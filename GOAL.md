@@ -22,11 +22,21 @@ Checklist:
 - [ ] Corpus-diff stage on the OK files: compare against hand-ported
       counterpart (byte-equal / ast-equal / diverged three-state; per-file
       rule attribution)
-- [ ] Widen construct coverage per the measured worklist (counts from baseline):
-      static fields→companion (17), classic for (9), for-each (9),
-      try/catch/finally (7), array initializers (3), non-final field in ctor (2),
-      multi identity-super ctors (2), switch→match (2), @FunctionalInterface +
-      Jackson annotation dispositions (2), nested types (1)
+- [x] Widen construct coverage, wave 1 (2026-07-18): statics→companion (class
+      AND interface constants), classic for→while, for-each→index/iterator
+      loop (iterated expr hoisted, evaluates once), try/catch/finally +
+      multi-catch, fallthrough-free switch→match (empty-case grouping, missing
+      default → `case _ => ()`), array initializers incl. `{}`, i++/i-- as
+      statements, catch-var refs, expression lambdas, non-final ctor-assigned
+      fields (`_p` rename), default-init fields, multi identity-super ctors
+      (max-arity primary), @FunctionalInterface/Jackson annotation drops.
+      Evidence: LiqpCorpus `OK=95 UNSUPPORTED=20 NO_COUNTERPART=2` — 81% from
+      53% baseline. M0 gate re-verified GREEN.
+- [ ] Widen construct coverage, wave 2 (measured remaining): nested types (8),
+      method references Foo::bar (3), general ctor funnel — private synthetic
+      primary + this-delegation for 2/3/6-ctor field-logic shapes (4+2 arity
+      mismatches), loop break/continue → boundary (2), two-ctor merge with
+      extra body stmts (1)
 - [ ] Tier 1 passes from PLAN.md §4.2 as needed by the corpus (boundary/return
       decision, ==/eq on references, overload disambiguation, varargs
       forwarding generalization, try/catch/finally, switch→match)

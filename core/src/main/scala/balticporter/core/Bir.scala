@@ -75,7 +75,8 @@ object BExpr:
       ownerQ: Option[String],
   ) extends BExpr
   final case class New(tpe: BType.Ref, args: List[BExpr]) extends BExpr
-  final case class NewArray(elem: BType, dims: List[BExpr]) extends BExpr
+  /** dims for `new T[n]`; init for `new T[]{...}` / `{...}` initializers. */
+  final case class NewArray(elem: BType, dims: List[BExpr], init: Option[List[BExpr]]) extends BExpr
 
   /** stringConcat: resolved statically by the frontend (any operand of `+` is a String). */
   final case class Binary(op: String, l: BExpr, r: BExpr, stringConcat: Boolean = false) extends BExpr
@@ -89,6 +90,10 @@ object BExpr:
   /** Static type of an expression as the frontend resolved it; attached where rules need it. */
   final case class Typed(e: BExpr, tpe: BType) extends BExpr
 
+  /** Java lambda → Scala lambda (types inferred from the SAM target).
+    * Left = block body (statements), Right = expression body. */
+  final case class Lambda(params: List[String], body: Either[List[BStmt], BExpr]) extends BExpr
+
 sealed trait BStmtK
 object BStmtK:
   final case class LocalVar(name: String, tpe: BType, init: Option[BExpr], effectivelyFinal: Boolean) extends BStmtK
@@ -100,7 +105,13 @@ object BStmtK:
   final case class Throw(e: BExpr) extends BStmtK
   final case class While(cond: BExpr, body: List[BStmt]) extends BStmtK
   final case class Block(body: List[BStmt]) extends BStmtK
+  final case class Try(body: List[BStmt], catches: List[BCatch], fin: Option[List[BStmt]]) extends BStmtK
+  /** From a fallthrough-free Java switch statement. isDefault cases have empty exprs. */
+  final case class Match(scrutinee: BExpr, cases: List[BCase]) extends BStmtK
   case object Empty extends BStmtK
+
+final case class BCatch(param: String, types: List[BType], body: List[BStmt])
+final case class BCase(exprs: List[BExpr], isDefault: Boolean, body: List[BStmt])
 
 final case class BStmt(leading: List[Trivia], k: BStmtK)
 
@@ -148,6 +159,9 @@ final case class BTypeDecl(
     fields: List[BField],
     ctors: List[BCtor],
     methods: List[BMethod],
+    /** static members — emitted into the companion object. */
+    staticFields: List[BField],
+    staticMethods: List[BMethod],
     nested: List[BTypeDecl],
     /** extracted `private static final long serialVersionUID = N` if present. */
     serialVersionUID: Option[Long],

@@ -121,6 +121,24 @@ private final class Printer(unit: BUnit, prov: Provenance):
     t.methods.foreach(methodDecl)
     indent -= 1
     line("}")
+    companion(t)
+
+  /** Java statics → companion object (RESEARCH.md §4.2; init-order caveats documented there). */
+  private def companion(t: BTypeDecl): Unit =
+    if t.staticFields.nonEmpty || t.staticMethods.nonEmpty then
+      line()
+      line(s"object ${id(t.name)} {")
+      indent += 1
+      t.staticFields.foreach { f =>
+        trivia(f.leading)
+        val kw = if f.mods.isFinal then "val" else "var"
+        val rhs = f.init.map(expr).getOrElse(defaultOf(f.tpe))
+        line(s"${visPrefix(f.mods)}$kw ${id(f.name)}: ${tpe(f.tpe)} = $rhs")
+        line()
+      }
+      t.staticMethods.foreach(methodDecl)
+      indent -= 1
+      line("}")
 
   private def tparamsStr(tps: List[BTypeParam]): String =
     if tps.isEmpty then ""
@@ -163,6 +181,10 @@ private final class Printer(unit: BUnit, prov: Provenance):
         trivia(f.leading)
         line(s"${visPrefix(f.mods)}val ${id(f.name)}: ${tpe(f.tpe)} = if (${id(pname)} != null) ${id(pname)} else ${expr(default)}")
         line()
+      case FieldLine.DefaultInit(f) =>
+        trivia(f.leading)
+        line(s"${visPrefix(f.mods)}var ${id(f.name)}: ${tpe(f.tpe)} = ${defaultOf(f.tpe)}")
+        line()
     }
     plan.secondaryCtors.foreach { sc =>
       trivia(sc.leading)
@@ -179,6 +201,7 @@ private final class Printer(unit: BUnit, prov: Provenance):
 
     indent -= 1
     line("}")
+    companion(t)
 
   private def paramStr(p: CtorPlan.Param): String =
     p.promoted match
@@ -259,6 +282,38 @@ private final class Printer(unit: BUnit, prov: Provenance):
         line("{")
         indent += 1; b.foreach(stmt); indent -= 1
         line("}")
+      case BStmtK.Try(b, catches, fin) =>
+        line("try {")
+        indent += 1; b.foreach(stmt); indent -= 1
+        if catches.nonEmpty then
+          line("} catch {")
+          indent += 1
+          catches.foreach { c =>
+            val pat = c.types match
+              case List(t1) => s"${id(c.param)}: ${tpe(t1)}"
+              case ts       => s"${id(c.param)} @ (${ts.map(t1 => s"_: ${tpe(t1)}").mkString(" | ")})"
+            line(s"case $pat =>")
+            indent += 1; c.body.foreach(stmt); indent -= 1
+          }
+          indent -= 1
+        fin match
+          case Some(f) =>
+            line("} finally {")
+            indent += 1; f.foreach(stmt); indent -= 1
+            line("}")
+          case None => line("}")
+      case BStmtK.Match(scrutinee, cases) =>
+        line(s"${expr(scrutinee)} match {")
+        indent += 1
+        cases.foreach { c =>
+          val pat = if c.isDefault then "_" else c.exprs.map(expr).mkString(" | ")
+          line(s"case $pat =>")
+          indent += 1
+          if c.body.isEmpty then line("()") else c.body.foreach(stmt)
+          indent -= 1
+        }
+        indent -= 1
+        line("}")
       case BStmtK.Empty => ()
 
   private def defaultOf(t: BType): String = t match
@@ -291,13 +346,24 @@ private final class Printer(unit: BUnit, prov: Provenance):
       s"$target${id(name)}(${adaptedArgs(args, formals, ownerQ).mkString(", ")})"
 
     case New(t, args) => s"new ${tpe(t)}(${args.map(expr).mkString(", ")})"
-    case NewArray(el, List(dim)) => s"new Array[${tpe(el)}](${expr(dim)})"
-    case NewArray(_, dims) => unsupported(s"multi-dimensional array (${dims.length} dims)")
+    case NewArray(el, _, Some(inits)) => s"Array[${tpe(el)}](${inits.map(expr).mkString(", ")})"
+    case NewArray(el, List(dim), None) => s"new Array[${tpe(el)}](${expr(dim)})"
+    case NewArray(_, dims, None) => unsupported(s"multi-dimensional array (${dims.length} dims)")
 
     case Binary(op, l, r, _) => s"(${expr(l)} $op ${expr(r)})"
     case Unary(op, e1, true) => s"($op${expr(e1)})"
     case Unary(op, _, false) => unsupported(s"postfix operator $op")
     case Ternary(c, t, e1)    => s"(if (${expr(c)}) ${expr(t)} else ${expr(e1)})"
+
+    case Lambda(ps, body) =>
+      val plist = ps match
+        case List(p1) => id(p1)
+        case _        => "(" + ps.map(id).mkString(", ") + ")"
+      body match
+        case Right(e)                                     => s"($plist => ${expr(e)})"
+        case Left(List(BStmt(_, BStmtK.Return(Some(e))))) => s"($plist => ${expr(e)})"
+        case Left(List(BStmt(_, BStmtK.ExprStmt(e))))     => s"($plist => ${expr(e)})"
+        case Left(_)                                      => unsupported("multi-statement lambda body")
 
     case Cast(BType.Prim(p), e1) =>
       val conv = primMap.getOrElse(p, unsupported(s"cast to $p"))

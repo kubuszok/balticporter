@@ -125,21 +125,28 @@ private final class UnitBuilder(sourcePath: String, source: String):
       isOverride = isOverride,
     )
 
-  private val ignoredAnnotations = Set("java.lang.Override", "java.lang.SuppressWarnings", "java.lang.SafeVarargs")
+  private val ignoredAnnotations = Set(
+    "java.lang.Override", "java.lang.SuppressWarnings", "java.lang.SafeVarargs",
+    "java.lang.FunctionalInterface", // Scala SAM conversion needs no marker
+  )
 
   private def checkAnnotations(el: CtElement & CtModifiable): Boolean =
     var hasOverride = false
     el.getAnnotations.asScala.foreach { a =>
       val q = a.getAnnotationType.getQualifiedName
       if q == "java.lang.Override" then hasOverride = true
-      else if !ignoredAnnotations.contains(q) then unsupported(el, s"annotation @$q")
+      // Jackson annotations: dropped — serialization is replaced per project dispositions
+      // (ssg: Jackson → LiquidSupport trait; see docs/architecture/liqp-port.md).
+      else if !ignoredAnnotations.contains(q) && !q.startsWith("com.fasterxml.jackson.") then
+        unsupported(el, s"annotation @$q")
     }
     hasOverride
 
   private def typeDecl(t: CtType[?]): BTypeDecl = t match
     case c: CtClass[?] =>
       checkAnnotations(c)
-      val (svuid, fields) = extractFields(c)
+      val (svuid, fields, staticFields) = extractFields(c)
+      val (staticM, instanceM) = c.getMethods.asScala.toList.sortBy(posKey).partition(_.hasModifier(ModifierKind.STATIC))
       BTypeDecl(
         leading = leadingOf(c),
         mods = mods(c),
@@ -154,12 +161,17 @@ private final class UnitBuilder(sourcePath: String, source: String):
         interfaces = c.getSuperInterfaces.asScala.toList.map(btype),
         fields = fields,
         ctors = c.getConstructors.asScala.toList.filterNot(_.isImplicit).map(ctorDecl),
-        methods = c.getMethods.asScala.toList.sortBy(m => posKey(m)).map(methodDecl),
+        methods = instanceM.map(methodDecl),
+        staticFields = staticFields,
+        staticMethods = staticM.map(methodDecl),
         nested = nestedOf(c),
         serialVersionUID = svuid,
       )
     case i: CtInterface[?] =>
       checkAnnotations(i)
+      // Java interface fields are implicitly public static final → companion object
+      val (svuid, _, staticFields) = extractFields(i)
+      val (staticM, instanceM) = i.getMethods.asScala.toList.sortBy(posKey).partition(_.hasModifier(ModifierKind.STATIC))
       BTypeDecl(
         leading = leadingOf(i),
         mods = mods(i),
@@ -170,9 +182,11 @@ private final class UnitBuilder(sourcePath: String, source: String):
         interfaces = i.getSuperInterfaces.asScala.toList.map(btype),
         fields = Nil,
         ctors = Nil,
-        methods = i.getMethods.asScala.toList.sortBy(m => posKey(m)).map(methodDecl),
+        methods = instanceM.map(methodDecl),
+        staticFields = staticFields,
+        staticMethods = staticM.map(methodDecl),
         nested = nestedOf(i),
-        serialVersionUID = None,
+        serialVersionUID = svuid,
       )
     case other => unsupported(other, s"type kind ${other.getClass.getSimpleName}")
 
@@ -190,30 +204,34 @@ private final class UnitBuilder(sourcePath: String, source: String):
     val p = el.getPosition
     if p != null && p.isValidPosition then p.getSourceStart else Int.MaxValue
 
-  private def extractFields(c: CtClass[?]): (Option[Long], List[BField]) =
+  /** returns (serialVersionUID, instance fields, static fields). Interface fields are
+    * implicitly static.
+    */
+  private def extractFields(c: CtType[?]): (Option[Long], List[BField], List[BField]) =
     var svuid: Option[Long] = None
-    val fields = c.getFields.asScala.toList.flatMap { f =>
+    val instance = List.newBuilder[BField]
+    val statics = List.newBuilder[BField]
+    val implicitlyStatic = c.isInstanceOf[CtInterface[?]]
+    c.getFields.asScala.toList.foreach { f =>
       checkAnnotations(f)
-      if f.getSimpleName == "serialVersionUID" && f.hasModifier(ModifierKind.STATIC) then
+      val isStatic = f.hasModifier(ModifierKind.STATIC) || implicitlyStatic
+      if f.getSimpleName == "serialVersionUID" && isStatic then
         svuid = Option(f.getDefaultExpression).collect { case l: CtLiteral[?] =>
           l.getValue match
             case n: java.lang.Number => n.longValue
             case v                   => unsupported(f, s"serialVersionUID value $v")
         }
-        None
-      else if f.hasModifier(ModifierKind.STATIC) then unsupported(f, "static field (not in M0 subset)")
       else
-        Some(
-          BField(
-            leading = leadingOf(f),
-            mods = mods(f),
-            tpe = btype(f.getType),
-            name = f.getSimpleName,
-            init = Option(f.getDefaultExpression).map(expr),
-          )
+        val bf = BField(
+          leading = leadingOf(f),
+          mods = mods(f),
+          tpe = btype(f.getType),
+          name = f.getSimpleName,
+          init = Option(f.getDefaultExpression).map(expr),
         )
+        if isStatic then statics += bf else instance += bf
     }
-    (svuid, fields)
+    (svuid, instance.result(), statics.result())
 
   private def paramsOf(e: CtExecutable[?]): List[BParam] =
     e.getParameters.asScala.toList.map { p =>
@@ -302,9 +320,122 @@ private final class UnitBuilder(sourcePath: String, source: String):
       BStmtK.Block(block(b.getStatements.asScala.toList))
     case i: CtInvocation[?] =>
       BStmtK.ExprStmt(expr(i))
+
+    case f: CtForEach => forEach(f)
+    case f: CtFor     => classicFor(f)
+
+    case t: CtTryWithResource => unsupported(t, "try-with-resources (not yet supported)")
+    case t: CtTry =>
+      val catches = t.getCatchers.asScala.toList.map { c =>
+        val p = c.getParameter
+        val types =
+          if p.getMultiTypes.asScala.nonEmpty then p.getMultiTypes.asScala.toList.map(btype)
+          else List(btype(p.getType))
+        BCatch(p.getSimpleName, types, blockOf(c.getBody))
+      }
+      BStmtK.Try(blockOf(t.getBody), catches, Option(t.getFinalizer).map(blockOf))
+
+    case s: CtSwitch[?] => switchToMatch(s)
+
+    // i++ / i-- / ++i / --i in statement position → i += 1 / i -= 1
     case u: CtUnaryOperator[?] =>
-      BStmtK.ExprStmt(expr(u))
+      import UnaryOperatorKind.*
+      u.getKind match
+        case POSTINC | PREINC => BStmtK.Assign(expr(u.getOperand), Lit(LitKind.IntL, "1"), Some("+"))
+        case POSTDEC | PREDEC => BStmtK.Assign(expr(u.getOperand), Lit(LitKind.IntL, "1"), Some("-"))
+        case _                => BStmtK.ExprStmt(expr(u))
+
     case other => unsupported(other, s"statement ${other.getClass.getSimpleName}")
+
+  /** `for (init; cond; update) body` → `{ init; while (cond) { body; update } }`.
+    * Safe because `continue` is not (yet) translated — nothing can skip the update.
+    */
+  private def classicFor(f: CtFor): BStmtK =
+    val init = f.getForInit.asScala.toList.map(s => BStmt(leadingOf(s), stmt(s)))
+    val update = f.getForUpdate.asScala.toList.map(s => BStmt(leadingOf(s), stmt(s)))
+    val cond = Option(f.getExpression).map(expr).getOrElse(Lit(LitKind.BoolL, "true"))
+    BStmtK.Block(init :+ BStmt(Nil, BStmtK.While(cond, blockOf(f.getBody) ++ update)))
+
+  /** `for (T x : e) body` — array-backed iterables get an index loop, everything else
+    * the explicit iterator()/hasNext()/next() desugaring (works for any java.lang.Iterable
+    * without needing Scala collection conversions). The iterated expression is hoisted so
+    * it evaluates once, as in Java.
+    */
+  private def forEach(f: CtForEach): BStmtK =
+    val v = f.getVariable
+    val x = v.getSimpleName
+    val elemT = btype(v.getType)
+    val coll = expr(f.getExpression)
+    val body = blockOf(f.getBody)
+    val isArray = Option(f.getExpression.getType).exists(_.isInstanceOf[CtArrayTypeReference[?]])
+    if isArray then
+      val arr = x + "$arr"
+      val i = x + "$i"
+      BStmtK.Block(
+        List(
+          BStmt(Nil, BStmtK.LocalVar(arr, btype(f.getExpression.getType), Some(coll), effectivelyFinal = true)),
+          BStmt(Nil, BStmtK.LocalVar(i, BType.Prim("int"), Some(Lit(LitKind.IntL, "0")), effectivelyFinal = false)),
+          BStmt(
+            Nil,
+            BStmtK.While(
+              Binary("<", Ident(i, RefKind.Local), ArrayLength(Ident(arr, RefKind.Local))),
+              BStmt(Nil, BStmtK.LocalVar(x, elemT, Some(ArrayAccess(Ident(arr, RefKind.Local), Ident(i, RefKind.Local))), effectivelyFinal = true))
+                :: body
+                ::: List(BStmt(Nil, BStmtK.Assign(Ident(i, RefKind.Local), Lit(LitKind.IntL, "1"), Some("+")))),
+            ),
+          ),
+        )
+      )
+    else
+      val it = x + "$it"
+      val itType = BType.Ref("java.util.Iterator", List(elemT))
+      BStmtK.Block(
+        List(
+          BStmt(Nil, BStmtK.LocalVar(it, itType, Some(Call(Recv.On(coll), "iterator", Nil, None, None)), effectivelyFinal = true)),
+          BStmt(
+            Nil,
+            BStmtK.While(
+              Call(Recv.On(Ident(it, RefKind.Local)), "hasNext", Nil, None, None),
+              BStmt(Nil, BStmtK.LocalVar(x, elemT, Some(Call(Recv.On(Ident(it, RefKind.Local)), "next", Nil, None, None)), effectivelyFinal = true))
+                :: body,
+            ),
+          ),
+        )
+      )
+
+  /** Fallthrough-free switch statements → match. Empty colon-cases group with the next
+    * case; a non-terminated non-empty case is genuine fallthrough → Unsupported.
+    * A missing default becomes `case _ => ()` (Java's silent fall-past).
+    */
+  private def switchToMatch(s: CtSwitch[?]): BStmtK =
+    val scrutinee = expr(s.getSelector)
+    val out = List.newBuilder[BCase]
+    var pendingExprs = List.empty[BExpr]
+    val cases = s.getCases.asScala.toList
+    cases.zipWithIndex.foreach { (c, idx) =>
+      val exprs = c.getCaseExpressions.asScala.toList.map(expr)
+      val isDefault = exprs.isEmpty
+      val stmts = c.getStatements.asScala.toList
+      val isLast = idx == cases.length - 1
+      if stmts.isEmpty && !isDefault && !isLast then pendingExprs = pendingExprs ++ exprs
+      else
+        val (bodyStmts, terminated) = stmts.reverse match
+          case (_: CtBreak) :: rest => (rest.reverse, true)
+          case all =>
+            val terms = all.headOption.exists {
+              case _: CtReturn[?] | _: CtThrow => true
+              case _                           => false
+            }
+            (all.reverse, terms)
+        if !terminated && !isLast then unsupported(c, "switch fallthrough")
+        out += BCase(pendingExprs ++ exprs, isDefault, block(bodyStmts))
+        pendingExprs = Nil
+    }
+    val result = out.result()
+    val withDefault =
+      if result.exists(_.isDefault) then result
+      else result :+ BCase(Nil, isDefault = true, List(BStmt(Nil, BStmtK.Empty)))
+    BStmtK.Match(scrutinee, withDefault)
 
   private def enclosingBodyHasWriteTo(v: CtLocalVariable[?]): Boolean =
     val body = v.getParent(classOf[CtExecutable[?]])
@@ -348,6 +479,22 @@ private final class UnitBuilder(sourcePath: String, source: String):
       val ownerQ = Option(ex.getDeclaringType).map(_.getQualifiedName)
       Call(recv, ex.getSimpleName, inv.getArguments.asScala.toList.map(expr), formalsOf(ex), ownerQ)
 
+    case na: CtNewArray[?] =>
+      val elem = btype(na.getType) match
+        case BType.Arr(e) => e
+        case t            => t
+      val inits = na.getElements.asScala.toList
+      val dims = na.getDimensionExpressions.asScala.toList
+      if inits.nonEmpty || dims.isEmpty then NewArray(elem, Nil, Some(inits.map(expr))) // `{...}` incl. empty `{}`
+      else NewArray(elem, dims.map(expr), None)
+
+    case l: CtLambda[?] =>
+      val params = l.getParameters.asScala.toList.map(_.getSimpleName)
+      (Option(l.getExpression), Option(l.getBody)) match
+        case (Some(e), _)    => Lambda(params, Right(expr(e)))
+        case (None, Some(b)) => Lambda(params, Left(block(b.getStatements.asScala.toList)))
+        case _               => unsupported(l, "lambda without body")
+
     case cc: CtConstructorCall[?] =>
       btype(cc.getType) match
         case r: BType.Ref => New(r, cc.getArguments.asScala.toList.map(expr))
@@ -385,6 +532,7 @@ private final class UnitBuilder(sourcePath: String, source: String):
       val varargs = Option(p.getDeclaration).exists(_.isVarArgs)
       Ident(p.getSimpleName, RefKind.Param(varargs))
     case l: CtLocalVariableReference[?] => Ident(l.getSimpleName, RefKind.Local)
+    case c: CtCatchVariableReference[?] => Ident(c.getSimpleName, RefKind.Local)
     case other                          => unsupported(at, s"variable reference ${other.getClass.getSimpleName}")
 
   private def fieldAccess(ref: CtFieldReference[?], target: CtExpression[?]): BExpr =

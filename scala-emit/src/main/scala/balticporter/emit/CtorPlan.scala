@@ -9,6 +9,8 @@ enum FieldLine:
   case FromField(f: BField, init: BExpr)
   /** null-sentinel merge: `val f: T = if (_p != null) _p else <default>`. */
   case SentinelVal(f: BField, paramName: String, default: BExpr)
+  /** non-final field with no initializer anywhere → Java default value. */
+  case DefaultInit(f: BField)
 
 /** The primary/secondary constructor layout for a class (PLAN.md funnel strategies).
   *
@@ -52,8 +54,9 @@ object CtorPlan:
 
     def fieldWithOwnInit(f: BField): FieldLine =
       f.init match
-        case Some(i) => FieldLine.FromField(f, i)
-        case None    => fail(s"field ${f.name} has no initializer and no constructor assigns it")
+        case Some(i)                 => FieldLine.FromField(f, i)
+        case None if !f.mods.isFinal => FieldLine.DefaultInit(f)
+        case None => fail(s"final field ${f.name} has no initializer and no constructor assigns it")
 
     /** `this.f = <e>` assignments in a ctor body, in order; everything else stays. */
     def splitAssigns(body: List[BStmt]): (List[(String, BExpr)], List[BStmt]) =
@@ -82,14 +85,25 @@ object CtorPlan:
               if p == f && t.fields.exists(fd => fd.name == f && fd.mods.isFinal) =>
             f -> t.fields.find(_.name == f).get
         }
-        val params = c.params.map(p => Param(p, promoted.get(p.name)))
+        // non-final `this.f = f` can't promote (a member may not shadow a same-named class
+        // param) — rename the param `_f` and initialize `var f = _f`
+        val renamed: Set[String] = assignedOnce.collect {
+          case (f, Ident(p, RefKind.Param(_)))
+              if p == f && !promoted.contains(f) && t.fields.exists(_.name == f) =>
+            f
+        }.toSet
+        val params = c.params.map { p =>
+          if renamed.contains(p.name) then Param(p.copy(name = "_" + p.name), None)
+          else Param(p, promoted.get(p.name))
+        }
         val fieldLines = t.fields.flatMap { f =>
           if promoted.contains(f.name) then None
           else
             (f.init, assignedOnce.get(f.name)) match
               case (Some(i), None) => Some(FieldLine.FromField(f, i))
-              case (None, Some(e)) if f.mods.isFinal => Some(FieldLine.FromField(f, e))
-              case (None, Some(_)) => fail(s"non-final field ${f.name} assigned in ctor (not yet supported)")
+              case (None, Some(_)) if renamed.contains(f.name) =>
+                Some(FieldLine.FromField(f, Ident("_" + f.name, RefKind.Param(false))))
+              case (None, Some(e)) => Some(FieldLine.FromField(f, e))
               case (Some(_), Some(_)) => fail(s"field ${f.name} has an initializer and a ctor assignment")
               case (None, None) => Some(fieldWithOwnInit(f))
         }
@@ -107,7 +121,11 @@ object CtorPlan:
             }
           }
           ctors.filter(isIdentitySuper) match
-            case primary :: Nil =>
+            case Nil => fail("multiple constructors, none with an identity super(...) call")
+            case candidates =>
+              // several identity-super ctors: the max-arity one is primary (first in
+              // source order on ties — `candidates` preserves source order)
+              val primary = candidates.maxBy(_.params.length)
               val secondaries = ctors.filterNot(_ eq primary).map { c =>
                 val delegateArgs = c.thisArgs.orElse(c.superArgs).getOrElse(fail("secondary ctor without super/this args"))
                 if delegateArgs.length != primary.params.length then
@@ -123,8 +141,6 @@ object CtorPlan:
                 t.fields.map(fieldWithOwnInit),
                 secondaries,
               )
-            case Nil => fail("multiple constructors, none with an identity super(...) call")
-            case _   => fail("multiple constructors with identity super(...) calls")
         else
           ctors.sortBy(_.params.length) match
             case List(noArg, paramful) if noArg.params.isEmpty && paramful.params.length == 1 =>
