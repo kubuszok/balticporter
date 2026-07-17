@@ -59,7 +59,8 @@ object LiqpCorpus:
       val handPort = ssgRoot.resolve("ssg-liquid/src/main/scala/ssg/liquid/" + handRel)
       val status = parsed.flatMap(u => scala.util.Try(ScalaPrinter.print(u, prov, sentinels)).toEither.map(u -> _)) match
         case Right((u, out)) =>
-          if CommentCheck.check(u, out).nonEmpty then "COMMENT_LOSS"
+          val lost = CommentCheck.check(u, out)
+          if lost.nonEmpty then s"COMMENT_LOSS\t${lost.head.comment.take(140)}"
           else
             parityFailures(u, out, rel) match
               case Some(missing) => s"PARITY_FAIL\t$missing"

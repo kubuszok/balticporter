@@ -182,6 +182,11 @@ private final class Printer(unit: BUnit, prov: Provenance, sentinels: Set[String
         trivia(f.leading)
         line(s"${visPrefix(f.mods)}val ${id(f.name)}: ${tpe(f.tpe)} = if (${id(pname)} != null) ${id(pname)} else ${expr(default)}")
         line()
+      case FieldLine.CondInit(f, pname, whenSome, whenNull) =>
+        trivia(f.leading)
+        val kw = if f.mods.isFinal then "val" else "var"
+        line(s"${visPrefix(f.mods)}$kw ${id(f.name)}: ${tpe(f.tpe)} = if (${id(pname)} != null) ${expr(whenSome)} else ${expr(whenNull)}")
+        line()
       case FieldLine.DefaultInit(f) =>
         trivia(f.leading)
         line(s"${visPrefix(f.mods)}var ${id(f.name)}: ${tpe(f.tpe)} = ${defaultOf(f.tpe)}")
@@ -270,6 +275,11 @@ private final class Printer(unit: BUnit, prov: Provenance, sentinels: Set[String
       case FieldLine.SentinelVal(f, pname, default) =>
         trivia(f.leading)
         line(s"${visPrefix(f.mods)}val ${id(f.name)}: ${tpe(f.tpe)} = if (${id(pname)} != null) ${id(pname)} else ${expr(default)}")
+        line()
+      case FieldLine.CondInit(f, pname, whenSome, whenNull) =>
+        trivia(f.leading)
+        val kw = if f.mods.isFinal then "val" else "var"
+        line(s"${visPrefix(f.mods)}$kw ${id(f.name)}: ${tpe(f.tpe)} = if (${id(pname)} != null) ${expr(whenSome)} else ${expr(whenNull)}")
         line()
       case FieldLine.DefaultInit(f) =>
         trivia(f.leading)

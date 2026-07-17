@@ -9,7 +9,12 @@ enum FieldLine:
   case FromField(f: BField, init: BExpr)
   /** null-sentinel merge: `val f: T = if (_p != null) _p else <default>`. */
   case SentinelVal(f: BField, paramName: String, default: BExpr)
-  /** non-final field with no initializer anywhere → Java default value. */
+  /** generalized sentinel: `val f: T = if (_p != null) <whenSome> else <whenNull>`. */
+  case CondInit(f: BField, paramName: String, whenSome: BExpr, whenNull: BExpr)
+  /** no initializer usable at the declaration → Java default value, as `var`.
+    * For final fields this is the definite-assignment fallback (RESEARCH.md §4.2:
+    * ctor assigns inside branches/try → lift is impossible mechanically; `var` +
+    * in-body assignment preserves behavior at the cost of final-field publication). */
   case DefaultInit(f: BField)
 
 /** The primary/secondary constructor layout for a class (PLAN.md funnel strategies).
@@ -66,18 +71,24 @@ object CtorPlan:
 
     def fieldWithOwnInit(f: BField): FieldLine =
       f.init match
-        case Some(i)                 => FieldLine.FromField(f, i)
-        case None if !f.mods.isFinal => FieldLine.DefaultInit(f)
-        case None => fail(s"final field ${f.name} has no initializer and no constructor assigns it")
+        case Some(i) => FieldLine.FromField(f, i)
+        case None    => FieldLine.DefaultInit(f) // incl. blank finals: definite-assignment fallback
 
-    /** `this.f = <e>` assignments in a ctor body, in order; everything else stays. */
+    /** `this.f = <e>` assignments in a ctor body (with their leading trivia, so the
+      * fusion into field declarations can't lose comments), in order; everything
+      * else stays.
+      */
     def splitAssigns(body: List[BStmt]): (List[(String, BExpr)], List[BStmt]) =
-      val assigns = List.newBuilder[(String, BExpr)]
+      val (a, r) = splitAssignsT(body)
+      (a.map(x => (x._1, x._2)), r)
+
+    def splitAssignsT(body: List[BStmt]): (List[(String, BExpr, List[Trivia])], List[BStmt]) =
+      val assigns = List.newBuilder[(String, BExpr, List[Trivia])]
       val rest = List.newBuilder[BStmt]
       body.foreach { s =>
         s.k match
-          case BStmtK.Assign(Ident(f, RefKind.OwnField), rhs, None) => assigns += (f -> rhs)
-          case BStmtK.Empty                                         => ()
+          case BStmtK.Assign(Ident(f, RefKind.OwnField), rhs, None) => assigns += ((f, rhs, s.leading))
+          case BStmtK.Empty if s.leading.isEmpty                    => ()
           case _                                                    => rest += s
       }
       (assigns.result(), rest.result())
@@ -86,10 +97,14 @@ object CtorPlan:
       * are this(...)-delegators already converted.
       */
     def rootPlan(c: BCtor, secondaries: List[Secondary]): CtorPlan =
-        val (assigns, rest) = splitAssigns(c.body)
+        val (assignsT, rest) = splitAssignsT(c.body)
+        val assigns = assignsT.map(x => (x._1, x._2))
         val counts = assigns.groupBy(_._1).view.mapValues(_.length).toMap
         counts.find(_._2 > 1).foreach { case (f, _) => fail(s"field $f assigned more than once in ctor") }
         val assignedOnce = assigns.toMap
+        val assignTrivia: Map[String, List[Trivia]] = assignsT.map(x => x._1 -> x._3).toMap
+        def withAssignTrivia(f: BField): BField =
+          f.copy(leading = f.leading ++ assignTrivia.getOrElse(f.name, Nil))
         val promoted: Map[String, BField] = assignedOnce.collect {
           case (f, Ident(p, RefKind.Param(_)))
               if p == f && t.fields.exists(fd => fd.name == f && fd.mods.isFinal) =>
@@ -112,12 +127,16 @@ object CtorPlan:
             (f.init, assignedOnce.get(f.name)) match
               case (Some(i), None) => Some(FieldLine.FromField(f, i))
               case (None, Some(_)) if renamed.contains(f.name) =>
-                Some(FieldLine.FromField(f, Ident("_" + f.name, RefKind.Param(false))))
-              case (None, Some(e)) => Some(FieldLine.FromField(f, e))
+                Some(FieldLine.FromField(withAssignTrivia(f), Ident("_" + f.name, RefKind.Param(false))))
+              case (None, Some(e)) => Some(FieldLine.FromField(withAssignTrivia(f), e))
               case (Some(_), Some(_)) => fail(s"field ${f.name} has an initializer and a ctor assignment")
               case (None, None) => Some(fieldWithOwnInit(f))
         }
-        CtorPlan(params, Some(c.mods), sentinelLike = false, c.leading, c.superArgs.getOrElse(Nil), rest, fieldLines, secondaries)
+        // promoted fields become val class params, which can't carry block comments —
+        // hoist their Javadoc above the class line so nothing is lost
+        val promotedTrivia = t.fields.filter(f => promoted.contains(f.name)).flatMap(f => withAssignTrivia(f).leading)
+        CtorPlan(params, Some(c.mods), sentinelLike = false, c.leading ++ promotedTrivia,
+          c.superArgs.getOrElse(Nil), rest, fieldLines, secondaries)
 
     t.ctors match
       case Nil =>
@@ -132,7 +151,20 @@ object CtorPlan:
         val allEmptyBodies = ctors.forall { c =>
           val (a, r) = splitAssigns(c.body); a.isEmpty && r.isEmpty
         }
-        if roots.length == 1 && delegators.nonEmpty then
+        // Date shape: every ctor is a root with IDENTICAL super args and no field
+        // assignments; one no-arg ctor with an empty body exists → it becomes the
+        // primary and the others delegate `this()` then run their statements.
+        val sameSuper = ctors.map(_.superArgs.getOrElse(Nil)).distinct.lengthIs == 1
+        val noFieldAssigns = ctors.forall(c => splitAssigns(c.body)._1.isEmpty)
+        val noArgEmptyRoot =
+          ctors.find(c => c.thisArgs.isEmpty && c.params.isEmpty && splitAssigns(c.body)._2.isEmpty)
+        if roots.length == ctors.length && sameSuper && noFieldAssigns && noArgEmptyRoot.isDefined then
+          val primary = noArgEmptyRoot.get
+          val secondaries = ctors.filterNot(_ eq primary).map { c =>
+            Secondary(c.leading, c.mods, c.params, Nil, splitAssigns(c.body)._2)
+          }
+          rootPlan(primary, secondaries)
+        else if roots.length == 1 && delegators.nonEmpty then
           // this(...)-chain: the sole root becomes the primary; each delegator is an
           // auxiliary running its remaining statements after the delegation. Auxiliaries
           // may only call PRECEDING ctors in Scala, so order by delegation depth
@@ -190,8 +222,14 @@ object CtorPlan:
         else
           ctors.sortBy(_.params.length) match
             case List(noArg, paramful) if noArg.params.isEmpty && paramful.params.length == 1 =>
-              val (na, nr) = splitAssigns(noArg.body)
-              val (pa, pr) = splitAssigns(paramful.body)
+              val (naT, nr) = splitAssignsT(noArg.body)
+              val (paT, pr) = splitAssignsT(paramful.body)
+              val na = naT.map(x => (x._1, x._2))
+              val pa = paT.map(x => (x._1, x._2))
+              val mergeTrivia: Map[String, List[Trivia]] =
+                (paT ++ naT).groupBy(_._1).view.mapValues(_.flatMap(_._3).toList).toMap
+              def withMergeTrivia(f: BField): BField =
+                f.copy(leading = f.leading ++ mergeTrivia.getOrElse(f.name, Nil))
               if nr.nonEmpty || pr.nonEmpty then fail("two-ctor merge: ctor bodies contain more than field assignments")
               (na, pa) match
                 case (List((f1, defaultExpr)), List((f2, Ident(pn, RefKind.Param(_)))))
@@ -208,9 +246,83 @@ object CtorPlan:
                     paramful.leading,
                     paramful.superArgs.getOrElse(Nil),
                     Nil,
-                    FieldLine.SentinelVal(fld, "_" + p.name, defaultExpr)
+                    FieldLine.SentinelVal(withMergeTrivia(fld), "_" + p.name, defaultExpr)
                       :: t.fields.filterNot(_.name == f1).map(fieldWithOwnInit),
                     List(Secondary(noArg.leading, noArg.mods, Nil, List(Lit(LitKind.NullL, "null")))),
                   )
-                case _ => fail("two-ctor merge: shapes don't match the sentinel pattern")
+                case (na, pa) =>
+                  // generalized N-field sentinel merge: for every field the paramful ctor
+                  // assigns, the no-null branch takes that expression and the null branch
+                  // takes the no-arg ctor's assignment or the field's own initializer —
+                  // exactly Java's two construction paths, merged.
+                  val naMap = na.toMap
+                  val paMap = pa.toMap
+                  val noDupes = naMap.size == na.length && paMap.size == pa.length
+                  val superOk = noArg.superArgs.getOrElse(Nil) == paramful.superArgs.getOrElse(Nil)
+                  val p = paramful.params.head
+                  if !noDupes || !superOk then fail("two-ctor merge: shapes don't match the sentinel pattern")
+                  if p.tpe.isInstanceOf[BType.Prim] then fail("two-ctor merge: sentinel requires a reference-typed parameter")
+                  val pn = "_" + p.name
+                  val merged = t.fields.map { f =>
+                    (paMap.get(f.name), naMap.get(f.name), f.init) match
+                      case (Some(_), Some(_), Some(_)) =>
+                        fail(s"two-ctor merge: field ${f.name} has an initializer and assignments in both ctors")
+                      case (Some(pe), Some(ne), None) =>
+                        FieldLine.CondInit(withMergeTrivia(f), pn, renameParam(pe, p.name, pn), ne)
+                      case (Some(pe), None, Some(init)) =>
+                        FieldLine.CondInit(withMergeTrivia(f), pn, renameParam(pe, p.name, pn), init)
+                      case (Some(pe), None, None) =>
+                        // no-arg path leaves the Java default value
+                        FieldLine.CondInit(withMergeTrivia(f), pn, renameParam(pe, p.name, pn), javaDefault(f.tpe))
+                      case (None, Some(_), _) =>
+                        fail(s"two-ctor merge: field ${f.name} assigned only in the no-arg ctor")
+                      case (None, None, _) => fieldWithOwnInit(f)
+                  }
+                  CtorPlan(
+                    List(Param(p.copy(name = pn), None)),
+                    Some(paramful.mods),
+                    sentinelLike = true,
+                    paramful.leading,
+                    paramful.superArgs.getOrElse(Nil),
+                    Nil,
+                    merged,
+                    List(Secondary(noArg.leading, noArg.mods, Nil, List(Lit(LitKind.NullL, "null")))),
+                  )
             case _ => fail(s"${ctors.length} constructors with field logic — no funnel strategy applies")
+
+  /** Java default value for a type, as an expression. */
+  private def javaDefault(t: BType): BExpr = t match
+    case BType.Prim("boolean") => Lit(LitKind.BoolL, "false")
+    case BType.Prim("long")    => Lit(LitKind.LongL, "0L")
+    case BType.Prim("float")   => Lit(LitKind.FloatL, "0.0f")
+    case BType.Prim("double")  => Lit(LitKind.DoubleL, "0.0d")
+    case BType.Prim("char")    => Lit(LitKind.CharL, "'\\u0000'")
+    case BType.Prim(_)         => Lit(LitKind.IntL, "0")
+    case _                     => Lit(LitKind.NullL, "null")
+
+  /** Renames a parameter reference throughout an expression (best-effort structural
+    * map; lambda bodies that shadow the name are left untouched, scalac verifies). */
+  private def renameParam(e: BExpr, from: String, to: String): BExpr =
+    def rp(x: BExpr): BExpr = renameParam(x, from, to)
+    e match
+      case Ident(n, k @ RefKind.Param(_)) if n == from => Ident(to, k)
+      case _: Ident | _: Lit | This | _: ClassLit      => e
+      case Select(r, n)                                => Select(rp(r), n)
+      case ArrayLength(a)                              => ArrayLength(rp(a))
+      case ArrayAccess(a, i)                           => ArrayAccess(rp(a), rp(i))
+      case Call(recv, n, args, f, o) =>
+        val r2 = recv match
+          case Recv.On(r) => Recv.On(rp(r))
+          case other      => other
+        Call(r2, n, args.map(rp), f, o)
+      case New(t2, args, b)        => New(t2, args.map(rp), b)
+      case NewArray(el, d, i)      => NewArray(el, d.map(rp), i.map(_.map(rp)))
+      case Binary(op, l, r, c)     => Binary(op, rp(l), rp(r), c)
+      case Unary(op, x, p2)        => Unary(op, rp(x), p2)
+      case Ternary(c, tt, ee)      => Ternary(rp(c), rp(tt), rp(ee))
+      case Cast(t2, x)             => Cast(t2, rp(x))
+      case InstanceOf(x, t2)       => InstanceOf(rp(x), t2)
+      case Typed(x, t2)            => Typed(rp(x), t2)
+      case l: Lambda               => if l.params.contains(from) then l else l.copy(body = l.body.map(rp))
+      case m: MethodRef            => m.copy(prefix = m.prefix.map(rp))
+      case u: UnboundMethodRef     => u
