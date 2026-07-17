@@ -89,7 +89,14 @@ object SkeletonDiff:
       missingInHand: List[Member],  // engine has, hand port lacks
       extraInHand: List[Member],    // hand port has, engine lacks
       explained: List[String],
-  )
+  ):
+    /** Stable fingerprint of the (post-idiom) diff — accepted-divergence ledger entries
+      * pin this, so a changed diff invalidates the acceptance instead of hiding it.
+      */
+    def fingerprint: String =
+      val text = (missingInHand.map("−" + _.key) ++ extraInHand.map("+" + _.key)).sorted.mkString("\n")
+      val d = java.security.MessageDigest.getInstance("SHA-256").digest(text.getBytes("UTF-8"))
+      d.take(6).map(b => f"$b%02x").mkString
 
   /** Applies per-file rename mappings (manifest `Renames:` entries) to engine members
     * before comparison — names and path segments both.

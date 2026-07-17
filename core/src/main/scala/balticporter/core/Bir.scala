@@ -78,7 +78,10 @@ object BExpr:
       /** fqcn of the resolved declaring type (drives JDK-vs-translated call-site adaptations). */
       ownerQ: Option[String],
   ) extends BExpr
-  final case class New(tpe: BType.Ref, args: List[BExpr]) extends BExpr
+  /** anonEmptyBody: Java `new X(...) {}` — an anonymous subclass with NO members
+    * (the super-type-token pattern); preserved as `new X(...) {}` in Scala.
+    * Anonymous classes with members are not yet mechanized. */
+  final case class New(tpe: BType.Ref, args: List[BExpr], anonEmptyBody: Boolean = false) extends BExpr
   /** dims for `new T[n]`; init for `new T[]{...}` / `{...}` initializers. */
   final case class NewArray(elem: BType, dims: List[BExpr], init: Option[List[BExpr]]) extends BExpr
 

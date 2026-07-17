@@ -603,6 +603,13 @@ private final class UnitBuilder(sourcePath: String, source: String):
         case _: CtTypeAccess[?] => unsupported(mr, "unbound instance method reference")
         case t                  => MethodRef(Right(expr(t)), ex.getSimpleName)
 
+    case nc: CtNewClass[?] =>
+      val anonMembers = Option(nc.getAnonymousClass).map(_.getTypeMembers.asScala.toList).getOrElse(Nil)
+      if anonMembers.nonEmpty then unsupported(nc, "anonymous class with members")
+      btype(nc.getType) match
+        case r: BType.Ref => New(r, nc.getArguments.asScala.toList.map(expr), anonEmptyBody = true)
+        case t            => unsupported(nc, s"anonymous class of $t")
+
     case cc: CtConstructorCall[?] =>
       btype(cc.getType) match
         case r: BType.Ref => New(r, cc.getArguments.asScala.toList.map(expr))

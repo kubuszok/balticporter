@@ -31,7 +31,7 @@ private final class Printer(unit: BUnit, prov: Provenance):
   def result(): String =
     header()
     if unit.pkg.nonEmpty then
-      line(s"package ${unit.pkg}")
+      line(s"package ${unit.pkg.split('.').map(id).mkString(".")}")
       line()
     unit.types.foreach(typeDecl)
     sb.toString
@@ -64,12 +64,15 @@ private final class Printer(unit: BUnit, prov: Provenance):
   private def refName(q0: String): String =
     // Spoon qualifies nested types as Outer$Inner; the companion encoding makes that Outer.Inner
     val q = q0.replace('$', '.')
-    if q == BType.ObjectQ then "Any"
-    else if q == "java.lang.String" then "String"
-    else if pkgOfQ(q) == "java.lang" then q.substring("java.lang.".length)
-    else if q.startsWith(unit.pkg + ".") && pkgOfQ(q0).length <= unit.pkg.length then
-      q.substring(unit.pkg.length + 1)
-    else q
+    val name =
+      if q == BType.ObjectQ then "Any"
+      else if q == "java.lang.String" then "String"
+      else if pkgOfQ(q) == "java.lang" then q.substring("java.lang.".length)
+      else if q.startsWith(unit.pkg + ".") && pkgOfQ(q0).length <= unit.pkg.length then
+        q.substring(unit.pkg.length + 1)
+      else q
+    // Scala keywords can appear as Java package segments (e.g. jackson.core.type)
+    name.split('.').map(id).mkString(".")
 
   private val primMap = Map(
     "void" -> "Unit", "int" -> "Int", "long" -> "Long", "double" -> "Double", "float" -> "Float",
@@ -413,7 +416,8 @@ private final class Printer(unit: BUnit, prov: Provenance):
         case Recv.On(r)         => expr(r) + "."
       s"$target${id(name)}(${adaptedArgs(args, formals, ownerQ).mkString(", ")})"
 
-    case New(t, args) => s"new ${tpe(t)}(${args.map(expr).mkString(", ")})"
+    case New(t, args, anon) =>
+      s"new ${tpe(t)}(${args.map(expr).mkString(", ")})" + (if anon then " {}" else "")
     case NewArray(el, _, Some(inits)) => s"Array[${tpe(el)}](${inits.map(expr).mkString(", ")})"
     case NewArray(el, List(dim), None) => s"new Array[${tpe(el)}](${expr(dim)})"
     case NewArray(_, dims, None) => unsupported(s"multi-dimensional array (${dims.length} dims)")

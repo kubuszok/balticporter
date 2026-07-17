@@ -58,9 +58,13 @@ object LiqpCorpus:
       val status = parsed.flatMap(u => scala.util.Try(ScalaPrinter.print(u, prov)).toEither.map(u -> _)) match
         case Right((u, out)) =>
           if CommentCheck.check(u, out).nonEmpty then "COMMENT_LOSS"
-          else if substituted.contains(rel) then s"SUBSTITUTED\t${substituted(rel)}"
-          else if !Files.exists(handPort) then "NO_COUNTERPART"
-          else skeletonStatus(out, Files.readString(handPort), rel, memberRenames.getOrElse(rel, Map.empty))
+          else
+            parityFailures(u, out, rel) match
+              case Some(missing) => s"PARITY_FAIL\t$missing"
+              case None =>
+                if substituted.contains(rel) then s"SUBSTITUTED\t${substituted(rel)}"
+                else if !Files.exists(handPort) then "NO_COUNTERPART"
+                else skeletonStatus(out, Files.readString(handPort), rel, memberRenames.getOrElse(rel, Map.empty))
         case Left(e: Unsupported) => s"UNSUPPORTED\t${e.what}"
         case Left(e)              => s"ERROR\t${e.getClass.getSimpleName}: ${String.valueOf(e.getMessage).take(120)}"
       rel -> status
@@ -83,6 +87,15 @@ object LiqpCorpus:
     }
     println(s"[corpus] report: $outFile")
 
+  /** Structural API-parity (the computed covenant): original surface ⊆ emitted output. */
+  private def parityFailures(u: BUnit, out: String, rel: String): Option[String] =
+    import balticporter.verify.{ApiParity, SkeletonDiff as SD}
+    SD.parseSkeleton(out, s"engine:$rel") match
+      case Left(err) => Some(s"emitted output unparseable: ${err.take(100)}")
+      case Right(emitted) =>
+        val missing = ApiParity.check(u, emitted)
+        if missing.isEmpty then None else Some(missing.take(5).mkString("; "))
+
   /** Skeleton comparison vs the hand port (SkeletonDiff): the M1 convergence metric. */
   private def skeletonStatus(engineOut: String, handSrc: String, rel: String, renames: Map[String, String]): String =
     import balticporter.verify.SkeletonDiff as SD
@@ -95,9 +108,38 @@ object LiqpCorpus:
           case SD.Status.HandAdditions =>
             s"SKEL_HAND_ADDITIONS\t${r.extraInHand.take(4).mkString("; ")}"
           case SD.Status.Diff =>
-            val detail =
-              (r.missingInHand.take(3).map(m => s"engine-only:$m") ++ r.extraInHand.take(3).map(m => s"hand-only:$m"))
-                .mkString("; ")
-            s"SKEL_DIFF\t$detail"
+            Ledger.lookup(rel) match
+              case Some((fp, reason)) if fp == r.fingerprint => s"SKEL_ACCEPTED\t$reason"
+              case Some((fp, _)) =>
+                s"SKEL_DIFF\tledger stale: accepted fp=$fp, actual fp=${r.fingerprint}"
+              case None =>
+                val detail =
+                  (r.missingInHand.take(3).map(m => s"engine-only:$m") ++ r.extraInHand.take(3).map(m => s"hand-only:$m"))
+                    .mkString("; ")
+                s"SKEL_DIFF\tfp=${r.fingerprint}\t$detail"
       case (Left(err), _) => s"SKEL_PARSE_ERROR\tengine: ${err.take(120)}"
       case (_, Left(err)) => s"SKEL_PARSE_ERROR\thand: ${err.take(120)}"
+
+/** Accepted-divergence ledger: corpus-tests/liqp-divergences.tsv
+  * (rel_path \t diff-fingerprint \t verified reason). An entry only suppresses the
+  * exact diff it was written for — fingerprint drift resurfaces as SKEL_DIFF.
+  */
+object Ledger:
+  private lazy val entries: Map[String, (String, String)] =
+    val p = Path
+      .of(sys.props.getOrElse("balticporter.root", "."))
+      .resolve("corpus-tests/liqp-divergences.tsv")
+    if !Files.exists(p) then Map.empty
+    else
+      Files
+        .readAllLines(p)
+        .asScala
+        .toList
+        .filterNot(l => l.startsWith("#") || l.isBlank)
+        .flatMap { l =>
+          l.split('\t') match
+            case Array(rel, fp, reason) => Some(rel -> (fp, reason))
+            case _                      => None
+        }
+        .toMap
+  def lookup(rel: String): Option[(String, String)] = entries.get(rel)
