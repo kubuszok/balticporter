@@ -33,7 +33,11 @@ final case class Mods(
 )
 
 enum BTypeKind:
-  case Class, Interface
+  case Class, Interface, Enum
+
+/** One Java enum constant → `case Name extends E(args)`. Constant-specific class
+  * bodies are not yet mechanized. */
+final case class BEnumCase(leading: List[Trivia], name: String, args: List[BExpr])
 
 /** How an identifier reference resolves. */
 enum RefKind:
@@ -170,6 +174,8 @@ final case class BTypeDecl(
     /** static members — emitted into the companion object. */
     staticFields: List[BField],
     staticMethods: List[BMethod],
+    /** enum constants (kind == Enum only). */
+    enumCases: List[BEnumCase] = Nil,
     nested: List[BTypeDecl],
     /** extracted `private static final long serialVersionUID = N` if present. */
     serialVersionUID: Option[Long],

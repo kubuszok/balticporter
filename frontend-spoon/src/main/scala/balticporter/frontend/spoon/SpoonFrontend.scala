@@ -143,6 +143,39 @@ private final class UnitBuilder(sourcePath: String, source: String):
     hasOverride
 
   private def typeDecl(t: CtType[?]): BTypeDecl = t match
+    // NOTE: CtEnum extends CtClass — must match first
+    case e: CtEnum[?] =>
+      checkAnnotations(e)
+      val (svuid, fields, staticFields) = extractFields(e)
+      val (staticM, instanceM) =
+        e.getMethods.asScala.toList.filterNot(_.isImplicit).sortBy(posKey).partition(_.hasModifier(ModifierKind.STATIC))
+      val cases = e.getEnumValues.asScala.toList.map { v =>
+        val args = v.getDefaultExpression match
+          case null => Nil
+          case cc: CtConstructorCall[?] =>
+            if cc.isInstanceOf[CtNewClass[?]] then unsupported(v, "enum constant with class body")
+            cc.getArguments.asScala.toList.map(expr)
+          case other => unsupported(v, s"enum constant initializer ${other.getClass.getSimpleName}")
+        BEnumCase(leadingOf(v), v.getSimpleName, args)
+      }
+      BTypeDecl(
+        leading = leadingOf(e),
+        mods = mods(e),
+        kind = BTypeKind.Enum,
+        name = e.getSimpleName,
+        tparams = Nil,
+        superClass = None,
+        interfaces = e.getSuperInterfaces.asScala.toList.map(btype),
+        fields = fields,
+        ctors = e.getConstructors.asScala.toList.filterNot(_.isImplicit).map(ctorDecl),
+        methods = instanceM.map(methodDecl),
+        staticFields = staticFields,
+        staticMethods = staticM.map(methodDecl),
+        enumCases = cases,
+        nested = nestedOf(e),
+        serialVersionUID = svuid,
+      )
+
     case c: CtClass[?] =>
       checkAnnotations(c)
       val (svuid, fields, staticFields) = extractFields(c)
@@ -195,7 +228,8 @@ private final class UnitBuilder(sourcePath: String, source: String):
     */
   private def nestedOf(t: CtType[?]): List[BTypeDecl] =
     t.getNestedTypes.asScala.toList.sortBy(posKey).map { n =>
-      val implicitlyStatic = n.isInstanceOf[CtInterface[?]] || t.isInstanceOf[CtInterface[?]]
+      val implicitlyStatic =
+        n.isInstanceOf[CtInterface[?]] || n.isInstanceOf[CtEnum[?]] || t.isInstanceOf[CtInterface[?]]
       if !n.hasModifier(ModifierKind.STATIC) && !implicitlyStatic then
         unsupported(n, "inner (non-static) class")
       typeDecl(n)
@@ -218,7 +252,8 @@ private final class UnitBuilder(sourcePath: String, source: String):
     val instance = List.newBuilder[BField]
     val statics = List.newBuilder[BField]
     val implicitlyStatic = c.isInstanceOf[CtInterface[?]]
-    c.getFields.asScala.toList.foreach { f =>
+    // enum constants surface as fields too — they're handled via getEnumValues
+    c.getFields.asScala.toList.filterNot(_.isInstanceOf[CtEnumValue[?]]).foreach { f =>
       checkAnnotations(f)
       val isStatic = f.hasModifier(ModifierKind.STATIC) || implicitlyStatic
       if f.getSimpleName == "serialVersionUID" && isStatic then

@@ -31,21 +31,21 @@ object SkeletonDiff:
     val out = List.newBuilder[Member]
     def walkTemplate(templ: Template, path: String): Unit =
       templ.body.stats.foreach(walk(_, path))
-    def ctorParams(d: Defn.Class, path: String): Unit =
-      val isCase = d.mods.exists(_.isInstanceOf[Mod.Case])
-      d.ctor.paramClauses.flatMap(_.values).foreach { p =>
-        val kind = p.mods.collectFirst {
-          case _: Mod.VarParam => "var"
-          case _: Mod.ValParam => "val"
-        }
-        kind.orElse(if isCase then Some("val") else None).foreach { k =>
-          out += Member(s"$path/${d.name.value}", k, p.name.value, 0)
-        }
+    def ctorParams(name: String, isCase: Boolean, ctor: Ctor.Primary, path: String): Unit =
+      ctor.paramClauses.flatMap(_.values).foreach { p =>
+        val kind = p.mods
+          .collectFirst {
+            case _: Mod.VarParam => "var"
+            case _: Mod.ValParam => "val"
+          }
+          .orElse(if isCase then Some("val") else None)
+          .getOrElse("param") // plain ctor param (still a captured field candidate)
+        out += Member(s"$path/$name", kind, p.name.value, 0)
       }
     def walk(t: Tree, path: String): Unit = t match
       case d: Defn.Class =>
         out += Member(path, "class", d.name.value, 0)
-        ctorParams(d, path)
+        ctorParams(d.name.value, d.mods.exists(_.isInstanceOf[Mod.Case]), d.ctor, path)
         walkTemplate(d.templ, s"$path/${d.name.value}")
       case d: Defn.Trait =>
         out += Member(path, "trait", d.name.value, 0)
@@ -55,7 +55,12 @@ object SkeletonDiff:
         walkTemplate(d.templ, s"$path/${d.name.value}$$")
       case d: Defn.Enum =>
         out += Member(path, "enum", d.name.value, 0)
+        ctorParams(d.name.value, isCase = false, d.ctor, path)
         walkTemplate(d.templ, s"$path/${d.name.value}")
+      case d: Defn.EnumCase =>
+        out += Member(path, "case", d.name.value, 0)
+      case d: Defn.RepeatedEnumCase =>
+        d.cases.foreach(c => out += Member(path, "case", c.value, 0))
       case d: Defn.Def =>
         out += Member(path, "def", d.name.value, arity(d.paramClauseGroups.flatMap(_.paramClauses)))
       case d: Decl.Def =>
@@ -85,6 +90,18 @@ object SkeletonDiff:
       extraInHand: List[Member],    // hand port has, engine lacks
       explained: List[String],
   )
+
+  /** Applies per-file rename mappings (manifest `Renames:` entries) to engine members
+    * before comparison — names and path segments both.
+    */
+  def applyRenames(members: List[Member], renames: Map[String, String]): List[Member] =
+    if renames.isEmpty then members
+    else
+      members.map { m =>
+        val name = renames.getOrElse(m.name, m.name)
+        val path = m.path.split('/').map(seg => renames.getOrElse(seg.stripSuffix("$"), seg.stripSuffix("$")) + (if seg.endsWith("$") then "$" else "")).mkString("/")
+        m.copy(name = name, path = path)
+      }
 
   def compare(engine: List[Member], hand: List[Member]): Result =
     val engineKeys = engine.map(_.key).toSet
@@ -118,15 +135,22 @@ object SkeletonDiff:
     }.toSet
     extra = extra.filterNot(h => explainedProps.contains(h.name))
 
-    // Idiom: mutability narrowed — engine `var x` (Java non-final), hand port `val x`.
+    // Idiom: property-kind drift — same path+name as val/var/plain-ctor-param on the
+    // other side (mutability narrowed, or val param vs captured plain param).
+    val propKinds = Set("val", "var", "param")
     val (varToVal, restMissing3) = missing.partition { m =>
-      (m.kind == "var" || m.kind == "val") &&
-        extra.exists(h => h.path == m.path && h.name == m.name && Set("val", "var").contains(h.kind))
+      propKinds.contains(m.kind) &&
+        extra.exists(h => h.path == m.path && h.name == m.name && propKinds.contains(h.kind))
     }
     varToVal.foreach(v => explained += s"mutability: ${v.name}")
     missing = restMissing3
     val varToValNames = varToVal.map(v => (v.path, v.name)).toSet
     extra = extra.filterNot(h => varToValNames.contains((h.path, h.name)))
+
+    // plain ctor params are constructor-locals, not API surface — they exist in the
+    // skeleton only as evidence for the val↔param idiom above
+    missing = missing.filterNot(_.kind == "param")
+    extra = extra.filterNot(_.kind == "param")
 
     val status =
       if missing.isEmpty && extra.isEmpty then

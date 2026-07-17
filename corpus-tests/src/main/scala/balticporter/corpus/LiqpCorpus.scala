@@ -35,16 +35,32 @@ object LiqpCorpus:
 
     val cfg = FrontendConfig(sourceRoot, files, LiqpClasspath.resolve(repoRoot), resolutionRoots = List(sourceRoot))
     val prov = Provenance("Liqp", LiqpClasspath.upstreamCommit(repoRoot), "MIT", "liqp/src/main/java")
+    // manifest mapping entries beyond the path convention (PLAN.md §3.5): renamed
+    // counterparts, and files whose hand-port role was substituted by a documented
+    // dependency replacement (docs/architecture/liqp-port.md).
+    val renamedCounterparts = Map(
+      "liqp/filters/Map.java" -> "filters/MapFilter.scala" // avoids scala.collection.Map clash
+    )
+    // manifest `Renames:` entries — engine-name → hand-port-name, applied before diffing
+    val memberRenames: Map[String, Map[String, String]] = Map(
+      "liqp/filters/Map.java" -> Map("Map" -> "MapFilter"),
+      "liqp/nodes/OutputNode.java" -> Map("unparsedline" -> "unparsedLine"), // casing fixed in hand port
+    )
+    val substituted = Map(
+      "liqp/parser/v4/NodeVisitor.java" -> "ANTLR visitor replaced by hand-written parser",
+      "liqp/parser/Inspectable.java" -> "Jackson introspection replaced by LiquidSupport disposition",
+      "liqp/parser/LiquidSupport.java" -> "Jackson replaced by LiquidSupport trait (ssg-data-commons DataView)",
+    )
+
     val results = new SpoonFrontend().parseTolerant(cfg).map { case (rel, parsed) =>
-      val handPort = ssgRoot.resolve(
-        "ssg-liquid/src/main/scala/ssg/liquid/" +
-          rel.stripPrefix("liqp/").stripSuffix(".java") + ".scala"
-      )
+      val handRel = renamedCounterparts.getOrElse(rel, rel.stripPrefix("liqp/").stripSuffix(".java") + ".scala")
+      val handPort = ssgRoot.resolve("ssg-liquid/src/main/scala/ssg/liquid/" + handRel)
       val status = parsed.flatMap(u => scala.util.Try(ScalaPrinter.print(u, prov)).toEither.map(u -> _)) match
         case Right((u, out)) =>
           if CommentCheck.check(u, out).nonEmpty then "COMMENT_LOSS"
+          else if substituted.contains(rel) then s"SUBSTITUTED\t${substituted(rel)}"
           else if !Files.exists(handPort) then "NO_COUNTERPART"
-          else skeletonStatus(out, Files.readString(handPort), rel)
+          else skeletonStatus(out, Files.readString(handPort), rel, memberRenames.getOrElse(rel, Map.empty))
         case Left(e: Unsupported) => s"UNSUPPORTED\t${e.what}"
         case Left(e)              => s"ERROR\t${e.getClass.getSimpleName}: ${String.valueOf(e.getMessage).take(120)}"
       rel -> status
@@ -68,11 +84,11 @@ object LiqpCorpus:
     println(s"[corpus] report: $outFile")
 
   /** Skeleton comparison vs the hand port (SkeletonDiff): the M1 convergence metric. */
-  private def skeletonStatus(engineOut: String, handSrc: String, rel: String): String =
+  private def skeletonStatus(engineOut: String, handSrc: String, rel: String, renames: Map[String, String]): String =
     import balticporter.verify.SkeletonDiff as SD
     (SD.parseSkeleton(engineOut, s"engine:$rel"), SD.parseSkeleton(handSrc, s"hand:$rel")) match
       case (Right(e), Right(h)) =>
-        val r = SD.compare(e, h)
+        val r = SD.compare(SD.applyRenames(e, renames), h)
         r.status match
           case SD.Status.SkeletonEqual => "SKEL_EQUAL"
           case SD.Status.Idiom         => "SKEL_IDIOM"

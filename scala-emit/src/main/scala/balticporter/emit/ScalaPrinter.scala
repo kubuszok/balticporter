@@ -113,6 +113,51 @@ private final class Printer(unit: BUnit, prov: Provenance):
   private def typeDecl(t: BTypeDecl): Unit = t.kind match
     case BTypeKind.Interface => traitDecl(t)
     case BTypeKind.Class     => classDecl(t)
+    case BTypeKind.Enum      => enumDecl(t)
+
+  /** Java enum → `enum E(val params) extends java.lang.Enum[E]` (the conversion rule
+    * both target repos mandate; parameterized cases per the corpus encoding).
+    */
+  private def enumDecl(t: BTypeDecl): Unit =
+    trivia(t.leading)
+    val plan = CtorPlan.of(t, unit)
+    trivia(plan.primaryLeading)
+    t.serialVersionUID.foreach(v => line(s"@SerialVersionUID(${v}L)"))
+    // enum ctors are implicitly private in Java; the Scala enum primary stays unmodified
+    val primary = plan.primaryParams match
+      case Nil => ""
+      case ps  => "(" + ps.map(paramStr).mkString(", ") + ")"
+    val ext = (s"java.lang.Enum[${id(t.name)}]" :: t.interfaces.map(tpe)).mkString(" extends ", " with ", "")
+    line(s"${visPrefix(t.mods)}enum ${id(t.name)}$primary$ext {")
+    indent += 1
+    t.enumCases.foreach { c =>
+      trivia(c.leading)
+      if c.args.isEmpty && plan.primaryParams.isEmpty then line(s"case ${id(c.name)}")
+      else line(s"case ${id(c.name)} extends ${id(t.name)}(${c.args.map(expr).mkString(", ")})")
+    }
+    line()
+    plan.fieldLines.foreach {
+      case FieldLine.FromField(f, init) =>
+        trivia(f.leading)
+        val kw = if f.mods.isFinal then "val" else "var"
+        line(s"${visPrefix(f.mods)}$kw ${id(f.name)}: ${tpe(f.tpe)} = ${expr(init)}")
+        line()
+      case FieldLine.SentinelVal(f, pname, default) =>
+        trivia(f.leading)
+        line(s"${visPrefix(f.mods)}val ${id(f.name)}: ${tpe(f.tpe)} = if (${id(pname)} != null) ${id(pname)} else ${expr(default)}")
+        line()
+      case FieldLine.DefaultInit(f) =>
+        trivia(f.leading)
+        line(s"${visPrefix(f.mods)}var ${id(f.name)}: ${tpe(f.tpe)} = ${defaultOf(f.tpe)}")
+        line()
+    }
+    if plan.primaryBody.nonEmpty then
+      plan.primaryBody.foreach(stmt)
+      line()
+    t.methods.foreach(methodDecl)
+    indent -= 1
+    line("}")
+    companion(t)
 
   private def traitDecl(t: BTypeDecl): Unit =
     trivia(t.leading)
