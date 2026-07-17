@@ -47,7 +47,14 @@ final case class CtorPlan(
 object CtorPlan:
   /** promoted=true renders as `<vis>val name: T`; the vis comes from the promoted field. */
   final case class Param(p: BParam, promoted: Option[BField])
-  final case class Secondary(leading: List[Trivia], mods: Mods, params: List[BParam], delegateArgs: List[BExpr])
+  final case class Secondary(
+      leading: List[Trivia],
+      mods: Mods,
+      params: List[BParam],
+      delegateArgs: List[BExpr],
+      /** statements after the delegation (Scala auxiliaries may run code after this(...)). */
+      body: List[BStmt] = Nil,
+  )
 
   def of(t: BTypeDecl, unit: BUnit): CtorPlan =
     def fail(what: String): Nothing = throw Unsupported(unit.sourcePath, t.name, what)
@@ -70,12 +77,10 @@ object CtorPlan:
       }
       (assigns.result(), rest.result())
 
-    t.ctors match
-      case Nil =>
-        CtorPlan(Nil, None, Nil, Nil, Nil, t.fields.map(fieldWithOwnInit), Nil)
-
-      case c :: Nil =>
-        c.thisArgs.foreach(_ => fail("single constructor delegating to this(...)"))
+    /** shape 1 generalized: `root` is the single non-delegating ctor; `secondaries`
+      * are this(...)-delegators already converted.
+      */
+    def rootPlan(c: BCtor, secondaries: List[Secondary]): CtorPlan =
         val (assigns, rest) = splitAssigns(c.body)
         val counts = assigns.groupBy(_._1).view.mapValues(_.length).toMap
         counts.find(_._2 > 1).foreach { case (f, _) => fail(s"field $f assigned more than once in ctor") }
@@ -107,13 +112,38 @@ object CtorPlan:
               case (Some(_), Some(_)) => fail(s"field ${f.name} has an initializer and a ctor assignment")
               case (None, None) => Some(fieldWithOwnInit(f))
         }
-        CtorPlan(params, Some(c.mods), c.leading, c.superArgs.getOrElse(Nil), rest, fieldLines, Nil)
+        CtorPlan(params, Some(c.mods), c.leading, c.superArgs.getOrElse(Nil), rest, fieldLines, secondaries)
+
+    t.ctors match
+      case Nil =>
+        CtorPlan(Nil, None, Nil, Nil, Nil, t.fields.map(fieldWithOwnInit), Nil)
+
+      case c :: Nil =>
+        c.thisArgs.foreach(_ => fail("single constructor delegating to this(...)"))
+        rootPlan(c, Nil)
 
       case ctors =>
+        val (roots, delegators) = ctors.partition(_.thisArgs.isEmpty)
         val allEmptyBodies = ctors.forall { c =>
           val (a, r) = splitAssigns(c.body); a.isEmpty && r.isEmpty
         }
-        if allEmptyBodies then
+        if roots.length == 1 && delegators.nonEmpty then
+          // this(...)-chain: the sole root becomes the primary; each delegator is an
+          // auxiliary running its remaining statements after the delegation. Auxiliaries
+          // may only call PRECEDING ctors in Scala, so order by delegation depth
+          // (target found by arity — scalac re-verifies the resolution).
+          def depth(c: BCtor, seen: Set[BCtor]): Int =
+            c.thisArgs match
+              case None => 0
+              case Some(args) =>
+                ctors.find(o => !seen.contains(o) && (o ne c) && o.params.length == args.length) match
+                  case Some(target) => 1 + depth(target, seen + c)
+                  case None         => 99
+          val secondaries = delegators
+            .sortBy(d => depth(d, Set.empty))
+            .map(d => Secondary(d.leading, d.mods, d.params, d.thisArgs.get, d.body))
+          rootPlan(roots.head, secondaries)
+        else if allEmptyBodies then
           def isIdentitySuper(c: BCtor): Boolean = c.superArgs.exists { args =>
             args.length == c.params.length && args.zip(c.params).forall {
               case (Ident(n, RefKind.Param(_)), p) => n == p.name

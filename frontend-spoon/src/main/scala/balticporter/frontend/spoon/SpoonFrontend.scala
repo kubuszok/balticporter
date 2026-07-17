@@ -190,10 +190,16 @@ private final class UnitBuilder(sourcePath: String, source: String):
       )
     case other => unsupported(other, s"type kind ${other.getClass.getSimpleName}")
 
+  /** Static nested types → companion members. Inner (non-static) classes have
+    * path-dependent Scala encodings — not yet mechanized.
+    */
   private def nestedOf(t: CtType[?]): List[BTypeDecl] =
-    val nested = t.getNestedTypes.asScala.toList
-    if nested.nonEmpty then unsupported(nested.head, "nested type (not in M0 subset)")
-    Nil
+    t.getNestedTypes.asScala.toList.sortBy(posKey).map { n =>
+      val implicitlyStatic = n.isInstanceOf[CtInterface[?]] || t.isInstanceOf[CtInterface[?]]
+      if !n.hasModifier(ModifierKind.STATIC) && !implicitlyStatic then
+        unsupported(n, "inner (non-static) class")
+      typeDecl(n)
+    }
 
   private def tparamsOf(t: CtFormalTypeDeclarer): List[BTypeParam] =
     t.getFormalCtTypeParameters.asScala.toList.map { tp =>
@@ -315,7 +321,21 @@ private final class UnitBuilder(sourcePath: String, source: String):
     case t: CtThrow =>
       BStmtK.Throw(expr(t.getThrownExpression))
     case w: CtWhile =>
-      BStmtK.While(expr(w.getLoopingExpression), blockOf(w.getBody))
+      val (hasB, hasC) = analyzeLoop(w)
+      val body = maybeContinueBoundary(hasC, blockOf(w.getBody))
+      maybeBreakBoundary(hasB, BStmtK.While(expr(w.getLoopingExpression), body))
+
+    case b: CtBreak =>
+      if b.getTargetLabel != null then unsupported(b, "labeled break")
+      val owner = nearestOwner(b, includeSwitch = true)
+      if owner != null && breakLoops.contains(owner) then BStmtK.LoopBreak
+      else unsupported(b, "break not owned by a translated loop")
+
+    case c: CtContinue =>
+      if c.getTargetLabel != null then unsupported(c, "labeled continue")
+      val owner = nearestOwner(c, includeSwitch = false)
+      if owner != null && continueLoops.contains(owner) then BStmtK.LoopBreak
+      else unsupported(c, "continue not owned by a translated loop")
     case b: CtBlock[?] =>
       BStmtK.Block(block(b.getStatements.asScala.toList))
     case i: CtInvocation[?] =>
@@ -347,14 +367,57 @@ private final class UnitBuilder(sourcePath: String, source: String):
 
     case other => unsupported(other, s"statement ${other.getClass.getSimpleName}")
 
+  // ---- break/continue → scala.util.boundary --------------------------------
+
+  private val breakLoops = collection.mutable.Set[CtElement]()
+  private val continueLoops = collection.mutable.Set[CtElement]()
+
+  /** nearest enclosing construct an unlabeled break (incl. switches) / continue targets. */
+  private def nearestOwner(s: CtElement, includeSwitch: Boolean): CtElement =
+    var p = s.getParent
+    var found: CtElement = null
+    while p != null && found == null do
+      p match
+        case _: CtLoop                          => found = p
+        case _: CtSwitch[?] if includeSwitch    => found = p
+        case _                                  => ()
+      if found == null then p = p.getParent
+    found
+
+  /** Registers the loop's break/continue mode. Mixed break+continue needs two nested
+    * boundaries with distinguishable labels — not yet mechanized.
+    */
+  private def analyzeLoop(loop: CtElement): (Boolean, Boolean) =
+    val hasB = loop
+      .getElements(new spoon.reflect.visitor.filter.TypeFilter(classOf[CtBreak]))
+      .asScala
+      .exists(b => nearestOwner(b, includeSwitch = true) eq loop)
+    val hasC = loop
+      .getElements(new spoon.reflect.visitor.filter.TypeFilter(classOf[CtContinue]))
+      .asScala
+      .exists(c => nearestOwner(c, includeSwitch = false) eq loop)
+    if hasB && hasC then unsupported(loop, "loop with both break and continue")
+    if hasB then breakLoops += loop
+    if hasC then continueLoops += loop
+    (hasB, hasC)
+
+  private def maybeContinueBoundary(hasC: Boolean, body: List[BStmt]): List[BStmt] =
+    if hasC then List(BStmt(Nil, BStmtK.Boundary(body))) else body
+
+  private def maybeBreakBoundary(hasB: Boolean, k: BStmtK): BStmtK =
+    if hasB then BStmtK.Boundary(List(BStmt(Nil, k))) else k
+
   /** `for (init; cond; update) body` → `{ init; while (cond) { body; update } }`.
-    * Safe because `continue` is not (yet) translated — nothing can skip the update.
+    * A translated `continue` exits the boundary wrapped around body-without-update,
+    * so the update still runs — matching Java's continue-jumps-to-update.
     */
   private def classicFor(f: CtFor): BStmtK =
+    val (hasB, hasC) = analyzeLoop(f)
     val init = f.getForInit.asScala.toList.map(s => BStmt(leadingOf(s), stmt(s)))
     val update = f.getForUpdate.asScala.toList.map(s => BStmt(leadingOf(s), stmt(s)))
     val cond = Option(f.getExpression).map(expr).getOrElse(Lit(LitKind.BoolL, "true"))
-    BStmtK.Block(init :+ BStmt(Nil, BStmtK.While(cond, blockOf(f.getBody) ++ update)))
+    val body = maybeContinueBoundary(hasC, blockOf(f.getBody))
+    maybeBreakBoundary(hasB, BStmtK.Block(init :+ BStmt(Nil, BStmtK.While(cond, body ++ update))))
 
   /** `for (T x : e) body` — array-backed iterables get an index loop, everything else
     * the explicit iterator()/hasNext()/next() desugaring (works for any java.lang.Iterable
@@ -362,16 +425,17 @@ private final class UnitBuilder(sourcePath: String, source: String):
     * it evaluates once, as in Java.
     */
   private def forEach(f: CtForEach): BStmtK =
+    val (hasB, hasC) = analyzeLoop(f)
     val v = f.getVariable
     val x = v.getSimpleName
     val elemT = btype(v.getType)
     val coll = expr(f.getExpression)
-    val body = blockOf(f.getBody)
+    val body = maybeContinueBoundary(hasC, blockOf(f.getBody))
     val isArray = Option(f.getExpression.getType).exists(_.isInstanceOf[CtArrayTypeReference[?]])
     if isArray then
       val arr = x + "$arr"
       val i = x + "$i"
-      BStmtK.Block(
+      maybeBreakBoundary(hasB, BStmtK.Block(
         List(
           BStmt(Nil, BStmtK.LocalVar(arr, btype(f.getExpression.getType), Some(coll), effectivelyFinal = true)),
           BStmt(Nil, BStmtK.LocalVar(i, BType.Prim("int"), Some(Lit(LitKind.IntL, "0")), effectivelyFinal = false)),
@@ -385,11 +449,11 @@ private final class UnitBuilder(sourcePath: String, source: String):
             ),
           ),
         )
-      )
+      ))
     else
       val it = x + "$it"
       val itType = BType.Ref("java.util.Iterator", List(elemT))
-      BStmtK.Block(
+      maybeBreakBoundary(hasB, BStmtK.Block(
         List(
           BStmt(Nil, BStmtK.LocalVar(it, itType, Some(Call(Recv.On(coll), "iterator", Nil, None, None)), effectivelyFinal = true)),
           BStmt(
@@ -401,7 +465,7 @@ private final class UnitBuilder(sourcePath: String, source: String):
             ),
           ),
         )
-      )
+      ))
 
   /** Fallthrough-free switch statements → match. Empty colon-cases group with the next
     * case; a non-terminated non-empty case is genuine fallthrough → Unsupported.
@@ -494,6 +558,15 @@ private final class UnitBuilder(sourcePath: String, source: String):
         case (Some(e), _)    => Lambda(params, Right(expr(e)))
         case (None, Some(b)) => Lambda(params, Left(block(b.getStatements.asScala.toList)))
         case _               => unsupported(l, "lambda without body")
+
+    case mr: CtExecutableReferenceExpression[?, ?] =>
+      val ex = mr.getExecutable
+      if ex.isConstructor then unsupported(mr, "constructor reference")
+      mr.getTarget match
+        case ta: CtTypeAccess[?] if ex.isStatic =>
+          MethodRef(Left(ta.getAccessedType.getQualifiedName), ex.getSimpleName)
+        case _: CtTypeAccess[?] => unsupported(mr, "unbound instance method reference")
+        case t                  => MethodRef(Right(expr(t)), ex.getSimpleName)
 
     case cc: CtConstructorCall[?] =>
       btype(cc.getType) match

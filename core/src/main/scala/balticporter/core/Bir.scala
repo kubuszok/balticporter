@@ -94,6 +94,10 @@ object BExpr:
     * Left = block body (statements), Right = expression body. */
   final case class Lambda(params: List[String], body: Either[List[BStmt], BExpr]) extends BExpr
 
+  /** Java method reference → eta-expandable Scala selection: `Owner.m` (static) or
+    * `recv.m` (bound instance). SAM conversion supplies the target type. */
+  final case class MethodRef(prefix: Either[String, BExpr], name: String) extends BExpr
+
 sealed trait BStmtK
 object BStmtK:
   final case class LocalVar(name: String, tpe: BType, init: Option[BExpr], effectivelyFinal: Boolean) extends BStmtK
@@ -106,6 +110,10 @@ object BStmtK:
   final case class While(cond: BExpr, body: List[BStmt]) extends BStmtK
   final case class Block(body: List[BStmt]) extends BStmtK
   final case class Try(body: List[BStmt], catches: List[BCatch], fin: Option[List[BStmt]]) extends BStmtK
+  /** `scala.util.boundary { ... }` — target for translated break/continue. */
+  final case class Boundary(body: List[BStmt]) extends BStmtK
+  /** `scala.util.boundary.break()` — exits the nearest enclosing Boundary. */
+  case object LoopBreak extends BStmtK
   /** From a fallthrough-free Java switch statement. isDefault cases have empty exprs. */
   final case class Match(scrutinee: BExpr, cases: List[BCase]) extends BStmtK
   case object Empty extends BStmtK

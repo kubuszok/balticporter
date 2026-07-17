@@ -61,11 +61,14 @@ private final class Printer(unit: BUnit, prov: Provenance):
     case -1 => ""
     case i  => q.substring(0, i)
 
-  private def refName(q: String): String =
+  private def refName(q0: String): String =
+    // Spoon qualifies nested types as Outer$Inner; the companion encoding makes that Outer.Inner
+    val q = q0.replace('$', '.')
     if q == BType.ObjectQ then "Any"
     else if q == "java.lang.String" then "String"
     else if pkgOfQ(q) == "java.lang" then q.substring("java.lang.".length)
-    else if pkgOfQ(q) == unit.pkg then q.substring(unit.pkg.length + 1)
+    else if q.startsWith(unit.pkg + ".") && pkgOfQ(q0).length <= unit.pkg.length then
+      q.substring(unit.pkg.length + 1)
     else q
 
   private val primMap = Map(
@@ -123,9 +126,11 @@ private final class Printer(unit: BUnit, prov: Provenance):
     line("}")
     companion(t)
 
-  /** Java statics → companion object (RESEARCH.md §4.2; init-order caveats documented there). */
+  /** Java statics + static nested types → companion object (RESEARCH.md §4.2;
+    * init-order caveats documented there).
+    */
   private def companion(t: BTypeDecl): Unit =
-    if t.staticFields.nonEmpty || t.staticMethods.nonEmpty then
+    if t.staticFields.nonEmpty || t.staticMethods.nonEmpty || t.nested.nonEmpty then
       line()
       line(s"object ${id(t.name)} {")
       indent += 1
@@ -137,6 +142,10 @@ private final class Printer(unit: BUnit, prov: Provenance):
         line()
       }
       t.staticMethods.foreach(methodDecl)
+      t.nested.foreach { n =>
+        typeDecl(n)
+        line()
+      }
       indent -= 1
       line("}")
 
@@ -188,10 +197,19 @@ private final class Printer(unit: BUnit, prov: Provenance):
     }
     plan.secondaryCtors.foreach { sc =>
       trivia(sc.leading)
-      line(s"${visPrefix(sc.mods)}def this(${sc.params.map(paramOf).mkString(", ")}) =")
-      indent += 1
-      line(s"this(${sc.delegateArgs.map(expr).mkString(", ")})")
-      indent -= 1
+      val sig = s"${visPrefix(sc.mods)}def this(${sc.params.map(paramOf).mkString(", ")}) ="
+      if sc.body.isEmpty then
+        line(sig)
+        indent += 1
+        line(s"this(${sc.delegateArgs.map(expr).mkString(", ")})")
+        indent -= 1
+      else
+        line(sig + " {")
+        indent += 1
+        line(s"this(${sc.delegateArgs.map(expr).mkString(", ")})")
+        sc.body.foreach(stmt)
+        indent -= 1
+        line("}")
       line()
     }
     if plan.primaryBody.nonEmpty then
@@ -302,6 +320,11 @@ private final class Printer(unit: BUnit, prov: Provenance):
             indent += 1; f.foreach(stmt); indent -= 1
             line("}")
           case None => line("}")
+      case BStmtK.Boundary(b) =>
+        line("scala.util.boundary {")
+        indent += 1; b.foreach(stmt); indent -= 1
+        line("}")
+      case BStmtK.LoopBreak => line("scala.util.boundary.break()")
       case BStmtK.Match(scrutinee, cases) =>
         line(s"${expr(scrutinee)} match {")
         indent += 1
@@ -354,6 +377,11 @@ private final class Printer(unit: BUnit, prov: Provenance):
     case Unary(op, e1, true) => s"($op${expr(e1)})"
     case Unary(op, _, false) => unsupported(s"postfix operator $op")
     case Ternary(c, t, e1)    => s"(if (${expr(c)}) ${expr(t)} else ${expr(e1)})"
+
+    case MethodRef(prefix, name) =>
+      prefix match
+        case Left(owner) => s"${refName(owner)}.${id(name)}"
+        case Right(r)    => s"${expr(r)}.${id(name)}"
 
     case Lambda(ps, body) =>
       val plist = ps match
