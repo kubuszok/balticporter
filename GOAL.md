@@ -19,9 +19,16 @@ Checklist:
       `sbt "corpus-tests/runMain balticporter.corpus.LiqpCorpus"` →
       `OK=62 UNSUPPORTED=54 NO_COUNTERPART=1` (53% translate cleanly, comments
       preserved, before any Tier-1 widening).
-- [ ] Corpus-diff stage on the OK files: compare against hand-ported
-      counterpart (byte-equal / ast-equal / diverged three-state; per-file
-      rule attribution)
+- [x] Corpus-diff stage (2026-07-18, commit f611639): SkeletonDiff in the new
+      `verify` module (Scalameta 4.17.2) — declaration-surface comparison with
+      idiom classification (getter/setter collapse, mutability narrowing,
+      hand-port additions). Convergence: SKEL_EQUAL=70 + IDIOM=9 +
+      HAND_ADDITIONS=10 = 89/117 (76%) equal-or-better; SKEL_DIFF=15.
+      M0 gate re-verified GREEN.
+- [ ] Close the SKEL_DIFF=15: per-file classification (hand-port renames like
+      temporalAsArray→temporalAsVector, reorganizations like NameResolver.Default,
+      TemplateContext restructures) → new idiom rules, mapping entries, or
+      documented divergences
 - [x] Widen construct coverage, wave 1 (2026-07-18): statics→companion (class
       AND interface constants), classic for→while, for-each→index/iterator
       loop (iterated expr hoisted, evaluates once), try/catch/finally +
