@@ -24,16 +24,21 @@ final class SpoonFrontend extends Frontend:
     env.setNoClasspath(false)
     env.setSourceClasspath(cfg.classpath.map(_.toString).toArray)
     cfg.files.foreach(f => launcher.addInputResource(cfg.sourceRoot.resolve(f).toString))
-    launcher.buildModel()
+    val model = launcher.buildModel()
 
-    val cus = launcher.getFactory.CompilationUnit().getMap.asScala.toMap
+    val typesByFile: Map[Path, List[CtType[?]]] =
+      model.getAllTypes.asScala.toList
+        .filter(t => t.getPosition != null && t.getPosition.isValidPosition)
+        .groupBy(t => t.getPosition.getFile.toPath.toRealPath())
+        .view
+        .mapValues(_.sortBy(t => t.getPosition.getSourceStart))
+        .toMap
+
     cfg.files.map { rel =>
       val abs = cfg.sourceRoot.resolve(rel).toRealPath()
-      val cu = cus
-        .collectFirst { case (p, cu) if Path.of(p).toRealPath() == abs => cu }
-        .getOrElse(throw Unsupported(rel, "-", "file produced no compilation unit"))
+      val types = typesByFile.getOrElse(abs, throw Unsupported(rel, "-", "file produced no types"))
       val src = Files.readString(abs)
-      new UnitBuilder(rel, src).build(cu)
+      new UnitBuilder(rel, src).build(types)
     }
 
 private final class UnitBuilder(sourcePath: String, source: String):
@@ -79,10 +84,9 @@ private final class UnitBuilder(sourcePath: String, source: String):
 
   // ---- declarations ----------------------------------------------------------
 
-  def build(cu: CtCompilationUnit): BUnit =
-    val pkg = Option(cu.getPackageDeclaration).map(_.getReference.getQualifiedName).getOrElse("")
-    val types = cu.getDeclaredTypes.asScala.toList.map(typeDecl)
-    BUnit(sourcePath, pkg, types, CommentScanner.scan(source))
+  def build(types: List[CtType[?]]): BUnit =
+    val pkg = types.headOption.flatMap(t => Option(t.getPackage)).map(_.getQualifiedName).getOrElse("")
+    BUnit(sourcePath, pkg, types.map(typeDecl), CommentScanner.scan(source))
 
   private def mods(m: CtModifiable, isOverride: Boolean = false): Mods =
     val vis =
@@ -216,7 +220,7 @@ private final class UnitBuilder(sourcePath: String, source: String):
     val isOverride = checkAnnotations(m)
     val assigned = collection.mutable.Set[String]()
     Option(m.getBody).foreach { b =>
-      b.getElements(classOf[CtAssignment[?, ?]]).asScala.foreach { a =>
+      b.getElements(new spoon.reflect.visitor.filter.TypeFilter(classOf[CtAssignment[?, ?]])).asScala.foreach { a =>
         a.getAssigned match
           case w: CtVariableWrite[?] =>
             w.getVariable match
@@ -281,7 +285,7 @@ private final class UnitBuilder(sourcePath: String, source: String):
 
   private def enclosingBodyHasWriteTo(v: CtLocalVariable[?]): Boolean =
     val body = v.getParent(classOf[CtExecutable[?]])
-    body != null && body.getElements(classOf[CtAssignment[?, ?]]).asScala.exists { a =>
+    body != null && body.getElements(new spoon.reflect.visitor.filter.TypeFilter(classOf[CtAssignment[?, ?]])).asScala.exists { a =>
       a.getAssigned match
         case w: CtVariableWrite[?] =>
           w.getVariable match
@@ -299,13 +303,14 @@ private final class UnitBuilder(sourcePath: String, source: String):
   private def exprNoCasts(e: CtExpression[?]): BExpr = e match
     case l: CtLiteral[?] => literal(l)
 
-    case v: CtVariableRead[?] => varAccess(v.getVariable, v)
+    // NOTE: CtFieldRead/CtFieldWrite/CtThisAccess extend CtVariableRead/Write —
+    // the specific cases must precede the general variable-access ones.
+    case f: CtFieldRead[?]  => fieldAccess(f.getVariable, f.getTarget)
+    case f: CtFieldWrite[?] => fieldAccess(f.getVariable, f.getTarget)
+    case _: CtThisAccess[?] => This
+
+    case v: CtVariableRead[?]  => varAccess(v.getVariable, v)
     case v: CtVariableWrite[?] => varAccess(v.getVariable, v)
-
-    case f: CtFieldRead[?]  => fieldAccess(f, f.getVariable, f.getTarget)
-    case f: CtFieldWrite[?] => fieldAccess(f, f.getVariable, f.getTarget)
-
-    case t: CtThisAccess[?] => This
 
     case a: CtArrayRead[?] => ArrayAccess(expr(a.getTarget), expr(a.getIndexExpression))
 
@@ -315,9 +320,10 @@ private final class UnitBuilder(sourcePath: String, source: String):
         case null                              => Recv.OnThis
         case _: CtSuperAccess[?]               => Recv.OnSuper
         case ta: CtTypeAccess[?]               => Recv.Static(ta.getAccessedType.getQualifiedName)
-        case th: CtThisAccess[?]               => Recv.OnThis
+        case _: CtThisAccess[?]                => Recv.OnThis
         case t                                 => Recv.On(expr(t))
-      Call(recv, ex.getSimpleName, inv.getArguments.asScala.toList.map(expr), formalsOf(ex))
+      val ownerQ = Option(ex.getDeclaringType).map(_.getQualifiedName)
+      Call(recv, ex.getSimpleName, inv.getArguments.asScala.toList.map(expr), formalsOf(ex), ownerQ)
 
     case cc: CtConstructorCall[?] =>
       btype(cc.getType) match
@@ -358,7 +364,7 @@ private final class UnitBuilder(sourcePath: String, source: String):
     case l: CtLocalVariableReference[?] => Ident(l.getSimpleName, RefKind.Local)
     case other                          => unsupported(at, s"variable reference ${other.getClass.getSimpleName}")
 
-  private def fieldAccess(at: CtElement, ref: CtFieldReference[?], target: CtExpression[?]): BExpr =
+  private def fieldAccess(ref: CtFieldReference[?], target: CtExpression[?]): BExpr =
     val owner = Option(ref.getDeclaringType).map(_.getQualifiedName).getOrElse(BType.ObjectQ)
     if ref.getSimpleName == "length" && Option(ref.getDeclaringType).exists(_.isArray) then
       ArrayLength(expr(target))

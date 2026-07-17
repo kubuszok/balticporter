@@ -60,6 +60,8 @@ lazy val `corpus-tests` = project
     name := "balticporter-corpus-tests",
     libraryDependencies += munit,
     publish / skip := true,
+    Compile / run / fork := true,
+    Compile / run / javaOptions += s"-Dbalticporter.root=${(ThisBuild / baseDirectory).value}",
   )
 
 lazy val root = project

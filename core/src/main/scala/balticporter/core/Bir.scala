@@ -66,7 +66,14 @@ object BExpr:
     case On(expr: BExpr)
   /** One formal parameter of the *resolved* target (so call-site adaptations can see array/varargs slots). */
   final case class Formal(tpe: BType, varargs: Boolean)
-  final case class Call(recv: Recv, name: String, args: List[BExpr], formals: Option[List[Formal]]) extends BExpr
+  final case class Call(
+      recv: Recv,
+      name: String,
+      args: List[BExpr],
+      formals: Option[List[Formal]],
+      /** fqcn of the resolved declaring type (drives JDK-vs-translated call-site adaptations). */
+      ownerQ: Option[String],
+  ) extends BExpr
   final case class New(tpe: BType.Ref, args: List[BExpr]) extends BExpr
   final case class NewArray(elem: BType, dims: List[BExpr]) extends BExpr
 
