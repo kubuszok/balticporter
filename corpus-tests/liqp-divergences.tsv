@@ -15,3 +15,5 @@ liqp/nodes/LookupNode.java	342e7c2dd3aa	Index.key field became a method-local va
 liqp/parser/Flavor.java	451e65545051	hand port moved filters/insertions/parser off the enum into the registry; engine keeps upstream enum members
 liqp/tags/Decrement.java	b6226752e90e	INITIAL constant inlined by hand port; engine keeps upstream companion (fidelity-preserving)
 liqp/tags/Increment.java	23af799d9778	INITIAL constant inlined by hand port; engine keeps upstream companion (fidelity-preserving)
+liqp/Insertions.java	2b442b575ca7	hand port renamed backing vals to _blockNames/_tagNames and inlined getNames helper (naming idiom; members present under new names)
+liqp/blocks/For.java	c75790029609	toLiquid→toDataView (Tier-2 DataView vocabulary) + java.util.Stack→ArrayDeque substitution per docs/architecture/liqp-port.md Cross-Platform Strategy (createLoopDropInStack→createLoopDropInArrayDeque)

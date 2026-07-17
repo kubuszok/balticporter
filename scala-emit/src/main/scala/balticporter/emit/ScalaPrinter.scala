@@ -14,10 +14,33 @@ import balticporter.core.BExpr.*
   */
 object ScalaPrinter:
 
-  def print(unit: BUnit, prov: Provenance): String =
-    new Printer(unit, prov).result()
+  def print(unit: BUnit, prov: Provenance, sentinels: Set[String] = Set.empty): String =
+    new Printer(unit, prov, sentinels).result()
 
-private final class Printer(unit: BUnit, prov: Provenance):
+/** Cross-unit knowledge: which classes' no-arg construction path equals the null
+  * sentinel (needed for the super()-rewrite; transitive over subclass chains).
+  */
+object SentinelRegistry:
+  def compute(units: List[BUnit]): Set[String] =
+    var acc = Set.empty[String]
+    var changed = true
+    while changed do
+      changed = false
+      units.foreach { u =>
+        u.types.foreach { t =>
+          val fqcn = if u.pkg.isEmpty then t.name else s"${u.pkg}.${t.name}"
+          if !acc.contains(fqcn) then
+            val sentinelish =
+              try CtorPlan.of(t, u, acc).sentinelLike
+              catch case _: Unsupported => false
+            if sentinelish then
+              acc += fqcn
+              changed = true
+        }
+      }
+    acc
+
+private final class Printer(unit: BUnit, prov: Provenance, sentinels: Set[String]):
   private val sb = new StringBuilder
   private var indent = 0
 
@@ -133,7 +156,7 @@ private final class Printer(unit: BUnit, prov: Provenance):
     */
   private def enumDecl(t: BTypeDecl): Unit =
     trivia(t.leading)
-    val plan = CtorPlan.of(t, unit)
+    val plan = CtorPlan.of(t, unit, sentinels)
     trivia(plan.primaryLeading)
     t.serialVersionUID.foreach(v => line(s"@SerialVersionUID(${v}L)"))
     // enum ctors are implicitly private in Java; the Scala enum primary stays unmodified
@@ -213,7 +236,7 @@ private final class Printer(unit: BUnit, prov: Provenance):
 
   private def classDecl(t: BTypeDecl): Unit =
     trivia(t.leading)
-    val plan = CtorPlan.of(t, unit)
+    val plan = CtorPlan.of(t, unit, sentinels)
     trivia(plan.primaryLeading)
     t.serialVersionUID.foreach(v => line(s"@SerialVersionUID(${v}L)"))
     val mods = StringBuilder(visPrefix(t.mods))
@@ -378,11 +401,14 @@ private final class Printer(unit: BUnit, prov: Provenance):
             indent += 1; f.foreach(stmt); indent -= 1
             line("}")
           case None => line("}")
-      case BStmtK.Boundary(b) =>
-        line("scala.util.boundary {")
+      case BStmtK.Boundary(b, label) =>
+        label match
+          case None    => line("scala.util.boundary {")
+          case Some(l) => line(s"scala.util.boundary { (${id(l)}: scala.util.boundary.Label[Unit]) ?=>")
         indent += 1; b.foreach(stmt); indent -= 1
         line("}")
-      case BStmtK.LoopBreak => line("scala.util.boundary.break()")
+      case BStmtK.LoopBreak(None)    => line("scala.util.boundary.break()")
+      case BStmtK.LoopBreak(Some(l)) => line(s"scala.util.boundary.break()(using ${id(l)})")
       case BStmtK.Match(scrutinee, cases) =>
         line(s"${expr(scrutinee)} match {")
         indent += 1
@@ -459,6 +485,12 @@ private final class Printer(unit: BUnit, prov: Provenance):
         case Left(owner) => s"${refName(owner)}.${id(name)}"
         case Right(r)    => s"${expr(r)}.${id(name)}"
 
+    case UnboundMethodRef(recvT, name, formals) =>
+      val ps = ("recv$" -> recvT) :: formals.zipWithIndex.map((t, i) => s"p$i$$" -> t)
+      val plist = ps.map((n, t) => s"$n: ${tpe(t)}").mkString(", ")
+      val args = formals.indices.map(i => s"p$i$$").mkString(", ")
+      s"(($plist) => recv$$.${id(name)}($args))"
+
     case Lambda(ps, body) =>
       val plist = ps match
         case List(p1) => id(p1)
@@ -467,7 +499,13 @@ private final class Printer(unit: BUnit, prov: Provenance):
         case Right(e)                                     => s"($plist => ${expr(e)})"
         case Left(List(BStmt(_, BStmtK.Return(Some(e))))) => s"($plist => ${expr(e)})"
         case Left(List(BStmt(_, BStmtK.ExprStmt(e))))     => s"($plist => ${expr(e)})"
-        case Left(_)                                      => unsupported("multi-statement lambda body")
+        case Left(stmts) =>
+          val bodyStr = captured {
+            indent += 1
+            printBody(stmts)
+            indent -= 1
+          }
+          s"($plist => {\n" + bodyStr + ("  " * indent) + "})"
 
     case Cast(BType.Prim(p), e1) =>
       val conv = primMap.getOrElse(p, unsupported(s"cast to $p"))

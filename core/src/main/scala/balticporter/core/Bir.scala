@@ -105,6 +105,11 @@ object BExpr:
     * `recv.m` (bound instance). SAM conversion supplies the target type. */
   final case class MethodRef(prefix: Either[String, BExpr], name: String) extends BExpr
 
+  /** Unbound instance method reference `Type::m` → explicit lambda
+    * `(r: Type, p1: A1, ...) => r.m(p1, ...)` — receiver + formal types from the
+    * resolved executable. */
+  final case class UnboundMethodRef(recvType: BType, name: String, formals: List[BType]) extends BExpr
+
 sealed trait BStmtK
 object BStmtK:
   final case class LocalVar(name: String, tpe: BType, init: Option[BExpr], effectivelyFinal: Boolean) extends BStmtK
@@ -117,10 +122,13 @@ object BStmtK:
   final case class While(cond: BExpr, body: List[BStmt]) extends BStmtK
   final case class Block(body: List[BStmt]) extends BStmtK
   final case class Try(body: List[BStmt], catches: List[BCatch], fin: Option[List[BStmt]]) extends BStmtK
-  /** `scala.util.boundary { ... }` — target for translated break/continue. */
-  final case class Boundary(body: List[BStmt]) extends BStmtK
-  /** `scala.util.boundary.break()` — exits the nearest enclosing Boundary. */
-  case object LoopBreak extends BStmtK
+  /** `scala.util.boundary { ... }` — target for translated break/continue.
+    * label: names the Label context param, letting an inner boundary's break
+    * target this one explicitly (the mixed break+continue encoding). */
+  final case class Boundary(body: List[BStmt], label: Option[String] = None) extends BStmtK
+  /** `scala.util.boundary.break()` — exits the nearest enclosing Boundary,
+    * or the named one when `label` is set. */
+  final case class LoopBreak(label: Option[String] = None) extends BStmtK
   /** From a fallthrough-free Java switch statement. isDefault cases have empty exprs. */
   final case class Match(scrutinee: BExpr, cases: List[BCase]) extends BStmtK
   case object Empty extends BStmtK

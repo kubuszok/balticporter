@@ -35,6 +35,11 @@ enum FieldLine:
 final case class CtorPlan(
     primaryParams: List[CtorPlan.Param],
     primaryMods: Option[Mods],
+    /** true when this class's no-arg construction path is equivalent to passing the
+      * null sentinel to its primary (the sentinel merge itself, or a super() rewrite
+      * against a sentinel-like parent). Subclass translation consults this via
+      * the sentinel registry. */
+    sentinelLike: Boolean,
     /** the primary Java ctor's comments — hoisted above the class line, since the
       * primary constructor has no declaration of its own in Scala. */
     primaryLeading: List[Trivia],
@@ -56,7 +61,7 @@ object CtorPlan:
       body: List[BStmt] = Nil,
   )
 
-  def of(t: BTypeDecl, unit: BUnit): CtorPlan =
+  def of(t: BTypeDecl, unit: BUnit, sentinelSupers: Set[String] = Set.empty): CtorPlan =
     def fail(what: String): Nothing = throw Unsupported(unit.sourcePath, t.name, what)
 
     def fieldWithOwnInit(f: BField): FieldLine =
@@ -112,11 +117,11 @@ object CtorPlan:
               case (Some(_), Some(_)) => fail(s"field ${f.name} has an initializer and a ctor assignment")
               case (None, None) => Some(fieldWithOwnInit(f))
         }
-        CtorPlan(params, Some(c.mods), c.leading, c.superArgs.getOrElse(Nil), rest, fieldLines, secondaries)
+        CtorPlan(params, Some(c.mods), sentinelLike = false, c.leading, c.superArgs.getOrElse(Nil), rest, fieldLines, secondaries)
 
     t.ctors match
       case Nil =>
-        CtorPlan(Nil, None, Nil, Nil, Nil, t.fields.map(fieldWithOwnInit), Nil)
+        CtorPlan(Nil, None, sentinelLike = false, Nil, Nil, Nil, t.fields.map(fieldWithOwnInit), Nil)
 
       case c :: Nil =>
         c.thisArgs.foreach(_ => fail("single constructor delegating to this(...)"))
@@ -156,15 +161,26 @@ object CtorPlan:
               // several identity-super ctors: the max-arity one is primary (first in
               // source order on ties — `candidates` preserves source order)
               val primary = candidates.maxBy(_.params.length)
+              // super() ≡ super(null) when the parent's no-arg path is the null-sentinel
+              // (by construction of the sentinel merge) — so a no-arg secondary calling a
+              // different super overload can still delegate as this(null).
+              val parentSentinel = t.superClass.exists(s => sentinelSupers.contains(s.qname))
+              var usedSentinelRewrite = false
               val secondaries = ctors.filterNot(_ eq primary).map { c =>
                 val delegateArgs = c.thisArgs.orElse(c.superArgs).getOrElse(fail("secondary ctor without super/this args"))
-                if delegateArgs.length != primary.params.length then
-                  fail("secondary ctor cannot delegate to primary (arity mismatch)")
-                Secondary(c.leading, c.mods, c.params, delegateArgs)
+                if delegateArgs.length == primary.params.length then
+                  Secondary(c.leading, c.mods, c.params, delegateArgs)
+                else if delegateArgs.isEmpty && c.params.isEmpty && parentSentinel &&
+                  primary.params.length == 1 && !primary.params.head.tpe.isInstanceOf[BType.Prim]
+                then
+                  usedSentinelRewrite = true
+                  Secondary(c.leading, c.mods, Nil, List(Lit(LitKind.NullL, "null")))
+                else fail("secondary ctor cannot delegate to primary (arity mismatch)")
               }
               CtorPlan(
                 primary.params.map(p => Param(p, None)),
                 Some(primary.mods),
+                sentinelLike = usedSentinelRewrite,
                 primary.leading,
                 primary.superArgs.getOrElse(Nil),
                 Nil,
@@ -188,6 +204,7 @@ object CtorPlan:
                   CtorPlan(
                     List(Param(p.copy(name = "_" + p.name), None)),
                     Some(paramful.mods),
+                    sentinelLike = true,
                     paramful.leading,
                     paramful.superArgs.getOrElse(Nil),
                     Nil,

@@ -52,10 +52,12 @@ object LiqpCorpus:
       "liqp/parser/LiquidSupport.java" -> "Jackson replaced by LiquidSupport trait (ssg-data-commons DataView)",
     )
 
-    val results = new SpoonFrontend().parseTolerant(cfg).map { case (rel, parsed) =>
+    val parsedAll = new SpoonFrontend().parseTolerant(cfg)
+    val sentinels = balticporter.emit.SentinelRegistry.compute(parsedAll.collect { case (_, Right(u)) => u })
+    val results = parsedAll.map { case (rel, parsed) =>
       val handRel = renamedCounterparts.getOrElse(rel, rel.stripPrefix("liqp/").stripSuffix(".java") + ".scala")
       val handPort = ssgRoot.resolve("ssg-liquid/src/main/scala/ssg/liquid/" + handRel)
-      val status = parsed.flatMap(u => scala.util.Try(ScalaPrinter.print(u, prov)).toEither.map(u -> _)) match
+      val status = parsed.flatMap(u => scala.util.Try(ScalaPrinter.print(u, prov, sentinels)).toEither.map(u -> _)) match
         case Right((u, out)) =>
           if CommentCheck.check(u, out).nonEmpty then "COMMENT_LOSS"
           else

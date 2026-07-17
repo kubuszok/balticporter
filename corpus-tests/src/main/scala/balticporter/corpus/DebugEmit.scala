@@ -14,4 +14,4 @@ object DebugEmit:
     val cfg = FrontendConfig(sourceRoot, List(args(0)), LiqpClasspath.resolve(repoRoot), List(sourceRoot))
     val prov = Provenance("Liqp", "debug", "MIT", "liqp/src/main/java")
     val unit = new SpoonFrontend().parse(cfg).head
-    println(ScalaPrinter.print(unit, prov))
+    println(ScalaPrinter.print(unit, prov, balticporter.emit.SentinelRegistry.compute(List(unit))))

@@ -363,13 +363,14 @@ private final class UnitBuilder(sourcePath: String, source: String):
     case b: CtBreak =>
       if b.getTargetLabel != null then unsupported(b, "labeled break")
       val owner = nearestOwner(b, includeSwitch = true)
-      if owner != null && breakLoops.contains(owner) then BStmtK.LoopBreak
+      if owner != null && breakLoops.contains(owner) then
+        BStmtK.LoopBreak(label = if mixedLoops.contains(owner) then Some("break$") else None)
       else unsupported(b, "break not owned by a translated loop")
 
     case c: CtContinue =>
       if c.getTargetLabel != null then unsupported(c, "labeled continue")
       val owner = nearestOwner(c, includeSwitch = false)
-      if owner != null && continueLoops.contains(owner) then BStmtK.LoopBreak
+      if owner != null && continueLoops.contains(owner) then BStmtK.LoopBreak()
       else unsupported(c, "continue not owned by a translated loop")
     case b: CtBlock[?] =>
       BStmtK.Block(block(b.getStatements.asScala.toList))
@@ -419,8 +420,9 @@ private final class UnitBuilder(sourcePath: String, source: String):
       if found == null then p = p.getParent
     found
 
-  /** Registers the loop's break/continue mode. Mixed break+continue needs two nested
-    * boundaries with distinguishable labels — not yet mechanized.
+  /** Registers the loop's break/continue mode. Mixed break+continue nests two
+    * boundaries: the outer (break target) names its Label `break$`, so translated
+    * breaks use `break()(using break$)` while continues hit the inner unnamed one.
     */
   private def analyzeLoop(loop: CtElement): (Boolean, Boolean) =
     val hasB = loop
@@ -431,16 +433,18 @@ private final class UnitBuilder(sourcePath: String, source: String):
       .getElements(new spoon.reflect.visitor.filter.TypeFilter(classOf[CtContinue]))
       .asScala
       .exists(c => nearestOwner(c, includeSwitch = false) eq loop)
-    if hasB && hasC then unsupported(loop, "loop with both break and continue")
     if hasB then breakLoops += loop
     if hasC then continueLoops += loop
+    if hasB && hasC then mixedLoops += loop
     (hasB, hasC)
+
+  private val mixedLoops = collection.mutable.Set[CtElement]()
 
   private def maybeContinueBoundary(hasC: Boolean, body: List[BStmt]): List[BStmt] =
     if hasC then List(BStmt(Nil, BStmtK.Boundary(body))) else body
 
   private def maybeBreakBoundary(hasB: Boolean, k: BStmtK): BStmtK =
-    if hasB then BStmtK.Boundary(List(BStmt(Nil, k))) else k
+    if hasB then BStmtK.Boundary(List(BStmt(Nil, k)), label = Some("break$")) else k
 
   /** `for (init; cond; update) body` → `{ init; while (cond) { body; update } }`.
     * A translated `continue` exits the boundary wrapped around body-without-update,
@@ -600,8 +604,12 @@ private final class UnitBuilder(sourcePath: String, source: String):
       mr.getTarget match
         case ta: CtTypeAccess[?] if ex.isStatic =>
           MethodRef(Left(ta.getAccessedType.getQualifiedName), ex.getSimpleName)
-        case _: CtTypeAccess[?] => unsupported(mr, "unbound instance method reference")
-        case t                  => MethodRef(Right(expr(t)), ex.getSimpleName)
+        case ta: CtTypeAccess[?] =>
+          val formals = Option(ex.getExecutableDeclaration)
+            .map(_.getParameters.asScala.toList.map(p => btype(p.getType)))
+            .getOrElse(unsupported(mr, "unbound method reference with unresolvable formals"))
+          UnboundMethodRef(btype(ta.getAccessedType), ex.getSimpleName, formals)
+        case t => MethodRef(Right(expr(t)), ex.getSimpleName)
 
     case nc: CtNewClass[?] =>
       val anonMembers = Option(nc.getAnonymousClass).map(_.getTypeMembers.asScala.toList).getOrElse(Nil)
