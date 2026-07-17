@@ -23,11 +23,17 @@ Checklist:
       real `sbt Test/compile`
 - [ ] Whole-corpus compile: translate all supported files (107) into the
       generated project, shims for the unsupported 10, compile on JVM
-- [ ] Remaining unsupported tail (10, from M1): general super-ctor funnel
-      (Block/Tag/TemplateParser/Date/LiquidException — needs the
-      different-super-args strategy or overrides), unbound method refs (2),
-      mixed break+continue (For), multi-statement lambda
-      (RenderTransformerDefaultImpl), final-field-no-init (Template)
+- [x] Unsupported tail 10→4 (2026-07-18, commit fd0c584): SentinelRegistry
+      (cross-unit fixpoint; super() ≡ this(null) under sentinel-merged parents
+      — Tag/Block chains), multi-statement lambdas, unbound method refs as
+      typed lambdas, mixed break+continue via named boundary Label. Plus 2
+      verified ledger entries (For: Stack→ArrayDeque; Insertions naming).
+      Corpus: 113/117 (96.6%) classified — EQUAL=73 ACCEPTED=15 IDIOM=13
+      HAND_ADDITIONS=9 SUBSTITUTED=3; UNSUPPORTED=4. M0 GREEN.
+- [ ] Final 4 unsupported (hard ctor shapes — likely per-file declaration
+      overrides, PLAN §7): Template (final-field-no-init), TemplateParser
+      (builder-style ctors), LiquidException (3 different super calls),
+      Date (sentinel + extra stmts)
 - [ ] Convergence to ≥97%: byte/AST-level comparison tier (currently skeleton-level)
 
 ## Completed phases
