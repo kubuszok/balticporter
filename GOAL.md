@@ -32,13 +32,23 @@ Checklist:
       (MapFilter, unparsedLine). Corpus: EQUAL=71 IDIOM=12 HAND_ADDITIONS=9
       SUBSTITUTED=3 → 95/117 (81%) accounted; DIFF=13, UNSUPPORTED=9.
       M0 gate GREEN.
-- [ ] Close the SKEL_DIFF=13: most are Tier-2 vocabulary renames in disguise
-      (toLiquid→toDataView, temporalAsArray→temporalAsVector) — start the
-      project-rename vocabulary table + accepted-divergence ledger with
-      per-file verified reasons (LValue BREAK/CONTINUE relocation, Sort
-      rewrite, Strip_HTML helper split, NameResolver.Default,
-      RenderTransformer* restructure, TemplateContext, Decrement/Increment
-      INITIAL inlining)
+- [x] Divergence ledger + API-parity gate (2026-07-18, commit 7f122ad):
+      liqp-divergences.tsv with per-file verified reasons, fingerprint-pinned
+      (drift resurfaces as SKEL_DIFF); ApiParity = computed covenant, runs
+      before classification. Parity immediately caught two real bugs:
+      keyword package segments (jackson.core.`type`) and silently-dropped
+      anonymous-class bodies — 6 files reclassified falsely-OK → UNSUPPORTED.
+      Corpus: EQUAL=70 ACCEPTED=11 IDIOM=11 HAND_ADDITIONS=9 SUBSTITUTED=2
+      UNSUPPORTED=14 → 103/117 (88%) classified, honestly. M0 GREEN.
+- [ ] Anonymous classes WITH members (now the top blocker, 6 files: LValue,
+      RenderTransformerDefaultImpl, Template, Sort_Natural, AtomNode,
+      LiquidSupport) — needs multi-line expression rendering in the printer
+      (New with body; same machinery unlocks multi-statement lambdas)
+- [ ] Remaining unsupported tail (8): two-super-ctor shapes (Block, Tag,
+      TemplateParser, Date, LiquidException), unbound method refs (Insertions,
+      Filters), mixed break+continue (For)
+- [ ] GATE math check: ≥90% needs ~106/117 — anonymous classes alone gets to
+      ~109 if all 6 land
 - [x] Widen construct coverage, wave 1 (2026-07-18): statics→companion (class
       AND interface constants), classic for→while, for-each→index/iterator
       loop (iterated expr hoisted, evaluates once), try/catch/finally +
