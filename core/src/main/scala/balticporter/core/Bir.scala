@@ -1,0 +1,157 @@
+package balticporter.core
+
+/** Comment kinds preserved from source. Text is stored verbatim including delimiters. */
+enum TriviaKind:
+  case Line, Block, Javadoc
+
+final case class Trivia(kind: TriviaKind, text: String)
+
+/** Java types, post-resolution: every Ref carries a fully-qualified name. */
+sealed trait BType
+object BType:
+  final case class Prim(name: String) extends BType // void int long double float boolean char byte short
+  final case class Ref(qname: String, args: List[BType]) extends BType
+  final case class Arr(elem: BType) extends BType
+  final case class TVar(name: String) extends BType
+  final case class Wild(upper: Option[BType], lower: Option[BType]) extends BType
+
+  val Void: BType = Prim("void")
+  val ObjectQ = "java.lang.Object"
+  def isObject(t: BType): Boolean = t match
+    case Ref(ObjectQ, _) => true
+    case _               => false
+
+enum Vis:
+  case Public, Protected, PackagePrivate, Private
+
+final case class Mods(
+    vis: Vis = Vis.Public,
+    isAbstract: Boolean = false,
+    isFinal: Boolean = false,
+    isStatic: Boolean = false,
+    isOverride: Boolean = false,
+)
+
+enum BTypeKind:
+  case Class, Interface
+
+/** How an identifier reference resolves. */
+enum RefKind:
+  case Local
+  /** varargs: the parameter was declared `T...` in Java. */
+  case Param(varargs: Boolean)
+  /** field on `this` (or an enclosing instance). */
+  case OwnField
+  /** static field: qname of the owner. */
+  case StaticField(owner: String)
+
+sealed trait BExpr
+object BExpr:
+  enum LitKind:
+    case IntL, LongL, DoubleL, FloatL, BoolL, CharL, StringL, NullL
+  /** raw is the literal exactly as it should print in Scala (delimiters included for strings/chars). */
+  final case class Lit(kind: LitKind, raw: String) extends BExpr
+  final case class Ident(name: String, kind: RefKind) extends BExpr
+  case object This extends BExpr
+  /** Field selection on an explicit receiver. */
+  final case class Select(recv: BExpr, name: String) extends BExpr
+  /** `arr.length` on an array. */
+  final case class ArrayLength(arr: BExpr) extends BExpr
+  final case class ArrayAccess(arr: BExpr, idx: BExpr) extends BExpr
+
+  enum Recv:
+    case OnThis
+    case OnSuper
+    case Static(owner: String)
+    case On(expr: BExpr)
+  /** One formal parameter of the *resolved* target (so call-site adaptations can see array/varargs slots). */
+  final case class Formal(tpe: BType, varargs: Boolean)
+  final case class Call(recv: Recv, name: String, args: List[BExpr], formals: Option[List[Formal]]) extends BExpr
+  final case class New(tpe: BType.Ref, args: List[BExpr]) extends BExpr
+  final case class NewArray(elem: BType, dims: List[BExpr]) extends BExpr
+
+  /** stringConcat: resolved statically by the frontend (any operand of `+` is a String). */
+  final case class Binary(op: String, l: BExpr, r: BExpr, stringConcat: Boolean = false) extends BExpr
+  final case class Unary(op: String, e: BExpr, prefix: Boolean = true) extends BExpr
+  final case class Ternary(c: BExpr, t: BExpr, e: BExpr) extends BExpr
+  final case class Cast(tpe: BType, e: BExpr) extends BExpr
+  final case class InstanceOf(e: BExpr, tpe: BType) extends BExpr
+  /** `Foo.class` */
+  final case class ClassLit(tpe: BType) extends BExpr
+
+  /** Static type of an expression as the frontend resolved it; attached where rules need it. */
+  final case class Typed(e: BExpr, tpe: BType) extends BExpr
+
+sealed trait BStmtK
+object BStmtK:
+  final case class LocalVar(name: String, tpe: BType, init: Option[BExpr], effectivelyFinal: Boolean) extends BStmtK
+  final case class ExprStmt(e: BExpr) extends BStmtK
+  /** op: None for plain `=`, Some("+") for `+=` etc. */
+  final case class Assign(lhs: BExpr, rhs: BExpr, op: Option[String]) extends BStmtK
+  final case class If(cond: BExpr, thenB: List[BStmt], elseB: Option[List[BStmt]]) extends BStmtK
+  final case class Return(e: Option[BExpr]) extends BStmtK
+  final case class Throw(e: BExpr) extends BStmtK
+  final case class While(cond: BExpr, body: List[BStmt]) extends BStmtK
+  final case class Block(body: List[BStmt]) extends BStmtK
+  case object Empty extends BStmtK
+
+final case class BStmt(leading: List[Trivia], k: BStmtK)
+
+final case class BTypeParam(name: String, upper: Option[BType])
+final case class BParam(name: String, tpe: BType, varargs: Boolean)
+
+final case class BField(
+    leading: List[Trivia],
+    mods: Mods,
+    tpe: BType,
+    name: String,
+    init: Option[BExpr],
+)
+
+/** Constructor: the frontend splits off the explicit super()/this() invocation from the body. */
+final case class BCtor(
+    leading: List[Trivia],
+    mods: Mods,
+    params: List[BParam],
+    superArgs: Option[List[BExpr]],
+    thisArgs: Option[List[BExpr]],
+    body: List[BStmt],
+)
+
+final case class BMethod(
+    leading: List[Trivia],
+    mods: Mods,
+    tparams: List[BTypeParam],
+    name: String,
+    params: List[BParam],
+    ret: BType,
+    body: Option[List[BStmt]],
+    /** parameter names that are reassigned inside the body (Java params are mutable, Scala's are not). */
+    assignedParams: Set[String],
+)
+
+final case class BTypeDecl(
+    leading: List[Trivia],
+    mods: Mods,
+    kind: BTypeKind,
+    name: String,
+    tparams: List[BTypeParam],
+    superClass: Option[BType.Ref],
+    interfaces: List[BType],
+    fields: List[BField],
+    ctors: List[BCtor],
+    methods: List[BMethod],
+    nested: List[BTypeDecl],
+    /** extracted `private static final long serialVersionUID = N` if present. */
+    serialVersionUID: Option[Long],
+)
+
+/** One translation unit = one Java compilation unit. */
+final case class BUnit(
+    /** path relative to the upstream source root, e.g. "liqp/filters/Abs.java". */
+    sourcePath: String,
+    pkg: String,
+    types: List[BTypeDecl],
+    /** every comment found in the source file, for the preservation invariant. */
+    allComments: List[Trivia],
+)
