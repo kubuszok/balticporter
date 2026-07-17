@@ -25,10 +25,20 @@ Checklist:
       hand-port additions). Convergence: SKEL_EQUAL=70 + IDIOM=9 +
       HAND_ADDITIONS=10 = 89/117 (76%) equal-or-better; SKEL_DIFF=15.
       M0 gate re-verified GREEN.
-- [ ] Close the SKEL_DIFF=15: per-file classification (hand-port renames like
-      temporalAsArray→temporalAsVector, reorganizations like NameResolver.Default,
-      TemplateContext restructures) → new idiom rules, mapping entries, or
-      documented divergences
+- [x] Enum translation + mapping entries (2026-07-18, commit 937fbb3): Java
+      enum → parameterized `enum E(vals) extends java.lang.Enum[E]` (Flavor now
+      SKEL_EQUAL); SUBSTITUTED status for the 3 documented dependency
+      replacements; renamed counterpart + member-rename normalization
+      (MapFilter, unparsedLine). Corpus: EQUAL=71 IDIOM=12 HAND_ADDITIONS=9
+      SUBSTITUTED=3 → 95/117 (81%) accounted; DIFF=13, UNSUPPORTED=9.
+      M0 gate GREEN.
+- [ ] Close the SKEL_DIFF=13: most are Tier-2 vocabulary renames in disguise
+      (toLiquid→toDataView, temporalAsArray→temporalAsVector) — start the
+      project-rename vocabulary table + accepted-divergence ledger with
+      per-file verified reasons (LValue BREAK/CONTINUE relocation, Sort
+      rewrite, Strip_HTML helper split, NameResolver.Default,
+      RenderTransformer* restructure, TemplateContext, Decrement/Increment
+      INITIAL inlining)
 - [x] Widen construct coverage, wave 1 (2026-07-18): statics→companion (class
       AND interface constants), classic for→while, for-each→index/iterator
       loop (iterated expr hoisted, evaluates once), try/catch/finally +
