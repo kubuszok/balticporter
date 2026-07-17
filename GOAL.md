@@ -30,10 +30,14 @@ Checklist:
       verified ledger entries (For: Stack→ArrayDeque; Insertions naming).
       Corpus: 113/117 (96.6%) classified — EQUAL=73 ACCEPTED=15 IDIOM=13
       HAND_ADDITIONS=9 SUBSTITUTED=3; UNSUPPORTED=4. M0 GREEN.
-- [ ] Final 4 unsupported (hard ctor shapes — likely per-file declaration
-      overrides, PLAN §7): Template (final-field-no-init), TemplateParser
-      (builder-style ctors), LiquidException (3 different super calls),
-      Date (sentinel + extra stmts)
+- [x] Final ctor shapes (2026-07-18, commit 74247a9): blank-final
+      definite-assignment fallback (Template), same-super/no-arg-primary shape
+      (Date), generalized N-field sentinel merge with own-init/Java-default
+      no-arg branches + param-rename rewriting (TemplateParser.Builder);
+      comment preservation through all merges (assign trivia → field decls,
+      promoted-param Javadoc hoisted). Corpus: 116/117 (99.1%) classified,
+      UNSUPPORTED=1 (LiquidException — 3 different super calls, the genuinely
+      Scala-inexpressible shape; whole-file override with sbt-gen). M0 GREEN.
 - [ ] Convergence to ≥97%: byte/AST-level comparison tier (currently skeleton-level)
 
 ## Completed phases
