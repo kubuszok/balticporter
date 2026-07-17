@@ -32,11 +32,17 @@ Checklist:
       (max-arity primary), @FunctionalInterface/Jackson annotation drops.
       Evidence: LiqpCorpus `OK=95 UNSUPPORTED=20 NO_COUNTERPART=2` — 81% from
       53% baseline. M0 gate re-verified GREEN.
-- [ ] Widen construct coverage, wave 2 (measured remaining): nested types (8),
-      method references Foo::bar (3), general ctor funnel — private synthetic
-      primary + this-delegation for 2/3/6-ctor field-logic shapes (4+2 arity
-      mismatches), loop break/continue → boundary (2), two-ctor merge with
-      extra body stmts (1)
+- [x] Widen construct coverage, wave 2 (2026-07-18): static nested types →
+      companion members, this(...)-chain ctor funnel (post-delegation stmts,
+      depth-ordered auxiliaries), static/bound method refs, break/continue →
+      scala.util.boundary. Evidence: LiqpCorpus `OK=104 UNSUPPORTED=9
+      NO_COUNTERPART=4` → 92% translate (commit a55a578). M0 gate green.
+- [ ] Hard tail (9 files, measured): unbound instance method refs (2),
+      two-super-call ctor shapes (2+1+1 — may end as documented divergences or
+      overrides, cf. RESEARCH.md §6 trap 2), mixed break+continue loop (1),
+      final field with no init path (1), 3-ctor field logic (1)
+- [ ] Map the 4 NO_COUNTERPART files (hand port merged/renamed them —
+      manifest mapping entries, not translation failures)
 - [ ] Tier 1 passes from PLAN.md §4.2 as needed by the corpus (boundary/return
       decision, ==/eq on references, overload disambiguation, varargs
       forwarding generalization, try/catch/finally, switch→match)
