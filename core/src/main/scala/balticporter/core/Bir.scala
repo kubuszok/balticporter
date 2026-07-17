@@ -78,10 +78,10 @@ object BExpr:
       /** fqcn of the resolved declaring type (drives JDK-vs-translated call-site adaptations). */
       ownerQ: Option[String],
   ) extends BExpr
-  /** anonEmptyBody: Java `new X(...) {}` — an anonymous subclass with NO members
-    * (the super-type-token pattern); preserved as `new X(...) {}` in Scala.
-    * Anonymous classes with members are not yet mechanized. */
-  final case class New(tpe: BType.Ref, args: List[BExpr], anonEmptyBody: Boolean = false) extends BExpr
+  /** anonBody: Java anonymous subclass — `Some(empty)` for the super-type-token
+    * pattern `new X(...) {}`, `Some(members)` for bodies with fields/methods. */
+  final case class New(tpe: BType.Ref, args: List[BExpr], anonBody: Option[BAnonBody] = None) extends BExpr
+  final case class BAnonBody(fields: List[BField], methods: List[BMethod])
   /** dims for `new T[n]`; init for `new T[]{...}` / `{...}` initializers. */
   final case class NewArray(elem: BType, dims: List[BExpr], init: Option[List[BExpr]]) extends BExpr
 

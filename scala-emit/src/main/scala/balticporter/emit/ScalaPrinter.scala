@@ -25,6 +25,16 @@ private final class Printer(unit: BUnit, prov: Provenance):
     if s.isEmpty then sb.append('\n')
     else sb.append("  " * indent).append(s).append('\n')
 
+  /** Renders `body`'s line() output into a string instead of the document —
+    * the mechanism for multi-line expressions (anonymous class bodies).
+    */
+  private def captured(body: => Unit): String =
+    val mark = sb.length
+    body
+    val s = sb.substring(mark)
+    sb.setLength(mark)
+    s
+
   private def unsupported(what: String): Nothing =
     throw Unsupported(unit.sourcePath, "-", what)
 
@@ -417,7 +427,24 @@ private final class Printer(unit: BUnit, prov: Provenance):
       s"$target${id(name)}(${adaptedArgs(args, formals, ownerQ).mkString(", ")})"
 
     case New(t, args, anon) =>
-      s"new ${tpe(t)}(${args.map(expr).mkString(", ")})" + (if anon then " {}" else "")
+      val argsStr = if args.isEmpty && anon.isDefined then "" else s"(${args.map(expr).mkString(", ")})"
+      val base = s"new ${tpe(t)}$argsStr"
+      anon match
+        case None => base
+        case Some(BAnonBody(Nil, Nil)) => base + " {}"
+        case Some(BAnonBody(fields, methods)) =>
+          val body = captured {
+            indent += 1
+            fields.foreach { f =>
+              trivia(f.leading)
+              val kw = if f.mods.isFinal then "val" else "var"
+              val rhs = f.init.map(expr).getOrElse(defaultOf(f.tpe))
+              line(s"${visPrefix(f.mods)}$kw ${id(f.name)}: ${tpe(f.tpe)} = $rhs")
+            }
+            methods.foreach(methodDecl)
+            indent -= 1
+          }
+          base + " {\n" + body + ("  " * indent) + "}"
     case NewArray(el, _, Some(inits)) => s"Array[${tpe(el)}](${inits.map(expr).mkString(", ")})"
     case NewArray(el, List(dim), None) => s"new Array[${tpe(el)}](${expr(dim)})"
     case NewArray(_, dims, None) => unsupported(s"multi-dimensional array (${dims.length} dims)")

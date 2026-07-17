@@ -605,10 +605,20 @@ private final class UnitBuilder(sourcePath: String, source: String):
 
     case nc: CtNewClass[?] =>
       val anonMembers = Option(nc.getAnonymousClass).map(_.getTypeMembers.asScala.toList).getOrElse(Nil)
-      if anonMembers.nonEmpty then unsupported(nc, "anonymous class with members")
+      val fields = List.newBuilder[BField]
+      val methods = List.newBuilder[BMethod]
+      anonMembers.foreach {
+        case f: CtField[?] =>
+          checkAnnotations(f)
+          fields += BField(leadingOf(f), mods(f), btype(f.getType), f.getSimpleName, Option(f.getDefaultExpression).map(expr))
+        case m: CtMethod[?] => methods += methodDecl(m)
+        case c: CtConstructor[?] if c.isImplicit => ()
+        case other => unsupported(other, s"anonymous class member ${other.getClass.getSimpleName}")
+      }
       btype(nc.getType) match
-        case r: BType.Ref => New(r, nc.getArguments.asScala.toList.map(expr), anonEmptyBody = true)
-        case t            => unsupported(nc, s"anonymous class of $t")
+        case r: BType.Ref =>
+          New(r, nc.getArguments.asScala.toList.map(expr), Some(BAnonBody(fields.result(), methods.result())))
+        case t => unsupported(nc, s"anonymous class of $t")
 
     case cc: CtConstructorCall[?] =>
       btype(cc.getType) match
