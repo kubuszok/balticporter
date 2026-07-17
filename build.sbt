@@ -37,6 +37,17 @@ lazy val `scala-emit` = project
     libraryDependencies += munit,
   )
 
+lazy val verify = project
+  .in(file("verify"))
+  .dependsOn(core)
+  .settings(
+    name := "balticporter-verify",
+    libraryDependencies ++= Seq(
+      "org.scalameta" %% "scalameta" % "4.17.2",
+      munit,
+    ),
+  )
+
 lazy val testkit = project
   .in(file("testkit"))
   .dependsOn(core, `frontend-spoon`, `scala-emit`)
@@ -55,7 +66,7 @@ lazy val runner = project
 
 lazy val `corpus-tests` = project
   .in(file("corpus-tests"))
-  .dependsOn(runner, testkit)
+  .dependsOn(runner, testkit, verify)
   .settings(
     name := "balticporter-corpus-tests",
     libraryDependencies += munit,
@@ -66,7 +77,7 @@ lazy val `corpus-tests` = project
 
 lazy val root = project
   .in(file("."))
-  .aggregate(core, `frontend-spoon`, `scala-emit`, testkit, runner, `corpus-tests`)
+  .aggregate(core, `frontend-spoon`, `scala-emit`, verify, testkit, runner, `corpus-tests`)
   .settings(
     name := "balticporter",
     publish / skip := true,

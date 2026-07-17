@@ -44,7 +44,7 @@ object LiqpCorpus:
         case Right((u, out)) =>
           if CommentCheck.check(u, out).nonEmpty then "COMMENT_LOSS"
           else if !Files.exists(handPort) then "NO_COUNTERPART"
-          else "OK"
+          else skeletonStatus(out, Files.readString(handPort), rel)
         case Left(e: Unsupported) => s"UNSUPPORTED\t${e.what}"
         case Left(e)              => s"ERROR\t${e.getClass.getSimpleName}: ${String.valueOf(e.getMessage).take(120)}"
       rel -> status
@@ -55,6 +55,10 @@ object LiqpCorpus:
     Files.writeString(outFile, results.map((f, s) => s"$f\t$s").mkString("", "\n", "\n"))
 
     val counts = results.groupBy(_._2.takeWhile(_ != '\t')).view.mapValues(_.length).toMap
+    val skelDiffs = results.collect { case (f, s) if s.startsWith("SKEL_DIFF\t") => s"$f: ${s.split('\t').drop(1).mkString(" ")}" }
+    if skelDiffs.nonEmpty then
+      println("[corpus] sample skeleton diffs:")
+      skelDiffs.take(8).foreach(d => println(s"[corpus]   ${d.take(180)}"))
     println(s"[corpus] status counts: " + counts.toList.sortBy(-_._2).map((k, v) => s"$k=$v").mkString(" "))
     val reasons = results.collect { case (_, s) if s.startsWith("UNSUPPORTED\t") => s.split('\t')(1) }
     println("[corpus] top unsupported reasons:")
@@ -62,3 +66,22 @@ object LiqpCorpus:
       println(f"[corpus]   $n%3d  $r")
     }
     println(s"[corpus] report: $outFile")
+
+  /** Skeleton comparison vs the hand port (SkeletonDiff): the M1 convergence metric. */
+  private def skeletonStatus(engineOut: String, handSrc: String, rel: String): String =
+    import balticporter.verify.SkeletonDiff as SD
+    (SD.parseSkeleton(engineOut, s"engine:$rel"), SD.parseSkeleton(handSrc, s"hand:$rel")) match
+      case (Right(e), Right(h)) =>
+        val r = SD.compare(e, h)
+        r.status match
+          case SD.Status.SkeletonEqual => "SKEL_EQUAL"
+          case SD.Status.Idiom         => "SKEL_IDIOM"
+          case SD.Status.HandAdditions =>
+            s"SKEL_HAND_ADDITIONS\t${r.extraInHand.take(4).mkString("; ")}"
+          case SD.Status.Diff =>
+            val detail =
+              (r.missingInHand.take(3).map(m => s"engine-only:$m") ++ r.extraInHand.take(3).map(m => s"hand-only:$m"))
+                .mkString("; ")
+            s"SKEL_DIFF\t$detail"
+      case (Left(err), _) => s"SKEL_PARSE_ERROR\tengine: ${err.take(120)}"
+      case (_, Left(err)) => s"SKEL_PARSE_ERROR\thand: ${err.take(120)}"
