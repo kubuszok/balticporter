@@ -17,29 +17,52 @@ import scala.jdk.CollectionConverters.*
 final class SpoonFrontend extends Frontend:
 
   def parse(cfg: FrontendConfig): List[BUnit] =
-    val launcher = new Launcher
-    val env = launcher.getEnvironment
-    env.setComplianceLevel(21)
-    env.setCommentEnabled(true)
-    env.setNoClasspath(false)
-    env.setSourceClasspath(cfg.classpath.map(_.toString).toArray)
-    cfg.files.foreach(f => launcher.addInputResource(cfg.sourceRoot.resolve(f).toString))
-    val model = launcher.buildModel()
-
-    val typesByFile: Map[Path, List[CtType[?]]] =
-      model.getAllTypes.asScala.toList
-        .filter(t => t.getPosition != null && t.getPosition.isValidPosition)
-        .groupBy(t => t.getPosition.getFile.toPath.toRealPath())
-        .view
-        .mapValues(_.sortBy(t => t.getPosition.getSourceStart))
-        .toMap
-
+    val typesByFile = buildModel(cfg)
     cfg.files.map { rel =>
       val abs = cfg.sourceRoot.resolve(rel).toRealPath()
       val types = typesByFile.getOrElse(abs, throw Unsupported(rel, "-", "file produced no types"))
       val src = Files.readString(abs)
       new UnitBuilder(rel, src).build(types)
     }
+
+  /** Like parse, but isolates conversion failures per file (corpus/coverage runs).
+    * The model is still built once over all files.
+    */
+  def parseTolerant(cfg: FrontendConfig): List[(String, Either[Throwable, BUnit])] =
+    val typesByFile = buildModel(cfg)
+    cfg.files.map { rel =>
+      rel -> scala.util.Try {
+        val abs = cfg.sourceRoot.resolve(rel).toRealPath()
+        val types = typesByFile.getOrElse(abs, throw Unsupported(rel, "-", "file produced no types"))
+        val src = Files.readString(abs)
+        new UnitBuilder(rel, src).build(types)
+      }.toEither
+    }
+
+  private def buildModel(cfg: FrontendConfig): Map[Path, List[CtType[?]]] =
+    val launcher = new Launcher
+    val env = launcher.getEnvironment
+    env.setComplianceLevel(21)
+    env.setCommentEnabled(true)
+    env.setNoClasspath(false)
+    env.setSourceClasspath(cfg.classpath.map(_.toString).toArray)
+    if cfg.resolutionRoots.nonEmpty then
+      // whole roots participate in resolution; conversion is limited to cfg.files
+      cfg.resolutionRoots.foreach(r => launcher.addInputResource(r.toString))
+      val covered = cfg.resolutionRoots.map(_.toRealPath())
+      cfg.files
+        .map(f => cfg.sourceRoot.resolve(f).toRealPath())
+        .filterNot(abs => covered.exists(abs.startsWith))
+        .foreach(abs => launcher.addInputResource(abs.toString))
+    else cfg.files.foreach(f => launcher.addInputResource(cfg.sourceRoot.resolve(f).toString))
+    val model = launcher.buildModel()
+
+    model.getAllTypes.asScala.toList
+      .filter(t => t.getPosition != null && t.getPosition.isValidPosition)
+      .groupBy(t => t.getPosition.getFile.toPath.toRealPath())
+      .view
+      .mapValues(_.sortBy(t => t.getPosition.getSourceStart))
+      .toMap
 
 private final class UnitBuilder(sourcePath: String, source: String):
 

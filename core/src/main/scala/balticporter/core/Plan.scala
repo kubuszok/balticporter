@@ -18,6 +18,8 @@ final case class UnitPlan(
     classpath: List[Path],
     outDir: Path,
     provenance: Provenance,
+    /** source roots participating in resolution but not converted (see FrontendConfig). */
+    resolutionRoots: List[Path] = Nil,
 )
 
 object EngineInfo:

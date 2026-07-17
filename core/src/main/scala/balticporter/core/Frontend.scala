@@ -11,10 +11,13 @@ final case class Unsupported(sourcePath: String, position: String, what: String)
 final case class FrontendConfig(
     /** root of the upstream Java sources (package dirs below it). */
     sourceRoot: Path,
-    /** files to parse, relative to sourceRoot. Order defines unit order. */
+    /** files to CONVERT, relative to sourceRoot. Order defines unit order. */
     files: List[String],
     /** dependency classpath for full resolution. */
     classpath: List[Path],
+    /** additional source roots that participate in RESOLUTION but are not converted
+      * (typically the whole vendored tree — source-over-jar avoids version skew). */
+    resolutionRoots: List[Path] = Nil,
 )
 
 trait Frontend:

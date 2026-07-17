@@ -15,7 +15,7 @@ object M0Pipeline:
   final case class Translated(targetPath: String, content: String)
 
   def translateOnce(plan: UnitPlan, frontend: Frontend): List[Translated] =
-    val units = frontend.parse(FrontendConfig(plan.sourceRoot, plan.files, plan.classpath))
+    val units = frontend.parse(FrontendConfig(plan.sourceRoot, plan.files, plan.classpath, plan.resolutionRoots))
     units.map { u =>
       val out = ScalaPrinter.print(u, plan.provenance)
       val missing = CommentCheck.check(u, out)
