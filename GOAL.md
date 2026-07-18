@@ -21,10 +21,18 @@ Checklist:
       assignment/inc-dec as expressions, array-write exprs; sbt-gen test
       deps + src/test/scala. **104/105 translate** (1 inner-class holdout in
       the ANTLR parser test — ledger candidate).
-- [ ] Test/compile error burn: baseline 100 errors (test-idiom classes —
-      histogram + fix next iteration)
-- [ ] Run: triage failures — engine bug vs upstream-behavior vs environment;
-      ledger with reasons
+- [x] Test/compile GREEN (2026-07-18, commit 27cdbfd): 100→0 errors (literal
+      slice validation, local-class fixes, String.valueOf concat, generic-
+      return + return-into-T casts)
+- [x] Suite RUNS: 102 classes / 625 tests execute serially — **553 pass
+      (88.5%)** on the first behavioral gate. Fixtures copied; parallel
+      execution disabled (shared registries). NOTE: flaky sbt-client output
+      faked partial runs earlier — always confirm with junit-interface -v.
+- [ ] Triage 72 failures (6 clusters): include-eval wrapper (28 — unwrap
+      cause), array varargs/toString flows (Shift/Pop/Push/Unshift, 10),
+      comparison yes/no flips (Gt/Lt/Comparing nodes, 8 — suspect boxed
+      compare or Comparable dispatch), blank AssertionErrors (9), map-lookup
+      misses (2), char-parse (2). Expect 2-4 engine bugs behind all six.
 - [ ] GATE: suite green on JVM with ledgered exceptions
 
 Deferred from M2 scoping (needed by M5, not gate-blocking): declarative Tier-2
