@@ -102,7 +102,11 @@ Checklist:
             that dominates. FINDING: the visitor family's real blocker is the
             F-bounded generics (raw-type fill emits `[?]` where the F-bound
             wants `[Node]`), not varargs — override-bound.
-      - [ ] remaining (242, visitor-family-dominated): AstActionHandler is the
+      - [x] wave 8 (commit cb53a2f): F-bounded raw-type fill — raw type with a
+            non-Object simple upper bound (<N extends Node>) fills `[Node]` not
+            `[?]`, matching the API's bound-parameterized form. Object-bounded
+            raws (Map/List) stay `?` (Liqp unaffected). 242 → 236. 639/639.
+      - [ ] remaining (236, visitor-family-dominated): AstActionHandler is the
             dominant blocker — Java `X...`/`X[]...` varargs both erase to Seq
             in Scala (Conflicting definitions) + F-bounded `[?]` vs `[Node]`.
             ~5 files (NodeVisitor, TextCollectingVisitor, the two Adapters,
