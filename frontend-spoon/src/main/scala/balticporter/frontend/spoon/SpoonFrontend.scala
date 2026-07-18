@@ -148,8 +148,11 @@ private final class UnitBuilder(sourcePath: String, source: String):
     "java.lang.FunctionalInterface", // Scala SAM conversion needs no marker
   )
 
-  /** annotations carried through to the output verbatim (test frameworks etc.). */
-  private val preservedAnnotationPrefixes = List("org.junit.", "junit.")
+  /** annotations carried through to the output verbatim. Jackson annotations are
+    * behavior-bearing on the JVM (custom serializers drive the eager-render path) —
+    * a cross-platform port would substitute them (ssg's disposition), but the
+    * JVM-faithful port preserves them. */
+  private val preservedAnnotationPrefixes = List("org.junit.", "junit.", "com.fasterxml.jackson.")
 
   private def checkAnnotations(el: CtElement & CtModifiable): Boolean =
     var hasOverride = false
@@ -158,10 +161,8 @@ private final class UnitBuilder(sourcePath: String, source: String):
       if q == "java.lang.Override" then hasOverride = true
       // Jackson annotations: dropped — serialization is replaced per project dispositions
       // (ssg: Jackson → LiquidSupport trait; see docs/architecture/liqp-port.md).
-      else if
-        !ignoredAnnotations.contains(q) && !q.startsWith("com.fasterxml.jackson.") &&
-        !preservedAnnotationPrefixes.exists(q.startsWith)
-      then unsupported(el, s"annotation @$q")
+      else if !ignoredAnnotations.contains(q) && !preservedAnnotationPrefixes.exists(q.startsWith) then
+        unsupported(el, s"annotation @$q")
     }
     hasOverride
 

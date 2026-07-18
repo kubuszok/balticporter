@@ -85,6 +85,9 @@ private final class Printer(unit: BUnit, prov: Provenance, sentinels: Set[String
     "false", "final", "finally", "for", "given", "if", "implicit", "import", "lazy", "match",
     "new", "null", "object", "override", "package", "private", "protected", "return", "sealed",
     "super", "then", "throw", "trait", "true", "try", "type", "val", "var", "while", "with", "yield",
+    // soft keywords — position-sensitive (e.g. `using = x` in annotation args); backticking
+    // them unconditionally is always safe
+    "using", "extension", "inline", "opaque", "transparent", "derives", "end", "infix",
   )
 
   private def id(name: String): String =
@@ -228,6 +231,7 @@ private final class Printer(unit: BUnit, prov: Provenance, sentinels: Set[String
 
   private def traitDecl(t: BTypeDecl): Unit =
     trivia(t.leading)
+    annotationLines(t.mods)
     val ext =
       if t.interfaces.isEmpty then ""
       else " extends " + t.interfaces.map(tpe).mkString(" with ")
@@ -304,6 +308,13 @@ private final class Printer(unit: BUnit, prov: Provenance, sentinels: Set[String
 
     line(s"${mods.result()}class ${id(t.name)}${tparamsStr(t.tparams)}$primary$ext {")
     indent += 1
+
+    if t.staticInit.nonEmpty then
+      // Java <clinit> runs before the first instance; Scala companions are lazy —
+      // touch the companion so static{} blocks keep their before-any-instance timing
+      // (RESEARCH.md §6 trap 1, hit live by SPI registries)
+      line(s"locally(${id(t.name)})")
+      line()
 
     plan.fieldLines.foreach {
       case FieldLine.FromField(f, init) =>
@@ -403,7 +414,7 @@ private final class Printer(unit: BUnit, prov: Provenance, sentinels: Set[String
     m.annotations.foreach { a =>
       val args =
         if a.args.isEmpty then ""
-        else "(" + a.args.map((k, v) => s"$k = ${expr(v)}").mkString(", ") + ")"
+        else "(" + a.args.map((k, v) => s"${id(k)} = ${expr(v)}").mkString(", ") + ")"
       line(s"@${refName(a.qname)}$args")
     }
 
