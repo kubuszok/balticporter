@@ -872,6 +872,13 @@ private final class Printer(
             case Typed(inner, t) => (inner, Some(t))
             case e               => (e, None)
           (a, at, f) match
+            // flat varargs param (H...) forwarded into a varargs-OF-ARRAYS slot
+            // (Java H[]... target = Scala Array[H]*): Java passes the whole array as
+            // ONE element, so materialize the Seq to one array — don't spread it flat
+            case (Ident(_, RefKind.Param(true)), srcT, Formal(BType.Arr(el), true))
+                if !srcT.exists(_.isInstanceOf[BType.Arr]) =>
+              val conv = expr(a) + ".toArray"
+              if BType.isObject(el) then conv + ".asInstanceOf[Array[AnyRef]]" else conv
             // varargs param forwarded into a varargs slot → spread
             case (Ident(_, RefKind.Param(true)), _, Formal(_, true)) => expr(a) + "*"
             // array-typed value into a varargs slot (Java passes arrays directly) → spread
