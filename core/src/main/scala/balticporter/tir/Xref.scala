@@ -130,6 +130,27 @@ object Xref:
       case Tree.Return(e, _, _)             => e.foreach(walkTerm)
       case Tree.While(c, b, _, _)           => walkTerm(c); walkTerm(b)
       case Tree.Throw(e, _, _)              => walkTerm(e)
+      case io @ Tree.InstanceOf(e, tpt, _, _) => walkTerm(e); walkType(tpt.tpe, UsageKind.TypeRefPos, io)
+      case Tree.ArrayAccess(a, i, _, _)     => walkTerm(a); walkTerm(i)
+      case Tree.ArrayLength(a, _, _)        => walkTerm(a)
+      case na @ Tree.NewArray(el, dims, init, _, _) =>
+        walkType(el.tpe, UsageKind.Instantiate, na); dims.foreach(walkTerm); init.foreach(_.foreach(walkTerm))
+      case Tree.ForEach(b, it, body, _, _)  => walkValDef(b); walkTerm(it); walkTerm(body)
+      case Tree.For(init, c, upd, body, _, _) =>
+        init.foreach(walkStat); c.foreach(walkTerm); upd.foreach(walkStat); walkTerm(body)
+      case Tree.Try(body, catches, fin, _, _) =>
+        walkTerm(body)
+        catches.foreach { c => walkValDef(c.param); walkTerm(c.body) }
+        fin.foreach(walkTerm)
+      case Tree.Match(scrut, cases, _, _) =>
+        walkTerm(scrut)
+        cases.foreach { c => c.labels.foreach(walkTerm); c.guard.foreach(walkTerm); walkTerm(c.body) }
+      case mr @ Tree.MethodRef(qual, method, _, _) =>
+        rec(method, UsageKind.Call, mr)
+        qual match
+          case Left(tpt)   => walkType(tpt.tpe, UsageKind.TypeRefPos, tpt)
+          case Right(term) => walkTerm(term)
+      case _: Tree.Break | _: Tree.Continue => () // control-flow leaves, no symbol refs
       case l @ Tree.Literal(Constant.ClassOfC(tp), _, _) => walkType(tp, UsageKind.TypeArg, l)
       case _: Tree.Literal                  => ()
       case _: Tree.Opaque                   => ()

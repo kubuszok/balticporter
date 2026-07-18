@@ -1,5 +1,6 @@
 package balticporter.frontend.spoon
 
+import balticporter.core.FrontendConfig
 import balticporter.tir.*
 import balticporter.tir.TypeRepr.*
 
@@ -18,15 +19,42 @@ import scala.jdk.CollectionConverters.*
   * types) are lazily interned so `usagesOf(java.util.List)` works even with no local
   * definition. [[Xref.build]] then indexes every usage by position.
   *
-  * Scope: declarations, signatures, and TYPES — the substrate the whole-program transforms
-  * query. Method BODIES are not yet translated (the BIR frontend still owns expression
-  * fidelity); they surface as `rhs = None`, so term-level (Call) usages are absent for now.
-  * Type-position tracing — the point of this pass — is complete, including class/method
-  * type-parameter F-bounds.
+  * Scope: declarations, signatures, TYPES, and method BODIES — the full substrate the
+  * whole-program transforms query. Bodies translate to TIR terms with every reference
+  * resolved to a `SymId` (see [[Builder.BodyTranslator]]), so `usagesOf`/`callersOf` are
+  * real over actual code. Type-position tracing includes class/method type-parameter
+  * F-bounds. The whole liqp corpus (135 types) translates with no `Unsupported`.
   */
 object SpoonTir:
   /** Build a [[Program]] from already-resolved top-level Spoon types. */
   def fromTypes(types: List[CtType[?]]): Program = new Builder().build(types)
+
+  /** Build the Spoon model over a whole closure (full classpath + resolution roots), the
+    * same way the BIR frontend does, and return its top-level types. */
+  def buildModel(cfg: FrontendConfig): List[CtType[?]] =
+    val launcher = new Launcher
+    val env      = launcher.getEnvironment
+    env.setComplianceLevel(21)
+    env.setCommentEnabled(false)
+    env.setNoClasspath(false)
+    env.setSourceClasspath(cfg.classpath.map(_.toString).toArray)
+    if cfg.resolutionRoots.nonEmpty then
+      cfg.resolutionRoots.foreach(r => launcher.addInputResource(r.toString))
+      val covered = cfg.resolutionRoots.map(_.toRealPath())
+      cfg.files
+        .map(f => cfg.sourceRoot.resolve(f).toRealPath())
+        .filterNot(abs => covered.exists(abs.startsWith))
+        .foreach(abs => launcher.addInputResource(abs.toString))
+    else cfg.files.foreach(f => launcher.addInputResource(cfg.sourceRoot.resolve(f).toString))
+    launcher.buildModel().getAllTypes.asScala.toList.filter(_.getDeclaringType == null)
+
+  /** Translate each top-level type in ISOLATION (fresh symbol space), returning per-type
+    * success (symbol count) or the failure. Used to MEASURE corpus coverage — which
+    * constructs still hit `Unsupported` — without one bad file sinking the batch. */
+  def coverage(types: List[CtType[?]]): List[(String, Either[Throwable, Int])] =
+    types.map { t =>
+      t.getQualifiedName -> scala.util.Try(new Builder().build(List(t)).symbols.all.size).toEither
+    }
 
   /** Convenience for tests / snippets: parse one in-memory source (no external classpath;
     * JDK types resolve by qualified name) and populate the TIR from its top-level types. */
@@ -334,6 +362,22 @@ object SpoonTir:
           Tree.Throw(expr(t.getThrownExpression), nothingT, originOf(t))
         case b: CtBlock[?]      => blockTerm(b)
         case inv: CtInvocation[?] => expr(inv)
+        case cc: CtConstructorCall[?] => ctorCall(cc)
+        case f: CtForEach =>
+          val v  = f.getVariable
+          val vt = tpe(v.getType)
+          val id = defineLocal(v, vt)
+          Tree.ForEach(Tree.ValDef(id, tt(vt, v), None, originOf(v)), expr(f.getExpression), blockTerm(f.getBody), unitT, originOf(f))
+        case f: CtFor =>
+          val init = f.getForInit.asScala.toList.map(stmt)
+          val cond = Option(f.getExpression).map(expr)
+          val upd  = f.getForUpdate.asScala.toList.map(stmt)
+          Tree.For(init, cond, upd, blockTerm(f.getBody), unitT, originOf(f))
+        case t: CtTryWithResource => unsupported(t, "try-with-resources")
+        case t: CtTry             => tryStmt(t)
+        case s: CtSwitch[?]       => switchStmt(s)
+        case b: CtBreak           => Tree.Break(Option(b.getTargetLabel), nothingT, originOf(b))
+        case c: CtContinue        => Tree.Continue(Option(c.getTargetLabel), nothingT, originOf(c))
         case u: CtUnaryOperator[?] =>
           import UnaryOperatorKind.*
           val one = Tree.Literal(Constant.IntC(1), ty(u), originOf(u))
@@ -342,6 +386,49 @@ object SpoonTir:
             case POSTDEC | PREDEC => val t = expr(u.getOperand); Tree.Assign(t, binApply("-", t, one, ty(u)), unitT, originOf(u))
             case _                => expr(u)
         case other => unsupported(other, s"statement ${other.getClass.getSimpleName}")
+
+      private def defineLocal(v: CtVariable[?], vt: TypeRepr): SymId =
+        val key = "@" + methodId.raw + "$L$" + v.getSimpleName + "#" + posKey(v)
+        val id  = minter.define(key)(sid => Symbol(sid, v.getSimpleName, v.getSimpleName, Flags(), methodId, vt))
+        registerVar(v, id)
+        id
+
+      private def tryStmt(t: CtTry): Term =
+        val catches = t.getCatchers.asScala.toList.map { c =>
+          val p  = c.getParameter
+          val pt = p.getMultiTypes.asScala.toList match
+            case Nil    => tpe(p.getType)
+            case multi  => multi.map(tpe).reduce(OrType(_, _))
+          val id = defineLocal(p, pt)
+          Tree.CatchCase(Tree.ValDef(id, tt(pt, p), None, originOf(p)), blockTerm(c.getBody))
+        }
+        Tree.Try(blockTerm(t.getBody), catches, Option(t.getFinalizer).map(blockTerm), unitT, originOf(t))
+
+      /** Java switch → TIR `Match`. Empty (grouping) cases merge their labels into the next;
+        * a genuine fallthrough (a non-empty, non-terminated, non-last case) is `Unsupported`,
+        * the same faithful stance as the BIR frontend. */
+      private def switchStmt(s: CtSwitch[?]): Term =
+        val cases = s.getCases.asScala.toList
+        def stmtsOf(c: CtCase[?]): List[CtStatement] = c.getStatements.asScala.toList match
+          case List(b: CtBlock[?]) => b.getStatements.asScala.toList
+          case l                   => l
+        val out     = List.newBuilder[Tree.CaseDef]
+        var pending = List.empty[Term]
+        cases.zipWithIndex.foreach { case (c, idx) =>
+          val labels    = c.getCaseExpressions.asScala.toList.map(expr)
+          val isDefault = labels.isEmpty
+          val isLast    = idx == cases.length - 1
+          val raw       = stmtsOf(c)
+          if raw.isEmpty && !isDefault && !isLast then pending = pending ++ labels
+          else
+            val (body, terminated) = raw.reverse match
+              case (_: CtBreak) :: rest => (rest.reverse, true)
+              case _                    => (raw, raw.lastOption.exists { case _: CtReturn[?] | _: CtThrow => true; case _ => false })
+            if body.nonEmpty && !terminated && !isLast then unsupported(c, "switch fallthrough")
+            out += Tree.CaseDef(pending ++ labels, None, Tree.Block(body.map(stmt), unit(c), unitT, originOf(c)), isDefault)
+            pending = Nil
+        }
+        Tree.Match(expr(s.getSelector), out.result(), unitT, originOf(s))
 
       // ---- expressions ----
       private def expr(e: CtExpression[?]): Term =
@@ -359,8 +446,17 @@ object SpoonTir:
         case v: CtVariableWrite[?] => Tree.Ident(resolveVar(v.getVariable), ty(e), originOf(e))
         case inv: CtInvocation[?] => invocation(inv)
         case cc: CtConstructorCall[?] => ctorCall(cc)
+        case a: CtArrayRead[?]  => Tree.ArrayAccess(expr(a.getTarget), expr(a.getIndexExpression), ty(e), originOf(e))
+        case a: CtArrayWrite[?] => Tree.ArrayAccess(expr(a.getTarget), expr(a.getIndexExpression), ty(e), originOf(e))
+        case na: CtNewArray[?]  => newArray(na)
+        case l: CtLambda[?]     => lambda(l)
+        case mr: CtExecutableReferenceExpression[?, ?] => methodRef(mr)
         case b: CtBinaryOperator[?] =>
-          if b.getKind == BinaryOperatorKind.INSTANCEOF then unsupported(b, "instanceof")
+          if b.getKind == BinaryOperatorKind.INSTANCEOF then
+            val tp = b.getRightHandOperand match
+              case ta: CtTypeAccess[?] => tpe(ta.getAccessedType)
+              case other               => unsupported(other, "instanceof right operand")
+            Tree.InstanceOf(expr(b.getLeftHandOperand), tt(tp, b), ty(b), originOf(b))
           else binApply(opText(b.getKind), expr(b.getLeftHandOperand), expr(b.getRightHandOperand), ty(b))
         case u: CtUnaryOperator[?] =>
           import UnaryOperatorKind.*
@@ -395,8 +491,38 @@ object SpoonTir:
         if decl != null && varIds.containsKey(decl) then varIds.get(decl)
         else nameIds.getOrElse(ref.getSimpleName, minter.external("?var$" + ref.getSimpleName, ref.getSimpleName))
 
+      private def newArray(na: CtNewArray[?]): Term =
+        val elemT = na.getType match
+          case arr: CtArrayTypeReference[?] => tpe(arr.getComponentType)
+          case t                            => tpe(t)
+        val inits = na.getElements.asScala.toList
+        val dims  = na.getDimensionExpressions.asScala.toList
+        val et    = tt(elemT, na)
+        if inits.nonEmpty || dims.isEmpty then Tree.NewArray(et, Nil, Some(inits.map(expr)), ty(na), originOf(na))
+        else Tree.NewArray(et, dims.map(expr), None, ty(na), originOf(na))
+
+      private def lambda(l: CtLambda[?]): Term =
+        val pvs = l.getParameters.asScala.toList.map { p =>
+          val pt = tpe(p.getType)
+          Tree.ValDef(defineLocal(p, pt), tt(pt, p), None, originOf(p))
+        }
+        val body =
+          if l.getExpression != null then expr(l.getExpression)
+          else if l.getBody != null then blockTerm(l.getBody)
+          else unsupported(l, "lambda without body")
+        Tree.Lambda(pvs, body, ty(l), originOf(l))
+
+      private def methodRef(mr: CtExecutableReferenceExpression[?, ?]): Term =
+        val mid = methodSym(mr.getExecutable)
+        val qual: Either[TypeTree, Term] = mr.getTarget match
+          case ta: CtTypeAccess[?] => Left(tt(tpe(ta.getAccessedType), mr))
+          case t                   => Right(expr(t))
+        Tree.MethodRef(qual, mid, ty(mr), originOf(mr))
+
       private def fieldAccess(ref: CtFieldReference[?], target: CtExpression[?], at: CtExpression[?]): Term =
         if ref.getSimpleName == "class" then Tree.Literal(Constant.ClassOfC(ty(at)), ty(at), originOf(at))
+        else if ref.getSimpleName == "length" && Option(ref.getDeclaringType).exists(_.isInstanceOf[CtArrayTypeReference[?]]) then
+          Tree.ArrayLength(expr(target), ty(at), originOf(at))
         else
           val fid = fieldSym(ref)
           val qual: Term = target match

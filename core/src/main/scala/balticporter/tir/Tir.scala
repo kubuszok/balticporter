@@ -207,6 +207,32 @@ object Tree:
   final case class While(cond: Term, body: Term, tpe: TypeRepr, origin: Origin)         extends Term
   /** `throw e`. `tpe` is Nothing. */
   final case class Throw(expr: Term, tpe: TypeRepr, origin: Origin)                     extends Term
+  /** `x instanceof T` — the tested type is a real type usage. */
+  final case class InstanceOf(expr: Term, tpt: TypeTree, tpe: TypeRepr, origin: Origin) extends Term
+  /** `array(index)` element access. */
+  final case class ArrayAccess(array: Term, index: Term, tpe: TypeRepr, origin: Origin) extends Term
+  /** `array.length`. */
+  final case class ArrayLength(array: Term, tpe: TypeRepr, origin: Origin)              extends Term
+  /** `new T[dims]` and/or `new T[]{ init }`; `init` present for a brace initializer. */
+  final case class NewArray(elem: TypeTree, dims: List[Term], init: Option[List[Term]], tpe: TypeRepr, origin: Origin) extends Term
+  /** `for (binding : iterable) body` (Java enhanced-for). */
+  final case class ForEach(binding: ValDef, iterable: Term, body: Term, tpe: TypeRepr, origin: Origin) extends Term
+  /** `for (init; cond; update) body` (Java classic-for). */
+  final case class For(init: List[Statement], cond: Option[Term], update: List[Statement], body: Term, tpe: TypeRepr, origin: Origin) extends Term
+  /** `try body catch cases finally fin`. */
+  final case class Try(body: Term, catches: List[CatchCase], finalizer: Option[Term], tpe: TypeRepr, origin: Origin) extends Term
+  /** one `catch (param) body`; `param.tpt` may be an `OrType` for multi-catch. */
+  final case class CatchCase(param: ValDef, body: Term)
+  /** `scrutinee match { cases }` (from a Java switch). */
+  final case class Match(scrutinee: Term, cases: List[CaseDef], tpe: TypeRepr, origin: Origin) extends Term
+  /** one case: `labels` are the constant patterns (empty ⇒ `default`/`case _`). */
+  final case class CaseDef(labels: List[Term], guard: Option[Term], body: Term, isDefault: Boolean)
+  /** a method value `qualifier :: method` (`Foo::bar`, `x::baz`, `Foo::new`). */
+  final case class MethodRef(qualifier: Either[TypeTree, Term], method: SymId, tpe: TypeRepr, origin: Origin) extends Term
+  /** `break` / `break label` — loop/switch exit. `tpe` is Nothing. */
+  final case class Break(label: Option[String], tpe: TypeRepr, origin: Origin)          extends Term
+  /** `continue` / `continue label`. `tpe` is Nothing. */
+  final case class Continue(label: Option[String], tpe: TypeRepr, origin: Origin)        extends Term
   /** an as-yet-unmodeled TERM, kept typed (a full structured `tpe`) so the tree stays
     * whole while the node set grows. TYPES are never opaque; only unmodeled terms are. */
   final case class Opaque(raw: String, tpe: TypeRepr, origin: Origin)                   extends Term

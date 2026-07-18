@@ -119,6 +119,26 @@ Because the tree carries types and symbols, emission inserts the correct form by
 construction (the diamond/inference bugs cannot occur). The determinism / comment-
 invariant / API-parity checks become backend verifications, not the driver.
 
+## Design goal: semantic diff between two portings (planned, not yet built)
+
+The re-compiler must be able to produce a **semantic diff between any two portings of the
+same project** — not a textual diff. Two axes:
+
+- **Upstream drift** — when the original Java changes, diff the two TIRs to get the semantic
+  delta in Java terms (symbols added/removed/retyped, signature changes, call-graph edges
+  gained/lost) AND its projection onto the emitted Scala (which output definitions actually
+  change). Symbol-keyed identity (interned `SymId`, not text) is what makes this a
+  structural diff resilient to renames/reflow, rather than a line diff.
+- **Transform drift** — when we develop or change a plugin/phase, diff the pre- and
+  post-transform TIRs (and their emissions) to see exactly what a phase did across the whole
+  program — the reviewable unit of a migration.
+
+Enablers already in place: stable `SymId` identity, `Origin` provenance, the kinded
+`XrefIndex`, and the immutable-rebuild pipeline (each phase yields a fresh `Program`, so
+before/after snapshots are naturally available). The diff itself (a `Program × Program →
+SemanticDelta`, plus an emission-level projection) is future work — slot it after the
+emission backend (step 3), since projecting the delta onto Scala output needs emission.
+
 ## What is reused vs replaced
 
 - **Reuse:** the Spoon frontend + whole-classpath resolution (the typed/symbol
@@ -158,6 +178,14 @@ invariant / API-parity checks become backend verifications, not the driver.
      stance as the BIR frontend; the body node set grows the same way). Proven by
      `SpoonTirSpec` (6/6): method calls / field refs become traced usages, and
      `callersOf(pick) == [run]` over real translated bodies.
+   - **2d. Full corpus body coverage** — the body node set was grown until the ENTIRE liqp
+     corpus translates clean. Added faithful Term nodes: `InstanceOf`, `ArrayAccess`,
+     `ArrayLength`, `NewArray`, `ForEach`, `For`, `Try`(+`CatchCase`), `Match`(+`CaseDef`),
+     `MethodRef`, `Break`, `Continue` (Java switch → `Match`; genuine fallthrough kept as
+     `Unsupported`, like the BIR frontend). `SpoonTirCoverage` (a runMain burn-down harness
+     over `../ssg` liqp) reports **135/135 types, 0 `Unsupported`**; a whole-program build
+     (all types, one xref) yields 3101 symbols / 632 methods / a real call graph.
+     `SpoonTirBodySpec` locks the constructs in without needing the corpus.
 3. **Emission backend** — TIR → Scala source, types-aware (subsumes the compile
    fixes). Gate: the M6 closure compiles from TIR emission.
 4. **First transform** — pick one real case (java→scala collection, or a field

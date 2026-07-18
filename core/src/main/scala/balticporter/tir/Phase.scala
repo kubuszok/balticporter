@@ -185,7 +185,31 @@ object StandardTraversal:
       case x: Tree.Return   => x.copy(expr = x.expr.map(mapTerm(ph, _)), tpe = mapType(ph, x.tpe))
       case x: Tree.While    => x.copy(cond = mapTerm(ph, x.cond), body = mapTerm(ph, x.body), tpe = mapType(ph, x.tpe))
       case x: Tree.Throw    => x.copy(expr = mapTerm(ph, x.expr), tpe = mapType(ph, x.tpe))
+      case x: Tree.InstanceOf => x.copy(expr = mapTerm(ph, x.expr), tpt = mapTpt(ph, x.tpt), tpe = mapType(ph, x.tpe))
+      case x: Tree.ArrayAccess => x.copy(array = mapTerm(ph, x.array), index = mapTerm(ph, x.index), tpe = mapType(ph, x.tpe))
+      case x: Tree.ArrayLength => x.copy(array = mapTerm(ph, x.array), tpe = mapType(ph, x.tpe))
+      case x: Tree.NewArray =>
+        x.copy(elem = mapTpt(ph, x.elem), dims = x.dims.map(mapTerm(ph, _)),
+          init = x.init.map(_.map(mapTerm(ph, _))), tpe = mapType(ph, x.tpe))
+      case x: Tree.ForEach =>
+        x.copy(binding = mapValDef(ph, x.binding), iterable = mapTerm(ph, x.iterable), body = mapTerm(ph, x.body), tpe = mapType(ph, x.tpe))
+      case x: Tree.For =>
+        x.copy(init = x.init.map(mapStat(ph, _)), cond = x.cond.map(mapTerm(ph, _)),
+          update = x.update.map(mapStat(ph, _)), body = mapTerm(ph, x.body), tpe = mapType(ph, x.tpe))
+      case x: Tree.Try =>
+        x.copy(body = mapTerm(ph, x.body),
+          catches = x.catches.map(c => Tree.CatchCase(mapValDef(ph, c.param), mapTerm(ph, c.body))),
+          finalizer = x.finalizer.map(mapTerm(ph, _)), tpe = mapType(ph, x.tpe))
+      case x: Tree.Match =>
+        x.copy(scrutinee = mapTerm(ph, x.scrutinee),
+          cases = x.cases.map(c => Tree.CaseDef(c.labels.map(mapTerm(ph, _)), c.guard.map(mapTerm(ph, _)), mapTerm(ph, c.body), c.isDefault)),
+          tpe = mapType(ph, x.tpe))
+      case x: Tree.MethodRef =>
+        x.copy(qualifier = x.qualifier match { case Left(t) => Left(mapTpt(ph, t)); case Right(e) => Right(mapTerm(ph, e)) },
+          tpe = mapType(ph, x.tpe))
       case x: Tree.This     => x.copy(tpe = mapType(ph, x.tpe))
+      case x: Tree.Break    => x.copy(tpe = mapType(ph, x.tpe))
+      case x: Tree.Continue => x.copy(tpe = mapType(ph, x.tpe))
       case x: Tree.Literal  => x.copy(tpe = mapType(ph, x.tpe))
       case x: Tree.Opaque   => x.copy(tpe = mapType(ph, x.tpe))
     ph.transformTerm(rebuilt)
