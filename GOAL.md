@@ -111,7 +111,11 @@ Checklist:
             flags) emitted `this.out` (wrong instance); RefKind.EnclosingField
             now emits the bare name (lexical). Biggest drop: 236 → 200.
             639/639.
-      - [ ] remaining (200, visitor-family-dominated): AstActionHandler is the
+      - [x] wave 10 (commit 111b026): `return null` from a type-var-returning
+            method → null.asInstanceOf[V] (return type always in scope). Call-
+            arg variant reverted — JDK-method TVars aren't nameable at the call
+            site (broke Collections.singletonMap). 200 → 193. 639/639.
+      - [ ] remaining (193, visitor-family-dominated): AstActionHandler is the
             dominant blocker — Java `X...`/`X[]...` varargs both erase to Seq
             in Scala (Conflicting definitions) + F-bounded `[?]` vs `[Node]`.
             ~5 files (NodeVisitor, TextCollectingVisitor, the two Adapters,
