@@ -184,7 +184,16 @@ Checklist:
             the redundant array-varargs backward-compat overloads (unused in the
             closure) are dropped. 136 → 132. Engine untouched (harness + override
             only); corpus-tests compiles so liqp unaffected.
-      - [ ] Override sweep (continue, hand-port): NodeVisitor + LinkResolverAdapter
+      - [~] wave 19 (this commit): override sweep continues — LinkResolverAdapter,
+            NodeVisitor, BlockNodeVisitor (same AstActionHandler family). KEY
+            LEARNING: making a visitor compile EXPOSES previously-masked caller
+            errors — callers build `new NodeVisitor(VisitHandler[Text], VisitHandler
+            [HtmlEntity], ...)` with HETEROGENEOUS handlers, which the raw Java
+            `VisitHandler...` accepts but a `VisitHandler[Node]*` param (invariant)
+            rejects. Faithful port uses a wildcard vararg `VisitHandler[?]*` + an
+            unchecked cast to the base's `Array[H]` (Java's @SuppressWarnings).
+            132 → 118. Engine untouched (override files only).
+      - [ ] Override sweep (continue, hand-port): the two *VisitorExt +
             + LinkResolverAdapter + BlockNodeVisitor + AstActionHandler base
             (F-bounded visitor family) and IRichSequenceBase/SequenceBuilder
             (F-bounded sequence bases) as PLAN §7 whole-file overrides. This is
