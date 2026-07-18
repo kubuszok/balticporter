@@ -396,7 +396,20 @@ private final class UnitBuilder(sourcePath: String, source: String):
     case i: CtIf =>
       BStmtK.If(expr(i.getCondition), blockOf(i.getThenStatement), Option(i.getElseStatement).map(blockOf))
     case r: CtReturn[?] =>
-      BStmtK.Return(Option(r.getReturnedExpression).map(expr))
+      // returning into a method-generic T: javac unchecked-converts; Scala needs the
+      // cast to the (in-scope) type variable
+      val enclosing = Option(r.getParent(classOf[CtMethod[?]]))
+      val retTVar = enclosing
+        .map(_.getType)
+        .collect { case tp: CtTypeParameterReference => tp.getSimpleName }
+        .filter(n => enclosing.exists(_.getFormalCtTypeParameters.asScala.exists(_.getSimpleName == n)))
+      BStmtK.Return(Option(r.getReturnedExpression).map { e =>
+        val base = expr(e)
+        retTVar match
+          case Some(n) if !Option(e.getType).exists(_.isInstanceOf[CtTypeParameterReference]) =>
+            Cast(BType.TVar(n), base)
+          case _ => base
+      })
     case t: CtThrow =>
       BStmtK.Throw(expr(t.getThrownExpression))
     case w: CtWhile =>
@@ -421,7 +434,9 @@ private final class UnitBuilder(sourcePath: String, source: String):
     case i: CtInvocation[?] =>
       BStmtK.ExprStmt(expr(i))
 
-    case c: CtClass[?] => BStmtK.LocalType(typeDecl(c)) // Java local class
+    case c: CtClass[?] => // Java local class (Spoon prefixes the name with a block counter)
+      val t = typeDecl(c)
+      BStmtK.LocalType(t.copy(name = t.name.dropWhile(_.isDigit)))
 
     case f: CtForEach => forEach(f)
     case f: CtFor     => classicFor(f)
@@ -649,7 +664,29 @@ private final class UnitBuilder(sourcePath: String, source: String):
         case _: CtThisAccess[?] => Recv.OnThis
         case t                  => Recv.On(expr(t))
       val ownerQ = Option(ex.getDeclaringType).map(_.getQualifiedName)
-      Call(recv, ex.getSimpleName, inv.getArguments.asScala.toList.map(typedArg), formalsOf(ex), ownerQ)
+      val call = Call(recv, ex.getSimpleName, inv.getArguments.asScala.toList.map(typedArg), formalsOf(ex), ownerQ)
+      // a method-generic return (<T> T get(...)) infers Nothing in Scala without a
+      // target type — cast to the instantiation javac resolved (erasure-identical)
+      val methodGenericReturn = scala.util.Try {
+        Option(ex.getExecutableDeclaration).exists { d =>
+          d.getType.isInstanceOf[CtTypeParameterReference] &&
+          d.asInstanceOf[CtExecutable[?]].isInstanceOf[CtFormalTypeDeclarer] &&
+          d.asInstanceOf[CtFormalTypeDeclarer].getFormalCtTypeParameters.asScala
+            .exists(_.getSimpleName == d.getType.asInstanceOf[CtTypeParameterReference].getSimpleName)
+        }
+      }.getOrElse(false)
+      val resolved = Option(inv.getType)
+      def wildFree(t: BType): Boolean = t match
+        case _: BType.Wild    => false
+        case BType.Ref(_, as) => as.forall(wildFree)
+        case BType.Arr(e2)    => wildFree(e2)
+        case _                => true
+      // only cast to CONCRETE instantiations — inside the generic method itself the
+      // resolved type is just the bound (wildcards), and the polymorphic context
+      // carries the type
+      if methodGenericReturn && resolved.exists(t => !t.isInstanceOf[CtTypeParameterReference])
+      then Cast(btype(resolved.get), call)
+      else call
 
     case na: CtNewArray[?] =>
       val elem = btype(na.getType) match
@@ -793,20 +830,53 @@ private final class UnitBuilder(sourcePath: String, source: String):
   private def literal(l: CtLiteral[?]): BExpr =
     import LitKind.*
     val pos = l.getPosition
-    def slice: Option[String] =
+    def rawSlice: Option[String] =
       if pos != null && pos.isValidPosition && pos.getSourceEnd >= pos.getSourceStart then
         Some(source.substring(pos.getSourceStart, pos.getSourceEnd + 1))
       else None
+    // the position can span a cast prefix ("(Object) 4") — only trust slices that
+    // look like the literal itself
+    def slice: Option[String] = rawSlice.filter { s0 =>
+      val s1 = s0.trim
+      l.getValue match
+        case _: java.lang.String    => s1.startsWith("\"")
+        case _: java.lang.Character => s1.startsWith("'")
+        case _                      => s1.headOption.exists(c => c.isDigit || c == '-' || c == '.')
+    }
     l.getValue match
       case null                 => Lit(NullL, "null")
-      case _: java.lang.String  => Lit(StringL, slice.getOrElse(unsupported(l, "string literal without position")))
-      case _: java.lang.Character => Lit(CharL, slice.getOrElse(unsupported(l, "char literal without position")))
+      case v: java.lang.String  => Lit(StringL, slice.getOrElse(escapeString(v)))
+      case c: java.lang.Character => Lit(CharL, slice.getOrElse(escapeChar(c)))
       case b: java.lang.Boolean => Lit(BoolL, b.toString)
       case n: java.lang.Integer => Lit(IntL, slice.getOrElse(n.toString))
       case n: java.lang.Long    => Lit(LongL, slice.map(s => if s.toLowerCase.endsWith("l") then s else s + "L").getOrElse(n.toString + "L"))
       case n: java.lang.Double  => Lit(DoubleL, slice.getOrElse(n.toString))
       case n: java.lang.Float   => Lit(FloatL, slice.map(s => if s.toLowerCase.endsWith("f") then s else s + "f").getOrElse(n.toString + "f"))
       case v                    => unsupported(l, s"literal $v")
+
+  private def escapeChar(c: Char): String =
+    val body = c match
+      case '\\' => "\\\\"
+      case '\'' => "\\'"
+      case '\n' => "\\n"
+      case '\r' => "\\r"
+      case '\t' => "\\t"
+      case x if x < 32 || x > 126 => f"\\u$x%04x"
+      case x => x.toString
+    s"'$body'"
+
+  private def escapeString(v: String): String =
+    val sb = new java.lang.StringBuilder("\"")
+    v.foreach {
+      case '\\' => sb.append("\\\\")
+      case '"'  => sb.append("\\\"")
+      case '\n' => sb.append("\\n")
+      case '\r' => sb.append("\\r")
+      case '\t' => sb.append("\\t")
+      case x if x < 32 || x > 126 => sb.append(f"\\u$x%04x")
+      case x => sb.append(x)
+    }
+    sb.append("\"").toString
 
   private def binOp(k: BinaryOperatorKind, at: CtElement): String =
     import BinaryOperatorKind.*

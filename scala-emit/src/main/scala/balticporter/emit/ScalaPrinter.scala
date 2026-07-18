@@ -103,6 +103,12 @@ private final class Printer(unit: BUnit, prov: Provenance, sentinels: Set[String
   )
 
   private def refName(q0: String): String =
+    // Spoon names LOCAL classes with a block-counter prefix (Outer$1MyParams) — they
+    // are only referable by simple name inside their defining method
+    val lastSeg0 = q0.substring(q0.lastIndexOf('$') + 1)
+    val localStripped = lastSeg0.dropWhile(_.isDigit)
+    if q0.contains('$') && lastSeg0.headOption.exists(_.isDigit) && localStripped.nonEmpty then
+      return id(localStripped)
     // Spoon qualifies nested types as Outer$Inner; the companion encoding makes that Outer.Inner
     val q = q0.replace('$', '.')
     val name =
@@ -509,7 +515,9 @@ private final class Printer(unit: BUnit, prov: Provenance, sentinels: Set[String
         }
         indent -= 1
         line("}")
-      case BStmtK.LocalType(t) => typeDecl(t)
+      case BStmtK.LocalType(t) =>
+        // local definitions take no access modifiers in Scala
+        typeDecl(t.copy(mods = t.mods.copy(vis = Vis.Public)))
       case BStmtK.Empty => ()
 
   private def defaultOf(t: BType): String = t match
@@ -589,7 +597,19 @@ private final class Printer(unit: BUnit, prov: Provenance, sentinels: Set[String
     case NewArray(el, List(dim), None) => s"new Array[${arrElem(el)}](${expr(dim)})"
     case NewArray(_, dims, None) => unsupported(s"multi-dimensional array (${dims.length} dims)")
 
-    case Binary(op, l, r, _) => s"(${expr(l)} $op ${expr(r)})"
+    case Binary(op, l, r, concat) =>
+      // Java string concat: any operand String makes the whole chain concat; Scala
+      // needs a String LEFT operand — String.valueOf is identity on strings, so
+      // wrapping when the left isn't obviously a string is semantics-preserving
+      // (incl. null → "null", matching Java)
+      def obviouslyString(x: BExpr): Boolean = x match
+        case Lit(LitKind.StringL, _)      => true
+        case Binary(_, _, _, true)        => true
+        case Typed(i, BType.Ref("java.lang.String", _)) => true
+        case Typed(i, _)                  => obviouslyString(i)
+        case _                            => false
+      if concat && !obviouslyString(l) then s"(String.valueOf(${expr(l)}) $op ${expr(r)})"
+      else s"(${expr(l)} $op ${expr(r)})"
     case Unary(op, e1, true) => s"($op${expr(e1)})"
     case Unary(op, _, false) => unsupported(s"postfix operator $op")
     case Ternary(c, t, e1)    => s"(if (${expr(c)}) ${expr(t)} else ${expr(e1)})"

@@ -139,6 +139,21 @@ object LiqpProject:
           case scala.util.Failure(e) => testFailures += rel -> String.valueOf(e.getMessage).take(120)
       case (rel, Left(e)) => testFailures += rel -> String.valueOf(e.getMessage).take(120)
     }
+    // upstream test fixtures (template files the tests read relative to the project root)
+    List("src/test/jekyll", "src/test/resources").foreach { rel =>
+      val src = ssgRoot.resolve(s"original-src/liqp/$rel")
+      if Files.isDirectory(src) then
+        val dst = projRoot.resolve(rel)
+        Files.walk(src).iterator().asScala.foreach { p =>
+          val t = dst.resolve(src.relativize(p).toString)
+          if Files.isDirectory(p) then Files.createDirectories(t)
+          else
+            Files.createDirectories(t.getParent)
+            Files.copy(p, t, StandardCopyOption.REPLACE_EXISTING)
+        }
+        println(s"[proj] fixtures copied: $rel")
+    }
+
     println(s"[proj] tests: $okTests/${testFiles.length} translated")
     val fails = testFailures.result()
     if fails.nonEmpty then

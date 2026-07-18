@@ -48,5 +48,8 @@ object SbtGen:
          |name := "${spec.moduleName}"
          |organization := "${spec.organization}"
          |scalaVersion := "${spec.scalaVersion}"
+         |
+         |// upstream suites mutate shared registries — run serially, like Maven did
+         |Test / parallelExecution := false
          |$deps$testDeps""".stripMargin,
     )
