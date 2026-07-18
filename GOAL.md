@@ -25,10 +25,12 @@ Checklist:
       identity-basis ctor funnel (+uses-this purity guard), static/instance
       init blocks (comment invariant caught silent drops!), i++-aware
       mutability, boxed-name collisions, raw-type wildcard fill.
-- [ ] Whole-corpus scalac gate: errors 135 → 56. Worklist (measured):
-      varargs forwarding into overloaded ctors (InsertionNode, 11),
-      conflicting definitions (5), Class.class chains (2), toArray/copyOfRange
-      overload resolution (2+2), NodeVisitor (10, ANTLR-heavy), rest singles
+- [ ] Whole-corpus scalac gate: errors 135 → 56 → 38 (commit 47d72df).
+      Remaining worklist (measured): Array[Any]↔AnyRef flows (7+2),
+      conflicting definitions (5 — inspect), anon class extends final
+      StringBuilder (2 — Java allows shadow-final? needs
+      composition/override), Any-has-no-ctor (2), Collector variance (1),
+      singles (Flavor, AtomNode, where-impls, FuzzyDateDateParser)
 - [x] Unsupported tail 10→4 (2026-07-18, commit fd0c584): SentinelRegistry
       (cross-unit fixpoint; super() ≡ this(null) under sentinel-merged parents
       — Tag/Block chains), multi-statement lambdas, unbound method refs as
