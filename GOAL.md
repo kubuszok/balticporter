@@ -269,7 +269,13 @@ Checklist:
             target rejects the ascription (Null isn't a subtype of unbounded T); cast
             instead. NullableDataKey. 76 → 75. liqp compile GREEN, suite 639/639,
             LiqpCorpus PARITY_FAIL=0.
-      - [ ] Hard tail (~75, override territory / Spoon-limited): F-bounded sequence
+      - [~] wave 30 (this commit): MessageProvider override — the SAM method takes
+            varargs (Object... -> Any*) but the DEFAULT lambda's resolved param type is
+            the array form Array[AnyRef], so it doesn't SAM-convert. Explicit anonymous
+            class with the varargs signature. 75 → 74. (Latent engine follow-up: wave-20
+            lambda param-type annotation should not use the array form for a varargs SAM
+            slot.) Engine untouched (override only).
+      - [ ] Hard tail (~74, override territory / Spoon-limited): F-bounded sequence
             family (getBuilder Nothing, SequenceUtils T-vs-CharSequence, IRichSequence
             Base/SubSequence/SegmentedSequence ~20 — whole-file overrides); Formatter
             family (generic inference/overload ~14); collection null-typevar (~9 —
