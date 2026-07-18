@@ -10,8 +10,47 @@ import balticporter.core.BExpr.*
   */
 object MemberClashPass:
 
-  def apply(unit: BUnit): BUnit =
-    unit.copy(types = unit.types.map(t => fixLocals(fixType(t, unit))))
+  def apply(unit: BUnit, registry: Option[CtorRegistry] = None): BUnit =
+    val collapsed = registry.map(_.collapsedAccessors).getOrElse(Set.empty)
+    val dropped = registry.map(_.droppedDeprecatedClashes).getOrElse(Set.empty)
+    val pkgPrefix = if unit.pkg.isEmpty then "" else unit.pkg + "."
+    val u1 =
+      if collapsed.isEmpty then unit
+      else
+        // resolved nilary calls to collapsed accessors become field reads — in
+        // EVERY unit (the accessor's declaring unit no longer emits the method)
+        unit.copy(types = unit.types.map(BirTransform.mapTypeDecl(_) {
+          case Call(recv, n, Nil, _, Some(owner)) if collapsed((owner, n)) =>
+            recv match
+              case Recv.On(r)     => Select(r, n)
+              case Recv.OnThis    => Ident(n, RefKind.OwnField)
+              case Recv.Static(o) => Ident(n, RefKind.StaticField(o))
+              case Recv.OnSuper   => Select(This, n)
+          case e => e
+        }))
+    val u2 = u1.copy(types = u1.types.map(t => dropMembers(t, pkgPrefix + t.name, collapsed ++ dropped)))
+    u2.copy(types = u2.types.map(t => fixLocals(fixType(t, unit))))
+
+  /** removes collapsed/dropped accessor methods, hoisting their trivia onto the
+    * same-named field so the comment invariant holds. Recurses with $-qualified
+    * names matching the registry's keys. */
+  private def dropMembers(t: BTypeDecl, fqcn: String, gone: Set[(String, String)]): BTypeDecl =
+    def hoist(fields: List[BField], removed: List[BMethod]): List[BField] =
+      fields.map { f =>
+        removed.filter(_.name == f.name) match
+          case Nil => f
+          case ms  => f.copy(leading = f.leading ++ ms.flatMap(_.leading))
+      }
+    val (goneInst, keepInst) = t.methods.partition(m => m.params.isEmpty && gone((fqcn, m.name)))
+    val (goneStat, keepStat) = t.staticMethods.partition(m => m.params.isEmpty && gone((fqcn, m.name)))
+    t.copy(
+      fields = hoist(t.fields, goneInst),
+      staticFields = hoist(t.staticFields, goneStat),
+      methods = keepInst,
+      staticMethods = keepStat,
+      nested = t.nested.map(n => dropMembers(n, s"$fqcn$$${n.name}", gone)),
+      inner = t.inner.map(n => dropMembers(n, s"$fqcn$$${n.name}", gone)),
+    )
 
   /** A Java local may share the name of a method it calls in its own initializer
     * (`Object x = x(...)`) — Scala's block scoping makes that a self-reference.

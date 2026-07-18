@@ -24,16 +24,76 @@ final case class CtorInfo(
 
 final class CtorRegistry(units: List[BUnit]):
   val byFqcn: Map[String, (BTypeDecl, CtorInfo)] =
+    def entry(fqcn: String, t: BTypeDecl): List[(String, (BTypeDecl, CtorInfo))] =
+      val info = CtorInfo(
+        t.superClass.map(_.qname),
+        t.ctors.map(c => (c.params, c.superArgs, c.thisArgs, c.body)),
+      )
+      // nested types register under Outer$Nested — Spoon qualifies super refs that way
+      (fqcn -> (t, info)) :: (t.nested ++ t.inner).flatMap(n => entry(s"$fqcn$$${n.name}", n))
     units.flatMap { u =>
-      u.types.map { t =>
-        val fqcn = if u.pkg.isEmpty then t.name else s"${u.pkg}.${t.name}"
-        val info = CtorInfo(
-          t.superClass.map(_.qname),
-          t.ctors.map(c => (c.params, c.superArgs, c.thisArgs, c.body)),
-        )
-        fqcn -> (t, info)
+      u.types.flatMap { t =>
+        entry(if u.pkg.isEmpty then t.name else s"${u.pkg}.${t.name}", t)
       }
     }.toMap
+
+  /** Resolves a type decl's registry key when the caller only knows package +
+    * simple name (nested decls live under Outer$Name): exact key first, else
+    * the UNIQUE in-package key ending in `$Name` — ambiguity returns None. */
+  def resolveFqcn(pkg: String, name: String): Option[String] =
+    val plain = if pkg.isEmpty then name else s"$pkg.$name"
+    if byFqcn.contains(plain) then Some(plain)
+    else
+      val prefix = if pkg.isEmpty then "" else pkg + "."
+      byFqcn.keysIterator
+        .filter(k => k.startsWith(prefix) && k.endsWith("$" + name))
+        .toList match
+        case k :: Nil => Some(k)
+        case _        => None
+
+  /** Java-style redundant accessors: a field `f` plus a nilary same-name method
+    * whose body is exactly `return f`. Scala can't declare both — the method is
+    * DROPPED and every resolved nilary call `x.f()` rewrites to the field read
+    * (semantically exact: the method returned the field). Keys are ($-qualified
+    * fqcn, member name). */
+  lazy val collapsedAccessors: Set[(String, String)] =
+    byFqcn.iterator.flatMap { case (fqcn, (t, _)) =>
+      def returnsField(body: Option[List[BStmt]], name: String, static: Boolean): Boolean =
+        body.map(_.filterNot(st => st.k == BStmtK.Empty)).exists {
+          case List(BStmt(_, BStmtK.Return(Some(Ident(n, k))))) =>
+            n == name && (k match
+              case RefKind.OwnField       => !static
+              case RefKind.StaticField(_) => static
+              case _                      => false)
+          case _ => false
+        }
+      val inst = t.methods.collect {
+        case m if m.params.isEmpty && t.fields.exists(_.name == m.name) &&
+          returnsField(m.body, m.name, static = false) => (fqcn, m.name)
+      }
+      val stat = t.staticMethods.collect {
+        case m if m.params.isEmpty && t.staticFields.exists(_.name == m.name) &&
+          returnsField(m.body, m.name, static = true) => (fqcn, m.name)
+      }
+      inst ++ stat
+    }.toSet
+
+  /** Same-name field/method clashes where the method is @Deprecated and NOT a pure
+    * accessor: the hand-port corpus's answer (ssg-md Parsing.ADDITIONAL_CHARS) is
+    * keep the field, drop the deprecated method. Its trivia hoists to the field;
+    * any surviving call sites surface at the scalac gate. */
+  lazy val droppedDeprecatedClashes: Set[(String, String)] =
+    def deprecated(m: BMethod): Boolean =
+      m.mods.annotations.exists(a => a.qname == "scala.deprecated" || a.qname == "java.lang.Deprecated")
+    byFqcn.iterator.flatMap { case (fqcn, (t, _)) =>
+      val inst = t.methods.collect {
+        case m if m.params.isEmpty && deprecated(m) && t.fields.exists(_.name == m.name) => (fqcn, m.name)
+      }
+      val stat = t.staticMethods.collect {
+        case m if m.params.isEmpty && deprecated(m) && t.staticFields.exists(_.name == m.name) => (fqcn, m.name)
+      }
+      inst ++ stat
+    }.toSet.diff(collapsedAccessors)
 
   /** fqcns whose no-arg construction path is empty-effect (transitively):
     * no ctors at all, or an explicit no-arg ctor with empty body and an

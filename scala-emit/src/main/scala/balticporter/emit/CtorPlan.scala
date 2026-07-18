@@ -428,7 +428,10 @@ object CtorPlan:
       fail: String => Nothing,
   ): Option[CtorPlan] =
     registry.flatMap { reg =>
-      val selfFqcn = if unit.pkg.isEmpty then t.name else s"${unit.pkg}.${t.name}"
+      val selfFqcn = reg.resolveFqcn(unit.pkg, t.name)
+        .getOrElse(if unit.pkg.isEmpty then t.name else s"${unit.pkg}.${t.name}")
+      def dbg(msg: => String): Unit =
+        if sys.env.get("BP_DEBUG_CLASS").exists(selfFqcn.endsWith) then System.err.println(s"[noargpp] $selfFqcn: $msg")
       val noArgJava = t.ctors.find(_.params.isEmpty)
       def upstreamOf(c: BCtor): Option[List[BStmt]] = c.thisArgs match
         case Some(ta) => reg.inlineSuperEffects(selfFqcn, ta, forFqcn = selfFqcn)
@@ -445,13 +448,16 @@ object CtorPlan:
       val primaryBody: Option[List[BStmt]] = noArgJava match
         case None    => Some(Nil)
         case Some(c) => flatBody(c)
+      dbg(s"noArg=${noArgJava.isDefined} thisArgs=${noArgJava.flatMap(_.thisArgs).map(_.length)} primaryBody=${primaryBody.map(_.length)}")
       if primaryBody.isEmpty then None
       else
         val toReplay = t.ctors.filter(_.params.nonEmpty)
         val secondaries: Option[List[Secondary]] =
           toReplay.foldRight(Option(List.empty[Secondary])) { (c, acc) =>
             acc.flatMap { tail =>
-              flatBody(c).map { body =>
+              val fb = flatBody(c)
+              dbg(s"replay ctor/${c.params.length}: flatBody=${fb.map(_.length)}")
+              fb.map { body =>
                 fixSecondaryCollisions(t, Secondary(c.leading, c.mods, c.params, Nil, body)) :: tail
               }
             }

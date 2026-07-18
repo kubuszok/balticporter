@@ -20,7 +20,7 @@ object ScalaPrinter:
       sentinels: Set[String] = Set.empty,
       registry: Option[CtorRegistry] = None,
   ): String =
-    new Printer(MemberClashPass(widenFields(unit, registry)), prov, sentinels, registry).result()
+    new Printer(MemberClashPass(widenFields(unit, registry), registry), prov, sentinels, registry).result()
 
   /** Private non-final fields that subclass effect-replay assigns (see
     * CtorRegistry.widenedFields) emit `protected` — the deterministic analog of
