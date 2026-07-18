@@ -1,0 +1,3 @@
+# Accepted skeleton divergences vs the sge hand port (rel_path \t fingerprint \t verified reason).
+# Fingerprint drift resurfaces as SKEL_DIFF — entries only suppress the exact diff they were written for.
+com/dongbat/jbump/Collisions.java	3d1755bd3928	hand port redesigns keySort (boxed/applyPermutation/swapMap) instead of implementing Comparator<Integer>: compare/order dropped; size field+method collapsed to _size + def size

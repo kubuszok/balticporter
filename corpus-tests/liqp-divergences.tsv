@@ -4,7 +4,7 @@
 # mismatch resurfaces the file as SKEL_DIFF (ledger-stale) — entries never blanket-accept.
 liqp/LValue.java	ba226c6036c7	hand port relocated BREAK/CONTINUE sentinels to tags/Break.scala,Continue.scala and reshaped temporal helpers for DataView+context (temporalAsArray/1→temporalAsVector/2, +temporalToString/2, +toZonedDateTime/2) — Tier-2/3 vocabulary territory
 liqp/RenderTransformer.java	48a5a97aee91	ObjectAppender/Controller nesting differs: hand port hosts append on the ObjectAppender trait (verified RenderTransformer.scala:49)
-liqp/RenderTransformerDefaultImpl.java	ae831415a62e	hand port names the anonymous controller (DefaultController in companion) and drops INSTANCE for object idiom; engine keeps upstream shape
+liqp/RenderTransformerDefaultImpl.java	345df0707763	hand port names the anonymous controller (DefaultController in companion) and drops INSTANCE for object idiom; engine keeps upstream shape — re-pinned 2026-07-18 after static-placement idiom shrank the diff
 liqp/antlr/NameResolver.java	20adee3df704	hand port adds NameResolver.Default implementation object; getLocationFromCharStream moved into the hand-written parser layer (ANTLR substitution)
 liqp/blocks/Tablerow.java	6f8c722604ef	toLiquid→toDataView rename (Tier-2 DataView vocabulary) + drop-context var restructured into the DataView encoding
 liqp/filters/Relative_Url.java	04ebcec861a9	objectToMap/2→dvToMap/1 (DataView vocabulary; TemplateContext param no longer needed)
@@ -16,7 +16,7 @@ liqp/tags/Decrement.java	b6226752e90e	INITIAL constant inlined by hand port; eng
 liqp/tags/Increment.java	23af799d9778	INITIAL constant inlined by hand port; engine keeps upstream companion (fidelity-preserving)
 liqp/Insertions.java	2b442b575ca7	hand port renamed backing vals to _blockNames/_tagNames and inlined getNames helper (naming idiom; members present under new names)
 liqp/blocks/For.java	c75790029609	toLiquid→toDataView (Tier-2 DataView vocabulary) + java.util.Stack→ArrayDeque substitution per docs/architecture/liqp-port.md Cross-Platform Strategy (createLoopDropInStack→createLoopDropInArrayDeque)
-liqp/Template.java	2088f70f8fef	hand port replaced ANTLR parse-tree API (getParseTree/children/companion parse) with the hand-written parser surface (renderResult/withJailRoot) — the documented ANTLR substitution; engine keeps upstream ANTLR accessors
+liqp/Template.java	482ef833ef46	hand port replaced ANTLR parse-tree API (getParseTree/children/companion parse) with the hand-written parser surface (renderResult/withJailRoot) — the documented ANTLR substitution; engine keeps upstream ANTLR accessors — re-pinned 2026-07-18 after static-placement idiom shrank the diff
 liqp/TemplateParser.java	644facf8a0ba	hand port restructured the Builder: Jackson ObjectMapper option dropped (withObjectMapper — Jackson substitution), underscore-prefixed backing vals (_filters/_insertions naming idiom), strftime dateParser replaced (strftime4j→DateTimeFormatter substitution), withLiquidStyleWhere added upstream-later
 liqp/TemplateContext.java	6f88429b9c23	hand port renames errors→errorsList (engine: errors$fld after field-vs-method clash rename), adds REGISTRY_JAIL_ROOT/getJailRoot registry accessors, restructures template/checkForMaxIterations — re-verified 2026-07-18 after promotion-rule change
 liqp/parser/v4/LiquidParserTest.java	-	NOT TRANSLATED (inner non-static class construct); ANTLR parser test — excluded from the suite, upstream parser is exercised via LiquidLexerTest (72 tests) and every template-rendering test

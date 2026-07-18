@@ -154,6 +154,19 @@ object SkeletonDiff:
     val varToValNames = varToVal.map(v => (v.path, v.name)).toSet
     extra = extra.filterNot(h => varToValNames.contains((h.path, h.name)))
 
+    // Idiom: static placement — the engine emits Java statics in the companion
+    // (/X$/m); sge-style hand ports freely move members between the class and its
+    // object (or nest types in the class body). Pair members that agree on
+    // kind+name+arity and whose paths differ only by the `$` companion marker.
+    def normPath(path: String): String = path.split('/').map(_.stripSuffix("$")).mkString("/")
+    val (placed, restMissing4) = missing.partition { m =>
+      extra.exists(h => normPath(h.path) == normPath(m.path) && h.kind == m.kind && h.name == m.name && h.arity == m.arity)
+    }
+    placed.foreach(p => explained += s"static-placement: ${p.name}")
+    missing = restMissing4
+    val placedKeys = placed.map(m => (normPath(m.path), m.kind, m.name, m.arity)).toSet
+    extra = extra.filterNot(h => placedKeys.contains((normPath(h.path), h.kind, h.name, h.arity)))
+
     // plain ctor params are constructor-locals, not API surface — they exist in the
     // skeleton only as evidence for the val↔param idiom above
     missing = missing.filterNot(_.kind == "param")
