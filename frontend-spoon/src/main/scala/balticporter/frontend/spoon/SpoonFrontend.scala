@@ -133,18 +133,23 @@ private final class UnitBuilder(sourcePath: String, source: String):
       else if m.hasModifier(ModifierKind.PROTECTED) then Vis.Protected
       else if m.hasModifier(ModifierKind.PRIVATE) then Vis.Private
       else Vis.PackagePrivate
+    val anns = preservedAnnotations(m.asInstanceOf[CtElement & CtModifiable])
     Mods(
       vis = vis,
       isAbstract = m.hasModifier(ModifierKind.ABSTRACT),
       isFinal = m.hasModifier(ModifierKind.FINAL),
       isStatic = m.hasModifier(ModifierKind.STATIC),
       isOverride = isOverride,
+      annotations = anns,
     )
 
   private val ignoredAnnotations = Set(
     "java.lang.Override", "java.lang.SuppressWarnings", "java.lang.SafeVarargs",
     "java.lang.FunctionalInterface", // Scala SAM conversion needs no marker
   )
+
+  /** annotations carried through to the output verbatim (test frameworks etc.). */
+  private val preservedAnnotationPrefixes = List("org.junit.", "junit.")
 
   private def checkAnnotations(el: CtElement & CtModifiable): Boolean =
     var hasOverride = false
@@ -153,10 +158,24 @@ private final class UnitBuilder(sourcePath: String, source: String):
       if q == "java.lang.Override" then hasOverride = true
       // Jackson annotations: dropped — serialization is replaced per project dispositions
       // (ssg: Jackson → LiquidSupport trait; see docs/architecture/liqp-port.md).
-      else if !ignoredAnnotations.contains(q) && !q.startsWith("com.fasterxml.jackson.") then
-        unsupported(el, s"annotation @$q")
+      else if
+        !ignoredAnnotations.contains(q) && !q.startsWith("com.fasterxml.jackson.") &&
+        !preservedAnnotationPrefixes.exists(q.startsWith)
+      then unsupported(el, s"annotation @$q")
     }
     hasOverride
+
+  private def preservedAnnotations(el: CtElement & CtModifiable): List[BAnnotation] =
+    el.getAnnotations.asScala.toList
+      .filter(a => preservedAnnotationPrefixes.exists(a.getAnnotationType.getQualifiedName.startsWith))
+      .map { a =>
+        val args = a.getValues.asScala.toList.map { (k, v) =>
+          k -> (v match
+            case e: CtExpression[?] => expr(e)
+            case other              => unsupported(a, s"annotation value $other"))
+        }
+        BAnnotation(a.getAnnotationType.getQualifiedName, args)
+      }
 
   private def typeDecl(t: CtType[?]): BTypeDecl = t match
     // NOTE: CtEnum extends CtClass — must match first
@@ -402,6 +421,8 @@ private final class UnitBuilder(sourcePath: String, source: String):
     case i: CtInvocation[?] =>
       BStmtK.ExprStmt(expr(i))
 
+    case c: CtClass[?] => BStmtK.LocalType(typeDecl(c)) // Java local class
+
     case f: CtForEach => forEach(f)
     case f: CtFor     => classicFor(f)
 
@@ -610,6 +631,7 @@ private final class UnitBuilder(sourcePath: String, source: String):
     case v: CtVariableWrite[?] => varAccess(v.getVariable, v)
 
     case a: CtArrayRead[?] => ArrayAccess(expr(a.getTarget), expr(a.getIndexExpression))
+    case a: CtArrayWrite[?] => ArrayAccess(expr(a.getTarget), expr(a.getIndexExpression))
 
     case inv: CtInvocation[?] =>
       val ex = inv.getExecutable
@@ -700,13 +722,21 @@ private final class UnitBuilder(sourcePath: String, source: String):
     case u: CtUnaryOperator[?] =>
       import UnaryOperatorKind.*
       u.getKind match
-        case NOT  => Unary("!", expr(u.getOperand))
-        case NEG  => Unary("-", expr(u.getOperand))
-        case POS  => Unary("+", expr(u.getOperand))
-        case COMPL => Unary("~", expr(u.getOperand))
-        case k    => unsupported(u, s"unary operator $k")
+        case NOT     => Unary("!", expr(u.getOperand))
+        case NEG     => Unary("-", expr(u.getOperand))
+        case POS     => Unary("+", expr(u.getOperand))
+        case COMPL   => Unary("~", expr(u.getOperand))
+        case POSTINC => IncDecExpr(expr(u.getOperand), "+", post = true)
+        case POSTDEC => IncDecExpr(expr(u.getOperand), "-", post = true)
+        case PREINC  => IncDecExpr(expr(u.getOperand), "+", post = false)
+        case PREDEC  => IncDecExpr(expr(u.getOperand), "-", post = false)
+        case k       => unsupported(u, s"unary operator $k")
 
     case c: CtConditional[?] => Ternary(expr(c.getCondition), expr(c.getThenExpression), expr(c.getElseExpression))
+
+    // assignment in expression position: `while ((x = next()) != null)` etc.
+    case a: CtAssignment[?, ?] if !a.isInstanceOf[CtOperatorAssignment[?, ?]] =>
+      AssignExpr(expr(a.getAssigned), expr(a.getAssignment))
 
     case ta: CtTypeAccess[?] => ClassLit(btype(ta.getAccessedType))
 

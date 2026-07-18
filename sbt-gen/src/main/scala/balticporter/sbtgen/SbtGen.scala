@@ -16,6 +16,8 @@ object SbtGen:
       scalaVersion: String,
       sbtVersion: String,
       deps: List[Dep],
+      testDeps: List[Dep] = Nil,
+      testFramework: Option[String] = None, // e.g. com.novocode.junit.JUnitFramework fingerprint line
       engineFingerprint: String,
   )
 
@@ -26,11 +28,18 @@ object SbtGen:
       root.resolve("project/build.properties"),
       s"sbt.version=${spec.sbtVersion}\n",
     )
+    if spec.testDeps.nonEmpty then Files.createDirectories(root.resolve("src/test/scala"))
     val deps =
       if spec.deps.isEmpty then ""
       else
         spec.deps
           .map(d => s"  ${d.sbtString},")
+          .mkString("\nlibraryDependencies ++= Seq(\n", "\n", "\n)\n")
+    val testDeps =
+      if spec.testDeps.isEmpty then ""
+      else
+        spec.testDeps
+          .map(d => s"  ${d.sbtString} % Test,")
           .mkString("\nlibraryDependencies ++= Seq(\n", "\n", "\n)\n")
     Files.writeString(
       root.resolve("build.sbt"),
@@ -39,5 +48,5 @@ object SbtGen:
          |name := "${spec.moduleName}"
          |organization := "${spec.organization}"
          |scalaVersion := "${spec.scalaVersion}"
-         |$deps""".stripMargin,
+         |$deps$testDeps""".stripMargin,
     )

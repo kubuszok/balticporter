@@ -140,6 +140,22 @@ object LiqpClasspath:
       )
     genClasses
 
+  /** JUnit4 + Hamcrest for test-source resolution. */
+  def junitClasspath(repoRoot: Path): List[Path] =
+    val cache = repoRoot.resolve("out/junit-classpath.txt")
+    val text =
+      if Files.exists(cache) then Files.readString(cache).trim
+      else
+        val pb = new ProcessBuilder("cs", "fetch", "--classpath", "junit:junit:4.13.2", "org.hamcrest:hamcrest-all:1.3")
+          .redirectErrorStream(true)
+        val proc = pb.start()
+        val out = new String(proc.getInputStream.readAllBytes()).trim
+        if proc.waitFor() != 0 then throw new RuntimeException(s"coursier fetch failed:\n$out")
+        val cp = out.linesIterator.toList.last
+        Files.writeString(cache, cp)
+        cp
+    text.split(java.io.File.pathSeparatorChar).toList.map(Path.of(_))
+
   /** Pin of the vendored upstream: the submodule HEAD recorded by ../ssg. */
   def upstreamCommit(repoRoot: Path): String =
     val pb = new ProcessBuilder("git", "-C", repoRoot.resolve("../ssg/original-src/liqp").toString, "rev-parse", "HEAD")

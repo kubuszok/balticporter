@@ -24,12 +24,16 @@ object BType:
 enum Vis:
   case Public, Protected, PackagePrivate, Private
 
+/** A preserved annotation (e.g. JUnit's @Test(expected = X.class)). */
+final case class BAnnotation(qname: String, args: List[(String, BExpr)])
+
 final case class Mods(
     vis: Vis = Vis.Public,
     isAbstract: Boolean = false,
     isFinal: Boolean = false,
     isStatic: Boolean = false,
     isOverride: Boolean = false,
+    annotations: List[BAnnotation] = Nil,
 )
 
 enum BTypeKind:
@@ -113,6 +117,12 @@ object BExpr:
     * `recv.m` (bound instance). SAM conversion supplies the target type. */
   final case class MethodRef(prefix: Either[String, BExpr], name: String) extends BExpr
 
+  /** Java assignment in expression position → `{ lhs = rhs; lhs }`. */
+  final case class AssignExpr(lhs: BExpr, rhs: BExpr) extends BExpr
+
+  /** Java `x++`/`x--` (post=true) or `++x`/`--x` (post=false) in expression position. */
+  final case class IncDecExpr(target: BExpr, op: String, post: Boolean) extends BExpr
+
   /** Unbound instance method reference `Type::m` → explicit lambda
     * `(r: Type, p1: A1, ...) => r.m(p1, ...)` — receiver + formal types from the
     * resolved executable. */
@@ -139,6 +149,8 @@ object BStmtK:
   final case class LoopBreak(label: Option[String] = None) extends BStmtK
   /** From a fallthrough-free Java switch statement. isDefault cases have empty exprs. */
   final case class Match(scrutinee: BExpr, cases: List[BCase]) extends BStmtK
+  /** Java local class declared inside a method body. */
+  final case class LocalType(t: BTypeDecl) extends BStmtK
   case object Empty extends BStmtK
 
 final case class BCatch(param: String, types: List[BType], body: List[BStmt])

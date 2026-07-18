@@ -413,6 +413,8 @@ object CtorPlan:
       recvThis || args.exists(usesThis)
     case New(_, args, _, _)     => args.exists(usesThis)
     case NewArray(_, d, i)      => d.exists(usesThis) || i.exists(_.exists(usesThis))
+    case AssignExpr(l, r)       => usesThis(l) || usesThis(r)
+    case IncDecExpr(t2, _, _)   => usesThis(t2)
     case Binary(_, l, r, _)     => usesThis(l) || usesThis(r)
     case Unary(_, x, _)         => usesThis(x)
     case Ternary(c, t, e2)      => usesThis(c) || usesThis(t) || usesThis(e2)

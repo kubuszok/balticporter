@@ -194,6 +194,7 @@ private final class Printer(unit: BUnit, prov: Provenance, sentinels: Set[String
     plan.fieldLines.foreach {
       case FieldLine.FromField(f, init) =>
         trivia(f.leading)
+        annotationLines(f.mods)
         val kw = if f.mods.isFinal then "val" else "var"
         line(s"${visPrefix(f.mods)}$kw ${id(f.name)}: ${tpe(f.tpe)} = ${expr(init)}")
         line()
@@ -267,6 +268,7 @@ private final class Printer(unit: BUnit, prov: Provenance, sentinels: Set[String
 
   private def classDecl(t: BTypeDecl): Unit =
     trivia(t.leading)
+    annotationLines(t.mods)
     val plan = CtorPlan.of(t, unit, sentinels)
     trivia(plan.primaryLeading)
     t.serialVersionUID.foreach(v => line(s"@SerialVersionUID(${v}L)"))
@@ -300,6 +302,7 @@ private final class Printer(unit: BUnit, prov: Provenance, sentinels: Set[String
     plan.fieldLines.foreach {
       case FieldLine.FromField(f, init) =>
         trivia(f.leading)
+        annotationLines(f.mods)
         val kw = if f.mods.isFinal then "val" else "var"
         line(s"${visPrefix(f.mods)}$kw ${id(f.name)}: ${tpe(f.tpe)} = ${expr(init)}")
         line()
@@ -378,8 +381,17 @@ private final class Printer(unit: BUnit, prov: Provenance, sentinels: Set[String
     else tpe(p.tpe)
     s"${id(p.name)}: $t"
 
+  private def annotationLines(m: Mods): Unit =
+    m.annotations.foreach { a =>
+      val args =
+        if a.args.isEmpty then ""
+        else "(" + a.args.map((k, v) => s"$k = ${expr(v)}").mkString(", ") + ")"
+      line(s"@${refName(a.qname)}$args")
+    }
+
   private def methodDecl(m: BMethod): Unit =
     trivia(m.leading)
+    annotationLines(m.mods)
     val mods = StringBuilder(visPrefix(m.mods))
     if m.mods.isOverride then mods.append("override ")
     if m.mods.isFinal then mods.append("final ")
@@ -497,6 +509,7 @@ private final class Printer(unit: BUnit, prov: Provenance, sentinels: Set[String
         }
         indent -= 1
         line("}")
+      case BStmtK.LocalType(t) => typeDecl(t)
       case BStmtK.Empty => ()
 
   private def defaultOf(t: BType): String = t match
@@ -522,6 +535,10 @@ private final class Printer(unit: BUnit, prov: Provenance, sentinels: Set[String
     case ArrayLength(a) => s"${expr(a)}.length"
     case ArrayAccess(a, i) => s"${expr(a)}(${expr(i)})"
     case Typed(inner, _) => expr(inner)
+    case AssignExpr(l, r) => s"{ ${expr(l)} = ${expr(r)}; ${expr(l)} }"
+    case IncDecExpr(t, op, post) =>
+      if post then s"{ val tmp$$ = ${expr(t)}; ${expr(t)} $op= 1; tmp$$ }"
+      else s"{ ${expr(t)} $op= 1; ${expr(t)} }"
 
     case Call(recv, name, args, formals, ownerQ) =>
       val target = recv match

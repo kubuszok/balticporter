@@ -10,6 +10,8 @@ object BirTransform:
     val rebuilt = e match
       case _: Lit | _: Ident | This | _: ClassLit | _: UnboundMethodRef => e
       case Select(r, n)       => Select(m(r), n)
+      case AssignExpr(l, r)   => AssignExpr(m(l), m(r))
+      case IncDecExpr(t, op, post) => IncDecExpr(m(t), op, post)
       case ArrayLength(a)     => ArrayLength(m(a))
       case ArrayAccess(a, i)  => ArrayAccess(m(a), m(i))
       case c: Call =>
@@ -53,6 +55,7 @@ object BirTransform:
         BStmtK.Try(b.map(ms), cs.map(c => c.copy(body = c.body.map(ms))), fin.map(_.map(ms)))
       case BStmtK.Boundary(b, l)        => BStmtK.Boundary(b.map(ms), l)
       case BStmtK.Match(scr, cases)     => BStmtK.Match(me(scr), cases.map(c => c.copy(exprs = c.exprs.map(me), body = c.body.map(ms))))
+      case BStmtK.LocalType(t)          => BStmtK.LocalType(mapTypeDecl(t)(f))
       case BStmtK.Empty | _: BStmtK.LoopBreak => s.k
     s.copy(k = k)
 

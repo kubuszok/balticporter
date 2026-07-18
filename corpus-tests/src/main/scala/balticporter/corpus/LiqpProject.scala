@@ -99,10 +99,53 @@ object LiqpProject:
           SbtGen.Dep("com.fasterxml.jackson.datatype", "jackson-datatype-jsr310", "2.13.2"),
           SbtGen.Dep("ua.co.k", "strftime4j", "1.0.6"),
         ),
+        testDeps = List(
+          SbtGen.Dep("junit", "junit", "4.13.2"),
+          SbtGen.Dep("org.hamcrest", "hamcrest-all", "1.3"),
+          SbtGen.Dep("com.github.sbt", "junit-interface", "0.13.3"),
+        ),
         engineFingerprint = EngineInfo.fingerprint,
       ),
     )
     println(s"[proj] emitted ${units.length + overridden.size} sources + build to $projRoot")
+
+    // ---- tests: translate the upstream JUnit4 suite onto JUnit4 itself (JVM gate;
+    // munit/cross-platform is a later phase) -----------------------------------
+    val testRoot = ssgRoot.resolve("original-src/liqp/src/test/java")
+    val testFiles = Files
+      .walk(testRoot)
+      .iterator()
+      .asScala
+      .filter(p => p.toString.endsWith(".java"))
+      .map(p => testRoot.relativize(p).toString)
+      .toList
+      .sorted
+    val testCp = LiqpClasspath.resolve(repoRoot) ++ LiqpClasspath.junitClasspath(repoRoot)
+    val testCfg = FrontendConfig(testRoot, testFiles, testCp, List(sourceRoot, testRoot))
+    val testResults = frontend.parseTolerant(testCfg)
+    val testDir = projRoot.resolve("src/test/scala")
+    if Files.exists(testDir) then
+      Files.walk(testDir).iterator().asScala.toList.reverse.foreach(Files.delete)
+    var okTests = 0
+    val testFailures = List.newBuilder[(String, String)]
+    testResults.foreach {
+      case (rel, Right(u)) =>
+        scala.util.Try(ScalaPrinter.print(u, prov, sentinels)) match
+          case scala.util.Success(out) =>
+            okTests += 1
+            val target = testDir.resolve(u.sourcePath.stripSuffix(".java") + ".scala")
+            Files.createDirectories(target.getParent)
+            Files.writeString(target, out)
+          case scala.util.Failure(e) => testFailures += rel -> String.valueOf(e.getMessage).take(120)
+      case (rel, Left(e)) => testFailures += rel -> String.valueOf(e.getMessage).take(120)
+    }
+    println(s"[proj] tests: $okTests/${testFiles.length} translated")
+    val fails = testFailures.result()
+    if fails.nonEmpty then
+      println("[proj] test translation failures:")
+      fails.groupBy(_._2).view.mapValues(_.length).toList.sortBy(-_._2).take(10).foreach { (r, n) =>
+        println(f"[proj]   $n%3d  $r")
+      }
 
     println("[proj] running sbt compile (this is the whole-module scalac gate)...")
     val pb = new ProcessBuilder("sbt", "-batch", "compile").directory(projRoot.toFile).redirectErrorStream(true)
