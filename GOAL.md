@@ -130,7 +130,24 @@ Checklist:
             `E.values` (companion val, no parens) — was parsed as
             values.apply(i). Frontend emits nilary static values() on an enum
             as a static-field access. 172 → 165. 639/639.
-      - [ ] remaining (165, visitor-family-dominated): AstActionHandler is the
+      - [~] wave 14 (no commit — two net-zero experiments, both reverted):
+            (a) re-tried lambda param-type annotation for the 16 Missing-
+            parameter-type SAM lambdas — Spoon leaves those params
+            wildcard/unresolved so the nameable guard skips them (2nd
+            confirmation it can't help); (b) field-init null→asInstanceOf[T] —
+            didn't fire on the observed `var context: C = null` and net-zero.
+            INFLECTION: at 165 the per-fix MECHANICAL yield is exhausted — the
+            remaining classes are Missing-param-type (Spoon-unresolvable SAM),
+            Conflicting-definitions (X.../X[]... varargs erasure, override-
+            bound), F-bounded self-referential generics (IRichSequenceBase/
+            SequenceBuilder), and Ambiguous/None-of-overloaded. NEXT PHASE:
+            override sweep of the ~5-8 override-bound files (visitor family +
+            the two sequence bases) via the ctor-splice + whole-file overrides,
+            rather than more net-zero engine tweaks.
+      - [ ] Override sweep (next): NodeVisitor/adapters (conflicting ctors) +
+            IRichSequenceBase/SequenceBuilder (F-bounded) — PLAN §7 dispositions
+            toward a compiling module; then port the xwiki-macros spec suite.
+      - [ ] (ref) remaining (165, visitor-family-dominated): AstActionHandler is the
             dominant blocker — Java `X...`/`X[]...` varargs both erase to Seq
             in Scala (Conflicting definitions) + F-bounded `[?]` vs `[Node]`.
             ~5 files (NodeVisitor, TextCollectingVisitor, the two Adapters,
