@@ -275,7 +275,17 @@ Checklist:
             class with the varargs signature. 75 → 74. (Latent engine follow-up: wave-20
             lambda param-type annotation should not use the array form for a varargs SAM
             slot.) Engine untouched (override only).
-      - [ ] Hard tail (~74, override territory / Spoon-limited): F-bounded sequence
+      - [x] wave 33 (this commit): ENGINE fix — keep the declared local-type annotation
+            for `new`/`Call` inits (not just `Call`). The BIR already carries the local's
+            Spoon-resolved type; the printer was DROPPING the annotation whenever the type
+            held a wildcard, so a raw Java-diamond `new HashSet<>()` (resolved type
+            HashSet[NodeRenderingHandler[?]]) emitted as an unannotated `val set = new
+            HashSet()` and inferred Object. Keeping the annotation makes the expected type
+            drive the diamond's inference. This is the "use the resolution we already have"
+            fix (per the design intent), not a re-inference. 70 → 61 (raw-collection
+            cluster, module-wide). liqp compile GREEN, suite 639/639, PARITY_FAIL=0.
+            (NOTE: makes the MacroNodeRenderer / NodeCollectingVisitor overrides redundant.)
+      - [ ] Hard tail (~61, override territory / Spoon-limited): F-bounded sequence
             family (getBuilder Nothing, SequenceUtils T-vs-CharSequence, IRichSequence
             Base/SubSequence/SegmentedSequence ~20 — whole-file overrides); Formatter
             family (generic inference/overload ~14); collection null-typevar (~9 —

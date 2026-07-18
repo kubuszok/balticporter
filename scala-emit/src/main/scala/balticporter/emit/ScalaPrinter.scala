@@ -740,8 +740,13 @@ private final class Printer(
         // it carries a wildcard — otherwise B infers Nothing. Keep the skip only for
         // top-level-wildcard locals (raw iterators), which infer fine.
         def topWild(x: BType): Boolean = x.isInstanceOf[BType.Wild]
-        val callInit = init.exists(_.isInstanceOf[Call])
-        val skip = synthetic || (wildIn(t) && !(callInit && !topWild(t)))
+        // a call/constructor whose type args Scala must infer needs the declared type as
+        // context: a method type-var return (getBuilder(): <B..> B) infers Nothing, and a
+        // raw `new HashSet()` (Java diamond) infers Object without the annotation. Keep the
+        // annotation for those (unless the local's own type is a top-level wildcard, which
+        // can't be written and infers fine anyway).
+        val ctorInit = init.exists(e => e.isInstanceOf[Call] || e.isInstanceOf[New] || e.isInstanceOf[NewArray])
+        val skip = synthetic || (wildIn(t) && !(ctorInit && !topWild(t)))
         val ann = if skip && init.isDefined then "" else s": ${tpe(t)}"
         val rhs = init.map(expr).getOrElse(defaultOf(t))
         line(s"$kw ${id(name)}$ann = $rhs")
