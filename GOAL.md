@@ -28,11 +28,15 @@ Checklist:
       (88.5%)** on the first behavioral gate. Fixtures copied; parallel
       execution disabled (shared registries). NOTE: flaky sbt-client output
       faked partial runs earlier — always confirm with junit-interface -v.
-- [ ] Triage 72 failures (6 clusters): include-eval wrapper (28 — unwrap
-      cause), array varargs/toString flows (Shift/Pop/Push/Unshift, 10),
-      comparison yes/no flips (Gt/Lt/Comparing nodes, 8 — suspect boxed
-      compare or Comparable dispatch), blank AssertionErrors (9), map-lookup
-      misses (2), char-parse (2). Expect 2-4 engine bugs behind all six.
+- [x] Triage wave 1 (commit 08526fa): 72 → 35. Include cluster = missing
+      fixture roots (_includes etc., environment). Array cluster = REAL
+      ENGINE BUG: cast-blind call typing — ((Object[]) x) into varargs must
+      spread; typedArg now honors outermost casts. First bug class invisible
+      to compile+skeleton gates, caught only behaviorally.
+- [ ] Triage wave 2 (35 left): temporal comparisons (testDateTypes flips ×4
+      ordering nodes + birthday date render — one temporal cause suspected),
+      blank AssertionErrors (9 — LiquidSupport/Jekyll-where), tablerow size,
+      where-impl lookups (hi[tobi]), char-parse (2), immutability (2)
 - [ ] GATE: suite green on JVM with ledgered exceptions
 
 Deferred from M2 scoping (needed by M5, not gate-blocking): declarative Tier-2
