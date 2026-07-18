@@ -44,9 +44,21 @@ Checklist:
       and shared-super synthetic primary (no no-arg ctor but all ctors share
       super(<const>) → primary carries it, each replays own body — clears the
       two adapters). Blockers 8 → 4. liqp 639/639, flexmark 749 → 753.
-- [ ] Blocker burn remainder (4, genuine multi-field logic): 2-ctor
-      (SegmentedSequenceTree, TagRange) + 4-ctor (BasedSegmentBuilder,
-      HtmlWriter); XwikiSurvey → 0 blockers
+- [x] Blocker wave 4 (commit 6c830a1): synthetic maximal-primary funnel —
+      independent multi-field root ctors reaching one canonical super arity
+      get a private primary carrying all super + field slots, each ctor
+      delegating its values. Clears SegmentedSequenceTree. Blockers 4 → 3.
+      liqp 638/638, flexmark 753 → 754.
+- [ ] Blocker burn remainder (3): TagRange, BasedSegmentBuilder, HtmlWriter —
+      these reach genuinely DIFFERENT super targets (Range copy-ctor vs
+      int,int; super() vs super(options)) that can't be structurally unified.
+      Disposition: PLAN §7 override layer (handwritten ctor fragments,
+      symbol-existence verified) — the designed cold-port escape hatch.
+      Wire overrides into the (forthcoming) XwikiProject assembly.
+- [ ] XwikiProject assembly: sbt-gen the xwiki-macros module set + ported test
+      suite; compile + tests green on JVM (the M6 core gate)
+- [ ] Framework docs + example port program published
+- [ ] HUMAN REVIEW: idiom-quality sign-off (queue when the above is green)
 - [ ] Port program written against the framework (PortProgram-style entry,
       dispositions declared, vocabulary + passes as needed)
 - [ ] Generated sbt project compiles; ported test suite green on JVM
