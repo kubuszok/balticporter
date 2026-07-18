@@ -77,11 +77,16 @@ Checklist:
       - [x] wave 3 (commit 820f3d6): CtorRef (X::new) wildcard strip, shared
             with New via hasWildType (fully-defined 8 → 0). 283 → 275.
             Lambda param-type experiment tried + reverted (net-zero).
-      - [ ] remaining (~275): the AstActionHandler visitor family — Java
-            `X...`/`X[]...` overloads collide in Scala (varargs erase to Seq)
-            and F-bounded generics fill `[?]` where the super wants `[Node]`.
-            ~4 adapter/visitor files; likely method/ctor override candidates,
-            not a general rule. Plus scattered not-found members, generic
+      - [x] wave 4 (commit f9a2ba7): inherited-field ctor-param shadow — a
+            plain Java ctor param promoted to a Scala field shadows an
+            inherited field of the same name (InlineParserImpl options:
+            DataHolder vs inherited InlineParserOptions field). rootPlan
+            rename now fires on inherited field names too
+            (CtorRegistry.inheritedFieldNames). Cleared not-a-member-of-
+            DataHolder (19 → 0). 275 → 256.
+      - [ ] remaining (~256): AstActionHandler visitor family (Java
+            `X...`/`X[]...` overload collision + F-bounded `[?]` vs `[Node]`;
+            override candidates), scattered not-found members, generic
             wildcard mismatches, missing-param lambdas (wildcard-typed).
 - [ ] Port the xwiki-macros spec suite; whole-module compile + tests green.
 - [ ] Framework docs + example port program published
