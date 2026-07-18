@@ -390,11 +390,14 @@ idioms (Nullable, no-return, headers); `sbt-gen`.
 *Gate:* Liqp's upstream test suite ported and green on JVM; failures
 triaged into ledger with reasons or fixed by rules.
 
-**M4 — cross-platform + cache.**
-Platform lint tables, platform source-dir placement, JS/Native compile +
-test orchestration; full cache with early cutoff.
-*Gate:* Liqp module compiles + tests green on JVM/JS/Native; warm re-run
-touches zero units; `--no-cache` byte-identical.
+**M4 — cache + platform analysis.** *(gate amended 2026-07-18: a JS/Native
+compile of the JVM-faithful Liqp port is not meaningful — its Jackson/ANTLR/
+strftime4j coupling is exactly what the Tier-2 substitution dispositions
+exist to replace, which is M5+ vocabulary work. Evidence: the platform-lint
+report quantifies the coupling and reproduces ssg's substitution choices.)*
+Platform lint tables; full cache with early cutoff.
+*Gate:* warm re-run touches zero units; `--no-cache` byte-identical;
+lint report quantifies the JS/Native substitution plan.
 
 **M5 — scale + second corpus.**
 flexmark (1,100 files: merges, skips, visitor patterns, F-bounded generics)

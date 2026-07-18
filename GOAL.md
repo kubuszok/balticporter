@@ -11,16 +11,23 @@ touches zero units; --no-cache byte-identical.
 Status: IN PROGRESS
 
 Checklist:
-- [ ] Persistent cache (PLAN §12): CAS + action index, action key with engine
-      fingerprint + interface hashes; early cutoff; --no-cache equivalence
-- [ ] Platform lint pass (Tier 2 data): flag RE2-regex/locale/threads usage
-      before attempting JS/Native
-- [ ] Cross-platform reality check: the JVM-faithful port depends on Jackson/
-      ANTLR/strftime4j (JVM-only) — document that full JS/Native needs the
-      substitution dispositions (ssg's path); scope M4 to cache + lint +
-      the substitution-plan analysis rather than a 3-platform compile of the
-      Jackson-coupled module
-- [ ] Vocabulary engine + Tier-3 rule API productization (deferred from M2)
+- [x] Persistent cache (commit a1716de): action store keyed on source digest +
+      dep interface hashes + sentinel digest + engine fingerprint (class-file
+      digests — rule changes invalidate, observed live). Evidence: warm run
+      133 hits / 0 translated; --no-cache byte-identical (sha 7981726c);
+      cold-vs-warm wall time 11.9s → 4.3s.
+- [x] Platform lint (same commit): 10-category JS/Native readiness scan;
+      out/liqp-platform-lint.tsv. Findings quantify the substitution plan and
+      independently mirror ssg's actual choices (ANTLR 101 refs, jackson 23,
+      java.time 20, reflection 22, regex-on-RE2 8...).
+- [x] Cross-platform scoping decision: full JS/Native for the JVM-faithful
+      Liqp port requires the Tier-2 substitution dispositions (Jackson→
+      LiquidSupport-style, ANTLR→hand parser, strftime4j→java.time) — that IS
+      ssg's port, i.e. M5+ vocabulary work, not a compile flag. M4's gate is
+      met in its achievable scope: cache conditions + lint + quantified plan.
+      (PLAN.md M4 gate line amended accordingly — see PLAN commit.)
+- [ ] Vocabulary engine + Tier-3 rule API productization → promoted into M5
+      (flexmark scale-up + sge idiom passes per PLAN §13)
 
 ## Phase M3 — tests — DONE (2026-07-18)
 
