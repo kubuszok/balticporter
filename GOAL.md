@@ -211,8 +211,16 @@ Checklist:
             /emptyList()/emptyMap() infer their element type from context. Frontend
             rewrites the static-field access to the method call. 106 → 101. liqp
             compile GREEN, suite 639/639, LiqpCorpus PARITY_FAIL=0.
-      - [ ] Override sweep / engine (continue): IRichSequenceBase (wildcard lambdas +
-            F-bounded getBuilder), the two *VisitorExt +
+      - [x] wave 22 (this commit): ENGINE fix — qualify param-shadowed this-calls.
+            A method parameter sharing a name with a this-callable (often inherited)
+            method makes a bare `m()` resolve to the param (`length()` → param.apply()
+            → "does not take parameters"). MemberClashPass now rewrites `Recv.OnThis`
+            calls whose name matches an enclosing param to `Recv.On(This)` → `this.m()`.
+            Safe: a param used as a function is invoked via Recv.On, so OnThis always
+            means this's method. does-not-take-parameters 4 → 0. 101 → 97. liqp
+            compile GREEN, suite 639/639, LiqpCorpus PARITY_FAIL=0.
+      - [ ] Continue: IRichSequenceBase (overloaded method-ref eta `this::matches`,
+            F-bounded getBuilder), Formatter family, collection null-typevar,
             + LinkResolverAdapter + BlockNodeVisitor + AstActionHandler base
             (F-bounded visitor family) and IRichSequenceBase/SequenceBuilder
             (F-bounded sequence bases) as PLAN §7 whole-file overrides. This is

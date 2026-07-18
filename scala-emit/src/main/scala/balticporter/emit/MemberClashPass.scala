@@ -37,7 +37,28 @@ object MemberClashPass:
         case Some(reg) =>
           val supers = t.superClass.toList.map(_.qname) ++ t.interfaces.collect { case BType.Ref(q, _) => q }
           supers.flatMap(reg.inheritedMethodNames(_)).toSet
-    u2.copy(types = u2.types.map(t => fixLocals(fixType(t, unit), inheritedMethods(t))))
+    u2.copy(types = u2.types.map(t => qualifyParamShadowedThisCalls(fixLocals(fixType(t, unit), inheritedMethods(t)))))
+
+  /** A method parameter shadowing a same-named this-callable method makes a bare
+    * `m(...)` call resolve to the parameter (`param.apply(...)` → "does not take
+    * parameters" for a nilary `length()`). Qualify such calls as `this.m(...)`. Safe:
+    * a `Recv.OnThis` call always targets `this`'s method (a parameter used as a
+    * function is invoked through `Recv.On`), so the qualification never changes which
+    * member is meant — it only defeats the parameter's lexical shadow. */
+  private def qualifyParamShadowedThisCalls(t0: BTypeDecl): BTypeDecl =
+    val t = t0.copy(
+      nested = t0.nested.map(qualifyParamShadowedThisCalls),
+      inner = t0.inner.map(qualifyParamShadowedThisCalls),
+    )
+    def fixM(m: BMethod): BMethod =
+      val pnames = m.params.map(_.name).toSet
+      if pnames.isEmpty then m
+      else
+        m.copy(body = m.body.map(_.map(s => BirTransform.mapStmt(s) {
+          case Call(Recv.OnThis, n, args, f, o) if pnames.contains(n) => Call(Recv.On(This), n, args, f, o)
+          case e                                                      => e
+        })))
+    t.copy(methods = t.methods.map(fixM), staticMethods = t.staticMethods.map(fixM))
 
   /** removes collapsed/dropped accessor methods, hoisting their trivia onto the
     * same-named field so the comment invariant holds. Recurses with $-qualified
