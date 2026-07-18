@@ -140,7 +140,7 @@ object LiqpProject:
       case (rel, Left(e)) => testFailures += rel -> String.valueOf(e.getMessage).take(120)
     }
     // upstream test fixtures (template files the tests read relative to the project root)
-    List("src/test/jekyll", "src/test/resources").foreach { rel =>
+    List("src/test/jekyll", "src/test/resources", "_includes", "alternative_includes", "snippets").foreach { rel =>
       val src = ssgRoot.resolve(s"original-src/liqp/$rel")
       if Files.isDirectory(src) then
         val dst = projRoot.resolve(rel)

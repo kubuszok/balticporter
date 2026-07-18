@@ -818,7 +818,10 @@ private final class UnitBuilder(sourcePath: String, source: String):
     * adaptations (array spread, Object[] casts) need it. */
   private def typedArg(e: CtExpression[?]): BExpr =
     val core = expr(e)
-    Option(e.getType) match
+    // an explicit cast changes the static type javac used for the call ((Object[]) x
+    // into varargs spreads!) — the outermost cast wins over the expression's own type
+    val effective = e.getTypeCasts.asScala.lastOption.orElse(Option(e.getType))
+    effective match
       case Some(t) => Typed(core, btype(t))
       case None    => core
 
