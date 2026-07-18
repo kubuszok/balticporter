@@ -86,8 +86,23 @@ private final class UnitBuilder(sourcePath: String, source: String):
       else c.toString
     Trivia(kind, text)
 
+  /** every comment handed out as trivia, by identity — deepComments only scoops
+    * what no closer harvest point claimed. */
+  private val claimed: java.util.Set[CtComment] = java.util.Collections.newSetFromMap(
+    new java.util.IdentityHashMap[CtComment, java.lang.Boolean]())
+
   private def leadingOf(el: CtElement): List[Trivia] =
-    el.getComments.asScala.toList.map(triviaOf)
+    el.getComments.asScala.toList.map { c => claimed.add(c); triviaOf(c) }
+
+  /** comments Spoon attached to expression-level descendants (arg lists, fluent
+    * chains, initializer exprs). BIR carries no expression trivia, so they hoist
+    * to the nearest enclosing harvest point. Call AFTER translating children so
+    * nested statements claim their own first. */
+  private def deepComments(el: CtElement): List[Trivia] =
+    el.getElements(new spoon.reflect.visitor.filter.TypeFilter[CtComment](classOf[CtComment]))
+      .asScala.toList
+      .filter(claimed.add)
+      .map(triviaOf)
 
   // ---- types -----------------------------------------------------------------
 
@@ -125,7 +140,20 @@ private final class UnitBuilder(sourcePath: String, source: String):
 
   def build(types: List[CtType[?]]): BUnit =
     val pkg = types.headOption.flatMap(t => Option(t.getPackage)).map(_.getQualifiedName).getOrElse("")
-    BUnit(sourcePath, pkg, types.map(typeDecl), CommentScanner.scan(source))
+    // file-header comments live on the compilation unit (before `package`) or on
+    // the import declarations (between `package` and the first import)
+    val header = types.headOption
+      .map { t =>
+        val cu = t.getPosition.getCompilationUnit
+        val cuc = cu.getComments.asScala.toList
+        val imp = cu.getImports.asScala.toList.flatMap(_.getComments.asScala)
+        (cuc ++ imp).filter(claimed.add).map(triviaOf)
+      }
+      .getOrElse(Nil)
+    val decls = types.map(typeDecl) match
+      case first :: rest if header.nonEmpty => first.copy(leading = header ++ first.leading) :: rest
+      case l                                => l
+    BUnit(sourcePath, pkg, decls, CommentScanner.scan(source))
 
   private def mods(m: CtModifiable, isOverride: Boolean = false): Mods =
     val vis =
@@ -315,12 +343,14 @@ private final class UnitBuilder(sourcePath: String, source: String):
             case v                   => unsupported(f, s"serialVersionUID value $v")
         }
       else
+        val fLeading = leadingOf(f)
+        val fInit = Option(f.getDefaultExpression).map(expr)
         val bf = BField(
-          leading = leadingOf(f),
+          leading = fLeading ++ deepComments(f),
           mods = mods(f),
           tpe = btype(f.getType),
           name = f.getSimpleName,
-          init = Option(f.getDefaultExpression).map(expr),
+          init = fInit,
         )
         if isStatic then statics += bf else instance += bf
     }
@@ -334,15 +364,18 @@ private final class UnitBuilder(sourcePath: String, source: String):
   private def ctorDecl(c: CtConstructor[?]): BCtor =
     checkAnnotations(c)
     val stmts = Option(c.getBody).map(_.getStatements.asScala.toList).getOrElse(Nil)
+    var invTrivia = List.empty[Trivia]
     val (superArgs, thisArgs, rest) = stmts match
       case (inv: CtInvocation[?]) :: tail if inv.getExecutable != null && inv.getExecutable.isConstructor =>
         val ownerQ = Option(inv.getExecutable.getDeclaringType).map(_.getQualifiedName)
         val isThisCall = ownerQ.contains(c.getDeclaringType.getQualifiedName)
         val args = inv.getArguments.asScala.toList.map(expr)
+        // the invocation statement itself is consumed — its comments hoist to the ctor
+        invTrivia = leadingOf(inv) ++ deepComments(inv)
         if isThisCall then (None, Some(args), tail) else (Some(args), None, tail)
       case _ => (None, None, stmts)
     BCtor(
-      leading = leadingOf(c),
+      leading = leadingOf(c) ++ invTrivia,
       mods = mods(c),
       params = paramsOf(c),
       superArgs = superArgs,
@@ -358,8 +391,9 @@ private final class UnitBuilder(sourcePath: String, source: String):
         if writesToVar(b, p.getSimpleName) then assigned += p.getSimpleName
       }
     }
+    val mLeading = leadingOf(m)
     BMethod(
-      leading = leadingOf(m),
+      leading = mLeading,
       mods = mods(m, isOverride),
       tparams = tparamsOf(m),
       name = m.getSimpleName,
@@ -377,7 +411,9 @@ private final class UnitBuilder(sourcePath: String, source: String):
     stmts.foreach {
       case c: CtComment => pending = pending :+ triviaOf(c)
       case s =>
-        out += BStmt(pending ++ leadingOf(s), stmt(s))
+        val own = leadingOf(s)
+        val k = stmt(s)
+        out += BStmt(pending ++ own ++ deepComments(s), k)
         pending = Nil
     }
     if pending.nonEmpty then out += BStmt(pending, BStmtK.Empty)
@@ -390,7 +426,10 @@ private final class UnitBuilder(sourcePath: String, source: String):
       val own = leadingOf(b)
       val inner = block(b.getStatements.asScala.toList)
       if own.isEmpty then inner else BStmt(own, BStmtK.Empty) :: inner
-    case single => List(BStmt(leadingOf(single), stmt(single)))
+    case single =>
+      val own = leadingOf(single)
+      val k = stmt(single)
+      List(BStmt(own ++ deepComments(single), k))
 
   private def stmt(s: CtStatement): BStmtK = s match
     case v: CtLocalVariable[?] =>
@@ -430,7 +469,9 @@ private final class UnitBuilder(sourcePath: String, source: String):
       val owner = nearestOwner(b, includeSwitch = true)
       if owner != null && breakLoops.contains(owner) then
         BStmtK.LoopBreak(label = if mixedLoops.contains(owner) then Some("break$") else None)
-      else unsupported(b, "break not owned by a translated loop")
+      else
+        val pos = if b.getPosition.isValidPosition then s" (line ${b.getPosition.getLine})" else ""
+        unsupported(b, s"break not owned by a translated loop$pos")
 
     case c: CtContinue =>
       if c.getTargetLabel != null then unsupported(c, "labeled continue")
@@ -467,6 +508,9 @@ private final class UnitBuilder(sourcePath: String, source: String):
         BCatch(p.getSimpleName, types, blockOf(c.getBody))
       }
       BStmtK.Try(blockOf(t.getBody), catches, Option(t.getFinalizer).map(blockOf))
+
+    case sy: CtSynchronized =>
+      BStmtK.Synchronized(expr(sy.getExpression), blockOf(sy.getBlock))
 
     case s: CtSwitch[?] => switchToMatch(s)
 
@@ -591,10 +635,25 @@ private final class UnitBuilder(sourcePath: String, source: String):
   private def switchToMatch(s: CtSwitch[?]): BStmtK =
     val scrutinee = expr(s.getSelector)
     val cases = s.getCases.asScala.toList
+    // Java allows `case X: { ...; break; }` — unwrap single-block case bodies so the
+    // trailing break is visible
+    def effStmts(c: CtCase[?]): List[CtStatement] =
+      c.getStatements.asScala.toList match
+        case List(b: CtBlock[?]) => b.getStatements.asScala.toList
+        case l                   => l
+    // mid-case breaks (not trailing) target the switch — encode as a boundary
+    val midCaseBreaks = s
+      .getElements(new spoon.reflect.visitor.filter.TypeFilter(classOf[CtBreak]))
+      .asScala
+      .exists { b =>
+        (nearestOwner(b, includeSwitch = true) eq s) &&
+        !cases.exists(c => effStmts(c).lastOption.exists(_ eq b)) // eq: Spoon equals is structural
+      }
+    if midCaseBreaks then breakLoops += s
     // pre-compute each case's (bodyStmts, terminated); fallthrough closure = own body
     // ++ the next case's closure when not terminated (tail duplication, RESEARCH §4.2)
     val split = cases.map { c =>
-      val stmts = c.getStatements.asScala.toList
+      val stmts = effStmts(c)
       stmts.reverse match
         case (_: CtBreak) :: rest => (rest.reverse, true)
         case all =>
@@ -616,7 +675,8 @@ private final class UnitBuilder(sourcePath: String, source: String):
       val exprs = c.getCaseExpressions.asScala.toList.map(expr)
       val isDefault = exprs.isEmpty
       val isLast = idx == cases.length - 1
-      if split(idx)._1.isEmpty && !isDefault && !isLast then pendingExprs = pendingExprs ++ exprs
+      if split(idx)._1.isEmpty && effStmts(c).isEmpty && !isDefault && !isLast then
+        pendingExprs = pendingExprs ++ exprs
       else
         out += BCase(pendingExprs ++ exprs, isDefault, block(closures(idx)))
         pendingExprs = Nil
@@ -625,7 +685,8 @@ private final class UnitBuilder(sourcePath: String, source: String):
     val withDefault =
       if result.exists(_.isDefault) then result
       else result :+ BCase(Nil, isDefault = true, List(BStmt(Nil, BStmtK.Empty)))
-    BStmtK.Match(scrutinee, withDefault)
+    val m = BStmtK.Match(scrutinee, withDefault)
+    if midCaseBreaks then BStmtK.Boundary(List(BStmt(Nil, m))) else m
 
   /** Any mutation of the named variable inside scope — plain/compound assignment OR
     * increment/decrement (i++ is a write even though Spoon models it as a unary op). */

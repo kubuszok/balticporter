@@ -290,14 +290,17 @@ object CtorPlan:
                 (paT ++ naT).groupBy(_._1).view.mapValues(_.flatMap(_._3).toList).toMap
               def withMergeTrivia(f: BField): BField =
                 f.copy(leading = f.leading ++ mergeTrivia.getOrElse(f.name, Nil))
-              if nr.nonEmpty || pr.nonEmpty then fail("two-ctor merge: ctor bodies contain more than field assignments")
+              if nr.nonEmpty || pr.nonEmpty then
+                return noArgPrimaryPlan(t, unit, registry, fail).getOrElse(
+                  fail("two-ctor merge: ctor bodies contain more than field assignments"))
               (na, pa) match
                 case (List((f1, defaultExpr)), List((f2, Ident(pn, RefKind.Param(_)))))
                     if f1 == f2 && paramful.params.head.name == pn &&
                       t.fields.exists(fd => fd.name == f1 && fd.mods.isFinal) =>
                   val p = paramful.params.head
                   if p.tpe.isInstanceOf[BType.Prim] then
-                    fail("two-ctor merge: sentinel requires a reference-typed parameter")
+                    return noArgPrimaryPlan(t, unit, registry, fail).getOrElse(
+                      fail("two-ctor merge: sentinel requires a reference-typed parameter"))
                   val fld = t.fields.find(_.name == f1).get
                   CtorPlan(
                     List(Param(p.copy(name = "_" + p.name), None)),

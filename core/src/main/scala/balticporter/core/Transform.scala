@@ -57,6 +57,7 @@ object BirTransform:
         BStmtK.Try(b.map(ms), cs.map(c => c.copy(body = c.body.map(ms))), fin.map(_.map(ms)))
       case BStmtK.Boundary(b, l)        => BStmtK.Boundary(b.map(ms), l)
       case BStmtK.Match(scr, cases)     => BStmtK.Match(me(scr), cases.map(c => c.copy(exprs = c.exprs.map(me), body = c.body.map(ms))))
+      case BStmtK.Synchronized(l, b)    => BStmtK.Synchronized(me(l), b.map(ms))
       case BStmtK.LocalType(t)          => BStmtK.LocalType(mapTypeDecl(t)(f))
       case BStmtK.Empty | _: BStmtK.LoopBreak => s.k
     s.copy(k = k)

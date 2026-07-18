@@ -157,6 +157,8 @@ object BStmtK:
   final case class LoopBreak(label: Option[String] = None) extends BStmtK
   /** From a fallthrough-free Java switch statement. isDefault cases have empty exprs. */
   final case class Match(scrutinee: BExpr, cases: List[BCase]) extends BStmtK
+  /** Java synchronized(lock){...} → lock.synchronized{...} (same monitors). */
+  final case class Synchronized(lock: BExpr, body: List[BStmt]) extends BStmtK
   /** Java local class declared inside a method body. */
   final case class LocalType(t: BTypeDecl) extends BStmtK
   case object Empty extends BStmtK

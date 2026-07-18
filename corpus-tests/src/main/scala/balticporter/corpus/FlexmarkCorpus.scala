@@ -57,7 +57,8 @@ object FlexmarkCorpus:
       val status = if rel.endsWith("package-info.java") then "PACKAGE_INFO"
       else e.flatMap(u => scala.util.Try(ScalaPrinter.print(u, prov, sentinels, ctorReg)).toEither.map(u -> _)) match
         case Right((u, out)) =>
-          if CommentCheck.check(u, out).nonEmpty then "COMMENT_LOSS" else "OK"
+          val lost = CommentCheck.check(u, out)
+          if lost.nonEmpty then s"COMMENT_LOSS\t${lost.length} lost; first: ${lost.head.comment.take(120)}" else "OK"
         case Left(err: Unsupported) => s"UNSUPPORTED\t${err.what}"
         case Left(err)              => s"ERROR\t${err.getClass.getSimpleName}: ${String.valueOf(err.getMessage).take(120)}"
       rel -> status

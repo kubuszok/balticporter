@@ -556,6 +556,10 @@ private final class Printer(
         }
         indent -= 1
         line("}")
+      case BStmtK.Synchronized(l, b) =>
+        line(s"${expr(l)}.synchronized {")
+        indent += 1; b.foreach(stmt); indent -= 1
+        line("}")
       case BStmtK.LocalType(t) =>
         // local definitions take no access modifiers in Scala
         typeDecl(t.copy(mods = t.mods.copy(vis = Vis.Public)))
