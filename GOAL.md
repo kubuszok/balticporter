@@ -29,11 +29,20 @@ Checklist:
       rewritten globally — ExampleOption ×4); deprecated-clash drop (keep
       field, drop @Deprecated method, per ssg-md Parsing precedent).
       Blockers 12 → 9. Battery green; flexmark 746 → 748.
-- [ ] Blocker burn remainder (9, all ctor shapes): arity-mismatch delegation
-      ×3 (BlockNodeVisitor, DependentItemMap, PlainSegmentBuilder), 2-ctor
-      field logic ×2 (SegmentedSequenceTree, TagRange), 3-ctor ×2
-      (AttributeProviderAdapter, LinkResolverAdapter), 4-ctor ×2
-      (BasedSegmentBuilder, HtmlWriter); XwikiSurvey reaches 0 blockers
+- [x] Blocker wave 2 (commit 3b127cb): delta-replay effect inlining — the
+      no-arg-primary's super() already runs the parent no-arg path, so replay
+      only the delta beyond it (clears BlockNodeVisitor; the shared
+      super(<const>) prefix with its private/final assigns cancels). Plus a
+      SOUNDNESS FIX the liqp compile gate caught: accessor-collapse was
+      dropping interface-implementing accessors (FuzzyDateDateParser.
+      UnparsedPart start()/end() implement Part) — now guarded by @Override +
+      supertype nilary-member check. Blockers 9 → 8. liqp Test/compile exit=0,
+      suite 639/639.
+- [ ] Blocker burn remainder (8, all ctor shapes): arity-mismatch ×2
+      (DependentItemMap, PlainSegmentBuilder), 2-ctor field logic ×2
+      (SegmentedSequenceTree, TagRange), 3-ctor ×2 (AttributeProviderAdapter,
+      LinkResolverAdapter), 4-ctor ×2 (BasedSegmentBuilder, HtmlWriter);
+      XwikiSurvey → 0 blockers
 - [ ] Port program written against the framework (PortProgram-style entry,
       dispositions declared, vocabulary + passes as needed)
 - [ ] Generated sbt project compiles; ported test suite green on JVM
