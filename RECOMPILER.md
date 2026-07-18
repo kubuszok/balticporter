@@ -90,11 +90,28 @@ Each node carries its **Java origin** (path + position) and, after emission, its
 Scala position. Satisfies "access the original source that produced each node" and
 underpins bump-resilience and diagnostics.
 
-### Transform API
-A pass receives the `Program` (typed, indexed) and rewrites trees, keeping the
-index consistent. Richer than SemanticDB/scalafix because: full carried types,
-Java provenance, whole-program call graph, domain-taggable symbols, and it runs
-**before** emission. These passes are the project-owned, customized transformers.
+### Transform API — shaped by Scala 3's compiler-plugin model
+`Plugin` (a named bundle) ~ `dotc.plugins.Plugin`; `Phase` ~ `PluginPhase`/
+`MiniPhase` with `runsAfter`/`runsBefore` ordering and `transformX` hooks you
+override only for the nodes you touch (the framework does the bottom-up traversal
+and fuses them); a full-control `run` ~ `ResearchPlugin` for whole-program analyses
+(globals→implicits needs the call graph before rewriting). Every hook runs with the
+whole-program `Program` in scope (`using`), so a transform can ask `usagesOf` /
+`callersOf` / `symbolOf` *while* rewriting — the thing Quotes and scalafix-over-
+SemanticDB cannot give you across a program, before emission. `Pipeline.order`
+topologically sorts phases; the xref index is rebuilt between phases. These passes
+are the project-owned, customized transformers.
+
+## Design anchors
+
+- **Tree / type / symbol model → `scala.quoted.Quotes#reflect`.** Same shapes
+  (`TypeRepr`, `Tree`/`Statement`/`Definition`/`Term`/`TypeTree`, `Symbol`) so macro-
+  literate authors are immediately at home. We do **not** use Quotes directly — its
+  contracts are hard to satisfy outside a macro and its `Symbol` hides internals — we
+  own a close analog that exposes everything and adds `Origin`, `SymTag`, and the
+  whole-program `XrefIndex`.
+- **Transform pipeline → Scala 3 compiler-plugin model** (`Plugin`/`PluginPhase`/
+  `MiniPhase`, phase ordering, `transformX` hooks, `ResearchPlugin` escape hatch).
 
 ### Emission (backend)
 A backend walks the transformed typed tree → Scala source (and later TASTy).

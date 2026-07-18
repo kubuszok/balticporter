@@ -2,172 +2,205 @@ package balticporter.tir
 
 /** Typed IR (TIR) — the re-compiler's working representation. See RECOMPILER.md.
   *
-  * A Scala-shaped, whole-program, TYPED tree with a real SYMBOL model. Unlike the
-  * BIR (a per-unit, string-oriented projection built to feed a pretty-printer), TIR:
-  *   - carries a fully STRUCTURED `TType` on every node (no re-inference at emission,
-  *     and never a flat string collapsing applied params / mixins / self-types),
-  *   - resolves every reference to a stable `SymId` (enabling whole-program usage
-  *     lookup and bump-resilient, symbol-keyed transforms — not textual diffs),
-  *   - records `Origin` provenance back to the Java source,
-  *   - is the substrate project-owned transformers run on BEFORE emission.
+  * SHAPED LIKE `scala.quoted.Quotes#reflect` so that anyone who has written a Scala 3
+  * macro finds the transformer API familiar: `TypeRepr`, `Tree`/`Statement`/
+  * `Definition`/`Term`/`TypeTree`, `Symbol`. We do NOT use Quotes directly — its
+  * contracts are subtle to satisfy outside a macro, and its `Symbol` hides internals
+  * from users. So we OWN a close analog and deliberately EXPOSE MORE:
+  *   - `Origin`: provenance back to the original Java source (Quotes has positions,
+  *     but not cross-language origin);
+  *   - `SymTag`: open domain semantics on symbols (e.g. "this Int is a GL layer");
+  *   - a WHOLE-PROGRAM `XrefIndex` (`usagesOf`, `callersOf`) — Quotes is per-macro-
+  *     expansion and cannot answer program-wide usage queries.
+  *
+  * Every node carries a fully STRUCTURED `TypeRepr` (never a flat string collapsing
+  * applied params / mixins / self-types), resolved from Spoon — never re-inferred.
+  * Starter subset of the Quotes node set; grown incrementally.
   */
 
-/** Where a node came from. `javaPath`+position is the recompiler input; a Scala
-  * position is attached later by emission. */
+/** Provenance to the original source. Our addition over Quotes' positions. */
 final case class Origin(javaPath: String, line: Int, col: Int)
 object Origin:
   val synthetic: Origin = Origin("<synthetic>", 0, 0)
 
-/** Stable symbol identity — an interned integer, NEVER a string. Usage lookup and
-  * symbol-keyed patches depend on identity surviving upstream renames/reflows. */
+/** Stable symbol identity — interned, NEVER a string (the analog of `reflect.Symbol`
+  * as a handle). Ergonomic queries hang off it as `(using Program)` extensions,
+  * mirroring Quotes' `(using Quotes)` symbol methods. */
 opaque type SymId = Int
 object SymId:
+  val None: SymId                   = -1
   def apply(i: Int): SymId          = i
   extension (s: SymId) def raw: Int = s
 
-enum SymKind:
-  case Package, Class, Trait, Object, Enum, Method, Ctor, Field, Param, Local, TypeParam
-
-enum Vis:
-  case Public, Protected, PackagePrivate, Private
-
-enum Variance:
-  case Invariant, Covariant, Contravariant
-
+// ---------------------------------------------------------------------------
+// Flags — mirrors `reflect.Flags` (superset of what we currently populate).
+// ---------------------------------------------------------------------------
 final case class Flags(
-    vis: Vis = Vis.Public,
     isAbstract: Boolean = false,
     isFinal: Boolean = false,
-    isStatic: Boolean = false,
+    isSealed: Boolean = false,
+    isTrait: Boolean = false,
+    isModule: Boolean = false, // `object`
+    isEnum: Boolean = false,
+    isCase: Boolean = false,
+    isImplicit: Boolean = false,
+    isGiven: Boolean = false,
     isOverride: Boolean = false,
-    varargs: Boolean = false,
+    isMutable: Boolean = false, // `var`
+    isLazy: Boolean = false,
+    isParam: Boolean = false,
+    isParamAccessor: Boolean = false,
+    isPrivate: Boolean = false,
+    isProtected: Boolean = false,
+    isStatic: Boolean = false, // JavaStatic
+    isCovariant: Boolean = false,
+    isContravariant: Boolean = false,
 )
 
-/** Open, extensible domain semantics attached to symbols by transforms — e.g. a
-  * transform tags an `Int` field as `GLLayer` so downstream retyping finds every
-  * flow of it. Information a Scala-2.13 semantic AST cannot carry. */
+/** Open, extensible domain semantics attached to symbols by transforms. */
 trait SymTag
 
-// ---------------------------------------------------------------------------
-// Types — a STRUCTURED algebra, faithful to Scala's type system. Nothing here
-// collapses into a string; every constituent stays addressable so transforms can
-// rewrite applied args, split/compose mixins, read self-types and F-bounds, etc.
-// ---------------------------------------------------------------------------
-
-enum PrimKind:
-  case Boolean, Byte, Short, Char, Int, Long, Float, Double, Unit
-
-/** A type parameter with its variance, bounds, and (for type constructors) its own
-  * higher-kinded parameters. F-bounds live here: `T <: IRichSequence[T]` is a
-  * `TypeParam` whose `bounds` hi references `T`'s own symbol. */
-final case class TypeParam(sym: SymId, variance: Variance, bounds: TType.Bounds, hkParams: List[TypeParam] = Nil)
-
-/** A method/constructor type: poly type params, value params, result. */
-final case class MethodSig(typeParams: List[TypeParam], params: List[TType], result: TType)
-
-enum TType:
-  case Prim(kind: PrimKind)
-  /** a named type; `prefix` present only for path-dependent forms (`p.T`, `Outer#Inner`). */
-  case Named(sym: SymId, prefix: Option[TType] = None)
-  /** applied type constructor: `tycon[args]`. args may be `Bounds` (wildcards). */
-  case Applied(tycon: TType, args: List[TType])
-  /** reference to a type-parameter symbol. */
-  case TVar(sym: SymId)
-  /** intersection / mixin composition: `A with B with C` (Scala 3 `A & B & C`). */
-  case And(members: List[TType])
-  /** union: `A | B`. */
-  case Or(members: List[TType])
-  /** type bounds — also the wildcard type `?`; `None` means Nothing / Any. */
-  case Bounds(lo: Option[TType], hi: Option[TType])
-  case Arr(elem: TType)
-  /** `C.this` — the self reference; distinct from a plain `Named`. */
-  case This(cls: SymId)
-  /** `x.type` — a term's singleton type (path-dependent tracking). */
-  case Singleton(term: SymId)
-  /** a method's type. */
-  case Method(sig: MethodSig)
-  /** higher-kinded type lambda `[X] =>> body`. */
-  case HKLambda(params: List[TypeParam], body: TType)
-  /** by-name `=> T`. */
-  case ByName(underlying: TType)
-  case NoType
-
-object TType:
-  val AnyBounds: Bounds = Bounds(None, None)
-
-// ---------------------------------------------------------------------------
-// Symbols
-// ---------------------------------------------------------------------------
-
-/** A declaration's symbol. `tpe` is the value type (terms) / declared type (types) /
-  * a `Method` type (methods). Owned/interned by the `SymbolTable`. */
+/** A declaration's symbol record (the analog of `reflect.Symbol`'s backing data).
+  * `info` is its type: a value/field type, a `MethodType`/`PolyType` for methods, a
+  * `TypeBounds` for type params/abstract types, or the class `TypeRef` for classes.
+  * Cross-references (declarations, members, usages) are answered by `Program`, so a
+  * plain record stays serializable while the graph lives in the tables. */
 final case class Symbol(
     id: SymId,
     name: String,
-    kind: SymKind,
-    owner: Option[SymId],
-    tpe: TType,
+    fullName: String,
     flags: Flags,
-    origin: Origin,
+    owner: SymId,           // SymId.None at the root
+    info: TypeRepr,
+    privateWithin: SymId = SymId.None,
+    origin: Origin = Origin.synthetic,
     tags: Set[SymTag] = Set.empty,
 )
 
 // ---------------------------------------------------------------------------
-// Trees — typed Scala tree (the `tpd.Tree` analog). Every node has `tpe` + `origin`;
-// declarations carry a `symbol` and full structure (type params WITH bounds, the
-// mixin parent list, self-types); term references resolve to the symbol they use.
-// Starter subset — extended as population/emission need more node kinds.
+// Constants — mirrors `reflect.Constant`.
 // ---------------------------------------------------------------------------
+enum Constant:
+  case BoolC(v: Boolean)
+  case ByteC(v: Byte)
+  case ShortC(v: Short)
+  case CharC(v: Char)
+  case IntC(v: Int)
+  case LongC(v: Long)
+  case FloatC(v: Float)
+  case DoubleC(v: Double)
+  case StringC(v: String)
+  case NullC
+  case UnitC
+  case ClassOfC(tpe: TypeRepr)
 
+// ---------------------------------------------------------------------------
+// TypeRepr — the STRUCTURED type algebra, mirroring `reflect.TypeRepr`. Every
+// constituent stays addressable: transforms can rewrite applied args, split/compose
+// mixins (And/Or), read self-types (ThisType) and F-bounds (TypeBounds on params).
+// ---------------------------------------------------------------------------
+sealed trait TypeRepr
+object TypeRepr:
+  case object NoPrefix                                                      extends TypeRepr
+  case object NoType                                                        extends TypeRepr
+  final case class ConstantType(value: Constant)                           extends TypeRepr
+  /** named type reference to a type symbol (`prefix#sym`); prefix `NoPrefix` when plain. */
+  final case class TypeRef(prefix: TypeRepr, sym: SymId)                    extends TypeRepr
+  /** singleton / path-dependent: a term's type (`p.type`, the prefix of `p.T`). */
+  final case class TermRef(prefix: TypeRepr, sym: SymId)                    extends TypeRepr
+  /** `C.this` — self reference (needed for self-types and path-dependence). */
+  final case class ThisType(cls: SymId)                                     extends TypeRepr
+  final case class SuperType(thistpe: TypeRepr, supertpe: TypeRepr)         extends TypeRepr
+  /** applied type constructor `tycon[args]`; args may be `TypeBounds` (wildcards). */
+  final case class AppliedType(tycon: TypeRepr, args: List[TypeRepr])       extends TypeRepr
+  /** intersection / mixin: `A & B` (`A with B`). */
+  final case class AndType(left: TypeRepr, right: TypeRepr)                 extends TypeRepr
+  /** union: `A | B`. */
+  final case class OrType(left: TypeRepr, right: TypeRepr)                  extends TypeRepr
+  final case class ByNameType(underlying: TypeRepr)                         extends TypeRepr
+  /** bounds `>: lo <: hi` — also the wildcard type `?` (a `TypeBounds` arg). */
+  final case class TypeBounds(low: TypeRepr, hi: TypeRepr)                  extends TypeRepr
+  /** structural refinement `parent { type/def name: info }`. */
+  final case class Refinement(parent: TypeRepr, name: String, info: TypeRepr) extends TypeRepr
+  /** method type `(params): result`; contextual/implicit flag for `using` clauses. */
+  final case class MethodType(params: List[(String, TypeRepr)], result: TypeRepr, isImplicit: Boolean = false)
+      extends TypeRepr
+  /** poly method type `[tparams]: result` with per-param bounds. */
+  final case class PolyType(params: List[(String, TypeBounds)], result: TypeRepr) extends TypeRepr
+  /** higher-kinded type lambda `[X <: U] =>> body`. */
+  final case class TypeLambda(params: List[(String, TypeBounds)], body: TypeRepr) extends TypeRepr
+  /** reference to the i-th parameter of an enclosing Method/Poly/TypeLambda binder. */
+  final case class ParamRef(binder: TypeRepr, idx: Int)                     extends TypeRepr
+
+  val AnyBounds: TypeBounds = TypeBounds(NoType, NoType) // NoType lo/hi ⇒ Nothing/Any
+
+// ---------------------------------------------------------------------------
+// Trees — mirrors `reflect.Tree`: Tree > Statement > {Definition, Term}; TypeTree
+// (a syntactic type carrying its `TypeRepr`) is a sibling. Not every Tree has a
+// `tpe` (Definitions carry a `symbol`, Terms a `tpe`) — same split as Quotes.
+// ---------------------------------------------------------------------------
 sealed trait Tree:
-  def tpe: TType
   def origin: Origin
 
-sealed trait TermTree extends Tree
-sealed trait DefTree extends Tree:
+sealed trait Statement extends Tree
+
+sealed trait Definition extends Statement:
   def symbol: SymId
 
+sealed trait Term extends Statement:
+  def tpe: TypeRepr
+
+/** a syntactic type occurrence (`reflect.TypeTree`) — carries its resolved
+  * `TypeRepr` and an `Origin`, bridging tree positions and the type algebra. */
+final case class TypeTree(tpe: TypeRepr, origin: Origin) extends Tree
+
 object Tree:
-  /** class / trait / object / enum. `parents` is the linearized mixin composition
-    * (each may be an `Applied` type); `selfType` carries `self: S =>` and F-bounded
-    * self annotations; `typeParams` carry variance + bounds. */
-  final case class TypeDef(
+  // ---- definitions ----
+  /** class / trait / object / enum. `parents` are the (typed) super constructors /
+    * mixins; `selfType` carries `self: S =>` and F-bounded self annotations. */
+  final case class ClassDef(
       symbol: SymId,
-      typeParams: List[TypeParam],
-      parents: List[TType],
-      selfType: Option[TType],
-      members: List[Tree],
-      tpe: TType,
+      parents: List[Term | TypeTree],
+      selfType: Option[TypeTree],
+      body: List[Statement],
       origin: Origin,
-  ) extends DefTree
+  ) extends Definition
+
+  /** type alias / abstract type member (`type T = …` / `type T <: U`). */
+  final case class TypeDef(symbol: SymId, rhs: TypeTree, origin: Origin) extends Definition
 
   final case class DefDef(
       symbol: SymId,
-      typeParams: List[TypeParam],
-      params: List[ValDef],
-      resultTpe: TType,
-      body: Option[TermTree],
-      tpe: TType,
+      paramss: List[List[ValDef]],
+      returnTpt: TypeTree,
+      rhs: Option[Term],
       origin: Origin,
-  ) extends DefTree
+  ) extends Definition
 
-  final case class ValDef(symbol: SymId, rhs: Option[TermTree], tpe: TType, origin: Origin) extends DefTree
+  final case class ValDef(symbol: SymId, tpt: TypeTree, rhs: Option[Term], origin: Origin) extends Definition
 
   // ---- terms (each reference resolves to a SymId) ----
-  final case class Ident(sym: SymId, tpe: TType, origin: Origin) extends TermTree
-  final case class Select(qual: TermTree, sym: SymId, tpe: TType, origin: Origin) extends TermTree
-  final case class Apply(fun: TermTree, targs: List[TType], args: List[TermTree], method: SymId, tpe: TType, origin: Origin)
-      extends TermTree
-  final case class New(cls: TType, args: List[TermTree], ctor: SymId, tpe: TType, origin: Origin) extends TermTree
-  final case class Lambda(params: List[ValDef], body: TermTree, tpe: TType, origin: Origin) extends TermTree
-  final case class Block(stats: List[Tree], expr: TermTree, tpe: TType, origin: Origin) extends TermTree
-  final case class Lit(raw: String, tpe: TType, origin: Origin) extends TermTree
+  final case class Ident(sym: SymId, tpe: TypeRepr, origin: Origin)                     extends Term
+  final case class Select(qual: Term, sym: SymId, tpe: TypeRepr, origin: Origin)        extends Term
+  final case class Literal(const: Constant, tpe: TypeRepr, origin: Origin)              extends Term
+  final case class This(cls: SymId, tpe: TypeRepr, origin: Origin)                      extends Term
+  final case class New(tpt: TypeTree, tpe: TypeRepr, origin: Origin)                    extends Term
+  final case class Apply(fun: Term, args: List[Term], method: SymId, tpe: TypeRepr, origin: Origin) extends Term
+  final case class TypeApply(fun: Term, targs: List[TypeTree], tpe: TypeRepr, origin: Origin)       extends Term
+  final case class Assign(lhs: Term, rhs: Term, tpe: TypeRepr, origin: Origin)          extends Term
+  final case class Block(stats: List[Statement], expr: Term, tpe: TypeRepr, origin: Origin) extends Term
+  /** anonymous function (`reflect.Closure`/`Block(DefDef,Closure)` simplified). */
+  final case class Lambda(params: List[ValDef], body: Term, tpe: TypeRepr, origin: Origin) extends Term
+  final case class If(cond: Term, thenp: Term, elsep: Term, tpe: TypeRepr, origin: Origin) extends Term
+  final case class Typed(expr: Term, tpt: TypeTree, tpe: TypeRepr, origin: Origin)      extends Term
+  /** varargs sequence (`reflect.Repeated`). */
+  final case class Repeated(elems: List[Term], tpe: TypeRepr, origin: Origin)           extends Term
   /** an as-yet-unmodeled TERM, kept typed (a full structured `tpe`) so the tree stays
-    * whole while the node set grows incrementally. Types are never opaque. */
-  final case class Opaque(raw: String, tpe: TType, origin: Origin) extends TermTree
+    * whole while the node set grows. TYPES are never opaque; only unmodeled terms are. */
+  final case class Opaque(raw: String, tpe: TypeRepr, origin: Origin)                   extends Term
 
 // ---------------------------------------------------------------------------
-// Whole-program index + program
+// Whole-program index + program — our layer BEYOND Quotes.
 // ---------------------------------------------------------------------------
 
 /** Interned symbol store. Tagging returns a new table (immutable). */
@@ -181,41 +214,42 @@ final class SymbolTable(private val syms: Map[SymId, Symbol]):
 object SymbolTable:
   def apply(syms: Iterable[Symbol]): SymbolTable = new SymbolTable(syms.map(s => s.id -> s).toMap)
 
-/** Whole-program cross-reference index — the substrate for scalafix-style queries:
-  * symbol → its definition, symbol → every usage site (term refs AND type positions,
-  * since types reference type-symbols). */
+/** Whole-program cross-reference index: symbol → its definition, symbol → every
+  * usage site (term refs AND type positions, since `TypeRef`/`TermRef` name symbols).
+  * This is what Quotes cannot give you across a program. */
 final class XrefIndex(
-    private val defs: Map[SymId, DefTree],
+    private val defs: Map[SymId, Definition],
     private val usages: Map[SymId, List[Tree]],
 ):
-  def definitionOf(s: SymId): Option[DefTree] = defs.get(s)
-  def usagesOf(s: SymId): List[Tree]          = usages.getOrElse(s, Nil)
+  def definitionOf(s: SymId): Option[Definition] = defs.get(s)
+  def usagesOf(s: SymId): List[Tree]             = usages.getOrElse(s, Nil)
 
-/** The transform substrate: all units, the symbol table, the xref index. Passes
-  * (the project-owned transformers) receive this, query it, and rewrite. */
-final class Program(val units: List[Tree.TypeDef], val symbols: SymbolTable, val xref: XrefIndex):
+/** The transform substrate: all units, the symbol table, the xref index. Project-
+  * owned transformers receive this, query it (Quotes-familiar), and rewrite. */
+final class Program(val units: List[Tree.ClassDef], val symbols: SymbolTable, val xref: XrefIndex):
   export xref.{definitionOf, usagesOf}
-  def typeOf(t: Tree): TType = t.tpe
 
-  def symbolOf(t: Tree): Option[SymId] = t match
-    case d: DefTree                   => Some(d.symbol)
-    case Tree.Ident(s, _, _)          => Some(s)
-    case Tree.Select(_, s, _, _)      => Some(s)
-    case Tree.Apply(_, _, _, m, _, _) => Some(m)
-    case Tree.New(_, _, c, _, _)      => Some(c)
-    case _                            => None
+  def symbolOf(id: SymId): Option[Symbol] = symbols.get(id)
+
+  /** the symbol a tree defines or references, if any (`reflect`-style `.symbol`). */
+  def symbolIn(t: Tree): Option[SymId] = t match
+    case d: Definition                   => Some(d.symbol)
+    case Tree.Ident(s, _, _)             => Some(s)
+    case Tree.Select(_, s, _, _)         => Some(s)
+    case Tree.Apply(_, _, m, _, _)       => Some(m)
+    case _                               => scala.None
 
   /** methods that call `method` (a call-graph edge) — walked by globals→implicits. */
   def callersOf(method: SymId): List[SymId] =
     xref.usagesOf(method).flatMap(enclosingMethod)
 
   private def enclosingMethod(usage: Tree): Option[SymId] =
-    symbolOf(usage)
+    symbolIn(usage)
       .flatMap(ownerChain)
-      .find(id => symbols.get(id).exists(s => s.kind == SymKind.Method || s.kind == SymKind.Ctor))
+      .find(id => symbols.get(id).exists(s => s.info.isInstanceOf[TypeRepr.MethodType | TypeRepr.PolyType]))
 
   private def ownerChain(s: SymId): LazyList[SymId] =
-    LazyList.unfold(Option(s)) {
-      case Some(id) => Some((id, symbols.get(id).flatMap(_.owner)))
-      case None     => None
+    LazyList.unfold[SymId, SymId](s) { id =>
+      if id == SymId.None then scala.None
+      else Some((id, symbols.get(id).map(_.owner).getOrElse(SymId.None)))
     }
