@@ -110,13 +110,22 @@ object CtorPlan:
               if p == f && t.fields.exists(fd => fd.name == f && fd.mods.isFinal) =>
             f -> t.fields.find(_.name == f).get
         }
-        // non-final `this.f = f` can't promote (a member may not shadow a same-named class
-        // param) — rename the param `_f` and initialize `var f = _f`
-        val renamed: Set[String] = assignedOnce.collect {
-          case (f, Ident(p, RefKind.Param(_)))
-              if p == f && !promoted.contains(f) && t.fields.exists(_.name == f) =>
-            f
-        }.toSet
+        // a class param may not share a name with a member it doesn't become — rename
+        // such params `_p` and rewrite every reference (field-init exprs, super args,
+        // remaining ctor body)
+        val renamed: Set[String] = c.params
+          .map(_.name)
+          .filter(pn => !promoted.contains(pn) && t.fields.exists(_.name == pn))
+          .toSet
+        def rn(e: BExpr): BExpr =
+          renamed.foldLeft(e)((acc, n) => renameParam(acc, n, "_" + n))
+        val renameStmts: BExpr => BExpr = {
+          case Ident(n, k @ RefKind.Param(_)) if renamed.contains(n) => Ident("_" + n, k)
+          case e                                                     => e
+        }
+        val assignedR = assignedOnce.view.mapValues(rn).toMap
+        val superArgsR = c.superArgs.getOrElse(Nil).map(rn)
+        val restR = rest.map(BirTransform.mapStmt(_)(renameStmts))
         val params = c.params.map { p =>
           if renamed.contains(p.name) then Param(p.copy(name = "_" + p.name), None)
           else Param(p, promoted.get(p.name))
@@ -124,10 +133,8 @@ object CtorPlan:
         val fieldLines = t.fields.flatMap { f =>
           if promoted.contains(f.name) then None
           else
-            (f.init, assignedOnce.get(f.name)) match
+            (f.init, assignedR.get(f.name)) match
               case (Some(i), None) => Some(FieldLine.FromField(f, i))
-              case (None, Some(_)) if renamed.contains(f.name) =>
-                Some(FieldLine.FromField(withAssignTrivia(f), Ident("_" + f.name, RefKind.Param(false))))
               case (None, Some(e)) => Some(FieldLine.FromField(withAssignTrivia(f), e))
               case (Some(_), Some(_)) => fail(s"field ${f.name} has an initializer and a ctor assignment")
               case (None, None) => Some(fieldWithOwnInit(f))
@@ -136,7 +143,7 @@ object CtorPlan:
         // hoist their Javadoc above the class line so nothing is lost
         val promotedTrivia = t.fields.filter(f => promoted.contains(f.name)).flatMap(f => withAssignTrivia(f).leading)
         CtorPlan(params, Some(c.mods), sentinelLike = false, c.leading ++ promotedTrivia,
-          c.superArgs.getOrElse(Nil), rest, fieldLines, secondaries)
+          superArgsR, restR, fieldLines, secondaries)
 
     def identityBasisPlan(ctors: List[BCtor], roots: List[BCtor]): Option[CtorPlan] =
       identityBasisPlanImpl(ctors, roots, splitAssigns, rootPlan)

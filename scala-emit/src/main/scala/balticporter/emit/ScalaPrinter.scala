@@ -15,7 +15,7 @@ import balticporter.core.BExpr.*
 object ScalaPrinter:
 
   def print(unit: BUnit, prov: Provenance, sentinels: Set[String] = Set.empty): String =
-    new Printer(unit, prov, sentinels).result()
+    new Printer(MemberClashPass(unit), prov, sentinels).result()
 
 /** Cross-unit knowledge: which classes' no-arg construction path equals the null
   * sentinel (needed for the super()-rewrite; transitive over subclass chains).
@@ -267,11 +267,16 @@ private final class Printer(unit: BUnit, prov: Provenance, sentinels: Set[String
     if t.mods.isAbstract then mods.append("abstract ")
     if t.mods.isFinal then mods.append("final ")
 
-    val primaryVis = plan.primaryMods
-      .map(m => visPrefix(m).trim)
-      .filter(_.nonEmpty)
-      .map(v => s" $v ")
-      .getOrElse("")
+    // a private class can't expose a less-private ctor; and ctor vis on a private
+    // class trips "non-private constructor refers to private class"
+    val primaryVis =
+      if t.mods.vis == Vis.Private then ""
+      else
+        plan.primaryMods
+          .map(m => visPrefix(m).trim)
+          .filter(_.nonEmpty)
+          .map(v => s" $v ")
+          .getOrElse("")
     val primary = plan.primaryParams match
       case Nil => ""
       case ps  => primaryVis + "(" + ps.map(paramStr).mkString(", ") + ")"
@@ -429,7 +434,9 @@ private final class Printer(unit: BUnit, prov: Provenance, sentinels: Set[String
         indent += 1; b.foreach(stmt); indent -= 1
         line("}")
       case BStmtK.Block(b) =>
-        line("{")
+        // `locally` keeps a bare block from gluing onto the previous line as an
+        // anonymous-class body or refinement
+        line("locally {")
         indent += 1; b.foreach(stmt); indent -= 1
         line("}")
       case BStmtK.Try(b, catches, fin) =>
@@ -515,7 +522,9 @@ private final class Printer(unit: BUnit, prov: Provenance, sentinels: Set[String
       val argsStr =
         if args.isEmpty && anon.isDefined then ""
         else s"(${adaptedArgs(args, formals, Some(t.qname)).mkString(", ")})"
-      val base = s"new ${tpe(newT)}$argsStr"
+      // `new Object()` — Any has no constructor; Object aliases AnyRef in Scala
+      val typeStr = if BType.isObject(BType.Ref(t.qname, Nil)) then "Object" else tpe(newT)
+      val base = s"new $typeStr$argsStr"
       anon match
         case None => base
         case Some(BAnonBody(Nil, Nil, Nil)) => base + " {}"
@@ -588,7 +597,6 @@ private final class Printer(unit: BUnit, prov: Provenance, sentinels: Set[String
     *     since translated code maps Object → Any but the JDK keeps AnyRef)
     */
   private def adaptedArgs(args: List[BExpr], formals: Option[List[Formal]], ownerQ: Option[String]): List[String] =
-    val jdkOwner = ownerQ.exists(q => q.startsWith("java.") || q.startsWith("javax."))
     formals match
       case Some(fs) if fs.length == args.length =>
         args.zip(fs).map { (a0, f) =>
@@ -600,10 +608,11 @@ private final class Printer(unit: BUnit, prov: Provenance, sentinels: Set[String
             case (Ident(_, RefKind.Param(true)), _, Formal(_, true)) => expr(a) + "*"
             // array-typed value into a varargs slot (Java passes arrays directly) → spread
             case (_, Some(BType.Arr(_)), Formal(_, true)) => expr(a) + "*"
-            // varargs param into an array slot → materialize
+            // varargs param into an array slot → materialize (Object[] slots always
+            // need the cast: the Seq is Seq[Any] but Object[] is Array[AnyRef])
             case (Ident(_, RefKind.Param(true)), _, Formal(BType.Arr(el), false)) =>
               val conv = expr(a) + ".toArray"
-              if jdkOwner && BType.isObject(el) then conv + ".asInstanceOf[Array[AnyRef]]" else conv
+              if BType.isObject(el) then conv + ".asInstanceOf[Array[AnyRef]]" else conv
             case _ => expr(a)
         }
       case _ => args.map(expr)
