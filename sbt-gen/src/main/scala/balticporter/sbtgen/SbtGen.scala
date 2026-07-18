@@ -51,5 +51,10 @@ object SbtGen:
          |
          |// upstream suites mutate shared registries — run serially, like Maven did
          |Test / parallelExecution := false
+         |
+         |// upstream code (DecimalFormat/SimpleDateFormat) is locale-sensitive and its
+         |// CI runs English — the faithful translation inherits that assumption
+         |Test / fork := true
+         |Test / javaOptions ++= Seq("-Duser.language=en", "-Duser.country=US")
          |$deps$testDeps""".stripMargin,
     )
