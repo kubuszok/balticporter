@@ -115,7 +115,18 @@ private final class Printer(
     "java.lang.StringBuilder", "java.lang.Iterable", "java.lang.Cloneable",
   )
 
+  /** Spoon qnames of inner (non-static) classes in this unit — referable only by
+    * simple name inside their outer class (path-dependent from anywhere else). */
+  private lazy val innerQNames: Set[String] =
+    def walk(prefix: String, t: BTypeDecl): List[String] =
+      val q = s"$prefix${t.name}"
+      t.inner.map(n => s"$q$$${n.name}") ++
+        (t.nested ++ t.inner).flatMap(n => walk(s"$q$$", n))
+    val pkgPrefix = if unit.pkg.isEmpty then "" else unit.pkg + "."
+    unit.types.flatMap(t => walk(pkgPrefix, t)).toSet
+
   private def refName(q0: String): String =
+    if innerQNames.contains(q0) then return id(q0.substring(q0.lastIndexOf('$') + 1))
     // Spoon names LOCAL classes with a block-counter prefix (Outer$1MyParams) — they
     // are only referable by simple name inside their defining method
     val lastSeg0 = q0.substring(q0.lastIndexOf('$') + 1)
@@ -376,6 +387,13 @@ private final class Printer(
       line()
     t.methods.foreach(methodDecl)
 
+    t.inner.foreach { n =>
+      nestedDepth += 1
+      typeDecl(n)
+      nestedDepth -= 1
+      line()
+    }
+
     indent -= 1
     line("}")
     companion(t)
@@ -582,6 +600,7 @@ private final class Printer(
     // explicit `this.` — a Java local may shadow a same-named field, and Java resolves
     // the pre-declaration read to the field while Scala's block scoping would not
     case Ident(n, RefKind.OwnField) => s"this.${id(n)}"
+    case Ident(n, RefKind.OuterField(outer)) => s"${id(outer)}.this.${id(n)}"
     case Ident(n, _)                => id(n)
     case This          => "this"
     case Select(r, n)  => s"${expr(r)}.${id(n)}"

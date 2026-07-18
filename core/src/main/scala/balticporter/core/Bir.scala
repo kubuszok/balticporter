@@ -50,6 +50,8 @@ enum RefKind:
   case Param(varargs: Boolean)
   /** field on `this` (or an enclosing instance). */
   case OwnField
+  /** field on an enclosing instance from inside an inner class: `Outer.this.f`. */
+  case OuterField(outer: String)
   /** static field: qname of the owner. */
   case StaticField(owner: String)
 
@@ -224,6 +226,9 @@ final case class BTypeDecl(
     nested: List[BTypeDecl],
     /** extracted `private static final long serialVersionUID = N` if present. */
     serialVersionUID: Option[Long],
+    /** non-static nested classes — emitted in the class body (Scala nested classes
+      * are inner by default, capturing the outer instance). */
+    inner: List[BTypeDecl] = Nil,
 )
 
 /** One translation unit = one Java compilation unit. */

@@ -217,6 +217,7 @@ private final class UnitBuilder(sourcePath: String, source: String):
     // NOTE: CtEnum extends CtClass — must match first
     case e: CtEnum[?] =>
       checkAnnotations(e)
+      val nestedE = nestedOf(e)
       val (svuid, fields, staticFields) = extractFields(e)
       val (staticM, instanceM) =
         e.getMethods.asScala.toList.filterNot(_.isImplicit).sortBy(posKey).partition(_.hasModifier(ModifierKind.STATIC))
@@ -243,12 +244,14 @@ private final class UnitBuilder(sourcePath: String, source: String):
         staticFields = staticFields,
         staticMethods = staticM.map(methodDecl),
         enumCases = cases,
-        nested = nestedOf(e),
+        nested = nestedE._1,
+        inner = nestedE._2,
         serialVersionUID = svuid,
       )
 
     case c: CtClass[?] =>
       checkAnnotations(c)
+      val nestedC = nestedOf(c)
       val (svuid, fields, staticFields) = extractFields(c)
       val (staticM, instanceM) = c.getMethods.asScala.toList.sortBy(posKey).partition(_.hasModifier(ModifierKind.STATIC))
       val (staticBlocks, instanceBlocks) = c.getAnonymousExecutables.asScala.toList
@@ -277,11 +280,13 @@ private final class UnitBuilder(sourcePath: String, source: String):
         staticMethods = staticM.map(methodDecl),
         staticInit = initStmts(staticBlocks),
         instanceInit = initStmts(instanceBlocks),
-        nested = nestedOf(c),
+        nested = nestedC._1,
+        inner = nestedC._2,
         serialVersionUID = svuid,
       )
     case i: CtInterface[?] =>
       checkAnnotations(i)
+      val nestedI = nestedOf(i)
       // Java interface fields are implicitly public static final → companion object
       val (svuid, _, staticFields) = extractFields(i)
       val (staticM, instanceM) = i.getMethods.asScala.toList.sortBy(posKey).partition(_.hasModifier(ModifierKind.STATIC))
@@ -298,22 +303,21 @@ private final class UnitBuilder(sourcePath: String, source: String):
         methods = instanceM.map(methodDecl),
         staticFields = staticFields,
         staticMethods = staticM.map(methodDecl),
-        nested = nestedOf(i),
+        nested = nestedI._1,
+        inner = nestedI._2,
         serialVersionUID = svuid,
       )
     case other => unsupported(other, s"type kind ${other.getClass.getSimpleName}")
 
-  /** Static nested types → companion members. Inner (non-static) classes have
-    * path-dependent Scala encodings — not yet mechanized.
+  /** Static nested types → companion members; inner (non-static) classes → class
+    * body (Scala nested classes are inner by default, capturing the outer instance).
     */
-  private def nestedOf(t: CtType[?]): List[BTypeDecl] =
-    t.getNestedTypes.asScala.toList.sortBy(posKey).map { n =>
-      val implicitlyStatic =
-        n.isInstanceOf[CtInterface[?]] || n.isInstanceOf[CtEnum[?]] || t.isInstanceOf[CtInterface[?]]
-      if !n.hasModifier(ModifierKind.STATIC) && !implicitlyStatic then
-        unsupported(n, "inner (non-static) class")
-      typeDecl(n)
+  private def nestedOf(t: CtType[?]): (List[BTypeDecl], List[BTypeDecl]) =
+    val (stat, inn) = t.getNestedTypes.asScala.toList.sortBy(posKey).partition { n =>
+      n.hasModifier(ModifierKind.STATIC) ||
+      n.isInstanceOf[CtInterface[?]] || n.isInstanceOf[CtEnum[?]] || t.isInstanceOf[CtInterface[?]]
     }
+    (stat.map(typeDecl), inn.map(typeDecl))
 
   private def tparamsOf(t: CtFormalTypeDeclarer): List[BTypeParam] =
     t.getFormalCtTypeParameters.asScala.toList.map { tp =>
@@ -892,9 +896,39 @@ private final class UnitBuilder(sourcePath: String, source: String):
     else
       target match
         // this / qualified-this / super targets all print as the bare member in Scala
-        case null | (_: CtThisAccess[?]) | (_: CtSuperAccess[?]) =>
+        case ta: CtThisAccess[?] =>
+          // inside an inner class, `this` reads against the OUTER instance (Spoon
+          // types the implicit this-access as the outer class) must qualify:
+          // `Outer.this.f` — plain `this.f` would resolve against the inner class
+          outerThisName(ta) match
+            case Some(outer) => Ident(ref.getSimpleName, RefKind.OuterField(outer))
+            case None        => Ident(ref.getSimpleName, RefKind.OwnField)
+        case null | (_: CtSuperAccess[?]) =>
           Ident(ref.getSimpleName, RefKind.OwnField)
         case t => Select(expr(t), ref.getSimpleName)
+
+  /** When a this-access inside a named inner class refers to an enclosing type,
+    * returns that type's simple name (the `Outer.this` qualifier). None for the
+    * ordinary own-instance case, and inside anonymous/local classes (their outer
+    * accesses resolve lexically and stay bare — the M2/M3-green encoding). */
+  private def outerThisName(ta: CtThisAccess[?]): Option[String] =
+    val thisTypeQ = Option(ta.getType).map(_.getQualifiedName)
+    var p: CtElement = ta.getParent
+    var encl: CtType[?] = null
+    while p != null && encl == null do
+      p match
+        case t: CtType[?] => encl = t
+        case _            => ()
+      p = p.getParent
+    if encl == null || encl.isAnonymous || encl.isLocalType then None
+    else
+      thisTypeQ match
+        case Some(q) if q != encl.getQualifiedName &&
+            !encl.hasModifier(ModifierKind.STATIC) && encl.getDeclaringType != null =>
+          // the this-access belongs to an enclosing type — qualify with its simple name
+          val seg = q.substring(q.lastIndexOf('.') + 1)
+          Some(seg.substring(seg.lastIndexOf('$') + 1))
+        case _ => None
 
   /** Java performs unchecked conversion when a raw-typed expression flows into a
     * parameterized target — Scala needs the cast made explicit. */

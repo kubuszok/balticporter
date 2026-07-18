@@ -84,4 +84,5 @@ object BirTransform:
       staticInit = t.staticInit.map(mapStmt(_)(f)),
       instanceInit = t.instanceInit.map(mapStmt(_)(f)),
       nested = t.nested.map(mapTypeDecl(_)(f)),
+      inner = t.inner.map(mapTypeDecl(_)(f)),
     )
