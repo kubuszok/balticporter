@@ -930,11 +930,35 @@ private final class UnitBuilder(sourcePath: String, source: String):
     case c: CtCatchVariableReference[?] => Ident(c.getSimpleName, RefKind.Local)
     case other                          => unsupported(at, s"variable reference ${other.getClass.getSimpleName}")
 
+  /** Spoon's getFieldDeclaration can return null for a constant inherited through
+    * interfaces/superclasses (BasedSequence.LS where LS is SequenceUtils'), leaving
+    * only the ACCESS type. Scala companions don't inherit, so walk the access type's
+    * hierarchy — superclass then super-interfaces (sorted for determinism) — to the
+    * type that actually DECLARES the field, whose companion object holds the constant. */
+  private def declaringTypeOf(start: CtTypeReference[?], simpleName: String): Option[String] =
+    val seen = scala.collection.mutable.Set[String]()
+    def search(tr: CtTypeReference[?]): Option[String] =
+      if tr == null then None
+      else
+        val q = tr.getQualifiedName
+        if q == null || seen(q) then None
+        else
+          seen += q
+          val decl = scala.util.Try(Option(tr.getTypeDeclaration)).toOption.flatten
+          if decl.exists(d => scala.util.Try(Option(d.getField(simpleName)).isDefined).getOrElse(false)) then Some(q)
+          else
+            val supers = decl.toList.flatMap { d =>
+              Option(d.getSuperclass).toList ++ d.getSuperInterfaces.asScala.toList.sortBy(_.getQualifiedName)
+            }
+            supers.iterator.map(search).collectFirst { case Some(x) => x }
+    search(start)
+
   private def fieldAccess(ref: CtFieldReference[?], target: CtExpression[?]): BExpr =
     // Spoon's getDeclaringType returns the ACCESS type for a field inherited through
     // interfaces (BasedSequence.LS where LS is SequenceUtils' constant); Scala companions
     // don't inherit, so resolve to the true declaring type (the field's own declaration).
     val owner = scala.util.Try(Option(ref.getFieldDeclaration).flatMap(fd => Option(fd.getDeclaringType)).map(_.getQualifiedName)).toOption.flatten
+      .orElse(Option(ref.getDeclaringType).flatMap(dt => declaringTypeOf(dt, ref.getSimpleName)))
       .orElse(Option(ref.getDeclaringType).map(_.getQualifiedName))
       .getOrElse(BType.ObjectQ)
     if ref.getSimpleName == "class" then

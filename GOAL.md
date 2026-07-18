@@ -153,6 +153,18 @@ Checklist:
             collision is NOT mechanizable — the visitor family requires
             whole-file overrides (rewriting ctors AND the addActionHandlers/
             addHandlers methods with Scala-distinct signatures).
+      - [x] wave 16 (this commit): completes wave 5's partial (2/6) inherited
+            static-field resolution. When Spoon's getFieldDeclaration returns null
+            for a constant inherited through a super-interface/superclass (the
+            "Spoon null declarations block the rest" case wave 5 flagged), walk the
+            access type's hierarchy (superclass then super-interfaces, sorted for
+            determinism) to the true declaring type whose companion holds the
+            constant. Cleared all 20 not-a-member-of-object errors
+            (PlainSegmentBuilder.F_DEFAULT→ISegmentBuilder, BasedSequence.LS→
+            SequenceUtils, .F_FULL_SEGMENTED_SEQUENCES→BasedOptionsHolder). 161 → 141.
+            liqp compile GREEN + suite 639/639. NOTE: session-start found the
+            frontend-spoon source (SpoonFrontend/CommentScanner) deleted from the
+            working tree — restored from HEAD; honest baseline was 161, not 165.
       - [ ] Override sweep (next, hand-port): NodeVisitor + AttributeProviderAdapter
             + LinkResolverAdapter + BlockNodeVisitor + AstActionHandler base
             (F-bounded visitor family) and IRichSequenceBase/SequenceBuilder
