@@ -133,6 +133,16 @@ invariant / API-parity checks become backend verifications, not the driver.
 2. **Populate from Spoon** — one pass over the existing closure that mints symbols
    for every declaration, resolves every reference to a symbol via Spoon, and
    builds the xref index. Validate: `usagesOf` a known field returns every site.
+   - **2a. Kinded xref + rewrite-responsive traversal — DONE** (`Xref.build`,
+     `UsageKind`, `Usage`; `StandardTraversal` routes every type occurrence and every
+     symbol `info` through `transformType`; `Pipeline` rebuilds the index between
+     phases). `usagesOf(sym)` traces a type across every position — external type,
+     type argument, member type, mixin, extends, self-type, bound — and after a phase
+     rewrites the tree the old symbol drops to zero usages while the new one inherits
+     the exact positions. Proven by `core` `XrefSpec` (3/3). Remaining for step 2: the
+     Spoon population pass that feeds this builder real units. Known gap: class-level
+     type params are not yet distinct tree nodes, so class F-bounds aren't walked
+     (method/poly sigs and wildcard bounds are).
 3. **Emission backend** — TIR → Scala source, types-aware (subsumes the compile
    fixes). Gate: the M6 closure compiles from TIR emission.
 4. **First transform** — pick one real case (java→scala collection, or a field

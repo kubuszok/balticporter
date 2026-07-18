@@ -214,20 +214,52 @@ final class SymbolTable(private val syms: Map[SymId, Symbol]):
 object SymbolTable:
   def apply(syms: Iterable[Symbol]): SymbolTable = new SymbolTable(syms.map(s => s.id -> s).toMap)
 
-/** Whole-program cross-reference index: symbol → its definition, symbol → every
-  * usage site (term refs AND type positions, since `TypeRef`/`TermRef` name symbols).
-  * This is what Quotes cannot give you across a program. */
+/** The POSITION a symbol is used in — so a query can ask "used as a mixin / type
+  * argument / member type / bound / …", not merely "used". This is what makes the
+  * sge/ssg rewrites tractable: java→scala collections retype every `MemberType` and
+  * `TypeArg` site; Int→opaque retypes `TypeArg`/`MemberType` flows; a mixin swap edits
+  * `Mixin`/`Extends`. Type positions are first-class, not just call sites. */
+enum UsageKind:
+  case Call        // invoked as a method (`Apply.method`)
+  case TermRef     // referenced as a term/value/object (`Ident`/`Select`)
+  case Instantiate // `new T(...)` — the constructed type
+  case Extends     // primary supertype in a class's parent list
+  case Mixin       // an additional mixin parent, or a member of an `A & B` intersection
+  case SelfType    // a class self-type `self: S =>`
+  case TypeArg     // a type argument in `F[Arg]` — i.e. a type-PARAMETER position
+  case Tycon       // the constructor being applied in `F[...]`
+  case Bound       // inside a `TypeBounds` — a type-param bound (incl. F-bound) or wildcard
+  case MemberType  // the declared type of a field / val / param / def-result
+  case TypeRefPos  // any other type-reference position (prefix, alias rhs, ascription)
+
+/** One recorded use of a symbol: WHERE (`kind`) and at which tree node (`site`). */
+final case class Usage(kind: UsageKind, site: Tree)
+
+/** Whole-program cross-reference index: symbol → its definition, and symbol → every
+  * usage site KINDED by position (term refs AND every type position — external type,
+  * type argument, member type, mixin, bound, self-type — since `TypeRef`/`TermRef`
+  * name symbols wherever they occur). This is what Quotes cannot give you across a
+  * program. Built by [[Xref.build]] over the tree, so it RE-DERIVES after each phase
+  * rewrites — the pipeline rebuilds it between phases. */
 final class XrefIndex(
     private val defs: Map[SymId, Definition],
-    private val usages: Map[SymId, List[Tree]],
+    private val usagesBySym: Map[SymId, List[Usage]],
 ):
   def definitionOf(s: SymId): Option[Definition] = defs.get(s)
-  def usagesOf(s: SymId): List[Tree]             = usages.getOrElse(s, Nil)
+  /** all usage sites of `s`, any position. */
+  def usagesOf(s: SymId): List[Tree] = usagesBySym.getOrElse(s, Nil).map(_.site)
+  /** kinded usages of `s` — ask "where, and how". */
+  def usages(s: SymId): List[Usage] = usagesBySym.getOrElse(s, Nil)
+  /** usage sites of `s` restricted to one position kind. */
+  def usagesOf(s: SymId, kind: UsageKind): List[Tree] =
+    usagesBySym.getOrElse(s, Nil).collect { case Usage(`kind`, site) => site }
+  /** every symbol that has at least one recorded usage. */
+  def referenced: Set[SymId] = usagesBySym.keySet
 
 /** The transform substrate: all units, the symbol table, the xref index. Project-
   * owned transformers receive this, query it (Quotes-familiar), and rewrite. */
 final class Program(val units: List[Tree.ClassDef], val symbols: SymbolTable, val xref: XrefIndex):
-  export xref.{definitionOf, usagesOf}
+  export xref.{definitionOf, usagesOf, usages, referenced}
 
   def symbolOf(id: SymId): Option[Symbol] = symbols.get(id)
 

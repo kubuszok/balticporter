@@ -13,6 +13,11 @@ package balticporter.tir
   * Every hook runs with the whole-program `Program` in scope (`using`), so a transform
   * can ask `usagesOf` / `callersOf` / `symbolOf` while rewriting — the thing Quotes
   * and scalafix-over-SemanticDB cannot give you across the program, before emission.
+  *
+  * `transformType` is applied by the traversal at EVERY type occurrence in the tree
+  * (parents, self-types, tpts, type args, `new`, ascriptions) AND over every symbol's
+  * `info`, so a type rewrite lands everywhere the xref reads — and the rebuilt index
+  * reflects it. That is the "responds to rewrites" contract.
   */
 trait Phase:
   def name: String
@@ -20,12 +25,14 @@ trait Phase:
   def runsBefore: Set[String] = Set.empty
 
   /** Full-control entry point. Default applies the hooks below via the standard
-    * bottom-up traversal (MiniPhase-style). Override for whole-program passes. */
+    * bottom-up traversal (MiniPhase-style), then rewrites symbol infos with
+    * `transformType` so signatures stay consistent with the rewritten trees. Override
+    * for whole-program passes. The pipeline rebuilds the xref afterwards. */
   def run(program: Program): Program =
     given Program = program
-    val units = program.units.map(u => StandardTraversal.mapClassDef(this, u))
-    // xref is rebuilt by the Pipeline after each phase; here we only replace trees
-    new Program(units, program.symbols, program.xref)
+    val units   = program.units.map(u => StandardTraversal.mapClassDef(this, u))
+    val symbols = StandardTraversal.mapSymbols(this, program.symbols)
+    new Program(units, symbols, program.xref) // xref rebuilt by the Pipeline
 
   // ---- MiniPhase-style hooks (identity by default) ----
   def transformClassDef(t: Tree.ClassDef)(using Program): Tree.ClassDef = t
@@ -42,7 +49,8 @@ trait Phase:
   def transformBlock(t: Tree.Block)(using Program): Term         = t
   def transformTerm(t: Term)(using Program): Term                = t // catch-all, after the specific hook
 
-  /** rewrite a type occurrence (e.g. java.util.List → scala List). */
+  /** rewrite a type occurrence (e.g. java.util.List → scala List). Applied by the
+    * traversal at every constituent, bottom-up. */
   def transformType(t: TypeRepr)(using Program): TypeRepr = t
 
 /** A named bundle of phases (`dotc.plugins.Plugin`). */
@@ -59,7 +67,7 @@ object Pipeline:
     // edges: a -> b means a runs before b
     val edges: Map[String, Set[String]] =
       phases.foldLeft(Map.empty[String, Set[String]].withDefaultValue(Set.empty)) { (m, p) =>
-        val afters  = p.runsAfter.filter(byName.contains).map(a => (a, p.name)) // a before p
+        val afters  = p.runsAfter.filter(byName.contains).map(a => (a, p.name))  // a before p
         val befores = p.runsBefore.filter(byName.contains).map(b => (p.name, b)) // p before b
         (afters ++ befores).foldLeft(m)((mm, e) => mm.updated(e._1, mm(e._1) + e._2))
       }
@@ -77,38 +85,95 @@ object Pipeline:
       throw new IllegalStateException(s"phase ordering has a cycle among: ${phases.map(_.name).toSet -- out.toSet}")
     out.toList.map(byName)
 
-  def run(program: Program, phases: List[Phase])(rebuildXref: Program => Program): Program =
-    order(phases).foldLeft(program)((prog, phase) => rebuildXref(phase.run(prog)))
+  /** Run phases in dependency order, rebuilding the xref from the rewritten tree after
+    * each — so every phase sees an index consistent with the prior phase's rewrites. */
+  def run(program: Program, phases: List[Phase]): Program =
+    order(phases).foldLeft(program) { (prog, phase) =>
+      val out = phase.run(prog)
+      new Program(out.units, out.symbols, Xref.build(out.units))
+    }
 
 /** The standard bottom-up traversal that fuses a phase's hooks over a tree. Children
   * are transformed first, then the node's specific hook, then the `transformTerm`
-  * catch-all. Starter coverage of the defined node set; grown with the node set. */
+  * catch-all. Every type occurrence (in a `TypeTree` or a term/definition `tpe`/`info`)
+  * is routed through `transformType`, applied bottom-up over the `TypeRepr`. */
 object StandardTraversal:
+  // -- types --
+  def mapType(ph: Phase, t: TypeRepr)(using Program): TypeRepr =
+    val mapped: TypeRepr = t match
+      case TypeRepr.TypeRef(p, s)       => TypeRepr.TypeRef(mapType(ph, p), s)
+      case TypeRepr.TermRef(p, s)       => TypeRepr.TermRef(mapType(ph, p), s)
+      case TypeRepr.SuperType(a, b)     => TypeRepr.SuperType(mapType(ph, a), mapType(ph, b))
+      case TypeRepr.AppliedType(tc, as) => TypeRepr.AppliedType(mapType(ph, tc), as.map(mapType(ph, _)))
+      case TypeRepr.AndType(l, r)       => TypeRepr.AndType(mapType(ph, l), mapType(ph, r))
+      case TypeRepr.OrType(l, r)        => TypeRepr.OrType(mapType(ph, l), mapType(ph, r))
+      case TypeRepr.ByNameType(u)       => TypeRepr.ByNameType(mapType(ph, u))
+      case TypeRepr.TypeBounds(lo, hi)  => TypeRepr.TypeBounds(mapType(ph, lo), mapType(ph, hi))
+      case TypeRepr.Refinement(p, n, i) => TypeRepr.Refinement(mapType(ph, p), n, mapType(ph, i))
+      case TypeRepr.MethodType(ps, r, im) =>
+        TypeRepr.MethodType(ps.map((n, pt) => (n, mapType(ph, pt))), mapType(ph, r), im)
+      case TypeRepr.PolyType(ps, r)  => TypeRepr.PolyType(ps.map((n, b) => (n, mapBounds(ph, b))), mapType(ph, r))
+      case TypeRepr.TypeLambda(ps, b) => TypeRepr.TypeLambda(ps.map((n, bd) => (n, mapBounds(ph, bd))), mapType(ph, b))
+      case TypeRepr.ConstantType(Constant.ClassOfC(tp)) => TypeRepr.ConstantType(Constant.ClassOfC(mapType(ph, tp)))
+      case other => other
+    ph.transformType(mapped)
+
+  private def mapBounds(ph: Phase, b: TypeRepr.TypeBounds)(using Program): TypeRepr.TypeBounds =
+    TypeRepr.TypeBounds(mapType(ph, b.low), mapType(ph, b.hi))
+
+  private def mapTpt(ph: Phase, tt: TypeTree)(using Program): TypeTree = TypeTree(mapType(ph, tt.tpe), tt.origin)
+
+  def mapSymbols(ph: Phase, tbl: SymbolTable)(using Program): SymbolTable =
+    tbl.all.foldLeft(tbl)((t, s) => t.updated(s.copy(info = mapType(ph, s.info))))
+
+  // -- trees --
   def mapClassDef(ph: Phase, t: Tree.ClassDef)(using Program): Tree.ClassDef =
-    ph.transformClassDef(t.copy(body = t.body.map(mapStat(ph, _))))
+    val parents: List[Term | TypeTree] = t.parents.map {
+      case tt: TypeTree => mapTpt(ph, tt)
+      case term: Term   => mapTerm(ph, term)
+    }
+    ph.transformClassDef(
+      t.copy(parents = parents, selfType = t.selfType.map(mapTpt(ph, _)), body = t.body.map(mapStat(ph, _)))
+    )
 
   def mapStat(ph: Phase, s: Statement)(using Program): Statement = s match
     case c: Tree.ClassDef => mapClassDef(ph, c)
-    case d: Tree.DefDef   => ph.transformDefDef(d.copy(paramss = d.paramss.map(_.map(mapValDef(ph, _))), rhs = d.rhs.map(mapTerm(ph, _))))
+    case d: Tree.DefDef =>
+      ph.transformDefDef(
+        d.copy(
+          paramss = d.paramss.map(_.map(mapValDef(ph, _))),
+          returnTpt = mapTpt(ph, d.returnTpt),
+          rhs = d.rhs.map(mapTerm(ph, _)),
+        )
+      )
     case v: Tree.ValDef   => mapValDef(ph, v)
-    case td: Tree.TypeDef => ph.transformTypeDef(td)
+    case td: Tree.TypeDef => ph.transformTypeDef(td.copy(rhs = mapTpt(ph, td.rhs)))
     case t: Term          => mapTerm(ph, t)
 
   def mapValDef(ph: Phase, v: Tree.ValDef)(using Program): Tree.ValDef =
-    ph.transformValDef(v.copy(rhs = v.rhs.map(mapTerm(ph, _))))
+    ph.transformValDef(v.copy(tpt = mapTpt(ph, v.tpt), rhs = v.rhs.map(mapTerm(ph, _))))
 
   def mapTerm(ph: Phase, t: Term)(using Program): Term =
     val rebuilt: Term = t match
-      case x: Tree.Ident     => ph.transformIdent(x)
-      case x: Tree.Select    => ph.transformSelect(x.copy(qual = mapTerm(ph, x.qual)))
-      case x: Tree.Apply     => ph.transformApply(x.copy(fun = mapTerm(ph, x.fun), args = x.args.map(mapTerm(ph, _))))
-      case x: Tree.TypeApply => ph.transformTypeApply(x.copy(fun = mapTerm(ph, x.fun)))
-      case x: Tree.New       => ph.transformNew(x)
-      case x: Tree.Lambda    => ph.transformLambda(x.copy(params = x.params.map(mapValDef(ph, _)), body = mapTerm(ph, x.body)))
-      case x: Tree.Block     => ph.transformBlock(x.copy(stats = x.stats.map(mapStat(ph, _)), expr = mapTerm(ph, x.expr)))
-      case x: Tree.Assign    => x.copy(lhs = mapTerm(ph, x.lhs), rhs = mapTerm(ph, x.rhs))
-      case x: Tree.If        => x.copy(cond = mapTerm(ph, x.cond), thenp = mapTerm(ph, x.thenp), elsep = mapTerm(ph, x.elsep))
-      case x: Tree.Typed     => x.copy(expr = mapTerm(ph, x.expr))
-      case x: Tree.Repeated  => x.copy(elems = x.elems.map(mapTerm(ph, _)))
-      case other             => other
+      case x: Tree.Ident  => ph.transformIdent(x.copy(tpe = mapType(ph, x.tpe)))
+      case x: Tree.Select => ph.transformSelect(x.copy(qual = mapTerm(ph, x.qual), tpe = mapType(ph, x.tpe)))
+      case x: Tree.Apply =>
+        ph.transformApply(x.copy(fun = mapTerm(ph, x.fun), args = x.args.map(mapTerm(ph, _)), tpe = mapType(ph, x.tpe)))
+      case x: Tree.TypeApply =>
+        ph.transformTypeApply(
+          x.copy(fun = mapTerm(ph, x.fun), targs = x.targs.map(mapTpt(ph, _)), tpe = mapType(ph, x.tpe))
+        )
+      case x: Tree.New => ph.transformNew(x.copy(tpt = mapTpt(ph, x.tpt), tpe = mapType(ph, x.tpe)))
+      case x: Tree.Lambda =>
+        ph.transformLambda(x.copy(params = x.params.map(mapValDef(ph, _)), body = mapTerm(ph, x.body), tpe = mapType(ph, x.tpe)))
+      case x: Tree.Block =>
+        ph.transformBlock(x.copy(stats = x.stats.map(mapStat(ph, _)), expr = mapTerm(ph, x.expr), tpe = mapType(ph, x.tpe)))
+      case x: Tree.Assign => x.copy(lhs = mapTerm(ph, x.lhs), rhs = mapTerm(ph, x.rhs), tpe = mapType(ph, x.tpe))
+      case x: Tree.If =>
+        x.copy(cond = mapTerm(ph, x.cond), thenp = mapTerm(ph, x.thenp), elsep = mapTerm(ph, x.elsep), tpe = mapType(ph, x.tpe))
+      case x: Tree.Typed    => x.copy(expr = mapTerm(ph, x.expr), tpt = mapTpt(ph, x.tpt), tpe = mapType(ph, x.tpe))
+      case x: Tree.Repeated => x.copy(elems = x.elems.map(mapTerm(ph, _)), tpe = mapType(ph, x.tpe))
+      case x: Tree.This     => x.copy(tpe = mapType(ph, x.tpe))
+      case x: Tree.Literal  => x.copy(tpe = mapType(ph, x.tpe))
+      case x: Tree.Opaque   => x.copy(tpe = mapType(ph, x.tpe))
     ph.transformTerm(rebuilt)
