@@ -37,6 +37,14 @@ lazy val `scala-emit` = project
     libraryDependencies += munit,
   )
 
+lazy val vocab = project
+  .in(file("vocab"))
+  .dependsOn(core)
+  .settings(
+    name := "balticporter-vocab",
+    libraryDependencies += munit,
+  )
+
 lazy val `sbt-gen` = project
   .in(file("sbt-gen"))
   .dependsOn(core)
@@ -74,7 +82,7 @@ lazy val runner = project
 
 lazy val `corpus-tests` = project
   .in(file("corpus-tests"))
-  .dependsOn(runner, testkit, verify, `sbt-gen`)
+  .dependsOn(runner, testkit, verify, `sbt-gen`, vocab)
   .settings(
     name := "balticporter-corpus-tests",
     libraryDependencies += munit,
@@ -85,7 +93,7 @@ lazy val `corpus-tests` = project
 
 lazy val root = project
   .in(file("."))
-  .aggregate(core, `frontend-spoon`, `scala-emit`, `sbt-gen`, verify, testkit, runner, `corpus-tests`)
+  .aggregate(core, `frontend-spoon`, `scala-emit`, vocab, `sbt-gen`, verify, testkit, runner, `corpus-tests`)
   .settings(
     name := "balticporter",
     publish / skip := true,

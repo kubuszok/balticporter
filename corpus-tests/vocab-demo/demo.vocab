@@ -1,0 +1,5 @@
+# Tier-2 demo table: Java collections onto Scala mutable counterparts.
+type java.util.ArrayList -> scala.collection.mutable.ArrayBuffer
+method java.util.ArrayList#add -> append
+method java.util.ArrayList#addAll -> appendAll
+getter java.util.ArrayList#size -> size
