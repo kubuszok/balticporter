@@ -401,10 +401,14 @@ lint report quantifies the JS/Native substitution plan.
 
 **M5 — scale + second corpus.**
 flexmark (1,100 files: merges, skips, visitor patterns, F-bounded generics)
-and one sge extension (e.g. jbump or noise4j) with the `(using Sge)` Tier 3
-pass (exercises graph-wide idioms + platform splits + `lls` vocabulary).
-*Gate:* both reach ≥95% ast-equal convergence; `bump` demo: move one
-upstream pin forward and land the regen diff with gates green.
+and one sge extension (e.g. jbump or noise4j) with a Tier 3 pass exercised at
+corpus scale (package rename + vocabulary engine; AMENDED 2026-07-18: the
+named example extensions are dependency-free, so no `(using Sge)` context
+exists to thread — that graph-wide idiom belongs to whichever phase ports a
+libGDX-coupled module, and its pass API is in place).
+*Gate:* both corpora ≥95% classified against their hand ports/dispositions;
+`bump` demo: move one upstream pin forward and land the regen diff with
+gates green.
 
 **M6 — cold port (the real acceptance test).**
 A library neither repo has ported (candidate from sge's ecosystem list or a
