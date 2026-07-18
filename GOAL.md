@@ -49,12 +49,14 @@ Checklist:
       get a private primary carrying all super + field slots, each ctor
       delegating its values. Clears SegmentedSequenceTree. Blockers 4 → 3.
       liqp 638/638, flexmark 753 → 754.
-- [ ] Blocker burn remainder (3): TagRange, BasedSegmentBuilder, HtmlWriter —
-      these reach genuinely DIFFERENT super targets (Range copy-ctor vs
-      int,int; super() vs super(options)) that can't be structurally unified.
-      Disposition: PLAN §7 override layer (handwritten ctor fragments,
-      symbol-existence verified) — the designed cold-port escape hatch.
-      Wire overrides into the (forthcoming) XwikiProject assembly.
+- [x] Blocker wave 5 (commit 4676f90): maximal-primary now handles
+      this()-delegators (roots feed the synthetic primary; delegators stay
+      aux→sibling, depth-ordered). Clears BasedSegmentBuilder. Blockers 3 → 2.
+      liqp 639/639, flexmark 754 → 755.
+- [ ] Final 2 blockers → override layer: TagRange (Range copy-ctor vs int,int
+      super targets) and HtmlWriter (3 distinct super targets + method-call
+      bodies) are genuinely irreducible. Wire whole-file overrides (or, better,
+      a constructor-splice mechanism) into XwikiProject.
 - [ ] XwikiProject assembly: sbt-gen the xwiki-macros module set + ported test
       suite; compile + tests green on JVM (the M6 core gate)
 - [ ] Framework docs + example port program published
