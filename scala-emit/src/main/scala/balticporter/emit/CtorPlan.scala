@@ -185,10 +185,13 @@ object CtorPlan:
       * `this(<its canonical super args>, <its field values>)`. Fields a ctor doesn't
       * set take their own initializer (or the Java default). This is the general
       * struct-of-params encoding for independent multi-field constructors that don't
-      * delegate to one another (SegmentedSequenceTree, TagRange). */
+      * delegate to one another (SegmentedSequenceTree). Constructors that `this()`-
+      * delegate within the subclass stay as ordinary aux→sibling delegations
+      * (BasedSegmentBuilder). */
     def maximalPrimaryPlan: Option[CtorPlan] =
       val reg = registry.orNull
-      if reg == null || t.ctors.lengthIs < 2 || t.ctors.exists(_.thisArgs.isDefined) then None
+      val (rootCtors, thisDelegators) = t.ctors.partition(_.thisArgs.isEmpty)
+      if reg == null || t.ctors.lengthIs < 2 || rootCtors.length < 2 then None
       else
         val superQ = t.superClass.map(_.qname)
         def canonSuper(c: BCtor): Option[List[BExpr]] =
@@ -196,11 +199,11 @@ object CtorPlan:
           superQ match
             case Some(q) => reg.resolveThisChain(q, sa).orElse(Some(sa))
             case None    => if sa.isEmpty then Some(Nil) else None
-        val perCtor = t.ctors.map { c =>
+        val perCtor = rootCtors.map { c =>
           val (assigns, rest) = splitAssigns(c.body)
           (c, canonSuper(c), assigns, rest)
         }
-        // guards: every super resolves, all to one arity; bodies are pure field assigns
+        // guards: every ROOT super resolves, all to one arity; bodies are pure field assigns
         if perCtor.exists(_._2.isEmpty) || perCtor.exists(_._4.nonEmpty) then None
         else if perCtor.exists { case (_, _, a, _) => a.map(_._1).distinct.length != a.length } then None
         else
@@ -233,7 +236,7 @@ object CtorPlan:
                   if assignedNames.contains(f.name) then FieldLine.DefaultInit(f.copy(mods = f.mods.copy(isFinal = false)))
                   else fieldWithOwnInit(f)
                 }
-                val secondaries = perCtor.map { case (c, Some(cSuper), assigns, _) =>
+                val rootSecondaries = perCtor.map { case (c, Some(cSuper), assigns, _) =>
                   val amap = assigns.toMap
                   val fieldVals = fieldsF.map { f =>
                     amap.getOrElse(f.name, f.init.getOrElse(javaDefault(f.tpe)))
@@ -241,6 +244,20 @@ object CtorPlan:
                   fixSecondaryCollisions(t, Secondary(c.leading, c.mods, c.params, cSuper ++ fieldVals,
                     targetTypes = primaryParams.map(_.tpe)))
                 }
+                // this()-delegating ctors stay as ordinary aux→sibling delegations,
+                // ordered so each target (found by arity) precedes it (Scala rule)
+                def depth(c: BCtor, seen: Set[BCtor]): Int = c.thisArgs match
+                  case None => 0
+                  case Some(args) =>
+                    t.ctors.find(o => !seen.contains(o) && (o ne c) && o.params.length == args.length) match
+                      case Some(tg) => 1 + depth(tg, seen + c)
+                      case None     => 99
+                val delegSecondaries = thisDelegators.sortBy(d => depth(d, Set.empty)).map { d =>
+                  val tgtTypes = t.ctors.find(o => (o ne d) && o.params.length == d.thisArgs.get.length)
+                    .map(_.params.map(_.tpe)).getOrElse(Nil)
+                  fixSecondaryCollisions(t, Secondary(d.leading, d.mods, d.params, d.thisArgs.get, d.body, targetTypes = tgtTypes))
+                }
+                val secondaries = rootSecondaries ++ delegSecondaries
                 Some(CtorPlan(
                   primaryParams.map(p => Param(p, None)),
                   Some(Mods(vis = Vis.Private)),
