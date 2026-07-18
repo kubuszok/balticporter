@@ -249,6 +249,21 @@ private final class Printer(
       else line(s"case ${id(c.name)} extends ${id(t.name)}(${c.args.map(expr).mkString(", ")})")
     }
     line()
+    // enum auxiliary constructors (a no-arg Java enum ctor delegating this(default))
+    // let no-arg cases `extends Flags()` resolve — Scala 3 enums allow `def this()`
+    plan.secondaryCtors.foreach { sc =>
+      trivia(sc.leading)
+      val dArgs =
+        if sc.targetTypes.length == sc.delegateArgs.length then
+          sc.delegateArgs.zip(sc.targetTypes).map((a, tt) => delegateArg(a, Some(tt))).mkString(", ")
+        else sc.delegateArgs.map(delegateArg).mkString(", ")
+      if sc.body.isEmpty then
+        line(s"${visPrefix(sc.mods)}def this(${sc.params.map(paramOf).mkString(", ")}) = this($dArgs)")
+      else
+        line(s"${visPrefix(sc.mods)}def this(${sc.params.map(paramOf).mkString(", ")}) = {")
+        indent += 1; line(s"this($dArgs)"); sc.body.foreach(stmt); indent -= 1; line("}")
+      line()
+    }
     plan.fieldLines.foreach {
       case FieldLine.FromField(f, init) =>
         trivia(f.leading)
