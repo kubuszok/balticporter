@@ -8,7 +8,7 @@ object BirTransform:
   def mapExpr(e: BExpr)(f: BExpr => BExpr): BExpr =
     def m(x: BExpr): BExpr = mapExpr(x)(f)
     val rebuilt = e match
-      case _: Lit | _: Ident | This | _: ClassLit | _: UnboundMethodRef => e
+      case _: Lit | _: Ident | This | _: ClassLit | _: UnboundMethodRef | _: CtorRef => e
       case Select(r, n)       => Select(m(r), n)
       case AssignExpr(l, r)   => AssignExpr(m(l), m(r))
       case IncDecExpr(t, op, post) => IncDecExpr(m(t), op, post)
@@ -50,6 +50,8 @@ object BirTransform:
       case BStmtK.Return(e)             => BStmtK.Return(e.map(me))
       case BStmtK.Throw(e)              => BStmtK.Throw(me(e))
       case BStmtK.While(c, b)           => BStmtK.While(me(c), b.map(ms))
+      case BStmtK.DoWhile(b, c)         => BStmtK.DoWhile(b.map(ms), me(c))
+      case BStmtK.Assert(c, m2)         => BStmtK.Assert(me(c), m2.map(me))
       case BStmtK.Block(b)              => BStmtK.Block(b.map(ms))
       case BStmtK.Try(b, cs, fin) =>
         BStmtK.Try(b.map(ms), cs.map(c => c.copy(body = c.body.map(ms))), fin.map(_.map(ms)))

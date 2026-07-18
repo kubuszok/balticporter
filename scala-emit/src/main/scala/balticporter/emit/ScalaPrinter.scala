@@ -492,6 +492,14 @@ private final class Printer(unit: BUnit, prov: Provenance, sentinels: Set[String
         line(s"while (${expr(c)}) {")
         indent += 1; b.foreach(stmt); indent -= 1
         line("}")
+      case BStmtK.DoWhile(b, c) =>
+        line("while ({")
+        indent += 1; b.foreach(stmt); line(expr(c)); indent -= 1
+        line("}) ()")
+      case BStmtK.Assert(c, m) =>
+        m match
+          case Some(msg) => line(s"assert(${expr(c)}, ${expr(msg)})")
+          case None      => line(s"assert(${expr(c)})")
       case BStmtK.Block(b) =>
         // `locally` keeps a bare block from gluing onto the previous line as an
         // anonymous-class body or refinement
@@ -636,6 +644,11 @@ private final class Printer(unit: BUnit, prov: Provenance, sentinels: Set[String
     case Unary(op, e1, true) => s"($op${expr(e1)})"
     case Unary(op, _, false) => unsupported(s"postfix operator $op")
     case Ternary(c, t, e1)    => s"(if (${expr(c)}) ${expr(t)} else ${expr(e1)})"
+
+    case CtorRef(t, formals) =>
+      val ps = formals.zipWithIndex.map((ft, i) => s"p$i$$: ${tpe(ft)}")
+      val args = formals.indices.map(i => s"p$i$$").mkString(", ")
+      s"((${ps.mkString(", ")}) => new ${tpe(t)}($args))"
 
     case MethodRef(prefix, name) =>
       prefix match

@@ -123,6 +123,9 @@ object BExpr:
   /** Java `x++`/`x--` (post=true) or `++x`/`--x` (post=false) in expression position. */
   final case class IncDecExpr(target: BExpr, op: String, post: Boolean) extends BExpr
 
+  /** Constructor reference `X::new` → `((p0, ...) => new X(p0, ...))`. */
+  final case class CtorRef(tpe: BType.Ref, formals: List[BType]) extends BExpr
+
   /** Unbound instance method reference `Type::m` → explicit lambda
     * `(r: Type, p1: A1, ...) => r.m(p1, ...)` — receiver + formal types from the
     * resolved executable. */
@@ -138,6 +141,11 @@ object BStmtK:
   final case class Return(e: Option[BExpr]) extends BStmtK
   final case class Throw(e: BExpr) extends BStmtK
   final case class While(cond: BExpr, body: List[BStmt]) extends BStmtK
+  /** Java do/while → `while ({ body; cond }) ()` (exact semantics). */
+  final case class DoWhile(body: List[BStmt], cond: BExpr) extends BStmtK
+  /** Java `assert cond : msg` → Scala assert (NOTE: Java asserts are off by default
+    * at runtime; Scala's are on — a documented, deliberate divergence). */
+  final case class Assert(cond: BExpr, msg: Option[BExpr]) extends BStmtK
   final case class Block(body: List[BStmt]) extends BStmtK
   final case class Try(body: List[BStmt], catches: List[BCatch], fin: Option[List[BStmt]]) extends BStmtK
   /** `scala.util.boundary { ... }` — target for translated break/continue.

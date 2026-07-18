@@ -146,6 +146,7 @@ private final class UnitBuilder(sourcePath: String, source: String):
   private val ignoredAnnotations = Set(
     "java.lang.Override", "java.lang.SuppressWarnings", "java.lang.SafeVarargs",
     "java.lang.FunctionalInterface", // Scala SAM conversion needs no marker
+    "java.lang.Deprecated",          // mapped to scala.deprecated in preservedAnnotations
   )
 
   /** annotations carried through to the output verbatim. Jackson annotations are
@@ -169,14 +170,19 @@ private final class UnitBuilder(sourcePath: String, source: String):
 
   private def preservedAnnotations(el: CtElement & CtModifiable): List[BAnnotation] =
     el.getAnnotations.asScala.toList
-      .filter(a => preservedAnnotationPrefixes.exists(a.getAnnotationType.getQualifiedName.startsWith))
+      .filter(a =>
+        preservedAnnotationPrefixes.exists(a.getAnnotationType.getQualifiedName.startsWith)
+          || a.getAnnotationType.getQualifiedName == "java.lang.Deprecated")
       .map { a =>
-        val args = a.getValues.asScala.toList.map { (k, v) =>
-          k -> (v match
-            case e: CtExpression[?] => expr(e)
-            case other              => unsupported(a, s"annotation value $other"))
-        }
-        BAnnotation(a.getAnnotationType.getQualifiedName, args)
+        val q = a.getAnnotationType.getQualifiedName
+        if q == "java.lang.Deprecated" then BAnnotation("scala.deprecated", Nil)
+        else
+          val args = a.getValues.asScala.toList.map { (k, v) =>
+            k -> (v match
+              case e: CtExpression[?] => expr(e)
+              case other              => unsupported(a, s"annotation value $other"))
+          }
+          BAnnotation(q, args)
       }
 
   private def typeDecl(t: CtType[?]): BTypeDecl = t match
@@ -443,6 +449,14 @@ private final class UnitBuilder(sourcePath: String, source: String):
     case f: CtForEach => forEach(f)
     case f: CtFor     => classicFor(f)
 
+    case a: CtAssert[?] =>
+      BStmtK.Assert(expr(a.getAssertExpression), Option(a.getExpression).map(expr))
+
+    case d: CtDo =>
+      val (hasB, hasC) = analyzeLoop(d)
+      val body = maybeContinueBoundary(hasC, blockOf(d.getBody))
+      maybeBreakBoundary(hasB, BStmtK.DoWhile(body, expr(d.getLoopingExpression)))
+
     case t: CtTryWithResource => unsupported(t, "try-with-resources (not yet supported)")
     case t: CtTry =>
       val catches = t.getCatchers.asScala.toList.map { c =>
@@ -576,26 +590,35 @@ private final class UnitBuilder(sourcePath: String, source: String):
     */
   private def switchToMatch(s: CtSwitch[?]): BStmtK =
     val scrutinee = expr(s.getSelector)
+    val cases = s.getCases.asScala.toList
+    // pre-compute each case's (bodyStmts, terminated); fallthrough closure = own body
+    // ++ the next case's closure when not terminated (tail duplication, RESEARCH §4.2)
+    val split = cases.map { c =>
+      val stmts = c.getStatements.asScala.toList
+      stmts.reverse match
+        case (_: CtBreak) :: rest => (rest.reverse, true)
+        case all =>
+          val terms = all.headOption.exists {
+            case _: CtReturn[?] | _: CtThrow => true
+            case _                           => false
+          }
+          (all.reverse, terms)
+    }
+    val closures = new Array[List[CtStatement]](cases.length)
+    for i <- cases.indices.reverse do
+      val (body, terminated) = split(i)
+      closures(i) =
+        if terminated || i == cases.length - 1 then body
+        else body ++ closures(i + 1)
     val out = List.newBuilder[BCase]
     var pendingExprs = List.empty[BExpr]
-    val cases = s.getCases.asScala.toList
     cases.zipWithIndex.foreach { (c, idx) =>
       val exprs = c.getCaseExpressions.asScala.toList.map(expr)
       val isDefault = exprs.isEmpty
-      val stmts = c.getStatements.asScala.toList
       val isLast = idx == cases.length - 1
-      if stmts.isEmpty && !isDefault && !isLast then pendingExprs = pendingExprs ++ exprs
+      if split(idx)._1.isEmpty && !isDefault && !isLast then pendingExprs = pendingExprs ++ exprs
       else
-        val (bodyStmts, terminated) = stmts.reverse match
-          case (_: CtBreak) :: rest => (rest.reverse, true)
-          case all =>
-            val terms = all.headOption.exists {
-              case _: CtReturn[?] | _: CtThrow => true
-              case _                           => false
-            }
-            (all.reverse, terms)
-        if !terminated && !isLast then unsupported(c, "switch fallthrough")
-        out += BCase(pendingExprs ++ exprs, isDefault, block(bodyStmts))
+        out += BCase(pendingExprs ++ exprs, isDefault, block(closures(idx)))
         pendingExprs = Nil
     }
     val result = out.result()
@@ -708,7 +731,13 @@ private final class UnitBuilder(sourcePath: String, source: String):
 
     case mr: CtExecutableReferenceExpression[?, ?] =>
       val ex = mr.getExecutable
-      if ex.isConstructor then unsupported(mr, "constructor reference")
+      if ex.isConstructor then
+        val formals = Option(ex.getExecutableDeclaration)
+          .map(_.getParameters.asScala.toList.map(p => btype(p.getType)))
+          .getOrElse(unsupported(mr, "constructor reference with unresolvable formals"))
+        btype(ex.getDeclaringType) match
+          case r: BType.Ref => return CtorRef(r, formals)
+          case t2           => unsupported(mr, s"constructor reference of $t2")
       mr.getTarget match
         case ta: CtTypeAccess[?] if ex.isStatic =>
           MethodRef(Left(ta.getAccessedType.getQualifiedName), ex.getSimpleName)

@@ -145,6 +145,7 @@ object CtorPlan:
         }
         def unfinal(f: BField): BField =
           if secondaryAssigned.contains(f.name) then f.copy(mods = f.mods.copy(isFinal = false)) else f
+        val reassignedInCtor = collection.mutable.Set[String]()
         val fieldLines = t.fields.flatMap { f0 =>
           val f = unfinal(f0)
           if promoted.contains(f.name) then None
@@ -152,14 +153,22 @@ object CtorPlan:
             (f.init, assignedR.get(f.name)) match
               case (Some(i), None) => Some(FieldLine.FromField(f, i))
               case (None, Some(e)) => Some(FieldLine.FromField(withAssignTrivia(f), e))
-              case (Some(_), Some(_)) => fail(s"field ${f.name} has an initializer and a ctor assignment")
+              case (Some(i), Some(_)) =>
+                // Java: field init runs first, ctor assignment overwrites — keep the
+                // declaration init and reinstate the assignment in the ctor body
+                // (position among other body stmts approximated to front; gates verify)
+                reassignedInCtor += f.name
+                Some(FieldLine.FromField(f.copy(mods = f.mods.copy(isFinal = false)), i))
               case (None, None) => Some(fieldWithOwnInit(f))
         }
+        val reinstated = assignsT
+          .filter(x => reassignedInCtor.contains(x._1))
+          .map(x => BStmt(x._3, BStmtK.Assign(Ident(x._1, RefKind.OwnField), rn(x._2), None)))
         // promoted fields become val class params, which can't carry block comments —
         // hoist their Javadoc above the class line so nothing is lost
         val promotedTrivia = t.fields.filter(f => promoted.contains(f.name)).flatMap(f => withAssignTrivia(f).leading)
         CtorPlan(params, Some(c.mods), sentinelLike = false, c.leading ++ promotedTrivia,
-          superArgsR, restR, fieldLines, secondaries)
+          superArgsR, reinstated ++ restR, fieldLines, secondaries)
 
     def identityBasisPlan(ctors: List[BCtor], roots: List[BCtor]): Option[CtorPlan] =
       identityBasisPlanImpl(ctors, roots, splitAssigns, rootPlan)
@@ -423,7 +432,7 @@ object CtorPlan:
     case Typed(x, _)            => usesThis(x)
     case Lambda(_, body)        => body.fold(_ => true, usesThis) // conservative for stmt bodies
     case MethodRef(p2, _)       => p2.fold(_ => false, usesThis)
-    case _: UnboundMethodRef | _: Ident | _: Lit | _: ClassLit => false
+    case _: UnboundMethodRef | _: Ident | _: Lit | _: ClassLit | _: CtorRef => false
 
   /** Java default value for a type, as an expression. */
   private def javaDefault(t: BType): BExpr = t match

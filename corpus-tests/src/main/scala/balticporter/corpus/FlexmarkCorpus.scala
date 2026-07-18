@@ -53,7 +53,8 @@ object FlexmarkCorpus:
     val sentinels = SentinelRegistry.compute(parsed.collect { case (_, Right(u)) => u })
 
     val results = parsed.map { case (rel, e) =>
-      val status = e.flatMap(u => scala.util.Try(ScalaPrinter.print(u, prov, sentinels)).toEither.map(u -> _)) match
+      val status = if rel.endsWith("package-info.java") then "PACKAGE_INFO"
+      else e.flatMap(u => scala.util.Try(ScalaPrinter.print(u, prov, sentinels)).toEither.map(u -> _)) match
         case Right((u, out)) =>
           if CommentCheck.check(u, out).nonEmpty then "COMMENT_LOSS" else "OK"
         case Left(err: Unsupported) => s"UNSUPPORTED\t${err.what}"
