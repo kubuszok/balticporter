@@ -74,10 +74,15 @@ Checklist:
       - [x] wave 2 (commit 4e8c523): ternary `cond ? null : x` ascribes the
             null branch to the resolved reference type (Found-Null 33 → 0).
             Regression 639/639. Total ~300 → 283.
-      - [ ] remaining classes: missing-param-type lambdas (16, needs lambda
-            param-type annotation — BIR change), varargs/Array↔Seq (~45),
-            conflicting Array[X]*/X* overloads, raw-generic in `new`,
-            not-found members, generic wildcard mismatches.
+      - [x] wave 3 (commit 820f3d6): CtorRef (X::new) wildcard strip, shared
+            with New via hasWildType (fully-defined 8 → 0). 283 → 275.
+            Lambda param-type experiment tried + reverted (net-zero).
+      - [ ] remaining (~275): the AstActionHandler visitor family — Java
+            `X...`/`X[]...` overloads collide in Scala (varargs erase to Seq)
+            and F-bounded generics fill `[?]` where the super wants `[Node]`.
+            ~4 adapter/visitor files; likely method/ctor override candidates,
+            not a general rule. Plus scattered not-found members, generic
+            wildcard mismatches, missing-param lambdas (wildcard-typed).
 - [ ] Port the xwiki-macros spec suite; whole-module compile + tests green.
 - [ ] Framework docs + example port program published
 - [ ] HUMAN REVIEW: idiom-quality sign-off (queue when the above is green)
