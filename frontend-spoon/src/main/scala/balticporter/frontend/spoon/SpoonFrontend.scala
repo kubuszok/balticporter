@@ -619,7 +619,7 @@ private final class UnitBuilder(sourcePath: String, source: String):
         case _: CtThisAccess[?]                => Recv.OnThis
         case t                                 => Recv.On(expr(t))
       val ownerQ = Option(ex.getDeclaringType).map(_.getQualifiedName)
-      Call(recv, ex.getSimpleName, inv.getArguments.asScala.toList.map(expr), formalsOf(ex), ownerQ)
+      Call(recv, ex.getSimpleName, inv.getArguments.asScala.toList.map(typedArg), formalsOf(ex), ownerQ)
 
     case na: CtNewArray[?] =>
       val elem = btype(na.getType) match
@@ -673,8 +673,9 @@ private final class UnitBuilder(sourcePath: String, source: String):
 
     case cc: CtConstructorCall[?] =>
       btype(cc.getType) match
-        case r: BType.Ref => New(r, cc.getArguments.asScala.toList.map(expr))
-        case t            => unsupported(cc, s"constructor call of $t")
+        case r: BType.Ref =>
+          New(r, cc.getArguments.asScala.toList.map(typedArg), None, formalsOf(cc.getExecutable))
+        case t => unsupported(cc, s"constructor call of $t")
 
     case b: CtBinaryOperator[?] =>
       if b.getKind == BinaryOperatorKind.INSTANCEOF then
@@ -713,6 +714,10 @@ private final class UnitBuilder(sourcePath: String, source: String):
 
   private def fieldAccess(ref: CtFieldReference[?], target: CtExpression[?]): BExpr =
     val owner = Option(ref.getDeclaringType).map(_.getQualifiedName).getOrElse(BType.ObjectQ)
+    if ref.getSimpleName == "class" then
+      target match
+        case ta: CtTypeAccess[?] => return ClassLit(btype(ta.getAccessedType))
+        case _                   => ()
     if ref.getSimpleName == "length" && Option(ref.getDeclaringType).exists(_.isArray) then
       ArrayLength(expr(target))
     else if target != null && Option(ref.getDeclaringType).exists(_.isArray) then ArrayLength(expr(target))
@@ -723,6 +728,14 @@ private final class UnitBuilder(sourcePath: String, source: String):
         case null | (_: CtThisAccess[?]) | (_: CtSuperAccess[?]) =>
           Ident(ref.getSimpleName, RefKind.OwnField)
         case t => Select(expr(t), ref.getSimpleName)
+
+  /** Argument wrapped with its resolved static type — the printer's call-site
+    * adaptations (array spread, Object[] casts) need it. */
+  private def typedArg(e: CtExpression[?]): BExpr =
+    val core = expr(e)
+    Option(e.getType) match
+      case Some(t) => Typed(core, btype(t))
+      case None    => core
 
   private def formalsOf(ex: CtExecutableReference[?]): Option[List[Formal]] =
     Option(ex.getExecutableDeclaration).map { decl =>

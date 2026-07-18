@@ -363,7 +363,7 @@ object CtorPlan:
         case Recv.On(r)                 => usesThis(r)
         case Recv.Static(_)             => false
       recvThis || args.exists(usesThis)
-    case New(_, args, _)        => args.exists(usesThis)
+    case New(_, args, _, _)     => args.exists(usesThis)
     case NewArray(_, d, i)      => d.exists(usesThis) || i.exists(_.exists(usesThis))
     case Binary(_, l, r, _)     => usesThis(l) || usesThis(r)
     case Unary(_, x, _)         => usesThis(x)
@@ -400,7 +400,7 @@ object CtorPlan:
           case Recv.On(r) => Recv.On(rp(r))
           case other      => other
         Call(r2, n, args.map(rp), f, o)
-      case New(t2, args, b)        => New(t2, args.map(rp), b)
+      case n: New                  => n.copy(args = n.args.map(rp))
       case NewArray(el, d, i)      => NewArray(el, d.map(rp), i.map(_.map(rp)))
       case Binary(op, l, r, c)     => Binary(op, rp(l), rp(r), c)
       case Unary(op, x, p2)        => Unary(op, rp(x), p2)

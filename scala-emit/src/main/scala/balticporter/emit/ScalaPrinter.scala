@@ -99,6 +99,7 @@ private final class Printer(unit: BUnit, prov: Provenance, sentinels: Set[String
   private val collidingJavaLang = Set(
     "java.lang.Long", "java.lang.Double", "java.lang.Float", "java.lang.Boolean",
     "java.lang.Byte", "java.lang.Short", "java.lang.Character",
+    "java.lang.StringBuilder", "java.lang.Iterable", "java.lang.Cloneable",
   )
 
   private def refName(q0: String): String =
@@ -124,13 +125,18 @@ private final class Printer(unit: BUnit, prov: Provenance, sentinels: Set[String
     case BType.Prim(n)       => primMap.getOrElse(n, unsupported(s"primitive $n"))
     case BType.Ref(q, Nil)   => refName(q)
     case BType.Ref(q, args)  => s"${refName(q)}[${args.map(tpe).mkString(", ")}]"
-    case BType.Arr(e)        => s"Array[${tpe(e)}]"
+    case BType.Arr(e)        => s"Array[${arrElem(e)}]"
     case BType.TVar(n)       => n
     case BType.Wild(up, lo) =>
       (up, lo) match
         case (Some(u), None) => s"? <: ${tpe(u)}"
         case (None, Some(l)) => s"? >: ${tpe(l)}"
         case _               => "?"
+
+  /** Java Object[] is Array[AnyRef], not Array[Any] — arrays are invariant and the
+    * JDK's T[] overloads require reference element types. */
+  private def arrElem(e: BType): String =
+    if BType.isObject(e) then "AnyRef" else tpe(e)
 
   private def innermostPkg: String = unit.pkg.lastIndexOf('.') match
     case -1 => unit.pkg
@@ -273,7 +279,7 @@ private final class Printer(unit: BUnit, prov: Provenance, sentinels: Set[String
       case (None, _) if t.interfaces.isEmpty => ""
       case (None, _)         => " extends " + t.interfaces.map(tpe).mkString(" with ")
       case (Some(s), args)   =>
-        val sup = tpe(s) + (if args.isEmpty then "" else "(" + args.map(expr).mkString(", ") + ")")
+        val sup = tpe(s) + (if args.isEmpty then "" else "(" + args.map(delegateArg).mkString(", ") + ")")
         " extends " + (sup :: t.interfaces.map(tpe)).mkString(" with ")
 
     line(s"${mods.result()}class ${id(t.name)}${tparamsStr(t.tparams)}$primary$ext {")
@@ -302,15 +308,16 @@ private final class Printer(unit: BUnit, prov: Provenance, sentinels: Set[String
     plan.secondaryCtors.foreach { sc =>
       trivia(sc.leading)
       val sig = s"${visPrefix(sc.mods)}def this(${sc.params.map(paramOf).mkString(", ")}) ="
+      val dArgs = sc.delegateArgs.map(delegateArg).mkString(", ")
       if sc.body.isEmpty then
         line(sig)
         indent += 1
-        line(s"this(${sc.delegateArgs.map(expr).mkString(", ")})")
+        line(s"this($dArgs)")
         indent -= 1
       else
         line(sig + " {")
         indent += 1
-        line(s"this(${sc.delegateArgs.map(expr).mkString(", ")})")
+        line(s"this($dArgs)")
         sc.body.foreach(stmt)
         indent -= 1
         line("}")
@@ -327,6 +334,16 @@ private final class Printer(unit: BUnit, prov: Provenance, sentinels: Set[String
     indent -= 1
     line("}")
     companion(t)
+
+  /** Delegation/super-call argument: forwarding a varargs param needs a spread
+    * (formals of this()/super() targets aren't tracked; forwarding-whole is the
+    * overwhelmingly common Java shape, and scalac verifies).
+    */
+  private def delegateArg(e: BExpr): String = e match
+    case Ident(_, RefKind.Param(true))           => expr(e) + "*"
+    case Typed(i @ Ident(_, RefKind.Param(true)), _) => expr(i) + "*"
+    case Typed(i, _)                             => expr(i)
+    case other                                   => expr(other)
 
   private def paramStr(p: CtorPlan.Param): String =
     p.promoted match
@@ -382,8 +399,16 @@ private final class Printer(unit: BUnit, prov: Provenance, sentinels: Set[String
     s.k match
       case BStmtK.LocalVar(name, t, init, effFinal) =>
         val kw = if effFinal then "val" else "var"
+        // wildcard-typed locals: the annotation would demand invariant conformance the
+        // rhs can't give (raw-type iterators etc.) — let inference take it
+        def wildIn(x: BType): Boolean = x match
+          case _: BType.Wild    => true
+          case BType.Ref(_, as) => as.exists(wildIn)
+          case BType.Arr(e2)    => wildIn(e2)
+          case _                => false
+        val ann = if wildIn(t) && init.isDefined then "" else s": ${tpe(t)}"
         val rhs = init.map(expr).getOrElse(defaultOf(t))
-        line(s"$kw ${id(name)}: ${tpe(t)} = $rhs")
+        line(s"$kw ${id(name)}$ann = $rhs")
       case BStmtK.ExprStmt(e) => line(expr(e))
       case BStmtK.Assign(lhs, rhs, op) =>
         line(s"${expr(lhs)} ${op.getOrElse("")}= ${expr(rhs)}")
@@ -478,7 +503,7 @@ private final class Printer(unit: BUnit, prov: Provenance, sentinels: Set[String
         case Recv.On(r)         => expr(r) + "."
       s"$target${id(name)}(${adaptedArgs(args, formals, ownerQ).mkString(", ")})"
 
-    case New(t, args, anon) =>
+    case New(t, args, anon, formals) =>
       // wildcards are illegal in instantiation type args (Java diamond/raw) — strip
       // and let inference do what javac did
       def hasWild(x: BType): Boolean = x match
@@ -487,7 +512,9 @@ private final class Printer(unit: BUnit, prov: Provenance, sentinels: Set[String
         case BType.Arr(e2)      => hasWild(e2)
         case _                  => false
       val newT = if t.args.exists(hasWild) then t.copy(args = Nil) else t
-      val argsStr = if args.isEmpty && anon.isDefined then "" else s"(${args.map(expr).mkString(", ")})"
+      val argsStr =
+        if args.isEmpty && anon.isDefined then ""
+        else s"(${adaptedArgs(args, formals, Some(t.qname)).mkString(", ")})"
       val base = s"new ${tpe(newT)}$argsStr"
       anon match
         case None => base
@@ -506,8 +533,13 @@ private final class Printer(unit: BUnit, prov: Provenance, sentinels: Set[String
             indent -= 1
           }
           base + " {\n" + body + ("  " * indent) + "}"
-    case NewArray(el, _, Some(inits)) => s"Array[${tpe(el)}](${inits.map(expr).mkString(", ")})"
-    case NewArray(el, List(dim), None) => s"new Array[${tpe(el)}](${expr(dim)})"
+    case NewArray(el, _, Some(inits)) =>
+      // Object[] initializers box like Java autoboxing did
+      val items =
+        if BType.isObject(el) then inits.map(i => s"${expr(i)}.asInstanceOf[AnyRef]")
+        else inits.map(expr)
+      s"Array[${arrElem(el)}](${items.mkString(", ")})"
+    case NewArray(el, List(dim), None) => s"new Array[${arrElem(el)}](${expr(dim)})"
     case NewArray(_, dims, None) => unsupported(s"multi-dimensional array (${dims.length} dims)")
 
     case Binary(op, l, r, _) => s"(${expr(l)} $op ${expr(r)})"
@@ -559,11 +591,19 @@ private final class Printer(unit: BUnit, prov: Provenance, sentinels: Set[String
     val jdkOwner = ownerQ.exists(q => q.startsWith("java.") || q.startsWith("javax."))
     formals match
       case Some(fs) if fs.length == args.length =>
-        args.zip(fs).map {
-          case (a @ Ident(_, RefKind.Param(true)), Formal(_, true)) => expr(a) + "*"
-          case (a @ Ident(_, RefKind.Param(true)), Formal(BType.Arr(el), false)) =>
-            val conv = expr(a) + ".toArray"
-            if jdkOwner && BType.isObject(el) then conv + ".asInstanceOf[Array[AnyRef]]" else conv
-          case (a, _) => expr(a)
+        args.zip(fs).map { (a0, f) =>
+          val (a, at) = a0 match
+            case Typed(inner, t) => (inner, Some(t))
+            case e               => (e, None)
+          (a, at, f) match
+            // varargs param forwarded into a varargs slot → spread
+            case (Ident(_, RefKind.Param(true)), _, Formal(_, true)) => expr(a) + "*"
+            // array-typed value into a varargs slot (Java passes arrays directly) → spread
+            case (_, Some(BType.Arr(_)), Formal(_, true)) => expr(a) + "*"
+            // varargs param into an array slot → materialize
+            case (Ident(_, RefKind.Param(true)), _, Formal(BType.Arr(el), false)) =>
+              val conv = expr(a) + ".toArray"
+              if jdkOwner && BType.isObject(el) then conv + ".asInstanceOf[Array[AnyRef]]" else conv
+            case _ => expr(a)
         }
       case _ => args.map(expr)

@@ -79,8 +79,14 @@ object BExpr:
       ownerQ: Option[String],
   ) extends BExpr
   /** anonBody: Java anonymous subclass — `Some(empty)` for the super-type-token
-    * pattern `new X(...) {}`, `Some(members)` for bodies with fields/methods. */
-  final case class New(tpe: BType.Ref, args: List[BExpr], anonBody: Option[BAnonBody] = None) extends BExpr
+    * pattern `new X(...) {}`, `Some(members)` for bodies with fields/methods.
+    * formals: resolved ctor signature (drives call-site adaptations). */
+  final case class New(
+      tpe: BType.Ref,
+      args: List[BExpr],
+      anonBody: Option[BAnonBody] = None,
+      formals: Option[List[Formal]] = None,
+  ) extends BExpr
   /** init: instance-initializer blocks (the double-brace idiom) — plain statements
     * in the Scala anonymous body. */
   final case class BAnonBody(fields: List[BField], methods: List[BMethod], init: List[BStmt] = Nil)
