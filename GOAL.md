@@ -165,6 +165,14 @@ Checklist:
             liqp compile GREEN + suite 639/639. NOTE: session-start found the
             frontend-spoon source (SpoonFrontend/CommentScanner) deleted from the
             working tree — restored from HEAD; honest baseline was 161, not 165.
+      - [x] wave 17 (this commit): static blank-final assigned in a static-init
+            block → `var`. Java `static final X F; static { F = ...; }` assigns F
+            in the init block, not at declaration; Scala can't express a val
+            assigned later in the object body. Printer now scans staticInit for
+            assignment LHSs (recursing control flow; method calls like F.addAll(..)
+            don't count) and renders reassigned finals as var. Cleared HtmlDeepParser
+            BLOCK_TAGS/VOID_TAGS/START_PATTERN/PATTERN_MAP/OPTIONAL_TAGS + cascade.
+            141 → 136. liqp compile GREEN, suite 639/639, LiqpCorpus PARITY_FAIL=0.
       - [ ] Override sweep (next, hand-port): NodeVisitor + AttributeProviderAdapter
             + LinkResolverAdapter + BlockNodeVisitor + AstActionHandler base
             (F-bounded visitor family) and IRichSequenceBase/SequenceBuilder

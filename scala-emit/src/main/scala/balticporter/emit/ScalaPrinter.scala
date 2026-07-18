@@ -314,9 +314,13 @@ private final class Printer(
       line()
       line(s"object ${id(t.name)} {")
       indent += 1
+      // Java blank-final statics (`static final X F; static { F = ...; }`) are
+      // assigned in the static-init block, not at declaration — Scala can't express
+      // a val assigned later in the object body, so those must be `var`.
+      val reassignedStatics = assignedFieldNames(t.staticInit)
       t.staticFields.foreach { f =>
         trivia(f.leading)
-        val kw = if f.mods.isFinal then "val" else "var"
+        val kw = if f.mods.isFinal && !reassignedStatics(f.name) then "val" else "var"
         val rhs = f.init.map(expr).getOrElse(defaultOf(f.tpe))
         line(s"${visPrefix(f.mods)}$kw ${id(f.name)}: ${tpe(f.tpe)} = $rhs")
         line()
@@ -335,6 +339,32 @@ private final class Printer(
       }
       indent -= 1
       line("}")
+
+  /** Names of fields that appear as the LHS of an assignment anywhere in `stmts`
+    * (recursing through control flow). A static blank-final assigned in a static
+    * init block is detected here and rendered `var` rather than `val`. Method calls
+    * on a field (`F.addAll(...)`) are not assignments and don't count. */
+  private def assignedFieldNames(stmts: List[BStmt]): Set[String] =
+    val out = collection.mutable.Set[String]()
+    def fieldName(e: BExpr): Option[String] = e match
+      case Ident(n, RefKind.StaticField(_)) => Some(n)
+      case Ident(n, RefKind.OwnField)       => Some(n)
+      case Select(_, n)                     => Some(n)
+      case _                                => None
+    def walk(ss: List[BStmt]): Unit = ss.foreach(s => walkK(s.k))
+    def walkK(k: BStmtK): Unit = k match
+      case BStmtK.Assign(lhs, _, _)  => fieldName(lhs).foreach(out += _)
+      case BStmtK.If(_, tb, eb)      => walk(tb); eb.foreach(walk)
+      case BStmtK.While(_, b)        => walk(b)
+      case BStmtK.DoWhile(b, _)      => walk(b)
+      case BStmtK.Block(b)           => walk(b)
+      case BStmtK.Try(b, cs, f)      => walk(b); cs.foreach(c => walk(c.body)); f.foreach(walk)
+      case BStmtK.Boundary(b, _)     => walk(b)
+      case BStmtK.Match(_, cases)    => cases.foreach(c => walk(c.body))
+      case BStmtK.Synchronized(_, b) => walk(b)
+      case _                         => ()
+    walk(stmts)
+    out.toSet
 
   private def tparamsStr(tps: List[BTypeParam]): String =
     if tps.isEmpty then ""
