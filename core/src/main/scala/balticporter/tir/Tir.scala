@@ -201,6 +201,12 @@ object Tree:
   final case class Typed(expr: Term, tpt: TypeTree, tpe: TypeRepr, origin: Origin)      extends Term
   /** varargs sequence (`reflect.Repeated`). */
   final case class Repeated(elems: List[Term], tpe: TypeRepr, origin: Origin)           extends Term
+  /** `return e` — imperative early exit (Java bodies). `tpe` is Nothing. */
+  final case class Return(expr: Option[Term], tpe: TypeRepr, origin: Origin)            extends Term
+  /** `while (cond) body` — imperative loop (Java bodies). `tpe` is Unit. */
+  final case class While(cond: Term, body: Term, tpe: TypeRepr, origin: Origin)         extends Term
+  /** `throw e`. `tpe` is Nothing. */
+  final case class Throw(expr: Term, tpe: TypeRepr, origin: Origin)                     extends Term
   /** an as-yet-unmodeled TERM, kept typed (a full structured `tpe`) so the tree stays
     * whole while the node set grows. TYPES are never opaque; only unmodeled terms are. */
   final case class Opaque(raw: String, tpe: TypeRepr, origin: Origin)                   extends Term
@@ -238,8 +244,10 @@ enum UsageKind:
   case MemberType  // the declared type of a field / val / param / def-result
   case TypeRefPos  // any other type-reference position (prefix, alias rhs, ascription)
 
-/** One recorded use of a symbol: WHERE (`kind`) and at which tree node (`site`). */
-final case class Usage(kind: UsageKind, site: Tree)
+/** One recorded use of a symbol: WHERE (`kind`), at which tree node (`site`), and inside
+  * which enclosing definition (`enclosing` — the nearest containing method/field/class
+  * symbol). `enclosing` is what makes `callersOf` a real call-graph edge. */
+final case class Usage(kind: UsageKind, site: Tree, enclosing: SymId = SymId.None)
 
 /** Whole-program cross-reference index: symbol → its definition, and symbol → every
   * usage site KINDED by position (term refs AND every type position — external type,
@@ -258,7 +266,7 @@ final class XrefIndex(
   def usages(s: SymId): List[Usage] = usagesBySym.getOrElse(s, Nil)
   /** usage sites of `s` restricted to one position kind. */
   def usagesOf(s: SymId, kind: UsageKind): List[Tree] =
-    usagesBySym.getOrElse(s, Nil).collect { case Usage(`kind`, site) => site }
+    usagesBySym.getOrElse(s, Nil).collect { case Usage(`kind`, site, _) => site }
   /** every symbol that has at least one recorded usage. */
   def referenced: Set[SymId] = usagesBySym.keySet
 
@@ -277,14 +285,17 @@ final class Program(val units: List[Tree.ClassDef], val symbols: SymbolTable, va
     case Tree.Apply(_, _, m, _, _)       => Some(m)
     case _                               => scala.None
 
-  /** methods that call `method` (a call-graph edge) — walked by globals→implicits. */
+  /** methods that call `method` (a call-graph edge) — walked by globals→implicits. Uses
+    * each call usage's recorded `enclosing` definition, climbing to the nearest method. */
   def callersOf(method: SymId): List[SymId] =
-    xref.usagesOf(method).flatMap(enclosingMethod)
+    xref
+      .usages(method)
+      .collect { case Usage(UsageKind.Call, _, enc) if enc != SymId.None => enc }
+      .flatMap(enclosingMethod)
+      .distinct
 
-  private def enclosingMethod(usage: Tree): Option[SymId] =
-    symbolIn(usage)
-      .flatMap(ownerChain)
-      .find(id => symbols.get(id).exists(s => s.info.isInstanceOf[TypeRepr.MethodType | TypeRepr.PolyType]))
+  private def enclosingMethod(from: SymId): Option[SymId] =
+    ownerChain(from).find(id => symbols.get(id).exists(s => s.info.isInstanceOf[TypeRepr.MethodType | TypeRepr.PolyType]))
 
   private def ownerChain(s: SymId): LazyList[SymId] =
     LazyList.unfold[SymId, SymId](s) { id =>

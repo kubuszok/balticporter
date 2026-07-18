@@ -20,10 +20,19 @@ object Xref:
   def build(units: List[Tree.ClassDef]): XrefIndex =
     val defs   = collection.mutable.Map.empty[SymId, Definition]
     val usages = collection.mutable.Map.empty[SymId, collection.mutable.ListBuffer[Usage]]
+    // the nearest enclosing definition symbol — recorded on each usage so `callersOf`
+    // is a real call-graph edge (a call knows which method contains it).
+    var enclosing: SymId = SymId.None
 
     def rec(sym: SymId, kind: UsageKind, site: Tree): Unit =
       if sym != SymId.None then
-        usages.getOrElseUpdate(sym, collection.mutable.ListBuffer.empty) += Usage(kind, site)
+        usages.getOrElseUpdate(sym, collection.mutable.ListBuffer.empty) += Usage(kind, site, enclosing)
+
+    def within[A](d: SymId)(body: => A): A =
+      val saved = enclosing
+      enclosing = d
+      try body
+      finally enclosing = saved
 
     def defOf(d: Definition): Unit = defs(d.symbol) = d
 
@@ -62,32 +71,38 @@ object Xref:
 
     def walkClassDef(cd: Tree.ClassDef): Unit =
       defOf(cd)
-      cd.tparams.foreach(walkTypeDef)
-      cd.parents.zipWithIndex.foreach { case (p, i) =>
-        val k = if i == 0 then UsageKind.Extends else UsageKind.Mixin
-        p match
-          case tt: TypeTree => walkType(tt.tpe, k, tt)
-          case term: Term   => walkType(term.tpe, k, term); walkTerm(term)
+      within(cd.symbol) {
+        cd.tparams.foreach(walkTypeDef)
+        cd.parents.zipWithIndex.foreach { case (p, i) =>
+          val k = if i == 0 then UsageKind.Extends else UsageKind.Mixin
+          p match
+            case tt: TypeTree => walkType(tt.tpe, k, tt)
+            case term: Term   => walkType(term.tpe, k, term); walkTerm(term)
+        }
+        cd.selfType.foreach(tt => walkType(tt.tpe, UsageKind.SelfType, tt))
       }
-      cd.selfType.foreach(tt => walkType(tt.tpe, UsageKind.SelfType, tt))
       cd.body.foreach(walkStat)
 
     def walkStat(s: Statement): Unit = s match
       case c: Tree.ClassDef => walkClassDef(c)
       case d: Tree.DefDef =>
         defOf(d)
-        d.tparams.foreach(walkTypeDef)
-        d.paramss.foreach(_.foreach(walkValDef))
-        walkType(d.returnTpt.tpe, UsageKind.MemberType, d.returnTpt)
-        d.rhs.foreach(walkTerm)
+        within(d.symbol) {
+          d.tparams.foreach(walkTypeDef)
+          d.paramss.foreach(_.foreach(walkValDef))
+          walkType(d.returnTpt.tpe, UsageKind.MemberType, d.returnTpt)
+          d.rhs.foreach(walkTerm)
+        }
       case v: Tree.ValDef   => walkValDef(v)
       case td: Tree.TypeDef => walkTypeDef(td)
       case t: Term          => walkTerm(t)
 
     def walkValDef(v: Tree.ValDef): Unit =
       defOf(v)
-      walkType(v.tpt.tpe, UsageKind.MemberType, v.tpt)
-      v.rhs.foreach(walkTerm)
+      within(v.symbol) {
+        walkType(v.tpt.tpe, UsageKind.MemberType, v.tpt)
+        v.rhs.foreach(walkTerm)
+      }
 
     def walkTerm(t: Term): Unit = t match
       case i @ Tree.Ident(sym, _, _)        => rec(sym, UsageKind.TermRef, i)
@@ -102,13 +117,19 @@ object Xref:
       case Tree.TypeApply(fun, targs, _, _) =>
         walkTerm(fun); targs.foreach(tt => walkType(tt.tpe, UsageKind.TypeArg, tt))
       case n @ Tree.New(tpt, _, _)          => walkType(tpt.tpe, UsageKind.Instantiate, n)
-      case th @ Tree.This(cls, _, _)        => rec(cls, UsageKind.TermRef, th)
+      // `this` is an implicit self-reference, not a cross-reference to rewrite — recording
+      // it would flood every enclosing class with a usage per method body. Self-TYPES are
+      // captured separately via `walkType`'s `ThisType` case.
+      case _: Tree.This                     => ()
       case Tree.Typed(expr, tpt, _, _)      => walkTerm(expr); walkType(tpt.tpe, UsageKind.TypeRefPos, tpt)
       case Tree.Assign(lhs, rhs, _, _)      => walkTerm(lhs); walkTerm(rhs)
       case Tree.Block(stats, expr, _, _)    => stats.foreach(walkStat); walkTerm(expr)
       case Tree.Lambda(params, body, _, _)  => params.foreach(walkValDef); walkTerm(body)
       case Tree.If(c, th, el, _, _)         => walkTerm(c); walkTerm(th); walkTerm(el)
       case Tree.Repeated(elems, _, _)       => elems.foreach(walkTerm)
+      case Tree.Return(e, _, _)             => e.foreach(walkTerm)
+      case Tree.While(c, b, _, _)           => walkTerm(c); walkTerm(b)
+      case Tree.Throw(e, _, _)              => walkTerm(e)
       case l @ Tree.Literal(Constant.ClassOfC(tp), _, _) => walkType(tp, UsageKind.TypeArg, l)
       case _: Tree.Literal                  => ()
       case _: Tree.Opaque                   => ()

@@ -16,7 +16,14 @@ class SpoonTirSpec extends munit.FunSuite:
       |class Holder<T extends Comparable<T>> extends Base implements Marker {
       |  List<T> items;
       |  T best;
+      |  int size;
       |  T pick(List<? extends T> more) { return best; }
+      |  void reset() { size = 0; }
+      |  void run() {
+      |    reset();
+      |    T x = pick(items);
+      |    if (size < 10) { size = size + 1; }
+      |  }
       |}
       |""".stripMargin
 
@@ -25,6 +32,10 @@ class SpoonTirSpec extends munit.FunSuite:
   /** first symbol whose fullName matches, or fail. */
   private def sym(full: String): SymId =
     program.symbols.all.find(_.fullName == full).map(_.id).getOrElse(fail(s"no symbol for $full"))
+
+  /** a method/field symbol by owner-qualified name `demo.Holder#name`. */
+  private def member(name: String): SymId =
+    program.symbols.all.find(_.fullName == name).map(_.id).getOrElse(fail(s"no member $name"))
 
   private def kinds(s: SymId): Set[UsageKind] = program.usages(s).map(_.kind).toSet
 
@@ -68,4 +79,27 @@ class SpoonTirSpec extends munit.FunSuite:
     val after = Pipeline.run(program, List(swap))
     assertEquals(after.usagesOf(listId), Nil)                                  // old symbol vacated
     assertEquals(after.usages(target).map(_.kind).toSet, Set(UsageKind.Tycon)) // new symbol inherits
+  }
+
+  test("translates bodies: method calls and field refs become traced usages") {
+    val pick  = member("demo.Holder#pick")
+    val reset = member("demo.Holder#reset")
+    val best  = member("demo.Holder#best")
+    val items = member("demo.Holder#items")
+    // run() calls reset() and pick() — both recorded as Call usages.
+    assert(program.usagesOf(pick, UsageKind.Call).nonEmpty)
+    assert(program.usagesOf(reset, UsageKind.Call).nonEmpty)
+    // pick()'s body reads the `best` field; run() reads `items`.
+    assert(program.usagesOf(best, UsageKind.TermRef).nonEmpty)
+    assert(program.usagesOf(items, UsageKind.TermRef).nonEmpty)
+  }
+
+  test("callersOf is a real call-graph edge over translated bodies") {
+    val run   = member("demo.Holder#run")
+    val pick  = member("demo.Holder#pick")
+    val reset = member("demo.Holder#reset")
+    // run is the sole caller of both pick and reset; pick has no callers.
+    assertEquals(program.callersOf(pick), List(run))
+    assertEquals(program.callersOf(reset), List(run))
+    assertEquals(program.callersOf(run), Nil)
   }

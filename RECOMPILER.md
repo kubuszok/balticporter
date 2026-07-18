@@ -147,9 +147,17 @@ invariant / API-parity checks become backend verifications, not the driver.
      scope stack incl. F-bounds), building `ClassDef` units fed to `Xref.build`. Proven
      by `SpoonTirSpec` (4/4) on real parsed Java, including a class F-bound traced
      across type-arg/member-type/bound positions and a live List→scala rewrite.
-   - Deferred within step 2: method BODY translation (expression trees). Bodies surface
-     as `rhs = None`, so term-level (Call) usages await the body populator; type-position
-     tracing — the substrate the transforms query — is complete.
+   - **2c. Method-body translation** — `SpoonTir.BodyTranslator` translates method / ctor
+     / field-initializer bodies into TIR terms, resolving every reference to a `SymId`:
+     locals, assignments, `if`/`while`/`return`/`throw`, blocks, method & constructor
+     calls, field/variable access, `this`, casts, ternary, operators (as `x.op(y)`, the
+     quotes.reflect shape), literals. New imperative Term nodes `Return`/`While`/`Throw`
+     were added to the model; each `Usage` now records its `enclosing` definition, making
+     `callersOf` a real call-graph edge. Constructs not yet modeled (for-loops, switch,
+     try, lambdas, arrays, method refs) fail loudly via `Unsupported` (same anti-omission
+     stance as the BIR frontend; the body node set grows the same way). Proven by
+     `SpoonTirSpec` (6/6): method calls / field refs become traced usages, and
+     `callersOf(pick) == [run]` over real translated bodies.
 3. **Emission backend** — TIR → Scala source, types-aware (subsumes the compile
    fixes). Gate: the M6 closure compiles from TIR emission.
 4. **First transform** — pick one real case (java→scala collection, or a field
