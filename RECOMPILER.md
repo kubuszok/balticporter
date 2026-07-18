@@ -130,19 +130,26 @@ invariant / API-parity checks become backend verifications, not the driver.
 
 1. **TIR core model** — `Symbol`, `SymId`, `SymbolTable`, `TType`, `Tree`,
    `Origin`, `Program`, `XrefIndex` (signatures + minimal bodies). *(this commit)*
-2. **Populate from Spoon** — one pass over the existing closure that mints symbols
-   for every declaration, resolves every reference to a symbol via Spoon, and
-   builds the xref index. Validate: `usagesOf` a known field returns every site.
-   - **2a. Kinded xref + rewrite-responsive traversal — DONE** (`Xref.build`,
-     `UsageKind`, `Usage`; `StandardTraversal` routes every type occurrence and every
-     symbol `info` through `transformType`; `Pipeline` rebuilds the index between
-     phases). `usagesOf(sym)` traces a type across every position — external type,
-     type argument, member type, mixin, extends, self-type, bound — and after a phase
-     rewrites the tree the old symbol drops to zero usages while the new one inherits
-     the exact positions. Proven by `core` `XrefSpec` (3/3). Remaining for step 2: the
-     Spoon population pass that feeds this builder real units. Known gap: class-level
-     type params are not yet distinct tree nodes, so class F-bounds aren't walked
-     (method/poly sigs and wildcard bounds are).
+2. **Populate from Spoon — DONE** (declarations + signatures + types).
+   - **2a. Kinded xref + rewrite-responsive traversal** (`Xref.build`, `UsageKind`,
+     `Usage`; `StandardTraversal` routes every type occurrence and every symbol `info`
+     through `transformType`; `Pipeline` rebuilds the index between phases).
+     `usagesOf(sym)` traces a type across every position — external type, type argument,
+     member type, mixin, extends, self-type, bound — and after a phase rewrites the tree
+     the old symbol drops to zero usages while the new one inherits the exact positions.
+     Proven by `core` `XrefSpec` (3/3). Class/method type parameters are now first-class
+     `TypeDef` nodes on `ClassDef`/`DefDef`, so class F-bounds ARE walked (gap closed).
+   - **2b. `SpoonTir` populator** (`frontend-spoon`) — one pass over Spoon's resolved
+     `CtModel` that mints a stable-identity `Symbol` per declaration, lazily interns
+     externals (JDK/library) so `usagesOf(java.util.List)` works with no local
+     definition, and translates every `CtTypeReference` to a structured `TypeRepr`
+     (applied types, wildcards→`TypeBounds`, intersections→`AndType`, type params via a
+     scope stack incl. F-bounds), building `ClassDef` units fed to `Xref.build`. Proven
+     by `SpoonTirSpec` (4/4) on real parsed Java, including a class F-bound traced
+     across type-arg/member-type/bound positions and a live List→scala rewrite.
+   - Deferred within step 2: method BODY translation (expression trees). Bodies surface
+     as `rhs = None`, so term-level (Call) usages await the body populator; type-position
+     tracing — the substrate the transforms query — is complete.
 3. **Emission backend** — TIR → Scala source, types-aware (subsumes the compile
    fixes). Gate: the M6 closure compiles from TIR emission.
 4. **First transform** — pick one real case (java→scala collection, or a field

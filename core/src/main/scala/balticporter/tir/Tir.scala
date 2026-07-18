@@ -157,16 +157,21 @@ final case class TypeTree(tpe: TypeRepr, origin: Origin) extends Tree
 object Tree:
   // ---- definitions ----
   /** class / trait / object / enum. `parents` are the (typed) super constructors /
-    * mixins; `selfType` carries `self: S =>` and F-bounded self annotations. */
+    * mixins; `selfType` carries `self: S =>` and F-bounded self annotations; `tparams`
+    * are the class's own type parameters as `TypeDef`s whose `rhs` is a `TypeBounds`
+    * — so a class F-bound `class C[T <: IRich[T]]` is a first-class, walkable node
+    * (the bound references `T`'s own symbol, and the xref traces it). */
   final case class ClassDef(
       symbol: SymId,
       parents: List[Term | TypeTree],
       selfType: Option[TypeTree],
       body: List[Statement],
       origin: Origin,
+      tparams: List[TypeDef] = Nil,
   ) extends Definition
 
-  /** type alias / abstract type member (`type T = …` / `type T <: U`). */
+  /** type alias / abstract type member / type parameter (`type T = …` / `type T <: U`).
+    * For a type parameter, `rhs` carries a `TypeBounds`. */
   final case class TypeDef(symbol: SymId, rhs: TypeTree, origin: Origin) extends Definition
 
   final case class DefDef(
@@ -175,6 +180,7 @@ object Tree:
       returnTpt: TypeTree,
       rhs: Option[Term],
       origin: Origin,
+      tparams: List[TypeDef] = Nil,
   ) extends Definition
 
   final case class ValDef(symbol: SymId, tpt: TypeTree, rhs: Option[Term], origin: Origin) extends Definition

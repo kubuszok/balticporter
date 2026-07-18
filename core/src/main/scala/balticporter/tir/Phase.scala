@@ -133,14 +133,23 @@ object StandardTraversal:
       case term: Term   => mapTerm(ph, term)
     }
     ph.transformClassDef(
-      t.copy(parents = parents, selfType = t.selfType.map(mapTpt(ph, _)), body = t.body.map(mapStat(ph, _)))
+      t.copy(
+        parents = parents,
+        selfType = t.selfType.map(mapTpt(ph, _)),
+        body = t.body.map(mapStat(ph, _)),
+        tparams = t.tparams.map(mapTypeParam(ph, _)),
+      )
     )
+
+  private def mapTypeParam(ph: Phase, tp: Tree.TypeDef)(using Program): Tree.TypeDef =
+    ph.transformTypeDef(tp.copy(rhs = mapTpt(ph, tp.rhs)))
 
   def mapStat(ph: Phase, s: Statement)(using Program): Statement = s match
     case c: Tree.ClassDef => mapClassDef(ph, c)
     case d: Tree.DefDef =>
       ph.transformDefDef(
         d.copy(
+          tparams = d.tparams.map(mapTypeParam(ph, _)),
           paramss = d.paramss.map(_.map(mapValDef(ph, _))),
           returnTpt = mapTpt(ph, d.returnTpt),
           rhs = d.rhs.map(mapTerm(ph, _)),

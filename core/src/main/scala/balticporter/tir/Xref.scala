@@ -53,8 +53,16 @@ object Xref:
       case TypeRepr.NoPrefix | TypeRepr.NoType => ()
 
     // --- descend the tree structure ---
+    def walkTypeDef(td: Tree.TypeDef): Unit =
+      defOf(td)
+      // a type param's rhs is its TypeBounds; walkType descends into Bound positions,
+      // so a class/method F-bound (T <: IRich[T]) records IRich as a Tycon and T as
+      // a Bound/TypeArg — the class type parameter is now traced across positions.
+      walkType(td.rhs.tpe, UsageKind.TypeRefPos, td.rhs)
+
     def walkClassDef(cd: Tree.ClassDef): Unit =
       defOf(cd)
+      cd.tparams.foreach(walkTypeDef)
       cd.parents.zipWithIndex.foreach { case (p, i) =>
         val k = if i == 0 then UsageKind.Extends else UsageKind.Mixin
         p match
@@ -68,11 +76,12 @@ object Xref:
       case c: Tree.ClassDef => walkClassDef(c)
       case d: Tree.DefDef =>
         defOf(d)
+        d.tparams.foreach(walkTypeDef)
         d.paramss.foreach(_.foreach(walkValDef))
         walkType(d.returnTpt.tpe, UsageKind.MemberType, d.returnTpt)
         d.rhs.foreach(walkTerm)
       case v: Tree.ValDef   => walkValDef(v)
-      case td: Tree.TypeDef => defOf(td); walkType(td.rhs.tpe, UsageKind.TypeRefPos, td.rhs)
+      case td: Tree.TypeDef => walkTypeDef(td)
       case t: Term          => walkTerm(t)
 
     def walkValDef(v: Tree.ValDef): Unit =
