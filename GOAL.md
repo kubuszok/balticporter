@@ -3,12 +3,42 @@
 Machine-updated by `/goal` iterations. One phase at a time; a phase advances
 only when its gate (PLAN.md §13) is green with re-runnable evidence.
 
-## Phase: M3 — tests
+## Phase: M4 — cross-platform + cache (per PLAN.md §13)
 
-Gate (PLAN.md §13): Liqp's upstream test suite ported through the engine and
-green on JVM; failures triaged into the ledger with reasons or fixed by rules.
+Gate: Liqp module compiles + tests green on JVM/JS/Native; warm re-run
+touches zero units; --no-cache byte-identical.
 
 Status: IN PROGRESS
+
+Checklist:
+- [ ] Persistent cache (PLAN §12): CAS + action index, action key with engine
+      fingerprint + interface hashes; early cutoff; --no-cache equivalence
+- [ ] Platform lint pass (Tier 2 data): flag RE2-regex/locale/threads usage
+      before attempting JS/Native
+- [ ] Cross-platform reality check: the JVM-faithful port depends on Jackson/
+      ANTLR/strftime4j (JVM-only) — document that full JS/Native needs the
+      substitution dispositions (ssg's path); scope M4 to cache + lint +
+      the substitution-plan analysis rather than a 3-platform compile of the
+      Jackson-coupled module
+- [ ] Vocabulary engine + Tier-3 rule API productization (deferred from M2)
+
+## Phase M3 — tests — DONE (2026-07-18)
+
+Gate: upstream suite ported through the engine, green on JVM, exceptions
+ledgered.
+
+**Evidence: 625/625 tests pass (102 classes), `sbt test` exit=0** (commit
+45ad835; union evidence incl. explicit runs of 2 discovery-flaky classes —
+sbt thin-client log truncation documented). 104/105 test files machine-
+translated; LiquidParserTest ledgered (untranslated inner class; parser
+covered by lexer + rendering tests). Failure burn: 82 → 72 → 35 → 16 → 4 → 0.
+Engine rules found ONLY by the behavioral oracle: cast-aware call typing,
+@BeanProperty reflection visibility, varargs-Object materialization, Jackson
+annotation preservation + soft-keyword arg escaping, companion-touch for
+static{} timing (RESEARCH §6 traps 1 and 7 both hit live). Environment
+finds: ServiceLoader resources, fixture roots, upstream locale assumption.
+
+Status: DONE
 
 Checklist:
 - [x] Survey (2026-07-18): 105 JUnit4 files, 169 Hamcrest + 149 junit imports,
