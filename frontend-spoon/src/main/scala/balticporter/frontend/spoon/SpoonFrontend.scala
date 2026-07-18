@@ -872,7 +872,18 @@ private final class UnitBuilder(sourcePath: String, source: String):
         case PREDEC  => IncDecExpr(expr(u.getOperand), "-", post = false)
         case k       => unsupported(u, s"unary operator $k")
 
-    case c: CtConditional[?] => Ternary(expr(c.getCondition), expr(c.getThenExpression), expr(c.getElseExpression))
+    case c: CtConditional[?] =>
+      // Java `cond ? null : x` types as x's reference type; Scala infers `X | Null`
+      // which won't assign to an unbounded type var — ascribe the null branch to the
+      // conditional's resolved type so it stays `null.asInstanceOf[T]`
+      val condType = Option(c.getType).filter(t => !t.isPrimitive)
+      def branch(e: CtExpression[?], other: CtExpression[?]): BExpr =
+        val be = expr(e)
+        be match
+          case Lit(BExpr.LitKind.NullL, _) =>
+            condType.orElse(Option(other.getType).filter(t => !t.isPrimitive)).map(t => Cast(btype(t), be)).getOrElse(be)
+          case _ => be
+      Ternary(expr(c.getCondition), branch(c.getThenExpression, c.getElseExpression), branch(c.getElseExpression, c.getThenExpression))
 
     // assignment in expression position: `while ((x = next()) != null)` etc.
     case a: CtAssignment[?, ?] if !a.isInstanceOf[CtOperatorAssignment[?, ?]] =>
