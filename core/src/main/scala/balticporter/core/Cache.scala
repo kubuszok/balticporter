@@ -53,6 +53,7 @@ object EngineFingerprint:
       .flatMap(n => scala.util.Try(Class.forName(n)).toOption)
       .flatMap(c => Option(c.getProtectionDomain.getCodeSource).map(_.getLocation.toURI))
     val dirs = (roots ++ extra).distinct.map(Path.of(_)).filter(Files.exists(_))
+    if sys.env.contains("BP_DEBUG") then dirs.foreach(d => System.err.println(s"[engine-fp] $d"))
     val parts = dirs.flatMap { d =>
       if Files.isDirectory(d) then
         val classFiles = Files.walk(d).iterator()
@@ -61,7 +62,10 @@ object EngineFingerprint:
           if p.toString.endsWith(".class") then buf += (d.relativize(p).toString -> Digest.file(p))
         }
         buf.result()
-      else List(d.toString -> Digest.file(d)) // a jar
+      else
+        // a jar — sbt 2.0 forked runs materialize module jars under per-run
+        // bg-jobs paths, so the key must be path-independent (content decides)
+        List("jar:" + d.getFileName.toString -> Digest.file(d))
     }
     Digest.combined(parts.sortBy(_._1))
 

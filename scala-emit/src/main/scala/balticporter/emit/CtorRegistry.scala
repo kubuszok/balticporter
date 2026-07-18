@@ -69,6 +69,16 @@ final class CtorRegistry(units: List[BUnit]):
     if debug then System.err.println(s"[ctor-inline miss] $why")
     None
 
+  /** Deterministic serialization of everything the registry can inject into a
+    * unit's output (ctor shapes + bodies, super chain, field mods for widening) —
+    * cache keys include its digest so a parent ctor BODY edit invalidates
+    * dependents (interface hashes alone only cover signature surface). */
+  lazy val digestInput: String =
+    byFqcn.toList.sortBy(_._1).map { case (fqcn, (t, info)) =>
+      val fields = t.fields.map(f => s"${f.name}:${f.mods.vis}:${f.mods.isFinal}").mkString(",")
+      s"$fqcn|${info.superFqcn.getOrElse("")}|$fields|${info.ctors.toString}"
+    }.mkString("\n")
+
   /** Private non-final parent fields that some subclass's super-chain ctor effects
     * assign — the effect-replay funnel makes the subclass write them, so the parent
     * emits them `protected var` (the hand-ported corpus widens the same way:

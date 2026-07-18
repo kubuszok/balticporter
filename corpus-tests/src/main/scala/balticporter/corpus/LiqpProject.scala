@@ -59,6 +59,8 @@ object LiqpProject:
     val cache = new ActionCache(repoRoot.resolve("out/.bpcache"), cacheEnabled)
     val engineFp = EngineFingerprint.value
     val sentinelDigest = Digest.string(sentinels.toList.sorted.mkString(","))
+    val ctorDigest = Digest.string(ctorReg.map(_.digestInput).getOrElse(""))
+    println(s"[proj] key components: engine=${engineFp.take(12)} sentinels=${sentinelDigest.take(12)} ctors=${ctorDigest.take(12)}")
     val fqcnToUnit: Map[String, BUnit] =
       units.flatMap(u => u.types.map(t => (if u.pkg.isEmpty then t.name else s"${u.pkg}.${t.name}") -> u)).toMap
     val ifaceHash: Map[String, String] = units.map(u => u.sourcePath -> InterfaceHash.of(u)).toMap
@@ -78,6 +80,7 @@ object LiqpProject:
         ("src" -> Digest.file(sourceRoot.resolve(u.sourcePath)))
           :: ("engine" -> engineFp)
           :: ("sentinels" -> sentinelDigest)
+          :: ("ctors" -> ctorDigest)
           :: ("prov" -> Digest.string(prov.toString))
           :: deps.map(d => s"dep:$d" -> ifaceHash(d))
       )
