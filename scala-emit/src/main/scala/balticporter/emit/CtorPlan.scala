@@ -128,11 +128,16 @@ object CtorPlan:
         // such params `_p` and rewrite every reference (field-init exprs, super args,
         // remaining ctor body)
         // ...or with a method name (a used plain param materializes as private[this] val)
+        // a plain ctor param promoted to a Scala field would also shadow an
+        // INHERITED field of the same name — Java's `this.f` reaches the inherited
+        // one (InlineParserImpl's `options` field vs its DataHolder ctor param)
+        val inheritedFields: Set[String] =
+          t.superClass.flatMap(s => registry.map(_.inheritedFieldNames(s.qname))).getOrElse(Set.empty)
         val renamed: Set[String] = c.params
           .map(_.name)
           .filter(pn =>
             !promoted.contains(pn) &&
-              (t.fields.exists(_.name == pn) || t.methods.exists(_.name == pn))
+              (t.fields.exists(_.name == pn) || t.methods.exists(_.name == pn) || inheritedFields.contains(pn))
           )
           .toSet
         def rn(e: BExpr): BExpr =

@@ -55,6 +55,17 @@ final class CtorRegistry(units: List[BUnit]):
         case k :: Nil => Some(k)
         case _        => None
 
+  /** every field name declared anywhere up the superclass chain (within the
+    * closure). A ctor param sharing one of these names, promoted to a Scala field,
+    * would SHADOW the inherited field — Java's `this.f` reaches the inherited one,
+    * so such params must be renamed. */
+  def inheritedFieldNames(superFqcn: String, depth: Int = 0): Set[String] =
+    if depth > 12 then return Set.empty
+    keyOf(superFqcn).flatMap(byFqcn.get) match
+      case None => Set.empty
+      case Some((decl, info)) =>
+        decl.fields.map(_.name).toSet ++ info.superFqcn.map(inheritedFieldNames(_, depth + 1)).getOrElse(Set.empty)
+
   /** the registry key of a superclass/interface reference (nested types live
     * under Outer$Name; interfaces arrive as dotted qnames Spoon resolved). */
   private def keyOf(qname: String): Option[String] =
