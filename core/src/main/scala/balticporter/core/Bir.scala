@@ -114,9 +114,11 @@ object BExpr:
   /** Static type of an expression as the frontend resolved it; attached where rules need it. */
   final case class Typed(e: BExpr, tpe: BType) extends BExpr
 
-  /** Java lambda → Scala lambda (types inferred from the SAM target).
-    * Left = block body (statements), Right = expression body. */
-  final case class Lambda(params: List[String], body: Either[List[BStmt], BExpr]) extends BExpr
+  /** Java lambda → Scala lambda. Left = block body (statements), Right = expression
+    * body. paramTypes carries the resolved SAM parameter types when available, so the
+    * printer can annotate them where Scala can't infer against an overloaded target. */
+  final case class Lambda(params: List[String], body: Either[List[BStmt], BExpr], paramTypes: List[BType] = Nil)
+      extends BExpr
 
   /** Java method reference → eta-expandable Scala selection: `Owner.m` (static) or
     * `recv.m` (bound instance). SAM conversion supplies the target type. */

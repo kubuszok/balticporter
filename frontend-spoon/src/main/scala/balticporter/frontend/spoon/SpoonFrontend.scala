@@ -824,10 +824,15 @@ private final class UnitBuilder(sourcePath: String, source: String):
       else NewArray(elem, dims.map(expr), None)
 
     case l: CtLambda[?] =>
-      val params = l.getParameters.asScala.toList.map(_.getSimpleName)
+      val ps = l.getParameters.asScala.toList
+      val params = ps.map(_.getSimpleName)
+      // resolved SAM param types (when Spoon infers them) — lets the printer annotate
+      // lambda params where an overloaded target defeats Scala's inference
+      val ptypes = ps.map(p => scala.util.Try(Option(p.getType).map(btype)).toOption.flatten)
+      val paramTypes = if params.nonEmpty && ptypes.forall(_.isDefined) then ptypes.flatten else Nil
       (Option(l.getExpression), Option(l.getBody)) match
-        case (Some(e), _)    => Lambda(params, Right(expr(e)))
-        case (None, Some(b)) => Lambda(params, Left(block(b.getStatements.asScala.toList)))
+        case (Some(e), _)    => Lambda(params, Right(expr(e)), paramTypes)
+        case (None, Some(b)) => Lambda(params, Left(block(b.getStatements.asScala.toList)), paramTypes)
         case _               => unsupported(l, "lambda without body")
 
     case mr: CtExecutableReferenceExpression[?, ?] =>

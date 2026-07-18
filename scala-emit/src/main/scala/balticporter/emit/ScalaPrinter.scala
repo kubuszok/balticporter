@@ -874,10 +874,16 @@ private final class Printer(
       val args = formals.indices.map(i => s"p$i$$").mkString(", ")
       s"((${ps.mkString(", ")}) => recv$$.${id(name)}($args))"
 
-    case Lambda(ps, body) =>
-      val plist = ps match
-        case List(p1) => id(p1)
-        case _        => "(" + ps.map(id).mkString(", ") + ")"
+    case Lambda(ps, body, pts) =>
+      // annotate params with their resolved SAM types when available and clean —
+      // wildcards can't be written as lambda param types, so fall back to bare names
+      val useTypes = pts.length == ps.length && pts.nonEmpty && !pts.exists(hasWildType)
+      val plist =
+        if useTypes then "(" + ps.zip(pts).map((p, t) => s"${id(p)}: ${tpe(t)}").mkString(", ") + ")"
+        else
+          ps match
+            case List(p1) => id(p1)
+            case _        => "(" + ps.map(id).mkString(", ") + ")"
       body match
         case Right(e)                                     => s"($plist => ${expr(e)})"
         case Left(List(BStmt(_, BStmtK.Return(Some(e))))) => s"($plist => ${expr(e)})"

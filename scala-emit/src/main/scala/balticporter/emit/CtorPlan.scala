@@ -670,7 +670,7 @@ object CtorPlan:
     case Cast(_, x)             => usesThis(x)
     case InstanceOf(x, _)       => usesThis(x)
     case Typed(x, _)            => usesThis(x)
-    case Lambda(_, body)        => body.fold(_ => true, usesThis) // conservative for stmt bodies
+    case Lambda(_, body, _)     => body.fold(_ => true, usesThis) // conservative for stmt bodies
     case MethodRef(p2, _)       => p2.fold(_ => false, usesThis)
     case _: UnboundMethodRef | _: Ident | _: Lit | _: ClassLit | _: CtorRef => false
 

@@ -193,7 +193,19 @@ Checklist:
             rejects. Faithful port uses a wildcard vararg `VisitHandler[?]*` + an
             unchecked cast to the base's `Array[H]` (Java's @SuppressWarnings).
             132 → 118. Engine untouched (override files only).
-      - [ ] Override sweep (continue, hand-port): the two *VisitorExt +
+      - [x] wave 20 (this commit): ENGINE fix — lambda param-type annotation. A
+            Java lambda passed to an OVERLOADED target (the nullIf / BiPredicate /
+            BiFunction families, forAllCells visitors) can't have its param types
+            inferred by Scala: resolving the overload needs the lambda types, and
+            inferring the lambda types needs the resolved overload (deadlock →
+            "Missing parameter type"). BIR Lambda now carries resolved SAM param
+            types (frontend captures them from Spoon); the printer annotates
+            `(p: T, ...) =>` when all are known and wildcard-free (wildcard SAM
+            params can't be written as lambda types, so those fall back to bare and
+            stay for the IRichSequenceBase override). Missing-parameter-type 16 → 1.
+            118 → 106. liqp compile GREEN, suite 639/639, LiqpCorpus PARITY_FAIL=0.
+      - [ ] Override sweep / engine (continue): IRichSequenceBase (wildcard lambdas +
+            F-bounded getBuilder), the two *VisitorExt +
             + LinkResolverAdapter + BlockNodeVisitor + AstActionHandler base
             (F-bounded visitor family) and IRichSequenceBase/SequenceBuilder
             (F-bounded sequence bases) as PLAN §7 whole-file overrides. This is
