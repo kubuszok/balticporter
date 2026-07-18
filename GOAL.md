@@ -144,9 +144,22 @@ Checklist:
             override sweep of the ~5-8 override-bound files (visitor family +
             the two sequence bases) via the ctor-splice + whole-file overrides,
             rather than more net-zero engine tweaks.
-      - [ ] Override sweep (next): NodeVisitor/adapters (conflicting ctors) +
-            IRichSequenceBase/SequenceBuilder (F-bounded) — PLAN §7 dispositions
-            toward a compiling module; then port the xwiki-macros spec suite.
+      - [~] wave 15 (no commit — reverted): tried a mechanical drop of the
+            redundant `X[]...` array-varargs overload (the Conflicting-
+            definitions root). NET-NEGATIVE both ways: dropping the METHOD form
+            breaks internal callers (addHandlers → super.addActionHandlers),
+            dropping the CTOR form breaks external callers (165 → 171). DEFINITIVE
+            FINDING: the X.../X[]... overloads are genuinely used, so the
+            collision is NOT mechanizable — the visitor family requires
+            whole-file overrides (rewriting ctors AND the addActionHandlers/
+            addHandlers methods with Scala-distinct signatures).
+      - [ ] Override sweep (next, hand-port): NodeVisitor + AttributeProviderAdapter
+            + LinkResolverAdapter + BlockNodeVisitor + AstActionHandler base
+            (F-bounded visitor family) and IRichSequenceBase/SequenceBuilder
+            (F-bounded sequence bases) as PLAN §7 whole-file overrides. This is
+            focused, careful hand-porting (F-bounded generics must be exact) —
+            the mechanical engine phase is complete (13 fixes, 420 → 165). Then
+            port the xwiki-macros spec suite; whole-module compile + tests green.
       - [ ] (ref) remaining (165, visitor-family-dominated): AstActionHandler is the
             dominant blocker — Java `X...`/`X[]...` varargs both erase to Seq
             in Scala (Conflicting definitions) + F-bounded `[?]` vs `[Node]`.
