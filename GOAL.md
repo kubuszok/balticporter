@@ -37,10 +37,15 @@ Checklist:
       @BeanProperty on public fields (Java reflection visibility — 15 tests)
       and varargs-into-Object materialization (Java varargs ARE Object[] at
       runtime — 4 tests). Both invisible to every static gate.
-- [ ] Triage wave 3 (16 left): strftime/date-format cluster (~8: epoch
-      ms-vs-s ×1000 suspect, pattern application '31 Dec,' → 'Thu Dec 31',
-      char-parse ','), java.util.Date yes/no compare flips (4), blank
-      asserts (3), birthday ISO date (1)
+- [x] Triage wave 3 (commit 7e95a16): 16 → 4. The whole java.util.Date
+      cluster (9) was ONE missing resource dir: META-INF/services ServiceLoader
+      registration of the TypesSupport SPI. The comma-parse cluster (3) was
+      upstream's own locale-sensitivity (DecimalFormat under a comma-decimal
+      machine locale) — test JVM pinned en_US to match upstream CI's effective
+      environment.
+- [ ] Final 4: testRenderDateType (legacy Date ctor + CET timezone — inspect
+      whether upstream CI TZ assumption, like locale), 3× LiquidSupportTest
+      (Target/EAGER_RENDERING_PARSER chain — inspect Target translation)
 - [ ] GATE: suite green on JVM with ledgered exceptions
 
 Deferred from M2 scoping (needed by M5, not gate-blocking): declarative Tier-2
