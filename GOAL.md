@@ -264,7 +264,12 @@ Checklist:
             passes super(0), aux ctors overwrite this.hash; SubSequence also fixes a
             getOption[T] ternary cast (Any → T). 79 → 76. Engine untouched (override
             files only); corpus-tests compiles so liqp unaffected.
-      - [ ] Hard tail (~76, override territory / Spoon-limited): F-bounded sequence
+      - [x] wave 29 (this commit): ENGINE fix — delegate-arg null to a type variable →
+            asInstanceOf. delegateArg ascribed null args `(null: T)`, but a type-variable
+            target rejects the ascription (Null isn't a subtype of unbounded T); cast
+            instead. NullableDataKey. 76 → 75. liqp compile GREEN, suite 639/639,
+            LiqpCorpus PARITY_FAIL=0.
+      - [ ] Hard tail (~75, override territory / Spoon-limited): F-bounded sequence
             family (getBuilder Nothing, SequenceUtils T-vs-CharSequence, IRichSequence
             Base/SubSequence/SegmentedSequence ~20 — whole-file overrides); Formatter
             family (generic inference/overload ~14); collection null-typevar (~9 —

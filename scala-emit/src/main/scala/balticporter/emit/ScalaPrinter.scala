@@ -539,6 +539,9 @@ private final class Printer(
       case (Ident(_, RefKind.Param(true)), _)                  => expr(stripped) + "*"
       // a bare `null` delegate arg is ambiguous when the target ctor is overloaded
       // (this(null) matching both (String) and (BasedSequence)) — ascribe its type
+      // a type-variable target can't take the `(null: T)` ascription (Null isn't a
+      // subtype of an unbounded T) — cast instead
+      case (Lit(LitKind.NullL, _), Some(t: BType.TVar))                    => s"null.asInstanceOf[${tpe(t)}]"
       case (Lit(LitKind.NullL, _), Some(t)) if !t.isInstanceOf[BType.Prim] => s"(null: ${tpe(t)})"
       case _                                                   => expr(stripped)
 
