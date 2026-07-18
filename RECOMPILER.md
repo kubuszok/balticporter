@@ -56,10 +56,23 @@ and what makes patches **bump-resilient**: they key on symbol identity, not text
 so an upstream rename/reflow can't break them.
 
 ### Types
-A Scala type model (`TType`) — not Java's. Every tree node carries its `TType`,
-resolved from Spoon (including F-bound instantiations and generic-method returns),
-so transforms and emission **never re-infer**. This is the "more than a 2.13 AST"
-information: full resolved types, carried, not recovered.
+A **structured** Scala type algebra (`TType`) — not Java's, and never a flat string
+that collapses type structure. It must faithfully represent, as addressable nodes:
+- **applied type constructors** — `Applied(tycon, args)`, args recursively typed;
+- **intersection / mixins** — `And(members)` and the `TypeDef.parents` linearization
+  (`A with B with C`);
+- **self-types** — `TypeDef.selfType` + `This(cls)` (`trait T { self: S => }`);
+- **type-parameter bounds, incl. F-bounds** — `TypeParam(sym, variance, bounds, …)`
+  where `T <: IRichSequence[T]` is a param whose bound references its own symbol;
+- **variance**, **higher-kinded** params (`hkParams`, `HKLambda`), **wildcards**
+  (`Bounds`), **path-dependent / singleton** types (`Named(prefix)`, `Singleton`),
+  and **method/poly signatures** (`Method(MethodSig)`).
+
+Every tree node carries its `TType`, resolved from Spoon (including F-bound
+instantiations and generic-method returns), so transforms and emission **never
+re-infer**. Type references point to a type-*symbol*, so "find all usages of
+`java.util.List`" includes type positions, not just calls. This is the "more than a
+2.13 AST" information: full structured resolved types, carried, not recovered.
 
 ### Trees
 A typed Scala tree (the `tpd.Tree` analog): `ValDef`, `DefDef`, `Apply`, `Select`,
