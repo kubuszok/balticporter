@@ -90,7 +90,15 @@ Checklist:
             639/639. MEASUREMENT NOTE: scalac error-display cap varied between
             runs (100 vs uncapped 256) making raw-count deltas unreliable;
             switch to a fixed -Xmax-errors for future waves.
-      - [ ] remaining (~256 uncapped): AstActionHandler visitor family is the
+      - [x] wave 6 (commit 492a979): enum auxiliary constructors — a no-arg
+            Java enum ctor delegating this(default) now emits `def this() =
+            this(1)` so no-arg cases `extends Flags()` resolve (enum-case
+            7 → 0; cascade cleared Flags users, 256 → 242 errors found).
+            Metric switched to "N errors found" (headers cap at 100).
+      - [ ] remaining (242): non-visitor mechanical classes still open —
+            Found-Null in non-ternary positions (16), `.length()` on
+            parameterless receivers (8), null-into-generic-method-arg, plus
+            the visitor family (~40, override-bound). AstActionHandler is the
             dominant blocker — Java `X...`/`X[]...` varargs both erase to Seq
             in Scala (Conflicting definitions) + F-bounded `[?]` vs `[Node]`.
             ~5 files (NodeVisitor, TextCollectingVisitor, the two Adapters,
