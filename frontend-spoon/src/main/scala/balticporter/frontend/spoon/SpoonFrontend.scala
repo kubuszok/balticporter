@@ -118,13 +118,14 @@ private final class UnitBuilder(sourcePath: String, source: String):
     case p if p.isPrimitive => BType.Prim(p.getSimpleName)
     case r =>
       val args = r.getActualTypeArguments.asScala.toList.map(btype)
-      // Java raw types are illegal in Scala type positions — fill with wildcards
+      // Java raw types are illegal in Scala type positions — fill each slot. A type
+      // parameter with a NON-Object, non-self-referential upper bound (F-bounded
+      // handlers: <N extends Node>) fills with that bound so the raw type stays
+      // assignment-compatible with the bound-parameterized form the API expects;
+      // plain Object-bounded params (Map<K,V>) fill with `?` as before.
       val filled =
         if args.nonEmpty then args
-        else
-          rawArity(r) match
-            case 0 => Nil
-            case n => List.fill(n)(BType.Wild(None, None))
+        else rawFill(r)
       BType.Ref(r.getQualifiedName, filled)
 
   private val arityCache = collection.mutable.Map[String, Int]()
@@ -135,6 +136,27 @@ private final class UnitBuilder(sourcePath: String, source: String):
       r.getQualifiedName,
       scala.util.Try(Option(r.getTypeDeclaration).map(_.getFormalCtTypeParameters.size).getOrElse(0)).getOrElse(0),
     )
+
+  /** Fill args for a raw type: the type param's non-Object simple upper bound where
+    * there is one, else `?`. Self-referential F-bounds (T extends IRichSequence<T>)
+    * and type-var-carrying bounds fall back to `?` to avoid unbound references. */
+  private def rawFill(r: CtTypeReference[?]): List[BType] =
+    val wild = BType.Wild(None, None)
+    scala.util.Try {
+      val tps = r.getTypeDeclaration.getFormalCtTypeParameters.asScala.toList
+      tps.map { tp =>
+        Option(tp.getSuperclass).map(btype) match
+          case Some(b: BType.Ref) if b.qname != BType.ObjectQ && !hasTypeVar(b) => b
+          case _                                                                => wild
+      }
+    }.toOption.filter(_.length == rawArity(r)).getOrElse(List.fill(rawArity(r))(wild))
+
+  private def hasTypeVar(t: BType): Boolean = t match
+    case _: BType.TVar    => true
+    case BType.Ref(_, as) => as.exists(hasTypeVar)
+    case BType.Arr(e)     => hasTypeVar(e)
+    case BType.Wild(u, l) => u.exists(hasTypeVar) || l.exists(hasTypeVar)
+    case _                => false
 
   // ---- declarations ----------------------------------------------------------
 
