@@ -13,8 +13,17 @@ program published.
 Status: IN PROGRESS
 
 Checklist:
-- [ ] Candidate selection: survey sge's ecosystem list / unported flexmark
-      extensions; pick one with a real test suite and bounded deps
+- [x] Candidate selected (commit c1a102c): **flexmark-ext-xwiki-macros** —
+      ssg skipped it entirely (no hand port = truly cold), real spec-driven
+      test suite, vendored sources, closure bounded to flexmark core + util +
+      test-util. Survey: 533 closure files, OK=489 PACKAGE_INFO=32,
+      **12 blockers** (must compile — no ledger escape): 2 public
+      field-vs-method clashes (member-rename disposition needed), 4
+      arity-mismatch delegations (ListOptions translates in the corpus run
+      but not the closure run — registry sensitivity to investigate), 5
+      multi-ctor field-logic shapes, HtmlWriter.
+- [ ] Blocker burn: clear the 12 closure UNSUPPORTED (member-rename
+      disposition mechanism + funnel work); XwikiSurvey reaches 0 blockers
 - [ ] Port program written against the framework (PortProgram-style entry,
       dispositions declared, vocabulary + passes as needed)
 - [ ] Generated sbt project compiles; ported test suite green on JVM
