@@ -33,10 +33,14 @@ Checklist:
       ENGINE BUG: cast-blind call typing — ((Object[]) x) into varargs must
       spread; typedArg now honors outermost casts. First bug class invisible
       to compile+skeleton gates, caught only behaviorally.
-- [ ] Triage wave 2 (35 left): temporal comparisons (testDateTypes flips ×4
-      ordering nodes + birthday date render — one temporal cause suspected),
-      blank AssertionErrors (9 — LiquidSupport/Jekyll-where), tablerow size,
-      where-impl lookups (hi[tobi]), char-parse (2), immutability (2)
+- [x] Triage wave 2 (commit 2caafbe): 35 → 16. Two more runtime-shape rules:
+      @BeanProperty on public fields (Java reflection visibility — 15 tests)
+      and varargs-into-Object materialization (Java varargs ARE Object[] at
+      runtime — 4 tests). Both invisible to every static gate.
+- [ ] Triage wave 3 (16 left): strftime/date-format cluster (~8: epoch
+      ms-vs-s ×1000 suspect, pattern application '31 Dec,' → 'Thu Dec 31',
+      char-parse ','), java.util.Date yes/no compare flips (4), blank
+      asserts (3), birthday ISO date (1)
 - [ ] GATE: suite green on JVM with ledgered exceptions
 
 Deferred from M2 scoping (needed by M5, not gate-blocking): declarative Tier-2
