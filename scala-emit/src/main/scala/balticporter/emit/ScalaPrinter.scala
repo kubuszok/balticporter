@@ -636,7 +636,14 @@ private final class Printer(
         // engine-synthesized loop locals ($it/$arr) always infer correctly and their
         // declared types can be existential-hostile
         val synthetic = name.endsWith("$it") || name.endsWith("$arr")
-        val ann = if (wildIn(t) || synthetic) && init.isDefined then "" else s": ${tpe(t)}"
+        // a call whose return type is a bare method type variable (getBuilder():
+        // <B extends ...> B) needs the declared type as inference context, even when
+        // it carries a wildcard — otherwise B infers Nothing. Keep the skip only for
+        // top-level-wildcard locals (raw iterators), which infer fine.
+        def topWild(x: BType): Boolean = x.isInstanceOf[BType.Wild]
+        val callInit = init.exists(_.isInstanceOf[Call])
+        val skip = synthetic || (wildIn(t) && !(callInit && !topWild(t)))
+        val ann = if skip && init.isDefined then "" else s": ${tpe(t)}"
         val rhs = init.map(expr).getOrElse(defaultOf(t))
         line(s"$kw ${id(name)}$ann = $rhs")
       case BStmtK.ExprStmt(e) => line(expr(e))

@@ -29,7 +29,15 @@ object MemberClashPass:
           case e => e
         }))
     val u2 = u1.copy(types = u1.types.map(t => dropMembers(t, pkgPrefix + t.name, collapsed ++ dropped)))
-    u2.copy(types = u2.types.map(t => fixLocals(fixType(t, unit))))
+    // inherited method names (CharSequence.length() etc.) so a local named like one
+    // is renamed too — Java resolves `length()` in `int length = length()` to the method
+    def inheritedMethods(t: BTypeDecl): Set[String] =
+      registry match
+        case None => Set.empty
+        case Some(reg) =>
+          val supers = t.superClass.toList.map(_.qname) ++ t.interfaces.collect { case BType.Ref(q, _) => q }
+          supers.flatMap(reg.inheritedMethodNames(_)).toSet
+    u2.copy(types = u2.types.map(t => fixLocals(fixType(t, unit), inheritedMethods(t))))
 
   /** removes collapsed/dropped accessor methods, hoisting their trivia onto the
     * same-named field so the comment invariant holds. Recurses with $-qualified
@@ -55,9 +63,9 @@ object MemberClashPass:
   /** A Java local may share the name of a method it calls in its own initializer
     * (`Object x = x(...)`) — Scala's block scoping makes that a self-reference.
     * Rename such locals `x` → `x$loc` (Ident(Local) refs only; calls are untouched). */
-  private def fixLocals(t0: BTypeDecl): BTypeDecl =
-    val t = t0.copy(nested = t0.nested.map(fixLocals))
-    val methodNames = (t.methods ++ t.staticMethods).map(_.name).toSet
+  private def fixLocals(t0: BTypeDecl, inherited: Set[String] = Set.empty): BTypeDecl =
+    val t = t0.copy(nested = t0.nested.map(fixLocals(_, inherited)))
+    val methodNames = (t.methods ++ t.staticMethods).map(_.name).toSet ++ inherited
     if methodNames.isEmpty then t
     else
       def renStmt(s: BStmt): BStmt =

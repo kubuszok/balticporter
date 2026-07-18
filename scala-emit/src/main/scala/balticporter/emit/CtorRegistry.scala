@@ -66,6 +66,18 @@ final class CtorRegistry(units: List[BUnit]):
       case Some((decl, info)) =>
         decl.fields.map(_.name).toSet ++ info.superFqcn.map(inheritedFieldNames(_, depth + 1)).getOrElse(Set.empty)
 
+  /** method names declared up the superclass AND interface chain (within the
+    * closure). A local named like an inherited method (`int length = length();`
+    * where length() is CharSequence's) would shadow it — the local must rename. */
+  def inheritedMethodNames(fqcn: String, depth: Int = 0): Set[String] =
+    if depth > 12 then return Set.empty
+    keyOf(fqcn).flatMap(byFqcn.get) match
+      case None => Set.empty
+      case Some((decl, info)) =>
+        val supers = info.superFqcn.toList ++ decl.interfaces.collect { case BType.Ref(q, _) => q }
+        (decl.methods ++ decl.staticMethods).map(_.name).toSet ++
+          supers.flatMap(s => inheritedMethodNames(s, depth + 1)).toSet
+
   /** the registry key of a superclass/interface reference (nested types live
     * under Outer$Name; interfaces arrive as dotted qnames Spoon resolved). */
   private def keyOf(qname: String): Option[String] =
