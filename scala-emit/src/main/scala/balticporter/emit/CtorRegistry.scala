@@ -16,19 +16,23 @@ import balticporter.core.BExpr.*
   */
 final case class CtorInfo(
     superFqcn: Option[String],
-    /** Java ctors: (params, superArgs (None = implicit super()), thisArgs, body). */
-    ctors: List[(List[BParam], Option[List[BExpr]], Option[List[BExpr]], List[BStmt])],
+    ctors: List[BCtor],
 ):
-  def noArgCtor: Option[(List[BParam], Option[List[BExpr]], Option[List[BExpr]], List[BStmt])] =
-    ctors.find(_._1.isEmpty)
+  def noArgCtor: Option[BCtor] = ctors.find(_.params.isEmpty)
+
+  /** the ctor a super()/this() call of `arity` resolves to: prefer the overload
+    * whose param types match `target` (records the resolved signature), else the
+    * unique same-arity ctor. Disambiguates ContentNode's three arity-1 ctors. */
+  def resolve(arity: Int, target: Option[List[BType]]): Option[BCtor] =
+    val sameArity = ctors.filter(_.params.length == arity)
+    target match
+      case Some(ts) => sameArity.find(_.params.map(_.tpe) == ts).orElse(sameArity.headOption)
+      case None     => sameArity.headOption
 
 final class CtorRegistry(units: List[BUnit]):
   val byFqcn: Map[String, (BTypeDecl, CtorInfo)] =
     def entry(fqcn: String, t: BTypeDecl): List[(String, (BTypeDecl, CtorInfo))] =
-      val info = CtorInfo(
-        t.superClass.map(_.qname),
-        t.ctors.map(c => (c.params, c.superArgs, c.thisArgs, c.body)),
-      )
+      val info = CtorInfo(t.superClass.map(_.qname), t.ctors)
       // nested types register under Outer$Nested — Spoon qualifies super refs that way
       (fqcn -> (t, info)) :: (t.nested ++ t.inner).flatMap(n => entry(s"$fqcn$$${n.name}", n))
     units.flatMap { u =>
@@ -135,9 +139,9 @@ final class CtorRegistry(units: List[BUnit]):
       byFqcn.foreach { case (fqcn, (_, info)) =>
         if !acc.contains(fqcn) then
           val ok = info.ctors.isEmpty && parentOk(info) ||
-            info.noArgCtor.exists { case (_, superArgs, thisArgs, body) =>
-              body.forall(_.k == BStmtK.Empty) && thisArgs.isEmpty &&
-              superArgs.forall(_.isEmpty) && parentOk(info)
+            info.noArgCtor.exists { c =>
+              c.body.forall(_.k == BStmtK.Empty) && c.thisArgs.isEmpty &&
+              c.superArgs.forall(_.isEmpty) && parentOk(info)
             }
           if ok then
             acc += fqcn
@@ -172,28 +176,28 @@ final class CtorRegistry(units: List[BUnit]):
     * deterministic, and widening private→protected never changes behavior. */
   lazy val widenedFields: Set[(String, String)] =
     val out = collection.mutable.Set[(String, String)]()
-    def walk(rootFqcn: String, fqcn: String, args: List[BExpr], depth: Int): Unit =
+    def walk(rootFqcn: String, fqcn: String, args: List[BExpr], target: Option[List[BType]], depth: Int): Unit =
       if depth > 8 then return
       byFqcn.get(fqcn).foreach { case (pd, pi) =>
-        pi.ctors.find(_._1.length == args.length).foreach { case (_, superArgs, thisArgs, body) =>
+        pi.resolve(args.length, target).foreach { c =>
           if fqcn != rootFqcn then
-            body.foreach { st =>
+            c.body.foreach { st =>
               st.k match
                 case BStmtK.Assign(Ident(f, RefKind.OwnField), _, _)
                     if pd.fields.exists(fd => fd.name == f && fd.mods.vis == Vis.Private && !fd.mods.isFinal) =>
                   out += ((fqcn, f))
                 case _ => ()
             }
-          thisArgs match
-            case Some(ta) => walk(rootFqcn, fqcn, ta, depth + 1)
-            case None     => pi.superFqcn.foreach(p => walk(rootFqcn, p, superArgs.getOrElse(Nil), depth + 1))
+          c.thisArgs match
+            case Some(ta) => walk(rootFqcn, fqcn, ta, c.callTargetTypes, depth + 1)
+            case None     => pi.superFqcn.foreach(p => walk(rootFqcn, p, c.superArgs.getOrElse(Nil), c.callTargetTypes, depth + 1))
         }
       }
     byFqcn.foreach { case (fqcn, (_, info)) =>
-      info.ctors.foreach { case (_, superArgs, thisArgs, _) =>
-        thisArgs match
-          case Some(ta) => walk(fqcn, fqcn, ta, 0)
-          case None     => info.superFqcn.foreach(p => walk(fqcn, p, superArgs.getOrElse(Nil), 0))
+      info.ctors.foreach { c =>
+        c.thisArgs match
+          case Some(ta) => walk(fqcn, fqcn, ta, c.callTargetTypes, 0)
+          case None     => info.superFqcn.foreach(p => walk(fqcn, p, c.superArgs.getOrElse(Nil), c.callTargetTypes, 0))
       }
     }
     out.toSet
@@ -242,50 +246,50 @@ final class CtorRegistry(units: List[BUnit]):
     * canonical full-arity super args to delegate through (OrderedMap(capacity) →
     * this(capacity, null) → the (int, host) canonical → [capacity, null]).
     * None when no matching-arity ctor exists in the closure. */
-  def resolveThisChain(parentFqcn: String, args: List[BExpr], depth: Int = 0): Option[List[BExpr]] =
+  def resolveThisChain(parentFqcn: String, args: List[BExpr], depth: Int = 0, target: Option[List[BType]] = None): Option[List[BExpr]] =
     if depth > 12 then return None
     byFqcn.get(parentFqcn).flatMap { (_, info) =>
-      info.ctors.find(_._1.length == args.length) match
+      info.resolve(args.length, target) match
         case None => if depth == 0 then None else Some(args) // unknown overload: stop at current arity
-        case Some((params, _, thisArgs, _)) =>
-          thisArgs match
+        case Some(c) =>
+          c.thisArgs match
             case None => Some(args) // terminal: this ctor calls super (or nothing)
             case Some(ta) =>
-              val subst: Map[String, BExpr] = params.map(_.name).zip(args).toMap
+              val subst: Map[String, BExpr] = c.params.map(_.name).zip(args).toMap
               def sub(e: BExpr): BExpr = BirTransform.mapExpr(e) {
                 case Ident(n, RefKind.Param(_)) if subst.contains(n) => subst(n)
                 case x                                               => x
               }
-              resolveThisChain(parentFqcn, ta.map(sub), depth + 1)
+              resolveThisChain(parentFqcn, ta.map(sub), depth + 1, c.callTargetTypes)
     }
 
   /** Raw transitive effects of constructing `parentFqcn(args)` — the matched
     * overload's body (params substituted) prefixed by its super/this chain, with
     * NO replayability guard. None only when structurally impossible (depth cap, or
     * a non-no-arg call into a type outside the translated set). */
-  private def rawEffects(parentFqcn: String, args: List[BExpr], depth: Int): Option[List[BStmt]] =
+  private def rawEffects(parentFqcn: String, args: List[BExpr], depth: Int, target: Option[List[BType]] = None): Option[List[BStmt]] =
     if depth > 8 then return None
     byFqcn.get(parentFqcn) match
       case None => if args.isEmpty then Some(Nil) else None
       case Some((_, info)) =>
-        info.ctors.find(_._1.length == args.length) match
+        info.resolve(args.length, target) match
           case None => if args.isEmpty then Some(Nil) else None // implicit no-arg
-          case Some((params, superArgs, thisArgs, body)) =>
-            val subst: Map[String, BExpr] = params.map(_.name).zip(args).toMap
+          case Some(c) =>
+            val subst: Map[String, BExpr] = c.params.map(_.name).zip(args).toMap
             def sub(e: BExpr): BExpr = BirTransform.mapExpr(e) {
               case Ident(n, RefKind.Param(_)) if subst.contains(n) => subst(n)
               case x                                               => x
             }
-            val ownBody = body.filterNot(_.k == BStmtK.Empty).map(BirTransform.mapStmt(_) {
+            val ownBody = c.body.filterNot(_.k == BStmtK.Empty).map(BirTransform.mapStmt(_) {
               case Ident(n, RefKind.Param(_)) if subst.contains(n) => subst(n)
               case x                                               => x
             })
-            val upstream: Option[List[BStmt]] = thisArgs match
-              case Some(ta) => rawEffects(parentFqcn, ta.map(sub), depth + 1)
+            val upstream: Option[List[BStmt]] = c.thisArgs match
+              case Some(ta) => rawEffects(parentFqcn, ta.map(sub), depth + 1, c.callTargetTypes)
               case None =>
-                val sargs = superArgs.getOrElse(Nil).map(sub)
+                val sargs = c.superArgs.getOrElse(Nil).map(sub)
                 info.superFqcn match
-                  case Some(p) => rawEffects(p, sargs, depth + 1)
+                  case Some(p) => rawEffects(p, sargs, depth + 1, c.callTargetTypes)
                   case None    => if sargs.isEmpty then Some(Nil) else None
             upstream.map(_ ++ ownBody)
 
@@ -295,8 +299,8 @@ final class CtorRegistry(units: List[BUnit]):
     * post-`this()` statements. Effects shared with no-arg construction (typically
     * the common `super(<constant>)` prefix that assigns private/final grandparent
     * fields) cancel out and never need to be replayable in the subclass. */
-  def inlineSuperEffects(parentFqcn: String, args: List[BExpr], depth: Int = 0, forFqcn: String = ""): Option[List[BStmt]] =
-    rawEffects(parentFqcn, args, depth) match
+  def inlineSuperEffects(parentFqcn: String, args: List[BExpr], depth: Int = 0, forFqcn: String = "", target: Option[List[BType]] = None): Option[List[BStmt]] =
+    rawEffects(parentFqcn, args, depth, target) match
       case None => miss(s"$parentFqcn: effects not structurally computable at ${args.length} args")
       case Some(full) =>
         // subtract the parent no-arg path (run by the subclass primary's super())

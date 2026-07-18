@@ -122,6 +122,7 @@ private final class Printer(
     "false", "final", "finally", "for", "given", "if", "implicit", "import", "lazy", "match",
     "new", "null", "object", "override", "package", "private", "protected", "return", "sealed",
     "super", "then", "throw", "trait", "true", "try", "type", "val", "var", "while", "with", "yield",
+    "macro", "forSome",
     // soft keywords — position-sensitive (e.g. `using = x` in annotation args); backticking
     // them unconditionally is always safe
     "using", "extension", "inline", "opaque", "transparent", "derives", "end", "infix",

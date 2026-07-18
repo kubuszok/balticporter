@@ -369,11 +369,17 @@ private final class UnitBuilder(sourcePath: String, source: String):
     checkAnnotations(c)
     val stmts = Option(c.getBody).map(_.getStatements.asScala.toList).getOrElse(Nil)
     var invTrivia = List.empty[Trivia]
+    var targetTypes = Option.empty[List[BType]]
     val (superArgs, thisArgs, rest) = stmts match
       case (inv: CtInvocation[?]) :: tail if inv.getExecutable != null && inv.getExecutable.isConstructor =>
         val ownerQ = Option(inv.getExecutable.getDeclaringType).map(_.getQualifiedName)
         val isThisCall = ownerQ.contains(c.getDeclaringType.getQualifiedName)
         val args = inv.getArguments.asScala.toList.map(expr)
+        // the resolved target ctor's formal param types — disambiguates same-arity
+        // overloads when the effect-replay funnel inlines this super/this call
+        targetTypes = scala.util.Try(
+          inv.getExecutable.getParameters.asScala.toList.map(btype)
+        ).toOption
         // the invocation statement itself is consumed — its comments hoist to the ctor
         invTrivia = leadingOf(inv) ++ deepComments(inv)
         if isThisCall then (None, Some(args), tail) else (Some(args), None, tail)
@@ -385,6 +391,7 @@ private final class UnitBuilder(sourcePath: String, source: String):
       superArgs = superArgs,
       thisArgs = thisArgs,
       body = block(rest),
+      callTargetTypes = targetTypes,
     )
 
   private def methodDecl(m: CtMethod[?]): BMethod =

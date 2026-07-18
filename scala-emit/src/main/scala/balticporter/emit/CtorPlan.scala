@@ -197,7 +197,7 @@ object CtorPlan:
         def canonSuper(c: BCtor): Option[List[BExpr]] =
           val sa = c.superArgs.getOrElse(Nil)
           superQ match
-            case Some(q) => reg.resolveThisChain(q, sa).orElse(Some(sa))
+            case Some(q) => reg.resolveThisChain(q, sa, target = c.callTargetTypes).orElse(Some(sa))
             case None    => if sa.isEmpty then Some(Nil) else None
         val perCtor = rootCtors.map { c =>
           val (assigns, rest) = splitAssigns(c.body)
@@ -217,7 +217,7 @@ object CtorPlan:
             // super-slot types from the parent's canonical n-arity ctor
             val superParamTypes: Option[List[BType]] =
               if n == 0 then Some(Nil)
-              else superQ.flatMap(q => reg.byFqcn.get(q)).flatMap((_, info) => info.ctors.find(_._1.length == n).map(_._1.map(_.tpe)))
+              else superQ.flatMap(q => reg.byFqcn.get(q)).flatMap((_, info) => info.ctors.find(_.params.length == n).map(_.params.map(_.tpe)))
             superParamTypes match
               case None => None
               case Some(sTypes) =>
@@ -345,7 +345,7 @@ object CtorPlan:
               def resolvedThrough(c: BCtor): Option[List[BExpr]] =
                 if c.thisArgs.isDefined then None // this-delegation must already match arity
                 else
-                  t.superClass.flatMap(sc => registry.flatMap(_.resolveThisChain(sc.qname, c.superArgs.getOrElse(Nil))))
+                  t.superClass.flatMap(sc => registry.flatMap(_.resolveThisChain(sc.qname, c.superArgs.getOrElse(Nil), target = c.callTargetTypes)))
                     .filter(_.length == primary.params.length)
               def canDelegate(c: BCtor): Boolean =
                 val dArgs = c.thisArgs.orElse(c.superArgs).getOrElse(Nil)
@@ -556,11 +556,11 @@ object CtorPlan:
             case _                                           => None
         else None
       def upstreamOf(c: BCtor): Option[List[BStmt]] = c.thisArgs match
-        case Some(ta) => reg.inlineSuperEffects(selfFqcn, ta, forFqcn = selfFqcn)
+        case Some(ta) => reg.inlineSuperEffects(selfFqcn, ta, forFqcn = selfFqcn, target = c.callTargetTypes)
         case None =>
           val sargs = c.superArgs.getOrElse(Nil)
           t.superClass match
-            case Some(p) => reg.inlineSuperEffects(p.qname, sargs, forFqcn = selfFqcn)
+            case Some(p) => reg.inlineSuperEffects(p.qname, sargs, forFqcn = selfFqcn, target = c.callTargetTypes)
             case None    => if sargs.isEmpty then Some(Nil) else None
       def ownBody(c: BCtor): List[BStmt] = c.body.filterNot(st => st.k == BStmtK.Empty && st.leading.isEmpty)
       def flatBody(c: BCtor): Option[List[BStmt]] =

@@ -189,6 +189,10 @@ final case class BCtor(
     superArgs: Option[List[BExpr]],
     thisArgs: Option[List[BExpr]],
     body: List[BStmt],
+    /** the resolved param types of the super()/this() target ctor — disambiguates
+      * overloads of the same arity (ContentNode has three arity-1 ctors); None when
+      * there is no explicit super/this call. */
+    callTargetTypes: Option[List[BType]] = None,
 )
 
 final case class BMethod(
