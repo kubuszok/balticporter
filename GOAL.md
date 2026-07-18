@@ -3,12 +3,33 @@
 Machine-updated by `/goal` iterations. One phase at a time; a phase advances
 only when its gate (PLAN.md §13) is green with re-runnable evidence.
 
-## Phase: M4 — cross-platform + cache (per PLAN.md §13)
+## Phase: M5 — scale + second corpus (flexmark; then sge idioms)
 
-Gate: Liqp module compiles + tests green on JVM/JS/Native; warm re-run
-touches zero units; --no-cache byte-identical.
+Gate (PLAN.md §13, amended M4 note applies): flexmark reaches ≥95%
+translate-or-classified; one sge extension with the (using Sge) Tier-3 pass;
+bump demo (upstream pin move → scoped regen, gates green).
 
 Status: IN PROGRESS
+
+Checklist:
+- [x] flexmark coverage baseline (commit ea32f02): 543/845 (64%) on first
+      contact — Liqp-hardened rules generalize. Measured worklist recorded.
+- [ ] Quick wins: Java assert (46), @Deprecated→@deprecated (23),
+      package-info no-types (82 — verify + handle), ctor refs X::new (11),
+      do-while (4), switch fallthrough (5), comment losses (12)
+- [ ] Ctor-funnel next tier (~108 files): synthesized-full-primary strategy
+      for N-ctor different-super shapes at scale
+- [ ] Vocabulary/Tier-3 productization (deferred from M2/M4) — needed for the
+      sge (using Sge) pass
+- [ ] sge extension port (jbump or noise4j) + skeleton diff vs sge hand port
+- [ ] bump demo
+
+## Phase M4 — cross-platform + cache — DONE (2026-07-18, amended scope)
+
+Amended gate (see PLAN commit 6dd3339): warm re-run zero units; --no-cache
+byte-identical; lint quantifies the JS/Native substitution plan.
+
+Status: DONE
 
 Checklist:
 - [x] Persistent cache (commit a1716de): action store keyed on source digest +
