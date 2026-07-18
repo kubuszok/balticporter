@@ -62,33 +62,47 @@ object XwikiProject:
     val srcDir = projRoot.resolve("src/main/scala")
     if Files.exists(srcDir) then Files.walk(srcDir).iterator().asScala.toList.reverse.foreach(Files.delete)
 
+    // PLAN §7 whole-file overrides: hand-ported Scala for the irreducible
+    // F-bounded / same-erasure-varargs families the engine can't mechanize
+    // (keyed by the flattened package path; each must carry the header). The unit
+    // is still parsed for cross-closure resolution — only its OUTPUT is replaced.
+    val overridesRoot = repoRoot.resolve("corpus-tests/xwiki-overrides")
     var cacheHits = 0
     var translated = 0
+    var overridden = 0
     var commentFailures = 0
     units.foreach { u =>
-      val deps = UnitDeps.of(u, fqcnToUnit.keySet).flatMap(fqcnToUnit.get).map(_.sourcePath).toList.distinct.sorted
-      val key = Digest.combined(
-        ("src" -> Digest.file(fmRoot.resolve(u.sourcePath)))
-          :: ("engine" -> engineFp) :: ("sentinels" -> sentinelDigest) :: ("ctors" -> ctorDigest)
-          :: ("ovr" -> ovrDigest) :: ("prov" -> Digest.string(prov.toString))
-          :: deps.map(d => s"dep:$d" -> ifaceHash(d))
-      )
-      val out = cache.get(key) match
-        case Some(c) => cacheHits += 1; c
-        case None =>
-          translated += 1
-          val fresh = ScalaPrinter.print(u, prov, sentinels, ctorReg, XwikiOverrides.map)
-          cache.put(key, fresh)
-          fresh
-      if CommentCheck.check(u, out).nonEmpty then commentFailures += 1
       // flatten: package path from the Scala package, not the Maven module dir
       val pkgPath = u.pkg.replace('.', '/')
       val fileName = u.sourcePath.substring(u.sourcePath.lastIndexOf('/') + 1).stripSuffix(".java") + ".scala"
       val target = srcDir.resolve(pkgPath).resolve(fileName)
       Files.createDirectories(target.getParent)
-      Files.writeString(target, out)
+
+      val ovrFile = overridesRoot.resolve(pkgPath).resolve(fileName)
+      if Files.exists(ovrFile) then
+        val content = Files.readString(ovrFile)
+        require(content.contains("HANDWRITTEN OVERRIDE"), s"override without header: $ovrFile")
+        overridden += 1
+        Files.writeString(target, content)
+      else
+        val deps = UnitDeps.of(u, fqcnToUnit.keySet).flatMap(fqcnToUnit.get).map(_.sourcePath).toList.distinct.sorted
+        val key = Digest.combined(
+          ("src" -> Digest.file(fmRoot.resolve(u.sourcePath)))
+            :: ("engine" -> engineFp) :: ("sentinels" -> sentinelDigest) :: ("ctors" -> ctorDigest)
+            :: ("ovr" -> ovrDigest) :: ("prov" -> Digest.string(prov.toString))
+            :: deps.map(d => s"dep:$d" -> ifaceHash(d))
+        )
+        val out = cache.get(key) match
+          case Some(c) => cacheHits += 1; c
+          case None =>
+            translated += 1
+            val fresh = ScalaPrinter.print(u, prov, sentinels, ctorReg, XwikiOverrides.map)
+            cache.put(key, fresh)
+            fresh
+        if CommentCheck.check(u, out).nonEmpty then commentFailures += 1
+        Files.writeString(target, out)
     }
-    println(s"[xwiki] cache: $cacheHits hits, $translated translated; comment failures=$commentFailures")
+    println(s"[xwiki] cache: $cacheHits hits, $translated translated, $overridden whole-file overrides; comment failures=$commentFailures")
     if commentFailures > 0 then System.err.println(s"[xwiki] $commentFailures comment failures");
 
     SbtGen.emit(

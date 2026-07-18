@@ -173,7 +173,18 @@ Checklist:
             don't count) and renders reassigned finals as var. Cleared HtmlDeepParser
             BLOCK_TAGS/VOID_TAGS/START_PATTERN/PATTERN_MAP/OPTIONAL_TAGS + cascade.
             141 → 136. liqp compile GREEN, suite 639/639, LiqpCorpus PARITY_FAIL=0.
-      - [ ] Override sweep (next, hand-port): NodeVisitor + AttributeProviderAdapter
+      - [~] wave 18 (this commit): override sweep BEGINS. Added whole-file
+            override support to XwikiProject (mirrors LiqpProject's mechanism —
+            corpus-tests/xwiki-overrides/, HANDWRITTEN OVERRIDE header checked, unit
+            still parsed for resolution, only OUTPUT replaced). First override:
+            AttributeProviderAdapter — the H.../H[]... varargs overloads collide
+            under Scala erasure and the flat-varargs super call mistranslates (base
+            AstActionHandler takes addActionHandlers(Array[H]*), so a Java H[] arg is
+            ONE element not a spread). Hand-port routes every form through the base;
+            the redundant array-varargs backward-compat overloads (unused in the
+            closure) are dropped. 136 → 132. Engine untouched (harness + override
+            only); corpus-tests compiles so liqp unaffected.
+      - [ ] Override sweep (continue, hand-port): NodeVisitor + LinkResolverAdapter
             + LinkResolverAdapter + BlockNodeVisitor + AstActionHandler base
             (F-bounded visitor family) and IRichSequenceBase/SequenceBuilder
             (F-bounded sequence bases) as PLAN §7 whole-file overrides. This is
