@@ -95,10 +95,14 @@ Checklist:
             this(1)` so no-arg cases `extends Flags()` resolve (enum-case
             7 → 0; cascade cleared Flags users, 256 → 242 errors found).
             Metric switched to "N errors found" (headers cap at 100).
-      - [ ] remaining (242): non-visitor mechanical classes still open —
-            Found-Null in non-ternary positions (16), `.length()` on
-            parameterless receivers (8), null-into-generic-method-arg, plus
-            the visitor family (~40, override-bound). AstActionHandler is the
+      - [~] wave 7 (commit f59a04d): varargs-of-arrays call adaptation —
+            flat H... forwarded to H[]... target now materializes to one array
+            (`handlers.toArray`) not spread. CORRECTNESS fix but net-zero on
+            count (242): the same lines carry the F-bounded generic mismatch
+            that dominates. FINDING: the visitor family's real blocker is the
+            F-bounded generics (raw-type fill emits `[?]` where the F-bound
+            wants `[Node]`), not varargs — override-bound.
+      - [ ] remaining (242, visitor-family-dominated): AstActionHandler is the
             dominant blocker — Java `X...`/`X[]...` varargs both erase to Seq
             in Scala (Conflicting definitions) + F-bounded `[?]` vs `[Node]`.
             ~5 files (NodeVisitor, TextCollectingVisitor, the two Adapters,
