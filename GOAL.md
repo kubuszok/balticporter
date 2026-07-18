@@ -227,8 +227,17 @@ Checklist:
             operand is a Lambda/MethodRef/UnboundMethodRef: SAM-converts AND the
             target type resolves the overloaded eta. Ambiguous-overload 7 → 1.
             97 → 91. liqp compile GREEN, suite 639/639, LiqpCorpus PARITY_FAIL=0.
-      - [ ] Continue: F-bounded getBuilder (Nothing), Formatter family, collection
-            null-typevar,
+      - [x] wave 24 (this commit): ENGINE fix — reassigned primary-ctor param → var.
+            Java ctor params are mutable; a primary-ctor param reassigned in the body
+            (Segment.Base `_byteOffset += 1` / `_byteOffset++`) fails as a Scala val
+            ("+= is not a member of Int"). Printer now scans the primary-ctor body for
+            param reassignments (statement Assign + AssignExpr/IncDecExpr nested in
+            expressions) and emits those params as `private var` — the super call still
+            reads the value, the body mutates the field. compound-assign 7 → 3 (the
+            remaining 3 are narrow-type `c |= x` on Char — a separate fix). 91 → 87.
+            liqp compile GREEN, suite 639/639, LiqpCorpus PARITY_FAIL=0.
+      - [ ] Continue: narrow-type compound-assign (Char |=), F-bounded getBuilder,
+            Formatter family, collection null-typevar,
             + LinkResolverAdapter + BlockNodeVisitor + AstActionHandler base
             (F-bounded visitor family) and IRichSequenceBase/SequenceBuilder
             (F-bounded sequence bases) as PLAN §7 whole-file overrides. This is

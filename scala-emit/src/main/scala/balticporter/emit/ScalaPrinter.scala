@@ -394,9 +394,10 @@ private final class Printer(
           .filter(_.nonEmpty)
           .map(v => s" $v ")
           .getOrElse("")
+    val reParams = reassignedParams(plan.primaryBody, plan.primaryParams.map(_.p.name).toSet)
     val primary = plan.primaryParams match
       case Nil => ""
-      case ps  => primaryVis + "(" + ps.map(paramStr(_, t.methods)).mkString(", ") + ")"
+      case ps  => primaryVis + "(" + ps.map(paramStr(_, t.methods, reParams)).mkString(", ") + ")"
     val ext = (t.superClass, plan.superArgs) match
       case (None, _) if t.interfaces.isEmpty => ""
       case (None, _)         => " extends " + t.interfaces.map(tpe).mkString(" with ")
@@ -526,12 +527,54 @@ private final class Printer(
       case (Lit(LitKind.NullL, _), Some(t)) if !t.isInstanceOf[BType.Prim] => s"(null: ${tpe(t)})"
       case _                                                   => expr(stripped)
 
-  private def paramStr(p: CtorPlan.Param): String = paramStr(p, Nil)
+  private def paramStr(p: CtorPlan.Param): String = paramStr(p, Nil, Set.empty)
 
-  private def paramStr(p: CtorPlan.Param, methods: List[BMethod]): String =
+  private def paramStr(p: CtorPlan.Param, methods: List[BMethod], reassigned: Set[String] = Set.empty): String =
     p.promoted match
-      case Some(f) => s"${beanPrefix(f, methods)}${visPrefix(f.mods)}val ${id(p.p.name)}: ${tpe(p.p.tpe)}"
-      case None    => paramOf(p.p)
+      case Some(f)                               => s"${beanPrefix(f, methods)}${visPrefix(f.mods)}val ${id(p.p.name)}: ${tpe(p.p.tpe)}"
+      // Java ctor params are mutable; a primary-ctor param reassigned in the ctor body
+      // becomes a `private var` field (Scala params are val). The super call still reads
+      // its value, and the body's `p += ...` / `p++` mutate the field.
+      case None if reassigned.contains(p.p.name) => s"private var ${paramOf(p.p)}"
+      case None                                  => paramOf(p.p)
+
+  /** Primary-ctor parameters reassigned in the ctor body (statement `p = …`, or an
+    * `AssignExpr`/`IncDecExpr` nested in an expression such as `p++`). */
+  private def reassignedParams(stmts: List[BStmt], pnames: Set[String]): Set[String] =
+    if pnames.isEmpty then Set.empty
+    else
+      val out = collection.mutable.Set[String]()
+      def exprScan(e: BExpr): Unit =
+        BirTransform.mapExpr(e) { x =>
+          x match
+            case AssignExpr(Ident(n, RefKind.Param(_)), _) if pnames(n)    => out += n
+            case IncDecExpr(Ident(n, RefKind.Param(_)), _, _) if pnames(n) => out += n
+            case _                                                         => ()
+          x
+        }
+      def walk(ss: List[BStmt]): Unit = ss.foreach(s => walkK(s.k))
+      def walkK(k: BStmtK): Unit = k match
+        case BStmtK.Assign(lhs, rhs, _) =>
+          lhs match
+            case Ident(n, RefKind.Param(_)) if pnames(n) => out += n
+            case _                                       => exprScan(lhs)
+          exprScan(rhs)
+        case BStmtK.LocalVar(_, _, i, _) => i.foreach(exprScan)
+        case BStmtK.ExprStmt(e)          => exprScan(e)
+        case BStmtK.If(c, t, e)          => exprScan(c); walk(t); e.foreach(walk)
+        case BStmtK.While(c, b)          => exprScan(c); walk(b)
+        case BStmtK.DoWhile(b, c)        => walk(b); exprScan(c)
+        case BStmtK.Return(e)            => e.foreach(exprScan)
+        case BStmtK.Throw(e)             => exprScan(e)
+        case BStmtK.Block(b)             => walk(b)
+        case BStmtK.Try(b, cs, f)        => walk(b); cs.foreach(c => walk(c.body)); f.foreach(walk)
+        case BStmtK.Boundary(b, _)       => walk(b)
+        case BStmtK.Match(scr, cases)    => exprScan(scr); cases.foreach(c => walk(c.body))
+        case BStmtK.Synchronized(l, b)   => exprScan(l); walk(b)
+        case BStmtK.Assert(c, m)         => exprScan(c); m.foreach(exprScan)
+        case _                           => ()
+      walk(stmts)
+      out.toSet
 
   private def paramOf(p: BParam): String =
     val t = if p.varargs then
