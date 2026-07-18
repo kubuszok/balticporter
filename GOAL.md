@@ -60,8 +60,17 @@ Checklist:
       (its 3 supers all normalize through HtmlAppendableBase's this-chain);
       only TagRange (Range copy-ctor) needs the 3-line override. xwiki closure
       533/533 translate, 0 UNSUPPORTED. liqp 639/639, flexmark 755 → 756.
-- [ ] XwikiProject assembly: sbt-gen the xwiki-macros module set + ported test
-      suite; compile + tests green on JVM (the M6 core gate)
+- [x] XwikiProject assembly built (commit 023f450): 501-file closure flattened
+      into one sbt 2.0 module + ctor-splice overrides; 501/501 emit, 0 comment
+      failures. ROOT-CAUSE FIX landed: effect-replay matched super/this targets
+      by arity alone (ContentNode's 3 arity-1 ctors) — BCtor.callTargetTypes +
+      CtorInfo.resolve now disambiguate by signature (BlockQuote(BasedSequence)
+      fixed). `macro`/`forSome` keyword escaping. Regression: 639/639, all
+      corpora unchanged.
+- [ ] XwikiProject compile-error burn (first contact ~400 errors across 78
+      files; Liqp-style arc): remaining classes incl. null-into-generic,
+      package-collision (util²/ast²), varargs/Array↔Seq, missing-param-type
+      lambdas. Then port the xwiki-macros spec suite; compile + tests green.
 - [ ] Framework docs + example port program published
 - [ ] HUMAN REVIEW: idiom-quality sign-off (queue when the above is green)
 - [ ] Port program written against the framework (PortProgram-style entry,
