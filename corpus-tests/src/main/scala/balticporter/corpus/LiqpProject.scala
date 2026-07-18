@@ -51,9 +51,44 @@ object LiqpProject:
     if Files.exists(srcDir) then
       Files.walk(srcDir).iterator().asScala.toList.reverse.foreach(Files.delete)
 
+    // ---- persistent action cache (PLAN §12): key = source digest + dep interface
+    // hashes + sentinel set + engine fingerprint; -Dbalticporter.cache=off disables
+    val cacheEnabled =
+      sys.props.getOrElse("balticporter.cache", "on") != "off" && !args.contains("--no-cache")
+    val cache = new ActionCache(repoRoot.resolve("out/.bpcache"), cacheEnabled)
+    val engineFp = EngineFingerprint.value
+    val sentinelDigest = Digest.string(sentinels.toList.sorted.mkString(","))
+    val fqcnToUnit: Map[String, BUnit] =
+      units.flatMap(u => u.types.map(t => (if u.pkg.isEmpty then t.name else s"${u.pkg}.${t.name}") -> u)).toMap
+    val ifaceHash: Map[String, String] = units.map(u => u.sourcePath -> InterfaceHash.of(u)).toMap
+    var cacheHits = 0
+    var translatedCount = 0
+
     var commentFailures = 0
     units.foreach { u =>
-      val out = ScalaPrinter.print(u, prov, sentinels)
+      val deps = UnitDeps
+        .of(u, fqcnToUnit.keySet)
+        .flatMap(fqcnToUnit.get)
+        .map(_.sourcePath)
+        .toList
+        .distinct
+        .sorted
+      val key = Digest.combined(
+        ("src" -> Digest.file(sourceRoot.resolve(u.sourcePath)))
+          :: ("engine" -> engineFp)
+          :: ("sentinels" -> sentinelDigest)
+          :: ("prov" -> Digest.string(prov.toString))
+          :: deps.map(d => s"dep:$d" -> ifaceHash(d))
+      )
+      val out = cache.get(key) match
+        case Some(cached) =>
+          cacheHits += 1
+          cached
+        case None =>
+          translatedCount += 1
+          val fresh = ScalaPrinter.print(u, prov, sentinels)
+          cache.put(key, fresh)
+          fresh
       val lost = CommentCheck.check(u, out)
       if lost.nonEmpty then
         commentFailures += 1
@@ -70,6 +105,22 @@ object LiqpProject:
       Files.createDirectories(target.getParent)
       Files.copy(src, target, StandardCopyOption.REPLACE_EXISTING)
     }
+    println(s"[proj] cache: $cacheHits hits, $translatedCount translated (enabled=$cacheEnabled)")
+
+    // platform lint: the substitution-disposition worklist for a JS/Native port
+    val lintHits = balticporter.verify.PlatformLint.scan(units, fqcnToUnit.keySet)
+    val lintReport = lintHits
+      .groupBy(_.category)
+      .view
+      .mapValues(hs => (hs.map(_.unit).distinct.length, hs.length))
+      .toList
+      .sortBy(-_._2._1)
+    Files.writeString(
+      repoRoot.resolve("out/liqp-platform-lint.tsv"),
+      lintHits.map(h => s"${h.unit}\t${h.category}\t${h.detail}").sorted.distinct.mkString("", "\n", "\n"),
+    )
+    println("[proj] platform lint (units affected / refs) — JS/Native substitution worklist:")
+    lintReport.foreach { case (cat, (us, refs)) => println(f"[proj]   $us%3d units $refs%4d refs  $cat") }
     if commentFailures > 0 then
       System.err.println(s"[proj] $commentFailures comment failures"); sys.exit(1)
 
