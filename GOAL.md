@@ -110,7 +110,9 @@ Checklist:
       Note: jbump needs no (using Sge) context — it is dependency-free; the
       Sge-context pass belongs to a libGDX-coupled extension when one is
       ported.
-- [ ] bump demo
+- [x] bump demo (commit 91bd6a5): staged pin move, exact scoped regen
+      62/133 (leaf body edit: no ripple; signature edit: 61-unit interface
+      ripple), byte-stable, GATE GREEN.
 
 ## Phase M4 — cross-platform + cache — DONE (2026-07-18, amended scope)
 
