@@ -33,10 +33,18 @@ Checklist:
       green (corpus counts unchanged, M0 GREEN, 625/625 tests — LiquidLexerTest
       confirmed via explicit testOnly; `test` detection silently skips it,
       known thin-client quirk).
-- [ ] flexmark tail remainder (16): inner non-static classes (6), ctor-funnel
-      leftovers (9: no-identity-super 4, primitive sentinel 2, 3-ctor field
-      logic 2, arity mismatch 1), public field-vs-method clash (1) — assess
-      translate vs ledger/override per file
+- [x] Inner (non-static) classes (commit a454047): emit in the class body
+      (Scala nested classes are inner by default); RefKind.OuterField prints
+      `Outer.this.f` for enclosing-instance reads; inner qnames print as
+      simple names in outer scope. flexmark 747 → **754/763 (98.8%)**.
+      VERIFIED BEHAVIORALLY: Liqp test translation 105/105 (LiquidParserTest
+      holdout cleared), Test/compile exit=0, full suite **639/639** green
+      (625 + 14 new). NOTE: sbt 2.0 caches test results — byte-identical
+      regenerated tests report `Total 0` from plain `test`; force full runs
+      with `testOnly *`.
+- [ ] flexmark tail remainder (9): ctor-funnel shapes (8: no-identity-super 4,
+      primitive sentinel 2, 3-ctor field logic 2) + public field-vs-method
+      clash ADDITIONAL_CHARS (1) — assess translate vs ledger/override per file
 - [ ] Vocabulary/Tier-3 productization (deferred from M2/M4) — needed for the
       sge (using Sge) pass
 - [ ] sge extension port (jbump or noise4j) + skeleton diff vs sge hand port
