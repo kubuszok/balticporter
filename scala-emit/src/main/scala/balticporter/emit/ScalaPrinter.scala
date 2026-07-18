@@ -142,9 +142,14 @@ private final class Printer(unit: BUnit, prov: Provenance, sentinels: Set[String
     case -1 => unit.pkg
     case i  => unit.pkg.substring(i + 1)
 
+  /** >0 while printing types nested inside a companion — their `private` members are
+    * outer-accessible in Java (synthetic accessors), so they widen to package scope. */
+  private var nestedDepth = 0
+
   private def visPrefix(m: Mods): String = m.vis match
-    case Vis.Public         => ""
-    case Vis.Private        => "private "
+    case Vis.Public => ""
+    case Vis.Private =>
+      if nestedDepth > 0 && unit.pkg.nonEmpty then s"private[$innermostPkg] " else "private "
     case Vis.Protected      => if unit.pkg.isEmpty then "protected " else s"protected[$innermostPkg] "
     case Vis.PackagePrivate => if unit.pkg.isEmpty then "private " else s"private[$innermostPkg] "
 
@@ -248,7 +253,9 @@ private final class Printer(unit: BUnit, prov: Provenance, sentinels: Set[String
         line()
       t.staticMethods.foreach(methodDecl)
       t.nested.foreach { n =>
+        nestedDepth += 1
         typeDecl(n)
+        nestedDepth -= 1
         line()
       }
       indent -= 1
@@ -313,7 +320,10 @@ private final class Printer(unit: BUnit, prov: Provenance, sentinels: Set[String
     plan.secondaryCtors.foreach { sc =>
       trivia(sc.leading)
       val sig = s"${visPrefix(sc.mods)}def this(${sc.params.map(paramOf).mkString(", ")}) ="
-      val dArgs = sc.delegateArgs.map(delegateArg).mkString(", ")
+      val dArgs =
+        if sc.targetTypes.length == sc.delegateArgs.length then
+          sc.delegateArgs.zip(sc.targetTypes).map((a, tt) => delegateArg(a, Some(tt))).mkString(", ")
+        else sc.delegateArgs.map(delegateArg).mkString(", ")
       if sc.body.isEmpty then
         line(sig)
         indent += 1
@@ -344,11 +354,16 @@ private final class Printer(unit: BUnit, prov: Provenance, sentinels: Set[String
     * (formals of this()/super() targets aren't tracked; forwarding-whole is the
     * overwhelmingly common Java shape, and scalac verifies).
     */
-  private def delegateArg(e: BExpr): String = e match
-    case Ident(_, RefKind.Param(true))           => expr(e) + "*"
-    case Typed(i @ Ident(_, RefKind.Param(true)), _) => expr(i) + "*"
-    case Typed(i, _)                             => expr(i)
-    case other                                   => expr(other)
+  private def delegateArg(e: BExpr): String = delegateArg(e, None)
+
+  private def delegateArg(e: BExpr, target: Option[BType]): String =
+    val stripped = e match
+      case Typed(i, _) => i
+      case other       => other
+    (stripped, target) match
+      case (Ident(_, RefKind.Param(true)), Some(BType.Arr(_))) => expr(stripped) + ".toArray"
+      case (Ident(_, RefKind.Param(true)), _)                  => expr(stripped) + "*"
+      case _                                                   => expr(stripped)
 
   private def paramStr(p: CtorPlan.Param): String =
     p.promoted match
@@ -411,7 +426,10 @@ private final class Printer(unit: BUnit, prov: Provenance, sentinels: Set[String
           case BType.Ref(_, as) => as.exists(wildIn)
           case BType.Arr(e2)    => wildIn(e2)
           case _                => false
-        val ann = if wildIn(t) && init.isDefined then "" else s": ${tpe(t)}"
+        // engine-synthesized loop locals ($it/$arr) always infer correctly and their
+        // declared types can be existential-hostile
+        val synthetic = name.endsWith("$it") || name.endsWith("$arr")
+        val ann = if (wildIn(t) || synthetic) && init.isDefined then "" else s": ${tpe(t)}"
         val rhs = init.map(expr).getOrElse(defaultOf(t))
         line(s"$kw ${id(name)}$ann = $rhs")
       case BStmtK.ExprStmt(e) => line(expr(e))
@@ -495,7 +513,10 @@ private final class Printer(unit: BUnit, prov: Provenance, sentinels: Set[String
   private def expr(e: BExpr): String = e match
     case Lit(_, raw)   => raw
     case Ident(n, RefKind.StaticField(owner)) => s"${refName(owner)}.${id(n)}"
-    case Ident(n, _)   => id(n)
+    // explicit `this.` — a Java local may shadow a same-named field, and Java resolves
+    // the pre-declaration read to the field while Scala's block scoping would not
+    case Ident(n, RefKind.OwnField) => s"this.${id(n)}"
+    case Ident(n, _)                => id(n)
     case This          => "this"
     case Select(r, n)  => s"${expr(r)}.${id(n)}"
     case ArrayLength(a) => s"${expr(a)}.length"
@@ -562,10 +583,17 @@ private final class Printer(unit: BUnit, prov: Provenance, sentinels: Set[String
         case Right(r)    => s"${expr(r)}.${id(name)}"
 
     case UnboundMethodRef(recvT, name, formals) =>
-      val ps = ("recv$" -> recvT) :: formals.zipWithIndex.map((t, i) => s"p$i$$" -> t)
-      val plist = ps.map((n, t) => s"$n: ${tpe(t)}").mkString(", ")
+      // annotate the receiver only when its type is precise (wildcards would WIDEN what
+      // SAM inference could otherwise carry); other params always infer
+      def precise(x: BType): Boolean = x match
+        case _: BType.Wild    => false
+        case BType.Ref(_, as) => as.forall(precise)
+        case BType.Arr(e2)    => precise(e2)
+        case _                => true
+      val recvP = if precise(recvT) then s"recv$$: ${tpe(recvT)}" else "recv$"
+      val ps = recvP :: formals.indices.map(i => s"p$i$$").toList
       val args = formals.indices.map(i => s"p$i$$").mkString(", ")
-      s"(($plist) => recv$$.${id(name)}($args))"
+      s"((${ps.mkString(", ")}) => recv$$.${id(name)}($args))"
 
     case Lambda(ps, body) =>
       val plist = ps match
@@ -588,7 +616,15 @@ private final class Printer(unit: BUnit, prov: Provenance, sentinels: Set[String
       s"${expr(e1)}.to$conv"
     case Cast(t, e1)       => s"${expr(e1)}.asInstanceOf[${tpe(t)}]"
     case InstanceOf(e1, t) => s"${expr(e1)}.isInstanceOf[${tpe(t)}]"
-    case ClassLit(t)       => s"classOf[${tpe(t)}]"
+    case ClassLit(t) =>
+      // Java class literals are erased. For a GENERIC class the raw Class value flows
+      // with an unchecked T in Java — Class[AnyRef] reproduces that for inference,
+      // with result casts handled at the assignment (maybeUncheckedCast).
+      t match
+        case BType.Ref(_, args) if args.nonEmpty =>
+          // generic class literal: Java's raw Class flows with unchecked T
+          s"classOf[${tpe(t)}].asInstanceOf[Class[AnyRef]]"
+        case other => s"classOf[${tpe(other)}]"
 
   /** Call-site adaptation of Java varargs/array boundaries (RESEARCH.md §4.2):
     *   - varargs param forwarded into a varargs slot        → spread `p*`

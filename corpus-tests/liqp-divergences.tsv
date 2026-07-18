@@ -5,7 +5,6 @@
 liqp/LValue.java	ba226c6036c7	hand port relocated BREAK/CONTINUE sentinels to tags/Break.scala,Continue.scala and reshaped temporal helpers for DataView+context (temporalAsArray/1→temporalAsVector/2, +temporalToString/2, +toZonedDateTime/2) — Tier-2/3 vocabulary territory
 liqp/RenderTransformer.java	48a5a97aee91	ObjectAppender/Controller nesting differs: hand port hosts append on the ObjectAppender trait (verified RenderTransformer.scala:49)
 liqp/RenderTransformerDefaultImpl.java	ae831415a62e	hand port names the anonymous controller (DefaultController in companion) and drops INSTANCE for object idiom; engine keeps upstream shape
-liqp/TemplateContext.java	97b9e54372ae	hand port renames errors→errorsList, adds REGISTRY_JAIL_ROOT/getJailRoot registry accessors, restructures template/checkForMaxIterations
 liqp/antlr/NameResolver.java	20adee3df704	hand port adds NameResolver.Default implementation object; getLocationFromCharStream moved into the hand-written parser layer (ANTLR substitution)
 liqp/blocks/Tablerow.java	6f8c722604ef	toLiquid→toDataView rename (Tier-2 DataView vocabulary) + drop-context var restructured into the DataView encoding
 liqp/filters/Relative_Url.java	04ebcec861a9	objectToMap/2→dvToMap/1 (DataView vocabulary; TemplateContext param no longer needed)
@@ -19,3 +18,4 @@ liqp/Insertions.java	2b442b575ca7	hand port renamed backing vals to _blockNames/
 liqp/blocks/For.java	c75790029609	toLiquid→toDataView (Tier-2 DataView vocabulary) + java.util.Stack→ArrayDeque substitution per docs/architecture/liqp-port.md Cross-Platform Strategy (createLoopDropInStack→createLoopDropInArrayDeque)
 liqp/Template.java	2088f70f8fef	hand port replaced ANTLR parse-tree API (getParseTree/children/companion parse) with the hand-written parser surface (renderResult/withJailRoot) — the documented ANTLR substitution; engine keeps upstream ANTLR accessors
 liqp/TemplateParser.java	644facf8a0ba	hand port restructured the Builder: Jackson ObjectMapper option dropped (withObjectMapper — Jackson substitution), underscore-prefixed backing vals (_filters/_insertions naming idiom), strftime dateParser replaced (strftime4j→DateTimeFormatter substitution), withLiquidStyleWhere added upstream-later
+liqp/TemplateContext.java	6f88429b9c23	hand port renames errors→errorsList (engine: errors$fld after field-vs-method clash rename), adds REGISTRY_JAIL_ROOT/getJailRoot registry accessors, restructures template/checkForMaxIterations — re-verified 2026-07-18 after promotion-rule change

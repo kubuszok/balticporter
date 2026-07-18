@@ -11,7 +11,43 @@ import balticporter.core.BExpr.*
 object MemberClashPass:
 
   def apply(unit: BUnit): BUnit =
-    unit.copy(types = unit.types.map(fixType(_, unit)))
+    unit.copy(types = unit.types.map(t => fixLocals(fixType(t, unit))))
+
+  /** A Java local may share the name of a method it calls in its own initializer
+    * (`Object x = x(...)`) — Scala's block scoping makes that a self-reference.
+    * Rename such locals `x` → `x$loc` (Ident(Local) refs only; calls are untouched). */
+  private def fixLocals(t0: BTypeDecl): BTypeDecl =
+    val t = t0.copy(nested = t0.nested.map(fixLocals))
+    val methodNames = (t.methods ++ t.staticMethods).map(_.name).toSet
+    if methodNames.isEmpty then t
+    else
+      def renStmt(s: BStmt): BStmt =
+        val mapped = BirTransform.mapStmt(s) {
+          case Ident(n, RefKind.Local) if methodNames.contains(n) => Ident(n + "$loc", RefKind.Local)
+          case e                                                  => e
+        }
+        renameLocalDecls(mapped, methodNames)
+      def fixM(m: BMethod): BMethod = m.copy(body = m.body.map(_.map(renStmt)))
+      t.copy(
+        methods = t.methods.map(fixM),
+        staticMethods = t.staticMethods.map(fixM),
+        ctors = t.ctors.map(c => c.copy(body = c.body.map(renStmt))),
+        staticInit = t.staticInit.map(renStmt),
+        instanceInit = t.instanceInit.map(renStmt),
+      )
+
+  private def renameLocalDecls(s: BStmt, names: Set[String]): BStmt =
+    def r(x: BStmt): BStmt = renameLocalDecls(x, names)
+    val k = s.k match
+      case lv: BStmtK.LocalVar if names.contains(lv.name) => lv.copy(name = lv.name + "$loc")
+      case BStmtK.If(c, tb, eb)      => BStmtK.If(c, tb.map(r), eb.map(_.map(r)))
+      case BStmtK.While(c, b)        => BStmtK.While(c, b.map(r))
+      case BStmtK.Block(b)           => BStmtK.Block(b.map(r))
+      case BStmtK.Try(b, cs, f)      => BStmtK.Try(b.map(r), cs.map(c => c.copy(body = c.body.map(r))), f.map(_.map(r)))
+      case BStmtK.Boundary(b, l)     => BStmtK.Boundary(b.map(r), l)
+      case BStmtK.Match(scr, cases)  => BStmtK.Match(scr, cases.map(c => c.copy(body = c.body.map(r))))
+      case other                     => other
+    s.copy(k = k)
 
   private def fixType(t0: BTypeDecl, unit: BUnit): BTypeDecl =
     val t = t0.copy(nested = t0.nested.map(fixType(_, unit)))

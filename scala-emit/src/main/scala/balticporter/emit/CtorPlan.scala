@@ -64,6 +64,8 @@ object CtorPlan:
       delegateArgs: List[BExpr],
       /** statements after the delegation (Scala auxiliaries may run code after this(...)). */
       body: List[BStmt] = Nil,
+      /** the delegation target's param types — drives varargs/array adaptation. */
+      targetTypes: List[BType] = Nil,
   )
 
   def of(t: BTypeDecl, unit: BUnit, sentinelSupers: Set[String] = Set.empty): CtorPlan =
@@ -105,17 +107,28 @@ object CtorPlan:
         val assignTrivia: Map[String, List[Trivia]] = assignsT.map(x => x._1 -> x._3).toMap
         def withAssignTrivia(f: BField): BField =
           f.copy(leading = f.leading ++ assignTrivia.getOrElse(f.name, Nil))
+        // fields assigned again in secondary-ctor bodies can be neither promoted nor val
+        val secondaryAssigned: Set[String] = secondaries
+          .flatMap(_.body)
+          .collect { case BStmt(_, BStmtK.Assign(Ident(f, RefKind.OwnField), _, None)) => f }
+          .toSet
         val promoted: Map[String, BField] = assignedOnce.collect {
           case (f, Ident(p, RefKind.Param(_)))
-              if p == f && t.fields.exists(fd => fd.name == f && fd.mods.isFinal) =>
+              if p == f && t.fields.exists(fd => fd.name == f && fd.mods.isFinal) &&
+                !secondaryAssigned.contains(f) &&
+                !t.methods.exists(_.name == f) => // field-vs-method clash stays a field (renamed later)
             f -> t.fields.find(_.name == f).get
         }
         // a class param may not share a name with a member it doesn't become — rename
         // such params `_p` and rewrite every reference (field-init exprs, super args,
         // remaining ctor body)
+        // ...or with a method name (a used plain param materializes as private[this] val)
         val renamed: Set[String] = c.params
           .map(_.name)
-          .filter(pn => !promoted.contains(pn) && t.fields.exists(_.name == pn))
+          .filter(pn =>
+            !promoted.contains(pn) &&
+              (t.fields.exists(_.name == pn) || t.methods.exists(_.name == pn))
+          )
           .toSet
         def rn(e: BExpr): BExpr =
           renamed.foldLeft(e)((acc, n) => renameParam(acc, n, "_" + n))
@@ -130,7 +143,10 @@ object CtorPlan:
           if renamed.contains(p.name) then Param(p.copy(name = "_" + p.name), None)
           else Param(p, promoted.get(p.name))
         }
-        val fieldLines = t.fields.flatMap { f =>
+        def unfinal(f: BField): BField =
+          if secondaryAssigned.contains(f.name) then f.copy(mods = f.mods.copy(isFinal = false)) else f
+        val fieldLines = t.fields.flatMap { f0 =>
+          val f = unfinal(f0)
           if promoted.contains(f.name) then None
           else
             (f.init, assignedR.get(f.name)) match
@@ -188,7 +204,13 @@ object CtorPlan:
                   case None         => 99
           val secondaries = delegators
             .sortBy(d => depth(d, Set.empty))
-            .map(d => Secondary(d.leading, d.mods, d.params, d.thisArgs.get, d.body))
+            .map(d =>
+              fixSecondaryCollisions(
+                t,
+                Secondary(d.leading, d.mods, d.params, d.thisArgs.get, d.body,
+                  targetTypes = roots.head.params.map(_.tpe)),
+              )
+            )
           rootPlan(roots.head, secondaries)
         else if allEmptyBodies then
           def isIdentitySuper(c: BCtor): Boolean = c.superArgs.exists { args =>
@@ -356,6 +378,25 @@ object CtorPlan:
         }
       secondaries.map(rootPlan(p, _))
     }
+
+  /** Secondary-ctor params sharing a name with a class member would make
+    * `member = param` a self-assignment — rename them `_p` throughout. */
+  private def fixSecondaryCollisions(t: BTypeDecl, s: Secondary): Secondary =
+    val collide = s.params
+      .map(_.name)
+      .filter(pn => t.fields.exists(_.name == pn) || t.methods.exists(_.name == pn))
+      .toSet
+    if collide.isEmpty then s
+    else
+      val rnE: BExpr => BExpr = {
+        case Ident(n, k @ RefKind.Param(_)) if collide.contains(n) => Ident("_" + n, k)
+        case e                                                     => e
+      }
+      s.copy(
+        params = s.params.map(p => if collide.contains(p.name) then p.copy(name = "_" + p.name) else p),
+        delegateArgs = s.delegateArgs.map(BirTransform.mapExpr(_)(rnE)),
+        body = s.body.map(BirTransform.mapStmt(_)(rnE)),
+      )
 
   /** true when the expression touches the instance under construction. */
   private def usesThis(e: BExpr): Boolean = e match

@@ -368,11 +368,12 @@ private final class UnitBuilder(sourcePath: String, source: String):
   private def stmt(s: CtStatement): BStmtK = s match
     case v: CtLocalVariable[?] =>
       val reassigned = enclosingBodyHasWriteTo(v)
-      BStmtK.LocalVar(v.getSimpleName, btype(v.getType), Option(v.getDefaultExpression).map(expr), !reassigned)
+      val init = Option(v.getDefaultExpression).map(maybeUncheckedCast(v.getType, _))
+      BStmtK.LocalVar(v.getSimpleName, btype(v.getType), init, !reassigned)
     case a: CtOperatorAssignment[?, ?] =>
       BStmtK.Assign(expr(a.getAssigned), expr(a.getAssignment), Some(binOp(a.getKind, a)))
     case a: CtAssignment[?, ?] =>
-      BStmtK.Assign(expr(a.getAssigned), expr(a.getAssignment), None)
+      BStmtK.Assign(expr(a.getAssigned), maybeUncheckedCast(a.getAssigned.getType, a.getAssignment), None)
     case i: CtIf =>
       BStmtK.If(expr(i.getCondition), blockOf(i.getThenStatement), Option(i.getElseStatement).map(blockOf))
     case r: CtReturn[?] =>
@@ -613,11 +614,18 @@ private final class UnitBuilder(sourcePath: String, source: String):
     case inv: CtInvocation[?] =>
       val ex = inv.getExecutable
       val recv = inv.getTarget match
-        case null                              => Recv.OnThis
-        case _: CtSuperAccess[?]               => Recv.OnSuper
-        case ta: CtTypeAccess[?]               => Recv.Static(ta.getAccessedType.getQualifiedName)
-        case _: CtThisAccess[?]                => Recv.OnThis
-        case t                                 => Recv.On(expr(t))
+        case null                => Recv.OnThis
+        case _: CtSuperAccess[?] => Recv.OnSuper
+        case ta: CtTypeAccess[?] =>
+          // Java resolves statics through subclass names (Parser.staticOfSuper());
+          // Scala companions don't inherit — target the DECLARING class
+          val owner =
+            if ex != null && ex.isStatic then
+              Option(ex.getDeclaringType).map(_.getQualifiedName).getOrElse(ta.getAccessedType.getQualifiedName)
+            else ta.getAccessedType.getQualifiedName
+          Recv.Static(owner)
+        case _: CtThisAccess[?] => Recv.OnThis
+        case t                  => Recv.On(expr(t))
       val ownerQ = Option(ex.getDeclaringType).map(_.getQualifiedName)
       Call(recv, ex.getSimpleName, inv.getArguments.asScala.toList.map(typedArg), formalsOf(ex), ownerQ)
 
@@ -728,6 +736,16 @@ private final class UnitBuilder(sourcePath: String, source: String):
         case null | (_: CtThisAccess[?]) | (_: CtSuperAccess[?]) =>
           Ident(ref.getSimpleName, RefKind.OwnField)
         case t => Select(expr(t), ref.getSimpleName)
+
+  /** Java performs unchecked conversion when a raw-typed expression flows into a
+    * parameterized target — Scala needs the cast made explicit. */
+  private def maybeUncheckedCast(declared: CtTypeReference[?], rhs: CtExpression[?]): BExpr =
+    val e = expr(rhs)
+    val rt = rhs.getType
+    val isRaw = rt != null && !rt.isPrimitive && !rt.isInstanceOf[CtArrayTypeReference[?]] &&
+      rt.getActualTypeArguments.isEmpty && rawArity(rt) > 0
+    val declaredParameterized = declared != null && !declared.getActualTypeArguments.asScala.isEmpty
+    if isRaw && declaredParameterized then Cast(btype(declared), e) else e
 
   /** Argument wrapped with its resolved static type — the printer's call-site
     * adaptations (array spread, Object[] casts) need it. */
