@@ -20,7 +20,24 @@ object ScalaPrinter:
       sentinels: Set[String] = Set.empty,
       registry: Option[CtorRegistry] = None,
   ): String =
-    new Printer(MemberClashPass(unit), prov, sentinels, registry).result()
+    new Printer(MemberClashPass(widenFields(unit, registry)), prov, sentinels, registry).result()
+
+  /** Private non-final fields that subclass effect-replay assigns (see
+    * CtorRegistry.widenedFields) emit `protected` — the deterministic analog of
+    * the hand-port corpus's accessor widening. */
+  private def widenFields(unit: BUnit, registry: Option[CtorRegistry]): BUnit =
+    registry match
+      case None => unit
+      case Some(reg) =>
+        val w = reg.widenedFields
+        if w.isEmpty then unit
+        else
+          unit.copy(types = unit.types.map { t =>
+            val fqcn = if unit.pkg.isEmpty then t.name else s"${unit.pkg}.${t.name}"
+            t.copy(fields = t.fields.map { f =>
+              if w((fqcn, f.name)) then f.copy(mods = f.mods.copy(vis = Vis.Protected)) else f
+            })
+          })
 
 /** Cross-unit knowledge: which classes' no-arg construction path equals the null
   * sentinel (needed for the super()-rewrite; transitive over subclass chains).

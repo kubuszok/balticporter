@@ -323,8 +323,12 @@ object CtorPlan:
                   val noDupes = naMap.size == na.length && paMap.size == pa.length
                   val superOk = noArg.superArgs.getOrElse(Nil) == paramful.superArgs.getOrElse(Nil)
                   val p = paramful.params.head
-                  if !noDupes || !superOk then fail("two-ctor merge: shapes don't match the sentinel pattern")
-                  if p.tpe.isInstanceOf[BType.Prim] then fail("two-ctor merge: sentinel requires a reference-typed parameter")
+                  if !noDupes || !superOk then
+                    return noArgPrimaryPlan(t, unit, registry, fail).getOrElse(
+                      fail("two-ctor merge: shapes don't match the sentinel pattern"))
+                  if p.tpe.isInstanceOf[BType.Prim] then
+                    return noArgPrimaryPlan(t, unit, registry, fail).getOrElse(
+                      fail("two-ctor merge: sentinel requires a reference-typed parameter"))
                   val pn = "_" + p.name
                   val merged = t.fields.map { f =>
                     (paMap.get(f.name), naMap.get(f.name), f.init) match
@@ -426,24 +430,28 @@ object CtorPlan:
     registry.flatMap { reg =>
       val selfFqcn = if unit.pkg.isEmpty then t.name else s"${unit.pkg}.${t.name}"
       val noArgJava = t.ctors.find(_.params.isEmpty)
-      def emptyish(c: BCtor): Boolean =
-        c.body.forall(_.k == BStmtK.Empty) && c.thisArgs.isEmpty && c.superArgs.forall(_.isEmpty)
-      // a no-arg Java ctor with effects would clash with the synthetic primary
-      if noArgJava.exists(c => !emptyish(c)) then None
+      def upstreamOf(c: BCtor): Option[List[BStmt]] = c.thisArgs match
+        case Some(ta) => reg.inlineSuperEffects(selfFqcn, ta, forFqcn = selfFqcn)
+        case None =>
+          val sargs = c.superArgs.getOrElse(Nil)
+          t.superClass match
+            case Some(p) => reg.inlineSuperEffects(p.qname, sargs, forFqcn = selfFqcn)
+            case None    => if sargs.isEmpty then Some(Nil) else None
+      def flatBody(c: BCtor): Option[List[BStmt]] =
+        upstreamOf(c).map(_ ++ c.body.filterNot(st => st.k == BStmtK.Empty && st.leading.isEmpty))
+      // a body-ful (or this-delegating) no-arg ctor flattens into the synthetic
+      // primary's body — its effects run on every construction path, and replayed
+      // secondaries overwrite them, the funnel's standing replay semantics
+      val primaryBody: Option[List[BStmt]] = noArgJava match
+        case None    => Some(Nil)
+        case Some(c) => flatBody(c)
+      if primaryBody.isEmpty then None
       else
-        val toReplay = t.ctors.filterNot(c => c.params.isEmpty && emptyish(c))
+        val toReplay = t.ctors.filter(_.params.nonEmpty)
         val secondaries: Option[List[Secondary]] =
           toReplay.foldRight(Option(List.empty[Secondary])) { (c, acc) =>
             acc.flatMap { tail =>
-              val upstream: Option[List[BStmt]] = c.thisArgs match
-                case Some(ta) => reg.inlineSuperEffects(selfFqcn, ta)
-                case None =>
-                  val sargs = c.superArgs.getOrElse(Nil)
-                  t.superClass match
-                    case Some(p) => reg.inlineSuperEffects(p.qname, sargs)
-                    case None    => if sargs.isEmpty then Some(Nil) else None
-              upstream.map { eff =>
-                val body = eff ++ c.body.filterNot(st => st.k == BStmtK.Empty && st.leading.isEmpty)
+              flatBody(c).map { body =>
                 fixSecondaryCollisions(t, Secondary(c.leading, c.mods, c.params, Nil, body)) :: tail
               }
             }
@@ -463,6 +471,7 @@ object CtorPlan:
               case BStmtK.Match(_, cases)  => cases.foreach(_.body.foreach(collectAssigns))
               case _ => ()
           secs.foreach(_.body.foreach(collectAssigns))
+          primaryBody.getOrElse(Nil).foreach(collectAssigns)
           val fieldLines = t.fields.map { f0 =>
             val f = if assigned.contains(f0.name) then f0.copy(mods = f0.mods.copy(isFinal = false)) else f0
             f.init match
@@ -475,7 +484,7 @@ object CtorPlan:
             sentinelLike = false,
             noArgJava.map(_.leading).getOrElse(Nil),
             Nil,
-            Nil,
+            primaryBody.getOrElse(Nil),
             fieldLines,
             secs,
           )

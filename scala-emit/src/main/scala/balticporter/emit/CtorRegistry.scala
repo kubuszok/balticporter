@@ -69,7 +69,81 @@ final class CtorRegistry(units: List[BUnit]):
     if debug then System.err.println(s"[ctor-inline miss] $why")
     None
 
-  def inlineSuperEffects(parentFqcn: String, args: List[BExpr], depth: Int = 0): Option[List[BStmt]] =
+  /** Private non-final parent fields that some subclass's super-chain ctor effects
+    * assign — the effect-replay funnel makes the subclass write them, so the parent
+    * emits them `protected var` (the hand-ported corpus widens the same way:
+    * ssg-md Node.chars). Structural overapproximation: computed from ctor shapes
+    * alone, independent of which funnel strategy each subclass ends up using —
+    * deterministic, and widening private→protected never changes behavior. */
+  lazy val widenedFields: Set[(String, String)] =
+    val out = collection.mutable.Set[(String, String)]()
+    def walk(rootFqcn: String, fqcn: String, args: List[BExpr], depth: Int): Unit =
+      if depth > 8 then return
+      byFqcn.get(fqcn).foreach { case (pd, pi) =>
+        pi.ctors.find(_._1.length == args.length).foreach { case (_, superArgs, thisArgs, body) =>
+          if fqcn != rootFqcn then
+            body.foreach { st =>
+              st.k match
+                case BStmtK.Assign(Ident(f, RefKind.OwnField), _, _)
+                    if pd.fields.exists(fd => fd.name == f && fd.mods.vis == Vis.Private && !fd.mods.isFinal) =>
+                  out += ((fqcn, f))
+                case _ => ()
+            }
+          thisArgs match
+            case Some(ta) => walk(rootFqcn, fqcn, ta, depth + 1)
+            case None     => pi.superFqcn.foreach(p => walk(rootFqcn, p, superArgs.getOrElse(Nil), depth + 1))
+        }
+      }
+    byFqcn.foreach { case (fqcn, (_, info)) =>
+      info.ctors.foreach { case (_, superArgs, thisArgs, _) =>
+        thisArgs match
+          case Some(ta) => walk(fqcn, fqcn, ta, 0)
+          case None     => info.superFqcn.foreach(p => walk(fqcn, p, superArgs.getOrElse(Nil), 0))
+      }
+    }
+    out.toSet
+
+  /** true when `body` (a parent ctor's effect statements) can legally execute
+    * inside a subclass: assigned fields must resolve in the translated chain as
+    * assignable there (var + visible, widening included), and read/called `this`
+    * members must not be private at their declaring level (unless widened). */
+  private def replayableFrom(declaringFqcn: String, body: List[BStmt]): Boolean =
+    def findField(fqcn: String, name: String): Option[(String, Mods)] =
+      byFqcn.get(fqcn) match
+        case None => None
+        case Some((decl, info)) =>
+          decl.fields.find(_.name == name).map(f => (fqcn, f.mods))
+            .orElse(info.superFqcn.flatMap(findField(_, name)))
+    def privateHere(name: String): Boolean =
+      byFqcn.get(declaringFqcn).exists { (decl, _) =>
+        (decl.fields.exists(f => f.name == name && f.mods.vis == Vis.Private) &&
+          !widenedFields((declaringFqcn, name))) ||
+        decl.methods.exists(m => m.name == name && m.mods.vis == Vis.Private)
+      }
+    var ok = true
+    def checkExpr(e: BExpr): BExpr =
+      e match
+        case Ident(n, RefKind.OwnField) if privateHere(n) => ok = false
+        case Call(Recv.OnThis, m, _, _, _) if privateHere(m) => ok = false
+        case _ => ()
+      e
+    def checkStmt(st: BStmt): Unit =
+      st.k match
+        case BStmtK.Assign(Ident(f, RefKind.OwnField), _, _) =>
+          findField(declaringFqcn, f) match
+            case Some((declFqcn, mods)) =>
+              val visible = mods.vis != Vis.Private || widenedFields((declFqcn, f))
+              if mods.isFinal || !visible then ok = false
+            case None => ok = false // declared outside the translated set — unknowable
+        case _ => ()
+      BirTransform.mapStmt(st)(checkExpr)
+    body.foreach(checkStmt)
+    ok
+
+  /** forFqcn: the subclass whose plan replays the effects — accessibility/finality
+    * checks are skipped at levels equal to it (its own plan un-finals what it
+    * assigns; only CROSS-class replay needs visible assignable members). */
+  def inlineSuperEffects(parentFqcn: String, args: List[BExpr], depth: Int = 0, forFqcn: String = ""): Option[List[BStmt]] =
     if depth > 8 then return miss(s"depth cap at $parentFqcn")
     byFqcn.get(parentFqcn) match
       case None =>
@@ -88,11 +162,16 @@ final class CtorRegistry(units: List[BUnit]):
               case Ident(n, RefKind.Param(_)) if subst.contains(n) => subst(n)
               case x                                               => x
             })
+            // the inlined statements execute in the SUBCLASS — references that were
+            // legal in the parent's own ctor may not be there: private members are
+            // invisible, and final fields emit as vals (not assignable post-hoc)
+            if parentFqcn != forFqcn && !replayableFrom(parentFqcn, ownBody) then
+              return miss(s"$parentFqcn: ctor effects touch private/final members — not replayable in a subclass")
             val upstream: Option[List[BStmt]] = thisArgs match
-              case Some(ta) => inlineSuperEffects(parentFqcn, ta.map(sub), depth + 1)
+              case Some(ta) => inlineSuperEffects(parentFqcn, ta.map(sub), depth + 1, forFqcn)
               case None =>
                 val sargs = superArgs.getOrElse(Nil).map(sub)
                 info.superFqcn match
-                  case Some(p) => inlineSuperEffects(p, sargs, depth + 1)
+                  case Some(p) => inlineSuperEffects(p, sargs, depth + 1, forFqcn)
                   case None    => if sargs.isEmpty then Some(Nil) else miss(s"$parentFqcn: super args with no superclass")
             upstream.map(_ ++ ownBody)
