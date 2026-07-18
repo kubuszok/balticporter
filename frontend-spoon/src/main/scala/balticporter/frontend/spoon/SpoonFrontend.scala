@@ -159,10 +159,11 @@ private final class UnitBuilder(sourcePath: String, source: String):
     el.getAnnotations.asScala.foreach { a =>
       val q = a.getAnnotationType.getQualifiedName
       if q == "java.lang.Override" then hasOverride = true
-      // Jackson annotations: dropped — serialization is replaced per project dispositions
-      // (ssg: Jackson → LiquidSupport trait; see docs/architecture/liqp-port.md).
-      else if !ignoredAnnotations.contains(q) && !preservedAnnotationPrefixes.exists(q.startsWith) then
-        unsupported(el, s"annotation @$q")
+      // JetBrains nullness annotations: advisory only — dropped (the Nullable idiom is
+      // Tier-3 work driven by real null-flow analysis, not these hints)
+      else if !ignoredAnnotations.contains(q) && !preservedAnnotationPrefixes.exists(q.startsWith)
+        && !q.startsWith("org.jetbrains.annotations.") && !q.startsWith("org.intellij.lang.annotations.")
+      then unsupported(el, s"annotation @$q")
     }
     hasOverride
 
