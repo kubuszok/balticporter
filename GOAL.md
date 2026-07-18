@@ -23,8 +23,20 @@ Checklist:
       CtorRegistry with noArgReachable fixpoint + recursive super-overload
       inlining. flexmark 679 → **729/763 (95.6%)** — over the M5 translate
       line. Liqp battery fully green after.
-- [ ] flexmark tail (20 + 14 comment losses): inner classes (6),
-      identity-super leftovers (8), break ownership (3), synchronized (1)
+- [x] flexmark tail wave 1 (commit 566a741): synchronized → `.synchronized{}`,
+      switch-owned breaks (block-case unwrap + boundary for mid-case breaks;
+      Spoon equals is structural — reference-equality guard), and the whole
+      comment-loss class: identity-claimed harvest hoists expression-attached
+      comments (arg lists, fluent chains, initializer exprs) to the nearest
+      trivia point; CU/import header comments; consumed super()/this() trivia.
+      flexmark 729 → **747/763 (97.9%)**, COMMENT_LOSS 15 → 0. Liqp battery
+      green (corpus counts unchanged, M0 GREEN, 625/625 tests — LiquidLexerTest
+      confirmed via explicit testOnly; `test` detection silently skips it,
+      known thin-client quirk).
+- [ ] flexmark tail remainder (16): inner non-static classes (6), ctor-funnel
+      leftovers (9: no-identity-super 4, primitive sentinel 2, 3-ctor field
+      logic 2, arity mismatch 1), public field-vs-method clash (1) — assess
+      translate vs ledger/override per file
 - [ ] Vocabulary/Tier-3 productization (deferred from M2/M4) — needed for the
       sge (using Sge) pass
 - [ ] sge extension port (jbump or noise4j) + skeleton diff vs sge hand port
