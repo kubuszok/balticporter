@@ -25,14 +25,15 @@ Checklist:
       identity-basis ctor funnel (+uses-this purity guard), static/instance
       init blocks (comment invariant caught silent drops!), i++-aware
       mutability, boxed-name collisions, raw-type wildcard fill.
-- [ ] Whole-corpus scalac gate: errors 135 → 56 → 38 → 15 (commit 0d3eac4).
-      En route: BirTransform (the pass substrate), MemberClashPass
-      (field-vs-method renames), general param-collision renames, locally{}
-      blocks (parser-ambiguity found by gate), Object[]/Object fixes.
-      Remaining 15 are singles: Class[?] variance at convertValue sites,
-      iterator existentials (list.E), stream Collector wildcards, one
-      InsertionNode overload, a Parser static resolution (check MemberClash
-      cross-file effects), where-impl leftovers
+- [x] Whole-corpus scalac gate GREEN (2026-07-18, commit b42249c):
+      135 → 56 → 38 → 15 → 0. `sbt compile` exit=0 on out/liqp-project —
+      134/134 files (133 machine-translated + LiquidException override).
+      Final rules: static-inheritance owner resolution (RESEARCH trap 7 caught
+      live), param/local-vs-member collision renames, generic class literals
+      → Class[AnyRef] + unchecked result casts, nested-private widening,
+      precise-receiver method refs, this.-qualified own-field reads.
+      Corpus convergence re-verified 116/117 (TemplateContext fingerprint
+      staleness fired as designed → re-verified, re-pinned). M0 GREEN.
 - [x] Unsupported tail 10→4 (2026-07-18, commit fd0c584): SentinelRegistry
       (cross-unit fixpoint; super() ≡ this(null) under sentinel-merged parents
       — Tag/Block chains), multi-statement lambdas, unbound method refs as
