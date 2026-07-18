@@ -68,7 +68,12 @@ object CtorPlan:
       targetTypes: List[BType] = Nil,
   )
 
-  def of(t: BTypeDecl, unit: BUnit, sentinelSupers: Set[String] = Set.empty): CtorPlan =
+  def of(
+      t: BTypeDecl,
+      unit: BUnit,
+      sentinelSupers: Set[String] = Set.empty,
+      registry: Option[CtorRegistry] = None,
+  ): CtorPlan =
     def fail(what: String): Nothing = throw Unsupported(unit.sourcePath, t.name, what)
 
     def fieldWithOwnInit(f: BField): FieldLine =
@@ -229,7 +234,9 @@ object CtorPlan:
             }
           }
           ctors.filter(isIdentitySuper) match
-            case Nil => fail("multiple constructors, none with an identity super(...) call")
+            case Nil =>
+              noArgPrimaryPlan(t, unit, registry, fail).getOrElse(
+                fail("multiple constructors, none with an identity super(...) call"))
             case candidates =>
               // several identity-super ctors: the max-arity one is primary (first in
               // source order on ties — `candidates` preserves source order)
@@ -238,28 +245,39 @@ object CtorPlan:
               // (by construction of the sentinel merge) — so a no-arg secondary calling a
               // different super overload can still delegate as this(null).
               val parentSentinel = t.superClass.exists(s => sentinelSupers.contains(s.qname))
-              var usedSentinelRewrite = false
-              val secondaries = ctors.filterNot(_ eq primary).map { c =>
-                val delegateArgs = c.thisArgs.orElse(c.superArgs).getOrElse(fail("secondary ctor without super/this args"))
-                if delegateArgs.length == primary.params.length then
-                  Secondary(c.leading, c.mods, c.params, delegateArgs)
-                else if delegateArgs.isEmpty && c.params.isEmpty && parentSentinel &&
-                  primary.params.length == 1 && !primary.params.head.tpe.isInstanceOf[BType.Prim]
-                then
-                  usedSentinelRewrite = true
-                  Secondary(c.leading, c.mods, Nil, List(Lit(LitKind.NullL, "null")))
-                else fail("secondary ctor cannot delegate to primary (arity mismatch)")
-              }
-              CtorPlan(
-                primary.params.map(p => Param(p, None)),
-                Some(primary.mods),
-                sentinelLike = usedSentinelRewrite,
-                primary.leading,
-                primary.superArgs.getOrElse(Nil),
-                Nil,
-                t.fields.map(fieldWithOwnInit),
-                secondaries,
-              )
+              def canDelegate(c: BCtor): Boolean =
+                val dArgs = c.thisArgs.orElse(c.superArgs).getOrElse(Nil)
+                dArgs.length == primary.params.length ||
+                (dArgs.isEmpty && c.params.isEmpty && parentSentinel &&
+                  primary.params.length == 1 && !primary.params.head.tpe.isInstanceOf[BType.Prim])
+              val others = ctors.filterNot(_ eq primary)
+              if !others.forall(canDelegate) then
+                // different-super-overload family: the no-arg-primary + effect-replay
+                // encoding (the hand-ported corpus's own answer to this shape)
+                noArgPrimaryPlan(t, unit, registry, fail).getOrElse(
+                  fail("secondary ctor cannot delegate to primary (arity mismatch)")
+                )
+              else
+                var usedSentinelRewrite = false
+                val secondaries = others.map { c =>
+                  val delegateArgs =
+                    c.thisArgs.orElse(c.superArgs).getOrElse(fail("secondary ctor without super/this args"))
+                  if delegateArgs.length == primary.params.length then
+                    Secondary(c.leading, c.mods, c.params, delegateArgs)
+                  else
+                    usedSentinelRewrite = true
+                    Secondary(c.leading, c.mods, Nil, List(Lit(LitKind.NullL, "null")))
+                }
+                CtorPlan(
+                  primary.params.map(p => Param(p, None)),
+                  Some(primary.mods),
+                  sentinelLike = usedSentinelRewrite,
+                  primary.leading,
+                  primary.superArgs.getOrElse(Nil),
+                  Nil,
+                  t.fields.map(fieldWithOwnInit),
+                  secondaries,
+                )
         else if identityBasisPlan(ctors, roots).isDefined then identityBasisPlan(ctors, roots).get
         else
           ctors.sortBy(_.params.length) match
@@ -330,7 +348,9 @@ object CtorPlan:
                     merged,
                     List(Secondary(noArg.leading, noArg.mods, Nil, List(Lit(LitKind.NullL, "null")))),
                   )
-            case _ => fail(s"${ctors.length} constructors with field logic — no funnel strategy applies")
+            case _ =>
+              noArgPrimaryPlan(t, unit, registry, fail).getOrElse(
+                fail(s"${ctors.length} constructors with field logic — no funnel strategy applies"))
 
   /** Identity-basis funnel: a root ctor P whose super args are all distinct param refs
     * and whose field assigns are all param refs, with every param used exactly once,
@@ -386,6 +406,77 @@ object CtorPlan:
           }
         }
       secondaries.map(rootPlan(p, _))
+    }
+
+  /** The no-arg-primary + effect-replay funnel (the hand-ported corpus's encoding
+    * for Node-family hierarchies with different-super-overload ctors): synthesize a
+    * bare primary; every Java ctor becomes `def this(params) = { this(); <transitive
+    * inlined super effects>; <own body> }`. Requires the parent chain reachable via
+    * empty no-arg construction and overload effects inlinable from the registry.
+    */
+  private def noArgPrimaryPlan(
+      t: BTypeDecl,
+      unit: BUnit,
+      registry: Option[CtorRegistry],
+      fail: String => Nothing,
+  ): Option[CtorPlan] =
+    registry.flatMap { reg =>
+      val selfFqcn = if unit.pkg.isEmpty then t.name else s"${unit.pkg}.${t.name}"
+      val noArgJava = t.ctors.find(_.params.isEmpty)
+      def emptyish(c: BCtor): Boolean =
+        c.body.forall(_.k == BStmtK.Empty) && c.thisArgs.isEmpty && c.superArgs.forall(_.isEmpty)
+      // a no-arg Java ctor with effects would clash with the synthetic primary
+      if noArgJava.exists(c => !emptyish(c)) then None
+      else
+        val toReplay = t.ctors.filterNot(c => c.params.isEmpty && emptyish(c))
+        val secondaries: Option[List[Secondary]] =
+          toReplay.foldRight(Option(List.empty[Secondary])) { (c, acc) =>
+            acc.flatMap { tail =>
+              val upstream: Option[List[BStmt]] = c.thisArgs match
+                case Some(ta) => reg.inlineSuperEffects(selfFqcn, ta)
+                case None =>
+                  val sargs = c.superArgs.getOrElse(Nil)
+                  t.superClass match
+                    case Some(p) => reg.inlineSuperEffects(p.qname, sargs)
+                    case None    => if sargs.isEmpty then Some(Nil) else None
+              upstream.map { eff =>
+                val body = eff ++ c.body.filterNot(st => st.k == BStmtK.Empty && st.leading.isEmpty)
+                fixSecondaryCollisions(t, Secondary(c.leading, c.mods, c.params, Nil, body)) :: tail
+              }
+            }
+          }
+        secondaries.map { secs =>
+          val assigned = collection.mutable.Set[String]()
+          def collectAssigns(st: BStmt): Unit =
+            st.k match
+              case BStmtK.Assign(Ident(f, RefKind.OwnField), _, _) => assigned += f
+              case BStmtK.If(_, a, b)      => a.foreach(collectAssigns); b.foreach(_.foreach(collectAssigns))
+              case BStmtK.While(_, b)      => b.foreach(collectAssigns)
+              case BStmtK.DoWhile(b, _)    => b.foreach(collectAssigns)
+              case BStmtK.Block(b)         => b.foreach(collectAssigns)
+              case BStmtK.Boundary(b, _)   => b.foreach(collectAssigns)
+              case BStmtK.Try(b, cs, f2)   =>
+                b.foreach(collectAssigns); cs.foreach(_.body.foreach(collectAssigns)); f2.foreach(_.foreach(collectAssigns))
+              case BStmtK.Match(_, cases)  => cases.foreach(_.body.foreach(collectAssigns))
+              case _ => ()
+          secs.foreach(_.body.foreach(collectAssigns))
+          val fieldLines = t.fields.map { f0 =>
+            val f = if assigned.contains(f0.name) then f0.copy(mods = f0.mods.copy(isFinal = false)) else f0
+            f.init match
+              case Some(i) => FieldLine.FromField(f, i)
+              case None    => FieldLine.DefaultInit(f)
+          }
+          CtorPlan(
+            Nil,
+            noArgJava.map(_.mods),
+            sentinelLike = false,
+            noArgJava.map(_.leading).getOrElse(Nil),
+            Nil,
+            Nil,
+            fieldLines,
+            secs,
+          )
+        }
     }
 
   /** Secondary-ctor params sharing a name with a class member would make

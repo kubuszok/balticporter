@@ -46,6 +46,7 @@ object LiqpProject:
     val frontend = new SpoonFrontend
     val units = frontend.parse(cfg)
     val sentinels = SentinelRegistry.compute(units)
+    val ctorReg = Some(new balticporter.emit.CtorRegistry(units))
 
     val srcDir = projRoot.resolve("src/main/scala")
     if Files.exists(srcDir) then
@@ -86,7 +87,7 @@ object LiqpProject:
           cached
         case None =>
           translatedCount += 1
-          val fresh = ScalaPrinter.print(u, prov, sentinels)
+          val fresh = ScalaPrinter.print(u, prov, sentinels, ctorReg)
           cache.put(key, fresh)
           fresh
       val lost = CommentCheck.check(u, out)
@@ -181,7 +182,7 @@ object LiqpProject:
     val testFailures = List.newBuilder[(String, String)]
     testResults.foreach {
       case (rel, Right(u)) =>
-        scala.util.Try(ScalaPrinter.print(u, prov, sentinels)) match
+        scala.util.Try(ScalaPrinter.print(u, prov, sentinels, ctorReg)) match
           case scala.util.Success(out) =>
             okTests += 1
             val target = testDir.resolve(u.sourcePath.stripSuffix(".java") + ".scala")

@@ -54,10 +54,11 @@ object LiqpCorpus:
 
     val parsedAll = new SpoonFrontend().parseTolerant(cfg)
     val sentinels = balticporter.emit.SentinelRegistry.compute(parsedAll.collect { case (_, Right(u)) => u })
+    val ctorReg = Some(new balticporter.emit.CtorRegistry(parsedAll.collect { case (_, Right(u)) => u }))
     val results = parsedAll.map { case (rel, parsed) =>
       val handRel = renamedCounterparts.getOrElse(rel, rel.stripPrefix("liqp/").stripSuffix(".java") + ".scala")
       val handPort = ssgRoot.resolve("ssg-liquid/src/main/scala/ssg/liquid/" + handRel)
-      val status = parsed.flatMap(u => scala.util.Try(ScalaPrinter.print(u, prov, sentinels)).toEither.map(u -> _)) match
+      val status = parsed.flatMap(u => scala.util.Try(ScalaPrinter.print(u, prov, sentinels, ctorReg)).toEither.map(u -> _)) match
         case Right((u, out)) =>
           val lost = CommentCheck.check(u, out)
           if lost.nonEmpty then s"COMMENT_LOSS\t${lost.head.comment.take(140)}"

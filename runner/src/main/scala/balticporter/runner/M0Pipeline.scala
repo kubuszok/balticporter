@@ -17,7 +17,12 @@ object M0Pipeline:
   def translateOnce(plan: UnitPlan, frontend: Frontend): List[Translated] =
     val units = frontend.parse(FrontendConfig(plan.sourceRoot, plan.files, plan.classpath, plan.resolutionRoots))
     units.map { u =>
-      val out = ScalaPrinter.print(u, plan.provenance, balticporter.emit.SentinelRegistry.compute(units))
+      val out = ScalaPrinter.print(
+        u,
+        plan.provenance,
+        balticporter.emit.SentinelRegistry.compute(units),
+        Some(new balticporter.emit.CtorRegistry(units)),
+      )
       val missing = CommentCheck.check(u, out)
       if missing.nonEmpty then
         throw new RuntimeException(

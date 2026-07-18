@@ -14,8 +14,13 @@ import balticporter.core.BExpr.*
   */
 object ScalaPrinter:
 
-  def print(unit: BUnit, prov: Provenance, sentinels: Set[String] = Set.empty): String =
-    new Printer(MemberClashPass(unit), prov, sentinels).result()
+  def print(
+      unit: BUnit,
+      prov: Provenance,
+      sentinels: Set[String] = Set.empty,
+      registry: Option[CtorRegistry] = None,
+  ): String =
+    new Printer(MemberClashPass(unit), prov, sentinels, registry).result()
 
 /** Cross-unit knowledge: which classes' no-arg construction path equals the null
   * sentinel (needed for the super()-rewrite; transitive over subclass chains).
@@ -40,7 +45,12 @@ object SentinelRegistry:
       }
     acc
 
-private final class Printer(unit: BUnit, prov: Provenance, sentinels: Set[String]):
+private final class Printer(
+    unit: BUnit,
+    prov: Provenance,
+    sentinels: Set[String],
+    registry: Option[CtorRegistry],
+):
   private val sb = new StringBuilder
   private var indent = 0
 
@@ -184,7 +194,7 @@ private final class Printer(unit: BUnit, prov: Provenance, sentinels: Set[String
     */
   private def enumDecl(t: BTypeDecl): Unit =
     trivia(t.leading)
-    val plan = CtorPlan.of(t, unit, sentinels)
+    val plan = CtorPlan.of(t, unit, sentinels, registry)
     trivia(plan.primaryLeading)
     t.serialVersionUID.foreach(v => line(s"@SerialVersionUID(${v}L)"))
     // enum ctors are implicitly private in Java; the Scala enum primary stays unmodified
@@ -279,7 +289,7 @@ private final class Printer(unit: BUnit, prov: Provenance, sentinels: Set[String
   private def classDecl(t: BTypeDecl): Unit =
     trivia(t.leading)
     annotationLines(t.mods)
-    val plan = CtorPlan.of(t, unit, sentinels)
+    val plan = CtorPlan.of(t, unit, sentinels, registry)
     trivia(plan.primaryLeading)
     t.serialVersionUID.foreach(v => line(s"@SerialVersionUID(${v}L)"))
     val mods = StringBuilder(visPrefix(t.mods))

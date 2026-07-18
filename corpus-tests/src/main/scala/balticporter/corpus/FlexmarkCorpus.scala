@@ -51,10 +51,11 @@ object FlexmarkCorpus:
     val prov = Provenance("flexmark-java", "baseline", "BSD-2-Clause", "flexmark-java")
     val parsed = new SpoonFrontend().parseTolerant(cfg)
     val sentinels = SentinelRegistry.compute(parsed.collect { case (_, Right(u)) => u })
+    val ctorReg = Some(new balticporter.emit.CtorRegistry(parsed.collect { case (_, Right(u)) => u }))
 
     val results = parsed.map { case (rel, e) =>
       val status = if rel.endsWith("package-info.java") then "PACKAGE_INFO"
-      else e.flatMap(u => scala.util.Try(ScalaPrinter.print(u, prov, sentinels)).toEither.map(u -> _)) match
+      else e.flatMap(u => scala.util.Try(ScalaPrinter.print(u, prov, sentinels, ctorReg)).toEither.map(u -> _)) match
         case Right((u, out)) =>
           if CommentCheck.check(u, out).nonEmpty then "COMMENT_LOSS" else "OK"
         case Left(err: Unsupported) => s"UNSUPPORTED\t${err.what}"
