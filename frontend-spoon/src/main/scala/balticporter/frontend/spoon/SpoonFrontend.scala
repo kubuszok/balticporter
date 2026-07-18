@@ -783,6 +783,13 @@ private final class UnitBuilder(sourcePath: String, source: String):
         case _: CtThisAccess[?] => Recv.OnThis
         case t                  => Recv.On(expr(t))
       val ownerQ = Option(ex.getDeclaringType).map(_.getQualifiedName)
+      // Java enum `E.values()` → Scala 3 enum `E.values` (a companion val, no parens);
+      // emitting values() parses as values.apply(i). valueOf keeps its arg.
+      val isEnumOwner = scala.util.Try(Option(ex.getDeclaringType).map(_.getTypeDeclaration).exists(_.isInstanceOf[CtEnum[?]])).getOrElse(false)
+      if ex.getSimpleName == "values" && ex.isStatic && inv.getArguments.isEmpty && isEnumOwner then
+        return recv match
+          case Recv.Static(owner) => Ident("values", RefKind.StaticField(owner))
+          case _                  => Select(This, "values")
       val call = Call(recv, ex.getSimpleName, inv.getArguments.asScala.toList.map(typedArg), formalsOf(ex), ownerQ)
       // a method-generic return (<T> T get(...)) infers Nothing in Scala without a
       // target type — cast to the instantiation javac resolved (erasure-identical)
