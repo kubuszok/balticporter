@@ -550,12 +550,31 @@ private final class Printer(
           val t = if p.varargs then unsupported(s"reassigned varargs parameter ${p.name}") else tpe(p.tpe)
           line(s"var ${id(p.name)}: $t = ${id("_" + p.name)}")
         }
-        printBody(body)
+        // `return null` from a method whose return type is a type variable — Scala's
+        // unbounded T rejects Null, so ascribe (Java allows null for any ref type)
+        printBody(if m.ret.isInstanceOf[BType.TVar] then body.map(ascribeReturnNulls(_, m.ret)) else body)
         indent -= 1
         line("}")
     line()
 
   // ---- statements ------------------------------------------------------------
+
+  /** ascribe a bare `return null` to the method's type-variable return type,
+    * recursing into control-flow bodies (the null must carry the T type). */
+  private def ascribeReturnNulls(s: BStmt, ret: BType): BStmt =
+    def r(x: BStmt) = ascribeReturnNulls(x, ret)
+    val k = s.k match
+      case BStmtK.Return(Some(Lit(LitKind.NullL, _))) => BStmtK.Return(Some(Cast(ret, Lit(LitKind.NullL, "null"))))
+      case BStmtK.If(c, t, e)        => BStmtK.If(c, t.map(r), e.map(_.map(r)))
+      case BStmtK.While(c, b)        => BStmtK.While(c, b.map(r))
+      case BStmtK.DoWhile(b, c)      => BStmtK.DoWhile(b.map(r), c)
+      case BStmtK.Block(b)           => BStmtK.Block(b.map(r))
+      case BStmtK.Try(b, cs, f)      => BStmtK.Try(b.map(r), cs.map(c => c.copy(body = c.body.map(r))), f.map(_.map(r)))
+      case BStmtK.Boundary(b, l)     => BStmtK.Boundary(b.map(r), l)
+      case BStmtK.Synchronized(l, b) => BStmtK.Synchronized(l, b.map(r))
+      case BStmtK.Match(scr, cases)  => BStmtK.Match(scr, cases.map(c => c.copy(body = c.body.map(r))))
+      case other                     => other
+    s.copy(k = k)
 
   /** true while emitting a lambda body wrapped in scala.util.boundary — any
     * surviving `return e` prints as `boundary.break(e)`. */
