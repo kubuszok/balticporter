@@ -106,7 +106,12 @@ Checklist:
             non-Object simple upper bound (<N extends Node>) fills `[Node]` not
             `[?]`, matching the API's bound-parameterized form. Object-bounded
             raws (Map/List) stay `?` (Liqp unaffected). 242 → 236. 639/639.
-      - [ ] remaining (236, visitor-family-dominated): AstActionHandler is the
+      - [x] wave 9 (commit 8e65d17): enclosing-field access from anonymous
+            classes — an anon class reading an outer field (out/myVisitor/
+            flags) emitted `this.out` (wrong instance); RefKind.EnclosingField
+            now emits the bare name (lexical). Biggest drop: 236 → 200.
+            639/639.
+      - [ ] remaining (200, visitor-family-dominated): AstActionHandler is the
             dominant blocker — Java `X...`/`X[]...` varargs both erase to Seq
             in Scala (Conflicting definitions) + F-bounded `[?]` vs `[Node]`.
             ~5 files (NodeVisitor, TextCollectingVisitor, the two Adapters,
