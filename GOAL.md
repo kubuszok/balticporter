@@ -251,10 +251,21 @@ Checklist:
             counts OwnField-referenced targets (a promoted param reads back as a field),
             and paramStr emits promoted reassigned params as var. 84 → 80. liqp compile
             GREEN, suite 639/639, LiqpCorpus PARITY_FAIL=0.
-      - [ ] Continue (hard tail): narrow-type compound-assign (Char |=), F-bounded
-            sequence family (getBuilder Nothing, SequenceUtils T-vs-CharSequence —
-            override territory), Formatter family (generic inference/overload),
-            collection null-typevar,
+      - [x] wave 27 (this commit): ENGINE fix — narrow-type compound assignment. Java
+            auto-narrows `c op= x` back to a char/byte/short target; Scala's `c |= x`
+            desugars to `c = (c | x): Int` and won't fit Char. Frontend emits
+            `c = (c op x).toChar` for narrow LHS types (Cast of a Prim renders as
+            `.toChar`/`.toByte`/`.toShort`). 80 → 79. liqp compile GREEN, suite
+            639/639, LiqpCorpus PARITY_FAIL=0.
+      - [ ] Hard tail (~79, override territory / Spoon-limited): F-bounded sequence
+            family (getBuilder Nothing, SequenceUtils T-vs-CharSequence, IRichSequence
+            Base/SubSequence/SegmentedSequence ~20 — whole-file overrides); Formatter
+            family (generic inference/overload ~14); collection null-typevar (~9 —
+            blocked: Spoon erases JDK method formals so the type-var slot is invisible);
+            type-var-bound member access (getReferencingNode/compareTo on B/N); diverse
+            singletons. Mechanical cross-cutting patterns are exhausted (waves 16-27,
+            161 → 79). Remaining path = resume the override sweep for the concentrated
+            F-bounded files.
             + LinkResolverAdapter + BlockNodeVisitor + AstActionHandler base
             (F-bounded visitor family) and IRichSequenceBase/SequenceBuilder
             (F-bounded sequence bases) as PLAN §7 whole-file overrides. This is

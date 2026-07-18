@@ -470,7 +470,16 @@ private final class UnitBuilder(sourcePath: String, source: String):
       val init = Option(v.getDefaultExpression).map(maybeUncheckedCast(v.getType, _))
       BStmtK.LocalVar(v.getSimpleName, btype(v.getType), init, !reassigned)
     case a: CtOperatorAssignment[?, ?] =>
-      BStmtK.Assign(expr(a.getAssigned), expr(a.getAssignment), Some(binOp(a.getKind, a)))
+      val op = binOp(a.getKind, a)
+      val lhsNarrow = Option(a.getAssigned.getType).map(_.getSimpleName).exists(Set("char", "byte", "short"))
+      // Java compound assignment auto-narrows the widened result back to the target's
+      // narrow type; Scala's `c |= x` desugars to `c = (c | x): Int` and fails to fit
+      // Char/Byte/Short. Emit `c = (c op x).toChar` explicitly (Cast of a Prim renders
+      // as `.toChar`/`.toByte`/`.toShort`).
+      if lhsNarrow then
+        val lhs = expr(a.getAssigned)
+        BStmtK.Assign(lhs, Cast(btype(a.getAssigned.getType), Binary(op, lhs, expr(a.getAssignment))), None)
+      else BStmtK.Assign(expr(a.getAssigned), expr(a.getAssignment), Some(op))
     case a: CtAssignment[?, ?] =>
       BStmtK.Assign(expr(a.getAssigned), maybeUncheckedCast(a.getAssigned.getType, a.getAssignment), None)
     case i: CtIf =>
