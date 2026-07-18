@@ -62,8 +62,14 @@ Checklist:
       bg-jobs jar paths — warm hits had silently dropped to 0; filename keys
       fixed it. Evidence: warm 133 hits / 0 translated; --no-cache
       byte-identical (tree 5b2271afd06a = the suite-green tree).
-- [ ] Vocabulary/Tier-3 productization (deferred from M2/M4) — needed for the
-      sge (using Sge) pass
+- [x] Vocabulary/Tier-3 foundation (commit 6f9fed1): BirPass/PassPipeline
+      (versioned ids join cache fingerprints), QNameMap structural rewriter,
+      vocab module with diffable tables (type/method/getter entries, stacked,
+      digestable), VocabPass + PackageRenamePass. Gate: VocabDemo — table +
+      rename over an engine-owned unit, asserts + determinism + scalac GREEN.
+      Battery unchanged. REMAINING (pulled by the sge port when needed):
+      call-shape code hooks, ScalaPass tier, disposition enum wiring,
+      pass fingerprints joining a caching port program's keys.
 - [ ] sge extension port (jbump or noise4j) + skeleton diff vs sge hand port
 - [ ] bump demo
 
