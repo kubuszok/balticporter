@@ -942,10 +942,12 @@ private final class UnitBuilder(sourcePath: String, source: String):
       target match
         // this / qualified-this / super targets all print as the bare member in Scala
         case ta: CtThisAccess[?] =>
-          // inside an inner class, `this` reads against the OUTER instance (Spoon
-          // types the implicit this-access as the outer class) must qualify:
-          // `Outer.this.f` — plain `this.f` would resolve against the inner class
+          // inside a nested class, `this` reads against the OUTER instance (Spoon
+          // types the implicit this-access as the outer class) must be re-qualified:
+          // `Outer.this.f` for named inners, a bare lexical `f` for anonymous ones —
+          // plain `this.f` would resolve against the nested class and miss the field
           outerThisName(ta) match
+            case Some("")    => Ident(ref.getSimpleName, RefKind.EnclosingField)
             case Some(outer) => Ident(ref.getSimpleName, RefKind.OuterField(outer))
             case None        => Ident(ref.getSimpleName, RefKind.OwnField)
         case null | (_: CtSuperAccess[?]) =>
@@ -965,14 +967,17 @@ private final class UnitBuilder(sourcePath: String, source: String):
         case t: CtType[?] => encl = t
         case _            => ()
       p = p.getParent
-    if encl == null || encl.isAnonymous || encl.isLocalType then None
+    if encl == null then None
     else
       thisTypeQ match
-        case Some(q) if q != encl.getQualifiedName &&
-            !encl.hasModifier(ModifierKind.STATIC) && encl.getDeclaringType != null =>
-          // the this-access belongs to an enclosing type — qualify with its simple name
-          val seg = q.substring(q.lastIndexOf('.') + 1)
-          Some(seg.substring(seg.lastIndexOf('$') + 1))
+        // the this-access belongs to an ENCLOSING type (its qname differs from the
+        // immediate nested class) → it's an outer-field read
+        case Some(q) if q != encl.getQualifiedName =>
+          if encl.isAnonymous || encl.isLocalType then Some("") // no name → bare lexical
+          else if !encl.hasModifier(ModifierKind.STATIC) && encl.getDeclaringType != null then
+            val seg = q.substring(q.lastIndexOf('.') + 1)
+            Some(seg.substring(seg.lastIndexOf('$') + 1)) // Outer.this.f
+          else None
         case _ => None
 
   /** Java performs unchecked conversion when a raw-typed expression flows into a

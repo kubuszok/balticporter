@@ -52,6 +52,9 @@ enum RefKind:
   case OwnField
   /** field on an enclosing instance from inside an inner class: `Outer.this.f`. */
   case OuterField(outer: String)
+  /** field on an enclosing instance from inside an ANONYMOUS/local class, which has
+    * no name for `Outer.this` — emitted bare, resolved by Scala's lexical scoping. */
+  case EnclosingField
   /** static field: qname of the owner. */
   case StaticField(owner: String)
 

@@ -720,6 +720,7 @@ private final class Printer(
     // the pre-declaration read to the field while Scala's block scoping would not
     case Ident(n, RefKind.OwnField) => s"this.${id(n)}"
     case Ident(n, RefKind.OuterField(outer)) => s"${id(outer)}.this.${id(n)}"
+    case Ident(n, RefKind.EnclosingField) => id(n) // bare: resolved lexically from an anon/local class
     case Ident(n, _)                => id(n)
     case This          => "this"
     case Select(r, n)  => s"${expr(r)}.${id(n)}"
