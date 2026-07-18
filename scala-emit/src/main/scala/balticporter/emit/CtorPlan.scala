@@ -178,6 +178,80 @@ object CtorPlan:
     def identityBasisPlan(ctors: List[BCtor], roots: List[BCtor]): Option[CtorPlan] =
       identityBasisPlanImpl(ctors, roots, splitAssigns, rootPlan)
 
+    /** Synthetic maximal-primary funnel: several root ctors (no `this()`-delegation)
+      * that each call `super(...)` reaching the SAME canonical super arity and whose
+      * bodies are pure `this.f = expr` assignments. A synthetic private primary takes
+      * all super slots + all assigned-field slots; each real ctor delegates
+      * `this(<its canonical super args>, <its field values>)`. Fields a ctor doesn't
+      * set take their own initializer (or the Java default). This is the general
+      * struct-of-params encoding for independent multi-field constructors that don't
+      * delegate to one another (SegmentedSequenceTree, TagRange). */
+    def maximalPrimaryPlan: Option[CtorPlan] =
+      val reg = registry.orNull
+      if reg == null || t.ctors.lengthIs < 2 || t.ctors.exists(_.thisArgs.isDefined) then None
+      else
+        val superQ = t.superClass.map(_.qname)
+        def canonSuper(c: BCtor): Option[List[BExpr]] =
+          val sa = c.superArgs.getOrElse(Nil)
+          superQ match
+            case Some(q) => reg.resolveThisChain(q, sa).orElse(Some(sa))
+            case None    => if sa.isEmpty then Some(Nil) else None
+        val perCtor = t.ctors.map { c =>
+          val (assigns, rest) = splitAssigns(c.body)
+          (c, canonSuper(c), assigns, rest)
+        }
+        // guards: every super resolves, all to one arity; bodies are pure field assigns
+        if perCtor.exists(_._2.isEmpty) || perCtor.exists(_._4.nonEmpty) then None
+        else if perCtor.exists { case (_, _, a, _) => a.map(_._1).distinct.length != a.length } then None
+        else
+          val arities = perCtor.map(_._2.get.length).distinct
+          if arities.lengthIs != 1 then None
+          else
+            val n = arities.head
+            // super-slot types from the parent's canonical n-arity ctor
+            val superParamTypes: Option[List[BType]] =
+              if n == 0 then Some(Nil)
+              else superQ.flatMap(q => reg.byFqcn.get(q)).flatMap((_, info) => info.ctors.find(_._1.length == n).map(_._1.map(_.tpe)))
+            superParamTypes match
+              case None => None
+              case Some(sTypes) =>
+                val assignedNames = perCtor.flatMap(_._3.map(_._1)).toSet
+                val fieldsF = t.fields.filter(f => assignedNames.contains(f.name))
+                // a class-member/param-name a synthetic slot must not collide with
+                val sNames = (0 until n).map(i => s"_s$i").toList
+                val fNames = fieldsF.map(f => s"_f_${f.name}")
+                val primaryParams =
+                  sNames.zip(sTypes).map((nm, tp) => BParam(nm, tp, false)) ++
+                    fieldsF.zip(fNames).map((f, nm) => BParam(nm, f.tpe, false))
+                val superRefs = sNames.zip(sTypes).map((nm, tp) => Ident(nm, RefKind.Param(false)))
+                val primaryBody = fieldsF.zip(fNames).map { (f, nm) =>
+                  BStmt(f.leading, BStmtK.Assign(Ident(f.name, RefKind.OwnField), Ident(nm, RefKind.Param(false)), None))
+                }
+                // fields assigned by any ctor become plain `var f = <java default>`;
+                // the primary overwrites them, others keep decl-order fields untouched
+                val fieldLines = t.fields.map { f =>
+                  if assignedNames.contains(f.name) then FieldLine.DefaultInit(f.copy(mods = f.mods.copy(isFinal = false)))
+                  else fieldWithOwnInit(f)
+                }
+                val secondaries = perCtor.map { case (c, Some(cSuper), assigns, _) =>
+                  val amap = assigns.toMap
+                  val fieldVals = fieldsF.map { f =>
+                    amap.getOrElse(f.name, f.init.getOrElse(javaDefault(f.tpe)))
+                  }
+                  fixSecondaryCollisions(t, Secondary(c.leading, c.mods, c.params, cSuper ++ fieldVals,
+                    targetTypes = primaryParams.map(_.tpe)))
+                }
+                Some(CtorPlan(
+                  primaryParams.map(p => Param(p, None)),
+                  Some(Mods(vis = Vis.Private)),
+                  sentinelLike = false,
+                  Nil,
+                  superRefs,
+                  primaryBody,
+                  fieldLines,
+                  secondaries,
+                ))
+
     t.ctors match
       case Nil =>
         CtorPlan(Nil, None, sentinelLike = false, Nil, Nil, Nil, t.fields.map(fieldWithOwnInit), Nil)
@@ -368,8 +442,9 @@ object CtorPlan:
                     List(Secondary(noArg.leading, noArg.mods, Nil, List(Lit(LitKind.NullL, "null")))),
                   )
             case _ =>
-              noArgPrimaryPlan(t, unit, registry, fail).getOrElse(
-                fail(s"${ctors.length} constructors with field logic — no funnel strategy applies"))
+              noArgPrimaryPlan(t, unit, registry, fail)
+                .orElse(maximalPrimaryPlan)
+                .getOrElse(fail(s"${ctors.length} constructors with field logic — no funnel strategy applies"))
 
   /** Identity-basis funnel: a root ctor P whose super args are all distinct param refs
     * and whose field assigns are all param refs, with every param used exactly once,
@@ -449,9 +524,11 @@ object CtorPlan:
       // param-free super(<const>) call (AttributeProviderAdapter: all super(AST_ADAPTER)).
       // The synthetic primary carries that super call in its `extends` clause and each
       // ctor replays only its OWN body — no cross-class inlining needed.
-      def paramFree(es: List[BExpr]): Boolean =
-        es.forall(e => BirTransform.mapExpr(e) { case Ident(_, RefKind.Param(_)) => Ident(" param", RefKind.Local); case x => x }
-          == e) // no Param refs
+      def hasParamRef(e: BExpr): Boolean =
+        var found = false
+        BirTransform.mapExpr(e) { case x @ Ident(_, RefKind.Param(_)) => found = true; x; case x => x }
+        found
+      def paramFree(es: List[BExpr]): Boolean = !es.exists(hasParamRef)
       val sharedSuper: Option[List[BExpr]] =
         if noArgJava.isEmpty && t.ctors.nonEmpty && t.ctors.forall(c => c.thisArgs.isEmpty && c.superArgs.isDefined) then
           t.ctors.map(_.superArgs.get).distinctBy(_.toString) match
