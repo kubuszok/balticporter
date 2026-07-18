@@ -70,7 +70,15 @@ Checklist:
       Battery unchanged. REMAINING (pulled by the sge port when needed):
       call-shape code hooks, ScalaPass tier, disposition enum wiring,
       pass fingerprints joining a caching port program's keys.
-- [ ] sge extension port (jbump or noise4j) + skeleton diff vs sge hand port
+- [x] sge extension port (commit 406d134): jbump 19/19 classified vs the sge
+      hand port — EQUAL=6 IDIOM=6 SUBSTITUTED=5 ACCEPTED=1 (fingerprint
+      ledger) UNSUPPORTED_ACCEPTED=1 (covenant-dropped API), zero unexplained.
+      Tier-3 PackageRenamePass exercised at corpus scale; SkeletonDiff gained
+      the static-placement idiom (class↔companion moves); Liqp ledger
+      staleness fired on the shrunk diffs and both were re-verified/re-pinned.
+      Note: jbump needs no (using Sge) context — it is dependency-free; the
+      Sge-context pass belongs to a libGDX-coupled extension when one is
+      ported.
 - [ ] bump demo
 
 ## Phase M4 — cross-platform + cache — DONE (2026-07-18, amended scope)
