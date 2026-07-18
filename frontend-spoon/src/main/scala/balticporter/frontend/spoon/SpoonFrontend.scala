@@ -902,7 +902,12 @@ private final class UnitBuilder(sourcePath: String, source: String):
     case other                          => unsupported(at, s"variable reference ${other.getClass.getSimpleName}")
 
   private def fieldAccess(ref: CtFieldReference[?], target: CtExpression[?]): BExpr =
-    val owner = Option(ref.getDeclaringType).map(_.getQualifiedName).getOrElse(BType.ObjectQ)
+    // Spoon's getDeclaringType returns the ACCESS type for a field inherited through
+    // interfaces (BasedSequence.LS where LS is SequenceUtils' constant); Scala companions
+    // don't inherit, so resolve to the true declaring type (the field's own declaration).
+    val owner = scala.util.Try(Option(ref.getFieldDeclaration).flatMap(fd => Option(fd.getDeclaringType)).map(_.getQualifiedName)).toOption.flatten
+      .orElse(Option(ref.getDeclaringType).map(_.getQualifiedName))
+      .getOrElse(BType.ObjectQ)
     if ref.getSimpleName == "class" then
       target match
         case ta: CtTypeAccess[?] => return ClassLit(btype(ta.getAccessedType))
