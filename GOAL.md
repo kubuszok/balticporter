@@ -122,7 +122,11 @@ Checklist:
             generic method's return type var doesn't infer Nothing —
             getBuilder()). Entangled in the IRichSequenceBase/SequenceBuilder
             cluster; together 193 → 180. 639/639.
-      - [ ] remaining (180, visitor-family-dominated): AstActionHandler is the
+      - [x] wave 12 (commit 8660d6d): local shadow of a JDK-inherited
+            this-called method (length() from CharSequence, outside the
+            closure) — fixLocals now collects this-call names from bodies, not
+            just declared/closure-inherited methods. 180 → 172. 639/639.
+      - [ ] remaining (172, visitor-family-dominated): AstActionHandler is the
             dominant blocker — Java `X...`/`X[]...` varargs both erase to Seq
             in Scala (Conflicting definitions) + F-bounded `[?]` vs `[Node]`.
             ~5 files (NodeVisitor, TextCollectingVisitor, the two Adapters,
