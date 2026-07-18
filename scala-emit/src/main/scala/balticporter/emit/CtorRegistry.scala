@@ -51,11 +51,35 @@ final class CtorRegistry(units: List[BUnit]):
         case k :: Nil => Some(k)
         case _        => None
 
+  /** the registry key of a superclass/interface reference (nested types live
+    * under Outer$Name; interfaces arrive as dotted qnames Spoon resolved). */
+  private def keyOf(qname: String): Option[String] =
+    val dollar = qname.replace('.', '$')
+    if byFqcn.contains(qname) then Some(qname)
+    else byFqcn.keysIterator.find(k => k == qname || k.replace('.', '$').endsWith(dollar))
+
+  /** true when any supertype (superclass chain + all interfaces, transitively,
+    * within the closure) declares a nilary method named `name` — i.e. the accessor
+    * fulfils an inherited contract and CANNOT be dropped (a `val` can't satisfy a
+    * `def m(): T`, and interface-typed call sites dispatch through the method). */
+  private def nilaryInSupertype(fqcn: String, name: String, depth: Int = 0): Boolean =
+    if depth > 12 then return false
+    byFqcn.get(fqcn) match
+      case None => false
+      case Some((t, info)) =>
+        val supers = info.superFqcn.toList ++ t.interfaces.collect { case BType.Ref(q, _) => q }
+        supers.flatMap(keyOf).exists { sk =>
+          byFqcn.get(sk).exists { (st, _) =>
+            (st.methods ++ st.staticMethods).exists(m => m.name == name && m.params.isEmpty)
+          } || nilaryInSupertype(sk, name, depth + 1)
+        }
+
   /** Java-style redundant accessors: a field `f` plus a nilary same-name method
     * whose body is exactly `return f`. Scala can't declare both — the method is
     * DROPPED and every resolved nilary call `x.f()` rewrites to the field read
     * (semantically exact: the method returned the field). Keys are ($-qualified
-    * fqcn, member name). */
+    * fqcn, member name). NOT collapsed when the method overrides an inherited
+    * nilary member (the field can't satisfy the contract) or is `@Override`. */
   lazy val collapsedAccessors: Set[(String, String)] =
     byFqcn.iterator.flatMap { case (fqcn, (t, _)) =>
       def returnsField(body: Option[List[BStmt]], name: String, static: Boolean): Boolean =
@@ -67,13 +91,14 @@ final class CtorRegistry(units: List[BUnit]):
               case _                      => false)
           case _ => false
         }
+      def collapsible(m: BMethod, hasField: Boolean, static: Boolean): Boolean =
+        m.params.isEmpty && hasField && returnsField(m.body, m.name, static) &&
+          !m.mods.isOverride && !nilaryInSupertype(fqcn, m.name)
       val inst = t.methods.collect {
-        case m if m.params.isEmpty && t.fields.exists(_.name == m.name) &&
-          returnsField(m.body, m.name, static = false) => (fqcn, m.name)
+        case m if collapsible(m, t.fields.exists(_.name == m.name), static = false) => (fqcn, m.name)
       }
       val stat = t.staticMethods.collect {
-        case m if m.params.isEmpty && t.staticFields.exists(_.name == m.name) &&
-          returnsField(m.body, m.name, static = true) => (fqcn, m.name)
+        case m if collapsible(m, t.staticFields.exists(_.name == m.name), static = true) => (fqcn, m.name)
       }
       inst ++ stat
     }.toSet
@@ -210,18 +235,17 @@ final class CtorRegistry(units: List[BUnit]):
     body.foreach(checkStmt)
     ok
 
-  /** forFqcn: the subclass whose plan replays the effects — accessibility/finality
-    * checks are skipped at levels equal to it (its own plan un-finals what it
-    * assigns; only CROSS-class replay needs visible assignable members). */
-  def inlineSuperEffects(parentFqcn: String, args: List[BExpr], depth: Int = 0, forFqcn: String = ""): Option[List[BStmt]] =
-    if depth > 8 then return miss(s"depth cap at $parentFqcn")
+  /** Raw transitive effects of constructing `parentFqcn(args)` — the matched
+    * overload's body (params substituted) prefixed by its super/this chain, with
+    * NO replayability guard. None only when structurally impossible (depth cap, or
+    * a non-no-arg call into a type outside the translated set). */
+  private def rawEffects(parentFqcn: String, args: List[BExpr], depth: Int): Option[List[BStmt]] =
+    if depth > 8 then return None
     byFqcn.get(parentFqcn) match
-      case None =>
-        // outside the translated set: only an effect-free no-arg call is replayable
-        if args.isEmpty then Some(Nil) else miss(s"$parentFqcn outside set with ${args.length} args")
+      case None => if args.isEmpty then Some(Nil) else None
       case Some((_, info)) =>
         info.ctors.find(_._1.length == args.length) match
-          case None => if args.isEmpty then Some(Nil) else miss(s"$parentFqcn: no ${args.length}-arity ctor") // implicit no-arg
+          case None => if args.isEmpty then Some(Nil) else None // implicit no-arg
           case Some((params, superArgs, thisArgs, body)) =>
             val subst: Map[String, BExpr] = params.map(_.name).zip(args).toMap
             def sub(e: BExpr): BExpr = BirTransform.mapExpr(e) {
@@ -232,16 +256,32 @@ final class CtorRegistry(units: List[BUnit]):
               case Ident(n, RefKind.Param(_)) if subst.contains(n) => subst(n)
               case x                                               => x
             })
-            // the inlined statements execute in the SUBCLASS — references that were
-            // legal in the parent's own ctor may not be there: private members are
-            // invisible, and final fields emit as vals (not assignable post-hoc)
-            if parentFqcn != forFqcn && !replayableFrom(parentFqcn, ownBody) then
-              return miss(s"$parentFqcn: ctor effects touch private/final members — not replayable in a subclass")
             val upstream: Option[List[BStmt]] = thisArgs match
-              case Some(ta) => inlineSuperEffects(parentFqcn, ta.map(sub), depth + 1, forFqcn)
+              case Some(ta) => rawEffects(parentFqcn, ta.map(sub), depth + 1)
               case None =>
                 val sargs = superArgs.getOrElse(Nil).map(sub)
                 info.superFqcn match
-                  case Some(p) => inlineSuperEffects(p, sargs, depth + 1, forFqcn)
-                  case None    => if sargs.isEmpty then Some(Nil) else miss(s"$parentFqcn: super args with no superclass")
+                  case Some(p) => rawEffects(p, sargs, depth + 1)
+                  case None    => if sargs.isEmpty then Some(Nil) else None
             upstream.map(_ ++ ownBody)
+
+  /** forFqcn: the subclass whose no-arg-primary plan replays these effects. Its
+    * synthetic primary already calls `super()`, which runs the parent's OWN no-arg
+    * construction path — so only the DELTA beyond that path needs replaying as
+    * post-`this()` statements. Effects shared with no-arg construction (typically
+    * the common `super(<constant>)` prefix that assigns private/final grandparent
+    * fields) cancel out and never need to be replayable in the subclass. */
+  def inlineSuperEffects(parentFqcn: String, args: List[BExpr], depth: Int = 0, forFqcn: String = ""): Option[List[BStmt]] =
+    rawEffects(parentFqcn, args, depth) match
+      case None => miss(s"$parentFqcn: effects not structurally computable at ${args.length} args")
+      case Some(full) =>
+        // subtract the parent no-arg path (run by the subclass primary's super())
+        val base = rawEffects(parentFqcn, Nil, depth).getOrElse(Nil)
+        val delta =
+          if base.length <= full.length && full.take(base.length) == base then full.drop(base.length)
+          else full
+        // the delta executes in the SUBCLASS — its field assigns must resolve there
+        // as visible + assignable (var, not private-at-declaration unless widened)
+        if delta.nonEmpty && parentFqcn != forFqcn && !replayableFrom(forFqcn, delta) then
+          miss(s"$parentFqcn: replay delta touches private/final members — not replayable in $forFqcn")
+        else Some(delta)
