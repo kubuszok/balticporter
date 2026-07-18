@@ -19,8 +19,9 @@ object ScalaPrinter:
       prov: Provenance,
       sentinels: Set[String] = Set.empty,
       registry: Option[CtorRegistry] = None,
+      ctorOverrides: Map[String, CtorOverride] = Map.empty,
   ): String =
-    new Printer(MemberClashPass(widenFields(unit, registry), registry), prov, sentinels, registry).result()
+    new Printer(MemberClashPass(widenFields(unit, registry), registry), prov, sentinels, registry, ctorOverrides).result()
 
   /** Private non-final fields that subclass effect-replay assigns (see
     * CtorRegistry.widenedFields) emit `protected` — the deterministic analog of
@@ -62,11 +63,20 @@ object SentinelRegistry:
       }
     acc
 
+/** PLAN §7 declaration-level override: replace only a class's constructor block
+  * (the irreducible cases the funnel refuses) while the engine still translates
+  * every field, method, companion, and import. `headerSuffix` is spliced after
+  * `class Name[tparams]` (primary params + `extends ...`); `body` lines open the
+  * class body (field decls the ctors assign + the auxiliary `def this(...)`s).
+  * The engine emits methods/inner types/companion below it as usual. */
+final case class CtorOverride(headerSuffix: String, body: List[String])
+
 private final class Printer(
     unit: BUnit,
     prov: Provenance,
     sentinels: Set[String],
     registry: Option[CtorRegistry],
+    ctorOverrides: Map[String, CtorOverride] = Map.empty,
 ):
   private val sb = new StringBuilder
   private var indent = 0
@@ -317,6 +327,10 @@ private final class Printer(
   private def classDecl(t: BTypeDecl): Unit =
     trivia(t.leading)
     annotationLines(t.mods)
+    val fqcn = if unit.pkg.isEmpty then t.name else s"${unit.pkg}.${t.name}"
+    ctorOverrides.get(fqcn).filter(_ => nestedDepth == 0) match
+      case Some(ovr) => classDeclOverridden(t, ovr); return
+      case None      => ()
     val plan = CtorPlan.of(t, unit, sentinels, registry)
     trivia(plan.primaryLeading)
     t.serialVersionUID.foreach(v => line(s"@SerialVersionUID(${v}L)"))
@@ -411,6 +425,32 @@ private final class Printer(
       line()
     }
 
+    indent -= 1
+    line("}")
+    companion(t)
+
+  /** Class emission with a handwritten constructor block (CtorOverride): the header
+    * suffix and body come verbatim from the override; fields/methods/inner/companion
+    * are still the engine's, so the class stays in sync with upstream on re-port. */
+  private def classDeclOverridden(t: BTypeDecl, ovr: CtorOverride): Unit =
+    t.serialVersionUID.foreach(v => line(s"@SerialVersionUID(${v}L)"))
+    val mods = StringBuilder(visPrefix(t.mods))
+    if t.mods.isAbstract then mods.append("abstract ")
+    if t.mods.isFinal then mods.append("final ")
+    line(s"${mods.result()}class ${id(t.name)}${tparamsStr(t.tparams)}${ovr.headerSuffix} {")
+    indent += 1
+    if t.staticInit.nonEmpty then
+      line(s"locally(${id(t.name)})")
+      line()
+    ovr.body.foreach(line)
+    if ovr.body.nonEmpty then line()
+    t.methods.foreach(methodDecl)
+    t.inner.foreach { n =>
+      nestedDepth += 1
+      typeDecl(n)
+      nestedDepth -= 1
+      line()
+    }
     indent -= 1
     line("}")
     companion(t)

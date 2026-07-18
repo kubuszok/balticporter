@@ -203,8 +203,11 @@ object CtorPlan:
           val (assigns, rest) = splitAssigns(c.body)
           (c, canonSuper(c), assigns, rest)
         }
-        // guards: every ROOT super resolves, all to one arity; bodies are pure field assigns
-        if perCtor.exists(_._2.isEmpty) || perCtor.exists(_._4.nonEmpty) then None
+        // guards: every ROOT super resolves, all to one arity. Non-field-assign
+        // statements (method calls like setSuppressOpenTagLine) are allowed — they
+        // replay as post-this() secondary body, so they may not reference `this`
+        // before construction (they run AFTER the delegation completes).
+        if perCtor.exists(_._2.isEmpty) then None
         else if perCtor.exists { case (_, _, a, _) => a.map(_._1).distinct.length != a.length } then None
         else
           val arities = perCtor.map(_._2.get.length).distinct
@@ -236,13 +239,13 @@ object CtorPlan:
                   if assignedNames.contains(f.name) then FieldLine.DefaultInit(f.copy(mods = f.mods.copy(isFinal = false)))
                   else fieldWithOwnInit(f)
                 }
-                val rootSecondaries = perCtor.map { case (c, Some(cSuper), assigns, _) =>
+                val rootSecondaries = perCtor.map { case (c, Some(cSuper), assigns, rest) =>
                   val amap = assigns.toMap
                   val fieldVals = fieldsF.map { f =>
                     amap.getOrElse(f.name, f.init.getOrElse(javaDefault(f.tpe)))
                   }
                   fixSecondaryCollisions(t, Secondary(c.leading, c.mods, c.params, cSuper ++ fieldVals,
-                    targetTypes = primaryParams.map(_.tpe)))
+                    body = rest, targetTypes = primaryParams.map(_.tpe)))
                 }
                 // this()-delegating ctors stay as ordinary aux→sibling delegations,
                 // ordered so each target (found by arity) precedes it (Scala rule)
