@@ -3,13 +3,44 @@
 Machine-updated by `/goal` iterations. One phase at a time; a phase advances
 only when its gate (PLAN.md §13) is green with re-runnable evidence.
 
-## Phase: M5 — scale + second corpus (flexmark; then sge idioms)
+## Phase: M6 — cold port (the real acceptance test)
 
-Gate (PLAN.md §13, amended M4 note applies): flexmark reaches ≥95%
-translate-or-classified; one sge extension with the (using Sge) Tier-3 pass;
-bump demo (upstream pin move → scoped regen, gates green).
+Gate (PLAN.md §13): a library neither repo has ported, no corpus to lean on —
+generated sbt project + ported tests green on declared platforms; human
+review of output signs off on idiom quality; framework docs + example port
+program published.
 
 Status: IN PROGRESS
+
+Checklist:
+- [ ] Candidate selection: survey sge's ecosystem list / unported flexmark
+      extensions; pick one with a real test suite and bounded deps
+- [ ] Port program written against the framework (PortProgram-style entry,
+      dispositions declared, vocabulary + passes as needed)
+- [ ] Generated sbt project compiles; ported test suite green on JVM
+- [ ] Framework docs + example port program published (README/docs)
+- [ ] HUMAN REVIEW (blocks completion): idiom-quality sign-off by the user —
+      queue the request when everything above is green
+
+## Phase M5 — scale + second corpus — DONE (2026-07-18)
+
+Gate (amended, PLAN commits 6dd3339 + 17a0c68): flexmark ≥95%
+translate-or-classified; one sge extension with a Tier-3 pass at corpus
+scale; bump demo (pin move → scoped regen, gates green).
+
+Evidence:
+- flexmark: **746/763 real files translate (97.8%), 17 classified refusals**,
+  COMMENT_LOSS 0 — all sound after the replay accessibility guard.
+- jbump vs sge hand port: **19/19 classified, zero unexplained**
+  (EQUAL=6 IDIOM=6 SUBSTITUTED=5 ACCEPTED=1 UNSUPPORTED_ACCEPTED=1),
+  PackageRenamePass exercised corpus-wide (commit 406d134).
+- Vocabulary/Tier-3 foundation: VocabDemo gate green (commit 6f9fed1).
+- Bump demo: pin move retranslates exactly 62/133 (1 body edit, no ripple;
+  1 signature edit + 61 interface-ripple), byte-stable, GATE GREEN
+  (commit 91bd6a5).
+- Liqp regression battery green throughout; suite 639/639 (commit a454047).
+
+Status: DONE
 
 Checklist:
 - [x] flexmark coverage baseline (commit ea32f02): 543/845 (64%) on first
