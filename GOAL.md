@@ -22,8 +22,18 @@ Checklist:
       arity-mismatch delegations (ListOptions translates in the corpus run
       but not the closure run — registry sensitivity to investigate), 5
       multi-ctor field-logic shapes, HtmlWriter.
-- [ ] Blocker burn: clear the 12 closure UNSUPPORTED (member-rename
-      disposition mechanism + funnel work); XwikiSurvey reaches 0 blockers
+- [x] Blocker wave 1 (commit 94c4e6d): nested types registered under
+      Outer$Nested (clears ListOptions family — the c1a102c 'registry
+      sensitivity' note was a misread, the file failed in both runs);
+      redundant-accessor collapse (field + 'return f' getter → field, calls
+      rewritten globally — ExampleOption ×4); deprecated-clash drop (keep
+      field, drop @Deprecated method, per ssg-md Parsing precedent).
+      Blockers 12 → 9. Battery green; flexmark 746 → 748.
+- [ ] Blocker burn remainder (9, all ctor shapes): arity-mismatch delegation
+      ×3 (BlockNodeVisitor, DependentItemMap, PlainSegmentBuilder), 2-ctor
+      field logic ×2 (SegmentedSequenceTree, TagRange), 3-ctor ×2
+      (AttributeProviderAdapter, LinkResolverAdapter), 4-ctor ×2
+      (BasedSegmentBuilder, HtmlWriter); XwikiSurvey reaches 0 blockers
 - [ ] Port program written against the framework (PortProgram-style entry,
       dispositions declared, vocabulary + passes as needed)
 - [ ] Generated sbt project compiles; ported test suite green on JVM
