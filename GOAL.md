@@ -18,8 +18,13 @@ Checklist:
       ctor refs, @Deprecated, switch fallthrough tail-duplication,
       field-init+ctor-assign, package-info categorized. 543 → 634 OK (83% of
       real files). Liqp fully regression-checked (suite exit=0).
-- [ ] Ctor-funnel next tier (~108 files): synthesized-full-primary strategy
-      for N-ctor different-super shapes at scale
+- [x] Ctor-funnel next tier (commit ed8b154): no-arg-primary + effect-replay
+      encoding (mined from the hand-port corpus — Emphasis.scala pattern);
+      CtorRegistry with noArgReachable fixpoint + recursive super-overload
+      inlining. flexmark 679 → **729/763 (95.6%)** — over the M5 translate
+      line. Liqp battery fully green after.
+- [ ] flexmark tail (20 + 14 comment losses): inner classes (6),
+      identity-super leftovers (8), break ownership (3), synchronized (1)
 - [ ] Vocabulary/Tier-3 productization (deferred from M2/M4) — needed for the
       sge (using Sge) pass
 - [ ] sge extension port (jbump or noise4j) + skeleton diff vs sge hand port
