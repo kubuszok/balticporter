@@ -235,6 +235,30 @@ final class CtorRegistry(units: List[BUnit]):
     body.foreach(checkStmt)
     ok
 
+  /** Follows `parentFqcn`'s own `this(...)`-delegation chain from a call of the
+    * given arity to the terminal (non-this-delegating) constructor, returning the
+    * args that reach it — with the caller's arg expressions substituted for the
+    * intermediate params. This is how a subclass ctor `super(subsetArgs)` finds the
+    * canonical full-arity super args to delegate through (OrderedMap(capacity) →
+    * this(capacity, null) → the (int, host) canonical → [capacity, null]).
+    * None when no matching-arity ctor exists in the closure. */
+  def resolveThisChain(parentFqcn: String, args: List[BExpr], depth: Int = 0): Option[List[BExpr]] =
+    if depth > 12 then return None
+    byFqcn.get(parentFqcn).flatMap { (_, info) =>
+      info.ctors.find(_._1.length == args.length) match
+        case None => if depth == 0 then None else Some(args) // unknown overload: stop at current arity
+        case Some((params, _, thisArgs, _)) =>
+          thisArgs match
+            case None => Some(args) // terminal: this ctor calls super (or nothing)
+            case Some(ta) =>
+              val subst: Map[String, BExpr] = params.map(_.name).zip(args).toMap
+              def sub(e: BExpr): BExpr = BirTransform.mapExpr(e) {
+                case Ident(n, RefKind.Param(_)) if subst.contains(n) => subst(n)
+                case x                                               => x
+              }
+              resolveThisChain(parentFqcn, ta.map(sub), depth + 1)
+    }
+
   /** Raw transitive effects of constructing `parentFqcn(args)` — the matched
     * overload's body (params substituted) prefixed by its super/this chain, with
     * NO replayability guard. None only when structurally impossible (depth cap, or

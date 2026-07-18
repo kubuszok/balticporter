@@ -245,9 +245,18 @@ object CtorPlan:
               // (by construction of the sentinel merge) — so a no-arg secondary calling a
               // different super overload can still delegate as this(null).
               val parentSentinel = t.superClass.exists(s => sentinelSupers.contains(s.qname))
+              // a secondary's super(subsetArgs) can resolve THROUGH the parent's own
+              // this()-chain to the primary's (canonical) super arity — DependentItemMap
+              // super(capacity) → OrderedMap.this(capacity, null) → delegate this(capacity, null)
+              def resolvedThrough(c: BCtor): Option[List[BExpr]] =
+                if c.thisArgs.isDefined then None // this-delegation must already match arity
+                else
+                  t.superClass.flatMap(sc => registry.flatMap(_.resolveThisChain(sc.qname, c.superArgs.getOrElse(Nil))))
+                    .filter(_.length == primary.params.length)
               def canDelegate(c: BCtor): Boolean =
                 val dArgs = c.thisArgs.orElse(c.superArgs).getOrElse(Nil)
                 dArgs.length == primary.params.length ||
+                resolvedThrough(c).isDefined ||
                 (dArgs.isEmpty && c.params.isEmpty && parentSentinel &&
                   primary.params.length == 1 && !primary.params.head.tpe.isInstanceOf[BType.Prim])
               val others = ctors.filterNot(_ eq primary)
@@ -261,12 +270,15 @@ object CtorPlan:
                 var usedSentinelRewrite = false
                 val secondaries = others.map { c =>
                   val delegateArgs =
-                    c.thisArgs.orElse(c.superArgs).getOrElse(fail("secondary ctor without super/this args"))
+                    c.thisArgs.orElse(c.superArgs).getOrElse(Nil)
                   if delegateArgs.length == primary.params.length then
-                    Secondary(c.leading, c.mods, c.params, delegateArgs)
-                  else
-                    usedSentinelRewrite = true
-                    Secondary(c.leading, c.mods, Nil, List(Lit(LitKind.NullL, "null")))
+                    Secondary(c.leading, c.mods, c.params, delegateArgs, targetTypes = primary.params.map(_.tpe))
+                  else resolvedThrough(c) match
+                    case Some(resolved) =>
+                      Secondary(c.leading, c.mods, c.params, resolved, targetTypes = primary.params.map(_.tpe))
+                    case None =>
+                      usedSentinelRewrite = true
+                      Secondary(c.leading, c.mods, Nil, List(Lit(LitKind.NullL, "null")))
                 }
                 CtorPlan(
                   primary.params.map(p => Param(p, None)),
@@ -433,6 +445,19 @@ object CtorPlan:
       def dbg(msg: => String): Unit =
         if sys.env.get("BP_DEBUG_CLASS").exists(selfFqcn.endsWith) then System.err.println(s"[noargpp] $selfFqcn: $msg")
       val noArgJava = t.ctors.find(_.params.isEmpty)
+      // shared-super shape: no no-arg ctor, but every ctor opens with the SAME
+      // param-free super(<const>) call (AttributeProviderAdapter: all super(AST_ADAPTER)).
+      // The synthetic primary carries that super call in its `extends` clause and each
+      // ctor replays only its OWN body — no cross-class inlining needed.
+      def paramFree(es: List[BExpr]): Boolean =
+        es.forall(e => BirTransform.mapExpr(e) { case Ident(_, RefKind.Param(_)) => Ident(" param", RefKind.Local); case x => x }
+          == e) // no Param refs
+      val sharedSuper: Option[List[BExpr]] =
+        if noArgJava.isEmpty && t.ctors.nonEmpty && t.ctors.forall(c => c.thisArgs.isEmpty && c.superArgs.isDefined) then
+          t.ctors.map(_.superArgs.get).distinctBy(_.toString) match
+            case List(one) if one.nonEmpty && paramFree(one) => Some(one)
+            case _                                           => None
+        else None
       def upstreamOf(c: BCtor): Option[List[BStmt]] = c.thisArgs match
         case Some(ta) => reg.inlineSuperEffects(selfFqcn, ta, forFqcn = selfFqcn)
         case None =>
@@ -440,18 +465,21 @@ object CtorPlan:
           t.superClass match
             case Some(p) => reg.inlineSuperEffects(p.qname, sargs, forFqcn = selfFqcn)
             case None    => if sargs.isEmpty then Some(Nil) else None
+      def ownBody(c: BCtor): List[BStmt] = c.body.filterNot(st => st.k == BStmtK.Empty && st.leading.isEmpty)
       def flatBody(c: BCtor): Option[List[BStmt]] =
-        upstreamOf(c).map(_ ++ c.body.filterNot(st => st.k == BStmtK.Empty && st.leading.isEmpty))
+        // in shared-super mode the primary already ran super(<const>) — replay only own body
+        if sharedSuper.isDefined then Some(ownBody(c))
+        else upstreamOf(c).map(_ ++ ownBody(c))
       // a body-ful (or this-delegating) no-arg ctor flattens into the synthetic
       // primary's body — its effects run on every construction path, and replayed
       // secondaries overwrite them, the funnel's standing replay semantics
       val primaryBody: Option[List[BStmt]] = noArgJava match
         case None    => Some(Nil)
         case Some(c) => flatBody(c)
-      dbg(s"noArg=${noArgJava.isDefined} thisArgs=${noArgJava.flatMap(_.thisArgs).map(_.length)} primaryBody=${primaryBody.map(_.length)}")
+      dbg(s"noArg=${noArgJava.isDefined} sharedSuper=${sharedSuper.map(_.length)} primaryBody=${primaryBody.map(_.length)}")
       if primaryBody.isEmpty then None
       else
-        val toReplay = t.ctors.filter(_.params.nonEmpty)
+        val toReplay = if sharedSuper.isDefined then t.ctors else t.ctors.filter(_.params.nonEmpty)
         val secondaries: Option[List[Secondary]] =
           toReplay.foldRight(Option(List.empty[Secondary])) { (c, acc) =>
             acc.flatMap { tail =>
@@ -489,7 +517,7 @@ object CtorPlan:
             noArgJava.map(_.mods),
             sentinelLike = false,
             noArgJava.map(_.leading).getOrElse(Nil),
-            Nil,
+            sharedSuper.getOrElse(Nil),
             primaryBody.getOrElse(Nil),
             fieldLines,
             secs,
