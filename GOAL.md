@@ -126,7 +126,11 @@ Checklist:
             this-called method (length() from CharSequence, outside the
             closure) — fixLocals now collects this-call names from bodies, not
             just declared/closure-inherited methods. 180 → 172. 639/639.
-      - [ ] remaining (172, visitor-family-dominated): AstActionHandler is the
+      - [x] wave 13 (commit b5b0c7b): Java enum `E.values()` → Scala 3 enum
+            `E.values` (companion val, no parens) — was parsed as
+            values.apply(i). Frontend emits nilary static values() on an enum
+            as a static-field access. 172 → 165. 639/639.
+      - [ ] remaining (165, visitor-family-dominated): AstActionHandler is the
             dominant blocker — Java `X...`/`X[]...` varargs both erase to Seq
             in Scala (Conflicting definitions) + F-bounded `[?]` vs `[Node]`.
             ~5 files (NodeVisitor, TextCollectingVisitor, the two Adapters,
