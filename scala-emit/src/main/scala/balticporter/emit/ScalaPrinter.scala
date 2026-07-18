@@ -438,11 +438,22 @@ private final class Printer(
     }
     plan.secondaryCtors.foreach { sc =>
       trivia(sc.leading)
-      val sig = s"${visPrefix(sc.mods)}def this(${sc.params.map(paramOf).mkString(", ")}) ="
+      // an aux-ctor param reassigned in the body can't stay a val: rename it `_p`,
+      // add `var p = _p` after the delegate, and read `_p` in the delegate args
+      val reassigned = reassignedParams(sc.body, sc.params.map(_.name).toSet)
+      val paramStrs = sc.params.map(p => if reassigned(p.name) then paramOf(p.copy(name = "_" + p.name)) else paramOf(p))
+      val sig = s"${visPrefix(sc.mods)}def this(${paramStrs.mkString(", ")}) ="
+      def fixArg(a: BExpr): BExpr =
+        if reassigned.isEmpty then a
+        else
+          BirTransform.mapExpr(a) {
+            case Ident(n, RefKind.Param(v)) if reassigned(n) => Ident("_" + n, RefKind.Param(v))
+            case e                                           => e
+          }
       val dArgs =
         if sc.targetTypes.length == sc.delegateArgs.length then
-          sc.delegateArgs.zip(sc.targetTypes).map((a, tt) => delegateArg(a, Some(tt))).mkString(", ")
-        else sc.delegateArgs.map(delegateArg).mkString(", ")
+          sc.delegateArgs.zip(sc.targetTypes).map((a, tt) => delegateArg(fixArg(a), Some(tt))).mkString(", ")
+        else sc.delegateArgs.map(a => delegateArg(fixArg(a))).mkString(", ")
       if sc.body.isEmpty then
         line(sig)
         indent += 1
@@ -452,6 +463,10 @@ private final class Printer(
         line(sig + " {")
         indent += 1
         line(s"this($dArgs)")
+        reassigned.toList.sorted.foreach { n =>
+          val p = sc.params.find(_.name == n).get
+          line(s"var ${id(n)}: ${tpe(p.tpe)} = ${id("_" + n)}")
+        }
         sc.body.foreach(stmt)
         indent -= 1
         line("}")

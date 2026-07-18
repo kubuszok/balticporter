@@ -236,8 +236,16 @@ Checklist:
             reads the value, the body mutates the field. compound-assign 7 → 3 (the
             remaining 3 are narrow-type `c |= x` on Char — a separate fix). 91 → 87.
             liqp compile GREEN, suite 639/639, LiqpCorpus PARITY_FAIL=0.
-      - [ ] Continue: narrow-type compound-assign (Char |=), F-bounded getBuilder,
-            Formatter family, collection null-typevar,
+      - [x] wave 25 (this commit): ENGINE fix — reassigned AUX-ctor param → var copy
+            (the aux analogue of wave 24). SequenceBuilder's `def this(base, options,
+            ...)` reassigns `options |= ...`; RomanNumeral's `def this(roman)` reassigns
+            `roman = roman.toUpperCase()`. Aux params can't be promoted to var fields,
+            so: rename to `_p`, read `_p` in the delegate args, and prepend `var p = _p`
+            after the `this(...)` delegate (mirrors the method-param path). 87 → 84.
+            liqp compile GREEN, suite 639/639, LiqpCorpus PARITY_FAIL=0.
+      - [ ] Continue: narrow-type compound-assign (Char |=), promoted-field reassign
+            (ParsedOption), F-bounded getBuilder, Formatter family, collection
+            null-typevar,
             + LinkResolverAdapter + BlockNodeVisitor + AstActionHandler base
             (F-bounded visitor family) and IRichSequenceBase/SequenceBuilder
             (F-bounded sequence bases) as PLAN §7 whole-file overrides. This is
