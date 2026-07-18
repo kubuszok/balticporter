@@ -67,10 +67,15 @@ Checklist:
       CtorInfo.resolve now disambiguate by signature (BlockQuote(BasedSequence)
       fixed). `macro`/`forSome` keyword escaping. Regression: 639/639, all
       corpora unchanged.
-- [ ] XwikiProject compile-error burn (first contact ~400 errors across 78
-      files; Liqp-style arc): remaining classes incl. null-into-generic,
-      package-collision (util²/ast²), varargs/Array↔Seq, missing-param-type
-      lambdas. Then port the xwiki-macros spec suite; compile + tests green.
+- [~] XwikiProject compile-error burn (Liqp-style arc, ~420 → ~300):
+      - [x] wave 1 (commit adfd85c): Java octal escapes → \uXXXX; lambda
+            `return` → tail-strip + boundary.break; ambiguous this(null) →
+            `(null: T)` ascription. Regression 639/639.
+      - [ ] remaining classes: raw-generic in `new` (HashMap[?,?]),
+            package-collision (util²/ast² in flattened layout), varargs/
+            Array↔Seq, conflicting Array[X]*/X* overloads, missing-param-type
+            lambdas, not-found members.
+- [ ] Port the xwiki-macros spec suite; whole-module compile + tests green.
 - [ ] Framework docs + example port program published
 - [ ] HUMAN REVIEW: idiom-quality sign-off (queue when the above is green)
 - [ ] Port program written against the framework (PortProgram-style entry,
