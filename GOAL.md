@@ -71,10 +71,13 @@ Checklist:
       - [x] wave 1 (commit adfd85c): Java octal escapes → \uXXXX; lambda
             `return` → tail-strip + boundary.break; ambiguous this(null) →
             `(null: T)` ascription. Regression 639/639.
-      - [ ] remaining classes: raw-generic in `new` (HashMap[?,?]),
-            package-collision (util²/ast² in flattened layout), varargs/
-            Array↔Seq, conflicting Array[X]*/X* overloads, missing-param-type
-            lambdas, not-found members.
+      - [x] wave 2 (commit 4e8c523): ternary `cond ? null : x` ascribes the
+            null branch to the resolved reference type (Found-Null 33 → 0).
+            Regression 639/639. Total ~300 → 283.
+      - [ ] remaining classes: missing-param-type lambdas (16, needs lambda
+            param-type annotation — BIR change), varargs/Array↔Seq (~45),
+            conflicting Array[X]*/X* overloads, raw-generic in `new`,
+            not-found members, generic wildcard mismatches.
 - [ ] Port the xwiki-macros spec suite; whole-module compile + tests green.
 - [ ] Framework docs + example port program published
 - [ ] HUMAN REVIEW: idiom-quality sign-off (queue when the above is green)
