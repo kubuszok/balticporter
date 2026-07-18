@@ -973,7 +973,21 @@ private final class UnitBuilder(sourcePath: String, source: String):
     if ref.getSimpleName == "length" && Option(ref.getDeclaringType).exists(_.isArray) then
       ArrayLength(expr(target))
     else if target != null && Option(ref.getDeclaringType).exists(_.isArray) then ArrayLength(expr(target))
-    else if ref.isStatic then Ident(ref.getSimpleName, RefKind.StaticField(owner))
+    else if ref.isStatic then
+      // Collections.EMPTY_SET/LIST/MAP are raw-typed constants (java.util.Set, not
+      // Set[T]) — Scala rejects the raw type where a parameterized one is expected.
+      // The generic empty* methods infer their element type from context.
+      val emptyGeneric =
+        if owner == "java.util.Collections" then
+          ref.getSimpleName match
+            case "EMPTY_SET"  => Some("emptySet")
+            case "EMPTY_LIST" => Some("emptyList")
+            case "EMPTY_MAP"  => Some("emptyMap")
+            case _            => None
+        else None
+      emptyGeneric match
+        case Some(m) => Call(Recv.Static(owner), m, Nil, Some(Nil), Some(owner))
+        case None    => Ident(ref.getSimpleName, RefKind.StaticField(owner))
     else
       target match
         // this / qualified-this / super targets all print as the bare member in Scala

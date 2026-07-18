@@ -204,6 +204,13 @@ Checklist:
             params can't be written as lambda types, so those fall back to bare and
             stay for the IRichSequenceBase override). Missing-parameter-type 16 → 1.
             118 → 106. liqp compile GREEN, suite 639/639, LiqpCorpus PARITY_FAIL=0.
+      - [x] wave 21 (this commit): ENGINE fix — Collections.EMPTY_SET/LIST/MAP →
+            generic empty*(). The raw constants are typed java.util.Set (not Set[T]),
+            which Scala rejects where a parameterized collection is expected (put(...),
+            ternary branches vs keySet()/values()). The generic Collections.emptySet()
+            /emptyList()/emptyMap() infer their element type from context. Frontend
+            rewrites the static-field access to the method call. 106 → 101. liqp
+            compile GREEN, suite 639/639, LiqpCorpus PARITY_FAIL=0.
       - [ ] Override sweep / engine (continue): IRichSequenceBase (wildcard lambdas +
             F-bounded getBuilder), the two *VisitorExt +
             + LinkResolverAdapter + BlockNodeVisitor + AstActionHandler base
