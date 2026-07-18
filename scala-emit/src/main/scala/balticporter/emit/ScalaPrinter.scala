@@ -202,20 +202,20 @@ private final class Printer(unit: BUnit, prov: Provenance, sentinels: Set[String
         trivia(f.leading)
         annotationLines(f.mods)
         val kw = if f.mods.isFinal then "val" else "var"
-        line(s"${visPrefix(f.mods)}$kw ${id(f.name)}: ${tpe(f.tpe)} = ${expr(init)}")
+        line(s"${beanPrefix(f, t.methods)}${visPrefix(f.mods)}$kw ${id(f.name)}: ${tpe(f.tpe)} = ${expr(init)}")
         line()
       case FieldLine.SentinelVal(f, pname, default) =>
         trivia(f.leading)
-        line(s"${visPrefix(f.mods)}val ${id(f.name)}: ${tpe(f.tpe)} = if (${id(pname)} != null) ${id(pname)} else ${expr(default)}")
+        line(s"${beanPrefix(f, t.methods)}${visPrefix(f.mods)}val ${id(f.name)}: ${tpe(f.tpe)} = if (${id(pname)} != null) ${id(pname)} else ${expr(default)}")
         line()
       case FieldLine.CondInit(f, pname, whenSome, whenNull) =>
         trivia(f.leading)
         val kw = if f.mods.isFinal then "val" else "var"
-        line(s"${visPrefix(f.mods)}$kw ${id(f.name)}: ${tpe(f.tpe)} = if (${id(pname)} != null) ${expr(whenSome)} else ${expr(whenNull)}")
+        line(s"${beanPrefix(f, t.methods)}${visPrefix(f.mods)}$kw ${id(f.name)}: ${tpe(f.tpe)} = if (${id(pname)} != null) ${expr(whenSome)} else ${expr(whenNull)}")
         line()
       case FieldLine.DefaultInit(f) =>
         trivia(f.leading)
-        line(s"${visPrefix(f.mods)}var ${id(f.name)}: ${tpe(f.tpe)} = ${defaultOf(f.tpe)}")
+        line(s"${beanPrefix(f, t.methods)}${visPrefix(f.mods)}var ${id(f.name)}: ${tpe(f.tpe)} = ${defaultOf(f.tpe)}")
         line()
     }
     if plan.primaryBody.nonEmpty then
@@ -294,7 +294,7 @@ private final class Printer(unit: BUnit, prov: Provenance, sentinels: Set[String
           .getOrElse("")
     val primary = plan.primaryParams match
       case Nil => ""
-      case ps  => primaryVis + "(" + ps.map(paramStr).mkString(", ") + ")"
+      case ps  => primaryVis + "(" + ps.map(paramStr(_, t.methods)).mkString(", ") + ")"
     val ext = (t.superClass, plan.superArgs) match
       case (None, _) if t.interfaces.isEmpty => ""
       case (None, _)         => " extends " + t.interfaces.map(tpe).mkString(" with ")
@@ -310,20 +310,20 @@ private final class Printer(unit: BUnit, prov: Provenance, sentinels: Set[String
         trivia(f.leading)
         annotationLines(f.mods)
         val kw = if f.mods.isFinal then "val" else "var"
-        line(s"${visPrefix(f.mods)}$kw ${id(f.name)}: ${tpe(f.tpe)} = ${expr(init)}")
+        line(s"${beanPrefix(f, t.methods)}${visPrefix(f.mods)}$kw ${id(f.name)}: ${tpe(f.tpe)} = ${expr(init)}")
         line()
       case FieldLine.SentinelVal(f, pname, default) =>
         trivia(f.leading)
-        line(s"${visPrefix(f.mods)}val ${id(f.name)}: ${tpe(f.tpe)} = if (${id(pname)} != null) ${id(pname)} else ${expr(default)}")
+        line(s"${beanPrefix(f, t.methods)}${visPrefix(f.mods)}val ${id(f.name)}: ${tpe(f.tpe)} = if (${id(pname)} != null) ${id(pname)} else ${expr(default)}")
         line()
       case FieldLine.CondInit(f, pname, whenSome, whenNull) =>
         trivia(f.leading)
         val kw = if f.mods.isFinal then "val" else "var"
-        line(s"${visPrefix(f.mods)}$kw ${id(f.name)}: ${tpe(f.tpe)} = if (${id(pname)} != null) ${expr(whenSome)} else ${expr(whenNull)}")
+        line(s"${beanPrefix(f, t.methods)}${visPrefix(f.mods)}$kw ${id(f.name)}: ${tpe(f.tpe)} = if (${id(pname)} != null) ${expr(whenSome)} else ${expr(whenNull)}")
         line()
       case FieldLine.DefaultInit(f) =>
         trivia(f.leading)
-        line(s"${visPrefix(f.mods)}var ${id(f.name)}: ${tpe(f.tpe)} = ${defaultOf(f.tpe)}")
+        line(s"${beanPrefix(f, t.methods)}${visPrefix(f.mods)}var ${id(f.name)}: ${tpe(f.tpe)} = ${defaultOf(f.tpe)}")
         line()
     }
     plan.secondaryCtors.foreach { sc =>
@@ -374,9 +374,11 @@ private final class Printer(unit: BUnit, prov: Provenance, sentinels: Set[String
       case (Ident(_, RefKind.Param(true)), _)                  => expr(stripped) + "*"
       case _                                                   => expr(stripped)
 
-  private def paramStr(p: CtorPlan.Param): String =
+  private def paramStr(p: CtorPlan.Param): String = paramStr(p, Nil)
+
+  private def paramStr(p: CtorPlan.Param, methods: List[BMethod]): String =
     p.promoted match
-      case Some(f) => s"${visPrefix(f.mods)}val ${id(p.p.name)}: ${tpe(p.p.tpe)}"
+      case Some(f) => s"${beanPrefix(f, methods)}${visPrefix(f.mods)}val ${id(p.p.name)}: ${tpe(p.p.tpe)}"
       case None    => paramOf(p.p)
 
   private def paramOf(p: BParam): String =
@@ -386,6 +388,16 @@ private final class Printer(unit: BUnit, prov: Provenance, sentinels: Set[String
         case other        => tpe(other) + "*"
     else tpe(p.tpe)
     s"${id(p.name)}: $t"
+
+  /** Java PUBLIC fields are reflectively visible (Jackson/beans introspection);
+    * Scala fields compile to private+accessor — @BeanProperty restores getters.
+    * Skipped when the class already declares the bean method. */
+  private def beanPrefix(f: BField, methods: List[BMethod]): String =
+    if f.mods.vis != Vis.Public then ""
+    else
+      val cap = f.name.capitalize
+      val clash = methods.exists(m => m.name == s"get$cap" || m.name == s"is$cap" || m.name == s"set$cap")
+      if clash then "" else "@scala.beans.BeanProperty "
 
   private def annotationLines(m: Mods): Unit =
     m.annotations.foreach { a =>
@@ -581,7 +593,7 @@ private final class Printer(unit: BUnit, prov: Provenance, sentinels: Set[String
               trivia(f.leading)
               val kw = if f.mods.isFinal then "val" else "var"
               val rhs = f.init.map(expr).getOrElse(defaultOf(f.tpe))
-              line(s"${visPrefix(f.mods)}$kw ${id(f.name)}: ${tpe(f.tpe)} = $rhs")
+              line(s"${beanPrefix(f, methods)}${visPrefix(f.mods)}$kw ${id(f.name)}: ${tpe(f.tpe)} = $rhs")
             }
             init.foreach(stmt)
             methods.foreach(methodDecl)
@@ -686,6 +698,10 @@ private final class Printer(unit: BUnit, prov: Provenance, sentinels: Set[String
             case (Ident(_, RefKind.Param(true)), _, Formal(BType.Arr(el), false)) =>
               val conv = expr(a) + ".toArray"
               if BType.isObject(el) then conv + ".asInstanceOf[Array[AnyRef]]" else conv
+            // varargs param into a plain Object slot: Java's runtime value is an
+            // Object[] (isArray-visible) — Scala's Seq must materialize
+            case (Ident(_, RefKind.Param(true)), _, Formal(t, false)) if BType.isObject(t) =>
+              expr(a) + ".toArray"
             case _ => expr(a)
         }
       case _ => args.map(expr)
