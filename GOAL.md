@@ -38,11 +38,15 @@ Checklist:
       UnparsedPart start()/end() implement Part) — now guarded by @Override +
       supertype nilary-member check. Blockers 9 → 8. liqp Test/compile exit=0,
       suite 639/639.
-- [ ] Blocker burn remainder (8, all ctor shapes): arity-mismatch ×2
-      (DependentItemMap, PlainSegmentBuilder), 2-ctor field logic ×2
-      (SegmentedSequenceTree, TagRange), 3-ctor ×2 (AttributeProviderAdapter,
-      LinkResolverAdapter), 4-ctor ×2 (BasedSegmentBuilder, HtmlWriter);
-      XwikiSurvey → 0 blockers
+- [x] Blocker wave 3 (commit 246210a): resolveThisChain (subclass
+      super(subsetArgs) resolves through the parent's this()-chain to the
+      canonical super arity — clears DependentItemMap, PlainSegmentBuilder)
+      and shared-super synthetic primary (no no-arg ctor but all ctors share
+      super(<const>) → primary carries it, each replays own body — clears the
+      two adapters). Blockers 8 → 4. liqp 639/639, flexmark 749 → 753.
+- [ ] Blocker burn remainder (4, genuine multi-field logic): 2-ctor
+      (SegmentedSequenceTree, TagRange) + 4-ctor (BasedSegmentBuilder,
+      HtmlWriter); XwikiSurvey → 0 blockers
 - [ ] Port program written against the framework (PortProgram-style entry,
       dispositions declared, vocabulary + passes as needed)
 - [ ] Generated sbt project compiles; ported test suite green on JVM
