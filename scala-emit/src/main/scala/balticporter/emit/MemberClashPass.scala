@@ -65,7 +65,17 @@ object MemberClashPass:
     * Rename such locals `x` → `x$loc` (Ident(Local) refs only; calls are untouched). */
   private def fixLocals(t0: BTypeDecl, inherited: Set[String] = Set.empty): BTypeDecl =
     val t = t0.copy(nested = t0.nested.map(fixLocals(_, inherited)))
-    val methodNames = (t.methods ++ t.staticMethods).map(_.name).toSet ++ inherited
+    // this-method calls in the bodies — catches JDK-inherited methods (length() from
+    // CharSequence) that aren't in the closure registry: a local shadowing one still clashes
+    val thisCallNames = collection.mutable.Set[String]()
+    def scan(body: List[BStmt]): Unit =
+      body.foreach(s => BirTransform.mapStmt(s) {
+        case c @ Call(Recv.OnThis, n, _, _, _) => thisCallNames += n; c
+        case e                                 => e
+      })
+    (t.methods ++ t.staticMethods).foreach(_.body.foreach(scan))
+    t.ctors.foreach(c => scan(c.body))
+    val methodNames = (t.methods ++ t.staticMethods).map(_.name).toSet ++ inherited ++ thisCallNames
     if methodNames.isEmpty then t
     else
       def renStmt(s: BStmt): BStmt =
