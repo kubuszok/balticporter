@@ -257,7 +257,14 @@ Checklist:
             `c = (c op x).toChar` for narrow LHS types (Cast of a Prim renders as
             `.toChar`/`.toByte`/`.toShort`). 80 → 79. liqp compile GREEN, suite
             639/639, LiqpCorpus PARITY_FAIL=0.
-      - [ ] Hard tail (~79, override territory / Spoon-limited): F-bounded sequence
+      - [~] wave 28 (this commit): override sweep resumes — SubSequence + CharSubSequence
+            (BasedSequenceImpl subclasses whose two private ctors call super(hash) with
+            differing values, so the funnel emitted `extends BasedSequenceImpl` with no
+            super arg — E171 missing _hash). Copy-patch overrides: private no-arg primary
+            passes super(0), aux ctors overwrite this.hash; SubSequence also fixes a
+            getOption[T] ternary cast (Any → T). 79 → 76. Engine untouched (override
+            files only); corpus-tests compiles so liqp unaffected.
+      - [ ] Hard tail (~76, override territory / Spoon-limited): F-bounded sequence
             family (getBuilder Nothing, SequenceUtils T-vs-CharSequence, IRichSequence
             Base/SubSequence/SegmentedSequence ~20 — whole-file overrides); Formatter
             family (generic inference/overload ~14); collection null-typevar (~9 —
