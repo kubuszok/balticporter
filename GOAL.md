@@ -115,7 +115,14 @@ Checklist:
             method → null.asInstanceOf[V] (return type always in scope). Call-
             arg variant reverted — JDK-method TVars aren't nameable at the call
             site (broke Collections.singletonMap). 200 → 193. 639/639.
-      - [ ] remaining (193, visitor-family-dominated): AstActionHandler is the
+      - [x] wave 11 (commit d9f29fd): inherited-method local shadow (local
+            named like an inherited method → renamed; fixLocals now walks
+            super+interface method names) + wildcard-local inference context
+            (keep declared type on call-inits with a nested wildcard so a
+            generic method's return type var doesn't infer Nothing —
+            getBuilder()). Entangled in the IRichSequenceBase/SequenceBuilder
+            cluster; together 193 → 180. 639/639.
+      - [ ] remaining (180, visitor-family-dominated): AstActionHandler is the
             dominant blocker — Java `X...`/`X[]...` varargs both erase to Seq
             in Scala (Conflicting definitions) + F-bounded `[?]` vs `[Node]`.
             ~5 files (NodeVisitor, TextCollectingVisitor, the two Adapters,
