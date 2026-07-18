@@ -42,9 +42,24 @@ Checklist:
       (625 + 14 new). NOTE: sbt 2.0 caches test results — byte-identical
       regenerated tests report `Total 0` from plain `test`; force full runs
       with `testOnly *`.
-- [ ] flexmark tail remainder (9): ctor-funnel shapes (8: no-identity-super 4,
-      primitive sentinel 2, 3-ctor field logic 2) + public field-vs-method
-      clash ADDITIONAL_CHARS (1) — assess translate vs ledger/override per file
+- [x] Ctor-funnel wave 3 + replay soundness (commit 2782867): local no-arg-
+      primary generalization (body-ful/delegating no-arg flattens into the
+      synthetic primary; covers ListOptions family + primitive-capacity
+      builders). HONESTY FIX: effect-replay was emitting illegal subclass
+      writes to private/final parent members (invisible — no flexmark compile
+      gate); the registry now refuses those, and private NON-final fields
+      assigned by subclass replays widen to `protected var` (the hand-port
+      corpus's own idiom: ssg-md Node.chars). Net: 746/763 (97.8%) all-sound
+      (previous 754 included ~13 fake-greens). Liqp battery green, 639/639.
+- [ ] flexmark tail remainder (17, all honest refusals): private-FINAL parent
+      effects (media-link family 4 + wiki 2), arity mismatches (6), multi-root
+      field logic (6), public field-vs-method clash Parsing.ADDITIONAL_CHARS
+      (1) — dispositions: override/ledger; none block the ≥95% gate line
+- [ ] OPEN HAZARD (recorded 2026-07-18): ActionCache dep keys use Interface
+      Hashes (signature surface) but effect-replay + widening read parent ctor
+      BODIES — a parent body edit may not invalidate dependent units. Needs a
+      registry digest in the cache key (sentinel-digest pattern) before the
+      bump demo relies on scoped regen.
 - [ ] Vocabulary/Tier-3 productization (deferred from M2/M4) — needed for the
       sge (using Sge) pass
 - [ ] sge extension port (jbump or noise4j) + skeleton diff vs sge hand port
