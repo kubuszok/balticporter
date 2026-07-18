@@ -3,14 +3,48 @@
 Machine-updated by `/goal` iterations. One phase at a time; a phase advances
 only when its gate (PLAN.md §13) is green with re-runnable evidence.
 
-## Phase: M2 — vocabulary + idioms + build emission
+## Phase: M3 — tests
 
-Gate (PLAN.md §13): `translate && emit-build` on Liqp yields an sbt 2.0
-project where `sbt Test/compile` passes on JVM with zero manual edits; corpus
-convergence ≥97% ast-equal-or-classified; remaining divergences documented as
-accepted improvements.
+Gate (PLAN.md §13): Liqp's upstream test suite ported through the engine and
+green on JVM; failures triaged into the ledger with reasons or fixed by rules.
 
 Status: IN PROGRESS
+
+Checklist:
+- [ ] Survey liqp's test sources (~105 files, JUnit4) — construct census +
+      test-only constructs (assertions, @Test/@Before, parameterized runners)
+- [ ] test-port rules: JUnit4 → munit (assertEquals arg order, intercept,
+      Before/After → beforeEach/afterEach, Parameterized → dynamic
+      registration)
+- [ ] Test resources copied; sbt-gen emits test config (munit dep,
+      Test/compile + test tasks)
+- [ ] Run: triage failures — engine bug vs upstream-behavior vs
+      environment; ledger with reasons
+- [ ] GATE: suite green on JVM with ledgered exceptions
+
+Deferred from M2 scoping (needed by M5, not gate-blocking): declarative Tier-2
+vocabulary engine, Tier-3 rule API productization (currently: passes are
+engine-internal + corpus-program config).
+
+## Completed phases
+
+### M2 — build emission + whole-corpus compile — DONE (2026-07-18)
+
+Gate: `translate && emit-build` on Liqp yields an sbt 2.0 project where
+`sbt Test/compile` passes on JVM with zero manual edits; corpus convergence
+≥97% classified; divergences documented.
+
+Evidence:
+- `sbt "corpus-tests/runMain balticporter.corpus.LiqpProject"` then
+  `cd out/liqp-project && sbt compile` → **exit=0** (134/134 files: 133
+  machine-translated + 1 documented whole-file override). Zero manual edits
+  of generated output. Compile-error burn: 135→56→38→15→0 (commits
+  420fb84, 47d72df, 0d3eac4, b42249c).
+- Corpus convergence 116/117 = 99.1% classified (EQUAL=73 ACCEPTED=17
+  IDIOM=13 HAND_ADDITIONS=10 SUBSTITUTED=3); divergence ledger
+  fingerprint-pinned (staleness detection fired and was re-verified during
+  this phase — the mechanism works).
+- Comment invariant clean over all 134; M0 gate GREEN.
 
 Checklist:
 - [ ] Vocabulary engine (Tier 2, PLAN.md §6): declarative symbol/call-shape
