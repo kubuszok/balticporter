@@ -546,7 +546,9 @@ private final class Printer(
 
   private def paramStr(p: CtorPlan.Param, methods: List[BMethod], reassigned: Set[String] = Set.empty): String =
     p.promoted match
-      case Some(f)                               => s"${beanPrefix(f, methods)}${visPrefix(f.mods)}val ${id(p.p.name)}: ${tpe(p.p.tpe)}"
+      // a promoted field reassigned in the ctor body (Java mutates the param before
+      // storing the final field) must be `var`, not `val`
+      case Some(f)                               => s"${beanPrefix(f, methods)}${visPrefix(f.mods)}${if reassigned.contains(p.p.name) then "var" else "val"} ${id(p.p.name)}: ${tpe(p.p.tpe)}"
       // Java ctor params are mutable; a primary-ctor param reassigned in the ctor body
       // becomes a `private var` field (Scala params are val). The super call still reads
       // its value, and the body's `p += ...` / `p++` mutate the field.
@@ -559,20 +561,26 @@ private final class Printer(
     if pnames.isEmpty then Set.empty
     else
       val out = collection.mutable.Set[String]()
+      // a primary-ctor param may be read back either as its parameter (Param) or, when
+      // promoted to a field, as an own-field reference — both count as the same binding
+      def isTarget(e: BExpr): Option[String] = e match
+        case Ident(n, RefKind.Param(_)) if pnames(n) => Some(n)
+        case Ident(n, RefKind.OwnField) if pnames(n) => Some(n)
+        case _                                       => None
       def exprScan(e: BExpr): Unit =
         BirTransform.mapExpr(e) { x =>
           x match
-            case AssignExpr(Ident(n, RefKind.Param(_)), _) if pnames(n)    => out += n
-            case IncDecExpr(Ident(n, RefKind.Param(_)), _, _) if pnames(n) => out += n
-            case _                                                         => ()
+            case AssignExpr(t, _) => isTarget(t).foreach(out += _)
+            case IncDecExpr(t, _, _) => isTarget(t).foreach(out += _)
+            case _                => ()
           x
         }
       def walk(ss: List[BStmt]): Unit = ss.foreach(s => walkK(s.k))
       def walkK(k: BStmtK): Unit = k match
         case BStmtK.Assign(lhs, rhs, _) =>
-          lhs match
-            case Ident(n, RefKind.Param(_)) if pnames(n) => out += n
-            case _                                       => exprScan(lhs)
+          isTarget(lhs) match
+            case Some(n) => out += n
+            case None    => exprScan(lhs)
           exprScan(rhs)
         case BStmtK.LocalVar(_, _, i, _) => i.foreach(exprScan)
         case BStmtK.ExprStmt(e)          => exprScan(e)

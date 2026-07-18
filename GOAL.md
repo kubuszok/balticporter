@@ -243,9 +243,18 @@ Checklist:
             so: rename to `_p`, read `_p` in the delegate args, and prepend `var p = _p`
             after the `this(...)` delegate (mirrors the method-param path). 87 → 84.
             liqp compile GREEN, suite 639/639, LiqpCorpus PARITY_FAIL=0.
-      - [ ] Continue: narrow-type compound-assign (Char |=), promoted-field reassign
-            (ParsedOption), F-bounded getBuilder, Formatter family, collection
-            null-typevar,
+      - [x] wave 26 (this commit): ENGINE fix — reassigned PROMOTED-field param → var
+            (completes the ctor-mutability trilogy: primary non-promoted w24, aux w25,
+            promoted here). ParsedOption promotes `optionResult`/`messages` (Java-final
+            fields whose param is mutated in the ctor before the field is stored) — a
+            promoted `val` reassigned in the body fails. reassignedParams now also
+            counts OwnField-referenced targets (a promoted param reads back as a field),
+            and paramStr emits promoted reassigned params as var. 84 → 80. liqp compile
+            GREEN, suite 639/639, LiqpCorpus PARITY_FAIL=0.
+      - [ ] Continue (hard tail): narrow-type compound-assign (Char |=), F-bounded
+            sequence family (getBuilder Nothing, SequenceUtils T-vs-CharSequence —
+            override territory), Formatter family (generic inference/overload),
+            collection null-typevar,
             + LinkResolverAdapter + BlockNodeVisitor + AstActionHandler base
             (F-bounded visitor family) and IRichSequenceBase/SequenceBuilder
             (F-bounded sequence bases) as PLAN §7 whole-file overrides. This is
