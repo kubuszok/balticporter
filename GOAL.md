@@ -55,11 +55,13 @@ Checklist:
       effects (media-link family 4 + wiki 2), arity mismatches (6), multi-root
       field logic (6), public field-vs-method clash Parsing.ADDITIONAL_CHARS
       (1) — dispositions: override/ledger; none block the ≥95% gate line
-- [ ] OPEN HAZARD (recorded 2026-07-18): ActionCache dep keys use Interface
-      Hashes (signature surface) but effect-replay + widening read parent ctor
-      BODIES — a parent body edit may not invalidate dependent units. Needs a
-      registry digest in the cache key (sentinel-digest pattern) before the
-      bump demo relies on scoped regen.
+- [x] Cache-key hazard CLOSED (commit 43ed343): ctor-registry digest (shapes +
+      bodies + field mods) joined the action key — parent ctor body edits now
+      invalidate dependents by construction. Bonus find: EngineFingerprint
+      keyed jars by absolute path, but sbt 2.0 forked runs use per-run random
+      bg-jobs jar paths — warm hits had silently dropped to 0; filename keys
+      fixed it. Evidence: warm 133 hits / 0 translated; --no-cache
+      byte-identical (tree 5b2271afd06a = the suite-green tree).
 - [ ] Vocabulary/Tier-3 productization (deferred from M2/M4) — needed for the
       sge (using Sge) pass
 - [ ] sge extension port (jbump or noise4j) + skeleton diff vs sge hand port
