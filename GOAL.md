@@ -14,9 +14,10 @@ Status: IN PROGRESS
 Checklist:
 - [x] flexmark coverage baseline (commit ea32f02): 543/845 (64%) on first
       contact — Liqp-hardened rules generalize. Measured worklist recorded.
-- [ ] Quick wins: Java assert (46), @Deprecated→@deprecated (23),
-      package-info no-types (82 — verify + handle), ctor refs X::new (11),
-      do-while (4), switch fallthrough (5), comment losses (12)
+- [x] Quick wins (commit 8509619): assert, do-while (exact semantics),
+      ctor refs, @Deprecated, switch fallthrough tail-duplication,
+      field-init+ctor-assign, package-info categorized. 543 → 634 OK (83% of
+      real files). Liqp fully regression-checked (suite exit=0).
 - [ ] Ctor-funnel next tier (~108 files): synthesized-full-primary strategy
       for N-ctor different-super shapes at scale
 - [ ] Vocabulary/Tier-3 productization (deferred from M2/M4) — needed for the
