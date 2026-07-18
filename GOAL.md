@@ -219,8 +219,16 @@ Checklist:
             Safe: a param used as a function is invoked via Recv.On, so OnThis always
             means this's method. does-not-take-parameters 4 → 0. 101 → 97. liqp
             compile GREEN, suite 639/639, LiqpCorpus PARITY_FAIL=0.
-      - [ ] Continue: IRichSequenceBase (overloaded method-ref eta `this::matches`,
-            F-bounded getBuilder), Formatter family, collection null-typevar,
+      - [x] wave 23 (this commit): ENGINE fix — SAM-cast of lambda/method-ref →
+            ascription. Java `(Predicate) this::matches` is a SAM conversion, not a
+            runtime cast; the engine emitted `.asInstanceOf[Predicate]` (a Function
+            isn't a Predicate at runtime — always wrong) AND left `this.matches`
+            ambiguous over overloads. Printer now ascribes `(f: I)` when a cast's
+            operand is a Lambda/MethodRef/UnboundMethodRef: SAM-converts AND the
+            target type resolves the overloaded eta. Ambiguous-overload 7 → 1.
+            97 → 91. liqp compile GREEN, suite 639/639, LiqpCorpus PARITY_FAIL=0.
+      - [ ] Continue: F-bounded getBuilder (Nothing), Formatter family, collection
+            null-typevar,
             + LinkResolverAdapter + BlockNodeVisitor + AstActionHandler base
             (F-bounded visitor family) and IRichSequenceBase/SequenceBuilder
             (F-bounded sequence bases) as PLAN §7 whole-file overrides. This is

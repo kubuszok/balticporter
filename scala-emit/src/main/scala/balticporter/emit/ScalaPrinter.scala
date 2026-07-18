@@ -909,6 +909,11 @@ private final class Printer(
     case Cast(BType.Prim(p), e1) =>
       val conv = primMap.getOrElse(p, unsupported(s"cast to $p"))
       s"${expr(e1)}.to$conv"
+    // a Java cast of a lambda / method reference to a functional interface is a SAM
+    // conversion, not a runtime cast — ascribe it (`(f: I)`) so Scala converts, and so
+    // the target type resolves an overloaded method reference (`(this.matches: Predicate)`)
+    case Cast(t, e1) if e1.isInstanceOf[Lambda] || e1.isInstanceOf[MethodRef] || e1.isInstanceOf[UnboundMethodRef] =>
+      s"(${expr(e1)}: ${tpe(t)})"
     case Cast(t, e1)       => s"${expr(e1)}.asInstanceOf[${tpe(t)}]"
     case InstanceOf(e1, t) => s"${expr(e1)}.isInstanceOf[${tpe(t)}]"
     case ClassLit(t) =>
