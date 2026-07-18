@@ -18,11 +18,17 @@ Checklist:
       table format
 - [ ] Tier 3 project-rule API: BIR passes + Scalameta post-passes registered
       per plan (first rules: ssg header template, package rename liqp→<target>)
-- [ ] sbt-gen: emit build.sbt (sbt 2.0.x, Scala 3.8.4) + project/ +
-      module layout for the translated Liqp tree; scala-cli gate replaced by
-      real `sbt Test/compile`
-- [ ] Whole-corpus compile: translate all supported files (107) into the
-      generated project, shims for the unsupported 10, compile on JVM
+- [x] sbt-gen + whole-corpus assembly (2026-07-18, commit 420f b84): LiqpProject
+      emits all 134 upstream files (done + ssg-skipped packages) + generated
+      build.sbt + ANTLR parser jar; whole-file override mechanism (header-
+      checked) with LiquidException as first override. New rules en route:
+      identity-basis ctor funnel (+uses-this purity guard), static/instance
+      init blocks (comment invariant caught silent drops!), i++-aware
+      mutability, boxed-name collisions, raw-type wildcard fill.
+- [ ] Whole-corpus scalac gate: errors 135 → 56. Worklist (measured):
+      varargs forwarding into overloaded ctors (InsertionNode, 11),
+      conflicting definitions (5), Class.class chains (2), toArray/copyOfRange
+      overload resolution (2+2), NodeVisitor (10, ANTLR-heavy), rest singles
 - [x] Unsupported tail 10→4 (2026-07-18, commit fd0c584): SentinelRegistry
       (cross-unit fixpoint; super() ≡ this(null) under sentinel-merged parents
       — Tag/Block chains), multi-statement lambdas, unbound method refs as
