@@ -53,10 +53,13 @@ Checklist:
       this()-delegators (roots feed the synthetic primary; delegators stay
       aux→sibling, depth-ordered). Clears BasedSegmentBuilder. Blockers 3 → 2.
       liqp 639/639, flexmark 754 → 755.
-- [ ] Final 2 blockers → override layer: TagRange (Range copy-ctor vs int,int
-      super targets) and HtmlWriter (3 distinct super targets + method-call
-      bodies) are genuinely irreducible. Wire whole-file overrides (or, better,
-      a constructor-splice mechanism) into XwikiProject.
+- [x] Closure TRANSLATE-COMPLETE (commit 5014a43): built the PLAN §7 L2
+      constructor-splice override (CtorOverride — replace only the ctor block,
+      engine does fields/methods/companion) and extended maximalPrimaryPlan to
+      replay method-call body statements post-this(). HtmlWriter mechanized
+      (its 3 supers all normalize through HtmlAppendableBase's this-chain);
+      only TagRange (Range copy-ctor) needs the 3-line override. xwiki closure
+      533/533 translate, 0 UNSUPPORTED. liqp 639/639, flexmark 755 → 756.
 - [ ] XwikiProject assembly: sbt-gen the xwiki-macros module set + ported test
       suite; compile + tests green on JVM (the M6 core gate)
 - [ ] Framework docs + example port program published
