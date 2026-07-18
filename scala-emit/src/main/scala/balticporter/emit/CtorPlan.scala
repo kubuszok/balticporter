@@ -138,6 +138,9 @@ object CtorPlan:
         CtorPlan(params, Some(c.mods), sentinelLike = false, c.leading ++ promotedTrivia,
           c.superArgs.getOrElse(Nil), rest, fieldLines, secondaries)
 
+    def identityBasisPlan(ctors: List[BCtor], roots: List[BCtor]): Option[CtorPlan] =
+      identityBasisPlanImpl(ctors, roots, splitAssigns, rootPlan)
+
     t.ctors match
       case Nil =>
         CtorPlan(Nil, None, sentinelLike = false, Nil, Nil, Nil, t.fields.map(fieldWithOwnInit), Nil)
@@ -219,6 +222,7 @@ object CtorPlan:
                 t.fields.map(fieldWithOwnInit),
                 secondaries,
               )
+        else if identityBasisPlan(ctors, roots).isDefined then identityBasisPlan(ctors, roots).get
         else
           ctors.sortBy(_.params.length) match
             case List(noArg, paramful) if noArg.params.isEmpty && paramful.params.length == 1 =>
@@ -289,6 +293,87 @@ object CtorPlan:
                     List(Secondary(noArg.leading, noArg.mods, Nil, List(Lit(LitKind.NullL, "null")))),
                   )
             case _ => fail(s"${ctors.length} constructors with field logic — no funnel strategy applies")
+
+  /** Identity-basis funnel: a root ctor P whose super args are all distinct param refs
+    * and whose field assigns are all param refs, with every param used exactly once,
+    * is a complete basis — any sibling with the SAME super arity and SAME assigned
+    * field set delegates by filling P's slots from its own exprs:
+    *   P(in, path){ super(in); this.path = path }
+    *   R(path){ super(CharStreams.fromPath(path)); this.path = path }
+    *     → def this(path) = this(CharStreams.fromPath(path), path)
+    */
+  private def identityBasisPlanImpl(
+      ctors: List[BCtor],
+      roots: List[BCtor],
+      splitAssigns: List[BStmt] => (List[(String, BExpr)], List[BStmt]),
+      rootPlan: (BCtor, List[Secondary]) => CtorPlan,
+  ): Option[CtorPlan] =
+    def paramRef(e: BExpr): Option[String] = e match
+      case Ident(n, RefKind.Param(_)) => Some(n)
+      case _                          => None
+    val basis = roots.find { p =>
+      val (pa, pr) = splitAssigns(p.body)
+      val superParams = p.superArgs.getOrElse(Nil).map(paramRef)
+      val assignParams = pa.map((_, e) => paramRef(e))
+      pr.isEmpty &&
+      superParams.forall(_.isDefined) && assignParams.forall(_.isDefined) && {
+        val used = superParams.flatten ++ assignParams.flatten
+        used.sorted == p.params.map(_.name).sorted && used.distinct.length == used.length
+      }
+    }
+    basis.flatMap { p =>
+      val (pAssigns, _) = splitAssigns(p.body)
+      val superParams = p.superArgs.getOrElse(Nil).flatMap(paramRef)
+      val fieldOfParam: Map[String, String] = pAssigns.flatMap((f, e) => paramRef(e).map(_ -> f)).toMap
+      val others = ctors.filterNot(_ eq p)
+      val secondaries: Option[List[Secondary]] =
+        others.foldRight(Option(List.empty[Secondary])) { (r, acc) =>
+          acc.flatMap { tail =>
+            val (rAssigns, rRest) = splitAssigns(r.body)
+            val rSuper = r.superArgs.getOrElse(Nil)
+            if r.thisArgs.isDefined || rSuper.length != superParams.length ||
+              rAssigns.map(_._1).toSet != pAssigns.map(_._1).toSet ||
+              rAssigns.map(_._1).distinct.length != rAssigns.length
+            then None
+            else
+              val rAssignMap = rAssigns.toMap
+              val delegateArgs = p.params.map { param =>
+                superParams.indexOf(param.name) match
+                  case -1 => rAssignMap(fieldOfParam(param.name))
+                  case i  => rSuper(i)
+              }
+              // delegate args run BEFORE construction — they may not touch `this`
+              if delegateArgs.exists(usesThis) then None
+              else Some(Secondary(r.leading, r.mods, r.params, delegateArgs, rRest) :: tail)
+          }
+        }
+      secondaries.map(rootPlan(p, _))
+    }
+
+  /** true when the expression touches the instance under construction. */
+  private def usesThis(e: BExpr): Boolean = e match
+    case This                       => true
+    case Ident(_, RefKind.OwnField) => true
+    case Select(r, _)               => usesThis(r)
+    case ArrayLength(a)             => usesThis(a)
+    case ArrayAccess(a, i)          => usesThis(a) || usesThis(i)
+    case Call(recv, _, args, _, _) =>
+      val recvThis = recv match
+        case Recv.OnThis | Recv.OnSuper => true
+        case Recv.On(r)                 => usesThis(r)
+        case Recv.Static(_)             => false
+      recvThis || args.exists(usesThis)
+    case New(_, args, _)        => args.exists(usesThis)
+    case NewArray(_, d, i)      => d.exists(usesThis) || i.exists(_.exists(usesThis))
+    case Binary(_, l, r, _)     => usesThis(l) || usesThis(r)
+    case Unary(_, x, _)         => usesThis(x)
+    case Ternary(c, t, e2)      => usesThis(c) || usesThis(t) || usesThis(e2)
+    case Cast(_, x)             => usesThis(x)
+    case InstanceOf(x, _)       => usesThis(x)
+    case Typed(x, _)            => usesThis(x)
+    case Lambda(_, body)        => body.fold(_ => true, usesThis) // conservative for stmt bodies
+    case MethodRef(p2, _)       => p2.fold(_ => false, usesThis)
+    case _: UnboundMethodRef | _: Ident | _: Lit | _: ClassLit => false
 
   /** Java default value for a type, as an expression. */
   private def javaDefault(t: BType): BExpr = t match

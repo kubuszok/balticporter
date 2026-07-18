@@ -81,7 +81,9 @@ object BExpr:
   /** anonBody: Java anonymous subclass — `Some(empty)` for the super-type-token
     * pattern `new X(...) {}`, `Some(members)` for bodies with fields/methods. */
   final case class New(tpe: BType.Ref, args: List[BExpr], anonBody: Option[BAnonBody] = None) extends BExpr
-  final case class BAnonBody(fields: List[BField], methods: List[BMethod])
+  /** init: instance-initializer blocks (the double-brace idiom) — plain statements
+    * in the Scala anonymous body. */
+  final case class BAnonBody(fields: List[BField], methods: List[BMethod], init: List[BStmt] = Nil)
   /** dims for `new T[n]`; init for `new T[]{...}` / `{...}` initializers. */
   final case class NewArray(elem: BType, dims: List[BExpr], init: Option[List[BExpr]]) extends BExpr
 
@@ -187,6 +189,10 @@ final case class BTypeDecl(
     staticMethods: List[BMethod],
     /** enum constants (kind == Enum only). */
     enumCases: List[BEnumCase] = Nil,
+    /** `static { ... }` blocks → companion object body (source order). */
+    staticInit: List[BStmt] = Nil,
+    /** instance initializer blocks → class body before ctor statements. */
+    instanceInit: List[BStmt] = Nil,
     nested: List[BTypeDecl],
     /** extracted `private static final long serialVersionUID = N` if present. */
     serialVersionUID: Option[Long],

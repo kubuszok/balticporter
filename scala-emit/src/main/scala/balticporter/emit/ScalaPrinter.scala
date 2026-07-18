@@ -94,12 +94,20 @@ private final class Printer(unit: BUnit, prov: Provenance, sentinels: Set[String
     case -1 => ""
     case i  => q.substring(0, i)
 
+  /** boxed types whose simple names collide with Scala primitives — never shortened
+    * (java.lang.Long.MAX_VALUE must not become scala.Long.MAX_VALUE). */
+  private val collidingJavaLang = Set(
+    "java.lang.Long", "java.lang.Double", "java.lang.Float", "java.lang.Boolean",
+    "java.lang.Byte", "java.lang.Short", "java.lang.Character",
+  )
+
   private def refName(q0: String): String =
     // Spoon qualifies nested types as Outer$Inner; the companion encoding makes that Outer.Inner
     val q = q0.replace('$', '.')
     val name =
       if q == BType.ObjectQ then "Any"
       else if q == "java.lang.String" then "String"
+      else if collidingJavaLang.contains(q) then q
       else if pkgOfQ(q) == "java.lang" then q.substring("java.lang.".length)
       else if q.startsWith(unit.pkg + ".") && pkgOfQ(q0).length <= unit.pkg.length then
         q.substring(unit.pkg.length + 1)
@@ -216,7 +224,7 @@ private final class Printer(unit: BUnit, prov: Provenance, sentinels: Set[String
     * init-order caveats documented there).
     */
   private def companion(t: BTypeDecl): Unit =
-    if t.staticFields.nonEmpty || t.staticMethods.nonEmpty || t.nested.nonEmpty then
+    if t.staticFields.nonEmpty || t.staticMethods.nonEmpty || t.nested.nonEmpty || t.staticInit.nonEmpty then
       line()
       line(s"object ${id(t.name)} {")
       indent += 1
@@ -227,6 +235,11 @@ private final class Printer(unit: BUnit, prov: Provenance, sentinels: Set[String
         line(s"${visPrefix(f.mods)}$kw ${id(f.name)}: ${tpe(f.tpe)} = $rhs")
         line()
       }
+      if t.staticInit.nonEmpty then
+        // Java `static { ... }` blocks — companion body statements (init-order caveat:
+        // Scala companions initialize lazily on first access, RESEARCH.md §6 trap 1)
+        t.staticInit.foreach(stmt)
+        line()
       t.staticMethods.foreach(methodDecl)
       t.nested.foreach { n =>
         typeDecl(n)
@@ -303,6 +316,9 @@ private final class Printer(unit: BUnit, prov: Provenance, sentinels: Set[String
         line("}")
       line()
     }
+    if t.instanceInit.nonEmpty then
+      t.instanceInit.foreach(stmt)
+      line()
     if plan.primaryBody.nonEmpty then
       plan.primaryBody.foreach(stmt)
       line()
@@ -463,12 +479,20 @@ private final class Printer(unit: BUnit, prov: Provenance, sentinels: Set[String
       s"$target${id(name)}(${adaptedArgs(args, formals, ownerQ).mkString(", ")})"
 
     case New(t, args, anon) =>
+      // wildcards are illegal in instantiation type args (Java diamond/raw) — strip
+      // and let inference do what javac did
+      def hasWild(x: BType): Boolean = x match
+        case _: BType.Wild      => true
+        case BType.Ref(_, as)   => as.exists(hasWild)
+        case BType.Arr(e2)      => hasWild(e2)
+        case _                  => false
+      val newT = if t.args.exists(hasWild) then t.copy(args = Nil) else t
       val argsStr = if args.isEmpty && anon.isDefined then "" else s"(${args.map(expr).mkString(", ")})"
-      val base = s"new ${tpe(t)}$argsStr"
+      val base = s"new ${tpe(newT)}$argsStr"
       anon match
         case None => base
-        case Some(BAnonBody(Nil, Nil)) => base + " {}"
-        case Some(BAnonBody(fields, methods)) =>
+        case Some(BAnonBody(Nil, Nil, Nil)) => base + " {}"
+        case Some(BAnonBody(fields, methods, init)) =>
           val body = captured {
             indent += 1
             fields.foreach { f =>
@@ -477,6 +501,7 @@ private final class Printer(unit: BUnit, prov: Provenance, sentinels: Set[String
               val rhs = f.init.map(expr).getOrElse(defaultOf(f.tpe))
               line(s"${visPrefix(f.mods)}$kw ${id(f.name)}: ${tpe(f.tpe)} = $rhs")
             }
+            init.foreach(stmt)
             methods.foreach(methodDecl)
             indent -= 1
           }

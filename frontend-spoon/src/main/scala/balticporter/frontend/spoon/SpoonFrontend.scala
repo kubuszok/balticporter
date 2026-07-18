@@ -103,7 +103,23 @@ private final class UnitBuilder(sourcePath: String, source: String):
     case p if p.isPrimitive => BType.Prim(p.getSimpleName)
     case r =>
       val args = r.getActualTypeArguments.asScala.toList.map(btype)
-      BType.Ref(r.getQualifiedName, args)
+      // Java raw types are illegal in Scala type positions — fill with wildcards
+      val filled =
+        if args.nonEmpty then args
+        else
+          rawArity(r) match
+            case 0 => Nil
+            case n => List.fill(n)(BType.Wild(None, None))
+      BType.Ref(r.getQualifiedName, filled)
+
+  private val arityCache = collection.mutable.Map[String, Int]()
+
+  /** formal type-parameter count of the referenced declaration (0 when unresolvable). */
+  private def rawArity(r: CtTypeReference[?]): Int =
+    arityCache.getOrElseUpdate(
+      r.getQualifiedName,
+      scala.util.Try(Option(r.getTypeDeclaration).map(_.getFormalCtTypeParameters.size).getOrElse(0)).getOrElse(0),
+    )
 
   // ---- declarations ----------------------------------------------------------
 
@@ -180,6 +196,13 @@ private final class UnitBuilder(sourcePath: String, source: String):
       checkAnnotations(c)
       val (svuid, fields, staticFields) = extractFields(c)
       val (staticM, instanceM) = c.getMethods.asScala.toList.sortBy(posKey).partition(_.hasModifier(ModifierKind.STATIC))
+      val (staticBlocks, instanceBlocks) = c.getAnonymousExecutables.asScala.toList
+        .sortBy(posKey)
+        .partition(_.hasModifier(ModifierKind.STATIC))
+      def initStmts(blocks: List[CtAnonymousExecutable]): List[BStmt] =
+        blocks.flatMap { b =>
+          BStmt(leadingOf(b), BStmtK.Empty) :: block(b.getBody.getStatements.asScala.toList)
+        }
       BTypeDecl(
         leading = leadingOf(c),
         mods = mods(c),
@@ -197,6 +220,8 @@ private final class UnitBuilder(sourcePath: String, source: String):
         methods = instanceM.map(methodDecl),
         staticFields = staticFields,
         staticMethods = staticM.map(methodDecl),
+        staticInit = initStmts(staticBlocks),
+        instanceInit = initStmts(instanceBlocks),
         nested = nestedOf(c),
         serialVersionUID = svuid,
       )
@@ -302,13 +327,8 @@ private final class UnitBuilder(sourcePath: String, source: String):
     val isOverride = checkAnnotations(m)
     val assigned = collection.mutable.Set[String]()
     Option(m.getBody).foreach { b =>
-      b.getElements(new spoon.reflect.visitor.filter.TypeFilter(classOf[CtAssignment[?, ?]])).asScala.foreach { a =>
-        a.getAssigned match
-          case w: CtVariableWrite[?] =>
-            w.getVariable match
-              case p: CtParameterReference[?] => assigned += p.getSimpleName
-              case _                          => ()
-          case _ => ()
+      m.getParameters.asScala.foreach { p =>
+        if writesToVar(b, p.getSimpleName) then assigned += p.getSimpleName
       }
     }
     BMethod(
@@ -337,9 +357,13 @@ private final class UnitBuilder(sourcePath: String, source: String):
     out.result()
 
   private def blockOf(s: CtStatement): List[BStmt] = s match
-    case null        => Nil
-    case b: CtBlock[?] => block(b.getStatements.asScala.toList)
-    case single      => List(BStmt(leadingOf(single), stmt(single)))
+    case null => Nil
+    case b: CtBlock[?] =>
+      // the block's OWN comments (e.g. `} else /* note */ {`) become leading trivia
+      val own = leadingOf(b)
+      val inner = block(b.getStatements.asScala.toList)
+      if own.isEmpty then inner else BStmt(own, BStmtK.Empty) :: inner
+    case single => List(BStmt(leadingOf(single), stmt(single)))
 
   private def stmt(s: CtStatement): BStmtK = s match
     case v: CtLocalVariable[?] =>
@@ -467,6 +491,7 @@ private final class UnitBuilder(sourcePath: String, source: String):
     val (hasB, hasC) = analyzeLoop(f)
     val v = f.getVariable
     val x = v.getSimpleName
+    val loopVarMutable = Option(f.getBody).exists(writesToVar(_, x))
     val elemT = btype(v.getType)
     val coll = expr(f.getExpression)
     val body = maybeContinueBoundary(hasC, blockOf(f.getBody))
@@ -482,7 +507,7 @@ private final class UnitBuilder(sourcePath: String, source: String):
             Nil,
             BStmtK.While(
               Binary("<", Ident(i, RefKind.Local), ArrayLength(Ident(arr, RefKind.Local))),
-              BStmt(Nil, BStmtK.LocalVar(x, elemT, Some(ArrayAccess(Ident(arr, RefKind.Local), Ident(i, RefKind.Local))), effectivelyFinal = true))
+              BStmt(Nil, BStmtK.LocalVar(x, elemT, Some(ArrayAccess(Ident(arr, RefKind.Local), Ident(i, RefKind.Local))), effectivelyFinal = !loopVarMutable))
                 :: body
                 ::: List(BStmt(Nil, BStmtK.Assign(Ident(i, RefKind.Local), Lit(LitKind.IntL, "1"), Some("+")))),
             ),
@@ -499,7 +524,7 @@ private final class UnitBuilder(sourcePath: String, source: String):
             Nil,
             BStmtK.While(
               Call(Recv.On(Ident(it, RefKind.Local)), "hasNext", Nil, None, None),
-              BStmt(Nil, BStmtK.LocalVar(x, elemT, Some(Call(Recv.On(Ident(it, RefKind.Local)), "next", Nil, None, None)), effectivelyFinal = true))
+              BStmt(Nil, BStmtK.LocalVar(x, elemT, Some(Call(Recv.On(Ident(it, RefKind.Local)), "next", Nil, None, None)), effectivelyFinal = !loopVarMutable))
                 :: body,
             ),
           ),
@@ -540,16 +565,30 @@ private final class UnitBuilder(sourcePath: String, source: String):
       else result :+ BCase(Nil, isDefault = true, List(BStmt(Nil, BStmtK.Empty)))
     BStmtK.Match(scrutinee, withDefault)
 
+  /** Any mutation of the named variable inside scope — plain/compound assignment OR
+    * increment/decrement (i++ is a write even though Spoon models it as a unary op). */
+  private def writesToVar(scope: CtElement, name: String): Boolean =
+    scope
+      .getElements(new spoon.reflect.visitor.filter.TypeFilter(classOf[CtAssignment[?, ?]]))
+      .asScala
+      .exists { a =>
+        a.getAssigned match
+          case w: CtVariableWrite[?] => w.getVariable.getSimpleName == name
+          case _                     => false
+      }
+    || scope
+      .getElements(new spoon.reflect.visitor.filter.TypeFilter(classOf[CtUnaryOperator[?]]))
+      .asScala
+      .exists { u =>
+        import UnaryOperatorKind.*
+        Set(POSTINC, POSTDEC, PREINC, PREDEC).contains(u.getKind) && (u.getOperand match
+          case v: CtVariableAccess[?] => v.getVariable.getSimpleName == name
+          case _                      => false)
+      }
+
   private def enclosingBodyHasWriteTo(v: CtLocalVariable[?]): Boolean =
     val body = v.getParent(classOf[CtExecutable[?]])
-    body != null && body.getElements(new spoon.reflect.visitor.filter.TypeFilter(classOf[CtAssignment[?, ?]])).asScala.exists { a =>
-      a.getAssigned match
-        case w: CtVariableWrite[?] =>
-          w.getVariable match
-            case l: CtLocalVariableReference[?] => l.getSimpleName == v.getSimpleName
-            case _                              => false
-        case _ => false
-    }
+    body != null && writesToVar(body, v.getSimpleName)
 
   // ---- expressions -----------------------------------------------------------
 
@@ -615,17 +654,21 @@ private final class UnitBuilder(sourcePath: String, source: String):
       val anonMembers = Option(nc.getAnonymousClass).map(_.getTypeMembers.asScala.toList).getOrElse(Nil)
       val fields = List.newBuilder[BField]
       val methods = List.newBuilder[BMethod]
+      val init = List.newBuilder[BStmt]
       anonMembers.foreach {
         case f: CtField[?] =>
           checkAnnotations(f)
           fields += BField(leadingOf(f), mods(f), btype(f.getType), f.getSimpleName, Option(f.getDefaultExpression).map(expr))
         case m: CtMethod[?] => methods += methodDecl(m)
         case c: CtConstructor[?] if c.isImplicit => ()
+        // instance-initializer block (double-brace idiom) → statements in the anon body
+        case a: CtAnonymousExecutable if !a.getModifiers.asScala.exists(_ == ModifierKind.STATIC) =>
+          init ++= block(a.getBody.getStatements.asScala.toList)
         case other => unsupported(other, s"anonymous class member ${other.getClass.getSimpleName}")
       }
       btype(nc.getType) match
         case r: BType.Ref =>
-          New(r, nc.getArguments.asScala.toList.map(expr), Some(BAnonBody(fields.result(), methods.result())))
+          New(r, nc.getArguments.asScala.toList.map(expr), Some(BAnonBody(fields.result(), methods.result(), init.result())))
         case t => unsupported(nc, s"anonymous class of $t")
 
     case cc: CtConstructorCall[?] =>
@@ -676,8 +719,10 @@ private final class UnitBuilder(sourcePath: String, source: String):
     else if ref.isStatic then Ident(ref.getSimpleName, RefKind.StaticField(owner))
     else
       target match
-        case null | (_: CtThisAccess[?]) => Ident(ref.getSimpleName, RefKind.OwnField)
-        case t                           => Select(expr(t), ref.getSimpleName)
+        // this / qualified-this / super targets all print as the bare member in Scala
+        case null | (_: CtThisAccess[?]) | (_: CtSuperAccess[?]) =>
+          Ident(ref.getSimpleName, RefKind.OwnField)
+        case t => Select(expr(t), ref.getSimpleName)
 
   private def formalsOf(ex: CtExecutableReference[?]): Option[List[Formal]] =
     Option(ex.getExecutableDeclaration).map { decl =>
