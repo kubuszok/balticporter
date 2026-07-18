@@ -972,12 +972,15 @@ private final class UnitBuilder(sourcePath: String, source: String):
       else None
     // the position can span a cast prefix ("(Object) 4") — only trust slices that
     // look like the literal itself
+    // Java octal escapes (\0, \12, \377) are illegal in Scala — a slice carrying one
+    // must fall back to escapeChar/escapeString, which render the resolved value as \uXXXX
+    val octalEscape = "\\\\[0-7]".r
     def slice: Option[String] = rawSlice.filter { s0 =>
       val s1 = s0.trim
-      l.getValue match
+      octalEscape.findFirstIn(s1).isEmpty && (l.getValue match
         case _: java.lang.String    => s1.startsWith("\"")
         case _: java.lang.Character => s1.startsWith("'")
-        case _                      => s1.headOption.exists(c => c.isDigit || c == '-' || c == '.')
+        case _                      => s1.headOption.exists(c => c.isDigit || c == '-' || c == '.'))
     }
     l.getValue match
       case null                 => Lit(NullL, "null")

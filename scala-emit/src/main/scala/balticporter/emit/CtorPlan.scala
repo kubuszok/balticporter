@@ -372,7 +372,8 @@ object CtorPlan:
                       Secondary(c.leading, c.mods, c.params, resolved, targetTypes = primary.params.map(_.tpe))
                     case None =>
                       usedSentinelRewrite = true
-                      Secondary(c.leading, c.mods, Nil, List(Lit(LitKind.NullL, "null")))
+                      Secondary(c.leading, c.mods, Nil, List(Lit(LitKind.NullL, "null")),
+                        targetTypes = primary.params.map(_.tpe))
                 }
                 CtorPlan(
                   primary.params.map(p => Param(p, None)),

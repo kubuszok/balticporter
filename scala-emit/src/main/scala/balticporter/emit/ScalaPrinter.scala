@@ -469,6 +469,9 @@ private final class Printer(
     (stripped, target) match
       case (Ident(_, RefKind.Param(true)), Some(BType.Arr(_))) => expr(stripped) + ".toArray"
       case (Ident(_, RefKind.Param(true)), _)                  => expr(stripped) + "*"
+      // a bare `null` delegate arg is ambiguous when the target ctor is overloaded
+      // (this(null) matching both (String) and (BasedSequence)) — ascribe its type
+      case (Lit(LitKind.NullL, _), Some(t)) if !t.isInstanceOf[BType.Prim] => s"(null: ${tpe(t)})"
       case _                                                   => expr(stripped)
 
   private def paramStr(p: CtorPlan.Param): String = paramStr(p, Nil)
@@ -532,6 +535,42 @@ private final class Printer(
 
   // ---- statements ------------------------------------------------------------
 
+  /** true while emitting a lambda body wrapped in scala.util.boundary — any
+    * surviving `return e` prints as `boundary.break(e)`. */
+  private var lambdaBoundaryActive = false
+
+  /** Converts tail-position `return e` to a bare value `e` (recursing into the
+    * tails of if/else, match, try, and nested blocks) so a Java lambda block reads
+    * as a Scala expression. Non-tail returns are left for the boundary fallback. */
+  private def stripTailReturns(stmts: List[BStmt]): List[BStmt] =
+    if stmts.isEmpty then stmts
+    else
+      val last = stmts.last
+      val newK = last.k match
+        case BStmtK.Return(Some(e)) => BStmtK.ExprStmt(e)
+        case BStmtK.Return(None)    => BStmtK.Empty
+        case BStmtK.If(c, t, e)     => BStmtK.If(c, stripTailReturns(t), e.map(stripTailReturns))
+        case BStmtK.Match(s, cs)    => BStmtK.Match(s, cs.map(cc => cc.copy(body = stripTailReturns(cc.body))))
+        case BStmtK.Block(b)        => BStmtK.Block(stripTailReturns(b))
+        case BStmtK.Try(b, cs, f)   => BStmtK.Try(stripTailReturns(b), cs.map(cc => cc.copy(body = stripTailReturns(cc.body))), f)
+        case k                      => k
+      stmts.init :+ last.copy(k = newK)
+
+  private def hasReturn(stmts: List[BStmt]): Boolean =
+    stmts.exists { s =>
+      s.k match
+        case BStmtK.Return(_)       => true
+        case BStmtK.If(_, t, e)     => hasReturn(t) || e.exists(hasReturn)
+        case BStmtK.While(_, b)     => hasReturn(b)
+        case BStmtK.DoWhile(b, _)   => hasReturn(b)
+        case BStmtK.Block(b)        => hasReturn(b)
+        case BStmtK.Boundary(b, _)  => hasReturn(b)
+        case BStmtK.Match(_, cs)    => cs.exists(cc => hasReturn(cc.body))
+        case BStmtK.Try(b, cs, f)   => hasReturn(b) || cs.exists(cc => hasReturn(cc.body)) || f.exists(hasReturn)
+        case BStmtK.Synchronized(_, b) => hasReturn(b)
+        case _                      => false
+    }
+
   /** Prints a method body; a trailing `return e` prints as `e`. */
   private def printBody(body: List[BStmt]): Unit =
     body.zipWithIndex.foreach { case (s, i) =>
@@ -571,8 +610,8 @@ private final class Printer(
             line("} else {")
             indent += 1; els.foreach(stmt); indent -= 1
             line("}")
-      case BStmtK.Return(None)    => line("return")
-      case BStmtK.Return(Some(e)) => line(s"return ${expr(e)}")
+      case BStmtK.Return(None)    => line(if lambdaBoundaryActive then "scala.util.boundary.break()" else "return")
+      case BStmtK.Return(Some(e)) => line(if lambdaBoundaryActive then s"scala.util.boundary.break(${expr(e)})" else s"return ${expr(e)}")
       case BStmtK.Throw(e)        => line(s"throw ${expr(e)}")
       case BStmtK.While(c, b) =>
         line(s"while (${expr(c)}) {")
@@ -767,13 +806,23 @@ private final class Printer(
         case Right(e)                                     => s"($plist => ${expr(e)})"
         case Left(List(BStmt(_, BStmtK.Return(Some(e))))) => s"($plist => ${expr(e)})"
         case Left(List(BStmt(_, BStmtK.ExprStmt(e))))     => s"($plist => ${expr(e)})"
-        case Left(stmts) =>
+        case Left(stmts0) =>
+          // Java lambdas use `return` for their value; Scala lambdas can't. Strip
+          // tail-position returns (recursing into if/else/match/try tails); if early
+          // (non-tail) returns remain, wrap in scala.util.boundary and break instead.
+          val stmts = stripTailReturns(stmts0)
+          val needsBoundary = hasReturn(stmts)
           val bodyStr = captured {
             indent += 1
+            val saved = lambdaBoundaryActive
+            lambdaBoundaryActive = needsBoundary
             printBody(stmts)
+            lambdaBoundaryActive = saved
             indent -= 1
           }
-          s"($plist => {\n" + bodyStr + ("  " * indent) + "})"
+          val pad = "  " * indent
+          if needsBoundary then s"($plist => scala.util.boundary {\n" + bodyStr + pad + "})"
+          else s"($plist => {\n" + bodyStr + pad + "})"
 
     case Cast(BType.Prim(p), e1) =>
       val conv = primMap.getOrElse(p, unsupported(s"cast to $p"))
