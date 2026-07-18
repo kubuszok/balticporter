@@ -11,15 +11,20 @@ green on JVM; failures triaged into the ledger with reasons or fixed by rules.
 Status: IN PROGRESS
 
 Checklist:
-- [ ] Survey liqp's test sources (~105 files, JUnit4) — construct census +
-      test-only constructs (assertions, @Test/@Before, parameterized runners)
-- [ ] test-port rules: JUnit4 → munit (assertEquals arg order, intercept,
-      Before/After → beforeEach/afterEach, Parameterized → dynamic
-      registration)
-- [ ] Test resources copied; sbt-gen emits test config (munit dep,
-      Test/compile + test tasks)
-- [ ] Run: triage failures — engine bug vs upstream-behavior vs
-      environment; ledger with reasons
+- [x] Survey (2026-07-18): 105 JUnit4 files, 169 Hamcrest + 149 junit imports,
+      ZERO Parameterized runners, 5 junit.framework (JUnit3-style), no test
+      resources. Strategy decision: port tests onto JUnit4/Hamcrest themselves
+      for the JVM gate (they're plain JVM libs, sbt junit-interface runs
+      them); munit conversion deferred to the cross-platform phase.
+- [x] Test translation pipeline (commit 2659441): annotation preservation
+      (BAnnotation, @Test(expected=...) etc.), local classes,
+      assignment/inc-dec as expressions, array-write exprs; sbt-gen test
+      deps + src/test/scala. **104/105 translate** (1 inner-class holdout in
+      the ANTLR parser test — ledger candidate).
+- [ ] Test/compile error burn: baseline 100 errors (test-idiom classes —
+      histogram + fix next iteration)
+- [ ] Run: triage failures — engine bug vs upstream-behavior vs environment;
+      ledger with reasons
 - [ ] GATE: suite green on JVM with ledgered exceptions
 
 Deferred from M2 scoping (needed by M5, not gate-blocking): declarative Tier-2
