@@ -84,10 +84,19 @@ Checklist:
             rename now fires on inherited field names too
             (CtorRegistry.inheritedFieldNames). Cleared not-a-member-of-
             DataHolder (19 → 0). 275 → 256.
-      - [ ] remaining (~256): AstActionHandler visitor family (Java
-            `X...`/`X[]...` overload collision + F-bounded `[?]` vs `[Node]`;
-            override candidates), scattered not-found members, generic
-            wildcard mismatches, missing-param lambdas (wildcard-typed).
+      - [~] wave 5 (commit e536ec9): inherited static-field owner resolution
+            (BasedSequence.LS → SequenceUtils.LS, trap 7) — partial (2/6;
+            Spoon null declarations block the rest cross-module). Regression
+            639/639. MEASUREMENT NOTE: scalac error-display cap varied between
+            runs (100 vs uncapped 256) making raw-count deltas unreliable;
+            switch to a fixed -Xmax-errors for future waves.
+      - [ ] remaining (~256 uncapped): AstActionHandler visitor family is the
+            dominant blocker — Java `X...`/`X[]...` varargs both erase to Seq
+            in Scala (Conflicting definitions) + F-bounded `[?]` vs `[Node]`.
+            ~5 files (NodeVisitor, TextCollectingVisitor, the two Adapters,
+            BlockNodeVisitor). DECISION: these need method/whole-file overrides
+            (PLAN §7) — not a general rule; the Java/Scala varargs-erasure
+            impedance is fundamental. Next: override that family, then re-burn.
 - [ ] Port the xwiki-macros spec suite; whole-module compile + tests green.
 - [ ] Framework docs + example port program published
 - [ ] HUMAN REVIEW: idiom-quality sign-off (queue when the above is green)
