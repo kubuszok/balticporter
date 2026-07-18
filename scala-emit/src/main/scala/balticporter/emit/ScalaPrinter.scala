@@ -460,6 +460,13 @@ private final class Printer(
     * (formals of this()/super() targets aren't tracked; forwarding-whole is the
     * overwhelmingly common Java shape, and scalac verifies).
     */
+  /** a type carrying a wildcard anywhere — illegal in `new`/CtorRef instantiation args. */
+  private def hasWildType(x: BType): Boolean = x match
+    case _: BType.Wild    => true
+    case BType.Ref(_, as) => as.exists(hasWildType)
+    case BType.Arr(e2)    => hasWildType(e2)
+    case _                => false
+
   private def delegateArg(e: BExpr): String = delegateArg(e, None)
 
   private def delegateArg(e: BExpr, target: Option[BType]): String =
@@ -720,12 +727,7 @@ private final class Printer(
     case New(t, args, anon, formals) =>
       // wildcards are illegal in instantiation type args (Java diamond/raw) — strip
       // and let inference do what javac did
-      def hasWild(x: BType): Boolean = x match
-        case _: BType.Wild      => true
-        case BType.Ref(_, as)   => as.exists(hasWild)
-        case BType.Arr(e2)      => hasWild(e2)
-        case _                  => false
-      val newT = if t.args.exists(hasWild) then t.copy(args = Nil) else t
+      val newT = if t.args.exists(hasWildType) then t.copy(args = Nil) else t
       val argsStr =
         if args.isEmpty && anon.isDefined then ""
         else s"(${adaptedArgs(args, formals, Some(t.qname)).mkString(", ")})"
@@ -778,7 +780,9 @@ private final class Printer(
     case CtorRef(t, formals) =>
       val ps = formals.zipWithIndex.map((ft, i) => s"p$i$$: ${tpe(ft)}")
       val args = formals.indices.map(i => s"p$i$$").mkString(", ")
-      s"((${ps.mkString(", ")}) => new ${tpe(t)}($args))"
+      // wildcards are illegal in instantiation type args (raw HashMap::new) — strip
+      val ctorT = if t.args.exists(hasWildType) then t.copy(args = Nil) else t
+      s"((${ps.mkString(", ")}) => new ${tpe(ctorT)}($args))"
 
     case MethodRef(prefix, name) =>
       prefix match
