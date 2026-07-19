@@ -84,3 +84,18 @@ class SpoonTirBodySpec extends munit.FunSuite:
     val p = SpoonTir.fromSource(src2) // throws on any Unsupported
     assert(p.symbols.all.exists(_.fullName == "demo.More#run"))
   }
+
+  test("try-with-resources translates (resources kept structural on the Try)") {
+    val p = SpoonTir.fromSource(
+      """package demo;
+        |import java.io.*;
+        |class R {
+        |  void go() throws Exception {
+        |    try (BufferedReader r = new BufferedReader(new FileReader("x"))) { r.readLine(); }
+        |    catch (IOException e) { }
+        |  }
+        |}
+        |""".stripMargin
+    )
+    assert(p.symbols.all.exists(_.fullName == "demo.R#go"))
+  }

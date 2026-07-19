@@ -29,14 +29,16 @@ object SpoonTir:
   /** Build a [[Program]] from already-resolved top-level Spoon types. */
   def fromTypes(types: List[CtType[?]]): Program = new Builder().build(types)
 
-  /** Build the Spoon model over a whole closure (full classpath + resolution roots), the
-    * same way the BIR frontend does, and return its top-level types. */
-  def buildModel(cfg: FrontendConfig): List[CtType[?]] =
+  /** Build the Spoon model over a whole closure and return its top-level types. Full
+    * classpath by default (like the BIR frontend); `lenient` uses noClasspath mode so a
+    * library with unconfigured external deps still parses (types resolve where possible,
+    * unresolved ones degrade to unmapped references — fine for construct coverage). */
+  def buildModel(cfg: FrontendConfig, lenient: Boolean = false): List[CtType[?]] =
     val launcher = new Launcher
     val env      = launcher.getEnvironment
     env.setComplianceLevel(21)
     env.setCommentEnabled(false)
-    env.setNoClasspath(false)
+    env.setNoClasspath(lenient)
     env.setSourceClasspath(cfg.classpath.map(_.toString).toArray)
     if cfg.resolutionRoots.nonEmpty then
       cfg.resolutionRoots.foreach(r => launcher.addInputResource(r.toString))
@@ -335,6 +337,7 @@ object SpoonTir:
       private def unit(el: CtElement): Term = Tree.Literal(Constant.UnitC, unitT, originOf(el))
 
       private def blockTerm(s: CtStatement): Term = s match
+        case null          => Tree.Block(Nil, Tree.Literal(Constant.UnitC, unitT, Origin.synthetic), unitT, Origin.synthetic)
         case b: CtBlock[?] => Tree.Block(b.getStatements.asScala.toList.map(stmt), unit(b), unitT, originOf(b))
         case single        => Tree.Block(List(stmt(single)), unit(single), unitT, originOf(single))
 
@@ -373,8 +376,13 @@ object SpoonTir:
           val cond = Option(f.getExpression).map(expr)
           val upd  = f.getForUpdate.asScala.toList.map(stmt)
           Tree.For(init, cond, upd, blockTerm(f.getBody), unitT, originOf(f))
-        case t: CtTryWithResource => unsupported(t, "try-with-resources")
-        case t: CtTry             => tryStmt(t)
+        case t: CtTryWithResource =>
+          val res = t.getResources.asScala.toList.collect { case lv: CtLocalVariable[?] =>
+            val rt = tpe(lv.getType)
+            Tree.ValDef(defineLocal(lv, rt), tt(rt, lv), Option(lv.getDefaultExpression).map(expr), originOf(lv))
+          }
+          tryStmt(t, res)
+        case t: CtTry             => tryStmt(t, Nil)
         case s: CtSwitch[?]       => switchStmt(s)
         case b: CtBreak           => Tree.Break(Option(b.getTargetLabel), nothingT, originOf(b))
         case c: CtContinue        => Tree.Continue(Option(c.getTargetLabel), nothingT, originOf(c))
@@ -396,7 +404,7 @@ object SpoonTir:
         registerVar(v, id)
         id
 
-      private def tryStmt(t: CtTry): Term =
+      private def tryStmt(t: CtTry, resources: List[Tree.ValDef]): Term =
         val catches = t.getCatchers.asScala.toList.map { c =>
           val p  = c.getParameter
           val pt = p.getMultiTypes.asScala.toList match
@@ -405,7 +413,7 @@ object SpoonTir:
           val id = defineLocal(p, pt)
           Tree.CatchCase(Tree.ValDef(id, tt(pt, p), None, originOf(p)), blockTerm(c.getBody))
         }
-        Tree.Try(blockTerm(t.getBody), catches, Option(t.getFinalizer).map(blockTerm), unitT, originOf(t))
+        Tree.Try(resources, blockTerm(t.getBody), catches, Option(t.getFinalizer).map(blockTerm), unitT, originOf(t))
 
       /** Java switch → TIR `Match`. Empty (grouping) cases merge their labels into the next;
         * genuine fallthrough is lowered by TAIL DUPLICATION — a non-terminated case's body is

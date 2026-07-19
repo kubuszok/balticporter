@@ -138,7 +138,8 @@ object Xref:
       case Tree.ForEach(b, it, body, _, _)  => walkValDef(b); walkTerm(it); walkTerm(body)
       case Tree.For(init, c, upd, body, _, _) =>
         init.foreach(walkStat); c.foreach(walkTerm); upd.foreach(walkStat); walkTerm(body)
-      case Tree.Try(body, catches, fin, _, _) =>
+      case Tree.Try(res, body, catches, fin, _, _) =>
+        res.foreach(walkValDef)
         walkTerm(body)
         catches.foreach { c => walkValDef(c.param); walkTerm(c.body) }
         fin.foreach(walkTerm)

@@ -197,7 +197,7 @@ object StandardTraversal:
         x.copy(init = x.init.map(mapStat(ph, _)), cond = x.cond.map(mapTerm(ph, _)),
           update = x.update.map(mapStat(ph, _)), body = mapTerm(ph, x.body), tpe = mapType(ph, x.tpe))
       case x: Tree.Try =>
-        x.copy(body = mapTerm(ph, x.body),
+        x.copy(resources = x.resources.map(mapValDef(ph, _)), body = mapTerm(ph, x.body),
           catches = x.catches.map(c => Tree.CatchCase(mapValDef(ph, c.param), mapTerm(ph, c.body))),
           finalizer = x.finalizer.map(mapTerm(ph, _)), tpe = mapType(ph, x.tpe))
       case x: Tree.Match =>

@@ -219,8 +219,10 @@ object Tree:
   final case class ForEach(binding: ValDef, iterable: Term, body: Term, tpe: TypeRepr, origin: Origin) extends Term
   /** `for (init; cond; update) body` (Java classic-for). */
   final case class For(init: List[Statement], cond: Option[Term], update: List[Statement], body: Term, tpe: TypeRepr, origin: Origin) extends Term
-  /** `try body catch cases finally fin`. */
-  final case class Try(body: Term, catches: List[CatchCase], finalizer: Option[Term], tpe: TypeRepr, origin: Origin) extends Term
+  /** `try (resources) body catch cases finally fin`. `resources` are the try-with-resources
+    * bindings (empty for a plain `try`); each is auto-closed — a lowering concern for the
+    * backend, kept structural here. */
+  final case class Try(resources: List[ValDef], body: Term, catches: List[CatchCase], finalizer: Option[Term], tpe: TypeRepr, origin: Origin) extends Term
   /** one `catch (param) body`; `param.tpt` may be an `OrType` for multi-catch. */
   final case class CatchCase(param: ValDef, body: Term)
   /** `scrutinee match { cases }` (from a Java switch). */

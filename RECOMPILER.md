@@ -178,18 +178,20 @@ emission backend (step 3), since projecting the delta onto Scala output needs em
      stance as the BIR frontend; the body node set grows the same way). Proven by
      `SpoonTirSpec` (6/6): method calls / field refs become traced usages, and
      `callersOf(pick) == [run]` over real translated bodies.
-   - **2d. Full corpus body coverage** — the body node set was grown until entire corpora
-     translate clean. Added faithful Term nodes: `InstanceOf`, `ArrayAccess`, `ArrayLength`,
-     `NewArray`, `ForEach`, `For`, `Try`(+`CatchCase`), `Match`(+`CaseDef`), `MethodRef`,
-     `Break`, `Continue`, `Assert`, `IncDec`, `DoWhile`, `Synchronized`; assignment-as-value
-     reuses `Assign`. Java switch → `Match` with **tail-duplication** for genuine fallthrough
-     (RESEARCH §4.2), so no `Unsupported`. `SpoonTirCoverage` is a multi-corpus burn-down
-     harness (`runMain … [liqp|flexmark] [N]`) over `../ssg`:
-       - **liqp: 135/135 types, 0 `Unsupported`** — whole-program 135 units / 3101 symbols /
-         632 methods.
-       - **flexmark: 789/789 types, 0 `Unsupported`** — whole-program 789 units / 27899
-         symbols / 8412 methods, one xref over the whole thing.
-     `SpoonTirBodySpec` locks every construct in corpus-independently (4/4).
+   - **2d. Full corpus body coverage** — the body node set was grown until EVERY Java
+     library that sge and ssg port translates clean. Added faithful Term nodes: `InstanceOf`,
+     `ArrayAccess`, `ArrayLength`, `NewArray`, `ForEach`, `For`, `Try`(+`CatchCase`,
+     +resources), `Match`(+`CaseDef`), `MethodRef`, `Break`, `Continue`, `Assert`, `IncDec`,
+     `DoWhile`, `Synchronized`; assignment-as-value reuses `Assign`; Java switch → `Match`
+     with **tail-duplication** for genuine fallthrough (RESEARCH §4.2). `SpoonTirCoverage` is
+     a multi-corpus burn-down harness (`runMain … [liqp|flexmark|sge|all] [N]`) over `../ssg`
+     and `../sge`; sge is a lenient per-library sweep (each libGDX-ecosystem library modeled
+     on its own, pinned to its canonical module root for the multi-backend ones):
+       - **ssg liqp: 135/135**, flexmark: **789/789**.
+       - **sge: 1484/1484** across all 14 libGDX libraries (libgdx core 605, gdx-gltf 160,
+         vis-ui 180, gdx-ai 166, …).
+       - **all: 2408/2408 top-level types, 0 `Unsupported`.**
+     `SpoonTirBodySpec` locks every construct in corpus-independently (5/5).
 3. **Emission backend** — TIR → Scala source, types-aware (subsumes the compile
    fixes). Gate: the M6 closure compiles from TIR emission.
 4. **First transform** — pick one real case (java→scala collection, or a field
@@ -200,3 +202,16 @@ emission backend (step 3), since projecting the delta onto Scala output needs em
 The old string-printer compile grind (M6 at ~61 errors) is **subsumed** by step 3:
 a types-carrying backend emits compiling code by construction. We stop patching the
 printer.
+
+## North star
+
+1. **Cover every ported library** — the TIR populates from every Java library sge and ssg
+   port. *(done: 2408/2408 types, step 2d.)*
+2. **Source pretty-printing** — the emission backend (step 3): TIR → Scala source. This is
+   also what projects the semantic diff onto Scala output.
+3. **Agents take over library maintenance** — once the re-compiler round-trips (populate →
+   transform → emit) and can semantic-diff two portings, per-library agents manage the ports:
+   pull upstream Java changes, re-run the transforms, review the semantic delta (Java + its
+   Scala projection), and land the migration. The re-compiler is the tool; the agents are the
+   operators. The pieces this needs — whole-program symbol/xref substrate, owned transform
+   pipeline, semantic diff — are what steps 2–5 build.
