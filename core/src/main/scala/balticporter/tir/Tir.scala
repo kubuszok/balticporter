@@ -190,6 +190,9 @@ object Tree:
   final case class Select(qual: Term, sym: SymId, tpe: TypeRepr, origin: Origin)        extends Term
   final case class Literal(const: Constant, tpe: TypeRepr, origin: Origin)              extends Term
   final case class This(cls: SymId, tpe: TypeRepr, origin: Origin)                      extends Term
+  /** `super` (receiver of `super.m(...)` / `super(...)`) — distinct from `this` so the
+    * backend can emit `super`-dispatch and constructor delegation correctly. */
+  final case class Super(cls: SymId, tpe: TypeRepr, origin: Origin)                     extends Term
   final case class New(tpt: TypeTree, tpe: TypeRepr, origin: Origin)                    extends Term
   final case class Apply(fun: Term, args: List[Term], method: SymId, tpe: TypeRepr, origin: Origin) extends Term
   final case class TypeApply(fun: Term, targs: List[TypeTree], tpe: TypeRepr, origin: Origin)       extends Term

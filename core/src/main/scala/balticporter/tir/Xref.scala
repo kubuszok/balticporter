@@ -120,7 +120,7 @@ object Xref:
       // `this` is an implicit self-reference, not a cross-reference to rewrite — recording
       // it would flood every enclosing class with a usage per method body. Self-TYPES are
       // captured separately via `walkType`'s `ThisType` case.
-      case _: Tree.This                     => ()
+      case _: Tree.This | _: Tree.Super     => ()
       case Tree.Typed(expr, tpt, _, _)      => walkTerm(expr); walkType(tpt.tpe, UsageKind.TypeRefPos, tpt)
       case Tree.Assign(lhs, rhs, _, _)      => walkTerm(lhs); walkTerm(rhs)
       case Tree.Block(stats, expr, _, _)    => stats.foreach(walkStat); walkTerm(expr)

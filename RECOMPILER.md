@@ -201,10 +201,22 @@ emission backend (step 3), since projecting the delta onto Scala output needs em
      try, match, for/foreach, lambda, instanceof, …). Operators render infix/prefix
      (precedence-safe parens). Emits readable Scala on real corpus files (e.g. liqp
      `Compact`, `Upcase`). `TirEmitterSpec` pins output from a hand-built program;
-     `SpoonTirEmit` (runMain) emits any Java file for eyeballing. Known refinement points
-     (marked inline, not populator gaps): constructor lowering (primary vs secondary, super
-     vs this — the `CtorPlan` analog), `break`/`continue` → `boundary`, do-while, and inc/dec
-     in value position. Next: drive a real closure to scalac-green (the step-3 gate).
+     `SpoonTirEmit` (runMain) emits any Java file for eyeballing.
+   - **3b. scalac gate + burn-down** — `SpoonTirEmitProject` (runMain) emits a whole small
+     library through the TIR to `out/tir-emit/<lib>/` and runs scalac (`M0Pipeline.compileGate`)
+     over it; the loop is: run, read errors, fix the emitter, repeat. Driving noise4j
+     (12 files, dependency-free) burned through the first structural classes of Java→Scala:
+     keyword-escaping (`type`/`object`/… as identifiers), `abstract def` (methods are abstract
+     by lacking a body, not a keyword), uninitialized fields → defaulted `var` (no `final var`),
+     a `Super` term node so super-vs-this dispatch and constructor delegation are distinct,
+     secondary-constructor ordering (delegate must precede — sorted by descending arity),
+     fully-qualified type references (no import machinery), operators infix, and Java statics →
+     a **companion `object`**. Remaining classes on the worklist (each a distinct
+     emitter/populator refinement, not yet done): nested-type placement (static-nested →
+     companion, inner → path-dependent), accessor-paren semantics, **enum lowering with cases**
+     (populator must carry `CtEnumValue`s), java-collection API surface, and `break`/`continue`
+     → `boundary` / do-while / inc-dec-in-value. Full green on a real library is a multi-wave
+     grind (the M6-scale effort, now on the emitter, where it belongs).
 4. **First transform** — pick one real case (java→scala collection, or a field
    usage rewrite) end-to-end to validate the substrate against an actual migration.
 5. **Transform API + the sge/ssg cases** — globals→implicits (call graph),

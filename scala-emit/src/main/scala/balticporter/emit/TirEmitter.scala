@@ -24,11 +24,22 @@ final class TirEmitter(program: Program):
 
   // ---- names ----
   private def sym(id: SymId): Symbol = program.symbolOf(id).getOrElse(Symbol(id, "?", "?", Flags(), SymId.None, TypeRepr.NoType))
-  private def local(id: SymId): String = sym(id).name
-  /** a TYPE symbol's rendered name — simple for our own declarations, qualified for externals. */
+  private def local(id: SymId): String = esc(sym(id).name)
+
+  private val keywords = Set(
+    "type", "object", "val", "var", "def", "class", "trait", "enum", "given", "match", "case",
+    "if", "else", "while", "do", "for", "yield", "then", "with", "extends", "new", "this", "super",
+    "null", "true", "false", "import", "package", "override", "final", "abstract", "sealed", "private",
+    "protected", "implicit", "lazy", "return", "throw", "try", "catch", "finally", "forSome", "using",
+    "export", "inline", "opaque", "transparent", "derives", "extension", "macro", "end", "as", "wait",
+  )
+  /** backtick an identifier that collides with a Scala keyword. */
+  private def esc(name: String): String = if keywords(name) then s"`$name`" else name
+  /** a TYPE symbol's rendered name. Type parameters render by simple name; everything else
+    * fully-qualified (no import machinery yet), with `$` (nested/binary names) → `.`. */
   private def typeSym(id: SymId): String =
     val s = sym(id)
-    if program.definitionOf(id).isDefined then s.name else s.fullName
+    if s.flags.isParam then esc(s.name) else s.fullName.replace('$', '.')
 
   private def ind(n: Int): String = "  " * n
 
@@ -43,13 +54,34 @@ final class TirEmitter(program: Program):
     val tps     = if cd.tparams.isEmpty then "" else "[" + cd.tparams.map(typeParam).mkString(", ") + "]"
     val parents = cd.parents.map(parent).filter(_.nonEmpty)
     val ext     = if parents.isEmpty then "" else " extends " + parents.mkString(" with ")
+    // Java statics have no instance home in Scala — they move to the companion object.
+    val (statics, instance) = if s.flags.isModule then (Nil, cd.body) else cd.body.partition(isStatic)
     val self    = cd.selfType.map(st => s"${ind(i + 1)}self: ${tpe(st.tpe)} =>\n").getOrElse("")
-    val body    = cd.body.map(stat(_, i + 1)).filter(_.nonEmpty).mkString("\n")
+    val body    = orderBody(instance).map(stat(_, i + 1)).filter(_.nonEmpty).mkString("\n")
     val open    = if body.isEmpty && self.isEmpty then "" else s" {\n$self$body\n${ind(i)}}"
-    s"${ind(i)}${mods(s.flags)}$kw ${s.name}$tps$ext$open"
+    val abs     = if kw == "class" && s.flags.isAbstract then "abstract " else ""
+    val cls     = s"${ind(i)}${mods(s.flags)}$abs$kw ${esc(s.name)}$tps$ext$open"
+    if statics.isEmpty then cls
+    else
+      val sb = orderBody(statics).map(stat(_, i + 1)).filter(_.nonEmpty).mkString("\n")
+      s"$cls\n${ind(i)}object ${esc(s.name)} {\n$sb\n${ind(i)}}"
+
+  private def isStatic(s: Statement): Boolean = s match
+    case d: Definition => sym(d.symbol).flags.isStatic
+    case _             => false
+
+  /** Scala secondary constructors must delegate to a PRECEDING constructor, so order fields
+    * first, then constructors by descending arity (a convenience ctor `this(a)` delegating to
+    * a fuller `this(a,b)` needs the fuller one earlier), then everything else. */
+  private def orderBody(body: List[Statement]): List[Statement] =
+    def isCtor(s: Statement) = s match { case d: Tree.DefDef => sym(d.symbol).name == "<init>"; case _ => false }
+    val ctors  = body.collect { case d: Tree.DefDef if isCtor(d) => d }.sortBy(-_.paramss.map(_.size).sum)
+    val fields = body.collect { case v: Tree.ValDef => v }
+    val rest   = body.filterNot(s => isCtor(s) || s.isInstanceOf[Tree.ValDef])
+    fields ++ ctors ++ rest
 
   private def typeParam(td: Tree.TypeDef): String =
-    val name = sym(td.symbol).name
+    val name = esc(sym(td.symbol).name)
     td.rhs.tpe match
       case TypeRepr.TypeBounds(TypeRepr.NoType, TypeRepr.NoType) => name
       case TypeRepr.TypeBounds(lo, hi) =>
@@ -66,32 +98,69 @@ final class TirEmitter(program: Program):
     case c: Tree.ClassDef => classDef(c, i)
     case d: Tree.DefDef   => defDef(d, i)
     case v: Tree.ValDef   => valDef(v, i)
-    case t: Tree.TypeDef  => s"${ind(i)}type ${sym(t.symbol).name} = ${tpe(t.rhs.tpe)}"
+    case t: Tree.TypeDef  => s"${ind(i)}type ${esc(sym(t.symbol).name)} = ${tpe(t.rhs.tpe)}"
     case t: Term     => ind(i) + term(t, i)
 
   private def defDef(d: Tree.DefDef, i: Int): String =
-    val s    = sym(d.symbol)
-    val name = if s.name == "<init>" then "this" else s.name
-    val tps  = if d.tparams.isEmpty then "" else "[" + d.tparams.map(typeParam).mkString(", ") + "]"
-    val pss  = d.paramss.map(ps => "(" + ps.map(param).mkString(", ") + ")").mkString
-    val ret  = if name == "this" then "" else s": ${tpe(d.returnTpt.tpe)}"
-    val rhs  = d.rhs.map(r => s" = ${term(r, i)}").getOrElse("")
+    val s     = sym(d.symbol)
+    val isCtor = s.name == "<init>"
+    val name  = if isCtor then "this" else esc(s.name)
+    val tps   = if d.tparams.isEmpty then "" else "[" + d.tparams.map(typeParam).mkString(", ") + "]"
+    val pss   = d.paramss.map(ps => "(" + ps.map(param).mkString(", ") + ")").mkString
+    val ret   = if isCtor then "" else s": ${tpe(d.returnTpt.tpe)}"
+    val rhs   = if isCtor then s" = ${ctorBody(d.rhs, i)}" else d.rhs.map(r => s" = ${term(r, i)}").getOrElse("")
     s"${ind(i)}${mods(s.flags)}def $name$tps$pss$ret$rhs"
 
-  private def param(v: Tree.ValDef): String = s"${sym(v.symbol).name}: ${tpe(v.tpt.tpe)}"
+  /** A Scala secondary constructor must delegate to `this(...)` first — never `super(...)`.
+    * Keep a Java `this(args)` delegation; rewrite a leading `super(...)`/implicit-super to
+    * `this()` (its super args are dropped — the primary-vs-secondary split is future work). */
+  private def ctorBody(rhs: Option[Term], i: Int): String =
+    val stats = rhs match
+      case Some(Tree.Block(s, _, _, _)) => s
+      case Some(t)                      => List(t)
+      case None                         => Nil
+    val (deleg, rest) = stats match
+      case (Tree.Apply(Tree.Select(r, m, _, _), args, _, _, _)) :: tl if sym(m).name == "<init>" =>
+        val d = r match
+          case _: Tree.Super => "this()"
+          case _             => s"this(${args.map(term(_, i + 1)).mkString(", ")})"
+        (d, tl)
+      case all => ("this()", all)
+    val lines = (ind(i + 1) + deleg) :: rest.map(stat(_, i + 1)).filter(_.trim.nonEmpty)
+    s"{\n${lines.mkString("\n")}\n${ind(i)}}"
+
+  private def param(v: Tree.ValDef): String = s"${esc(sym(v.symbol).name)}: ${tpe(v.tpt.tpe)}"
 
   private def valDef(v: Tree.ValDef, i: Int): String =
-    val s   = sym(v.symbol)
-    val kw  = if s.flags.isMutable then "var" else "val"
-    val rhs = v.rhs.map(r => s" = ${term(r, i)}").getOrElse("")
-    s"${ind(i)}${mods(s.flags)}$kw ${s.name}: ${tpe(v.tpt.tpe)}$rhs"
+    val s = sym(v.symbol)
+    v.rhs match
+      case Some(r) =>
+        val kw = if s.flags.isMutable then "var" else "val"
+        val m  = if kw == "var" then mods(s.flags).replace("final ", "") else mods(s.flags)
+        s"${ind(i)}$m$kw ${esc(s.name)}: ${tpe(v.tpt.tpe)} = ${term(r, i)}"
+      case None =>
+        // an uninitialized Java field: a `var` defaulted so constructors can assign it (a bare
+        // `val x: T` is an abstract member and won't compile in a class). `final var` is
+        // contradictory in Scala, so `final` is dropped here.
+        s"${ind(i)}${mods(s.flags).replace("final ", "")}var ${esc(s.name)}: ${tpe(v.tpt.tpe)} = ${defaultFor(v.tpt.tpe)}"
+
+  private def defaultFor(t: TypeRepr): String = t match
+    case TypeRepr.TypeRef(_, s) => sym(s).fullName match
+        case "scala.Int" | "scala.Short" | "scala.Byte" => "0"
+        case "scala.Long"                               => "0L"
+        case "scala.Float"                              => "0.0f"
+        case "scala.Double"                             => "0.0"
+        case "scala.Boolean"                            => "false"
+        case "scala.Char"                               => "'\\u0000'"
+        case "scala.Unit"                               => "()"
+        case _                                          => s"null.asInstanceOf[${tpe(t)}]"
+    case _ => s"null.asInstanceOf[${tpe(t)}]"
 
   private def mods(f: Flags): String =
     val parts = List(
       if f.isPrivate then "private " else "",
       if f.isProtected then "protected " else "",
       if f.isOverride then "override " else "",
-      if f.isAbstract && !f.isTrait then "abstract " else "",
       if f.isFinal then "final " else "",
       if f.isSealed then "sealed " else "",
       if f.isImplicit then "implicit " else "",
@@ -104,6 +173,7 @@ final class TirEmitter(program: Program):
     case Tree.Ident(s, _, _)            => local(s)
     case Tree.Literal(c, _, _)          => constant(c)
     case Tree.This(_, _, _)             => "this"
+    case Tree.Super(_, _, _)            => "super"
     case Tree.Select(q, s, _, _)        => s"${term(q, i)}.${local(s)}"
     case Tree.New(tpt, _, _)            => s"new ${tpe(tpt.tpe)}"
     case Tree.Apply(fun, args, _, _, _) => applyStr(fun, args, i)
@@ -124,7 +194,7 @@ final class TirEmitter(program: Program):
       init match
         case Some(es) => s"Array[${tpe(el.tpe)}](${es.map(term(_, i)).mkString(", ")})"
         case None     => s"new Array[${tpe(el.tpe)}](${dims.map(term(_, i)).mkString(", ")})"
-    case Tree.ForEach(b, it, body, _, _) => s"for (${sym(b.symbol).name} <- ${term(it, i)}) ${term(body, i)}"
+    case Tree.ForEach(b, it, body, _, _) => s"for (${esc(sym(b.symbol).name)} <- ${term(it, i)}) ${term(body, i)}"
     case Tree.For(init, cond, upd, body, _, _) =>
       val is = init.map(stat(_, 0)).mkString("; ")
       val c  = cond.map(term(_, i)).getOrElse("true")
@@ -150,11 +220,9 @@ final class TirEmitter(program: Program):
       val op = sym(m).name
       if op.startsWith("unary_") then s"${op.stripPrefix("unary_")}${operand(recv, i)}"
       else s"${operand(recv, i)} $op ${args.map(operand(_, i)).mkString(", ")}"
-    // constructor delegation: the populator maps both super()/this() receivers to `this`,
-    // so `<init>` calls render as `super(...)`; the implicit no-arg super is dropped.
-    // TODO: full constructor lowering (primary vs secondary, super vs this) — the CtorPlan analog.
-    case Tree.Select(_, m, _, _) if sym(m).name == "<init>" =>
-      if args.isEmpty then "()" else s"super(${args.map(term(_, i)).mkString(", ")})"
+    case Tree.Select(recv, m, _, _) if sym(m).name == "<init>" =>
+      val kw = recv match { case _: Tree.Super => "super"; case _ => "this" }
+      s"$kw(${args.map(term(_, i)).mkString(", ")})"
     case _ => s"${term(fun, i)}(${args.map(term(_, i)).mkString(", ")})"
 
   /** parenthesize an operator application when it is an operand, to preserve precedence. */
@@ -173,7 +241,7 @@ final class TirEmitter(program: Program):
 
   private def tryStr(res: List[Tree.ValDef], body: Term, catches: List[Tree.CatchCase], fin: Option[Term], i: Int): String =
     val r  = res.map(v => s"${ind(i + 1)}${valDef(v, 0)}\n").mkString
-    val cs = catches.map(c => s"${ind(i + 1)}case ${sym(c.param.symbol).name}: ${tpe(c.param.tpt.tpe)} => ${term(c.body, i + 1)}").mkString("\n")
+    val cs = catches.map(c => s"${ind(i + 1)}case ${esc(sym(c.param.symbol).name)}: ${tpe(c.param.tpt.tpe)} => ${term(c.body, i + 1)}").mkString("\n")
     val cl = if catches.isEmpty then "" else s" catch {\n$cs\n${ind(i)}}"
     val fl = fin.map(f => s" finally ${term(f, i)}").getOrElse("")
     s"try ${term(body, i)}$cl$fl" // resources: r prepended when the backend lowers auto-close

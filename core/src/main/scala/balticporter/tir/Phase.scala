@@ -208,6 +208,7 @@ object StandardTraversal:
         x.copy(qualifier = x.qualifier match { case Left(t) => Left(mapTpt(ph, t)); case Right(e) => Right(mapTerm(ph, e)) },
           tpe = mapType(ph, x.tpe))
       case x: Tree.This     => x.copy(tpe = mapType(ph, x.tpe))
+      case x: Tree.Super    => x.copy(tpe = mapType(ph, x.tpe))
       case x: Tree.Break    => x.copy(tpe = mapType(ph, x.tpe))
       case x: Tree.Continue => x.copy(tpe = mapType(ph, x.tpe))
       case x: Tree.Assert   => x.copy(cond = mapTerm(ph, x.cond), msg = x.msg.map(mapTerm(ph, _)), tpe = mapType(ph, x.tpe))

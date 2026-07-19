@@ -326,7 +326,8 @@ object SpoonTir:
       private def nothingT = TypeRef(NoPrefix, minter.external("scala.Nothing", "Nothing"))
       private def selfT    = TypeRef(NoPrefix, classId)
       private def ty(e: CtTypedElement[?]): TypeRepr = Option(e.getType).map(tpe).getOrElse(NoType)
-      private def thisTerm(el: CtElement): Term = Tree.This(classId, selfT, originOf(el))
+      private def thisTerm(el: CtElement): Term  = Tree.This(classId, selfT, originOf(el))
+      private def superTerm(el: CtElement): Term = Tree.Super(classId, selfT, originOf(el))
 
       /** entry: a method/ctor block → a TIR `Block` (statements, Unit result). */
       def methodBody(b: CtBlock[?]): Term =
@@ -553,9 +554,10 @@ object SpoonTir:
         else
           val fid = fieldSym(ref)
           val qual: Term = target match
-            case null | (_: CtThisAccess[?]) | (_: CtSuperAccess[?]) => thisTerm(at)
-            case ta: CtTypeAccess[?]                                 => typeTerm(ta, at) // static access
-            case other                                               => expr(other)
+            case _: CtSuperAccess[?]                => superTerm(at)
+            case null | (_: CtThisAccess[?])        => thisTerm(at)
+            case ta: CtTypeAccess[?]                => typeTerm(ta, at) // static access
+            case other                              => expr(other)
           Tree.Select(qual, fid, ty(at), originOf(at))
 
       private def fieldSym(ref: CtFieldReference[?]): SymId =
@@ -570,9 +572,15 @@ object SpoonTir:
         val mid  = methodSym(ex)
         val args = inv.getArguments.asScala.toList.map(expr)
         val recv: Term = inv.getTarget match
-          case null | (_: CtThisAccess[?]) | (_: CtSuperAccess[?]) => thisTerm(inv)
-          case ta: CtTypeAccess[?]                                 => typeTerm(ta, inv) // static call
-          case t                                                   => expr(t)
+          case _: CtSuperAccess[?] => superTerm(inv)
+          case ta: CtTypeAccess[?] => typeTerm(ta, inv) // static call
+          case null | (_: CtThisAccess[?]) =>
+            // a constructor call whose target class isn't the enclosing class is `super(...)`
+            // (Spoon often leaves such invocations with a null/this target).
+            val superCtor = ex.isConstructor &&
+              Option(ex.getDeclaringType).map(_.getQualifiedName).exists(_ != minter.fullNameOf(classId))
+            if superCtor then superTerm(inv) else thisTerm(inv)
+          case t => expr(t)
         Tree.Apply(Tree.Select(recv, mid, NoType, originOf(inv)), args, mid, ty(inv), originOf(inv))
 
       private def ctorCall(cc: CtConstructorCall[?]): Term =
