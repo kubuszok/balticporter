@@ -345,10 +345,8 @@ object SpoonTir:
       // ---- statements ----
       private def stmt(s: CtStatement): Statement = s match
         case v: CtLocalVariable[?] =>
-          val vt  = tpe(v.getType)
-          val key = "@" + methodId.raw + "$L$" + v.getSimpleName + "#" + posKey(v)
-          val id  = minter.define(key)(sid => Symbol(sid, v.getSimpleName, v.getSimpleName, Flags(), methodId, vt))
-          registerVar(v, id)
+          val vt = tpe(v.getType)
+          val id = defineLocal(v, vt) // sets isMutable when the local is reassigned
           Tree.ValDef(id, tt(vt, v), Option(v.getDefaultExpression).map(expr), originOf(v))
         case a: CtOperatorAssignment[?, ?] =>
           val lhs = expr(a.getAssigned)
@@ -401,9 +399,26 @@ object SpoonTir:
 
       private def defineLocal(v: CtVariable[?], vt: TypeRepr): SymId =
         val key = "@" + methodId.raw + "$L$" + v.getSimpleName + "#" + posKey(v)
-        val id  = minter.define(key)(sid => Symbol(sid, v.getSimpleName, v.getSimpleName, Flags(), methodId, vt))
+        val mut = v.isInstanceOf[CtLocalVariable[?]] && isReassigned(v)
+        val id  = minter.define(key)(sid => Symbol(sid, v.getSimpleName, v.getSimpleName, Flags(isMutable = mut), methodId, vt))
         registerVar(v, id)
         id
+
+      /** does the enclosing method body write to `v` after its declaration? (then it's a `var`). */
+      private def isReassigned(v: CtVariable[?]): Boolean =
+        val scope = v.getParent(classOf[CtExecutable[?]])
+        scope != null && writesToVar(scope, v.getSimpleName)
+
+      private def writesToVar(scope: CtElement, name: String): Boolean =
+        val assigns = scope.getElements(new spoon.reflect.visitor.filter.TypeFilter(classOf[CtAssignment[?, ?]])).asScala
+        val unaries = scope.getElements(new spoon.reflect.visitor.filter.TypeFilter(classOf[CtUnaryOperator[?]])).asScala
+        assigns.exists { a =>
+          a.getAssigned match { case w: CtVariableWrite[?] => w.getVariable.getSimpleName == name; case _ => false }
+        } || unaries.exists { u =>
+          import UnaryOperatorKind.*
+          Set(POSTINC, POSTDEC, PREINC, PREDEC).contains(u.getKind) &&
+            (u.getOperand match { case va: CtVariableAccess[?] => va.getVariable.getSimpleName == name; case _ => false })
+        }
 
       private def tryStmt(t: CtTry, resources: List[Tree.ValDef]): Term =
         val catches = t.getCatchers.asScala.toList.map { c =>
@@ -488,12 +503,16 @@ object SpoonTir:
             case POSTDEC => Tree.IncDec(expr(u.getOperand), "-", post = true, ty(u), originOf(u))
             case PREINC  => Tree.IncDec(expr(u.getOperand), "+", post = false, ty(u), originOf(u))
             case PREDEC  => Tree.IncDec(expr(u.getOperand), "-", post = false, ty(u), originOf(u))
-        // assignment used as a value: `while ((line = read()) != null)`
+        // assignment used as a VALUE (`return a = v`, `while ((line = read()) != null)`):
+        // Java yields the assigned value, Scala's `=` is Unit — lower to `{ lhs = rhs; lhs }`.
         case a: CtOperatorAssignment[?, ?] =>
           val lhs = expr(a.getAssigned)
-          Tree.Assign(lhs, binApply(opText(a.getKind), lhs, expr(a.getAssignment), ty(a)), ty(a), originOf(a))
+          val st  = Tree.Assign(lhs, binApply(opText(a.getKind), lhs, expr(a.getAssignment), ty(a)), unitT, originOf(a))
+          Tree.Block(List(st), lhs, ty(a), originOf(a))
         case a: CtAssignment[?, ?] =>
-          Tree.Assign(expr(a.getAssigned), expr(a.getAssignment), ty(a), originOf(a))
+          val lhs = expr(a.getAssigned)
+          val st  = Tree.Assign(lhs, expr(a.getAssignment), unitT, originOf(a))
+          Tree.Block(List(st), lhs, ty(a), originOf(a))
         case c: CtConditional[?] =>
           Tree.If(expr(c.getCondition), expr(c.getThenExpression), expr(c.getElseExpression), ty(c), originOf(c))
         case ta: CtTypeAccess[?] => Tree.Literal(Constant.ClassOfC(tpe(ta.getAccessedType)), ty(e), originOf(e))

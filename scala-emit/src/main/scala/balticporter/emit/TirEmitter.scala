@@ -17,10 +17,31 @@ final class TirEmitter(program: Program):
 
   def emit: String = program.units.map(emitUnit).mkString("\n\n")
 
+  /** type symbols referenced while rendering the current unit — drives import generation. */
+  private val referenced = collection.mutable.LinkedHashSet[SymId]()
+
   def emitUnit(cd: Tree.ClassDef): String =
+    referenced.clear()
+    val body = classDef(cd, 0) // fills `referenced` via typeSym
     val full = sym(cd.symbol).fullName
     val pkg  = if full.contains('.') then s"package ${full.substring(0, full.lastIndexOf('.'))}\n\n" else ""
-    pkg + classDef(cd, 0)
+    pkg + imports(cd) + body
+
+  /** import every our-own type this unit references but does not itself declare, so those can
+    * be named simply. (No same-package elision or clash resolution yet — good enough here.) */
+  private def imports(cd: Tree.ClassDef): String =
+    val declared = declaredTypes(cd)
+    val lines = referenced.filterNot(declared).toList
+      .map(id => sym(id).fullName.replace('$', '.'))
+      .filter(_.contains('.'))
+      .distinct.sorted
+      .map(q => s"import $q")
+    if lines.isEmpty then "" else lines.mkString("", "\n", "\n\n")
+
+  private def declaredTypes(cd: Tree.ClassDef): Set[SymId] =
+    val acc = collection.mutable.Set[SymId](cd.symbol)
+    cd.body.foreach { case c: Tree.ClassDef => acc ++= declaredTypes(c); case _ => () }
+    acc.toSet
 
   // ---- names ----
   private def sym(id: SymId): Symbol = program.symbolOf(id).getOrElse(Symbol(id, "?", "?", Flags(), SymId.None, TypeRepr.NoType))
@@ -35,11 +56,13 @@ final class TirEmitter(program: Program):
   )
   /** backtick an identifier that collides with a Scala keyword. */
   private def esc(name: String): String = if keywords(name) then s"`$name`" else name
-  /** a TYPE symbol's rendered name. Type parameters render by simple name; everything else
-    * fully-qualified (no import machinery yet), with `$` (nested/binary names) → `.`. */
+  /** a TYPE symbol's rendered name. Type params and our own declarations render by simple
+    * name (and get imported if from elsewhere — see `imports`); externals stay fully qualified. */
   private def typeSym(id: SymId): String =
     val s = sym(id)
-    if s.flags.isParam then esc(s.name) else s.fullName.replace('$', '.')
+    if s.flags.isParam then esc(s.name)
+    else if program.definitionOf(id).isDefined then { referenced += id; esc(s.name) }
+    else s.fullName.replace('$', '.')
 
   private def ind(n: Int): String = "  " * n
 
@@ -66,16 +89,27 @@ final class TirEmitter(program: Program):
       val sb = orderBody(statics).map(stat(_, i + 1)).filter(_.nonEmpty).mkString("\n")
       s"$cls\n${ind(i)}object ${esc(s.name)} {\n$sb\n${ind(i)}}"
 
+  // static vals/defs move to the companion object; nested TYPES stay in the class body so
+  // they remain in scope by simple name inside it (a Java static nested class is visible
+  // throughout its enclosing class).
   private def isStatic(s: Statement): Boolean = s match
-    case d: Definition => sym(d.symbol).flags.isStatic
-    case _             => false
+    case _: Tree.ClassDef => false
+    case d: Definition    => sym(d.symbol).flags.isStatic
+    case _                => false
 
   /** Scala secondary constructors must delegate to a PRECEDING constructor, so order fields
     * first, then constructors by descending arity (a convenience ctor `this(a)` delegating to
     * a fuller `this(a,b)` needs the fuller one earlier), then everything else. */
   private def orderBody(body: List[Statement]): List[Statement] =
     def isCtor(s: Statement) = s match { case d: Tree.DefDef => sym(d.symbol).name == "<init>"; case _ => false }
-    val ctors  = body.collect { case d: Tree.DefDef if isCtor(d) => d }.sortBy(-_.paramss.map(_.size).sum)
+    // a ctor that delegates to `this(args)` must follow the one it delegates to. A base ctor
+    // (delegates to the primary via `this()`/super) sorts first; then by descending arity.
+    def delegatesToPeer(d: Tree.DefDef): Boolean = d.rhs match
+      case Some(Tree.Block((Tree.Apply(Tree.Select(r, m, _, _), args, _, _, _)) :: _, _, _, _)) =>
+        sym(m).name == "<init>" && args.nonEmpty && !r.isInstanceOf[Tree.Super]
+      case _ => false
+    val ctors  = body.collect { case d: Tree.DefDef if isCtor(d) => d }
+      .sortBy(d => (if delegatesToPeer(d) then 1 else 0, -d.paramss.map(_.size).sum))
     val fields = body.collect { case v: Tree.ValDef => v }
     val rest   = body.filterNot(s => isCtor(s) || s.isInstanceOf[Tree.ValDef])
     fields ++ ctors ++ rest
@@ -169,8 +203,15 @@ final class TirEmitter(program: Program):
     parts.mkString
 
   // ---- terms ----
+  /** true when an `Ident`'s symbol is actually a TYPE used as a value (a static-access
+    * receiver like `Float.compare`) — those must render as the (qualified) type name. */
+  private def isTypeRef(id: SymId): Boolean = program.definitionOf(id) match
+    case Some(_: Tree.ClassDef) => true
+    case Some(_)                => false
+    case None                   => val f = sym(id).fullName; f.contains('.') && !f.contains('#') && sym(id).info == TypeRepr.NoType
+
   private def term(t: Term, i: Int): String = t match
-    case Tree.Ident(s, _, _)            => local(s)
+    case Tree.Ident(s, _, _)            => if isTypeRef(s) then typeSym(s) else local(s)
     case Tree.Literal(c, _, _)          => constant(c)
     case Tree.This(_, _, _)             => "this"
     case Tree.Super(_, _, _)            => "super"

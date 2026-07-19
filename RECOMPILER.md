@@ -211,12 +211,18 @@ emission backend (step 3), since projecting the delta onto Scala output needs em
      a `Super` term node so super-vs-this dispatch and constructor delegation are distinct,
      secondary-constructor ordering (delegate must precede — sorted by descending arity),
      fully-qualified type references (no import machinery), operators infix, and Java statics →
-     a **companion `object`**. Remaining classes on the worklist (each a distinct
-     emitter/populator refinement, not yet done): nested-type placement (static-nested →
-     companion, inner → path-dependent), accessor-paren semantics, **enum lowering with cases**
-     (populator must carry `CtEnumValue`s), java-collection API surface, and `break`/`continue`
-     → `boundary` / do-while / inc-dec-in-value. Full green on a real library is a multi-wave
-     grind (the M6-scale effort, now on the emitter, where it belongs).
+     a **companion `object`**. More waves since: **import generation** (types referenced
+     during render → `import`s so simple names resolve), nested types kept in the class body,
+     **assignment-as-value** → `{ lhs = rhs; lhs }`, **static-receiver types qualified**
+     (`Float.compare` → `java.lang.Float`), **local `var` inference** (reassigned local → var),
+     and **constructor ordering by delegation**. This took noise4j from all-red to **77 scalac
+     errors** (Grid at 2, two files fully green). Remaining classes — the deep Java→Scala
+     structural ones the BIR path solved with dedicated passes, now to port to the emitter:
+     **enum lowering with cases** (populator must carry `CtEnumValue`s; emit sealed/enum +
+     `values`), **member-name clashes** (a Java field `x` + method `x()` — the `MemberClashPass`
+     analog), cross-file nested-type references (inner `Outer#Inner`), java-collection API
+     surface, casts/accessor-parens. Full green on a real library is a multi-wave grind (the
+     M6-scale effort, now on the emitter, where it belongs).
 4. **First transform** — pick one real case (java→scala collection, or a field
    usage rewrite) end-to-end to validate the substrate against an actual migration.
 5. **Transform API + the sge/ssg cases** — globals→implicits (call graph),
