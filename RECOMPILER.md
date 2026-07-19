@@ -194,6 +194,17 @@ emission backend (step 3), since projecting the delta onto Scala output needs em
      `SpoonTirBodySpec` locks every construct in corpus-independently (5/5).
 3. **Emission backend** — TIR → Scala source, types-aware (subsumes the compile
    fixes). Gate: the M6 closure compiles from TIR emission.
+   - **3a. First cut — `TirEmitter` (scala-emit)** — walks the typed tree → Scala 3 source,
+     resolving every name from the `Program` symbol table (types: simple for our own decls,
+     qualified for externals). Covers the whole node set: classes/traits/objects/enums with
+     type params + F-bounds, defs/vals/fields, and all terms (calls, control flow, arrays,
+     try, match, for/foreach, lambda, instanceof, …). Operators render infix/prefix
+     (precedence-safe parens). Emits readable Scala on real corpus files (e.g. liqp
+     `Compact`, `Upcase`). `TirEmitterSpec` pins output from a hand-built program;
+     `SpoonTirEmit` (runMain) emits any Java file for eyeballing. Known refinement points
+     (marked inline, not populator gaps): constructor lowering (primary vs secondary, super
+     vs this — the `CtorPlan` analog), `break`/`continue` → `boundary`, do-while, and inc/dec
+     in value position. Next: drive a real closure to scalac-green (the step-3 gate).
 4. **First transform** — pick one real case (java→scala collection, or a field
    usage rewrite) end-to-end to validate the substrate against an actual migration.
 5. **Transform API + the sge/ssg cases** — globals→implicits (call graph),
