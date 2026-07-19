@@ -178,14 +178,18 @@ emission backend (step 3), since projecting the delta onto Scala output needs em
      stance as the BIR frontend; the body node set grows the same way). Proven by
      `SpoonTirSpec` (6/6): method calls / field refs become traced usages, and
      `callersOf(pick) == [run]` over real translated bodies.
-   - **2d. Full corpus body coverage** — the body node set was grown until the ENTIRE liqp
-     corpus translates clean. Added faithful Term nodes: `InstanceOf`, `ArrayAccess`,
-     `ArrayLength`, `NewArray`, `ForEach`, `For`, `Try`(+`CatchCase`), `Match`(+`CaseDef`),
-     `MethodRef`, `Break`, `Continue` (Java switch → `Match`; genuine fallthrough kept as
-     `Unsupported`, like the BIR frontend). `SpoonTirCoverage` (a runMain burn-down harness
-     over `../ssg` liqp) reports **135/135 types, 0 `Unsupported`**; a whole-program build
-     (all types, one xref) yields 3101 symbols / 632 methods / a real call graph.
-     `SpoonTirBodySpec` locks the constructs in without needing the corpus.
+   - **2d. Full corpus body coverage** — the body node set was grown until entire corpora
+     translate clean. Added faithful Term nodes: `InstanceOf`, `ArrayAccess`, `ArrayLength`,
+     `NewArray`, `ForEach`, `For`, `Try`(+`CatchCase`), `Match`(+`CaseDef`), `MethodRef`,
+     `Break`, `Continue`, `Assert`, `IncDec`, `DoWhile`, `Synchronized`; assignment-as-value
+     reuses `Assign`. Java switch → `Match` with **tail-duplication** for genuine fallthrough
+     (RESEARCH §4.2), so no `Unsupported`. `SpoonTirCoverage` is a multi-corpus burn-down
+     harness (`runMain … [liqp|flexmark] [N]`) over `../ssg`:
+       - **liqp: 135/135 types, 0 `Unsupported`** — whole-program 135 units / 3101 symbols /
+         632 methods.
+       - **flexmark: 789/789 types, 0 `Unsupported`** — whole-program 789 units / 27899
+         symbols / 8412 methods, one xref over the whole thing.
+     `SpoonTirBodySpec` locks every construct in corpus-independently (4/4).
 3. **Emission backend** — TIR → Scala source, types-aware (subsumes the compile
    fixes). Gate: the M6 closure compiles from TIR emission.
 4. **First transform** — pick one real case (java→scala collection, or a field

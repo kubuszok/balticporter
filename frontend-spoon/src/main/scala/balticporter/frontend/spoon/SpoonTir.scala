@@ -378,6 +378,9 @@ object SpoonTir:
         case s: CtSwitch[?]       => switchStmt(s)
         case b: CtBreak           => Tree.Break(Option(b.getTargetLabel), nothingT, originOf(b))
         case c: CtContinue        => Tree.Continue(Option(c.getTargetLabel), nothingT, originOf(c))
+        case a: CtAssert[?]       => Tree.Assert(expr(a.getAssertExpression), Option(a.getExpression).map(expr), unitT, originOf(a))
+        case d: CtDo              => Tree.DoWhile(blockTerm(d.getBody), expr(d.getLoopingExpression), unitT, originOf(d))
+        case y: CtSynchronized    => Tree.Synchronized(expr(y.getExpression), blockTerm(y.getBlock), unitT, originOf(y))
         case u: CtUnaryOperator[?] =>
           import UnaryOperatorKind.*
           val one = Tree.Literal(Constant.IntC(1), ty(u), originOf(u))
@@ -405,27 +408,34 @@ object SpoonTir:
         Tree.Try(blockTerm(t.getBody), catches, Option(t.getFinalizer).map(blockTerm), unitT, originOf(t))
 
       /** Java switch → TIR `Match`. Empty (grouping) cases merge their labels into the next;
-        * a genuine fallthrough (a non-empty, non-terminated, non-last case) is `Unsupported`,
-        * the same faithful stance as the BIR frontend. */
+        * genuine fallthrough is lowered by TAIL DUPLICATION — a non-terminated case's body is
+        * its own statements followed by the next case's closure (the same faithful lowering
+        * the BIR frontend uses, RESEARCH §4.2), so no `Unsupported`. */
       private def switchStmt(s: CtSwitch[?]): Term =
         val cases = s.getCases.asScala.toList
         def stmtsOf(c: CtCase[?]): List[CtStatement] = c.getStatements.asScala.toList match
           case List(b: CtBlock[?]) => b.getStatements.asScala.toList
           case l                   => l
+        // per case: (body without a trailing break, terminated?)
+        val split = cases.map { c =>
+          val raw = stmtsOf(c)
+          raw.reverse match
+            case (_: CtBreak) :: rest => (rest.reverse, true)
+            case _                    => (raw, raw.lastOption.exists { case _: CtReturn[?] | _: CtThrow => true; case _ => false })
+        }
+        val closures = new Array[List[CtStatement]](cases.length)
+        for i <- cases.indices.reverse do
+          val (body, terminated) = split(i)
+          closures(i) = if terminated || i == cases.length - 1 then body else body ++ closures(i + 1)
         val out     = List.newBuilder[Tree.CaseDef]
         var pending = List.empty[Term]
         cases.zipWithIndex.foreach { case (c, idx) =>
           val labels    = c.getCaseExpressions.asScala.toList.map(expr)
           val isDefault = labels.isEmpty
           val isLast    = idx == cases.length - 1
-          val raw       = stmtsOf(c)
-          if raw.isEmpty && !isDefault && !isLast then pending = pending ++ labels
+          if split(idx)._1.isEmpty && stmtsOf(c).isEmpty && !isDefault && !isLast then pending = pending ++ labels
           else
-            val (body, terminated) = raw.reverse match
-              case (_: CtBreak) :: rest => (rest.reverse, true)
-              case _                    => (raw, raw.lastOption.exists { case _: CtReturn[?] | _: CtThrow => true; case _ => false })
-            if body.nonEmpty && !terminated && !isLast then unsupported(c, "switch fallthrough")
-            out += Tree.CaseDef(pending ++ labels, None, Tree.Block(body.map(stmt), unit(c), unitT, originOf(c)), isDefault)
+            out += Tree.CaseDef(pending ++ labels, None, Tree.Block(closures(idx).map(stmt), unit(c), unitT, originOf(c)), isDefault)
             pending = Nil
         }
         Tree.Match(expr(s.getSelector), out.result(), unitT, originOf(s))
@@ -461,11 +471,20 @@ object SpoonTir:
         case u: CtUnaryOperator[?] =>
           import UnaryOperatorKind.*
           u.getKind match
-            case NOT   => unApply("unary_!", expr(u.getOperand), ty(u))
-            case NEG   => unApply("unary_-", expr(u.getOperand), ty(u))
-            case POS   => unApply("unary_+", expr(u.getOperand), ty(u))
-            case COMPL => unApply("unary_~", expr(u.getOperand), ty(u))
-            case k     => unsupported(u, s"unary in expression position $k")
+            case NOT     => unApply("unary_!", expr(u.getOperand), ty(u))
+            case NEG     => unApply("unary_-", expr(u.getOperand), ty(u))
+            case POS     => unApply("unary_+", expr(u.getOperand), ty(u))
+            case COMPL   => unApply("unary_~", expr(u.getOperand), ty(u))
+            case POSTINC => Tree.IncDec(expr(u.getOperand), "+", post = true, ty(u), originOf(u))
+            case POSTDEC => Tree.IncDec(expr(u.getOperand), "-", post = true, ty(u), originOf(u))
+            case PREINC  => Tree.IncDec(expr(u.getOperand), "+", post = false, ty(u), originOf(u))
+            case PREDEC  => Tree.IncDec(expr(u.getOperand), "-", post = false, ty(u), originOf(u))
+        // assignment used as a value: `while ((line = read()) != null)`
+        case a: CtOperatorAssignment[?, ?] =>
+          val lhs = expr(a.getAssigned)
+          Tree.Assign(lhs, binApply(opText(a.getKind), lhs, expr(a.getAssignment), ty(a)), ty(a), originOf(a))
+        case a: CtAssignment[?, ?] =>
+          Tree.Assign(expr(a.getAssigned), expr(a.getAssignment), ty(a), originOf(a))
         case c: CtConditional[?] =>
           Tree.If(expr(c.getCondition), expr(c.getThenExpression), expr(c.getElseExpression), ty(c), originOf(c))
         case ta: CtTypeAccess[?] => Tree.Literal(Constant.ClassOfC(tpe(ta.getAccessedType)), ty(e), originOf(e))

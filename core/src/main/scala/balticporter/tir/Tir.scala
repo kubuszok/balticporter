@@ -233,6 +233,14 @@ object Tree:
   final case class Break(label: Option[String], tpe: TypeRepr, origin: Origin)          extends Term
   /** `continue` / `continue label`. `tpe` is Nothing. */
   final case class Continue(label: Option[String], tpe: TypeRepr, origin: Origin)        extends Term
+  /** `assert cond` / `assert cond : msg`. `tpe` is Unit. */
+  final case class Assert(cond: Term, msg: Option[Term], tpe: TypeRepr, origin: Origin)  extends Term
+  /** `i++` / `++i` / `i--` / `--i` as an expression; `op` is `"+"`/`"-"`, `post` the position. */
+  final case class IncDec(target: Term, op: String, post: Boolean, tpe: TypeRepr, origin: Origin) extends Term
+  /** `do body while (cond)`. `tpe` is Unit. */
+  final case class DoWhile(body: Term, cond: Term, tpe: TypeRepr, origin: Origin)        extends Term
+  /** `synchronized (lock) body`. `tpe` is Unit. */
+  final case class Synchronized(lock: Term, body: Term, tpe: TypeRepr, origin: Origin)   extends Term
   /** an as-yet-unmodeled TERM, kept typed (a full structured `tpe`) so the tree stays
     * whole while the node set grows. TYPES are never opaque; only unmodeled terms are. */
   final case class Opaque(raw: String, tpe: TypeRepr, origin: Origin)                   extends Term

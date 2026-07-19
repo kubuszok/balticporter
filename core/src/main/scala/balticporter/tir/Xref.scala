@@ -151,6 +151,10 @@ object Xref:
           case Left(tpt)   => walkType(tpt.tpe, UsageKind.TypeRefPos, tpt)
           case Right(term) => walkTerm(term)
       case _: Tree.Break | _: Tree.Continue => () // control-flow leaves, no symbol refs
+      case Tree.Assert(c, m, _, _)          => walkTerm(c); m.foreach(walkTerm)
+      case Tree.IncDec(t, _, _, _, _)       => walkTerm(t)
+      case Tree.DoWhile(b, c, _, _)         => walkTerm(b); walkTerm(c)
+      case Tree.Synchronized(l, b, _, _)    => walkTerm(l); walkTerm(b)
       case l @ Tree.Literal(Constant.ClassOfC(tp), _, _) => walkType(tp, UsageKind.TypeArg, l)
       case _: Tree.Literal                  => ()
       case _: Tree.Opaque                   => ()

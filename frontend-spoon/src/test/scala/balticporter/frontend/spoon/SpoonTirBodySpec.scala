@@ -55,3 +55,32 @@ class SpoonTirBodySpec extends munit.FunSuite:
     val string = program.symbols.all.find(_.fullName == "java.lang.String").map(_.id)
     assert(string.exists(id => program.usagesOf(id).nonEmpty))
   }
+
+  // second batch: constructs surfaced by the flexmark corpus
+  private val src2 =
+    """package demo;
+      |class More {
+      |  int run(int n) {
+      |    int i = 0;
+      |    int total = 0;
+      |    assert n > 0 : "positive";
+      |    do { total = total + n; i++; } while (i < n);
+      |    synchronized (this) { total = total + 1; }
+      |    int[] a = new int[3];
+      |    a[i % 3] = a[0]++;                 // inc/dec in expression + array write
+      |    int x;
+      |    while ((x = a[0]) > 0) { break; }  // assignment as expression
+      |    switch (n) {
+      |      case 1: total = total + 1;       // genuine fallthrough
+      |      case 2: total = total + 2; break;
+      |      default: total = 0;
+      |    }
+      |    return total;
+      |  }
+      |}
+      |""".stripMargin
+
+  test("assert / do-while / synchronized / inc-dec-expr / assign-expr / switch-fallthrough all translate") {
+    val p = SpoonTir.fromSource(src2) // throws on any Unsupported
+    assert(p.symbols.all.exists(_.fullName == "demo.More#run"))
+  }
