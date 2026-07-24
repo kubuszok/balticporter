@@ -223,6 +223,22 @@ emission backend (step 3), since projecting the delta onto Scala output needs em
      analog), cross-file nested-type references (inner `Outer#Inner`), java-collection API
      surface, casts/accessor-parens. Full green on a real library is a multi-wave grind (the
      M6-scale effort, now on the emitter, where it belongs).
+   - **3c. Structural burn-down (all-red → 27).** The identified structural categories were
+     resolved as emitter capabilities: **enum lowering** (`sealed abstract class` + companion
+     `case object`s + `def values()`, per-constant overrides); **member-name clashes**
+     (`resolveMemberClashes` renames + relaxes visibility); **cross-file nested types**
+     (`Outer#Inner` type projections, scope-aware; dotted paths in value position);
+     **inner/outer member access** (implicit-`this` and enclosing/inherited access → bare
+     refs; explicit own `this.x` stays qualified); **casts** → `.asInstanceOf[T]`; **statics**
+     → companion `object` (all-static class → plain `object`); **degenerate no-arg ctors**
+     dropped; **`IncDec` in value position** yields the value. Grid, Array2D, Int2dArray,
+     Generator, Generators, AbstractRoomGenerator emit scalac-green. The residual ~27 are the
+     hardest edges: **java-collection iteration** (`for (x <- javaList)` — the step-5
+     collections TRANSFORM, not an emitter concern; the emitter emits `java.util` types
+     correctly), **anonymous-class outer capture**, **generics erasure** (`null`/array of a
+     type param), and **nested-static VALUE access** (path-dependent `Outer.Inner.CONST`).
+     Those want either the collections transform (step 5) or dedicated nesting-placement /
+     capture machinery — tracked, not yet built.
 4. **First transform** — pick one real case (java→scala collection, or a field
    usage rewrite) end-to-end to validate the substrate against an actual migration.
 5. **Transform API + the sge/ssg cases** — globals→implicits (call graph),

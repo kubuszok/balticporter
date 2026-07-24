@@ -264,8 +264,16 @@ final class TirEmitter(source: Program):
     val s = sym(id)
     if currentDeclared(id) then esc(s.name) else s.fullName.replace('$', '.')
 
+  /** a static member lives in the companion `object`; even inside its own class it must be
+    * named `Owner.member`, since a Scala class doesn't see its companion's members unqualified. */
+  private def staticRef(s: SymId): String =
+    val sm = sym(s)
+    if sm.flags.isStatic && sm.owner != SymId.None && program.symbolOf(sm.owner).exists(_.info.isInstanceOf[TypeRepr.TypeRef])
+    then s"${typeValue(sm.owner)}.${esc(sm.name)}"
+    else local(s)
+
   private def term(t: Term, i: Int): String = t match
-    case Tree.Ident(s, _, _)            => if isTypeRef(s) then typeValue(s) else local(s)
+    case Tree.Ident(s, _, _)            => if isTypeRef(s) then typeValue(s) else staticRef(s)
     case Tree.Literal(c, _, _)          => constant(c)
     case Tree.This(_, _, _)             => "this"
     case Tree.Super(_, _, _)            => "super"
