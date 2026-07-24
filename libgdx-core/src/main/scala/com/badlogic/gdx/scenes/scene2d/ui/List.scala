@@ -89,7 +89,7 @@ class List[T] extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlogi
     font.setColor(fontColorUnselected.r, fontColorUnselected.g, fontColorUnselected.b, fontColorUnselected.a * parentAlpha);
     { var i: scala.Int = 0; while (i < this.items.size) { {
       if ((this.cullingArea == null) || (((itemY - this.itemHeight) <= (this.cullingArea.y + this.cullingArea.height)) && (itemY >= this.cullingArea.y))) {
-        val item: T = this.items.get(i)
+        val item: T = this.items.get(i).asInstanceOf[T]
         val selected: scala.Boolean = this.selection.contains(item)
         var drawable: com.badlogic.gdx.scenes.scene2d.utils.Drawable = null
         if ((this.pressedIndex == i) && (this.style.down != null)) {
@@ -140,7 +140,7 @@ class List[T] extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlogi
     this.selection = selection
   }
   def getSelected(): T = {
-    return this.selection.first()
+    return this.selection.first().asInstanceOf[T]
   }
   def setSelected(item: T): scala.Unit = {
     if (this.items.contains(item, false)) {
@@ -178,7 +178,7 @@ class List[T] extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlogi
     if (index == (-1)) {
       return null.asInstanceOf[T]
     } else ()
-    return this.items.get(index)
+    return this.items.get(index).asInstanceOf[T]
   }
   def getItemIndexAt(y$arg: scala.Float): scala.Int = {
     var y: scala.Float = y$arg

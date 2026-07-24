@@ -83,7 +83,7 @@ class ParticleEffectLoader extends com.badlogic.gdx.assets.loaders.AsynchronousA
   private def find[T](array: com.badlogic.gdx.utils.Array[?], `type`: java.lang.Class[T]): T = {
     for (`object` <- array) {
       if (com.badlogic.gdx.utils.reflect.ClassReflection.isAssignableFrom(`type`, `object`.getClass())) {
-        return `object`.asInstanceOf[T]
+        return `object`.asInstanceOf[T].asInstanceOf[T]
       } else ()
     }
     return null.asInstanceOf[T]

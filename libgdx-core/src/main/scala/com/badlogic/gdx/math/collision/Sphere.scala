@@ -25,7 +25,7 @@ class Sphere extends java.io.Serializable {
     if ((o == null) || (o.getClass() != this.getClass())) {
       return false
     } else ()
-    val s: Sphere = o.asInstanceOf[Sphere]
+    val s: Sphere = o.asInstanceOf[Sphere].asInstanceOf[Sphere]
     return (this.radius == s.radius) && this.center.equals(s.center)
   }
   def volume(): scala.Float = {

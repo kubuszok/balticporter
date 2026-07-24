@@ -539,7 +539,7 @@ class FileHandle {
     if (!obj.isInstanceOf[FileHandle]) {
       return false
     } else ()
-    val other: FileHandle = obj.asInstanceOf[FileHandle]
+    val other: FileHandle = obj.asInstanceOf[FileHandle].asInstanceOf[FileHandle]
     return (this.type$field == other.type$field) && this.path().equals(other.path())
   }
   def hashCode(): scala.Int = {

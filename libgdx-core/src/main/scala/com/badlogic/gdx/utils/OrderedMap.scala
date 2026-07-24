@@ -41,10 +41,10 @@ class OrderedMap[K, V] extends com.badlogic.gdx.utils.ObjectMap[K, V] {
   }
   def remove(key: K): V = {
     this.keys$field.removeValue(key, false)
-    return super.remove(key)
+    return super.remove(key).asInstanceOf[V]
   }
   def removeIndex(index: scala.Int): V = {
-    return super.remove(this.keys$field.removeIndex(index))
+    return super.remove(this.keys$field.removeIndex(index)).asInstanceOf[V]
   }
   def alter(before: K, after: K): scala.Boolean = {
     if (this.containsKey(after)) {
@@ -147,13 +147,13 @@ class OrderedMap[K, V] extends com.badlogic.gdx.utils.ObjectMap[K, V] {
     } else ()
     val keys: com.badlogic.gdx.utils.Array[K] = this.keys$field;
     { var i: scala.Int = 0; val n: scala.Int = keys.size; while (i < n) { {
-      val key: K = keys.get(i)
+      val key: K = keys.get(i).asInstanceOf[K]
       if (i > 0) {
         buffer.append(separator)
       } else ()
       buffer.append(if (key == this) "(this)" else key)
       buffer.append('=')
-      val value: V = this.get(key)
+      val value: V = this.get(key).asInstanceOf[V]
       buffer.append(if (value == this) "(this)" else value)
     }; i = i + 1 } }
     if (braces) {
@@ -182,8 +182,8 @@ object OrderedMap {
         throw new com.badlogic.gdx.utils.GdxRuntimeException("#iterator() cannot be used nested.")
       } else ()
       currentIndex = nextIndex
-      this.entry.key = this.keys.get(nextIndex)
-      this.entry.value = map.get(this.entry.key)
+      this.entry.key = this.keys.get(nextIndex).asInstanceOf[K]
+      this.entry.value = map.get(this.entry.key).asInstanceOf[V]
       nextIndex = nextIndex + 1
       hasNext = nextIndex < this.map.size
       return entry
@@ -215,7 +215,7 @@ object OrderedMap {
       if (!valid) {
         throw new com.badlogic.gdx.utils.GdxRuntimeException("#iterator() cannot be used nested.")
       } else ()
-      val key: K = this.keys.get(nextIndex)
+      val key: K = this.keys.get(nextIndex).asInstanceOf[K]
       currentIndex = nextIndex
       nextIndex = nextIndex + 1
       hasNext = nextIndex < this.map.size
@@ -257,7 +257,7 @@ object OrderedMap {
       if (!valid) {
         throw new com.badlogic.gdx.utils.GdxRuntimeException("#iterator() cannot be used nested.")
       } else ()
-      val value: V = map.get(this.keys.get(nextIndex))
+      val value: V = map.get(this.keys.get(nextIndex)).asInstanceOf[V]
       currentIndex = nextIndex
       nextIndex = nextIndex + 1
       hasNext = nextIndex < this.map.size

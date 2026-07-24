@@ -10,7 +10,7 @@ class MapProperties {
     return this.properties.get(key)
   }
   def get[T](key: java.lang.String, clazz: java.lang.Class[T]): T = {
-    return this.get(key).asInstanceOf[T]
+    return this.get(key).asInstanceOf[T].asInstanceOf[T]
   }
   def get[T](key: java.lang.String, defaultValue: T, clazz: java.lang.Class[T]): T = {
     val `object`: java.lang.Object = this.get(key)
@@ -41,7 +41,7 @@ class MapProperties {
     if (!o.isInstanceOf[MapProperties]) {
       return false
     } else ()
-    val that: MapProperties = o.asInstanceOf[MapProperties]
+    val that: MapProperties = o.asInstanceOf[MapProperties].asInstanceOf[MapProperties]
     return java.util.Objects.equals(this.properties, that.properties)
   }
   def hashCode(): scala.Int = {

@@ -351,7 +351,7 @@ class Tree[N <: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[?, ?, ?], V] extend
     if (this.overNode == null) {
       return null.asInstanceOf[V]
     } else ()
-    return this.overNode.getValue().asInstanceOf[V]
+    return this.overNode.getValue().asInstanceOf[V].asInstanceOf[V]
   }
   def setOverNode(overNode: N): scala.Unit = {
     this.overNode = overNode

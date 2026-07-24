@@ -282,7 +282,7 @@ class Vector2 extends java.io.Serializable with com.badlogic.gdx.math.Vector[Vec
     if (this.getClass() != obj.getClass()) {
       return false
     } else ()
-    val other: Vector2 = obj.asInstanceOf[Vector2]
+    val other: Vector2 = obj.asInstanceOf[Vector2].asInstanceOf[Vector2]
     if (com.badlogic.gdx.utils.NumberUtils.floatToIntBits(this.x) != com.badlogic.gdx.utils.NumberUtils.floatToIntBits(other.x)) {
       return false
     } else ()

@@ -9,7 +9,7 @@ abstract class FlushablePool[T] extends com.badlogic.gdx.utils.Pool[T] {
     this()
   }
   def obtain(): T = {
-    val result: T = super.obtain()
+    val result: T = super.obtain().asInstanceOf[T]
     this.obtained.add(result)
     return result
   }

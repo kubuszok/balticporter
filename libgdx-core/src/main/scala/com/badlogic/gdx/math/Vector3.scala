@@ -335,7 +335,7 @@ class Vector3 extends java.io.Serializable with com.badlogic.gdx.math.Vector[Vec
     if (this.getClass() != obj.getClass()) {
       return false
     } else ()
-    val other: Vector3 = obj.asInstanceOf[Vector3]
+    val other: Vector3 = obj.asInstanceOf[Vector3].asInstanceOf[Vector3]
     if (com.badlogic.gdx.utils.NumberUtils.floatToIntBits(this.x) != com.badlogic.gdx.utils.NumberUtils.floatToIntBits(other.x)) {
       return false
     } else ()

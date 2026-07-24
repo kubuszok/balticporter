@@ -388,7 +388,7 @@ class Quaternion extends java.io.Serializable {
     if (!obj.isInstanceOf[Quaternion]) {
       return false
     } else ()
-    val other: Quaternion = obj.asInstanceOf[Quaternion]
+    val other: Quaternion = obj.asInstanceOf[Quaternion].asInstanceOf[Quaternion]
     return (((com.badlogic.gdx.utils.NumberUtils.floatToRawIntBits(this.w) == com.badlogic.gdx.utils.NumberUtils.floatToRawIntBits(other.w)) && (com.badlogic.gdx.utils.NumberUtils.floatToRawIntBits(this.x) == com.badlogic.gdx.utils.NumberUtils.floatToRawIntBits(other.x))) && (com.badlogic.gdx.utils.NumberUtils.floatToRawIntBits(this.y) == com.badlogic.gdx.utils.NumberUtils.floatToRawIntBits(other.y))) && (com.badlogic.gdx.utils.NumberUtils.floatToRawIntBits(this.z) == com.badlogic.gdx.utils.NumberUtils.floatToRawIntBits(other.z))
   }
   def dot(other: Quaternion): scala.Float = {

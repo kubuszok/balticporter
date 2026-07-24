@@ -66,7 +66,7 @@ class Actor {
     try {
       val ascendantsArray: scala.Array[java.lang.Object] = ascendants.items.asInstanceOf[scala.Array[java.lang.Object]];
       { var i: scala.Int = ascendants.size - 1; while (i >= 0) { {
-        val currentTarget: com.badlogic.gdx.scenes.scene2d.Group = ascendantsArray(i).asInstanceOf[com.badlogic.gdx.scenes.scene2d.Group]
+        val currentTarget: com.badlogic.gdx.scenes.scene2d.Group = ascendantsArray(i).asInstanceOf[com.badlogic.gdx.scenes.scene2d.Group].asInstanceOf[com.badlogic.gdx.scenes.scene2d.Group]
         currentTarget.notify(event, true)
         if (event.isStopped()) {
           return event.isCancelled()

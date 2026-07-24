@@ -27,7 +27,7 @@ abstract class ModelInfluencer extends com.badlogic.gdx.graphics.g3d.particles.i
       descriptor = data.loadAsset()
       descriptor
     } != null) {
-      val model: com.badlogic.gdx.graphics.g3d.Model = manager.get(descriptor).asInstanceOf[com.badlogic.gdx.graphics.g3d.Model]
+      val model: com.badlogic.gdx.graphics.g3d.Model = manager.get(descriptor).asInstanceOf[com.badlogic.gdx.graphics.g3d.Model].asInstanceOf[com.badlogic.gdx.graphics.g3d.Model]
       if (model == null) {
         throw new java.lang.RuntimeException("Model is null")
       } else ()

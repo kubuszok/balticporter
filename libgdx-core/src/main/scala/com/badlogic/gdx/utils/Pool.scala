@@ -51,7 +51,7 @@ abstract class Pool[T] {
     val freeObjects: com.badlogic.gdx.utils.Array[T] = this.freeObjects
     val max: scala.Int = this.max;
     { var i: scala.Int = 0; val n: scala.Int = objects.size; while (i < n) { {
-      val `object`: T = objects.get(i)
+      val `object`: T = objects.get(i).asInstanceOf[T]
       if (`object` == null) {
         /* continue */ ()
       } else ()

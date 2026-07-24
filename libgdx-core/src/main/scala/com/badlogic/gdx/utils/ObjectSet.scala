@@ -206,7 +206,7 @@ class ObjectSet[T] extends scala.collection.Iterable[T] {
     if (!obj.isInstanceOf[ObjectSet[?]]) {
       return false
     } else ()
-    val other: ObjectSet[?] = obj.asInstanceOf[ObjectSet[?]]
+    val other: ObjectSet[?] = obj.asInstanceOf[ObjectSet[?]].asInstanceOf[ObjectSet[?]]
     if (other.size != this.size) {
       return false
     } else ()

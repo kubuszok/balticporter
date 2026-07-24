@@ -382,7 +382,7 @@ class IntArray {
     if (!`object`.isInstanceOf[IntArray]) {
       return false
     } else ()
-    val array: IntArray = `object`.asInstanceOf[IntArray]
+    val array: IntArray = `object`.asInstanceOf[IntArray].asInstanceOf[IntArray]
     if (!array.ordered) {
       return false
     } else ()

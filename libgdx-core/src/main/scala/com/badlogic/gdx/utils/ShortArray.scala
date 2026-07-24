@@ -389,7 +389,7 @@ class ShortArray {
     if (!`object`.isInstanceOf[ShortArray]) {
       return false
     } else ()
-    val array: ShortArray = `object`.asInstanceOf[ShortArray]
+    val array: ShortArray = `object`.asInstanceOf[ShortArray].asInstanceOf[ShortArray]
     if (!array.ordered) {
       return false
     } else ()

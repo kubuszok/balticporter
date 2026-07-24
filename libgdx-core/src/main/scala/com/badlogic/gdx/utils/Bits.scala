@@ -231,7 +231,7 @@ class Bits {
     if (this.getClass() != obj.getClass()) {
       return false
     } else ()
-    val other: Bits = obj.asInstanceOf[Bits]
+    val other: Bits = obj.asInstanceOf[Bits].asInstanceOf[Bits]
     val otherBits: scala.Array[scala.Long] = other.bits
     val commonWords: scala.Int = java.lang.Math.min(this.bits.length, otherBits.length);
     { var i: scala.Int = 0; while (commonWords > i) { {

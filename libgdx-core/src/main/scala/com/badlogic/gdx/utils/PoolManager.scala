@@ -29,14 +29,14 @@ class PoolManager {
     if (pool == null) {
       throw new com.badlogic.gdx.utils.GdxRuntimeException(((("Attempt to get pooled object with unknown class: " + clazz) + ", register using PoolManager#addPool(") + clazz.getSimpleName()) + "::new)")
     } else ()
-    return pool.obtain()
+    return pool.obtain().asInstanceOf[T]
   }
   def obtainOrNull[T](clazz: java.lang.Class[T]): T = {
     val pool: com.badlogic.gdx.utils.Pool[T] = this.typePools.get(clazz).asInstanceOf[com.badlogic.gdx.utils.Pool[T]]
     if (pool == null) {
       return null.asInstanceOf[T]
     } else ()
-    return pool.obtain()
+    return pool.obtain().asInstanceOf[T]
   }
   def free[T](`object`: T): scala.Unit = {
     val pool: com.badlogic.gdx.utils.Pool[T] = this.typePools.get(`object`.getClass()).asInstanceOf[com.badlogic.gdx.utils.Pool[T]]

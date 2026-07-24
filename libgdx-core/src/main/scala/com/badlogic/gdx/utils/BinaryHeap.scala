@@ -161,7 +161,7 @@ class BinaryHeap[T <: com.badlogic.gdx.utils.BinaryHeap.Node] {
     if (!obj.isInstanceOf[BinaryHeap[?]]) {
       return false
     } else ()
-    val other: BinaryHeap[?] = obj.asInstanceOf[BinaryHeap[?]]
+    val other: BinaryHeap[?] = obj.asInstanceOf[BinaryHeap[?]].asInstanceOf[BinaryHeap[?]]
     if (other.size != this.size) {
       return false
     } else ()

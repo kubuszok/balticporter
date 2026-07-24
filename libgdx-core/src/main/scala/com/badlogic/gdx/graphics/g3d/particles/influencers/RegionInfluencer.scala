@@ -58,7 +58,7 @@ abstract class RegionInfluencer extends com.badlogic.gdx.graphics.g3d.particles.
       return
     } else ()
     var atlas: com.badlogic.gdx.graphics.g2d.TextureAtlas = null.asInstanceOf[com.badlogic.gdx.graphics.g2d.TextureAtlas]
-    atlas = manager.get(data.loadAsset()).asInstanceOf[com.badlogic.gdx.graphics.g2d.TextureAtlas]
+    atlas = manager.get(data.loadAsset()).asInstanceOf[com.badlogic.gdx.graphics.g2d.TextureAtlas].asInstanceOf[com.badlogic.gdx.graphics.g2d.TextureAtlas]
     for (atr <- this.regions) {
       atr.updateUV(atlas)
     }

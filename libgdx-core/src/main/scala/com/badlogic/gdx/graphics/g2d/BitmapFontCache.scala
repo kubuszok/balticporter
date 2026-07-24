@@ -315,7 +315,7 @@ class BitmapFontCache {
           nextColorGlyphIndex = if ({ colorsIndex += 1; colorsIndex } < colors.size) colors.get(colorsIndex) else -1
         } else ()
         gx = gx + xAdvances(ii)
-        this.addGlyph(glyphs(ii).asInstanceOf[com.badlogic.gdx.graphics.g2d.BitmapFont.Glyph], gx, gy, lastColorFloatBits)
+        this.addGlyph(glyphs(ii).asInstanceOf[com.badlogic.gdx.graphics.g2d.BitmapFont.Glyph].asInstanceOf[com.badlogic.gdx.graphics.g2d.BitmapFont.Glyph], gx, gy, lastColorFloatBits)
       }; ii = ii + 1 } }
     }; i = i + 1 } }
     this.currentTint = com.badlogic.gdx.graphics.Color.WHITE_FLOAT_BITS

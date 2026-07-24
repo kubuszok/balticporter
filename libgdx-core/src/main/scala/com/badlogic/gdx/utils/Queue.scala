@@ -316,7 +316,7 @@ class Queue[T] extends scala.collection.Iterable[T] {
     if ((o == null) || (!o.isInstanceOf[Queue[?]])) {
       return false
     } else ()
-    val q: Queue[?] = o.asInstanceOf[Queue[?]]
+    val q: Queue[?] = o.asInstanceOf[Queue[?]].asInstanceOf[Queue[?]]
     val size: scala.Int = this.size
     if (q.size != size) {
       return false
@@ -351,7 +351,7 @@ class Queue[T] extends scala.collection.Iterable[T] {
     if ((o == null) || (!o.isInstanceOf[Queue[?]])) {
       return false
     } else ()
-    val q: Queue[?] = o.asInstanceOf[Queue[?]]
+    val q: Queue[?] = o.asInstanceOf[Queue[?]].asInstanceOf[Queue[?]]
     val size: scala.Int = this.size
     if (q.size != size) {
       return false
@@ -405,7 +405,7 @@ object Queue {
       if (!this.valid) {
         throw new com.badlogic.gdx.utils.GdxRuntimeException("#iterator() cannot be used nested.")
       } else ()
-      return this.queue.get({ this.index += 1; this.index })
+      return this.queue.get({ this.index += 1; this.index }).asInstanceOf[T]
     }
     def remove(): scala.Unit = {
       if (!this.allowRemove) {

@@ -45,7 +45,7 @@ object ClassReflection {
   }
   def newInstance[T](c: java.lang.Class[T]): T = {
     try {
-      return c.newInstance()
+      return c.newInstance().asInstanceOf[T]
     } catch {
       case e: java.lang.InstantiationException => {
         throw new com.badlogic.gdx.utils.reflect.ReflectionException("Could not instantiate instance of class: " + c.getName(), e)

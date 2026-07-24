@@ -22,7 +22,7 @@ abstract class Attribute extends java.lang.Comparable[Attribute] {
     if (!obj.isInstanceOf[Attribute]) {
       return false
     } else ()
-    val other: Attribute = obj.asInstanceOf[Attribute]
+    val other: Attribute = obj.asInstanceOf[Attribute].asInstanceOf[Attribute]
     if (this.`type` != other.`type`) {
       return false
     } else ()

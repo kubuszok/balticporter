@@ -165,7 +165,7 @@ class Table extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup {
       if (cell.row$field > 0) {
         val cells: scala.Array[java.lang.Object] = this.cells.items.asInstanceOf[scala.Array[java.lang.Object]];
         { var i: scala.Int = cellCount - 1; while (i >= 0) { {
-          val other: com.badlogic.gdx.scenes.scene2d.ui.Cell[?] = cells(i).asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]];
+          val other: com.badlogic.gdx.scenes.scene2d.ui.Cell[?] = cells(i).asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]].asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]];
           { var column: scala.Int = other.column; val nn: scala.Int = column + other.colspan$field; while (column < nn) { {
             if (column == cell.column) {
               cell.cellAboveIndex = i
@@ -255,7 +255,7 @@ class Table extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup {
   def clearChildren(unfocus: scala.Boolean): scala.Unit = {
     val cells: scala.Array[java.lang.Object] = this.cells.items.asInstanceOf[scala.Array[java.lang.Object]];
     { var i: scala.Int = this.cells.size - 1; while (i >= 0) { {
-      val cell: com.badlogic.gdx.scenes.scene2d.ui.Cell[?] = cells(i).asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]]
+      val cell: com.badlogic.gdx.scenes.scene2d.ui.Cell[?] = cells(i).asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]].asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]]
       val actor: com.badlogic.gdx.scenes.scene2d.Actor = cell.actor
       if (actor != null) {
         actor.remove()
@@ -311,7 +311,7 @@ class Table extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup {
     val cells: scala.Array[java.lang.Object] = this.cells.items.asInstanceOf[scala.Array[java.lang.Object]]
     var rowColumns: scala.Int = 0;
     { var i: scala.Int = this.cells.size - 1; while (i >= 0) { {
-      val cell: com.badlogic.gdx.scenes.scene2d.ui.Cell[?] = cells(i).asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]]
+      val cell: com.badlogic.gdx.scenes.scene2d.ui.Cell[?] = cells(i).asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]].asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]]
       if (cell.endRow) {
         /* break */ ()
       } else ()
@@ -343,7 +343,7 @@ class Table extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup {
     } else ()
     val cells: scala.Array[java.lang.Object] = this.cells.items.asInstanceOf[scala.Array[java.lang.Object]];
     { var i: scala.Int = 0; val n: scala.Int = this.cells.size; while (i < n) { {
-      val c: com.badlogic.gdx.scenes.scene2d.ui.Cell[?] = cells(i).asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]]
+      val c: com.badlogic.gdx.scenes.scene2d.ui.Cell[?] = cells(i).asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]].asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]]
       if (c.actor == actor) {
         return c
       } else ()
@@ -603,7 +603,7 @@ class Table extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup {
     y = y + this.getPadTop()
     val cells: scala.Array[java.lang.Object] = this.cells.items.asInstanceOf[scala.Array[java.lang.Object]];
     { var i: scala.Int = 0; var row: scala.Int = 0; while (i < n) { {
-      val c: com.badlogic.gdx.scenes.scene2d.ui.Cell[?] = cells({ i += 1; i }).asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]]
+      val c: com.badlogic.gdx.scenes.scene2d.ui.Cell[?] = cells({ i += 1; i }).asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]].asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]]
       if ((c.actorY + c.computedPadTop) < y) {
         return row
       } else ()
@@ -712,7 +712,7 @@ class Table extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup {
     }
     var spaceRightLast: scala.Float = 0;
     { var i: scala.Int = 0; while (i < cellCount) { {
-      val c: com.badlogic.gdx.scenes.scene2d.ui.Cell[?] = cells(i).asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]]
+      val c: com.badlogic.gdx.scenes.scene2d.ui.Cell[?] = cells(i).asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]].asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]]
       val column: scala.Int = c.column
       val row: scala.Int = c.row$field
       val colspan: scala.Int = c.colspan$field
@@ -726,7 +726,7 @@ class Table extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup {
       c.computedPadLeft = c.padLeft$field.get(a) + (if (column == 0) 0 else java.lang.Math.max(0, c.spaceLeft$field.get(a) - spaceRightLast))
       c.computedPadTop = c.padTop$field.get(a)
       if (c.cellAboveIndex != (-1)) {
-        val above: com.badlogic.gdx.scenes.scene2d.ui.Cell[?] = cells(c.cellAboveIndex).asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]]
+        val above: com.badlogic.gdx.scenes.scene2d.ui.Cell[?] = cells(c.cellAboveIndex).asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]].asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]]
         c.computedPadTop = c.computedPadTop + java.lang.Math.max(0, c.spaceTop$field.get(a) - above.spaceBottom$field.get(a))
       } else ()
       val spaceRight: scala.Float = c.spaceRight$field.get(a)
@@ -771,7 +771,7 @@ class Table extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup {
     var uniformPrefWidth: scala.Float = 0
     var uniformPrefHeight: scala.Float = 0;
     { var i: scala.Int = 0; while (i < cellCount) { {
-      val c: com.badlogic.gdx.scenes.scene2d.ui.Cell[?] = cells(i).asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]]
+      val c: com.badlogic.gdx.scenes.scene2d.ui.Cell[?] = cells(i).asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]].asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]]
       val column: scala.Int = c.column
       val expandX: scala.Int = c.expandX$field
       if (expandX != 0) {
@@ -798,7 +798,7 @@ class Table extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup {
     }; i = i + 1 } }
     if ((uniformPrefWidth > 0) || (uniformPrefHeight > 0)) {
       { var i: scala.Int = 0; while (i < cellCount) { {
-        val c: com.badlogic.gdx.scenes.scene2d.ui.Cell[?] = cells(i).asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]]
+        val c: com.badlogic.gdx.scenes.scene2d.ui.Cell[?] = cells(i).asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]].asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]]
         if (((uniformPrefWidth > 0) && (c.uniformX$field == java.lang.Boolean.TRUE)) && (c.colspan$field == 1)) {
           val hpadding: scala.Float = c.computedPadLeft + c.computedPadRight
           columnMinWidth(c.column) = uniformMinWidth + hpadding
@@ -812,7 +812,7 @@ class Table extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup {
       }; i = i + 1 } }
     } else ();
     { var i: scala.Int = 0; while (i < cellCount) { {
-      val c: com.badlogic.gdx.scenes.scene2d.ui.Cell[?] = cells(i).asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]]
+      val c: com.badlogic.gdx.scenes.scene2d.ui.Cell[?] = cells(i).asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]].asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]]
       val colspan: scala.Int = c.colspan$field
       if (colspan == 1) {
         /* continue */ ()
@@ -918,7 +918,7 @@ class Table extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup {
     val cells: scala.Array[java.lang.Object] = this.cells.items.asInstanceOf[scala.Array[java.lang.Object]]
     val cellCount: scala.Int = this.cells.size;
     { var i: scala.Int = 0; while (i < cellCount) { {
-      val c: com.badlogic.gdx.scenes.scene2d.ui.Cell[?] = cells(i).asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]]
+      val c: com.badlogic.gdx.scenes.scene2d.ui.Cell[?] = cells(i).asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]].asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]]
       var column: scala.Int = c.column
       val row: scala.Int = c.row$field
       val a: com.badlogic.gdx.scenes.scene2d.Actor = c.actor
@@ -1004,7 +1004,7 @@ class Table extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup {
       } else ()
     } else ();
     { var i: scala.Int = 0; while (i < cellCount) { {
-      val c: com.badlogic.gdx.scenes.scene2d.ui.Cell[?] = cells(i).asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]]
+      val c: com.badlogic.gdx.scenes.scene2d.ui.Cell[?] = cells(i).asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]].asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]]
       val colspan: scala.Int = c.colspan$field
       if (colspan == 1) {
         /* continue */ ()
@@ -1049,7 +1049,7 @@ class Table extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup {
     var currentX: scala.Float = x
     var currentY: scala.Float = y;
     { var i: scala.Int = 0; while (i < cellCount) { {
-      val c: com.badlogic.gdx.scenes.scene2d.ui.Cell[?] = cells(i).asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]]
+      val c: com.badlogic.gdx.scenes.scene2d.ui.Cell[?] = cells(i).asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]].asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]]
       var spannedCellWidth: scala.Float = 0;
       { var column: scala.Int = c.column; val nn: scala.Int = column + c.colspan$field; while (column < nn) { {
         spannedCellWidth = spannedCellWidth + columnWidth(column)

@@ -70,7 +70,7 @@ abstract class ParticleControllerInfluencer extends com.badlogic.gdx.graphics.g3
       descriptor = data.loadAsset()
       descriptor
     } != null) {
-      val effect: com.badlogic.gdx.graphics.g3d.particles.ParticleEffect = manager.get(descriptor).asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ParticleEffect]
+      val effect: com.badlogic.gdx.graphics.g3d.particles.ParticleEffect = manager.get(descriptor).asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ParticleEffect].asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ParticleEffect]
       if (effect == null) {
         throw new java.lang.RuntimeException("Template is null")
       } else ()

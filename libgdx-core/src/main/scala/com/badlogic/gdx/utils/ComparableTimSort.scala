@@ -119,7 +119,7 @@ class ComparableTimSort {
       this.runLen(i + 1) = this.runLen(i + 2)
     } else ()
     this.stackSize = this.stackSize - 1
-    val k: scala.Int = ComparableTimSort.gallopRight(this.a(base2).asInstanceOf[java.lang.Comparable[java.lang.Object]], this.a, base1, len1, 0)
+    val k: scala.Int = ComparableTimSort.gallopRight(this.a(base2).asInstanceOf[java.lang.Comparable[java.lang.Object]].asInstanceOf[java.lang.Comparable[java.lang.Object]], this.a, base1, len1, 0)
     if (ComparableTimSort.DEBUG) {
       assert(k >= 0)
     } else ()
@@ -128,7 +128,7 @@ class ComparableTimSort {
     if (len1 == 0) {
       return
     } else ()
-    len2 = ComparableTimSort.gallopLeft(this.a((base1 + len1) - 1).asInstanceOf[java.lang.Comparable[java.lang.Object]], this.a, base2, len2, len2 - 1)
+    len2 = ComparableTimSort.gallopLeft(this.a((base1 + len1) - 1).asInstanceOf[java.lang.Comparable[java.lang.Object]].asInstanceOf[java.lang.Comparable[java.lang.Object]], this.a, base2, len2, len2 - 1)
     if (ComparableTimSort.DEBUG) {
       assert(len2 >= 0)
     } else ()
@@ -191,7 +191,7 @@ class ComparableTimSort {
         if (ComparableTimSort.DEBUG) {
           assert((len1 > 1) && (len2 > 0))
         } else ()
-        count1 = ComparableTimSort.gallopRight(a(cursor2).asInstanceOf[java.lang.Comparable[?]], tmp, cursor1, len1, 0)
+        count1 = ComparableTimSort.gallopRight(a(cursor2).asInstanceOf[java.lang.Comparable[?]].asInstanceOf[java.lang.Comparable[java.lang.Object]], tmp, cursor1, len1, 0)
         if (count1 != 0) {
           java.lang.System.arraycopy(tmp, cursor1, a, dest, count1)
           dest = dest + count1
@@ -205,7 +205,7 @@ class ComparableTimSort {
         if ({ len2 -= 1; len2 } == 0) {
           /* break */ ()
         } else ()
-        count2 = ComparableTimSort.gallopLeft(tmp(cursor1).asInstanceOf[java.lang.Comparable[?]], a, cursor2, len2, 0)
+        count2 = ComparableTimSort.gallopLeft(tmp(cursor1).asInstanceOf[java.lang.Comparable[?]].asInstanceOf[java.lang.Comparable[java.lang.Object]], a, cursor2, len2, 0)
         if (count2 != 0) {
           java.lang.System.arraycopy(a, cursor2, a, dest, count2)
           dest = dest + count2
@@ -299,7 +299,7 @@ class ComparableTimSort {
         if (ComparableTimSort.DEBUG) {
           assert((len1 > 0) && (len2 > 1))
         } else ()
-        count1 = len1 - ComparableTimSort.gallopRight(tmp(cursor2).asInstanceOf[java.lang.Comparable[?]], a, base1, len1, len1 - 1)
+        count1 = len1 - ComparableTimSort.gallopRight(tmp(cursor2).asInstanceOf[java.lang.Comparable[?]].asInstanceOf[java.lang.Comparable[java.lang.Object]], a, base1, len1, len1 - 1)
         if (count1 != 0) {
           dest = dest - count1
           cursor1 = cursor1 - count1
@@ -313,7 +313,7 @@ class ComparableTimSort {
         if ({ len2 -= 1; len2 } == 1) {
           /* break */ ()
         } else ()
-        count2 = len2 - ComparableTimSort.gallopLeft(a(cursor1).asInstanceOf[java.lang.Comparable[?]], tmp, 0, len2, len2 - 1)
+        count2 = len2 - ComparableTimSort.gallopLeft(a(cursor1).asInstanceOf[java.lang.Comparable[?]].asInstanceOf[java.lang.Comparable[java.lang.Object]], tmp, 0, len2, len2 - 1)
         if (count2 != 0) {
           dest = dest - count2
           cursor2 = cursor2 - count2
@@ -429,7 +429,7 @@ object ComparableTimSort {
       start = start + 1
     } else ();
     { ; while (start < hi) { {
-      val pivot: java.lang.Comparable[java.lang.Object] = a(start).asInstanceOf[java.lang.Comparable[?]]
+      val pivot: java.lang.Comparable[java.lang.Object] = a(start).asInstanceOf[java.lang.Comparable[?]].asInstanceOf[java.lang.Comparable[java.lang.Object]]
       var left: scala.Int = lo
       var right: scala.Int = start
       if (ComparableTimSort.DEBUG) {

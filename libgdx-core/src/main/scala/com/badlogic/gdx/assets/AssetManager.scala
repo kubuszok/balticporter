@@ -45,10 +45,10 @@ class AssetManager extends com.badlogic.gdx.utils.Disposable {
     return this.resolver
   }
   def get[T](fileName: java.lang.String): T = {
-    return this.get(fileName, true)
+    return this.get(fileName, true).asInstanceOf[T]
   }
   def get[T](fileName: java.lang.String, `type`: java.lang.Class[T]): T = {
-    return this.get(fileName, `type`, true)
+    return this.get(fileName, `type`, true).asInstanceOf[T]
   }
   def get[T](fileName: java.lang.String, required: scala.Boolean): T = {
     val `type`: java.lang.Class[T] = this.assetTypes.get(fileName)
@@ -57,7 +57,7 @@ class AssetManager extends com.badlogic.gdx.utils.Disposable {
       if (assetsByType != null) {
         val assetContainer: com.badlogic.gdx.assets.AssetManager.RefCountedContainer = assetsByType.get(fileName)
         if (assetContainer != null) {
-          return assetContainer.`object`.asInstanceOf[T]
+          return assetContainer.`object`.asInstanceOf[T].asInstanceOf[T]
         } else ()
       } else ()
     } else ()
@@ -71,7 +71,7 @@ class AssetManager extends com.badlogic.gdx.utils.Disposable {
     if (assetsByType != null) {
       val assetContainer: com.badlogic.gdx.assets.AssetManager.RefCountedContainer = assetsByType.get(fileName)
       if (assetContainer != null) {
-        return assetContainer.`object`.asInstanceOf[T]
+        return assetContainer.`object`.asInstanceOf[T].asInstanceOf[T]
       } else ()
     } else ()
     if (required) {
@@ -80,7 +80,7 @@ class AssetManager extends com.badlogic.gdx.utils.Disposable {
     return null.asInstanceOf[T]
   }
   def get[T](assetDescriptor: com.badlogic.gdx.assets.AssetDescriptor[T]): T = {
-    return this.get(assetDescriptor.fileName, assetDescriptor.`type`, true)
+    return this.get(assetDescriptor.fileName, assetDescriptor.`type`, true).asInstanceOf[T]
   }
   def getAll[T](`type`: java.lang.Class[T], out: com.badlogic.gdx.utils.Array[T]): com.badlogic.gdx.utils.Array[T] = {
     val assetsByType: com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.assets.AssetManager.RefCountedContainer] = this.assets.get(`type`)
@@ -311,7 +311,7 @@ class AssetManager extends com.badlogic.gdx.utils.Disposable {
     this.log.debug("Loading complete.")
   }
   def finishLoadingAsset[T](assetDesc: com.badlogic.gdx.assets.AssetDescriptor[?]): T = {
-    return this.finishLoadingAsset(assetDesc.fileName)
+    return this.finishLoadingAsset(assetDesc.fileName).asInstanceOf[T]
   }
   def finishLoadingAsset[T](fileName: java.lang.String): T = {
     this.log.debug("Waiting for asset to be loaded: " + fileName)
@@ -324,7 +324,7 @@ class AssetManager extends com.badlogic.gdx.utils.Disposable {
             val assetContainer: com.badlogic.gdx.assets.AssetManager.RefCountedContainer = assetsByType.get(fileName)
             if (assetContainer != null) {
               this.log.debug("Asset loaded: " + fileName)
-              return assetContainer.`object`.asInstanceOf[T]
+              return assetContainer.`object`.asInstanceOf[T].asInstanceOf[T]
             } else ()
           } else ()
         } else ()

@@ -382,7 +382,7 @@ class ByteArray {
     if (!`object`.isInstanceOf[ByteArray]) {
       return false
     } else ()
-    val array: ByteArray = `object`.asInstanceOf[ByteArray]
+    val array: ByteArray = `object`.asInstanceOf[ByteArray].asInstanceOf[ByteArray]
     if (!array.ordered) {
       return false
     } else ()

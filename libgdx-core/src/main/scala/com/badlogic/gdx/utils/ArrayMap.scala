@@ -83,7 +83,7 @@ class ArrayMap[K, V] extends scala.collection.Iterable[com.badlogic.gdx.utils.Ob
     this.size = this.size + length
   }
   def get(key: K): V = {
-    return this.get(key, null)
+    return this.get(key, null).asInstanceOf[V]
   }
   def get(key: K, defaultValue: V): V = {
     val keys: scala.Array[java.lang.Object] = this.keys$field.asInstanceOf[scala.Array[java.lang.Object]]
@@ -403,7 +403,7 @@ class ArrayMap[K, V] extends scala.collection.Iterable[com.badlogic.gdx.utils.Ob
     if (!obj.isInstanceOf[ArrayMap[?, ?]]) {
       return false
     } else ()
-    val other: ArrayMap[?, ?] = obj.asInstanceOf[ArrayMap[?, ?]]
+    val other: ArrayMap[?, ?] = obj.asInstanceOf[ArrayMap[?, ?]].asInstanceOf[ArrayMap[?, ?]]
     if (other.size != this.size) {
       return false
     } else ()
@@ -431,7 +431,7 @@ class ArrayMap[K, V] extends scala.collection.Iterable[com.badlogic.gdx.utils.Ob
     if (!obj.isInstanceOf[ArrayMap[?, ?]]) {
       return false
     } else ()
-    val other: ArrayMap[?, ?] = obj.asInstanceOf[ArrayMap[?, ?]]
+    val other: ArrayMap[?, ?] = obj.asInstanceOf[ArrayMap[?, ?]].asInstanceOf[ArrayMap[?, ?]]
     if (other.size != this.size) {
       return false
     } else ()

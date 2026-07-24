@@ -103,7 +103,7 @@ class ParallelArray {
     var data: scala.Array[scala.Float] = null.asInstanceOf[scala.Array[scala.Float]]
     def this(id: scala.Int, strideSize: scala.Int, size: scala.Int) = {
       this()
-      this.data = data.asInstanceOf[scala.Array[scala.Float]]
+      this.data = data.asInstanceOf[scala.Array[scala.Float]].asInstanceOf[scala.Array[scala.Float]]
     }
     def add(index: scala.Int, objects: scala.Array[java.lang.Object]): scala.Unit = {
       { var i: scala.Int = strideSize * size; val c: scala.Int = i + strideSize; var k: scala.Int = 0; while (i < c) { {
@@ -135,7 +135,7 @@ class ParallelArray {
     var data: scala.Array[scala.Int] = null.asInstanceOf[scala.Array[scala.Int]]
     def this(id: scala.Int, strideSize: scala.Int, size: scala.Int) = {
       this()
-      this.data = data.asInstanceOf[scala.Array[scala.Int]]
+      this.data = data.asInstanceOf[scala.Array[scala.Int]].asInstanceOf[scala.Array[scala.Int]]
     }
     def add(index: scala.Int, objects: scala.Array[java.lang.Object]): scala.Unit = {
       { var i: scala.Int = strideSize * size; val c: scala.Int = i + strideSize; var k: scala.Int = 0; while (i < c) { {
@@ -167,11 +167,11 @@ class ParallelArray {
     var data: scala.Array[T] = null.asInstanceOf[scala.Array[T]]
     def this(id: scala.Int, strideSize: scala.Int, size: scala.Int, arraySupplier: com.badlogic.gdx.utils.ArraySupplier[scala.Array[T]]) = {
       this()
-      this.data = data.asInstanceOf[scala.Array[T]]
+      this.data = data.asInstanceOf[scala.Array[T]].asInstanceOf[scala.Array[T]]
     }
     def add(index: scala.Int, objects: scala.Array[java.lang.Object]): scala.Unit = {
       { var i: scala.Int = strideSize * size; val c: scala.Int = i + strideSize; var k: scala.Int = 0; while (i < c) { {
-        this.data(i) = objects(k).asInstanceOf[T]
+        this.data(i) = objects(k).asInstanceOf[T].asInstanceOf[T]
       }; i = i + 1; k = k + 1 } }
     }
     def swap(i$arg: scala.Int, k$arg: scala.Int): scala.Unit = {

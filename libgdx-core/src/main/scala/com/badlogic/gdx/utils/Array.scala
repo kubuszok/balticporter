@@ -413,7 +413,7 @@ class Array[T] extends scala.collection.Iterable[T] {
     if (kthLowest < 1) {
       throw new com.badlogic.gdx.utils.GdxRuntimeException("nth_lowest must be greater than 0, 1 = first, 2 = second...")
     } else ()
-    return com.badlogic.gdx.utils.Select.instance().select(this.items.asInstanceOf[scala.Array[java.lang.Object]], comparator, kthLowest, this.size)
+    return com.badlogic.gdx.utils.Select.instance().select(this.items.asInstanceOf[scala.Array[java.lang.Object]], comparator, kthLowest, this.size).asInstanceOf[T]
   }
   def selectRankedIndex(comparator: java.util.Comparator[T], kthLowest: scala.Int): scala.Int = {
     if (kthLowest < 1) {
@@ -486,7 +486,7 @@ class Array[T] extends scala.collection.Iterable[T] {
     return result
   }
   def toArray[V](`type`: java.lang.Class[V]): scala.Array[V] = {
-    val result: scala.Array[V] = com.badlogic.gdx.utils.reflect.ArrayReflection.newInstance(`type`, this.size).asInstanceOf[scala.Array[V]]
+    val result: scala.Array[V] = com.badlogic.gdx.utils.reflect.ArrayReflection.newInstance(`type`, this.size).asInstanceOf[scala.Array[V]].asInstanceOf[scala.Array[V]]
     java.lang.System.arraycopy(this.items, 0, result, 0, this.size)
     return result
   }
@@ -515,7 +515,7 @@ class Array[T] extends scala.collection.Iterable[T] {
     if (!`object`.isInstanceOf[Array[?]]) {
       return false
     } else ()
-    val array: Array[?] = `object`.asInstanceOf[Array[?]]
+    val array: Array[?] = `object`.asInstanceOf[Array[?]].asInstanceOf[Array[?]]
     if (!array.ordered) {
       return false
     } else ()
@@ -544,7 +544,7 @@ class Array[T] extends scala.collection.Iterable[T] {
     if (!`object`.isInstanceOf[Array[?]]) {
       return false
     } else ()
-    val array: Array[?] = `object`.asInstanceOf[Array[?]]
+    val array: Array[?] = `object`.asInstanceOf[Array[?]].asInstanceOf[Array[?]]
     if (!array.ordered) {
       return false
     } else ()

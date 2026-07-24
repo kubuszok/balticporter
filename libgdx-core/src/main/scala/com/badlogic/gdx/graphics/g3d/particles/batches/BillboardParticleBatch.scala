@@ -340,8 +340,8 @@ class BillboardParticleBatch extends com.badlogic.gdx.graphics.g3d.particles.bat
   def load(manager: com.badlogic.gdx.assets.AssetManager, resources: com.badlogic.gdx.graphics.g3d.particles.ResourceData[?]): scala.Unit = {
     val data: com.badlogic.gdx.graphics.g3d.particles.ResourceData.SaveData = resources.getSaveData("billboardBatch")
     if (data != null) {
-      this.setTexture(manager.get(data.loadAsset()).asInstanceOf[com.badlogic.gdx.graphics.Texture])
-      val cfg: com.badlogic.gdx.graphics.g3d.particles.batches.BillboardParticleBatch.Config = data.load("cfg").asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.batches.BillboardParticleBatch.Config]
+      this.setTexture(manager.get(data.loadAsset()).asInstanceOf[com.badlogic.gdx.graphics.Texture].asInstanceOf[com.badlogic.gdx.graphics.Texture])
+      val cfg: com.badlogic.gdx.graphics.g3d.particles.batches.BillboardParticleBatch.Config = data.load("cfg").asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.batches.BillboardParticleBatch.Config].asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.batches.BillboardParticleBatch.Config]
       this.setUseGpu(cfg.useGPU)
       this.setAlignMode(cfg.mode)
     } else ()

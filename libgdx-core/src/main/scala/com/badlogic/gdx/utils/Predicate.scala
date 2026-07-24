@@ -38,7 +38,7 @@ object Predicate {
       } else ()
       this.peeked = true
       while (this.iterator.hasNext) {
-        val n: T = this.iterator.next
+        val n: T = this.iterator.next.asInstanceOf[T]
         if (this.predicate.evaluate(n)) {
           this.next$field = n
           return true

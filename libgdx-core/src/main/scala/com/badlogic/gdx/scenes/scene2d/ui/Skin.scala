@@ -70,7 +70,7 @@ class Skin extends com.badlogic.gdx.utils.Disposable {
     typeResources.remove(name)
   }
   def get[T](`type`: java.lang.Class[T]): T = {
-    return this.get("default", `type`)
+    return this.get("default", `type`).asInstanceOf[T]
   }
   def get[T](name: java.lang.String, `type`: java.lang.Class[T]): T = {
     if (name == null) {
@@ -99,7 +99,7 @@ class Skin extends com.badlogic.gdx.utils.Disposable {
     if (resource == null) {
       throw new com.badlogic.gdx.utils.GdxRuntimeException((("No " + `type`.getName()) + " registered with name: ") + name)
     } else ()
-    return resource.asInstanceOf[T]
+    return resource.asInstanceOf[T].asInstanceOf[T]
   }
   def optional[T](name: java.lang.String, `type`: java.lang.Class[T]): T = {
     if (name == null) {
@@ -112,7 +112,7 @@ class Skin extends com.badlogic.gdx.utils.Disposable {
     if (typeResources == null) {
       return null.asInstanceOf[T]
     } else ()
-    return typeResources.get(name).asInstanceOf[T]
+    return typeResources.get(name).asInstanceOf[T].asInstanceOf[T]
   }
   def has(name: java.lang.String, `type`: java.lang.Class[?]): scala.Boolean = {
     val typeResources: com.badlogic.gdx.utils.ObjectMap[java.lang.String, java.lang.Object] = this.resources.get(`type`)
@@ -349,13 +349,13 @@ class Skin extends com.badlogic.gdx.utils.Disposable {
     this.scale$field = scale
   }
   def setEnabled[V](styleable: com.badlogic.gdx.scenes.scene2d.ui.Styleable[V], enabled: scala.Boolean): scala.Unit = {
-    var style: V = styleable.getStyle()
+    var style: V = styleable.getStyle().asInstanceOf[V]
     var name: java.lang.String = this.find(style)
     if (name == null) {
       return
     } else ()
     name = name.replace("-disabled", "") + (if (enabled) "" else "-disabled")
-    style = this.get(name, style.getClass().asInstanceOf[java.lang.Class[V]])
+    style = this.get(name, style.getClass().asInstanceOf[java.lang.Class[V]]).asInstanceOf[V]
     styleable.setStyle(style)
   }
   def setEnabledReflection(actor: com.badlogic.gdx.scenes.scene2d.Actor, enabled: scala.Boolean): scala.Unit = {
@@ -382,7 +382,7 @@ class Skin extends com.badlogic.gdx.utils.Disposable {
       return
     } else ()
     try {
-      method.invoke(actor, style)
+      method.invoke(actor, style.asInstanceOf[scala.Array[java.lang.Object]])
     } catch {
       case ignored: java.lang.Exception => {
         ()

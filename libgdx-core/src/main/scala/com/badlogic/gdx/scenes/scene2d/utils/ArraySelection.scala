@@ -67,7 +67,7 @@ class ArraySelection[T] extends com.badlogic.gdx.scenes.scene2d.utils.Selection[
     } else ()
     var changed: scala.Boolean = false;
     { val iter: scala.collection.Iterator[T] = this.items().iterator(); while (iter.hasNext) { {
-      val selected: T = iter.next
+      val selected: T = iter.next.asInstanceOf[T]
       if (!array.contains(selected, false)) {
         iter.remove()
         changed = true

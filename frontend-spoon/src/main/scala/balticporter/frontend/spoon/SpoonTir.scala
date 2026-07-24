@@ -486,12 +486,17 @@ object SpoonTir:
         // autoboxing — Scala won't box into every such position, so make it explicit.
         val boxing = et != null && et.isPrimitive && !target.isPrimitive &&
           !target.isInstanceOf[CtTypeParameterReference] && !target.isInstanceOf[CtArrayTypeReference[?]]
+        // a value erased to `Object` (a generic method's result) flowing into a more specific
+        // slot — Java inserts an unchecked downcast; Scala needs it explicit.
+        val downcast = et != null && et.getQualifiedName == "java.lang.Object" &&
+          !target.isPrimitive && target.getQualifiedName != "java.lang.Object"
         val cast =
           (isNull && target.isInstanceOf[CtTypeParameterReference]) ||             // null → type param
           (target.isInstanceOf[CtArrayTypeReference[?]] && et != null &&           // array covariance
             et.isInstanceOf[CtArrayTypeReference[?]] && target.getQualifiedName != et.getQualifiedName) ||
           narrowing ||                                                            // int → short/byte/char
-          boxing                                                                  // int → Object/Number
+          boxing ||                                                               // int → Object/Number
+          downcast                                                                // Object → specific
         if cast then Tree.Typed(t, tt(tpe(target), e), tpe(target), originOf(e)) else t
 
       /** coerce each argument to its formal parameter type (Java autoboxing / numeric narrowing

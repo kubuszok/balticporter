@@ -35,7 +35,7 @@ final class VertexAttribute {
     if (!obj.isInstanceOf[VertexAttribute]) {
       return false
     } else ()
-    return this.equals(obj.asInstanceOf[VertexAttribute])
+    return this.equals(obj.asInstanceOf[VertexAttribute].asInstanceOf[VertexAttribute])
   }
   def equals(other: VertexAttribute): scala.Boolean = {
     return ((((((other != null) && (this.usage == other.usage)) && (this.numComponents == other.numComponents)) && (this.`type` == other.`type`)) && (this.normalized == other.normalized)) && this.alias.equals(other.alias)) && (this.unit == other.unit)

@@ -99,7 +99,7 @@ class PointSpriteParticleBatch extends com.badlogic.gdx.graphics.g3d.particles.b
   def load(manager: com.badlogic.gdx.assets.AssetManager, resources: com.badlogic.gdx.graphics.g3d.particles.ResourceData[?]): scala.Unit = {
     val data: com.badlogic.gdx.graphics.g3d.particles.ResourceData.SaveData = resources.getSaveData("pointSpriteBatch")
     if (data != null) {
-      this.setTexture(manager.get(data.loadAsset()).asInstanceOf[com.badlogic.gdx.graphics.Texture])
+      this.setTexture(manager.get(data.loadAsset()).asInstanceOf[com.badlogic.gdx.graphics.Texture].asInstanceOf[com.badlogic.gdx.graphics.Texture])
     } else ()
   }
 }

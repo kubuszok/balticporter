@@ -55,7 +55,7 @@ class CumulativeDistribution[T] {
     return this.values.items(imin).value
   }
   def value(): T = {
-    return this.value(com.badlogic.gdx.math.MathUtils.random())
+    return this.value(com.badlogic.gdx.math.MathUtils.random()).asInstanceOf[T]
   }
   def size(): scala.Int = {
     return this.values.size

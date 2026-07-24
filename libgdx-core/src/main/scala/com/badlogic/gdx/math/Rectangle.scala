@@ -232,7 +232,7 @@ class Rectangle extends java.io.Serializable with com.badlogic.gdx.math.Shape2D 
     if (this.getClass() != obj.getClass()) {
       return false
     } else ()
-    val other: Rectangle = obj.asInstanceOf[Rectangle]
+    val other: Rectangle = obj.asInstanceOf[Rectangle].asInstanceOf[Rectangle]
     if (com.badlogic.gdx.utils.NumberUtils.floatToRawIntBits(this.height) != com.badlogic.gdx.utils.NumberUtils.floatToRawIntBits(other.height)) {
       return false
     } else ()

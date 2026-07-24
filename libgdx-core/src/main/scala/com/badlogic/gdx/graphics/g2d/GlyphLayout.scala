@@ -179,13 +179,13 @@ class GlyphLayout extends com.badlogic.gdx.utils.Pool.Poolable {
     var width: scala.Float = 0
     val runsItems: scala.Array[java.lang.Object] = this.runs.items.asInstanceOf[scala.Array[java.lang.Object]];
     { var i: scala.Int = 0; val n: scala.Int = this.runs.size; while (i < n) { {
-      val run: com.badlogic.gdx.graphics.g2d.GlyphLayout.GlyphRun = runsItems(i).asInstanceOf[com.badlogic.gdx.graphics.g2d.GlyphLayout.GlyphRun]
+      val run: com.badlogic.gdx.graphics.g2d.GlyphLayout.GlyphRun = runsItems(i).asInstanceOf[com.badlogic.gdx.graphics.g2d.GlyphLayout.GlyphRun].asInstanceOf[com.badlogic.gdx.graphics.g2d.GlyphLayout.GlyphRun]
       val xAdvances: scala.Array[scala.Float] = run.xAdvances.items
       var runWidth: scala.Float = run.x + xAdvances(0)
       var max: scala.Float = 0
       val glyphs: scala.Array[java.lang.Object] = run.glyphs.items.asInstanceOf[scala.Array[java.lang.Object]];
       { var ii: scala.Int = 0; val nn: scala.Int = run.glyphs.size; while (ii < nn) { {
-        val glyph: com.badlogic.gdx.graphics.g2d.BitmapFont.Glyph = glyphs(ii).asInstanceOf[com.badlogic.gdx.graphics.g2d.BitmapFont.Glyph]
+        val glyph: com.badlogic.gdx.graphics.g2d.BitmapFont.Glyph = glyphs(ii).asInstanceOf[com.badlogic.gdx.graphics.g2d.BitmapFont.Glyph].asInstanceOf[com.badlogic.gdx.graphics.g2d.BitmapFont.Glyph]
         val glyphWidth: scala.Float = this.getGlyphWidth(glyph, fontData)
         max = java.lang.Math.max(max, runWidth + glyphWidth)
         ii = ii + 1
@@ -201,7 +201,7 @@ class GlyphLayout extends com.badlogic.gdx.utils.Pool.Poolable {
       val center: scala.Boolean = (halign & com.badlogic.gdx.utils.Align.center) != 0
       val runsItems: scala.Array[java.lang.Object] = this.runs.items.asInstanceOf[scala.Array[java.lang.Object]];
       { var i: scala.Int = 0; val n: scala.Int = this.runs.size; while (i < n) { {
-        val run: com.badlogic.gdx.graphics.g2d.GlyphLayout.GlyphRun = runsItems(i).asInstanceOf[com.badlogic.gdx.graphics.g2d.GlyphLayout.GlyphRun]
+        val run: com.badlogic.gdx.graphics.g2d.GlyphLayout.GlyphRun = runsItems(i).asInstanceOf[com.badlogic.gdx.graphics.g2d.GlyphLayout.GlyphRun].asInstanceOf[com.badlogic.gdx.graphics.g2d.GlyphLayout.GlyphRun]
         run.x = run.x + (if (center) 0.5f * (targetWidth - run.width) else targetWidth - run.width)
       }; i = i + 1 } }
     } else ()

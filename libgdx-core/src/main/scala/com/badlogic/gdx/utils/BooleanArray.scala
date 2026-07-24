@@ -317,7 +317,7 @@ class BooleanArray {
     if (!`object`.isInstanceOf[BooleanArray]) {
       return false
     } else ()
-    val array: BooleanArray = `object`.asInstanceOf[BooleanArray]
+    val array: BooleanArray = `object`.asInstanceOf[BooleanArray].asInstanceOf[BooleanArray]
     if (!array.ordered) {
       return false
     } else ()

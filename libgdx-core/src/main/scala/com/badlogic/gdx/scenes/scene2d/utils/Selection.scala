@@ -104,7 +104,7 @@ class Selection[T] extends com.badlogic.gdx.scenes.scene2d.utils.Disableable wit
     this.lastSelected = null.asInstanceOf[T]
     this.selected.clear(items.size);
     { var i: scala.Int = 0; val n: scala.Int = items.size; while (i < n) { {
-      val item: T = items.get(i)
+      val item: T = items.get(i).asInstanceOf[T]
       if (item == null) {
         throw new java.lang.IllegalArgumentException("item cannot be null.")
       } else ()
@@ -117,7 +117,7 @@ class Selection[T] extends com.badlogic.gdx.scenes.scene2d.utils.Disableable wit
         this.revert()
       } else {
         if (items.size > 0) {
-          this.lastSelected = items.peek()
+          this.lastSelected = items.peek().asInstanceOf[T]
           this.changed()
         } else ()
       }
@@ -142,7 +142,7 @@ class Selection[T] extends com.badlogic.gdx.scenes.scene2d.utils.Disableable wit
     var added: scala.Boolean = false
     this.snapshot();
     { var i: scala.Int = 0; val n: scala.Int = items.size; while (i < n) { {
-      val item: T = items.get(i)
+      val item: T = items.get(i).asInstanceOf[T]
       if (item == null) {
         throw new java.lang.IllegalArgumentException("item cannot be null.")
       } else ()
@@ -154,7 +154,7 @@ class Selection[T] extends com.badlogic.gdx.scenes.scene2d.utils.Disableable wit
       if (this.programmaticChangeEvents && this.fireChangeEvent()) {
         this.revert()
       } else {
-        this.lastSelected = items.peek()
+        this.lastSelected = items.peek().asInstanceOf[T]
         this.changed()
       }
     } else ()
@@ -178,7 +178,7 @@ class Selection[T] extends com.badlogic.gdx.scenes.scene2d.utils.Disableable wit
     var removed: scala.Boolean = false
     this.snapshot();
     { var i: scala.Int = 0; val n: scala.Int = items.size; while (i < n) { {
-      val item: T = items.get(i)
+      val item: T = items.get(i).asInstanceOf[T]
       if (item == null) {
         throw new java.lang.IllegalArgumentException("item cannot be null.")
       } else ()
@@ -236,7 +236,7 @@ class Selection[T] extends com.badlogic.gdx.scenes.scene2d.utils.Disableable wit
       return this.lastSelected
     } else {
       if (this.selected.size > 0) {
-        return this.selected.first()
+        return this.selected.first().asInstanceOf[T]
       } else ()
     }
     return null.asInstanceOf[T]

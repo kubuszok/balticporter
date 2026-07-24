@@ -90,7 +90,7 @@ class SpotLight extends com.badlogic.gdx.graphics.g3d.environment.BaseLight[Spot
     return this
   }
   def equals(obj: java.lang.Object): scala.Boolean = {
-    return obj.isInstanceOf[SpotLight] && this.equals(obj.asInstanceOf[SpotLight])
+    return obj.isInstanceOf[SpotLight] && this.equals(obj.asInstanceOf[SpotLight].asInstanceOf[SpotLight])
   }
   def equals(other: SpotLight): scala.Boolean = {
     return (other != null) && ((other == this) || (((((color.equals(other.color) && this.position.equals(other.position)) && this.direction.equals(other.direction)) && com.badlogic.gdx.math.MathUtils.isEqual(this.intensity, other.intensity)) && com.badlogic.gdx.math.MathUtils.isEqual(this.cutoffAngle, other.cutoffAngle)) && com.badlogic.gdx.math.MathUtils.isEqual(this.exponent, other.exponent)))

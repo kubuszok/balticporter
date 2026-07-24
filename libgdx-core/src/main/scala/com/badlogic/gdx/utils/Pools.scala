@@ -31,7 +31,7 @@ object Pools {
     Pools.set(poolTypeSupplier, 100)
   }
   def obtain[T](`type`: java.lang.Class[T]): T = {
-    return Pools.get(`type`).obtain()
+    return Pools.get(`type`).obtain().asInstanceOf[T]
   }
   def free(`object`: java.lang.Object): scala.Unit = {
     if (`object` == null) {

@@ -78,7 +78,7 @@ final class VertexAttributes extends scala.collection.Iterable[com.badlogic.gdx.
     if (!obj.isInstanceOf[VertexAttributes]) {
       return false
     } else ()
-    val other: VertexAttributes = obj.asInstanceOf[VertexAttributes]
+    val other: VertexAttributes = obj.asInstanceOf[VertexAttributes].asInstanceOf[VertexAttributes]
     if (this.attributes.length != other.attributes.length) {
       return false
     } else ();

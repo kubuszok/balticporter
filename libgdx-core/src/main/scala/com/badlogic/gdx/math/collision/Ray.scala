@@ -46,7 +46,7 @@ class Ray extends java.io.Serializable {
     if ((o == null) || (o.getClass() != this.getClass())) {
       return false
     } else ()
-    val r: Ray = o.asInstanceOf[Ray]
+    val r: Ray = o.asInstanceOf[Ray].asInstanceOf[Ray]
     return this.direction.equals(r.direction) && this.origin.equals(r.origin)
   }
   def hashCode(): scala.Int = {

@@ -23,7 +23,7 @@ class DecalMaterial {
     if (o == null) {
       return false
     } else ()
-    val material: DecalMaterial = o.asInstanceOf[DecalMaterial]
+    val material: DecalMaterial = o.asInstanceOf[DecalMaterial].asInstanceOf[DecalMaterial]
     return ((this.dstBlendFactor == material.dstBlendFactor) && (this.srcBlendFactor == material.srcBlendFactor)) && (this.textureRegion.getTexture() == material.textureRegion.getTexture())
   }
   def hashCode(): scala.Int = {

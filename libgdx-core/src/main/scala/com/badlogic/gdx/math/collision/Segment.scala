@@ -26,7 +26,7 @@ class Segment extends java.io.Serializable {
     if ((o == null) || (o.getClass() != this.getClass())) {
       return false
     } else ()
-    val s: Segment = o.asInstanceOf[Segment]
+    val s: Segment = o.asInstanceOf[Segment].asInstanceOf[Segment]
     return this.a.equals(s.a) && this.b.equals(s.b)
   }
   def hashCode(): scala.Int = {

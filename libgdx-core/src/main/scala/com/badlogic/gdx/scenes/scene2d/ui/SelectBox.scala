@@ -115,7 +115,7 @@ class SelectBox[T] extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.ba
       if (bg != null) {
         this.prefWidth = bg.getLeftWidth() + bg.getRightWidth()
       } else ()
-      val selected: T = this.getSelected()
+      val selected: T = this.getSelected().asInstanceOf[T]
       if (selected != null) {
         layout.setText(font, this.toString(selected))
         this.prefWidth = this.prefWidth + layout.width
@@ -179,7 +179,7 @@ class SelectBox[T] extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.ba
     if (background != null) {
       background.draw(batch, x, y, width, height)
     } else ()
-    val selected: T = this.selection.first()
+    val selected: T = this.selection.first().asInstanceOf[T]
     if (selected != null) {
       if (background != null) {
         width = width - (background.getLeftWidth() + background.getRightWidth())
@@ -204,7 +204,7 @@ class SelectBox[T] extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.ba
     return this.selection
   }
   def getSelected(): T = {
-    return this.selection.first()
+    return this.selection.first().asInstanceOf[T]
   }
   def setSelected(item: T): scala.Unit = {
     if (this.items.contains(item, false)) {

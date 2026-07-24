@@ -11,7 +11,7 @@ class AsyncResult[T] {
   }
   def get(): T = {
     try {
-      return this.future.get()
+      return this.future.get().asInstanceOf[T]
     } catch {
       case ex: java.lang.InterruptedException => {
         return null.asInstanceOf[T]

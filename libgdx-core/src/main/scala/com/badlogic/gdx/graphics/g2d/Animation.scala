@@ -39,7 +39,7 @@ class Animation[T] {
         }
       } else ()
     }
-    val frame: T = this.getKeyFrame(stateTime)
+    val frame: T = this.getKeyFrame(stateTime).asInstanceOf[T]
     this.playMode = oldPlayMode
     return frame
   }

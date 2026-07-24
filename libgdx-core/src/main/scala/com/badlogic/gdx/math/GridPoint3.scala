@@ -86,7 +86,7 @@ class GridPoint3 extends java.io.Serializable {
     if ((o == null) || (o.getClass() != this.getClass())) {
       return false
     } else ()
-    val g: GridPoint3 = o.asInstanceOf[GridPoint3]
+    val g: GridPoint3 = o.asInstanceOf[GridPoint3].asInstanceOf[GridPoint3]
     return ((this.x == g.x) && (this.y == g.y)) && (this.z == g.z)
   }
   def hashCode(): scala.Int = {

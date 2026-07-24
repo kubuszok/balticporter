@@ -226,7 +226,7 @@ class IntSet {
     if (!obj.isInstanceOf[IntSet]) {
       return false
     } else ()
-    val other: IntSet = obj.asInstanceOf[IntSet]
+    val other: IntSet = obj.asInstanceOf[IntSet].asInstanceOf[IntSet]
     if (other.size != this.size) {
       return false
     } else ()

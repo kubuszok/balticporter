@@ -37,7 +37,7 @@ class TextureDescriptor[T <: com.badlogic.gdx.graphics.GLTexture] extends java.l
     if (!obj.isInstanceOf[TextureDescriptor[?]]) {
       return false
     } else ()
-    val other: TextureDescriptor[?] = obj.asInstanceOf[TextureDescriptor[?]]
+    val other: TextureDescriptor[?] = obj.asInstanceOf[TextureDescriptor[?]].asInstanceOf[TextureDescriptor[?]]
     return ((((other.texture == this.texture) && (other.minFilter == this.minFilter)) && (other.magFilter == this.magFilter)) && (other.uWrap == this.uWrap)) && (other.vWrap == this.vWrap)
   }
   def hashCode(): scala.Int = {

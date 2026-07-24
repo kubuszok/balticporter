@@ -257,7 +257,7 @@ class LongQueue {
     if ((o == null) || (!o.isInstanceOf[LongQueue])) {
       return false
     } else ()
-    val q: LongQueue = o.asInstanceOf[LongQueue]
+    val q: LongQueue = o.asInstanceOf[LongQueue].asInstanceOf[LongQueue]
     val size: scala.Int = this.size
     if (q.size != size) {
       return false

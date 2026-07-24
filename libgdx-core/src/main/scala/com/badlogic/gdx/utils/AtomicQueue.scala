@@ -28,7 +28,7 @@ class AtomicQueue[T] {
     if (read == write) {
       return null.asInstanceOf[T]
     } else ()
-    val value: T = this.queue.get(read)
+    val value: T = this.queue.get(read).asInstanceOf[T]
     this.readIndex.set(this.next(read))
     return value
   }

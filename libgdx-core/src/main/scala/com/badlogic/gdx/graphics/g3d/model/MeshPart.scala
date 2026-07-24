@@ -58,7 +58,7 @@ class MeshPart {
     if (!arg0.isInstanceOf[MeshPart]) {
       return false
     } else ()
-    return this.equals(arg0.asInstanceOf[MeshPart])
+    return this.equals(arg0.asInstanceOf[MeshPart].asInstanceOf[MeshPart])
   }
   def render(shader: com.badlogic.gdx.graphics.glutils.ShaderProgram, autoBind: scala.Boolean): scala.Unit = {
     this.mesh.render(shader, this.primitiveType, this.offset, this.size, autoBind)

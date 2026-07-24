@@ -594,7 +594,7 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
       return this.appendNull()
     } else ()
     if (obj.isInstanceOf[java.lang.CharSequence]) {
-      return this.append(obj.asInstanceOf[java.lang.CharSequence])
+      return this.append(obj.asInstanceOf[java.lang.CharSequence].asInstanceOf[java.lang.CharSequence])
     } else ()
     return this.append(obj.toString())
   }
@@ -1686,7 +1686,7 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
     if (!`object`.isInstanceOf[CharArray]) {
       return false
     } else ()
-    val other: CharArray = `object`.asInstanceOf[CharArray]
+    val other: CharArray = `object`.asInstanceOf[CharArray].asInstanceOf[CharArray]
     if (!other.ordered) {
       return false
     } else ()

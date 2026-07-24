@@ -248,7 +248,7 @@ class ObjectLongMap[K] extends scala.collection.Iterable[com.badlogic.gdx.utils.
     if (!obj.isInstanceOf[ObjectLongMap[?]]) {
       return false
     } else ()
-    val other: ObjectLongMap[?] = obj.asInstanceOf[ObjectLongMap[?]]
+    val other: ObjectLongMap[?] = obj.asInstanceOf[ObjectLongMap[?]].asInstanceOf[ObjectLongMap[?]]
     if (other.size != this.size) {
       return false
     } else ()

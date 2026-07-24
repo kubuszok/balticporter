@@ -330,7 +330,7 @@ class IntFloatMap extends scala.collection.Iterable[com.badlogic.gdx.utils.IntFl
     if (!obj.isInstanceOf[IntFloatMap]) {
       return false
     } else ()
-    val other: IntFloatMap = obj.asInstanceOf[IntFloatMap]
+    val other: IntFloatMap = obj.asInstanceOf[IntFloatMap].asInstanceOf[IntFloatMap]
     if (other.size != this.size) {
       return false
     } else ()

@@ -57,7 +57,7 @@ class ParticleShader extends com.badlogic.gdx.graphics.g3d.shaders.BaseShader {
     return 0
   }
   def equals(obj: java.lang.Object): scala.Boolean = {
-    return obj.isInstanceOf[ParticleShader] && this.equals(obj.asInstanceOf[ParticleShader])
+    return obj.isInstanceOf[ParticleShader] && this.equals(obj.asInstanceOf[ParticleShader].asInstanceOf[ParticleShader])
   }
   def equals(obj: ParticleShader): scala.Boolean = {
     return obj == this

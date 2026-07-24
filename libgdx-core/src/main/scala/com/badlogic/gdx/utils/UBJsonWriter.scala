@@ -323,7 +323,7 @@ class UBJsonWriter extends java.io.Closeable {
       return this.value()
     } else {
       if (`object`.isInstanceOf[java.lang.Number]) {
-        val number: java.lang.Number = `object`.asInstanceOf[java.lang.Number]
+        val number: java.lang.Number = `object`.asInstanceOf[java.lang.Number].asInstanceOf[java.lang.Number]
         if (`object`.isInstanceOf[java.lang.Byte]) {
           return this.value(number.byteValue())
         } else ()

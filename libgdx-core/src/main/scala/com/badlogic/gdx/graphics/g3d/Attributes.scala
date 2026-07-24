@@ -158,7 +158,7 @@ class Attributes extends scala.collection.Iterable[com.badlogic.gdx.graphics.g3d
     if (other == this) {
       return true
     } else ()
-    return this.same(other.asInstanceOf[Attributes], true)
+    return this.same(other.asInstanceOf[Attributes].asInstanceOf[Attributes], true)
   }
   def compareTo(other: Attributes): scala.Int = {
     if (other == this) {

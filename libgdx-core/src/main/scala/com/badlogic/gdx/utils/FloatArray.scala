@@ -382,7 +382,7 @@ class FloatArray {
     if (!`object`.isInstanceOf[FloatArray]) {
       return false
     } else ()
-    val array: FloatArray = `object`.asInstanceOf[FloatArray]
+    val array: FloatArray = `object`.asInstanceOf[FloatArray].asInstanceOf[FloatArray]
     if (!array.ordered) {
       return false
     } else ()
@@ -406,7 +406,7 @@ class FloatArray {
     if (!`object`.isInstanceOf[FloatArray]) {
       return false
     } else ()
-    val array: FloatArray = `object`.asInstanceOf[FloatArray]
+    val array: FloatArray = `object`.asInstanceOf[FloatArray].asInstanceOf[FloatArray]
     val n: scala.Int = this.size
     if (n != array.size) {
       return false

@@ -90,7 +90,7 @@ class SnapshotArray[T] extends com.badlogic.gdx.utils.Array[T] {
   }
   def removeIndex(index: scala.Int): T = {
     this.modified()
-    return super.removeIndex(index)
+    return super.removeIndex(index).asInstanceOf[T]
   }
   def removeRange(start: scala.Int, `end`: scala.Int): scala.Unit = {
     this.modified()
@@ -102,7 +102,7 @@ class SnapshotArray[T] extends com.badlogic.gdx.utils.Array[T] {
   }
   def pop(): T = {
     this.modified()
-    return super.pop()
+    return super.pop().asInstanceOf[T]
   }
   def clear(): scala.Unit = {
     this.modified()

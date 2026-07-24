@@ -87,9 +87,9 @@ class DelayedRemovalArray[T] extends com.badlogic.gdx.utils.Array[T] {
   def removeIndex(index: scala.Int): T = {
     if (this.iterating > 0) {
       this.remove(index)
-      return this.get(index)
+      return this.get(index).asInstanceOf[T]
     } else ()
-    return super.removeIndex(index)
+    return super.removeIndex(index).asInstanceOf[T]
   }
   def removeRange(start: scala.Int, `end`: scala.Int): scala.Unit = {
     if (this.iterating > 0) {
@@ -147,7 +147,7 @@ class DelayedRemovalArray[T] extends com.badlogic.gdx.utils.Array[T] {
     if (this.iterating > 0) {
       throw new java.lang.IllegalStateException("Invalid between begin/end.")
     } else ()
-    return super.pop()
+    return super.pop().asInstanceOf[T]
   }
   def sort(): scala.Unit = {
     if (this.iterating > 0) {

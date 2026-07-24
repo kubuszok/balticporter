@@ -111,7 +111,7 @@ class Ellipse extends java.io.Serializable with com.badlogic.gdx.math.Shape2D {
     if ((o == null) || (o.getClass() != this.getClass())) {
       return false
     } else ()
-    val e: Ellipse = o.asInstanceOf[Ellipse]
+    val e: Ellipse = o.asInstanceOf[Ellipse].asInstanceOf[Ellipse]
     return (((this.x == e.x) && (this.y == e.y)) && (this.width == e.width)) && (this.height == e.height)
   }
   def hashCode(): scala.Int = {

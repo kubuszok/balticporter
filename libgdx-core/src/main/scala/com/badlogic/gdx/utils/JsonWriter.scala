@@ -43,7 +43,7 @@ class JsonWriter extends java.io.Writer {
       value = value.toString()
     } else {
       if (value.isInstanceOf[java.lang.Number]) {
-        val number: java.lang.Number = value.asInstanceOf[java.lang.Number]
+        val number: java.lang.Number = value.asInstanceOf[java.lang.Number].asInstanceOf[java.lang.Number]
         val longValue: scala.Long = number.longValue()
         if (number.doubleValue() == longValue) {
           value = longValue.asInstanceOf[java.lang.Object]

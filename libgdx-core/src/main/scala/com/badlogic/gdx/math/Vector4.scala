@@ -360,7 +360,7 @@ class Vector4 extends java.io.Serializable with com.badlogic.gdx.math.Vector[Vec
     if (this.getClass() != obj.getClass()) {
       return false
     } else ()
-    val other: Vector4 = obj.asInstanceOf[Vector4]
+    val other: Vector4 = obj.asInstanceOf[Vector4].asInstanceOf[Vector4]
     if (com.badlogic.gdx.utils.NumberUtils.floatToIntBits(this.x) != com.badlogic.gdx.utils.NumberUtils.floatToIntBits(other.x)) {
       return false
     } else ()

@@ -34,7 +34,7 @@ class ReflectionPool[T] extends com.badlogic.gdx.utils.Pool[T] {
   }
   def newObject(): T = {
     try {
-      return this.constructor.newInstance(null.asInstanceOf[scala.Array[java.lang.Object]]).asInstanceOf[T]
+      return this.constructor.newInstance(null.asInstanceOf[scala.Array[java.lang.Object]]).asInstanceOf[T].asInstanceOf[T]
     } catch {
       case ex: java.lang.Exception => {
         throw new com.badlogic.gdx.utils.GdxRuntimeException("Unable to create new instance: " + this.constructor.getDeclaringClass().getName(), ex)

@@ -153,7 +153,7 @@ class Color {
     if ((o == null) || (this.getClass() != o.getClass())) {
       return false
     } else ()
-    val color: Color = o.asInstanceOf[Color]
+    val color: Color = o.asInstanceOf[Color].asInstanceOf[Color]
     return this.toIntBits() == color.toIntBits()
   }
   def hashCode(): scala.Int = {

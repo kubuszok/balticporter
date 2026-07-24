@@ -389,7 +389,7 @@ class LongArray {
     if (!`object`.isInstanceOf[LongArray]) {
       return false
     } else ()
-    val array: LongArray = `object`.asInstanceOf[LongArray]
+    val array: LongArray = `object`.asInstanceOf[LongArray].asInstanceOf[LongArray]
     if (!array.ordered) {
       return false
     } else ()

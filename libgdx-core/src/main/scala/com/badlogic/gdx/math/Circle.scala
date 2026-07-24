@@ -111,7 +111,7 @@ class Circle extends java.io.Serializable with com.badlogic.gdx.math.Shape2D {
     if ((o == null) || (o.getClass() != this.getClass())) {
       return false
     } else ()
-    val c: Circle = o.asInstanceOf[Circle]
+    val c: Circle = o.asInstanceOf[Circle].asInstanceOf[Circle]
     return ((this.x == c.x) && (this.y == c.y)) && (this.radius == c.radius)
   }
   def hashCode(): scala.Int = {

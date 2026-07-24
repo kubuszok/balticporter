@@ -305,7 +305,7 @@ class IntIntMap extends scala.collection.Iterable[com.badlogic.gdx.utils.IntIntM
     if (!obj.isInstanceOf[IntIntMap]) {
       return false
     } else ()
-    val other: IntIntMap = obj.asInstanceOf[IntIntMap]
+    val other: IntIntMap = obj.asInstanceOf[IntIntMap].asInstanceOf[IntIntMap]
     if (other.size != this.size) {
       return false
     } else ()

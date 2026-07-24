@@ -13,7 +13,7 @@ class DefaultPool[T] extends com.badlogic.gdx.utils.Pool[T] {
     this(supplier, 16, java.lang.Integer.MAX_VALUE)
   }
   def newObject(): T = {
-    return this.poolTypeSupplier.get()
+    return this.poolTypeSupplier.get().asInstanceOf[T]
   }
 }
 object DefaultPool {

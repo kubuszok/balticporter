@@ -54,7 +54,7 @@ class OrderedSet[T] extends com.badlogic.gdx.utils.ObjectSet[T] {
     return true
   }
   def removeIndex(index: scala.Int): T = {
-    val key: T = this.items.removeIndex(index)
+    val key: T = this.items.removeIndex(index).asInstanceOf[T]
     super.remove(key)
     return key
   }
@@ -90,7 +90,7 @@ class OrderedSet[T] extends com.badlogic.gdx.utils.ObjectSet[T] {
     return this.items
   }
   def first(): T = {
-    return this.items.first()
+    return this.items.first().asInstanceOf[T]
   }
   def hashCode(): scala.Int = {
     var h: scala.Int = size
@@ -107,7 +107,7 @@ class OrderedSet[T] extends com.badlogic.gdx.utils.ObjectSet[T] {
     if (!obj.isInstanceOf[com.badlogic.gdx.utils.ObjectSet[?]]) {
       return false
     } else ()
-    val other: com.badlogic.gdx.utils.ObjectSet[?] = obj.asInstanceOf[com.badlogic.gdx.utils.ObjectSet[?]]
+    val other: com.badlogic.gdx.utils.ObjectSet[?] = obj.asInstanceOf[com.badlogic.gdx.utils.ObjectSet[?]].asInstanceOf[com.badlogic.gdx.utils.ObjectSet[?]]
     if (other.size != size) {
       return false
     } else ()
@@ -180,7 +180,7 @@ object OrderedSet {
       if (!valid) {
         throw new com.badlogic.gdx.utils.GdxRuntimeException("#iterator() cannot be used nested.")
       } else ()
-      val key: K = this.items.get(nextIndex)
+      val key: K = this.items.get(nextIndex).asInstanceOf[K]
       nextIndex = nextIndex + 1
       hasNext$field = nextIndex < this.set.size
       return key

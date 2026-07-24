@@ -233,7 +233,7 @@ class DefaultShader extends com.badlogic.gdx.graphics.g3d.shaders.BaseShader {
     return 0
   }
   def equals(obj: java.lang.Object): scala.Boolean = {
-    return obj.isInstanceOf[DefaultShader] && this.equals(obj.asInstanceOf[DefaultShader])
+    return obj.isInstanceOf[DefaultShader] && this.equals(obj.asInstanceOf[DefaultShader].asInstanceOf[DefaultShader])
   }
   def equals(obj: DefaultShader): scala.Boolean = {
     return obj == this
