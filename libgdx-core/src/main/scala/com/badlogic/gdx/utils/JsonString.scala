@@ -43,7 +43,7 @@ class JsonString {
         val number: java.lang.Number = value.asInstanceOf[java.lang.Number].asInstanceOf[java.lang.Number]
         val longValue: scala.Long = number.longValue()
         if (number.doubleValue() == longValue) {
-          value = longValue.asInstanceOf[java.lang.Object]
+          value = longValue.asInstanceOf[java.lang.Long]
         } else ()
       } else ()
     }

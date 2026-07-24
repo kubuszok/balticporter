@@ -104,7 +104,7 @@ class TideMapLoader extends com.badlogic.gdx.assets.loaders.SynchronousAssetLoad
       }
       val tileset: com.badlogic.gdx.maps.tiled.TiledMapTileSet = new com.badlogic.gdx.maps.tiled.TiledMapTileSet()
       tileset.setName(id)
-      tileset.getProperties().put("firstgid", firstgid.asInstanceOf[java.lang.Object])
+      tileset.getProperties().put("firstgid", firstgid.asInstanceOf[java.lang.Integer])
       var gid: scala.Int = firstgid
       val stopWidth: scala.Int = texture.getRegionWidth() - tileSizeX
       val stopHeight: scala.Int = texture.getRegionHeight() - tileSizeY;
@@ -203,13 +203,13 @@ class TideMapLoader extends com.badlogic.gdx.assets.loaders.SynchronousAssetLoad
         val `type`: java.lang.String = property.getAttribute("Type", null)
         val value: java.lang.String = property.getText()
         if (`type`.equals("Int32")) {
-          properties.put(key, java.lang.Integer.parseInt(value).asInstanceOf[java.lang.Object])
+          properties.put(key, java.lang.Integer.parseInt(value).asInstanceOf[java.lang.Integer])
         } else {
           if (`type`.equals("String")) {
             properties.put(key, value)
           } else {
             if (`type`.equals("Boolean")) {
-              properties.put(key, value.equalsIgnoreCase("true").asInstanceOf[java.lang.Object])
+              properties.put(key, value.equalsIgnoreCase("true").asInstanceOf[java.lang.Boolean])
             } else {
               properties.put(key, value)
             }

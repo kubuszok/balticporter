@@ -47,12 +47,12 @@ class AtlasTmjMapLoader extends com.badlogic.gdx.maps.tiled.BaseTmjMapLoader[com
     }
     val props: com.badlogic.gdx.maps.MapProperties = tileSet.getProperties()
     props.put("imagesource", imageSource)
-    props.put("imagewidth", imageWidth.asInstanceOf[java.lang.Object])
-    props.put("imageheight", imageHeight.asInstanceOf[java.lang.Object])
-    props.put("tilewidth", tilewidth.asInstanceOf[java.lang.Object])
-    props.put("tileheight", tileheight.asInstanceOf[java.lang.Object])
-    props.put("margin", margin.asInstanceOf[java.lang.Object])
-    props.put("spacing", spacing.asInstanceOf[java.lang.Object])
+    props.put("imagewidth", imageWidth.asInstanceOf[java.lang.Integer])
+    props.put("imageheight", imageHeight.asInstanceOf[java.lang.Integer])
+    props.put("tilewidth", tilewidth.asInstanceOf[java.lang.Integer])
+    props.put("tileheight", tileheight.asInstanceOf[java.lang.Integer])
+    props.put("margin", margin.asInstanceOf[java.lang.Integer])
+    props.put("spacing", spacing.asInstanceOf[java.lang.Integer])
     if ((imageSource != null) && (imageSource.length() > 0)) {
       val lastgid: scala.Int = (firstgid + ((imageWidth / tilewidth) * (imageHeight / tileheight))) - 1
       for (region <- atlas.findRegions(regionsName)) {

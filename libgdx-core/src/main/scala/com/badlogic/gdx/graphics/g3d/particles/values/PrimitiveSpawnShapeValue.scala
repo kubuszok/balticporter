@@ -76,7 +76,7 @@ abstract class PrimitiveSpawnShapeValue extends com.badlogic.gdx.graphics.g3d.pa
     json.writeValue("spawnWidthValue", this.spawnWidthValue)
     json.writeValue("spawnHeightValue", this.spawnHeightValue)
     json.writeValue("spawnDepthValue", this.spawnDepthValue)
-    json.writeValue("edges", this.edges.asInstanceOf[java.lang.Object])
+    json.writeValue("edges", this.edges.asInstanceOf[java.lang.Boolean])
   }
   def read(json: com.badlogic.gdx.utils.Json, jsonData: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
     super.read(json, jsonData)

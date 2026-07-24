@@ -67,34 +67,34 @@ class ObjLoader extends com.badlogic.gdx.assets.loaders.ModelLoader[com.badlogic
                 val faces: com.badlogic.gdx.utils.Array[java.lang.Integer] = activeGroup.faces;
                 { var i: scala.Int = 1; while (i < (tokens.length - 2)) { {
                   parts = tokens(1).split("/")
-                  faces.add(this.getIndex(parts(0), this.verts.size).asInstanceOf[java.lang.Object])
+                  faces.add(this.getIndex(parts(0), this.verts.size).asInstanceOf[java.lang.Integer])
                   if (parts.length > 2) {
                     if (i == 1) {
                       activeGroup.hasNorms = true
                     } else ()
-                    faces.add(this.getIndex(parts(2), this.norms.size).asInstanceOf[java.lang.Object])
+                    faces.add(this.getIndex(parts(2), this.norms.size).asInstanceOf[java.lang.Integer])
                   } else ()
                   if ((parts.length > 1) && (parts(1).length() > 0)) {
                     if (i == 1) {
                       activeGroup.hasUVs = true
                     } else ()
-                    faces.add(this.getIndex(parts(1), this.uvs.size).asInstanceOf[java.lang.Object])
+                    faces.add(this.getIndex(parts(1), this.uvs.size).asInstanceOf[java.lang.Integer])
                   } else ()
                   parts = tokens({ i += 1; i }).split("/")
-                  faces.add(this.getIndex(parts(0), this.verts.size).asInstanceOf[java.lang.Object])
+                  faces.add(this.getIndex(parts(0), this.verts.size).asInstanceOf[java.lang.Integer])
                   if (parts.length > 2) {
-                    faces.add(this.getIndex(parts(2), this.norms.size).asInstanceOf[java.lang.Object])
+                    faces.add(this.getIndex(parts(2), this.norms.size).asInstanceOf[java.lang.Integer])
                   } else ()
                   if ((parts.length > 1) && (parts(1).length() > 0)) {
-                    faces.add(this.getIndex(parts(1), this.uvs.size).asInstanceOf[java.lang.Object])
+                    faces.add(this.getIndex(parts(1), this.uvs.size).asInstanceOf[java.lang.Integer])
                   } else ()
                   parts = tokens({ i += 1; i }).split("/")
-                  faces.add(this.getIndex(parts(0), this.verts.size).asInstanceOf[java.lang.Object])
+                  faces.add(this.getIndex(parts(0), this.verts.size).asInstanceOf[java.lang.Integer])
                   if (parts.length > 2) {
-                    faces.add(this.getIndex(parts(2), this.norms.size).asInstanceOf[java.lang.Object])
+                    faces.add(this.getIndex(parts(2), this.norms.size).asInstanceOf[java.lang.Integer])
                   } else ()
                   if ((parts.length > 1) && (parts(1).length() > 0)) {
-                    faces.add(this.getIndex(parts(1), this.uvs.size).asInstanceOf[java.lang.Object])
+                    faces.add(this.getIndex(parts(1), this.uvs.size).asInstanceOf[java.lang.Integer])
                   } else ()
                   activeGroup.numFaces = activeGroup.numFaces + 1
                 }; i = i - 1 } }

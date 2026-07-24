@@ -16,7 +16,7 @@ class ParticleValue extends com.badlogic.gdx.utils.Json.Serializable {
     this.active = value.active
   }
   def write(json: com.badlogic.gdx.utils.Json): scala.Unit = {
-    json.writeValue("active", this.active.asInstanceOf[java.lang.Object])
+    json.writeValue("active", this.active.asInstanceOf[java.lang.Boolean])
   }
   def read(json: com.badlogic.gdx.utils.Json, jsonData: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
     this.active = json.readValue[java.lang.Boolean]("active", classOf[java.lang.Boolean], jsonData)

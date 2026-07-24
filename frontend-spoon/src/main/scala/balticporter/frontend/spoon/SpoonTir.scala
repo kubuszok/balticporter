@@ -500,7 +500,21 @@ object SpoonTir:
           narrowing ||                                                            // int → short/byte/char
           boxing ||                                                               // int → Object/Number
           downcast                                                                // Object → specific
-        if cast then Tree.Typed(t, tt(tpe(target), e), tpe(target), originOf(e)) else t
+        // Box to the primitive's WRAPPER (`int` → `java.lang.Integer`), not the (often Object-erased)
+        // formal: the wrapper is what Java autoboxing yields and it satisfies both the erased `Object`
+        // slot AND a real `Integer`/`Number` one — where casting straight to `Object` fails an
+        // `Integer` parameter that Spoon erased at the call reference.
+        val ct = if boxing then boxedPrimitive(et.getSimpleName) else tpe(target)
+        if cast then Tree.Typed(t, tt(ct, e), ct, originOf(e)) else t
+
+      private val wrapperOf = Map(
+        "byte" -> "java.lang.Byte", "short" -> "java.lang.Short", "char" -> "java.lang.Character",
+        "int" -> "java.lang.Integer", "long" -> "java.lang.Long", "float" -> "java.lang.Float",
+        "double" -> "java.lang.Double", "boolean" -> "java.lang.Boolean")
+      private def boxedPrimitive(prim: String): TypeRepr =
+        wrapperOf.get(prim) match
+          case Some(fqn) => TypeRef(NoPrefix, minter.external(fqn, simpleName(fqn)))
+          case None      => TypeRef(NoPrefix, minter.external("java.lang.Object", "Object"))
 
       /** coerce each argument to its formal parameter type (Java autoboxing / numeric narrowing
         * that Scala won't do implicitly). Skipped when arities differ (varargs spread etc.). */

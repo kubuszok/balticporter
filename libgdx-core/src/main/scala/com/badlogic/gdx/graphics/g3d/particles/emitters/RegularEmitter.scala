@@ -206,7 +206,7 @@ class RegularEmitter extends com.badlogic.gdx.graphics.g3d.particles.emitters.Em
   }
   def write(json: com.badlogic.gdx.utils.Json): scala.Unit = {
     super.write(json)
-    json.writeValue("continous", this.continuous.asInstanceOf[java.lang.Object])
+    json.writeValue("continous", this.continuous.asInstanceOf[java.lang.Boolean])
     json.writeValue("emission", this.emissionValue)
     json.writeValue("delay", this.delayValue)
     json.writeValue("duration", this.durationValue)

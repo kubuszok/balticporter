@@ -38,8 +38,8 @@ abstract class Emitter extends com.badlogic.gdx.graphics.g3d.particles.ParticleC
     this.maxParticleCount = emitter.maxParticleCount
   }
   def write(json: com.badlogic.gdx.utils.Json): scala.Unit = {
-    json.writeValue("minParticleCount", this.minParticleCount.asInstanceOf[java.lang.Object])
-    json.writeValue("maxParticleCount", this.maxParticleCount.asInstanceOf[java.lang.Object])
+    json.writeValue("minParticleCount", this.minParticleCount.asInstanceOf[java.lang.Integer])
+    json.writeValue("maxParticleCount", this.maxParticleCount.asInstanceOf[java.lang.Integer])
   }
   def read(json: com.badlogic.gdx.utils.Json, jsonData: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
     this.minParticleCount = json.readValue("minParticleCount", classOf[scala.Int], jsonData)

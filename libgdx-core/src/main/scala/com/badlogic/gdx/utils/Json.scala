@@ -485,7 +485,7 @@ class Json {
         this.writeObjectStart(actualType, knownType)
         for (entry <- value.asInstanceOf[com.badlogic.gdx.utils.ObjectIntMap[?]].entries()) {
           this.writer.name(this.convertToString(entry.key))
-          this.writeValue(entry.value.asInstanceOf[java.lang.Object], classOf[java.lang.Integer])
+          this.writeValue(entry.value.asInstanceOf[java.lang.Integer], classOf[java.lang.Integer])
         }
         this.writeObjectEnd()
         return
@@ -497,7 +497,7 @@ class Json {
         this.writeObjectStart(actualType, knownType)
         for (entry <- value.asInstanceOf[com.badlogic.gdx.utils.ObjectFloatMap[?]].entries()) {
           this.writer.name(this.convertToString(entry.key))
-          this.writeValue(entry.value.asInstanceOf[java.lang.Object], classOf[java.lang.Float])
+          this.writeValue(entry.value.asInstanceOf[java.lang.Float], classOf[java.lang.Float])
         }
         this.writeObjectEnd()
         return
@@ -548,7 +548,7 @@ class Json {
         this.writer.name("values")
         this.writeArrayStart();
         { val iter: com.badlogic.gdx.utils.IntSet.IntSetIterator = value.asInstanceOf[com.badlogic.gdx.utils.IntSet].iterator(); while (iter.hasNext) { {
-          this.writeValue(iter.next().asInstanceOf[java.lang.Object], classOf[java.lang.Integer], null)
+          this.writeValue(iter.next().asInstanceOf[java.lang.Integer], classOf[java.lang.Integer], null)
         };  } }
         this.writeArrayEnd()
         this.writeObjectEnd()

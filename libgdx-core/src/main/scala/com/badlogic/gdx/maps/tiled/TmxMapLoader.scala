@@ -85,12 +85,12 @@ class TmxMapLoader extends com.badlogic.gdx.maps.tiled.BaseTmxMapLoader[com.badl
     if (image != null) {
       val texture: com.badlogic.gdx.graphics.g2d.TextureRegion = imageResolver.getImage(image.path())
       props.put("imagesource", imageSource)
-      props.put("imagewidth", imageWidth.asInstanceOf[java.lang.Object])
-      props.put("imageheight", imageHeight.asInstanceOf[java.lang.Object])
-      props.put("tilewidth", tilewidth.asInstanceOf[java.lang.Object])
-      props.put("tileheight", tileheight.asInstanceOf[java.lang.Object])
-      props.put("margin", margin.asInstanceOf[java.lang.Object])
-      props.put("spacing", spacing.asInstanceOf[java.lang.Object])
+      props.put("imagewidth", imageWidth.asInstanceOf[java.lang.Integer])
+      props.put("imageheight", imageHeight.asInstanceOf[java.lang.Integer])
+      props.put("tilewidth", tilewidth.asInstanceOf[java.lang.Integer])
+      props.put("tileheight", tileheight.asInstanceOf[java.lang.Integer])
+      props.put("margin", margin.asInstanceOf[java.lang.Integer])
+      props.put("spacing", spacing.asInstanceOf[java.lang.Integer])
       val stopWidth: scala.Int = texture.getRegionWidth() - tilewidth
       val stopHeight: scala.Int = texture.getRegionHeight() - tileheight
       var id: scala.Int = firstgid;
