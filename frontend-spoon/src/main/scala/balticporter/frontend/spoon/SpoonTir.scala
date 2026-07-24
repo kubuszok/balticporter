@@ -776,7 +776,7 @@ object SpoonTir:
         else
           val fid = fieldSym(ref)
           target match
-            case ta: CtTypeAccess[?]                 => Tree.Select(typeTerm(ta, at), fid, ty(at), originOf(at)) // static
+            case ta: CtTypeAccess[?]                 => staticFieldAccess(ta, ref, fid, at) // static (re-qualify if inherited)
             // fields: `super.f`, an outer `Outer.this.f`, and implicit `f` all resolve as a BARE
             // name in Scala (inherited or enclosing). Only an OWN `this.f` needs qualifying.
             case _: CtSuperAccess[?]                 => Tree.Ident(fid, ty(at), originOf(at))
@@ -784,6 +784,30 @@ object SpoonTir:
             case ta: CtThisAccess[?] if !isOwnThis(ta) => Tree.Ident(fid, ty(at), originOf(at))
             case _: CtThisAccess[?]                  => Tree.Select(thisTerm(at), fid, ty(at), originOf(at))
             case other                               => Tree.Select(expr(other), fid, ty(at), originOf(at))
+
+      /** A Java static field read through a SUBCLASS (`Rotational3D.TMP_V3`, where `TMP_V3` is declared
+        * in an ancestor `DynamicsModifier`) — Scala companion objects don't inherit statics, so resolve
+        * the field to its real DECLARING type and qualify by that (`DynamicsModifier.TMP_V3`). Falls back
+        * to the written qualifier when the declaring type can't be located. */
+      private def staticFieldAccess(ta: CtTypeAccess[?], ref: CtFieldReference[?], fid: SymId, at: CtExpression[?]): Term =
+        val name  = ref.getSimpleName
+        val ownerT = declaringStaticType(ta.getAccessedType, name)
+        ownerT match
+          case Some(t) if t.getQualifiedName != ta.getAccessedType.getQualifiedName =>
+            val ownerId = minter.external(t.getQualifiedName, simpleName(t.getQualifiedName))
+            val fid2    = minter.external(memberKey(ownerId, name), name)
+            Tree.Select(Tree.Ident(ownerId, TypeRef(NoPrefix, ownerId), originOf(at)), fid2, ty(at), originOf(at))
+          case _ => Tree.Select(typeTerm(ta, at), fid, ty(at), originOf(at))
+
+      /** the type that DECLARES a static field `name`, walking the accessed type's superclass chain
+        * (source types only; degrades to None on shadow/unresolved types). */
+      private def declaringStaticType(accessed: CtTypeReference[?], name: String): Option[CtType[?]] =
+        var t: CtType[?] = try accessed.getTypeDeclaration catch { case _: Throwable => null }
+        val seen = collection.mutable.Set[String]()
+        while t != null && seen.add(t.getQualifiedName) do
+          if (try t.getFields.asScala.exists(_.getSimpleName == name) catch { case _: Throwable => false }) then return Some(t)
+          t = try Option(t.getSuperclass).flatMap(s => Option(s.getTypeDeclaration)).orNull catch { case _: Throwable => null }
+        None
 
       private def fieldSym(ref: CtFieldReference[?]): SymId =
         val ownerQ = Option(ref.getFieldDeclaration).flatMap(fd => Option(fd.getDeclaringType)).map(_.getQualifiedName)

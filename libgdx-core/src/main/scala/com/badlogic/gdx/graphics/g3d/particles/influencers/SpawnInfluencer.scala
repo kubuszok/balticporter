@@ -27,16 +27,16 @@ class SpawnInfluencer extends com.badlogic.gdx.graphics.g3d.particles.influencer
     { var i: scala.Int = startIndex * this.positionChannel.strideSize; val c: scala.Int = i + (count * this.positionChannel.strideSize); while (i < c) { {
       this.spawnShapeValue.spawn(com.badlogic.gdx.graphics.g3d.particles.ParticleControllerComponent.TMP_V1, this.controller.emitter.percent)
       com.badlogic.gdx.graphics.g3d.particles.ParticleControllerComponent.TMP_V1.mul(this.controller.transform)
-      this.positionChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.XOffset) = SpawnInfluencer.TMP_V1.x
-      this.positionChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.YOffset) = SpawnInfluencer.TMP_V1.y
-      this.positionChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.ZOffset) = SpawnInfluencer.TMP_V1.z
+      this.positionChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.XOffset) = com.badlogic.gdx.graphics.g3d.particles.ParticleControllerComponent.TMP_V1.x
+      this.positionChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.YOffset) = com.badlogic.gdx.graphics.g3d.particles.ParticleControllerComponent.TMP_V1.y
+      this.positionChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.ZOffset) = com.badlogic.gdx.graphics.g3d.particles.ParticleControllerComponent.TMP_V1.z
     }; i = i + this.positionChannel.strideSize } };
     { var i: scala.Int = startIndex * this.rotationChannel.strideSize; val c: scala.Int = i + (count * this.rotationChannel.strideSize); while (i < c) { {
       this.controller.transform.getRotation(com.badlogic.gdx.graphics.g3d.particles.ParticleControllerComponent.TMP_Q, true)
-      this.rotationChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.XOffset) = SpawnInfluencer.TMP_Q.x
-      this.rotationChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.YOffset) = SpawnInfluencer.TMP_Q.y
-      this.rotationChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.ZOffset) = SpawnInfluencer.TMP_Q.z
-      this.rotationChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.WOffset) = SpawnInfluencer.TMP_Q.w
+      this.rotationChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.XOffset) = com.badlogic.gdx.graphics.g3d.particles.ParticleControllerComponent.TMP_Q.x
+      this.rotationChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.YOffset) = com.badlogic.gdx.graphics.g3d.particles.ParticleControllerComponent.TMP_Q.y
+      this.rotationChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.ZOffset) = com.badlogic.gdx.graphics.g3d.particles.ParticleControllerComponent.TMP_Q.z
+      this.rotationChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.WOffset) = com.badlogic.gdx.graphics.g3d.particles.ParticleControllerComponent.TMP_Q.w
     }; i = i + this.rotationChannel.strideSize } }
   }
   def copy(): SpawnInfluencer = {

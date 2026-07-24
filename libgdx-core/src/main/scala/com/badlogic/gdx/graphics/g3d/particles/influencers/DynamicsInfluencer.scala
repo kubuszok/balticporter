@@ -130,10 +130,10 @@ class DynamicsInfluencer extends com.badlogic.gdx.graphics.g3d.particles.influen
           val qz: scala.Float = this.rotationChannel.data(offset + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.ZOffset)
           val qw: scala.Float = this.rotationChannel.data(offset + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.WOffset)
           com.badlogic.gdx.graphics.g3d.particles.ParticleControllerComponent.TMP_Q.set(wx, wy, wz, 0).mul(qx, qy, qz, qw).mul(0.5f * this.controller.deltaTime).add(qx, qy, qz, qw).nor()
-          this.rotationChannel.data(offset + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.XOffset) = DynamicsInfluencer.TMP_Q.x
-          this.rotationChannel.data(offset + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.YOffset) = DynamicsInfluencer.TMP_Q.y
-          this.rotationChannel.data(offset + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.ZOffset) = DynamicsInfluencer.TMP_Q.z
-          this.rotationChannel.data(offset + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.WOffset) = DynamicsInfluencer.TMP_Q.w
+          this.rotationChannel.data(offset + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.XOffset) = com.badlogic.gdx.graphics.g3d.particles.ParticleControllerComponent.TMP_Q.x
+          this.rotationChannel.data(offset + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.YOffset) = com.badlogic.gdx.graphics.g3d.particles.ParticleControllerComponent.TMP_Q.y
+          this.rotationChannel.data(offset + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.ZOffset) = com.badlogic.gdx.graphics.g3d.particles.ParticleControllerComponent.TMP_Q.z
+          this.rotationChannel.data(offset + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.WOffset) = com.badlogic.gdx.graphics.g3d.particles.ParticleControllerComponent.TMP_Q.w
         }; i = i + 1; offset = offset + this.rotationChannel.strideSize; angularOffset = angularOffset + this.angularVelocityChannel.strideSize } }
       } else ()
     }

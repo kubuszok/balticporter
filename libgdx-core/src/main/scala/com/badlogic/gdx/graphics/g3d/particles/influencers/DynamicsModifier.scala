@@ -41,10 +41,10 @@ object DynamicsModifier {
         val axisY: com.badlogic.gdx.math.Vector3 = DynamicsModifier.TMP_V2.set(DynamicsModifier.TMP_V1).crs(com.badlogic.gdx.math.Vector3.Y).nor().crs(DynamicsModifier.TMP_V1).nor()
         val axisX: com.badlogic.gdx.math.Vector3 = DynamicsModifier.TMP_V3.set(axisY).crs(axisZ).nor()
         DynamicsModifier.TMP_Q.setFromAxes(false, axisX.x, axisY.x, axisZ.x, axisX.y, axisY.y, axisZ.y, axisX.z, axisY.z, axisZ.z)
-        this.rotationChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.XOffset) = com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.FaceDirection.TMP_Q.x
-        this.rotationChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.YOffset) = com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.FaceDirection.TMP_Q.y
-        this.rotationChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.ZOffset) = com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.FaceDirection.TMP_Q.z
-        this.rotationChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.WOffset) = com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.FaceDirection.TMP_Q.w
+        this.rotationChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.XOffset) = DynamicsModifier.TMP_Q.x
+        this.rotationChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.YOffset) = DynamicsModifier.TMP_Q.y
+        this.rotationChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.ZOffset) = DynamicsModifier.TMP_Q.z
+        this.rotationChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.WOffset) = DynamicsModifier.TMP_Q.w
       }; i = i + this.rotationChannel.strideSize; accelOffset = accelOffset + this.accellerationChannel.strideSize } }
     }
     def copy(): com.badlogic.gdx.graphics.g3d.particles.ParticleControllerComponent = {
@@ -190,9 +190,9 @@ object DynamicsModifier {
         val sinPhi: scala.Float = com.badlogic.gdx.math.MathUtils.sinDeg(phi)
         DynamicsModifier.TMP_V3.set(cosTheta * sinPhi, cosPhi, sinTheta * sinPhi)
         DynamicsModifier.TMP_V3.scl(strength * com.badlogic.gdx.math.MathUtils.degreesToRadians)
-        this.rotationalForceChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.XOffset) = this.rotationalForceChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.XOffset) + com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.Rotational3D.TMP_V3.x
-        this.rotationalForceChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.YOffset) = this.rotationalForceChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.YOffset) + com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.Rotational3D.TMP_V3.y
-        this.rotationalForceChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.ZOffset) = this.rotationalForceChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.ZOffset) + com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.Rotational3D.TMP_V3.z
+        this.rotationalForceChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.XOffset) = this.rotationalForceChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.XOffset) + DynamicsModifier.TMP_V3.x
+        this.rotationalForceChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.YOffset) = this.rotationalForceChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.YOffset) + DynamicsModifier.TMP_V3.y
+        this.rotationalForceChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.ZOffset) = this.rotationalForceChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.ZOffset) + DynamicsModifier.TMP_V3.z
       }; s = s + this.strengthChannel.strideSize; i = i + this.rotationalForceChannel.strideSize; a = a + this.angularChannel.strideSize; l = l + this.lifeChannel.strideSize } }
     }
     def copy(): com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.Rotational3D = {
@@ -230,9 +230,9 @@ object DynamicsModifier {
       { var i: scala.Int = 0; val c: scala.Int = this.controller.particles.size; while (i < c) { {
         val strength: scala.Float = this.strengthChannel.data(strengthOffset + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.VelocityStrengthStartOffset) + (this.strengthChannel.data(strengthOffset + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.VelocityStrengthDiffOffset) * strengthValue.getScale(this.lifeChannel.data(lifeOffset)))
         DynamicsModifier.TMP_V3.set(this.positionChannel.data(positionOffset + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.XOffset) - cx, this.positionChannel.data(positionOffset + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.YOffset) - cy, this.positionChannel.data(positionOffset + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.ZOffset) - cz).nor().scl(strength)
-        this.accelerationChannel.data(forceOffset + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.XOffset) = this.accelerationChannel.data(forceOffset + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.XOffset) + com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.CentripetalAcceleration.TMP_V3.x
-        this.accelerationChannel.data(forceOffset + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.YOffset) = this.accelerationChannel.data(forceOffset + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.YOffset) + com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.CentripetalAcceleration.TMP_V3.y
-        this.accelerationChannel.data(forceOffset + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.ZOffset) = this.accelerationChannel.data(forceOffset + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.ZOffset) + com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.CentripetalAcceleration.TMP_V3.z
+        this.accelerationChannel.data(forceOffset + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.XOffset) = this.accelerationChannel.data(forceOffset + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.XOffset) + DynamicsModifier.TMP_V3.x
+        this.accelerationChannel.data(forceOffset + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.YOffset) = this.accelerationChannel.data(forceOffset + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.YOffset) + DynamicsModifier.TMP_V3.y
+        this.accelerationChannel.data(forceOffset + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.ZOffset) = this.accelerationChannel.data(forceOffset + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.ZOffset) + DynamicsModifier.TMP_V3.z
       }; i = i + 1; positionOffset = positionOffset + this.positionChannel.strideSize; strengthOffset = strengthOffset + this.strengthChannel.strideSize; forceOffset = forceOffset + this.accelerationChannel.strideSize; lifeOffset = lifeOffset + this.lifeChannel.strideSize } }
     }
     def copy(): com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.CentripetalAcceleration = {
@@ -266,9 +266,9 @@ object DynamicsModifier {
           this.controller.transform.getRotation(DynamicsModifier.TMP_Q, true)
           DynamicsModifier.TMP_V3.mul(DynamicsModifier.TMP_Q)
         } else ()
-        this.directionalVelocityChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.XOffset) = this.directionalVelocityChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.XOffset) + com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.PolarAcceleration.TMP_V3.x
-        this.directionalVelocityChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.YOffset) = this.directionalVelocityChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.YOffset) + com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.PolarAcceleration.TMP_V3.y
-        this.directionalVelocityChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.ZOffset) = this.directionalVelocityChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.ZOffset) + com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.PolarAcceleration.TMP_V3.z
+        this.directionalVelocityChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.XOffset) = this.directionalVelocityChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.XOffset) + DynamicsModifier.TMP_V3.x
+        this.directionalVelocityChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.YOffset) = this.directionalVelocityChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.YOffset) + DynamicsModifier.TMP_V3.y
+        this.directionalVelocityChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.ZOffset) = this.directionalVelocityChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.ZOffset) + DynamicsModifier.TMP_V3.z
       }; s = s + this.strengthChannel.strideSize; i = i + this.directionalVelocityChannel.strideSize; a = a + this.angularChannel.strideSize; l = l + this.lifeChannel.strideSize } }
     }
     def copy(): com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.PolarAcceleration = {
@@ -308,9 +308,9 @@ object DynamicsModifier {
           DynamicsModifier.TMP_V3.mul(DynamicsModifier.TMP_Q)
         } else ()
         DynamicsModifier.TMP_V3.crs(DynamicsModifier.TMP_V1).nor().scl(strength)
-        this.directionalVelocityChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.XOffset) = this.directionalVelocityChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.XOffset) + com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.TangentialAcceleration.TMP_V3.x
-        this.directionalVelocityChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.YOffset) = this.directionalVelocityChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.YOffset) + com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.TangentialAcceleration.TMP_V3.y
-        this.directionalVelocityChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.ZOffset) = this.directionalVelocityChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.ZOffset) + com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.TangentialAcceleration.TMP_V3.z
+        this.directionalVelocityChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.XOffset) = this.directionalVelocityChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.XOffset) + DynamicsModifier.TMP_V3.x
+        this.directionalVelocityChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.YOffset) = this.directionalVelocityChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.YOffset) + DynamicsModifier.TMP_V3.y
+        this.directionalVelocityChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.ZOffset) = this.directionalVelocityChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.ZOffset) + DynamicsModifier.TMP_V3.z
       }; s = s + this.strengthChannel.strideSize; i = i + this.directionalVelocityChannel.strideSize; a = a + this.angularChannel.strideSize; l = l + this.lifeChannel.strideSize; positionOffset = positionOffset + this.positionChannel.strideSize } }
     }
     def copy(): com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.TangentialAcceleration = {
@@ -336,9 +336,9 @@ object DynamicsModifier {
       { var i: scala.Int = 0; val c: scala.Int = this.controller.particles.size; while (i < c) { {
         val strength: scala.Float = this.strengthChannel.data(strengthOffset + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.VelocityStrengthStartOffset) + (this.strengthChannel.data(strengthOffset + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.VelocityStrengthDiffOffset) * strengthValue.getScale(this.lifeChannel.data(lifeOffset)))
         DynamicsModifier.TMP_V3.set(com.badlogic.gdx.math.MathUtils.random(-1, 1.0f), com.badlogic.gdx.math.MathUtils.random(-1, 1.0f), com.badlogic.gdx.math.MathUtils.random(-1, 1.0f)).nor().scl(strength)
-        this.accelerationChannel.data(forceOffset + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.XOffset) = this.accelerationChannel.data(forceOffset + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.XOffset) + com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.BrownianAcceleration.TMP_V3.x
-        this.accelerationChannel.data(forceOffset + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.YOffset) = this.accelerationChannel.data(forceOffset + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.YOffset) + com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.BrownianAcceleration.TMP_V3.y
-        this.accelerationChannel.data(forceOffset + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.ZOffset) = this.accelerationChannel.data(forceOffset + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.ZOffset) + com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.BrownianAcceleration.TMP_V3.z
+        this.accelerationChannel.data(forceOffset + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.XOffset) = this.accelerationChannel.data(forceOffset + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.XOffset) + DynamicsModifier.TMP_V3.x
+        this.accelerationChannel.data(forceOffset + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.YOffset) = this.accelerationChannel.data(forceOffset + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.YOffset) + DynamicsModifier.TMP_V3.y
+        this.accelerationChannel.data(forceOffset + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.ZOffset) = this.accelerationChannel.data(forceOffset + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.ZOffset) + DynamicsModifier.TMP_V3.z
       }; i = i + 1; strengthOffset = strengthOffset + this.strengthChannel.strideSize; forceOffset = forceOffset + this.accelerationChannel.strideSize; lifeOffset = lifeOffset + this.lifeChannel.strideSize } }
     }
     def copy(): com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.BrownianAcceleration = {
