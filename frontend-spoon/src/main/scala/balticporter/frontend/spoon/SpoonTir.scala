@@ -102,6 +102,11 @@ object SpoonTir:
   private final class Builder:
     private val minter   = new Minter
     private val tpScopes = collection.mutable.ArrayDeque[Map[String, SymId]]()
+    private val selfRawStack = collection.mutable.ArrayDeque[(SymId, List[SymId])]()
+    private var inStatic = false
+    private def withStatic[A](s: Boolean)(f: => A): A =
+      val prev = inStatic; inStatic = s
+      try f finally inStatic = prev
 
     def build(types: List[CtType[?]]): Program =
       val units = types.map(classDef)
@@ -174,7 +179,14 @@ object SpoonTir:
             // than needs a concrete arg. The residual raw-into-type-param sites are cast below.)
             val arity = try Option(r.getTypeDeclaration).map(_.getFormalCtTypeParameters.size).getOrElse(0)
                         catch { case _: Throwable => 0 }
-            if arity > 0 then AppliedType(head, List.fill(arity)(TypeBounds(NoType, NoType))) else head
+            // a raw use of the class we're currently INSIDE, in a NON-static member (where the class's
+            // own type params are in scope): fill with them (`ArrayMap[K,V]`) instead of wildcards, so
+            // member accesses stay on the enclosing instantiation rather than a path-dependent capture.
+            selfRawStack.headOption match
+              case Some((cls, params)) if !inStatic && cls == typeSym(r) && params.nonEmpty && params.sizeIs == arity =>
+                AppliedType(head, params.map(p => TypeRef(NoPrefix, p)))
+              case _ =>
+                if arity > 0 then AppliedType(head, List.fill(arity)(TypeBounds(NoType, NoType))) else head
           case args => AppliedType(head, args.map(tpe))
 
     /** id of a referenced class type — our own (already defined) or an external stub. */
@@ -191,6 +203,8 @@ object SpoonTir:
       val id   = defineType(t)
       val (frame, tpDefs) = mintTypeParams(typeKey(t.getReference), id, t.getFormalCtTypeParameters.asScala.toList)
       tpScopes.prepend(frame)
+      selfRawStack.prepend(id -> t.getFormalCtTypeParameters.asScala.toList.map(tp => frame(tp.getSimpleName)))
+      val savedStatic = inStatic; inStatic = false // a class body isn't a static context for its instance members
       val parents = superTypes(t)
       val fields = t.getFields.asScala.toList
         .filterNot(_.isInstanceOf[CtEnumValue[?]])
@@ -207,6 +221,7 @@ object SpoonTir:
         case e: CtEnum[?] => e.getEnumValues.asScala.toList.map(enumCase(id, _))
         case _            => Nil
       tpScopes.remove(0)
+      selfRawStack.remove(0); inStatic = savedStatic
       Tree.ClassDef(id, parents, selfType = None, body = fields ++ ctors ++ methods ++ nested,
         origin = originOf(t), tparams = tpDefs, enumCases = enumCases)
 
@@ -243,7 +258,7 @@ object SpoonTir:
         case _             => None
       (sc.toList ++ t.getSuperInterfaces.asScala.toList).map(tr => tt(tpe(tr), t))
 
-    private def fieldDef(owner: SymId, f: CtField[?]): Tree.ValDef =
+    private def fieldDef(owner: SymId, f: CtField[?]): Tree.ValDef = withStatic(fieldFlags(f).isStatic) {
       val ft = tpe(f.getType)
       val id = minter.define(memberKey(owner, f.getSimpleName))(sid =>
         Symbol(sid, f.getSimpleName, qualified(owner, f.getSimpleName), fieldFlags(f), owner, ft)
@@ -252,8 +267,9 @@ object SpoonTir:
       // attributed to the field (not a method).
       val rhs = Option(f.getDefaultExpression).map(e => new BodyTranslator(id, owner).coercedExprOf(f.getType, e))
       Tree.ValDef(id, tt(ft, f), rhs = rhs, origin = originOf(f))
+    }
 
-    private def execDef(owner: SymId, m: CtExecutable[?], name: String): Tree.DefDef =
+    private def execDef(owner: SymId, m: CtExecutable[?], name: String): Tree.DefDef = withStatic(execFlags(m).isStatic) {
       val mkey = memberKey(owner, name + erasedSig(m))
       val id   = minter.resolve(mkey)
       val mtps = m match
@@ -284,6 +300,7 @@ object SpoonTir:
       val body = Option(m.getBody).map(b => bt.methodBody(b))
       tpScopes.remove(0)
       Tree.DefDef(id, paramss = List(pvs), returnTpt = tt(ret, m), rhs = body, origin = originOf(m), tparams = tpDefs)
+    }
 
     private def qualified(owner: SymId, member: String): String = minter.fullNameOf(owner) + "#" + member
     private def unitT: TypeRepr = TypeRef(NoPrefix, minter.external("scala.Unit", "Unit"))

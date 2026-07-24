@@ -34,7 +34,7 @@ class TextureDescriptor[T <: com.badlogic.gdx.graphics.GLTexture] extends java.l
     if (obj == this) {
       return true
     } else ()
-    if (!obj.isInstanceOf[TextureDescriptor[?]]) {
+    if (!obj.isInstanceOf[TextureDescriptor[T]]) {
       return false
     } else ()
     val other: TextureDescriptor[?] = obj.asInstanceOf[TextureDescriptor[?]].asInstanceOf[TextureDescriptor[?]]

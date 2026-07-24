@@ -313,7 +313,7 @@ class Queue[T] extends scala.collection.Iterable[T] {
     if (this == o) {
       return true
     } else ()
-    if ((o == null) || (!o.isInstanceOf[Queue[?]])) {
+    if ((o == null) || (!o.isInstanceOf[Queue[T]])) {
       return false
     } else ()
     val q: Queue[?] = o.asInstanceOf[Queue[?]].asInstanceOf[Queue[?]]
@@ -348,7 +348,7 @@ class Queue[T] extends scala.collection.Iterable[T] {
     if (this == o) {
       return true
     } else ()
-    if ((o == null) || (!o.isInstanceOf[Queue[?]])) {
+    if ((o == null) || (!o.isInstanceOf[Queue[T]])) {
       return false
     } else ()
     val q: Queue[?] = o.asInstanceOf[Queue[?]].asInstanceOf[Queue[?]]

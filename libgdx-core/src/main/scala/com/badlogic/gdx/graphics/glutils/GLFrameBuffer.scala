@@ -241,8 +241,8 @@ abstract class GLFrameBuffer[T <: com.badlogic.gdx.graphics.GLTexture] extends c
     gl.glDeleteRenderbuffer(this.depthbufferHandle)
     gl.glDeleteRenderbuffer(this.stencilbufferHandle)
     gl.glDeleteFramebuffer(this.framebufferHandle)
-    if (GLFrameBuffer.buffers.getOrElse(com.badlogic.gdx.Gdx.app, null.asInstanceOf[com.badlogic.gdx.utils.Array[GLFrameBuffer[?]]]) != null) {
-      GLFrameBuffer.buffers.getOrElse(com.badlogic.gdx.Gdx.app, null.asInstanceOf[com.badlogic.gdx.utils.Array[GLFrameBuffer[?]]]).removeValue(this, true)
+    if (GLFrameBuffer.buffers.getOrElse(com.badlogic.gdx.Gdx.app, null.asInstanceOf[com.badlogic.gdx.utils.Array[GLFrameBuffer[T]]]) != null) {
+      GLFrameBuffer.buffers.getOrElse(com.badlogic.gdx.Gdx.app, null.asInstanceOf[com.badlogic.gdx.utils.Array[GLFrameBuffer[T]]]).removeValue(this, true)
     } else ()
   }
   def bind(): scala.Unit = {

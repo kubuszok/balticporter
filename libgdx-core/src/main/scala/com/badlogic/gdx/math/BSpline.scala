@@ -13,7 +13,7 @@ class BSpline[T <: com.badlogic.gdx.math.Vector[T]] extends com.badlogic.gdx.mat
     this()
     this.set(controlPoints, degree, continuous)
   }
-  def set(controlPoints: scala.Array[T], degree: scala.Int, continuous: scala.Boolean): BSpline[?] = {
+  def set(controlPoints: scala.Array[T], degree: scala.Int, continuous: scala.Boolean): BSpline[T] = {
     if (this.tmp == null) {
       this.tmp = controlPoints(0).cpy()
     } else ()

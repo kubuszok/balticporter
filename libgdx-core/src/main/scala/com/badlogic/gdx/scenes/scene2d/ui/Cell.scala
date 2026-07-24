@@ -37,7 +37,7 @@ class Cell[T <: com.badlogic.gdx.scenes.scene2d.Actor] extends com.badlogic.gdx.
   var computedPadLeft: scala.Float = 0.0f
   var computedPadBottom: scala.Float = 0.0f
   var computedPadRight: scala.Float = 0.0f
-  val defaults: Cell[?] = Cell.defaults()
+  val defaults: Cell[T] = Cell.defaults()
   this.cellAboveIndex = -1
   if (defaults != null) {
     this.set(defaults)
@@ -801,7 +801,7 @@ class Cell[T <: com.badlogic.gdx.scenes.scene2d.Actor] extends com.badlogic.gdx.
     this.cellAboveIndex = -1
     this.set(Cell.defaults())
   }
-  def set(cell: Cell[?]): scala.Unit = {
+  def set(cell: Cell[T]): scala.Unit = {
     this.minWidth$field = cell.minWidth$field
     this.minHeight$field = cell.minHeight$field
     this.prefWidth$field = cell.prefWidth$field
@@ -825,7 +825,7 @@ class Cell[T <: com.badlogic.gdx.scenes.scene2d.Actor] extends com.badlogic.gdx.
     this.uniformX$field = cell.uniformX$field
     this.uniformY$field = cell.uniformY$field
   }
-  def merge(cell: Cell[?]): scala.Unit = {
+  def merge(cell: Cell[T]): scala.Unit = {
     if (cell == null) {
       return
     } else ()

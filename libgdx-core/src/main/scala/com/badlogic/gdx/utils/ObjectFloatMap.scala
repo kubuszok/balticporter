@@ -269,10 +269,10 @@ class ObjectFloatMap[K] extends scala.collection.Iterable[com.badlogic.gdx.utils
     if (obj == this) {
       return true
     } else ()
-    if (!obj.isInstanceOf[ObjectFloatMap[?]]) {
+    if (!obj.isInstanceOf[ObjectFloatMap[K]]) {
       return false
     } else ()
-    val other: ObjectFloatMap[?] = obj.asInstanceOf[ObjectFloatMap[?]].asInstanceOf[ObjectFloatMap[?]]
+    val other: ObjectFloatMap[K] = obj.asInstanceOf[ObjectFloatMap[K]].asInstanceOf[ObjectFloatMap[K]]
     if (other.size != this.size) {
       return false
     } else ()

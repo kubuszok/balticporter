@@ -512,10 +512,10 @@ class Array[T] extends scala.collection.Iterable[T] {
     if (!this.ordered) {
       return false
     } else ()
-    if (!`object`.isInstanceOf[Array[?]]) {
+    if (!`object`.isInstanceOf[Array[T]]) {
       return false
     } else ()
-    val array: Array[?] = `object`.asInstanceOf[Array[?]].asInstanceOf[Array[?]]
+    val array: Array[T] = `object`.asInstanceOf[Array[T]].asInstanceOf[Array[T]]
     if (!array.ordered) {
       return false
     } else ()
@@ -541,10 +541,10 @@ class Array[T] extends scala.collection.Iterable[T] {
     if (!this.ordered) {
       return false
     } else ()
-    if (!`object`.isInstanceOf[Array[?]]) {
+    if (!`object`.isInstanceOf[Array[T]]) {
       return false
     } else ()
-    val array: Array[?] = `object`.asInstanceOf[Array[?]].asInstanceOf[Array[?]]
+    val array: Array[T] = `object`.asInstanceOf[Array[T]].asInstanceOf[Array[T]]
     if (!array.ordered) {
       return false
     } else ()

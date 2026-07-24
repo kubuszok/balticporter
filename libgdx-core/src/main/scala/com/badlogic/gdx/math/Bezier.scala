@@ -17,10 +17,10 @@ class Bezier[T <: com.badlogic.gdx.math.Vector[T]] extends com.badlogic.gdx.math
     this()
     this.set(points, offset, length)
   }
-  def set(points: scala.Array[T]): Bezier[?] = {
+  def set(points: scala.Array[T]): Bezier[T] = {
     return this.set(points, 0, points.length)
   }
-  def set(points: scala.Array[T], offset: scala.Int, length: scala.Int): Bezier[?] = {
+  def set(points: scala.Array[T], offset: scala.Int, length: scala.Int): Bezier[T] = {
     if ((length < 2) || (length > 4)) {
       throw new com.badlogic.gdx.utils.GdxRuntimeException("Only first, second and third degree Bezier curves are supported.")
     } else ()
@@ -37,7 +37,7 @@ class Bezier[T <: com.badlogic.gdx.math.Vector[T]] extends com.badlogic.gdx.math
     this.points.addAll(points, offset, length)
     return this
   }
-  def set(points: com.badlogic.gdx.utils.Array[T], offset: scala.Int, length: scala.Int): Bezier[?] = {
+  def set(points: com.badlogic.gdx.utils.Array[T], offset: scala.Int, length: scala.Int): Bezier[T] = {
     if ((length < 2) || (length > 4)) {
       throw new com.badlogic.gdx.utils.GdxRuntimeException("Only first, second and third degree Bezier curves are supported.")
     } else ()

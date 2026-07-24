@@ -206,10 +206,10 @@ class ObjectSet[T] extends scala.collection.Iterable[T] {
     return h
   }
   def equals(obj: java.lang.Object): scala.Boolean = {
-    if (!obj.isInstanceOf[ObjectSet[?]]) {
+    if (!obj.isInstanceOf[ObjectSet[T]]) {
       return false
     } else ()
-    val other: ObjectSet[?] = obj.asInstanceOf[ObjectSet[?]].asInstanceOf[ObjectSet[?]]
+    val other: ObjectSet[T] = obj.asInstanceOf[ObjectSet[T]].asInstanceOf[ObjectSet[T]]
     if (other.size != this.size) {
       return false
     } else ()

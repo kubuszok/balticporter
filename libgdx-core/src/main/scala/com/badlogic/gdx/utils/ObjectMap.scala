@@ -261,10 +261,10 @@ class ObjectMap[K, V] extends scala.collection.Iterable[com.badlogic.gdx.utils.O
     if (obj == this) {
       return true
     } else ()
-    if (!obj.isInstanceOf[ObjectMap[?, ?]]) {
+    if (!obj.isInstanceOf[ObjectMap[K, V]]) {
       return false
     } else ()
-    val other: ObjectMap[?, ?] = obj.asInstanceOf[ObjectMap[?, ?]].asInstanceOf[ObjectMap[?, ?]]
+    val other: ObjectMap[K, V] = obj.asInstanceOf[ObjectMap[K, V]].asInstanceOf[ObjectMap[K, V]]
     if (other.size != this.size) {
       return false
     } else ()
@@ -291,10 +291,10 @@ class ObjectMap[K, V] extends scala.collection.Iterable[com.badlogic.gdx.utils.O
     if (obj == this) {
       return true
     } else ()
-    if (!obj.isInstanceOf[ObjectMap[?, ?]]) {
+    if (!obj.isInstanceOf[ObjectMap[K, V]]) {
       return false
     } else ()
-    val other: ObjectMap[?, ?] = obj.asInstanceOf[ObjectMap[?, ?]].asInstanceOf[ObjectMap[?, ?]]
+    val other: ObjectMap[K, V] = obj.asInstanceOf[ObjectMap[K, V]].asInstanceOf[ObjectMap[K, V]]
     if (other.size != this.size) {
       return false
     } else ()

@@ -11,7 +11,7 @@ class CatmullRomSpline[T <: com.badlogic.gdx.math.Vector[T]] extends com.badlogi
     this()
     this.set(controlPoints, continuous)
   }
-  def set(controlPoints: scala.Array[T], continuous: scala.Boolean): CatmullRomSpline[?] = {
+  def set(controlPoints: scala.Array[T], continuous: scala.Boolean): CatmullRomSpline[T] = {
     if (this.tmp == null) {
       this.tmp = controlPoints(0).cpy()
     } else ()

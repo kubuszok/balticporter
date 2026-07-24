@@ -317,10 +317,10 @@ class LongMap[V] extends scala.collection.Iterable[com.badlogic.gdx.utils.LongMa
     if (obj == this) {
       return true
     } else ()
-    if (!obj.isInstanceOf[LongMap[?]]) {
+    if (!obj.isInstanceOf[LongMap[V]]) {
       return false
     } else ()
-    val other: LongMap[?] = obj.asInstanceOf[LongMap[?]].asInstanceOf[LongMap[?]]
+    val other: LongMap[V] = obj.asInstanceOf[LongMap[V]].asInstanceOf[LongMap[V]]
     if (other.size != this.size) {
       return false
     } else ()
@@ -361,10 +361,10 @@ class LongMap[V] extends scala.collection.Iterable[com.badlogic.gdx.utils.LongMa
     if (obj == this) {
       return true
     } else ()
-    if (!obj.isInstanceOf[LongMap[?]]) {
+    if (!obj.isInstanceOf[LongMap[V]]) {
       return false
     } else ()
-    val other: LongMap[?] = obj.asInstanceOf[LongMap[?]].asInstanceOf[LongMap[?]]
+    val other: LongMap[V] = obj.asInstanceOf[LongMap[V]].asInstanceOf[LongMap[V]]
     if (other.size != this.size) {
       return false
     } else ()

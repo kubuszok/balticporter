@@ -248,10 +248,10 @@ class ObjectIntMap[K] extends scala.collection.Iterable[com.badlogic.gdx.utils.O
     if (obj == this) {
       return true
     } else ()
-    if (!obj.isInstanceOf[ObjectIntMap[?]]) {
+    if (!obj.isInstanceOf[ObjectIntMap[K]]) {
       return false
     } else ()
-    val other: ObjectIntMap[?] = obj.asInstanceOf[ObjectIntMap[?]].asInstanceOf[ObjectIntMap[?]]
+    val other: ObjectIntMap[K] = obj.asInstanceOf[ObjectIntMap[K]].asInstanceOf[ObjectIntMap[K]]
     if (other.size != this.size) {
       return false
     } else ()

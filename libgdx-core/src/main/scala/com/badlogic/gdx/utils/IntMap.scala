@@ -317,10 +317,10 @@ class IntMap[V] extends scala.collection.Iterable[com.badlogic.gdx.utils.IntMap.
     if (obj == this) {
       return true
     } else ()
-    if (!obj.isInstanceOf[IntMap[?]]) {
+    if (!obj.isInstanceOf[IntMap[V]]) {
       return false
     } else ()
-    val other: IntMap[?] = obj.asInstanceOf[IntMap[?]].asInstanceOf[IntMap[?]]
+    val other: IntMap[V] = obj.asInstanceOf[IntMap[V]].asInstanceOf[IntMap[V]]
     if (other.size != this.size) {
       return false
     } else ()
@@ -361,10 +361,10 @@ class IntMap[V] extends scala.collection.Iterable[com.badlogic.gdx.utils.IntMap.
     if (obj == this) {
       return true
     } else ()
-    if (!obj.isInstanceOf[IntMap[?]]) {
+    if (!obj.isInstanceOf[IntMap[V]]) {
       return false
     } else ()
-    val other: IntMap[?] = obj.asInstanceOf[IntMap[?]].asInstanceOf[IntMap[?]]
+    val other: IntMap[V] = obj.asInstanceOf[IntMap[V]].asInstanceOf[IntMap[V]]
     if (other.size != this.size) {
       return false
     } else ()

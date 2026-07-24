@@ -664,7 +664,7 @@ object Tree {
     }
     def getLevel(): scala.Int = {
       var level: scala.Int = 0
-      var current: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[?, ?, ?] = this
+      var current: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[N, V, A] = this
       while ({ {
         level = level + 1
         current = current.getParent()
@@ -691,7 +691,7 @@ object Tree {
       } else ()
     }
     def expandTo(): scala.Unit = {
-      var node: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[?, ?, ?] = this.parent
+      var node: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[N, V, A] = this.parent
       while (node != null) {
         node.setExpanded(true)
         node = node.parent
@@ -724,7 +724,7 @@ object Tree {
       if (node == null) {
         throw new java.lang.IllegalArgumentException("node cannot be null.")
       } else ()
-      var current: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[?, ?, ?] = node
+      var current: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[N, V, A] = node
       while ({ {
         if (current == this) {
           return true
@@ -737,7 +737,7 @@ object Tree {
       if (node == null) {
         throw new java.lang.IllegalArgumentException("node cannot be null.")
       } else ()
-      var parent: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[?, ?, ?] = this
+      var parent: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[N, V, A] = this
       while ({ {
         if (parent == node) {
           return true
