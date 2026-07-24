@@ -2,7 +2,7 @@ package com.badlogic.gdx.graphics.g3d.utils.shapebuilders
 
 class ArrowShapeBuilder extends com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BaseShapeBuilder
 object ArrowShapeBuilder {
-  export com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BaseShapeBuilder.*
+  export com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BaseShapeBuilder.{build => _, *}
   def build(builder: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder, x1: scala.Float, y1: scala.Float, z1: scala.Float, x2: scala.Float, y2: scala.Float, z2: scala.Float, capLength: scala.Float, stemThickness: scala.Float, divisions: scala.Int): scala.Unit = {
     val begin: com.badlogic.gdx.math.Vector3 = com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BaseShapeBuilder.obtainV3().set(x1, y1, z1)
     val `end`: com.badlogic.gdx.math.Vector3 = com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BaseShapeBuilder.obtainV3().set(x2, y2, z2)

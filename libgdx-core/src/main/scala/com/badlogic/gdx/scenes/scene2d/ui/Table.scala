@@ -1223,7 +1223,7 @@ class Table extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup {
   }
 }
 object Table {
-  export com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup.*
+  export com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup.{debugTableColor => _, debugCellColor => _, debugActorColor => _, cellPool => _, columnWeightedWidth => _, rowWeightedHeight => _, backgroundTop => _, backgroundLeft => _, backgroundBottom => _, backgroundRight => _, DebugRect => _, Debug => _, *}
   var debugTableColor: com.badlogic.gdx.graphics.Color = new com.badlogic.gdx.graphics.Color(0, 0, 1, 1)
   var debugCellColor: com.badlogic.gdx.graphics.Color = new com.badlogic.gdx.graphics.Color(1, 0, 0, 1)
   var debugActorColor: com.badlogic.gdx.graphics.Color = new com.badlogic.gdx.graphics.Color(0, 1, 0, 1)
@@ -1238,7 +1238,7 @@ object Table {
     var color: com.badlogic.gdx.graphics.Color = null.asInstanceOf[com.badlogic.gdx.graphics.Color]
   }
   object DebugRect {
-    export com.badlogic.gdx.math.Rectangle.*
+    export com.badlogic.gdx.math.Rectangle.{pool => _, *}
     var pool: com.badlogic.gdx.utils.Pool[com.badlogic.gdx.scenes.scene2d.ui.Table.DebugRect] = new com.badlogic.gdx.utils.DefaultPool[com.badlogic.gdx.scenes.scene2d.ui.Table.DebugRect]((() => new com.badlogic.gdx.scenes.scene2d.ui.Table.DebugRect()))
   }
   sealed abstract class Debug

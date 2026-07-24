@@ -308,7 +308,7 @@ class SelectBox[T] extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.ba
   }
 }
 object SelectBox {
-  export com.badlogic.gdx.scenes.scene2d.ui.Widget.*
+  export com.badlogic.gdx.scenes.scene2d.ui.Widget.{temp => _, SelectBoxScrollPane => _, SelectBoxStyle => _, *}
   final val temp: com.badlogic.gdx.math.Vector2 = new com.badlogic.gdx.math.Vector2()
   class SelectBoxScrollPane[T] extends com.badlogic.gdx.scenes.scene2d.ui.ScrollPane {
     var selectBox: SelectBox[T] = null.asInstanceOf[SelectBox[T]]

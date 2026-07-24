@@ -26,7 +26,7 @@ class FloatAttribute extends com.badlogic.gdx.graphics.g3d.Attribute {
   }
 }
 object FloatAttribute {
-  export com.badlogic.gdx.graphics.g3d.Attribute.*
+  export com.badlogic.gdx.graphics.g3d.Attribute.{ShininessAlias => _, Shininess => _, AlphaTestAlias => _, AlphaTest => _, createShininess => _, createAlphaTest => _, *}
   final val ShininessAlias: java.lang.String = "shininess"
   final val Shininess: scala.Long = com.badlogic.gdx.graphics.g3d.Attribute.register(FloatAttribute.ShininessAlias)
   final val AlphaTestAlias: java.lang.String = "alphaTest"

@@ -245,7 +245,7 @@ class ObjLoader extends com.badlogic.gdx.assets.loaders.ModelLoader[com.badlogic
   }
 }
 object ObjLoader {
-  export com.badlogic.gdx.assets.loaders.ModelLoader.*
+  export com.badlogic.gdx.assets.loaders.ModelLoader.{logWarning => _, ObjLoaderParameters => _, Group => _, *}
   var logWarning: scala.Boolean = false
   class ObjLoaderParameters extends com.badlogic.gdx.assets.loaders.ModelLoader.ModelParameters {
     var flipV: scala.Boolean = false

@@ -665,7 +665,7 @@ abstract class BaseTmxMapLoader[P <: com.badlogic.gdx.maps.tiled.BaseTiledMapLoa
   }
 }
 object BaseTmxMapLoader {
-  export com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.*
+  export com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.{getPropertyValue => _, getTileIds => _, *}
   private def getPropertyValue(classProp: com.badlogic.gdx.utils.XmlReader.Element): java.lang.String = {
     return classProp.getAttribute("value", classProp.getText())
   }

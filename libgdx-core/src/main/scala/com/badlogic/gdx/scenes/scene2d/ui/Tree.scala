@@ -421,7 +421,7 @@ class Tree[N <: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[?, ?, ?], V] extend
   }
 }
 object Tree {
-  export com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup.*
+  export com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup.{tmp => _, findExpandedValues => _, findNode => _, collapseAll => _, expandAll => _, Node => _, TreeStyle => _, *}
   private final val tmp: com.badlogic.gdx.math.Vector2 = new com.badlogic.gdx.math.Vector2()
   def findExpandedValues(nodes: com.badlogic.gdx.utils.Array[? <: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[?, ?, ?]], values: com.badlogic.gdx.utils.Array[?]): scala.Boolean = {
     val expanded: scala.Boolean = false;

@@ -2,7 +2,7 @@ package com.badlogic.gdx.graphics.g3d.utils.shapebuilders
 
 class ConeShapeBuilder extends com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BaseShapeBuilder
 object ConeShapeBuilder {
-  export com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BaseShapeBuilder.*
+  export com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BaseShapeBuilder.{build => _, *}
   def build(builder: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder, width: scala.Float, height: scala.Float, depth: scala.Float, divisions: scala.Int): scala.Unit = {
     ConeShapeBuilder.build(builder, width, height, depth, divisions, 0, 360)
   }

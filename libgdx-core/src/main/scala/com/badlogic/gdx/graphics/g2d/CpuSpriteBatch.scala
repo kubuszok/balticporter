@@ -467,7 +467,7 @@ class CpuSpriteBatch extends com.badlogic.gdx.graphics.g2d.SpriteBatch {
   }
 }
 object CpuSpriteBatch {
-  export com.badlogic.gdx.graphics.g2d.SpriteBatch.*
+  export com.badlogic.gdx.graphics.g2d.SpriteBatch.{checkEqual => _, checkIdt => _, *}
   private def checkEqual(a: com.badlogic.gdx.math.Matrix4, b: com.badlogic.gdx.math.Matrix4): scala.Boolean = {
     if (a == b) {
       return true

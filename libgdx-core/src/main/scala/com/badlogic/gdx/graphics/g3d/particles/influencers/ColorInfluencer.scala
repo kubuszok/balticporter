@@ -7,7 +7,7 @@ abstract class ColorInfluencer extends com.badlogic.gdx.graphics.g3d.particles.i
   }
 }
 object ColorInfluencer {
-  export com.badlogic.gdx.graphics.g3d.particles.influencers.Influencer.*
+  export com.badlogic.gdx.graphics.g3d.particles.influencers.Influencer.{Random => _, Single => _, *}
   class Random extends ColorInfluencer {
     var colorChannel: com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel]
     def allocateChannels(): scala.Unit = {

@@ -685,7 +685,7 @@ class MeshBuilder extends com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder {
   }
 }
 object MeshBuilder {
-  export com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.*
+  export com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.{MAX_VERTICES => _, MAX_INDEX => _, tmpIndices => _, tmpVertices => _, vTmp => _, indicesMap => _, createAttributes => _, transformPosition => _, transformNormal => _, *}
   final val MAX_VERTICES: scala.Int = 1 << 16
   final val MAX_INDEX: scala.Int = MeshBuilder.MAX_VERTICES - 1
   final val tmpIndices: com.badlogic.gdx.utils.ShortArray = new com.badlogic.gdx.utils.ShortArray()

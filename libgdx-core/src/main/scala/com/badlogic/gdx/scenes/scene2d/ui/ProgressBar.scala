@@ -301,7 +301,7 @@ class ProgressBar extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.bad
   }
 }
 object ProgressBar {
-  export com.badlogic.gdx.scenes.scene2d.ui.Widget.*
+  export com.badlogic.gdx.scenes.scene2d.ui.Widget.{ProgressBarStyle => _, *}
   class ProgressBarStyle {
     var background: com.badlogic.gdx.scenes.scene2d.utils.Drawable = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Drawable]
     var disabledBackground: com.badlogic.gdx.scenes.scene2d.utils.Drawable = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Drawable]

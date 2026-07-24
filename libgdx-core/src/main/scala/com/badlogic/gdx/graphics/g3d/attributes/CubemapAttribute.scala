@@ -36,7 +36,7 @@ class CubemapAttribute extends com.badlogic.gdx.graphics.g3d.Attribute {
   }
 }
 object CubemapAttribute {
-  export com.badlogic.gdx.graphics.g3d.Attribute.*
+  export com.badlogic.gdx.graphics.g3d.Attribute.{EnvironmentMapAlias => _, EnvironmentMap => _, Mask => _, is => _, *}
   final val EnvironmentMapAlias: java.lang.String = "environmentCubemap"
   final val EnvironmentMap: scala.Long = com.badlogic.gdx.graphics.g3d.Attribute.register(CubemapAttribute.EnvironmentMapAlias)
   var Mask: scala.Long = CubemapAttribute.EnvironmentMap

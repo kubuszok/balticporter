@@ -111,7 +111,7 @@ class AtlasTmjMapLoader extends com.badlogic.gdx.maps.tiled.BaseTmjMapLoader[com
   }
 }
 object AtlasTmjMapLoader {
-  export com.badlogic.gdx.maps.tiled.BaseTmjMapLoader.*
+  export com.badlogic.gdx.maps.tiled.BaseTmjMapLoader.{parseRegionName => _, AtlasResolver => _, *}
   def parseRegionName(name: java.lang.String): java.lang.String = {
     if (name.contains("atlas_imagelayer")) {
       val lastSlash: scala.Int = name.lastIndexOf('/')
@@ -124,7 +124,7 @@ object AtlasTmjMapLoader {
     def getAtlas(): com.badlogic.gdx.graphics.g2d.TextureAtlas
   }
   object AtlasResolver {
-    export com.badlogic.gdx.maps.ImageResolver.*
+    export com.badlogic.gdx.maps.ImageResolver.{DirectAtlasResolver => _, AssetManagerAtlasResolver => _, *}
     class DirectAtlasResolver extends com.badlogic.gdx.maps.tiled.AtlasTmjMapLoader.AtlasResolver {
       private var atlas: com.badlogic.gdx.graphics.g2d.TextureAtlas = null.asInstanceOf[com.badlogic.gdx.graphics.g2d.TextureAtlas]
       def this(atlas: com.badlogic.gdx.graphics.g2d.TextureAtlas) = {

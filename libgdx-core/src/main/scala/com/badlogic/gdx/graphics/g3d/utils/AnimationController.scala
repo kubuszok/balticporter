@@ -209,7 +209,7 @@ class AnimationController extends com.badlogic.gdx.graphics.g3d.utils.BaseAnimat
   }
 }
 object AnimationController {
-  export com.badlogic.gdx.graphics.g3d.utils.BaseAnimationController.*
+  export com.badlogic.gdx.graphics.g3d.utils.BaseAnimationController.{AnimationListener => _, AnimationDesc => _, *}
   trait AnimationListener {
     def onEnd(animation: com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationDesc): scala.Unit
     def onLoop(animation: com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationDesc): scala.Unit

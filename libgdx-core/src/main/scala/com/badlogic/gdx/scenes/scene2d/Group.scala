@@ -442,6 +442,6 @@ class Group extends com.badlogic.gdx.scenes.scene2d.Actor with com.badlogic.gdx.
   }
 }
 object Group {
-  export com.badlogic.gdx.scenes.scene2d.Actor.*
+  export com.badlogic.gdx.scenes.scene2d.Actor.{tmp => _, *}
   private final val tmp: com.badlogic.gdx.math.Vector2 = new com.badlogic.gdx.math.Vector2()
 }

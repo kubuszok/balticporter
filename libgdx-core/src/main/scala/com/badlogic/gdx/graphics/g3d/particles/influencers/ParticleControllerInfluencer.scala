@@ -83,7 +83,7 @@ abstract class ParticleControllerInfluencer extends com.badlogic.gdx.graphics.g3
   }
 }
 object ParticleControllerInfluencer {
-  export com.badlogic.gdx.graphics.g3d.particles.influencers.Influencer.*
+  export com.badlogic.gdx.graphics.g3d.particles.influencers.Influencer.{Single => _, Random => _, *}
   class Single extends ParticleControllerInfluencer {
     def this(templates: scala.Array[com.badlogic.gdx.graphics.g3d.particles.ParticleController]) = {
       this()

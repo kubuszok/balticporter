@@ -224,7 +224,7 @@ class Button extends com.badlogic.gdx.scenes.scene2d.ui.Table with com.badlogic.
   }
 }
 object Button {
-  export com.badlogic.gdx.scenes.scene2d.ui.Table.*
+  export com.badlogic.gdx.scenes.scene2d.ui.Table.{ButtonStyle => _, *}
   class ButtonStyle {
     var up: com.badlogic.gdx.scenes.scene2d.utils.Drawable = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Drawable]
     var down: com.badlogic.gdx.scenes.scene2d.utils.Drawable = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Drawable]

@@ -36,7 +36,7 @@ abstract class ModelInfluencer extends com.badlogic.gdx.graphics.g3d.particles.i
   }
 }
 object ModelInfluencer {
-  export com.badlogic.gdx.graphics.g3d.particles.influencers.Influencer.*
+  export com.badlogic.gdx.graphics.g3d.particles.influencers.Influencer.{Single => _, Random => _, *}
   class Single extends ModelInfluencer {
     def this(influencer: com.badlogic.gdx.graphics.g3d.particles.influencers.ModelInfluencer.Single) = {
       this()

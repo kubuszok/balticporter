@@ -2,7 +2,7 @@ package com.badlogic.gdx.graphics.g3d.utils.shapebuilders
 
 class CylinderShapeBuilder extends com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BaseShapeBuilder
 object CylinderShapeBuilder {
-  export com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BaseShapeBuilder.*
+  export com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BaseShapeBuilder.{build => _, *}
   def build(builder: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder, width: scala.Float, height: scala.Float, depth: scala.Float, divisions: scala.Int): scala.Unit = {
     CylinderShapeBuilder.build(builder, width, height, depth, divisions, 0, 360)
   }

@@ -62,7 +62,7 @@ class CheckBox extends com.badlogic.gdx.scenes.scene2d.ui.TextButton {
   }
 }
 object CheckBox {
-  export com.badlogic.gdx.scenes.scene2d.ui.TextButton.*
+  export com.badlogic.gdx.scenes.scene2d.ui.TextButton.{CheckBoxStyle => _, *}
   class CheckBoxStyle extends com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle {
     var checkboxOn: com.badlogic.gdx.scenes.scene2d.utils.Drawable = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Drawable]
     var checkboxOff: com.badlogic.gdx.scenes.scene2d.utils.Drawable = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Drawable]

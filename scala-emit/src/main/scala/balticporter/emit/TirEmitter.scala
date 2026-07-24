@@ -155,7 +155,11 @@ final class TirEmitter(source: Program):
     // Java interface/parent CONSTANTS are `static`, so they live in the parent's companion object
     // — which Scala does NOT inherit. Re-export each static-bearing parent's companion so an
     // inherited constant accessed via a subclass (`GL30.GL_LUMINANCE`, declared in `GL20`) resolves.
-    val parentExports = parentSymsOf(cd).filter(p => staticsReachable(p)).map(p => s"${ind(i + 1)}export ${typeValue(p)}.*")
+    // exclude the class's OWN static names from the re-export (a subtype may redeclare a parent
+    // constant — OpenGL's GL31 vs GL30 — which would otherwise be a duplicate/conflicting export).
+    val ownStaticNames = statics.collect { case d: Definition => esc(sym(d.symbol).name) }.distinct
+    val exclusions     = if ownStaticNames.isEmpty then "*" else s"{${ownStaticNames.map(_ + " => _").mkString(", ")}, *}"
+    val parentExports  = parentSymsOf(cd).filter(p => staticsReachable(p)).map(p => s"${ind(i + 1)}export ${typeValue(p)}.$exclusions")
     if statics.isEmpty && parentExports.isEmpty then cls
     else
       val sb = (parentExports ++ orderBody(statics).map(stat(_, i + 1)).filter(_.nonEmpty)).mkString("\n")

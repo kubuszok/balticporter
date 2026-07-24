@@ -452,7 +452,7 @@ class RemoteInput extends java.lang.Runnable with com.badlogic.gdx.Input {
   }
 }
 object RemoteInput {
-  export com.badlogic.gdx.Input.*
+  export com.badlogic.gdx.Input.{MAX_TOUCHES => _, DEFAULT_PORT => _, RemoteInputListener => _, *}
   private final val MAX_TOUCHES: scala.Int = 20
   var DEFAULT_PORT: scala.Int = 8190
   trait RemoteInputListener {

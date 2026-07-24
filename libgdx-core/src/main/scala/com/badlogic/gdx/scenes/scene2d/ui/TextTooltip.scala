@@ -43,7 +43,7 @@ class TextTooltip extends com.badlogic.gdx.scenes.scene2d.ui.Tooltip[com.badlogi
   }
 }
 object TextTooltip {
-  export com.badlogic.gdx.scenes.scene2d.ui.Tooltip.*
+  export com.badlogic.gdx.scenes.scene2d.ui.Tooltip.{TextTooltipStyle => _, *}
   class TextTooltipStyle {
     var label: com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle]
     var background: com.badlogic.gdx.scenes.scene2d.utils.Drawable = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Drawable]

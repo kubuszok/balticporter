@@ -126,7 +126,7 @@ class ParticleShader extends com.badlogic.gdx.graphics.g3d.shaders.BaseShader {
   }
 }
 object ParticleShader {
-  export com.badlogic.gdx.graphics.g3d.shaders.BaseShader.*
+  export com.badlogic.gdx.graphics.g3d.shaders.BaseShader.{defaultVertexShader => _, defaultFragmentShader => _, implementedFlags => _, TMP_VECTOR3 => _, optionalAttributes => _, getDefaultVertexShader => _, getDefaultFragmentShader => _, createPrefix => _, ParticleType => _, AlignMode => _, Config => _, Inputs => _, Setters => _, *}
   private var defaultVertexShader: java.lang.String = null
   private var defaultFragmentShader: java.lang.String = null
   var implementedFlags: scala.Long = com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute.Type | com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute.Diffuse

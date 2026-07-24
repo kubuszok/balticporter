@@ -885,7 +885,7 @@ class SpriteBatch extends com.badlogic.gdx.graphics.g2d.Batch {
   }
 }
 object SpriteBatch {
-  export com.badlogic.gdx.graphics.g2d.Batch.*
+  export com.badlogic.gdx.graphics.g2d.Batch.{defaultVertexDataType => _, overrideVertexType => _, createDefaultShader => _, *}
   var defaultVertexDataType: com.badlogic.gdx.graphics.Mesh.VertexDataType = com.badlogic.gdx.graphics.Mesh.VertexDataType.VertexBufferObject
   var overrideVertexType: com.badlogic.gdx.graphics.Mesh.VertexDataType = null
   def createDefaultShader(): com.badlogic.gdx.graphics.glutils.ShaderProgram = {

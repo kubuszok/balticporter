@@ -60,7 +60,7 @@ class TextureArray extends com.badlogic.gdx.graphics.GLTexture {
   }
 }
 object TextureArray {
-  export com.badlogic.gdx.graphics.GLTexture.*
+  export com.badlogic.gdx.graphics.GLTexture.{managedTextureArrays => _, getInternalHandles => _, addManagedTexture => _, clearAllTextureArrays => _, invalidateAllTextureArrays => _, getManagedStatus => _, getNumManagedTextureArrays => _, *}
   final val managedTextureArrays: scala.collection.mutable.Map[com.badlogic.gdx.Application, com.badlogic.gdx.utils.Array[TextureArray]] = new scala.collection.mutable.HashMap[com.badlogic.gdx.Application, com.badlogic.gdx.utils.Array[TextureArray]]()
   private def getInternalHandles(internalPaths: scala.Array[java.lang.String]): scala.Array[com.badlogic.gdx.files.FileHandle] = {
     val handles: scala.Array[com.badlogic.gdx.files.FileHandle] = new scala.Array[com.badlogic.gdx.files.FileHandle](internalPaths.length);

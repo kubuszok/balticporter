@@ -660,7 +660,7 @@ class JsonMatcher extends com.badlogic.gdx.utils.JsonSkimmer {
   }
 }
 object JsonMatcher {
-  export com.badlogic.gdx.utils.JsonSkimmer.*
+  export com.badlogic.gdx.utils.JsonSkimmer.{debug$field => _, none => _, `match` => _, process$field => _, capture => _, array => _, keys => _, single => _, Pattern => _, Node => _, Match => _, Processor => _, *}
   final val debug$field: scala.Boolean = false
   private final val none: scala.Int = 0
   final val `match`: scala.Int = 1

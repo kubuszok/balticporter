@@ -17,7 +17,7 @@ class DefaultPool[T] extends com.badlogic.gdx.utils.Pool[T] {
   }
 }
 object DefaultPool {
-  export com.badlogic.gdx.utils.Pool.*
+  export com.badlogic.gdx.utils.Pool.{PoolSupplier => _, *}
   trait PoolSupplier[T] {
     def get(): T
   }

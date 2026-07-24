@@ -621,7 +621,7 @@ abstract class BaseTmjMapLoader[P <: com.badlogic.gdx.maps.tiled.BaseTiledMapLoa
   }
 }
 object BaseTmjMapLoader {
-  export com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.*
+  export com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.{getTileIds => _, *}
   def getTileIds(element: com.badlogic.gdx.utils.JsonValue, width: scala.Int, height: scala.Int): scala.Array[scala.Int] = {
     val data: com.badlogic.gdx.utils.JsonValue = element.get("data")
     val encoding: java.lang.String = element.getString("encoding", null)

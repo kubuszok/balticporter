@@ -2,7 +2,7 @@ package com.badlogic.gdx.graphics.g3d.utils.shapebuilders
 
 class BoxShapeBuilder extends com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BaseShapeBuilder
 object BoxShapeBuilder {
-  export com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BaseShapeBuilder.*
+  export com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BaseShapeBuilder.{build => _, *}
   def build(builder: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder, box: com.badlogic.gdx.math.collision.BoundingBox): scala.Unit = {
     builder.box(box.getCorner000(com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BaseShapeBuilder.obtainV3()), box.getCorner010(com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BaseShapeBuilder.obtainV3()), box.getCorner100(com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BaseShapeBuilder.obtainV3()), box.getCorner110(com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BaseShapeBuilder.obtainV3()), box.getCorner001(com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BaseShapeBuilder.obtainV3()), box.getCorner011(com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BaseShapeBuilder.obtainV3()), box.getCorner101(com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BaseShapeBuilder.obtainV3()), box.getCorner111(com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BaseShapeBuilder.obtainV3()))
     com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BaseShapeBuilder.freeAll()

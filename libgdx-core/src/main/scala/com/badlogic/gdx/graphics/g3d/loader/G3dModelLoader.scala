@@ -449,7 +449,7 @@ class G3dModelLoader extends com.badlogic.gdx.assets.loaders.ModelLoader[com.bad
   }
 }
 object G3dModelLoader {
-  export com.badlogic.gdx.assets.loaders.ModelLoader.*
+  export com.badlogic.gdx.assets.loaders.ModelLoader.{VERSION_HI => _, VERSION_LO => _, *}
   final val VERSION_HI: scala.Short = 0.asInstanceOf[scala.Short]
   final val VERSION_LO: scala.Short = 1.asInstanceOf[scala.Short]
 }

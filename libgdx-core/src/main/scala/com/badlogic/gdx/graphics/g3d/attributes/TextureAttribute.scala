@@ -88,7 +88,7 @@ class TextureAttribute extends com.badlogic.gdx.graphics.g3d.Attribute {
   }
 }
 object TextureAttribute {
-  export com.badlogic.gdx.graphics.g3d.Attribute.*
+  export com.badlogic.gdx.graphics.g3d.Attribute.{DiffuseAlias => _, Diffuse => _, SpecularAlias => _, Specular => _, BumpAlias => _, Bump => _, NormalAlias => _, Normal => _, AmbientAlias => _, Ambient => _, EmissiveAlias => _, Emissive => _, ReflectionAlias => _, Reflection => _, Mask => _, is => _, createDiffuse => _, createSpecular => _, createNormal => _, createBump => _, createAmbient => _, createEmissive => _, createReflection => _, *}
   final val DiffuseAlias: java.lang.String = "diffuseTexture"
   final val Diffuse: scala.Long = com.badlogic.gdx.graphics.g3d.Attribute.register(TextureAttribute.DiffuseAlias)
   final val SpecularAlias: java.lang.String = "specularTexture"

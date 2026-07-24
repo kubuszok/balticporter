@@ -2,7 +2,7 @@ package com.badlogic.gdx.graphics.g3d.utils.shapebuilders
 
 class EllipseShapeBuilder extends com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BaseShapeBuilder
 object EllipseShapeBuilder {
-  export com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BaseShapeBuilder.*
+  export com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BaseShapeBuilder.{build => _, *}
   def build(builder: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder, radius: scala.Float, divisions: scala.Int, centerX: scala.Float, centerY: scala.Float, centerZ: scala.Float, normalX: scala.Float, normalY: scala.Float, normalZ: scala.Float): scala.Unit = {
     EllipseShapeBuilder.build(builder, radius, divisions, centerX, centerY, centerZ, normalX, normalY, normalZ, 0.0f, 360.0f)
   }

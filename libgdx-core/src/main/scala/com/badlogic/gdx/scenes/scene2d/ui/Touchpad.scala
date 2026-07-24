@@ -146,7 +146,7 @@ class Touchpad extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlog
   }
 }
 object Touchpad {
-  export com.badlogic.gdx.scenes.scene2d.ui.Widget.*
+  export com.badlogic.gdx.scenes.scene2d.ui.Widget.{TouchpadStyle => _, *}
   class TouchpadStyle {
     var background: com.badlogic.gdx.scenes.scene2d.utils.Drawable = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Drawable]
     var knob: com.badlogic.gdx.scenes.scene2d.utils.Drawable = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Drawable]

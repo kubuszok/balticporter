@@ -56,7 +56,7 @@ class BlendingAttribute extends com.badlogic.gdx.graphics.g3d.Attribute {
   }
 }
 object BlendingAttribute {
-  export com.badlogic.gdx.graphics.g3d.Attribute.*
+  export com.badlogic.gdx.graphics.g3d.Attribute.{Alias => _, Type => _, is => _, *}
   final val Alias: java.lang.String = "blended"
   final val Type: scala.Long = com.badlogic.gdx.graphics.g3d.Attribute.register(BlendingAttribute.Alias)
   final def is(mask: scala.Long): scala.Boolean = {

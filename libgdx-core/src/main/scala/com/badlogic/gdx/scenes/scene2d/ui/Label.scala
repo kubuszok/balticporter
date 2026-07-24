@@ -321,7 +321,7 @@ class Label extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlogic.
   }
 }
 object Label {
-  export com.badlogic.gdx.scenes.scene2d.ui.Widget.*
+  export com.badlogic.gdx.scenes.scene2d.ui.Widget.{tempColor => _, prefSizeLayout => _, LabelStyle => _, *}
   private final val tempColor: com.badlogic.gdx.graphics.Color = new com.badlogic.gdx.graphics.Color()
   private final val prefSizeLayout: com.badlogic.gdx.graphics.g2d.GlyphLayout = new com.badlogic.gdx.graphics.g2d.GlyphLayout()
   class LabelStyle {

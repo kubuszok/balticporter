@@ -63,6 +63,6 @@ class FrameBufferCubemap extends com.badlogic.gdx.graphics.glutils.GLFrameBuffer
   }
 }
 object FrameBufferCubemap {
-  export com.badlogic.gdx.graphics.glutils.GLFrameBuffer.*
+  export com.badlogic.gdx.graphics.glutils.GLFrameBuffer.{cubemapSides => _, *}
   private final val cubemapSides: scala.Array[com.badlogic.gdx.graphics.Cubemap.CubemapSide] = com.badlogic.gdx.graphics.Cubemap.CubemapSide.values()
 }

@@ -425,7 +425,7 @@ class DefaultShader extends com.badlogic.gdx.graphics.g3d.shaders.BaseShader {
   }
 }
 object DefaultShader {
-  export com.badlogic.gdx.graphics.g3d.shaders.BaseShader.*
+  export com.badlogic.gdx.graphics.g3d.shaders.BaseShader.{defaultVertexShader => _, defaultFragmentShader => _, implementedFlags => _, defaultCullFace => _, defaultDepthFunc => _, optionalAttributes => _, tmpAttributes => _, getDefaultVertexShader => _, getDefaultFragmentShader => _, and => _, or => _, combineAttributes => _, combineAttributeMasks => _, createPrefix => _, Config => _, Inputs => _, Setters => _, *}
   private var defaultVertexShader: java.lang.String = null
   private var defaultFragmentShader: java.lang.String = null
   var implementedFlags: scala.Long = (((com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute.Type | com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute.Diffuse) | com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute.Diffuse) | com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute.Specular) | com.badlogic.gdx.graphics.g3d.attributes.FloatAttribute.Shininess

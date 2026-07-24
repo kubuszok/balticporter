@@ -119,7 +119,7 @@ class TextButton extends com.badlogic.gdx.scenes.scene2d.ui.Button {
   }
 }
 object TextButton {
-  export com.badlogic.gdx.scenes.scene2d.ui.Button.*
+  export com.badlogic.gdx.scenes.scene2d.ui.Button.{TextButtonStyle => _, *}
   class TextButtonStyle extends com.badlogic.gdx.scenes.scene2d.ui.Button.ButtonStyle {
     var font: com.badlogic.gdx.graphics.g2d.BitmapFont = null.asInstanceOf[com.badlogic.gdx.graphics.g2d.BitmapFont]
     var fontColor: com.badlogic.gdx.graphics.Color = null.asInstanceOf[com.badlogic.gdx.graphics.Color]

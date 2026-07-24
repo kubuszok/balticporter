@@ -68,6 +68,6 @@ class DragScrollListener extends com.badlogic.gdx.scenes.scene2d.utils.DragListe
   }
 }
 object DragScrollListener {
-  export com.badlogic.gdx.scenes.scene2d.utils.DragListener.*
+  export com.badlogic.gdx.scenes.scene2d.utils.DragListener.{tmpCoords => _, *}
   final val tmpCoords: com.badlogic.gdx.math.Vector2 = new com.badlogic.gdx.math.Vector2()
 }

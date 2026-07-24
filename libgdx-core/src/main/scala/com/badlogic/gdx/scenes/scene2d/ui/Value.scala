@@ -46,7 +46,7 @@ object Value {
     }
   }
   object Fixed {
-    export Value.*
+    export Value.{cache => _, valueOf => _, *}
     final val cache: scala.Array[com.badlogic.gdx.scenes.scene2d.ui.Value.Fixed] = new scala.Array[com.badlogic.gdx.scenes.scene2d.ui.Value.Fixed](111)
     def valueOf(value: scala.Float): com.badlogic.gdx.scenes.scene2d.ui.Value.Fixed = {
       if (value == 0) {

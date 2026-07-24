@@ -846,7 +846,7 @@ class ScrollPane extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup with com
   }
 }
 object ScrollPane {
-  export com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup.*
+  export com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup.{ScrollPaneStyle => _, *}
   class ScrollPaneStyle {
     var background: com.badlogic.gdx.scenes.scene2d.utils.Drawable = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Drawable]
     var corner: com.badlogic.gdx.scenes.scene2d.utils.Drawable = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Drawable]
