@@ -35,8 +35,8 @@ class TimSort[T] {
       return
     } else ()
     if (nRemaining < TimSort.MIN_MERGE) {
-      val initRunLen: scala.Int = TimSort.countRunAndMakeAscending(a, lo, hi, c)
-      TimSort.binarySort(a, lo, hi, lo + initRunLen, c)
+      val initRunLen: scala.Int = TimSort.countRunAndMakeAscending(a.asInstanceOf[scala.Array[java.lang.Object]], lo, hi, c)
+      TimSort.binarySort(a.asInstanceOf[scala.Array[java.lang.Object]], lo, hi, lo + initRunLen, c)
       return
     } else ()
     this.a = a
@@ -44,10 +44,10 @@ class TimSort[T] {
     this.tmpCount = 0
     val minRun: scala.Int = TimSort.minRunLength(nRemaining)
     while ({ {
-      var runLen: scala.Int = TimSort.countRunAndMakeAscending(a, lo, hi, c)
+      var runLen: scala.Int = TimSort.countRunAndMakeAscending(a.asInstanceOf[scala.Array[java.lang.Object]], lo, hi, c)
       if (runLen < minRun) {
         val force: scala.Int = if (nRemaining <= minRun) nRemaining else minRun
-        TimSort.binarySort(a, lo, lo + force, lo + runLen, c)
+        TimSort.binarySort(a.asInstanceOf[scala.Array[java.lang.Object]], lo, lo + force, lo + runLen, c)
         runLen = force
       } else ()
       this.pushRun(lo, runLen)
@@ -124,7 +124,7 @@ class TimSort[T] {
       this.runLen(i + 1) = this.runLen(i + 2)
     } else ()
     this.stackSize = this.stackSize - 1
-    val k: scala.Int = TimSort.gallopRight(this.a(base2), this.a, base1, len1, 0, this.c)
+    val k: scala.Int = TimSort.gallopRight(this.a(base2), this.a.asInstanceOf[scala.Array[java.lang.Object]], base1, len1, 0, this.c)
     if (TimSort.DEBUG) {
       assert(k >= 0)
     } else ()
@@ -133,7 +133,7 @@ class TimSort[T] {
     if (len1 == 0) {
       return
     } else ()
-    len2 = TimSort.gallopLeft(this.a((base1 + len1) - 1), this.a, base2, len2, len2 - 1, this.c)
+    len2 = TimSort.gallopLeft(this.a((base1 + len1) - 1), this.a.asInstanceOf[scala.Array[java.lang.Object]], base2, len2, len2 - 1, this.c)
     if (TimSort.DEBUG) {
       assert(len2 >= 0)
     } else ()
@@ -197,7 +197,7 @@ class TimSort[T] {
         if (TimSort.DEBUG) {
           assert((len1 > 1) && (len2 > 0))
         } else ()
-        count1 = TimSort.gallopRight(a(cursor2), tmp, cursor1, len1, 0, c)
+        count1 = TimSort.gallopRight(a(cursor2), tmp.asInstanceOf[scala.Array[java.lang.Object]], cursor1, len1, 0, c)
         if (count1 != 0) {
           java.lang.System.arraycopy(tmp, cursor1, a, dest, count1)
           dest = dest + count1
@@ -211,7 +211,7 @@ class TimSort[T] {
         if ({ len2 -= 1; len2 } == 0) {
           /* break */ ()
         } else ()
-        count2 = TimSort.gallopLeft(tmp(cursor1), a, cursor2, len2, 0, c)
+        count2 = TimSort.gallopLeft(tmp(cursor1), a.asInstanceOf[scala.Array[java.lang.Object]], cursor2, len2, 0, c)
         if (count2 != 0) {
           java.lang.System.arraycopy(a, cursor2, a, dest, count2)
           dest = dest + count2
@@ -306,7 +306,7 @@ class TimSort[T] {
         if (TimSort.DEBUG) {
           assert((len1 > 0) && (len2 > 1))
         } else ()
-        count1 = len1 - TimSort.gallopRight(tmp(cursor2), a, base1, len1, len1 - 1, c)
+        count1 = len1 - TimSort.gallopRight(tmp(cursor2), a.asInstanceOf[scala.Array[java.lang.Object]], base1, len1, len1 - 1, c)
         if (count1 != 0) {
           dest = dest - count1
           cursor1 = cursor1 - count1
@@ -320,7 +320,7 @@ class TimSort[T] {
         if ({ len2 -= 1; len2 } == 1) {
           /* break */ ()
         } else ()
-        count2 = len2 - TimSort.gallopLeft(a(cursor1), tmp, 0, len2, len2 - 1, c)
+        count2 = len2 - TimSort.gallopLeft(a(cursor1), tmp.asInstanceOf[scala.Array[java.lang.Object]], 0, len2, len2 - 1, c)
         if (count2 != 0) {
           dest = dest - count2
           cursor2 = cursor2 - count2
@@ -391,12 +391,12 @@ object TimSort {
   private final val INITIAL_TMP_STORAGE_LENGTH: scala.Int = 256
   private final val DEBUG: scala.Boolean = false
   def sort[T](a: scala.Array[T], c: java.util.Comparator[? >: T]): scala.Unit = {
-    TimSort.sort(a, 0, a.length, c)
+    TimSort.sort(a.asInstanceOf[scala.Array[java.lang.Object]], 0, a.length, c)
   }
   def sort[T](a: scala.Array[T], lo$arg: scala.Int, hi: scala.Int, c: java.util.Comparator[? >: T]): scala.Unit = {
     var lo: scala.Int = lo$arg
     if (c == null) {
-      java.util.Arrays.sort(a, lo, hi)
+      java.util.Arrays.sort(a.asInstanceOf[scala.Array[java.lang.Object]], lo, hi)
       return
     } else ()
     TimSort.rangeCheck(a.length, lo, hi)
@@ -405,17 +405,17 @@ object TimSort {
       return
     } else ()
     if (nRemaining < TimSort.MIN_MERGE) {
-      val initRunLen: scala.Int = TimSort.countRunAndMakeAscending(a, lo, hi, c)
-      TimSort.binarySort(a, lo, hi, lo + initRunLen, c)
+      val initRunLen: scala.Int = TimSort.countRunAndMakeAscending(a.asInstanceOf[scala.Array[java.lang.Object]], lo, hi, c)
+      TimSort.binarySort(a.asInstanceOf[scala.Array[java.lang.Object]], lo, hi, lo + initRunLen, c)
       return
     } else ()
-    val ts: TimSort[T] = new TimSort[T](a, c)
+    val ts: TimSort[T] = new TimSort[T](a.asInstanceOf[scala.Array[java.lang.Object]], c)
     val minRun: scala.Int = TimSort.minRunLength(nRemaining)
     while ({ {
-      var runLen: scala.Int = TimSort.countRunAndMakeAscending(a, lo, hi, c)
+      var runLen: scala.Int = TimSort.countRunAndMakeAscending(a.asInstanceOf[scala.Array[java.lang.Object]], lo, hi, c)
       if (runLen < minRun) {
         val force: scala.Int = if (nRemaining <= minRun) nRemaining else minRun
-        TimSort.binarySort(a, lo, lo + force, lo + runLen, c)
+        TimSort.binarySort(a.asInstanceOf[scala.Array[java.lang.Object]], lo, lo + force, lo + runLen, c)
         runLen = force
       } else ()
       ts.pushRun(lo, runLen)
@@ -485,7 +485,7 @@ object TimSort {
       while ((runHi < hi) && (c.compare(a(runHi), a(runHi - 1)) < 0)) {
         runHi = runHi + 1
       }
-      TimSort.reverseRange(a, lo, runHi)
+      TimSort.reverseRange(a.asInstanceOf[scala.Array[java.lang.Object]], lo, runHi)
     } else {
       while ((runHi < hi) && (c.compare(a(runHi), a(runHi - 1)) >= 0)) {
         runHi = runHi + 1

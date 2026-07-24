@@ -580,7 +580,7 @@ class ShapeRenderer extends com.badlogic.gdx.utils.Disposable {
     this.x(p.x, p.y, size)
   }
   def arc(x: scala.Float, y: scala.Float, radius: scala.Float, start: scala.Float, degrees: scala.Float): scala.Unit = {
-    this.arc(x, y, radius, start, degrees, java.lang.Math.max(1, ((6 * java.lang.Math.cbrt(radius).asInstanceOf[scala.Float]) * (degrees / 360.0f)).asInstanceOf[scala.Int]))
+    this.arc(x, y, radius, start, degrees, java.lang.Math.max(1, ((6 * java.lang.Math.cbrt(radius).asInstanceOf[scala.Float]) * (degrees / 360.0f)).asInstanceOf[scala.Int].asInstanceOf[scala.Int]))
   }
   def arc(x: scala.Float, y: scala.Float, radius: scala.Float, start: scala.Float, degrees: scala.Float, segments: scala.Int): scala.Unit = {
     if (segments <= 0) {
@@ -634,7 +634,7 @@ class ShapeRenderer extends com.badlogic.gdx.utils.Disposable {
     this.renderer.vertex(x + cx, y + cy, 0)
   }
   def circle(x: scala.Float, y: scala.Float, radius: scala.Float): scala.Unit = {
-    this.circle(x, y, radius, java.lang.Math.max(1, (6 * java.lang.Math.cbrt(radius).asInstanceOf[scala.Float]).asInstanceOf[scala.Int]))
+    this.circle(x, y, radius, java.lang.Math.max(1, (6 * java.lang.Math.cbrt(radius).asInstanceOf[scala.Float]).asInstanceOf[scala.Int].asInstanceOf[scala.Int]))
   }
   def circle(x: scala.Float, y: scala.Float, radius: scala.Float, segments$arg: scala.Int): scala.Unit = {
     var segments: scala.Int = segments$arg
@@ -686,7 +686,7 @@ class ShapeRenderer extends com.badlogic.gdx.utils.Disposable {
     this.renderer.vertex(x + cx, y + cy, 0)
   }
   def ellipse(x: scala.Float, y: scala.Float, width: scala.Float, height: scala.Float): scala.Unit = {
-    this.ellipse(x, y, width, height, java.lang.Math.max(1, (12 * java.lang.Math.cbrt(java.lang.Math.max(width * 0.5f, height * 0.5f)).asInstanceOf[scala.Float]).asInstanceOf[scala.Int]))
+    this.ellipse(x, y, width, height, java.lang.Math.max(1, (12 * java.lang.Math.cbrt(java.lang.Math.max(width * 0.5f, height * 0.5f)).asInstanceOf[scala.Float]).asInstanceOf[scala.Int].asInstanceOf[scala.Int]))
   }
   def ellipse(x: scala.Float, y: scala.Float, width: scala.Float, height: scala.Float, segments: scala.Int): scala.Unit = {
     if (segments <= 0) {
@@ -716,7 +716,7 @@ class ShapeRenderer extends com.badlogic.gdx.utils.Disposable {
     }
   }
   def ellipse(x: scala.Float, y: scala.Float, width: scala.Float, height: scala.Float, rotation: scala.Float): scala.Unit = {
-    this.ellipse(x, y, width, height, rotation, java.lang.Math.max(1, (12 * java.lang.Math.cbrt(java.lang.Math.max(width * 0.5f, height * 0.5f)).asInstanceOf[scala.Float]).asInstanceOf[scala.Int]))
+    this.ellipse(x, y, width, height, rotation, java.lang.Math.max(1, (12 * java.lang.Math.cbrt(java.lang.Math.max(width * 0.5f, height * 0.5f)).asInstanceOf[scala.Float]).asInstanceOf[scala.Int].asInstanceOf[scala.Int]))
   }
   def ellipse(x: scala.Float, y: scala.Float, width: scala.Float, height: scala.Float, rotation$arg: scala.Float, segments: scala.Int): scala.Unit = {
     var rotation: scala.Float = rotation$arg
@@ -756,7 +756,7 @@ class ShapeRenderer extends com.badlogic.gdx.utils.Disposable {
     }
   }
   def cone(x: scala.Float, y: scala.Float, z: scala.Float, radius: scala.Float, height: scala.Float): scala.Unit = {
-    this.cone(x, y, z, radius, height, java.lang.Math.max(1, (4 * java.lang.Math.sqrt(radius).asInstanceOf[scala.Float]).asInstanceOf[scala.Int]))
+    this.cone(x, y, z, radius, height, java.lang.Math.max(1, (4 * java.lang.Math.sqrt(radius).asInstanceOf[scala.Float]).asInstanceOf[scala.Int].asInstanceOf[scala.Int]))
   }
   def cone(x: scala.Float, y: scala.Float, z: scala.Float, radius: scala.Float, height: scala.Float, segments$arg: scala.Int): scala.Unit = {
     var segments: scala.Int = segments$arg
@@ -947,6 +947,12 @@ object ShapeRenderer {
     case object Point extends ShapeType(com.badlogic.gdx.graphics.GL20.GL_POINTS)
     case object Line extends ShapeType(com.badlogic.gdx.graphics.GL20.GL_LINES)
     case object Filled extends ShapeType(com.badlogic.gdx.graphics.GL20.GL_TRIANGLES)
-    def values(): Array[ShapeType] = Array(Point, Line, Filled)
+    def values(): scala.Array[ShapeType] = scala.Array(Point, Line, Filled)
+    def valueOf(name: java.lang.String): ShapeType = name match {
+      case "Point" => Point
+      case "Line" => Line
+      case "Filled" => Filled
+      case _ => throw new java.lang.IllegalArgumentException(name)
+    }
   }
 }

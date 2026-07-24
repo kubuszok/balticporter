@@ -18,7 +18,12 @@ object TextureData {
   object TextureDataType {
     case object Pixmap extends TextureDataType
     case object Custom extends TextureDataType
-    def values(): Array[TextureDataType] = Array(Pixmap, Custom)
+    def values(): scala.Array[TextureDataType] = scala.Array(Pixmap, Custom)
+    def valueOf(name: java.lang.String): TextureDataType = name match {
+      case "Pixmap" => Pixmap
+      case "Custom" => Custom
+      case _ => throw new java.lang.IllegalArgumentException(name)
+    }
   }
   object Factory {
     def loadFromFile(file: com.badlogic.gdx.files.FileHandle, useMipMaps: scala.Boolean): TextureData = {

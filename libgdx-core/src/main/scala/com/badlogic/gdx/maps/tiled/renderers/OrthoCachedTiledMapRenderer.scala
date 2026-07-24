@@ -152,10 +152,10 @@ class OrthoCachedTiledMapRenderer extends com.badlogic.gdx.maps.tiled.TiledMapRe
     val layerTileHeight: scala.Float = layer.getTileHeight() * this.unitScale
     val layerOffsetX: scala.Float = (layer.getRenderOffsetX() * this.unitScale) - (this.viewBounds.x * (layer.getParallaxX() - 1))
     val layerOffsetY: scala.Float = ((-layer.getRenderOffsetY()) * this.unitScale) - (this.viewBounds.y * (layer.getParallaxY() - 1))
-    val col1: scala.Int = java.lang.Math.max(0, ((this.cacheBounds.x - layerOffsetX) / layerTileWidth).asInstanceOf[scala.Int])
-    val col2: scala.Int = java.lang.Math.min(layerWidth, ((((this.cacheBounds.x + this.cacheBounds.width) + layerTileWidth) - layerOffsetX) / layerTileWidth).asInstanceOf[scala.Int])
-    val row1: scala.Int = java.lang.Math.max(0, ((this.cacheBounds.y - layerOffsetY) / layerTileHeight).asInstanceOf[scala.Int])
-    val row2: scala.Int = java.lang.Math.min(layerHeight, ((((this.cacheBounds.y + this.cacheBounds.height) + layerTileHeight) - layerOffsetY) / layerTileHeight).asInstanceOf[scala.Int])
+    val col1: scala.Int = java.lang.Math.max(0, ((this.cacheBounds.x - layerOffsetX) / layerTileWidth).asInstanceOf[scala.Int].asInstanceOf[scala.Int])
+    val col2: scala.Int = java.lang.Math.min(layerWidth, ((((this.cacheBounds.x + this.cacheBounds.width) + layerTileWidth) - layerOffsetX) / layerTileWidth).asInstanceOf[scala.Int].asInstanceOf[scala.Int])
+    val row1: scala.Int = java.lang.Math.max(0, ((this.cacheBounds.y - layerOffsetY) / layerTileHeight).asInstanceOf[scala.Int].asInstanceOf[scala.Int])
+    val row2: scala.Int = java.lang.Math.min(layerHeight, ((((this.cacheBounds.y + this.cacheBounds.height) + layerTileHeight) - layerOffsetY) / layerTileHeight).asInstanceOf[scala.Int].asInstanceOf[scala.Int])
     this.canCacheMoreN = row2 < layerHeight
     this.canCacheMoreE = col2 < layerWidth
     this.canCacheMoreW = col1 > 0

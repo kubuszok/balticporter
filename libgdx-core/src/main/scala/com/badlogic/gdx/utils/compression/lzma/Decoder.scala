@@ -76,7 +76,7 @@ class Decoder {
     while ((outSize < 0) || (nowPos64 < outSize)) {
       val posState: scala.Int = nowPos64.asInstanceOf[scala.Int] & this.m_PosStateMask
       if (this.m_RangeDecoder.DecodeBit(this.m_IsMatchDecoders, (state << com.badlogic.gdx.utils.compression.lzma.Base.kNumPosStatesBitsMax) + posState) == 0) {
-        val decoder2: Decoder2 = this.m_LiteralDecoder.GetDecoder(nowPos64.asInstanceOf[scala.Int], prevByte)
+        val decoder2: Decoder2 = this.m_LiteralDecoder.GetDecoder(nowPos64.asInstanceOf[scala.Int].asInstanceOf[scala.Int], prevByte)
         if (!com.badlogic.gdx.utils.compression.lzma.Base.StateIsCharState(state)) {
           prevByte = decoder2.DecodeWithMatchByte(this.m_RangeDecoder, this.m_OutWindow.GetByte(rep0))
         } else {

@@ -139,8 +139,11 @@ final class TirEmitter(source: Program):
       s"${ind(i + 1)}case object $cn extends $name$args$body"
     }
     // `def` (not `val`) so Java's `E.values()` call site type-checks; also a no-paren read works.
-    val values = s"${ind(i + 1)}def values(): Array[$name] = Array(${cd.enumCases.map(ec => esc(sym(ec.symbol).name)).mkString(", ")})"
-    val objBody = (cases :+ values) ++ statics.map(stat(_, i + 1)).filter(_.nonEmpty)
+    val values = s"${ind(i + 1)}def values(): scala.Array[$name] = scala.Array(${cd.enumCases.map(ec => esc(sym(ec.symbol).name)).mkString(", ")})"
+    // Java's `Enum.valueOf(String)` — resolve a constant by name (throws like the JDK on no match).
+    val vArms  = cd.enumCases.map(ec => esc(sym(ec.symbol).name)).map(n => s"""${ind(i + 2)}case "$n" => $n""").mkString("\n")
+    val valueOf = s"${ind(i + 1)}def valueOf(name: java.lang.String): $name = name match {\n$vArms\n${ind(i + 2)}case _ => throw new java.lang.IllegalArgumentException(name)\n${ind(i + 1)}}"
+    val objBody = (cases :+ values :+ valueOf) ++ statics.map(stat(_, i + 1)).filter(_.nonEmpty)
     s"$cls\n${ind(i)}object $name {\n${objBody.mkString("\n")}\n${ind(i)}}"
 
   // a Java `static` nested class has no instance home in Scala → it moves to the companion

@@ -31,7 +31,7 @@ class ObjectIntMap[K] extends scala.collection.Iterable[com.badlogic.gdx.utils.O
     this(initialCapacity, 0.8f)
   }
   def this(map: ObjectIntMap[? <: K]) = {
-    this((map.keyTable.length * map.loadFactor).asInstanceOf[scala.Int], map.loadFactor)
+    this((map.keyTable.length * map.loadFactor).asInstanceOf[scala.Int].asInstanceOf[scala.Int], map.loadFactor)
     java.lang.System.arraycopy(map.keyTable, 0, this.keyTable, 0, map.keyTable.length)
     java.lang.System.arraycopy(map.valueTable, 0, this.valueTable, 0, map.valueTable.length)
     this.size = map.size
@@ -179,7 +179,7 @@ class ObjectIntMap[K] extends scala.collection.Iterable[com.badlogic.gdx.utils.O
       return
     } else ()
     this.size = 0
-    java.util.Arrays.fill(this.keyTable, null)
+    java.util.Arrays.fill(this.keyTable.asInstanceOf[scala.Array[java.lang.Object]], null)
   }
   def containsValue(value: scala.Int): scala.Boolean = {
     val keyTable: scala.Array[K] = this.keyTable

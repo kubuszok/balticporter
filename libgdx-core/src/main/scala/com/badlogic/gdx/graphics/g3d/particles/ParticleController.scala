@@ -18,7 +18,7 @@ class ParticleController extends com.badlogic.gdx.utils.Json.Serializable with c
     this.emitter = emitter
     this.renderer = renderer
     this.particleChannels = new com.badlogic.gdx.graphics.g3d.particles.ParticleChannels()
-    this.influencers = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.influencers.Influencer](influencers)
+    this.influencers = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.influencers.Influencer](influencers.asInstanceOf[scala.Array[java.lang.Object]])
   }
   def this() = {
     this()

@@ -29,7 +29,7 @@ object ScissorStack {
       scissor.height = java.lang.Math.max(1, maxY - minY)
     }
     ScissorStack.scissors.add(scissor)
-    com.badlogic.gdx.graphics.glutils.HdpiUtils.glScissor(scissor.x.asInstanceOf[scala.Int], scissor.y.asInstanceOf[scala.Int], scissor.width.asInstanceOf[scala.Int], scissor.height.asInstanceOf[scala.Int])
+    com.badlogic.gdx.graphics.glutils.HdpiUtils.glScissor(scissor.x.asInstanceOf[scala.Int].asInstanceOf[scala.Int], scissor.y.asInstanceOf[scala.Int].asInstanceOf[scala.Int], scissor.width.asInstanceOf[scala.Int].asInstanceOf[scala.Int], scissor.height.asInstanceOf[scala.Int].asInstanceOf[scala.Int])
     return true
   }
   def popScissors(): com.badlogic.gdx.math.Rectangle = {
@@ -38,7 +38,7 @@ object ScissorStack {
       com.badlogic.gdx.Gdx.gl.glDisable(com.badlogic.gdx.graphics.GL20.GL_SCISSOR_TEST)
     } else {
       val scissor: com.badlogic.gdx.math.Rectangle = ScissorStack.scissors.peek()
-      com.badlogic.gdx.graphics.glutils.HdpiUtils.glScissor(scissor.x.asInstanceOf[scala.Int], scissor.y.asInstanceOf[scala.Int], scissor.width.asInstanceOf[scala.Int], scissor.height.asInstanceOf[scala.Int])
+      com.badlogic.gdx.graphics.glutils.HdpiUtils.glScissor(scissor.x.asInstanceOf[scala.Int].asInstanceOf[scala.Int], scissor.y.asInstanceOf[scala.Int].asInstanceOf[scala.Int], scissor.width.asInstanceOf[scala.Int].asInstanceOf[scala.Int], scissor.height.asInstanceOf[scala.Int].asInstanceOf[scala.Int])
     }
     return old
   }

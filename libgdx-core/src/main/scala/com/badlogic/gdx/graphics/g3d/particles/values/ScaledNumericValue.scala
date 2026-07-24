@@ -77,9 +77,9 @@ class ScaledNumericValue extends com.badlogic.gdx.graphics.g3d.particles.values.
   }
   def write(json: com.badlogic.gdx.utils.Json): scala.Unit = {
     super.write(json)
-    json.writeValue("highMin", this.highMin)
-    json.writeValue("highMax", this.highMax)
-    json.writeValue("relative", this.relative)
+    json.writeValue("highMin", this.highMin.asInstanceOf[java.lang.Object])
+    json.writeValue("highMax", this.highMax.asInstanceOf[java.lang.Object])
+    json.writeValue("relative", this.relative.asInstanceOf[java.lang.Object])
     json.writeValue("scaling", this.scaling)
     json.writeValue("timeline", this.timeline)
   }

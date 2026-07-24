@@ -46,7 +46,7 @@ class JsonWriter extends java.io.Writer {
         val number: java.lang.Number = value.asInstanceOf[java.lang.Number]
         val longValue: scala.Long = number.longValue()
         if (number.doubleValue() == longValue) {
-          value = longValue
+          value = longValue.asInstanceOf[java.lang.Object]
         } else ()
       } else ()
     }
@@ -284,7 +284,13 @@ object JsonWriter {
     case object json extends OutputType
     case object javascript extends OutputType
     case object minimal extends OutputType
-    def values(): Array[OutputType] = Array(json, javascript, minimal)
+    def values(): scala.Array[OutputType] = scala.Array(json, javascript, minimal)
+    def valueOf(name: java.lang.String): OutputType = name match {
+      case "json" => json
+      case "javascript" => javascript
+      case "minimal" => minimal
+      case _ => throw new java.lang.IllegalArgumentException(name)
+    }
     private var javascriptPattern: java.util.regex.Pattern = java.util.regex.Pattern.compile("^[a-zA-Z_$][a-zA-Z_$0-9]*$")
     private var minimalNamePattern: java.util.regex.Pattern = java.util.regex.Pattern.compile("^[^\":,}/ ][^:]*$")
     private var minimalValuePattern: java.util.regex.Pattern = java.util.regex.Pattern.compile("^[^\":,{\\[\\]/ ][^}\\],]*$")

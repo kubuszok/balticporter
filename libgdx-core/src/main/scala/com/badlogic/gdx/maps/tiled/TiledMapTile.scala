@@ -19,6 +19,11 @@ object TiledMapTile {
   object BlendMode {
     case object NONE extends BlendMode
     case object ALPHA extends BlendMode
-    def values(): Array[BlendMode] = Array(NONE, ALPHA)
+    def values(): scala.Array[BlendMode] = scala.Array(NONE, ALPHA)
+    def valueOf(name: java.lang.String): BlendMode = name match {
+      case "NONE" => NONE
+      case "ALPHA" => ALPHA
+      case _ => throw new java.lang.IllegalArgumentException(name)
+    }
   }
 }

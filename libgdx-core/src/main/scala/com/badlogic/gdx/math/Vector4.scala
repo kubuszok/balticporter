@@ -315,7 +315,7 @@ class Vector4 extends java.io.Serializable with com.badlogic.gdx.math.Vector[Vec
   def limit2(limit2: scala.Float): Vector4 = {
     val len2: scala.Float = this.len2()
     if (len2 > limit2) {
-      this.scl(java.lang.Math.sqrt(limit2 / len2).asInstanceOf[scala.Float])
+      this.scl(java.lang.Math.sqrt(limit2 / len2).asInstanceOf[scala.Float].asInstanceOf[scala.Float])
     } else ()
     return this
   }
@@ -324,7 +324,7 @@ class Vector4 extends java.io.Serializable with com.badlogic.gdx.math.Vector[Vec
   }
   def setLength2(len2: scala.Float): Vector4 = {
     val oldLen2: scala.Float = this.len2()
-    return if ((oldLen2 == 0) || (oldLen2 == len2)) this else this.scl(java.lang.Math.sqrt(len2 / oldLen2).asInstanceOf[scala.Float])
+    return if ((oldLen2 == 0) || (oldLen2 == len2)) this else this.scl(java.lang.Math.sqrt(len2 / oldLen2).asInstanceOf[scala.Float].asInstanceOf[scala.Float])
   }
   def clamp(min: scala.Float, max: scala.Float): Vector4 = {
     val len2: scala.Float = this.len2()
@@ -333,11 +333,11 @@ class Vector4 extends java.io.Serializable with com.badlogic.gdx.math.Vector[Vec
     } else ()
     val max2: scala.Float = max * max
     if (len2 > max2) {
-      return this.scl(java.lang.Math.sqrt(max2 / len2).asInstanceOf[scala.Float])
+      return this.scl(java.lang.Math.sqrt(max2 / len2).asInstanceOf[scala.Float].asInstanceOf[scala.Float])
     } else ()
     val min2: scala.Float = min * min
     if (len2 < min2) {
-      return this.scl(java.lang.Math.sqrt(min2 / len2).asInstanceOf[scala.Float])
+      return this.scl(java.lang.Math.sqrt(min2 / len2).asInstanceOf[scala.Float].asInstanceOf[scala.Float])
     } else ()
     return this
   }

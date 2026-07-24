@@ -17,6 +17,11 @@ object ModelMaterial {
   object MaterialType {
     case object Lambert extends MaterialType
     case object Phong extends MaterialType
-    def values(): Array[MaterialType] = Array(Lambert, Phong)
+    def values(): scala.Array[MaterialType] = scala.Array(Lambert, Phong)
+    def valueOf(name: java.lang.String): MaterialType = name match {
+      case "Lambert" => Lambert
+      case "Phong" => Phong
+      case _ => throw new java.lang.IllegalArgumentException(name)
+    }
   }
 }

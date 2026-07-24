@@ -67,7 +67,17 @@ object Graphics {
     case object JGLFW extends GraphicsType
     case object Mock extends GraphicsType
     case object LWJGL3 extends GraphicsType
-    def values(): Array[GraphicsType] = Array(AndroidGL, LWJGL, WebGL, iOSGL, JGLFW, Mock, LWJGL3)
+    def values(): scala.Array[GraphicsType] = scala.Array(AndroidGL, LWJGL, WebGL, iOSGL, JGLFW, Mock, LWJGL3)
+    def valueOf(name: java.lang.String): GraphicsType = name match {
+      case "AndroidGL" => AndroidGL
+      case "LWJGL" => LWJGL
+      case "WebGL" => WebGL
+      case "iOSGL" => iOSGL
+      case "JGLFW" => JGLFW
+      case "Mock" => Mock
+      case "LWJGL3" => LWJGL3
+      case _ => throw new java.lang.IllegalArgumentException(name)
+    }
   }
   class DisplayMode {
     var width: scala.Int = 0

@@ -120,6 +120,10 @@ object Net {
   sealed abstract class Protocol
   object Protocol {
     case object TCP extends Protocol
-    def values(): Array[Protocol] = Array(TCP)
+    def values(): scala.Array[Protocol] = scala.Array(TCP)
+    def valueOf(name: java.lang.String): Protocol = name match {
+      case "TCP" => TCP
+      case _ => throw new java.lang.IllegalArgumentException(name)
+    }
   }
 }

@@ -22,10 +22,10 @@ class OrthogonalTiledMapRenderer extends com.badlogic.gdx.maps.tiled.renderers.B
     val layerTileHeight: scala.Float = layer.getTileHeight() * unitScale
     val layerOffsetX: scala.Float = (layer.getRenderOffsetX() * unitScale) - (this.viewBounds.x * (layer.getParallaxX() - 1))
     val layerOffsetY: scala.Float = ((-layer.getRenderOffsetY()) * unitScale) - (this.viewBounds.y * (layer.getParallaxY() - 1))
-    val col1: scala.Int = java.lang.Math.max(0, ((this.viewBounds.x - layerOffsetX) / layerTileWidth).asInstanceOf[scala.Int])
-    val col2: scala.Int = java.lang.Math.min(layerWidth, ((((this.viewBounds.x + this.viewBounds.width) + layerTileWidth) - layerOffsetX) / layerTileWidth).asInstanceOf[scala.Int])
-    val row1: scala.Int = java.lang.Math.max(0, ((this.viewBounds.y - layerOffsetY) / layerTileHeight).asInstanceOf[scala.Int])
-    val row2: scala.Int = java.lang.Math.min(layerHeight, ((((this.viewBounds.y + this.viewBounds.height) + layerTileHeight) - layerOffsetY) / layerTileHeight).asInstanceOf[scala.Int])
+    val col1: scala.Int = java.lang.Math.max(0, ((this.viewBounds.x - layerOffsetX) / layerTileWidth).asInstanceOf[scala.Int].asInstanceOf[scala.Int])
+    val col2: scala.Int = java.lang.Math.min(layerWidth, ((((this.viewBounds.x + this.viewBounds.width) + layerTileWidth) - layerOffsetX) / layerTileWidth).asInstanceOf[scala.Int].asInstanceOf[scala.Int])
+    val row1: scala.Int = java.lang.Math.max(0, ((this.viewBounds.y - layerOffsetY) / layerTileHeight).asInstanceOf[scala.Int].asInstanceOf[scala.Int])
+    val row2: scala.Int = java.lang.Math.min(layerHeight, ((((this.viewBounds.y + this.viewBounds.height) + layerTileHeight) - layerOffsetY) / layerTileHeight).asInstanceOf[scala.Int].asInstanceOf[scala.Int])
     var y: scala.Float = (row2 * layerTileHeight) + layerOffsetY
     val xStart: scala.Float = (col1 * layerTileWidth) + layerOffsetX
     val vertices: scala.Array[scala.Float] = this.vertices;

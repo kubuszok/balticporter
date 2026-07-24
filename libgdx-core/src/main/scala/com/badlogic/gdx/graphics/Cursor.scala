@@ -15,6 +15,20 @@ object Cursor {
     case object AllResize extends SystemCursor
     case object NotAllowed extends SystemCursor
     case object None extends SystemCursor
-    def values(): Array[SystemCursor] = Array(Arrow, Ibeam, Crosshair, Hand, HorizontalResize, VerticalResize, NWSEResize, NESWResize, AllResize, NotAllowed, None)
+    def values(): scala.Array[SystemCursor] = scala.Array(Arrow, Ibeam, Crosshair, Hand, HorizontalResize, VerticalResize, NWSEResize, NESWResize, AllResize, NotAllowed, None)
+    def valueOf(name: java.lang.String): SystemCursor = name match {
+      case "Arrow" => Arrow
+      case "Ibeam" => Ibeam
+      case "Crosshair" => Crosshair
+      case "Hand" => Hand
+      case "HorizontalResize" => HorizontalResize
+      case "VerticalResize" => VerticalResize
+      case "NWSEResize" => NWSEResize
+      case "NESWResize" => NESWResize
+      case "AllResize" => AllResize
+      case "NotAllowed" => NotAllowed
+      case "None" => None
+      case _ => throw new java.lang.IllegalArgumentException(name)
+    }
   }
 }

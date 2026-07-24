@@ -30,14 +30,14 @@ class BooleanArray {
   def add(value: scala.Boolean): scala.Unit = {
     var items: scala.Array[scala.Boolean] = this.items
     if (this.size == items.length) {
-      items = this.resize(java.lang.Math.max(8, (this.size * 1.75f).asInstanceOf[scala.Int]))
+      items = this.resize(java.lang.Math.max(8, (this.size * 1.75f).asInstanceOf[scala.Int].asInstanceOf[scala.Int]))
     } else ()
     items({ this.size += 1; this.size }) = value
   }
   def add(value1: scala.Boolean, value2: scala.Boolean): scala.Unit = {
     var items: scala.Array[scala.Boolean] = this.items
     if ((this.size + 1) >= items.length) {
-      items = this.resize(java.lang.Math.max(8, (this.size * 1.75f).asInstanceOf[scala.Int]))
+      items = this.resize(java.lang.Math.max(8, (this.size * 1.75f).asInstanceOf[scala.Int].asInstanceOf[scala.Int]))
     } else ()
     items(this.size) = value1
     items(this.size + 1) = value2
@@ -46,7 +46,7 @@ class BooleanArray {
   def add(value1: scala.Boolean, value2: scala.Boolean, value3: scala.Boolean): scala.Unit = {
     var items: scala.Array[scala.Boolean] = this.items
     if ((this.size + 2) >= items.length) {
-      items = this.resize(java.lang.Math.max(8, (this.size * 1.75f).asInstanceOf[scala.Int]))
+      items = this.resize(java.lang.Math.max(8, (this.size * 1.75f).asInstanceOf[scala.Int].asInstanceOf[scala.Int]))
     } else ()
     items(this.size) = value1
     items(this.size + 1) = value2
@@ -56,7 +56,7 @@ class BooleanArray {
   def add(value1: scala.Boolean, value2: scala.Boolean, value3: scala.Boolean, value4: scala.Boolean): scala.Unit = {
     var items: scala.Array[scala.Boolean] = this.items
     if ((this.size + 3) >= items.length) {
-      items = this.resize(java.lang.Math.max(8, (this.size * 1.8f).asInstanceOf[scala.Int]))
+      items = this.resize(java.lang.Math.max(8, (this.size * 1.8f).asInstanceOf[scala.Int].asInstanceOf[scala.Int]))
     } else ()
     items(this.size) = value1
     items(this.size + 1) = value2
@@ -80,7 +80,7 @@ class BooleanArray {
     var items: scala.Array[scala.Boolean] = this.items
     val sizeNeeded: scala.Int = this.size + length
     if (sizeNeeded > items.length) {
-      items = this.resize(java.lang.Math.max(java.lang.Math.max(8, sizeNeeded), (this.size * 1.75f).asInstanceOf[scala.Int]))
+      items = this.resize(java.lang.Math.max(java.lang.Math.max(8, sizeNeeded), (this.size * 1.75f).asInstanceOf[scala.Int].asInstanceOf[scala.Int]))
     } else ()
     java.lang.System.arraycopy(array, offset, items, this.size, length)
     this.size = this.size + length
@@ -103,7 +103,7 @@ class BooleanArray {
     } else ()
     var items: scala.Array[scala.Boolean] = this.items
     if (this.size == items.length) {
-      items = this.resize(java.lang.Math.max(8, (this.size * 1.75f).asInstanceOf[scala.Int]))
+      items = this.resize(java.lang.Math.max(8, (this.size * 1.75f).asInstanceOf[scala.Int].asInstanceOf[scala.Int]))
     } else ()
     if (this.ordered) {
       java.lang.System.arraycopy(items, index, items, index + 1, this.size - index)
@@ -119,7 +119,7 @@ class BooleanArray {
     } else ()
     val sizeNeeded: scala.Int = this.size + count
     if (sizeNeeded > this.items.length) {
-      this.items = this.resize(java.lang.Math.max(java.lang.Math.max(8, sizeNeeded), (this.size * 1.75f).asInstanceOf[scala.Int]))
+      this.items = this.resize(java.lang.Math.max(java.lang.Math.max(8, sizeNeeded), (this.size * 1.75f).asInstanceOf[scala.Int].asInstanceOf[scala.Int]))
     } else ()
     java.lang.System.arraycopy(this.items, index, this.items, index + count, this.size - index)
     this.size = sizeNeeded
@@ -238,7 +238,7 @@ class BooleanArray {
     } else ()
     val sizeNeeded: scala.Int = this.size + additionalCapacity
     if (sizeNeeded > this.items.length) {
-      this.resize(java.lang.Math.max(java.lang.Math.max(8, sizeNeeded), (this.size * 1.75f).asInstanceOf[scala.Int]))
+      this.resize(java.lang.Math.max(java.lang.Math.max(8, sizeNeeded), (this.size * 1.75f).asInstanceOf[scala.Int].asInstanceOf[scala.Int]))
     } else ()
     return this.items
   }

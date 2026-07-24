@@ -16,7 +16,7 @@ class AtlasTmxMapLoader extends com.badlogic.gdx.maps.tiled.BaseTmxMapLoader[com
     val atlas: com.badlogic.gdx.graphics.g2d.TextureAtlas = new com.badlogic.gdx.graphics.g2d.TextureAtlas(atlasFileHandle)
     this.atlasResolver = new com.badlogic.gdx.maps.tiled.AtlasTmxMapLoader.AtlasResolver.DirectAtlasResolver(atlas)
     val map: com.badlogic.gdx.maps.tiled.TiledMap = this.loadTiledMap(tmxFile, parameter, this.atlasResolver)
-    map.setOwnedResources(new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.TextureAtlas](scala.Array[com.badlogic.gdx.graphics.g2d.TextureAtlas](atlas)))
+    map.setOwnedResources(new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.TextureAtlas](scala.Array[com.badlogic.gdx.graphics.g2d.TextureAtlas](atlas).asInstanceOf[scala.Array[java.lang.Object]]))
     this.setTextureFilters(parameter.textureMinFilter, parameter.textureMagFilter)
     return map
   }
@@ -47,12 +47,12 @@ class AtlasTmxMapLoader extends com.badlogic.gdx.maps.tiled.BaseTmxMapLoader[com
     }
     val props: com.badlogic.gdx.maps.MapProperties = tileSet.getProperties()
     props.put("imagesource", imageSource)
-    props.put("imagewidth", imageWidth)
-    props.put("imageheight", imageHeight)
-    props.put("tilewidth", tilewidth)
-    props.put("tileheight", tileheight)
-    props.put("margin", margin)
-    props.put("spacing", spacing)
+    props.put("imagewidth", imageWidth.asInstanceOf[java.lang.Object])
+    props.put("imageheight", imageHeight.asInstanceOf[java.lang.Object])
+    props.put("tilewidth", tilewidth.asInstanceOf[java.lang.Object])
+    props.put("tileheight", tileheight.asInstanceOf[java.lang.Object])
+    props.put("margin", margin.asInstanceOf[java.lang.Object])
+    props.put("spacing", spacing.asInstanceOf[java.lang.Object])
     if ((imageSource != null) && (imageSource.length() > 0)) {
       val lastgid: scala.Int = (firstgid + ((imageWidth / tilewidth) * (imageHeight / tileheight))) - 1
       for (region <- atlas.findRegions(regionsName)) {

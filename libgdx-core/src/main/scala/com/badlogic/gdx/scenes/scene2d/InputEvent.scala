@@ -108,6 +108,19 @@ object InputEvent {
     case object keyDown extends Type
     case object keyUp extends Type
     case object keyTyped extends Type
-    def values(): Array[Type] = Array(touchDown, touchUp, touchDragged, mouseMoved, enter, exit, scrolled, keyDown, keyUp, keyTyped)
+    def values(): scala.Array[Type] = scala.Array(touchDown, touchUp, touchDragged, mouseMoved, enter, exit, scrolled, keyDown, keyUp, keyTyped)
+    def valueOf(name: java.lang.String): Type = name match {
+      case "touchDown" => touchDown
+      case "touchUp" => touchUp
+      case "touchDragged" => touchDragged
+      case "mouseMoved" => mouseMoved
+      case "enter" => enter
+      case "exit" => exit
+      case "scrolled" => scrolled
+      case "keyDown" => keyDown
+      case "keyUp" => keyUp
+      case "keyTyped" => keyTyped
+      case _ => throw new java.lang.IllegalArgumentException(name)
+    }
   }
 }

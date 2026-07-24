@@ -180,7 +180,17 @@ object Pixmap {
     case object RGBA4444 extends Format
     case object RGB888 extends Format
     case object RGBA8888 extends Format
-    def values(): Array[Format] = Array(Alpha, Intensity, LuminanceAlpha, RGB565, RGBA4444, RGB888, RGBA8888)
+    def values(): scala.Array[Format] = scala.Array(Alpha, Intensity, LuminanceAlpha, RGB565, RGBA4444, RGB888, RGBA8888)
+    def valueOf(name: java.lang.String): Format = name match {
+      case "Alpha" => Alpha
+      case "Intensity" => Intensity
+      case "LuminanceAlpha" => LuminanceAlpha
+      case "RGB565" => RGB565
+      case "RGBA4444" => RGBA4444
+      case "RGB888" => RGB888
+      case "RGBA8888" => RGBA8888
+      case _ => throw new java.lang.IllegalArgumentException(name)
+    }
     def toGdx2DPixmapFormat(format: com.badlogic.gdx.graphics.Pixmap.Format): scala.Int = {
       if (format == com.badlogic.gdx.graphics.Pixmap.Format.Alpha) {
         return com.badlogic.gdx.graphics.g2d.Gdx2DPixmap.GDX2D_FORMAT_ALPHA
@@ -237,13 +247,23 @@ object Pixmap {
   object Blending {
     case object None extends Blending
     case object SourceOver extends Blending
-    def values(): Array[Blending] = Array(None, SourceOver)
+    def values(): scala.Array[Blending] = scala.Array(None, SourceOver)
+    def valueOf(name: java.lang.String): Blending = name match {
+      case "None" => None
+      case "SourceOver" => SourceOver
+      case _ => throw new java.lang.IllegalArgumentException(name)
+    }
   }
   sealed abstract class Filter
   object Filter {
     case object NearestNeighbour extends Filter
     case object BiLinear extends Filter
-    def values(): Array[Filter] = Array(NearestNeighbour, BiLinear)
+    def values(): scala.Array[Filter] = scala.Array(NearestNeighbour, BiLinear)
+    def valueOf(name: java.lang.String): Filter = name match {
+      case "NearestNeighbour" => NearestNeighbour
+      case "BiLinear" => BiLinear
+      case _ => throw new java.lang.IllegalArgumentException(name)
+    }
   }
   trait DownloadPixmapResponseListener {
     def downloadComplete(pixmap: Pixmap): scala.Unit

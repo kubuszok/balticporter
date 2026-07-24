@@ -1246,6 +1246,14 @@ object Table {
     case object table extends Debug
     case object cell extends Debug
     case object actor extends Debug
-    def values(): Array[Debug] = Array(none, all, table, cell, actor)
+    def values(): scala.Array[Debug] = scala.Array(none, all, table, cell, actor)
+    def valueOf(name: java.lang.String): Debug = name match {
+      case "none" => none
+      case "all" => all
+      case "table" => table
+      case "cell" => cell
+      case "actor" => actor
+      case _ => throw new java.lang.IllegalArgumentException(name)
+    }
   }
 }

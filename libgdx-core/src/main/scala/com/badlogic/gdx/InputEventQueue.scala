@@ -28,7 +28,7 @@ class InputEventQueue {
           processor.keyUp(q({ i += 1; i }))
         }
         case InputEventQueue.KEY_TYPED => {
-          processor.keyTyped(q({ i += 1; i }).asInstanceOf[scala.Char])
+          processor.keyTyped(q({ i += 1; i }).asInstanceOf[scala.Char].asInstanceOf[scala.Char])
         }
         case InputEventQueue.TOUCH_DOWN => {
           processor.touchDown(q({ i += 1; i }), q({ i += 1; i }), q({ i += 1; i }), q({ i += 1; i }))
@@ -97,8 +97,8 @@ class InputEventQueue {
     return -1
   }
   private def queueTime(time: scala.Long): scala.Unit = {
-    this.queue.add((time >> 32).asInstanceOf[scala.Int])
-    this.queue.add(time.asInstanceOf[scala.Int])
+    this.queue.add((time >> 32).asInstanceOf[scala.Int].asInstanceOf[scala.Int])
+    this.queue.add(time.asInstanceOf[scala.Int].asInstanceOf[scala.Int])
   }
   def keyDown(keycode: scala.Int, time: scala.Long): scala.Boolean = {
     this.queue.add(InputEventQueue.KEY_DOWN)

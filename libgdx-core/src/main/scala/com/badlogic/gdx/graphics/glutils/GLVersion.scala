@@ -115,6 +115,13 @@ object GLVersion {
     case object GLES extends Type
     case object WebGL extends Type
     case object NONE extends Type
-    def values(): Array[Type] = Array(OpenGL, GLES, WebGL, NONE)
+    def values(): scala.Array[Type] = scala.Array(OpenGL, GLES, WebGL, NONE)
+    def valueOf(name: java.lang.String): Type = name match {
+      case "OpenGL" => OpenGL
+      case "GLES" => GLES
+      case "WebGL" => WebGL
+      case "NONE" => NONE
+      case _ => throw new java.lang.IllegalArgumentException(name)
+    }
   }
 }

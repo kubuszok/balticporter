@@ -478,8 +478,8 @@ class Cell[T <: com.badlogic.gdx.scenes.scene2d.Actor] extends com.badlogic.gdx.
     return this
   }
   def fill(x: scala.Float, y: scala.Float): Cell[T] = {
-    this.fillX$field = x
-    this.fillY$field = y
+    this.fillX$field = x.asInstanceOf[java.lang.Float]
+    this.fillY$field = y.asInstanceOf[java.lang.Float]
     return this
   }
   def fill(x: scala.Boolean, y: scala.Boolean): Cell[T] = {
@@ -493,7 +493,7 @@ class Cell[T <: com.badlogic.gdx.scenes.scene2d.Actor] extends com.badlogic.gdx.
     return this
   }
   def align(align: scala.Int): Cell[T] = {
-    this.align$field = align
+    this.align$field = align.asInstanceOf[java.lang.Integer]
     return this
   }
   def center(): Cell[T] = {
@@ -504,7 +504,7 @@ class Cell[T <: com.badlogic.gdx.scenes.scene2d.Actor] extends com.badlogic.gdx.
     if (this.align$field == null) {
       this.align$field = Cell.topi
     } else {
-      this.align$field = (this.align$field | com.badlogic.gdx.utils.Align.top) & (~com.badlogic.gdx.utils.Align.bottom)
+      this.align$field = ((this.align$field | com.badlogic.gdx.utils.Align.top) & (~com.badlogic.gdx.utils.Align.bottom)).asInstanceOf[java.lang.Integer]
     }
     return this
   }
@@ -512,7 +512,7 @@ class Cell[T <: com.badlogic.gdx.scenes.scene2d.Actor] extends com.badlogic.gdx.
     if (this.align$field == null) {
       this.align$field = Cell.lefti
     } else {
-      this.align$field = (this.align$field | com.badlogic.gdx.utils.Align.left) & (~com.badlogic.gdx.utils.Align.right)
+      this.align$field = ((this.align$field | com.badlogic.gdx.utils.Align.left) & (~com.badlogic.gdx.utils.Align.right)).asInstanceOf[java.lang.Integer]
     }
     return this
   }
@@ -520,7 +520,7 @@ class Cell[T <: com.badlogic.gdx.scenes.scene2d.Actor] extends com.badlogic.gdx.
     if (this.align$field == null) {
       this.align$field = Cell.bottomi
     } else {
-      this.align$field = (this.align$field | com.badlogic.gdx.utils.Align.bottom) & (~com.badlogic.gdx.utils.Align.top)
+      this.align$field = ((this.align$field | com.badlogic.gdx.utils.Align.bottom) & (~com.badlogic.gdx.utils.Align.top)).asInstanceOf[java.lang.Integer]
     }
     return this
   }
@@ -528,7 +528,7 @@ class Cell[T <: com.badlogic.gdx.scenes.scene2d.Actor] extends com.badlogic.gdx.
     if (this.align$field == null) {
       this.align$field = Cell.righti
     } else {
-      this.align$field = (this.align$field | com.badlogic.gdx.utils.Align.right) & (~com.badlogic.gdx.utils.Align.left)
+      this.align$field = ((this.align$field | com.badlogic.gdx.utils.Align.right) & (~com.badlogic.gdx.utils.Align.left)).asInstanceOf[java.lang.Integer]
     }
     return this
   }
@@ -563,8 +563,8 @@ class Cell[T <: com.badlogic.gdx.scenes.scene2d.Actor] extends com.badlogic.gdx.
     return this
   }
   def expand(x: scala.Int, y: scala.Int): Cell[T] = {
-    this.expandX$field = x
-    this.expandY$field = y
+    this.expandX$field = x.asInstanceOf[java.lang.Integer]
+    this.expandY$field = y.asInstanceOf[java.lang.Integer]
     return this
   }
   def expand(x: scala.Boolean, y: scala.Boolean): Cell[T] = {
@@ -573,7 +573,7 @@ class Cell[T <: com.badlogic.gdx.scenes.scene2d.Actor] extends com.badlogic.gdx.
     return this
   }
   def colspan(colspan: scala.Int): Cell[T] = {
-    this.colspan$field = colspan
+    this.colspan$field = colspan.asInstanceOf[java.lang.Integer]
     return this
   }
   def uniform(): Cell[T] = {
@@ -590,13 +590,13 @@ class Cell[T <: com.badlogic.gdx.scenes.scene2d.Actor] extends com.badlogic.gdx.
     return this
   }
   def uniform(uniform: scala.Boolean): Cell[T] = {
-    this.uniformX$field = uniform
-    this.uniformY$field = uniform
+    this.uniformX$field = uniform.asInstanceOf[java.lang.Boolean]
+    this.uniformY$field = uniform.asInstanceOf[java.lang.Boolean]
     return this
   }
   def uniform(x: scala.Boolean, y: scala.Boolean): Cell[T] = {
-    this.uniformX$field = x
-    this.uniformY$field = y
+    this.uniformX$field = x.asInstanceOf[java.lang.Boolean]
+    this.uniformY$field = y.asInstanceOf[java.lang.Boolean]
     return this
   }
   def setActorBounds(x: scala.Float, y: scala.Float, width: scala.Float, height: scala.Float): scala.Unit = {

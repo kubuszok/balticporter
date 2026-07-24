@@ -185,7 +185,7 @@ class HorizontalGroup extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup {
         } else ()
       }
       if (round) {
-        child.setBounds(java.lang.Math.floor(x).asInstanceOf[scala.Float], java.lang.Math.floor(y).asInstanceOf[scala.Float], java.lang.Math.ceil(width).asInstanceOf[scala.Float], java.lang.Math.ceil(height).asInstanceOf[scala.Float])
+        child.setBounds(java.lang.Math.floor(x).asInstanceOf[scala.Float].asInstanceOf[scala.Float], java.lang.Math.floor(y).asInstanceOf[scala.Float].asInstanceOf[scala.Float], java.lang.Math.ceil(width).asInstanceOf[scala.Float].asInstanceOf[scala.Float], java.lang.Math.ceil(height).asInstanceOf[scala.Float].asInstanceOf[scala.Float])
       } else {
         child.setBounds(x, y, width, height)
       }
@@ -295,7 +295,7 @@ class HorizontalGroup extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup {
         } else ()
       }
       if (round) {
-        child.setBounds(java.lang.Math.floor(x).asInstanceOf[scala.Float], java.lang.Math.floor(y).asInstanceOf[scala.Float], java.lang.Math.ceil(width).asInstanceOf[scala.Float], java.lang.Math.ceil(height).asInstanceOf[scala.Float])
+        child.setBounds(java.lang.Math.floor(x).asInstanceOf[scala.Float].asInstanceOf[scala.Float], java.lang.Math.floor(y).asInstanceOf[scala.Float].asInstanceOf[scala.Float], java.lang.Math.ceil(width).asInstanceOf[scala.Float].asInstanceOf[scala.Float], java.lang.Math.ceil(height).asInstanceOf[scala.Float].asInstanceOf[scala.Float])
       } else {
         child.setBounds(x, y, width, height)
       }

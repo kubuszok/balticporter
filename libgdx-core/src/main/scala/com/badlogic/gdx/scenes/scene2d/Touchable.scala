@@ -5,5 +5,11 @@ object Touchable {
   case object enabled extends Touchable
   case object disabled extends Touchable
   case object childrenOnly extends Touchable
-  def values(): Array[Touchable] = Array(enabled, disabled, childrenOnly)
+  def values(): scala.Array[Touchable] = scala.Array(enabled, disabled, childrenOnly)
+  def valueOf(name: java.lang.String): Touchable = name match {
+    case "enabled" => enabled
+    case "disabled" => disabled
+    case "childrenOnly" => childrenOnly
+    case _ => throw new java.lang.IllegalArgumentException(name)
+  }
 }

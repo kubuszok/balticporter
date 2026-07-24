@@ -79,7 +79,7 @@ abstract class PrimitiveSpawnShapeValue extends com.badlogic.gdx.graphics.g3d.pa
     json.writeValue("spawnWidthValue", this.spawnWidthValue)
     json.writeValue("spawnHeightValue", this.spawnHeightValue)
     json.writeValue("spawnDepthValue", this.spawnDepthValue)
-    json.writeValue("edges", this.edges)
+    json.writeValue("edges", this.edges.asInstanceOf[java.lang.Object])
   }
   def read(json: com.badlogic.gdx.utils.Json, jsonData: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
     super.read(json, jsonData)
@@ -96,6 +96,12 @@ object PrimitiveSpawnShapeValue {
     case object both extends SpawnSide
     case object top extends SpawnSide
     case object bottom extends SpawnSide
-    def values(): Array[SpawnSide] = Array(both, top, bottom)
+    def values(): scala.Array[SpawnSide] = scala.Array(both, top, bottom)
+    def valueOf(name: java.lang.String): SpawnSide = name match {
+      case "both" => both
+      case "top" => top
+      case "bottom" => bottom
+      case _ => throw new java.lang.IllegalArgumentException(name)
+    }
   }
 }

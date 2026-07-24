@@ -561,7 +561,7 @@ class XmlReader {
       return "\""
     } else ()
     if (name.startsWith("#x")) {
-      return java.lang.Character.toString(java.lang.Integer.parseInt(name.substring(2), 16).asInstanceOf[scala.Char])
+      return java.lang.Character.toString(java.lang.Integer.parseInt(name.substring(2), 16).asInstanceOf[scala.Char].asInstanceOf[scala.Char])
     } else ()
     return null
   }

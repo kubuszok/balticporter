@@ -43,7 +43,7 @@ class JsonString {
         val number: java.lang.Number = value.asInstanceOf[java.lang.Number]
         val longValue: scala.Long = number.longValue()
         if (number.doubleValue() == longValue) {
-          value = longValue
+          value = longValue.asInstanceOf[java.lang.Object]
         } else ()
       } else ()
     }
@@ -193,7 +193,7 @@ class JsonString {
     if (this.named) {
       throw new java.lang.IllegalStateException("Expected an object, array, or value since a name was set.")
     } else ()
-    this.buffer.append((this.current >> 1).asInstanceOf[scala.Char])
+    this.buffer.append((this.current >> 1).asInstanceOf[scala.Char].asInstanceOf[scala.Char])
     this.current = if (this.stack.size == 0) JsonString.none else this.stack.items({ this.stack.size -= 1; this.stack.size })
     return this
   }

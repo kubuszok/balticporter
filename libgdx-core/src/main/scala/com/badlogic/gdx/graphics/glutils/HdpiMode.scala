@@ -4,5 +4,10 @@ sealed abstract class HdpiMode
 object HdpiMode {
   case object Logical extends HdpiMode
   case object Pixels extends HdpiMode
-  def values(): Array[HdpiMode] = Array(Logical, Pixels)
+  def values(): scala.Array[HdpiMode] = scala.Array(Logical, Pixels)
+  def valueOf(name: java.lang.String): HdpiMode = name match {
+    case "Logical" => Logical
+    case "Pixels" => Pixels
+    case _ => throw new java.lang.IllegalArgumentException(name)
+  }
 }

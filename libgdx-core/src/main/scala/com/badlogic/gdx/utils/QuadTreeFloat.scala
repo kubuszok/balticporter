@@ -184,7 +184,7 @@ class QuadTreeFloat extends com.badlogic.gdx.utils.Pool.Poolable {
       nearDist = nearDist * nearDist
     } else ()
     result.clear()
-    this.query(x, y, java.lang.Math.sqrt(nearDist).asInstanceOf[scala.Float], result);
+    this.query(x, y, java.lang.Math.sqrt(nearDist).asInstanceOf[scala.Float].asInstanceOf[scala.Float], result);
     { var i: scala.Int = 3; val n: scala.Int = result.size; while (i < n) { {
       val dist: scala.Float = result.get(i)
       if (dist < nearDist) {

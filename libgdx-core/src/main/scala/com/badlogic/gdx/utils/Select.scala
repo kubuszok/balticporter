@@ -3,7 +3,7 @@ package com.badlogic.gdx.utils
 class Select {
   private var quickSelect: com.badlogic.gdx.utils.QuickSelect[?] = null.asInstanceOf[com.badlogic.gdx.utils.QuickSelect[?]]
   def select[T](items: scala.Array[T], comp: java.util.Comparator[T], kthLowest: scala.Int, size: scala.Int): T = {
-    val idx: scala.Int = this.selectIndex(items, comp, kthLowest, size)
+    val idx: scala.Int = this.selectIndex(items.asInstanceOf[scala.Array[java.lang.Object]], comp, kthLowest, size)
     return items(idx)
   }
   def selectIndex[T](items: scala.Array[T], comp: java.util.Comparator[T], kthLowest: scala.Int, size: scala.Int): scala.Int = {
@@ -16,15 +16,15 @@ class Select {
     }
     var idx: scala.Int = 0
     if (kthLowest == 1) {
-      idx = this.fastMin(items, comp, size)
+      idx = this.fastMin(items.asInstanceOf[scala.Array[java.lang.Object]], comp, size)
     } else {
       if (kthLowest == size) {
-        idx = this.fastMax(items, comp, size)
+        idx = this.fastMax(items.asInstanceOf[scala.Array[java.lang.Object]], comp, size)
       } else {
         if (this.quickSelect == null) {
           this.quickSelect = new com.badlogic.gdx.utils.QuickSelect()
         } else ()
-        idx = this.quickSelect.select(items, comp, kthLowest, size)
+        idx = this.quickSelect.select(items.asInstanceOf[scala.Array[java.lang.Object]], comp, kthLowest, size)
       }
     }
     return idx

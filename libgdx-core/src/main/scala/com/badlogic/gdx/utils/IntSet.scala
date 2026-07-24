@@ -26,7 +26,7 @@ class IntSet {
     this(initialCapacity, 0.8f)
   }
   def this(set: IntSet) = {
-    this((set.keyTable.length * set.loadFactor).asInstanceOf[scala.Int], set.loadFactor)
+    this((set.keyTable.length * set.loadFactor).asInstanceOf[scala.Int].asInstanceOf[scala.Int], set.loadFactor)
     java.lang.System.arraycopy(set.keyTable, 0, this.keyTable, 0, set.keyTable.length)
     this.size = set.size
     this.hasZeroValue = set.hasZeroValue

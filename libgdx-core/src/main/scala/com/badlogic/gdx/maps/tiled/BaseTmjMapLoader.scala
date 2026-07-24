@@ -43,11 +43,11 @@ abstract class BaseTmjMapLoader[P <: com.badlogic.gdx.maps.tiled.BaseTiledMapLoa
     if (mapOrientation != null) {
       mapProperties.put("orientation", mapOrientation)
     } else ()
-    mapProperties.put("width", mapWidth)
-    mapProperties.put("height", mapHeight)
-    mapProperties.put("tilewidth", tileWidth)
-    mapProperties.put("tileheight", tileHeight)
-    mapProperties.put("hexsidelength", hexSideLength)
+    mapProperties.put("width", mapWidth.asInstanceOf[java.lang.Object])
+    mapProperties.put("height", mapHeight.asInstanceOf[java.lang.Object])
+    mapProperties.put("tilewidth", tileWidth.asInstanceOf[java.lang.Object])
+    mapProperties.put("tileheight", tileHeight.asInstanceOf[java.lang.Object])
+    mapProperties.put("hexsidelength", hexSideLength.asInstanceOf[java.lang.Object])
     if (staggerAxis != null) {
       mapProperties.put("staggeraxis", staggerAxis)
     } else ()
@@ -317,7 +317,7 @@ abstract class BaseTmjMapLoader[P <: com.badlogic.gdx.maps.tiled.BaseTiledMapLoa
         val tile: com.badlogic.gdx.maps.tiled.TiledMapTile = map.getTileSets().getTile(id & (~com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.MASK_CLEAR))
         val tiledMapTileMapObject: com.badlogic.gdx.maps.tiled.objects.TiledMapTileMapObject = new com.badlogic.gdx.maps.tiled.objects.TiledMapTileMapObject(tile, flipHorizontally, flipVertically)
         val textureRegion: com.badlogic.gdx.graphics.g2d.TextureRegion = tiledMapTileMapObject.getTextureRegion()
-        tiledMapTileMapObject.getProperties().put("gid", id)
+        tiledMapTileMapObject.getProperties().put("gid", id.asInstanceOf[java.lang.Object])
         tiledMapTileMapObject.setX(x)
         tiledMapTileMapObject.setY(if (flipY) y else y - height)
         val objectWidth: scala.Float = element.getFloat("width", textureRegion.getRegionWidth())
@@ -333,7 +333,7 @@ abstract class BaseTmjMapLoader[P <: com.badlogic.gdx.maps.tiled.BaseTiledMapLoa
     `object`.setName(element.getString("name", null))
     val rotation: java.lang.String = element.getString("rotation", null)
     if (rotation != null) {
-      `object`.getProperties().put("rotation", java.lang.Float.parseFloat(rotation))
+      `object`.getProperties().put("rotation", java.lang.Float.parseFloat(rotation).asInstanceOf[java.lang.Object])
     } else ()
     val `type`: java.lang.String = element.getString("type", null)
     if (`type` != null) {
@@ -341,16 +341,16 @@ abstract class BaseTmjMapLoader[P <: com.badlogic.gdx.maps.tiled.BaseTiledMapLoa
     } else ()
     val id: scala.Int = element.getInt("id", 0)
     if (id != 0) {
-      `object`.getProperties().put("id", id)
+      `object`.getProperties().put("id", id.asInstanceOf[java.lang.Object])
     } else ()
-    `object`.getProperties().put("x", x)
+    `object`.getProperties().put("x", x.asInstanceOf[java.lang.Object])
     if (`object`.isInstanceOf[com.badlogic.gdx.maps.tiled.objects.TiledMapTileMapObject]) {
-      `object`.getProperties().put("y", y)
+      `object`.getProperties().put("y", y.asInstanceOf[java.lang.Object])
     } else {
-      `object`.getProperties().put("y", if (flipY) y - height else y)
+      `object`.getProperties().put("y", (if (flipY) y - height else y).asInstanceOf[java.lang.Object])
     }
-    `object`.getProperties().put("width", width)
-    `object`.getProperties().put("height", height)
+    `object`.getProperties().put("width", width.asInstanceOf[java.lang.Object])
+    `object`.getProperties().put("height", height.asInstanceOf[java.lang.Object])
     `object`.setVisible(element.getBoolean("visible", true))
     val properties: com.badlogic.gdx.utils.JsonValue = element.get("properties")
     if (properties != null) {
@@ -549,7 +549,7 @@ abstract class BaseTmjMapLoader[P <: com.badlogic.gdx.maps.tiled.BaseTiledMapLoa
       if (properties != null) {
         this.loadProperties(tileSetProperties, properties)
       } else ()
-      tileSetProperties.put("firstgid", firstgid)
+      tileSetProperties.put("firstgid", firstgid.asInstanceOf[java.lang.Object])
       var tiles: com.badlogic.gdx.utils.JsonValue = element.get("tiles")
       if (tiles == null) {
         tiles = new com.badlogic.gdx.utils.JsonValue(com.badlogic.gdx.utils.JsonValue.ValueType.array)

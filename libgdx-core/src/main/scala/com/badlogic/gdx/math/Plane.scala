@@ -85,6 +85,12 @@ object Plane {
     case object OnPlane extends PlaneSide
     case object Back extends PlaneSide
     case object Front extends PlaneSide
-    def values(): Array[PlaneSide] = Array(OnPlane, Back, Front)
+    def values(): scala.Array[PlaneSide] = scala.Array(OnPlane, Back, Front)
+    def valueOf(name: java.lang.String): PlaneSide = name match {
+      case "OnPlane" => OnPlane
+      case "Back" => Back
+      case "Front" => Front
+      case _ => throw new java.lang.IllegalArgumentException(name)
+    }
   }
 }

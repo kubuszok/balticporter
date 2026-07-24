@@ -1142,7 +1142,14 @@ object JsonSkimmer {
       case object trueValue extends TokenType
       case object falseValue extends TokenType
       case object other extends TokenType
-      def values(): Array[TokenType] = Array(nullValue, trueValue, falseValue, other)
+      def values(): scala.Array[TokenType] = scala.Array(nullValue, trueValue, falseValue, other)
+      def valueOf(name: java.lang.String): TokenType = name match {
+        case "nullValue" => nullValue
+        case "trueValue" => trueValue
+        case "falseValue" => falseValue
+        case "other" => other
+        case _ => throw new java.lang.IllegalArgumentException(name)
+      }
     }
   }
 }

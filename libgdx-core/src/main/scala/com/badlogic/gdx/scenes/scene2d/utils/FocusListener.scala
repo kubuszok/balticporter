@@ -56,7 +56,12 @@ object FocusListener {
     object Type {
       case object keyboard extends Type
       case object scroll extends Type
-      def values(): Array[Type] = Array(keyboard, scroll)
+      def values(): scala.Array[Type] = scala.Array(keyboard, scroll)
+      def valueOf(name: java.lang.String): Type = name match {
+        case "keyboard" => keyboard
+        case "scroll" => scroll
+        case _ => throw new java.lang.IllegalArgumentException(name)
+      }
     }
   }
 }

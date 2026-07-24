@@ -209,7 +209,7 @@ class RegularEmitter extends com.badlogic.gdx.graphics.g3d.particles.emitters.Em
   }
   def write(json: com.badlogic.gdx.utils.Json): scala.Unit = {
     super.write(json)
-    json.writeValue("continous", this.continuous)
+    json.writeValue("continous", this.continuous.asInstanceOf[java.lang.Object])
     json.writeValue("emission", this.emissionValue)
     json.writeValue("delay", this.delayValue)
     json.writeValue("duration", this.durationValue)
@@ -232,6 +232,12 @@ object RegularEmitter {
     case object Enabled extends EmissionMode
     case object EnabledUntilCycleEnd extends EmissionMode
     case object Disabled extends EmissionMode
-    def values(): Array[EmissionMode] = Array(Enabled, EnabledUntilCycleEnd, Disabled)
+    def values(): scala.Array[EmissionMode] = scala.Array(Enabled, EnabledUntilCycleEnd, Disabled)
+    def valueOf(name: java.lang.String): EmissionMode = name match {
+      case "Enabled" => Enabled
+      case "EnabledUntilCycleEnd" => EnabledUntilCycleEnd
+      case "Disabled" => Disabled
+      case _ => throw new java.lang.IllegalArgumentException(name)
+    }
   }
 }

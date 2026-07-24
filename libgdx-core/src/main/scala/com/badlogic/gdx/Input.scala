@@ -801,7 +801,20 @@ object Input {
     case object Gyroscope extends Peripheral
     case object RotationVector extends Peripheral
     case object Pressure extends Peripheral
-    def values(): Array[Peripheral] = Array(HardwareKeyboard, OnscreenKeyboard, MultitouchScreen, Accelerometer, Compass, Vibrator, HapticFeedback, Gyroscope, RotationVector, Pressure)
+    def values(): scala.Array[Peripheral] = scala.Array(HardwareKeyboard, OnscreenKeyboard, MultitouchScreen, Accelerometer, Compass, Vibrator, HapticFeedback, Gyroscope, RotationVector, Pressure)
+    def valueOf(name: java.lang.String): Peripheral = name match {
+      case "HardwareKeyboard" => HardwareKeyboard
+      case "OnscreenKeyboard" => OnscreenKeyboard
+      case "MultitouchScreen" => MultitouchScreen
+      case "Accelerometer" => Accelerometer
+      case "Compass" => Compass
+      case "Vibrator" => Vibrator
+      case "HapticFeedback" => HapticFeedback
+      case "Gyroscope" => Gyroscope
+      case "RotationVector" => RotationVector
+      case "Pressure" => Pressure
+      case _ => throw new java.lang.IllegalArgumentException(name)
+    }
   }
   trait InputStringValidator {
     def validate(toCheck: java.lang.String): scala.Boolean
@@ -819,19 +832,39 @@ object Input {
     case object Email extends OnscreenKeyboardType
     case object Password extends OnscreenKeyboardType
     case object URI extends OnscreenKeyboardType
-    def values(): Array[OnscreenKeyboardType] = Array(Default, NumberPad, PhonePad, Email, Password, URI)
+    def values(): scala.Array[OnscreenKeyboardType] = scala.Array(Default, NumberPad, PhonePad, Email, Password, URI)
+    def valueOf(name: java.lang.String): OnscreenKeyboardType = name match {
+      case "Default" => Default
+      case "NumberPad" => NumberPad
+      case "PhonePad" => PhonePad
+      case "Email" => Email
+      case "Password" => Password
+      case "URI" => URI
+      case _ => throw new java.lang.IllegalArgumentException(name)
+    }
   }
   sealed abstract class VibrationType
   object VibrationType {
     case object LIGHT extends VibrationType
     case object MEDIUM extends VibrationType
     case object HEAVY extends VibrationType
-    def values(): Array[VibrationType] = Array(LIGHT, MEDIUM, HEAVY)
+    def values(): scala.Array[VibrationType] = scala.Array(LIGHT, MEDIUM, HEAVY)
+    def valueOf(name: java.lang.String): VibrationType = name match {
+      case "LIGHT" => LIGHT
+      case "MEDIUM" => MEDIUM
+      case "HEAVY" => HEAVY
+      case _ => throw new java.lang.IllegalArgumentException(name)
+    }
   }
   sealed abstract class Orientation
   object Orientation {
     case object Landscape extends Orientation
     case object Portrait extends Orientation
-    def values(): Array[Orientation] = Array(Landscape, Portrait)
+    def values(): scala.Array[Orientation] = scala.Array(Landscape, Portrait)
+    def valueOf(name: java.lang.String): Orientation = name match {
+      case "Landscape" => Landscape
+      case "Portrait" => Portrait
+      case _ => throw new java.lang.IllegalArgumentException(name)
+    }
   }
 }

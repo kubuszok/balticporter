@@ -53,7 +53,7 @@ class Queue[T] extends scala.collection.Iterable[T] {
     var values: scala.Array[T] = this.values
     var head: scala.Int = this.head
     var tail: scala.Int = this.tail
-    val newArray: scala.Array[T] = java.util.Arrays.copyOf(values, newSize).asInstanceOf[scala.Array[T]]
+    val newArray: scala.Array[T] = java.util.Arrays.copyOf(values.asInstanceOf[scala.Array[java.lang.Object]], newSize).asInstanceOf[scala.Array[T]]
     if (head < tail) {
       java.lang.System.arraycopy(values, head, newArray, 0, tail - head)
     } else {

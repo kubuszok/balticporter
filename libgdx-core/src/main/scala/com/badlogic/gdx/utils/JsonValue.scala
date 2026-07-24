@@ -1305,7 +1305,17 @@ object JsonValue {
     case object longValue extends ValueType
     case object booleanValue extends ValueType
     case object nullValue extends ValueType
-    def values(): Array[ValueType] = Array(`object`, array, stringValue, doubleValue, longValue, booleanValue, nullValue)
+    def values(): scala.Array[ValueType] = scala.Array(`object`, array, stringValue, doubleValue, longValue, booleanValue, nullValue)
+    def valueOf(name: java.lang.String): ValueType = name match {
+      case "`object`" => `object`
+      case "array" => array
+      case "stringValue" => stringValue
+      case "doubleValue" => doubleValue
+      case "longValue" => longValue
+      case "booleanValue" => booleanValue
+      case "nullValue" => nullValue
+      case _ => throw new java.lang.IllegalArgumentException(name)
+    }
   }
   class PrettyPrintSettings {
     var outputType: com.badlogic.gdx.utils.JsonWriter.OutputType = null.asInstanceOf[com.badlogic.gdx.utils.JsonWriter.OutputType]

@@ -109,7 +109,7 @@ class Json {
     }
     val allFields: scala.collection.mutable.ArrayBuffer[com.badlogic.gdx.utils.reflect.Field] = new scala.collection.mutable.ArrayBuffer();
     { var i: scala.Int = classHierarchy.size - 1; while (i >= 0) { {
-      java.util.Collections.addAll(allFields, com.badlogic.gdx.utils.reflect.ClassReflection.getDeclaredFields(classHierarchy.get(i)))
+      java.util.Collections.addAll(allFields, com.badlogic.gdx.utils.reflect.ClassReflection.getDeclaredFields(classHierarchy.get(i)).asInstanceOf[scala.Array[java.lang.Object]])
     }; i = i - 1 } }
     val nameToField: com.badlogic.gdx.utils.OrderedMap[java.lang.String, com.badlogic.gdx.utils.Json.FieldMetadata] = new com.badlogic.gdx.utils.OrderedMap(allFields.size);
     { var i: scala.Int = 0; val n: scala.Int = allFields.size; while (i < n) { {
@@ -488,7 +488,7 @@ class Json {
         this.writeObjectStart(actualType, knownType)
         for (entry <- value.asInstanceOf[com.badlogic.gdx.utils.ObjectIntMap[?]].entries()) {
           this.writer.name(this.convertToString(entry.key))
-          this.writeValue(entry.value, classOf[java.lang.Integer])
+          this.writeValue(entry.value.asInstanceOf[java.lang.Object], classOf[java.lang.Integer])
         }
         this.writeObjectEnd()
         return
@@ -500,7 +500,7 @@ class Json {
         this.writeObjectStart(actualType, knownType)
         for (entry <- value.asInstanceOf[com.badlogic.gdx.utils.ObjectFloatMap[?]].entries()) {
           this.writer.name(this.convertToString(entry.key))
-          this.writeValue(entry.value, classOf[java.lang.Float])
+          this.writeValue(entry.value.asInstanceOf[java.lang.Object], classOf[java.lang.Float])
         }
         this.writeObjectEnd()
         return
@@ -551,7 +551,7 @@ class Json {
         this.writer.name("values")
         this.writeArrayStart();
         { val iter: com.badlogic.gdx.utils.IntSet.IntSetIterator = value.asInstanceOf[com.badlogic.gdx.utils.IntSet].iterator(); while (iter.hasNext) { {
-          this.writeValue(iter.next(), classOf[java.lang.Integer], null)
+          this.writeValue(iter.next().asInstanceOf[java.lang.Object], classOf[java.lang.Integer], null)
         };  } }
         this.writeArrayEnd()
         this.writeObjectEnd()

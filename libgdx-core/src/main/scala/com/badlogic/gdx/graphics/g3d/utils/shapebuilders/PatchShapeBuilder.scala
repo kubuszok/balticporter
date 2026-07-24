@@ -15,7 +15,7 @@ object PatchShapeBuilder {
       { var v: scala.Int = 0; while (v <= divisionsV) { {
         val idx: scala.Short = builder.vertex(com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BaseShapeBuilder.vertTmp7.set(com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BaseShapeBuilder.vertTmp5).lerp(com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BaseShapeBuilder.vertTmp6, v.asInstanceOf[scala.Float] / divisionsV.asInstanceOf[scala.Float]))
         if ((u > 0) && (v > 0)) {
-          builder.rect(((idx - divisionsV) - 2).asInstanceOf[scala.Short], (idx - 1).asInstanceOf[scala.Short], idx, ((idx - divisionsV) - 1).asInstanceOf[scala.Short])
+          builder.rect(((idx - divisionsV) - 2).asInstanceOf[scala.Short].asInstanceOf[scala.Short], (idx - 1).asInstanceOf[scala.Short].asInstanceOf[scala.Short], idx, ((idx - divisionsV) - 1).asInstanceOf[scala.Short].asInstanceOf[scala.Short])
         } else ()
       }; v = v + 1 } }
     }; u = u + 1 } }

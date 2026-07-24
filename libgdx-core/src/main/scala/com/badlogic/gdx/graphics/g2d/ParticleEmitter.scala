@@ -638,7 +638,7 @@ class ParticleEmitter {
       particle.setColor(color(0), color(1), color(2), particle.transparency + (particle.transparencyDiff * this.transparencyValue.getScale(percent)))
     }
     if ((updateFlags & ParticleEmitter.UPDATE_SPRITE) != 0) {
-      var frame: scala.Int = java.lang.Math.min((percent * this.sprites.size).asInstanceOf[scala.Int], this.sprites.size - 1)
+      var frame: scala.Int = java.lang.Math.min((percent * this.sprites.size).asInstanceOf[scala.Int].asInstanceOf[scala.Int], this.sprites.size - 1)
       if (particle.frame != frame) {
         val sprite: com.badlogic.gdx.graphics.g2d.Sprite = this.sprites.get(frame)
         val prevSpriteWidth: scala.Float = particle.getWidth()
@@ -700,7 +700,7 @@ class ParticleEmitter {
         }
         case com.badlogic.gdx.graphics.g2d.ParticleEmitter.SpriteMode.animated => {
           val percent: scala.Float = 1 - (particle.currentLife / particle.life.asInstanceOf[scala.Float])
-          particle.frame = java.lang.Math.min((percent * sprites.size).asInstanceOf[scala.Int], sprites.size - 1)
+          particle.frame = java.lang.Math.min((percent * sprites.size).asInstanceOf[scala.Int].asInstanceOf[scala.Int], sprites.size - 1)
           sprite = sprites.get(particle.frame)
         }
       }
@@ -1654,20 +1654,39 @@ object ParticleEmitter {
     case object line extends SpawnShape
     case object square extends SpawnShape
     case object ellipse extends SpawnShape
-    def values(): Array[SpawnShape] = Array(point, line, square, ellipse)
+    def values(): scala.Array[SpawnShape] = scala.Array(point, line, square, ellipse)
+    def valueOf(name: java.lang.String): SpawnShape = name match {
+      case "point" => point
+      case "line" => line
+      case "square" => square
+      case "ellipse" => ellipse
+      case _ => throw new java.lang.IllegalArgumentException(name)
+    }
   }
   sealed abstract class SpawnEllipseSide
   object SpawnEllipseSide {
     case object both extends SpawnEllipseSide
     case object top extends SpawnEllipseSide
     case object bottom extends SpawnEllipseSide
-    def values(): Array[SpawnEllipseSide] = Array(both, top, bottom)
+    def values(): scala.Array[SpawnEllipseSide] = scala.Array(both, top, bottom)
+    def valueOf(name: java.lang.String): SpawnEllipseSide = name match {
+      case "both" => both
+      case "top" => top
+      case "bottom" => bottom
+      case _ => throw new java.lang.IllegalArgumentException(name)
+    }
   }
   sealed abstract class SpriteMode
   object SpriteMode {
     case object single extends SpriteMode
     case object random extends SpriteMode
     case object animated extends SpriteMode
-    def values(): Array[SpriteMode] = Array(single, random, animated)
+    def values(): scala.Array[SpriteMode] = scala.Array(single, random, animated)
+    def valueOf(name: java.lang.String): SpriteMode = name match {
+      case "single" => single
+      case "random" => random
+      case "animated" => animated
+      case _ => throw new java.lang.IllegalArgumentException(name)
+    }
   }
 }

@@ -20,6 +20,14 @@ object Files {
     case object External extends FileType
     case object Absolute extends FileType
     case object Local extends FileType
-    def values(): Array[FileType] = Array(Classpath, Internal, External, Absolute, Local)
+    def values(): scala.Array[FileType] = scala.Array(Classpath, Internal, External, Absolute, Local)
+    def valueOf(name: java.lang.String): FileType = name match {
+      case "Classpath" => Classpath
+      case "Internal" => Internal
+      case "External" => External
+      case "Absolute" => Absolute
+      case "Local" => Local
+      case _ => throw new java.lang.IllegalArgumentException(name)
+    }
   }
 }

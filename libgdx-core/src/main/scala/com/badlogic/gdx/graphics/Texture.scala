@@ -184,7 +184,17 @@ object Texture {
     case object MipMapLinearNearest extends TextureFilter(com.badlogic.gdx.graphics.GL20.GL_LINEAR_MIPMAP_NEAREST)
     case object MipMapNearestLinear extends TextureFilter(com.badlogic.gdx.graphics.GL20.GL_NEAREST_MIPMAP_LINEAR)
     case object MipMapLinearLinear extends TextureFilter(com.badlogic.gdx.graphics.GL20.GL_LINEAR_MIPMAP_LINEAR)
-    def values(): Array[TextureFilter] = Array(Nearest, Linear, MipMap, MipMapNearestNearest, MipMapLinearNearest, MipMapNearestLinear, MipMapLinearLinear)
+    def values(): scala.Array[TextureFilter] = scala.Array(Nearest, Linear, MipMap, MipMapNearestNearest, MipMapLinearNearest, MipMapNearestLinear, MipMapLinearLinear)
+    def valueOf(name: java.lang.String): TextureFilter = name match {
+      case "Nearest" => Nearest
+      case "Linear" => Linear
+      case "MipMap" => MipMap
+      case "MipMapNearestNearest" => MipMapNearestNearest
+      case "MipMapLinearNearest" => MipMapLinearNearest
+      case "MipMapNearestLinear" => MipMapNearestLinear
+      case "MipMapLinearLinear" => MipMapLinearLinear
+      case _ => throw new java.lang.IllegalArgumentException(name)
+    }
   }
   sealed abstract class TextureWrap {
     var glEnum: scala.Int = 0
@@ -196,6 +206,12 @@ object Texture {
     case object MirroredRepeat extends TextureWrap(com.badlogic.gdx.graphics.GL20.GL_MIRRORED_REPEAT)
     case object ClampToEdge extends TextureWrap(com.badlogic.gdx.graphics.GL20.GL_CLAMP_TO_EDGE)
     case object Repeat extends TextureWrap(com.badlogic.gdx.graphics.GL20.GL_REPEAT)
-    def values(): Array[TextureWrap] = Array(MirroredRepeat, ClampToEdge, Repeat)
+    def values(): scala.Array[TextureWrap] = scala.Array(MirroredRepeat, ClampToEdge, Repeat)
+    def valueOf(name: java.lang.String): TextureWrap = name match {
+      case "MirroredRepeat" => MirroredRepeat
+      case "ClampToEdge" => ClampToEdge
+      case "Repeat" => Repeat
+      case _ => throw new java.lang.IllegalArgumentException(name)
+    }
   }
 }

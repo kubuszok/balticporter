@@ -12,7 +12,7 @@ class ParticleEffect extends com.badlogic.gdx.utils.Disposable with com.badlogic
   }
   def this(emitters: scala.Array[com.badlogic.gdx.graphics.g3d.particles.ParticleController]) = {
     this()
-    this.controllers = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.ParticleController](emitters)
+    this.controllers = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.ParticleController](emitters.asInstanceOf[scala.Array[java.lang.Object]])
   }
   def this() = {
     this()

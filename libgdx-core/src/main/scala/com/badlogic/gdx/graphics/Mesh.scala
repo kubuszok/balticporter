@@ -799,6 +799,13 @@ object Mesh {
     case object VertexBufferObject extends VertexDataType
     case object VertexBufferObjectSubData extends VertexDataType
     case object VertexBufferObjectWithVAO extends VertexDataType
-    def values(): Array[VertexDataType] = Array(VertexArray, VertexBufferObject, VertexBufferObjectSubData, VertexBufferObjectWithVAO)
+    def values(): scala.Array[VertexDataType] = scala.Array(VertexArray, VertexBufferObject, VertexBufferObjectSubData, VertexBufferObjectWithVAO)
+    def valueOf(name: java.lang.String): VertexDataType = name match {
+      case "VertexArray" => VertexArray
+      case "VertexBufferObject" => VertexBufferObject
+      case "VertexBufferObjectSubData" => VertexBufferObjectSubData
+      case "VertexBufferObjectWithVAO" => VertexBufferObjectWithVAO
+      case _ => throw new java.lang.IllegalArgumentException(name)
+    }
   }
 }

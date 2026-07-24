@@ -255,7 +255,7 @@ object BitmapFont {
       page(ch & (BitmapFont.PAGE_SIZE - 1)) = value.asInstanceOf[scala.Byte].asInstanceOf[scala.Byte]
     }
     def toString(): java.lang.String = {
-      return java.lang.Character.toString(this.id.asInstanceOf[scala.Char])
+      return java.lang.Character.toString(this.id.asInstanceOf[scala.Char].asInstanceOf[scala.Char])
     }
   }
   class BitmapFontData {
@@ -446,7 +446,7 @@ object BitmapFont {
           if ((((first < 0) || (first > java.lang.Character.MAX_VALUE)) || (second < 0)) || (second > java.lang.Character.MAX_VALUE)) {
             /* continue */ ()
           } else ()
-          val glyph: com.badlogic.gdx.graphics.g2d.BitmapFont.Glyph = this.getGlyph(first.asInstanceOf[scala.Char])
+          val glyph: com.badlogic.gdx.graphics.g2d.BitmapFont.Glyph = this.getGlyph(first.asInstanceOf[scala.Char].asInstanceOf[scala.Char])
           tokens.nextToken()
           val amount: scala.Int = java.lang.Integer.parseInt(tokens.nextToken())
           if (glyph != null) {

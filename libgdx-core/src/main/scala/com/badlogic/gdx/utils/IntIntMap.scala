@@ -33,7 +33,7 @@ class IntIntMap extends scala.collection.Iterable[com.badlogic.gdx.utils.IntIntM
     this(initialCapacity, 0.8f)
   }
   def this(map: IntIntMap) = {
-    this((map.keyTable.length * map.loadFactor).asInstanceOf[scala.Int], map.loadFactor)
+    this((map.keyTable.length * map.loadFactor).asInstanceOf[scala.Int].asInstanceOf[scala.Int], map.loadFactor)
     java.lang.System.arraycopy(map.keyTable, 0, this.keyTable, 0, map.keyTable.length)
     java.lang.System.arraycopy(map.valueTable, 0, this.valueTable, 0, map.valueTable.length)
     this.size = map.size

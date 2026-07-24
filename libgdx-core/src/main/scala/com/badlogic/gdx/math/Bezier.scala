@@ -7,7 +7,7 @@ class Bezier[T <: com.badlogic.gdx.math.Vector[T]] extends com.badlogic.gdx.math
   private var tmp3: T = null.asInstanceOf[T]
   def this(points: scala.Array[T], offset: scala.Int, length: scala.Int) = {
     this()
-    this.set(points, offset, length)
+    this.set(points.asInstanceOf[scala.Array[com.badlogic.gdx.math.Vector[T]]], offset, length)
   }
   def this(points: com.badlogic.gdx.utils.Array[T], offset: scala.Int, length: scala.Int) = {
     this()
@@ -15,10 +15,10 @@ class Bezier[T <: com.badlogic.gdx.math.Vector[T]] extends com.badlogic.gdx.math
   }
   def this(points: scala.Array[T]) = {
     this()
-    this.set(points)
+    this.set(points.asInstanceOf[scala.Array[com.badlogic.gdx.math.Vector[T]]])
   }
   def set(points: scala.Array[T]): Bezier[?] = {
-    return this.set(points, 0, points.length)
+    return this.set(points.asInstanceOf[scala.Array[com.badlogic.gdx.math.Vector[T]]], 0, points.length)
   }
   def set(points: scala.Array[T], offset: scala.Int, length: scala.Int): Bezier[?] = {
     if ((length < 2) || (length > 4)) {
@@ -34,7 +34,7 @@ class Bezier[T <: com.badlogic.gdx.math.Vector[T]] extends com.badlogic.gdx.math
       this.tmp3 = points(0).cpy()
     } else ()
     this.points.clear()
-    this.points.addAll(points, offset, length)
+    this.points.addAll(points.asInstanceOf[scala.Array[java.lang.Object]], offset, length)
     return this
   }
   def set(points: com.badlogic.gdx.utils.Array[T], offset: scala.Int, length: scala.Int): Bezier[?] = {

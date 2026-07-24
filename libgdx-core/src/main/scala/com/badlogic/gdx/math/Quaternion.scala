@@ -447,7 +447,7 @@ class Quaternion extends java.io.Serializable {
   def getAngleAroundRad(axisX: scala.Float, axisY: scala.Float, axisZ: scala.Float): scala.Float = {
     val d: scala.Float = com.badlogic.gdx.math.Vector3.dot(this.x, this.y, this.z, axisX, axisY, axisZ)
     val l2: scala.Float = Quaternion.len2(axisX * d, axisY * d, axisZ * d, this.w)
-    return if (com.badlogic.gdx.math.MathUtils.isZero(l2)) 0.0f else (2.0 * java.lang.Math.acos(com.badlogic.gdx.math.MathUtils.clamp(((if (d < 0) -this.w else this.w) / java.lang.Math.sqrt(l2)).asInstanceOf[scala.Float], -1.0f, 1.0f))).asInstanceOf[scala.Float]
+    return if (com.badlogic.gdx.math.MathUtils.isZero(l2)) 0.0f else (2.0 * java.lang.Math.acos(com.badlogic.gdx.math.MathUtils.clamp(((if (d < 0) -this.w else this.w) / java.lang.Math.sqrt(l2)).asInstanceOf[scala.Float].asInstanceOf[scala.Float], -1.0f, 1.0f))).asInstanceOf[scala.Float]
   }
   def getAngleAroundRad(axis: com.badlogic.gdx.math.Vector3): scala.Float = {
     return this.getAngleAroundRad(axis.x, axis.y, axis.z)

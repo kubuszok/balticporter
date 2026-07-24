@@ -262,13 +262,13 @@ class GlyphLayout extends com.badlogic.gdx.utils.Pool.Poolable {
     val xAdvances2: com.badlogic.gdx.utils.FloatArray = first.xAdvances
     var firstEnd: scala.Int = wrapIndex;
     { ; while (firstEnd > 0) { {
-      if (!fontData.isWhitespace(glyphs2.get(firstEnd - 1).id.asInstanceOf[scala.Char])) {
+      if (!fontData.isWhitespace(glyphs2.get(firstEnd - 1).id.asInstanceOf[scala.Char].asInstanceOf[scala.Char])) {
         /* break */ ()
       } else ()
     }; firstEnd = firstEnd - 1 } }
     var secondStart: scala.Int = wrapIndex;
     { ; while (secondStart < glyphCount) { {
-      if (!fontData.isWhitespace(glyphs2.get(secondStart).id.asInstanceOf[scala.Char])) {
+      if (!fontData.isWhitespace(glyphs2.get(secondStart).id.asInstanceOf[scala.Char].asInstanceOf[scala.Char])) {
         /* break */ ()
       } else ()
     }; secondStart = secondStart + 1 } }
@@ -448,7 +448,7 @@ object GlyphLayout {
       val glyphs: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.BitmapFont.Glyph] = this.glyphs;
       { var i: scala.Int = 0; val n: scala.Int = glyphs.size; while (i < n) { {
         val g: com.badlogic.gdx.graphics.g2d.BitmapFont.Glyph = glyphs.get(i)
-        buffer.append(g.id.asInstanceOf[scala.Char])
+        buffer.append(g.id.asInstanceOf[scala.Char].asInstanceOf[scala.Char])
       }; i = i + 1 } }
       buffer.append(", ")
       buffer.append(this.x)

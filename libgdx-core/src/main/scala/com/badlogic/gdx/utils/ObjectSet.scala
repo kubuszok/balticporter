@@ -25,7 +25,7 @@ class ObjectSet[T] extends scala.collection.Iterable[T] {
     this(initialCapacity, 0.8f)
   }
   def this(set: ObjectSet[? <: T]) = {
-    this((set.keyTable.length * set.loadFactor).asInstanceOf[scala.Int], set.loadFactor)
+    this((set.keyTable.length * set.loadFactor).asInstanceOf[scala.Int].asInstanceOf[scala.Int], set.loadFactor)
     java.lang.System.arraycopy(set.keyTable, 0, this.keyTable, 0, set.keyTable.length)
     this.size = set.size
   }
@@ -60,16 +60,16 @@ class ObjectSet[T] extends scala.collection.Iterable[T] {
     return true
   }
   def addAll(array: com.badlogic.gdx.utils.Array[? <: T]): scala.Unit = {
-    this.addAll(array.items, 0, array.size)
+    this.addAll(array.items.asInstanceOf[scala.Array[java.lang.Object]], 0, array.size)
   }
   def addAll(array: com.badlogic.gdx.utils.Array[? <: T], offset: scala.Int, length: scala.Int): scala.Unit = {
     if ((offset + length) > array.size) {
       throw new java.lang.IllegalArgumentException((((("offset + length must be <= size: " + offset) + " + ") + length) + " <= ") + array.size)
     } else ()
-    this.addAll(array.items, offset, length)
+    this.addAll(array.items.asInstanceOf[scala.Array[java.lang.Object]], offset, length)
   }
   def addAll(array: scala.Array[T]): scala.Boolean = {
-    return this.addAll(array, 0, array.length)
+    return this.addAll(array.asInstanceOf[scala.Array[java.lang.Object]], 0, array.length)
   }
   def addAll(array: scala.Array[T], offset: scala.Int, length: scala.Int): scala.Boolean = {
     this.ensureCapacity(length)
@@ -151,7 +151,7 @@ class ObjectSet[T] extends scala.collection.Iterable[T] {
       return
     } else ()
     this.size = 0
-    java.util.Arrays.fill(this.keyTable, null)
+    java.util.Arrays.fill(this.keyTable.asInstanceOf[scala.Array[java.lang.Object]], null)
   }
   def contains(key: T): scala.Boolean = {
     return this.locateKey(key) >= 0
@@ -269,14 +269,14 @@ class ObjectSet[T] extends scala.collection.Iterable[T] {
 object ObjectSet {
   def `with`[T](array: scala.Array[T]): ObjectSet[T] = {
     val set: ObjectSet[T] = new ObjectSet[T]()
-    set.addAll(array)
+    set.addAll(array.asInstanceOf[scala.Array[java.lang.Object]])
     return set
   }
   def tableSize(capacity: scala.Int, loadFactor: scala.Float): scala.Int = {
     if (capacity < 0) {
       throw new java.lang.IllegalArgumentException("capacity must be >= 0: " + capacity)
     } else ()
-    val tableSize: scala.Int = com.badlogic.gdx.math.MathUtils.nextPowerOfTwo(java.lang.Math.max(2, java.lang.Math.ceil(capacity / loadFactor).asInstanceOf[scala.Int]))
+    val tableSize: scala.Int = com.badlogic.gdx.math.MathUtils.nextPowerOfTwo(java.lang.Math.max(2, java.lang.Math.ceil(capacity / loadFactor).asInstanceOf[scala.Int].asInstanceOf[scala.Int]))
     if (tableSize > (1 << 30)) {
       throw new java.lang.IllegalArgumentException("The required capacity is too large: " + capacity)
     } else ()

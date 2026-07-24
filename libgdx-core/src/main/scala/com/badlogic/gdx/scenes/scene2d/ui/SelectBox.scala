@@ -64,7 +64,7 @@ class SelectBox[T] extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.ba
     } else ()
     val oldPrefWidth: scala.Float = this.getPrefWidth()
     this.items.clear()
-    this.items.addAll(newItems)
+    this.items.addAll(newItems.asInstanceOf[scala.Array[java.lang.Object]])
     this.selection.validate()
     this.scrollPane.list.setItems(this.items)
     this.invalidate()

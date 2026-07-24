@@ -27,7 +27,7 @@ class IsometricTiledMapRenderer extends com.badlogic.gdx.maps.tiled.renderers.Ba
   private def init(): scala.Unit = {
     this.isoTransform = new com.badlogic.gdx.math.Matrix4()
     this.isoTransform.idt()
-    this.isoTransform.scale((java.lang.Math.sqrt(2.0) / 2.0).asInstanceOf[scala.Float], (java.lang.Math.sqrt(2.0) / 4.0).asInstanceOf[scala.Float], 1.0f)
+    this.isoTransform.scale((java.lang.Math.sqrt(2.0) / 2.0).asInstanceOf[scala.Float].asInstanceOf[scala.Float], (java.lang.Math.sqrt(2.0) / 4.0).asInstanceOf[scala.Float].asInstanceOf[scala.Float], 1.0f)
     this.isoTransform.rotate(0.0f, 0.0f, 1.0f, -45)
     this.invIsotransform = new com.badlogic.gdx.math.Matrix4(this.isoTransform)
     this.invIsotransform.inv()

@@ -41,6 +41,15 @@ object Application {
     case object Applet extends ApplicationType
     case object WebGL extends ApplicationType
     case object iOS extends ApplicationType
-    def values(): Array[ApplicationType] = Array(Android, Desktop, HeadlessDesktop, Applet, WebGL, iOS)
+    def values(): scala.Array[ApplicationType] = scala.Array(Android, Desktop, HeadlessDesktop, Applet, WebGL, iOS)
+    def valueOf(name: java.lang.String): ApplicationType = name match {
+      case "Android" => Android
+      case "Desktop" => Desktop
+      case "HeadlessDesktop" => HeadlessDesktop
+      case "Applet" => Applet
+      case "WebGL" => WebGL
+      case "iOS" => iOS
+      case _ => throw new java.lang.IllegalArgumentException(name)
+    }
   }
 }

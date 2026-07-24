@@ -153,7 +153,7 @@ object RegionInfluencer {
     }
     def update(): scala.Unit = {
       { var i: scala.Int = 0; var l: scala.Int = com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.LifePercentOffset; val c: scala.Int = this.controller.particles.size * this.regionChannel.strideSize; while (i < c) { {
-        val region: com.badlogic.gdx.graphics.g3d.particles.influencers.RegionInfluencer.AspectTextureRegion = regions.get((this.lifeChannel.data(l) * (this.regions.size - 1)).asInstanceOf[scala.Int])
+        val region: com.badlogic.gdx.graphics.g3d.particles.influencers.RegionInfluencer.AspectTextureRegion = regions.get((this.lifeChannel.data(l) * (this.regions.size - 1)).asInstanceOf[scala.Int].asInstanceOf[scala.Int])
         this.regionChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.UOffset) = region.u
         this.regionChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.VOffset) = region.v
         this.regionChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.U2Offset) = region.u2

@@ -30,21 +30,21 @@ class ShortArray {
   def add(value: scala.Int): scala.Unit = {
     var items: scala.Array[scala.Short] = this.items
     if (this.size == items.length) {
-      items = this.resize(java.lang.Math.max(8, (this.size * 1.75f).asInstanceOf[scala.Int]))
+      items = this.resize(java.lang.Math.max(8, (this.size * 1.75f).asInstanceOf[scala.Int].asInstanceOf[scala.Int]))
     } else ()
     items({ this.size += 1; this.size }) = value.asInstanceOf[scala.Short].asInstanceOf[scala.Short]
   }
   def add(value: scala.Short): scala.Unit = {
     var items: scala.Array[scala.Short] = this.items
     if (this.size == items.length) {
-      items = this.resize(java.lang.Math.max(8, (this.size * 1.75f).asInstanceOf[scala.Int]))
+      items = this.resize(java.lang.Math.max(8, (this.size * 1.75f).asInstanceOf[scala.Int].asInstanceOf[scala.Int]))
     } else ()
     items({ this.size += 1; this.size }) = value
   }
   def add(value1: scala.Short, value2: scala.Short): scala.Unit = {
     var items: scala.Array[scala.Short] = this.items
     if ((this.size + 1) >= items.length) {
-      items = this.resize(java.lang.Math.max(8, (this.size * 1.75f).asInstanceOf[scala.Int]))
+      items = this.resize(java.lang.Math.max(8, (this.size * 1.75f).asInstanceOf[scala.Int].asInstanceOf[scala.Int]))
     } else ()
     items(this.size) = value1
     items(this.size + 1) = value2
@@ -53,7 +53,7 @@ class ShortArray {
   def add(value1: scala.Short, value2: scala.Short, value3: scala.Short): scala.Unit = {
     var items: scala.Array[scala.Short] = this.items
     if ((this.size + 2) >= items.length) {
-      items = this.resize(java.lang.Math.max(8, (this.size * 1.75f).asInstanceOf[scala.Int]))
+      items = this.resize(java.lang.Math.max(8, (this.size * 1.75f).asInstanceOf[scala.Int].asInstanceOf[scala.Int]))
     } else ()
     items(this.size) = value1
     items(this.size + 1) = value2
@@ -63,7 +63,7 @@ class ShortArray {
   def add(value1: scala.Short, value2: scala.Short, value3: scala.Short, value4: scala.Short): scala.Unit = {
     var items: scala.Array[scala.Short] = this.items
     if ((this.size + 3) >= items.length) {
-      items = this.resize(java.lang.Math.max(8, (this.size * 1.8f).asInstanceOf[scala.Int]))
+      items = this.resize(java.lang.Math.max(8, (this.size * 1.8f).asInstanceOf[scala.Int].asInstanceOf[scala.Int]))
     } else ()
     items(this.size) = value1
     items(this.size + 1) = value2
@@ -87,7 +87,7 @@ class ShortArray {
     var items: scala.Array[scala.Short] = this.items
     val sizeNeeded: scala.Int = this.size + length
     if (sizeNeeded > items.length) {
-      items = this.resize(java.lang.Math.max(java.lang.Math.max(8, sizeNeeded), (this.size * 1.75f).asInstanceOf[scala.Int]))
+      items = this.resize(java.lang.Math.max(java.lang.Math.max(8, sizeNeeded), (this.size * 1.75f).asInstanceOf[scala.Int].asInstanceOf[scala.Int]))
     } else ()
     java.lang.System.arraycopy(array, offset, items, this.size, length)
     this.size = this.size + length
@@ -134,7 +134,7 @@ class ShortArray {
     } else ()
     var items: scala.Array[scala.Short] = this.items
     if (this.size == items.length) {
-      items = this.resize(java.lang.Math.max(8, (this.size * 1.75f).asInstanceOf[scala.Int]))
+      items = this.resize(java.lang.Math.max(8, (this.size * 1.75f).asInstanceOf[scala.Int].asInstanceOf[scala.Int]))
     } else ()
     if (this.ordered) {
       java.lang.System.arraycopy(items, index, items, index + 1, this.size - index)
@@ -150,7 +150,7 @@ class ShortArray {
     } else ()
     val sizeNeeded: scala.Int = this.size + count
     if (sizeNeeded > this.items.length) {
-      this.items = this.resize(java.lang.Math.max(java.lang.Math.max(8, sizeNeeded), (this.size * 1.75f).asInstanceOf[scala.Int]))
+      this.items = this.resize(java.lang.Math.max(java.lang.Math.max(8, sizeNeeded), (this.size * 1.75f).asInstanceOf[scala.Int].asInstanceOf[scala.Int]))
     } else ()
     java.lang.System.arraycopy(this.items, index, this.items, index + count, this.size - index)
     this.size = sizeNeeded
@@ -307,7 +307,7 @@ class ShortArray {
     } else ()
     val sizeNeeded: scala.Int = this.size + additionalCapacity
     if (sizeNeeded > this.items.length) {
-      this.resize(java.lang.Math.max(java.lang.Math.max(8, sizeNeeded), (this.size * 1.75f).asInstanceOf[scala.Int]))
+      this.resize(java.lang.Math.max(java.lang.Math.max(8, sizeNeeded), (this.size * 1.75f).asInstanceOf[scala.Int].asInstanceOf[scala.Int]))
     } else ()
     return this.items
   }

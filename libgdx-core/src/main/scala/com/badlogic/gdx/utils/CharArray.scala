@@ -1215,7 +1215,7 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
     this.validateIndex(index)
     val sizeNeeded: scala.Int = this.size + count
     if (sizeNeeded > this.items.length) {
-      this.items = this.resize(java.lang.Math.max(java.lang.Math.max(8, sizeNeeded), (this.size * 1.75f).asInstanceOf[scala.Int]))
+      this.items = this.resize(java.lang.Math.max(java.lang.Math.max(8, sizeNeeded), (this.size * 1.75f).asInstanceOf[scala.Int].asInstanceOf[scala.Int]))
     } else ()
     java.lang.System.arraycopy(this.items, index, this.items, index + count, this.size - index)
     this.size = sizeNeeded
@@ -1858,7 +1858,7 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
       append(cbuf, off, length)
     }
     def write(c: scala.Int): scala.Unit = {
-      append(c.asInstanceOf[scala.Char])
+      append(c.asInstanceOf[scala.Char].asInstanceOf[scala.Char])
     }
     def write(str: java.lang.String): scala.Unit = {
       append(str)

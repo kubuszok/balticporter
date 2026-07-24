@@ -10,13 +10,13 @@ class Animation[T] {
   def this(frameDuration: scala.Float, keyFrames: com.badlogic.gdx.utils.Array[? <: T]) = {
     this()
     this.frameDuration = frameDuration
-    val frames: scala.Array[T] = java.util.Arrays.copyOf(keyFrames.items, keyFrames.size).asInstanceOf[scala.Array[T]]
-    this.setKeyFrames(frames)
+    val frames: scala.Array[T] = java.util.Arrays.copyOf(keyFrames.items.asInstanceOf[scala.Array[java.lang.Object]], keyFrames.size).asInstanceOf[scala.Array[T]]
+    this.setKeyFrames(frames.asInstanceOf[scala.Array[java.lang.Object]])
   }
   def this(frameDuration: scala.Float, keyFrames: scala.Array[T]) = {
     this()
     this.frameDuration = frameDuration
-    this.setKeyFrames(keyFrames)
+    this.setKeyFrames(keyFrames.asInstanceOf[scala.Array[java.lang.Object]])
   }
   def this(frameDuration: scala.Float, keyFrames: com.badlogic.gdx.utils.Array[? <: T], playMode: com.badlogic.gdx.graphics.g2d.Animation.PlayMode) = {
     this(frameDuration, keyFrames)
@@ -122,6 +122,15 @@ object Animation {
     case object LOOP_REVERSED extends PlayMode
     case object LOOP_PINGPONG extends PlayMode
     case object LOOP_RANDOM extends PlayMode
-    def values(): Array[PlayMode] = Array(NORMAL, REVERSED, LOOP, LOOP_REVERSED, LOOP_PINGPONG, LOOP_RANDOM)
+    def values(): scala.Array[PlayMode] = scala.Array(NORMAL, REVERSED, LOOP, LOOP_REVERSED, LOOP_PINGPONG, LOOP_RANDOM)
+    def valueOf(name: java.lang.String): PlayMode = name match {
+      case "NORMAL" => NORMAL
+      case "REVERSED" => REVERSED
+      case "LOOP" => LOOP
+      case "LOOP_REVERSED" => LOOP_REVERSED
+      case "LOOP_PINGPONG" => LOOP_PINGPONG
+      case "LOOP_RANDOM" => LOOP_RANDOM
+      case _ => throw new java.lang.IllegalArgumentException(name)
+    }
   }
 }

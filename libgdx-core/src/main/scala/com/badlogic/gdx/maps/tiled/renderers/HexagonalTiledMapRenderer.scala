@@ -85,10 +85,10 @@ class HexagonalTiledMapRenderer extends com.badlogic.gdx.maps.tiled.renderers.Ba
       val tileWidthLowerCorner: scala.Float = (layerTileWidth - layerHexLength) / 2
       val tileWidthUpperCorner: scala.Float = (layerTileWidth + layerHexLength) / 2
       val layerTileHeight50: scala.Float = layerTileHeight * 0.5f
-      val row1: scala.Int = java.lang.Math.max(0, (((this.viewBounds.y - layerTileHeight50) - layerOffsetY) / layerTileHeight).asInstanceOf[scala.Int])
-      val row2: scala.Int = java.lang.Math.min(layerHeight, ((((this.viewBounds.y + this.viewBounds.height) + layerTileHeight) - layerOffsetY) / layerTileHeight).asInstanceOf[scala.Int])
-      val col1: scala.Int = java.lang.Math.max(0, (((this.viewBounds.x - tileWidthLowerCorner) - layerOffsetX) / tileWidthUpperCorner).asInstanceOf[scala.Int])
-      val col2: scala.Int = java.lang.Math.min(layerWidth, ((((this.viewBounds.x + this.viewBounds.width) + tileWidthUpperCorner) - layerOffsetX) / tileWidthUpperCorner).asInstanceOf[scala.Int])
+      val row1: scala.Int = java.lang.Math.max(0, (((this.viewBounds.y - layerTileHeight50) - layerOffsetY) / layerTileHeight).asInstanceOf[scala.Int].asInstanceOf[scala.Int])
+      val row2: scala.Int = java.lang.Math.min(layerHeight, ((((this.viewBounds.y + this.viewBounds.height) + layerTileHeight) - layerOffsetY) / layerTileHeight).asInstanceOf[scala.Int].asInstanceOf[scala.Int])
+      val col1: scala.Int = java.lang.Math.max(0, (((this.viewBounds.x - tileWidthLowerCorner) - layerOffsetX) / tileWidthUpperCorner).asInstanceOf[scala.Int].asInstanceOf[scala.Int])
+      val col2: scala.Int = java.lang.Math.min(layerWidth, ((((this.viewBounds.x + this.viewBounds.width) + tileWidthUpperCorner) - layerOffsetX) / tileWidthUpperCorner).asInstanceOf[scala.Int].asInstanceOf[scala.Int])
       val colA: scala.Int = if (this.staggerIndexEven == ((col1 % 2) == 0)) col1 + 1 else col1
       val colB: scala.Int = if (this.staggerIndexEven == ((col1 % 2) == 0)) col1 else col1 + 1;
       { var row: scala.Int = row2 - 1; while (row >= row1) { {
@@ -103,10 +103,10 @@ class HexagonalTiledMapRenderer extends com.badlogic.gdx.maps.tiled.renderers.Ba
       val tileHeightLowerCorner: scala.Float = (layerTileHeight - layerHexLength) / 2
       val tileHeightUpperCorner: scala.Float = (layerTileHeight + layerHexLength) / 2
       val layerTileWidth50: scala.Float = layerTileWidth * 0.5f
-      val row1: scala.Int = java.lang.Math.max(0, (((this.viewBounds.y - tileHeightLowerCorner) - layerOffsetY) / tileHeightUpperCorner).asInstanceOf[scala.Int])
-      val row2: scala.Int = java.lang.Math.min(layerHeight, ((((this.viewBounds.y + this.viewBounds.height) + tileHeightUpperCorner) - layerOffsetY) / tileHeightUpperCorner).asInstanceOf[scala.Int])
-      val col1: scala.Int = java.lang.Math.max(0, (((this.viewBounds.x - layerTileWidth50) - layerOffsetX) / layerTileWidth).asInstanceOf[scala.Int])
-      val col2: scala.Int = java.lang.Math.min(layerWidth, ((((this.viewBounds.x + this.viewBounds.width) + layerTileWidth) - layerOffsetX) / layerTileWidth).asInstanceOf[scala.Int])
+      val row1: scala.Int = java.lang.Math.max(0, (((this.viewBounds.y - tileHeightLowerCorner) - layerOffsetY) / tileHeightUpperCorner).asInstanceOf[scala.Int].asInstanceOf[scala.Int])
+      val row2: scala.Int = java.lang.Math.min(layerHeight, ((((this.viewBounds.y + this.viewBounds.height) + tileHeightUpperCorner) - layerOffsetY) / tileHeightUpperCorner).asInstanceOf[scala.Int].asInstanceOf[scala.Int])
+      val col1: scala.Int = java.lang.Math.max(0, (((this.viewBounds.x - layerTileWidth50) - layerOffsetX) / layerTileWidth).asInstanceOf[scala.Int].asInstanceOf[scala.Int])
+      val col2: scala.Int = java.lang.Math.min(layerWidth, ((((this.viewBounds.x + this.viewBounds.width) + layerTileWidth) - layerOffsetX) / layerTileWidth).asInstanceOf[scala.Int].asInstanceOf[scala.Int])
       var shiftX: scala.Float = 0;
       { var row: scala.Int = row2 - 1; while (row >= row1) { {
         if (((row % 2) == 0) == this.staggerIndexEven) {

@@ -9,7 +9,7 @@ object PixmapIO {
   }
   def writePNG(file: com.badlogic.gdx.files.FileHandle, pixmap: com.badlogic.gdx.graphics.Pixmap, compression: scala.Int, flipY: scala.Boolean): scala.Unit = {
     try {
-      val writer: com.badlogic.gdx.graphics.PixmapIO.PNG = new com.badlogic.gdx.graphics.PixmapIO.PNG(((pixmap.getWidth() * pixmap.getHeight()) * 1.5f).asInstanceOf[scala.Int])
+      val writer: com.badlogic.gdx.graphics.PixmapIO.PNG = new com.badlogic.gdx.graphics.PixmapIO.PNG(((pixmap.getWidth() * pixmap.getHeight()) * 1.5f).asInstanceOf[scala.Int].asInstanceOf[scala.Int])
       try {
         writer.setFlipY(flipY)
         writer.setCompression(compression)
@@ -250,7 +250,7 @@ object PixmapIO {
         this.flush()
         target.writeInt(this.buffer.size() - 4)
         this.buffer.writeTo(target)
-        target.writeInt(this.crc.getValue().asInstanceOf[scala.Int])
+        target.writeInt(this.crc.getValue().asInstanceOf[scala.Int].asInstanceOf[scala.Int])
         this.buffer.reset()
         this.crc.reset()
       }

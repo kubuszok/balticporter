@@ -163,6 +163,15 @@ object Cubemap {
     case object NegativeY extends CubemapSide(3, com.badlogic.gdx.graphics.GL20.GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, 0, -1, 0, -1, 0)
     case object PositiveZ extends CubemapSide(4, com.badlogic.gdx.graphics.GL20.GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, -1, 0, 0, 0, 1)
     case object NegativeZ extends CubemapSide(5, com.badlogic.gdx.graphics.GL20.GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, -1, 0, 0, 0, -1)
-    def values(): Array[CubemapSide] = Array(PositiveX, NegativeX, PositiveY, NegativeY, PositiveZ, NegativeZ)
+    def values(): scala.Array[CubemapSide] = scala.Array(PositiveX, NegativeX, PositiveY, NegativeY, PositiveZ, NegativeZ)
+    def valueOf(name: java.lang.String): CubemapSide = name match {
+      case "PositiveX" => PositiveX
+      case "NegativeX" => NegativeX
+      case "PositiveY" => PositiveY
+      case "NegativeY" => NegativeY
+      case "PositiveZ" => PositiveZ
+      case "NegativeZ" => NegativeZ
+      case _ => throw new java.lang.IllegalArgumentException(name)
+    }
   }
 }

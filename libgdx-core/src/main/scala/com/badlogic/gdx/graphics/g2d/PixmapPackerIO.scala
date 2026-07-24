@@ -64,7 +64,12 @@ object PixmapPackerIO {
   object ImageFormat {
     case object CIM extends ImageFormat(".cim")
     case object PNG extends ImageFormat(".png")
-    def values(): Array[ImageFormat] = Array(CIM, PNG)
+    def values(): scala.Array[ImageFormat] = scala.Array(CIM, PNG)
+    def valueOf(name: java.lang.String): ImageFormat = name match {
+      case "CIM" => CIM
+      case "PNG" => PNG
+      case _ => throw new java.lang.IllegalArgumentException(name)
+    }
   }
   class SaveParameters {
     var format: com.badlogic.gdx.graphics.g2d.PixmapPackerIO.ImageFormat = com.badlogic.gdx.graphics.g2d.PixmapPackerIO.ImageFormat.PNG

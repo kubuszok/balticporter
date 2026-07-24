@@ -551,7 +551,7 @@ class MeshBuilder extends com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder {
           didx
         })
       } else ()
-      this.index(didx.asInstanceOf[scala.Short])
+      this.index(didx.asInstanceOf[scala.Short].asInstanceOf[scala.Short])
     }; i = i + 1 } }
   }
   def addMesh(vertices: scala.Array[scala.Float], indices: scala.Array[scala.Short]): scala.Unit = {
@@ -563,7 +563,7 @@ class MeshBuilder extends com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder {
     }; v = v + this.stride } }
     this.ensureIndices(indices.length);
     { var i: scala.Int = 0; while (i < indices.length) { {
-      this.index(((indices(i) & 65535) + offset).asInstanceOf[scala.Short])
+      this.index(((indices(i) & 65535) + offset).asInstanceOf[scala.Short].asInstanceOf[scala.Short])
     }; i = i + 1 } }
   }
   def patch(corner00: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo, corner10: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo, corner11: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo, corner01: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo, divisionsU: scala.Int, divisionsV: scala.Int): scala.Unit = {

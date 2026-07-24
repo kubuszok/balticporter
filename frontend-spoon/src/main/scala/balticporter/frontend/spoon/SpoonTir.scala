@@ -472,12 +472,23 @@ object SpoonTir:
         val rank   = Map("byte" -> 1, "short" -> 2, "char" -> 2, "int" -> 3, "long" -> 4, "float" -> 5, "double" -> 6)
         val narrowing = target.isPrimitive && et != null && et.isPrimitive &&
           rank.get(target.getSimpleName).exists(tr => rank.get(et.getSimpleName).exists(_ > tr))
+        // a primitive flowing into a concrete REFERENCE slot (`Object`, `Number`, …) is Java
+        // autoboxing — Scala won't box into every such position, so make it explicit.
+        val boxing = et != null && et.isPrimitive && !target.isPrimitive &&
+          !target.isInstanceOf[CtTypeParameterReference] && !target.isInstanceOf[CtArrayTypeReference[?]]
         val cast =
           (isNull && target.isInstanceOf[CtTypeParameterReference]) ||             // null → type param
           (target.isInstanceOf[CtArrayTypeReference[?]] && et != null &&           // array covariance
             et.isInstanceOf[CtArrayTypeReference[?]] && target.getQualifiedName != et.getQualifiedName) ||
-          narrowing                                                               // int → short/byte/char
+          narrowing ||                                                            // int → short/byte/char
+          boxing                                                                  // int → Object/Number
         if cast then Tree.Typed(t, tt(tpe(target), e), tpe(target), originOf(e)) else t
+
+      /** coerce each argument to its formal parameter type (Java autoboxing / numeric narrowing
+        * that Scala won't do implicitly). Skipped when arities differ (varargs spread etc.). */
+      private def coerceArgs(formals: List[CtTypeReference[?]], argEs: List[CtExpression[?]]): List[Term] =
+        if formals.size == argEs.size then argEs.zip(formals).map((e, ft) => coerce(ft, e, expr(e)))
+        else argEs.map(expr)
 
       private def tryStmt(t: CtTry, resources: List[Tree.ValDef]): Term =
         val catches = t.getCatchers.asScala.toList.map { c =>
@@ -655,7 +666,7 @@ object SpoonTir:
       private def invocation(inv: CtInvocation[?]): Term =
         val ex   = inv.getExecutable
         val mid  = methodSym(ex)
-        val args = inv.getArguments.asScala.toList.map(expr)
+        val args = coerceArgs(ex.getParameters.asScala.toList, inv.getArguments.asScala.toList)
         val o    = originOf(inv)
         val fun: Term =
           if ex.isConstructor then
@@ -678,7 +689,7 @@ object SpoonTir:
       private def ctorCall(cc: CtConstructorCall[?]): Term =
         val t    = tpe(cc.getType)
         val cid  = methodSym(cc.getExecutable)
-        val args = cc.getArguments.asScala.toList.map(expr)
+        val args = coerceArgs(cc.getExecutable.getParameters.asScala.toList, cc.getArguments.asScala.toList)
         Tree.Apply(Tree.New(tt(t, cc), t, originOf(cc)), args, cid, t, originOf(cc))
 
       /** SymId of a called executable — via its declaration (keyed identically to how we

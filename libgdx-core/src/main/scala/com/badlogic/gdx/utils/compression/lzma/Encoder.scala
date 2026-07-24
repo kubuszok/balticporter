@@ -624,7 +624,7 @@ class Encoder {
     val progressPosValuePrev: scala.Long = this.nowPos64
     if (this.nowPos64 == 0) {
       if (this._matchFinder.GetNumAvailableBytes() == 0) {
-        this.Flush(this.nowPos64.asInstanceOf[scala.Int])
+        this.Flush(this.nowPos64.asInstanceOf[scala.Int].asInstanceOf[scala.Int])
         return
       } else ()
       this.ReadMatchDistances()
@@ -632,24 +632,24 @@ class Encoder {
       this._rangeEncoder.Encode(this._isMatch, (this._state << com.badlogic.gdx.utils.compression.lzma.Base.kNumPosStatesBitsMax) + posState, 0)
       this._state = com.badlogic.gdx.utils.compression.lzma.Base.StateUpdateChar(this._state)
       val curByte: scala.Byte = this._matchFinder.GetIndexByte(0 - this._additionalOffset)
-      this._literalEncoder.GetSubCoder(this.nowPos64.asInstanceOf[scala.Int], this._previousByte).Encode(this._rangeEncoder, curByte)
+      this._literalEncoder.GetSubCoder(this.nowPos64.asInstanceOf[scala.Int].asInstanceOf[scala.Int], this._previousByte).Encode(this._rangeEncoder, curByte)
       this._previousByte = curByte
       this._additionalOffset = this._additionalOffset - 1
       this.nowPos64 = this.nowPos64 + 1
     } else ()
     if (this._matchFinder.GetNumAvailableBytes() == 0) {
-      this.Flush(this.nowPos64.asInstanceOf[scala.Int])
+      this.Flush(this.nowPos64.asInstanceOf[scala.Int].asInstanceOf[scala.Int])
       return
     } else ()
     while (true) {
-      val len: scala.Int = this.GetOptimum(this.nowPos64.asInstanceOf[scala.Int])
+      val len: scala.Int = this.GetOptimum(this.nowPos64.asInstanceOf[scala.Int].asInstanceOf[scala.Int])
       var pos: scala.Int = this.backRes
       val posState: scala.Int = this.nowPos64.asInstanceOf[scala.Int] & this._posStateMask
       val complexState: scala.Int = (this._state << com.badlogic.gdx.utils.compression.lzma.Base.kNumPosStatesBitsMax) + posState
       if ((len == 1) && (pos == (-1))) {
         this._rangeEncoder.Encode(this._isMatch, complexState, 0)
         val curByte: scala.Byte = this._matchFinder.GetIndexByte((0 - this._additionalOffset).asInstanceOf[scala.Int])
-        val subCoder: Encoder2 = this._literalEncoder.GetSubCoder(this.nowPos64.asInstanceOf[scala.Int], this._previousByte)
+        val subCoder: Encoder2 = this._literalEncoder.GetSubCoder(this.nowPos64.asInstanceOf[scala.Int].asInstanceOf[scala.Int], this._previousByte)
         if (!com.badlogic.gdx.utils.compression.lzma.Base.StateIsCharState(this._state)) {
           val matchByte: scala.Byte = this._matchFinder.GetIndexByte((((0 - this._repDistances(0)) - 1) - this._additionalOffset).asInstanceOf[scala.Int])
           subCoder.EncodeMatched(this._rangeEncoder, matchByte, curByte)
@@ -732,7 +732,7 @@ class Encoder {
         inSize(0) = this.nowPos64
         outSize(0) = this._rangeEncoder.GetProcessedSizeAdd()
         if (this._matchFinder.GetNumAvailableBytes() == 0) {
-          this.Flush(this.nowPos64.asInstanceOf[scala.Int])
+          this.Flush(this.nowPos64.asInstanceOf[scala.Int].asInstanceOf[scala.Int])
           return
         } else ()
         if ((this.nowPos64 - progressPosValuePrev) >= (1 << 12)) {

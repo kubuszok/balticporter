@@ -24,10 +24,10 @@ class IsometricStaggeredTiledMapRenderer extends com.badlogic.gdx.maps.tiled.ren
     val layerTileHeight: scala.Float = layer.getTileHeight() * unitScale
     val layerTileWidth50: scala.Float = layerTileWidth * 0.5f
     val layerTileHeight50: scala.Float = layerTileHeight * 0.5f
-    val minX: scala.Int = java.lang.Math.max(0, (((this.viewBounds.x - layerTileWidth50) - layerOffsetX) / layerTileWidth).asInstanceOf[scala.Int])
-    val maxX: scala.Int = java.lang.Math.min(layerWidth, (((((this.viewBounds.x + this.viewBounds.width) + layerTileWidth) + layerTileWidth50) - layerOffsetX) / layerTileWidth).asInstanceOf[scala.Int])
-    val minY: scala.Int = java.lang.Math.max(0, (((this.viewBounds.y - layerTileHeight) - layerOffsetY) / layerTileHeight).asInstanceOf[scala.Int])
-    val maxY: scala.Int = java.lang.Math.min(layerHeight, ((((this.viewBounds.y + this.viewBounds.height) + layerTileHeight) - layerOffsetY) / layerTileHeight50).asInstanceOf[scala.Int]);
+    val minX: scala.Int = java.lang.Math.max(0, (((this.viewBounds.x - layerTileWidth50) - layerOffsetX) / layerTileWidth).asInstanceOf[scala.Int].asInstanceOf[scala.Int])
+    val maxX: scala.Int = java.lang.Math.min(layerWidth, (((((this.viewBounds.x + this.viewBounds.width) + layerTileWidth) + layerTileWidth50) - layerOffsetX) / layerTileWidth).asInstanceOf[scala.Int].asInstanceOf[scala.Int])
+    val minY: scala.Int = java.lang.Math.max(0, (((this.viewBounds.y - layerTileHeight) - layerOffsetY) / layerTileHeight).asInstanceOf[scala.Int].asInstanceOf[scala.Int])
+    val maxY: scala.Int = java.lang.Math.min(layerHeight, ((((this.viewBounds.y + this.viewBounds.height) + layerTileHeight) - layerOffsetY) / layerTileHeight50).asInstanceOf[scala.Int].asInstanceOf[scala.Int]);
     { var y: scala.Int = maxY - 1; while (y >= minY) { {
       val offsetX: scala.Float = if ((y % 2) == 1) layerTileWidth50 else 0;
       { var x: scala.Int = maxX - 1; while (x >= minX) { {

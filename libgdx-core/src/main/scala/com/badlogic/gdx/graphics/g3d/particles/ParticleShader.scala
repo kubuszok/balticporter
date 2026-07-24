@@ -166,13 +166,23 @@ object ParticleShader {
   object ParticleType {
     case object Billboard extends ParticleType
     case object Point extends ParticleType
-    def values(): Array[ParticleType] = Array(Billboard, Point)
+    def values(): scala.Array[ParticleType] = scala.Array(Billboard, Point)
+    def valueOf(name: java.lang.String): ParticleType = name match {
+      case "Billboard" => Billboard
+      case "Point" => Point
+      case _ => throw new java.lang.IllegalArgumentException(name)
+    }
   }
   sealed abstract class AlignMode
   object AlignMode {
     case object Screen extends AlignMode
     case object ViewPoint extends AlignMode
-    def values(): Array[AlignMode] = Array(Screen, ViewPoint)
+    def values(): scala.Array[AlignMode] = scala.Array(Screen, ViewPoint)
+    def valueOf(name: java.lang.String): AlignMode = name match {
+      case "Screen" => Screen
+      case "ViewPoint" => ViewPoint
+      case _ => throw new java.lang.IllegalArgumentException(name)
+    }
   }
   class Config {
     var vertexShader: java.lang.String = null

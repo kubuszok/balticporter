@@ -201,7 +201,7 @@ class List[T] extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlogi
     val oldPrefWidth: scala.Float = this.getPrefWidth()
     val oldPrefHeight: scala.Float = this.getPrefHeight()
     this.items.clear()
-    this.items.addAll(newItems)
+    this.items.addAll(newItems.asInstanceOf[scala.Array[java.lang.Object]])
     this.overIndex = -1
     this.pressedIndex = -1
     this.selection.validate()

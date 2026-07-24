@@ -12,7 +12,7 @@ abstract class DynamicsModifier extends com.badlogic.gdx.graphics.g3d.particles.
   }
   def write(json: com.badlogic.gdx.utils.Json): scala.Unit = {
     super.write(json)
-    json.writeValue("isGlobal", this.isGlobal)
+    json.writeValue("isGlobal", this.isGlobal.asInstanceOf[java.lang.Object])
   }
   def read(json: com.badlogic.gdx.utils.Json, jsonData: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
     super.read(json, jsonData)
