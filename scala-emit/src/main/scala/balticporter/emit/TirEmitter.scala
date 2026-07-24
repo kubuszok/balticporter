@@ -324,10 +324,13 @@ final class TirEmitter(source: Program):
       s"$kw(${args.map(term(_, i)).mkString(", ")})"
     case _ => s"${term(fun, i)}(${args.map(term(_, i)).mkString(", ")})"
 
-  /** parenthesize an operator application when it is an operand, to preserve precedence. */
+  /** parenthesize a term when it is an operand, where bare juxtaposition would misparse:
+    * an operator application (precedence) and any control-flow expression — `if`/`match`
+    * as an operand (`a + if (c) x else y`) needs parens or Scala reads "end of statement". */
   private def operand(t: Term, i: Int): String = t match
     case Tree.Apply(Tree.Select(_, m, _, _), _, _, _, _) if sym(m).fullName.startsWith("scala.<op>#") =>
       s"(${term(t, i)})"
+    case _: Tree.If | _: Tree.Match | _: Tree.Lambda => s"(${term(t, i)})"
     case _ => term(t, i)
 
   private def block(stats: List[Statement], expr: Term, i: Int): String =
@@ -384,6 +387,7 @@ final class TirEmitter(source: Program):
     case Constant.LongC(v)   => s"${v}L"
     case Constant.FloatC(v)  => s"${v}f"
     case Constant.DoubleC(v) => v.toString
+    case Constant.CharC('\'') => "'\\''" // a single-quote char must be escaped inside `'…'`
     case Constant.CharC(v)   => s"'${escape(v.toString)}'"
     case Constant.StringC(v) => "\"" + escape(v) + "\""
     case Constant.NullC      => "null"

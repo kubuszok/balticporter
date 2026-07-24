@@ -91,6 +91,18 @@ lazy val `corpus-tests` = project
     Compile / run / javaOptions += s"-Dbalticporter.root=${(ThisBuild / baseDirectory).value}",
   )
 
+// A migration TARGET, not part of the tool: the TIR-emitted Scala of libGDX's core module
+// (`gdx/src`, 605 types), produced by `corpus-tests/runMain …LibgdxCoreMigrate`. Standalone
+// (JDK-only, like libGDX core itself) and NOT aggregated by root, so a work-in-progress port
+// can't break the main build. Lenient scalacOptions: this is generated code under burn-down.
+lazy val `libgdx-core` = project
+  .in(file("libgdx-core"))
+  .settings(
+    name := "balticporter-libgdx-core",
+    scalacOptions := Seq("-nowarn"),
+    publish / skip := true,
+  )
+
 lazy val root = project
   .in(file("."))
   .aggregate(core, `frontend-spoon`, `scala-emit`, vocab, `sbt-gen`, verify, testkit, runner, `corpus-tests`)
