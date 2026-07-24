@@ -86,6 +86,17 @@ final class TirEmitter(source: Program):
     val tps     = if cd.tparams.isEmpty then "" else "[" + cd.tparams.map(typeParam).mkString(", ") + "]"
     val parents = cd.parents.map(parent).filter(_.nonEmpty)
     val ext     = if parents.isEmpty then "" else " extends " + parents.mkString(" with ")
+    // an all-static utility class (no instance state, no supertype) is just an `object` — so its
+    // static members and nested types live together and see each other by simple name.
+    val hasInstanceState = cd.body.exists {
+      case d: Tree.DefDef => sym(d.symbol).name != "<init>" && !sym(d.symbol).flags.isStatic
+      case v: Tree.ValDef => !sym(v.symbol).flags.isStatic
+      case _              => false
+    }
+    if kw == "class" && parents.isEmpty && cd.body.nonEmpty && !hasInstanceState then
+      val members = cd.body.filterNot { case d: Tree.DefDef => sym(d.symbol).name == "<init>"; case _ => false }
+      val ob = orderBody(members).map(stat(_, i + 1)).filter(_.nonEmpty).mkString("\n")
+      return s"${ind(i)}object ${esc(s.name)}$tps {\n$ob\n${ind(i)}}"
     // Java statics have no instance home in Scala — they move to the companion object.
     val (statics, instance) = if s.flags.isModule then (Nil, cd.body) else cd.body.partition(isStatic)
     val self    = cd.selfType.map(st => s"${ind(i + 1)}self: ${tpe(st.tpe)} =>\n").getOrElse("")
