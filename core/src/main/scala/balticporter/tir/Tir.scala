@@ -168,7 +168,12 @@ object Tree:
       body: List[Statement],
       origin: Origin,
       tparams: List[TypeDef] = Nil,
+      enumCases: List[EnumCase] = Nil,
   ) extends Definition
+
+  /** one Java enum constant — `NAME(ctorArgs) { body }`. Lowered to a Scala `case object`
+    * extending the enum's sealed class. `body` carries per-constant method overrides. */
+  final case class EnumCase(symbol: SymId, ctorArgs: List[Term], body: List[Statement], origin: Origin)
 
   /** type alias / abstract type member / type parameter (`type T = …` / `type T <: U`).
     * For a type parameter, `rhs` carries a `TypeBounds`. */

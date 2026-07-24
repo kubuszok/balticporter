@@ -138,6 +138,9 @@ object StandardTraversal:
         selfType = t.selfType.map(mapTpt(ph, _)),
         body = t.body.map(mapStat(ph, _)),
         tparams = t.tparams.map(mapTypeParam(ph, _)),
+        enumCases = t.enumCases.map(ec =>
+          ec.copy(ctorArgs = ec.ctorArgs.map(mapTerm(ph, _)), body = ec.body.map(mapStat(ph, _)))
+        ),
       )
     )
 

@@ -82,6 +82,7 @@ object Xref:
         cd.selfType.foreach(tt => walkType(tt.tpe, UsageKind.SelfType, tt))
       }
       cd.body.foreach(walkStat)
+      cd.enumCases.foreach(ec => within(ec.symbol) { ec.ctorArgs.foreach(walkTerm); ec.body.foreach(walkStat) })
 
     def walkStat(s: Statement): Unit = s match
       case c: Tree.ClassDef => walkClassDef(c)

@@ -13,15 +13,21 @@ import balticporter.tir.*
   * `boundary`), do-while (dropped in Scala 3), and inc/dec used as a value; those are the
   * emitter's known refinement points, not populator gaps.
   */
-final class TirEmitter(program: Program):
+final class TirEmitter(source: Program):
+  // normalize away Java member-name clashes (a field `x` alongside a method `x()`) before
+  // rendering — Scala forbids them; renaming the field symbol propagates to every reference.
+  private val program = TirEmitter.resolveMemberClashes(source)
 
   def emit: String = program.units.map(emitUnit).mkString("\n\n")
 
   /** type symbols referenced while rendering the current unit — drives import generation. */
   private val referenced = collection.mutable.LinkedHashSet[SymId]()
+  /** types declared in the unit currently being rendered (in scope by simple name). */
+  private var currentDeclared: Set[SymId] = Set.empty
 
   def emitUnit(cd: Tree.ClassDef): String =
     referenced.clear()
+    currentDeclared = declaredTypes(cd)
     val body = classDef(cd, 0) // fills `referenced` via typeSym
     val full = sym(cd.symbol).fullName
     val pkg  = if full.contains('.') then s"package ${full.substring(0, full.lastIndexOf('.'))}\n\n" else ""
@@ -61,17 +67,20 @@ final class TirEmitter(program: Program):
   private def typeSym(id: SymId): String =
     val s = sym(id)
     if s.flags.isParam then esc(s.name)
-    else if program.definitionOf(id).isDefined then { referenced += id; esc(s.name) }
-    else s.fullName.replace('$', '.')
+    else if program.definitionOf(id).isDefined then
+      if currentDeclared(id) then esc(s.name)                       // declared here — in scope
+      else if s.fullName.contains('$') then s.fullName.replace('$', '#').replace(".", ".") // nested elsewhere → projection
+      else { referenced += id; esc(s.name) }                        // top-level elsewhere → import + simple
+    else s.fullName.replace('$', '.')                               // external, fully qualified
 
   private def ind(n: Int): String = "  " * n
 
   // ---- definitions ----
   private def classDef(cd: Tree.ClassDef, i: Int): String =
+    if sym(cd.symbol).flags.isEnum then return enumDef(cd, i)
     val s  = sym(cd.symbol)
     val kw =
       if s.flags.isModule then "object"
-      else if s.flags.isEnum then "enum"
       else if s.flags.isTrait then "trait"
       else "class"
     val tps     = if cd.tparams.isEmpty then "" else "[" + cd.tparams.map(typeParam).mkString(", ") + "]"
@@ -92,6 +101,27 @@ final class TirEmitter(program: Program):
   // static vals/defs move to the companion object; nested TYPES stay in the class body so
   // they remain in scope by simple name inside it (a Java static nested class is visible
   // throughout its enclosing class).
+  /** Java enum → `sealed abstract class Name <parents-minus-Enum> { members }` plus a
+    * companion `object` holding each constant as a `case object` and a `values` array. */
+  private def enumDef(cd: Tree.ClassDef, i: Int): String =
+    val s       = sym(cd.symbol)
+    val name    = esc(s.name)
+    val parents = cd.parents.map(parent).filter(p => p.nonEmpty && !p.startsWith("java.lang.Enum"))
+    val ext     = if parents.isEmpty then "" else " extends " + parents.mkString(" with ")
+    val (statics, instance) = cd.body.partition(isStatic)
+    val cbody   = orderBody(instance).map(stat(_, i + 1)).filter(_.nonEmpty).mkString("\n")
+    val cls     = s"${ind(i)}sealed abstract class $name$ext" + (if cbody.isEmpty then "" else s" {\n$cbody\n${ind(i)}}")
+    val cases = cd.enumCases.map { ec =>
+      val cn   = esc(sym(ec.symbol).name)
+      val args = if ec.ctorArgs.isEmpty then "" else s"(${ec.ctorArgs.map(term(_, i + 1)).mkString(", ")})"
+      val body = if ec.body.isEmpty then "" else s" {\n${ec.body.map(stat(_, i + 2)).mkString("\n")}\n${ind(i + 1)}}"
+      s"${ind(i + 1)}case object $cn extends $name$args$body"
+    }
+    // `def` (not `val`) so Java's `E.values()` call site type-checks; also a no-paren read works.
+    val values = s"${ind(i + 1)}def values(): Array[$name] = Array(${cd.enumCases.map(ec => esc(sym(ec.symbol).name)).mkString(", ")})"
+    val objBody = (cases :+ values) ++ statics.map(stat(_, i + 1)).filter(_.nonEmpty)
+    s"$cls\n${ind(i)}object $name {\n${objBody.mkString("\n")}\n${ind(i)}}"
+
   private def isStatic(s: Statement): Boolean = s match
     case _: Tree.ClassDef => false
     case d: Definition    => sym(d.symbol).flags.isStatic
@@ -223,7 +253,7 @@ final class TirEmitter(program: Program):
     case Tree.Block(stats, expr, _, _)  => block(stats, expr, i)
     case Tree.Lambda(ps, body, _, _)    => s"(${ps.map(param).mkString(", ")}) => ${term(body, i)}"
     case Tree.If(c, th, el, _, _)       => s"if (${term(c, i)}) ${term(th, i)} else ${term(el, i)}"
-    case Tree.Typed(e, tpt, _, _)       => s"(${term(e, i)}: ${tpe(tpt.tpe)})"
+    case Tree.Typed(e, tpt, _, _)       => s"${operand(e, i)}.asInstanceOf[${tpe(tpt.tpe)}]" // Java cast
     case Tree.Repeated(es, _, _)        => es.map(term(_, i)).mkString(", ")
     case Tree.Return(e, _, _)           => "return" + e.map(x => " " + term(x, i)).getOrElse("")
     case Tree.While(c, b, _, _)         => s"while (${term(c, i)}) ${term(b, i)}"
@@ -337,3 +367,28 @@ final class TirEmitter(program: Program):
       case '\\' => "\\\\"; case '"' => "\\\""; case '\n' => "\\n"; case '\r' => "\\r"; case '\t' => "\\t"
       case c    => c.toString
     }
+
+object TirEmitter:
+  /** Rename any field whose simple name collides with a method in the same class (legal in
+    * Java, illegal in Scala) by suffixing `$field`. Renaming the symbol propagates to every
+    * reference, since the emitter reads names from the symbol table. */
+  def resolveMemberClashes(p: Program): Program =
+    val renames = collection.mutable.Map[SymId, String]()
+    def nm(id: SymId): String = p.symbolOf(id).map(_.name).getOrElse("")
+    def scan(cd: Tree.ClassDef): Unit =
+      val methodNames = cd.body.collect { case d: Tree.DefDef => nm(d.symbol) }.toSet
+      cd.body.foreach {
+        case v: Tree.ValDef if methodNames(nm(v.symbol)) => renames(v.symbol) = nm(v.symbol) + "$field"
+        case c: Tree.ClassDef                            => scan(c)
+        case _                                           => ()
+      }
+      cd.enumCases.foreach(_.body.foreach { case c: Tree.ClassDef => scan(c); case _ => () })
+    p.units.foreach(scan)
+    if renames.isEmpty then p
+    else
+      // also relax visibility: Java lets the enclosing class read a nested class's private
+      // field (`point.x`); Scala does not, so a renamed clash-field must stay accessible.
+      val syms = p.symbols.all.map(s =>
+        renames.get(s.id).map(n => s.copy(name = n, flags = s.flags.copy(isPrivate = false, isProtected = false))).getOrElse(s)
+      )
+      new Program(p.units, SymbolTable(syms), p.xref)

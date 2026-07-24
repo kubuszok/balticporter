@@ -189,13 +189,38 @@ object SpoonTir:
         .filterNot(_.isInstanceOf[CtEnumValue[?]])
         .sortBy(posKey)
         .map(fieldDef(id, _))
+      // enum constructors are folded into the sealed-class lowering, not emitted as secondary ctors.
       val ctors = t match
+        case _: CtEnum[?]  => Nil
         case c: CtClass[?] => c.getConstructors.asScala.toList.sortBy(posKey).map(execDef(id, _, "<init>"))
         case _             => Nil
       val methods = t.getMethods.asScala.toList.sortBy(posKey).map(m => execDef(id, m, m.getSimpleName))
       val nested  = t.getNestedTypes.asScala.toList.sortBy(posKey).map(classDef)
+      val enumCases = t match
+        case e: CtEnum[?] => e.getEnumValues.asScala.toList.map(enumCase(id, _))
+        case _            => Nil
       tpScopes.remove(0)
-      Tree.ClassDef(id, parents, selfType = None, body = fields ++ ctors ++ methods ++ nested, origin = originOf(t), tparams = tpDefs)
+      Tree.ClassDef(id, parents, selfType = None, body = fields ++ ctors ++ methods ++ nested,
+        origin = originOf(t), tparams = tpDefs, enumCases = enumCases)
+
+    /** a Java enum constant → `EnumCase`: its ctor args, and any per-constant method overrides
+      * (from its anonymous-class body), each keyed under the CONSTANT so it doesn't collide
+      * with the enum's abstract method of the same name. */
+    private def enumCase(enumId: SymId, v: CtEnumValue[?]): Tree.EnumCase =
+      val caseId = minter.define(memberKey(enumId, v.getSimpleName))(sid =>
+        Symbol(sid, v.getSimpleName, qualified(enumId, v.getSimpleName), Flags(isStatic = true), enumId, TypeRef(NoPrefix, enumId))
+      )
+      val bt = new BodyTranslator(enumId, enumId)
+      val (args, body) = v.getDefaultExpression match
+        case nc: CtNewClass[?] =>
+          val a = nc.getArguments.asScala.toList.map(bt.exprOf)
+          val b = Option(nc.getAnonymousClass).toList.flatMap(_.getTypeMembers.asScala.toList).collect {
+            case m: CtMethod[?] => execDef(caseId, m, m.getSimpleName)
+          }
+          (a, b)
+        case cc: CtConstructorCall[?] => (cc.getArguments.asScala.toList.map(bt.exprOf), Nil)
+        case _                        => (Nil, Nil)
+      Tree.EnumCase(caseId, args, body, originOf(v))
 
     private def defineType(t: CtType[?]): SymId =
       val q = typeKey(t.getReference)
