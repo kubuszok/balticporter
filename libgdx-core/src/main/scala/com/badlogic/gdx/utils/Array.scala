@@ -8,7 +8,7 @@ class Array[T] extends scala.collection.Iterable[T] {
   private var predicateIterable: com.badlogic.gdx.utils.Predicate.PredicateIterable[T] = null.asInstanceOf[com.badlogic.gdx.utils.Predicate.PredicateIterable[T]]
   def this(ordered: scala.Boolean, array: scala.Array[T], start: scala.Int, count: scala.Int) = {
     this()
-    this.items = java.util.Arrays.copyOfRange(array, start, start + count).asInstanceOf[scala.Array[T]]
+    this.items = java.util.Arrays.copyOfRange(array.asInstanceOf[scala.Array[java.lang.Object]], start, start + count).asInstanceOf[scala.Array[T]]
     this.ordered = ordered
     this.size = count
   }
@@ -19,7 +19,7 @@ class Array[T] extends scala.collection.Iterable[T] {
   }
   def this(array: Array[? <: T]) = {
     this()
-    this.items = java.util.Arrays.copyOf(array.items, array.size).asInstanceOf[scala.Array[T]]
+    this.items = java.util.Arrays.copyOf(array.items.asInstanceOf[scala.Array[java.lang.Object]], array.size).asInstanceOf[scala.Array[T]]
     this.ordered = array.ordered
     this.size = array.size
   }
@@ -372,7 +372,7 @@ class Array[T] extends scala.collection.Iterable[T] {
     return this.size == 0
   }
   def clear(): scala.Unit = {
-    java.util.Arrays.fill(this.items, 0, this.size, null)
+    java.util.Arrays.fill(this.items.asInstanceOf[scala.Array[java.lang.Object]], 0, this.size, null)
     this.size = 0
   }
   def shrink(): scala.Array[T] = {
@@ -400,7 +400,7 @@ class Array[T] extends scala.collection.Iterable[T] {
     return this.items
   }
   def resize(newSize: scala.Int): scala.Array[T] = {
-    this.items = java.util.Arrays.copyOf(this.items, newSize).asInstanceOf[scala.Array[T]]
+    this.items = java.util.Arrays.copyOf(this.items.asInstanceOf[scala.Array[java.lang.Object]], newSize).asInstanceOf[scala.Array[T]]
     return this.items
   }
   def sort(): scala.Unit = {
@@ -478,7 +478,7 @@ class Array[T] extends scala.collection.Iterable[T] {
     return this.items(com.badlogic.gdx.math.MathUtils.random(0, this.size - 1))
   }
   def toArray(): scala.Array[T] = {
-    return java.util.Arrays.copyOf(this.items, this.size).asInstanceOf[scala.Array[T]]
+    return java.util.Arrays.copyOf(this.items.asInstanceOf[scala.Array[java.lang.Object]], this.size).asInstanceOf[scala.Array[T]]
   }
   def toArray(arraySupplier: com.badlogic.gdx.utils.ArraySupplier[scala.Array[T]]): scala.Array[T] = {
     val result: scala.Array[T] = arraySupplier.get(this.size).asInstanceOf[scala.Array[T]]

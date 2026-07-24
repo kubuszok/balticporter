@@ -519,9 +519,18 @@ object SpoonTir:
       /** coerce each argument to its formal parameter type (Java autoboxing / numeric narrowing
         * that Scala won't do implicitly). Skipped when arities differ (varargs spread etc.). */
       private def coerceArgs(ex: CtExecutableReference[?], argEs: List[CtExpression[?]]): List[Term] =
-        // NB: array covariance is DISABLED for call args — Spoon erases a generic array formal
-        // (`T[]`) to `Object[]`, and casting the arg to `Array[Object]` breaks the (overloaded)
-        // Scala method that actually wants `Array[T]`.
+        // Array covariance at call args is DISABLED for OUR OWN methods — Spoon erases a generic
+        // array formal (`T[]`) to `Object[]`, and casting the arg to `Array[Object]` breaks the
+        // (overloaded) Scala method that actually wants the invariant `Array[T]`. But for EXTERNAL
+        // (JDK/library) callees there is no `Array[T]` Scala overload — the real method genuinely
+        // takes `Object[]` (Java erasure), so `Arrays.fill(items: Array[T], …)` / `copyOf` need the
+        // `items.asInstanceOf[Array[Object]]` erasure cast. Enable covariance only for those.
+        // A JDK/library method's declaration is a SHADOW type (reconstructed from bytecode/reflection);
+        // our own source types are non-shadow. (`getExecutableDeclaration` is non-null even for JDK
+        // methods under noClasspath, so isShadow — not null-ness — is the reliable external signal.)
+        val external = Option(ex.getExecutableDeclaration) match
+          case None    => true
+          case Some(d) => Option(d.getParent(classOf[CtType[?]])).forall(_.isShadow)
         val formals = ex.getParameters.asScala.toList
         // Under noClasspath, an executable REFERENCE erases a generic formal `T` to `Object`, so
         // `coerce` sees `null → Object` (legal) and skips the cast — yet the emitted method keeps
@@ -531,7 +540,7 @@ object SpoonTir:
           val ps = Option(ex.getExecutableDeclaration).map(_.getParameters.asScala.toList.map(_.getType))
           i => ps.flatMap(l => if i < l.size then Option(l(i)) else None)
         if formals.size == argEs.size then
-          argEs.zipWithIndex.map { (e, i) => nullToTypeParam(e, declFormals(i), coerce(formals(i), e, expr(e), arrayCov = false)) }
+          argEs.zipWithIndex.map { (e, i) => nullToTypeParam(e, declFormals(i), coerce(formals(i), e, expr(e), arrayCov = external)) }
         else argEs.map(expr)
 
       /** `null` passed to a callee slot whose real (un-erased) formal is a type parameter — cast it,

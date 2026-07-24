@@ -20,8 +20,8 @@ class ArrayMap[K, V] extends scala.collection.Iterable[com.badlogic.gdx.utils.Ob
   def this(array: ArrayMap[K, V]) = {
     this()
     this.ordered = array.ordered
-    this.keys$field = java.util.Arrays.copyOf(array.keys$field, array.keys$field.length).asInstanceOf[scala.Array[K]]
-    this.values$field = java.util.Arrays.copyOf(array.values$field, array.values$field.length).asInstanceOf[scala.Array[V]]
+    this.keys$field = java.util.Arrays.copyOf(array.keys$field.asInstanceOf[scala.Array[java.lang.Object]], array.keys$field.length).asInstanceOf[scala.Array[K]]
+    this.values$field = java.util.Arrays.copyOf(array.values$field.asInstanceOf[scala.Array[java.lang.Object]], array.values$field.length).asInstanceOf[scala.Array[V]]
     this.size = array.size
   }
   def this(ordered: scala.Boolean, capacity: scala.Int, keyArrayType: java.lang.Class[?], valueArrayType: java.lang.Class[?]) = {
@@ -322,8 +322,8 @@ class ArrayMap[K, V] extends scala.collection.Iterable[com.badlogic.gdx.utils.Ob
     this.resize(maximumCapacity)
   }
   def clear(): scala.Unit = {
-    java.util.Arrays.fill(this.keys$field, 0, this.size, null)
-    java.util.Arrays.fill(this.values$field, 0, this.size, null)
+    java.util.Arrays.fill(this.keys$field.asInstanceOf[scala.Array[java.lang.Object]], 0, this.size, null)
+    java.util.Arrays.fill(this.values$field.asInstanceOf[scala.Array[java.lang.Object]], 0, this.size, null)
     this.size = 0
   }
   def shrink(): scala.Unit = {
@@ -342,8 +342,8 @@ class ArrayMap[K, V] extends scala.collection.Iterable[com.badlogic.gdx.utils.Ob
     } else ()
   }
   def resize(newSize: scala.Int): scala.Unit = {
-    this.keys$field = java.util.Arrays.copyOf(this.keys$field, newSize).asInstanceOf[scala.Array[K]]
-    this.values$field = java.util.Arrays.copyOf(this.values$field, newSize).asInstanceOf[scala.Array[V]]
+    this.keys$field = java.util.Arrays.copyOf(this.keys$field.asInstanceOf[scala.Array[java.lang.Object]], newSize).asInstanceOf[scala.Array[K]]
+    this.values$field = java.util.Arrays.copyOf(this.values$field.asInstanceOf[scala.Array[java.lang.Object]], newSize).asInstanceOf[scala.Array[V]]
   }
   def reverse(): scala.Unit = {
     { var i: scala.Int = 0; val lastIndex: scala.Int = this.size - 1; val n: scala.Int = this.size / 2; while (i < n) { {

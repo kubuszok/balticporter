@@ -190,7 +190,7 @@ class IntMap[V] extends scala.collection.Iterable[com.badlogic.gdx.utils.IntMap.
     } else ()
     this.size = 0
     java.util.Arrays.fill(this.keyTable, 0)
-    java.util.Arrays.fill(this.valueTable, null)
+    java.util.Arrays.fill(this.valueTable.asInstanceOf[scala.Array[java.lang.Object]], null)
     this.zeroValue = null.asInstanceOf[V]
     this.hasZeroValue = false
   }

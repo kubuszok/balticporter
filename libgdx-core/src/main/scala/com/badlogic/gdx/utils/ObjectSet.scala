@@ -154,7 +154,7 @@ class ObjectSet[T] extends scala.collection.Iterable[T] {
       return
     } else ()
     this.size = 0
-    java.util.Arrays.fill(this.keyTable, null)
+    java.util.Arrays.fill(this.keyTable.asInstanceOf[scala.Array[java.lang.Object]], null)
   }
   def contains(key: T): scala.Boolean = {
     return this.locateKey(key) >= 0

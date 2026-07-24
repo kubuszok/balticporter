@@ -44,7 +44,7 @@ class SnapshotArray[T] extends com.badlogic.gdx.utils.Array[T] {
     } else ()
     if ((this.snapshot != items) && (this.snapshots == 0)) {
       this.recycled = this.snapshot
-      java.util.Arrays.fill(this.recycled, null)
+      java.util.Arrays.fill(this.recycled.asInstanceOf[scala.Array[java.lang.Object]], null)
     } else ()
     this.snapshot = null
   }

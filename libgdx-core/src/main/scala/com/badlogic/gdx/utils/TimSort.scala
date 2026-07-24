@@ -393,7 +393,7 @@ object TimSort {
   def sort[T](a: scala.Array[T], lo$arg: scala.Int, hi: scala.Int, c: java.util.Comparator[? >: T]): scala.Unit = {
     var lo: scala.Int = lo$arg
     if (c == null) {
-      java.util.Arrays.sort(a, lo, hi)
+      java.util.Arrays.sort(a.asInstanceOf[scala.Array[java.lang.Object]], lo, hi)
       return
     } else ()
     TimSort.rangeCheck(a.length, lo, hi)
