@@ -58,7 +58,7 @@ class InWindow {
     if ((this._bufferBase == null) || (this._blockSize != blockSize)) {
       this.Free()
       this._blockSize = blockSize
-      this._bufferBase = new Array[scala.Byte](this._blockSize)
+      this._bufferBase = new scala.Array[scala.Byte](this._blockSize)
     } else ()
     this._pointerToLastSafePosition = this._blockSize - keepSizeAfter
   }

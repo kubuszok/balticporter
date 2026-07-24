@@ -213,8 +213,8 @@ class PixmapPacker extends com.badlogic.gdx.utils.Disposable {
           val rect: com.badlogic.gdx.graphics.g2d.PixmapPacker.PixmapPackerRectangle = page.rects.get(name)
           val region: com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion = new com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion(page.texture, rect.getX(), rect.getY(), rect.getWidth(), rect.getHeight())
           if (rect.splits != null) {
-            region.names = Array[java.lang.String]("split", "pad")
-            region.values = Array[scala.Array[scala.Int]](rect.splits, rect.pads)
+            region.names = scala.Array[java.lang.String]("split", "pad")
+            region.values = scala.Array[scala.Array[scala.Int]](rect.splits, rect.pads)
           } else ()
           var imageIndex: scala.Int = -1
           var imageName: java.lang.String = name
@@ -313,7 +313,7 @@ class PixmapPacker extends com.badlogic.gdx.utils.Disposable {
     } else {
       endY = raster.getHeight() - 2
     }
-    return Array[scala.Int](startX, endX, startY, endY)
+    return scala.Array[scala.Int](startX, endX, startY, endY)
   }
   private def getPads(raster: com.badlogic.gdx.graphics.Pixmap, splits: scala.Array[scala.Int]): scala.Array[scala.Int] = {
     val bottom: scala.Int = raster.getHeight() - 1
@@ -355,14 +355,14 @@ class PixmapPacker extends com.badlogic.gdx.utils.Disposable {
         endY = raster.getHeight() - 2
       }
     }
-    val pads: scala.Array[scala.Int] = Array[scala.Int](startX, endX, startY, endY)
+    val pads: scala.Array[scala.Int] = scala.Array[scala.Int](startX, endX, startY, endY)
     if ((splits != null) && java.util.Arrays.equals(pads, splits)) {
       return null
     } else ()
     return pads
   }
   private def getSplitPoint(raster: com.badlogic.gdx.graphics.Pixmap, startX: scala.Int, startY: scala.Int, startPoint: scala.Boolean, xAxis: scala.Boolean): scala.Int = {
-    val rgba: scala.Array[scala.Int] = new Array[scala.Int](4)
+    val rgba: scala.Array[scala.Int] = new scala.Array[scala.Int](4)
     var next: scala.Int = if (xAxis) startX else startY
     val `end`: scala.Int = if (xAxis) raster.getWidth() else raster.getHeight()
     val breakA: scala.Int = if (startPoint) 255 else 0

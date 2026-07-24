@@ -348,7 +348,7 @@ class JsonValue extends scala.collection.Iterable[JsonValue] {
     if (this.type$field != com.badlogic.gdx.utils.JsonValue.ValueType.array) {
       throw new java.lang.IllegalStateException("Value is not an array: " + this.type$field)
     } else ()
-    val array: scala.Array[java.lang.String] = new Array[java.lang.String](this.size$field)
+    val array: scala.Array[java.lang.String] = new scala.Array[java.lang.String](this.size$field)
     var i: scala.Int = 0;
     { var value: JsonValue = this.child$field; while (value != null) { {
       var v: java.lang.String = null.asInstanceOf[java.lang.String]
@@ -380,7 +380,7 @@ class JsonValue extends scala.collection.Iterable[JsonValue] {
     if (this.type$field != com.badlogic.gdx.utils.JsonValue.ValueType.array) {
       throw new java.lang.IllegalStateException("Value is not an array: " + this.type$field)
     } else ()
-    val array: scala.Array[scala.Float] = new Array[scala.Float](this.size$field)
+    val array: scala.Array[scala.Float] = new scala.Array[scala.Float](this.size$field)
     var i: scala.Int = 0;
     { var value: JsonValue = this.child$field; while (value != null) { {
       var v: scala.Float = 0.0f
@@ -409,7 +409,7 @@ class JsonValue extends scala.collection.Iterable[JsonValue] {
     if (this.type$field != com.badlogic.gdx.utils.JsonValue.ValueType.array) {
       throw new java.lang.IllegalStateException("Value is not an array: " + this.type$field)
     } else ()
-    val array: scala.Array[scala.Double] = new Array[scala.Double](this.size$field)
+    val array: scala.Array[scala.Double] = new scala.Array[scala.Double](this.size$field)
     var i: scala.Int = 0;
     { var value: JsonValue = this.child$field; while (value != null) { {
       var v: scala.Double = 0.0
@@ -438,7 +438,7 @@ class JsonValue extends scala.collection.Iterable[JsonValue] {
     if (this.type$field != com.badlogic.gdx.utils.JsonValue.ValueType.array) {
       throw new java.lang.IllegalStateException("Value is not an array: " + this.type$field)
     } else ()
-    val array: scala.Array[scala.Long] = new Array[scala.Long](this.size$field)
+    val array: scala.Array[scala.Long] = new scala.Array[scala.Long](this.size$field)
     var i: scala.Int = 0;
     { var value: JsonValue = this.child$field; while (value != null) { {
       var v: scala.Long = 0L
@@ -467,7 +467,7 @@ class JsonValue extends scala.collection.Iterable[JsonValue] {
     if (this.type$field != com.badlogic.gdx.utils.JsonValue.ValueType.array) {
       throw new java.lang.IllegalStateException("Value is not an array: " + this.type$field)
     } else ()
-    val array: scala.Array[scala.Int] = new Array[scala.Int](this.size$field)
+    val array: scala.Array[scala.Int] = new scala.Array[scala.Int](this.size$field)
     var i: scala.Int = 0;
     { var value: JsonValue = this.child$field; while (value != null) { {
       var v: scala.Int = 0
@@ -496,7 +496,7 @@ class JsonValue extends scala.collection.Iterable[JsonValue] {
     if (this.type$field != com.badlogic.gdx.utils.JsonValue.ValueType.array) {
       throw new java.lang.IllegalStateException("Value is not an array: " + this.type$field)
     } else ()
-    val array: scala.Array[scala.Boolean] = new Array[scala.Boolean](this.size$field)
+    val array: scala.Array[scala.Boolean] = new scala.Array[scala.Boolean](this.size$field)
     var i: scala.Int = 0;
     { var value: JsonValue = this.child$field; while (value != null) { {
       var v: scala.Boolean = false
@@ -525,7 +525,7 @@ class JsonValue extends scala.collection.Iterable[JsonValue] {
     if (this.type$field != com.badlogic.gdx.utils.JsonValue.ValueType.array) {
       throw new java.lang.IllegalStateException("Value is not an array: " + this.type$field)
     } else ()
-    val array: scala.Array[scala.Byte] = new Array[scala.Byte](this.size$field)
+    val array: scala.Array[scala.Byte] = new scala.Array[scala.Byte](this.size$field)
     var i: scala.Int = 0;
     { var value: JsonValue = this.child$field; while (value != null) { {
       var v: scala.Byte = 0
@@ -554,7 +554,7 @@ class JsonValue extends scala.collection.Iterable[JsonValue] {
     if (this.type$field != com.badlogic.gdx.utils.JsonValue.ValueType.array) {
       throw new java.lang.IllegalStateException("Value is not an array: " + this.type$field)
     } else ()
-    val array: scala.Array[scala.Short] = new Array[scala.Short](this.size$field)
+    val array: scala.Array[scala.Short] = new scala.Array[scala.Short](this.size$field)
     var i: scala.Int = 0;
     { var value: JsonValue = this.child$field; while (value != null) { {
       var v: scala.Short = 0
@@ -583,7 +583,7 @@ class JsonValue extends scala.collection.Iterable[JsonValue] {
     if (this.type$field != com.badlogic.gdx.utils.JsonValue.ValueType.array) {
       throw new java.lang.IllegalStateException("Value is not an array: " + this.type$field)
     } else ()
-    val array: scala.Array[scala.Char] = new Array[scala.Char](this.size$field)
+    val array: scala.Array[scala.Char] = new scala.Array[scala.Char](this.size$field)
     var i: scala.Int = 0;
     { var value: JsonValue = this.child$field; while (value != null) { {
       var v: scala.Char = '\u0000'

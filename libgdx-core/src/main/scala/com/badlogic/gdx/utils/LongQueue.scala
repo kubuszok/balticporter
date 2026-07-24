@@ -7,7 +7,7 @@ class LongQueue {
   var size: scala.Int = 0
   def this(initialSize: scala.Int) = {
     this()
-    this.values = new Array[scala.Long](initialSize)
+    this.values = new scala.Array[scala.Long](initialSize)
   }
   def addLast(value: scala.Long): scala.Unit = {
     var values: scala.Array[scala.Long] = this.values
@@ -46,7 +46,7 @@ class LongQueue {
     var values: scala.Array[scala.Long] = this.values
     var head: scala.Int = this.head
     var tail: scala.Int = this.tail
-    val newArray: scala.Array[scala.Long] = new Array[scala.Long](newSize)
+    val newArray: scala.Array[scala.Long] = new scala.Array[scala.Long](newSize)
     if (head < tail) {
       java.lang.System.arraycopy(values, head, newArray, 0, tail - head)
     } else {

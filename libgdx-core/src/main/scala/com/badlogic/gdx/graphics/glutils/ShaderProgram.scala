@@ -498,7 +498,7 @@ class ShaderProgram extends com.badlogic.gdx.utils.Disposable {
     this.params.asInstanceOf[java.nio.Buffer].clear()
     com.badlogic.gdx.Gdx.gl20.glGetProgramiv(this.program, com.badlogic.gdx.graphics.GL20.GL_ACTIVE_UNIFORMS, this.params)
     val numUniforms: scala.Int = this.params.get(0)
-    this.uniformNames = new Array[java.lang.String](numUniforms);
+    this.uniformNames = new scala.Array[java.lang.String](numUniforms);
     { var i: scala.Int = 0; while (i < numUniforms) { {
       this.params.asInstanceOf[java.nio.Buffer].clear()
       this.params.put(0, 1)
@@ -515,7 +515,7 @@ class ShaderProgram extends com.badlogic.gdx.utils.Disposable {
     this.params.asInstanceOf[java.nio.Buffer].clear()
     com.badlogic.gdx.Gdx.gl20.glGetProgramiv(this.program, com.badlogic.gdx.graphics.GL20.GL_ACTIVE_ATTRIBUTES, this.params)
     val numAttributes: scala.Int = this.params.get(0)
-    this.attributeNames = new Array[java.lang.String](numAttributes);
+    this.attributeNames = new scala.Array[java.lang.String](numAttributes);
     { var i: scala.Int = 0; while (i < numAttributes) { {
       this.params.asInstanceOf[java.nio.Buffer].clear()
       this.params.put(0, 1)

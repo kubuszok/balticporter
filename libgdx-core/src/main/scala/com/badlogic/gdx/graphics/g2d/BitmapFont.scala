@@ -243,12 +243,12 @@ object BitmapFont {
     }
     def setKerning(ch: scala.Int, value: scala.Int): scala.Unit = {
       if (this.kerning == null) {
-        this.kerning = new Array[scala.Array[scala.Byte]](BitmapFont.PAGES)
+        this.kerning = new scala.Array[scala.Array[scala.Byte]](BitmapFont.PAGES)
       } else ()
       var page: scala.Array[scala.Byte] = this.kerning(ch >>> BitmapFont.LOG2_PAGE_SIZE)
       if (page == null) {
         this.kerning(ch >>> BitmapFont.LOG2_PAGE_SIZE) = {
-          page = new Array[scala.Byte](BitmapFont.PAGE_SIZE)
+          page = new scala.Array[scala.Byte](BitmapFont.PAGE_SIZE)
           page
         }
       } else ()
@@ -277,13 +277,13 @@ object BitmapFont {
     var scaleY: scala.Float = 1
     var markupEnabled: scala.Boolean = false
     var cursorX: scala.Float = 0.0f
-    final val glyphs: scala.Array[scala.Array[com.badlogic.gdx.graphics.g2d.BitmapFont.Glyph]] = new Array[scala.Array[com.badlogic.gdx.graphics.g2d.BitmapFont.Glyph]](BitmapFont.PAGES)
+    final val glyphs: scala.Array[scala.Array[com.badlogic.gdx.graphics.g2d.BitmapFont.Glyph]] = new scala.Array[scala.Array[com.badlogic.gdx.graphics.g2d.BitmapFont.Glyph]](BitmapFont.PAGES)
     var missingGlyph: com.badlogic.gdx.graphics.g2d.BitmapFont.Glyph = null.asInstanceOf[com.badlogic.gdx.graphics.g2d.BitmapFont.Glyph]
     var spaceXadvance: scala.Float = 0.0f
     var xHeight: scala.Float = 1
     var breakChars: scala.Array[scala.Char] = null.asInstanceOf[scala.Array[scala.Char]]
-    var xChars: scala.Array[scala.Char] = Array[scala.Char]('x', 'e', 'a', 'o', 'n', 's', 'r', 'c', 'u', 'm', 'v', 'w', 'z')
-    var capChars: scala.Array[scala.Char] = Array[scala.Char]('M', 'N', 'B', 'D', 'C', 'E', 'F', 'K', 'A', 'G', 'H', 'I', 'J', 'L', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z')
+    var xChars: scala.Array[scala.Char] = scala.Array[scala.Char]('x', 'e', 'a', 'o', 'n', 's', 'r', 'c', 'u', 'm', 'v', 'w', 'z')
+    var capChars: scala.Array[scala.Char] = scala.Array[scala.Char]('M', 'N', 'B', 'D', 'C', 'E', 'F', 'K', 'A', 'G', 'H', 'I', 'J', 'L', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z')
     def this(fontFile: com.badlogic.gdx.files.FileHandle, flip: scala.Boolean) = {
       this()
       this.fontFile = fontFile
@@ -337,7 +337,7 @@ object BitmapFont {
             }
           }
         } else ()
-        this.imagePaths = new Array[java.lang.String](pageCount);
+        this.imagePaths = new scala.Array[java.lang.String](pageCount);
         { var p: scala.Int = 0; while (p < pageCount) { {
           line = reader.readLine()
           if (line == null) {
@@ -620,7 +620,7 @@ object BitmapFont {
       var page: scala.Array[com.badlogic.gdx.graphics.g2d.BitmapFont.Glyph] = this.glyphs(ch / BitmapFont.PAGE_SIZE)
       if (page == null) {
         this.glyphs(ch / BitmapFont.PAGE_SIZE) = {
-          page = new Array[com.badlogic.gdx.graphics.g2d.BitmapFont.Glyph](BitmapFont.PAGE_SIZE)
+          page = new scala.Array[com.badlogic.gdx.graphics.g2d.BitmapFont.Glyph](BitmapFont.PAGE_SIZE)
           page
         }
       } else ()

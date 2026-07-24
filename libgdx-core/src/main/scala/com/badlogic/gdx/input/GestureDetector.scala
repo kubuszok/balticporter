@@ -262,9 +262,9 @@ object GestureDetector {
     var deltaY: scala.Float = 0.0f
     var lastTime: scala.Long = 0L
     var numSamples: scala.Int = 0
-    var meanX: scala.Array[scala.Float] = new Array[scala.Float](this.sampleSize)
-    var meanY: scala.Array[scala.Float] = new Array[scala.Float](this.sampleSize)
-    var meanTime: scala.Array[scala.Long] = new Array[scala.Long](this.sampleSize)
+    var meanX: scala.Array[scala.Float] = new scala.Array[scala.Float](this.sampleSize)
+    var meanY: scala.Array[scala.Float] = new scala.Array[scala.Float](this.sampleSize)
+    var meanTime: scala.Array[scala.Long] = new scala.Array[scala.Long](this.sampleSize)
     def start(x: scala.Float, y: scala.Float, timeStamp: scala.Long): scala.Unit = {
       this.lastX = x
       this.lastY = y

@@ -22,15 +22,15 @@ class BitmapFontCache {
     if (pageCount == 0) {
       throw new java.lang.IllegalArgumentException("The specified font must contain at least one texture page.")
     } else ()
-    this.pageVertices = new Array[scala.Array[scala.Float]](pageCount)
-    this.idx = new Array[scala.Int](pageCount)
+    this.pageVertices = new scala.Array[scala.Array[scala.Float]](pageCount)
+    this.idx = new scala.Array[scala.Int](pageCount)
     if (pageCount > 1) {
-      this.pageGlyphIndices = new Array[com.badlogic.gdx.utils.IntArray](pageCount);
+      this.pageGlyphIndices = new scala.Array[com.badlogic.gdx.utils.IntArray](pageCount);
       { var i: scala.Int = 0; val n: scala.Int = this.pageGlyphIndices.length; while (i < n) { {
         this.pageGlyphIndices(i) = new com.badlogic.gdx.utils.IntArray()
       }; i = i + 1 } }
     } else ()
-    this.tempGlyphCount = new Array[scala.Int](pageCount)
+    this.tempGlyphCount = new scala.Array[scala.Int](pageCount)
   }
   def this(font: com.badlogic.gdx.graphics.g2d.BitmapFont) = {
     this(font, font.usesIntegerPositions())
@@ -260,23 +260,23 @@ class BitmapFontCache {
     val vertexCount: scala.Int = this.idx(page) + (glyphCount * 20)
     val vertices: scala.Array[scala.Float] = this.pageVertices(page)
     if (vertices == null) {
-      this.pageVertices(page) = new Array[scala.Float](vertexCount)
+      this.pageVertices(page) = new scala.Array[scala.Float](vertexCount)
     } else {
       if (vertices.length < vertexCount) {
-        val newVertices: scala.Array[scala.Float] = new Array[scala.Float](vertexCount)
+        val newVertices: scala.Array[scala.Float] = new scala.Array[scala.Float](vertexCount)
         java.lang.System.arraycopy(vertices, 0, newVertices, 0, this.idx(page))
         this.pageVertices(page) = newVertices
       } else ()
     }
   }
   private def setPageCount(pageCount: scala.Int): scala.Unit = {
-    val newPageVertices: scala.Array[scala.Array[scala.Float]] = new Array[scala.Array[scala.Float]](pageCount)
+    val newPageVertices: scala.Array[scala.Array[scala.Float]] = new scala.Array[scala.Array[scala.Float]](pageCount)
     java.lang.System.arraycopy(this.pageVertices, 0, newPageVertices, 0, this.pageVertices.length)
     this.pageVertices = newPageVertices
-    val newIdx: scala.Array[scala.Int] = new Array[scala.Int](pageCount)
+    val newIdx: scala.Array[scala.Int] = new scala.Array[scala.Int](pageCount)
     java.lang.System.arraycopy(this.idx, 0, newIdx, 0, this.idx.length)
     this.idx = newIdx
-    val newPageGlyphIndices: scala.Array[com.badlogic.gdx.utils.IntArray] = new Array[com.badlogic.gdx.utils.IntArray](pageCount)
+    val newPageGlyphIndices: scala.Array[com.badlogic.gdx.utils.IntArray] = new scala.Array[com.badlogic.gdx.utils.IntArray](pageCount)
     var pageGlyphIndicesLength: scala.Int = 0
     if (this.pageGlyphIndices != null) {
       pageGlyphIndicesLength = this.pageGlyphIndices.length
@@ -286,7 +286,7 @@ class BitmapFontCache {
       newPageGlyphIndices(i) = new com.badlogic.gdx.utils.IntArray()
     }; i = i + 1 } }
     this.pageGlyphIndices = newPageGlyphIndices
-    this.tempGlyphCount = new Array[scala.Int](pageCount)
+    this.tempGlyphCount = new scala.Array[scala.Int](pageCount)
   }
   private def addToCache(layout: com.badlogic.gdx.graphics.g2d.GlyphLayout, x: scala.Float, y: scala.Float): scala.Unit = {
     val runCount: scala.Int = layout.runs.size

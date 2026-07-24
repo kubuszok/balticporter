@@ -342,8 +342,10 @@ final class TirEmitter(source: Program):
     case Tree.ArrayLength(a, _, _)      => s"${term(a, i)}.length"
     case Tree.NewArray(el, dims, init, _, _) =>
       init match
-        case Some(es) => s"Array[${tpe(el.tpe)}](${es.map(term(_, i)).mkString(", ")})"
-        case None     => s"new Array[${tpe(el.tpe)}](${dims.map(term(_, i)).mkString(", ")})"
+        // `scala.Array`, fully qualified: a bare `Array` collides with libGDX's own
+        // `com.badlogic.gdx.utils.Array` inside that package (same-package name resolution).
+        case Some(es) => s"scala.Array[${tpe(el.tpe)}](${es.map(term(_, i)).mkString(", ")})"
+        case None     => s"new scala.Array[${tpe(el.tpe)}](${dims.map(term(_, i)).mkString(", ")})"
     case Tree.ForEach(b, it, body, _, _) => s"for (${esc(sym(b.symbol).name)} <- ${term(it, i)}) ${term(body, i)}"
     case Tree.For(init, cond, upd, body, _, _) =>
       val is = init.map(stat(_, 0)).mkString("; ")

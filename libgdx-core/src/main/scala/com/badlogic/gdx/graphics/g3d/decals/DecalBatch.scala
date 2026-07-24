@@ -19,13 +19,13 @@ class DecalBatch extends com.badlogic.gdx.utils.Disposable {
     this.groupStrategy = groupStrategy
   }
   def initialize(size: scala.Int): scala.Unit = {
-    this.vertices = new Array[scala.Float](size * com.badlogic.gdx.graphics.g3d.decals.Decal.SIZE)
+    this.vertices = new scala.Array[scala.Float](size * com.badlogic.gdx.graphics.g3d.decals.Decal.SIZE)
     var vertexDataType: com.badlogic.gdx.graphics.Mesh.VertexDataType = com.badlogic.gdx.graphics.Mesh.VertexDataType.VertexArray
     if (com.badlogic.gdx.Gdx.gl30 != null) {
       vertexDataType = com.badlogic.gdx.graphics.Mesh.VertexDataType.VertexBufferObjectWithVAO
     } else ()
     this.mesh = new com.badlogic.gdx.graphics.Mesh(vertexDataType, false, size * 4, size * 6, new com.badlogic.gdx.graphics.VertexAttribute(com.badlogic.gdx.graphics.VertexAttributes.Usage.Position, 3, com.badlogic.gdx.graphics.glutils.ShaderProgram.POSITION_ATTRIBUTE), new com.badlogic.gdx.graphics.VertexAttribute(com.badlogic.gdx.graphics.VertexAttributes.Usage.ColorPacked, 4, com.badlogic.gdx.graphics.glutils.ShaderProgram.COLOR_ATTRIBUTE), new com.badlogic.gdx.graphics.VertexAttribute(com.badlogic.gdx.graphics.VertexAttributes.Usage.TextureCoordinates, 2, com.badlogic.gdx.graphics.glutils.ShaderProgram.TEXCOORD_ATTRIBUTE + "0"))
-    val indices: scala.Array[scala.Short] = new Array[scala.Short](size * 6)
+    val indices: scala.Array[scala.Short] = new scala.Array[scala.Short](size * 6)
     var v: scala.Int = 0;
     { var i: scala.Int = 0; while (i < indices.length) { {
       indices(i) = v.asInstanceOf[scala.Short].asInstanceOf[scala.Short]

@@ -23,8 +23,8 @@ final class DefaultTextureBinder extends com.badlogic.gdx.graphics.g3d.utils.Tex
     this.method = method
     this.offset = offset
     this.count = count
-    this.textures = new Array[com.badlogic.gdx.graphics.GLTexture](count)
-    this.unitsLRU = if (method == DefaultTextureBinder.LRU) new Array[scala.Int](count) else null
+    this.textures = new scala.Array[com.badlogic.gdx.graphics.GLTexture](count)
+    this.unitsLRU = if (method == DefaultTextureBinder.LRU) new scala.Array[scala.Int](count) else null
   }
   def this(method: scala.Int, offset: scala.Int) = {
     this(method, offset, -1)

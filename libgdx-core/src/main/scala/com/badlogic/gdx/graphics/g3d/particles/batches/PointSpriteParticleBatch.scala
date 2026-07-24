@@ -30,7 +30,7 @@ class PointSpriteParticleBatch extends com.badlogic.gdx.graphics.g3d.particles.b
     this(capacity, new com.badlogic.gdx.graphics.g3d.particles.ParticleShader.Config(com.badlogic.gdx.graphics.g3d.particles.ParticleShader.ParticleType.Point))
   }
   def allocParticlesData(capacity: scala.Int): scala.Unit = {
-    this.vertices = new Array[scala.Float](capacity * PointSpriteParticleBatch.CPU_VERTEX_SIZE)
+    this.vertices = new scala.Array[scala.Float](capacity * PointSpriteParticleBatch.CPU_VERTEX_SIZE)
     if (this.renderable.meshPart.mesh != null) {
       this.renderable.meshPart.mesh.dispose()
     } else ()

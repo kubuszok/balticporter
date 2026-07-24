@@ -71,7 +71,7 @@ final class Method {
   }
   def getDeclaredAnnotations(): scala.Array[com.badlogic.gdx.utils.reflect.Annotation] = {
     val annotations: scala.Array[java.lang.annotation.Annotation] = this.method.getDeclaredAnnotations()
-    val result: scala.Array[com.badlogic.gdx.utils.reflect.Annotation] = new Array[com.badlogic.gdx.utils.reflect.Annotation](annotations.length);
+    val result: scala.Array[com.badlogic.gdx.utils.reflect.Annotation] = new scala.Array[com.badlogic.gdx.utils.reflect.Annotation](annotations.length);
     { var i: scala.Int = 0; while (i < annotations.length) { {
       result(i) = new com.badlogic.gdx.utils.reflect.Annotation(annotations(i))
     }; i = i + 1 } }

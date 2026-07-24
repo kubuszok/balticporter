@@ -186,14 +186,14 @@ object TextureAtlas {
       this.load(packFile, imagesDir, flip)
     }
     def load(packFile: com.badlogic.gdx.files.FileHandle, imagesDir: com.badlogic.gdx.files.FileHandle, flip: scala.Boolean): scala.Unit = {
-      val entry: scala.Array[java.lang.String] = new Array[java.lang.String](5)
+      val entry: scala.Array[java.lang.String] = new scala.Array[java.lang.String](5)
       val pageFields: com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Page]] = new com.badlogic.gdx.utils.ObjectMap(15, 0.99f)
       pageFields.put("size", new com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Page]())
       pageFields.put("format", new com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Page]())
       pageFields.put("filter", new com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Page]())
       pageFields.put("repeat", new com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Page]())
       pageFields.put("pma", new com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Page]())
-      val hasIndexes: scala.Array[scala.Boolean] = Array[scala.Boolean](false)
+      val hasIndexes: scala.Array[scala.Boolean] = scala.Array[scala.Boolean](false)
       val regionFields: com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Region]] = new com.badlogic.gdx.utils.ObjectMap(127, 0.99f)
       regionFields.put("xy", new com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Region]())
       regionFields.put("size", new com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Region]())
@@ -271,7 +271,7 @@ object TextureAtlas {
                     values = new com.badlogic.gdx.utils.Array(8)
                   } else ()
                   names.add(entry(0))
-                  val entryValues: scala.Array[scala.Int] = new Array[scala.Int](count);
+                  val entryValues: scala.Array[scala.Int] = new scala.Array[scala.Int](count);
                   { var i: scala.Int = 0; while (i < count) { {
                     try {
                       entryValues(i) = java.lang.Integer.parseInt(entry(i + 1))

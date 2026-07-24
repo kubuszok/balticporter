@@ -199,8 +199,8 @@ object Interpolation {
       if ((bounces < 2) || (bounces > 5)) {
         throw new java.lang.IllegalArgumentException("bounces cannot be < 2 or > 5: " + bounces)
       } else ()
-      this.widths = new Array[scala.Float](bounces)
-      this.heights = new Array[scala.Float](bounces)
+      this.widths = new scala.Array[scala.Float](bounces)
+      this.heights = new scala.Array[scala.Float](bounces)
       this.heights(0) = 1
       bounces match {
         case 2 => {

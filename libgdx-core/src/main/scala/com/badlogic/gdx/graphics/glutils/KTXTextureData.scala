@@ -35,7 +35,7 @@ class KTXTextureData extends com.badlogic.gdx.graphics.TextureData with com.badl
       throw new com.badlogic.gdx.utils.GdxRuntimeException("Need a file to load from")
     } else ()
     if (this.file.name().endsWith(".zktx")) {
-      val buffer: scala.Array[scala.Byte] = new Array[scala.Byte](1024 * 10)
+      val buffer: scala.Array[scala.Byte] = new scala.Array[scala.Byte](1024 * 10)
       var in: java.io.DataInputStream = null
       try {
         in = new java.io.DataInputStream(new java.io.BufferedInputStream(new java.util.zip.GZIPInputStream(this.file.read())))

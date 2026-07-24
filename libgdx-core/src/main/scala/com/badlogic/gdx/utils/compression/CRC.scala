@@ -24,5 +24,5 @@ class CRC {
   }
 }
 object CRC {
-  var Table: scala.Array[scala.Int] = new Array[scala.Int](256)
+  var Table: scala.Array[scala.Int] = new scala.Array[scala.Int](256)
 }

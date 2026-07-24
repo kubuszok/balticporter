@@ -297,7 +297,7 @@ class G3dModelLoader extends com.badlogic.gdx.assets.loaders.ModelLoader[com.bad
     } else ()
     val materials: com.badlogic.gdx.utils.JsonValue = json.get("parts")
     if (materials != null) {
-      jsonNode.parts = new Array[com.badlogic.gdx.graphics.g3d.model.data.ModelNodePart](materials.size$field)
+      jsonNode.parts = new scala.Array[com.badlogic.gdx.graphics.g3d.model.data.ModelNodePart](materials.size$field)
       var i: scala.Int = 0;
       { var material: com.badlogic.gdx.utils.JsonValue = materials.child$field; while (material != null) { {
         val nodePart: com.badlogic.gdx.graphics.g3d.model.data.ModelNodePart = new com.badlogic.gdx.graphics.g3d.model.data.ModelNodePart()
@@ -338,7 +338,7 @@ class G3dModelLoader extends com.badlogic.gdx.assets.loaders.ModelLoader[com.bad
     } else ()
     var children: com.badlogic.gdx.utils.JsonValue = json.get("children")
     if (children != null) {
-      jsonNode.children = new Array[com.badlogic.gdx.graphics.g3d.model.data.ModelNode](children.size$field)
+      jsonNode.children = new scala.Array[com.badlogic.gdx.graphics.g3d.model.data.ModelNode](children.size$field)
       var i: scala.Int = 0;
       { var child: com.badlogic.gdx.utils.JsonValue = children.child$field; while (child != null) { {
         jsonNode.children(i) = this.parseNodesRecursively(child)

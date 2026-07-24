@@ -17,7 +17,7 @@ class NinePatch {
   private var middleHeight: scala.Float = 0.0f
   private var topHeight: scala.Float = 0.0f
   private var bottomHeight: scala.Float = 0.0f
-  private var vertices: scala.Array[scala.Float] = new Array[scala.Float]((9 * 4) * 5)
+  private var vertices: scala.Array[scala.Float] = new scala.Array[scala.Float]((9 * 4) * 5)
   private var idx: scala.Int = 0
   private final val color: com.badlogic.gdx.graphics.Color = new com.badlogic.gdx.graphics.Color(com.badlogic.gdx.graphics.Color.WHITE)
   private var padLeft: scala.Float = -1
@@ -32,7 +32,7 @@ class NinePatch {
     val sign: scala.Int = if (region.isFlipY()) -1 else 1
     val middleWidth: scala.Int = (region.getRegionWidth() - left) - right
     val middleHeight: scala.Int = (region.getRegionHeight() - top) - bottom
-    val patches: scala.Array[com.badlogic.gdx.graphics.g2d.TextureRegion] = new Array[com.badlogic.gdx.graphics.g2d.TextureRegion](9)
+    val patches: scala.Array[com.badlogic.gdx.graphics.g2d.TextureRegion] = new scala.Array[com.badlogic.gdx.graphics.g2d.TextureRegion](9)
     if (top > 0) {
       if (left > 0) {
         patches(NinePatch.TOP_LEFT) = new com.badlogic.gdx.graphics.g2d.TextureRegion(region, 0, 0, left, sign * top)
@@ -106,14 +106,14 @@ class NinePatch {
     this.padTop = ninePatch.padTop
     this.padBottom = ninePatch.padBottom
     this.padRight = ninePatch.padRight
-    this.vertices = new Array[scala.Float](ninePatch.vertices.length)
+    this.vertices = new scala.Array[scala.Float](ninePatch.vertices.length)
     java.lang.System.arraycopy(ninePatch.vertices, 0, this.vertices, 0, ninePatch.vertices.length)
     this.idx = ninePatch.idx
     this.color.set(color)
   }
   def this(region: com.badlogic.gdx.graphics.g2d.TextureRegion) = {
     this()
-    this.load(Array[com.badlogic.gdx.graphics.g2d.TextureRegion](null, null, null, null, region, null, null, null, null))
+    this.load(scala.Array[com.badlogic.gdx.graphics.g2d.TextureRegion](null, null, null, null, region, null, null, null, null))
   }
   def this(patches: scala.Array[com.badlogic.gdx.graphics.g2d.TextureRegion]) = {
     this()
@@ -216,7 +216,7 @@ class NinePatch {
       this.topRight = -1
     }
     if (this.idx < this.vertices.length) {
-      val newVertices: scala.Array[scala.Float] = new Array[scala.Float](this.idx)
+      val newVertices: scala.Array[scala.Float] = new scala.Array[scala.Float](this.idx)
       java.lang.System.arraycopy(this.vertices, 0, newVertices, 0, this.idx)
       this.vertices = newVertices
     } else ()

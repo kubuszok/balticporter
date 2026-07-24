@@ -38,7 +38,7 @@ class BillboardParticleBatch extends com.badlogic.gdx.graphics.g3d.particles.bat
     this(com.badlogic.gdx.graphics.g3d.particles.ParticleShader.AlignMode.Screen, false, capacity)
   }
   def allocParticlesData(capacity: scala.Int): scala.Unit = {
-    this.vertices = new Array[scala.Float]((this.currentVertexSize * 4) * capacity)
+    this.vertices = new scala.Array[scala.Float]((this.currentVertexSize * 4) * capacity)
     this.allocRenderables(capacity)
   }
   def allocRenderable(): com.badlogic.gdx.graphics.g3d.Renderable = {
@@ -53,7 +53,7 @@ class BillboardParticleBatch extends com.badlogic.gdx.graphics.g3d.particles.bat
   }
   private def allocIndices(): scala.Unit = {
     val indicesCount: scala.Int = BillboardParticleBatch.MAX_PARTICLES_PER_MESH * 6
-    this.indices = new Array[scala.Short](indicesCount);
+    this.indices = new scala.Array[scala.Short](indicesCount);
     { var i: scala.Int = 0; var vertex: scala.Int = 0; while (i < indicesCount) { {
       this.indices(i) = vertex.asInstanceOf[scala.Short].asInstanceOf[scala.Short]
       this.indices(i + 1) = (vertex + 1).asInstanceOf[scala.Short].asInstanceOf[scala.Short]

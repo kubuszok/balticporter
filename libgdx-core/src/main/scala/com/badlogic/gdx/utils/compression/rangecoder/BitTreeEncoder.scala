@@ -6,7 +6,7 @@ class BitTreeEncoder {
   def this(numBitLevels: scala.Int) = {
     this()
     this.NumBitLevels = numBitLevels
-    this.Models = new Array[scala.Short](1 << numBitLevels)
+    this.Models = new scala.Array[scala.Short](1 << numBitLevels)
   }
   def Init(): scala.Unit = {
     com.badlogic.gdx.utils.compression.rangecoder.Decoder.InitBitModels(this.Models)

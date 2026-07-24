@@ -64,7 +64,7 @@ class Octree[T] {
       val deeperLevel: scala.Int = this.level - 1
       this.leaf = false
       if (this.children == null) {
-        this.children = new Array[OctreeNode](8)
+        this.children = new scala.Array[OctreeNode](8)
       } else ()
       this.children(0) = createNode(new com.badlogic.gdx.math.Vector3(this.bounds.min$field.x, midy, midz), new com.badlogic.gdx.math.Vector3(midx, this.bounds.max$field.y, this.bounds.max$field.z), deeperLevel)
       this.children(1) = createNode(new com.badlogic.gdx.math.Vector3(midx, midy, midz), new com.badlogic.gdx.math.Vector3(this.bounds.max$field.x, this.bounds.max$field.y, this.bounds.max$field.z), deeperLevel)

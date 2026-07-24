@@ -12,7 +12,7 @@ class TiledMapTileLayer extends com.badlogic.gdx.maps.MapLayer {
     this.height = height
     this.tileWidth = tileWidth
     this.tileHeight = tileHeight
-    this.cells = new Array[scala.Array[com.badlogic.gdx.maps.tiled.TiledMapTileLayer.Cell]](width, height)
+    this.cells = new scala.Array[scala.Array[com.badlogic.gdx.maps.tiled.TiledMapTileLayer.Cell]](width, height)
   }
   def getWidth(): scala.Int = {
     return this.width

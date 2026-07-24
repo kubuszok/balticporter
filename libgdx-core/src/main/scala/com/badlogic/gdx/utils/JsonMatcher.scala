@@ -2,7 +2,7 @@ package com.badlogic.gdx.utils
 
 class JsonMatcher extends com.badlogic.gdx.utils.JsonSkimmer {
   var processor: com.badlogic.gdx.utils.JsonMatcher.Processor = null.asInstanceOf[com.badlogic.gdx.utils.JsonMatcher.Processor]
-  var patterns: scala.Array[com.badlogic.gdx.utils.JsonMatcher.Pattern] = new Array[com.badlogic.gdx.utils.JsonMatcher.Pattern](0)
+  var patterns: scala.Array[com.badlogic.gdx.utils.JsonMatcher.Pattern] = new scala.Array[com.badlogic.gdx.utils.JsonMatcher.Pattern](0)
   var original: scala.Array[com.badlogic.gdx.utils.JsonMatcher.Pattern] = null.asInstanceOf[scala.Array[com.badlogic.gdx.utils.JsonMatcher.Pattern]]
   var all: scala.Array[com.badlogic.gdx.utils.JsonMatcher.Pattern] = null.asInstanceOf[scala.Array[com.badlogic.gdx.utils.JsonMatcher.Pattern]]
   var total: scala.Int = 0
@@ -30,11 +30,11 @@ class JsonMatcher extends com.badlogic.gdx.utils.JsonSkimmer {
     if (this.chars != null) {
       throw new java.lang.IllegalStateException()
     } else ()
-    val newPatterns: scala.Array[com.badlogic.gdx.utils.JsonMatcher.Pattern] = new Array[com.badlogic.gdx.utils.JsonMatcher.Pattern](this.patterns.length + 1)
+    val newPatterns: scala.Array[com.badlogic.gdx.utils.JsonMatcher.Pattern] = new scala.Array[com.badlogic.gdx.utils.JsonMatcher.Pattern](this.patterns.length + 1)
     java.lang.System.arraycopy(this.patterns, 0, newPatterns, 0, this.patterns.length)
     var newPattern: com.badlogic.gdx.utils.JsonMatcher.Pattern = null.asInstanceOf[com.badlogic.gdx.utils.JsonMatcher.Pattern]
     if (pattern.isEmpty()) {
-      newPattern = new com.badlogic.gdx.utils.JsonMatcher.Pattern(new com.badlogic.gdx.utils.JsonMatcher.Node(new Array[com.badlogic.gdx.utils.JsonMatcher.Match](0), false, null), processor, java.lang.Integer.MAX_VALUE, false)
+      newPattern = new com.badlogic.gdx.utils.JsonMatcher.Pattern(new com.badlogic.gdx.utils.JsonMatcher.Node(new scala.Array[com.badlogic.gdx.utils.JsonMatcher.Match](0), false, null), processor, java.lang.Integer.MAX_VALUE, false)
       newPattern.captureRoot = true
       newPattern.captureAll = true
       this.endCaptures = this.endCaptures + 1
@@ -546,7 +546,7 @@ class JsonMatcher extends com.badlogic.gdx.utils.JsonSkimmer {
       if (node.starStar) {
         return node
       } else ()
-      prev = new com.badlogic.gdx.utils.JsonMatcher.Node(Array[com.badlogic.gdx.utils.JsonMatcher.Match](new com.badlogic.gdx.utils.JsonMatcher.Match(".", 0, false, false)), false, null)
+      prev = new com.badlogic.gdx.utils.JsonMatcher.Node(scala.Array[com.badlogic.gdx.utils.JsonMatcher.Match](new com.badlogic.gdx.utils.JsonMatcher.Match(".", 0, false, false)), false, null)
     } else ()
     prev.next = node
     prev.nextStarStar = node.starStar

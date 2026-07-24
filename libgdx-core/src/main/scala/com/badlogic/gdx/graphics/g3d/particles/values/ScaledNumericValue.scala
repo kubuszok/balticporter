@@ -1,8 +1,8 @@
 package com.badlogic.gdx.graphics.g3d.particles.values
 
 class ScaledNumericValue extends com.badlogic.gdx.graphics.g3d.particles.values.RangedNumericValue {
-  private var scaling: scala.Array[scala.Float] = Array[scala.Float](1)
-  var timeline: scala.Array[scala.Float] = Array[scala.Float](0)
+  private var scaling: scala.Array[scala.Float] = scala.Array[scala.Float](1)
+  var timeline: scala.Array[scala.Float] = scala.Array[scala.Float](0)
   private var highMin: scala.Float = 0.0f
   private var highMax: scala.Float = 0.0f
   private var relative: scala.Boolean = false
@@ -69,9 +69,9 @@ class ScaledNumericValue extends com.badlogic.gdx.graphics.g3d.particles.values.
     super.load(value)
     this.highMax = value.highMax
     this.highMin = value.highMin
-    this.scaling = new Array[scala.Float](value.scaling.length)
+    this.scaling = new scala.Array[scala.Float](value.scaling.length)
     java.lang.System.arraycopy(value.scaling, 0, this.scaling, 0, this.scaling.length)
-    this.timeline = new Array[scala.Float](value.timeline.length)
+    this.timeline = new scala.Array[scala.Float](value.timeline.length)
     java.lang.System.arraycopy(value.timeline, 0, this.timeline, 0, this.timeline.length)
     this.relative = value.relative
   }

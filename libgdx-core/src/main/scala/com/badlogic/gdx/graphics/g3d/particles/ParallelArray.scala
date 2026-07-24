@@ -123,7 +123,7 @@ class ParallelArray {
       }; i = i + 1; k = k + 1 } }
     }
     def setCapacity(requiredCapacity: scala.Int): scala.Unit = {
-      val newData: scala.Array[scala.Float] = new Array[scala.Float](strideSize * requiredCapacity)
+      val newData: scala.Array[scala.Float] = new scala.Array[scala.Float](strideSize * requiredCapacity)
       java.lang.System.arraycopy(this.data, 0, newData, 0, java.lang.Math.min(this.data.length, newData.length))
       data = {
         this.data = newData
@@ -155,7 +155,7 @@ class ParallelArray {
       }; i = i + 1; k = k + 1 } }
     }
     def setCapacity(requiredCapacity: scala.Int): scala.Unit = {
-      val newData: scala.Array[scala.Int] = new Array[scala.Int](strideSize * requiredCapacity)
+      val newData: scala.Array[scala.Int] = new scala.Array[scala.Int](strideSize * requiredCapacity)
       java.lang.System.arraycopy(this.data, 0, newData, 0, java.lang.Math.min(this.data.length, newData.length))
       data = {
         this.data = newData

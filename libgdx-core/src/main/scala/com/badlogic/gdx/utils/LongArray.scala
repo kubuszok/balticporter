@@ -7,13 +7,13 @@ class LongArray {
   def this(ordered: scala.Boolean, capacity: scala.Int) = {
     this()
     this.ordered = ordered
-    this.items = new Array[scala.Long](capacity)
+    this.items = new scala.Array[scala.Long](capacity)
   }
   def this(array: LongArray) = {
     this()
     this.ordered = array.ordered
     this.size = array.size
-    this.items = new Array[scala.Long](this.size)
+    this.items = new scala.Array[scala.Long](this.size)
     java.lang.System.arraycopy(array.items, 0, this.items, 0, this.size)
   }
   def this(ordered: scala.Boolean, array: scala.Array[scala.Long], startIndex: scala.Int, count: scala.Int) = {
@@ -321,7 +321,7 @@ class LongArray {
     return this.items
   }
   def resize(newSize: scala.Int): scala.Array[scala.Long] = {
-    val newItems: scala.Array[scala.Long] = new Array[scala.Long](newSize)
+    val newItems: scala.Array[scala.Long] = new scala.Array[scala.Long](newSize)
     var items: scala.Array[scala.Long] = this.items
     java.lang.System.arraycopy(items, 0, newItems, 0, java.lang.Math.min(this.size, newItems.length))
     this.items = newItems
@@ -363,7 +363,7 @@ class LongArray {
     return this.items(com.badlogic.gdx.math.MathUtils.random(0, this.size - 1))
   }
   def toArray(): scala.Array[scala.Long] = {
-    val array: scala.Array[scala.Long] = new Array[scala.Long](this.size)
+    val array: scala.Array[scala.Long] = new scala.Array[scala.Long](this.size)
     java.lang.System.arraycopy(this.items, 0, array, 0, this.size)
     return array
   }

@@ -55,7 +55,7 @@ object ScreenUtils {
     val pixels: java.nio.ByteBuffer = com.badlogic.gdx.utils.BufferUtils.newByteBuffer((w * h) * 4)
     com.badlogic.gdx.Gdx.gl.glReadPixels(x, y, w, h, com.badlogic.gdx.graphics.GL20.GL_RGBA, com.badlogic.gdx.graphics.GL20.GL_UNSIGNED_BYTE, pixels)
     val numBytes: scala.Int = (w * h) * 4
-    val lines: scala.Array[scala.Byte] = new Array[scala.Byte](numBytes)
+    val lines: scala.Array[scala.Byte] = new scala.Array[scala.Byte](numBytes)
     if (flipY) {
       val numBytesPerLine: scala.Int = w * 4;
       { var i: scala.Int = 0; while (i < h) { {

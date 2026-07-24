@@ -37,9 +37,9 @@ class SpriteBatch extends com.badlogic.gdx.graphics.g2d.Batch {
     this.currentDataType = vertexDataType
     this.mesh = new com.badlogic.gdx.graphics.Mesh(this.currentDataType, false, size * 4, size * 6, new com.badlogic.gdx.graphics.VertexAttribute(com.badlogic.gdx.graphics.VertexAttributes.Usage.Position, 2, com.badlogic.gdx.graphics.glutils.ShaderProgram.POSITION_ATTRIBUTE), new com.badlogic.gdx.graphics.VertexAttribute(com.badlogic.gdx.graphics.VertexAttributes.Usage.ColorPacked, 4, com.badlogic.gdx.graphics.glutils.ShaderProgram.COLOR_ATTRIBUTE), new com.badlogic.gdx.graphics.VertexAttribute(com.badlogic.gdx.graphics.VertexAttributes.Usage.TextureCoordinates, 2, com.badlogic.gdx.graphics.glutils.ShaderProgram.TEXCOORD_ATTRIBUTE + "0"))
     this.projectionMatrix.setToOrtho2D(0, 0, com.badlogic.gdx.Gdx.graphics.getWidth(), com.badlogic.gdx.Gdx.graphics.getHeight())
-    this.vertices = new Array[scala.Float](size * com.badlogic.gdx.graphics.g2d.Sprite.SPRITE_SIZE)
+    this.vertices = new scala.Array[scala.Float](size * com.badlogic.gdx.graphics.g2d.Sprite.SPRITE_SIZE)
     val len: scala.Int = size * 6
-    val indices: scala.Array[scala.Short] = new Array[scala.Short](len)
+    val indices: scala.Array[scala.Short] = new scala.Array[scala.Short](len)
     var j: scala.Short = 0.asInstanceOf[scala.Short];
     { var i: scala.Int = 0; while (i < len) { {
       indices(i) = j

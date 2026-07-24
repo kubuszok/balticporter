@@ -261,7 +261,7 @@ abstract class BaseTmxMapLoader[P <: com.badlogic.gdx.maps.tiled.BaseTiledMapLoa
           child
         } != null) {
           val points: scala.Array[java.lang.String] = child.getAttribute("points").split(" ")
-          val vertices: scala.Array[scala.Float] = new Array[scala.Float](points.length * 2);
+          val vertices: scala.Array[scala.Float] = new scala.Array[scala.Float](points.length * 2);
           { var i: scala.Int = 0; while (i < points.length) { {
             val point: scala.Array[java.lang.String] = points(i).split(",")
             vertices(i * 2) = java.lang.Float.parseFloat(point(0)) * scaleX
@@ -276,7 +276,7 @@ abstract class BaseTmxMapLoader[P <: com.badlogic.gdx.maps.tiled.BaseTiledMapLoa
             child
           } != null) {
             val points: scala.Array[java.lang.String] = child.getAttribute("points").split(" ")
-            val vertices: scala.Array[scala.Float] = new Array[scala.Float](points.length * 2);
+            val vertices: scala.Array[scala.Float] = new scala.Array[scala.Float](points.length * 2);
             { var i: scala.Int = 0; while (i < points.length) { {
               val point: scala.Array[java.lang.String] = points(i).split(",")
               vertices(i * 2) = java.lang.Float.parseFloat(point(0)) * scaleX
@@ -674,7 +674,7 @@ object BaseTmxMapLoader {
     if (encoding == null) {
       throw new com.badlogic.gdx.utils.GdxRuntimeException("Unsupported encoding (XML) for TMX Layer Data")
     } else ()
-    val ids: scala.Array[scala.Int] = new Array[scala.Int](width * height)
+    val ids: scala.Array[scala.Int] = new scala.Array[scala.Int](width * height)
     if (encoding.equals("csv")) {
       val array: scala.Array[java.lang.String] = data.getText().split(",");
       { var i: scala.Int = 0; while (i < array.length) { {
@@ -700,7 +700,7 @@ object BaseTmxMapLoader {
                 }
               }
             }
-            val temp: scala.Array[scala.Byte] = new Array[scala.Byte](4);
+            val temp: scala.Array[scala.Byte] = new scala.Array[scala.Byte](4);
             { var y: scala.Int = 0; while (y < height) { {
               { var x: scala.Int = 0; while (x < width) { {
                 var read: scala.Int = is.read(temp)

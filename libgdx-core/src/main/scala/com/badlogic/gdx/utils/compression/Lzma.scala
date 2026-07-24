@@ -43,7 +43,7 @@ object Lzma {
   }
   def decompress(in: java.io.InputStream, out: java.io.OutputStream): scala.Unit = {
     val propertiesSize: scala.Int = 5
-    val properties: scala.Array[scala.Byte] = new Array[scala.Byte](propertiesSize)
+    val properties: scala.Array[scala.Byte] = new scala.Array[scala.Byte](propertiesSize)
     if (in.read(properties, 0, propertiesSize) != propertiesSize) {
       throw new java.lang.RuntimeException("input .lzma file is too short")
     } else ()

@@ -257,7 +257,7 @@ class UBJsonReader extends com.badlogic.gdx.utils.BaseJsonReader {
     return din.readInt().asInstanceOf[scala.Long] & -1
   }
   def readString(din: java.io.DataInputStream, size: scala.Long): java.lang.String = {
-    val data: scala.Array[scala.Byte] = new Array[scala.Byte](size.asInstanceOf[scala.Int])
+    val data: scala.Array[scala.Byte] = new scala.Array[scala.Byte](size.asInstanceOf[scala.Int])
     din.readFully(data)
     return new java.lang.String(data, "UTF-8")
   }

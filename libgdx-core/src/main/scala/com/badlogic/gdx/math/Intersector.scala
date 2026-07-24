@@ -1122,9 +1122,9 @@ object Intersector {
     var backOffset: scala.Int = 0
     def this(numAttributes: scala.Int) = {
       this()
-      this.front = new Array[scala.Float]((numAttributes * 3) * 2)
-      this.back = new Array[scala.Float]((numAttributes * 3) * 2)
-      this.edgeSplit = new Array[scala.Float](numAttributes)
+      this.front = new scala.Array[scala.Float]((numAttributes * 3) * 2)
+      this.back = new scala.Array[scala.Float]((numAttributes * 3) * 2)
+      this.edgeSplit = new scala.Array[scala.Float](numAttributes)
     }
     def toString(): java.lang.String = {
       return ((((((((("SplitTriangle [front=" + java.util.Arrays.toString(this.front)) + ", back=") + java.util.Arrays.toString(this.back)) + ", numFront=") + this.numFront) + ", numBack=") + this.numBack) + ", total=") + this.total) + "]"

@@ -2,7 +2,7 @@ package com.badlogic.gdx.graphics.g3d.decals
 
 class Decal {
   var value: scala.Int = 0
-  var vertices: scala.Array[scala.Float] = new Array[scala.Float](Decal.SIZE)
+  var vertices: scala.Array[scala.Float] = new scala.Array[scala.Float](Decal.SIZE)
   var position: com.badlogic.gdx.math.Vector3 = new com.badlogic.gdx.math.Vector3()
   var rotation: com.badlogic.gdx.math.Quaternion = new com.badlogic.gdx.math.Quaternion()
   var scale: com.badlogic.gdx.math.Vector2 = new com.badlogic.gdx.math.Vector2(1, 1)

@@ -52,7 +52,7 @@ class BinTree extends com.badlogic.gdx.utils.compression.lz.InWindow {
     this._matchMaxLen = matchMaxLen
     val cyclicBufferSize: scala.Int = historySize + 1
     if (this._cyclicBufferSize != cyclicBufferSize) {
-      this._son = new Array[scala.Int]({
+      this._son = new scala.Array[scala.Int]({
         this._cyclicBufferSize = cyclicBufferSize
         this._cyclicBufferSize
       } * 2)
@@ -74,7 +74,7 @@ class BinTree extends com.badlogic.gdx.utils.compression.lz.InWindow {
       hs = hs + this.kFixHashSize
     } else ()
     if (hs != this._hashSizeSum) {
-      this._hash = new Array[scala.Int]({
+      this._hash = new scala.Array[scala.Int]({
         this._hashSizeSum = hs
         this._hashSizeSum
       })
@@ -313,5 +313,5 @@ object BinTree {
   final val kHash3Offset: scala.Int = BinTree.kHash2Size
   final val kEmptyHashValue: scala.Int = 0
   final val kMaxValForNormalize: scala.Int = (1 << 30) - 1
-  private final val CrcTable: scala.Array[scala.Int] = new Array[scala.Int](256)
+  private final val CrcTable: scala.Array[scala.Int] = new scala.Array[scala.Int](256)
 }

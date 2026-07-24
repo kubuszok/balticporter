@@ -3,7 +3,7 @@ package com.badlogic.gdx.maps.tiled.renderers
 class OrthoCachedTiledMapRenderer extends com.badlogic.gdx.maps.tiled.TiledMapRenderer with com.badlogic.gdx.utils.Disposable {
   var map: com.badlogic.gdx.maps.tiled.TiledMap = null.asInstanceOf[com.badlogic.gdx.maps.tiled.TiledMap]
   var spriteCache: com.badlogic.gdx.graphics.g2d.SpriteCache = null.asInstanceOf[com.badlogic.gdx.graphics.g2d.SpriteCache]
-  final val vertices: scala.Array[scala.Float] = new Array[scala.Float](20)
+  final val vertices: scala.Array[scala.Float] = new scala.Array[scala.Float](20)
   var blending: scala.Boolean = false
   var unitScale: scala.Float = 0.0f
   final val viewBounds: com.badlogic.gdx.math.Rectangle = new com.badlogic.gdx.math.Rectangle()

@@ -18,7 +18,7 @@ class ConvexHull {
     var `end`: scala.Int = offset + count
     if (!sorted) {
       if ((this.sortedPoints == null) || (this.sortedPoints.length < count)) {
-        this.sortedPoints = new Array[scala.Float](count)
+        this.sortedPoints = new scala.Array[scala.Float](count)
       } else ()
       java.lang.System.arraycopy(points, offset, this.sortedPoints, 0, count)
       points = this.sortedPoints
@@ -63,7 +63,7 @@ class ConvexHull {
     var `end`: scala.Int = offset + count
     if (!sorted) {
       if ((this.sortedPoints == null) || (this.sortedPoints.length < count)) {
-        this.sortedPoints = new Array[scala.Float](count)
+        this.sortedPoints = new scala.Array[scala.Float](count)
       } else ()
       java.lang.System.arraycopy(points, offset, this.sortedPoints, 0, count)
       points = this.sortedPoints

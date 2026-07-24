@@ -87,12 +87,12 @@ object RenderableShapeBuilder {
   }
   private def ensureVerticesCapacity(capacity: scala.Int): scala.Unit = {
     if ((RenderableShapeBuilder.vertices == null) || (RenderableShapeBuilder.vertices.length < capacity)) {
-      RenderableShapeBuilder.vertices = new Array[scala.Float](capacity)
+      RenderableShapeBuilder.vertices = new scala.Array[scala.Float](capacity)
     } else ()
   }
   private def ensureIndicesCapacity(capacity: scala.Int): scala.Unit = {
     if ((RenderableShapeBuilder.indices == null) || (RenderableShapeBuilder.indices.length < capacity)) {
-      RenderableShapeBuilder.indices = new Array[scala.Short](capacity)
+      RenderableShapeBuilder.indices = new scala.Array[scala.Short](capacity)
     } else ()
   }
   private def minVerticeInIndices(): scala.Short = {

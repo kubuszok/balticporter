@@ -55,7 +55,7 @@ class PolygonRegionLoader extends com.badlogic.gdx.assets.loaders.SynchronousAss
         } else ()
         if (line.startsWith("s")) {
           val polygonStrings: scala.Array[java.lang.String] = line.substring(1).trim().split(",")
-          val vertices: scala.Array[scala.Float] = new Array[scala.Float](polygonStrings.length);
+          val vertices: scala.Array[scala.Float] = new scala.Array[scala.Float](polygonStrings.length);
           { var i: scala.Int = 0; val n: scala.Int = vertices.length; while (i < n) { {
             vertices(i) = java.lang.Float.parseFloat(polygonStrings(i))
           }; i = i + 1 } }
@@ -76,6 +76,6 @@ object PolygonRegionLoader {
   class PolygonRegionParameters extends com.badlogic.gdx.assets.AssetLoaderParameters[com.badlogic.gdx.graphics.g2d.PolygonRegion] {
     var texturePrefix: java.lang.String = "i "
     var readerBuffer: scala.Int = 1024
-    var textureExtensions: scala.Array[java.lang.String] = Array[java.lang.String]("png", "PNG", "jpeg", "JPEG", "jpg", "JPG", "cim", "CIM", "etc1", "ETC1", "ktx", "KTX", "zktx", "ZKTX")
+    var textureExtensions: scala.Array[java.lang.String] = scala.Array[java.lang.String]("png", "PNG", "jpeg", "JPEG", "jpg", "JPG", "cim", "CIM", "etc1", "ETC1", "ktx", "KTX", "zktx", "ZKTX")
   }
 }

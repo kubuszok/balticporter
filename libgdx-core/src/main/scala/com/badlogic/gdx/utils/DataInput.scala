@@ -1,7 +1,7 @@
 package com.badlogic.gdx.utils
 
 class DataInput extends java.io.DataInputStream {
-  private var chars: scala.Array[scala.Char] = new Array[scala.Char](32)
+  private var chars: scala.Array[scala.Char] = new scala.Array[scala.Char](32)
   def this(in: java.io.InputStream) = {
     this()
   }
@@ -38,7 +38,7 @@ class DataInput extends java.io.DataInputStream {
     }
     charCount = charCount - 1
     if (this.chars.length < charCount) {
-      this.chars = new Array[scala.Char](charCount)
+      this.chars = new scala.Array[scala.Char](charCount)
     } else ()
     var chars: scala.Array[scala.Char] = this.chars
     var charIndex: scala.Int = 0

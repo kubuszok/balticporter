@@ -28,8 +28,8 @@ object PixmapIO {
   }
   object CIM {
     private final val BUFFER_SIZE: scala.Int = 32000
-    private final val writeBuffer: scala.Array[scala.Byte] = new Array[scala.Byte](com.badlogic.gdx.graphics.PixmapIO.CIM.BUFFER_SIZE)
-    private final val readBuffer: scala.Array[scala.Byte] = new Array[scala.Byte](com.badlogic.gdx.graphics.PixmapIO.CIM.BUFFER_SIZE)
+    private final val writeBuffer: scala.Array[scala.Byte] = new scala.Array[scala.Byte](com.badlogic.gdx.graphics.PixmapIO.CIM.BUFFER_SIZE)
+    private final val readBuffer: scala.Array[scala.Byte] = new scala.Array[scala.Byte](com.badlogic.gdx.graphics.PixmapIO.CIM.BUFFER_SIZE)
     def write(file: com.badlogic.gdx.files.FileHandle, pixmap: com.badlogic.gdx.graphics.Pixmap): scala.Unit = {
       var out: java.io.DataOutputStream = null
       try {
@@ -226,7 +226,7 @@ object PixmapIO {
     }
   }
   object PNG {
-    private final val SIGNATURE: scala.Array[scala.Byte] = Array[scala.Byte](137.asInstanceOf[scala.Byte], 80, 78, 71, 13, 10, 26, 10)
+    private final val SIGNATURE: scala.Array[scala.Byte] = scala.Array[scala.Byte](137.asInstanceOf[scala.Byte], 80, 78, 71, 13, 10, 26, 10)
     private final val IHDR: scala.Int = 1229472850
     private final val IDAT: scala.Int = 1229209940
     private final val IEND: scala.Int = 1229278788

@@ -61,7 +61,7 @@ class MeshBuilder extends com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder {
     this.part$field = null
     this.stride = attributes.vertexSize / 4
     if ((this.vertex$field == null) || (this.vertex$field.length < this.stride)) {
-      this.vertex$field = new Array[scala.Float](this.stride)
+      this.vertex$field = new scala.Array[scala.Float](this.stride)
     } else ()
     var a: com.badlogic.gdx.graphics.VertexAttribute = attributes.findByUsage(com.badlogic.gdx.graphics.VertexAttributes.Usage.Position)
     if (a == null) {
@@ -708,7 +708,7 @@ object MeshBuilder {
     if ((usage & com.badlogic.gdx.graphics.VertexAttributes.Usage.TextureCoordinates) == com.badlogic.gdx.graphics.VertexAttributes.Usage.TextureCoordinates) {
       attrs.add(new com.badlogic.gdx.graphics.VertexAttribute(com.badlogic.gdx.graphics.VertexAttributes.Usage.TextureCoordinates, 2, com.badlogic.gdx.graphics.glutils.ShaderProgram.TEXCOORD_ATTRIBUTE + "0"))
     } else ()
-    val attributes: scala.Array[com.badlogic.gdx.graphics.VertexAttribute] = new Array[com.badlogic.gdx.graphics.VertexAttribute](attrs.size);
+    val attributes: scala.Array[com.badlogic.gdx.graphics.VertexAttribute] = new scala.Array[com.badlogic.gdx.graphics.VertexAttribute](attrs.size);
     { var i: scala.Int = 0; while (i < attributes.length) { {
       attributes(i) = attrs.get(i)
     }; i = i + 1 } }

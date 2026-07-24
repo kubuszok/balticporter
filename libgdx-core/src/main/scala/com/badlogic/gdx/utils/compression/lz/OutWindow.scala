@@ -8,7 +8,7 @@ class OutWindow {
   var _stream: java.io.OutputStream = null.asInstanceOf[java.io.OutputStream]
   def Create(windowSize: scala.Int): scala.Unit = {
     if ((this._buffer == null) || (this._windowSize != windowSize)) {
-      this._buffer = new Array[scala.Byte](windowSize)
+      this._buffer = new scala.Array[scala.Byte](windowSize)
     } else ()
     this._windowSize = windowSize
     this._pos = 0

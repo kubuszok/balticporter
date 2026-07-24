@@ -1,14 +1,14 @@
 package com.badlogic.gdx.utils
 
 class Bits {
-  var bits: scala.Array[scala.Long] = Array[scala.Long](0)
+  var bits: scala.Array[scala.Long] = scala.Array[scala.Long](0)
   def this(nbits: scala.Int) = {
     this()
     this.checkCapacity(nbits >>> 6)
   }
   def this(bitsToCpy: Bits) = {
     this()
-    this.bits = new Array[scala.Long](bitsToCpy.bits.length)
+    this.bits = new scala.Array[scala.Long](bitsToCpy.bits.length)
     java.lang.System.arraycopy(bitsToCpy.bits, 0, this.bits, 0, bitsToCpy.bits.length)
   }
   def get(index: scala.Int): scala.Boolean = {
@@ -46,7 +46,7 @@ class Bits {
   }
   private def checkCapacity(len: scala.Int): scala.Unit = {
     if (len >= this.bits.length) {
-      val newBits: scala.Array[scala.Long] = new Array[scala.Long](len + 1)
+      val newBits: scala.Array[scala.Long] = new scala.Array[scala.Long](len + 1)
       java.lang.System.arraycopy(this.bits, 0, newBits, 0, this.bits.length)
       this.bits = newBits
     } else ()

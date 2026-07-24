@@ -6,7 +6,7 @@ class Gdx2DPixmap extends com.badlogic.gdx.utils.Disposable {
   var height: scala.Int = 0
   var format: scala.Int = 0
   var pixelPtr: java.nio.ByteBuffer = null.asInstanceOf[java.nio.ByteBuffer]
-  var nativeData: scala.Array[scala.Long] = new Array[scala.Long](4)
+  var nativeData: scala.Array[scala.Long] = new scala.Array[scala.Long](4)
   def this(encodedData: scala.Array[scala.Byte], offset: scala.Int, len: scala.Int, requestedFormat: scala.Int) = {
     this()
     this.pixelPtr = Gdx2DPixmap.load(this.nativeData, encodedData, offset, len)
@@ -52,7 +52,7 @@ class Gdx2DPixmap extends com.badlogic.gdx.utils.Disposable {
   def this(in: java.io.InputStream, requestedFormat: scala.Int) = {
     this()
     val bytes: java.io.ByteArrayOutputStream = new java.io.ByteArrayOutputStream(1024)
-    var buffer: scala.Array[scala.Byte] = new Array[scala.Byte](1024)
+    var buffer: scala.Array[scala.Byte] = new scala.Array[scala.Byte](1024)
     var readBytes: scala.Int = 0
     while ({
       readBytes = in.read(buffer)

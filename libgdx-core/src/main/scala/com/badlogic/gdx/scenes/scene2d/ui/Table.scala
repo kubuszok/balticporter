@@ -663,7 +663,7 @@ class Table extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup {
   }
   private def ensureSize(array: scala.Array[scala.Float], size: scala.Int): scala.Array[scala.Float] = {
     if ((array == null) || (array.length < size)) {
-      return new Array[scala.Float](size)
+      return new scala.Array[scala.Float](size)
     } else ()
     java.util.Arrays.fill(array, 0, size, 0)
     return array

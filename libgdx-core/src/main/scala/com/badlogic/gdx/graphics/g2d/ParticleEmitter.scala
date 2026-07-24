@@ -122,9 +122,9 @@ class ParticleEmitter {
   }
   def setMaxParticleCount(maxParticleCount: scala.Int): scala.Unit = {
     this.maxParticleCount = maxParticleCount
-    this.active = new Array[scala.Boolean](maxParticleCount)
+    this.active = new scala.Array[scala.Boolean](maxParticleCount)
     this.activeCount = 0
-    this.particles = new Array[com.badlogic.gdx.graphics.g2d.ParticleEmitter.Particle](maxParticleCount)
+    this.particles = new scala.Array[com.badlogic.gdx.graphics.g2d.ParticleEmitter.Particle](maxParticleCount)
   }
   def addParticle(): scala.Unit = {
     var activeCount: scala.Int = this.activeCount
@@ -481,7 +481,7 @@ class ParticleEmitter {
     var color: scala.Array[scala.Float] = particle.tint
     if (color == null) {
       particle.tint = {
-        color = new Array[scala.Float](3)
+        color = new scala.Array[scala.Float](3)
         color
       }
     } else ()
@@ -926,7 +926,7 @@ class ParticleEmitter {
   }
   def getXSizeValues(): scala.Array[com.badlogic.gdx.graphics.g2d.ParticleEmitter.RangedNumericValue] = {
     if (this.xSizeValues == null) {
-      this.xSizeValues = new Array[com.badlogic.gdx.graphics.g2d.ParticleEmitter.RangedNumericValue](3)
+      this.xSizeValues = new scala.Array[com.badlogic.gdx.graphics.g2d.ParticleEmitter.RangedNumericValue](3)
       this.xSizeValues(0) = this.xScaleValue
       this.xSizeValues(1) = this.spawnWidthValue
       this.xSizeValues(2) = this.xOffsetValue
@@ -935,7 +935,7 @@ class ParticleEmitter {
   }
   def getYSizeValues(): scala.Array[com.badlogic.gdx.graphics.g2d.ParticleEmitter.RangedNumericValue] = {
     if (this.ySizeValues == null) {
-      this.ySizeValues = new Array[com.badlogic.gdx.graphics.g2d.ParticleEmitter.RangedNumericValue](3)
+      this.ySizeValues = new scala.Array[com.badlogic.gdx.graphics.g2d.ParticleEmitter.RangedNumericValue](3)
       this.ySizeValues(0) = this.yScaleValue
       this.ySizeValues(1) = this.spawnHeightValue
       this.ySizeValues(2) = this.yOffsetValue
@@ -944,7 +944,7 @@ class ParticleEmitter {
   }
   def getMotionValues(): scala.Array[com.badlogic.gdx.graphics.g2d.ParticleEmitter.RangedNumericValue] = {
     if (this.motionValues == null) {
-      this.motionValues = new Array[com.badlogic.gdx.graphics.g2d.ParticleEmitter.RangedNumericValue](3)
+      this.motionValues = new scala.Array[com.badlogic.gdx.graphics.g2d.ParticleEmitter.RangedNumericValue](3)
       this.motionValues(0) = this.velocityValue
       this.motionValues(1) = this.windValue
       this.motionValues(2) = this.gravityValue
@@ -1316,8 +1316,8 @@ object ParticleEmitter {
     }
   }
   class ScaledNumericValue extends com.badlogic.gdx.graphics.g2d.ParticleEmitter.RangedNumericValue {
-    private var scaling: scala.Array[scala.Float] = Array[scala.Float](1)
-    var timeline: scala.Array[scala.Float] = Array[scala.Float](0)
+    private var scaling: scala.Array[scala.Float] = scala.Array[scala.Float](1)
+    var timeline: scala.Array[scala.Float] = scala.Array[scala.Float](0)
     private var highMin: scala.Float = 0.0f
     private var highMax: scala.Float = 0.0f
     var relative: scala.Boolean = false
@@ -1435,11 +1435,11 @@ object ParticleEmitter {
       this.highMin = ParticleEmitter.readFloat(reader, "highMin")
       this.highMax = ParticleEmitter.readFloat(reader, "highMax")
       this.relative = ParticleEmitter.readBoolean(reader, "relative")
-      this.scaling = new Array[scala.Float](ParticleEmitter.readInt(reader, "scalingCount"));
+      this.scaling = new scala.Array[scala.Float](ParticleEmitter.readInt(reader, "scalingCount"));
       { var i: scala.Int = 0; while (i < this.scaling.length) { {
         this.scaling(i) = ParticleEmitter.readFloat(reader, "scaling" + i)
       }; i = i + 1 } }
-      this.timeline = new Array[scala.Float](ParticleEmitter.readInt(reader, "timelineCount"));
+      this.timeline = new scala.Array[scala.Float](ParticleEmitter.readInt(reader, "timelineCount"));
       { var i: scala.Int = 0; while (i < this.timeline.length) { {
         this.timeline(i) = ParticleEmitter.readFloat(reader, "timeline" + i)
       }; i = i + 1 } }
@@ -1448,9 +1448,9 @@ object ParticleEmitter {
       super.load(value)
       this.highMax = value.highMax
       this.highMin = value.highMin
-      this.scaling = new Array[scala.Float](value.scaling.length)
+      this.scaling = new scala.Array[scala.Float](value.scaling.length)
       java.lang.System.arraycopy(value.scaling, 0, this.scaling, 0, this.scaling.length)
-      this.timeline = new Array[scala.Float](value.timeline.length)
+      this.timeline = new scala.Array[scala.Float](value.timeline.length)
       java.lang.System.arraycopy(value.timeline, 0, this.timeline, 0, this.timeline.length)
       this.relative = value.relative
     }
@@ -1512,8 +1512,8 @@ object ParticleEmitter {
     }
   }
   class GradientColorValue extends com.badlogic.gdx.graphics.g2d.ParticleEmitter.ParticleValue {
-    private var colors: scala.Array[scala.Float] = Array[scala.Float](1, 1, 1)
-    var timeline: scala.Array[scala.Float] = Array[scala.Float](0)
+    private var colors: scala.Array[scala.Float] = scala.Array[scala.Float](1, 1, 1)
+    var timeline: scala.Array[scala.Float] = scala.Array[scala.Float](0)
     alwaysActive = true
     def getTimeline(): scala.Array[scala.Float] = {
       return this.timeline
@@ -1577,25 +1577,25 @@ object ParticleEmitter {
       if (!active) {
         return
       } else ()
-      this.colors = new Array[scala.Float](ParticleEmitter.readInt(reader, "colorsCount"));
+      this.colors = new scala.Array[scala.Float](ParticleEmitter.readInt(reader, "colorsCount"));
       { var i: scala.Int = 0; while (i < this.colors.length) { {
         this.colors(i) = ParticleEmitter.readFloat(reader, "colors" + i)
       }; i = i + 1 } }
-      this.timeline = new Array[scala.Float](ParticleEmitter.readInt(reader, "timelineCount"));
+      this.timeline = new scala.Array[scala.Float](ParticleEmitter.readInt(reader, "timelineCount"));
       { var i: scala.Int = 0; while (i < this.timeline.length) { {
         this.timeline(i) = ParticleEmitter.readFloat(reader, "timeline" + i)
       }; i = i + 1 } }
     }
     def load(value: com.badlogic.gdx.graphics.g2d.ParticleEmitter.GradientColorValue): scala.Unit = {
       super.load(value)
-      this.colors = new Array[scala.Float](value.colors.length)
+      this.colors = new scala.Array[scala.Float](value.colors.length)
       java.lang.System.arraycopy(value.colors, 0, this.colors, 0, this.colors.length)
-      this.timeline = new Array[scala.Float](value.timeline.length)
+      this.timeline = new scala.Array[scala.Float](value.timeline.length)
       java.lang.System.arraycopy(value.timeline, 0, this.timeline, 0, this.timeline.length)
     }
   }
   object GradientColorValue {
-    private var temp: scala.Array[scala.Float] = new Array[scala.Float](4)
+    private var temp: scala.Array[scala.Float] = new scala.Array[scala.Float](4)
   }
   class SpawnShapeValue extends com.badlogic.gdx.graphics.g2d.ParticleEmitter.ParticleValue {
     var shape: com.badlogic.gdx.graphics.g2d.ParticleEmitter.SpawnShape = com.badlogic.gdx.graphics.g2d.ParticleEmitter.SpawnShape.point

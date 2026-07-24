@@ -26,8 +26,8 @@ class IntIntMap extends scala.collection.Iterable[com.badlogic.gdx.utils.IntIntM
     this.threshold = (tableSize * loadFactor).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
     this.mask = tableSize - 1
     this.shift = java.lang.Long.numberOfLeadingZeros(this.mask)
-    this.keyTable = new Array[scala.Int](tableSize)
-    this.valueTable = new Array[scala.Int](tableSize)
+    this.keyTable = new scala.Array[scala.Int](tableSize)
+    this.valueTable = new scala.Array[scala.Int](tableSize)
   }
   def this(initialCapacity: scala.Int) = {
     this(initialCapacity, 0.8f)
@@ -272,8 +272,8 @@ class IntIntMap extends scala.collection.Iterable[com.badlogic.gdx.utils.IntIntM
     this.shift = java.lang.Long.numberOfLeadingZeros(this.mask)
     val oldKeyTable: scala.Array[scala.Int] = this.keyTable
     val oldValueTable: scala.Array[scala.Int] = this.valueTable
-    this.keyTable = new Array[scala.Int](newSize)
-    this.valueTable = new Array[scala.Int](newSize)
+    this.keyTable = new scala.Array[scala.Int](newSize)
+    this.valueTable = new scala.Array[scala.Int](newSize)
     if (this.size > 0) {
       { var i: scala.Int = 0; while (i < oldCapacity) { {
         val key: scala.Int = oldKeyTable(i)

@@ -7,10 +7,10 @@ class Stage extends com.badlogic.gdx.InputAdapter with com.badlogic.gdx.utils.Di
   private var ownsBatch: scala.Boolean = false
   private var root: com.badlogic.gdx.scenes.scene2d.Group = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.Group]
   private final val tempCoords: com.badlogic.gdx.math.Vector2 = new com.badlogic.gdx.math.Vector2()
-  private final val pointerOverActors: scala.Array[com.badlogic.gdx.scenes.scene2d.Actor] = new Array[com.badlogic.gdx.scenes.scene2d.Actor](20)
-  private final val pointerTouched: scala.Array[scala.Boolean] = new Array[scala.Boolean](20)
-  private final val pointerScreenX: scala.Array[scala.Int] = new Array[scala.Int](20)
-  private final val pointerScreenY: scala.Array[scala.Int] = new Array[scala.Int](20)
+  private final val pointerOverActors: scala.Array[com.badlogic.gdx.scenes.scene2d.Actor] = new scala.Array[com.badlogic.gdx.scenes.scene2d.Actor](20)
+  private final val pointerTouched: scala.Array[scala.Boolean] = new scala.Array[scala.Boolean](20)
+  private final val pointerScreenX: scala.Array[scala.Int] = new scala.Array[scala.Int](20)
+  private final val pointerScreenY: scala.Array[scala.Int] = new scala.Array[scala.Int](20)
   private var mouseScreenX: scala.Int = 0
   private var mouseScreenY: scala.Int = 0
   private var mouseOverActor: com.badlogic.gdx.scenes.scene2d.Actor = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.Actor]

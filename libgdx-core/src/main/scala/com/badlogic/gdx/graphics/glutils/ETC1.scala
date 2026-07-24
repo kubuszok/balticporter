@@ -73,7 +73,7 @@ object ETC1 {
     }
     def this(pkmFile: com.badlogic.gdx.files.FileHandle) = {
       this()
-      val buffer: scala.Array[scala.Byte] = new Array[scala.Byte](1024 * 10)
+      val buffer: scala.Array[scala.Byte] = new scala.Array[scala.Byte](1024 * 10)
       var in: java.io.DataInputStream = null
       try {
         in = new java.io.DataInputStream(new java.io.BufferedInputStream(new java.util.zip.GZIPInputStream(pkmFile.read())))
@@ -111,7 +111,7 @@ object ETC1 {
     }
     def write(file: com.badlogic.gdx.files.FileHandle): scala.Unit = {
       var write: java.io.DataOutputStream = null
-      val buffer: scala.Array[scala.Byte] = new Array[scala.Byte](10 * 1024)
+      val buffer: scala.Array[scala.Byte] = new scala.Array[scala.Byte](10 * 1024)
       var writtenBytes: scala.Int = 0
       this.compressedData.asInstanceOf[java.nio.Buffer].position(0)
       this.compressedData.asInstanceOf[java.nio.Buffer].limit(this.compressedData.capacity())

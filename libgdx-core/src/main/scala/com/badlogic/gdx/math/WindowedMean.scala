@@ -8,7 +8,7 @@ final class WindowedMean {
   var dirty: scala.Boolean = true
   def this(window_size: scala.Int) = {
     this()
-    this.values = new Array[scala.Float](window_size)
+    this.values = new scala.Array[scala.Float](window_size)
   }
   def hasEnoughData(): scala.Boolean = {
     return this.added_values >= this.values.length
@@ -84,7 +84,7 @@ final class WindowedMean {
     return this.values.length
   }
   def getWindowValues(): scala.Array[scala.Float] = {
-    val windowValues: scala.Array[scala.Float] = new Array[scala.Float](this.added_values)
+    val windowValues: scala.Array[scala.Float] = new scala.Array[scala.Float](this.added_values)
     if (this.hasEnoughData()) {
       { var i: scala.Int = 0; while (i < windowValues.length) { {
         windowValues(i) = this.values((i + this.last_value) % this.values.length)

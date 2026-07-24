@@ -2,23 +2,23 @@ package com.badlogic.gdx.input
 
 class RemoteInput extends java.lang.Runnable with com.badlogic.gdx.Input {
   private var serverSocket: java.net.ServerSocket = null.asInstanceOf[java.net.ServerSocket]
-  private var accel: scala.Array[scala.Float] = new Array[scala.Float](3)
-  private var gyrate: scala.Array[scala.Float] = new Array[scala.Float](3)
-  private var compass: scala.Array[scala.Float] = new Array[scala.Float](3)
+  private var accel: scala.Array[scala.Float] = new scala.Array[scala.Float](3)
+  private var gyrate: scala.Array[scala.Float] = new scala.Array[scala.Float](3)
+  private var compass: scala.Array[scala.Float] = new scala.Array[scala.Float](3)
   private var multiTouch: scala.Boolean = false
   private var remoteWidth: scala.Float = 0
   private var remoteHeight: scala.Float = 0
   private var connected: scala.Boolean = false
   private var listener: com.badlogic.gdx.input.RemoteInput.RemoteInputListener = null.asInstanceOf[com.badlogic.gdx.input.RemoteInput.RemoteInputListener]
   var keyCount: scala.Int = 0
-  var keys: scala.Array[scala.Boolean] = new Array[scala.Boolean](256)
+  var keys: scala.Array[scala.Boolean] = new scala.Array[scala.Boolean](256)
   var keyJustPressed: scala.Boolean = false
-  var justPressedKeys: scala.Array[scala.Boolean] = new Array[scala.Boolean](256)
-  var deltaX: scala.Array[scala.Int] = new Array[scala.Int](RemoteInput.MAX_TOUCHES)
-  var deltaY: scala.Array[scala.Int] = new Array[scala.Int](RemoteInput.MAX_TOUCHES)
-  var touchX: scala.Array[scala.Int] = new Array[scala.Int](RemoteInput.MAX_TOUCHES)
-  var touchY: scala.Array[scala.Int] = new Array[scala.Int](RemoteInput.MAX_TOUCHES)
-  var isTouched$field: scala.Array[scala.Boolean] = new Array[scala.Boolean](RemoteInput.MAX_TOUCHES)
+  var justPressedKeys: scala.Array[scala.Boolean] = new scala.Array[scala.Boolean](256)
+  var deltaX: scala.Array[scala.Int] = new scala.Array[scala.Int](RemoteInput.MAX_TOUCHES)
+  var deltaY: scala.Array[scala.Int] = new scala.Array[scala.Int](RemoteInput.MAX_TOUCHES)
+  var touchX: scala.Array[scala.Int] = new scala.Array[scala.Int](RemoteInput.MAX_TOUCHES)
+  var touchY: scala.Array[scala.Int] = new scala.Array[scala.Int](RemoteInput.MAX_TOUCHES)
+  var isTouched$field: scala.Array[scala.Boolean] = new scala.Array[scala.Boolean](RemoteInput.MAX_TOUCHES)
   var justTouched$field: scala.Boolean = false
   var processor: com.badlogic.gdx.InputProcessor = null
   private var port: scala.Int = 0
@@ -33,7 +33,7 @@ class RemoteInput extends java.lang.Runnable with com.badlogic.gdx.Input {
       thread.setDaemon(true)
       thread.start()
       val allByName: scala.Array[java.net.InetAddress] = java.net.InetAddress.getAllByName(java.net.InetAddress.getLocalHost().getHostName())
-      this.ips = new Array[java.lang.String](allByName.length);
+      this.ips = new scala.Array[java.lang.String](allByName.length);
       { var i: scala.Int = 0; while (i < allByName.length) { {
         this.ips(i) = allByName(i).getHostAddress()
       }; i = i + 1 } }

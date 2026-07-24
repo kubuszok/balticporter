@@ -11,7 +11,7 @@ class PolygonRegion {
     this.vertices = vertices
     this.triangles = triangles
     var textureCoords: scala.Array[scala.Float] = {
-      this.textureCoords = new Array[scala.Float](vertices.length)
+      this.textureCoords = new scala.Array[scala.Float](vertices.length)
       this.textureCoords
     }
     val u: scala.Float = region.u

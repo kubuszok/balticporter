@@ -7,7 +7,7 @@ class DelaunayTriangulator {
   private final val originalIndices: com.badlogic.gdx.utils.ShortArray = new com.badlogic.gdx.utils.ShortArray(false, 0)
   private final val edges: com.badlogic.gdx.utils.IntArray = new com.badlogic.gdx.utils.IntArray()
   private final val complete: com.badlogic.gdx.utils.BooleanArray = new com.badlogic.gdx.utils.BooleanArray(false, 16)
-  private final val superTriangle: scala.Array[scala.Float] = new Array[scala.Float](6)
+  private final val superTriangle: scala.Array[scala.Float] = new scala.Array[scala.Float](6)
   private final val centroid: com.badlogic.gdx.math.Vector2 = new com.badlogic.gdx.math.Vector2()
   def computeTriangles(points: com.badlogic.gdx.utils.FloatArray, sorted: scala.Boolean): com.badlogic.gdx.utils.ShortArray = {
     return this.computeTriangles(points.items, 0, points.size, sorted)
@@ -29,7 +29,7 @@ class DelaunayTriangulator {
     triangles.ensureCapacity(count)
     if (!sorted) {
       if ((this.sortedPoints == null) || (this.sortedPoints.length < count)) {
-        this.sortedPoints = new Array[scala.Float](count)
+        this.sortedPoints = new scala.Array[scala.Float](count)
       } else ()
       java.lang.System.arraycopy(points, offset, this.sortedPoints, 0, count)
       points = this.sortedPoints

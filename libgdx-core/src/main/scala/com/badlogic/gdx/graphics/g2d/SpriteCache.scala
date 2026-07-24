@@ -26,7 +26,7 @@ class SpriteCache extends com.badlogic.gdx.utils.Disposable {
     this.mesh.setAutoBind(false)
     if (useIndices) {
       val length: scala.Int = size * 6
-      val indices: scala.Array[scala.Short] = new Array[scala.Short](length)
+      val indices: scala.Array[scala.Short] = new scala.Array[scala.Short](length)
       var j: scala.Short = 0.asInstanceOf[scala.Short];
       { var i: scala.Int = 0; while (i < length) { {
         indices(i + 0) = j
@@ -101,7 +101,7 @@ class SpriteCache extends com.badlogic.gdx.utils.Disposable {
       cache.maxCount = cacheCount
       cache.textureCount = this.textures.size
       cache.textures = this.textures.toArray((() => new scala.Array[com.badlogic.gdx.graphics.Texture]()))
-      cache.counts = new Array[scala.Int](cache.textureCount);
+      cache.counts = new scala.Array[scala.Int](cache.textureCount);
       { var i: scala.Int = 0; val n: scala.Int = this.counts.size; while (i < n) { {
         cache.counts(i) = this.counts.get(i)
       }; i = i + 1 } }
@@ -112,13 +112,13 @@ class SpriteCache extends com.badlogic.gdx.utils.Disposable {
       } else ()
       cache.textureCount = this.textures.size
       if (cache.textures.length < cache.textureCount) {
-        cache.textures = new Array[com.badlogic.gdx.graphics.Texture](cache.textureCount)
+        cache.textures = new scala.Array[com.badlogic.gdx.graphics.Texture](cache.textureCount)
       } else ();
       { var i: scala.Int = 0; val n: scala.Int = cache.textureCount; while (i < n) { {
         cache.textures(i) = this.textures.get(i)
       }; i = i + 1 } }
       if (cache.counts.length < cache.textureCount) {
-        cache.counts = new Array[scala.Int](cache.textureCount)
+        cache.counts = new scala.Array[scala.Int](cache.textureCount)
       } else ();
       { var i: scala.Int = 0; val n: scala.Int = cache.textureCount; while (i < n) { {
         cache.counts(i) = this.counts.get(i)
@@ -759,7 +759,7 @@ class SpriteCache extends com.badlogic.gdx.utils.Disposable {
   }
 }
 object SpriteCache {
-  private final val tempVertices: scala.Array[scala.Float] = new Array[scala.Float](com.badlogic.gdx.graphics.g2d.Sprite.VERTEX_SIZE * 6)
+  private final val tempVertices: scala.Array[scala.Float] = new scala.Array[scala.Float](com.badlogic.gdx.graphics.g2d.Sprite.VERTEX_SIZE * 6)
   def createDefaultShader(): com.badlogic.gdx.graphics.glutils.ShaderProgram = {
     val vertexShader: java.lang.String = (((((((((((((((((((((((("attribute vec4 " + com.badlogic.gdx.graphics.glutils.ShaderProgram.POSITION_ATTRIBUTE) + ";\n") + "attribute vec4 ") + com.badlogic.gdx.graphics.glutils.ShaderProgram.COLOR_ATTRIBUTE) + ";\n") + "attribute vec2 ") + com.badlogic.gdx.graphics.glutils.ShaderProgram.TEXCOORD_ATTRIBUTE) + "0;\n") + "uniform mat4 u_projectionViewMatrix;\n") + "varying vec4 v_color;\n") + "varying vec2 v_texCoords;\n") + "\n") + "void main()\n") + "{\n") + "   v_color = ") + com.badlogic.gdx.graphics.glutils.ShaderProgram.COLOR_ATTRIBUTE) + ";\n") + "   v_color.a = v_color.a * (255.0/254.0);\n") + "   v_texCoords = ") + com.badlogic.gdx.graphics.glutils.ShaderProgram.TEXCOORD_ATTRIBUTE) + "0;\n") + "   gl_Position =  u_projectionViewMatrix * ") + com.badlogic.gdx.graphics.glutils.ShaderProgram.POSITION_ATTRIBUTE) + ";\n") + "}\n"
     val fragmentShader: java.lang.String = (((((((("#ifdef GL_ES\n" + "precision mediump float;\n") + "#endif\n") + "varying vec4 v_color;\n") + "varying vec2 v_texCoords;\n") + "uniform sampler2D u_texture;\n") + "void main()\n") + "{\n") + "  gl_FragColor = v_color * texture2D(u_texture, v_texCoords);\n") + "}"

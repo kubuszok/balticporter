@@ -67,7 +67,7 @@ abstract class BaseShader extends com.badlogic.gdx.graphics.g3d.Shader {
     } else ()
     this.program = program
     val n: scala.Int = this.uniforms.size
-    this.locations = new Array[scala.Int](n);
+    this.locations = new scala.Array[scala.Int](n);
     { var i: scala.Int = 0; while (i < n) { {
       val input: java.lang.String = this.uniforms.get(i)
       val validator: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Validator = this.validators.get(i)

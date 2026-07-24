@@ -1,9 +1,9 @@
 package com.badlogic.gdx.math
 
 class Frustum {
-  final val planes: scala.Array[com.badlogic.gdx.math.Plane] = new Array[com.badlogic.gdx.math.Plane](6)
-  final val planePoints: scala.Array[com.badlogic.gdx.math.Vector3] = Array[com.badlogic.gdx.math.Vector3](new com.badlogic.gdx.math.Vector3(), new com.badlogic.gdx.math.Vector3(), new com.badlogic.gdx.math.Vector3(), new com.badlogic.gdx.math.Vector3(), new com.badlogic.gdx.math.Vector3(), new com.badlogic.gdx.math.Vector3(), new com.badlogic.gdx.math.Vector3(), new com.badlogic.gdx.math.Vector3())
-  final val planePointsArray: scala.Array[scala.Float] = new Array[scala.Float](8 * 3);
+  final val planes: scala.Array[com.badlogic.gdx.math.Plane] = new scala.Array[com.badlogic.gdx.math.Plane](6)
+  final val planePoints: scala.Array[com.badlogic.gdx.math.Vector3] = scala.Array[com.badlogic.gdx.math.Vector3](new com.badlogic.gdx.math.Vector3(), new com.badlogic.gdx.math.Vector3(), new com.badlogic.gdx.math.Vector3(), new com.badlogic.gdx.math.Vector3(), new com.badlogic.gdx.math.Vector3(), new com.badlogic.gdx.math.Vector3(), new com.badlogic.gdx.math.Vector3(), new com.badlogic.gdx.math.Vector3())
+  final val planePointsArray: scala.Array[scala.Float] = new scala.Array[scala.Float](8 * 3);
   { var i: scala.Int = 0; while (i < 6) { {
     this.planes(i) = new com.badlogic.gdx.math.Plane(new com.badlogic.gdx.math.Vector3(), 0)
   }; i = i + 1 } }
@@ -168,7 +168,7 @@ class Frustum {
   }
 }
 object Frustum {
-  final val clipSpacePlanePoints: scala.Array[com.badlogic.gdx.math.Vector3] = Array[com.badlogic.gdx.math.Vector3](new com.badlogic.gdx.math.Vector3(-1, -1, -1), new com.badlogic.gdx.math.Vector3(1, -1, -1), new com.badlogic.gdx.math.Vector3(1, 1, -1), new com.badlogic.gdx.math.Vector3(-1, 1, -1), new com.badlogic.gdx.math.Vector3(-1, -1, 1), new com.badlogic.gdx.math.Vector3(1, -1, 1), new com.badlogic.gdx.math.Vector3(1, 1, 1), new com.badlogic.gdx.math.Vector3(-1, 1, 1))
-  final val clipSpacePlanePointsArray: scala.Array[scala.Float] = new Array[scala.Float](8 * 3)
+  final val clipSpacePlanePoints: scala.Array[com.badlogic.gdx.math.Vector3] = scala.Array[com.badlogic.gdx.math.Vector3](new com.badlogic.gdx.math.Vector3(-1, -1, -1), new com.badlogic.gdx.math.Vector3(1, -1, -1), new com.badlogic.gdx.math.Vector3(1, 1, -1), new com.badlogic.gdx.math.Vector3(-1, 1, -1), new com.badlogic.gdx.math.Vector3(-1, -1, 1), new com.badlogic.gdx.math.Vector3(1, -1, 1), new com.badlogic.gdx.math.Vector3(1, 1, 1), new com.badlogic.gdx.math.Vector3(-1, 1, 1))
+  final val clipSpacePlanePointsArray: scala.Array[scala.Float] = new scala.Array[scala.Float](8 * 3)
   private final val tmpV: com.badlogic.gdx.math.Vector3 = new com.badlogic.gdx.math.Vector3()
 }

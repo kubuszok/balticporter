@@ -24,8 +24,8 @@ class ObjectFloatMap[K] extends scala.collection.Iterable[com.badlogic.gdx.utils
     this.threshold = (tableSize * loadFactor).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
     this.mask = tableSize - 1
     this.shift = java.lang.Long.numberOfLeadingZeros(this.mask)
-    this.keyTable = new Array[java.lang.Object](tableSize).asInstanceOf[scala.Array[K]].asInstanceOf[scala.Array[K]]
-    this.valueTable = new Array[scala.Float](tableSize)
+    this.keyTable = new scala.Array[java.lang.Object](tableSize).asInstanceOf[scala.Array[K]].asInstanceOf[scala.Array[K]]
+    this.valueTable = new scala.Array[scala.Float](tableSize)
   }
   def this(initialCapacity: scala.Int) = {
     this(initialCapacity, 0.8f)
@@ -239,8 +239,8 @@ class ObjectFloatMap[K] extends scala.collection.Iterable[com.badlogic.gdx.utils
     this.shift = java.lang.Long.numberOfLeadingZeros(this.mask)
     val oldKeyTable: scala.Array[K] = this.keyTable
     val oldValueTable: scala.Array[scala.Float] = this.valueTable
-    this.keyTable = new Array[java.lang.Object](newSize).asInstanceOf[scala.Array[K]].asInstanceOf[scala.Array[K]]
-    this.valueTable = new Array[scala.Float](newSize)
+    this.keyTable = new scala.Array[java.lang.Object](newSize).asInstanceOf[scala.Array[K]].asInstanceOf[scala.Array[K]]
+    this.valueTable = new scala.Array[scala.Float](newSize)
     if (this.size > 0) {
       { var i: scala.Int = 0; while (i < oldCapacity) { {
         val key: K = oldKeyTable(i)

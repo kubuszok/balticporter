@@ -99,15 +99,15 @@ class DefaultShader extends com.badlogic.gdx.graphics.g3d.shaders.BaseShader {
     this.attributesMask = attributes.getMask() | DefaultShader.optionalAttributes
     this.vertexMask = renderable.meshPart.mesh.getVertexAttributes().getMaskWithSizePacked()
     this.textureCoordinates = renderable.meshPart.mesh.getVertexAttributes().getTextureCoordinates()
-    this.directionalLights = new Array[com.badlogic.gdx.graphics.g3d.environment.DirectionalLight](if (this.lighting && (config.numDirectionalLights > 0)) config.numDirectionalLights else 0);
+    this.directionalLights = new scala.Array[com.badlogic.gdx.graphics.g3d.environment.DirectionalLight](if (this.lighting && (config.numDirectionalLights > 0)) config.numDirectionalLights else 0);
     { var i: scala.Int = 0; while (i < this.directionalLights.length) { {
       this.directionalLights(i) = new com.badlogic.gdx.graphics.g3d.environment.DirectionalLight()
     }; i = i + 1 } }
-    this.pointLights = new Array[com.badlogic.gdx.graphics.g3d.environment.PointLight](if (this.lighting && (config.numPointLights > 0)) config.numPointLights else 0);
+    this.pointLights = new scala.Array[com.badlogic.gdx.graphics.g3d.environment.PointLight](if (this.lighting && (config.numPointLights > 0)) config.numPointLights else 0);
     { var i: scala.Int = 0; while (i < this.pointLights.length) { {
       this.pointLights(i) = new com.badlogic.gdx.graphics.g3d.environment.PointLight()
     }; i = i + 1 } }
-    this.spotLights = new Array[com.badlogic.gdx.graphics.g3d.environment.SpotLight](if (this.lighting && (config.numSpotLights > 0)) config.numSpotLights else 0);
+    this.spotLights = new scala.Array[com.badlogic.gdx.graphics.g3d.environment.SpotLight](if (this.lighting && (config.numSpotLights > 0)) config.numSpotLights else 0);
     { var i: scala.Int = 0; while (i < this.spotLights.length) { {
       this.spotLights(i) = new com.badlogic.gdx.graphics.g3d.environment.SpotLight()
     }; i = i + 1 } }
@@ -122,7 +122,7 @@ class DefaultShader extends com.badlogic.gdx.graphics.g3d.shaders.BaseShader {
       throw new com.badlogic.gdx.utils.GdxRuntimeException((("too many bone weights: " + boneWeights) + ", max configured: ") + config.numBoneWeights)
     } else ()
     if (renderable.bones != null) {
-      this.boneWeightsLocations = new Array[scala.Int](config.numBoneWeights)
+      this.boneWeightsLocations = new scala.Array[scala.Int](config.numBoneWeights)
     } else ()
     this.u_projTrans = this.register(com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Inputs.projTrans, com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Setters.projTrans)
     this.u_viewTrans = this.register(com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Inputs.viewTrans, com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Setters.viewTrans)
@@ -659,7 +659,7 @@ object DefaultShader {
       var bones: scala.Array[scala.Float] = null.asInstanceOf[scala.Array[scala.Float]]
       def this(numBones: scala.Int) = {
         this()
-        this.bones = new Array[scala.Float](numBones * 16)
+        this.bones = new scala.Array[scala.Float](numBones * 16)
       }
       def set(shader: com.badlogic.gdx.graphics.g3d.shaders.BaseShader, inputID: scala.Int, renderable: com.badlogic.gdx.graphics.g3d.Renderable, combinedAttributes: com.badlogic.gdx.graphics.g3d.Attributes): scala.Unit = {
         { var i: scala.Int = 0; while (i < this.bones.length) { {
@@ -711,7 +711,7 @@ object DefaultShader {
       }
     }
     object ACubemap {
-      private final val ones: scala.Array[scala.Float] = Array[scala.Float](1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1)
+      private final val ones: scala.Array[scala.Float] = scala.Array[scala.Float](1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1)
       private final val tmpV1: com.badlogic.gdx.math.Vector3 = new com.badlogic.gdx.math.Vector3()
     }
   }

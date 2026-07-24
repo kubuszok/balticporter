@@ -26,8 +26,8 @@ class LongMap[V] extends scala.collection.Iterable[com.badlogic.gdx.utils.LongMa
     this.threshold = (tableSize * loadFactor).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
     this.mask = tableSize - 1
     this.shift = java.lang.Long.numberOfLeadingZeros(this.mask)
-    this.keyTable = new Array[scala.Long](tableSize)
-    this.valueTable = new Array[java.lang.Object](tableSize).asInstanceOf[scala.Array[V]].asInstanceOf[scala.Array[V]]
+    this.keyTable = new scala.Array[scala.Long](tableSize)
+    this.valueTable = new scala.Array[java.lang.Object](tableSize).asInstanceOf[scala.Array[V]].asInstanceOf[scala.Array[V]]
   }
   def this(initialCapacity: scala.Int) = {
     this(initialCapacity, 0.8f)
@@ -280,8 +280,8 @@ class LongMap[V] extends scala.collection.Iterable[com.badlogic.gdx.utils.LongMa
     this.shift = java.lang.Long.numberOfLeadingZeros(this.mask)
     val oldKeyTable: scala.Array[scala.Long] = this.keyTable
     val oldValueTable: scala.Array[V] = this.valueTable
-    this.keyTable = new Array[scala.Long](newSize)
-    this.valueTable = new Array[java.lang.Object](newSize).asInstanceOf[scala.Array[V]].asInstanceOf[scala.Array[V]]
+    this.keyTable = new scala.Array[scala.Long](newSize)
+    this.valueTable = new scala.Array[java.lang.Object](newSize).asInstanceOf[scala.Array[V]].asInstanceOf[scala.Array[V]]
     if (this.size > 0) {
       { var i: scala.Int = 0; while (i < oldCapacity) { {
         val key: scala.Long = oldKeyTable(i)

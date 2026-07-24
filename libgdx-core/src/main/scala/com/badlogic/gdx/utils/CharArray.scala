@@ -7,7 +7,7 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
   def this(ordered: scala.Boolean, capacity: scala.Int) = {
     this()
     this.ordered = ordered
-    this.items = new Array[scala.Char](capacity)
+    this.items = new scala.Array[scala.Char](capacity)
   }
   private def this(initialBuffer: scala.Array[scala.Char], length: scala.Int) = {
     this()
@@ -19,7 +19,7 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
     this()
     this.ordered = array.ordered
     this.size = array.size
-    this.items = new Array[scala.Char](this.size)
+    this.items = new scala.Array[scala.Char](this.size)
     java.lang.System.arraycopy(array.items, 0, this.items, 0, this.size)
   }
   def this(ordered: scala.Boolean, array: scala.Array[scala.Char], start: scala.Int, count: scala.Int) = {
@@ -353,7 +353,7 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
     return this.items(com.badlogic.gdx.math.MathUtils.random(0, this.size - 1))
   }
   def toArray(): scala.Array[scala.Char] = {
-    val array: scala.Array[scala.Char] = new Array[scala.Char](this.size)
+    val array: scala.Array[scala.Char] = new scala.Array[scala.Char](this.size)
     java.lang.System.arraycopy(this.items, 0, array, 0, this.size)
     return array
   }
@@ -1077,7 +1077,7 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
     var target: scala.Array[scala.Char] = target$arg
     val length: scala.Int = this.size
     if ((target == null) || (target.length < length)) {
-      target = new Array[scala.Char](length)
+      target = new scala.Array[scala.Char](length)
     } else ()
     java.lang.System.arraycopy(this.items, 0, target, 0, length)
     return target
@@ -1874,7 +1874,7 @@ object CharArray {
   private final val FALSE_STRING_SIZE: scala.Int = 5
   private final val TRUE_STRING_SIZE: scala.Int = 4
   private final val NULL: java.lang.String = "null"
-  private final val DIGITS: scala.Array[scala.Char] = Array[scala.Char]('0', '1', '2', '3', '4', '5', '6', '7', '8', '9')
+  private final val DIGITS: scala.Array[scala.Char] = scala.Array[scala.Char]('0', '1', '2', '3', '4', '5', '6', '7', '8', '9')
   private final val MAX_BUFFER_SIZE: scala.Int = java.lang.Integer.MAX_VALUE - 8
   def wrap(initialBuffer: scala.Array[scala.Char]): CharArray = {
     return new CharArray(initialBuffer, initialBuffer.length)

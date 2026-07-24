@@ -14,17 +14,17 @@ class TimSort[T] {
     this.a = a
     this.c = c
     val len: scala.Int = a.length
-    val newArray: scala.Array[T] = new Array[java.lang.Object](if (len < (2 * TimSort.INITIAL_TMP_STORAGE_LENGTH)) len >>> 1 else TimSort.INITIAL_TMP_STORAGE_LENGTH).asInstanceOf[scala.Array[T]].asInstanceOf[scala.Array[T]]
+    val newArray: scala.Array[T] = new scala.Array[java.lang.Object](if (len < (2 * TimSort.INITIAL_TMP_STORAGE_LENGTH)) len >>> 1 else TimSort.INITIAL_TMP_STORAGE_LENGTH).asInstanceOf[scala.Array[T]].asInstanceOf[scala.Array[T]]
     this.tmp = newArray
     val stackLen: scala.Int = if (len < 120) 5 else if (len < 1542) 10 else if (len < 119151) 19 else 40
-    this.runBase = new Array[scala.Int](stackLen)
-    this.runLen = new Array[scala.Int](stackLen)
+    this.runBase = new scala.Array[scala.Int](stackLen)
+    this.runLen = new scala.Array[scala.Int](stackLen)
   }
   def this() = {
     this()
-    this.tmp = new Array[java.lang.Object](TimSort.INITIAL_TMP_STORAGE_LENGTH).asInstanceOf[scala.Array[T]].asInstanceOf[scala.Array[T]]
-    this.runBase = new Array[scala.Int](40)
-    this.runLen = new Array[scala.Int](40)
+    this.tmp = new scala.Array[java.lang.Object](TimSort.INITIAL_TMP_STORAGE_LENGTH).asInstanceOf[scala.Array[T]].asInstanceOf[scala.Array[T]]
+    this.runBase = new scala.Array[scala.Int](40)
+    this.runLen = new scala.Array[scala.Int](40)
   }
   def doSort(a: scala.Array[T], c: java.util.Comparator[T], lo$arg: scala.Int, hi: scala.Int): scala.Unit = {
     var lo: scala.Int = lo$arg
@@ -379,7 +379,7 @@ class TimSort[T] {
       } else {
         newSize = java.lang.Math.min(newSize, this.a.length >>> 1)
       }
-      val newArray: scala.Array[T] = new Array[java.lang.Object](newSize).asInstanceOf[scala.Array[T]].asInstanceOf[scala.Array[T]]
+      val newArray: scala.Array[T] = new scala.Array[java.lang.Object](newSize).asInstanceOf[scala.Array[T]].asInstanceOf[scala.Array[T]]
       this.tmp = newArray
     } else ()
     return this.tmp

@@ -12,17 +12,17 @@ class ComparableTimSort {
     this()
     this.a = a
     val len: scala.Int = a.length
-    val newArray: scala.Array[java.lang.Object] = new Array[java.lang.Object](if (len < (2 * ComparableTimSort.INITIAL_TMP_STORAGE_LENGTH)) len >>> 1 else ComparableTimSort.INITIAL_TMP_STORAGE_LENGTH)
+    val newArray: scala.Array[java.lang.Object] = new scala.Array[java.lang.Object](if (len < (2 * ComparableTimSort.INITIAL_TMP_STORAGE_LENGTH)) len >>> 1 else ComparableTimSort.INITIAL_TMP_STORAGE_LENGTH)
     this.tmp = newArray
     val stackLen: scala.Int = if (len < 120) 5 else if (len < 1542) 10 else if (len < 119151) 19 else 40
-    this.runBase = new Array[scala.Int](stackLen)
-    this.runLen = new Array[scala.Int](stackLen)
+    this.runBase = new scala.Array[scala.Int](stackLen)
+    this.runLen = new scala.Array[scala.Int](stackLen)
   }
   def this() = {
     this()
-    this.tmp = new Array[java.lang.Object](ComparableTimSort.INITIAL_TMP_STORAGE_LENGTH)
-    this.runBase = new Array[scala.Int](40)
-    this.runLen = new Array[scala.Int](40)
+    this.tmp = new scala.Array[java.lang.Object](ComparableTimSort.INITIAL_TMP_STORAGE_LENGTH)
+    this.runBase = new scala.Array[scala.Int](40)
+    this.runLen = new scala.Array[scala.Int](40)
   }
   def doSort(a: scala.Array[java.lang.Object], lo$arg: scala.Int, hi: scala.Int): scala.Unit = {
     var lo: scala.Int = lo$arg
@@ -375,7 +375,7 @@ class ComparableTimSort {
       } else {
         newSize = java.lang.Math.min(newSize, this.a.length >>> 1)
       }
-      val newArray: scala.Array[java.lang.Object] = new Array[java.lang.Object](newSize)
+      val newArray: scala.Array[java.lang.Object] = new scala.Array[java.lang.Object](newSize)
       this.tmp = newArray
     } else ()
     return this.tmp

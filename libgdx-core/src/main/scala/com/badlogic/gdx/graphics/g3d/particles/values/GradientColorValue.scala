@@ -1,8 +1,8 @@
 package com.badlogic.gdx.graphics.g3d.particles.values
 
 class GradientColorValue extends com.badlogic.gdx.graphics.g3d.particles.values.ParticleValue {
-  private var colors: scala.Array[scala.Float] = Array[scala.Float](1, 1, 1)
-  var timeline: scala.Array[scala.Float] = Array[scala.Float](0)
+  private var colors: scala.Array[scala.Float] = scala.Array[scala.Float](1, 1, 1)
+  var timeline: scala.Array[scala.Float] = scala.Array[scala.Float](0)
   def getTimeline(): scala.Array[scala.Float] = {
     return this.timeline
   }
@@ -61,12 +61,12 @@ class GradientColorValue extends com.badlogic.gdx.graphics.g3d.particles.values.
   }
   def load(value: GradientColorValue): scala.Unit = {
     super.load(value)
-    this.colors = new Array[scala.Float](value.colors.length)
+    this.colors = new scala.Array[scala.Float](value.colors.length)
     java.lang.System.arraycopy(value.colors, 0, this.colors, 0, this.colors.length)
-    this.timeline = new Array[scala.Float](value.timeline.length)
+    this.timeline = new scala.Array[scala.Float](value.timeline.length)
     java.lang.System.arraycopy(value.timeline, 0, this.timeline, 0, this.timeline.length)
   }
 }
 object GradientColorValue {
-  private var temp: scala.Array[scala.Float] = new Array[scala.Float](3)
+  private var temp: scala.Array[scala.Float] = new scala.Array[scala.Float](3)
 }

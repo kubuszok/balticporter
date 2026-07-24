@@ -1,7 +1,7 @@
 package com.badlogic.gdx.graphics.g2d
 
 class Sprite extends com.badlogic.gdx.graphics.g2d.TextureRegion {
-  final val vertices: scala.Array[scala.Float] = new Array[scala.Float](Sprite.SPRITE_SIZE)
+  final val vertices: scala.Array[scala.Float] = new scala.Array[scala.Float](Sprite.SPRITE_SIZE)
   private final val color: com.badlogic.gdx.graphics.Color = new com.badlogic.gdx.graphics.Color(1, 1, 1, 1)
   private var packedColor: scala.Float = com.badlogic.gdx.graphics.Color.WHITE_FLOAT_BITS
   private var x: scala.Float = 0.0f

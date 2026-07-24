@@ -18,7 +18,7 @@ class QuadTreeFloat extends com.badlogic.gdx.utils.Pool.Poolable {
     this()
     this.maxValues = maxValues * 3
     this.maxDepth = maxDepth
-    this.values = new Array[scala.Float](this.maxValues)
+    this.values = new scala.Array[scala.Float](this.maxValues)
   }
   def setBounds(x: scala.Float, y: scala.Float, width: scala.Float, height: scala.Float): scala.Unit = {
     this.x = x
@@ -268,7 +268,7 @@ class QuadTreeFloat extends com.badlogic.gdx.utils.Pool.Poolable {
     } else ()
     this.count = 0
     if (this.values.length > this.maxValues) {
-      this.values = new Array[scala.Float](this.maxValues)
+      this.values = new scala.Array[scala.Float](this.maxValues)
     } else ()
   }
 }

@@ -557,7 +557,7 @@ class Mesh extends com.badlogic.gdx.utils.Disposable {
     val numComponents: scala.Int = posAttr.numComponents
     val numVertices: scala.Int = this.getNumVertices()
     val vertexSize: scala.Int = this.getVertexSize() / 4
-    val vertices: scala.Array[scala.Float] = new Array[scala.Float](numVertices * vertexSize)
+    val vertices: scala.Array[scala.Float] = new scala.Array[scala.Float](numVertices * vertexSize)
     this.getVertices(vertices)
     var idx: scala.Int = offset
     numComponents match {
@@ -594,7 +594,7 @@ class Mesh extends com.badlogic.gdx.utils.Disposable {
     val stride: scala.Int = this.getVertexSize() / 4
     val numComponents: scala.Int = posAttr.numComponents
     val numVertices: scala.Int = this.getNumVertices()
-    val vertices: scala.Array[scala.Float] = new Array[scala.Float](count * stride)
+    val vertices: scala.Array[scala.Float] = new scala.Array[scala.Float](count * stride)
     this.getVertices(start * stride, count * stride, vertices)
     Mesh.transform(matrix, vertices, stride, posOffset, numComponents, 0, count)
     this.updateVertices(start * stride, vertices)
@@ -607,7 +607,7 @@ class Mesh extends com.badlogic.gdx.utils.Disposable {
     val offset: scala.Int = posAttr.offset / 4
     val vertexSize: scala.Int = this.getVertexSize() / 4
     val numVertices: scala.Int = this.getNumVertices()
-    val vertices: scala.Array[scala.Float] = new Array[scala.Float](numVertices * vertexSize)
+    val vertices: scala.Array[scala.Float] = new scala.Array[scala.Float](numVertices * vertexSize)
     this.getVertices(0, vertices.length, vertices)
     Mesh.transformUV(matrix, vertices, vertexSize, offset, start, count)
     this.setVertices(vertices, 0, vertices.length)
@@ -615,7 +615,7 @@ class Mesh extends com.badlogic.gdx.utils.Disposable {
   def copy(isStatic: scala.Boolean, removeDuplicates: scala.Boolean, usage: scala.Array[scala.Int]): Mesh = {
     val vertexSize: scala.Int = this.getVertexSize() / 4
     var numVertices: scala.Int = this.getNumVertices()
-    var vertices: scala.Array[scala.Float] = new Array[scala.Float](numVertices * vertexSize)
+    var vertices: scala.Array[scala.Float] = new scala.Array[scala.Float](numVertices * vertexSize)
     this.getVertices(0, vertices.length, vertices)
     var checks: scala.Array[scala.Short] = null
     var attrs: scala.Array[com.badlogic.gdx.graphics.VertexAttribute] = null
@@ -630,8 +630,8 @@ class Mesh extends com.badlogic.gdx.utils.Disposable {
         } else ()
       }; i = i + 1 } }
       if (size > 0) {
-        attrs = new Array[com.badlogic.gdx.graphics.VertexAttribute](`as`)
-        checks = new Array[scala.Short](size)
+        attrs = new scala.Array[com.badlogic.gdx.graphics.VertexAttribute](`as`)
+        checks = new scala.Array[scala.Short](size)
         var idx: scala.Int = -1
         var ai: scala.Int = -1;
         { var i: scala.Int = 0; while (i < usage.length) { {
@@ -648,7 +648,7 @@ class Mesh extends com.badlogic.gdx.utils.Disposable {
       } else ()
     } else ()
     if (checks == null) {
-      checks = new Array[scala.Short](vertexSize);
+      checks = new scala.Array[scala.Short](vertexSize);
       { var i: scala.Short = 0.asInstanceOf[scala.Short]; while (i < vertexSize) { {
         checks(i) = i
       }; i = i + 1 } }
@@ -657,10 +657,10 @@ class Mesh extends com.badlogic.gdx.utils.Disposable {
     val numIndices: scala.Int = this.getNumIndices()
     var indices: scala.Array[scala.Short] = null
     if (numIndices > 0) {
-      indices = new Array[scala.Short](numIndices)
+      indices = new scala.Array[scala.Short](numIndices)
       this.getIndices(indices)
       if (removeDuplicates || (newVertexSize != vertexSize)) {
-        val tmp: scala.Array[scala.Float] = new Array[scala.Float](vertices.length)
+        val tmp: scala.Array[scala.Float] = new scala.Array[scala.Float](vertices.length)
         var size: scala.Int = 0;
         { var i: scala.Int = 0; while (i < numIndices) { {
           val idx1: scala.Int = indices(i) * vertexSize

@@ -60,7 +60,7 @@ object ClassReflection {
   }
   def getConstructors(c: java.lang.Class[?]): scala.Array[com.badlogic.gdx.utils.reflect.Constructor] = {
     val constructors: scala.Array[java.lang.reflect.Constructor[?]] = c.getConstructors()
-    val result: scala.Array[com.badlogic.gdx.utils.reflect.Constructor] = new Array[com.badlogic.gdx.utils.reflect.Constructor](constructors.length);
+    val result: scala.Array[com.badlogic.gdx.utils.reflect.Constructor] = new scala.Array[com.badlogic.gdx.utils.reflect.Constructor](constructors.length);
     { var i: scala.Int = 0; val j: scala.Int = constructors.length; while (i < j) { {
       result(i) = new com.badlogic.gdx.utils.reflect.Constructor(constructors(i))
     }; i = i + 1 } }
@@ -95,7 +95,7 @@ object ClassReflection {
   }
   def getMethods(c: java.lang.Class[?]): scala.Array[com.badlogic.gdx.utils.reflect.Method] = {
     val methods: scala.Array[java.lang.reflect.Method] = c.getMethods()
-    val result: scala.Array[com.badlogic.gdx.utils.reflect.Method] = new Array[com.badlogic.gdx.utils.reflect.Method](methods.length);
+    val result: scala.Array[com.badlogic.gdx.utils.reflect.Method] = new scala.Array[com.badlogic.gdx.utils.reflect.Method](methods.length);
     { var i: scala.Int = 0; val j: scala.Int = methods.length; while (i < j) { {
       result(i) = new com.badlogic.gdx.utils.reflect.Method(methods(i))
     }; i = i + 1 } }
@@ -115,7 +115,7 @@ object ClassReflection {
   }
   def getDeclaredMethods(c: java.lang.Class[?]): scala.Array[com.badlogic.gdx.utils.reflect.Method] = {
     val methods: scala.Array[java.lang.reflect.Method] = c.getDeclaredMethods()
-    val result: scala.Array[com.badlogic.gdx.utils.reflect.Method] = new Array[com.badlogic.gdx.utils.reflect.Method](methods.length);
+    val result: scala.Array[com.badlogic.gdx.utils.reflect.Method] = new scala.Array[com.badlogic.gdx.utils.reflect.Method](methods.length);
     { var i: scala.Int = 0; val j: scala.Int = methods.length; while (i < j) { {
       result(i) = new com.badlogic.gdx.utils.reflect.Method(methods(i))
     }; i = i + 1 } }
@@ -135,7 +135,7 @@ object ClassReflection {
   }
   def getFields(c: java.lang.Class[?]): scala.Array[com.badlogic.gdx.utils.reflect.Field] = {
     val fields: scala.Array[java.lang.reflect.Field] = c.getFields()
-    val result: scala.Array[com.badlogic.gdx.utils.reflect.Field] = new Array[com.badlogic.gdx.utils.reflect.Field](fields.length);
+    val result: scala.Array[com.badlogic.gdx.utils.reflect.Field] = new scala.Array[com.badlogic.gdx.utils.reflect.Field](fields.length);
     { var i: scala.Int = 0; val j: scala.Int = fields.length; while (i < j) { {
       result(i) = new com.badlogic.gdx.utils.reflect.Field(fields(i))
     }; i = i + 1 } }
@@ -155,7 +155,7 @@ object ClassReflection {
   }
   def getDeclaredFields(c: java.lang.Class[?]): scala.Array[com.badlogic.gdx.utils.reflect.Field] = {
     val fields: scala.Array[java.lang.reflect.Field] = c.getDeclaredFields()
-    val result: scala.Array[com.badlogic.gdx.utils.reflect.Field] = new Array[com.badlogic.gdx.utils.reflect.Field](fields.length);
+    val result: scala.Array[com.badlogic.gdx.utils.reflect.Field] = new scala.Array[com.badlogic.gdx.utils.reflect.Field](fields.length);
     { var i: scala.Int = 0; val j: scala.Int = fields.length; while (i < j) { {
       result(i) = new com.badlogic.gdx.utils.reflect.Field(fields(i))
     }; i = i + 1 } }
@@ -178,7 +178,7 @@ object ClassReflection {
   }
   def getAnnotations(c: java.lang.Class[?]): scala.Array[com.badlogic.gdx.utils.reflect.Annotation] = {
     val annotations: scala.Array[java.lang.annotation.Annotation] = c.getAnnotations()
-    val result: scala.Array[com.badlogic.gdx.utils.reflect.Annotation] = new Array[com.badlogic.gdx.utils.reflect.Annotation](annotations.length);
+    val result: scala.Array[com.badlogic.gdx.utils.reflect.Annotation] = new scala.Array[com.badlogic.gdx.utils.reflect.Annotation](annotations.length);
     { var i: scala.Int = 0; while (i < annotations.length) { {
       result(i) = new com.badlogic.gdx.utils.reflect.Annotation(annotations(i))
     }; i = i + 1 } }
@@ -193,7 +193,7 @@ object ClassReflection {
   }
   def getDeclaredAnnotations(c: java.lang.Class[?]): scala.Array[com.badlogic.gdx.utils.reflect.Annotation] = {
     val annotations: scala.Array[java.lang.annotation.Annotation] = c.getDeclaredAnnotations()
-    val result: scala.Array[com.badlogic.gdx.utils.reflect.Annotation] = new Array[com.badlogic.gdx.utils.reflect.Annotation](annotations.length);
+    val result: scala.Array[com.badlogic.gdx.utils.reflect.Annotation] = new scala.Array[com.badlogic.gdx.utils.reflect.Annotation](annotations.length);
     { var i: scala.Int = 0; while (i < annotations.length) { {
       result(i) = new com.badlogic.gdx.utils.reflect.Annotation(annotations(i))
     }; i = i + 1 } }

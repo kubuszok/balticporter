@@ -57,7 +57,7 @@ object Base64Coder {
   def encode(in: scala.Array[scala.Byte], iOff: scala.Int, iLen: scala.Int, charMap: scala.Array[scala.Char]): scala.Array[scala.Char] = {
     val oDataLen: scala.Int = ((iLen * 4) + 2) / 3
     val oLen: scala.Int = ((iLen + 2) / 3) * 4
-    val out: scala.Array[scala.Char] = new Array[scala.Char](oLen)
+    val out: scala.Array[scala.Char] = new scala.Array[scala.Char](oLen)
     var ip: scala.Int = iOff
     val iEnd: scala.Int = iOff + iLen
     var op: scala.Int = 0
@@ -91,7 +91,7 @@ object Base64Coder {
     return Base64Coder.decodeLines(s, inverseCharMap.decodingMap)
   }
   def decodeLines(s: java.lang.String, inverseCharMap: scala.Array[scala.Byte]): scala.Array[scala.Byte] = {
-    val buf: scala.Array[scala.Char] = new Array[scala.Char](s.length())
+    val buf: scala.Array[scala.Char] = new scala.Array[scala.Char](s.length())
     var p: scala.Int = 0;
     { var ip: scala.Int = 0; while (ip < s.length()) { {
       val c: scala.Char = s.charAt(ip)
@@ -128,7 +128,7 @@ object Base64Coder {
       iLen = iLen - 1
     }
     val oLen: scala.Int = (iLen * 3) / 4
-    val out: scala.Array[scala.Byte] = new Array[scala.Byte](oLen)
+    val out: scala.Array[scala.Byte] = new scala.Array[scala.Byte](oLen)
     var ip: scala.Int = iOff
     val iEnd: scala.Int = iOff + iLen
     var op: scala.Int = 0
@@ -161,8 +161,8 @@ object Base64Coder {
     return out
   }
   class CharMap {
-    final val encodingMap: scala.Array[scala.Char] = new Array[scala.Char](64)
-    final val decodingMap: scala.Array[scala.Byte] = new Array[scala.Byte](128)
+    final val encodingMap: scala.Array[scala.Char] = new scala.Array[scala.Char](64)
+    final val decodingMap: scala.Array[scala.Byte] = new scala.Array[scala.Byte](128)
     def this(char63: scala.Char, char64: scala.Char) = {
       this()
       var i: scala.Int = 0;

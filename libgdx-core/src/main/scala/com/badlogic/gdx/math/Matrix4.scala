@@ -1,7 +1,7 @@
 package com.badlogic.gdx.math
 
 class Matrix4 extends java.io.Serializable {
-  final val `val`: scala.Array[scala.Float] = new Array[scala.Float](16)
+  final val `val`: scala.Array[scala.Float] = new scala.Array[scala.Float](16)
   def this(position: com.badlogic.gdx.math.Vector3, rotation: com.badlogic.gdx.math.Quaternion, scale: com.badlogic.gdx.math.Vector3) = {
     this()
     this.set(position, rotation, scale)

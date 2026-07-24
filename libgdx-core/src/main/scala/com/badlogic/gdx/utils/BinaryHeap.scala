@@ -7,11 +7,11 @@ class BinaryHeap[T <: com.badlogic.gdx.utils.BinaryHeap.Node] {
   def this(capacity: scala.Int, isMaxHeap: scala.Boolean) = {
     this()
     this.isMaxHeap = isMaxHeap
-    this.nodes = new Array[com.badlogic.gdx.utils.BinaryHeap.Node](capacity)
+    this.nodes = new scala.Array[com.badlogic.gdx.utils.BinaryHeap.Node](capacity)
   }
   def add(node: T): T = {
     if (this.size == this.nodes.length) {
-      val newNodes: scala.Array[com.badlogic.gdx.utils.BinaryHeap.Node] = new Array[com.badlogic.gdx.utils.BinaryHeap.Node](this.size << 1)
+      val newNodes: scala.Array[com.badlogic.gdx.utils.BinaryHeap.Node] = new scala.Array[com.badlogic.gdx.utils.BinaryHeap.Node](this.size << 1)
       java.lang.System.arraycopy(this.nodes, 0, newNodes, 0, this.size)
       this.nodes = newNodes
     } else ()

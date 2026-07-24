@@ -2,12 +2,12 @@ package com.badlogic.gdx.utils
 
 object StreamUtils {
   final val DEFAULT_BUFFER_SIZE: scala.Int = 4096
-  final val EMPTY_BYTES: scala.Array[scala.Byte] = new Array[scala.Byte](0)
+  final val EMPTY_BYTES: scala.Array[scala.Byte] = new scala.Array[scala.Byte](0)
   def copyStream(input: java.io.InputStream, output: java.io.OutputStream): scala.Unit = {
-    StreamUtils.copyStream(input, output, new Array[scala.Byte](StreamUtils.DEFAULT_BUFFER_SIZE))
+    StreamUtils.copyStream(input, output, new scala.Array[scala.Byte](StreamUtils.DEFAULT_BUFFER_SIZE))
   }
   def copyStream(input: java.io.InputStream, output: java.io.OutputStream, bufferSize: scala.Int): scala.Unit = {
-    StreamUtils.copyStream(input, output, new Array[scala.Byte](bufferSize))
+    StreamUtils.copyStream(input, output, new scala.Array[scala.Byte](bufferSize))
   }
   def copyStream(input: java.io.InputStream, output: java.io.OutputStream, buffer: scala.Array[scala.Byte]): scala.Unit = {
     var bytesRead: scala.Int = 0
@@ -19,10 +19,10 @@ object StreamUtils {
     }
   }
   def copyStream(input: java.io.InputStream, output: java.nio.ByteBuffer): scala.Unit = {
-    StreamUtils.copyStream(input, output, new Array[scala.Byte](StreamUtils.DEFAULT_BUFFER_SIZE))
+    StreamUtils.copyStream(input, output, new scala.Array[scala.Byte](StreamUtils.DEFAULT_BUFFER_SIZE))
   }
   def copyStream(input: java.io.InputStream, output: java.nio.ByteBuffer, bufferSize: scala.Int): scala.Unit = {
-    StreamUtils.copyStream(input, output, new Array[scala.Byte](bufferSize))
+    StreamUtils.copyStream(input, output, new scala.Array[scala.Byte](bufferSize))
   }
   def copyStream(input: java.io.InputStream, output: java.nio.ByteBuffer, buffer: scala.Array[scala.Byte]): scala.Int = {
     val startPosition: scala.Int = output.position()
@@ -56,7 +56,7 @@ object StreamUtils {
   def copyStreamToString(input: java.io.InputStream, estimatedSize: scala.Int, charset: java.lang.String): java.lang.String = {
     val reader: java.io.InputStreamReader = if (charset == null) new java.io.InputStreamReader(input) else new java.io.InputStreamReader(input, charset)
     val writer: java.io.StringWriter = new java.io.StringWriter(java.lang.Math.max(0, estimatedSize))
-    val buffer: scala.Array[scala.Char] = new Array[scala.Char](StreamUtils.DEFAULT_BUFFER_SIZE)
+    val buffer: scala.Array[scala.Char] = new scala.Array[scala.Char](StreamUtils.DEFAULT_BUFFER_SIZE)
     var charsRead: scala.Int = 0
     while ({
       charsRead = reader.read(buffer)

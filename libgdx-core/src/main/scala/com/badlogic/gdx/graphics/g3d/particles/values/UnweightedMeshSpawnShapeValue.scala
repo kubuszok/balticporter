@@ -17,14 +17,14 @@ final class UnweightedMeshSpawnShapeValue extends com.badlogic.gdx.graphics.g3d.
     this.positionOffset = mesh.getVertexAttribute(com.badlogic.gdx.graphics.VertexAttributes.Usage.Position).offset / 4
     val indicesCount: scala.Int = mesh.getNumIndices()
     if (indicesCount > 0) {
-      this.indices = new Array[scala.Short](indicesCount)
+      this.indices = new scala.Array[scala.Short](indicesCount)
       mesh.getIndices(this.indices)
       this.triangleCount = this.indices.length / 3
     } else {
       this.indices = null
     }
     this.vertexCount = mesh.getNumVertices()
-    this.vertices = new Array[scala.Float](this.vertexCount * this.vertexSize)
+    this.vertices = new scala.Array[scala.Float](this.vertexCount * this.vertexSize)
     mesh.getVertices(this.vertices)
   }
   def spawnAux(vector: com.badlogic.gdx.math.Vector3, percent: scala.Float): scala.Unit = {

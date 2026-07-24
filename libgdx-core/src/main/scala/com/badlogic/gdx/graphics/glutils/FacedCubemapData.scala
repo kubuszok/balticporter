@@ -1,7 +1,7 @@
 package com.badlogic.gdx.graphics.glutils
 
 class FacedCubemapData extends com.badlogic.gdx.graphics.CubemapData {
-  final val data: scala.Array[com.badlogic.gdx.graphics.TextureData] = new Array[com.badlogic.gdx.graphics.TextureData](6)
+  final val data: scala.Array[com.badlogic.gdx.graphics.TextureData] = new scala.Array[com.badlogic.gdx.graphics.TextureData](6)
   def this(positiveX: com.badlogic.gdx.graphics.TextureData, negativeX: com.badlogic.gdx.graphics.TextureData, positiveY: com.badlogic.gdx.graphics.TextureData, negativeY: com.badlogic.gdx.graphics.TextureData, positiveZ: com.badlogic.gdx.graphics.TextureData, negativeZ: com.badlogic.gdx.graphics.TextureData) = {
     this()
     this.data(0) = positiveX

@@ -81,7 +81,7 @@ object Encoder {
   final val kNumMoveBits: scala.Int = 5
   final val kNumMoveReducingBits: scala.Int = 2
   final val kNumBitPriceShiftBits: scala.Int = 6
-  private var ProbPrices: scala.Array[scala.Int] = new Array[scala.Int](Encoder.kBitModelTotal >>> Encoder.kNumMoveReducingBits)
+  private var ProbPrices: scala.Array[scala.Int] = new scala.Array[scala.Int](Encoder.kBitModelTotal >>> Encoder.kNumMoveReducingBits)
   def InitBitModels(probs: scala.Array[scala.Short]): scala.Unit = {
     { var i: scala.Int = 0; while (i < probs.length) { {
       probs(i) = (Encoder.kBitModelTotal >>> 1).asInstanceOf[scala.Short]

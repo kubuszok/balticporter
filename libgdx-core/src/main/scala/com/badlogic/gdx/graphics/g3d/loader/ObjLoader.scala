@@ -147,7 +147,7 @@ class ObjLoader extends com.badlogic.gdx.assets.loaders.ModelLoader[com.badlogic
       var numFaces: scala.Int = group.numFaces
       var hasNorms: scala.Boolean = group.hasNorms
       var hasUVs: scala.Boolean = group.hasUVs
-      val finalVerts: scala.Array[scala.Float] = new Array[scala.Float]((numFaces * 3) * ((3 + (if (hasNorms) 3 else 0)) + (if (hasUVs) 2 else 0)));
+      val finalVerts: scala.Array[scala.Float] = new scala.Array[scala.Float]((numFaces * 3) * ((3 + (if (hasNorms) 3 else 0)) + (if (hasUVs) 2 else 0)));
       { var i: scala.Int = 0; var vi: scala.Int = 0; while (i < numElements) { {
         var vertIndex: scala.Int = faces.get({ i += 1; i }) * 3
         finalVerts({ vi += 1; vi }) = this.verts.get({ vertIndex += 1; vertIndex })
@@ -166,7 +166,7 @@ class ObjLoader extends com.badlogic.gdx.assets.loaders.ModelLoader[com.badlogic
         } else ()
       };  } }
       val numIndices: scala.Int = if ((numFaces * 3) >= java.lang.Short.MAX_VALUE) 0 else numFaces * 3
-      val finalIndices: scala.Array[scala.Short] = new Array[scala.Short](numIndices)
+      val finalIndices: scala.Array[scala.Short] = new scala.Array[scala.Short](numIndices)
       if (numIndices > 0) {
         { var i: scala.Int = 0; while (i < numIndices) { {
           finalIndices(i) = i.asInstanceOf[scala.Short].asInstanceOf[scala.Short]
@@ -193,7 +193,7 @@ class ObjLoader extends com.badlogic.gdx.assets.loaders.ModelLoader[com.badlogic
       val pm: com.badlogic.gdx.graphics.g3d.model.data.ModelNodePart = new com.badlogic.gdx.graphics.g3d.model.data.ModelNodePart()
       pm.meshPartId = partId
       pm.materialId = group.materialName
-      node.parts = Array[com.badlogic.gdx.graphics.g3d.model.data.ModelNodePart](pm)
+      node.parts = scala.Array[com.badlogic.gdx.graphics.g3d.model.data.ModelNodePart](pm)
       val part: com.badlogic.gdx.graphics.g3d.model.data.ModelMeshPart = new com.badlogic.gdx.graphics.g3d.model.data.ModelMeshPart()
       part.id = partId
       part.indices = finalIndices
@@ -202,7 +202,7 @@ class ObjLoader extends com.badlogic.gdx.assets.loaders.ModelLoader[com.badlogic
       mesh.id = meshId
       mesh.attributes = attributes.toArray((() => new scala.Array[com.badlogic.gdx.graphics.VertexAttribute]()))
       mesh.vertices = finalVerts
-      mesh.parts = Array[com.badlogic.gdx.graphics.g3d.model.data.ModelMeshPart](part)
+      mesh.parts = scala.Array[com.badlogic.gdx.graphics.g3d.model.data.ModelMeshPart](part)
       data.nodes.add(node)
       data.meshes.add(mesh)
       val mm: com.badlogic.gdx.graphics.g3d.model.data.ModelMaterial = mtl.getMaterial(group.materialName)

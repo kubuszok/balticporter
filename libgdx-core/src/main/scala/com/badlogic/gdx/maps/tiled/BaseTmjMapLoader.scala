@@ -248,7 +248,7 @@ abstract class BaseTmjMapLoader[P <: com.badlogic.gdx.maps.tiled.BaseTiledMapLoa
         child = element.get("polygon")
         child
       } != null) {
-        val vertices: scala.Array[scala.Float] = new Array[scala.Float](child.size$field * 2)
+        val vertices: scala.Array[scala.Float] = new scala.Array[scala.Float](child.size$field * 2)
         var index: scala.Int = 0
         for (point <- child) {
           vertices({ index += 1; index }) = point.getFloat("x", 0) * scaleX
@@ -262,7 +262,7 @@ abstract class BaseTmjMapLoader[P <: com.badlogic.gdx.maps.tiled.BaseTiledMapLoa
           child = element.get("polyline")
           child
         } != null) {
-          val vertices: scala.Array[scala.Float] = new Array[scala.Float](child.size$field * 2)
+          val vertices: scala.Array[scala.Float] = new scala.Array[scala.Float](child.size$field * 2)
           var index: scala.Int = 0
           for (point <- child) {
             vertices({ index += 1; index }) = point.getFloat("x", 0) * scaleX
@@ -646,8 +646,8 @@ object BaseTmjMapLoader {
               }
             }
           }
-          val temp: scala.Array[scala.Byte] = new Array[scala.Byte](4)
-          ids = new Array[scala.Int](width * height);
+          val temp: scala.Array[scala.Byte] = new scala.Array[scala.Byte](4)
+          ids = new scala.Array[scala.Int](width * height);
           { var y: scala.Int = 0; while (y < height) { {
             { var x: scala.Int = 0; while (x < width) { {
               var read: scala.Int = is.read(temp)

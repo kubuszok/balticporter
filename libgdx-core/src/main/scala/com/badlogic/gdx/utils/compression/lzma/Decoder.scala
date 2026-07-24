@@ -3,14 +3,14 @@ package com.badlogic.gdx.utils.compression.lzma
 class Decoder {
   var m_OutWindow: com.badlogic.gdx.utils.compression.lz.OutWindow = new com.badlogic.gdx.utils.compression.lz.OutWindow()
   var m_RangeDecoder: com.badlogic.gdx.utils.compression.rangecoder.Decoder = new com.badlogic.gdx.utils.compression.rangecoder.Decoder()
-  var m_IsMatchDecoders: scala.Array[scala.Short] = new Array[scala.Short](com.badlogic.gdx.utils.compression.lzma.Base.kNumStates << com.badlogic.gdx.utils.compression.lzma.Base.kNumPosStatesBitsMax)
-  var m_IsRepDecoders: scala.Array[scala.Short] = new Array[scala.Short](com.badlogic.gdx.utils.compression.lzma.Base.kNumStates)
-  var m_IsRepG0Decoders: scala.Array[scala.Short] = new Array[scala.Short](com.badlogic.gdx.utils.compression.lzma.Base.kNumStates)
-  var m_IsRepG1Decoders: scala.Array[scala.Short] = new Array[scala.Short](com.badlogic.gdx.utils.compression.lzma.Base.kNumStates)
-  var m_IsRepG2Decoders: scala.Array[scala.Short] = new Array[scala.Short](com.badlogic.gdx.utils.compression.lzma.Base.kNumStates)
-  var m_IsRep0LongDecoders: scala.Array[scala.Short] = new Array[scala.Short](com.badlogic.gdx.utils.compression.lzma.Base.kNumStates << com.badlogic.gdx.utils.compression.lzma.Base.kNumPosStatesBitsMax)
-  var m_PosSlotDecoder: scala.Array[com.badlogic.gdx.utils.compression.rangecoder.BitTreeDecoder] = new Array[com.badlogic.gdx.utils.compression.rangecoder.BitTreeDecoder](com.badlogic.gdx.utils.compression.lzma.Base.kNumLenToPosStates)
-  var m_PosDecoders: scala.Array[scala.Short] = new Array[scala.Short](com.badlogic.gdx.utils.compression.lzma.Base.kNumFullDistances - com.badlogic.gdx.utils.compression.lzma.Base.kEndPosModelIndex)
+  var m_IsMatchDecoders: scala.Array[scala.Short] = new scala.Array[scala.Short](com.badlogic.gdx.utils.compression.lzma.Base.kNumStates << com.badlogic.gdx.utils.compression.lzma.Base.kNumPosStatesBitsMax)
+  var m_IsRepDecoders: scala.Array[scala.Short] = new scala.Array[scala.Short](com.badlogic.gdx.utils.compression.lzma.Base.kNumStates)
+  var m_IsRepG0Decoders: scala.Array[scala.Short] = new scala.Array[scala.Short](com.badlogic.gdx.utils.compression.lzma.Base.kNumStates)
+  var m_IsRepG1Decoders: scala.Array[scala.Short] = new scala.Array[scala.Short](com.badlogic.gdx.utils.compression.lzma.Base.kNumStates)
+  var m_IsRepG2Decoders: scala.Array[scala.Short] = new scala.Array[scala.Short](com.badlogic.gdx.utils.compression.lzma.Base.kNumStates)
+  var m_IsRep0LongDecoders: scala.Array[scala.Short] = new scala.Array[scala.Short](com.badlogic.gdx.utils.compression.lzma.Base.kNumStates << com.badlogic.gdx.utils.compression.lzma.Base.kNumPosStatesBitsMax)
+  var m_PosSlotDecoder: scala.Array[com.badlogic.gdx.utils.compression.rangecoder.BitTreeDecoder] = new scala.Array[com.badlogic.gdx.utils.compression.rangecoder.BitTreeDecoder](com.badlogic.gdx.utils.compression.lzma.Base.kNumLenToPosStates)
+  var m_PosDecoders: scala.Array[scala.Short] = new scala.Array[scala.Short](com.badlogic.gdx.utils.compression.lzma.Base.kNumFullDistances - com.badlogic.gdx.utils.compression.lzma.Base.kEndPosModelIndex)
   var m_PosAlignDecoder: com.badlogic.gdx.utils.compression.rangecoder.BitTreeDecoder = new com.badlogic.gdx.utils.compression.rangecoder.BitTreeDecoder(com.badlogic.gdx.utils.compression.lzma.Base.kNumAlignBits)
   var m_LenDecoder: LenDecoder = new LenDecoder()
   var m_RepLenDecoder: LenDecoder = new LenDecoder()
@@ -172,9 +172,9 @@ class Decoder {
     return this.SetDictionarySize(dictionarySize)
   }
   class LenDecoder {
-    var m_Choice: scala.Array[scala.Short] = new Array[scala.Short](2)
-    var m_LowCoder: scala.Array[com.badlogic.gdx.utils.compression.rangecoder.BitTreeDecoder] = new Array[com.badlogic.gdx.utils.compression.rangecoder.BitTreeDecoder](com.badlogic.gdx.utils.compression.lzma.Base.kNumPosStatesMax)
-    var m_MidCoder: scala.Array[com.badlogic.gdx.utils.compression.rangecoder.BitTreeDecoder] = new Array[com.badlogic.gdx.utils.compression.rangecoder.BitTreeDecoder](com.badlogic.gdx.utils.compression.lzma.Base.kNumPosStatesMax)
+    var m_Choice: scala.Array[scala.Short] = new scala.Array[scala.Short](2)
+    var m_LowCoder: scala.Array[com.badlogic.gdx.utils.compression.rangecoder.BitTreeDecoder] = new scala.Array[com.badlogic.gdx.utils.compression.rangecoder.BitTreeDecoder](com.badlogic.gdx.utils.compression.lzma.Base.kNumPosStatesMax)
+    var m_MidCoder: scala.Array[com.badlogic.gdx.utils.compression.rangecoder.BitTreeDecoder] = new scala.Array[com.badlogic.gdx.utils.compression.rangecoder.BitTreeDecoder](com.badlogic.gdx.utils.compression.lzma.Base.kNumPosStatesMax)
     var m_HighCoder: com.badlogic.gdx.utils.compression.rangecoder.BitTreeDecoder = new com.badlogic.gdx.utils.compression.rangecoder.BitTreeDecoder(com.badlogic.gdx.utils.compression.lzma.Base.kNumHighLenBits)
     var m_NumPosStates: scala.Int = 0
     def Create(numPosStates: scala.Int): scala.Unit = {
@@ -217,7 +217,7 @@ class Decoder {
       this.m_PosMask = (1 << numPosBits) - 1
       this.m_NumPrevBits = numPrevBits
       val numStates: scala.Int = 1 << (this.m_NumPrevBits + this.m_NumPosBits)
-      this.m_Coders = new Array[Decoder2](numStates);
+      this.m_Coders = new scala.Array[Decoder2](numStates);
       { var i: scala.Int = 0; while (i < numStates) { {
         this.m_Coders(i) = new Decoder2()
       }; i = i + 1 } }
@@ -232,7 +232,7 @@ class Decoder {
       return this.m_Coders(((pos & this.m_PosMask) << this.m_NumPrevBits) + ((prevByte & 255) >>> (8 - this.m_NumPrevBits)))
     }
     class Decoder2 {
-      var m_Decoders: scala.Array[scala.Short] = new Array[scala.Short](768)
+      var m_Decoders: scala.Array[scala.Short] = new scala.Array[scala.Short](768)
       def Init(): scala.Unit = {
         com.badlogic.gdx.utils.compression.rangecoder.Decoder.InitBitModels(this.m_Decoders)
       }

@@ -8,7 +8,7 @@ abstract class BatchTiledMapRenderer extends com.badlogic.gdx.maps.tiled.TiledMa
   var imageBounds: com.badlogic.gdx.math.Rectangle = new com.badlogic.gdx.math.Rectangle()
   var repeatedImageBounds: com.badlogic.gdx.math.Rectangle = new com.badlogic.gdx.math.Rectangle()
   var ownsBatch: scala.Boolean = false
-  var vertices: scala.Array[scala.Float] = new Array[scala.Float](BatchTiledMapRenderer.NUM_VERTICES)
+  var vertices: scala.Array[scala.Float] = new scala.Array[scala.Float](BatchTiledMapRenderer.NUM_VERTICES)
   def this(map: com.badlogic.gdx.maps.tiled.TiledMap, unitScale: scala.Float, batch: com.badlogic.gdx.graphics.g2d.Batch) = {
     this()
     this.map = map

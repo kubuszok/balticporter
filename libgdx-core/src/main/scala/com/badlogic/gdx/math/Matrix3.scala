@@ -1,8 +1,8 @@
 package com.badlogic.gdx.math
 
 class Matrix3 extends java.io.Serializable {
-  var `val`: scala.Array[scala.Float] = new Array[scala.Float](9)
-  private var tmp: scala.Array[scala.Float] = new Array[scala.Float](9)
+  var `val`: scala.Array[scala.Float] = new scala.Array[scala.Float](9)
+  private var tmp: scala.Array[scala.Float] = new scala.Array[scala.Float](9)
   def this(matrix: Matrix3) = {
     this()
     this.set(matrix)

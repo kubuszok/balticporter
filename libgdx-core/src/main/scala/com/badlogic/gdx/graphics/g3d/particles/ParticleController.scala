@@ -141,7 +141,7 @@ class ParticleController extends com.badlogic.gdx.utils.Json.Serializable with c
   }
   def copy(): ParticleController = {
     val emitter: com.badlogic.gdx.graphics.g3d.particles.emitters.Emitter = this.emitter.copy().asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.emitters.Emitter]
-    val influencers: scala.Array[com.badlogic.gdx.graphics.g3d.particles.influencers.Influencer] = new Array[com.badlogic.gdx.graphics.g3d.particles.influencers.Influencer](this.influencers.size)
+    val influencers: scala.Array[com.badlogic.gdx.graphics.g3d.particles.influencers.Influencer] = new scala.Array[com.badlogic.gdx.graphics.g3d.particles.influencers.Influencer](this.influencers.size)
     var i: scala.Int = 0
     for (influencer <- this.influencers) {
       influencers({ i += 1; i }) = influencer.copy().asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.influencers.Influencer]

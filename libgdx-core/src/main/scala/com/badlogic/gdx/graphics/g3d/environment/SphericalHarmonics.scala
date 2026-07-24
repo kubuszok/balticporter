@@ -11,7 +11,7 @@ class SphericalHarmonics {
   }
   def this() = {
     this()
-    this.data = new Array[scala.Float](9 * 3)
+    this.data = new scala.Array[scala.Float](9 * 3)
   }
   def set(values: scala.Array[scala.Float]): SphericalHarmonics = {
     { var i: scala.Int = 0; while (i < this.data.length) { {
@@ -35,7 +35,7 @@ class SphericalHarmonics {
   }
 }
 object SphericalHarmonics {
-  private final val coeff: scala.Array[scala.Float] = Array[scala.Float](0.282095f, 0.488603f, 0.488603f, 0.488603f, 1.092548f, 1.092548f, 1.092548f, 0.315392f, 0.546274f)
+  private final val coeff: scala.Array[scala.Float] = scala.Array[scala.Float](0.282095f, 0.488603f, 0.488603f, 0.488603f, 1.092548f, 1.092548f, 1.092548f, 0.315392f, 0.546274f)
   private final def clamp(v: scala.Float): scala.Float = {
     return if (v < 0.0f) 0.0f else if (v > 1.0f) 1.0f else v
   }

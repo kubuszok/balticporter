@@ -24,12 +24,12 @@ class ImmediateModeRenderer20 extends com.badlogic.gdx.graphics.glutils.Immediat
     this.shader = shader
     val attribs: scala.Array[com.badlogic.gdx.graphics.VertexAttribute] = this.buildVertexAttributes(hasNormals, hasColors, numTexCoords)
     this.mesh = new com.badlogic.gdx.graphics.Mesh(false, maxVertices, 0, attribs)
-    this.vertices = new Array[scala.Float](maxVertices * (this.mesh.getVertexAttributes().vertexSize / 4))
+    this.vertices = new scala.Array[scala.Float](maxVertices * (this.mesh.getVertexAttributes().vertexSize / 4))
     this.vertexSize = this.mesh.getVertexAttributes().vertexSize / 4
     this.normalOffset = if (this.mesh.getVertexAttribute(com.badlogic.gdx.graphics.VertexAttributes.Usage.Normal) != null) this.mesh.getVertexAttribute(com.badlogic.gdx.graphics.VertexAttributes.Usage.Normal).offset / 4 else 0
     this.colorOffset = if (this.mesh.getVertexAttribute(com.badlogic.gdx.graphics.VertexAttributes.Usage.ColorPacked) != null) this.mesh.getVertexAttribute(com.badlogic.gdx.graphics.VertexAttributes.Usage.ColorPacked).offset / 4 else 0
     this.texCoordOffset = if (this.mesh.getVertexAttribute(com.badlogic.gdx.graphics.VertexAttributes.Usage.TextureCoordinates) != null) this.mesh.getVertexAttribute(com.badlogic.gdx.graphics.VertexAttributes.Usage.TextureCoordinates).offset / 4 else 0
-    this.shaderUniformNames = new Array[java.lang.String](numTexCoords);
+    this.shaderUniformNames = new scala.Array[java.lang.String](numTexCoords);
     { var i: scala.Int = 0; while (i < numTexCoords) { {
       this.shaderUniformNames(i) = "u_sampler" + i
     }; i = i + 1 } }
@@ -54,7 +54,7 @@ class ImmediateModeRenderer20 extends com.badlogic.gdx.graphics.glutils.Immediat
     { var i: scala.Int = 0; while (i < numTexCoords) { {
       attribs.add(new com.badlogic.gdx.graphics.VertexAttribute(com.badlogic.gdx.graphics.VertexAttributes.Usage.TextureCoordinates, 2, com.badlogic.gdx.graphics.glutils.ShaderProgram.TEXCOORD_ATTRIBUTE + i))
     }; i = i + 1 } }
-    val array: scala.Array[com.badlogic.gdx.graphics.VertexAttribute] = new Array[com.badlogic.gdx.graphics.VertexAttribute](attribs.size);
+    val array: scala.Array[com.badlogic.gdx.graphics.VertexAttribute] = new scala.Array[com.badlogic.gdx.graphics.VertexAttribute](attribs.size);
     { var i: scala.Int = 0; while (i < attribs.size) { {
       array(i) = attribs.get(i)
     }; i = i + 1 } }

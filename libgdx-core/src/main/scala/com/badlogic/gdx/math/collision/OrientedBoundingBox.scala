@@ -4,8 +4,8 @@ class OrientedBoundingBox extends java.io.Serializable {
   private final val bounds: com.badlogic.gdx.math.collision.BoundingBox = new com.badlogic.gdx.math.collision.BoundingBox()
   final val transform: com.badlogic.gdx.math.Matrix4 = new com.badlogic.gdx.math.Matrix4()
   private final val inverseTransform: com.badlogic.gdx.math.Matrix4 = new com.badlogic.gdx.math.Matrix4()
-  private final val axes: scala.Array[com.badlogic.gdx.math.Vector3] = new Array[com.badlogic.gdx.math.Vector3](3)
-  private final val vertices: scala.Array[com.badlogic.gdx.math.Vector3] = new Array[com.badlogic.gdx.math.Vector3](8)
+  private final val axes: scala.Array[com.badlogic.gdx.math.Vector3] = new scala.Array[com.badlogic.gdx.math.Vector3](3)
+  private final val vertices: scala.Array[com.badlogic.gdx.math.Vector3] = new scala.Array[com.badlogic.gdx.math.Vector3](8)
   def this(bounds: com.badlogic.gdx.math.collision.BoundingBox, transform: com.badlogic.gdx.math.Matrix4) = {
     this()
     this.bounds.set(bounds.min$field, bounds.max$field)
@@ -171,7 +171,7 @@ class OrientedBoundingBox extends java.io.Serializable {
 }
 object OrientedBoundingBox {
   private final val serialVersionUID: scala.Long = 3864065514676250557L
-  private final val tempAxes: scala.Array[com.badlogic.gdx.math.Vector3] = new Array[com.badlogic.gdx.math.Vector3](15)
-  private final val tempVertices: scala.Array[com.badlogic.gdx.math.Vector3] = new Array[com.badlogic.gdx.math.Vector3](8)
-  private final val tmpVectors: scala.Array[com.badlogic.gdx.math.Vector3] = new Array[com.badlogic.gdx.math.Vector3](9)
+  private final val tempAxes: scala.Array[com.badlogic.gdx.math.Vector3] = new scala.Array[com.badlogic.gdx.math.Vector3](15)
+  private final val tempVertices: scala.Array[com.badlogic.gdx.math.Vector3] = new scala.Array[com.badlogic.gdx.math.Vector3](8)
+  private final val tmpVectors: scala.Array[com.badlogic.gdx.math.Vector3] = new scala.Array[com.badlogic.gdx.math.Vector3](9)
 }

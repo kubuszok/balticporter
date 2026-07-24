@@ -7,13 +7,13 @@ class BooleanArray {
   def this(ordered: scala.Boolean, capacity: scala.Int) = {
     this()
     this.ordered = ordered
-    this.items = new Array[scala.Boolean](capacity)
+    this.items = new scala.Array[scala.Boolean](capacity)
   }
   def this(array: BooleanArray) = {
     this()
     this.ordered = array.ordered
     this.size = array.size
-    this.items = new Array[scala.Boolean](this.size)
+    this.items = new scala.Array[scala.Boolean](this.size)
     java.lang.System.arraycopy(array.items, 0, this.items, 0, this.size)
   }
   def this(ordered: scala.Boolean, array: scala.Array[scala.Boolean], startIndex: scala.Int, count: scala.Int) = {
@@ -253,7 +253,7 @@ class BooleanArray {
     return this.items
   }
   def resize(newSize: scala.Int): scala.Array[scala.Boolean] = {
-    val newItems: scala.Array[scala.Boolean] = new Array[scala.Boolean](newSize)
+    val newItems: scala.Array[scala.Boolean] = new scala.Array[scala.Boolean](newSize)
     var items: scala.Array[scala.Boolean] = this.items
     java.lang.System.arraycopy(items, 0, newItems, 0, java.lang.Math.min(this.size, newItems.length))
     this.items = newItems
@@ -292,7 +292,7 @@ class BooleanArray {
     return this.items(com.badlogic.gdx.math.MathUtils.random(0, this.size - 1))
   }
   def toArray(): scala.Array[scala.Boolean] = {
-    val array: scala.Array[scala.Boolean] = new Array[scala.Boolean](this.size)
+    val array: scala.Array[scala.Boolean] = new scala.Array[scala.Boolean](this.size)
     java.lang.System.arraycopy(this.items, 0, array, 0, this.size)
     return array
   }

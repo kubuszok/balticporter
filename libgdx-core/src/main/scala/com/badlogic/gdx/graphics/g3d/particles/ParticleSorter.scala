@@ -17,7 +17,7 @@ object ParticleSorter {
     var indices: scala.Array[scala.Int] = null.asInstanceOf[scala.Array[scala.Int]]
     def ensureCapacity(capacity: scala.Int): scala.Unit = {
       if (this.currentCapacity < capacity) {
-        this.indices = new Array[scala.Int](capacity);
+        this.indices = new scala.Array[scala.Int](capacity);
         { var i: scala.Int = 0; while (i < capacity) { {
           this.indices(i) = i
         }; i = i + 1 } }
@@ -35,9 +35,9 @@ object ParticleSorter {
     private var currentSize: scala.Int = 0
     def ensureCapacity(capacity: scala.Int): scala.Unit = {
       if (this.currentSize < capacity) {
-        this.distances = new Array[scala.Float](capacity)
-        this.particleIndices = new Array[scala.Int](capacity)
-        this.particleOffsets = new Array[scala.Int](capacity)
+        this.distances = new scala.Array[scala.Float](capacity)
+        this.particleIndices = new scala.Array[scala.Int](capacity)
+        this.particleOffsets = new scala.Array[scala.Int](capacity)
         this.currentSize = capacity
       } else ()
     }

@@ -111,7 +111,7 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
         } else ()
       }; index = index - 1 } }
     }
-    return Array[scala.Int](left, right)
+    return scala.Array[scala.Int](left, right)
   }
   def wordUnderCursor(x: scala.Float): scala.Array[scala.Int] = {
     return this.wordUnderCursor(this.letterUnderCursor(x))

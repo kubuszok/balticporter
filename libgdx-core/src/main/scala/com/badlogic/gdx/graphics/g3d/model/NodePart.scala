@@ -35,7 +35,7 @@ class NodePart {
       }
       this.invBoneBindTransforms.putAll(other.invBoneBindTransforms)
       if ((this.bones == null) || (this.bones.length != this.invBoneBindTransforms.size)) {
-        this.bones = new Array[com.badlogic.gdx.math.Matrix4](this.invBoneBindTransforms.size)
+        this.bones = new scala.Array[com.badlogic.gdx.math.Matrix4](this.invBoneBindTransforms.size)
       } else ();
       { var i: scala.Int = 0; while (i < this.bones.length) { {
         if (this.bones(i) == null) {

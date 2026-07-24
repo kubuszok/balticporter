@@ -21,10 +21,10 @@ final class WeightMeshSpawnShapeValue extends com.badlogic.gdx.graphics.g3d.part
     val vertexCount: scala.Int = mesh.getNumVertices()
     val vertexSize: scala.Int = (attributes.vertexSize / 4).asInstanceOf[scala.Short]
     val positionOffset: scala.Int = (attributes.findByUsage(com.badlogic.gdx.graphics.VertexAttributes.Usage.Position).offset / 4).asInstanceOf[scala.Short]
-    val vertices: scala.Array[scala.Float] = new Array[scala.Float](vertexCount * vertexSize)
+    val vertices: scala.Array[scala.Float] = new scala.Array[scala.Float](vertexCount * vertexSize)
     mesh.getVertices(vertices)
     if (indicesCount > 0) {
-      val indices: scala.Array[scala.Short] = new Array[scala.Short](indicesCount)
+      val indices: scala.Array[scala.Short] = new scala.Array[scala.Short](indicesCount)
       mesh.getIndices(indices);
       { var i: scala.Int = 0; while (i < indicesCount) { {
         val p1Offset: scala.Int = (indices(i) * vertexSize) + positionOffset

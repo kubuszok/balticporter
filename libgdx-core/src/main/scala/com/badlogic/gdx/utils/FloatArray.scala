@@ -7,13 +7,13 @@ class FloatArray {
   def this(ordered: scala.Boolean, capacity: scala.Int) = {
     this()
     this.ordered = ordered
-    this.items = new Array[scala.Float](capacity)
+    this.items = new scala.Array[scala.Float](capacity)
   }
   def this(array: FloatArray) = {
     this()
     this.ordered = array.ordered
     this.size = array.size
-    this.items = new Array[scala.Float](this.size)
+    this.items = new scala.Array[scala.Float](this.size)
     java.lang.System.arraycopy(array.items, 0, this.items, 0, this.size)
   }
   def this(ordered: scala.Boolean, array: scala.Array[scala.Float], startIndex: scala.Int, count: scala.Int) = {
@@ -315,7 +315,7 @@ class FloatArray {
     return this.items
   }
   def resize(newSize: scala.Int): scala.Array[scala.Float] = {
-    val newItems: scala.Array[scala.Float] = new Array[scala.Float](newSize)
+    val newItems: scala.Array[scala.Float] = new scala.Array[scala.Float](newSize)
     var items: scala.Array[scala.Float] = this.items
     java.lang.System.arraycopy(items, 0, newItems, 0, java.lang.Math.min(this.size, newItems.length))
     this.items = newItems
@@ -357,7 +357,7 @@ class FloatArray {
     return this.items(com.badlogic.gdx.math.MathUtils.random(0, this.size - 1))
   }
   def toArray(): scala.Array[scala.Float] = {
-    val array: scala.Array[scala.Float] = new Array[scala.Float](this.size)
+    val array: scala.Array[scala.Float] = new scala.Array[scala.Float](this.size)
     java.lang.System.arraycopy(this.items, 0, array, 0, this.size)
     return array
   }

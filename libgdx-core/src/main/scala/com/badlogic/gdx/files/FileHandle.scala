@@ -122,7 +122,7 @@ class FileHandle {
       } else {
         reader = new java.io.InputStreamReader(this.read(), charset)
       }
-      val buffer: scala.Array[scala.Char] = new Array[scala.Char](256)
+      val buffer: scala.Array[scala.Char] = new scala.Array[scala.Char](256)
       while (true) {
         val length: scala.Int = reader.read(buffer)
         if (length == (-1)) {
@@ -307,9 +307,9 @@ class FileHandle {
     } else ()
     val relativePaths: scala.Array[java.lang.String] = this.file().list()
     if (relativePaths == null) {
-      return new Array[FileHandle](0)
+      return new scala.Array[FileHandle](0)
     } else ()
-    val handles: scala.Array[FileHandle] = new Array[FileHandle](relativePaths.length);
+    val handles: scala.Array[FileHandle] = new scala.Array[FileHandle](relativePaths.length);
     { var i: scala.Int = 0; val n: scala.Int = relativePaths.length; while (i < n) { {
       handles(i) = this.child(relativePaths(i))
     }; i = i + 1 } }
@@ -322,9 +322,9 @@ class FileHandle {
     val file: java.io.File = this.file()
     val relativePaths: scala.Array[java.lang.String] = file.list()
     if (relativePaths == null) {
-      return new Array[FileHandle](0)
+      return new scala.Array[FileHandle](0)
     } else ()
-    var handles: scala.Array[FileHandle] = new Array[FileHandle](relativePaths.length)
+    var handles: scala.Array[FileHandle] = new scala.Array[FileHandle](relativePaths.length)
     var count: scala.Int = 0;
     { var i: scala.Int = 0; val n: scala.Int = relativePaths.length; while (i < n) { {
       val path: java.lang.String = relativePaths(i)
@@ -336,7 +336,7 @@ class FileHandle {
       count = count + 1
     }; i = i + 1 } }
     if (count < relativePaths.length) {
-      val newHandles: scala.Array[FileHandle] = new Array[FileHandle](count)
+      val newHandles: scala.Array[FileHandle] = new scala.Array[FileHandle](count)
       java.lang.System.arraycopy(handles, 0, newHandles, 0, count)
       handles = newHandles
     } else ()
@@ -349,9 +349,9 @@ class FileHandle {
     val file: java.io.File = this.file()
     val relativePaths: scala.Array[java.lang.String] = file.list()
     if (relativePaths == null) {
-      return new Array[FileHandle](0)
+      return new scala.Array[FileHandle](0)
     } else ()
-    var handles: scala.Array[FileHandle] = new Array[FileHandle](relativePaths.length)
+    var handles: scala.Array[FileHandle] = new scala.Array[FileHandle](relativePaths.length)
     var count: scala.Int = 0;
     { var i: scala.Int = 0; val n: scala.Int = relativePaths.length; while (i < n) { {
       val path: java.lang.String = relativePaths(i)
@@ -362,7 +362,7 @@ class FileHandle {
       count = count + 1
     }; i = i + 1 } }
     if (count < relativePaths.length) {
-      val newHandles: scala.Array[FileHandle] = new Array[FileHandle](count)
+      val newHandles: scala.Array[FileHandle] = new scala.Array[FileHandle](count)
       java.lang.System.arraycopy(handles, 0, newHandles, 0, count)
       handles = newHandles
     } else ()
@@ -374,9 +374,9 @@ class FileHandle {
     } else ()
     val relativePaths: scala.Array[java.lang.String] = this.file().list()
     if (relativePaths == null) {
-      return new Array[FileHandle](0)
+      return new scala.Array[FileHandle](0)
     } else ()
-    var handles: scala.Array[FileHandle] = new Array[FileHandle](relativePaths.length)
+    var handles: scala.Array[FileHandle] = new scala.Array[FileHandle](relativePaths.length)
     var count: scala.Int = 0;
     { var i: scala.Int = 0; val n: scala.Int = relativePaths.length; while (i < n) { {
       val path: java.lang.String = relativePaths(i)
@@ -387,7 +387,7 @@ class FileHandle {
       count = count + 1
     }; i = i + 1 } }
     if (count < relativePaths.length) {
-      val newHandles: scala.Array[FileHandle] = new Array[FileHandle](count)
+      val newHandles: scala.Array[FileHandle] = new scala.Array[FileHandle](count)
       java.lang.System.arraycopy(handles, 0, newHandles, 0, count)
       handles = newHandles
     } else ()

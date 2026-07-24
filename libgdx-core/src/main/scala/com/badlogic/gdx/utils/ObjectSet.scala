@@ -19,7 +19,7 @@ class ObjectSet[T] extends scala.collection.Iterable[T] {
     this.threshold = (tableSize * loadFactor).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
     this.mask = tableSize - 1
     this.shift = java.lang.Long.numberOfLeadingZeros(this.mask)
-    this.keyTable = new Array[java.lang.Object](tableSize).asInstanceOf[scala.Array[T]].asInstanceOf[scala.Array[T]]
+    this.keyTable = new scala.Array[java.lang.Object](tableSize).asInstanceOf[scala.Array[T]].asInstanceOf[scala.Array[T]]
   }
   def this(initialCapacity: scala.Int) = {
     this(initialCapacity, 0.8f)
@@ -181,7 +181,7 @@ class ObjectSet[T] extends scala.collection.Iterable[T] {
     this.mask = newSize - 1
     this.shift = java.lang.Long.numberOfLeadingZeros(this.mask)
     val oldKeyTable: scala.Array[T] = this.keyTable
-    this.keyTable = new Array[java.lang.Object](newSize).asInstanceOf[scala.Array[T]].asInstanceOf[scala.Array[T]]
+    this.keyTable = new scala.Array[java.lang.Object](newSize).asInstanceOf[scala.Array[T]].asInstanceOf[scala.Array[T]]
     if (this.size > 0) {
       { var i: scala.Int = 0; while (i < oldCapacity) { {
         val key: T = oldKeyTable(i)

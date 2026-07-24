@@ -7,12 +7,12 @@ class AmbientCubemap {
     if (copyFrom.length != AmbientCubemap.NUM_VALUES) {
       throw new com.badlogic.gdx.utils.GdxRuntimeException("Incorrect array size")
     } else ()
-    this.data = new Array[scala.Float](copyFrom.length)
+    this.data = new scala.Array[scala.Float](copyFrom.length)
     java.lang.System.arraycopy(copyFrom, 0, this.data, 0, this.data.length)
   }
   def this() = {
     this()
-    this.data = new Array[scala.Float](AmbientCubemap.NUM_VALUES)
+    this.data = new scala.Array[scala.Float](AmbientCubemap.NUM_VALUES)
   }
   def this(copyFrom: AmbientCubemap) = {
     this(copyFrom.data)

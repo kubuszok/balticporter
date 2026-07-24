@@ -400,6 +400,6 @@ object MathUtils {
     return MathUtils.log(2, value)
   }
   object Sin {
-    final val table: scala.Array[scala.Float] = new Array[scala.Float](MathUtils.SIN_COUNT)
+    final val table: scala.Array[scala.Float] = new scala.Array[scala.Float](MathUtils.SIN_COUNT)
   }
 }

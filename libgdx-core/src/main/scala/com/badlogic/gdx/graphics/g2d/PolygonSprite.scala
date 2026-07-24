@@ -239,7 +239,7 @@ class PolygonSprite {
     val textureCoords: scala.Array[scala.Float] = region.textureCoords
     val verticesLength: scala.Int = (regionVertices.length / 2) * 5
     if ((this.vertices == null) || (this.vertices.length != verticesLength)) {
-      this.vertices = new Array[scala.Float](verticesLength)
+      this.vertices = new scala.Array[scala.Float](verticesLength)
     } else ()
     val floatColor: scala.Float = this.color.toFloatBits()
     var vertices: scala.Array[scala.Float] = this.vertices;

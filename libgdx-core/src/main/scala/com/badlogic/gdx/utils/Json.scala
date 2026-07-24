@@ -18,8 +18,8 @@ class Json {
   private final val classToTag: com.badlogic.gdx.utils.ObjectMap[java.lang.Class[?], java.lang.String] = new com.badlogic.gdx.utils.ObjectMap()
   private final val classToSerializer: com.badlogic.gdx.utils.ObjectMap[java.lang.Class[?], com.badlogic.gdx.utils.Json.Serializer[?]] = new com.badlogic.gdx.utils.ObjectMap()
   private final val classToDefaultValues: com.badlogic.gdx.utils.ObjectMap[java.lang.Class[?], scala.Array[java.lang.Object]] = new com.badlogic.gdx.utils.ObjectMap()
-  private final val equals1: scala.Array[java.lang.Object] = Array[java.lang.Object](null)
-  private final val equals2: scala.Array[java.lang.Object] = Array[java.lang.Object](null)
+  private final val equals1: scala.Array[java.lang.Object] = scala.Array[java.lang.Object](null)
+  private final val equals2: scala.Array[java.lang.Object] = scala.Array[java.lang.Object](null)
   def this(outputType: com.badlogic.gdx.utils.JsonWriter.OutputType) = {
     this()
     this.outputType = outputType
@@ -271,7 +271,7 @@ class Json {
       }
     }
     val fields: com.badlogic.gdx.utils.OrderedMap[java.lang.String, com.badlogic.gdx.utils.Json.FieldMetadata] = this.getFields(`type`)
-    val values: scala.Array[java.lang.Object] = new Array[java.lang.Object](fields.size)
+    val values: scala.Array[java.lang.Object] = new scala.Array[java.lang.Object](fields.size)
     this.classToDefaultValues.put(`type`, values)
     var defaultIndex: scala.Int = 0
     val fieldNames: com.badlogic.gdx.utils.Array[java.lang.String] = fields.orderedKeys();

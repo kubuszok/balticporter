@@ -36,8 +36,8 @@ class PolygonSpriteBatch extends com.badlogic.gdx.graphics.g2d.PolygonBatch {
       vertexDataType = com.badlogic.gdx.graphics.Mesh.VertexDataType.VertexBufferObjectWithVAO
     } else ()
     this.mesh = new com.badlogic.gdx.graphics.Mesh(vertexDataType, false, maxVertices, maxTriangles * 3, new com.badlogic.gdx.graphics.VertexAttribute(com.badlogic.gdx.graphics.VertexAttributes.Usage.Position, 2, com.badlogic.gdx.graphics.glutils.ShaderProgram.POSITION_ATTRIBUTE), new com.badlogic.gdx.graphics.VertexAttribute(com.badlogic.gdx.graphics.VertexAttributes.Usage.ColorPacked, 4, com.badlogic.gdx.graphics.glutils.ShaderProgram.COLOR_ATTRIBUTE), new com.badlogic.gdx.graphics.VertexAttribute(com.badlogic.gdx.graphics.VertexAttributes.Usage.TextureCoordinates, 2, com.badlogic.gdx.graphics.glutils.ShaderProgram.TEXCOORD_ATTRIBUTE + "0"))
-    this.vertices = new Array[scala.Float](maxVertices * com.badlogic.gdx.graphics.g2d.Sprite.VERTEX_SIZE)
-    this.triangles = new Array[scala.Short](maxTriangles * 3)
+    this.vertices = new scala.Array[scala.Float](maxVertices * com.badlogic.gdx.graphics.g2d.Sprite.VERTEX_SIZE)
+    this.triangles = new scala.Array[scala.Short](maxTriangles * 3)
     if (defaultShader == null) {
       this.shader = com.badlogic.gdx.graphics.g2d.SpriteBatch.createDefaultShader()
       this.ownsShader = true

@@ -39,7 +39,7 @@ class RepeatablePolygonSprite {
     this.rows = java.lang.Math.ceil(boundRect.getHeight() / this.gridHeight).asInstanceOf[scala.Int].asInstanceOf[scala.Int];
     { var col: scala.Int = 0; while (col < this.cols) { {
       { var row: scala.Int = 0; while (row < this.rows) { {
-        var verts: scala.Array[scala.Float] = new Array[scala.Float](8)
+        var verts: scala.Array[scala.Float] = new scala.Array[scala.Float](8)
         idx = 0
         verts({ idx += 1; idx }) = col * this.gridWidth
         verts({ idx += 1; idx }) = row * this.gridHeight
@@ -99,7 +99,7 @@ class RepeatablePolygonSprite {
       if (verts == null) {
         /* continue */ ()
       } else ()
-      val fullVerts: scala.Array[scala.Float] = new Array[scala.Float]((5 * verts.length) / 2)
+      val fullVerts: scala.Array[scala.Float] = new scala.Array[scala.Float]((5 * verts.length) / 2)
       var idx: scala.Int = 0
       val col: scala.Int = i / this.rows
       val row: scala.Int = i % this.rows;

@@ -3,7 +3,7 @@ package com.badlogic.gdx.utils
 class JsonSkimmer {
   var nameString: com.badlogic.gdx.utils.JsonSkimmer.JsonToken = null.asInstanceOf[com.badlogic.gdx.utils.JsonSkimmer.JsonToken]
   var value$field: com.badlogic.gdx.utils.JsonSkimmer.JsonToken = null.asInstanceOf[com.badlogic.gdx.utils.JsonSkimmer.JsonToken]
-  var stack: scala.Array[scala.Int] = new Array[scala.Int](8)
+  var stack: scala.Array[scala.Int] = new scala.Array[scala.Int](8)
   final val buffer: com.badlogic.gdx.utils.CharArray = new com.badlogic.gdx.utils.CharArray()
   var stop$field: scala.Boolean = false
   this.nameString = new com.badlogic.gdx.utils.JsonSkimmer.JsonToken(this.buffer)
@@ -13,7 +13,7 @@ class JsonSkimmer {
     this.parse(data, 0, data.length)
   }
   def parse(reader: java.io.Reader): scala.Unit = {
-    var data: scala.Array[scala.Char] = new Array[scala.Char](1024)
+    var data: scala.Array[scala.Char] = new scala.Array[scala.Char](1024)
     var offset: scala.Int = 0
     try {
       while (true) {
@@ -22,7 +22,7 @@ class JsonSkimmer {
           /* break */ ()
         } else ()
         if (length == 0) {
-          val newData: scala.Array[scala.Char] = new Array[scala.Char](data.length * 2)
+          val newData: scala.Array[scala.Char] = new scala.Array[scala.Char](data.length * 2)
           java.lang.System.arraycopy(data, 0, newData, 0, data.length)
           data = newData
         } else {
@@ -995,34 +995,34 @@ object JsonSkimmer {
   final val json_en_array: scala.Int = 20
   final val json_en_main: scala.Int = 1
   private def init__json_actions_0(): scala.Array[scala.Byte] = {
-    return Array[scala.Byte](0, 1, 0, 1, 1, 1, 2, 1, 3, 1, 4, 1, 6, 1, 7, 1, 9, 1, 10, 2, 8, 5, 2, 8, 7, 2, 10, 1, 2, 10, 3)
+    return scala.Array[scala.Byte](0, 1, 0, 1, 1, 1, 2, 1, 3, 1, 4, 1, 6, 1, 7, 1, 9, 1, 10, 2, 8, 5, 2, 8, 7, 2, 10, 1, 2, 10, 3)
   }
   private def init__json_key_offsets_0(): scala.Array[scala.Short] = {
-    return Array[scala.Short](0, 0, 11, 13, 15, 24, 30, 36, 38, 49, 56, 63, 72, 81, 83, 85, 94, 96, 98, 100, 102, 113, 120, 127, 138, 149, 151, 153, 164, 166, 168, 170, 175, 180, 180)
+    return scala.Array[scala.Short](0, 0, 11, 13, 15, 24, 30, 36, 38, 49, 56, 63, 72, 81, 83, 85, 94, 96, 98, 100, 102, 113, 120, 127, 138, 149, 151, 153, 164, 166, 168, 170, 175, 180, 180)
   }
   private def init__json_trans_keys_0(): scala.Array[scala.Char] = {
-    return Array[scala.Char](13, 32, 34, 44, 47, 58, 91, 93, 123, 9, 10, 42, 47, 42, 47, 13, 32, 34, 44, 47, 58, 125, 9, 10, 13, 32, 47, 58, 9, 10, 13, 32, 47, 58, 9, 10, 42, 47, 13, 32, 34, 44, 47, 58, 91, 93, 123, 9, 10, 9, 10, 13, 32, 44, 47, 125, 9, 10, 13, 32, 44, 47, 125, 13, 32, 34, 44, 47, 58, 125, 9, 10, 13, 32, 34, 44, 47, 58, 125, 9, 10, 42, 47, 42, 47, 13, 32, 34, 44, 47, 58, 125, 9, 10, 42, 47, 42, 47, 42, 47, 42, 47, 13, 32, 34, 44, 47, 58, 91, 93, 123, 9, 10, 9, 10, 13, 32, 44, 47, 93, 9, 10, 13, 32, 44, 47, 93, 13, 32, 34, 44, 47, 58, 91, 93, 123, 9, 10, 13, 32, 34, 44, 47, 58, 91, 93, 123, 9, 10, 42, 47, 42, 47, 13, 32, 34, 44, 47, 58, 91, 93, 123, 9, 10, 42, 47, 42, 47, 42, 47, 13, 32, 47, 9, 10, 13, 32, 47, 9, 10, 0)
+    return scala.Array[scala.Char](13, 32, 34, 44, 47, 58, 91, 93, 123, 9, 10, 42, 47, 42, 47, 13, 32, 34, 44, 47, 58, 125, 9, 10, 13, 32, 47, 58, 9, 10, 13, 32, 47, 58, 9, 10, 42, 47, 13, 32, 34, 44, 47, 58, 91, 93, 123, 9, 10, 9, 10, 13, 32, 44, 47, 125, 9, 10, 13, 32, 44, 47, 125, 13, 32, 34, 44, 47, 58, 125, 9, 10, 13, 32, 34, 44, 47, 58, 125, 9, 10, 42, 47, 42, 47, 13, 32, 34, 44, 47, 58, 125, 9, 10, 42, 47, 42, 47, 42, 47, 42, 47, 13, 32, 34, 44, 47, 58, 91, 93, 123, 9, 10, 9, 10, 13, 32, 44, 47, 93, 9, 10, 13, 32, 44, 47, 93, 13, 32, 34, 44, 47, 58, 91, 93, 123, 9, 10, 13, 32, 34, 44, 47, 58, 91, 93, 123, 9, 10, 42, 47, 42, 47, 13, 32, 34, 44, 47, 58, 91, 93, 123, 9, 10, 42, 47, 42, 47, 42, 47, 13, 32, 47, 9, 10, 13, 32, 47, 9, 10, 0)
   }
   private def init__json_single_lengths_0(): scala.Array[scala.Byte] = {
-    return Array[scala.Byte](0, 9, 2, 2, 7, 4, 4, 2, 9, 7, 7, 7, 7, 2, 2, 7, 2, 2, 2, 2, 9, 7, 7, 9, 9, 2, 2, 9, 2, 2, 2, 3, 3, 0, 0)
+    return scala.Array[scala.Byte](0, 9, 2, 2, 7, 4, 4, 2, 9, 7, 7, 7, 7, 2, 2, 7, 2, 2, 2, 2, 9, 7, 7, 9, 9, 2, 2, 9, 2, 2, 2, 3, 3, 0, 0)
   }
   private def init__json_range_lengths_0(): scala.Array[scala.Byte] = {
-    return Array[scala.Byte](0, 1, 0, 0, 1, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0)
+    return scala.Array[scala.Byte](0, 1, 0, 0, 1, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0)
   }
   private def init__json_index_offsets_0(): scala.Array[scala.Short] = {
-    return Array[scala.Short](0, 0, 11, 14, 17, 26, 32, 38, 41, 52, 60, 68, 77, 86, 89, 92, 101, 104, 107, 110, 113, 124, 132, 140, 151, 162, 165, 168, 179, 182, 185, 188, 193, 198, 199)
+    return scala.Array[scala.Short](0, 0, 11, 14, 17, 26, 32, 38, 41, 52, 60, 68, 77, 86, 89, 92, 101, 104, 107, 110, 113, 124, 132, 140, 151, 162, 165, 168, 179, 182, 185, 188, 193, 198, 199)
   }
   private def init__json_indicies_0(): scala.Array[scala.Byte] = {
-    return Array[scala.Byte](1, 1, 2, 3, 4, 3, 5, 3, 6, 1, 0, 7, 7, 3, 8, 8, 3, 10, 10, 11, 12, 13, 3, 14, 10, 9, 15, 15, 16, 17, 15, 3, 18, 18, 19, 20, 18, 3, 21, 21, 3, 20, 20, 23, 3, 24, 3, 25, 3, 26, 20, 22, 27, 28, 28, 27, 29, 30, 31, 3, 32, 33, 33, 32, 12, 34, 14, 3, 33, 33, 11, 35, 36, 3, 14, 33, 9, 35, 35, 11, 3, 37, 3, 3, 35, 9, 38, 38, 3, 39, 39, 3, 12, 12, 11, 3, 40, 3, 14, 12, 9, 41, 41, 3, 42, 42, 3, 43, 43, 3, 44, 44, 3, 46, 46, 47, 48, 49, 3, 50, 51, 52, 46, 45, 53, 54, 54, 53, 55, 56, 57, 3, 58, 59, 59, 58, 48, 60, 51, 3, 59, 59, 47, 61, 62, 3, 50, 51, 52, 59, 45, 61, 61, 47, 3, 63, 3, 50, 3, 52, 61, 45, 64, 64, 3, 65, 65, 3, 48, 48, 47, 3, 66, 3, 50, 51, 52, 48, 45, 67, 67, 3, 68, 68, 3, 69, 69, 3, 70, 70, 71, 70, 3, 72, 72, 73, 72, 3, 3, 3, 0)
+    return scala.Array[scala.Byte](1, 1, 2, 3, 4, 3, 5, 3, 6, 1, 0, 7, 7, 3, 8, 8, 3, 10, 10, 11, 12, 13, 3, 14, 10, 9, 15, 15, 16, 17, 15, 3, 18, 18, 19, 20, 18, 3, 21, 21, 3, 20, 20, 23, 3, 24, 3, 25, 3, 26, 20, 22, 27, 28, 28, 27, 29, 30, 31, 3, 32, 33, 33, 32, 12, 34, 14, 3, 33, 33, 11, 35, 36, 3, 14, 33, 9, 35, 35, 11, 3, 37, 3, 3, 35, 9, 38, 38, 3, 39, 39, 3, 12, 12, 11, 3, 40, 3, 14, 12, 9, 41, 41, 3, 42, 42, 3, 43, 43, 3, 44, 44, 3, 46, 46, 47, 48, 49, 3, 50, 51, 52, 46, 45, 53, 54, 54, 53, 55, 56, 57, 3, 58, 59, 59, 58, 48, 60, 51, 3, 59, 59, 47, 61, 62, 3, 50, 51, 52, 59, 45, 61, 61, 47, 3, 63, 3, 50, 3, 52, 61, 45, 64, 64, 3, 65, 65, 3, 48, 48, 47, 3, 66, 3, 50, 51, 52, 48, 45, 67, 67, 3, 68, 68, 3, 69, 69, 3, 70, 70, 71, 70, 3, 72, 72, 73, 72, 3, 3, 3, 0)
   }
   private def init__json_trans_targs_0(): scala.Array[scala.Byte] = {
-    return Array[scala.Byte](31, 1, 31, 0, 3, 32, 32, 32, 1, 5, 4, 5, 15, 19, 33, 6, 7, 8, 6, 7, 8, 6, 9, 9, 18, 10, 10, 10, 11, 15, 17, 33, 10, 11, 17, 12, 14, 13, 12, 11, 16, 15, 10, 8, 4, 21, 20, 21, 27, 30, 22, 34, 22, 22, 23, 27, 29, 34, 22, 23, 29, 24, 26, 25, 24, 23, 28, 27, 22, 20, 32, 2, 32, 2)
+    return scala.Array[scala.Byte](31, 1, 31, 0, 3, 32, 32, 32, 1, 5, 4, 5, 15, 19, 33, 6, 7, 8, 6, 7, 8, 6, 9, 9, 18, 10, 10, 10, 11, 15, 17, 33, 10, 11, 17, 12, 14, 13, 12, 11, 16, 15, 10, 8, 4, 21, 20, 21, 27, 30, 22, 34, 22, 22, 23, 27, 29, 34, 22, 23, 29, 24, 26, 25, 24, 23, 28, 27, 22, 20, 32, 2, 32, 2)
   }
   private def init__json_trans_actions_0(): scala.Array[scala.Byte] = {
-    return Array[scala.Byte](11, 0, 13, 0, 0, 5, 1, 9, 9, 19, 0, 22, 0, 0, 3, 15, 15, 15, 0, 0, 0, 9, 11, 13, 0, 5, 1, 17, 17, 17, 17, 25, 0, 0, 0, 0, 0, 0, 9, 9, 0, 9, 9, 9, 9, 11, 0, 13, 0, 0, 5, 7, 1, 17, 17, 17, 17, 28, 0, 0, 0, 0, 0, 0, 9, 9, 0, 9, 9, 9, 17, 17, 0, 0)
+    return scala.Array[scala.Byte](11, 0, 13, 0, 0, 5, 1, 9, 9, 19, 0, 22, 0, 0, 3, 15, 15, 15, 0, 0, 0, 9, 11, 13, 0, 5, 1, 17, 17, 17, 17, 25, 0, 0, 0, 0, 0, 0, 9, 9, 0, 9, 9, 9, 9, 11, 0, 13, 0, 0, 5, 7, 1, 17, 17, 17, 17, 28, 0, 0, 0, 0, 0, 0, 9, 9, 0, 9, 9, 9, 17, 17, 0, 0)
   }
   private def init__json_eof_actions_0(): scala.Array[scala.Byte] = {
-    return Array[scala.Byte](0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 17, 0, 0, 0)
+    return scala.Array[scala.Byte](0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 17, 0, 0, 0)
   }
   class JsonToken {
     var buffer: com.badlogic.gdx.utils.CharArray = null.asInstanceOf[com.badlogic.gdx.utils.CharArray]

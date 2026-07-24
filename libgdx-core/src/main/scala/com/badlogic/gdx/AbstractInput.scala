@@ -6,8 +6,8 @@ abstract class AbstractInput extends com.badlogic.gdx.Input {
   private final val keysToCatch: com.badlogic.gdx.utils.IntSet = new com.badlogic.gdx.utils.IntSet()
   var pressedKeyCount: scala.Int = 0
   var keyJustPressed: scala.Boolean = false
-  this.pressedKeys = new Array[scala.Boolean](com.badlogic.gdx.Input.Keys.MAX_KEYCODE + 1)
-  this.justPressedKeys = new Array[scala.Boolean](com.badlogic.gdx.Input.Keys.MAX_KEYCODE + 1)
+  this.pressedKeys = new scala.Array[scala.Boolean](com.badlogic.gdx.Input.Keys.MAX_KEYCODE + 1)
+  this.justPressedKeys = new scala.Array[scala.Boolean](com.badlogic.gdx.Input.Keys.MAX_KEYCODE + 1)
   def isKeyPressed(key: scala.Int): scala.Boolean = {
     if (key == com.badlogic.gdx.Input.Keys.ANY_KEY) {
       return this.pressedKeyCount > 0

@@ -25,7 +25,7 @@ class Polyline extends com.badlogic.gdx.math.Shape2D {
   }
   def this() = {
     this()
-    this.localVertices = new Array[scala.Float](0)
+    this.localVertices = new scala.Array[scala.Float](0)
   }
   def getVertices(): scala.Array[scala.Float] = {
     return this.localVertices
@@ -37,7 +37,7 @@ class Polyline extends com.badlogic.gdx.math.Shape2D {
     this.dirty$field = false
     val localVertices: scala.Array[scala.Float] = this.localVertices
     if ((this.worldVertices == null) || (this.worldVertices.length < localVertices.length)) {
-      this.worldVertices = new Array[scala.Float](localVertices.length)
+      this.worldVertices = new scala.Array[scala.Float](localVertices.length)
     } else ()
     var worldVertices: scala.Array[scala.Float] = this.worldVertices
     val positionX: scala.Float = this.x
