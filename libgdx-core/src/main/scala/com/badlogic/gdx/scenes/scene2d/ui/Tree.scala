@@ -96,7 +96,7 @@ class Tree[N <: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[?, ?, ?], V] extend
   }
   def clearChildren(unfocus: scala.Boolean): scala.Unit = {
     super.clearChildren(unfocus)
-    this.setOverNode(null)
+    this.setOverNode(null.asInstanceOf[N])
     this.rootNodes.clear()
     this.selection.clear()
   }
@@ -183,7 +183,7 @@ class Tree[N <: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[?, ?, ?], V] extend
     val color: com.badlogic.gdx.graphics.Color = this.getColor()
     val a: scala.Float = color.a * parentAlpha
     batch.setColor(color.r, color.g, color.b, a)
-    this.drawIcons(batch, color.r, color.g, color.b, a, null, this.rootNodes, this.paddingLeft, this.plusMinusWidth())
+    this.drawIcons(batch, color.r, color.g, color.b, a, null.asInstanceOf[N], this.rootNodes, this.paddingLeft, this.plusMinusWidth())
     super.draw(batch, parentAlpha)
   }
   def drawBackground(batch: com.badlogic.gdx.graphics.g2d.Batch, parentAlpha: scala.Float): scala.Unit = {

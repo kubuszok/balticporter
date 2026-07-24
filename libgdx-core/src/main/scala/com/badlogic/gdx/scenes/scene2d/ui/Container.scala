@@ -199,7 +199,7 @@ class Container[T <: com.badlogic.gdx.scenes.scene2d.Actor] extends com.badlogic
     if (actor != this.actor) {
       return false
     } else ()
-    this.setActor(null)
+    this.setActor(null.asInstanceOf[T])
     return true
   }
   def removeActor(actor: com.badlogic.gdx.scenes.scene2d.Actor, unfocus: scala.Boolean): scala.Boolean = {

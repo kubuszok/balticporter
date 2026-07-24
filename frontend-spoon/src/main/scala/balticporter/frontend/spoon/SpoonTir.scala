@@ -501,12 +501,33 @@ object SpoonTir:
 
       /** coerce each argument to its formal parameter type (Java autoboxing / numeric narrowing
         * that Scala won't do implicitly). Skipped when arities differ (varargs spread etc.). */
-      private def coerceArgs(formals: List[CtTypeReference[?]], argEs: List[CtExpression[?]]): List[Term] =
+      private def coerceArgs(ex: CtExecutableReference[?], argEs: List[CtExpression[?]]): List[Term] =
         // NB: array covariance is DISABLED for call args — Spoon erases a generic array formal
         // (`T[]`) to `Object[]`, and casting the arg to `Array[Object]` breaks the (overloaded)
         // Scala method that actually wants `Array[T]`.
-        if formals.size == argEs.size then argEs.zip(formals).map((e, ft) => coerce(ft, e, expr(e), arrayCov = false))
+        val formals = ex.getParameters.asScala.toList
+        // Under noClasspath, an executable REFERENCE erases a generic formal `T` to `Object`, so
+        // `coerce` sees `null → Object` (legal) and skips the cast — yet the emitted method keeps
+        // the real `T`, where `null → T` fails. Consult the DECLARATION's un-erased formals to
+        // recover the type parameter and cast the null there (`set(null.asInstanceOf[T])`).
+        val declFormals: Int => Option[CtTypeReference[?]] =
+          val ps = Option(ex.getExecutableDeclaration).map(_.getParameters.asScala.toList.map(_.getType))
+          i => ps.flatMap(l => if i < l.size then Option(l(i)) else None)
+        if formals.size == argEs.size then
+          argEs.zipWithIndex.map { (e, i) => nullToTypeParam(e, declFormals(i), coerce(formals(i), e, expr(e), arrayCov = false)) }
         else argEs.map(expr)
+
+      /** `null` passed to a callee slot whose real (un-erased) formal is a type parameter — cast it,
+        * so the ported call type-checks (`m(null)` → `m(null.asInstanceOf[T])`). The dominant case is
+        * a self-call inside the generic class, where `T` is in scope at the call site. */
+      private def nullToTypeParam(e: CtExpression[?], declFormal: Option[CtTypeReference[?]], t: Term): Term =
+        val isNull = e match { case l: CtLiteral[?] => l.getValue == null; case _ => false }
+        declFormal match
+          // only when the callee's type parameter actually RESOLVES in scope here (a self-call inside
+          // the same generic class) — otherwise `tpe` yields the `?T` unresolved stub, invalid syntax.
+          case Some(tp: CtTypeParameterReference) if isNull && resolveTypeParam(tp.getSimpleName).isDefined =>
+            Tree.Typed(t, tt(tpe(tp), e), tpe(tp), originOf(e))
+          case _ => t
 
       private def tryStmt(t: CtTry, resources: List[Tree.ValDef]): Term =
         val catches = t.getCatchers.asScala.toList.map { c =>
@@ -688,7 +709,7 @@ object SpoonTir:
       private def invocation(inv: CtInvocation[?]): Term =
         val ex   = inv.getExecutable
         val mid  = methodSym(ex)
-        val args = coerceArgs(ex.getParameters.asScala.toList, inv.getArguments.asScala.toList)
+        val args = coerceArgs(ex, inv.getArguments.asScala.toList)
         val o    = originOf(inv)
         val fun: Term =
           if ex.isConstructor then
@@ -750,7 +771,7 @@ object SpoonTir:
       private def ctorCall(cc: CtConstructorCall[?]): Term =
         val t    = tpe(cc.getType)
         val cid  = methodSym(cc.getExecutable)
-        val args = coerceArgs(cc.getExecutable.getParameters.asScala.toList, cc.getArguments.asScala.toList)
+        val args = coerceArgs(cc.getExecutable, cc.getArguments.asScala.toList)
         Tree.Apply(Tree.New(tt(t, cc), t, originOf(cc)), args, cid, t, originOf(cc))
 
       /** SymId of a called executable — via its declaration (keyed identically to how we
