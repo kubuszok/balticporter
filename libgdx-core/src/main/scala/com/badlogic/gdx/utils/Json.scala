@@ -914,14 +914,14 @@ class Json {
         if (`object`.isInstanceOf[com.badlogic.gdx.utils.ObjectIntMap[?]]) {
           val result: com.badlogic.gdx.utils.ObjectIntMap[?] = `object`.asInstanceOf[com.badlogic.gdx.utils.ObjectIntMap[?]].asInstanceOf[com.badlogic.gdx.utils.ObjectIntMap[?]];
           { var child: com.badlogic.gdx.utils.JsonValue = jsonData.child$field; while (child != null) { {
-            result.put(child.name$field, this.readValue(classOf[java.lang.Integer], null, child))
+            result.put(child.name$field, this.readValue[java.lang.Integer](classOf[java.lang.Integer], null, child))
           }; child = child.next$field } }
           return result.asInstanceOf[T]
         } else ()
         if (`object`.isInstanceOf[com.badlogic.gdx.utils.ObjectFloatMap[?]]) {
           val result: com.badlogic.gdx.utils.ObjectFloatMap[?] = `object`.asInstanceOf[com.badlogic.gdx.utils.ObjectFloatMap[?]].asInstanceOf[com.badlogic.gdx.utils.ObjectFloatMap[?]];
           { var child: com.badlogic.gdx.utils.JsonValue = jsonData.child$field; while (child != null) { {
-            result.put(child.name$field, this.readValue(classOf[java.lang.Float], null, child))
+            result.put(child.name$field, this.readValue[java.lang.Float](classOf[java.lang.Float], null, child))
           }; child = child.next$field } }
           return result.asInstanceOf[T]
         } else ()

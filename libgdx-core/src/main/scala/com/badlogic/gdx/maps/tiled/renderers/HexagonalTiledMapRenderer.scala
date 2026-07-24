@@ -37,15 +37,15 @@ class HexagonalTiledMapRenderer extends com.badlogic.gdx.maps.tiled.renderers.Ba
         this.staggerIndexEven = false
       }
     } else ()
-    if ((!this.staggerAxisX) && ((map.getProperties().get("height", classOf[java.lang.Integer]) % 2) == 0)) {
+    if ((!this.staggerAxisX) && ((map.getProperties().get[java.lang.Integer]("height", classOf[java.lang.Integer]) % 2) == 0)) {
       this.staggerIndexEven = !this.staggerIndexEven
     } else ()
-    var length: java.lang.Integer = map.getProperties().get("hexsidelength", classOf[java.lang.Integer])
+    var length: java.lang.Integer = map.getProperties().get[java.lang.Integer]("hexsidelength", classOf[java.lang.Integer])
     if (length != null) {
       this.hexSideLength = length.intValue()
     } else {
       if (this.staggerAxisX) {
-        length = map.getProperties().get("tilewidth", classOf[java.lang.Integer])
+        length = map.getProperties().get[java.lang.Integer]("tilewidth", classOf[java.lang.Integer])
         if (length != null) {
           this.hexSideLength = 0.5f * length.intValue()
         } else {
@@ -57,7 +57,7 @@ class HexagonalTiledMapRenderer extends com.badlogic.gdx.maps.tiled.renderers.Ba
           }
         }
       } else {
-        length = map.getProperties().get("tileheight", classOf[java.lang.Integer])
+        length = map.getProperties().get[java.lang.Integer]("tileheight", classOf[java.lang.Integer])
         if (length != null) {
           this.hexSideLength = 0.5f * length.intValue()
         } else {
@@ -201,8 +201,8 @@ class HexagonalTiledMapRenderer extends com.badlogic.gdx.maps.tiled.renderers.Ba
     if (region == null) {
       return
     } else ()
-    val tileHeight: scala.Int = this.getMap().getProperties().get("tileheight", classOf[java.lang.Integer])
-    val mapHeight: scala.Int = this.getMap().getProperties().get("height", classOf[java.lang.Integer])
+    val tileHeight: scala.Int = this.getMap().getProperties().get[java.lang.Integer]("tileheight", classOf[java.lang.Integer])
+    val mapHeight: scala.Int = this.getMap().getProperties().get[java.lang.Integer]("height", classOf[java.lang.Integer])
     val layerHexLength: scala.Float = this.hexSideLength
     val totalHeightPixels: scala.Float = (mapHeight * tileHeight) * unitScale
     val hexMapHeightPixels: scala.Float = (((mapHeight * tileHeight) * (3.0f / 4.0f)) + (layerHexLength * 0.5f)) * unitScale

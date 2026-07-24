@@ -706,7 +706,46 @@ object SpoonTir:
             case ta: CtThisAccess[?] if !isOwnThis(ta) => Tree.Ident(mid, NoType, o) // outer method → bare
             case _: CtThisAccess[?]                    => Tree.Select(thisTerm(inv), mid, NoType, o)
             case t                                     => Tree.Select(expr(t), mid, NoType, o)
-        Tree.Apply(fun, args, mid, ty(inv), o)
+        Tree.Apply(pinTypeArgs(fun, inv, o), args, mid, ty(inv), o)
+
+      /** Java resolves a generic call's type arguments (often by inference — e.g. `props.get("k",
+        * Integer.class)` binds `T=Integer`); Scala re-infers from the EXPECTED type, which can pick
+        * a different `T` (here `Int`, forcing `Class[Int]` on the arg → E007). Pin the Java-resolved
+        * arguments as an explicit `m[Targs](...)` so inference matches Java and unboxing conversions
+        * (`Integer` → `Int`) apply at the result. Conservative: only when every argument is a fully
+        * concrete class type — wildcards / type-variables can be unresolved under noClasspath. */
+      private def pinTypeArgs(fun: Term, inv: CtInvocation[?], o: Origin): Term =
+        if inv.getExecutable.isConstructor then return fun
+        val formals = Option(inv.getExecutable.getExecutableDeclaration).collect {
+          case m: CtMethod[?] => m.getFormalCtTypeParameters.size
+        }.getOrElse(0)
+        val actuals = inv.getActualTypeArguments.asScala.toList
+        // Restricted to boxed-primitive wrappers: that is the whole beneficial case — a `Class<T>: T`
+        // call whose `T` Scala would mis-infer to the primitive (demanding `Class[Int]`) when Java
+        // bound it to the wrapper (`Class[Integer]`). Pinning `T=Integer` fixes it and lets
+        // `Predef.Integer2int` unbox the result. Pinning other kinds (raw generics → `Array[?]`,
+        // path-dependent types) only disturbs overload resolution, so leave those to free inference.
+        if formals > 0 && actuals.nonEmpty && actuals.sizeIs == formals && actuals.forall(isBoxedWrapper)
+          && !inv.getArguments.asScala.exists(isPrimitiveClassLiteral)
+        then Tree.TypeApply(fun, actuals.map(a => tt(tpe(a), inv)), NoType, o)
+        else fun
+
+      /** `int.class` etc. — Java types a primitive class literal as `Class<Integer>` (boxed), but we
+        * emit it as `classOf[scala.Int]` (`Class[Int]`). Baseline inference binds a `Class<T>` param's
+        * `T` to the primitive and matches; pinning `T` to the boxed wrapper would break that. So a
+        * call carrying one of these must keep inference free — don't pin its type arguments. */
+      private def isPrimitiveClassLiteral(e: CtExpression[?]): Boolean = e match
+        case fr: CtFieldRead[?] if fr.getVariable.getSimpleName == "class" =>
+          fr.getTarget match
+            case ta: CtTypeAccess[?] => try ta.getAccessedType.isPrimitive catch { case _: Throwable => false }
+            case _                   => false
+        case _ => false
+
+      private val boxedWrappers = Set(
+        "java.lang.Integer", "java.lang.Long", "java.lang.Short", "java.lang.Byte",
+        "java.lang.Character", "java.lang.Boolean", "java.lang.Float", "java.lang.Double")
+      private def isBoxedWrapper(t: CtTypeReference[?]): Boolean =
+        try boxedWrappers(t.getQualifiedName) catch { case _: Throwable => false }
 
       private def ctorCall(cc: CtConstructorCall[?]): Term =
         val t    = tpe(cc.getType)

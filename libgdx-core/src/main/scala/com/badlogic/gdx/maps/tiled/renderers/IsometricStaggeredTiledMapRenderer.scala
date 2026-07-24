@@ -140,7 +140,7 @@ class IsometricStaggeredTiledMapRenderer extends com.badlogic.gdx.maps.tiled.ren
     if (region == null) {
       return
     } else ()
-    val tileWidth: scala.Int = this.getMap().getProperties().get("tilewidth", classOf[java.lang.Integer])
+    val tileWidth: scala.Int = this.getMap().getProperties().get[java.lang.Integer]("tilewidth", classOf[java.lang.Integer])
     val halfTileWidth: scala.Float = (tileWidth * 0.5f) * unitScale
     val x: scala.Float = layer.getX()
     val y: scala.Float = layer.getY()

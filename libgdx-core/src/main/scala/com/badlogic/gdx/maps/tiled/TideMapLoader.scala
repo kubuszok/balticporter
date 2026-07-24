@@ -154,7 +154,7 @@ class TideMapLoader extends com.badlogic.gdx.assets.loaders.SynchronousAssetLoad
           val name: java.lang.String = currentChild.getName()
           if (name.equals("TileSheet")) {
             currentTileSet = tilesets.getTileSet(currentChild.getAttribute("Ref"))
-            firstgid = currentTileSet.getProperties().get("firstgid", classOf[java.lang.Integer])
+            firstgid = currentTileSet.getProperties().get[java.lang.Integer]("firstgid", classOf[java.lang.Integer])
           } else {
             if (name.equals("Null")) {
               x = x + currentChild.getIntAttribute("Count")
@@ -173,7 +173,7 @@ class TideMapLoader extends com.badlogic.gdx.assets.loaders.SynchronousAssetLoad
                     val frameName: java.lang.String = frame.getName()
                     if (frameName.equals("TileSheet")) {
                       currentTileSet = tilesets.getTileSet(frame.getAttribute("Ref"))
-                      firstgid = currentTileSet.getProperties().get("firstgid", classOf[java.lang.Integer])
+                      firstgid = currentTileSet.getProperties().get[java.lang.Integer]("firstgid", classOf[java.lang.Integer])
                     } else {
                       if (frameName.equals("Static")) {
                         frameTiles.add(currentTileSet.getTile(firstgid + frame.getIntAttribute("Index")).asInstanceOf[com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile])

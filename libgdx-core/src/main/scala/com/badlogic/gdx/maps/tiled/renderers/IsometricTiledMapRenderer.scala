@@ -167,8 +167,8 @@ class IsometricTiledMapRenderer extends com.badlogic.gdx.maps.tiled.renderers.Ba
     if (region == null) {
       return
     } else ()
-    val tileHeight: scala.Int = this.getMap().getProperties().get("tileheight", classOf[java.lang.Integer])
-    val mapHeight: scala.Int = this.getMap().getProperties().get("height", classOf[java.lang.Integer])
+    val tileHeight: scala.Int = this.getMap().getProperties().get[java.lang.Integer]("tileheight", classOf[java.lang.Integer])
+    val mapHeight: scala.Int = this.getMap().getProperties().get[java.lang.Integer]("height", classOf[java.lang.Integer])
     val mapHeightPixels: scala.Float = (mapHeight * tileHeight) * unitScale
     val halfTileHeight: scala.Float = (tileHeight * 0.5f) * unitScale
     val x: scala.Float = layer.getX()

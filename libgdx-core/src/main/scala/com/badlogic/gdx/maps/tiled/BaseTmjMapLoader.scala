@@ -140,8 +140,8 @@ abstract class BaseTmjMapLoader[P <: com.badlogic.gdx.maps.tiled.BaseTiledMapLoa
     if (element.getString("type", "").equals("tilelayer")) {
       val width: scala.Int = element.getInt("width", 0)
       val height: scala.Int = element.getInt("height", 0)
-      val tileWidth: scala.Int = map.getProperties().get("tilewidth", classOf[java.lang.Integer])
-      val tileHeight: scala.Int = map.getProperties().get("tileheight", classOf[java.lang.Integer])
+      val tileWidth: scala.Int = map.getProperties().get[java.lang.Integer]("tilewidth", classOf[java.lang.Integer])
+      val tileHeight: scala.Int = map.getProperties().get[java.lang.Integer]("tileheight", classOf[java.lang.Integer])
       val layer: com.badlogic.gdx.maps.tiled.TiledMapTileLayer = new com.badlogic.gdx.maps.tiled.TiledMapTileLayer(width, height, tileWidth, tileHeight)
       this.loadBasicLayerInfo(layer, element)
       val ids: scala.Array[scala.Int] = BaseTmjMapLoader.getTileIds(element, width, height)
