@@ -14,7 +14,7 @@ class TextureAttribute extends com.badlogic.gdx.graphics.g3d.Attribute {
     } else ()
     this.textureDescription = new com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[com.badlogic.gdx.graphics.Texture]()
   }
-  def this[T <: com.badlogic.gdx.graphics.Texture](`type`: scala.Long, textureDescription: com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[T], offsetU: scala.Float, offsetV: scala.Float, scaleU: scala.Float, scaleV: scala.Float, uvIndex: scala.Int) = {
+  def this(`type`: scala.Long, textureDescription: com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[com.badlogic.gdx.graphics.Texture], offsetU: scala.Float, offsetV: scala.Float, scaleU: scala.Float, scaleV: scala.Float, uvIndex: scala.Int) = {
     this(`type`, textureDescription)
     this.offsetU = offsetU
     this.offsetV = offsetV
@@ -22,10 +22,10 @@ class TextureAttribute extends com.badlogic.gdx.graphics.g3d.Attribute {
     this.scaleV = scaleV
     this.uvIndex = uvIndex
   }
-  def this[T <: com.badlogic.gdx.graphics.Texture](`type`: scala.Long, textureDescription: com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[T], offsetU: scala.Float, offsetV: scala.Float, scaleU: scala.Float, scaleV: scala.Float) = {
+  def this(`type`: scala.Long, textureDescription: com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[com.badlogic.gdx.graphics.Texture], offsetU: scala.Float, offsetV: scala.Float, scaleU: scala.Float, scaleV: scala.Float) = {
     this(`type`, textureDescription, offsetU, offsetV, scaleU, scaleV, 0)
   }
-  def this[T <: com.badlogic.gdx.graphics.Texture](`type`: scala.Long, textureDescription: com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[T]) = {
+  def this(`type`: scala.Long, textureDescription: com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[com.badlogic.gdx.graphics.Texture]) = {
     this(`type`)
     this.textureDescription.set(textureDescription)
   }

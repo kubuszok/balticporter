@@ -9,7 +9,7 @@ class CubemapAttribute extends com.badlogic.gdx.graphics.g3d.Attribute {
     } else ()
     this.textureDescription = new com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[com.badlogic.gdx.graphics.Cubemap]()
   }
-  def this[T <: com.badlogic.gdx.graphics.Cubemap](`type`: scala.Long, textureDescription: com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[T]) = {
+  def this(`type`: scala.Long, textureDescription: com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[com.badlogic.gdx.graphics.Cubemap]) = {
     this(`type`)
     this.textureDescription.set(textureDescription)
   }

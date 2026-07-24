@@ -103,7 +103,8 @@ final class TirEmitter(source: Program):
     * prerequisite. (A later refinement handles givens/extensions, which FQN genuinely can't name.) */
   private def typeSym(id: SymId): String =
     val s = sym(id)
-    if s.flags.isParam then esc(s.name)
+    if tparamSubst.contains(id) then tpe(tparamSubst(id)) // ctor type param → its bound
+    else if s.flags.isParam then esc(s.name)
     // a Java `static` nested class is lowered into the enclosing type's companion `object`, so it
     // is named through the value path `Outer.Inner` — NOT by simple name (companion members aren't
     // in the class's scope) and NOT `Outer#Inner` (a type projection can't reach a companion member).
@@ -280,11 +281,21 @@ final class TirEmitter(source: Program):
     case t: Tree.TypeDef  => s"${ind(i)}${if sym(t.symbol).flags.isOpaque then "opaque " else ""}type ${esc(sym(t.symbol).name)} = ${tpe(t.rhs.tpe)}"
     case t: Term     => ind(i) + term(t, i)
 
+  /** ctor type-parameter substitution (Scala secondary ctors can't be generic) → their bounds. */
+  private var tparamSubst: Map[SymId, TypeRepr] = Map.empty
+
   private def defDef(d: Tree.DefDef, i: Int): String =
     val s     = sym(d.symbol)
     val isCtor = s.name == "<init>"
     val name  = if isCtor then "this" else esc(s.name)
-    val tps   = if d.tparams.isEmpty then "" else "[" + d.tparams.map(typeParam).mkString(", ") + "]"
+    // a Java generic constructor (`<T extends X> C(...)`) has no Scala form — secondary ctors can't
+    // be generic. Drop the type params and substitute each with its upper bound throughout the ctor.
+    val savedSubst = tparamSubst
+    if isCtor && d.tparams.nonEmpty then
+      tparamSubst = savedSubst ++ d.tparams.map(tp => tp.symbol -> (tp.rhs.tpe match
+        case TypeRepr.TypeBounds(_, hi) if hi != TypeRepr.NoType => hi
+        case _ => TypeRepr.NoType)).toMap // unbounded → `Any`
+    val tps   = if isCtor || d.tparams.isEmpty then "" else "[" + d.tparams.map(typeParam).mkString(", ") + "]"
     val pss   = d.paramss.map(paramClause).mkString
     val ret   = if isCtor then "" else s": ${tpe(d.returnTpt.tpe)}"
     // a Java `while(true){ … return … }` idiom: the loop never falls through, but Scala types
@@ -295,6 +306,7 @@ final class TirEmitter(source: Program):
       else d.rhs.map(r =>
         if needsUnreachable then s" = {\n${ind(i + 1)}${term(r, i + 1)}\n${ind(i + 1)}throw new java.lang.RuntimeException(\"unreachable\")\n${ind(i)}}"
         else s" = ${term(r, i)}").getOrElse("")
+    tparamSubst = savedSubst // restore (ctor type-param substitution was local to this def)
     s"${ind(i)}${mods(s.flags)}def $name$tps$pss$ret$rhs"
 
   private def isUnitType(t: TypeRepr): Boolean = t match
