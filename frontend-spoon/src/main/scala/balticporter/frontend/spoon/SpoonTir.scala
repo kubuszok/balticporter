@@ -442,8 +442,8 @@ object SpoonTir:
           import UnaryOperatorKind.*
           val one = Tree.Literal(Constant.IntC(1), ty(u), originOf(u))
           u.getKind match
-            case POSTINC | PREINC => val t = expr(u.getOperand); Tree.Assign(t, binApply("+", t, one, ty(u)), unitT, originOf(u))
-            case POSTDEC | PREDEC => val t = expr(u.getOperand); Tree.Assign(t, binApply("-", t, one, ty(u)), unitT, originOf(u))
+            case POSTINC | PREINC => val t = expr(u.getOperand); Tree.Assign(t, incNarrow(u.getOperand, binApply("+", t, one, ty(u))), unitT, originOf(u))
+            case POSTDEC | PREDEC => val t = expr(u.getOperand); Tree.Assign(t, incNarrow(u.getOperand, binApply("-", t, one, ty(u))), unitT, originOf(u))
             case _                => expr(u)
         case other => unsupported(other, s"statement ${other.getClass.getSimpleName}")
 
@@ -734,6 +734,12 @@ object SpoonTir:
 
       // operators as `recv.op(args)` — the quotes.reflect shape (no dedicated node).
       private def opId(op: String): SymId = minter.external("scala.<op>#" + op, op)
+      /** `i++`/`i--` on a byte/short/char narrows (`i = (short)(i + 1)`) — cast the result back. */
+      private def incNarrow(opnd: CtExpression[?], res: Term): Term =
+        val ot = try opnd.getType catch { case _: Throwable => null }
+        if ot != null && ot.isPrimitive && Set("byte", "short", "char").contains(ot.getSimpleName)
+        then Tree.Typed(res, tt(tpe(ot), opnd), tpe(ot), originOf(opnd)) else res
+
       private def isStringConcat(b: CtBinaryOperator[?]): Boolean =
         try b.getType.getQualifiedName == "java.lang.String" catch { case _: Throwable => false }
       private def isStringTyped(e: CtExpression[?]): Boolean =

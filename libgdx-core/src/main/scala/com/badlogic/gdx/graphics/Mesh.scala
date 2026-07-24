@@ -651,7 +651,7 @@ class Mesh extends com.badlogic.gdx.utils.Disposable {
       checks = new scala.Array[scala.Short](vertexSize);
       { var i: scala.Short = 0.asInstanceOf[scala.Short]; while (i < vertexSize) { {
         checks(i) = i
-      }; i = i + 1 } }
+      }; i = (i + 1).asInstanceOf[scala.Short] } }
       newVertexSize = vertexSize
     } else ()
     val numIndices: scala.Int = this.getNumIndices()
@@ -677,7 +677,7 @@ class Mesh extends com.badlogic.gdx.utils.Disposable {
               if (found) {
                 newIndex = j
               } else ()
-            }; j = j + 1 } }
+            }; j = (j + 1).asInstanceOf[scala.Short] } }
           } else ()
           if (newIndex > 0) {
             indices(i) = newIndex

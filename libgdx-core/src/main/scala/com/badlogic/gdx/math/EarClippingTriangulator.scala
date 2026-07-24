@@ -31,7 +31,7 @@ class EarClippingTriangulator {
     if (com.badlogic.gdx.math.GeometryUtils.isClockwise(vertices, offset, count)) {
       { var i: scala.Short = 0.asInstanceOf[scala.Short]; while (i < vertexCount) { {
         indices(i) = (vertexOffset + i).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
-      }; i = i + 1 } }
+      }; i = (i + 1).asInstanceOf[scala.Short] } }
     } else {
       { var i: scala.Int = 0; val n: scala.Int = vertexCount - 1; while (i < vertexCount) { {
         indices(i) = ((vertexOffset + n) - i).asInstanceOf[scala.Short].asInstanceOf[scala.Short]

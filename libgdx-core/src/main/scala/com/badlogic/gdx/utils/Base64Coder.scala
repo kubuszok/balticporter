@@ -168,13 +168,13 @@ object Base64Coder {
       var i: scala.Int = 0;
       { var c: scala.Char = 'A'; while (c <= 'Z') { {
         this.encodingMap({ i += 1; i }) = c
-      }; c = c + 1 } };
+      }; c = (c + 1).asInstanceOf[scala.Char] } };
       { var c: scala.Char = 'a'; while (c <= 'z') { {
         this.encodingMap({ i += 1; i }) = c
-      }; c = c + 1 } };
+      }; c = (c + 1).asInstanceOf[scala.Char] } };
       { var c: scala.Char = '0'; while (c <= '9') { {
         this.encodingMap({ i += 1; i }) = c
-      }; c = c + 1 } }
+      }; c = (c + 1).asInstanceOf[scala.Char] } }
       this.encodingMap({ i += 1; i }) = char63
       this.encodingMap({ i += 1; i }) = char64;
       { i = 0; while (i < this.decodingMap.length) { {

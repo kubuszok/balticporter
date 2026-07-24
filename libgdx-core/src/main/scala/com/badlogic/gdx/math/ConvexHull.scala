@@ -177,7 +177,7 @@ class ConvexHull {
     val originalIndicesArray: scala.Array[scala.Short] = this.originalIndices.items;
     { var i: scala.Short = 0.asInstanceOf[scala.Short]; while (i < pointCount) { {
       originalIndicesArray(i) = i
-    }; i = i + 1 } }
+    }; i = (i + 1).asInstanceOf[scala.Short] } }
     var lower: scala.Int = 0
     var upper: scala.Int = count - 1
     val stack: com.badlogic.gdx.utils.IntArray = this.quicksortStack
