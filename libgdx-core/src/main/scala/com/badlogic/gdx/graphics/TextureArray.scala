@@ -18,11 +18,11 @@ class TextureArray extends com.badlogic.gdx.graphics.GLTexture {
   def this(useMipMaps: scala.Boolean, files: scala.Array[com.badlogic.gdx.files.FileHandle]) = {
     this(useMipMaps, com.badlogic.gdx.graphics.Pixmap.Format.RGBA8888, files)
   }
-  def this(internalPaths: scala.Array[java.lang.String]) = {
-    this(TextureArray.getInternalHandles(internalPaths))
-  }
   def this(files: scala.Array[com.badlogic.gdx.files.FileHandle]) = {
     this(false, files)
+  }
+  def this(internalPaths: scala.Array[java.lang.String]) = {
+    this(TextureArray.getInternalHandles(internalPaths))
   }
   private def load(data: com.badlogic.gdx.graphics.TextureArrayData): scala.Unit = {
     if ((this.data != null) && (data.isManaged() != this.data.isManaged())) {

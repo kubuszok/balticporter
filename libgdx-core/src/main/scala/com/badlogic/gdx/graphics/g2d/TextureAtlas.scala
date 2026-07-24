@@ -10,17 +10,17 @@ class TextureAtlas extends com.badlogic.gdx.utils.Disposable {
   def this(packFile: com.badlogic.gdx.files.FileHandle, imagesDir: com.badlogic.gdx.files.FileHandle, flip: scala.Boolean) = {
     this(new com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData(packFile, imagesDir, flip))
   }
-  def this(packFile: com.badlogic.gdx.files.FileHandle, flip: scala.Boolean) = {
-    this(packFile, packFile.parent(), flip)
-  }
   def this(packFile: com.badlogic.gdx.files.FileHandle, imagesDir: com.badlogic.gdx.files.FileHandle) = {
     this(packFile, imagesDir, false)
+  }
+  def this(packFile: com.badlogic.gdx.files.FileHandle) = {
+    this(packFile, packFile.parent())
   }
   def this(internalPackFile: java.lang.String) = {
     this(com.badlogic.gdx.Gdx.files.internal(internalPackFile))
   }
-  def this(packFile: com.badlogic.gdx.files.FileHandle) = {
-    this(packFile, packFile.parent())
+  def this(packFile: com.badlogic.gdx.files.FileHandle, flip: scala.Boolean) = {
+    this(packFile, packFile.parent(), flip)
   }
   def load(data: com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData): scala.Unit = {
     this.textures.ensureCapacity(data.pages.size)

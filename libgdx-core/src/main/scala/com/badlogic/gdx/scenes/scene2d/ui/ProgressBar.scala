@@ -32,11 +32,11 @@ class ProgressBar extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.bad
     this.value = min
     this.setSize(this.getPrefWidth(), this.getPrefHeight())
   }
-  def this(min: scala.Float, max: scala.Float, stepSize: scala.Float, vertical: scala.Boolean, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin, styleName: java.lang.String) = {
-    this(min, max, stepSize, vertical, skin.get(styleName, classOf[com.badlogic.gdx.scenes.scene2d.ui.ProgressBar.ProgressBarStyle]))
-  }
   def this(min: scala.Float, max: scala.Float, stepSize: scala.Float, vertical: scala.Boolean, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin) = {
     this(min, max, stepSize, vertical, skin.get("default-" + (if (vertical) "vertical" else "horizontal"), classOf[com.badlogic.gdx.scenes.scene2d.ui.ProgressBar.ProgressBarStyle]))
+  }
+  def this(min: scala.Float, max: scala.Float, stepSize: scala.Float, vertical: scala.Boolean, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin, styleName: java.lang.String) = {
+    this(min, max, stepSize, vertical, skin.get(styleName, classOf[com.badlogic.gdx.scenes.scene2d.ui.ProgressBar.ProgressBarStyle]))
   }
   def setStyle(style: com.badlogic.gdx.scenes.scene2d.ui.ProgressBar.ProgressBarStyle): scala.Unit = {
     if (style == null) {

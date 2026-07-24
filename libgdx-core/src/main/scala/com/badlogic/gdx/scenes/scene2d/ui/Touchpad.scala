@@ -21,11 +21,11 @@ class Touchpad extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlog
     this.setSize(this.getPrefWidth(), this.getPrefHeight())
     this.addListener(new com.badlogic.gdx.scenes.scene2d.InputListener())
   }
-  def this(deadzoneRadius: scala.Float, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin, styleName: java.lang.String) = {
-    this(deadzoneRadius, skin.get(styleName, classOf[com.badlogic.gdx.scenes.scene2d.ui.Touchpad.TouchpadStyle]))
-  }
   def this(deadzoneRadius: scala.Float, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin) = {
     this(deadzoneRadius, skin.get(classOf[com.badlogic.gdx.scenes.scene2d.ui.Touchpad.TouchpadStyle]))
+  }
+  def this(deadzoneRadius: scala.Float, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin, styleName: java.lang.String) = {
+    this(deadzoneRadius, skin.get(styleName, classOf[com.badlogic.gdx.scenes.scene2d.ui.Touchpad.TouchpadStyle]))
   }
   def calculatePositionAndValue(x: scala.Float, y: scala.Float, isTouchUp: scala.Boolean): scala.Unit = {
     val oldPositionX: scala.Float = this.knobPosition.x

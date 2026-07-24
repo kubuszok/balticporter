@@ -2,22 +2,22 @@ package com.badlogic.gdx.graphics.g2d
 
 class DistanceFieldFont extends com.badlogic.gdx.graphics.g2d.BitmapFont {
   private var distanceFieldSmoothing: scala.Float = 0.0f
-  def this(fontFile: com.badlogic.gdx.files.FileHandle, imageFile: com.badlogic.gdx.files.FileHandle, flip: scala.Boolean, integer: scala.Boolean) = {
-    this()
-  }
   def this(data: com.badlogic.gdx.graphics.g2d.BitmapFont.BitmapFontData, pageRegions: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.TextureRegion], integer: scala.Boolean) = {
     this()
   }
   def this(data: com.badlogic.gdx.graphics.g2d.BitmapFont.BitmapFontData, region: com.badlogic.gdx.graphics.g2d.TextureRegion, integer: scala.Boolean) = {
     this()
   }
+  def this(fontFile: com.badlogic.gdx.files.FileHandle, flip: scala.Boolean) = {
+    this()
+  }
+  def this(fontFile: com.badlogic.gdx.files.FileHandle, imageFile: com.badlogic.gdx.files.FileHandle, flip: scala.Boolean, integer: scala.Boolean) = {
+    this()
+  }
   def this(fontFile: com.badlogic.gdx.files.FileHandle, imageFile: com.badlogic.gdx.files.FileHandle, flip: scala.Boolean) = {
     this()
   }
   def this(fontFile: com.badlogic.gdx.files.FileHandle, region: com.badlogic.gdx.graphics.g2d.TextureRegion, flip: scala.Boolean) = {
-    this()
-  }
-  def this(fontFile: com.badlogic.gdx.files.FileHandle, flip: scala.Boolean) = {
     this()
   }
   def this(fontFile: com.badlogic.gdx.files.FileHandle, region: com.badlogic.gdx.graphics.g2d.TextureRegion) = {
@@ -55,10 +55,10 @@ object DistanceFieldFont {
     return shader
   }
   private class DistanceFieldFontCache extends com.badlogic.gdx.graphics.g2d.BitmapFontCache {
-    def this(font: DistanceFieldFont, integer: scala.Boolean) = {
+    def this(font: DistanceFieldFont) = {
       this()
     }
-    def this(font: DistanceFieldFont) = {
+    def this(font: DistanceFieldFont, integer: scala.Boolean) = {
       this()
     }
     private def getSmoothingFactor(): scala.Float = {

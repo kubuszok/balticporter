@@ -8,6 +8,27 @@ class Mesh extends com.badlogic.gdx.utils.Disposable {
   var instances: com.badlogic.gdx.graphics.glutils.InstanceData = null.asInstanceOf[com.badlogic.gdx.graphics.glutils.InstanceData]
   var isInstanced$field: scala.Boolean = false
   private final val tmpV: com.badlogic.gdx.math.Vector3 = new com.badlogic.gdx.math.Vector3()
+  def this(vertices: com.badlogic.gdx.graphics.glutils.VertexData, indices: com.badlogic.gdx.graphics.glutils.IndexData, isVertexArray: scala.Boolean) = {
+    this()
+    this.vertices = vertices
+    this.indices = indices
+    this.isVertexArray = isVertexArray
+    Mesh.addManagedMesh(com.badlogic.gdx.Gdx.app, this)
+  }
+  def this(isStatic: scala.Boolean, maxVertices: scala.Int, maxIndices: scala.Int, attributes: scala.Array[com.badlogic.gdx.graphics.VertexAttribute]) = {
+    this()
+    this.vertices = this.makeVertexBuffer(isStatic, maxVertices, new com.badlogic.gdx.graphics.VertexAttributes(attributes))
+    this.indices = new com.badlogic.gdx.graphics.glutils.IndexBufferObject(isStatic, maxIndices)
+    this.isVertexArray = false
+    Mesh.addManagedMesh(com.badlogic.gdx.Gdx.app, this)
+  }
+  def this(isStatic: scala.Boolean, maxVertices: scala.Int, maxIndices: scala.Int, attributes: com.badlogic.gdx.graphics.VertexAttributes) = {
+    this()
+    this.vertices = this.makeVertexBuffer(isStatic, maxVertices, attributes)
+    this.indices = new com.badlogic.gdx.graphics.glutils.IndexBufferObject(isStatic, maxIndices)
+    this.isVertexArray = false
+    Mesh.addManagedMesh(com.badlogic.gdx.Gdx.app, this)
+  }
   def this(staticVertices: scala.Boolean, staticIndices: scala.Boolean, maxVertices: scala.Int, maxIndices: scala.Int, attributes: com.badlogic.gdx.graphics.VertexAttributes) = {
     this()
     this.vertices = this.makeVertexBuffer(staticVertices, maxVertices, attributes)
@@ -39,27 +60,6 @@ class Mesh extends com.badlogic.gdx.utils.Disposable {
         this.isVertexArray = true
       }
     }
-    Mesh.addManagedMesh(com.badlogic.gdx.Gdx.app, this)
-  }
-  def this(isStatic: scala.Boolean, maxVertices: scala.Int, maxIndices: scala.Int, attributes: scala.Array[com.badlogic.gdx.graphics.VertexAttribute]) = {
-    this()
-    this.vertices = this.makeVertexBuffer(isStatic, maxVertices, new com.badlogic.gdx.graphics.VertexAttributes(attributes))
-    this.indices = new com.badlogic.gdx.graphics.glutils.IndexBufferObject(isStatic, maxIndices)
-    this.isVertexArray = false
-    Mesh.addManagedMesh(com.badlogic.gdx.Gdx.app, this)
-  }
-  def this(isStatic: scala.Boolean, maxVertices: scala.Int, maxIndices: scala.Int, attributes: com.badlogic.gdx.graphics.VertexAttributes) = {
-    this()
-    this.vertices = this.makeVertexBuffer(isStatic, maxVertices, attributes)
-    this.indices = new com.badlogic.gdx.graphics.glutils.IndexBufferObject(isStatic, maxIndices)
-    this.isVertexArray = false
-    Mesh.addManagedMesh(com.badlogic.gdx.Gdx.app, this)
-  }
-  def this(vertices: com.badlogic.gdx.graphics.glutils.VertexData, indices: com.badlogic.gdx.graphics.glutils.IndexData, isVertexArray: scala.Boolean) = {
-    this()
-    this.vertices = vertices
-    this.indices = indices
-    this.isVertexArray = isVertexArray
     Mesh.addManagedMesh(com.badlogic.gdx.Gdx.app, this)
   }
   def this(`type`: com.badlogic.gdx.graphics.Mesh.VertexDataType, isStatic: scala.Boolean, maxVertices: scala.Int, maxIndices: scala.Int, attributes: scala.Array[com.badlogic.gdx.graphics.VertexAttribute]) = {

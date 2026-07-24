@@ -9,6 +9,9 @@ class ByteArray {
     this.ordered = ordered
     this.items = new scala.Array[scala.Byte](capacity)
   }
+  def this(capacity: scala.Int) = {
+    this(true, capacity)
+  }
   def this(array: ByteArray) = {
     this()
     this.ordered = array.ordered
@@ -20,9 +23,6 @@ class ByteArray {
     this(ordered, count)
     this.size = count
     java.lang.System.arraycopy(array, startIndex, this.items, 0, count)
-  }
-  def this(capacity: scala.Int) = {
-    this(true, capacity)
   }
   def this(array: scala.Array[scala.Byte]) = {
     this(true, array, 0, array.length)

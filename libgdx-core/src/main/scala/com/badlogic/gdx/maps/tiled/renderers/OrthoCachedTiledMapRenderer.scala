@@ -24,11 +24,11 @@ class OrthoCachedTiledMapRenderer extends com.badlogic.gdx.maps.tiled.TiledMapRe
     this.unitScale = unitScale
     this.spriteCache = new com.badlogic.gdx.graphics.g2d.SpriteCache(cacheSize, true)
   }
-  def this(map: com.badlogic.gdx.maps.tiled.TiledMap, unitScale: scala.Float) = {
-    this(map, unitScale, 2000)
-  }
   def this(map: com.badlogic.gdx.maps.tiled.TiledMap) = {
     this(map, 1, 2000)
+  }
+  def this(map: com.badlogic.gdx.maps.tiled.TiledMap, unitScale: scala.Float) = {
+    this(map, unitScale, 2000)
   }
   def setView(camera: com.badlogic.gdx.graphics.OrthographicCamera): scala.Unit = {
     this.spriteCache.setProjectionMatrix(camera.combined)

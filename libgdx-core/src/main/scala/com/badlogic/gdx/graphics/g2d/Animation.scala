@@ -13,14 +13,14 @@ class Animation[T] {
     val frames: scala.Array[T] = java.util.Arrays.copyOf(keyFrames.items.asInstanceOf[scala.Array[java.lang.Object]], keyFrames.size).asInstanceOf[scala.Array[T]]
     this.setKeyFrames(frames)
   }
+  def this(frameDuration: scala.Float, keyFrames: com.badlogic.gdx.utils.Array[? <: T], playMode: com.badlogic.gdx.graphics.g2d.Animation.PlayMode) = {
+    this(frameDuration, keyFrames)
+    this.setPlayMode(playMode)
+  }
   def this(frameDuration: scala.Float, keyFrames: scala.Array[T]) = {
     this()
     this.frameDuration = frameDuration
     this.setKeyFrames(keyFrames)
-  }
-  def this(frameDuration: scala.Float, keyFrames: com.badlogic.gdx.utils.Array[? <: T], playMode: com.badlogic.gdx.graphics.g2d.Animation.PlayMode) = {
-    this(frameDuration, keyFrames)
-    this.setPlayMode(playMode)
   }
   def getKeyFrame(stateTime: scala.Float, looping: scala.Boolean): T = {
     val oldPlayMode: com.badlogic.gdx.graphics.g2d.Animation.PlayMode = this.playMode

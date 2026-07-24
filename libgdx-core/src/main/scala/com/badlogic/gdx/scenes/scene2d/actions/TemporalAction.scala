@@ -7,14 +7,14 @@ abstract class TemporalAction extends com.badlogic.gdx.scenes.scene2d.Action wit
   private var reverse: scala.Boolean = false
   private var began: scala.Boolean = false
   private var complete: scala.Boolean = false
+  def this(duration: scala.Float) = {
+    this()
+    this.duration = duration
+  }
   def this(duration: scala.Float, interpolation: com.badlogic.gdx.math.Interpolation) = {
     this()
     this.duration = duration
     this.interpolation = interpolation
-  }
-  def this(duration: scala.Float) = {
-    this()
-    this.duration = duration
   }
   def act(delta: scala.Float): scala.Boolean = {
     if (this.complete) {

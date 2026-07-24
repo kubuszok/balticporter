@@ -5,12 +5,6 @@ class Skin extends com.badlogic.gdx.utils.Disposable {
   var atlas: com.badlogic.gdx.graphics.g2d.TextureAtlas = null.asInstanceOf[com.badlogic.gdx.graphics.g2d.TextureAtlas]
   var scale$field: scala.Float = 1
   private final val jsonClassTags: com.badlogic.gdx.utils.ObjectMap[java.lang.String, java.lang.Class[?]] = new com.badlogic.gdx.utils.ObjectMap(Skin.defaultTagClasses.length)
-  def this(skinFile: com.badlogic.gdx.files.FileHandle, atlas: com.badlogic.gdx.graphics.g2d.TextureAtlas) = {
-    this()
-    this.atlas = atlas
-    this.addRegions(atlas)
-    this.load(skinFile)
-  }
   def this(skinFile: com.badlogic.gdx.files.FileHandle) = {
     this()
     val atlasFile: com.badlogic.gdx.files.FileHandle = skinFile.sibling(skinFile.nameWithoutExtension() + ".atlas")
@@ -18,6 +12,12 @@ class Skin extends com.badlogic.gdx.utils.Disposable {
       this.atlas = new com.badlogic.gdx.graphics.g2d.TextureAtlas(atlasFile)
       this.addRegions(this.atlas)
     } else ()
+    this.load(skinFile)
+  }
+  def this(skinFile: com.badlogic.gdx.files.FileHandle, atlas: com.badlogic.gdx.graphics.g2d.TextureAtlas) = {
+    this()
+    this.atlas = atlas
+    this.addRegions(atlas)
     this.load(skinFile)
   }
   def this(atlas: com.badlogic.gdx.graphics.g2d.TextureAtlas) = {

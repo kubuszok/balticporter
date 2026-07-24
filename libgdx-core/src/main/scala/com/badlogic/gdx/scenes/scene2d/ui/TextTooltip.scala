@@ -7,20 +7,20 @@ class TextTooltip extends com.badlogic.gdx.scenes.scene2d.ui.Tooltip[com.badlogi
     container.setActor(this.newLabel(text, style.label))
     this.setStyle(style)
   }
-  def this(text: java.lang.String, manager: com.badlogic.gdx.scenes.scene2d.ui.TooltipManager, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin, styleName: java.lang.String) = {
-    this(text, manager, skin.get(styleName, classOf[com.badlogic.gdx.scenes.scene2d.ui.TextTooltip.TextTooltipStyle]))
+  def this(text: java.lang.String, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin) = {
+    this(text, com.badlogic.gdx.scenes.scene2d.ui.TooltipManager.getInstance(), skin.get(classOf[com.badlogic.gdx.scenes.scene2d.ui.TextTooltip.TextTooltipStyle]))
   }
   def this(text: java.lang.String, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin, styleName: java.lang.String) = {
     this(text, com.badlogic.gdx.scenes.scene2d.ui.TooltipManager.getInstance(), skin.get(styleName, classOf[com.badlogic.gdx.scenes.scene2d.ui.TextTooltip.TextTooltipStyle]))
   }
+  def this(text: java.lang.String, style: com.badlogic.gdx.scenes.scene2d.ui.TextTooltip.TextTooltipStyle) = {
+    this(text, com.badlogic.gdx.scenes.scene2d.ui.TooltipManager.getInstance(), style)
+  }
   def this(text: java.lang.String, manager: com.badlogic.gdx.scenes.scene2d.ui.TooltipManager, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin) = {
     this(text, manager, skin.get(classOf[com.badlogic.gdx.scenes.scene2d.ui.TextTooltip.TextTooltipStyle]))
   }
-  def this(text: java.lang.String, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin) = {
-    this(text, com.badlogic.gdx.scenes.scene2d.ui.TooltipManager.getInstance(), skin.get(classOf[com.badlogic.gdx.scenes.scene2d.ui.TextTooltip.TextTooltipStyle]))
-  }
-  def this(text: java.lang.String, style: com.badlogic.gdx.scenes.scene2d.ui.TextTooltip.TextTooltipStyle) = {
-    this(text, com.badlogic.gdx.scenes.scene2d.ui.TooltipManager.getInstance(), style)
+  def this(text: java.lang.String, manager: com.badlogic.gdx.scenes.scene2d.ui.TooltipManager, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin, styleName: java.lang.String) = {
+    this(text, manager, skin.get(styleName, classOf[com.badlogic.gdx.scenes.scene2d.ui.TextTooltip.TextTooltipStyle]))
   }
   def newLabel(text: java.lang.String, style: com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle): com.badlogic.gdx.scenes.scene2d.ui.Label = {
     return new com.badlogic.gdx.scenes.scene2d.ui.Label(text, style)

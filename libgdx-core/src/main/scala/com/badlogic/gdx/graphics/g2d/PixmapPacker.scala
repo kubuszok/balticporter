@@ -26,11 +26,11 @@ class PixmapPacker extends com.badlogic.gdx.utils.Disposable {
     this.stripWhitespaceY = stripWhitespaceY
     this.packStrategy = packStrategy
   }
-  def this(pageWidth: scala.Int, pageHeight: scala.Int, pageFormat: com.badlogic.gdx.graphics.Pixmap.Format, padding: scala.Int, duplicateBorder: scala.Boolean, packStrategy: com.badlogic.gdx.graphics.g2d.PixmapPacker.PackStrategy) = {
-    this(pageWidth, pageHeight, pageFormat, padding, duplicateBorder, false, false, packStrategy)
-  }
   def this(pageWidth: scala.Int, pageHeight: scala.Int, pageFormat: com.badlogic.gdx.graphics.Pixmap.Format, padding: scala.Int, duplicateBorder: scala.Boolean) = {
     this(pageWidth, pageHeight, pageFormat, padding, duplicateBorder, false, false, new com.badlogic.gdx.graphics.g2d.PixmapPacker.GuillotineStrategy())
+  }
+  def this(pageWidth: scala.Int, pageHeight: scala.Int, pageFormat: com.badlogic.gdx.graphics.Pixmap.Format, padding: scala.Int, duplicateBorder: scala.Boolean, packStrategy: com.badlogic.gdx.graphics.g2d.PixmapPacker.PackStrategy) = {
+    this(pageWidth, pageHeight, pageFormat, padding, duplicateBorder, false, false, packStrategy)
   }
   def sort(images: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.Pixmap]): scala.Unit = {
     this.packStrategy.sort(images)
@@ -636,14 +636,6 @@ object PixmapPacker {
     var originalWidth: scala.Int = 0
     var originalHeight: scala.Int = 0
     var bounds: com.badlogic.gdx.graphics.g2d.PixmapPacker.Bounds = null.asInstanceOf[com.badlogic.gdx.graphics.g2d.PixmapPacker.Bounds]
-    def this(x: scala.Int, y: scala.Int, width: scala.Int, height: scala.Int, left: scala.Int, top: scala.Int, originalWidth: scala.Int, originalHeight: scala.Int) = {
-      this()
-      this.bounds = new com.badlogic.gdx.graphics.g2d.PixmapPacker.Bounds(x, y, width, height)
-      this.offsetX = left
-      this.offsetY = top
-      this.originalWidth = originalWidth
-      this.originalHeight = originalHeight
-    }
     def this(x: scala.Int, y: scala.Int, width: scala.Int, height: scala.Int) = {
       this()
       this.bounds = new com.badlogic.gdx.graphics.g2d.PixmapPacker.Bounds(x, y, width, height)
@@ -651,6 +643,14 @@ object PixmapPacker {
       this.offsetY = 0
       this.originalWidth = width
       this.originalHeight = height
+    }
+    def this(x: scala.Int, y: scala.Int, width: scala.Int, height: scala.Int, left: scala.Int, top: scala.Int, originalWidth: scala.Int, originalHeight: scala.Int) = {
+      this()
+      this.bounds = new com.badlogic.gdx.graphics.g2d.PixmapPacker.Bounds(x, y, width, height)
+      this.offsetX = left
+      this.offsetY = top
+      this.originalWidth = originalWidth
+      this.originalHeight = originalHeight
     }
     def getX(): scala.Int = {
       return this.bounds.x

@@ -3,13 +3,20 @@ package com.badlogic.gdx.scenes.scene2d.actions
 class ParallelAction extends com.badlogic.gdx.scenes.scene2d.Action {
   var actions: com.badlogic.gdx.utils.Array[com.badlogic.gdx.scenes.scene2d.Action] = new com.badlogic.gdx.utils.Array(4)
   private var complete: scala.Boolean = false
-  def this(action1: com.badlogic.gdx.scenes.scene2d.Action, action2: com.badlogic.gdx.scenes.scene2d.Action, action3: com.badlogic.gdx.scenes.scene2d.Action, action4: com.badlogic.gdx.scenes.scene2d.Action, action5: com.badlogic.gdx.scenes.scene2d.Action) = {
+  def this(action1: com.badlogic.gdx.scenes.scene2d.Action) = {
+    this()
+    this.addAction(action1)
+  }
+  def this(action1: com.badlogic.gdx.scenes.scene2d.Action, action2: com.badlogic.gdx.scenes.scene2d.Action) = {
+    this()
+    this.addAction(action1)
+    this.addAction(action2)
+  }
+  def this(action1: com.badlogic.gdx.scenes.scene2d.Action, action2: com.badlogic.gdx.scenes.scene2d.Action, action3: com.badlogic.gdx.scenes.scene2d.Action) = {
     this()
     this.addAction(action1)
     this.addAction(action2)
     this.addAction(action3)
-    this.addAction(action4)
-    this.addAction(action5)
   }
   def this(action1: com.badlogic.gdx.scenes.scene2d.Action, action2: com.badlogic.gdx.scenes.scene2d.Action, action3: com.badlogic.gdx.scenes.scene2d.Action, action4: com.badlogic.gdx.scenes.scene2d.Action) = {
     this()
@@ -18,20 +25,13 @@ class ParallelAction extends com.badlogic.gdx.scenes.scene2d.Action {
     this.addAction(action3)
     this.addAction(action4)
   }
-  def this(action1: com.badlogic.gdx.scenes.scene2d.Action, action2: com.badlogic.gdx.scenes.scene2d.Action, action3: com.badlogic.gdx.scenes.scene2d.Action) = {
+  def this(action1: com.badlogic.gdx.scenes.scene2d.Action, action2: com.badlogic.gdx.scenes.scene2d.Action, action3: com.badlogic.gdx.scenes.scene2d.Action, action4: com.badlogic.gdx.scenes.scene2d.Action, action5: com.badlogic.gdx.scenes.scene2d.Action) = {
     this()
     this.addAction(action1)
     this.addAction(action2)
     this.addAction(action3)
-  }
-  def this(action1: com.badlogic.gdx.scenes.scene2d.Action, action2: com.badlogic.gdx.scenes.scene2d.Action) = {
-    this()
-    this.addAction(action1)
-    this.addAction(action2)
-  }
-  def this(action1: com.badlogic.gdx.scenes.scene2d.Action) = {
-    this()
-    this.addAction(action1)
+    this.addAction(action4)
+    this.addAction(action5)
   }
   def act(delta: scala.Float): scala.Boolean = {
     if (this.complete) {

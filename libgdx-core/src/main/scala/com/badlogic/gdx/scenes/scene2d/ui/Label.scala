@@ -27,17 +27,17 @@ class Label extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlogic.
       this.setSize(this.getPrefWidth(), this.getPrefHeight())
     } else ()
   }
+  def this(text: java.lang.CharSequence, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin) = {
+    this(text, skin.get(classOf[com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle]))
+  }
+  def this(text: java.lang.CharSequence, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin, styleName: java.lang.String) = {
+    this(text, skin.get(styleName, classOf[com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle]))
+  }
   def this(text: java.lang.CharSequence, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin, fontName: java.lang.String, color: com.badlogic.gdx.graphics.Color) = {
     this(text, new com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle(skin.getFont(fontName), color))
   }
   def this(text: java.lang.CharSequence, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin, fontName: java.lang.String, colorName: java.lang.String) = {
     this(text, new com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle(skin.getFont(fontName), skin.getColor(colorName)))
-  }
-  def this(text: java.lang.CharSequence, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin, styleName: java.lang.String) = {
-    this(text, skin.get(styleName, classOf[com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle]))
-  }
-  def this(text: java.lang.CharSequence, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin) = {
-    this(text, skin.get(classOf[com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle]))
   }
   def setStyle(style: com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle): scala.Unit = {
     if (style == null) {

@@ -5,6 +5,10 @@ class Bezier[T <: com.badlogic.gdx.math.Vector[T]] extends com.badlogic.gdx.math
   private var tmp: T = null.asInstanceOf[T]
   private var tmp2: T = null.asInstanceOf[T]
   private var tmp3: T = null.asInstanceOf[T]
+  def this(points: scala.Array[T]) = {
+    this()
+    this.set(points)
+  }
   def this(points: scala.Array[T], offset: scala.Int, length: scala.Int) = {
     this()
     this.set(points, offset, length)
@@ -12,10 +16,6 @@ class Bezier[T <: com.badlogic.gdx.math.Vector[T]] extends com.badlogic.gdx.math
   def this(points: com.badlogic.gdx.utils.Array[T], offset: scala.Int, length: scala.Int) = {
     this()
     this.set(points, offset, length)
-  }
-  def this(points: scala.Array[T]) = {
-    this()
-    this.set(points)
   }
   def set(points: scala.Array[T]): Bezier[?] = {
     return this.set(points, 0, points.length)

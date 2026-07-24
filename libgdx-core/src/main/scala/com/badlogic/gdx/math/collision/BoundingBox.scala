@@ -5,13 +5,13 @@ class BoundingBox extends java.io.Serializable {
   final val max$field: com.badlogic.gdx.math.Vector3 = new com.badlogic.gdx.math.Vector3()
   private final val cnt: com.badlogic.gdx.math.Vector3 = new com.badlogic.gdx.math.Vector3()
   private final val dim: com.badlogic.gdx.math.Vector3 = new com.badlogic.gdx.math.Vector3()
-  def this(minimum: com.badlogic.gdx.math.Vector3, maximum: com.badlogic.gdx.math.Vector3) = {
-    this()
-    this.set(minimum, maximum)
-  }
   def this(bounds: BoundingBox) = {
     this()
     this.set(bounds)
+  }
+  def this(minimum: com.badlogic.gdx.math.Vector3, maximum: com.badlogic.gdx.math.Vector3) = {
+    this()
+    this.set(minimum, maximum)
   }
   this.clr()
   def getCenter(out: com.badlogic.gdx.math.Vector3): com.badlogic.gdx.math.Vector3 = {

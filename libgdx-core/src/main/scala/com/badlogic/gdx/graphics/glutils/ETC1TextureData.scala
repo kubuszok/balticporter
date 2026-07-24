@@ -12,13 +12,13 @@ class ETC1TextureData extends com.badlogic.gdx.graphics.TextureData {
     this.file = file
     this.useMipMaps$field = useMipMaps
   }
+  def this(file: com.badlogic.gdx.files.FileHandle) = {
+    this(file, false)
+  }
   def this(encodedImage: com.badlogic.gdx.graphics.glutils.ETC1.ETC1Data, useMipMaps: scala.Boolean) = {
     this()
     this.data = encodedImage
     this.useMipMaps$field = useMipMaps
-  }
-  def this(file: com.badlogic.gdx.files.FileHandle) = {
-    this(file, false)
   }
   def getType(): com.badlogic.gdx.graphics.TextureData.TextureDataType = {
     return com.badlogic.gdx.graphics.TextureData.TextureDataType.Custom

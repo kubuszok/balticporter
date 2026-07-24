@@ -8,6 +8,19 @@ class TextureRegion {
   var v2: scala.Float = 0.0f
   var regionWidth: scala.Int = 0
   var regionHeight: scala.Int = 0
+  def this(texture: com.badlogic.gdx.graphics.Texture) = {
+    this()
+    if (texture == null) {
+      throw new java.lang.IllegalArgumentException("texture cannot be null.")
+    } else ()
+    this.texture = texture
+    this.setRegion(0, 0, texture.getWidth(), texture.getHeight())
+  }
+  def this(texture: com.badlogic.gdx.graphics.Texture, width: scala.Int, height: scala.Int) = {
+    this()
+    this.texture = texture
+    this.setRegion(0, 0, width, height)
+  }
   def this(texture: com.badlogic.gdx.graphics.Texture, x: scala.Int, y: scala.Int, width: scala.Int, height: scala.Int) = {
     this()
     this.texture = texture
@@ -18,26 +31,13 @@ class TextureRegion {
     this.texture = texture
     this.setRegion(u, v, u2, v2)
   }
-  def this(region: TextureRegion, x: scala.Int, y: scala.Int, width: scala.Int, height: scala.Int) = {
-    this()
-    this.setRegion(region, x, y, width, height)
-  }
-  def this(texture: com.badlogic.gdx.graphics.Texture, width: scala.Int, height: scala.Int) = {
-    this()
-    this.texture = texture
-    this.setRegion(0, 0, width, height)
-  }
-  def this(texture: com.badlogic.gdx.graphics.Texture) = {
-    this()
-    if (texture == null) {
-      throw new java.lang.IllegalArgumentException("texture cannot be null.")
-    } else ()
-    this.texture = texture
-    this.setRegion(0, 0, texture.getWidth(), texture.getHeight())
-  }
   def this(region: TextureRegion) = {
     this()
     this.setRegion(region)
+  }
+  def this(region: TextureRegion, x: scala.Int, y: scala.Int, width: scala.Int, height: scala.Int) = {
+    this()
+    this.setRegion(region, x, y, width, height)
   }
   def setRegion(texture: com.badlogic.gdx.graphics.Texture): scala.Unit = {
     this.texture = texture

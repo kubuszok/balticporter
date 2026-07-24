@@ -84,6 +84,43 @@ class NinePatch {
     } else ()
     this.load(patches)
   }
+  def this(texture: com.badlogic.gdx.graphics.Texture, left: scala.Int, right: scala.Int, top: scala.Int, bottom: scala.Int) = {
+    this(new com.badlogic.gdx.graphics.g2d.TextureRegion(texture), left, right, top, bottom)
+  }
+  def this(region: com.badlogic.gdx.graphics.g2d.TextureRegion) = {
+    this()
+    this.load(scala.Array[com.badlogic.gdx.graphics.g2d.TextureRegion](null, null, null, null, region, null, null, null, null))
+  }
+  def this(texture: com.badlogic.gdx.graphics.Texture) = {
+    this(new com.badlogic.gdx.graphics.g2d.TextureRegion(texture))
+  }
+  def this(texture: com.badlogic.gdx.graphics.Texture, color: com.badlogic.gdx.graphics.Color) = {
+    this(texture)
+    this.setColor(color)
+  }
+  def this(region: com.badlogic.gdx.graphics.g2d.TextureRegion, color: com.badlogic.gdx.graphics.Color) = {
+    this(region)
+    this.setColor(color)
+  }
+  def this(patches: scala.Array[com.badlogic.gdx.graphics.g2d.TextureRegion]) = {
+    this()
+    if ((patches == null) || (patches.length != 9)) {
+      throw new java.lang.IllegalArgumentException("NinePatch needs nine TextureRegions")
+    } else ()
+    this.load(patches)
+    if ((((patches(NinePatch.TOP_LEFT) != null) && (patches(NinePatch.TOP_LEFT).getRegionWidth() != this.leftWidth)) || ((patches(NinePatch.MIDDLE_LEFT) != null) && (patches(NinePatch.MIDDLE_LEFT).getRegionWidth() != this.leftWidth))) || ((patches(NinePatch.BOTTOM_LEFT) != null) && (patches(NinePatch.BOTTOM_LEFT).getRegionWidth() != this.leftWidth))) {
+      throw new com.badlogic.gdx.utils.GdxRuntimeException("Left side patches must have the same width")
+    } else ()
+    if ((((patches(NinePatch.TOP_RIGHT) != null) && (patches(NinePatch.TOP_RIGHT).getRegionWidth() != this.rightWidth)) || ((patches(NinePatch.MIDDLE_RIGHT) != null) && (patches(NinePatch.MIDDLE_RIGHT).getRegionWidth() != this.rightWidth))) || ((patches(NinePatch.BOTTOM_RIGHT) != null) && (patches(NinePatch.BOTTOM_RIGHT).getRegionWidth() != this.rightWidth))) {
+      throw new com.badlogic.gdx.utils.GdxRuntimeException("Right side patches must have the same width")
+    } else ()
+    if ((((patches(NinePatch.BOTTOM_LEFT) != null) && (patches(NinePatch.BOTTOM_LEFT).getRegionHeight() != this.bottomHeight)) || ((patches(NinePatch.BOTTOM_CENTER) != null) && (patches(NinePatch.BOTTOM_CENTER).getRegionHeight() != this.bottomHeight))) || ((patches(NinePatch.BOTTOM_RIGHT) != null) && (patches(NinePatch.BOTTOM_RIGHT).getRegionHeight() != this.bottomHeight))) {
+      throw new com.badlogic.gdx.utils.GdxRuntimeException("Bottom side patches must have the same height")
+    } else ()
+    if ((((patches(NinePatch.TOP_LEFT) != null) && (patches(NinePatch.TOP_LEFT).getRegionHeight() != this.topHeight)) || ((patches(NinePatch.TOP_CENTER) != null) && (patches(NinePatch.TOP_CENTER).getRegionHeight() != this.topHeight))) || ((patches(NinePatch.TOP_RIGHT) != null) && (patches(NinePatch.TOP_RIGHT).getRegionHeight() != this.topHeight))) {
+      throw new com.badlogic.gdx.utils.GdxRuntimeException("Top side patches must have the same height")
+    } else ()
+  }
   def this(ninePatch: NinePatch, color: com.badlogic.gdx.graphics.Color) = {
     this()
     this.texture = ninePatch.texture
@@ -110,43 +147,6 @@ class NinePatch {
     java.lang.System.arraycopy(ninePatch.vertices, 0, this.vertices, 0, ninePatch.vertices.length)
     this.idx = ninePatch.idx
     this.color.set(color)
-  }
-  def this(region: com.badlogic.gdx.graphics.g2d.TextureRegion) = {
-    this()
-    this.load(scala.Array[com.badlogic.gdx.graphics.g2d.TextureRegion](null, null, null, null, region, null, null, null, null))
-  }
-  def this(patches: scala.Array[com.badlogic.gdx.graphics.g2d.TextureRegion]) = {
-    this()
-    if ((patches == null) || (patches.length != 9)) {
-      throw new java.lang.IllegalArgumentException("NinePatch needs nine TextureRegions")
-    } else ()
-    this.load(patches)
-    if ((((patches(NinePatch.TOP_LEFT) != null) && (patches(NinePatch.TOP_LEFT).getRegionWidth() != this.leftWidth)) || ((patches(NinePatch.MIDDLE_LEFT) != null) && (patches(NinePatch.MIDDLE_LEFT).getRegionWidth() != this.leftWidth))) || ((patches(NinePatch.BOTTOM_LEFT) != null) && (patches(NinePatch.BOTTOM_LEFT).getRegionWidth() != this.leftWidth))) {
-      throw new com.badlogic.gdx.utils.GdxRuntimeException("Left side patches must have the same width")
-    } else ()
-    if ((((patches(NinePatch.TOP_RIGHT) != null) && (patches(NinePatch.TOP_RIGHT).getRegionWidth() != this.rightWidth)) || ((patches(NinePatch.MIDDLE_RIGHT) != null) && (patches(NinePatch.MIDDLE_RIGHT).getRegionWidth() != this.rightWidth))) || ((patches(NinePatch.BOTTOM_RIGHT) != null) && (patches(NinePatch.BOTTOM_RIGHT).getRegionWidth() != this.rightWidth))) {
-      throw new com.badlogic.gdx.utils.GdxRuntimeException("Right side patches must have the same width")
-    } else ()
-    if ((((patches(NinePatch.BOTTOM_LEFT) != null) && (patches(NinePatch.BOTTOM_LEFT).getRegionHeight() != this.bottomHeight)) || ((patches(NinePatch.BOTTOM_CENTER) != null) && (patches(NinePatch.BOTTOM_CENTER).getRegionHeight() != this.bottomHeight))) || ((patches(NinePatch.BOTTOM_RIGHT) != null) && (patches(NinePatch.BOTTOM_RIGHT).getRegionHeight() != this.bottomHeight))) {
-      throw new com.badlogic.gdx.utils.GdxRuntimeException("Bottom side patches must have the same height")
-    } else ()
-    if ((((patches(NinePatch.TOP_LEFT) != null) && (patches(NinePatch.TOP_LEFT).getRegionHeight() != this.topHeight)) || ((patches(NinePatch.TOP_CENTER) != null) && (patches(NinePatch.TOP_CENTER).getRegionHeight() != this.topHeight))) || ((patches(NinePatch.TOP_RIGHT) != null) && (patches(NinePatch.TOP_RIGHT).getRegionHeight() != this.topHeight))) {
-      throw new com.badlogic.gdx.utils.GdxRuntimeException("Top side patches must have the same height")
-    } else ()
-  }
-  def this(texture: com.badlogic.gdx.graphics.Texture, left: scala.Int, right: scala.Int, top: scala.Int, bottom: scala.Int) = {
-    this(new com.badlogic.gdx.graphics.g2d.TextureRegion(texture), left, right, top, bottom)
-  }
-  def this(texture: com.badlogic.gdx.graphics.Texture, color: com.badlogic.gdx.graphics.Color) = {
-    this(texture)
-    this.setColor(color)
-  }
-  def this(region: com.badlogic.gdx.graphics.g2d.TextureRegion, color: com.badlogic.gdx.graphics.Color) = {
-    this(region)
-    this.setColor(color)
-  }
-  def this(texture: com.badlogic.gdx.graphics.Texture) = {
-    this(new com.badlogic.gdx.graphics.g2d.TextureRegion(texture))
   }
   def this(ninePatch: NinePatch) = {
     this(ninePatch, ninePatch.color)

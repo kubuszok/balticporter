@@ -26,6 +26,9 @@ class IndexBufferObject extends com.badlogic.gdx.graphics.glutils.IndexData {
     this.bufferHandle = com.badlogic.gdx.Gdx.gl20.glGenBuffer()
     this.usage = if (isStatic) com.badlogic.gdx.graphics.GL20.GL_STATIC_DRAW else com.badlogic.gdx.graphics.GL20.GL_DYNAMIC_DRAW
   }
+  def this(maxIndices: scala.Int) = {
+    this(true, maxIndices)
+  }
   def this(isStatic: scala.Boolean, data: java.nio.ByteBuffer) = {
     this()
     this.empty = data.limit() == 0
@@ -35,9 +38,6 @@ class IndexBufferObject extends com.badlogic.gdx.graphics.glutils.IndexData {
     this.ownsBuffer = false
     this.bufferHandle = com.badlogic.gdx.Gdx.gl20.glGenBuffer()
     this.usage = if (isStatic) com.badlogic.gdx.graphics.GL20.GL_STATIC_DRAW else com.badlogic.gdx.graphics.GL20.GL_DYNAMIC_DRAW
-  }
-  def this(maxIndices: scala.Int) = {
-    this(true, maxIndices)
   }
   def getNumIndices(): scala.Int = {
     return if (this.empty) 0 else this.buffer.limit()

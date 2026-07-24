@@ -25,6 +25,9 @@ class VertexBufferObjectWithVAO extends com.badlogic.gdx.graphics.glutils.Vertex
     this.usage = if (isStatic) com.badlogic.gdx.graphics.GL20.GL_STATIC_DRAW else com.badlogic.gdx.graphics.GL20.GL_DYNAMIC_DRAW
     this.createVAO()
   }
+  def this(isStatic: scala.Boolean, numVertices: scala.Int, attributes: scala.Array[com.badlogic.gdx.graphics.VertexAttribute]) = {
+    this(isStatic, numVertices, new com.badlogic.gdx.graphics.VertexAttributes(attributes))
+  }
   def this(isStatic: scala.Boolean, unmanagedBuffer: java.nio.ByteBuffer, attributes: com.badlogic.gdx.graphics.VertexAttributes) = {
     this()
     this.isStatic = isStatic
@@ -37,9 +40,6 @@ class VertexBufferObjectWithVAO extends com.badlogic.gdx.graphics.glutils.Vertex
     this.bufferHandle = com.badlogic.gdx.Gdx.gl20.glGenBuffer()
     this.usage = if (isStatic) com.badlogic.gdx.graphics.GL20.GL_STATIC_DRAW else com.badlogic.gdx.graphics.GL20.GL_DYNAMIC_DRAW
     this.createVAO()
-  }
-  def this(isStatic: scala.Boolean, numVertices: scala.Int, attributes: scala.Array[com.badlogic.gdx.graphics.VertexAttribute]) = {
-    this(isStatic, numVertices, new com.badlogic.gdx.graphics.VertexAttributes(attributes))
   }
   def getAttributes(): com.badlogic.gdx.graphics.VertexAttributes = {
     return this.attributes

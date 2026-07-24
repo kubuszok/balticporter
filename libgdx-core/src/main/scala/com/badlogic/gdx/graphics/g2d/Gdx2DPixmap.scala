@@ -38,17 +38,6 @@ class Gdx2DPixmap extends com.badlogic.gdx.utils.Disposable {
       this.convert(requestedFormat)
     } else ()
   }
-  def this(width: scala.Int, height: scala.Int, format: scala.Int) = {
-    this()
-    this.pixelPtr = Gdx2DPixmap.newPixmap(this.nativeData, width, height, format)
-    if (this.pixelPtr == null) {
-      throw new com.badlogic.gdx.utils.GdxRuntimeException((((("Unable to allocate memory for pixmap: " + width) + "x") + height) + ", ") + Gdx2DPixmap.getFormatString(format))
-    } else ()
-    this.basePtr = this.nativeData(0)
-    this.width = this.nativeData(1).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
-    this.height = this.nativeData(2).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
-    this.format = this.nativeData(3).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
-  }
   def this(in: java.io.InputStream, requestedFormat: scala.Int) = {
     this()
     val bytes: java.io.ByteArrayOutputStream = new java.io.ByteArrayOutputStream(1024)
@@ -72,6 +61,17 @@ class Gdx2DPixmap extends com.badlogic.gdx.utils.Disposable {
     if ((requestedFormat != 0) && (requestedFormat != this.format)) {
       this.convert(requestedFormat)
     } else ()
+  }
+  def this(width: scala.Int, height: scala.Int, format: scala.Int) = {
+    this()
+    this.pixelPtr = Gdx2DPixmap.newPixmap(this.nativeData, width, height, format)
+    if (this.pixelPtr == null) {
+      throw new com.badlogic.gdx.utils.GdxRuntimeException((((("Unable to allocate memory for pixmap: " + width) + "x") + height) + ", ") + Gdx2DPixmap.getFormatString(format))
+    } else ()
+    this.basePtr = this.nativeData(0)
+    this.width = this.nativeData(1).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
+    this.height = this.nativeData(2).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
+    this.format = this.nativeData(3).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
   }
   def this(pixelPtr: java.nio.ByteBuffer, nativeData: scala.Array[scala.Long]) = {
     this()

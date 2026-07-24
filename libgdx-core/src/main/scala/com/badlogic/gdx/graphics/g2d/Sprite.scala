@@ -26,12 +26,11 @@ class Sprite extends com.badlogic.gdx.graphics.g2d.TextureRegion {
     this.setSize(java.lang.Math.abs(srcWidth), java.lang.Math.abs(srcHeight))
     this.setOrigin(this.width / 2, this.height / 2)
   }
-  def this(region: com.badlogic.gdx.graphics.g2d.TextureRegion, srcX: scala.Int, srcY: scala.Int, srcWidth: scala.Int, srcHeight: scala.Int) = {
-    this()
-    this.setRegion(region, srcX, srcY, srcWidth, srcHeight)
-    this.setColor(1, 1, 1, 1)
-    this.setSize(java.lang.Math.abs(srcWidth), java.lang.Math.abs(srcHeight))
-    this.setOrigin(this.width / 2, this.height / 2)
+  def this(texture: com.badlogic.gdx.graphics.Texture) = {
+    this(texture, 0, 0, texture.getWidth(), texture.getHeight())
+  }
+  def this(texture: com.badlogic.gdx.graphics.Texture, srcWidth: scala.Int, srcHeight: scala.Int) = {
+    this(texture, 0, 0, srcWidth, srcHeight)
   }
   def this(region: com.badlogic.gdx.graphics.g2d.TextureRegion) = {
     this()
@@ -40,15 +39,16 @@ class Sprite extends com.badlogic.gdx.graphics.g2d.TextureRegion {
     this.setSize(region.getRegionWidth(), region.getRegionHeight())
     this.setOrigin(this.width / 2, this.height / 2)
   }
+  def this(region: com.badlogic.gdx.graphics.g2d.TextureRegion, srcX: scala.Int, srcY: scala.Int, srcWidth: scala.Int, srcHeight: scala.Int) = {
+    this()
+    this.setRegion(region, srcX, srcY, srcWidth, srcHeight)
+    this.setColor(1, 1, 1, 1)
+    this.setSize(java.lang.Math.abs(srcWidth), java.lang.Math.abs(srcHeight))
+    this.setOrigin(this.width / 2, this.height / 2)
+  }
   def this(sprite: Sprite) = {
     this()
     this.set(sprite)
-  }
-  def this(texture: com.badlogic.gdx.graphics.Texture, srcWidth: scala.Int, srcHeight: scala.Int) = {
-    this(texture, 0, 0, srcWidth, srcHeight)
-  }
-  def this(texture: com.badlogic.gdx.graphics.Texture) = {
-    this(texture, 0, 0, texture.getWidth(), texture.getHeight())
   }
   this.setColor(1, 1, 1, 1)
   def set(sprite: Sprite): scala.Unit = {

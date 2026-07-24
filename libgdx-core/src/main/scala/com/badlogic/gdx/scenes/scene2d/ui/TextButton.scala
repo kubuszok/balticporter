@@ -11,12 +11,12 @@ class TextButton extends com.badlogic.gdx.scenes.scene2d.ui.Button {
     this.add(this.label).grow()
     this.setSize(this.getPrefWidth(), this.getPrefHeight())
   }
-  def this(text: java.lang.String, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin, styleName: java.lang.String) = {
-    this(text, skin.get(styleName, classOf[com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle]))
-    this.setSkin(skin)
-  }
   def this(text: java.lang.String, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin) = {
     this(text, skin.get(classOf[com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle]))
+    this.setSkin(skin)
+  }
+  def this(text: java.lang.String, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin, styleName: java.lang.String) = {
+    this(text, skin.get(styleName, classOf[com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle]))
     this.setSkin(skin)
   }
   def newLabel(text: java.lang.String, style: com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle): com.badlogic.gdx.scenes.scene2d.ui.Label = {

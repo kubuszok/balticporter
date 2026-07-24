@@ -8,15 +8,15 @@ class ColorAttribute extends com.badlogic.gdx.graphics.g3d.Attribute {
       throw new com.badlogic.gdx.utils.GdxRuntimeException("Invalid type specified")
     } else ()
   }
-  def this(`type`: scala.Long, r: scala.Float, g: scala.Float, b: scala.Float, a: scala.Float) = {
-    this(`type`)
-    this.color.set(r, g, b, a)
-  }
   def this(`type`: scala.Long, color: com.badlogic.gdx.graphics.Color) = {
     this(`type`)
     if (color != null) {
       this.color.set(color)
     } else ()
+  }
+  def this(`type`: scala.Long, r: scala.Float, g: scala.Float, b: scala.Float, a: scala.Float) = {
+    this(`type`)
+    this.color.set(r, g, b, a)
   }
   def this(copyFrom: ColorAttribute) = {
     this(copyFrom.`type`, copyFrom.color)

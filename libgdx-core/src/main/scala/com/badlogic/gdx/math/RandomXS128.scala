@@ -3,13 +3,13 @@ package com.badlogic.gdx.math
 class RandomXS128 extends java.util.Random {
   private var seed0: scala.Long = 0L
   private var seed1: scala.Long = 0L
-  def this(seed0: scala.Long, seed1: scala.Long) = {
-    this()
-    this.setState(seed0, seed1)
-  }
   def this(seed: scala.Long) = {
     this()
     this.setSeed(seed)
+  }
+  def this(seed0: scala.Long, seed1: scala.Long) = {
+    this()
+    this.setState(seed0, seed1)
   }
   this.setSeed(new java.util.Random().nextLong())
   def nextLong(): scala.Long = {

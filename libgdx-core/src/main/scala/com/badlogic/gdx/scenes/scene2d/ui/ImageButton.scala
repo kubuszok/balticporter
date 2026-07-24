@@ -10,22 +10,22 @@ class ImageButton extends com.badlogic.gdx.scenes.scene2d.ui.Button {
     this.setStyle(style)
     this.setSize(this.getPrefWidth(), this.getPrefHeight())
   }
-  def this(imageUp: com.badlogic.gdx.scenes.scene2d.utils.Drawable, imageDown: com.badlogic.gdx.scenes.scene2d.utils.Drawable, imageChecked: com.badlogic.gdx.scenes.scene2d.utils.Drawable) = {
-    this(new com.badlogic.gdx.scenes.scene2d.ui.ImageButton.ImageButtonStyle(null, null, null, imageUp, imageDown, imageChecked))
+  def this(skin: com.badlogic.gdx.scenes.scene2d.ui.Skin) = {
+    this(skin.get(classOf[com.badlogic.gdx.scenes.scene2d.ui.ImageButton.ImageButtonStyle]))
+    this.setSkin(skin)
   }
   def this(skin: com.badlogic.gdx.scenes.scene2d.ui.Skin, styleName: java.lang.String) = {
     this(skin.get(styleName, classOf[com.badlogic.gdx.scenes.scene2d.ui.ImageButton.ImageButtonStyle]))
     this.setSkin(skin)
   }
+  def this(imageUp: com.badlogic.gdx.scenes.scene2d.utils.Drawable) = {
+    this(new com.badlogic.gdx.scenes.scene2d.ui.ImageButton.ImageButtonStyle(null, null, null, imageUp, null, null))
+  }
   def this(imageUp: com.badlogic.gdx.scenes.scene2d.utils.Drawable, imageDown: com.badlogic.gdx.scenes.scene2d.utils.Drawable) = {
     this(new com.badlogic.gdx.scenes.scene2d.ui.ImageButton.ImageButtonStyle(null, null, null, imageUp, imageDown, null))
   }
-  def this(skin: com.badlogic.gdx.scenes.scene2d.ui.Skin) = {
-    this(skin.get(classOf[com.badlogic.gdx.scenes.scene2d.ui.ImageButton.ImageButtonStyle]))
-    this.setSkin(skin)
-  }
-  def this(imageUp: com.badlogic.gdx.scenes.scene2d.utils.Drawable) = {
-    this(new com.badlogic.gdx.scenes.scene2d.ui.ImageButton.ImageButtonStyle(null, null, null, imageUp, null, null))
+  def this(imageUp: com.badlogic.gdx.scenes.scene2d.utils.Drawable, imageDown: com.badlogic.gdx.scenes.scene2d.utils.Drawable, imageChecked: com.badlogic.gdx.scenes.scene2d.utils.Drawable) = {
+    this(new com.badlogic.gdx.scenes.scene2d.ui.ImageButton.ImageButtonStyle(null, null, null, imageUp, imageDown, imageChecked))
   }
   def newImage(): com.badlogic.gdx.scenes.scene2d.ui.Image = {
     return new com.badlogic.gdx.scenes.scene2d.ui.Image(null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Drawable], com.badlogic.gdx.utils.Scaling.fit)

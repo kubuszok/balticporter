@@ -6,25 +6,10 @@ class Array[T] extends scala.collection.Iterable[T] {
   var ordered: scala.Boolean = false
   private var iterable: com.badlogic.gdx.utils.Array.ArrayIterable[T] = null.asInstanceOf[com.badlogic.gdx.utils.Array.ArrayIterable[T]]
   private var predicateIterable: com.badlogic.gdx.utils.Predicate.PredicateIterable[T] = null.asInstanceOf[com.badlogic.gdx.utils.Predicate.PredicateIterable[T]]
-  def this(ordered: scala.Boolean, array: scala.Array[T], start: scala.Int, count: scala.Int) = {
-    this()
-    this.items = java.util.Arrays.copyOfRange(array.asInstanceOf[scala.Array[java.lang.Object]], start, start + count).asInstanceOf[scala.Array[T]]
-    this.ordered = ordered
-    this.size = count
-  }
   def this(ordered: scala.Boolean, capacity: scala.Int, arraySupplier: com.badlogic.gdx.utils.ArraySupplier[scala.Array[T]]) = {
     this()
     this.ordered = ordered
     this.items = arraySupplier.get(capacity).asInstanceOf[scala.Array[T]]
-  }
-  def this(array: Array[? <: T]) = {
-    this()
-    this.items = java.util.Arrays.copyOf(array.items.asInstanceOf[scala.Array[java.lang.Object]], array.size).asInstanceOf[scala.Array[T]]
-    this.ordered = array.ordered
-    this.size = array.size
-  }
-  def this(ordered: scala.Boolean, capacity: scala.Int, arrayType: java.lang.Class[?]) = {
-    this(ordered, capacity, (size: scala.Int) => com.badlogic.gdx.utils.reflect.ArrayReflection.newInstance(arrayType, size).asInstanceOf[scala.Array[T]])
   }
   def this(ordered: scala.Boolean, capacity: scala.Int) = {
     this(ordered, capacity, com.badlogic.gdx.utils.ArraySupplier.`object`())
@@ -35,8 +20,23 @@ class Array[T] extends scala.collection.Iterable[T] {
   def this(arraySupplier: com.badlogic.gdx.utils.ArraySupplier[scala.Array[T]]) = {
     this(true, 16, arraySupplier)
   }
+  def this(ordered: scala.Boolean, capacity: scala.Int, arrayType: java.lang.Class[?]) = {
+    this(ordered, capacity, (size: scala.Int) => com.badlogic.gdx.utils.reflect.ArrayReflection.newInstance(arrayType, size).asInstanceOf[scala.Array[T]])
+  }
   def this(arrayType: java.lang.Class[?]) = {
     this(true, 16, arrayType)
+  }
+  def this(array: Array[? <: T]) = {
+    this()
+    this.items = java.util.Arrays.copyOf(array.items.asInstanceOf[scala.Array[java.lang.Object]], array.size).asInstanceOf[scala.Array[T]]
+    this.ordered = array.ordered
+    this.size = array.size
+  }
+  def this(ordered: scala.Boolean, array: scala.Array[T], start: scala.Int, count: scala.Int) = {
+    this()
+    this.items = java.util.Arrays.copyOfRange(array.asInstanceOf[scala.Array[java.lang.Object]], start, start + count).asInstanceOf[scala.Array[T]]
+    this.ordered = ordered
+    this.size = count
   }
   def this(array: scala.Array[T]) = {
     this(true, array, 0, array.length)

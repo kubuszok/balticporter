@@ -3,13 +3,13 @@ package com.badlogic.gdx.assets.loaders
 class ShaderProgramLoader extends com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader[com.badlogic.gdx.graphics.glutils.ShaderProgram, com.badlogic.gdx.assets.loaders.ShaderProgramLoader.ShaderProgramParameter] {
   private var vertexFileSuffix: java.lang.String = ".vert"
   private var fragmentFileSuffix: java.lang.String = ".frag"
+  def this(resolver: com.badlogic.gdx.assets.loaders.FileHandleResolver) = {
+    this()
+  }
   def this(resolver: com.badlogic.gdx.assets.loaders.FileHandleResolver, vertexFileSuffix: java.lang.String, fragmentFileSuffix: java.lang.String) = {
     this()
     this.vertexFileSuffix = vertexFileSuffix
     this.fragmentFileSuffix = fragmentFileSuffix
-  }
-  def this(resolver: com.badlogic.gdx.assets.loaders.FileHandleResolver) = {
-    this()
   }
   def getDependencies(fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.assets.loaders.ShaderProgramLoader.ShaderProgramParameter): com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = {
     return null

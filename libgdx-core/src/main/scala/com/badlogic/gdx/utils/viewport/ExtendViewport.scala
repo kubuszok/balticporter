@@ -14,14 +14,14 @@ class ExtendViewport extends com.badlogic.gdx.utils.viewport.Viewport {
     this.maxWorldHeight = maxWorldHeight
     this.setCamera(camera)
   }
-  def this(minWorldWidth: scala.Float, minWorldHeight: scala.Float, maxWorldWidth: scala.Float, maxWorldHeight: scala.Float) = {
-    this(minWorldWidth, minWorldHeight, maxWorldWidth, maxWorldHeight, new com.badlogic.gdx.graphics.OrthographicCamera())
+  def this(minWorldWidth: scala.Float, minWorldHeight: scala.Float) = {
+    this(minWorldWidth, minWorldHeight, 0, 0, new com.badlogic.gdx.graphics.OrthographicCamera())
   }
   def this(minWorldWidth: scala.Float, minWorldHeight: scala.Float, camera: com.badlogic.gdx.graphics.Camera) = {
     this(minWorldWidth, minWorldHeight, 0, 0, camera)
   }
-  def this(minWorldWidth: scala.Float, minWorldHeight: scala.Float) = {
-    this(minWorldWidth, minWorldHeight, 0, 0, new com.badlogic.gdx.graphics.OrthographicCamera())
+  def this(minWorldWidth: scala.Float, minWorldHeight: scala.Float, maxWorldWidth: scala.Float, maxWorldHeight: scala.Float) = {
+    this(minWorldWidth, minWorldHeight, maxWorldWidth, maxWorldHeight, new com.badlogic.gdx.graphics.OrthographicCamera())
   }
   def update(screenWidth: scala.Int, screenHeight: scala.Int, centerCamera: scala.Boolean): scala.Unit = {
     var worldWidth: scala.Float = this.minWorldWidth

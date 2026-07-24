@@ -4,7 +4,7 @@ class DelayedRemovalArray[T] extends com.badlogic.gdx.utils.Array[T] {
   private var iterating: scala.Int = 0
   var remove$field: com.badlogic.gdx.utils.IntArray = new com.badlogic.gdx.utils.IntArray(0)
   var clear$field: scala.Int = 0
-  def this(ordered: scala.Boolean, array: scala.Array[T], startIndex: scala.Int, count: scala.Int) = {
+  def this(array: com.badlogic.gdx.utils.Array[?]) = {
     this()
   }
   def this(ordered: scala.Boolean, capacity: scala.Int, arraySupplier: com.badlogic.gdx.utils.ArraySupplier[scala.Array[T]]) = {
@@ -16,7 +16,7 @@ class DelayedRemovalArray[T] extends com.badlogic.gdx.utils.Array[T] {
   def this(ordered: scala.Boolean, capacity: scala.Int) = {
     this()
   }
-  def this(array: com.badlogic.gdx.utils.Array[?]) = {
+  def this(ordered: scala.Boolean, array: scala.Array[T], startIndex: scala.Int, count: scala.Int) = {
     this()
   }
   def this(arraySupplier: com.badlogic.gdx.utils.ArraySupplier[scala.Array[T]]) = {

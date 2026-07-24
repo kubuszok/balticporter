@@ -9,11 +9,8 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
     this.ordered = ordered
     this.items = new scala.Array[scala.Char](capacity)
   }
-  private def this(initialBuffer: scala.Array[scala.Char], length: scala.Int) = {
-    this()
-    java.util.Objects.requireNonNull(initialBuffer, "initialBuffer")
-    this.items = initialBuffer
-    this.size = length
+  def this(capacity: scala.Int) = {
+    this(true, capacity)
   }
   def this(array: CharArray) = {
     this()
@@ -26,9 +23,6 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
     this(ordered, count)
     this.size = count
     java.lang.System.arraycopy(array, start, this.items, 0, count)
-  }
-  def this(capacity: scala.Int) = {
-    this(true, capacity)
   }
   def this(array: scala.Array[scala.Char]) = {
     this(true, array, 0, array.length)
@@ -44,6 +38,12 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
   def this(str: java.lang.StringBuilder) = {
     this(str.length() + CharArray.CAPACITY)
     this.append(str)
+  }
+  private def this(initialBuffer: scala.Array[scala.Char], length: scala.Int) = {
+    this()
+    java.util.Objects.requireNonNull(initialBuffer, "initialBuffer")
+    this.items = initialBuffer
+    this.size = length
   }
   def add(value: scala.Char): scala.Unit = {
     if (this.size == this.items.length) {

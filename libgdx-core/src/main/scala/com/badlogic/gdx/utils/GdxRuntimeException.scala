@@ -1,13 +1,13 @@
 package com.badlogic.gdx.utils
 
 class GdxRuntimeException extends java.lang.RuntimeException {
-  def this(message: java.lang.String, t: java.lang.Throwable) = {
-    this()
-  }
   def this(message: java.lang.String) = {
     this()
   }
   def this(t: java.lang.Throwable) = {
+    this()
+  }
+  def this(message: java.lang.String, t: java.lang.Throwable) = {
     this()
   }
 }

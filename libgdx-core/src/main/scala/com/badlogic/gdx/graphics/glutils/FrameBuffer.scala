@@ -1,6 +1,9 @@
 package com.badlogic.gdx.graphics.glutils
 
 class FrameBuffer extends com.badlogic.gdx.graphics.glutils.GLFrameBuffer[com.badlogic.gdx.graphics.Texture] {
+  def this(bufferBuilder: com.badlogic.gdx.graphics.glutils.GLFrameBuffer.GLFrameBufferBuilder[? <: com.badlogic.gdx.graphics.glutils.GLFrameBuffer[com.badlogic.gdx.graphics.Texture]]) = {
+    this()
+  }
   def this(format: com.badlogic.gdx.graphics.Pixmap.Format, width: scala.Int, height: scala.Int, hasDepth: scala.Boolean, hasStencil: scala.Boolean) = {
     this()
     val frameBufferBuilder: com.badlogic.gdx.graphics.glutils.GLFrameBuffer.FrameBufferBuilder = new com.badlogic.gdx.graphics.glutils.GLFrameBuffer.FrameBufferBuilder(width, height)
@@ -13,9 +16,6 @@ class FrameBuffer extends com.badlogic.gdx.graphics.glutils.GLFrameBuffer[com.ba
     } else ()
     this.bufferBuilder = frameBufferBuilder
     this.build()
-  }
-  def this(bufferBuilder: com.badlogic.gdx.graphics.glutils.GLFrameBuffer.GLFrameBufferBuilder[? <: com.badlogic.gdx.graphics.glutils.GLFrameBuffer[com.badlogic.gdx.graphics.Texture]]) = {
-    this()
   }
   def this(format: com.badlogic.gdx.graphics.Pixmap.Format, width: scala.Int, height: scala.Int, hasDepth: scala.Boolean) = {
     this(format, width, height, hasDepth, false)

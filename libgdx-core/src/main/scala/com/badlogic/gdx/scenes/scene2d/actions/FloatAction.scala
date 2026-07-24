@@ -4,7 +4,7 @@ class FloatAction extends com.badlogic.gdx.scenes.scene2d.actions.TemporalAction
   private var start: scala.Float = 0.0f
   private var `end`: scala.Float = 0.0f
   private var value: scala.Float = 0.0f
-  def this(start: scala.Float, `end`: scala.Float, duration: scala.Float, interpolation: com.badlogic.gdx.math.Interpolation) = {
+  def this(start: scala.Float, `end`: scala.Float) = {
     this()
     this.start = start
     this.`end` = `end`
@@ -14,7 +14,7 @@ class FloatAction extends com.badlogic.gdx.scenes.scene2d.actions.TemporalAction
     this.start = start
     this.`end` = `end`
   }
-  def this(start: scala.Float, `end`: scala.Float) = {
+  def this(start: scala.Float, `end`: scala.Float, duration: scala.Float, interpolation: com.badlogic.gdx.math.Interpolation) = {
     this()
     this.start = start
     this.`end` = `end`

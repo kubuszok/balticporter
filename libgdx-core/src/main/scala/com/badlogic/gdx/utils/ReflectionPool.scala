@@ -9,11 +9,11 @@ class ReflectionPool[T] extends com.badlogic.gdx.utils.Pool[T] {
       throw new java.lang.RuntimeException("Class cannot be created (missing no-arg constructor): " + `type`.getName())
     } else ()
   }
-  def this(`type`: java.lang.Class[T], initialCapacity: scala.Int) = {
-    this(`type`, initialCapacity, java.lang.Integer.MAX_VALUE)
-  }
   def this(`type`: java.lang.Class[T]) = {
     this(`type`, 16, java.lang.Integer.MAX_VALUE)
+  }
+  def this(`type`: java.lang.Class[T], initialCapacity: scala.Int) = {
+    this(`type`, initialCapacity, java.lang.Integer.MAX_VALUE)
   }
   private def findConstructor(`type`: java.lang.Class[T]): com.badlogic.gdx.utils.reflect.Constructor = {
     try {

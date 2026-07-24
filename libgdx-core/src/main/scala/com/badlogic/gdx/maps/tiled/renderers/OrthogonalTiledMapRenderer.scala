@@ -1,7 +1,7 @@
 package com.badlogic.gdx.maps.tiled.renderers
 
 class OrthogonalTiledMapRenderer extends com.badlogic.gdx.maps.tiled.renderers.BatchTiledMapRenderer {
-  def this(map: com.badlogic.gdx.maps.tiled.TiledMap, unitScale: scala.Float, batch: com.badlogic.gdx.graphics.g2d.Batch) = {
+  def this(map: com.badlogic.gdx.maps.tiled.TiledMap) = {
     this()
   }
   def this(map: com.badlogic.gdx.maps.tiled.TiledMap, batch: com.badlogic.gdx.graphics.g2d.Batch) = {
@@ -10,7 +10,7 @@ class OrthogonalTiledMapRenderer extends com.badlogic.gdx.maps.tiled.renderers.B
   def this(map: com.badlogic.gdx.maps.tiled.TiledMap, unitScale: scala.Float) = {
     this()
   }
-  def this(map: com.badlogic.gdx.maps.tiled.TiledMap) = {
+  def this(map: com.badlogic.gdx.maps.tiled.TiledMap, unitScale: scala.Float, batch: com.badlogic.gdx.graphics.g2d.Batch) = {
     this()
   }
   def renderTileLayer(layer: com.badlogic.gdx.maps.tiled.TiledMapTileLayer): scala.Unit = {

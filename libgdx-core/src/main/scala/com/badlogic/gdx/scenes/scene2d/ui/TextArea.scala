@@ -8,10 +8,10 @@ class TextArea extends com.badlogic.gdx.scenes.scene2d.ui.TextField {
   private var linesShowing: scala.Int = 0
   var moveOffset: scala.Float = 0.0f
   private var prefRows: scala.Float = 0.0f
-  def this(text: java.lang.String, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin, styleName: java.lang.String) = {
+  def this(text: java.lang.String, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin) = {
     this()
   }
-  def this(text: java.lang.String, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin) = {
+  def this(text: java.lang.String, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin, styleName: java.lang.String) = {
     this()
   }
   def this(text: java.lang.String, style: com.badlogic.gdx.scenes.scene2d.ui.TextField.TextFieldStyle) = {

@@ -10,12 +10,12 @@ class Material extends com.badlogic.gdx.graphics.g3d.Attributes {
     this()
     this.set(attributes)
   }
-  def this(attributes: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.Attribute]) = {
-    this()
-    this.set(attributes)
-  }
   def this(id: java.lang.String, attributes: scala.Array[com.badlogic.gdx.graphics.g3d.Attribute]) = {
     this(id)
+    this.set(attributes)
+  }
+  def this(attributes: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.Attribute]) = {
+    this()
     this.set(attributes)
   }
   def this(id: java.lang.String, attributes: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.Attribute]) = {

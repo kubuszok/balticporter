@@ -202,11 +202,6 @@ object ParticleShader {
       this.align = align
       this.`type` = `type`
     }
-    def this(vertexShader: java.lang.String, fragmentShader: java.lang.String) = {
-      this()
-      this.vertexShader = vertexShader
-      this.fragmentShader = fragmentShader
-    }
     def this(align: com.badlogic.gdx.graphics.g3d.particles.ParticleShader.AlignMode) = {
       this()
       this.align = align
@@ -214,6 +209,11 @@ object ParticleShader {
     def this(`type`: com.badlogic.gdx.graphics.g3d.particles.ParticleShader.ParticleType) = {
       this()
       this.`type` = `type`
+    }
+    def this(vertexShader: java.lang.String, fragmentShader: java.lang.String) = {
+      this()
+      this.vertexShader = vertexShader
+      this.fragmentShader = fragmentShader
     }
   }
   object Inputs {

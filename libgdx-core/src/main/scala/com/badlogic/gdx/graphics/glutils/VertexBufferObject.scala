@@ -9,12 +9,6 @@ class VertexBufferObject extends com.badlogic.gdx.graphics.glutils.VertexData {
   private var usage: scala.Int = 0
   var isDirty: scala.Boolean = false
   var isBound: scala.Boolean = false
-  def this(usage: scala.Int, data: java.nio.ByteBuffer, ownsBuffer: scala.Boolean, attributes: com.badlogic.gdx.graphics.VertexAttributes) = {
-    this()
-    this.bufferHandle = com.badlogic.gdx.Gdx.gl20.glGenBuffer()
-    this.setBuffer(data, ownsBuffer, attributes)
-    this.setUsage(usage)
-  }
   def this(isStatic: scala.Boolean, numVertices: scala.Int, attributes: com.badlogic.gdx.graphics.VertexAttributes) = {
     this()
     this.bufferHandle = com.badlogic.gdx.Gdx.gl20.glGenBuffer()
@@ -25,6 +19,12 @@ class VertexBufferObject extends com.badlogic.gdx.graphics.glutils.VertexData {
   }
   def this(isStatic: scala.Boolean, numVertices: scala.Int, attributes: scala.Array[com.badlogic.gdx.graphics.VertexAttribute]) = {
     this(isStatic, numVertices, new com.badlogic.gdx.graphics.VertexAttributes(attributes))
+  }
+  def this(usage: scala.Int, data: java.nio.ByteBuffer, ownsBuffer: scala.Boolean, attributes: com.badlogic.gdx.graphics.VertexAttributes) = {
+    this()
+    this.bufferHandle = com.badlogic.gdx.Gdx.gl20.glGenBuffer()
+    this.setBuffer(data, ownsBuffer, attributes)
+    this.setUsage(usage)
   }
   def getAttributes(): com.badlogic.gdx.graphics.VertexAttributes = {
     return this.attributes

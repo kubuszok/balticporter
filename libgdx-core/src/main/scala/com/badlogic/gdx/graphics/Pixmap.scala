@@ -35,6 +35,9 @@ class Pixmap extends com.badlogic.gdx.utils.Disposable {
       }
     }
   }
+  def this(encodedData: java.nio.ByteBuffer) = {
+    this(encodedData, encodedData.position(), encodedData.remaining())
+  }
   def this(file: com.badlogic.gdx.files.FileHandle) = {
     this()
     try {
@@ -49,9 +52,6 @@ class Pixmap extends com.badlogic.gdx.utils.Disposable {
   def this(pixmap: com.badlogic.gdx.graphics.g2d.Gdx2DPixmap) = {
     this()
     this.pixmap = pixmap
-  }
-  def this(encodedData: java.nio.ByteBuffer) = {
-    this(encodedData, encodedData.position(), encodedData.remaining())
   }
   def setBlending(blending: com.badlogic.gdx.graphics.Pixmap.Blending): scala.Unit = {
     this.blending = blending

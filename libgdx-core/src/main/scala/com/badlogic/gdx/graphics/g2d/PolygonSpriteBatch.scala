@@ -46,11 +46,11 @@ class PolygonSpriteBatch extends com.badlogic.gdx.graphics.g2d.PolygonBatch {
     }
     this.projectionMatrix.setToOrtho2D(0, 0, com.badlogic.gdx.Gdx.graphics.getWidth(), com.badlogic.gdx.Gdx.graphics.getHeight())
   }
-  def this(size: scala.Int, defaultShader: com.badlogic.gdx.graphics.glutils.ShaderProgram) = {
-    this(size, size * 2, defaultShader)
-  }
   def this(size: scala.Int) = {
     this(size, size * 2, null)
+  }
+  def this(size: scala.Int, defaultShader: com.badlogic.gdx.graphics.glutils.ShaderProgram) = {
+    this(size, size * 2, defaultShader)
   }
   def begin(): scala.Unit = {
     if (this.drawing) {

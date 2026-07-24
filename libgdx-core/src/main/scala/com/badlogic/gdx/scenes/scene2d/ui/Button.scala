@@ -7,6 +7,12 @@ class Button extends com.badlogic.gdx.scenes.scene2d.ui.Table with com.badlogic.
   var buttonGroup: com.badlogic.gdx.scenes.scene2d.ui.ButtonGroup[?] = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.ButtonGroup[?]]
   private var clickListener: com.badlogic.gdx.scenes.scene2d.utils.ClickListener = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.ClickListener]
   private var programmaticChangeEvents: scala.Boolean = true
+  def this(skin: com.badlogic.gdx.scenes.scene2d.ui.Skin) = {
+    this()
+    this.initialize()
+    this.setStyle(skin.get(classOf[com.badlogic.gdx.scenes.scene2d.ui.Button.ButtonStyle]))
+    this.setSize(this.getPrefWidth(), this.getPrefHeight())
+  }
   def this(skin: com.badlogic.gdx.scenes.scene2d.ui.Skin, styleName: java.lang.String) = {
     this()
     this.initialize()
@@ -20,11 +26,9 @@ class Button extends com.badlogic.gdx.scenes.scene2d.ui.Table with com.badlogic.
     this.setStyle(style)
     this.setSize(this.getPrefWidth(), this.getPrefHeight())
   }
-  def this(skin: com.badlogic.gdx.scenes.scene2d.ui.Skin) = {
-    this()
-    this.initialize()
-    this.setStyle(skin.get(classOf[com.badlogic.gdx.scenes.scene2d.ui.Button.ButtonStyle]))
-    this.setSize(this.getPrefWidth(), this.getPrefHeight())
+  def this(child: com.badlogic.gdx.scenes.scene2d.Actor, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin, styleName: java.lang.String) = {
+    this(child, skin.get(styleName, classOf[com.badlogic.gdx.scenes.scene2d.ui.Button.ButtonStyle]))
+    this.setSkin(skin)
   }
   def this(style: com.badlogic.gdx.scenes.scene2d.ui.Button.ButtonStyle) = {
     this()
@@ -32,21 +36,17 @@ class Button extends com.badlogic.gdx.scenes.scene2d.ui.Table with com.badlogic.
     this.setStyle(style)
     this.setSize(this.getPrefWidth(), this.getPrefHeight())
   }
-  def this(child: com.badlogic.gdx.scenes.scene2d.Actor, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin, styleName: java.lang.String) = {
-    this(child, skin.get(styleName, classOf[com.badlogic.gdx.scenes.scene2d.ui.Button.ButtonStyle]))
-    this.setSkin(skin)
-  }
-  def this(up: com.badlogic.gdx.scenes.scene2d.utils.Drawable, down: com.badlogic.gdx.scenes.scene2d.utils.Drawable, checked: com.badlogic.gdx.scenes.scene2d.utils.Drawable) = {
-    this(new com.badlogic.gdx.scenes.scene2d.ui.Button.ButtonStyle(up, down, checked))
+  def this(up: com.badlogic.gdx.scenes.scene2d.utils.Drawable) = {
+    this(new com.badlogic.gdx.scenes.scene2d.ui.Button.ButtonStyle(up, null, null))
   }
   def this(up: com.badlogic.gdx.scenes.scene2d.utils.Drawable, down: com.badlogic.gdx.scenes.scene2d.utils.Drawable) = {
     this(new com.badlogic.gdx.scenes.scene2d.ui.Button.ButtonStyle(up, down, null))
   }
+  def this(up: com.badlogic.gdx.scenes.scene2d.utils.Drawable, down: com.badlogic.gdx.scenes.scene2d.utils.Drawable, checked: com.badlogic.gdx.scenes.scene2d.utils.Drawable) = {
+    this(new com.badlogic.gdx.scenes.scene2d.ui.Button.ButtonStyle(up, down, checked))
+  }
   def this(child: com.badlogic.gdx.scenes.scene2d.Actor, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin) = {
     this(child, skin.get(classOf[com.badlogic.gdx.scenes.scene2d.ui.Button.ButtonStyle]))
-  }
-  def this(up: com.badlogic.gdx.scenes.scene2d.utils.Drawable) = {
-    this(new com.badlogic.gdx.scenes.scene2d.ui.Button.ButtonStyle(up, null, null))
   }
   this.initialize()
   private def initialize(): scala.Unit = {

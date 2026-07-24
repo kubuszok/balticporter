@@ -2,6 +2,9 @@ package com.badlogic.gdx.graphics.glutils
 
 class FrameBufferCubemap extends com.badlogic.gdx.graphics.glutils.GLFrameBuffer[com.badlogic.gdx.graphics.Cubemap] {
   private var currentSide: scala.Int = 0
+  def this(bufferBuilder: com.badlogic.gdx.graphics.glutils.GLFrameBuffer.GLFrameBufferBuilder[? <: com.badlogic.gdx.graphics.glutils.GLFrameBuffer[com.badlogic.gdx.graphics.Cubemap]]) = {
+    this()
+  }
   def this(format: com.badlogic.gdx.graphics.Pixmap.Format, width: scala.Int, height: scala.Int, hasDepth: scala.Boolean, hasStencil: scala.Boolean) = {
     this()
     val frameBufferBuilder: com.badlogic.gdx.graphics.glutils.GLFrameBuffer.FrameBufferCubemapBuilder = new com.badlogic.gdx.graphics.glutils.GLFrameBuffer.FrameBufferCubemapBuilder(width, height)
@@ -14,9 +17,6 @@ class FrameBufferCubemap extends com.badlogic.gdx.graphics.glutils.GLFrameBuffer
     } else ()
     this.bufferBuilder = frameBufferBuilder
     this.build()
-  }
-  def this(bufferBuilder: com.badlogic.gdx.graphics.glutils.GLFrameBuffer.GLFrameBufferBuilder[? <: com.badlogic.gdx.graphics.glutils.GLFrameBuffer[com.badlogic.gdx.graphics.Cubemap]]) = {
-    this()
   }
   def this(format: com.badlogic.gdx.graphics.Pixmap.Format, width: scala.Int, height: scala.Int, hasDepth: scala.Boolean) = {
     this(format, width, height, hasDepth, false)

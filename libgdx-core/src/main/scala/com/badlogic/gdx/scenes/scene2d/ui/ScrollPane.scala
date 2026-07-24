@@ -62,14 +62,14 @@ class ScrollPane extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup with com
     this.addListener(this.flickScrollListener)
     this.addScrollListener()
   }
-  def this(actor: com.badlogic.gdx.scenes.scene2d.Actor, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin, styleName: java.lang.String) = {
-    this(actor, skin.get(styleName, classOf[com.badlogic.gdx.scenes.scene2d.ui.ScrollPane.ScrollPaneStyle]))
+  def this(actor: com.badlogic.gdx.scenes.scene2d.Actor) = {
+    this(actor, new com.badlogic.gdx.scenes.scene2d.ui.ScrollPane.ScrollPaneStyle())
   }
   def this(actor: com.badlogic.gdx.scenes.scene2d.Actor, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin) = {
     this(actor, skin.get(classOf[com.badlogic.gdx.scenes.scene2d.ui.ScrollPane.ScrollPaneStyle]))
   }
-  def this(actor: com.badlogic.gdx.scenes.scene2d.Actor) = {
-    this(actor, new com.badlogic.gdx.scenes.scene2d.ui.ScrollPane.ScrollPaneStyle())
+  def this(actor: com.badlogic.gdx.scenes.scene2d.Actor, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin, styleName: java.lang.String) = {
+    this(actor, skin.get(styleName, classOf[com.badlogic.gdx.scenes.scene2d.ui.ScrollPane.ScrollPaneStyle]))
   }
   def addCaptureListener(): scala.Unit = {
     this.addCaptureListener(new com.badlogic.gdx.scenes.scene2d.InputListener())

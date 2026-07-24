@@ -1,10 +1,10 @@
 package com.badlogic.gdx.utils
 
 class IdentityMap[K, V] extends com.badlogic.gdx.utils.ObjectMap[K, V] {
-  def this(initialCapacity: scala.Int, loadFactor: scala.Float) = {
+  def this(initialCapacity: scala.Int) = {
     this()
   }
-  def this(initialCapacity: scala.Int) = {
+  def this(initialCapacity: scala.Int, loadFactor: scala.Float) = {
     this()
   }
   def this(map: IdentityMap[K, V]) = {

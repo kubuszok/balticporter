@@ -9,32 +9,32 @@ class Texture extends com.badlogic.gdx.graphics.GLTexture(0, 0) {
       Texture.addManagedTexture(com.badlogic.gdx.Gdx.app, this)
     } else ()
   }
+  def this(data: com.badlogic.gdx.graphics.TextureData) = {
+    this(com.badlogic.gdx.graphics.GL20.GL_TEXTURE_2D, com.badlogic.gdx.Gdx.gl.glGenTexture(), data)
+  }
   def this(file: com.badlogic.gdx.files.FileHandle, format: com.badlogic.gdx.graphics.Pixmap.Format, useMipMaps: scala.Boolean) = {
     this(com.badlogic.gdx.graphics.TextureData.Factory.loadFromFile(file, format, useMipMaps))
+  }
+  def this(file: com.badlogic.gdx.files.FileHandle) = {
+    this(file, null, false)
+  }
+  def this(internalPath: java.lang.String) = {
+    this(com.badlogic.gdx.Gdx.files.internal(internalPath))
+  }
+  def this(file: com.badlogic.gdx.files.FileHandle, useMipMaps: scala.Boolean) = {
+    this(file, null, useMipMaps)
+  }
+  def this(pixmap: com.badlogic.gdx.graphics.Pixmap) = {
+    this(new com.badlogic.gdx.graphics.glutils.PixmapTextureData(pixmap, null, false, false))
+  }
+  def this(pixmap: com.badlogic.gdx.graphics.Pixmap, useMipMaps: scala.Boolean) = {
+    this(new com.badlogic.gdx.graphics.glutils.PixmapTextureData(pixmap, null, useMipMaps, false))
   }
   def this(pixmap: com.badlogic.gdx.graphics.Pixmap, format: com.badlogic.gdx.graphics.Pixmap.Format, useMipMaps: scala.Boolean) = {
     this(new com.badlogic.gdx.graphics.glutils.PixmapTextureData(pixmap, format, useMipMaps, false))
   }
   def this(width: scala.Int, height: scala.Int, format: com.badlogic.gdx.graphics.Pixmap.Format) = {
     this(new com.badlogic.gdx.graphics.glutils.PixmapTextureData(new com.badlogic.gdx.graphics.Pixmap(width, height, format), null, false, true))
-  }
-  def this(file: com.badlogic.gdx.files.FileHandle, useMipMaps: scala.Boolean) = {
-    this(file, null, useMipMaps)
-  }
-  def this(pixmap: com.badlogic.gdx.graphics.Pixmap, useMipMaps: scala.Boolean) = {
-    this(new com.badlogic.gdx.graphics.glutils.PixmapTextureData(pixmap, null, useMipMaps, false))
-  }
-  def this(internalPath: java.lang.String) = {
-    this(com.badlogic.gdx.Gdx.files.internal(internalPath))
-  }
-  def this(file: com.badlogic.gdx.files.FileHandle) = {
-    this(file, null, false)
-  }
-  def this(pixmap: com.badlogic.gdx.graphics.Pixmap) = {
-    this(new com.badlogic.gdx.graphics.glutils.PixmapTextureData(pixmap, null, false, false))
-  }
-  def this(data: com.badlogic.gdx.graphics.TextureData) = {
-    this(com.badlogic.gdx.graphics.GL20.GL_TEXTURE_2D, com.badlogic.gdx.Gdx.gl.glGenTexture(), data)
   }
   def load(data: com.badlogic.gdx.graphics.TextureData): scala.Unit = {
     if ((this.data != null) && (data.isManaged() != this.data.isManaged())) {

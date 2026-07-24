@@ -6,15 +6,15 @@ class OrientedBoundingBox extends java.io.Serializable {
   private final val inverseTransform: com.badlogic.gdx.math.Matrix4 = new com.badlogic.gdx.math.Matrix4()
   private final val axes: scala.Array[com.badlogic.gdx.math.Vector3] = new scala.Array[com.badlogic.gdx.math.Vector3](3)
   private final val vertices: scala.Array[com.badlogic.gdx.math.Vector3] = new scala.Array[com.badlogic.gdx.math.Vector3](8)
+  def this(bounds: com.badlogic.gdx.math.collision.BoundingBox) = {
+    this()
+    this.bounds.set(bounds.min$field, bounds.max$field)
+    this.init()
+  }
   def this(bounds: com.badlogic.gdx.math.collision.BoundingBox, transform: com.badlogic.gdx.math.Matrix4) = {
     this()
     this.bounds.set(bounds.min$field, bounds.max$field)
     this.transform.set(transform)
-    this.init()
-  }
-  def this(bounds: com.badlogic.gdx.math.collision.BoundingBox) = {
-    this()
-    this.bounds.set(bounds.min$field, bounds.max$field)
     this.init()
   }
   this.bounds.clr()

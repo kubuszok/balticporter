@@ -16,17 +16,17 @@ class Circle extends java.io.Serializable with com.badlogic.gdx.math.Shape2D {
     this.y = position.y
     this.radius = radius
   }
-  def this(center: com.badlogic.gdx.math.Vector2, edge: com.badlogic.gdx.math.Vector2) = {
-    this()
-    this.x = center.x
-    this.y = center.y
-    this.radius = com.badlogic.gdx.math.Vector2.len(center.x - edge.x, center.y - edge.y)
-  }
   def this(circle: Circle) = {
     this()
     this.x = circle.x
     this.y = circle.y
     this.radius = circle.radius
+  }
+  def this(center: com.badlogic.gdx.math.Vector2, edge: com.badlogic.gdx.math.Vector2) = {
+    this()
+    this.x = center.x
+    this.y = center.y
+    this.radius = com.badlogic.gdx.math.Vector2.len(center.x - edge.x, center.y - edge.y)
   }
   def set(x: scala.Float, y: scala.Float, radius: scala.Float): scala.Unit = {
     this.x = x

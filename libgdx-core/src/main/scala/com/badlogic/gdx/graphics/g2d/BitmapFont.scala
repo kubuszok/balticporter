@@ -35,18 +35,18 @@ class BitmapFont extends com.badlogic.gdx.utils.Disposable {
     this.cache = this.newFontCache()
     this.load(data)
   }
+  def this(data: com.badlogic.gdx.graphics.g2d.BitmapFont.BitmapFontData, region: com.badlogic.gdx.graphics.g2d.TextureRegion, integer: scala.Boolean) = {
+    this(data, if (region != null) com.badlogic.gdx.utils.Array.`with`(region) else null.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.TextureRegion]], integer)
+  }
   def this(fontFile: com.badlogic.gdx.files.FileHandle, imageFile: com.badlogic.gdx.files.FileHandle, flip: scala.Boolean, integer: scala.Boolean) = {
     this(new com.badlogic.gdx.graphics.g2d.BitmapFont.BitmapFontData(fontFile, flip), new com.badlogic.gdx.graphics.g2d.TextureRegion(new com.badlogic.gdx.graphics.Texture(imageFile, false)), integer)
     this.ownsTexture$field = true
   }
+  def this(flip: scala.Boolean) = {
+    this(com.badlogic.gdx.Gdx.files.classpath("com/badlogic/gdx/utils/lsans-15.fnt"), com.badlogic.gdx.Gdx.files.classpath("com/badlogic/gdx/utils/lsans-15.png"), flip, true)
+  }
   def this(fontFile: com.badlogic.gdx.files.FileHandle, region: com.badlogic.gdx.graphics.g2d.TextureRegion, flip: scala.Boolean) = {
     this(new com.badlogic.gdx.graphics.g2d.BitmapFont.BitmapFontData(fontFile, flip), region, true)
-  }
-  def this(fontFile: com.badlogic.gdx.files.FileHandle, imageFile: com.badlogic.gdx.files.FileHandle, flip: scala.Boolean) = {
-    this(fontFile, imageFile, flip, true)
-  }
-  def this(data: com.badlogic.gdx.graphics.g2d.BitmapFont.BitmapFontData, region: com.badlogic.gdx.graphics.g2d.TextureRegion, integer: scala.Boolean) = {
-    this(data, if (region != null) com.badlogic.gdx.utils.Array.`with`(region) else null.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.TextureRegion]], integer)
   }
   def this(fontFile: com.badlogic.gdx.files.FileHandle, region: com.badlogic.gdx.graphics.g2d.TextureRegion) = {
     this(fontFile, region, false)
@@ -54,11 +54,11 @@ class BitmapFont extends com.badlogic.gdx.utils.Disposable {
   def this(fontFile: com.badlogic.gdx.files.FileHandle, flip: scala.Boolean) = {
     this(new com.badlogic.gdx.graphics.g2d.BitmapFont.BitmapFontData(fontFile, flip), null.asInstanceOf[com.badlogic.gdx.graphics.g2d.TextureRegion], true)
   }
-  def this(flip: scala.Boolean) = {
-    this(com.badlogic.gdx.Gdx.files.classpath("com/badlogic/gdx/utils/lsans-15.fnt"), com.badlogic.gdx.Gdx.files.classpath("com/badlogic/gdx/utils/lsans-15.png"), flip, true)
-  }
   def this(fontFile: com.badlogic.gdx.files.FileHandle) = {
     this(fontFile, false)
+  }
+  def this(fontFile: com.badlogic.gdx.files.FileHandle, imageFile: com.badlogic.gdx.files.FileHandle, flip: scala.Boolean) = {
+    this(fontFile, imageFile, flip, true)
   }
   def load(data: com.badlogic.gdx.graphics.g2d.BitmapFont.BitmapFontData): scala.Unit = {
     for (page <- data.glyphs) {

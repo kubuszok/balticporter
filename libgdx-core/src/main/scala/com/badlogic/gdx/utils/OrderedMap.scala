@@ -2,11 +2,11 @@ package com.badlogic.gdx.utils
 
 class OrderedMap[K, V] extends com.badlogic.gdx.utils.ObjectMap[K, V] {
   var keys$field: com.badlogic.gdx.utils.Array[K] = null.asInstanceOf[com.badlogic.gdx.utils.Array[K]]
-  def this(initialCapacity: scala.Int, loadFactor: scala.Float) = {
+  def this(initialCapacity: scala.Int) = {
     this()
     this.keys$field = new com.badlogic.gdx.utils.Array(initialCapacity)
   }
-  def this(initialCapacity: scala.Int) = {
+  def this(initialCapacity: scala.Int, loadFactor: scala.Float) = {
     this()
     this.keys$field = new com.badlogic.gdx.utils.Array(initialCapacity)
   }

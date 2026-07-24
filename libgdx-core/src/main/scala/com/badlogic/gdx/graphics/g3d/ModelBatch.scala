@@ -21,23 +21,23 @@ class ModelBatch extends com.badlogic.gdx.utils.Disposable {
   def this(context: com.badlogic.gdx.graphics.g3d.utils.RenderContext, sorter: com.badlogic.gdx.graphics.g3d.utils.RenderableSorter) = {
     this(context, null, sorter)
   }
-  def this(shaderProvider: com.badlogic.gdx.graphics.g3d.utils.ShaderProvider, sorter: com.badlogic.gdx.graphics.g3d.utils.RenderableSorter) = {
-    this(null, shaderProvider, sorter)
-  }
-  def this(vertexShader: com.badlogic.gdx.files.FileHandle, fragmentShader: com.badlogic.gdx.files.FileHandle) = {
-    this(null, new com.badlogic.gdx.graphics.g3d.utils.DefaultShaderProvider(vertexShader, fragmentShader), null)
-  }
-  def this(vertexShader: java.lang.String, fragmentShader: java.lang.String) = {
-    this(null, new com.badlogic.gdx.graphics.g3d.utils.DefaultShaderProvider(vertexShader, fragmentShader), null)
-  }
   def this(context: com.badlogic.gdx.graphics.g3d.utils.RenderContext) = {
     this(context, null, null)
+  }
+  def this(shaderProvider: com.badlogic.gdx.graphics.g3d.utils.ShaderProvider, sorter: com.badlogic.gdx.graphics.g3d.utils.RenderableSorter) = {
+    this(null, shaderProvider, sorter)
   }
   def this(sorter: com.badlogic.gdx.graphics.g3d.utils.RenderableSorter) = {
     this(null, null, sorter)
   }
   def this(shaderProvider: com.badlogic.gdx.graphics.g3d.utils.ShaderProvider) = {
     this(null, shaderProvider, null)
+  }
+  def this(vertexShader: com.badlogic.gdx.files.FileHandle, fragmentShader: com.badlogic.gdx.files.FileHandle) = {
+    this(null, new com.badlogic.gdx.graphics.g3d.utils.DefaultShaderProvider(vertexShader, fragmentShader), null)
+  }
+  def this(vertexShader: java.lang.String, fragmentShader: java.lang.String) = {
+    this(null, new com.badlogic.gdx.graphics.g3d.utils.DefaultShaderProvider(vertexShader, fragmentShader), null)
   }
   def begin(cam: com.badlogic.gdx.graphics.Camera): scala.Unit = {
     if (this.camera != null) {

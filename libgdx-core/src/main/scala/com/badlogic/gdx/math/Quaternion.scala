@@ -9,13 +9,13 @@ class Quaternion extends java.io.Serializable {
     this()
     this.set(x, y, z, w)
   }
-  def this(axis: com.badlogic.gdx.math.Vector3, angle: scala.Float) = {
-    this()
-    this.set(axis, angle)
-  }
   def this(quaternion: Quaternion) = {
     this()
     this.set(quaternion)
+  }
+  def this(axis: com.badlogic.gdx.math.Vector3, angle: scala.Float) = {
+    this()
+    this.set(axis, angle)
   }
   this.idt()
   def set(x: scala.Float, y: scala.Float, z: scala.Float, w: scala.Float): Quaternion = {

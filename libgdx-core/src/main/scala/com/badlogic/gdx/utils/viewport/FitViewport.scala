@@ -1,10 +1,10 @@
 package com.badlogic.gdx.utils.viewport
 
 class FitViewport extends com.badlogic.gdx.utils.viewport.ScalingViewport {
-  def this(worldWidth: scala.Float, worldHeight: scala.Float, camera: com.badlogic.gdx.graphics.Camera) = {
+  def this(worldWidth: scala.Float, worldHeight: scala.Float) = {
     this()
   }
-  def this(worldWidth: scala.Float, worldHeight: scala.Float) = {
+  def this(worldWidth: scala.Float, worldHeight: scala.Float, camera: com.badlogic.gdx.graphics.Camera) = {
     this()
   }
 }

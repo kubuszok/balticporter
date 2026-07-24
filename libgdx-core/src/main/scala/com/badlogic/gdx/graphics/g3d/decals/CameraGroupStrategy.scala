@@ -7,16 +7,16 @@ class CameraGroupStrategy extends com.badlogic.gdx.graphics.g3d.decals.GroupStra
   var camera: com.badlogic.gdx.graphics.Camera = null.asInstanceOf[com.badlogic.gdx.graphics.Camera]
   var shader: com.badlogic.gdx.graphics.glutils.ShaderProgram = null.asInstanceOf[com.badlogic.gdx.graphics.glutils.ShaderProgram]
   private var cameraSorter: java.util.Comparator[com.badlogic.gdx.graphics.g3d.decals.Decal] = null.asInstanceOf[java.util.Comparator[com.badlogic.gdx.graphics.g3d.decals.Decal]]
-  def this(camera: com.badlogic.gdx.graphics.Camera, sorter: java.util.Comparator[com.badlogic.gdx.graphics.g3d.decals.Decal]) = {
-    this()
-    this.camera = camera
-    this.cameraSorter = sorter
-    this.createDefaultShader()
-  }
   def this(camera: com.badlogic.gdx.graphics.Camera) = {
     this()
     this.camera = camera
     this.cameraSorter = new java.util.Comparator[com.badlogic.gdx.graphics.g3d.decals.Decal]()
+    this.createDefaultShader()
+  }
+  def this(camera: com.badlogic.gdx.graphics.Camera, sorter: java.util.Comparator[com.badlogic.gdx.graphics.g3d.decals.Decal]) = {
+    this()
+    this.camera = camera
+    this.cameraSorter = sorter
     this.createDefaultShader()
   }
   def setCamera(camera: com.badlogic.gdx.graphics.Camera): scala.Unit = {

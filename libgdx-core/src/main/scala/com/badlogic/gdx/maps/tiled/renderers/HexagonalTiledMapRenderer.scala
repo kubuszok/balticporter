@@ -4,7 +4,7 @@ class HexagonalTiledMapRenderer extends com.badlogic.gdx.maps.tiled.renderers.Ba
   private var staggerAxisX: scala.Boolean = true
   private var staggerIndexEven: scala.Boolean = false
   private var hexSideLength: scala.Float = 0.0f
-  def this(map: com.badlogic.gdx.maps.tiled.TiledMap, unitScale: scala.Float, batch: com.badlogic.gdx.graphics.g2d.Batch) = {
+  def this(map: com.badlogic.gdx.maps.tiled.TiledMap) = {
     this()
     this.init(map)
   }
@@ -16,7 +16,7 @@ class HexagonalTiledMapRenderer extends com.badlogic.gdx.maps.tiled.renderers.Ba
     this()
     this.init(map)
   }
-  def this(map: com.badlogic.gdx.maps.tiled.TiledMap) = {
+  def this(map: com.badlogic.gdx.maps.tiled.TiledMap, unitScale: scala.Float, batch: com.badlogic.gdx.graphics.g2d.Batch) = {
     this()
     this.init(map)
   }

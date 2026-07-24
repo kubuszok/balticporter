@@ -15,23 +15,23 @@ class Image extends com.badlogic.gdx.scenes.scene2d.ui.Widget {
     this.align = align
     this.setSize(this.getPrefWidth(), this.getPrefHeight())
   }
-  def this(skin: com.badlogic.gdx.scenes.scene2d.ui.Skin, drawableName: java.lang.String) = {
-    this(skin.getDrawable(drawableName), com.badlogic.gdx.utils.Scaling.stretch, com.badlogic.gdx.utils.Align.center)
-  }
-  def this(drawable: com.badlogic.gdx.scenes.scene2d.utils.Drawable, scaling: com.badlogic.gdx.utils.Scaling) = {
-    this(drawable, scaling, com.badlogic.gdx.utils.Align.center)
-  }
   def this(patch: com.badlogic.gdx.graphics.g2d.NinePatch) = {
     this(new com.badlogic.gdx.scenes.scene2d.utils.NinePatchDrawable(patch), com.badlogic.gdx.utils.Scaling.stretch, com.badlogic.gdx.utils.Align.center)
   }
   def this(region: com.badlogic.gdx.graphics.g2d.TextureRegion) = {
     this(new com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable(region), com.badlogic.gdx.utils.Scaling.stretch, com.badlogic.gdx.utils.Align.center)
   }
+  def this(drawable: com.badlogic.gdx.scenes.scene2d.utils.Drawable) = {
+    this(drawable, com.badlogic.gdx.utils.Scaling.stretch, com.badlogic.gdx.utils.Align.center)
+  }
   def this(texture: com.badlogic.gdx.graphics.Texture) = {
     this(new com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable(new com.badlogic.gdx.graphics.g2d.TextureRegion(texture)))
   }
-  def this(drawable: com.badlogic.gdx.scenes.scene2d.utils.Drawable) = {
-    this(drawable, com.badlogic.gdx.utils.Scaling.stretch, com.badlogic.gdx.utils.Align.center)
+  def this(skin: com.badlogic.gdx.scenes.scene2d.ui.Skin, drawableName: java.lang.String) = {
+    this(skin.getDrawable(drawableName), com.badlogic.gdx.utils.Scaling.stretch, com.badlogic.gdx.utils.Align.center)
+  }
+  def this(drawable: com.badlogic.gdx.scenes.scene2d.utils.Drawable, scaling: com.badlogic.gdx.utils.Scaling) = {
+    this(drawable, scaling, com.badlogic.gdx.utils.Align.center)
   }
   def layout(): scala.Unit = {
     if (this.drawable == null) {

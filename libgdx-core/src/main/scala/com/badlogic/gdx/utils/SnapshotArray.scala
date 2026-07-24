@@ -4,7 +4,7 @@ class SnapshotArray[T] extends com.badlogic.gdx.utils.Array[T] {
   private var snapshot: scala.Array[T] = null.asInstanceOf[scala.Array[T]]
   private var recycled: scala.Array[T] = null.asInstanceOf[scala.Array[T]]
   private var snapshots: scala.Int = 0
-  def this(ordered: scala.Boolean, array: scala.Array[T], startIndex: scala.Int, count: scala.Int) = {
+  def this(array: com.badlogic.gdx.utils.Array[?]) = {
     this()
   }
   def this(ordered: scala.Boolean, capacity: scala.Int, arraySupplier: com.badlogic.gdx.utils.ArraySupplier[scala.Array[T]]) = {
@@ -16,7 +16,7 @@ class SnapshotArray[T] extends com.badlogic.gdx.utils.Array[T] {
   def this(ordered: scala.Boolean, capacity: scala.Int) = {
     this()
   }
-  def this(array: com.badlogic.gdx.utils.Array[?]) = {
+  def this(ordered: scala.Boolean, array: scala.Array[T], startIndex: scala.Int, count: scala.Int) = {
     this()
   }
   def this(arraySupplier: com.badlogic.gdx.utils.ArraySupplier[scala.Array[T]]) = {

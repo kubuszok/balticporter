@@ -1,6 +1,10 @@
 package com.badlogic.gdx.graphics.glutils
 
 class FloatFrameBuffer extends com.badlogic.gdx.graphics.glutils.FrameBuffer {
+  def this(bufferBuilder: com.badlogic.gdx.graphics.glutils.GLFrameBuffer.GLFrameBufferBuilder[? <: com.badlogic.gdx.graphics.glutils.GLFrameBuffer[com.badlogic.gdx.graphics.Texture]]) = {
+    this()
+    this.checkExtensions()
+  }
   def this(width: scala.Int, height: scala.Int, hasDepth: scala.Boolean) = {
     this()
     this.checkExtensions()
@@ -11,10 +15,6 @@ class FloatFrameBuffer extends com.badlogic.gdx.graphics.glutils.FrameBuffer {
     } else ()
     this.bufferBuilder = bufferBuilder
     this.build()
-  }
-  def this(bufferBuilder: com.badlogic.gdx.graphics.glutils.GLFrameBuffer.GLFrameBufferBuilder[? <: com.badlogic.gdx.graphics.glutils.GLFrameBuffer[com.badlogic.gdx.graphics.Texture]]) = {
-    this()
-    this.checkExtensions()
   }
   this.checkExtensions()
   def createTexture(attachmentSpec: com.badlogic.gdx.graphics.glutils.GLFrameBuffer.FrameBufferTextureAttachmentSpec): com.badlogic.gdx.graphics.Texture = {

@@ -8,7 +8,7 @@ class IsometricTiledMapRenderer extends com.badlogic.gdx.maps.tiled.renderers.Ba
   private var bottomLeft: com.badlogic.gdx.math.Vector2 = new com.badlogic.gdx.math.Vector2()
   private var topLeft: com.badlogic.gdx.math.Vector2 = new com.badlogic.gdx.math.Vector2()
   private var bottomRight: com.badlogic.gdx.math.Vector2 = new com.badlogic.gdx.math.Vector2()
-  def this(map: com.badlogic.gdx.maps.tiled.TiledMap, unitScale: scala.Float, batch: com.badlogic.gdx.graphics.g2d.Batch) = {
+  def this(map: com.badlogic.gdx.maps.tiled.TiledMap) = {
     this()
     this.init()
   }
@@ -20,7 +20,7 @@ class IsometricTiledMapRenderer extends com.badlogic.gdx.maps.tiled.renderers.Ba
     this()
     this.init()
   }
-  def this(map: com.badlogic.gdx.maps.tiled.TiledMap) = {
+  def this(map: com.badlogic.gdx.maps.tiled.TiledMap, unitScale: scala.Float, batch: com.badlogic.gdx.graphics.g2d.Batch) = {
     this()
     this.init()
   }

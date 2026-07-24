@@ -9,6 +9,9 @@ class IntArray {
     this.ordered = ordered
     this.items = new scala.Array[scala.Int](capacity)
   }
+  def this(capacity: scala.Int) = {
+    this(true, capacity)
+  }
   def this(array: IntArray) = {
     this()
     this.ordered = array.ordered
@@ -20,9 +23,6 @@ class IntArray {
     this(ordered, count)
     this.size = count
     java.lang.System.arraycopy(array, startIndex, this.items, 0, count)
-  }
-  def this(capacity: scala.Int) = {
-    this(true, capacity)
   }
   def this(array: scala.Array[scala.Int]) = {
     this(true, array, 0, array.length)

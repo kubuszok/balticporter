@@ -2,12 +2,12 @@ package com.badlogic.gdx.graphics.g3d.attributes
 
 class FloatAttribute extends com.badlogic.gdx.graphics.g3d.Attribute {
   var value: scala.Float = 0.0f
+  def this(`type`: scala.Long) = {
+    this()
+  }
   def this(`type`: scala.Long, value: scala.Float) = {
     this()
     this.value = value
-  }
-  def this(`type`: scala.Long) = {
-    this()
   }
   def copy(): com.badlogic.gdx.graphics.g3d.Attribute = {
     return new FloatAttribute(`type`, this.value)

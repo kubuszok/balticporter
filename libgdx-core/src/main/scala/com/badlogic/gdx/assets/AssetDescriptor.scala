@@ -11,15 +11,15 @@ class AssetDescriptor[T] {
     this.`type` = assetType
     this.params = params
   }
+  def this(fileName: java.lang.String, assetType: java.lang.Class[T]) = {
+    this(fileName, assetType, null)
+  }
   def this(file: com.badlogic.gdx.files.FileHandle, assetType: java.lang.Class[T], params: com.badlogic.gdx.assets.AssetLoaderParameters[T]) = {
     this()
     this.fileName = file.path()
     this.file = file
     this.`type` = assetType
     this.params = params
-  }
-  def this(fileName: java.lang.String, assetType: java.lang.Class[T]) = {
-    this(fileName, assetType, null)
   }
   def this(file: com.badlogic.gdx.files.FileHandle, assetType: java.lang.Class[T]) = {
     this(file, assetType, null)

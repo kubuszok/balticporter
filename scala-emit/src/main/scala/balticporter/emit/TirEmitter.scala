@@ -229,17 +229,19 @@ final class TirEmitter(source: Program):
     case d: Definition    => sym(d.symbol).flags.isStatic
     case _                => false
 
-  /** Scala secondary constructors must delegate to a PRECEDING constructor, so order fields
-    * first, then constructors by descending arity (a convenience ctor `this(a)` delegating to
-    * a fuller `this(a,b)` needs the fuller one earlier), then everything else. */
+  /** Scala secondary constructors must delegate to a PRECEDING constructor, so order fields first,
+    * then constructors in DELEGATION-TOPOLOGICAL order (each ctor's `this(args)` target emitted
+    * before it), then everything else. Arity is not a reliable proxy — a 3-arg convenience ctor can
+    * delegate to a 1-arg one (`Texture(pixmap,fmt,mip)` → `Texture(data)`), so we follow the actual
+    * `this(...)` edges, keyed by the target ctor's own symbol. */
   private def orderBody(body: List[Statement]): List[Statement] =
     def isCtor(s: Statement) = s match { case d: Tree.DefDef => sym(d.symbol).name == "<init>"; case _ => false }
-    // a ctor that delegates to `this(args)` must follow the one it delegates to. A base ctor
-    // (delegates to the primary via `this()`/super) sorts first; then by descending arity.
-    def delegatesToPeer(d: Tree.DefDef): Boolean = d.rhs match
-      case Some(Tree.Block((Tree.Apply(Tree.Select(r, m, _, _), args, _, _, _)) :: _, _, _, _)) =>
-        sym(m).name == "<init>" && args.nonEmpty && !r.isInstanceOf[Tree.Super]
-      case _ => false
+    // the peer ctor this one delegates to via a leading `this(args)` (NOT super, NOT the no-arg
+    // primary) — its symbol identifies the exact target constructor.
+    def delegateTarget(d: Tree.DefDef): Option[SymId] = d.rhs match
+      case Some(Tree.Block((Tree.Apply(Tree.Select(r, m, _, _), args, _, _, _)) :: _, _, _, _))
+          if sym(m).name == "<init>" && args.nonEmpty && !r.isInstanceOf[Tree.Super] => Some(m)
+      case _ => None
     // a no-arg constructor whose body is only super/this delegation is degenerate — Scala's
     // implicit primary constructor already is no-arg, and `def this() = this()` self-recurses.
     def degenerate(d: Tree.DefDef): Boolean =
@@ -247,11 +249,24 @@ final class TirEmitter(source: Program):
         case Some(Tree.Block(stats, _, _, _)) =>
           stats.forall { case Tree.Apply(Tree.Select(_, m, _, _), _, _, _, _) => sym(m).name == "<init>"; case _ => false }
         case _ => true)
-    val ctors = body.collect { case d: Tree.DefDef if isCtor(d) && !degenerate(d) => d }
-      .sortBy(d => (if delegatesToPeer(d) then 1 else 0, -d.paramss.map(_.size).sum))
+    val ctorList = body.collect { case d: Tree.DefDef if isCtor(d) && !degenerate(d) => d }
+    val bySym    = ctorList.map(d => d.symbol -> d).toMap
+    // DFS post-order = topological order (a target is appended before its caller); `inProgress`
+    // breaks any (illegal) cycle so a malformed chain can't loop forever.
+    val ordered    = collection.mutable.ListBuffer[Tree.DefDef]()
+    val visited    = collection.mutable.Set[SymId]()
+    val inProgress = collection.mutable.Set[SymId]()
+    def visit(d: Tree.DefDef): Unit =
+      if !visited(d.symbol) && !inProgress(d.symbol) then
+        inProgress += d.symbol
+        delegateTarget(d).flatMap(bySym.get).foreach(visit)
+        inProgress -= d.symbol
+        visited += d.symbol
+        ordered += d
+    ctorList.foreach(visit)
     val fields = body.collect { case v: Tree.ValDef => v }
     val rest   = body.filterNot(s => isCtor(s) || s.isInstanceOf[Tree.ValDef])
-    fields ++ ctors ++ rest
+    fields ++ ordered.toList ++ rest
 
   private def typeParam(td: Tree.TypeDef): String =
     val name = esc(sym(td.symbol).name)

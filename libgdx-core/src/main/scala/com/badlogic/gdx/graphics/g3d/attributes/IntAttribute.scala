@@ -2,12 +2,12 @@ package com.badlogic.gdx.graphics.g3d.attributes
 
 class IntAttribute extends com.badlogic.gdx.graphics.g3d.Attribute {
   var value: scala.Int = 0
+  def this(`type`: scala.Long) = {
+    this()
+  }
   def this(`type`: scala.Long, value: scala.Int) = {
     this()
     this.value = value
-  }
-  def this(`type`: scala.Long) = {
-    this()
   }
   def copy(): com.badlogic.gdx.graphics.g3d.Attribute = {
     return new IntAttribute(`type`, this.value)

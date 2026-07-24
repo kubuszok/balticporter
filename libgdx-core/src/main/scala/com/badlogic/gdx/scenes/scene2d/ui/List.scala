@@ -25,11 +25,11 @@ class List[T] extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlogi
     })
     this.addListener(new com.badlogic.gdx.scenes.scene2d.InputListener())
   }
-  def this(skin: com.badlogic.gdx.scenes.scene2d.ui.Skin, styleName: java.lang.String) = {
-    this(skin.get(styleName, classOf[com.badlogic.gdx.scenes.scene2d.ui.List.ListStyle]))
-  }
   def this(skin: com.badlogic.gdx.scenes.scene2d.ui.Skin) = {
     this(skin.get(classOf[com.badlogic.gdx.scenes.scene2d.ui.List.ListStyle]))
+  }
+  def this(skin: com.badlogic.gdx.scenes.scene2d.ui.Skin, styleName: java.lang.String) = {
+    this(skin.get(styleName, classOf[com.badlogic.gdx.scenes.scene2d.ui.List.ListStyle]))
   }
   def setStyle(style: com.badlogic.gdx.scenes.scene2d.ui.List.ListStyle): scala.Unit = {
     if (style == null) {

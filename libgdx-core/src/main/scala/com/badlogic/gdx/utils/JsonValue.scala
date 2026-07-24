@@ -12,6 +12,34 @@ class JsonValue extends scala.collection.Iterable[JsonValue] {
   var next$field: JsonValue = null.asInstanceOf[JsonValue]
   var prev$field: JsonValue = null.asInstanceOf[JsonValue]
   var size$field: scala.Int = 0
+  def this(`type`: com.badlogic.gdx.utils.JsonValue.ValueType) = {
+    this()
+    this.type$field = `type`
+  }
+  def this(value: java.lang.String) = {
+    this()
+    this.set(value)
+  }
+  def this(value: scala.Double) = {
+    this()
+    this.set(value, null)
+  }
+  def this(value: scala.Long) = {
+    this()
+    this.set(value, null)
+  }
+  def this(value: scala.Double, stringValue: java.lang.String) = {
+    this()
+    this.set(value, stringValue)
+  }
+  def this(value: scala.Long, stringValue: java.lang.String) = {
+    this()
+    this.set(value, stringValue)
+  }
+  def this(value: scala.Boolean) = {
+    this()
+    this.set(value)
+  }
   private def this(other: JsonValue, otherLast: JsonValue, parent: JsonValue) = {
     this()
     this.type$field = other.type$field
@@ -31,34 +59,6 @@ class JsonValue extends scala.collection.Iterable[JsonValue] {
       this.next$field.prev$field = this
     } else ()
     this.size$field = other.size$field
-  }
-  def this(value: scala.Double, stringValue: java.lang.String) = {
-    this()
-    this.set(value, stringValue)
-  }
-  def this(value: scala.Long, stringValue: java.lang.String) = {
-    this()
-    this.set(value, stringValue)
-  }
-  def this(`type`: com.badlogic.gdx.utils.JsonValue.ValueType) = {
-    this()
-    this.type$field = `type`
-  }
-  def this(value: java.lang.String) = {
-    this()
-    this.set(value)
-  }
-  def this(value: scala.Double) = {
-    this()
-    this.set(value, null)
-  }
-  def this(value: scala.Long) = {
-    this()
-    this.set(value, null)
-  }
-  def this(value: scala.Boolean) = {
-    this()
-    this.set(value)
   }
   def this(value: JsonValue) = {
     this(value, null, null)

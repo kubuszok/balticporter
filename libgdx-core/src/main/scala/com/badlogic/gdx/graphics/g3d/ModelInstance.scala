@@ -7,6 +7,24 @@ class ModelInstance extends com.badlogic.gdx.graphics.g3d.RenderableProvider {
   var model: com.badlogic.gdx.graphics.g3d.Model = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.Model]
   var transform: com.badlogic.gdx.math.Matrix4 = null.asInstanceOf[com.badlogic.gdx.math.Matrix4]
   var userData: java.lang.Object = null.asInstanceOf[java.lang.Object]
+  def this(model: com.badlogic.gdx.graphics.g3d.Model, transform: com.badlogic.gdx.math.Matrix4, rootNodeIds: scala.Array[java.lang.String]) = {
+    this()
+    this.model = model
+    this.transform = if (transform == null) new com.badlogic.gdx.math.Matrix4() else transform
+    if (rootNodeIds == null) {
+      this.copyNodes(model.nodes)
+    } else {
+      this.copyNodes(model.nodes, rootNodeIds)
+    }
+    this.copyAnimations(model.animations, ModelInstance.defaultShareKeyframes)
+    this.calculateTransforms()
+  }
+  def this(model: com.badlogic.gdx.graphics.g3d.Model, rootNodeIds: scala.Array[java.lang.String]) = {
+    this(model, null, rootNodeIds)
+  }
+  def this(model: com.badlogic.gdx.graphics.g3d.Model) = {
+    this(model, null.asInstanceOf[scala.Array[java.lang.String]])
+  }
   def this(model: com.badlogic.gdx.graphics.g3d.Model, transform: com.badlogic.gdx.math.Matrix4, nodeId: java.lang.String, recursive: scala.Boolean, parentTransform: scala.Boolean, mergeTransform: scala.Boolean, shareKeyframes: scala.Boolean) = {
     this()
     this.model = model
@@ -31,6 +49,24 @@ class ModelInstance extends com.badlogic.gdx.graphics.g3d.RenderableProvider {
     this.copyAnimations(model.animations, shareKeyframes)
     this.calculateTransforms()
   }
+  def this(model: com.badlogic.gdx.graphics.g3d.Model, transform: com.badlogic.gdx.math.Matrix4, nodeId: java.lang.String, recursive: scala.Boolean, parentTransform: scala.Boolean, mergeTransform: scala.Boolean) = {
+    this(model, transform, nodeId, recursive, parentTransform, mergeTransform, ModelInstance.defaultShareKeyframes)
+  }
+  def this(model: com.badlogic.gdx.graphics.g3d.Model, nodeId: java.lang.String, mergeTransform: scala.Boolean) = {
+    this(model, null, nodeId, false, false, mergeTransform)
+  }
+  def this(model: com.badlogic.gdx.graphics.g3d.Model, transform: com.badlogic.gdx.math.Matrix4, nodeId: java.lang.String, mergeTransform: scala.Boolean) = {
+    this(model, transform, nodeId, false, false, mergeTransform)
+  }
+  def this(model: com.badlogic.gdx.graphics.g3d.Model, nodeId: java.lang.String, parentTransform: scala.Boolean, mergeTransform: scala.Boolean) = {
+    this(model, null, nodeId, true, parentTransform, mergeTransform)
+  }
+  def this(model: com.badlogic.gdx.graphics.g3d.Model, transform: com.badlogic.gdx.math.Matrix4, nodeId: java.lang.String, parentTransform: scala.Boolean, mergeTransform: scala.Boolean) = {
+    this(model, transform, nodeId, true, parentTransform, mergeTransform)
+  }
+  def this(model: com.badlogic.gdx.graphics.g3d.Model, nodeId: java.lang.String, recursive: scala.Boolean, parentTransform: scala.Boolean, mergeTransform: scala.Boolean) = {
+    this(model, null, nodeId, recursive, parentTransform, mergeTransform)
+  }
   def this(model: com.badlogic.gdx.graphics.g3d.Model, transform: com.badlogic.gdx.math.Matrix4, rootNodeIds: com.badlogic.gdx.utils.Array[java.lang.String], shareKeyframes: scala.Boolean) = {
     this()
     this.model = model
@@ -39,17 +75,22 @@ class ModelInstance extends com.badlogic.gdx.graphics.g3d.RenderableProvider {
     this.copyAnimations(model.animations, shareKeyframes)
     this.calculateTransforms()
   }
-  def this(model: com.badlogic.gdx.graphics.g3d.Model, transform: com.badlogic.gdx.math.Matrix4, rootNodeIds: scala.Array[java.lang.String]) = {
-    this()
-    this.model = model
-    this.transform = if (transform == null) new com.badlogic.gdx.math.Matrix4() else transform
-    if (rootNodeIds == null) {
-      this.copyNodes(model.nodes)
-    } else {
-      this.copyNodes(model.nodes, rootNodeIds)
-    }
-    this.copyAnimations(model.animations, ModelInstance.defaultShareKeyframes)
-    this.calculateTransforms()
+  def this(model: com.badlogic.gdx.graphics.g3d.Model, transform: com.badlogic.gdx.math.Matrix4, rootNodeIds: com.badlogic.gdx.utils.Array[java.lang.String]) = {
+    this(model, transform, rootNodeIds, ModelInstance.defaultShareKeyframes)
+  }
+  def this(model: com.badlogic.gdx.graphics.g3d.Model, rootNodeIds: com.badlogic.gdx.utils.Array[java.lang.String]) = {
+    this(model, null, rootNodeIds)
+  }
+  def this(model: com.badlogic.gdx.graphics.g3d.Model, position: com.badlogic.gdx.math.Vector3) = {
+    this(model)
+    this.transform.setToTranslation(position)
+  }
+  def this(model: com.badlogic.gdx.graphics.g3d.Model, x: scala.Float, y: scala.Float, z: scala.Float) = {
+    this(model)
+    this.transform.setToTranslation(x, y, z)
+  }
+  def this(model: com.badlogic.gdx.graphics.g3d.Model, transform: com.badlogic.gdx.math.Matrix4) = {
+    this(model, transform, null.asInstanceOf[scala.Array[java.lang.String]])
   }
   def this(copyFrom: ModelInstance, transform: com.badlogic.gdx.math.Matrix4, shareKeyframes: scala.Boolean) = {
     this()
@@ -59,49 +100,8 @@ class ModelInstance extends com.badlogic.gdx.graphics.g3d.RenderableProvider {
     this.copyAnimations(copyFrom.animations, shareKeyframes)
     this.calculateTransforms()
   }
-  def this(model: com.badlogic.gdx.graphics.g3d.Model, transform: com.badlogic.gdx.math.Matrix4, nodeId: java.lang.String, recursive: scala.Boolean, parentTransform: scala.Boolean, mergeTransform: scala.Boolean) = {
-    this(model, transform, nodeId, recursive, parentTransform, mergeTransform, ModelInstance.defaultShareKeyframes)
-  }
-  def this(model: com.badlogic.gdx.graphics.g3d.Model, transform: com.badlogic.gdx.math.Matrix4, nodeId: java.lang.String, parentTransform: scala.Boolean, mergeTransform: scala.Boolean) = {
-    this(model, transform, nodeId, true, parentTransform, mergeTransform)
-  }
-  def this(model: com.badlogic.gdx.graphics.g3d.Model, nodeId: java.lang.String, recursive: scala.Boolean, parentTransform: scala.Boolean, mergeTransform: scala.Boolean) = {
-    this(model, null, nodeId, recursive, parentTransform, mergeTransform)
-  }
-  def this(model: com.badlogic.gdx.graphics.g3d.Model, transform: com.badlogic.gdx.math.Matrix4, nodeId: java.lang.String, mergeTransform: scala.Boolean) = {
-    this(model, transform, nodeId, false, false, mergeTransform)
-  }
-  def this(model: com.badlogic.gdx.graphics.g3d.Model, nodeId: java.lang.String, parentTransform: scala.Boolean, mergeTransform: scala.Boolean) = {
-    this(model, null, nodeId, true, parentTransform, mergeTransform)
-  }
-  def this(model: com.badlogic.gdx.graphics.g3d.Model, x: scala.Float, y: scala.Float, z: scala.Float) = {
-    this(model)
-    this.transform.setToTranslation(x, y, z)
-  }
-  def this(model: com.badlogic.gdx.graphics.g3d.Model, nodeId: java.lang.String, mergeTransform: scala.Boolean) = {
-    this(model, null, nodeId, false, false, mergeTransform)
-  }
-  def this(model: com.badlogic.gdx.graphics.g3d.Model, transform: com.badlogic.gdx.math.Matrix4, rootNodeIds: com.badlogic.gdx.utils.Array[java.lang.String]) = {
-    this(model, transform, rootNodeIds, ModelInstance.defaultShareKeyframes)
-  }
-  def this(model: com.badlogic.gdx.graphics.g3d.Model, rootNodeIds: scala.Array[java.lang.String]) = {
-    this(model, null, rootNodeIds)
-  }
-  def this(model: com.badlogic.gdx.graphics.g3d.Model, rootNodeIds: com.badlogic.gdx.utils.Array[java.lang.String]) = {
-    this(model, null, rootNodeIds)
-  }
-  def this(model: com.badlogic.gdx.graphics.g3d.Model, position: com.badlogic.gdx.math.Vector3) = {
-    this(model)
-    this.transform.setToTranslation(position)
-  }
-  def this(model: com.badlogic.gdx.graphics.g3d.Model, transform: com.badlogic.gdx.math.Matrix4) = {
-    this(model, transform, null.asInstanceOf[scala.Array[java.lang.String]])
-  }
   def this(copyFrom: ModelInstance, transform: com.badlogic.gdx.math.Matrix4) = {
     this(copyFrom, transform, ModelInstance.defaultShareKeyframes)
-  }
-  def this(model: com.badlogic.gdx.graphics.g3d.Model) = {
-    this(model, null.asInstanceOf[scala.Array[java.lang.String]])
   }
   def this(copyFrom: ModelInstance) = {
     this(copyFrom, copyFrom.transform.cpy())

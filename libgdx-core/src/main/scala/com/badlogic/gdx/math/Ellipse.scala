@@ -5,6 +5,13 @@ class Ellipse extends java.io.Serializable with com.badlogic.gdx.math.Shape2D {
   var y: scala.Float = 0.0f
   var width: scala.Float = 0.0f
   var height: scala.Float = 0.0f
+  def this(ellipse: Ellipse) = {
+    this()
+    this.x = ellipse.x
+    this.y = ellipse.y
+    this.width = ellipse.width
+    this.height = ellipse.height
+  }
   def this(x: scala.Float, y: scala.Float, width: scala.Float, height: scala.Float) = {
     this()
     this.x = x
@@ -25,13 +32,6 @@ class Ellipse extends java.io.Serializable with com.badlogic.gdx.math.Shape2D {
     this.y = position.y
     this.width = size.x
     this.height = size.y
-  }
-  def this(ellipse: Ellipse) = {
-    this()
-    this.x = ellipse.x
-    this.y = ellipse.y
-    this.width = ellipse.width
-    this.height = ellipse.height
   }
   def this(circle: com.badlogic.gdx.math.Circle) = {
     this()

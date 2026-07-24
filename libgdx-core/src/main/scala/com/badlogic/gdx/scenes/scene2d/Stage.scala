@@ -42,12 +42,12 @@ class Stage extends com.badlogic.gdx.InputAdapter with com.badlogic.gdx.utils.Di
     this.root.setStage(this)
     viewport.update(com.badlogic.gdx.Gdx.graphics.getWidth(), com.badlogic.gdx.Gdx.graphics.getHeight(), true)
   }
-  def this(viewport: com.badlogic.gdx.utils.viewport.Viewport) = {
-    this(viewport, new com.badlogic.gdx.graphics.g2d.SpriteBatch())
-    this.ownsBatch = true
-  }
   def this() = {
     this(new com.badlogic.gdx.utils.viewport.ScalingViewport(com.badlogic.gdx.utils.Scaling.stretch, com.badlogic.gdx.Gdx.graphics.getWidth(), com.badlogic.gdx.Gdx.graphics.getHeight(), new com.badlogic.gdx.graphics.OrthographicCamera()), new com.badlogic.gdx.graphics.g2d.SpriteBatch())
+    this.ownsBatch = true
+  }
+  def this(viewport: com.badlogic.gdx.utils.viewport.Viewport) = {
+    this(viewport, new com.badlogic.gdx.graphics.g2d.SpriteBatch())
     this.ownsBatch = true
   }
   def draw(): scala.Unit = {

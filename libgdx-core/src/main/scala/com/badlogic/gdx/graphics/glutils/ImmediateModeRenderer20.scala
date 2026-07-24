@@ -34,12 +34,12 @@ class ImmediateModeRenderer20 extends com.badlogic.gdx.graphics.glutils.Immediat
       this.shaderUniformNames(i) = "u_sampler" + i
     }; i = i + 1 } }
   }
-  def this(maxVertices: scala.Int, hasNormals: scala.Boolean, hasColors: scala.Boolean, numTexCoords: scala.Int) = {
-    this(maxVertices, hasNormals, hasColors, numTexCoords, ImmediateModeRenderer20.createDefaultShader(hasNormals, hasColors, numTexCoords))
-    this.ownsShader = true
-  }
   def this(hasNormals: scala.Boolean, hasColors: scala.Boolean, numTexCoords: scala.Int) = {
     this(5000, hasNormals, hasColors, numTexCoords, ImmediateModeRenderer20.createDefaultShader(hasNormals, hasColors, numTexCoords))
+    this.ownsShader = true
+  }
+  def this(maxVertices: scala.Int, hasNormals: scala.Boolean, hasColors: scala.Boolean, numTexCoords: scala.Int) = {
+    this(maxVertices, hasNormals, hasColors, numTexCoords, ImmediateModeRenderer20.createDefaultShader(hasNormals, hasColors, numTexCoords))
     this.ownsShader = true
   }
   private def buildVertexAttributes(hasNormals: scala.Boolean, hasColor: scala.Boolean, numTexCoords: scala.Int): scala.Array[com.badlogic.gdx.graphics.VertexAttribute] = {

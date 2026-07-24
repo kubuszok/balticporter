@@ -8,10 +8,6 @@ class Vector3 extends java.io.Serializable with com.badlogic.gdx.math.Vector[Vec
     this()
     this.set(x, y, z)
   }
-  def this(vector: com.badlogic.gdx.math.Vector2, z: scala.Float) = {
-    this()
-    this.set(vector.x, vector.y, z)
-  }
   def this(vector: Vector3) = {
     this()
     this.set(vector)
@@ -19,6 +15,10 @@ class Vector3 extends java.io.Serializable with com.badlogic.gdx.math.Vector[Vec
   def this(values: scala.Array[scala.Float]) = {
     this()
     this.set(values(0), values(1), values(2))
+  }
+  def this(vector: com.badlogic.gdx.math.Vector2, z: scala.Float) = {
+    this()
+    this.set(vector.x, vector.y, z)
   }
   def set(x: scala.Float, y: scala.Float, z: scala.Float): Vector3 = {
     this.x = x

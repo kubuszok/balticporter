@@ -25,11 +25,11 @@ class Tree[N <: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[?, ?, ?], V] extend
     this.setStyle(style)
     this.initialize()
   }
-  def this(skin: com.badlogic.gdx.scenes.scene2d.ui.Skin, styleName: java.lang.String) = {
-    this(skin.get(styleName, classOf[com.badlogic.gdx.scenes.scene2d.ui.Tree.TreeStyle]))
-  }
   def this(skin: com.badlogic.gdx.scenes.scene2d.ui.Skin) = {
     this(skin.get(classOf[com.badlogic.gdx.scenes.scene2d.ui.Tree.TreeStyle]))
+  }
+  def this(skin: com.badlogic.gdx.scenes.scene2d.ui.Skin, styleName: java.lang.String) = {
+    this(skin.get(styleName, classOf[com.badlogic.gdx.scenes.scene2d.ui.Tree.TreeStyle]))
   }
   private def initialize(): scala.Unit = {
     this.addListener({

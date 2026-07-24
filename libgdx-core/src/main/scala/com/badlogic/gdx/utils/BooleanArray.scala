@@ -9,6 +9,9 @@ class BooleanArray {
     this.ordered = ordered
     this.items = new scala.Array[scala.Boolean](capacity)
   }
+  def this(capacity: scala.Int) = {
+    this(true, capacity)
+  }
   def this(array: BooleanArray) = {
     this()
     this.ordered = array.ordered
@@ -20,9 +23,6 @@ class BooleanArray {
     this(ordered, count)
     this.size = count
     java.lang.System.arraycopy(array, startIndex, this.items, 0, count)
-  }
-  def this(capacity: scala.Int) = {
-    this(true, capacity)
   }
   def this(array: scala.Array[scala.Boolean]) = {
     this(true, array, 0, array.length)

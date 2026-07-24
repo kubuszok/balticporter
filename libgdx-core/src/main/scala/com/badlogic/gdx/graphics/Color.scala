@@ -5,6 +5,10 @@ class Color {
   var g: scala.Float = 0.0f
   var b: scala.Float = 0.0f
   var a: scala.Float = 0.0f
+  def this(rgba8888: scala.Int) = {
+    this()
+    Color.rgba8888ToColor(this, rgba8888)
+  }
   def this(r: scala.Float, g: scala.Float, b: scala.Float, a: scala.Float) = {
     this()
     this.r = r
@@ -12,10 +16,6 @@ class Color {
     this.b = b
     this.a = a
     this.clamp()
-  }
-  def this(rgba8888: scala.Int) = {
-    this()
-    Color.rgba8888ToColor(this, rgba8888)
   }
   def this(color: Color) = {
     this()

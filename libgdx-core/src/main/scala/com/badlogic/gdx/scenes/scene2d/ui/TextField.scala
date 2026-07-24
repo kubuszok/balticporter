@@ -51,11 +51,11 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
     this.setText(text)
     this.setSize(this.getPrefWidth(), this.getPrefHeight())
   }
-  def this(text: java.lang.String, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin, styleName: java.lang.String) = {
-    this(text, skin.get(styleName, classOf[com.badlogic.gdx.scenes.scene2d.ui.TextField.TextFieldStyle]))
-  }
   def this(text: java.lang.String, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin) = {
     this(text, skin.get(classOf[com.badlogic.gdx.scenes.scene2d.ui.TextField.TextFieldStyle]))
+  }
+  def this(text: java.lang.String, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin, styleName: java.lang.String) = {
+    this(text, skin.get(styleName, classOf[com.badlogic.gdx.scenes.scene2d.ui.TextField.TextFieldStyle]))
   }
   def initialize(): scala.Unit = {
     this.addListener({

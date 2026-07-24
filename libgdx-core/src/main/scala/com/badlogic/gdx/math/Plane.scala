@@ -3,10 +3,6 @@ package com.badlogic.gdx.math
 class Plane extends java.io.Serializable {
   final val normal: com.badlogic.gdx.math.Vector3 = new com.badlogic.gdx.math.Vector3()
   var d: scala.Float = 0
-  def this(point1: com.badlogic.gdx.math.Vector3, point2: com.badlogic.gdx.math.Vector3, point3: com.badlogic.gdx.math.Vector3) = {
-    this()
-    this.set(point1, point2, point3)
-  }
   def this(normal: com.badlogic.gdx.math.Vector3, d: scala.Float) = {
     this()
     this.normal.set(normal).nor()
@@ -16,6 +12,10 @@ class Plane extends java.io.Serializable {
     this()
     this.normal.set(normal).nor()
     this.d = -this.normal.dot(point)
+  }
+  def this(point1: com.badlogic.gdx.math.Vector3, point2: com.badlogic.gdx.math.Vector3, point3: com.badlogic.gdx.math.Vector3) = {
+    this()
+    this.set(point1, point2, point3)
   }
   def set(point1: com.badlogic.gdx.math.Vector3, point2: com.badlogic.gdx.math.Vector3, point3: com.badlogic.gdx.math.Vector3): scala.Unit = {
     this.normal.set(point1).sub(point2).crs(point2.x - point3.x, point2.y - point3.y, point2.z - point3.z).nor()

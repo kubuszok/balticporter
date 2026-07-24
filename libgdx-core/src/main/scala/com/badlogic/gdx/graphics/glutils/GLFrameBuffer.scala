@@ -499,10 +499,10 @@ object GLFrameBuffer {
     def build(): U
   }
   class FrameBufferBuilder extends com.badlogic.gdx.graphics.glutils.GLFrameBuffer.GLFrameBufferBuilder[com.badlogic.gdx.graphics.glutils.FrameBuffer] {
-    def this(width: scala.Int, height: scala.Int, samples: scala.Int) = {
+    def this(width: scala.Int, height: scala.Int) = {
       this()
     }
-    def this(width: scala.Int, height: scala.Int) = {
+    def this(width: scala.Int, height: scala.Int, samples: scala.Int) = {
       this()
     }
     def build(): com.badlogic.gdx.graphics.glutils.FrameBuffer = {
@@ -510,10 +510,10 @@ object GLFrameBuffer {
     }
   }
   class FloatFrameBufferBuilder extends com.badlogic.gdx.graphics.glutils.GLFrameBuffer.GLFrameBufferBuilder[com.badlogic.gdx.graphics.glutils.FloatFrameBuffer] {
-    def this(width: scala.Int, height: scala.Int, samples: scala.Int) = {
+    def this(width: scala.Int, height: scala.Int) = {
       this()
     }
-    def this(width: scala.Int, height: scala.Int) = {
+    def this(width: scala.Int, height: scala.Int, samples: scala.Int) = {
       this()
     }
     def build(): com.badlogic.gdx.graphics.glutils.FloatFrameBuffer = {
@@ -521,10 +521,10 @@ object GLFrameBuffer {
     }
   }
   class FrameBufferCubemapBuilder extends com.badlogic.gdx.graphics.glutils.GLFrameBuffer.GLFrameBufferBuilder[com.badlogic.gdx.graphics.glutils.FrameBufferCubemap] {
-    def this(width: scala.Int, height: scala.Int, samples: scala.Int) = {
+    def this(width: scala.Int, height: scala.Int) = {
       this()
     }
-    def this(width: scala.Int, height: scala.Int) = {
+    def this(width: scala.Int, height: scala.Int, samples: scala.Int) = {
       this()
     }
     def build(): com.badlogic.gdx.graphics.glutils.FrameBufferCubemap = {

@@ -9,14 +9,6 @@ abstract class BatchTiledMapRenderer extends com.badlogic.gdx.maps.tiled.TiledMa
   var repeatedImageBounds: com.badlogic.gdx.math.Rectangle = new com.badlogic.gdx.math.Rectangle()
   var ownsBatch: scala.Boolean = false
   var vertices: scala.Array[scala.Float] = new scala.Array[scala.Float](BatchTiledMapRenderer.NUM_VERTICES)
-  def this(map: com.badlogic.gdx.maps.tiled.TiledMap, unitScale: scala.Float, batch: com.badlogic.gdx.graphics.g2d.Batch) = {
-    this()
-    this.map = map
-    this.unitScale = unitScale
-    this.viewBounds = new com.badlogic.gdx.math.Rectangle()
-    this.batch = batch
-    this.ownsBatch = false
-  }
   def this(map: com.badlogic.gdx.maps.tiled.TiledMap, unitScale: scala.Float) = {
     this()
     this.map = map
@@ -25,11 +17,19 @@ abstract class BatchTiledMapRenderer extends com.badlogic.gdx.maps.tiled.TiledMa
     this.batch = new com.badlogic.gdx.graphics.g2d.SpriteBatch()
     this.ownsBatch = true
   }
-  def this(map: com.badlogic.gdx.maps.tiled.TiledMap, batch: com.badlogic.gdx.graphics.g2d.Batch) = {
-    this(map, 1.0f, batch)
-  }
   def this(map: com.badlogic.gdx.maps.tiled.TiledMap) = {
     this(map, 1.0f)
+  }
+  def this(map: com.badlogic.gdx.maps.tiled.TiledMap, unitScale: scala.Float, batch: com.badlogic.gdx.graphics.g2d.Batch) = {
+    this()
+    this.map = map
+    this.unitScale = unitScale
+    this.viewBounds = new com.badlogic.gdx.math.Rectangle()
+    this.batch = batch
+    this.ownsBatch = false
+  }
+  def this(map: com.badlogic.gdx.maps.tiled.TiledMap, batch: com.badlogic.gdx.graphics.g2d.Batch) = {
+    this(map, 1.0f, batch)
   }
   def getMap(): com.badlogic.gdx.maps.tiled.TiledMap = {
     return this.map

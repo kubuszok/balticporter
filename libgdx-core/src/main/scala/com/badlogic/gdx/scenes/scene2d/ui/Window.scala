@@ -30,12 +30,12 @@ class Window extends com.badlogic.gdx.scenes.scene2d.ui.Table with com.badlogic.
     this.addCaptureListener(new com.badlogic.gdx.scenes.scene2d.InputListener())
     this.addListener(new com.badlogic.gdx.scenes.scene2d.InputListener())
   }
-  def this(title: java.lang.String, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin, styleName: java.lang.String) = {
-    this(title, skin.get(styleName, classOf[com.badlogic.gdx.scenes.scene2d.ui.Window.WindowStyle]))
-    this.setSkin(skin)
-  }
   def this(title: java.lang.String, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin) = {
     this(title, skin.get(classOf[com.badlogic.gdx.scenes.scene2d.ui.Window.WindowStyle]))
+    this.setSkin(skin)
+  }
+  def this(title: java.lang.String, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin, styleName: java.lang.String) = {
+    this(title, skin.get(styleName, classOf[com.badlogic.gdx.scenes.scene2d.ui.Window.WindowStyle]))
     this.setSkin(skin)
   }
   def newLabel(text: java.lang.String, style: com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle): com.badlogic.gdx.scenes.scene2d.ui.Label = {

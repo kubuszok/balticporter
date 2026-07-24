@@ -19,14 +19,14 @@ final class VertexAttribute {
     this.unit = unit
     this.usageIndex = java.lang.Integer.numberOfTrailingZeros(usage)
   }
-  def this(usage: scala.Int, numComponents: scala.Int, `type`: scala.Int, normalized: scala.Boolean, alias: java.lang.String) = {
-    this(usage, numComponents, `type`, normalized, alias, 0)
-  }
   def this(usage: scala.Int, numComponents: scala.Int, alias: java.lang.String, unit: scala.Int) = {
     this(usage, numComponents, if (usage == com.badlogic.gdx.graphics.VertexAttributes.Usage.ColorPacked) com.badlogic.gdx.graphics.GL20.GL_UNSIGNED_BYTE else com.badlogic.gdx.graphics.GL20.GL_FLOAT, usage == com.badlogic.gdx.graphics.VertexAttributes.Usage.ColorPacked, alias, unit)
   }
   def this(usage: scala.Int, numComponents: scala.Int, alias: java.lang.String) = {
     this(usage, numComponents, alias, 0)
+  }
+  def this(usage: scala.Int, numComponents: scala.Int, `type`: scala.Int, normalized: scala.Boolean, alias: java.lang.String) = {
+    this(usage, numComponents, `type`, normalized, alias, 0)
   }
   def copy(): VertexAttribute = {
     return new VertexAttribute(this.usage, this.numComponents, this.`type`, this.normalized, this.alias, this.unit)

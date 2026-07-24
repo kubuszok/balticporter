@@ -3,16 +3,6 @@ package com.badlogic.gdx.files
 class FileHandle {
   var file$field: java.io.File = null.asInstanceOf[java.io.File]
   var type$field: com.badlogic.gdx.Files.FileType = null.asInstanceOf[com.badlogic.gdx.Files.FileType]
-  def this(fileName: java.lang.String, `type`: com.badlogic.gdx.Files.FileType) = {
-    this()
-    this.type$field = `type`
-    this.file$field = new java.io.File(fileName)
-  }
-  def this(file: java.io.File, `type`: com.badlogic.gdx.Files.FileType) = {
-    this()
-    this.file$field = file
-    this.type$field = `type`
-  }
   def this(fileName: java.lang.String) = {
     this()
     this.file$field = new java.io.File(fileName)
@@ -22,6 +12,16 @@ class FileHandle {
     this()
     this.file$field = file
     this.type$field = com.badlogic.gdx.Files.FileType.Absolute
+  }
+  def this(fileName: java.lang.String, `type`: com.badlogic.gdx.Files.FileType) = {
+    this()
+    this.type$field = `type`
+    this.file$field = new java.io.File(fileName)
+  }
+  def this(file: java.io.File, `type`: com.badlogic.gdx.Files.FileType) = {
+    this()
+    this.file$field = file
+    this.type$field = `type`
   }
   def path(): java.lang.String = {
     return this.file$field.getPath().replace('\\', '/')

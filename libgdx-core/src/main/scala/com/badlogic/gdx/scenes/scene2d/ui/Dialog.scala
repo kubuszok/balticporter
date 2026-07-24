@@ -10,13 +10,13 @@ class Dialog extends com.badlogic.gdx.scenes.scene2d.ui.Window {
   var previousScrollFocus: com.badlogic.gdx.scenes.scene2d.Actor = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.Actor]
   var focusListener: com.badlogic.gdx.scenes.scene2d.utils.FocusListener = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.FocusListener]
   var ignoreTouchDown: com.badlogic.gdx.scenes.scene2d.InputListener = new com.badlogic.gdx.scenes.scene2d.InputListener()
-  def this(title: java.lang.String, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin, windowStyleName: java.lang.String) = {
+  def this(title: java.lang.String, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin) = {
     this()
     this.setSkin(skin)
     this.skin = skin
     this.initialize()
   }
-  def this(title: java.lang.String, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin) = {
+  def this(title: java.lang.String, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin, windowStyleName: java.lang.String) = {
     this()
     this.setSkin(skin)
     this.skin = skin

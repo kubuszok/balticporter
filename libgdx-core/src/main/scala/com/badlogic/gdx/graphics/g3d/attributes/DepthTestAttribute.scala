@@ -18,9 +18,6 @@ class DepthTestAttribute extends com.badlogic.gdx.graphics.g3d.Attribute {
   def this(depthFunc: scala.Int, depthRangeNear: scala.Float, depthRangeFar: scala.Float, depthMask: scala.Boolean) = {
     this(DepthTestAttribute.Type, depthFunc, depthRangeNear, depthRangeFar, depthMask)
   }
-  def this(depthFunc: scala.Int, depthRangeNear: scala.Float, depthRangeFar: scala.Float) = {
-    this(depthFunc, depthRangeNear, depthRangeFar, true)
-  }
   def this(depthFunc: scala.Int, depthMask: scala.Boolean) = {
     this(depthFunc, 0, 1, depthMask)
   }
@@ -29,6 +26,9 @@ class DepthTestAttribute extends com.badlogic.gdx.graphics.g3d.Attribute {
   }
   def this(depthFunc: scala.Int) = {
     this(depthFunc, true)
+  }
+  def this(depthFunc: scala.Int, depthRangeNear: scala.Float, depthRangeFar: scala.Float) = {
+    this(depthFunc, depthRangeNear, depthRangeFar, true)
   }
   def this(rhs: DepthTestAttribute) = {
     this(rhs.`type`, rhs.depthFunc, rhs.depthRangeNear, rhs.depthRangeFar, rhs.depthMask)

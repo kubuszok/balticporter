@@ -3,15 +3,15 @@ package com.badlogic.gdx.math.collision
 class Segment extends java.io.Serializable {
   final val a: com.badlogic.gdx.math.Vector3 = new com.badlogic.gdx.math.Vector3()
   final val b: com.badlogic.gdx.math.Vector3 = new com.badlogic.gdx.math.Vector3()
-  def this(aX: scala.Float, aY: scala.Float, aZ: scala.Float, bX: scala.Float, bY: scala.Float, bZ: scala.Float) = {
-    this()
-    this.a.set(aX, aY, aZ)
-    this.b.set(bX, bY, bZ)
-  }
   def this(a: com.badlogic.gdx.math.Vector3, b: com.badlogic.gdx.math.Vector3) = {
     this()
     this.a.set(a)
     this.b.set(b)
+  }
+  def this(aX: scala.Float, aY: scala.Float, aZ: scala.Float, bX: scala.Float, bY: scala.Float, bZ: scala.Float) = {
+    this()
+    this.a.set(aX, aY, aZ)
+    this.b.set(bX, bY, bZ)
   }
   def len(): scala.Float = {
     return this.a.dst(this.b)

@@ -6,17 +6,17 @@ class GlyphLayout extends com.badlogic.gdx.utils.Pool.Poolable {
   var glyphCount: scala.Int = 0
   var width: scala.Float = 0.0f
   var height: scala.Float = 0.0f
-  def this(font: com.badlogic.gdx.graphics.g2d.BitmapFont, str: java.lang.CharSequence, start: scala.Int, `end`: scala.Int, color: com.badlogic.gdx.graphics.Color, targetWidth: scala.Float, halign: scala.Int, wrap: scala.Boolean, truncate: java.lang.String) = {
+  def this(font: com.badlogic.gdx.graphics.g2d.BitmapFont, str: java.lang.CharSequence) = {
     this()
-    this.setText(font, str, start, `end`, color, targetWidth, halign, wrap, truncate)
+    this.setText(font, str)
   }
   def this(font: com.badlogic.gdx.graphics.g2d.BitmapFont, str: java.lang.CharSequence, color: com.badlogic.gdx.graphics.Color, targetWidth: scala.Float, halign: scala.Int, wrap: scala.Boolean) = {
     this()
     this.setText(font, str, color, targetWidth, halign, wrap)
   }
-  def this(font: com.badlogic.gdx.graphics.g2d.BitmapFont, str: java.lang.CharSequence) = {
+  def this(font: com.badlogic.gdx.graphics.g2d.BitmapFont, str: java.lang.CharSequence, start: scala.Int, `end`: scala.Int, color: com.badlogic.gdx.graphics.Color, targetWidth: scala.Float, halign: scala.Int, wrap: scala.Boolean, truncate: java.lang.String) = {
     this()
-    this.setText(font, str)
+    this.setText(font, str, start, `end`, color, targetWidth, halign, wrap, truncate)
   }
   def setText(font: com.badlogic.gdx.graphics.g2d.BitmapFont, str: java.lang.CharSequence): scala.Unit = {
     this.setText(font, str, 0, str.length(), font.getColor(), 0, com.badlogic.gdx.utils.Align.left, false, null)
