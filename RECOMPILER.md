@@ -253,9 +253,26 @@ emission backend (step 3), since projecting the delta onto Scala output needs em
    its positions) and the emitted Scala; `CollectionsDemo` (runMain) shows before/after. This
    is the first real proof of the whole substrate: populate → transform (symbol-driven,
    whole-program) → emit compiling code.
-5. **Transform API + the remaining sge/ssg cases** — globals→implicits (call graph),
-   Int→opaque, Panama; grow the collections transform (more methods, `for`-each, immutable
-   variants).
+5. **Transform API + the remaining sge/ssg cases.**
+   - **Collections — GROWN.** `CollectionsTransform` is now kind-aware (Seq/Map/Set): `List.get`
+     →`apply`, `Map.get`→`getOrElse(k, null:V)` (default ascribed to the value type so inference
+     doesn't widen), `getOrDefault`→`getOrElse`, `set`→`update`, `add(i,x)`→`insert`,
+     `add`/`addAll`→`+=`/`++=`, `containsKey`→`contains`, `remove`(Set/Map)→`-=`, and the
+     no-paren accessors (`size`/`isEmpty`/`iterator`/`keySet`/`values`) drop `()`. For-each and
+     same-named methods need no rewrite (emitted by name against the retyped receiver). More
+     java.util types mapped (Queue/Deque/Tree*/LinkedHash*). Output compiles with scalac.
+   - **Int→opaque — DONE (`IntToOpaqueTransform`).** Retypes a semantically-tagged `int` to an
+     `opaque type <Name>.T = Int` with a synthesized companion (`apply`/`unwrap`), wrapping
+     construction and unwrapping consumption. Seed detection is **flow propagation**: from a
+     small HINT set, a union-find over the whole-program reference graph (pure-move flows —
+     assignment, `val x = ref`, `return ref`, `ref`→param, all read from the Spoon-resolved
+     SymIds) grows the full seed set, so a getter/setter/local is discovered from a single
+     field hint. Exposes `typeMapping` (old→new trace) and accepts `extraHints` so an agent can
+     feed a missed `int`'s FQN back after a failed compile. `IntToOpaqueTransformSpec` (3/3)
+     + `OpaqueDemo`; emitted output compiles with scalac. Needed a `Flags.isOpaque` + emitter
+     `opaque type` support, and a `Name.T` (module-owned type member, path-dependent) reference
+     form in the emitter.
+   - **TODO:** globals→implicits (call graph), Panama FFI; immutable-collection variants.
 
 The old string-printer compile grind (M6 at ~61 errors) is **subsumed** by step 3:
 a types-carrying backend emits compiling code by construction. We stop patching the

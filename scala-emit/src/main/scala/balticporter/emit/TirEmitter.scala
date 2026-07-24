@@ -69,6 +69,7 @@ final class TirEmitter(source: Program):
     if s.flags.isParam then esc(s.name)
     else if program.definitionOf(id).isDefined then
       if currentDeclared(id) then esc(s.name)                       // declared here — in scope
+      else if program.symbolOf(s.owner).exists(_.flags.isModule) then s"${typeValue(s.owner)}.${esc(s.name)}" // object's type member → path-dependent `O.T`
       else if s.fullName.contains('$') then s.fullName.replace('$', '#').replace(".", ".") // nested elsewhere → projection
       else { referenced += id; esc(s.name) }                        // top-level elsewhere → import + simple
     else s.fullName.replace('$', '.')                               // external, fully qualified
@@ -180,7 +181,7 @@ final class TirEmitter(source: Program):
     case c: Tree.ClassDef => classDef(c, i)
     case d: Tree.DefDef   => defDef(d, i)
     case v: Tree.ValDef   => valDef(v, i)
-    case t: Tree.TypeDef  => s"${ind(i)}type ${esc(sym(t.symbol).name)} = ${tpe(t.rhs.tpe)}"
+    case t: Tree.TypeDef  => s"${ind(i)}${if sym(t.symbol).flags.isOpaque then "opaque " else ""}type ${esc(sym(t.symbol).name)} = ${tpe(t.rhs.tpe)}"
     case t: Term     => ind(i) + term(t, i)
 
   private def defDef(d: Tree.DefDef, i: Int): String =

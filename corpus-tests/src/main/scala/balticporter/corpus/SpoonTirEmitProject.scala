@@ -50,15 +50,14 @@ object SpoonTirEmitProject:
     M0Pipeline.compileGate("3.8.4", List(outDir)) match
       case Right(())  => println(s"[emit] $lib: SCALAC GREEN")
       case Left(err)  =>
-        // dotty emits one `-- [E<code>] <Kind> Error:` header per diagnostic.
-        val errs = err.linesIterator.filter(_.matches("^-- \\[E\\d+\\].*")).toList
+        // dotty emits one `-- [E<code>] <Kind> Error:` header per diagnostic (strip ANSI first).
+        val plain = err.replaceAll("\\[[0-9;]*m", "")
+        val errs  = plain.linesIterator.filter(l => l.contains(".scala:") && l.matches(".*\\[E\\d+\\].*")).toList
         println(s"[emit] $lib: scalac FAILED — ${errs.size} error(s)")
-        // tally by error kind (E-code + category)
         val byKind = errs.groupBy(errSignature).view.mapValues(_.size).toList.sortBy(-_._2)
         byKind.foreach { case (sig, n) => println(f"  $n%3d  $sig") }
         println("\n--- first errors ---")
-        err.linesIterator.filter(_.startsWith("-- [E")).take(20)
-          .map(_.replaceAll("/.*/tir-emit/", "").replaceAll(":\\d+:\\d+ *$", "")).foreach(println)
+        errs.take(20).map(_.replaceAll(".*tir-emit/", "").replaceAll(":\\d+:\\d+ *$", "")).foreach(println)
 
   private def errSignature(line: String): String =
-    line.replaceAll(":.*$", "").replaceAll("/.*$", "").trim.take(70)
+    line.replaceAll(".*(\\[E\\d+\\][^:]*):.*", "$1").trim.take(70)

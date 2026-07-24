@@ -42,6 +42,8 @@ final case class Flags(
     isTrait: Boolean = false,
     isModule: Boolean = false, // `object`
     isEnum: Boolean = false,
+    isOpaque: Boolean = false, // `opaque type`
+
     isCase: Boolean = false,
     isImplicit: Boolean = false,
     isGiven: Boolean = false,
