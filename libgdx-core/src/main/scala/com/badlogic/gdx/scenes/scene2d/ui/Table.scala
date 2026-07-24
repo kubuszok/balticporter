@@ -718,10 +718,10 @@ class Table extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup {
       val colspan: scala.Int = c.colspan$field
       val a: com.badlogic.gdx.scenes.scene2d.Actor = c.actor
       if ((c.expandY$field != 0) && (expandHeight(row) == 0)) {
-        expandHeight(row) = c.expandY$field
+        expandHeight(row) = c.expandY$field.floatValue()
       } else ()
       if (((colspan == 1) && (c.expandX$field != 0)) && (expandWidth(column) == 0)) {
-        expandWidth(column) = c.expandX$field
+        expandWidth(column) = c.expandX$field.floatValue()
       } else ()
       c.computedPadLeft = c.padLeft$field.get(a) + (if (column == 0) 0 else java.lang.Math.max(0, c.spaceLeft$field.get(a) - spaceRightLast))
       c.computedPadTop = c.padTop$field.get(a)

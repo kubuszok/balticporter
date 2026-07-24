@@ -493,6 +493,15 @@ object SpoonTir:
         // slot — Java inserts an unchecked downcast; Scala needs it explicit.
         val downcast = et != null && et.getQualifiedName == "java.lang.Object" &&
           !target.isPrimitive && target.getQualifiedName != "java.lang.Object"
+        // a boxed wrapper flowing into a PRIMITIVE slot is Java auto-UNBOXING (possibly with a widening,
+        // `Integer`→`float`); Scala does neither implicitly, so emit the explicit `n.floatValue()`
+        // (every `Number` wrapper carries all the `xxxValue()` accessors; `Boolean`/`Character` their own).
+        // Only a CROSS-type unbox (`Integer`→`float`) needs this — a same-type unbox (`Integer`→`int`)
+        // is already handled by Scala's `Predef.Integer2int`, and forcing `.intValue()` there only
+        // perturbs surrounding resolution.
+        if et != null && !et.isPrimitive && target.isPrimitive && wrapperOf.values.toSet(et.getQualifiedName)
+          && wrapperOf.get(target.getSimpleName).exists(_ != et.getQualifiedName) then
+          return unbox(t, target.getSimpleName, e)
         val cast =
           (isNull && target.isInstanceOf[CtTypeParameterReference]) ||             // null → type param
           (arrayCov && target.isInstanceOf[CtArrayTypeReference[?]] && et != null &&  // array covariance
@@ -511,6 +520,17 @@ object SpoonTir:
         "byte" -> "java.lang.Byte", "short" -> "java.lang.Short", "char" -> "java.lang.Character",
         "int" -> "java.lang.Integer", "long" -> "java.lang.Long", "float" -> "java.lang.Float",
         "double" -> "java.lang.Double", "boolean" -> "java.lang.Boolean")
+      private val valueMethod = Map(
+        "int" -> "intValue", "long" -> "longValue", "float" -> "floatValue", "double" -> "doubleValue",
+        "short" -> "shortValue", "byte" -> "byteValue", "boolean" -> "booleanValue", "char" -> "charValue")
+      /** `wrapper.<prim>Value()` — explicit unboxing of a boxed number/boolean/char to a primitive. */
+      private def unbox(t: Term, prim: String, e: CtElement): Term =
+        val primT = TypeRef(NoPrefix, minter.external("scala." + primName(prim), prim))
+        valueMethod.get(prim) match
+          case Some(vm) =>
+            val vsym = minter.external("java.lang.Number#" + vm, vm)
+            Tree.Apply(Tree.Select(t, vsym, NoType, originOf(e)), Nil, vsym, primT, originOf(e))
+          case None => t
       private def boxedPrimitive(prim: String): TypeRepr =
         wrapperOf.get(prim) match
           case Some(fqn) => TypeRef(NoPrefix, minter.external(fqn, simpleName(fqn)))
