@@ -48,7 +48,7 @@ class DynamicsInfluencer extends com.badlogic.gdx.graphics.g3d.particles.influen
     }
   }
   def set(particleController: com.badlogic.gdx.graphics.g3d.particles.ParticleController): scala.Unit = {
-    super.set(particleController)
+    super.set(particleController);
     { var k: scala.Int = 0; while (k < this.velocities.size) { {
       this.velocities.items(k).set(particleController)
     }; k = k + 1 } }
@@ -80,7 +80,7 @@ class DynamicsInfluencer extends com.badlogic.gdx.graphics.g3d.particles.influen
           this.rotationChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.WOffset) = 1
         }; i = i + this.rotationChannel.strideSize } }
       } else ()
-    }
+    };
     { var k: scala.Int = 0; while (k < this.velocities.size) { {
       this.velocities.items(k).activateParticles(startIndex, count)
     }; k = k + 1 } }
@@ -91,7 +91,7 @@ class DynamicsInfluencer extends com.badlogic.gdx.graphics.g3d.particles.influen
     } else ()
     if (this.has2dAngularVelocity || this.has3dAngularVelocity) {
       java.util.Arrays.fill(this.angularVelocityChannel.data, 0, this.controller.particles.size * this.angularVelocityChannel.strideSize, 0)
-    } else ()
+    } else ();
     { var k: scala.Int = 0; while (k < this.velocities.size) { {
       this.velocities.items(k).update()
     }; k = k + 1 } }
@@ -145,9 +145,9 @@ class DynamicsInfluencer extends com.badlogic.gdx.graphics.g3d.particles.influen
     return new DynamicsInfluencer(this)
   }
   def write(json: com.badlogic.gdx.utils.Json): scala.Unit = {
-    json.writeValue("velocities", this.velocities, classOf[java.lang.Class], classOf[java.lang.Class])
+    json.writeValue("velocities", this.velocities, classOf[com.badlogic.gdx.utils.Array[?]], classOf[com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier])
   }
   def read(json: com.badlogic.gdx.utils.Json, jsonData: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
-    this.velocities.addAll(json.readValue("velocities", classOf[java.lang.Class], classOf[java.lang.Class], jsonData))
+    this.velocities.addAll(json.readValue("velocities", classOf[com.badlogic.gdx.utils.Array[?]], classOf[com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier], jsonData))
   }
 }

@@ -33,7 +33,7 @@ class ArraySelection[T] extends com.badlogic.gdx.scenes.scene2d.utils.Selection[
         } else ()
         if (!com.badlogic.gdx.scenes.scene2d.utils.UIUtils.ctrl()) {
           selected.clear(8)
-        } else ()
+        } else ();
         { var i: scala.Int = start; while (i <= `end`) { {
           selected.add(this.array.get(i))
         }; i = i + 1 } }
@@ -50,8 +50,8 @@ class ArraySelection[T] extends com.badlogic.gdx.scenes.scene2d.utils.Selection[
     super.choose(item)
     this.rangeStart = item
   }
-  protected def changed(): scala.Unit = {
-    this.rangeStart = null
+  def changed(): scala.Unit = {
+    this.rangeStart = null.asInstanceOf[T]
   }
   def getRangeSelect(): scala.Boolean = {
     return this.rangeSelect
@@ -65,9 +65,9 @@ class ArraySelection[T] extends com.badlogic.gdx.scenes.scene2d.utils.Selection[
       this.clear()
       return
     } else ()
-    var changed: scala.Boolean = false
-    { val iter: scala.collection.Iterator[T] = this.items().iterator(); while (iter.hasNext()) { {
-      val selected: T = iter.next()
+    var changed: scala.Boolean = false;
+    { val iter: scala.collection.Iterator[T] = this.items().iterator(); while (iter.hasNext) { {
+      val selected: T = iter.next
       if (!array.contains(selected, false)) {
         iter.remove()
         changed = true

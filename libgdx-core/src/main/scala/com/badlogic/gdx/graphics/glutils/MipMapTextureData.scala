@@ -7,7 +7,7 @@ class MipMapTextureData extends com.badlogic.gdx.graphics.TextureData {
     this.mips = new Array[com.badlogic.gdx.graphics.TextureData](mipMapData.length)
     java.lang.System.arraycopy(mipMapData, 0, this.mips, 0, mipMapData.length)
   }
-  def getType(): com.badlogic.gdx.graphics.TextureData#TextureDataType = {
+  def getType(): com.badlogic.gdx.graphics.TextureData.TextureDataType = {
     return com.badlogic.gdx.graphics.TextureData.TextureDataType.Custom
   }
   def isPrepared(): scala.Boolean = {
@@ -33,7 +33,7 @@ class MipMapTextureData extends com.badlogic.gdx.graphics.TextureData {
   def getHeight(): scala.Int = {
     return this.mips(0).getHeight()
   }
-  def getFormat(): com.badlogic.gdx.graphics.Pixmap#Format = {
+  def getFormat(): com.badlogic.gdx.graphics.Pixmap.Format = {
     return this.mips(0).getFormat()
   }
   def useMipMaps(): scala.Boolean = {

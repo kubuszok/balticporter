@@ -5,7 +5,7 @@ trait GL32 extends com.badlogic.gdx.graphics.GL31 {
   def glCopyImageSubData(srcName: scala.Int, srcTarget: scala.Int, srcLevel: scala.Int, srcX: scala.Int, srcY: scala.Int, srcZ: scala.Int, dstName: scala.Int, dstTarget: scala.Int, dstLevel: scala.Int, dstX: scala.Int, dstY: scala.Int, dstZ: scala.Int, srcWidth: scala.Int, srcHeight: scala.Int, srcDepth: scala.Int): scala.Unit
   def glDebugMessageControl(source: scala.Int, `type`: scala.Int, severity: scala.Int, ids: java.nio.IntBuffer, enabled: scala.Boolean): scala.Unit
   def glDebugMessageInsert(source: scala.Int, `type`: scala.Int, id: scala.Int, severity: scala.Int, buf: java.lang.String): scala.Unit
-  def glDebugMessageCallback(callback: DebugProc): scala.Unit
+  def glDebugMessageCallback(callback: com.badlogic.gdx.graphics.GL32.DebugProc): scala.Unit
   def glGetDebugMessageLog(count: scala.Int, sources: java.nio.IntBuffer, types: java.nio.IntBuffer, ids: java.nio.IntBuffer, severities: java.nio.IntBuffer, lengths: java.nio.IntBuffer, messageLog: java.nio.ByteBuffer): scala.Int
   def glPushDebugGroup(source: scala.Int, id: scala.Int, message: java.lang.String): scala.Unit
   def glPopDebugGroup(): scala.Unit
@@ -43,9 +43,6 @@ trait GL32 extends com.badlogic.gdx.graphics.GL31 {
   def glTexBuffer(target: scala.Int, internalformat: scala.Int, buffer: scala.Int): scala.Unit
   def glTexBufferRange(target: scala.Int, internalformat: scala.Int, buffer: scala.Int, offset: scala.Int, size: scala.Int): scala.Unit
   def glTexStorage3DMultisample(target: scala.Int, samples: scala.Int, internalformat: scala.Int, width: scala.Int, height: scala.Int, depth: scala.Int, fixedsamplelocations: scala.Boolean): scala.Unit
-  trait DebugProc {
-    def onMessage(source: scala.Int, `type`: scala.Int, id: scala.Int, severity: scala.Int, message: java.lang.String): scala.Unit
-  }
 }
 object GL32 {
   final val GL_CONTEXT_FLAG_DEBUG_BIT: scala.Int = 2
@@ -254,4 +251,7 @@ object GL32 {
   final val GL_COMPRESSED_SRGB8_ALPHA8_ASTC_10x10: scala.Int = 37851
   final val GL_COMPRESSED_SRGB8_ALPHA8_ASTC_12x10: scala.Int = 37852
   final val GL_COMPRESSED_SRGB8_ALPHA8_ASTC_12x12: scala.Int = 37853
+  trait DebugProc {
+    def onMessage(source: scala.Int, `type`: scala.Int, id: scala.Int, severity: scala.Int, message: java.lang.String): scala.Unit
+  }
 }

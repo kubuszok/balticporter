@@ -6,23 +6,23 @@ class Model extends com.badlogic.gdx.utils.Disposable {
   final val animations: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.model.Animation] = new com.badlogic.gdx.utils.Array()
   final val meshes: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.Mesh] = new com.badlogic.gdx.utils.Array()
   final val meshParts: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.model.MeshPart] = new com.badlogic.gdx.utils.Array()
-  protected final val disposables: com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.Disposable] = new com.badlogic.gdx.utils.Array()
+  final val disposables: com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.Disposable] = new com.badlogic.gdx.utils.Array()
   private var nodePartBones: com.badlogic.gdx.utils.ObjectMap[com.badlogic.gdx.graphics.g3d.model.NodePart, com.badlogic.gdx.utils.ArrayMap[java.lang.String, com.badlogic.gdx.math.Matrix4]] = new com.badlogic.gdx.utils.ObjectMap[com.badlogic.gdx.graphics.g3d.model.NodePart, com.badlogic.gdx.utils.ArrayMap[java.lang.String, com.badlogic.gdx.math.Matrix4]]()
   def this(modelData: com.badlogic.gdx.graphics.g3d.model.data.ModelData, textureProvider: com.badlogic.gdx.graphics.g3d.utils.TextureProvider) = {
     this()
     this.load(modelData, textureProvider)
   }
   def this(modelData: com.badlogic.gdx.graphics.g3d.model.data.ModelData) = {
-    this(modelData, new com.badlogic.gdx.graphics.g3d.utils.TextureProvider#FileTextureProvider())
+    this(modelData, new com.badlogic.gdx.graphics.g3d.utils.TextureProvider.FileTextureProvider())
   }
-  protected def load(modelData: com.badlogic.gdx.graphics.g3d.model.data.ModelData, textureProvider: com.badlogic.gdx.graphics.g3d.utils.TextureProvider): scala.Unit = {
+  def load(modelData: com.badlogic.gdx.graphics.g3d.model.data.ModelData, textureProvider: com.badlogic.gdx.graphics.g3d.utils.TextureProvider): scala.Unit = {
     this.loadMeshes(modelData.meshes)
     this.loadMaterials(modelData.materials, textureProvider)
     this.loadNodes(modelData.nodes)
     this.loadAnimations(modelData.animations)
     this.calculateTransforms()
   }
-  protected def loadAnimations(modelAnimations: scala.collection.Iterable[com.badlogic.gdx.graphics.g3d.model.data.ModelAnimation]): scala.Unit = {
+  def loadAnimations(modelAnimations: scala.collection.Iterable[com.badlogic.gdx.graphics.g3d.model.data.ModelAnimation]): scala.Unit = {
     for (anim <- modelAnimations) {
       val animation: com.badlogic.gdx.graphics.g3d.model.Animation = new com.badlogic.gdx.graphics.g3d.model.Animation()
       animation.id = anim.id
@@ -72,7 +72,7 @@ class Model extends com.badlogic.gdx.utils.Disposable {
       } else ()
     }
   }
-  protected def loadNodes(modelNodes: scala.collection.Iterable[com.badlogic.gdx.graphics.g3d.model.data.ModelNode]): scala.Unit = {
+  def loadNodes(modelNodes: scala.collection.Iterable[com.badlogic.gdx.graphics.g3d.model.data.ModelNode]): scala.Unit = {
     this.nodePartBones.clear()
     for (node <- modelNodes) {
       this.nodes.add(this.loadNode(node))
@@ -87,7 +87,7 @@ class Model extends com.badlogic.gdx.utils.Disposable {
       }
     }
   }
-  protected def loadNode(modelNode: com.badlogic.gdx.graphics.g3d.model.data.ModelNode): com.badlogic.gdx.graphics.g3d.model.Node = {
+  def loadNode(modelNode: com.badlogic.gdx.graphics.g3d.model.data.ModelNode): com.badlogic.gdx.graphics.g3d.model.Node = {
     val node: com.badlogic.gdx.graphics.g3d.model.Node = new com.badlogic.gdx.graphics.g3d.model.Node()
     node.id = modelNode.id
     if (modelNode.translation != null) {
@@ -138,12 +138,12 @@ class Model extends com.badlogic.gdx.utils.Disposable {
     } else ()
     return node
   }
-  protected def loadMeshes(meshes: scala.collection.Iterable[com.badlogic.gdx.graphics.g3d.model.data.ModelMesh]): scala.Unit = {
+  def loadMeshes(meshes: scala.collection.Iterable[com.badlogic.gdx.graphics.g3d.model.data.ModelMesh]): scala.Unit = {
     for (mesh <- meshes) {
       this.convertMesh(mesh)
     }
   }
-  protected def convertMesh(modelMesh: com.badlogic.gdx.graphics.g3d.model.data.ModelMesh): scala.Unit = {
+  def convertMesh(modelMesh: com.badlogic.gdx.graphics.g3d.model.data.ModelMesh): scala.Unit = {
     var numIndices: scala.Int = 0
     for (part <- modelMesh.parts) {
       numIndices = numIndices + part.indices.length
@@ -176,12 +176,12 @@ class Model extends com.badlogic.gdx.utils.Disposable {
       part.update()
     }
   }
-  protected def loadMaterials(modelMaterials: scala.collection.Iterable[com.badlogic.gdx.graphics.g3d.model.data.ModelMaterial], textureProvider: com.badlogic.gdx.graphics.g3d.utils.TextureProvider): scala.Unit = {
+  def loadMaterials(modelMaterials: scala.collection.Iterable[com.badlogic.gdx.graphics.g3d.model.data.ModelMaterial], textureProvider: com.badlogic.gdx.graphics.g3d.utils.TextureProvider): scala.Unit = {
     for (mtl <- modelMaterials) {
       this.materials.add(this.convertMaterial(mtl, textureProvider))
     }
   }
-  protected def convertMaterial(mtl: com.badlogic.gdx.graphics.g3d.model.data.ModelMaterial, textureProvider: com.badlogic.gdx.graphics.g3d.utils.TextureProvider): com.badlogic.gdx.graphics.g3d.Material = {
+  def convertMaterial(mtl: com.badlogic.gdx.graphics.g3d.model.data.ModelMaterial, textureProvider: com.badlogic.gdx.graphics.g3d.utils.TextureProvider): com.badlogic.gdx.graphics.g3d.Material = {
     val result: com.badlogic.gdx.graphics.g3d.Material = new com.badlogic.gdx.graphics.g3d.Material()
     result.id = mtl.id
     if (mtl.ambient != null) {
@@ -216,7 +216,7 @@ class Model extends com.badlogic.gdx.utils.Disposable {
           textures.put(tex.fileName, texture)
           this.disposables.add(texture)
         }
-        val descriptor: com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor = new com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor(texture)
+        val descriptor: com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[?] = new com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor(texture)
         descriptor.minFilter = texture.getMinFilter()
         descriptor.magFilter = texture.getMagFilter()
         descriptor.uWrap = texture.getUWrap()
@@ -266,10 +266,10 @@ class Model extends com.badlogic.gdx.utils.Disposable {
     }
   }
   def calculateTransforms(): scala.Unit = {
-    val n: scala.Int = this.nodes.size
+    val n: scala.Int = this.nodes.size;
     { var i: scala.Int = 0; while (i < n) { {
       this.nodes.get(i).calculateTransforms(true)
-    }; i = i + 1 } }
+    }; i = i + 1 } };
     { var i: scala.Int = 0; while (i < n) { {
       this.nodes.get(i).calculateBoneTransforms(true)
     }; i = i + 1 } }
@@ -279,7 +279,7 @@ class Model extends com.badlogic.gdx.utils.Disposable {
     return this.extendBoundingBox(out)
   }
   def extendBoundingBox(out: com.badlogic.gdx.math.collision.BoundingBox): com.badlogic.gdx.math.collision.BoundingBox = {
-    val n: scala.Int = this.nodes.size
+    val n: scala.Int = this.nodes.size;
     { var i: scala.Int = 0; while (i < n) { {
       this.nodes.get(i).extendBoundingBox(out)
     }; i = i + 1 } }

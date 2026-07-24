@@ -1,6 +1,6 @@
 package com.badlogic.gdx.utils
 
-class IntFloatMap extends scala.collection.Iterable[Entry] {
+class IntFloatMap extends scala.collection.Iterable[com.badlogic.gdx.utils.IntFloatMap.Entry] {
   var size: scala.Int = 0
   var keyTable: scala.Array[scala.Int] = null.asInstanceOf[scala.Array[scala.Int]]
   var valueTable: scala.Array[scala.Float] = null.asInstanceOf[scala.Array[scala.Float]]
@@ -8,14 +8,14 @@ class IntFloatMap extends scala.collection.Iterable[Entry] {
   var hasZeroValue: scala.Boolean = false
   private var loadFactor: scala.Float = 0.0f
   private var threshold: scala.Int = 0
-  protected var shift: scala.Int = 0
-  protected var mask: scala.Int = 0
-  private var entries1: Entries = null.asInstanceOf[Entries]
-  private var entries2: Entries = null.asInstanceOf[Entries]
-  private var values1: Values = null.asInstanceOf[Values]
-  private var values2: Values = null.asInstanceOf[Values]
-  private var keys1: Keys = null.asInstanceOf[Keys]
-  private var keys2: Keys = null.asInstanceOf[Keys]
+  var shift: scala.Int = 0
+  var mask: scala.Int = 0
+  private var entries1: com.badlogic.gdx.utils.IntFloatMap.Entries = null.asInstanceOf[com.badlogic.gdx.utils.IntFloatMap.Entries]
+  private var entries2: com.badlogic.gdx.utils.IntFloatMap.Entries = null.asInstanceOf[com.badlogic.gdx.utils.IntFloatMap.Entries]
+  private var values1: com.badlogic.gdx.utils.IntFloatMap.Values = null.asInstanceOf[com.badlogic.gdx.utils.IntFloatMap.Values]
+  private var values2: com.badlogic.gdx.utils.IntFloatMap.Values = null.asInstanceOf[com.badlogic.gdx.utils.IntFloatMap.Values]
+  private var keys1: com.badlogic.gdx.utils.IntFloatMap.Keys = null.asInstanceOf[com.badlogic.gdx.utils.IntFloatMap.Keys]
+  private var keys2: com.badlogic.gdx.utils.IntFloatMap.Keys = null.asInstanceOf[com.badlogic.gdx.utils.IntFloatMap.Keys]
   def this(initialCapacity: scala.Int, loadFactor: scala.Float) = {
     this()
     if ((loadFactor <= 0.0f) || (loadFactor >= 1.0f)) {
@@ -23,7 +23,7 @@ class IntFloatMap extends scala.collection.Iterable[Entry] {
     } else ()
     this.loadFactor = loadFactor
     val tableSize: scala.Int = com.badlogic.gdx.utils.ObjectSet.tableSize(initialCapacity, loadFactor)
-    this.threshold = (tableSize * loadFactor).asInstanceOf[scala.Int]
+    this.threshold = (tableSize * loadFactor).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
     this.mask = tableSize - 1
     this.shift = java.lang.Long.numberOfLeadingZeros(this.mask)
     this.keyTable = new Array[scala.Int](tableSize)
@@ -40,11 +40,11 @@ class IntFloatMap extends scala.collection.Iterable[Entry] {
     this.zeroValue = map.zeroValue
     this.hasZeroValue = map.hasZeroValue
   }
-  protected def place(item: scala.Int): scala.Int = {
-    return ((item * -7046029254386353131L) >>> this.shift).asInstanceOf[scala.Int]
+  def place(item: scala.Int): scala.Int = {
+    return ((item * -7046029254386353131L) >>> this.shift).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
   }
   private def locateKey(key: scala.Int): scala.Int = {
-    val keyTable: scala.Array[scala.Int] = this.keyTable
+    val keyTable: scala.Array[scala.Int] = this.keyTable;
     { var i: scala.Int = this.place(key); while (true) { {
       val other: scala.Int = keyTable(i)
       if (other == 0) {
@@ -107,7 +107,7 @@ class IntFloatMap extends scala.collection.Iterable[Entry] {
       this.put(0, map.zeroValue)
     } else ()
     val keyTable: scala.Array[scala.Int] = map.keyTable
-    val valueTable: scala.Array[scala.Float] = map.valueTable
+    val valueTable: scala.Array[scala.Float] = map.valueTable;
     { var i: scala.Int = 0; val n: scala.Int = keyTable.length; while (i < n) { {
       val key: scala.Int = keyTable(i)
       if (key != 0) {
@@ -116,7 +116,7 @@ class IntFloatMap extends scala.collection.Iterable[Entry] {
     }; i = i + 1 } }
   }
   private def putResize(key: scala.Int, value: scala.Float): scala.Unit = {
-    val keyTable: scala.Array[scala.Int] = this.keyTable
+    val keyTable: scala.Array[scala.Int] = this.keyTable;
     { var i: scala.Int = this.place(key); while (true) { {
       if (keyTable(i) == 0) {
         keyTable(i) = key
@@ -231,7 +231,7 @@ class IntFloatMap extends scala.collection.Iterable[Entry] {
       return true
     } else ()
     val keyTable: scala.Array[scala.Int] = this.keyTable
-    val valueTable: scala.Array[scala.Float] = this.valueTable
+    val valueTable: scala.Array[scala.Float] = this.valueTable;
     { var i: scala.Int = valueTable.length - 1; while (i >= 0) { {
       if ((keyTable(i) != 0) && (valueTable(i) == value)) {
         return true
@@ -244,7 +244,7 @@ class IntFloatMap extends scala.collection.Iterable[Entry] {
       return true
     } else ()
     val keyTable: scala.Array[scala.Int] = this.keyTable
-    val valueTable: scala.Array[scala.Float] = this.valueTable
+    val valueTable: scala.Array[scala.Float] = this.valueTable;
     { var i: scala.Int = valueTable.length - 1; while (i >= 0) { {
       if ((keyTable(i) != 0) && (java.lang.Math.abs(valueTable(i) - value) <= epsilon)) {
         return true
@@ -263,7 +263,7 @@ class IntFloatMap extends scala.collection.Iterable[Entry] {
       return 0
     } else ()
     val keyTable: scala.Array[scala.Int] = this.keyTable
-    val valueTable: scala.Array[scala.Float] = this.valueTable
+    val valueTable: scala.Array[scala.Float] = this.valueTable;
     { var i: scala.Int = valueTable.length - 1; while (i >= 0) { {
       if ((keyTable(i) != 0) && (valueTable(i) == value)) {
         return keyTable(i)
@@ -276,7 +276,7 @@ class IntFloatMap extends scala.collection.Iterable[Entry] {
       return 0
     } else ()
     val keyTable: scala.Array[scala.Int] = this.keyTable
-    val valueTable: scala.Array[scala.Float] = this.valueTable
+    val valueTable: scala.Array[scala.Float] = this.valueTable;
     { var i: scala.Int = valueTable.length - 1; while (i >= 0) { {
       if ((keyTable(i) != 0) && (java.lang.Math.abs(valueTable(i) - value) <= epsilon)) {
         return keyTable(i)
@@ -292,7 +292,7 @@ class IntFloatMap extends scala.collection.Iterable[Entry] {
   }
   private def resize(newSize: scala.Int): scala.Unit = {
     val oldCapacity: scala.Int = this.keyTable.length
-    this.threshold = (newSize * this.loadFactor).asInstanceOf[scala.Int]
+    this.threshold = (newSize * this.loadFactor).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
     this.mask = newSize - 1
     this.shift = java.lang.Long.numberOfLeadingZeros(this.mask)
     val oldKeyTable: scala.Array[scala.Int] = this.keyTable
@@ -314,7 +314,7 @@ class IntFloatMap extends scala.collection.Iterable[Entry] {
       h = h + com.badlogic.gdx.utils.NumberUtils.floatToRawIntBits(this.zeroValue)
     } else ()
     val keyTable: scala.Array[scala.Int] = this.keyTable
-    val valueTable: scala.Array[scala.Float] = this.valueTable
+    val valueTable: scala.Array[scala.Float] = this.valueTable;
     { var i: scala.Int = 0; val n: scala.Int = keyTable.length; while (i < n) { {
       val key: scala.Int = keyTable(i)
       if (key != 0) {
@@ -343,7 +343,7 @@ class IntFloatMap extends scala.collection.Iterable[Entry] {
       } else ()
     } else ()
     val keyTable: scala.Array[scala.Int] = this.keyTable
-    val valueTable: scala.Array[scala.Float] = this.valueTable
+    val valueTable: scala.Array[scala.Float] = this.valueTable;
     { var i: scala.Int = 0; val n: scala.Int = keyTable.length; while (i < n) { {
       val key: scala.Int = keyTable(i)
       if (key != 0) {
@@ -395,16 +395,16 @@ class IntFloatMap extends scala.collection.Iterable[Entry] {
     buffer.append(']')
     return buffer.toString()
   }
-  def iterator(): scala.collection.Iterator[Entry] = {
+  def iterator(): scala.collection.Iterator[com.badlogic.gdx.utils.IntFloatMap.Entry] = {
     return this.entries()
   }
-  def entries(): Entries = {
+  def entries(): com.badlogic.gdx.utils.IntFloatMap.Entries = {
     if (com.badlogic.gdx.utils.Collections.allocateIterators) {
-      return new Entries(this)
+      return new com.badlogic.gdx.utils.IntFloatMap.Entries(this)
     } else ()
     if (this.entries1 == null) {
-      this.entries1 = new Entries(this)
-      this.entries2 = new Entries(this)
+      this.entries1 = new com.badlogic.gdx.utils.IntFloatMap.Entries(this)
+      this.entries2 = new com.badlogic.gdx.utils.IntFloatMap.Entries(this)
     } else ()
     if (!this.entries1.valid) {
       this.entries1.reset()
@@ -417,13 +417,13 @@ class IntFloatMap extends scala.collection.Iterable[Entry] {
     this.entries1.valid = false
     return this.entries2
   }
-  def values(): Values = {
+  def values(): com.badlogic.gdx.utils.IntFloatMap.Values = {
     if (com.badlogic.gdx.utils.Collections.allocateIterators) {
-      return new Values(this)
+      return new com.badlogic.gdx.utils.IntFloatMap.Values(this)
     } else ()
     if (this.values1 == null) {
-      this.values1 = new Values(this)
-      this.values2 = new Values(this)
+      this.values1 = new com.badlogic.gdx.utils.IntFloatMap.Values(this)
+      this.values2 = new com.badlogic.gdx.utils.IntFloatMap.Values(this)
     } else ()
     if (!this.values1.valid) {
       this.values1.reset()
@@ -436,13 +436,13 @@ class IntFloatMap extends scala.collection.Iterable[Entry] {
     this.values1.valid = false
     return this.values2
   }
-  def keys(): Keys = {
+  def keys(): com.badlogic.gdx.utils.IntFloatMap.Keys = {
     if (com.badlogic.gdx.utils.Collections.allocateIterators) {
-      return new Keys(this)
+      return new com.badlogic.gdx.utils.IntFloatMap.Keys(this)
     } else ()
     if (this.keys1 == null) {
-      this.keys1 = new Keys(this)
-      this.keys2 = new Keys(this)
+      this.keys1 = new com.badlogic.gdx.utils.IntFloatMap.Keys(this)
+      this.keys2 = new com.badlogic.gdx.utils.IntFloatMap.Keys(this)
     } else ()
     if (!this.keys1.valid) {
       this.keys1.reset()
@@ -455,6 +455,8 @@ class IntFloatMap extends scala.collection.Iterable[Entry] {
     this.keys1.valid = false
     return this.keys2
   }
+}
+object IntFloatMap {
   class Entry {
     var key: scala.Int = 0
     var value: scala.Float = 0.0f
@@ -474,8 +476,8 @@ class IntFloatMap extends scala.collection.Iterable[Entry] {
       this.reset()
     }
     def reset(): scala.Unit = {
-      this.currentIndex = MapIterator.INDEX_ILLEGAL
-      this.nextIndex = MapIterator.INDEX_ZERO
+      this.currentIndex = com.badlogic.gdx.utils.IntFloatMap.MapIterator.INDEX_ILLEGAL
+      this.nextIndex = com.badlogic.gdx.utils.IntFloatMap.MapIterator.INDEX_ZERO
       if (this.map.hasZeroValue) {
         this.hasNext = true
       } else {
@@ -483,7 +485,7 @@ class IntFloatMap extends scala.collection.Iterable[Entry] {
       }
     }
     def findNextIndex(): scala.Unit = {
-      val keyTable: scala.Array[scala.Int] = this.map.keyTable
+      val keyTable: scala.Array[scala.Int] = this.map.keyTable;
       { val n: scala.Int = keyTable.length; while ({ this.nextIndex += 1; this.nextIndex } < n) { {
         if (keyTable(this.nextIndex) != 0) {
           this.hasNext = true
@@ -494,7 +496,7 @@ class IntFloatMap extends scala.collection.Iterable[Entry] {
     }
     def remove(): scala.Unit = {
       var i: scala.Int = this.currentIndex
-      if ((i == MapIterator.INDEX_ZERO) && this.map.hasZeroValue) {
+      if ((i == com.badlogic.gdx.utils.IntFloatMap.MapIterator.INDEX_ZERO) && this.map.hasZeroValue) {
         this.map.hasZeroValue = false
       } else {
         if (i < 0) {
@@ -523,7 +525,7 @@ class IntFloatMap extends scala.collection.Iterable[Entry] {
           } else ()
         }
       }
-      this.currentIndex = MapIterator.INDEX_ILLEGAL
+      this.currentIndex = com.badlogic.gdx.utils.IntFloatMap.MapIterator.INDEX_ILLEGAL
       this.map.size = this.map.size - 1
     }
   }
@@ -531,12 +533,12 @@ class IntFloatMap extends scala.collection.Iterable[Entry] {
     private final val INDEX_ILLEGAL: scala.Int = -2
     final val INDEX_ZERO: scala.Int = -1
   }
-  class Entries extends MapIterator with scala.collection.Iterable[Entry] with scala.collection.Iterator[Entry] {
-    private final val entry: Entry = new Entry()
+  class Entries extends com.badlogic.gdx.utils.IntFloatMap.MapIterator with scala.collection.Iterable[com.badlogic.gdx.utils.IntFloatMap.Entry] with scala.collection.Iterator[com.badlogic.gdx.utils.IntFloatMap.Entry] {
+    private final val entry: com.badlogic.gdx.utils.IntFloatMap.Entry = new com.badlogic.gdx.utils.IntFloatMap.Entry()
     def this(map: IntFloatMap) = {
       this()
     }
-    def next(): Entry = {
+    def next(): com.badlogic.gdx.utils.IntFloatMap.Entry = {
       if (!hasNext) {
         throw new java.util.NoSuchElementException()
       } else ()
@@ -544,7 +546,7 @@ class IntFloatMap extends scala.collection.Iterable[Entry] {
         throw new com.badlogic.gdx.utils.GdxRuntimeException("#iterator() cannot be used nested.")
       } else ()
       val keyTable: scala.Array[scala.Int] = this.map.keyTable
-      if (nextIndex == MapIterator.INDEX_ZERO) {
+      if (nextIndex == com.badlogic.gdx.utils.IntFloatMap.MapIterator.INDEX_ZERO) {
         this.entry.key = 0
         this.entry.value = this.map.zeroValue
       } else {
@@ -561,14 +563,14 @@ class IntFloatMap extends scala.collection.Iterable[Entry] {
       } else ()
       return hasNext
     }
-    def iterator(): scala.collection.Iterator[Entry] = {
+    def iterator(): scala.collection.Iterator[com.badlogic.gdx.utils.IntFloatMap.Entry] = {
       return this
     }
     def remove(): scala.Unit = {
       super.remove()
     }
   }
-  class Values extends MapIterator {
+  class Values extends com.badlogic.gdx.utils.IntFloatMap.MapIterator {
     def this(map: IntFloatMap) = {
       this()
     }
@@ -585,12 +587,12 @@ class IntFloatMap extends scala.collection.Iterable[Entry] {
       if (!valid) {
         throw new com.badlogic.gdx.utils.GdxRuntimeException("#iterator() cannot be used nested.")
       } else ()
-      val value: scala.Float = if (nextIndex == MapIterator.INDEX_ZERO) this.map.zeroValue else this.map.valueTable(nextIndex)
+      val value: scala.Float = if (nextIndex == com.badlogic.gdx.utils.IntFloatMap.MapIterator.INDEX_ZERO) this.map.zeroValue else this.map.valueTable(nextIndex)
       currentIndex = nextIndex
       this.findNextIndex()
       return value
     }
-    def iterator(): Values = {
+    def iterator(): com.badlogic.gdx.utils.IntFloatMap.Values = {
       return this
     }
     def toArray(): com.badlogic.gdx.utils.FloatArray = {
@@ -607,7 +609,7 @@ class IntFloatMap extends scala.collection.Iterable[Entry] {
       return array
     }
   }
-  class Keys extends MapIterator {
+  class Keys extends com.badlogic.gdx.utils.IntFloatMap.MapIterator {
     def this(map: IntFloatMap) = {
       this()
     }
@@ -618,7 +620,7 @@ class IntFloatMap extends scala.collection.Iterable[Entry] {
       if (!valid) {
         throw new com.badlogic.gdx.utils.GdxRuntimeException("#iterator() cannot be used nested.")
       } else ()
-      val key: scala.Int = if (nextIndex == MapIterator.INDEX_ZERO) 0 else this.map.keyTable(nextIndex)
+      val key: scala.Int = if (nextIndex == com.badlogic.gdx.utils.IntFloatMap.MapIterator.INDEX_ZERO) 0 else this.map.keyTable(nextIndex)
       currentIndex = nextIndex
       this.findNextIndex()
       return key

@@ -1,9 +1,9 @@
 package com.badlogic.gdx.graphics.g3d.utils
 
 class ModelBuilder {
-  protected var model: com.badlogic.gdx.graphics.g3d.Model = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.Model]
+  var model: com.badlogic.gdx.graphics.g3d.Model = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.Model]
   var node$field: com.badlogic.gdx.graphics.g3d.model.Node = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.model.Node]
-  protected var builders: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.utils.MeshBuilder] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.utils.MeshBuilder]()
+  var builders: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.utils.MeshBuilder] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.utils.MeshBuilder]()
   private var tmpTransform: com.badlogic.gdx.math.Matrix4 = new com.badlogic.gdx.math.Matrix4()
   private def getBuilder(attributes: com.badlogic.gdx.graphics.VertexAttributes): com.badlogic.gdx.graphics.g3d.utils.MeshBuilder = {
     for (mb <- this.builders) {
@@ -43,7 +43,7 @@ class ModelBuilder {
       this.node$field = null
     } else ()
   }
-  protected def node(node: com.badlogic.gdx.graphics.g3d.model.Node): com.badlogic.gdx.graphics.g3d.model.Node = {
+  def node(node: com.badlogic.gdx.graphics.g3d.model.Node): com.badlogic.gdx.graphics.g3d.model.Node = {
     if (this.model == null) {
       throw new com.badlogic.gdx.utils.GdxRuntimeException("Call begin() first")
     } else ()
@@ -203,7 +203,7 @@ class ModelBuilder {
     var z1: scala.Float = hzlength
     var x2: scala.Float = -hxlength
     var y2: scala.Float = 0
-    var z2: scala.Float = -hzlength
+    var z2: scala.Float = -hzlength;
     { var i: scala.Int = 0; while (i <= xDivisions) { {
       partBuilder.line(x1, y1, z1, x2, y2, z2)
       x1 = x1 + xSize
@@ -214,7 +214,7 @@ class ModelBuilder {
     z1 = -hzlength
     x2 = hxlength
     y2 = 0
-    z2 = -hzlength
+    z2 = -hzlength;
     { var j: scala.Int = 0; while (j <= zDivisions) { {
       partBuilder.line(x1, y1, z1, x2, y2, z2)
       z1 = z1 + zSize

@@ -1,7 +1,7 @@
 package com.badlogic.gdx.graphics.g3d.particles.values
 
 final class EllipseSpawnShapeValue extends com.badlogic.gdx.graphics.g3d.particles.values.PrimitiveSpawnShapeValue {
-  var side: com.badlogic.gdx.graphics.g3d.particles.values.PrimitiveSpawnShapeValue#SpawnSide = com.badlogic.gdx.graphics.g3d.particles.values.PrimitiveSpawnShapeValue.SpawnSide.both
+  var side: com.badlogic.gdx.graphics.g3d.particles.values.PrimitiveSpawnShapeValue.SpawnSide = com.badlogic.gdx.graphics.g3d.particles.values.PrimitiveSpawnShapeValue.SpawnSide.both
   def this(value: EllipseSpawnShapeValue) = {
     this()
     this.load(value)
@@ -45,13 +45,13 @@ final class EllipseSpawnShapeValue extends com.badlogic.gdx.graphics.g3d.particl
       radiusZ = com.badlogic.gdx.math.MathUtils.random(depth / 2)
     }
     val z: scala.Float = com.badlogic.gdx.math.MathUtils.random(-1, 1.0f)
-    val r: scala.Float = java.lang.Math.sqrt(1.0f - (z * z)).asInstanceOf[scala.Float]
+    val r: scala.Float = java.lang.Math.sqrt(1.0f - (z * z)).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
     vector.set((radiusX * r) * com.badlogic.gdx.math.MathUtils.cos(t), (radiusY * r) * com.badlogic.gdx.math.MathUtils.sin(t), radiusZ * z)
   }
-  def getSide(): com.badlogic.gdx.graphics.g3d.particles.values.PrimitiveSpawnShapeValue#SpawnSide = {
+  def getSide(): com.badlogic.gdx.graphics.g3d.particles.values.PrimitiveSpawnShapeValue.SpawnSide = {
     return this.side
   }
-  def setSide(side: com.badlogic.gdx.graphics.g3d.particles.values.PrimitiveSpawnShapeValue#SpawnSide): scala.Unit = {
+  def setSide(side: com.badlogic.gdx.graphics.g3d.particles.values.PrimitiveSpawnShapeValue.SpawnSide): scala.Unit = {
     this.side = side
   }
   def load(value: com.badlogic.gdx.graphics.g3d.particles.values.ParticleValue): scala.Unit = {
@@ -68,6 +68,6 @@ final class EllipseSpawnShapeValue extends com.badlogic.gdx.graphics.g3d.particl
   }
   def read(json: com.badlogic.gdx.utils.Json, jsonData: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
     super.read(json, jsonData)
-    this.side = json.readValue("side", classOf[java.lang.Class], jsonData)
+    this.side = json.readValue("side", classOf[com.badlogic.gdx.graphics.g3d.particles.values.PrimitiveSpawnShapeValue.SpawnSide], jsonData)
   }
 }

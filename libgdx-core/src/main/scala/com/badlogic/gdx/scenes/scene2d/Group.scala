@@ -9,7 +9,7 @@ class Group extends com.badlogic.gdx.scenes.scene2d.Actor with com.badlogic.gdx.
   private var cullingArea: com.badlogic.gdx.math.Rectangle = null.asInstanceOf[com.badlogic.gdx.math.Rectangle]
   def act(delta: scala.Float): scala.Unit = {
     super.act(delta)
-    val actors: scala.Array[com.badlogic.gdx.scenes.scene2d.Actor] = this.children.begin()
+    val actors: scala.Array[com.badlogic.gdx.scenes.scene2d.Actor] = this.children.begin();
     { var i: scala.Int = 0; val n: scala.Int = this.children.size; while (i < n) { {
       actors(i).act(delta)
     }; i = i + 1 } }
@@ -24,7 +24,7 @@ class Group extends com.badlogic.gdx.scenes.scene2d.Actor with com.badlogic.gdx.
       this.resetTransform(batch)
     } else ()
   }
-  protected def drawChildren(batch: com.badlogic.gdx.graphics.g2d.Batch, parentAlpha$arg: scala.Float): scala.Unit = {
+  def drawChildren(batch: com.badlogic.gdx.graphics.g2d.Batch, parentAlpha$arg: scala.Float): scala.Unit = {
     var parentAlpha: scala.Float = parentAlpha$arg
     parentAlpha = parentAlpha * this.color.a
     val children: com.badlogic.gdx.utils.SnapshotArray[com.badlogic.gdx.scenes.scene2d.Actor] = this.children
@@ -51,7 +51,7 @@ class Group extends com.badlogic.gdx.scenes.scene2d.Actor with com.badlogic.gdx.
         val offsetX: scala.Float = x
         val offsetY: scala.Float = y
         x = 0
-        y = 0
+        y = 0;
         { var i: scala.Int = 0; val n: scala.Int = children.size; while (i < n) { {
           val child: com.badlogic.gdx.scenes.scene2d.Actor = actors(i)
           if (!child.isVisible()) {
@@ -83,7 +83,7 @@ class Group extends com.badlogic.gdx.scenes.scene2d.Actor with com.badlogic.gdx.
         val offsetX: scala.Float = x
         val offsetY: scala.Float = y
         x = 0
-        y = 0
+        y = 0;
         { var i: scala.Int = 0; val n: scala.Int = children.size; while (i < n) { {
           val child: com.badlogic.gdx.scenes.scene2d.Actor = actors(i)
           if (!child.isVisible()) {
@@ -113,7 +113,7 @@ class Group extends com.badlogic.gdx.scenes.scene2d.Actor with com.badlogic.gdx.
       this.resetTransform(shapes)
     } else ()
   }
-  protected def drawDebugChildren(shapes: com.badlogic.gdx.graphics.glutils.ShapeRenderer): scala.Unit = {
+  def drawDebugChildren(shapes: com.badlogic.gdx.graphics.glutils.ShapeRenderer): scala.Unit = {
     val children: com.badlogic.gdx.utils.SnapshotArray[com.badlogic.gdx.scenes.scene2d.Actor] = this.children
     val actors: scala.Array[com.badlogic.gdx.scenes.scene2d.Actor] = children.begin()
     if (this.transform) {
@@ -132,7 +132,7 @@ class Group extends com.badlogic.gdx.scenes.scene2d.Actor with com.badlogic.gdx.
       val offsetX: scala.Float = x
       val offsetY: scala.Float = y
       x = 0
-      y = 0
+      y = 0;
       { var i: scala.Int = 0; val n: scala.Int = children.size; while (i < n) { {
         val child: com.badlogic.gdx.scenes.scene2d.Actor = actors(i)
         if (!child.isVisible()) {
@@ -154,7 +154,7 @@ class Group extends com.badlogic.gdx.scenes.scene2d.Actor with com.badlogic.gdx.
     }
     children.`end`()
   }
-  protected def computeTransform(): com.badlogic.gdx.math.Matrix4 = {
+  def computeTransform(): com.badlogic.gdx.math.Matrix4 = {
     val worldTransform: com.badlogic.gdx.math.Affine2 = this.worldTransform
     val originX: scala.Float = this.originX
     val originY: scala.Float = this.originY
@@ -175,19 +175,19 @@ class Group extends com.badlogic.gdx.scenes.scene2d.Actor with com.badlogic.gdx.
     this.computedTransform.set(worldTransform)
     return this.computedTransform
   }
-  protected def applyTransform(batch: com.badlogic.gdx.graphics.g2d.Batch, transform: com.badlogic.gdx.math.Matrix4): scala.Unit = {
+  def applyTransform(batch: com.badlogic.gdx.graphics.g2d.Batch, transform: com.badlogic.gdx.math.Matrix4): scala.Unit = {
     this.oldTransform.set(batch.getTransformMatrix())
     batch.setTransformMatrix(transform)
   }
-  protected def resetTransform(batch: com.badlogic.gdx.graphics.g2d.Batch): scala.Unit = {
+  def resetTransform(batch: com.badlogic.gdx.graphics.g2d.Batch): scala.Unit = {
     batch.setTransformMatrix(this.oldTransform)
   }
-  protected def applyTransform(shapes: com.badlogic.gdx.graphics.glutils.ShapeRenderer, transform: com.badlogic.gdx.math.Matrix4): scala.Unit = {
+  def applyTransform(shapes: com.badlogic.gdx.graphics.glutils.ShapeRenderer, transform: com.badlogic.gdx.math.Matrix4): scala.Unit = {
     this.oldTransform.set(shapes.getTransformMatrix())
     shapes.setTransformMatrix(transform)
     shapes.flush()
   }
-  protected def resetTransform(shapes: com.badlogic.gdx.graphics.glutils.ShapeRenderer): scala.Unit = {
+  def resetTransform(shapes: com.badlogic.gdx.graphics.glutils.ShapeRenderer): scala.Unit = {
     shapes.setTransformMatrix(this.oldTransform)
   }
   def setCullingArea(cullingArea: com.badlogic.gdx.math.Rectangle): scala.Unit = {
@@ -204,7 +204,7 @@ class Group extends com.badlogic.gdx.scenes.scene2d.Actor with com.badlogic.gdx.
       return null
     } else ()
     val point: com.badlogic.gdx.math.Vector2 = Group.tmp
-    val childrenArray: scala.Array[com.badlogic.gdx.scenes.scene2d.Actor] = this.children.items
+    val childrenArray: scala.Array[com.badlogic.gdx.scenes.scene2d.Actor] = this.children.items;
     { var i: scala.Int = this.children.size - 1; while (i >= 0) { {
       val child: com.badlogic.gdx.scenes.scene2d.Actor = childrenArray(i)
       child.parentToLocalCoordinates(point.set(x, y))
@@ -215,7 +215,7 @@ class Group extends com.badlogic.gdx.scenes.scene2d.Actor with com.badlogic.gdx.
     }; i = i - 1 } }
     return super.hit(x, y, touchable)
   }
-  protected def childrenChanged(): scala.Unit = {
+  def childrenChanged(): scala.Unit = {
     ()
   }
   def addActor(actor: com.badlogic.gdx.scenes.scene2d.Actor): scala.Unit = {
@@ -305,7 +305,7 @@ class Group extends com.badlogic.gdx.scenes.scene2d.Actor with com.badlogic.gdx.
     this.clearChildren(true)
   }
   def clearChildren(unfocus: scala.Boolean): scala.Unit = {
-    val actors: scala.Array[com.badlogic.gdx.scenes.scene2d.Actor] = this.children.begin()
+    val actors: scala.Array[com.badlogic.gdx.scenes.scene2d.Actor] = this.children.begin();
     { var i: scala.Int = 0; val n: scala.Int = this.children.size; while (i < n) { {
       val child: com.badlogic.gdx.scenes.scene2d.Actor = actors(i)
       if (unfocus) {
@@ -330,12 +330,12 @@ class Group extends com.badlogic.gdx.scenes.scene2d.Actor with com.badlogic.gdx.
     this.clearChildren(unfocus)
   }
   def findActor[T <: com.badlogic.gdx.scenes.scene2d.Actor](name: java.lang.String): T = {
-    val children: com.badlogic.gdx.utils.Array[com.badlogic.gdx.scenes.scene2d.Actor] = this.children
+    val children: com.badlogic.gdx.utils.Array[com.badlogic.gdx.scenes.scene2d.Actor] = this.children;
     { var i: scala.Int = 0; val n: scala.Int = children.size; while (i < n) { {
       if (name.equals(children.get(i).getName())) {
         return children.get(i).asInstanceOf[T]
       } else ()
-    }; i = i + 1 } }
+    }; i = i + 1 } };
     { var i: scala.Int = 0; val n: scala.Int = children.size; while (i < n) { {
       val child: com.badlogic.gdx.scenes.scene2d.Actor = children.get(i)
       if (child.isInstanceOf[Group]) {
@@ -345,11 +345,11 @@ class Group extends com.badlogic.gdx.scenes.scene2d.Actor with com.badlogic.gdx.
         } else ()
       } else ()
     }; i = i + 1 } }
-    return null
+    return null.asInstanceOf[T]
   }
-  protected def setStage(stage: com.badlogic.gdx.scenes.scene2d.Stage): scala.Unit = {
+  def setStage(stage: com.badlogic.gdx.scenes.scene2d.Stage): scala.Unit = {
     super.setStage(stage)
-    val childrenArray: scala.Array[com.badlogic.gdx.scenes.scene2d.Actor] = this.children.items
+    val childrenArray: scala.Array[com.badlogic.gdx.scenes.scene2d.Actor] = this.children.items;
     { var i: scala.Int = 0; val n: scala.Int = this.children.size; while (i < n) { {
       childrenArray(i).setStage(stage)
     }; i = i + 1 } }
@@ -425,7 +425,7 @@ class Group extends com.badlogic.gdx.scenes.scene2d.Actor with com.badlogic.gdx.
   def toString(buffer: java.lang.StringBuilder, indent: scala.Int): scala.Unit = {
     buffer.append(super.toString())
     buffer.append('\n')
-    val actors: scala.Array[com.badlogic.gdx.scenes.scene2d.Actor] = this.children.begin()
+    val actors: scala.Array[com.badlogic.gdx.scenes.scene2d.Actor] = this.children.begin();
     { var i: scala.Int = 0; val n: scala.Int = this.children.size; while (i < n) { {
       { var ii: scala.Int = 0; while (ii < indent) { {
         buffer.append("|  ")

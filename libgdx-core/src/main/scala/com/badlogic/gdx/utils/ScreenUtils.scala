@@ -57,7 +57,7 @@ object ScreenUtils {
     val numBytes: scala.Int = (w * h) * 4
     val lines: scala.Array[scala.Byte] = new Array[scala.Byte](numBytes)
     if (flipY) {
-      val numBytesPerLine: scala.Int = w * 4
+      val numBytesPerLine: scala.Int = w * 4;
       { var i: scala.Int = 0; while (i < h) { {
         pixels.asInstanceOf[java.nio.Buffer].position(((h - i) - 1) * numBytesPerLine)
         pixels.get(lines, i * numBytesPerLine, numBytesPerLine)

@@ -19,7 +19,7 @@ class FloatAttribute extends com.badlogic.gdx.graphics.g3d.Attribute {
   }
   def compareTo(o: com.badlogic.gdx.graphics.g3d.Attribute): scala.Int = {
     if (`type` != o.`type`) {
-      return (`type` - o.`type`).asInstanceOf[scala.Int]
+      return (`type` - o.`type`).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
     } else ()
     val v: scala.Float = o.asInstanceOf[FloatAttribute].value
     return if (com.badlogic.gdx.math.MathUtils.isEqual(this.value, v)) 0 else if (this.value < v) -1 else 1

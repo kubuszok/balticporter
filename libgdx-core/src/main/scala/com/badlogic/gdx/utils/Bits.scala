@@ -65,7 +65,7 @@ class Bits {
     return this.bits.length << 6
   }
   def length(): scala.Int = {
-    val bits: scala.Array[scala.Long] = this.bits
+    val bits: scala.Array[scala.Long] = this.bits;
     { var word: scala.Int = bits.length - 1; while (word >= 0) { {
       val bitsAtWord: scala.Long = bits(word)
       if (bitsAtWord != 0) {
@@ -83,7 +83,7 @@ class Bits {
   }
   def isEmpty(): scala.Boolean = {
     val bits: scala.Array[scala.Long] = this.bits
-    val length: scala.Int = bits.length
+    val length: scala.Int = bits.length;
     { var i: scala.Int = 0; while (i < length) { {
       if (bits(i) != 0L) {
         return false
@@ -105,7 +105,7 @@ class Bits {
           return (word << 6) + i
         } else ()
       }; i = i + 1 } }
-    } else ()
+    } else ();
     { word = word + 1; while (word < bitsLength) { {
       if (word != 0) {
         bitsAtWord = bits(word)
@@ -127,17 +127,17 @@ class Bits {
     if (word >= bitsLength) {
       return bits.length << 6
     } else ()
-    var bitsAtWord: scala.Long = bits(word)
+    var bitsAtWord: scala.Long = bits(word);
     { var i: scala.Int = fromIndex & 63; while (i < 64) { {
       if ((bitsAtWord & (1L << (i & 63))) == 0L) {
         return (word << 6) + i
       } else ()
-    }; i = i + 1 } }
+    }; i = i + 1 } };
     { word = word + 1; while (word < bitsLength) { {
       if (word == 0) {
         return word << 6
       } else ()
-      bitsAtWord = bits(word)
+      bitsAtWord = bits(word);
       { var i: scala.Int = 0; while (i < 64) { {
         if ((bitsAtWord & (1L << (i & 63))) == 0L) {
           return (word << 6) + i
@@ -147,7 +147,7 @@ class Bits {
     return bits.length << 6
   }
   def and(other: Bits): scala.Unit = {
-    val commonWords: scala.Int = java.lang.Math.min(this.bits.length, other.bits.length)
+    val commonWords: scala.Int = java.lang.Math.min(this.bits.length, other.bits.length);
     { var i: scala.Int = 0; while (commonWords > i) { {
       this.bits(i) = this.bits(i) & other.bits(i)
     }; i = i + 1 } }
@@ -163,24 +163,24 @@ class Bits {
     }; i = i + 1 } }
   }
   def or(other: Bits): scala.Unit = {
-    val commonWords: scala.Int = java.lang.Math.min(this.bits.length, other.bits.length)
+    val commonWords: scala.Int = java.lang.Math.min(this.bits.length, other.bits.length);
     { var i: scala.Int = 0; while (commonWords > i) { {
       this.bits(i) = this.bits(i) | other.bits(i)
     }; i = i + 1 } }
     if (commonWords < other.bits.length) {
-      this.checkCapacity(other.bits.length)
+      this.checkCapacity(other.bits.length);
       { var i: scala.Int = commonWords; val s: scala.Int = other.bits.length; while (s > i) { {
         this.bits(i) = other.bits(i)
       }; i = i + 1 } }
     } else ()
   }
   def xor(other: Bits): scala.Unit = {
-    val commonWords: scala.Int = java.lang.Math.min(this.bits.length, other.bits.length)
+    val commonWords: scala.Int = java.lang.Math.min(this.bits.length, other.bits.length);
     { var i: scala.Int = 0; while (commonWords > i) { {
       this.bits(i) = this.bits(i) ^ other.bits(i)
     }; i = i + 1 } }
     if (commonWords < other.bits.length) {
-      this.checkCapacity(other.bits.length)
+      this.checkCapacity(other.bits.length);
       { var i: scala.Int = commonWords; val s: scala.Int = other.bits.length; while (s > i) { {
         this.bits(i) = other.bits(i)
       }; i = i + 1 } }
@@ -188,7 +188,7 @@ class Bits {
   }
   def intersects(other: Bits): scala.Boolean = {
     val bits: scala.Array[scala.Long] = this.bits
-    val otherBits: scala.Array[scala.Long] = other.bits
+    val otherBits: scala.Array[scala.Long] = other.bits;
     { var i: scala.Int = java.lang.Math.min(bits.length, otherBits.length) - 1; while (i >= 0) { {
       if ((bits(i) & otherBits(i)) != 0) {
         return true
@@ -200,12 +200,12 @@ class Bits {
     val bits: scala.Array[scala.Long] = this.bits
     val otherBits: scala.Array[scala.Long] = other.bits
     val otherBitsLength: scala.Int = otherBits.length
-    val bitsLength: scala.Int = bits.length
+    val bitsLength: scala.Int = bits.length;
     { var i: scala.Int = bitsLength; while (i < otherBitsLength) { {
       if (otherBits(i) != 0) {
         return false
       } else ()
-    }; i = i + 1 } }
+    }; i = i + 1 } };
     { var i: scala.Int = java.lang.Math.min(bitsLength, otherBitsLength) - 1; while (i >= 0) { {
       if ((bits(i) & otherBits(i)) != otherBits(i)) {
         return false
@@ -215,7 +215,7 @@ class Bits {
   }
   def hashCode(): scala.Int = {
     val word: scala.Int = this.length() >>> 6
-    var hash: scala.Int = 0
+    var hash: scala.Int = 0;
     { var i: scala.Int = 0; while (word >= i) { {
       hash = (127 * hash) + (this.bits(i) ^ (this.bits(i) >>> 32)).asInstanceOf[scala.Int]
     }; i = i + 1 } }
@@ -233,7 +233,7 @@ class Bits {
     } else ()
     val other: Bits = obj.asInstanceOf[Bits]
     val otherBits: scala.Array[scala.Long] = other.bits
-    val commonWords: scala.Int = java.lang.Math.min(this.bits.length, otherBits.length)
+    val commonWords: scala.Int = java.lang.Math.min(this.bits.length, otherBits.length);
     { var i: scala.Int = 0; while (commonWords > i) { {
       if (this.bits(i) != otherBits(i)) {
         return false

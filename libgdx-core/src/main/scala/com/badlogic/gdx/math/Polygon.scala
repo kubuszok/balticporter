@@ -45,7 +45,7 @@ class Polygon extends com.badlogic.gdx.math.Shape2D {
     val scale: scala.Boolean = (scaleX != 1) || (scaleY != 1)
     val rotation: scala.Float = this.rotation
     val cos: scala.Float = com.badlogic.gdx.math.MathUtils.cosDeg(rotation)
-    val sin: scala.Float = com.badlogic.gdx.math.MathUtils.sinDeg(rotation)
+    val sin: scala.Float = com.badlogic.gdx.math.MathUtils.sinDeg(rotation);
     { var i: scala.Int = 0; val n: scala.Int = localVertices.length; while (i < n) { {
       var x: scala.Float = localVertices(i) - originX
       var y: scala.Float = localVertices(i + 1) - originY
@@ -138,7 +138,7 @@ class Polygon extends com.badlogic.gdx.math.Shape2D {
     var minY: scala.Float = vertices(1)
     var maxX: scala.Float = vertices(0)
     var maxY: scala.Float = vertices(1)
-    val numFloats: scala.Int = vertices.length
+    val numFloats: scala.Int = vertices.length;
     { var i: scala.Int = 2; while (i < numFloats) { {
       minX = if (minX > vertices(i)) vertices(i) else minX
       minY = if (minY > vertices(i + 1)) vertices(i + 1) else minY
@@ -157,7 +157,7 @@ class Polygon extends com.badlogic.gdx.math.Shape2D {
   def contains(x: scala.Float, y: scala.Float): scala.Boolean = {
     val vertices: scala.Array[scala.Float] = this.getTransformedVertices()
     val numFloats: scala.Int = vertices.length
-    var intersects: scala.Int = 0
+    var intersects: scala.Int = 0;
     { var i: scala.Int = 0; while (i < numFloats) { {
       val x1: scala.Float = vertices(i)
       val y1: scala.Float = vertices(i + 1)

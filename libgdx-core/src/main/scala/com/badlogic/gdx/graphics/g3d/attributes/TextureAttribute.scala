@@ -102,7 +102,7 @@ object TextureAttribute {
   final val Emissive: scala.Long = com.badlogic.gdx.graphics.g3d.Attribute.register(TextureAttribute.EmissiveAlias)
   final val ReflectionAlias: java.lang.String = "reflectionTexture"
   final val Reflection: scala.Long = com.badlogic.gdx.graphics.g3d.Attribute.register(TextureAttribute.ReflectionAlias)
-  protected var Mask: scala.Long = (((((TextureAttribute.Diffuse | TextureAttribute.Specular) | TextureAttribute.Bump) | TextureAttribute.Normal) | TextureAttribute.Ambient) | TextureAttribute.Emissive) | TextureAttribute.Reflection
+  var Mask: scala.Long = (((((TextureAttribute.Diffuse | TextureAttribute.Specular) | TextureAttribute.Bump) | TextureAttribute.Normal) | TextureAttribute.Ambient) | TextureAttribute.Emissive) | TextureAttribute.Reflection
   final def is(mask: scala.Long): scala.Boolean = {
     return (mask & TextureAttribute.Mask) != 0
   }

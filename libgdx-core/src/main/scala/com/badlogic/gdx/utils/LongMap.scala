@@ -1,6 +1,6 @@
 package com.badlogic.gdx.utils
 
-class LongMap[V] extends scala.collection.Iterable[Entry[V]] {
+class LongMap[V] extends scala.collection.Iterable[com.badlogic.gdx.utils.LongMap.Entry[V]] {
   var size: scala.Int = 0
   var keyTable: scala.Array[scala.Long] = null.asInstanceOf[scala.Array[scala.Long]]
   var valueTable: scala.Array[V] = null.asInstanceOf[scala.Array[V]]
@@ -8,14 +8,14 @@ class LongMap[V] extends scala.collection.Iterable[Entry[V]] {
   var hasZeroValue: scala.Boolean = false
   private var loadFactor: scala.Float = 0.0f
   private var threshold: scala.Int = 0
-  protected var shift: scala.Int = 0
-  protected var mask: scala.Int = 0
-  private var entries1: Entries = null.asInstanceOf[Entries]
-  private var entries2: Entries = null.asInstanceOf[Entries]
-  private var values1: Values = null.asInstanceOf[Values]
-  private var values2: Values = null.asInstanceOf[Values]
-  private var keys1: Keys = null.asInstanceOf[Keys]
-  private var keys2: Keys = null.asInstanceOf[Keys]
+  var shift: scala.Int = 0
+  var mask: scala.Int = 0
+  private var entries1: com.badlogic.gdx.utils.LongMap.Entries[?] = null.asInstanceOf[com.badlogic.gdx.utils.LongMap.Entries[?]]
+  private var entries2: com.badlogic.gdx.utils.LongMap.Entries[?] = null.asInstanceOf[com.badlogic.gdx.utils.LongMap.Entries[?]]
+  private var values1: com.badlogic.gdx.utils.LongMap.Values[?] = null.asInstanceOf[com.badlogic.gdx.utils.LongMap.Values[?]]
+  private var values2: com.badlogic.gdx.utils.LongMap.Values[?] = null.asInstanceOf[com.badlogic.gdx.utils.LongMap.Values[?]]
+  private var keys1: com.badlogic.gdx.utils.LongMap.Keys = null.asInstanceOf[com.badlogic.gdx.utils.LongMap.Keys]
+  private var keys2: com.badlogic.gdx.utils.LongMap.Keys = null.asInstanceOf[com.badlogic.gdx.utils.LongMap.Keys]
   def this(initialCapacity: scala.Int, loadFactor: scala.Float) = {
     this()
     if ((loadFactor <= 0.0f) || (loadFactor >= 1.0f)) {
@@ -23,11 +23,11 @@ class LongMap[V] extends scala.collection.Iterable[Entry[V]] {
     } else ()
     this.loadFactor = loadFactor
     val tableSize: scala.Int = com.badlogic.gdx.utils.ObjectSet.tableSize(initialCapacity, loadFactor)
-    this.threshold = (tableSize * loadFactor).asInstanceOf[scala.Int]
+    this.threshold = (tableSize * loadFactor).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
     this.mask = tableSize - 1
     this.shift = java.lang.Long.numberOfLeadingZeros(this.mask)
     this.keyTable = new Array[scala.Long](tableSize)
-    this.valueTable = new Array[java.lang.Object](tableSize).asInstanceOf[scala.Array[V]]
+    this.valueTable = new Array[java.lang.Object](tableSize).asInstanceOf[scala.Array[V]].asInstanceOf[scala.Array[V]]
   }
   def this(initialCapacity: scala.Int) = {
     this(initialCapacity, 0.8f)
@@ -40,11 +40,11 @@ class LongMap[V] extends scala.collection.Iterable[Entry[V]] {
     this.zeroValue = map.zeroValue
     this.hasZeroValue = map.hasZeroValue
   }
-  protected def place(item: scala.Long): scala.Int = {
-    return (((item ^ (item >>> 32)) * -7046029254386353131L) >>> this.shift).asInstanceOf[scala.Int]
+  def place(item: scala.Long): scala.Int = {
+    return (((item ^ (item >>> 32)) * -7046029254386353131L) >>> this.shift).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
   }
   private def locateKey(key: scala.Long): scala.Int = {
-    val keyTable: scala.Array[scala.Long] = this.keyTable
+    val keyTable: scala.Array[scala.Long] = this.keyTable;
     { var i: scala.Int = this.place(key); while (true) { {
       val other: scala.Long = keyTable(i)
       if (other == 0) {
@@ -77,7 +77,7 @@ class LongMap[V] extends scala.collection.Iterable[Entry[V]] {
     if ({ this.size += 1; this.size } >= this.threshold) {
       this.resize(this.keyTable.length << 1)
     } else ()
-    return null
+    return null.asInstanceOf[V]
   }
   def putAll(map: LongMap[? <: V]): scala.Unit = {
     this.ensureCapacity(map.size)
@@ -85,7 +85,7 @@ class LongMap[V] extends scala.collection.Iterable[Entry[V]] {
       this.put(0, map.zeroValue)
     } else ()
     val keyTable: scala.Array[scala.Long] = map.keyTable
-    val valueTable: scala.Array[V] = map.valueTable
+    val valueTable: scala.Array[V] = map.valueTable.asInstanceOf[scala.Array[V]];
     { var i: scala.Int = 0; val n: scala.Int = keyTable.length; while (i < n) { {
       val key: scala.Long = keyTable(i)
       if (key != 0) {
@@ -94,7 +94,7 @@ class LongMap[V] extends scala.collection.Iterable[Entry[V]] {
     }; i = i + 1 } }
   }
   private def putResize(key: scala.Long, value: V): scala.Unit = {
-    val keyTable: scala.Array[scala.Long] = this.keyTable
+    val keyTable: scala.Array[scala.Long] = this.keyTable;
     { var i: scala.Int = this.place(key); while (true) { {
       if (keyTable(i) == 0) {
         keyTable(i) = key
@@ -121,17 +121,17 @@ class LongMap[V] extends scala.collection.Iterable[Entry[V]] {
     var key: scala.Long = key$arg
     if (key == 0) {
       if (!this.hasZeroValue) {
-        return null
+        return null.asInstanceOf[V]
       } else ()
       this.hasZeroValue = false
       val oldValue: V = this.zeroValue
-      this.zeroValue = null
+      this.zeroValue = null.asInstanceOf[V]
       this.size = this.size - 1
       return oldValue
     } else ()
     var i: scala.Int = this.locateKey(key)
     if (i < 0) {
-      return null
+      return null.asInstanceOf[V]
     } else ()
     val keyTable: scala.Array[scala.Long] = this.keyTable
     val valueTable: scala.Array[V] = this.valueTable
@@ -151,7 +151,7 @@ class LongMap[V] extends scala.collection.Iterable[Entry[V]] {
       next = (next + 1) & mask
     }
     keyTable(i) = 0
-    valueTable(i) = null
+    valueTable(i) = null.asInstanceOf[V]
     this.size = this.size - 1
     return oldValue
   }
@@ -178,7 +178,7 @@ class LongMap[V] extends scala.collection.Iterable[Entry[V]] {
     } else ()
     this.size = 0
     this.hasZeroValue = false
-    this.zeroValue = null
+    this.zeroValue = null.asInstanceOf[V]
     this.resize(tableSize)
   }
   def clear(): scala.Unit = {
@@ -188,7 +188,7 @@ class LongMap[V] extends scala.collection.Iterable[Entry[V]] {
     this.size = 0
     java.util.Arrays.fill(this.keyTable, 0)
     java.util.Arrays.fill(this.valueTable, null)
-    this.zeroValue = null
+    this.zeroValue = null.asInstanceOf[V]
     this.hasZeroValue = false
   }
   def containsValue(value: java.lang.Object, identity: scala.Boolean): scala.Boolean = {
@@ -197,7 +197,7 @@ class LongMap[V] extends scala.collection.Iterable[Entry[V]] {
       if (this.hasZeroValue && (this.zeroValue == null)) {
         return true
       } else ()
-      val keyTable: scala.Array[scala.Long] = this.keyTable
+      val keyTable: scala.Array[scala.Long] = this.keyTable;
       { var i: scala.Int = valueTable.length - 1; while (i >= 0) { {
         if ((keyTable(i) != 0) && (valueTable(i) == null)) {
           return true
@@ -207,7 +207,7 @@ class LongMap[V] extends scala.collection.Iterable[Entry[V]] {
       if (identity) {
         if (value == this.zeroValue) {
           return true
-        } else ()
+        } else ();
         { var i: scala.Int = valueTable.length - 1; while (i >= 0) { {
           if (valueTable(i) == value) {
             return true
@@ -216,7 +216,7 @@ class LongMap[V] extends scala.collection.Iterable[Entry[V]] {
       } else {
         if (this.hasZeroValue && value.equals(this.zeroValue)) {
           return true
-        } else ()
+        } else ();
         { var i: scala.Int = valueTable.length - 1; while (i >= 0) { {
           if (value.equals(valueTable(i))) {
             return true
@@ -238,7 +238,7 @@ class LongMap[V] extends scala.collection.Iterable[Entry[V]] {
       if (this.hasZeroValue && (this.zeroValue == null)) {
         return 0
       } else ()
-      val keyTable: scala.Array[scala.Long] = this.keyTable
+      val keyTable: scala.Array[scala.Long] = this.keyTable;
       { var i: scala.Int = valueTable.length - 1; while (i >= 0) { {
         if ((keyTable(i) != 0) && (valueTable(i) == null)) {
           return keyTable(i)
@@ -248,7 +248,7 @@ class LongMap[V] extends scala.collection.Iterable[Entry[V]] {
       if (identity) {
         if (value == this.zeroValue) {
           return 0
-        } else ()
+        } else ();
         { var i: scala.Int = valueTable.length - 1; while (i >= 0) { {
           if (valueTable(i) == value) {
             return this.keyTable(i)
@@ -257,7 +257,7 @@ class LongMap[V] extends scala.collection.Iterable[Entry[V]] {
       } else {
         if (this.hasZeroValue && value.equals(this.zeroValue)) {
           return 0
-        } else ()
+        } else ();
         { var i: scala.Int = valueTable.length - 1; while (i >= 0) { {
           if (value.equals(valueTable(i))) {
             return this.keyTable(i)
@@ -275,13 +275,13 @@ class LongMap[V] extends scala.collection.Iterable[Entry[V]] {
   }
   private def resize(newSize: scala.Int): scala.Unit = {
     val oldCapacity: scala.Int = this.keyTable.length
-    this.threshold = (newSize * this.loadFactor).asInstanceOf[scala.Int]
+    this.threshold = (newSize * this.loadFactor).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
     this.mask = newSize - 1
     this.shift = java.lang.Long.numberOfLeadingZeros(this.mask)
     val oldKeyTable: scala.Array[scala.Long] = this.keyTable
     val oldValueTable: scala.Array[V] = this.valueTable
     this.keyTable = new Array[scala.Long](newSize)
-    this.valueTable = new Array[java.lang.Object](newSize).asInstanceOf[scala.Array[V]]
+    this.valueTable = new Array[java.lang.Object](newSize).asInstanceOf[scala.Array[V]].asInstanceOf[scala.Array[V]]
     if (this.size > 0) {
       { var i: scala.Int = 0; while (i < oldCapacity) { {
         val key: scala.Long = oldKeyTable(i)
@@ -297,7 +297,7 @@ class LongMap[V] extends scala.collection.Iterable[Entry[V]] {
       h = h + this.zeroValue.hashCode()
     } else ()
     val keyTable: scala.Array[scala.Long] = this.keyTable
-    val valueTable: scala.Array[V] = this.valueTable
+    val valueTable: scala.Array[V] = this.valueTable;
     { var i: scala.Int = 0; val n: scala.Int = keyTable.length; while (i < n) { {
       val key: scala.Long = keyTable(i)
       if (key != 0) {
@@ -314,10 +314,10 @@ class LongMap[V] extends scala.collection.Iterable[Entry[V]] {
     if (obj == this) {
       return true
     } else ()
-    if (!obj.isInstanceOf[LongMap]) {
+    if (!obj.isInstanceOf[LongMap[?]]) {
       return false
     } else ()
-    val other: LongMap = obj.asInstanceOf[LongMap]
+    val other: LongMap[?] = obj.asInstanceOf[LongMap[?]]
     if (other.size != this.size) {
       return false
     } else ()
@@ -336,7 +336,7 @@ class LongMap[V] extends scala.collection.Iterable[Entry[V]] {
       }
     } else ()
     val keyTable: scala.Array[scala.Long] = this.keyTable
-    val valueTable: scala.Array[V] = this.valueTable
+    val valueTable: scala.Array[V] = this.valueTable;
     { var i: scala.Int = 0; val n: scala.Int = keyTable.length; while (i < n) { {
       val key: scala.Long = keyTable(i)
       if (key != 0) {
@@ -358,10 +358,10 @@ class LongMap[V] extends scala.collection.Iterable[Entry[V]] {
     if (obj == this) {
       return true
     } else ()
-    if (!obj.isInstanceOf[LongMap]) {
+    if (!obj.isInstanceOf[LongMap[?]]) {
       return false
     } else ()
-    val other: LongMap = obj.asInstanceOf[LongMap]
+    val other: LongMap[?] = obj.asInstanceOf[LongMap[?]]
     if (other.size != this.size) {
       return false
     } else ()
@@ -372,7 +372,7 @@ class LongMap[V] extends scala.collection.Iterable[Entry[V]] {
       return false
     } else ()
     val keyTable: scala.Array[scala.Long] = this.keyTable
-    val valueTable: scala.Array[V] = this.valueTable
+    val valueTable: scala.Array[V] = this.valueTable;
     { var i: scala.Int = 0; val n: scala.Int = keyTable.length; while (i < n) { {
       val key: scala.Long = keyTable(i)
       if ((key != 0) && (valueTable(i) != other.get(key, com.badlogic.gdx.utils.ObjectMap.dummy))) {
@@ -418,16 +418,16 @@ class LongMap[V] extends scala.collection.Iterable[Entry[V]] {
     buffer.append(']')
     return buffer.toString()
   }
-  def iterator(): scala.collection.Iterator[Entry[V]] = {
+  def iterator(): scala.collection.Iterator[com.badlogic.gdx.utils.LongMap.Entry[V]] = {
     return this.entries()
   }
-  def entries(): Entries[V] = {
+  def entries(): com.badlogic.gdx.utils.LongMap.Entries[V] = {
     if (com.badlogic.gdx.utils.Collections.allocateIterators) {
-      return new Entries(this)
+      return new com.badlogic.gdx.utils.LongMap.Entries(this)
     } else ()
     if (this.entries1 == null) {
-      this.entries1 = new Entries(this)
-      this.entries2 = new Entries(this)
+      this.entries1 = new com.badlogic.gdx.utils.LongMap.Entries(this)
+      this.entries2 = new com.badlogic.gdx.utils.LongMap.Entries(this)
     } else ()
     if (!this.entries1.valid) {
       this.entries1.reset()
@@ -440,13 +440,13 @@ class LongMap[V] extends scala.collection.Iterable[Entry[V]] {
     this.entries1.valid = false
     return this.entries2
   }
-  def values(): Values[V] = {
+  def values(): com.badlogic.gdx.utils.LongMap.Values[V] = {
     if (com.badlogic.gdx.utils.Collections.allocateIterators) {
-      return new Values(this)
+      return new com.badlogic.gdx.utils.LongMap.Values(this)
     } else ()
     if (this.values1 == null) {
-      this.values1 = new Values(this)
-      this.values2 = new Values(this)
+      this.values1 = new com.badlogic.gdx.utils.LongMap.Values(this)
+      this.values2 = new com.badlogic.gdx.utils.LongMap.Values(this)
     } else ()
     if (!this.values1.valid) {
       this.values1.reset()
@@ -459,13 +459,13 @@ class LongMap[V] extends scala.collection.Iterable[Entry[V]] {
     this.values1.valid = false
     return this.values2
   }
-  def keys(): Keys = {
+  def keys(): com.badlogic.gdx.utils.LongMap.Keys = {
     if (com.badlogic.gdx.utils.Collections.allocateIterators) {
-      return new Keys(this)
+      return new com.badlogic.gdx.utils.LongMap.Keys(this)
     } else ()
     if (this.keys1 == null) {
-      this.keys1 = new Keys(this)
-      this.keys2 = new Keys(this)
+      this.keys1 = new com.badlogic.gdx.utils.LongMap.Keys(this)
+      this.keys2 = new com.badlogic.gdx.utils.LongMap.Keys(this)
     } else ()
     if (!this.keys1.valid) {
       this.keys1.reset()
@@ -478,6 +478,8 @@ class LongMap[V] extends scala.collection.Iterable[Entry[V]] {
     this.keys1.valid = false
     return this.keys2
   }
+}
+object LongMap {
   class Entry[V] {
     var key: scala.Long = 0L
     var value: V = null.asInstanceOf[V]
@@ -497,8 +499,8 @@ class LongMap[V] extends scala.collection.Iterable[Entry[V]] {
       this.reset()
     }
     def reset(): scala.Unit = {
-      this.currentIndex = MapIterator.INDEX_ILLEGAL
-      this.nextIndex = MapIterator.INDEX_ZERO
+      this.currentIndex = com.badlogic.gdx.utils.LongMap.MapIterator.INDEX_ILLEGAL
+      this.nextIndex = com.badlogic.gdx.utils.LongMap.MapIterator.INDEX_ZERO
       if (this.map.hasZeroValue) {
         this.hasNext = true
       } else {
@@ -506,7 +508,7 @@ class LongMap[V] extends scala.collection.Iterable[Entry[V]] {
       }
     }
     def findNextIndex(): scala.Unit = {
-      val keyTable: scala.Array[scala.Long] = this.map.keyTable
+      val keyTable: scala.Array[scala.Long] = this.map.keyTable;
       { val n: scala.Int = keyTable.length; while ({ this.nextIndex += 1; this.nextIndex } < n) { {
         if (keyTable(this.nextIndex) != 0) {
           this.hasNext = true
@@ -517,9 +519,9 @@ class LongMap[V] extends scala.collection.Iterable[Entry[V]] {
     }
     def remove(): scala.Unit = {
       var i: scala.Int = this.currentIndex
-      if ((i == MapIterator.INDEX_ZERO) && this.map.hasZeroValue) {
+      if ((i == com.badlogic.gdx.utils.LongMap.MapIterator.INDEX_ZERO) && this.map.hasZeroValue) {
         this.map.hasZeroValue = false
-        this.map.zeroValue = null
+        this.map.zeroValue = null.asInstanceOf[V]
       } else {
         if (i < 0) {
           throw new java.lang.IllegalStateException("next must be called before remove.")
@@ -542,13 +544,13 @@ class LongMap[V] extends scala.collection.Iterable[Entry[V]] {
             next = (next + 1) & mask
           }
           keyTable(i) = 0
-          valueTable(i) = null
+          valueTable(i) = null.asInstanceOf[V]
           if (i != this.currentIndex) {
             this.nextIndex = this.nextIndex - 1
           } else ()
         }
       }
-      this.currentIndex = MapIterator.INDEX_ILLEGAL
+      this.currentIndex = com.badlogic.gdx.utils.LongMap.MapIterator.INDEX_ILLEGAL
       this.map.size = this.map.size - 1
     }
   }
@@ -556,12 +558,12 @@ class LongMap[V] extends scala.collection.Iterable[Entry[V]] {
     private final val INDEX_ILLEGAL: scala.Int = -2
     final val INDEX_ZERO: scala.Int = -1
   }
-  class Entries[V] extends MapIterator[V] with scala.collection.Iterable[Entry[V]] with scala.collection.Iterator[Entry[V]] {
-    private final val entry: Entry[V] = new Entry()
-    def this(map: LongMap) = {
+  class Entries[V] extends com.badlogic.gdx.utils.LongMap.MapIterator[V] with scala.collection.Iterable[com.badlogic.gdx.utils.LongMap.Entry[V]] with scala.collection.Iterator[com.badlogic.gdx.utils.LongMap.Entry[V]] {
+    private final val entry: com.badlogic.gdx.utils.LongMap.Entry[V] = new com.badlogic.gdx.utils.LongMap.Entry()
+    def this(map: LongMap[?]) = {
       this()
     }
-    def next(): Entry[V] = {
+    def next(): com.badlogic.gdx.utils.LongMap.Entry[V] = {
       if (!hasNext) {
         throw new java.util.NoSuchElementException()
       } else ()
@@ -569,7 +571,7 @@ class LongMap[V] extends scala.collection.Iterable[Entry[V]] {
         throw new com.badlogic.gdx.utils.GdxRuntimeException("#iterator() cannot be used nested.")
       } else ()
       val keyTable: scala.Array[scala.Long] = this.map.keyTable
-      if (nextIndex == MapIterator.INDEX_ZERO) {
+      if (nextIndex == com.badlogic.gdx.utils.LongMap.MapIterator.INDEX_ZERO) {
         this.entry.key = 0
         this.entry.value = this.map.zeroValue
       } else {
@@ -586,11 +588,11 @@ class LongMap[V] extends scala.collection.Iterable[Entry[V]] {
       } else ()
       return hasNext
     }
-    def iterator(): scala.collection.Iterator[Entry[V]] = {
+    def iterator(): scala.collection.Iterator[com.badlogic.gdx.utils.LongMap.Entry[V]] = {
       return this
     }
   }
-  class Values[V] extends MapIterator[V] with scala.collection.Iterable[V] with scala.collection.Iterator[V] {
+  class Values[V] extends com.badlogic.gdx.utils.LongMap.MapIterator[V] with scala.collection.Iterable[V] with scala.collection.Iterator[V] {
     def this(map: LongMap[V]) = {
       this()
     }
@@ -608,7 +610,7 @@ class LongMap[V] extends scala.collection.Iterable[Entry[V]] {
         throw new com.badlogic.gdx.utils.GdxRuntimeException("#iterator() cannot be used nested.")
       } else ()
       var value: V = null.asInstanceOf[V]
-      if (nextIndex == MapIterator.INDEX_ZERO) {
+      if (nextIndex == com.badlogic.gdx.utils.LongMap.MapIterator.INDEX_ZERO) {
         value = this.map.zeroValue
       } else {
         value = this.map.valueTable(nextIndex)
@@ -621,15 +623,15 @@ class LongMap[V] extends scala.collection.Iterable[Entry[V]] {
       return this
     }
     def toArray(): com.badlogic.gdx.utils.Array[V] = {
-      val array: com.badlogic.gdx.utils.Array = new com.badlogic.gdx.utils.Array(true, this.map.size)
+      val array: com.badlogic.gdx.utils.Array[?] = new com.badlogic.gdx.utils.Array(true, this.map.size)
       while (hasNext) {
         array.add(this.next())
       }
       return array
     }
   }
-  class Keys extends MapIterator {
-    def this(map: LongMap) = {
+  class Keys extends com.badlogic.gdx.utils.LongMap.MapIterator[?] {
+    def this(map: LongMap[?]) = {
       this()
     }
     def next(): scala.Long = {
@@ -639,7 +641,7 @@ class LongMap[V] extends scala.collection.Iterable[Entry[V]] {
       if (!valid) {
         throw new com.badlogic.gdx.utils.GdxRuntimeException("#iterator() cannot be used nested.")
       } else ()
-      val key: scala.Long = if (nextIndex == MapIterator.INDEX_ZERO) 0 else this.map.keyTable(nextIndex)
+      val key: scala.Long = if (nextIndex == com.badlogic.gdx.utils.LongMap.MapIterator.INDEX_ZERO) 0 else this.map.keyTable(nextIndex)
       currentIndex = nextIndex
       this.findNextIndex()
       return key

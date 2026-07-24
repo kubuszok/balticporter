@@ -25,19 +25,19 @@ class RandomXS128 extends java.util.Random {
       this.seed1
     } + s0
   }
-  protected final def next(bits: scala.Int): scala.Int = {
-    return (this.nextLong() & ((1L << bits) - 1)).asInstanceOf[scala.Int]
+  final def next(bits: scala.Int): scala.Int = {
+    return (this.nextLong() & ((1L << bits) - 1)).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
   }
   def nextInt(): scala.Int = {
-    return this.nextLong().asInstanceOf[scala.Int]
+    return this.nextLong().asInstanceOf[scala.Int].asInstanceOf[scala.Int]
   }
   def nextInt(n: scala.Int): scala.Int = {
-    return this.nextLong(n).asInstanceOf[scala.Int]
+    return this.nextLong(n).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
   }
   def nextLong(n: scala.Long): scala.Long = {
     if (n <= 0) {
       throw new java.lang.IllegalArgumentException("n must be positive")
-    } else ()
+    } else ();
     { ; while (true) { {
       val bits: scala.Long = this.nextLong() >>> 1
       val value: scala.Long = bits % n
@@ -50,7 +50,7 @@ class RandomXS128 extends java.util.Random {
     return (this.nextLong() >>> 11) * RandomXS128.NORM_DOUBLE
   }
   def nextFloat(): scala.Float = {
-    return ((this.nextLong() >>> 40) * RandomXS128.NORM_FLOAT).asInstanceOf[scala.Float]
+    return ((this.nextLong() >>> 40) * RandomXS128.NORM_FLOAT).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
   }
   def nextBoolean(): scala.Boolean = {
     return (this.nextLong() & 1) != 0
@@ -59,9 +59,9 @@ class RandomXS128 extends java.util.Random {
     var n: scala.Int = 0
     var i: scala.Int = bytes.length
     while (i != 0) {
-      n = if (i < 8) i else 8
+      n = if (i < 8) i else 8;
       { var bits: scala.Long = this.nextLong(); while ({ n -= 1; n } != 0) { {
-        bytes({ i -= 1; i }) = bits.asInstanceOf[scala.Byte]
+        bytes({ i -= 1; i }) = bits.asInstanceOf[scala.Byte].asInstanceOf[scala.Byte]
       }; bits = bits >> 8 } }
     }
   }

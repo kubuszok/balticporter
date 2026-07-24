@@ -13,7 +13,9 @@ trait Music extends com.badlogic.gdx.utils.Disposable {
   def setPosition(position: scala.Float): scala.Unit
   def getPosition(): scala.Float
   def dispose(): scala.Unit
-  def setOnCompletionListener(listener: OnCompletionListener): scala.Unit
+  def setOnCompletionListener(listener: com.badlogic.gdx.audio.Music.OnCompletionListener): scala.Unit
+}
+object Music {
   trait OnCompletionListener {
     def onCompletion(music: Music): scala.Unit
   }

@@ -39,7 +39,7 @@ class MapLayers extends scala.collection.Iterable[com.badlogic.gdx.maps.MapLayer
     return this.getByType(`type`, new com.badlogic.gdx.utils.Array[T]())
   }
   def getByType[T <: com.badlogic.gdx.maps.MapLayer](`type`: java.lang.Class[T], fill: com.badlogic.gdx.utils.Array[T]): com.badlogic.gdx.utils.Array[T] = {
-    fill.clear()
+    fill.clear();
     { var i: scala.Int = 0; val n: scala.Int = this.layers.size; while (i < n) { {
       val layer: com.badlogic.gdx.maps.MapLayer = this.layers.get(i)
       if (com.badlogic.gdx.utils.reflect.ClassReflection.isInstance(`type`, layer)) {

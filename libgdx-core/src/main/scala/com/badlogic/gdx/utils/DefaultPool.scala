@@ -1,20 +1,22 @@
 package com.badlogic.gdx.utils
 
 class DefaultPool[T] extends com.badlogic.gdx.utils.Pool[T] {
-  private var poolTypeSupplier: PoolSupplier[T] = null.asInstanceOf[PoolSupplier[T]]
-  def this(supplier: PoolSupplier[T], initialCapacity: scala.Int, max: scala.Int) = {
+  private var poolTypeSupplier: com.badlogic.gdx.utils.DefaultPool.PoolSupplier[T] = null.asInstanceOf[com.badlogic.gdx.utils.DefaultPool.PoolSupplier[T]]
+  def this(supplier: com.badlogic.gdx.utils.DefaultPool.PoolSupplier[T], initialCapacity: scala.Int, max: scala.Int) = {
     this()
     this.poolTypeSupplier = supplier
   }
-  def this(supplier: PoolSupplier[T], initialCapacity: scala.Int) = {
+  def this(supplier: com.badlogic.gdx.utils.DefaultPool.PoolSupplier[T], initialCapacity: scala.Int) = {
     this(supplier, initialCapacity, java.lang.Integer.MAX_VALUE)
   }
-  def this(supplier: PoolSupplier[T]) = {
+  def this(supplier: com.badlogic.gdx.utils.DefaultPool.PoolSupplier[T]) = {
     this(supplier, 16, java.lang.Integer.MAX_VALUE)
   }
-  protected def newObject(): T = {
+  def newObject(): T = {
     return this.poolTypeSupplier.get()
   }
+}
+object DefaultPool {
   trait PoolSupplier[T] {
     def get(): T
   }

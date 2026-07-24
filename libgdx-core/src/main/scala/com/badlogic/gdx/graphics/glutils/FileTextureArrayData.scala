@@ -3,10 +3,10 @@ package com.badlogic.gdx.graphics.glutils
 class FileTextureArrayData extends com.badlogic.gdx.graphics.TextureArrayData {
   private var textureDatas: scala.Array[com.badlogic.gdx.graphics.TextureData] = null.asInstanceOf[scala.Array[com.badlogic.gdx.graphics.TextureData]]
   private var prepared: scala.Boolean = false
-  private var format: com.badlogic.gdx.graphics.Pixmap#Format = null.asInstanceOf[com.badlogic.gdx.graphics.Pixmap#Format]
+  private var format: com.badlogic.gdx.graphics.Pixmap.Format = null.asInstanceOf[com.badlogic.gdx.graphics.Pixmap.Format]
   private var depth: scala.Int = 0
   var useMipMaps: scala.Boolean = false
-  def this(format: com.badlogic.gdx.graphics.Pixmap#Format, useMipMaps: scala.Boolean, files: scala.Array[com.badlogic.gdx.files.FileHandle]) = {
+  def this(format: com.badlogic.gdx.graphics.Pixmap.Format, useMipMaps: scala.Boolean, files: scala.Array[com.badlogic.gdx.files.FileHandle]) = {
     this()
     this.format = format
     this.useMipMaps = useMipMaps
@@ -16,7 +16,7 @@ class FileTextureArrayData extends com.badlogic.gdx.graphics.TextureArrayData {
       this.textureDatas(i) = com.badlogic.gdx.graphics.TextureData.Factory.loadFromFile(files(i), format, useMipMaps)
     }; i = i + 1 } }
   }
-  def this(format: com.badlogic.gdx.graphics.Pixmap#Format, useMipMaps: scala.Boolean, textureDatas: scala.Array[com.badlogic.gdx.graphics.TextureData]) = {
+  def this(format: com.badlogic.gdx.graphics.Pixmap.Format, useMipMaps: scala.Boolean, textureDatas: scala.Array[com.badlogic.gdx.graphics.TextureData]) = {
     this()
     this.format = format
     this.useMipMaps = useMipMaps
@@ -45,7 +45,7 @@ class FileTextureArrayData extends com.badlogic.gdx.graphics.TextureArrayData {
     this.prepared = true
   }
   def consumeTextureArrayData(): scala.Unit = {
-    var containsCustomData: scala.Boolean = false
+    var containsCustomData: scala.Boolean = false;
     { var i: scala.Int = 0; while (i < this.textureDatas.length) { {
       if (this.textureDatas(i).getType() == com.badlogic.gdx.graphics.TextureData.TextureDataType.Custom) {
         this.textureDatas(i).consumeCustomData(com.badlogic.gdx.graphics.GL30.GL_TEXTURE_2D_ARRAY)

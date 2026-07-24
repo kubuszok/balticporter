@@ -46,7 +46,7 @@ class DepthTestAttribute extends com.badlogic.gdx.graphics.g3d.Attribute {
   }
   def compareTo(o: com.badlogic.gdx.graphics.g3d.Attribute): scala.Int = {
     if (`type` != o.`type`) {
-      return (`type` - o.`type`).asInstanceOf[scala.Int]
+      return (`type` - o.`type`).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
     } else ()
     val other: DepthTestAttribute = o.asInstanceOf[DepthTestAttribute]
     if (this.depthFunc != other.depthFunc) {
@@ -67,7 +67,7 @@ class DepthTestAttribute extends com.badlogic.gdx.graphics.g3d.Attribute {
 object DepthTestAttribute {
   final val Alias: java.lang.String = "depthStencil"
   final val Type: scala.Long = com.badlogic.gdx.graphics.g3d.Attribute.register(DepthTestAttribute.Alias)
-  protected var Mask: scala.Long = DepthTestAttribute.Type
+  var Mask: scala.Long = DepthTestAttribute.Type
   final def is(mask: scala.Long): scala.Boolean = {
     return (mask & DepthTestAttribute.Mask) != 0
   }

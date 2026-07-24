@@ -1,6 +1,7 @@
 package com.badlogic.gdx.graphics
 
-trait Cursor extends com.badlogic.gdx.utils.Disposable {
+trait Cursor extends com.badlogic.gdx.utils.Disposable
+object Cursor {
   sealed abstract class SystemCursor
   object SystemCursor {
     case object Arrow extends SystemCursor

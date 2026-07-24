@@ -6,7 +6,7 @@ class MapGroupLayer extends com.badlogic.gdx.maps.MapLayer {
     return this.layers
   }
   def invalidateRenderOffset(): scala.Unit = {
-    super.invalidateRenderOffset()
+    super.invalidateRenderOffset();
     { var i: scala.Int = 0; while (i < this.layers.size()) { {
       val child: com.badlogic.gdx.maps.MapLayer = this.layers.get(i)
       child.invalidateRenderOffset()

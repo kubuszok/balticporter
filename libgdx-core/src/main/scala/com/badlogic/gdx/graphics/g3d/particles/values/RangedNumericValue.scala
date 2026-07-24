@@ -38,7 +38,7 @@ class RangedNumericValue extends com.badlogic.gdx.graphics.g3d.particles.values.
   }
   def read(json: com.badlogic.gdx.utils.Json, jsonData: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
     super.read(json, jsonData)
-    this.lowMin = json.readValue("lowMin", classOf[java.lang.Class], jsonData)
-    this.lowMax = json.readValue("lowMax", classOf[java.lang.Class], jsonData)
+    this.lowMin = json.readValue("lowMin", classOf[scala.Float], jsonData)
+    this.lowMax = json.readValue("lowMax", classOf[scala.Float], jsonData)
   }
 }

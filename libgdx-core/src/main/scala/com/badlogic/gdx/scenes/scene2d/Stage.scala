@@ -1,7 +1,7 @@
 package com.badlogic.gdx.scenes.scene2d
 
 class Stage extends com.badlogic.gdx.InputAdapter with com.badlogic.gdx.utils.Disposable {
-  protected var pools: com.badlogic.gdx.utils.PoolManager = new com.badlogic.gdx.utils.PoolManager()
+  var pools: com.badlogic.gdx.utils.PoolManager = new com.badlogic.gdx.utils.PoolManager()
   private var viewport: com.badlogic.gdx.utils.viewport.Viewport = null.asInstanceOf[com.badlogic.gdx.utils.viewport.Viewport]
   private var batch: com.badlogic.gdx.graphics.g2d.Batch = null.asInstanceOf[com.badlogic.gdx.graphics.g2d.Batch]
   private var ownsBatch: scala.Boolean = false
@@ -16,14 +16,14 @@ class Stage extends com.badlogic.gdx.InputAdapter with com.badlogic.gdx.utils.Di
   private var mouseOverActor: com.badlogic.gdx.scenes.scene2d.Actor = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.Actor]
   private var keyboardFocus: com.badlogic.gdx.scenes.scene2d.Actor = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.Actor]
   private var scrollFocus: com.badlogic.gdx.scenes.scene2d.Actor = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.Actor]
-  final val touchFocuses: com.badlogic.gdx.utils.SnapshotArray[TouchFocus] = new com.badlogic.gdx.utils.SnapshotArray[TouchFocus](true, 4, scala.Array[TouchFocus].<init>)
+  final val touchFocuses: com.badlogic.gdx.utils.SnapshotArray[com.badlogic.gdx.scenes.scene2d.Stage.TouchFocus] = new com.badlogic.gdx.utils.SnapshotArray[com.badlogic.gdx.scenes.scene2d.Stage.TouchFocus](true, 4, scala.Array[com.badlogic.gdx.scenes.scene2d.Stage.TouchFocus].<init>)
   private var actionsRequestRendering: scala.Boolean = true
   private var debugShapes: com.badlogic.gdx.graphics.glutils.ShapeRenderer = null.asInstanceOf[com.badlogic.gdx.graphics.glutils.ShapeRenderer]
   private var debugInvisible: scala.Boolean = false
   private var debugAll: scala.Boolean = false
   private var debugUnderMouse: scala.Boolean = false
   private var debugParentUnderMouse: scala.Boolean = false
-  private var debugTableUnderMouse: com.badlogic.gdx.scenes.scene2d.ui.Table#Debug = com.badlogic.gdx.scenes.scene2d.ui.Table.Debug.none
+  private var debugTableUnderMouse: com.badlogic.gdx.scenes.scene2d.ui.Table.Debug = com.badlogic.gdx.scenes.scene2d.ui.Table.Debug.none
   private final val debugColor: com.badlogic.gdx.graphics.Color = new com.badlogic.gdx.graphics.Color(0, 1, 0, 0.85f)
   def this(viewport: com.badlogic.gdx.utils.viewport.Viewport, batch: com.badlogic.gdx.graphics.g2d.Batch) = {
     this()
@@ -35,9 +35,9 @@ class Stage extends com.badlogic.gdx.InputAdapter with com.badlogic.gdx.utils.Di
     } else ()
     this.viewport = viewport
     this.batch = batch
-    this.pools.addPool(classOf[java.lang.Class], com.badlogic.gdx.scenes.scene2d.InputEvent.<init>)
-    this.pools.addPool(classOf[java.lang.Class], com.badlogic.gdx.scenes.scene2d.utils.FocusListener#FocusEvent.<init>)
-    this.pools.addPool(classOf[java.lang.Class], TouchFocus.<init>)
+    this.pools.addPool(classOf[com.badlogic.gdx.scenes.scene2d.InputEvent], com.badlogic.gdx.scenes.scene2d.InputEvent.<init>)
+    this.pools.addPool(classOf[com.badlogic.gdx.scenes.scene2d.utils.FocusListener.FocusEvent], com.badlogic.gdx.scenes.scene2d.utils.FocusListener.FocusEvent.<init>)
+    this.pools.addPool(classOf[com.badlogic.gdx.scenes.scene2d.Stage.TouchFocus], com.badlogic.gdx.scenes.scene2d.Stage.TouchFocus.<init>)
     this.root = new com.badlogic.gdx.scenes.scene2d.Group()
     this.root.setStage(this)
     viewport.update(com.badlogic.gdx.Gdx.graphics.getWidth(), com.badlogic.gdx.Gdx.graphics.getHeight(), true)
@@ -115,7 +115,7 @@ class Stage extends com.badlogic.gdx.InputAdapter with com.badlogic.gdx.utils.Di
     } else ()
     actor.setDebug(false)
     if (actor.isInstanceOf[com.badlogic.gdx.scenes.scene2d.Group]) {
-      val children: com.badlogic.gdx.utils.SnapshotArray[com.badlogic.gdx.scenes.scene2d.Actor] = actor.asInstanceOf[com.badlogic.gdx.scenes.scene2d.Group].children
+      val children: com.badlogic.gdx.utils.SnapshotArray[com.badlogic.gdx.scenes.scene2d.Actor] = actor.asInstanceOf[com.badlogic.gdx.scenes.scene2d.Group].children;
       { var i: scala.Int = 0; val n: scala.Int = children.size; while (i < n) { {
         this.disableDebug(children.get(i), except)
       }; i = i + 1 } }
@@ -136,7 +136,7 @@ class Stage extends com.badlogic.gdx.InputAdapter with com.badlogic.gdx.utils.Di
         } else ()
       }
     }; pointer = pointer + 1 } }
-    val `type`: com.badlogic.gdx.Application#ApplicationType = com.badlogic.gdx.Gdx.app.getType()
+    val `type`: com.badlogic.gdx.Application.ApplicationType = com.badlogic.gdx.Gdx.app.getType()
     if (((`type` == com.badlogic.gdx.Application.ApplicationType.Desktop) || (`type` == com.badlogic.gdx.Application.ApplicationType.Applet)) || (`type` == com.badlogic.gdx.Application.ApplicationType.WebGL)) {
       this.mouseOverActor = this.fireEnterAndExit(this.mouseOverActor, this.mouseScreenX, this.mouseScreenY, -1)
     } else ()
@@ -149,7 +149,7 @@ class Stage extends com.badlogic.gdx.InputAdapter with com.badlogic.gdx.utils.Di
       return overLast
     } else ()
     if (overLast != null) {
-      val event: com.badlogic.gdx.scenes.scene2d.InputEvent = this.pools.obtain(classOf[java.lang.Class])
+      val event: com.badlogic.gdx.scenes.scene2d.InputEvent = this.pools.obtain(classOf[com.badlogic.gdx.scenes.scene2d.InputEvent])
       event.setType(com.badlogic.gdx.scenes.scene2d.InputEvent.Type.exit)
       event.setStage(this)
       event.setStageX(this.tempCoords.x)
@@ -160,7 +160,7 @@ class Stage extends com.badlogic.gdx.InputAdapter with com.badlogic.gdx.utils.Di
       this.pools.free(event)
     } else ()
     if (over != null) {
-      val event: com.badlogic.gdx.scenes.scene2d.InputEvent = this.pools.obtain(classOf[java.lang.Class])
+      val event: com.badlogic.gdx.scenes.scene2d.InputEvent = this.pools.obtain(classOf[com.badlogic.gdx.scenes.scene2d.InputEvent])
       event.setType(com.badlogic.gdx.scenes.scene2d.InputEvent.Type.enter)
       event.setStage(this)
       event.setStageX(this.tempCoords.x)
@@ -174,7 +174,7 @@ class Stage extends com.badlogic.gdx.InputAdapter with com.badlogic.gdx.utils.Di
   }
   private def fireExit(actor: com.badlogic.gdx.scenes.scene2d.Actor, screenX: scala.Int, screenY: scala.Int, pointer: scala.Int): scala.Unit = {
     this.screenToStageCoordinates(this.tempCoords.set(screenX, screenY))
-    val event: com.badlogic.gdx.scenes.scene2d.InputEvent = this.pools.obtain(classOf[java.lang.Class])
+    val event: com.badlogic.gdx.scenes.scene2d.InputEvent = this.pools.obtain(classOf[com.badlogic.gdx.scenes.scene2d.InputEvent])
     event.setType(com.badlogic.gdx.scenes.scene2d.InputEvent.Type.exit)
     event.setStage(this)
     event.setStageX(this.tempCoords.x)
@@ -192,7 +192,7 @@ class Stage extends com.badlogic.gdx.InputAdapter with com.badlogic.gdx.utils.Di
     this.pointerScreenX(pointer) = screenX
     this.pointerScreenY(pointer) = screenY
     this.screenToStageCoordinates(this.tempCoords.set(screenX, screenY))
-    val event: com.badlogic.gdx.scenes.scene2d.InputEvent = this.pools.obtain(classOf[java.lang.Class])
+    val event: com.badlogic.gdx.scenes.scene2d.InputEvent = this.pools.obtain(classOf[com.badlogic.gdx.scenes.scene2d.InputEvent])
     event.setType(com.badlogic.gdx.scenes.scene2d.InputEvent.Type.touchDown)
     event.setStage(this)
     event.setStageX(this.tempCoords.x)
@@ -220,16 +220,16 @@ class Stage extends com.badlogic.gdx.InputAdapter with com.badlogic.gdx.utils.Di
       return false
     } else ()
     this.screenToStageCoordinates(this.tempCoords.set(screenX, screenY))
-    val event: com.badlogic.gdx.scenes.scene2d.InputEvent = this.pools.obtain(classOf[java.lang.Class])
+    val event: com.badlogic.gdx.scenes.scene2d.InputEvent = this.pools.obtain(classOf[com.badlogic.gdx.scenes.scene2d.InputEvent])
     event.setType(com.badlogic.gdx.scenes.scene2d.InputEvent.Type.touchDragged)
     event.setStage(this)
     event.setStageX(this.tempCoords.x)
     event.setStageY(this.tempCoords.y)
     event.setPointer(pointer)
-    val touchFocuses: com.badlogic.gdx.utils.SnapshotArray[TouchFocus] = this.touchFocuses
-    val focuses: scala.Array[TouchFocus] = touchFocuses.begin()
+    val touchFocuses: com.badlogic.gdx.utils.SnapshotArray[com.badlogic.gdx.scenes.scene2d.Stage.TouchFocus] = this.touchFocuses
+    val focuses: scala.Array[com.badlogic.gdx.scenes.scene2d.Stage.TouchFocus] = touchFocuses.begin();
     { var i: scala.Int = 0; val n: scala.Int = touchFocuses.size; while (i < n) { {
-      val focus: TouchFocus = focuses(i)
+      val focus: com.badlogic.gdx.scenes.scene2d.Stage.TouchFocus = focuses(i)
       if (focus.pointer != pointer) {
         /* continue */ ()
       } else ()
@@ -255,17 +255,17 @@ class Stage extends com.badlogic.gdx.InputAdapter with com.badlogic.gdx.utils.Di
       return false
     } else ()
     this.screenToStageCoordinates(this.tempCoords.set(screenX, screenY))
-    val event: com.badlogic.gdx.scenes.scene2d.InputEvent = this.pools.obtain(classOf[java.lang.Class])
+    val event: com.badlogic.gdx.scenes.scene2d.InputEvent = this.pools.obtain(classOf[com.badlogic.gdx.scenes.scene2d.InputEvent])
     event.setType(com.badlogic.gdx.scenes.scene2d.InputEvent.Type.touchUp)
     event.setStage(this)
     event.setStageX(this.tempCoords.x)
     event.setStageY(this.tempCoords.y)
     event.setPointer(pointer)
     event.setButton(button)
-    val touchFocuses: com.badlogic.gdx.utils.SnapshotArray[TouchFocus] = this.touchFocuses
-    val focuses: scala.Array[TouchFocus] = touchFocuses.begin()
+    val touchFocuses: com.badlogic.gdx.utils.SnapshotArray[com.badlogic.gdx.scenes.scene2d.Stage.TouchFocus] = this.touchFocuses
+    val focuses: scala.Array[com.badlogic.gdx.scenes.scene2d.Stage.TouchFocus] = touchFocuses.begin();
     { var i: scala.Int = 0; val n: scala.Int = touchFocuses.size; while (i < n) { {
-      val focus: TouchFocus = focuses(i)
+      val focus: com.badlogic.gdx.scenes.scene2d.Stage.TouchFocus = focuses(i)
       if ((focus.pointer != pointer) || (focus.button != button)) {
         /* continue */ ()
       } else ()
@@ -295,7 +295,7 @@ class Stage extends com.badlogic.gdx.InputAdapter with com.badlogic.gdx.utils.Di
       return false
     } else ()
     this.screenToStageCoordinates(this.tempCoords.set(screenX, screenY))
-    val event: com.badlogic.gdx.scenes.scene2d.InputEvent = this.pools.obtain(classOf[java.lang.Class])
+    val event: com.badlogic.gdx.scenes.scene2d.InputEvent = this.pools.obtain(classOf[com.badlogic.gdx.scenes.scene2d.InputEvent])
     event.setType(com.badlogic.gdx.scenes.scene2d.InputEvent.Type.mouseMoved)
     event.setStage(this)
     event.setStageX(this.tempCoords.x)
@@ -312,7 +312,7 @@ class Stage extends com.badlogic.gdx.InputAdapter with com.badlogic.gdx.utils.Di
   def scrolled(amountX: scala.Float, amountY: scala.Float): scala.Boolean = {
     val target: com.badlogic.gdx.scenes.scene2d.Actor = if (this.scrollFocus == null) this.root else this.scrollFocus
     this.screenToStageCoordinates(this.tempCoords.set(this.mouseScreenX, this.mouseScreenY))
-    val event: com.badlogic.gdx.scenes.scene2d.InputEvent = this.pools.obtain(classOf[java.lang.Class])
+    val event: com.badlogic.gdx.scenes.scene2d.InputEvent = this.pools.obtain(classOf[com.badlogic.gdx.scenes.scene2d.InputEvent])
     event.setType(com.badlogic.gdx.scenes.scene2d.InputEvent.Type.scrolled)
     event.setStage(this)
     event.setStageX(this.tempCoords.x)
@@ -326,7 +326,7 @@ class Stage extends com.badlogic.gdx.InputAdapter with com.badlogic.gdx.utils.Di
   }
   def keyDown(keyCode: scala.Int): scala.Boolean = {
     val target: com.badlogic.gdx.scenes.scene2d.Actor = if (this.keyboardFocus == null) this.root else this.keyboardFocus
-    val event: com.badlogic.gdx.scenes.scene2d.InputEvent = this.pools.obtain(classOf[java.lang.Class])
+    val event: com.badlogic.gdx.scenes.scene2d.InputEvent = this.pools.obtain(classOf[com.badlogic.gdx.scenes.scene2d.InputEvent])
     event.setType(com.badlogic.gdx.scenes.scene2d.InputEvent.Type.keyDown)
     event.setStage(this)
     event.setKeyCode(keyCode)
@@ -337,7 +337,7 @@ class Stage extends com.badlogic.gdx.InputAdapter with com.badlogic.gdx.utils.Di
   }
   def keyUp(keyCode: scala.Int): scala.Boolean = {
     val target: com.badlogic.gdx.scenes.scene2d.Actor = if (this.keyboardFocus == null) this.root else this.keyboardFocus
-    val event: com.badlogic.gdx.scenes.scene2d.InputEvent = this.pools.obtain(classOf[java.lang.Class])
+    val event: com.badlogic.gdx.scenes.scene2d.InputEvent = this.pools.obtain(classOf[com.badlogic.gdx.scenes.scene2d.InputEvent])
     event.setType(com.badlogic.gdx.scenes.scene2d.InputEvent.Type.keyUp)
     event.setStage(this)
     event.setKeyCode(keyCode)
@@ -348,7 +348,7 @@ class Stage extends com.badlogic.gdx.InputAdapter with com.badlogic.gdx.utils.Di
   }
   def keyTyped(character: scala.Char): scala.Boolean = {
     val target: com.badlogic.gdx.scenes.scene2d.Actor = if (this.keyboardFocus == null) this.root else this.keyboardFocus
-    val event: com.badlogic.gdx.scenes.scene2d.InputEvent = this.pools.obtain(classOf[java.lang.Class])
+    val event: com.badlogic.gdx.scenes.scene2d.InputEvent = this.pools.obtain(classOf[com.badlogic.gdx.scenes.scene2d.InputEvent])
     event.setType(com.badlogic.gdx.scenes.scene2d.InputEvent.Type.keyTyped)
     event.setStage(this)
     event.setCharacter(character)
@@ -358,7 +358,7 @@ class Stage extends com.badlogic.gdx.InputAdapter with com.badlogic.gdx.utils.Di
     return handled
   }
   def addTouchFocus(listener: com.badlogic.gdx.scenes.scene2d.EventListener, listenerActor: com.badlogic.gdx.scenes.scene2d.Actor, target: com.badlogic.gdx.scenes.scene2d.Actor, pointer: scala.Int, button: scala.Int): scala.Unit = {
-    val focus: TouchFocus = this.pools.obtain(classOf[java.lang.Class])
+    val focus: com.badlogic.gdx.scenes.scene2d.Stage.TouchFocus = this.pools.obtain(classOf[com.badlogic.gdx.scenes.scene2d.Stage.TouchFocus])
     focus.listenerActor = listenerActor
     focus.target = target
     focus.listener = listener
@@ -367,9 +367,9 @@ class Stage extends com.badlogic.gdx.InputAdapter with com.badlogic.gdx.utils.Di
     this.touchFocuses.add(focus)
   }
   def removeTouchFocus(listener: com.badlogic.gdx.scenes.scene2d.EventListener, listenerActor: com.badlogic.gdx.scenes.scene2d.Actor, target: com.badlogic.gdx.scenes.scene2d.Actor, pointer: scala.Int, button: scala.Int): scala.Unit = {
-    val touchFocuses: com.badlogic.gdx.utils.SnapshotArray[TouchFocus] = this.touchFocuses
+    val touchFocuses: com.badlogic.gdx.utils.SnapshotArray[com.badlogic.gdx.scenes.scene2d.Stage.TouchFocus] = this.touchFocuses;
     { var i: scala.Int = touchFocuses.size - 1; while (i >= 0) { {
-      val focus: TouchFocus = touchFocuses.get(i)
+      val focus: com.badlogic.gdx.scenes.scene2d.Stage.TouchFocus = touchFocuses.get(i)
       if (((((focus.listener == listener) && (focus.listenerActor == listenerActor)) && (focus.target == target)) && (focus.pointer == pointer)) && (focus.button == button)) {
         touchFocuses.removeIndex(i)
         this.pools.free(focus)
@@ -378,10 +378,10 @@ class Stage extends com.badlogic.gdx.InputAdapter with com.badlogic.gdx.utils.Di
   }
   def cancelTouchFocus(listenerActor: com.badlogic.gdx.scenes.scene2d.Actor): scala.Unit = {
     var event: com.badlogic.gdx.scenes.scene2d.InputEvent = null
-    val touchFocuses: com.badlogic.gdx.utils.SnapshotArray[TouchFocus] = this.touchFocuses
-    val items: scala.Array[TouchFocus] = touchFocuses.begin()
+    val touchFocuses: com.badlogic.gdx.utils.SnapshotArray[com.badlogic.gdx.scenes.scene2d.Stage.TouchFocus] = this.touchFocuses
+    val items: scala.Array[com.badlogic.gdx.scenes.scene2d.Stage.TouchFocus] = touchFocuses.begin();
     { var i: scala.Int = 0; val n: scala.Int = touchFocuses.size; while (i < n) { {
-      val focus: TouchFocus = items(i)
+      val focus: com.badlogic.gdx.scenes.scene2d.Stage.TouchFocus = items(i)
       if (focus.listenerActor != listenerActor) {
         /* continue */ ()
       } else ()
@@ -389,7 +389,7 @@ class Stage extends com.badlogic.gdx.InputAdapter with com.badlogic.gdx.utils.Di
         /* continue */ ()
       } else ()
       if (event == null) {
-        event = this.pools.obtain(classOf[java.lang.Class])
+        event = this.pools.obtain(classOf[com.badlogic.gdx.scenes.scene2d.InputEvent])
         event.setType(com.badlogic.gdx.scenes.scene2d.InputEvent.Type.touchUp)
         event.setStage(this)
         event.setStageX(java.lang.Integer.MIN_VALUE)
@@ -410,15 +410,15 @@ class Stage extends com.badlogic.gdx.InputAdapter with com.badlogic.gdx.utils.Di
     this.cancelTouchFocusExcept(null, null)
   }
   def cancelTouchFocusExcept(exceptListener: com.badlogic.gdx.scenes.scene2d.EventListener, exceptActor: com.badlogic.gdx.scenes.scene2d.Actor): scala.Unit = {
-    val event: com.badlogic.gdx.scenes.scene2d.InputEvent = this.pools.obtain(classOf[java.lang.Class])
+    val event: com.badlogic.gdx.scenes.scene2d.InputEvent = this.pools.obtain(classOf[com.badlogic.gdx.scenes.scene2d.InputEvent])
     event.setType(com.badlogic.gdx.scenes.scene2d.InputEvent.Type.touchUp)
     event.setStage(this)
     event.setStageX(java.lang.Integer.MIN_VALUE)
     event.setStageY(java.lang.Integer.MIN_VALUE)
-    val touchFocuses: com.badlogic.gdx.utils.SnapshotArray[TouchFocus] = this.touchFocuses
-    val items: scala.Array[TouchFocus] = touchFocuses.begin()
+    val touchFocuses: com.badlogic.gdx.utils.SnapshotArray[com.badlogic.gdx.scenes.scene2d.Stage.TouchFocus] = this.touchFocuses
+    val items: scala.Array[com.badlogic.gdx.scenes.scene2d.Stage.TouchFocus] = touchFocuses.begin();
     { var i: scala.Int = 0; val n: scala.Int = touchFocuses.size; while (i < n) { {
-      val focus: TouchFocus = items(i)
+      val focus: com.badlogic.gdx.scenes.scene2d.Stage.TouchFocus = items(i)
       if ((focus.listener == exceptListener) && (focus.listenerActor == exceptActor)) {
         /* continue */ ()
       } else ()
@@ -455,7 +455,7 @@ class Stage extends com.badlogic.gdx.InputAdapter with com.badlogic.gdx.utils.Di
   def removeCaptureListener(listener: com.badlogic.gdx.scenes.scene2d.EventListener): scala.Boolean = {
     return this.root.removeCaptureListener(listener)
   }
-  protected def actorRemoved(actor: com.badlogic.gdx.scenes.scene2d.Actor): scala.Unit = {
+  def actorRemoved(actor: com.badlogic.gdx.scenes.scene2d.Actor): scala.Unit = {
     { var pointer: scala.Int = 0; val n: scala.Int = this.pointerOverActors.length; while (pointer < n) { {
       if (actor == this.pointerOverActors(pointer)) {
         this.pointerOverActors(pointer) = null
@@ -489,7 +489,7 @@ class Stage extends com.badlogic.gdx.InputAdapter with com.badlogic.gdx.utils.Di
     if (this.keyboardFocus == actor) {
       return true
     } else ()
-    val event: com.badlogic.gdx.scenes.scene2d.utils.FocusListener#FocusEvent = this.pools.obtain(classOf[java.lang.Class])
+    val event: com.badlogic.gdx.scenes.scene2d.utils.FocusListener.FocusEvent = this.pools.obtain(classOf[com.badlogic.gdx.scenes.scene2d.utils.FocusListener.FocusEvent])
     event.setStage(this)
     event.setType(com.badlogic.gdx.scenes.scene2d.utils.FocusListener.FocusEvent.Type.keyboard)
     val oldKeyboardFocus: com.badlogic.gdx.scenes.scene2d.Actor = this.keyboardFocus
@@ -521,7 +521,7 @@ class Stage extends com.badlogic.gdx.InputAdapter with com.badlogic.gdx.utils.Di
     if (this.scrollFocus == actor) {
       return true
     } else ()
-    val event: com.badlogic.gdx.scenes.scene2d.utils.FocusListener#FocusEvent = this.pools.obtain(classOf[java.lang.Class])
+    val event: com.badlogic.gdx.scenes.scene2d.utils.FocusListener.FocusEvent = this.pools.obtain(classOf[com.badlogic.gdx.scenes.scene2d.utils.FocusListener.FocusEvent])
     event.setStage(this)
     event.setType(com.badlogic.gdx.scenes.scene2d.utils.FocusListener.FocusEvent.Type.scroll)
     val oldScrollFocus: com.badlogic.gdx.scenes.scene2d.Actor = this.scrollFocus
@@ -651,8 +651,8 @@ class Stage extends com.badlogic.gdx.InputAdapter with com.badlogic.gdx.utils.Di
       this.root.setDebug(false, true)
     }
   }
-  def setDebugTableUnderMouse(debugTableUnderMouse$arg: com.badlogic.gdx.scenes.scene2d.ui.Table#Debug): scala.Unit = {
-    var debugTableUnderMouse: com.badlogic.gdx.scenes.scene2d.ui.Table#Debug = debugTableUnderMouse$arg
+  def setDebugTableUnderMouse(debugTableUnderMouse$arg: com.badlogic.gdx.scenes.scene2d.ui.Table.Debug): scala.Unit = {
+    var debugTableUnderMouse: com.badlogic.gdx.scenes.scene2d.ui.Table.Debug = debugTableUnderMouse$arg
     if (debugTableUnderMouse == null) {
       debugTableUnderMouse = com.badlogic.gdx.scenes.scene2d.ui.Table.Debug.none
     } else ()
@@ -678,7 +678,7 @@ class Stage extends com.badlogic.gdx.InputAdapter with com.badlogic.gdx.utils.Di
       this.debugShapes.dispose()
     } else ()
   }
-  protected def isInsideViewport(screenX: scala.Int, screenY$arg: scala.Int): scala.Boolean = {
+  def isInsideViewport(screenX: scala.Int, screenY$arg: scala.Int): scala.Boolean = {
     var screenY: scala.Int = screenY$arg
     val x0: scala.Int = this.viewport.getScreenX()
     val x1: scala.Int = x0 + this.viewport.getScreenWidth()
@@ -687,7 +687,10 @@ class Stage extends com.badlogic.gdx.InputAdapter with com.badlogic.gdx.utils.Di
     screenY = (com.badlogic.gdx.Gdx.graphics.getHeight() - 1) - screenY
     return (((screenX >= x0) && (screenX < x1)) && (screenY >= y0)) && (screenY < y1)
   }
-  final class TouchFocus extends com.badlogic.gdx.utils.Pool#Poolable {
+}
+object Stage {
+  var debug: scala.Boolean = false
+  final class TouchFocus extends com.badlogic.gdx.utils.Pool.Poolable {
     var listener: com.badlogic.gdx.scenes.scene2d.EventListener = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.EventListener]
     var listenerActor: com.badlogic.gdx.scenes.scene2d.Actor = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.Actor]
     var target: com.badlogic.gdx.scenes.scene2d.Actor = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.Actor]
@@ -699,7 +702,4 @@ class Stage extends com.badlogic.gdx.InputAdapter with com.badlogic.gdx.utils.Di
       this.target = null
     }
   }
-}
-object Stage {
-  var debug: scala.Boolean = false
 }

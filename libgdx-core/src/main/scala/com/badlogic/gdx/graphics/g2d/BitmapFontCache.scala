@@ -25,7 +25,7 @@ class BitmapFontCache {
     this.pageVertices = new Array[scala.Array[scala.Float]](pageCount)
     this.idx = new Array[scala.Int](pageCount)
     if (pageCount > 1) {
-      this.pageGlyphIndices = new Array[com.badlogic.gdx.utils.IntArray](pageCount)
+      this.pageGlyphIndices = new Array[com.badlogic.gdx.utils.IntArray](pageCount);
       { var i: scala.Int = 0; val n: scala.Int = this.pageGlyphIndices.length; while (i < n) { {
         this.pageGlyphIndices(i) = new com.badlogic.gdx.utils.IntArray()
       }; i = i + 1 } }
@@ -50,9 +50,9 @@ class BitmapFontCache {
     } else ()
     this.x = this.x + xAmount
     this.y = this.y + yAmount
-    val pageVertices: scala.Array[scala.Array[scala.Float]] = this.pageVertices
+    val pageVertices: scala.Array[scala.Array[scala.Float]] = this.pageVertices;
     { var i: scala.Int = 0; val n: scala.Int = pageVertices.length; while (i < n) { {
-      val vertices: scala.Array[scala.Float] = pageVertices(i)
+      val vertices: scala.Array[scala.Float] = pageVertices(i);
       { var ii: scala.Int = 0; val nn: scala.Int = this.idx(i); while (ii < nn) { {
         vertices(ii) = vertices(ii) + xAmount
         vertices(ii + 1) = vertices(ii + 1) + yAmount
@@ -68,24 +68,24 @@ class BitmapFontCache {
     val pageVertices: scala.Array[scala.Array[scala.Float]] = this.pageVertices
     val tempColor: com.badlogic.gdx.graphics.Color = BitmapFontCache.tempColor
     val tempGlyphCount: scala.Array[scala.Int] = this.tempGlyphCount
-    java.util.Arrays.fill(tempGlyphCount, 0)
+    java.util.Arrays.fill(tempGlyphCount, 0);
     { var i: scala.Int = 0; val n: scala.Int = this.layouts.size; while (i < n) { {
       val layout: com.badlogic.gdx.graphics.g2d.GlyphLayout = this.layouts.get(i)
       val colors: com.badlogic.gdx.utils.IntArray = layout.colors
       var colorsIndex: scala.Int = 0
       var nextColorGlyphIndex: scala.Int = 0
       var glyphIndex: scala.Int = 0
-      var lastColorFloatBits: scala.Float = 0
+      var lastColorFloatBits: scala.Float = 0;
       { var ii: scala.Int = 0; val nn: scala.Int = layout.runs.size; while (ii < nn) { {
-        val run: com.badlogic.gdx.graphics.g2d.GlyphLayout#GlyphRun = layout.runs.get(ii)
-        val glyphs: scala.Array[java.lang.Object] = run.glyphs.items
+        val run: com.badlogic.gdx.graphics.g2d.GlyphLayout.GlyphRun = layout.runs.get(ii)
+        val glyphs: scala.Array[java.lang.Object] = run.glyphs.items.asInstanceOf[scala.Array[java.lang.Object]];
         { var iii: scala.Int = 0; val nnn: scala.Int = run.glyphs.size; while (iii < nnn) { {
           if ({ glyphIndex += 1; glyphIndex } == nextColorGlyphIndex) {
             com.badlogic.gdx.graphics.Color.abgr8888ToColor(tempColor, colors.get({ colorsIndex += 1; colorsIndex }))
             lastColorFloatBits = tempColor.mul(tint).toFloatBits()
             nextColorGlyphIndex = if ({ colorsIndex += 1; colorsIndex } < colors.size) colors.get(colorsIndex) else -1
           } else ()
-          val page: scala.Int = glyphs(iii).asInstanceOf[com.badlogic.gdx.graphics.g2d.BitmapFont#Glyph].page
+          val page: scala.Int = glyphs(iii).asInstanceOf[com.badlogic.gdx.graphics.g2d.BitmapFont.Glyph].page
           val offset: scala.Int = (tempGlyphCount(page) * 20) + 2
           tempGlyphCount(page) = tempGlyphCount(page) + 1
           val vertices: scala.Array[scala.Float] = pageVertices(page)
@@ -100,9 +100,9 @@ class BitmapFontCache {
   def setAlphas(alpha: scala.Float): scala.Unit = {
     val alphaBits: scala.Int = (254 * alpha).asInstanceOf[scala.Int] << 24
     var prev: scala.Float = 0
-    var newColor: scala.Float = 0
+    var newColor: scala.Float = 0;
     { var j: scala.Int = 0; val length: scala.Int = this.pageVertices.length; while (j < length) { {
-      val vertices: scala.Array[scala.Float] = this.pageVertices(j)
+      val vertices: scala.Array[scala.Float] = this.pageVertices(j);
       { var i: scala.Int = 2; val n: scala.Int = this.idx(j); while (i < n) { {
         val c: scala.Float = vertices(i)
         if ((c == prev) && (i != 2)) {
@@ -119,7 +119,7 @@ class BitmapFontCache {
   }
   def setColors(color: scala.Float): scala.Unit = {
     { var j: scala.Int = 0; val length: scala.Int = this.pageVertices.length; while (j < length) { {
-      val vertices: scala.Array[scala.Float] = this.pageVertices(j)
+      val vertices: scala.Array[scala.Float] = this.pageVertices(j);
       { var i: scala.Int = 2; val n: scala.Int = this.idx(j); while (i < n) { {
         vertices(i) = color
       }; i = i + 5 } }
@@ -137,16 +137,16 @@ class BitmapFontCache {
   }
   def setColors(color: scala.Float, start: scala.Int, `end`: scala.Int): scala.Unit = {
     if (this.pageVertices.length == 1) {
-      val vertices: scala.Array[scala.Float] = this.pageVertices(0)
+      val vertices: scala.Array[scala.Float] = this.pageVertices(0);
       { var i: scala.Int = (start * 20) + 2; val n: scala.Int = java.lang.Math.min(`end` * 20, this.idx(0)); while (i < n) { {
         vertices(i) = color
       }; i = i + 5 } }
       return
     } else ()
-    val pageCount: scala.Int = this.pageVertices.length
+    val pageCount: scala.Int = this.pageVertices.length;
     { var i: scala.Int = 0; while (i < pageCount) { {
       val vertices: scala.Array[scala.Float] = this.pageVertices(i)
-      val glyphIndices: com.badlogic.gdx.utils.IntArray = this.pageGlyphIndices(i)
+      val glyphIndices: com.badlogic.gdx.utils.IntArray = this.pageGlyphIndices(i);
       { var j: scala.Int = 0; val n: scala.Int = glyphIndices.size; while (j < n) { {
         val glyphIndex: scala.Int = glyphIndices.items(j)
         if (glyphIndex >= `end`) {
@@ -172,7 +172,7 @@ class BitmapFontCache {
     this.color.set(r, g, b, a)
   }
   def draw(spriteBatch: com.badlogic.gdx.graphics.g2d.Batch): scala.Unit = {
-    val regions: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.TextureRegion] = this.font.getRegions()
+    val regions: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.TextureRegion] = this.font.getRegions();
     { var j: scala.Int = 0; val n: scala.Int = this.pageVertices.length; while (j < n) { {
       if (this.idx(j) > 0) {
         val vertices: scala.Array[scala.Float] = this.pageVertices(j)
@@ -185,11 +185,11 @@ class BitmapFontCache {
       spriteBatch.draw(this.font.getRegion().getTexture(), this.pageVertices(0), start * 20, (`end` - start) * 20)
       return
     } else ()
-    val regions: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.TextureRegion] = this.font.getRegions()
+    val regions: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.TextureRegion] = this.font.getRegions();
     { var i: scala.Int = 0; val pageCount: scala.Int = this.pageVertices.length; while (i < pageCount) { {
       var offset: scala.Int = -1
       var count: scala.Int = 0
-      val glyphIndices: com.badlogic.gdx.utils.IntArray = this.pageGlyphIndices(i)
+      val glyphIndices: com.badlogic.gdx.utils.IntArray = this.pageGlyphIndices(i);
       { var ii: scala.Int = 0; val n: scala.Int = glyphIndices.size; while (ii < n) { {
         val glyphIndex: scala.Int = glyphIndices.get(ii)
         if (glyphIndex >= `end`) {
@@ -225,7 +225,7 @@ class BitmapFontCache {
     this.x = 0
     this.y = 0
     this.pooledLayouts.flush()
-    this.layouts.clear()
+    this.layouts.clear();
     { var i: scala.Int = 0; val n: scala.Int = this.idx.length; while (i < n) { {
       if (this.pageGlyphIndices != null) {
         this.pageGlyphIndices(i).clear()
@@ -238,14 +238,14 @@ class BitmapFontCache {
       this.requirePageGlyphs(0, layout.glyphCount)
     } else {
       val tempGlyphCount: scala.Array[scala.Int] = this.tempGlyphCount
-      java.util.Arrays.fill(tempGlyphCount, 0)
+      java.util.Arrays.fill(tempGlyphCount, 0);
       { var i: scala.Int = 0; val n: scala.Int = layout.runs.size; while (i < n) { {
-        val glyphs: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.BitmapFont#Glyph] = layout.runs.get(i).glyphs
-        val glyphItems: scala.Array[java.lang.Object] = glyphs.items
+        val glyphs: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.BitmapFont.Glyph] = layout.runs.get(i).glyphs
+        val glyphItems: scala.Array[java.lang.Object] = glyphs.items.asInstanceOf[scala.Array[java.lang.Object]];
         { var ii: scala.Int = 0; val nn: scala.Int = glyphs.size; while (ii < nn) { {
-          tempGlyphCount(glyphItems(ii).asInstanceOf[com.badlogic.gdx.graphics.g2d.BitmapFont#Glyph].page) = tempGlyphCount(glyphItems(ii).asInstanceOf[com.badlogic.gdx.graphics.g2d.BitmapFont#Glyph].page) + 1
+          tempGlyphCount(glyphItems(ii).asInstanceOf[com.badlogic.gdx.graphics.g2d.BitmapFont.Glyph].page) = tempGlyphCount(glyphItems(ii).asInstanceOf[com.badlogic.gdx.graphics.g2d.BitmapFont.Glyph].page) + 1
         }; ii = ii + 1 } }
-      }; i = i + 1 } }
+      }; i = i + 1 } };
       { var i: scala.Int = 0; val n: scala.Int = tempGlyphCount.length; while (i < n) { {
         this.requirePageGlyphs(i, tempGlyphCount(i))
       }; i = i + 1 } }
@@ -281,7 +281,7 @@ class BitmapFontCache {
     if (this.pageGlyphIndices != null) {
       pageGlyphIndicesLength = this.pageGlyphIndices.length
       java.lang.System.arraycopy(this.pageGlyphIndices, 0, newPageGlyphIndices, 0, this.pageGlyphIndices.length)
-    } else ()
+    } else ();
     { var i: scala.Int = pageGlyphIndicesLength; while (i < pageCount) { {
       newPageGlyphIndices(i) = new com.badlogic.gdx.utils.IntArray()
     }; i = i + 1 } }
@@ -302,25 +302,25 @@ class BitmapFontCache {
     var colorsIndex: scala.Int = 0
     var nextColorGlyphIndex: scala.Int = 0
     var glyphIndex: scala.Int = 0
-    var lastColorFloatBits: scala.Float = 0
+    var lastColorFloatBits: scala.Float = 0;
     { var i: scala.Int = 0; while (i < runCount) { {
-      val run: com.badlogic.gdx.graphics.g2d.GlyphLayout#GlyphRun = layout.runs.get(i)
-      val glyphs: scala.Array[java.lang.Object] = run.glyphs.items
+      val run: com.badlogic.gdx.graphics.g2d.GlyphLayout.GlyphRun = layout.runs.get(i)
+      val glyphs: scala.Array[java.lang.Object] = run.glyphs.items.asInstanceOf[scala.Array[java.lang.Object]]
       val xAdvances: scala.Array[scala.Float] = run.xAdvances.items
       var gx: scala.Float = x + run.x
-      val gy: scala.Float = y + run.y
+      val gy: scala.Float = y + run.y;
       { var ii: scala.Int = 0; val nn: scala.Int = run.glyphs.size; while (ii < nn) { {
         if ({ glyphIndex += 1; glyphIndex } == nextColorGlyphIndex) {
           lastColorFloatBits = com.badlogic.gdx.utils.NumberUtils.intToFloatColor(colors.get({ colorsIndex += 1; colorsIndex }))
           nextColorGlyphIndex = if ({ colorsIndex += 1; colorsIndex } < colors.size) colors.get(colorsIndex) else -1
         } else ()
         gx = gx + xAdvances(ii)
-        this.addGlyph(glyphs(ii).asInstanceOf[com.badlogic.gdx.graphics.g2d.BitmapFont#Glyph], gx, gy, lastColorFloatBits)
+        this.addGlyph(glyphs(ii).asInstanceOf[com.badlogic.gdx.graphics.g2d.BitmapFont.Glyph], gx, gy, lastColorFloatBits)
       }; ii = ii + 1 } }
     }; i = i + 1 } }
     this.currentTint = com.badlogic.gdx.graphics.Color.WHITE_FLOAT_BITS
   }
-  private def addGlyph(glyph: com.badlogic.gdx.graphics.g2d.BitmapFont#Glyph, x$arg: scala.Float, y$arg: scala.Float, color: scala.Float): scala.Unit = {
+  private def addGlyph(glyph: com.badlogic.gdx.graphics.g2d.BitmapFont.Glyph, x$arg: scala.Float, y$arg: scala.Float, color: scala.Float): scala.Unit = {
     var x: scala.Float = x$arg
     var y: scala.Float = y$arg
     val scaleX: scala.Float = this.font.data.scaleX

@@ -1,9 +1,9 @@
 package com.badlogic.gdx.graphics.g3d
 
 class Attributes extends scala.collection.Iterable[com.badlogic.gdx.graphics.g3d.Attribute] with java.util.Comparator[com.badlogic.gdx.graphics.g3d.Attribute] with java.lang.Comparable[Attributes] {
-  protected var mask: scala.Long = 0L
-  protected final val attributes: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.Attribute] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.Attribute]()
-  protected var sorted: scala.Boolean = true
+  var mask: scala.Long = 0L
+  final val attributes: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.Attribute] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.Attribute]()
+  var sorted: scala.Boolean = true
   final def sort(): scala.Unit = {
     if (!this.sorted) {
       this.attributes.sort(this)
@@ -97,7 +97,7 @@ class Attributes extends scala.collection.Iterable[com.badlogic.gdx.graphics.g3d
   final def has(`type`: scala.Long): scala.Boolean = {
     return (`type` != 0) && ((this.mask & `type`) == `type`)
   }
-  protected def indexOf(`type`: scala.Long): scala.Int = {
+  def indexOf(`type`: scala.Long): scala.Int = {
     if (this.has(`type`)) {
       { var i: scala.Int = 0; while (i < this.attributes.size) { {
         if (this.attributes.get(i).`type` == `type`) {
@@ -118,7 +118,7 @@ class Attributes extends scala.collection.Iterable[com.badlogic.gdx.graphics.g3d
       return true
     } else ()
     this.sort()
-    other.sort()
+    other.sort();
     { var i: scala.Int = 0; while (i < this.attributes.size) { {
       if (!this.attributes.get(i).equals(other.attributes.get(i))) {
         return false
@@ -130,7 +130,7 @@ class Attributes extends scala.collection.Iterable[com.badlogic.gdx.graphics.g3d
     return this.same(other, false)
   }
   final def compare(arg0: com.badlogic.gdx.graphics.g3d.Attribute, arg1: com.badlogic.gdx.graphics.g3d.Attribute): scala.Int = {
-    return (arg0.`type` - arg1.`type`).asInstanceOf[scala.Int]
+    return (arg0.`type` - arg1.`type`).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
   }
   final def iterator(): scala.collection.Iterator[com.badlogic.gdx.graphics.g3d.Attribute] = {
     return this.attributes.iterator()
@@ -139,14 +139,14 @@ class Attributes extends scala.collection.Iterable[com.badlogic.gdx.graphics.g3d
     this.sort()
     val n: scala.Int = this.attributes.size
     var result: scala.Long = 71 + this.mask
-    var m: scala.Int = 1
+    var m: scala.Int = 1;
     { var i: scala.Int = 0; while (i < n) { {
       result = result + ((this.mask * this.attributes.get(i).hashCode()) * {
         m = (m * 7) & 65535
         m
       })
     }; i = i + 1 } }
-    return (result ^ (result >> 32)).asInstanceOf[scala.Int]
+    return (result ^ (result >> 32)).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
   }
   def hashCode(): scala.Int = {
     return this.attributesHash()
@@ -168,7 +168,7 @@ class Attributes extends scala.collection.Iterable[com.badlogic.gdx.graphics.g3d
       return if (this.mask < other.mask) -1 else 1
     } else ()
     this.sort()
-    other.sort()
+    other.sort();
     { var i: scala.Int = 0; while (i < this.attributes.size) { {
       val c: scala.Int = this.attributes.get(i).compareTo(other.attributes.get(i))
       if (c != 0) {

@@ -2,16 +2,16 @@ package com.badlogic.gdx.graphics.g3d.utils.shapebuilders
 
 class PatchShapeBuilder extends com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BaseShapeBuilder
 object PatchShapeBuilder {
-  def build(builder: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder, corner00: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder#VertexInfo, corner10: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder#VertexInfo, corner11: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder#VertexInfo, corner01: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder#VertexInfo, divisionsU: scala.Int, divisionsV: scala.Int): scala.Unit = {
+  def build(builder: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder, corner00: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo, corner10: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo, corner11: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo, corner01: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo, divisionsU: scala.Int, divisionsV: scala.Int): scala.Unit = {
     if ((divisionsU < 1) || (divisionsV < 1)) {
       throw new com.badlogic.gdx.utils.GdxRuntimeException((("divisionsU and divisionV must be > 0, u,v: " + divisionsU) + ", ") + divisionsV)
     } else ()
     builder.ensureVertices((divisionsV + 1) * (divisionsU + 1))
-    builder.ensureRectangleIndices(divisionsV * divisionsU)
+    builder.ensureRectangleIndices(divisionsV * divisionsU);
     { var u: scala.Int = 0; while (u <= divisionsU) { {
       val alphaU: scala.Float = u.asInstanceOf[scala.Float] / divisionsU.asInstanceOf[scala.Float]
       com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BaseShapeBuilder.vertTmp5.set(corner00).lerp(corner10, alphaU)
-      com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BaseShapeBuilder.vertTmp6.set(corner01).lerp(corner11, alphaU)
+      com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BaseShapeBuilder.vertTmp6.set(corner01).lerp(corner11, alphaU);
       { var v: scala.Int = 0; while (v <= divisionsV) { {
         val idx: scala.Short = builder.vertex(com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BaseShapeBuilder.vertTmp7.set(com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BaseShapeBuilder.vertTmp5).lerp(com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BaseShapeBuilder.vertTmp6, v.asInstanceOf[scala.Float] / divisionsV.asInstanceOf[scala.Float]))
         if ((u > 0) && (v > 0)) {

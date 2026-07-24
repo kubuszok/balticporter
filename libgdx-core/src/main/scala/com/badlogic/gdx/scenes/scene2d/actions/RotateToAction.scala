@@ -8,10 +8,10 @@ class RotateToAction extends com.badlogic.gdx.scenes.scene2d.actions.TemporalAct
     this()
     this.useShortestDirection = useShortestDirection
   }
-  protected def begin(): scala.Unit = {
+  def begin(): scala.Unit = {
     this.start = target.getRotation()
   }
-  protected def update(percent: scala.Float): scala.Unit = {
+  def update(percent: scala.Float): scala.Unit = {
     var rotation: scala.Float = 0.0f
     if (percent == 0) {
       rotation = this.start

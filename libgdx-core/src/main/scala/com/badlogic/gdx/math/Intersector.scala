@@ -66,16 +66,16 @@ object Intersector {
     return true
   }
   def pointLineSide(linePoint1: com.badlogic.gdx.math.Vector2, linePoint2: com.badlogic.gdx.math.Vector2, point: com.badlogic.gdx.math.Vector2): scala.Int = {
-    return java.lang.Math.signum(((linePoint2.x - linePoint1.x) * (point.y - linePoint1.y)) - ((linePoint2.y - linePoint1.y) * (point.x - linePoint1.x))).asInstanceOf[scala.Int]
+    return java.lang.Math.signum(((linePoint2.x - linePoint1.x) * (point.y - linePoint1.y)) - ((linePoint2.y - linePoint1.y) * (point.x - linePoint1.x))).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
   }
   def pointLineSide(linePoint1X: scala.Float, linePoint1Y: scala.Float, linePoint2X: scala.Float, linePoint2Y: scala.Float, pointX: scala.Float, pointY: scala.Float): scala.Int = {
-    return java.lang.Math.signum(((linePoint2X - linePoint1X) * (pointY - linePoint1Y)) - ((linePoint2Y - linePoint1Y) * (pointX - linePoint1X))).asInstanceOf[scala.Int]
+    return java.lang.Math.signum(((linePoint2X - linePoint1X) * (pointY - linePoint1Y)) - ((linePoint2Y - linePoint1Y) * (pointX - linePoint1X))).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
   }
   def isPointInPolygon(polygon: com.badlogic.gdx.utils.Array[com.badlogic.gdx.math.Vector2], point: com.badlogic.gdx.math.Vector2): scala.Boolean = {
     var last: com.badlogic.gdx.math.Vector2 = polygon.peek()
     val x: scala.Float = point.x
     val y: scala.Float = point.y
-    var oddNodes: scala.Boolean = false
+    var oddNodes: scala.Boolean = false;
     { var i: scala.Int = 0; while (i < polygon.size) { {
       val vertex: com.badlogic.gdx.math.Vector2 = polygon.get(i)
       if (((vertex.y < y) && (last.y >= y)) || ((last.y < y) && (vertex.y >= y))) {
@@ -92,7 +92,7 @@ object Intersector {
     val sx: scala.Float = polygon(offset)
     val sy: scala.Float = polygon(offset + 1)
     var y1: scala.Float = sy
-    var yi: scala.Int = offset + 3
+    var yi: scala.Int = offset + 3;
     { val n: scala.Int = offset + count; while (yi < n) { {
       val y2: scala.Float = polygon(yi)
       if (((y2 < y) && (y1 >= y)) || ((y1 < y) && (y2 >= y))) {
@@ -124,7 +124,7 @@ object Intersector {
     floatArray.clear()
     floatArray2.clear()
     floatArray2.addAll(p1.getTransformedVertices())
-    val vertices2: scala.Array[scala.Float] = p2.getTransformedVertices()
+    val vertices2: scala.Array[scala.Float] = p2.getTransformedVertices();
     { var i: scala.Int = 0; val last: scala.Int = vertices2.length - 2; while (i <= last) { {
       ep1.set(vertices2(i), vertices2(i + 1))
       if (i < last) {
@@ -135,7 +135,7 @@ object Intersector {
       if (floatArray2.size == 0) {
         return false
       } else ()
-      s.set(floatArray2.get(floatArray2.size - 2), floatArray2.get(floatArray2.size - 1))
+      s.set(floatArray2.get(floatArray2.size - 2), floatArray2.get(floatArray2.size - 1));
       { var j: scala.Int = 0; while (j < floatArray2.size) { {
         e.set(floatArray2.get(j), floatArray2.get(j + 1))
         val side: scala.Boolean = Intersector.pointLineSide(ep2, ep1, s) > 0
@@ -193,12 +193,12 @@ object Intersector {
     val p1: scala.Array[scala.Float] = polygon1.items
     val p2: scala.Array[scala.Float] = polygon2.items
     var x1: scala.Float = p1(last1)
-    var y1: scala.Float = p1(last1 + 1)
+    var y1: scala.Float = p1(last1 + 1);
     { var i: scala.Int = 0; while (i <= last1) { {
       val x2: scala.Float = p1(i)
       val y2: scala.Float = p1(i + 1)
       var x3: scala.Float = p2(last2)
-      var y3: scala.Float = p2(last2 + 1)
+      var y3: scala.Float = p2(last2 + 1);
       { var j: scala.Int = 0; while (j <= last2) { {
         val x4: scala.Float = p2(j)
         val y4: scala.Float = p2(j + 1)
@@ -272,7 +272,7 @@ object Intersector {
     val y: scala.Float = center.y - Intersector.tmp2.y
     return ((x * x) + (y * y)) <= squareRadius
   }
-  def intersectSegmentCircle(start: com.badlogic.gdx.math.Vector2, `end`: com.badlogic.gdx.math.Vector2, circle: com.badlogic.gdx.math.Circle, mtv: MinimumTranslationVector): scala.Boolean = {
+  def intersectSegmentCircle(start: com.badlogic.gdx.math.Vector2, `end`: com.badlogic.gdx.math.Vector2, circle: com.badlogic.gdx.math.Circle, mtv: com.badlogic.gdx.math.Intersector.MinimumTranslationVector): scala.Boolean = {
     Intersector.v2a.set(`end`).sub(start)
     Intersector.v2b.set(circle.x - start.x, circle.y - start.y)
     val len: scala.Float = Intersector.v2a.len()
@@ -681,7 +681,7 @@ object Intersector {
     var hit: scala.Boolean = false
     if ((triangles.length % 9) != 0) {
       throw new java.lang.RuntimeException("triangles array size is not a multiple of 9")
-    } else ()
+    } else ();
     { var i: scala.Int = 0; while (i < triangles.length) { {
       val result: scala.Boolean = Intersector.intersectRayTriangle(ray, Intersector.tmp1.set(triangles(i), triangles(i + 1), triangles(i + 2)), Intersector.tmp2.set(triangles(i + 3), triangles(i + 4), triangles(i + 5)), Intersector.tmp3.set(triangles(i + 6), triangles(i + 7), triangles(i + 8)), Intersector.tmp)
       if (result) {
@@ -707,7 +707,7 @@ object Intersector {
     var hit: scala.Boolean = false
     if ((indices.length % 3) != 0) {
       throw new java.lang.RuntimeException("triangle list size is not a multiple of 3")
-    } else ()
+    } else ();
     { var i: scala.Int = 0; while (i < indices.length) { {
       val i1: scala.Int = indices(i) * vertexSize
       val i2: scala.Int = indices(i + 1) * vertexSize
@@ -736,7 +736,7 @@ object Intersector {
     var hit: scala.Boolean = false
     if ((triangles.size % 3) != 0) {
       throw new java.lang.RuntimeException("triangle list size is not a multiple of 3")
-    } else ()
+    } else ();
     { var i: scala.Int = 0; while (i < triangles.size) { {
       val result: scala.Boolean = Intersector.intersectRayTriangle(ray, triangles(i), triangles(i + 1), triangles(i + 2), Intersector.tmp)
       if (result) {
@@ -787,7 +787,7 @@ object Intersector {
     val y2: scala.Float = p2.y
     val n: scala.Int = vertices.length
     var x3: scala.Float = vertices(n - 2)
-    var y3: scala.Float = vertices(n - 1)
+    var y3: scala.Float = vertices(n - 1);
     { var i: scala.Int = 0; while (i < n) { {
       val x4: scala.Float = vertices(i)
       val y4: scala.Float = vertices(i + 1)
@@ -843,7 +843,7 @@ object Intersector {
     val y2: scala.Float = p2.y
     val n: scala.Int = vertices.length
     var x3: scala.Float = vertices(n - 2)
-    var y3: scala.Float = vertices(n - 1)
+    var y3: scala.Float = vertices(n - 1);
     { var i: scala.Int = 0; while (i < n) { {
       val x4: scala.Float = vertices(i)
       val y4: scala.Float = vertices(i + 1)
@@ -925,13 +925,13 @@ object Intersector {
   def overlapConvexPolygons(p1: com.badlogic.gdx.math.Polygon, p2: com.badlogic.gdx.math.Polygon): scala.Boolean = {
     return Intersector.overlapConvexPolygons(p1, p2, null)
   }
-  def overlapConvexPolygons(p1: com.badlogic.gdx.math.Polygon, p2: com.badlogic.gdx.math.Polygon, mtv: MinimumTranslationVector): scala.Boolean = {
+  def overlapConvexPolygons(p1: com.badlogic.gdx.math.Polygon, p2: com.badlogic.gdx.math.Polygon, mtv: com.badlogic.gdx.math.Intersector.MinimumTranslationVector): scala.Boolean = {
     return Intersector.overlapConvexPolygons(p1.getTransformedVertices(), p2.getTransformedVertices(), mtv)
   }
-  def overlapConvexPolygons(verts1: scala.Array[scala.Float], verts2: scala.Array[scala.Float], mtv: MinimumTranslationVector): scala.Boolean = {
+  def overlapConvexPolygons(verts1: scala.Array[scala.Float], verts2: scala.Array[scala.Float], mtv: com.badlogic.gdx.math.Intersector.MinimumTranslationVector): scala.Boolean = {
     return Intersector.overlapConvexPolygons(verts1, 0, verts1.length, verts2, 0, verts2.length, mtv)
   }
-  def overlapConvexPolygons(verts1: scala.Array[scala.Float], offset1: scala.Int, count1: scala.Int, verts2: scala.Array[scala.Float], offset2: scala.Int, count2: scala.Int, mtv: MinimumTranslationVector): scala.Boolean = {
+  def overlapConvexPolygons(verts1: scala.Array[scala.Float], offset1: scala.Int, count1: scala.Int, verts2: scala.Array[scala.Float], offset2: scala.Int, count2: scala.Int, mtv: com.badlogic.gdx.math.Intersector.MinimumTranslationVector): scala.Boolean = {
     var overlaps: scala.Boolean = false
     if (mtv != null) {
       mtv.depth = java.lang.Float.MAX_VALUE
@@ -950,9 +950,9 @@ object Intersector {
     } else ()
     return true
   }
-  private def overlapsOnAxisOfShape(verts1: scala.Array[scala.Float], offset1: scala.Int, count1: scala.Int, verts2: scala.Array[scala.Float], offset2: scala.Int, count2: scala.Int, mtv: MinimumTranslationVector, shapesShifted: scala.Boolean): scala.Boolean = {
+  private def overlapsOnAxisOfShape(verts1: scala.Array[scala.Float], offset1: scala.Int, count1: scala.Int, verts2: scala.Array[scala.Float], offset2: scala.Int, count2: scala.Int, mtv: com.badlogic.gdx.math.Intersector.MinimumTranslationVector, shapesShifted: scala.Boolean): scala.Boolean = {
     val endA: scala.Int = offset1 + count1
-    val endB: scala.Int = offset2 + count2
+    val endB: scala.Int = offset2 + count2;
     { var i: scala.Int = offset1; while (i < endA) { {
       val x1: scala.Float = verts1(i)
       val y1: scala.Float = verts1(i + 1)
@@ -964,14 +964,14 @@ object Intersector {
       axisX = axisX / len
       axisY = axisY / len
       var minA: scala.Float = java.lang.Float.MAX_VALUE
-      var maxA: scala.Float = -java.lang.Float.MAX_VALUE
+      var maxA: scala.Float = -java.lang.Float.MAX_VALUE;
       { var v: scala.Int = offset1; while (v < endA) { {
         val p: scala.Float = (verts1(v) * axisX) + (verts1(v + 1) * axisY)
         minA = java.lang.Math.min(minA, p)
         maxA = java.lang.Math.max(maxA, p)
       }; v = v + 2 } }
       var minB: scala.Float = java.lang.Float.MAX_VALUE
-      var maxB: scala.Float = -java.lang.Float.MAX_VALUE
+      var maxB: scala.Float = -java.lang.Float.MAX_VALUE;
       { var v: scala.Int = offset2; while (v < endB) { {
         val p: scala.Float = (verts2(v) * axisX) + (verts2(v + 1) * axisY)
         minB = java.lang.Math.min(minB, p)
@@ -1015,7 +1015,7 @@ object Intersector {
     }; i = i + 2 } }
     return true
   }
-  def splitTriangle(triangle: scala.Array[scala.Float], plane: com.badlogic.gdx.math.Plane, split: SplitTriangle): scala.Unit = {
+  def splitTriangle(triangle: scala.Array[scala.Float], plane: com.badlogic.gdx.math.Plane, split: com.badlogic.gdx.math.Intersector.SplitTriangle): scala.Unit = {
     val stride: scala.Int = triangle.length / 3
     val r1: scala.Boolean = plane.testPoint(triangle(0), triangle(1), triangle(2)) == com.badlogic.gdx.math.Plane.PlaneSide.Back
     val r2: scala.Boolean = plane.testPoint(triangle(0 + stride), triangle(1 + stride), triangle(2 + stride)) == com.badlogic.gdx.math.Plane.PlaneSide.Back
@@ -1081,7 +1081,7 @@ object Intersector {
     val t: scala.Float = Intersector.intersectLinePlane(vertices(s), vertices(s + 1), vertices(s + 2), vertices(e), vertices(e + 1), vertices(e + 2), plane, Intersector.intersection)
     split(offset + 0) = Intersector.intersection.x
     split(offset + 1) = Intersector.intersection.y
-    split(offset + 2) = Intersector.intersection.z
+    split(offset + 2) = Intersector.intersection.z;
     { var i: scala.Int = 3; while (i < stride) { {
       val a: scala.Float = vertices(s + i)
       val b: scala.Float = vertices(e + i)

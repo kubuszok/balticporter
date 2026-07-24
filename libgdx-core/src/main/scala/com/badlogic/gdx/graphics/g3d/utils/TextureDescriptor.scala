@@ -2,18 +2,18 @@ package com.badlogic.gdx.graphics.g3d.utils
 
 class TextureDescriptor[T <: com.badlogic.gdx.graphics.GLTexture] extends java.lang.Comparable[TextureDescriptor[T]] {
   var texture: T = null
-  var minFilter: com.badlogic.gdx.graphics.Texture#TextureFilter = null.asInstanceOf[com.badlogic.gdx.graphics.Texture#TextureFilter]
-  var magFilter: com.badlogic.gdx.graphics.Texture#TextureFilter = null.asInstanceOf[com.badlogic.gdx.graphics.Texture#TextureFilter]
-  var uWrap: com.badlogic.gdx.graphics.Texture#TextureWrap = null.asInstanceOf[com.badlogic.gdx.graphics.Texture#TextureWrap]
-  var vWrap: com.badlogic.gdx.graphics.Texture#TextureWrap = null.asInstanceOf[com.badlogic.gdx.graphics.Texture#TextureWrap]
-  def this(texture: T, minFilter: com.badlogic.gdx.graphics.Texture#TextureFilter, magFilter: com.badlogic.gdx.graphics.Texture#TextureFilter, uWrap: com.badlogic.gdx.graphics.Texture#TextureWrap, vWrap: com.badlogic.gdx.graphics.Texture#TextureWrap) = {
+  var minFilter: com.badlogic.gdx.graphics.Texture.TextureFilter = null.asInstanceOf[com.badlogic.gdx.graphics.Texture.TextureFilter]
+  var magFilter: com.badlogic.gdx.graphics.Texture.TextureFilter = null.asInstanceOf[com.badlogic.gdx.graphics.Texture.TextureFilter]
+  var uWrap: com.badlogic.gdx.graphics.Texture.TextureWrap = null.asInstanceOf[com.badlogic.gdx.graphics.Texture.TextureWrap]
+  var vWrap: com.badlogic.gdx.graphics.Texture.TextureWrap = null.asInstanceOf[com.badlogic.gdx.graphics.Texture.TextureWrap]
+  def this(texture: T, minFilter: com.badlogic.gdx.graphics.Texture.TextureFilter, magFilter: com.badlogic.gdx.graphics.Texture.TextureFilter, uWrap: com.badlogic.gdx.graphics.Texture.TextureWrap, vWrap: com.badlogic.gdx.graphics.Texture.TextureWrap) = {
     this()
     this.set(texture, minFilter, magFilter, uWrap, vWrap)
   }
   def this(texture: T) = {
     this(texture, null, null, null, null)
   }
-  def set(texture: T, minFilter: com.badlogic.gdx.graphics.Texture#TextureFilter, magFilter: com.badlogic.gdx.graphics.Texture#TextureFilter, uWrap: com.badlogic.gdx.graphics.Texture#TextureWrap, vWrap: com.badlogic.gdx.graphics.Texture#TextureWrap): scala.Unit = {
+  def set(texture: T, minFilter: com.badlogic.gdx.graphics.Texture.TextureFilter, magFilter: com.badlogic.gdx.graphics.Texture.TextureFilter, uWrap: com.badlogic.gdx.graphics.Texture.TextureWrap, vWrap: com.badlogic.gdx.graphics.Texture.TextureWrap): scala.Unit = {
     this.texture = texture
     this.minFilter = minFilter
     this.magFilter = magFilter
@@ -34,7 +34,7 @@ class TextureDescriptor[T <: com.badlogic.gdx.graphics.GLTexture] extends java.l
     if (obj == this) {
       return true
     } else ()
-    if (!obj.isInstanceOf[TextureDescriptor]) {
+    if (!obj.isInstanceOf[TextureDescriptor[?]]) {
       return false
     } else ()
     val other: TextureDescriptor[?] = obj.asInstanceOf[TextureDescriptor[?]]
@@ -47,7 +47,7 @@ class TextureDescriptor[T <: com.badlogic.gdx.graphics.GLTexture] extends java.l
     result = (811 * result) + (if (this.magFilter == null) 0 else this.magFilter.getGLEnum())
     result = (811 * result) + (if (this.uWrap == null) 0 else this.uWrap.getGLEnum())
     result = (811 * result) + (if (this.vWrap == null) 0 else this.vWrap.getGLEnum())
-    return (result ^ (result >> 32)).asInstanceOf[scala.Int]
+    return (result ^ (result >> 32)).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
   }
   def compareTo(o: TextureDescriptor[T]): scala.Int = {
     if (o == this) {

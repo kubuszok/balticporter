@@ -33,61 +33,61 @@ class DefaultShader extends com.badlogic.gdx.graphics.g3d.shaders.BaseShader {
   var u_ambientTexture: scala.Int = 0
   var u_ambientUVTransform: scala.Int = 0
   var u_alphaTest: scala.Int = 0
-  protected var u_ambientCubemap: scala.Int = 0
-  protected var u_environmentCubemap: scala.Int = 0
-  protected final val u_dirLights0color: scala.Int = this.register(new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform("u_dirLights[0].color"))
-  protected final val u_dirLights0direction: scala.Int = this.register(new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform("u_dirLights[0].direction"))
-  protected final val u_dirLights1color: scala.Int = this.register(new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform("u_dirLights[1].color"))
-  protected final val u_pointLights0color: scala.Int = this.register(new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform("u_pointLights[0].color"))
-  protected final val u_pointLights0position: scala.Int = this.register(new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform("u_pointLights[0].position"))
-  protected final val u_pointLights0intensity: scala.Int = this.register(new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform("u_pointLights[0].intensity"))
-  protected final val u_pointLights1color: scala.Int = this.register(new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform("u_pointLights[1].color"))
-  protected final val u_spotLights0color: scala.Int = this.register(new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform("u_spotLights[0].color"))
-  protected final val u_spotLights0position: scala.Int = this.register(new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform("u_spotLights[0].position"))
-  protected final val u_spotLights0intensity: scala.Int = this.register(new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform("u_spotLights[0].intensity"))
-  protected final val u_spotLights0direction: scala.Int = this.register(new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform("u_spotLights[0].direction"))
-  protected final val u_spotLights0cutoffAngle: scala.Int = this.register(new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform("u_spotLights[0].cutoffAngle"))
-  protected final val u_spotLights0exponent: scala.Int = this.register(new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform("u_spotLights[0].exponent"))
-  protected final val u_spotLights1color: scala.Int = this.register(new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform("u_spotLights[1].color"))
-  protected final val u_fogColor: scala.Int = this.register(new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform("u_fogColor"))
-  protected final val u_shadowMapProjViewTrans: scala.Int = this.register(new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform("u_shadowMapProjViewTrans"))
-  protected final val u_shadowTexture: scala.Int = this.register(new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform("u_shadowTexture"))
-  protected final val u_shadowPCFOffset: scala.Int = this.register(new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform("u_shadowPCFOffset"))
-  protected var dirLightsLoc: scala.Int = 0
-  protected var dirLightsColorOffset: scala.Int = 0
-  protected var dirLightsDirectionOffset: scala.Int = 0
-  protected var dirLightsSize: scala.Int = 0
-  protected var pointLightsLoc: scala.Int = 0
-  protected var pointLightsColorOffset: scala.Int = 0
-  protected var pointLightsPositionOffset: scala.Int = 0
-  protected var pointLightsIntensityOffset: scala.Int = 0
-  protected var pointLightsSize: scala.Int = 0
-  protected var spotLightsLoc: scala.Int = 0
-  protected var spotLightsColorOffset: scala.Int = 0
-  protected var spotLightsPositionOffset: scala.Int = 0
-  protected var spotLightsDirectionOffset: scala.Int = 0
-  protected var spotLightsIntensityOffset: scala.Int = 0
-  protected var spotLightsCutoffAngleOffset: scala.Int = 0
-  protected var spotLightsExponentOffset: scala.Int = 0
-  protected var spotLightsSize: scala.Int = 0
-  protected var lighting: scala.Boolean = false
-  protected var environmentCubemap: scala.Boolean = false
-  protected var shadowMap: scala.Boolean = false
-  protected final val ambientCubemap: com.badlogic.gdx.graphics.g3d.environment.AmbientCubemap = new com.badlogic.gdx.graphics.g3d.environment.AmbientCubemap()
-  protected var directionalLights: scala.Array[com.badlogic.gdx.graphics.g3d.environment.DirectionalLight] = null.asInstanceOf[scala.Array[com.badlogic.gdx.graphics.g3d.environment.DirectionalLight]]
-  protected var pointLights: scala.Array[com.badlogic.gdx.graphics.g3d.environment.PointLight] = null.asInstanceOf[scala.Array[com.badlogic.gdx.graphics.g3d.environment.PointLight]]
-  protected var spotLights: scala.Array[com.badlogic.gdx.graphics.g3d.environment.SpotLight] = null.asInstanceOf[scala.Array[com.badlogic.gdx.graphics.g3d.environment.SpotLight]]
+  var u_ambientCubemap: scala.Int = 0
+  var u_environmentCubemap: scala.Int = 0
+  final val u_dirLights0color: scala.Int = this.register(new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform("u_dirLights[0].color"))
+  final val u_dirLights0direction: scala.Int = this.register(new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform("u_dirLights[0].direction"))
+  final val u_dirLights1color: scala.Int = this.register(new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform("u_dirLights[1].color"))
+  final val u_pointLights0color: scala.Int = this.register(new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform("u_pointLights[0].color"))
+  final val u_pointLights0position: scala.Int = this.register(new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform("u_pointLights[0].position"))
+  final val u_pointLights0intensity: scala.Int = this.register(new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform("u_pointLights[0].intensity"))
+  final val u_pointLights1color: scala.Int = this.register(new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform("u_pointLights[1].color"))
+  final val u_spotLights0color: scala.Int = this.register(new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform("u_spotLights[0].color"))
+  final val u_spotLights0position: scala.Int = this.register(new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform("u_spotLights[0].position"))
+  final val u_spotLights0intensity: scala.Int = this.register(new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform("u_spotLights[0].intensity"))
+  final val u_spotLights0direction: scala.Int = this.register(new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform("u_spotLights[0].direction"))
+  final val u_spotLights0cutoffAngle: scala.Int = this.register(new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform("u_spotLights[0].cutoffAngle"))
+  final val u_spotLights0exponent: scala.Int = this.register(new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform("u_spotLights[0].exponent"))
+  final val u_spotLights1color: scala.Int = this.register(new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform("u_spotLights[1].color"))
+  final val u_fogColor: scala.Int = this.register(new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform("u_fogColor"))
+  final val u_shadowMapProjViewTrans: scala.Int = this.register(new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform("u_shadowMapProjViewTrans"))
+  final val u_shadowTexture: scala.Int = this.register(new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform("u_shadowTexture"))
+  final val u_shadowPCFOffset: scala.Int = this.register(new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform("u_shadowPCFOffset"))
+  var dirLightsLoc: scala.Int = 0
+  var dirLightsColorOffset: scala.Int = 0
+  var dirLightsDirectionOffset: scala.Int = 0
+  var dirLightsSize: scala.Int = 0
+  var pointLightsLoc: scala.Int = 0
+  var pointLightsColorOffset: scala.Int = 0
+  var pointLightsPositionOffset: scala.Int = 0
+  var pointLightsIntensityOffset: scala.Int = 0
+  var pointLightsSize: scala.Int = 0
+  var spotLightsLoc: scala.Int = 0
+  var spotLightsColorOffset: scala.Int = 0
+  var spotLightsPositionOffset: scala.Int = 0
+  var spotLightsDirectionOffset: scala.Int = 0
+  var spotLightsIntensityOffset: scala.Int = 0
+  var spotLightsCutoffAngleOffset: scala.Int = 0
+  var spotLightsExponentOffset: scala.Int = 0
+  var spotLightsSize: scala.Int = 0
+  var lighting: scala.Boolean = false
+  var environmentCubemap: scala.Boolean = false
+  var shadowMap: scala.Boolean = false
+  final val ambientCubemap: com.badlogic.gdx.graphics.g3d.environment.AmbientCubemap = new com.badlogic.gdx.graphics.g3d.environment.AmbientCubemap()
+  var directionalLights: scala.Array[com.badlogic.gdx.graphics.g3d.environment.DirectionalLight] = null.asInstanceOf[scala.Array[com.badlogic.gdx.graphics.g3d.environment.DirectionalLight]]
+  var pointLights: scala.Array[com.badlogic.gdx.graphics.g3d.environment.PointLight] = null.asInstanceOf[scala.Array[com.badlogic.gdx.graphics.g3d.environment.PointLight]]
+  var spotLights: scala.Array[com.badlogic.gdx.graphics.g3d.environment.SpotLight] = null.asInstanceOf[scala.Array[com.badlogic.gdx.graphics.g3d.environment.SpotLight]]
   private var renderable: com.badlogic.gdx.graphics.g3d.Renderable = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.Renderable]
-  protected var attributesMask: scala.Long = 0L
+  var attributesMask: scala.Long = 0L
   private var vertexMask: scala.Long = 0L
   private var textureCoordinates: scala.Int = 0
   private var boneWeightsLocations: scala.Array[scala.Int] = null.asInstanceOf[scala.Array[scala.Int]]
-  protected var config: Config = null.asInstanceOf[Config]
+  var config: com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Config = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Config]
   private final val normalMatrix: com.badlogic.gdx.math.Matrix3 = new com.badlogic.gdx.math.Matrix3()
   private var time: scala.Float = 0.0f
   private var lightsSet: scala.Boolean = false
   private final val tmpV1: com.badlogic.gdx.math.Vector3 = new com.badlogic.gdx.math.Vector3()
-  def this(renderable: com.badlogic.gdx.graphics.g3d.Renderable, config: Config, shaderProgram: com.badlogic.gdx.graphics.glutils.ShaderProgram) = {
+  def this(renderable: com.badlogic.gdx.graphics.g3d.Renderable, config: com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Config, shaderProgram: com.badlogic.gdx.graphics.glutils.ShaderProgram) = {
     this()
     val attributes: com.badlogic.gdx.graphics.g3d.Attributes = DefaultShader.combineAttributes(renderable)
     this.config = config
@@ -124,52 +124,52 @@ class DefaultShader extends com.badlogic.gdx.graphics.g3d.shaders.BaseShader {
     if (renderable.bones != null) {
       this.boneWeightsLocations = new Array[scala.Int](config.numBoneWeights)
     } else ()
-    this.u_projTrans = this.register(Inputs.projTrans, Setters.projTrans)
-    this.u_viewTrans = this.register(Inputs.viewTrans, Setters.viewTrans)
-    this.u_projViewTrans = this.register(Inputs.projViewTrans, Setters.projViewTrans)
-    this.u_cameraPosition = this.register(Inputs.cameraPosition, Setters.cameraPosition)
-    this.u_cameraDirection = this.register(Inputs.cameraDirection, Setters.cameraDirection)
-    this.u_cameraUp = this.register(Inputs.cameraUp, Setters.cameraUp)
-    this.u_cameraNearFar = this.register(Inputs.cameraNearFar, Setters.cameraNearFar)
-    this.u_time = this.register(new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform("u_time"))
-    this.u_worldTrans = this.register(Inputs.worldTrans, Setters.worldTrans)
-    this.u_viewWorldTrans = this.register(Inputs.viewWorldTrans, Setters.viewWorldTrans)
-    this.u_projViewWorldTrans = this.register(Inputs.projViewWorldTrans, Setters.projViewWorldTrans)
-    this.u_normalMatrix = this.register(Inputs.normalMatrix, Setters.normalMatrix)
-    this.u_bones = if ((renderable.bones != null) && (config.numBones > 0)) this.register(Inputs.bones, new Bones(config.numBones)) else -1
-    this.u_shininess = this.register(Inputs.shininess, Setters.shininess)
-    this.u_opacity = this.register(Inputs.opacity)
-    this.u_diffuseColor = this.register(Inputs.diffuseColor, Setters.diffuseColor)
-    this.u_diffuseTexture = this.register(Inputs.diffuseTexture, Setters.diffuseTexture)
-    this.u_diffuseUVTransform = this.register(Inputs.diffuseUVTransform, Setters.diffuseUVTransform)
-    this.u_specularColor = this.register(Inputs.specularColor, Setters.specularColor)
-    this.u_specularTexture = this.register(Inputs.specularTexture, Setters.specularTexture)
-    this.u_specularUVTransform = this.register(Inputs.specularUVTransform, Setters.specularUVTransform)
-    this.u_emissiveColor = this.register(Inputs.emissiveColor, Setters.emissiveColor)
-    this.u_emissiveTexture = this.register(Inputs.emissiveTexture, Setters.emissiveTexture)
-    this.u_emissiveUVTransform = this.register(Inputs.emissiveUVTransform, Setters.emissiveUVTransform)
-    this.u_reflectionColor = this.register(Inputs.reflectionColor, Setters.reflectionColor)
-    this.u_reflectionTexture = this.register(Inputs.reflectionTexture, Setters.reflectionTexture)
-    this.u_reflectionUVTransform = this.register(Inputs.reflectionUVTransform, Setters.reflectionUVTransform)
-    this.u_normalTexture = this.register(Inputs.normalTexture, Setters.normalTexture)
-    this.u_normalUVTransform = this.register(Inputs.normalUVTransform, Setters.normalUVTransform)
-    this.u_ambientTexture = this.register(Inputs.ambientTexture, Setters.ambientTexture)
-    this.u_ambientUVTransform = this.register(Inputs.ambientUVTransform, Setters.ambientUVTransform)
-    this.u_alphaTest = this.register(Inputs.alphaTest)
-    this.u_ambientCubemap = if (this.lighting) this.register(Inputs.ambientCube, new ACubemap(config.numDirectionalLights, config.numPointLights)) else -1
-    this.u_environmentCubemap = if (this.environmentCubemap) this.register(Inputs.environmentCubemap, Setters.environmentCubemap) else -1
+    this.u_projTrans = this.register(com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Inputs.projTrans, com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Setters.projTrans)
+    this.u_viewTrans = this.register(com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Inputs.viewTrans, com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Setters.viewTrans)
+    this.u_projViewTrans = this.register(com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Inputs.projViewTrans, com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Setters.projViewTrans)
+    this.u_cameraPosition = this.register(com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Inputs.cameraPosition, com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Setters.cameraPosition)
+    this.u_cameraDirection = this.register(com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Inputs.cameraDirection, com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Setters.cameraDirection)
+    this.u_cameraUp = this.register(com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Inputs.cameraUp, com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Setters.cameraUp)
+    this.u_cameraNearFar = this.register(com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Inputs.cameraNearFar, com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Setters.cameraNearFar)
+    this.u_time = this.register(new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform("u_time"))
+    this.u_worldTrans = this.register(com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Inputs.worldTrans, com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Setters.worldTrans)
+    this.u_viewWorldTrans = this.register(com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Inputs.viewWorldTrans, com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Setters.viewWorldTrans)
+    this.u_projViewWorldTrans = this.register(com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Inputs.projViewWorldTrans, com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Setters.projViewWorldTrans)
+    this.u_normalMatrix = this.register(com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Inputs.normalMatrix, com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Setters.normalMatrix)
+    this.u_bones = if ((renderable.bones != null) && (config.numBones > 0)) this.register(com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Inputs.bones, new com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Setters.Bones(config.numBones)) else -1
+    this.u_shininess = this.register(com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Inputs.shininess, com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Setters.shininess)
+    this.u_opacity = this.register(com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Inputs.opacity)
+    this.u_diffuseColor = this.register(com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Inputs.diffuseColor, com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Setters.diffuseColor)
+    this.u_diffuseTexture = this.register(com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Inputs.diffuseTexture, com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Setters.diffuseTexture)
+    this.u_diffuseUVTransform = this.register(com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Inputs.diffuseUVTransform, com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Setters.diffuseUVTransform)
+    this.u_specularColor = this.register(com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Inputs.specularColor, com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Setters.specularColor)
+    this.u_specularTexture = this.register(com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Inputs.specularTexture, com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Setters.specularTexture)
+    this.u_specularUVTransform = this.register(com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Inputs.specularUVTransform, com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Setters.specularUVTransform)
+    this.u_emissiveColor = this.register(com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Inputs.emissiveColor, com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Setters.emissiveColor)
+    this.u_emissiveTexture = this.register(com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Inputs.emissiveTexture, com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Setters.emissiveTexture)
+    this.u_emissiveUVTransform = this.register(com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Inputs.emissiveUVTransform, com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Setters.emissiveUVTransform)
+    this.u_reflectionColor = this.register(com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Inputs.reflectionColor, com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Setters.reflectionColor)
+    this.u_reflectionTexture = this.register(com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Inputs.reflectionTexture, com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Setters.reflectionTexture)
+    this.u_reflectionUVTransform = this.register(com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Inputs.reflectionUVTransform, com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Setters.reflectionUVTransform)
+    this.u_normalTexture = this.register(com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Inputs.normalTexture, com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Setters.normalTexture)
+    this.u_normalUVTransform = this.register(com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Inputs.normalUVTransform, com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Setters.normalUVTransform)
+    this.u_ambientTexture = this.register(com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Inputs.ambientTexture, com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Setters.ambientTexture)
+    this.u_ambientUVTransform = this.register(com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Inputs.ambientUVTransform, com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Setters.ambientUVTransform)
+    this.u_alphaTest = this.register(com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Inputs.alphaTest)
+    this.u_ambientCubemap = if (this.lighting) this.register(com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Inputs.ambientCube, new com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Setters.ACubemap(config.numDirectionalLights, config.numPointLights)) else -1
+    this.u_environmentCubemap = if (this.environmentCubemap) this.register(com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Inputs.environmentCubemap, com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Setters.environmentCubemap) else -1
   }
-  def this(renderable: com.badlogic.gdx.graphics.g3d.Renderable, config: Config, prefix: java.lang.String, vertexShader: java.lang.String, fragmentShader: java.lang.String) = {
+  def this(renderable: com.badlogic.gdx.graphics.g3d.Renderable, config: com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Config, prefix: java.lang.String, vertexShader: java.lang.String, fragmentShader: java.lang.String) = {
     this(renderable, config, new com.badlogic.gdx.graphics.glutils.ShaderProgram(prefix + vertexShader, prefix + fragmentShader))
   }
-  def this(renderable: com.badlogic.gdx.graphics.g3d.Renderable, config: Config, prefix: java.lang.String) = {
+  def this(renderable: com.badlogic.gdx.graphics.g3d.Renderable, config: com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Config, prefix: java.lang.String) = {
     this(renderable, config, prefix, if (config.vertexShader != null) config.vertexShader else DefaultShader.getDefaultVertexShader(), if (config.fragmentShader != null) config.fragmentShader else DefaultShader.getDefaultFragmentShader())
   }
-  def this(renderable: com.badlogic.gdx.graphics.g3d.Renderable, config: Config) = {
+  def this(renderable: com.badlogic.gdx.graphics.g3d.Renderable, config: com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Config) = {
     this(renderable, config, DefaultShader.createPrefix(renderable, config))
   }
   def this(renderable: com.badlogic.gdx.graphics.g3d.Renderable) = {
-    this(renderable, new Config())
+    this(renderable, new com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Config())
   }
   def init(): scala.Unit = {
     var program: com.badlogic.gdx.graphics.glutils.ShaderProgram = this.program
@@ -277,7 +277,7 @@ class DefaultShader extends com.badlogic.gdx.graphics.g3d.shaders.BaseShader {
   def `end`(): scala.Unit = {
     super.`end`()
   }
-  protected def bindMaterial(attributes: com.badlogic.gdx.graphics.g3d.Attributes): scala.Unit = {
+  def bindMaterial(attributes: com.badlogic.gdx.graphics.g3d.Attributes): scala.Unit = {
     var cullFace: scala.Int = if (this.config.defaultCullFace == (-1)) DefaultShader.defaultCullFace else this.config.defaultCullFace
     var depthFunc: scala.Int = if (this.config.defaultDepthFunc == (-1)) DefaultShader.defaultDepthFunc else this.config.defaultDepthFunc
     var depthRangeNear: scala.Float = 0.0f
@@ -314,13 +314,13 @@ class DefaultShader extends com.badlogic.gdx.graphics.g3d.shaders.BaseShader {
     context.setDepthTest(depthFunc, depthRangeNear, depthRangeFar)
     context.setDepthMask(depthMask)
   }
-  protected def bindLights(renderable: com.badlogic.gdx.graphics.g3d.Renderable, attributes: com.badlogic.gdx.graphics.g3d.Attributes): scala.Unit = {
+  def bindLights(renderable: com.badlogic.gdx.graphics.g3d.Renderable, attributes: com.badlogic.gdx.graphics.g3d.Attributes): scala.Unit = {
     val lights: com.badlogic.gdx.graphics.g3d.Environment = renderable.environment
-    val dla: com.badlogic.gdx.graphics.g3d.attributes.DirectionalLightsAttribute = attributes.get(classOf[java.lang.Class], com.badlogic.gdx.graphics.g3d.attributes.DirectionalLightsAttribute.Type)
+    val dla: com.badlogic.gdx.graphics.g3d.attributes.DirectionalLightsAttribute = attributes.get(classOf[com.badlogic.gdx.graphics.g3d.attributes.DirectionalLightsAttribute], com.badlogic.gdx.graphics.g3d.attributes.DirectionalLightsAttribute.Type)
     val dirs: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.environment.DirectionalLight] = if (dla == null) null else dla.lights
-    val pla: com.badlogic.gdx.graphics.g3d.attributes.PointLightsAttribute = attributes.get(classOf[java.lang.Class], com.badlogic.gdx.graphics.g3d.attributes.PointLightsAttribute.Type)
+    val pla: com.badlogic.gdx.graphics.g3d.attributes.PointLightsAttribute = attributes.get(classOf[com.badlogic.gdx.graphics.g3d.attributes.PointLightsAttribute], com.badlogic.gdx.graphics.g3d.attributes.PointLightsAttribute.Type)
     val points: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.environment.PointLight] = if (pla == null) null else pla.lights
-    val sla: com.badlogic.gdx.graphics.g3d.attributes.SpotLightsAttribute = attributes.get(classOf[java.lang.Class], com.badlogic.gdx.graphics.g3d.attributes.SpotLightsAttribute.Type)
+    val sla: com.badlogic.gdx.graphics.g3d.attributes.SpotLightsAttribute = attributes.get(classOf[com.badlogic.gdx.graphics.g3d.attributes.SpotLightsAttribute], com.badlogic.gdx.graphics.g3d.attributes.SpotLightsAttribute.Type)
     val spots: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.environment.SpotLight] = if (sla == null) null else sla.lights
     if (this.dirLightsLoc >= 0) {
       { var i: scala.Int = 0; while (i < this.directionalLights.length) { {
@@ -423,156 +423,11 @@ class DefaultShader extends com.badlogic.gdx.graphics.g3d.shaders.BaseShader {
   def setDefaultDepthFunc(depthFunc: scala.Int): scala.Unit = {
     this.config.defaultDepthFunc = depthFunc
   }
-  class Config {
-    var vertexShader: java.lang.String = null
-    var fragmentShader: java.lang.String = null
-    var numDirectionalLights: scala.Int = 2
-    var numPointLights: scala.Int = 5
-    var numSpotLights: scala.Int = 0
-    var numBones: scala.Int = 12
-    var numBoneWeights: scala.Int = 4
-    var ignoreUnimplemented: scala.Boolean = true
-    var defaultCullFace: scala.Int = -1
-    var defaultDepthFunc: scala.Int = -1
-    def this(vertexShader: java.lang.String, fragmentShader: java.lang.String) = {
-      this()
-      this.vertexShader = vertexShader
-      this.fragmentShader = fragmentShader
-    }
-  }
-  object Inputs {
-    final val projTrans: com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform("u_projTrans")
-    final val viewTrans: com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform("u_viewTrans")
-    final val projViewTrans: com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform("u_projViewTrans")
-    final val cameraPosition: com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform("u_cameraPosition")
-    final val cameraDirection: com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform("u_cameraDirection")
-    final val cameraUp: com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform("u_cameraUp")
-    final val cameraNearFar: com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform("u_cameraNearFar")
-    final val worldTrans: com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform("u_worldTrans")
-    final val viewWorldTrans: com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform("u_viewWorldTrans")
-    final val projViewWorldTrans: com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform("u_projViewWorldTrans")
-    final val normalMatrix: com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform("u_normalMatrix")
-    final val bones: com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform("u_bones")
-    final val shininess: com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform("u_shininess", com.badlogic.gdx.graphics.g3d.attributes.FloatAttribute.Shininess)
-    final val opacity: com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform("u_opacity", com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute.Type)
-    final val diffuseColor: com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform("u_diffuseColor", com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute.Diffuse)
-    final val diffuseTexture: com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform("u_diffuseTexture", com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute.Diffuse)
-    final val diffuseUVTransform: com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform("u_diffuseUVTransform", com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute.Diffuse)
-    final val specularColor: com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform("u_specularColor", com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute.Specular)
-    final val specularTexture: com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform("u_specularTexture", com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute.Specular)
-    final val specularUVTransform: com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform("u_specularUVTransform", com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute.Specular)
-    final val emissiveColor: com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform("u_emissiveColor", com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute.Emissive)
-    final val emissiveTexture: com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform("u_emissiveTexture", com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute.Emissive)
-    final val emissiveUVTransform: com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform("u_emissiveUVTransform", com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute.Emissive)
-    final val reflectionColor: com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform("u_reflectionColor", com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute.Reflection)
-    final val reflectionTexture: com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform("u_reflectionTexture", com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute.Reflection)
-    final val reflectionUVTransform: com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform("u_reflectionUVTransform", com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute.Reflection)
-    final val normalTexture: com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform("u_normalTexture", com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute.Normal)
-    final val normalUVTransform: com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform("u_normalUVTransform", com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute.Normal)
-    final val ambientTexture: com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform("u_ambientTexture", com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute.Ambient)
-    final val ambientUVTransform: com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform("u_ambientUVTransform", com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute.Ambient)
-    final val alphaTest: com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform("u_alphaTest")
-    final val ambientCube: com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform("u_ambientCubemap")
-    final val dirLights: com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform("u_dirLights")
-    final val pointLights: com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform("u_pointLights")
-    final val spotLights: com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform("u_spotLights")
-    final val environmentCubemap: com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform("u_environmentCubemap")
-  }
-  object Setters {
-    final val projTrans: com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#GlobalSetter()
-    final val viewTrans: com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#GlobalSetter()
-    final val projViewTrans: com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#GlobalSetter()
-    final val cameraPosition: com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#GlobalSetter()
-    final val cameraDirection: com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#GlobalSetter()
-    final val cameraUp: com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#GlobalSetter()
-    final val cameraNearFar: com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#GlobalSetter()
-    final val worldTrans: com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#LocalSetter()
-    final val viewWorldTrans: com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#LocalSetter()
-    final val projViewWorldTrans: com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#LocalSetter()
-    final val normalMatrix: com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#LocalSetter()
-    final val shininess: com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#LocalSetter()
-    final val diffuseColor: com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#LocalSetter()
-    final val diffuseTexture: com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#LocalSetter()
-    final val diffuseUVTransform: com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#LocalSetter()
-    final val specularColor: com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#LocalSetter()
-    final val specularTexture: com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#LocalSetter()
-    final val specularUVTransform: com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#LocalSetter()
-    final val emissiveColor: com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#LocalSetter()
-    final val emissiveTexture: com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#LocalSetter()
-    final val emissiveUVTransform: com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#LocalSetter()
-    final val reflectionColor: com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#LocalSetter()
-    final val reflectionTexture: com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#LocalSetter()
-    final val reflectionUVTransform: com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#LocalSetter()
-    final val normalTexture: com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#LocalSetter()
-    final val normalUVTransform: com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#LocalSetter()
-    final val ambientTexture: com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#LocalSetter()
-    final val ambientUVTransform: com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#LocalSetter()
-    final val environmentCubemap: com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#LocalSetter()
-    class Bones extends com.badlogic.gdx.graphics.g3d.shaders.BaseShader#LocalSetter {
-      var bones: scala.Array[scala.Float] = null.asInstanceOf[scala.Array[scala.Float]]
-      def this(numBones: scala.Int) = {
-        this()
-        this.bones = new Array[scala.Float](numBones * 16)
-      }
-      def set(shader: com.badlogic.gdx.graphics.g3d.shaders.BaseShader, inputID: scala.Int, renderable: com.badlogic.gdx.graphics.g3d.Renderable, combinedAttributes: com.badlogic.gdx.graphics.g3d.Attributes): scala.Unit = {
-        { var i: scala.Int = 0; while (i < this.bones.length) { {
-          val idx: scala.Int = i / 16
-          if (((renderable.bones == null) || (idx >= renderable.bones.length)) || (renderable.bones(idx) == null)) {
-            java.lang.System.arraycopy(Bones.idtMatrix.`val`, 0, this.bones, i, 16)
-          } else {
-            java.lang.System.arraycopy(renderable.bones(idx).`val`, 0, this.bones, i, 16)
-          }
-        }; i = i + 16 } }
-        shader.program.setUniformMatrix4fv(shader.loc(inputID), this.bones, 0, this.bones.length)
-      }
-    }
-    object Bones {
-      private final val idtMatrix: com.badlogic.gdx.math.Matrix4 = new com.badlogic.gdx.math.Matrix4()
-    }
-    class ACubemap extends com.badlogic.gdx.graphics.g3d.shaders.BaseShader#LocalSetter {
-      private final val cacheAmbientCubemap: com.badlogic.gdx.graphics.g3d.environment.AmbientCubemap = new com.badlogic.gdx.graphics.g3d.environment.AmbientCubemap()
-      var dirLightsOffset: scala.Int = 0
-      var pointLightsOffset: scala.Int = 0
-      def this(dirLightsOffset: scala.Int, pointLightsOffset: scala.Int) = {
-        this()
-        this.dirLightsOffset = dirLightsOffset
-        this.pointLightsOffset = pointLightsOffset
-      }
-      def set(shader: com.badlogic.gdx.graphics.g3d.shaders.BaseShader, inputID: scala.Int, renderable: com.badlogic.gdx.graphics.g3d.Renderable, combinedAttributes: com.badlogic.gdx.graphics.g3d.Attributes): scala.Unit = {
-        if (renderable.environment == null) {
-          shader.program.setUniform3fv(shader.loc(inputID), ACubemap.ones, 0, ACubemap.ones.length)
-        } else {
-          renderable.worldTransform.getTranslation(ACubemap.tmpV1)
-          if (combinedAttributes.has(com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute.AmbientLight)) {
-            this.cacheAmbientCubemap.set(combinedAttributes.get(com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute.AmbientLight).asInstanceOf[com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute].color)
-          } else ()
-          if (combinedAttributes.has(com.badlogic.gdx.graphics.g3d.attributes.DirectionalLightsAttribute.Type)) {
-            val lights: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.environment.DirectionalLight] = combinedAttributes.get(com.badlogic.gdx.graphics.g3d.attributes.DirectionalLightsAttribute.Type).asInstanceOf[com.badlogic.gdx.graphics.g3d.attributes.DirectionalLightsAttribute].lights
-            { var i: scala.Int = this.dirLightsOffset; while (i < lights.size) { {
-              this.cacheAmbientCubemap.add(lights.get(i).color, lights.get(i).direction)
-            }; i = i + 1 } }
-          } else ()
-          if (combinedAttributes.has(com.badlogic.gdx.graphics.g3d.attributes.PointLightsAttribute.Type)) {
-            val lights: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.environment.PointLight] = combinedAttributes.get(com.badlogic.gdx.graphics.g3d.attributes.PointLightsAttribute.Type).asInstanceOf[com.badlogic.gdx.graphics.g3d.attributes.PointLightsAttribute].lights
-            { var i: scala.Int = this.pointLightsOffset; while (i < lights.size) { {
-              this.cacheAmbientCubemap.add(lights.get(i).color, lights.get(i).position, ACubemap.tmpV1, lights.get(i).intensity)
-            }; i = i + 1 } }
-          } else ()
-          this.cacheAmbientCubemap.clamp()
-          shader.program.setUniform3fv(shader.loc(inputID), this.cacheAmbientCubemap.data, 0, this.cacheAmbientCubemap.data.length)
-        }
-      }
-    }
-    object ACubemap {
-      private final val ones: scala.Array[scala.Float] = Array[scala.Float](1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1)
-      private final val tmpV1: com.badlogic.gdx.math.Vector3 = new com.badlogic.gdx.math.Vector3()
-    }
-  }
 }
 object DefaultShader {
   private var defaultVertexShader: java.lang.String = null
   private var defaultFragmentShader: java.lang.String = null
-  protected var implementedFlags: scala.Long = (((com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute.Type | com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute.Diffuse) | com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute.Diffuse) | com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute.Specular) | com.badlogic.gdx.graphics.g3d.attributes.FloatAttribute.Shininess
+  var implementedFlags: scala.Long = (((com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute.Type | com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute.Diffuse) | com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute.Diffuse) | com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute.Specular) | com.badlogic.gdx.graphics.g3d.attributes.FloatAttribute.Shininess
   var defaultCullFace: scala.Int = com.badlogic.gdx.graphics.GL20.GL_BACK
   var defaultDepthFunc: scala.Int = com.badlogic.gdx.graphics.GL20.GL_LEQUAL
   private final val optionalAttributes: scala.Long = com.badlogic.gdx.graphics.g3d.attributes.IntAttribute.CullFace | com.badlogic.gdx.graphics.g3d.attributes.DepthTestAttribute.Type
@@ -615,7 +470,7 @@ object DefaultShader {
     } else ()
     return mask
   }
-  def createPrefix(renderable: com.badlogic.gdx.graphics.g3d.Renderable, config: Config): java.lang.String = {
+  def createPrefix(renderable: com.badlogic.gdx.graphics.g3d.Renderable, config: com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Config): java.lang.String = {
     val attributes: com.badlogic.gdx.graphics.g3d.Attributes = DefaultShader.combineAttributes(renderable)
     var prefix: java.lang.String = ""
     val attributesMask: scala.Long = attributes.getMask()
@@ -653,7 +508,7 @@ object DefaultShader {
         } else ()
       } else ()
     } else ()
-    val n: scala.Int = renderable.meshPart.mesh.getVertexAttributes().size()
+    val n: scala.Int = renderable.meshPart.mesh.getVertexAttributes().size();
     { var i: scala.Int = 0; while (i < n) { {
       val attr: com.badlogic.gdx.graphics.VertexAttribute = renderable.meshPart.mesh.getVertexAttributes().get(i)
       if (attr.usage == com.badlogic.gdx.graphics.VertexAttributes.Usage.TextureCoordinates) {
@@ -714,5 +569,150 @@ object DefaultShader {
       prefix = prefix + (("#define numBones " + config.numBones) + "\n")
     } else ()
     return prefix
+  }
+  class Config {
+    var vertexShader: java.lang.String = null
+    var fragmentShader: java.lang.String = null
+    var numDirectionalLights: scala.Int = 2
+    var numPointLights: scala.Int = 5
+    var numSpotLights: scala.Int = 0
+    var numBones: scala.Int = 12
+    var numBoneWeights: scala.Int = 4
+    var ignoreUnimplemented: scala.Boolean = true
+    var defaultCullFace: scala.Int = -1
+    var defaultDepthFunc: scala.Int = -1
+    def this(vertexShader: java.lang.String, fragmentShader: java.lang.String) = {
+      this()
+      this.vertexShader = vertexShader
+      this.fragmentShader = fragmentShader
+    }
+  }
+  object Inputs {
+    final val projTrans: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform("u_projTrans")
+    final val viewTrans: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform("u_viewTrans")
+    final val projViewTrans: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform("u_projViewTrans")
+    final val cameraPosition: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform("u_cameraPosition")
+    final val cameraDirection: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform("u_cameraDirection")
+    final val cameraUp: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform("u_cameraUp")
+    final val cameraNearFar: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform("u_cameraNearFar")
+    final val worldTrans: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform("u_worldTrans")
+    final val viewWorldTrans: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform("u_viewWorldTrans")
+    final val projViewWorldTrans: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform("u_projViewWorldTrans")
+    final val normalMatrix: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform("u_normalMatrix")
+    final val bones: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform("u_bones")
+    final val shininess: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform("u_shininess", com.badlogic.gdx.graphics.g3d.attributes.FloatAttribute.Shininess)
+    final val opacity: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform("u_opacity", com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute.Type)
+    final val diffuseColor: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform("u_diffuseColor", com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute.Diffuse)
+    final val diffuseTexture: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform("u_diffuseTexture", com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute.Diffuse)
+    final val diffuseUVTransform: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform("u_diffuseUVTransform", com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute.Diffuse)
+    final val specularColor: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform("u_specularColor", com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute.Specular)
+    final val specularTexture: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform("u_specularTexture", com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute.Specular)
+    final val specularUVTransform: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform("u_specularUVTransform", com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute.Specular)
+    final val emissiveColor: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform("u_emissiveColor", com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute.Emissive)
+    final val emissiveTexture: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform("u_emissiveTexture", com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute.Emissive)
+    final val emissiveUVTransform: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform("u_emissiveUVTransform", com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute.Emissive)
+    final val reflectionColor: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform("u_reflectionColor", com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute.Reflection)
+    final val reflectionTexture: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform("u_reflectionTexture", com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute.Reflection)
+    final val reflectionUVTransform: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform("u_reflectionUVTransform", com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute.Reflection)
+    final val normalTexture: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform("u_normalTexture", com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute.Normal)
+    final val normalUVTransform: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform("u_normalUVTransform", com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute.Normal)
+    final val ambientTexture: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform("u_ambientTexture", com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute.Ambient)
+    final val ambientUVTransform: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform("u_ambientUVTransform", com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute.Ambient)
+    final val alphaTest: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform("u_alphaTest")
+    final val ambientCube: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform("u_ambientCubemap")
+    final val dirLights: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform("u_dirLights")
+    final val pointLights: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform("u_pointLights")
+    final val spotLights: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform("u_spotLights")
+    final val environmentCubemap: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform("u_environmentCubemap")
+  }
+  object Setters {
+    final val projTrans: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.GlobalSetter()
+    final val viewTrans: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.GlobalSetter()
+    final val projViewTrans: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.GlobalSetter()
+    final val cameraPosition: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.GlobalSetter()
+    final val cameraDirection: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.GlobalSetter()
+    final val cameraUp: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.GlobalSetter()
+    final val cameraNearFar: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.GlobalSetter()
+    final val worldTrans: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.LocalSetter()
+    final val viewWorldTrans: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.LocalSetter()
+    final val projViewWorldTrans: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.LocalSetter()
+    final val normalMatrix: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.LocalSetter()
+    final val shininess: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.LocalSetter()
+    final val diffuseColor: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.LocalSetter()
+    final val diffuseTexture: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.LocalSetter()
+    final val diffuseUVTransform: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.LocalSetter()
+    final val specularColor: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.LocalSetter()
+    final val specularTexture: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.LocalSetter()
+    final val specularUVTransform: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.LocalSetter()
+    final val emissiveColor: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.LocalSetter()
+    final val emissiveTexture: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.LocalSetter()
+    final val emissiveUVTransform: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.LocalSetter()
+    final val reflectionColor: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.LocalSetter()
+    final val reflectionTexture: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.LocalSetter()
+    final val reflectionUVTransform: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.LocalSetter()
+    final val normalTexture: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.LocalSetter()
+    final val normalUVTransform: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.LocalSetter()
+    final val ambientTexture: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.LocalSetter()
+    final val ambientUVTransform: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.LocalSetter()
+    final val environmentCubemap: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.LocalSetter()
+    class Bones extends com.badlogic.gdx.graphics.g3d.shaders.BaseShader.LocalSetter {
+      var bones: scala.Array[scala.Float] = null.asInstanceOf[scala.Array[scala.Float]]
+      def this(numBones: scala.Int) = {
+        this()
+        this.bones = new Array[scala.Float](numBones * 16)
+      }
+      def set(shader: com.badlogic.gdx.graphics.g3d.shaders.BaseShader, inputID: scala.Int, renderable: com.badlogic.gdx.graphics.g3d.Renderable, combinedAttributes: com.badlogic.gdx.graphics.g3d.Attributes): scala.Unit = {
+        { var i: scala.Int = 0; while (i < this.bones.length) { {
+          val idx: scala.Int = i / 16
+          if (((renderable.bones == null) || (idx >= renderable.bones.length)) || (renderable.bones(idx) == null)) {
+            java.lang.System.arraycopy(com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Setters.Bones.idtMatrix.`val`, 0, this.bones, i, 16)
+          } else {
+            java.lang.System.arraycopy(renderable.bones(idx).`val`, 0, this.bones, i, 16)
+          }
+        }; i = i + 16 } }
+        shader.program.setUniformMatrix4fv(shader.loc(inputID), this.bones, 0, this.bones.length)
+      }
+    }
+    object Bones {
+      private final val idtMatrix: com.badlogic.gdx.math.Matrix4 = new com.badlogic.gdx.math.Matrix4()
+    }
+    class ACubemap extends com.badlogic.gdx.graphics.g3d.shaders.BaseShader.LocalSetter {
+      private final val cacheAmbientCubemap: com.badlogic.gdx.graphics.g3d.environment.AmbientCubemap = new com.badlogic.gdx.graphics.g3d.environment.AmbientCubemap()
+      var dirLightsOffset: scala.Int = 0
+      var pointLightsOffset: scala.Int = 0
+      def this(dirLightsOffset: scala.Int, pointLightsOffset: scala.Int) = {
+        this()
+        this.dirLightsOffset = dirLightsOffset
+        this.pointLightsOffset = pointLightsOffset
+      }
+      def set(shader: com.badlogic.gdx.graphics.g3d.shaders.BaseShader, inputID: scala.Int, renderable: com.badlogic.gdx.graphics.g3d.Renderable, combinedAttributes: com.badlogic.gdx.graphics.g3d.Attributes): scala.Unit = {
+        if (renderable.environment == null) {
+          shader.program.setUniform3fv(shader.loc(inputID), com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Setters.ACubemap.ones, 0, com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Setters.ACubemap.ones.length)
+        } else {
+          renderable.worldTransform.getTranslation(com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Setters.ACubemap.tmpV1)
+          if (combinedAttributes.has(com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute.AmbientLight)) {
+            this.cacheAmbientCubemap.set(combinedAttributes.get(com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute.AmbientLight).asInstanceOf[com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute].color)
+          } else ()
+          if (combinedAttributes.has(com.badlogic.gdx.graphics.g3d.attributes.DirectionalLightsAttribute.Type)) {
+            val lights: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.environment.DirectionalLight] = combinedAttributes.get(com.badlogic.gdx.graphics.g3d.attributes.DirectionalLightsAttribute.Type).asInstanceOf[com.badlogic.gdx.graphics.g3d.attributes.DirectionalLightsAttribute].lights;
+            { var i: scala.Int = this.dirLightsOffset; while (i < lights.size) { {
+              this.cacheAmbientCubemap.add(lights.get(i).color, lights.get(i).direction)
+            }; i = i + 1 } }
+          } else ()
+          if (combinedAttributes.has(com.badlogic.gdx.graphics.g3d.attributes.PointLightsAttribute.Type)) {
+            val lights: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.environment.PointLight] = combinedAttributes.get(com.badlogic.gdx.graphics.g3d.attributes.PointLightsAttribute.Type).asInstanceOf[com.badlogic.gdx.graphics.g3d.attributes.PointLightsAttribute].lights;
+            { var i: scala.Int = this.pointLightsOffset; while (i < lights.size) { {
+              this.cacheAmbientCubemap.add(lights.get(i).color, lights.get(i).position, com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Setters.ACubemap.tmpV1, lights.get(i).intensity)
+            }; i = i + 1 } }
+          } else ()
+          this.cacheAmbientCubemap.clamp()
+          shader.program.setUniform3fv(shader.loc(inputID), this.cacheAmbientCubemap.data, 0, this.cacheAmbientCubemap.data.length)
+        }
+      }
+    }
+    object ACubemap {
+      private final val ones: scala.Array[scala.Float] = Array[scala.Float](1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1)
+      private final val tmpV1: com.badlogic.gdx.math.Vector3 = new com.badlogic.gdx.math.Vector3()
+    }
   }
 }

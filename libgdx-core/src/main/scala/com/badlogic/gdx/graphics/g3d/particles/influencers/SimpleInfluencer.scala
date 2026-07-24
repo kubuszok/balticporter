@@ -5,7 +5,7 @@ abstract class SimpleInfluencer extends com.badlogic.gdx.graphics.g3d.particles.
   var valueChannel: com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel]
   var interpolationChannel: com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel]
   var lifeChannel: com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel]
-  var valueChannelDescriptor: com.badlogic.gdx.graphics.g3d.particles.ParallelArray#ChannelDescriptor = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ParallelArray#ChannelDescriptor]
+  var valueChannelDescriptor: com.badlogic.gdx.graphics.g3d.particles.ParallelArray.ChannelDescriptor = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ParallelArray.ChannelDescriptor]
   def this(billboardScaleinfluencer: SimpleInfluencer) = {
     this()
     this.set(billboardScaleinfluencer)
@@ -53,6 +53,6 @@ abstract class SimpleInfluencer extends com.badlogic.gdx.graphics.g3d.particles.
     json.writeValue("value", this.value)
   }
   def read(json: com.badlogic.gdx.utils.Json, jsonData: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
-    this.value = json.readValue("value", classOf[java.lang.Class], jsonData)
+    this.value = json.readValue("value", classOf[com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue], jsonData)
   }
 }

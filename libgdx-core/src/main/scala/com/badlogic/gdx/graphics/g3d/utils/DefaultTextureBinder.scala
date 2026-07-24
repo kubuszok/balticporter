@@ -9,7 +9,7 @@ final class DefaultTextureBinder extends com.badlogic.gdx.graphics.g3d.utils.Tex
   private var reused: scala.Boolean = false
   private var reuseCount: scala.Int = 0
   private var bindCount: scala.Int = 0
-  private final val tempDesc: com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor = new com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor()
+  private final val tempDesc: com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[?] = new com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor()
   private var currentTexture: scala.Int = 0
   def this(method: scala.Int, offset: scala.Int, count: scala.Int) = {
     this()
@@ -43,14 +43,14 @@ final class DefaultTextureBinder extends com.badlogic.gdx.graphics.g3d.utils.Tex
   def `end`(): scala.Unit = {
     com.badlogic.gdx.Gdx.gl.glActiveTexture(com.badlogic.gdx.graphics.GL20.GL_TEXTURE0)
   }
-  final def bind(textureDesc: com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor): scala.Int = {
+  final def bind(textureDesc: com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[?]): scala.Int = {
     return this.bindTexture(textureDesc, false)
   }
   final def bind(texture: com.badlogic.gdx.graphics.GLTexture): scala.Int = {
     this.tempDesc.set(texture, null, null, null, null)
     return this.bindTexture(this.tempDesc, false)
   }
-  private final def bindTexture(textureDesc: com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor, rebind: scala.Boolean): scala.Int = {
+  private final def bindTexture(textureDesc: com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[?], rebind: scala.Boolean): scala.Int = {
     var idx: scala.Int = 0
     var result: scala.Int = 0
     val texture: com.badlogic.gdx.graphics.GLTexture = textureDesc.texture
@@ -100,7 +100,7 @@ final class DefaultTextureBinder extends com.badlogic.gdx.graphics.g3d.utils.Tex
     return this.currentTexture
   }
   private final def bindTextureLRU(texture: com.badlogic.gdx.graphics.GLTexture): scala.Int = {
-    var i: scala.Int = 0
+    var i: scala.Int = 0;
     { i = 0; while (i < this.count) { {
       val idx: scala.Int = this.unitsLRU(i)
       if (this.textures(idx) == texture) {

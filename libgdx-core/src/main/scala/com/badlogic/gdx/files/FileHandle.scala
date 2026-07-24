@@ -2,13 +2,13 @@ package com.badlogic.gdx.files
 
 class FileHandle {
   var file$field: java.io.File = null.asInstanceOf[java.io.File]
-  var type$field: com.badlogic.gdx.Files#FileType = null.asInstanceOf[com.badlogic.gdx.Files#FileType]
-  protected def this(fileName: java.lang.String, `type`: com.badlogic.gdx.Files#FileType) = {
+  var type$field: com.badlogic.gdx.Files.FileType = null.asInstanceOf[com.badlogic.gdx.Files.FileType]
+  def this(fileName: java.lang.String, `type`: com.badlogic.gdx.Files.FileType) = {
     this()
     this.type$field = `type`
     this.file$field = new java.io.File(fileName)
   }
-  protected def this(file: java.io.File, `type`: com.badlogic.gdx.Files#FileType) = {
+  def this(file: java.io.File, `type`: com.badlogic.gdx.Files.FileType) = {
     this()
     this.file$field = file
     this.type$field = `type`
@@ -53,7 +53,7 @@ class FileHandle {
     } else ()
     return path.substring(0, dotIndex)
   }
-  def `type`(): com.badlogic.gdx.Files#FileType = {
+  def `type`(): com.badlogic.gdx.Files.FileType = {
     return this.type$field
   }
   def file(): java.io.File = {
@@ -64,7 +64,7 @@ class FileHandle {
   }
   def read(): java.io.InputStream = {
     if (((this.type$field == com.badlogic.gdx.Files.FileType.Classpath) || ((this.type$field == com.badlogic.gdx.Files.FileType.Internal) && (!this.file().exists()))) || ((this.type$field == com.badlogic.gdx.Files.FileType.Local) && (!this.file().exists()))) {
-      val input: java.io.InputStream = classOf[java.lang.Class].getResourceAsStream("/" + this.file$field.getPath().replace('\\', '/'))
+      val input: java.io.InputStream = classOf[FileHandle].getResourceAsStream("/" + this.file$field.getPath().replace('\\', '/'))
       if (input == null) {
         throw new com.badlogic.gdx.utils.GdxRuntimeException(((("File not found: " + this.file$field) + " (") + this.type$field) + ")")
       } else ()
@@ -152,7 +152,7 @@ class FileHandle {
     }
   }
   private def estimateLength(): scala.Int = {
-    val length: scala.Int = this.length().asInstanceOf[scala.Int]
+    val length: scala.Int = this.length().asInstanceOf[scala.Int].asInstanceOf[scala.Int]
     return if (length != 0) length else 512
   }
   def readBytes(bytes: scala.Array[scala.Byte], offset: scala.Int, size: scala.Int): scala.Int = {
@@ -309,7 +309,7 @@ class FileHandle {
     if (relativePaths == null) {
       return new Array[FileHandle](0)
     } else ()
-    val handles: scala.Array[FileHandle] = new Array[FileHandle](relativePaths.length)
+    val handles: scala.Array[FileHandle] = new Array[FileHandle](relativePaths.length);
     { var i: scala.Int = 0; val n: scala.Int = relativePaths.length; while (i < n) { {
       handles(i) = this.child(relativePaths(i))
     }; i = i + 1 } }
@@ -325,7 +325,7 @@ class FileHandle {
       return new Array[FileHandle](0)
     } else ()
     var handles: scala.Array[FileHandle] = new Array[FileHandle](relativePaths.length)
-    var count: scala.Int = 0
+    var count: scala.Int = 0;
     { var i: scala.Int = 0; val n: scala.Int = relativePaths.length; while (i < n) { {
       val path: java.lang.String = relativePaths(i)
       val child: FileHandle = this.child(path)
@@ -352,7 +352,7 @@ class FileHandle {
       return new Array[FileHandle](0)
     } else ()
     var handles: scala.Array[FileHandle] = new Array[FileHandle](relativePaths.length)
-    var count: scala.Int = 0
+    var count: scala.Int = 0;
     { var i: scala.Int = 0; val n: scala.Int = relativePaths.length; while (i < n) { {
       val path: java.lang.String = relativePaths(i)
       if (!filter.accept(file, path)) {
@@ -377,7 +377,7 @@ class FileHandle {
       return new Array[FileHandle](0)
     } else ()
     var handles: scala.Array[FileHandle] = new Array[FileHandle](relativePaths.length)
-    var count: scala.Int = 0
+    var count: scala.Int = 0;
     { var i: scala.Int = 0; val n: scala.Int = relativePaths.length; while (i < n) { {
       val path: java.lang.String = relativePaths(i)
       if (!path.endsWith(suffix)) {
@@ -437,10 +437,10 @@ class FileHandle {
         if (this.file().exists()) {
           return true
         } else ()
-        return classOf[java.lang.Class].getResource("/" + this.file$field.getPath().replace('\\', '/')) != null
+        return classOf[FileHandle].getResource("/" + this.file$field.getPath().replace('\\', '/')) != null
       }
       case com.badlogic.gdx.Files.FileType.Classpath => {
-        return classOf[java.lang.Class].getResource("/" + this.file$field.getPath().replace('\\', '/')) != null
+        return classOf[FileHandle].getResource("/" + this.file$field.getPath().replace('\\', '/')) != null
       }
     }
     return this.file().exists()
@@ -611,7 +611,7 @@ object FileHandle {
   }
   private def copyDirectory(sourceDir: FileHandle, destDir: FileHandle): scala.Unit = {
     destDir.mkdirs()
-    val files: scala.Array[FileHandle] = sourceDir.list()
+    val files: scala.Array[FileHandle] = sourceDir.list();
     { var i: scala.Int = 0; val n: scala.Int = files.length; while (i < n) { {
       val srcFile: FileHandle = files(i)
       val destFile: FileHandle = destDir.child(srcFile.name())

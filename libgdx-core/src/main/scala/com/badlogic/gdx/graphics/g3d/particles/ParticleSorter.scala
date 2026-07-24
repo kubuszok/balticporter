@@ -1,7 +1,7 @@
 package com.badlogic.gdx.graphics.g3d.particles
 
 abstract class ParticleSorter {
-  protected var camera: com.badlogic.gdx.graphics.Camera = null.asInstanceOf[com.badlogic.gdx.graphics.Camera]
+  var camera: com.badlogic.gdx.graphics.Camera = null.asInstanceOf[com.badlogic.gdx.graphics.Camera]
   def sort[T <: com.badlogic.gdx.graphics.g3d.particles.renderers.ParticleControllerRenderData](renderData: com.badlogic.gdx.utils.Array[T]): scala.Array[scala.Int]
   def setCamera(camera: com.badlogic.gdx.graphics.Camera): scala.Unit = {
     this.camera = camera
@@ -9,12 +9,15 @@ abstract class ParticleSorter {
   def ensureCapacity(capacity: scala.Int): scala.Unit = {
     ()
   }
+}
+object ParticleSorter {
+  final val TMP_V1: com.badlogic.gdx.math.Vector3 = new com.badlogic.gdx.math.Vector3()
   class None extends ParticleSorter {
     var currentCapacity: scala.Int = 0
     var indices: scala.Array[scala.Int] = null.asInstanceOf[scala.Array[scala.Int]]
     def ensureCapacity(capacity: scala.Int): scala.Unit = {
       if (this.currentCapacity < capacity) {
-        this.indices = new Array[scala.Int](capacity)
+        this.indices = new Array[scala.Int](capacity);
         { var i: scala.Int = 0; while (i < capacity) { {
           this.indices(i) = i
         }; i = i + 1 } }
@@ -52,7 +55,7 @@ abstract class ParticleSorter {
         }; i = i + 1; k = k + data.positionChannel.strideSize } }
         count = count + data.controller.particles.size
       }
-      this.qsort(0, count - 1)
+      this.qsort(0, count - 1);
       { i = 0; while (i < count) { {
         this.particleOffsets(this.particleIndices(i)) = i
       }; i = i + 1 } }
@@ -78,7 +81,7 @@ abstract class ParticleSorter {
         } else ()
         val pivot: scala.Float = this.distances(si)
         var i: scala.Int = si + 1
-        particlesPivotIndex = this.particleIndices(si)
+        particlesPivotIndex = this.particleIndices(si);
         { var j: scala.Int = si + 1; while (j <= ei) { {
           if (pivot > this.distances(j)) {
             if (j > i) {
@@ -101,7 +104,4 @@ abstract class ParticleSorter {
       } else ()
     }
   }
-}
-object ParticleSorter {
-  final val TMP_V1: com.badlogic.gdx.math.Vector3 = new com.badlogic.gdx.math.Vector3()
 }

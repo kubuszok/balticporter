@@ -43,7 +43,7 @@ class DataOutput extends java.io.DataOutputStream {
       return
     } else ()
     this.writeInt(charCount + 1, true)
-    var charIndex: scala.Int = 0
+    var charIndex: scala.Int = 0;
     { ; while (charIndex < charCount) { {
       val c: scala.Int = value.charAt(charIndex)
       if (c > 127) {
@@ -56,7 +56,7 @@ class DataOutput extends java.io.DataOutputStream {
     } else ()
   }
   private def writeString_slow(value: java.lang.String, charCount: scala.Int, charIndex$arg: scala.Int): scala.Unit = {
-    var charIndex: scala.Int = charIndex$arg
+    var charIndex: scala.Int = charIndex$arg;
     { ; while (charIndex < charCount) { {
       val c: scala.Int = value.charAt(charIndex)
       if (c <= 127) {

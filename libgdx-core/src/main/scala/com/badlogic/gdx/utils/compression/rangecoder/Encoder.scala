@@ -29,7 +29,7 @@ class Encoder {
     this.Stream.flush()
   }
   def ShiftLow(): scala.Unit = {
-    val LowHi: scala.Int = (this.Low >>> 32).asInstanceOf[scala.Int]
+    val LowHi: scala.Int = (this.Low >>> 32).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
     if ((LowHi != 0) || (this.Low < 4278190080L)) {
       this._position = this._position + this._cacheSize
       var temp: scala.Int = this._cache
@@ -62,11 +62,11 @@ class Encoder {
     val newBound: scala.Int = (this.Range >>> Encoder.kNumBitModelTotalBits) * prob
     if (symbol == 0) {
       this.Range = newBound
-      probs(index) = (prob + ((Encoder.kBitModelTotal - prob) >>> Encoder.kNumMoveBits)).asInstanceOf[scala.Short]
+      probs(index) = (prob + ((Encoder.kBitModelTotal - prob) >>> Encoder.kNumMoveBits)).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
     } else {
       this.Low = this.Low + (newBound & 4294967295L)
       this.Range = this.Range - newBound
-      probs(index) = (prob - (prob >>> Encoder.kNumMoveBits)).asInstanceOf[scala.Short]
+      probs(index) = (prob - (prob >>> Encoder.kNumMoveBits)).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
     }
     if ((this.Range & Encoder.kTopMask) == 0) {
       this.Range = this.Range << 8
@@ -84,7 +84,7 @@ object Encoder {
   private var ProbPrices: scala.Array[scala.Int] = new Array[scala.Int](Encoder.kBitModelTotal >>> Encoder.kNumMoveReducingBits)
   def InitBitModels(probs: scala.Array[scala.Short]): scala.Unit = {
     { var i: scala.Int = 0; while (i < probs.length) { {
-      probs(i) = Encoder.kBitModelTotal >>> 1
+      probs(i) = (Encoder.kBitModelTotal >>> 1).asInstanceOf[scala.Short]
     }; i = i + 1 } }
   }
   def GetPrice(Prob: scala.Int, symbol: scala.Int): scala.Int = {

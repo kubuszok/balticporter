@@ -5,11 +5,11 @@ class SizeToAction extends com.badlogic.gdx.scenes.scene2d.actions.TemporalActio
   private var startHeight: scala.Float = 0.0f
   private var endWidth: scala.Float = 0.0f
   private var endHeight: scala.Float = 0.0f
-  protected def begin(): scala.Unit = {
+  def begin(): scala.Unit = {
     this.startWidth = target.getWidth()
     this.startHeight = target.getHeight()
   }
-  protected def update(percent: scala.Float): scala.Unit = {
+  def update(percent: scala.Float): scala.Unit = {
     var width: scala.Float = 0.0f
     var height: scala.Float = 0.0f
     if (percent == 0) {

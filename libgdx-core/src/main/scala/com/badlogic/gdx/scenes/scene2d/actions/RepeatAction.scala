@@ -4,7 +4,7 @@ class RepeatAction extends com.badlogic.gdx.scenes.scene2d.actions.DelegateActio
   private var repeatCount: scala.Int = 0
   private var executedCount: scala.Int = 0
   private var finished: scala.Boolean = false
-  protected def delegate(delta: scala.Float): scala.Boolean = {
+  def delegate(delta: scala.Float): scala.Boolean = {
     if (this.executedCount == this.repeatCount) {
       return true
     } else ()

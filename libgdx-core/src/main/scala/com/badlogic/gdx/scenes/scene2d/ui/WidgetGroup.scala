@@ -33,7 +33,7 @@ class WidgetGroup extends com.badlogic.gdx.scenes.scene2d.Group with com.badlogi
     this.setLayoutEnabled(this, enabled)
   }
   private def setLayoutEnabled(parent: com.badlogic.gdx.scenes.scene2d.Group, enabled: scala.Boolean): scala.Unit = {
-    val children: com.badlogic.gdx.utils.SnapshotArray[com.badlogic.gdx.scenes.scene2d.Actor] = parent.getChildren()
+    val children: com.badlogic.gdx.utils.SnapshotArray[com.badlogic.gdx.scenes.scene2d.Actor] = parent.getChildren();
     { var i: scala.Int = 0; val n: scala.Int = children.size; while (i < n) { {
       val actor: com.badlogic.gdx.scenes.scene2d.Actor = children.get(i)
       if (actor.isInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Layout]) {
@@ -66,7 +66,7 @@ class WidgetGroup extends com.badlogic.gdx.scenes.scene2d.Group with com.badlogi
     if (this.needsLayout$field) {
       if (parent.isInstanceOf[WidgetGroup]) {
         return
-      } else ()
+      } else ();
       { var i: scala.Int = 0; while (i < 5) { {
         this.needsLayout$field = false
         this.layout()
@@ -89,10 +89,10 @@ class WidgetGroup extends com.badlogic.gdx.scenes.scene2d.Group with com.badlogi
       parent.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Layout].invalidateHierarchy()
     } else ()
   }
-  protected def childrenChanged(): scala.Unit = {
+  def childrenChanged(): scala.Unit = {
     this.invalidateHierarchy()
   }
-  protected def sizeChanged(): scala.Unit = {
+  def sizeChanged(): scala.Unit = {
     this.invalidate()
   }
   def pack(): scala.Unit = {

@@ -11,7 +11,7 @@ class QuickSelect[T] {
   private def partition(left: scala.Int, right: scala.Int, pivot: scala.Int): scala.Int = {
     val pivotValue: T = this.array(pivot)
     this.swap(right, pivot)
-    var storage: scala.Int = left
+    var storage: scala.Int = left;
     { var i: scala.Int = left; while (i < right) { {
       if (this.comp.compare(this.array(i), pivotValue) < 0) {
         this.swap(storage, i)

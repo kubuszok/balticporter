@@ -40,7 +40,7 @@ class DelaunayTriangulator {
     var xmin: scala.Float = points(0)
     var ymin: scala.Float = points(1)
     var xmax: scala.Float = xmin
-    var ymax: scala.Float = ymin
+    var ymax: scala.Float = ymin;
     { var i: scala.Int = offset + 2; while (i < `end`) { {
       var value: scala.Float = points(i)
       if (value < xmin) {
@@ -78,12 +78,12 @@ class DelaunayTriangulator {
     triangles.add(`end`)
     triangles.add(`end` + 2)
     triangles.add(`end` + 4)
-    complete.add(false)
+    complete.add(false);
     { var pointIndex: scala.Int = offset; while (pointIndex < `end`) { {
       val x: scala.Float = points(pointIndex)
       val y: scala.Float = points(pointIndex + 1)
       val trianglesArray: scala.Array[scala.Short] = triangles.items
-      val completeArray: scala.Array[scala.Boolean] = complete.items
+      val completeArray: scala.Array[scala.Boolean] = complete.items;
       { var triangleIndex: scala.Int = triangles.size - 1; while (triangleIndex >= 0) { {
         val completeIndex: scala.Int = triangleIndex / 3
         if (completeArray(completeIndex)) {
@@ -134,14 +134,14 @@ class DelaunayTriangulator {
           }
         }
       }; triangleIndex = triangleIndex - 3 } }
-      val edgesArray: scala.Array[scala.Int] = edges.items
+      val edgesArray: scala.Array[scala.Int] = edges.items;
       { var i: scala.Int = 0; val n: scala.Int = edges.size; while (i < n) { {
         val p1: scala.Int = edgesArray(i)
         if (p1 == (-1)) {
           /* continue */ ()
         } else ()
         val p2: scala.Int = edgesArray(i + 1)
-        var skip: scala.Boolean = false
+        var skip: scala.Boolean = false;
         { var ii: scala.Int = i + 2; while (ii < n) { {
           if ((p1 == edgesArray(ii + 1)) && (p2 == edgesArray(ii))) {
             skip = true
@@ -158,7 +158,7 @@ class DelaunayTriangulator {
       }; i = i + 2 } }
       edges.clear()
     }; pointIndex = pointIndex + 2 } }
-    val trianglesArray: scala.Array[scala.Short] = triangles.items
+    val trianglesArray: scala.Array[scala.Short] = triangles.items;
     { var i: scala.Int = triangles.size - 1; while (i >= 0) { {
       if (((trianglesArray(i) >= `end`) || (trianglesArray(i - 1) >= `end`)) || (trianglesArray(i - 2) >= `end`)) {
         triangles.removeIndex(i)
@@ -167,18 +167,18 @@ class DelaunayTriangulator {
       } else ()
     }; i = i - 3 } }
     if (!sorted) {
-      val originalIndicesArray: scala.Array[scala.Short] = this.originalIndices.items
+      val originalIndicesArray: scala.Array[scala.Short] = this.originalIndices.items;
       { var i: scala.Int = 0; val n: scala.Int = triangles.size; while (i < n) { {
-        trianglesArray(i) = (originalIndicesArray(trianglesArray(i) / 2) * 2).asInstanceOf[scala.Short]
+        trianglesArray(i) = (originalIndicesArray(trianglesArray(i) / 2) * 2).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
       }; i = i + 1 } }
     } else ()
     if (offset == 0) {
       { var i: scala.Int = 0; val n: scala.Int = triangles.size; while (i < n) { {
-        trianglesArray(i) = (trianglesArray(i) / 2).asInstanceOf[scala.Short]
+        trianglesArray(i) = (trianglesArray(i) / 2).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
       }; i = i + 1 } }
     } else {
       { var i: scala.Int = 0; val n: scala.Int = triangles.size; while (i < n) { {
-        trianglesArray(i) = ((trianglesArray(i) - offset) / 2).asInstanceOf[scala.Short]
+        trianglesArray(i) = ((trianglesArray(i) - offset) / 2).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
       }; i = i + 1 } }
     }
     return triangles
@@ -227,8 +227,8 @@ class DelaunayTriangulator {
     val pointCount: scala.Int = count / 2
     this.originalIndices.clear()
     this.originalIndices.ensureCapacity(pointCount)
-    val originalIndicesArray: scala.Array[scala.Short] = this.originalIndices.items
-    { var i: scala.Short = 0; while (i < pointCount) { {
+    val originalIndicesArray: scala.Array[scala.Short] = this.originalIndices.items;
+    { var i: scala.Short = 0.asInstanceOf[scala.Short]; while (i < pointCount) { {
       originalIndicesArray(i) = i
     }; i = i + 1 } }
     var lower: scala.Int = 0
@@ -293,7 +293,7 @@ class DelaunayTriangulator {
     return up
   }
   def trim(triangles: com.badlogic.gdx.utils.ShortArray, points: scala.Array[scala.Float], hull: scala.Array[scala.Float], offset: scala.Int, count: scala.Int): scala.Unit = {
-    val trianglesArray: scala.Array[scala.Short] = triangles.items
+    val trianglesArray: scala.Array[scala.Short] = triangles.items;
     { var i: scala.Int = triangles.size - 1; while (i >= 0) { {
       val p1: scala.Int = trianglesArray(i - 2) * 2
       val p2: scala.Int = trianglesArray(i - 1) * 2

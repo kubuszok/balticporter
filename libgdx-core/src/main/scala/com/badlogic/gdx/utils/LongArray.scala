@@ -104,7 +104,7 @@ class LongArray {
     this.items(index) = this.items(index) + value
   }
   def incr(value: scala.Long): scala.Unit = {
-    val items: scala.Array[scala.Long] = this.items
+    val items: scala.Array[scala.Long] = this.items;
     { var i: scala.Int = 0; val n: scala.Int = this.size; while (i < n) { {
       items(i) = items(i) + value
     }; i = i + 1 } }
@@ -116,7 +116,7 @@ class LongArray {
     this.items(index) = this.items(index) * value
   }
   def mul(value: scala.Long): scala.Unit = {
-    val items: scala.Array[scala.Long] = this.items
+    val items: scala.Array[scala.Long] = this.items;
     { var i: scala.Int = 0; val n: scala.Int = this.size; while (i < n) { {
       items(i) = items(i) * value
     }; i = i + 1 } }
@@ -161,7 +161,7 @@ class LongArray {
     items(second) = firstValue
   }
   def replaceFirst(value: scala.Long, replacement: scala.Long): scala.Boolean = {
-    val items: scala.Array[scala.Long] = this.items
+    val items: scala.Array[scala.Long] = this.items;
     { var i: scala.Int = 0; val n: scala.Int = this.size; while (i < n) { {
       if (items(i) == value) {
         items(i) = replacement
@@ -172,7 +172,7 @@ class LongArray {
   }
   def replaceAll(value: scala.Long, replacement: scala.Long): scala.Int = {
     val items: scala.Array[scala.Long] = this.items
-    var replacements: scala.Int = 0
+    var replacements: scala.Int = 0;
     { var i: scala.Int = 0; val n: scala.Int = this.size; while (i < n) { {
       if (items(i) == value) {
         items(i) = replacement
@@ -192,7 +192,7 @@ class LongArray {
     return false
   }
   def indexOf(value: scala.Long): scala.Int = {
-    val items: scala.Array[scala.Long] = this.items
+    val items: scala.Array[scala.Long] = this.items;
     { var i: scala.Int = 0; val n: scala.Int = this.size; while (i < n) { {
       if (items(i) == value) {
         return i
@@ -201,7 +201,7 @@ class LongArray {
     return -1
   }
   def lastIndexOf(value: scala.Long): scala.Int = {
-    val items: scala.Array[scala.Long] = this.items
+    val items: scala.Array[scala.Long] = this.items;
     { var i: scala.Int = this.size - 1; while (i >= 0) { {
       if (items(i) == value) {
         return i
@@ -210,7 +210,7 @@ class LongArray {
     return -1
   }
   def removeValue(value: scala.Long): scala.Boolean = {
-    val items: scala.Array[scala.Long] = this.items
+    val items: scala.Array[scala.Long] = this.items;
     { var i: scala.Int = 0; val n: scala.Int = this.size; while (i < n) { {
       if (items(i) == value) {
         this.removeIndex(i)
@@ -254,9 +254,9 @@ class LongArray {
   def removeAll(array: LongArray): scala.Boolean = {
     var size: scala.Int = this.size
     val startSize: scala.Int = size
-    val items: scala.Array[scala.Long] = this.items
+    val items: scala.Array[scala.Long] = this.items;
     { var i: scala.Int = 0; val n: scala.Int = array.size; while (i < n) { {
-      val item: scala.Long = array.get(i)
+      val item: scala.Long = array.get(i);
       { var ii: scala.Int = 0; while (ii < size) { {
         if (item == items(ii)) {
           this.removeIndex(ii)
@@ -320,7 +320,7 @@ class LongArray {
     this.size = newSize
     return this.items
   }
-  protected def resize(newSize: scala.Int): scala.Array[scala.Long] = {
+  def resize(newSize: scala.Int): scala.Array[scala.Long] = {
     val newItems: scala.Array[scala.Long] = new Array[scala.Long](newSize)
     var items: scala.Array[scala.Long] = this.items
     java.lang.System.arraycopy(items, 0, newItems, 0, java.lang.Math.min(this.size, newItems.length))
@@ -331,7 +331,7 @@ class LongArray {
     java.util.Arrays.sort(this.items, 0, this.size)
   }
   def reverse(): scala.Unit = {
-    val items: scala.Array[scala.Long] = this.items
+    val items: scala.Array[scala.Long] = this.items;
     { var i: scala.Int = 0; val lastIndex: scala.Int = this.size - 1; val n: scala.Int = this.size / 2; while (i < n) { {
       val ii: scala.Int = lastIndex - i
       val temp: scala.Long = items(i)
@@ -340,7 +340,7 @@ class LongArray {
     }; i = i + 1 } }
   }
   def shuffle(): scala.Unit = {
-    val items: scala.Array[scala.Long] = this.items
+    val items: scala.Array[scala.Long] = this.items;
     { var i: scala.Int = this.size - 1; while (i >= 0) { {
       val ii: scala.Int = com.badlogic.gdx.math.MathUtils.random(i)
       val temp: scala.Long = items(i)
@@ -372,7 +372,7 @@ class LongArray {
       return super.hashCode()
     } else ()
     val items: scala.Array[scala.Long] = this.items
-    var h: scala.Int = 1
+    var h: scala.Int = 1;
     { var i: scala.Int = 0; val n: scala.Int = this.size; while (i < n) { {
       val item: scala.Long = items(i)
       h = (h * 31) + (item ^ (item >>> 32)).asInstanceOf[scala.Int]
@@ -398,7 +398,7 @@ class LongArray {
       return false
     } else ()
     val items1: scala.Array[scala.Long] = this.items
-    val items2: scala.Array[scala.Long] = array.items
+    val items2: scala.Array[scala.Long] = array.items;
     { var i: scala.Int = 0; while (i < n) { {
       if (items1(i) != items2(i)) {
         return false
@@ -413,7 +413,7 @@ class LongArray {
     val items: scala.Array[scala.Long] = this.items
     val buffer: java.lang.StringBuilder = new java.lang.StringBuilder(32)
     buffer.append('[')
-    buffer.append(items(0))
+    buffer.append(items(0));
     { var i: scala.Int = 1; while (i < this.size) { {
       buffer.append(", ")
       buffer.append(items(i))
@@ -427,7 +427,7 @@ class LongArray {
     } else ()
     val items: scala.Array[scala.Long] = this.items
     val buffer: java.lang.StringBuilder = new java.lang.StringBuilder(32)
-    buffer.append(items(0))
+    buffer.append(items(0));
     { var i: scala.Int = 1; while (i < this.size) { {
       buffer.append(separator)
       buffer.append(items(i))

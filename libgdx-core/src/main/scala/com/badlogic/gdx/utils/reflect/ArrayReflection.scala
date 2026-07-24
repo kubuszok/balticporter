@@ -1,7 +1,7 @@
 package com.badlogic.gdx.utils.reflect
 
 object ArrayReflection {
-  def newInstance(c: java.lang.Class, size: scala.Int): java.lang.Object = {
+  def newInstance(c: java.lang.Class[?], size: scala.Int): java.lang.Object = {
     return java.lang.reflect.Array.newInstance(c, size)
   }
   def getLength(array: java.lang.Object): scala.Int = {

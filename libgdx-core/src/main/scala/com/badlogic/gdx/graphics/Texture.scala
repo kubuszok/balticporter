@@ -2,20 +2,20 @@ package com.badlogic.gdx.graphics
 
 class Texture extends com.badlogic.gdx.graphics.GLTexture {
   var data: com.badlogic.gdx.graphics.TextureData = null.asInstanceOf[com.badlogic.gdx.graphics.TextureData]
-  protected def this(glTarget: scala.Int, glHandle: scala.Int, data: com.badlogic.gdx.graphics.TextureData) = {
+  def this(glTarget: scala.Int, glHandle: scala.Int, data: com.badlogic.gdx.graphics.TextureData) = {
     this()
     this.load(data)
     if (data.isManaged()) {
       Texture.addManagedTexture(com.badlogic.gdx.Gdx.app, this)
     } else ()
   }
-  def this(file: com.badlogic.gdx.files.FileHandle, format: com.badlogic.gdx.graphics.Pixmap#Format, useMipMaps: scala.Boolean) = {
+  def this(file: com.badlogic.gdx.files.FileHandle, format: com.badlogic.gdx.graphics.Pixmap.Format, useMipMaps: scala.Boolean) = {
     this(com.badlogic.gdx.graphics.TextureData.Factory.loadFromFile(file, format, useMipMaps))
   }
-  def this(pixmap: com.badlogic.gdx.graphics.Pixmap, format: com.badlogic.gdx.graphics.Pixmap#Format, useMipMaps: scala.Boolean) = {
+  def this(pixmap: com.badlogic.gdx.graphics.Pixmap, format: com.badlogic.gdx.graphics.Pixmap.Format, useMipMaps: scala.Boolean) = {
     this(new com.badlogic.gdx.graphics.glutils.PixmapTextureData(pixmap, format, useMipMaps, false))
   }
-  def this(width: scala.Int, height: scala.Int, format: com.badlogic.gdx.graphics.Pixmap#Format) = {
+  def this(width: scala.Int, height: scala.Int, format: com.badlogic.gdx.graphics.Pixmap.Format) = {
     this(new com.badlogic.gdx.graphics.glutils.PixmapTextureData(new com.badlogic.gdx.graphics.Pixmap(width, height, format), null, false, true))
   }
   def this(file: com.badlogic.gdx.files.FileHandle, useMipMaps: scala.Boolean) = {
@@ -51,7 +51,7 @@ class Texture extends com.badlogic.gdx.graphics.GLTexture {
     this.unsafeSetAnisotropicFilter(anisotropicFilterLevel, true)
     com.badlogic.gdx.Gdx.gl.glBindTexture(glTarget, 0)
   }
-  protected def reload(): scala.Unit = {
+  def reload(): scala.Unit = {
     if (!this.isManaged()) {
       throw new com.badlogic.gdx.utils.GdxRuntimeException("Tried to reload unmanaged Texture")
     } else ()
@@ -97,37 +97,6 @@ class Texture extends com.badlogic.gdx.graphics.GLTexture {
     } else ()
     return super.toString()
   }
-  sealed abstract class TextureFilter {
-    var glEnum: scala.Int = 0
-    def isMipMap(): scala.Boolean = {
-      return (this.glEnum != com.badlogic.gdx.graphics.GL20.GL_NEAREST) && (this.glEnum != com.badlogic.gdx.graphics.GL20.GL_LINEAR)
-    }
-    def getGLEnum(): scala.Int = {
-      return this.glEnum
-    }
-  }
-  object TextureFilter {
-    case object Nearest extends TextureFilter(com.badlogic.gdx.graphics.GL20.GL_NEAREST)
-    case object Linear extends TextureFilter(com.badlogic.gdx.graphics.GL20.GL_LINEAR)
-    case object MipMap extends TextureFilter(com.badlogic.gdx.graphics.GL20.GL_LINEAR_MIPMAP_LINEAR)
-    case object MipMapNearestNearest extends TextureFilter(com.badlogic.gdx.graphics.GL20.GL_NEAREST_MIPMAP_NEAREST)
-    case object MipMapLinearNearest extends TextureFilter(com.badlogic.gdx.graphics.GL20.GL_LINEAR_MIPMAP_NEAREST)
-    case object MipMapNearestLinear extends TextureFilter(com.badlogic.gdx.graphics.GL20.GL_NEAREST_MIPMAP_LINEAR)
-    case object MipMapLinearLinear extends TextureFilter(com.badlogic.gdx.graphics.GL20.GL_LINEAR_MIPMAP_LINEAR)
-    def values(): Array[TextureFilter] = Array(Nearest, Linear, MipMap, MipMapNearestNearest, MipMapLinearNearest, MipMapNearestLinear, MipMapLinearLinear)
-  }
-  sealed abstract class TextureWrap {
-    var glEnum: scala.Int = 0
-    def getGLEnum(): scala.Int = {
-      return this.glEnum
-    }
-  }
-  object TextureWrap {
-    case object MirroredRepeat extends TextureWrap(com.badlogic.gdx.graphics.GL20.GL_MIRRORED_REPEAT)
-    case object ClampToEdge extends TextureWrap(com.badlogic.gdx.graphics.GL20.GL_CLAMP_TO_EDGE)
-    case object Repeat extends TextureWrap(com.badlogic.gdx.graphics.GL20.GL_REPEAT)
-    def values(): Array[TextureWrap] = Array(MirroredRepeat, ClampToEdge, Repeat)
-  }
 }
 object Texture {
   private var assetManager: com.badlogic.gdx.assets.AssetManager = null.asInstanceOf[com.badlogic.gdx.assets.AssetManager]
@@ -164,7 +133,7 @@ object Texture {
           val refCount: scala.Int = Texture.assetManager.getReferenceCount(fileName)
           Texture.assetManager.setReferenceCount(fileName, 0)
           texture.glHandle = 0
-          val params: com.badlogic.gdx.assets.loaders.TextureLoader#TextureParameter = new com.badlogic.gdx.assets.loaders.TextureLoader#TextureParameter()
+          val params: com.badlogic.gdx.assets.loaders.TextureLoader.TextureParameter = new com.badlogic.gdx.assets.loaders.TextureLoader.TextureParameter()
           params.textureData = texture.getTextureData()
           params.minFilter = texture.getMinFilter()
           params.magFilter = texture.getMagFilter()
@@ -172,10 +141,10 @@ object Texture {
           params.wrapV = texture.getVWrap()
           params.genMipMaps = texture.data.useMipMaps()
           params.texture = texture
-          params.loadedCallback = new com.badlogic.gdx.assets.AssetLoaderParameters#LoadedCallback()
+          params.loadedCallback = new com.badlogic.gdx.assets.AssetLoaderParameters.LoadedCallback()
           Texture.assetManager.unload(fileName)
           texture.glHandle = com.badlogic.gdx.Gdx.gl.glGenTexture()
-          Texture.assetManager.load(fileName, classOf[java.lang.Class], params)
+          Texture.assetManager.load(fileName, classOf[Texture], params)
         }
       }
       managedTextureArray.clear()
@@ -197,5 +166,36 @@ object Texture {
   }
   def getNumManagedTextures(): scala.Int = {
     return Texture.managedTextures.getOrElse(com.badlogic.gdx.Gdx.app, null.asInstanceOf[com.badlogic.gdx.utils.Array[Texture]]).size
+  }
+  sealed abstract class TextureFilter {
+    var glEnum: scala.Int = 0
+    def isMipMap(): scala.Boolean = {
+      return (this.glEnum != com.badlogic.gdx.graphics.GL20.GL_NEAREST) && (this.glEnum != com.badlogic.gdx.graphics.GL20.GL_LINEAR)
+    }
+    def getGLEnum(): scala.Int = {
+      return this.glEnum
+    }
+  }
+  object TextureFilter {
+    case object Nearest extends TextureFilter(com.badlogic.gdx.graphics.GL20.GL_NEAREST)
+    case object Linear extends TextureFilter(com.badlogic.gdx.graphics.GL20.GL_LINEAR)
+    case object MipMap extends TextureFilter(com.badlogic.gdx.graphics.GL20.GL_LINEAR_MIPMAP_LINEAR)
+    case object MipMapNearestNearest extends TextureFilter(com.badlogic.gdx.graphics.GL20.GL_NEAREST_MIPMAP_NEAREST)
+    case object MipMapLinearNearest extends TextureFilter(com.badlogic.gdx.graphics.GL20.GL_LINEAR_MIPMAP_NEAREST)
+    case object MipMapNearestLinear extends TextureFilter(com.badlogic.gdx.graphics.GL20.GL_NEAREST_MIPMAP_LINEAR)
+    case object MipMapLinearLinear extends TextureFilter(com.badlogic.gdx.graphics.GL20.GL_LINEAR_MIPMAP_LINEAR)
+    def values(): Array[TextureFilter] = Array(Nearest, Linear, MipMap, MipMapNearestNearest, MipMapLinearNearest, MipMapNearestLinear, MipMapLinearLinear)
+  }
+  sealed abstract class TextureWrap {
+    var glEnum: scala.Int = 0
+    def getGLEnum(): scala.Int = {
+      return this.glEnum
+    }
+  }
+  object TextureWrap {
+    case object MirroredRepeat extends TextureWrap(com.badlogic.gdx.graphics.GL20.GL_MIRRORED_REPEAT)
+    case object ClampToEdge extends TextureWrap(com.badlogic.gdx.graphics.GL20.GL_CLAMP_TO_EDGE)
+    case object Repeat extends TextureWrap(com.badlogic.gdx.graphics.GL20.GL_REPEAT)
+    def values(): Array[TextureWrap] = Array(MirroredRepeat, ClampToEdge, Repeat)
   }
 }

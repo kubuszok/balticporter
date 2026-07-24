@@ -17,10 +17,10 @@ class Bezier[T <: com.badlogic.gdx.math.Vector[T]] extends com.badlogic.gdx.math
     this()
     this.set(points)
   }
-  def set(points: scala.Array[T]): Bezier = {
+  def set(points: scala.Array[T]): Bezier[?] = {
     return this.set(points, 0, points.length)
   }
-  def set(points: scala.Array[T], offset: scala.Int, length: scala.Int): Bezier = {
+  def set(points: scala.Array[T], offset: scala.Int, length: scala.Int): Bezier[?] = {
     if ((length < 2) || (length > 4)) {
       throw new com.badlogic.gdx.utils.GdxRuntimeException("Only first, second and third degree Bezier curves are supported.")
     } else ()
@@ -37,7 +37,7 @@ class Bezier[T <: com.badlogic.gdx.math.Vector[T]] extends com.badlogic.gdx.math
     this.points.addAll(points, offset, length)
     return this
   }
-  def set(points: com.badlogic.gdx.utils.Array[T], offset: scala.Int, length: scala.Int): Bezier = {
+  def set(points: com.badlogic.gdx.utils.Array[T], offset: scala.Int, length: scala.Int): Bezier[?] = {
     if ((length < 2) || (length > 4)) {
       throw new com.badlogic.gdx.utils.GdxRuntimeException("Only first, second and third degree Bezier curves are supported.")
     } else ()
@@ -91,7 +91,7 @@ class Bezier[T <: com.badlogic.gdx.math.Vector[T]] extends com.badlogic.gdx.math
     val l1Sqr: scala.Float = p1.dst2(p2)
     val l2Sqr: scala.Float = p3.dst2(p2)
     val l3Sqr: scala.Float = p3.dst2(p1)
-    val l1: scala.Float = java.lang.Math.sqrt(l1Sqr).asInstanceOf[scala.Float]
+    val l1: scala.Float = java.lang.Math.sqrt(l1Sqr).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
     val s: scala.Float = ((l2Sqr + l1Sqr) - l3Sqr) / (2 * l1)
     return com.badlogic.gdx.math.MathUtils.clamp((l1 - s) / l1, 0.0f, 1.0f)
   }
@@ -99,7 +99,7 @@ class Bezier[T <: com.badlogic.gdx.math.Vector[T]] extends com.badlogic.gdx.math
     return this.approximate(v)
   }
   def approxLength(samples: scala.Int): scala.Float = {
-    var tempLength: scala.Float = 0
+    var tempLength: scala.Float = 0;
     { var i: scala.Int = 0; while (i < samples) { {
       this.tmp2.set(this.tmp3)
       this.valueAt(this.tmp3, i / (samples.asInstanceOf[scala.Float] - 1))

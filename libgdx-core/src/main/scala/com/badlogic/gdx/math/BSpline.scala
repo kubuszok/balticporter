@@ -13,7 +13,7 @@ class BSpline[T <: com.badlogic.gdx.math.Vector[T]] extends com.badlogic.gdx.mat
     this()
     this.set(controlPoints, degree, continuous)
   }
-  def set(controlPoints: scala.Array[T], degree: scala.Int, continuous: scala.Boolean): BSpline = {
+  def set(controlPoints: scala.Array[T], degree: scala.Int, continuous: scala.Boolean): BSpline[?] = {
     if (this.tmp == null) {
       this.tmp = controlPoints(0).cpy()
     } else ()
@@ -33,7 +33,7 @@ class BSpline[T <: com.badlogic.gdx.math.Vector[T]] extends com.badlogic.gdx.mat
     } else {
       this.knots.clear()
       this.knots.ensureCapacity(knotCount)
-    }
+    };
     { var i: scala.Int = 0; while (i < knotCount) { {
       this.knots.add(BSpline.calculate(controlPoints(0).cpy(), if (continuous) i else i + (0.5f * degree).asInstanceOf[scala.Int], 0.0f, controlPoints, degree, continuous, this.tmp))
     }; i = i + 1 } }
@@ -69,7 +69,7 @@ class BSpline[T <: com.badlogic.gdx.math.Vector[T]] extends com.badlogic.gdx.mat
       start = start + knotCount
     }
     var result: scala.Int = start % knotCount
-    var dst: scala.Float = in.dst2(this.knots.get(result))
+    var dst: scala.Float = in.dst2(this.knots.get(result));
     { var i: scala.Int = 1; while (i < count) { {
       val idx: scala.Int = (start + i) % knotCount
       val d: scala.Float = in.dst2(this.knots.get(idx))
@@ -109,7 +109,7 @@ class BSpline[T <: com.badlogic.gdx.math.Vector[T]] extends com.badlogic.gdx.mat
     val L1Sqr: scala.Float = P1.dst2(P2) + 1.0E-10f
     val L2Sqr: scala.Float = P3.dst2(P2)
     val L3Sqr: scala.Float = P3.dst2(P1)
-    val L1: scala.Float = java.lang.Math.sqrt(L1Sqr).asInstanceOf[scala.Float]
+    val L1: scala.Float = java.lang.Math.sqrt(L1Sqr).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
     val s: scala.Float = ((L2Sqr + L1Sqr) - L3Sqr) / (2 * L1)
     val u: scala.Float = com.badlogic.gdx.math.MathUtils.clamp((L1 - s) / L1, 0.0f, 1.0f)
     return (n + u) / this.spanCount
@@ -118,7 +118,7 @@ class BSpline[T <: com.badlogic.gdx.math.Vector[T]] extends com.badlogic.gdx.mat
     return this.approximate(v)
   }
   def approxLength(samples: scala.Int): scala.Float = {
-    var tempLength: scala.Float = 0
+    var tempLength: scala.Float = 0;
     { var i: scala.Int = 0; while (i < samples) { {
       this.tmp2.set(this.tmp3)
       this.valueAt(this.tmp3, i / (samples.asInstanceOf[scala.Float] - 1))

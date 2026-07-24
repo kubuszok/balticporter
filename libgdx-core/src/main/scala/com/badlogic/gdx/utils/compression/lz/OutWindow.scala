@@ -44,7 +44,7 @@ class OutWindow {
     var pos: scala.Int = (this._pos - distance) - 1
     if (pos < 0) {
       pos = pos + this._windowSize
-    } else ()
+    } else ();
     { ; while (len != 0) { {
       if (pos >= this._windowSize) {
         pos = 0

@@ -1,16 +1,16 @@
 package com.badlogic.gdx.scenes.scene2d.actions
 
 abstract class DelegateAction extends com.badlogic.gdx.scenes.scene2d.Action {
-  protected var action: com.badlogic.gdx.scenes.scene2d.Action = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.Action]
+  var action: com.badlogic.gdx.scenes.scene2d.Action = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.Action]
   def setAction(action: com.badlogic.gdx.scenes.scene2d.Action): scala.Unit = {
     this.action = action
   }
   def getAction(): com.badlogic.gdx.scenes.scene2d.Action = {
     return this.action
   }
-  protected def delegate(delta: scala.Float): scala.Boolean
+  def delegate(delta: scala.Float): scala.Boolean
   final def act(delta: scala.Float): scala.Boolean = {
-    val pool: com.badlogic.gdx.utils.Pool = this.getPool()
+    val pool: com.badlogic.gdx.utils.Pool[?] = this.getPool()
     this.setPool(null)
     try {
       return this.delegate(delta)

@@ -2,8 +2,8 @@ package com.badlogic.gdx.utils
 
 class OrderedSet[T] extends com.badlogic.gdx.utils.ObjectSet[T] {
   var items: com.badlogic.gdx.utils.Array[T] = null.asInstanceOf[com.badlogic.gdx.utils.Array[T]]
-  var iterator1: OrderedSetIterator = null.asInstanceOf[OrderedSetIterator]
-  var iterator2: OrderedSetIterator = null.asInstanceOf[OrderedSetIterator]
+  var iterator1: com.badlogic.gdx.utils.OrderedSet.OrderedSetIterator[?] = null.asInstanceOf[com.badlogic.gdx.utils.OrderedSet.OrderedSetIterator[?]]
+  var iterator2: com.badlogic.gdx.utils.OrderedSet.OrderedSetIterator[?] = null.asInstanceOf[com.badlogic.gdx.utils.OrderedSet.OrderedSetIterator[?]]
   def this(initialCapacity: scala.Int, loadFactor: scala.Float) = {
     this()
     this.items = new com.badlogic.gdx.utils.Array(initialCapacity)
@@ -40,7 +40,7 @@ class OrderedSet[T] extends com.badlogic.gdx.utils.ObjectSet[T] {
   }
   def addAll(set: OrderedSet[T]): scala.Unit = {
     this.ensureCapacity(set.size)
-    val keys: scala.Array[T] = set.items.items
+    val keys: scala.Array[T] = set.items.items;
     { var i: scala.Int = 0; val n: scala.Int = set.items.size; while (i < n) { {
       this.add(keys(i))
     }; i = i + 1 } }
@@ -97,7 +97,7 @@ class OrderedSet[T] extends com.badlogic.gdx.utils.ObjectSet[T] {
   }
   def hashCode(): scala.Int = {
     var h: scala.Int = size
-    val items: scala.Array[T] = this.items.items
+    val items: scala.Array[T] = this.items.items;
     { var i: scala.Int = 0; val n: scala.Int = this.items.size; while (i < n) { {
       val key: T = items(i)
       if (key != null) {
@@ -107,14 +107,14 @@ class OrderedSet[T] extends com.badlogic.gdx.utils.ObjectSet[T] {
     return h
   }
   def equals(obj: java.lang.Object): scala.Boolean = {
-    if (!obj.isInstanceOf[com.badlogic.gdx.utils.ObjectSet]) {
+    if (!obj.isInstanceOf[com.badlogic.gdx.utils.ObjectSet[?]]) {
       return false
     } else ()
-    val other: com.badlogic.gdx.utils.ObjectSet = obj.asInstanceOf[com.badlogic.gdx.utils.ObjectSet]
+    val other: com.badlogic.gdx.utils.ObjectSet[?] = obj.asInstanceOf[com.badlogic.gdx.utils.ObjectSet[?]]
     if (other.size != size) {
       return false
     } else ()
-    val items: scala.Array[T] = this.items.items
+    val items: scala.Array[T] = this.items.items;
     { var i: scala.Int = 0; val n: scala.Int = this.items.size; while (i < n) { {
       if ((items(i) != null) && (!other.contains(items(i)))) {
         return false
@@ -122,13 +122,13 @@ class OrderedSet[T] extends com.badlogic.gdx.utils.ObjectSet[T] {
     }; i = i + 1 } }
     return true
   }
-  def iterator(): OrderedSetIterator[T] = {
+  def iterator(): com.badlogic.gdx.utils.OrderedSet.OrderedSetIterator[T] = {
     if (com.badlogic.gdx.utils.Collections.allocateIterators) {
-      return new OrderedSetIterator(this)
+      return new com.badlogic.gdx.utils.OrderedSet.OrderedSetIterator(this)
     } else ()
     if (this.iterator1 == null) {
-      this.iterator1 = new OrderedSetIterator(this)
-      this.iterator2 = new OrderedSetIterator(this)
+      this.iterator1 = new com.badlogic.gdx.utils.OrderedSet.OrderedSetIterator(this)
+      this.iterator2 = new com.badlogic.gdx.utils.OrderedSet.OrderedSetIterator(this)
     } else ()
     if (!this.iterator1.valid) {
       this.iterator1.reset()
@@ -148,7 +148,7 @@ class OrderedSet[T] extends com.badlogic.gdx.utils.ObjectSet[T] {
     val items: scala.Array[T] = this.items.items
     val buffer: java.lang.StringBuilder = new java.lang.StringBuilder(32)
     buffer.append('{')
-    buffer.append(items(0))
+    buffer.append(items(0));
     { var i: scala.Int = 1; while (i < size) { {
       buffer.append(", ")
       buffer.append(items(i))
@@ -159,7 +159,14 @@ class OrderedSet[T] extends com.badlogic.gdx.utils.ObjectSet[T] {
   def toString(separator: java.lang.String): java.lang.String = {
     return this.items.toString(separator)
   }
-  class OrderedSetIterator[K] extends com.badlogic.gdx.utils.ObjectSet#ObjectSetIterator[K] {
+}
+object OrderedSet {
+  def `with`[T](array: scala.Array[T]): OrderedSet[T] = {
+    val set: OrderedSet[T] = new OrderedSet[T]()
+    set.addAll(array)
+    return set
+  }
+  class OrderedSetIterator[K] extends com.badlogic.gdx.utils.ObjectSet.ObjectSetIterator[K] {
     private var items: com.badlogic.gdx.utils.Array[K] = null.asInstanceOf[com.badlogic.gdx.utils.Array[K]]
     def this(set: OrderedSet[K]) = {
       this()
@@ -186,7 +193,7 @@ class OrderedSet[T] extends com.badlogic.gdx.utils.ObjectSet[T] {
         throw new java.lang.IllegalStateException("next must be called before remove.")
       } else ()
       nextIndex = nextIndex - 1
-      set.asInstanceOf[OrderedSet].removeIndex(nextIndex)
+      set.asInstanceOf[OrderedSet[?]].removeIndex(nextIndex)
     }
     def toArray(array: com.badlogic.gdx.utils.Array[K]): com.badlogic.gdx.utils.Array[K] = {
       array.addAll(this.items, nextIndex, this.items.size - nextIndex)
@@ -197,12 +204,5 @@ class OrderedSet[T] extends com.badlogic.gdx.utils.ObjectSet[T] {
     def toArray(): com.badlogic.gdx.utils.Array[K] = {
       return this.toArray(new com.badlogic.gdx.utils.Array(true, this.set.size - nextIndex))
     }
-  }
-}
-object OrderedSet {
-  def `with`[T](array: scala.Array[T]): OrderedSet[T] = {
-    val set: OrderedSet[T] = new OrderedSet[T]()
-    set.addAll(array)
-    return set
   }
 }

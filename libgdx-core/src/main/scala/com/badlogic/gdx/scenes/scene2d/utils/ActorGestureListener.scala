@@ -7,7 +7,7 @@ class ActorGestureListener extends com.badlogic.gdx.scenes.scene2d.EventListener
   var touchDownTarget: com.badlogic.gdx.scenes.scene2d.Actor = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.Actor]
   def this(halfTapSquareSize: scala.Float, tapCountInterval: scala.Float, longPressDuration: scala.Float, maxFlingDelay: scala.Float) = {
     this()
-    this.detector = new com.badlogic.gdx.input.GestureDetector(halfTapSquareSize, tapCountInterval, longPressDuration, maxFlingDelay, new com.badlogic.gdx.input.GestureDetector#GestureAdapter())
+    this.detector = new com.badlogic.gdx.input.GestureDetector(halfTapSquareSize, tapCountInterval, longPressDuration, maxFlingDelay, new com.badlogic.gdx.input.GestureDetector.GestureAdapter())
   }
   def handle(e: com.badlogic.gdx.scenes.scene2d.Event): scala.Boolean = {
     if (!e.isInstanceOf[com.badlogic.gdx.scenes.scene2d.InputEvent]) {

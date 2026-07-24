@@ -48,7 +48,7 @@ final class CollectionsTransform extends Phase:
 
   /** scala nullary accessors that take NO parens (`def size: Int`) — a Java `size()`
     * emitted as `size()` would be an illegal application. Strip the `Apply`. */
-  private val parenless = Set("size", "isEmpty", "iterator", "keySet", "values", "nonEmpty")
+  private val parenless = Set("size", "isEmpty", "iterator", "keySet", "values", "nonEmpty", "hasNext", "next")
 
   // prepared in `run`, read by the hooks.
   private var remap: Map[SymId, SymId]    = Map.empty

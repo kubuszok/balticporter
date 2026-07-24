@@ -33,18 +33,18 @@ abstract class ParticleControllerInfluencer extends com.badlogic.gdx.graphics.g3
       }; i = i + 1 } }
     } else ()
   }
-  def save(manager: com.badlogic.gdx.assets.AssetManager, resources: com.badlogic.gdx.graphics.g3d.particles.ResourceData): scala.Unit = {
-    val data: com.badlogic.gdx.graphics.g3d.particles.ResourceData#SaveData = resources.createSaveData()
-    val effects: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.ParticleEffect] = manager.getAll(classOf[java.lang.Class], new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.ParticleEffect]())
+  def save(manager: com.badlogic.gdx.assets.AssetManager, resources: com.badlogic.gdx.graphics.g3d.particles.ResourceData[?]): scala.Unit = {
+    val data: com.badlogic.gdx.graphics.g3d.particles.ResourceData.SaveData = resources.createSaveData()
+    val effects: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.ParticleEffect] = manager.getAll(classOf[com.badlogic.gdx.graphics.g3d.particles.ParticleEffect], new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.ParticleEffect]())
     val controllers: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.ParticleController] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.ParticleController](this.templates)
-    val effectsIndices: com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.IntArray] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.IntArray]()
+    val effectsIndices: com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.IntArray] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.IntArray]();
     { var i: scala.Int = 0; while ((i < effects.size) && (controllers.size > 0)) { {
       val effect: com.badlogic.gdx.graphics.g3d.particles.ParticleEffect = effects.get(i)
       val effectControllers: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.ParticleController] = effect.getControllers()
       val iterator: scala.collection.Iterator[com.badlogic.gdx.graphics.g3d.particles.ParticleController] = controllers.iterator()
       var indices: com.badlogic.gdx.utils.IntArray = null
-      while (iterator.hasNext()) {
-        val controller: com.badlogic.gdx.graphics.g3d.particles.ParticleController = iterator.next()
+      while (iterator.hasNext) {
+        val controller: com.badlogic.gdx.graphics.g3d.particles.ParticleController = iterator.next
         var index: scala.Int = -1
         if ({
           index = effectControllers.indexOf(controller, true)
@@ -58,16 +58,16 @@ abstract class ParticleControllerInfluencer extends com.badlogic.gdx.graphics.g3
         } else ()
       }
       if (indices != null) {
-        data.saveAsset(manager.getAssetFileName(effect), classOf[java.lang.Class])
+        data.saveAsset(manager.getAssetFileName(effect), classOf[com.badlogic.gdx.graphics.g3d.particles.ParticleEffect])
         effectsIndices.add(indices)
       } else ()
     }; i = i + 1 } }
     data.save("indices", effectsIndices)
   }
-  def load(manager: com.badlogic.gdx.assets.AssetManager, resources: com.badlogic.gdx.graphics.g3d.particles.ResourceData): scala.Unit = {
-    val data: com.badlogic.gdx.graphics.g3d.particles.ResourceData#SaveData = resources.getSaveData()
+  def load(manager: com.badlogic.gdx.assets.AssetManager, resources: com.badlogic.gdx.graphics.g3d.particles.ResourceData[?]): scala.Unit = {
+    val data: com.badlogic.gdx.graphics.g3d.particles.ResourceData.SaveData = resources.getSaveData()
     val effectsIndices: com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.IntArray] = data.load("indices")
-    var descriptor: com.badlogic.gdx.assets.AssetDescriptor = null.asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor]
+    var descriptor: com.badlogic.gdx.assets.AssetDescriptor[?] = null.asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[?]]
     val iterator: scala.collection.Iterator[com.badlogic.gdx.utils.IntArray] = effectsIndices.iterator()
     while ({
       descriptor = data.loadAsset()
@@ -78,21 +78,23 @@ abstract class ParticleControllerInfluencer extends com.badlogic.gdx.graphics.g3
         throw new java.lang.RuntimeException("Template is null")
       } else ()
       val effectControllers: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.ParticleController] = effect.getControllers()
-      val effectIndices: com.badlogic.gdx.utils.IntArray = iterator.next()
+      val effectIndices: com.badlogic.gdx.utils.IntArray = iterator.next;
       { var i: scala.Int = 0; val n: scala.Int = effectIndices.size; while (i < n) { {
         this.templates.add(effectControllers.get(effectIndices.get(i)))
       }; i = i + 1 } }
     }
   }
+}
+object ParticleControllerInfluencer {
   class Single extends ParticleControllerInfluencer {
     def this(templates: scala.Array[com.badlogic.gdx.graphics.g3d.particles.ParticleController]) = {
       this()
     }
-    def this(particleControllerSingle: Single) = {
+    def this(particleControllerSingle: com.badlogic.gdx.graphics.g3d.particles.influencers.ParticleControllerInfluencer.Single) = {
       this()
     }
     def init(): scala.Unit = {
-      val first: com.badlogic.gdx.graphics.g3d.particles.ParticleController = templates.first()
+      val first: com.badlogic.gdx.graphics.g3d.particles.ParticleController = templates.first();
       { var i: scala.Int = 0; val c: scala.Int = this.controller.particles.capacity; while (i < c) { {
         val copy: com.badlogic.gdx.graphics.g3d.particles.ParticleController = first.copy()
         copy.init()
@@ -109,8 +111,8 @@ abstract class ParticleControllerInfluencer extends com.badlogic.gdx.graphics.g3
         this.particleControllerChannel.data(i).`end`()
       }; i = i + 1 } }
     }
-    def copy(): Single = {
-      return new Single(this)
+    def copy(): com.badlogic.gdx.graphics.g3d.particles.influencers.ParticleControllerInfluencer.Single = {
+      return new com.badlogic.gdx.graphics.g3d.particles.influencers.ParticleControllerInfluencer.Single(this)
     }
   }
   class Random extends ParticleControllerInfluencer {
@@ -119,7 +121,7 @@ abstract class ParticleControllerInfluencer extends com.badlogic.gdx.graphics.g3
       this()
       this.pool = new ParticleControllerPool()
     }
-    def this(particleControllerRandom: Random) = {
+    def this(particleControllerRandom: com.badlogic.gdx.graphics.g3d.particles.influencers.ParticleControllerInfluencer.Random) = {
       this()
       this.pool = new ParticleControllerPool()
     }
@@ -128,7 +130,7 @@ abstract class ParticleControllerInfluencer extends com.badlogic.gdx.graphics.g3
       this.pool = new ParticleControllerPool()
     }
     def init(): scala.Unit = {
-      this.pool.clear()
+      this.pool.clear();
       { var i: scala.Int = 0; while (i < this.controller.emitter.maxParticleCount) { {
         this.pool.free(this.pool.newObject())
       }; i = i + 1 } }
@@ -152,8 +154,8 @@ abstract class ParticleControllerInfluencer extends com.badlogic.gdx.graphics.g3
         this.particleControllerChannel.data(i) = null
       }; i = i + 1 } }
     }
-    def copy(): Random = {
-      return new Random(this)
+    def copy(): com.badlogic.gdx.graphics.g3d.particles.influencers.ParticleControllerInfluencer.Random = {
+      return new com.badlogic.gdx.graphics.g3d.particles.influencers.ParticleControllerInfluencer.Random(this)
     }
     private class ParticleControllerPool extends com.badlogic.gdx.utils.Pool[com.badlogic.gdx.graphics.g3d.particles.ParticleController] {
       def newObject(): com.badlogic.gdx.graphics.g3d.particles.ParticleController = {

@@ -4,11 +4,11 @@ class FileTextureData extends com.badlogic.gdx.graphics.TextureData {
   var file: com.badlogic.gdx.files.FileHandle = null.asInstanceOf[com.badlogic.gdx.files.FileHandle]
   var width: scala.Int = 0
   var height: scala.Int = 0
-  var format: com.badlogic.gdx.graphics.Pixmap#Format = null.asInstanceOf[com.badlogic.gdx.graphics.Pixmap#Format]
+  var format: com.badlogic.gdx.graphics.Pixmap.Format = null.asInstanceOf[com.badlogic.gdx.graphics.Pixmap.Format]
   var pixmap: com.badlogic.gdx.graphics.Pixmap = null.asInstanceOf[com.badlogic.gdx.graphics.Pixmap]
   var useMipMaps$field: scala.Boolean = false
   var isPrepared$field: scala.Boolean = false
-  def this(file: com.badlogic.gdx.files.FileHandle, preloadedPixmap: com.badlogic.gdx.graphics.Pixmap, format: com.badlogic.gdx.graphics.Pixmap#Format, useMipMaps: scala.Boolean) = {
+  def this(file: com.badlogic.gdx.files.FileHandle, preloadedPixmap: com.badlogic.gdx.graphics.Pixmap, format: com.badlogic.gdx.graphics.Pixmap.Format, useMipMaps: scala.Boolean) = {
     this()
     this.file = file
     this.pixmap = preloadedPixmap
@@ -61,7 +61,7 @@ class FileTextureData extends com.badlogic.gdx.graphics.TextureData {
   def getHeight(): scala.Int = {
     return this.height
   }
-  def getFormat(): com.badlogic.gdx.graphics.Pixmap#Format = {
+  def getFormat(): com.badlogic.gdx.graphics.Pixmap.Format = {
     return this.format
   }
   def useMipMaps(): scala.Boolean = {
@@ -73,7 +73,7 @@ class FileTextureData extends com.badlogic.gdx.graphics.TextureData {
   def getFileHandle(): com.badlogic.gdx.files.FileHandle = {
     return this.file
   }
-  def getType(): com.badlogic.gdx.graphics.TextureData#TextureDataType = {
+  def getType(): com.badlogic.gdx.graphics.TextureData.TextureDataType = {
     return com.badlogic.gdx.graphics.TextureData.TextureDataType.Pixmap
   }
   def consumeCustomData(target: scala.Int): scala.Unit = {

@@ -54,7 +54,7 @@ class VerticalGroup extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup {
         i = n - 1
         n = -1
         incr = -1
-      } else ()
+      } else ();
       { ; while (i != n) { {
         val child: com.badlogic.gdx.scenes.scene2d.Actor = children.get(i)
         var width: scala.Float = 0.0f
@@ -94,7 +94,7 @@ class VerticalGroup extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup {
       } else ()
       this.prefWidth = java.lang.Math.max(this.prefWidth, x + columnWidth)
     } else {
-      this.prefHeight = (this.padTop$field + this.padBottom$field) + (this.space$field * (n - 1))
+      this.prefHeight = (this.padTop$field + this.padBottom$field) + (this.space$field * (n - 1));
       { var i: scala.Int = 0; while (i < n) { {
         val child: com.badlogic.gdx.scenes.scene2d.Actor = children.get(i)
         if (child.isInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Layout]) {
@@ -109,8 +109,8 @@ class VerticalGroup extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup {
     }
     this.prefWidth = this.prefWidth + (this.padLeft$field + this.padRight$field)
     if (this.round) {
-      this.prefWidth = java.lang.Math.ceil(this.prefWidth).asInstanceOf[scala.Float]
-      this.prefHeight = java.lang.Math.ceil(this.prefHeight).asInstanceOf[scala.Float]
+      this.prefWidth = java.lang.Math.ceil(this.prefWidth).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
+      this.prefHeight = java.lang.Math.ceil(this.prefHeight).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
     } else ()
   }
   def layout(): scala.Unit = {
@@ -154,7 +154,7 @@ class VerticalGroup extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup {
       i = n - 1
       n = -1
       incr = -1
-    } else ()
+    } else ();
     { val r: scala.Int = 0; while (i != n) { {
       val child: com.badlogic.gdx.scenes.scene2d.Actor = children.get(i)
       var width: scala.Float = 0.0f
@@ -240,7 +240,7 @@ class VerticalGroup extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup {
       i = n - 1
       n = -1
       incr = -1
-    } else ()
+    } else ();
     { var r: scala.Int = 0; while (i != n) { {
       val child: com.badlogic.gdx.scenes.scene2d.Actor = children.get(i)
       var width: scala.Float = 0.0f
@@ -488,7 +488,7 @@ class VerticalGroup extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup {
     this.columnAlign$field = this.columnAlign$field & (~com.badlogic.gdx.utils.Align.left)
     return this
   }
-  protected def drawDebugBounds(shapes: com.badlogic.gdx.graphics.glutils.ShapeRenderer): scala.Unit = {
+  def drawDebugBounds(shapes: com.badlogic.gdx.graphics.glutils.ShapeRenderer): scala.Unit = {
     super.drawDebugBounds(shapes)
     if (!this.getDebug()) {
       return

@@ -1,13 +1,13 @@
 package com.badlogic.gdx.utils
 
-class SortedIntList[E] extends scala.collection.Iterable[Node[E]] {
-  private var nodePool: NodePool[E] = new NodePool[E]()
+class SortedIntList[E] extends scala.collection.Iterable[com.badlogic.gdx.utils.SortedIntList.Node[E]] {
+  private var nodePool: com.badlogic.gdx.utils.SortedIntList.NodePool[E] = new com.badlogic.gdx.utils.SortedIntList.NodePool[E]()
   var iterator$field: Iterator = null.asInstanceOf[Iterator]
   var size$field: scala.Int = 0
-  var first: Node[E] = null.asInstanceOf[Node[E]]
+  var first: com.badlogic.gdx.utils.SortedIntList.Node[E] = null.asInstanceOf[com.badlogic.gdx.utils.SortedIntList.Node[E]]
   def insert(index: scala.Int, value: E): E = {
     if (this.first != null) {
-      var c: Node[E] = this.first
+      var c: com.badlogic.gdx.utils.SortedIntList.Node[E] = this.first
       while ((c.n != null) && (c.n.index <= index)) {
         c = c.n
       }
@@ -19,7 +19,7 @@ class SortedIntList[E] extends scala.collection.Iterable[Node[E]] {
         this.size$field = this.size$field + 1
       } else {
         if (index < c.index) {
-          val newFirst: Node[E] = this.nodePool.obtain(null, this.first, value, index)
+          val newFirst: com.badlogic.gdx.utils.SortedIntList.Node[E] = this.nodePool.obtain(null, this.first, value, index)
           this.first.p = newFirst
           this.first = newFirst
           this.size$field = this.size$field + 1
@@ -31,12 +31,12 @@ class SortedIntList[E] extends scala.collection.Iterable[Node[E]] {
       this.first = this.nodePool.obtain(null, null, value, index)
       this.size$field = this.size$field + 1
     }
-    return null
+    return null.asInstanceOf[E]
   }
   def get(index: scala.Int): E = {
-    var `match`: E = null
+    var `match`: E = null.asInstanceOf[E]
     if (this.first != null) {
-      var c: Node[E] = this.first
+      var c: com.badlogic.gdx.utils.SortedIntList.Node[E] = this.first
       while ((c.n != null) && (c.index < index)) {
         c = c.n
       }
@@ -61,7 +61,7 @@ class SortedIntList[E] extends scala.collection.Iterable[Node[E]] {
   def isEmpty(): scala.Boolean = {
     return this.size$field == 0
   }
-  def iterator(): scala.collection.Iterator[Node[E]] = {
+  def iterator(): scala.collection.Iterator[com.badlogic.gdx.utils.SortedIntList.Node[E]] = {
     if (com.badlogic.gdx.utils.Collections.allocateIterators) {
       return new Iterator()
     } else ()
@@ -73,9 +73,9 @@ class SortedIntList[E] extends scala.collection.Iterable[Node[E]] {
     } else ()
     return this.iterator$field.reset()
   }
-  class Iterator extends scala.collection.Iterator[Node[E]] {
-    private var position: Node[E] = null.asInstanceOf[Node[E]]
-    private var previousPosition: Node[E] = null.asInstanceOf[Node[E]]
+  class Iterator extends scala.collection.Iterator[com.badlogic.gdx.utils.SortedIntList.Node[E]] {
+    private var position: com.badlogic.gdx.utils.SortedIntList.Node[E] = null.asInstanceOf[com.badlogic.gdx.utils.SortedIntList.Node[E]]
+    private var previousPosition: com.badlogic.gdx.utils.SortedIntList.Node[E] = null.asInstanceOf[com.badlogic.gdx.utils.SortedIntList.Node[E]]
     def this() = {
       this()
       this.reset()
@@ -83,7 +83,7 @@ class SortedIntList[E] extends scala.collection.Iterable[Node[E]] {
     def hasNext(): scala.Boolean = {
       return this.position != null
     }
-    def next(): Node[E] = {
+    def next(): com.badlogic.gdx.utils.SortedIntList.Node[E] = {
       this.previousPosition = this.position
       this.position = this.position.n
       return this.previousPosition
@@ -107,18 +107,20 @@ class SortedIntList[E] extends scala.collection.Iterable[Node[E]] {
       return this
     }
   }
+}
+object SortedIntList {
   class Node[E] {
-    protected var p: Node[E] = null.asInstanceOf[Node[E]]
-    protected var n: Node[E] = null.asInstanceOf[Node[E]]
+    var p: com.badlogic.gdx.utils.SortedIntList.Node[E] = null.asInstanceOf[com.badlogic.gdx.utils.SortedIntList.Node[E]]
+    var n: com.badlogic.gdx.utils.SortedIntList.Node[E] = null.asInstanceOf[com.badlogic.gdx.utils.SortedIntList.Node[E]]
     var value: E = null.asInstanceOf[E]
     var index: scala.Int = 0
   }
-  class NodePool[E] extends com.badlogic.gdx.utils.Pool[Node[E]] {
-    protected def newObject(): Node[E] = {
-      return new Node[E]()
+  class NodePool[E] extends com.badlogic.gdx.utils.Pool[com.badlogic.gdx.utils.SortedIntList.Node[E]] {
+    def newObject(): com.badlogic.gdx.utils.SortedIntList.Node[E] = {
+      return new com.badlogic.gdx.utils.SortedIntList.Node[E]()
     }
-    def obtain(p: Node[E], n: Node[E], value: E, index: scala.Int): Node[E] = {
-      val newNode: Node[E] = super.obtain()
+    def obtain(p: com.badlogic.gdx.utils.SortedIntList.Node[E], n: com.badlogic.gdx.utils.SortedIntList.Node[E], value: E, index: scala.Int): com.badlogic.gdx.utils.SortedIntList.Node[E] = {
+      val newNode: com.badlogic.gdx.utils.SortedIntList.Node[E] = super.obtain()
       newNode.p = p
       newNode.n = n
       newNode.value = value

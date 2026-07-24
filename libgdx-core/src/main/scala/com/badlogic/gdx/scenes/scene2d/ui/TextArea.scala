@@ -14,10 +14,10 @@ class TextArea extends com.badlogic.gdx.scenes.scene2d.ui.TextField {
   def this(text: java.lang.String, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin) = {
     this()
   }
-  def this(text: java.lang.String, style: com.badlogic.gdx.scenes.scene2d.ui.TextField#TextFieldStyle) = {
+  def this(text: java.lang.String, style: com.badlogic.gdx.scenes.scene2d.ui.TextField.TextFieldStyle) = {
     this()
   }
-  protected def initialize(): scala.Unit = {
+  def initialize(): scala.Unit = {
     super.initialize()
     writeEnters = true
     this.linesBreak = new com.badlogic.gdx.utils.IntArray()
@@ -26,7 +26,7 @@ class TextArea extends com.badlogic.gdx.scenes.scene2d.ui.TextField {
     this.moveOffset = -1
     this.linesShowing = 0
   }
-  protected def letterUnderCursor(x$arg: scala.Float): scala.Int = {
+  def letterUnderCursor(x$arg: scala.Float): scala.Int = {
     var x: scala.Float = x$arg
     if (this.linesBreak.size > 0) {
       if ((this.cursorLine * 2) >= this.linesBreak.size) {
@@ -36,7 +36,7 @@ class TextArea extends com.badlogic.gdx.scenes.scene2d.ui.TextField {
         val start: scala.Int = this.linesBreak.items(this.cursorLine * 2)
         x = x + glyphPositions(start)
         val `end`: scala.Int = this.linesBreak.items((this.cursorLine * 2) + 1)
-        var i: scala.Int = start
+        var i: scala.Int = start;
         { ; while (i < `end`) { {
           if (glyphPositions(i) > x) {
             /* break */ ()
@@ -51,7 +51,7 @@ class TextArea extends com.badlogic.gdx.scenes.scene2d.ui.TextField {
       return 0
     }
   }
-  def setStyle(style: com.badlogic.gdx.scenes.scene2d.ui.TextField#TextFieldStyle): scala.Unit = {
+  def setStyle(style: com.badlogic.gdx.scenes.scene2d.ui.TextField.TextFieldStyle): scala.Unit = {
     if (style == null) {
       throw new java.lang.IllegalArgumentException("style cannot be null.")
     } else ()
@@ -69,7 +69,7 @@ class TextArea extends com.badlogic.gdx.scenes.scene2d.ui.TextField {
     if (this.prefRows <= 0) {
       return super.getPrefHeight()
     } else {
-      var prefHeight: scala.Float = java.lang.Math.ceil(this.style.font.getLineHeight() * this.prefRows).asInstanceOf[scala.Float]
+      var prefHeight: scala.Float = java.lang.Math.ceil(this.style.font.getLineHeight() * this.prefRows).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
       if (this.style.background != null) {
         prefHeight = java.lang.Math.max((prefHeight + this.style.background.getBottomHeight()) + this.style.background.getTopHeight(), this.style.background.getMinHeight())
       } else ()
@@ -139,14 +139,14 @@ class TextArea extends com.badlogic.gdx.scenes.scene2d.ui.TextField {
     }
     return index
   }
-  protected def sizeChanged(): scala.Unit = {
+  def sizeChanged(): scala.Unit = {
     this.lastText = null
     val font: com.badlogic.gdx.graphics.g2d.BitmapFont = this.style.font
     val background: com.badlogic.gdx.scenes.scene2d.utils.Drawable = this.style.background
     val availableHeight: scala.Float = this.getHeight() - (if (background == null) 0 else background.getBottomHeight() + background.getTopHeight())
-    this.linesShowing = java.lang.Math.floor(availableHeight / font.getLineHeight()).asInstanceOf[scala.Int]
+    this.linesShowing = java.lang.Math.floor(availableHeight / font.getLineHeight()).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
   }
-  protected def getTextY(font: com.badlogic.gdx.graphics.g2d.BitmapFont, background: com.badlogic.gdx.scenes.scene2d.utils.Drawable): scala.Float = {
+  def getTextY(font: com.badlogic.gdx.graphics.g2d.BitmapFont, background: com.badlogic.gdx.scenes.scene2d.utils.Drawable): scala.Float = {
     var textY: scala.Float = this.getHeight()
     if (background != null) {
       textY = textY - background.getTopHeight()
@@ -156,12 +156,12 @@ class TextArea extends com.badlogic.gdx.scenes.scene2d.ui.TextField {
     } else ()
     return textY
   }
-  protected def drawSelection(selection: com.badlogic.gdx.scenes.scene2d.utils.Drawable, batch: com.badlogic.gdx.graphics.g2d.Batch, font: com.badlogic.gdx.graphics.g2d.BitmapFont, x: scala.Float, y: scala.Float): scala.Unit = {
+  def drawSelection(selection: com.badlogic.gdx.scenes.scene2d.utils.Drawable, batch: com.badlogic.gdx.graphics.g2d.Batch, font: com.badlogic.gdx.graphics.g2d.BitmapFont, x: scala.Float, y: scala.Float): scala.Unit = {
     var i: scala.Int = this.firstLineShowing * 2
     var offsetY: scala.Float = 0
     val minIndex: scala.Int = java.lang.Math.min(cursor, selectionStart)
     val maxIndex: scala.Int = java.lang.Math.max(cursor, selectionStart)
-    val fontData: com.badlogic.gdx.graphics.g2d.BitmapFont#BitmapFontData = font.getData()
+    val fontData: com.badlogic.gdx.graphics.g2d.BitmapFont.BitmapFontData = font.getData()
     val lineHeight: scala.Float = this.style.font.getLineHeight()
     while (((i + 1) < this.linesBreak.size) && (i < ((this.firstLineShowing + this.linesShowing) * 2))) {
       val lineStart: scala.Int = this.linesBreak.get(i)
@@ -171,7 +171,7 @@ class TextArea extends com.badlogic.gdx.scenes.scene2d.ui.TextField {
         val `end`: scala.Int = java.lang.Math.min(lineEnd, maxIndex)
         var fontLineOffsetX: scala.Float = 0
         var fontLineOffsetWidth: scala.Float = 0
-        val lineFirst: com.badlogic.gdx.graphics.g2d.BitmapFont#Glyph = fontData.getGlyph(displayText.charAt(lineStart))
+        val lineFirst: com.badlogic.gdx.graphics.g2d.BitmapFont.Glyph = fontData.getGlyph(displayText.charAt(lineStart))
         if (lineFirst != null) {
           if (start == lineStart) {
             fontLineOffsetWidth = if (lineFirst.fixedWidth) 0 else ((-lineFirst.xoffset) * fontData.scaleX) - fontData.padLeft
@@ -187,17 +187,17 @@ class TextArea extends com.badlogic.gdx.scenes.scene2d.ui.TextField {
       i = i + 2
     }
   }
-  protected def drawText(batch: com.badlogic.gdx.graphics.g2d.Batch, font: com.badlogic.gdx.graphics.g2d.BitmapFont, x: scala.Float, y: scala.Float): scala.Unit = {
-    var offsetY: scala.Float = (-(this.style.font.getLineHeight() - textHeight)) / 2
+  def drawText(batch: com.badlogic.gdx.graphics.g2d.Batch, font: com.badlogic.gdx.graphics.g2d.BitmapFont, x: scala.Float, y: scala.Float): scala.Unit = {
+    var offsetY: scala.Float = (-(this.style.font.getLineHeight() - textHeight)) / 2;
     { var i: scala.Int = this.firstLineShowing * 2; while ((i < ((this.firstLineShowing + this.linesShowing) * 2)) && (i < this.linesBreak.size)) { {
       font.draw(batch, displayText, x, y + offsetY, this.linesBreak.items(i), this.linesBreak.items(i + 1), 0, com.badlogic.gdx.utils.Align.left, false)
       offsetY = offsetY - font.getLineHeight()
     }; i = i + 2 } }
   }
-  protected def drawCursor(cursorPatch: com.badlogic.gdx.scenes.scene2d.utils.Drawable, batch: com.badlogic.gdx.graphics.g2d.Batch, font: com.badlogic.gdx.graphics.g2d.BitmapFont, x: scala.Float, y: scala.Float): scala.Unit = {
+  def drawCursor(cursorPatch: com.badlogic.gdx.scenes.scene2d.utils.Drawable, batch: com.badlogic.gdx.graphics.g2d.Batch, font: com.badlogic.gdx.graphics.g2d.BitmapFont, x: scala.Float, y: scala.Float): scala.Unit = {
     cursorPatch.draw(batch, x + this.getCursorX(), y + this.getCursorY(), cursorPatch.getMinWidth(), font.getLineHeight())
   }
-  protected def calculateOffsets(): scala.Unit = {
+  def calculateOffsets(): scala.Unit = {
     super.calculateOffsets()
     if (!this.text.equals(this.lastText)) {
       this.lastText = text
@@ -207,8 +207,8 @@ class TextArea extends com.badlogic.gdx.scenes.scene2d.ui.TextField {
       var lineStart: scala.Int = 0
       var lastSpace: scala.Int = 0
       var lastCharacter: scala.Char = '\u0000'
-      val layoutPool: com.badlogic.gdx.utils.Pool[com.badlogic.gdx.graphics.g2d.GlyphLayout] = com.badlogic.gdx.scenes.scene2d.Actor.POOLS.getPool(classOf[java.lang.Class])
-      val layout: com.badlogic.gdx.graphics.g2d.GlyphLayout = layoutPool.obtain()
+      val layoutPool: com.badlogic.gdx.utils.Pool[com.badlogic.gdx.graphics.g2d.GlyphLayout] = com.badlogic.gdx.scenes.scene2d.Actor.POOLS.getPool(classOf[com.badlogic.gdx.graphics.g2d.GlyphLayout])
+      val layout: com.badlogic.gdx.graphics.g2d.GlyphLayout = layoutPool.obtain();
       { var i: scala.Int = 0; while (i < text.length()) { {
         lastCharacter = text.charAt(i)
         if ((lastCharacter == com.badlogic.gdx.scenes.scene2d.ui.TextField.CARRIAGE_RETURN) || (lastCharacter == com.badlogic.gdx.scenes.scene2d.ui.TextField.NEWLINE)) {
@@ -237,14 +237,14 @@ class TextArea extends com.badlogic.gdx.scenes.scene2d.ui.TextField {
       this.showCursor()
     } else ()
   }
-  protected def createInputListener(): com.badlogic.gdx.scenes.scene2d.InputListener = {
+  def createInputListener(): com.badlogic.gdx.scenes.scene2d.InputListener = {
     return new TextAreaListener()
   }
   def setSelection(selectionStart: scala.Int, selectionEnd: scala.Int): scala.Unit = {
     super.setSelection(selectionStart, selectionEnd)
     this.updateCurrentLine()
   }
-  protected def moveCursor(forward: scala.Boolean, jump: scala.Boolean): scala.Unit = {
+  def moveCursor(forward: scala.Boolean, jump: scala.Boolean): scala.Unit = {
     val count: scala.Int = if (forward) 1 else -1
     val index: scala.Int = (this.cursorLine * 2) + count
     if ((((index >= 0) && ((index + 1) < this.linesBreak.size)) && (this.linesBreak.items(index) == cursor)) && (this.linesBreak.items(index + 1) == cursor)) {
@@ -258,7 +258,7 @@ class TextArea extends com.badlogic.gdx.scenes.scene2d.ui.TextField {
     }
     this.updateCurrentLine()
   }
-  protected def continueCursor(index: scala.Int, offset: scala.Int): scala.Boolean = {
+  def continueCursor(index: scala.Int, offset: scala.Int): scala.Boolean = {
     val pos: scala.Int = this.calculateCurrentLineIndex(index + offset)
     return super.continueCursor(index, offset) && ((((pos < 0) || (pos >= (this.linesBreak.size - 2))) || (this.linesBreak.items(pos + 1) != index)) || (this.linesBreak.items(pos + 1) == this.linesBreak.items(pos + 2)))
   }
@@ -273,11 +273,11 @@ class TextArea extends com.badlogic.gdx.scenes.scene2d.ui.TextField {
   }
   def getCursorX(): scala.Float = {
     var textOffset: scala.Float = 0
-    val fontData: com.badlogic.gdx.graphics.g2d.BitmapFont#BitmapFontData = this.style.font.getData()
+    val fontData: com.badlogic.gdx.graphics.g2d.BitmapFont.BitmapFontData = this.style.font.getData()
     if (!((cursor >= this.glyphPositions.size) || ((this.cursorLine * 2) >= this.linesBreak.size))) {
       val lineStart: scala.Int = this.linesBreak.items(this.cursorLine * 2)
       var glyphOffset: scala.Float = 0
-      val lineFirst: com.badlogic.gdx.graphics.g2d.BitmapFont#Glyph = fontData.getGlyph(displayText.charAt(lineStart))
+      val lineFirst: com.badlogic.gdx.graphics.g2d.BitmapFont.Glyph = fontData.getGlyph(displayText.charAt(lineStart))
       if (lineFirst != null) {
         glyphOffset = if (lineFirst.fixedWidth) 0 else ((-lineFirst.xoffset) * fontData.scaleX) - fontData.padLeft
       } else ()
@@ -290,7 +290,7 @@ class TextArea extends com.badlogic.gdx.scenes.scene2d.ui.TextField {
     return (-((this.cursorLine - this.firstLineShowing) + 1)) * font.getLineHeight()
   }
   class TextAreaListener extends com.badlogic.gdx.scenes.scene2d.ui.TextField#TextFieldClickListener {
-    protected def setCursorPosition(x$arg: scala.Float, y$arg: scala.Float): scala.Unit = {
+    def setCursorPosition(x$arg: scala.Float, y$arg: scala.Float): scala.Unit = {
       var x: scala.Float = x$arg
       var y: scala.Float = y$arg
       moveOffset = -1
@@ -350,7 +350,7 @@ class TextArea extends com.badlogic.gdx.scenes.scene2d.ui.TextField {
       } else ()
       return result
     }
-    protected def checkFocusTraversal(character: scala.Char): scala.Boolean = {
+    def checkFocusTraversal(character: scala.Char): scala.Boolean = {
       return focusTraversal && (character == com.badlogic.gdx.scenes.scene2d.ui.TextField.TAB)
     }
     def keyTyped(event: com.badlogic.gdx.scenes.scene2d.InputEvent, character: scala.Char): scala.Boolean = {
@@ -358,7 +358,7 @@ class TextArea extends com.badlogic.gdx.scenes.scene2d.ui.TextField {
       showCursor()
       return result
     }
-    protected def goHome(jump: scala.Boolean): scala.Unit = {
+    def goHome(jump: scala.Boolean): scala.Unit = {
       if (jump) {
         cursor = 0
       } else {
@@ -367,7 +367,7 @@ class TextArea extends com.badlogic.gdx.scenes.scene2d.ui.TextField {
         } else ()
       }
     }
-    protected def goEnd(jump: scala.Boolean): scala.Unit = {
+    def goEnd(jump: scala.Boolean): scala.Unit = {
       if (jump || (cursorLine >= getLines())) {
         cursor = text.length()
       } else {

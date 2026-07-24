@@ -48,7 +48,7 @@ class DataInput extends java.io.DataInputStream {
       if (b < 0) {
         /* break */ ()
       } else ()
-      chars({ charIndex += 1; charIndex }) = b.asInstanceOf[scala.Char]
+      chars({ charIndex += 1; charIndex }) = b.asInstanceOf[scala.Char].asInstanceOf[scala.Char]
     }
     if (charIndex < charCount) {
       this.readUtf8_slow(charCount, charIndex, b & 255)
@@ -61,13 +61,13 @@ class DataInput extends java.io.DataInputStream {
     while (true) {
       b >> 4 match {
         case 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 => {
-          chars(charIndex) = b.asInstanceOf[scala.Char]
+          chars(charIndex) = b.asInstanceOf[scala.Char].asInstanceOf[scala.Char]
         }
         case 12 | 13 => {
-          chars(charIndex) = (((b & 31) << 6) | (this.readByte() & 63)).asInstanceOf[scala.Char]
+          chars(charIndex) = (((b & 31) << 6) | (this.readByte() & 63)).asInstanceOf[scala.Char].asInstanceOf[scala.Char]
         }
         case 14 => {
-          chars(charIndex) = ((((b & 15) << 12) | ((this.readByte() & 63) << 6)) | (this.readByte() & 63)).asInstanceOf[scala.Char]
+          chars(charIndex) = ((((b & 15) << 12) | ((this.readByte() & 63) << 6)) | (this.readByte() & 63)).asInstanceOf[scala.Char].asInstanceOf[scala.Char]
         }
       }
       if ({ charIndex += 1; charIndex } >= charCount) {

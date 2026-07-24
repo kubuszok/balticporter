@@ -55,7 +55,7 @@ object TiledDrawable {
     val v: scala.Float = textureRegion.getV()
     val u2: scala.Float = textureRegion.getU2()
     val v2: scala.Float = textureRegion.getV2()
-    var fullX: scala.Int = (width / regionWidth).asInstanceOf[scala.Int]
+    var fullX: scala.Int = (width / regionWidth).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
     var leftPartialWidth: scala.Float = 0.0f
     var rightPartialWidth: scala.Float = 0.0f
     if (com.badlogic.gdx.utils.Align.isLeft(align)) {
@@ -77,7 +77,7 @@ object TiledDrawable {
         }
       }
     }
-    var fullY: scala.Int = (height / regionHeight).asInstanceOf[scala.Int]
+    var fullY: scala.Int = (height / regionHeight).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
     var topPartialHeight: scala.Float = 0.0f
     var bottomPartialHeight: scala.Float = 0.0f
     if (com.badlogic.gdx.utils.Align.isTop(align)) {
@@ -124,7 +124,7 @@ object TiledDrawable {
         val leftTopV: scala.Float = v2 - (topPartialHeight / textureHeight)
         batch.draw(texture, drawX, drawY, leftPartialWidth, topPartialHeight, leftEdgeU, v2, u2, leftTopV)
       } else ()
-    } else ()
+    } else ();
     {
       if (bottomPartialHeight > 0.0f) {
         drawX = x + leftPartialWidth
@@ -142,7 +142,7 @@ object TiledDrawable {
             drawX = drawX + regionWidth
           }; i = i + 1 } }
         }
-      } else ()
+      } else ();
       {
         drawX = x + leftPartialWidth
         val originalFullX: scala.Int = fullX
@@ -166,9 +166,9 @@ object TiledDrawable {
           val vOffset: scala.Float = (0.5f * (v2 - v)) * (1.0f - (height / regionHeight))
           centerCenterV = v2 - vOffset
           centerCenterV2 = v + vOffset
-        } else ()
+        } else ();
         { var i: scala.Int = 0; while (i < fullX) { {
-          drawY = y + bottomPartialHeight
+          drawY = y + bottomPartialHeight;
           { var ii: scala.Int = 0; while (ii < fullY) { {
             batch.draw(texture, drawX, drawY, centerCenterDrawWidth, centerCenterDrawHeight, centerCenterU, centerCenterV, centerCenterU2, centerCenterV2)
             drawY = drawY + centerCenterDrawHeight

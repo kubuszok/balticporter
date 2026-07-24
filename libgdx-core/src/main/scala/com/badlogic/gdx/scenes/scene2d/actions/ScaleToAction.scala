@@ -5,11 +5,11 @@ class ScaleToAction extends com.badlogic.gdx.scenes.scene2d.actions.TemporalActi
   private var startY: scala.Float = 0.0f
   private var endX: scala.Float = 0.0f
   private var endY: scala.Float = 0.0f
-  protected def begin(): scala.Unit = {
+  def begin(): scala.Unit = {
     this.startX = target.getScaleX()
     this.startY = target.getScaleY()
   }
-  protected def update(percent: scala.Float): scala.Unit = {
+  def update(percent: scala.Float): scala.Unit = {
     var x: scala.Float = 0.0f
     var y: scala.Float = 0.0f
     if (percent == 0) {

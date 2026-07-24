@@ -5,7 +5,7 @@ object Pools {
   var WARN_ON_REFLECTION_POOL_CREATION: scala.Boolean = true
   var THROW_ON_REFLECTION_POOL_CREATION: scala.Boolean = false
   def get[T](`type`: java.lang.Class[T], max: scala.Int): com.badlogic.gdx.utils.Pool[T] = {
-    var pool: com.badlogic.gdx.utils.Pool = Pools.typePools.get(`type`)
+    var pool: com.badlogic.gdx.utils.Pool[?] = Pools.typePools.get(`type`)
     if (pool == null) {
       if (Pools.THROW_ON_REFLECTION_POOL_CREATION) {
         throw new java.lang.RuntimeException(("Please manually define a Pool for " + `type`) + " by calling Pools#set before calling Pools#get")
@@ -24,10 +24,10 @@ object Pools {
   def set[T](`type`: java.lang.Class[T], pool: com.badlogic.gdx.utils.Pool[T]): scala.Unit = {
     Pools.typePools.put(`type`, pool)
   }
-  def set[T](poolTypeSupplier: com.badlogic.gdx.utils.DefaultPool#PoolSupplier[T], max: scala.Int): scala.Unit = {
+  def set[T](poolTypeSupplier: com.badlogic.gdx.utils.DefaultPool.PoolSupplier[T], max: scala.Int): scala.Unit = {
     Pools.set(poolTypeSupplier.get().getClass().asInstanceOf[java.lang.Class[T]], new com.badlogic.gdx.utils.DefaultPool[T](poolTypeSupplier, 4, max))
   }
-  def set[T](poolTypeSupplier: com.badlogic.gdx.utils.DefaultPool#PoolSupplier[T]): scala.Unit = {
+  def set[T](poolTypeSupplier: com.badlogic.gdx.utils.DefaultPool.PoolSupplier[T]): scala.Unit = {
     Pools.set(poolTypeSupplier, 100)
   }
   def obtain[T](`type`: java.lang.Class[T]): T = {
@@ -37,20 +37,20 @@ object Pools {
     if (`object` == null) {
       throw new java.lang.IllegalArgumentException("object cannot be null.")
     } else ()
-    val pool: com.badlogic.gdx.utils.Pool = Pools.typePools.get(`object`.getClass())
+    val pool: com.badlogic.gdx.utils.Pool[?] = Pools.typePools.get(`object`.getClass())
     if (pool == null) {
       return
     } else ()
     pool.free(`object`)
   }
-  def freeAll(objects: com.badlogic.gdx.utils.Array): scala.Unit = {
+  def freeAll(objects: com.badlogic.gdx.utils.Array[?]): scala.Unit = {
     Pools.freeAll(objects, false)
   }
-  def freeAll(objects: com.badlogic.gdx.utils.Array, samePool: scala.Boolean): scala.Unit = {
+  def freeAll(objects: com.badlogic.gdx.utils.Array[?], samePool: scala.Boolean): scala.Unit = {
     if (objects == null) {
       throw new java.lang.IllegalArgumentException("objects cannot be null.")
     } else ()
-    var pool: com.badlogic.gdx.utils.Pool = null
+    var pool: com.badlogic.gdx.utils.Pool[?] = null;
     { var i: scala.Int = 0; val n: scala.Int = objects.size; while (i < n) { {
       val `object`: java.lang.Object = objects.get(i)
       if (`object` == null) {

@@ -1,6 +1,6 @@
 package com.badlogic.gdx.graphics.g3d.particles.emitters
 
-abstract class Emitter extends com.badlogic.gdx.graphics.g3d.particles.ParticleControllerComponent with com.badlogic.gdx.utils.Json#Serializable {
+abstract class Emitter extends com.badlogic.gdx.graphics.g3d.particles.ParticleControllerComponent with com.badlogic.gdx.utils.Json.Serializable {
   var minParticleCount: scala.Int = 0
   var maxParticleCount: scala.Int = 4
   var percent: scala.Float = 0.0f
@@ -42,7 +42,7 @@ abstract class Emitter extends com.badlogic.gdx.graphics.g3d.particles.ParticleC
     json.writeValue("maxParticleCount", this.maxParticleCount)
   }
   def read(json: com.badlogic.gdx.utils.Json, jsonData: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
-    this.minParticleCount = json.readValue("minParticleCount", classOf[java.lang.Class], jsonData)
-    this.maxParticleCount = json.readValue("maxParticleCount", classOf[java.lang.Class], jsonData)
+    this.minParticleCount = json.readValue("minParticleCount", classOf[scala.Int], jsonData)
+    this.maxParticleCount = json.readValue("maxParticleCount", classOf[scala.Int], jsonData)
   }
 }

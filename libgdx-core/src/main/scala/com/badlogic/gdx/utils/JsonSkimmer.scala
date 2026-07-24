@@ -1,15 +1,15 @@
 package com.badlogic.gdx.utils
 
 class JsonSkimmer {
-  var nameString: JsonToken = null.asInstanceOf[JsonToken]
-  var value$field: JsonToken = null.asInstanceOf[JsonToken]
+  var nameString: com.badlogic.gdx.utils.JsonSkimmer.JsonToken = null.asInstanceOf[com.badlogic.gdx.utils.JsonSkimmer.JsonToken]
+  var value$field: com.badlogic.gdx.utils.JsonSkimmer.JsonToken = null.asInstanceOf[com.badlogic.gdx.utils.JsonSkimmer.JsonToken]
   var stack: scala.Array[scala.Int] = new Array[scala.Int](8)
-  protected final val buffer: com.badlogic.gdx.utils.CharArray = new com.badlogic.gdx.utils.CharArray()
+  final val buffer: com.badlogic.gdx.utils.CharArray = new com.badlogic.gdx.utils.CharArray()
   var stop$field: scala.Boolean = false
   def this() = {
     this()
-    this.nameString = new JsonToken(this.buffer)
-    this.value$field = new JsonToken(this.buffer)
+    this.nameString = new com.badlogic.gdx.utils.JsonSkimmer.JsonToken(this.buffer)
+    this.value$field = new com.badlogic.gdx.utils.JsonSkimmer.JsonToken(this.buffer)
   }
   def parse(json: java.lang.String): scala.Unit = {
     val data: scala.Array[scala.Char] = json.toCharArray()
@@ -77,10 +77,10 @@ class JsonSkimmer {
     val eof: scala.Int = pe
     var top: scala.Int = 0
     var stack: scala.Array[scala.Int] = this.stack
-    val nameString: JsonToken = this.nameString
-    val value: JsonToken = this.value$field
-    var string: JsonToken = value
-    var name: JsonToken = null
+    val nameString: com.badlogic.gdx.utils.JsonSkimmer.JsonToken = this.nameString
+    val value: com.badlogic.gdx.utils.JsonSkimmer.JsonToken = this.value$field
+    var string: com.badlogic.gdx.utils.JsonSkimmer.JsonToken = value
+    var name: com.badlogic.gdx.utils.JsonSkimmer.JsonToken = null
     nameString.chars = data
     value.chars = data
     var parseRuntimeEx: java.lang.RuntimeException = null
@@ -92,7 +92,7 @@ class JsonSkimmer {
       {
         cs = JsonSkimmer.json_start
         top = 0
-      }
+      };
       {
         var _klen: scala.Int = 0
         var _trans: scala.Int = 0
@@ -178,14 +178,14 @@ class JsonSkimmer {
                         if (this.stop$field) {
                           return
                         } else ()
-                        name = null
+                        name = null;
                         {
                           if (top == stack.length) {
                             stack = {
                               this.stack = java.util.Arrays.copyOf(stack, stack.length << 1)
                               this.stack
                             }
-                          } else ()
+                          } else ();
                           {
                             stack({ top += 1; top }) = cs
                             cs = 4
@@ -205,7 +205,7 @@ class JsonSkimmer {
                         this.pop()
                         if (this.stop$field) {
                           return
-                        } else ()
+                        } else ();
                         {
                           cs = stack({ top -= 1; top })
                           _goto_targ = 2
@@ -224,14 +224,14 @@ class JsonSkimmer {
                         if (this.stop$field) {
                           return
                         } else ()
-                        name = null
+                        name = null;
                         {
                           if (top == stack.length) {
                             stack = {
                               this.stack = java.util.Arrays.copyOf(stack, stack.length << 1)
                               this.stack
                             }
-                          } else ()
+                          } else ();
                           {
                             stack({ top += 1; top }) = cs
                             cs = 20
@@ -251,7 +251,7 @@ class JsonSkimmer {
                         this.pop()
                         if (this.stop$field) {
                           return
-                        } else ()
+                        } else ();
                         {
                           cs = stack({ top -= 1; top })
                           _goto_targ = 2
@@ -382,19 +382,19 @@ class JsonSkimmer {
                           }
                         } else ()
                         string.length = (p - start) + 1
-                        string.`type` = TokenType.other
+                        string.`type` = com.badlogic.gdx.utils.JsonSkimmer.JsonToken.TokenType.other
                         if (string.length == 4) {
                           if ((((data(start) == 't') && (data(start + 1) == 'r')) && (data(start + 2) == 'u')) && (data(start + 3) == 'e')) {
-                            string.`type` = TokenType.trueValue
+                            string.`type` = com.badlogic.gdx.utils.JsonSkimmer.JsonToken.TokenType.trueValue
                           } else {
                             if ((((data(start) == 'n') && (data(start + 1) == 'u')) && (data(start + 2) == 'l')) && (data(start + 3) == 'l')) {
-                              string.`type` = TokenType.nullValue
+                              string.`type` = com.badlogic.gdx.utils.JsonSkimmer.JsonToken.TokenType.nullValue
                             } else ()
                           }
                         } else {
                           if (string.length == 5) {
                             if (((((data(start) == 'f') && (data(start + 1) == 'a')) && (data(start + 2) == 'l')) && (data(start + 3) == 's')) && (data(start + 4) == 'e')) {
-                              string.`type` = TokenType.falseValue
+                              string.`type` = com.badlogic.gdx.utils.JsonSkimmer.JsonToken.TokenType.falseValue
                             } else ()
                           } else ()
                         }
@@ -455,7 +455,7 @@ class JsonSkimmer {
                           return
                         } else ()
                         value.unescape$field = false
-                        value.`type` = TokenType.other
+                        value.`type` = com.badlogic.gdx.utils.JsonSkimmer.JsonToken.TokenType.other
                         name = null
                         string = value
                       }
@@ -486,7 +486,7 @@ class JsonSkimmer {
                           return
                         } else ()
                         value.unescape$field = false
-                        value.`type` = TokenType.other
+                        value.`type` = com.badlogic.gdx.utils.JsonSkimmer.JsonToken.TokenType.other
                         name = null
                         string = value
                       }
@@ -563,14 +563,14 @@ class JsonSkimmer {
                         if (this.stop$field) {
                           return
                         } else ()
-                        name = null
+                        name = null;
                         {
                           if (top == stack.length) {
                             stack = {
                               this.stack = java.util.Arrays.copyOf(stack, stack.length << 1)
                               this.stack
                             }
-                          } else ()
+                          } else ();
                           {
                             stack({ top += 1; top }) = cs
                             cs = 4
@@ -590,7 +590,7 @@ class JsonSkimmer {
                         this.pop()
                         if (this.stop$field) {
                           return
-                        } else ()
+                        } else ();
                         {
                           cs = stack({ top -= 1; top })
                           _goto_targ = 2
@@ -609,14 +609,14 @@ class JsonSkimmer {
                         if (this.stop$field) {
                           return
                         } else ()
-                        name = null
+                        name = null;
                         {
                           if (top == stack.length) {
                             stack = {
                               this.stack = java.util.Arrays.copyOf(stack, stack.length << 1)
                               this.stack
                             }
-                          } else ()
+                          } else ();
                           {
                             stack({ top += 1; top }) = cs
                             cs = 20
@@ -636,7 +636,7 @@ class JsonSkimmer {
                         this.pop()
                         if (this.stop$field) {
                           return
-                        } else ()
+                        } else ();
                         {
                           cs = stack({ top -= 1; top })
                           _goto_targ = 2
@@ -767,19 +767,19 @@ class JsonSkimmer {
                           }
                         } else ()
                         string.length = (p - start) + 1
-                        string.`type` = TokenType.other
+                        string.`type` = com.badlogic.gdx.utils.JsonSkimmer.JsonToken.TokenType.other
                         if (string.length == 4) {
                           if ((((data(start) == 't') && (data(start + 1) == 'r')) && (data(start + 2) == 'u')) && (data(start + 3) == 'e')) {
-                            string.`type` = TokenType.trueValue
+                            string.`type` = com.badlogic.gdx.utils.JsonSkimmer.JsonToken.TokenType.trueValue
                           } else {
                             if ((((data(start) == 'n') && (data(start + 1) == 'u')) && (data(start + 2) == 'l')) && (data(start + 3) == 'l')) {
-                              string.`type` = TokenType.nullValue
+                              string.`type` = com.badlogic.gdx.utils.JsonSkimmer.JsonToken.TokenType.nullValue
                             } else ()
                           }
                         } else {
                           if (string.length == 5) {
                             if (((((data(start) == 'f') && (data(start + 1) == 'a')) && (data(start + 2) == 'l')) && (data(start + 3) == 's')) && (data(start + 4) == 'e')) {
-                              string.`type` = TokenType.falseValue
+                              string.`type` = com.badlogic.gdx.utils.JsonSkimmer.JsonToken.TokenType.falseValue
                             } else ()
                           } else ()
                         }
@@ -840,7 +840,7 @@ class JsonSkimmer {
                           return
                         } else ()
                         value.unescape$field = false
-                        value.`type` = TokenType.other
+                        value.`type` = com.badlogic.gdx.utils.JsonSkimmer.JsonToken.TokenType.other
                         name = null
                         string = value
                       }
@@ -871,7 +871,7 @@ class JsonSkimmer {
                           return
                         } else ()
                         value.unescape$field = false
-                        value.`type` = TokenType.other
+                        value.`type` = com.badlogic.gdx.utils.JsonSkimmer.JsonToken.TokenType.other
                         name = null
                         string = value
                       }
@@ -904,7 +904,7 @@ class JsonSkimmer {
                           return
                         } else ()
                         value.unescape$field = false
-                        value.`type` = TokenType.other
+                        value.`type` = com.badlogic.gdx.utils.JsonSkimmer.JsonToken.TokenType.other
                         name = null
                         string = value
                       }
@@ -929,7 +929,7 @@ class JsonSkimmer {
                           return
                         } else ()
                         value.unescape$field = false
-                        value.`type` = TokenType.other
+                        value.`type` = com.badlogic.gdx.utils.JsonSkimmer.JsonToken.TokenType.other
                         name = null
                         string = value
                       }
@@ -951,7 +951,7 @@ class JsonSkimmer {
       }
     }
     if (p < pe) {
-      var lineNumber: scala.Int = 1
+      var lineNumber: scala.Int = 1;
       { var i: scala.Int = 0; while (i < p) { {
         if (data(i) == '\n') {
           lineNumber = lineNumber + 1
@@ -970,133 +970,14 @@ class JsonSkimmer {
   def isStopped(): scala.Boolean = {
     return this.stop$field
   }
-  protected def push(name: JsonToken, `object`: scala.Boolean): scala.Unit = {
+  def push(name: com.badlogic.gdx.utils.JsonSkimmer.JsonToken, `object`: scala.Boolean): scala.Unit = {
     ()
   }
-  protected def pop(): scala.Unit = {
+  def pop(): scala.Unit = {
     ()
   }
-  protected def value(name: JsonToken, value: JsonToken): scala.Unit = {
+  def value(name: com.badlogic.gdx.utils.JsonSkimmer.JsonToken, value: com.badlogic.gdx.utils.JsonSkimmer.JsonToken): scala.Unit = {
     ()
-  }
-  class JsonToken {
-    var buffer: com.badlogic.gdx.utils.CharArray = null.asInstanceOf[com.badlogic.gdx.utils.CharArray]
-    var chars: scala.Array[scala.Char] = null.asInstanceOf[scala.Array[scala.Char]]
-    var start: scala.Int = 0
-    var length: scala.Int = 0
-    var unescape$field: scala.Boolean = false
-    var `type`: TokenType = TokenType.other
-    def this(buffer: com.badlogic.gdx.utils.CharArray) = {
-      this()
-      this.buffer = buffer
-    }
-    def equalsString(string: java.lang.String): scala.Boolean = {
-      if (string == null) {
-        return false
-      } else ()
-      if (this.unescape$field) {
-        return this.toString().equals(string)
-      } else ()
-      val n: scala.Int = this.length
-      if (string.length() != n) {
-        return false
-      } else ()
-      val chars: scala.Array[scala.Char] = this.chars
-      { var c: scala.Int = this.start; var s: scala.Int = 0; while (s < n) { {
-        if (chars(c) != string.charAt(s)) {
-          return false
-        } else ()
-      }; c = c + 1; s = s + 1 } }
-      return true
-    }
-    def toString(): java.lang.String = {
-      if (this.`type` == TokenType.nullValue) {
-        return "null"
-      } else ()
-      return if (this.unescape$field) this.unescape() else new java.lang.String(this.chars, this.start, this.length)
-    }
-    def value(): com.badlogic.gdx.utils.JsonValue = {
-      this.`type` match {
-        case TokenType.nullValue => {
-          return new com.badlogic.gdx.utils.JsonValue(com.badlogic.gdx.utils.JsonValue.ValueType.nullValue)
-        }
-        case TokenType.trueValue => {
-          return new com.badlogic.gdx.utils.JsonValue(true)
-        }
-        case TokenType.falseValue => {
-          return new com.badlogic.gdx.utils.JsonValue(false)
-        }
-        case _ => {
-          return new com.badlogic.gdx.utils.JsonValue(this.toString())
-        }
-      }
-    }
-    private def equals(string: java.lang.String): scala.Boolean = {
-      val n: scala.Int = this.length
-      val chars: scala.Array[scala.Char] = this.chars
-      { var c: scala.Int = this.start; var s: scala.Int = 0; while (s < n) { {
-        if (chars(c) != string.charAt(s)) {
-          return false
-        } else ()
-      }; c = c + 1; s = s + 1 } }
-      return true
-    }
-    private def unescape(): java.lang.String = {
-      val chars: scala.Array[scala.Char] = this.chars
-      this.buffer.size = 0
-      this.buffer.ensureCapacity(this.length + 16)
-      { var i: scala.Int = this.start; val n: scala.Int = i + this.length; while (i < n) { {
-        var c: scala.Char = chars({ i += 1; i })
-        if (c != '\\') {
-          this.buffer.append(c)
-          /* continue */ ()
-        } else ()
-        if (i == n) {
-          throw new com.badlogic.gdx.utils.SerializationException("Illegal escape sequence: \\")
-        } else ()
-        c = chars({ i += 1; i })
-        c match {
-          case 'u' => {
-            if ((i + 4) > n) {
-              throw new com.badlogic.gdx.utils.SerializationException("Illegal escape sequence: \\u")
-            } else ()
-            this.buffer.size = this.buffer.size + java.lang.Character.toChars((((java.lang.Character.digit(chars({ i += 1; i }), 16) << 12) | (java.lang.Character.digit(chars({ i += 1; i }), 16) << 8)) | (java.lang.Character.digit(chars({ i += 1; i }), 16) << 4)) | java.lang.Character.digit(chars({ i += 1; i }), 16), this.buffer.items, this.buffer.size)
-            /* continue */ ()
-          }
-          case '\"' | '\\' | '/' => {
-            ()
-          }
-          case 'b' => {
-            c = ''
-          }
-          case 'f' => {
-            c = ''
-          }
-          case 'n' => {
-            c = '\n'
-          }
-          case 'r' => {
-            c = '\r'
-          }
-          case 't' => {
-            c = '\t'
-          }
-          case _ => {
-            throw new com.badlogic.gdx.utils.SerializationException("Illegal escaped character: \\" + c)
-          }
-        }
-        this.buffer.append(c)
-      };  } }
-      return this.buffer.toString()
-    }
-    sealed abstract class TokenType
-    object TokenType {
-      case object nullValue extends TokenType
-      case object trueValue extends TokenType
-      case object falseValue extends TokenType
-      case object other extends TokenType
-      def values(): Array[TokenType] = Array(nullValue, trueValue, falseValue, other)
-    }
   }
 }
 object JsonSkimmer {
@@ -1145,5 +1026,126 @@ object JsonSkimmer {
   }
   private def init__json_eof_actions_0(): scala.Array[scala.Byte] = {
     return Array[scala.Byte](0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 17, 0, 0, 0)
+  }
+  class JsonToken {
+    var buffer: com.badlogic.gdx.utils.CharArray = null.asInstanceOf[com.badlogic.gdx.utils.CharArray]
+    var chars: scala.Array[scala.Char] = null.asInstanceOf[scala.Array[scala.Char]]
+    var start: scala.Int = 0
+    var length: scala.Int = 0
+    var unescape$field: scala.Boolean = false
+    var `type`: com.badlogic.gdx.utils.JsonSkimmer.JsonToken.TokenType = com.badlogic.gdx.utils.JsonSkimmer.JsonToken.TokenType.other
+    def this(buffer: com.badlogic.gdx.utils.CharArray) = {
+      this()
+      this.buffer = buffer
+    }
+    def equalsString(string: java.lang.String): scala.Boolean = {
+      if (string == null) {
+        return false
+      } else ()
+      if (this.unescape$field) {
+        return this.toString().equals(string)
+      } else ()
+      val n: scala.Int = this.length
+      if (string.length() != n) {
+        return false
+      } else ()
+      val chars: scala.Array[scala.Char] = this.chars;
+      { var c: scala.Int = this.start; var s: scala.Int = 0; while (s < n) { {
+        if (chars(c) != string.charAt(s)) {
+          return false
+        } else ()
+      }; c = c + 1; s = s + 1 } }
+      return true
+    }
+    def toString(): java.lang.String = {
+      if (this.`type` == com.badlogic.gdx.utils.JsonSkimmer.JsonToken.TokenType.nullValue) {
+        return "null"
+      } else ()
+      return if (this.unescape$field) this.unescape() else new java.lang.String(this.chars, this.start, this.length)
+    }
+    def value(): com.badlogic.gdx.utils.JsonValue = {
+      this.`type` match {
+        case com.badlogic.gdx.utils.JsonSkimmer.JsonToken.TokenType.nullValue => {
+          return new com.badlogic.gdx.utils.JsonValue(com.badlogic.gdx.utils.JsonValue.ValueType.nullValue)
+        }
+        case com.badlogic.gdx.utils.JsonSkimmer.JsonToken.TokenType.trueValue => {
+          return new com.badlogic.gdx.utils.JsonValue(true)
+        }
+        case com.badlogic.gdx.utils.JsonSkimmer.JsonToken.TokenType.falseValue => {
+          return new com.badlogic.gdx.utils.JsonValue(false)
+        }
+        case _ => {
+          return new com.badlogic.gdx.utils.JsonValue(this.toString())
+        }
+      }
+    }
+    private def equals(string: java.lang.String): scala.Boolean = {
+      val n: scala.Int = this.length
+      val chars: scala.Array[scala.Char] = this.chars;
+      { var c: scala.Int = this.start; var s: scala.Int = 0; while (s < n) { {
+        if (chars(c) != string.charAt(s)) {
+          return false
+        } else ()
+      }; c = c + 1; s = s + 1 } }
+      return true
+    }
+    private def unescape(): java.lang.String = {
+      val chars: scala.Array[scala.Char] = this.chars
+      this.buffer.size = 0
+      this.buffer.ensureCapacity(this.length + 16);
+      { var i: scala.Int = this.start; val n: scala.Int = i + this.length; while (i < n) { {
+        var c: scala.Char = chars({ i += 1; i })
+        if (c != '\\') {
+          this.buffer.append(c)
+          /* continue */ ()
+        } else ()
+        if (i == n) {
+          throw new com.badlogic.gdx.utils.SerializationException("Illegal escape sequence: \\")
+        } else ()
+        c = chars({ i += 1; i })
+        c match {
+          case 'u' => {
+            if ((i + 4) > n) {
+              throw new com.badlogic.gdx.utils.SerializationException("Illegal escape sequence: \\u")
+            } else ()
+            this.buffer.size = this.buffer.size + java.lang.Character.toChars((((java.lang.Character.digit(chars({ i += 1; i }), 16) << 12) | (java.lang.Character.digit(chars({ i += 1; i }), 16) << 8)) | (java.lang.Character.digit(chars({ i += 1; i }), 16) << 4)) | java.lang.Character.digit(chars({ i += 1; i }), 16), this.buffer.items, this.buffer.size)
+            /* continue */ ()
+          }
+          case '\"' | '\\' | '/' => {
+            ()
+          }
+          case 'b' => {
+            c = ''
+          }
+          case 'f' => {
+            c = ''
+          }
+          case 'n' => {
+            c = '\n'
+          }
+          case 'r' => {
+            c = '\r'
+          }
+          case 't' => {
+            c = '\t'
+          }
+          case _ => {
+            throw new com.badlogic.gdx.utils.SerializationException("Illegal escaped character: \\" + c)
+          }
+        }
+        this.buffer.append(c)
+      };  } }
+      return this.buffer.toString()
+    }
+  }
+  object JsonToken {
+    sealed abstract class TokenType
+    object TokenType {
+      case object nullValue extends TokenType
+      case object trueValue extends TokenType
+      case object falseValue extends TokenType
+      case object other extends TokenType
+      def values(): Array[TokenType] = Array(nullValue, trueValue, falseValue, other)
+    }
   }
 }

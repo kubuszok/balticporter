@@ -30,7 +30,7 @@ class CubemapAttribute extends com.badlogic.gdx.graphics.g3d.Attribute {
   }
   def compareTo(o: com.badlogic.gdx.graphics.g3d.Attribute): scala.Int = {
     if (`type` != o.`type`) {
-      return (`type` - o.`type`).asInstanceOf[scala.Int]
+      return (`type` - o.`type`).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
     } else ()
     return this.textureDescription.compareTo(o.asInstanceOf[CubemapAttribute].textureDescription)
   }
@@ -38,7 +38,7 @@ class CubemapAttribute extends com.badlogic.gdx.graphics.g3d.Attribute {
 object CubemapAttribute {
   final val EnvironmentMapAlias: java.lang.String = "environmentCubemap"
   final val EnvironmentMap: scala.Long = com.badlogic.gdx.graphics.g3d.Attribute.register(CubemapAttribute.EnvironmentMapAlias)
-  protected var Mask: scala.Long = CubemapAttribute.EnvironmentMap
+  var Mask: scala.Long = CubemapAttribute.EnvironmentMap
   final def is(mask: scala.Long): scala.Boolean = {
     return (mask & CubemapAttribute.Mask) != 0
   }

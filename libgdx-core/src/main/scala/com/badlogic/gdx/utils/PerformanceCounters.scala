@@ -26,7 +26,7 @@ class PerformanceCounters {
     }; i = i + 1 } }
   }
   def toString(sb: java.lang.StringBuilder): java.lang.StringBuilder = {
-    sb.setLength(0)
+    sb.setLength(0);
     { var i: scala.Int = 0; while (i < this.counters.size) { {
       if (i != 0) {
         sb.append("; ")

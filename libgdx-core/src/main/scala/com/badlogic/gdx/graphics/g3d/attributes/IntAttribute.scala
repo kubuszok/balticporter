@@ -19,7 +19,7 @@ class IntAttribute extends com.badlogic.gdx.graphics.g3d.Attribute {
   }
   def compareTo(o: com.badlogic.gdx.graphics.g3d.Attribute): scala.Int = {
     if (`type` != o.`type`) {
-      return (`type` - o.`type`).asInstanceOf[scala.Int]
+      return (`type` - o.`type`).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
     } else ()
     return this.value - o.asInstanceOf[IntAttribute].value
   }

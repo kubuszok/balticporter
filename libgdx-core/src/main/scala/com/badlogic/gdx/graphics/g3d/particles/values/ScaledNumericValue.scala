@@ -49,7 +49,7 @@ class ScaledNumericValue extends com.badlogic.gdx.graphics.g3d.particles.values.
   }
   def getScale(percent: scala.Float): scala.Float = {
     var endIndex: scala.Int = -1
-    val n: scala.Int = this.timeline.length
+    val n: scala.Int = this.timeline.length;
     { var i: scala.Int = 1; while (i < n) { {
       val t: scala.Float = this.timeline(i)
       if (t > percent) {
@@ -85,10 +85,10 @@ class ScaledNumericValue extends com.badlogic.gdx.graphics.g3d.particles.values.
   }
   def read(json: com.badlogic.gdx.utils.Json, jsonData: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
     super.read(json, jsonData)
-    this.highMin = json.readValue("highMin", classOf[java.lang.Class], jsonData)
-    this.highMax = json.readValue("highMax", classOf[java.lang.Class], jsonData)
-    this.relative = json.readValue("relative", classOf[java.lang.Class], jsonData)
-    this.scaling = json.readValue("scaling", classOf[java.lang.Class], jsonData)
-    this.timeline = json.readValue("timeline", classOf[java.lang.Class], jsonData)
+    this.highMin = json.readValue("highMin", classOf[scala.Float], jsonData)
+    this.highMax = json.readValue("highMax", classOf[scala.Float], jsonData)
+    this.relative = json.readValue("relative", classOf[scala.Boolean], jsonData)
+    this.scaling = json.readValue("scaling", classOf[scala.Array[scala.Float]], jsonData)
+    this.timeline = json.readValue("timeline", classOf[scala.Array[scala.Float]], jsonData)
   }
 }

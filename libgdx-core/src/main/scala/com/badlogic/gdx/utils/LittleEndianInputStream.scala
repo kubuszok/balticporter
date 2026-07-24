@@ -27,7 +27,7 @@ class LittleEndianInputStream extends java.io.FilterInputStream with java.io.Dat
   def readShort(): scala.Short = {
     val low: scala.Int = this.din.read()
     val high: scala.Int = this.din.read()
-    return ((high << 8) | (low & 255)).asInstanceOf[scala.Short]
+    return ((high << 8) | (low & 255)).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
   }
   def readUnsignedShort(): scala.Int = {
     val low: scala.Int = this.din.read()
@@ -38,14 +38,14 @@ class LittleEndianInputStream extends java.io.FilterInputStream with java.io.Dat
     return this.din.readChar()
   }
   def readInt(): scala.Int = {
-    val res: scala.Array[scala.Int] = new Array[scala.Int](4)
+    val res: scala.Array[scala.Int] = new Array[scala.Int](4);
     { var i: scala.Int = 3; while (i >= 0) { {
       res(i) = this.din.read()
     }; i = i - 1 } }
     return ((((res(0) & 255) << 24) | ((res(1) & 255) << 16)) | ((res(2) & 255) << 8)) | (res(3) & 255)
   }
   def readLong(): scala.Long = {
-    val res: scala.Array[scala.Int] = new Array[scala.Int](8)
+    val res: scala.Array[scala.Int] = new Array[scala.Int](8);
     { var i: scala.Int = 7; while (i >= 0) { {
       res(i) = this.din.read()
     }; i = i - 1 } }

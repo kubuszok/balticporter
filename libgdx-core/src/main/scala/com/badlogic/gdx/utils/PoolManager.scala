@@ -2,7 +2,7 @@ package com.badlogic.gdx.utils
 
 class PoolManager {
   private final val typePools: com.badlogic.gdx.utils.ObjectMap[java.lang.Class[?], com.badlogic.gdx.utils.Pool[?]] = new com.badlogic.gdx.utils.ObjectMap[java.lang.Class[?], com.badlogic.gdx.utils.Pool[?]]()
-  def addPool[T](poolClass: java.lang.Class[T], poolSupplier: com.badlogic.gdx.utils.DefaultPool#PoolSupplier[T]): scala.Unit = {
+  def addPool[T](poolClass: java.lang.Class[T], poolSupplier: com.badlogic.gdx.utils.DefaultPool.PoolSupplier[T]): scala.Unit = {
     this.addPool(poolClass, new com.badlogic.gdx.utils.DefaultPool[T](poolSupplier))
   }
   def addPool[T](poolClass: java.lang.Class[T], pool: com.badlogic.gdx.utils.Pool[T]): scala.Unit = {
@@ -34,7 +34,7 @@ class PoolManager {
   def obtainOrNull[T](clazz: java.lang.Class[T]): T = {
     val pool: com.badlogic.gdx.utils.Pool[T] = this.typePools.get(clazz).asInstanceOf[com.badlogic.gdx.utils.Pool[T]]
     if (pool == null) {
-      return null
+      return null.asInstanceOf[T]
     } else ()
     return pool.obtain()
   }

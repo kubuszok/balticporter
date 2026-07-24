@@ -14,7 +14,7 @@ class TimSort[T] {
     this.a = a
     this.c = c
     val len: scala.Int = a.length
-    val newArray: scala.Array[T] = new Array[java.lang.Object](if (len < (2 * TimSort.INITIAL_TMP_STORAGE_LENGTH)) len >>> 1 else TimSort.INITIAL_TMP_STORAGE_LENGTH).asInstanceOf[scala.Array[T]]
+    val newArray: scala.Array[T] = new Array[java.lang.Object](if (len < (2 * TimSort.INITIAL_TMP_STORAGE_LENGTH)) len >>> 1 else TimSort.INITIAL_TMP_STORAGE_LENGTH).asInstanceOf[scala.Array[T]].asInstanceOf[scala.Array[T]]
     this.tmp = newArray
     val stackLen: scala.Int = if (len < 120) 5 else if (len < 1542) 10 else if (len < 119151) 19 else 40
     this.runBase = new Array[scala.Int](stackLen)
@@ -22,7 +22,7 @@ class TimSort[T] {
   }
   def this() = {
     this()
-    this.tmp = new Array[java.lang.Object](TimSort.INITIAL_TMP_STORAGE_LENGTH).asInstanceOf[scala.Array[T]]
+    this.tmp = new Array[java.lang.Object](TimSort.INITIAL_TMP_STORAGE_LENGTH).asInstanceOf[scala.Array[T]].asInstanceOf[scala.Array[T]]
     this.runBase = new Array[scala.Int](40)
     this.runLen = new Array[scala.Int](40)
   }
@@ -64,9 +64,9 @@ class TimSort[T] {
     } else ()
     this.a = null
     this.c = null
-    val tmp: scala.Array[T] = this.tmp
+    val tmp: scala.Array[T] = this.tmp;
     { var i: scala.Int = 0; val n: scala.Int = this.tmpCount; while (i < n) { {
-      tmp(i) = null
+      tmp(i) = null.asInstanceOf[T]
     }; i = i + 1 } }
   }
   private def pushRun(runBase: scala.Int, runLen: scala.Int): scala.Unit = {
@@ -153,7 +153,7 @@ class TimSort[T] {
       assert(((len1 > 0) && (len2 > 0)) && ((base1 + len1) == base2))
     } else ()
     val a: scala.Array[T] = this.a
-    val tmp: scala.Array[T] = this.ensureCapacity(len1)
+    val tmp: scala.Array[T] = this.ensureCapacity(len1).asInstanceOf[scala.Array[T]]
     java.lang.System.arraycopy(a, base1, tmp, 0, len1)
     var cursor1: scala.Int = 0
     var cursor2: scala.Int = base2
@@ -260,7 +260,7 @@ class TimSort[T] {
       assert(((len1 > 0) && (len2 > 0)) && ((base1 + len1) == base2))
     } else ()
     val a: scala.Array[T] = this.a
-    val tmp: scala.Array[T] = this.ensureCapacity(len2)
+    val tmp: scala.Array[T] = this.ensureCapacity(len2).asInstanceOf[scala.Array[T]]
     java.lang.System.arraycopy(a, base2, tmp, 0, len2)
     var cursor1: scala.Int = (base1 + len1) - 1
     var cursor2: scala.Int = len2 - 1
@@ -379,7 +379,7 @@ class TimSort[T] {
       } else {
         newSize = java.lang.Math.min(newSize, this.a.length >>> 1)
       }
-      val newArray: scala.Array[T] = new Array[java.lang.Object](newSize).asInstanceOf[scala.Array[T]]
+      val newArray: scala.Array[T] = new Array[java.lang.Object](newSize).asInstanceOf[scala.Array[T]].asInstanceOf[scala.Array[T]]
       this.tmp = newArray
     } else ()
     return this.tmp
@@ -438,7 +438,7 @@ object TimSort {
     } else ()
     if (start == lo) {
       start = start + 1
-    } else ()
+    } else ();
     { ; while (start < hi) { {
       val pivot: T = a(start)
       var left: scala.Int = lo

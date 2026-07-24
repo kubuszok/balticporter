@@ -1,7 +1,7 @@
 package com.badlogic.gdx.scenes.scene2d.ui
 
-class ScrollPane extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup with com.badlogic.gdx.scenes.scene2d.ui.Styleable[ScrollPaneStyle] {
-  private var style: ScrollPaneStyle = null.asInstanceOf[ScrollPaneStyle]
+class ScrollPane extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup with com.badlogic.gdx.scenes.scene2d.ui.Styleable[com.badlogic.gdx.scenes.scene2d.ui.ScrollPane.ScrollPaneStyle] {
+  private var style: com.badlogic.gdx.scenes.scene2d.ui.ScrollPane.ScrollPaneStyle = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.ScrollPane.ScrollPaneStyle]
   private var actor: com.badlogic.gdx.scenes.scene2d.Actor = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.Actor]
   final val actorArea: com.badlogic.gdx.math.Rectangle = new com.badlogic.gdx.math.Rectangle()
   final val hScrollBounds: com.badlogic.gdx.math.Rectangle = new com.badlogic.gdx.math.Rectangle()
@@ -49,7 +49,7 @@ class ScrollPane extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup with com
   private var scrollbarsOnTop: scala.Boolean = false
   private var variableSizeKnobs: scala.Boolean = true
   var draggingPointer: scala.Int = -1
-  def this(actor: com.badlogic.gdx.scenes.scene2d.Actor, style: ScrollPaneStyle) = {
+  def this(actor: com.badlogic.gdx.scenes.scene2d.Actor, style: com.badlogic.gdx.scenes.scene2d.ui.ScrollPane.ScrollPaneStyle) = {
     this()
     if (style == null) {
       throw new java.lang.IllegalArgumentException("style cannot be null.")
@@ -63,21 +63,21 @@ class ScrollPane extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup with com
     this.addScrollListener()
   }
   def this(actor: com.badlogic.gdx.scenes.scene2d.Actor, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin, styleName: java.lang.String) = {
-    this(actor, skin.get(styleName, classOf[java.lang.Class]))
+    this(actor, skin.get(styleName, classOf[com.badlogic.gdx.scenes.scene2d.ui.ScrollPane.ScrollPaneStyle]))
   }
   def this(actor: com.badlogic.gdx.scenes.scene2d.Actor, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin) = {
-    this(actor, skin.get(classOf[java.lang.Class]))
+    this(actor, skin.get(classOf[com.badlogic.gdx.scenes.scene2d.ui.ScrollPane.ScrollPaneStyle]))
   }
   def this(actor: com.badlogic.gdx.scenes.scene2d.Actor) = {
-    this(actor, new ScrollPaneStyle())
+    this(actor, new com.badlogic.gdx.scenes.scene2d.ui.ScrollPane.ScrollPaneStyle())
   }
-  protected def addCaptureListener(): scala.Unit = {
+  def addCaptureListener(): scala.Unit = {
     this.addCaptureListener(new com.badlogic.gdx.scenes.scene2d.InputListener())
   }
-  protected def getFlickScrollListener(): com.badlogic.gdx.scenes.scene2d.utils.ActorGestureListener = {
+  def getFlickScrollListener(): com.badlogic.gdx.scenes.scene2d.utils.ActorGestureListener = {
     return new com.badlogic.gdx.scenes.scene2d.utils.ActorGestureListener()
   }
-  protected def addScrollListener(): scala.Unit = {
+  def addScrollListener(): scala.Unit = {
     this.addListener(new com.badlogic.gdx.scenes.scene2d.InputListener())
   }
   def setScrollbarsVisible(visible: scala.Boolean): scala.Unit = {
@@ -108,14 +108,14 @@ class ScrollPane extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup with com
     this.scrollX(if (this.overscrollX) com.badlogic.gdx.math.MathUtils.clamp(this.amountX, -this.overscrollDistance, this.maxX + this.overscrollDistance) else com.badlogic.gdx.math.MathUtils.clamp(this.amountX, 0, this.maxX))
     this.scrollY(if (this.overscrollY) com.badlogic.gdx.math.MathUtils.clamp(this.amountY, -this.overscrollDistance, this.maxY + this.overscrollDistance) else com.badlogic.gdx.math.MathUtils.clamp(this.amountY, 0, this.maxY))
   }
-  def setStyle(style: ScrollPaneStyle): scala.Unit = {
+  def setStyle(style: com.badlogic.gdx.scenes.scene2d.ui.ScrollPane.ScrollPaneStyle): scala.Unit = {
     if (style == null) {
       throw new java.lang.IllegalArgumentException("style cannot be null.")
     } else ()
     this.style = style
     this.invalidateHierarchy()
   }
-  def getStyle(): ScrollPaneStyle = {
+  def getStyle(): com.badlogic.gdx.scenes.scene2d.ui.ScrollPane.ScrollPaneStyle = {
     return this.style
   }
   def act(delta: scala.Float): scala.Unit = {
@@ -406,7 +406,7 @@ class ScrollPane extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup with com
     this.drawScrollBars(batch, color.r, color.g, color.b, alpha)
     this.resetTransform(batch)
   }
-  protected def drawScrollBars(batch: com.badlogic.gdx.graphics.g2d.Batch, r: scala.Float, g: scala.Float, b: scala.Float, a: scala.Float): scala.Unit = {
+  def drawScrollBars(batch: com.badlogic.gdx.graphics.g2d.Batch, r: scala.Float, g: scala.Float, b: scala.Float, a: scala.Float): scala.Unit = {
     if (a <= 0) {
       return
     } else ()
@@ -568,22 +568,22 @@ class ScrollPane extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup with com
     } else ()
     return super.hit(x, y, touchable)
   }
-  protected def scrollX(pixelsX: scala.Float): scala.Unit = {
+  def scrollX(pixelsX: scala.Float): scala.Unit = {
     this.amountX = pixelsX
   }
-  protected def scrollY(pixelsY: scala.Float): scala.Unit = {
+  def scrollY(pixelsY: scala.Float): scala.Unit = {
     this.amountY = pixelsY
   }
-  protected def visualScrollX(pixelsX: scala.Float): scala.Unit = {
+  def visualScrollX(pixelsX: scala.Float): scala.Unit = {
     this.visualAmountX = pixelsX
   }
-  protected def visualScrollY(pixelsY: scala.Float): scala.Unit = {
+  def visualScrollY(pixelsY: scala.Float): scala.Unit = {
     this.visualAmountY = pixelsY
   }
-  protected def getMouseWheelX(): scala.Float = {
+  def getMouseWheelX(): scala.Float = {
     return java.lang.Math.min(this.actorArea.width, java.lang.Math.max(this.actorArea.width * 0.9f, this.maxX * 0.1f) / 4)
   }
-  protected def getMouseWheelY(): scala.Float = {
+  def getMouseWheelY(): scala.Float = {
     return java.lang.Math.min(this.actorArea.height, java.lang.Math.max(this.actorArea.height * 0.9f, this.maxY * 0.1f) / 4)
   }
   def setScrollX(pixels: scala.Float): scala.Unit = {
@@ -844,6 +844,8 @@ class ScrollPane extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup with com
     } else ()
     this.resetTransform(shapes)
   }
+}
+object ScrollPane {
   class ScrollPaneStyle {
     var background: com.badlogic.gdx.scenes.scene2d.utils.Drawable = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Drawable]
     var corner: com.badlogic.gdx.scenes.scene2d.utils.Drawable = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Drawable]
@@ -859,7 +861,7 @@ class ScrollPane extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup with com
       this.vScroll = vScroll
       this.vScrollKnob = vScrollKnob
     }
-    def this(style: ScrollPaneStyle) = {
+    def this(style: com.badlogic.gdx.scenes.scene2d.ui.ScrollPane.ScrollPaneStyle) = {
       this()
       this.background = style.background
       this.corner = style.corner

@@ -4,12 +4,12 @@ abstract class PrimitiveSpawnShapeValue extends com.badlogic.gdx.graphics.g3d.pa
   var spawnWidthValue: com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue]
   var spawnHeightValue: com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue]
   var spawnDepthValue: com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue]
-  protected var spawnWidth: scala.Float = 0.0f
-  protected var spawnWidthDiff: scala.Float = 0.0f
-  protected var spawnHeight: scala.Float = 0.0f
-  protected var spawnHeightDiff: scala.Float = 0.0f
-  protected var spawnDepth: scala.Float = 0.0f
-  protected var spawnDepthDiff: scala.Float = 0.0f
+  var spawnWidth: scala.Float = 0.0f
+  var spawnWidthDiff: scala.Float = 0.0f
+  var spawnHeight: scala.Float = 0.0f
+  var spawnHeightDiff: scala.Float = 0.0f
+  var spawnDepth: scala.Float = 0.0f
+  var spawnDepthDiff: scala.Float = 0.0f
   var edges: scala.Boolean = false
   def this(value: PrimitiveSpawnShapeValue) = {
     this()
@@ -83,11 +83,14 @@ abstract class PrimitiveSpawnShapeValue extends com.badlogic.gdx.graphics.g3d.pa
   }
   def read(json: com.badlogic.gdx.utils.Json, jsonData: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
     super.read(json, jsonData)
-    this.spawnWidthValue = json.readValue("spawnWidthValue", classOf[java.lang.Class], jsonData)
-    this.spawnHeightValue = json.readValue("spawnHeightValue", classOf[java.lang.Class], jsonData)
-    this.spawnDepthValue = json.readValue("spawnDepthValue", classOf[java.lang.Class], jsonData)
-    this.edges = json.readValue("edges", classOf[java.lang.Class], jsonData)
+    this.spawnWidthValue = json.readValue("spawnWidthValue", classOf[com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue], jsonData)
+    this.spawnHeightValue = json.readValue("spawnHeightValue", classOf[com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue], jsonData)
+    this.spawnDepthValue = json.readValue("spawnDepthValue", classOf[com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue], jsonData)
+    this.edges = json.readValue("edges", classOf[scala.Boolean], jsonData)
   }
+}
+object PrimitiveSpawnShapeValue {
+  final val TMP_V1: com.badlogic.gdx.math.Vector3 = new com.badlogic.gdx.math.Vector3()
   sealed abstract class SpawnSide
   object SpawnSide {
     case object both extends SpawnSide
@@ -95,7 +98,4 @@ abstract class PrimitiveSpawnShapeValue extends com.badlogic.gdx.graphics.g3d.pa
     case object bottom extends SpawnSide
     def values(): Array[SpawnSide] = Array(both, top, bottom)
   }
-}
-object PrimitiveSpawnShapeValue {
-  protected final val TMP_V1: com.badlogic.gdx.math.Vector3 = new com.badlogic.gdx.math.Vector3()
 }

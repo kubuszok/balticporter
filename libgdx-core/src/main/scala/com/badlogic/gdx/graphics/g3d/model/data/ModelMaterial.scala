@@ -2,7 +2,7 @@ package com.badlogic.gdx.graphics.g3d.model.data
 
 class ModelMaterial {
   var id: java.lang.String = null.asInstanceOf[java.lang.String]
-  var `type`: MaterialType = null.asInstanceOf[MaterialType]
+  var `type`: com.badlogic.gdx.graphics.g3d.model.data.ModelMaterial.MaterialType = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.model.data.ModelMaterial.MaterialType]
   var ambient: com.badlogic.gdx.graphics.Color = null.asInstanceOf[com.badlogic.gdx.graphics.Color]
   var diffuse: com.badlogic.gdx.graphics.Color = null.asInstanceOf[com.badlogic.gdx.graphics.Color]
   var specular: com.badlogic.gdx.graphics.Color = null.asInstanceOf[com.badlogic.gdx.graphics.Color]
@@ -11,6 +11,8 @@ class ModelMaterial {
   var shininess: scala.Float = 0.0f
   var opacity: scala.Float = 1.0f
   var textures: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.model.data.ModelTexture] = null.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.model.data.ModelTexture]]
+}
+object ModelMaterial {
   sealed abstract class MaterialType
   object MaterialType {
     case object Lambert extends MaterialType

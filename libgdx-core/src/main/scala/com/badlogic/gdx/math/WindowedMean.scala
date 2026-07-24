@@ -15,7 +15,7 @@ final class WindowedMean {
   }
   def clear(): scala.Unit = {
     this.added_values = 0
-    this.last_value = 0
+    this.last_value = 0;
     { var i: scala.Int = 0; while (i < this.values.length) { {
       this.values(i) = 0
     }; i = i + 1 } }
@@ -34,7 +34,7 @@ final class WindowedMean {
   def getMean(): scala.Float = {
     if (this.hasEnoughData()) {
       if (this.dirty) {
-        var mean: scala.Float = 0
+        var mean: scala.Float = 0;
         { var i: scala.Int = 0; while (i < this.values.length) { {
           mean = mean + this.values(i)
         }; i = i + 1 } }
@@ -57,21 +57,21 @@ final class WindowedMean {
       return 0
     } else ()
     val mean: scala.Float = this.getMean()
-    var sum: scala.Float = 0
+    var sum: scala.Float = 0;
     { var i: scala.Int = 0; while (i < this.values.length) { {
       sum = sum + ((this.values(i) - mean) * (this.values(i) - mean))
     }; i = i + 1 } }
-    return java.lang.Math.sqrt(sum / this.values.length).asInstanceOf[scala.Float]
+    return java.lang.Math.sqrt(sum / this.values.length).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
   }
   def getLowest(): scala.Float = {
-    var lowest: scala.Float = java.lang.Float.MAX_VALUE
+    var lowest: scala.Float = java.lang.Float.MAX_VALUE;
     { var i: scala.Int = 0; while (i < this.values.length) { {
       lowest = java.lang.Math.min(lowest, this.values(i))
     }; i = i + 1 } }
     return lowest
   }
   def getHighest(): scala.Float = {
-    var lowest: scala.Float = java.lang.Float.MIN_NORMAL
+    var lowest: scala.Float = java.lang.Float.MIN_NORMAL;
     { var i: scala.Int = 0; while (i < this.values.length) { {
       lowest = java.lang.Math.max(lowest, this.values(i))
     }; i = i + 1 } }

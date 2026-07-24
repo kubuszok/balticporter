@@ -1,45 +1,45 @@
 package com.badlogic.gdx.maps.tiled
 
-class AtlasTmxMapLoader extends com.badlogic.gdx.maps.tiled.BaseTmxMapLoader[com.badlogic.gdx.maps.tiled.BaseTiledMapLoader#Parameters] {
-  protected var trackedTextures: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.Texture] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.Texture]()
-  protected var atlasResolver: AtlasResolver = null.asInstanceOf[AtlasResolver]
+class AtlasTmxMapLoader extends com.badlogic.gdx.maps.tiled.BaseTmxMapLoader[com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.Parameters] {
+  var trackedTextures: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.Texture] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.Texture]()
+  var atlasResolver: com.badlogic.gdx.maps.tiled.AtlasTmxMapLoader.AtlasResolver = null.asInstanceOf[com.badlogic.gdx.maps.tiled.AtlasTmxMapLoader.AtlasResolver]
   def this(resolver: com.badlogic.gdx.assets.loaders.FileHandleResolver) = {
     this()
   }
   def load(fileName: java.lang.String): com.badlogic.gdx.maps.tiled.TiledMap = {
-    return this.load(fileName, new com.badlogic.gdx.maps.tiled.BaseTiledMapLoader#Parameters())
+    return this.load(fileName, new com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.Parameters())
   }
-  def load(fileName: java.lang.String, parameter: com.badlogic.gdx.maps.tiled.BaseTiledMapLoader#Parameters): com.badlogic.gdx.maps.tiled.TiledMap = {
+  def load(fileName: java.lang.String, parameter: com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.Parameters): com.badlogic.gdx.maps.tiled.TiledMap = {
     val tmxFile: com.badlogic.gdx.files.FileHandle = this.resolve(fileName)
     this.root = xml.parse(tmxFile)
     val atlasFileHandle: com.badlogic.gdx.files.FileHandle = this.getAtlasFileHandle(tmxFile)
     val atlas: com.badlogic.gdx.graphics.g2d.TextureAtlas = new com.badlogic.gdx.graphics.g2d.TextureAtlas(atlasFileHandle)
-    this.atlasResolver = new DirectAtlasResolver(atlas)
+    this.atlasResolver = new com.badlogic.gdx.maps.tiled.AtlasTmxMapLoader.AtlasResolver.DirectAtlasResolver(atlas)
     val map: com.badlogic.gdx.maps.tiled.TiledMap = this.loadTiledMap(tmxFile, parameter, this.atlasResolver)
     map.setOwnedResources(new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.TextureAtlas](Array[com.badlogic.gdx.graphics.g2d.TextureAtlas](atlas)))
     this.setTextureFilters(parameter.textureMinFilter, parameter.textureMagFilter)
     return map
   }
-  def loadAsync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, tmxFile: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.maps.tiled.BaseTiledMapLoader#Parameters): scala.Unit = {
+  def loadAsync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, tmxFile: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.Parameters): scala.Unit = {
     val atlasHandle: com.badlogic.gdx.files.FileHandle = this.getAtlasFileHandle(tmxFile)
-    this.atlasResolver = new AssetManagerAtlasResolver(manager, atlasHandle.path())
+    this.atlasResolver = new com.badlogic.gdx.maps.tiled.AtlasTmxMapLoader.AtlasResolver.AssetManagerAtlasResolver(manager, atlasHandle.path())
     this.map = this.loadTiledMap(tmxFile, parameter, this.atlasResolver)
   }
-  def loadSync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.maps.tiled.BaseTiledMapLoader#Parameters): com.badlogic.gdx.maps.tiled.TiledMap = {
+  def loadSync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.Parameters): com.badlogic.gdx.maps.tiled.TiledMap = {
     if (parameter != null) {
       this.setTextureFilters(parameter.textureMinFilter, parameter.textureMagFilter)
     } else ()
     return map
   }
-  protected def getDependencyAssetDescriptors(tmxFile: com.badlogic.gdx.files.FileHandle, textureParameter: com.badlogic.gdx.assets.loaders.TextureLoader#TextureParameter): com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor] = {
-    val descriptors: com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor]()
+  def getDependencyAssetDescriptors(tmxFile: com.badlogic.gdx.files.FileHandle, textureParameter: com.badlogic.gdx.assets.loaders.TextureLoader.TextureParameter): com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = {
+    val descriptors: com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]()
     val atlasFileHandle: com.badlogic.gdx.files.FileHandle = this.getAtlasFileHandle(tmxFile)
     if (atlasFileHandle != null) {
-      descriptors.add(new com.badlogic.gdx.assets.AssetDescriptor(atlasFileHandle, classOf[java.lang.Class]))
+      descriptors.add(new com.badlogic.gdx.assets.AssetDescriptor(atlasFileHandle, classOf[com.badlogic.gdx.graphics.g2d.TextureAtlas]))
     } else ()
     return descriptors
   }
-  protected def addStaticTiles(tmxFile: com.badlogic.gdx.files.FileHandle, imageResolver: com.badlogic.gdx.maps.ImageResolver, tileSet: com.badlogic.gdx.maps.tiled.TiledMapTileSet, element: com.badlogic.gdx.utils.XmlReader#Element, tileElements: com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.XmlReader#Element], name: java.lang.String, firstgid: scala.Int, tilewidth: scala.Int, tileheight: scala.Int, spacing: scala.Int, margin: scala.Int, source: java.lang.String, offsetX: scala.Int, offsetY: scala.Int, imageSource: java.lang.String, imageWidth: scala.Int, imageHeight: scala.Int, image: com.badlogic.gdx.files.FileHandle): scala.Unit = {
+  def addStaticTiles(tmxFile: com.badlogic.gdx.files.FileHandle, imageResolver: com.badlogic.gdx.maps.ImageResolver, tileSet: com.badlogic.gdx.maps.tiled.TiledMapTileSet, element: com.badlogic.gdx.utils.XmlReader.Element, tileElements: com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.XmlReader.Element], name: java.lang.String, firstgid: scala.Int, tilewidth: scala.Int, tileheight: scala.Int, spacing: scala.Int, margin: scala.Int, source: java.lang.String, offsetX: scala.Int, offsetY: scala.Int, imageSource: java.lang.String, imageWidth: scala.Int, imageHeight: scala.Int, image: com.badlogic.gdx.files.FileHandle): scala.Unit = {
     val atlas: com.badlogic.gdx.graphics.g2d.TextureAtlas = this.atlasResolver.getAtlas()
     val regionsName: java.lang.String = name
     for (texture <- atlas.getTextures()) {
@@ -68,11 +68,11 @@ class AtlasTmxMapLoader extends com.badlogic.gdx.maps.tiled.BaseTmxMapLoader[com
       val tileId: scala.Int = firstgid + tileElement.getIntAttribute("id", 0)
       val tile: com.badlogic.gdx.maps.tiled.TiledMapTile = tileSet.getTile(tileId)
       if (tile == null) {
-        val imageElement: com.badlogic.gdx.utils.XmlReader#Element = tileElement.getChildByName("image")
+        val imageElement: com.badlogic.gdx.utils.XmlReader.Element = tileElement.getChildByName("image")
         if (imageElement != null) {
           var regionName: java.lang.String = imageElement.getAttribute("source")
           regionName = regionName.substring(0, regionName.lastIndexOf('.'))
-          val region: com.badlogic.gdx.graphics.g2d.TextureAtlas#AtlasRegion = atlas.findRegion(regionName)
+          val region: com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion = atlas.findRegion(regionName)
           if (region == null) {
             throw new com.badlogic.gdx.utils.GdxRuntimeException("Tileset atlasRegion not found: " + regionName)
           } else ()
@@ -81,8 +81,8 @@ class AtlasTmxMapLoader extends com.badlogic.gdx.maps.tiled.BaseTmxMapLoader[com
       } else ()
     }
   }
-  protected def getAtlasFileHandle(tmxFile: com.badlogic.gdx.files.FileHandle): com.badlogic.gdx.files.FileHandle = {
-    val properties: com.badlogic.gdx.utils.XmlReader#Element = root.getChildByName("properties")
+  def getAtlasFileHandle(tmxFile: com.badlogic.gdx.files.FileHandle): com.badlogic.gdx.files.FileHandle = {
+    val properties: com.badlogic.gdx.utils.XmlReader.Element = root.getChildByName("properties")
     var atlasFilePath: java.lang.String = null
     if (properties != null) {
       for (property <- properties.getChildrenByName("property")) {
@@ -103,15 +103,27 @@ class AtlasTmxMapLoader extends com.badlogic.gdx.maps.tiled.BaseTmxMapLoader[com
       return fileHandle
     }
   }
-  protected def setTextureFilters(min: com.badlogic.gdx.graphics.Texture#TextureFilter, mag: com.badlogic.gdx.graphics.Texture#TextureFilter): scala.Unit = {
+  def setTextureFilters(min: com.badlogic.gdx.graphics.Texture.TextureFilter, mag: com.badlogic.gdx.graphics.Texture.TextureFilter): scala.Unit = {
     for (texture <- this.trackedTextures) {
       texture.setFilter(min, mag)
     }
     this.trackedTextures.clear()
   }
-  protected trait AtlasResolver extends com.badlogic.gdx.maps.ImageResolver {
+}
+object AtlasTmxMapLoader {
+  def parseRegionName(name: java.lang.String): java.lang.String = {
+    if (name.contains("atlas_imagelayer")) {
+      val lastSlash: scala.Int = name.lastIndexOf('/')
+      return if (lastSlash >= 0) name.substring(lastSlash + 1) else name
+    } else {
+      return name
+    }
+  }
+  trait AtlasResolver extends com.badlogic.gdx.maps.ImageResolver {
     def getAtlas(): com.badlogic.gdx.graphics.g2d.TextureAtlas
-    class DirectAtlasResolver extends AtlasResolver {
+  }
+  object AtlasResolver {
+    class DirectAtlasResolver extends com.badlogic.gdx.maps.tiled.AtlasTmxMapLoader.AtlasResolver {
       private var atlas: com.badlogic.gdx.graphics.g2d.TextureAtlas = null.asInstanceOf[com.badlogic.gdx.graphics.g2d.TextureAtlas]
       def this(atlas: com.badlogic.gdx.graphics.g2d.TextureAtlas) = {
         this()
@@ -125,7 +137,7 @@ class AtlasTmxMapLoader extends com.badlogic.gdx.maps.tiled.BaseTmxMapLoader[com
         return this.atlas.findRegion(regionName)
       }
     }
-    class AssetManagerAtlasResolver extends AtlasResolver {
+    class AssetManagerAtlasResolver extends com.badlogic.gdx.maps.tiled.AtlasTmxMapLoader.AtlasResolver {
       private var assetManager: com.badlogic.gdx.assets.AssetManager = null.asInstanceOf[com.badlogic.gdx.assets.AssetManager]
       private var atlasName: java.lang.String = null.asInstanceOf[java.lang.String]
       def this(assetManager: com.badlogic.gdx.assets.AssetManager, atlasName: java.lang.String) = {
@@ -134,22 +146,12 @@ class AtlasTmxMapLoader extends com.badlogic.gdx.maps.tiled.BaseTmxMapLoader[com
         this.atlasName = atlasName
       }
       def getAtlas(): com.badlogic.gdx.graphics.g2d.TextureAtlas = {
-        return this.assetManager.get(this.atlasName, classOf[java.lang.Class])
+        return this.assetManager.get(this.atlasName, classOf[com.badlogic.gdx.graphics.g2d.TextureAtlas])
       }
       def getImage(name: java.lang.String): com.badlogic.gdx.graphics.g2d.TextureRegion = {
         val regionName: java.lang.String = AtlasTmxMapLoader.parseRegionName(name)
         return this.getAtlas().findRegion(regionName)
       }
-    }
-  }
-}
-object AtlasTmxMapLoader {
-  def parseRegionName(name: java.lang.String): java.lang.String = {
-    if (name.contains("atlas_imagelayer")) {
-      val lastSlash: scala.Int = name.lastIndexOf('/')
-      return if (lastSlash >= 0) name.substring(lastSlash + 1) else name
-    } else {
-      return name
     }
   }
 }

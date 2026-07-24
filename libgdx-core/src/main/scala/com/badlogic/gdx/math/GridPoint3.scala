@@ -44,13 +44,13 @@ class GridPoint3 extends java.io.Serializable {
     val xd: scala.Int = other.x - this.x
     val yd: scala.Int = other.y - this.y
     val zd: scala.Int = other.z - this.z
-    return java.lang.Math.sqrt(((xd * xd) + (yd * yd)) + (zd * zd)).asInstanceOf[scala.Float]
+    return java.lang.Math.sqrt(((xd * xd) + (yd * yd)) + (zd * zd)).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
   }
   def dst(x: scala.Int, y: scala.Int, z: scala.Int): scala.Float = {
     val xd: scala.Int = x - this.x
     val yd: scala.Int = y - this.y
     val zd: scala.Int = z - this.z
-    return java.lang.Math.sqrt(((xd * xd) + (yd * yd)) + (zd * zd)).asInstanceOf[scala.Float]
+    return java.lang.Math.sqrt(((xd * xd) + (yd * yd)) + (zd * zd)).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
   }
   def add(other: GridPoint3): GridPoint3 = {
     this.x = this.x + other.x

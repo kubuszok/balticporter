@@ -2,15 +2,15 @@ package com.badlogic.gdx.graphics.g3d.decals
 
 class Decal {
   var value: scala.Int = 0
-  protected var vertices: scala.Array[scala.Float] = new Array[scala.Float](Decal.SIZE)
-  protected var position: com.badlogic.gdx.math.Vector3 = new com.badlogic.gdx.math.Vector3()
-  protected var rotation: com.badlogic.gdx.math.Quaternion = new com.badlogic.gdx.math.Quaternion()
-  protected var scale: com.badlogic.gdx.math.Vector2 = new com.badlogic.gdx.math.Vector2(1, 1)
-  protected var color: com.badlogic.gdx.graphics.Color = new com.badlogic.gdx.graphics.Color()
+  var vertices: scala.Array[scala.Float] = new Array[scala.Float](Decal.SIZE)
+  var position: com.badlogic.gdx.math.Vector3 = new com.badlogic.gdx.math.Vector3()
+  var rotation: com.badlogic.gdx.math.Quaternion = new com.badlogic.gdx.math.Quaternion()
+  var scale: com.badlogic.gdx.math.Vector2 = new com.badlogic.gdx.math.Vector2(1, 1)
+  var color: com.badlogic.gdx.graphics.Color = new com.badlogic.gdx.graphics.Color()
   var transformationOffset: com.badlogic.gdx.math.Vector2 = null
-  protected var dimensions: com.badlogic.gdx.math.Vector2 = new com.badlogic.gdx.math.Vector2()
-  protected var material: com.badlogic.gdx.graphics.g3d.decals.DecalMaterial = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.decals.DecalMaterial]
-  protected var updated: scala.Boolean = false
+  var dimensions: com.badlogic.gdx.math.Vector2 = new com.badlogic.gdx.math.Vector2()
+  var material: com.badlogic.gdx.graphics.g3d.decals.DecalMaterial = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.decals.DecalMaterial]
+  var updated: scala.Boolean = false
   def this(material: com.badlogic.gdx.graphics.g3d.decals.DecalMaterial) = {
     this()
     this.material = material
@@ -186,13 +186,13 @@ class Decal {
     this.update()
     return this.vertices
   }
-  protected def update(): scala.Unit = {
+  def update(): scala.Unit = {
     if (!this.updated) {
       this.resetVertices()
       this.transformVertices()
     } else ()
   }
-  protected def transformVertices(): scala.Unit = {
+  def transformVertices(): scala.Unit = {
     var x: scala.Float = 0.0f
     var y: scala.Float = 0.0f
     var z: scala.Float = 0.0f
@@ -282,7 +282,7 @@ class Decal {
     this.vertices(Decal.Z4) = this.vertices(Decal.Z4) + this.position.z
     this.updated = true
   }
-  protected def resetVertices(): scala.Unit = {
+  def resetVertices(): scala.Unit = {
     val left: scala.Float = (-this.dimensions.x) / 2.0f
     val right: scala.Float = left + this.dimensions.x
     val top: scala.Float = this.dimensions.y / 2.0f
@@ -301,7 +301,7 @@ class Decal {
     this.vertices(Decal.Z4) = 0
     this.updated = false
   }
-  protected def updateUVs(): scala.Unit = {
+  def updateUVs(): scala.Unit = {
     val tr: com.badlogic.gdx.graphics.g2d.TextureRegion = this.material.textureRegion
     this.vertices(Decal.U1) = tr.getU()
     this.vertices(Decal.V1) = tr.getV()
@@ -364,7 +364,7 @@ object Decal {
   final val C4: scala.Int = 21
   final val U4: scala.Int = 22
   final val V4: scala.Int = 23
-  protected var rotator: com.badlogic.gdx.math.Quaternion = new com.badlogic.gdx.math.Quaternion(0, 0, 0, 0)
+  var rotator: com.badlogic.gdx.math.Quaternion = new com.badlogic.gdx.math.Quaternion(0, 0, 0, 0)
   def newDecal(textureRegion: com.badlogic.gdx.graphics.g2d.TextureRegion): Decal = {
     return Decal.newDecal(textureRegion.getRegionWidth(), textureRegion.getRegionHeight(), textureRegion, com.badlogic.gdx.graphics.g3d.decals.DecalMaterial.NO_BLEND, com.badlogic.gdx.graphics.g3d.decals.DecalMaterial.NO_BLEND)
   }

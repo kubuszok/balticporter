@@ -1,9 +1,9 @@
 package com.badlogic.gdx.scenes.scene2d
 
-abstract class Action extends com.badlogic.gdx.utils.Pool#Poolable {
-  protected var actor: com.badlogic.gdx.scenes.scene2d.Actor = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.Actor]
-  protected var target: com.badlogic.gdx.scenes.scene2d.Actor = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.Actor]
-  private var pool: com.badlogic.gdx.utils.Pool = null.asInstanceOf[com.badlogic.gdx.utils.Pool]
+abstract class Action extends com.badlogic.gdx.utils.Pool.Poolable {
+  var actor: com.badlogic.gdx.scenes.scene2d.Actor = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.Actor]
+  var target: com.badlogic.gdx.scenes.scene2d.Actor = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.Actor]
+  private var pool: com.badlogic.gdx.utils.Pool[?] = null.asInstanceOf[com.badlogic.gdx.utils.Pool[?]]
   def act(delta: scala.Float): scala.Boolean
   def restart(): scala.Unit = {
     ()
@@ -35,10 +35,10 @@ abstract class Action extends com.badlogic.gdx.utils.Pool#Poolable {
     this.pool = null
     this.restart()
   }
-  def getPool(): com.badlogic.gdx.utils.Pool = {
+  def getPool(): com.badlogic.gdx.utils.Pool[?] = {
     return this.pool
   }
-  def setPool(pool: com.badlogic.gdx.utils.Pool): scala.Unit = {
+  def setPool(pool: com.badlogic.gdx.utils.Pool[?]): scala.Unit = {
     this.pool = pool
   }
   def toString(): java.lang.String = {

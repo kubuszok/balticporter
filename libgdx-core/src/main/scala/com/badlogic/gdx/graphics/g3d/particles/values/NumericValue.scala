@@ -18,6 +18,6 @@ class NumericValue extends com.badlogic.gdx.graphics.g3d.particles.values.Partic
   }
   def read(json: com.badlogic.gdx.utils.Json, jsonData: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
     super.read(json, jsonData)
-    this.value = json.readValue("value", classOf[java.lang.Class], jsonData)
+    this.value = json.readValue("value", classOf[scala.Float], jsonData)
   }
 }

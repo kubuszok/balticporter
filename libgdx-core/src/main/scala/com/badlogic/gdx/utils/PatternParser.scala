@@ -12,7 +12,7 @@ object PatternParser {
   private final val _parser_trans_actions: scala.Array[scala.Byte] = PatternParser.init__parser_trans_actions_0()
   private final val _parser_eof_actions: scala.Array[scala.Byte] = PatternParser.init__parser_eof_actions_0()
   final val parser_start: scala.Int = 1
-  def parse(matcher: com.badlogic.gdx.utils.JsonMatcher, text: java.lang.String, processor: com.badlogic.gdx.utils.JsonMatcher#Processor): com.badlogic.gdx.utils.JsonMatcher#Pattern = {
+  def parse(matcher: com.badlogic.gdx.utils.JsonMatcher, text: java.lang.String, processor: com.badlogic.gdx.utils.JsonMatcher.Processor): com.badlogic.gdx.utils.JsonMatcher.Pattern = {
     val data: scala.Array[scala.Char] = text.toCharArray()
     var cs: scala.Int = 0
     var p: scala.Int = 0
@@ -28,16 +28,16 @@ object PatternParser {
     var keyCapture: scala.Boolean = false
     var star: scala.Boolean = false
     var starStar: scala.Boolean = false
-    val matches: com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.JsonMatcher#Match] = new com.badlogic.gdx.utils.Array(scala.Array[com.badlogic.gdx.utils.JsonMatcher#Match].<init>)
-    var root: com.badlogic.gdx.utils.JsonMatcher#Node = null
-    var prev: com.badlogic.gdx.utils.JsonMatcher#Node = null
-    var backtrack: com.badlogic.gdx.utils.JsonMatcher#Node = null
+    val matches: com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.JsonMatcher.Match] = new com.badlogic.gdx.utils.Array(scala.Array[com.badlogic.gdx.utils.JsonMatcher.Match].<init>)
+    var root: com.badlogic.gdx.utils.JsonMatcher.Node = null
+    var prev: com.badlogic.gdx.utils.JsonMatcher.Node = null
+    var backtrack: com.badlogic.gdx.utils.JsonMatcher.Node = null
     var processEach: scala.Boolean = false
     var hasCapture: scala.Boolean = false
     try {
       {
         cs = PatternParser.parser_start
-      }
+      };
       {
         var _klen: scala.Int = 0
         var _trans: scala.Int = 0
@@ -143,7 +143,7 @@ object PatternParser {
                         if (escaped) {
                           name = name.replace("''", "'")
                         } else ()
-                        val `match`: com.badlogic.gdx.utils.JsonMatcher#Match = matcher.newMatch(name, brackets, at, processEach, c >= 0, keyCapture, star, starStar)
+                        val `match`: com.badlogic.gdx.utils.JsonMatcher.Match = matcher.newMatch(name, brackets, at, processEach, c >= 0, keyCapture, star, starStar)
                         matches.add(`match`)
                         if (starStar && ((`match`.flags & com.badlogic.gdx.utils.JsonMatcher.process$field) != 0)) {
                           processEach = true
@@ -207,7 +207,7 @@ object PatternParser {
                     }
                     case 13 => {
                       {
-                        val node: com.badlogic.gdx.utils.JsonMatcher#Node = matcher.newNode(matches.toArray(), processEach, backtrack, prev)
+                        val node: com.badlogic.gdx.utils.JsonMatcher.Node = matcher.newNode(matches.toArray(), processEach, backtrack, prev)
                         if (node.starStar) {
                           if (matches.size > 1) {
                             throw new java.lang.IllegalArgumentException("** cannot have other matches at the same level.")
@@ -256,7 +256,7 @@ object PatternParser {
                         if (escaped) {
                           name = name.replace("''", "'")
                         } else ()
-                        val `match`: com.badlogic.gdx.utils.JsonMatcher#Match = matcher.newMatch(name, brackets, at, processEach, c >= 0, keyCapture, star, starStar)
+                        val `match`: com.badlogic.gdx.utils.JsonMatcher.Match = matcher.newMatch(name, brackets, at, processEach, c >= 0, keyCapture, star, starStar)
                         matches.add(`match`)
                         if (starStar && ((`match`.flags & com.badlogic.gdx.utils.JsonMatcher.process$field) != 0)) {
                           processEach = true
@@ -278,7 +278,7 @@ object PatternParser {
                     }
                     case 13 => {
                       {
-                        val node: com.badlogic.gdx.utils.JsonMatcher#Node = matcher.newNode(matches.toArray(), processEach, backtrack, prev)
+                        val node: com.badlogic.gdx.utils.JsonMatcher.Node = matcher.newNode(matches.toArray(), processEach, backtrack, prev)
                         if (node.starStar) {
                           if (matches.size > 1) {
                             throw new java.lang.IllegalArgumentException("** cannot have other matches at the same level.")
@@ -384,7 +384,7 @@ object PatternParser {
                         if (escaped) {
                           name = name.replace("''", "'")
                         } else ()
-                        val `match`: com.badlogic.gdx.utils.JsonMatcher#Match = matcher.newMatch(name, brackets, at, processEach, c >= 0, keyCapture, star, starStar)
+                        val `match`: com.badlogic.gdx.utils.JsonMatcher.Match = matcher.newMatch(name, brackets, at, processEach, c >= 0, keyCapture, star, starStar)
                         matches.add(`match`)
                         if (starStar && ((`match`.flags & com.badlogic.gdx.utils.JsonMatcher.process$field) != 0)) {
                           processEach = true
@@ -448,7 +448,7 @@ object PatternParser {
                     }
                     case 13 => {
                       {
-                        val node: com.badlogic.gdx.utils.JsonMatcher#Node = matcher.newNode(matches.toArray(), processEach, backtrack, prev)
+                        val node: com.badlogic.gdx.utils.JsonMatcher.Node = matcher.newNode(matches.toArray(), processEach, backtrack, prev)
                         if (node.starStar) {
                           if (matches.size > 1) {
                             throw new java.lang.IllegalArgumentException("** cannot have other matches at the same level.")
@@ -497,7 +497,7 @@ object PatternParser {
                         if (escaped) {
                           name = name.replace("''", "'")
                         } else ()
-                        val `match`: com.badlogic.gdx.utils.JsonMatcher#Match = matcher.newMatch(name, brackets, at, processEach, c >= 0, keyCapture, star, starStar)
+                        val `match`: com.badlogic.gdx.utils.JsonMatcher.Match = matcher.newMatch(name, brackets, at, processEach, c >= 0, keyCapture, star, starStar)
                         matches.add(`match`)
                         if (starStar && ((`match`.flags & com.badlogic.gdx.utils.JsonMatcher.process$field) != 0)) {
                           processEach = true
@@ -519,7 +519,7 @@ object PatternParser {
                     }
                     case 13 => {
                       {
-                        val node: com.badlogic.gdx.utils.JsonMatcher#Node = matcher.newNode(matches.toArray(), processEach, backtrack, prev)
+                        val node: com.badlogic.gdx.utils.JsonMatcher.Node = matcher.newNode(matches.toArray(), processEach, backtrack, prev)
                         if (node.starStar) {
                           if (matches.size > 1) {
                             throw new java.lang.IllegalArgumentException("** cannot have other matches at the same level.")
@@ -570,7 +570,7 @@ object PatternParser {
                         if (escaped) {
                           name = name.replace("''", "'")
                         } else ()
-                        val `match`: com.badlogic.gdx.utils.JsonMatcher#Match = matcher.newMatch(name, brackets, at, processEach, c >= 0, keyCapture, star, starStar)
+                        val `match`: com.badlogic.gdx.utils.JsonMatcher.Match = matcher.newMatch(name, brackets, at, processEach, c >= 0, keyCapture, star, starStar)
                         matches.add(`match`)
                         if (starStar && ((`match`.flags & com.badlogic.gdx.utils.JsonMatcher.process$field) != 0)) {
                           processEach = true
@@ -592,7 +592,7 @@ object PatternParser {
                     }
                     case 13 => {
                       {
-                        val node: com.badlogic.gdx.utils.JsonMatcher#Node = matcher.newNode(matches.toArray(), processEach, backtrack, prev)
+                        val node: com.badlogic.gdx.utils.JsonMatcher.Node = matcher.newNode(matches.toArray(), processEach, backtrack, prev)
                         if (node.starStar) {
                           if (matches.size > 1) {
                             throw new java.lang.IllegalArgumentException("** cannot have other matches at the same level.")
@@ -635,7 +635,7 @@ object PatternParser {
                         if (escaped) {
                           name = name.replace("''", "'")
                         } else ()
-                        val `match`: com.badlogic.gdx.utils.JsonMatcher#Match = matcher.newMatch(name, brackets, at, processEach, c >= 0, keyCapture, star, starStar)
+                        val `match`: com.badlogic.gdx.utils.JsonMatcher.Match = matcher.newMatch(name, brackets, at, processEach, c >= 0, keyCapture, star, starStar)
                         matches.add(`match`)
                         if (starStar && ((`match`.flags & com.badlogic.gdx.utils.JsonMatcher.process$field) != 0)) {
                           processEach = true
@@ -657,7 +657,7 @@ object PatternParser {
                     }
                     case 13 => {
                       {
-                        val node: com.badlogic.gdx.utils.JsonMatcher#Node = matcher.newNode(matches.toArray(), processEach, backtrack, prev)
+                        val node: com.badlogic.gdx.utils.JsonMatcher.Node = matcher.newNode(matches.toArray(), processEach, backtrack, prev)
                         if (node.starStar) {
                           if (matches.size > 1) {
                             throw new java.lang.IllegalArgumentException("** cannot have other matches at the same level.")

@@ -104,7 +104,7 @@ class ByteArray {
     this.items(index) = this.items(index) + value
   }
   def incr(value: scala.Byte): scala.Unit = {
-    val items: scala.Array[scala.Byte] = this.items
+    val items: scala.Array[scala.Byte] = this.items;
     { var i: scala.Int = 0; val n: scala.Int = this.size; while (i < n) { {
       items(i) = items(i) + value
     }; i = i + 1 } }
@@ -116,7 +116,7 @@ class ByteArray {
     this.items(index) = this.items(index) * value
   }
   def mul(value: scala.Byte): scala.Unit = {
-    val items: scala.Array[scala.Byte] = this.items
+    val items: scala.Array[scala.Byte] = this.items;
     { var i: scala.Int = 0; val n: scala.Int = this.size; while (i < n) { {
       items(i) = items(i) * value
     }; i = i + 1 } }
@@ -161,7 +161,7 @@ class ByteArray {
     items(second) = firstValue
   }
   def replaceFirst(value: scala.Byte, replacement: scala.Byte): scala.Boolean = {
-    val items: scala.Array[scala.Byte] = this.items
+    val items: scala.Array[scala.Byte] = this.items;
     { var i: scala.Int = 0; val n: scala.Int = this.size; while (i < n) { {
       if (items(i) == value) {
         items(i) = replacement
@@ -172,7 +172,7 @@ class ByteArray {
   }
   def replaceAll(value: scala.Byte, replacement: scala.Byte): scala.Int = {
     val items: scala.Array[scala.Byte] = this.items
-    var replacements: scala.Int = 0
+    var replacements: scala.Int = 0;
     { var i: scala.Int = 0; val n: scala.Int = this.size; while (i < n) { {
       if (items(i) == value) {
         items(i) = replacement
@@ -192,7 +192,7 @@ class ByteArray {
     return false
   }
   def indexOf(value: scala.Byte): scala.Int = {
-    val items: scala.Array[scala.Byte] = this.items
+    val items: scala.Array[scala.Byte] = this.items;
     { var i: scala.Int = 0; val n: scala.Int = this.size; while (i < n) { {
       if (items(i) == value) {
         return i
@@ -201,7 +201,7 @@ class ByteArray {
     return -1
   }
   def lastIndexOf(value: scala.Byte): scala.Int = {
-    val items: scala.Array[scala.Byte] = this.items
+    val items: scala.Array[scala.Byte] = this.items;
     { var i: scala.Int = this.size - 1; while (i >= 0) { {
       if (items(i) == value) {
         return i
@@ -210,7 +210,7 @@ class ByteArray {
     return -1
   }
   def removeValue(value: scala.Byte): scala.Boolean = {
-    val items: scala.Array[scala.Byte] = this.items
+    val items: scala.Array[scala.Byte] = this.items;
     { var i: scala.Int = 0; val n: scala.Int = this.size; while (i < n) { {
       if (items(i) == value) {
         this.removeIndex(i)
@@ -254,9 +254,9 @@ class ByteArray {
   def removeAll(array: ByteArray): scala.Boolean = {
     var size: scala.Int = this.size
     val startSize: scala.Int = size
-    val items: scala.Array[scala.Byte] = this.items
+    val items: scala.Array[scala.Byte] = this.items;
     { var i: scala.Int = 0; val n: scala.Int = array.size; while (i < n) { {
-      val item: scala.Int = array.get(i)
+      val item: scala.Int = array.get(i);
       { var ii: scala.Int = 0; while (ii < size) { {
         if (item == items(ii)) {
           this.removeIndex(ii)
@@ -314,7 +314,7 @@ class ByteArray {
     this.size = newSize
     return this.items
   }
-  protected def resize(newSize: scala.Int): scala.Array[scala.Byte] = {
+  def resize(newSize: scala.Int): scala.Array[scala.Byte] = {
     val newItems: scala.Array[scala.Byte] = new Array[scala.Byte](newSize)
     var items: scala.Array[scala.Byte] = this.items
     java.lang.System.arraycopy(items, 0, newItems, 0, java.lang.Math.min(this.size, newItems.length))
@@ -325,7 +325,7 @@ class ByteArray {
     java.util.Arrays.sort(this.items, 0, this.size)
   }
   def reverse(): scala.Unit = {
-    val items: scala.Array[scala.Byte] = this.items
+    val items: scala.Array[scala.Byte] = this.items;
     { var i: scala.Int = 0; val lastIndex: scala.Int = this.size - 1; val n: scala.Int = this.size / 2; while (i < n) { {
       val ii: scala.Int = lastIndex - i
       val temp: scala.Byte = items(i)
@@ -334,7 +334,7 @@ class ByteArray {
     }; i = i + 1 } }
   }
   def shuffle(): scala.Unit = {
-    val items: scala.Array[scala.Byte] = this.items
+    val items: scala.Array[scala.Byte] = this.items;
     { var i: scala.Int = this.size - 1; while (i >= 0) { {
       val ii: scala.Int = com.badlogic.gdx.math.MathUtils.random(i)
       val temp: scala.Byte = items(i)
@@ -352,7 +352,7 @@ class ByteArray {
   }
   def random(): scala.Byte = {
     if (this.size == 0) {
-      return 0
+      return 0.asInstanceOf[scala.Byte]
     } else ()
     return this.items(com.badlogic.gdx.math.MathUtils.random(0, this.size - 1))
   }
@@ -366,7 +366,7 @@ class ByteArray {
       return super.hashCode()
     } else ()
     val items: scala.Array[scala.Byte] = this.items
-    var h: scala.Int = 1
+    var h: scala.Int = 1;
     { var i: scala.Int = 0; val n: scala.Int = this.size; while (i < n) { {
       h = (h * 31) + items(i)
     }; i = i + 1 } }
@@ -391,7 +391,7 @@ class ByteArray {
       return false
     } else ()
     val items1: scala.Array[scala.Byte] = this.items
-    val items2: scala.Array[scala.Byte] = array.items
+    val items2: scala.Array[scala.Byte] = array.items;
     { var i: scala.Int = 0; while (i < n) { {
       if (items1(i) != items2(i)) {
         return false
@@ -406,7 +406,7 @@ class ByteArray {
     val items: scala.Array[scala.Byte] = this.items
     val buffer: java.lang.StringBuilder = new java.lang.StringBuilder(32)
     buffer.append('[')
-    buffer.append(items(0))
+    buffer.append(items(0));
     { var i: scala.Int = 1; while (i < this.size) { {
       buffer.append(", ")
       buffer.append(items(i))
@@ -420,7 +420,7 @@ class ByteArray {
     } else ()
     val items: scala.Array[scala.Byte] = this.items
     val buffer: java.lang.StringBuilder = new java.lang.StringBuilder(32)
-    buffer.append(items(0))
+    buffer.append(items(0));
     { var i: scala.Int = 1; while (i < this.size) { {
       buffer.append(separator)
       buffer.append(items(i))

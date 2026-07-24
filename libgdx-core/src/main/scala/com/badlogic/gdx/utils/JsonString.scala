@@ -5,7 +5,7 @@ class JsonString {
   private final val stack: com.badlogic.gdx.utils.IntArray = new com.badlogic.gdx.utils.IntArray()
   private var current: scala.Int = 0
   private var named: scala.Boolean = false
-  private var outputType: com.badlogic.gdx.utils.JsonWriter#OutputType = com.badlogic.gdx.utils.JsonWriter.OutputType.json
+  private var outputType: com.badlogic.gdx.utils.JsonWriter.OutputType = com.badlogic.gdx.utils.JsonWriter.OutputType.json
   private var quoteLongValues: scala.Boolean = false
   def this(initialBufferSize: scala.Int) = {
     this()
@@ -14,7 +14,7 @@ class JsonString {
   def getBuffer(): java.lang.StringBuilder = {
     return this.buffer
   }
-  def setOutputType(outputType: com.badlogic.gdx.utils.JsonWriter#OutputType): scala.Unit = {
+  def setOutputType(outputType: com.badlogic.gdx.utils.JsonWriter.OutputType): scala.Unit = {
     this.outputType = outputType
   }
   def setQuoteLongValues(quoteLongValues: scala.Boolean): scala.Unit = {

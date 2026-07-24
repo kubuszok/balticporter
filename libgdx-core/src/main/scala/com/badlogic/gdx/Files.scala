@@ -1,7 +1,7 @@
 package com.badlogic.gdx
 
 trait Files {
-  def getFileHandle(path: java.lang.String, `type`: FileType): com.badlogic.gdx.files.FileHandle
+  def getFileHandle(path: java.lang.String, `type`: com.badlogic.gdx.Files.FileType): com.badlogic.gdx.files.FileHandle
   def classpath(path: java.lang.String): com.badlogic.gdx.files.FileHandle
   def internal(path: java.lang.String): com.badlogic.gdx.files.FileHandle
   def external(path: java.lang.String): com.badlogic.gdx.files.FileHandle
@@ -11,6 +11,8 @@ trait Files {
   def isExternalStorageAvailable(): scala.Boolean
   def getLocalStoragePath(): java.lang.String
   def isLocalStorageAvailable(): scala.Boolean
+}
+object Files {
   sealed abstract class FileType
   object FileType {
     case object Classpath extends FileType

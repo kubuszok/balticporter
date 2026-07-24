@@ -102,7 +102,7 @@ class VertexBufferObjectWithVAO extends com.badlogic.gdx.graphics.glutils.Vertex
           stillValid = location == this.cachedLocations.get(i)
         }; i = i + 1 } }
       } else {
-        stillValid = locations.length == this.cachedLocations.size
+        stillValid = locations.length == this.cachedLocations.size;
         { var i: scala.Int = 0; while (stillValid && (i < numAttributes)) { {
           stillValid = locations(i) == this.cachedLocations.get(i)
         }; i = i + 1 } }
@@ -111,7 +111,7 @@ class VertexBufferObjectWithVAO extends com.badlogic.gdx.graphics.glutils.Vertex
     if (!stillValid) {
       com.badlogic.gdx.Gdx.gl.glBindBuffer(com.badlogic.gdx.graphics.GL20.GL_ARRAY_BUFFER, this.bufferHandle)
       this.unbindAttributes(shader)
-      this.cachedLocations.clear()
+      this.cachedLocations.clear();
       { var i: scala.Int = 0; while (i < numAttributes) { {
         val attribute: com.badlogic.gdx.graphics.VertexAttribute = this.attributes.get(i)
         if (locations == null) {
@@ -132,7 +132,7 @@ class VertexBufferObjectWithVAO extends com.badlogic.gdx.graphics.glutils.Vertex
     if (this.cachedLocations.size == 0) {
       return
     } else ()
-    val numAttributes: scala.Int = this.attributes.size()
+    val numAttributes: scala.Int = this.attributes.size();
     { var i: scala.Int = 0; while (i < numAttributes) { {
       val location: scala.Int = this.cachedLocations.get(i)
       if (location < 0) {

@@ -13,7 +13,7 @@ class InputEventQueue {
       this.processingQueue.addAll(this.queue)
       this.queue.clear()
     }
-    val q: scala.Array[scala.Int] = this.processingQueue.items
+    val q: scala.Array[scala.Int] = this.processingQueue.items;
     { var i: scala.Int = 0; val n: scala.Int = this.processingQueue.size; while (i < n) { {
       val `type`: scala.Int = q({ i += 1; i })
       this.currentEventTime = (q({ i += 1; i }).asInstanceOf[scala.Long] << 32) | (q({ i += 1; i }) & 4294967295L)
@@ -54,7 +54,7 @@ class InputEventQueue {
   }
   private def next(nextType: scala.Int, i$arg: scala.Int): scala.Int = {
     var i: scala.Int = i$arg
-    val q: scala.Array[scala.Int] = this.queue.items
+    val q: scala.Array[scala.Int] = this.queue.items;
     { val n: scala.Int = this.queue.size; while (i < n) { {
       val `type`: scala.Int = q(i)
       if (`type` == nextType) {

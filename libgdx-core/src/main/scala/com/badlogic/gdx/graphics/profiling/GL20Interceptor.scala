@@ -1,8 +1,8 @@
 package com.badlogic.gdx.graphics.profiling
 
 class GL20Interceptor extends com.badlogic.gdx.graphics.profiling.GLInterceptor with com.badlogic.gdx.graphics.GL20 {
-  protected var gl20: com.badlogic.gdx.graphics.GL20 = null.asInstanceOf[com.badlogic.gdx.graphics.GL20]
-  protected def this(glProfiler: com.badlogic.gdx.graphics.profiling.GLProfiler, gl20: com.badlogic.gdx.graphics.GL20) = {
+  var gl20: com.badlogic.gdx.graphics.GL20 = null.asInstanceOf[com.badlogic.gdx.graphics.GL20]
+  def this(glProfiler: com.badlogic.gdx.graphics.profiling.GLProfiler, gl20: com.badlogic.gdx.graphics.GL20) = {
     this()
     this.gl20 = gl20
   }

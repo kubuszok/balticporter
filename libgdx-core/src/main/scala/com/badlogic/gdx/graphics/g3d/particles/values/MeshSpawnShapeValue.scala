@@ -1,8 +1,8 @@
 package com.badlogic.gdx.graphics.g3d.particles.values
 
 abstract class MeshSpawnShapeValue extends com.badlogic.gdx.graphics.g3d.particles.values.SpawnShapeValue {
-  protected var mesh: com.badlogic.gdx.graphics.Mesh = null.asInstanceOf[com.badlogic.gdx.graphics.Mesh]
-  protected var model: com.badlogic.gdx.graphics.g3d.Model = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.Model]
+  var mesh: com.badlogic.gdx.graphics.Mesh = null.asInstanceOf[com.badlogic.gdx.graphics.Mesh]
+  var model: com.badlogic.gdx.graphics.g3d.Model = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.Model]
   def this(value: MeshSpawnShapeValue) = {
     this()
   }
@@ -21,21 +21,23 @@ abstract class MeshSpawnShapeValue extends com.badlogic.gdx.graphics.g3d.particl
   def setMesh(mesh: com.badlogic.gdx.graphics.Mesh): scala.Unit = {
     this.setMesh(mesh, null)
   }
-  def save(manager: com.badlogic.gdx.assets.AssetManager, data: com.badlogic.gdx.graphics.g3d.particles.ResourceData): scala.Unit = {
+  def save(manager: com.badlogic.gdx.assets.AssetManager, data: com.badlogic.gdx.graphics.g3d.particles.ResourceData[?]): scala.Unit = {
     if (this.model != null) {
-      val saveData: com.badlogic.gdx.graphics.g3d.particles.ResourceData#SaveData = data.createSaveData()
-      saveData.saveAsset(manager.getAssetFileName(this.model), classOf[java.lang.Class])
+      val saveData: com.badlogic.gdx.graphics.g3d.particles.ResourceData.SaveData = data.createSaveData()
+      saveData.saveAsset(manager.getAssetFileName(this.model), classOf[com.badlogic.gdx.graphics.g3d.Model])
       saveData.save("index", this.model.meshes.indexOf(this.mesh, true))
     } else ()
   }
-  def load(manager: com.badlogic.gdx.assets.AssetManager, data: com.badlogic.gdx.graphics.g3d.particles.ResourceData): scala.Unit = {
-    val saveData: com.badlogic.gdx.graphics.g3d.particles.ResourceData#SaveData = data.getSaveData()
-    val descriptor: com.badlogic.gdx.assets.AssetDescriptor = saveData.loadAsset()
+  def load(manager: com.badlogic.gdx.assets.AssetManager, data: com.badlogic.gdx.graphics.g3d.particles.ResourceData[?]): scala.Unit = {
+    val saveData: com.badlogic.gdx.graphics.g3d.particles.ResourceData.SaveData = data.getSaveData()
+    val descriptor: com.badlogic.gdx.assets.AssetDescriptor[?] = saveData.loadAsset()
     if (descriptor != null) {
       val model: com.badlogic.gdx.graphics.g3d.Model = manager.get(descriptor).asInstanceOf[com.badlogic.gdx.graphics.g3d.Model]
       this.setMesh(model.meshes.get(saveData.load("index").asInstanceOf[java.lang.Integer]), model)
     } else ()
   }
+}
+object MeshSpawnShapeValue {
   class Triangle {
     var x1: scala.Float = 0.0f
     var y1: scala.Float = 0.0f

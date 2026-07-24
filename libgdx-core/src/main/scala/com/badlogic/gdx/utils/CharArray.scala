@@ -119,7 +119,7 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
     this.items(index) = this.items(index) + value
   }
   def incr(value: scala.Char): scala.Unit = {
-    val items: scala.Array[scala.Char] = this.items
+    val items: scala.Array[scala.Char] = this.items;
     { var i: scala.Int = 0; val n: scala.Int = this.size; while (i < n) { {
       items(i) = items(i) + value
     }; i = i + 1 } }
@@ -131,7 +131,7 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
     this.items(index) = this.items(index) * value
   }
   def mul(value: scala.Char): scala.Unit = {
-    val items: scala.Array[scala.Char] = this.items
+    val items: scala.Array[scala.Char] = this.items;
     { var i: scala.Int = 0; val n: scala.Int = this.size; while (i < n) { {
       items(i) = items(i) * value
     }; i = i + 1 } }
@@ -150,7 +150,7 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
   }
   def replaceFirst(value: scala.Char, replacement: scala.Char): scala.Boolean = {
     if (value != replacement) {
-      val items: scala.Array[scala.Char] = this.items
+      val items: scala.Array[scala.Char] = this.items;
       { var i: scala.Int = 0; val n: scala.Int = this.size; while (i < n) { {
         if (items(i) == value) {
           items(i) = replacement
@@ -163,7 +163,7 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
   def replaceAll(value: scala.Char, replacement: scala.Char): scala.Int = {
     var replacements: scala.Int = 0
     if (value != replacement) {
-      val items: scala.Array[scala.Char] = this.items
+      val items: scala.Array[scala.Char] = this.items;
       { var i: scala.Int = 0; val n: scala.Int = this.size; while (i < n) { {
         if (items(i) == value) {
           items(i) = replacement
@@ -184,7 +184,7 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
     return false
   }
   def indexOf(value: scala.Char): scala.Int = {
-    val items: scala.Array[scala.Char] = this.items
+    val items: scala.Array[scala.Char] = this.items;
     { var i: scala.Int = 0; val n: scala.Int = this.size; while (i < n) { {
       if (items(i) == value) {
         return i
@@ -193,7 +193,7 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
     return -1
   }
   def lastIndexOf(value: scala.Char): scala.Int = {
-    val items: scala.Array[scala.Char] = this.items
+    val items: scala.Array[scala.Char] = this.items;
     { var i: scala.Int = this.size - 1; while (i >= 0) { {
       if (items(i) == value) {
         return i
@@ -202,7 +202,7 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
     return -1
   }
   def removeValue(value: scala.Char): scala.Boolean = {
-    val items: scala.Array[scala.Char] = this.items
+    val items: scala.Array[scala.Char] = this.items;
     { var i: scala.Int = 0; val n: scala.Int = this.size; while (i < n) { {
       if (items(i) == value) {
         this.removeIndex(i)
@@ -239,9 +239,9 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
   def removeAll(array: CharArray): scala.Boolean = {
     var size: scala.Int = this.size
     val startSize: scala.Int = size
-    val items: scala.Array[scala.Char] = this.items
+    val items: scala.Array[scala.Char] = this.items;
     { var i: scala.Int = 0; val n: scala.Int = array.size; while (i < n) { {
-      val item: scala.Char = array.get(i)
+      val item: scala.Char = array.get(i);
       { var ii: scala.Int = 0; while (ii < size) { {
         if (item == items(ii)) {
           this.removeIndex(ii)
@@ -322,7 +322,7 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
     } else ()
     this.resize(newCapacity)
   }
-  protected def resize(newSize: scala.Int): scala.Array[scala.Char] = {
+  def resize(newSize: scala.Int): scala.Array[scala.Char] = {
     this.items = java.util.Arrays.copyOf(this.items, newSize)
     return this.items
   }
@@ -330,7 +330,7 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
     java.util.Arrays.sort(this.items, 0, this.size)
   }
   def shuffle(): scala.Unit = {
-    val items: scala.Array[scala.Char] = this.items
+    val items: scala.Array[scala.Char] = this.items;
     { var i: scala.Int = this.size - 1; while (i >= 0) { {
       val ii: scala.Int = com.badlogic.gdx.math.MathUtils.random(i)
       val temp: scala.Char = items(i)
@@ -701,14 +701,14 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
     return this
   }
   def appendAll(iterable: scala.collection.Iterable[?]): CharArray = {
-    { val iter: scala.collection.Iterator = iterable.iterator; while (iter.hasNext()) { {
-      this.append(iter.next())
+    { val iter: scala.collection.Iterator[?] = iterable.iterator; while (iter.hasNext) { {
+      this.append(iter.next)
     };  } }
     return this
   }
   def appendAll(iter: scala.collection.Iterator[?]): CharArray = {
-    while (iter.hasNext()) {
-      this.append(iter.next())
+    while (iter.hasNext) {
+      this.append(iter.next)
     }
     return this
   }
@@ -915,9 +915,9 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
   }
   def appendWithSeparators(it: scala.collection.Iterator[?], separator: java.lang.String): CharArray = {
     val sep: java.lang.String = java.util.Objects.toString(separator, "")
-    while (it.hasNext()) {
-      this.append(it.next())
-      if (it.hasNext()) {
+    while (it.hasNext) {
+      this.append(it.next)
+      if (it.hasNext) {
         this.append(sep)
       } else ()
     }
@@ -926,7 +926,7 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
   def appendWithSeparators(array: scala.Array[java.lang.Object], separator: java.lang.String): CharArray = {
     if (array.length > 0) {
       val sep: java.lang.String = java.util.Objects.toString(separator, "")
-      this.append(array(0))
+      this.append(array(0));
       { var i: scala.Int = 1; while (i < array.length) { {
         this.append(sep)
         this.append(array(i))
@@ -1065,7 +1065,7 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
     if (length > this.size) {
       return false
     } else ()
-    var pos: scala.Int = this.size - length
+    var pos: scala.Int = this.size - length;
     { var i: scala.Int = 0; while (i < length) { {
       if (this.items(pos) != str.charAt(i)) {
         return false
@@ -1100,7 +1100,7 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
     if (start >= this.size) {
       return -1
     } else ()
-    val thisBuf: scala.Array[scala.Char] = this.items
+    val thisBuf: scala.Array[scala.Char] = this.items;
     { var i: scala.Int = start; val n: scala.Int = this.size; while (i < n) { {
       if (thisBuf(i) == ch) {
         return i
@@ -1131,9 +1131,9 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
       return -1
     } else ()
     val thisBuf: scala.Array[scala.Char] = this.items
-    val searchLen: scala.Int = (this.size - strLen) + 1
+    val searchLen: scala.Int = (this.size - strLen) + 1;
     { var i: scala.Int = start; while (i < searchLen) { {
-      var found: scala.Boolean = true
+      var found: scala.Boolean = true;
       { var j: scala.Int = 0; while ((j < strLen) && found) { {
         found = str.charAt(j) == thisBuf(i + j)
       }; j = j + 1 } }
@@ -1160,7 +1160,7 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
     val firstLower: scala.Char = java.lang.Character.toLowerCase(firstUpper)
     while (true) {
       var i: scala.Int = start
-      var found: scala.Boolean = false
+      var found: scala.Boolean = false;
       { ; while (i <= maxIndex) { {
         val c: scala.Char = this.items(i)
         if ((c == firstUpper) || (c == firstLower)) {
@@ -1291,7 +1291,7 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
     start = if (start >= this.size) this.size - 1 else start
     if (start < 0) {
       return -1
-    } else ()
+    } else ();
     { var i: scala.Int = start; while (i >= 0) { {
       if (this.items(i) == ch) {
         return i
@@ -1320,9 +1320,9 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
     } else ()
     if (strLen == 1) {
       return this.lastIndexOf(str.charAt(0), start)
-    } else ()
+    } else ();
     { var i: scala.Int = (start - strLen) + 1; while (i >= 0) { {
-      var found: scala.Boolean = true
+      var found: scala.Boolean = true;
       { var j: scala.Int = 0; while ((j < strLen) && found) { {
         found = str.charAt(j) == this.items(i + j)
       }; j = j + 1 } }
@@ -1477,7 +1477,7 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
     } else ()
   }
   def reverse(): scala.Unit = {
-    val items: scala.Array[scala.Char] = this.items
+    val items: scala.Array[scala.Char] = this.items;
     { var i: scala.Int = 0; val lastIndex: scala.Int = this.size - 1; val n: scala.Int = this.size / 2; while (i < n) { {
       val ii: scala.Int = lastIndex - i
       val temp: scala.Char = items(i)
@@ -1493,7 +1493,7 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
     var frontHigh: scala.Char = this.items(0)
     var endLow: scala.Char = this.items(`end`)
     var allowFrontSur: scala.Boolean = true
-    var allowEndSur: scala.Boolean = true
+    var allowEndSur: scala.Boolean = true;
     { var i: scala.Int = 0; val mid: scala.Int = this.size / 2; while (i < mid) { {
       val frontLow: scala.Char = this.items(i + 1)
       val endHigh: scala.Char = this.items(`end` - 1)
@@ -1583,7 +1583,7 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
     } else ()
     if (length > this.size) {
       return false
-    } else ()
+    } else ();
     { var i: scala.Int = 0; while (i < length) { {
       if (this.items(i) != str.charAt(i)) {
         return false
@@ -1623,7 +1623,7 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
     } else ()
     val items: scala.Array[scala.Char] = this.items
     val buffer: java.lang.StringBuilder = new java.lang.StringBuilder(32)
-    buffer.append(items(0))
+    buffer.append(items(0));
     { var i: scala.Int = 1; while (i < this.size) { {
       buffer.append(separator)
       buffer.append(items(i))
@@ -1656,12 +1656,12 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
     } else ()
     return this
   }
-  protected def validateIndex(index: scala.Int): scala.Unit = {
+  def validateIndex(index: scala.Int): scala.Unit = {
     if ((index < 0) || (index > this.size)) {
       throw new java.lang.IndexOutOfBoundsException((("index: " + index) + ", size: ") + this.size)
     } else ()
   }
-  protected def validateRange(start: scala.Int, `end`: scala.Int): scala.Int = {
+  def validateRange(start: scala.Int, `end`: scala.Int): scala.Int = {
     if (start < 0) {
       throw new java.lang.IndexOutOfBoundsException("start: " + start)
     } else ()
@@ -1695,7 +1695,7 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
       return false
     } else ()
     val chars: scala.Array[scala.Char] = this.items
-    val chars2: scala.Array[scala.Char] = other.items
+    val chars2: scala.Array[scala.Char] = other.items;
     { var i: scala.Int = 0; while (i < length) { {
       if (chars(i) != chars2(i)) {
         return false
@@ -1715,7 +1715,7 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
       return false
     } else ()
     val chars: scala.Array[scala.Char] = this.items
-    val chars2: scala.Array[scala.Char] = other.items
+    val chars2: scala.Array[scala.Char] = other.items;
     { var i: scala.Int = 0; while (i < length) { {
       if (chars(i) != chars2(i)) {
         return false
@@ -1735,7 +1735,7 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
       return false
     } else ()
     val chars: scala.Array[scala.Char] = this.items
-    val chars2: scala.Array[scala.Char] = other.items
+    val chars2: scala.Array[scala.Char] = other.items;
     { var i: scala.Int = 0; while (i < length) { {
       val c: scala.Char = chars(i)
       val upper: scala.Char = java.lang.Character.toUpperCase(chars2(i))
@@ -1753,7 +1753,7 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
     if (length != other.length()) {
       return false
     } else ()
-    val chars: scala.Array[scala.Char] = this.items
+    val chars: scala.Array[scala.Char] = this.items;
     { var i: scala.Int = 0; while (i < length) { {
       if (chars(i) != other.charAt(i)) {
         return false
@@ -1769,7 +1769,7 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
     if (length != other.length()) {
       return false
     } else ()
-    val chars: scala.Array[scala.Char] = this.items
+    val chars: scala.Array[scala.Char] = this.items;
     { var i: scala.Int = 0; while (i < length) { {
       val c: scala.Char = chars(i)
       val upper: scala.Char = java.lang.Character.toUpperCase(other.charAt(i))
@@ -1784,7 +1784,7 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
       return super.hashCode()
     } else ()
     val chars: scala.Array[scala.Char] = this.items
-    var result: scala.Int = 31 + this.size
+    var result: scala.Int = 31 + this.size;
     { var index: scala.Int = 0; while (index < this.size) { {
       result = (31 * result) + chars(index)
     }; index = index + 1 } }

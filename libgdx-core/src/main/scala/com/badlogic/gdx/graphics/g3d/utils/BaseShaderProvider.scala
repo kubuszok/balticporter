@@ -1,7 +1,7 @@
 package com.badlogic.gdx.graphics.g3d.utils
 
 abstract class BaseShaderProvider extends com.badlogic.gdx.graphics.g3d.utils.ShaderProvider {
-  protected var shaders: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.Shader] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.Shader]()
+  var shaders: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.Shader] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.Shader]()
   def getShader(renderable: com.badlogic.gdx.graphics.g3d.Renderable): com.badlogic.gdx.graphics.g3d.Shader = {
     val suggestedShader: com.badlogic.gdx.graphics.g3d.Shader = renderable.shader
     if ((suggestedShader != null) && suggestedShader.canRender(renderable)) {
@@ -20,7 +20,7 @@ abstract class BaseShaderProvider extends com.badlogic.gdx.graphics.g3d.utils.Sh
     this.shaders.add(shader)
     return shader
   }
-  protected def createShader(renderable: com.badlogic.gdx.graphics.g3d.Renderable): com.badlogic.gdx.graphics.g3d.Shader
+  def createShader(renderable: com.badlogic.gdx.graphics.g3d.Renderable): com.badlogic.gdx.graphics.g3d.Shader
   def dispose(): scala.Unit = {
     for (shader <- this.shaders) {
       shader.dispose()

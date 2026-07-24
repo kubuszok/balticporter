@@ -1,24 +1,24 @@
 package com.badlogic.gdx.assets.loaders
 
-class SkinLoader extends com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader[com.badlogic.gdx.scenes.scene2d.ui.Skin, SkinParameter] {
+class SkinLoader extends com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader[com.badlogic.gdx.scenes.scene2d.ui.Skin, com.badlogic.gdx.assets.loaders.SkinLoader.SkinParameter] {
   def this(resolver: com.badlogic.gdx.assets.loaders.FileHandleResolver) = {
     this()
   }
-  def getDependencies(fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: SkinParameter): com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor] = {
-    val deps: com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor] = new com.badlogic.gdx.utils.Array()
+  def getDependencies(fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.assets.loaders.SkinLoader.SkinParameter): com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = {
+    val deps: com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = new com.badlogic.gdx.utils.Array()
     if ((parameter == null) || (parameter.textureAtlasPath == null)) {
-      deps.add(new com.badlogic.gdx.assets.AssetDescriptor(file.pathWithoutExtension() + ".atlas", classOf[java.lang.Class]))
+      deps.add(new com.badlogic.gdx.assets.AssetDescriptor(file.pathWithoutExtension() + ".atlas", classOf[com.badlogic.gdx.graphics.g2d.TextureAtlas]))
     } else {
       if (parameter.textureAtlasPath != null) {
-        deps.add(new com.badlogic.gdx.assets.AssetDescriptor(parameter.textureAtlasPath, classOf[java.lang.Class]))
+        deps.add(new com.badlogic.gdx.assets.AssetDescriptor(parameter.textureAtlasPath, classOf[com.badlogic.gdx.graphics.g2d.TextureAtlas]))
       } else ()
     }
     return deps
   }
-  def loadAsync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: SkinParameter): scala.Unit = {
+  def loadAsync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.assets.loaders.SkinLoader.SkinParameter): scala.Unit = {
     ()
   }
-  def loadSync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: SkinParameter): com.badlogic.gdx.scenes.scene2d.ui.Skin = {
+  def loadSync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.assets.loaders.SkinLoader.SkinParameter): com.badlogic.gdx.scenes.scene2d.ui.Skin = {
     var textureAtlasPath: java.lang.String = file.pathWithoutExtension() + ".atlas"
     var resources: com.badlogic.gdx.utils.ObjectMap[java.lang.String, java.lang.Object] = null
     if (parameter != null) {
@@ -29,7 +29,7 @@ class SkinLoader extends com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader
         resources = parameter.resources
       } else ()
     } else ()
-    val atlas: com.badlogic.gdx.graphics.g2d.TextureAtlas = manager.get(textureAtlasPath, classOf[java.lang.Class])
+    val atlas: com.badlogic.gdx.graphics.g2d.TextureAtlas = manager.get(textureAtlasPath, classOf[com.badlogic.gdx.graphics.g2d.TextureAtlas])
     val skin: com.badlogic.gdx.scenes.scene2d.ui.Skin = this.newSkin(atlas)
     if (resources != null) {
       for (entry <- resources.entries()) {
@@ -39,9 +39,11 @@ class SkinLoader extends com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader
     skin.load(file)
     return skin
   }
-  protected def newSkin(atlas: com.badlogic.gdx.graphics.g2d.TextureAtlas): com.badlogic.gdx.scenes.scene2d.ui.Skin = {
+  def newSkin(atlas: com.badlogic.gdx.graphics.g2d.TextureAtlas): com.badlogic.gdx.scenes.scene2d.ui.Skin = {
     return new com.badlogic.gdx.scenes.scene2d.ui.Skin(atlas)
   }
+}
+object SkinLoader {
   class SkinParameter extends com.badlogic.gdx.assets.AssetLoaderParameters[com.badlogic.gdx.scenes.scene2d.ui.Skin] {
     var textureAtlasPath: java.lang.String = null.asInstanceOf[java.lang.String]
     var resources: com.badlogic.gdx.utils.ObjectMap[java.lang.String, java.lang.Object] = null.asInstanceOf[com.badlogic.gdx.utils.ObjectMap[java.lang.String, java.lang.Object]]

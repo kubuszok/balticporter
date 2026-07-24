@@ -30,6 +30,23 @@ final class TirEmitter(source: Program):
     val pkg  = if full.contains('.') then s"package ${full.substring(0, full.lastIndexOf('.'))}\n\n" else ""
     pkg + body
 
+  /** every type symbol that appears as a parent (extends/mixin) anywhere in the program — an
+    * all-static class in this set must stay a `class`, since an `object` can't be extended. */
+  private lazy val extendedTypes: Set[SymId] =
+    val acc = collection.mutable.Set[SymId]()
+    def headSym(t: TypeRepr): Option[SymId] = t match
+      case TypeRepr.TypeRef(_, s)      => Some(s)
+      case TypeRepr.AppliedType(tc, _) => headSym(tc)
+      case _                           => None
+    def scan(cd: Tree.ClassDef): Unit =
+      cd.parents.foreach {
+        case tt: TypeTree => headSym(tt.tpe).foreach(acc += _)
+        case term: Term   => headSym(term.tpe).foreach(acc += _)
+      }
+      cd.body.foreach { case c: Tree.ClassDef => scan(c); case _ => () }
+    program.units.foreach(scan)
+    acc.toSet
+
   private def declaredTypes(cd: Tree.ClassDef): Set[SymId] =
     val acc = collection.mutable.Set[SymId](cd.symbol)
     cd.body.foreach { case c: Tree.ClassDef => acc ++= declaredTypes(c); case _ => () }
@@ -58,9 +75,13 @@ final class TirEmitter(source: Program):
   private def typeSym(id: SymId): String =
     val s = sym(id)
     if s.flags.isParam then esc(s.name)
+    // a Java `static` nested class is lowered into the enclosing type's companion `object`, so it
+    // is named through the value path `Outer.Inner` — NOT by simple name (companion members aren't
+    // in the class's scope) and NOT `Outer#Inner` (a type projection can't reach a companion member).
+    else if s.flags.isStatic && s.fullName.contains('$') then s.fullName.replace('$', '.')
     else if program.definitionOf(id).isDefined && currentDeclared(id) then esc(s.name) // declared here — in scope
     else if program.symbolOf(s.owner).exists(_.flags.isModule) then s"${typeValue(s.owner)}.${esc(s.name)}" // object's type member → path-dependent `O.T`
-    else s.fullName.replace('$', '#')                               // everything else → fully qualified (class-nested → `Outer#Inner`)
+    else s.fullName.replace('$', '#')                               // non-static inner class elsewhere → `Outer#Inner`
 
   private def ind(n: Int): String = "  " * n
 
@@ -82,7 +103,9 @@ final class TirEmitter(source: Program):
       case v: Tree.ValDef => !sym(v.symbol).flags.isStatic
       case _              => false
     }
-    if kw == "class" && parents.isEmpty && cd.body.nonEmpty && !hasInstanceState then
+    // an all-static class can only collapse to an `object` if nobody EXTENDS it (you can't extend
+    // an object) — otherwise it stays a `class` with its statics in a companion object.
+    if kw == "class" && parents.isEmpty && cd.body.nonEmpty && !hasInstanceState && !extendedTypes(cd.symbol) then
       val members = cd.body.filterNot { case d: Tree.DefDef => sym(d.symbol).name == "<init>"; case _ => false }
       val ob = orderBody(members).map(stat(_, i + 1)).filter(_.nonEmpty).mkString("\n")
       return s"${ind(i)}object ${esc(s.name)}$tps {\n$ob\n${ind(i)}}"
@@ -98,9 +121,6 @@ final class TirEmitter(source: Program):
       val sb = orderBody(statics).map(stat(_, i + 1)).filter(_.nonEmpty).mkString("\n")
       s"$cls\n${ind(i)}object ${esc(s.name)} {\n$sb\n${ind(i)}}"
 
-  // static vals/defs move to the companion object; nested TYPES stay in the class body so
-  // they remain in scope by simple name inside it (a Java static nested class is visible
-  // throughout its enclosing class).
   /** Java enum → `sealed abstract class Name <parents-minus-Enum> { members }` plus a
     * companion `object` holding each constant as a `case object` and a `values` array. */
   private def enumDef(cd: Tree.ClassDef, i: Int): String =
@@ -122,8 +142,10 @@ final class TirEmitter(source: Program):
     val objBody = (cases :+ values) ++ statics.map(stat(_, i + 1)).filter(_.nonEmpty)
     s"$cls\n${ind(i)}object $name {\n${objBody.mkString("\n")}\n${ind(i)}}"
 
+  // a Java `static` nested class has no instance home in Scala → it moves to the companion
+  // `object` alongside static vals/defs. A non-static inner class stays in the class body.
   private def isStatic(s: Statement): Boolean = s match
-    case _: Tree.ClassDef => false
+    case d: Tree.ClassDef => sym(d.symbol).flags.isStatic
     case d: Definition    => sym(d.symbol).flags.isStatic
     case _                => false
 
@@ -237,7 +259,10 @@ final class TirEmitter(source: Program):
   private def mods(f: Flags): String =
     val parts = List(
       if f.isPrivate then "private " else "",
-      if f.isProtected then "protected " else "",
+      // Java `protected` (package + any-instance-in-subclass) is MORE permissive than Scala
+      // `protected` (this-instance only), so a faithful port emits it as public — loosening
+      // visibility can only remove access errors, never introduce them.
+      "",
       if f.isOverride then "override " else "",
       if f.isFinal then "final " else "",
       if f.isSealed then "sealed " else "",
@@ -258,7 +283,11 @@ final class TirEmitter(source: Program):
     * (which is type-position-only syntax). */
   private def typeValue(id: SymId): String =
     val s = sym(id)
-    if currentDeclared(id) then esc(s.name) else s.fullName.replace('$', '.')
+    // a static nested type lives in the companion `object`, so name it through the value path
+    // `Outer.Inner` even from inside `Outer` (companion members aren't in the class's scope).
+    if s.flags.isStatic && s.fullName.contains('$') then s.fullName.replace('$', '.')
+    else if currentDeclared(id) then esc(s.name)
+    else s.fullName.replace('$', '.')
 
   /** a static member lives in the companion `object`; even inside its own class it must be
     * named `Owner.member`, since a Scala class doesn't see its companion's members unqualified. */
@@ -274,7 +303,7 @@ final class TirEmitter(source: Program):
     case Tree.This(_, _, _)             => "this"
     case Tree.Super(_, _, _)            => "super"
     case Tree.Select(q, s, _, _)        => s"${term(q, i)}.${local(s)}"
-    case Tree.New(tpt, _, _)            => s"new ${tpe(tpt.tpe)}"
+    case Tree.New(tpt, _, _)            => s"new ${ctorTpe(tpt.tpe)}"
     case Tree.Apply(fun, args, _, _, _) => applyStr(fun, args, i)
     case Tree.TypeApply(fun, targs, _, _) => s"${term(fun, i)}[${targs.map(a => tpe(a.tpe)).mkString(", ")}]"
     case Tree.Assign(l, r, _, _)        => s"${term(l, i)} = ${term(r, i)}"
@@ -313,7 +342,7 @@ final class TirEmitter(source: Program):
     case Tree.Opaque(raw, _, _)         => raw
 
   private def applyStr(fun: Term, args: List[Term], i: Int): String = fun match
-    case Tree.New(tpt, _, _) => s"new ${tpe(tpt.tpe)}(${args.map(term(_, i)).mkString(", ")})"
+    case Tree.New(tpt, _, _) => s"new ${ctorTpe(tpt.tpe)}(${args.map(term(_, i)).mkString(", ")})"
     // operators (populator tags them `scala.<op>#…`) render infix / prefix, not `.op(x)`.
     case Tree.Select(recv, m, _, _) if sym(m).fullName.startsWith("scala.<op>#") =>
       val op = sym(m).name
@@ -339,7 +368,16 @@ final class TirEmitter(source: Program):
       case Tree.Literal(Constant.UnitC, _, _) if stats.nonEmpty => Nil
       case _                                                    => List(ind(i + 1) + term(expr, i + 1))
     val lines = (stats.map(stat(_, i + 1)) ++ tail).filter(_.trim.nonEmpty)
-    s"{\n${lines.mkString("\n")}\n${ind(i)}}"
+    s"{\n${joinStats(lines)}\n${ind(i)}}"
+
+  /** join block statements, terminating one with `;` when the NEXT begins with `{` — otherwise
+    * Scala greedily reads `new T(a)\n{ … }` as an anonymous-class body rather than two statements. */
+  private def joinStats(lines: List[String]): String = lines match
+    case Nil => ""
+    case h :: t =>
+      val sb = new StringBuilder(h)
+      t.foreach { l => if l.trim.startsWith("{") then sb.append(";"); sb.append("\n").append(l) }
+      sb.toString
 
   private def tryStr(res: List[Tree.ValDef], body: Term, catches: List[Tree.CatchCase], fin: Option[Term], i: Int): String =
     val r  = res.map(v => s"${ind(i + 1)}${valDef(v, 0)}\n").mkString
@@ -356,6 +394,13 @@ final class TirEmitter(source: Program):
     s"${term(scr, i)} match {\n$cs\n${ind(i)}}"
 
   // ---- types ----
+  /** a type in `new` position: `new Foo[?]` is illegal (you can't instantiate a wildcard), so
+    * when a raw generic type carries wildcard args, drop them and let Scala infer the arguments
+    * from the expected type (`new Foo(...)`). */
+  private def ctorTpe(t: TypeRepr): String = t match
+    case TypeRepr.AppliedType(tc, args) if args.exists(_.isInstanceOf[TypeRepr.TypeBounds]) => tpe(tc)
+    case _ => tpe(t)
+
   private def tpe(t: TypeRepr): String = t match
     case TypeRepr.NoType | TypeRepr.NoPrefix   => "Any"
     case TypeRepr.TypeRef(_, s)                => typeSym(s)

@@ -1,12 +1,12 @@
 package com.badlogic.gdx.graphics.g3d.environment
 
 class DirectionalShadowLight extends com.badlogic.gdx.graphics.g3d.environment.DirectionalLight with com.badlogic.gdx.graphics.g3d.environment.ShadowMap with com.badlogic.gdx.utils.Disposable {
-  protected var fbo: com.badlogic.gdx.graphics.glutils.FrameBuffer = null.asInstanceOf[com.badlogic.gdx.graphics.glutils.FrameBuffer]
-  protected var cam: com.badlogic.gdx.graphics.Camera = null.asInstanceOf[com.badlogic.gdx.graphics.Camera]
-  protected var halfDepth: scala.Float = 0.0f
-  protected var halfHeight: scala.Float = 0.0f
-  protected final val tmpV: com.badlogic.gdx.math.Vector3 = new com.badlogic.gdx.math.Vector3()
-  protected var textureDesc: com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor]
+  var fbo: com.badlogic.gdx.graphics.glutils.FrameBuffer = null.asInstanceOf[com.badlogic.gdx.graphics.glutils.FrameBuffer]
+  var cam: com.badlogic.gdx.graphics.Camera = null.asInstanceOf[com.badlogic.gdx.graphics.Camera]
+  var halfDepth: scala.Float = 0.0f
+  var halfHeight: scala.Float = 0.0f
+  final val tmpV: com.badlogic.gdx.math.Vector3 = new com.badlogic.gdx.math.Vector3()
+  var textureDesc: com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[?] = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[?]]
   def this(shadowMapWidth: scala.Int, shadowMapHeight: scala.Int, shadowViewportWidth: scala.Float, shadowViewportHeight: scala.Float, shadowNear: scala.Float, shadowFar: scala.Float) = {
     this()
     this.fbo = new com.badlogic.gdx.graphics.glutils.FrameBuffer(com.badlogic.gdx.graphics.Pixmap.Format.RGBA8888, shadowMapWidth, shadowMapHeight, true)
@@ -65,7 +65,7 @@ class DirectionalShadowLight extends com.badlogic.gdx.graphics.g3d.environment.D
   def getProjViewTrans(): com.badlogic.gdx.math.Matrix4 = {
     return this.cam.combined
   }
-  def getDepthMap(): com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor = {
+  def getDepthMap(): com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[?] = {
     this.textureDesc.texture = this.fbo.getColorBufferTexture()
     return this.textureDesc
   }

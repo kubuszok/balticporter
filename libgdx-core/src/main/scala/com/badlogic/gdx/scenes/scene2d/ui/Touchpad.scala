@@ -1,7 +1,7 @@
 package com.badlogic.gdx.scenes.scene2d.ui
 
-class Touchpad extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlogic.gdx.scenes.scene2d.ui.Styleable[TouchpadStyle] {
-  private var style: TouchpadStyle = null.asInstanceOf[TouchpadStyle]
+class Touchpad extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlogic.gdx.scenes.scene2d.ui.Styleable[com.badlogic.gdx.scenes.scene2d.ui.Touchpad.TouchpadStyle] {
+  private var style: com.badlogic.gdx.scenes.scene2d.ui.Touchpad.TouchpadStyle = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Touchpad.TouchpadStyle]
   var touched: scala.Boolean = false
   var resetOnTouchUp: scala.Boolean = true
   private var deadzoneRadius: scala.Float = 0.0f
@@ -10,7 +10,7 @@ class Touchpad extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlog
   private final val deadzoneBounds: com.badlogic.gdx.math.Circle = new com.badlogic.gdx.math.Circle(0, 0, 0)
   private final val knobPosition: com.badlogic.gdx.math.Vector2 = new com.badlogic.gdx.math.Vector2()
   private final val knobPercent: com.badlogic.gdx.math.Vector2 = new com.badlogic.gdx.math.Vector2()
-  def this(deadzoneRadius: scala.Float, style: TouchpadStyle) = {
+  def this(deadzoneRadius: scala.Float, style: com.badlogic.gdx.scenes.scene2d.ui.Touchpad.TouchpadStyle) = {
     this()
     if (deadzoneRadius < 0) {
       throw new java.lang.IllegalArgumentException("deadzoneRadius must be > 0")
@@ -22,10 +22,10 @@ class Touchpad extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlog
     this.addListener(new com.badlogic.gdx.scenes.scene2d.InputListener())
   }
   def this(deadzoneRadius: scala.Float, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin, styleName: java.lang.String) = {
-    this(deadzoneRadius, skin.get(styleName, classOf[java.lang.Class]))
+    this(deadzoneRadius, skin.get(styleName, classOf[com.badlogic.gdx.scenes.scene2d.ui.Touchpad.TouchpadStyle]))
   }
   def this(deadzoneRadius: scala.Float, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin) = {
-    this(deadzoneRadius, skin.get(classOf[java.lang.Class]))
+    this(deadzoneRadius, skin.get(classOf[com.badlogic.gdx.scenes.scene2d.ui.Touchpad.TouchpadStyle]))
   }
   def calculatePositionAndValue(x: scala.Float, y: scala.Float, isTouchUp: scala.Boolean): scala.Unit = {
     val oldPositionX: scala.Float = this.knobPosition.x
@@ -51,7 +51,7 @@ class Touchpad extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlog
       } else ()
     } else ()
     if ((oldPercentX != this.knobPercent.x) || (oldPercentY != this.knobPercent.y)) {
-      val changeEvent: com.badlogic.gdx.scenes.scene2d.utils.ChangeListener#ChangeEvent = com.badlogic.gdx.scenes.scene2d.Actor.POOLS.obtain(classOf[java.lang.Class])
+      val changeEvent: com.badlogic.gdx.scenes.scene2d.utils.ChangeListener.ChangeEvent = com.badlogic.gdx.scenes.scene2d.Actor.POOLS.obtain(classOf[com.badlogic.gdx.scenes.scene2d.utils.ChangeListener.ChangeEvent])
       if (this.fire(changeEvent)) {
         this.knobPercent.set(oldPercentX, oldPercentY)
         this.knobPosition.set(oldPositionX, oldPositionY)
@@ -59,14 +59,14 @@ class Touchpad extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlog
       com.badlogic.gdx.scenes.scene2d.Actor.POOLS.free(changeEvent)
     } else ()
   }
-  def setStyle(style: TouchpadStyle): scala.Unit = {
+  def setStyle(style: com.badlogic.gdx.scenes.scene2d.ui.Touchpad.TouchpadStyle): scala.Unit = {
     if (style == null) {
       throw new java.lang.IllegalArgumentException("style cannot be null")
     } else ()
     this.style = style
     this.invalidateHierarchy()
   }
-  def getStyle(): TouchpadStyle = {
+  def getStyle(): com.badlogic.gdx.scenes.scene2d.ui.Touchpad.TouchpadStyle = {
     return this.style
   }
   def hit(x: scala.Float, y: scala.Float, touchable: scala.Boolean): com.badlogic.gdx.scenes.scene2d.Actor = {
@@ -144,6 +144,8 @@ class Touchpad extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlog
   def getKnobPercentY(): scala.Float = {
     return this.knobPercent.y
   }
+}
+object Touchpad {
   class TouchpadStyle {
     var background: com.badlogic.gdx.scenes.scene2d.utils.Drawable = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Drawable]
     var knob: com.badlogic.gdx.scenes.scene2d.utils.Drawable = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Drawable]
@@ -152,7 +154,7 @@ class Touchpad extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlog
       this.background = background
       this.knob = knob
     }
-    def this(style: TouchpadStyle) = {
+    def this(style: com.badlogic.gdx.scenes.scene2d.ui.Touchpad.TouchpadStyle) = {
       this()
       this.background = style.background
       this.knob = style.knob

@@ -36,7 +36,7 @@ class SequenceAction extends com.badlogic.gdx.scenes.scene2d.actions.ParallelAct
     if (this.index >= this.actions.size) {
       return true
     } else ()
-    val pool: com.badlogic.gdx.utils.Pool = this.getPool()
+    val pool: com.badlogic.gdx.utils.Pool[?] = this.getPool()
     this.setPool(null)
     try {
       if (actions.get(this.index).act(delta)) {

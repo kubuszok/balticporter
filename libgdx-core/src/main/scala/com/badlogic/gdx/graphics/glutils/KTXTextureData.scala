@@ -21,7 +21,7 @@ class KTXTextureData extends com.badlogic.gdx.graphics.TextureData with com.badl
     this.file = file
     this.useMipMaps$field = genMipMaps
   }
-  def getType(): com.badlogic.gdx.graphics.TextureData#TextureDataType = {
+  def getType(): com.badlogic.gdx.graphics.TextureData.TextureDataType = {
     return com.badlogic.gdx.graphics.TextureData.TextureDataType.Custom
   }
   def isPrepared(): scala.Boolean = {
@@ -121,7 +121,7 @@ class KTXTextureData extends com.badlogic.gdx.graphics.TextureData with com.badl
     val bytesOfKeyValueData: scala.Int = this.compressedData.getInt()
     this.imagePos = this.compressedData.position() + bytesOfKeyValueData
     if (!this.compressedData.isDirect()) {
-      var pos: scala.Int = this.imagePos
+      var pos: scala.Int = this.imagePos;
       { var level: scala.Int = 0; while (level < this.numberOfMipmapLevels) { {
         val faceLodSize: scala.Int = this.compressedData.getInt(pos)
         val faceLodSizeRounded: scala.Int = (faceLodSize + 3) & (~3)
@@ -210,7 +210,7 @@ class KTXTextureData extends com.badlogic.gdx.graphics.TextureData with com.badl
     } else ()
     val glInternalFormat: scala.Int = this.glInternalFormat
     val glFormat: scala.Int = this.glFormat
-    var pos: scala.Int = this.imagePos
+    var pos: scala.Int = this.imagePos;
     { var level: scala.Int = 0; while (level < this.numberOfMipmapLevels) { {
       val pixelWidth: scala.Int = java.lang.Math.max(1, this.pixelWidth >> level)
       var pixelHeight: scala.Int = java.lang.Math.max(1, this.pixelHeight >> level)
@@ -218,7 +218,7 @@ class KTXTextureData extends com.badlogic.gdx.graphics.TextureData with com.badl
       this.compressedData.asInstanceOf[java.nio.Buffer].position(pos)
       val faceLodSize: scala.Int = this.compressedData.getInt()
       val faceLodSizeRounded: scala.Int = (faceLodSize + 3) & (~3)
-      pos = pos + 4
+      pos = pos + 4;
       { var face: scala.Int = 0; while (face < this.numberOfFaces) { {
         this.compressedData.asInstanceOf[java.nio.Buffer].position(pos)
         pos = pos + faceLodSizeRounded
@@ -237,7 +237,7 @@ class KTXTextureData extends com.badlogic.gdx.graphics.TextureData with com.badl
             if (compressed) {
               if (glInternalFormat == com.badlogic.gdx.graphics.glutils.ETC1.ETC1_RGB8_OES) {
                 if (!com.badlogic.gdx.Gdx.graphics.supportsExtension("GL_OES_compressed_ETC1_RGB8_texture")) {
-                  val etcData: com.badlogic.gdx.graphics.glutils.ETC1#ETC1Data = new com.badlogic.gdx.graphics.glutils.ETC1#ETC1Data(pixelWidth, pixelHeight, data, 0)
+                  val etcData: com.badlogic.gdx.graphics.glutils.ETC1.ETC1Data = new com.badlogic.gdx.graphics.glutils.ETC1.ETC1Data(pixelWidth, pixelHeight, data, 0)
                   val pixmap: com.badlogic.gdx.graphics.Pixmap = com.badlogic.gdx.graphics.glutils.ETC1.decodeImage(etcData, com.badlogic.gdx.graphics.Pixmap.Format.RGB888)
                   com.badlogic.gdx.Gdx.gl.glTexImage2D(target + face, level, pixmap.getGLInternalFormat(), pixmap.getWidth(), pixmap.getHeight(), 0, pixmap.getGLFormat(), pixmap.getGLType(), pixmap.getPixels())
                   pixmap.dispose()
@@ -296,7 +296,7 @@ class KTXTextureData extends com.badlogic.gdx.graphics.TextureData with com.badl
     return this.glInternalFormat
   }
   def getData(requestedLevel: scala.Int, requestedFace: scala.Int): java.nio.ByteBuffer = {
-    var pos: scala.Int = this.imagePos
+    var pos: scala.Int = this.imagePos;
     { var level: scala.Int = 0; while (level < this.numberOfMipmapLevels) { {
       val faceLodSize: scala.Int = this.compressedData.getInt(pos)
       val faceLodSizeRounded: scala.Int = (faceLodSize + 3) & (~3)
@@ -317,7 +317,7 @@ class KTXTextureData extends com.badlogic.gdx.graphics.TextureData with com.badl
     }; level = level + 1 } }
     return null
   }
-  def getFormat(): com.badlogic.gdx.graphics.Pixmap#Format = {
+  def getFormat(): com.badlogic.gdx.graphics.Pixmap.Format = {
     throw new com.badlogic.gdx.utils.GdxRuntimeException("This TextureData implementation directly handles texture formats.")
   }
   def useMipMaps(): scala.Boolean = {

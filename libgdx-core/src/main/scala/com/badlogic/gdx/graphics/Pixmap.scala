@@ -1,14 +1,14 @@
 package com.badlogic.gdx.graphics
 
 class Pixmap extends com.badlogic.gdx.utils.Disposable {
-  private var blending: Blending = Blending.SourceOver
-  private var filter: Filter = Filter.BiLinear
+  private var blending: com.badlogic.gdx.graphics.Pixmap.Blending = com.badlogic.gdx.graphics.Pixmap.Blending.SourceOver
+  private var filter: com.badlogic.gdx.graphics.Pixmap.Filter = com.badlogic.gdx.graphics.Pixmap.Filter.BiLinear
   var pixmap: com.badlogic.gdx.graphics.g2d.Gdx2DPixmap = null.asInstanceOf[com.badlogic.gdx.graphics.g2d.Gdx2DPixmap]
   var color: scala.Int = 0
   private var disposed: scala.Boolean = false
-  def this(width: scala.Int, height: scala.Int, format: Format) = {
+  def this(width: scala.Int, height: scala.Int, format: com.badlogic.gdx.graphics.Pixmap.Format) = {
     this()
-    this.pixmap = new com.badlogic.gdx.graphics.g2d.Gdx2DPixmap(width, height, Format.toGdx2DPixmapFormat(format))
+    this.pixmap = new com.badlogic.gdx.graphics.g2d.Gdx2DPixmap(width, height, com.badlogic.gdx.graphics.Pixmap.Format.toGdx2DPixmapFormat(format))
     this.setColor(0, 0, 0, 0)
     this.fill()
   }
@@ -53,13 +53,13 @@ class Pixmap extends com.badlogic.gdx.utils.Disposable {
   def this(encodedData: java.nio.ByteBuffer) = {
     this(encodedData, encodedData.position(), encodedData.remaining())
   }
-  def setBlending(blending: Blending): scala.Unit = {
+  def setBlending(blending: com.badlogic.gdx.graphics.Pixmap.Blending): scala.Unit = {
     this.blending = blending
-    this.pixmap.setBlend(if (blending == Blending.None) 0 else 1)
+    this.pixmap.setBlend(if (blending == com.badlogic.gdx.graphics.Pixmap.Blending.None) 0 else 1)
   }
-  def setFilter(filter: Filter): scala.Unit = {
+  def setFilter(filter: com.badlogic.gdx.graphics.Pixmap.Filter): scala.Unit = {
     this.filter = filter
-    this.pixmap.setScale(if (filter == Filter.NearestNeighbour) com.badlogic.gdx.graphics.g2d.Gdx2DPixmap.GDX2D_SCALE_NEAREST else com.badlogic.gdx.graphics.g2d.Gdx2DPixmap.GDX2D_SCALE_LINEAR)
+    this.pixmap.setScale(if (filter == com.badlogic.gdx.graphics.Pixmap.Filter.NearestNeighbour) com.badlogic.gdx.graphics.g2d.Gdx2DPixmap.GDX2D_SCALE_NEAREST else com.badlogic.gdx.graphics.g2d.Gdx2DPixmap.GDX2D_SCALE_LINEAR)
   }
   def setColor(color: scala.Int): scala.Unit = {
     this.color = color
@@ -148,14 +148,28 @@ class Pixmap extends com.badlogic.gdx.utils.Disposable {
     val dst: java.nio.ByteBuffer = this.pixmap.getPixels()
     com.badlogic.gdx.utils.BufferUtils.copy(pixels, dst, dst.limit())
   }
-  def getFormat(): Format = {
-    return Format.fromGdx2DPixmapFormat(this.pixmap.getFormat())
+  def getFormat(): com.badlogic.gdx.graphics.Pixmap.Format = {
+    return com.badlogic.gdx.graphics.Pixmap.Format.fromGdx2DPixmapFormat(this.pixmap.getFormat())
   }
-  def getBlending(): Blending = {
+  def getBlending(): com.badlogic.gdx.graphics.Pixmap.Blending = {
     return this.blending
   }
-  def getFilter(): Filter = {
+  def getFilter(): com.badlogic.gdx.graphics.Pixmap.Filter = {
     return this.filter
+  }
+}
+object Pixmap {
+  def createFromFrameBuffer(x: scala.Int, y: scala.Int, w: scala.Int, h: scala.Int): Pixmap = {
+    com.badlogic.gdx.Gdx.gl.glPixelStorei(com.badlogic.gdx.graphics.GL20.GL_PACK_ALIGNMENT, 1)
+    val pixmap: Pixmap = new Pixmap(w, h, com.badlogic.gdx.graphics.Pixmap.Format.RGBA8888)
+    val pixels: java.nio.ByteBuffer = pixmap.getPixels()
+    com.badlogic.gdx.Gdx.gl.glReadPixels(x, y, w, h, com.badlogic.gdx.graphics.GL20.GL_RGBA, com.badlogic.gdx.graphics.GL20.GL_UNSIGNED_BYTE, pixels)
+    return pixmap
+  }
+  def downloadFromUrl(url: java.lang.String, responseListener: com.badlogic.gdx.graphics.Pixmap.DownloadPixmapResponseListener): scala.Unit = {
+    val request: com.badlogic.gdx.Net.HttpRequest = new com.badlogic.gdx.Net.HttpRequest(com.badlogic.gdx.Net.HttpMethods.GET)
+    request.setUrl(url)
+    com.badlogic.gdx.Gdx.net.sendHttpRequest(request, new com.badlogic.gdx.Net.HttpResponseListener())
   }
   sealed abstract class Format
   object Format {
@@ -167,56 +181,56 @@ class Pixmap extends com.badlogic.gdx.utils.Disposable {
     case object RGB888 extends Format
     case object RGBA8888 extends Format
     def values(): Array[Format] = Array(Alpha, Intensity, LuminanceAlpha, RGB565, RGBA4444, RGB888, RGBA8888)
-    def toGdx2DPixmapFormat(format: Format): scala.Int = {
-      if (format == Format.Alpha) {
+    def toGdx2DPixmapFormat(format: com.badlogic.gdx.graphics.Pixmap.Format): scala.Int = {
+      if (format == com.badlogic.gdx.graphics.Pixmap.Format.Alpha) {
         return com.badlogic.gdx.graphics.g2d.Gdx2DPixmap.GDX2D_FORMAT_ALPHA
       } else ()
-      if (format == Format.Intensity) {
+      if (format == com.badlogic.gdx.graphics.Pixmap.Format.Intensity) {
         return com.badlogic.gdx.graphics.g2d.Gdx2DPixmap.GDX2D_FORMAT_ALPHA
       } else ()
-      if (format == Format.LuminanceAlpha) {
+      if (format == com.badlogic.gdx.graphics.Pixmap.Format.LuminanceAlpha) {
         return com.badlogic.gdx.graphics.g2d.Gdx2DPixmap.GDX2D_FORMAT_LUMINANCE_ALPHA
       } else ()
-      if (format == Format.RGB565) {
+      if (format == com.badlogic.gdx.graphics.Pixmap.Format.RGB565) {
         return com.badlogic.gdx.graphics.g2d.Gdx2DPixmap.GDX2D_FORMAT_RGB565
       } else ()
-      if (format == Format.RGBA4444) {
+      if (format == com.badlogic.gdx.graphics.Pixmap.Format.RGBA4444) {
         return com.badlogic.gdx.graphics.g2d.Gdx2DPixmap.GDX2D_FORMAT_RGBA4444
       } else ()
-      if (format == Format.RGB888) {
+      if (format == com.badlogic.gdx.graphics.Pixmap.Format.RGB888) {
         return com.badlogic.gdx.graphics.g2d.Gdx2DPixmap.GDX2D_FORMAT_RGB888
       } else ()
-      if (format == Format.RGBA8888) {
+      if (format == com.badlogic.gdx.graphics.Pixmap.Format.RGBA8888) {
         return com.badlogic.gdx.graphics.g2d.Gdx2DPixmap.GDX2D_FORMAT_RGBA8888
       } else ()
       throw new com.badlogic.gdx.utils.GdxRuntimeException("Unknown Format: " + format)
     }
-    def fromGdx2DPixmapFormat(format: scala.Int): Format = {
+    def fromGdx2DPixmapFormat(format: scala.Int): com.badlogic.gdx.graphics.Pixmap.Format = {
       if (format == com.badlogic.gdx.graphics.g2d.Gdx2DPixmap.GDX2D_FORMAT_ALPHA) {
-        return Format.Alpha
+        return com.badlogic.gdx.graphics.Pixmap.Format.Alpha
       } else ()
       if (format == com.badlogic.gdx.graphics.g2d.Gdx2DPixmap.GDX2D_FORMAT_LUMINANCE_ALPHA) {
-        return Format.LuminanceAlpha
+        return com.badlogic.gdx.graphics.Pixmap.Format.LuminanceAlpha
       } else ()
       if (format == com.badlogic.gdx.graphics.g2d.Gdx2DPixmap.GDX2D_FORMAT_RGB565) {
-        return Format.RGB565
+        return com.badlogic.gdx.graphics.Pixmap.Format.RGB565
       } else ()
       if (format == com.badlogic.gdx.graphics.g2d.Gdx2DPixmap.GDX2D_FORMAT_RGBA4444) {
-        return Format.RGBA4444
+        return com.badlogic.gdx.graphics.Pixmap.Format.RGBA4444
       } else ()
       if (format == com.badlogic.gdx.graphics.g2d.Gdx2DPixmap.GDX2D_FORMAT_RGB888) {
-        return Format.RGB888
+        return com.badlogic.gdx.graphics.Pixmap.Format.RGB888
       } else ()
       if (format == com.badlogic.gdx.graphics.g2d.Gdx2DPixmap.GDX2D_FORMAT_RGBA8888) {
-        return Format.RGBA8888
+        return com.badlogic.gdx.graphics.Pixmap.Format.RGBA8888
       } else ()
       throw new com.badlogic.gdx.utils.GdxRuntimeException("Unknown Gdx2DPixmap Format: " + format)
     }
-    def toGlFormat(format: Format): scala.Int = {
-      return com.badlogic.gdx.graphics.g2d.Gdx2DPixmap.toGlFormat(Format.toGdx2DPixmapFormat(format))
+    def toGlFormat(format: com.badlogic.gdx.graphics.Pixmap.Format): scala.Int = {
+      return com.badlogic.gdx.graphics.g2d.Gdx2DPixmap.toGlFormat(com.badlogic.gdx.graphics.Pixmap.Format.toGdx2DPixmapFormat(format))
     }
-    def toGlType(format: Format): scala.Int = {
-      return com.badlogic.gdx.graphics.g2d.Gdx2DPixmap.toGlType(Format.toGdx2DPixmapFormat(format))
+    def toGlType(format: com.badlogic.gdx.graphics.Pixmap.Format): scala.Int = {
+      return com.badlogic.gdx.graphics.g2d.Gdx2DPixmap.toGlType(com.badlogic.gdx.graphics.Pixmap.Format.toGdx2DPixmapFormat(format))
     }
   }
   sealed abstract class Blending
@@ -234,19 +248,5 @@ class Pixmap extends com.badlogic.gdx.utils.Disposable {
   trait DownloadPixmapResponseListener {
     def downloadComplete(pixmap: Pixmap): scala.Unit
     def downloadFailed(t: java.lang.Throwable): scala.Unit
-  }
-}
-object Pixmap {
-  def createFromFrameBuffer(x: scala.Int, y: scala.Int, w: scala.Int, h: scala.Int): Pixmap = {
-    com.badlogic.gdx.Gdx.gl.glPixelStorei(com.badlogic.gdx.graphics.GL20.GL_PACK_ALIGNMENT, 1)
-    val pixmap: Pixmap = new Pixmap(w, h, Format.RGBA8888)
-    val pixels: java.nio.ByteBuffer = pixmap.getPixels()
-    com.badlogic.gdx.Gdx.gl.glReadPixels(x, y, w, h, com.badlogic.gdx.graphics.GL20.GL_RGBA, com.badlogic.gdx.graphics.GL20.GL_UNSIGNED_BYTE, pixels)
-    return pixmap
-  }
-  def downloadFromUrl(url: java.lang.String, responseListener: DownloadPixmapResponseListener): scala.Unit = {
-    val request: com.badlogic.gdx.Net#HttpRequest = new com.badlogic.gdx.Net#HttpRequest(com.badlogic.gdx.Net.HttpMethods.GET)
-    request.setUrl(url)
-    com.badlogic.gdx.Gdx.net.sendHttpRequest(request, new com.badlogic.gdx.Net#HttpResponseListener())
   }
 }

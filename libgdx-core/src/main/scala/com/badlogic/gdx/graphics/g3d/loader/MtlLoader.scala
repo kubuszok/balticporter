@@ -5,7 +5,7 @@ class MtlLoader {
   def load(file: com.badlogic.gdx.files.FileHandle): scala.Unit = {
     var line: java.lang.String = null.asInstanceOf[java.lang.String]
     var tokens: scala.Array[java.lang.String] = null.asInstanceOf[scala.Array[java.lang.String]]
-    val currentMaterial: ObjMaterial = new ObjMaterial()
+    val currentMaterial: com.badlogic.gdx.graphics.g3d.loader.MtlLoader.ObjMaterial = new com.badlogic.gdx.graphics.g3d.loader.MtlLoader.ObjMaterial()
     if ((file == null) || (!file.exists())) {
       return
     } else ()
@@ -112,6 +112,8 @@ class MtlLoader {
     this.materials.add(mat)
     return mat
   }
+}
+object MtlLoader {
   private class ObjMaterial {
     var materialName: java.lang.String = "default"
     var ambientColor: com.badlogic.gdx.graphics.Color = null.asInstanceOf[com.badlogic.gdx.graphics.Color]

@@ -28,10 +28,10 @@ class ModelInstanceParticleBatch extends com.badlogic.gdx.graphics.g3d.particles
     this.controllersRenderData.add(data)
     this.bufferedParticlesCount = this.bufferedParticlesCount + data.controller.particles.size
   }
-  def save(manager: com.badlogic.gdx.assets.AssetManager, assetDependencyData: com.badlogic.gdx.graphics.g3d.particles.ResourceData): scala.Unit = {
+  def save(manager: com.badlogic.gdx.assets.AssetManager, assetDependencyData: com.badlogic.gdx.graphics.g3d.particles.ResourceData[?]): scala.Unit = {
     ()
   }
-  def load(manager: com.badlogic.gdx.assets.AssetManager, assetDependencyData: com.badlogic.gdx.graphics.g3d.particles.ResourceData): scala.Unit = {
+  def load(manager: com.badlogic.gdx.assets.AssetManager, assetDependencyData: com.badlogic.gdx.graphics.g3d.particles.ResourceData[?]): scala.Unit = {
     ()
   }
 }

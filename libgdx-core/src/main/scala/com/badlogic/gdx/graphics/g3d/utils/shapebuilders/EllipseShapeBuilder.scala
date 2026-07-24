@@ -87,7 +87,7 @@ object EllipseShapeBuilder {
     val syEx: com.badlogic.gdx.math.Vector3 = com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BaseShapeBuilder.tmpV2.set(binormalX, binormalY, binormalZ).scl(height * 0.5f)
     val sxIn: com.badlogic.gdx.math.Vector3 = com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BaseShapeBuilder.tmpV3.set(tangentX, tangentY, tangentZ).scl(innerWidth * 0.5f)
     val syIn: com.badlogic.gdx.math.Vector3 = com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BaseShapeBuilder.tmpV4.set(binormalX, binormalY, binormalZ).scl(innerHeight * 0.5f)
-    val currIn: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder#VertexInfo = com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BaseShapeBuilder.vertTmp3.set(null, null, null, null)
+    val currIn: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo = com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BaseShapeBuilder.vertTmp3.set(null, null, null, null)
     currIn.hasUV = {
       currIn.hasPosition = {
         currIn.hasNormal = true
@@ -98,7 +98,7 @@ object EllipseShapeBuilder {
     currIn.uv.set(0.5f, 0.5f)
     currIn.position.set(centerX, centerY, centerZ)
     currIn.normal.set(normalX, normalY, normalZ)
-    val currEx: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder#VertexInfo = com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BaseShapeBuilder.vertTmp4.set(null, null, null, null)
+    val currEx: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo = com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BaseShapeBuilder.vertTmp4.set(null, null, null, null)
     currEx.hasUV = {
       currEx.hasPosition = {
         currEx.hasNormal = true
@@ -114,9 +114,9 @@ object EllipseShapeBuilder {
     val us: scala.Float = 0.5f * (innerWidth / width)
     val vs: scala.Float = 0.5f * (innerHeight / height)
     var i1: scala.Short = 0
-    var i2: scala.Short = 0
-    var i3: scala.Short = 0
-    var i4: scala.Short = 0
+    var i2: scala.Short = 0.asInstanceOf[scala.Short]
+    var i3: scala.Short = 0.asInstanceOf[scala.Short]
+    var i4: scala.Short = 0.asInstanceOf[scala.Short];
     { var i: scala.Int = 0; while (i <= divisions) { {
       angle = ao + (step * i)
       val x: scala.Float = com.badlogic.gdx.math.MathUtils.cos(angle)

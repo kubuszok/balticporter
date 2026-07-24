@@ -5,7 +5,7 @@ class I18NBundle {
   private var locale: java.util.Locale = null.asInstanceOf[java.util.Locale]
   private var properties: com.badlogic.gdx.utils.ObjectMap[java.lang.String, java.lang.String] = null.asInstanceOf[com.badlogic.gdx.utils.ObjectMap[java.lang.String, java.lang.String]]
   private var formatter: com.badlogic.gdx.utils.TextFormatter = null.asInstanceOf[com.badlogic.gdx.utils.TextFormatter]
-  protected def load(reader: java.io.Reader): scala.Unit = {
+  def load(reader: java.io.Reader): scala.Unit = {
     this.properties = new com.badlogic.gdx.utils.ObjectMap[java.lang.String, java.lang.String]()
     com.badlogic.gdx.utils.PropertiesUtils.load(this.properties, reader)
   }
@@ -34,7 +34,7 @@ class I18NBundle {
   }
   def keys(): scala.collection.mutable.Set[java.lang.String] = {
     val result: scala.collection.mutable.Set[java.lang.String] = new scala.collection.mutable.LinkedHashSet[java.lang.String]()
-    val keys: com.badlogic.gdx.utils.ObjectMap#Keys[java.lang.String] = this.properties.keys()
+    val keys: com.badlogic.gdx.utils.ObjectMap.Keys[java.lang.String] = this.properties.keys()
     if (keys != null) {
       for (key <- keys) {
         result += key
@@ -46,7 +46,7 @@ class I18NBundle {
     return this.formatter.format(this.get(key), args)
   }
   def debug(placeholder: java.lang.String): scala.Unit = {
-    val keys: com.badlogic.gdx.utils.ObjectMap#Keys[java.lang.String] = this.properties.keys()
+    val keys: com.badlogic.gdx.utils.ObjectMap.Keys[java.lang.String] = this.properties.keys()
     if (keys == null) {
       return
     } else ()

@@ -2,8 +2,8 @@ package com.badlogic.gdx.graphics.g3d.shaders
 
 abstract class BaseShader extends com.badlogic.gdx.graphics.g3d.Shader {
   private final val uniforms: com.badlogic.gdx.utils.Array[java.lang.String] = new com.badlogic.gdx.utils.Array[java.lang.String]()
-  private final val validators: com.badlogic.gdx.utils.Array[Validator] = new com.badlogic.gdx.utils.Array[Validator]()
-  private final val setters: com.badlogic.gdx.utils.Array[Setter] = new com.badlogic.gdx.utils.Array[Setter]()
+  private final val validators: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Validator] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Validator]()
+  private final val setters: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter]()
   private var locations: scala.Array[scala.Int] = null.asInstanceOf[scala.Array[scala.Int]]
   private final val globalUniforms: com.badlogic.gdx.utils.IntArray = new com.badlogic.gdx.utils.IntArray()
   private final val localUniforms: com.badlogic.gdx.utils.IntArray = new com.badlogic.gdx.utils.IntArray()
@@ -16,7 +16,7 @@ abstract class BaseShader extends com.badlogic.gdx.graphics.g3d.Shader {
   private final val tempArray: com.badlogic.gdx.utils.IntArray = new com.badlogic.gdx.utils.IntArray()
   private final val tempArray2: com.badlogic.gdx.utils.IntArray = new com.badlogic.gdx.utils.IntArray()
   private var combinedAttributes: com.badlogic.gdx.graphics.g3d.Attributes = new com.badlogic.gdx.graphics.g3d.Attributes()
-  def register(alias: java.lang.String, validator: Validator, setter: Setter): scala.Int = {
+  def register(alias: java.lang.String, validator: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Validator, setter: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter): scala.Int = {
     if (this.locations != null) {
       throw new com.badlogic.gdx.utils.GdxRuntimeException("Cannot register an uniform after initialization")
     } else ()
@@ -31,23 +31,23 @@ abstract class BaseShader extends com.badlogic.gdx.graphics.g3d.Shader {
     this.setters.add(setter)
     return this.uniforms.size - 1
   }
-  def register(alias: java.lang.String, validator: Validator): scala.Int = {
+  def register(alias: java.lang.String, validator: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Validator): scala.Int = {
     return this.register(alias, validator, null)
   }
-  def register(alias: java.lang.String, setter: Setter): scala.Int = {
+  def register(alias: java.lang.String, setter: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter): scala.Int = {
     return this.register(alias, null, setter)
   }
   def register(alias: java.lang.String): scala.Int = {
     return this.register(alias, null, null)
   }
-  def register(uniform: Uniform, setter: Setter): scala.Int = {
+  def register(uniform: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform, setter: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter): scala.Int = {
     return this.register(uniform.alias, uniform, setter)
   }
-  def register(uniform: Uniform): scala.Int = {
+  def register(uniform: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform): scala.Int = {
     return this.register(uniform, null)
   }
   def getUniformID(alias: java.lang.String): scala.Int = {
-    val n: scala.Int = this.uniforms.size
+    val n: scala.Int = this.uniforms.size;
     { var i: scala.Int = 0; while (i < n) { {
       if (this.uniforms.get(i).equals(alias)) {
         return i
@@ -67,11 +67,11 @@ abstract class BaseShader extends com.badlogic.gdx.graphics.g3d.Shader {
     } else ()
     this.program = program
     val n: scala.Int = this.uniforms.size
-    this.locations = new Array[scala.Int](n)
+    this.locations = new Array[scala.Int](n);
     { var i: scala.Int = 0; while (i < n) { {
       val input: java.lang.String = this.uniforms.get(i)
-      val validator: Validator = this.validators.get(i)
-      val setter: Setter = this.setters.get(i)
+      val validator: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Validator = this.validators.get(i)
+      val setter: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter = this.setters.get(i)
       if ((validator != null) && (!validator.validate(this, i, renderable))) {
         this.locations(i) = -1
       } else {
@@ -91,7 +91,7 @@ abstract class BaseShader extends com.badlogic.gdx.graphics.g3d.Shader {
     }; i = i + 1 } }
     if (renderable != null) {
       val attrs: com.badlogic.gdx.graphics.VertexAttributes = renderable.meshPart.mesh.getVertexAttributes()
-      val c: scala.Int = attrs.size()
+      val c: scala.Int = attrs.size();
       { var i: scala.Int = 0; while (i < c) { {
         val attr: com.badlogic.gdx.graphics.VertexAttribute = attrs.get(i)
         val location: scala.Int = program.getAttributeLocation(attr.alias)
@@ -101,7 +101,7 @@ abstract class BaseShader extends com.badlogic.gdx.graphics.g3d.Shader {
       }; i = i + 1 } }
       val iattrs: com.badlogic.gdx.graphics.VertexAttributes = renderable.meshPart.mesh.getInstancedAttributes()
       if (iattrs != null) {
-        val ic: scala.Int = iattrs.size()
+        val ic: scala.Int = iattrs.size();
         { var i: scala.Int = 0; while (i < ic) { {
           val attr: com.badlogic.gdx.graphics.VertexAttribute = iattrs.get(i)
           val location: scala.Int = program.getAttributeLocation(attr.alias)
@@ -116,7 +116,7 @@ abstract class BaseShader extends com.badlogic.gdx.graphics.g3d.Shader {
     this.camera = camera
     this.context = context
     this.program.bind()
-    this.currentMesh = null
+    this.currentMesh = null;
     { var u: scala.Int = 0; var i: scala.Int = 0; while (i < this.globalUniforms.size) { {
       if (this.setters.get({
         u = this.globalUniforms.get(i)
@@ -128,7 +128,7 @@ abstract class BaseShader extends com.badlogic.gdx.graphics.g3d.Shader {
   }
   private final def getAttributeLocations(attrs: com.badlogic.gdx.graphics.VertexAttributes): scala.Array[scala.Int] = {
     this.tempArray.clear()
-    val n: scala.Int = attrs.size()
+    val n: scala.Int = attrs.size();
     { var i: scala.Int = 0; while (i < n) { {
       this.tempArray.add(this.attributes.get(attrs.get(i).getKey(), -1))
     }; i = i + 1 } }
@@ -140,7 +140,7 @@ abstract class BaseShader extends com.badlogic.gdx.graphics.g3d.Shader {
       return null
     } else ()
     this.tempArray2.clear()
-    val n: scala.Int = attrs.size()
+    val n: scala.Int = attrs.size();
     { var i: scala.Int = 0; while (i < n) { {
       this.tempArray2.add(this.instancedAttributes.get(attrs.get(i).getKey(), -1))
     }; i = i + 1 } }
@@ -290,7 +290,7 @@ abstract class BaseShader extends com.badlogic.gdx.graphics.g3d.Shader {
     this.program.setUniformi(this.locations(uniform), v1, v2, v3, v4)
     return true
   }
-  final def set(uniform: scala.Int, textureDesc: com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor): scala.Boolean = {
+  final def set(uniform: scala.Int, textureDesc: com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[?]): scala.Boolean = {
     if (this.locations(uniform) < 0) {
       return false
     } else ()
@@ -304,6 +304,8 @@ abstract class BaseShader extends com.badlogic.gdx.graphics.g3d.Shader {
     this.program.setUniformi(this.locations(uniform), this.context.textureBinder.bind(texture))
     return true
   }
+}
+object BaseShader {
   trait Validator {
     def validate(shader: BaseShader, inputID: scala.Int, renderable: com.badlogic.gdx.graphics.g3d.Renderable): scala.Boolean
   }
@@ -311,17 +313,17 @@ abstract class BaseShader extends com.badlogic.gdx.graphics.g3d.Shader {
     def isGlobal(shader: BaseShader, inputID: scala.Int): scala.Boolean
     def set(shader: BaseShader, inputID: scala.Int, renderable: com.badlogic.gdx.graphics.g3d.Renderable, combinedAttributes: com.badlogic.gdx.graphics.g3d.Attributes): scala.Unit
   }
-  abstract class GlobalSetter extends Setter {
+  abstract class GlobalSetter extends com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter {
     def isGlobal(shader: BaseShader, inputID: scala.Int): scala.Boolean = {
       return true
     }
   }
-  abstract class LocalSetter extends Setter {
+  abstract class LocalSetter extends com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter {
     def isGlobal(shader: BaseShader, inputID: scala.Int): scala.Boolean = {
       return false
     }
   }
-  class Uniform extends Validator {
+  class Uniform extends com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Validator {
     var alias: java.lang.String = null.asInstanceOf[java.lang.String]
     var materialMask: scala.Long = 0L
     var environmentMask: scala.Long = 0L

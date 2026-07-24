@@ -5,6 +5,8 @@ abstract class ColorInfluencer extends com.badlogic.gdx.graphics.g3d.particles.i
   def allocateChannels(): scala.Unit = {
     this.colorChannel = this.controller.particles.addChannel(com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.Color)
   }
+}
+object ColorInfluencer {
   class Random extends ColorInfluencer {
     var colorChannel: com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel]
     def allocateChannels(): scala.Unit = {
@@ -18,8 +20,8 @@ abstract class ColorInfluencer extends com.badlogic.gdx.graphics.g3d.particles.i
         this.colorChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.AlphaOffset) = com.badlogic.gdx.math.MathUtils.random()
       }; i = i + this.colorChannel.strideSize } }
     }
-    def copy(): Random = {
-      return new Random()
+    def copy(): com.badlogic.gdx.graphics.g3d.particles.influencers.ColorInfluencer.Random = {
+      return new com.badlogic.gdx.graphics.g3d.particles.influencers.ColorInfluencer.Random()
     }
   }
   class Single extends ColorInfluencer {
@@ -27,7 +29,7 @@ abstract class ColorInfluencer extends com.badlogic.gdx.graphics.g3d.particles.i
     var lifeChannel: com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel]
     var alphaValue: com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue]
     var colorValue: com.badlogic.gdx.graphics.g3d.particles.values.GradientColorValue = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.values.GradientColorValue]
-    def this(billboardColorInfluencer: Single) = {
+    def this(billboardColorInfluencer: com.badlogic.gdx.graphics.g3d.particles.influencers.ColorInfluencer.Single) = {
       this()
       this.set(billboardColorInfluencer)
     }
@@ -37,7 +39,7 @@ abstract class ColorInfluencer extends com.badlogic.gdx.graphics.g3d.particles.i
       this.alphaValue = new com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue()
       this.alphaValue.setHigh(1)
     }
-    def set(colorInfluencer: Single): scala.Unit = {
+    def set(colorInfluencer: com.badlogic.gdx.graphics.g3d.particles.influencers.ColorInfluencer.Single): scala.Unit = {
       this.colorValue.load(colorInfluencer.colorValue)
       this.alphaValue.load(colorInfluencer.alphaValue)
     }
@@ -64,16 +66,16 @@ abstract class ColorInfluencer extends com.badlogic.gdx.graphics.g3d.particles.i
         this.colorChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.AlphaOffset) = this.alphaInterpolationChannel.data(a + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.InterpolationStartOffset) + (this.alphaInterpolationChannel.data(a + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.InterpolationDiffOffset) * this.alphaValue.getScale(lifePercent))
       }; i = i + this.colorChannel.strideSize; a = a + this.alphaInterpolationChannel.strideSize; l = l + this.lifeChannel.strideSize } }
     }
-    def copy(): Single = {
-      return new Single(this)
+    def copy(): com.badlogic.gdx.graphics.g3d.particles.influencers.ColorInfluencer.Single = {
+      return new com.badlogic.gdx.graphics.g3d.particles.influencers.ColorInfluencer.Single(this)
     }
     def write(json: com.badlogic.gdx.utils.Json): scala.Unit = {
       json.writeValue("alpha", this.alphaValue)
       json.writeValue("color", this.colorValue)
     }
     def read(json: com.badlogic.gdx.utils.Json, jsonData: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
-      this.alphaValue = json.readValue("alpha", classOf[java.lang.Class], jsonData)
-      this.colorValue = json.readValue("color", classOf[java.lang.Class], jsonData)
+      this.alphaValue = json.readValue("alpha", classOf[com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue], jsonData)
+      this.colorValue = json.readValue("color", classOf[com.badlogic.gdx.graphics.g3d.particles.values.GradientColorValue], jsonData)
     }
   }
 }

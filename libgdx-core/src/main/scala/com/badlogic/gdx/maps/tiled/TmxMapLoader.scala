@@ -1,13 +1,13 @@
 package com.badlogic.gdx.maps.tiled
 
-class TmxMapLoader extends com.badlogic.gdx.maps.tiled.BaseTmxMapLoader[com.badlogic.gdx.maps.tiled.BaseTiledMapLoader#Parameters] {
+class TmxMapLoader extends com.badlogic.gdx.maps.tiled.BaseTmxMapLoader[com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.Parameters] {
   def this(resolver: com.badlogic.gdx.assets.loaders.FileHandleResolver) = {
     this()
   }
   def load(fileName: java.lang.String): com.badlogic.gdx.maps.tiled.TiledMap = {
-    return this.load(fileName, new com.badlogic.gdx.maps.tiled.BaseTiledMapLoader#Parameters())
+    return this.load(fileName, new com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.Parameters())
   }
-  def load(fileName: java.lang.String, parameter: com.badlogic.gdx.maps.tiled.BaseTiledMapLoader#Parameters): com.badlogic.gdx.maps.tiled.TiledMap = {
+  def load(fileName: java.lang.String, parameter: com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.Parameters): com.badlogic.gdx.maps.tiled.TiledMap = {
     val tmxFile: com.badlogic.gdx.files.FileHandle = this.resolve(fileName)
     this.root = xml.parse(tmxFile)
     val textures: com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.graphics.Texture] = new com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.graphics.Texture]()
@@ -17,31 +17,31 @@ class TmxMapLoader extends com.badlogic.gdx.maps.tiled.BaseTmxMapLoader[com.badl
       texture.setFilter(parameter.textureMinFilter, parameter.textureMagFilter)
       textures.put(textureFile.path(), texture)
     }
-    val map: com.badlogic.gdx.maps.tiled.TiledMap = this.loadTiledMap(tmxFile, parameter, new com.badlogic.gdx.maps.ImageResolver#DirectImageResolver(textures))
+    val map: com.badlogic.gdx.maps.tiled.TiledMap = this.loadTiledMap(tmxFile, parameter, new com.badlogic.gdx.maps.ImageResolver.DirectImageResolver(textures))
     map.setOwnedResources(textures.values().toArray())
     return map
   }
-  def loadAsync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, tmxFile: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.maps.tiled.BaseTiledMapLoader#Parameters): scala.Unit = {
-    this.map = this.loadTiledMap(tmxFile, parameter, new com.badlogic.gdx.maps.ImageResolver#AssetManagerImageResolver(manager))
+  def loadAsync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, tmxFile: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.Parameters): scala.Unit = {
+    this.map = this.loadTiledMap(tmxFile, parameter, new com.badlogic.gdx.maps.ImageResolver.AssetManagerImageResolver(manager))
   }
-  def loadSync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.maps.tiled.BaseTiledMapLoader#Parameters): com.badlogic.gdx.maps.tiled.TiledMap = {
+  def loadSync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.Parameters): com.badlogic.gdx.maps.tiled.TiledMap = {
     return map
   }
-  protected def getDependencyAssetDescriptors(tmxFile: com.badlogic.gdx.files.FileHandle, textureParameter: com.badlogic.gdx.assets.loaders.TextureLoader#TextureParameter): com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor] = {
-    val descriptors: com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor]()
+  def getDependencyAssetDescriptors(tmxFile: com.badlogic.gdx.files.FileHandle, textureParameter: com.badlogic.gdx.assets.loaders.TextureLoader.TextureParameter): com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = {
+    val descriptors: com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]()
     val fileHandles: com.badlogic.gdx.utils.Array[com.badlogic.gdx.files.FileHandle] = this.getDependencyFileHandles(tmxFile)
     for (handle <- fileHandles) {
-      descriptors.add(new com.badlogic.gdx.assets.AssetDescriptor(handle, classOf[java.lang.Class], textureParameter))
+      descriptors.add(new com.badlogic.gdx.assets.AssetDescriptor(handle, classOf[com.badlogic.gdx.graphics.Texture], textureParameter))
     }
     return descriptors
   }
-  protected def getDependencyFileHandles(tmxFile: com.badlogic.gdx.files.FileHandle): com.badlogic.gdx.utils.Array[com.badlogic.gdx.files.FileHandle] = {
+  def getDependencyFileHandles(tmxFile: com.badlogic.gdx.files.FileHandle): com.badlogic.gdx.utils.Array[com.badlogic.gdx.files.FileHandle] = {
     val fileHandles: com.badlogic.gdx.utils.Array[com.badlogic.gdx.files.FileHandle] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.files.FileHandle]()
     for (tileset <- root.getChildrenByNameRecursively("tileset")) {
       this.getTileSetDependencyFileHandle(fileHandles, tmxFile, tileset)
     }
     for (imageLayer <- root.getChildrenByNameRecursively("imagelayer")) {
-      val image: com.badlogic.gdx.utils.XmlReader#Element = imageLayer.getChildByName("image")
+      val image: com.badlogic.gdx.utils.XmlReader.Element = imageLayer.getChildByName("image")
       val source: java.lang.String = image.getAttribute("source", null)
       if (source != null) {
         val handle: com.badlogic.gdx.files.FileHandle = com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.getRelativeFileHandle(tmxFile, source)
@@ -50,12 +50,12 @@ class TmxMapLoader extends com.badlogic.gdx.maps.tiled.BaseTmxMapLoader[com.badl
     }
     return fileHandles
   }
-  protected def getTileSetDependencyFileHandle(tmxFile: com.badlogic.gdx.files.FileHandle, tileset: com.badlogic.gdx.utils.XmlReader#Element): com.badlogic.gdx.utils.Array[com.badlogic.gdx.files.FileHandle] = {
+  def getTileSetDependencyFileHandle(tmxFile: com.badlogic.gdx.files.FileHandle, tileset: com.badlogic.gdx.utils.XmlReader.Element): com.badlogic.gdx.utils.Array[com.badlogic.gdx.files.FileHandle] = {
     val fileHandles: com.badlogic.gdx.utils.Array[com.badlogic.gdx.files.FileHandle] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.files.FileHandle]()
     return this.getTileSetDependencyFileHandle(fileHandles, tmxFile, tileset)
   }
-  protected def getTileSetDependencyFileHandle(fileHandles: com.badlogic.gdx.utils.Array[com.badlogic.gdx.files.FileHandle], tmxFile: com.badlogic.gdx.files.FileHandle, tileset$arg: com.badlogic.gdx.utils.XmlReader#Element): com.badlogic.gdx.utils.Array[com.badlogic.gdx.files.FileHandle] = {
-    var tileset: com.badlogic.gdx.utils.XmlReader#Element = tileset$arg
+  def getTileSetDependencyFileHandle(fileHandles: com.badlogic.gdx.utils.Array[com.badlogic.gdx.files.FileHandle], tmxFile: com.badlogic.gdx.files.FileHandle, tileset$arg: com.badlogic.gdx.utils.XmlReader.Element): com.badlogic.gdx.utils.Array[com.badlogic.gdx.files.FileHandle] = {
+    var tileset: com.badlogic.gdx.utils.XmlReader.Element = tileset$arg
     var tsxFile: com.badlogic.gdx.files.FileHandle = null.asInstanceOf[com.badlogic.gdx.files.FileHandle]
     val source: java.lang.String = tileset.getAttribute("source", null)
     if (source != null) {
@@ -64,7 +64,7 @@ class TmxMapLoader extends com.badlogic.gdx.maps.tiled.BaseTmxMapLoader[com.badl
     } else {
       tsxFile = tmxFile
     }
-    val imageElement: com.badlogic.gdx.utils.XmlReader#Element = tileset.getChildByName("image")
+    val imageElement: com.badlogic.gdx.utils.XmlReader.Element = tileset.getChildByName("image")
     if (imageElement != null) {
       val imageSource: java.lang.String = imageElement.getAttribute("source")
       val image: com.badlogic.gdx.files.FileHandle = com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.getRelativeFileHandle(tsxFile, imageSource)
@@ -78,7 +78,7 @@ class TmxMapLoader extends com.badlogic.gdx.maps.tiled.BaseTmxMapLoader[com.badl
     }
     return fileHandles
   }
-  protected def addStaticTiles(tmxFile: com.badlogic.gdx.files.FileHandle, imageResolver: com.badlogic.gdx.maps.ImageResolver, tileSet: com.badlogic.gdx.maps.tiled.TiledMapTileSet, element: com.badlogic.gdx.utils.XmlReader#Element, tileElements: com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.XmlReader#Element], name: java.lang.String, firstgid: scala.Int, tilewidth: scala.Int, tileheight: scala.Int, spacing: scala.Int, margin: scala.Int, source: java.lang.String, offsetX: scala.Int, offsetY: scala.Int, imageSource$arg: java.lang.String, imageWidth: scala.Int, imageHeight: scala.Int, image$arg: com.badlogic.gdx.files.FileHandle): scala.Unit = {
+  def addStaticTiles(tmxFile: com.badlogic.gdx.files.FileHandle, imageResolver: com.badlogic.gdx.maps.ImageResolver, tileSet: com.badlogic.gdx.maps.tiled.TiledMapTileSet, element: com.badlogic.gdx.utils.XmlReader.Element, tileElements: com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.XmlReader.Element], name: java.lang.String, firstgid: scala.Int, tilewidth: scala.Int, tileheight: scala.Int, spacing: scala.Int, margin: scala.Int, source: java.lang.String, offsetX: scala.Int, offsetY: scala.Int, imageSource$arg: java.lang.String, imageWidth: scala.Int, imageHeight: scala.Int, image$arg: com.badlogic.gdx.files.FileHandle): scala.Unit = {
     var imageSource: java.lang.String = imageSource$arg
     var image: com.badlogic.gdx.files.FileHandle = image$arg
     val props: com.badlogic.gdx.maps.MapProperties = tileSet.getProperties()
@@ -93,7 +93,7 @@ class TmxMapLoader extends com.badlogic.gdx.maps.tiled.BaseTmxMapLoader[com.badl
       props.put("spacing", spacing)
       val stopWidth: scala.Int = texture.getRegionWidth() - tilewidth
       val stopHeight: scala.Int = texture.getRegionHeight() - tileheight
-      var id: scala.Int = firstgid
+      var id: scala.Int = firstgid;
       { var y: scala.Int = margin; while (y <= stopHeight) { {
         { var x: scala.Int = margin; while (x <= stopWidth) { {
           val tileRegion: com.badlogic.gdx.graphics.g2d.TextureRegion = new com.badlogic.gdx.graphics.g2d.TextureRegion(texture, x, y, tilewidth, tileheight)
@@ -103,7 +103,7 @@ class TmxMapLoader extends com.badlogic.gdx.maps.tiled.BaseTmxMapLoader[com.badl
       }; y = y + (tileheight + spacing) } }
     } else {
       for (tileElement <- tileElements) {
-        val imageElement: com.badlogic.gdx.utils.XmlReader#Element = tileElement.getChildByName("image")
+        val imageElement: com.badlogic.gdx.utils.XmlReader.Element = tileElement.getChildByName("image")
         if (imageElement != null) {
           imageSource = imageElement.getAttribute("source")
           if (source != null) {

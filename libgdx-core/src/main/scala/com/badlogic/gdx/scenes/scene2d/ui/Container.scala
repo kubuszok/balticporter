@@ -51,7 +51,7 @@ class Container[T <: com.badlogic.gdx.scenes.scene2d.Actor] extends com.badlogic
       super.draw(batch, parentAlpha)
     }
   }
-  protected def drawBackground(batch: com.badlogic.gdx.graphics.g2d.Batch, parentAlpha: scala.Float, x: scala.Float, y: scala.Float): scala.Unit = {
+  def drawBackground(batch: com.badlogic.gdx.graphics.g2d.Batch, parentAlpha: scala.Float, x: scala.Float, y: scala.Float): scala.Unit = {
     if (this.background$field == null) {
       return
     } else ()
@@ -138,10 +138,10 @@ class Container[T <: com.badlogic.gdx.scenes.scene2d.Actor] extends com.badlogic
       } else ()
     }
     if (this.round) {
-      x = java.lang.Math.floor(x).asInstanceOf[scala.Float]
-      y = java.lang.Math.floor(y).asInstanceOf[scala.Float]
-      width = java.lang.Math.ceil(width).asInstanceOf[scala.Float]
-      height = java.lang.Math.ceil(height).asInstanceOf[scala.Float]
+      x = java.lang.Math.floor(x).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
+      y = java.lang.Math.floor(y).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
+      width = java.lang.Math.ceil(width).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
+      height = java.lang.Math.ceil(height).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
     } else ()
     this.actor.setBounds(x, y, width, height)
     if (this.actor.isInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Layout]) {
@@ -212,13 +212,13 @@ class Container[T <: com.badlogic.gdx.scenes.scene2d.Actor] extends com.badlogic
     if (actor != this.actor) {
       return false
     } else ()
-    this.actor = null
+    this.actor = null.asInstanceOf[T]
     return super.removeActor(actor, unfocus)
   }
   def removeActorAt(index: scala.Int, unfocus: scala.Boolean): com.badlogic.gdx.scenes.scene2d.Actor = {
     var actor: com.badlogic.gdx.scenes.scene2d.Actor = super.removeActorAt(index, unfocus)
     if (actor == this.actor) {
-      this.actor = null
+      this.actor = null.asInstanceOf[T]
     } else ()
     return actor
   }

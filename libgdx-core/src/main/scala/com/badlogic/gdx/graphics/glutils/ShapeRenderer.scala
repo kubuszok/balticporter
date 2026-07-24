@@ -8,7 +8,7 @@ class ShapeRenderer extends com.badlogic.gdx.utils.Disposable {
   private final val combinedMatrix: com.badlogic.gdx.math.Matrix4 = new com.badlogic.gdx.math.Matrix4()
   private final val tmp: com.badlogic.gdx.math.Vector2 = new com.badlogic.gdx.math.Vector2()
   private final val color: com.badlogic.gdx.graphics.Color = new com.badlogic.gdx.graphics.Color(1, 1, 1, 1)
-  private var shapeType: ShapeType = null.asInstanceOf[ShapeType]
+  private var shapeType: com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType = null.asInstanceOf[com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType]
   private var autoShapeType: scala.Boolean = false
   private var defaultRectLineWidth: scala.Float = 0.75f
   def this(maxVertices: scala.Int, defaultShader: com.badlogic.gdx.graphics.glutils.ShaderProgram) = {
@@ -73,9 +73,9 @@ class ShapeRenderer extends com.badlogic.gdx.utils.Disposable {
     if (!this.autoShapeType) {
       throw new java.lang.IllegalStateException("autoShapeType must be true to use this method.")
     } else ()
-    this.begin(ShapeType.Line)
+    this.begin(com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Line)
   }
-  def begin(`type`: ShapeType): scala.Unit = {
+  def begin(`type`: com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType): scala.Unit = {
     if (this.shapeType != null) {
       throw new java.lang.IllegalStateException("Call end() before beginning a new shape batch.")
     } else ()
@@ -87,7 +87,7 @@ class ShapeRenderer extends com.badlogic.gdx.utils.Disposable {
     } else ()
     this.renderer.begin(this.combinedMatrix, this.shapeType.getGlType())
   }
-  def set(`type`: ShapeType): scala.Unit = {
+  def set(`type`: com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType): scala.Unit = {
     if (this.shapeType == `type`) {
       return
     } else ()
@@ -101,18 +101,18 @@ class ShapeRenderer extends com.badlogic.gdx.utils.Disposable {
     this.begin(`type`)
   }
   def point(x: scala.Float, y: scala.Float, z: scala.Float): scala.Unit = {
-    if (this.shapeType == ShapeType.Line) {
+    if (this.shapeType == com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Line) {
       val size: scala.Float = this.defaultRectLineWidth * 0.5f
       this.line(x - size, y - size, z, x + size, y + size, z)
       return
     } else {
-      if (this.shapeType == ShapeType.Filled) {
+      if (this.shapeType == com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Filled) {
         val size: scala.Float = this.defaultRectLineWidth * 0.5f
         this.box(x - size, y - size, z - size, this.defaultRectLineWidth, this.defaultRectLineWidth, this.defaultRectLineWidth)
         return
       } else ()
     }
-    this.check(ShapeType.Point, null, 1)
+    this.check(com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Point, null, 1)
     this.renderer.color(this.color)
     this.renderer.vertex(x, y, z)
   }
@@ -132,18 +132,18 @@ class ShapeRenderer extends com.badlogic.gdx.utils.Disposable {
     this.line(x, y, 0.0f, x2, y2, 0.0f, c1, c2)
   }
   def line(x: scala.Float, y: scala.Float, z: scala.Float, x2: scala.Float, y2: scala.Float, z2: scala.Float, c1: com.badlogic.gdx.graphics.Color, c2: com.badlogic.gdx.graphics.Color): scala.Unit = {
-    if (this.shapeType == ShapeType.Filled) {
+    if (this.shapeType == com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Filled) {
       this.rectLine(x, y, x2, y2, this.defaultRectLineWidth, c1, c2)
       return
     } else ()
-    this.check(ShapeType.Line, null, 2)
+    this.check(com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Line, null, 2)
     this.renderer.color(c1.r, c1.g, c1.b, c1.a)
     this.renderer.vertex(x, y, z)
     this.renderer.color(c2.r, c2.g, c2.b, c2.a)
     this.renderer.vertex(x2, y2, z2)
   }
   def curve(x1: scala.Float, y1: scala.Float, cx1: scala.Float, cy1: scala.Float, cx2: scala.Float, cy2: scala.Float, x2: scala.Float, y2: scala.Float, segments: scala.Int): scala.Unit = {
-    this.check(ShapeType.Line, null, (segments * 2) + 2)
+    this.check(com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Line, null, (segments * 2) + 2)
     val colorBits: scala.Float = this.color.toFloatBits()
     val subdiv_step: scala.Float = 1.0f / segments
     val subdiv_step2: scala.Float = subdiv_step * subdiv_step
@@ -182,9 +182,9 @@ class ShapeRenderer extends com.badlogic.gdx.utils.Disposable {
     this.renderer.vertex(x2, y2, 0)
   }
   def triangle(x1: scala.Float, y1: scala.Float, x2: scala.Float, y2: scala.Float, x3: scala.Float, y3: scala.Float): scala.Unit = {
-    this.check(ShapeType.Line, ShapeType.Filled, 6)
+    this.check(com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Line, com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Filled, 6)
     val colorBits: scala.Float = this.color.toFloatBits()
-    if (this.shapeType == ShapeType.Line) {
+    if (this.shapeType == com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Line) {
       this.renderer.color(colorBits)
       this.renderer.vertex(x1, y1, 0)
       this.renderer.color(colorBits)
@@ -207,8 +207,8 @@ class ShapeRenderer extends com.badlogic.gdx.utils.Disposable {
     }
   }
   def triangle(x1: scala.Float, y1: scala.Float, x2: scala.Float, y2: scala.Float, x3: scala.Float, y3: scala.Float, col1: com.badlogic.gdx.graphics.Color, col2: com.badlogic.gdx.graphics.Color, col3: com.badlogic.gdx.graphics.Color): scala.Unit = {
-    this.check(ShapeType.Line, ShapeType.Filled, 6)
-    if (this.shapeType == ShapeType.Line) {
+    this.check(com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Line, com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Filled, 6)
+    if (this.shapeType == com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Line) {
       this.renderer.color(col1.r, col1.g, col1.b, col1.a)
       this.renderer.vertex(x1, y1, 0)
       this.renderer.color(col2.r, col2.g, col2.b, col2.a)
@@ -231,9 +231,9 @@ class ShapeRenderer extends com.badlogic.gdx.utils.Disposable {
     }
   }
   def rect(x: scala.Float, y: scala.Float, width: scala.Float, height: scala.Float): scala.Unit = {
-    this.check(ShapeType.Line, ShapeType.Filled, 8)
+    this.check(com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Line, com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Filled, 8)
     val colorBits: scala.Float = this.color.toFloatBits()
-    if (this.shapeType == ShapeType.Line) {
+    if (this.shapeType == com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Line) {
       this.renderer.color(colorBits)
       this.renderer.vertex(x, y, 0)
       this.renderer.color(colorBits)
@@ -266,8 +266,8 @@ class ShapeRenderer extends com.badlogic.gdx.utils.Disposable {
     }
   }
   def rect(x: scala.Float, y: scala.Float, width: scala.Float, height: scala.Float, col1: com.badlogic.gdx.graphics.Color, col2: com.badlogic.gdx.graphics.Color, col3: com.badlogic.gdx.graphics.Color, col4: com.badlogic.gdx.graphics.Color): scala.Unit = {
-    this.check(ShapeType.Line, ShapeType.Filled, 8)
-    if (this.shapeType == ShapeType.Line) {
+    this.check(com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Line, com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Filled, 8)
+    if (this.shapeType == com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Line) {
       this.renderer.color(col1.r, col1.g, col1.b, col1.a)
       this.renderer.vertex(x, y, 0)
       this.renderer.color(col2.r, col2.g, col2.b, col2.a)
@@ -303,7 +303,7 @@ class ShapeRenderer extends com.badlogic.gdx.utils.Disposable {
     this.rect(x, y, originX, originY, width, height, scaleX, scaleY, degrees, this.color, this.color, this.color, this.color)
   }
   def rect(x: scala.Float, y: scala.Float, originX: scala.Float, originY: scala.Float, width: scala.Float, height: scala.Float, scaleX: scala.Float, scaleY: scala.Float, degrees: scala.Float, col1: com.badlogic.gdx.graphics.Color, col2: com.badlogic.gdx.graphics.Color, col3: com.badlogic.gdx.graphics.Color, col4: com.badlogic.gdx.graphics.Color): scala.Unit = {
-    this.check(ShapeType.Line, ShapeType.Filled, 8)
+    this.check(com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Line, com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Filled, 8)
     val cos: scala.Float = com.badlogic.gdx.math.MathUtils.cosDeg(degrees)
     val sin: scala.Float = com.badlogic.gdx.math.MathUtils.sinDeg(degrees)
     var fx: scala.Float = -originX
@@ -326,7 +326,7 @@ class ShapeRenderer extends com.badlogic.gdx.utils.Disposable {
     val y3: scala.Float = ((sin * fx2) + (cos * fy2)) + worldOriginY
     val x4: scala.Float = x1 + (x3 - x2)
     val y4: scala.Float = y3 - (y2 - y1)
-    if (this.shapeType == ShapeType.Line) {
+    if (this.shapeType == com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Line) {
       this.renderer.color(col1.r, col1.g, col1.b, col1.a)
       this.renderer.vertex(x1, y1, 0)
       this.renderer.color(col2.r, col2.g, col2.b, col2.a)
@@ -360,13 +360,13 @@ class ShapeRenderer extends com.badlogic.gdx.utils.Disposable {
   }
   def rectLine(x1: scala.Float, y1: scala.Float, x2: scala.Float, y2: scala.Float, width$arg: scala.Float): scala.Unit = {
     var width: scala.Float = width$arg
-    this.check(ShapeType.Line, ShapeType.Filled, 8)
+    this.check(com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Line, com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Filled, 8)
     val colorBits: scala.Float = this.color.toFloatBits()
     val t: com.badlogic.gdx.math.Vector2 = this.tmp.set(y2 - y1, x1 - x2).nor()
     width = width * 0.5f
     val tx: scala.Float = t.x * width
     val ty: scala.Float = t.y * width
-    if (this.shapeType == ShapeType.Line) {
+    if (this.shapeType == com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Line) {
       this.renderer.color(colorBits)
       this.renderer.vertex(x1 + tx, y1 + ty, 0)
       this.renderer.color(colorBits)
@@ -400,14 +400,14 @@ class ShapeRenderer extends com.badlogic.gdx.utils.Disposable {
   }
   def rectLine(x1: scala.Float, y1: scala.Float, x2: scala.Float, y2: scala.Float, width$arg: scala.Float, c1: com.badlogic.gdx.graphics.Color, c2: com.badlogic.gdx.graphics.Color): scala.Unit = {
     var width: scala.Float = width$arg
-    this.check(ShapeType.Line, ShapeType.Filled, 8)
+    this.check(com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Line, com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Filled, 8)
     val col1Bits: scala.Float = c1.toFloatBits()
     val col2Bits: scala.Float = c2.toFloatBits()
     val t: com.badlogic.gdx.math.Vector2 = this.tmp.set(y2 - y1, x1 - x2).nor()
     width = width * 0.5f
     val tx: scala.Float = t.x * width
     val ty: scala.Float = t.y * width
-    if (this.shapeType == ShapeType.Line) {
+    if (this.shapeType == com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Line) {
       this.renderer.color(col1Bits)
       this.renderer.vertex(x1 + tx, y1 + ty, 0)
       this.renderer.color(col1Bits)
@@ -446,8 +446,8 @@ class ShapeRenderer extends com.badlogic.gdx.utils.Disposable {
     var depth: scala.Float = depth$arg
     depth = -depth
     val colorBits: scala.Float = this.color.toFloatBits()
-    if (this.shapeType == ShapeType.Line) {
-      this.check(ShapeType.Line, ShapeType.Filled, 24)
+    if (this.shapeType == com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Line) {
+      this.check(com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Line, com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Filled, 24)
       this.renderer.color(colorBits)
       this.renderer.vertex(x, y, z)
       this.renderer.color(colorBits)
@@ -497,7 +497,7 @@ class ShapeRenderer extends com.badlogic.gdx.utils.Disposable {
       this.renderer.color(colorBits)
       this.renderer.vertex(x, y + height, z + depth)
     } else {
-      this.check(ShapeType.Line, ShapeType.Filled, 36)
+      this.check(com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Line, com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Filled, 36)
       this.renderer.color(colorBits)
       this.renderer.vertex(x, y, z)
       this.renderer.color(colorBits)
@@ -592,12 +592,12 @@ class ShapeRenderer extends com.badlogic.gdx.utils.Disposable {
     val sin: scala.Float = com.badlogic.gdx.math.MathUtils.sin(theta)
     var cx: scala.Float = radius * com.badlogic.gdx.math.MathUtils.cos(start * com.badlogic.gdx.math.MathUtils.degreesToRadians)
     var cy: scala.Float = radius * com.badlogic.gdx.math.MathUtils.sin(start * com.badlogic.gdx.math.MathUtils.degreesToRadians)
-    if (this.shapeType == ShapeType.Line) {
-      this.check(ShapeType.Line, ShapeType.Filled, (segments * 2) + 2)
+    if (this.shapeType == com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Line) {
+      this.check(com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Line, com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Filled, (segments * 2) + 2)
       this.renderer.color(colorBits)
       this.renderer.vertex(x, y, 0)
       this.renderer.color(colorBits)
-      this.renderer.vertex(x + cx, y + cy, 0)
+      this.renderer.vertex(x + cx, y + cy, 0);
       { var i: scala.Int = 0; while (i < segments) { {
         this.renderer.color(colorBits)
         this.renderer.vertex(x + cx, y + cy, 0)
@@ -610,7 +610,7 @@ class ShapeRenderer extends com.badlogic.gdx.utils.Disposable {
       this.renderer.color(colorBits)
       this.renderer.vertex(x + cx, y + cy, 0)
     } else {
-      this.check(ShapeType.Line, ShapeType.Filled, (segments * 3) + 3)
+      this.check(com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Line, com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Filled, (segments * 3) + 3);
       { var i: scala.Int = 0; while (i < segments) { {
         this.renderer.color(colorBits)
         this.renderer.vertex(x, y, 0)
@@ -647,8 +647,8 @@ class ShapeRenderer extends com.badlogic.gdx.utils.Disposable {
     val sin: scala.Float = com.badlogic.gdx.math.MathUtils.sin(angle)
     var cx: scala.Float = radius
     var cy: scala.Float = 0
-    if (this.shapeType == ShapeType.Line) {
-      this.check(ShapeType.Line, ShapeType.Filled, (segments * 2) + 2)
+    if (this.shapeType == com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Line) {
+      this.check(com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Line, com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Filled, (segments * 2) + 2);
       { var i: scala.Int = 0; while (i < segments) { {
         this.renderer.color(colorBits)
         this.renderer.vertex(x + cx, y + cy, 0)
@@ -661,8 +661,8 @@ class ShapeRenderer extends com.badlogic.gdx.utils.Disposable {
       this.renderer.color(colorBits)
       this.renderer.vertex(x + cx, y + cy, 0)
     } else {
-      this.check(ShapeType.Line, ShapeType.Filled, (segments * 3) + 3)
-      segments = segments - 1
+      this.check(com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Line, com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Filled, (segments * 3) + 3)
+      segments = segments - 1;
       { var i: scala.Int = 0; while (i < segments) { {
         this.renderer.color(colorBits)
         this.renderer.vertex(x, y, 0)
@@ -692,12 +692,12 @@ class ShapeRenderer extends com.badlogic.gdx.utils.Disposable {
     if (segments <= 0) {
       throw new java.lang.IllegalArgumentException("segments must be > 0.")
     } else ()
-    this.check(ShapeType.Line, ShapeType.Filled, segments * 3)
+    this.check(com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Line, com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Filled, segments * 3)
     val colorBits: scala.Float = this.color.toFloatBits()
     val angle: scala.Float = (2 * com.badlogic.gdx.math.MathUtils.PI) / segments
     val cx: scala.Float = x + (width / 2)
     val cy: scala.Float = y + (height / 2)
-    if (this.shapeType == ShapeType.Line) {
+    if (this.shapeType == com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Line) {
       { var i: scala.Int = 0; while (i < segments) { {
         this.renderer.color(colorBits)
         this.renderer.vertex(cx + ((width * 0.5f) * com.badlogic.gdx.math.MathUtils.cos(i * angle)), cy + ((height * 0.5f) * com.badlogic.gdx.math.MathUtils.sin(i * angle)), 0)
@@ -723,7 +723,7 @@ class ShapeRenderer extends com.badlogic.gdx.utils.Disposable {
     if (segments <= 0) {
       throw new java.lang.IllegalArgumentException("segments must be > 0.")
     } else ()
-    this.check(ShapeType.Line, ShapeType.Filled, segments * 3)
+    this.check(com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Line, com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Filled, segments * 3)
     val colorBits: scala.Float = this.color.toFloatBits()
     val angle: scala.Float = (2 * com.badlogic.gdx.math.MathUtils.PI) / segments
     rotation = (com.badlogic.gdx.math.MathUtils.PI * rotation) / 180.0f
@@ -733,7 +733,7 @@ class ShapeRenderer extends com.badlogic.gdx.utils.Disposable {
     val cy: scala.Float = y + (height / 2)
     var x1: scala.Float = width * 0.5f
     var y1: scala.Float = 0
-    if (this.shapeType == ShapeType.Line) {
+    if (this.shapeType == com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Line) {
       { var i: scala.Int = 0; while (i < segments) { {
         this.renderer.color(colorBits)
         this.renderer.vertex((cx + (cos * x1)) - (sin * y1), (cy + (sin * x1)) + (cos * y1), 0)
@@ -763,14 +763,14 @@ class ShapeRenderer extends com.badlogic.gdx.utils.Disposable {
     if (segments <= 0) {
       throw new java.lang.IllegalArgumentException("segments must be > 0.")
     } else ()
-    this.check(ShapeType.Line, ShapeType.Filled, (segments * 4) + 2)
+    this.check(com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Line, com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Filled, (segments * 4) + 2)
     val colorBits: scala.Float = this.color.toFloatBits()
     val angle: scala.Float = (2 * com.badlogic.gdx.math.MathUtils.PI) / segments
     val cos: scala.Float = com.badlogic.gdx.math.MathUtils.cos(angle)
     val sin: scala.Float = com.badlogic.gdx.math.MathUtils.sin(angle)
     var cx: scala.Float = radius
     var cy: scala.Float = 0
-    if (this.shapeType == ShapeType.Line) {
+    if (this.shapeType == com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Line) {
       { var i: scala.Int = 0; while (i < segments) { {
         this.renderer.color(colorBits)
         this.renderer.vertex(x + cx, y + cy, z)
@@ -787,7 +787,7 @@ class ShapeRenderer extends com.badlogic.gdx.utils.Disposable {
       this.renderer.color(colorBits)
       this.renderer.vertex(x + cx, y + cy, z)
     } else {
-      segments = segments - 1
+      segments = segments - 1;
       { var i: scala.Int = 0; while (i < segments) { {
         this.renderer.color(colorBits)
         this.renderer.vertex(x, y, z)
@@ -817,7 +817,7 @@ class ShapeRenderer extends com.badlogic.gdx.utils.Disposable {
     cy = 0
     this.renderer.color(colorBits)
     this.renderer.vertex(x + cx, y + cy, z)
-    if (this.shapeType != ShapeType.Line) {
+    if (this.shapeType != com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Line) {
       this.renderer.color(colorBits)
       this.renderer.vertex(x + temp, y + temp2, z)
       this.renderer.color(colorBits)
@@ -833,10 +833,10 @@ class ShapeRenderer extends com.badlogic.gdx.utils.Disposable {
     if ((count % 2) != 0) {
       throw new java.lang.IllegalArgumentException("Polygons must have an even number of vertices.")
     } else ()
-    this.check(ShapeType.Line, null, count)
+    this.check(com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Line, null, count)
     val colorBits: scala.Float = this.color.toFloatBits()
     val firstX: scala.Float = vertices(0)
-    val firstY: scala.Float = vertices(1)
+    val firstY: scala.Float = vertices(1);
     { var i: scala.Int = offset; val n: scala.Int = offset + count; while (i < n) { {
       val x1: scala.Float = vertices(i)
       val y1: scala.Float = vertices(i + 1)
@@ -865,8 +865,8 @@ class ShapeRenderer extends com.badlogic.gdx.utils.Disposable {
     if ((count % 2) != 0) {
       throw new java.lang.IllegalArgumentException("Polylines must have an even number of vertices.")
     } else ()
-    this.check(ShapeType.Line, null, count)
-    val colorBits: scala.Float = this.color.toFloatBits()
+    this.check(com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Line, null, count)
+    val colorBits: scala.Float = this.color.toFloatBits();
     { var i: scala.Int = offset; val n: scala.Int = (offset + count) - 2; while (i < n) { {
       val x1: scala.Float = vertices(i)
       val y1: scala.Float = vertices(i + 1)
@@ -883,7 +883,7 @@ class ShapeRenderer extends com.badlogic.gdx.utils.Disposable {
   def polyline(vertices: scala.Array[scala.Float]): scala.Unit = {
     this.polyline(vertices, 0, vertices.length)
   }
-  protected final def check(preferred: ShapeType, other: ShapeType, newVertices: scala.Int): scala.Unit = {
+  final def check(preferred: com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType, other: com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType, newVertices: scala.Int): scala.Unit = {
     if (this.shapeType == null) {
       throw new java.lang.IllegalStateException("begin must be called first.")
     } else ()
@@ -899,12 +899,12 @@ class ShapeRenderer extends com.badlogic.gdx.utils.Disposable {
       this.begin(preferred)
     } else {
       if (this.matrixDirty) {
-        val `type`: ShapeType = this.shapeType
+        val `type`: com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType = this.shapeType
         this.`end`()
         this.begin(`type`)
       } else {
         if ((this.renderer.getMaxVertices() - this.renderer.getNumVertices()) < newVertices) {
-          val `type`: ShapeType = this.shapeType
+          val `type`: com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType = this.shapeType
           this.`end`()
           this.begin(`type`)
         } else ()
@@ -916,14 +916,14 @@ class ShapeRenderer extends com.badlogic.gdx.utils.Disposable {
     this.shapeType = null
   }
   def flush(): scala.Unit = {
-    val `type`: ShapeType = this.shapeType
+    val `type`: com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType = this.shapeType
     if (`type` == null) {
       return
     } else ()
     this.`end`()
     this.begin(`type`)
   }
-  def getCurrentType(): ShapeType = {
+  def getCurrentType(): com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType = {
     return this.shapeType
   }
   def getRenderer(): com.badlogic.gdx.graphics.glutils.ImmediateModeRenderer = {
@@ -935,6 +935,8 @@ class ShapeRenderer extends com.badlogic.gdx.utils.Disposable {
   def dispose(): scala.Unit = {
     this.renderer.dispose()
   }
+}
+object ShapeRenderer {
   sealed abstract class ShapeType {
     private var glType: scala.Int = 0
     def getGlType(): scala.Int = {

@@ -26,7 +26,7 @@ class AtomicQueue[T] {
     val read: scala.Int = this.readIndex.get()
     val write: scala.Int = this.writeIndex.get()
     if (read == write) {
-      return null
+      return null.asInstanceOf[T]
     } else ()
     val value: T = this.queue.get(read)
     this.readIndex.set(this.next(read))

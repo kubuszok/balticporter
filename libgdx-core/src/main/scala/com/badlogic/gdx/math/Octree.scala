@@ -3,9 +3,9 @@ package com.badlogic.gdx.math
 class Octree[T] {
   var maxItemsPerNode: scala.Int = 0
   final val nodePool: com.badlogic.gdx.utils.Pool[OctreeNode] = new com.badlogic.gdx.utils.Pool[OctreeNode]()
-  protected var root: OctreeNode = null.asInstanceOf[OctreeNode]
-  var collider: Collider[T] = null.asInstanceOf[Collider[T]]
-  def this(minimum: com.badlogic.gdx.math.Vector3, maximum: com.badlogic.gdx.math.Vector3, maxDepth: scala.Int, maxItemsPerNode: scala.Int, collider: Collider[T]) = {
+  var root: OctreeNode = null.asInstanceOf[OctreeNode]
+  var collider: com.badlogic.gdx.math.Octree.Collider[T] = null.asInstanceOf[com.badlogic.gdx.math.Octree.Collider[T]]
+  def this(minimum: com.badlogic.gdx.math.Vector3, maximum: com.badlogic.gdx.math.Vector3, maxDepth: scala.Int, maxItemsPerNode: scala.Int, collider: com.badlogic.gdx.math.Octree.Collider[T]) = {
     this()
     val realMin: com.badlogic.gdx.math.Vector3 = new com.badlogic.gdx.math.Vector3(java.lang.Math.min(minimum.x, maximum.x), java.lang.Math.min(minimum.y, maximum.y), java.lang.Math.min(minimum.z, maximum.z))
     val realMax: com.badlogic.gdx.math.Vector3 = new com.badlogic.gdx.math.Vector3(java.lang.Math.max(minimum.x, maximum.x), java.lang.Math.max(minimum.y, maximum.y), java.lang.Math.max(minimum.z, maximum.z))
@@ -42,7 +42,7 @@ class Octree[T] {
     this.root.query(frustum, result)
     return result
   }
-  def rayCast(ray: com.badlogic.gdx.math.collision.Ray, result: RayCastResult[T]): T = {
+  def rayCast(ray: com.badlogic.gdx.math.collision.Ray, result: com.badlogic.gdx.math.Octree.RayCastResult[T]): T = {
     result.distance = result.maxDistanceSq
     this.root.rayCast(ray, result)
     return result.geometry
@@ -51,7 +51,7 @@ class Octree[T] {
     this.root.getBoundingBox(boxes)
     return boxes
   }
-  protected class OctreeNode {
+  class OctreeNode {
     var level: scala.Int = 0
     final val bounds: com.badlogic.gdx.math.collision.BoundingBox = new com.badlogic.gdx.math.collision.BoundingBox()
     var leaf: scala.Boolean = false
@@ -98,7 +98,7 @@ class Octree[T] {
         this.children(i) = null
       }; i = i + 1 } }
     }
-    protected def add(geometry: T): scala.Unit = {
+    def add(geometry: T): scala.Unit = {
       if (!collider.intersects(this.bounds, geometry)) {
         return
       } else ()
@@ -117,7 +117,7 @@ class Octree[T] {
         }
       }
     }
-    protected def remove(`object`: T): scala.Boolean = {
+    def remove(`object`: T): scala.Boolean = {
       if (!this.leaf) {
         var removed: scala.Boolean = false
         for (node <- this.children) {
@@ -139,10 +139,10 @@ class Octree[T] {
       } else ()
       return this.geometries.removeValue(`object`, true)
     }
-    protected def isLeaf(): scala.Boolean = {
+    def isLeaf(): scala.Boolean = {
       return this.leaf
     }
-    protected def query(aabb: com.badlogic.gdx.math.collision.BoundingBox, result: com.badlogic.gdx.utils.ObjectSet[T]): scala.Unit = {
+    def query(aabb: com.badlogic.gdx.math.collision.BoundingBox, result: com.badlogic.gdx.utils.ObjectSet[T]): scala.Unit = {
       if (!aabb.intersects(this.bounds)) {
         return
       } else ()
@@ -158,7 +158,7 @@ class Octree[T] {
         }
       }
     }
-    protected def query(frustum: com.badlogic.gdx.math.Frustum, result: com.badlogic.gdx.utils.ObjectSet[T]): scala.Unit = {
+    def query(frustum: com.badlogic.gdx.math.Frustum, result: com.badlogic.gdx.utils.ObjectSet[T]): scala.Unit = {
       if (!com.badlogic.gdx.math.Intersector.intersectFrustumBounds(frustum, this.bounds)) {
         return
       } else ()
@@ -174,7 +174,7 @@ class Octree[T] {
         }
       }
     }
-    protected def rayCast(ray: com.badlogic.gdx.math.collision.Ray, result: RayCastResult[T]): scala.Unit = {
+    def rayCast(ray: com.badlogic.gdx.math.collision.Ray, result: com.badlogic.gdx.math.Octree.RayCastResult[T]): scala.Unit = {
       val intersect: scala.Boolean = com.badlogic.gdx.math.Intersector.intersectRayBounds(ray, this.bounds, Octree.tmp)
       if (!intersect) {
         return
@@ -198,7 +198,7 @@ class Octree[T] {
         }
       }
     }
-    protected def getAll(resultSet: com.badlogic.gdx.utils.ObjectSet[T]): scala.Unit = {
+    def getAll(resultSet: com.badlogic.gdx.utils.ObjectSet[T]): scala.Unit = {
       if (!this.leaf) {
         for (child <- this.children) {
           child.getAll(resultSet)
@@ -206,7 +206,7 @@ class Octree[T] {
       } else ()
       resultSet.addAll(this.geometries)
     }
-    protected def getBoundingBox(bounds: com.badlogic.gdx.utils.ObjectSet[com.badlogic.gdx.math.collision.BoundingBox]): scala.Unit = {
+    def getBoundingBox(bounds: com.badlogic.gdx.utils.ObjectSet[com.badlogic.gdx.math.collision.BoundingBox]): scala.Unit = {
       if (!this.leaf) {
         for (node <- this.children) {
           node.getBoundingBox(bounds)
@@ -215,6 +215,9 @@ class Octree[T] {
       bounds.add(this.bounds)
     }
   }
+}
+object Octree {
+  final val tmp: com.badlogic.gdx.math.Vector3 = new com.badlogic.gdx.math.Vector3()
   trait Collider[T] {
     def intersects(nodeBounds: com.badlogic.gdx.math.collision.BoundingBox, geometry: T): scala.Boolean
     def intersects(frustum: com.badlogic.gdx.math.Frustum, geometry: T): scala.Boolean
@@ -225,7 +228,4 @@ class Octree[T] {
     var distance: scala.Float = 0.0f
     var maxDistanceSq: scala.Float = java.lang.Float.MAX_VALUE
   }
-}
-object Octree {
-  final val tmp: com.badlogic.gdx.math.Vector3 = new com.badlogic.gdx.math.Vector3()
 }

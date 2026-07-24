@@ -38,10 +38,10 @@ class ParallelAction extends com.badlogic.gdx.scenes.scene2d.Action {
       return true
     } else ()
     this.complete = true
-    val pool: com.badlogic.gdx.utils.Pool = this.getPool()
+    val pool: com.badlogic.gdx.utils.Pool[?] = this.getPool()
     this.setPool(null)
     try {
-      val actions: com.badlogic.gdx.utils.Array[com.badlogic.gdx.scenes.scene2d.Action] = this.actions
+      val actions: com.badlogic.gdx.utils.Array[com.badlogic.gdx.scenes.scene2d.Action] = this.actions;
       { var i: scala.Int = 0; val n: scala.Int = actions.size; while ((i < n) && (actor != null)) { {
         val currentAction: com.badlogic.gdx.scenes.scene2d.Action = actions.get(i)
         if ((currentAction.getActor() != null) && (!currentAction.act(delta))) {
@@ -58,7 +58,7 @@ class ParallelAction extends com.badlogic.gdx.scenes.scene2d.Action {
   }
   def restart(): scala.Unit = {
     this.complete = false
-    val actions: com.badlogic.gdx.utils.Array[com.badlogic.gdx.scenes.scene2d.Action] = this.actions
+    val actions: com.badlogic.gdx.utils.Array[com.badlogic.gdx.scenes.scene2d.Action] = this.actions;
     { var i: scala.Int = 0; val n: scala.Int = actions.size; while (i < n) { {
       actions.get(i).restart()
     }; i = i + 1 } }
@@ -74,7 +74,7 @@ class ParallelAction extends com.badlogic.gdx.scenes.scene2d.Action {
     } else ()
   }
   def setActor(actor: com.badlogic.gdx.scenes.scene2d.Actor): scala.Unit = {
-    val actions: com.badlogic.gdx.utils.Array[com.badlogic.gdx.scenes.scene2d.Action] = this.actions
+    val actions: com.badlogic.gdx.utils.Array[com.badlogic.gdx.scenes.scene2d.Action] = this.actions;
     { var i: scala.Int = 0; val n: scala.Int = actions.size; while (i < n) { {
       actions.get(i).setActor(actor)
     }; i = i + 1 } }
@@ -87,7 +87,7 @@ class ParallelAction extends com.badlogic.gdx.scenes.scene2d.Action {
     val buffer: java.lang.StringBuilder = new java.lang.StringBuilder(64)
     buffer.append(super.toString())
     buffer.append('(')
-    val actions: com.badlogic.gdx.utils.Array[com.badlogic.gdx.scenes.scene2d.Action] = this.actions
+    val actions: com.badlogic.gdx.utils.Array[com.badlogic.gdx.scenes.scene2d.Action] = this.actions;
     { var i: scala.Int = 0; val n: scala.Int = actions.size; while (i < n) { {
       if (i > 0) {
         buffer.append(", ")

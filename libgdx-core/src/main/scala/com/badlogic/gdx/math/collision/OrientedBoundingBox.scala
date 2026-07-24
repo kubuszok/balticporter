@@ -25,7 +25,7 @@ class OrientedBoundingBox extends java.io.Serializable {
   private def init(): scala.Unit = {
     { var i: scala.Int = 0; while (i < this.axes.length) { {
       this.axes(i) = new com.badlogic.gdx.math.Vector3()
-    }; i = i + 1 } }
+    }; i = i + 1 } };
     { var i: scala.Int = 0; while (i < this.vertices.length) { {
       this.vertices(i) = new com.badlogic.gdx.math.Vector3()
     }; i = i + 1 } }

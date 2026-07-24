@@ -5,10 +5,10 @@ class SpriteCache extends com.badlogic.gdx.utils.Disposable {
   private var drawing: scala.Boolean = false
   private final val transformMatrix: com.badlogic.gdx.math.Matrix4 = new com.badlogic.gdx.math.Matrix4()
   private final val projectionMatrix: com.badlogic.gdx.math.Matrix4 = new com.badlogic.gdx.math.Matrix4()
-  private var caches: com.badlogic.gdx.utils.Array[Cache] = new com.badlogic.gdx.utils.Array()
+  private var caches: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.SpriteCache.Cache] = new com.badlogic.gdx.utils.Array()
   private final val combinedMatrix: com.badlogic.gdx.math.Matrix4 = new com.badlogic.gdx.math.Matrix4()
   private var shader: com.badlogic.gdx.graphics.glutils.ShaderProgram = null.asInstanceOf[com.badlogic.gdx.graphics.glutils.ShaderProgram]
-  private var currentCache: Cache = null.asInstanceOf[Cache]
+  private var currentCache: com.badlogic.gdx.graphics.g2d.SpriteCache.Cache = null.asInstanceOf[com.badlogic.gdx.graphics.g2d.SpriteCache.Cache]
   private final val textures: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.Texture] = new com.badlogic.gdx.utils.Array(8)
   private final val counts: com.badlogic.gdx.utils.IntArray = new com.badlogic.gdx.utils.IntArray(8)
   private final val color: com.badlogic.gdx.graphics.Color = new com.badlogic.gdx.graphics.Color(1, 1, 1, 1)
@@ -27,13 +27,13 @@ class SpriteCache extends com.badlogic.gdx.utils.Disposable {
     if (useIndices) {
       val length: scala.Int = size * 6
       val indices: scala.Array[scala.Short] = new Array[scala.Short](length)
-      var j: scala.Short = 0
+      var j: scala.Short = 0.asInstanceOf[scala.Short];
       { var i: scala.Int = 0; while (i < length) { {
         indices(i + 0) = j
-        indices(i + 1) = (j + 1).asInstanceOf[scala.Short]
-        indices(i + 2) = (j + 2).asInstanceOf[scala.Short]
-        indices(i + 3) = (j + 2).asInstanceOf[scala.Short]
-        indices(i + 4) = (j + 3).asInstanceOf[scala.Short]
+        indices(i + 1) = (j + 1).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
+        indices(i + 2) = (j + 2).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
+        indices(i + 3) = (j + 2).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
+        indices(i + 4) = (j + 3).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
         indices(i + 5) = j
       }; i = i + 6; j = j + 4 } }
       this.mesh.setIndices(indices)
@@ -70,7 +70,7 @@ class SpriteCache extends com.badlogic.gdx.utils.Disposable {
     } else ()
     val verticesPerImage: scala.Int = if (this.mesh.getNumIndices() > 0) 4 else 6
     val verticesBuffer: java.nio.FloatBuffer = this.mesh.getVerticesBuffer(true)
-    this.currentCache = new Cache(this.caches.size, verticesBuffer.limit())
+    this.currentCache = new com.badlogic.gdx.graphics.g2d.SpriteCache.Cache(this.caches.size, verticesBuffer.limit())
     this.caches.add(this.currentCache)
     verticesBuffer.compact()
   }
@@ -83,7 +83,7 @@ class SpriteCache extends com.badlogic.gdx.utils.Disposable {
     } else ()
     val verticesBuffer: java.nio.Buffer = this.mesh.getVerticesBuffer(true).asInstanceOf[java.nio.Buffer]
     if (cacheID == (this.caches.size - 1)) {
-      val oldCache: Cache = this.caches.removeIndex(cacheID)
+      val oldCache: com.badlogic.gdx.graphics.g2d.SpriteCache.Cache = this.caches.removeIndex(cacheID)
       verticesBuffer.limit(oldCache.offset)
       this.beginCache()
       return
@@ -95,13 +95,13 @@ class SpriteCache extends com.badlogic.gdx.utils.Disposable {
     if (this.currentCache == null) {
       throw new java.lang.IllegalStateException("beginCache must be called before endCache.")
     } else ()
-    val cache: Cache = this.currentCache
+    val cache: com.badlogic.gdx.graphics.g2d.SpriteCache.Cache = this.currentCache
     val cacheCount: scala.Int = this.mesh.getVerticesBuffer(false).position() - cache.offset
     if (cache.textures == null) {
       cache.maxCount = cacheCount
       cache.textureCount = this.textures.size
       cache.textures = this.textures.toArray(scala.Array[com.badlogic.gdx.graphics.Texture].<init>)
-      cache.counts = new Array[scala.Int](cache.textureCount)
+      cache.counts = new Array[scala.Int](cache.textureCount);
       { var i: scala.Int = 0; val n: scala.Int = this.counts.size; while (i < n) { {
         cache.counts(i) = this.counts.get(i)
       }; i = i + 1 } }
@@ -113,19 +113,19 @@ class SpriteCache extends com.badlogic.gdx.utils.Disposable {
       cache.textureCount = this.textures.size
       if (cache.textures.length < cache.textureCount) {
         cache.textures = new Array[com.badlogic.gdx.graphics.Texture](cache.textureCount)
-      } else ()
+      } else ();
       { var i: scala.Int = 0; val n: scala.Int = cache.textureCount; while (i < n) { {
         cache.textures(i) = this.textures.get(i)
       }; i = i + 1 } }
       if (cache.counts.length < cache.textureCount) {
         cache.counts = new Array[scala.Int](cache.textureCount)
-      } else ()
+      } else ();
       { var i: scala.Int = 0; val n: scala.Int = cache.textureCount; while (i < n) { {
         cache.counts(i) = this.counts.get(i)
       }; i = i + 1 } }
       val vertices: java.nio.FloatBuffer = this.mesh.getVerticesBuffer(true)
       vertices.asInstanceOf[java.nio.Buffer].position(0)
-      val lastCache: Cache = this.caches.get(this.caches.size - 1)
+      val lastCache: com.badlogic.gdx.graphics.g2d.SpriteCache.Cache = this.caches.get(this.caches.size - 1)
       vertices.asInstanceOf[java.nio.Buffer].limit(lastCache.offset + lastCache.maxCount)
     }
     this.currentCache = null
@@ -673,12 +673,12 @@ class SpriteCache extends com.badlogic.gdx.utils.Disposable {
     if (!this.drawing) {
       throw new java.lang.IllegalStateException("SpriteCache.begin must be called before draw.")
     } else ()
-    val cache: Cache = this.caches.get(cacheID)
+    val cache: com.badlogic.gdx.graphics.g2d.SpriteCache.Cache = this.caches.get(cacheID)
     val verticesPerImage: scala.Int = if (this.mesh.getNumIndices() > 0) 4 else 6
     var offset: scala.Int = (cache.offset / (verticesPerImage * com.badlogic.gdx.graphics.g2d.Sprite.VERTEX_SIZE)) * 6
     val textures: scala.Array[com.badlogic.gdx.graphics.Texture] = cache.textures
     val counts: scala.Array[scala.Int] = cache.counts
-    val textureCount: scala.Int = cache.textureCount
+    val textureCount: scala.Int = cache.textureCount;
     { var i: scala.Int = 0; while (i < textureCount) { {
       val count: scala.Int = counts(i)
       textures(i).bind()
@@ -698,13 +698,13 @@ class SpriteCache extends com.badlogic.gdx.utils.Disposable {
     if (!this.drawing) {
       throw new java.lang.IllegalStateException("SpriteCache.begin must be called before draw.")
     } else ()
-    val cache: Cache = this.caches.get(cacheID)
+    val cache: com.badlogic.gdx.graphics.g2d.SpriteCache.Cache = this.caches.get(cacheID)
     val verticesPerImage: scala.Int = if (this.mesh.getNumIndices() > 0) 4 else 6
     offset = ((cache.offset / (verticesPerImage * com.badlogic.gdx.graphics.g2d.Sprite.VERTEX_SIZE)) * 6) + (offset * 6)
     length = length * 6
     val textures: scala.Array[com.badlogic.gdx.graphics.Texture] = cache.textures
     val counts: scala.Array[scala.Int] = cache.counts
-    val textureCount: scala.Int = cache.textureCount
+    val textureCount: scala.Int = cache.textureCount;
     { var i: scala.Int = 0; while (i < textureCount) { {
       textures(i).bind()
       var count: scala.Int = counts(i)
@@ -757,6 +757,18 @@ class SpriteCache extends com.badlogic.gdx.utils.Disposable {
   def isDrawing(): scala.Boolean = {
     return this.drawing
   }
+}
+object SpriteCache {
+  private final val tempVertices: scala.Array[scala.Float] = new Array[scala.Float](com.badlogic.gdx.graphics.g2d.Sprite.VERTEX_SIZE * 6)
+  def createDefaultShader(): com.badlogic.gdx.graphics.glutils.ShaderProgram = {
+    val vertexShader: java.lang.String = (((((((((((((((((((((((("attribute vec4 " + com.badlogic.gdx.graphics.glutils.ShaderProgram.POSITION_ATTRIBUTE) + ";\n") + "attribute vec4 ") + com.badlogic.gdx.graphics.glutils.ShaderProgram.COLOR_ATTRIBUTE) + ";\n") + "attribute vec2 ") + com.badlogic.gdx.graphics.glutils.ShaderProgram.TEXCOORD_ATTRIBUTE) + "0;\n") + "uniform mat4 u_projectionViewMatrix;\n") + "varying vec4 v_color;\n") + "varying vec2 v_texCoords;\n") + "\n") + "void main()\n") + "{\n") + "   v_color = ") + com.badlogic.gdx.graphics.glutils.ShaderProgram.COLOR_ATTRIBUTE) + ";\n") + "   v_color.a = v_color.a * (255.0/254.0);\n") + "   v_texCoords = ") + com.badlogic.gdx.graphics.glutils.ShaderProgram.TEXCOORD_ATTRIBUTE) + "0;\n") + "   gl_Position =  u_projectionViewMatrix * ") + com.badlogic.gdx.graphics.glutils.ShaderProgram.POSITION_ATTRIBUTE) + ";\n") + "}\n"
+    val fragmentShader: java.lang.String = (((((((("#ifdef GL_ES\n" + "precision mediump float;\n") + "#endif\n") + "varying vec4 v_color;\n") + "varying vec2 v_texCoords;\n") + "uniform sampler2D u_texture;\n") + "void main()\n") + "{\n") + "  gl_FragColor = v_color * texture2D(u_texture, v_texCoords);\n") + "}"
+    val shader: com.badlogic.gdx.graphics.glutils.ShaderProgram = new com.badlogic.gdx.graphics.glutils.ShaderProgram(vertexShader, fragmentShader)
+    if (!shader.isCompiled()) {
+      throw new java.lang.IllegalArgumentException("Error compiling shader: " + shader.getLog())
+    } else ()
+    return shader
+  }
   private class Cache {
     var id: scala.Int = 0
     var offset: scala.Int = 0
@@ -769,17 +781,5 @@ class SpriteCache extends com.badlogic.gdx.utils.Disposable {
       this.id = id
       this.offset = offset
     }
-  }
-}
-object SpriteCache {
-  private final val tempVertices: scala.Array[scala.Float] = new Array[scala.Float](com.badlogic.gdx.graphics.g2d.Sprite.VERTEX_SIZE * 6)
-  def createDefaultShader(): com.badlogic.gdx.graphics.glutils.ShaderProgram = {
-    val vertexShader: java.lang.String = (((((((((((((((((((((((("attribute vec4 " + com.badlogic.gdx.graphics.glutils.ShaderProgram.POSITION_ATTRIBUTE) + ";\n") + "attribute vec4 ") + com.badlogic.gdx.graphics.glutils.ShaderProgram.COLOR_ATTRIBUTE) + ";\n") + "attribute vec2 ") + com.badlogic.gdx.graphics.glutils.ShaderProgram.TEXCOORD_ATTRIBUTE) + "0;\n") + "uniform mat4 u_projectionViewMatrix;\n") + "varying vec4 v_color;\n") + "varying vec2 v_texCoords;\n") + "\n") + "void main()\n") + "{\n") + "   v_color = ") + com.badlogic.gdx.graphics.glutils.ShaderProgram.COLOR_ATTRIBUTE) + ";\n") + "   v_color.a = v_color.a * (255.0/254.0);\n") + "   v_texCoords = ") + com.badlogic.gdx.graphics.glutils.ShaderProgram.TEXCOORD_ATTRIBUTE) + "0;\n") + "   gl_Position =  u_projectionViewMatrix * ") + com.badlogic.gdx.graphics.glutils.ShaderProgram.POSITION_ATTRIBUTE) + ";\n") + "}\n"
-    val fragmentShader: java.lang.String = (((((((("#ifdef GL_ES\n" + "precision mediump float;\n") + "#endif\n") + "varying vec4 v_color;\n") + "varying vec2 v_texCoords;\n") + "uniform sampler2D u_texture;\n") + "void main()\n") + "{\n") + "  gl_FragColor = v_color * texture2D(u_texture, v_texCoords);\n") + "}"
-    val shader: com.badlogic.gdx.graphics.glutils.ShaderProgram = new com.badlogic.gdx.graphics.glutils.ShaderProgram(vertexShader, fragmentShader)
-    if (!shader.isCompiled()) {
-      throw new java.lang.IllegalArgumentException("Error compiling shader: " + shader.getLog())
-    } else ()
-    return shader
   }
 }

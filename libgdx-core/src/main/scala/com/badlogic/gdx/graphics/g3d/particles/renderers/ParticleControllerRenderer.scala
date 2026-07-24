@@ -1,9 +1,9 @@
 package com.badlogic.gdx.graphics.g3d.particles.renderers
 
 abstract class ParticleControllerRenderer[D <: com.badlogic.gdx.graphics.g3d.particles.renderers.ParticleControllerRenderData, T <: com.badlogic.gdx.graphics.g3d.particles.batches.ParticleBatch[D]] extends com.badlogic.gdx.graphics.g3d.particles.ParticleControllerComponent {
-  protected var batch: T = null.asInstanceOf[T]
-  protected var renderData: D = null.asInstanceOf[D]
-  protected def this(renderData: D) = {
+  var batch: T = null.asInstanceOf[T]
+  var renderData: D = null.asInstanceOf[D]
+  def this(renderData: D) = {
     this()
     this.renderData = renderData
   }

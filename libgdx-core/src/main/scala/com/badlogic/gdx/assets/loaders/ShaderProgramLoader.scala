@@ -1,6 +1,6 @@
 package com.badlogic.gdx.assets.loaders
 
-class ShaderProgramLoader extends com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader[com.badlogic.gdx.graphics.glutils.ShaderProgram, ShaderProgramParameter] {
+class ShaderProgramLoader extends com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader[com.badlogic.gdx.graphics.glutils.ShaderProgram, com.badlogic.gdx.assets.loaders.ShaderProgramLoader.ShaderProgramParameter] {
   private var vertexFileSuffix: java.lang.String = ".vert"
   private var fragmentFileSuffix: java.lang.String = ".frag"
   def this(resolver: com.badlogic.gdx.assets.loaders.FileHandleResolver, vertexFileSuffix: java.lang.String, fragmentFileSuffix: java.lang.String) = {
@@ -11,13 +11,13 @@ class ShaderProgramLoader extends com.badlogic.gdx.assets.loaders.AsynchronousAs
   def this(resolver: com.badlogic.gdx.assets.loaders.FileHandleResolver) = {
     this()
   }
-  def getDependencies(fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: ShaderProgramParameter): com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor] = {
+  def getDependencies(fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.assets.loaders.ShaderProgramLoader.ShaderProgramParameter): com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = {
     return null
   }
-  def loadAsync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: ShaderProgramParameter): scala.Unit = {
+  def loadAsync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.assets.loaders.ShaderProgramLoader.ShaderProgramParameter): scala.Unit = {
     ()
   }
-  def loadSync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: ShaderProgramParameter): com.badlogic.gdx.graphics.glutils.ShaderProgram = {
+  def loadSync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.assets.loaders.ShaderProgramLoader.ShaderProgramParameter): com.badlogic.gdx.graphics.glutils.ShaderProgram = {
     var vertFileName: java.lang.String = null
     var fragFileName: java.lang.String = null
     if (parameter != null) {
@@ -52,6 +52,8 @@ class ShaderProgramLoader extends com.badlogic.gdx.assets.loaders.AsynchronousAs
     } else ()
     return shaderProgram
   }
+}
+object ShaderProgramLoader {
   class ShaderProgramParameter extends com.badlogic.gdx.assets.AssetLoaderParameters[com.badlogic.gdx.graphics.glutils.ShaderProgram] {
     var vertexFile: java.lang.String = null.asInstanceOf[java.lang.String]
     var fragmentFile: java.lang.String = null.asInstanceOf[java.lang.String]

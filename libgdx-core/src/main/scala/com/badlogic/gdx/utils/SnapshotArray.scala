@@ -10,19 +10,19 @@ class SnapshotArray[T] extends com.badlogic.gdx.utils.Array[T] {
   def this(ordered: scala.Boolean, capacity: scala.Int, arraySupplier: com.badlogic.gdx.utils.ArraySupplier[scala.Array[T]]) = {
     this()
   }
-  def this(ordered: scala.Boolean, capacity: scala.Int, arrayType: java.lang.Class) = {
+  def this(ordered: scala.Boolean, capacity: scala.Int, arrayType: java.lang.Class[?]) = {
     this()
   }
   def this(ordered: scala.Boolean, capacity: scala.Int) = {
     this()
   }
-  def this(array: com.badlogic.gdx.utils.Array) = {
+  def this(array: com.badlogic.gdx.utils.Array[?]) = {
     this()
   }
   def this(arraySupplier: com.badlogic.gdx.utils.ArraySupplier[scala.Array[T]]) = {
     this()
   }
-  def this(arrayType: java.lang.Class) = {
+  def this(arrayType: java.lang.Class[?]) = {
     this()
   }
   def this(capacity: scala.Int) = {
@@ -130,7 +130,7 @@ class SnapshotArray[T] extends com.badlogic.gdx.utils.Array[T] {
   }
   def setSize(newSize: scala.Int): scala.Array[T] = {
     this.modified()
-    return super.setSize(newSize)
+    return super.setSize(newSize).asInstanceOf[scala.Array[T]]
   }
 }
 object SnapshotArray {

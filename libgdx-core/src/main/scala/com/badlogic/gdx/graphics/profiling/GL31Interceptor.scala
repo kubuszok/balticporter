@@ -6,7 +6,7 @@ class GL31Interceptor extends com.badlogic.gdx.graphics.profiling.GL30Intercepto
     this()
     this.gl31 = gl31
   }
-  protected def check(): scala.Unit = {
+  def check(): scala.Unit = {
     var error: scala.Int = gl30.glGetError()
     while (error != com.badlogic.gdx.graphics.GL20.GL_NO_ERROR) {
       glProfiler.getListener().onError(error)

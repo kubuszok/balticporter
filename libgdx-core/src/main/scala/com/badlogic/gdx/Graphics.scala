@@ -25,7 +25,7 @@ trait Graphics {
   def getDeltaTime(): scala.Float
   def getRawDeltaTime(): scala.Float
   def getFramesPerSecond(): scala.Int
-  def getType(): GraphicsType
+  def getType(): com.badlogic.gdx.Graphics.GraphicsType
   def getGLVersion(): com.badlogic.gdx.graphics.glutils.GLVersion
   def getPpiX(): scala.Float
   def getPpiY(): scala.Float
@@ -33,21 +33,21 @@ trait Graphics {
   def getPpcY(): scala.Float
   def getDensity(): scala.Float
   def supportsDisplayModeChange(): scala.Boolean
-  def getPrimaryMonitor(): Monitor
-  def getMonitor(): Monitor
-  def getMonitors(): scala.Array[Monitor]
-  def getDisplayModes(): scala.Array[DisplayMode]
-  def getDisplayModes(monitor: Monitor): scala.Array[DisplayMode]
-  def getDisplayMode(): DisplayMode
-  def getDisplayMode(monitor: Monitor): DisplayMode
-  def setFullscreenMode(displayMode: DisplayMode): scala.Boolean
+  def getPrimaryMonitor(): com.badlogic.gdx.Graphics.Monitor
+  def getMonitor(): com.badlogic.gdx.Graphics.Monitor
+  def getMonitors(): scala.Array[com.badlogic.gdx.Graphics.Monitor]
+  def getDisplayModes(): scala.Array[com.badlogic.gdx.Graphics.DisplayMode]
+  def getDisplayModes(monitor: com.badlogic.gdx.Graphics.Monitor): scala.Array[com.badlogic.gdx.Graphics.DisplayMode]
+  def getDisplayMode(): com.badlogic.gdx.Graphics.DisplayMode
+  def getDisplayMode(monitor: com.badlogic.gdx.Graphics.Monitor): com.badlogic.gdx.Graphics.DisplayMode
+  def setFullscreenMode(displayMode: com.badlogic.gdx.Graphics.DisplayMode): scala.Boolean
   def setWindowedMode(width: scala.Int, height: scala.Int): scala.Boolean
   def setTitle(title: java.lang.String): scala.Unit
   def setUndecorated(undecorated: scala.Boolean): scala.Unit
   def setResizable(resizable: scala.Boolean): scala.Unit
   def setVSync(vsync: scala.Boolean): scala.Unit
   def setForegroundFPS(fps: scala.Int): scala.Unit
-  def getBufferFormat(): BufferFormat
+  def getBufferFormat(): com.badlogic.gdx.Graphics.BufferFormat
   def supportsExtension(`extension`: java.lang.String): scala.Boolean
   def setContinuousRendering(isContinuous: scala.Boolean): scala.Unit
   def isContinuousRendering(): scala.Boolean
@@ -55,7 +55,9 @@ trait Graphics {
   def isFullscreen(): scala.Boolean
   def newCursor(pixmap: com.badlogic.gdx.graphics.Pixmap, xHotspot: scala.Int, yHotspot: scala.Int): com.badlogic.gdx.graphics.Cursor
   def setCursor(cursor: com.badlogic.gdx.graphics.Cursor): scala.Unit
-  def setSystemCursor(systemCursor: com.badlogic.gdx.graphics.Cursor#SystemCursor): scala.Unit
+  def setSystemCursor(systemCursor: com.badlogic.gdx.graphics.Cursor.SystemCursor): scala.Unit
+}
+object Graphics {
   sealed abstract class GraphicsType
   object GraphicsType {
     case object AndroidGL extends GraphicsType
@@ -72,7 +74,7 @@ trait Graphics {
     var height: scala.Int = 0
     var refreshRate: scala.Int = 0
     var bitsPerPixel: scala.Int = 0
-    protected def this(width: scala.Int, height: scala.Int, refreshRate: scala.Int, bitsPerPixel: scala.Int) = {
+    def this(width: scala.Int, height: scala.Int, refreshRate: scala.Int, bitsPerPixel: scala.Int) = {
       this()
       this.width = width
       this.height = height
@@ -87,7 +89,7 @@ trait Graphics {
     var virtualX: scala.Int = 0
     var virtualY: scala.Int = 0
     var name: java.lang.String = null.asInstanceOf[java.lang.String]
-    protected def this(virtualX: scala.Int, virtualY: scala.Int, name: java.lang.String) = {
+    def this(virtualX: scala.Int, virtualY: scala.Int, name: java.lang.String) = {
       this()
       this.virtualX = virtualX
       this.virtualY = virtualY

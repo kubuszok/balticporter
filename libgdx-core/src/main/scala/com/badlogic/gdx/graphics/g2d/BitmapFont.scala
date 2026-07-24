@@ -1,13 +1,13 @@
 package com.badlogic.gdx.graphics.g2d
 
 class BitmapFont extends com.badlogic.gdx.utils.Disposable {
-  var data: BitmapFontData = null.asInstanceOf[BitmapFontData]
+  var data: com.badlogic.gdx.graphics.g2d.BitmapFont.BitmapFontData = null.asInstanceOf[com.badlogic.gdx.graphics.g2d.BitmapFont.BitmapFontData]
   var regions: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.TextureRegion] = null.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.TextureRegion]]
   private var cache: com.badlogic.gdx.graphics.g2d.BitmapFontCache = null.asInstanceOf[com.badlogic.gdx.graphics.g2d.BitmapFontCache]
   private var flipped: scala.Boolean = false
   var integer: scala.Boolean = false
   var ownsTexture$field: scala.Boolean = false
-  def this(data: BitmapFontData, pageRegions: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.TextureRegion], integer: scala.Boolean) = {
+  def this(data: com.badlogic.gdx.graphics.g2d.BitmapFont.BitmapFontData, pageRegions: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.TextureRegion], integer: scala.Boolean) = {
     this()
     this.flipped = data.flipped
     this.data = data
@@ -17,7 +17,7 @@ class BitmapFont extends com.badlogic.gdx.utils.Disposable {
         throw new java.lang.IllegalArgumentException("If no regions are specified, the font data must have an images path.")
       } else ()
       val n: scala.Int = data.imagePaths.length
-      this.regions = new com.badlogic.gdx.utils.Array(n)
+      this.regions = new com.badlogic.gdx.utils.Array(n);
       { var i: scala.Int = 0; while (i < n) { {
         var file: com.badlogic.gdx.files.FileHandle = null.asInstanceOf[com.badlogic.gdx.files.FileHandle]
         if (data.fontFile == null) {
@@ -36,23 +36,23 @@ class BitmapFont extends com.badlogic.gdx.utils.Disposable {
     this.load(data)
   }
   def this(fontFile: com.badlogic.gdx.files.FileHandle, imageFile: com.badlogic.gdx.files.FileHandle, flip: scala.Boolean, integer: scala.Boolean) = {
-    this(new BitmapFontData(fontFile, flip), new com.badlogic.gdx.graphics.g2d.TextureRegion(new com.badlogic.gdx.graphics.Texture(imageFile, false)), integer)
+    this(new com.badlogic.gdx.graphics.g2d.BitmapFont.BitmapFontData(fontFile, flip), new com.badlogic.gdx.graphics.g2d.TextureRegion(new com.badlogic.gdx.graphics.Texture(imageFile, false)), integer)
     this.ownsTexture$field = true
   }
   def this(fontFile: com.badlogic.gdx.files.FileHandle, region: com.badlogic.gdx.graphics.g2d.TextureRegion, flip: scala.Boolean) = {
-    this(new BitmapFontData(fontFile, flip), region, true)
+    this(new com.badlogic.gdx.graphics.g2d.BitmapFont.BitmapFontData(fontFile, flip), region, true)
   }
   def this(fontFile: com.badlogic.gdx.files.FileHandle, imageFile: com.badlogic.gdx.files.FileHandle, flip: scala.Boolean) = {
     this(fontFile, imageFile, flip, true)
   }
-  def this(data: BitmapFontData, region: com.badlogic.gdx.graphics.g2d.TextureRegion, integer: scala.Boolean) = {
+  def this(data: com.badlogic.gdx.graphics.g2d.BitmapFont.BitmapFontData, region: com.badlogic.gdx.graphics.g2d.TextureRegion, integer: scala.Boolean) = {
     this(data, if (region != null) com.badlogic.gdx.utils.Array.`with`(region) else null, integer)
   }
   def this(fontFile: com.badlogic.gdx.files.FileHandle, region: com.badlogic.gdx.graphics.g2d.TextureRegion) = {
     this(fontFile, region, false)
   }
   def this(fontFile: com.badlogic.gdx.files.FileHandle, flip: scala.Boolean) = {
-    this(new BitmapFontData(fontFile, flip), null.asInstanceOf[com.badlogic.gdx.graphics.g2d.TextureRegion], true)
+    this(new com.badlogic.gdx.graphics.g2d.BitmapFont.BitmapFontData(fontFile, flip), null.asInstanceOf[com.badlogic.gdx.graphics.g2d.TextureRegion], true)
   }
   def this(flip: scala.Boolean) = {
     this(com.badlogic.gdx.Gdx.files.classpath("com/badlogic/gdx/utils/lsans-15.fnt"), com.badlogic.gdx.Gdx.files.classpath("com/badlogic/gdx/utils/lsans-15.png"), flip, true)
@@ -60,7 +60,7 @@ class BitmapFont extends com.badlogic.gdx.utils.Disposable {
   def this(fontFile: com.badlogic.gdx.files.FileHandle) = {
     this(fontFile, false)
   }
-  protected def load(data: BitmapFontData): scala.Unit = {
+  def load(data: com.badlogic.gdx.graphics.g2d.BitmapFont.BitmapFontData): scala.Unit = {
     for (page <- data.glyphs) {
       if (page == null) {
         /* continue */ ()
@@ -157,16 +157,16 @@ class BitmapFont extends com.badlogic.gdx.utils.Disposable {
     } else ()
   }
   def setFixedWidthGlyphs(glyphs: java.lang.CharSequence): scala.Unit = {
-    val data: BitmapFontData = this.data
-    var maxAdvance: scala.Int = 0
+    val data: com.badlogic.gdx.graphics.g2d.BitmapFont.BitmapFontData = this.data
+    var maxAdvance: scala.Int = 0;
     { var index: scala.Int = 0; val `end`: scala.Int = glyphs.length(); while (index < `end`) { {
-      val g: Glyph = data.getGlyph(glyphs.charAt(index))
+      val g: com.badlogic.gdx.graphics.g2d.BitmapFont.Glyph = data.getGlyph(glyphs.charAt(index))
       if ((g != null) && (g.xadvance > maxAdvance)) {
         maxAdvance = g.xadvance
       } else ()
-    }; index = index + 1 } }
+    }; index = index + 1 } };
     { var index: scala.Int = 0; val `end`: scala.Int = glyphs.length(); while (index < `end`) { {
-      val g: Glyph = data.getGlyph(glyphs.charAt(index))
+      val g: com.badlogic.gdx.graphics.g2d.BitmapFont.Glyph = data.getGlyph(glyphs.charAt(index))
       if (g == null) {
         /* continue */ ()
       } else ()
@@ -186,7 +186,7 @@ class BitmapFont extends com.badlogic.gdx.utils.Disposable {
   def getCache(): com.badlogic.gdx.graphics.g2d.BitmapFontCache = {
     return this.cache
   }
-  def getData(): BitmapFontData = {
+  def getData(): com.badlogic.gdx.graphics.g2d.BitmapFont.BitmapFontData = {
     return this.data
   }
   def ownsTexture(): scala.Boolean = {
@@ -200,6 +200,21 @@ class BitmapFont extends com.badlogic.gdx.utils.Disposable {
   }
   def toString(): java.lang.String = {
     return if (this.data.name != null) this.data.name else super.toString()
+  }
+}
+object BitmapFont {
+  private final val LOG2_PAGE_SIZE: scala.Int = 9
+  private final val PAGE_SIZE: scala.Int = 1 << BitmapFont.LOG2_PAGE_SIZE
+  private final val PAGES: scala.Int = 65536 / BitmapFont.PAGE_SIZE
+  def indexOf(text: java.lang.CharSequence, ch: scala.Char, start$arg: scala.Int): scala.Int = {
+    var start: scala.Int = start$arg
+    val n: scala.Int = text.length();
+    { ; while (start < n) { {
+      if (text.charAt(start) == ch) {
+        return start
+      } else ()
+    }; start = start + 1 } }
+    return n
   }
   class Glyph {
     var id: scala.Int = 0
@@ -237,7 +252,7 @@ class BitmapFont extends com.badlogic.gdx.utils.Disposable {
           page
         }
       } else ()
-      page(ch & (BitmapFont.PAGE_SIZE - 1)) = value.asInstanceOf[scala.Byte]
+      page(ch & (BitmapFont.PAGE_SIZE - 1)) = value.asInstanceOf[scala.Byte].asInstanceOf[scala.Byte]
     }
     def toString(): java.lang.String = {
       return java.lang.Character.toString(this.id.asInstanceOf[scala.Char])
@@ -262,8 +277,8 @@ class BitmapFont extends com.badlogic.gdx.utils.Disposable {
     var scaleY: scala.Float = 1
     var markupEnabled: scala.Boolean = false
     var cursorX: scala.Float = 0.0f
-    final val glyphs: scala.Array[scala.Array[Glyph]] = new Array[scala.Array[Glyph]](BitmapFont.PAGES)
-    var missingGlyph: Glyph = null.asInstanceOf[Glyph]
+    final val glyphs: scala.Array[scala.Array[com.badlogic.gdx.graphics.g2d.BitmapFont.Glyph]] = new Array[scala.Array[com.badlogic.gdx.graphics.g2d.BitmapFont.Glyph]](BitmapFont.PAGES)
+    var missingGlyph: com.badlogic.gdx.graphics.g2d.BitmapFont.Glyph = null.asInstanceOf[com.badlogic.gdx.graphics.g2d.BitmapFont.Glyph]
     var spaceXadvance: scala.Float = 0.0f
     var xHeight: scala.Float = 1
     var breakChars: scala.Array[scala.Char] = null.asInstanceOf[scala.Array[scala.Char]]
@@ -322,7 +337,7 @@ class BitmapFont extends com.badlogic.gdx.utils.Disposable {
             }
           }
         } else ()
-        this.imagePaths = new Array[java.lang.String](pageCount)
+        this.imagePaths = new Array[java.lang.String](pageCount);
         { var p: scala.Int = 0; while (p < pageCount) { {
           line = reader.readLine()
           if (line == null) {
@@ -364,7 +379,7 @@ class BitmapFont extends com.badlogic.gdx.utils.Disposable {
           if (!line.startsWith("char ")) {
             /* continue */ ()
           } else ()
-          val glyph: Glyph = new Glyph()
+          val glyph: com.badlogic.gdx.graphics.g2d.BitmapFont.Glyph = new com.badlogic.gdx.graphics.g2d.BitmapFont.Glyph()
           val tokens: java.util.StringTokenizer = new java.util.StringTokenizer(line, " =")
           tokens.nextToken()
           tokens.nextToken()
@@ -431,7 +446,7 @@ class BitmapFont extends com.badlogic.gdx.utils.Disposable {
           if ((((first < 0) || (first > java.lang.Character.MAX_VALUE)) || (second < 0)) || (second > java.lang.Character.MAX_VALUE)) {
             /* continue */ ()
           } else ()
-          val glyph: Glyph = this.getGlyph(first.asInstanceOf[scala.Char])
+          val glyph: com.badlogic.gdx.graphics.g2d.BitmapFont.Glyph = this.getGlyph(first.asInstanceOf[scala.Char])
           tokens.nextToken()
           val amount: scala.Int = java.lang.Integer.parseInt(tokens.nextToken())
           if (glyph != null) {
@@ -465,11 +480,11 @@ class BitmapFont extends com.badlogic.gdx.utils.Disposable {
           tokens.nextToken()
           overrideXHeight = java.lang.Float.parseFloat(tokens.nextToken())
         } else ()
-        var spaceGlyph: Glyph = this.getGlyph(' ')
+        var spaceGlyph: com.badlogic.gdx.graphics.g2d.BitmapFont.Glyph = this.getGlyph(' ')
         if (spaceGlyph == null) {
-          spaceGlyph = new Glyph()
+          spaceGlyph = new com.badlogic.gdx.graphics.g2d.BitmapFont.Glyph()
           spaceGlyph.id = ' '
-          var xadvanceGlyph: Glyph = this.getGlyph('l')
+          var xadvanceGlyph: com.badlogic.gdx.graphics.g2d.BitmapFont.Glyph = this.getGlyph('l')
           if (xadvanceGlyph == null) {
             xadvanceGlyph = this.getFirstGlyph()
           } else ()
@@ -477,11 +492,11 @@ class BitmapFont extends com.badlogic.gdx.utils.Disposable {
           this.setGlyph(' ', spaceGlyph)
         } else ()
         if (spaceGlyph.width == 0) {
-          spaceGlyph.width = ((this.padLeft + spaceGlyph.xadvance) + this.padRight).asInstanceOf[scala.Int]
-          spaceGlyph.xoffset = (-this.padLeft).asInstanceOf[scala.Int]
+          spaceGlyph.width = ((this.padLeft + spaceGlyph.xadvance) + this.padRight).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
+          spaceGlyph.xoffset = (-this.padLeft).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
         } else ()
         this.spaceXadvance = spaceGlyph.xadvance
-        var xGlyph: Glyph = null
+        var xGlyph: com.badlogic.gdx.graphics.g2d.BitmapFont.Glyph = null
         for (xChar <- this.xChars) {
           xGlyph = this.getGlyph(xChar)
           if (xGlyph != null) {
@@ -492,7 +507,7 @@ class BitmapFont extends com.badlogic.gdx.utils.Disposable {
           xGlyph = this.getFirstGlyph()
         } else ()
         this.xHeight = xGlyph.height - padY
-        var capGlyph: Glyph = null
+        var capGlyph: com.badlogic.gdx.graphics.g2d.BitmapFont.Glyph = null
         for (capChar <- this.capChars) {
           capGlyph = this.getGlyph(capChar)
           if (capGlyph != null) {
@@ -538,7 +553,7 @@ class BitmapFont extends com.badlogic.gdx.utils.Disposable {
         com.badlogic.gdx.utils.StreamUtils.closeQuietly(reader)
       }
     }
-    def setGlyphRegion(glyph: Glyph, region: com.badlogic.gdx.graphics.g2d.TextureRegion): scala.Unit = {
+    def setGlyphRegion(glyph: com.badlogic.gdx.graphics.g2d.BitmapFont.Glyph, region: com.badlogic.gdx.graphics.g2d.TextureRegion): scala.Unit = {
       val texture: com.badlogic.gdx.graphics.Texture = region.getTexture()
       val invTexWidth: scala.Float = 1.0f / texture.getWidth()
       val invTexHeight: scala.Float = 1.0f / texture.getHeight()
@@ -548,8 +563,8 @@ class BitmapFont extends com.badlogic.gdx.utils.Disposable {
       var v: scala.Float = region.v
       val regionWidth: scala.Float = region.getRegionWidth()
       val regionHeight: scala.Float = region.getRegionHeight()
-      if (region.isInstanceOf[com.badlogic.gdx.graphics.g2d.TextureAtlas#AtlasRegion]) {
-        val atlasRegion: com.badlogic.gdx.graphics.g2d.TextureAtlas#AtlasRegion = region.asInstanceOf[com.badlogic.gdx.graphics.g2d.TextureAtlas#AtlasRegion]
+      if (region.isInstanceOf[com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion]) {
+        val atlasRegion: com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion = region.asInstanceOf[com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion]
         offsetX = atlasRegion.offsetX
         offsetY = (atlasRegion.originalHeight - atlasRegion.packedHeight) - atlasRegion.offsetY
       } else ()
@@ -601,17 +616,17 @@ class BitmapFont extends com.badlogic.gdx.utils.Disposable {
       this.lineHeight = height * this.scaleY
       this.down = if (this.flipped) this.lineHeight else -this.lineHeight
     }
-    def setGlyph(ch: scala.Int, glyph: Glyph): scala.Unit = {
-      var page: scala.Array[Glyph] = this.glyphs(ch / BitmapFont.PAGE_SIZE)
+    def setGlyph(ch: scala.Int, glyph: com.badlogic.gdx.graphics.g2d.BitmapFont.Glyph): scala.Unit = {
+      var page: scala.Array[com.badlogic.gdx.graphics.g2d.BitmapFont.Glyph] = this.glyphs(ch / BitmapFont.PAGE_SIZE)
       if (page == null) {
         this.glyphs(ch / BitmapFont.PAGE_SIZE) = {
-          page = new Array[Glyph](BitmapFont.PAGE_SIZE)
+          page = new Array[com.badlogic.gdx.graphics.g2d.BitmapFont.Glyph](BitmapFont.PAGE_SIZE)
           page
         }
       } else ()
       page(ch & (BitmapFont.PAGE_SIZE - 1)) = glyph
     }
-    def getFirstGlyph(): Glyph = {
+    def getFirstGlyph(): com.badlogic.gdx.graphics.g2d.BitmapFont.Glyph = {
       for (page <- this.glyphs) {
         if (page == null) {
           /* continue */ ()
@@ -631,23 +646,23 @@ class BitmapFont extends com.badlogic.gdx.utils.Disposable {
       } else ()
       return this.getGlyph(ch) != null
     }
-    def getGlyph(ch: scala.Char): Glyph = {
-      val page: scala.Array[Glyph] = this.glyphs(ch / BitmapFont.PAGE_SIZE)
+    def getGlyph(ch: scala.Char): com.badlogic.gdx.graphics.g2d.BitmapFont.Glyph = {
+      val page: scala.Array[com.badlogic.gdx.graphics.g2d.BitmapFont.Glyph] = this.glyphs(ch / BitmapFont.PAGE_SIZE)
       if (page != null) {
         return page(ch & (BitmapFont.PAGE_SIZE - 1))
       } else ()
       return null
     }
-    def getGlyphs(run: com.badlogic.gdx.graphics.g2d.GlyphLayout#GlyphRun, str: java.lang.CharSequence, start$arg: scala.Int, `end`: scala.Int, lastGlyph$arg: Glyph): scala.Unit = {
+    def getGlyphs(run: com.badlogic.gdx.graphics.g2d.GlyphLayout.GlyphRun, str: java.lang.CharSequence, start$arg: scala.Int, `end`: scala.Int, lastGlyph$arg: com.badlogic.gdx.graphics.g2d.BitmapFont.Glyph): scala.Unit = {
       var start: scala.Int = start$arg
-      var lastGlyph: Glyph = lastGlyph$arg
+      var lastGlyph: com.badlogic.gdx.graphics.g2d.BitmapFont.Glyph = lastGlyph$arg
       val max: scala.Int = `end` - start
       if (max == 0) {
         return
       } else ()
       val markupEnabled: scala.Boolean = this.markupEnabled
       val scaleX: scala.Float = this.scaleX
-      val glyphs: com.badlogic.gdx.utils.Array[Glyph] = run.glyphs
+      val glyphs: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.BitmapFont.Glyph] = run.glyphs
       val xAdvances: com.badlogic.gdx.utils.FloatArray = run.xAdvances
       glyphs.ensureCapacity(max)
       run.xAdvances.ensureCapacity(max + 1)
@@ -656,7 +671,7 @@ class BitmapFont extends com.badlogic.gdx.utils.Disposable {
         if (ch == '\r') {
           /* continue */ ()
         } else ()
-        var glyph: Glyph = this.getGlyph(ch)
+        var glyph: com.badlogic.gdx.graphics.g2d.BitmapFont.Glyph = this.getGlyph(ch)
         if (glyph == null) {
           if (this.missingGlyph == null) {
             /* continue */ ()
@@ -675,18 +690,18 @@ class BitmapFont extends com.badlogic.gdx.utils.Disposable {
         xAdvances.add(lastGlyphWidth)
       } else ()
     }
-    def getWrapIndex(glyphs: com.badlogic.gdx.utils.Array[Glyph], start: scala.Int): scala.Int = {
+    def getWrapIndex(glyphs: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.BitmapFont.Glyph], start: scala.Int): scala.Int = {
       var i: scala.Int = start - 1
-      val glyphsItems: scala.Array[java.lang.Object] = glyphs.items
-      var ch: scala.Char = glyphsItems(i).asInstanceOf[Glyph].id.asInstanceOf[scala.Char]
+      val glyphsItems: scala.Array[java.lang.Object] = glyphs.items.asInstanceOf[scala.Array[java.lang.Object]]
+      var ch: scala.Char = glyphsItems(i).asInstanceOf[com.badlogic.gdx.graphics.g2d.BitmapFont.Glyph].id.asInstanceOf[scala.Char].asInstanceOf[scala.Char]
       if (this.isWhitespace(ch)) {
         return i
       } else ()
       if (this.isBreakChar(ch)) {
         i = i - 1
-      } else ()
+      } else ();
       { ; while (i > 0) { {
-        ch = glyphsItems(i).asInstanceOf[Glyph].id.asInstanceOf[scala.Char]
+        ch = glyphsItems(i).asInstanceOf[com.badlogic.gdx.graphics.g2d.BitmapFont.Glyph].id.asInstanceOf[scala.Char].asInstanceOf[scala.Char]
         if (this.isWhitespace(ch) || this.isBreakChar(ch)) {
           return i + 1
         } else ()
@@ -755,20 +770,5 @@ class BitmapFont extends com.badlogic.gdx.utils.Disposable {
     def toString(): java.lang.String = {
       return if (this.name != null) this.name else super.toString()
     }
-  }
-}
-object BitmapFont {
-  private final val LOG2_PAGE_SIZE: scala.Int = 9
-  private final val PAGE_SIZE: scala.Int = 1 << BitmapFont.LOG2_PAGE_SIZE
-  private final val PAGES: scala.Int = 65536 / BitmapFont.PAGE_SIZE
-  def indexOf(text: java.lang.CharSequence, ch: scala.Char, start$arg: scala.Int): scala.Int = {
-    var start: scala.Int = start$arg
-    val n: scala.Int = text.length()
-    { ; while (start < n) { {
-      if (text.charAt(start) == ch) {
-        return start
-      } else ()
-    }; start = start + 1 } }
-    return n
   }
 }

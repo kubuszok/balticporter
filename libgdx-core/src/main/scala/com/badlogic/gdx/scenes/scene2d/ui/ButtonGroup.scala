@@ -31,7 +31,7 @@ class ButtonGroup[T <: com.badlogic.gdx.scenes.scene2d.ui.Button] {
   def add(buttons: scala.Array[T]): scala.Unit = {
     if (buttons == null) {
       throw new java.lang.IllegalArgumentException("buttons cannot be null.")
-    } else ()
+    } else ();
     { var i: scala.Int = 0; val n: scala.Int = buttons.length; while (i < n) { {
       this.add(buttons(i))
     }; i = i + 1 } }
@@ -47,7 +47,7 @@ class ButtonGroup[T <: com.badlogic.gdx.scenes.scene2d.ui.Button] {
   def remove(buttons: scala.Array[T]): scala.Unit = {
     if (buttons == null) {
       throw new java.lang.IllegalArgumentException("buttons cannot be null.")
-    } else ()
+    } else ();
     { var i: scala.Int = 0; val n: scala.Int = buttons.length; while (i < n) { {
       this.remove(buttons(i))
     }; i = i + 1 } }
@@ -59,7 +59,7 @@ class ButtonGroup[T <: com.badlogic.gdx.scenes.scene2d.ui.Button] {
   def setChecked(text: java.lang.String): scala.Unit = {
     if (text == null) {
       throw new java.lang.IllegalArgumentException("text cannot be null.")
-    } else ()
+    } else ();
     { var i: scala.Int = 0; val n: scala.Int = this.buttons.size; while (i < n) { {
       val button: T = this.buttons.get(i)
       if (button.isInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.TextButton] && text.contentEquals(button.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.TextButton].getText())) {
@@ -68,7 +68,7 @@ class ButtonGroup[T <: com.badlogic.gdx.scenes.scene2d.ui.Button] {
       } else ()
     }; i = i + 1 } }
   }
-  protected def canCheck(button: T, newState: scala.Boolean): scala.Boolean = {
+  def canCheck(button: T, newState: scala.Boolean): scala.Boolean = {
     if (button.isChecked$field == newState) {
       return false
     } else ()
@@ -81,7 +81,7 @@ class ButtonGroup[T <: com.badlogic.gdx.scenes.scene2d.ui.Button] {
       if ((this.maxCheckCount != (-1)) && (this.checkedButtons.size >= this.maxCheckCount)) {
         if (!this.uncheckLast) {
           return false
-        } else ()
+        } else ();
         { var tries: scala.Int = 0; while (true) { {
           val old: scala.Int = this.minCheckCount
           this.minCheckCount = 0
@@ -105,7 +105,7 @@ class ButtonGroup[T <: com.badlogic.gdx.scenes.scene2d.ui.Button] {
   }
   def uncheckAll(): scala.Unit = {
     val old: scala.Int = this.minCheckCount
-    this.minCheckCount = 0
+    this.minCheckCount = 0;
     { var i: scala.Int = 0; val n: scala.Int = this.buttons.size; while (i < n) { {
       val button: T = this.buttons.get(i)
       button.setChecked(false)
@@ -116,7 +116,7 @@ class ButtonGroup[T <: com.badlogic.gdx.scenes.scene2d.ui.Button] {
     if (this.checkedButtons.size > 0) {
       return this.checkedButtons.get(0)
     } else ()
-    return null
+    return null.asInstanceOf[T]
   }
   def getCheckedIndex(): scala.Int = {
     if (this.checkedButtons.size > 0) {

@@ -1,17 +1,17 @@
 package com.badlogic.gdx.utils
 
-class BinaryHeap[T <: Node] {
+class BinaryHeap[T <: com.badlogic.gdx.utils.BinaryHeap.Node] {
   var size: scala.Int = 0
-  private var nodes: scala.Array[Node] = null.asInstanceOf[scala.Array[Node]]
+  private var nodes: scala.Array[com.badlogic.gdx.utils.BinaryHeap.Node] = null.asInstanceOf[scala.Array[com.badlogic.gdx.utils.BinaryHeap.Node]]
   private var isMaxHeap: scala.Boolean = false
   def this(capacity: scala.Int, isMaxHeap: scala.Boolean) = {
     this()
     this.isMaxHeap = isMaxHeap
-    this.nodes = new Array[Node](capacity)
+    this.nodes = new Array[com.badlogic.gdx.utils.BinaryHeap.Node](capacity)
   }
   def add(node: T): T = {
     if (this.size == this.nodes.length) {
-      val newNodes: scala.Array[Node] = new Array[Node](this.size << 1)
+      val newNodes: scala.Array[com.badlogic.gdx.utils.BinaryHeap.Node] = new Array[com.badlogic.gdx.utils.BinaryHeap.Node](this.size << 1)
       java.lang.System.arraycopy(this.nodes, 0, newNodes, 0, this.size)
       this.nodes = newNodes
     } else ()
@@ -50,7 +50,7 @@ class BinaryHeap[T <: Node] {
     return this.nodes(0).asInstanceOf[T]
   }
   def pop(): T = {
-    val removed: Node = this.nodes(0)
+    val removed: com.badlogic.gdx.utils.BinaryHeap.Node = this.nodes(0)
     if ({ this.size -= 1; this.size } > 0) {
       this.nodes(0) = this.nodes(this.size)
       this.nodes(this.size) = null
@@ -62,7 +62,7 @@ class BinaryHeap[T <: Node] {
   }
   def remove(node: T): T = {
     if ({ this.size -= 1; this.size } > 0) {
-      val moved: Node = this.nodes(this.size)
+      val moved: com.badlogic.gdx.utils.BinaryHeap.Node = this.nodes(this.size)
       this.nodes(this.size) = null
       this.nodes(node.index) = moved
       if ((moved.value < node.value) ^ this.isMaxHeap) {
@@ -96,12 +96,12 @@ class BinaryHeap[T <: Node] {
   }
   private def up(index$arg: scala.Int): scala.Unit = {
     var index: scala.Int = index$arg
-    val nodes: scala.Array[Node] = this.nodes
-    val node: Node = nodes(index)
+    val nodes: scala.Array[com.badlogic.gdx.utils.BinaryHeap.Node] = this.nodes
+    val node: com.badlogic.gdx.utils.BinaryHeap.Node = nodes(index)
     val value: scala.Float = node.value
     while (index > 0) {
       val parentIndex: scala.Int = (index - 1) >> 1
-      val parent: Node = nodes(parentIndex)
+      val parent: com.badlogic.gdx.utils.BinaryHeap.Node = nodes(parentIndex)
       if ((value < parent.value) ^ this.isMaxHeap) {
         nodes(index) = parent
         parent.index = index
@@ -115,9 +115,9 @@ class BinaryHeap[T <: Node] {
   }
   private def down(index$arg: scala.Int): scala.Unit = {
     var index: scala.Int = index$arg
-    val nodes: scala.Array[Node] = this.nodes
+    val nodes: scala.Array[com.badlogic.gdx.utils.BinaryHeap.Node] = this.nodes
     val size: scala.Int = this.size
-    val node: Node = nodes(index)
+    val node: com.badlogic.gdx.utils.BinaryHeap.Node = nodes(index)
     val value: scala.Float = node.value
     while (true) {
       val leftIndex: scala.Int = 1 + (index << 1)
@@ -125,9 +125,9 @@ class BinaryHeap[T <: Node] {
         /* break */ ()
       } else ()
       val rightIndex: scala.Int = leftIndex + 1
-      val leftNode: Node = nodes(leftIndex)
+      val leftNode: com.badlogic.gdx.utils.BinaryHeap.Node = nodes(leftIndex)
       val leftValue: scala.Float = leftNode.value
-      var rightNode: Node = null.asInstanceOf[Node]
+      var rightNode: com.badlogic.gdx.utils.BinaryHeap.Node = null.asInstanceOf[com.badlogic.gdx.utils.BinaryHeap.Node]
       var rightValue: scala.Float = 0.0f
       if (rightIndex >= size) {
         rightNode = null
@@ -158,15 +158,15 @@ class BinaryHeap[T <: Node] {
     node.index = index
   }
   def equals(obj: java.lang.Object): scala.Boolean = {
-    if (!obj.isInstanceOf[BinaryHeap]) {
+    if (!obj.isInstanceOf[BinaryHeap[?]]) {
       return false
     } else ()
-    val other: BinaryHeap = obj.asInstanceOf[BinaryHeap]
+    val other: BinaryHeap[?] = obj.asInstanceOf[BinaryHeap[?]]
     if (other.size != this.size) {
       return false
     } else ()
-    val nodes1: scala.Array[Node] = this.nodes
-    val nodes2: scala.Array[Node] = other.nodes
+    val nodes1: scala.Array[com.badlogic.gdx.utils.BinaryHeap.Node] = this.nodes
+    val nodes2: scala.Array[com.badlogic.gdx.utils.BinaryHeap.Node] = other.nodes;
     { var i: scala.Int = 0; val n: scala.Int = this.size; while (i < n) { {
       if (nodes1(i).value != nodes2(i).value) {
         return false
@@ -176,7 +176,7 @@ class BinaryHeap[T <: Node] {
   }
   def hashCode(): scala.Int = {
     var h: scala.Int = 1
-    val nodes: scala.Array[Node] = this.nodes
+    val nodes: scala.Array[com.badlogic.gdx.utils.BinaryHeap.Node] = this.nodes;
     { var i: scala.Int = 0; val n: scala.Int = this.size; while (i < n) { {
       h = (h * 31) + java.lang.Float.floatToIntBits(nodes(i).value)
     }; i = i + 1 } }
@@ -186,10 +186,10 @@ class BinaryHeap[T <: Node] {
     if (this.size == 0) {
       return "[]"
     } else ()
-    val nodes: scala.Array[Node] = this.nodes
+    val nodes: scala.Array[com.badlogic.gdx.utils.BinaryHeap.Node] = this.nodes
     val buffer: java.lang.StringBuilder = new java.lang.StringBuilder(32)
     buffer.append('[')
-    buffer.append(nodes(0).value)
+    buffer.append(nodes(0).value);
     { var i: scala.Int = 1; while (i < this.size) { {
       buffer.append(", ")
       buffer.append(nodes(i).value)
@@ -197,6 +197,8 @@ class BinaryHeap[T <: Node] {
     buffer.append(']')
     return buffer.toString()
   }
+}
+object BinaryHeap {
   class Node {
     var value: scala.Float = 0.0f
     var index: scala.Int = 0

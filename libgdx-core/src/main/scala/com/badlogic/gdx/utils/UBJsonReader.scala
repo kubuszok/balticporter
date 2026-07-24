@@ -31,7 +31,7 @@ class UBJsonReader extends com.badlogic.gdx.utils.BaseJsonReader {
       com.badlogic.gdx.utils.StreamUtils.closeQuietly(din)
     }
   }
-  protected def parse(din: java.io.DataInputStream, `type`: scala.Byte): com.badlogic.gdx.utils.JsonValue = {
+  def parse(din: java.io.DataInputStream, `type`: scala.Byte): com.badlogic.gdx.utils.JsonValue = {
     if (`type` == '[') {
       return this.parseArray(din)
     } else {
@@ -98,17 +98,17 @@ class UBJsonReader extends com.badlogic.gdx.utils.BaseJsonReader {
       }
     }
   }
-  protected def parseArray(din: java.io.DataInputStream): com.badlogic.gdx.utils.JsonValue = {
+  def parseArray(din: java.io.DataInputStream): com.badlogic.gdx.utils.JsonValue = {
     val result: com.badlogic.gdx.utils.JsonValue = new com.badlogic.gdx.utils.JsonValue(com.badlogic.gdx.utils.JsonValue.ValueType.array)
     var `type`: scala.Byte = din.readByte()
-    var valueType: scala.Byte = 0
+    var valueType: scala.Byte = 0.asInstanceOf[scala.Byte]
     if (`type` == '$') {
       valueType = din.readByte()
       `type` = din.readByte()
     } else ()
     var size: scala.Int = -1
     if (`type` == '#') {
-      size = this.parseSize(din, false, -1).asInstanceOf[scala.Int]
+      size = this.parseSize(din, false, -1).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
       if (size < 0) {
         throw new com.badlogic.gdx.utils.GdxRuntimeException("Unrecognized data type")
       } else ()
@@ -139,17 +139,17 @@ class UBJsonReader extends com.badlogic.gdx.utils.BaseJsonReader {
     result.last$field = prev
     return result
   }
-  protected def parseObject(din: java.io.DataInputStream): com.badlogic.gdx.utils.JsonValue = {
+  def parseObject(din: java.io.DataInputStream): com.badlogic.gdx.utils.JsonValue = {
     val result: com.badlogic.gdx.utils.JsonValue = new com.badlogic.gdx.utils.JsonValue(com.badlogic.gdx.utils.JsonValue.ValueType.`object`)
     var `type`: scala.Byte = din.readByte()
-    var valueType: scala.Byte = 0
+    var valueType: scala.Byte = 0.asInstanceOf[scala.Byte]
     if (`type` == '$') {
       valueType = din.readByte()
       `type` = din.readByte()
     } else ()
     var size: scala.Int = -1
     if (`type` == '#') {
-      size = this.parseSize(din, false, -1).asInstanceOf[scala.Int]
+      size = this.parseSize(din, false, -1).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
       if (size < 0) {
         throw new com.badlogic.gdx.utils.GdxRuntimeException("Unrecognized data type")
       } else ()
@@ -182,11 +182,11 @@ class UBJsonReader extends com.badlogic.gdx.utils.BaseJsonReader {
     result.last$field = prev
     return result
   }
-  protected def parseData(din: java.io.DataInputStream, blockType: scala.Byte): com.badlogic.gdx.utils.JsonValue = {
+  def parseData(din: java.io.DataInputStream, blockType: scala.Byte): com.badlogic.gdx.utils.JsonValue = {
     val dataType: scala.Byte = din.readByte()
-    var size: scala.Int = (if (blockType == 'A') this.readUInt(din) else this.readUChar(din)).asInstanceOf[scala.Int]
+    var size: scala.Int = (if (blockType == 'A') this.readUInt(din) else this.readUChar(din)).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
     val result: com.badlogic.gdx.utils.JsonValue = new com.badlogic.gdx.utils.JsonValue(com.badlogic.gdx.utils.JsonValue.ValueType.array)
-    var prev: com.badlogic.gdx.utils.JsonValue = null
+    var prev: com.badlogic.gdx.utils.JsonValue = null;
     { var i: scala.Long = 0; while (i < size) { {
       val `val`: com.badlogic.gdx.utils.JsonValue = this.parse(din, dataType)
       `val`.parent$field = result
@@ -201,10 +201,10 @@ class UBJsonReader extends com.badlogic.gdx.utils.BaseJsonReader {
     result.last$field = prev
     return result
   }
-  protected def parseString(din: java.io.DataInputStream, `type`: scala.Byte): java.lang.String = {
+  def parseString(din: java.io.DataInputStream, `type`: scala.Byte): java.lang.String = {
     return this.parseString(din, false, `type`)
   }
-  protected def parseString(din: java.io.DataInputStream, sOptional: scala.Boolean, `type`: scala.Byte): java.lang.String = {
+  def parseString(din: java.io.DataInputStream, sOptional: scala.Boolean, `type`: scala.Byte): java.lang.String = {
     var size: scala.Long = -1
     if (`type` == 'S') {
       size = this.parseSize(din, true, -1)
@@ -222,10 +222,10 @@ class UBJsonReader extends com.badlogic.gdx.utils.BaseJsonReader {
     } else ()
     return if (size > 0) this.readString(din, size) else ""
   }
-  protected def parseSize(din: java.io.DataInputStream, useIntOnError: scala.Boolean, defaultValue: scala.Long): scala.Long = {
+  def parseSize(din: java.io.DataInputStream, useIntOnError: scala.Boolean, defaultValue: scala.Long): scala.Long = {
     return this.parseSize(din, din.readByte(), useIntOnError, defaultValue)
   }
-  protected def parseSize(din: java.io.DataInputStream, `type`: scala.Byte, useIntOnError: scala.Boolean, defaultValue: scala.Long): scala.Long = {
+  def parseSize(din: java.io.DataInputStream, `type`: scala.Byte, useIntOnError: scala.Boolean, defaultValue: scala.Long): scala.Long = {
     if (`type` == 'i') {
       return this.readUChar(din).asInstanceOf[scala.Long]
     } else ()
@@ -247,16 +247,16 @@ class UBJsonReader extends com.badlogic.gdx.utils.BaseJsonReader {
     } else ()
     return defaultValue
   }
-  protected def readUChar(din: java.io.DataInputStream): scala.Short = {
-    return (din.readByte().asInstanceOf[scala.Short] & 255).asInstanceOf[scala.Short]
+  def readUChar(din: java.io.DataInputStream): scala.Short = {
+    return (din.readByte().asInstanceOf[scala.Short] & 255).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
   }
-  protected def readUShort(din: java.io.DataInputStream): scala.Int = {
+  def readUShort(din: java.io.DataInputStream): scala.Int = {
     return din.readShort().asInstanceOf[scala.Int] & 65535
   }
-  protected def readUInt(din: java.io.DataInputStream): scala.Long = {
+  def readUInt(din: java.io.DataInputStream): scala.Long = {
     return din.readInt().asInstanceOf[scala.Long] & -1
   }
-  protected def readString(din: java.io.DataInputStream, size: scala.Long): java.lang.String = {
+  def readString(din: java.io.DataInputStream, size: scala.Long): java.lang.String = {
     val data: scala.Array[scala.Byte] = new Array[scala.Byte](size.asInstanceOf[scala.Int])
     din.readFully(data)
     return new java.lang.String(data, "UTF-8")

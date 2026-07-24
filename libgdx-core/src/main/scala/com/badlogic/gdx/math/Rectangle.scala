@@ -135,7 +135,7 @@ class Rectangle extends java.io.Serializable with com.badlogic.gdx.math.Shape2D 
     var minX: scala.Float = this.x
     var maxX: scala.Float = this.x + this.width
     var minY: scala.Float = this.y
-    var maxY: scala.Float = this.y + this.height
+    var maxY: scala.Float = this.y + this.height;
     { var i: scala.Int = 0; while (i < vecs.length) { {
       val v: com.badlogic.gdx.math.Vector2 = vecs(i)
       minX = java.lang.Math.min(minX, v.x)

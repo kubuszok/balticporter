@@ -1,13 +1,15 @@
 package com.badlogic.gdx
 
 trait Net {
-  def sendHttpRequest(httpRequest: HttpRequest, httpResponseListener: HttpResponseListener): scala.Unit
-  def cancelHttpRequest(httpRequest: HttpRequest): scala.Unit
-  def isHttpRequestPending(httpRequest: HttpRequest): scala.Boolean
-  def newServerSocket(protocol: Protocol, hostname: java.lang.String, port: scala.Int, hints: com.badlogic.gdx.net.ServerSocketHints): com.badlogic.gdx.net.ServerSocket
-  def newServerSocket(protocol: Protocol, port: scala.Int, hints: com.badlogic.gdx.net.ServerSocketHints): com.badlogic.gdx.net.ServerSocket
-  def newClientSocket(protocol: Protocol, host: java.lang.String, port: scala.Int, hints: com.badlogic.gdx.net.SocketHints): com.badlogic.gdx.net.Socket
+  def sendHttpRequest(httpRequest: com.badlogic.gdx.Net.HttpRequest, httpResponseListener: com.badlogic.gdx.Net.HttpResponseListener): scala.Unit
+  def cancelHttpRequest(httpRequest: com.badlogic.gdx.Net.HttpRequest): scala.Unit
+  def isHttpRequestPending(httpRequest: com.badlogic.gdx.Net.HttpRequest): scala.Boolean
+  def newServerSocket(protocol: com.badlogic.gdx.Net.Protocol, hostname: java.lang.String, port: scala.Int, hints: com.badlogic.gdx.net.ServerSocketHints): com.badlogic.gdx.net.ServerSocket
+  def newServerSocket(protocol: com.badlogic.gdx.Net.Protocol, port: scala.Int, hints: com.badlogic.gdx.net.ServerSocketHints): com.badlogic.gdx.net.ServerSocket
+  def newClientSocket(protocol: com.badlogic.gdx.Net.Protocol, host: java.lang.String, port: scala.Int, hints: com.badlogic.gdx.net.SocketHints): com.badlogic.gdx.net.Socket
   def openURI(URI: java.lang.String): scala.Boolean
+}
+object Net {
   trait HttpResponse {
     def getResult(): scala.Array[scala.Byte]
     def getResultAsString(): java.lang.String
@@ -25,7 +27,7 @@ trait Net {
     final val PATCH: java.lang.String = "PATCH"
     final val DELETE: java.lang.String = "DELETE"
   }
-  class HttpRequest extends com.badlogic.gdx.utils.Pool#Poolable {
+  class HttpRequest extends com.badlogic.gdx.utils.Pool.Poolable {
     private var httpMethod: java.lang.String = null.asInstanceOf[java.lang.String]
     private var url: java.lang.String = null.asInstanceOf[java.lang.String]
     private var headers: scala.collection.mutable.Map[java.lang.String, java.lang.String] = null.asInstanceOf[scala.collection.mutable.Map[java.lang.String, java.lang.String]]
@@ -111,7 +113,7 @@ trait Net {
     }
   }
   trait HttpResponseListener {
-    def handleHttpResponse(httpResponse: HttpResponse): scala.Unit
+    def handleHttpResponse(httpResponse: com.badlogic.gdx.Net.HttpResponse): scala.Unit
     def failed(t: java.lang.Throwable): scala.Unit
     def cancelled(): scala.Unit
   }

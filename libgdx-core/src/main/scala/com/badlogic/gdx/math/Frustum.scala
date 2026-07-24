@@ -3,7 +3,7 @@ package com.badlogic.gdx.math
 class Frustum {
   final val planes: scala.Array[com.badlogic.gdx.math.Plane] = new Array[com.badlogic.gdx.math.Plane](6)
   final val planePoints: scala.Array[com.badlogic.gdx.math.Vector3] = Array[com.badlogic.gdx.math.Vector3](new com.badlogic.gdx.math.Vector3(), new com.badlogic.gdx.math.Vector3(), new com.badlogic.gdx.math.Vector3(), new com.badlogic.gdx.math.Vector3(), new com.badlogic.gdx.math.Vector3(), new com.badlogic.gdx.math.Vector3(), new com.badlogic.gdx.math.Vector3(), new com.badlogic.gdx.math.Vector3())
-  protected final val planePointsArray: scala.Array[scala.Float] = new Array[scala.Float](8 * 3)
+  final val planePointsArray: scala.Array[scala.Float] = new Array[scala.Float](8 * 3)
   def this() = {
     this()
     { var i: scala.Int = 0; while (i < 6) { {
@@ -12,7 +12,7 @@ class Frustum {
   }
   def update(inverseProjectionView: com.badlogic.gdx.math.Matrix4): scala.Unit = {
     java.lang.System.arraycopy(Frustum.clipSpacePlanePointsArray, 0, this.planePointsArray, 0, Frustum.clipSpacePlanePointsArray.length)
-    com.badlogic.gdx.math.Matrix4.prj(inverseProjectionView.`val`, this.planePointsArray, 0, 8, 3)
+    com.badlogic.gdx.math.Matrix4.prj(inverseProjectionView.`val`, this.planePointsArray, 0, 8, 3);
     { var i: scala.Int = 0; var j: scala.Int = 0; while (i < 8) { {
       val v: com.badlogic.gdx.math.Vector3 = this.planePoints(i)
       v.x = this.planePointsArray({ j += 1; j })
@@ -28,7 +28,7 @@ class Frustum {
   }
   def pointInFrustum(point: com.badlogic.gdx.math.Vector3): scala.Boolean = {
     { var i: scala.Int = 0; while (i < this.planes.length) { {
-      val result: com.badlogic.gdx.math.Plane#PlaneSide = this.planes(i).testPoint(point)
+      val result: com.badlogic.gdx.math.Plane.PlaneSide = this.planes(i).testPoint(point)
       if (result == com.badlogic.gdx.math.Plane.PlaneSide.Back) {
         return false
       } else ()
@@ -37,7 +37,7 @@ class Frustum {
   }
   def pointInFrustum(x: scala.Float, y: scala.Float, z: scala.Float): scala.Boolean = {
     { var i: scala.Int = 0; while (i < this.planes.length) { {
-      val result: com.badlogic.gdx.math.Plane#PlaneSide = this.planes(i).testPoint(x, y, z)
+      val result: com.badlogic.gdx.math.Plane.PlaneSide = this.planes(i).testPoint(x, y, z)
       if (result == com.badlogic.gdx.math.Plane.PlaneSide.Back) {
         return false
       } else ()
@@ -171,7 +171,7 @@ class Frustum {
   }
 }
 object Frustum {
-  protected final val clipSpacePlanePoints: scala.Array[com.badlogic.gdx.math.Vector3] = Array[com.badlogic.gdx.math.Vector3](new com.badlogic.gdx.math.Vector3(-1, -1, -1), new com.badlogic.gdx.math.Vector3(1, -1, -1), new com.badlogic.gdx.math.Vector3(1, 1, -1), new com.badlogic.gdx.math.Vector3(-1, 1, -1), new com.badlogic.gdx.math.Vector3(-1, -1, 1), new com.badlogic.gdx.math.Vector3(1, -1, 1), new com.badlogic.gdx.math.Vector3(1, 1, 1), new com.badlogic.gdx.math.Vector3(-1, 1, 1))
-  protected final val clipSpacePlanePointsArray: scala.Array[scala.Float] = new Array[scala.Float](8 * 3)
+  final val clipSpacePlanePoints: scala.Array[com.badlogic.gdx.math.Vector3] = Array[com.badlogic.gdx.math.Vector3](new com.badlogic.gdx.math.Vector3(-1, -1, -1), new com.badlogic.gdx.math.Vector3(1, -1, -1), new com.badlogic.gdx.math.Vector3(1, 1, -1), new com.badlogic.gdx.math.Vector3(-1, 1, -1), new com.badlogic.gdx.math.Vector3(-1, -1, 1), new com.badlogic.gdx.math.Vector3(1, -1, 1), new com.badlogic.gdx.math.Vector3(1, 1, 1), new com.badlogic.gdx.math.Vector3(-1, 1, 1))
+  final val clipSpacePlanePointsArray: scala.Array[scala.Float] = new Array[scala.Float](8 * 3)
   private final val tmpV: com.badlogic.gdx.math.Vector3 = new com.badlogic.gdx.math.Vector3()
 }

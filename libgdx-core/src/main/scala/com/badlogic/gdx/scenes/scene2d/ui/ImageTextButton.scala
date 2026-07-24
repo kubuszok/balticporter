@@ -3,13 +3,13 @@ package com.badlogic.gdx.scenes.scene2d.ui
 class ImageTextButton extends com.badlogic.gdx.scenes.scene2d.ui.Button {
   private var image: com.badlogic.gdx.scenes.scene2d.ui.Image = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Image]
   private var label: com.badlogic.gdx.scenes.scene2d.ui.Label = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Label]
-  private var style: ImageTextButtonStyle = null.asInstanceOf[ImageTextButtonStyle]
-  def this(text: java.lang.String, style: ImageTextButtonStyle) = {
+  private var style: com.badlogic.gdx.scenes.scene2d.ui.ImageTextButton.ImageTextButtonStyle = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.ImageTextButton.ImageTextButtonStyle]
+  def this(text: java.lang.String, style: com.badlogic.gdx.scenes.scene2d.ui.ImageTextButton.ImageTextButtonStyle) = {
     this()
     this.style = style
     this.defaults().space(3)
     this.image = this.newImage()
-    this.label = this.newLabel(text, new com.badlogic.gdx.scenes.scene2d.ui.Label#LabelStyle(style.font, style.fontColor))
+    this.label = this.newLabel(text, new com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle(style.font, style.fontColor))
     this.label.setAlignment(com.badlogic.gdx.utils.Align.center)
     this.add(this.image)
     this.add(this.label)
@@ -17,40 +17,40 @@ class ImageTextButton extends com.badlogic.gdx.scenes.scene2d.ui.Button {
     this.setSize(this.getPrefWidth(), this.getPrefHeight())
   }
   def this(text: java.lang.String, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin, styleName: java.lang.String) = {
-    this(text, skin.get(styleName, classOf[java.lang.Class]))
+    this(text, skin.get(styleName, classOf[com.badlogic.gdx.scenes.scene2d.ui.ImageTextButton.ImageTextButtonStyle]))
     this.setSkin(skin)
   }
   def this(text: java.lang.String, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin) = {
-    this(text, skin.get(classOf[java.lang.Class]))
+    this(text, skin.get(classOf[com.badlogic.gdx.scenes.scene2d.ui.ImageTextButton.ImageTextButtonStyle]))
     this.setSkin(skin)
   }
-  protected def newImage(): com.badlogic.gdx.scenes.scene2d.ui.Image = {
+  def newImage(): com.badlogic.gdx.scenes.scene2d.ui.Image = {
     return new com.badlogic.gdx.scenes.scene2d.ui.Image(null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Drawable], com.badlogic.gdx.utils.Scaling.fit)
   }
-  protected def newLabel(text: java.lang.String, style: com.badlogic.gdx.scenes.scene2d.ui.Label#LabelStyle): com.badlogic.gdx.scenes.scene2d.ui.Label = {
+  def newLabel(text: java.lang.String, style: com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle): com.badlogic.gdx.scenes.scene2d.ui.Label = {
     return new com.badlogic.gdx.scenes.scene2d.ui.Label(text, style)
   }
-  def setStyle(style: com.badlogic.gdx.scenes.scene2d.ui.Button#ButtonStyle): scala.Unit = {
-    if (!style.isInstanceOf[ImageTextButtonStyle]) {
+  def setStyle(style: com.badlogic.gdx.scenes.scene2d.ui.Button.ButtonStyle): scala.Unit = {
+    if (!style.isInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.ImageTextButton.ImageTextButtonStyle]) {
       throw new java.lang.IllegalArgumentException("style must be a ImageTextButtonStyle.")
     } else ()
-    this.style = style.asInstanceOf[ImageTextButtonStyle]
+    this.style = style.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.ImageTextButton.ImageTextButtonStyle]
     super.setStyle(style)
     if (this.image != null) {
       this.updateImage()
     } else ()
     if (this.label != null) {
-      val textButtonStyle: ImageTextButtonStyle = style.asInstanceOf[ImageTextButtonStyle]
-      val labelStyle: com.badlogic.gdx.scenes.scene2d.ui.Label#LabelStyle = this.label.getStyle()
+      val textButtonStyle: com.badlogic.gdx.scenes.scene2d.ui.ImageTextButton.ImageTextButtonStyle = style.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.ImageTextButton.ImageTextButtonStyle]
+      val labelStyle: com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle = this.label.getStyle()
       labelStyle.font = textButtonStyle.font
       labelStyle.fontColor = this.getFontColor()
       this.label.setStyle(labelStyle)
     } else ()
   }
-  def getStyle(): ImageTextButtonStyle = {
+  def getStyle(): com.badlogic.gdx.scenes.scene2d.ui.ImageTextButton.ImageTextButtonStyle = {
     return this.style
   }
-  protected def getImageDrawable(): com.badlogic.gdx.scenes.scene2d.utils.Drawable = {
+  def getImageDrawable(): com.badlogic.gdx.scenes.scene2d.utils.Drawable = {
     if (this.isDisabled() && (this.style.imageDisabled != null)) {
       return this.style.imageDisabled
     } else ()
@@ -83,10 +83,10 @@ class ImageTextButton extends com.badlogic.gdx.scenes.scene2d.ui.Button {
     } else ()
     return this.style.imageUp
   }
-  protected def updateImage(): scala.Unit = {
+  def updateImage(): scala.Unit = {
     this.image.setDrawable(this.getImageDrawable())
   }
-  protected def getFontColor(): com.badlogic.gdx.graphics.Color = {
+  def getFontColor(): com.badlogic.gdx.graphics.Color = {
     if (this.isDisabled() && (this.style.disabledFontColor != null)) {
       return this.style.disabledFontColor
     } else ()
@@ -134,7 +134,7 @@ class ImageTextButton extends com.badlogic.gdx.scenes.scene2d.ui.Button {
   def getImage(): com.badlogic.gdx.scenes.scene2d.ui.Image = {
     return this.image
   }
-  def getImageCell(): com.badlogic.gdx.scenes.scene2d.ui.Cell = {
+  def getImageCell(): com.badlogic.gdx.scenes.scene2d.ui.Cell[?] = {
     return this.getCell(this.image)
   }
   def setLabel(label: com.badlogic.gdx.scenes.scene2d.ui.Label): scala.Unit = {
@@ -144,7 +144,7 @@ class ImageTextButton extends com.badlogic.gdx.scenes.scene2d.ui.Button {
   def getLabel(): com.badlogic.gdx.scenes.scene2d.ui.Label = {
     return this.label
   }
-  def getLabelCell(): com.badlogic.gdx.scenes.scene2d.ui.Cell = {
+  def getLabelCell(): com.badlogic.gdx.scenes.scene2d.ui.Cell[?] = {
     return this.getCell(this.label)
   }
   def setText(text: java.lang.CharSequence): scala.Unit = {
@@ -165,7 +165,9 @@ class ImageTextButton extends com.badlogic.gdx.scenes.scene2d.ui.Button {
     } else ()
     return (((((if (className.indexOf('$') != (-1)) "ImageTextButton " else "") + className) + ": ") + this.image.getDrawable()) + " ") + this.label.getText()
   }
-  class ImageTextButtonStyle extends com.badlogic.gdx.scenes.scene2d.ui.TextButton#TextButtonStyle {
+}
+object ImageTextButton {
+  class ImageTextButtonStyle extends com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle {
     var imageUp: com.badlogic.gdx.scenes.scene2d.utils.Drawable = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Drawable]
     var imageDown: com.badlogic.gdx.scenes.scene2d.utils.Drawable = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Drawable]
     var imageOver: com.badlogic.gdx.scenes.scene2d.utils.Drawable = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Drawable]
@@ -176,7 +178,7 @@ class ImageTextButton extends com.badlogic.gdx.scenes.scene2d.ui.Button {
     def this(up: com.badlogic.gdx.scenes.scene2d.utils.Drawable, down: com.badlogic.gdx.scenes.scene2d.utils.Drawable, checked: com.badlogic.gdx.scenes.scene2d.utils.Drawable, font: com.badlogic.gdx.graphics.g2d.BitmapFont) = {
       this()
     }
-    def this(style: ImageTextButtonStyle) = {
+    def this(style: com.badlogic.gdx.scenes.scene2d.ui.ImageTextButton.ImageTextButtonStyle) = {
       this()
       this.imageUp = style.imageUp
       this.imageDown = style.imageDown
@@ -186,7 +188,7 @@ class ImageTextButton extends com.badlogic.gdx.scenes.scene2d.ui.Button {
       this.imageCheckedDown = style.imageCheckedDown
       this.imageCheckedOver = style.imageCheckedOver
     }
-    def this(style: com.badlogic.gdx.scenes.scene2d.ui.TextButton#TextButtonStyle) = {
+    def this(style: com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle) = {
       this()
     }
   }

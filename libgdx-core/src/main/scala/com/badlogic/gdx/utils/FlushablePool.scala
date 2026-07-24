@@ -1,7 +1,7 @@
 package com.badlogic.gdx.utils
 
 abstract class FlushablePool[T] extends com.badlogic.gdx.utils.Pool[T] {
-  protected var obtained: com.badlogic.gdx.utils.Array[T] = new com.badlogic.gdx.utils.Array[T]()
+  var obtained: com.badlogic.gdx.utils.Array[T] = new com.badlogic.gdx.utils.Array[T]()
   def this(initialCapacity: scala.Int, max: scala.Int) = {
     this()
   }

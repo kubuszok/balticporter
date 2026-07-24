@@ -27,7 +27,7 @@ class Selection[T] extends com.badlogic.gdx.scenes.scene2d.utils.Disableable wit
           return
         } else ()
         this.selected.remove(item)
-        this.lastSelected = null
+        this.lastSelected = null.asInstanceOf[T]
       } else {
         var modified: scala.Boolean = false
         if ((!this.multiple) || ((!this.toggle) && (!com.badlogic.gdx.scenes.scene2d.utils.UIUtils.ctrl()))) {
@@ -101,8 +101,8 @@ class Selection[T] extends com.badlogic.gdx.scenes.scene2d.utils.Disableable wit
   def setAll(items: com.badlogic.gdx.utils.Array[T]): scala.Unit = {
     var added: scala.Boolean = false
     this.snapshot()
-    this.lastSelected = null
-    this.selected.clear(items.size)
+    this.lastSelected = null.asInstanceOf[T]
+    this.selected.clear(items.size);
     { var i: scala.Int = 0; val n: scala.Int = items.size; while (i < n) { {
       val item: T = items.get(i)
       if (item == null) {
@@ -140,7 +140,7 @@ class Selection[T] extends com.badlogic.gdx.scenes.scene2d.utils.Disableable wit
   }
   def addAll(items: com.badlogic.gdx.utils.Array[T]): scala.Unit = {
     var added: scala.Boolean = false
-    this.snapshot()
+    this.snapshot();
     { var i: scala.Int = 0; val n: scala.Int = items.size; while (i < n) { {
       val item: T = items.get(i)
       if (item == null) {
@@ -170,13 +170,13 @@ class Selection[T] extends com.badlogic.gdx.scenes.scene2d.utils.Disableable wit
     if (this.programmaticChangeEvents && this.fireChangeEvent()) {
       this.selected.add(item)
     } else {
-      this.lastSelected = null
+      this.lastSelected = null.asInstanceOf[T]
       this.changed()
     }
   }
   def removeAll(items: com.badlogic.gdx.utils.Array[T]): scala.Unit = {
     var removed: scala.Boolean = false
-    this.snapshot()
+    this.snapshot();
     { var i: scala.Int = 0; val n: scala.Int = items.size; while (i < n) { {
       val item: T = items.get(i)
       if (item == null) {
@@ -190,7 +190,7 @@ class Selection[T] extends com.badlogic.gdx.scenes.scene2d.utils.Disableable wit
       if (this.programmaticChangeEvents && this.fireChangeEvent()) {
         this.revert()
       } else {
-        this.lastSelected = null
+        this.lastSelected = null.asInstanceOf[T]
         this.changed()
       }
     } else ()
@@ -198,7 +198,7 @@ class Selection[T] extends com.badlogic.gdx.scenes.scene2d.utils.Disableable wit
   }
   def clear(): scala.Unit = {
     if (this.selected.size == 0) {
-      this.lastSelected = null
+      this.lastSelected = null.asInstanceOf[T]
       return
     } else ()
     this.snapshot()
@@ -206,19 +206,19 @@ class Selection[T] extends com.badlogic.gdx.scenes.scene2d.utils.Disableable wit
     if (this.programmaticChangeEvents && this.fireChangeEvent()) {
       this.revert()
     } else {
-      this.lastSelected = null
+      this.lastSelected = null.asInstanceOf[T]
       this.changed()
     }
     this.cleanup()
   }
-  protected def changed(): scala.Unit = {
+  def changed(): scala.Unit = {
     ()
   }
   def fireChangeEvent(): scala.Boolean = {
     if (this.actor == null) {
       return false
     } else ()
-    val changeEvent: com.badlogic.gdx.scenes.scene2d.utils.ChangeListener#ChangeEvent = com.badlogic.gdx.scenes.scene2d.Actor.POOLS.obtain(classOf[java.lang.Class])
+    val changeEvent: com.badlogic.gdx.scenes.scene2d.utils.ChangeListener.ChangeEvent = com.badlogic.gdx.scenes.scene2d.Actor.POOLS.obtain(classOf[com.badlogic.gdx.scenes.scene2d.utils.ChangeListener.ChangeEvent])
     try {
       return this.actor.fire(changeEvent)
     } finally {
@@ -239,7 +239,7 @@ class Selection[T] extends com.badlogic.gdx.scenes.scene2d.utils.Disableable wit
         return this.selected.first()
       } else ()
     }
-    return null
+    return null.asInstanceOf[T]
   }
   def iterator(): scala.collection.Iterator[T] = {
     return this.selected.iterator()

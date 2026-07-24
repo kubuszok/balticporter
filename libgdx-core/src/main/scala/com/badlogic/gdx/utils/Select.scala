@@ -1,7 +1,7 @@
 package com.badlogic.gdx.utils
 
 class Select {
-  private var quickSelect: com.badlogic.gdx.utils.QuickSelect = null.asInstanceOf[com.badlogic.gdx.utils.QuickSelect]
+  private var quickSelect: com.badlogic.gdx.utils.QuickSelect[?] = null.asInstanceOf[com.badlogic.gdx.utils.QuickSelect[?]]
   def select[T](items: scala.Array[T], comp: java.util.Comparator[T], kthLowest: scala.Int, size: scala.Int): T = {
     val idx: scala.Int = this.selectIndex(items, comp, kthLowest, size)
     return items(idx)
@@ -30,7 +30,7 @@ class Select {
     return idx
   }
   private def fastMin[T](items: scala.Array[T], comp: java.util.Comparator[T], size: scala.Int): scala.Int = {
-    var lowestIdx: scala.Int = 0
+    var lowestIdx: scala.Int = 0;
     { var i: scala.Int = 1; while (i < size) { {
       val comparison: scala.Int = comp.compare(items(i), items(lowestIdx))
       if (comparison < 0) {
@@ -40,7 +40,7 @@ class Select {
     return lowestIdx
   }
   private def fastMax[T](items: scala.Array[T], comp: java.util.Comparator[T], size: scala.Int): scala.Int = {
-    var highestIdx: scala.Int = 0
+    var highestIdx: scala.Int = 0;
     { var i: scala.Int = 1; while (i < size) { {
       val comparison: scala.Int = comp.compare(items(i), items(highestIdx))
       if (comparison > 0) {

@@ -96,9 +96,9 @@ class Ellipse extends java.io.Serializable with com.badlogic.gdx.math.Shape2D {
     val a: scala.Float = this.width / 2
     val b: scala.Float = this.height / 2
     if (((a * 3) > b) || ((b * 3) > a)) {
-      return (com.badlogic.gdx.math.MathUtils.PI * ((3 * (a + b)) - java.lang.Math.sqrt(((3 * a) + b) * (a + (3 * b))))).asInstanceOf[scala.Float]
+      return (com.badlogic.gdx.math.MathUtils.PI * ((3 * (a + b)) - java.lang.Math.sqrt(((3 * a) + b) * (a + (3 * b))))).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
     } else {
-      return (com.badlogic.gdx.math.MathUtils.PI2 * java.lang.Math.sqrt(((a * a) + (b * b)) / 2)).asInstanceOf[scala.Float]
+      return (com.badlogic.gdx.math.MathUtils.PI2 * java.lang.Math.sqrt(((a * a) + (b * b)) / 2)).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
     }
   }
   def toString(): java.lang.String = {

@@ -2,7 +2,7 @@ package com.badlogic.gdx.maps.tiled.tiles
 
 class AnimatedTiledMapTile extends com.badlogic.gdx.maps.tiled.TiledMapTile {
   private var id: scala.Int = 0
-  private var blendMode: com.badlogic.gdx.maps.tiled.TiledMapTile#BlendMode = com.badlogic.gdx.maps.tiled.TiledMapTile.BlendMode.ALPHA
+  private var blendMode: com.badlogic.gdx.maps.tiled.TiledMapTile.BlendMode = com.badlogic.gdx.maps.tiled.TiledMapTile.BlendMode.ALPHA
   private var properties: com.badlogic.gdx.maps.MapProperties = null.asInstanceOf[com.badlogic.gdx.maps.MapProperties]
   private var objects: com.badlogic.gdx.maps.MapObjects = null.asInstanceOf[com.badlogic.gdx.maps.MapObjects]
   private var frameTiles: scala.Array[com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile] = null.asInstanceOf[scala.Array[com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile]]
@@ -15,7 +15,7 @@ class AnimatedTiledMapTile extends com.badlogic.gdx.maps.tiled.TiledMapTile {
     this.animationIntervals = new Array[scala.Int](frameTiles.size)
     { var i: scala.Int = 0; while (i < frameTiles.size) { {
       this.frameTiles(i) = frameTiles.get(i)
-      this.animationIntervals(i) = (interval * 1000.0f).asInstanceOf[scala.Int]
+      this.animationIntervals(i) = (interval * 1000.0f).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
     }; i = i + 1 } }
   }
   def this(intervals: com.badlogic.gdx.utils.IntArray, frameTiles: com.badlogic.gdx.utils.Array[com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile]) = {
@@ -34,14 +34,14 @@ class AnimatedTiledMapTile extends com.badlogic.gdx.maps.tiled.TiledMapTile {
   def setId(id: scala.Int): scala.Unit = {
     this.id = id
   }
-  def getBlendMode(): com.badlogic.gdx.maps.tiled.TiledMapTile#BlendMode = {
+  def getBlendMode(): com.badlogic.gdx.maps.tiled.TiledMapTile.BlendMode = {
     return this.blendMode
   }
-  def setBlendMode(blendMode: com.badlogic.gdx.maps.tiled.TiledMapTile#BlendMode): scala.Unit = {
+  def setBlendMode(blendMode: com.badlogic.gdx.maps.tiled.TiledMapTile.BlendMode): scala.Unit = {
     this.blendMode = blendMode
   }
   def getCurrentFrameIndex(): scala.Int = {
-    var currentTime: scala.Int = (AnimatedTiledMapTile.lastTiledMapRenderTime % this.loopDuration).asInstanceOf[scala.Int]
+    var currentTime: scala.Int = (AnimatedTiledMapTile.lastTiledMapRenderTime % this.loopDuration).asInstanceOf[scala.Int].asInstanceOf[scala.Int];
     { var i: scala.Int = 0; while (i < this.animationIntervals.length) { {
       val animationInterval: scala.Int = this.animationIntervals(i)
       if (currentTime <= animationInterval) {
@@ -78,7 +78,7 @@ class AnimatedTiledMapTile extends com.badlogic.gdx.maps.tiled.TiledMapTile {
   def setAnimationIntervals(intervals: scala.Array[scala.Int]): scala.Unit = {
     if (intervals.length == this.animationIntervals.length) {
       this.animationIntervals = intervals
-      this.loopDuration = 0
+      this.loopDuration = 0;
       { var i: scala.Int = 0; while (i < intervals.length) { {
         this.loopDuration = this.loopDuration + intervals(i)
       }; i = i + 1 } }

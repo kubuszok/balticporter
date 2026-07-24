@@ -2,8 +2,8 @@ package com.badlogic.gdx.utils
 
 object Base64Coder {
   private final val systemLineSeparator: java.lang.String = "\n"
-  final val regularMap: CharMap = new CharMap('+', '/')
-  final val urlsafeMap: CharMap = new CharMap('-', '_')
+  final val regularMap: com.badlogic.gdx.utils.Base64Coder.CharMap = new com.badlogic.gdx.utils.Base64Coder.CharMap('+', '/')
+  final val urlsafeMap: com.badlogic.gdx.utils.Base64Coder.CharMap = new com.badlogic.gdx.utils.Base64Coder.CharMap('-', '_')
   def encodeString(s: java.lang.String): java.lang.String = {
     return Base64Coder.encodeString(s, false)
   }
@@ -19,7 +19,7 @@ object Base64Coder {
   def encodeLines(in: scala.Array[scala.Byte]): java.lang.String = {
     return Base64Coder.encodeLines(in, 0, in.length, 76, Base64Coder.systemLineSeparator, Base64Coder.regularMap.encodingMap)
   }
-  def encodeLines(in: scala.Array[scala.Byte], iOff: scala.Int, iLen: scala.Int, lineLen: scala.Int, lineSeparator: java.lang.String, charMap: CharMap): java.lang.String = {
+  def encodeLines(in: scala.Array[scala.Byte], iOff: scala.Int, iLen: scala.Int, lineLen: scala.Int, lineSeparator: java.lang.String, charMap: com.badlogic.gdx.utils.Base64Coder.CharMap): java.lang.String = {
     return Base64Coder.encodeLines(in, iOff, iLen, lineLen, lineSeparator, charMap.encodingMap)
   }
   def encodeLines(in: scala.Array[scala.Byte], iOff: scala.Int, iLen: scala.Int, lineLen: scala.Int, lineSeparator: java.lang.String, charMap: scala.Array[scala.Char]): java.lang.String = {
@@ -42,7 +42,7 @@ object Base64Coder {
   def encode(in: scala.Array[scala.Byte]): scala.Array[scala.Char] = {
     return Base64Coder.encode(in, Base64Coder.regularMap.encodingMap)
   }
-  def encode(in: scala.Array[scala.Byte], charMap: CharMap): scala.Array[scala.Char] = {
+  def encode(in: scala.Array[scala.Byte], charMap: com.badlogic.gdx.utils.Base64Coder.CharMap): scala.Array[scala.Char] = {
     return Base64Coder.encode(in, 0, in.length, charMap)
   }
   def encode(in: scala.Array[scala.Byte], charMap: scala.Array[scala.Char]): scala.Array[scala.Char] = {
@@ -51,7 +51,7 @@ object Base64Coder {
   def encode(in: scala.Array[scala.Byte], iLen: scala.Int): scala.Array[scala.Char] = {
     return Base64Coder.encode(in, 0, iLen, Base64Coder.regularMap.encodingMap)
   }
-  def encode(in: scala.Array[scala.Byte], iOff: scala.Int, iLen: scala.Int, charMap: CharMap): scala.Array[scala.Char] = {
+  def encode(in: scala.Array[scala.Byte], iOff: scala.Int, iLen: scala.Int, charMap: com.badlogic.gdx.utils.Base64Coder.CharMap): scala.Array[scala.Char] = {
     return Base64Coder.encode(in, iOff, iLen, charMap.encodingMap)
   }
   def encode(in: scala.Array[scala.Byte], iOff: scala.Int, iLen: scala.Int, charMap: scala.Array[scala.Char]): scala.Array[scala.Char] = {
@@ -87,12 +87,12 @@ object Base64Coder {
   def decodeLines(s: java.lang.String): scala.Array[scala.Byte] = {
     return Base64Coder.decodeLines(s, Base64Coder.regularMap.decodingMap)
   }
-  def decodeLines(s: java.lang.String, inverseCharMap: CharMap): scala.Array[scala.Byte] = {
+  def decodeLines(s: java.lang.String, inverseCharMap: com.badlogic.gdx.utils.Base64Coder.CharMap): scala.Array[scala.Byte] = {
     return Base64Coder.decodeLines(s, inverseCharMap.decodingMap)
   }
   def decodeLines(s: java.lang.String, inverseCharMap: scala.Array[scala.Byte]): scala.Array[scala.Byte] = {
     val buf: scala.Array[scala.Char] = new Array[scala.Char](s.length())
-    var p: scala.Int = 0
+    var p: scala.Int = 0;
     { var ip: scala.Int = 0; while (ip < s.length()) { {
       val c: scala.Char = s.charAt(ip)
       if ((((c != ' ') && (c != '\r')) && (c != '\n')) && (c != '\t')) {
@@ -104,19 +104,19 @@ object Base64Coder {
   def decode(s: java.lang.String): scala.Array[scala.Byte] = {
     return Base64Coder.decode(s.toCharArray())
   }
-  def decode(s: java.lang.String, inverseCharMap: CharMap): scala.Array[scala.Byte] = {
+  def decode(s: java.lang.String, inverseCharMap: com.badlogic.gdx.utils.Base64Coder.CharMap): scala.Array[scala.Byte] = {
     return Base64Coder.decode(s.toCharArray(), inverseCharMap)
   }
   def decode(in: scala.Array[scala.Char], inverseCharMap: scala.Array[scala.Byte]): scala.Array[scala.Byte] = {
     return Base64Coder.decode(in, 0, in.length, inverseCharMap)
   }
-  def decode(in: scala.Array[scala.Char], inverseCharMap: CharMap): scala.Array[scala.Byte] = {
+  def decode(in: scala.Array[scala.Char], inverseCharMap: com.badlogic.gdx.utils.Base64Coder.CharMap): scala.Array[scala.Byte] = {
     return Base64Coder.decode(in, 0, in.length, inverseCharMap)
   }
   def decode(in: scala.Array[scala.Char]): scala.Array[scala.Byte] = {
     return Base64Coder.decode(in, 0, in.length, Base64Coder.regularMap.decodingMap)
   }
-  def decode(in: scala.Array[scala.Char], iOff: scala.Int, iLen: scala.Int, inverseCharMap: CharMap): scala.Array[scala.Byte] = {
+  def decode(in: scala.Array[scala.Char], iOff: scala.Int, iLen: scala.Int, inverseCharMap: com.badlogic.gdx.utils.Base64Coder.CharMap): scala.Array[scala.Byte] = {
     return Base64Coder.decode(in, iOff, iLen, inverseCharMap.decodingMap)
   }
   def decode(in: scala.Array[scala.Char], iOff: scala.Int, iLen$arg: scala.Int, inverseCharMap: scala.Array[scala.Byte]): scala.Array[scala.Byte] = {
@@ -150,19 +150,19 @@ object Base64Coder {
       val o0: scala.Int = (b0 << 2) | (b1 >>> 4)
       val o1: scala.Int = ((b1 & 15) << 4) | (b2 >>> 2)
       val o2: scala.Int = ((b2 & 3) << 6) | b3
-      out({ op += 1; op }) = o0.asInstanceOf[scala.Byte]
+      out({ op += 1; op }) = o0.asInstanceOf[scala.Byte].asInstanceOf[scala.Byte]
       if (op < oLen) {
-        out({ op += 1; op }) = o1.asInstanceOf[scala.Byte]
+        out({ op += 1; op }) = o1.asInstanceOf[scala.Byte].asInstanceOf[scala.Byte]
       } else ()
       if (op < oLen) {
-        out({ op += 1; op }) = o2.asInstanceOf[scala.Byte]
+        out({ op += 1; op }) = o2.asInstanceOf[scala.Byte].asInstanceOf[scala.Byte]
       } else ()
     }
     return out
   }
   class CharMap {
-    protected final val encodingMap: scala.Array[scala.Char] = new Array[scala.Char](64)
-    protected final val decodingMap: scala.Array[scala.Byte] = new Array[scala.Byte](128)
+    final val encodingMap: scala.Array[scala.Char] = new Array[scala.Char](64)
+    final val decodingMap: scala.Array[scala.Byte] = new Array[scala.Byte](128)
     def this(char63: scala.Char, char64: scala.Char) = {
       this()
       var i: scala.Int = 0
@@ -178,10 +178,10 @@ object Base64Coder {
       this.encodingMap({ i += 1; i }) = char63
       this.encodingMap({ i += 1; i }) = char64
       { i = 0; while (i < this.decodingMap.length) { {
-        this.decodingMap(i) = -1
+        this.decodingMap(i) = (-1).asInstanceOf[scala.Byte]
       }; i = i + 1 } }
       { i = 0; while (i < 64) { {
-        this.decodingMap(this.encodingMap(i)) = i.asInstanceOf[scala.Byte]
+        this.decodingMap(this.encodingMap(i)) = i.asInstanceOf[scala.Byte].asInstanceOf[scala.Byte]
       }; i = i + 1 } }
     }
     def getDecodingMap(): scala.Array[scala.Byte] = {

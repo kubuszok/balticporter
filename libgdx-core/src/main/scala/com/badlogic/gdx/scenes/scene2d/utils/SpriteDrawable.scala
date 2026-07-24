@@ -41,8 +41,8 @@ class SpriteDrawable extends com.badlogic.gdx.scenes.scene2d.utils.BaseDrawable 
   }
   def tint(tint: com.badlogic.gdx.graphics.Color): SpriteDrawable = {
     var newSprite: com.badlogic.gdx.graphics.g2d.Sprite = null.asInstanceOf[com.badlogic.gdx.graphics.g2d.Sprite]
-    if (this.sprite.isInstanceOf[com.badlogic.gdx.graphics.g2d.TextureAtlas#AtlasSprite]) {
-      newSprite = new com.badlogic.gdx.graphics.g2d.TextureAtlas#AtlasSprite(this.sprite.asInstanceOf[com.badlogic.gdx.graphics.g2d.TextureAtlas#AtlasSprite])
+    if (this.sprite.isInstanceOf[com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasSprite]) {
+      newSprite = new com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasSprite(this.sprite.asInstanceOf[com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasSprite])
     } else {
       newSprite = new com.badlogic.gdx.graphics.g2d.Sprite(this.sprite)
     }

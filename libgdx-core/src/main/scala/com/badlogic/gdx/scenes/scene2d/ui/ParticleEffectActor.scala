@@ -2,9 +2,9 @@ package com.badlogic.gdx.scenes.scene2d.ui
 
 class ParticleEffectActor extends com.badlogic.gdx.scenes.scene2d.Actor with com.badlogic.gdx.utils.Disposable {
   private var particleEffect: com.badlogic.gdx.graphics.g2d.ParticleEffect = null.asInstanceOf[com.badlogic.gdx.graphics.g2d.ParticleEffect]
-  protected var lastDelta: scala.Float = 0.0f
+  var lastDelta: scala.Float = 0.0f
   var isRunning$field: scala.Boolean = false
-  protected var ownsEffect: scala.Boolean = false
+  var ownsEffect: scala.Boolean = false
   private var resetOnStart: scala.Boolean = false
   private var autoRemove: scala.Boolean = false
   def this(particleEffect: com.badlogic.gdx.graphics.g2d.ParticleEffect, resetOnStart: scala.Boolean) = {
@@ -69,7 +69,7 @@ class ParticleEffectActor extends com.badlogic.gdx.scenes.scene2d.Actor with com
   def getEffect(): com.badlogic.gdx.graphics.g2d.ParticleEffect = {
     return this.particleEffect
   }
-  protected def scaleChanged(): scala.Unit = {
+  def scaleChanged(): scala.Unit = {
     super.scaleChanged()
     this.particleEffect.scaleEffect(this.getScaleX(), this.getScaleY(), this.getScaleY())
   }

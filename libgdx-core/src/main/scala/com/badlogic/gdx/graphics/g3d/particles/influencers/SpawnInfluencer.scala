@@ -33,7 +33,7 @@ class SpawnInfluencer extends com.badlogic.gdx.graphics.g3d.particles.influencer
       this.positionChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.XOffset) = SpawnInfluencer.TMP_V1.x
       this.positionChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.YOffset) = SpawnInfluencer.TMP_V1.y
       this.positionChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.ZOffset) = SpawnInfluencer.TMP_V1.z
-    }; i = i + this.positionChannel.strideSize } }
+    }; i = i + this.positionChannel.strideSize } };
     { var i: scala.Int = startIndex * this.rotationChannel.strideSize; val c: scala.Int = i + (count * this.rotationChannel.strideSize); while (i < c) { {
       this.controller.transform.getRotation(com.badlogic.gdx.graphics.g3d.particles.ParticleControllerComponent.TMP_Q, true)
       this.rotationChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.XOffset) = SpawnInfluencer.TMP_Q.x
@@ -46,15 +46,15 @@ class SpawnInfluencer extends com.badlogic.gdx.graphics.g3d.particles.influencer
     return new SpawnInfluencer(this)
   }
   def write(json: com.badlogic.gdx.utils.Json): scala.Unit = {
-    json.writeValue("spawnShape", this.spawnShapeValue, classOf[java.lang.Class])
+    json.writeValue("spawnShape", this.spawnShapeValue, classOf[com.badlogic.gdx.graphics.g3d.particles.values.SpawnShapeValue])
   }
   def read(json: com.badlogic.gdx.utils.Json, jsonData: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
-    this.spawnShapeValue = json.readValue("spawnShape", classOf[java.lang.Class], jsonData)
+    this.spawnShapeValue = json.readValue("spawnShape", classOf[com.badlogic.gdx.graphics.g3d.particles.values.SpawnShapeValue], jsonData)
   }
-  def save(manager: com.badlogic.gdx.assets.AssetManager, data: com.badlogic.gdx.graphics.g3d.particles.ResourceData): scala.Unit = {
+  def save(manager: com.badlogic.gdx.assets.AssetManager, data: com.badlogic.gdx.graphics.g3d.particles.ResourceData[?]): scala.Unit = {
     this.spawnShapeValue.save(manager, data)
   }
-  def load(manager: com.badlogic.gdx.assets.AssetManager, data: com.badlogic.gdx.graphics.g3d.particles.ResourceData): scala.Unit = {
+  def load(manager: com.badlogic.gdx.assets.AssetManager, data: com.badlogic.gdx.graphics.g3d.particles.ResourceData[?]): scala.Unit = {
     this.spawnShapeValue.load(manager, data)
   }
 }

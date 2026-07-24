@@ -1,6 +1,6 @@
 package com.badlogic.gdx.utils
 
-class QuadTreeFloat extends com.badlogic.gdx.utils.Pool#Poolable {
+class QuadTreeFloat extends com.badlogic.gdx.utils.Pool.Poolable {
   var maxValues: scala.Int = 0
   var maxDepth: scala.Int = 0
   var x: scala.Float = 0.0f
@@ -48,7 +48,7 @@ class QuadTreeFloat extends com.badlogic.gdx.utils.Pool#Poolable {
     this.count = this.count + 3
   }
   private def split(value: scala.Float, valueX: scala.Float, valueY: scala.Float): scala.Unit = {
-    val values: scala.Array[scala.Float] = this.values
+    val values: scala.Array[scala.Float] = this.values;
     { var i: scala.Int = 0; while (i < this.maxValues) { {
       this.addToChild(values(i), values(i + 1), values(i + 2))
     }; i = i + 3 } }
@@ -95,7 +95,7 @@ class QuadTreeFloat extends com.badlogic.gdx.utils.Pool#Poolable {
     child.depth = depth
     return child
   }
-  protected def growValues(): scala.Int = {
+  def growValues(): scala.Int = {
     return this.count + (10 * 3)
   }
   def query(centerX: scala.Float, centerY: scala.Float, radius: scala.Float, results: com.badlogic.gdx.utils.FloatArray): scala.Unit = {
@@ -107,7 +107,7 @@ class QuadTreeFloat extends com.badlogic.gdx.utils.Pool#Poolable {
     } else ()
     val count: scala.Int = this.count
     if (count != (-1)) {
-      val values: scala.Array[scala.Float] = this.values
+      val values: scala.Array[scala.Float] = this.values;
       { var i: scala.Int = 1; while (i < count) { {
         val px: scala.Float = values(i)
         val py: scala.Float = values(i + 1)
@@ -142,7 +142,7 @@ class QuadTreeFloat extends com.badlogic.gdx.utils.Pool#Poolable {
     } else ()
     val count: scala.Int = this.count
     if (count != (-1)) {
-      val values: scala.Array[scala.Float] = this.values
+      val values: scala.Array[scala.Float] = this.values;
       { var i: scala.Int = 1; while (i < count) { {
         val px: scala.Float = values(i)
         val py: scala.Float = values(i + 1)
@@ -184,7 +184,7 @@ class QuadTreeFloat extends com.badlogic.gdx.utils.Pool#Poolable {
       nearDist = nearDist * nearDist
     } else ()
     result.clear()
-    this.query(x, y, java.lang.Math.sqrt(nearDist).asInstanceOf[scala.Float], result)
+    this.query(x, y, java.lang.Math.sqrt(nearDist).asInstanceOf[scala.Float], result);
     { var i: scala.Int = 3; val n: scala.Int = result.size; while (i < n) { {
       val dist: scala.Float = result.get(i)
       if (dist < nearDist) {
@@ -214,7 +214,7 @@ class QuadTreeFloat extends com.badlogic.gdx.utils.Pool#Poolable {
       var nearX: scala.Float = result.get(1)
       var nearY: scala.Float = result.get(2)
       var nearDist: scala.Float = result.get(3)
-      val values: scala.Array[scala.Float] = this.values
+      val values: scala.Array[scala.Float] = this.values;
       { var i: scala.Int = 1; while (i < count) { {
         val px: scala.Float = values(i)
         val py: scala.Float = values(i + 1)

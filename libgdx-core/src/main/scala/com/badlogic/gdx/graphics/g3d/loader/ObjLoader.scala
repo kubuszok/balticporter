@@ -1,20 +1,20 @@
 package com.badlogic.gdx.graphics.g3d.loader
 
-class ObjLoader extends com.badlogic.gdx.assets.loaders.ModelLoader[ObjLoaderParameters] {
+class ObjLoader extends com.badlogic.gdx.assets.loaders.ModelLoader[com.badlogic.gdx.graphics.g3d.loader.ObjLoader.ObjLoaderParameters] {
   final val verts: com.badlogic.gdx.utils.FloatArray = new com.badlogic.gdx.utils.FloatArray(300)
   final val norms: com.badlogic.gdx.utils.FloatArray = new com.badlogic.gdx.utils.FloatArray(300)
   final val uvs: com.badlogic.gdx.utils.FloatArray = new com.badlogic.gdx.utils.FloatArray(200)
-  final val groups: com.badlogic.gdx.utils.Array[Group] = new com.badlogic.gdx.utils.Array[Group](10)
+  final val groups: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.loader.ObjLoader.Group] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.loader.ObjLoader.Group](10)
   def this(resolver: com.badlogic.gdx.assets.loaders.FileHandleResolver) = {
     this()
   }
   def loadModel(fileHandle: com.badlogic.gdx.files.FileHandle, flipV: scala.Boolean): com.badlogic.gdx.graphics.g3d.Model = {
-    return this.loadModel(fileHandle, new ObjLoaderParameters(flipV))
+    return this.loadModel(fileHandle, new com.badlogic.gdx.graphics.g3d.loader.ObjLoader.ObjLoaderParameters(flipV))
   }
-  def loadModelData(file: com.badlogic.gdx.files.FileHandle, parameters: ObjLoaderParameters): com.badlogic.gdx.graphics.g3d.model.data.ModelData = {
+  def loadModelData(file: com.badlogic.gdx.files.FileHandle, parameters: com.badlogic.gdx.graphics.g3d.loader.ObjLoader.ObjLoaderParameters): com.badlogic.gdx.graphics.g3d.model.data.ModelData = {
     return this.loadModelData(file, (parameters != null) && parameters.flipV)
   }
-  protected def loadModelData(file: com.badlogic.gdx.files.FileHandle, flipV: scala.Boolean): com.badlogic.gdx.graphics.g3d.model.data.ModelData = {
+  def loadModelData(file: com.badlogic.gdx.files.FileHandle, flipV: scala.Boolean): com.badlogic.gdx.graphics.g3d.model.data.ModelData = {
     if (ObjLoader.logWarning) {
       com.badlogic.gdx.Gdx.app.error("ObjLoader", "Wavefront (OBJ) is not fully supported, consult the documentation for more information")
     } else ()
@@ -22,7 +22,7 @@ class ObjLoader extends com.badlogic.gdx.assets.loaders.ModelLoader[ObjLoaderPar
     var tokens: scala.Array[java.lang.String] = null.asInstanceOf[scala.Array[java.lang.String]]
     var firstChar: scala.Char = '\u0000'
     val mtl: com.badlogic.gdx.graphics.g3d.loader.MtlLoader = new com.badlogic.gdx.graphics.g3d.loader.MtlLoader()
-    var activeGroup: Group = new Group("default")
+    var activeGroup: com.badlogic.gdx.graphics.g3d.loader.ObjLoader.Group = new com.badlogic.gdx.graphics.g3d.loader.ObjLoader.Group("default")
     this.groups.add(activeGroup)
     val reader: java.io.BufferedReader = new java.io.BufferedReader(new java.io.InputStreamReader(file.read()), 4096)
     var id: scala.Int = 0
@@ -64,7 +64,7 @@ class ObjLoader extends com.badlogic.gdx.assets.loaders.ModelLoader[ObjLoaderPar
             } else {
               if (firstChar == 'f') {
                 var parts: scala.Array[java.lang.String] = null.asInstanceOf[scala.Array[java.lang.String]]
-                val faces: com.badlogic.gdx.utils.Array[java.lang.Integer] = activeGroup.faces
+                val faces: com.badlogic.gdx.utils.Array[java.lang.Integer] = activeGroup.faces;
                 { var i: scala.Int = 1; while (i < (tokens.length - 2)) { {
                   parts = tokens(1).split("/")
                   faces.add(this.getIndex(parts(0), this.verts.size))
@@ -128,7 +128,7 @@ class ObjLoader extends com.badlogic.gdx.assets.loaders.ModelLoader[ObjLoaderPar
       case e: java.io.IOException => {
         return null
       }
-    }
+    };
     { var i: scala.Int = 0; while (i < this.groups.size) { {
       if (this.groups.get(i).numFaces < 1) {
         this.groups.removeIndex(i)
@@ -139,15 +139,15 @@ class ObjLoader extends com.badlogic.gdx.assets.loaders.ModelLoader[ObjLoaderPar
       return null
     } else ()
     val numGroups: scala.Int = this.groups.size
-    val data: com.badlogic.gdx.graphics.g3d.model.data.ModelData = new com.badlogic.gdx.graphics.g3d.model.data.ModelData()
+    val data: com.badlogic.gdx.graphics.g3d.model.data.ModelData = new com.badlogic.gdx.graphics.g3d.model.data.ModelData();
     { var g: scala.Int = 0; while (g < numGroups) { {
-      val group: Group = this.groups.get(g)
+      val group: com.badlogic.gdx.graphics.g3d.loader.ObjLoader.Group = this.groups.get(g)
       val faces: com.badlogic.gdx.utils.Array[java.lang.Integer] = group.faces
       val numElements: scala.Int = faces.size
       var numFaces: scala.Int = group.numFaces
       var hasNorms: scala.Boolean = group.hasNorms
       var hasUVs: scala.Boolean = group.hasUVs
-      val finalVerts: scala.Array[scala.Float] = new Array[scala.Float]((numFaces * 3) * ((3 + (if (hasNorms) 3 else 0)) + (if (hasUVs) 2 else 0)))
+      val finalVerts: scala.Array[scala.Float] = new Array[scala.Float]((numFaces * 3) * ((3 + (if (hasNorms) 3 else 0)) + (if (hasUVs) 2 else 0)));
       { var i: scala.Int = 0; var vi: scala.Int = 0; while (i < numElements) { {
         var vertIndex: scala.Int = faces.get({ i += 1; i }) * 3
         finalVerts({ vi += 1; vi }) = this.verts.get({ vertIndex += 1; vertIndex })
@@ -169,7 +169,7 @@ class ObjLoader extends com.badlogic.gdx.assets.loaders.ModelLoader[ObjLoaderPar
       val finalIndices: scala.Array[scala.Short] = new Array[scala.Short](numIndices)
       if (numIndices > 0) {
         { var i: scala.Int = 0; while (i < numIndices) { {
-          finalIndices(i) = i.asInstanceOf[scala.Short]
+          finalIndices(i) = i.asInstanceOf[scala.Short].asInstanceOf[scala.Short]
         }; i = i + 1 } }
       } else ()
       var attributes: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.VertexAttribute] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.VertexAttribute]()
@@ -222,13 +222,13 @@ class ObjLoader extends com.badlogic.gdx.assets.loaders.ModelLoader[ObjLoaderPar
     } else ()
     return data
   }
-  private def setActiveGroup(name: java.lang.String): Group = {
+  private def setActiveGroup(name: java.lang.String): com.badlogic.gdx.graphics.g3d.loader.ObjLoader.Group = {
     for (group <- this.groups) {
       if (group.name.equals(name)) {
         return group
       } else ()
     }
-    val group: Group = new Group(name)
+    val group: com.badlogic.gdx.graphics.g3d.loader.ObjLoader.Group = new com.badlogic.gdx.graphics.g3d.loader.ObjLoader.Group(name)
     this.groups.add(group)
     return group
   }
@@ -243,7 +243,10 @@ class ObjLoader extends com.badlogic.gdx.assets.loaders.ModelLoader[ObjLoaderPar
       return idx - 1
     }
   }
-  class ObjLoaderParameters extends com.badlogic.gdx.assets.loaders.ModelLoader#ModelParameters {
+}
+object ObjLoader {
+  var logWarning: scala.Boolean = false
+  class ObjLoaderParameters extends com.badlogic.gdx.assets.loaders.ModelLoader.ModelParameters {
     var flipV: scala.Boolean = false
     def this(flipV: scala.Boolean) = {
       this()
@@ -267,7 +270,4 @@ class ObjLoader extends com.badlogic.gdx.assets.loaders.ModelLoader[ObjLoaderPar
       this.materialName = "default"
     }
   }
-}
-object ObjLoader {
-  var logWarning: scala.Boolean = false
 }

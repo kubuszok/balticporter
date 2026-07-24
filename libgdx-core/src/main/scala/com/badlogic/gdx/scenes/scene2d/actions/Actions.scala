@@ -2,7 +2,7 @@ package com.badlogic.gdx.scenes.scene2d.actions
 
 object Actions {
   final val ACTION_POOLS: com.badlogic.gdx.utils.PoolManager = new com.badlogic.gdx.utils.PoolManager()
-  def registerAction[T <: com.badlogic.gdx.scenes.scene2d.Action](poolClass: java.lang.Class[T], supplier: com.badlogic.gdx.utils.DefaultPool#PoolSupplier[T]): scala.Unit = {
+  def registerAction[T <: com.badlogic.gdx.scenes.scene2d.Action](poolClass: java.lang.Class[T], supplier: com.badlogic.gdx.utils.DefaultPool.PoolSupplier[T]): scala.Unit = {
     Actions.ACTION_POOLS.addPool(poolClass, supplier)
   }
   def action[T <: com.badlogic.gdx.scenes.scene2d.Action](`type`: java.lang.Class[T]): T = {
@@ -15,23 +15,23 @@ object Actions {
     return action
   }
   def addAction(action: com.badlogic.gdx.scenes.scene2d.Action): com.badlogic.gdx.scenes.scene2d.actions.AddAction = {
-    val addAction: com.badlogic.gdx.scenes.scene2d.actions.AddAction = Actions.action(classOf[java.lang.Class])
+    val addAction: com.badlogic.gdx.scenes.scene2d.actions.AddAction = Actions.action(classOf[com.badlogic.gdx.scenes.scene2d.actions.AddAction])
     addAction.setAction(action)
     return addAction
   }
   def addAction(action: com.badlogic.gdx.scenes.scene2d.Action, targetActor: com.badlogic.gdx.scenes.scene2d.Actor): com.badlogic.gdx.scenes.scene2d.actions.AddAction = {
-    val addAction: com.badlogic.gdx.scenes.scene2d.actions.AddAction = Actions.action(classOf[java.lang.Class])
+    val addAction: com.badlogic.gdx.scenes.scene2d.actions.AddAction = Actions.action(classOf[com.badlogic.gdx.scenes.scene2d.actions.AddAction])
     addAction.setTarget(targetActor)
     addAction.setAction(action)
     return addAction
   }
   def removeAction(action: com.badlogic.gdx.scenes.scene2d.Action): com.badlogic.gdx.scenes.scene2d.actions.RemoveAction = {
-    val removeAction: com.badlogic.gdx.scenes.scene2d.actions.RemoveAction = Actions.action(classOf[java.lang.Class])
+    val removeAction: com.badlogic.gdx.scenes.scene2d.actions.RemoveAction = Actions.action(classOf[com.badlogic.gdx.scenes.scene2d.actions.RemoveAction])
     removeAction.setAction(action)
     return removeAction
   }
   def removeAction(action: com.badlogic.gdx.scenes.scene2d.Action, targetActor: com.badlogic.gdx.scenes.scene2d.Actor): com.badlogic.gdx.scenes.scene2d.actions.RemoveAction = {
-    val removeAction: com.badlogic.gdx.scenes.scene2d.actions.RemoveAction = Actions.action(classOf[java.lang.Class])
+    val removeAction: com.badlogic.gdx.scenes.scene2d.actions.RemoveAction = Actions.action(classOf[com.badlogic.gdx.scenes.scene2d.actions.RemoveAction])
     removeAction.setTarget(targetActor)
     removeAction.setAction(action)
     return removeAction
@@ -43,7 +43,7 @@ object Actions {
     return Actions.moveTo(x, y, duration, null)
   }
   def moveTo(x: scala.Float, y: scala.Float, duration: scala.Float, interpolation: com.badlogic.gdx.math.Interpolation): com.badlogic.gdx.scenes.scene2d.actions.MoveToAction = {
-    val action: com.badlogic.gdx.scenes.scene2d.actions.MoveToAction = Actions.action(classOf[java.lang.Class])
+    val action: com.badlogic.gdx.scenes.scene2d.actions.MoveToAction = Actions.action(classOf[com.badlogic.gdx.scenes.scene2d.actions.MoveToAction])
     action.setPosition(x, y)
     action.setDuration(duration)
     action.setInterpolation(interpolation)
@@ -56,7 +56,7 @@ object Actions {
     return Actions.moveToAligned(x, y, alignment, duration, null)
   }
   def moveToAligned(x: scala.Float, y: scala.Float, alignment: scala.Int, duration: scala.Float, interpolation: com.badlogic.gdx.math.Interpolation): com.badlogic.gdx.scenes.scene2d.actions.MoveToAction = {
-    val action: com.badlogic.gdx.scenes.scene2d.actions.MoveToAction = Actions.action(classOf[java.lang.Class])
+    val action: com.badlogic.gdx.scenes.scene2d.actions.MoveToAction = Actions.action(classOf[com.badlogic.gdx.scenes.scene2d.actions.MoveToAction])
     action.setPosition(x, y, alignment)
     action.setDuration(duration)
     action.setInterpolation(interpolation)
@@ -69,7 +69,7 @@ object Actions {
     return Actions.moveBy(amountX, amountY, duration, null)
   }
   def moveBy(amountX: scala.Float, amountY: scala.Float, duration: scala.Float, interpolation: com.badlogic.gdx.math.Interpolation): com.badlogic.gdx.scenes.scene2d.actions.MoveByAction = {
-    val action: com.badlogic.gdx.scenes.scene2d.actions.MoveByAction = Actions.action(classOf[java.lang.Class])
+    val action: com.badlogic.gdx.scenes.scene2d.actions.MoveByAction = Actions.action(classOf[com.badlogic.gdx.scenes.scene2d.actions.MoveByAction])
     action.setAmount(amountX, amountY)
     action.setDuration(duration)
     action.setInterpolation(interpolation)
@@ -82,7 +82,7 @@ object Actions {
     return Actions.sizeTo(x, y, duration, null)
   }
   def sizeTo(x: scala.Float, y: scala.Float, duration: scala.Float, interpolation: com.badlogic.gdx.math.Interpolation): com.badlogic.gdx.scenes.scene2d.actions.SizeToAction = {
-    val action: com.badlogic.gdx.scenes.scene2d.actions.SizeToAction = Actions.action(classOf[java.lang.Class])
+    val action: com.badlogic.gdx.scenes.scene2d.actions.SizeToAction = Actions.action(classOf[com.badlogic.gdx.scenes.scene2d.actions.SizeToAction])
     action.setSize(x, y)
     action.setDuration(duration)
     action.setInterpolation(interpolation)
@@ -95,7 +95,7 @@ object Actions {
     return Actions.sizeBy(amountX, amountY, duration, null)
   }
   def sizeBy(amountX: scala.Float, amountY: scala.Float, duration: scala.Float, interpolation: com.badlogic.gdx.math.Interpolation): com.badlogic.gdx.scenes.scene2d.actions.SizeByAction = {
-    val action: com.badlogic.gdx.scenes.scene2d.actions.SizeByAction = Actions.action(classOf[java.lang.Class])
+    val action: com.badlogic.gdx.scenes.scene2d.actions.SizeByAction = Actions.action(classOf[com.badlogic.gdx.scenes.scene2d.actions.SizeByAction])
     action.setAmount(amountX, amountY)
     action.setDuration(duration)
     action.setInterpolation(interpolation)
@@ -108,7 +108,7 @@ object Actions {
     return Actions.scaleTo(x, y, duration, null)
   }
   def scaleTo(x: scala.Float, y: scala.Float, duration: scala.Float, interpolation: com.badlogic.gdx.math.Interpolation): com.badlogic.gdx.scenes.scene2d.actions.ScaleToAction = {
-    val action: com.badlogic.gdx.scenes.scene2d.actions.ScaleToAction = Actions.action(classOf[java.lang.Class])
+    val action: com.badlogic.gdx.scenes.scene2d.actions.ScaleToAction = Actions.action(classOf[com.badlogic.gdx.scenes.scene2d.actions.ScaleToAction])
     action.setScale(x, y)
     action.setDuration(duration)
     action.setInterpolation(interpolation)
@@ -121,7 +121,7 @@ object Actions {
     return Actions.scaleBy(amountX, amountY, duration, null)
   }
   def scaleBy(amountX: scala.Float, amountY: scala.Float, duration: scala.Float, interpolation: com.badlogic.gdx.math.Interpolation): com.badlogic.gdx.scenes.scene2d.actions.ScaleByAction = {
-    val action: com.badlogic.gdx.scenes.scene2d.actions.ScaleByAction = Actions.action(classOf[java.lang.Class])
+    val action: com.badlogic.gdx.scenes.scene2d.actions.ScaleByAction = Actions.action(classOf[com.badlogic.gdx.scenes.scene2d.actions.ScaleByAction])
     action.setAmount(amountX, amountY)
     action.setDuration(duration)
     action.setInterpolation(interpolation)
@@ -134,7 +134,7 @@ object Actions {
     return Actions.rotateTo(rotation, duration, null)
   }
   def rotateTo(rotation: scala.Float, duration: scala.Float, interpolation: com.badlogic.gdx.math.Interpolation): com.badlogic.gdx.scenes.scene2d.actions.RotateToAction = {
-    val action: com.badlogic.gdx.scenes.scene2d.actions.RotateToAction = Actions.action(classOf[java.lang.Class])
+    val action: com.badlogic.gdx.scenes.scene2d.actions.RotateToAction = Actions.action(classOf[com.badlogic.gdx.scenes.scene2d.actions.RotateToAction])
     action.setRotation(rotation)
     action.setDuration(duration)
     action.setInterpolation(interpolation)
@@ -147,7 +147,7 @@ object Actions {
     return Actions.rotateBy(rotationAmount, duration, null)
   }
   def rotateBy(rotationAmount: scala.Float, duration: scala.Float, interpolation: com.badlogic.gdx.math.Interpolation): com.badlogic.gdx.scenes.scene2d.actions.RotateByAction = {
-    val action: com.badlogic.gdx.scenes.scene2d.actions.RotateByAction = Actions.action(classOf[java.lang.Class])
+    val action: com.badlogic.gdx.scenes.scene2d.actions.RotateByAction = Actions.action(classOf[com.badlogic.gdx.scenes.scene2d.actions.RotateByAction])
     action.setAmount(rotationAmount)
     action.setDuration(duration)
     action.setInterpolation(interpolation)
@@ -160,7 +160,7 @@ object Actions {
     return Actions.color(color, duration, null)
   }
   def color(color: com.badlogic.gdx.graphics.Color, duration: scala.Float, interpolation: com.badlogic.gdx.math.Interpolation): com.badlogic.gdx.scenes.scene2d.actions.ColorAction = {
-    val action: com.badlogic.gdx.scenes.scene2d.actions.ColorAction = Actions.action(classOf[java.lang.Class])
+    val action: com.badlogic.gdx.scenes.scene2d.actions.ColorAction = Actions.action(classOf[com.badlogic.gdx.scenes.scene2d.actions.ColorAction])
     action.setEndColor(color)
     action.setDuration(duration)
     action.setInterpolation(interpolation)
@@ -173,7 +173,7 @@ object Actions {
     return Actions.alpha(a, duration, null)
   }
   def alpha(a: scala.Float, duration: scala.Float, interpolation: com.badlogic.gdx.math.Interpolation): com.badlogic.gdx.scenes.scene2d.actions.AlphaAction = {
-    val action: com.badlogic.gdx.scenes.scene2d.actions.AlphaAction = Actions.action(classOf[java.lang.Class])
+    val action: com.badlogic.gdx.scenes.scene2d.actions.AlphaAction = Actions.action(classOf[com.badlogic.gdx.scenes.scene2d.actions.AlphaAction])
     action.setAlpha(a)
     action.setDuration(duration)
     action.setInterpolation(interpolation)
@@ -183,7 +183,7 @@ object Actions {
     return Actions.alpha(0, duration, null)
   }
   def fadeOut(duration: scala.Float, interpolation: com.badlogic.gdx.math.Interpolation): com.badlogic.gdx.scenes.scene2d.actions.AlphaAction = {
-    val action: com.badlogic.gdx.scenes.scene2d.actions.AlphaAction = Actions.action(classOf[java.lang.Class])
+    val action: com.badlogic.gdx.scenes.scene2d.actions.AlphaAction = Actions.action(classOf[com.badlogic.gdx.scenes.scene2d.actions.AlphaAction])
     action.setAlpha(0)
     action.setDuration(duration)
     action.setInterpolation(interpolation)
@@ -193,7 +193,7 @@ object Actions {
     return Actions.alpha(1, duration, null)
   }
   def fadeIn(duration: scala.Float, interpolation: com.badlogic.gdx.math.Interpolation): com.badlogic.gdx.scenes.scene2d.actions.AlphaAction = {
-    val action: com.badlogic.gdx.scenes.scene2d.actions.AlphaAction = Actions.action(classOf[java.lang.Class])
+    val action: com.badlogic.gdx.scenes.scene2d.actions.AlphaAction = Actions.action(classOf[com.badlogic.gdx.scenes.scene2d.actions.AlphaAction])
     action.setAlpha(1)
     action.setDuration(duration)
     action.setInterpolation(interpolation)
@@ -206,60 +206,60 @@ object Actions {
     return Actions.visible(false)
   }
   def visible(visible: scala.Boolean): com.badlogic.gdx.scenes.scene2d.actions.VisibleAction = {
-    val action: com.badlogic.gdx.scenes.scene2d.actions.VisibleAction = Actions.action(classOf[java.lang.Class])
+    val action: com.badlogic.gdx.scenes.scene2d.actions.VisibleAction = Actions.action(classOf[com.badlogic.gdx.scenes.scene2d.actions.VisibleAction])
     action.setVisible(visible)
     return action
   }
   def touchable(touchable: com.badlogic.gdx.scenes.scene2d.Touchable): com.badlogic.gdx.scenes.scene2d.actions.TouchableAction = {
-    val action: com.badlogic.gdx.scenes.scene2d.actions.TouchableAction = Actions.action(classOf[java.lang.Class])
+    val action: com.badlogic.gdx.scenes.scene2d.actions.TouchableAction = Actions.action(classOf[com.badlogic.gdx.scenes.scene2d.actions.TouchableAction])
     action.setTouchable(touchable)
     return action
   }
   def removeActor(): com.badlogic.gdx.scenes.scene2d.actions.RemoveActorAction = {
-    return Actions.action(classOf[java.lang.Class])
+    return Actions.action(classOf[com.badlogic.gdx.scenes.scene2d.actions.RemoveActorAction])
   }
   def removeActor(removeActor: com.badlogic.gdx.scenes.scene2d.Actor): com.badlogic.gdx.scenes.scene2d.actions.RemoveActorAction = {
-    val action: com.badlogic.gdx.scenes.scene2d.actions.RemoveActorAction = Actions.action(classOf[java.lang.Class])
+    val action: com.badlogic.gdx.scenes.scene2d.actions.RemoveActorAction = Actions.action(classOf[com.badlogic.gdx.scenes.scene2d.actions.RemoveActorAction])
     action.setTarget(removeActor)
     return action
   }
   def delay(duration: scala.Float): com.badlogic.gdx.scenes.scene2d.actions.DelayAction = {
-    val action: com.badlogic.gdx.scenes.scene2d.actions.DelayAction = Actions.action(classOf[java.lang.Class])
+    val action: com.badlogic.gdx.scenes.scene2d.actions.DelayAction = Actions.action(classOf[com.badlogic.gdx.scenes.scene2d.actions.DelayAction])
     action.setDuration(duration)
     return action
   }
   def delay(duration: scala.Float, delayedAction: com.badlogic.gdx.scenes.scene2d.Action): com.badlogic.gdx.scenes.scene2d.actions.DelayAction = {
-    val action: com.badlogic.gdx.scenes.scene2d.actions.DelayAction = Actions.action(classOf[java.lang.Class])
+    val action: com.badlogic.gdx.scenes.scene2d.actions.DelayAction = Actions.action(classOf[com.badlogic.gdx.scenes.scene2d.actions.DelayAction])
     action.setDuration(duration)
     action.setAction(delayedAction)
     return action
   }
   def timeScale(scale: scala.Float, scaledAction: com.badlogic.gdx.scenes.scene2d.Action): com.badlogic.gdx.scenes.scene2d.actions.TimeScaleAction = {
-    val action: com.badlogic.gdx.scenes.scene2d.actions.TimeScaleAction = Actions.action(classOf[java.lang.Class])
+    val action: com.badlogic.gdx.scenes.scene2d.actions.TimeScaleAction = Actions.action(classOf[com.badlogic.gdx.scenes.scene2d.actions.TimeScaleAction])
     action.setScale(scale)
     action.setAction(scaledAction)
     return action
   }
   def sequence(action1: com.badlogic.gdx.scenes.scene2d.Action): com.badlogic.gdx.scenes.scene2d.actions.SequenceAction = {
-    val action: com.badlogic.gdx.scenes.scene2d.actions.SequenceAction = Actions.action(classOf[java.lang.Class])
+    val action: com.badlogic.gdx.scenes.scene2d.actions.SequenceAction = Actions.action(classOf[com.badlogic.gdx.scenes.scene2d.actions.SequenceAction])
     action.addAction(action1)
     return action
   }
   def sequence(action1: com.badlogic.gdx.scenes.scene2d.Action, action2: com.badlogic.gdx.scenes.scene2d.Action): com.badlogic.gdx.scenes.scene2d.actions.SequenceAction = {
-    val action: com.badlogic.gdx.scenes.scene2d.actions.SequenceAction = Actions.action(classOf[java.lang.Class])
+    val action: com.badlogic.gdx.scenes.scene2d.actions.SequenceAction = Actions.action(classOf[com.badlogic.gdx.scenes.scene2d.actions.SequenceAction])
     action.addAction(action1)
     action.addAction(action2)
     return action
   }
   def sequence(action1: com.badlogic.gdx.scenes.scene2d.Action, action2: com.badlogic.gdx.scenes.scene2d.Action, action3: com.badlogic.gdx.scenes.scene2d.Action): com.badlogic.gdx.scenes.scene2d.actions.SequenceAction = {
-    val action: com.badlogic.gdx.scenes.scene2d.actions.SequenceAction = Actions.action(classOf[java.lang.Class])
+    val action: com.badlogic.gdx.scenes.scene2d.actions.SequenceAction = Actions.action(classOf[com.badlogic.gdx.scenes.scene2d.actions.SequenceAction])
     action.addAction(action1)
     action.addAction(action2)
     action.addAction(action3)
     return action
   }
   def sequence(action1: com.badlogic.gdx.scenes.scene2d.Action, action2: com.badlogic.gdx.scenes.scene2d.Action, action3: com.badlogic.gdx.scenes.scene2d.Action, action4: com.badlogic.gdx.scenes.scene2d.Action): com.badlogic.gdx.scenes.scene2d.actions.SequenceAction = {
-    val action: com.badlogic.gdx.scenes.scene2d.actions.SequenceAction = Actions.action(classOf[java.lang.Class])
+    val action: com.badlogic.gdx.scenes.scene2d.actions.SequenceAction = Actions.action(classOf[com.badlogic.gdx.scenes.scene2d.actions.SequenceAction])
     action.addAction(action1)
     action.addAction(action2)
     action.addAction(action3)
@@ -267,7 +267,7 @@ object Actions {
     return action
   }
   def sequence(action1: com.badlogic.gdx.scenes.scene2d.Action, action2: com.badlogic.gdx.scenes.scene2d.Action, action3: com.badlogic.gdx.scenes.scene2d.Action, action4: com.badlogic.gdx.scenes.scene2d.Action, action5: com.badlogic.gdx.scenes.scene2d.Action): com.badlogic.gdx.scenes.scene2d.actions.SequenceAction = {
-    val action: com.badlogic.gdx.scenes.scene2d.actions.SequenceAction = Actions.action(classOf[java.lang.Class])
+    val action: com.badlogic.gdx.scenes.scene2d.actions.SequenceAction = Actions.action(classOf[com.badlogic.gdx.scenes.scene2d.actions.SequenceAction])
     action.addAction(action1)
     action.addAction(action2)
     action.addAction(action3)
@@ -276,35 +276,35 @@ object Actions {
     return action
   }
   def sequence(actions: scala.Array[com.badlogic.gdx.scenes.scene2d.Action]): com.badlogic.gdx.scenes.scene2d.actions.SequenceAction = {
-    val action: com.badlogic.gdx.scenes.scene2d.actions.SequenceAction = Actions.action(classOf[java.lang.Class])
+    val action: com.badlogic.gdx.scenes.scene2d.actions.SequenceAction = Actions.action(classOf[com.badlogic.gdx.scenes.scene2d.actions.SequenceAction]);
     { var i: scala.Int = 0; val n: scala.Int = actions.length; while (i < n) { {
       action.addAction(actions(i))
     }; i = i + 1 } }
     return action
   }
   def sequence(): com.badlogic.gdx.scenes.scene2d.actions.SequenceAction = {
-    return Actions.action(classOf[java.lang.Class])
+    return Actions.action(classOf[com.badlogic.gdx.scenes.scene2d.actions.SequenceAction])
   }
   def parallel(action1: com.badlogic.gdx.scenes.scene2d.Action): com.badlogic.gdx.scenes.scene2d.actions.ParallelAction = {
-    val action: com.badlogic.gdx.scenes.scene2d.actions.ParallelAction = Actions.action(classOf[java.lang.Class])
+    val action: com.badlogic.gdx.scenes.scene2d.actions.ParallelAction = Actions.action(classOf[com.badlogic.gdx.scenes.scene2d.actions.ParallelAction])
     action.addAction(action1)
     return action
   }
   def parallel(action1: com.badlogic.gdx.scenes.scene2d.Action, action2: com.badlogic.gdx.scenes.scene2d.Action): com.badlogic.gdx.scenes.scene2d.actions.ParallelAction = {
-    val action: com.badlogic.gdx.scenes.scene2d.actions.ParallelAction = Actions.action(classOf[java.lang.Class])
+    val action: com.badlogic.gdx.scenes.scene2d.actions.ParallelAction = Actions.action(classOf[com.badlogic.gdx.scenes.scene2d.actions.ParallelAction])
     action.addAction(action1)
     action.addAction(action2)
     return action
   }
   def parallel(action1: com.badlogic.gdx.scenes.scene2d.Action, action2: com.badlogic.gdx.scenes.scene2d.Action, action3: com.badlogic.gdx.scenes.scene2d.Action): com.badlogic.gdx.scenes.scene2d.actions.ParallelAction = {
-    val action: com.badlogic.gdx.scenes.scene2d.actions.ParallelAction = Actions.action(classOf[java.lang.Class])
+    val action: com.badlogic.gdx.scenes.scene2d.actions.ParallelAction = Actions.action(classOf[com.badlogic.gdx.scenes.scene2d.actions.ParallelAction])
     action.addAction(action1)
     action.addAction(action2)
     action.addAction(action3)
     return action
   }
   def parallel(action1: com.badlogic.gdx.scenes.scene2d.Action, action2: com.badlogic.gdx.scenes.scene2d.Action, action3: com.badlogic.gdx.scenes.scene2d.Action, action4: com.badlogic.gdx.scenes.scene2d.Action): com.badlogic.gdx.scenes.scene2d.actions.ParallelAction = {
-    val action: com.badlogic.gdx.scenes.scene2d.actions.ParallelAction = Actions.action(classOf[java.lang.Class])
+    val action: com.badlogic.gdx.scenes.scene2d.actions.ParallelAction = Actions.action(classOf[com.badlogic.gdx.scenes.scene2d.actions.ParallelAction])
     action.addAction(action1)
     action.addAction(action2)
     action.addAction(action3)
@@ -312,7 +312,7 @@ object Actions {
     return action
   }
   def parallel(action1: com.badlogic.gdx.scenes.scene2d.Action, action2: com.badlogic.gdx.scenes.scene2d.Action, action3: com.badlogic.gdx.scenes.scene2d.Action, action4: com.badlogic.gdx.scenes.scene2d.Action, action5: com.badlogic.gdx.scenes.scene2d.Action): com.badlogic.gdx.scenes.scene2d.actions.ParallelAction = {
-    val action: com.badlogic.gdx.scenes.scene2d.actions.ParallelAction = Actions.action(classOf[java.lang.Class])
+    val action: com.badlogic.gdx.scenes.scene2d.actions.ParallelAction = Actions.action(classOf[com.badlogic.gdx.scenes.scene2d.actions.ParallelAction])
     action.addAction(action1)
     action.addAction(action2)
     action.addAction(action3)
@@ -321,63 +321,63 @@ object Actions {
     return action
   }
   def parallel(actions: scala.Array[com.badlogic.gdx.scenes.scene2d.Action]): com.badlogic.gdx.scenes.scene2d.actions.ParallelAction = {
-    val action: com.badlogic.gdx.scenes.scene2d.actions.ParallelAction = Actions.action(classOf[java.lang.Class])
+    val action: com.badlogic.gdx.scenes.scene2d.actions.ParallelAction = Actions.action(classOf[com.badlogic.gdx.scenes.scene2d.actions.ParallelAction]);
     { var i: scala.Int = 0; val n: scala.Int = actions.length; while (i < n) { {
       action.addAction(actions(i))
     }; i = i + 1 } }
     return action
   }
   def parallel(): com.badlogic.gdx.scenes.scene2d.actions.ParallelAction = {
-    return Actions.action(classOf[java.lang.Class])
+    return Actions.action(classOf[com.badlogic.gdx.scenes.scene2d.actions.ParallelAction])
   }
   def repeat(count: scala.Int, repeatedAction: com.badlogic.gdx.scenes.scene2d.Action): com.badlogic.gdx.scenes.scene2d.actions.RepeatAction = {
-    val action: com.badlogic.gdx.scenes.scene2d.actions.RepeatAction = Actions.action(classOf[java.lang.Class])
+    val action: com.badlogic.gdx.scenes.scene2d.actions.RepeatAction = Actions.action(classOf[com.badlogic.gdx.scenes.scene2d.actions.RepeatAction])
     action.setCount(count)
     action.setAction(repeatedAction)
     return action
   }
   def forever(repeatedAction: com.badlogic.gdx.scenes.scene2d.Action): com.badlogic.gdx.scenes.scene2d.actions.RepeatAction = {
-    val action: com.badlogic.gdx.scenes.scene2d.actions.RepeatAction = Actions.action(classOf[java.lang.Class])
+    val action: com.badlogic.gdx.scenes.scene2d.actions.RepeatAction = Actions.action(classOf[com.badlogic.gdx.scenes.scene2d.actions.RepeatAction])
     action.setCount(com.badlogic.gdx.scenes.scene2d.actions.RepeatAction.FOREVER)
     action.setAction(repeatedAction)
     return action
   }
   def run(runnable: java.lang.Runnable): com.badlogic.gdx.scenes.scene2d.actions.RunnableAction = {
-    val action: com.badlogic.gdx.scenes.scene2d.actions.RunnableAction = Actions.action(classOf[java.lang.Class])
+    val action: com.badlogic.gdx.scenes.scene2d.actions.RunnableAction = Actions.action(classOf[com.badlogic.gdx.scenes.scene2d.actions.RunnableAction])
     action.setRunnable(runnable)
     return action
   }
   def layout(enabled: scala.Boolean): com.badlogic.gdx.scenes.scene2d.actions.LayoutAction = {
-    val action: com.badlogic.gdx.scenes.scene2d.actions.LayoutAction = Actions.action(classOf[java.lang.Class])
+    val action: com.badlogic.gdx.scenes.scene2d.actions.LayoutAction = Actions.action(classOf[com.badlogic.gdx.scenes.scene2d.actions.LayoutAction])
     action.setLayoutEnabled(enabled)
     return action
   }
   def after(action: com.badlogic.gdx.scenes.scene2d.Action): com.badlogic.gdx.scenes.scene2d.actions.AfterAction = {
-    val afterAction: com.badlogic.gdx.scenes.scene2d.actions.AfterAction = Actions.action(classOf[java.lang.Class])
+    val afterAction: com.badlogic.gdx.scenes.scene2d.actions.AfterAction = Actions.action(classOf[com.badlogic.gdx.scenes.scene2d.actions.AfterAction])
     afterAction.setAction(action)
     return afterAction
   }
   def addListener(listener: com.badlogic.gdx.scenes.scene2d.EventListener, capture: scala.Boolean): com.badlogic.gdx.scenes.scene2d.actions.AddListenerAction = {
-    val addAction: com.badlogic.gdx.scenes.scene2d.actions.AddListenerAction = Actions.action(classOf[java.lang.Class])
+    val addAction: com.badlogic.gdx.scenes.scene2d.actions.AddListenerAction = Actions.action(classOf[com.badlogic.gdx.scenes.scene2d.actions.AddListenerAction])
     addAction.setListener(listener)
     addAction.setCapture(capture)
     return addAction
   }
   def addListener(listener: com.badlogic.gdx.scenes.scene2d.EventListener, capture: scala.Boolean, targetActor: com.badlogic.gdx.scenes.scene2d.Actor): com.badlogic.gdx.scenes.scene2d.actions.AddListenerAction = {
-    val addAction: com.badlogic.gdx.scenes.scene2d.actions.AddListenerAction = Actions.action(classOf[java.lang.Class])
+    val addAction: com.badlogic.gdx.scenes.scene2d.actions.AddListenerAction = Actions.action(classOf[com.badlogic.gdx.scenes.scene2d.actions.AddListenerAction])
     addAction.setTarget(targetActor)
     addAction.setListener(listener)
     addAction.setCapture(capture)
     return addAction
   }
   def removeListener(listener: com.badlogic.gdx.scenes.scene2d.EventListener, capture: scala.Boolean): com.badlogic.gdx.scenes.scene2d.actions.RemoveListenerAction = {
-    val addAction: com.badlogic.gdx.scenes.scene2d.actions.RemoveListenerAction = Actions.action(classOf[java.lang.Class])
+    val addAction: com.badlogic.gdx.scenes.scene2d.actions.RemoveListenerAction = Actions.action(classOf[com.badlogic.gdx.scenes.scene2d.actions.RemoveListenerAction])
     addAction.setListener(listener)
     addAction.setCapture(capture)
     return addAction
   }
   def removeListener(listener: com.badlogic.gdx.scenes.scene2d.EventListener, capture: scala.Boolean, targetActor: com.badlogic.gdx.scenes.scene2d.Actor): com.badlogic.gdx.scenes.scene2d.actions.RemoveListenerAction = {
-    val addAction: com.badlogic.gdx.scenes.scene2d.actions.RemoveListenerAction = Actions.action(classOf[java.lang.Class])
+    val addAction: com.badlogic.gdx.scenes.scene2d.actions.RemoveListenerAction = Actions.action(classOf[com.badlogic.gdx.scenes.scene2d.actions.RemoveListenerAction])
     addAction.setTarget(targetActor)
     addAction.setListener(listener)
     addAction.setCapture(capture)

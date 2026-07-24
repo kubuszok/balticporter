@@ -6,11 +6,11 @@ class MoveToAction extends com.badlogic.gdx.scenes.scene2d.actions.TemporalActio
   private var endX: scala.Float = 0.0f
   private var endY: scala.Float = 0.0f
   private var alignment: scala.Int = com.badlogic.gdx.utils.Align.bottomLeft
-  protected def begin(): scala.Unit = {
+  def begin(): scala.Unit = {
     this.startX = target.getX(this.alignment)
     this.startY = target.getY(this.alignment)
   }
-  protected def update(percent: scala.Float): scala.Unit = {
+  def update(percent: scala.Float): scala.Unit = {
     var x: scala.Float = 0.0f
     var y: scala.Float = 0.0f
     if (percent == 0) {

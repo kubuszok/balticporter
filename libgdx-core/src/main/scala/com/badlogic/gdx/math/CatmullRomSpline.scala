@@ -11,7 +11,7 @@ class CatmullRomSpline[T <: com.badlogic.gdx.math.Vector[T]] extends com.badlogi
     this()
     this.set(controlPoints, continuous)
   }
-  def set(controlPoints: scala.Array[T], continuous: scala.Boolean): CatmullRomSpline = {
+  def set(controlPoints: scala.Array[T], continuous: scala.Boolean): CatmullRomSpline[?] = {
     if (this.tmp == null) {
       this.tmp = controlPoints(0).cpy()
     } else ()
@@ -55,7 +55,7 @@ class CatmullRomSpline[T <: com.badlogic.gdx.math.Vector[T]] extends com.badlogi
       start = start + this.spanCount
     }
     var result: scala.Int = start % this.spanCount
-    var dst: scala.Float = in.dst2(this.controlPoints(result))
+    var dst: scala.Float = in.dst2(this.controlPoints(result));
     { var i: scala.Int = 1; while (i < count) { {
       val idx: scala.Int = (start + i) % this.spanCount
       val d: scala.Float = in.dst2(this.controlPoints(idx))
@@ -95,7 +95,7 @@ class CatmullRomSpline[T <: com.badlogic.gdx.math.Vector[T]] extends com.badlogi
     val L1Sqr: scala.Float = P1.dst2(P2)
     val L2Sqr: scala.Float = P3.dst2(P2)
     val L3Sqr: scala.Float = P3.dst2(P1)
-    val L1: scala.Float = java.lang.Math.sqrt(L1Sqr).asInstanceOf[scala.Float]
+    val L1: scala.Float = java.lang.Math.sqrt(L1Sqr).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
     val s: scala.Float = ((L2Sqr + L1Sqr) - L3Sqr) / (2.0f * L1)
     val u: scala.Float = com.badlogic.gdx.math.MathUtils.clamp((L1 - s) / L1, 0.0f, 1.0f)
     return (n + u) / this.spanCount
@@ -104,7 +104,7 @@ class CatmullRomSpline[T <: com.badlogic.gdx.math.Vector[T]] extends com.badlogi
     return this.approximate(v)
   }
   def approxLength(samples: scala.Int): scala.Float = {
-    var tempLength: scala.Float = 0
+    var tempLength: scala.Float = 0;
     { var i: scala.Int = 0; while (i < samples) { {
       this.tmp2.set(this.tmp3)
       this.valueAt(this.tmp3, i / (samples.asInstanceOf[scala.Float] - 1))

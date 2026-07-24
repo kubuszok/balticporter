@@ -20,7 +20,7 @@ class TextFormatter {
   private def replaceEscapeChars(pattern: java.lang.String): java.lang.String = {
     this.buffer.setLength(0)
     var changed: scala.Boolean = false
-    val len: scala.Int = pattern.length()
+    val len: scala.Int = pattern.length();
     { var i: scala.Int = 0; while (i < len) { {
       val ch: scala.Char = pattern.charAt(i)
       if (ch == '\'') {
@@ -56,7 +56,7 @@ class TextFormatter {
     this.buffer.setLength(0)
     var changed: scala.Boolean = false
     var placeholder: scala.Int = -1
-    val patternLength: scala.Int = pattern.length()
+    val patternLength: scala.Int = pattern.length();
     { var i: scala.Int = 0; while (i < patternLength) { {
       val ch: scala.Char = pattern.charAt(i)
       if (placeholder < 0) {

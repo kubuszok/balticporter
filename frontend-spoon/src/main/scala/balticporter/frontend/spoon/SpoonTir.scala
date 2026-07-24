@@ -167,7 +167,12 @@ object SpoonTir:
       case r =>
         val head = TypeRef(NoPrefix, typeSym(r))
         r.getActualTypeArguments.asScala.toList match
-          case Nil  => head
+          case Nil =>
+            // a RAW use of a generic type — Java allows it, Scala requires arguments. Fill the
+            // declared arity with wildcards (`Class` → `Class[?]`), so the reference type-checks.
+            val arity = try Option(r.getTypeDeclaration).map(_.getFormalCtTypeParameters.size).getOrElse(0)
+                        catch { case _: Throwable => 0 }
+            if arity > 0 then AppliedType(head, List.fill(arity)(TypeBounds(NoType, NoType))) else head
           case args => AppliedType(head, args.map(tpe))
 
     /** id of a referenced class type — our own (already defined) or an external stub. */
@@ -377,17 +382,23 @@ object SpoonTir:
         case v: CtLocalVariable[?] =>
           val vt = tpe(v.getType)
           val id = defineLocal(v, vt) // sets isMutable when the local is reassigned
-          Tree.ValDef(id, tt(vt, v), Option(v.getDefaultExpression).map(expr), originOf(v))
+          val rhs = Option(v.getDefaultExpression).map(e => coerce(v.getType, e, expr(e)))
+          Tree.ValDef(id, tt(vt, v), rhs, originOf(v))
         case a: CtOperatorAssignment[?, ?] =>
           val lhs = expr(a.getAssigned)
           Tree.Assign(lhs, binApply(opText(a.getKind), lhs, expr(a.getAssignment), ty(a)), unitT, originOf(a))
         case a: CtAssignment[?, ?] =>
-          Tree.Assign(expr(a.getAssigned), expr(a.getAssignment), unitT, originOf(a))
+          val tgt = Option(a.getAssigned.getType)
+          val rhs = a.getAssignment
+          Tree.Assign(expr(a.getAssigned), tgt.map(coerce(_, rhs, expr(rhs))).getOrElse(expr(rhs)), unitT, originOf(a))
         case i: CtIf =>
           val elze = Option(i.getElseStatement).map(blockTerm).getOrElse(unit(i))
           Tree.If(expr(i.getCondition), blockTerm(i.getThenStatement), elze, unitT, originOf(i))
         case r: CtReturn[?] =>
-          Tree.Return(Option(r.getReturnedExpression).map(expr), nothingT, originOf(r))
+          // coerce the returned value to the method's declared return type (null → type param, etc.).
+          val target = Option(r.getParent(classOf[CtMethod[?]])).flatMap(m => Option(m.getType))
+          val ret = Option(r.getReturnedExpression).map(e => target.map(tp => coerce(tp, e, expr(e))).getOrElse(expr(e)))
+          Tree.Return(ret, nothingT, originOf(r))
         case w: CtWhile =>
           Tree.While(expr(w.getLoopingExpression), blockTerm(w.getBody), unitT, originOf(w))
         case t: CtThrow =>
@@ -449,6 +460,22 @@ object SpoonTir:
           Set(POSTINC, POSTDEC, PREINC, PREDEC).contains(u.getKind) &&
             (u.getOperand match { case va: CtVariableAccess[?] => va.getVariable.getSimpleName == name; case _ => false })
         }
+
+      /** Java permits two implicit conversions Scala forbids: array covariance (`Sub[]` → a
+        * `Super[]` slot) and `null` → a type parameter. Insert an explicit `asInstanceOf` so the
+        * ported assignment/initializer type-checks. */
+      private def coerce(target: CtTypeReference[?], e: CtExpression[?], t: Term): Term =
+        val isNull = e match { case l: CtLiteral[?] => l.getValue == null; case _ => false }
+        val et     = try e.getType catch { case _: Throwable => null }
+        val rank   = Map("byte" -> 1, "short" -> 2, "char" -> 2, "int" -> 3, "long" -> 4, "float" -> 5, "double" -> 6)
+        val narrowing = target.isPrimitive && et != null && et.isPrimitive &&
+          rank.get(target.getSimpleName).exists(tr => rank.get(et.getSimpleName).exists(_ > tr))
+        val cast =
+          (isNull && target.isInstanceOf[CtTypeParameterReference]) ||             // null → type param
+          (target.isInstanceOf[CtArrayTypeReference[?]] && et != null &&           // array covariance
+            et.isInstanceOf[CtArrayTypeReference[?]] && target.getQualifiedName != et.getQualifiedName) ||
+          narrowing                                                               // int → short/byte/char
+        if cast then Tree.Typed(t, tt(tpe(target), e), tpe(target), originOf(e)) else t
 
       private def tryStmt(t: CtTry, resources: List[Tree.ValDef]): Term =
         val catches = t.getCatchers.asScala.toList.map { c =>
@@ -597,7 +624,11 @@ object SpoonTir:
         Tree.MethodRef(qual, mid, ty(mr), originOf(mr))
 
       private def fieldAccess(ref: CtFieldReference[?], target: CtExpression[?], at: CtExpression[?]): Term =
-        if ref.getSimpleName == "class" then Tree.Literal(Constant.ClassOfC(ty(at)), ty(at), originOf(at))
+        if ref.getSimpleName == "class" then
+          // `Foo.class` → `classOf[Foo]`: the argument is the ACCESSED type (`Foo`), not the type
+          // of the `.class` expression (`java.lang.Class[Foo]`, which is what `ty(at)` gives).
+          val accessed = target match { case ta: CtTypeAccess[?] => tpe(ta.getAccessedType); case _ => ty(at) }
+          Tree.Literal(Constant.ClassOfC(accessed), ty(at), originOf(at))
         else if ref.getSimpleName == "length" && Option(ref.getDeclaringType).exists(_.isInstanceOf[CtArrayTypeReference[?]]) then
           Tree.ArrayLength(expr(target), ty(at), originOf(at))
         else

@@ -52,7 +52,7 @@ class Bresenham2 {
     } else ()
     val shortest2: scala.Int = shortest << 1
     val longest2: scala.Int = longest << 1
-    var numerator: scala.Int = 0
+    var numerator: scala.Int = 0;
     { var i: scala.Int = 0; while (i <= longest) { {
       val point: com.badlogic.gdx.math.GridPoint2 = pool.obtain()
       point.set(startX, startY)

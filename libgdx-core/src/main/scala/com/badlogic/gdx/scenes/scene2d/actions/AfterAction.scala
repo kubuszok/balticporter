@@ -12,11 +12,11 @@ class AfterAction extends com.badlogic.gdx.scenes.scene2d.actions.DelegateAction
     super.restart()
     this.waitForActions.clear()
   }
-  protected def delegate(delta: scala.Float): scala.Boolean = {
+  def delegate(delta: scala.Float): scala.Boolean = {
     val currentActions: com.badlogic.gdx.utils.Array[com.badlogic.gdx.scenes.scene2d.Action] = target.getActions()
     if (currentActions.size == 1) {
       this.waitForActions.clear()
-    } else ()
+    } else ();
     { var i: scala.Int = this.waitForActions.size - 1; while (i >= 0) { {
       val action: com.badlogic.gdx.scenes.scene2d.Action = this.waitForActions.get(i)
       val index: scala.Int = currentActions.indexOf(action, true)

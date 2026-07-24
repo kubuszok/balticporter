@@ -65,7 +65,7 @@ class Encoder {
   }
   def BaseInit(): scala.Unit = {
     this._state = com.badlogic.gdx.utils.compression.lzma.Base.StateInit()
-    this._previousByte = 0
+    this._previousByte = 0.asInstanceOf[scala.Byte];
     { var i: scala.Int = 0; while (i < com.badlogic.gdx.utils.compression.lzma.Base.kNumRepDistances) { {
       this._repDistances(i) = 0
     }; i = i + 1 } }
@@ -101,7 +101,7 @@ class Encoder {
     com.badlogic.gdx.utils.compression.rangecoder.Encoder.InitBitModels(this._isRepG1)
     com.badlogic.gdx.utils.compression.rangecoder.Encoder.InitBitModels(this._isRepG2)
     com.badlogic.gdx.utils.compression.rangecoder.Encoder.InitBitModels(this._posEncoders)
-    this._literalEncoder.Init()
+    this._literalEncoder.Init();
     { var i: scala.Int = 0; while (i < com.badlogic.gdx.utils.compression.lzma.Base.kNumLenToPosStates) { {
       this._posSlotEncoder(i).Init()
     }; i = i + 1 } }
@@ -221,7 +221,7 @@ class Encoder {
       numAvailableBytes = com.badlogic.gdx.utils.compression.lzma.Base.kMatchMaxLen
     } else ()
     var repMaxIndex: scala.Int = 0
-    var i: scala.Int = 0
+    var i: scala.Int = 0;
     { i = 0; while (i < com.badlogic.gdx.utils.compression.lzma.Base.kNumRepDistances) { {
       this.reps(i) = this._repDistances(i)
       this.repLens(i) = this._matchFinder.GetMatchLen(0 - 1, this.reps(i), com.badlogic.gdx.utils.compression.lzma.Base.kMatchMaxLen)
@@ -272,7 +272,7 @@ class Encoder {
     var len: scala.Int = lenEnd
     while ({ {
       this._optimum({ len -= 1; len }).Price = Encoder.kIfinityPrice
-    }; len >= 2 }) ()
+    }; len >= 2 }) ();
     { i = 0; while (i < com.badlogic.gdx.utils.compression.lzma.Base.kNumRepDistances) { {
       var repLen: scala.Int = this.repLens(i)
       if (repLen < 2) {
@@ -296,7 +296,7 @@ class Encoder {
       var offs: scala.Int = 0
       while (len > this._matchDistances(offs)) {
         offs = offs + 2
-      }
+      };
       { ; while (true) { {
         val distance: scala.Int = this._matchDistances(offs + 1)
         var curAndLenPrice: scala.Int = normalMatchPrice + this.GetPosLenPrice(distance, len, posState)
@@ -445,7 +445,7 @@ class Encoder {
         if (lenTest2 >= 2) {
           var state2: scala.Int = com.badlogic.gdx.utils.compression.lzma.Base.StateUpdateChar(state)
           var posStateNext: scala.Int = (position + 1) & this._posStateMask
-          val nextRepMatchPrice: scala.Int = (curAnd1Price + com.badlogic.gdx.utils.compression.rangecoder.Encoder.GetPrice1(this._isMatch((state2 << com.badlogic.gdx.utils.compression.lzma.Base.kNumPosStatesBitsMax) + posStateNext))) + com.badlogic.gdx.utils.compression.rangecoder.Encoder.GetPrice1(this._isRep(state2))
+          val nextRepMatchPrice: scala.Int = (curAnd1Price + com.badlogic.gdx.utils.compression.rangecoder.Encoder.GetPrice1(this._isMatch((state2 << com.badlogic.gdx.utils.compression.lzma.Base.kNumPosStatesBitsMax) + posStateNext))) + com.badlogic.gdx.utils.compression.rangecoder.Encoder.GetPrice1(this._isRep(state2));
           {
             val offset: scala.Int = (cur + 1) + lenTest2
             while (lenEnd < offset) {
@@ -463,7 +463,7 @@ class Encoder {
           }
         } else ()
       } else ()
-      var startLen: scala.Int = 2
+      var startLen: scala.Int = 2;
       { var repIndex: scala.Int = 0; while (repIndex < com.badlogic.gdx.utils.compression.lzma.Base.kNumRepDistances) { {
         var lenTest: scala.Int = this._matchFinder.GetMatchLen(0 - 1, this.reps(repIndex), numAvailableBytes)
         if (lenTest < 2) {
@@ -497,7 +497,7 @@ class Encoder {
             state2 = com.badlogic.gdx.utils.compression.lzma.Base.StateUpdateChar(state2)
             posStateNext = ((position + lenTest) + 1) & this._posStateMask
             val nextMatchPrice: scala.Int = curAndLenCharPrice + com.badlogic.gdx.utils.compression.rangecoder.Encoder.GetPrice1(this._isMatch((state2 << com.badlogic.gdx.utils.compression.lzma.Base.kNumPosStatesBitsMax) + posStateNext))
-            val nextRepMatchPrice: scala.Int = nextMatchPrice + com.badlogic.gdx.utils.compression.rangecoder.Encoder.GetPrice1(this._isRep(state2))
+            val nextRepMatchPrice: scala.Int = nextMatchPrice + com.badlogic.gdx.utils.compression.rangecoder.Encoder.GetPrice1(this._isRep(state2));
             {
               val offset: scala.Int = (lenTest + 1) + lenTest2
               while (lenEnd < (cur + offset)) {
@@ -519,7 +519,7 @@ class Encoder {
         } else ()
       }; repIndex = repIndex + 1 } }
       if (newLen > numAvailableBytes) {
-        newLen = numAvailableBytes
+        newLen = numAvailableBytes;
         { numDistancePairs = 0; while (newLen > this._matchDistances(numDistancePairs)) { {
           ()
         }; numDistancePairs = numDistancePairs + 2 } }
@@ -534,7 +534,7 @@ class Encoder {
         var offs: scala.Int = 0
         while (startLen > this._matchDistances(offs)) {
           offs = offs + 2
-        }
+        };
         { var lenTest: scala.Int = startLen; while (true) { {
           val curBack: scala.Int = this._matchDistances(offs + 1)
           var curAndLenPrice: scala.Int = normalMatchPrice + this.GetPosLenPrice(curBack, lenTest, posState)
@@ -714,7 +714,7 @@ class Encoder {
               this._alignPriceCount = this._alignPriceCount + 1
             }
           } else ()
-          val distance: scala.Int = pos
+          val distance: scala.Int = pos;
           { var i: scala.Int = com.badlogic.gdx.utils.compression.lzma.Base.kNumRepDistances - 1; while (i >= 1) { {
             this._repDistances(i) = this._repDistances(i - 1)
           }; i = i - 1 } }
@@ -767,7 +767,7 @@ class Encoder {
     this._finished = false
     this.Create()
     this.SetOutStream(outStream)
-    this.Init()
+    this.Init();
     {
       this.FillDistancesPrices()
       this.FillAlignPrices()
@@ -796,9 +796,9 @@ class Encoder {
     }
   }
   def WriteCoderProperties(outStream: java.io.OutputStream): scala.Unit = {
-    this.properties(0) = ((((this._posStateBits * 5) + this._numLiteralPosStateBits) * 9) + this._numLiteralContextBits).asInstanceOf[scala.Byte]
+    this.properties(0) = ((((this._posStateBits * 5) + this._numLiteralPosStateBits) * 9) + this._numLiteralContextBits).asInstanceOf[scala.Byte].asInstanceOf[scala.Byte];
     { var i: scala.Int = 0; while (i < 4) { {
-      this.properties(1 + i) = (this._dictionarySize >> (8 * i)).asInstanceOf[scala.Byte]
+      this.properties(1 + i) = (this._dictionarySize >> (8 * i)).asInstanceOf[scala.Byte].asInstanceOf[scala.Byte]
     }; i = i + 1 } }
     outStream.write(this.properties, 0, Encoder.kPropSize)
   }
@@ -808,22 +808,22 @@ class Encoder {
       val footerBits: scala.Int = ((posSlot >> 1) - 1).asInstanceOf[scala.Int]
       val baseVal: scala.Int = (2 | (posSlot & 1)) << footerBits
       this.tempPrices(i) = com.badlogic.gdx.utils.compression.rangecoder.BitTreeEncoder.ReverseGetPrice(this._posEncoders, (baseVal - posSlot) - 1, footerBits, i - baseVal)
-    }; i = i + 1 } }
+    }; i = i + 1 } };
     { var lenToPosState: scala.Int = 0; while (lenToPosState < com.badlogic.gdx.utils.compression.lzma.Base.kNumLenToPosStates) { {
       var posSlot: scala.Int = 0
       val encoder: com.badlogic.gdx.utils.compression.rangecoder.BitTreeEncoder = this._posSlotEncoder(lenToPosState)
-      val st: scala.Int = lenToPosState << com.badlogic.gdx.utils.compression.lzma.Base.kNumPosSlotBits
+      val st: scala.Int = lenToPosState << com.badlogic.gdx.utils.compression.lzma.Base.kNumPosSlotBits;
       { posSlot = 0; while (posSlot < this._distTableSize) { {
         this._posSlotPrices(st + posSlot) = encoder.GetPrice(posSlot)
-      }; posSlot = posSlot + 1 } }
+      }; posSlot = posSlot + 1 } };
       { posSlot = com.badlogic.gdx.utils.compression.lzma.Base.kEndPosModelIndex; while (posSlot < this._distTableSize) { {
         this._posSlotPrices(st + posSlot) = this._posSlotPrices(st + posSlot) + ((((posSlot >> 1) - 1) - com.badlogic.gdx.utils.compression.lzma.Base.kNumAlignBits) << com.badlogic.gdx.utils.compression.rangecoder.Encoder.kNumBitPriceShiftBits)
       }; posSlot = posSlot + 1 } }
       val st2: scala.Int = lenToPosState * com.badlogic.gdx.utils.compression.lzma.Base.kNumFullDistances
-      var i: scala.Int = 0
+      var i: scala.Int = 0;
       { i = 0; while (i < com.badlogic.gdx.utils.compression.lzma.Base.kStartPosModelIndex) { {
         this._distancesPrices(st2 + i) = this._posSlotPrices(st + i)
-      }; i = i + 1 } }
+      }; i = i + 1 } };
       { ; while (i < com.badlogic.gdx.utils.compression.lzma.Base.kNumFullDistances) { {
         this._distancesPrices(st2 + i) = this._posSlotPrices(st + Encoder.GetPosSlot(i)) + this.tempPrices(i)
       }; i = i + 1 } }
@@ -845,7 +845,7 @@ class Encoder {
       return false
     } else ()
     this._dictionarySize = dictionarySize
-    var dicLogSize: scala.Int = 0
+    var dicLogSize: scala.Int = 0;
     { dicLogSize = 0; while (dictionarySize > (1 << dicLogSize)) { {
       ()
     }; dicLogSize = dicLogSize + 1 } }
@@ -897,13 +897,13 @@ class Encoder {
       this.m_PosMask = (1 << numPosBits) - 1
       this.m_NumPrevBits = numPrevBits
       val numStates: scala.Int = 1 << (this.m_NumPrevBits + this.m_NumPosBits)
-      this.m_Coders = new Array[Encoder2](numStates)
+      this.m_Coders = new Array[Encoder2](numStates);
       { var i: scala.Int = 0; while (i < numStates) { {
         this.m_Coders(i) = new Encoder2()
       }; i = i + 1 } }
     }
     def Init(): scala.Unit = {
-      val numStates: scala.Int = 1 << (this.m_NumPrevBits + this.m_NumPosBits)
+      val numStates: scala.Int = 1 << (this.m_NumPrevBits + this.m_NumPosBits);
       { var i: scala.Int = 0; while (i < numStates) { {
         this.m_Coders(i).Init()
       }; i = i + 1 } }
@@ -917,7 +917,7 @@ class Encoder {
         com.badlogic.gdx.utils.compression.rangecoder.Encoder.InitBitModels(this.m_Encoders)
       }
       def Encode(rangeEncoder: com.badlogic.gdx.utils.compression.rangecoder.Encoder, symbol: scala.Byte): scala.Unit = {
-        var context: scala.Int = 1
+        var context: scala.Int = 1;
         { var i: scala.Int = 7; while (i >= 0) { {
           val bit: scala.Int = (symbol >> i) & 1
           rangeEncoder.Encode(this.m_Encoders, context, bit)
@@ -926,7 +926,7 @@ class Encoder {
       }
       def EncodeMatched(rangeEncoder: com.badlogic.gdx.utils.compression.rangecoder.Encoder, matchByte: scala.Byte, symbol: scala.Byte): scala.Unit = {
         var context: scala.Int = 1
-        var same: scala.Boolean = true
+        var same: scala.Boolean = true;
         { var i: scala.Int = 7; while (i >= 0) { {
           val bit: scala.Int = (symbol >> i) & 1
           var state: scala.Int = context
@@ -954,7 +954,7 @@ class Encoder {
               /* break */ ()
             } else ()
           }; i = i - 1 } }
-        } else ()
+        } else ();
         { ; while (i >= 0) { {
           val bit: scala.Int = (symbol >> i) & 1
           price = price + com.badlogic.gdx.utils.compression.rangecoder.Encoder.GetPrice(this.m_Encoders(context), bit)
@@ -977,7 +977,7 @@ class Encoder {
       }; posState = posState + 1 } }
     }
     def Init(numPosStates: scala.Int): scala.Unit = {
-      com.badlogic.gdx.utils.compression.rangecoder.Encoder.InitBitModels(this._choice)
+      com.badlogic.gdx.utils.compression.rangecoder.Encoder.InitBitModels(this._choice);
       { var posState: scala.Int = 0; while (posState < numPosStates) { {
         this._lowCoder(posState).Init()
         this._midCoder(posState).Init()
@@ -1006,19 +1006,19 @@ class Encoder {
       val a1: scala.Int = com.badlogic.gdx.utils.compression.rangecoder.Encoder.GetPrice1(this._choice(0))
       val b0: scala.Int = a1 + com.badlogic.gdx.utils.compression.rangecoder.Encoder.GetPrice0(this._choice(1))
       val b1: scala.Int = a1 + com.badlogic.gdx.utils.compression.rangecoder.Encoder.GetPrice1(this._choice(1))
-      var i: scala.Int = 0
+      var i: scala.Int = 0;
       { i = 0; while (i < com.badlogic.gdx.utils.compression.lzma.Base.kNumLowLenSymbols) { {
         if (i >= numSymbols) {
           return
         } else ()
         prices(st + i) = a0 + this._lowCoder(posState).GetPrice(i)
-      }; i = i + 1 } }
+      }; i = i + 1 } };
       { ; while (i < (com.badlogic.gdx.utils.compression.lzma.Base.kNumLowLenSymbols + com.badlogic.gdx.utils.compression.lzma.Base.kNumMidLenSymbols)) { {
         if (i >= numSymbols) {
           return
         } else ()
         prices(st + i) = b0 + this._midCoder(posState).GetPrice(i - com.badlogic.gdx.utils.compression.lzma.Base.kNumLowLenSymbols)
-      }; i = i + 1 } }
+      }; i = i + 1 } };
       { ; while (i < numSymbols) { {
         prices(st + i) = b1 + this._highCoder.GetPrice((i - com.badlogic.gdx.utils.compression.lzma.Base.kNumLowLenSymbols) - com.badlogic.gdx.utils.compression.lzma.Base.kNumMidLenSymbols)
       }; i = i + 1 } }

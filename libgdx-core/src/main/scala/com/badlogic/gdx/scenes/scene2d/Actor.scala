@@ -57,14 +57,14 @@ class Actor {
       event.setStage(this.getStage())
     } else ()
     event.setTarget(this)
-    val ascendants: com.badlogic.gdx.utils.Array[com.badlogic.gdx.scenes.scene2d.Group] = Actor.POOLS.obtain(classOf[java.lang.Class])
+    val ascendants: com.badlogic.gdx.utils.Array[com.badlogic.gdx.scenes.scene2d.Group] = Actor.POOLS.obtain(classOf[com.badlogic.gdx.utils.Array[?]])
     var parent: com.badlogic.gdx.scenes.scene2d.Group = this.parent
     while (parent != null) {
       ascendants.add(parent)
       parent = parent.parent
     }
     try {
-      val ascendantsArray: scala.Array[java.lang.Object] = ascendants.items
+      val ascendantsArray: scala.Array[java.lang.Object] = ascendants.items.asInstanceOf[scala.Array[java.lang.Object]];
       { var i: scala.Int = ascendants.size - 1; while (i >= 0) { {
         val currentTarget: com.badlogic.gdx.scenes.scene2d.Group = ascendantsArray(i).asInstanceOf[com.badlogic.gdx.scenes.scene2d.Group]
         currentTarget.notify(event, true)
@@ -82,7 +82,7 @@ class Actor {
       } else ()
       if (event.isStopped()) {
         return event.isCancelled()
-      } else ()
+      } else ();
       { var i: scala.Int = 0; val n: scala.Int = ascendants.size; while (i < n) { {
         ascendantsArray(i).asInstanceOf[com.badlogic.gdx.scenes.scene2d.Group].notify(event, false)
         if (event.isStopped()) {
@@ -109,7 +109,7 @@ class Actor {
       event.setStage(this.stage)
     } else ()
     try {
-      listeners.begin()
+      listeners.begin();
       { var i: scala.Int = 0; val n: scala.Int = listeners.size; while (i < n) { {
         if (listeners.get(i).handle(event)) {
           event.handle()
@@ -211,7 +211,7 @@ class Actor {
   def getStage(): com.badlogic.gdx.scenes.scene2d.Stage = {
     return this.stage
   }
-  protected def setStage(stage: com.badlogic.gdx.scenes.scene2d.Stage): scala.Unit = {
+  def setStage(stage: com.badlogic.gdx.scenes.scene2d.Stage): scala.Unit = {
     this.stage = stage
   }
   def isDescendantOf(actor: Actor): scala.Boolean = {
@@ -251,7 +251,7 @@ class Actor {
       } else ()
       actor = actor.parent
     }; actor != null }) ()
-    return null
+    return null.asInstanceOf[T]
   }
   def hasParent(): scala.Boolean = {
     return this.parent != null
@@ -259,7 +259,7 @@ class Actor {
   def getParent(): com.badlogic.gdx.scenes.scene2d.Group = {
     return this.parent
   }
-  protected def setParent(parent: com.badlogic.gdx.scenes.scene2d.Group): scala.Unit = {
+  def setParent(parent: com.badlogic.gdx.scenes.scene2d.Group): scala.Unit = {
     this.parent = parent
   }
   def isTouchable(): scala.Boolean = {
@@ -302,7 +302,7 @@ class Actor {
     val stage: com.badlogic.gdx.scenes.scene2d.Stage = this.getStage()
     if (stage == null) {
       return false
-    } else ()
+    } else ();
     { var i: scala.Int = 0; val n: scala.Int = stage.touchFocuses.size; while (i < n) { {
       if (stage.touchFocuses.get(i).target == this) {
         return true
@@ -314,7 +314,7 @@ class Actor {
     val stage: com.badlogic.gdx.scenes.scene2d.Stage = this.getStage()
     if (stage == null) {
       return false
-    } else ()
+    } else ();
     { var i: scala.Int = 0; val n: scala.Int = stage.touchFocuses.size; while (i < n) { {
       if (stage.touchFocuses.get(i).listenerActor == this) {
         return true
@@ -457,16 +457,16 @@ class Actor {
   def getRight(): scala.Float = {
     return this.x + this.width
   }
-  protected def positionChanged(): scala.Unit = {
+  def positionChanged(): scala.Unit = {
     ()
   }
-  protected def sizeChanged(): scala.Unit = {
+  def sizeChanged(): scala.Unit = {
     ()
   }
-  protected def scaleChanged(): scala.Unit = {
+  def scaleChanged(): scala.Unit = {
     ()
   }
-  protected def rotationChanged(): scala.Unit = {
+  def rotationChanged(): scala.Unit = {
     ()
   }
   def setSize(width: scala.Float, height: scala.Float): scala.Unit = {
@@ -666,7 +666,7 @@ class Actor {
     tableBounds.y = y
     tableBounds.width = width
     tableBounds.height = height
-    val scissorBounds: com.badlogic.gdx.math.Rectangle = Actor.POOLS.obtain(classOf[java.lang.Class])
+    val scissorBounds: com.badlogic.gdx.math.Rectangle = Actor.POOLS.obtain(classOf[com.badlogic.gdx.math.Rectangle])
     stage.calculateScissors(tableBounds, scissorBounds)
     if (com.badlogic.gdx.scenes.scene2d.utils.ScissorStack.pushScissors(scissorBounds)) {
       return true
@@ -708,8 +708,8 @@ class Actor {
         parentCoords.y = (((parentCoords.y - childY) - originY) / scaleY) + originY
       }
     } else {
-      val cos: scala.Float = java.lang.Math.cos(rotation * com.badlogic.gdx.math.MathUtils.degreesToRadians).asInstanceOf[scala.Float]
-      val sin: scala.Float = java.lang.Math.sin(rotation * com.badlogic.gdx.math.MathUtils.degreesToRadians).asInstanceOf[scala.Float]
+      val cos: scala.Float = java.lang.Math.cos(rotation * com.badlogic.gdx.math.MathUtils.degreesToRadians).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
+      val sin: scala.Float = java.lang.Math.sin(rotation * com.badlogic.gdx.math.MathUtils.degreesToRadians).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
       val originX: scala.Float = this.originX
       val originY: scala.Float = this.originY
       val tox: scala.Float = (parentCoords.x - childX) - originX
@@ -746,8 +746,8 @@ class Actor {
         localCoords.y = (((localCoords.y - originY) * scaleY) + originY) + y
       }
     } else {
-      val cos: scala.Float = java.lang.Math.cos(rotation * com.badlogic.gdx.math.MathUtils.degreesToRadians).asInstanceOf[scala.Float]
-      val sin: scala.Float = java.lang.Math.sin(rotation * com.badlogic.gdx.math.MathUtils.degreesToRadians).asInstanceOf[scala.Float]
+      val cos: scala.Float = java.lang.Math.cos(rotation * com.badlogic.gdx.math.MathUtils.degreesToRadians).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
+      val sin: scala.Float = java.lang.Math.sin(rotation * com.badlogic.gdx.math.MathUtils.degreesToRadians).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
       val originX: scala.Float = this.originX
       val originY: scala.Float = this.originY
       val tox: scala.Float = (localCoords.x - originX) * scaleX
@@ -775,7 +775,7 @@ class Actor {
   def drawDebug(shapes: com.badlogic.gdx.graphics.glutils.ShapeRenderer): scala.Unit = {
     this.drawDebugBounds(shapes)
   }
-  protected def drawDebugBounds(shapes: com.badlogic.gdx.graphics.glutils.ShapeRenderer): scala.Unit = {
+  def drawDebugBounds(shapes: com.badlogic.gdx.graphics.glutils.ShapeRenderer): scala.Unit = {
     if (!this.debug$field) {
       return
     } else ()

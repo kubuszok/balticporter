@@ -43,7 +43,7 @@ object StreamUtils {
     return StreamUtils.copyStreamToByteArray(input, input.available())
   }
   def copyStreamToByteArray(input: java.io.InputStream, estimatedSize: scala.Int): scala.Array[scala.Byte] = {
-    val baos: java.io.ByteArrayOutputStream = new OptimizedByteArrayOutputStream(java.lang.Math.max(0, estimatedSize))
+    val baos: java.io.ByteArrayOutputStream = new com.badlogic.gdx.utils.StreamUtils.OptimizedByteArrayOutputStream(java.lang.Math.max(0, estimatedSize))
     StreamUtils.copyStream(input, baos)
     return baos.toByteArray()
   }

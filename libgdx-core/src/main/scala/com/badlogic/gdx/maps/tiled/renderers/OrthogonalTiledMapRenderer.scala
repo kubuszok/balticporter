@@ -28,11 +28,11 @@ class OrthogonalTiledMapRenderer extends com.badlogic.gdx.maps.tiled.renderers.B
     val row2: scala.Int = java.lang.Math.min(layerHeight, ((((this.viewBounds.y + this.viewBounds.height) + layerTileHeight) - layerOffsetY) / layerTileHeight).asInstanceOf[scala.Int])
     var y: scala.Float = (row2 * layerTileHeight) + layerOffsetY
     val xStart: scala.Float = (col1 * layerTileWidth) + layerOffsetX
-    val vertices: scala.Array[scala.Float] = this.vertices
+    val vertices: scala.Array[scala.Float] = this.vertices;
     { var row: scala.Int = row2; while (row >= row1) { {
-      var x: scala.Float = xStart
+      var x: scala.Float = xStart;
       { var col: scala.Int = col1; while (col < col2) { {
-        val cell: com.badlogic.gdx.maps.tiled.TiledMapTileLayer#Cell = layer.getCell(col, row)
+        val cell: com.badlogic.gdx.maps.tiled.TiledMapTileLayer.Cell = layer.getCell(col, row)
         if (cell == null) {
           x = x + layerTileWidth
           /* continue */ ()

@@ -11,7 +11,7 @@ class CRC {
     }; i = i + 1 } }
   }
   def Update(data: scala.Array[scala.Byte]): scala.Unit = {
-    val size: scala.Int = data.length
+    val size: scala.Int = data.length;
     { var i: scala.Int = 0; while (i < size) { {
       this._value = CRC.Table((this._value ^ data(i)) & 255) ^ (this._value >>> 8)
     }; i = i + 1 } }

@@ -1,10 +1,10 @@
 package com.badlogic.gdx.utils
 
 class JsonMatcher extends com.badlogic.gdx.utils.JsonSkimmer {
-  var processor: Processor = null.asInstanceOf[Processor]
-  var patterns: scala.Array[Pattern] = new Array[Pattern](0)
-  var original: scala.Array[Pattern] = null.asInstanceOf[scala.Array[Pattern]]
-  var all: scala.Array[Pattern] = null.asInstanceOf[scala.Array[Pattern]]
+  var processor: com.badlogic.gdx.utils.JsonMatcher.Processor = null.asInstanceOf[com.badlogic.gdx.utils.JsonMatcher.Processor]
+  var patterns: scala.Array[com.badlogic.gdx.utils.JsonMatcher.Pattern] = new Array[com.badlogic.gdx.utils.JsonMatcher.Pattern](0)
+  var original: scala.Array[com.badlogic.gdx.utils.JsonMatcher.Pattern] = null.asInstanceOf[scala.Array[com.badlogic.gdx.utils.JsonMatcher.Pattern]]
+  var all: scala.Array[com.badlogic.gdx.utils.JsonMatcher.Pattern] = null.asInstanceOf[scala.Array[com.badlogic.gdx.utils.JsonMatcher.Pattern]]
   var total: scala.Int = 0
   var endCaptures: scala.Int = 0
   private var rejected: scala.Boolean = false
@@ -13,28 +13,28 @@ class JsonMatcher extends com.badlogic.gdx.utils.JsonSkimmer {
   var captured$field: scala.Int = 0
   var chars: scala.Array[scala.Char] = null.asInstanceOf[scala.Array[scala.Char]]
   final val path$field: com.badlogic.gdx.utils.IntArray = new com.badlogic.gdx.utils.IntArray()
-  var processPattern: Pattern = null.asInstanceOf[Pattern]
+  var processPattern: com.badlogic.gdx.utils.JsonMatcher.Pattern = null.asInstanceOf[com.badlogic.gdx.utils.JsonMatcher.Pattern]
   def this(patterns: scala.Array[java.lang.String]) = {
     this()
     for (pattern <- patterns) {
       this.addPattern(pattern)
     }
   }
-  def setProcessor(processor: Processor): scala.Unit = {
+  def setProcessor(processor: com.badlogic.gdx.utils.JsonMatcher.Processor): scala.Unit = {
     this.processor = processor
   }
   def addPattern(pattern: java.lang.String): scala.Int = {
     return this.addPattern(pattern, null)
   }
-  def addPattern(pattern: java.lang.String, processor: Processor): scala.Int = {
+  def addPattern(pattern: java.lang.String, processor: com.badlogic.gdx.utils.JsonMatcher.Processor): scala.Int = {
     if (this.chars != null) {
       throw new java.lang.IllegalStateException()
     } else ()
-    val newPatterns: scala.Array[Pattern] = new Array[Pattern](this.patterns.length + 1)
+    val newPatterns: scala.Array[com.badlogic.gdx.utils.JsonMatcher.Pattern] = new Array[com.badlogic.gdx.utils.JsonMatcher.Pattern](this.patterns.length + 1)
     java.lang.System.arraycopy(this.patterns, 0, newPatterns, 0, this.patterns.length)
-    var newPattern: Pattern = null.asInstanceOf[Pattern]
+    var newPattern: com.badlogic.gdx.utils.JsonMatcher.Pattern = null.asInstanceOf[com.badlogic.gdx.utils.JsonMatcher.Pattern]
     if (pattern.isEmpty()) {
-      newPattern = new Pattern(new Node(new Array[Match](0), false, null), processor, java.lang.Integer.MAX_VALUE, false)
+      newPattern = new com.badlogic.gdx.utils.JsonMatcher.Pattern(new com.badlogic.gdx.utils.JsonMatcher.Node(new Array[com.badlogic.gdx.utils.JsonMatcher.Match](0), false, null), processor, java.lang.Integer.MAX_VALUE, false)
       newPattern.captureRoot = true
       newPattern.captureAll = true
       this.endCaptures = this.endCaptures + 1
@@ -83,13 +83,13 @@ class JsonMatcher extends com.badlogic.gdx.utils.JsonSkimmer {
       }
     } else ()
   }
-  protected def parseStart(): scala.Unit = {
+  def parseStart(): scala.Unit = {
     ()
   }
-  protected def parseEnd(): scala.Unit = {
+  def parseEnd(): scala.Unit = {
     ()
   }
-  protected def push(name: com.badlogic.gdx.utils.JsonSkimmer#JsonToken, `object`: scala.Boolean): scala.Unit = {
+  def push(name: com.badlogic.gdx.utils.JsonSkimmer.JsonToken, `object`: scala.Boolean): scala.Unit = {
     if (JsonMatcher.debug$field) {
       this.debug(null, (((("push: " + name) + ":") + (if (`object`) "{}" else "[]")) + ", depth: ") + this.depth$field)
     } else ()
@@ -114,12 +114,12 @@ class JsonMatcher extends com.badlogic.gdx.utils.JsonSkimmer {
           this.captureAllValue(pattern, name, value)
           pattern.stack.add(value)
         } else {
-          val node: Node = pattern.current
+          val node: com.badlogic.gdx.utils.JsonMatcher.Node = pattern.current
           if (JsonMatcher.debug$field) {
             this.debug(pattern, ("current: " + node) + (if (this.depth$field <= node.dead) "" else if (node.dead == (-1)) " DONE" else " DEAD"))
           } else ()
           if (this.depth$field <= node.dead) {
-            var next: Node = node.next
+            var next: com.badlogic.gdx.utils.JsonMatcher.Node = node.next
             var flags: scala.Int = if (next == null) JsonMatcher.none else next.`match`(name)
             if (flags != JsonMatcher.none) {
               while (true) {
@@ -143,7 +143,7 @@ class JsonMatcher extends com.badlogic.gdx.utils.JsonSkimmer {
                 } else ()
                 pattern.current = next
                 next.pop = this.depth$field
-                val nextNext: Node = next.next
+                val nextNext: com.badlogic.gdx.utils.JsonMatcher.Node = next.next
                 if ((!next.starStar) || (nextNext == null)) {
                   /* break */ ()
                 } else ()
@@ -181,7 +181,7 @@ class JsonMatcher extends com.badlogic.gdx.utils.JsonSkimmer {
     }
     this.depth$field = this.depth$field + 1
   }
-  protected def pop(): scala.Unit = {
+  def pop(): scala.Unit = {
     val nextDepth: scala.Int = this.depth$field - 1
     if (JsonMatcher.debug$field) {
       this.debug(null, "pop " + nextDepth)
@@ -198,7 +198,7 @@ class JsonMatcher extends com.badlogic.gdx.utils.JsonSkimmer {
         pattern.captureAll = pattern.captureRoot
         this.captured(pattern)
       } else ()
-      var node: Node = pattern.current
+      var node: com.badlogic.gdx.utils.JsonMatcher.Node = pattern.current
       if (JsonMatcher.debug$field) {
         this.debug(pattern, (((("current: " + node) + " pop at ") + node.pop) + ", captured: ") + pattern.capture.toJson(com.badlogic.gdx.utils.JsonWriter.OutputType.minimal))
       } else ()
@@ -231,7 +231,7 @@ class JsonMatcher extends com.badlogic.gdx.utils.JsonSkimmer {
     this.depth$field = nextDepth
     this.path$field.size = this.path$field.size - 2
   }
-  protected def value(name: com.badlogic.gdx.utils.JsonSkimmer#JsonToken, value: com.badlogic.gdx.utils.JsonSkimmer#JsonToken): scala.Unit = {
+  def value(name: com.badlogic.gdx.utils.JsonSkimmer.JsonToken, value: com.badlogic.gdx.utils.JsonSkimmer.JsonToken): scala.Unit = {
     if (JsonMatcher.debug$field) {
       this.debug(null, (("value: " + name) + "=") + value)
     } else ()
@@ -240,7 +240,7 @@ class JsonMatcher extends com.badlogic.gdx.utils.JsonSkimmer {
         this.captureAllValue(pattern, name, value.value())
       } else {
         if (this.depth$field <= pattern.current.dead) {
-          var next: Node = pattern.current.next
+          var next: com.badlogic.gdx.utils.JsonMatcher.Node = pattern.current.next
           var flags: scala.Int = if (next == null) JsonMatcher.none else next.`match`(name)
           if (flags != JsonMatcher.none) {
             while (true) {
@@ -271,7 +271,7 @@ class JsonMatcher extends com.badlogic.gdx.utils.JsonSkimmer {
                 } else ()
                 /* break */ ()
               } else ()
-              val nextNext: Node = next.next
+              val nextNext: com.badlogic.gdx.utils.JsonMatcher.Node = next.next
               if ((!next.starStar) || (nextNext == null)) {
                 /* break */ ()
               } else ()
@@ -289,7 +289,7 @@ class JsonMatcher extends com.badlogic.gdx.utils.JsonSkimmer {
       }
     }
   }
-  private def captureValue(pattern: Pattern, flags: scala.Int, name: com.badlogic.gdx.utils.JsonSkimmer#JsonToken, value: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
+  private def captureValue(pattern: com.badlogic.gdx.utils.JsonMatcher.Pattern, flags: scala.Int, name: com.badlogic.gdx.utils.JsonSkimmer.JsonToken, value: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
     val capture: com.badlogic.gdx.utils.JsonValue = pattern.capture
     if ((flags & JsonMatcher.single) != 0) {
       capture.name$field = if (name == null) null else name.toString()
@@ -316,7 +316,7 @@ class JsonMatcher extends com.badlogic.gdx.utils.JsonSkimmer {
       }
     }
   }
-  private def captured(pattern: Pattern): scala.Unit = {
+  private def captured(pattern: com.badlogic.gdx.utils.JsonMatcher.Pattern): scala.Unit = {
     if (this.stoppable && ({ this.captured$field += 1; this.captured$field } >= this.total)) {
       if (JsonMatcher.debug$field) {
         this.debug(null, "END PARSING")
@@ -332,8 +332,8 @@ class JsonMatcher extends com.badlogic.gdx.utils.JsonSkimmer {
       } else ()
     } else ()
   }
-  private def captureAllStart(pattern: Pattern, flags: scala.Int, name: com.badlogic.gdx.utils.JsonSkimmer#JsonToken, `object`: scala.Boolean): scala.Unit = {
-    val `type`: com.badlogic.gdx.utils.JsonValue#ValueType = if (`object`) com.badlogic.gdx.utils.JsonValue.ValueType.`object` else com.badlogic.gdx.utils.JsonValue.ValueType.array
+  private def captureAllStart(pattern: com.badlogic.gdx.utils.JsonMatcher.Pattern, flags: scala.Int, name: com.badlogic.gdx.utils.JsonSkimmer.JsonToken, `object`: scala.Boolean): scala.Unit = {
+    val `type`: com.badlogic.gdx.utils.JsonValue.ValueType = if (`object`) com.badlogic.gdx.utils.JsonValue.ValueType.`object` else com.badlogic.gdx.utils.JsonValue.ValueType.array
     var capture: com.badlogic.gdx.utils.JsonValue = null.asInstanceOf[com.badlogic.gdx.utils.JsonValue]
     if ((flags & (JsonMatcher.single | JsonMatcher.array)) == JsonMatcher.single) {
       capture = pattern.capture
@@ -349,7 +349,7 @@ class JsonMatcher extends com.badlogic.gdx.utils.JsonSkimmer {
       this.debug(pattern, "CAPTURE ALL BEGIN, depth: " + this.depth$field)
     } else ()
   }
-  private def captureAllValue(pattern: Pattern, name: com.badlogic.gdx.utils.JsonSkimmer#JsonToken, value: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
+  private def captureAllValue(pattern: com.badlogic.gdx.utils.JsonMatcher.Pattern, name: com.badlogic.gdx.utils.JsonSkimmer.JsonToken, value: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
     if (pattern.stack.isEmpty()) {
       pattern.capture.set(value)
       this.captured(pattern)
@@ -362,7 +362,7 @@ class JsonMatcher extends com.badlogic.gdx.utils.JsonSkimmer {
       }
     }
   }
-  private def process(pattern: Pattern, clear: scala.Boolean): scala.Unit = {
+  private def process(pattern: com.badlogic.gdx.utils.JsonMatcher.Pattern, clear: scala.Boolean): scala.Unit = {
     if (pattern.captured == 0) {
       return
     } else ()
@@ -395,7 +395,7 @@ class JsonMatcher extends com.badlogic.gdx.utils.JsonSkimmer {
       this.processPattern = null
     }
   }
-  protected def process(value: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
+  def process(value: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
     ()
   }
   def depth(): scala.Int = {
@@ -480,7 +480,7 @@ class JsonMatcher extends com.badlogic.gdx.utils.JsonSkimmer {
     }
   }
   def path(): java.lang.String = {
-    this.buffer.size = 0
+    this.buffer.size = 0;
     { var i: scala.Int = 0; val n: scala.Int = this.path$field.size; while (i < n) { {
       if (i > 0) {
         buffer.append('/')
@@ -520,7 +520,7 @@ class JsonMatcher extends com.badlogic.gdx.utils.JsonSkimmer {
     } else ()
     return new java.lang.String(this.chars, start, length)
   }
-  def newMatch(name: java.lang.String, brackets: scala.Boolean, at: scala.Boolean, processEach: scala.Boolean, valueCapture: scala.Boolean, keyCapture: scala.Boolean, star: scala.Boolean, starStar: scala.Boolean): Match = {
+  def newMatch(name: java.lang.String, brackets: scala.Boolean, at: scala.Boolean, processEach: scala.Boolean, valueCapture: scala.Boolean, keyCapture: scala.Boolean, star: scala.Boolean, starStar: scala.Boolean): com.badlogic.gdx.utils.JsonMatcher.Match = {
     var flags: scala.Int = JsonMatcher.`match`
     if (at || processEach) {
       flags = flags | JsonMatcher.process$field
@@ -537,29 +537,29 @@ class JsonMatcher extends com.badlogic.gdx.utils.JsonSkimmer {
     if (keyCapture) {
       flags = flags | JsonMatcher.keys
     } else ()
-    return new Match(name, flags, star, starStar)
+    return new com.badlogic.gdx.utils.JsonMatcher.Match(name, flags, star, starStar)
   }
-  def newNode(matches: scala.Array[Match], processEach: scala.Boolean, backtrack: Node, prev$arg: Node): Node = {
-    var prev: Node = prev$arg
-    val node: Node = new Node(matches, processEach, backtrack)
+  def newNode(matches: scala.Array[com.badlogic.gdx.utils.JsonMatcher.Match], processEach: scala.Boolean, backtrack: com.badlogic.gdx.utils.JsonMatcher.Node, prev$arg: com.badlogic.gdx.utils.JsonMatcher.Node): com.badlogic.gdx.utils.JsonMatcher.Node = {
+    var prev: com.badlogic.gdx.utils.JsonMatcher.Node = prev$arg
+    val node: com.badlogic.gdx.utils.JsonMatcher.Node = new com.badlogic.gdx.utils.JsonMatcher.Node(matches, processEach, backtrack)
     if (prev == null) {
       if (node.starStar) {
         return node
       } else ()
-      prev = new Node(Array[Match](new Match(".", 0, false, false)), false, null)
+      prev = new com.badlogic.gdx.utils.JsonMatcher.Node(Array[com.badlogic.gdx.utils.JsonMatcher.Match](new com.badlogic.gdx.utils.JsonMatcher.Match(".", 0, false, false)), false, null)
     } else ()
     prev.next = node
     prev.nextStarStar = node.starStar
     node.prev = prev
     return node
   }
-  def newPattern(root: Node, processor: Processor): Pattern = {
-    var current: Node = root
+  def newPattern(root: com.badlogic.gdx.utils.JsonMatcher.Node, processor: com.badlogic.gdx.utils.JsonMatcher.Processor): com.badlogic.gdx.utils.JsonMatcher.Pattern = {
+    var current: com.badlogic.gdx.utils.JsonMatcher.Node = root
     var multi: scala.Boolean = false
     var at: scala.Boolean = false
     var stoppable: scala.Boolean = true
     var captures: scala.Int = 0
-    var prevCapture: Match = null
+    var prevCapture: com.badlogic.gdx.utils.JsonMatcher.Match = null
     while ({ {
       for (`match` <- current.matches) {
         var flags: scala.Int = `match`.flags
@@ -600,12 +600,12 @@ class JsonMatcher extends com.badlogic.gdx.utils.JsonSkimmer {
     } else {
       this.endCaptures = this.endCaptures + 1
     }
-    return new Pattern(root, processor, captures, at)
+    return new com.badlogic.gdx.utils.JsonMatcher.Pattern(root, processor, captures, at)
   }
-  private def debug(pattern: Pattern, text: java.lang.String): scala.Unit = {
+  private def debug(pattern: com.badlogic.gdx.utils.JsonMatcher.Pattern, text: java.lang.String): scala.Unit = {
     { var i: scala.Int = 0; while (i < this.depth$field) { {
       java.lang.System.out.print("  ")
-    }; i = i + 1 } }
+    }; i = i + 1 } };
     { var i: scala.Int = 0; val n: scala.Int = this.patterns.length; while (i < n) { {
       if (this.patterns(i) == pattern) {
         java.lang.System.out.print(("[" + i) + "] ")
@@ -658,9 +658,19 @@ class JsonMatcher extends com.badlogic.gdx.utils.JsonSkimmer {
     this.parse(file)
     return value
   }
+}
+object JsonMatcher {
+  final val debug$field: scala.Boolean = false
+  private final val none: scala.Int = 0
+  final val `match`: scala.Int = 1
+  final val process$field: scala.Int = 2
+  final val capture: scala.Int = 4
+  final val array: scala.Int = 8
+  final val keys: scala.Int = 16
+  final val single: scala.Int = 32
   class Pattern {
-    var root: Node = null.asInstanceOf[Node]
-    var processor: Processor = null.asInstanceOf[Processor]
+    var root: com.badlogic.gdx.utils.JsonMatcher.Node = null.asInstanceOf[com.badlogic.gdx.utils.JsonMatcher.Node]
+    var processor: com.badlogic.gdx.utils.JsonMatcher.Processor = null.asInstanceOf[com.badlogic.gdx.utils.JsonMatcher.Processor]
     var capture: com.badlogic.gdx.utils.JsonValue = new com.badlogic.gdx.utils.JsonValue(com.badlogic.gdx.utils.JsonValue.ValueType.`object`)
     var captured: scala.Int = 0
     var total: scala.Int = 0
@@ -668,8 +678,8 @@ class JsonMatcher extends com.badlogic.gdx.utils.JsonSkimmer {
     var captureRoot: scala.Boolean = false
     var at: scala.Boolean = false
     final val stack: com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.JsonValue] = new com.badlogic.gdx.utils.Array()
-    var current: Node = null.asInstanceOf[Node]
-    def this(root: Node, processor: Processor, total: scala.Int, at: scala.Boolean) = {
+    var current: com.badlogic.gdx.utils.JsonMatcher.Node = null.asInstanceOf[com.badlogic.gdx.utils.JsonMatcher.Node]
+    def this(root: com.badlogic.gdx.utils.JsonMatcher.Node, processor: com.badlogic.gdx.utils.JsonMatcher.Processor, total: scala.Int, at: scala.Boolean) = {
       this()
       this.root = root
       this.processor = processor
@@ -686,7 +696,7 @@ class JsonMatcher extends com.badlogic.gdx.utils.JsonSkimmer {
       this.capture.size$field = 0
     }
     def reset(): scala.Unit = {
-      var node: Node = this.root
+      var node: com.badlogic.gdx.utils.JsonMatcher.Node = this.root
       while ({ {
         node.dead = java.lang.Integer.MAX_VALUE
         node = node.next
@@ -704,17 +714,17 @@ class JsonMatcher extends com.badlogic.gdx.utils.JsonSkimmer {
     }
   }
   class Node {
-    var matches: scala.Array[Match] = null.asInstanceOf[scala.Array[Match]]
+    var matches: scala.Array[com.badlogic.gdx.utils.JsonMatcher.Match] = null.asInstanceOf[scala.Array[com.badlogic.gdx.utils.JsonMatcher.Match]]
     var processEach: scala.Boolean = false
     var processPop: scala.Boolean = false
     var starStar: scala.Boolean = false
     var nextStarStar: scala.Boolean = false
-    var prev: Node = null.asInstanceOf[Node]
-    var next: Node = null.asInstanceOf[Node]
-    var backtrack: Node = null.asInstanceOf[Node]
+    var prev: com.badlogic.gdx.utils.JsonMatcher.Node = null.asInstanceOf[com.badlogic.gdx.utils.JsonMatcher.Node]
+    var next: com.badlogic.gdx.utils.JsonMatcher.Node = null.asInstanceOf[com.badlogic.gdx.utils.JsonMatcher.Node]
+    var backtrack: com.badlogic.gdx.utils.JsonMatcher.Node = null.asInstanceOf[com.badlogic.gdx.utils.JsonMatcher.Node]
     var pop: scala.Int = 0
     var dead: scala.Int = java.lang.Integer.MAX_VALUE
-    def this(matches: scala.Array[Match], processEach: scala.Boolean, backtrack: Node) = {
+    def this(matches: scala.Array[com.badlogic.gdx.utils.JsonMatcher.Match], processEach: scala.Boolean, backtrack: com.badlogic.gdx.utils.JsonMatcher.Node) = {
       this()
       this.matches = matches
       this.processEach = processEach
@@ -728,7 +738,7 @@ class JsonMatcher extends com.badlogic.gdx.utils.JsonSkimmer {
         } else ()
       }
     }
-    def `match`(name: com.badlogic.gdx.utils.JsonSkimmer#JsonToken): scala.Int = {
+    def `match`(name: com.badlogic.gdx.utils.JsonSkimmer.JsonToken): scala.Int = {
       if (name != null) {
         for (`match` <- this.matches) {
           if (`match`.any || name.equalsString(`match`.name)) {
@@ -809,14 +819,4 @@ class JsonMatcher extends com.badlogic.gdx.utils.JsonSkimmer {
   trait Processor {
     def process(value: com.badlogic.gdx.utils.JsonValue): scala.Unit
   }
-}
-object JsonMatcher {
-  final val debug$field: scala.Boolean = false
-  private final val none: scala.Int = 0
-  final val `match`: scala.Int = 1
-  final val process$field: scala.Int = 2
-  final val capture: scala.Int = 4
-  final val array: scala.Int = 8
-  final val keys: scala.Int = 16
-  final val single: scala.Int = 32
 }

@@ -10,7 +10,7 @@ class Node {
   final val localTransform: com.badlogic.gdx.math.Matrix4 = new com.badlogic.gdx.math.Matrix4()
   final val globalTransform: com.badlogic.gdx.math.Matrix4 = new com.badlogic.gdx.math.Matrix4()
   var parts: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.model.NodePart] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.model.NodePart](2)
-  protected var parent: Node = null.asInstanceOf[Node]
+  var parent: Node = null.asInstanceOf[Node]
   private final val children: com.badlogic.gdx.utils.Array[Node] = new com.badlogic.gdx.utils.Array[Node](2)
   def calculateLocalTransform(): com.badlogic.gdx.math.Matrix4 = {
     if (!this.isAnimated) {
@@ -40,7 +40,7 @@ class Node {
       if (((part.invBoneBindTransforms == null) || (part.bones == null)) || (part.invBoneBindTransforms.size != part.bones.length)) {
         /* continue */ ()
       } else ()
-      val n: scala.Int = part.invBoneBindTransforms.size
+      val n: scala.Int = part.invBoneBindTransforms.size;
       { var i: scala.Int = 0; while (i < n) { {
         part.bones(i).set(part.invBoneBindTransforms.keys$field(i).globalTransform).mul(part.invBoneBindTransforms.values$field(i))
       }; i = i + 1 } }
@@ -63,7 +63,7 @@ class Node {
     return this.extendBoundingBox(out, true)
   }
   def extendBoundingBox(out: com.badlogic.gdx.math.collision.BoundingBox, transform: scala.Boolean): com.badlogic.gdx.math.collision.BoundingBox = {
-    val partCount: scala.Int = this.parts.size
+    val partCount: scala.Int = this.parts.size;
     { var i: scala.Int = 0; while (i < partCount) { {
       val part: com.badlogic.gdx.graphics.g3d.model.NodePart = this.parts.get(i)
       if (part.enabled) {
@@ -75,7 +75,7 @@ class Node {
         }
       } else ()
     }; i = i + 1 } }
-    val childCount: scala.Int = this.children.size
+    val childCount: scala.Int = this.children.size;
     { var i: scala.Int = 0; while (i < childCount) { {
       this.children.get(i).extendBoundingBox(out)
     }; i = i + 1 } }
@@ -109,7 +109,7 @@ class Node {
     return this.insertChildren(-1, nodes)
   }
   def insertChild[T <: Node](index$arg: scala.Int, child: T): scala.Int = {
-    var index: scala.Int = index$arg
+    var index: scala.Int = index$arg;
     { var p: Node = this; while (p != null) { {
       if (p == child) {
         throw new com.badlogic.gdx.utils.GdxRuntimeException("Cannot add a parent as a child")
@@ -158,7 +158,7 @@ class Node {
   def copy(): Node = {
     return new Node().set(this)
   }
-  protected def set(other: Node): Node = {
+  def set(other: Node): Node = {
     this.detach()
     this.id = other.id
     this.isAnimated = other.isAnimated

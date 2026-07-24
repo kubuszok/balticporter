@@ -1,23 +1,23 @@
 package com.badlogic.gdx.maps.tiled.renderers
 
 class OrthoCachedTiledMapRenderer extends com.badlogic.gdx.maps.tiled.TiledMapRenderer with com.badlogic.gdx.utils.Disposable {
-  protected var map: com.badlogic.gdx.maps.tiled.TiledMap = null.asInstanceOf[com.badlogic.gdx.maps.tiled.TiledMap]
-  protected var spriteCache: com.badlogic.gdx.graphics.g2d.SpriteCache = null.asInstanceOf[com.badlogic.gdx.graphics.g2d.SpriteCache]
-  protected final val vertices: scala.Array[scala.Float] = new Array[scala.Float](20)
-  protected var blending: scala.Boolean = false
-  protected var unitScale: scala.Float = 0.0f
-  protected final val viewBounds: com.badlogic.gdx.math.Rectangle = new com.badlogic.gdx.math.Rectangle()
-  protected final val cacheBounds: com.badlogic.gdx.math.Rectangle = new com.badlogic.gdx.math.Rectangle()
-  protected var overCache: scala.Float = 0.5f
-  protected var maxTileWidth: scala.Float = 0.0f
-  protected var maxTileHeight: scala.Float = 0.0f
-  protected var cached: scala.Boolean = false
-  protected var count: scala.Int = 0
-  protected var canCacheMoreN: scala.Boolean = false
-  protected var canCacheMoreE: scala.Boolean = false
-  protected var canCacheMoreW: scala.Boolean = false
-  protected var canCacheMoreS: scala.Boolean = false
-  protected var imageBounds: com.badlogic.gdx.math.Rectangle = new com.badlogic.gdx.math.Rectangle()
+  var map: com.badlogic.gdx.maps.tiled.TiledMap = null.asInstanceOf[com.badlogic.gdx.maps.tiled.TiledMap]
+  var spriteCache: com.badlogic.gdx.graphics.g2d.SpriteCache = null.asInstanceOf[com.badlogic.gdx.graphics.g2d.SpriteCache]
+  final val vertices: scala.Array[scala.Float] = new Array[scala.Float](20)
+  var blending: scala.Boolean = false
+  var unitScale: scala.Float = 0.0f
+  final val viewBounds: com.badlogic.gdx.math.Rectangle = new com.badlogic.gdx.math.Rectangle()
+  final val cacheBounds: com.badlogic.gdx.math.Rectangle = new com.badlogic.gdx.math.Rectangle()
+  var overCache: scala.Float = 0.5f
+  var maxTileWidth: scala.Float = 0.0f
+  var maxTileHeight: scala.Float = 0.0f
+  var cached: scala.Boolean = false
+  var count: scala.Int = 0
+  var canCacheMoreN: scala.Boolean = false
+  var canCacheMoreE: scala.Boolean = false
+  var canCacheMoreW: scala.Boolean = false
+  var canCacheMoreS: scala.Boolean = false
+  var imageBounds: com.badlogic.gdx.math.Rectangle = new com.badlogic.gdx.math.Rectangle()
   def this(map: com.badlogic.gdx.maps.tiled.TiledMap, unitScale: scala.Float, cacheSize: scala.Int) = {
     this()
     this.map = map
@@ -82,7 +82,7 @@ class OrthoCachedTiledMapRenderer extends com.badlogic.gdx.maps.tiled.TiledMapRe
       com.badlogic.gdx.Gdx.gl.glBlendFunc(com.badlogic.gdx.graphics.GL20.GL_SRC_ALPHA, com.badlogic.gdx.graphics.GL20.GL_ONE_MINUS_SRC_ALPHA)
     } else ()
     this.spriteCache.begin()
-    val mapLayers: com.badlogic.gdx.maps.MapLayers = this.map.getLayers()
+    val mapLayers: com.badlogic.gdx.maps.MapLayers = this.map.getLayers();
     { var i: scala.Int = 0; val j: scala.Int = mapLayers.getCount(); while (i < j) { {
       val layer: com.badlogic.gdx.maps.MapLayer = mapLayers.get(i)
       if (layer.isVisible()) {
@@ -160,10 +160,10 @@ class OrthoCachedTiledMapRenderer extends com.badlogic.gdx.maps.tiled.TiledMapRe
     this.canCacheMoreE = col2 < layerWidth
     this.canCacheMoreW = col1 > 0
     this.canCacheMoreS = row1 > 0
-    val vertices: scala.Array[scala.Float] = this.vertices
+    val vertices: scala.Array[scala.Float] = this.vertices;
     { var row: scala.Int = row2; while (row >= row1) { {
       { var col: scala.Int = col1; while (col < col2) { {
-        val cell: com.badlogic.gdx.maps.tiled.TiledMapTileLayer#Cell = layer.getCell(col, row)
+        val cell: com.badlogic.gdx.maps.tiled.TiledMapTileLayer.Cell = layer.getCell(col, row)
         if (cell == null) {
           /* continue */ ()
         } else ()
@@ -319,7 +319,7 @@ class OrthoCachedTiledMapRenderer extends com.badlogic.gdx.maps.tiled.TiledMapRe
       var startX: scala.Float = this.cacheBounds.x
       var startY: scala.Float = this.cacheBounds.y
       startX = startX - (startX % this.imageBounds.width)
-      startY = startY - (startY % this.imageBounds.height)
+      startY = startY - (startY % this.imageBounds.height);
       { var i: scala.Int = 0; while (i <= repeatX) { {
         { var j: scala.Int = 0; while (j <= repeatY) { {
           var rx1: scala.Float = x1
@@ -388,5 +388,5 @@ class OrthoCachedTiledMapRenderer extends com.badlogic.gdx.maps.tiled.TiledMapRe
 }
 object OrthoCachedTiledMapRenderer {
   private final val tolerance: scala.Float = 1.0E-5f
-  protected final val NUM_VERTICES: scala.Int = 20
+  final val NUM_VERTICES: scala.Int = 20
 }

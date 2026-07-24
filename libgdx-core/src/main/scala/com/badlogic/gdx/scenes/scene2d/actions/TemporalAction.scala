@@ -20,7 +20,7 @@ abstract class TemporalAction extends com.badlogic.gdx.scenes.scene2d.Action wit
     if (this.complete) {
       return true
     } else ()
-    val pool: com.badlogic.gdx.utils.Pool = this.getPool()
+    val pool: com.badlogic.gdx.utils.Pool[?] = this.getPool()
     this.setPool(null)
     try {
       if (!this.began) {
@@ -42,13 +42,13 @@ abstract class TemporalAction extends com.badlogic.gdx.scenes.scene2d.Action wit
       this.setPool(pool)
     }
   }
-  protected def begin(): scala.Unit = {
+  def begin(): scala.Unit = {
     ()
   }
-  protected def `end`(): scala.Unit = {
+  def `end`(): scala.Unit = {
     ()
   }
-  protected def update(percent: scala.Float): scala.Unit
+  def update(percent: scala.Float): scala.Unit
   def finish(): scala.Unit = {
     this.time = this.duration
   }

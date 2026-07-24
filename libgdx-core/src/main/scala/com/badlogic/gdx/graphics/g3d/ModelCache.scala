@@ -9,9 +9,9 @@ class ModelCache extends com.badlogic.gdx.utils.Disposable with com.badlogic.gdx
   private var meshBuilder: com.badlogic.gdx.graphics.g3d.utils.MeshBuilder = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.utils.MeshBuilder]
   private var building: scala.Boolean = false
   private var sorter: com.badlogic.gdx.graphics.g3d.utils.RenderableSorter = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.utils.RenderableSorter]
-  private var meshPool: MeshPool = null.asInstanceOf[MeshPool]
+  private var meshPool: com.badlogic.gdx.graphics.g3d.ModelCache.MeshPool = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.ModelCache.MeshPool]
   private var camera: com.badlogic.gdx.graphics.Camera = null.asInstanceOf[com.badlogic.gdx.graphics.Camera]
-  def this(sorter: com.badlogic.gdx.graphics.g3d.utils.RenderableSorter, meshPool: MeshPool) = {
+  def this(sorter: com.badlogic.gdx.graphics.g3d.utils.RenderableSorter, meshPool: com.badlogic.gdx.graphics.g3d.ModelCache.MeshPool) = {
     this()
     this.sorter = sorter
     this.meshPool = meshPool
@@ -67,7 +67,7 @@ class ModelCache extends com.badlogic.gdx.utils.Disposable with com.badlogic.gdx
     var offset: scala.Int = this.renderables.size
     this.meshBuilder.begin(vertexAttributes)
     var part: com.badlogic.gdx.graphics.g3d.model.MeshPart = this.meshBuilder.part("", primitiveType, this.meshPartPool.obtain())
-    this.renderables.add(this.obtainRenderable(material, primitiveType))
+    this.renderables.add(this.obtainRenderable(material, primitiveType));
     { var i: scala.Int = 0; val n: scala.Int = this.items.size; while (i < n) { {
       val renderable: com.badlogic.gdx.graphics.g3d.Renderable = this.items.get(i)
       val va: com.badlogic.gdx.graphics.VertexAttributes = renderable.meshPart.mesh.getVertexAttributes()
@@ -125,7 +125,7 @@ class ModelCache extends com.badlogic.gdx.utils.Disposable with com.badlogic.gdx
     }
   }
   def add(renderableProvider: com.badlogic.gdx.graphics.g3d.RenderableProvider): scala.Unit = {
-    renderableProvider.getRenderables(this.tmp, this.renderablesPool)
+    renderableProvider.getRenderables(this.tmp, this.renderablesPool);
     { var i: scala.Int = 0; val n: scala.Int = this.tmp.size; while (i < n) { {
       this.add(this.tmp.get(i))
     }; i = i + 1 } }
@@ -152,11 +152,13 @@ class ModelCache extends com.badlogic.gdx.utils.Disposable with com.badlogic.gdx
     } else ()
     this.meshPool.dispose()
   }
+}
+object ModelCache {
   trait MeshPool extends com.badlogic.gdx.utils.Disposable {
     def obtain(vertexAttributes: com.badlogic.gdx.graphics.VertexAttributes, vertexCount: scala.Int, indexCount: scala.Int): com.badlogic.gdx.graphics.Mesh
     def flush(): scala.Unit
   }
-  class SimpleMeshPool extends MeshPool {
+  class SimpleMeshPool extends com.badlogic.gdx.graphics.g3d.ModelCache.MeshPool {
     private var freeMeshes: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.Mesh] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.Mesh]()
     private var usedMeshes: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.Mesh] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.Mesh]()
     def flush(): scala.Unit = {
@@ -165,7 +167,7 @@ class ModelCache extends com.badlogic.gdx.utils.Disposable with com.badlogic.gdx
     }
     def obtain(vertexAttributes: com.badlogic.gdx.graphics.VertexAttributes, vertexCount$arg: scala.Int, indexCount$arg: scala.Int): com.badlogic.gdx.graphics.Mesh = {
       var vertexCount: scala.Int = vertexCount$arg
-      var indexCount: scala.Int = indexCount$arg
+      var indexCount: scala.Int = indexCount$arg;
       { var i: scala.Int = 0; val n: scala.Int = this.freeMeshes.size; while (i < n) { {
         val mesh: com.badlogic.gdx.graphics.Mesh = this.freeMeshes.get(i)
         if ((mesh.getVertexAttributes().equals(vertexAttributes) && (mesh.getMaxVertices() >= vertexCount)) && (mesh.getMaxIndices() >= indexCount)) {
@@ -191,7 +193,7 @@ class ModelCache extends com.badlogic.gdx.utils.Disposable with com.badlogic.gdx
       this.freeMeshes.clear()
     }
   }
-  class TightMeshPool extends MeshPool {
+  class TightMeshPool extends com.badlogic.gdx.graphics.g3d.ModelCache.MeshPool {
     private var freeMeshes: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.Mesh] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.Mesh]()
     private var usedMeshes: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.Mesh] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.Mesh]()
     def flush(): scala.Unit = {

@@ -1,19 +1,19 @@
 package com.badlogic.gdx.scenes.scene2d.ui
 
-class Button extends com.badlogic.gdx.scenes.scene2d.ui.Table with com.badlogic.gdx.scenes.scene2d.utils.Disableable with com.badlogic.gdx.scenes.scene2d.ui.Styleable[ButtonStyle] {
-  private var style: ButtonStyle = null.asInstanceOf[ButtonStyle]
+class Button extends com.badlogic.gdx.scenes.scene2d.ui.Table with com.badlogic.gdx.scenes.scene2d.utils.Disableable with com.badlogic.gdx.scenes.scene2d.ui.Styleable[com.badlogic.gdx.scenes.scene2d.ui.Button.ButtonStyle] {
+  private var style: com.badlogic.gdx.scenes.scene2d.ui.Button.ButtonStyle = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Button.ButtonStyle]
   var isChecked$field: scala.Boolean = false
   var isDisabled$field: scala.Boolean = false
-  var buttonGroup: com.badlogic.gdx.scenes.scene2d.ui.ButtonGroup = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.ButtonGroup]
+  var buttonGroup: com.badlogic.gdx.scenes.scene2d.ui.ButtonGroup[?] = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.ButtonGroup[?]]
   private var clickListener: com.badlogic.gdx.scenes.scene2d.utils.ClickListener = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.ClickListener]
   private var programmaticChangeEvents: scala.Boolean = true
   def this(skin: com.badlogic.gdx.scenes.scene2d.ui.Skin, styleName: java.lang.String) = {
     this()
     this.initialize()
-    this.setStyle(skin.get(styleName, classOf[java.lang.Class]))
+    this.setStyle(skin.get(styleName, classOf[com.badlogic.gdx.scenes.scene2d.ui.Button.ButtonStyle]))
     this.setSize(this.getPrefWidth(), this.getPrefHeight())
   }
-  def this(child: com.badlogic.gdx.scenes.scene2d.Actor, style: ButtonStyle) = {
+  def this(child: com.badlogic.gdx.scenes.scene2d.Actor, style: com.badlogic.gdx.scenes.scene2d.ui.Button.ButtonStyle) = {
     this()
     this.initialize()
     this.add(child)
@@ -23,10 +23,10 @@ class Button extends com.badlogic.gdx.scenes.scene2d.ui.Table with com.badlogic.
   def this(skin: com.badlogic.gdx.scenes.scene2d.ui.Skin) = {
     this()
     this.initialize()
-    this.setStyle(skin.get(classOf[java.lang.Class]))
+    this.setStyle(skin.get(classOf[com.badlogic.gdx.scenes.scene2d.ui.Button.ButtonStyle]))
     this.setSize(this.getPrefWidth(), this.getPrefHeight())
   }
-  def this(style: ButtonStyle) = {
+  def this(style: com.badlogic.gdx.scenes.scene2d.ui.Button.ButtonStyle) = {
     this()
     this.initialize()
     this.setStyle(style)
@@ -37,20 +37,20 @@ class Button extends com.badlogic.gdx.scenes.scene2d.ui.Table with com.badlogic.
     this.initialize()
   }
   def this(child: com.badlogic.gdx.scenes.scene2d.Actor, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin, styleName: java.lang.String) = {
-    this(child, skin.get(styleName, classOf[java.lang.Class]))
+    this(child, skin.get(styleName, classOf[com.badlogic.gdx.scenes.scene2d.ui.Button.ButtonStyle]))
     this.setSkin(skin)
   }
   def this(up: com.badlogic.gdx.scenes.scene2d.utils.Drawable, down: com.badlogic.gdx.scenes.scene2d.utils.Drawable, checked: com.badlogic.gdx.scenes.scene2d.utils.Drawable) = {
-    this(new ButtonStyle(up, down, checked))
+    this(new com.badlogic.gdx.scenes.scene2d.ui.Button.ButtonStyle(up, down, checked))
   }
   def this(up: com.badlogic.gdx.scenes.scene2d.utils.Drawable, down: com.badlogic.gdx.scenes.scene2d.utils.Drawable) = {
-    this(new ButtonStyle(up, down, null))
+    this(new com.badlogic.gdx.scenes.scene2d.ui.Button.ButtonStyle(up, down, null))
   }
   def this(child: com.badlogic.gdx.scenes.scene2d.Actor, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin) = {
-    this(child, skin.get(classOf[java.lang.Class]))
+    this(child, skin.get(classOf[com.badlogic.gdx.scenes.scene2d.ui.Button.ButtonStyle]))
   }
   def this(up: com.badlogic.gdx.scenes.scene2d.utils.Drawable) = {
-    this(new ButtonStyle(up, null, null))
+    this(new com.badlogic.gdx.scenes.scene2d.ui.Button.ButtonStyle(up, null, null))
   }
   private def initialize(): scala.Unit = {
     this.setTouchable(com.badlogic.gdx.scenes.scene2d.Touchable.enabled)
@@ -71,7 +71,7 @@ class Button extends com.badlogic.gdx.scenes.scene2d.ui.Table with com.badlogic.
     } else ()
     this.isChecked$field = isChecked
     if (fireEvent) {
-      val changeEvent: com.badlogic.gdx.scenes.scene2d.utils.ChangeListener#ChangeEvent = com.badlogic.gdx.scenes.scene2d.Actor.POOLS.obtain(classOf[java.lang.Class])
+      val changeEvent: com.badlogic.gdx.scenes.scene2d.utils.ChangeListener.ChangeEvent = com.badlogic.gdx.scenes.scene2d.Actor.POOLS.obtain(classOf[com.badlogic.gdx.scenes.scene2d.utils.ChangeListener.ChangeEvent])
       if (this.fire(changeEvent)) {
         this.isChecked$field = !isChecked
       } else ()
@@ -105,20 +105,20 @@ class Button extends com.badlogic.gdx.scenes.scene2d.ui.Table with com.badlogic.
   def getProgrammaticChangeEvents(): scala.Boolean = {
     return this.programmaticChangeEvents
   }
-  def setStyle(style: ButtonStyle): scala.Unit = {
+  def setStyle(style: com.badlogic.gdx.scenes.scene2d.ui.Button.ButtonStyle): scala.Unit = {
     if (style == null) {
       throw new java.lang.IllegalArgumentException("style cannot be null.")
     } else ()
     this.style = style
     this.setBackground(this.getBackgroundDrawable())
   }
-  def getStyle(): ButtonStyle = {
+  def getStyle(): com.badlogic.gdx.scenes.scene2d.ui.Button.ButtonStyle = {
     return this.style
   }
-  def getButtonGroup(): com.badlogic.gdx.scenes.scene2d.ui.ButtonGroup = {
+  def getButtonGroup(): com.badlogic.gdx.scenes.scene2d.ui.ButtonGroup[?] = {
     return this.buttonGroup
   }
-  protected def getBackgroundDrawable(): com.badlogic.gdx.scenes.scene2d.utils.Drawable = {
+  def getBackgroundDrawable(): com.badlogic.gdx.scenes.scene2d.utils.Drawable = {
     if (this.isDisabled() && (this.style.disabled != null)) {
       return this.style.disabled
     } else ()
@@ -225,6 +225,8 @@ class Button extends com.badlogic.gdx.scenes.scene2d.ui.Table with com.badlogic.
   def getMinHeight(): scala.Float = {
     return this.getPrefHeight()
   }
+}
+object Button {
   class ButtonStyle {
     var up: com.badlogic.gdx.scenes.scene2d.utils.Drawable = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Drawable]
     var down: com.badlogic.gdx.scenes.scene2d.utils.Drawable = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Drawable]
@@ -247,7 +249,7 @@ class Button extends com.badlogic.gdx.scenes.scene2d.ui.Table with com.badlogic.
       this.down = down
       this.checked = checked
     }
-    def this(style: ButtonStyle) = {
+    def this(style: com.badlogic.gdx.scenes.scene2d.ui.Button.ButtonStyle) = {
       this()
       this.up = style.up
       this.down = style.down

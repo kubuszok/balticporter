@@ -7,7 +7,7 @@ class CameraInputController extends com.badlogic.gdx.input.GestureDetector {
   var translateUnits: scala.Float = 10.0f
   var forwardButton: scala.Int = com.badlogic.gdx.Input.Buttons.MIDDLE
   var activateKey: scala.Int = 0
-  protected var activatePressed: scala.Boolean = false
+  var activatePressed: scala.Boolean = false
   var alwaysScroll: scala.Boolean = true
   var scrollFactor: scala.Float = -0.1f
   var pinchZoomFactor: scala.Float = 10.0f
@@ -17,31 +17,31 @@ class CameraInputController extends com.badlogic.gdx.input.GestureDetector {
   var forwardTarget: scala.Boolean = true
   var scrollTarget: scala.Boolean = false
   var forwardKey: scala.Int = com.badlogic.gdx.Input.Keys.W
-  protected var forwardPressed: scala.Boolean = false
+  var forwardPressed: scala.Boolean = false
   var backwardKey: scala.Int = com.badlogic.gdx.Input.Keys.S
-  protected var backwardPressed: scala.Boolean = false
+  var backwardPressed: scala.Boolean = false
   var rotateRightKey: scala.Int = com.badlogic.gdx.Input.Keys.A
-  protected var rotateRightPressed: scala.Boolean = false
+  var rotateRightPressed: scala.Boolean = false
   var rotateLeftKey: scala.Int = com.badlogic.gdx.Input.Keys.D
-  protected var rotateLeftPressed: scala.Boolean = false
-  protected var controlsInverted: scala.Boolean = false
+  var rotateLeftPressed: scala.Boolean = false
+  var controlsInverted: scala.Boolean = false
   var camera: com.badlogic.gdx.graphics.Camera = null.asInstanceOf[com.badlogic.gdx.graphics.Camera]
-  protected var button: scala.Int = -1
+  var button: scala.Int = -1
   private var startX: scala.Float = 0.0f
   private var startY: scala.Float = 0.0f
   private final val tmpV1: com.badlogic.gdx.math.Vector3 = new com.badlogic.gdx.math.Vector3()
   private final val tmpV2: com.badlogic.gdx.math.Vector3 = new com.badlogic.gdx.math.Vector3()
-  protected var gestureListener: CameraGestureListener = null.asInstanceOf[CameraGestureListener]
+  var gestureListener: com.badlogic.gdx.graphics.g3d.utils.CameraInputController.CameraGestureListener = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.utils.CameraInputController.CameraGestureListener]
   private var touched: scala.Int = 0
   private var multiTouch: scala.Boolean = false
-  protected def this(gestureListener: CameraGestureListener, camera: com.badlogic.gdx.graphics.Camera) = {
+  def this(gestureListener: com.badlogic.gdx.graphics.g3d.utils.CameraInputController.CameraGestureListener, camera: com.badlogic.gdx.graphics.Camera) = {
     this()
     this.gestureListener = gestureListener
     this.gestureListener.controller = this
     this.camera = camera
   }
   def this(camera: com.badlogic.gdx.graphics.Camera) = {
-    this(new CameraGestureListener(), camera)
+    this(new com.badlogic.gdx.graphics.g3d.utils.CameraInputController.CameraGestureListener(), camera)
   }
   def update(): scala.Unit = {
     if (((this.rotateRightPressed || this.rotateLeftPressed) || this.forwardPressed) || this.backwardPressed) {
@@ -97,7 +97,7 @@ class CameraInputController extends com.badlogic.gdx.input.GestureDetector {
     } else ()
     this.controlsInverted = invertControls
   }
-  protected def process(deltaX: scala.Float, deltaY: scala.Float, button: scala.Int): scala.Boolean = {
+  def process(deltaX: scala.Float, deltaY: scala.Float, button: scala.Int): scala.Boolean = {
     if (button == this.rotateButton) {
       this.tmpV1.set(this.camera.direction).crs(this.camera.up).y = 0.0f
       this.camera.rotateAround(this.target, this.tmpV1.nor(), deltaY * this.rotateAngle)
@@ -150,7 +150,7 @@ class CameraInputController extends com.badlogic.gdx.input.GestureDetector {
     } else ()
     return true
   }
-  protected def pinchZoom(amount: scala.Float): scala.Boolean = {
+  def pinchZoom(amount: scala.Float): scala.Boolean = {
     return this.zoom(this.pinchZoomFactor * amount)
   }
   def keyDown(keycode: scala.Int): scala.Boolean = {
@@ -196,7 +196,9 @@ class CameraInputController extends com.badlogic.gdx.input.GestureDetector {
     }
     return false
   }
-  protected class CameraGestureListener extends com.badlogic.gdx.input.GestureDetector#GestureAdapter {
+}
+object CameraInputController {
+  class CameraGestureListener extends com.badlogic.gdx.input.GestureDetector.GestureAdapter {
     var controller: CameraInputController = null.asInstanceOf[CameraInputController]
     private var previousZoom: scala.Float = 0.0f
     def touchDown(x: scala.Float, y: scala.Float, pointer: scala.Int, button: scala.Int): scala.Boolean = {

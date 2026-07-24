@@ -38,7 +38,7 @@ class Quaternion extends java.io.Serializable {
     return new Quaternion(this)
   }
   def len(): scala.Float = {
-    return java.lang.Math.sqrt((((this.x * this.x) + (this.y * this.y)) + (this.z * this.z)) + (this.w * this.w)).asInstanceOf[scala.Float]
+    return java.lang.Math.sqrt((((this.x * this.x) + (this.y * this.y)) + (this.z * this.z)) + (this.w * this.w)).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
   }
   def toString(): java.lang.String = {
     return ((((((("[" + this.x) + "|") + this.y) + "|") + this.z) + "|") + this.w) + "]"
@@ -48,14 +48,14 @@ class Quaternion extends java.io.Serializable {
   }
   def setEulerAnglesRad(yaw: scala.Float, pitch: scala.Float, roll: scala.Float): Quaternion = {
     val hr: scala.Float = roll * 0.5f
-    val shr: scala.Float = java.lang.Math.sin(hr).asInstanceOf[scala.Float]
-    val chr: scala.Float = java.lang.Math.cos(hr).asInstanceOf[scala.Float]
+    val shr: scala.Float = java.lang.Math.sin(hr).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
+    val chr: scala.Float = java.lang.Math.cos(hr).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
     val hp: scala.Float = pitch * 0.5f
-    val shp: scala.Float = java.lang.Math.sin(hp).asInstanceOf[scala.Float]
-    val chp: scala.Float = java.lang.Math.cos(hp).asInstanceOf[scala.Float]
+    val shp: scala.Float = java.lang.Math.sin(hp).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
+    val chp: scala.Float = java.lang.Math.cos(hp).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
     val hy: scala.Float = yaw * 0.5f
-    val shy: scala.Float = java.lang.Math.sin(hy).asInstanceOf[scala.Float]
-    val chy: scala.Float = java.lang.Math.cos(hy).asInstanceOf[scala.Float]
+    val shy: scala.Float = java.lang.Math.sin(hy).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
+    val chy: scala.Float = java.lang.Math.cos(hy).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
     val chy_shp: scala.Float = chy * shp
     val shy_chp: scala.Float = shy * chp
     val chy_chp: scala.Float = chy * chp
@@ -96,7 +96,7 @@ class Quaternion extends java.io.Serializable {
   def nor(): Quaternion = {
     var len: scala.Float = this.len2()
     if ((len != 0.0f) && (!com.badlogic.gdx.math.MathUtils.isEqual(len, 1.0f))) {
-      len = java.lang.Math.sqrt(len).asInstanceOf[scala.Float]
+      len = java.lang.Math.sqrt(len).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
       this.w = this.w / len
       this.x = this.x / len
       this.y = this.y / len
@@ -229,8 +229,8 @@ class Quaternion extends java.io.Serializable {
     } else ()
     d = 1.0f / d
     val l_ang: scala.Float = if (radians < 0) com.badlogic.gdx.math.MathUtils.PI2 - ((-radians) % com.badlogic.gdx.math.MathUtils.PI2) else radians % com.badlogic.gdx.math.MathUtils.PI2
-    val l_sin: scala.Float = java.lang.Math.sin(l_ang / 2).asInstanceOf[scala.Float]
-    val l_cos: scala.Float = java.lang.Math.cos(l_ang / 2).asInstanceOf[scala.Float]
+    val l_sin: scala.Float = java.lang.Math.sin(l_ang / 2).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
+    val l_cos: scala.Float = java.lang.Math.cos(l_ang / 2).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
     return this.set((d * x) * l_sin, (d * y) * l_sin, (d * z) * l_sin, l_cos).nor()
   }
   def setFromMatrix(normalizeAxes: scala.Boolean, matrix: com.badlogic.gdx.math.Matrix4): Quaternion = {
@@ -274,7 +274,7 @@ class Quaternion extends java.io.Serializable {
     } else ()
     val t: scala.Float = (xx + yy) + zz
     if (t >= 0) {
-      var s: scala.Float = java.lang.Math.sqrt(t + 1).asInstanceOf[scala.Float]
+      var s: scala.Float = java.lang.Math.sqrt(t + 1).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
       this.w = 0.5f * s
       s = 0.5f / s
       this.x = (zy - yz) * s
@@ -282,7 +282,7 @@ class Quaternion extends java.io.Serializable {
       this.z = (yx - xy) * s
     } else {
       if ((xx > yy) && (xx > zz)) {
-        var s: scala.Float = java.lang.Math.sqrt(((1.0 + xx) - yy) - zz).asInstanceOf[scala.Float]
+        var s: scala.Float = java.lang.Math.sqrt(((1.0 + xx) - yy) - zz).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
         this.x = s * 0.5f
         s = 0.5f / s
         this.y = (yx + xy) * s
@@ -290,14 +290,14 @@ class Quaternion extends java.io.Serializable {
         this.w = (zy - yz) * s
       } else {
         if (yy > zz) {
-          var s: scala.Float = java.lang.Math.sqrt(((1.0 + yy) - xx) - zz).asInstanceOf[scala.Float]
+          var s: scala.Float = java.lang.Math.sqrt(((1.0 + yy) - xx) - zz).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
           this.y = s * 0.5f
           s = 0.5f / s
           this.x = (yx + xy) * s
           this.z = (zy + yz) * s
           this.w = (xz - zx) * s
         } else {
-          var s: scala.Float = java.lang.Math.sqrt(((1.0 + zz) - xx) - yy).asInstanceOf[scala.Float]
+          var s: scala.Float = java.lang.Math.sqrt(((1.0 + zz) - xx) - yy).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
           this.z = s * 0.5f
           s = 0.5f / s
           this.x = (xz + zx) * s
@@ -310,12 +310,12 @@ class Quaternion extends java.io.Serializable {
   }
   def setFromCross(v1: com.badlogic.gdx.math.Vector3, v2: com.badlogic.gdx.math.Vector3): Quaternion = {
     val dot: scala.Float = com.badlogic.gdx.math.MathUtils.clamp(v1.dot(v2), -1.0f, 1.0f)
-    val angle: scala.Float = java.lang.Math.acos(dot).asInstanceOf[scala.Float]
+    val angle: scala.Float = java.lang.Math.acos(dot).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
     return this.setFromAxisRad((v1.y * v2.z) - (v1.z * v2.y), (v1.z * v2.x) - (v1.x * v2.z), (v1.x * v2.y) - (v1.y * v2.x), angle)
   }
   def setFromCross(x1: scala.Float, y1: scala.Float, z1: scala.Float, x2: scala.Float, y2: scala.Float, z2: scala.Float): Quaternion = {
     val dot: scala.Float = com.badlogic.gdx.math.MathUtils.clamp(com.badlogic.gdx.math.Vector3.dot(x1, y1, z1, x2, y2, z2), -1.0f, 1.0f)
-    val angle: scala.Float = java.lang.Math.acos(dot).asInstanceOf[scala.Float]
+    val angle: scala.Float = java.lang.Math.acos(dot).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
     return this.setFromAxisRad((y1 * z2) - (z1 * y2), (z1 * x2) - (x1 * z2), (x1 * y2) - (y1 * x2), angle)
   }
   def slerp(`end`: Quaternion, alpha: scala.Float): Quaternion = {
@@ -324,7 +324,7 @@ class Quaternion extends java.io.Serializable {
     var scale0: scala.Float = 1.0f - alpha
     var scale1: scala.Float = alpha
     if ((1 - absDot) > 0.1) {
-      val angle: scala.Float = java.lang.Math.acos(absDot).asInstanceOf[scala.Float]
+      val angle: scala.Float = java.lang.Math.acos(absDot).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
       val invSinTheta: scala.Float = 1.0f / java.lang.Math.sin(angle).asInstanceOf[scala.Float]
       scale0 = java.lang.Math.sin((1.0f - alpha) * angle).asInstanceOf[scala.Float] * invSinTheta
       scale1 = java.lang.Math.sin(alpha * angle).asInstanceOf[scala.Float] * invSinTheta
@@ -340,7 +340,7 @@ class Quaternion extends java.io.Serializable {
   }
   def slerp(q: scala.Array[Quaternion]): Quaternion = {
     val w: scala.Float = 1.0f / q.length
-    this.set(q(0)).exp(w)
+    this.set(q(0)).exp(w);
     { var i: scala.Int = 1; while (i < q.length) { {
       this.mul(Quaternion.tmp1.set(q(i)).exp(w))
     }; i = i + 1 } }
@@ -348,7 +348,7 @@ class Quaternion extends java.io.Serializable {
     return this
   }
   def slerp(q: scala.Array[Quaternion], w: scala.Array[scala.Float]): Quaternion = {
-    this.set(q(0)).exp(w(0))
+    this.set(q(0)).exp(w(0));
     { var i: scala.Int = 1; while (i < q.length) { {
       this.mul(Quaternion.tmp1.set(q(i)).exp(w(i)))
     }; i = i + 1 } }
@@ -357,15 +357,15 @@ class Quaternion extends java.io.Serializable {
   }
   def exp(alpha: scala.Float): Quaternion = {
     val norm: scala.Float = this.len()
-    val normExp: scala.Float = java.lang.Math.pow(norm, alpha).asInstanceOf[scala.Float]
-    val theta: scala.Float = java.lang.Math.acos(this.w / norm).asInstanceOf[scala.Float]
+    val normExp: scala.Float = java.lang.Math.pow(norm, alpha).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
+    val theta: scala.Float = java.lang.Math.acos(this.w / norm).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
     var coeff: scala.Float = 0
     if (java.lang.Math.abs(theta) < 0.001) {
       coeff = (normExp * alpha) / norm
     } else {
-      coeff = ((normExp * java.lang.Math.sin(alpha * theta)) / (norm * java.lang.Math.sin(theta))).asInstanceOf[scala.Float]
+      coeff = ((normExp * java.lang.Math.sin(alpha * theta)) / (norm * java.lang.Math.sin(theta))).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
     }
-    this.w = (normExp * java.lang.Math.cos(alpha * theta)).asInstanceOf[scala.Float]
+    this.w = (normExp * java.lang.Math.cos(alpha * theta)).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
     this.x = this.x * coeff
     this.y = this.y * coeff
     this.z = this.z * coeff
@@ -414,21 +414,21 @@ class Quaternion extends java.io.Serializable {
     if (this.w > 1) {
       this.nor()
     } else ()
-    val angle: scala.Float = (2.0 * java.lang.Math.acos(this.w)).asInstanceOf[scala.Float]
+    val angle: scala.Float = (2.0 * java.lang.Math.acos(this.w)).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
     val s: scala.Double = java.lang.Math.sqrt(1 - (this.w * this.w))
     if (s < com.badlogic.gdx.math.MathUtils.FLOAT_ROUNDING_ERROR) {
       axis.x = this.x
       axis.y = this.y
       axis.z = this.z
     } else {
-      axis.x = (this.x / s).asInstanceOf[scala.Float]
-      axis.y = (this.y / s).asInstanceOf[scala.Float]
-      axis.z = (this.z / s).asInstanceOf[scala.Float]
+      axis.x = (this.x / s).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
+      axis.y = (this.y / s).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
+      axis.z = (this.z / s).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
     }
     return angle
   }
   def getAngleRad(): scala.Float = {
-    return (2.0 * java.lang.Math.acos(if (this.w > 1) this.w / this.len() else this.w)).asInstanceOf[scala.Float]
+    return (2.0 * java.lang.Math.acos(if (this.w > 1) this.w / this.len() else this.w)).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
   }
   def getAngle(): scala.Float = {
     return this.getAngleRad() * com.badlogic.gdx.math.MathUtils.radiansToDegrees
@@ -464,7 +464,7 @@ object Quaternion {
   private var tmp1: Quaternion = new Quaternion(0, 0, 0, 0)
   private var tmp2: Quaternion = new Quaternion(0, 0, 0, 0)
   final def len(x: scala.Float, y: scala.Float, z: scala.Float, w: scala.Float): scala.Float = {
-    return java.lang.Math.sqrt((((x * x) + (y * y)) + (z * z)) + (w * w)).asInstanceOf[scala.Float]
+    return java.lang.Math.sqrt((((x * x) + (y * y)) + (z * z)) + (w * w)).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
   }
   final def len2(x: scala.Float, y: scala.Float, z: scala.Float, w: scala.Float): scala.Float = {
     return (((x * x) + (y * y)) + (z * z)) + (w * w)

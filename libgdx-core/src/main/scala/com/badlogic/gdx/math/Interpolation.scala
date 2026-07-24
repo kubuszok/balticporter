@@ -5,6 +5,52 @@ abstract class Interpolation {
   def apply(start: scala.Float, `end`: scala.Float, a: scala.Float): scala.Float = {
     return start + ((`end` - start) * this.apply(a))
   }
+}
+object Interpolation {
+  final val linear: Interpolation = new Interpolation()
+  final val smooth: Interpolation = new Interpolation()
+  final val smooth2: Interpolation = new Interpolation()
+  final val smoother: Interpolation = new Interpolation()
+  final val fade: Interpolation = Interpolation.smoother
+  final val pow2: com.badlogic.gdx.math.Interpolation.Pow = new com.badlogic.gdx.math.Interpolation.Pow(2)
+  final val pow2In: com.badlogic.gdx.math.Interpolation.PowIn = new com.badlogic.gdx.math.Interpolation.PowIn(2)
+  final val slowFast: com.badlogic.gdx.math.Interpolation.PowIn = Interpolation.pow2In
+  final val pow2Out: com.badlogic.gdx.math.Interpolation.PowOut = new com.badlogic.gdx.math.Interpolation.PowOut(2)
+  final val fastSlow: com.badlogic.gdx.math.Interpolation.PowOut = Interpolation.pow2Out
+  final val pow2InInverse: Interpolation = new Interpolation()
+  final val pow2OutInverse: Interpolation = new Interpolation()
+  final val pow3: com.badlogic.gdx.math.Interpolation.Pow = new com.badlogic.gdx.math.Interpolation.Pow(3)
+  final val pow3In: com.badlogic.gdx.math.Interpolation.PowIn = new com.badlogic.gdx.math.Interpolation.PowIn(3)
+  final val pow3Out: com.badlogic.gdx.math.Interpolation.PowOut = new com.badlogic.gdx.math.Interpolation.PowOut(3)
+  final val pow3InInverse: Interpolation = new Interpolation()
+  final val pow3OutInverse: Interpolation = new Interpolation()
+  final val pow4: com.badlogic.gdx.math.Interpolation.Pow = new com.badlogic.gdx.math.Interpolation.Pow(4)
+  final val pow4In: com.badlogic.gdx.math.Interpolation.PowIn = new com.badlogic.gdx.math.Interpolation.PowIn(4)
+  final val pow4Out: com.badlogic.gdx.math.Interpolation.PowOut = new com.badlogic.gdx.math.Interpolation.PowOut(4)
+  final val pow5: com.badlogic.gdx.math.Interpolation.Pow = new com.badlogic.gdx.math.Interpolation.Pow(5)
+  final val pow5In: com.badlogic.gdx.math.Interpolation.PowIn = new com.badlogic.gdx.math.Interpolation.PowIn(5)
+  final val pow5Out: com.badlogic.gdx.math.Interpolation.PowOut = new com.badlogic.gdx.math.Interpolation.PowOut(5)
+  final val sine: Interpolation = new Interpolation()
+  final val sineIn: Interpolation = new Interpolation()
+  final val sineOut: Interpolation = new Interpolation()
+  final val exp10: com.badlogic.gdx.math.Interpolation.Exp = new com.badlogic.gdx.math.Interpolation.Exp(2, 10)
+  final val exp10In: com.badlogic.gdx.math.Interpolation.ExpIn = new com.badlogic.gdx.math.Interpolation.ExpIn(2, 10)
+  final val exp10Out: com.badlogic.gdx.math.Interpolation.ExpOut = new com.badlogic.gdx.math.Interpolation.ExpOut(2, 10)
+  final val exp5: com.badlogic.gdx.math.Interpolation.Exp = new com.badlogic.gdx.math.Interpolation.Exp(2, 5)
+  final val exp5In: com.badlogic.gdx.math.Interpolation.ExpIn = new com.badlogic.gdx.math.Interpolation.ExpIn(2, 5)
+  final val exp5Out: com.badlogic.gdx.math.Interpolation.ExpOut = new com.badlogic.gdx.math.Interpolation.ExpOut(2, 5)
+  final val circle: Interpolation = new Interpolation()
+  final val circleIn: Interpolation = new Interpolation()
+  final val circleOut: Interpolation = new Interpolation()
+  final val elastic: com.badlogic.gdx.math.Interpolation.Elastic = new com.badlogic.gdx.math.Interpolation.Elastic(2, 10, 7, 1)
+  final val elasticIn: com.badlogic.gdx.math.Interpolation.ElasticIn = new com.badlogic.gdx.math.Interpolation.ElasticIn(2, 10, 6, 1)
+  final val elasticOut: com.badlogic.gdx.math.Interpolation.ElasticOut = new com.badlogic.gdx.math.Interpolation.ElasticOut(2, 10, 7, 1)
+  final val swing: com.badlogic.gdx.math.Interpolation.Swing = new com.badlogic.gdx.math.Interpolation.Swing(1.5f)
+  final val swingIn: com.badlogic.gdx.math.Interpolation.SwingIn = new com.badlogic.gdx.math.Interpolation.SwingIn(2.0f)
+  final val swingOut: com.badlogic.gdx.math.Interpolation.SwingOut = new com.badlogic.gdx.math.Interpolation.SwingOut(2.0f)
+  final val bounce: com.badlogic.gdx.math.Interpolation.Bounce = new com.badlogic.gdx.math.Interpolation.Bounce(4)
+  final val bounceIn: com.badlogic.gdx.math.Interpolation.BounceIn = new com.badlogic.gdx.math.Interpolation.BounceIn(4)
+  final val bounceOut: com.badlogic.gdx.math.Interpolation.BounceOut = new com.badlogic.gdx.math.Interpolation.BounceOut(4)
   class Pow extends Interpolation {
     var power: scala.Int = 0
     def this(power: scala.Int) = {
@@ -18,15 +64,15 @@ abstract class Interpolation {
       return (java.lang.Math.pow((a - 1) * 2, this.power).asInstanceOf[scala.Float] / (if ((this.power % 2) == 0) -2 else 2)) + 1
     }
   }
-  class PowIn extends Pow {
+  class PowIn extends com.badlogic.gdx.math.Interpolation.Pow {
     def this(power: scala.Int) = {
       this()
     }
     def apply(a: scala.Float): scala.Float = {
-      return java.lang.Math.pow(a, power).asInstanceOf[scala.Float]
+      return java.lang.Math.pow(a, power).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
     }
   }
-  class PowOut extends Pow {
+  class PowOut extends com.badlogic.gdx.math.Interpolation.Pow {
     def this(power: scala.Int) = {
       this()
     }
@@ -43,7 +89,7 @@ abstract class Interpolation {
       this()
       this.value = value
       this.power = power
-      this.min = java.lang.Math.pow(value, -power).asInstanceOf[scala.Float]
+      this.min = java.lang.Math.pow(value, -power).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
       this.scale = 1 / (1 - this.min)
     }
     def apply(a: scala.Float): scala.Float = {
@@ -53,7 +99,7 @@ abstract class Interpolation {
       return (2 - ((java.lang.Math.pow(this.value, (-this.power) * ((a * 2) - 1)).asInstanceOf[scala.Float] - this.min) * this.scale)) / 2
     }
   }
-  class ExpIn extends Exp {
+  class ExpIn extends com.badlogic.gdx.math.Interpolation.Exp {
     def this(value: scala.Float, power: scala.Float) = {
       this()
     }
@@ -61,7 +107,7 @@ abstract class Interpolation {
       return (java.lang.Math.pow(value, power * (a - 1)).asInstanceOf[scala.Float] - min) * scale
     }
   }
-  class ExpOut extends Exp {
+  class ExpOut extends com.badlogic.gdx.math.Interpolation.Exp {
     def this(value: scala.Float, power: scala.Float) = {
       this()
     }
@@ -92,7 +138,7 @@ abstract class Interpolation {
       return 1 - (((java.lang.Math.pow(this.value, this.power * (a - 1)).asInstanceOf[scala.Float] * com.badlogic.gdx.math.MathUtils.sin(a * this.bounces)) * this.scale) / 2)
     }
   }
-  class ElasticIn extends Elastic {
+  class ElasticIn extends com.badlogic.gdx.math.Interpolation.Elastic {
     def this(value: scala.Float, power: scala.Float, bounces: scala.Int, scale: scala.Float) = {
       this()
     }
@@ -103,7 +149,7 @@ abstract class Interpolation {
       return (java.lang.Math.pow(value, power * (a - 1)).asInstanceOf[scala.Float] * com.badlogic.gdx.math.MathUtils.sin(a * bounces)) * scale
     }
   }
-  class ElasticOut extends Elastic {
+  class ElasticOut extends com.badlogic.gdx.math.Interpolation.Elastic {
     def this(value: scala.Float, power: scala.Float, bounces: scala.Int, scale: scala.Float) = {
       this()
     }
@@ -116,7 +162,7 @@ abstract class Interpolation {
       return 1 - ((java.lang.Math.pow(value, power * (a - 1)).asInstanceOf[scala.Float] * com.badlogic.gdx.math.MathUtils.sin(a * bounces)) * scale)
     }
   }
-  class Bounce extends BounceOut {
+  class Bounce extends com.badlogic.gdx.math.Interpolation.BounceOut {
     def this(widths: scala.Array[scala.Float], heights: scala.Array[scala.Float]) = {
       this()
     }
@@ -199,7 +245,7 @@ abstract class Interpolation {
       } else ()
       a = a + (this.widths(0) / 2)
       var width: scala.Float = 0
-      var height: scala.Float = 0
+      var height: scala.Float = 0;
       { var i: scala.Int = 0; val n: scala.Int = this.widths.length; while (i < n) { {
         width = this.widths(i)
         if (a <= width) {
@@ -213,7 +259,7 @@ abstract class Interpolation {
       return 1 - ((z - (z * a)) * width)
     }
   }
-  class BounceIn extends BounceOut {
+  class BounceIn extends com.badlogic.gdx.math.Interpolation.BounceOut {
     def this(widths: scala.Array[scala.Float], heights: scala.Array[scala.Float]) = {
       this()
     }
@@ -263,50 +309,4 @@ abstract class Interpolation {
       return (a * a) * (((this.scale + 1) * a) - this.scale)
     }
   }
-}
-object Interpolation {
-  final val linear: Interpolation = new Interpolation()
-  final val smooth: Interpolation = new Interpolation()
-  final val smooth2: Interpolation = new Interpolation()
-  final val smoother: Interpolation = new Interpolation()
-  final val fade: Interpolation = Interpolation.smoother
-  final val pow2: Pow = new Pow(2)
-  final val pow2In: PowIn = new PowIn(2)
-  final val slowFast: PowIn = Interpolation.pow2In
-  final val pow2Out: PowOut = new PowOut(2)
-  final val fastSlow: PowOut = Interpolation.pow2Out
-  final val pow2InInverse: Interpolation = new Interpolation()
-  final val pow2OutInverse: Interpolation = new Interpolation()
-  final val pow3: Pow = new Pow(3)
-  final val pow3In: PowIn = new PowIn(3)
-  final val pow3Out: PowOut = new PowOut(3)
-  final val pow3InInverse: Interpolation = new Interpolation()
-  final val pow3OutInverse: Interpolation = new Interpolation()
-  final val pow4: Pow = new Pow(4)
-  final val pow4In: PowIn = new PowIn(4)
-  final val pow4Out: PowOut = new PowOut(4)
-  final val pow5: Pow = new Pow(5)
-  final val pow5In: PowIn = new PowIn(5)
-  final val pow5Out: PowOut = new PowOut(5)
-  final val sine: Interpolation = new Interpolation()
-  final val sineIn: Interpolation = new Interpolation()
-  final val sineOut: Interpolation = new Interpolation()
-  final val exp10: Exp = new Exp(2, 10)
-  final val exp10In: ExpIn = new ExpIn(2, 10)
-  final val exp10Out: ExpOut = new ExpOut(2, 10)
-  final val exp5: Exp = new Exp(2, 5)
-  final val exp5In: ExpIn = new ExpIn(2, 5)
-  final val exp5Out: ExpOut = new ExpOut(2, 5)
-  final val circle: Interpolation = new Interpolation()
-  final val circleIn: Interpolation = new Interpolation()
-  final val circleOut: Interpolation = new Interpolation()
-  final val elastic: Elastic = new Elastic(2, 10, 7, 1)
-  final val elasticIn: ElasticIn = new ElasticIn(2, 10, 6, 1)
-  final val elasticOut: ElasticOut = new ElasticOut(2, 10, 7, 1)
-  final val swing: Swing = new Swing(1.5f)
-  final val swingIn: SwingIn = new SwingIn(2.0f)
-  final val swingOut: SwingOut = new SwingOut(2.0f)
-  final val bounce: Bounce = new Bounce(4)
-  final val bounceIn: BounceIn = new BounceIn(4)
-  final val bounceOut: BounceOut = new BounceOut(4)
 }

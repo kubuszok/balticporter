@@ -40,7 +40,7 @@ class BlendingAttribute extends com.badlogic.gdx.graphics.g3d.Attribute {
   }
   def compareTo(o: com.badlogic.gdx.graphics.g3d.Attribute): scala.Int = {
     if (`type` != o.`type`) {
-      return (`type` - o.`type`).asInstanceOf[scala.Int]
+      return (`type` - o.`type`).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
     } else ()
     val other: BlendingAttribute = o.asInstanceOf[BlendingAttribute]
     if (this.blended != other.blended) {

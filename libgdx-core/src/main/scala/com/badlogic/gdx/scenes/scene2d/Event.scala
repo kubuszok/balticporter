@@ -1,6 +1,6 @@
 package com.badlogic.gdx.scenes.scene2d
 
-class Event extends com.badlogic.gdx.utils.Pool#Poolable {
+class Event extends com.badlogic.gdx.utils.Pool.Poolable {
   private var stage: com.badlogic.gdx.scenes.scene2d.Stage = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.Stage]
   private var targetActor: com.badlogic.gdx.scenes.scene2d.Actor = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.Actor]
   private var listenerActor: com.badlogic.gdx.scenes.scene2d.Actor = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.Actor]

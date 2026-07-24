@@ -12,7 +12,7 @@ class TextureArray extends com.badlogic.gdx.graphics.GLTexture {
       TextureArray.addManagedTexture(com.badlogic.gdx.Gdx.app, this)
     } else ()
   }
-  def this(useMipMaps: scala.Boolean, format: com.badlogic.gdx.graphics.Pixmap#Format, files: scala.Array[com.badlogic.gdx.files.FileHandle]) = {
+  def this(useMipMaps: scala.Boolean, format: com.badlogic.gdx.graphics.Pixmap.Format, files: scala.Array[com.badlogic.gdx.files.FileHandle]) = {
     this(com.badlogic.gdx.graphics.TextureArrayData.Factory.loadFromFiles(format, useMipMaps, files))
   }
   def this(useMipMaps: scala.Boolean, files: scala.Array[com.badlogic.gdx.files.FileHandle]) = {
@@ -51,7 +51,7 @@ class TextureArray extends com.badlogic.gdx.graphics.GLTexture {
   def isManaged(): scala.Boolean = {
     return this.data.isManaged()
   }
-  protected def reload(): scala.Unit = {
+  def reload(): scala.Unit = {
     if (!this.isManaged()) {
       throw new com.badlogic.gdx.utils.GdxRuntimeException("Tried to reload an unmanaged TextureArray")
     } else ()
@@ -62,7 +62,7 @@ class TextureArray extends com.badlogic.gdx.graphics.GLTexture {
 object TextureArray {
   final val managedTextureArrays: scala.collection.mutable.Map[com.badlogic.gdx.Application, com.badlogic.gdx.utils.Array[TextureArray]] = new scala.collection.mutable.HashMap[com.badlogic.gdx.Application, com.badlogic.gdx.utils.Array[TextureArray]]()
   private def getInternalHandles(internalPaths: scala.Array[java.lang.String]): scala.Array[com.badlogic.gdx.files.FileHandle] = {
-    val handles: scala.Array[com.badlogic.gdx.files.FileHandle] = new Array[com.badlogic.gdx.files.FileHandle](internalPaths.length)
+    val handles: scala.Array[com.badlogic.gdx.files.FileHandle] = new Array[com.badlogic.gdx.files.FileHandle](internalPaths.length);
     { var i: scala.Int = 0; while (i < internalPaths.length) { {
       handles(i) = com.badlogic.gdx.Gdx.files.internal(internalPaths(i))
     }; i = i + 1 } }
@@ -83,7 +83,7 @@ object TextureArray {
     val managedTextureArray: com.badlogic.gdx.utils.Array[TextureArray] = TextureArray.managedTextureArrays.getOrElse(app, null.asInstanceOf[com.badlogic.gdx.utils.Array[TextureArray]])
     if (managedTextureArray == null) {
       return
-    } else ()
+    } else ();
     { var i: scala.Int = 0; while (i < managedTextureArray.size) { {
       val textureArray: TextureArray = managedTextureArray.get(i)
       textureArray.reload()

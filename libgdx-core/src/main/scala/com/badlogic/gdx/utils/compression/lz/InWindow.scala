@@ -17,7 +17,7 @@ class InWindow {
     if (offset > 0) {
       offset = offset - 1
     } else ()
-    val numBytes: scala.Int = (this._bufferOffset + this._streamPos) - offset
+    val numBytes: scala.Int = (this._bufferOffset + this._streamPos) - offset;
     { var i: scala.Int = 0; while (i < numBytes) { {
       this._bufferBase(i) = this._bufferBase(offset + i)
     }; i = i + 1 } }
@@ -98,7 +98,7 @@ class InWindow {
     } else ()
     distance = distance + 1
     val pby: scala.Int = (this._bufferOffset + this._pos) + index
-    var i: scala.Int = 0
+    var i: scala.Int = 0;
     { i = 0; while ((i < limit) && (this._bufferBase(pby + i) == this._bufferBase((pby + i) - distance))) { {
       ()
     }; i = i + 1 } }

@@ -6,10 +6,10 @@ class IntSet {
   var hasZeroValue: scala.Boolean = false
   private var loadFactor: scala.Float = 0.0f
   private var threshold: scala.Int = 0
-  protected var shift: scala.Int = 0
-  protected var mask: scala.Int = 0
-  private var iterator1: IntSetIterator = null.asInstanceOf[IntSetIterator]
-  private var iterator2: IntSetIterator = null.asInstanceOf[IntSetIterator]
+  var shift: scala.Int = 0
+  var mask: scala.Int = 0
+  private var iterator1: com.badlogic.gdx.utils.IntSet.IntSetIterator = null.asInstanceOf[com.badlogic.gdx.utils.IntSet.IntSetIterator]
+  private var iterator2: com.badlogic.gdx.utils.IntSet.IntSetIterator = null.asInstanceOf[com.badlogic.gdx.utils.IntSet.IntSetIterator]
   def this(initialCapacity: scala.Int, loadFactor: scala.Float) = {
     this()
     if ((loadFactor <= 0.0f) || (loadFactor >= 1.0f)) {
@@ -17,7 +17,7 @@ class IntSet {
     } else ()
     this.loadFactor = loadFactor
     val tableSize: scala.Int = com.badlogic.gdx.utils.ObjectSet.tableSize(initialCapacity, loadFactor)
-    this.threshold = (tableSize * loadFactor).asInstanceOf[scala.Int]
+    this.threshold = (tableSize * loadFactor).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
     this.mask = tableSize - 1
     this.shift = java.lang.Long.numberOfLeadingZeros(this.mask)
     this.keyTable = new Array[scala.Int](tableSize)
@@ -31,11 +31,11 @@ class IntSet {
     this.size = set.size
     this.hasZeroValue = set.hasZeroValue
   }
-  protected def place(item: scala.Int): scala.Int = {
-    return ((item * -7046029254386353131L) >>> this.shift).asInstanceOf[scala.Int]
+  def place(item: scala.Int): scala.Int = {
+    return ((item * -7046029254386353131L) >>> this.shift).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
   }
   private def locateKey(key: scala.Int): scala.Int = {
-    val keyTable: scala.Array[scala.Int] = this.keyTable
+    val keyTable: scala.Array[scala.Int] = this.keyTable;
     { var i: scala.Int = this.place(key); while (true) { {
       val other: scala.Int = keyTable(i)
       if (other == 0) {
@@ -79,7 +79,7 @@ class IntSet {
     this.addAll(array, 0, array.length)
   }
   def addAll(array: scala.Array[scala.Int], offset: scala.Int, length: scala.Int): scala.Unit = {
-    this.ensureCapacity(length)
+    this.ensureCapacity(length);
     { var i: scala.Int = offset; val n: scala.Int = i + length; while (i < n) { {
       this.add(array(i))
     }; i = i + 1 } }
@@ -89,7 +89,7 @@ class IntSet {
     if (set.hasZeroValue) {
       this.add(0)
     } else ()
-    val keyTable: scala.Array[scala.Int] = set.keyTable
+    val keyTable: scala.Array[scala.Int] = set.keyTable;
     { var i: scala.Int = 0; val n: scala.Int = keyTable.length; while (i < n) { {
       val key: scala.Int = keyTable(i)
       if (key != 0) {
@@ -98,7 +98,7 @@ class IntSet {
     }; i = i + 1 } }
   }
   private def addResize(key: scala.Int): scala.Unit = {
-    val keyTable: scala.Array[scala.Int] = this.keyTable
+    val keyTable: scala.Array[scala.Int] = this.keyTable;
     { var i: scala.Int = this.place(key); while (true) { {
       if (keyTable(i) == 0) {
         keyTable(i) = key
@@ -181,7 +181,7 @@ class IntSet {
     if (this.hasZeroValue) {
       return 0
     } else ()
-    val keyTable: scala.Array[scala.Int] = this.keyTable
+    val keyTable: scala.Array[scala.Int] = this.keyTable;
     { var i: scala.Int = 0; val n: scala.Int = keyTable.length; while (i < n) { {
       if (keyTable(i) != 0) {
         return keyTable(i)
@@ -197,7 +197,7 @@ class IntSet {
   }
   private def resize(newSize: scala.Int): scala.Unit = {
     val oldCapacity: scala.Int = this.keyTable.length
-    this.threshold = (newSize * this.loadFactor).asInstanceOf[scala.Int]
+    this.threshold = (newSize * this.loadFactor).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
     this.mask = newSize - 1
     this.shift = java.lang.Long.numberOfLeadingZeros(this.mask)
     val oldKeyTable: scala.Array[scala.Int] = this.keyTable
@@ -213,7 +213,7 @@ class IntSet {
   }
   def hashCode(): scala.Int = {
     var h: scala.Int = this.size
-    val keyTable: scala.Array[scala.Int] = this.keyTable
+    val keyTable: scala.Array[scala.Int] = this.keyTable;
     { var i: scala.Int = 0; val n: scala.Int = keyTable.length; while (i < n) { {
       val key: scala.Int = keyTable(i)
       if (key != 0) {
@@ -233,7 +233,7 @@ class IntSet {
     if (other.hasZeroValue != this.hasZeroValue) {
       return false
     } else ()
-    val keyTable: scala.Array[scala.Int] = this.keyTable
+    val keyTable: scala.Array[scala.Int] = this.keyTable;
     { var i: scala.Int = 0; val n: scala.Int = keyTable.length; while (i < n) { {
       if ((keyTable(i) != 0) && (!other.contains(keyTable(i)))) {
         return false
@@ -272,13 +272,13 @@ class IntSet {
     buffer.append(']')
     return buffer.toString()
   }
-  def iterator(): IntSetIterator = {
+  def iterator(): com.badlogic.gdx.utils.IntSet.IntSetIterator = {
     if (com.badlogic.gdx.utils.Collections.allocateIterators) {
-      return new IntSetIterator(this)
+      return new com.badlogic.gdx.utils.IntSet.IntSetIterator(this)
     } else ()
     if (this.iterator1 == null) {
-      this.iterator1 = new IntSetIterator(this)
-      this.iterator2 = new IntSetIterator(this)
+      this.iterator1 = new com.badlogic.gdx.utils.IntSet.IntSetIterator(this)
+      this.iterator2 = new com.badlogic.gdx.utils.IntSet.IntSetIterator(this)
     } else ()
     if (!this.iterator1.valid) {
       this.iterator1.reset()
@@ -290,6 +290,13 @@ class IntSet {
     this.iterator2.valid = true
     this.iterator1.valid = false
     return this.iterator2
+  }
+}
+object IntSet {
+  def `with`(array: scala.Array[scala.Int]): IntSet = {
+    val set: IntSet = new IntSet()
+    set.addAll(array)
+    return set
   }
   class IntSetIterator {
     var hasNext: scala.Boolean = false
@@ -303,8 +310,8 @@ class IntSet {
       this.reset()
     }
     def reset(): scala.Unit = {
-      this.currentIndex = IntSetIterator.INDEX_ILLEGAL
-      this.nextIndex = IntSetIterator.INDEX_ZERO
+      this.currentIndex = com.badlogic.gdx.utils.IntSet.IntSetIterator.INDEX_ILLEGAL
+      this.nextIndex = com.badlogic.gdx.utils.IntSet.IntSetIterator.INDEX_ZERO
       if (this.set.hasZeroValue) {
         this.hasNext = true
       } else {
@@ -312,7 +319,7 @@ class IntSet {
       }
     }
     def findNextIndex(): scala.Unit = {
-      val keyTable: scala.Array[scala.Int] = this.set.keyTable
+      val keyTable: scala.Array[scala.Int] = this.set.keyTable;
       { val n: scala.Int = keyTable.length; while ({ this.nextIndex += 1; this.nextIndex } < n) { {
         if (keyTable(this.nextIndex) != 0) {
           this.hasNext = true
@@ -323,7 +330,7 @@ class IntSet {
     }
     def remove(): scala.Unit = {
       var i: scala.Int = this.currentIndex
-      if ((i == IntSetIterator.INDEX_ZERO) && this.set.hasZeroValue) {
+      if ((i == com.badlogic.gdx.utils.IntSet.IntSetIterator.INDEX_ZERO) && this.set.hasZeroValue) {
         this.set.hasZeroValue = false
       } else {
         if (i < 0) {
@@ -350,7 +357,7 @@ class IntSet {
           } else ()
         }
       }
-      this.currentIndex = IntSetIterator.INDEX_ILLEGAL
+      this.currentIndex = com.badlogic.gdx.utils.IntSet.IntSetIterator.INDEX_ILLEGAL
       this.set.size = this.set.size - 1
     }
     def next(): scala.Int = {
@@ -360,7 +367,7 @@ class IntSet {
       if (!this.valid) {
         throw new com.badlogic.gdx.utils.GdxRuntimeException("#iterator() cannot be used nested.")
       } else ()
-      val key: scala.Int = if (this.nextIndex == IntSetIterator.INDEX_ZERO) 0 else this.set.keyTable(this.nextIndex)
+      val key: scala.Int = if (this.nextIndex == com.badlogic.gdx.utils.IntSet.IntSetIterator.INDEX_ZERO) 0 else this.set.keyTable(this.nextIndex)
       this.currentIndex = this.nextIndex
       this.findNextIndex()
       return key
@@ -376,12 +383,5 @@ class IntSet {
   object IntSetIterator {
     private final val INDEX_ILLEGAL: scala.Int = -2
     private final val INDEX_ZERO: scala.Int = -1
-  }
-}
-object IntSet {
-  def `with`(array: scala.Array[scala.Int]): IntSet = {
-    val set: IntSet = new IntSet()
-    set.addAll(array)
-    return set
   }
 }

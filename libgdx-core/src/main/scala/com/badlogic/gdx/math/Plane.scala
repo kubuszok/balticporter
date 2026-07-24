@@ -28,27 +28,27 @@ class Plane extends java.io.Serializable {
   def distance(point: com.badlogic.gdx.math.Vector3): scala.Float = {
     return this.normal.dot(point) + this.d
   }
-  def testPoint(point: com.badlogic.gdx.math.Vector3): PlaneSide = {
+  def testPoint(point: com.badlogic.gdx.math.Vector3): com.badlogic.gdx.math.Plane.PlaneSide = {
     val dist: scala.Float = this.normal.dot(point) + this.d
     if (dist == 0) {
-      return PlaneSide.OnPlane
+      return com.badlogic.gdx.math.Plane.PlaneSide.OnPlane
     } else {
       if (dist < 0) {
-        return PlaneSide.Back
+        return com.badlogic.gdx.math.Plane.PlaneSide.Back
       } else {
-        return PlaneSide.Front
+        return com.badlogic.gdx.math.Plane.PlaneSide.Front
       }
     }
   }
-  def testPoint(x: scala.Float, y: scala.Float, z: scala.Float): PlaneSide = {
+  def testPoint(x: scala.Float, y: scala.Float, z: scala.Float): com.badlogic.gdx.math.Plane.PlaneSide = {
     val dist: scala.Float = this.normal.dot(x, y, z) + this.d
     if (dist == 0) {
-      return PlaneSide.OnPlane
+      return com.badlogic.gdx.math.Plane.PlaneSide.OnPlane
     } else {
       if (dist < 0) {
-        return PlaneSide.Back
+        return com.badlogic.gdx.math.Plane.PlaneSide.Back
       } else {
-        return PlaneSide.Front
+        return com.badlogic.gdx.math.Plane.PlaneSide.Front
       }
     }
   }
@@ -77,6 +77,9 @@ class Plane extends java.io.Serializable {
   def toString(): java.lang.String = {
     return (this.normal.toString() + ", ") + this.d
   }
+}
+object Plane {
+  private final val serialVersionUID: scala.Long = -1240652082930747866L
   sealed abstract class PlaneSide
   object PlaneSide {
     case object OnPlane extends PlaneSide
@@ -84,7 +87,4 @@ class Plane extends java.io.Serializable {
     case object Front extends PlaneSide
     def values(): Array[PlaneSide] = Array(OnPlane, Back, Front)
   }
-}
-object Plane {
-  private final val serialVersionUID: scala.Long = -1240652082930747866L
 }

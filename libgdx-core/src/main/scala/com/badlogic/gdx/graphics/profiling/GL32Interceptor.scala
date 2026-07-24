@@ -26,7 +26,7 @@ class GL32Interceptor extends com.badlogic.gdx.graphics.profiling.GL31Intercepto
     this.gl32.glDebugMessageInsert(source, `type`, id, severity, buf)
     this.check()
   }
-  def glDebugMessageCallback(callsback: com.badlogic.gdx.graphics.GL32#DebugProc): scala.Unit = {
+  def glDebugMessageCallback(callsback: com.badlogic.gdx.graphics.GL32.DebugProc): scala.Unit = {
     calls = calls + 1
     this.gl32.glDebugMessageCallback(callsback)
     this.check()

@@ -49,7 +49,7 @@ class Polyline extends com.badlogic.gdx.math.Shape2D {
     val scale: scala.Boolean = (scaleX != 1) || (scaleY != 1)
     val rotation: scala.Float = this.rotation
     val cos: scala.Float = com.badlogic.gdx.math.MathUtils.cosDeg(rotation)
-    val sin: scala.Float = com.badlogic.gdx.math.MathUtils.sinDeg(rotation)
+    val sin: scala.Float = com.badlogic.gdx.math.MathUtils.sinDeg(rotation);
     { var i: scala.Int = 0; val n: scala.Int = localVertices.length; while (i < n) { {
       var x: scala.Float = localVertices(i) - originX
       var y: scala.Float = localVertices(i + 1) - originY
@@ -72,7 +72,7 @@ class Polyline extends com.badlogic.gdx.math.Shape2D {
       return this.length
     } else ()
     this.calculateLength$field = false
-    this.length = 0
+    this.length = 0;
     { var i: scala.Int = 0; val n: scala.Int = this.localVertices.length - 2; while (i < n) { {
       val x: scala.Float = this.localVertices(i + 2) - this.localVertices(i)
       val y: scala.Float = this.localVertices(i + 1) - this.localVertices(i + 3)
@@ -85,7 +85,7 @@ class Polyline extends com.badlogic.gdx.math.Shape2D {
       return this.scaledLength
     } else ()
     this.calculateScaledLength$field = false
-    this.scaledLength = 0
+    this.scaledLength = 0;
     { var i: scala.Int = 0; val n: scala.Int = this.localVertices.length - 2; while (i < n) { {
       val x: scala.Float = (this.localVertices(i + 2) * this.scaleX) - (this.localVertices(i) * this.scaleX)
       val y: scala.Float = (this.localVertices(i + 1) * this.scaleY) - (this.localVertices(i + 3) * this.scaleY)
@@ -171,7 +171,7 @@ class Polyline extends com.badlogic.gdx.math.Shape2D {
     var minY: scala.Float = vertices(1)
     var maxX: scala.Float = vertices(0)
     var maxY: scala.Float = vertices(1)
-    val numFloats: scala.Int = vertices.length
+    val numFloats: scala.Int = vertices.length;
     { var i: scala.Int = 2; while (i < numFloats) { {
       minX = if (minX > vertices(i)) vertices(i) else minX
       minY = if (minY > vertices(i + 1)) vertices(i + 1) else minY

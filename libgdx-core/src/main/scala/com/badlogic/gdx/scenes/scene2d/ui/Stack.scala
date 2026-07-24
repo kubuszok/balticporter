@@ -33,7 +33,7 @@ class Stack extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup {
     this.minHeight = 0
     this.maxWidth = 0
     this.maxHeight = 0
-    val children: com.badlogic.gdx.utils.SnapshotArray[com.badlogic.gdx.scenes.scene2d.Actor] = this.getChildren()
+    val children: com.badlogic.gdx.utils.SnapshotArray[com.badlogic.gdx.scenes.scene2d.Actor] = this.getChildren();
     { var i: scala.Int = 0; val n: scala.Int = children.size; while (i < n) { {
       val child: com.badlogic.gdx.scenes.scene2d.Actor = children.get(i)
       var childMaxWidth: scala.Float = 0.0f
@@ -71,7 +71,7 @@ class Stack extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup {
     } else ()
     val width: scala.Float = this.getWidth()
     val height: scala.Float = this.getHeight()
-    val children: com.badlogic.gdx.utils.Array[com.badlogic.gdx.scenes.scene2d.Actor] = this.getChildren()
+    val children: com.badlogic.gdx.utils.Array[com.badlogic.gdx.scenes.scene2d.Actor] = this.getChildren();
     { var i: scala.Int = 0; val n: scala.Int = children.size; while (i < n) { {
       val child: com.badlogic.gdx.scenes.scene2d.Actor = children.get(i)
       child.setBounds(0, 0, width, height)

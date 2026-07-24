@@ -1,15 +1,15 @@
 package com.badlogic.gdx.maps.tiled
 
-abstract class BaseTmjMapLoader[P <: com.badlogic.gdx.maps.tiled.BaseTiledMapLoader#Parameters] extends com.badlogic.gdx.maps.tiled.BaseTiledMapLoader[P] {
-  protected var json: com.badlogic.gdx.utils.JsonReader = new com.badlogic.gdx.utils.JsonReader()
-  protected var root: com.badlogic.gdx.utils.JsonValue = null.asInstanceOf[com.badlogic.gdx.utils.JsonValue]
-  protected var templateCache: com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.utils.JsonValue] = null.asInstanceOf[com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.utils.JsonValue]]
+abstract class BaseTmjMapLoader[P <: com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.Parameters] extends com.badlogic.gdx.maps.tiled.BaseTiledMapLoader[P] {
+  var json: com.badlogic.gdx.utils.JsonReader = new com.badlogic.gdx.utils.JsonReader()
+  var root: com.badlogic.gdx.utils.JsonValue = null.asInstanceOf[com.badlogic.gdx.utils.JsonValue]
+  var templateCache: com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.utils.JsonValue] = null.asInstanceOf[com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.utils.JsonValue]]
   def this(resolver: com.badlogic.gdx.assets.loaders.FileHandleResolver) = {
     this()
   }
-  def getDependencies(fileName: java.lang.String, tmjFile: com.badlogic.gdx.files.FileHandle, parameter: P): com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor] = {
+  def getDependencies(fileName: java.lang.String, tmjFile: com.badlogic.gdx.files.FileHandle, parameter: P): com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = {
     this.root = this.json.parse(tmjFile)
-    val textureParameter: com.badlogic.gdx.assets.loaders.TextureLoader#TextureParameter = new com.badlogic.gdx.assets.loaders.TextureLoader#TextureParameter()
+    val textureParameter: com.badlogic.gdx.assets.loaders.TextureLoader.TextureParameter = new com.badlogic.gdx.assets.loaders.TextureLoader.TextureParameter()
     if (parameter != null) {
       textureParameter.genMipMaps = parameter.generateMipMaps
       textureParameter.minFilter = parameter.textureMinFilter
@@ -17,7 +17,7 @@ abstract class BaseTmjMapLoader[P <: com.badlogic.gdx.maps.tiled.BaseTiledMapLoa
     } else ()
     return this.getDependencyAssetDescriptors(tmjFile, textureParameter)
   }
-  protected def loadTiledMap(tmjFile: com.badlogic.gdx.files.FileHandle, parameter: P, imageResolver: com.badlogic.gdx.maps.ImageResolver): com.badlogic.gdx.maps.tiled.TiledMap = {
+  def loadTiledMap(tmjFile: com.badlogic.gdx.files.FileHandle, parameter: P, imageResolver: com.badlogic.gdx.maps.ImageResolver): com.badlogic.gdx.maps.tiled.TiledMap = {
     this.map = new com.badlogic.gdx.maps.tiled.TiledMap()
     this.idToObject = new com.badlogic.gdx.utils.IntMap[com.badlogic.gdx.maps.MapObject]()
     this.runOnEndOfLoadTiled = new com.badlogic.gdx.utils.Array[java.lang.Runnable]()
@@ -81,7 +81,7 @@ abstract class BaseTmjMapLoader[P <: com.badlogic.gdx.maps.tiled.BaseTiledMapLoa
     for (element <- layers) {
       this.loadLayer(map, map.getLayers(), element, tmjFile, imageResolver)
     }
-    val groups: com.badlogic.gdx.utils.Array[com.badlogic.gdx.maps.MapGroupLayer] = map.getLayers().getByType(classOf[java.lang.Class])
+    val groups: com.badlogic.gdx.utils.Array[com.badlogic.gdx.maps.MapGroupLayer] = map.getLayers().getByType(classOf[com.badlogic.gdx.maps.MapGroupLayer])
     while (groups.notEmpty()) {
       val group: com.badlogic.gdx.maps.MapGroupLayer = groups.first()
       groups.removeIndex(0)
@@ -99,7 +99,7 @@ abstract class BaseTmjMapLoader[P <: com.badlogic.gdx.maps.tiled.BaseTiledMapLoa
     runOnEndOfLoadTiled = null
     return map
   }
-  protected def loadLayer(map: com.badlogic.gdx.maps.tiled.TiledMap, parentLayers: com.badlogic.gdx.maps.MapLayers, element: com.badlogic.gdx.utils.JsonValue, tmjFile: com.badlogic.gdx.files.FileHandle, imageResolver: com.badlogic.gdx.maps.ImageResolver): scala.Unit = {
+  def loadLayer(map: com.badlogic.gdx.maps.tiled.TiledMap, parentLayers: com.badlogic.gdx.maps.MapLayers, element: com.badlogic.gdx.utils.JsonValue, tmjFile: com.badlogic.gdx.files.FileHandle, imageResolver: com.badlogic.gdx.maps.ImageResolver): scala.Unit = {
     val `type`: java.lang.String = element.getString("type", "")
     `type` match {
       case "group" => {
@@ -116,7 +116,7 @@ abstract class BaseTmjMapLoader[P <: com.badlogic.gdx.maps.tiled.BaseTiledMapLoa
       }
     }
   }
-  protected def loadLayerGroup(map: com.badlogic.gdx.maps.tiled.TiledMap, parentLayers: com.badlogic.gdx.maps.MapLayers, element: com.badlogic.gdx.utils.JsonValue, tmjFile: com.badlogic.gdx.files.FileHandle, imageResolver: com.badlogic.gdx.maps.ImageResolver): scala.Unit = {
+  def loadLayerGroup(map: com.badlogic.gdx.maps.tiled.TiledMap, parentLayers: com.badlogic.gdx.maps.MapLayers, element: com.badlogic.gdx.utils.JsonValue, tmjFile: com.badlogic.gdx.files.FileHandle, imageResolver: com.badlogic.gdx.maps.ImageResolver): scala.Unit = {
     if (element.getString("type", "").equals("group")) {
       val groupLayer: com.badlogic.gdx.maps.MapGroupLayer = new com.badlogic.gdx.maps.MapGroupLayer()
       this.loadBasicLayerInfo(groupLayer, element)
@@ -136,16 +136,16 @@ abstract class BaseTmjMapLoader[P <: com.badlogic.gdx.maps.tiled.BaseTiledMapLoa
       parentLayers.add(groupLayer)
     } else ()
   }
-  protected def loadTileLayer(map: com.badlogic.gdx.maps.tiled.TiledMap, parentLayers: com.badlogic.gdx.maps.MapLayers, element: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
+  def loadTileLayer(map: com.badlogic.gdx.maps.tiled.TiledMap, parentLayers: com.badlogic.gdx.maps.MapLayers, element: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
     if (element.getString("type", "").equals("tilelayer")) {
       val width: scala.Int = element.getInt("width", 0)
       val height: scala.Int = element.getInt("height", 0)
-      val tileWidth: scala.Int = map.getProperties().get("tilewidth", classOf[java.lang.Class])
-      val tileHeight: scala.Int = map.getProperties().get("tileheight", classOf[java.lang.Class])
+      val tileWidth: scala.Int = map.getProperties().get("tilewidth", classOf[java.lang.Integer])
+      val tileHeight: scala.Int = map.getProperties().get("tileheight", classOf[java.lang.Integer])
       val layer: com.badlogic.gdx.maps.tiled.TiledMapTileLayer = new com.badlogic.gdx.maps.tiled.TiledMapTileLayer(width, height, tileWidth, tileHeight)
       this.loadBasicLayerInfo(layer, element)
       val ids: scala.Array[scala.Int] = BaseTmjMapLoader.getTileIds(element, width, height)
-      val tileSets: com.badlogic.gdx.maps.tiled.TiledMapTileSets = map.getTileSets()
+      val tileSets: com.badlogic.gdx.maps.tiled.TiledMapTileSets = map.getTileSets();
       { var y: scala.Int = 0; while (y < height) { {
         { var x: scala.Int = 0; while (x < width) { {
           val id: scala.Int = ids((y * width) + x)
@@ -154,7 +154,7 @@ abstract class BaseTmjMapLoader[P <: com.badlogic.gdx.maps.tiled.BaseTiledMapLoa
           val flipDiagonally: scala.Boolean = (id & com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.FLAG_FLIP_DIAGONALLY) != 0
           val tile: com.badlogic.gdx.maps.tiled.TiledMapTile = tileSets.getTile(id & (~com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.MASK_CLEAR))
           if (tile != null) {
-            val cell: com.badlogic.gdx.maps.tiled.TiledMapTileLayer#Cell = this.createTileLayerCell(flipHorizontally, flipVertically, flipDiagonally)
+            val cell: com.badlogic.gdx.maps.tiled.TiledMapTileLayer.Cell = this.createTileLayerCell(flipHorizontally, flipVertically, flipDiagonally)
             cell.setTile(tile)
             layer.setCell(x, if (flipY) (height - 1) - y else y, cell)
           } else ()
@@ -167,7 +167,7 @@ abstract class BaseTmjMapLoader[P <: com.badlogic.gdx.maps.tiled.BaseTiledMapLoa
       parentLayers.add(layer)
     } else ()
   }
-  protected def loadObjectGroup(map: com.badlogic.gdx.maps.tiled.TiledMap, parentLayers: com.badlogic.gdx.maps.MapLayers, element: com.badlogic.gdx.utils.JsonValue, tmjFile: com.badlogic.gdx.files.FileHandle): scala.Unit = {
+  def loadObjectGroup(map: com.badlogic.gdx.maps.tiled.TiledMap, parentLayers: com.badlogic.gdx.maps.MapLayers, element: com.badlogic.gdx.utils.JsonValue, tmjFile: com.badlogic.gdx.files.FileHandle): scala.Unit = {
     if (element.getString("type", "").equals("objectgroup")) {
       val layer: com.badlogic.gdx.maps.MapLayer = new com.badlogic.gdx.maps.MapLayer()
       this.loadBasicLayerInfo(layer, element)
@@ -185,7 +185,7 @@ abstract class BaseTmjMapLoader[P <: com.badlogic.gdx.maps.tiled.BaseTiledMapLoa
       parentLayers.add(layer)
     } else ()
   }
-  protected def loadImageLayer(map: com.badlogic.gdx.maps.tiled.TiledMap, parentLayers: com.badlogic.gdx.maps.MapLayers, element: com.badlogic.gdx.utils.JsonValue, tmjFile: com.badlogic.gdx.files.FileHandle, imageResolver: com.badlogic.gdx.maps.ImageResolver): scala.Unit = {
+  def loadImageLayer(map: com.badlogic.gdx.maps.tiled.TiledMap, parentLayers: com.badlogic.gdx.maps.MapLayers, element: com.badlogic.gdx.utils.JsonValue, tmjFile: com.badlogic.gdx.files.FileHandle, imageResolver: com.badlogic.gdx.maps.ImageResolver): scala.Unit = {
     if (element.getString("type", "").equals("imagelayer")) {
       val x: scala.Float = element.getFloat("offsetx", 0)
       var y: scala.Float = element.getFloat("offsety", 0)
@@ -210,7 +210,7 @@ abstract class BaseTmjMapLoader[P <: com.badlogic.gdx.maps.tiled.BaseTiledMapLoa
       parentLayers.add(layer)
     } else ()
   }
-  protected def loadBasicLayerInfo(layer: com.badlogic.gdx.maps.MapLayer, element: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
+  def loadBasicLayerInfo(layer: com.badlogic.gdx.maps.MapLayer, element: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
     val name: java.lang.String = element.getString("name")
     val opacity: scala.Float = element.getFloat("opacity", 1.0f)
     val tintColor: java.lang.String = element.getString("tintcolor", "#ffffffff")
@@ -228,13 +228,13 @@ abstract class BaseTmjMapLoader[P <: com.badlogic.gdx.maps.tiled.BaseTiledMapLoa
     layer.setParallaxY(parallaxY)
     layer.setTintColor(com.badlogic.gdx.graphics.Color.valueOf(com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.tiledColorToLibGDXColor(tintColor)))
   }
-  protected def loadObject(map: com.badlogic.gdx.maps.tiled.TiledMap, layer: com.badlogic.gdx.maps.MapLayer, element: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
+  def loadObject(map: com.badlogic.gdx.maps.tiled.TiledMap, layer: com.badlogic.gdx.maps.MapLayer, element: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
     this.loadObject(map, layer.getObjects(), element, mapHeightInPixels)
   }
-  protected def loadObject(map: com.badlogic.gdx.maps.tiled.TiledMap, tile: com.badlogic.gdx.maps.tiled.TiledMapTile, element: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
+  def loadObject(map: com.badlogic.gdx.maps.tiled.TiledMap, tile: com.badlogic.gdx.maps.tiled.TiledMapTile, element: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
     this.loadObject(map, tile.getObjects(), element, tile.getTextureRegion().getRegionHeight())
   }
-  protected def loadObject(map: com.badlogic.gdx.maps.tiled.TiledMap, objects: com.badlogic.gdx.maps.MapObjects, element: com.badlogic.gdx.utils.JsonValue, heightInPixels: scala.Float): scala.Unit = {
+  def loadObject(map: com.badlogic.gdx.maps.tiled.TiledMap, objects: com.badlogic.gdx.maps.MapObjects, element: com.badlogic.gdx.utils.JsonValue, heightInPixels: scala.Float): scala.Unit = {
     var `object`: com.badlogic.gdx.maps.MapObject = null
     val scaleX: scala.Float = if (convertObjectToTileSpace) 1.0f / mapTileWidth else 1.0f
     val scaleY: scala.Float = if (convertObjectToTileSpace) 1.0f / mapTileHeight else 1.0f
@@ -311,7 +311,7 @@ abstract class BaseTmjMapLoader[P <: com.badlogic.gdx.maps.tiled.BaseTiledMapLoa
         gid = element.getString("gid", null)
         gid
       } != null) {
-        val id: scala.Int = java.lang.Long.parseLong(gid).asInstanceOf[scala.Int]
+        val id: scala.Int = java.lang.Long.parseLong(gid).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
         val flipHorizontally: scala.Boolean = (id & com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.FLAG_FLIP_HORIZONTALLY) != 0
         val flipVertically: scala.Boolean = (id & com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.FLAG_FLIP_VERTICALLY) != 0
         val tile: com.badlogic.gdx.maps.tiled.TiledMapTile = map.getTileSets().getTile(id & (~com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.MASK_CLEAR))
@@ -360,7 +360,7 @@ abstract class BaseTmjMapLoader[P <: com.badlogic.gdx.maps.tiled.BaseTiledMapLoa
     idToObject.put(id, `object`)
     objects.add(`object`)
   }
-  protected def resolveTemplateObject(map: com.badlogic.gdx.maps.tiled.TiledMap, layer: com.badlogic.gdx.maps.MapLayer, mapElement: com.badlogic.gdx.utils.JsonValue, tmjFile: com.badlogic.gdx.files.FileHandle): com.badlogic.gdx.utils.JsonValue = {
+  def resolveTemplateObject(map: com.badlogic.gdx.maps.tiled.TiledMap, layer: com.badlogic.gdx.maps.MapLayer, mapElement: com.badlogic.gdx.utils.JsonValue, tmjFile: com.badlogic.gdx.files.FileHandle): com.badlogic.gdx.utils.JsonValue = {
     val tjFileName: java.lang.String = mapElement.getString("template")
     var templateElement: com.badlogic.gdx.utils.JsonValue = this.templateCache.get(tjFileName)
     if (templateElement == null) {
@@ -376,7 +376,7 @@ abstract class BaseTmjMapLoader[P <: com.badlogic.gdx.maps.tiled.BaseTiledMapLoa
     val templateObjectElement: com.badlogic.gdx.utils.JsonValue = templateElement.get("object")
     return this.mergeParentElementWithTemplate(mapElement, templateObjectElement)
   }
-  protected def mergeJsonObject(parentObject: com.badlogic.gdx.utils.JsonValue, templateObject: com.badlogic.gdx.utils.JsonValue): com.badlogic.gdx.utils.JsonValue = {
+  def mergeJsonObject(parentObject: com.badlogic.gdx.utils.JsonValue, templateObject: com.badlogic.gdx.utils.JsonValue): com.badlogic.gdx.utils.JsonValue = {
     if (templateObject == null) {
       return parentObject
     } else ()
@@ -392,7 +392,7 @@ abstract class BaseTmjMapLoader[P <: com.badlogic.gdx.maps.tiled.BaseTiledMapLoa
     }
     return merged
   }
-  protected def cloneElementShallow(src: com.badlogic.gdx.utils.JsonValue): com.badlogic.gdx.utils.JsonValue = {
+  def cloneElementShallow(src: com.badlogic.gdx.utils.JsonValue): com.badlogic.gdx.utils.JsonValue = {
     var clone: com.badlogic.gdx.utils.JsonValue = null.asInstanceOf[com.badlogic.gdx.utils.JsonValue]
     src.`type`() match {
       case com.badlogic.gdx.utils.JsonValue.ValueType.stringValue => {
@@ -417,7 +417,7 @@ abstract class BaseTmjMapLoader[P <: com.badlogic.gdx.maps.tiled.BaseTiledMapLoa
     clone.setName(src.name())
     return clone
   }
-  protected def mergeJsonProperties(parentProps: com.badlogic.gdx.utils.JsonValue, templateProps: com.badlogic.gdx.utils.JsonValue): com.badlogic.gdx.utils.JsonValue = {
+  def mergeJsonProperties(parentProps: com.badlogic.gdx.utils.JsonValue, templateProps: com.badlogic.gdx.utils.JsonValue): com.badlogic.gdx.utils.JsonValue = {
     if (templateProps == null) {
       return parentProps
     } else ()
@@ -443,7 +443,7 @@ abstract class BaseTmjMapLoader[P <: com.badlogic.gdx.maps.tiled.BaseTiledMapLoa
     }
     return merged
   }
-  protected def mergeParentElementWithTemplate(parent: com.badlogic.gdx.utils.JsonValue, template: com.badlogic.gdx.utils.JsonValue): com.badlogic.gdx.utils.JsonValue = {
+  def mergeParentElementWithTemplate(parent: com.badlogic.gdx.utils.JsonValue, template: com.badlogic.gdx.utils.JsonValue): com.badlogic.gdx.utils.JsonValue = {
     if (template == null) {
       return parent
     } else ()
@@ -498,7 +498,7 @@ abstract class BaseTmjMapLoader[P <: com.badlogic.gdx.maps.tiled.BaseTiledMapLoa
       }
     }
   }
-  protected def loadTileSet(element$arg: com.badlogic.gdx.utils.JsonValue, tmjFile: com.badlogic.gdx.files.FileHandle, imageResolver: com.badlogic.gdx.maps.ImageResolver): scala.Unit = {
+  def loadTileSet(element$arg: com.badlogic.gdx.utils.JsonValue, tmjFile: com.badlogic.gdx.files.FileHandle, imageResolver: com.badlogic.gdx.maps.ImageResolver): scala.Unit = {
     var element: com.badlogic.gdx.utils.JsonValue = element$arg
     if (element.getString("firstgid") != null) {
       val firstgid: scala.Int = element.getInt("firstgid", 1)
@@ -575,7 +575,7 @@ abstract class BaseTmjMapLoader[P <: com.badlogic.gdx.maps.tiled.BaseTiledMapLoa
       map.getTileSets().addTileSet(tileSet)
     } else ()
   }
-  protected def addStaticTiles(tmjFile: com.badlogic.gdx.files.FileHandle, imageResolver: com.badlogic.gdx.maps.ImageResolver, tileSet: com.badlogic.gdx.maps.tiled.TiledMapTileSet, element: com.badlogic.gdx.utils.JsonValue, tiles: com.badlogic.gdx.utils.JsonValue, name: java.lang.String, firstgid: scala.Int, tilewidth: scala.Int, tileheight: scala.Int, spacing: scala.Int, margin: scala.Int, source: java.lang.String, offsetX: scala.Int, offsetY: scala.Int, imageSource: java.lang.String, imageWidth: scala.Int, imageHeight: scala.Int, image: com.badlogic.gdx.files.FileHandle): scala.Unit
+  def addStaticTiles(tmjFile: com.badlogic.gdx.files.FileHandle, imageResolver: com.badlogic.gdx.maps.ImageResolver, tileSet: com.badlogic.gdx.maps.tiled.TiledMapTileSet, element: com.badlogic.gdx.utils.JsonValue, tiles: com.badlogic.gdx.utils.JsonValue, name: java.lang.String, firstgid: scala.Int, tilewidth: scala.Int, tileheight: scala.Int, spacing: scala.Int, margin: scala.Int, source: java.lang.String, offsetX: scala.Int, offsetY: scala.Int, imageSource: java.lang.String, imageWidth: scala.Int, imageHeight: scala.Int, image: com.badlogic.gdx.files.FileHandle): scala.Unit
   private def addTileProperties(tile: com.badlogic.gdx.maps.tiled.TiledMapTile, tileElement: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
     val terrain: java.lang.String = tileElement.getString("terrain", null)
     val tileProperties: com.badlogic.gdx.maps.MapProperties = tile.getProperties()
@@ -604,7 +604,7 @@ abstract class BaseTmjMapLoader[P <: com.badlogic.gdx.maps.tiled.BaseTiledMapLoa
       }
     } else ()
   }
-  protected def createAnimatedTile(tileSet: com.badlogic.gdx.maps.tiled.TiledMapTileSet, tile: com.badlogic.gdx.maps.tiled.TiledMapTile, tileElement: com.badlogic.gdx.utils.JsonValue, firstgid: scala.Int): com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile = {
+  def createAnimatedTile(tileSet: com.badlogic.gdx.maps.tiled.TiledMapTileSet, tile: com.badlogic.gdx.maps.tiled.TiledMapTile, tileElement: com.badlogic.gdx.utils.JsonValue, firstgid: scala.Int): com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile = {
     val animationElement: com.badlogic.gdx.utils.JsonValue = tileElement.get("animation")
     if (animationElement != null) {
       val staticTiles: com.badlogic.gdx.utils.Array[com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile]()
@@ -647,7 +647,7 @@ object BaseTmjMapLoader {
             }
           }
           val temp: scala.Array[scala.Byte] = new Array[scala.Byte](4)
-          ids = new Array[scala.Int](width * height)
+          ids = new Array[scala.Int](width * height);
           { var y: scala.Int = 0; while (y < height) { {
             { var x: scala.Int = 0; while (x < width) { {
               var read: scala.Int = is.read(temp)

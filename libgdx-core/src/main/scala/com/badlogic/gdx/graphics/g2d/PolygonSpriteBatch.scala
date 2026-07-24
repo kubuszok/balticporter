@@ -31,7 +31,7 @@ class PolygonSpriteBatch extends com.badlogic.gdx.graphics.g2d.PolygonBatch {
     if (maxVertices > 32767) {
       throw new java.lang.IllegalArgumentException("Can't have more than 32767 vertices per batch: " + maxVertices)
     } else ()
-    var vertexDataType: com.badlogic.gdx.graphics.Mesh#VertexDataType = com.badlogic.gdx.graphics.Mesh.VertexDataType.VertexArray
+    var vertexDataType: com.badlogic.gdx.graphics.Mesh.VertexDataType = com.badlogic.gdx.graphics.Mesh.VertexDataType.VertexArray
     if (com.badlogic.gdx.Gdx.gl30 != null) {
       vertexDataType = com.badlogic.gdx.graphics.Mesh.VertexDataType.VertexBufferObjectWithVAO
     } else ()
@@ -118,14 +118,14 @@ class PolygonSpriteBatch extends com.badlogic.gdx.graphics.g2d.PolygonBatch {
     }
     var triangleIndex: scala.Int = this.triangleIndex
     var vertexIndex: scala.Int = this.vertexIndex
-    val startVertex: scala.Int = vertexIndex / com.badlogic.gdx.graphics.g2d.Sprite.VERTEX_SIZE
+    val startVertex: scala.Int = vertexIndex / com.badlogic.gdx.graphics.g2d.Sprite.VERTEX_SIZE;
     { var i: scala.Int = 0; while (i < regionTrianglesLength) { {
-      triangles({ triangleIndex += 1; triangleIndex }) = (regionTriangles(i) + startVertex).asInstanceOf[scala.Short]
+      triangles({ triangleIndex += 1; triangleIndex }) = (regionTriangles(i) + startVertex).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
     }; i = i + 1 } }
     this.triangleIndex = triangleIndex
     val vertices: scala.Array[scala.Float] = this.vertices
     val color: scala.Float = this.colorPacked
-    val textureCoords: scala.Array[scala.Float] = region.textureCoords
+    val textureCoords: scala.Array[scala.Float] = region.textureCoords;
     { var i: scala.Int = 0; while (i < regionVerticesLength) { {
       vertices({ vertexIndex += 1; vertexIndex }) = regionVertices(i) + x
       vertices({ vertexIndex += 1; vertexIndex }) = regionVertices(i + 1) + y
@@ -155,16 +155,16 @@ class PolygonSpriteBatch extends com.badlogic.gdx.graphics.g2d.PolygonBatch {
     }
     var triangleIndex: scala.Int = this.triangleIndex
     var vertexIndex: scala.Int = this.vertexIndex
-    val startVertex: scala.Int = vertexIndex / com.badlogic.gdx.graphics.g2d.Sprite.VERTEX_SIZE
+    val startVertex: scala.Int = vertexIndex / com.badlogic.gdx.graphics.g2d.Sprite.VERTEX_SIZE;
     { var i: scala.Int = 0; val n: scala.Int = regionTriangles.length; while (i < n) { {
-      triangles({ triangleIndex += 1; triangleIndex }) = (regionTriangles(i) + startVertex).asInstanceOf[scala.Short]
+      triangles({ triangleIndex += 1; triangleIndex }) = (regionTriangles(i) + startVertex).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
     }; i = i + 1 } }
     this.triangleIndex = triangleIndex
     val vertices: scala.Array[scala.Float] = this.vertices
     val color: scala.Float = this.colorPacked
     val textureCoords: scala.Array[scala.Float] = region.textureCoords
     val sX: scala.Float = width / textureRegion.regionWidth
-    val sY: scala.Float = height / textureRegion.regionHeight
+    val sY: scala.Float = height / textureRegion.regionHeight;
     { var i: scala.Int = 0; while (i < regionVerticesLength) { {
       vertices({ vertexIndex += 1; vertexIndex }) = (regionVertices(i) * sX) + x
       vertices({ vertexIndex += 1; vertexIndex }) = (regionVertices(i + 1) * sY) + y
@@ -194,9 +194,9 @@ class PolygonSpriteBatch extends com.badlogic.gdx.graphics.g2d.PolygonBatch {
     }
     var triangleIndex: scala.Int = this.triangleIndex
     var vertexIndex: scala.Int = this.vertexIndex
-    val startVertex: scala.Int = vertexIndex / com.badlogic.gdx.graphics.g2d.Sprite.VERTEX_SIZE
+    val startVertex: scala.Int = vertexIndex / com.badlogic.gdx.graphics.g2d.Sprite.VERTEX_SIZE;
     { var i: scala.Int = 0; while (i < regionTrianglesLength) { {
-      triangles({ triangleIndex += 1; triangleIndex }) = (regionTriangles(i) + startVertex).asInstanceOf[scala.Short]
+      triangles({ triangleIndex += 1; triangleIndex }) = (regionTriangles(i) + startVertex).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
     }; i = i + 1 } }
     this.triangleIndex = triangleIndex
     val vertices: scala.Array[scala.Float] = this.vertices
@@ -209,7 +209,7 @@ class PolygonSpriteBatch extends com.badlogic.gdx.graphics.g2d.PolygonBatch {
     val cos: scala.Float = com.badlogic.gdx.math.MathUtils.cosDeg(rotation)
     val sin: scala.Float = com.badlogic.gdx.math.MathUtils.sinDeg(rotation)
     var fx: scala.Float = 0.0f
-    var fy: scala.Float = 0.0f
+    var fy: scala.Float = 0.0f;
     { var i: scala.Int = 0; while (i < regionVerticesLength) { {
       fx = ((regionVertices(i) * sX) - originX) * scaleX
       fy = ((regionVertices(i + 1) * sY) - originY) * scaleY
@@ -236,9 +236,9 @@ class PolygonSpriteBatch extends com.badlogic.gdx.graphics.g2d.PolygonBatch {
     }
     var triangleIndex: scala.Int = this.triangleIndex
     var vertexIndex: scala.Int = this.vertexIndex
-    val startVertex: scala.Int = vertexIndex / com.badlogic.gdx.graphics.g2d.Sprite.VERTEX_SIZE
+    val startVertex: scala.Int = vertexIndex / com.badlogic.gdx.graphics.g2d.Sprite.VERTEX_SIZE;
     { var i: scala.Int = trianglesOffset; val n: scala.Int = i + trianglesCount; while (i < n) { {
-      triangles({ triangleIndex += 1; triangleIndex }) = (polygonTriangles(i) + startVertex).asInstanceOf[scala.Short]
+      triangles({ triangleIndex += 1; triangleIndex }) = (polygonTriangles(i) + startVertex).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
     }; i = i + 1 } }
     this.triangleIndex = triangleIndex
     java.lang.System.arraycopy(polygonVertices, verticesOffset, vertices, vertexIndex, verticesCount)
@@ -259,12 +259,12 @@ class PolygonSpriteBatch extends com.badlogic.gdx.graphics.g2d.PolygonBatch {
     }
     var triangleIndex: scala.Int = this.triangleIndex
     val startVertex: scala.Int = this.vertexIndex / com.badlogic.gdx.graphics.g2d.Sprite.VERTEX_SIZE
-    triangles({ triangleIndex += 1; triangleIndex }) = startVertex.asInstanceOf[scala.Short]
-    triangles({ triangleIndex += 1; triangleIndex }) = (startVertex + 1).asInstanceOf[scala.Short]
-    triangles({ triangleIndex += 1; triangleIndex }) = (startVertex + 2).asInstanceOf[scala.Short]
-    triangles({ triangleIndex += 1; triangleIndex }) = (startVertex + 2).asInstanceOf[scala.Short]
-    triangles({ triangleIndex += 1; triangleIndex }) = (startVertex + 3).asInstanceOf[scala.Short]
-    triangles({ triangleIndex += 1; triangleIndex }) = startVertex.asInstanceOf[scala.Short]
+    triangles({ triangleIndex += 1; triangleIndex }) = startVertex.asInstanceOf[scala.Short].asInstanceOf[scala.Short]
+    triangles({ triangleIndex += 1; triangleIndex }) = (startVertex + 1).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
+    triangles({ triangleIndex += 1; triangleIndex }) = (startVertex + 2).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
+    triangles({ triangleIndex += 1; triangleIndex }) = (startVertex + 2).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
+    triangles({ triangleIndex += 1; triangleIndex }) = (startVertex + 3).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
+    triangles({ triangleIndex += 1; triangleIndex }) = startVertex.asInstanceOf[scala.Short].asInstanceOf[scala.Short]
     this.triangleIndex = triangleIndex
     val worldOriginX: scala.Float = x + originX
     val worldOriginY: scala.Float = y + originY
@@ -376,12 +376,12 @@ class PolygonSpriteBatch extends com.badlogic.gdx.graphics.g2d.PolygonBatch {
     }
     var triangleIndex: scala.Int = this.triangleIndex
     val startVertex: scala.Int = this.vertexIndex / com.badlogic.gdx.graphics.g2d.Sprite.VERTEX_SIZE
-    triangles({ triangleIndex += 1; triangleIndex }) = startVertex.asInstanceOf[scala.Short]
-    triangles({ triangleIndex += 1; triangleIndex }) = (startVertex + 1).asInstanceOf[scala.Short]
-    triangles({ triangleIndex += 1; triangleIndex }) = (startVertex + 2).asInstanceOf[scala.Short]
-    triangles({ triangleIndex += 1; triangleIndex }) = (startVertex + 2).asInstanceOf[scala.Short]
-    triangles({ triangleIndex += 1; triangleIndex }) = (startVertex + 3).asInstanceOf[scala.Short]
-    triangles({ triangleIndex += 1; triangleIndex }) = startVertex.asInstanceOf[scala.Short]
+    triangles({ triangleIndex += 1; triangleIndex }) = startVertex.asInstanceOf[scala.Short].asInstanceOf[scala.Short]
+    triangles({ triangleIndex += 1; triangleIndex }) = (startVertex + 1).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
+    triangles({ triangleIndex += 1; triangleIndex }) = (startVertex + 2).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
+    triangles({ triangleIndex += 1; triangleIndex }) = (startVertex + 2).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
+    triangles({ triangleIndex += 1; triangleIndex }) = (startVertex + 3).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
+    triangles({ triangleIndex += 1; triangleIndex }) = startVertex.asInstanceOf[scala.Short].asInstanceOf[scala.Short]
     this.triangleIndex = triangleIndex
     var u: scala.Float = srcX * this.invTexWidth
     var v: scala.Float = (srcY + srcHeight) * this.invTexHeight
@@ -438,12 +438,12 @@ class PolygonSpriteBatch extends com.badlogic.gdx.graphics.g2d.PolygonBatch {
     }
     var triangleIndex: scala.Int = this.triangleIndex
     val startVertex: scala.Int = this.vertexIndex / com.badlogic.gdx.graphics.g2d.Sprite.VERTEX_SIZE
-    triangles({ triangleIndex += 1; triangleIndex }) = startVertex.asInstanceOf[scala.Short]
-    triangles({ triangleIndex += 1; triangleIndex }) = (startVertex + 1).asInstanceOf[scala.Short]
-    triangles({ triangleIndex += 1; triangleIndex }) = (startVertex + 2).asInstanceOf[scala.Short]
-    triangles({ triangleIndex += 1; triangleIndex }) = (startVertex + 2).asInstanceOf[scala.Short]
-    triangles({ triangleIndex += 1; triangleIndex }) = (startVertex + 3).asInstanceOf[scala.Short]
-    triangles({ triangleIndex += 1; triangleIndex }) = startVertex.asInstanceOf[scala.Short]
+    triangles({ triangleIndex += 1; triangleIndex }) = startVertex.asInstanceOf[scala.Short].asInstanceOf[scala.Short]
+    triangles({ triangleIndex += 1; triangleIndex }) = (startVertex + 1).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
+    triangles({ triangleIndex += 1; triangleIndex }) = (startVertex + 2).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
+    triangles({ triangleIndex += 1; triangleIndex }) = (startVertex + 2).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
+    triangles({ triangleIndex += 1; triangleIndex }) = (startVertex + 3).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
+    triangles({ triangleIndex += 1; triangleIndex }) = startVertex.asInstanceOf[scala.Short].asInstanceOf[scala.Short]
     this.triangleIndex = triangleIndex
     val u: scala.Float = srcX * this.invTexWidth
     val v: scala.Float = (srcY + srcHeight) * this.invTexHeight
@@ -490,12 +490,12 @@ class PolygonSpriteBatch extends com.badlogic.gdx.graphics.g2d.PolygonBatch {
     }
     var triangleIndex: scala.Int = this.triangleIndex
     val startVertex: scala.Int = this.vertexIndex / com.badlogic.gdx.graphics.g2d.Sprite.VERTEX_SIZE
-    triangles({ triangleIndex += 1; triangleIndex }) = startVertex.asInstanceOf[scala.Short]
-    triangles({ triangleIndex += 1; triangleIndex }) = (startVertex + 1).asInstanceOf[scala.Short]
-    triangles({ triangleIndex += 1; triangleIndex }) = (startVertex + 2).asInstanceOf[scala.Short]
-    triangles({ triangleIndex += 1; triangleIndex }) = (startVertex + 2).asInstanceOf[scala.Short]
-    triangles({ triangleIndex += 1; triangleIndex }) = (startVertex + 3).asInstanceOf[scala.Short]
-    triangles({ triangleIndex += 1; triangleIndex }) = startVertex.asInstanceOf[scala.Short]
+    triangles({ triangleIndex += 1; triangleIndex }) = startVertex.asInstanceOf[scala.Short].asInstanceOf[scala.Short]
+    triangles({ triangleIndex += 1; triangleIndex }) = (startVertex + 1).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
+    triangles({ triangleIndex += 1; triangleIndex }) = (startVertex + 2).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
+    triangles({ triangleIndex += 1; triangleIndex }) = (startVertex + 2).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
+    triangles({ triangleIndex += 1; triangleIndex }) = (startVertex + 3).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
+    triangles({ triangleIndex += 1; triangleIndex }) = startVertex.asInstanceOf[scala.Short].asInstanceOf[scala.Short]
     this.triangleIndex = triangleIndex
     val fx2: scala.Float = x + width
     val fy2: scala.Float = y + height
@@ -541,12 +541,12 @@ class PolygonSpriteBatch extends com.badlogic.gdx.graphics.g2d.PolygonBatch {
     }
     var triangleIndex: scala.Int = this.triangleIndex
     val startVertex: scala.Int = this.vertexIndex / com.badlogic.gdx.graphics.g2d.Sprite.VERTEX_SIZE
-    triangles({ triangleIndex += 1; triangleIndex }) = startVertex.asInstanceOf[scala.Short]
-    triangles({ triangleIndex += 1; triangleIndex }) = (startVertex + 1).asInstanceOf[scala.Short]
-    triangles({ triangleIndex += 1; triangleIndex }) = (startVertex + 2).asInstanceOf[scala.Short]
-    triangles({ triangleIndex += 1; triangleIndex }) = (startVertex + 2).asInstanceOf[scala.Short]
-    triangles({ triangleIndex += 1; triangleIndex }) = (startVertex + 3).asInstanceOf[scala.Short]
-    triangles({ triangleIndex += 1; triangleIndex }) = startVertex.asInstanceOf[scala.Short]
+    triangles({ triangleIndex += 1; triangleIndex }) = startVertex.asInstanceOf[scala.Short].asInstanceOf[scala.Short]
+    triangles({ triangleIndex += 1; triangleIndex }) = (startVertex + 1).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
+    triangles({ triangleIndex += 1; triangleIndex }) = (startVertex + 2).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
+    triangles({ triangleIndex += 1; triangleIndex }) = (startVertex + 2).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
+    triangles({ triangleIndex += 1; triangleIndex }) = (startVertex + 3).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
+    triangles({ triangleIndex += 1; triangleIndex }) = startVertex.asInstanceOf[scala.Short].asInstanceOf[scala.Short]
     this.triangleIndex = triangleIndex
     val fx2: scala.Float = x + width
     val fy2: scala.Float = y + height
@@ -602,14 +602,14 @@ class PolygonSpriteBatch extends com.badlogic.gdx.graphics.g2d.PolygonBatch {
       }
     }
     var vertexIndex: scala.Int = this.vertexIndex
-    var vertex: scala.Short = (vertexIndex / com.badlogic.gdx.graphics.g2d.Sprite.VERTEX_SIZE).asInstanceOf[scala.Short]
-    var triangleIndex: scala.Int = this.triangleIndex
+    var vertex: scala.Short = (vertexIndex / com.badlogic.gdx.graphics.g2d.Sprite.VERTEX_SIZE).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
+    var triangleIndex: scala.Int = this.triangleIndex;
     { val n: scala.Int = triangleIndex + triangleCount; while (triangleIndex < n) { {
       triangles(triangleIndex) = vertex
-      triangles(triangleIndex + 1) = (vertex + 1).asInstanceOf[scala.Short]
-      triangles(triangleIndex + 2) = (vertex + 2).asInstanceOf[scala.Short]
-      triangles(triangleIndex + 3) = (vertex + 2).asInstanceOf[scala.Short]
-      triangles(triangleIndex + 4) = (vertex + 3).asInstanceOf[scala.Short]
+      triangles(triangleIndex + 1) = (vertex + 1).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
+      triangles(triangleIndex + 2) = (vertex + 2).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
+      triangles(triangleIndex + 3) = (vertex + 2).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
+      triangles(triangleIndex + 4) = (vertex + 3).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
       triangles(triangleIndex + 5) = vertex
     }; triangleIndex = triangleIndex + 6; vertex = vertex + 4 } }
     while (true) {
@@ -648,12 +648,12 @@ class PolygonSpriteBatch extends com.badlogic.gdx.graphics.g2d.PolygonBatch {
     }
     var triangleIndex: scala.Int = this.triangleIndex
     val startVertex: scala.Int = this.vertexIndex / com.badlogic.gdx.graphics.g2d.Sprite.VERTEX_SIZE
-    triangles({ triangleIndex += 1; triangleIndex }) = startVertex.asInstanceOf[scala.Short]
-    triangles({ triangleIndex += 1; triangleIndex }) = (startVertex + 1).asInstanceOf[scala.Short]
-    triangles({ triangleIndex += 1; triangleIndex }) = (startVertex + 2).asInstanceOf[scala.Short]
-    triangles({ triangleIndex += 1; triangleIndex }) = (startVertex + 2).asInstanceOf[scala.Short]
-    triangles({ triangleIndex += 1; triangleIndex }) = (startVertex + 3).asInstanceOf[scala.Short]
-    triangles({ triangleIndex += 1; triangleIndex }) = startVertex.asInstanceOf[scala.Short]
+    triangles({ triangleIndex += 1; triangleIndex }) = startVertex.asInstanceOf[scala.Short].asInstanceOf[scala.Short]
+    triangles({ triangleIndex += 1; triangleIndex }) = (startVertex + 1).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
+    triangles({ triangleIndex += 1; triangleIndex }) = (startVertex + 2).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
+    triangles({ triangleIndex += 1; triangleIndex }) = (startVertex + 2).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
+    triangles({ triangleIndex += 1; triangleIndex }) = (startVertex + 3).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
+    triangles({ triangleIndex += 1; triangleIndex }) = startVertex.asInstanceOf[scala.Short].asInstanceOf[scala.Short]
     this.triangleIndex = triangleIndex
     val fx2: scala.Float = x + width
     val fy2: scala.Float = y + height
@@ -701,12 +701,12 @@ class PolygonSpriteBatch extends com.badlogic.gdx.graphics.g2d.PolygonBatch {
     }
     var triangleIndex: scala.Int = this.triangleIndex
     val startVertex: scala.Int = this.vertexIndex / com.badlogic.gdx.graphics.g2d.Sprite.VERTEX_SIZE
-    triangles({ triangleIndex += 1; triangleIndex }) = startVertex.asInstanceOf[scala.Short]
-    triangles({ triangleIndex += 1; triangleIndex }) = (startVertex + 1).asInstanceOf[scala.Short]
-    triangles({ triangleIndex += 1; triangleIndex }) = (startVertex + 2).asInstanceOf[scala.Short]
-    triangles({ triangleIndex += 1; triangleIndex }) = (startVertex + 2).asInstanceOf[scala.Short]
-    triangles({ triangleIndex += 1; triangleIndex }) = (startVertex + 3).asInstanceOf[scala.Short]
-    triangles({ triangleIndex += 1; triangleIndex }) = startVertex.asInstanceOf[scala.Short]
+    triangles({ triangleIndex += 1; triangleIndex }) = startVertex.asInstanceOf[scala.Short].asInstanceOf[scala.Short]
+    triangles({ triangleIndex += 1; triangleIndex }) = (startVertex + 1).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
+    triangles({ triangleIndex += 1; triangleIndex }) = (startVertex + 2).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
+    triangles({ triangleIndex += 1; triangleIndex }) = (startVertex + 2).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
+    triangles({ triangleIndex += 1; triangleIndex }) = (startVertex + 3).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
+    triangles({ triangleIndex += 1; triangleIndex }) = startVertex.asInstanceOf[scala.Short].asInstanceOf[scala.Short]
     this.triangleIndex = triangleIndex
     val worldOriginX: scala.Float = x + originX
     val worldOriginY: scala.Float = y + originY
@@ -809,12 +809,12 @@ class PolygonSpriteBatch extends com.badlogic.gdx.graphics.g2d.PolygonBatch {
     }
     var triangleIndex: scala.Int = this.triangleIndex
     val startVertex: scala.Int = this.vertexIndex / com.badlogic.gdx.graphics.g2d.Sprite.VERTEX_SIZE
-    triangles({ triangleIndex += 1; triangleIndex }) = startVertex.asInstanceOf[scala.Short]
-    triangles({ triangleIndex += 1; triangleIndex }) = (startVertex + 1).asInstanceOf[scala.Short]
-    triangles({ triangleIndex += 1; triangleIndex }) = (startVertex + 2).asInstanceOf[scala.Short]
-    triangles({ triangleIndex += 1; triangleIndex }) = (startVertex + 2).asInstanceOf[scala.Short]
-    triangles({ triangleIndex += 1; triangleIndex }) = (startVertex + 3).asInstanceOf[scala.Short]
-    triangles({ triangleIndex += 1; triangleIndex }) = startVertex.asInstanceOf[scala.Short]
+    triangles({ triangleIndex += 1; triangleIndex }) = startVertex.asInstanceOf[scala.Short].asInstanceOf[scala.Short]
+    triangles({ triangleIndex += 1; triangleIndex }) = (startVertex + 1).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
+    triangles({ triangleIndex += 1; triangleIndex }) = (startVertex + 2).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
+    triangles({ triangleIndex += 1; triangleIndex }) = (startVertex + 2).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
+    triangles({ triangleIndex += 1; triangleIndex }) = (startVertex + 3).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
+    triangles({ triangleIndex += 1; triangleIndex }) = startVertex.asInstanceOf[scala.Short].asInstanceOf[scala.Short]
     this.triangleIndex = triangleIndex
     val worldOriginX: scala.Float = x + originX
     val worldOriginY: scala.Float = y + originY
@@ -940,12 +940,12 @@ class PolygonSpriteBatch extends com.badlogic.gdx.graphics.g2d.PolygonBatch {
     }
     var triangleIndex: scala.Int = this.triangleIndex
     val startVertex: scala.Int = this.vertexIndex / com.badlogic.gdx.graphics.g2d.Sprite.VERTEX_SIZE
-    triangles({ triangleIndex += 1; triangleIndex }) = startVertex.asInstanceOf[scala.Short]
-    triangles({ triangleIndex += 1; triangleIndex }) = (startVertex + 1).asInstanceOf[scala.Short]
-    triangles({ triangleIndex += 1; triangleIndex }) = (startVertex + 2).asInstanceOf[scala.Short]
-    triangles({ triangleIndex += 1; triangleIndex }) = (startVertex + 2).asInstanceOf[scala.Short]
-    triangles({ triangleIndex += 1; triangleIndex }) = (startVertex + 3).asInstanceOf[scala.Short]
-    triangles({ triangleIndex += 1; triangleIndex }) = startVertex.asInstanceOf[scala.Short]
+    triangles({ triangleIndex += 1; triangleIndex }) = startVertex.asInstanceOf[scala.Short].asInstanceOf[scala.Short]
+    triangles({ triangleIndex += 1; triangleIndex }) = (startVertex + 1).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
+    triangles({ triangleIndex += 1; triangleIndex }) = (startVertex + 2).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
+    triangles({ triangleIndex += 1; triangleIndex }) = (startVertex + 2).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
+    triangles({ triangleIndex += 1; triangleIndex }) = (startVertex + 3).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
+    triangles({ triangleIndex += 1; triangleIndex }) = startVertex.asInstanceOf[scala.Short].asInstanceOf[scala.Short]
     this.triangleIndex = triangleIndex
     val x1: scala.Float = transform.m02
     val y1: scala.Float = transform.m12
@@ -1072,7 +1072,7 @@ class PolygonSpriteBatch extends com.badlogic.gdx.graphics.g2d.PolygonBatch {
       this.setupMatrices()
     } else ()
   }
-  protected def setupMatrices(): scala.Unit = {
+  def setupMatrices(): scala.Unit = {
     this.combinedMatrix.set(this.projectionMatrix).mul(this.transformMatrix)
     if (this.customShader != null) {
       this.customShader.setUniformMatrix("u_projTrans", this.combinedMatrix)
@@ -1082,7 +1082,7 @@ class PolygonSpriteBatch extends com.badlogic.gdx.graphics.g2d.PolygonBatch {
       this.shader.setUniformi("u_texture", 0)
     }
   }
-  protected def switchTexture(texture: com.badlogic.gdx.graphics.Texture): scala.Unit = {
+  def switchTexture(texture: com.badlogic.gdx.graphics.Texture): scala.Unit = {
     this.flush()
     this.lastTexture = texture
     this.invTexWidth = 1.0f / texture.getWidth()

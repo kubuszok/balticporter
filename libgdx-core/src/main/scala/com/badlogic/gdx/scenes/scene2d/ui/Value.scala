@@ -5,41 +5,9 @@ abstract class Value {
     return this.get(null)
   }
   def get(context: com.badlogic.gdx.scenes.scene2d.Actor): scala.Float
-  class Fixed extends Value {
-    private var value: scala.Float = 0.0f
-    def this(value: scala.Float) = {
-      this()
-      this.value = value
-    }
-    def get(context: com.badlogic.gdx.scenes.scene2d.Actor): scala.Float = {
-      return this.value
-    }
-    def toString(): java.lang.String = {
-      return java.lang.Float.toString(this.value)
-    }
-  }
-  object Fixed {
-    final val cache: scala.Array[Fixed] = new Array[Fixed](111)
-    def valueOf(value: scala.Float): Fixed = {
-      if (value == 0) {
-        return Value.zero
-      } else ()
-      if (((value >= (-10)) && (value <= 100)) && (value == value.asInstanceOf[scala.Int])) {
-        var fixed: Fixed = Fixed.cache(value.asInstanceOf[scala.Int] + 10)
-        if (fixed == null) {
-          Fixed.cache(value.asInstanceOf[scala.Int] + 10) = {
-            fixed = new Fixed(value)
-            fixed
-          }
-        } else ()
-        return fixed
-      } else ()
-      return new Fixed(value)
-    }
-  }
 }
 object Value {
-  final val zero: Fixed = new Fixed(0)
+  final val zero: com.badlogic.gdx.scenes.scene2d.ui.Value.Fixed = new com.badlogic.gdx.scenes.scene2d.ui.Value.Fixed(0)
   var minWidth: Value = new Value()
   var minHeight: Value = new Value()
   var prefWidth: Value = new Value()
@@ -63,5 +31,37 @@ object Value {
       throw new java.lang.IllegalArgumentException("actor cannot be null.")
     } else ()
     return new Value()
+  }
+  class Fixed extends Value {
+    private var value: scala.Float = 0.0f
+    def this(value: scala.Float) = {
+      this()
+      this.value = value
+    }
+    def get(context: com.badlogic.gdx.scenes.scene2d.Actor): scala.Float = {
+      return this.value
+    }
+    def toString(): java.lang.String = {
+      return java.lang.Float.toString(this.value)
+    }
+  }
+  object Fixed {
+    final val cache: scala.Array[com.badlogic.gdx.scenes.scene2d.ui.Value.Fixed] = new Array[com.badlogic.gdx.scenes.scene2d.ui.Value.Fixed](111)
+    def valueOf(value: scala.Float): com.badlogic.gdx.scenes.scene2d.ui.Value.Fixed = {
+      if (value == 0) {
+        return Value.zero
+      } else ()
+      if (((value >= (-10)) && (value <= 100)) && (value == value.asInstanceOf[scala.Int])) {
+        var fixed: com.badlogic.gdx.scenes.scene2d.ui.Value.Fixed = com.badlogic.gdx.scenes.scene2d.ui.Value.Fixed.cache(value.asInstanceOf[scala.Int] + 10)
+        if (fixed == null) {
+          com.badlogic.gdx.scenes.scene2d.ui.Value.Fixed.cache(value.asInstanceOf[scala.Int] + 10) = {
+            fixed = new com.badlogic.gdx.scenes.scene2d.ui.Value.Fixed(value)
+            fixed
+          }
+        } else ()
+        return fixed
+      } else ()
+      return new com.badlogic.gdx.scenes.scene2d.ui.Value.Fixed(value)
+    }
   }
 }

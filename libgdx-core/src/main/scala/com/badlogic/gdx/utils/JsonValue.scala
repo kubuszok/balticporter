@@ -1,7 +1,7 @@
 package com.badlogic.gdx.utils
 
 class JsonValue extends scala.collection.Iterable[JsonValue] {
-  var type$field: ValueType = null.asInstanceOf[ValueType]
+  var type$field: com.badlogic.gdx.utils.JsonValue.ValueType = null.asInstanceOf[com.badlogic.gdx.utils.JsonValue.ValueType]
   private var stringValue: java.lang.String = null.asInstanceOf[java.lang.String]
   private var doubleValue: scala.Double = 0.0
   private var longValue: scala.Long = 0L
@@ -40,7 +40,7 @@ class JsonValue extends scala.collection.Iterable[JsonValue] {
     this()
     this.set(value, stringValue)
   }
-  def this(`type`: ValueType) = {
+  def this(`type`: com.badlogic.gdx.utils.JsonValue.ValueType) = {
     this()
     this.type$field = `type`
   }
@@ -190,19 +190,19 @@ class JsonValue extends scala.collection.Iterable[JsonValue] {
   }
   def asString(): java.lang.String = {
     this.type$field match {
-      case ValueType.stringValue => {
+      case com.badlogic.gdx.utils.JsonValue.ValueType.stringValue => {
         return this.stringValue
       }
-      case ValueType.doubleValue => {
+      case com.badlogic.gdx.utils.JsonValue.ValueType.doubleValue => {
         return if (this.stringValue != null) this.stringValue else java.lang.Double.toString(this.doubleValue)
       }
-      case ValueType.longValue => {
+      case com.badlogic.gdx.utils.JsonValue.ValueType.longValue => {
         return if (this.stringValue != null) this.stringValue else java.lang.Long.toString(this.longValue)
       }
-      case ValueType.booleanValue => {
+      case com.badlogic.gdx.utils.JsonValue.ValueType.booleanValue => {
         return if (this.longValue != 0) "true" else "false"
       }
-      case ValueType.nullValue => {
+      case com.badlogic.gdx.utils.JsonValue.ValueType.nullValue => {
         return null
       }
     }
@@ -210,16 +210,16 @@ class JsonValue extends scala.collection.Iterable[JsonValue] {
   }
   def asFloat(): scala.Float = {
     this.type$field match {
-      case ValueType.stringValue => {
+      case com.badlogic.gdx.utils.JsonValue.ValueType.stringValue => {
         return java.lang.Float.parseFloat(this.stringValue)
       }
-      case ValueType.doubleValue => {
-        return this.doubleValue.asInstanceOf[scala.Float]
+      case com.badlogic.gdx.utils.JsonValue.ValueType.doubleValue => {
+        return this.doubleValue.asInstanceOf[scala.Float].asInstanceOf[scala.Float]
       }
-      case ValueType.longValue => {
+      case com.badlogic.gdx.utils.JsonValue.ValueType.longValue => {
         return this.longValue
       }
-      case ValueType.booleanValue => {
+      case com.badlogic.gdx.utils.JsonValue.ValueType.booleanValue => {
         return if (this.longValue != 0) 1 else 0
       }
     }
@@ -227,16 +227,16 @@ class JsonValue extends scala.collection.Iterable[JsonValue] {
   }
   def asDouble(): scala.Double = {
     this.type$field match {
-      case ValueType.stringValue => {
+      case com.badlogic.gdx.utils.JsonValue.ValueType.stringValue => {
         return java.lang.Double.parseDouble(this.stringValue)
       }
-      case ValueType.doubleValue => {
+      case com.badlogic.gdx.utils.JsonValue.ValueType.doubleValue => {
         return this.doubleValue
       }
-      case ValueType.longValue => {
+      case com.badlogic.gdx.utils.JsonValue.ValueType.longValue => {
         return this.longValue
       }
-      case ValueType.booleanValue => {
+      case com.badlogic.gdx.utils.JsonValue.ValueType.booleanValue => {
         return if (this.longValue != 0) 1 else 0
       }
     }
@@ -244,16 +244,16 @@ class JsonValue extends scala.collection.Iterable[JsonValue] {
   }
   def asLong(): scala.Long = {
     this.type$field match {
-      case ValueType.stringValue => {
+      case com.badlogic.gdx.utils.JsonValue.ValueType.stringValue => {
         return java.lang.Long.parseLong(this.stringValue)
       }
-      case ValueType.doubleValue => {
-        return this.doubleValue.asInstanceOf[scala.Long]
+      case com.badlogic.gdx.utils.JsonValue.ValueType.doubleValue => {
+        return this.doubleValue.asInstanceOf[scala.Long].asInstanceOf[scala.Long]
       }
-      case ValueType.longValue => {
+      case com.badlogic.gdx.utils.JsonValue.ValueType.longValue => {
         return this.longValue
       }
-      case ValueType.booleanValue => {
+      case com.badlogic.gdx.utils.JsonValue.ValueType.booleanValue => {
         return if (this.longValue != 0) 1 else 0
       }
     }
@@ -261,16 +261,16 @@ class JsonValue extends scala.collection.Iterable[JsonValue] {
   }
   def asInt(): scala.Int = {
     this.type$field match {
-      case ValueType.stringValue => {
+      case com.badlogic.gdx.utils.JsonValue.ValueType.stringValue => {
         return java.lang.Integer.parseInt(this.stringValue)
       }
-      case ValueType.doubleValue => {
-        return this.doubleValue.asInstanceOf[scala.Int]
+      case com.badlogic.gdx.utils.JsonValue.ValueType.doubleValue => {
+        return this.doubleValue.asInstanceOf[scala.Int].asInstanceOf[scala.Int]
       }
-      case ValueType.longValue => {
-        return this.longValue.asInstanceOf[scala.Int]
+      case com.badlogic.gdx.utils.JsonValue.ValueType.longValue => {
+        return this.longValue.asInstanceOf[scala.Int].asInstanceOf[scala.Int]
       }
-      case ValueType.booleanValue => {
+      case com.badlogic.gdx.utils.JsonValue.ValueType.booleanValue => {
         return if (this.longValue != 0) 1 else 0
       }
     }
@@ -278,16 +278,16 @@ class JsonValue extends scala.collection.Iterable[JsonValue] {
   }
   def asBoolean(): scala.Boolean = {
     this.type$field match {
-      case ValueType.stringValue => {
+      case com.badlogic.gdx.utils.JsonValue.ValueType.stringValue => {
         return this.stringValue.equalsIgnoreCase("true")
       }
-      case ValueType.doubleValue => {
+      case com.badlogic.gdx.utils.JsonValue.ValueType.doubleValue => {
         return this.doubleValue != 0
       }
-      case ValueType.longValue => {
+      case com.badlogic.gdx.utils.JsonValue.ValueType.longValue => {
         return this.longValue != 0
       }
-      case ValueType.booleanValue => {
+      case com.badlogic.gdx.utils.JsonValue.ValueType.booleanValue => {
         return this.longValue != 0
       }
     }
@@ -295,16 +295,16 @@ class JsonValue extends scala.collection.Iterable[JsonValue] {
   }
   def asByte(): scala.Byte = {
     this.type$field match {
-      case ValueType.stringValue => {
+      case com.badlogic.gdx.utils.JsonValue.ValueType.stringValue => {
         return java.lang.Byte.parseByte(this.stringValue)
       }
-      case ValueType.doubleValue => {
-        return this.doubleValue.asInstanceOf[scala.Byte]
+      case com.badlogic.gdx.utils.JsonValue.ValueType.doubleValue => {
+        return this.doubleValue.asInstanceOf[scala.Byte].asInstanceOf[scala.Byte]
       }
-      case ValueType.longValue => {
-        return this.longValue.asInstanceOf[scala.Byte]
+      case com.badlogic.gdx.utils.JsonValue.ValueType.longValue => {
+        return this.longValue.asInstanceOf[scala.Byte].asInstanceOf[scala.Byte]
       }
-      case ValueType.booleanValue => {
+      case com.badlogic.gdx.utils.JsonValue.ValueType.booleanValue => {
         return if (this.longValue != 0) 1.asInstanceOf[scala.Byte] else 0
       }
     }
@@ -312,16 +312,16 @@ class JsonValue extends scala.collection.Iterable[JsonValue] {
   }
   def asShort(): scala.Short = {
     this.type$field match {
-      case ValueType.stringValue => {
+      case com.badlogic.gdx.utils.JsonValue.ValueType.stringValue => {
         return java.lang.Short.parseShort(this.stringValue)
       }
-      case ValueType.doubleValue => {
-        return this.doubleValue.asInstanceOf[scala.Short]
+      case com.badlogic.gdx.utils.JsonValue.ValueType.doubleValue => {
+        return this.doubleValue.asInstanceOf[scala.Short].asInstanceOf[scala.Short]
       }
-      case ValueType.longValue => {
-        return this.longValue.asInstanceOf[scala.Short]
+      case com.badlogic.gdx.utils.JsonValue.ValueType.longValue => {
+        return this.longValue.asInstanceOf[scala.Short].asInstanceOf[scala.Short]
       }
-      case ValueType.booleanValue => {
+      case com.badlogic.gdx.utils.JsonValue.ValueType.booleanValue => {
         return if (this.longValue != 0) 1.asInstanceOf[scala.Short] else 0
       }
     }
@@ -329,43 +329,43 @@ class JsonValue extends scala.collection.Iterable[JsonValue] {
   }
   def asChar(): scala.Char = {
     this.type$field match {
-      case ValueType.stringValue => {
+      case com.badlogic.gdx.utils.JsonValue.ValueType.stringValue => {
         return if (this.stringValue.length() == 0) 0 else this.stringValue.charAt(0)
       }
-      case ValueType.doubleValue => {
-        return this.doubleValue.asInstanceOf[scala.Char]
+      case com.badlogic.gdx.utils.JsonValue.ValueType.doubleValue => {
+        return this.doubleValue.asInstanceOf[scala.Char].asInstanceOf[scala.Char]
       }
-      case ValueType.longValue => {
-        return this.longValue.asInstanceOf[scala.Char]
+      case com.badlogic.gdx.utils.JsonValue.ValueType.longValue => {
+        return this.longValue.asInstanceOf[scala.Char].asInstanceOf[scala.Char]
       }
-      case ValueType.booleanValue => {
+      case com.badlogic.gdx.utils.JsonValue.ValueType.booleanValue => {
         return if (this.longValue != 0) 1.asInstanceOf[scala.Char] else 0
       }
     }
     throw new java.lang.IllegalStateException("Value cannot be converted to char: " + this.type$field)
   }
   def asStringArray(): scala.Array[java.lang.String] = {
-    if (this.type$field != ValueType.array) {
+    if (this.type$field != com.badlogic.gdx.utils.JsonValue.ValueType.array) {
       throw new java.lang.IllegalStateException("Value is not an array: " + this.type$field)
     } else ()
     val array: scala.Array[java.lang.String] = new Array[java.lang.String](this.size$field)
-    var i: scala.Int = 0
+    var i: scala.Int = 0;
     { var value: JsonValue = this.child$field; while (value != null) { {
       var v: java.lang.String = null.asInstanceOf[java.lang.String]
       value.type$field match {
-        case ValueType.stringValue => {
+        case com.badlogic.gdx.utils.JsonValue.ValueType.stringValue => {
           v = value.stringValue
         }
-        case ValueType.doubleValue => {
+        case com.badlogic.gdx.utils.JsonValue.ValueType.doubleValue => {
           v = if (this.stringValue != null) this.stringValue else java.lang.Double.toString(value.doubleValue)
         }
-        case ValueType.longValue => {
+        case com.badlogic.gdx.utils.JsonValue.ValueType.longValue => {
           v = if (this.stringValue != null) this.stringValue else java.lang.Long.toString(value.longValue)
         }
-        case ValueType.booleanValue => {
+        case com.badlogic.gdx.utils.JsonValue.ValueType.booleanValue => {
           v = if (value.longValue != 0) "true" else "false"
         }
-        case ValueType.nullValue => {
+        case com.badlogic.gdx.utils.JsonValue.ValueType.nullValue => {
           v = null
         }
         case _ => {
@@ -377,24 +377,24 @@ class JsonValue extends scala.collection.Iterable[JsonValue] {
     return array
   }
   def asFloatArray(): scala.Array[scala.Float] = {
-    if (this.type$field != ValueType.array) {
+    if (this.type$field != com.badlogic.gdx.utils.JsonValue.ValueType.array) {
       throw new java.lang.IllegalStateException("Value is not an array: " + this.type$field)
     } else ()
     val array: scala.Array[scala.Float] = new Array[scala.Float](this.size$field)
-    var i: scala.Int = 0
+    var i: scala.Int = 0;
     { var value: JsonValue = this.child$field; while (value != null) { {
       var v: scala.Float = 0.0f
       value.type$field match {
-        case ValueType.stringValue => {
+        case com.badlogic.gdx.utils.JsonValue.ValueType.stringValue => {
           v = java.lang.Float.parseFloat(value.stringValue)
         }
-        case ValueType.doubleValue => {
-          v = value.doubleValue.asInstanceOf[scala.Float]
+        case com.badlogic.gdx.utils.JsonValue.ValueType.doubleValue => {
+          v = value.doubleValue.asInstanceOf[scala.Float].asInstanceOf[scala.Float]
         }
-        case ValueType.longValue => {
+        case com.badlogic.gdx.utils.JsonValue.ValueType.longValue => {
           v = value.longValue
         }
-        case ValueType.booleanValue => {
+        case com.badlogic.gdx.utils.JsonValue.ValueType.booleanValue => {
           v = if (value.longValue != 0) 1 else 0
         }
         case _ => {
@@ -406,24 +406,24 @@ class JsonValue extends scala.collection.Iterable[JsonValue] {
     return array
   }
   def asDoubleArray(): scala.Array[scala.Double] = {
-    if (this.type$field != ValueType.array) {
+    if (this.type$field != com.badlogic.gdx.utils.JsonValue.ValueType.array) {
       throw new java.lang.IllegalStateException("Value is not an array: " + this.type$field)
     } else ()
     val array: scala.Array[scala.Double] = new Array[scala.Double](this.size$field)
-    var i: scala.Int = 0
+    var i: scala.Int = 0;
     { var value: JsonValue = this.child$field; while (value != null) { {
       var v: scala.Double = 0.0
       value.type$field match {
-        case ValueType.stringValue => {
+        case com.badlogic.gdx.utils.JsonValue.ValueType.stringValue => {
           v = java.lang.Double.parseDouble(value.stringValue)
         }
-        case ValueType.doubleValue => {
+        case com.badlogic.gdx.utils.JsonValue.ValueType.doubleValue => {
           v = value.doubleValue
         }
-        case ValueType.longValue => {
+        case com.badlogic.gdx.utils.JsonValue.ValueType.longValue => {
           v = value.longValue
         }
-        case ValueType.booleanValue => {
+        case com.badlogic.gdx.utils.JsonValue.ValueType.booleanValue => {
           v = if (value.longValue != 0) 1 else 0
         }
         case _ => {
@@ -435,24 +435,24 @@ class JsonValue extends scala.collection.Iterable[JsonValue] {
     return array
   }
   def asLongArray(): scala.Array[scala.Long] = {
-    if (this.type$field != ValueType.array) {
+    if (this.type$field != com.badlogic.gdx.utils.JsonValue.ValueType.array) {
       throw new java.lang.IllegalStateException("Value is not an array: " + this.type$field)
     } else ()
     val array: scala.Array[scala.Long] = new Array[scala.Long](this.size$field)
-    var i: scala.Int = 0
+    var i: scala.Int = 0;
     { var value: JsonValue = this.child$field; while (value != null) { {
       var v: scala.Long = 0L
       value.type$field match {
-        case ValueType.stringValue => {
+        case com.badlogic.gdx.utils.JsonValue.ValueType.stringValue => {
           v = java.lang.Long.parseLong(value.stringValue)
         }
-        case ValueType.doubleValue => {
-          v = value.doubleValue.asInstanceOf[scala.Long]
+        case com.badlogic.gdx.utils.JsonValue.ValueType.doubleValue => {
+          v = value.doubleValue.asInstanceOf[scala.Long].asInstanceOf[scala.Long]
         }
-        case ValueType.longValue => {
+        case com.badlogic.gdx.utils.JsonValue.ValueType.longValue => {
           v = value.longValue
         }
-        case ValueType.booleanValue => {
+        case com.badlogic.gdx.utils.JsonValue.ValueType.booleanValue => {
           v = if (value.longValue != 0) 1 else 0
         }
         case _ => {
@@ -464,24 +464,24 @@ class JsonValue extends scala.collection.Iterable[JsonValue] {
     return array
   }
   def asIntArray(): scala.Array[scala.Int] = {
-    if (this.type$field != ValueType.array) {
+    if (this.type$field != com.badlogic.gdx.utils.JsonValue.ValueType.array) {
       throw new java.lang.IllegalStateException("Value is not an array: " + this.type$field)
     } else ()
     val array: scala.Array[scala.Int] = new Array[scala.Int](this.size$field)
-    var i: scala.Int = 0
+    var i: scala.Int = 0;
     { var value: JsonValue = this.child$field; while (value != null) { {
       var v: scala.Int = 0
       value.type$field match {
-        case ValueType.stringValue => {
+        case com.badlogic.gdx.utils.JsonValue.ValueType.stringValue => {
           v = java.lang.Integer.parseInt(value.stringValue)
         }
-        case ValueType.doubleValue => {
-          v = value.doubleValue.asInstanceOf[scala.Int]
+        case com.badlogic.gdx.utils.JsonValue.ValueType.doubleValue => {
+          v = value.doubleValue.asInstanceOf[scala.Int].asInstanceOf[scala.Int]
         }
-        case ValueType.longValue => {
-          v = value.longValue.asInstanceOf[scala.Int]
+        case com.badlogic.gdx.utils.JsonValue.ValueType.longValue => {
+          v = value.longValue.asInstanceOf[scala.Int].asInstanceOf[scala.Int]
         }
-        case ValueType.booleanValue => {
+        case com.badlogic.gdx.utils.JsonValue.ValueType.booleanValue => {
           v = if (value.longValue != 0) 1 else 0
         }
         case _ => {
@@ -493,24 +493,24 @@ class JsonValue extends scala.collection.Iterable[JsonValue] {
     return array
   }
   def asBooleanArray(): scala.Array[scala.Boolean] = {
-    if (this.type$field != ValueType.array) {
+    if (this.type$field != com.badlogic.gdx.utils.JsonValue.ValueType.array) {
       throw new java.lang.IllegalStateException("Value is not an array: " + this.type$field)
     } else ()
     val array: scala.Array[scala.Boolean] = new Array[scala.Boolean](this.size$field)
-    var i: scala.Int = 0
+    var i: scala.Int = 0;
     { var value: JsonValue = this.child$field; while (value != null) { {
       var v: scala.Boolean = false
       value.type$field match {
-        case ValueType.stringValue => {
+        case com.badlogic.gdx.utils.JsonValue.ValueType.stringValue => {
           v = java.lang.Boolean.parseBoolean(value.stringValue)
         }
-        case ValueType.doubleValue => {
+        case com.badlogic.gdx.utils.JsonValue.ValueType.doubleValue => {
           v = value.doubleValue == 0
         }
-        case ValueType.longValue => {
+        case com.badlogic.gdx.utils.JsonValue.ValueType.longValue => {
           v = value.longValue == 0
         }
-        case ValueType.booleanValue => {
+        case com.badlogic.gdx.utils.JsonValue.ValueType.booleanValue => {
           v = value.longValue != 0
         }
         case _ => {
@@ -522,24 +522,24 @@ class JsonValue extends scala.collection.Iterable[JsonValue] {
     return array
   }
   def asByteArray(): scala.Array[scala.Byte] = {
-    if (this.type$field != ValueType.array) {
+    if (this.type$field != com.badlogic.gdx.utils.JsonValue.ValueType.array) {
       throw new java.lang.IllegalStateException("Value is not an array: " + this.type$field)
     } else ()
     val array: scala.Array[scala.Byte] = new Array[scala.Byte](this.size$field)
-    var i: scala.Int = 0
+    var i: scala.Int = 0;
     { var value: JsonValue = this.child$field; while (value != null) { {
       var v: scala.Byte = 0
       value.type$field match {
-        case ValueType.stringValue => {
+        case com.badlogic.gdx.utils.JsonValue.ValueType.stringValue => {
           v = java.lang.Byte.parseByte(value.stringValue)
         }
-        case ValueType.doubleValue => {
-          v = value.doubleValue.asInstanceOf[scala.Byte]
+        case com.badlogic.gdx.utils.JsonValue.ValueType.doubleValue => {
+          v = value.doubleValue.asInstanceOf[scala.Byte].asInstanceOf[scala.Byte]
         }
-        case ValueType.longValue => {
-          v = value.longValue.asInstanceOf[scala.Byte]
+        case com.badlogic.gdx.utils.JsonValue.ValueType.longValue => {
+          v = value.longValue.asInstanceOf[scala.Byte].asInstanceOf[scala.Byte]
         }
-        case ValueType.booleanValue => {
+        case com.badlogic.gdx.utils.JsonValue.ValueType.booleanValue => {
           v = if (value.longValue != 0) 1.asInstanceOf[scala.Byte] else 0
         }
         case _ => {
@@ -551,24 +551,24 @@ class JsonValue extends scala.collection.Iterable[JsonValue] {
     return array
   }
   def asShortArray(): scala.Array[scala.Short] = {
-    if (this.type$field != ValueType.array) {
+    if (this.type$field != com.badlogic.gdx.utils.JsonValue.ValueType.array) {
       throw new java.lang.IllegalStateException("Value is not an array: " + this.type$field)
     } else ()
     val array: scala.Array[scala.Short] = new Array[scala.Short](this.size$field)
-    var i: scala.Int = 0
+    var i: scala.Int = 0;
     { var value: JsonValue = this.child$field; while (value != null) { {
       var v: scala.Short = 0
       value.type$field match {
-        case ValueType.stringValue => {
+        case com.badlogic.gdx.utils.JsonValue.ValueType.stringValue => {
           v = java.lang.Short.parseShort(value.stringValue)
         }
-        case ValueType.doubleValue => {
-          v = value.doubleValue.asInstanceOf[scala.Short]
+        case com.badlogic.gdx.utils.JsonValue.ValueType.doubleValue => {
+          v = value.doubleValue.asInstanceOf[scala.Short].asInstanceOf[scala.Short]
         }
-        case ValueType.longValue => {
-          v = value.longValue.asInstanceOf[scala.Short]
+        case com.badlogic.gdx.utils.JsonValue.ValueType.longValue => {
+          v = value.longValue.asInstanceOf[scala.Short].asInstanceOf[scala.Short]
         }
-        case ValueType.booleanValue => {
+        case com.badlogic.gdx.utils.JsonValue.ValueType.booleanValue => {
           v = if (value.longValue != 0) 1.asInstanceOf[scala.Short] else 0
         }
         case _ => {
@@ -580,24 +580,24 @@ class JsonValue extends scala.collection.Iterable[JsonValue] {
     return array
   }
   def asCharArray(): scala.Array[scala.Char] = {
-    if (this.type$field != ValueType.array) {
+    if (this.type$field != com.badlogic.gdx.utils.JsonValue.ValueType.array) {
       throw new java.lang.IllegalStateException("Value is not an array: " + this.type$field)
     } else ()
     val array: scala.Array[scala.Char] = new Array[scala.Char](this.size$field)
-    var i: scala.Int = 0
+    var i: scala.Int = 0;
     { var value: JsonValue = this.child$field; while (value != null) { {
       var v: scala.Char = '\u0000'
       value.type$field match {
-        case ValueType.stringValue => {
+        case com.badlogic.gdx.utils.JsonValue.ValueType.stringValue => {
           v = if (value.stringValue.length() == 0) 0 else value.stringValue.charAt(0)
         }
-        case ValueType.doubleValue => {
-          v = value.doubleValue.asInstanceOf[scala.Char]
+        case com.badlogic.gdx.utils.JsonValue.ValueType.doubleValue => {
+          v = value.doubleValue.asInstanceOf[scala.Char].asInstanceOf[scala.Char]
         }
-        case ValueType.longValue => {
-          v = value.longValue.asInstanceOf[scala.Char]
+        case com.badlogic.gdx.utils.JsonValue.ValueType.longValue => {
+          v = value.longValue.asInstanceOf[scala.Char].asInstanceOf[scala.Char]
         }
-        case ValueType.booleanValue => {
+        case com.badlogic.gdx.utils.JsonValue.ValueType.booleanValue => {
           v = if (value.longValue != 0) 1.asInstanceOf[scala.Char] else 0
         }
         case _ => {
@@ -777,42 +777,42 @@ class JsonValue extends scala.collection.Iterable[JsonValue] {
     } else ()
     return child.asChar()
   }
-  def `type`(): ValueType = {
+  def `type`(): com.badlogic.gdx.utils.JsonValue.ValueType = {
     return this.type$field
   }
-  def setType(`type`: ValueType): scala.Unit = {
+  def setType(`type`: com.badlogic.gdx.utils.JsonValue.ValueType): scala.Unit = {
     if (`type` == null) {
       throw new java.lang.IllegalArgumentException("type cannot be null.")
     } else ()
     this.type$field = `type`
   }
   def isArray(): scala.Boolean = {
-    return this.type$field == ValueType.array
+    return this.type$field == com.badlogic.gdx.utils.JsonValue.ValueType.array
   }
   def isObject(): scala.Boolean = {
-    return this.type$field == ValueType.`object`
+    return this.type$field == com.badlogic.gdx.utils.JsonValue.ValueType.`object`
   }
   def isString(): scala.Boolean = {
-    return this.type$field == ValueType.stringValue
+    return this.type$field == com.badlogic.gdx.utils.JsonValue.ValueType.stringValue
   }
   def isNumber(): scala.Boolean = {
-    return (this.type$field == ValueType.doubleValue) || (this.type$field == ValueType.longValue)
+    return (this.type$field == com.badlogic.gdx.utils.JsonValue.ValueType.doubleValue) || (this.type$field == com.badlogic.gdx.utils.JsonValue.ValueType.longValue)
   }
   def isDouble(): scala.Boolean = {
-    return this.type$field == ValueType.doubleValue
+    return this.type$field == com.badlogic.gdx.utils.JsonValue.ValueType.doubleValue
   }
   def isLong(): scala.Boolean = {
-    return this.type$field == ValueType.longValue
+    return this.type$field == com.badlogic.gdx.utils.JsonValue.ValueType.longValue
   }
   def isBoolean(): scala.Boolean = {
-    return this.type$field == ValueType.booleanValue
+    return this.type$field == com.badlogic.gdx.utils.JsonValue.ValueType.booleanValue
   }
   def isNull(): scala.Boolean = {
-    return this.type$field == ValueType.nullValue
+    return this.type$field == com.badlogic.gdx.utils.JsonValue.ValueType.nullValue
   }
   def isValue(): scala.Boolean = {
     this.type$field match {
-      case ValueType.stringValue | ValueType.doubleValue | ValueType.longValue | ValueType.booleanValue | ValueType.nullValue => {
+      case com.badlogic.gdx.utils.JsonValue.ValueType.stringValue | com.badlogic.gdx.utils.JsonValue.ValueType.doubleValue | com.badlogic.gdx.utils.JsonValue.ValueType.longValue | com.badlogic.gdx.utils.JsonValue.ValueType.booleanValue | com.badlogic.gdx.utils.JsonValue.ValueType.nullValue => {
         return true
       }
     }
@@ -882,7 +882,7 @@ class JsonValue extends scala.collection.Iterable[JsonValue] {
     this.addChild(value)
   }
   def addChild(value: JsonValue): scala.Unit = {
-    if ((this.type$field == ValueType.`object`) && (value.name$field == null)) {
+    if ((this.type$field == com.badlogic.gdx.utils.JsonValue.ValueType.`object`) && (value.name$field == null)) {
       throw new java.lang.IllegalStateException("An object child requires a name: " + value)
     } else ()
     value.parent$field = this
@@ -898,7 +898,7 @@ class JsonValue extends scala.collection.Iterable[JsonValue] {
     this.size$field = this.size$field + 1
   }
   def addChildFirst(value: JsonValue): scala.Unit = {
-    if ((this.type$field == ValueType.`object`) && (value.name$field == null)) {
+    if ((this.type$field == com.badlogic.gdx.utils.JsonValue.ValueType.`object`) && (value.name$field == null)) {
       throw new java.lang.IllegalStateException("An object child requires a name: " + value)
     } else ()
     value.parent$field = this
@@ -933,27 +933,27 @@ class JsonValue extends scala.collection.Iterable[JsonValue] {
   }
   def set(value: java.lang.String): scala.Unit = {
     this.stringValue = value
-    this.type$field = if (value == null) ValueType.nullValue else ValueType.stringValue
+    this.type$field = if (value == null) com.badlogic.gdx.utils.JsonValue.ValueType.nullValue else com.badlogic.gdx.utils.JsonValue.ValueType.stringValue
   }
   def setNull(): scala.Unit = {
     this.stringValue = null
-    this.type$field = ValueType.nullValue
+    this.type$field = com.badlogic.gdx.utils.JsonValue.ValueType.nullValue
   }
   def set(value: scala.Double, stringValue: java.lang.String): scala.Unit = {
     this.doubleValue = value
-    this.longValue = value.asInstanceOf[scala.Long]
+    this.longValue = value.asInstanceOf[scala.Long].asInstanceOf[scala.Long]
     this.stringValue = stringValue
-    this.type$field = ValueType.doubleValue
+    this.type$field = com.badlogic.gdx.utils.JsonValue.ValueType.doubleValue
   }
   def set(value: scala.Long, stringValue: java.lang.String): scala.Unit = {
     this.longValue = value
     this.doubleValue = value
     this.stringValue = stringValue
-    this.type$field = ValueType.longValue
+    this.type$field = com.badlogic.gdx.utils.JsonValue.ValueType.longValue
   }
   def set(value: scala.Boolean): scala.Unit = {
     this.longValue = if (value) 1 else 0
-    this.type$field = ValueType.booleanValue
+    this.type$field = com.badlogic.gdx.utils.JsonValue.ValueType.booleanValue
   }
   def equalsString(value: java.lang.String): scala.Boolean = {
     return java.util.Objects.equals(this.asString(), value)
@@ -961,7 +961,7 @@ class JsonValue extends scala.collection.Iterable[JsonValue] {
   def nameEquals(value: java.lang.String): scala.Boolean = {
     return java.util.Objects.equals(this.name$field, value)
   }
-  def toJson(outputType: com.badlogic.gdx.utils.JsonWriter#OutputType): java.lang.String = {
+  def toJson(outputType: com.badlogic.gdx.utils.JsonWriter.OutputType): java.lang.String = {
     if (this.isValue()) {
       return this.asString()
     } else ()
@@ -975,9 +975,9 @@ class JsonValue extends scala.collection.Iterable[JsonValue] {
     }
     return writer.toString()
   }
-  def toJson(outputType: com.badlogic.gdx.utils.JsonWriter#OutputType, writer: java.io.Writer): scala.Unit = {
+  def toJson(outputType: com.badlogic.gdx.utils.JsonWriter.OutputType, writer: java.io.Writer): scala.Unit = {
     if (this.isObject()) {
-      writer.write('{')
+      writer.write('{');
       { var child: JsonValue = this.child$field; while (child != null) { {
         writer.write(outputType.quoteName(child.name$field))
         writer.write(':')
@@ -989,7 +989,7 @@ class JsonValue extends scala.collection.Iterable[JsonValue] {
       writer.write('}')
     } else {
       if (this.isArray()) {
-        writer.write('[')
+        writer.write('[');
         { var child: JsonValue = this.child$field; while (child != null) { {
           child.toJson(outputType, writer)
           if (child.next$field != null) {
@@ -1035,18 +1035,18 @@ class JsonValue extends scala.collection.Iterable[JsonValue] {
   }
   def trace(): java.lang.String = {
     if (this.parent$field == null) {
-      if (this.type$field == ValueType.array) {
+      if (this.type$field == com.badlogic.gdx.utils.JsonValue.ValueType.array) {
         return "[]"
       } else ()
-      if (this.type$field == ValueType.`object`) {
+      if (this.type$field == com.badlogic.gdx.utils.JsonValue.ValueType.`object`) {
         return "{}"
       } else ()
       return ""
     } else ()
     var trace: java.lang.String = null.asInstanceOf[java.lang.String]
-    if (this.parent$field.type$field == ValueType.array) {
+    if (this.parent$field.type$field == com.badlogic.gdx.utils.JsonValue.ValueType.array) {
       trace = "[]"
-      var i: scala.Int = 0
+      var i: scala.Int = 0;
       { var child: JsonValue = this.parent$field.child$field; while (child != null) { {
         if (child == this) {
           trace = ("[" + i) + "]"
@@ -1062,19 +1062,19 @@ class JsonValue extends scala.collection.Iterable[JsonValue] {
     }
     return this.parent$field.trace() + trace
   }
-  def prettyPrint(outputType: com.badlogic.gdx.utils.JsonWriter#OutputType, singleLineColumns: scala.Int): java.lang.String = {
-    val settings: PrettyPrintSettings = new PrettyPrintSettings()
+  def prettyPrint(outputType: com.badlogic.gdx.utils.JsonWriter.OutputType, singleLineColumns: scala.Int): java.lang.String = {
+    val settings: com.badlogic.gdx.utils.JsonValue.PrettyPrintSettings = new com.badlogic.gdx.utils.JsonValue.PrettyPrintSettings()
     settings.outputType = outputType
     settings.singleLineColumns = singleLineColumns
     return this.prettyPrint(settings)
   }
-  def prettyPrint(settings: PrettyPrintSettings): java.lang.String = {
+  def prettyPrint(settings: com.badlogic.gdx.utils.JsonValue.PrettyPrintSettings): java.lang.String = {
     val buffer: java.lang.StringBuilder = new java.lang.StringBuilder(512)
     this.prettyPrint(this, buffer, 0, settings)
     return buffer.toString()
   }
-  private def prettyPrint(`object`: JsonValue, buffer: java.lang.StringBuilder, indent: scala.Int, settings: PrettyPrintSettings): scala.Unit = {
-    val outputType: com.badlogic.gdx.utils.JsonWriter#OutputType = settings.outputType
+  private def prettyPrint(`object`: JsonValue, buffer: java.lang.StringBuilder, indent: scala.Int, settings: com.badlogic.gdx.utils.JsonValue.PrettyPrintSettings): scala.Unit = {
+    val outputType: com.badlogic.gdx.utils.JsonWriter.OutputType = settings.outputType
     if (`object`.isObject()) {
       if (`object`.child$field == null) {
         buffer.append("{}")
@@ -1082,7 +1082,7 @@ class JsonValue extends scala.collection.Iterable[JsonValue] {
         var newLines: scala.Boolean = !JsonValue.isFlat(`object`)
         val start: scala.Int = buffer.length()
         while (true) {
-          buffer.append(if (newLines) "{\n" else "{ ")
+          buffer.append(if (newLines) "{\n" else "{ ");
           { var child: JsonValue = `object`.child$field; while (child != null) { {
             if (newLines) {
               JsonValue.indent(indent, buffer)
@@ -1116,7 +1116,7 @@ class JsonValue extends scala.collection.Iterable[JsonValue] {
           val wrap: scala.Boolean = settings.wrapNumericArrays || (!JsonValue.isNumeric(`object`))
           val start: scala.Int = buffer.length()
           while (true) {
-            buffer.append(if (newLines) "[\n" else "[ ")
+            buffer.append(if (newLines) "[\n" else "[ ");
             { var child: JsonValue = `object`.child$field; while (child != null) { {
               if (newLines) {
                 JsonValue.indent(indent, buffer)
@@ -1166,20 +1166,20 @@ class JsonValue extends scala.collection.Iterable[JsonValue] {
       }
     }
   }
-  def prettyPrint(outputType: com.badlogic.gdx.utils.JsonWriter#OutputType, writer: java.io.Writer): scala.Unit = {
-    val settings: PrettyPrintSettings = new PrettyPrintSettings()
+  def prettyPrint(outputType: com.badlogic.gdx.utils.JsonWriter.OutputType, writer: java.io.Writer): scala.Unit = {
+    val settings: com.badlogic.gdx.utils.JsonValue.PrettyPrintSettings = new com.badlogic.gdx.utils.JsonValue.PrettyPrintSettings()
     settings.outputType = outputType
     this.prettyPrint(this, writer, 0, settings)
   }
-  private def prettyPrint(`object`: JsonValue, writer: java.io.Writer, indent: scala.Int, settings: PrettyPrintSettings): scala.Unit = {
-    val outputType: com.badlogic.gdx.utils.JsonWriter#OutputType = settings.outputType
+  private def prettyPrint(`object`: JsonValue, writer: java.io.Writer, indent: scala.Int, settings: com.badlogic.gdx.utils.JsonValue.PrettyPrintSettings): scala.Unit = {
+    val outputType: com.badlogic.gdx.utils.JsonWriter.OutputType = settings.outputType
     if (`object`.isObject()) {
       if (`object`.child$field == null) {
         writer.write("{}")
       } else {
         val newLines: scala.Boolean = (!JsonValue.isFlat(`object`)) || (`object`.size$field > 6)
         writer.write(if (newLines) "{\n" else "{ ")
-        val i: scala.Int = 0
+        val i: scala.Int = 0;
         { var child: JsonValue = `object`.child$field; while (child != null) { {
           if (newLines) {
             JsonValue.indent(indent, writer)
@@ -1204,7 +1204,7 @@ class JsonValue extends scala.collection.Iterable[JsonValue] {
         } else {
           val newLines: scala.Boolean = !JsonValue.isFlat(`object`)
           writer.write(if (newLines) "[\n" else "[ ")
-          val i: scala.Int = 0
+          val i: scala.Int = 0;
           { var child: JsonValue = `object`.child$field; while (child != null) { {
             if (newLines) {
               JsonValue.indent(indent, writer)
@@ -1268,22 +1268,6 @@ class JsonValue extends scala.collection.Iterable[JsonValue] {
       return this
     }
   }
-  sealed abstract class ValueType
-  object ValueType {
-    case object `object` extends ValueType
-    case object array extends ValueType
-    case object stringValue extends ValueType
-    case object doubleValue extends ValueType
-    case object longValue extends ValueType
-    case object booleanValue extends ValueType
-    case object nullValue extends ValueType
-    def values(): Array[ValueType] = Array(`object`, array, stringValue, doubleValue, longValue, booleanValue, nullValue)
-  }
-  class PrettyPrintSettings {
-    var outputType: com.badlogic.gdx.utils.JsonWriter#OutputType = null.asInstanceOf[com.badlogic.gdx.utils.JsonWriter#OutputType]
-    var singleLineColumns: scala.Int = 0
-    var wrapNumericArrays: scala.Boolean = false
-  }
 }
 object JsonValue {
   private def isFlat(`object`: JsonValue): scala.Boolean = {
@@ -1311,5 +1295,21 @@ object JsonValue {
     { var i: scala.Int = 0; while (i < count) { {
       writer.write('\t')
     }; i = i + 1 } }
+  }
+  sealed abstract class ValueType
+  object ValueType {
+    case object `object` extends ValueType
+    case object array extends ValueType
+    case object stringValue extends ValueType
+    case object doubleValue extends ValueType
+    case object longValue extends ValueType
+    case object booleanValue extends ValueType
+    case object nullValue extends ValueType
+    def values(): Array[ValueType] = Array(`object`, array, stringValue, doubleValue, longValue, booleanValue, nullValue)
+  }
+  class PrettyPrintSettings {
+    var outputType: com.badlogic.gdx.utils.JsonWriter.OutputType = null.asInstanceOf[com.badlogic.gdx.utils.JsonWriter.OutputType]
+    var singleLineColumns: scala.Int = 0
+    var wrapNumericArrays: scala.Boolean = false
   }
 }

@@ -1,6 +1,6 @@
 package com.badlogic.gdx.math
 
-class FloatCounter extends com.badlogic.gdx.utils.Pool#Poolable {
+class FloatCounter extends com.badlogic.gdx.utils.Pool.Poolable {
   var count: scala.Int = 0
   var total: scala.Float = 0.0f
   var min: scala.Float = 0.0f

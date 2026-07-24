@@ -25,25 +25,25 @@ trait Input {
   def isButtonJustPressed(button: scala.Int): scala.Boolean
   def isKeyPressed(key: scala.Int): scala.Boolean
   def isKeyJustPressed(key: scala.Int): scala.Boolean
-  def getTextInput(listener: TextInputListener, title: java.lang.String, text: java.lang.String, hint: java.lang.String): scala.Unit
-  def getTextInput(listener: TextInputListener, title: java.lang.String, text: java.lang.String, hint: java.lang.String, `type`: OnscreenKeyboardType): scala.Unit
+  def getTextInput(listener: com.badlogic.gdx.Input.TextInputListener, title: java.lang.String, text: java.lang.String, hint: java.lang.String): scala.Unit
+  def getTextInput(listener: com.badlogic.gdx.Input.TextInputListener, title: java.lang.String, text: java.lang.String, hint: java.lang.String, `type`: com.badlogic.gdx.Input.OnscreenKeyboardType): scala.Unit
   def setOnscreenKeyboardVisible(visible: scala.Boolean): scala.Unit
-  def setOnscreenKeyboardVisible(visible: scala.Boolean, `type`: OnscreenKeyboardType): scala.Unit
+  def setOnscreenKeyboardVisible(visible: scala.Boolean, `type`: com.badlogic.gdx.Input.OnscreenKeyboardType): scala.Unit
   def openTextInputField(configuration: com.badlogic.gdx.input.NativeInputConfiguration): scala.Unit
   def closeTextInputField(isConfirmative: scala.Boolean): scala.Unit = {
     this.closeTextInputField(isConfirmative, null)
   }
-  def closeTextInputField(isConfirmative: scala.Boolean, callback: com.badlogic.gdx.input.NativeInputConfiguration#NativeInputCloseCallback): scala.Unit = {
+  def closeTextInputField(isConfirmative: scala.Boolean, callback: com.badlogic.gdx.input.NativeInputConfiguration.NativeInputCloseCallback): scala.Unit = {
     ()
   }
   def isTextInputFieldOpened(): scala.Boolean = {
     return false
   }
-  def setKeyboardHeightObserver(observer: KeyboardHeightObserver): scala.Unit
+  def setKeyboardHeightObserver(observer: com.badlogic.gdx.Input.KeyboardHeightObserver): scala.Unit
   def vibrate(milliseconds: scala.Int): scala.Unit
   def vibrate(milliseconds: scala.Int, fallback: scala.Boolean): scala.Unit
   def vibrate(milliseconds: scala.Int, amplitude: scala.Int, fallback: scala.Boolean): scala.Unit
-  def vibrate(vibrationType: VibrationType): scala.Unit
+  def vibrate(vibrationType: com.badlogic.gdx.Input.VibrationType): scala.Unit
   def getAzimuth(): scala.Float
   def getPitch(): scala.Float
   def getRoll(): scala.Float
@@ -53,12 +53,14 @@ trait Input {
   def isCatchKey(keycode: scala.Int): scala.Boolean
   def setInputProcessor(processor: com.badlogic.gdx.InputProcessor): scala.Unit
   def getInputProcessor(): com.badlogic.gdx.InputProcessor
-  def isPeripheralAvailable(peripheral: Peripheral): scala.Boolean
+  def isPeripheralAvailable(peripheral: com.badlogic.gdx.Input.Peripheral): scala.Boolean
   def getRotation(): scala.Int
-  def getNativeOrientation(): Orientation
+  def getNativeOrientation(): com.badlogic.gdx.Input.Orientation
   def setCursorCatched(catched: scala.Boolean): scala.Unit
   def isCursorCatched(): scala.Boolean
   def setCursorPosition(x: scala.Int, y: scala.Int): scala.Unit
+}
+object Input {
   trait TextInputListener {
     def input(text: java.lang.String): scala.Unit
     def canceled(): scala.Unit
@@ -261,509 +263,509 @@ trait Input {
       if (keycode < 0) {
         throw new java.lang.IllegalArgumentException("keycode cannot be negative, keycode: " + keycode)
       } else ()
-      if (keycode > Keys.MAX_KEYCODE) {
+      if (keycode > com.badlogic.gdx.Input.Keys.MAX_KEYCODE) {
         throw new java.lang.IllegalArgumentException("keycode cannot be greater than 255, keycode: " + keycode)
       } else ()
       keycode match {
-        case Keys.UNKNOWN => {
+        case com.badlogic.gdx.Input.Keys.UNKNOWN => {
           return "Unknown"
         }
-        case Keys.SOFT_LEFT => {
+        case com.badlogic.gdx.Input.Keys.SOFT_LEFT => {
           return "Soft Left"
         }
-        case Keys.SOFT_RIGHT => {
+        case com.badlogic.gdx.Input.Keys.SOFT_RIGHT => {
           return "Soft Right"
         }
-        case Keys.HOME => {
+        case com.badlogic.gdx.Input.Keys.HOME => {
           return "Home"
         }
-        case Keys.BACK => {
+        case com.badlogic.gdx.Input.Keys.BACK => {
           return "Back"
         }
-        case Keys.CALL => {
+        case com.badlogic.gdx.Input.Keys.CALL => {
           return "Call"
         }
-        case Keys.ENDCALL => {
+        case com.badlogic.gdx.Input.Keys.ENDCALL => {
           return "End Call"
         }
-        case Keys.NUM_0 => {
+        case com.badlogic.gdx.Input.Keys.NUM_0 => {
           return "0"
         }
-        case Keys.NUM_1 => {
+        case com.badlogic.gdx.Input.Keys.NUM_1 => {
           return "1"
         }
-        case Keys.NUM_2 => {
+        case com.badlogic.gdx.Input.Keys.NUM_2 => {
           return "2"
         }
-        case Keys.NUM_3 => {
+        case com.badlogic.gdx.Input.Keys.NUM_3 => {
           return "3"
         }
-        case Keys.NUM_4 => {
+        case com.badlogic.gdx.Input.Keys.NUM_4 => {
           return "4"
         }
-        case Keys.NUM_5 => {
+        case com.badlogic.gdx.Input.Keys.NUM_5 => {
           return "5"
         }
-        case Keys.NUM_6 => {
+        case com.badlogic.gdx.Input.Keys.NUM_6 => {
           return "6"
         }
-        case Keys.NUM_7 => {
+        case com.badlogic.gdx.Input.Keys.NUM_7 => {
           return "7"
         }
-        case Keys.NUM_8 => {
+        case com.badlogic.gdx.Input.Keys.NUM_8 => {
           return "8"
         }
-        case Keys.NUM_9 => {
+        case com.badlogic.gdx.Input.Keys.NUM_9 => {
           return "9"
         }
-        case Keys.STAR => {
+        case com.badlogic.gdx.Input.Keys.STAR => {
           return "*"
         }
-        case Keys.POUND => {
+        case com.badlogic.gdx.Input.Keys.POUND => {
           return "#"
         }
-        case Keys.UP => {
+        case com.badlogic.gdx.Input.Keys.UP => {
           return "Up"
         }
-        case Keys.DOWN => {
+        case com.badlogic.gdx.Input.Keys.DOWN => {
           return "Down"
         }
-        case Keys.LEFT => {
+        case com.badlogic.gdx.Input.Keys.LEFT => {
           return "Left"
         }
-        case Keys.RIGHT => {
+        case com.badlogic.gdx.Input.Keys.RIGHT => {
           return "Right"
         }
-        case Keys.CENTER => {
+        case com.badlogic.gdx.Input.Keys.CENTER => {
           return "Center"
         }
-        case Keys.VOLUME_UP => {
+        case com.badlogic.gdx.Input.Keys.VOLUME_UP => {
           return "Volume Up"
         }
-        case Keys.VOLUME_DOWN => {
+        case com.badlogic.gdx.Input.Keys.VOLUME_DOWN => {
           return "Volume Down"
         }
-        case Keys.POWER => {
+        case com.badlogic.gdx.Input.Keys.POWER => {
           return "Power"
         }
-        case Keys.CAMERA => {
+        case com.badlogic.gdx.Input.Keys.CAMERA => {
           return "Camera"
         }
-        case Keys.CLEAR => {
+        case com.badlogic.gdx.Input.Keys.CLEAR => {
           return "Clear"
         }
-        case Keys.A => {
+        case com.badlogic.gdx.Input.Keys.A => {
           return "A"
         }
-        case Keys.B => {
+        case com.badlogic.gdx.Input.Keys.B => {
           return "B"
         }
-        case Keys.C => {
+        case com.badlogic.gdx.Input.Keys.C => {
           return "C"
         }
-        case Keys.D => {
+        case com.badlogic.gdx.Input.Keys.D => {
           return "D"
         }
-        case Keys.E => {
+        case com.badlogic.gdx.Input.Keys.E => {
           return "E"
         }
-        case Keys.F => {
+        case com.badlogic.gdx.Input.Keys.F => {
           return "F"
         }
-        case Keys.G => {
+        case com.badlogic.gdx.Input.Keys.G => {
           return "G"
         }
-        case Keys.H => {
+        case com.badlogic.gdx.Input.Keys.H => {
           return "H"
         }
-        case Keys.I => {
+        case com.badlogic.gdx.Input.Keys.I => {
           return "I"
         }
-        case Keys.J => {
+        case com.badlogic.gdx.Input.Keys.J => {
           return "J"
         }
-        case Keys.K => {
+        case com.badlogic.gdx.Input.Keys.K => {
           return "K"
         }
-        case Keys.L => {
+        case com.badlogic.gdx.Input.Keys.L => {
           return "L"
         }
-        case Keys.M => {
+        case com.badlogic.gdx.Input.Keys.M => {
           return "M"
         }
-        case Keys.N => {
+        case com.badlogic.gdx.Input.Keys.N => {
           return "N"
         }
-        case Keys.O => {
+        case com.badlogic.gdx.Input.Keys.O => {
           return "O"
         }
-        case Keys.P => {
+        case com.badlogic.gdx.Input.Keys.P => {
           return "P"
         }
-        case Keys.Q => {
+        case com.badlogic.gdx.Input.Keys.Q => {
           return "Q"
         }
-        case Keys.R => {
+        case com.badlogic.gdx.Input.Keys.R => {
           return "R"
         }
-        case Keys.S => {
+        case com.badlogic.gdx.Input.Keys.S => {
           return "S"
         }
-        case Keys.T => {
+        case com.badlogic.gdx.Input.Keys.T => {
           return "T"
         }
-        case Keys.U => {
+        case com.badlogic.gdx.Input.Keys.U => {
           return "U"
         }
-        case Keys.V => {
+        case com.badlogic.gdx.Input.Keys.V => {
           return "V"
         }
-        case Keys.W => {
+        case com.badlogic.gdx.Input.Keys.W => {
           return "W"
         }
-        case Keys.X => {
+        case com.badlogic.gdx.Input.Keys.X => {
           return "X"
         }
-        case Keys.Y => {
+        case com.badlogic.gdx.Input.Keys.Y => {
           return "Y"
         }
-        case Keys.Z => {
+        case com.badlogic.gdx.Input.Keys.Z => {
           return "Z"
         }
-        case Keys.COMMA => {
+        case com.badlogic.gdx.Input.Keys.COMMA => {
           return ","
         }
-        case Keys.PERIOD => {
+        case com.badlogic.gdx.Input.Keys.PERIOD => {
           return "."
         }
-        case Keys.ALT_LEFT => {
+        case com.badlogic.gdx.Input.Keys.ALT_LEFT => {
           return "L-Alt"
         }
-        case Keys.ALT_RIGHT => {
+        case com.badlogic.gdx.Input.Keys.ALT_RIGHT => {
           return "R-Alt"
         }
-        case Keys.SHIFT_LEFT => {
+        case com.badlogic.gdx.Input.Keys.SHIFT_LEFT => {
           return "L-Shift"
         }
-        case Keys.SHIFT_RIGHT => {
+        case com.badlogic.gdx.Input.Keys.SHIFT_RIGHT => {
           return "R-Shift"
         }
-        case Keys.TAB => {
+        case com.badlogic.gdx.Input.Keys.TAB => {
           return "Tab"
         }
-        case Keys.SPACE => {
+        case com.badlogic.gdx.Input.Keys.SPACE => {
           return "Space"
         }
-        case Keys.SYM => {
+        case com.badlogic.gdx.Input.Keys.SYM => {
           return "SYM"
         }
-        case Keys.EXPLORER => {
+        case com.badlogic.gdx.Input.Keys.EXPLORER => {
           return "Explorer"
         }
-        case Keys.ENVELOPE => {
+        case com.badlogic.gdx.Input.Keys.ENVELOPE => {
           return "Envelope"
         }
-        case Keys.ENTER => {
+        case com.badlogic.gdx.Input.Keys.ENTER => {
           return "Enter"
         }
-        case Keys.DEL => {
+        case com.badlogic.gdx.Input.Keys.DEL => {
           return "Delete"
         }
-        case Keys.GRAVE => {
+        case com.badlogic.gdx.Input.Keys.GRAVE => {
           return "`"
         }
-        case Keys.MINUS => {
+        case com.badlogic.gdx.Input.Keys.MINUS => {
           return "-"
         }
-        case Keys.EQUALS => {
+        case com.badlogic.gdx.Input.Keys.EQUALS => {
           return "="
         }
-        case Keys.LEFT_BRACKET => {
+        case com.badlogic.gdx.Input.Keys.LEFT_BRACKET => {
           return "["
         }
-        case Keys.RIGHT_BRACKET => {
+        case com.badlogic.gdx.Input.Keys.RIGHT_BRACKET => {
           return "]"
         }
-        case Keys.BACKSLASH => {
+        case com.badlogic.gdx.Input.Keys.BACKSLASH => {
           return "\\"
         }
-        case Keys.SEMICOLON => {
+        case com.badlogic.gdx.Input.Keys.SEMICOLON => {
           return ";"
         }
-        case Keys.APOSTROPHE => {
+        case com.badlogic.gdx.Input.Keys.APOSTROPHE => {
           return "'"
         }
-        case Keys.SLASH => {
+        case com.badlogic.gdx.Input.Keys.SLASH => {
           return "/"
         }
-        case Keys.AT => {
+        case com.badlogic.gdx.Input.Keys.AT => {
           return "@"
         }
-        case Keys.NUM => {
+        case com.badlogic.gdx.Input.Keys.NUM => {
           return "Num"
         }
-        case Keys.HEADSETHOOK => {
+        case com.badlogic.gdx.Input.Keys.HEADSETHOOK => {
           return "Headset Hook"
         }
-        case Keys.FOCUS => {
+        case com.badlogic.gdx.Input.Keys.FOCUS => {
           return "Focus"
         }
-        case Keys.PLUS => {
+        case com.badlogic.gdx.Input.Keys.PLUS => {
           return "Plus"
         }
-        case Keys.MENU => {
+        case com.badlogic.gdx.Input.Keys.MENU => {
           return "Menu"
         }
-        case Keys.NOTIFICATION => {
+        case com.badlogic.gdx.Input.Keys.NOTIFICATION => {
           return "Notification"
         }
-        case Keys.SEARCH => {
+        case com.badlogic.gdx.Input.Keys.SEARCH => {
           return "Search"
         }
-        case Keys.MEDIA_PLAY_PAUSE => {
+        case com.badlogic.gdx.Input.Keys.MEDIA_PLAY_PAUSE => {
           return "Play/Pause"
         }
-        case Keys.MEDIA_STOP => {
+        case com.badlogic.gdx.Input.Keys.MEDIA_STOP => {
           return "Stop Media"
         }
-        case Keys.MEDIA_NEXT => {
+        case com.badlogic.gdx.Input.Keys.MEDIA_NEXT => {
           return "Next Media"
         }
-        case Keys.MEDIA_PREVIOUS => {
+        case com.badlogic.gdx.Input.Keys.MEDIA_PREVIOUS => {
           return "Prev Media"
         }
-        case Keys.MEDIA_REWIND => {
+        case com.badlogic.gdx.Input.Keys.MEDIA_REWIND => {
           return "Rewind"
         }
-        case Keys.MEDIA_FAST_FORWARD => {
+        case com.badlogic.gdx.Input.Keys.MEDIA_FAST_FORWARD => {
           return "Fast Forward"
         }
-        case Keys.MUTE => {
+        case com.badlogic.gdx.Input.Keys.MUTE => {
           return "Mute"
         }
-        case Keys.PAGE_UP => {
+        case com.badlogic.gdx.Input.Keys.PAGE_UP => {
           return "Page Up"
         }
-        case Keys.PAGE_DOWN => {
+        case com.badlogic.gdx.Input.Keys.PAGE_DOWN => {
           return "Page Down"
         }
-        case Keys.PICTSYMBOLS => {
+        case com.badlogic.gdx.Input.Keys.PICTSYMBOLS => {
           return "PICTSYMBOLS"
         }
-        case Keys.SWITCH_CHARSET => {
+        case com.badlogic.gdx.Input.Keys.SWITCH_CHARSET => {
           return "SWITCH_CHARSET"
         }
-        case Keys.BUTTON_A => {
+        case com.badlogic.gdx.Input.Keys.BUTTON_A => {
           return "A Button"
         }
-        case Keys.BUTTON_B => {
+        case com.badlogic.gdx.Input.Keys.BUTTON_B => {
           return "B Button"
         }
-        case Keys.BUTTON_C => {
+        case com.badlogic.gdx.Input.Keys.BUTTON_C => {
           return "C Button"
         }
-        case Keys.BUTTON_X => {
+        case com.badlogic.gdx.Input.Keys.BUTTON_X => {
           return "X Button"
         }
-        case Keys.BUTTON_Y => {
+        case com.badlogic.gdx.Input.Keys.BUTTON_Y => {
           return "Y Button"
         }
-        case Keys.BUTTON_Z => {
+        case com.badlogic.gdx.Input.Keys.BUTTON_Z => {
           return "Z Button"
         }
-        case Keys.BUTTON_L1 => {
+        case com.badlogic.gdx.Input.Keys.BUTTON_L1 => {
           return "L1 Button"
         }
-        case Keys.BUTTON_R1 => {
+        case com.badlogic.gdx.Input.Keys.BUTTON_R1 => {
           return "R1 Button"
         }
-        case Keys.BUTTON_L2 => {
+        case com.badlogic.gdx.Input.Keys.BUTTON_L2 => {
           return "L2 Button"
         }
-        case Keys.BUTTON_R2 => {
+        case com.badlogic.gdx.Input.Keys.BUTTON_R2 => {
           return "R2 Button"
         }
-        case Keys.BUTTON_THUMBL => {
+        case com.badlogic.gdx.Input.Keys.BUTTON_THUMBL => {
           return "Left Thumb"
         }
-        case Keys.BUTTON_THUMBR => {
+        case com.badlogic.gdx.Input.Keys.BUTTON_THUMBR => {
           return "Right Thumb"
         }
-        case Keys.BUTTON_START => {
+        case com.badlogic.gdx.Input.Keys.BUTTON_START => {
           return "Start"
         }
-        case Keys.BUTTON_SELECT => {
+        case com.badlogic.gdx.Input.Keys.BUTTON_SELECT => {
           return "Select"
         }
-        case Keys.BUTTON_MODE => {
+        case com.badlogic.gdx.Input.Keys.BUTTON_MODE => {
           return "Button Mode"
         }
-        case Keys.FORWARD_DEL => {
+        case com.badlogic.gdx.Input.Keys.FORWARD_DEL => {
           return "Forward Delete"
         }
-        case Keys.CONTROL_LEFT => {
+        case com.badlogic.gdx.Input.Keys.CONTROL_LEFT => {
           return "L-Ctrl"
         }
-        case Keys.CONTROL_RIGHT => {
+        case com.badlogic.gdx.Input.Keys.CONTROL_RIGHT => {
           return "R-Ctrl"
         }
-        case Keys.ESCAPE => {
+        case com.badlogic.gdx.Input.Keys.ESCAPE => {
           return "Escape"
         }
-        case Keys.END => {
+        case com.badlogic.gdx.Input.Keys.END => {
           return "End"
         }
-        case Keys.INSERT => {
+        case com.badlogic.gdx.Input.Keys.INSERT => {
           return "Insert"
         }
-        case Keys.NUMPAD_0 => {
+        case com.badlogic.gdx.Input.Keys.NUMPAD_0 => {
           return "Numpad 0"
         }
-        case Keys.NUMPAD_1 => {
+        case com.badlogic.gdx.Input.Keys.NUMPAD_1 => {
           return "Numpad 1"
         }
-        case Keys.NUMPAD_2 => {
+        case com.badlogic.gdx.Input.Keys.NUMPAD_2 => {
           return "Numpad 2"
         }
-        case Keys.NUMPAD_3 => {
+        case com.badlogic.gdx.Input.Keys.NUMPAD_3 => {
           return "Numpad 3"
         }
-        case Keys.NUMPAD_4 => {
+        case com.badlogic.gdx.Input.Keys.NUMPAD_4 => {
           return "Numpad 4"
         }
-        case Keys.NUMPAD_5 => {
+        case com.badlogic.gdx.Input.Keys.NUMPAD_5 => {
           return "Numpad 5"
         }
-        case Keys.NUMPAD_6 => {
+        case com.badlogic.gdx.Input.Keys.NUMPAD_6 => {
           return "Numpad 6"
         }
-        case Keys.NUMPAD_7 => {
+        case com.badlogic.gdx.Input.Keys.NUMPAD_7 => {
           return "Numpad 7"
         }
-        case Keys.NUMPAD_8 => {
+        case com.badlogic.gdx.Input.Keys.NUMPAD_8 => {
           return "Numpad 8"
         }
-        case Keys.NUMPAD_9 => {
+        case com.badlogic.gdx.Input.Keys.NUMPAD_9 => {
           return "Numpad 9"
         }
-        case Keys.COLON => {
+        case com.badlogic.gdx.Input.Keys.COLON => {
           return ":"
         }
-        case Keys.F1 => {
+        case com.badlogic.gdx.Input.Keys.F1 => {
           return "F1"
         }
-        case Keys.F2 => {
+        case com.badlogic.gdx.Input.Keys.F2 => {
           return "F2"
         }
-        case Keys.F3 => {
+        case com.badlogic.gdx.Input.Keys.F3 => {
           return "F3"
         }
-        case Keys.F4 => {
+        case com.badlogic.gdx.Input.Keys.F4 => {
           return "F4"
         }
-        case Keys.F5 => {
+        case com.badlogic.gdx.Input.Keys.F5 => {
           return "F5"
         }
-        case Keys.F6 => {
+        case com.badlogic.gdx.Input.Keys.F6 => {
           return "F6"
         }
-        case Keys.F7 => {
+        case com.badlogic.gdx.Input.Keys.F7 => {
           return "F7"
         }
-        case Keys.F8 => {
+        case com.badlogic.gdx.Input.Keys.F8 => {
           return "F8"
         }
-        case Keys.F9 => {
+        case com.badlogic.gdx.Input.Keys.F9 => {
           return "F9"
         }
-        case Keys.F10 => {
+        case com.badlogic.gdx.Input.Keys.F10 => {
           return "F10"
         }
-        case Keys.F11 => {
+        case com.badlogic.gdx.Input.Keys.F11 => {
           return "F11"
         }
-        case Keys.F12 => {
+        case com.badlogic.gdx.Input.Keys.F12 => {
           return "F12"
         }
-        case Keys.F13 => {
+        case com.badlogic.gdx.Input.Keys.F13 => {
           return "F13"
         }
-        case Keys.F14 => {
+        case com.badlogic.gdx.Input.Keys.F14 => {
           return "F14"
         }
-        case Keys.F15 => {
+        case com.badlogic.gdx.Input.Keys.F15 => {
           return "F15"
         }
-        case Keys.F16 => {
+        case com.badlogic.gdx.Input.Keys.F16 => {
           return "F16"
         }
-        case Keys.F17 => {
+        case com.badlogic.gdx.Input.Keys.F17 => {
           return "F17"
         }
-        case Keys.F18 => {
+        case com.badlogic.gdx.Input.Keys.F18 => {
           return "F18"
         }
-        case Keys.F19 => {
+        case com.badlogic.gdx.Input.Keys.F19 => {
           return "F19"
         }
-        case Keys.F20 => {
+        case com.badlogic.gdx.Input.Keys.F20 => {
           return "F20"
         }
-        case Keys.F21 => {
+        case com.badlogic.gdx.Input.Keys.F21 => {
           return "F21"
         }
-        case Keys.F22 => {
+        case com.badlogic.gdx.Input.Keys.F22 => {
           return "F22"
         }
-        case Keys.F23 => {
+        case com.badlogic.gdx.Input.Keys.F23 => {
           return "F23"
         }
-        case Keys.F24 => {
+        case com.badlogic.gdx.Input.Keys.F24 => {
           return "F24"
         }
-        case Keys.NUMPAD_DIVIDE => {
+        case com.badlogic.gdx.Input.Keys.NUMPAD_DIVIDE => {
           return "Num /"
         }
-        case Keys.NUMPAD_MULTIPLY => {
+        case com.badlogic.gdx.Input.Keys.NUMPAD_MULTIPLY => {
           return "Num *"
         }
-        case Keys.NUMPAD_SUBTRACT => {
+        case com.badlogic.gdx.Input.Keys.NUMPAD_SUBTRACT => {
           return "Num -"
         }
-        case Keys.NUMPAD_ADD => {
+        case com.badlogic.gdx.Input.Keys.NUMPAD_ADD => {
           return "Num +"
         }
-        case Keys.NUMPAD_DOT => {
+        case com.badlogic.gdx.Input.Keys.NUMPAD_DOT => {
           return "Num ."
         }
-        case Keys.NUMPAD_COMMA => {
+        case com.badlogic.gdx.Input.Keys.NUMPAD_COMMA => {
           return "Num ,"
         }
-        case Keys.NUMPAD_ENTER => {
+        case com.badlogic.gdx.Input.Keys.NUMPAD_ENTER => {
           return "Num Enter"
         }
-        case Keys.NUMPAD_EQUALS => {
+        case com.badlogic.gdx.Input.Keys.NUMPAD_EQUALS => {
           return "Num ="
         }
-        case Keys.NUMPAD_LEFT_PAREN => {
+        case com.badlogic.gdx.Input.Keys.NUMPAD_LEFT_PAREN => {
           return "Num ("
         }
-        case Keys.NUMPAD_RIGHT_PAREN => {
+        case com.badlogic.gdx.Input.Keys.NUMPAD_RIGHT_PAREN => {
           return "Num )"
         }
-        case Keys.NUM_LOCK => {
+        case com.badlogic.gdx.Input.Keys.NUM_LOCK => {
           return "Num Lock"
         }
-        case Keys.CAPS_LOCK => {
+        case com.badlogic.gdx.Input.Keys.CAPS_LOCK => {
           return "Caps Lock"
         }
-        case Keys.SCROLL_LOCK => {
+        case com.badlogic.gdx.Input.Keys.SCROLL_LOCK => {
           return "Scroll Lock"
         }
-        case Keys.PAUSE => {
+        case com.badlogic.gdx.Input.Keys.PAUSE => {
           return "Pause"
         }
-        case Keys.PRINT_SCREEN => {
+        case com.badlogic.gdx.Input.Keys.PRINT_SCREEN => {
           return "Print"
         }
         case _ => {
@@ -772,17 +774,17 @@ trait Input {
       }
     }
     def valueOf(keyname: java.lang.String): scala.Int = {
-      if (Keys.keyNames == null) {
-        Keys.initializeKeyNames()
+      if (com.badlogic.gdx.Input.Keys.keyNames == null) {
+        com.badlogic.gdx.Input.Keys.initializeKeyNames()
       } else ()
-      return Keys.keyNames.get(keyname, -1)
+      return com.badlogic.gdx.Input.Keys.keyNames.get(keyname, -1)
     }
     private def initializeKeyNames(): scala.Unit = {
-      Keys.keyNames = new com.badlogic.gdx.utils.ObjectIntMap[java.lang.String]()
+      com.badlogic.gdx.Input.Keys.keyNames = new com.badlogic.gdx.utils.ObjectIntMap[java.lang.String]();
       { var i: scala.Int = 0; while (i < 256) { {
-        val name: java.lang.String = Keys.toString(i)
+        val name: java.lang.String = com.badlogic.gdx.Input.Keys.toString(i)
         if (name != null) {
-          Keys.keyNames.put(name, i)
+          com.badlogic.gdx.Input.Keys.keyNames.put(name, i)
         } else ()
       }; i = i + 1 } }
     }

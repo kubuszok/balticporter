@@ -1,16 +1,16 @@
 package com.badlogic.gdx.utils
 
 class XmlReader {
-  private final val elements: com.badlogic.gdx.utils.Array[Element] = new com.badlogic.gdx.utils.Array(8)
-  private var root: Element = null.asInstanceOf[Element]
-  private var current: Element = null.asInstanceOf[Element]
+  private final val elements: com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.XmlReader.Element] = new com.badlogic.gdx.utils.Array(8)
+  private var root: com.badlogic.gdx.utils.XmlReader.Element = null.asInstanceOf[com.badlogic.gdx.utils.XmlReader.Element]
+  private var current: com.badlogic.gdx.utils.XmlReader.Element = null.asInstanceOf[com.badlogic.gdx.utils.XmlReader.Element]
   private final val textBuffer: java.lang.StringBuilder = new java.lang.StringBuilder(64)
   private var entitiesText: java.lang.String = null.asInstanceOf[java.lang.String]
-  def parse(xml: java.lang.String): Element = {
+  def parse(xml: java.lang.String): com.badlogic.gdx.utils.XmlReader.Element = {
     val data: scala.Array[scala.Char] = xml.toCharArray()
     return this.parse(data, 0, data.length)
   }
-  def parse(reader: java.io.Reader): Element = {
+  def parse(reader: java.io.Reader): com.badlogic.gdx.utils.XmlReader.Element = {
     try {
       var data: scala.Array[scala.Char] = new Array[scala.Char](1024)
       var offset: scala.Int = 0
@@ -36,7 +36,7 @@ class XmlReader {
       com.badlogic.gdx.utils.StreamUtils.closeQuietly(reader)
     }
   }
-  def parse(input: java.io.InputStream): Element = {
+  def parse(input: java.io.InputStream): com.badlogic.gdx.utils.XmlReader.Element = {
     try {
       return this.parse(new java.io.InputStreamReader(input, "UTF-8"))
     } catch {
@@ -47,7 +47,7 @@ class XmlReader {
       com.badlogic.gdx.utils.StreamUtils.closeQuietly(input)
     }
   }
-  def parse(file: com.badlogic.gdx.files.FileHandle): Element = {
+  def parse(file: com.badlogic.gdx.files.FileHandle): com.badlogic.gdx.utils.XmlReader.Element = {
     try {
       return this.parse(file.reader("UTF-8"))
     } catch {
@@ -56,16 +56,16 @@ class XmlReader {
       }
     }
   }
-  def parse(data: scala.Array[scala.Char], offset: scala.Int, length: scala.Int): Element = {
+  def parse(data: scala.Array[scala.Char], offset: scala.Int, length: scala.Int): com.badlogic.gdx.utils.XmlReader.Element = {
     var cs: scala.Int = 0
     var p: scala.Int = offset
     val pe: scala.Int = length
     var s: scala.Int = 0
     var attributeName: java.lang.String = null
-    var hasBody: scala.Boolean = false
+    var hasBody: scala.Boolean = false;
     {
       cs = XmlReader.xml_start
-    }
+    };
     {
       var _klen: scala.Int = 0
       var _trans: scala.Int = 0
@@ -170,7 +170,7 @@ class XmlReader {
                               p = p + 1
                             }
                           }
-                        }
+                        };
                         {
                           cs = 15
                           _goto_targ = 2
@@ -186,7 +186,7 @@ class XmlReader {
                   case 2 => {
                     {
                       hasBody = false
-                      this.close()
+                      this.close();
                       {
                         cs = 15
                         _goto_targ = 2
@@ -198,7 +198,7 @@ class XmlReader {
                   }
                   case 3 => {
                     {
-                      this.close()
+                      this.close();
                       {
                         cs = 15
                         _goto_targ = 2
@@ -376,7 +376,7 @@ class XmlReader {
                               p = p + 1
                             }
                           }
-                        }
+                        };
                         {
                           cs = 15
                           _goto_targ = 2
@@ -392,7 +392,7 @@ class XmlReader {
                   case 2 => {
                     {
                       hasBody = false
-                      this.close()
+                      this.close();
                       {
                         cs = 15
                         _goto_targ = 2
@@ -404,7 +404,7 @@ class XmlReader {
                   }
                   case 3 => {
                     {
-                      this.close()
+                      this.close();
                       {
                         cs = 15
                         _goto_targ = 2
@@ -514,7 +514,7 @@ class XmlReader {
     }
     this.entitiesText = null
     if (p < pe) {
-      var lineNumber: scala.Int = 1
+      var lineNumber: scala.Int = 1;
       { var i: scala.Int = 0; while (i < p) { {
         if (data(i) == '\n') {
           lineNumber = lineNumber + 1
@@ -523,28 +523,28 @@ class XmlReader {
       throw new com.badlogic.gdx.utils.SerializationException((("Error parsing XML on line " + lineNumber) + " near: ") + new java.lang.String(data, p, java.lang.Math.min(32, pe - p)))
     } else {
       if (this.elements.size != 0) {
-        val element: Element = this.elements.peek()
+        val element: com.badlogic.gdx.utils.XmlReader.Element = this.elements.peek()
         this.elements.clear()
         throw new com.badlogic.gdx.utils.SerializationException("Error parsing XML, unclosed element: " + element.getName())
       } else ()
     }
-    var root: Element = this.root
+    var root: com.badlogic.gdx.utils.XmlReader.Element = this.root
     this.root = null
     return root
   }
-  protected def open(name: java.lang.String): scala.Unit = {
-    val child: Element = new Element(name, this.current)
-    val parent: Element = this.current
+  def open(name: java.lang.String): scala.Unit = {
+    val child: com.badlogic.gdx.utils.XmlReader.Element = new com.badlogic.gdx.utils.XmlReader.Element(name, this.current)
+    val parent: com.badlogic.gdx.utils.XmlReader.Element = this.current
     if (parent != null) {
       parent.addChild(child)
     } else ()
     this.elements.add(child)
     this.current = child
   }
-  protected def attribute(name: java.lang.String, value: java.lang.String): scala.Unit = {
+  def attribute(name: java.lang.String, value: java.lang.String): scala.Unit = {
     this.current.setAttribute(name, value)
   }
-  protected def entity(name: java.lang.String): java.lang.String = {
+  def entity(name: java.lang.String): java.lang.String = {
     if (name.equals("lt")) {
       return "<"
     } else ()
@@ -565,21 +565,64 @@ class XmlReader {
     } else ()
     return null
   }
-  protected def text(text: java.lang.String): scala.Unit = {
+  def text(text: java.lang.String): scala.Unit = {
     val existing: java.lang.String = this.current.getText()
     this.current.setText(if (existing != null) existing + text else text)
   }
-  protected def close(): scala.Unit = {
+  def close(): scala.Unit = {
     this.root = this.elements.pop()
     this.current = if (this.elements.size > 0) this.elements.peek() else null
+  }
+}
+object XmlReader {
+  private final val _xml_actions: scala.Array[scala.Byte] = XmlReader.init__xml_actions_0()
+  private final val _xml_key_offsets: scala.Array[scala.Byte] = XmlReader.init__xml_key_offsets_0()
+  private final val _xml_trans_keys: scala.Array[scala.Char] = XmlReader.init__xml_trans_keys_0()
+  private final val _xml_single_lengths: scala.Array[scala.Byte] = XmlReader.init__xml_single_lengths_0()
+  private final val _xml_range_lengths: scala.Array[scala.Byte] = XmlReader.init__xml_range_lengths_0()
+  private final val _xml_index_offsets: scala.Array[scala.Short] = XmlReader.init__xml_index_offsets_0()
+  private final val _xml_indicies: scala.Array[scala.Byte] = XmlReader.init__xml_indicies_0()
+  private final val _xml_trans_targs: scala.Array[scala.Byte] = XmlReader.init__xml_trans_targs_0()
+  private final val _xml_trans_actions: scala.Array[scala.Byte] = XmlReader.init__xml_trans_actions_0()
+  final val xml_start: scala.Int = 1
+  final val xml_first_final: scala.Int = 34
+  final val xml_error: scala.Int = 0
+  final val xml_en_elementBody: scala.Int = 15
+  final val xml_en_main: scala.Int = 1
+  private def init__xml_actions_0(): scala.Array[scala.Byte] = {
+    return Array[scala.Byte](0, 1, 0, 1, 1, 1, 2, 1, 3, 1, 4, 1, 5, 2, 1, 4, 2, 2, 4, 2, 6, 7, 2, 6, 8, 3, 0, 6, 7)
+  }
+  private def init__xml_key_offsets_0(): scala.Array[scala.Byte] = {
+    return Array[scala.Byte](0, 0, 4, 9, 14, 20, 26, 30, 35, 36, 37, 42, 46, 50, 51, 52, 56, 57, 62, 67, 73, 79, 83, 88, 89, 90, 95, 99, 103, 104, 108, 109, 110, 111, 112, 115)
+  }
+  private def init__xml_trans_keys_0(): scala.Array[scala.Char] = {
+    return Array[scala.Char](32, 60, 9, 13, 32, 47, 62, 9, 13, 32, 47, 62, 9, 13, 32, 47, 61, 62, 9, 13, 32, 47, 61, 62, 9, 13, 32, 61, 9, 13, 32, 34, 39, 9, 13, 34, 34, 32, 47, 62, 9, 13, 32, 62, 9, 13, 32, 62, 9, 13, 39, 39, 32, 60, 9, 13, 60, 32, 47, 62, 9, 13, 32, 47, 62, 9, 13, 32, 47, 61, 62, 9, 13, 32, 47, 61, 62, 9, 13, 32, 61, 9, 13, 32, 34, 39, 9, 13, 34, 34, 32, 47, 62, 9, 13, 32, 62, 9, 13, 32, 62, 9, 13, 60, 32, 47, 9, 13, 62, 62, 39, 39, 32, 9, 13, 0)
+  }
+  private def init__xml_single_lengths_0(): scala.Array[scala.Byte] = {
+    return Array[scala.Byte](0, 2, 3, 3, 4, 4, 2, 3, 1, 1, 3, 2, 2, 1, 1, 2, 1, 3, 3, 4, 4, 2, 3, 1, 1, 3, 2, 2, 1, 2, 1, 1, 1, 1, 1, 0)
+  }
+  private def init__xml_range_lengths_0(): scala.Array[scala.Byte] = {
+    return Array[scala.Byte](0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 0, 0, 1, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 1, 0)
+  }
+  private def init__xml_index_offsets_0(): scala.Array[scala.Short] = {
+    return Array[scala.Short](0, 0, 4, 9, 14, 20, 26, 30, 35, 37, 39, 44, 48, 52, 54, 56, 60, 62, 67, 72, 78, 84, 88, 93, 95, 97, 102, 106, 110, 112, 116, 118, 120, 122, 124, 127)
+  }
+  private def init__xml_indicies_0(): scala.Array[scala.Byte] = {
+    return Array[scala.Byte](0, 2, 0, 1, 2, 1, 1, 2, 3, 5, 6, 7, 5, 4, 9, 10, 1, 11, 9, 8, 13, 1, 14, 1, 13, 12, 15, 16, 15, 1, 16, 17, 18, 16, 1, 20, 19, 22, 21, 9, 10, 11, 9, 1, 23, 24, 23, 1, 25, 11, 25, 1, 20, 26, 22, 27, 29, 30, 29, 28, 32, 31, 30, 34, 1, 30, 33, 36, 37, 38, 36, 35, 40, 41, 1, 42, 40, 39, 44, 1, 45, 1, 44, 43, 46, 47, 46, 1, 47, 48, 49, 47, 1, 51, 50, 53, 52, 40, 41, 42, 40, 1, 54, 55, 54, 1, 56, 42, 56, 1, 57, 1, 57, 34, 57, 1, 1, 58, 59, 58, 51, 60, 53, 61, 62, 62, 1, 1, 0)
+  }
+  private def init__xml_trans_targs_0(): scala.Array[scala.Byte] = {
+    return Array[scala.Byte](1, 0, 2, 3, 3, 4, 11, 34, 5, 4, 11, 34, 5, 6, 7, 6, 7, 8, 13, 9, 10, 9, 10, 12, 34, 12, 14, 14, 16, 15, 17, 16, 17, 18, 30, 18, 19, 26, 28, 20, 19, 26, 28, 20, 21, 22, 21, 22, 23, 32, 24, 25, 24, 25, 27, 28, 27, 29, 31, 35, 33, 33, 34)
+  }
+  private def init__xml_trans_actions_0(): scala.Array[scala.Byte] = {
+    return Array[scala.Byte](0, 0, 0, 1, 0, 3, 3, 13, 1, 0, 0, 9, 0, 11, 11, 0, 0, 0, 0, 1, 25, 0, 19, 5, 16, 0, 1, 0, 1, 0, 0, 0, 22, 1, 0, 0, 3, 3, 13, 1, 0, 0, 9, 0, 11, 11, 0, 0, 0, 0, 1, 25, 0, 19, 5, 16, 0, 0, 0, 7, 1, 0, 0)
   }
   class Element {
     private var name: java.lang.String = null.asInstanceOf[java.lang.String]
     private var attributes: com.badlogic.gdx.utils.ObjectMap[java.lang.String, java.lang.String] = null.asInstanceOf[com.badlogic.gdx.utils.ObjectMap[java.lang.String, java.lang.String]]
-    private var children: com.badlogic.gdx.utils.Array[Element] = null.asInstanceOf[com.badlogic.gdx.utils.Array[Element]]
+    private var children: com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.XmlReader.Element] = null.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.XmlReader.Element]]
     private var text: java.lang.String = null.asInstanceOf[java.lang.String]
-    private var parent: Element = null.asInstanceOf[Element]
-    def this(name: java.lang.String, parent: Element) = {
+    private var parent: com.badlogic.gdx.utils.XmlReader.Element = null.asInstanceOf[com.badlogic.gdx.utils.XmlReader.Element]
+    def this(name: java.lang.String, parent: com.badlogic.gdx.utils.XmlReader.Element) = {
       this()
       this.name = name
       this.parent = parent
@@ -628,16 +671,16 @@ class XmlReader {
       } else ()
       return this.children.size
     }
-    def getChildren(): com.badlogic.gdx.utils.Array[Element] = {
+    def getChildren(): com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.XmlReader.Element] = {
       return this.children
     }
-    def getChild(index: scala.Int): Element = {
+    def getChild(index: scala.Int): com.badlogic.gdx.utils.XmlReader.Element = {
       if (this.children == null) {
         throw new com.badlogic.gdx.utils.GdxRuntimeException("Element has no children: " + this.name)
       } else ()
       return this.children.get(index)
     }
-    def addChild(element: Element): scala.Unit = {
+    def addChild(element: com.badlogic.gdx.utils.XmlReader.Element): scala.Unit = {
       if (element == null) {
         throw new java.lang.IllegalArgumentException("element cannot be null.")
       } else ()
@@ -655,13 +698,13 @@ class XmlReader {
     }
     def removeChild(index: scala.Int): scala.Unit = {
       if (this.children != null) {
-        val removedChild: Element = this.children.removeIndex(index)
+        val removedChild: com.badlogic.gdx.utils.XmlReader.Element = this.children.removeIndex(index)
         if (removedChild != null) {
           removedChild.parent = null
         } else ()
       } else ()
     }
-    def removeChild(child: Element): scala.Unit = {
+    def removeChild(child: com.badlogic.gdx.utils.XmlReader.Element): scala.Unit = {
       if (this.children != null) {
         val removeSuccess: scala.Boolean = this.children.removeValue(child, true)
         if (removeSuccess) {
@@ -673,7 +716,7 @@ class XmlReader {
       this.parent.removeChild(this)
       this.parent = null
     }
-    def replaceChild(child: Element, replacement: Element): scala.Unit = {
+    def replaceChild(child: com.badlogic.gdx.utils.XmlReader.Element, replacement: com.badlogic.gdx.utils.XmlReader.Element): scala.Unit = {
       if (child == null) {
         throw new java.lang.IllegalArgumentException("child cannot be null.")
       } else ()
@@ -690,7 +733,7 @@ class XmlReader {
         child.parent = null
       }
     }
-    def getParent(): Element = {
+    def getParent(): com.badlogic.gdx.utils.XmlReader.Element = {
       return this.parent
     }
     def toString(): java.lang.String = {
@@ -733,12 +776,12 @@ class XmlReader {
       }
       return buffer.toString()
     }
-    def getChildByName(name: java.lang.String): Element = {
+    def getChildByName(name: java.lang.String): com.badlogic.gdx.utils.XmlReader.Element = {
       if (this.children == null) {
         return null
-      } else ()
+      } else ();
       { var i: scala.Int = 0; while (i < this.children.size) { {
-        val element: Element = this.children.get(i)
+        val element: com.badlogic.gdx.utils.XmlReader.Element = this.children.get(i)
         if (element.name.equals(name)) {
           return element
         } else ()
@@ -751,16 +794,16 @@ class XmlReader {
       } else ()
       return this.getChildByName(name) != null
     }
-    def getChildByNameRecursive(name: java.lang.String): Element = {
+    def getChildByNameRecursive(name: java.lang.String): com.badlogic.gdx.utils.XmlReader.Element = {
       if (this.children == null) {
         return null
-      } else ()
+      } else ();
       { var i: scala.Int = 0; while (i < this.children.size) { {
-        val element: Element = this.children.get(i)
+        val element: com.badlogic.gdx.utils.XmlReader.Element = this.children.get(i)
         if (element.name.equals(name)) {
           return element
         } else ()
-        val found: Element = element.getChildByNameRecursive(name)
+        val found: com.badlogic.gdx.utils.XmlReader.Element = element.getChildByNameRecursive(name)
         if (found != null) {
           return found
         } else ()
@@ -773,30 +816,30 @@ class XmlReader {
       } else ()
       return this.getChildByNameRecursive(name) != null
     }
-    def getChildrenByName(name: java.lang.String): com.badlogic.gdx.utils.Array[Element] = {
-      val result: com.badlogic.gdx.utils.Array[Element] = new com.badlogic.gdx.utils.Array[Element]()
+    def getChildrenByName(name: java.lang.String): com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.XmlReader.Element] = {
+      val result: com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.XmlReader.Element] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.XmlReader.Element]()
       if (this.children == null) {
         return result
-      } else ()
+      } else ();
       { var i: scala.Int = 0; while (i < this.children.size) { {
-        val child: Element = this.children.get(i)
+        val child: com.badlogic.gdx.utils.XmlReader.Element = this.children.get(i)
         if (child.name.equals(name)) {
           result.add(child)
         } else ()
       }; i = i + 1 } }
       return result
     }
-    def getChildrenByNameRecursively(name: java.lang.String): com.badlogic.gdx.utils.Array[Element] = {
-      val result: com.badlogic.gdx.utils.Array[Element] = new com.badlogic.gdx.utils.Array[Element]()
+    def getChildrenByNameRecursively(name: java.lang.String): com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.XmlReader.Element] = {
+      val result: com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.XmlReader.Element] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.XmlReader.Element]()
       this.getChildrenByNameRecursively(name, result)
       return result
     }
-    private def getChildrenByNameRecursively(name: java.lang.String, result: com.badlogic.gdx.utils.Array[Element]): scala.Unit = {
+    private def getChildrenByNameRecursively(name: java.lang.String, result: com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.XmlReader.Element]): scala.Unit = {
       if (this.children == null) {
         return
-      } else ()
+      } else ();
       { var i: scala.Int = 0; while (i < this.children.size) { {
-        val child: Element = this.children.get(i)
+        val child: com.badlogic.gdx.utils.XmlReader.Element = this.children.get(i)
         if (child.name.equals(name)) {
           result.add(child)
         } else ()
@@ -847,7 +890,7 @@ class XmlReader {
           return value
         } else ()
       } else ()
-      val child: Element = this.getChildByName(name)
+      val child: com.badlogic.gdx.utils.XmlReader.Element = this.getChildByName(name)
       if (child == null) {
         return defaultValue
       } else ()
@@ -899,48 +942,5 @@ class XmlReader {
       } else ()
       return java.lang.Boolean.parseBoolean(value)
     }
-  }
-}
-object XmlReader {
-  private final val _xml_actions: scala.Array[scala.Byte] = XmlReader.init__xml_actions_0()
-  private final val _xml_key_offsets: scala.Array[scala.Byte] = XmlReader.init__xml_key_offsets_0()
-  private final val _xml_trans_keys: scala.Array[scala.Char] = XmlReader.init__xml_trans_keys_0()
-  private final val _xml_single_lengths: scala.Array[scala.Byte] = XmlReader.init__xml_single_lengths_0()
-  private final val _xml_range_lengths: scala.Array[scala.Byte] = XmlReader.init__xml_range_lengths_0()
-  private final val _xml_index_offsets: scala.Array[scala.Short] = XmlReader.init__xml_index_offsets_0()
-  private final val _xml_indicies: scala.Array[scala.Byte] = XmlReader.init__xml_indicies_0()
-  private final val _xml_trans_targs: scala.Array[scala.Byte] = XmlReader.init__xml_trans_targs_0()
-  private final val _xml_trans_actions: scala.Array[scala.Byte] = XmlReader.init__xml_trans_actions_0()
-  final val xml_start: scala.Int = 1
-  final val xml_first_final: scala.Int = 34
-  final val xml_error: scala.Int = 0
-  final val xml_en_elementBody: scala.Int = 15
-  final val xml_en_main: scala.Int = 1
-  private def init__xml_actions_0(): scala.Array[scala.Byte] = {
-    return Array[scala.Byte](0, 1, 0, 1, 1, 1, 2, 1, 3, 1, 4, 1, 5, 2, 1, 4, 2, 2, 4, 2, 6, 7, 2, 6, 8, 3, 0, 6, 7)
-  }
-  private def init__xml_key_offsets_0(): scala.Array[scala.Byte] = {
-    return Array[scala.Byte](0, 0, 4, 9, 14, 20, 26, 30, 35, 36, 37, 42, 46, 50, 51, 52, 56, 57, 62, 67, 73, 79, 83, 88, 89, 90, 95, 99, 103, 104, 108, 109, 110, 111, 112, 115)
-  }
-  private def init__xml_trans_keys_0(): scala.Array[scala.Char] = {
-    return Array[scala.Char](32, 60, 9, 13, 32, 47, 62, 9, 13, 32, 47, 62, 9, 13, 32, 47, 61, 62, 9, 13, 32, 47, 61, 62, 9, 13, 32, 61, 9, 13, 32, 34, 39, 9, 13, 34, 34, 32, 47, 62, 9, 13, 32, 62, 9, 13, 32, 62, 9, 13, 39, 39, 32, 60, 9, 13, 60, 32, 47, 62, 9, 13, 32, 47, 62, 9, 13, 32, 47, 61, 62, 9, 13, 32, 47, 61, 62, 9, 13, 32, 61, 9, 13, 32, 34, 39, 9, 13, 34, 34, 32, 47, 62, 9, 13, 32, 62, 9, 13, 32, 62, 9, 13, 60, 32, 47, 9, 13, 62, 62, 39, 39, 32, 9, 13, 0)
-  }
-  private def init__xml_single_lengths_0(): scala.Array[scala.Byte] = {
-    return Array[scala.Byte](0, 2, 3, 3, 4, 4, 2, 3, 1, 1, 3, 2, 2, 1, 1, 2, 1, 3, 3, 4, 4, 2, 3, 1, 1, 3, 2, 2, 1, 2, 1, 1, 1, 1, 1, 0)
-  }
-  private def init__xml_range_lengths_0(): scala.Array[scala.Byte] = {
-    return Array[scala.Byte](0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 0, 0, 1, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 1, 0)
-  }
-  private def init__xml_index_offsets_0(): scala.Array[scala.Short] = {
-    return Array[scala.Short](0, 0, 4, 9, 14, 20, 26, 30, 35, 37, 39, 44, 48, 52, 54, 56, 60, 62, 67, 72, 78, 84, 88, 93, 95, 97, 102, 106, 110, 112, 116, 118, 120, 122, 124, 127)
-  }
-  private def init__xml_indicies_0(): scala.Array[scala.Byte] = {
-    return Array[scala.Byte](0, 2, 0, 1, 2, 1, 1, 2, 3, 5, 6, 7, 5, 4, 9, 10, 1, 11, 9, 8, 13, 1, 14, 1, 13, 12, 15, 16, 15, 1, 16, 17, 18, 16, 1, 20, 19, 22, 21, 9, 10, 11, 9, 1, 23, 24, 23, 1, 25, 11, 25, 1, 20, 26, 22, 27, 29, 30, 29, 28, 32, 31, 30, 34, 1, 30, 33, 36, 37, 38, 36, 35, 40, 41, 1, 42, 40, 39, 44, 1, 45, 1, 44, 43, 46, 47, 46, 1, 47, 48, 49, 47, 1, 51, 50, 53, 52, 40, 41, 42, 40, 1, 54, 55, 54, 1, 56, 42, 56, 1, 57, 1, 57, 34, 57, 1, 1, 58, 59, 58, 51, 60, 53, 61, 62, 62, 1, 1, 0)
-  }
-  private def init__xml_trans_targs_0(): scala.Array[scala.Byte] = {
-    return Array[scala.Byte](1, 0, 2, 3, 3, 4, 11, 34, 5, 4, 11, 34, 5, 6, 7, 6, 7, 8, 13, 9, 10, 9, 10, 12, 34, 12, 14, 14, 16, 15, 17, 16, 17, 18, 30, 18, 19, 26, 28, 20, 19, 26, 28, 20, 21, 22, 21, 22, 23, 32, 24, 25, 24, 25, 27, 28, 27, 29, 31, 35, 33, 33, 34)
-  }
-  private def init__xml_trans_actions_0(): scala.Array[scala.Byte] = {
-    return Array[scala.Byte](0, 0, 0, 1, 0, 3, 3, 13, 1, 0, 0, 9, 0, 11, 11, 0, 0, 0, 0, 1, 25, 0, 19, 5, 16, 0, 1, 0, 1, 0, 0, 0, 22, 1, 0, 0, 3, 3, 13, 1, 0, 0, 9, 0, 11, 11, 0, 0, 0, 0, 1, 25, 0, 19, 5, 16, 0, 0, 0, 7, 1, 0, 0)
   }
 }

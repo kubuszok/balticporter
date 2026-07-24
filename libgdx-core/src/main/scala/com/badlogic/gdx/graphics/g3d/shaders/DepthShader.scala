@@ -3,7 +3,7 @@ package com.badlogic.gdx.graphics.g3d.shaders
 class DepthShader extends com.badlogic.gdx.graphics.g3d.shaders.DefaultShader {
   var numBones: scala.Int = 0
   private var alphaTestAttribute: com.badlogic.gdx.graphics.g3d.attributes.FloatAttribute = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.attributes.FloatAttribute]
-  def this(renderable: com.badlogic.gdx.graphics.g3d.Renderable, config: Config, shaderProgram: com.badlogic.gdx.graphics.glutils.ShaderProgram) = {
+  def this(renderable: com.badlogic.gdx.graphics.g3d.Renderable, config: com.badlogic.gdx.graphics.g3d.shaders.DepthShader.Config, shaderProgram: com.badlogic.gdx.graphics.glutils.ShaderProgram) = {
     this()
     val attributes: com.badlogic.gdx.graphics.g3d.Attributes = DepthShader.combineAttributes(renderable)
     if ((renderable.bones != null) && (renderable.bones.length > config.numBones)) {
@@ -16,17 +16,17 @@ class DepthShader extends com.badlogic.gdx.graphics.g3d.shaders.DefaultShader {
     } else ()
     this.alphaTestAttribute = new com.badlogic.gdx.graphics.g3d.attributes.FloatAttribute(com.badlogic.gdx.graphics.g3d.attributes.FloatAttribute.AlphaTest, config.defaultAlphaTest)
   }
-  def this(renderable: com.badlogic.gdx.graphics.g3d.Renderable, config: Config, prefix: java.lang.String, vertexShader: java.lang.String, fragmentShader: java.lang.String) = {
+  def this(renderable: com.badlogic.gdx.graphics.g3d.Renderable, config: com.badlogic.gdx.graphics.g3d.shaders.DepthShader.Config, prefix: java.lang.String, vertexShader: java.lang.String, fragmentShader: java.lang.String) = {
     this(renderable, config, new com.badlogic.gdx.graphics.glutils.ShaderProgram(prefix + vertexShader, prefix + fragmentShader))
   }
-  def this(renderable: com.badlogic.gdx.graphics.g3d.Renderable, config: Config, prefix: java.lang.String) = {
+  def this(renderable: com.badlogic.gdx.graphics.g3d.Renderable, config: com.badlogic.gdx.graphics.g3d.shaders.DepthShader.Config, prefix: java.lang.String) = {
     this(renderable, config, prefix, if (config.vertexShader != null) config.vertexShader else DepthShader.getDefaultVertexShader(), if (config.fragmentShader != null) config.fragmentShader else DepthShader.getDefaultFragmentShader())
   }
-  def this(renderable: com.badlogic.gdx.graphics.g3d.Renderable, config: Config) = {
+  def this(renderable: com.badlogic.gdx.graphics.g3d.Renderable, config: com.badlogic.gdx.graphics.g3d.shaders.DepthShader.Config) = {
     this(renderable, config, DepthShader.createPrefix(renderable, config))
   }
   def this(renderable: com.badlogic.gdx.graphics.g3d.Renderable) = {
-    this(renderable, new Config())
+    this(renderable, new com.badlogic.gdx.graphics.g3d.shaders.DepthShader.Config())
   }
   def begin(camera: com.badlogic.gdx.graphics.Camera, context: com.badlogic.gdx.graphics.g3d.utils.RenderContext): scala.Unit = {
     super.begin(camera, context)
@@ -70,17 +70,6 @@ class DepthShader extends com.badlogic.gdx.graphics.g3d.shaders.DefaultShader {
       super.render(renderable, combinedAttributes)
     }
   }
-  class Config extends com.badlogic.gdx.graphics.g3d.shaders.DefaultShader#Config {
-    var depthBufferOnly: scala.Boolean = false
-    var defaultAlphaTest: scala.Float = 0.5f
-    def this(vertexShader: java.lang.String, fragmentShader: java.lang.String) = {
-      this()
-    }
-    def this() = {
-      this()
-      defaultCullFace = com.badlogic.gdx.graphics.GL20.GL_FRONT
-    }
-  }
 }
 object DepthShader {
   private var defaultVertexShader: java.lang.String = null
@@ -98,7 +87,7 @@ object DepthShader {
     } else ()
     return DepthShader.defaultFragmentShader
   }
-  def createPrefix(renderable: com.badlogic.gdx.graphics.g3d.Renderable, config: Config): java.lang.String = {
+  def createPrefix(renderable: com.badlogic.gdx.graphics.g3d.Renderable, config: com.badlogic.gdx.graphics.g3d.shaders.DepthShader.Config): java.lang.String = {
     var prefix: java.lang.String = com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.createPrefix(renderable, config)
     if (!config.depthBufferOnly) {
       prefix = prefix + "#define PackedDepthFlag\n"
@@ -114,5 +103,16 @@ object DepthShader {
       DepthShader.tmpAttributes.set(renderable.material)
     } else ()
     return DepthShader.tmpAttributes
+  }
+  class Config extends com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Config {
+    var depthBufferOnly: scala.Boolean = false
+    var defaultAlphaTest: scala.Float = 0.5f
+    def this(vertexShader: java.lang.String, fragmentShader: java.lang.String) = {
+      this()
+    }
+    def this() = {
+      this()
+      defaultCullFace = com.badlogic.gdx.graphics.GL20.GL_FRONT
+    }
   }
 }

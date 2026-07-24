@@ -1,7 +1,7 @@
 package com.badlogic.gdx.scenes.scene2d
 
 class InputEvent extends com.badlogic.gdx.scenes.scene2d.Event {
-  private var `type`: Type = null.asInstanceOf[Type]
+  private var `type`: com.badlogic.gdx.scenes.scene2d.InputEvent.Type = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.InputEvent.Type]
   private var stageX: scala.Float = 0.0f
   private var stageY: scala.Float = 0.0f
   private var scrollAmountX: scala.Float = 0.0f
@@ -29,10 +29,10 @@ class InputEvent extends com.badlogic.gdx.scenes.scene2d.Event {
   def setStageY(stageY: scala.Float): scala.Unit = {
     this.stageY = stageY
   }
-  def getType(): Type = {
+  def getType(): com.badlogic.gdx.scenes.scene2d.InputEvent.Type = {
     return this.`type`
   }
-  def setType(`type`: Type): scala.Unit = {
+  def setType(`type`: com.badlogic.gdx.scenes.scene2d.InputEvent.Type): scala.Unit = {
     this.`type` = `type`
   }
   def getPointer(): scala.Int = {
@@ -94,6 +94,8 @@ class InputEvent extends com.badlogic.gdx.scenes.scene2d.Event {
   def toString(): java.lang.String = {
     return this.`type`.toString()
   }
+}
+object InputEvent {
   sealed abstract class Type
   object Type {
     case object touchDown extends Type

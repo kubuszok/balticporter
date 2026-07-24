@@ -1,6 +1,6 @@
 package com.badlogic.gdx.graphics.g3d.particles.values
 
-abstract class SpawnShapeValue extends com.badlogic.gdx.graphics.g3d.particles.values.ParticleValue with com.badlogic.gdx.graphics.g3d.particles.ResourceData#Configurable with com.badlogic.gdx.utils.Json#Serializable {
+abstract class SpawnShapeValue extends com.badlogic.gdx.graphics.g3d.particles.values.ParticleValue with com.badlogic.gdx.graphics.g3d.particles.ResourceData.Configurable[?] with com.badlogic.gdx.utils.Json.Serializable {
   var xOffsetValue: com.badlogic.gdx.graphics.g3d.particles.values.RangedNumericValue = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.values.RangedNumericValue]
   var yOffsetValue: com.badlogic.gdx.graphics.g3d.particles.values.RangedNumericValue = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.values.RangedNumericValue]
   var zOffsetValue: com.badlogic.gdx.graphics.g3d.particles.values.RangedNumericValue = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.values.RangedNumericValue]
@@ -49,14 +49,14 @@ abstract class SpawnShapeValue extends com.badlogic.gdx.graphics.g3d.particles.v
   }
   def read(json: com.badlogic.gdx.utils.Json, jsonData: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
     super.read(json, jsonData)
-    this.xOffsetValue = json.readValue("xOffsetValue", classOf[java.lang.Class], jsonData)
-    this.yOffsetValue = json.readValue("yOffsetValue", classOf[java.lang.Class], jsonData)
-    this.zOffsetValue = json.readValue("zOffsetValue", classOf[java.lang.Class], jsonData)
+    this.xOffsetValue = json.readValue("xOffsetValue", classOf[com.badlogic.gdx.graphics.g3d.particles.values.RangedNumericValue], jsonData)
+    this.yOffsetValue = json.readValue("yOffsetValue", classOf[com.badlogic.gdx.graphics.g3d.particles.values.RangedNumericValue], jsonData)
+    this.zOffsetValue = json.readValue("zOffsetValue", classOf[com.badlogic.gdx.graphics.g3d.particles.values.RangedNumericValue], jsonData)
   }
-  def save(manager: com.badlogic.gdx.assets.AssetManager, data: com.badlogic.gdx.graphics.g3d.particles.ResourceData): scala.Unit = {
+  def save(manager: com.badlogic.gdx.assets.AssetManager, data: com.badlogic.gdx.graphics.g3d.particles.ResourceData[?]): scala.Unit = {
     ()
   }
-  def load(manager: com.badlogic.gdx.assets.AssetManager, data: com.badlogic.gdx.graphics.g3d.particles.ResourceData): scala.Unit = {
+  def load(manager: com.badlogic.gdx.assets.AssetManager, data: com.badlogic.gdx.graphics.g3d.particles.ResourceData[?]): scala.Unit = {
     ()
   }
 }

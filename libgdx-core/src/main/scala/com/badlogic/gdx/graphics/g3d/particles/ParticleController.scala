@@ -1,6 +1,6 @@
 package com.badlogic.gdx.graphics.g3d.particles
 
-class ParticleController extends com.badlogic.gdx.utils.Json#Serializable with com.badlogic.gdx.graphics.g3d.particles.ResourceData#Configurable {
+class ParticleController extends com.badlogic.gdx.utils.Json.Serializable with com.badlogic.gdx.graphics.g3d.particles.ResourceData.Configurable[?] {
   var name: java.lang.String = null.asInstanceOf[java.lang.String]
   var emitter: com.badlogic.gdx.graphics.g3d.particles.emitters.Emitter = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.emitters.Emitter]
   var influencers: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.influencers.Influencer] = null.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.influencers.Influencer]]
@@ -9,7 +9,7 @@ class ParticleController extends com.badlogic.gdx.utils.Json#Serializable with c
   var particleChannels: com.badlogic.gdx.graphics.g3d.particles.ParticleChannels = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ParticleChannels]
   var transform: com.badlogic.gdx.math.Matrix4 = null.asInstanceOf[com.badlogic.gdx.math.Matrix4]
   var scale$field: com.badlogic.gdx.math.Vector3 = null.asInstanceOf[com.badlogic.gdx.math.Vector3]
-  protected var boundingBox: com.badlogic.gdx.math.collision.BoundingBox = null.asInstanceOf[com.badlogic.gdx.math.collision.BoundingBox]
+  var boundingBox: com.badlogic.gdx.math.collision.BoundingBox = null.asInstanceOf[com.badlogic.gdx.math.collision.BoundingBox]
   var deltaTime: scala.Float = 0.0f
   var deltaTimeSqr: scala.Float = 0.0f
   def this(name: java.lang.String, emitter: com.badlogic.gdx.graphics.g3d.particles.emitters.Emitter, renderer: com.badlogic.gdx.graphics.g3d.particles.renderers.ParticleControllerRenderer[?, ?], influencers: scala.Array[com.badlogic.gdx.graphics.g3d.particles.influencers.Influencer]) = {
@@ -81,7 +81,7 @@ class ParticleController extends com.badlogic.gdx.utils.Json#Serializable with c
     }
     this.renderer.init()
   }
-  protected def allocateChannels(maxParticleCount: scala.Int): scala.Unit = {
+  def allocateChannels(maxParticleCount: scala.Int): scala.Unit = {
     this.particles = new com.badlogic.gdx.graphics.g3d.particles.ParallelArray(maxParticleCount)
     this.emitter.allocateChannels()
     for (influencer <- this.influencers) {
@@ -89,7 +89,7 @@ class ParticleController extends com.badlogic.gdx.utils.Json#Serializable with c
     }
     this.renderer.allocateChannels()
   }
-  protected def bind(): scala.Unit = {
+  def bind(): scala.Unit = {
     this.emitter.set(this)
     for (influencer <- this.influencers) {
       influencer.set(this)
@@ -161,9 +161,9 @@ class ParticleController extends com.badlogic.gdx.utils.Json#Serializable with c
     this.calculateBoundingBox()
     return this.boundingBox
   }
-  protected def calculateBoundingBox(): scala.Unit = {
+  def calculateBoundingBox(): scala.Unit = {
     this.boundingBox.clr()
-    val positionChannel: com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel = this.particles.getChannel(com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.Position)
+    val positionChannel: com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel = this.particles.getChannel(com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.Position);
     { var pos: scala.Int = 0; val c: scala.Int = positionChannel.strideSize * this.particles.size; while (pos < c) { {
       this.boundingBox.ext(positionChannel.data(pos + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.XOffset), positionChannel.data(pos + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.YOffset), positionChannel.data(pos + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.ZOffset))
     }; pos = pos + positionChannel.strideSize } }
@@ -198,24 +198,24 @@ class ParticleController extends com.badlogic.gdx.utils.Json#Serializable with c
   }
   def write(json: com.badlogic.gdx.utils.Json): scala.Unit = {
     json.writeValue("name", this.name)
-    json.writeValue("emitter", this.emitter, classOf[java.lang.Class])
-    json.writeValue("influencers", this.influencers, classOf[java.lang.Class], classOf[java.lang.Class])
-    json.writeValue("renderer", this.renderer, classOf[java.lang.Class])
+    json.writeValue("emitter", this.emitter, classOf[com.badlogic.gdx.graphics.g3d.particles.emitters.Emitter])
+    json.writeValue("influencers", this.influencers, classOf[com.badlogic.gdx.utils.Array[?]], classOf[com.badlogic.gdx.graphics.g3d.particles.influencers.Influencer])
+    json.writeValue("renderer", this.renderer, classOf[com.badlogic.gdx.graphics.g3d.particles.renderers.ParticleControllerRenderer[?, ?]])
   }
   def read(json: com.badlogic.gdx.utils.Json, jsonMap: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
-    this.name = json.readValue("name", classOf[java.lang.Class], jsonMap)
-    this.emitter = json.readValue("emitter", classOf[java.lang.Class], jsonMap)
-    this.influencers.addAll(json.readValue("influencers", classOf[java.lang.Class], classOf[java.lang.Class], jsonMap))
-    this.renderer = json.readValue("renderer", classOf[java.lang.Class], jsonMap)
+    this.name = json.readValue("name", classOf[java.lang.String], jsonMap)
+    this.emitter = json.readValue("emitter", classOf[com.badlogic.gdx.graphics.g3d.particles.emitters.Emitter], jsonMap)
+    this.influencers.addAll(json.readValue("influencers", classOf[com.badlogic.gdx.utils.Array[?]], classOf[com.badlogic.gdx.graphics.g3d.particles.influencers.Influencer], jsonMap))
+    this.renderer = json.readValue("renderer", classOf[com.badlogic.gdx.graphics.g3d.particles.renderers.ParticleControllerRenderer[?, ?]], jsonMap)
   }
-  def save(manager: com.badlogic.gdx.assets.AssetManager, data: com.badlogic.gdx.graphics.g3d.particles.ResourceData): scala.Unit = {
+  def save(manager: com.badlogic.gdx.assets.AssetManager, data: com.badlogic.gdx.graphics.g3d.particles.ResourceData[?]): scala.Unit = {
     this.emitter.save(manager, data)
     for (influencer <- this.influencers) {
       influencer.save(manager, data)
     }
     this.renderer.save(manager, data)
   }
-  def load(manager: com.badlogic.gdx.assets.AssetManager, data: com.badlogic.gdx.graphics.g3d.particles.ResourceData): scala.Unit = {
+  def load(manager: com.badlogic.gdx.assets.AssetManager, data: com.badlogic.gdx.graphics.g3d.particles.ResourceData[?]): scala.Unit = {
     this.emitter.load(manager, data)
     for (influencer <- this.influencers) {
       influencer.load(manager, data)
@@ -224,5 +224,5 @@ class ParticleController extends com.badlogic.gdx.utils.Json#Serializable with c
   }
 }
 object ParticleController {
-  protected final val DEFAULT_TIME_STEP: scala.Float = 1.0f / 60
+  final val DEFAULT_TIME_STEP: scala.Float = 1.0f / 60
 }

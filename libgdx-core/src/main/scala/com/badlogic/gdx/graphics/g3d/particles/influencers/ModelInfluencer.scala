@@ -17,15 +17,15 @@ abstract class ModelInfluencer extends com.badlogic.gdx.graphics.g3d.particles.i
   def allocateChannels(): scala.Unit = {
     this.modelChannel = this.controller.particles.addChannel(com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.ModelInstance)
   }
-  def save(manager: com.badlogic.gdx.assets.AssetManager, resources: com.badlogic.gdx.graphics.g3d.particles.ResourceData): scala.Unit = {
-    val data: com.badlogic.gdx.graphics.g3d.particles.ResourceData#SaveData = resources.createSaveData()
+  def save(manager: com.badlogic.gdx.assets.AssetManager, resources: com.badlogic.gdx.graphics.g3d.particles.ResourceData[?]): scala.Unit = {
+    val data: com.badlogic.gdx.graphics.g3d.particles.ResourceData.SaveData = resources.createSaveData()
     for (model <- this.models) {
-      data.saveAsset(manager.getAssetFileName(model), classOf[java.lang.Class])
+      data.saveAsset(manager.getAssetFileName(model), classOf[com.badlogic.gdx.graphics.g3d.Model])
     }
   }
-  def load(manager: com.badlogic.gdx.assets.AssetManager, resources: com.badlogic.gdx.graphics.g3d.particles.ResourceData): scala.Unit = {
-    val data: com.badlogic.gdx.graphics.g3d.particles.ResourceData#SaveData = resources.getSaveData()
-    var descriptor: com.badlogic.gdx.assets.AssetDescriptor = null.asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor]
+  def load(manager: com.badlogic.gdx.assets.AssetManager, resources: com.badlogic.gdx.graphics.g3d.particles.ResourceData[?]): scala.Unit = {
+    val data: com.badlogic.gdx.graphics.g3d.particles.ResourceData.SaveData = resources.getSaveData()
+    var descriptor: com.badlogic.gdx.assets.AssetDescriptor[?] = null.asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[?]]
     while ({
       descriptor = data.loadAsset()
       descriptor
@@ -37,26 +37,28 @@ abstract class ModelInfluencer extends com.badlogic.gdx.graphics.g3d.particles.i
       this.models.add(model)
     }
   }
+}
+object ModelInfluencer {
   class Single extends ModelInfluencer {
-    def this(influencer: Single) = {
+    def this(influencer: com.badlogic.gdx.graphics.g3d.particles.influencers.ModelInfluencer.Single) = {
       this()
     }
     def this(models: scala.Array[com.badlogic.gdx.graphics.g3d.Model]) = {
       this()
     }
     def init(): scala.Unit = {
-      val first: com.badlogic.gdx.graphics.g3d.Model = models.first()
+      val first: com.badlogic.gdx.graphics.g3d.Model = models.first();
       { var i: scala.Int = 0; val c: scala.Int = this.controller.emitter.maxParticleCount; while (i < c) { {
         this.modelChannel.data(i) = new com.badlogic.gdx.graphics.g3d.ModelInstance(first)
       }; i = i + 1 } }
     }
-    def copy(): Single = {
-      return new Single(this)
+    def copy(): com.badlogic.gdx.graphics.g3d.particles.influencers.ModelInfluencer.Single = {
+      return new com.badlogic.gdx.graphics.g3d.particles.influencers.ModelInfluencer.Single(this)
     }
   }
   class Random extends ModelInfluencer {
     var pool: ModelInstancePool = null.asInstanceOf[ModelInstancePool]
-    def this(influencer: Random) = {
+    def this(influencer: com.badlogic.gdx.graphics.g3d.particles.influencers.ModelInfluencer.Random) = {
       this()
       this.pool = new ModelInstancePool()
     }
@@ -82,8 +84,8 @@ abstract class ModelInfluencer extends com.badlogic.gdx.graphics.g3d.particles.i
         this.modelChannel.data(i) = null
       }; i = i + 1 } }
     }
-    def copy(): Random = {
-      return new Random(this)
+    def copy(): com.badlogic.gdx.graphics.g3d.particles.influencers.ModelInfluencer.Random = {
+      return new com.badlogic.gdx.graphics.g3d.particles.influencers.ModelInfluencer.Random(this)
     }
     private class ModelInstancePool extends com.badlogic.gdx.utils.Pool[com.badlogic.gdx.graphics.g3d.ModelInstance] {
       def newObject(): com.badlogic.gdx.graphics.g3d.ModelInstance = {

@@ -184,9 +184,9 @@ class TextureRegion {
     val rows: scala.Int = height / tileHeight
     val cols: scala.Int = width / tileWidth
     val startX: scala.Int = x
-    val tiles: scala.Array[scala.Array[TextureRegion]] = new Array[scala.Array[TextureRegion]](rows, cols)
+    val tiles: scala.Array[scala.Array[TextureRegion]] = new Array[scala.Array[TextureRegion]](rows, cols);
     { var row: scala.Int = 0; while (row < rows) { {
-      x = startX
+      x = startX;
       { var col: scala.Int = 0; while (col < cols) { {
         tiles(row)(col) = new TextureRegion(this.texture, x, y, tileWidth, tileHeight)
       }; col = col + 1; x = x + tileWidth } }

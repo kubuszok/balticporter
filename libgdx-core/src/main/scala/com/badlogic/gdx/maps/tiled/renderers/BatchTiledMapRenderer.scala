@@ -1,14 +1,14 @@
 package com.badlogic.gdx.maps.tiled.renderers
 
 abstract class BatchTiledMapRenderer extends com.badlogic.gdx.maps.tiled.TiledMapRenderer with com.badlogic.gdx.utils.Disposable {
-  protected var map: com.badlogic.gdx.maps.tiled.TiledMap = null.asInstanceOf[com.badlogic.gdx.maps.tiled.TiledMap]
-  protected var unitScale: scala.Float = 0.0f
-  protected var batch: com.badlogic.gdx.graphics.g2d.Batch = null.asInstanceOf[com.badlogic.gdx.graphics.g2d.Batch]
-  protected var viewBounds: com.badlogic.gdx.math.Rectangle = null.asInstanceOf[com.badlogic.gdx.math.Rectangle]
-  protected var imageBounds: com.badlogic.gdx.math.Rectangle = new com.badlogic.gdx.math.Rectangle()
-  protected var repeatedImageBounds: com.badlogic.gdx.math.Rectangle = new com.badlogic.gdx.math.Rectangle()
-  protected var ownsBatch: scala.Boolean = false
-  protected var vertices: scala.Array[scala.Float] = new Array[scala.Float](BatchTiledMapRenderer.NUM_VERTICES)
+  var map: com.badlogic.gdx.maps.tiled.TiledMap = null.asInstanceOf[com.badlogic.gdx.maps.tiled.TiledMap]
+  var unitScale: scala.Float = 0.0f
+  var batch: com.badlogic.gdx.graphics.g2d.Batch = null.asInstanceOf[com.badlogic.gdx.graphics.g2d.Batch]
+  var viewBounds: com.badlogic.gdx.math.Rectangle = null.asInstanceOf[com.badlogic.gdx.math.Rectangle]
+  var imageBounds: com.badlogic.gdx.math.Rectangle = new com.badlogic.gdx.math.Rectangle()
+  var repeatedImageBounds: com.badlogic.gdx.math.Rectangle = new com.badlogic.gdx.math.Rectangle()
+  var ownsBatch: scala.Boolean = false
+  var vertices: scala.Array[scala.Float] = new Array[scala.Float](BatchTiledMapRenderer.NUM_VERTICES)
   def this(map: com.badlogic.gdx.maps.tiled.TiledMap, unitScale: scala.Float, batch: com.badlogic.gdx.graphics.g2d.Batch) = {
     this()
     this.map = map
@@ -78,7 +78,7 @@ abstract class BatchTiledMapRenderer extends com.badlogic.gdx.maps.tiled.TiledMa
       return
     } else ()
     if (layer.isInstanceOf[com.badlogic.gdx.maps.MapGroupLayer]) {
-      val childLayers: com.badlogic.gdx.maps.MapLayers = layer.asInstanceOf[com.badlogic.gdx.maps.MapGroupLayer].getLayers()
+      val childLayers: com.badlogic.gdx.maps.MapLayers = layer.asInstanceOf[com.badlogic.gdx.maps.MapGroupLayer].getLayers();
       { var i: scala.Int = 0; while (i < childLayers.size()) { {
         val childLayer: com.badlogic.gdx.maps.MapLayer = childLayers.get(i)
         if (!childLayer.isVisible()) {
@@ -155,7 +155,7 @@ abstract class BatchTiledMapRenderer extends com.badlogic.gdx.maps.tiled.TiledMa
       var startX: scala.Float = this.viewBounds.x
       var startY: scala.Float = this.viewBounds.y
       startX = startX - (startX % this.imageBounds.width)
-      startY = startY - (startY % this.imageBounds.height)
+      startY = startY - (startY % this.imageBounds.height);
       { var i: scala.Int = 0; while (i <= repeatX) { {
         { var j: scala.Int = 0; while (j <= repeatY) { {
           var rx1: scala.Float = x1
@@ -202,21 +202,21 @@ abstract class BatchTiledMapRenderer extends com.badlogic.gdx.maps.tiled.TiledMa
       }; i = i + 1 } }
     }
   }
-  protected def getImageLayerColor(layer: com.badlogic.gdx.maps.tiled.TiledMapImageLayer, batchColor: com.badlogic.gdx.graphics.Color): scala.Float = {
+  def getImageLayerColor(layer: com.badlogic.gdx.maps.tiled.TiledMapImageLayer, batchColor: com.badlogic.gdx.graphics.Color): scala.Float = {
     val combinedTint: com.badlogic.gdx.graphics.Color = layer.getCombinedTintColor()
     val supportsTransparency: scala.Boolean = layer.supportsTransparency()
     val alphaMultiplier: scala.Float = if (supportsTransparency) 1.0f else combinedTint.a
     val opacityMultiplier: scala.Float = if (supportsTransparency) combinedTint.a else 1.0f
     return com.badlogic.gdx.graphics.Color.toFloatBits(batchColor.r * (combinedTint.r * alphaMultiplier), batchColor.g * (combinedTint.g * alphaMultiplier), batchColor.b * (combinedTint.b * alphaMultiplier), batchColor.a * (layer.getOpacity() * opacityMultiplier))
   }
-  protected def getTileLayerColor(layer: com.badlogic.gdx.maps.tiled.TiledMapTileLayer, batchColor: com.badlogic.gdx.graphics.Color): scala.Float = {
+  def getTileLayerColor(layer: com.badlogic.gdx.maps.tiled.TiledMapTileLayer, batchColor: com.badlogic.gdx.graphics.Color): scala.Float = {
     return com.badlogic.gdx.graphics.Color.toFloatBits(batchColor.r * layer.getCombinedTintColor().r, batchColor.g * layer.getCombinedTintColor().g, batchColor.b * layer.getCombinedTintColor().b, (batchColor.a * layer.getCombinedTintColor().a) * layer.getOpacity())
   }
-  protected def beginRender(): scala.Unit = {
+  def beginRender(): scala.Unit = {
     com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile.updateAnimationBaseTime()
     this.batch.begin()
   }
-  protected def endRender(): scala.Unit = {
+  def endRender(): scala.Unit = {
     this.batch.`end`()
   }
   def dispose(): scala.Unit = {
@@ -226,5 +226,5 @@ abstract class BatchTiledMapRenderer extends com.badlogic.gdx.maps.tiled.TiledMa
   }
 }
 object BatchTiledMapRenderer {
-  protected final val NUM_VERTICES: scala.Int = 20
+  final val NUM_VERTICES: scala.Int = 20
 }

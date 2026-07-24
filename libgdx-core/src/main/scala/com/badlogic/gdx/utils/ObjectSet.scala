@@ -5,10 +5,10 @@ class ObjectSet[T] extends scala.collection.Iterable[T] {
   var keyTable: scala.Array[T] = null.asInstanceOf[scala.Array[T]]
   var loadFactor: scala.Float = 0.0f
   var threshold: scala.Int = 0
-  protected var shift: scala.Int = 0
-  protected var mask: scala.Int = 0
-  private var iterator1: ObjectSetIterator = null.asInstanceOf[ObjectSetIterator]
-  private var iterator2: ObjectSetIterator = null.asInstanceOf[ObjectSetIterator]
+  var shift: scala.Int = 0
+  var mask: scala.Int = 0
+  private var iterator1: com.badlogic.gdx.utils.ObjectSet.ObjectSetIterator[?] = null.asInstanceOf[com.badlogic.gdx.utils.ObjectSet.ObjectSetIterator[?]]
+  private var iterator2: com.badlogic.gdx.utils.ObjectSet.ObjectSetIterator[?] = null.asInstanceOf[com.badlogic.gdx.utils.ObjectSet.ObjectSetIterator[?]]
   def this(initialCapacity: scala.Int, loadFactor: scala.Float) = {
     this()
     if ((loadFactor <= 0.0f) || (loadFactor >= 1.0f)) {
@@ -16,10 +16,10 @@ class ObjectSet[T] extends scala.collection.Iterable[T] {
     } else ()
     this.loadFactor = loadFactor
     val tableSize: scala.Int = ObjectSet.tableSize(initialCapacity, loadFactor)
-    this.threshold = (tableSize * loadFactor).asInstanceOf[scala.Int]
+    this.threshold = (tableSize * loadFactor).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
     this.mask = tableSize - 1
     this.shift = java.lang.Long.numberOfLeadingZeros(this.mask)
-    this.keyTable = new Array[java.lang.Object](tableSize).asInstanceOf[scala.Array[T]]
+    this.keyTable = new Array[java.lang.Object](tableSize).asInstanceOf[scala.Array[T]].asInstanceOf[scala.Array[T]]
   }
   def this(initialCapacity: scala.Int) = {
     this(initialCapacity, 0.8f)
@@ -29,14 +29,14 @@ class ObjectSet[T] extends scala.collection.Iterable[T] {
     java.lang.System.arraycopy(set.keyTable, 0, this.keyTable, 0, set.keyTable.length)
     this.size = set.size
   }
-  protected def place(item: T): scala.Int = {
-    return ((item.hashCode() * -7046029254386353131L) >>> this.shift).asInstanceOf[scala.Int]
+  def place(item: T): scala.Int = {
+    return ((item.hashCode() * -7046029254386353131L) >>> this.shift).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
   }
   def locateKey(key: T): scala.Int = {
     if (key == null) {
       throw new java.lang.IllegalArgumentException("key cannot be null.")
     } else ()
-    val keyTable: scala.Array[T] = this.keyTable
+    val keyTable: scala.Array[T] = this.keyTable;
     { var i: scala.Int = this.place(key); while (true) { {
       val other: T = keyTable(i)
       if (other == null) {
@@ -73,7 +73,7 @@ class ObjectSet[T] extends scala.collection.Iterable[T] {
   }
   def addAll(array: scala.Array[T], offset: scala.Int, length: scala.Int): scala.Boolean = {
     this.ensureCapacity(length)
-    val oldSize: scala.Int = this.size
+    val oldSize: scala.Int = this.size;
     { var i: scala.Int = offset; val n: scala.Int = i + length; while (i < n) { {
       this.add(array(i))
     }; i = i + 1 } }
@@ -81,7 +81,7 @@ class ObjectSet[T] extends scala.collection.Iterable[T] {
   }
   def addAll(set: ObjectSet[T]): scala.Unit = {
     this.ensureCapacity(set.size)
-    val keyTable: scala.Array[T] = set.keyTable
+    val keyTable: scala.Array[T] = set.keyTable;
     { var i: scala.Int = 0; val n: scala.Int = keyTable.length; while (i < n) { {
       val key: T = keyTable(i)
       if (key != null) {
@@ -90,7 +90,7 @@ class ObjectSet[T] extends scala.collection.Iterable[T] {
     }; i = i + 1 } }
   }
   private def addResize(key: T): scala.Unit = {
-    val keyTable: scala.Array[T] = this.keyTable
+    val keyTable: scala.Array[T] = this.keyTable;
     { var i: scala.Int = this.place(key); while (true) { {
       if (keyTable(i) == null) {
         keyTable(i) = key
@@ -118,7 +118,7 @@ class ObjectSet[T] extends scala.collection.Iterable[T] {
       } else ()
       next = (next + 1) & mask
     }
-    keyTable(i) = null
+    keyTable(i) = null.asInstanceOf[T]
     this.size = this.size - 1
     return true
   }
@@ -161,7 +161,7 @@ class ObjectSet[T] extends scala.collection.Iterable[T] {
     return if (i < 0) null else this.keyTable(i)
   }
   def first(): T = {
-    val keyTable: scala.Array[T] = this.keyTable
+    val keyTable: scala.Array[T] = this.keyTable;
     { var i: scala.Int = 0; val n: scala.Int = keyTable.length; while (i < n) { {
       if (keyTable(i) != null) {
         return keyTable(i)
@@ -177,11 +177,11 @@ class ObjectSet[T] extends scala.collection.Iterable[T] {
   }
   private def resize(newSize: scala.Int): scala.Unit = {
     val oldCapacity: scala.Int = this.keyTable.length
-    this.threshold = (newSize * this.loadFactor).asInstanceOf[scala.Int]
+    this.threshold = (newSize * this.loadFactor).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
     this.mask = newSize - 1
     this.shift = java.lang.Long.numberOfLeadingZeros(this.mask)
     val oldKeyTable: scala.Array[T] = this.keyTable
-    this.keyTable = new Array[java.lang.Object](newSize).asInstanceOf[scala.Array[T]]
+    this.keyTable = new Array[java.lang.Object](newSize).asInstanceOf[scala.Array[T]].asInstanceOf[scala.Array[T]]
     if (this.size > 0) {
       { var i: scala.Int = 0; while (i < oldCapacity) { {
         val key: T = oldKeyTable(i)
@@ -193,7 +193,7 @@ class ObjectSet[T] extends scala.collection.Iterable[T] {
   }
   def hashCode(): scala.Int = {
     var h: scala.Int = this.size
-    val keyTable: scala.Array[T] = this.keyTable
+    val keyTable: scala.Array[T] = this.keyTable;
     { var i: scala.Int = 0; val n: scala.Int = keyTable.length; while (i < n) { {
       val key: T = keyTable(i)
       if (key != null) {
@@ -203,14 +203,14 @@ class ObjectSet[T] extends scala.collection.Iterable[T] {
     return h
   }
   def equals(obj: java.lang.Object): scala.Boolean = {
-    if (!obj.isInstanceOf[ObjectSet]) {
+    if (!obj.isInstanceOf[ObjectSet[?]]) {
       return false
     } else ()
-    val other: ObjectSet = obj.asInstanceOf[ObjectSet]
+    val other: ObjectSet[?] = obj.asInstanceOf[ObjectSet[?]]
     if (other.size != this.size) {
       return false
     } else ()
-    val keyTable: scala.Array[T] = this.keyTable
+    val keyTable: scala.Array[T] = this.keyTable;
     { var i: scala.Int = 0; val n: scala.Int = keyTable.length; while (i < n) { {
       if ((keyTable(i) != null) && (!other.contains(keyTable(i)))) {
         return false
@@ -246,13 +246,13 @@ class ObjectSet[T] extends scala.collection.Iterable[T] {
     }
     return buffer.toString()
   }
-  def iterator(): ObjectSetIterator[T] = {
+  def iterator(): com.badlogic.gdx.utils.ObjectSet.ObjectSetIterator[T] = {
     if (com.badlogic.gdx.utils.Collections.allocateIterators) {
-      return new ObjectSetIterator(this)
+      return new com.badlogic.gdx.utils.ObjectSet.ObjectSetIterator(this)
     } else ()
     if (this.iterator1 == null) {
-      this.iterator1 = new ObjectSetIterator(this)
-      this.iterator2 = new ObjectSetIterator(this)
+      this.iterator1 = new com.badlogic.gdx.utils.ObjectSet.ObjectSetIterator(this)
+      this.iterator2 = new com.badlogic.gdx.utils.ObjectSet.ObjectSetIterator(this)
     } else ()
     if (!this.iterator1.valid) {
       this.iterator1.reset()
@@ -264,6 +264,23 @@ class ObjectSet[T] extends scala.collection.Iterable[T] {
     this.iterator2.valid = true
     this.iterator1.valid = false
     return this.iterator2
+  }
+}
+object ObjectSet {
+  def `with`[T](array: scala.Array[T]): ObjectSet[T] = {
+    val set: ObjectSet[T] = new ObjectSet[T]()
+    set.addAll(array)
+    return set
+  }
+  def tableSize(capacity: scala.Int, loadFactor: scala.Float): scala.Int = {
+    if (capacity < 0) {
+      throw new java.lang.IllegalArgumentException("capacity must be >= 0: " + capacity)
+    } else ()
+    val tableSize: scala.Int = com.badlogic.gdx.math.MathUtils.nextPowerOfTwo(java.lang.Math.max(2, java.lang.Math.ceil(capacity / loadFactor).asInstanceOf[scala.Int]))
+    if (tableSize > (1 << 30)) {
+      throw new java.lang.IllegalArgumentException("The required capacity is too large: " + capacity)
+    } else ()
+    return tableSize
   }
   class ObjectSetIterator[K] extends scala.collection.Iterable[K] with scala.collection.Iterator[K] {
     var hasNext$field: scala.Boolean = false
@@ -282,7 +299,7 @@ class ObjectSet[T] extends scala.collection.Iterable[T] {
       this.findNextIndex()
     }
     private def findNextIndex(): scala.Unit = {
-      val keyTable: scala.Array[K] = this.set.keyTable
+      val keyTable: scala.Array[K] = this.set.keyTable;
       { val n: scala.Int = this.set.keyTable.length; while ({ this.nextIndex += 1; this.nextIndex } < n) { {
         if (keyTable(this.nextIndex) != null) {
           this.hasNext$field = true
@@ -311,7 +328,7 @@ class ObjectSet[T] extends scala.collection.Iterable[T] {
         } else ()
         next = (next + 1) & mask
       }
-      keyTable(i) = null
+      keyTable(i) = null.asInstanceOf[K]
       this.set.size = this.set.size - 1
       if (i != this.currentIndex) {
         this.nextIndex = this.nextIndex - 1
@@ -336,7 +353,7 @@ class ObjectSet[T] extends scala.collection.Iterable[T] {
       this.findNextIndex()
       return key
     }
-    def iterator(): ObjectSetIterator[K] = {
+    def iterator(): com.badlogic.gdx.utils.ObjectSet.ObjectSetIterator[K] = {
       return this
     }
     def toArray(array: com.badlogic.gdx.utils.Array[K]): com.badlogic.gdx.utils.Array[K] = {
@@ -348,22 +365,5 @@ class ObjectSet[T] extends scala.collection.Iterable[T] {
     def toArray(): com.badlogic.gdx.utils.Array[K] = {
       return this.toArray(new com.badlogic.gdx.utils.Array[K](true, this.set.size))
     }
-  }
-}
-object ObjectSet {
-  def `with`[T](array: scala.Array[T]): ObjectSet[T] = {
-    val set: ObjectSet[T] = new ObjectSet[T]()
-    set.addAll(array)
-    return set
-  }
-  def tableSize(capacity: scala.Int, loadFactor: scala.Float): scala.Int = {
-    if (capacity < 0) {
-      throw new java.lang.IllegalArgumentException("capacity must be >= 0: " + capacity)
-    } else ()
-    val tableSize: scala.Int = com.badlogic.gdx.math.MathUtils.nextPowerOfTwo(java.lang.Math.max(2, java.lang.Math.ceil(capacity / loadFactor).asInstanceOf[scala.Int]))
-    if (tableSize > (1 << 30)) {
-      throw new java.lang.IllegalArgumentException("The required capacity is too large: " + capacity)
-    } else ()
-    return tableSize
   }
 }

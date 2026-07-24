@@ -1,15 +1,15 @@
 package com.badlogic.gdx.utils.reflect
 
 final class Constructor {
-  private var constructor: java.lang.reflect.Constructor = null.asInstanceOf[java.lang.reflect.Constructor]
-  def this(constructor: java.lang.reflect.Constructor) = {
+  private var constructor: java.lang.reflect.Constructor[?] = null.asInstanceOf[java.lang.reflect.Constructor[?]]
+  def this(constructor: java.lang.reflect.Constructor[?]) = {
     this()
     this.constructor = constructor
   }
-  def getParameterTypes(): scala.Array[java.lang.Class] = {
+  def getParameterTypes(): scala.Array[java.lang.Class[?]] = {
     return this.constructor.getParameterTypes()
   }
-  def getDeclaringClass(): java.lang.Class = {
+  def getDeclaringClass(): java.lang.Class[?] = {
     return this.constructor.getDeclaringClass()
   }
   def isAccessible(): scala.Boolean = {

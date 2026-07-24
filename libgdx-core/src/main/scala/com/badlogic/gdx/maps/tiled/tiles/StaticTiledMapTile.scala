@@ -2,7 +2,7 @@ package com.badlogic.gdx.maps.tiled.tiles
 
 class StaticTiledMapTile extends com.badlogic.gdx.maps.tiled.TiledMapTile {
   private var id: scala.Int = 0
-  private var blendMode: com.badlogic.gdx.maps.tiled.TiledMapTile#BlendMode = com.badlogic.gdx.maps.tiled.TiledMapTile.BlendMode.ALPHA
+  private var blendMode: com.badlogic.gdx.maps.tiled.TiledMapTile.BlendMode = com.badlogic.gdx.maps.tiled.TiledMapTile.BlendMode.ALPHA
   private var properties: com.badlogic.gdx.maps.MapProperties = null.asInstanceOf[com.badlogic.gdx.maps.MapProperties]
   private var objects: com.badlogic.gdx.maps.MapObjects = null.asInstanceOf[com.badlogic.gdx.maps.MapObjects]
   private var textureRegion: com.badlogic.gdx.graphics.g2d.TextureRegion = null.asInstanceOf[com.badlogic.gdx.graphics.g2d.TextureRegion]
@@ -27,10 +27,10 @@ class StaticTiledMapTile extends com.badlogic.gdx.maps.tiled.TiledMapTile {
   def setId(id: scala.Int): scala.Unit = {
     this.id = id
   }
-  def getBlendMode(): com.badlogic.gdx.maps.tiled.TiledMapTile#BlendMode = {
+  def getBlendMode(): com.badlogic.gdx.maps.tiled.TiledMapTile.BlendMode = {
     return this.blendMode
   }
-  def setBlendMode(blendMode: com.badlogic.gdx.maps.tiled.TiledMapTile#BlendMode): scala.Unit = {
+  def setBlendMode(blendMode: com.badlogic.gdx.maps.tiled.TiledMapTile.BlendMode): scala.Unit = {
     this.blendMode = blendMode
   }
   def getProperties(): com.badlogic.gdx.maps.MapProperties = {

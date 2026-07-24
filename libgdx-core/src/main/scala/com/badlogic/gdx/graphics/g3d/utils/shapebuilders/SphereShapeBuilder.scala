@@ -29,7 +29,7 @@ object SphereShapeBuilder {
     var v: scala.Float = 0.0f
     var angleU: scala.Float = 0.0f
     var angleV: scala.Float = 0.0f
-    val curr1: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder#VertexInfo = com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BaseShapeBuilder.vertTmp3.set(null, null, null, null)
+    val curr1: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo = com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BaseShapeBuilder.vertTmp3.set(null, null, null, null)
     curr1.hasUV = {
       curr1.hasPosition = {
         curr1.hasNormal = true
@@ -44,12 +44,12 @@ object SphereShapeBuilder {
     SphereShapeBuilder.tmpIndices.size = s
     var tempOffset: scala.Int = 0
     builder.ensureVertices((divisionsV + 1) * (divisionsU + 1))
-    builder.ensureRectangleIndices(divisionsU)
+    builder.ensureRectangleIndices(divisionsU);
     { var iv: scala.Int = 0; while (iv <= divisionsV) { {
       angleV = avo + (stepV * iv)
       v = vs * iv
       val t: scala.Float = com.badlogic.gdx.math.MathUtils.sin(angleV)
-      val h: scala.Float = com.badlogic.gdx.math.MathUtils.cos(angleV) * hh
+      val h: scala.Float = com.badlogic.gdx.math.MathUtils.cos(angleV) * hh;
       { var iu: scala.Int = 0; while (iu <= divisionsU) { {
         angleU = auo + (stepU * iu)
         if (((iv == 0) && closedVFrom) || ((iv == divisionsV) && closedVTo)) {

@@ -1,7 +1,7 @@
 package com.badlogic.gdx.scenes.scene2d.ui
 
-class Label extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlogic.gdx.scenes.scene2d.ui.Styleable[LabelStyle] {
-  private var style: LabelStyle = null.asInstanceOf[LabelStyle]
+class Label extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlogic.gdx.scenes.scene2d.ui.Styleable[com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle] {
+  private var style: com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle]
   final val layout$field: com.badlogic.gdx.graphics.g2d.GlyphLayout = new com.badlogic.gdx.graphics.g2d.GlyphLayout()
   private var prefWidth: scala.Float = 0.0f
   private var prefHeight: scala.Float = 0.0f
@@ -17,7 +17,7 @@ class Label extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlogic.
   private var fontScaleY: scala.Float = 1
   private var fontScaleChanged: scala.Boolean = false
   private var ellipsis: java.lang.String = null.asInstanceOf[java.lang.String]
-  def this(text: java.lang.CharSequence, style: LabelStyle) = {
+  def this(text: java.lang.CharSequence, style: com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle) = {
     this()
     if (text != null) {
       this.text.append(text)
@@ -28,18 +28,18 @@ class Label extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlogic.
     } else ()
   }
   def this(text: java.lang.CharSequence, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin, fontName: java.lang.String, color: com.badlogic.gdx.graphics.Color) = {
-    this(text, new LabelStyle(skin.getFont(fontName), color))
+    this(text, new com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle(skin.getFont(fontName), color))
   }
   def this(text: java.lang.CharSequence, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin, fontName: java.lang.String, colorName: java.lang.String) = {
-    this(text, new LabelStyle(skin.getFont(fontName), skin.getColor(colorName)))
+    this(text, new com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle(skin.getFont(fontName), skin.getColor(colorName)))
   }
   def this(text: java.lang.CharSequence, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin, styleName: java.lang.String) = {
-    this(text, skin.get(styleName, classOf[java.lang.Class]))
+    this(text, skin.get(styleName, classOf[com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle]))
   }
   def this(text: java.lang.CharSequence, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin) = {
-    this(text, skin.get(classOf[java.lang.Class]))
+    this(text, skin.get(classOf[com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle]))
   }
-  def setStyle(style: LabelStyle): scala.Unit = {
+  def setStyle(style: com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle): scala.Unit = {
     if (style == null) {
       throw new java.lang.IllegalArgumentException("style cannot be null.")
     } else ()
@@ -50,7 +50,7 @@ class Label extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlogic.
     this.cache = style.font.newFontCache()
     this.invalidateHierarchy()
   }
-  def getStyle(): LabelStyle = {
+  def getStyle(): com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle = {
     return this.style
   }
   def setText(value: scala.Int): scala.Boolean = {
@@ -92,7 +92,7 @@ class Label extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlogic.
     val chars: scala.Array[scala.Char] = this.text.items
     if (length != other.length()) {
       return false
-    } else ()
+    } else ();
     { var i: scala.Int = 0; while (i < length) { {
       if (chars(i) != other.charAt(i)) {
         return false
@@ -119,7 +119,7 @@ class Label extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlogic.
       font.getData().setScale(oldScaleX, oldScaleY)
     } else ()
   }
-  protected def computePrefSize(layout: com.badlogic.gdx.graphics.g2d.GlyphLayout): scala.Unit = {
+  def computePrefSize(layout: com.badlogic.gdx.graphics.g2d.GlyphLayout): scala.Unit = {
     this.prefSizeInvalid = false
     if (this.wrap && (this.ellipsis == null)) {
       var width: scala.Float = this.getWidth()
@@ -304,7 +304,7 @@ class Label extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlogic.
       this.ellipsis = null
     }
   }
-  protected def getBitmapFontCache(): com.badlogic.gdx.graphics.g2d.BitmapFontCache = {
+  def getBitmapFontCache(): com.badlogic.gdx.graphics.g2d.BitmapFontCache = {
     return this.cache
   }
   def toString(): java.lang.String = {
@@ -319,6 +319,10 @@ class Label extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlogic.
     } else ()
     return (((if (className.indexOf('$') != (-1)) "Label " else "") + className) + ": ") + this.text
   }
+}
+object Label {
+  private final val tempColor: com.badlogic.gdx.graphics.Color = new com.badlogic.gdx.graphics.Color()
+  private final val prefSizeLayout: com.badlogic.gdx.graphics.g2d.GlyphLayout = new com.badlogic.gdx.graphics.g2d.GlyphLayout()
   class LabelStyle {
     var font: com.badlogic.gdx.graphics.g2d.BitmapFont = null.asInstanceOf[com.badlogic.gdx.graphics.g2d.BitmapFont]
     var fontColor: com.badlogic.gdx.graphics.Color = null.asInstanceOf[com.badlogic.gdx.graphics.Color]
@@ -328,7 +332,7 @@ class Label extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlogic.
       this.font = font
       this.fontColor = fontColor
     }
-    def this(style: LabelStyle) = {
+    def this(style: com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle) = {
       this()
       this.font = style.font
       if (style.fontColor != null) {
@@ -337,8 +341,4 @@ class Label extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlogic.
       this.background = style.background
     }
   }
-}
-object Label {
-  private final val tempColor: com.badlogic.gdx.graphics.Color = new com.badlogic.gdx.graphics.Color()
-  private final val prefSizeLayout: com.badlogic.gdx.graphics.g2d.GlyphLayout = new com.badlogic.gdx.graphics.g2d.GlyphLayout()
 }

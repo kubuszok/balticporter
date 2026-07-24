@@ -7,7 +7,7 @@ class DelayAction extends com.badlogic.gdx.scenes.scene2d.actions.DelegateAction
     this()
     this.duration = duration
   }
-  protected def delegate(delta$arg: scala.Float): scala.Boolean = {
+  def delegate(delta$arg: scala.Float): scala.Boolean = {
     var delta: scala.Float = delta$arg
     if (this.time < this.duration) {
       this.time = this.time + delta

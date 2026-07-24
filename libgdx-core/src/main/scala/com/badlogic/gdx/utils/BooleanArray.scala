@@ -137,7 +137,7 @@ class BooleanArray {
     items(second) = firstValue
   }
   def replaceFirst(value: scala.Boolean, replacement: scala.Boolean): scala.Boolean = {
-    val items: scala.Array[scala.Boolean] = this.items
+    val items: scala.Array[scala.Boolean] = this.items;
     { var i: scala.Int = 0; val n: scala.Int = this.size; while (i < n) { {
       if (items(i) == value) {
         items(i) = replacement
@@ -148,7 +148,7 @@ class BooleanArray {
   }
   def replaceAll(value: scala.Boolean, replacement: scala.Boolean): scala.Int = {
     val items: scala.Array[scala.Boolean] = this.items
-    var replacements: scala.Int = 0
+    var replacements: scala.Int = 0;
     { var i: scala.Int = 0; val n: scala.Int = this.size; while (i < n) { {
       if (items(i) == value) {
         items(i) = replacement
@@ -192,9 +192,9 @@ class BooleanArray {
   def removeAll(array: BooleanArray): scala.Boolean = {
     var size: scala.Int = this.size
     val startSize: scala.Int = size
-    val items: scala.Array[scala.Boolean] = this.items
+    val items: scala.Array[scala.Boolean] = this.items;
     { var i: scala.Int = 0; val n: scala.Int = array.size; while (i < n) { {
-      val item: scala.Boolean = array.get(i)
+      val item: scala.Boolean = array.get(i);
       { var ii: scala.Int = 0; while (ii < size) { {
         if (item == items(ii)) {
           this.removeIndex(ii)
@@ -252,7 +252,7 @@ class BooleanArray {
     this.size = newSize
     return this.items
   }
-  protected def resize(newSize: scala.Int): scala.Array[scala.Boolean] = {
+  def resize(newSize: scala.Int): scala.Array[scala.Boolean] = {
     val newItems: scala.Array[scala.Boolean] = new Array[scala.Boolean](newSize)
     var items: scala.Array[scala.Boolean] = this.items
     java.lang.System.arraycopy(items, 0, newItems, 0, java.lang.Math.min(this.size, newItems.length))
@@ -260,7 +260,7 @@ class BooleanArray {
     return newItems
   }
   def reverse(): scala.Unit = {
-    val items: scala.Array[scala.Boolean] = this.items
+    val items: scala.Array[scala.Boolean] = this.items;
     { var i: scala.Int = 0; val lastIndex: scala.Int = this.size - 1; val n: scala.Int = this.size / 2; while (i < n) { {
       val ii: scala.Int = lastIndex - i
       val temp: scala.Boolean = items(i)
@@ -269,7 +269,7 @@ class BooleanArray {
     }; i = i + 1 } }
   }
   def shuffle(): scala.Unit = {
-    val items: scala.Array[scala.Boolean] = this.items
+    val items: scala.Array[scala.Boolean] = this.items;
     { var i: scala.Int = this.size - 1; while (i >= 0) { {
       val ii: scala.Int = com.badlogic.gdx.math.MathUtils.random(i)
       val temp: scala.Boolean = items(i)
@@ -301,7 +301,7 @@ class BooleanArray {
       return super.hashCode()
     } else ()
     val items: scala.Array[scala.Boolean] = this.items
-    var h: scala.Int = 1
+    var h: scala.Int = 1;
     { var i: scala.Int = 0; val n: scala.Int = this.size; while (i < n) { {
       h = (h * 31) + (if (items(i)) 1231 else 1237)
     }; i = i + 1 } }
@@ -326,7 +326,7 @@ class BooleanArray {
       return false
     } else ()
     val items1: scala.Array[scala.Boolean] = this.items
-    val items2: scala.Array[scala.Boolean] = array.items
+    val items2: scala.Array[scala.Boolean] = array.items;
     { var i: scala.Int = 0; while (i < n) { {
       if (items1(i) != items2(i)) {
         return false
@@ -341,7 +341,7 @@ class BooleanArray {
     val items: scala.Array[scala.Boolean] = this.items
     val buffer: java.lang.StringBuilder = new java.lang.StringBuilder(32)
     buffer.append('[')
-    buffer.append(items(0))
+    buffer.append(items(0));
     { var i: scala.Int = 1; while (i < this.size) { {
       buffer.append(", ")
       buffer.append(items(i))
@@ -355,7 +355,7 @@ class BooleanArray {
     } else ()
     val items: scala.Array[scala.Boolean] = this.items
     val buffer: java.lang.StringBuilder = new java.lang.StringBuilder(32)
-    buffer.append(items(0))
+    buffer.append(items(0));
     { var i: scala.Int = 1; while (i < this.size) { {
       buffer.append(separator)
       buffer.append(items(i))

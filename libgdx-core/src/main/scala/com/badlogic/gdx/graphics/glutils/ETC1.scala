@@ -3,7 +3,7 @@ package com.badlogic.gdx.graphics.glutils
 object ETC1 {
   var PKM_HEADER_SIZE: scala.Int = 16
   var ETC1_RGB8_OES: scala.Int = 36196
-  private def getPixelSize(format: com.badlogic.gdx.graphics.Pixmap#Format): scala.Int = {
+  private def getPixelSize(format: com.badlogic.gdx.graphics.Pixmap.Format): scala.Int = {
     if (format == com.badlogic.gdx.graphics.Pixmap.Format.RGB565) {
       return 2
     } else ()
@@ -12,19 +12,19 @@ object ETC1 {
     } else ()
     throw new com.badlogic.gdx.utils.GdxRuntimeException("Can only handle RGB565 or RGB888 images")
   }
-  def encodeImage(pixmap: com.badlogic.gdx.graphics.Pixmap): ETC1Data = {
+  def encodeImage(pixmap: com.badlogic.gdx.graphics.Pixmap): com.badlogic.gdx.graphics.glutils.ETC1.ETC1Data = {
     val pixelSize: scala.Int = ETC1.getPixelSize(pixmap.getFormat())
     val compressedData: java.nio.ByteBuffer = ETC1.encodeImage(pixmap.getPixels(), 0, pixmap.getWidth(), pixmap.getHeight(), pixelSize)
     com.badlogic.gdx.utils.BufferUtils.newUnsafeByteBuffer(compressedData)
-    return new ETC1Data(pixmap.getWidth(), pixmap.getHeight(), compressedData, 0)
+    return new com.badlogic.gdx.graphics.glutils.ETC1.ETC1Data(pixmap.getWidth(), pixmap.getHeight(), compressedData, 0)
   }
-  def encodeImagePKM(pixmap: com.badlogic.gdx.graphics.Pixmap): ETC1Data = {
+  def encodeImagePKM(pixmap: com.badlogic.gdx.graphics.Pixmap): com.badlogic.gdx.graphics.glutils.ETC1.ETC1Data = {
     val pixelSize: scala.Int = ETC1.getPixelSize(pixmap.getFormat())
     val compressedData: java.nio.ByteBuffer = ETC1.encodeImagePKM(pixmap.getPixels(), 0, pixmap.getWidth(), pixmap.getHeight(), pixelSize)
     com.badlogic.gdx.utils.BufferUtils.newUnsafeByteBuffer(compressedData)
-    return new ETC1Data(pixmap.getWidth(), pixmap.getHeight(), compressedData, 16)
+    return new com.badlogic.gdx.graphics.glutils.ETC1.ETC1Data(pixmap.getWidth(), pixmap.getHeight(), compressedData, 16)
   }
-  def decodeImage(etc1Data: ETC1Data, format: com.badlogic.gdx.graphics.Pixmap#Format): com.badlogic.gdx.graphics.Pixmap = {
+  def decodeImage(etc1Data: com.badlogic.gdx.graphics.glutils.ETC1.ETC1Data, format: com.badlogic.gdx.graphics.Pixmap.Format): com.badlogic.gdx.graphics.Pixmap = {
     var dataOffset: scala.Int = 0
     var width: scala.Int = 0
     var height: scala.Int = 0

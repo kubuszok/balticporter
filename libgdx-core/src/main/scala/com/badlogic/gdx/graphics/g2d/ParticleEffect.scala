@@ -4,9 +4,9 @@ class ParticleEffect extends com.badlogic.gdx.utils.Disposable {
   private var emitters: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.ParticleEmitter] = null.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.ParticleEmitter]]
   private var bounds: com.badlogic.gdx.math.collision.BoundingBox = null.asInstanceOf[com.badlogic.gdx.math.collision.BoundingBox]
   private var ownsTexture: scala.Boolean = false
-  protected var xSizeScale: scala.Float = 1.0f
-  protected var ySizeScale: scala.Float = 1.0f
-  protected var motionScale: scala.Float = 1.0f
+  var xSizeScale: scala.Float = 1.0f
+  var ySizeScale: scala.Float = 1.0f
+  var motionScale: scala.Float = 1.0f
   def this(effect: ParticleEffect) = {
     this()
     this.emitters = new com.badlogic.gdx.utils.Array(true, effect.emitters.size)
@@ -114,7 +114,7 @@ class ParticleEffect extends com.badlogic.gdx.utils.Disposable {
     }
   }
   def save(output: java.io.Writer): scala.Unit = {
-    var index: scala.Int = 0
+    var index: scala.Int = 0;
     { var i: scala.Int = 0; val n: scala.Int = this.emitters.size; while (i < n) { {
       val emitter: com.badlogic.gdx.graphics.g2d.ParticleEmitter = this.emitters.get(i)
       if ({ index += 1; index } > 0) {
@@ -185,7 +185,7 @@ class ParticleEffect extends com.badlogic.gdx.utils.Disposable {
   }
   def loadEmitterImages(imagesDir: com.badlogic.gdx.files.FileHandle): scala.Unit = {
     this.ownsTexture = true
-    val loadedSprites: com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.graphics.g2d.Sprite] = new com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.graphics.g2d.Sprite](this.emitters.size)
+    val loadedSprites: com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.graphics.g2d.Sprite] = new com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.graphics.g2d.Sprite](this.emitters.size);
     { var i: scala.Int = 0; val n: scala.Int = this.emitters.size; while (i < n) { {
       val emitter: com.badlogic.gdx.graphics.g2d.ParticleEmitter = this.emitters.get(i)
       if (emitter.getImagePaths().size == 0) {
@@ -204,19 +204,19 @@ class ParticleEffect extends com.badlogic.gdx.utils.Disposable {
       emitter.setSprites(sprites)
     }; i = i + 1 } }
   }
-  protected def newEmitter(reader: java.io.BufferedReader): com.badlogic.gdx.graphics.g2d.ParticleEmitter = {
+  def newEmitter(reader: java.io.BufferedReader): com.badlogic.gdx.graphics.g2d.ParticleEmitter = {
     return new com.badlogic.gdx.graphics.g2d.ParticleEmitter(reader)
   }
-  protected def newEmitter(emitter: com.badlogic.gdx.graphics.g2d.ParticleEmitter): com.badlogic.gdx.graphics.g2d.ParticleEmitter = {
+  def newEmitter(emitter: com.badlogic.gdx.graphics.g2d.ParticleEmitter): com.badlogic.gdx.graphics.g2d.ParticleEmitter = {
     return new com.badlogic.gdx.graphics.g2d.ParticleEmitter(emitter)
   }
-  protected def loadTexture(file: com.badlogic.gdx.files.FileHandle): com.badlogic.gdx.graphics.Texture = {
+  def loadTexture(file: com.badlogic.gdx.files.FileHandle): com.badlogic.gdx.graphics.Texture = {
     return new com.badlogic.gdx.graphics.Texture(file, false)
   }
   def dispose(): scala.Unit = {
     if (!this.ownsTexture) {
       return
-    } else ()
+    } else ();
     { var i: scala.Int = 0; val n: scala.Int = this.emitters.size; while (i < n) { {
       val emitter: com.badlogic.gdx.graphics.g2d.ParticleEmitter = this.emitters.get(i)
       for (sprite <- emitter.getSprites()) {

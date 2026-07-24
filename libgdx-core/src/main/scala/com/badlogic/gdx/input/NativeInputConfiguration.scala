@@ -1,21 +1,21 @@
 package com.badlogic.gdx.input
 
 class NativeInputConfiguration {
-  private var `type`: com.badlogic.gdx.Input#OnscreenKeyboardType = com.badlogic.gdx.Input.OnscreenKeyboardType.Default
+  private var `type`: com.badlogic.gdx.Input.OnscreenKeyboardType = com.badlogic.gdx.Input.OnscreenKeyboardType.Default
   private var preventCorrection: scala.Boolean = false
   private var textInputWrapper: com.badlogic.gdx.input.TextInputWrapper = null.asInstanceOf[com.badlogic.gdx.input.TextInputWrapper]
   var isMultiLine$field: scala.Boolean = false
   private var maxLength: scala.Int = -1
-  private var validator: com.badlogic.gdx.Input#InputStringValidator = null.asInstanceOf[com.badlogic.gdx.Input#InputStringValidator]
+  private var validator: com.badlogic.gdx.Input.InputStringValidator = null.asInstanceOf[com.badlogic.gdx.Input.InputStringValidator]
   private var placeholder: java.lang.String = ""
   private var maskInput: scala.Boolean = false
   private var showUnmaskButton: scala.Boolean = false
   private var autoComplete: scala.Array[java.lang.String] = null
-  private var closeCallback: NativeInputCloseCallback = (confirm: scala.Boolean) => false
-  def getType(): com.badlogic.gdx.Input#OnscreenKeyboardType = {
+  private var closeCallback: com.badlogic.gdx.input.NativeInputConfiguration.NativeInputCloseCallback = (confirm: scala.Boolean) => false
+  def getType(): com.badlogic.gdx.Input.OnscreenKeyboardType = {
     return this.`type`
   }
-  def setType(`type`: com.badlogic.gdx.Input#OnscreenKeyboardType): NativeInputConfiguration = {
+  def setType(`type`: com.badlogic.gdx.Input.OnscreenKeyboardType): NativeInputConfiguration = {
     this.`type` = `type`
     return this
   }
@@ -47,10 +47,10 @@ class NativeInputConfiguration {
     this.maxLength = maxLength
     return this
   }
-  def getValidator(): com.badlogic.gdx.Input#InputStringValidator = {
+  def getValidator(): com.badlogic.gdx.Input.InputStringValidator = {
     return this.validator
   }
-  def setValidator(validator: com.badlogic.gdx.Input#InputStringValidator): NativeInputConfiguration = {
+  def setValidator(validator: com.badlogic.gdx.Input.InputStringValidator): NativeInputConfiguration = {
     this.validator = validator
     return this
   }
@@ -82,10 +82,10 @@ class NativeInputConfiguration {
     this.autoComplete = autoComplete
     return this
   }
-  def getCloseCallback(): NativeInputCloseCallback = {
+  def getCloseCallback(): com.badlogic.gdx.input.NativeInputConfiguration.NativeInputCloseCallback = {
     return this.closeCallback
   }
-  def setCloseCallback(closeCallback: NativeInputCloseCallback): NativeInputConfiguration = {
+  def setCloseCallback(closeCallback: com.badlogic.gdx.input.NativeInputConfiguration.NativeInputCloseCallback): NativeInputConfiguration = {
     this.closeCallback = closeCallback
     return this
   }
@@ -116,6 +116,8 @@ class NativeInputConfiguration {
       throw new java.lang.IllegalArgumentException("NativeInputConfiguration validation failed: " + message)
     } else ()
   }
+}
+object NativeInputConfiguration {
   trait NativeInputCloseCallback {
     def onClose(confirmativeAction: scala.Boolean): scala.Boolean
   }

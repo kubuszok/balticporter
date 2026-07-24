@@ -1,19 +1,19 @@
 package com.badlogic.gdx.graphics.g3d.particles.batches
 
 abstract class BufferedParticleBatch[T <: com.badlogic.gdx.graphics.g3d.particles.renderers.ParticleControllerRenderData] extends com.badlogic.gdx.graphics.g3d.particles.batches.ParticleBatch[T] {
-  protected var renderData: com.badlogic.gdx.utils.Array[T] = null.asInstanceOf[com.badlogic.gdx.utils.Array[T]]
-  protected var bufferedParticlesCount: scala.Int = 0
-  protected var currentCapacity: scala.Int = 0
-  protected var sorter: com.badlogic.gdx.graphics.g3d.particles.ParticleSorter = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ParticleSorter]
-  protected var camera: com.badlogic.gdx.graphics.Camera = null.asInstanceOf[com.badlogic.gdx.graphics.Camera]
-  protected def this(`type`: java.lang.Class[T]) = {
+  var renderData: com.badlogic.gdx.utils.Array[T] = null.asInstanceOf[com.badlogic.gdx.utils.Array[T]]
+  var bufferedParticlesCount: scala.Int = 0
+  var currentCapacity: scala.Int = 0
+  var sorter: com.badlogic.gdx.graphics.g3d.particles.ParticleSorter = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ParticleSorter]
+  var camera: com.badlogic.gdx.graphics.Camera = null.asInstanceOf[com.badlogic.gdx.graphics.Camera]
+  def this(`type`: java.lang.Class[T]) = {
     this()
-    this.sorter = new com.badlogic.gdx.graphics.g3d.particles.ParticleSorter#Distance()
+    this.sorter = new com.badlogic.gdx.graphics.g3d.particles.ParticleSorter.Distance()
     this.renderData = new com.badlogic.gdx.utils.Array[T](false, 10, `type`)
   }
-  protected def this(arraySupplier: com.badlogic.gdx.utils.ArraySupplier[scala.Array[T]]) = {
+  def this(arraySupplier: com.badlogic.gdx.utils.ArraySupplier[scala.Array[T]]) = {
     this()
-    this.sorter = new com.badlogic.gdx.graphics.g3d.particles.ParticleSorter#Distance()
+    this.sorter = new com.badlogic.gdx.graphics.g3d.particles.ParticleSorter.Distance()
     this.renderData = new com.badlogic.gdx.utils.Array[T](false, 10, arraySupplier)
   }
   def begin(): scala.Unit = {
@@ -46,7 +46,7 @@ abstract class BufferedParticleBatch[T <: com.badlogic.gdx.graphics.g3d.particle
       this.bufferedParticlesCount
     }
   }
-  protected def allocParticlesData(capacity: scala.Int): scala.Unit
+  def allocParticlesData(capacity: scala.Int): scala.Unit
   def setCamera(camera: com.badlogic.gdx.graphics.Camera): scala.Unit = {
     this.camera = camera
     this.sorter.setCamera(camera)
@@ -59,7 +59,7 @@ abstract class BufferedParticleBatch[T <: com.badlogic.gdx.graphics.g3d.particle
     sorter.setCamera(this.camera)
     sorter.ensureCapacity(this.currentCapacity)
   }
-  protected def flush(offsets: scala.Array[scala.Int]): scala.Unit
+  def flush(offsets: scala.Array[scala.Int]): scala.Unit
   def getBufferedCount(): scala.Int = {
     return this.bufferedParticlesCount
   }

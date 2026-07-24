@@ -21,7 +21,7 @@ class HexagonalTiledMapRenderer extends com.badlogic.gdx.maps.tiled.renderers.Ba
     this.init(map)
   }
   private def init(map: com.badlogic.gdx.maps.tiled.TiledMap): scala.Unit = {
-    val axis: java.lang.String = map.getProperties().get("staggeraxis", classOf[java.lang.Class])
+    val axis: java.lang.String = map.getProperties().get("staggeraxis", classOf[java.lang.String])
     if (axis != null) {
       if (axis.equals("x")) {
         this.staggerAxisX = true
@@ -29,7 +29,7 @@ class HexagonalTiledMapRenderer extends com.badlogic.gdx.maps.tiled.renderers.Ba
         this.staggerAxisX = false
       }
     } else ()
-    val index: java.lang.String = map.getProperties().get("staggerindex", classOf[java.lang.Class])
+    val index: java.lang.String = map.getProperties().get("staggerindex", classOf[java.lang.String])
     if (index != null) {
       if (index.equals("even")) {
         this.staggerIndexEven = true
@@ -37,15 +37,15 @@ class HexagonalTiledMapRenderer extends com.badlogic.gdx.maps.tiled.renderers.Ba
         this.staggerIndexEven = false
       }
     } else ()
-    if ((!this.staggerAxisX) && ((map.getProperties().get("height", classOf[java.lang.Class]) % 2) == 0)) {
+    if ((!this.staggerAxisX) && ((map.getProperties().get("height", classOf[java.lang.Integer]) % 2) == 0)) {
       this.staggerIndexEven = !this.staggerIndexEven
     } else ()
-    var length: java.lang.Integer = map.getProperties().get("hexsidelength", classOf[java.lang.Class])
+    var length: java.lang.Integer = map.getProperties().get("hexsidelength", classOf[java.lang.Integer])
     if (length != null) {
       this.hexSideLength = length.intValue()
     } else {
       if (this.staggerAxisX) {
-        length = map.getProperties().get("tilewidth", classOf[java.lang.Class])
+        length = map.getProperties().get("tilewidth", classOf[java.lang.Integer])
         if (length != null) {
           this.hexSideLength = 0.5f * length.intValue()
         } else {
@@ -57,7 +57,7 @@ class HexagonalTiledMapRenderer extends com.badlogic.gdx.maps.tiled.renderers.Ba
           }
         }
       } else {
-        length = map.getProperties().get("tileheight", classOf[java.lang.Class])
+        length = map.getProperties().get("tileheight", classOf[java.lang.Integer])
         if (length != null) {
           this.hexSideLength = 0.5f * length.intValue()
         } else {
@@ -90,11 +90,11 @@ class HexagonalTiledMapRenderer extends com.badlogic.gdx.maps.tiled.renderers.Ba
       val col1: scala.Int = java.lang.Math.max(0, (((this.viewBounds.x - tileWidthLowerCorner) - layerOffsetX) / tileWidthUpperCorner).asInstanceOf[scala.Int])
       val col2: scala.Int = java.lang.Math.min(layerWidth, ((((this.viewBounds.x + this.viewBounds.width) + tileWidthUpperCorner) - layerOffsetX) / tileWidthUpperCorner).asInstanceOf[scala.Int])
       val colA: scala.Int = if (this.staggerIndexEven == ((col1 % 2) == 0)) col1 + 1 else col1
-      val colB: scala.Int = if (this.staggerIndexEven == ((col1 % 2) == 0)) col1 else col1 + 1
+      val colB: scala.Int = if (this.staggerIndexEven == ((col1 % 2) == 0)) col1 else col1 + 1;
       { var row: scala.Int = row2 - 1; while (row >= row1) { {
         { var col: scala.Int = colA; while (col < col2) { {
           this.renderCell(layer.getCell(col, row), (tileWidthUpperCorner * col) + layerOffsetX, (layerTileHeight50 + (layerTileHeight * row)) + layerOffsetY, color)
-        }; col = col + 2 } }
+        }; col = col + 2 } };
         { var col: scala.Int = colB; while (col < col2) { {
           this.renderCell(layer.getCell(col, row), (tileWidthUpperCorner * col) + layerOffsetX, (layerTileHeight * row) + layerOffsetY, color)
         }; col = col + 2 } }
@@ -107,20 +107,20 @@ class HexagonalTiledMapRenderer extends com.badlogic.gdx.maps.tiled.renderers.Ba
       val row2: scala.Int = java.lang.Math.min(layerHeight, ((((this.viewBounds.y + this.viewBounds.height) + tileHeightUpperCorner) - layerOffsetY) / tileHeightUpperCorner).asInstanceOf[scala.Int])
       val col1: scala.Int = java.lang.Math.max(0, (((this.viewBounds.x - layerTileWidth50) - layerOffsetX) / layerTileWidth).asInstanceOf[scala.Int])
       val col2: scala.Int = java.lang.Math.min(layerWidth, ((((this.viewBounds.x + this.viewBounds.width) + layerTileWidth) - layerOffsetX) / layerTileWidth).asInstanceOf[scala.Int])
-      var shiftX: scala.Float = 0
+      var shiftX: scala.Float = 0;
       { var row: scala.Int = row2 - 1; while (row >= row1) { {
         if (((row % 2) == 0) == this.staggerIndexEven) {
           shiftX = layerTileWidth50
         } else {
           shiftX = 0
-        }
+        };
         { var col: scala.Int = col1; while (col < col2) { {
           this.renderCell(layer.getCell(col, row), ((layerTileWidth * col) + shiftX) + layerOffsetX, (tileHeightUpperCorner * row) + layerOffsetY, color)
         }; col = col + 1 } }
       }; row = row - 1 } }
     }
   }
-  private def renderCell(cell: com.badlogic.gdx.maps.tiled.TiledMapTileLayer#Cell, x: scala.Float, y: scala.Float, color: scala.Float): scala.Unit = {
+  private def renderCell(cell: com.badlogic.gdx.maps.tiled.TiledMapTileLayer.Cell, x: scala.Float, y: scala.Float, color: scala.Float): scala.Unit = {
     if (cell != null) {
       val tile: com.badlogic.gdx.maps.tiled.TiledMapTile = cell.getTile()
       if (tile != null) {
@@ -201,8 +201,8 @@ class HexagonalTiledMapRenderer extends com.badlogic.gdx.maps.tiled.renderers.Ba
     if (region == null) {
       return
     } else ()
-    val tileHeight: scala.Int = this.getMap().getProperties().get("tileheight", classOf[java.lang.Class])
-    val mapHeight: scala.Int = this.getMap().getProperties().get("height", classOf[java.lang.Class])
+    val tileHeight: scala.Int = this.getMap().getProperties().get("tileheight", classOf[java.lang.Integer])
+    val mapHeight: scala.Int = this.getMap().getProperties().get("height", classOf[java.lang.Integer])
     val layerHexLength: scala.Float = this.hexSideLength
     val totalHeightPixels: scala.Float = (mapHeight * tileHeight) * unitScale
     val hexMapHeightPixels: scala.Float = (((mapHeight * tileHeight) * (3.0f / 4.0f)) + (layerHexLength * 0.5f)) * unitScale
@@ -255,7 +255,7 @@ class HexagonalTiledMapRenderer extends com.badlogic.gdx.maps.tiled.renderers.Ba
       var startX: scala.Float = this.viewBounds.x
       var startY: scala.Float = this.viewBounds.y
       startX = startX - (startX % this.imageBounds.width)
-      startY = startY - (startY % this.imageBounds.height)
+      startY = startY - (startY % this.imageBounds.height);
       { var i: scala.Int = 0; while (i <= repeatX) { {
         { var j: scala.Int = 0; while (j <= repeatY) { {
           var rx1: scala.Float = x1

@@ -9,7 +9,7 @@ class RemoteInput extends java.lang.Runnable with com.badlogic.gdx.Input {
   private var remoteWidth: scala.Float = 0
   private var remoteHeight: scala.Float = 0
   private var connected: scala.Boolean = false
-  private var listener: RemoteInputListener = null.asInstanceOf[RemoteInputListener]
+  private var listener: com.badlogic.gdx.input.RemoteInput.RemoteInputListener = null.asInstanceOf[com.badlogic.gdx.input.RemoteInput.RemoteInputListener]
   var keyCount: scala.Int = 0
   var keys: scala.Array[scala.Boolean] = new Array[scala.Boolean](256)
   var keyJustPressed: scala.Boolean = false
@@ -23,7 +23,7 @@ class RemoteInput extends java.lang.Runnable with com.badlogic.gdx.Input {
   var processor: com.badlogic.gdx.InputProcessor = null
   private var port: scala.Int = 0
   var ips: scala.Array[java.lang.String] = null.asInstanceOf[scala.Array[java.lang.String]]
-  def this(port: scala.Int, listener: RemoteInputListener) = {
+  def this(port: scala.Int, listener: com.badlogic.gdx.input.RemoteInput.RemoteInputListener) = {
     this()
     this.listener = listener
     try {
@@ -33,7 +33,7 @@ class RemoteInput extends java.lang.Runnable with com.badlogic.gdx.Input {
       thread.setDaemon(true)
       thread.start()
       val allByName: scala.Array[java.net.InetAddress] = java.net.InetAddress.getAllByName(java.net.InetAddress.getLocalHost().getHostName())
-      this.ips = new Array[java.lang.String](allByName.length)
+      this.ips = new Array[java.lang.String](allByName.length);
       { var i: scala.Int = 0; while (i < allByName.length) { {
         this.ips(i) = allByName(i).getHostAddress()
       }; i = i + 1 } }
@@ -43,7 +43,7 @@ class RemoteInput extends java.lang.Runnable with com.badlogic.gdx.Input {
       }
     }
   }
-  def this(listener: RemoteInputListener) = {
+  def this(listener: com.badlogic.gdx.input.RemoteInput.RemoteInputListener) = {
     this(RemoteInput.DEFAULT_PORT, listener)
   }
   def this(port: scala.Int) = {
@@ -108,22 +108,22 @@ class RemoteInput extends java.lang.Runnable with com.badlogic.gdx.Input {
             }
             case com.badlogic.gdx.input.RemoteSender.TOUCH_DOWN => {
               touchEvent = new TouchEvent()
-              touchEvent.x = ((in.readInt() / this.remoteWidth) * com.badlogic.gdx.Gdx.graphics.getWidth()).asInstanceOf[scala.Int]
-              touchEvent.y = ((in.readInt() / this.remoteHeight) * com.badlogic.gdx.Gdx.graphics.getHeight()).asInstanceOf[scala.Int]
+              touchEvent.x = ((in.readInt() / this.remoteWidth) * com.badlogic.gdx.Gdx.graphics.getWidth()).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
+              touchEvent.y = ((in.readInt() / this.remoteHeight) * com.badlogic.gdx.Gdx.graphics.getHeight()).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
               touchEvent.pointer = in.readInt()
               touchEvent.`type` = TouchEvent.TOUCH_DOWN
             }
             case com.badlogic.gdx.input.RemoteSender.TOUCH_UP => {
               touchEvent = new TouchEvent()
-              touchEvent.x = ((in.readInt() / this.remoteWidth) * com.badlogic.gdx.Gdx.graphics.getWidth()).asInstanceOf[scala.Int]
-              touchEvent.y = ((in.readInt() / this.remoteHeight) * com.badlogic.gdx.Gdx.graphics.getHeight()).asInstanceOf[scala.Int]
+              touchEvent.x = ((in.readInt() / this.remoteWidth) * com.badlogic.gdx.Gdx.graphics.getWidth()).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
+              touchEvent.y = ((in.readInt() / this.remoteHeight) * com.badlogic.gdx.Gdx.graphics.getHeight()).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
               touchEvent.pointer = in.readInt()
               touchEvent.`type` = TouchEvent.TOUCH_UP
             }
             case com.badlogic.gdx.input.RemoteSender.TOUCH_DRAGGED => {
               touchEvent = new TouchEvent()
-              touchEvent.x = ((in.readInt() / this.remoteWidth) * com.badlogic.gdx.Gdx.graphics.getWidth()).asInstanceOf[scala.Int]
-              touchEvent.y = ((in.readInt() / this.remoteHeight) * com.badlogic.gdx.Gdx.graphics.getHeight()).asInstanceOf[scala.Int]
+              touchEvent.x = ((in.readInt() / this.remoteWidth) * com.badlogic.gdx.Gdx.graphics.getWidth()).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
+              touchEvent.y = ((in.readInt() / this.remoteHeight) * com.badlogic.gdx.Gdx.graphics.getHeight()).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
               touchEvent.pointer = in.readInt()
               touchEvent.`type` = TouchEvent.TOUCH_DRAGGED
             }
@@ -191,7 +191,7 @@ class RemoteInput extends java.lang.Runnable with com.badlogic.gdx.Input {
   def isButtonPressed(button: scala.Int): scala.Boolean = {
     if (button != com.badlogic.gdx.Input.Buttons.LEFT) {
       return false
-    } else ()
+    } else ();
     { var i: scala.Int = 0; while (i < this.isTouched$field.length) { {
       if (this.isTouched$field(i)) {
         return true
@@ -220,16 +220,16 @@ class RemoteInput extends java.lang.Runnable with com.badlogic.gdx.Input {
     } else ()
     return this.justPressedKeys(key)
   }
-  def getTextInput(listener: com.badlogic.gdx.Input#TextInputListener, title: java.lang.String, text: java.lang.String, hint: java.lang.String): scala.Unit = {
+  def getTextInput(listener: com.badlogic.gdx.Input.TextInputListener, title: java.lang.String, text: java.lang.String, hint: java.lang.String): scala.Unit = {
     com.badlogic.gdx.Gdx.app.getInput().getTextInput(listener, title, text, hint)
   }
-  def getTextInput(listener: com.badlogic.gdx.Input#TextInputListener, title: java.lang.String, text: java.lang.String, hint: java.lang.String, `type`: com.badlogic.gdx.Input#OnscreenKeyboardType): scala.Unit = {
+  def getTextInput(listener: com.badlogic.gdx.Input.TextInputListener, title: java.lang.String, text: java.lang.String, hint: java.lang.String, `type`: com.badlogic.gdx.Input.OnscreenKeyboardType): scala.Unit = {
     com.badlogic.gdx.Gdx.app.getInput().getTextInput(listener, title, text, hint, `type`)
   }
   def setOnscreenKeyboardVisible(visible: scala.Boolean): scala.Unit = {
     ()
   }
-  def setOnscreenKeyboardVisible(visible: scala.Boolean, `type`: com.badlogic.gdx.Input#OnscreenKeyboardType): scala.Unit = {
+  def setOnscreenKeyboardVisible(visible: scala.Boolean, `type`: com.badlogic.gdx.Input.OnscreenKeyboardType): scala.Unit = {
     ()
   }
   def openTextInputField(configuration: com.badlogic.gdx.input.NativeInputConfiguration): scala.Unit = {
@@ -238,7 +238,7 @@ class RemoteInput extends java.lang.Runnable with com.badlogic.gdx.Input {
   def closeTextInputField(sendReturn: scala.Boolean): scala.Unit = {
     ()
   }
-  def setKeyboardHeightObserver(observer: com.badlogic.gdx.Input#KeyboardHeightObserver): scala.Unit = {
+  def setKeyboardHeightObserver(observer: com.badlogic.gdx.Input.KeyboardHeightObserver): scala.Unit = {
     ()
   }
   def vibrate(milliseconds: scala.Int): scala.Unit = {
@@ -250,7 +250,7 @@ class RemoteInput extends java.lang.Runnable with com.badlogic.gdx.Input {
   def vibrate(milliseconds: scala.Int, amplitude: scala.Int, fallback: scala.Boolean): scala.Unit = {
     ()
   }
-  def vibrate(vibrationType: com.badlogic.gdx.Input#VibrationType): scala.Unit = {
+  def vibrate(vibrationType: com.badlogic.gdx.Input.VibrationType): scala.Unit = {
     ()
   }
   def getAzimuth(): scala.Float = {
@@ -277,7 +277,7 @@ class RemoteInput extends java.lang.Runnable with com.badlogic.gdx.Input {
   def getIPs(): scala.Array[java.lang.String] = {
     return this.ips
   }
-  def isPeripheralAvailable(peripheral: com.badlogic.gdx.Input#Peripheral): scala.Boolean = {
+  def isPeripheralAvailable(peripheral: com.badlogic.gdx.Input.Peripheral): scala.Boolean = {
     if (peripheral == com.badlogic.gdx.Input.Peripheral.Accelerometer) {
       return true
     } else ()
@@ -292,7 +292,7 @@ class RemoteInput extends java.lang.Runnable with com.badlogic.gdx.Input {
   def getRotation(): scala.Int = {
     return 0
   }
-  def getNativeOrientation(): com.badlogic.gdx.Input#Orientation = {
+  def getNativeOrientation(): com.badlogic.gdx.Input.Orientation = {
     return com.badlogic.gdx.Input.Orientation.Landscape
   }
   def setCursorCatched(catched: scala.Boolean): scala.Unit = {
@@ -321,10 +321,6 @@ class RemoteInput extends java.lang.Runnable with com.badlogic.gdx.Input {
   }
   def getRotationMatrix(matrix: scala.Array[scala.Float]): scala.Unit = {
     ()
-  }
-  trait RemoteInputListener {
-    def onConnected(): scala.Unit
-    def onDisconnected(): scala.Unit
   }
   class KeyEvent {
     var timeStamp: scala.Long = 0L
@@ -360,7 +356,7 @@ class RemoteInput extends java.lang.Runnable with com.badlogic.gdx.Input {
     def run(): scala.Unit = {
       justTouched$field = false
       if (keyJustPressed) {
-        keyJustPressed = false
+        keyJustPressed = false;
         { var i: scala.Int = 0; while (i < justPressedKeys.length) { {
           justPressedKeys(i) = false
         }; i = i + 1 } }
@@ -458,4 +454,8 @@ class RemoteInput extends java.lang.Runnable with com.badlogic.gdx.Input {
 object RemoteInput {
   private final val MAX_TOUCHES: scala.Int = 20
   var DEFAULT_PORT: scala.Int = 8190
+  trait RemoteInputListener {
+    def onConnected(): scala.Unit
+    def onDisconnected(): scala.Unit
+  }
 }

@@ -2,7 +2,7 @@ package com.badlogic.gdx.graphics.glutils
 
 class ETC1TextureData extends com.badlogic.gdx.graphics.TextureData {
   var file: com.badlogic.gdx.files.FileHandle = null.asInstanceOf[com.badlogic.gdx.files.FileHandle]
-  var data: com.badlogic.gdx.graphics.glutils.ETC1#ETC1Data = null.asInstanceOf[com.badlogic.gdx.graphics.glutils.ETC1#ETC1Data]
+  var data: com.badlogic.gdx.graphics.glutils.ETC1.ETC1Data = null.asInstanceOf[com.badlogic.gdx.graphics.glutils.ETC1.ETC1Data]
   var useMipMaps$field: scala.Boolean = false
   var width: scala.Int = 0
   var height: scala.Int = 0
@@ -12,7 +12,7 @@ class ETC1TextureData extends com.badlogic.gdx.graphics.TextureData {
     this.file = file
     this.useMipMaps$field = useMipMaps
   }
-  def this(encodedImage: com.badlogic.gdx.graphics.glutils.ETC1#ETC1Data, useMipMaps: scala.Boolean) = {
+  def this(encodedImage: com.badlogic.gdx.graphics.glutils.ETC1.ETC1Data, useMipMaps: scala.Boolean) = {
     this()
     this.data = encodedImage
     this.useMipMaps$field = useMipMaps
@@ -20,7 +20,7 @@ class ETC1TextureData extends com.badlogic.gdx.graphics.TextureData {
   def this(file: com.badlogic.gdx.files.FileHandle) = {
     this(file, false)
   }
-  def getType(): com.badlogic.gdx.graphics.TextureData#TextureDataType = {
+  def getType(): com.badlogic.gdx.graphics.TextureData.TextureDataType = {
     return com.badlogic.gdx.graphics.TextureData.TextureDataType.Custom
   }
   def isPrepared(): scala.Boolean = {
@@ -34,7 +34,7 @@ class ETC1TextureData extends com.badlogic.gdx.graphics.TextureData {
       throw new com.badlogic.gdx.utils.GdxRuntimeException("Can only load once from ETC1Data")
     } else ()
     if (this.file != null) {
-      this.data = new com.badlogic.gdx.graphics.glutils.ETC1#ETC1Data(this.file)
+      this.data = new com.badlogic.gdx.graphics.glutils.ETC1.ETC1Data(this.file)
     } else ()
     this.width = this.data.width
     this.height = this.data.height
@@ -74,7 +74,7 @@ class ETC1TextureData extends com.badlogic.gdx.graphics.TextureData {
   def getHeight(): scala.Int = {
     return this.height
   }
-  def getFormat(): com.badlogic.gdx.graphics.Pixmap#Format = {
+  def getFormat(): com.badlogic.gdx.graphics.Pixmap.Format = {
     return com.badlogic.gdx.graphics.Pixmap.Format.RGB565
   }
   def useMipMaps(): scala.Boolean = {

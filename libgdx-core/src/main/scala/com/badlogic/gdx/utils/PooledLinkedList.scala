@@ -1,18 +1,18 @@
 package com.badlogic.gdx.utils
 
 class PooledLinkedList[T] {
-  private var head: Item[T] = null.asInstanceOf[Item[T]]
-  private var tail: Item[T] = null.asInstanceOf[Item[T]]
-  var iter$field: Item[T] = null.asInstanceOf[Item[T]]
-  private var curr: Item[T] = null.asInstanceOf[Item[T]]
+  private var head: com.badlogic.gdx.utils.PooledLinkedList.Item[T] = null.asInstanceOf[com.badlogic.gdx.utils.PooledLinkedList.Item[T]]
+  private var tail: com.badlogic.gdx.utils.PooledLinkedList.Item[T] = null.asInstanceOf[com.badlogic.gdx.utils.PooledLinkedList.Item[T]]
+  var iter$field: com.badlogic.gdx.utils.PooledLinkedList.Item[T] = null.asInstanceOf[com.badlogic.gdx.utils.PooledLinkedList.Item[T]]
+  private var curr: com.badlogic.gdx.utils.PooledLinkedList.Item[T] = null.asInstanceOf[com.badlogic.gdx.utils.PooledLinkedList.Item[T]]
   var size$field: scala.Int = 0
-  private var pool: com.badlogic.gdx.utils.Pool[Item[T]] = null.asInstanceOf[com.badlogic.gdx.utils.Pool[Item[T]]]
+  private var pool: com.badlogic.gdx.utils.Pool[com.badlogic.gdx.utils.PooledLinkedList.Item[T]] = null.asInstanceOf[com.badlogic.gdx.utils.Pool[com.badlogic.gdx.utils.PooledLinkedList.Item[T]]]
   def this(maxPoolSize: scala.Int) = {
     this()
-    this.pool = new com.badlogic.gdx.utils.Pool[Item[T]](16, maxPoolSize)
+    this.pool = new com.badlogic.gdx.utils.Pool[com.badlogic.gdx.utils.PooledLinkedList.Item[T]](16, maxPoolSize)
   }
   def add(`object`: T): scala.Unit = {
-    val item: Item[T] = this.pool.obtain()
+    val item: com.badlogic.gdx.utils.PooledLinkedList.Item[T] = this.pool.obtain()
     item.payload = `object`
     item.next = null
     item.prev = null
@@ -28,7 +28,7 @@ class PooledLinkedList[T] {
     this.size$field = this.size$field + 1
   }
   def addFirst(`object`: T): scala.Unit = {
-    val item: Item[T] = this.pool.obtain()
+    val item: com.badlogic.gdx.utils.PooledLinkedList.Item[T] = this.pool.obtain()
     item.payload = `object`
     item.next = this.head
     item.prev = null
@@ -51,7 +51,7 @@ class PooledLinkedList[T] {
   }
   def next(): T = {
     if (this.iter$field == null) {
-      return null
+      return null.asInstanceOf[T]
     } else ()
     val payload: T = this.iter$field.payload
     this.curr = this.iter$field
@@ -60,7 +60,7 @@ class PooledLinkedList[T] {
   }
   def previous(): T = {
     if (this.iter$field == null) {
-      return null
+      return null.asInstanceOf[T]
     } else ()
     val payload: T = this.iter$field.payload
     this.curr = this.iter$field
@@ -72,9 +72,9 @@ class PooledLinkedList[T] {
       return
     } else ()
     this.size$field = this.size$field - 1
-    val c: Item[T] = this.curr
-    val n: Item[T] = this.curr.next
-    val p: Item[T] = this.curr.prev
+    val c: com.badlogic.gdx.utils.PooledLinkedList.Item[T] = this.curr
+    val n: com.badlogic.gdx.utils.PooledLinkedList.Item[T] = this.curr.next
+    val p: com.badlogic.gdx.utils.PooledLinkedList.Item[T] = this.curr.prev
     this.pool.free(this.curr)
     this.curr = null
     if (this.size$field == 0) {
@@ -97,11 +97,11 @@ class PooledLinkedList[T] {
   }
   def removeLast(): T = {
     if (this.tail == null) {
-      return null
+      return null.asInstanceOf[T]
     } else ()
     val payload: T = this.tail.payload
     this.size$field = this.size$field - 1
-    val p: Item[T] = this.tail.prev
+    val p: com.badlogic.gdx.utils.PooledLinkedList.Item[T] = this.tail.prev
     this.pool.free(this.tail)
     if (this.size$field == 0) {
       this.head = null
@@ -114,7 +114,7 @@ class PooledLinkedList[T] {
   }
   def clear(): scala.Unit = {
     this.iter()
-    var v: T = null
+    var v: T = null.asInstanceOf[T]
     while ({
       v = this.next()
       v
@@ -122,9 +122,11 @@ class PooledLinkedList[T] {
       this.remove()
     }
   }
+}
+object PooledLinkedList {
   final class Item[T] {
     var payload: T = null.asInstanceOf[T]
-    var next: Item[T] = null.asInstanceOf[Item[T]]
-    var prev: Item[T] = null.asInstanceOf[Item[T]]
+    var next: com.badlogic.gdx.utils.PooledLinkedList.Item[T] = null.asInstanceOf[com.badlogic.gdx.utils.PooledLinkedList.Item[T]]
+    var prev: com.badlogic.gdx.utils.PooledLinkedList.Item[T] = null.asInstanceOf[com.badlogic.gdx.utils.PooledLinkedList.Item[T]]
   }
 }

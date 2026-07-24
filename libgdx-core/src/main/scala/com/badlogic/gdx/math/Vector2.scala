@@ -16,7 +16,7 @@ class Vector2 extends java.io.Serializable with com.badlogic.gdx.math.Vector[Vec
     return new Vector2(this)
   }
   def len(): scala.Float = {
-    return java.lang.Math.sqrt((this.x * this.x) + (this.y * this.y)).asInstanceOf[scala.Float]
+    return java.lang.Math.sqrt((this.x * this.x) + (this.y * this.y)).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
   }
   def len2(): scala.Float = {
     return (this.x * this.x) + (this.y * this.y)
@@ -96,12 +96,12 @@ class Vector2 extends java.io.Serializable with com.badlogic.gdx.math.Vector[Vec
   def dst(v: Vector2): scala.Float = {
     val x_d: scala.Float = v.x - this.x
     val y_d: scala.Float = v.y - this.y
-    return java.lang.Math.sqrt((x_d * x_d) + (y_d * y_d)).asInstanceOf[scala.Float]
+    return java.lang.Math.sqrt((x_d * x_d) + (y_d * y_d)).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
   }
   def dst(x: scala.Float, y: scala.Float): scala.Float = {
     val x_d: scala.Float = x - this.x
     val y_d: scala.Float = y - this.y
-    return java.lang.Math.sqrt((x_d * x_d) + (y_d * y_d)).asInstanceOf[scala.Float]
+    return java.lang.Math.sqrt((x_d * x_d) + (y_d * y_d)).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
   }
   def dst2(v: Vector2): scala.Float = {
     val x_d: scala.Float = v.x - this.x
@@ -201,10 +201,10 @@ class Vector2 extends java.io.Serializable with com.badlogic.gdx.math.Vector[Vec
     return angle
   }
   def angleRad(): scala.Float = {
-    return java.lang.Math.atan2(this.y, this.x).asInstanceOf[scala.Float]
+    return java.lang.Math.atan2(this.y, this.x).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
   }
   def angleRad(reference: Vector2): scala.Float = {
-    return java.lang.Math.atan2(reference.crs(this), reference.dot(this)).asInstanceOf[scala.Float]
+    return java.lang.Math.atan2(reference.crs(this), reference.dot(this)).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
   }
   def setAngle(degrees: scala.Float): Vector2 = {
     return this.setAngleRad(degrees * com.badlogic.gdx.math.MathUtils.degreesToRadians)
@@ -227,8 +227,8 @@ class Vector2 extends java.io.Serializable with com.badlogic.gdx.math.Vector[Vec
     return this.rotateRad(degrees * com.badlogic.gdx.math.MathUtils.degreesToRadians)
   }
   def rotateRad(radians: scala.Float): Vector2 = {
-    val cos: scala.Float = java.lang.Math.cos(radians).asInstanceOf[scala.Float]
-    val sin: scala.Float = java.lang.Math.sin(radians).asInstanceOf[scala.Float]
+    val cos: scala.Float = java.lang.Math.cos(radians).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
+    val sin: scala.Float = java.lang.Math.sin(radians).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
     val newX: scala.Float = (this.x * cos) - (this.y * sin)
     val newY: scala.Float = (this.x * sin) + (this.y * cos)
     this.x = newX
@@ -373,7 +373,7 @@ object Vector2 {
   final val Zero: Vector2 = new Vector2(0, 0)
   final val One: Vector2 = new Vector2(1, 1)
   def len(x: scala.Float, y: scala.Float): scala.Float = {
-    return java.lang.Math.sqrt((x * x) + (y * y)).asInstanceOf[scala.Float]
+    return java.lang.Math.sqrt((x * x) + (y * y)).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
   }
   def len2(x: scala.Float, y: scala.Float): scala.Float = {
     return (x * x) + (y * y)
@@ -384,7 +384,7 @@ object Vector2 {
   def dst(x1: scala.Float, y1: scala.Float, x2: scala.Float, y2: scala.Float): scala.Float = {
     val x_d: scala.Float = x2 - x1
     val y_d: scala.Float = y2 - y1
-    return java.lang.Math.sqrt((x_d * x_d) + (y_d * y_d)).asInstanceOf[scala.Float]
+    return java.lang.Math.sqrt((x_d * x_d) + (y_d * y_d)).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
   }
   def dst2(x1: scala.Float, y1: scala.Float, x2: scala.Float, y2: scala.Float): scala.Float = {
     val x_d: scala.Float = x2 - x1
@@ -399,6 +399,6 @@ object Vector2 {
     return angle
   }
   def angleRad(x: scala.Float, y: scala.Float): scala.Float = {
-    return java.lang.Math.atan2(y, x).asInstanceOf[scala.Float]
+    return java.lang.Math.atan2(y, x).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
   }
 }

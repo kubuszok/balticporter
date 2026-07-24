@@ -33,10 +33,10 @@ class RepeatablePolygonSprite {
       density = boundRect.getWidth() / region.getRegionWidth()
     } else ()
     val regionAspectRatio: scala.Float = region.getRegionHeight().asInstanceOf[scala.Float] / region.getRegionWidth().asInstanceOf[scala.Float]
-    this.cols = java.lang.Math.ceil(density).asInstanceOf[scala.Int]
+    this.cols = java.lang.Math.ceil(density).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
     this.gridWidth = boundRect.getWidth() / density
     this.gridHeight = regionAspectRatio * this.gridWidth
-    this.rows = java.lang.Math.ceil(boundRect.getHeight() / this.gridHeight).asInstanceOf[scala.Int]
+    this.rows = java.lang.Math.ceil(boundRect.getHeight() / this.gridHeight).asInstanceOf[scala.Int].asInstanceOf[scala.Int];
     { var col: scala.Int = 0; while (col < this.cols) { {
       { var row: scala.Int = 0; while (row < this.rows) { {
         var verts: scala.Array[scala.Float] = new Array[scala.Float](8)
@@ -77,7 +77,7 @@ class RepeatablePolygonSprite {
     return vertices
   }
   private def offset(vertices: scala.Array[scala.Float]): scala.Array[scala.Float] = {
-    this.offset$field.set(vertices(0), vertices(1))
+    this.offset$field.set(vertices(0), vertices(1));
     { var i: scala.Int = 0; while (i < (vertices.length - 1)) { {
       if (this.offset$field.x > vertices(i)) {
         this.offset$field.x = vertices(i)
@@ -85,7 +85,7 @@ class RepeatablePolygonSprite {
       if (this.offset$field.y > vertices(i + 1)) {
         this.offset$field.y = vertices(i + 1)
       } else ()
-    }; i = i + 2 } }
+    }; i = i + 2 } };
     { var i: scala.Int = 0; while (i < vertices.length) { {
       vertices(i) = vertices(i) - this.offset$field.x
       vertices(i + 1) = vertices(i + 1) - this.offset$field.y
@@ -93,7 +93,7 @@ class RepeatablePolygonSprite {
     return vertices
   }
   private def buildVertices(): scala.Unit = {
-    this.vertices.clear()
+    this.vertices.clear();
     { var i: scala.Int = 0; while (i < this.parts.size) { {
       val verts: scala.Array[scala.Float] = this.parts.get(i)
       if (verts == null) {
@@ -102,7 +102,7 @@ class RepeatablePolygonSprite {
       val fullVerts: scala.Array[scala.Float] = new Array[scala.Float]((5 * verts.length) / 2)
       var idx: scala.Int = 0
       val col: scala.Int = i / this.rows
-      val row: scala.Int = i % this.rows
+      val row: scala.Int = i % this.rows;
       { var j: scala.Int = 0; while (j < verts.length) { {
         fullVerts({ idx += 1; idx }) = (verts(j) + this.offset$field.x) + this.x
         fullVerts({ idx += 1; idx }) = (verts(j + 1) + this.offset$field.y) + this.y
@@ -133,7 +133,7 @@ class RepeatablePolygonSprite {
   def draw(batch: com.badlogic.gdx.graphics.g2d.PolygonSpriteBatch): scala.Unit = {
     if (this.dirty) {
       this.buildVertices()
-    } else ()
+    } else ();
     { var i: scala.Int = 0; while (i < this.vertices.size) { {
       batch.draw(this.region.getTexture(), this.vertices.get(i), 0, this.vertices.get(i).length, this.indices.get(i), 0, this.indices.get(i).length)
     }; i = i + 1 } }

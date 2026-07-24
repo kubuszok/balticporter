@@ -1,12 +1,12 @@
 package com.badlogic.gdx.net
 
 class HttpRequestBuilder {
-  private var httpRequest: com.badlogic.gdx.Net#HttpRequest = null.asInstanceOf[com.badlogic.gdx.Net#HttpRequest]
+  private var httpRequest: com.badlogic.gdx.Net.HttpRequest = null.asInstanceOf[com.badlogic.gdx.Net.HttpRequest]
   def newRequest(): HttpRequestBuilder = {
     if (this.httpRequest != null) {
       throw new java.lang.IllegalStateException("A new request has already been started. Call HttpRequestBuilder.build() first.")
     } else ()
-    this.httpRequest = new com.badlogic.gdx.Net#HttpRequest()
+    this.httpRequest = new com.badlogic.gdx.Net.HttpRequest()
     this.httpRequest.setTimeOut(HttpRequestBuilder.defaultTimeout)
     return this
   }
@@ -69,9 +69,9 @@ class HttpRequestBuilder {
     this.httpRequest.setHeader(com.badlogic.gdx.net.HttpRequestHeader.Authorization, "Basic " + com.badlogic.gdx.utils.Base64Coder.encodeString((username + ":") + password))
     return this
   }
-  def build(): com.badlogic.gdx.Net#HttpRequest = {
+  def build(): com.badlogic.gdx.Net.HttpRequest = {
     this.validate()
-    val request: com.badlogic.gdx.Net#HttpRequest = this.httpRequest
+    val request: com.badlogic.gdx.Net.HttpRequest = this.httpRequest
     this.httpRequest = null
     return request
   }

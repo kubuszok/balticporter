@@ -2,19 +2,19 @@ package com.badlogic.gdx.net
 
 class NetJavaImpl {
   private var executorService: java.util.concurrent.ThreadPoolExecutor = null.asInstanceOf[java.util.concurrent.ThreadPoolExecutor]
-  var connections: com.badlogic.gdx.utils.ObjectMap[com.badlogic.gdx.Net#HttpRequest, java.net.HttpURLConnection] = null.asInstanceOf[com.badlogic.gdx.utils.ObjectMap[com.badlogic.gdx.Net#HttpRequest, java.net.HttpURLConnection]]
-  var listeners: com.badlogic.gdx.utils.ObjectMap[com.badlogic.gdx.Net#HttpRequest, com.badlogic.gdx.Net#HttpResponseListener] = null.asInstanceOf[com.badlogic.gdx.utils.ObjectMap[com.badlogic.gdx.Net#HttpRequest, com.badlogic.gdx.Net#HttpResponseListener]]
-  var tasks: com.badlogic.gdx.utils.ObjectMap[com.badlogic.gdx.Net#HttpRequest, java.util.concurrent.Future[?]] = null.asInstanceOf[com.badlogic.gdx.utils.ObjectMap[com.badlogic.gdx.Net#HttpRequest, java.util.concurrent.Future[?]]]
+  var connections: com.badlogic.gdx.utils.ObjectMap[com.badlogic.gdx.Net.HttpRequest, java.net.HttpURLConnection] = null.asInstanceOf[com.badlogic.gdx.utils.ObjectMap[com.badlogic.gdx.Net.HttpRequest, java.net.HttpURLConnection]]
+  var listeners: com.badlogic.gdx.utils.ObjectMap[com.badlogic.gdx.Net.HttpRequest, com.badlogic.gdx.Net.HttpResponseListener] = null.asInstanceOf[com.badlogic.gdx.utils.ObjectMap[com.badlogic.gdx.Net.HttpRequest, com.badlogic.gdx.Net.HttpResponseListener]]
+  var tasks: com.badlogic.gdx.utils.ObjectMap[com.badlogic.gdx.Net.HttpRequest, java.util.concurrent.Future[?]] = null.asInstanceOf[com.badlogic.gdx.utils.ObjectMap[com.badlogic.gdx.Net.HttpRequest, java.util.concurrent.Future[?]]]
   def this(maxThreads: scala.Int) = {
     this()
     val isCachedPool: scala.Boolean = maxThreads == java.lang.Integer.MAX_VALUE
     this.executorService = new java.util.concurrent.ThreadPoolExecutor(if (isCachedPool) 0 else maxThreads, maxThreads, 60L, java.util.concurrent.TimeUnit.SECONDS, if (isCachedPool) new java.util.concurrent.SynchronousQueue[java.lang.Runnable]() else new java.util.concurrent.LinkedBlockingQueue[java.lang.Runnable](), new java.util.concurrent.ThreadFactory())
     this.executorService.allowCoreThreadTimeOut(!isCachedPool)
-    this.connections = new com.badlogic.gdx.utils.ObjectMap[com.badlogic.gdx.Net#HttpRequest, java.net.HttpURLConnection]()
-    this.listeners = new com.badlogic.gdx.utils.ObjectMap[com.badlogic.gdx.Net#HttpRequest, com.badlogic.gdx.Net#HttpResponseListener]()
-    this.tasks = new com.badlogic.gdx.utils.ObjectMap[com.badlogic.gdx.Net#HttpRequest, java.util.concurrent.Future[?]]()
+    this.connections = new com.badlogic.gdx.utils.ObjectMap[com.badlogic.gdx.Net.HttpRequest, java.net.HttpURLConnection]()
+    this.listeners = new com.badlogic.gdx.utils.ObjectMap[com.badlogic.gdx.Net.HttpRequest, com.badlogic.gdx.Net.HttpResponseListener]()
+    this.tasks = new com.badlogic.gdx.utils.ObjectMap[com.badlogic.gdx.Net.HttpRequest, java.util.concurrent.Future[?]]()
   }
-  def sendHttpRequest(httpRequest: com.badlogic.gdx.Net#HttpRequest, httpResponseListener: com.badlogic.gdx.Net#HttpResponseListener): scala.Unit = {
+  def sendHttpRequest(httpRequest: com.badlogic.gdx.Net.HttpRequest, httpResponseListener: com.badlogic.gdx.Net.HttpResponseListener): scala.Unit = {
     if (httpRequest.getUrl() == null) {
       httpResponseListener.failed(new com.badlogic.gdx.utils.GdxRuntimeException("can't process a HTTP request without URL set"))
       return
@@ -57,37 +57,39 @@ class NetJavaImpl {
       }
     }
   }
-  def cancelHttpRequest(httpRequest: com.badlogic.gdx.Net#HttpRequest): scala.Unit = {
-    val httpResponseListener: com.badlogic.gdx.Net#HttpResponseListener = this.getFromListeners(httpRequest)
+  def cancelHttpRequest(httpRequest: com.badlogic.gdx.Net.HttpRequest): scala.Unit = {
+    val httpResponseListener: com.badlogic.gdx.Net.HttpResponseListener = this.getFromListeners(httpRequest)
     if (httpResponseListener != null) {
       httpResponseListener.cancelled()
       this.cancelTask(httpRequest)
       this.removeFromConnectionsAndListeners(httpRequest)
     } else ()
   }
-  def isHttpRequestPending(httpRequest: com.badlogic.gdx.Net#HttpRequest): scala.Boolean = {
+  def isHttpRequestPending(httpRequest: com.badlogic.gdx.Net.HttpRequest): scala.Boolean = {
     return this.getFromListeners(httpRequest) != null
   }
-  private def cancelTask(httpRequest: com.badlogic.gdx.Net#HttpRequest): scala.Unit = {
+  private def cancelTask(httpRequest: com.badlogic.gdx.Net.HttpRequest): scala.Unit = {
     val task: java.util.concurrent.Future[?] = this.tasks.get(httpRequest)
     if (task != null) {
       task.cancel(false)
     } else ()
   }
-  def removeFromConnectionsAndListeners(httpRequest: com.badlogic.gdx.Net#HttpRequest): scala.Unit = {
+  def removeFromConnectionsAndListeners(httpRequest: com.badlogic.gdx.Net.HttpRequest): scala.Unit = {
     this.connections.remove(httpRequest)
     this.listeners.remove(httpRequest)
     this.tasks.remove(httpRequest)
   }
-  def putIntoConnectionsAndListeners(httpRequest: com.badlogic.gdx.Net#HttpRequest, httpResponseListener: com.badlogic.gdx.Net#HttpResponseListener, connection: java.net.HttpURLConnection): scala.Unit = {
+  def putIntoConnectionsAndListeners(httpRequest: com.badlogic.gdx.Net.HttpRequest, httpResponseListener: com.badlogic.gdx.Net.HttpResponseListener, connection: java.net.HttpURLConnection): scala.Unit = {
     this.connections.put(httpRequest, connection)
     this.listeners.put(httpRequest, httpResponseListener)
   }
-  def getFromListeners(httpRequest: com.badlogic.gdx.Net#HttpRequest): com.badlogic.gdx.Net#HttpResponseListener = {
-    val httpResponseListener: com.badlogic.gdx.Net#HttpResponseListener = this.listeners.get(httpRequest)
+  def getFromListeners(httpRequest: com.badlogic.gdx.Net.HttpRequest): com.badlogic.gdx.Net.HttpResponseListener = {
+    val httpResponseListener: com.badlogic.gdx.Net.HttpResponseListener = this.listeners.get(httpRequest)
     return httpResponseListener
   }
-  class HttpClientResponse extends com.badlogic.gdx.Net#HttpResponse {
+}
+object NetJavaImpl {
+  class HttpClientResponse extends com.badlogic.gdx.Net.HttpResponse {
     private var connection: java.net.HttpURLConnection = null.asInstanceOf[java.net.HttpURLConnection]
     private var status: com.badlogic.gdx.net.HttpStatus = null.asInstanceOf[com.badlogic.gdx.net.HttpStatus]
     def this(connection: java.net.HttpURLConnection) = {

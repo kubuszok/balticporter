@@ -1,11 +1,11 @@
 package com.badlogic.gdx.graphics.g3d.utils
 
 class AnimationController extends com.badlogic.gdx.graphics.g3d.utils.BaseAnimationController {
-  protected final val animationPool: com.badlogic.gdx.utils.Pool[AnimationDesc] = new com.badlogic.gdx.utils.Pool[AnimationDesc]()
-  var current: AnimationDesc = null.asInstanceOf[AnimationDesc]
-  var queued: AnimationDesc = null.asInstanceOf[AnimationDesc]
+  final val animationPool: com.badlogic.gdx.utils.Pool[com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationDesc] = new com.badlogic.gdx.utils.Pool[com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationDesc]()
+  var current: com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationDesc = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationDesc]
+  var queued: com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationDesc = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationDesc]
   var queuedTransitionTime: scala.Float = 0.0f
-  var previous: AnimationDesc = null.asInstanceOf[AnimationDesc]
+  var previous: com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationDesc = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationDesc]
   var transitionCurrentTime: scala.Float = 0.0f
   var transitionTargetTime: scala.Float = 0.0f
   var inAction: scala.Boolean = false
@@ -15,11 +15,11 @@ class AnimationController extends com.badlogic.gdx.graphics.g3d.utils.BaseAnimat
   def this(target: com.badlogic.gdx.graphics.g3d.ModelInstance) = {
     this()
   }
-  private def obtain(anim: com.badlogic.gdx.graphics.g3d.model.Animation, offset: scala.Float, duration: scala.Float, loopCount: scala.Int, speed: scala.Float, listener: AnimationListener): AnimationDesc = {
+  private def obtain(anim: com.badlogic.gdx.graphics.g3d.model.Animation, offset: scala.Float, duration: scala.Float, loopCount: scala.Int, speed: scala.Float, listener: com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationListener): com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationDesc = {
     if (anim == null) {
       return null
     } else ()
-    val result: AnimationDesc = this.animationPool.obtain()
+    val result: com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationDesc = this.animationPool.obtain()
     result.animation = anim
     result.listener = listener
     result.loopCount = loopCount
@@ -29,7 +29,7 @@ class AnimationController extends com.badlogic.gdx.graphics.g3d.utils.BaseAnimat
     result.time = if (speed < 0) result.duration else 0.0f
     return result
   }
-  private def obtain(id: java.lang.String, offset: scala.Float, duration: scala.Float, loopCount: scala.Int, speed: scala.Float, listener: AnimationListener): AnimationDesc = {
+  private def obtain(id: java.lang.String, offset: scala.Float, duration: scala.Float, loopCount: scala.Int, speed: scala.Float, listener: com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationListener): com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationDesc = {
     if (id == null) {
       return null
     } else ()
@@ -39,7 +39,7 @@ class AnimationController extends com.badlogic.gdx.graphics.g3d.utils.BaseAnimat
     } else ()
     return this.obtain(anim, offset, duration, loopCount, speed, listener)
   }
-  private def obtain(anim: AnimationDesc): AnimationDesc = {
+  private def obtain(anim: com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationDesc): com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationDesc = {
     return this.obtain(anim.animation, anim.offset, anim.duration, anim.loopCount, anim.speed, anim.listener)
   }
   def update(delta: scala.Float): scala.Unit = {
@@ -78,28 +78,28 @@ class AnimationController extends com.badlogic.gdx.graphics.g3d.utils.BaseAnimat
       this.applyAnimation(this.current.animation, this.current.offset + this.current.time)
     }
   }
-  def setAnimation(id: java.lang.String): AnimationDesc = {
+  def setAnimation(id: java.lang.String): com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationDesc = {
     return this.setAnimation(id, 1, 1.0f, null)
   }
-  def setAnimation(id: java.lang.String, loopCount: scala.Int): AnimationDesc = {
+  def setAnimation(id: java.lang.String, loopCount: scala.Int): com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationDesc = {
     return this.setAnimation(id, loopCount, 1.0f, null)
   }
-  def setAnimation(id: java.lang.String, listener: AnimationListener): AnimationDesc = {
+  def setAnimation(id: java.lang.String, listener: com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationListener): com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationDesc = {
     return this.setAnimation(id, 1, 1.0f, listener)
   }
-  def setAnimation(id: java.lang.String, loopCount: scala.Int, listener: AnimationListener): AnimationDesc = {
+  def setAnimation(id: java.lang.String, loopCount: scala.Int, listener: com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationListener): com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationDesc = {
     return this.setAnimation(id, loopCount, 1.0f, listener)
   }
-  def setAnimation(id: java.lang.String, loopCount: scala.Int, speed: scala.Float, listener: AnimationListener): AnimationDesc = {
+  def setAnimation(id: java.lang.String, loopCount: scala.Int, speed: scala.Float, listener: com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationListener): com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationDesc = {
     return this.setAnimation(id, 0.0f, -1.0f, loopCount, speed, listener)
   }
-  def setAnimation(id: java.lang.String, offset: scala.Float, duration: scala.Float, loopCount: scala.Int, speed: scala.Float, listener: AnimationListener): AnimationDesc = {
+  def setAnimation(id: java.lang.String, offset: scala.Float, duration: scala.Float, loopCount: scala.Int, speed: scala.Float, listener: com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationListener): com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationDesc = {
     return this.setAnimation(this.obtain(id, offset, duration, loopCount, speed, listener))
   }
-  protected def setAnimation(anim: com.badlogic.gdx.graphics.g3d.model.Animation, offset: scala.Float, duration: scala.Float, loopCount: scala.Int, speed: scala.Float, listener: AnimationListener): AnimationDesc = {
+  def setAnimation(anim: com.badlogic.gdx.graphics.g3d.model.Animation, offset: scala.Float, duration: scala.Float, loopCount: scala.Int, speed: scala.Float, listener: com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationListener): com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationDesc = {
     return this.setAnimation(this.obtain(anim, offset, duration, loopCount, speed, listener))
   }
-  protected def setAnimation(anim: AnimationDesc): AnimationDesc = {
+  def setAnimation(anim: com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationDesc): com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationDesc = {
     if (this.current == null) {
       this.current = anim
     } else {
@@ -114,25 +114,25 @@ class AnimationController extends com.badlogic.gdx.graphics.g3d.utils.BaseAnimat
     this.justChangedAnimation = true
     return anim
   }
-  def animate(id: java.lang.String, transitionTime: scala.Float): AnimationDesc = {
+  def animate(id: java.lang.String, transitionTime: scala.Float): com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationDesc = {
     return this.animate(id, 1, 1.0f, null, transitionTime)
   }
-  def animate(id: java.lang.String, listener: AnimationListener, transitionTime: scala.Float): AnimationDesc = {
+  def animate(id: java.lang.String, listener: com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationListener, transitionTime: scala.Float): com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationDesc = {
     return this.animate(id, 1, 1.0f, listener, transitionTime)
   }
-  def animate(id: java.lang.String, loopCount: scala.Int, listener: AnimationListener, transitionTime: scala.Float): AnimationDesc = {
+  def animate(id: java.lang.String, loopCount: scala.Int, listener: com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationListener, transitionTime: scala.Float): com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationDesc = {
     return this.animate(id, loopCount, 1.0f, listener, transitionTime)
   }
-  def animate(id: java.lang.String, loopCount: scala.Int, speed: scala.Float, listener: AnimationListener, transitionTime: scala.Float): AnimationDesc = {
+  def animate(id: java.lang.String, loopCount: scala.Int, speed: scala.Float, listener: com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationListener, transitionTime: scala.Float): com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationDesc = {
     return this.animate(id, 0.0f, -1.0f, loopCount, speed, listener, transitionTime)
   }
-  def animate(id: java.lang.String, offset: scala.Float, duration: scala.Float, loopCount: scala.Int, speed: scala.Float, listener: AnimationListener, transitionTime: scala.Float): AnimationDesc = {
+  def animate(id: java.lang.String, offset: scala.Float, duration: scala.Float, loopCount: scala.Int, speed: scala.Float, listener: com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationListener, transitionTime: scala.Float): com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationDesc = {
     return this.animate(this.obtain(id, offset, duration, loopCount, speed, listener), transitionTime)
   }
-  protected def animate(anim: com.badlogic.gdx.graphics.g3d.model.Animation, offset: scala.Float, duration: scala.Float, loopCount: scala.Int, speed: scala.Float, listener: AnimationListener, transitionTime: scala.Float): AnimationDesc = {
+  def animate(anim: com.badlogic.gdx.graphics.g3d.model.Animation, offset: scala.Float, duration: scala.Float, loopCount: scala.Int, speed: scala.Float, listener: com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationListener, transitionTime: scala.Float): com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationDesc = {
     return this.animate(this.obtain(anim, offset, duration, loopCount, speed, listener), transitionTime)
   }
-  protected def animate(anim: AnimationDesc, transitionTime: scala.Float): AnimationDesc = {
+  def animate(anim: com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationDesc, transitionTime: scala.Float): com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationDesc = {
     if ((this.current == null) || (this.current.loopCount == 0)) {
       this.current = anim
     } else {
@@ -157,16 +157,16 @@ class AnimationController extends com.badlogic.gdx.graphics.g3d.utils.BaseAnimat
     }
     return anim
   }
-  def queue(id: java.lang.String, loopCount: scala.Int, speed: scala.Float, listener: AnimationListener, transitionTime: scala.Float): AnimationDesc = {
+  def queue(id: java.lang.String, loopCount: scala.Int, speed: scala.Float, listener: com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationListener, transitionTime: scala.Float): com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationDesc = {
     return this.queue(id, 0.0f, -1.0f, loopCount, speed, listener, transitionTime)
   }
-  def queue(id: java.lang.String, offset: scala.Float, duration: scala.Float, loopCount: scala.Int, speed: scala.Float, listener: AnimationListener, transitionTime: scala.Float): AnimationDesc = {
+  def queue(id: java.lang.String, offset: scala.Float, duration: scala.Float, loopCount: scala.Int, speed: scala.Float, listener: com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationListener, transitionTime: scala.Float): com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationDesc = {
     return this.queue(this.obtain(id, offset, duration, loopCount, speed, listener), transitionTime)
   }
-  protected def queue(anim: com.badlogic.gdx.graphics.g3d.model.Animation, offset: scala.Float, duration: scala.Float, loopCount: scala.Int, speed: scala.Float, listener: AnimationListener, transitionTime: scala.Float): AnimationDesc = {
+  def queue(anim: com.badlogic.gdx.graphics.g3d.model.Animation, offset: scala.Float, duration: scala.Float, loopCount: scala.Int, speed: scala.Float, listener: com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationListener, transitionTime: scala.Float): com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationDesc = {
     return this.queue(this.obtain(anim, offset, duration, loopCount, speed, listener), transitionTime)
   }
-  protected def queue(anim: AnimationDesc, transitionTime: scala.Float): AnimationDesc = {
+  def queue(anim: com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationDesc, transitionTime: scala.Float): com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationDesc = {
     if ((this.current == null) || (this.current.loopCount == 0)) {
       this.animate(anim, transitionTime)
     } else {
@@ -181,23 +181,23 @@ class AnimationController extends com.badlogic.gdx.graphics.g3d.utils.BaseAnimat
     }
     return anim
   }
-  def action(id: java.lang.String, loopCount: scala.Int, speed: scala.Float, listener: AnimationListener, transitionTime: scala.Float): AnimationDesc = {
+  def action(id: java.lang.String, loopCount: scala.Int, speed: scala.Float, listener: com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationListener, transitionTime: scala.Float): com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationDesc = {
     return this.action(id, 0, -1.0f, loopCount, speed, listener, transitionTime)
   }
-  def action(id: java.lang.String, offset: scala.Float, duration: scala.Float, loopCount: scala.Int, speed: scala.Float, listener: AnimationListener, transitionTime: scala.Float): AnimationDesc = {
+  def action(id: java.lang.String, offset: scala.Float, duration: scala.Float, loopCount: scala.Int, speed: scala.Float, listener: com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationListener, transitionTime: scala.Float): com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationDesc = {
     return this.action(this.obtain(id, offset, duration, loopCount, speed, listener), transitionTime)
   }
-  protected def action(anim: com.badlogic.gdx.graphics.g3d.model.Animation, offset: scala.Float, duration: scala.Float, loopCount: scala.Int, speed: scala.Float, listener: AnimationListener, transitionTime: scala.Float): AnimationDesc = {
+  def action(anim: com.badlogic.gdx.graphics.g3d.model.Animation, offset: scala.Float, duration: scala.Float, loopCount: scala.Int, speed: scala.Float, listener: com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationListener, transitionTime: scala.Float): com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationDesc = {
     return this.action(this.obtain(anim, offset, duration, loopCount, speed, listener), transitionTime)
   }
-  protected def action(anim: AnimationDesc, transitionTime: scala.Float): AnimationDesc = {
+  def action(anim: com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationDesc, transitionTime: scala.Float): com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationDesc = {
     if (anim.loopCount < 0) {
       throw new com.badlogic.gdx.utils.GdxRuntimeException("An action cannot be continuous")
     } else ()
     if ((this.current == null) || (this.current.loopCount == 0)) {
       this.animate(anim, transitionTime)
     } else {
-      val toQueue: AnimationDesc = if (this.inAction) null else this.obtain(this.current)
+      val toQueue: com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationDesc = if (this.inAction) null else this.obtain(this.current)
       this.inAction = false
       this.animate(anim, transitionTime)
       this.inAction = true
@@ -207,19 +207,21 @@ class AnimationController extends com.badlogic.gdx.graphics.g3d.utils.BaseAnimat
     }
     return anim
   }
+}
+object AnimationController {
   trait AnimationListener {
-    def onEnd(animation: AnimationDesc): scala.Unit
-    def onLoop(animation: AnimationDesc): scala.Unit
+    def onEnd(animation: com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationDesc): scala.Unit
+    def onLoop(animation: com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationDesc): scala.Unit
   }
   class AnimationDesc {
-    var listener: AnimationListener = null.asInstanceOf[AnimationListener]
+    var listener: com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationListener = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationListener]
     var animation: com.badlogic.gdx.graphics.g3d.model.Animation = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.model.Animation]
     var speed: scala.Float = 0.0f
     var time: scala.Float = 0.0f
     var offset: scala.Float = 0.0f
     var duration: scala.Float = 0.0f
     var loopCount: scala.Int = 0
-    protected def update(delta: scala.Float): scala.Float = {
+    def update(delta: scala.Float): scala.Float = {
       if ((this.loopCount != 0) && (this.animation != null)) {
         var loops: scala.Int = 0
         val diff: scala.Float = this.speed * delta
@@ -227,16 +229,16 @@ class AnimationController extends com.badlogic.gdx.graphics.g3d.utils.BaseAnimat
           this.time = this.time + diff
           if (this.speed < 0) {
             var invTime: scala.Float = this.duration - this.time
-            loops = java.lang.Math.abs(invTime / this.duration).asInstanceOf[scala.Int]
+            loops = java.lang.Math.abs(invTime / this.duration).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
             invTime = java.lang.Math.abs(invTime % this.duration)
             this.time = this.duration - invTime
           } else {
-            loops = java.lang.Math.abs(this.time / this.duration).asInstanceOf[scala.Int]
+            loops = java.lang.Math.abs(this.time / this.duration).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
             this.time = java.lang.Math.abs(this.time % this.duration)
           }
         } else {
           loops = 1
-        }
+        };
         { var i: scala.Int = 0; while (i < loops) { {
           if (this.loopCount > 0) {
             this.loopCount = this.loopCount - 1

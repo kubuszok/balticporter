@@ -27,7 +27,7 @@ class ConvexHull {
       this.sort(points, count)
     } else ()
     val hull: com.badlogic.gdx.utils.FloatArray = this.hull
-    hull.clear()
+    hull.clear();
     { var i: scala.Int = offset; while (i < `end`) { {
       val x: scala.Float = points(i)
       val y: scala.Float = points(i + 1)
@@ -36,7 +36,7 @@ class ConvexHull {
       }
       hull.add(x)
       hull.add(y)
-    }; i = i + 2 } }
+    }; i = i + 2 } };
     { var i: scala.Int = `end` - 4; val t: scala.Int = hull.size + 2; while (i >= offset) { {
       val x: scala.Float = points(i)
       val y: scala.Float = points(i + 1)
@@ -74,7 +74,7 @@ class ConvexHull {
     val indices: com.badlogic.gdx.utils.IntArray = this.indices
     indices.clear()
     val hull: com.badlogic.gdx.utils.FloatArray = this.hull
-    hull.clear()
+    hull.clear();
     { var i: scala.Int = offset; var index: scala.Int = i / 2; while (i < `end`) { {
       val x: scala.Float = points(i)
       val y: scala.Float = points(i + 1)
@@ -85,7 +85,7 @@ class ConvexHull {
       hull.add(x)
       hull.add(y)
       indices.add(index)
-    }; i = i + 2; index = index + 1 } }
+    }; i = i + 2; index = index + 1 } };
     { var i: scala.Int = `end` - 4; var index: scala.Int = i / 2; val t: scala.Int = hull.size + 2; while (i >= offset) { {
       val x: scala.Float = points(i)
       val y: scala.Float = points(i + 1)
@@ -99,7 +99,7 @@ class ConvexHull {
     }; i = i - 2; index = index - 1 } }
     if (!sorted) {
       val originalIndicesArray: scala.Array[scala.Short] = this.originalIndices.items
-      val indicesArray: scala.Array[scala.Int] = indices.items
+      val indicesArray: scala.Array[scala.Int] = indices.items;
       { var i: scala.Int = 0; val n: scala.Int = indices.size; while (i < n) { {
         indicesArray(i) = originalIndicesArray(indicesArray(i))
       }; i = i + 1 } }
@@ -174,8 +174,8 @@ class ConvexHull {
     val pointCount: scala.Int = count / 2
     this.originalIndices.clear()
     this.originalIndices.ensureCapacity(pointCount)
-    val originalIndicesArray: scala.Array[scala.Short] = this.originalIndices.items
-    { var i: scala.Short = 0; while (i < pointCount) { {
+    val originalIndicesArray: scala.Array[scala.Short] = this.originalIndices.items;
+    { var i: scala.Short = 0.asInstanceOf[scala.Short]; while (i < pointCount) { {
       originalIndicesArray(i) = i
     }; i = i + 1 } }
     var lower: scala.Int = 0

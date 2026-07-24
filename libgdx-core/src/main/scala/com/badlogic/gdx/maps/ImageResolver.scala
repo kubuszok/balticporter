@@ -2,6 +2,8 @@ package com.badlogic.gdx.maps
 
 trait ImageResolver {
   def getImage(name: java.lang.String): com.badlogic.gdx.graphics.g2d.TextureRegion
+}
+object ImageResolver {
   class DirectImageResolver extends ImageResolver {
     private var images: com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.graphics.Texture] = null.asInstanceOf[com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.graphics.Texture]]
     def this(images: com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.graphics.Texture]) = {
@@ -19,7 +21,7 @@ trait ImageResolver {
       this.assetManager = assetManager
     }
     def getImage(name: java.lang.String): com.badlogic.gdx.graphics.g2d.TextureRegion = {
-      return new com.badlogic.gdx.graphics.g2d.TextureRegion(this.assetManager.get(name, classOf[java.lang.Class]))
+      return new com.badlogic.gdx.graphics.g2d.TextureRegion(this.assetManager.get(name, classOf[com.badlogic.gdx.graphics.Texture]))
     }
   }
   class TextureAtlasImageResolver extends ImageResolver {

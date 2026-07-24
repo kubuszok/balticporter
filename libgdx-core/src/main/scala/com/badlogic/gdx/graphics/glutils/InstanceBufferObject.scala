@@ -40,7 +40,7 @@ class InstanceBufferObject extends com.badlogic.gdx.graphics.glutils.InstanceDat
     this.isDirty = this.isDirty | forWriting
     return this.buffer
   }
-  protected def setBuffer(data: java.nio.Buffer, ownsBuffer: scala.Boolean, value: com.badlogic.gdx.graphics.VertexAttributes): scala.Unit = {
+  def setBuffer(data: java.nio.Buffer, ownsBuffer: scala.Boolean, value: com.badlogic.gdx.graphics.VertexAttributes): scala.Unit = {
     if (this.isBound) {
       throw new com.badlogic.gdx.utils.GdxRuntimeException("Cannot change attributes while VBO is bound")
     } else ()
@@ -100,10 +100,10 @@ class InstanceBufferObject extends com.badlogic.gdx.graphics.glutils.InstanceDat
     this.buffer.asInstanceOf[java.nio.Buffer].position(0)
     this.bufferChanged()
   }
-  protected def getUsage(): scala.Int = {
+  def getUsage(): scala.Int = {
     return this.usage
   }
-  protected def setUsage(value: scala.Int): scala.Unit = {
+  def setUsage(value: scala.Int): scala.Unit = {
     if (this.isBound) {
       throw new com.badlogic.gdx.utils.GdxRuntimeException("Cannot change usage while VBO is bound")
     } else ()

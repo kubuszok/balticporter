@@ -2,12 +2,12 @@ package com.badlogic.gdx.graphics
 
 abstract class GLTexture extends com.badlogic.gdx.utils.Disposable {
   var glTarget: scala.Int = 0
-  protected var glHandle: scala.Int = 0
-  protected var minFilter: com.badlogic.gdx.graphics.Texture#TextureFilter = com.badlogic.gdx.graphics.Texture.TextureFilter.Nearest
-  protected var magFilter: com.badlogic.gdx.graphics.Texture#TextureFilter = com.badlogic.gdx.graphics.Texture.TextureFilter.Nearest
-  protected var uWrap: com.badlogic.gdx.graphics.Texture#TextureWrap = com.badlogic.gdx.graphics.Texture.TextureWrap.ClampToEdge
-  protected var vWrap: com.badlogic.gdx.graphics.Texture#TextureWrap = com.badlogic.gdx.graphics.Texture.TextureWrap.ClampToEdge
-  protected var anisotropicFilterLevel: scala.Float = 1.0f
+  var glHandle: scala.Int = 0
+  var minFilter: com.badlogic.gdx.graphics.Texture.TextureFilter = com.badlogic.gdx.graphics.Texture.TextureFilter.Nearest
+  var magFilter: com.badlogic.gdx.graphics.Texture.TextureFilter = com.badlogic.gdx.graphics.Texture.TextureFilter.Nearest
+  var uWrap: com.badlogic.gdx.graphics.Texture.TextureWrap = com.badlogic.gdx.graphics.Texture.TextureWrap.ClampToEdge
+  var vWrap: com.badlogic.gdx.graphics.Texture.TextureWrap = com.badlogic.gdx.graphics.Texture.TextureWrap.ClampToEdge
+  var anisotropicFilterLevel: scala.Float = 1.0f
   def this(glTarget: scala.Int, glHandle: scala.Int) = {
     this()
     this.glTarget = glTarget
@@ -20,7 +20,7 @@ abstract class GLTexture extends com.badlogic.gdx.utils.Disposable {
   def getHeight(): scala.Int
   def getDepth(): scala.Int
   def isManaged(): scala.Boolean
-  protected def reload(): scala.Unit
+  def reload(): scala.Unit
   def bind(): scala.Unit = {
     com.badlogic.gdx.Gdx.gl.glBindTexture(this.glTarget, this.glHandle)
   }
@@ -28,25 +28,25 @@ abstract class GLTexture extends com.badlogic.gdx.utils.Disposable {
     com.badlogic.gdx.Gdx.gl.glActiveTexture(com.badlogic.gdx.graphics.GL20.GL_TEXTURE0 + unit)
     com.badlogic.gdx.Gdx.gl.glBindTexture(this.glTarget, this.glHandle)
   }
-  def getMinFilter(): com.badlogic.gdx.graphics.Texture#TextureFilter = {
+  def getMinFilter(): com.badlogic.gdx.graphics.Texture.TextureFilter = {
     return this.minFilter
   }
-  def getMagFilter(): com.badlogic.gdx.graphics.Texture#TextureFilter = {
+  def getMagFilter(): com.badlogic.gdx.graphics.Texture.TextureFilter = {
     return this.magFilter
   }
-  def getUWrap(): com.badlogic.gdx.graphics.Texture#TextureWrap = {
+  def getUWrap(): com.badlogic.gdx.graphics.Texture.TextureWrap = {
     return this.uWrap
   }
-  def getVWrap(): com.badlogic.gdx.graphics.Texture#TextureWrap = {
+  def getVWrap(): com.badlogic.gdx.graphics.Texture.TextureWrap = {
     return this.vWrap
   }
   def getTextureObjectHandle(): scala.Int = {
     return this.glHandle
   }
-  def unsafeSetWrap(u: com.badlogic.gdx.graphics.Texture#TextureWrap, v: com.badlogic.gdx.graphics.Texture#TextureWrap): scala.Unit = {
+  def unsafeSetWrap(u: com.badlogic.gdx.graphics.Texture.TextureWrap, v: com.badlogic.gdx.graphics.Texture.TextureWrap): scala.Unit = {
     this.unsafeSetWrap(u, v, false)
   }
-  def unsafeSetWrap(u: com.badlogic.gdx.graphics.Texture#TextureWrap, v: com.badlogic.gdx.graphics.Texture#TextureWrap, force: scala.Boolean): scala.Unit = {
+  def unsafeSetWrap(u: com.badlogic.gdx.graphics.Texture.TextureWrap, v: com.badlogic.gdx.graphics.Texture.TextureWrap, force: scala.Boolean): scala.Unit = {
     if ((u != null) && (force || (this.uWrap != u))) {
       com.badlogic.gdx.Gdx.gl.glTexParameteri(this.glTarget, com.badlogic.gdx.graphics.GL20.GL_TEXTURE_WRAP_S, u.getGLEnum())
       this.uWrap = u
@@ -56,17 +56,17 @@ abstract class GLTexture extends com.badlogic.gdx.utils.Disposable {
       this.vWrap = v
     } else ()
   }
-  def setWrap(u: com.badlogic.gdx.graphics.Texture#TextureWrap, v: com.badlogic.gdx.graphics.Texture#TextureWrap): scala.Unit = {
+  def setWrap(u: com.badlogic.gdx.graphics.Texture.TextureWrap, v: com.badlogic.gdx.graphics.Texture.TextureWrap): scala.Unit = {
     this.uWrap = u
     this.vWrap = v
     this.bind()
     com.badlogic.gdx.Gdx.gl.glTexParameteri(this.glTarget, com.badlogic.gdx.graphics.GL20.GL_TEXTURE_WRAP_S, u.getGLEnum())
     com.badlogic.gdx.Gdx.gl.glTexParameteri(this.glTarget, com.badlogic.gdx.graphics.GL20.GL_TEXTURE_WRAP_T, v.getGLEnum())
   }
-  def unsafeSetFilter(minFilter: com.badlogic.gdx.graphics.Texture#TextureFilter, magFilter: com.badlogic.gdx.graphics.Texture#TextureFilter): scala.Unit = {
+  def unsafeSetFilter(minFilter: com.badlogic.gdx.graphics.Texture.TextureFilter, magFilter: com.badlogic.gdx.graphics.Texture.TextureFilter): scala.Unit = {
     this.unsafeSetFilter(minFilter, magFilter, false)
   }
-  def unsafeSetFilter(minFilter: com.badlogic.gdx.graphics.Texture#TextureFilter, magFilter: com.badlogic.gdx.graphics.Texture#TextureFilter, force: scala.Boolean): scala.Unit = {
+  def unsafeSetFilter(minFilter: com.badlogic.gdx.graphics.Texture.TextureFilter, magFilter: com.badlogic.gdx.graphics.Texture.TextureFilter, force: scala.Boolean): scala.Unit = {
     if ((minFilter != null) && (force || (this.minFilter != minFilter))) {
       com.badlogic.gdx.Gdx.gl.glTexParameteri(this.glTarget, com.badlogic.gdx.graphics.GL20.GL_TEXTURE_MIN_FILTER, minFilter.getGLEnum())
       this.minFilter = minFilter
@@ -76,7 +76,7 @@ abstract class GLTexture extends com.badlogic.gdx.utils.Disposable {
       this.magFilter = magFilter
     } else ()
   }
-  def setFilter(minFilter: com.badlogic.gdx.graphics.Texture#TextureFilter, magFilter: com.badlogic.gdx.graphics.Texture#TextureFilter): scala.Unit = {
+  def setFilter(minFilter: com.badlogic.gdx.graphics.Texture.TextureFilter, magFilter: com.badlogic.gdx.graphics.Texture.TextureFilter): scala.Unit = {
     this.minFilter = minFilter
     this.magFilter = magFilter
     this.bind()
@@ -122,7 +122,7 @@ abstract class GLTexture extends com.badlogic.gdx.utils.Disposable {
   def getAnisotropicFilter(): scala.Float = {
     return this.anisotropicFilterLevel
   }
-  protected def delete(): scala.Unit = {
+  def delete(): scala.Unit = {
     if (this.glHandle != 0) {
       com.badlogic.gdx.Gdx.gl.glDeleteTexture(this.glHandle)
       this.glHandle = 0
@@ -153,7 +153,7 @@ object GLTexture {
       GLTexture.maxAnisotropicFilterLevel
     }
   }
-  protected def uploadImageData(target: scala.Int, data: com.badlogic.gdx.graphics.TextureData): scala.Unit = {
+  def uploadImageData(target: scala.Int, data: com.badlogic.gdx.graphics.TextureData): scala.Unit = {
     GLTexture.uploadImageData(target, data, 0)
   }
   def uploadImageData(target: scala.Int, data: com.badlogic.gdx.graphics.TextureData, miplevel: scala.Int): scala.Unit = {
@@ -163,7 +163,7 @@ object GLTexture {
     if (!data.isPrepared()) {
       data.prepare()
     } else ()
-    val `type`: com.badlogic.gdx.graphics.TextureData#TextureDataType = data.getType()
+    val `type`: com.badlogic.gdx.graphics.TextureData.TextureDataType = data.getType()
     if (`type` == com.badlogic.gdx.graphics.TextureData.TextureDataType.Custom) {
       data.consumeCustomData(target)
       return

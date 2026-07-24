@@ -5,22 +5,22 @@ class Json {
   private var reader: com.badlogic.gdx.utils.JsonReader = new com.badlogic.gdx.utils.JsonReader()
   private var typeName: java.lang.String = "class"
   private var usePrototypes: scala.Boolean = true
-  private var outputType: com.badlogic.gdx.utils.JsonWriter#OutputType = null.asInstanceOf[com.badlogic.gdx.utils.JsonWriter#OutputType]
+  private var outputType: com.badlogic.gdx.utils.JsonWriter.OutputType = null.asInstanceOf[com.badlogic.gdx.utils.JsonWriter.OutputType]
   private var quoteLongValues: scala.Boolean = false
   private var ignoreUnknownFields: scala.Boolean = false
   private var ignoreDeprecated: scala.Boolean = false
   private var readDeprecated: scala.Boolean = false
   private var enumNames: scala.Boolean = true
   var sortFields$field: scala.Boolean = false
-  private var defaultSerializer: Serializer = null.asInstanceOf[Serializer]
-  private final val typeToFields: com.badlogic.gdx.utils.ObjectMap[java.lang.Class, com.badlogic.gdx.utils.OrderedMap[java.lang.String, FieldMetadata]] = new com.badlogic.gdx.utils.ObjectMap()
-  private final val tagToClass: com.badlogic.gdx.utils.ObjectMap[java.lang.String, java.lang.Class] = new com.badlogic.gdx.utils.ObjectMap()
-  private final val classToTag: com.badlogic.gdx.utils.ObjectMap[java.lang.Class, java.lang.String] = new com.badlogic.gdx.utils.ObjectMap()
-  private final val classToSerializer: com.badlogic.gdx.utils.ObjectMap[java.lang.Class, Serializer] = new com.badlogic.gdx.utils.ObjectMap()
-  private final val classToDefaultValues: com.badlogic.gdx.utils.ObjectMap[java.lang.Class, scala.Array[java.lang.Object]] = new com.badlogic.gdx.utils.ObjectMap()
+  private var defaultSerializer: com.badlogic.gdx.utils.Json.Serializer[?] = null.asInstanceOf[com.badlogic.gdx.utils.Json.Serializer[?]]
+  private final val typeToFields: com.badlogic.gdx.utils.ObjectMap[java.lang.Class[?], com.badlogic.gdx.utils.OrderedMap[java.lang.String, com.badlogic.gdx.utils.Json.FieldMetadata]] = new com.badlogic.gdx.utils.ObjectMap()
+  private final val tagToClass: com.badlogic.gdx.utils.ObjectMap[java.lang.String, java.lang.Class[?]] = new com.badlogic.gdx.utils.ObjectMap()
+  private final val classToTag: com.badlogic.gdx.utils.ObjectMap[java.lang.Class[?], java.lang.String] = new com.badlogic.gdx.utils.ObjectMap()
+  private final val classToSerializer: com.badlogic.gdx.utils.ObjectMap[java.lang.Class[?], com.badlogic.gdx.utils.Json.Serializer[?]] = new com.badlogic.gdx.utils.ObjectMap()
+  private final val classToDefaultValues: com.badlogic.gdx.utils.ObjectMap[java.lang.Class[?], scala.Array[java.lang.Object]] = new com.badlogic.gdx.utils.ObjectMap()
   private final val equals1: scala.Array[java.lang.Object] = Array[java.lang.Object](null)
   private final val equals2: scala.Array[java.lang.Object] = Array[java.lang.Object](null)
-  def this(outputType: com.badlogic.gdx.utils.JsonWriter#OutputType) = {
+  def this(outputType: com.badlogic.gdx.utils.JsonWriter.OutputType) = {
     this()
     this.outputType = outputType
   }
@@ -40,7 +40,7 @@ class Json {
   def setReadDeprecated(readDeprecated: scala.Boolean): scala.Unit = {
     this.readDeprecated = readDeprecated
   }
-  def setOutputType(outputType: com.badlogic.gdx.utils.JsonWriter#OutputType): scala.Unit = {
+  def setOutputType(outputType: com.badlogic.gdx.utils.JsonWriter.OutputType): scala.Unit = {
     this.outputType = outputType
   }
   def setQuoteLongValues(quoteLongValues: scala.Boolean): scala.Unit = {
@@ -49,40 +49,40 @@ class Json {
   def setEnumNames(enumNames: scala.Boolean): scala.Unit = {
     this.enumNames = enumNames
   }
-  def addClassTag(tag: java.lang.String, `type`: java.lang.Class): scala.Unit = {
+  def addClassTag(tag: java.lang.String, `type`: java.lang.Class[?]): scala.Unit = {
     this.tagToClass.put(tag, `type`)
     this.classToTag.put(`type`, tag)
   }
-  def getClass(tag: java.lang.String): java.lang.Class = {
+  def getClass(tag: java.lang.String): java.lang.Class[?] = {
     return this.tagToClass.get(tag)
   }
-  def getTag(`type`: java.lang.Class): java.lang.String = {
+  def getTag(`type`: java.lang.Class[?]): java.lang.String = {
     return this.classToTag.get(`type`)
   }
   def setTypeName(typeName: java.lang.String): scala.Unit = {
     this.typeName = typeName
   }
-  def setDefaultSerializer(defaultSerializer: Serializer): scala.Unit = {
+  def setDefaultSerializer(defaultSerializer: com.badlogic.gdx.utils.Json.Serializer[?]): scala.Unit = {
     this.defaultSerializer = defaultSerializer
   }
-  def setSerializer[T](`type`: java.lang.Class[T], serializer: Serializer[T]): scala.Unit = {
+  def setSerializer[T](`type`: java.lang.Class[T], serializer: com.badlogic.gdx.utils.Json.Serializer[T]): scala.Unit = {
     this.classToSerializer.put(`type`, serializer)
   }
-  def getSerializer[T](`type`: java.lang.Class[T]): Serializer[T] = {
+  def getSerializer[T](`type`: java.lang.Class[T]): com.badlogic.gdx.utils.Json.Serializer[T] = {
     return this.classToSerializer.get(`type`)
   }
   def setUsePrototypes(usePrototypes: scala.Boolean): scala.Unit = {
     this.usePrototypes = usePrototypes
   }
-  def setElementType(`type`: java.lang.Class, fieldName: java.lang.String, elementType: java.lang.Class): scala.Unit = {
-    val metadata: FieldMetadata = this.getFields(`type`).get(fieldName)
+  def setElementType(`type`: java.lang.Class[?], fieldName: java.lang.String, elementType: java.lang.Class[?]): scala.Unit = {
+    val metadata: com.badlogic.gdx.utils.Json.FieldMetadata = this.getFields(`type`).get(fieldName)
     if (metadata == null) {
       throw new com.badlogic.gdx.utils.SerializationException(((("Field not found: " + fieldName) + " (") + `type`.getName()) + ")")
     } else ()
     metadata.elementType = elementType
   }
-  def setDeprecated(`type`: java.lang.Class, fieldName: java.lang.String, deprecated: scala.Boolean): scala.Unit = {
-    val metadata: FieldMetadata = this.getFields(`type`).get(fieldName)
+  def setDeprecated(`type`: java.lang.Class[?], fieldName: java.lang.String, deprecated: scala.Boolean): scala.Unit = {
+    val metadata: com.badlogic.gdx.utils.Json.FieldMetadata = this.getFields(`type`).get(fieldName)
     if (metadata == null) {
       throw new com.badlogic.gdx.utils.SerializationException(((("Field not found: " + fieldName) + " (") + `type`.getName()) + ")")
     } else ()
@@ -91,27 +91,27 @@ class Json {
   def setSortFields(sortFields: scala.Boolean): scala.Unit = {
     this.sortFields$field = sortFields
   }
-  protected def sortFields(`type`: java.lang.Class, fieldNames: com.badlogic.gdx.utils.Array[java.lang.String]): scala.Unit = {
+  def sortFields(`type`: java.lang.Class[?], fieldNames: com.badlogic.gdx.utils.Array[java.lang.String]): scala.Unit = {
     if (this.sortFields$field) {
       fieldNames.sort()
     } else ()
   }
-  private def getFields(`type`: java.lang.Class): com.badlogic.gdx.utils.OrderedMap[java.lang.String, FieldMetadata] = {
-    val fields: com.badlogic.gdx.utils.OrderedMap[java.lang.String, FieldMetadata] = this.typeToFields.get(`type`)
+  private def getFields(`type`: java.lang.Class[?]): com.badlogic.gdx.utils.OrderedMap[java.lang.String, com.badlogic.gdx.utils.Json.FieldMetadata] = {
+    val fields: com.badlogic.gdx.utils.OrderedMap[java.lang.String, com.badlogic.gdx.utils.Json.FieldMetadata] = this.typeToFields.get(`type`)
     if (fields != null) {
       return fields
     } else ()
-    val classHierarchy: com.badlogic.gdx.utils.Array[java.lang.Class] = new com.badlogic.gdx.utils.Array()
-    var nextClass: java.lang.Class = `type`
-    while (nextClass != classOf[java.lang.Class]) {
+    val classHierarchy: com.badlogic.gdx.utils.Array[java.lang.Class[?]] = new com.badlogic.gdx.utils.Array()
+    var nextClass: java.lang.Class[?] = `type`
+    while (nextClass != classOf[java.lang.Object]) {
       classHierarchy.add(nextClass)
       nextClass = nextClass.getSuperclass()
     }
-    val allFields: scala.collection.mutable.ArrayBuffer[com.badlogic.gdx.utils.reflect.Field] = new scala.collection.mutable.ArrayBuffer()
+    val allFields: scala.collection.mutable.ArrayBuffer[com.badlogic.gdx.utils.reflect.Field] = new scala.collection.mutable.ArrayBuffer();
     { var i: scala.Int = classHierarchy.size - 1; while (i >= 0) { {
       java.util.Collections.addAll(allFields, com.badlogic.gdx.utils.reflect.ClassReflection.getDeclaredFields(classHierarchy.get(i)))
     }; i = i - 1 } }
-    val nameToField: com.badlogic.gdx.utils.OrderedMap[java.lang.String, FieldMetadata] = new com.badlogic.gdx.utils.OrderedMap(allFields.size)
+    val nameToField: com.badlogic.gdx.utils.OrderedMap[java.lang.String, com.badlogic.gdx.utils.Json.FieldMetadata] = new com.badlogic.gdx.utils.OrderedMap(allFields.size);
     { var i: scala.Int = 0; val n: scala.Int = allFields.size; while (i < n) { {
       val field: com.badlogic.gdx.utils.reflect.Field = allFields(i)
       if (field.isTransient()) {
@@ -132,19 +132,19 @@ class Json {
           }
         }
       } else ()
-      nameToField.put(field.getName(), new FieldMetadata(field))
+      nameToField.put(field.getName(), new com.badlogic.gdx.utils.Json.FieldMetadata(field))
     }; i = i + 1 } }
     this.sortFields(`type`, nameToField.keys$field)
     this.typeToFields.put(`type`, nameToField)
     return nameToField
   }
   def toJson(`object`: java.lang.Object): java.lang.String = {
-    return this.toJson(`object`, if (`object` == null) null else `object`.getClass(), null.asInstanceOf[java.lang.Class])
+    return this.toJson(`object`, if (`object` == null) null else `object`.getClass(), null.asInstanceOf[java.lang.Class[?]])
   }
-  def toJson(`object`: java.lang.Object, knownType: java.lang.Class): java.lang.String = {
-    return this.toJson(`object`, knownType, null.asInstanceOf[java.lang.Class])
+  def toJson(`object`: java.lang.Object, knownType: java.lang.Class[?]): java.lang.String = {
+    return this.toJson(`object`, knownType, null.asInstanceOf[java.lang.Class[?]])
   }
-  def toJson(`object`: java.lang.Object, knownType: java.lang.Class, elementType: java.lang.Class): java.lang.String = {
+  def toJson(`object`: java.lang.Object, knownType: java.lang.Class[?], elementType: java.lang.Class[?]): java.lang.String = {
     val buffer: java.io.StringWriter = new java.io.StringWriter()
     this.toJson(`object`, knownType, elementType, buffer)
     return buffer.toString()
@@ -152,10 +152,10 @@ class Json {
   def toJson(`object`: java.lang.Object, file: com.badlogic.gdx.files.FileHandle): scala.Unit = {
     this.toJson(`object`, if (`object` == null) null else `object`.getClass(), null, file)
   }
-  def toJson(`object`: java.lang.Object, knownType: java.lang.Class, file: com.badlogic.gdx.files.FileHandle): scala.Unit = {
+  def toJson(`object`: java.lang.Object, knownType: java.lang.Class[?], file: com.badlogic.gdx.files.FileHandle): scala.Unit = {
     this.toJson(`object`, knownType, null, file)
   }
-  def toJson(`object`: java.lang.Object, knownType: java.lang.Class, elementType: java.lang.Class, file: com.badlogic.gdx.files.FileHandle): scala.Unit = {
+  def toJson(`object`: java.lang.Object, knownType: java.lang.Class[?], elementType: java.lang.Class[?], file: com.badlogic.gdx.files.FileHandle): scala.Unit = {
     var writer: java.io.Writer = null
     try {
       writer = file.writer(false, "UTF-8")
@@ -171,10 +171,10 @@ class Json {
   def toJson(`object`: java.lang.Object, writer: java.io.Writer): scala.Unit = {
     this.toJson(`object`, if (`object` == null) null else `object`.getClass(), null, writer)
   }
-  def toJson(`object`: java.lang.Object, knownType: java.lang.Class, writer: java.io.Writer): scala.Unit = {
+  def toJson(`object`: java.lang.Object, knownType: java.lang.Class[?], writer: java.io.Writer): scala.Unit = {
     this.toJson(`object`, knownType, null, writer)
   }
-  def toJson(`object`: java.lang.Object, knownType: java.lang.Class, elementType: java.lang.Class, writer: java.io.Writer): scala.Unit = {
+  def toJson(`object`: java.lang.Object, knownType: java.lang.Class[?], elementType: java.lang.Class[?], writer: java.io.Writer): scala.Unit = {
     this.setWriter(writer)
     try {
       this.writeValue(`object`, knownType, elementType)
@@ -202,13 +202,13 @@ class Json {
     return this.reader
   }
   def writeFields(`object`: java.lang.Object): scala.Unit = {
-    val `type`: java.lang.Class = `object`.getClass()
+    val `type`: java.lang.Class[?] = `object`.getClass()
     val defaultValues: scala.Array[java.lang.Object] = this.getDefaultValues(`type`)
-    val fields: com.badlogic.gdx.utils.OrderedMap[java.lang.String, FieldMetadata] = this.getFields(`type`)
+    val fields: com.badlogic.gdx.utils.OrderedMap[java.lang.String, com.badlogic.gdx.utils.Json.FieldMetadata] = this.getFields(`type`)
     var defaultIndex: scala.Int = 0
-    val fieldNames: com.badlogic.gdx.utils.Array[java.lang.String] = fields.orderedKeys()
+    val fieldNames: com.badlogic.gdx.utils.Array[java.lang.String] = fields.orderedKeys();
     { var i: scala.Int = 0; val n: scala.Int = fieldNames.size; while (i < n) { {
-      val metadata: FieldMetadata = fields.get(fieldNames.get(i))
+      val metadata: com.badlogic.gdx.utils.Json.FieldMetadata = fields.get(fieldNames.get(i))
       if (this.ignoreDeprecated && metadata.deprecated) {
         /* continue */ ()
       } else ()
@@ -254,7 +254,7 @@ class Json {
       }
     }; i = i + 1 } }
   }
-  private def getDefaultValues(`type`: java.lang.Class): scala.Array[java.lang.Object] = {
+  private def getDefaultValues(`type`: java.lang.Class[?]): scala.Array[java.lang.Object] = {
     if (!this.usePrototypes) {
       return null
     } else ()
@@ -270,13 +270,13 @@ class Json {
         return null
       }
     }
-    val fields: com.badlogic.gdx.utils.OrderedMap[java.lang.String, FieldMetadata] = this.getFields(`type`)
+    val fields: com.badlogic.gdx.utils.OrderedMap[java.lang.String, com.badlogic.gdx.utils.Json.FieldMetadata] = this.getFields(`type`)
     val values: scala.Array[java.lang.Object] = new Array[java.lang.Object](fields.size)
     this.classToDefaultValues.put(`type`, values)
     var defaultIndex: scala.Int = 0
-    val fieldNames: com.badlogic.gdx.utils.Array[java.lang.String] = fields.orderedKeys()
+    val fieldNames: com.badlogic.gdx.utils.Array[java.lang.String] = fields.orderedKeys();
     { var i: scala.Int = 0; val n: scala.Int = fieldNames.size; while (i < n) { {
-      val metadata: FieldMetadata = fields.get(fieldNames.get(i))
+      val metadata: com.badlogic.gdx.utils.Json.FieldMetadata = fields.get(fieldNames.get(i))
       if (this.ignoreDeprecated && metadata.deprecated) {
         /* continue */ ()
       } else ()
@@ -303,16 +303,16 @@ class Json {
   def writeField(`object`: java.lang.Object, name: java.lang.String): scala.Unit = {
     this.writeField(`object`, name, name, null)
   }
-  def writeField(`object`: java.lang.Object, name: java.lang.String, elementType: java.lang.Class): scala.Unit = {
+  def writeField(`object`: java.lang.Object, name: java.lang.String, elementType: java.lang.Class[?]): scala.Unit = {
     this.writeField(`object`, name, name, elementType)
   }
   def writeField(`object`: java.lang.Object, fieldName: java.lang.String, jsonName: java.lang.String): scala.Unit = {
     this.writeField(`object`, fieldName, jsonName, null)
   }
-  def writeField(`object`: java.lang.Object, fieldName: java.lang.String, jsonName: java.lang.String, elementType$arg: java.lang.Class): scala.Unit = {
-    var elementType: java.lang.Class = elementType$arg
-    val `type`: java.lang.Class = `object`.getClass()
-    val metadata: FieldMetadata = this.getFields(`type`).get(fieldName)
+  def writeField(`object`: java.lang.Object, fieldName: java.lang.String, jsonName: java.lang.String, elementType$arg: java.lang.Class[?]): scala.Unit = {
+    var elementType: java.lang.Class[?] = elementType$arg
+    val `type`: java.lang.Class[?] = `object`.getClass()
+    val metadata: com.badlogic.gdx.utils.Json.FieldMetadata = this.getFields(`type`).get(fieldName)
     if (metadata == null) {
       throw new com.badlogic.gdx.utils.SerializationException(((("Field not found: " + fieldName) + " (") + `type`.getName()) + ")")
     } else ()
@@ -355,7 +355,7 @@ class Json {
       this.writeValue(value, value.getClass(), null)
     }
   }
-  def writeValue(name: java.lang.String, value: java.lang.Object, knownType: java.lang.Class): scala.Unit = {
+  def writeValue(name: java.lang.String, value: java.lang.Object, knownType: java.lang.Class[?]): scala.Unit = {
     try {
       this.writer.name(name)
     } catch {
@@ -365,7 +365,7 @@ class Json {
     }
     this.writeValue(value, knownType, null)
   }
-  def writeValue(name: java.lang.String, value: java.lang.Object, knownType: java.lang.Class, elementType: java.lang.Class): scala.Unit = {
+  def writeValue(name: java.lang.String, value: java.lang.Object, knownType: java.lang.Class[?], elementType: java.lang.Class[?]): scala.Unit = {
     try {
       this.writer.name(name)
     } catch {
@@ -382,75 +382,75 @@ class Json {
       this.writeValue(value, value.getClass(), null)
     }
   }
-  def writeValue(value: java.lang.Object, knownType: java.lang.Class): scala.Unit = {
+  def writeValue(value: java.lang.Object, knownType: java.lang.Class[?]): scala.Unit = {
     this.writeValue(value, knownType, null)
   }
-  def writeValue(value: java.lang.Object, knownType$arg: java.lang.Class, elementType$arg: java.lang.Class): scala.Unit = {
-    var knownType: java.lang.Class = knownType$arg
-    var elementType: java.lang.Class = elementType$arg
+  def writeValue(value: java.lang.Object, knownType$arg: java.lang.Class[?], elementType$arg: java.lang.Class[?]): scala.Unit = {
+    var knownType: java.lang.Class[?] = knownType$arg
+    var elementType: java.lang.Class[?] = elementType$arg
     try {
       if (value == null) {
         this.writer.value(null)
         return
       } else ()
-      if (((((((((((knownType != null) && knownType.isPrimitive()) || (knownType == classOf[java.lang.Class])) || (knownType == classOf[java.lang.Class])) || (knownType == classOf[java.lang.Class])) || (knownType == classOf[java.lang.Class])) || (knownType == classOf[java.lang.Class])) || (knownType == classOf[java.lang.Class])) || (knownType == classOf[java.lang.Class])) || (knownType == classOf[java.lang.Class])) || (knownType == classOf[java.lang.Class])) {
+      if (((((((((((knownType != null) && knownType.isPrimitive()) || (knownType == classOf[java.lang.String])) || (knownType == classOf[java.lang.Integer])) || (knownType == classOf[java.lang.Boolean])) || (knownType == classOf[java.lang.Float])) || (knownType == classOf[java.lang.Long])) || (knownType == classOf[java.lang.Double])) || (knownType == classOf[java.lang.Short])) || (knownType == classOf[java.lang.Byte])) || (knownType == classOf[java.lang.Character])) {
         this.writer.value(value)
         return
       } else ()
-      var actualType: java.lang.Class = value.getClass()
-      if (((((((((actualType.isPrimitive() || (actualType == classOf[java.lang.Class])) || (actualType == classOf[java.lang.Class])) || (actualType == classOf[java.lang.Class])) || (actualType == classOf[java.lang.Class])) || (actualType == classOf[java.lang.Class])) || (actualType == classOf[java.lang.Class])) || (actualType == classOf[java.lang.Class])) || (actualType == classOf[java.lang.Class])) || (actualType == classOf[java.lang.Class])) {
+      var actualType: java.lang.Class[?] = value.getClass()
+      if (((((((((actualType.isPrimitive() || (actualType == classOf[java.lang.String])) || (actualType == classOf[java.lang.Integer])) || (actualType == classOf[java.lang.Boolean])) || (actualType == classOf[java.lang.Float])) || (actualType == classOf[java.lang.Long])) || (actualType == classOf[java.lang.Double])) || (actualType == classOf[java.lang.Short])) || (actualType == classOf[java.lang.Byte])) || (actualType == classOf[java.lang.Character])) {
         this.writeObjectStart(actualType, null)
         this.writeValue("value", value)
         this.writeObjectEnd()
         return
       } else ()
-      if (value.isInstanceOf[Serializable]) {
+      if (value.isInstanceOf[com.badlogic.gdx.utils.Json.Serializable]) {
         this.writeObjectStart(actualType, knownType)
-        value.asInstanceOf[Serializable].write(this)
+        value.asInstanceOf[com.badlogic.gdx.utils.Json.Serializable].write(this)
         this.writeObjectEnd()
         return
       } else ()
-      val serializer: Serializer = this.classToSerializer.get(actualType)
+      val serializer: com.badlogic.gdx.utils.Json.Serializer[?] = this.classToSerializer.get(actualType)
       if (serializer != null) {
         serializer.write(this, value, knownType)
         return
       } else ()
-      if (value.isInstanceOf[com.badlogic.gdx.utils.Array]) {
-        if (((knownType != null) && (actualType != knownType)) && (actualType != classOf[java.lang.Class])) {
+      if (value.isInstanceOf[com.badlogic.gdx.utils.Array[?]]) {
+        if (((knownType != null) && (actualType != knownType)) && (actualType != classOf[com.badlogic.gdx.utils.Array[?]])) {
           throw new com.badlogic.gdx.utils.SerializationException(((("Serialization of an Array other than the known type is not supported.\n" + "Known type: ") + knownType) + "\nActual type: ") + actualType)
         } else ()
         this.writeArrayStart()
-        val array: com.badlogic.gdx.utils.Array = value.asInstanceOf[com.badlogic.gdx.utils.Array]
+        val array: com.badlogic.gdx.utils.Array[?] = value.asInstanceOf[com.badlogic.gdx.utils.Array[?]];
         { var i: scala.Int = 0; val n: scala.Int = array.size; while (i < n) { {
           this.writeValue(array.get(i), elementType, null)
         }; i = i + 1 } }
         this.writeArrayEnd()
         return
       } else ()
-      if (value.isInstanceOf[com.badlogic.gdx.utils.Queue]) {
-        if (((knownType != null) && (actualType != knownType)) && (actualType != classOf[java.lang.Class])) {
+      if (value.isInstanceOf[com.badlogic.gdx.utils.Queue[?]]) {
+        if (((knownType != null) && (actualType != knownType)) && (actualType != classOf[com.badlogic.gdx.utils.Queue[?]])) {
           throw new com.badlogic.gdx.utils.SerializationException(((("Serialization of a Queue other than the known type is not supported.\n" + "Known type: ") + knownType) + "\nActual type: ") + actualType)
         } else ()
         this.writeArrayStart()
-        val queue: com.badlogic.gdx.utils.Queue = value.asInstanceOf[com.badlogic.gdx.utils.Queue]
+        val queue: com.badlogic.gdx.utils.Queue[?] = value.asInstanceOf[com.badlogic.gdx.utils.Queue[?]];
         { var i: scala.Int = 0; val n: scala.Int = queue.size; while (i < n) { {
           this.writeValue(queue.get(i), elementType, null)
         }; i = i + 1 } }
         this.writeArrayEnd()
         return
       } else ()
-      if (value.isInstanceOf[scala.collection.mutable.Iterable]) {
-        if (((this.typeName != null) && (actualType != classOf[java.lang.Class])) && ((knownType == null) || (knownType != actualType))) {
+      if (value.isInstanceOf[scala.collection.mutable.Iterable[?]]) {
+        if (((this.typeName != null) && (actualType != classOf[java.util.ArrayList[?]])) && ((knownType == null) || (knownType != actualType))) {
           this.writeObjectStart(actualType, knownType)
           this.writeArrayStart("items")
-          for (item <- value.asInstanceOf[scala.collection.mutable.Iterable]) {
+          for (item <- value.asInstanceOf[scala.collection.mutable.Iterable[?]]) {
             this.writeValue(item, elementType, null)
           }
           this.writeArrayEnd()
           this.writeObjectEnd()
         } else {
           this.writeArrayStart()
-          for (item <- value.asInstanceOf[scala.collection.mutable.Iterable]) {
+          for (item <- value.asInstanceOf[scala.collection.mutable.Iterable[?]]) {
             this.writeValue(item, elementType, null)
           }
           this.writeArrayEnd()
@@ -462,16 +462,16 @@ class Json {
           elementType = actualType.getComponentType()
         } else ()
         val length: scala.Int = com.badlogic.gdx.utils.reflect.ArrayReflection.getLength(value)
-        this.writeArrayStart()
+        this.writeArrayStart();
         { var i: scala.Int = 0; while (i < length) { {
           this.writeValue(com.badlogic.gdx.utils.reflect.ArrayReflection.get(value, i), elementType, null)
         }; i = i + 1 } }
         this.writeArrayEnd()
         return
       } else ()
-      if (value.isInstanceOf[com.badlogic.gdx.utils.ObjectMap]) {
+      if (value.isInstanceOf[com.badlogic.gdx.utils.ObjectMap[?, ?]]) {
         if (knownType == null) {
-          knownType = classOf[java.lang.Class]
+          knownType = classOf[com.badlogic.gdx.utils.ObjectMap[?, ?]]
         } else ()
         this.writeObjectStart(actualType, knownType)
         for (entry <- value.asInstanceOf[com.badlogic.gdx.utils.ObjectMap[?, ?]].entries()) {
@@ -481,47 +481,47 @@ class Json {
         this.writeObjectEnd()
         return
       } else ()
-      if (value.isInstanceOf[com.badlogic.gdx.utils.ObjectIntMap]) {
+      if (value.isInstanceOf[com.badlogic.gdx.utils.ObjectIntMap[?]]) {
         if (knownType == null) {
-          knownType = classOf[java.lang.Class]
+          knownType = classOf[com.badlogic.gdx.utils.ObjectIntMap[?]]
         } else ()
         this.writeObjectStart(actualType, knownType)
         for (entry <- value.asInstanceOf[com.badlogic.gdx.utils.ObjectIntMap[?]].entries()) {
           this.writer.name(this.convertToString(entry.key))
-          this.writeValue(entry.value, classOf[java.lang.Class])
+          this.writeValue(entry.value, classOf[java.lang.Integer])
         }
         this.writeObjectEnd()
         return
       } else ()
-      if (value.isInstanceOf[com.badlogic.gdx.utils.ObjectFloatMap]) {
+      if (value.isInstanceOf[com.badlogic.gdx.utils.ObjectFloatMap[?]]) {
         if (knownType == null) {
-          knownType = classOf[java.lang.Class]
+          knownType = classOf[com.badlogic.gdx.utils.ObjectFloatMap[?]]
         } else ()
         this.writeObjectStart(actualType, knownType)
         for (entry <- value.asInstanceOf[com.badlogic.gdx.utils.ObjectFloatMap[?]].entries()) {
           this.writer.name(this.convertToString(entry.key))
-          this.writeValue(entry.value, classOf[java.lang.Class])
+          this.writeValue(entry.value, classOf[java.lang.Float])
         }
         this.writeObjectEnd()
         return
       } else ()
-      if (value.isInstanceOf[com.badlogic.gdx.utils.ObjectSet]) {
+      if (value.isInstanceOf[com.badlogic.gdx.utils.ObjectSet[?]]) {
         if (knownType == null) {
-          knownType = classOf[java.lang.Class]
+          knownType = classOf[com.badlogic.gdx.utils.ObjectSet[?]]
         } else ()
         this.writeObjectStart(actualType, knownType)
         this.writer.name("values")
         this.writeArrayStart()
-        for (entry <- value.asInstanceOf[com.badlogic.gdx.utils.ObjectSet]) {
+        for (entry <- value.asInstanceOf[com.badlogic.gdx.utils.ObjectSet[?]]) {
           this.writeValue(entry, elementType, null)
         }
         this.writeArrayEnd()
         this.writeObjectEnd()
         return
       } else ()
-      if (value.isInstanceOf[com.badlogic.gdx.utils.IntMap]) {
+      if (value.isInstanceOf[com.badlogic.gdx.utils.IntMap[?]]) {
         if (knownType == null) {
-          knownType = classOf[java.lang.Class]
+          knownType = classOf[com.badlogic.gdx.utils.IntMap[?]]
         } else ()
         this.writeObjectStart(actualType, knownType)
         for (entry <- value.asInstanceOf[com.badlogic.gdx.utils.IntMap[?]].entries()) {
@@ -531,9 +531,9 @@ class Json {
         this.writeObjectEnd()
         return
       } else ()
-      if (value.isInstanceOf[com.badlogic.gdx.utils.LongMap]) {
+      if (value.isInstanceOf[com.badlogic.gdx.utils.LongMap[?]]) {
         if (knownType == null) {
-          knownType = classOf[java.lang.Class]
+          knownType = classOf[com.badlogic.gdx.utils.LongMap[?]]
         } else ()
         this.writeObjectStart(actualType, knownType)
         for (entry <- value.asInstanceOf[com.badlogic.gdx.utils.LongMap[?]].entries()) {
@@ -545,24 +545,24 @@ class Json {
       } else ()
       if (value.isInstanceOf[com.badlogic.gdx.utils.IntSet]) {
         if (knownType == null) {
-          knownType = classOf[java.lang.Class]
+          knownType = classOf[com.badlogic.gdx.utils.IntSet]
         } else ()
         this.writeObjectStart(actualType, knownType)
         this.writer.name("values")
-        this.writeArrayStart()
-        { val iter: com.badlogic.gdx.utils.IntSet#IntSetIterator = value.asInstanceOf[com.badlogic.gdx.utils.IntSet].iterator(); while (iter.hasNext) { {
-          this.writeValue(iter.next(), classOf[java.lang.Class], null)
+        this.writeArrayStart();
+        { val iter: com.badlogic.gdx.utils.IntSet.IntSetIterator = value.asInstanceOf[com.badlogic.gdx.utils.IntSet].iterator(); while (iter.hasNext) { {
+          this.writeValue(iter.next(), classOf[java.lang.Integer], null)
         };  } }
         this.writeArrayEnd()
         this.writeObjectEnd()
         return
       } else ()
-      if (value.isInstanceOf[com.badlogic.gdx.utils.ArrayMap]) {
+      if (value.isInstanceOf[com.badlogic.gdx.utils.ArrayMap[?, ?]]) {
         if (knownType == null) {
-          knownType = classOf[java.lang.Class]
+          knownType = classOf[com.badlogic.gdx.utils.ArrayMap[?, ?]]
         } else ()
         this.writeObjectStart(actualType, knownType)
-        val map: com.badlogic.gdx.utils.ArrayMap = value.asInstanceOf[com.badlogic.gdx.utils.ArrayMap]
+        val map: com.badlogic.gdx.utils.ArrayMap[?, ?] = value.asInstanceOf[com.badlogic.gdx.utils.ArrayMap[?, ?]];
         { var i: scala.Int = 0; val n: scala.Int = map.size; while (i < n) { {
           this.writer.name(this.convertToString(map.keys$field(i)))
           this.writeValue(map.values$field(i), elementType, null)
@@ -570,9 +570,9 @@ class Json {
         this.writeObjectEnd()
         return
       } else ()
-      if (value.isInstanceOf[scala.collection.mutable.Map]) {
+      if (value.isInstanceOf[scala.collection.mutable.Map[?, ?]]) {
         if (knownType == null) {
-          knownType = classOf[java.lang.Class]
+          knownType = classOf[java.util.HashMap[?, ?]]
         } else ()
         this.writeObjectStart(actualType, knownType)
         for (entry <- value.asInstanceOf[scala.collection.mutable.Map[?, ?]].entrySet()) {
@@ -582,17 +582,17 @@ class Json {
         this.writeObjectEnd()
         return
       } else ()
-      if (com.badlogic.gdx.utils.reflect.ClassReflection.isAssignableFrom(classOf[java.lang.Class], actualType)) {
+      if (com.badlogic.gdx.utils.reflect.ClassReflection.isAssignableFrom(classOf[java.lang.Enum[?]], actualType)) {
         if (actualType.getEnumConstants() == null) {
           actualType = actualType.getSuperclass()
         } else ()
         if ((this.typeName != null) && ((knownType == null) || (knownType != actualType))) {
           this.writeObjectStart(actualType, null)
           this.writer.name("value")
-          this.writer.value(this.convertToString(value.asInstanceOf[java.lang.Enum]))
+          this.writer.value(this.convertToString(value.asInstanceOf[java.lang.Enum[?]]))
           this.writeObjectEnd()
         } else {
-          this.writer.value(this.convertToString(value.asInstanceOf[java.lang.Enum]))
+          this.writer.value(this.convertToString(value.asInstanceOf[java.lang.Enum[?]]))
         }
         return
       } else ()
@@ -615,7 +615,7 @@ class Json {
     }
     this.writeObjectStart()
   }
-  def writeObjectStart(name: java.lang.String, actualType: java.lang.Class, knownType: java.lang.Class): scala.Unit = {
+  def writeObjectStart(name: java.lang.String, actualType: java.lang.Class[?], knownType: java.lang.Class[?]): scala.Unit = {
     try {
       this.writer.name(name)
     } catch {
@@ -634,7 +634,7 @@ class Json {
       }
     }
   }
-  def writeObjectStart(actualType: java.lang.Class, knownType: java.lang.Class): scala.Unit = {
+  def writeObjectStart(actualType: java.lang.Class[?], knownType: java.lang.Class[?]): scala.Unit = {
     try {
       this.writer.`object`()
     } catch {
@@ -683,7 +683,7 @@ class Json {
       }
     }
   }
-  def writeType(`type`: java.lang.Class): scala.Unit = {
+  def writeType(`type`: java.lang.Class[?]): scala.Unit = {
     if (this.typeName == null) {
       return
     } else ()
@@ -705,13 +705,13 @@ class Json {
   def fromJson[T](`type`: java.lang.Class[T], reader: java.io.Reader): T = {
     return this.readValue(`type`, null, this.reader.parse(reader))
   }
-  def fromJson[T](`type`: java.lang.Class[T], elementType: java.lang.Class, reader: java.io.Reader): T = {
+  def fromJson[T](`type`: java.lang.Class[T], elementType: java.lang.Class[?], reader: java.io.Reader): T = {
     return this.readValue(`type`, elementType, this.reader.parse(reader))
   }
   def fromJson[T](`type`: java.lang.Class[T], input: java.io.InputStream): T = {
     return this.readValue(`type`, null, this.reader.parse(input))
   }
-  def fromJson[T](`type`: java.lang.Class[T], elementType: java.lang.Class, input: java.io.InputStream): T = {
+  def fromJson[T](`type`: java.lang.Class[T], elementType: java.lang.Class[?], input: java.io.InputStream): T = {
     return this.readValue(`type`, elementType, this.reader.parse(input))
   }
   def fromJson[T](`type`: java.lang.Class[T], file: com.badlogic.gdx.files.FileHandle): T = {
@@ -723,7 +723,7 @@ class Json {
       }
     }
   }
-  def fromJson[T](`type`: java.lang.Class[T], elementType: java.lang.Class, file: com.badlogic.gdx.files.FileHandle): T = {
+  def fromJson[T](`type`: java.lang.Class[T], elementType: java.lang.Class[?], file: com.badlogic.gdx.files.FileHandle): T = {
     try {
       return this.readValue(`type`, elementType, this.reader.parse(file))
     } catch {
@@ -735,28 +735,28 @@ class Json {
   def fromJson[T](`type`: java.lang.Class[T], data: scala.Array[scala.Char], offset: scala.Int, length: scala.Int): T = {
     return this.readValue(`type`, null, this.reader.parse(data, offset, length))
   }
-  def fromJson[T](`type`: java.lang.Class[T], elementType: java.lang.Class, data: scala.Array[scala.Char], offset: scala.Int, length: scala.Int): T = {
+  def fromJson[T](`type`: java.lang.Class[T], elementType: java.lang.Class[?], data: scala.Array[scala.Char], offset: scala.Int, length: scala.Int): T = {
     return this.readValue(`type`, elementType, this.reader.parse(data, offset, length))
   }
   def fromJson[T](`type`: java.lang.Class[T], json: java.lang.String): T = {
     return this.readValue(`type`, null, this.reader.parse(json))
   }
-  def fromJson[T](`type`: java.lang.Class[T], elementType: java.lang.Class, json: java.lang.String): T = {
+  def fromJson[T](`type`: java.lang.Class[T], elementType: java.lang.Class[?], json: java.lang.String): T = {
     return this.readValue(`type`, elementType, this.reader.parse(json))
   }
   def readField(`object`: java.lang.Object, name: java.lang.String, jsonData: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
     this.readField(`object`, name, name, null, jsonData)
   }
-  def readField(`object`: java.lang.Object, name: java.lang.String, elementType: java.lang.Class, jsonData: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
+  def readField(`object`: java.lang.Object, name: java.lang.String, elementType: java.lang.Class[?], jsonData: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
     this.readField(`object`, name, name, elementType, jsonData)
   }
   def readField(`object`: java.lang.Object, fieldName: java.lang.String, jsonName: java.lang.String, jsonData: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
     this.readField(`object`, fieldName, jsonName, null, jsonData)
   }
-  def readField(`object`: java.lang.Object, fieldName: java.lang.String, jsonName: java.lang.String, elementType$arg: java.lang.Class, jsonMap: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
-    var elementType: java.lang.Class = elementType$arg
-    val `type`: java.lang.Class = `object`.getClass()
-    val metadata: FieldMetadata = this.getFields(`type`).get(fieldName)
+  def readField(`object`: java.lang.Object, fieldName: java.lang.String, jsonName: java.lang.String, elementType$arg: java.lang.Class[?], jsonMap: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
+    var elementType: java.lang.Class[?] = elementType$arg
+    val `type`: java.lang.Class[?] = `object`.getClass()
+    val metadata: com.badlogic.gdx.utils.Json.FieldMetadata = this.getFields(`type`).get(fieldName)
     if (metadata == null) {
       throw new com.badlogic.gdx.utils.SerializationException(((("Field not found: " + fieldName) + " (") + `type`.getName()) + ")")
     } else ()
@@ -766,7 +766,7 @@ class Json {
     } else ()
     this.readField(`object`, field, jsonName, elementType, jsonMap)
   }
-  def readField(`object`: java.lang.Object, field: com.badlogic.gdx.utils.reflect.Field, jsonName: java.lang.String, elementType: java.lang.Class, jsonMap: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
+  def readField(`object`: java.lang.Object, field: com.badlogic.gdx.utils.reflect.Field, jsonName: java.lang.String, elementType: java.lang.Class[?], jsonMap: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
     val jsonValue: com.badlogic.gdx.utils.JsonValue = jsonMap.get(jsonName)
     if (jsonValue == null) {
       return
@@ -790,10 +790,10 @@ class Json {
     }
   }
   def readFields(`object`: java.lang.Object, jsonMap: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
-    val `type`: java.lang.Class = `object`.getClass()
-    val fields: com.badlogic.gdx.utils.OrderedMap[java.lang.String, FieldMetadata] = this.getFields(`type`)
+    val `type`: java.lang.Class[?] = `object`.getClass()
+    val fields: com.badlogic.gdx.utils.OrderedMap[java.lang.String, com.badlogic.gdx.utils.Json.FieldMetadata] = this.getFields(`type`);
     { var child: com.badlogic.gdx.utils.JsonValue = jsonMap.child$field; while (child != null) { {
-      val metadata: FieldMetadata = fields.get(child.name().replace(" ", "_"))
+      val metadata: com.badlogic.gdx.utils.Json.FieldMetadata = fields.get(child.name().replace(" ", "_"))
       if (metadata == null) {
         if (child.name$field.equals(this.typeName)) {
           /* continue */ ()
@@ -833,7 +833,7 @@ class Json {
       }
     }; child = child.next$field } }
   }
-  protected def ignoreUnknownField(`type`: java.lang.Class, fieldName: java.lang.String): scala.Boolean = {
+  def ignoreUnknownField(`type`: java.lang.Class[?], fieldName: java.lang.String): scala.Boolean = {
     return false
   }
   def readValue[T](name: java.lang.String, `type`: java.lang.Class[T], jsonMap: com.badlogic.gdx.utils.JsonValue): T = {
@@ -846,14 +846,14 @@ class Json {
     } else ()
     return this.readValue(`type`, null, jsonValue)
   }
-  def readValue[T](name: java.lang.String, `type`: java.lang.Class[T], elementType: java.lang.Class, jsonMap: com.badlogic.gdx.utils.JsonValue): T = {
+  def readValue[T](name: java.lang.String, `type`: java.lang.Class[T], elementType: java.lang.Class[?], jsonMap: com.badlogic.gdx.utils.JsonValue): T = {
     return this.readValue(`type`, elementType, jsonMap.get(name))
   }
-  def readValue[T](name: java.lang.String, `type`: java.lang.Class[T], elementType: java.lang.Class, defaultValue: T, jsonMap: com.badlogic.gdx.utils.JsonValue): T = {
+  def readValue[T](name: java.lang.String, `type`: java.lang.Class[T], elementType: java.lang.Class[?], defaultValue: T, jsonMap: com.badlogic.gdx.utils.JsonValue): T = {
     val jsonValue: com.badlogic.gdx.utils.JsonValue = jsonMap.get(name)
     return this.readValue(`type`, elementType, defaultValue, jsonValue)
   }
-  def readValue[T](`type`: java.lang.Class[T], elementType: java.lang.Class, defaultValue: T, jsonData: com.badlogic.gdx.utils.JsonValue): T = {
+  def readValue[T](`type`: java.lang.Class[T], elementType: java.lang.Class[?], defaultValue: T, jsonData: com.badlogic.gdx.utils.JsonValue): T = {
     if (jsonData == null) {
       return defaultValue
     } else ()
@@ -862,12 +862,12 @@ class Json {
   def readValue[T](`type`: java.lang.Class[T], jsonData: com.badlogic.gdx.utils.JsonValue): T = {
     return this.readValue(`type`, null, jsonData)
   }
-  def readValue[T](type$arg: java.lang.Class[T], elementType$arg: java.lang.Class, jsonData$arg: com.badlogic.gdx.utils.JsonValue): T = {
+  def readValue[T](type$arg: java.lang.Class[T], elementType$arg: java.lang.Class[?], jsonData$arg: com.badlogic.gdx.utils.JsonValue): T = {
     var `type`: java.lang.Class[T] = type$arg
-    var elementType: java.lang.Class = elementType$arg
+    var elementType: java.lang.Class[?] = elementType$arg
     var jsonData: com.badlogic.gdx.utils.JsonValue = jsonData$arg
     if (jsonData == null) {
-      return null
+      return null.asInstanceOf[T]
     } else ()
     if (jsonData.isObject()) {
       val className: java.lang.String = if (this.typeName == null) null else jsonData.getString(this.typeName, null)
@@ -889,82 +889,82 @@ class Json {
         } else ()
         return jsonData.asInstanceOf[T]
       } else ()
-      if ((this.typeName != null) && com.badlogic.gdx.utils.reflect.ClassReflection.isAssignableFrom(classOf[java.lang.Class], `type`)) {
+      if ((this.typeName != null) && com.badlogic.gdx.utils.reflect.ClassReflection.isAssignableFrom(classOf[java.util.Collection[?]], `type`)) {
         jsonData = jsonData.get("items")
         if (jsonData == null) {
           throw new com.badlogic.gdx.utils.SerializationException(((("Unable to convert object to collection: " + jsonData) + " (") + `type`.getName()) + ")")
         } else ()
       } else {
-        val serializer: Serializer = this.classToSerializer.get(`type`)
+        val serializer: com.badlogic.gdx.utils.Json.Serializer[?] = this.classToSerializer.get(`type`)
         if (serializer != null) {
           return serializer.read(this, jsonData, `type`).asInstanceOf[T]
         } else ()
-        if ((((((((((`type` == classOf[java.lang.Class]) || (`type` == classOf[java.lang.Class])) || (`type` == classOf[java.lang.Class])) || (`type` == classOf[java.lang.Class])) || (`type` == classOf[java.lang.Class])) || (`type` == classOf[java.lang.Class])) || (`type` == classOf[java.lang.Class])) || (`type` == classOf[java.lang.Class])) || (`type` == classOf[java.lang.Class])) || com.badlogic.gdx.utils.reflect.ClassReflection.isAssignableFrom(classOf[java.lang.Class], `type`)) {
+        if ((((((((((`type` == classOf[java.lang.String]) || (`type` == classOf[java.lang.Integer])) || (`type` == classOf[java.lang.Boolean])) || (`type` == classOf[java.lang.Float])) || (`type` == classOf[java.lang.Long])) || (`type` == classOf[java.lang.Double])) || (`type` == classOf[java.lang.Short])) || (`type` == classOf[java.lang.Byte])) || (`type` == classOf[java.lang.Character])) || com.badlogic.gdx.utils.reflect.ClassReflection.isAssignableFrom(classOf[java.lang.Enum[?]], `type`)) {
           return this.readValue("value", `type`, jsonData)
         } else ()
         val `object`: java.lang.Object = this.newInstance(`type`)
-        if (`object`.isInstanceOf[Serializable]) {
-          `object`.asInstanceOf[Serializable].read(this, jsonData)
+        if (`object`.isInstanceOf[com.badlogic.gdx.utils.Json.Serializable]) {
+          `object`.asInstanceOf[com.badlogic.gdx.utils.Json.Serializable].read(this, jsonData)
           return `object`.asInstanceOf[T]
         } else ()
-        if (`object`.isInstanceOf[com.badlogic.gdx.utils.ObjectMap]) {
-          val result: com.badlogic.gdx.utils.ObjectMap = `object`.asInstanceOf[com.badlogic.gdx.utils.ObjectMap]
+        if (`object`.isInstanceOf[com.badlogic.gdx.utils.ObjectMap[?, ?]]) {
+          val result: com.badlogic.gdx.utils.ObjectMap[?, ?] = `object`.asInstanceOf[com.badlogic.gdx.utils.ObjectMap[?, ?]];
           { var child: com.badlogic.gdx.utils.JsonValue = jsonData.child$field; while (child != null) { {
             result.put(child.name$field, this.readValue(elementType, null, child))
           }; child = child.next$field } }
           return result.asInstanceOf[T]
         } else ()
-        if (`object`.isInstanceOf[com.badlogic.gdx.utils.ObjectIntMap]) {
-          val result: com.badlogic.gdx.utils.ObjectIntMap = `object`.asInstanceOf[com.badlogic.gdx.utils.ObjectIntMap]
+        if (`object`.isInstanceOf[com.badlogic.gdx.utils.ObjectIntMap[?]]) {
+          val result: com.badlogic.gdx.utils.ObjectIntMap[?] = `object`.asInstanceOf[com.badlogic.gdx.utils.ObjectIntMap[?]];
           { var child: com.badlogic.gdx.utils.JsonValue = jsonData.child$field; while (child != null) { {
-            result.put(child.name$field, this.readValue(classOf[java.lang.Class], null, child))
+            result.put(child.name$field, this.readValue(classOf[java.lang.Integer], null, child))
           }; child = child.next$field } }
           return result.asInstanceOf[T]
         } else ()
-        if (`object`.isInstanceOf[com.badlogic.gdx.utils.ObjectFloatMap]) {
-          val result: com.badlogic.gdx.utils.ObjectFloatMap = `object`.asInstanceOf[com.badlogic.gdx.utils.ObjectFloatMap]
+        if (`object`.isInstanceOf[com.badlogic.gdx.utils.ObjectFloatMap[?]]) {
+          val result: com.badlogic.gdx.utils.ObjectFloatMap[?] = `object`.asInstanceOf[com.badlogic.gdx.utils.ObjectFloatMap[?]];
           { var child: com.badlogic.gdx.utils.JsonValue = jsonData.child$field; while (child != null) { {
-            result.put(child.name$field, this.readValue(classOf[java.lang.Class], null, child))
+            result.put(child.name$field, this.readValue(classOf[java.lang.Float], null, child))
           }; child = child.next$field } }
           return result.asInstanceOf[T]
         } else ()
-        if (`object`.isInstanceOf[com.badlogic.gdx.utils.ObjectSet]) {
-          val result: com.badlogic.gdx.utils.ObjectSet = `object`.asInstanceOf[com.badlogic.gdx.utils.ObjectSet]
+        if (`object`.isInstanceOf[com.badlogic.gdx.utils.ObjectSet[?]]) {
+          val result: com.badlogic.gdx.utils.ObjectSet[?] = `object`.asInstanceOf[com.badlogic.gdx.utils.ObjectSet[?]];
           { var child: com.badlogic.gdx.utils.JsonValue = jsonData.getChild("values"); while (child != null) { {
             result.add(this.readValue(elementType, null, child))
           }; child = child.next$field } }
           return result.asInstanceOf[T]
         } else ()
-        if (`object`.isInstanceOf[com.badlogic.gdx.utils.IntMap]) {
-          val result: com.badlogic.gdx.utils.IntMap = `object`.asInstanceOf[com.badlogic.gdx.utils.IntMap]
+        if (`object`.isInstanceOf[com.badlogic.gdx.utils.IntMap[?]]) {
+          val result: com.badlogic.gdx.utils.IntMap[?] = `object`.asInstanceOf[com.badlogic.gdx.utils.IntMap[?]];
           { var child: com.badlogic.gdx.utils.JsonValue = jsonData.child$field; while (child != null) { {
             result.put(java.lang.Integer.parseInt(child.name$field), this.readValue(elementType, null, child))
           }; child = child.next$field } }
           return result.asInstanceOf[T]
         } else ()
-        if (`object`.isInstanceOf[com.badlogic.gdx.utils.LongMap]) {
-          val result: com.badlogic.gdx.utils.LongMap = `object`.asInstanceOf[com.badlogic.gdx.utils.LongMap]
+        if (`object`.isInstanceOf[com.badlogic.gdx.utils.LongMap[?]]) {
+          val result: com.badlogic.gdx.utils.LongMap[?] = `object`.asInstanceOf[com.badlogic.gdx.utils.LongMap[?]];
           { var child: com.badlogic.gdx.utils.JsonValue = jsonData.child$field; while (child != null) { {
             result.put(java.lang.Long.parseLong(child.name$field), this.readValue(elementType, null, child))
           }; child = child.next$field } }
           return result.asInstanceOf[T]
         } else ()
         if (`object`.isInstanceOf[com.badlogic.gdx.utils.IntSet]) {
-          val result: com.badlogic.gdx.utils.IntSet = `object`.asInstanceOf[com.badlogic.gdx.utils.IntSet]
+          val result: com.badlogic.gdx.utils.IntSet = `object`.asInstanceOf[com.badlogic.gdx.utils.IntSet];
           { var child: com.badlogic.gdx.utils.JsonValue = jsonData.getChild("values"); while (child != null) { {
             result.add(child.asInt())
           }; child = child.next$field } }
           return result.asInstanceOf[T]
         } else ()
-        if (`object`.isInstanceOf[com.badlogic.gdx.utils.ArrayMap]) {
-          val result: com.badlogic.gdx.utils.ArrayMap = `object`.asInstanceOf[com.badlogic.gdx.utils.ArrayMap]
+        if (`object`.isInstanceOf[com.badlogic.gdx.utils.ArrayMap[?, ?]]) {
+          val result: com.badlogic.gdx.utils.ArrayMap[?, ?] = `object`.asInstanceOf[com.badlogic.gdx.utils.ArrayMap[?, ?]];
           { var child: com.badlogic.gdx.utils.JsonValue = jsonData.child$field; while (child != null) { {
             result.put(child.name$field, this.readValue(elementType, null, child))
           }; child = child.next$field } }
           return result.asInstanceOf[T]
         } else ()
-        if (`object`.isInstanceOf[scala.collection.mutable.Map]) {
-          val result: scala.collection.mutable.Map = `object`.asInstanceOf[scala.collection.mutable.Map]
+        if (`object`.isInstanceOf[scala.collection.mutable.Map[?, ?]]) {
+          val result: scala.collection.mutable.Map[?, ?] = `object`.asInstanceOf[scala.collection.mutable.Map[?, ?]];
           { var child: com.badlogic.gdx.utils.JsonValue = jsonData.child$field; while (child != null) { {
             if (child.name$field.equals(this.typeName)) {
               /* continue */ ()
@@ -978,48 +978,48 @@ class Json {
       }
     } else ()
     if (`type` != null) {
-      val serializer: Serializer = this.classToSerializer.get(`type`)
+      val serializer: com.badlogic.gdx.utils.Json.Serializer[?] = this.classToSerializer.get(`type`)
       if (serializer != null) {
         return serializer.read(this, jsonData, `type`).asInstanceOf[T]
       } else ()
-      if (com.badlogic.gdx.utils.reflect.ClassReflection.isAssignableFrom(classOf[java.lang.Class], `type`)) {
+      if (com.badlogic.gdx.utils.reflect.ClassReflection.isAssignableFrom(classOf[com.badlogic.gdx.utils.Json.Serializable], `type`)) {
         val `object`: java.lang.Object = this.newInstance(`type`)
-        `object`.asInstanceOf[Serializable].read(this, jsonData)
+        `object`.asInstanceOf[com.badlogic.gdx.utils.Json.Serializable].read(this, jsonData)
         return `object`.asInstanceOf[T]
       } else ()
     } else ()
     if (jsonData.isArray()) {
-      if ((`type` == null) || (`type` == classOf[java.lang.Class])) {
-        `type` = classOf[java.lang.Class].asInstanceOf[java.lang.Class[T]]
+      if ((`type` == null) || (`type` == classOf[java.lang.Object])) {
+        `type` = classOf[com.badlogic.gdx.utils.Array[?]].asInstanceOf[java.lang.Class[T]]
       } else ()
-      if (com.badlogic.gdx.utils.reflect.ClassReflection.isAssignableFrom(classOf[java.lang.Class], `type`)) {
-        val result: com.badlogic.gdx.utils.Array = if (`type` == classOf[java.lang.Class]) new com.badlogic.gdx.utils.Array() else this.newInstance(`type`).asInstanceOf[com.badlogic.gdx.utils.Array]
+      if (com.badlogic.gdx.utils.reflect.ClassReflection.isAssignableFrom(classOf[com.badlogic.gdx.utils.Array[?]], `type`)) {
+        val result: com.badlogic.gdx.utils.Array[?] = if (`type` == classOf[com.badlogic.gdx.utils.Array[?]]) new com.badlogic.gdx.utils.Array() else this.newInstance(`type`).asInstanceOf[com.badlogic.gdx.utils.Array[?]];
         { var child: com.badlogic.gdx.utils.JsonValue = jsonData.child$field; while (child != null) { {
           result.add(this.readValue(elementType, null, child))
         }; child = child.next$field } }
         return result.asInstanceOf[T]
       } else ()
-      if (com.badlogic.gdx.utils.reflect.ClassReflection.isAssignableFrom(classOf[java.lang.Class], `type`)) {
-        val result: com.badlogic.gdx.utils.Queue = if (`type` == classOf[java.lang.Class]) new com.badlogic.gdx.utils.Queue() else this.newInstance(`type`).asInstanceOf[com.badlogic.gdx.utils.Queue]
+      if (com.badlogic.gdx.utils.reflect.ClassReflection.isAssignableFrom(classOf[com.badlogic.gdx.utils.Queue[?]], `type`)) {
+        val result: com.badlogic.gdx.utils.Queue[?] = if (`type` == classOf[com.badlogic.gdx.utils.Queue[?]]) new com.badlogic.gdx.utils.Queue() else this.newInstance(`type`).asInstanceOf[com.badlogic.gdx.utils.Queue[?]];
         { var child: com.badlogic.gdx.utils.JsonValue = jsonData.child$field; while (child != null) { {
           result.addLast(this.readValue(elementType, null, child))
         }; child = child.next$field } }
         return result.asInstanceOf[T]
       } else ()
-      if (com.badlogic.gdx.utils.reflect.ClassReflection.isAssignableFrom(classOf[java.lang.Class], `type`)) {
-        val result: scala.collection.mutable.Iterable = if (`type`.isInterface()) new scala.collection.mutable.ArrayBuffer() else this.newInstance(`type`).asInstanceOf[scala.collection.mutable.Iterable]
+      if (com.badlogic.gdx.utils.reflect.ClassReflection.isAssignableFrom(classOf[java.util.Collection[?]], `type`)) {
+        val result: scala.collection.mutable.Iterable[?] = if (`type`.isInterface()) new scala.collection.mutable.ArrayBuffer() else this.newInstance(`type`).asInstanceOf[scala.collection.mutable.Iterable[?]];
         { var child: com.badlogic.gdx.utils.JsonValue = jsonData.child$field; while (child != null) { {
           result += this.readValue(elementType, null, child)
         }; child = child.next$field } }
         return result.asInstanceOf[T]
       } else ()
       if (`type`.isArray()) {
-        val componentType: java.lang.Class = `type`.getComponentType()
+        val componentType: java.lang.Class[?] = `type`.getComponentType()
         if (elementType == null) {
           elementType = componentType
         } else ()
         val result: java.lang.Object = com.badlogic.gdx.utils.reflect.ArrayReflection.newInstance(componentType, jsonData.size$field)
-        var i: scala.Int = 0
+        var i: scala.Int = 0;
         { var child: com.badlogic.gdx.utils.JsonValue = jsonData.child$field; while (child != null) { {
           com.badlogic.gdx.utils.reflect.ArrayReflection.set(result, { i += 1; i }, this.readValue(elementType, null, child))
         }; child = child.next$field } }
@@ -1029,28 +1029,28 @@ class Json {
     } else ()
     if (jsonData.isNumber()) {
       try {
-        if (((`type` == null) || (`type` == classOf[java.lang.Class])) || (`type` == classOf[java.lang.Class])) {
+        if (((`type` == null) || (`type` == classOf[scala.Float])) || (`type` == classOf[java.lang.Float])) {
           return jsonData.asFloat().asInstanceOf[java.lang.Float].asInstanceOf[T]
         } else ()
-        if ((`type` == classOf[java.lang.Class]) || (`type` == classOf[java.lang.Class])) {
+        if ((`type` == classOf[scala.Int]) || (`type` == classOf[java.lang.Integer])) {
           return jsonData.asInt().asInstanceOf[java.lang.Integer].asInstanceOf[T]
         } else ()
-        if ((`type` == classOf[java.lang.Class]) || (`type` == classOf[java.lang.Class])) {
+        if ((`type` == classOf[scala.Long]) || (`type` == classOf[java.lang.Long])) {
           return jsonData.asLong().asInstanceOf[java.lang.Long].asInstanceOf[T]
         } else ()
-        if ((`type` == classOf[java.lang.Class]) || (`type` == classOf[java.lang.Class])) {
+        if ((`type` == classOf[scala.Double]) || (`type` == classOf[java.lang.Double])) {
           return jsonData.asDouble().asInstanceOf[java.lang.Double].asInstanceOf[T]
         } else ()
-        if (`type` == classOf[java.lang.Class]) {
+        if (`type` == classOf[java.lang.String]) {
           return jsonData.asString().asInstanceOf[T]
         } else ()
-        if ((`type` == classOf[java.lang.Class]) || (`type` == classOf[java.lang.Class])) {
+        if ((`type` == classOf[scala.Short]) || (`type` == classOf[java.lang.Short])) {
           return jsonData.asShort().asInstanceOf[java.lang.Short].asInstanceOf[T]
         } else ()
-        if ((`type` == classOf[java.lang.Class]) || (`type` == classOf[java.lang.Class])) {
+        if ((`type` == classOf[scala.Byte]) || (`type` == classOf[java.lang.Byte])) {
           return jsonData.asByte().asInstanceOf[java.lang.Byte].asInstanceOf[T]
         } else ()
-        if ((`type` == classOf[java.lang.Class]) || (`type` == classOf[java.lang.Class])) {
+        if ((`type` == classOf[scala.Char]) || (`type` == classOf[java.lang.Character])) {
           return jsonData.asChar().asInstanceOf[java.lang.Character].asInstanceOf[T]
         } else ()
       } catch {
@@ -1062,7 +1062,7 @@ class Json {
     } else ()
     if (jsonData.isBoolean()) {
       try {
-        if (((`type` == null) || (`type` == classOf[java.lang.Class])) || (`type` == classOf[java.lang.Class])) {
+        if (((`type` == null) || (`type` == classOf[scala.Boolean])) || (`type` == classOf[java.lang.Boolean])) {
           return jsonData.asBoolean().asInstanceOf[java.lang.Boolean].asInstanceOf[T]
         } else ()
       } catch {
@@ -1074,26 +1074,26 @@ class Json {
     } else ()
     if (jsonData.isString()) {
       val string: java.lang.String = jsonData.asString()
-      if ((`type` == null) || (`type` == classOf[java.lang.Class])) {
+      if ((`type` == null) || (`type` == classOf[java.lang.String])) {
         return string.asInstanceOf[T]
       } else ()
       try {
-        if ((`type` == classOf[java.lang.Class]) || (`type` == classOf[java.lang.Class])) {
+        if ((`type` == classOf[scala.Int]) || (`type` == classOf[java.lang.Integer])) {
           return java.lang.Integer.valueOf(string).asInstanceOf[T]
         } else ()
-        if ((`type` == classOf[java.lang.Class]) || (`type` == classOf[java.lang.Class])) {
+        if ((`type` == classOf[scala.Float]) || (`type` == classOf[java.lang.Float])) {
           return java.lang.Float.valueOf(string).asInstanceOf[T]
         } else ()
-        if ((`type` == classOf[java.lang.Class]) || (`type` == classOf[java.lang.Class])) {
+        if ((`type` == classOf[scala.Long]) || (`type` == classOf[java.lang.Long])) {
           return java.lang.Long.valueOf(string).asInstanceOf[T]
         } else ()
-        if ((`type` == classOf[java.lang.Class]) || (`type` == classOf[java.lang.Class])) {
+        if ((`type` == classOf[scala.Double]) || (`type` == classOf[java.lang.Double])) {
           return java.lang.Double.valueOf(string).asInstanceOf[T]
         } else ()
-        if ((`type` == classOf[java.lang.Class]) || (`type` == classOf[java.lang.Class])) {
+        if ((`type` == classOf[scala.Short]) || (`type` == classOf[java.lang.Short])) {
           return java.lang.Short.valueOf(string).asInstanceOf[T]
         } else ()
-        if ((`type` == classOf[java.lang.Class]) || (`type` == classOf[java.lang.Class])) {
+        if ((`type` == classOf[scala.Byte]) || (`type` == classOf[java.lang.Byte])) {
           return java.lang.Byte.valueOf(string).asInstanceOf[T]
         } else ()
       } catch {
@@ -1101,32 +1101,32 @@ class Json {
           ()
         }
       }
-      if ((`type` == classOf[java.lang.Class]) || (`type` == classOf[java.lang.Class])) {
+      if ((`type` == classOf[scala.Boolean]) || (`type` == classOf[java.lang.Boolean])) {
         return java.lang.Boolean.valueOf(string).asInstanceOf[T]
       } else ()
-      if ((`type` == classOf[java.lang.Class]) || (`type` == classOf[java.lang.Class])) {
+      if ((`type` == classOf[scala.Char]) || (`type` == classOf[java.lang.Character])) {
         return string.charAt(0).asInstanceOf[java.lang.Character].asInstanceOf[T]
       } else ()
-      if (com.badlogic.gdx.utils.reflect.ClassReflection.isAssignableFrom(classOf[java.lang.Class], `type`)) {
-        val constants: scala.Array[java.lang.Enum] = `type`.getEnumConstants().asInstanceOf[scala.Array[java.lang.Enum]]
+      if (com.badlogic.gdx.utils.reflect.ClassReflection.isAssignableFrom(classOf[java.lang.Enum[?]], `type`)) {
+        val constants: scala.Array[java.lang.Enum[?]] = `type`.getEnumConstants().asInstanceOf[scala.Array[java.lang.Enum[?]]].asInstanceOf[scala.Array[java.lang.Enum[?]]];
         { var i: scala.Int = 0; val n: scala.Int = constants.length; while (i < n) { {
-          val e: java.lang.Enum = constants(i)
+          val e: java.lang.Enum[?] = constants(i)
           if (string.equals(this.convertToString(e))) {
             return e.asInstanceOf[T]
           } else ()
         }; i = i + 1 } }
       } else ()
-      if (`type` == classOf[java.lang.Class]) {
+      if (`type` == classOf[java.lang.CharSequence]) {
         return string.asInstanceOf[T]
       } else ()
       throw new com.badlogic.gdx.utils.SerializationException(((("Unable to convert value to required type: " + jsonData) + " (") + `type`.getName()) + ")")
     } else ()
-    return null
+    return null.asInstanceOf[T]
   }
   def copyFields(from: java.lang.Object, to: java.lang.Object): scala.Unit = {
-    val toFields: com.badlogic.gdx.utils.OrderedMap[java.lang.String, FieldMetadata] = this.getFields(to.getClass())
+    val toFields: com.badlogic.gdx.utils.OrderedMap[java.lang.String, com.badlogic.gdx.utils.Json.FieldMetadata] = this.getFields(to.getClass())
     for (entry <- this.getFields(from.getClass())) {
-      val toField: FieldMetadata = toFields.get(entry.key)
+      val toField: com.badlogic.gdx.utils.Json.FieldMetadata = toFields.get(entry.key)
       val fromField: com.badlogic.gdx.utils.reflect.Field = entry.value.field
       if (toField == null) {
         throw new com.badlogic.gdx.utils.SerializationException("To object is missing field: " + entry.key)
@@ -1140,20 +1140,20 @@ class Json {
       }
     }
   }
-  private def convertToString(e: java.lang.Enum): java.lang.String = {
+  private def convertToString(e: java.lang.Enum[?]): java.lang.String = {
     return if (this.enumNames) e.name() else e.toString()
   }
   private def convertToString(`object`: java.lang.Object): java.lang.String = {
-    if (`object`.isInstanceOf[java.lang.Enum]) {
-      return this.convertToString(`object`.asInstanceOf[java.lang.Enum])
+    if (`object`.isInstanceOf[java.lang.Enum[?]]) {
+      return this.convertToString(`object`.asInstanceOf[java.lang.Enum[?]])
     } else ()
-    if (`object`.isInstanceOf[java.lang.Class]) {
-      return `object`.asInstanceOf[java.lang.Class].getName()
+    if (`object`.isInstanceOf[java.lang.Class[?]]) {
+      return `object`.asInstanceOf[java.lang.Class[?]].getName()
     } else ()
     return java.lang.String.valueOf(`object`)
   }
-  protected def newInstance(type$arg: java.lang.Class): java.lang.Object = {
-    var `type`: java.lang.Class = type$arg
+  def newInstance(type$arg: java.lang.Class[?]): java.lang.Object = {
+    var `type`: java.lang.Class[?] = type$arg
     try {
       return com.badlogic.gdx.utils.reflect.ClassReflection.newInstance(`type`)
     } catch {
@@ -1167,7 +1167,7 @@ class Json {
             ()
           }
           case ignored: com.badlogic.gdx.utils.reflect.ReflectionException => {
-            if (com.badlogic.gdx.utils.reflect.ClassReflection.isAssignableFrom(classOf[java.lang.Class], `type`)) {
+            if (com.badlogic.gdx.utils.reflect.ClassReflection.isAssignableFrom(classOf[java.lang.Enum[?]], `type`)) {
               if (`type`.getEnumConstants() == null) {
                 `type` = `type`.getSuperclass()
               } else ()
@@ -1203,39 +1203,39 @@ class Json {
   def prettyPrint(json: java.lang.String, singleLineColumns: scala.Int): java.lang.String = {
     return this.reader.parse(json).prettyPrint(this.outputType, singleLineColumns)
   }
-  def prettyPrint(`object`: java.lang.Object, settings: com.badlogic.gdx.utils.JsonValue#PrettyPrintSettings): java.lang.String = {
+  def prettyPrint(`object`: java.lang.Object, settings: com.badlogic.gdx.utils.JsonValue.PrettyPrintSettings): java.lang.String = {
     return this.prettyPrint(this.toJson(`object`), settings)
   }
-  def prettyPrint(json: java.lang.String, settings: com.badlogic.gdx.utils.JsonValue#PrettyPrintSettings): java.lang.String = {
+  def prettyPrint(json: java.lang.String, settings: com.badlogic.gdx.utils.JsonValue.PrettyPrintSettings): java.lang.String = {
     return this.reader.parse(json).prettyPrint(settings)
   }
+}
+object Json {
+  private final val debug: scala.Boolean = false
   private class FieldMetadata {
     var field: com.badlogic.gdx.utils.reflect.Field = null.asInstanceOf[com.badlogic.gdx.utils.reflect.Field]
-    var elementType: java.lang.Class = null.asInstanceOf[java.lang.Class]
+    var elementType: java.lang.Class[?] = null.asInstanceOf[java.lang.Class[?]]
     var deprecated: scala.Boolean = false
     def this(field: com.badlogic.gdx.utils.reflect.Field) = {
       this()
       this.field = field
-      val index: scala.Int = if (com.badlogic.gdx.utils.reflect.ClassReflection.isAssignableFrom(classOf[java.lang.Class], field.getType()) || com.badlogic.gdx.utils.reflect.ClassReflection.isAssignableFrom(classOf[java.lang.Class], field.getType())) 1 else 0
+      val index: scala.Int = if (com.badlogic.gdx.utils.reflect.ClassReflection.isAssignableFrom(classOf[com.badlogic.gdx.utils.ObjectMap[?, ?]], field.getType()) || com.badlogic.gdx.utils.reflect.ClassReflection.isAssignableFrom(classOf[java.util.Map[?, ?]], field.getType())) 1 else 0
       this.elementType = field.getElementType(index)
-      this.deprecated = field.isAnnotationPresent(classOf[java.lang.Class])
+      this.deprecated = field.isAnnotationPresent(classOf[java.lang.Deprecated])
     }
   }
   trait Serializer[T] {
-    def write(json: Json, `object`: T, knownType: java.lang.Class): scala.Unit
-    def read(json: Json, jsonData: com.badlogic.gdx.utils.JsonValue, `type`: java.lang.Class): T
+    def write(json: Json, `object`: T, knownType: java.lang.Class[?]): scala.Unit
+    def read(json: Json, jsonData: com.badlogic.gdx.utils.JsonValue, `type`: java.lang.Class[?]): T
   }
-  abstract class ReadOnlySerializer[T] extends Serializer[T] {
-    def write(json: Json, `object`: T, knownType: java.lang.Class): scala.Unit = {
+  abstract class ReadOnlySerializer[T] extends com.badlogic.gdx.utils.Json.Serializer[T] {
+    def write(json: Json, `object`: T, knownType: java.lang.Class[?]): scala.Unit = {
       ()
     }
-    def read(json: Json, jsonData: com.badlogic.gdx.utils.JsonValue, `type`: java.lang.Class): T
+    def read(json: Json, jsonData: com.badlogic.gdx.utils.JsonValue, `type`: java.lang.Class[?]): T
   }
   trait Serializable {
     def write(json: Json): scala.Unit
     def read(json: Json, jsonData: com.badlogic.gdx.utils.JsonValue): scala.Unit
   }
-}
-object Json {
-  private final val debug: scala.Boolean = false
 }

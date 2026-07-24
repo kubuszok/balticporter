@@ -1,7 +1,7 @@
 package com.badlogic.gdx.graphics.g2d
 
-class GlyphLayout extends com.badlogic.gdx.utils.Pool#Poolable {
-  final val runs: com.badlogic.gdx.utils.Array[GlyphRun] = new com.badlogic.gdx.utils.Array(1)
+class GlyphLayout extends com.badlogic.gdx.utils.Pool.Poolable {
+  final val runs: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.GlyphLayout.GlyphRun] = new com.badlogic.gdx.utils.Array(1)
   final val colors: com.badlogic.gdx.utils.IntArray = new com.badlogic.gdx.utils.IntArray(2)
   var glyphCount: scala.Int = 0
   var width: scala.Float = 0.0f
@@ -28,7 +28,7 @@ class GlyphLayout extends com.badlogic.gdx.utils.Pool#Poolable {
     var start: scala.Int = start$arg
     var targetWidth: scala.Float = targetWidth$arg
     this.reset()
-    val fontData: com.badlogic.gdx.graphics.g2d.BitmapFont#BitmapFontData = font.data
+    val fontData: com.badlogic.gdx.graphics.g2d.BitmapFont.BitmapFontData = font.data
     if (start == `end`) {
       this.height = fontData.capHeight
       return
@@ -47,8 +47,8 @@ class GlyphLayout extends com.badlogic.gdx.utils.Pool#Poolable {
     var isLastRun: scala.Boolean = false
     var y: scala.Float = 0
     val down: scala.Float = fontData.down
-    var lineRun: GlyphRun = null
-    var lastGlyph: com.badlogic.gdx.graphics.g2d.BitmapFont#Glyph = null
+    var lineRun: com.badlogic.gdx.graphics.g2d.GlyphLayout.GlyphRun = null
+    var lastGlyph: com.badlogic.gdx.graphics.g2d.BitmapFont.Glyph = null
     var runStart: scala.Int = start
     while (true) {
       var runEnd: scala.Int = 0
@@ -88,9 +88,9 @@ class GlyphLayout extends com.badlogic.gdx.utils.Pool#Poolable {
             /* continue */ ()
           }
         }
-      }
+      };
       {
-        val run: GlyphRun = GlyphLayout.glyphRunPool.obtain()
+        val run: com.badlogic.gdx.graphics.g2d.GlyphLayout.GlyphRun = GlyphLayout.glyphRunPool.obtain()
         run.x = 0
         run.y = y
         fontData.getGlyphs(run, str, runStart, runEnd, lastGlyph)
@@ -128,9 +128,9 @@ class GlyphLayout extends com.badlogic.gdx.utils.Pool#Poolable {
           /* break */ ()
         } else ()
         if (newline || isLastRun) {
-          var runWidth: scala.Float = lineRun.xAdvances.first() + lineRun.xAdvances.get(1)
+          var runWidth: scala.Float = lineRun.xAdvances.first() + lineRun.xAdvances.get(1);
           { var i: scala.Int = 2; while (i < lineRun.xAdvances.size) { {
-            val glyph: com.badlogic.gdx.graphics.g2d.BitmapFont#Glyph = lineRun.glyphs.get(i - 1)
+            val glyph: com.badlogic.gdx.graphics.g2d.BitmapFont.Glyph = lineRun.glyphs.get(i - 1)
             val glyphWidth: scala.Float = this.getGlyphWidth(glyph, fontData)
             if (((runWidth + glyphWidth) - GlyphLayout.epsilon) <= targetWidth) {
               runWidth = runWidth + lineRun.xAdvances.items(i)
@@ -175,17 +175,17 @@ class GlyphLayout extends com.badlogic.gdx.utils.Pool#Poolable {
       GlyphLayout.colorStack.clear()
     } else ()
   }
-  private def calculateWidths(fontData: com.badlogic.gdx.graphics.g2d.BitmapFont#BitmapFontData): scala.Unit = {
+  private def calculateWidths(fontData: com.badlogic.gdx.graphics.g2d.BitmapFont.BitmapFontData): scala.Unit = {
     var width: scala.Float = 0
-    val runsItems: scala.Array[java.lang.Object] = this.runs.items
+    val runsItems: scala.Array[java.lang.Object] = this.runs.items.asInstanceOf[scala.Array[java.lang.Object]];
     { var i: scala.Int = 0; val n: scala.Int = this.runs.size; while (i < n) { {
-      val run: GlyphRun = runsItems(i).asInstanceOf[GlyphRun]
+      val run: com.badlogic.gdx.graphics.g2d.GlyphLayout.GlyphRun = runsItems(i).asInstanceOf[com.badlogic.gdx.graphics.g2d.GlyphLayout.GlyphRun]
       val xAdvances: scala.Array[scala.Float] = run.xAdvances.items
       var runWidth: scala.Float = run.x + xAdvances(0)
       var max: scala.Float = 0
-      val glyphs: scala.Array[java.lang.Object] = run.glyphs.items
+      val glyphs: scala.Array[java.lang.Object] = run.glyphs.items.asInstanceOf[scala.Array[java.lang.Object]];
       { var ii: scala.Int = 0; val nn: scala.Int = run.glyphs.size; while (ii < nn) { {
-        val glyph: com.badlogic.gdx.graphics.g2d.BitmapFont#Glyph = glyphs(ii).asInstanceOf[com.badlogic.gdx.graphics.g2d.BitmapFont#Glyph]
+        val glyph: com.badlogic.gdx.graphics.g2d.BitmapFont.Glyph = glyphs(ii).asInstanceOf[com.badlogic.gdx.graphics.g2d.BitmapFont.Glyph]
         val glyphWidth: scala.Float = this.getGlyphWidth(glyph, fontData)
         max = java.lang.Math.max(max, runWidth + glyphWidth)
         ii = ii + 1
@@ -199,22 +199,22 @@ class GlyphLayout extends com.badlogic.gdx.utils.Pool#Poolable {
   private def alignRuns(targetWidth: scala.Float, halign: scala.Int): scala.Unit = {
     if ((halign & com.badlogic.gdx.utils.Align.left) == 0) {
       val center: scala.Boolean = (halign & com.badlogic.gdx.utils.Align.center) != 0
-      val runsItems: scala.Array[java.lang.Object] = this.runs.items
+      val runsItems: scala.Array[java.lang.Object] = this.runs.items.asInstanceOf[scala.Array[java.lang.Object]];
       { var i: scala.Int = 0; val n: scala.Int = this.runs.size; while (i < n) { {
-        val run: GlyphRun = runsItems(i).asInstanceOf[GlyphRun]
+        val run: com.badlogic.gdx.graphics.g2d.GlyphLayout.GlyphRun = runsItems(i).asInstanceOf[com.badlogic.gdx.graphics.g2d.GlyphLayout.GlyphRun]
         run.x = run.x + (if (center) 0.5f * (targetWidth - run.width) else targetWidth - run.width)
       }; i = i + 1 } }
     } else ()
   }
-  private def truncate(fontData: com.badlogic.gdx.graphics.g2d.BitmapFont#BitmapFontData, run: GlyphRun, targetWidth$arg: scala.Float, truncate: java.lang.String): scala.Unit = {
+  private def truncate(fontData: com.badlogic.gdx.graphics.g2d.BitmapFont.BitmapFontData, run: com.badlogic.gdx.graphics.g2d.GlyphLayout.GlyphRun, targetWidth$arg: scala.Float, truncate: java.lang.String): scala.Unit = {
     var targetWidth: scala.Float = targetWidth$arg
     var glyphCount: scala.Int = run.glyphs.size
-    val truncateRun: GlyphRun = GlyphLayout.glyphRunPool.obtain()
+    val truncateRun: com.badlogic.gdx.graphics.g2d.GlyphLayout.GlyphRun = GlyphLayout.glyphRunPool.obtain()
     fontData.getGlyphs(truncateRun, truncate, 0, truncate.length(), null)
     var truncateWidth: scala.Float = 0
     if (truncateRun.xAdvances.size > 0) {
       this.setLastGlyphXAdvance(fontData, truncateRun)
-      val xAdvances: scala.Array[scala.Float] = truncateRun.xAdvances.items
+      val xAdvances: scala.Array[scala.Float] = truncateRun.xAdvances.items;
       { var i: scala.Int = 1; val n: scala.Int = truncateRun.xAdvances.size; while (i < n) { {
         truncateWidth = truncateWidth + xAdvances(i)
       }; i = i + 1 } }
@@ -256,26 +256,26 @@ class GlyphLayout extends com.badlogic.gdx.utils.Pool#Poolable {
     this.glyphCount = this.glyphCount + truncate.length()
     GlyphLayout.glyphRunPool.free(truncateRun)
   }
-  private def wrap(fontData: com.badlogic.gdx.graphics.g2d.BitmapFont#BitmapFontData, first: GlyphRun, wrapIndex: scala.Int): GlyphRun = {
-    val glyphs2: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.BitmapFont#Glyph] = first.glyphs
+  private def wrap(fontData: com.badlogic.gdx.graphics.g2d.BitmapFont.BitmapFontData, first: com.badlogic.gdx.graphics.g2d.GlyphLayout.GlyphRun, wrapIndex: scala.Int): com.badlogic.gdx.graphics.g2d.GlyphLayout.GlyphRun = {
+    val glyphs2: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.BitmapFont.Glyph] = first.glyphs
     var glyphCount: scala.Int = first.glyphs.size
     val xAdvances2: com.badlogic.gdx.utils.FloatArray = first.xAdvances
-    var firstEnd: scala.Int = wrapIndex
+    var firstEnd: scala.Int = wrapIndex;
     { ; while (firstEnd > 0) { {
       if (!fontData.isWhitespace(glyphs2.get(firstEnd - 1).id.asInstanceOf[scala.Char])) {
         /* break */ ()
       } else ()
     }; firstEnd = firstEnd - 1 } }
-    var secondStart: scala.Int = wrapIndex
+    var secondStart: scala.Int = wrapIndex;
     { ; while (secondStart < glyphCount) { {
       if (!fontData.isWhitespace(glyphs2.get(secondStart).id.asInstanceOf[scala.Char])) {
         /* break */ ()
       } else ()
     }; secondStart = secondStart + 1 } }
-    var second: GlyphRun = null
+    var second: com.badlogic.gdx.graphics.g2d.GlyphLayout.GlyphRun = null
     if (secondStart < glyphCount) {
       second = GlyphLayout.glyphRunPool.obtain()
-      val glyphs1: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.BitmapFont#Glyph] = second.glyphs
+      val glyphs1: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.BitmapFont.Glyph] = second.glyphs
       glyphs1.addAll(glyphs2, 0, firstEnd)
       glyphs2.removeRange(0, secondStart - 1)
       first.glyphs = glyphs1
@@ -291,7 +291,7 @@ class GlyphLayout extends com.badlogic.gdx.utils.Pool#Poolable {
       val droppedGlyphCount: scala.Int = (glyphCount - firstGlyphCount) - secondGlyphCount
       this.glyphCount = this.glyphCount - droppedGlyphCount
       if (fontData.markupEnabled && (droppedGlyphCount > 0)) {
-        val reductionThreshold: scala.Int = this.glyphCount - secondGlyphCount
+        val reductionThreshold: scala.Int = this.glyphCount - secondGlyphCount;
         { var i: scala.Int = this.colors.size - 2; while (i >= 2) { {
           val colorChangeIndex: scala.Int = this.colors.get(i)
           if (colorChangeIndex <= reductionThreshold) {
@@ -324,17 +324,17 @@ class GlyphLayout extends com.badlogic.gdx.utils.Pool#Poolable {
     }
     return second
   }
-  private def setLastGlyphXAdvance(fontData: com.badlogic.gdx.graphics.g2d.BitmapFont#BitmapFontData, run: GlyphRun): scala.Unit = {
-    val last: com.badlogic.gdx.graphics.g2d.BitmapFont#Glyph = run.glyphs.peek()
+  private def setLastGlyphXAdvance(fontData: com.badlogic.gdx.graphics.g2d.BitmapFont.BitmapFontData, run: com.badlogic.gdx.graphics.g2d.GlyphLayout.GlyphRun): scala.Unit = {
+    val last: com.badlogic.gdx.graphics.g2d.BitmapFont.Glyph = run.glyphs.peek()
     if (!last.fixedWidth) {
       run.xAdvances.items(run.xAdvances.size - 1) = this.getGlyphWidth(last, fontData)
     } else ()
   }
-  private def getGlyphWidth(glyph: com.badlogic.gdx.graphics.g2d.BitmapFont#Glyph, fontData: com.badlogic.gdx.graphics.g2d.BitmapFont#BitmapFontData): scala.Float = {
+  private def getGlyphWidth(glyph: com.badlogic.gdx.graphics.g2d.BitmapFont.Glyph, fontData: com.badlogic.gdx.graphics.g2d.BitmapFont.BitmapFontData): scala.Float = {
     return ((if (glyph.fixedWidth) glyph.xadvance else glyph.width + glyph.xoffset) * fontData.scaleX) - fontData.padRight
   }
-  private def getLineOffset(glyphs: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.BitmapFont#Glyph], fontData: com.badlogic.gdx.graphics.g2d.BitmapFont#BitmapFontData): scala.Float = {
-    val first: com.badlogic.gdx.graphics.g2d.BitmapFont#Glyph = glyphs.first()
+  private def getLineOffset(glyphs: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.BitmapFont.Glyph], fontData: com.badlogic.gdx.graphics.g2d.BitmapFont.BitmapFontData): scala.Float = {
+    val first: com.badlogic.gdx.graphics.g2d.BitmapFont.Glyph = glyphs.first()
     return (if (first.fixedWidth) 0 else (-first.xoffset) * fontData.scaleX) - fontData.padLeft
   }
   private def parseColorMarkup(str: java.lang.CharSequence, start: scala.Int, `end`: scala.Int): scala.Int = {
@@ -343,7 +343,7 @@ class GlyphLayout extends com.badlogic.gdx.utils.Pool#Poolable {
     } else ()
     str.charAt(start) match {
       case '#' => {
-        var color: scala.Int = 0
+        var color: scala.Int = 0;
         { var i: scala.Int = start + 1; while (i < `end`) { {
           val ch: scala.Char = str.charAt(i)
           if (ch == ']') {
@@ -382,7 +382,7 @@ class GlyphLayout extends com.badlogic.gdx.utils.Pool#Poolable {
         } else ()
         return 0
       }
-    }
+    };
     { var i: scala.Int = start + 1; while (i < `end`) { {
       val ch: scala.Char = str.charAt(i)
       if (ch != ']') {
@@ -413,7 +413,7 @@ class GlyphLayout extends com.badlogic.gdx.utils.Pool#Poolable {
     buffer.append(this.width)
     buffer.append('x')
     buffer.append(this.height)
-    buffer.append('\n')
+    buffer.append('\n');
     { var i: scala.Int = 0; val n: scala.Int = this.runs.size; while (i < n) { {
       buffer.append(this.runs.get(i).toString())
       buffer.append('\n')
@@ -421,13 +421,18 @@ class GlyphLayout extends com.badlogic.gdx.utils.Pool#Poolable {
     buffer.setLength(buffer.length() - 1)
     return buffer.toString()
   }
-  class GlyphRun extends com.badlogic.gdx.utils.Pool#Poolable {
-    var glyphs: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.BitmapFont#Glyph] = new com.badlogic.gdx.utils.Array()
+}
+object GlyphLayout {
+  private final val glyphRunPool: com.badlogic.gdx.utils.Pool[com.badlogic.gdx.graphics.g2d.GlyphLayout.GlyphRun] = new com.badlogic.gdx.utils.DefaultPool[com.badlogic.gdx.graphics.g2d.GlyphLayout.GlyphRun](com.badlogic.gdx.graphics.g2d.GlyphLayout.GlyphRun.<init>)
+  private final val colorStack: com.badlogic.gdx.utils.IntArray = new com.badlogic.gdx.utils.IntArray(4)
+  private final val epsilon: scala.Float = 1.0E-4f
+  class GlyphRun extends com.badlogic.gdx.utils.Pool.Poolable {
+    var glyphs: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.BitmapFont.Glyph] = new com.badlogic.gdx.utils.Array()
     var xAdvances: com.badlogic.gdx.utils.FloatArray = new com.badlogic.gdx.utils.FloatArray()
     var x: scala.Float = 0.0f
     var y: scala.Float = 0.0f
     var width: scala.Float = 0.0f
-    def appendRun(run: GlyphRun): scala.Unit = {
+    def appendRun(run: com.badlogic.gdx.graphics.g2d.GlyphLayout.GlyphRun): scala.Unit = {
       this.glyphs.addAll(run.glyphs)
       if (this.xAdvances.notEmpty()) {
         this.xAdvances.size = this.xAdvances.size - 1
@@ -440,9 +445,9 @@ class GlyphLayout extends com.badlogic.gdx.utils.Pool#Poolable {
     }
     def toString(): java.lang.String = {
       val buffer: java.lang.StringBuilder = new java.lang.StringBuilder(this.glyphs.size + 32)
-      val glyphs: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.BitmapFont#Glyph] = this.glyphs
+      val glyphs: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.BitmapFont.Glyph] = this.glyphs;
       { var i: scala.Int = 0; val n: scala.Int = glyphs.size; while (i < n) { {
-        val g: com.badlogic.gdx.graphics.g2d.BitmapFont#Glyph = glyphs.get(i)
+        val g: com.badlogic.gdx.graphics.g2d.BitmapFont.Glyph = glyphs.get(i)
         buffer.append(g.id.asInstanceOf[scala.Char])
       }; i = i + 1 } }
       buffer.append(", ")
@@ -454,9 +459,4 @@ class GlyphLayout extends com.badlogic.gdx.utils.Pool#Poolable {
       return buffer.toString()
     }
   }
-}
-object GlyphLayout {
-  private final val glyphRunPool: com.badlogic.gdx.utils.Pool[GlyphRun] = new com.badlogic.gdx.utils.DefaultPool[GlyphRun](GlyphRun.<init>)
-  private final val colorStack: com.badlogic.gdx.utils.IntArray = new com.badlogic.gdx.utils.IntArray(4)
-  private final val epsilon: scala.Float = 1.0E-4f
 }

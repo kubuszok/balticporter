@@ -1,7 +1,7 @@
 package com.badlogic.gdx.input
 
 class GestureDetector extends com.badlogic.gdx.InputAdapter {
-  var listener: GestureListener = null.asInstanceOf[GestureListener]
+  var listener: com.badlogic.gdx.input.GestureDetector.GestureListener = null.asInstanceOf[com.badlogic.gdx.input.GestureDetector.GestureListener]
   private var tapRectangleWidth: scala.Float = 0.0f
   private var tapRectangleHeight: scala.Float = 0.0f
   private var tapCountInterval: scala.Long = 0L
@@ -17,7 +17,7 @@ class GestureDetector extends com.badlogic.gdx.InputAdapter {
   var longPressFired: scala.Boolean = false
   private var pinching: scala.Boolean = false
   private var panning: scala.Boolean = false
-  private final val tracker: VelocityTracker = new VelocityTracker()
+  private final val tracker: com.badlogic.gdx.input.GestureDetector.VelocityTracker = new com.badlogic.gdx.input.GestureDetector.VelocityTracker()
   private var tapRectangleCenterX: scala.Float = 0.0f
   private var tapRectangleCenterY: scala.Float = 0.0f
   private var touchDownTime: scala.Long = 0L
@@ -25,23 +25,23 @@ class GestureDetector extends com.badlogic.gdx.InputAdapter {
   private final val pointer2: com.badlogic.gdx.math.Vector2 = new com.badlogic.gdx.math.Vector2()
   private final val initialPointer1: com.badlogic.gdx.math.Vector2 = new com.badlogic.gdx.math.Vector2()
   private final val initialPointer2: com.badlogic.gdx.math.Vector2 = new com.badlogic.gdx.math.Vector2()
-  private final val longPressTask: com.badlogic.gdx.utils.Timer#Task = new com.badlogic.gdx.utils.Timer#Task()
-  def this(halfTapRectangleWidth: scala.Float, halfTapRectangleHeight: scala.Float, tapCountInterval: scala.Float, longPressDuration: scala.Float, maxFlingDelay: scala.Float, listener: GestureListener) = {
+  private final val longPressTask: com.badlogic.gdx.utils.Timer.Task = new com.badlogic.gdx.utils.Timer.Task()
+  def this(halfTapRectangleWidth: scala.Float, halfTapRectangleHeight: scala.Float, tapCountInterval: scala.Float, longPressDuration: scala.Float, maxFlingDelay: scala.Float, listener: com.badlogic.gdx.input.GestureDetector.GestureListener) = {
     this()
     if (listener == null) {
       throw new java.lang.IllegalArgumentException("listener cannot be null.")
     } else ()
     this.tapRectangleWidth = halfTapRectangleWidth
     this.tapRectangleHeight = halfTapRectangleHeight
-    this.tapCountInterval = (tapCountInterval * 1000000000L).asInstanceOf[scala.Long]
+    this.tapCountInterval = (tapCountInterval * 1000000000L).asInstanceOf[scala.Long].asInstanceOf[scala.Long]
     this.longPressSeconds = longPressDuration
-    this.maxFlingDelay = (maxFlingDelay * 1000000000L).asInstanceOf[scala.Long]
+    this.maxFlingDelay = (maxFlingDelay * 1000000000L).asInstanceOf[scala.Long].asInstanceOf[scala.Long]
     this.listener = listener
   }
-  def this(halfTapSquareSize: scala.Float, tapCountInterval: scala.Float, longPressDuration: scala.Float, maxFlingDelay: scala.Float, listener: GestureListener) = {
+  def this(halfTapSquareSize: scala.Float, tapCountInterval: scala.Float, longPressDuration: scala.Float, maxFlingDelay: scala.Float, listener: com.badlogic.gdx.input.GestureDetector.GestureListener) = {
     this(halfTapSquareSize, halfTapSquareSize, tapCountInterval, longPressDuration, maxFlingDelay, listener)
   }
-  def this(listener: GestureListener) = {
+  def this(listener: com.badlogic.gdx.input.GestureDetector.GestureListener) = {
     this(20, 0.4f, 1.1f, java.lang.Integer.MAX_VALUE, listener)
   }
   def touchDown(x: scala.Int, y: scala.Int, pointer: scala.Int, button: scala.Int): scala.Boolean = {
@@ -204,7 +204,7 @@ class GestureDetector extends com.badlogic.gdx.InputAdapter {
     this.tapRectangleHeight = halfTapRectangleHeight
   }
   def setTapCountInterval(tapCountInterval: scala.Float): scala.Unit = {
-    this.tapCountInterval = (tapCountInterval * 1000000000L).asInstanceOf[scala.Long]
+    this.tapCountInterval = (tapCountInterval * 1000000000L).asInstanceOf[scala.Long].asInstanceOf[scala.Long]
   }
   def setLongPressSeconds(longPressSeconds: scala.Float): scala.Unit = {
     this.longPressSeconds = longPressSeconds
@@ -212,6 +212,8 @@ class GestureDetector extends com.badlogic.gdx.InputAdapter {
   def setMaxFlingDelay(maxFlingDelay: scala.Long): scala.Unit = {
     this.maxFlingDelay = maxFlingDelay
   }
+}
+object GestureDetector {
   trait GestureListener {
     def touchDown(x: scala.Float, y: scala.Float, pointer: scala.Int, button: scala.Int): scala.Boolean
     def tap(x: scala.Float, y: scala.Float, count: scala.Int, button: scala.Int): scala.Boolean
@@ -223,7 +225,7 @@ class GestureDetector extends com.badlogic.gdx.InputAdapter {
     def pinch(initialPointer1: com.badlogic.gdx.math.Vector2, initialPointer2: com.badlogic.gdx.math.Vector2, pointer1: com.badlogic.gdx.math.Vector2, pointer2: com.badlogic.gdx.math.Vector2): scala.Boolean
     def pinchStop(): scala.Unit
   }
-  class GestureAdapter extends GestureListener {
+  class GestureAdapter extends com.badlogic.gdx.input.GestureDetector.GestureListener {
     def touchDown(x: scala.Float, y: scala.Float, pointer: scala.Int, button: scala.Int): scala.Boolean = {
       return false
     }
@@ -268,7 +270,7 @@ class GestureDetector extends com.badlogic.gdx.InputAdapter {
       this.lastY = y
       this.deltaX = 0
       this.deltaY = 0
-      this.numSamples = 0
+      this.numSamples = 0;
       { var i: scala.Int = 0; while (i < this.sampleSize) { {
         this.meanX(i) = 0
         this.meanY(i) = 0
@@ -308,7 +310,7 @@ class GestureDetector extends com.badlogic.gdx.InputAdapter {
     private def getAverage(values: scala.Array[scala.Float], numSamples$arg: scala.Int): scala.Float = {
       var numSamples: scala.Int = numSamples$arg
       numSamples = java.lang.Math.min(this.sampleSize, numSamples)
-      var sum: scala.Float = 0
+      var sum: scala.Float = 0;
       { var i: scala.Int = 0; while (i < numSamples) { {
         sum = sum + values(i)
       }; i = i + 1 } }
@@ -317,7 +319,7 @@ class GestureDetector extends com.badlogic.gdx.InputAdapter {
     private def getAverage(values: scala.Array[scala.Long], numSamples$arg: scala.Int): scala.Long = {
       var numSamples: scala.Int = numSamples$arg
       numSamples = java.lang.Math.min(this.sampleSize, numSamples)
-      var sum: scala.Long = 0
+      var sum: scala.Long = 0;
       { var i: scala.Int = 0; while (i < numSamples) { {
         sum = sum + values(i)
       }; i = i + 1 } }
@@ -329,7 +331,7 @@ class GestureDetector extends com.badlogic.gdx.InputAdapter {
     private def getSum(values: scala.Array[scala.Float], numSamples$arg: scala.Int): scala.Float = {
       var numSamples: scala.Int = numSamples$arg
       numSamples = java.lang.Math.min(this.sampleSize, numSamples)
-      var sum: scala.Float = 0
+      var sum: scala.Float = 0;
       { var i: scala.Int = 0; while (i < numSamples) { {
         sum = sum + values(i)
       }; i = i + 1 } }

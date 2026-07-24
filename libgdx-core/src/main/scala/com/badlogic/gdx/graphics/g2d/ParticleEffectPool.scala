@@ -6,7 +6,7 @@ class ParticleEffectPool extends com.badlogic.gdx.utils.Pool[PooledEffect] {
     this()
     this.effect = effect
   }
-  protected def newObject(): PooledEffect = {
+  def newObject(): PooledEffect = {
     val pooledEffect: PooledEffect = new PooledEffect(this.effect)
     pooledEffect.start()
     return pooledEffect
@@ -16,7 +16,7 @@ class ParticleEffectPool extends com.badlogic.gdx.utils.Pool[PooledEffect] {
     effect.reset(false)
     if (((effect.xSizeScale != this.effect.xSizeScale) || (effect.ySizeScale != this.effect.ySizeScale)) || (effect.motionScale != this.effect.motionScale)) {
       val emitters: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.ParticleEmitter] = effect.getEmitters()
-      val templateEmitters: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.ParticleEmitter] = this.effect.getEmitters()
+      val templateEmitters: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.ParticleEmitter] = this.effect.getEmitters();
       { var i: scala.Int = 0; while (i < emitters.size) { {
         val emitter: com.badlogic.gdx.graphics.g2d.ParticleEmitter = emitters.get(i)
         val templateEmitter: com.badlogic.gdx.graphics.g2d.ParticleEmitter = templateEmitters.get(i)

@@ -107,7 +107,7 @@ class MapLayer {
   def getProperties(): com.badlogic.gdx.maps.MapProperties = {
     return this.properties
   }
-  protected def calculateRenderOffsets(): scala.Unit = {
+  def calculateRenderOffsets(): scala.Unit = {
     if (this.parent != null) {
       this.parent.calculateRenderOffsets()
       this.renderOffsetX = this.parent.getRenderOffsetX() + this.offsetX

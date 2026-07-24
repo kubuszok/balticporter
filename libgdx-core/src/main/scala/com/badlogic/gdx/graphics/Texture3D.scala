@@ -2,7 +2,7 @@ package com.badlogic.gdx.graphics
 
 class Texture3D extends com.badlogic.gdx.graphics.GLTexture {
   private var data: com.badlogic.gdx.graphics.Texture3DData = null.asInstanceOf[com.badlogic.gdx.graphics.Texture3DData]
-  protected var rWrap: com.badlogic.gdx.graphics.Texture#TextureWrap = com.badlogic.gdx.graphics.Texture.TextureWrap.ClampToEdge
+  var rWrap: com.badlogic.gdx.graphics.Texture.TextureWrap = com.badlogic.gdx.graphics.Texture.TextureWrap.ClampToEdge
   def this(data: com.badlogic.gdx.graphics.Texture3DData) = {
     this()
     if (com.badlogic.gdx.Gdx.gl30 == null) {
@@ -49,26 +49,26 @@ class Texture3D extends com.badlogic.gdx.graphics.GLTexture {
   def isManaged(): scala.Boolean = {
     return this.data.isManaged()
   }
-  protected def reload(): scala.Unit = {
+  def reload(): scala.Unit = {
     if (!this.isManaged()) {
       throw new com.badlogic.gdx.utils.GdxRuntimeException("Tried to reload an unmanaged TextureArray")
     } else ()
     glHandle = com.badlogic.gdx.Gdx.gl.glGenTexture()
     this.load(this.data)
   }
-  def setWrap(u: com.badlogic.gdx.graphics.Texture#TextureWrap, v: com.badlogic.gdx.graphics.Texture#TextureWrap, r: com.badlogic.gdx.graphics.Texture#TextureWrap): scala.Unit = {
+  def setWrap(u: com.badlogic.gdx.graphics.Texture.TextureWrap, v: com.badlogic.gdx.graphics.Texture.TextureWrap, r: com.badlogic.gdx.graphics.Texture.TextureWrap): scala.Unit = {
     this.rWrap = r
     super.setWrap(u, v)
     com.badlogic.gdx.Gdx.gl.glTexParameteri(glTarget, com.badlogic.gdx.graphics.GL30.GL_TEXTURE_WRAP_R, r.getGLEnum())
   }
-  def unsafeSetWrap(u: com.badlogic.gdx.graphics.Texture#TextureWrap, v: com.badlogic.gdx.graphics.Texture#TextureWrap, r: com.badlogic.gdx.graphics.Texture#TextureWrap, force: scala.Boolean): scala.Unit = {
+  def unsafeSetWrap(u: com.badlogic.gdx.graphics.Texture.TextureWrap, v: com.badlogic.gdx.graphics.Texture.TextureWrap, r: com.badlogic.gdx.graphics.Texture.TextureWrap, force: scala.Boolean): scala.Unit = {
     this.unsafeSetWrap(u, v, force)
     if ((r != null) && (force || (this.rWrap != r))) {
       com.badlogic.gdx.Gdx.gl.glTexParameteri(glTarget, com.badlogic.gdx.graphics.GL30.GL_TEXTURE_WRAP_R, u.getGLEnum())
       this.rWrap = r
     } else ()
   }
-  def unsafeSetWrap(u: com.badlogic.gdx.graphics.Texture#TextureWrap, v: com.badlogic.gdx.graphics.Texture#TextureWrap, r: com.badlogic.gdx.graphics.Texture#TextureWrap): scala.Unit = {
+  def unsafeSetWrap(u: com.badlogic.gdx.graphics.Texture.TextureWrap, v: com.badlogic.gdx.graphics.Texture.TextureWrap, r: com.badlogic.gdx.graphics.Texture.TextureWrap): scala.Unit = {
     this.unsafeSetWrap(u, v, r, false)
   }
 }
@@ -89,7 +89,7 @@ object Texture3D {
     val managedTextureArray: com.badlogic.gdx.utils.Array[Texture3D] = Texture3D.managedTexture3Ds.getOrElse(app, null.asInstanceOf[com.badlogic.gdx.utils.Array[Texture3D]])
     if (managedTextureArray == null) {
       return
-    } else ()
+    } else ();
     { var i: scala.Int = 0; while (i < managedTextureArray.size) { {
       val textureArray: Texture3D = managedTextureArray.get(i)
       textureArray.reload()

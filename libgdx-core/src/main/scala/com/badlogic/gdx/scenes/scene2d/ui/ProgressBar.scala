@@ -1,7 +1,7 @@
 package com.badlogic.gdx.scenes.scene2d.ui
 
-class ProgressBar extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlogic.gdx.scenes.scene2d.utils.Disableable with com.badlogic.gdx.scenes.scene2d.ui.Styleable[ProgressBarStyle] {
-  private var style: ProgressBarStyle = null.asInstanceOf[ProgressBarStyle]
+class ProgressBar extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlogic.gdx.scenes.scene2d.utils.Disableable with com.badlogic.gdx.scenes.scene2d.ui.Styleable[com.badlogic.gdx.scenes.scene2d.ui.ProgressBar.ProgressBarStyle] {
+  private var style: com.badlogic.gdx.scenes.scene2d.ui.ProgressBar.ProgressBarStyle = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.ProgressBar.ProgressBarStyle]
   var min: scala.Float = 0.0f
   var max: scala.Float = 0.0f
   var stepSize: scala.Float = 0.0f
@@ -16,7 +16,7 @@ class ProgressBar extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.bad
   var disabled: scala.Boolean = false
   var round$field: scala.Boolean = true
   private var programmaticChangeEvents: scala.Boolean = true
-  def this(min: scala.Float, max: scala.Float, stepSize: scala.Float, vertical: scala.Boolean, style: ProgressBarStyle) = {
+  def this(min: scala.Float, max: scala.Float, stepSize: scala.Float, vertical: scala.Boolean, style: com.badlogic.gdx.scenes.scene2d.ui.ProgressBar.ProgressBarStyle) = {
     this()
     if (min > max) {
       throw new java.lang.IllegalArgumentException((("max must be > min. min,max: " + min) + ", ") + max)
@@ -33,19 +33,19 @@ class ProgressBar extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.bad
     this.setSize(this.getPrefWidth(), this.getPrefHeight())
   }
   def this(min: scala.Float, max: scala.Float, stepSize: scala.Float, vertical: scala.Boolean, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin, styleName: java.lang.String) = {
-    this(min, max, stepSize, vertical, skin.get(styleName, classOf[java.lang.Class]))
+    this(min, max, stepSize, vertical, skin.get(styleName, classOf[com.badlogic.gdx.scenes.scene2d.ui.ProgressBar.ProgressBarStyle]))
   }
   def this(min: scala.Float, max: scala.Float, stepSize: scala.Float, vertical: scala.Boolean, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin) = {
-    this(min, max, stepSize, vertical, skin.get("default-" + (if (vertical) "vertical" else "horizontal"), classOf[java.lang.Class]))
+    this(min, max, stepSize, vertical, skin.get("default-" + (if (vertical) "vertical" else "horizontal"), classOf[com.badlogic.gdx.scenes.scene2d.ui.ProgressBar.ProgressBarStyle]))
   }
-  def setStyle(style: ProgressBarStyle): scala.Unit = {
+  def setStyle(style: com.badlogic.gdx.scenes.scene2d.ui.ProgressBar.ProgressBarStyle): scala.Unit = {
     if (style == null) {
       throw new java.lang.IllegalArgumentException("style cannot be null.")
     } else ()
     this.style = style
     this.invalidateHierarchy()
   }
-  def getStyle(): ProgressBarStyle = {
+  def getStyle(): com.badlogic.gdx.scenes.scene2d.ui.ProgressBar.ProgressBarStyle = {
     return this.style
   }
   def act(delta: scala.Float): scala.Unit = {
@@ -59,7 +59,7 @@ class ProgressBar extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.bad
     } else ()
   }
   def draw(batch: com.badlogic.gdx.graphics.g2d.Batch, parentAlpha: scala.Float): scala.Unit = {
-    val style: ProgressBarStyle = this.style
+    val style: com.badlogic.gdx.scenes.scene2d.ui.ProgressBar.ProgressBarStyle = this.style
     val disabled: scala.Boolean = this.disabled
     val knob: com.badlogic.gdx.scenes.scene2d.utils.Drawable = style.knob
     val currentKnob: com.badlogic.gdx.scenes.scene2d.utils.Drawable = this.getKnobDrawable()
@@ -131,10 +131,10 @@ class ProgressBar extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.bad
     var w: scala.Float = w$arg
     var h: scala.Float = h$arg
     if (this.round$field) {
-      x = java.lang.Math.floor(x).asInstanceOf[scala.Float]
-      y = java.lang.Math.floor(y).asInstanceOf[scala.Float]
-      w = java.lang.Math.ceil(w).asInstanceOf[scala.Float]
-      h = java.lang.Math.ceil(h).asInstanceOf[scala.Float]
+      x = java.lang.Math.floor(x).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
+      y = java.lang.Math.floor(y).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
+      w = java.lang.Math.ceil(w).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
+      h = java.lang.Math.ceil(h).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
     } else ()
     drawable.draw(batch, x, y, w, h)
   }
@@ -162,31 +162,31 @@ class ProgressBar extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.bad
     } else ()
     return this.visualInterpolation.apply((this.getVisualValue() - this.min) / (this.max - this.min))
   }
-  protected def getBackgroundDrawable(): com.badlogic.gdx.scenes.scene2d.utils.Drawable = {
+  def getBackgroundDrawable(): com.badlogic.gdx.scenes.scene2d.utils.Drawable = {
     if (this.disabled && (this.style.disabledBackground != null)) {
       return this.style.disabledBackground
     } else ()
     return this.style.background
   }
-  protected def getKnobDrawable(): com.badlogic.gdx.scenes.scene2d.utils.Drawable = {
+  def getKnobDrawable(): com.badlogic.gdx.scenes.scene2d.utils.Drawable = {
     if (this.disabled && (this.style.disabledKnob != null)) {
       return this.style.disabledKnob
     } else ()
     return this.style.knob
   }
-  protected def getKnobBeforeDrawable(): com.badlogic.gdx.scenes.scene2d.utils.Drawable = {
+  def getKnobBeforeDrawable(): com.badlogic.gdx.scenes.scene2d.utils.Drawable = {
     if (this.disabled && (this.style.disabledKnobBefore != null)) {
       return this.style.disabledKnobBefore
     } else ()
     return this.style.knobBefore
   }
-  protected def getKnobAfterDrawable(): com.badlogic.gdx.scenes.scene2d.utils.Drawable = {
+  def getKnobAfterDrawable(): com.badlogic.gdx.scenes.scene2d.utils.Drawable = {
     if (this.disabled && (this.style.disabledKnobAfter != null)) {
       return this.style.disabledKnobAfter
     } else ()
     return this.style.knobAfter
   }
-  protected def getKnobPosition(): scala.Float = {
+  def getKnobPosition(): scala.Float = {
     return this.position
   }
   def setValue(value$arg: scala.Float): scala.Boolean = {
@@ -199,7 +199,7 @@ class ProgressBar extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.bad
     val oldVisualValue: scala.Float = this.getVisualValue()
     this.value = value
     if (this.programmaticChangeEvents) {
-      val changeEvent: com.badlogic.gdx.scenes.scene2d.utils.ChangeListener#ChangeEvent = com.badlogic.gdx.scenes.scene2d.Actor.POOLS.obtain(classOf[java.lang.Class])
+      val changeEvent: com.badlogic.gdx.scenes.scene2d.utils.ChangeListener.ChangeEvent = com.badlogic.gdx.scenes.scene2d.Actor.POOLS.obtain(classOf[com.badlogic.gdx.scenes.scene2d.utils.ChangeListener.ChangeEvent])
       val cancelled: scala.Boolean = this.fire(changeEvent)
       com.badlogic.gdx.scenes.scene2d.Actor.POOLS.free(changeEvent)
       if (cancelled) {
@@ -213,10 +213,10 @@ class ProgressBar extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.bad
     } else ()
     return true
   }
-  protected def round(value: scala.Float): scala.Float = {
+  def round(value: scala.Float): scala.Float = {
     return java.lang.Math.round(value / this.stepSize) * this.stepSize
   }
-  protected def clamp(value: scala.Float): scala.Float = {
+  def clamp(value: scala.Float): scala.Float = {
     return com.badlogic.gdx.math.MathUtils.clamp(value, this.min, this.max)
   }
   def setRange(min: scala.Float, max: scala.Float): scala.Unit = {
@@ -299,6 +299,8 @@ class ProgressBar extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.bad
   def getProgrammaticChangeEvents(): scala.Boolean = {
     return this.programmaticChangeEvents
   }
+}
+object ProgressBar {
   class ProgressBarStyle {
     var background: com.badlogic.gdx.scenes.scene2d.utils.Drawable = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Drawable]
     var disabledBackground: com.badlogic.gdx.scenes.scene2d.utils.Drawable = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Drawable]
@@ -313,7 +315,7 @@ class ProgressBar extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.bad
       this.background = background
       this.knob = knob
     }
-    def this(style: ProgressBarStyle) = {
+    def this(style: com.badlogic.gdx.scenes.scene2d.ui.ProgressBar.ProgressBarStyle) = {
       this()
       this.background = style.background
       this.disabledBackground = style.disabledBackground

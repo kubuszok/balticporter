@@ -53,12 +53,12 @@ class IsometricTiledMapRenderer extends com.badlogic.gdx.maps.tiled.renderers.Ba
     val row1: scala.Int = (this.translateScreenToIso(this.topLeft).y / tileWidth).asInstanceOf[scala.Int] - 2
     val row2: scala.Int = (this.translateScreenToIso(this.bottomRight).y / tileWidth).asInstanceOf[scala.Int] + 2
     val col1: scala.Int = (this.translateScreenToIso(this.bottomLeft).x / tileWidth).asInstanceOf[scala.Int] - 2
-    val col2: scala.Int = (this.translateScreenToIso(this.topRight).x / tileWidth).asInstanceOf[scala.Int] + 2
+    val col2: scala.Int = (this.translateScreenToIso(this.topRight).x / tileWidth).asInstanceOf[scala.Int] + 2;
     { var row: scala.Int = row2; while (row >= row1) { {
       { var col: scala.Int = col1; while (col <= col2) { {
         val x: scala.Float = (col * halfTileWidth) + (row * halfTileWidth)
         val y: scala.Float = (row * halfTileHeight) - (col * halfTileHeight)
-        val cell: com.badlogic.gdx.maps.tiled.TiledMapTileLayer#Cell = layer.getCell(col, row)
+        val cell: com.badlogic.gdx.maps.tiled.TiledMapTileLayer.Cell = layer.getCell(col, row)
         if (cell == null) {
           /* continue */ ()
         } else ()
@@ -167,8 +167,8 @@ class IsometricTiledMapRenderer extends com.badlogic.gdx.maps.tiled.renderers.Ba
     if (region == null) {
       return
     } else ()
-    val tileHeight: scala.Int = this.getMap().getProperties().get("tileheight", classOf[java.lang.Class])
-    val mapHeight: scala.Int = this.getMap().getProperties().get("height", classOf[java.lang.Class])
+    val tileHeight: scala.Int = this.getMap().getProperties().get("tileheight", classOf[java.lang.Integer])
+    val mapHeight: scala.Int = this.getMap().getProperties().get("height", classOf[java.lang.Integer])
     val mapHeightPixels: scala.Float = (mapHeight * tileHeight) * unitScale
     val halfTileHeight: scala.Float = (tileHeight * 0.5f) * unitScale
     val x: scala.Float = layer.getX()
@@ -212,7 +212,7 @@ class IsometricTiledMapRenderer extends com.badlogic.gdx.maps.tiled.renderers.Ba
       var startX: scala.Float = this.viewBounds.x
       var startY: scala.Float = this.viewBounds.y
       startX = startX - (startX % this.imageBounds.width)
-      startY = startY - (startY % this.imageBounds.height)
+      startY = startY - (startY % this.imageBounds.height);
       { var i: scala.Int = 0; while (i <= repeatX) { {
         { var j: scala.Int = 0; while (j <= repeatY) { {
           var rx1: scala.Float = x1

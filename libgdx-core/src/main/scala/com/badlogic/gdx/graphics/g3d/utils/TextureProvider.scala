@@ -2,13 +2,15 @@ package com.badlogic.gdx.graphics.g3d.utils
 
 trait TextureProvider {
   def load(fileName: java.lang.String): com.badlogic.gdx.graphics.Texture
+}
+object TextureProvider {
   class FileTextureProvider extends TextureProvider {
-    private var minFilter: com.badlogic.gdx.graphics.Texture#TextureFilter = null.asInstanceOf[com.badlogic.gdx.graphics.Texture#TextureFilter]
-    private var magFilter: com.badlogic.gdx.graphics.Texture#TextureFilter = null.asInstanceOf[com.badlogic.gdx.graphics.Texture#TextureFilter]
-    private var uWrap: com.badlogic.gdx.graphics.Texture#TextureWrap = null.asInstanceOf[com.badlogic.gdx.graphics.Texture#TextureWrap]
-    private var vWrap: com.badlogic.gdx.graphics.Texture#TextureWrap = null.asInstanceOf[com.badlogic.gdx.graphics.Texture#TextureWrap]
+    private var minFilter: com.badlogic.gdx.graphics.Texture.TextureFilter = null.asInstanceOf[com.badlogic.gdx.graphics.Texture.TextureFilter]
+    private var magFilter: com.badlogic.gdx.graphics.Texture.TextureFilter = null.asInstanceOf[com.badlogic.gdx.graphics.Texture.TextureFilter]
+    private var uWrap: com.badlogic.gdx.graphics.Texture.TextureWrap = null.asInstanceOf[com.badlogic.gdx.graphics.Texture.TextureWrap]
+    private var vWrap: com.badlogic.gdx.graphics.Texture.TextureWrap = null.asInstanceOf[com.badlogic.gdx.graphics.Texture.TextureWrap]
     private var useMipMaps: scala.Boolean = false
-    def this(minFilter: com.badlogic.gdx.graphics.Texture#TextureFilter, magFilter: com.badlogic.gdx.graphics.Texture#TextureFilter, uWrap: com.badlogic.gdx.graphics.Texture#TextureWrap, vWrap: com.badlogic.gdx.graphics.Texture#TextureWrap, useMipMaps: scala.Boolean) = {
+    def this(minFilter: com.badlogic.gdx.graphics.Texture.TextureFilter, magFilter: com.badlogic.gdx.graphics.Texture.TextureFilter, uWrap: com.badlogic.gdx.graphics.Texture.TextureWrap, vWrap: com.badlogic.gdx.graphics.Texture.TextureWrap, useMipMaps: scala.Boolean) = {
       this()
       this.minFilter = minFilter
       this.magFilter = magFilter
@@ -42,7 +44,7 @@ trait TextureProvider {
       this.assetManager = assetManager
     }
     def load(fileName: java.lang.String): com.badlogic.gdx.graphics.Texture = {
-      return this.assetManager.get(fileName, classOf[java.lang.Class])
+      return this.assetManager.get(fileName, classOf[com.badlogic.gdx.graphics.Texture])
     }
   }
 }

@@ -5,7 +5,7 @@ class JsonWriter extends java.io.Writer {
   private final val stack: com.badlogic.gdx.utils.IntArray = new com.badlogic.gdx.utils.IntArray()
   private var current: scala.Int = 0
   private var named: scala.Boolean = false
-  private var outputType: OutputType = OutputType.json
+  private var outputType: com.badlogic.gdx.utils.JsonWriter.OutputType = com.badlogic.gdx.utils.JsonWriter.OutputType.json
   private var quoteLongValues: scala.Boolean = false
   def this(writer: java.io.Writer) = {
     this()
@@ -17,7 +17,7 @@ class JsonWriter extends java.io.Writer {
   def getWriter(): java.io.Writer = {
     return this.writer
   }
-  def setOutputType(outputType: OutputType): scala.Unit = {
+  def setOutputType(outputType: com.badlogic.gdx.utils.JsonWriter.OutputType): scala.Unit = {
     this.outputType = outputType
   }
   def setQuoteLongValues(quoteLongValues: scala.Boolean): scala.Unit = {
@@ -212,6 +212,13 @@ class JsonWriter extends java.io.Writer {
     }
     this.writer.close()
   }
+}
+object JsonWriter {
+  private final val none: scala.Int = 0
+  private final val needsComma: scala.Int = 1
+  final val object$field: scala.Int = '}' << 1
+  final val array$field: scala.Int = ']' << 1
+  private final val isObject: scala.Int = 64
   sealed abstract class OutputType {
     def quoteValue(value: java.lang.Object): java.lang.String = {
       if (value == null) {
@@ -221,11 +228,11 @@ class JsonWriter extends java.io.Writer {
       if (value.isInstanceOf[java.lang.Number] || value.isInstanceOf[java.lang.Boolean]) {
         return string
       } else ()
-      var quote: scala.Boolean = false
+      var quote: scala.Boolean = false;
       { var i: scala.Int = 0; while (i < string.length()) { {
         string.charAt(i) match {
           case '\\' | '\r' | '\n' | '\t' => {
-            string = OutputType.escape(string, i)
+            string = com.badlogic.gdx.utils.JsonWriter.OutputType.escape(string, i)
             quote = true
           }
           case '\"' => {
@@ -233,21 +240,21 @@ class JsonWriter extends java.io.Writer {
           }
         }
       }; i = i + 1 } }
-      if ((((((this == OutputType.minimal) && (!string.equals("true"))) && (!string.equals("false"))) && (!string.equals("null"))) && (!string.contains("//"))) && (!string.contains("/*"))) {
+      if ((((((this == com.badlogic.gdx.utils.JsonWriter.OutputType.minimal) && (!string.equals("true"))) && (!string.equals("false"))) && (!string.equals("null"))) && (!string.contains("//"))) && (!string.contains("/*"))) {
         val length: scala.Int = string.length()
-        if (((length > 0) && (string.charAt(length - 1) != ' ')) && OutputType.minimalValuePattern.matcher(string).matches()) {
+        if (((length > 0) && (string.charAt(length - 1) != ' ')) && com.badlogic.gdx.utils.JsonWriter.OutputType.minimalValuePattern.matcher(string).matches()) {
           return string
         } else ()
       } else ()
-      return if (quote) OutputType.escapeQuote(string) else ('\"' + string) + '\"'
+      return if (quote) com.badlogic.gdx.utils.JsonWriter.OutputType.escapeQuote(string) else ('\"' + string) + '\"'
     }
     def quoteName(value$arg: java.lang.String): java.lang.String = {
       var value: java.lang.String = value$arg
-      var quote: scala.Boolean = false
+      var quote: scala.Boolean = false;
       { var i: scala.Int = 0; while (i < value.length()) { {
         value.charAt(i) match {
           case '\\' | '\r' | '\n' | '\t' => {
-            value = OutputType.escape(value, i)
+            value = com.badlogic.gdx.utils.JsonWriter.OutputType.escape(value, i)
             quote = true
           }
           case '\"' => {
@@ -256,21 +263,21 @@ class JsonWriter extends java.io.Writer {
         }
       }; i = i + 1 } }
       this match {
-        case OutputType.minimal => {
-          if (((!value.contains("//")) && (!value.contains("/*"))) && OutputType.minimalNamePattern.matcher(value).matches()) {
+        case com.badlogic.gdx.utils.JsonWriter.OutputType.minimal => {
+          if (((!value.contains("//")) && (!value.contains("/*"))) && com.badlogic.gdx.utils.JsonWriter.OutputType.minimalNamePattern.matcher(value).matches()) {
             return value
           } else ()
-          if (OutputType.javascriptPattern.matcher(value).matches()) {
+          if (com.badlogic.gdx.utils.JsonWriter.OutputType.javascriptPattern.matcher(value).matches()) {
             return value
           } else ()
         }
-        case OutputType.javascript => {
-          if (OutputType.javascriptPattern.matcher(value).matches()) {
+        case com.badlogic.gdx.utils.JsonWriter.OutputType.javascript => {
+          if (com.badlogic.gdx.utils.JsonWriter.OutputType.javascriptPattern.matcher(value).matches()) {
             return value
           } else ()
         }
       }
-      return if (quote) OutputType.escapeQuote(value) else ('\"' + value) + '\"'
+      return if (quote) com.badlogic.gdx.utils.JsonWriter.OutputType.escapeQuote(value) else ('\"' + value) + '\"'
     }
   }
   object OutputType {
@@ -284,7 +291,7 @@ class JsonWriter extends java.io.Writer {
     private def escape(value: java.lang.String, i$arg: scala.Int): java.lang.String = {
       var i: scala.Int = i$arg
       val buffer: java.lang.StringBuilder = new java.lang.StringBuilder(value.length() + 6)
-      buffer.append(value, 0, i)
+      buffer.append(value, 0, i);
       { ; while (i < value.length()) { {
         val c: scala.Char = value.charAt(i)
         c match {
@@ -309,7 +316,7 @@ class JsonWriter extends java.io.Writer {
     }
     private def escapeQuote(value: java.lang.String): java.lang.String = {
       val buffer: java.lang.StringBuilder = new java.lang.StringBuilder(value.length() + 6)
-      buffer.append('\"')
+      buffer.append('\"');
       { var i: scala.Int = 0; while (i < value.length()) { {
         val c: scala.Char = value.charAt(i)
         if (c == '\"') {
@@ -322,11 +329,4 @@ class JsonWriter extends java.io.Writer {
       return buffer.toString()
     }
   }
-}
-object JsonWriter {
-  private final val none: scala.Int = 0
-  private final val needsComma: scala.Int = 1
-  final val object$field: scala.Int = '}' << 1
-  final val array$field: scala.Int = ']' << 1
-  private final val isObject: scala.Int = 64
 }

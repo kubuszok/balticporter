@@ -7,13 +7,13 @@ class BillboardParticleBatch extends com.badlogic.gdx.graphics.g3d.particles.bat
   private var indices: scala.Array[scala.Short] = null.asInstanceOf[scala.Array[scala.Short]]
   private var currentVertexSize: scala.Int = 0
   private var currentAttributes: com.badlogic.gdx.graphics.VertexAttributes = null.asInstanceOf[com.badlogic.gdx.graphics.VertexAttributes]
-  protected var useGPU: scala.Boolean = false
-  protected var mode: com.badlogic.gdx.graphics.g3d.particles.ParticleShader#AlignMode = com.badlogic.gdx.graphics.g3d.particles.ParticleShader.AlignMode.Screen
-  protected var texture: com.badlogic.gdx.graphics.Texture = null.asInstanceOf[com.badlogic.gdx.graphics.Texture]
-  protected var blendingAttribute: com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute]
-  protected var depthTestAttribute: com.badlogic.gdx.graphics.g3d.attributes.DepthTestAttribute = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.attributes.DepthTestAttribute]
+  var useGPU: scala.Boolean = false
+  var mode: com.badlogic.gdx.graphics.g3d.particles.ParticleShader.AlignMode = com.badlogic.gdx.graphics.g3d.particles.ParticleShader.AlignMode.Screen
+  var texture: com.badlogic.gdx.graphics.Texture = null.asInstanceOf[com.badlogic.gdx.graphics.Texture]
+  var blendingAttribute: com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute]
+  var depthTestAttribute: com.badlogic.gdx.graphics.g3d.attributes.DepthTestAttribute = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.attributes.DepthTestAttribute]
   var shader: com.badlogic.gdx.graphics.g3d.Shader = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.Shader]
-  def this(mode: com.badlogic.gdx.graphics.g3d.particles.ParticleShader#AlignMode, useGPU: scala.Boolean, capacity: scala.Int, blendingAttribute: com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute, depthTestAttribute: com.badlogic.gdx.graphics.g3d.attributes.DepthTestAttribute) = {
+  def this(mode: com.badlogic.gdx.graphics.g3d.particles.ParticleShader.AlignMode, useGPU: scala.Boolean, capacity: scala.Int, blendingAttribute: com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute, depthTestAttribute: com.badlogic.gdx.graphics.g3d.attributes.DepthTestAttribute) = {
     this()
     this.renderables = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.Renderable]()
     this.renderablePool = new RenderablePool()
@@ -31,7 +31,7 @@ class BillboardParticleBatch extends com.badlogic.gdx.graphics.g3d.particles.bat
     this.setUseGpu(useGPU)
     this.setAlignMode(mode)
   }
-  def this(mode: com.badlogic.gdx.graphics.g3d.particles.ParticleShader#AlignMode, useGPU: scala.Boolean, capacity: scala.Int) = {
+  def this(mode: com.badlogic.gdx.graphics.g3d.particles.ParticleShader.AlignMode, useGPU: scala.Boolean, capacity: scala.Int) = {
     this(mode, useGPU, capacity, null, null)
   }
   def this(capacity: scala.Int) = {
@@ -41,7 +41,7 @@ class BillboardParticleBatch extends com.badlogic.gdx.graphics.g3d.particles.bat
     this.vertices = new Array[scala.Float]((this.currentVertexSize * 4) * capacity)
     this.allocRenderables(capacity)
   }
-  protected def allocRenderable(): com.badlogic.gdx.graphics.g3d.Renderable = {
+  def allocRenderable(): com.badlogic.gdx.graphics.g3d.Renderable = {
     val renderable: com.badlogic.gdx.graphics.g3d.Renderable = new com.badlogic.gdx.graphics.g3d.Renderable()
     renderable.meshPart.primitiveType = com.badlogic.gdx.graphics.GL20.GL_TRIANGLES
     renderable.meshPart.offset = 0
@@ -53,14 +53,14 @@ class BillboardParticleBatch extends com.badlogic.gdx.graphics.g3d.particles.bat
   }
   private def allocIndices(): scala.Unit = {
     val indicesCount: scala.Int = BillboardParticleBatch.MAX_PARTICLES_PER_MESH * 6
-    this.indices = new Array[scala.Short](indicesCount)
+    this.indices = new Array[scala.Short](indicesCount);
     { var i: scala.Int = 0; var vertex: scala.Int = 0; while (i < indicesCount) { {
-      this.indices(i) = vertex.asInstanceOf[scala.Short]
-      this.indices(i + 1) = (vertex + 1).asInstanceOf[scala.Short]
-      this.indices(i + 2) = (vertex + 2).asInstanceOf[scala.Short]
-      this.indices(i + 3) = (vertex + 2).asInstanceOf[scala.Short]
-      this.indices(i + 4) = (vertex + 3).asInstanceOf[scala.Short]
-      this.indices(i + 5) = vertex.asInstanceOf[scala.Short]
+      this.indices(i) = vertex.asInstanceOf[scala.Short].asInstanceOf[scala.Short]
+      this.indices(i + 1) = (vertex + 1).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
+      this.indices(i + 2) = (vertex + 2).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
+      this.indices(i + 3) = (vertex + 2).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
+      this.indices(i + 4) = (vertex + 3).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
+      this.indices(i + 5) = vertex.asInstanceOf[scala.Short].asInstanceOf[scala.Short]
     }; i = i + 6; vertex = vertex + 4 } }
   }
   private def allocRenderables(capacity: scala.Int): scala.Unit = {
@@ -72,8 +72,8 @@ class BillboardParticleBatch extends com.badlogic.gdx.graphics.g3d.particles.bat
       }; i = i + 1 } }
     } else ()
   }
-  protected def getShader(renderable: com.badlogic.gdx.graphics.g3d.Renderable): com.badlogic.gdx.graphics.g3d.Shader = {
-    val shader: com.badlogic.gdx.graphics.g3d.Shader = if (this.useGPU) new com.badlogic.gdx.graphics.g3d.particles.ParticleShader(renderable, new com.badlogic.gdx.graphics.g3d.particles.ParticleShader#Config(this.mode)) else new com.badlogic.gdx.graphics.g3d.shaders.DefaultShader(renderable)
+  def getShader(renderable: com.badlogic.gdx.graphics.g3d.Renderable): com.badlogic.gdx.graphics.g3d.Shader = {
+    val shader: com.badlogic.gdx.graphics.g3d.Shader = if (this.useGPU) new com.badlogic.gdx.graphics.g3d.particles.ParticleShader(renderable, new com.badlogic.gdx.graphics.g3d.particles.ParticleShader.Config(this.mode)) else new com.badlogic.gdx.graphics.g3d.shaders.DefaultShader(renderable)
     shader.init()
     return shader
   }
@@ -86,7 +86,7 @@ class BillboardParticleBatch extends com.badlogic.gdx.graphics.g3d.particles.bat
     this.renderablePool.free(newRenderable)
   }
   private def clearRenderablesPool(): scala.Unit = {
-    this.renderablePool.freeAll(this.renderables)
+    this.renderablePool.freeAll(this.renderables);
     { var i: scala.Int = 0; val free: scala.Int = this.renderablePool.getFree(); while (i < free) { {
       val renderable: com.badlogic.gdx.graphics.g3d.Renderable = this.renderablePool.obtain()
       renderable.meshPart.mesh.dispose()
@@ -108,7 +108,7 @@ class BillboardParticleBatch extends com.badlogic.gdx.graphics.g3d.particles.bat
     this.allocShader()
     this.resetCapacity()
   }
-  def setAlignMode(mode: com.badlogic.gdx.graphics.g3d.particles.ParticleShader#AlignMode): scala.Unit = {
+  def setAlignMode(mode: com.badlogic.gdx.graphics.g3d.particles.ParticleShader.AlignMode): scala.Unit = {
     if (mode != this.mode) {
       this.mode = mode
       if (this.useGPU) {
@@ -117,7 +117,7 @@ class BillboardParticleBatch extends com.badlogic.gdx.graphics.g3d.particles.bat
       } else ()
     } else ()
   }
-  def getAlignMode(): com.badlogic.gdx.graphics.g3d.particles.ParticleShader#AlignMode = {
+  def getAlignMode(): com.badlogic.gdx.graphics.g3d.particles.ParticleShader.AlignMode = {
     return this.mode
   }
   def setUseGpu(useGPU: scala.Boolean): scala.Unit = {
@@ -132,7 +132,7 @@ class BillboardParticleBatch extends com.badlogic.gdx.graphics.g3d.particles.bat
   }
   def setTexture(texture: com.badlogic.gdx.graphics.Texture): scala.Unit = {
     this.renderablePool.freeAll(this.renderables)
-    this.renderables.clear()
+    this.renderables.clear();
     { var i: scala.Int = 0; val free: scala.Int = this.renderablePool.getFree(); while (i < free) { {
       val renderable: com.badlogic.gdx.graphics.g3d.Renderable = this.renderablePool.obtain()
       val attribute: com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute = renderable.material.get(com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute.Diffuse).asInstanceOf[com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute]
@@ -158,7 +158,7 @@ class BillboardParticleBatch extends com.badlogic.gdx.graphics.g3d.particles.bat
       val regionChannel: com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel = data.regionChannel
       val positionChannel: com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel = data.positionChannel
       val colorChannel: com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel = data.colorChannel
-      val rotationChannel: com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel = data.rotationChannel
+      val rotationChannel: com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel = data.rotationChannel;
       { var p: scala.Int = 0; val c: scala.Int = data.controller.particles.size; while (p < c) { {
         var baseOffset: scala.Int = (particlesOffset(tp) * this.currentVertexSize) * 4
         val scale: scala.Float = scaleChannel.data(p * scaleChannel.strideSize)
@@ -199,7 +199,7 @@ class BillboardParticleBatch extends com.badlogic.gdx.graphics.g3d.particles.bat
       val regionChannel: com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel = data.regionChannel
       val positionChannel: com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel = data.positionChannel
       val colorChannel: com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel = data.colorChannel
-      val rotationChannel: com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel = data.rotationChannel
+      val rotationChannel: com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel = data.rotationChannel;
       { var p: scala.Int = 0; val c: scala.Int = data.controller.particles.size; while (p < c) { {
         var baseOffset: scala.Int = (particlesOffset(tp) * this.currentVertexSize) * 4
         val scale: scala.Float = scaleChannel.data(p * scaleChannel.strideSize)
@@ -258,7 +258,7 @@ class BillboardParticleBatch extends com.badlogic.gdx.graphics.g3d.particles.bat
       val regionChannel: com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel = data.regionChannel
       val positionChannel: com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel = data.positionChannel
       val colorChannel: com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel = data.colorChannel
-      val rotationChannel: com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel = data.rotationChannel
+      val rotationChannel: com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel = data.rotationChannel;
       { var p: scala.Int = 0; val c: scala.Int = data.controller.particles.size; while (p < c) { {
         var baseOffset: scala.Int = (particlesOffset(tp) * this.currentVertexSize) * 4
         val scale: scala.Float = scaleChannel.data(p * scaleChannel.strideSize)
@@ -304,7 +304,7 @@ class BillboardParticleBatch extends com.badlogic.gdx.graphics.g3d.particles.bat
       }; p = p + 1; tp = tp + 1 } }
     }
   }
-  protected def flush(offsets: scala.Array[scala.Int]): scala.Unit = {
+  def flush(offsets: scala.Array[scala.Int]): scala.Unit = {
     if (this.useGPU) {
       this.fillVerticesGPU(offsets)
     } else {
@@ -317,7 +317,7 @@ class BillboardParticleBatch extends com.badlogic.gdx.graphics.g3d.particles.bat
       }
     }
     var addedVertexCount: scala.Int = 0
-    val vCount: scala.Int = bufferedParticlesCount * 4
+    val vCount: scala.Int = bufferedParticlesCount * 4;
     { var v: scala.Int = 0; while (v < vCount) { {
       addedVertexCount = java.lang.Math.min(vCount - v, BillboardParticleBatch.MAX_VERTICES_PER_MESH)
       val renderable: com.badlogic.gdx.graphics.g3d.Renderable = this.renderablePool.obtain()
@@ -332,16 +332,16 @@ class BillboardParticleBatch extends com.badlogic.gdx.graphics.g3d.particles.bat
       renderables.add(pool.obtain().set(renderable))
     }
   }
-  def save(manager: com.badlogic.gdx.assets.AssetManager, resources: com.badlogic.gdx.graphics.g3d.particles.ResourceData): scala.Unit = {
-    val data: com.badlogic.gdx.graphics.g3d.particles.ResourceData#SaveData = resources.createSaveData("billboardBatch")
-    data.save("cfg", new Config(this.useGPU, this.mode))
-    data.saveAsset(manager.getAssetFileName(this.texture), classOf[java.lang.Class])
+  def save(manager: com.badlogic.gdx.assets.AssetManager, resources: com.badlogic.gdx.graphics.g3d.particles.ResourceData[?]): scala.Unit = {
+    val data: com.badlogic.gdx.graphics.g3d.particles.ResourceData.SaveData = resources.createSaveData("billboardBatch")
+    data.save("cfg", new com.badlogic.gdx.graphics.g3d.particles.batches.BillboardParticleBatch.Config(this.useGPU, this.mode))
+    data.saveAsset(manager.getAssetFileName(this.texture), classOf[com.badlogic.gdx.graphics.Texture])
   }
-  def load(manager: com.badlogic.gdx.assets.AssetManager, resources: com.badlogic.gdx.graphics.g3d.particles.ResourceData): scala.Unit = {
-    val data: com.badlogic.gdx.graphics.g3d.particles.ResourceData#SaveData = resources.getSaveData("billboardBatch")
+  def load(manager: com.badlogic.gdx.assets.AssetManager, resources: com.badlogic.gdx.graphics.g3d.particles.ResourceData[?]): scala.Unit = {
+    val data: com.badlogic.gdx.graphics.g3d.particles.ResourceData.SaveData = resources.getSaveData("billboardBatch")
     if (data != null) {
       this.setTexture(manager.get(data.loadAsset()).asInstanceOf[com.badlogic.gdx.graphics.Texture])
-      val cfg: Config = data.load("cfg").asInstanceOf[Config]
+      val cfg: com.badlogic.gdx.graphics.g3d.particles.batches.BillboardParticleBatch.Config = data.load("cfg").asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.batches.BillboardParticleBatch.Config]
       this.setUseGpu(cfg.useGPU)
       this.setAlignMode(cfg.mode)
     } else ()
@@ -351,26 +351,17 @@ class BillboardParticleBatch extends com.badlogic.gdx.graphics.g3d.particles.bat
       return allocRenderable()
     }
   }
-  class Config {
-    var useGPU: scala.Boolean = false
-    var mode: com.badlogic.gdx.graphics.g3d.particles.ParticleShader#AlignMode = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ParticleShader#AlignMode]
-    def this(useGPU: scala.Boolean, mode: com.badlogic.gdx.graphics.g3d.particles.ParticleShader#AlignMode) = {
-      this()
-      this.useGPU = useGPU
-      this.mode = mode
-    }
-  }
 }
 object BillboardParticleBatch {
-  protected final val TMP_V1: com.badlogic.gdx.math.Vector3 = new com.badlogic.gdx.math.Vector3()
-  protected final val TMP_V2: com.badlogic.gdx.math.Vector3 = new com.badlogic.gdx.math.Vector3()
-  protected final val TMP_V3: com.badlogic.gdx.math.Vector3 = new com.badlogic.gdx.math.Vector3()
-  protected final val TMP_V4: com.badlogic.gdx.math.Vector3 = new com.badlogic.gdx.math.Vector3()
-  protected final val TMP_V5: com.badlogic.gdx.math.Vector3 = new com.badlogic.gdx.math.Vector3()
-  protected final val TMP_V6: com.badlogic.gdx.math.Vector3 = new com.badlogic.gdx.math.Vector3()
-  protected final val TMP_M3: com.badlogic.gdx.math.Matrix3 = new com.badlogic.gdx.math.Matrix3()
-  protected final val sizeAndRotationUsage: scala.Int = 1 << 9
-  protected final val directionUsage: scala.Int = 1 << 10
+  final val TMP_V1: com.badlogic.gdx.math.Vector3 = new com.badlogic.gdx.math.Vector3()
+  final val TMP_V2: com.badlogic.gdx.math.Vector3 = new com.badlogic.gdx.math.Vector3()
+  final val TMP_V3: com.badlogic.gdx.math.Vector3 = new com.badlogic.gdx.math.Vector3()
+  final val TMP_V4: com.badlogic.gdx.math.Vector3 = new com.badlogic.gdx.math.Vector3()
+  final val TMP_V5: com.badlogic.gdx.math.Vector3 = new com.badlogic.gdx.math.Vector3()
+  final val TMP_V6: com.badlogic.gdx.math.Vector3 = new com.badlogic.gdx.math.Vector3()
+  final val TMP_M3: com.badlogic.gdx.math.Matrix3 = new com.badlogic.gdx.math.Matrix3()
+  final val sizeAndRotationUsage: scala.Int = 1 << 9
+  final val directionUsage: scala.Int = 1 << 10
   private final val GPU_ATTRIBUTES: com.badlogic.gdx.graphics.VertexAttributes = new com.badlogic.gdx.graphics.VertexAttributes(new com.badlogic.gdx.graphics.VertexAttribute(com.badlogic.gdx.graphics.VertexAttributes.Usage.Position, 3, com.badlogic.gdx.graphics.glutils.ShaderProgram.POSITION_ATTRIBUTE), new com.badlogic.gdx.graphics.VertexAttribute(com.badlogic.gdx.graphics.VertexAttributes.Usage.TextureCoordinates, 2, com.badlogic.gdx.graphics.glutils.ShaderProgram.TEXCOORD_ATTRIBUTE + "0"), new com.badlogic.gdx.graphics.VertexAttribute(com.badlogic.gdx.graphics.VertexAttributes.Usage.ColorUnpacked, 4, com.badlogic.gdx.graphics.glutils.ShaderProgram.COLOR_ATTRIBUTE), new com.badlogic.gdx.graphics.VertexAttribute(BillboardParticleBatch.sizeAndRotationUsage, 4, "a_sizeAndRotation"))
   private final val CPU_ATTRIBUTES: com.badlogic.gdx.graphics.VertexAttributes = new com.badlogic.gdx.graphics.VertexAttributes(new com.badlogic.gdx.graphics.VertexAttribute(com.badlogic.gdx.graphics.VertexAttributes.Usage.Position, 3, com.badlogic.gdx.graphics.glutils.ShaderProgram.POSITION_ATTRIBUTE), new com.badlogic.gdx.graphics.VertexAttribute(com.badlogic.gdx.graphics.VertexAttributes.Usage.TextureCoordinates, 2, com.badlogic.gdx.graphics.glutils.ShaderProgram.TEXCOORD_ATTRIBUTE + "0"), new com.badlogic.gdx.graphics.VertexAttribute(com.badlogic.gdx.graphics.VertexAttributes.Usage.ColorUnpacked, 4, com.badlogic.gdx.graphics.glutils.ShaderProgram.COLOR_ATTRIBUTE))
   private final val GPU_POSITION_OFFSET: scala.Int = (BillboardParticleBatch.GPU_ATTRIBUTES.findByUsage(com.badlogic.gdx.graphics.VertexAttributes.Usage.Position).offset / 4).asInstanceOf[scala.Short]
@@ -409,5 +400,14 @@ object BillboardParticleBatch {
     vertices((offset + BillboardParticleBatch.CPU_COLOR_OFFSET) + 1) = g
     vertices((offset + BillboardParticleBatch.CPU_COLOR_OFFSET) + 2) = b
     vertices((offset + BillboardParticleBatch.CPU_COLOR_OFFSET) + 3) = a
+  }
+  class Config {
+    var useGPU: scala.Boolean = false
+    var mode: com.badlogic.gdx.graphics.g3d.particles.ParticleShader.AlignMode = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ParticleShader.AlignMode]
+    def this(useGPU: scala.Boolean, mode: com.badlogic.gdx.graphics.g3d.particles.ParticleShader.AlignMode) = {
+      this()
+      this.useGPU = useGPU
+      this.mode = mode
+    }
   }
 }

@@ -1,25 +1,25 @@
 package com.badlogic.gdx.maps.tiled
 
-abstract class BaseTiledMapLoader[P <: Parameters] extends com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader[com.badlogic.gdx.maps.tiled.TiledMap, P] {
-  protected var convertObjectToTileSpace: scala.Boolean = false
-  protected var flipY: scala.Boolean = true
-  protected var mapTileWidth: scala.Int = 0
-  protected var mapTileHeight: scala.Int = 0
-  protected var mapWidthInPixels: scala.Int = 0
-  protected var mapHeightInPixels: scala.Int = 0
-  protected var map: com.badlogic.gdx.maps.tiled.TiledMap = null.asInstanceOf[com.badlogic.gdx.maps.tiled.TiledMap]
-  protected var idToObject: com.badlogic.gdx.utils.IntMap[com.badlogic.gdx.maps.MapObject] = null.asInstanceOf[com.badlogic.gdx.utils.IntMap[com.badlogic.gdx.maps.MapObject]]
-  protected var runOnEndOfLoadTiled: com.badlogic.gdx.utils.Array[java.lang.Runnable] = null.asInstanceOf[com.badlogic.gdx.utils.Array[java.lang.Runnable]]
-  protected var projectClassInfo: com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.utils.Array[ProjectClassMember]] = null.asInstanceOf[com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.utils.Array[ProjectClassMember]]]
+abstract class BaseTiledMapLoader[P <: com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.Parameters] extends com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader[com.badlogic.gdx.maps.tiled.TiledMap, P] {
+  var convertObjectToTileSpace: scala.Boolean = false
+  var flipY: scala.Boolean = true
+  var mapTileWidth: scala.Int = 0
+  var mapTileHeight: scala.Int = 0
+  var mapWidthInPixels: scala.Int = 0
+  var mapHeightInPixels: scala.Int = 0
+  var map: com.badlogic.gdx.maps.tiled.TiledMap = null.asInstanceOf[com.badlogic.gdx.maps.tiled.TiledMap]
+  var idToObject: com.badlogic.gdx.utils.IntMap[com.badlogic.gdx.maps.MapObject] = null.asInstanceOf[com.badlogic.gdx.utils.IntMap[com.badlogic.gdx.maps.MapObject]]
+  var runOnEndOfLoadTiled: com.badlogic.gdx.utils.Array[java.lang.Runnable] = null.asInstanceOf[com.badlogic.gdx.utils.Array[java.lang.Runnable]]
+  var projectClassInfo: com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.utils.Array[com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.ProjectClassMember]] = null.asInstanceOf[com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.utils.Array[com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.ProjectClassMember]]]
   def this(resolver: com.badlogic.gdx.assets.loaders.FileHandleResolver) = {
     this()
   }
-  protected def getDependencyAssetDescriptors(mapFile: com.badlogic.gdx.files.FileHandle, textureParameter: com.badlogic.gdx.assets.loaders.TextureLoader#TextureParameter): com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor]
-  protected def loadTiledMap(mapFile: com.badlogic.gdx.files.FileHandle, parameter: P, imageResolver: com.badlogic.gdx.maps.ImageResolver): com.badlogic.gdx.maps.tiled.TiledMap
+  def getDependencyAssetDescriptors(mapFile: com.badlogic.gdx.files.FileHandle, textureParameter: com.badlogic.gdx.assets.loaders.TextureLoader.TextureParameter): com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]
+  def loadTiledMap(mapFile: com.badlogic.gdx.files.FileHandle, parameter: P, imageResolver: com.badlogic.gdx.maps.ImageResolver): com.badlogic.gdx.maps.tiled.TiledMap
   def getIdToObject(): com.badlogic.gdx.utils.IntMap[com.badlogic.gdx.maps.MapObject] = {
     return this.idToObject
   }
-  protected def castProperty(name: java.lang.String, value: java.lang.String, `type`: java.lang.String): java.lang.Object = {
+  def castProperty(name: java.lang.String, value: java.lang.String, `type`: java.lang.String): java.lang.Object = {
     if (((`type` == null) || "string".equals(`type`)) || "file".equals(`type`)) {
       return value
     } else {
@@ -42,8 +42,8 @@ abstract class BaseTiledMapLoader[P <: Parameters] extends com.badlogic.gdx.asse
       }
     }
   }
-  protected def createTileLayerCell(flipHorizontally: scala.Boolean, flipVertically: scala.Boolean, flipDiagonally: scala.Boolean): com.badlogic.gdx.maps.tiled.TiledMapTileLayer#Cell = {
-    val cell: com.badlogic.gdx.maps.tiled.TiledMapTileLayer#Cell = new com.badlogic.gdx.maps.tiled.TiledMapTileLayer#Cell()
+  def createTileLayerCell(flipHorizontally: scala.Boolean, flipVertically: scala.Boolean, flipDiagonally: scala.Boolean): com.badlogic.gdx.maps.tiled.TiledMapTileLayer.Cell = {
+    val cell: com.badlogic.gdx.maps.tiled.TiledMapTileLayer.Cell = new com.badlogic.gdx.maps.tiled.TiledMapTileLayer.Cell()
     if (flipDiagonally) {
       if (flipHorizontally && flipVertically) {
         cell.setFlipHorizontally(true)
@@ -66,14 +66,14 @@ abstract class BaseTiledMapLoader[P <: Parameters] extends com.badlogic.gdx.asse
     }
     return cell
   }
-  protected def addStaticTiledMapTile(tileSet: com.badlogic.gdx.maps.tiled.TiledMapTileSet, textureRegion: com.badlogic.gdx.graphics.g2d.TextureRegion, tileId: scala.Int, offsetX: scala.Float, offsetY: scala.Float): scala.Unit = {
+  def addStaticTiledMapTile(tileSet: com.badlogic.gdx.maps.tiled.TiledMapTileSet, textureRegion: com.badlogic.gdx.graphics.g2d.TextureRegion, tileId: scala.Int, offsetX: scala.Float, offsetY: scala.Float): scala.Unit = {
     val tile: com.badlogic.gdx.maps.tiled.TiledMapTile = new com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile(textureRegion)
     tile.setId(tileId)
     tile.setOffsetX(offsetX)
     tile.setOffsetY(if (this.flipY) -offsetY else offsetY)
     tileSet.putTile(tileId, tile)
   }
-  protected def loadObjectProperty(properties: com.badlogic.gdx.maps.MapProperties, name: java.lang.String, value: java.lang.String): scala.Unit = {
+  def loadObjectProperty(properties: com.badlogic.gdx.maps.MapProperties, name: java.lang.String, value: java.lang.String): scala.Unit = {
     try {
       val id: scala.Int = java.lang.Integer.parseInt(value)
       val fetch: java.lang.Runnable = new java.lang.Runnable()
@@ -84,12 +84,12 @@ abstract class BaseTiledMapLoader[P <: Parameters] extends com.badlogic.gdx.asse
       }
     }
   }
-  protected def loadBasicProperty(properties: com.badlogic.gdx.maps.MapProperties, name: java.lang.String, value: java.lang.String, `type`: java.lang.String): scala.Unit = {
+  def loadBasicProperty(properties: com.badlogic.gdx.maps.MapProperties, name: java.lang.String, value: java.lang.String, `type`: java.lang.String): scala.Unit = {
     val castValue: java.lang.Object = this.castProperty(name, value, `type`)
     properties.put(name, castValue)
   }
-  protected def loadProjectFile(projectFilePath: java.lang.String): scala.Unit = {
-    this.projectClassInfo = new com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.utils.Array[ProjectClassMember]]()
+  def loadProjectFile(projectFilePath: java.lang.String): scala.Unit = {
+    this.projectClassInfo = new com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.utils.Array[com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.ProjectClassMember]]()
     if ((projectFilePath == null) || projectFilePath.trim().isEmpty()) {
       return
     } else ()
@@ -108,10 +108,10 @@ abstract class BaseTiledMapLoader[P <: Parameters] extends com.badlogic.gdx.asse
       if (members.isEmpty()) {
         /* continue */ ()
       } else ()
-      val projectClassMembers: com.badlogic.gdx.utils.Array[ProjectClassMember] = new com.badlogic.gdx.utils.Array[ProjectClassMember]()
+      val projectClassMembers: com.badlogic.gdx.utils.Array[com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.ProjectClassMember] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.ProjectClassMember]()
       this.projectClassInfo.put(className, projectClassMembers)
       for (member <- members) {
-        val projectClassMember: ProjectClassMember = new ProjectClassMember()
+        val projectClassMember: com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.ProjectClassMember = new com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.ProjectClassMember()
         projectClassMember.name = member.getString("name")
         projectClassMember.`type` = member.getString("type")
         projectClassMember.propertyType = member.getString("propertyType", null)
@@ -120,14 +120,14 @@ abstract class BaseTiledMapLoader[P <: Parameters] extends com.badlogic.gdx.asse
       }
     }
   }
-  protected def loadJsonClassProperties(className: java.lang.String, classProperties: com.badlogic.gdx.maps.MapProperties, classElement: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
+  def loadJsonClassProperties(className: java.lang.String, classProperties: com.badlogic.gdx.maps.MapProperties, classElement: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
     if (this.projectClassInfo == null) {
       throw new com.badlogic.gdx.utils.GdxRuntimeException("No class information loaded to support class properties. Did you set the 'projectFilePath' parameter?")
     } else ()
     if (this.projectClassInfo.isEmpty()) {
       throw new com.badlogic.gdx.utils.GdxRuntimeException("No class information available. Did you set the correct Tiled project path in the 'projectFilePath' parameter?")
     } else ()
-    val projectClassMembers: com.badlogic.gdx.utils.Array[ProjectClassMember] = this.projectClassInfo.get(className)
+    val projectClassMembers: com.badlogic.gdx.utils.Array[com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.ProjectClassMember] = this.projectClassInfo.get(className)
     if (projectClassMembers == null) {
       throw new com.badlogic.gdx.utils.GdxRuntimeException(("There is no class with name '" + className) + "' in given Tiled project file.")
     } else ()
@@ -156,16 +156,16 @@ abstract class BaseTiledMapLoader[P <: Parameters] extends com.badlogic.gdx.asse
       }
     }
   }
-  protected def loadMapPropertiesClassDefaults(className: java.lang.String, mapProperties: com.badlogic.gdx.maps.MapProperties): scala.Unit = {
+  def loadMapPropertiesClassDefaults(className: java.lang.String, mapProperties: com.badlogic.gdx.maps.MapProperties): scala.Unit = {
     if (this.projectClassInfo == null) {
       com.badlogic.gdx.Gdx.app.log("TiledMapLoader", "WARN: There is at least one property of type class or an object with a class defined. " + "Use the 'projectFilePath' parameter to correctly load the default values of a class.")
-      this.projectClassInfo = new com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.utils.Array[ProjectClassMember]]()
+      this.projectClassInfo = new com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.utils.Array[com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.ProjectClassMember]]()
       return
     } else ()
     if ((className == null) || (!this.projectClassInfo.containsKey(className))) {
       return
     } else ()
-    val classMembers: com.badlogic.gdx.utils.Array[ProjectClassMember] = this.projectClassInfo.get(className)
+    val classMembers: com.badlogic.gdx.utils.Array[com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.ProjectClassMember] = this.projectClassInfo.get(className)
     for (classMember <- classMembers) {
       val propName: java.lang.String = classMember.name
       if (mapProperties.containsKey(propName)) {
@@ -187,34 +187,16 @@ abstract class BaseTiledMapLoader[P <: Parameters] extends com.badlogic.gdx.asse
       }
     }
   }
-  class Parameters extends com.badlogic.gdx.assets.AssetLoaderParameters[com.badlogic.gdx.maps.tiled.TiledMap] {
-    var generateMipMaps: scala.Boolean = false
-    var textureMinFilter: com.badlogic.gdx.graphics.Texture#TextureFilter = com.badlogic.gdx.graphics.Texture.TextureFilter.Nearest
-    var textureMagFilter: com.badlogic.gdx.graphics.Texture#TextureFilter = com.badlogic.gdx.graphics.Texture.TextureFilter.Nearest
-    var convertObjectToTileSpace: scala.Boolean = false
-    var flipY: scala.Boolean = true
-    var projectFilePath: java.lang.String = null
-    var forceTextureFilters: scala.Boolean = false
-  }
-  protected class ProjectClassMember {
-    var name: java.lang.String = null.asInstanceOf[java.lang.String]
-    var `type`: java.lang.String = null.asInstanceOf[java.lang.String]
-    var propertyType: java.lang.String = null.asInstanceOf[java.lang.String]
-    var defaultValue: com.badlogic.gdx.utils.JsonValue = null.asInstanceOf[com.badlogic.gdx.utils.JsonValue]
-    def toString(): java.lang.String = {
-      return ((((((((((("ProjectClassMember{" + "name='") + this.name) + "'") + ", type='") + this.`type`) + "'") + ", propertyType='") + this.propertyType) + "'") + ", defaultValue=") + this.defaultValue) + "}"
-    }
-  }
 }
 object BaseTiledMapLoader {
-  protected final val FLAG_FLIP_HORIZONTALLY: scala.Int = -2147483648
-  protected final val FLAG_FLIP_VERTICALLY: scala.Int = 1073741824
-  protected final val FLAG_FLIP_DIAGONALLY: scala.Int = 536870912
-  protected final val MASK_CLEAR: scala.Int = -536870912
-  protected def unsignedByteToInt(b: scala.Byte): scala.Int = {
+  final val FLAG_FLIP_HORIZONTALLY: scala.Int = -2147483648
+  final val FLAG_FLIP_VERTICALLY: scala.Int = 1073741824
+  final val FLAG_FLIP_DIAGONALLY: scala.Int = 536870912
+  final val MASK_CLEAR: scala.Int = -536870912
+  def unsignedByteToInt(b: scala.Byte): scala.Int = {
     return b & 255
   }
-  protected def getRelativeFileHandle(file: com.badlogic.gdx.files.FileHandle, path: java.lang.String): com.badlogic.gdx.files.FileHandle = {
+  def getRelativeFileHandle(file: com.badlogic.gdx.files.FileHandle, path: java.lang.String): com.badlogic.gdx.files.FileHandle = {
     val tokenizer: java.util.StringTokenizer = new java.util.StringTokenizer(path, "\\/")
     var result: com.badlogic.gdx.files.FileHandle = file.parent()
     while (tokenizer.hasMoreElements()) {
@@ -231,5 +213,23 @@ object BaseTiledMapLoader {
     val alpha: java.lang.String = if (tiledColor.length() == 9) tiledColor.substring(1, 3) else "ff"
     val color: java.lang.String = if (tiledColor.length() == 9) tiledColor.substring(3) else tiledColor.substring(1)
     return color + alpha
+  }
+  class Parameters extends com.badlogic.gdx.assets.AssetLoaderParameters[com.badlogic.gdx.maps.tiled.TiledMap] {
+    var generateMipMaps: scala.Boolean = false
+    var textureMinFilter: com.badlogic.gdx.graphics.Texture.TextureFilter = com.badlogic.gdx.graphics.Texture.TextureFilter.Nearest
+    var textureMagFilter: com.badlogic.gdx.graphics.Texture.TextureFilter = com.badlogic.gdx.graphics.Texture.TextureFilter.Nearest
+    var convertObjectToTileSpace: scala.Boolean = false
+    var flipY: scala.Boolean = true
+    var projectFilePath: java.lang.String = null
+    var forceTextureFilters: scala.Boolean = false
+  }
+  class ProjectClassMember {
+    var name: java.lang.String = null.asInstanceOf[java.lang.String]
+    var `type`: java.lang.String = null.asInstanceOf[java.lang.String]
+    var propertyType: java.lang.String = null.asInstanceOf[java.lang.String]
+    var defaultValue: com.badlogic.gdx.utils.JsonValue = null.asInstanceOf[com.badlogic.gdx.utils.JsonValue]
+    def toString(): java.lang.String = {
+      return ((((((((((("ProjectClassMember{" + "name='") + this.name) + "'") + ", type='") + this.`type`) + "'") + ", propertyType='") + this.propertyType) + "'") + ", defaultValue=") + this.defaultValue) + "}"
+    }
   }
 }

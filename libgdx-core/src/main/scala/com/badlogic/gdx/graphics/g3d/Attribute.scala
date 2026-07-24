@@ -3,13 +3,13 @@ package com.badlogic.gdx.graphics.g3d
 abstract class Attribute extends java.lang.Comparable[Attribute] {
   var `type`: scala.Long = 0L
   private var typeBit: scala.Int = 0
-  protected def this(`type`: scala.Long) = {
+  def this(`type`: scala.Long) = {
     this()
     this.`type` = `type`
     this.typeBit = java.lang.Long.numberOfTrailingZeros(`type`)
   }
   def copy(): Attribute
-  protected def equals(other: Attribute): scala.Boolean = {
+  def equals(other: Attribute): scala.Boolean = {
     return other.hashCode() == this.hashCode()
   }
   def equals(obj: java.lang.Object): scala.Boolean = {
@@ -53,7 +53,7 @@ object Attribute {
     }
     return if ((idx >= 0) && (idx < Attribute.types.size)) Attribute.types.get(idx) else null
   }
-  protected final def register(alias: java.lang.String): scala.Long = {
+  final def register(alias: java.lang.String): scala.Long = {
     val result: scala.Long = Attribute.getAttributeType(alias)
     if (result > 0) {
       return result

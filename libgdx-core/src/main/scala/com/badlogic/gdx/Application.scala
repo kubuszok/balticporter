@@ -17,7 +17,7 @@ trait Application {
   def getLogLevel(): scala.Int
   def setApplicationLogger(applicationLogger: com.badlogic.gdx.ApplicationLogger): scala.Unit
   def getApplicationLogger(): com.badlogic.gdx.ApplicationLogger
-  def getType(): ApplicationType
+  def getType(): com.badlogic.gdx.Application.ApplicationType
   def getVersion(): scala.Int
   def getJavaHeap(): scala.Long
   def getNativeHeap(): scala.Long
@@ -27,6 +27,12 @@ trait Application {
   def exit(): scala.Unit
   def addLifecycleListener(listener: com.badlogic.gdx.LifecycleListener): scala.Unit
   def removeLifecycleListener(listener: com.badlogic.gdx.LifecycleListener): scala.Unit
+}
+object Application {
+  final val LOG_NONE: scala.Int = 0
+  final val LOG_DEBUG: scala.Int = 3
+  final val LOG_INFO: scala.Int = 2
+  final val LOG_ERROR: scala.Int = 1
   sealed abstract class ApplicationType
   object ApplicationType {
     case object Android extends ApplicationType
@@ -37,10 +43,4 @@ trait Application {
     case object iOS extends ApplicationType
     def values(): Array[ApplicationType] = Array(Android, Desktop, HeadlessDesktop, Applet, WebGL, iOS)
   }
-}
-object Application {
-  final val LOG_NONE: scala.Int = 0
-  final val LOG_DEBUG: scala.Int = 3
-  final val LOG_INFO: scala.Int = 2
-  final val LOG_ERROR: scala.Int = 1
 }

@@ -14,9 +14,9 @@ class Gdx2DPixmap extends com.badlogic.gdx.utils.Disposable {
       throw new java.io.IOException("Error loading pixmap: " + Gdx2DPixmap.getFailureReason())
     } else ()
     this.basePtr = this.nativeData(0)
-    this.width = this.nativeData(1).asInstanceOf[scala.Int]
-    this.height = this.nativeData(2).asInstanceOf[scala.Int]
-    this.format = this.nativeData(3).asInstanceOf[scala.Int]
+    this.width = this.nativeData(1).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
+    this.height = this.nativeData(2).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
+    this.format = this.nativeData(3).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
     if ((requestedFormat != 0) && (requestedFormat != this.format)) {
       this.convert(requestedFormat)
     } else ()
@@ -31,9 +31,9 @@ class Gdx2DPixmap extends com.badlogic.gdx.utils.Disposable {
       throw new java.io.IOException("Error loading pixmap: " + Gdx2DPixmap.getFailureReason())
     } else ()
     this.basePtr = this.nativeData(0)
-    this.width = this.nativeData(1).asInstanceOf[scala.Int]
-    this.height = this.nativeData(2).asInstanceOf[scala.Int]
-    this.format = this.nativeData(3).asInstanceOf[scala.Int]
+    this.width = this.nativeData(1).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
+    this.height = this.nativeData(2).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
+    this.format = this.nativeData(3).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
     if ((requestedFormat != 0) && (requestedFormat != this.format)) {
       this.convert(requestedFormat)
     } else ()
@@ -45,9 +45,9 @@ class Gdx2DPixmap extends com.badlogic.gdx.utils.Disposable {
       throw new com.badlogic.gdx.utils.GdxRuntimeException((((("Unable to allocate memory for pixmap: " + width) + "x") + height) + ", ") + Gdx2DPixmap.getFormatString(format))
     } else ()
     this.basePtr = this.nativeData(0)
-    this.width = this.nativeData(1).asInstanceOf[scala.Int]
-    this.height = this.nativeData(2).asInstanceOf[scala.Int]
-    this.format = this.nativeData(3).asInstanceOf[scala.Int]
+    this.width = this.nativeData(1).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
+    this.height = this.nativeData(2).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
+    this.format = this.nativeData(3).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
   }
   def this(in: java.io.InputStream, requestedFormat: scala.Int) = {
     this()
@@ -66,9 +66,9 @@ class Gdx2DPixmap extends com.badlogic.gdx.utils.Disposable {
       throw new java.io.IOException("Error loading pixmap: " + Gdx2DPixmap.getFailureReason())
     } else ()
     this.basePtr = this.nativeData(0)
-    this.width = this.nativeData(1).asInstanceOf[scala.Int]
-    this.height = this.nativeData(2).asInstanceOf[scala.Int]
-    this.format = this.nativeData(3).asInstanceOf[scala.Int]
+    this.width = this.nativeData(1).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
+    this.height = this.nativeData(2).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
+    this.format = this.nativeData(3).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
     if ((requestedFormat != 0) && (requestedFormat != this.format)) {
       this.convert(requestedFormat)
     } else ()
@@ -77,9 +77,9 @@ class Gdx2DPixmap extends com.badlogic.gdx.utils.Disposable {
     this()
     this.pixelPtr = pixelPtr
     this.basePtr = nativeData(0)
-    this.width = nativeData(1).asInstanceOf[scala.Int]
-    this.height = nativeData(2).asInstanceOf[scala.Int]
-    this.format = nativeData(3).asInstanceOf[scala.Int]
+    this.width = nativeData(1).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
+    this.height = nativeData(2).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
+    this.format = nativeData(3).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
   }
   private def convert(requestedFormat: scala.Int): scala.Unit = {
     val pixmap: Gdx2DPixmap = new Gdx2DPixmap(this.width, this.height, requestedFormat)

@@ -31,7 +31,7 @@ class ColorAttribute extends com.badlogic.gdx.graphics.g3d.Attribute {
   }
   def compareTo(o: com.badlogic.gdx.graphics.g3d.Attribute): scala.Int = {
     if (`type` != o.`type`) {
-      return (`type` - o.`type`).asInstanceOf[scala.Int]
+      return (`type` - o.`type`).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
     } else ()
     return o.asInstanceOf[ColorAttribute].color.toIntBits() - this.color.toIntBits()
   }
@@ -51,7 +51,7 @@ object ColorAttribute {
   final val AmbientLight: scala.Long = com.badlogic.gdx.graphics.g3d.Attribute.register(ColorAttribute.AmbientLightAlias)
   final val FogAlias: java.lang.String = "fogColor"
   final val Fog: scala.Long = com.badlogic.gdx.graphics.g3d.Attribute.register(ColorAttribute.FogAlias)
-  protected var Mask: scala.Long = (((((ColorAttribute.Ambient | ColorAttribute.Diffuse) | ColorAttribute.Specular) | ColorAttribute.Emissive) | ColorAttribute.Reflection) | ColorAttribute.AmbientLight) | ColorAttribute.Fog
+  var Mask: scala.Long = (((((ColorAttribute.Ambient | ColorAttribute.Diffuse) | ColorAttribute.Specular) | ColorAttribute.Emissive) | ColorAttribute.Reflection) | ColorAttribute.AmbientLight) | ColorAttribute.Fog
   final def is(mask: scala.Long): scala.Boolean = {
     return (mask & ColorAttribute.Mask) != 0
   }

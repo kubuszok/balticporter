@@ -32,8 +32,8 @@ class TextureRegionDrawable extends com.badlogic.gdx.scenes.scene2d.utils.BaseDr
   }
   def tint(tint: com.badlogic.gdx.graphics.Color): com.badlogic.gdx.scenes.scene2d.utils.Drawable = {
     var sprite: com.badlogic.gdx.graphics.g2d.Sprite = null.asInstanceOf[com.badlogic.gdx.graphics.g2d.Sprite]
-    if (this.region.isInstanceOf[com.badlogic.gdx.graphics.g2d.TextureAtlas#AtlasRegion]) {
-      sprite = new com.badlogic.gdx.graphics.g2d.TextureAtlas#AtlasSprite(this.region.asInstanceOf[com.badlogic.gdx.graphics.g2d.TextureAtlas#AtlasRegion])
+    if (this.region.isInstanceOf[com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion]) {
+      sprite = new com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasSprite(this.region.asInstanceOf[com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion])
     } else {
       sprite = new com.badlogic.gdx.graphics.g2d.Sprite(this.region)
     }

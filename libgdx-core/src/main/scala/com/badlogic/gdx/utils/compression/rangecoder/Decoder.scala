@@ -12,13 +12,13 @@ class Decoder {
   }
   final def Init(): scala.Unit = {
     this.Code = 0
-    this.Range = -1
+    this.Range = -1;
     { var i: scala.Int = 0; while (i < 5) { {
       this.Code = (this.Code << 8) | this.Stream.read()
     }; i = i + 1 } }
   }
   final def DecodeDirectBits(numTotalBits: scala.Int): scala.Int = {
-    var result: scala.Int = 0
+    var result: scala.Int = 0;
     { var i: scala.Int = numTotalBits; while (i != 0) { {
       this.Range = this.Range >>> 1
       val t: scala.Int = (this.Code - this.Range) >>> 31
@@ -36,7 +36,7 @@ class Decoder {
     val newBound: scala.Int = (this.Range >>> Decoder.kNumBitModelTotalBits) * prob
     if ((this.Code ^ -2147483648) < (newBound ^ -2147483648)) {
       this.Range = newBound
-      probs(index) = (prob + ((Decoder.kBitModelTotal - prob) >>> Decoder.kNumMoveBits)).asInstanceOf[scala.Short]
+      probs(index) = (prob + ((Decoder.kBitModelTotal - prob) >>> Decoder.kNumMoveBits)).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
       if ((this.Range & Decoder.kTopMask) == 0) {
         this.Code = (this.Code << 8) | this.Stream.read()
         this.Range = this.Range << 8
@@ -45,7 +45,7 @@ class Decoder {
     } else {
       this.Range = this.Range - newBound
       this.Code = this.Code - newBound
-      probs(index) = (prob - (prob >>> Decoder.kNumMoveBits)).asInstanceOf[scala.Short]
+      probs(index) = (prob - (prob >>> Decoder.kNumMoveBits)).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
       if ((this.Range & Decoder.kTopMask) == 0) {
         this.Code = (this.Code << 8) | this.Stream.read()
         this.Range = this.Range << 8
@@ -61,7 +61,7 @@ object Decoder {
   final val kNumMoveBits: scala.Int = 5
   def InitBitModels(probs: scala.Array[scala.Short]): scala.Unit = {
     { var i: scala.Int = 0; while (i < probs.length) { {
-      probs(i) = Decoder.kBitModelTotal >>> 1
+      probs(i) = (Decoder.kBitModelTotal >>> 1).asInstanceOf[scala.Short]
     }; i = i + 1 } }
   }
 }

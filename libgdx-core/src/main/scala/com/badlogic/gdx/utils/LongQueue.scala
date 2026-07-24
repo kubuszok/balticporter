@@ -1,9 +1,9 @@
 package com.badlogic.gdx.utils
 
 class LongQueue {
-  protected var values: scala.Array[scala.Long] = null.asInstanceOf[scala.Array[scala.Long]]
-  protected var head: scala.Int = 0
-  protected var tail: scala.Int = 0
+  var values: scala.Array[scala.Long] = null.asInstanceOf[scala.Array[scala.Long]]
+  var head: scala.Int = 0
+  var tail: scala.Int = 0
   var size: scala.Int = 0
   def this(initialSize: scala.Int) = {
     this()
@@ -42,7 +42,7 @@ class LongQueue {
       this.resize(needed)
     } else ()
   }
-  protected def resize(newSize: scala.Int): scala.Unit = {
+  def resize(newSize: scala.Int): scala.Unit = {
     var values: scala.Array[scala.Long] = this.values
     var head: scala.Int = this.head
     var tail: scala.Int = this.tail
@@ -106,7 +106,7 @@ class LongQueue {
         if (values(i) == value) {
           return i - head
         } else ()
-      }; i = i + 1 } }
+      }; i = i + 1 } };
       { var i: scala.Int = 0; while (i < tail) { {
         if (values(i) == value) {
           return (i + values.length) - head
@@ -213,7 +213,7 @@ class LongQueue {
     val tail: scala.Int = this.tail
     val sb: java.lang.StringBuilder = new java.lang.StringBuilder(64)
     sb.append('[')
-    sb.append(values(head))
+    sb.append(values(head));
     { var i: scala.Int = (head + 1) % values.length; while (i != tail) { {
       sb.append(", ").append(values(i))
     }; i = (i + 1) % values.length } }
@@ -228,7 +228,7 @@ class LongQueue {
     val head: scala.Int = this.head
     val tail: scala.Int = this.tail
     val sb: java.lang.StringBuilder = new java.lang.StringBuilder(64)
-    sb.append(values(head))
+    sb.append(values(head));
     { var i: scala.Int = (head + 1) % values.length; while (i != tail) { {
       sb.append(separator).append(values(i))
     }; i = (i + 1) % values.length } }
@@ -239,7 +239,7 @@ class LongQueue {
     val values: scala.Array[scala.Long] = this.values
     val backingLength: scala.Int = values.length
     var index: scala.Int = this.head
-    var hash: scala.Int = size + 1
+    var hash: scala.Int = size + 1;
     { var s: scala.Int = 0; while (s < size) { {
       val value: scala.Long = values(index)
       hash = hash + ((value ^ (value >>> 32)).asInstanceOf[scala.Int] * 31)
@@ -267,7 +267,7 @@ class LongQueue {
     val itsValues: scala.Array[scala.Long] = q.values
     val itsBackingLength: scala.Int = itsValues.length
     var myIndex: scala.Int = this.head
-    var itsIndex: scala.Int = q.head
+    var itsIndex: scala.Int = q.head;
     { var s: scala.Int = 0; while (s < size) { {
       if (myValues(myIndex) != itsValues(itsIndex)) {
         return false

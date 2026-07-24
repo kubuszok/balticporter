@@ -17,7 +17,7 @@ object CylinderShapeBuilder {
     val us: scala.Float = 1.0f / divisions
     var u: scala.Float = 0.0f
     var angle: scala.Float = 0.0f
-    val curr1: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder#VertexInfo = com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BaseShapeBuilder.vertTmp3.set(null, null, null, null)
+    val curr1: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo = com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BaseShapeBuilder.vertTmp3.set(null, null, null, null)
     curr1.hasUV = {
       curr1.hasPosition = {
         curr1.hasNormal = true
@@ -25,7 +25,7 @@ object CylinderShapeBuilder {
       }
       curr1.hasPosition
     }
-    val curr2: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder#VertexInfo = com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BaseShapeBuilder.vertTmp4.set(null, null, null, null)
+    val curr2: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo = com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BaseShapeBuilder.vertTmp4.set(null, null, null, null)
     curr2.hasUV = {
       curr2.hasPosition = {
         curr2.hasNormal = true
@@ -35,10 +35,10 @@ object CylinderShapeBuilder {
     }
     var i1: scala.Short = 0
     var i2: scala.Short = 0
-    var i3: scala.Short = 0
-    var i4: scala.Short = 0
+    var i3: scala.Short = 0.asInstanceOf[scala.Short]
+    var i4: scala.Short = 0.asInstanceOf[scala.Short]
     builder.ensureVertices(2 * (divisions + 1))
-    builder.ensureRectangleIndices(divisions)
+    builder.ensureRectangleIndices(divisions);
     { var i: scala.Int = 0; while (i <= divisions) { {
       angle = ao + (step * i)
       u = 1.0f - (us * i)

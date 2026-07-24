@@ -2,14 +2,14 @@ package com.badlogic.gdx.graphics
 
 object PixmapIO {
   def writeCIM(file: com.badlogic.gdx.files.FileHandle, pixmap: com.badlogic.gdx.graphics.Pixmap): scala.Unit = {
-    CIM.write(file, pixmap)
+    com.badlogic.gdx.graphics.PixmapIO.CIM.write(file, pixmap)
   }
   def readCIM(file: com.badlogic.gdx.files.FileHandle): com.badlogic.gdx.graphics.Pixmap = {
-    return CIM.read(file)
+    return com.badlogic.gdx.graphics.PixmapIO.CIM.read(file)
   }
   def writePNG(file: com.badlogic.gdx.files.FileHandle, pixmap: com.badlogic.gdx.graphics.Pixmap, compression: scala.Int, flipY: scala.Boolean): scala.Unit = {
     try {
-      val writer: PNG = new PNG(((pixmap.getWidth() * pixmap.getHeight()) * 1.5f).asInstanceOf[scala.Int])
+      val writer: com.badlogic.gdx.graphics.PixmapIO.PNG = new com.badlogic.gdx.graphics.PixmapIO.PNG(((pixmap.getWidth() * pixmap.getHeight()) * 1.5f).asInstanceOf[scala.Int])
       try {
         writer.setFlipY(flipY)
         writer.setCompression(compression)
@@ -28,8 +28,8 @@ object PixmapIO {
   }
   object CIM {
     private final val BUFFER_SIZE: scala.Int = 32000
-    private final val writeBuffer: scala.Array[scala.Byte] = new Array[scala.Byte](CIM.BUFFER_SIZE)
-    private final val readBuffer: scala.Array[scala.Byte] = new Array[scala.Byte](CIM.BUFFER_SIZE)
+    private final val writeBuffer: scala.Array[scala.Byte] = new Array[scala.Byte](com.badlogic.gdx.graphics.PixmapIO.CIM.BUFFER_SIZE)
+    private final val readBuffer: scala.Array[scala.Byte] = new Array[scala.Byte](com.badlogic.gdx.graphics.PixmapIO.CIM.BUFFER_SIZE)
     def write(file: com.badlogic.gdx.files.FileHandle, pixmap: com.badlogic.gdx.graphics.Pixmap): scala.Unit = {
       var out: java.io.DataOutputStream = null
       try {
@@ -41,15 +41,15 @@ object PixmapIO {
         val pixelBuf: java.nio.ByteBuffer = pixmap.getPixels()
         pixelBuf.asInstanceOf[java.nio.Buffer].position(0)
         pixelBuf.asInstanceOf[java.nio.Buffer].limit(pixelBuf.capacity())
-        val remainingBytes: scala.Int = pixelBuf.capacity() % CIM.BUFFER_SIZE
-        val iterations: scala.Int = pixelBuf.capacity() / CIM.BUFFER_SIZE
-        CIM.writeBuffer.synchronized {
+        val remainingBytes: scala.Int = pixelBuf.capacity() % com.badlogic.gdx.graphics.PixmapIO.CIM.BUFFER_SIZE
+        val iterations: scala.Int = pixelBuf.capacity() / com.badlogic.gdx.graphics.PixmapIO.CIM.BUFFER_SIZE
+        com.badlogic.gdx.graphics.PixmapIO.CIM.writeBuffer.synchronized {
           { var i: scala.Int = 0; while (i < iterations) { {
-            pixelBuf.get(CIM.writeBuffer)
-            out.write(CIM.writeBuffer)
+            pixelBuf.get(com.badlogic.gdx.graphics.PixmapIO.CIM.writeBuffer)
+            out.write(com.badlogic.gdx.graphics.PixmapIO.CIM.writeBuffer)
           }; i = i + 1 } }
-          pixelBuf.get(CIM.writeBuffer, 0, remainingBytes)
-          out.write(CIM.writeBuffer, 0, remainingBytes)
+          pixelBuf.get(com.badlogic.gdx.graphics.PixmapIO.CIM.writeBuffer, 0, remainingBytes)
+          out.write(com.badlogic.gdx.graphics.PixmapIO.CIM.writeBuffer, 0, remainingBytes)
         }
         pixelBuf.asInstanceOf[java.nio.Buffer].position(0)
         pixelBuf.asInstanceOf[java.nio.Buffer].limit(pixelBuf.capacity())
@@ -67,18 +67,18 @@ object PixmapIO {
         in = new java.io.DataInputStream(new java.util.zip.InflaterInputStream(new java.io.BufferedInputStream(file.read())))
         val width: scala.Int = in.readInt()
         val height: scala.Int = in.readInt()
-        val format: com.badlogic.gdx.graphics.Pixmap#Format = com.badlogic.gdx.graphics.Pixmap.Format.fromGdx2DPixmapFormat(in.readInt())
+        val format: com.badlogic.gdx.graphics.Pixmap.Format = com.badlogic.gdx.graphics.Pixmap.Format.fromGdx2DPixmapFormat(in.readInt())
         val pixmap: com.badlogic.gdx.graphics.Pixmap = new com.badlogic.gdx.graphics.Pixmap(width, height, format)
         val pixelBuf: java.nio.ByteBuffer = pixmap.getPixels()
         pixelBuf.asInstanceOf[java.nio.Buffer].position(0)
         pixelBuf.asInstanceOf[java.nio.Buffer].limit(pixelBuf.capacity())
-        CIM.readBuffer.synchronized {
+        com.badlogic.gdx.graphics.PixmapIO.CIM.readBuffer.synchronized {
           var readBytes: scala.Int = 0
           while ({
-            readBytes = in.read(CIM.readBuffer)
+            readBytes = in.read(com.badlogic.gdx.graphics.PixmapIO.CIM.readBuffer)
             readBytes
           } > 0) {
-            pixelBuf.put(CIM.readBuffer, 0, readBytes)
+            pixelBuf.put(com.badlogic.gdx.graphics.PixmapIO.CIM.readBuffer, 0, readBytes)
           }
         }
         pixelBuf.asInstanceOf[java.nio.Buffer].position(0)
@@ -94,7 +94,7 @@ object PixmapIO {
     }
   }
   class PNG extends com.badlogic.gdx.utils.Disposable {
-    private var buffer: ChunkBuffer = null.asInstanceOf[ChunkBuffer]
+    private var buffer: com.badlogic.gdx.graphics.PixmapIO.PNG.ChunkBuffer = null.asInstanceOf[com.badlogic.gdx.graphics.PixmapIO.PNG.ChunkBuffer]
     private var deflater: java.util.zip.Deflater = null.asInstanceOf[java.util.zip.Deflater]
     private var lineOutBytes: com.badlogic.gdx.utils.ByteArray = null.asInstanceOf[com.badlogic.gdx.utils.ByteArray]
     private var curLineBytes: com.badlogic.gdx.utils.ByteArray = null.asInstanceOf[com.badlogic.gdx.utils.ByteArray]
@@ -103,7 +103,7 @@ object PixmapIO {
     private var lastLineLen: scala.Int = 0
     def this(initialBufferSize: scala.Int) = {
       this()
-      this.buffer = new ChunkBuffer(initialBufferSize)
+      this.buffer = new com.badlogic.gdx.graphics.PixmapIO.PNG.ChunkBuffer(initialBufferSize)
       this.deflater = new java.util.zip.Deflater()
     }
     def setFlipY(flipY: scala.Boolean): scala.Unit = {
@@ -123,17 +123,17 @@ object PixmapIO {
     def write(output: java.io.OutputStream, pixmap: com.badlogic.gdx.graphics.Pixmap): scala.Unit = {
       val deflaterOutput: java.util.zip.DeflaterOutputStream = new java.util.zip.DeflaterOutputStream(this.buffer, this.deflater)
       val dataOutput: java.io.DataOutputStream = new java.io.DataOutputStream(output)
-      dataOutput.write(PNG.SIGNATURE)
-      this.buffer.writeInt(PNG.IHDR)
+      dataOutput.write(com.badlogic.gdx.graphics.PixmapIO.PNG.SIGNATURE)
+      this.buffer.writeInt(com.badlogic.gdx.graphics.PixmapIO.PNG.IHDR)
       this.buffer.writeInt(pixmap.getWidth())
       this.buffer.writeInt(pixmap.getHeight())
       this.buffer.writeByte(8)
-      this.buffer.writeByte(PNG.COLOR_ARGB)
-      this.buffer.writeByte(PNG.COMPRESSION_DEFLATE)
-      this.buffer.writeByte(PNG.FILTER_NONE)
-      this.buffer.writeByte(PNG.INTERLACE_NONE)
+      this.buffer.writeByte(com.badlogic.gdx.graphics.PixmapIO.PNG.COLOR_ARGB)
+      this.buffer.writeByte(com.badlogic.gdx.graphics.PixmapIO.PNG.COMPRESSION_DEFLATE)
+      this.buffer.writeByte(com.badlogic.gdx.graphics.PixmapIO.PNG.FILTER_NONE)
+      this.buffer.writeByte(com.badlogic.gdx.graphics.PixmapIO.PNG.INTERLACE_NONE)
       this.buffer.endChunk(dataOutput)
-      this.buffer.writeInt(PNG.IDAT)
+      this.buffer.writeInt(com.badlogic.gdx.graphics.PixmapIO.PNG.IDAT)
       this.deflater.reset()
       val lineLen: scala.Int = pixmap.getWidth() * 4
       var lineOut: scala.Array[scala.Byte] = null.asInstanceOf[scala.Array[scala.Byte]]
@@ -155,15 +155,15 @@ object PixmapIO {
       } else {
         lineOut = this.lineOutBytes.ensureCapacity(lineLen)
         curLine = this.curLineBytes.ensureCapacity(lineLen)
-        prevLine = this.prevLineBytes.ensureCapacity(lineLen)
+        prevLine = this.prevLineBytes.ensureCapacity(lineLen);
         { var i: scala.Int = 0; val n: scala.Int = this.lastLineLen; while (i < n) { {
-          prevLine(i) = 0
+          prevLine(i) = 0.asInstanceOf[scala.Byte]
         }; i = i + 1 } }
       }
       this.lastLineLen = lineLen
       val pixels: java.nio.ByteBuffer = pixmap.getPixels()
       val oldPosition: scala.Int = pixels.position()
-      val rgba8888: scala.Boolean = pixmap.getFormat() == com.badlogic.gdx.graphics.Pixmap.Format.RGBA8888
+      val rgba8888: scala.Boolean = pixmap.getFormat() == com.badlogic.gdx.graphics.Pixmap.Format.RGBA8888;
       { var y: scala.Int = 0; val h: scala.Int = pixmap.getHeight(); while (y < h) { {
         val py: scala.Int = if (this.flipY) (h - y) - 1 else y
         if (rgba8888) {
@@ -172,16 +172,16 @@ object PixmapIO {
         } else {
           { var px: scala.Int = 0; var x: scala.Int = 0; while (px < pixmap.getWidth()) { {
             val pixel: scala.Int = pixmap.getPixel(px, py)
-            curLine({ x += 1; x }) = ((pixel >> 24) & 255).asInstanceOf[scala.Byte]
-            curLine({ x += 1; x }) = ((pixel >> 16) & 255).asInstanceOf[scala.Byte]
-            curLine({ x += 1; x }) = ((pixel >> 8) & 255).asInstanceOf[scala.Byte]
-            curLine({ x += 1; x }) = (pixel & 255).asInstanceOf[scala.Byte]
+            curLine({ x += 1; x }) = ((pixel >> 24) & 255).asInstanceOf[scala.Byte].asInstanceOf[scala.Byte]
+            curLine({ x += 1; x }) = ((pixel >> 16) & 255).asInstanceOf[scala.Byte].asInstanceOf[scala.Byte]
+            curLine({ x += 1; x }) = ((pixel >> 8) & 255).asInstanceOf[scala.Byte].asInstanceOf[scala.Byte]
+            curLine({ x += 1; x }) = (pixel & 255).asInstanceOf[scala.Byte].asInstanceOf[scala.Byte]
           }; px = px + 1 } }
         }
-        lineOut(0) = (curLine(0) - prevLine(0)).asInstanceOf[scala.Byte]
-        lineOut(1) = (curLine(1) - prevLine(1)).asInstanceOf[scala.Byte]
-        lineOut(2) = (curLine(2) - prevLine(2)).asInstanceOf[scala.Byte]
-        lineOut(3) = (curLine(3) - prevLine(3)).asInstanceOf[scala.Byte]
+        lineOut(0) = (curLine(0) - prevLine(0)).asInstanceOf[scala.Byte].asInstanceOf[scala.Byte]
+        lineOut(1) = (curLine(1) - prevLine(1)).asInstanceOf[scala.Byte].asInstanceOf[scala.Byte]
+        lineOut(2) = (curLine(2) - prevLine(2)).asInstanceOf[scala.Byte].asInstanceOf[scala.Byte]
+        lineOut(3) = (curLine(3) - prevLine(3)).asInstanceOf[scala.Byte].asInstanceOf[scala.Byte];
         { var x: scala.Int = 4; while (x < lineLen) { {
           val a: scala.Int = curLine(x - 4) & 255
           val b: scala.Int = prevLine(x) & 255
@@ -206,9 +206,9 @@ object PixmapIO {
               c = b
             } else ()
           }
-          lineOut(x) = (curLine(x) - c).asInstanceOf[scala.Byte]
+          lineOut(x) = (curLine(x) - c).asInstanceOf[scala.Byte].asInstanceOf[scala.Byte]
         }; x = x + 1 } }
-        deflaterOutput.write(PNG.PAETH)
+        deflaterOutput.write(com.badlogic.gdx.graphics.PixmapIO.PNG.PAETH)
         deflaterOutput.write(lineOut, 0, lineLen)
         val temp: scala.Array[scala.Byte] = curLine
         curLine = prevLine
@@ -217,13 +217,24 @@ object PixmapIO {
       pixels.asInstanceOf[java.nio.Buffer].position(oldPosition)
       deflaterOutput.finish()
       this.buffer.endChunk(dataOutput)
-      this.buffer.writeInt(PNG.IEND)
+      this.buffer.writeInt(com.badlogic.gdx.graphics.PixmapIO.PNG.IEND)
       this.buffer.endChunk(dataOutput)
       output.flush()
     }
     def dispose(): scala.Unit = {
       this.deflater.`end`()
     }
+  }
+  object PNG {
+    private final val SIGNATURE: scala.Array[scala.Byte] = Array[scala.Byte](137.asInstanceOf[scala.Byte], 80, 78, 71, 13, 10, 26, 10)
+    private final val IHDR: scala.Int = 1229472850
+    private final val IDAT: scala.Int = 1229209940
+    private final val IEND: scala.Int = 1229278788
+    private final val COLOR_ARGB: scala.Byte = 6
+    private final val COMPRESSION_DEFLATE: scala.Byte = 0
+    private final val FILTER_NONE: scala.Byte = 0
+    private final val INTERLACE_NONE: scala.Byte = 0
+    private final val PAETH: scala.Byte = 4
     class ChunkBuffer extends java.io.DataOutputStream {
       var buffer: java.io.ByteArrayOutputStream = null.asInstanceOf[java.io.ByteArrayOutputStream]
       var crc: java.util.zip.CRC32 = null.asInstanceOf[java.util.zip.CRC32]
@@ -244,16 +255,5 @@ object PixmapIO {
         this.crc.reset()
       }
     }
-  }
-  object PNG {
-    private final val SIGNATURE: scala.Array[scala.Byte] = Array[scala.Byte](137.asInstanceOf[scala.Byte], 80, 78, 71, 13, 10, 26, 10)
-    private final val IHDR: scala.Int = 1229472850
-    private final val IDAT: scala.Int = 1229209940
-    private final val IEND: scala.Int = 1229278788
-    private final val COLOR_ARGB: scala.Byte = 6
-    private final val COMPRESSION_DEFLATE: scala.Byte = 0
-    private final val FILTER_NONE: scala.Byte = 0
-    private final val INTERLACE_NONE: scala.Byte = 0
-    private final val PAETH: scala.Byte = 4
   }
 }

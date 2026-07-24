@@ -1,8 +1,8 @@
 package com.badlogic.gdx.graphics.g3d.loader
 
-class G3dModelLoader extends com.badlogic.gdx.assets.loaders.ModelLoader[com.badlogic.gdx.assets.loaders.ModelLoader#ModelParameters] {
-  protected var reader: com.badlogic.gdx.utils.BaseJsonReader = null.asInstanceOf[com.badlogic.gdx.utils.BaseJsonReader]
-  protected final val tempQ: com.badlogic.gdx.math.Quaternion = new com.badlogic.gdx.math.Quaternion()
+class G3dModelLoader extends com.badlogic.gdx.assets.loaders.ModelLoader[com.badlogic.gdx.assets.loaders.ModelLoader.ModelParameters] {
+  var reader: com.badlogic.gdx.utils.BaseJsonReader = null.asInstanceOf[com.badlogic.gdx.utils.BaseJsonReader]
+  final val tempQ: com.badlogic.gdx.math.Quaternion = new com.badlogic.gdx.math.Quaternion()
   def this(reader: com.badlogic.gdx.utils.BaseJsonReader, resolver: com.badlogic.gdx.assets.loaders.FileHandleResolver) = {
     this()
     this.reader = reader
@@ -10,7 +10,7 @@ class G3dModelLoader extends com.badlogic.gdx.assets.loaders.ModelLoader[com.bad
   def this(reader: com.badlogic.gdx.utils.BaseJsonReader) = {
     this(reader, null)
   }
-  def loadModelData(fileHandle: com.badlogic.gdx.files.FileHandle, parameters: com.badlogic.gdx.assets.loaders.ModelLoader#ModelParameters): com.badlogic.gdx.graphics.g3d.model.data.ModelData = {
+  def loadModelData(fileHandle: com.badlogic.gdx.files.FileHandle, parameters: com.badlogic.gdx.assets.loaders.ModelLoader.ModelParameters): com.badlogic.gdx.graphics.g3d.model.data.ModelData = {
     return this.parseModel(fileHandle)
   }
   def parseModel(handle: com.badlogic.gdx.files.FileHandle): com.badlogic.gdx.graphics.g3d.model.data.ModelData = {
@@ -29,10 +29,10 @@ class G3dModelLoader extends com.badlogic.gdx.assets.loaders.ModelLoader[com.bad
     this.parseAnimations(model, json)
     return model
   }
-  protected def parseMeshes(model: com.badlogic.gdx.graphics.g3d.model.data.ModelData, json: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
+  def parseMeshes(model: com.badlogic.gdx.graphics.g3d.model.data.ModelData, json: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
     val meshes: com.badlogic.gdx.utils.JsonValue = json.get("meshes")
     if (meshes != null) {
-      model.meshes.ensureCapacity(meshes.size$field)
+      model.meshes.ensureCapacity(meshes.size$field);
       { var mesh: com.badlogic.gdx.utils.JsonValue = meshes.child$field; while (mesh != null) { {
         val jsonMesh: com.badlogic.gdx.graphics.g3d.model.data.ModelMesh = new com.badlogic.gdx.graphics.g3d.model.data.ModelMesh()
         var id: java.lang.String = mesh.getString("id", "")
@@ -41,7 +41,7 @@ class G3dModelLoader extends com.badlogic.gdx.assets.loaders.ModelLoader[com.bad
         jsonMesh.attributes = this.parseAttributes(attributes)
         jsonMesh.vertices = mesh.require("vertices").asFloatArray()
         val meshParts: com.badlogic.gdx.utils.JsonValue = mesh.require("parts")
-        var parts: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.model.data.ModelMeshPart] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.model.data.ModelMeshPart]()
+        var parts: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.model.data.ModelMeshPart] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.model.data.ModelMeshPart]();
         { var meshPart: com.badlogic.gdx.utils.JsonValue = meshParts.child$field; while (meshPart != null) { {
           val jsonPart: com.badlogic.gdx.graphics.g3d.model.data.ModelMeshPart = new com.badlogic.gdx.graphics.g3d.model.data.ModelMeshPart()
           val partId: java.lang.String = meshPart.getString("id", null)
@@ -67,7 +67,7 @@ class G3dModelLoader extends com.badlogic.gdx.assets.loaders.ModelLoader[com.bad
       }; mesh = mesh.next$field } }
     } else ()
   }
-  protected def parseType(`type`: java.lang.String): scala.Int = {
+  def parseType(`type`: java.lang.String): scala.Int = {
     if (`type`.equals("TRIANGLES")) {
       return com.badlogic.gdx.graphics.GL20.GL_TRIANGLES
     } else {
@@ -90,10 +90,10 @@ class G3dModelLoader extends com.badlogic.gdx.assets.loaders.ModelLoader[com.bad
       }
     }
   }
-  protected def parseAttributes(attributes: com.badlogic.gdx.utils.JsonValue): scala.Array[com.badlogic.gdx.graphics.VertexAttribute] = {
+  def parseAttributes(attributes: com.badlogic.gdx.utils.JsonValue): scala.Array[com.badlogic.gdx.graphics.VertexAttribute] = {
     val vertexAttributes: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.VertexAttribute] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.VertexAttribute]()
     var unit: scala.Int = 0
-    var blendWeightCount: scala.Int = 0
+    var blendWeightCount: scala.Int = 0;
     { var value: com.badlogic.gdx.utils.JsonValue = attributes.child$field; while (value != null) { {
       val attribute: java.lang.String = value.asString()
       val attr: java.lang.String = attribute.asInstanceOf[java.lang.String]
@@ -133,12 +133,12 @@ class G3dModelLoader extends com.badlogic.gdx.assets.loaders.ModelLoader[com.bad
     }; value = value.next$field } }
     return vertexAttributes.toArray(scala.Array[com.badlogic.gdx.graphics.VertexAttribute].<init>)
   }
-  protected def parseMaterials(model: com.badlogic.gdx.graphics.g3d.model.data.ModelData, json: com.badlogic.gdx.utils.JsonValue, materialDir: java.lang.String): scala.Unit = {
+  def parseMaterials(model: com.badlogic.gdx.graphics.g3d.model.data.ModelData, json: com.badlogic.gdx.utils.JsonValue, materialDir: java.lang.String): scala.Unit = {
     val materials: com.badlogic.gdx.utils.JsonValue = json.get("materials")
     if (materials == null) {
       ()
     } else {
-      model.materials.ensureCapacity(materials.size$field)
+      model.materials.ensureCapacity(materials.size$field);
       { var material: com.badlogic.gdx.utils.JsonValue = materials.child$field; while (material != null) { {
         val jsonMaterial: com.badlogic.gdx.graphics.g3d.model.data.ModelMaterial = new com.badlogic.gdx.graphics.g3d.model.data.ModelMaterial()
         var id: java.lang.String = material.getString("id", null)
@@ -199,7 +199,7 @@ class G3dModelLoader extends com.badlogic.gdx.assets.loaders.ModelLoader[com.bad
       }; material = material.next$field } }
     }
   }
-  protected def parseTextureUsage(value: java.lang.String): scala.Int = {
+  def parseTextureUsage(value: java.lang.String): scala.Int = {
     if (value.equalsIgnoreCase("AMBIENT")) {
       return com.badlogic.gdx.graphics.g3d.model.data.ModelTexture.USAGE_AMBIENT
     } else {
@@ -241,14 +241,14 @@ class G3dModelLoader extends com.badlogic.gdx.assets.loaders.ModelLoader[com.bad
     }
     return com.badlogic.gdx.graphics.g3d.model.data.ModelTexture.USAGE_UNKNOWN
   }
-  protected def parseColor(colorArray: com.badlogic.gdx.utils.JsonValue): com.badlogic.gdx.graphics.Color = {
+  def parseColor(colorArray: com.badlogic.gdx.utils.JsonValue): com.badlogic.gdx.graphics.Color = {
     if (colorArray.size$field >= 3) {
       return new com.badlogic.gdx.graphics.Color(colorArray.getFloat(0), colorArray.getFloat(1), colorArray.getFloat(2), 1.0f)
     } else {
       throw new com.badlogic.gdx.utils.GdxRuntimeException("Expected Color values <> than three.")
     }
   }
-  protected def readVector2(vectorArray: com.badlogic.gdx.utils.JsonValue, x: scala.Float, y: scala.Float): com.badlogic.gdx.math.Vector2 = {
+  def readVector2(vectorArray: com.badlogic.gdx.utils.JsonValue, x: scala.Float, y: scala.Float): com.badlogic.gdx.math.Vector2 = {
     if (vectorArray == null) {
       return new com.badlogic.gdx.math.Vector2(x, y)
     } else {
@@ -259,17 +259,17 @@ class G3dModelLoader extends com.badlogic.gdx.assets.loaders.ModelLoader[com.bad
       }
     }
   }
-  protected def parseNodes(model: com.badlogic.gdx.graphics.g3d.model.data.ModelData, json: com.badlogic.gdx.utils.JsonValue): com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.model.data.ModelNode] = {
+  def parseNodes(model: com.badlogic.gdx.graphics.g3d.model.data.ModelData, json: com.badlogic.gdx.utils.JsonValue): com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.model.data.ModelNode] = {
     val nodes: com.badlogic.gdx.utils.JsonValue = json.get("nodes")
     if (nodes != null) {
-      model.nodes.ensureCapacity(nodes.size$field)
+      model.nodes.ensureCapacity(nodes.size$field);
       { var node: com.badlogic.gdx.utils.JsonValue = nodes.child$field; while (node != null) { {
         model.nodes.add(this.parseNodesRecursively(node))
       }; node = node.next$field } }
     } else ()
     return model.nodes
   }
-  protected def parseNodesRecursively(json: com.badlogic.gdx.utils.JsonValue): com.badlogic.gdx.graphics.g3d.model.data.ModelNode = {
+  def parseNodesRecursively(json: com.badlogic.gdx.utils.JsonValue): com.badlogic.gdx.graphics.g3d.model.data.ModelNode = {
     val jsonNode: com.badlogic.gdx.graphics.g3d.model.data.ModelNode = new com.badlogic.gdx.graphics.g3d.model.data.ModelNode()
     var id: java.lang.String = json.getString("id", null)
     if (id == null) {
@@ -298,7 +298,7 @@ class G3dModelLoader extends com.badlogic.gdx.assets.loaders.ModelLoader[com.bad
     val materials: com.badlogic.gdx.utils.JsonValue = json.get("parts")
     if (materials != null) {
       jsonNode.parts = new Array[com.badlogic.gdx.graphics.g3d.model.data.ModelNodePart](materials.size$field)
-      var i: scala.Int = 0
+      var i: scala.Int = 0;
       { var material: com.badlogic.gdx.utils.JsonValue = materials.child$field; while (material != null) { {
         val nodePart: com.badlogic.gdx.graphics.g3d.model.data.ModelNodePart = new com.badlogic.gdx.graphics.g3d.model.data.ModelNodePart()
         var meshPartId: java.lang.String = material.getString("meshpartid", null)
@@ -311,7 +311,7 @@ class G3dModelLoader extends com.badlogic.gdx.assets.loaders.ModelLoader[com.bad
         var bones: com.badlogic.gdx.utils.JsonValue = material.get("bones")
         if (bones != null) {
           nodePart.bones = new com.badlogic.gdx.utils.ArrayMap[java.lang.String, com.badlogic.gdx.math.Matrix4](true, bones.size$field, scala.Array[java.lang.String].<init>, scala.Array[com.badlogic.gdx.math.Matrix4].<init>)
-          var j: scala.Int = 0
+          var j: scala.Int = 0;
           { var bone: com.badlogic.gdx.utils.JsonValue = bones.child$field; while (bone != null) { {
             val nodeId: java.lang.String = bone.getString("node", null)
             if (nodeId == null) {
@@ -339,19 +339,19 @@ class G3dModelLoader extends com.badlogic.gdx.assets.loaders.ModelLoader[com.bad
     var children: com.badlogic.gdx.utils.JsonValue = json.get("children")
     if (children != null) {
       jsonNode.children = new Array[com.badlogic.gdx.graphics.g3d.model.data.ModelNode](children.size$field)
-      var i: scala.Int = 0
+      var i: scala.Int = 0;
       { var child: com.badlogic.gdx.utils.JsonValue = children.child$field; while (child != null) { {
         jsonNode.children(i) = this.parseNodesRecursively(child)
       }; child = child.next$field; i = i + 1 } }
     } else ()
     return jsonNode
   }
-  protected def parseAnimations(model: com.badlogic.gdx.graphics.g3d.model.data.ModelData, json: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
+  def parseAnimations(model: com.badlogic.gdx.graphics.g3d.model.data.ModelData, json: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
     val animations: com.badlogic.gdx.utils.JsonValue = json.get("animations")
     if (animations == null) {
       return
     } else ()
-    model.animations.ensureCapacity(animations.size$field)
+    model.animations.ensureCapacity(animations.size$field);
     { var anim: com.badlogic.gdx.utils.JsonValue = animations.child$field; while (anim != null) { {
       val nodes: com.badlogic.gdx.utils.JsonValue = anim.get("bones")
       if (nodes == null) {
@@ -360,7 +360,7 @@ class G3dModelLoader extends com.badlogic.gdx.assets.loaders.ModelLoader[com.bad
       val animation: com.badlogic.gdx.graphics.g3d.model.data.ModelAnimation = new com.badlogic.gdx.graphics.g3d.model.data.ModelAnimation()
       model.animations.add(animation)
       animation.nodeAnimations.ensureCapacity(nodes.size$field)
-      animation.id = anim.getString("id")
+      animation.id = anim.getString("id");
       { var node: com.badlogic.gdx.utils.JsonValue = nodes.child$field; while (node != null) { {
         val nodeAnim: com.badlogic.gdx.graphics.g3d.model.data.ModelNodeAnimation = new com.badlogic.gdx.graphics.g3d.model.data.ModelNodeAnimation()
         animation.nodeAnimations.add(nodeAnim)
@@ -404,7 +404,7 @@ class G3dModelLoader extends com.badlogic.gdx.assets.loaders.ModelLoader[com.bad
           val translationKF: com.badlogic.gdx.utils.JsonValue = node.get("translation")
           if ((translationKF != null) && translationKF.isArray()) {
             nodeAnim.translation = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.model.data.ModelNodeKeyframe[com.badlogic.gdx.math.Vector3]]()
-            nodeAnim.translation.ensureCapacity(translationKF.size$field)
+            nodeAnim.translation.ensureCapacity(translationKF.size$field);
             { var keyframe: com.badlogic.gdx.utils.JsonValue = translationKF.child$field; while (keyframe != null) { {
               val kf: com.badlogic.gdx.graphics.g3d.model.data.ModelNodeKeyframe[com.badlogic.gdx.math.Vector3] = new com.badlogic.gdx.graphics.g3d.model.data.ModelNodeKeyframe[com.badlogic.gdx.math.Vector3]()
               nodeAnim.translation.add(kf)
@@ -418,7 +418,7 @@ class G3dModelLoader extends com.badlogic.gdx.assets.loaders.ModelLoader[com.bad
           val rotationKF: com.badlogic.gdx.utils.JsonValue = node.get("rotation")
           if ((rotationKF != null) && rotationKF.isArray()) {
             nodeAnim.rotation = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.model.data.ModelNodeKeyframe[com.badlogic.gdx.math.Quaternion]]()
-            nodeAnim.rotation.ensureCapacity(rotationKF.size$field)
+            nodeAnim.rotation.ensureCapacity(rotationKF.size$field);
             { var keyframe: com.badlogic.gdx.utils.JsonValue = rotationKF.child$field; while (keyframe != null) { {
               val kf: com.badlogic.gdx.graphics.g3d.model.data.ModelNodeKeyframe[com.badlogic.gdx.math.Quaternion] = new com.badlogic.gdx.graphics.g3d.model.data.ModelNodeKeyframe[com.badlogic.gdx.math.Quaternion]()
               nodeAnim.rotation.add(kf)
@@ -432,7 +432,7 @@ class G3dModelLoader extends com.badlogic.gdx.assets.loaders.ModelLoader[com.bad
           val scalingKF: com.badlogic.gdx.utils.JsonValue = node.get("scaling")
           if ((scalingKF != null) && scalingKF.isArray()) {
             nodeAnim.scaling = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.model.data.ModelNodeKeyframe[com.badlogic.gdx.math.Vector3]]()
-            nodeAnim.scaling.ensureCapacity(scalingKF.size$field)
+            nodeAnim.scaling.ensureCapacity(scalingKF.size$field);
             { var keyframe: com.badlogic.gdx.utils.JsonValue = scalingKF.child$field; while (keyframe != null) { {
               val kf: com.badlogic.gdx.graphics.g3d.model.data.ModelNodeKeyframe[com.badlogic.gdx.math.Vector3] = new com.badlogic.gdx.graphics.g3d.model.data.ModelNodeKeyframe[com.badlogic.gdx.math.Vector3]()
               nodeAnim.scaling.add(kf)

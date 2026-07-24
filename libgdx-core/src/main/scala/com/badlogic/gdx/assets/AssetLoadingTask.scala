@@ -2,18 +2,18 @@ package com.badlogic.gdx.assets
 
 class AssetLoadingTask extends com.badlogic.gdx.utils.async.AsyncTask[java.lang.Void] {
   var manager: com.badlogic.gdx.assets.AssetManager = null.asInstanceOf[com.badlogic.gdx.assets.AssetManager]
-  var assetDesc: com.badlogic.gdx.assets.AssetDescriptor = null.asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor]
-  var loader: com.badlogic.gdx.assets.loaders.AssetLoader = null.asInstanceOf[com.badlogic.gdx.assets.loaders.AssetLoader]
+  var assetDesc: com.badlogic.gdx.assets.AssetDescriptor[?] = null.asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[?]]
+  var loader: com.badlogic.gdx.assets.loaders.AssetLoader[?, ?] = null.asInstanceOf[com.badlogic.gdx.assets.loaders.AssetLoader[?, ?]]
   var executor: com.badlogic.gdx.utils.async.AsyncExecutor = null.asInstanceOf[com.badlogic.gdx.utils.async.AsyncExecutor]
   var startTime: scala.Long = 0L
   var asyncDone: scala.Boolean = false
   var dependenciesLoaded: scala.Boolean = false
-  var dependencies: com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor] = null.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor]]
+  var dependencies: com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = null.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]]
   var depsFuture: com.badlogic.gdx.utils.async.AsyncResult[java.lang.Void] = null.asInstanceOf[com.badlogic.gdx.utils.async.AsyncResult[java.lang.Void]]
   var loadFuture: com.badlogic.gdx.utils.async.AsyncResult[java.lang.Void] = null.asInstanceOf[com.badlogic.gdx.utils.async.AsyncResult[java.lang.Void]]
   var asset: java.lang.Object = null.asInstanceOf[java.lang.Object]
   var cancel: scala.Boolean = false
-  def this(manager: com.badlogic.gdx.assets.AssetManager, assetDesc: com.badlogic.gdx.assets.AssetDescriptor, loader: com.badlogic.gdx.assets.loaders.AssetLoader, threadPool: com.badlogic.gdx.utils.async.AsyncExecutor) = {
+  def this(manager: com.badlogic.gdx.assets.AssetManager, assetDesc: com.badlogic.gdx.assets.AssetDescriptor[?], loader: com.badlogic.gdx.assets.loaders.AssetLoader[?, ?], threadPool: com.badlogic.gdx.utils.async.AsyncExecutor) = {
     this()
     this.manager = manager
     this.assetDesc = assetDesc
@@ -25,7 +25,7 @@ class AssetLoadingTask extends com.badlogic.gdx.utils.async.AsyncTask[java.lang.
     if (this.cancel) {
       return null
     } else ()
-    val asyncLoader: com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader = this.loader.asInstanceOf[com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader]
+    val asyncLoader: com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader[?, ?] = this.loader.asInstanceOf[com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader[?, ?]]
     if (!this.dependenciesLoaded) {
       this.dependencies = asyncLoader.getDependencies(this.assetDesc.fileName, this.resolve(this.loader, this.assetDesc), this.assetDesc.params)
       if (this.dependencies != null) {
@@ -42,7 +42,7 @@ class AssetLoadingTask extends com.badlogic.gdx.utils.async.AsyncTask[java.lang.
     return null
   }
   def update(): scala.Boolean = {
-    if (this.loader.isInstanceOf[com.badlogic.gdx.assets.loaders.SynchronousAssetLoader]) {
+    if (this.loader.isInstanceOf[com.badlogic.gdx.assets.loaders.SynchronousAssetLoader[?, ?]]) {
       this.handleSyncLoader()
     } else {
       this.handleAsyncLoader()
@@ -50,7 +50,7 @@ class AssetLoadingTask extends com.badlogic.gdx.utils.async.AsyncTask[java.lang.
     return this.asset != null
   }
   private def handleSyncLoader(): scala.Unit = {
-    val syncLoader: com.badlogic.gdx.assets.loaders.SynchronousAssetLoader = this.loader.asInstanceOf[com.badlogic.gdx.assets.loaders.SynchronousAssetLoader]
+    val syncLoader: com.badlogic.gdx.assets.loaders.SynchronousAssetLoader[?, ?] = this.loader.asInstanceOf[com.badlogic.gdx.assets.loaders.SynchronousAssetLoader[?, ?]]
     if (!this.dependenciesLoaded) {
       this.dependenciesLoaded = true
       this.dependencies = syncLoader.getDependencies(this.assetDesc.fileName, this.resolve(this.loader, this.assetDesc), this.assetDesc.params)
@@ -65,7 +65,7 @@ class AssetLoadingTask extends com.badlogic.gdx.utils.async.AsyncTask[java.lang.
     }
   }
   private def handleAsyncLoader(): scala.Unit = {
-    val asyncLoader: com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader = this.loader.asInstanceOf[com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader]
+    val asyncLoader: com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader[?, ?] = this.loader.asInstanceOf[com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader[?, ?]]
     if (!this.dependenciesLoaded) {
       if (this.depsFuture == null) {
         this.depsFuture = this.executor.submit(this)
@@ -106,22 +106,22 @@ class AssetLoadingTask extends com.badlogic.gdx.utils.async.AsyncTask[java.lang.
     }
   }
   def unload(): scala.Unit = {
-    if (this.loader.isInstanceOf[com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader]) {
-      this.loader.asInstanceOf[com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader].unloadAsync(this.manager, this.assetDesc.fileName, this.resolve(this.loader, this.assetDesc), this.assetDesc.params)
+    if (this.loader.isInstanceOf[com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader[?, ?]]) {
+      this.loader.asInstanceOf[com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader[?, ?]].unloadAsync(this.manager, this.assetDesc.fileName, this.resolve(this.loader, this.assetDesc), this.assetDesc.params)
     } else ()
   }
-  private def resolve(loader: com.badlogic.gdx.assets.loaders.AssetLoader, assetDesc: com.badlogic.gdx.assets.AssetDescriptor): com.badlogic.gdx.files.FileHandle = {
+  private def resolve(loader: com.badlogic.gdx.assets.loaders.AssetLoader[?, ?], assetDesc: com.badlogic.gdx.assets.AssetDescriptor[?]): com.badlogic.gdx.files.FileHandle = {
     if (assetDesc.file == null) {
       assetDesc.file = loader.resolve(assetDesc.fileName)
     } else ()
     return assetDesc.file
   }
-  private def removeDuplicates(array: com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor]): scala.Unit = {
+  private def removeDuplicates(array: com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]): scala.Unit = {
     var ordered: scala.Boolean = array.ordered
-    array.ordered = true
+    array.ordered = true;
     { var i: scala.Int = 0; while (i < array.size) { {
       val fn: java.lang.String = array.get(i).fileName
-      val `type`: java.lang.Class = array.get(i).`type`
+      val `type`: java.lang.Class[?] = array.get(i).`type`;
       { var j: scala.Int = array.size - 1; while (j > i) { {
         if ((`type` == array.get(j).`type`) && fn.equals(array.get(j).fileName)) {
           array.removeIndex(j)

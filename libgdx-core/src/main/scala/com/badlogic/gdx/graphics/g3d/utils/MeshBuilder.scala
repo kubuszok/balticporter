@@ -1,41 +1,41 @@
 package com.badlogic.gdx.graphics.g3d.utils
 
 class MeshBuilder extends com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder {
-  protected final val vertTmp1: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder#VertexInfo = new com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder#VertexInfo()
-  protected final val vertTmp2: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder#VertexInfo = new com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder#VertexInfo()
-  protected final val vertTmp3: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder#VertexInfo = new com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder#VertexInfo()
-  protected final val vertTmp4: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder#VertexInfo = new com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder#VertexInfo()
-  protected final val tempC1: com.badlogic.gdx.graphics.Color = new com.badlogic.gdx.graphics.Color()
-  protected var attributes: com.badlogic.gdx.graphics.VertexAttributes = null.asInstanceOf[com.badlogic.gdx.graphics.VertexAttributes]
-  protected var vertices: com.badlogic.gdx.utils.FloatArray = new com.badlogic.gdx.utils.FloatArray()
-  protected var indices: com.badlogic.gdx.utils.ShortArray = new com.badlogic.gdx.utils.ShortArray()
-  protected var stride: scala.Int = 0
-  protected var vindex: scala.Int = 0
-  protected var istart: scala.Int = 0
-  protected var posOffset: scala.Int = 0
-  protected var posSize: scala.Int = 0
-  protected var norOffset: scala.Int = 0
-  protected var biNorOffset: scala.Int = 0
-  protected var tangentOffset: scala.Int = 0
-  protected var colOffset: scala.Int = 0
-  protected var colSize: scala.Int = 0
-  protected var cpOffset: scala.Int = 0
-  protected var uvOffset: scala.Int = 0
+  final val vertTmp1: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo = new com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo()
+  final val vertTmp2: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo = new com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo()
+  final val vertTmp3: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo = new com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo()
+  final val vertTmp4: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo = new com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo()
+  final val tempC1: com.badlogic.gdx.graphics.Color = new com.badlogic.gdx.graphics.Color()
+  var attributes: com.badlogic.gdx.graphics.VertexAttributes = null.asInstanceOf[com.badlogic.gdx.graphics.VertexAttributes]
+  var vertices: com.badlogic.gdx.utils.FloatArray = new com.badlogic.gdx.utils.FloatArray()
+  var indices: com.badlogic.gdx.utils.ShortArray = new com.badlogic.gdx.utils.ShortArray()
+  var stride: scala.Int = 0
+  var vindex: scala.Int = 0
+  var istart: scala.Int = 0
+  var posOffset: scala.Int = 0
+  var posSize: scala.Int = 0
+  var norOffset: scala.Int = 0
+  var biNorOffset: scala.Int = 0
+  var tangentOffset: scala.Int = 0
+  var colOffset: scala.Int = 0
+  var colSize: scala.Int = 0
+  var cpOffset: scala.Int = 0
+  var uvOffset: scala.Int = 0
   var part$field: com.badlogic.gdx.graphics.g3d.model.MeshPart = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.model.MeshPart]
-  protected var parts: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.model.MeshPart] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.model.MeshPart]()
-  protected final val color: com.badlogic.gdx.graphics.Color = new com.badlogic.gdx.graphics.Color(com.badlogic.gdx.graphics.Color.WHITE)
-  protected var hasColor: scala.Boolean = false
-  protected var primitiveType: scala.Int = 0
-  protected var uOffset: scala.Float = 0.0f
-  protected var uScale: scala.Float = 1.0f
-  protected var vOffset: scala.Float = 0.0f
-  protected var vScale: scala.Float = 1.0f
-  protected var hasUVTransform: scala.Boolean = false
+  var parts: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.model.MeshPart] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.model.MeshPart]()
+  final val color: com.badlogic.gdx.graphics.Color = new com.badlogic.gdx.graphics.Color(com.badlogic.gdx.graphics.Color.WHITE)
+  var hasColor: scala.Boolean = false
+  var primitiveType: scala.Int = 0
+  var uOffset: scala.Float = 0.0f
+  var uScale: scala.Float = 1.0f
+  var vOffset: scala.Float = 0.0f
+  var vScale: scala.Float = 1.0f
+  var hasUVTransform: scala.Boolean = false
   var vertex$field: scala.Array[scala.Float] = null.asInstanceOf[scala.Array[scala.Float]]
-  protected var vertexTransformationEnabled: scala.Boolean = false
-  protected final val positionTransform: com.badlogic.gdx.math.Matrix4 = new com.badlogic.gdx.math.Matrix4()
-  protected final val normalTransform: com.badlogic.gdx.math.Matrix3 = new com.badlogic.gdx.math.Matrix3()
-  protected final val bounds: com.badlogic.gdx.math.collision.BoundingBox = new com.badlogic.gdx.math.collision.BoundingBox()
+  var vertexTransformationEnabled: scala.Boolean = false
+  final val positionTransform: com.badlogic.gdx.math.Matrix4 = new com.badlogic.gdx.math.Matrix4()
+  final val normalTransform: com.badlogic.gdx.math.Matrix3 = new com.badlogic.gdx.math.Matrix3()
+  final val bounds: com.badlogic.gdx.math.collision.BoundingBox = new com.badlogic.gdx.math.collision.BoundingBox()
   var lastIndex$field: scala.Int = -1
   private final val tmpNormal: com.badlogic.gdx.math.Vector3 = new com.badlogic.gdx.math.Vector3()
   def begin(attributes: scala.Long): scala.Unit = {
@@ -172,7 +172,7 @@ class MeshBuilder extends com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder {
     } else ()
     java.lang.System.arraycopy(this.vertices.items, 0, out, destOffset, this.vertices.size)
   }
-  protected def getVertices(): scala.Array[scala.Float] = {
+  def getVertices(): scala.Array[scala.Float] = {
     return this.vertices.items
   }
   def getNumIndices(): scala.Int = {
@@ -187,7 +187,7 @@ class MeshBuilder extends com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder {
     } else ()
     java.lang.System.arraycopy(this.indices.items, 0, out, destOffset, this.indices.size)
   }
-  protected def getIndices(): scala.Array[scala.Short] = {
+  def getIndices(): scala.Array[scala.Short] = {
     return this.indices.items
   }
   def getAttributes(): com.badlogic.gdx.graphics.VertexAttributes = {
@@ -386,16 +386,16 @@ class MeshBuilder extends com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder {
       this.vertex$field(this.uvOffset + 1) = uv.y
     } else ()
     this.addVertex(this.vertex$field, 0)
-    return this.lastIndex$field.asInstanceOf[scala.Short]
+    return this.lastIndex$field.asInstanceOf[scala.Short].asInstanceOf[scala.Short]
   }
   def vertex(values: scala.Array[scala.Float]): scala.Short = {
-    val n: scala.Int = values.length - this.stride
+    val n: scala.Int = values.length - this.stride;
     { var i: scala.Int = 0; while (i <= n) { {
       this.addVertex(values, i)
     }; i = i + this.stride } }
-    return this.lastIndex$field.asInstanceOf[scala.Short]
+    return this.lastIndex$field.asInstanceOf[scala.Short].asInstanceOf[scala.Short]
   }
-  def vertex(info: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder#VertexInfo): scala.Short = {
+  def vertex(info: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo): scala.Short = {
     return this.vertex(if (info.hasPosition) info.position else null, if (info.hasNormal) info.normal else null, if (info.hasColor) info.color else null, if (info.hasUV) info.uv else null)
   }
   def index(value: scala.Short): scala.Unit = {
@@ -445,7 +445,7 @@ class MeshBuilder extends com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder {
     } else ()
     this.index(index1, index2)
   }
-  def line(p1: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder#VertexInfo, p2: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder#VertexInfo): scala.Unit = {
+  def line(p1: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo, p2: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo): scala.Unit = {
     this.ensureVertices(2)
     this.line(this.vertex(p1), this.vertex(p2))
   }
@@ -469,7 +469,7 @@ class MeshBuilder extends com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder {
       }
     }
   }
-  def triangle(p1: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder#VertexInfo, p2: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder#VertexInfo, p3: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder#VertexInfo): scala.Unit = {
+  def triangle(p1: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo, p2: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo, p3: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo): scala.Unit = {
     this.ensureVertices(3)
     this.triangle(this.vertex(p1), this.vertex(p2), this.vertex(p3))
   }
@@ -494,7 +494,7 @@ class MeshBuilder extends com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder {
       }
     }
   }
-  def rect(corner00: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder#VertexInfo, corner10: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder#VertexInfo, corner11: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder#VertexInfo, corner01: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder#VertexInfo): scala.Unit = {
+  def rect(corner00: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo, corner10: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo, corner11: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo, corner01: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo): scala.Unit = {
     this.ensureVertices(4)
     this.rect(this.vertex(corner00), this.vertex(corner10), this.vertex(corner11), this.vertex(corner01))
   }
@@ -540,7 +540,7 @@ class MeshBuilder extends com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder {
     }
     this.ensureIndices(numIndices)
     val numVertices: scala.Int = vertices.length / this.stride
-    this.ensureVertices(if (numVertices < numIndices) numVertices else numIndices)
+    this.ensureVertices(if (numVertices < numIndices) numVertices else numIndices);
     { var i: scala.Int = 0; while (i < numIndices) { {
       val sidx: scala.Int = indices(indexOffset + i) & 65535
       var didx: scala.Int = MeshBuilder.indicesMap.get(sidx, -1)
@@ -557,16 +557,16 @@ class MeshBuilder extends com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder {
   def addMesh(vertices: scala.Array[scala.Float], indices: scala.Array[scala.Short]): scala.Unit = {
     val offset: scala.Int = this.lastIndex$field + 1
     val numVertices: scala.Int = vertices.length / this.stride
-    this.ensureVertices(numVertices)
+    this.ensureVertices(numVertices);
     { var v: scala.Int = 0; while (v < vertices.length) { {
       this.addVertex(vertices, v)
     }; v = v + this.stride } }
-    this.ensureIndices(indices.length)
+    this.ensureIndices(indices.length);
     { var i: scala.Int = 0; while (i < indices.length) { {
       this.index(((indices(i) & 65535) + offset).asInstanceOf[scala.Short])
     }; i = i + 1 } }
   }
-  def patch(corner00: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder#VertexInfo, corner10: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder#VertexInfo, corner11: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder#VertexInfo, corner01: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder#VertexInfo, divisionsU: scala.Int, divisionsV: scala.Int): scala.Unit = {
+  def patch(corner00: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo, corner10: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo, corner11: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo, corner01: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo, divisionsU: scala.Int, divisionsV: scala.Int): scala.Unit = {
     com.badlogic.gdx.graphics.g3d.utils.shapebuilders.PatchShapeBuilder.build(this, corner00, corner10, corner11, corner01, divisionsU, divisionsV)
   }
   def patch(corner00: com.badlogic.gdx.math.Vector3, corner10: com.badlogic.gdx.math.Vector3, corner11: com.badlogic.gdx.math.Vector3, corner01: com.badlogic.gdx.math.Vector3, normal: com.badlogic.gdx.math.Vector3, divisionsU: scala.Int, divisionsV: scala.Int): scala.Unit = {
@@ -575,7 +575,7 @@ class MeshBuilder extends com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder {
   def patch(x00: scala.Float, y00: scala.Float, z00: scala.Float, x10: scala.Float, y10: scala.Float, z10: scala.Float, x11: scala.Float, y11: scala.Float, z11: scala.Float, x01: scala.Float, y01: scala.Float, z01: scala.Float, normalX: scala.Float, normalY: scala.Float, normalZ: scala.Float, divisionsU: scala.Int, divisionsV: scala.Int): scala.Unit = {
     com.badlogic.gdx.graphics.g3d.utils.shapebuilders.PatchShapeBuilder.build(this, x00, y00, z00, x10, y10, z10, x11, y11, z11, x01, y01, z01, normalX, normalY, normalZ, divisionsU, divisionsV)
   }
-  def box(corner000: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder#VertexInfo, corner010: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder#VertexInfo, corner100: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder#VertexInfo, corner110: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder#VertexInfo, corner001: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder#VertexInfo, corner011: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder#VertexInfo, corner101: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder#VertexInfo, corner111: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder#VertexInfo): scala.Unit = {
+  def box(corner000: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo, corner010: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo, corner100: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo, corner110: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo, corner001: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo, corner011: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo, corner101: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo, corner111: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo): scala.Unit = {
     com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BoxShapeBuilder.build(this, corner000, corner010, corner100, corner110, corner001, corner011, corner101, corner111)
   }
   def box(corner000: com.badlogic.gdx.math.Vector3, corner010: com.badlogic.gdx.math.Vector3, corner100: com.badlogic.gdx.math.Vector3, corner110: com.badlogic.gdx.math.Vector3, corner001: com.badlogic.gdx.math.Vector3, corner011: com.badlogic.gdx.math.Vector3, corner101: com.badlogic.gdx.math.Vector3, corner111: com.badlogic.gdx.math.Vector3): scala.Unit = {
@@ -687,8 +687,8 @@ class MeshBuilder extends com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder {
 object MeshBuilder {
   final val MAX_VERTICES: scala.Int = 1 << 16
   final val MAX_INDEX: scala.Int = MeshBuilder.MAX_VERTICES - 1
-  protected final val tmpIndices: com.badlogic.gdx.utils.ShortArray = new com.badlogic.gdx.utils.ShortArray()
-  protected final val tmpVertices: com.badlogic.gdx.utils.FloatArray = new com.badlogic.gdx.utils.FloatArray()
+  final val tmpIndices: com.badlogic.gdx.utils.ShortArray = new com.badlogic.gdx.utils.ShortArray()
+  final val tmpVertices: com.badlogic.gdx.utils.FloatArray = new com.badlogic.gdx.utils.FloatArray()
   private final val vTmp: com.badlogic.gdx.math.Vector3 = new com.badlogic.gdx.math.Vector3()
   private var indicesMap: com.badlogic.gdx.utils.IntIntMap = null
   def createAttributes(usage: scala.Long): com.badlogic.gdx.graphics.VertexAttributes = {
@@ -708,7 +708,7 @@ object MeshBuilder {
     if ((usage & com.badlogic.gdx.graphics.VertexAttributes.Usage.TextureCoordinates) == com.badlogic.gdx.graphics.VertexAttributes.Usage.TextureCoordinates) {
       attrs.add(new com.badlogic.gdx.graphics.VertexAttribute(com.badlogic.gdx.graphics.VertexAttributes.Usage.TextureCoordinates, 2, com.badlogic.gdx.graphics.glutils.ShaderProgram.TEXCOORD_ATTRIBUTE + "0"))
     } else ()
-    val attributes: scala.Array[com.badlogic.gdx.graphics.VertexAttribute] = new Array[com.badlogic.gdx.graphics.VertexAttribute](attrs.size)
+    val attributes: scala.Array[com.badlogic.gdx.graphics.VertexAttribute] = new Array[com.badlogic.gdx.graphics.VertexAttribute](attrs.size);
     { var i: scala.Int = 0; while (i < attributes.length) { {
       attributes(i) = attrs.get(i)
     }; i = i + 1 } }

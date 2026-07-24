@@ -4,7 +4,7 @@ class FloatFrameBuffer extends com.badlogic.gdx.graphics.glutils.FrameBuffer {
   def this(width: scala.Int, height: scala.Int, hasDepth: scala.Boolean) = {
     this()
     this.checkExtensions()
-    var bufferBuilder: com.badlogic.gdx.graphics.glutils.GLFrameBuffer#FloatFrameBufferBuilder = new com.badlogic.gdx.graphics.glutils.GLFrameBuffer#FloatFrameBufferBuilder(width, height)
+    var bufferBuilder: com.badlogic.gdx.graphics.glutils.GLFrameBuffer.FloatFrameBufferBuilder = new com.badlogic.gdx.graphics.glutils.GLFrameBuffer.FloatFrameBufferBuilder(width, height)
     bufferBuilder.addFloatAttachment(com.badlogic.gdx.graphics.GL30.GL_RGBA32F, com.badlogic.gdx.graphics.GL30.GL_RGBA, com.badlogic.gdx.graphics.GL30.GL_FLOAT, false)
     if (hasDepth) {
       bufferBuilder.addBasicDepthRenderBuffer()
@@ -12,7 +12,7 @@ class FloatFrameBuffer extends com.badlogic.gdx.graphics.glutils.FrameBuffer {
     this.bufferBuilder = bufferBuilder
     this.build()
   }
-  protected def this(bufferBuilder: com.badlogic.gdx.graphics.glutils.GLFrameBuffer#GLFrameBufferBuilder[? <: com.badlogic.gdx.graphics.glutils.GLFrameBuffer[com.badlogic.gdx.graphics.Texture]]) = {
+  def this(bufferBuilder: com.badlogic.gdx.graphics.glutils.GLFrameBuffer.GLFrameBufferBuilder[? <: com.badlogic.gdx.graphics.glutils.GLFrameBuffer[com.badlogic.gdx.graphics.Texture]]) = {
     this()
     this.checkExtensions()
   }
@@ -20,7 +20,7 @@ class FloatFrameBuffer extends com.badlogic.gdx.graphics.glutils.FrameBuffer {
     this()
     this.checkExtensions()
   }
-  protected def createTexture(attachmentSpec: com.badlogic.gdx.graphics.glutils.GLFrameBuffer#FrameBufferTextureAttachmentSpec): com.badlogic.gdx.graphics.Texture = {
+  def createTexture(attachmentSpec: com.badlogic.gdx.graphics.glutils.GLFrameBuffer.FrameBufferTextureAttachmentSpec): com.badlogic.gdx.graphics.Texture = {
     val data: com.badlogic.gdx.graphics.glutils.FloatTextureData = new com.badlogic.gdx.graphics.glutils.FloatTextureData(this.bufferBuilder.width, this.bufferBuilder.height, attachmentSpec.internalFormat, attachmentSpec.format, attachmentSpec.`type`, attachmentSpec.isGpuOnly)
     val result: com.badlogic.gdx.graphics.Texture = new com.badlogic.gdx.graphics.Texture(data)
     if ((com.badlogic.gdx.Gdx.app.getType() == com.badlogic.gdx.Application.ApplicationType.Desktop) || (com.badlogic.gdx.Gdx.app.getType() == com.badlogic.gdx.Application.ApplicationType.Applet)) {

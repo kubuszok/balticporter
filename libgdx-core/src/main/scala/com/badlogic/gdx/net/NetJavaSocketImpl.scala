@@ -2,7 +2,7 @@ package com.badlogic.gdx.net
 
 class NetJavaSocketImpl extends com.badlogic.gdx.net.Socket {
   private var socket: java.net.Socket = null.asInstanceOf[java.net.Socket]
-  def this(protocol: com.badlogic.gdx.Net#Protocol, host: java.lang.String, port: scala.Int, hints: com.badlogic.gdx.net.SocketHints) = {
+  def this(protocol: com.badlogic.gdx.Net.Protocol, host: java.lang.String, port: scala.Int, hints: com.badlogic.gdx.net.SocketHints) = {
     this()
     try {
       this.socket = new java.net.Socket()

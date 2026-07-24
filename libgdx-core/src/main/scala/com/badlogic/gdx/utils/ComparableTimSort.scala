@@ -60,7 +60,7 @@ class ComparableTimSort {
       assert(this.stackSize == 1)
     } else ()
     this.a = null
-    val tmp: scala.Array[java.lang.Object] = this.tmp
+    val tmp: scala.Array[java.lang.Object] = this.tmp;
     { var i: scala.Int = 0; val n: scala.Int = this.tmpCount; while (i < n) { {
       tmp(i) = null
     }; i = i + 1 } }
@@ -174,7 +174,7 @@ class ComparableTimSort {
         if (ComparableTimSort.DEBUG) {
           assert((len1 > 1) && (len2 > 0))
         } else ()
-        if (a(cursor2).asInstanceOf[java.lang.Comparable].compareTo(tmp(cursor1)) < 0) {
+        if (a(cursor2).asInstanceOf[java.lang.Comparable[?]].compareTo(tmp(cursor1)) < 0) {
           a({ dest += 1; dest }) = a({ cursor2 += 1; cursor2 })
           count2 = count2 + 1
           count1 = 0
@@ -194,7 +194,7 @@ class ComparableTimSort {
         if (ComparableTimSort.DEBUG) {
           assert((len1 > 1) && (len2 > 0))
         } else ()
-        count1 = ComparableTimSort.gallopRight(a(cursor2).asInstanceOf[java.lang.Comparable], tmp, cursor1, len1, 0)
+        count1 = ComparableTimSort.gallopRight(a(cursor2).asInstanceOf[java.lang.Comparable[?]], tmp, cursor1, len1, 0)
         if (count1 != 0) {
           java.lang.System.arraycopy(tmp, cursor1, a, dest, count1)
           dest = dest + count1
@@ -208,7 +208,7 @@ class ComparableTimSort {
         if ({ len2 -= 1; len2 } == 0) {
           /* break */ ()
         } else ()
-        count2 = ComparableTimSort.gallopLeft(tmp(cursor1).asInstanceOf[java.lang.Comparable], a, cursor2, len2, 0)
+        count2 = ComparableTimSort.gallopLeft(tmp(cursor1).asInstanceOf[java.lang.Comparable[?]], a, cursor2, len2, 0)
         if (count2 != 0) {
           java.lang.System.arraycopy(a, cursor2, a, dest, count2)
           dest = dest + count2
@@ -282,7 +282,7 @@ class ComparableTimSort {
         if (ComparableTimSort.DEBUG) {
           assert((len1 > 0) && (len2 > 1))
         } else ()
-        if (tmp(cursor2).asInstanceOf[java.lang.Comparable].compareTo(a(cursor1)) < 0) {
+        if (tmp(cursor2).asInstanceOf[java.lang.Comparable[?]].compareTo(a(cursor1)) < 0) {
           a({ dest -= 1; dest }) = a({ cursor1 -= 1; cursor1 })
           count1 = count1 + 1
           count2 = 0
@@ -302,7 +302,7 @@ class ComparableTimSort {
         if (ComparableTimSort.DEBUG) {
           assert((len1 > 0) && (len2 > 1))
         } else ()
-        count1 = len1 - ComparableTimSort.gallopRight(tmp(cursor2).asInstanceOf[java.lang.Comparable], a, base1, len1, len1 - 1)
+        count1 = len1 - ComparableTimSort.gallopRight(tmp(cursor2).asInstanceOf[java.lang.Comparable[?]], a, base1, len1, len1 - 1)
         if (count1 != 0) {
           dest = dest - count1
           cursor1 = cursor1 - count1
@@ -316,7 +316,7 @@ class ComparableTimSort {
         if ({ len2 -= 1; len2 } == 1) {
           /* break */ ()
         } else ()
-        count2 = len2 - ComparableTimSort.gallopLeft(a(cursor1).asInstanceOf[java.lang.Comparable], tmp, 0, len2, len2 - 1)
+        count2 = len2 - ComparableTimSort.gallopLeft(a(cursor1).asInstanceOf[java.lang.Comparable[?]], tmp, 0, len2, len2 - 1)
         if (count2 != 0) {
           dest = dest - count2
           cursor2 = cursor2 - count2
@@ -430,9 +430,9 @@ object ComparableTimSort {
     } else ()
     if (start == lo) {
       start = start + 1
-    } else ()
+    } else ();
     { ; while (start < hi) { {
-      val pivot: java.lang.Comparable[java.lang.Object] = a(start).asInstanceOf[java.lang.Comparable]
+      val pivot: java.lang.Comparable[java.lang.Object] = a(start).asInstanceOf[java.lang.Comparable[?]]
       var left: scala.Int = lo
       var right: scala.Int = start
       if (ComparableTimSort.DEBUG) {
@@ -473,13 +473,13 @@ object ComparableTimSort {
     if (runHi == hi) {
       return 1
     } else ()
-    if (a({ runHi += 1; runHi }).asInstanceOf[java.lang.Comparable].compareTo(a(lo)) < 0) {
-      while ((runHi < hi) && (a(runHi).asInstanceOf[java.lang.Comparable].compareTo(a(runHi - 1)) < 0)) {
+    if (a({ runHi += 1; runHi }).asInstanceOf[java.lang.Comparable[?]].compareTo(a(lo)) < 0) {
+      while ((runHi < hi) && (a(runHi).asInstanceOf[java.lang.Comparable[?]].compareTo(a(runHi - 1)) < 0)) {
         runHi = runHi + 1
       }
       ComparableTimSort.reverseRange(a, lo, runHi)
     } else {
-      while ((runHi < hi) && (a(runHi).asInstanceOf[java.lang.Comparable].compareTo(a(runHi - 1)) >= 0)) {
+      while ((runHi < hi) && (a(runHi).asInstanceOf[java.lang.Comparable[?]].compareTo(a(runHi - 1)) >= 0)) {
         runHi = runHi + 1
       }
     }

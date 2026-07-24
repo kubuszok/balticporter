@@ -36,7 +36,7 @@ object GeometryUtils {
     if (det < 0) {
       return java.lang.Float.NaN
     } else ()
-    val sqrtD: scala.Float = java.lang.Math.sqrt(det).asInstanceOf[scala.Float]
+    val sqrtD: scala.Float = java.lang.Math.sqrt(det).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
     val invA: scala.Float = 1 / (2 * a)
     var r1: scala.Float = ((-b) - sqrtD) * invA
     var r2: scala.Float = ((-b) + sqrtD) * invA
@@ -119,7 +119,7 @@ object GeometryUtils {
     }
     val dx: scala.Float = x1 - x
     val dy: scala.Float = y1 - y
-    return java.lang.Math.sqrt((dx * dx) + (dy * dy)).asInstanceOf[scala.Float]
+    return java.lang.Math.sqrt((dx * dx) + (dy * dy)).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
   }
   def triangleQuality(x1: scala.Float, y1: scala.Float, x2: scala.Float, y2: scala.Float, x3: scala.Float, y3: scala.Float): scala.Float = {
     val sqLength1: scala.Float = (x1 * x1) + (y1 * y1)
@@ -148,7 +148,7 @@ object GeometryUtils {
     var y: scala.Float = 0
     val last: scala.Int = (offset + count) - 2
     var x1: scala.Float = polygon(last)
-    var y1: scala.Float = polygon(last + 1)
+    var y1: scala.Float = polygon(last + 1);
     { var i: scala.Int = offset; while (i <= last) { {
       val x2: scala.Float = polygon(i)
       val y2: scala.Float = polygon(i + 1)
@@ -173,7 +173,7 @@ object GeometryUtils {
     var area: scala.Float = 0
     val last: scala.Int = (offset + count) - 2
     var x1: scala.Float = polygon(last)
-    var y1: scala.Float = polygon(last + 1)
+    var y1: scala.Float = polygon(last + 1);
     { var i: scala.Int = offset; while (i <= last) { {
       val x2: scala.Float = polygon(i)
       val y2: scala.Float = polygon(i + 1)
@@ -202,7 +202,7 @@ object GeometryUtils {
     GeometryUtils.reverseVertices(polygon, offset, count)
   }
   def reverseVertices(polygon: scala.Array[scala.Float], offset: scala.Int, count: scala.Int): scala.Unit = {
-    val lastX: scala.Int = (offset + count) - 2
+    val lastX: scala.Int = (offset + count) - 2;
     { var i: scala.Int = offset; val n: scala.Int = offset + (count / 2); while (i < n) { {
       val other: scala.Int = lastX - i
       val x: scala.Float = polygon(i)
@@ -220,7 +220,7 @@ object GeometryUtils {
     var area: scala.Float = 0
     val last: scala.Int = (offset + count) - 2
     var x1: scala.Float = polygon(last)
-    var y1: scala.Float = polygon(last + 1)
+    var y1: scala.Float = polygon(last + 1);
     { var i: scala.Int = offset; while (i <= last) { {
       val x2: scala.Float = polygon(i)
       val y2: scala.Float = polygon(i + 1)

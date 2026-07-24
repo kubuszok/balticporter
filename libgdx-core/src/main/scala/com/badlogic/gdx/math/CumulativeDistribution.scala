@@ -1,44 +1,44 @@
 package com.badlogic.gdx.math
 
 class CumulativeDistribution[T] {
-  private var values: com.badlogic.gdx.utils.Array[CumulativeValue[T]] = null.asInstanceOf[com.badlogic.gdx.utils.Array[CumulativeValue[T]]]
+  private var values: com.badlogic.gdx.utils.Array[com.badlogic.gdx.math.CumulativeDistribution.CumulativeValue[T]] = null.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.math.CumulativeDistribution.CumulativeValue[T]]]
   def this() = {
     this()
-    this.values = new com.badlogic.gdx.utils.Array[CumulativeValue[T]](false, 10, scala.Array[CumulativeValue].<init>)
+    this.values = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.math.CumulativeDistribution.CumulativeValue[T]](false, 10, scala.Array[com.badlogic.gdx.math.CumulativeDistribution.CumulativeValue[?]].<init>)
   }
   def add(value: T, intervalSize: scala.Float): scala.Unit = {
-    this.values.add(new CumulativeValue[T](value, 0, intervalSize))
+    this.values.add(new com.badlogic.gdx.math.CumulativeDistribution.CumulativeValue[T](value, 0, intervalSize))
   }
   def add(value: T): scala.Unit = {
-    this.values.add(new CumulativeValue[T](value, 0, 0))
+    this.values.add(new com.badlogic.gdx.math.CumulativeDistribution.CumulativeValue[T](value, 0, 0))
   }
   def generate(): scala.Unit = {
-    var sum: scala.Float = 0
+    var sum: scala.Float = 0;
     { var i: scala.Int = 0; while (i < this.values.size) { {
       sum = sum + this.values.items(i).interval
       this.values.items(i).frequency = sum
     }; i = i + 1 } }
   }
   def generateNormalized(): scala.Unit = {
-    var sum: scala.Float = 0
+    var sum: scala.Float = 0;
     { var i: scala.Int = 0; while (i < this.values.size) { {
       sum = sum + this.values.items(i).interval
     }; i = i + 1 } }
-    var intervalSum: scala.Float = 0
+    var intervalSum: scala.Float = 0;
     { var i: scala.Int = 0; while (i < this.values.size) { {
       intervalSum = intervalSum + (this.values.items(i).interval / sum)
       this.values.items(i).frequency = intervalSum
     }; i = i + 1 } }
   }
   def generateUniform(): scala.Unit = {
-    val freq: scala.Float = 1.0f / this.values.size
+    val freq: scala.Float = 1.0f / this.values.size;
     { var i: scala.Int = 0; while (i < this.values.size) { {
       this.values.items(i).interval = freq
       this.values.items(i).frequency = (i + 1) * freq
     }; i = i + 1 } }
   }
   def value(probability: scala.Float): T = {
-    var value: CumulativeValue[T] = null
+    var value: com.badlogic.gdx.math.CumulativeDistribution.CumulativeValue[T] = null
     var imax: scala.Int = this.values.size - 1
     var imin: scala.Int = 0
     var imid: scala.Int = 0
@@ -83,6 +83,8 @@ class CumulativeDistribution[T] {
   def clear(): scala.Unit = {
     this.values.clear()
   }
+}
+object CumulativeDistribution {
   private class CumulativeValue[T] {
     var value: T = null.asInstanceOf[T]
     var frequency: scala.Float = 0.0f

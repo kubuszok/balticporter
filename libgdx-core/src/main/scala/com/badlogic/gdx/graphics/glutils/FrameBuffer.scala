@@ -1,9 +1,9 @@
 package com.badlogic.gdx.graphics.glutils
 
 class FrameBuffer extends com.badlogic.gdx.graphics.glutils.GLFrameBuffer[com.badlogic.gdx.graphics.Texture] {
-  def this(format: com.badlogic.gdx.graphics.Pixmap#Format, width: scala.Int, height: scala.Int, hasDepth: scala.Boolean, hasStencil: scala.Boolean) = {
+  def this(format: com.badlogic.gdx.graphics.Pixmap.Format, width: scala.Int, height: scala.Int, hasDepth: scala.Boolean, hasStencil: scala.Boolean) = {
     this()
-    val frameBufferBuilder: com.badlogic.gdx.graphics.glutils.GLFrameBuffer#FrameBufferBuilder = new com.badlogic.gdx.graphics.glutils.GLFrameBuffer#FrameBufferBuilder(width, height)
+    val frameBufferBuilder: com.badlogic.gdx.graphics.glutils.GLFrameBuffer.FrameBufferBuilder = new com.badlogic.gdx.graphics.glutils.GLFrameBuffer.FrameBufferBuilder(width, height)
     frameBufferBuilder.addBasicColorTextureAttachment(format)
     if (hasDepth) {
       frameBufferBuilder.addBasicDepthRenderBuffer()
@@ -14,13 +14,13 @@ class FrameBuffer extends com.badlogic.gdx.graphics.glutils.GLFrameBuffer[com.ba
     this.bufferBuilder = frameBufferBuilder
     this.build()
   }
-  protected def this(bufferBuilder: com.badlogic.gdx.graphics.glutils.GLFrameBuffer#GLFrameBufferBuilder[? <: com.badlogic.gdx.graphics.glutils.GLFrameBuffer[com.badlogic.gdx.graphics.Texture]]) = {
+  def this(bufferBuilder: com.badlogic.gdx.graphics.glutils.GLFrameBuffer.GLFrameBufferBuilder[? <: com.badlogic.gdx.graphics.glutils.GLFrameBuffer[com.badlogic.gdx.graphics.Texture]]) = {
     this()
   }
-  def this(format: com.badlogic.gdx.graphics.Pixmap#Format, width: scala.Int, height: scala.Int, hasDepth: scala.Boolean) = {
+  def this(format: com.badlogic.gdx.graphics.Pixmap.Format, width: scala.Int, height: scala.Int, hasDepth: scala.Boolean) = {
     this(format, width, height, hasDepth, false)
   }
-  protected def createTexture(attachmentSpec: com.badlogic.gdx.graphics.glutils.GLFrameBuffer#FrameBufferTextureAttachmentSpec): com.badlogic.gdx.graphics.Texture = {
+  def createTexture(attachmentSpec: com.badlogic.gdx.graphics.glutils.GLFrameBuffer.FrameBufferTextureAttachmentSpec): com.badlogic.gdx.graphics.Texture = {
     val data: com.badlogic.gdx.graphics.glutils.GLOnlyTextureData = new com.badlogic.gdx.graphics.glutils.GLOnlyTextureData(this.bufferBuilder.width, this.bufferBuilder.height, 0, attachmentSpec.internalFormat, attachmentSpec.format, attachmentSpec.`type`)
     val result: com.badlogic.gdx.graphics.Texture = new com.badlogic.gdx.graphics.Texture(data)
     val webGLDepth: scala.Boolean = attachmentSpec.isDepth && (com.badlogic.gdx.Gdx.app.getType() == com.badlogic.gdx.Application.ApplicationType.WebGL)
@@ -30,10 +30,10 @@ class FrameBuffer extends com.badlogic.gdx.graphics.glutils.GLFrameBuffer[com.ba
     result.setWrap(com.badlogic.gdx.graphics.Texture.TextureWrap.ClampToEdge, com.badlogic.gdx.graphics.Texture.TextureWrap.ClampToEdge)
     return result
   }
-  protected def disposeColorTexture(colorTexture: com.badlogic.gdx.graphics.Texture): scala.Unit = {
+  def disposeColorTexture(colorTexture: com.badlogic.gdx.graphics.Texture): scala.Unit = {
     colorTexture.dispose()
   }
-  protected def attachFrameBufferColorTexture(texture: com.badlogic.gdx.graphics.Texture): scala.Unit = {
+  def attachFrameBufferColorTexture(texture: com.badlogic.gdx.graphics.Texture): scala.Unit = {
     com.badlogic.gdx.Gdx.gl20.glFramebufferTexture2D(com.badlogic.gdx.graphics.GL20.GL_FRAMEBUFFER, com.badlogic.gdx.graphics.GL20.GL_COLOR_ATTACHMENT0, com.badlogic.gdx.graphics.GL20.GL_TEXTURE_2D, texture.getTextureObjectHandle(), 0)
   }
 }

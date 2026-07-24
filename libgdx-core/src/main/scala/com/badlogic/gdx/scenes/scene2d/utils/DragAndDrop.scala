@@ -1,14 +1,14 @@
 package com.badlogic.gdx.scenes.scene2d.utils
 
 class DragAndDrop {
-  var dragSource: Source = null.asInstanceOf[Source]
-  var payload: Payload = null.asInstanceOf[Payload]
+  var dragSource: com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop.Source = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop.Source]
+  var payload: com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop.Payload = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop.Payload]
   var dragActor: com.badlogic.gdx.scenes.scene2d.Actor = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.Actor]
   var removeDragActor: scala.Boolean = false
-  var target: Target = null.asInstanceOf[Target]
+  var target: com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop.Target = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop.Target]
   var isValidTarget: scala.Boolean = false
-  final val targets: com.badlogic.gdx.utils.Array[Target] = new com.badlogic.gdx.utils.Array(8)
-  final val sourceListeners: com.badlogic.gdx.utils.ObjectMap[Source, com.badlogic.gdx.scenes.scene2d.utils.DragListener] = new com.badlogic.gdx.utils.ObjectMap(8)
+  final val targets: com.badlogic.gdx.utils.Array[com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop.Target] = new com.badlogic.gdx.utils.Array(8)
+  final val sourceListeners: com.badlogic.gdx.utils.ObjectMap[com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop.Source, com.badlogic.gdx.scenes.scene2d.utils.DragListener] = new com.badlogic.gdx.utils.ObjectMap(8)
   private var tapSquareSize: scala.Float = 8
   private var button: scala.Int = 0
   var dragActorX: scala.Float = 0
@@ -20,21 +20,21 @@ class DragAndDrop {
   var activePointer: scala.Int = -1
   var cancelTouchFocus: scala.Boolean = true
   var keepWithinStage: scala.Boolean = true
-  def addSource(source: Source): scala.Unit = {
+  def addSource(source: com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop.Source): scala.Unit = {
     val listener: com.badlogic.gdx.scenes.scene2d.utils.DragListener = new com.badlogic.gdx.scenes.scene2d.utils.DragListener()
     listener.setTapSquareSize(this.tapSquareSize)
     listener.setButton(this.button)
     source.actor.addCaptureListener(listener)
     this.sourceListeners.put(source, listener)
   }
-  def removeSource(source: Source): scala.Unit = {
+  def removeSource(source: com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop.Source): scala.Unit = {
     val dragListener: com.badlogic.gdx.scenes.scene2d.utils.DragListener = this.sourceListeners.remove(source)
     source.actor.removeCaptureListener(dragListener)
   }
-  def addTarget(target: Target): scala.Unit = {
+  def addTarget(target: com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop.Target): scala.Unit = {
     this.targets.add(target)
   }
-  def removeTarget(target: Target): scala.Unit = {
+  def removeTarget(target: com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop.Target): scala.Unit = {
     this.targets.removeValue(target, true)
   }
   def clear(): scala.Unit = {
@@ -44,7 +44,7 @@ class DragAndDrop {
     }
     this.sourceListeners.clear(8)
   }
-  def cancelTouchFocusExcept(except: Source): scala.Unit = {
+  def cancelTouchFocusExcept(except: com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop.Source): scala.Unit = {
     val listener: com.badlogic.gdx.scenes.scene2d.utils.DragListener = this.sourceListeners.get(except)
     if (listener == null) {
       return
@@ -74,10 +74,10 @@ class DragAndDrop {
   def getDragActor(): com.badlogic.gdx.scenes.scene2d.Actor = {
     return this.dragActor
   }
-  def getDragPayload(): Payload = {
+  def getDragPayload(): com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop.Payload = {
     return this.payload
   }
-  def getDragSource(): Source = {
+  def getDragSource(): com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop.Source = {
     return this.dragSource
   }
   def setDragTime(dragMillis: scala.Int): scala.Unit = {
@@ -95,6 +95,9 @@ class DragAndDrop {
   def setKeepWithinStage(keepWithinStage: scala.Boolean): scala.Unit = {
     this.keepWithinStage = keepWithinStage
   }
+}
+object DragAndDrop {
+  final val tmpVector: com.badlogic.gdx.math.Vector2 = new com.badlogic.gdx.math.Vector2()
   abstract class Source {
     var actor: com.badlogic.gdx.scenes.scene2d.Actor = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.Actor]
     def this(actor: com.badlogic.gdx.scenes.scene2d.Actor) = {
@@ -104,11 +107,11 @@ class DragAndDrop {
       } else ()
       this.actor = actor
     }
-    def dragStart(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float, pointer: scala.Int): Payload
+    def dragStart(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float, pointer: scala.Int): com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop.Payload
     def drag(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float, pointer: scala.Int): scala.Unit = {
       ()
     }
-    def dragStop(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float, pointer: scala.Int, payload: Payload, target: Target): scala.Unit = {
+    def dragStop(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float, pointer: scala.Int, payload: com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop.Payload, target: com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop.Target): scala.Unit = {
       ()
     }
     def getActor(): com.badlogic.gdx.scenes.scene2d.Actor = {
@@ -128,11 +131,11 @@ class DragAndDrop {
         throw new java.lang.IllegalArgumentException("The stage root cannot be a drag and drop target.")
       } else ()
     }
-    def drag(source: Source, payload: Payload, x: scala.Float, y: scala.Float, pointer: scala.Int): scala.Boolean
-    def reset(source: Source, payload: Payload): scala.Unit = {
+    def drag(source: com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop.Source, payload: com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop.Payload, x: scala.Float, y: scala.Float, pointer: scala.Int): scala.Boolean
+    def reset(source: com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop.Source, payload: com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop.Payload): scala.Unit = {
       ()
     }
-    def drop(source: Source, payload: Payload, x: scala.Float, y: scala.Float, pointer: scala.Int): scala.Unit
+    def drop(source: com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop.Source, payload: com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop.Payload, x: scala.Float, y: scala.Float, pointer: scala.Int): scala.Unit
     def getActor(): com.badlogic.gdx.scenes.scene2d.Actor = {
       return this.actor
     }
@@ -167,7 +170,4 @@ class DragAndDrop {
       this.`object` = `object`
     }
   }
-}
-object DragAndDrop {
-  final val tmpVector: com.badlogic.gdx.math.Vector2 = new com.badlogic.gdx.math.Vector2()
 }

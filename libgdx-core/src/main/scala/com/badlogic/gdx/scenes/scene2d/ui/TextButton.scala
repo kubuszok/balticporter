@@ -2,47 +2,47 @@ package com.badlogic.gdx.scenes.scene2d.ui
 
 class TextButton extends com.badlogic.gdx.scenes.scene2d.ui.Button {
   private var label: com.badlogic.gdx.scenes.scene2d.ui.Label = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Label]
-  private var style: TextButtonStyle = null.asInstanceOf[TextButtonStyle]
-  def this(text: java.lang.String, style: TextButtonStyle) = {
+  private var style: com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle]
+  def this(text: java.lang.String, style: com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle) = {
     this()
     this.setStyle(style)
-    this.label = this.newLabel(text, new com.badlogic.gdx.scenes.scene2d.ui.Label#LabelStyle(style.font, style.fontColor))
+    this.label = this.newLabel(text, new com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle(style.font, style.fontColor))
     this.label.setAlignment(com.badlogic.gdx.utils.Align.center)
     this.add(this.label).grow()
     this.setSize(this.getPrefWidth(), this.getPrefHeight())
   }
   def this(text: java.lang.String, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin, styleName: java.lang.String) = {
-    this(text, skin.get(styleName, classOf[java.lang.Class]))
+    this(text, skin.get(styleName, classOf[com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle]))
     this.setSkin(skin)
   }
   def this(text: java.lang.String, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin) = {
-    this(text, skin.get(classOf[java.lang.Class]))
+    this(text, skin.get(classOf[com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle]))
     this.setSkin(skin)
   }
-  protected def newLabel(text: java.lang.String, style: com.badlogic.gdx.scenes.scene2d.ui.Label#LabelStyle): com.badlogic.gdx.scenes.scene2d.ui.Label = {
+  def newLabel(text: java.lang.String, style: com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle): com.badlogic.gdx.scenes.scene2d.ui.Label = {
     return new com.badlogic.gdx.scenes.scene2d.ui.Label(text, style)
   }
-  def setStyle(style: com.badlogic.gdx.scenes.scene2d.ui.Button#ButtonStyle): scala.Unit = {
+  def setStyle(style: com.badlogic.gdx.scenes.scene2d.ui.Button.ButtonStyle): scala.Unit = {
     if (style == null) {
       throw new java.lang.NullPointerException("style cannot be null")
     } else ()
-    if (!style.isInstanceOf[TextButtonStyle]) {
+    if (!style.isInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle]) {
       throw new java.lang.IllegalArgumentException("style must be a TextButtonStyle.")
     } else ()
-    this.style = style.asInstanceOf[TextButtonStyle]
+    this.style = style.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle]
     super.setStyle(style)
     if (this.label != null) {
-      val textButtonStyle: TextButtonStyle = style.asInstanceOf[TextButtonStyle]
-      val labelStyle: com.badlogic.gdx.scenes.scene2d.ui.Label#LabelStyle = this.label.getStyle()
+      val textButtonStyle: com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle = style.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle]
+      val labelStyle: com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle = this.label.getStyle()
       labelStyle.font = textButtonStyle.font
       labelStyle.fontColor = textButtonStyle.fontColor
       this.label.setStyle(labelStyle)
     } else ()
   }
-  def getStyle(): TextButtonStyle = {
+  def getStyle(): com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle = {
     return this.style
   }
-  protected def getFontColor(): com.badlogic.gdx.graphics.Color = {
+  def getFontColor(): com.badlogic.gdx.graphics.Color = {
     if (this.isDisabled() && (this.style.disabledFontColor != null)) {
       return this.style.disabledFontColor
     } else ()
@@ -117,7 +117,9 @@ class TextButton extends com.badlogic.gdx.scenes.scene2d.ui.Button {
     } else ()
     return (((if (className.indexOf('$') != (-1)) "TextButton " else "") + className) + ": ") + this.label.getText()
   }
-  class TextButtonStyle extends com.badlogic.gdx.scenes.scene2d.ui.Button#ButtonStyle {
+}
+object TextButton {
+  class TextButtonStyle extends com.badlogic.gdx.scenes.scene2d.ui.Button.ButtonStyle {
     var font: com.badlogic.gdx.graphics.g2d.BitmapFont = null.asInstanceOf[com.badlogic.gdx.graphics.g2d.BitmapFont]
     var fontColor: com.badlogic.gdx.graphics.Color = null.asInstanceOf[com.badlogic.gdx.graphics.Color]
     var downFontColor: com.badlogic.gdx.graphics.Color = null.asInstanceOf[com.badlogic.gdx.graphics.Color]
@@ -132,7 +134,7 @@ class TextButton extends com.badlogic.gdx.scenes.scene2d.ui.Button {
       this()
       this.font = font
     }
-    def this(style: TextButtonStyle) = {
+    def this(style: com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle) = {
       this()
       this.font = style.font
       if (style.fontColor != null) {

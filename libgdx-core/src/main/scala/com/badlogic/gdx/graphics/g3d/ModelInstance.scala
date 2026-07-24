@@ -160,7 +160,7 @@ class ModelInstance extends com.badlogic.gdx.graphics.g3d.RenderableProvider {
           part.material = this.materials.get(midx)
         }
       } else ()
-    }; i = i + 1 } }
+    }; i = i + 1 } };
     { var i: scala.Int = 0; val n: scala.Int = node.getChildCount(); while (i < n) { {
       this.invalidate(node.getChild(i))
     }; i = i + 1 } }
@@ -251,7 +251,7 @@ class ModelInstance extends com.badlogic.gdx.graphics.g3d.RenderableProvider {
     out.userData = this.userData
     return out
   }
-  protected def getRenderables(node: com.badlogic.gdx.graphics.g3d.model.Node, renderables: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.Renderable], pool: com.badlogic.gdx.utils.Pool[com.badlogic.gdx.graphics.g3d.Renderable]): scala.Unit = {
+  def getRenderables(node: com.badlogic.gdx.graphics.g3d.model.Node, renderables: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.Renderable], pool: com.badlogic.gdx.utils.Pool[com.badlogic.gdx.graphics.g3d.Renderable]): scala.Unit = {
     if (node.parts.size > 0) {
       for (nodePart <- node.parts) {
         if (nodePart.enabled) {
@@ -264,10 +264,10 @@ class ModelInstance extends com.badlogic.gdx.graphics.g3d.RenderableProvider {
     }
   }
   def calculateTransforms(): scala.Unit = {
-    val n: scala.Int = this.nodes.size
+    val n: scala.Int = this.nodes.size;
     { var i: scala.Int = 0; while (i < n) { {
       this.nodes.get(i).calculateTransforms(true)
-    }; i = i + 1 } }
+    }; i = i + 1 } };
     { var i: scala.Int = 0; while (i < n) { {
       this.nodes.get(i).calculateBoneTransforms(true)
     }; i = i + 1 } }
@@ -277,7 +277,7 @@ class ModelInstance extends com.badlogic.gdx.graphics.g3d.RenderableProvider {
     return this.extendBoundingBox(out)
   }
   def extendBoundingBox(out: com.badlogic.gdx.math.collision.BoundingBox): com.badlogic.gdx.math.collision.BoundingBox = {
-    val n: scala.Int = this.nodes.size
+    val n: scala.Int = this.nodes.size;
     { var i: scala.Int = 0; while (i < n) { {
       this.nodes.get(i).extendBoundingBox(out)
     }; i = i + 1 } }

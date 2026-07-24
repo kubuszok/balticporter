@@ -1,21 +1,21 @@
 package com.badlogic.gdx.scenes.scene2d.ui
 
-class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlogic.gdx.scenes.scene2d.utils.Disableable with com.badlogic.gdx.scenes.scene2d.ui.Styleable[TextFieldStyle] {
-  protected var text: java.lang.String = null.asInstanceOf[java.lang.String]
-  protected var cursor: scala.Int = 0
-  protected var selectionStart: scala.Int = 0
-  protected var hasSelection: scala.Boolean = false
-  protected var writeEnters: scala.Boolean = false
-  protected final val layout: com.badlogic.gdx.graphics.g2d.GlyphLayout = new com.badlogic.gdx.graphics.g2d.GlyphLayout()
-  protected final val glyphPositions: com.badlogic.gdx.utils.FloatArray = new com.badlogic.gdx.utils.FloatArray()
-  var style: TextFieldStyle = null.asInstanceOf[TextFieldStyle]
+class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlogic.gdx.scenes.scene2d.utils.Disableable with com.badlogic.gdx.scenes.scene2d.ui.Styleable[com.badlogic.gdx.scenes.scene2d.ui.TextField.TextFieldStyle] {
+  var text: java.lang.String = null.asInstanceOf[java.lang.String]
+  var cursor: scala.Int = 0
+  var selectionStart: scala.Int = 0
+  var hasSelection: scala.Boolean = false
+  var writeEnters: scala.Boolean = false
+  final val layout: com.badlogic.gdx.graphics.g2d.GlyphLayout = new com.badlogic.gdx.graphics.g2d.GlyphLayout()
+  final val glyphPositions: com.badlogic.gdx.utils.FloatArray = new com.badlogic.gdx.utils.FloatArray()
+  var style: com.badlogic.gdx.scenes.scene2d.ui.TextField.TextFieldStyle = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.TextField.TextFieldStyle]
   private var messageText: java.lang.String = null.asInstanceOf[java.lang.String]
-  protected var displayText: java.lang.CharSequence = null.asInstanceOf[java.lang.CharSequence]
+  var displayText: java.lang.CharSequence = null.asInstanceOf[java.lang.CharSequence]
   var clipboard: com.badlogic.gdx.utils.Clipboard = null.asInstanceOf[com.badlogic.gdx.utils.Clipboard]
   var inputListener: com.badlogic.gdx.scenes.scene2d.InputListener = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.InputListener]
-  var listener: TextFieldListener = null.asInstanceOf[TextFieldListener]
-  var filter: TextFieldFilter = null.asInstanceOf[TextFieldFilter]
-  var keyboard: OnscreenKeyboard = TextField.DEFAULT_ONSCREEN_KEYBOARD
+  var listener: com.badlogic.gdx.scenes.scene2d.ui.TextField.TextFieldListener = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.TextField.TextFieldListener]
+  var filter: com.badlogic.gdx.scenes.scene2d.ui.TextField.TextFieldFilter = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.TextField.TextFieldFilter]
+  var keyboard: com.badlogic.gdx.scenes.scene2d.ui.TextField.OnscreenKeyboard = TextField.DEFAULT_ONSCREEN_KEYBOARD
   var focusTraversal: scala.Boolean = true
   var onlyFontChars: scala.Boolean = true
   var disabled: scala.Boolean = false
@@ -27,23 +27,23 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
   var passwordMode: scala.Boolean = false
   private var passwordBuffer: java.lang.StringBuilder = null.asInstanceOf[java.lang.StringBuilder]
   private var passwordCharacter: scala.Char = TextField.BULLET
-  protected var fontOffset: scala.Float = 0.0f
-  protected var textHeight: scala.Float = 0.0f
-  protected var textOffset: scala.Float = 0.0f
+  var fontOffset: scala.Float = 0.0f
+  var textHeight: scala.Float = 0.0f
+  var textOffset: scala.Float = 0.0f
   var renderOffset: scala.Float = 0.0f
-  protected var visibleTextStart: scala.Int = 0
-  protected var visibleTextEnd: scala.Int = 0
+  var visibleTextStart: scala.Int = 0
+  var visibleTextEnd: scala.Int = 0
   private var maxLength: scala.Int = 0
   private var autocompleteOptions: scala.Array[java.lang.String] = null.asInstanceOf[scala.Array[java.lang.String]]
-  private var keyboardType: com.badlogic.gdx.Input#OnscreenKeyboardType = com.badlogic.gdx.Input.OnscreenKeyboardType.Default
+  private var keyboardType: com.badlogic.gdx.Input.OnscreenKeyboardType = com.badlogic.gdx.Input.OnscreenKeyboardType.Default
   private var preventAutoCorrection: scala.Boolean = false
   var focused: scala.Boolean = false
   var cursorOn: scala.Boolean = false
   var blinkTime: scala.Float = 0.32f
-  final val blinkTask: com.badlogic.gdx.utils.Timer#Task = new com.badlogic.gdx.utils.Timer#Task()
+  final val blinkTask: com.badlogic.gdx.utils.Timer.Task = new com.badlogic.gdx.utils.Timer.Task()
   final val keyRepeatTask: KeyRepeatTask = new KeyRepeatTask()
   var programmaticChangeEvents: scala.Boolean = false
-  def this(text: java.lang.String, style: TextFieldStyle) = {
+  def this(text: java.lang.String, style: com.badlogic.gdx.scenes.scene2d.ui.TextField.TextFieldStyle) = {
     this()
     this.setStyle(style)
     this.clipboard = com.badlogic.gdx.Gdx.app.getClipboard()
@@ -52,21 +52,21 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
     this.setSize(this.getPrefWidth(), this.getPrefHeight())
   }
   def this(text: java.lang.String, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin, styleName: java.lang.String) = {
-    this(text, skin.get(styleName, classOf[java.lang.Class]))
+    this(text, skin.get(styleName, classOf[com.badlogic.gdx.scenes.scene2d.ui.TextField.TextFieldStyle]))
   }
   def this(text: java.lang.String, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin) = {
-    this(text, skin.get(classOf[java.lang.Class]))
+    this(text, skin.get(classOf[com.badlogic.gdx.scenes.scene2d.ui.TextField.TextFieldStyle]))
   }
-  protected def initialize(): scala.Unit = {
+  def initialize(): scala.Unit = {
     this.addListener({
       this.inputListener = this.createInputListener()
       this.inputListener
     })
   }
-  protected def createInputListener(): com.badlogic.gdx.scenes.scene2d.InputListener = {
+  def createInputListener(): com.badlogic.gdx.scenes.scene2d.InputListener = {
     return new TextFieldClickListener()
   }
-  protected def letterUnderCursor(x$arg: scala.Float): scala.Int = {
+  def letterUnderCursor(x$arg: scala.Float): scala.Int = {
     var x: scala.Float = x$arg
     x = x - (((this.textOffset + this.fontOffset) - this.style.font.getData().cursorX) - this.glyphPositions.get(this.visibleTextStart))
     val background: com.badlogic.gdx.scenes.scene2d.utils.Drawable = this.getBackgroundDrawable()
@@ -74,7 +74,7 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
       x = x - this.style.background.getLeftWidth()
     } else ()
     val n: scala.Int = this.glyphPositions.size
-    val glyphPositions: scala.Array[scala.Float] = this.glyphPositions.items
+    val glyphPositions: scala.Array[scala.Float] = this.glyphPositions.items;
     { var i: scala.Int = 1; while (i < n) { {
       if (glyphPositions(i) > x) {
         if ((glyphPositions(i) - x) <= (x - glyphPositions(i - 1))) {
@@ -85,10 +85,10 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
     }; i = i + 1 } }
     return n - 1
   }
-  protected def isWordCharacter(c: scala.Char): scala.Boolean = {
+  def isWordCharacter(c: scala.Char): scala.Boolean = {
     return java.lang.Character.isLetterOrDigit(c)
   }
-  protected def wordUnderCursor(at: scala.Int): scala.Array[scala.Int] = {
+  def wordUnderCursor(at: scala.Int): scala.Array[scala.Int] = {
     val text: java.lang.String = this.text
     val start: scala.Int = at
     var right: scala.Int = text.length()
@@ -103,7 +103,7 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
           right = index
           /* break */ ()
         } else ()
-      }; index = index + 1 } }
+      }; index = index + 1 } };
       { index = start - 1; while (index > (-1)) { {
         if (!this.isWordCharacter(text.charAt(index))) {
           left = index + 1
@@ -128,7 +128,7 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
   def setAutocompleteOptions(autocompleteOptions: scala.Array[java.lang.String]): scala.Unit = {
     this.autocompleteOptions = autocompleteOptions
   }
-  def setKeyboardType(keyboardType: com.badlogic.gdx.Input#OnscreenKeyboardType): scala.Unit = {
+  def setKeyboardType(keyboardType: com.badlogic.gdx.Input.OnscreenKeyboardType): scala.Unit = {
     this.keyboardType = keyboardType
   }
   def setPreventAutoCorrection(preventAutoCorrection: scala.Boolean): scala.Unit = {
@@ -137,7 +137,7 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
   def setOnlyFontChars(onlyFontChars: scala.Boolean): scala.Unit = {
     this.onlyFontChars = onlyFontChars
   }
-  def setStyle(style: TextFieldStyle): scala.Unit = {
+  def setStyle(style: com.badlogic.gdx.scenes.scene2d.ui.TextField.TextFieldStyle): scala.Unit = {
     if (style == null) {
       throw new java.lang.IllegalArgumentException("style cannot be null.")
     } else ()
@@ -148,10 +148,10 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
     } else ()
     this.invalidateHierarchy()
   }
-  def getStyle(): TextFieldStyle = {
+  def getStyle(): com.badlogic.gdx.scenes.scene2d.ui.TextField.TextFieldStyle = {
     return this.style
   }
-  protected def calculateOffsets(): scala.Unit = {
+  def calculateOffsets(): scala.Unit = {
     var visibleWidth: scala.Float = this.getWidth()
     val background: com.badlogic.gdx.scenes.scene2d.utils.Drawable = this.getBackgroundDrawable()
     if (background != null) {
@@ -171,7 +171,7 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
       } else ()
     }
     var maxOffset: scala.Float = 0
-    val width: scala.Float = glyphPositions(glyphCount - 1)
+    val width: scala.Float = glyphPositions(glyphCount - 1);
     { var i: scala.Int = glyphCount - 2; while (i >= 0) { {
       val x: scala.Float = glyphPositions(i)
       if ((width - x) > visibleWidth) {
@@ -183,7 +183,7 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
       this.renderOffset = -maxOffset
     } else ()
     this.visibleTextStart = 0
-    var startX: scala.Float = 0
+    var startX: scala.Float = 0;
     { var i: scala.Int = 0; while (i < glyphCount) { {
       if (glyphPositions(i) >= (-this.renderOffset)) {
         this.visibleTextStart = i
@@ -192,7 +192,7 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
       } else ()
     }; i = i + 1 } }
     var `end`: scala.Int = this.visibleTextStart + 1
-    val endX: scala.Float = visibleWidth - this.renderOffset
+    val endX: scala.Float = visibleWidth - this.renderOffset;
     { val n: scala.Int = java.lang.Math.min(this.displayText.length(), glyphCount); while (`end` <= n) { {
       if (glyphPositions(`end`) > endX) {
         /* break */ ()
@@ -216,7 +216,7 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
       this.selectionWidth = (maxX - minX) - this.style.font.getData().cursorX
     } else ()
   }
-  protected def getBackgroundDrawable(): com.badlogic.gdx.scenes.scene2d.utils.Drawable = {
+  def getBackgroundDrawable(): com.badlogic.gdx.scenes.scene2d.utils.Drawable = {
     if (this.disabled && (this.style.disabledBackground != null)) {
       return this.style.disabledBackground
     } else ()
@@ -276,7 +276,7 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
         this.drawMessageText(batch, messageFont, x + bgLeftWidth, (y + textY) + yOffset, (width - bgLeftWidth) - bgRightWidth)
       } else ()
     } else {
-      val data: com.badlogic.gdx.graphics.g2d.BitmapFont#BitmapFontData = font.getData()
+      val data: com.badlogic.gdx.graphics.g2d.BitmapFont.BitmapFontData = font.getData()
       var markupEnabled: scala.Boolean = data.markupEnabled
       data.markupEnabled = false
       font.setColor(fontColor.r, fontColor.g, fontColor.b, (fontColor.a * color.a) * parentAlpha)
@@ -287,7 +287,7 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
       this.drawCursor(cursorPatch, batch, font, x + bgLeftWidth, y + textY)
     } else ()
   }
-  protected def getTextY(font: com.badlogic.gdx.graphics.g2d.BitmapFont, background: com.badlogic.gdx.scenes.scene2d.utils.Drawable): scala.Float = {
+  def getTextY(font: com.badlogic.gdx.graphics.g2d.BitmapFont, background: com.badlogic.gdx.scenes.scene2d.utils.Drawable): scala.Float = {
     val height: scala.Float = this.getHeight()
     var textY: scala.Float = (this.textHeight / 2) + font.getDescent()
     if (background != null) {
@@ -301,27 +301,27 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
     } else ()
     return textY
   }
-  protected def drawBackground(background: com.badlogic.gdx.scenes.scene2d.utils.Drawable, batch: com.badlogic.gdx.graphics.g2d.Batch, x: scala.Float, y: scala.Float, width: scala.Float, height: scala.Float): scala.Unit = {
+  def drawBackground(background: com.badlogic.gdx.scenes.scene2d.utils.Drawable, batch: com.badlogic.gdx.graphics.g2d.Batch, x: scala.Float, y: scala.Float, width: scala.Float, height: scala.Float): scala.Unit = {
     background.draw(batch, x, y, width, height)
   }
-  protected def drawSelection(selection: com.badlogic.gdx.scenes.scene2d.utils.Drawable, batch: com.badlogic.gdx.graphics.g2d.Batch, font: com.badlogic.gdx.graphics.g2d.BitmapFont, x: scala.Float, y: scala.Float): scala.Unit = {
+  def drawSelection(selection: com.badlogic.gdx.scenes.scene2d.utils.Drawable, batch: com.badlogic.gdx.graphics.g2d.Batch, font: com.badlogic.gdx.graphics.g2d.BitmapFont, x: scala.Float, y: scala.Float): scala.Unit = {
     selection.draw(batch, ((x + this.textOffset) + this.selectionX) + this.fontOffset, (y - this.textHeight) - font.getDescent(), this.selectionWidth, this.textHeight)
   }
-  protected def drawText(batch: com.badlogic.gdx.graphics.g2d.Batch, font: com.badlogic.gdx.graphics.g2d.BitmapFont, x: scala.Float, y: scala.Float): scala.Unit = {
+  def drawText(batch: com.badlogic.gdx.graphics.g2d.Batch, font: com.badlogic.gdx.graphics.g2d.BitmapFont, x: scala.Float, y: scala.Float): scala.Unit = {
     font.draw(batch, this.displayText, x + this.textOffset, y, this.visibleTextStart, this.visibleTextEnd, 0, com.badlogic.gdx.utils.Align.left, false)
   }
-  protected def drawMessageText(batch: com.badlogic.gdx.graphics.g2d.Batch, font: com.badlogic.gdx.graphics.g2d.BitmapFont, x: scala.Float, y: scala.Float, maxWidth: scala.Float): scala.Unit = {
+  def drawMessageText(batch: com.badlogic.gdx.graphics.g2d.Batch, font: com.badlogic.gdx.graphics.g2d.BitmapFont, x: scala.Float, y: scala.Float, maxWidth: scala.Float): scala.Unit = {
     font.draw(batch, this.messageText, x, y, 0, this.messageText.length(), maxWidth, this.textHAlign, false, "...")
   }
-  protected def drawCursor(cursorPatch: com.badlogic.gdx.scenes.scene2d.utils.Drawable, batch: com.badlogic.gdx.graphics.g2d.Batch, font: com.badlogic.gdx.graphics.g2d.BitmapFont, x: scala.Float, y: scala.Float): scala.Unit = {
+  def drawCursor(cursorPatch: com.badlogic.gdx.scenes.scene2d.utils.Drawable, batch: com.badlogic.gdx.graphics.g2d.Batch, font: com.badlogic.gdx.graphics.g2d.BitmapFont, x: scala.Float, y: scala.Float): scala.Unit = {
     cursorPatch.draw(batch, ((((x + this.textOffset) + this.glyphPositions.get(this.cursor)) - this.glyphPositions.get(this.visibleTextStart)) + this.fontOffset) + font.getData().cursorX, (y - this.textHeight) - font.getDescent(), cursorPatch.getMinWidth(), this.textHeight)
   }
-  protected def updateDisplayText(): scala.Unit = {
+  def updateDisplayText(): scala.Unit = {
     val font: com.badlogic.gdx.graphics.g2d.BitmapFont = this.style.font
-    val data: com.badlogic.gdx.graphics.g2d.BitmapFont#BitmapFontData = font.getData()
+    val data: com.badlogic.gdx.graphics.g2d.BitmapFont.BitmapFontData = font.getData()
     val text: java.lang.String = this.text
     val textLength: scala.Int = text.length()
-    val buffer: java.lang.StringBuilder = new java.lang.StringBuilder()
+    val buffer: java.lang.StringBuilder = new java.lang.StringBuilder();
     { var i: scala.Int = 0; while (i < textLength) { {
       val c: scala.Char = text.charAt(i)
       buffer.append(if (data.hasGlyph(c)) c else ' ')
@@ -349,9 +349,9 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
     this.glyphPositions.clear()
     var x: scala.Float = 0
     if (this.layout.runs.size > 0) {
-      val run: com.badlogic.gdx.graphics.g2d.GlyphLayout#GlyphRun = this.layout.runs.first()
+      val run: com.badlogic.gdx.graphics.g2d.GlyphLayout.GlyphRun = this.layout.runs.first()
       val xAdvances: com.badlogic.gdx.utils.FloatArray = run.xAdvances
-      this.fontOffset = xAdvances.first()
+      this.fontOffset = xAdvances.first();
       { var i: scala.Int = 1; val n: scala.Int = xAdvances.size; while (i < n) { {
         this.glyphPositions.add(x)
         x = x + xAdvances.get(i)
@@ -391,7 +391,7 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
     if (this.hasSelection) {
       textLength = textLength - java.lang.Math.abs(this.cursor - this.selectionStart)
     } else ()
-    val data: com.badlogic.gdx.graphics.g2d.BitmapFont#BitmapFontData = this.style.font.getData()
+    val data: com.badlogic.gdx.graphics.g2d.BitmapFont.BitmapFontData = this.style.font.getData();
     { var i: scala.Int = 0; val n: scala.Int = content.length(); while (i < n) { {
       if (!this.withinMaxLength(textLength + buffer.length())) {
         /* break */ ()
@@ -472,7 +472,7 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
     }
   }
   private def findNextTextField(actors: com.badlogic.gdx.utils.Array[com.badlogic.gdx.scenes.scene2d.Actor], best$arg: TextField, bestCoords: com.badlogic.gdx.math.Vector2, currentCoords: com.badlogic.gdx.math.Vector2, up: scala.Boolean): TextField = {
-    var best: TextField = best$arg
+    var best: TextField = best$arg;
     { var i: scala.Int = 0; val n: scala.Int = actors.size; while (i < n) { {
       val actor: com.badlogic.gdx.scenes.scene2d.Actor = actors.get(i)
       if (actor.isInstanceOf[TextField]) {
@@ -508,13 +508,13 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
   def getDefaultInputListener(): com.badlogic.gdx.scenes.scene2d.InputListener = {
     return this.inputListener
   }
-  def setTextFieldListener(listener: TextFieldListener): scala.Unit = {
+  def setTextFieldListener(listener: com.badlogic.gdx.scenes.scene2d.ui.TextField.TextFieldListener): scala.Unit = {
     this.listener = listener
   }
-  def setTextFieldFilter(filter: TextFieldFilter): scala.Unit = {
+  def setTextFieldFilter(filter: com.badlogic.gdx.scenes.scene2d.ui.TextField.TextFieldFilter): scala.Unit = {
     this.filter = filter
   }
-  def getTextFieldFilter(): TextFieldFilter = {
+  def getTextFieldFilter(): com.badlogic.gdx.scenes.scene2d.ui.TextField.TextFieldFilter = {
     return this.filter
   }
   def setFocusTraversal(focusTraversal: scala.Boolean): scala.Unit = {
@@ -563,7 +563,7 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
       return false
     } else ()
     this.text = newText
-    val changeEvent: com.badlogic.gdx.scenes.scene2d.utils.ChangeListener#ChangeEvent = com.badlogic.gdx.scenes.scene2d.Actor.POOLS.obtain(classOf[java.lang.Class])
+    val changeEvent: com.badlogic.gdx.scenes.scene2d.utils.ChangeListener.ChangeEvent = com.badlogic.gdx.scenes.scene2d.Actor.POOLS.obtain(classOf[com.badlogic.gdx.scenes.scene2d.utils.ChangeListener.ChangeEvent])
     val cancelled: scala.Boolean = this.fire(changeEvent)
     if (cancelled) {
       this.text = oldText
@@ -623,10 +623,10 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
   def getCursorPosition(): scala.Int = {
     return this.cursor
   }
-  def getOnscreenKeyboard(): OnscreenKeyboard = {
+  def getOnscreenKeyboard(): com.badlogic.gdx.scenes.scene2d.ui.TextField.OnscreenKeyboard = {
     return this.keyboard
   }
-  def setOnscreenKeyboard(keyboard: OnscreenKeyboard): scala.Unit = {
+  def setOnscreenKeyboard(keyboard: com.badlogic.gdx.scenes.scene2d.ui.TextField.OnscreenKeyboard): scala.Unit = {
     this.keyboard = keyboard
   }
   def setClipboard(clipboard: com.badlogic.gdx.utils.Clipboard): scala.Unit = {
@@ -680,7 +680,7 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
   def isDisabled(): scala.Boolean = {
     return this.disabled
   }
-  protected def moveCursor(forward: scala.Boolean, jump: scala.Boolean): scala.Unit = {
+  def moveCursor(forward: scala.Boolean, jump: scala.Boolean): scala.Unit = {
     val limit: scala.Int = if (forward) this.text.length() else 0
     val charOffset: scala.Int = if (forward) 0 else -1
     while ((if (forward) { this.cursor += 1; this.cursor } < limit else { this.cursor -= 1; this.cursor } > limit) && jump) {
@@ -689,11 +689,11 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
       } else ()
     }
   }
-  protected def continueCursor(index: scala.Int, offset: scala.Int): scala.Boolean = {
+  def continueCursor(index: scala.Int, offset: scala.Int): scala.Boolean = {
     val c: scala.Char = this.text.charAt(index + offset)
     return this.isWordCharacter(c)
   }
-  class KeyRepeatTask extends com.badlogic.gdx.utils.Timer#Task {
+  class KeyRepeatTask extends com.badlogic.gdx.utils.Timer.Task {
     var keycode: scala.Int = 0
     def run(): scala.Unit = {
       if (getStage() == null) {
@@ -701,71 +701,6 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
         return
       } else ()
       inputListener.keyDown(null, this.keycode)
-    }
-  }
-  trait TextFieldListener {
-    def keyTyped(textField: TextField, c: scala.Char): scala.Unit
-  }
-  trait TextFieldFilter {
-    def acceptChar(textField: TextField, c: scala.Char): scala.Boolean
-    class DigitsOnlyFilter extends TextFieldFilter {
-      def acceptChar(textField: TextField, c: scala.Char): scala.Boolean = {
-        return java.lang.Character.isDigit(c)
-      }
-    }
-  }
-  trait OnscreenKeyboard {
-    def show(textField: TextField): scala.Unit
-    def close(): scala.Unit
-  }
-  class DefaultOnscreenKeyboard extends OnscreenKeyboard {
-    def show(textField: TextField): scala.Unit = {
-      com.badlogic.gdx.Gdx.input.setOnscreenKeyboardVisible(true)
-    }
-    def close(): scala.Unit = {
-      com.badlogic.gdx.Gdx.input.setOnscreenKeyboardVisible(false)
-    }
-  }
-  class NativeOnscreenKeyboard extends OnscreenKeyboard {
-    def close(): scala.Unit = {
-      com.badlogic.gdx.Gdx.input.closeTextInputField(false)
-    }
-    def show(textField: TextField): scala.Unit = {
-      if (com.badlogic.gdx.Gdx.input.isTextInputFieldOpened()) {
-        com.badlogic.gdx.Gdx.input.closeTextInputField(false, (confirmativeAction: scala.Boolean) => {
-          this.openNativeInputField(textField)
-          return true
-        })
-        return
-      } else ()
-      this.openNativeInputField(textField)
-    }
-    private def openNativeInputField(textField: TextField): scala.Unit = {
-      val configuration: com.badlogic.gdx.input.NativeInputConfiguration = new com.badlogic.gdx.input.NativeInputConfiguration()
-      val resolvedType: com.badlogic.gdx.Input#OnscreenKeyboardType = if (textField.passwordMode && (textField.keyboardType == com.badlogic.gdx.Input.OnscreenKeyboardType.Default)) com.badlogic.gdx.Input.OnscreenKeyboardType.Password else textField.keyboardType
-      configuration.setType(resolvedType).setMaskInput(textField.passwordMode).setShowUnmaskButton(textField.passwordMode).setMaxLength(if (textField.maxLength <= 0) -1 else textField.maxLength).setMultiLine(textField.writeEnters).setPreventCorrection(textField.preventAutoCorrection || (resolvedType == com.badlogic.gdx.Input.OnscreenKeyboardType.Password)).setPlaceholder(if (textField.messageText == null) "" else textField.messageText).setAutoComplete(textField.autocompleteOptions)
-      if (textField.filter != null) {
-        configuration.setValidator((toCheck: java.lang.String) => {
-          { var i: scala.Int = 0; while (i < toCheck.length()) { {
-            if (!textField.filter.acceptChar(textField, toCheck.charAt(i))) {
-              return false
-            } else ()
-          }; i = i + 1 } }
-          return true
-        })
-      } else ()
-      configuration.setCloseCallback((confirmativeAction: scala.Boolean) => {
-        if (confirmativeAction) {
-          val focused: TextField = textField.next(false)
-          if (focused != null) {
-            focused.getOnscreenKeyboard().show(focused)
-            return true
-          } else ()
-        } else ()
-        return false
-      })
-      configuration.setTextInputWrapper(new com.badlogic.gdx.input.TextInputWrapper())
-      com.badlogic.gdx.Gdx.input.openTextInputField(configuration)
     }
   }
   class TextFieldClickListener extends com.badlogic.gdx.scenes.scene2d.utils.ClickListener {
@@ -812,7 +747,7 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
       } else ()
       super.touchUp(event, x, y, pointer, button)
     }
-    protected def setCursorPosition(x: scala.Float, y: scala.Float): scala.Unit = {
+    def setCursorPosition(x: scala.Float, y: scala.Float): scala.Unit = {
       cursor = letterUnderCursor(x)
       cursorOn = focused
       blinkTask.cancel()
@@ -820,10 +755,10 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
         com.badlogic.gdx.utils.Timer.schedule(blinkTask, blinkTime, blinkTime)
       } else ()
     }
-    protected def goHome(jump: scala.Boolean): scala.Unit = {
+    def goHome(jump: scala.Boolean): scala.Unit = {
       cursor = 0
     }
-    protected def goEnd(jump: scala.Boolean): scala.Unit = {
+    def goEnd(jump: scala.Boolean): scala.Unit = {
       cursor = text.length()
     }
     def keyDown(event: com.badlogic.gdx.scenes.scene2d.InputEvent, keycode: scala.Int): scala.Boolean = {
@@ -880,9 +815,9 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
           case com.badlogic.gdx.Input.Keys.FORWARD_DEL => {
             cut(true)
           }
-        }
+        };
         {
-          val temp: scala.Int = cursor
+          val temp: scala.Int = cursor;
           {
             keycode match {
               case com.badlogic.gdx.Input.Keys.LEFT => {
@@ -943,7 +878,7 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
       } else ()
       return handled
     }
-    protected def scheduleKeyRepeatTask(keycode: scala.Int): scala.Unit = {
+    def scheduleKeyRepeatTask(keycode: scala.Int): scala.Unit = {
       if ((!keyRepeatTask.isScheduled()) || (keyRepeatTask.keycode != keycode)) {
         keyRepeatTask.keycode = keycode
         keyRepeatTask.cancel()
@@ -957,7 +892,7 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
       keyRepeatTask.cancel()
       return true
     }
-    protected def checkFocusTraversal(character: scala.Char): scala.Boolean = {
+    def checkFocusTraversal(character: scala.Char): scala.Boolean = {
       return focusTraversal && ((character == TextField.TAB) || (((character == TextField.CARRIAGE_RETURN) || (character == TextField.NEWLINE)) && (com.badlogic.gdx.scenes.scene2d.utils.UIUtils.isAndroid || com.badlogic.gdx.scenes.scene2d.utils.UIUtils.isIos)))
     }
     def keyTyped(event: com.badlogic.gdx.scenes.scene2d.InputEvent, character: scala.Char): scala.Boolean = {
@@ -1041,6 +976,87 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
       return true
     }
   }
+}
+object TextField {
+  final val BACKSPACE: scala.Char = 8
+  final val CARRIAGE_RETURN: scala.Char = '\r'
+  final val NEWLINE: scala.Char = '\n'
+  final val TAB: scala.Char = '\t'
+  final val DELETE: scala.Char = 127
+  final val BULLET: scala.Char = 149
+  var DEFAULT_ONSCREEN_KEYBOARD: com.badlogic.gdx.scenes.scene2d.ui.TextField.OnscreenKeyboard = new com.badlogic.gdx.scenes.scene2d.ui.TextField.DefaultOnscreenKeyboard()
+  private final val tmp1: com.badlogic.gdx.math.Vector2 = new com.badlogic.gdx.math.Vector2()
+  private final val tmp2: com.badlogic.gdx.math.Vector2 = new com.badlogic.gdx.math.Vector2()
+  private final val tmp3: com.badlogic.gdx.math.Vector2 = new com.badlogic.gdx.math.Vector2()
+  var keyRepeatInitialTime: scala.Float = 0.4f
+  var keyRepeatTime: scala.Float = 0.1f
+  trait TextFieldListener {
+    def keyTyped(textField: TextField, c: scala.Char): scala.Unit
+  }
+  trait TextFieldFilter {
+    def acceptChar(textField: TextField, c: scala.Char): scala.Boolean
+  }
+  object TextFieldFilter {
+    class DigitsOnlyFilter extends com.badlogic.gdx.scenes.scene2d.ui.TextField.TextFieldFilter {
+      def acceptChar(textField: TextField, c: scala.Char): scala.Boolean = {
+        return java.lang.Character.isDigit(c)
+      }
+    }
+  }
+  trait OnscreenKeyboard {
+    def show(textField: TextField): scala.Unit
+    def close(): scala.Unit
+  }
+  class DefaultOnscreenKeyboard extends com.badlogic.gdx.scenes.scene2d.ui.TextField.OnscreenKeyboard {
+    def show(textField: TextField): scala.Unit = {
+      com.badlogic.gdx.Gdx.input.setOnscreenKeyboardVisible(true)
+    }
+    def close(): scala.Unit = {
+      com.badlogic.gdx.Gdx.input.setOnscreenKeyboardVisible(false)
+    }
+  }
+  class NativeOnscreenKeyboard extends com.badlogic.gdx.scenes.scene2d.ui.TextField.OnscreenKeyboard {
+    def close(): scala.Unit = {
+      com.badlogic.gdx.Gdx.input.closeTextInputField(false)
+    }
+    def show(textField: TextField): scala.Unit = {
+      if (com.badlogic.gdx.Gdx.input.isTextInputFieldOpened()) {
+        com.badlogic.gdx.Gdx.input.closeTextInputField(false, (confirmativeAction: scala.Boolean) => {
+          this.openNativeInputField(textField)
+          return true
+        })
+        return
+      } else ()
+      this.openNativeInputField(textField)
+    }
+    private def openNativeInputField(textField: TextField): scala.Unit = {
+      val configuration: com.badlogic.gdx.input.NativeInputConfiguration = new com.badlogic.gdx.input.NativeInputConfiguration()
+      val resolvedType: com.badlogic.gdx.Input.OnscreenKeyboardType = if (textField.passwordMode && (textField.keyboardType == com.badlogic.gdx.Input.OnscreenKeyboardType.Default)) com.badlogic.gdx.Input.OnscreenKeyboardType.Password else textField.keyboardType
+      configuration.setType(resolvedType).setMaskInput(textField.passwordMode).setShowUnmaskButton(textField.passwordMode).setMaxLength(if (textField.maxLength <= 0) -1 else textField.maxLength).setMultiLine(textField.writeEnters).setPreventCorrection(textField.preventAutoCorrection || (resolvedType == com.badlogic.gdx.Input.OnscreenKeyboardType.Password)).setPlaceholder(if (textField.messageText == null) "" else textField.messageText).setAutoComplete(textField.autocompleteOptions)
+      if (textField.filter != null) {
+        configuration.setValidator((toCheck: java.lang.String) => {
+          { var i: scala.Int = 0; while (i < toCheck.length()) { {
+            if (!textField.filter.acceptChar(textField, toCheck.charAt(i))) {
+              return false
+            } else ()
+          }; i = i + 1 } }
+          return true
+        })
+      } else ()
+      configuration.setCloseCallback((confirmativeAction: scala.Boolean) => {
+        if (confirmativeAction) {
+          val focused: TextField = textField.next(false)
+          if (focused != null) {
+            focused.getOnscreenKeyboard().show(focused)
+            return true
+          } else ()
+        } else ()
+        return false
+      })
+      configuration.setTextInputWrapper(new com.badlogic.gdx.input.TextInputWrapper())
+      com.badlogic.gdx.Gdx.input.openTextInputField(configuration)
+    }
+  }
   class TextFieldStyle {
     var font: com.badlogic.gdx.graphics.g2d.BitmapFont = null.asInstanceOf[com.badlogic.gdx.graphics.g2d.BitmapFont]
     var fontColor: com.badlogic.gdx.graphics.Color = null.asInstanceOf[com.badlogic.gdx.graphics.Color]
@@ -1061,7 +1077,7 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
       this.selection = selection
       this.background = background
     }
-    def this(style: TextFieldStyle) = {
+    def this(style: com.badlogic.gdx.scenes.scene2d.ui.TextField.TextFieldStyle) = {
       this()
       this.font = style.font
       if (style.fontColor != null) {
@@ -1084,18 +1100,4 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
       } else ()
     }
   }
-}
-object TextField {
-  protected final val BACKSPACE: scala.Char = 8
-  protected final val CARRIAGE_RETURN: scala.Char = '\r'
-  protected final val NEWLINE: scala.Char = '\n'
-  protected final val TAB: scala.Char = '\t'
-  protected final val DELETE: scala.Char = 127
-  protected final val BULLET: scala.Char = 149
-  var DEFAULT_ONSCREEN_KEYBOARD: OnscreenKeyboard = new DefaultOnscreenKeyboard()
-  private final val tmp1: com.badlogic.gdx.math.Vector2 = new com.badlogic.gdx.math.Vector2()
-  private final val tmp2: com.badlogic.gdx.math.Vector2 = new com.badlogic.gdx.math.Vector2()
-  private final val tmp3: com.badlogic.gdx.math.Vector2 = new com.badlogic.gdx.math.Vector2()
-  var keyRepeatInitialTime: scala.Float = 0.4f
-  var keyRepeatTime: scala.Float = 0.1f
 }

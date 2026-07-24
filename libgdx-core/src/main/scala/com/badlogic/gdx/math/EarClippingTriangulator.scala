@@ -29,17 +29,17 @@ class EarClippingTriangulator {
       this.indices
     }
     if (com.badlogic.gdx.math.GeometryUtils.isClockwise(vertices, offset, count)) {
-      { var i: scala.Short = 0; while (i < vertexCount) { {
-        indices(i) = (vertexOffset + i).asInstanceOf[scala.Short]
+      { var i: scala.Short = 0.asInstanceOf[scala.Short]; while (i < vertexCount) { {
+        indices(i) = (vertexOffset + i).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
       }; i = i + 1 } }
     } else {
       { var i: scala.Int = 0; val n: scala.Int = vertexCount - 1; while (i < vertexCount) { {
-        indices(i) = ((vertexOffset + n) - i).asInstanceOf[scala.Short]
+        indices(i) = ((vertexOffset + n) - i).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
       }; i = i + 1 } }
     }
     val vertexTypes: com.badlogic.gdx.utils.IntArray = this.vertexTypes
     vertexTypes.clear()
-    vertexTypes.ensureCapacity(vertexCount)
+    vertexTypes.ensureCapacity(vertexCount);
     { var i: scala.Int = 0; val n: scala.Int = vertexCount; while (i < n) { {
       vertexTypes.add(this.classifyVertex(i))
     }; i = i + 1 } }
@@ -76,13 +76,13 @@ class EarClippingTriangulator {
     return EarClippingTriangulator.computeSpannedAreaSign(vertices(previous), vertices(previous + 1), vertices(current), vertices(current + 1), vertices(next), vertices(next + 1))
   }
   private def findEarTip(): scala.Int = {
-    val vertexCount: scala.Int = this.vertexCount
+    val vertexCount: scala.Int = this.vertexCount;
     { var i: scala.Int = 0; while (i < vertexCount) { {
       if (this.isEarTip(i)) {
         return i
       } else ()
     }; i = i + 1 } }
-    val vertexTypes: scala.Array[scala.Int] = this.vertexTypes.items
+    val vertexTypes: scala.Array[scala.Int] = this.vertexTypes.items;
     { var i: scala.Int = 0; while (i < vertexCount) { {
       if (vertexTypes(i) != EarClippingTriangulator.CONCAVE) {
         return i
@@ -107,7 +107,7 @@ class EarClippingTriangulator {
     val p2x: scala.Float = vertices(p2)
     val p2y: scala.Float = vertices(p2 + 1)
     val p3x: scala.Float = vertices(p3)
-    val p3y: scala.Float = vertices(p3 + 1)
+    val p3y: scala.Float = vertices(p3 + 1);
     { var i: scala.Int = this.nextIndex(nextIndex); while (i != previousIndex) { {
       if (vertexTypes(i) != EarClippingTriangulator.CONVEX) {
         val v: scala.Int = indices(i) * 2
@@ -148,6 +148,6 @@ object EarClippingTriangulator {
     var area: scala.Float = p1x * (p3y - p2y)
     area = area + (p2x * (p1y - p3y))
     area = area + (p3x * (p2y - p1y))
-    return java.lang.Math.signum(area).asInstanceOf[scala.Int]
+    return java.lang.Math.signum(area).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
   }
 }

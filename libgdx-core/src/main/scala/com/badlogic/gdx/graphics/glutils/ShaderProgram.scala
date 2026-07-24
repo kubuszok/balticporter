@@ -81,7 +81,7 @@ class ShaderProgram extends com.badlogic.gdx.utils.Disposable {
     } else ()
     return shader
   }
-  protected def createProgram(): scala.Int = {
+  def createProgram(): scala.Int = {
     val gl: com.badlogic.gdx.graphics.GL20 = com.badlogic.gdx.Gdx.gl20
     val program: scala.Int = gl.glCreateProgram()
     return if (program != 0) program else -1
@@ -498,7 +498,7 @@ class ShaderProgram extends com.badlogic.gdx.utils.Disposable {
     this.params.asInstanceOf[java.nio.Buffer].clear()
     com.badlogic.gdx.Gdx.gl20.glGetProgramiv(this.program, com.badlogic.gdx.graphics.GL20.GL_ACTIVE_UNIFORMS, this.params)
     val numUniforms: scala.Int = this.params.get(0)
-    this.uniformNames = new Array[java.lang.String](numUniforms)
+    this.uniformNames = new Array[java.lang.String](numUniforms);
     { var i: scala.Int = 0; while (i < numUniforms) { {
       this.params.asInstanceOf[java.nio.Buffer].clear()
       this.params.put(0, 1)
@@ -515,7 +515,7 @@ class ShaderProgram extends com.badlogic.gdx.utils.Disposable {
     this.params.asInstanceOf[java.nio.Buffer].clear()
     com.badlogic.gdx.Gdx.gl20.glGetProgramiv(this.program, com.badlogic.gdx.graphics.GL20.GL_ACTIVE_ATTRIBUTES, this.params)
     val numAttributes: scala.Int = this.params.get(0)
-    this.attributeNames = new Array[java.lang.String](numAttributes)
+    this.attributeNames = new Array[java.lang.String](numAttributes);
     { var i: scala.Int = 0; while (i < numAttributes) { {
       this.params.asInstanceOf[java.nio.Buffer].clear()
       this.params.put(0, 1)
@@ -588,7 +588,7 @@ object ShaderProgram {
     val shaderArray: com.badlogic.gdx.utils.Array[ShaderProgram] = ShaderProgram.shaders.get(app)
     if (shaderArray == null) {
       return
-    } else ()
+    } else ();
     { var i: scala.Int = 0; while (i < shaderArray.size) { {
       shaderArray.get(i).invalidated = true
       shaderArray.get(i).checkManaged()

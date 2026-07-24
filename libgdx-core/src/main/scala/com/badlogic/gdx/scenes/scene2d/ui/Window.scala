@@ -1,7 +1,7 @@
 package com.badlogic.gdx.scenes.scene2d.ui
 
-class Window extends com.badlogic.gdx.scenes.scene2d.ui.Table with com.badlogic.gdx.scenes.scene2d.ui.Styleable[WindowStyle] {
-  private var style: WindowStyle = null.asInstanceOf[WindowStyle]
+class Window extends com.badlogic.gdx.scenes.scene2d.ui.Table with com.badlogic.gdx.scenes.scene2d.ui.Styleable[com.badlogic.gdx.scenes.scene2d.ui.Window.WindowStyle] {
+  private var style: com.badlogic.gdx.scenes.scene2d.ui.Window.WindowStyle = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Window.WindowStyle]
   var isMovable$field: scala.Boolean = true
   var isModal$field: scala.Boolean = false
   var isResizable$field: scala.Boolean = false
@@ -10,16 +10,16 @@ class Window extends com.badlogic.gdx.scenes.scene2d.ui.Table with com.badlogic.
   var titleLabel: com.badlogic.gdx.scenes.scene2d.ui.Label = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Label]
   var titleTable: com.badlogic.gdx.scenes.scene2d.ui.Table = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Table]
   var drawTitleTable: scala.Boolean = false
-  protected var edge: scala.Int = 0
-  protected var dragging: scala.Boolean = false
-  def this(title: java.lang.String, style: WindowStyle) = {
+  var edge: scala.Int = 0
+  var dragging: scala.Boolean = false
+  def this(title: java.lang.String, style: com.badlogic.gdx.scenes.scene2d.ui.Window.WindowStyle) = {
     this()
     if (title == null) {
       throw new java.lang.IllegalArgumentException("title cannot be null.")
     } else ()
     this.setTouchable(com.badlogic.gdx.scenes.scene2d.Touchable.enabled)
     this.setClip(true)
-    this.titleLabel = this.newLabel(title, new com.badlogic.gdx.scenes.scene2d.ui.Label#LabelStyle(style.titleFont, style.titleFontColor))
+    this.titleLabel = this.newLabel(title, new com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle(style.titleFont, style.titleFontColor))
     this.titleLabel.setEllipsis(true)
     this.titleTable = new com.badlogic.gdx.scenes.scene2d.ui.Table()
     this.titleTable.add(this.titleLabel).growX().minWidth(0)
@@ -31,26 +31,26 @@ class Window extends com.badlogic.gdx.scenes.scene2d.ui.Table with com.badlogic.
     this.addListener(new com.badlogic.gdx.scenes.scene2d.InputListener())
   }
   def this(title: java.lang.String, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin, styleName: java.lang.String) = {
-    this(title, skin.get(styleName, classOf[java.lang.Class]))
+    this(title, skin.get(styleName, classOf[com.badlogic.gdx.scenes.scene2d.ui.Window.WindowStyle]))
     this.setSkin(skin)
   }
   def this(title: java.lang.String, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin) = {
-    this(title, skin.get(classOf[java.lang.Class]))
+    this(title, skin.get(classOf[com.badlogic.gdx.scenes.scene2d.ui.Window.WindowStyle]))
     this.setSkin(skin)
   }
-  protected def newLabel(text: java.lang.String, style: com.badlogic.gdx.scenes.scene2d.ui.Label#LabelStyle): com.badlogic.gdx.scenes.scene2d.ui.Label = {
+  def newLabel(text: java.lang.String, style: com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle): com.badlogic.gdx.scenes.scene2d.ui.Label = {
     return new com.badlogic.gdx.scenes.scene2d.ui.Label(text, style)
   }
-  def setStyle(style: WindowStyle): scala.Unit = {
+  def setStyle(style: com.badlogic.gdx.scenes.scene2d.ui.Window.WindowStyle): scala.Unit = {
     if (style == null) {
       throw new java.lang.IllegalArgumentException("style cannot be null.")
     } else ()
     this.style = style
     this.setBackground(style.background)
-    this.titleLabel.setStyle(new com.badlogic.gdx.scenes.scene2d.ui.Label#LabelStyle(style.titleFont, style.titleFontColor))
+    this.titleLabel.setStyle(new com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle(style.titleFont, style.titleFontColor))
     this.invalidateHierarchy()
   }
-  def getStyle(): WindowStyle = {
+  def getStyle(): com.badlogic.gdx.scenes.scene2d.ui.Window.WindowStyle = {
     return this.style
   }
   def keepWithinStage(): scala.Unit = {
@@ -112,12 +112,12 @@ class Window extends com.badlogic.gdx.scenes.scene2d.ui.Table with com.badlogic.
     } else ()
     super.draw(batch, parentAlpha)
   }
-  protected def drawStageBackground(batch: com.badlogic.gdx.graphics.g2d.Batch, parentAlpha: scala.Float, x: scala.Float, y: scala.Float, width: scala.Float, height: scala.Float): scala.Unit = {
+  def drawStageBackground(batch: com.badlogic.gdx.graphics.g2d.Batch, parentAlpha: scala.Float, x: scala.Float, y: scala.Float, width: scala.Float, height: scala.Float): scala.Unit = {
     val color: com.badlogic.gdx.graphics.Color = this.getColor()
     batch.setColor(color.r, color.g, color.b, color.a * parentAlpha)
     this.style.stageBackground.draw(batch, x, y, width, height)
   }
-  protected def drawBackground(batch: com.badlogic.gdx.graphics.g2d.Batch, parentAlpha: scala.Float, x: scala.Float, y: scala.Float): scala.Unit = {
+  def drawBackground(batch: com.badlogic.gdx.graphics.g2d.Batch, parentAlpha: scala.Float, x: scala.Float, y: scala.Float): scala.Unit = {
     super.drawBackground(batch, parentAlpha, x, y)
     this.titleTable.getColor().a = this.getColor().a
     val padTop: scala.Float = this.getPadTop()
@@ -187,6 +187,11 @@ class Window extends com.badlogic.gdx.scenes.scene2d.ui.Table with com.badlogic.
   def getTitleLabel(): com.badlogic.gdx.scenes.scene2d.ui.Label = {
     return this.titleLabel
   }
+}
+object Window {
+  private final val tmpPosition: com.badlogic.gdx.math.Vector2 = new com.badlogic.gdx.math.Vector2()
+  private final val tmpSize: com.badlogic.gdx.math.Vector2 = new com.badlogic.gdx.math.Vector2()
+  private final val MOVE: scala.Int = 1 << 5
   class WindowStyle {
     var background: com.badlogic.gdx.scenes.scene2d.utils.Drawable = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Drawable]
     var titleFont: com.badlogic.gdx.graphics.g2d.BitmapFont = null.asInstanceOf[com.badlogic.gdx.graphics.g2d.BitmapFont]
@@ -198,7 +203,7 @@ class Window extends com.badlogic.gdx.scenes.scene2d.ui.Table with com.badlogic.
       this.titleFontColor.set(titleFontColor)
       this.background = background
     }
-    def this(style: WindowStyle) = {
+    def this(style: com.badlogic.gdx.scenes.scene2d.ui.Window.WindowStyle) = {
       this()
       this.titleFont = style.titleFont
       if (style.titleFontColor != null) {
@@ -208,9 +213,4 @@ class Window extends com.badlogic.gdx.scenes.scene2d.ui.Table with com.badlogic.
       this.stageBackground = style.stageBackground
     }
   }
-}
-object Window {
-  private final val tmpPosition: com.badlogic.gdx.math.Vector2 = new com.badlogic.gdx.math.Vector2()
-  private final val tmpSize: com.badlogic.gdx.math.Vector2 = new com.badlogic.gdx.math.Vector2()
-  private final val MOVE: scala.Int = 1 << 5
 }

@@ -26,7 +26,7 @@ class BinTree extends com.badlogic.gdx.utils.compression.lz.InWindow {
     }
   }
   def Init(): scala.Unit = {
-    super.Init()
+    super.Init();
     { var i: scala.Int = 0; while (i < this._hashSizeSum) { {
       this._hash(i) = BinTree.kEmptyHashValue
     }; i = i + 1 } }

@@ -10,7 +10,7 @@ final class Annotation {
     if (this.annotation.annotationType().equals(annotationType)) {
       return this.annotation.asInstanceOf[T]
     } else ()
-    return null
+    return null.asInstanceOf[T]
   }
   def getAnnotationType(): java.lang.Class[? <: java.lang.annotation.Annotation] = {
     return this.annotation.annotationType()

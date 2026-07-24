@@ -179,7 +179,7 @@ class Color {
   }
   def fromHsv(h: scala.Float, s: scala.Float, v: scala.Float): Color = {
     val x: scala.Float = ((h / 60.0f) + 6) % 6
-    val i: scala.Int = x.asInstanceOf[scala.Int]
+    val i: scala.Int = x.asInstanceOf[scala.Int].asInstanceOf[scala.Int]
     val f: scala.Float = x - i
     val p: scala.Float = v * (1 - s)
     val q: scala.Float = v * (1 - (s * f))
@@ -312,7 +312,7 @@ object Color {
     return (((a << 24) | (b << 16)) | (g << 8)) | r
   }
   def alpha(alpha: scala.Float): scala.Int = {
-    return (alpha * 255.0f).asInstanceOf[scala.Int]
+    return (alpha * 255.0f).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
   }
   def luminanceAlpha(luminance: scala.Float, alpha: scala.Float): scala.Int = {
     return ((luminance * 255.0f).asInstanceOf[scala.Int] << 8) | (alpha * 255).asInstanceOf[scala.Int]

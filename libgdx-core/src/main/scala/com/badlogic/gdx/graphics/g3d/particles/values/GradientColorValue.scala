@@ -23,7 +23,7 @@ class GradientColorValue extends com.badlogic.gdx.graphics.g3d.particles.values.
     var startIndex: scala.Int = 0
     var endIndex: scala.Int = -1
     val timeline: scala.Array[scala.Float] = this.timeline
-    val n: scala.Int = timeline.length
+    val n: scala.Int = timeline.length;
     { var i: scala.Int = 1; while (i < n) { {
       val t: scala.Float = timeline(i)
       if (t > percent) {
@@ -56,8 +56,8 @@ class GradientColorValue extends com.badlogic.gdx.graphics.g3d.particles.values.
   }
   def read(json: com.badlogic.gdx.utils.Json, jsonData: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
     super.read(json, jsonData)
-    this.colors = json.readValue("colors", classOf[java.lang.Class], jsonData)
-    this.timeline = json.readValue("timeline", classOf[java.lang.Class], jsonData)
+    this.colors = json.readValue("colors", classOf[scala.Array[scala.Float]], jsonData)
+    this.timeline = json.readValue("timeline", classOf[scala.Array[scala.Float]], jsonData)
   }
   def load(value: GradientColorValue): scala.Unit = {
     super.load(value)

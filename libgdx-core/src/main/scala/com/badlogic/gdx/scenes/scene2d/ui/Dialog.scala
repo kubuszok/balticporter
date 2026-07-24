@@ -9,7 +9,7 @@ class Dialog extends com.badlogic.gdx.scenes.scene2d.ui.Window {
   var previousKeyboardFocus: com.badlogic.gdx.scenes.scene2d.Actor = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.Actor]
   var previousScrollFocus: com.badlogic.gdx.scenes.scene2d.Actor = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.Actor]
   var focusListener: com.badlogic.gdx.scenes.scene2d.utils.FocusListener = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.FocusListener]
-  protected var ignoreTouchDown: com.badlogic.gdx.scenes.scene2d.InputListener = new com.badlogic.gdx.scenes.scene2d.InputListener()
+  var ignoreTouchDown: com.badlogic.gdx.scenes.scene2d.InputListener = new com.badlogic.gdx.scenes.scene2d.InputListener()
   def this(title: java.lang.String, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin, windowStyleName: java.lang.String) = {
     this()
     this.setSkin(skin)
@@ -22,7 +22,7 @@ class Dialog extends com.badlogic.gdx.scenes.scene2d.ui.Window {
     this.skin = skin
     this.initialize()
   }
-  def this(title: java.lang.String, windowStyle: com.badlogic.gdx.scenes.scene2d.ui.Window#WindowStyle) = {
+  def this(title: java.lang.String, windowStyle: com.badlogic.gdx.scenes.scene2d.ui.Window.WindowStyle) = {
     this()
     this.initialize()
   }
@@ -43,7 +43,7 @@ class Dialog extends com.badlogic.gdx.scenes.scene2d.ui.Window {
     this.buttonTable.addListener(new com.badlogic.gdx.scenes.scene2d.utils.ChangeListener())
     this.focusListener = new com.badlogic.gdx.scenes.scene2d.utils.FocusListener()
   }
-  protected def setStage(stage: com.badlogic.gdx.scenes.scene2d.Stage): scala.Unit = {
+  def setStage(stage: com.badlogic.gdx.scenes.scene2d.Stage): scala.Unit = {
     if (stage == null) {
       this.addListener(this.focusListener)
     } else {
@@ -61,9 +61,9 @@ class Dialog extends com.badlogic.gdx.scenes.scene2d.ui.Window {
     if (this.skin == null) {
       throw new java.lang.IllegalStateException("This method may only be used if the dialog was constructed with a Skin.")
     } else ()
-    return this.text(text, this.skin.get(classOf[java.lang.Class]))
+    return this.text(text, this.skin.get(classOf[com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle]))
   }
-  def text(text: java.lang.String, labelStyle: com.badlogic.gdx.scenes.scene2d.ui.Label#LabelStyle): Dialog = {
+  def text(text: java.lang.String, labelStyle: com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle): Dialog = {
     return this.text(new com.badlogic.gdx.scenes.scene2d.ui.Label(text, labelStyle))
   }
   def text(label: com.badlogic.gdx.scenes.scene2d.ui.Label): Dialog = {
@@ -77,9 +77,9 @@ class Dialog extends com.badlogic.gdx.scenes.scene2d.ui.Window {
     if (this.skin == null) {
       throw new java.lang.IllegalStateException("This method may only be used if the dialog was constructed with a Skin.")
     } else ()
-    return this.button(text, `object`, this.skin.get(classOf[java.lang.Class]))
+    return this.button(text, `object`, this.skin.get(classOf[com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle]))
   }
-  def button(text: java.lang.String, `object`: java.lang.Object, buttonStyle: com.badlogic.gdx.scenes.scene2d.ui.TextButton#TextButtonStyle): Dialog = {
+  def button(text: java.lang.String, `object`: java.lang.Object, buttonStyle: com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle): Dialog = {
     return this.button(new com.badlogic.gdx.scenes.scene2d.ui.TextButton(text, buttonStyle), `object`)
   }
   def button(button: com.badlogic.gdx.scenes.scene2d.ui.Button): Dialog = {
@@ -154,7 +154,7 @@ class Dialog extends com.badlogic.gdx.scenes.scene2d.ui.Window {
     this.addListener(new com.badlogic.gdx.scenes.scene2d.InputListener())
     return this
   }
-  protected def result(`object`: java.lang.Object): scala.Unit = {
+  def result(`object`: java.lang.Object): scala.Unit = {
     ()
   }
   def cancel(): scala.Unit = {

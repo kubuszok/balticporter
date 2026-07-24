@@ -2,6 +2,8 @@ package com.badlogic.gdx.utils
 
 trait Predicate[T] {
   def evaluate(arg0: T): scala.Boolean
+}
+object Predicate {
   class PredicateIterator[T] extends scala.collection.Iterator[T] {
     var iterator: scala.collection.Iterator[T] = null.asInstanceOf[scala.collection.Iterator[T]]
     var predicate: Predicate[T] = null.asInstanceOf[Predicate[T]]
@@ -25,7 +27,7 @@ trait Predicate[T] {
         this.peeked = false
         this.peeked
       }
-      this.next$field = null
+      this.next$field = null.asInstanceOf[T]
     }
     def hasNext(): scala.Boolean = {
       if (this.`end`) {
@@ -35,8 +37,8 @@ trait Predicate[T] {
         return true
       } else ()
       this.peeked = true
-      while (this.iterator.hasNext()) {
-        val n: T = this.iterator.next()
+      while (this.iterator.hasNext) {
+        val n: T = this.iterator.next
         if (this.predicate.evaluate(n)) {
           this.next$field = n
           return true
@@ -47,10 +49,10 @@ trait Predicate[T] {
     }
     def next(): T = {
       if ((this.next$field == null) && (!this.hasNext())) {
-        return null
+        return null.asInstanceOf[T]
       } else ()
       val result: T = this.next$field
-      this.next$field = null
+      this.next$field = null.asInstanceOf[T]
       this.peeked = false
       return result
     }
@@ -64,7 +66,7 @@ trait Predicate[T] {
   class PredicateIterable[T] extends scala.collection.Iterable[T] {
     var iterable: scala.collection.Iterable[T] = null.asInstanceOf[scala.collection.Iterable[T]]
     var predicate: Predicate[T] = null.asInstanceOf[Predicate[T]]
-    var iterator$field: PredicateIterator[T] = null
+    var iterator$field: com.badlogic.gdx.utils.Predicate.PredicateIterator[T] = null
     def this(iterable: scala.collection.Iterable[T], predicate: Predicate[T]) = {
       this()
       this.set(iterable, predicate)
@@ -75,10 +77,10 @@ trait Predicate[T] {
     }
     def iterator(): scala.collection.Iterator[T] = {
       if (com.badlogic.gdx.utils.Collections.allocateIterators) {
-        return new PredicateIterator[T](this.iterable.iterator, this.predicate)
+        return new com.badlogic.gdx.utils.Predicate.PredicateIterator[T](this.iterable.iterator, this.predicate)
       } else ()
       if (this.iterator$field == null) {
-        this.iterator$field = new PredicateIterator[T](this.iterable.iterator, this.predicate)
+        this.iterator$field = new com.badlogic.gdx.utils.Predicate.PredicateIterator[T](this.iterable.iterator, this.predicate)
       } else {
         this.iterator$field.set(this.iterable.iterator, this.predicate)
       }

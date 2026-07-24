@@ -14,7 +14,7 @@ class XmlWriter extends java.io.Writer {
     var count: scala.Int = this.indent$field
     if (this.currentElement != null) {
       count = count + 1
-    } else ()
+    } else ();
     { var i: scala.Int = 0; while (i < count) { {
       this.writer.write('\t')
     }; i = i + 1 } }

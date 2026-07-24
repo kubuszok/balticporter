@@ -1,9 +1,9 @@
 package com.badlogic.gdx.graphics.g3d.decals
 
 class DecalMaterial {
-  protected var textureRegion: com.badlogic.gdx.graphics.g2d.TextureRegion = null.asInstanceOf[com.badlogic.gdx.graphics.g2d.TextureRegion]
-  protected var srcBlendFactor: scala.Int = 0
-  protected var dstBlendFactor: scala.Int = 0
+  var textureRegion: com.badlogic.gdx.graphics.g2d.TextureRegion = null.asInstanceOf[com.badlogic.gdx.graphics.g2d.TextureRegion]
+  var srcBlendFactor: scala.Int = 0
+  var dstBlendFactor: scala.Int = 0
   def set(): scala.Unit = {
     this.textureRegion.getTexture().bind(0)
     if (!this.isOpaque()) {

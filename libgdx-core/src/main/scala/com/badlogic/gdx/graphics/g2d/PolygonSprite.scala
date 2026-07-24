@@ -67,7 +67,7 @@ class PolygonSprite {
     if (this.dirty) {
       return
     } else ()
-    val vertices: scala.Array[scala.Float] = this.vertices
+    val vertices: scala.Array[scala.Float] = this.vertices;
     { var i: scala.Int = 0; while (i < vertices.length) { {
       vertices(i) = vertices(i) + xAmount
     }; i = i + com.badlogic.gdx.graphics.g2d.Sprite.VERTEX_SIZE } }
@@ -77,7 +77,7 @@ class PolygonSprite {
     if (this.dirty) {
       return
     } else ()
-    val vertices: scala.Array[scala.Float] = this.vertices
+    val vertices: scala.Array[scala.Float] = this.vertices;
     { var i: scala.Int = 1; while (i < vertices.length) { {
       vertices(i) = vertices(i) + yAmount
     }; i = i + com.badlogic.gdx.graphics.g2d.Sprite.VERTEX_SIZE } }
@@ -88,7 +88,7 @@ class PolygonSprite {
     if (this.dirty) {
       return
     } else ()
-    val vertices: scala.Array[scala.Float] = this.vertices
+    val vertices: scala.Array[scala.Float] = this.vertices;
     { var i: scala.Int = 0; while (i < vertices.length) { {
       vertices(i) = vertices(i) + xAmount
       vertices(i + 1) = vertices(i + 1) + yAmount
@@ -97,7 +97,7 @@ class PolygonSprite {
   def setColor(tint: com.badlogic.gdx.graphics.Color): scala.Unit = {
     this.color.set(tint)
     val color: scala.Float = tint.toFloatBits()
-    val vertices: scala.Array[scala.Float] = this.vertices
+    val vertices: scala.Array[scala.Float] = this.vertices;
     { var i: scala.Int = 2; while (i < vertices.length) { {
       vertices(i) = color
     }; i = i + com.badlogic.gdx.graphics.g2d.Sprite.VERTEX_SIZE } }
@@ -105,7 +105,7 @@ class PolygonSprite {
   def setColor(r: scala.Float, g: scala.Float, b: scala.Float, a: scala.Float): scala.Unit = {
     this.color.set(r, g, b, a)
     val packedColor: scala.Float = this.color.toFloatBits()
-    val vertices: scala.Array[scala.Float] = this.vertices
+    val vertices: scala.Array[scala.Float] = this.vertices;
     { var i: scala.Int = 2; while (i < vertices.length) { {
       vertices(i) = packedColor
     }; i = i + com.badlogic.gdx.graphics.g2d.Sprite.VERTEX_SIZE } }
@@ -157,7 +157,7 @@ class PolygonSprite {
     val cos: scala.Float = com.badlogic.gdx.math.MathUtils.cosDeg(this.rotation)
     val sin: scala.Float = com.badlogic.gdx.math.MathUtils.sinDeg(this.rotation)
     var fx: scala.Float = 0.0f
-    var fy: scala.Float = 0.0f
+    var fy: scala.Float = 0.0f;
     { var i: scala.Int = 0; var v: scala.Int = 0; val n: scala.Int = regionVertices.length; while (i < n) { {
       fx = ((regionVertices(i) * sX) - originX) * scaleX
       fy = ((regionVertices(i + 1) * sY) - originY) * scaleY
@@ -171,7 +171,7 @@ class PolygonSprite {
     var minx: scala.Float = vertices(0)
     var miny: scala.Float = vertices(1)
     var maxx: scala.Float = vertices(0)
-    var maxy: scala.Float = vertices(1)
+    var maxy: scala.Float = vertices(1);
     { var i: scala.Int = 5; while (i < vertices.length) { {
       var x: scala.Float = vertices(i)
       var y: scala.Float = vertices(i + 1)
@@ -242,7 +242,7 @@ class PolygonSprite {
       this.vertices = new Array[scala.Float](verticesLength)
     } else ()
     val floatColor: scala.Float = this.color.toFloatBits()
-    var vertices: scala.Array[scala.Float] = this.vertices
+    var vertices: scala.Array[scala.Float] = this.vertices;
     { var i: scala.Int = 0; var v: scala.Int = 2; while (v < verticesLength) { {
       vertices(v) = floatColor
       vertices(v + 1) = textureCoords(i)

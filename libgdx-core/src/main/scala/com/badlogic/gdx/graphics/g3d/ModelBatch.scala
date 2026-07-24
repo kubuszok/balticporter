@@ -1,13 +1,13 @@
 package com.badlogic.gdx.graphics.g3d
 
 class ModelBatch extends com.badlogic.gdx.utils.Disposable {
-  protected var camera: com.badlogic.gdx.graphics.Camera = null.asInstanceOf[com.badlogic.gdx.graphics.Camera]
-  protected final val renderablesPool: RenderablePool = new RenderablePool()
-  protected final val renderables: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.Renderable] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.Renderable]()
-  protected var context: com.badlogic.gdx.graphics.g3d.utils.RenderContext = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.utils.RenderContext]
+  var camera: com.badlogic.gdx.graphics.Camera = null.asInstanceOf[com.badlogic.gdx.graphics.Camera]
+  final val renderablesPool: com.badlogic.gdx.graphics.g3d.ModelBatch.RenderablePool = new com.badlogic.gdx.graphics.g3d.ModelBatch.RenderablePool()
+  final val renderables: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.Renderable] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.Renderable]()
+  var context: com.badlogic.gdx.graphics.g3d.utils.RenderContext = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.utils.RenderContext]
   private var ownContext: scala.Boolean = false
-  protected var shaderProvider: com.badlogic.gdx.graphics.g3d.utils.ShaderProvider = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.utils.ShaderProvider]
-  protected var sorter: com.badlogic.gdx.graphics.g3d.utils.RenderableSorter = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.utils.RenderableSorter]
+  var shaderProvider: com.badlogic.gdx.graphics.g3d.utils.ShaderProvider = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.utils.ShaderProvider]
+  var sorter: com.badlogic.gdx.graphics.g3d.utils.RenderableSorter = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.utils.RenderableSorter]
   def this(context: com.badlogic.gdx.graphics.g3d.utils.RenderContext, shaderProvider: com.badlogic.gdx.graphics.g3d.utils.ShaderProvider, sorter: com.badlogic.gdx.graphics.g3d.utils.RenderableSorter) = {
     this()
     this.sorter = if (sorter == null) new com.badlogic.gdx.graphics.g3d.utils.DefaultRenderableSorter() else sorter
@@ -74,7 +74,7 @@ class ModelBatch extends com.badlogic.gdx.utils.Disposable {
   }
   def flush(): scala.Unit = {
     this.sorter.sort(this.camera, this.renderables)
-    var currentShader: com.badlogic.gdx.graphics.g3d.Shader = null
+    var currentShader: com.badlogic.gdx.graphics.g3d.Shader = null;
     { var i: scala.Int = 0; while (i < this.renderables.size) { {
       val renderable: com.badlogic.gdx.graphics.g3d.Renderable = this.renderables.get(i)
       if (currentShader != renderable.shader) {
@@ -105,7 +105,7 @@ class ModelBatch extends com.badlogic.gdx.utils.Disposable {
   }
   def render(renderableProvider: com.badlogic.gdx.graphics.g3d.RenderableProvider): scala.Unit = {
     val offset: scala.Int = this.renderables.size
-    renderableProvider.getRenderables(this.renderables, this.renderablesPool)
+    renderableProvider.getRenderables(this.renderables, this.renderablesPool);
     { var i: scala.Int = offset; while (i < this.renderables.size) { {
       val renderable: com.badlogic.gdx.graphics.g3d.Renderable = this.renderables.get(i)
       renderable.shader = this.shaderProvider.getShader(renderable)
@@ -118,7 +118,7 @@ class ModelBatch extends com.badlogic.gdx.utils.Disposable {
   }
   def render(renderableProvider: com.badlogic.gdx.graphics.g3d.RenderableProvider, environment: com.badlogic.gdx.graphics.g3d.Environment): scala.Unit = {
     val offset: scala.Int = this.renderables.size
-    renderableProvider.getRenderables(this.renderables, this.renderablesPool)
+    renderableProvider.getRenderables(this.renderables, this.renderablesPool);
     { var i: scala.Int = offset; while (i < this.renderables.size) { {
       val renderable: com.badlogic.gdx.graphics.g3d.Renderable = this.renderables.get(i)
       renderable.environment = environment
@@ -132,7 +132,7 @@ class ModelBatch extends com.badlogic.gdx.utils.Disposable {
   }
   def render(renderableProvider: com.badlogic.gdx.graphics.g3d.RenderableProvider, shader: com.badlogic.gdx.graphics.g3d.Shader): scala.Unit = {
     val offset: scala.Int = this.renderables.size
-    renderableProvider.getRenderables(this.renderables, this.renderablesPool)
+    renderableProvider.getRenderables(this.renderables, this.renderablesPool);
     { var i: scala.Int = offset; while (i < this.renderables.size) { {
       val renderable: com.badlogic.gdx.graphics.g3d.Renderable = this.renderables.get(i)
       renderable.shader = shader
@@ -146,7 +146,7 @@ class ModelBatch extends com.badlogic.gdx.utils.Disposable {
   }
   def render(renderableProvider: com.badlogic.gdx.graphics.g3d.RenderableProvider, environment: com.badlogic.gdx.graphics.g3d.Environment, shader: com.badlogic.gdx.graphics.g3d.Shader): scala.Unit = {
     val offset: scala.Int = this.renderables.size
-    renderableProvider.getRenderables(this.renderables, this.renderablesPool)
+    renderableProvider.getRenderables(this.renderables, this.renderablesPool);
     { var i: scala.Int = offset; while (i < this.renderables.size) { {
       val renderable: com.badlogic.gdx.graphics.g3d.Renderable = this.renderables.get(i)
       renderable.environment = environment
@@ -162,8 +162,10 @@ class ModelBatch extends com.badlogic.gdx.utils.Disposable {
   def dispose(): scala.Unit = {
     this.shaderProvider.dispose()
   }
-  protected class RenderablePool extends com.badlogic.gdx.utils.FlushablePool[com.badlogic.gdx.graphics.g3d.Renderable] {
-    protected def newObject(): com.badlogic.gdx.graphics.g3d.Renderable = {
+}
+object ModelBatch {
+  class RenderablePool extends com.badlogic.gdx.utils.FlushablePool[com.badlogic.gdx.graphics.g3d.Renderable] {
+    def newObject(): com.badlogic.gdx.graphics.g3d.Renderable = {
       return new com.badlogic.gdx.graphics.g3d.Renderable()
     }
     def obtain(): com.badlogic.gdx.graphics.g3d.Renderable = {

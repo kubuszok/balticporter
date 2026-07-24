@@ -50,11 +50,11 @@ class ImmediateModeRenderer20 extends com.badlogic.gdx.graphics.glutils.Immediat
     } else ()
     if (hasColor) {
       attribs.add(new com.badlogic.gdx.graphics.VertexAttribute(com.badlogic.gdx.graphics.VertexAttributes.Usage.ColorPacked, 4, com.badlogic.gdx.graphics.glutils.ShaderProgram.COLOR_ATTRIBUTE))
-    } else ()
+    } else ();
     { var i: scala.Int = 0; while (i < numTexCoords) { {
       attribs.add(new com.badlogic.gdx.graphics.VertexAttribute(com.badlogic.gdx.graphics.VertexAttributes.Usage.TextureCoordinates, 2, com.badlogic.gdx.graphics.glutils.ShaderProgram.TEXCOORD_ATTRIBUTE + i))
     }; i = i + 1 } }
-    val array: scala.Array[com.badlogic.gdx.graphics.VertexAttribute] = new Array[com.badlogic.gdx.graphics.VertexAttribute](attribs.size)
+    val array: scala.Array[com.badlogic.gdx.graphics.VertexAttribute] = new Array[com.badlogic.gdx.graphics.VertexAttribute](attribs.size);
     { var i: scala.Int = 0; while (i < attribs.size) { {
       array(i) = attribs.get(i)
     }; i = i + 1 } }
@@ -109,7 +109,7 @@ class ImmediateModeRenderer20 extends com.badlogic.gdx.graphics.glutils.Immediat
       return
     } else ()
     this.shader.bind()
-    this.shader.setUniformMatrix("u_projModelView", this.projModelView)
+    this.shader.setUniformMatrix("u_projModelView", this.projModelView);
     { var i: scala.Int = 0; while (i < this.numTexCoords) { {
       this.shader.setUniformi(this.shaderUniformNames(i), i)
     }; i = i + 1 } }
@@ -137,18 +137,18 @@ class ImmediateModeRenderer20 extends com.badlogic.gdx.graphics.glutils.Immediat
 }
 object ImmediateModeRenderer20 {
   private def createVertexShader(hasNormals: scala.Boolean, hasColors: scala.Boolean, numTexCoords: scala.Int): java.lang.String = {
-    var shader: java.lang.String = ((("attribute vec4 " + com.badlogic.gdx.graphics.glutils.ShaderProgram.POSITION_ATTRIBUTE) + ";\n") + (if (hasNormals) ("attribute vec3 " + com.badlogic.gdx.graphics.glutils.ShaderProgram.NORMAL_ATTRIBUTE) + ";\n" else "")) + (if (hasColors) ("attribute vec4 " + com.badlogic.gdx.graphics.glutils.ShaderProgram.COLOR_ATTRIBUTE) + ";\n" else "")
+    var shader: java.lang.String = ((("attribute vec4 " + com.badlogic.gdx.graphics.glutils.ShaderProgram.POSITION_ATTRIBUTE) + ";\n") + (if (hasNormals) ("attribute vec3 " + com.badlogic.gdx.graphics.glutils.ShaderProgram.NORMAL_ATTRIBUTE) + ";\n" else "")) + (if (hasColors) ("attribute vec4 " + com.badlogic.gdx.graphics.glutils.ShaderProgram.COLOR_ATTRIBUTE) + ";\n" else "");
     { var i: scala.Int = 0; while (i < numTexCoords) { {
       shader = shader + ((("attribute vec2 " + com.badlogic.gdx.graphics.glutils.ShaderProgram.TEXCOORD_ATTRIBUTE) + i) + ";\n")
     }; i = i + 1 } }
-    shader = shader + ("uniform mat4 u_projModelView;\n" + (if (hasColors) "varying vec4 v_col;\n" else ""))
+    shader = shader + ("uniform mat4 u_projModelView;\n" + (if (hasColors) "varying vec4 v_col;\n" else ""));
     { var i: scala.Int = 0; while (i < numTexCoords) { {
       shader = shader + (("varying vec2 v_tex" + i) + ";\n")
     }; i = i + 1 } }
     shader = shader + ((("void main() {\n" + "   gl_Position = u_projModelView * ") + com.badlogic.gdx.graphics.glutils.ShaderProgram.POSITION_ATTRIBUTE) + ";\n")
     if (hasColors) {
       shader = shader + ((("   v_col = " + com.badlogic.gdx.graphics.glutils.ShaderProgram.COLOR_ATTRIBUTE) + ";\n") + "   v_col.a *= 255.0 / 254.0;\n")
-    } else ()
+    } else ();
     { var i: scala.Int = 0; while (i < numTexCoords) { {
       shader = shader + ((((("   v_tex" + i) + " = ") + com.badlogic.gdx.graphics.glutils.ShaderProgram.TEXCOORD_ATTRIBUTE) + i) + ";\n")
     }; i = i + 1 } }
@@ -159,7 +159,7 @@ object ImmediateModeRenderer20 {
     var shader: java.lang.String = ("#ifdef GL_ES\n" + "precision mediump float;\n") + "#endif\n"
     if (hasColors) {
       shader = shader + "varying vec4 v_col;\n"
-    } else ()
+    } else ();
     { var i: scala.Int = 0; while (i < numTexCoords) { {
       shader = shader + (("varying vec2 v_tex" + i) + ";\n")
       shader = shader + (("uniform sampler2D u_sampler" + i) + ";\n")
@@ -167,7 +167,7 @@ object ImmediateModeRenderer20 {
     shader = shader + (("void main() {\n" + "   gl_FragColor = ") + (if (hasColors) "v_col" else "vec4(1, 1, 1, 1)"))
     if (numTexCoords > 0) {
       shader = shader + " * "
-    } else ()
+    } else ();
     { var i: scala.Int = 0; while (i < numTexCoords) { {
       if (i == (numTexCoords - 1)) {
         shader = shader + ((((" texture2D(u_sampler" + i) + ",  v_tex") + i) + ")")

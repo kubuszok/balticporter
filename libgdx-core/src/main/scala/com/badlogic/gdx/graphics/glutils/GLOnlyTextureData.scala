@@ -17,7 +17,7 @@ class GLOnlyTextureData extends com.badlogic.gdx.graphics.TextureData {
     this.format = format
     this.`type` = `type`
   }
-  def getType(): com.badlogic.gdx.graphics.TextureData#TextureDataType = {
+  def getType(): com.badlogic.gdx.graphics.TextureData.TextureDataType = {
     return com.badlogic.gdx.graphics.TextureData.TextureDataType.Custom
   }
   def isPrepared(): scala.Boolean = {
@@ -44,7 +44,7 @@ class GLOnlyTextureData extends com.badlogic.gdx.graphics.TextureData {
   def getHeight(): scala.Int = {
     return this.height
   }
-  def getFormat(): com.badlogic.gdx.graphics.Pixmap#Format = {
+  def getFormat(): com.badlogic.gdx.graphics.Pixmap.Format = {
     return com.badlogic.gdx.graphics.Pixmap.Format.RGBA8888
   }
   def useMipMaps(): scala.Boolean = {

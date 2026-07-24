@@ -142,7 +142,7 @@ class UBJsonWriter extends java.io.Closeable {
     this.out.writeByte('$')
     this.out.writeByte('i')
     this.out.writeByte('#')
-    this.value(values.length)
+    this.value(values.length);
     { var i: scala.Int = 0; val n: scala.Int = values.length; while (i < n) { {
       this.out.writeByte(values(i))
     }; i = i + 1 } }
@@ -154,7 +154,7 @@ class UBJsonWriter extends java.io.Closeable {
     this.out.writeByte('$')
     this.out.writeByte('I')
     this.out.writeByte('#')
-    this.value(values.length)
+    this.value(values.length);
     { var i: scala.Int = 0; val n: scala.Int = values.length; while (i < n) { {
       this.out.writeShort(values(i))
     }; i = i + 1 } }
@@ -166,7 +166,7 @@ class UBJsonWriter extends java.io.Closeable {
     this.out.writeByte('$')
     this.out.writeByte('l')
     this.out.writeByte('#')
-    this.value(values.length)
+    this.value(values.length);
     { var i: scala.Int = 0; val n: scala.Int = values.length; while (i < n) { {
       this.out.writeInt(values(i))
     }; i = i + 1 } }
@@ -178,7 +178,7 @@ class UBJsonWriter extends java.io.Closeable {
     this.out.writeByte('$')
     this.out.writeByte('L')
     this.out.writeByte('#')
-    this.value(values.length)
+    this.value(values.length);
     { var i: scala.Int = 0; val n: scala.Int = values.length; while (i < n) { {
       this.out.writeLong(values(i))
     }; i = i + 1 } }
@@ -190,7 +190,7 @@ class UBJsonWriter extends java.io.Closeable {
     this.out.writeByte('$')
     this.out.writeByte('d')
     this.out.writeByte('#')
-    this.value(values.length)
+    this.value(values.length);
     { var i: scala.Int = 0; val n: scala.Int = values.length; while (i < n) { {
       this.out.writeFloat(values(i))
     }; i = i + 1 } }
@@ -202,7 +202,7 @@ class UBJsonWriter extends java.io.Closeable {
     this.out.writeByte('$')
     this.out.writeByte('D')
     this.out.writeByte('#')
-    this.value(values.length)
+    this.value(values.length);
     { var i: scala.Int = 0; val n: scala.Int = values.length; while (i < n) { {
       this.out.writeDouble(values(i))
     }; i = i + 1 } }
@@ -210,7 +210,7 @@ class UBJsonWriter extends java.io.Closeable {
     return this
   }
   def value(values: scala.Array[scala.Boolean]): UBJsonWriter = {
-    this.array()
+    this.array();
     { var i: scala.Int = 0; val n: scala.Int = values.length; while (i < n) { {
       this.out.writeByte(if (values(i)) 'T' else 'F')
     }; i = i + 1 } }
@@ -222,7 +222,7 @@ class UBJsonWriter extends java.io.Closeable {
     this.out.writeByte('$')
     this.out.writeByte('C')
     this.out.writeByte('#')
-    this.value(values.length)
+    this.value(values.length);
     { var i: scala.Int = 0; val n: scala.Int = values.length; while (i < n) { {
       this.out.writeChar(values(i))
     }; i = i + 1 } }
@@ -234,7 +234,7 @@ class UBJsonWriter extends java.io.Closeable {
     this.out.writeByte('$')
     this.out.writeByte('S')
     this.out.writeByte('#')
-    this.value(values.length)
+    this.value(values.length);
     { var i: scala.Int = 0; val n: scala.Int = values.length; while (i < n) { {
       val bytes: scala.Array[scala.Byte] = values(i).getBytes("UTF-8")
       if (bytes.length <= java.lang.Byte.MAX_VALUE) {
@@ -260,7 +260,7 @@ class UBJsonWriter extends java.io.Closeable {
         this.`object`(value.name$field)
       } else {
         this.`object`()
-      }
+      };
       { var child: com.badlogic.gdx.utils.JsonValue = value.child$field; while (child != null) { {
         this.value(child)
       }; child = child.next$field } }
@@ -271,7 +271,7 @@ class UBJsonWriter extends java.io.Closeable {
           this.array(value.name$field)
         } else {
           this.array()
-        }
+        };
         { var child: com.badlogic.gdx.utils.JsonValue = value.child$field; while (child != null) { {
           this.value(child)
         }; child = child.next$field } }
@@ -430,7 +430,7 @@ class UBJsonWriter extends java.io.Closeable {
   def pop(): UBJsonWriter = {
     return this.pop(false)
   }
-  protected def pop(silent: scala.Boolean): UBJsonWriter = {
+  def pop(silent: scala.Boolean): UBJsonWriter = {
     if (this.named) {
       throw new java.lang.IllegalStateException("Expected an object, array, or value since a name was set.")
     } else ()

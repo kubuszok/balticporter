@@ -1,7 +1,7 @@
 package com.badlogic.gdx.graphics.glutils
 
 class FacedCubemapData extends com.badlogic.gdx.graphics.CubemapData {
-  protected final val data: scala.Array[com.badlogic.gdx.graphics.TextureData] = new Array[com.badlogic.gdx.graphics.TextureData](6)
+  final val data: scala.Array[com.badlogic.gdx.graphics.TextureData] = new Array[com.badlogic.gdx.graphics.TextureData](6)
   def this(positiveX: com.badlogic.gdx.graphics.TextureData, negativeX: com.badlogic.gdx.graphics.TextureData, positiveY: com.badlogic.gdx.graphics.TextureData, negativeY: com.badlogic.gdx.graphics.TextureData, positiveZ: com.badlogic.gdx.graphics.TextureData, negativeZ: com.badlogic.gdx.graphics.TextureData) = {
     this()
     this.data(0) = positiveX
@@ -23,7 +23,7 @@ class FacedCubemapData extends com.badlogic.gdx.graphics.CubemapData {
   def this(positiveX: com.badlogic.gdx.graphics.Pixmap, negativeX: com.badlogic.gdx.graphics.Pixmap, positiveY: com.badlogic.gdx.graphics.Pixmap, negativeY: com.badlogic.gdx.graphics.Pixmap, positiveZ: com.badlogic.gdx.graphics.Pixmap, negativeZ: com.badlogic.gdx.graphics.Pixmap) = {
     this(positiveX, negativeX, positiveY, negativeY, positiveZ, negativeZ, false)
   }
-  def this(width: scala.Int, height: scala.Int, depth: scala.Int, format: com.badlogic.gdx.graphics.Pixmap#Format) = {
+  def this(width: scala.Int, height: scala.Int, depth: scala.Int, format: com.badlogic.gdx.graphics.Pixmap.Format) = {
     this(new com.badlogic.gdx.graphics.glutils.PixmapTextureData(new com.badlogic.gdx.graphics.Pixmap(depth, height, format), null, false, true), new com.badlogic.gdx.graphics.glutils.PixmapTextureData(new com.badlogic.gdx.graphics.Pixmap(depth, height, format), null, false, true), new com.badlogic.gdx.graphics.glutils.PixmapTextureData(new com.badlogic.gdx.graphics.Pixmap(width, depth, format), null, false, true), new com.badlogic.gdx.graphics.glutils.PixmapTextureData(new com.badlogic.gdx.graphics.Pixmap(width, depth, format), null, false, true), new com.badlogic.gdx.graphics.glutils.PixmapTextureData(new com.badlogic.gdx.graphics.Pixmap(width, height, format), null, false, true), new com.badlogic.gdx.graphics.glutils.PixmapTextureData(new com.badlogic.gdx.graphics.Pixmap(width, height, format), null, false, true))
   }
   def isManaged(): scala.Boolean = {
@@ -34,10 +34,10 @@ class FacedCubemapData extends com.badlogic.gdx.graphics.CubemapData {
     }
     return true
   }
-  def load(side: com.badlogic.gdx.graphics.Cubemap#CubemapSide, file: com.badlogic.gdx.files.FileHandle): scala.Unit = {
+  def load(side: com.badlogic.gdx.graphics.Cubemap.CubemapSide, file: com.badlogic.gdx.files.FileHandle): scala.Unit = {
     this.data(side.index) = com.badlogic.gdx.graphics.TextureData.Factory.loadFromFile(file, false)
   }
-  def load(side: com.badlogic.gdx.graphics.Cubemap#CubemapSide, pixmap: com.badlogic.gdx.graphics.Pixmap): scala.Unit = {
+  def load(side: com.badlogic.gdx.graphics.Cubemap.CubemapSide, pixmap: com.badlogic.gdx.graphics.Pixmap): scala.Unit = {
     this.data(side.index) = if (pixmap == null) null else new com.badlogic.gdx.graphics.glutils.PixmapTextureData(pixmap, null, false, false)
   }
   def isComplete(): scala.Boolean = {
@@ -48,7 +48,7 @@ class FacedCubemapData extends com.badlogic.gdx.graphics.CubemapData {
     }; i = i + 1 } }
     return true
   }
-  def getTextureData(side: com.badlogic.gdx.graphics.Cubemap#CubemapSide): com.badlogic.gdx.graphics.TextureData = {
+  def getTextureData(side: com.badlogic.gdx.graphics.Cubemap.CubemapSide): com.badlogic.gdx.graphics.TextureData = {
     return this.data(side.index)
   }
   def getWidth(): scala.Int = {
@@ -115,7 +115,7 @@ class FacedCubemapData extends com.badlogic.gdx.graphics.CubemapData {
   def prepare(): scala.Unit = {
     if (!this.isComplete()) {
       throw new com.badlogic.gdx.utils.GdxRuntimeException("You need to complete your cubemap data before using it")
-    } else ()
+    } else ();
     { var i: scala.Int = 0; while (i < this.data.length) { {
       if (!this.data(i).isPrepared()) {
         this.data(i).prepare()

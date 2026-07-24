@@ -1,7 +1,7 @@
 package com.badlogic.gdx.graphics
 
 class Cubemap extends com.badlogic.gdx.graphics.GLTexture {
-  protected var data: com.badlogic.gdx.graphics.CubemapData = null.asInstanceOf[com.badlogic.gdx.graphics.CubemapData]
+  var data: com.badlogic.gdx.graphics.CubemapData = null.asInstanceOf[com.badlogic.gdx.graphics.CubemapData]
   def this(data: com.badlogic.gdx.graphics.CubemapData) = {
     this()
     this.data = data
@@ -25,7 +25,7 @@ class Cubemap extends com.badlogic.gdx.graphics.GLTexture {
   def this(positiveX: com.badlogic.gdx.graphics.TextureData, negativeX: com.badlogic.gdx.graphics.TextureData, positiveY: com.badlogic.gdx.graphics.TextureData, negativeY: com.badlogic.gdx.graphics.TextureData, positiveZ: com.badlogic.gdx.graphics.TextureData, negativeZ: com.badlogic.gdx.graphics.TextureData) = {
     this(new com.badlogic.gdx.graphics.glutils.FacedCubemapData(positiveX, negativeX, positiveY, negativeY, positiveZ, negativeZ))
   }
-  def this(width: scala.Int, height: scala.Int, depth: scala.Int, format: com.badlogic.gdx.graphics.Pixmap#Format) = {
+  def this(width: scala.Int, height: scala.Int, depth: scala.Int, format: com.badlogic.gdx.graphics.Pixmap.Format) = {
     this(new com.badlogic.gdx.graphics.glutils.PixmapTextureData(new com.badlogic.gdx.graphics.Pixmap(depth, height, format), null, false, true), new com.badlogic.gdx.graphics.glutils.PixmapTextureData(new com.badlogic.gdx.graphics.Pixmap(depth, height, format), null, false, true), new com.badlogic.gdx.graphics.glutils.PixmapTextureData(new com.badlogic.gdx.graphics.Pixmap(width, depth, format), null, false, true), new com.badlogic.gdx.graphics.glutils.PixmapTextureData(new com.badlogic.gdx.graphics.Pixmap(width, depth, format), null, false, true), new com.badlogic.gdx.graphics.glutils.PixmapTextureData(new com.badlogic.gdx.graphics.Pixmap(width, height, format), null, false, true), new com.badlogic.gdx.graphics.glutils.PixmapTextureData(new com.badlogic.gdx.graphics.Pixmap(width, height, format), null, false, true))
   }
   def load(data: com.badlogic.gdx.graphics.CubemapData): scala.Unit = {
@@ -45,7 +45,7 @@ class Cubemap extends com.badlogic.gdx.graphics.GLTexture {
   def isManaged(): scala.Boolean = {
     return this.data.isManaged()
   }
-  protected def reload(): scala.Unit = {
+  def reload(): scala.Unit = {
     if (!this.isManaged()) {
       throw new com.badlogic.gdx.utils.GdxRuntimeException("Tried to reload an unmanaged Cubemap")
     } else ()
@@ -71,30 +71,6 @@ class Cubemap extends com.badlogic.gdx.graphics.GLTexture {
         Cubemap.managedCubemaps.getOrElse(com.badlogic.gdx.Gdx.app, null.asInstanceOf[com.badlogic.gdx.utils.Array[Cubemap]]).removeValue(this, true)
       } else ()
     } else ()
-  }
-  sealed abstract class CubemapSide {
-    var index: scala.Int = 0
-    var glEnum: scala.Int = 0
-    var up: com.badlogic.gdx.math.Vector3 = null.asInstanceOf[com.badlogic.gdx.math.Vector3]
-    var direction: com.badlogic.gdx.math.Vector3 = null.asInstanceOf[com.badlogic.gdx.math.Vector3]
-    def getGLEnum(): scala.Int = {
-      return this.glEnum
-    }
-    def getUp(out: com.badlogic.gdx.math.Vector3): com.badlogic.gdx.math.Vector3 = {
-      return out.set(this.up)
-    }
-    def getDirection(out: com.badlogic.gdx.math.Vector3): com.badlogic.gdx.math.Vector3 = {
-      return out.set(this.direction)
-    }
-  }
-  object CubemapSide {
-    case object PositiveX extends CubemapSide(0, com.badlogic.gdx.graphics.GL20.GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, -1, 0, 1, 0, 0)
-    case object NegativeX extends CubemapSide(1, com.badlogic.gdx.graphics.GL20.GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, -1, 0, -1, 0, 0)
-    case object PositiveY extends CubemapSide(2, com.badlogic.gdx.graphics.GL20.GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, 0, 1, 0, 1, 0)
-    case object NegativeY extends CubemapSide(3, com.badlogic.gdx.graphics.GL20.GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, 0, -1, 0, -1, 0)
-    case object PositiveZ extends CubemapSide(4, com.badlogic.gdx.graphics.GL20.GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, -1, 0, 0, 0, 1)
-    case object NegativeZ extends CubemapSide(5, com.badlogic.gdx.graphics.GL20.GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, -1, 0, 0, 0, -1)
-    def values(): Array[CubemapSide] = Array(PositiveX, NegativeX, PositiveY, NegativeY, PositiveZ, NegativeZ)
   }
 }
 object Cubemap {
@@ -132,17 +108,17 @@ object Cubemap {
           val refCount: scala.Int = Cubemap.assetManager.getReferenceCount(fileName)
           Cubemap.assetManager.setReferenceCount(fileName, 0)
           cubemap.glHandle = 0
-          val params: com.badlogic.gdx.assets.loaders.CubemapLoader#CubemapParameter = new com.badlogic.gdx.assets.loaders.CubemapLoader#CubemapParameter()
+          val params: com.badlogic.gdx.assets.loaders.CubemapLoader.CubemapParameter = new com.badlogic.gdx.assets.loaders.CubemapLoader.CubemapParameter()
           params.cubemapData = cubemap.getCubemapData()
           params.minFilter = cubemap.getMinFilter()
           params.magFilter = cubemap.getMagFilter()
           params.wrapU = cubemap.getUWrap()
           params.wrapV = cubemap.getVWrap()
           params.cubemap = cubemap
-          params.loadedCallback = new com.badlogic.gdx.assets.AssetLoaderParameters#LoadedCallback()
+          params.loadedCallback = new com.badlogic.gdx.assets.AssetLoaderParameters.LoadedCallback()
           Cubemap.assetManager.unload(fileName)
           cubemap.glHandle = com.badlogic.gdx.Gdx.gl.glGenTexture()
-          Cubemap.assetManager.load(fileName, classOf[java.lang.Class], params)
+          Cubemap.assetManager.load(fileName, classOf[Cubemap], params)
         }
       }
       managedCubemapArray.clear()
@@ -164,5 +140,29 @@ object Cubemap {
   }
   def getNumManagedCubemaps(): scala.Int = {
     return Cubemap.managedCubemaps.getOrElse(com.badlogic.gdx.Gdx.app, null.asInstanceOf[com.badlogic.gdx.utils.Array[Cubemap]]).size
+  }
+  sealed abstract class CubemapSide {
+    var index: scala.Int = 0
+    var glEnum: scala.Int = 0
+    var up: com.badlogic.gdx.math.Vector3 = null.asInstanceOf[com.badlogic.gdx.math.Vector3]
+    var direction: com.badlogic.gdx.math.Vector3 = null.asInstanceOf[com.badlogic.gdx.math.Vector3]
+    def getGLEnum(): scala.Int = {
+      return this.glEnum
+    }
+    def getUp(out: com.badlogic.gdx.math.Vector3): com.badlogic.gdx.math.Vector3 = {
+      return out.set(this.up)
+    }
+    def getDirection(out: com.badlogic.gdx.math.Vector3): com.badlogic.gdx.math.Vector3 = {
+      return out.set(this.direction)
+    }
+  }
+  object CubemapSide {
+    case object PositiveX extends CubemapSide(0, com.badlogic.gdx.graphics.GL20.GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, -1, 0, 1, 0, 0)
+    case object NegativeX extends CubemapSide(1, com.badlogic.gdx.graphics.GL20.GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, -1, 0, -1, 0, 0)
+    case object PositiveY extends CubemapSide(2, com.badlogic.gdx.graphics.GL20.GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, 0, 1, 0, 1, 0)
+    case object NegativeY extends CubemapSide(3, com.badlogic.gdx.graphics.GL20.GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, 0, -1, 0, -1, 0)
+    case object PositiveZ extends CubemapSide(4, com.badlogic.gdx.graphics.GL20.GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, -1, 0, 0, 0, 1)
+    case object NegativeZ extends CubemapSide(5, com.badlogic.gdx.graphics.GL20.GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, -1, 0, 0, 0, -1)
+    def values(): Array[CubemapSide] = Array(PositiveX, NegativeX, PositiveY, NegativeY, PositiveZ, NegativeZ)
   }
 }

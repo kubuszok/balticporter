@@ -20,15 +20,15 @@ object HdpiUtils {
     }
   }
   def toLogicalX(backBufferX: scala.Int): scala.Int = {
-    return ((backBufferX * com.badlogic.gdx.Gdx.graphics.getWidth()) / com.badlogic.gdx.Gdx.graphics.getBackBufferWidth().asInstanceOf[scala.Float]).asInstanceOf[scala.Int]
+    return ((backBufferX * com.badlogic.gdx.Gdx.graphics.getWidth()) / com.badlogic.gdx.Gdx.graphics.getBackBufferWidth().asInstanceOf[scala.Float]).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
   }
   def toLogicalY(backBufferY: scala.Int): scala.Int = {
-    return ((backBufferY * com.badlogic.gdx.Gdx.graphics.getHeight()) / com.badlogic.gdx.Gdx.graphics.getBackBufferHeight().asInstanceOf[scala.Float]).asInstanceOf[scala.Int]
+    return ((backBufferY * com.badlogic.gdx.Gdx.graphics.getHeight()) / com.badlogic.gdx.Gdx.graphics.getBackBufferHeight().asInstanceOf[scala.Float]).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
   }
   def toBackBufferX(logicalX: scala.Int): scala.Int = {
-    return ((logicalX * com.badlogic.gdx.Gdx.graphics.getBackBufferWidth()) / com.badlogic.gdx.Gdx.graphics.getWidth().asInstanceOf[scala.Float]).asInstanceOf[scala.Int]
+    return ((logicalX * com.badlogic.gdx.Gdx.graphics.getBackBufferWidth()) / com.badlogic.gdx.Gdx.graphics.getWidth().asInstanceOf[scala.Float]).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
   }
   def toBackBufferY(logicalY: scala.Int): scala.Int = {
-    return ((logicalY * com.badlogic.gdx.Gdx.graphics.getBackBufferHeight()) / com.badlogic.gdx.Gdx.graphics.getHeight().asInstanceOf[scala.Float]).asInstanceOf[scala.Int]
+    return ((logicalY * com.badlogic.gdx.Gdx.graphics.getBackBufferHeight()) / com.badlogic.gdx.Gdx.graphics.getHeight().asInstanceOf[scala.Float]).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
   }
 }

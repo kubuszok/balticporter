@@ -5,14 +5,14 @@ class TiledMapTileLayer extends com.badlogic.gdx.maps.MapLayer {
   private var height: scala.Int = 0
   private var tileWidth: scala.Int = 0
   private var tileHeight: scala.Int = 0
-  private var cells: scala.Array[scala.Array[Cell]] = null.asInstanceOf[scala.Array[scala.Array[Cell]]]
+  private var cells: scala.Array[scala.Array[com.badlogic.gdx.maps.tiled.TiledMapTileLayer.Cell]] = null.asInstanceOf[scala.Array[scala.Array[com.badlogic.gdx.maps.tiled.TiledMapTileLayer.Cell]]]
   def this(width: scala.Int, height: scala.Int, tileWidth: scala.Int, tileHeight: scala.Int) = {
     this()
     this.width = width
     this.height = height
     this.tileWidth = tileWidth
     this.tileHeight = tileHeight
-    this.cells = new Array[scala.Array[Cell]](width, height)
+    this.cells = new Array[scala.Array[com.badlogic.gdx.maps.tiled.TiledMapTileLayer.Cell]](width, height)
   }
   def getWidth(): scala.Int = {
     return this.width
@@ -26,7 +26,7 @@ class TiledMapTileLayer extends com.badlogic.gdx.maps.MapLayer {
   def getTileHeight(): scala.Int = {
     return this.tileHeight
   }
-  def getCell(x: scala.Int, y: scala.Int): Cell = {
+  def getCell(x: scala.Int, y: scala.Int): com.badlogic.gdx.maps.tiled.TiledMapTileLayer.Cell = {
     if ((x < 0) || (x >= this.width)) {
       return null
     } else ()
@@ -35,7 +35,7 @@ class TiledMapTileLayer extends com.badlogic.gdx.maps.MapLayer {
     } else ()
     return this.cells(x)(y)
   }
-  def setCell(x: scala.Int, y: scala.Int, cell: Cell): scala.Unit = {
+  def setCell(x: scala.Int, y: scala.Int, cell: com.badlogic.gdx.maps.tiled.TiledMapTileLayer.Cell): scala.Unit = {
     if ((x < 0) || (x >= this.width)) {
       return
     } else ()
@@ -44,6 +44,8 @@ class TiledMapTileLayer extends com.badlogic.gdx.maps.MapLayer {
     } else ()
     this.cells(x)(y) = cell
   }
+}
+object TiledMapTileLayer {
   class Cell {
     private var tile: com.badlogic.gdx.maps.tiled.TiledMapTile = null.asInstanceOf[com.badlogic.gdx.maps.tiled.TiledMapTile]
     private var flipHorizontally: scala.Boolean = false
@@ -52,28 +54,28 @@ class TiledMapTileLayer extends com.badlogic.gdx.maps.MapLayer {
     def getTile(): com.badlogic.gdx.maps.tiled.TiledMapTile = {
       return this.tile
     }
-    def setTile(tile: com.badlogic.gdx.maps.tiled.TiledMapTile): Cell = {
+    def setTile(tile: com.badlogic.gdx.maps.tiled.TiledMapTile): com.badlogic.gdx.maps.tiled.TiledMapTileLayer.Cell = {
       this.tile = tile
       return this
     }
     def getFlipHorizontally(): scala.Boolean = {
       return this.flipHorizontally
     }
-    def setFlipHorizontally(flipHorizontally: scala.Boolean): Cell = {
+    def setFlipHorizontally(flipHorizontally: scala.Boolean): com.badlogic.gdx.maps.tiled.TiledMapTileLayer.Cell = {
       this.flipHorizontally = flipHorizontally
       return this
     }
     def getFlipVertically(): scala.Boolean = {
       return this.flipVertically
     }
-    def setFlipVertically(flipVertically: scala.Boolean): Cell = {
+    def setFlipVertically(flipVertically: scala.Boolean): com.badlogic.gdx.maps.tiled.TiledMapTileLayer.Cell = {
       this.flipVertically = flipVertically
       return this
     }
     def getRotation(): scala.Int = {
       return this.rotation
     }
-    def setRotation(rotation: scala.Int): Cell = {
+    def setRotation(rotation: scala.Int): com.badlogic.gdx.maps.tiled.TiledMapTileLayer.Cell = {
       this.rotation = rotation
       return this
     }

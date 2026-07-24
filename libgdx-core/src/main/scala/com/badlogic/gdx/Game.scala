@@ -1,7 +1,7 @@
 package com.badlogic.gdx
 
 abstract class Game extends com.badlogic.gdx.ApplicationListener {
-  protected var screen: com.badlogic.gdx.Screen = null.asInstanceOf[com.badlogic.gdx.Screen]
+  var screen: com.badlogic.gdx.Screen = null.asInstanceOf[com.badlogic.gdx.Screen]
   def dispose(): scala.Unit = {
     if (this.screen != null) {
       this.screen.hide()

@@ -1,8 +1,8 @@
 package com.badlogic.gdx.assets.loaders
 
-abstract class ModelLoader[P <: ModelParameters] extends com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader[com.badlogic.gdx.graphics.g3d.Model, P] {
-  protected var items: com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.ObjectMap#Entry[java.lang.String, com.badlogic.gdx.graphics.g3d.model.data.ModelData]] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.ObjectMap#Entry[java.lang.String, com.badlogic.gdx.graphics.g3d.model.data.ModelData]]()
-  protected var defaultParameters: ModelParameters = new ModelParameters()
+abstract class ModelLoader[P <: com.badlogic.gdx.assets.loaders.ModelLoader.ModelParameters] extends com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader[com.badlogic.gdx.graphics.g3d.Model, P] {
+  var items: com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.ObjectMap.Entry[java.lang.String, com.badlogic.gdx.graphics.g3d.model.data.ModelData]] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.ObjectMap.Entry[java.lang.String, com.badlogic.gdx.graphics.g3d.model.data.ModelData]]()
+  var defaultParameters: com.badlogic.gdx.assets.loaders.ModelLoader.ModelParameters = new com.badlogic.gdx.assets.loaders.ModelLoader.ModelParameters()
   def this(resolver: com.badlogic.gdx.assets.loaders.FileHandleResolver) = {
     this()
   }
@@ -15,31 +15,31 @@ abstract class ModelLoader[P <: ModelParameters] extends com.badlogic.gdx.assets
     return if (data == null) null else new com.badlogic.gdx.graphics.g3d.Model(data, textureProvider)
   }
   def loadModel(fileHandle: com.badlogic.gdx.files.FileHandle, parameters: P): com.badlogic.gdx.graphics.g3d.Model = {
-    return this.loadModel(fileHandle, new com.badlogic.gdx.graphics.g3d.utils.TextureProvider#FileTextureProvider(), parameters)
+    return this.loadModel(fileHandle, new com.badlogic.gdx.graphics.g3d.utils.TextureProvider.FileTextureProvider(), parameters)
   }
   def loadModel(fileHandle: com.badlogic.gdx.files.FileHandle, textureProvider: com.badlogic.gdx.graphics.g3d.utils.TextureProvider): com.badlogic.gdx.graphics.g3d.Model = {
     return this.loadModel(fileHandle, textureProvider, null)
   }
   def loadModel(fileHandle: com.badlogic.gdx.files.FileHandle): com.badlogic.gdx.graphics.g3d.Model = {
-    return this.loadModel(fileHandle, new com.badlogic.gdx.graphics.g3d.utils.TextureProvider#FileTextureProvider(), null)
+    return this.loadModel(fileHandle, new com.badlogic.gdx.graphics.g3d.utils.TextureProvider.FileTextureProvider(), null)
   }
-  def getDependencies(fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameters: P): com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor] = {
-    val deps: com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor] = new com.badlogic.gdx.utils.Array()
+  def getDependencies(fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameters: P): com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = {
+    val deps: com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = new com.badlogic.gdx.utils.Array()
     val data: com.badlogic.gdx.graphics.g3d.model.data.ModelData = this.loadModelData(file, parameters)
     if (data == null) {
       return deps
     } else ()
-    val item: com.badlogic.gdx.utils.ObjectMap#Entry[java.lang.String, com.badlogic.gdx.graphics.g3d.model.data.ModelData] = new com.badlogic.gdx.utils.ObjectMap#Entry[java.lang.String, com.badlogic.gdx.graphics.g3d.model.data.ModelData]()
+    val item: com.badlogic.gdx.utils.ObjectMap.Entry[java.lang.String, com.badlogic.gdx.graphics.g3d.model.data.ModelData] = new com.badlogic.gdx.utils.ObjectMap.Entry[java.lang.String, com.badlogic.gdx.graphics.g3d.model.data.ModelData]()
     item.key = fileName
     item.value = data
     this.items.synchronized {
       this.items.add(item)
     }
-    val textureParameter: com.badlogic.gdx.assets.loaders.TextureLoader#TextureParameter = if (parameters != null) parameters.textureParameter else this.defaultParameters.textureParameter
+    val textureParameter: com.badlogic.gdx.assets.loaders.TextureLoader.TextureParameter = if (parameters != null) parameters.textureParameter else this.defaultParameters.textureParameter
     for (modelMaterial <- data.materials) {
       if (modelMaterial.textures != null) {
         for (modelTexture <- modelMaterial.textures) {
-          deps.add(new com.badlogic.gdx.assets.AssetDescriptor(modelTexture.fileName, classOf[java.lang.Class], textureParameter))
+          deps.add(new com.badlogic.gdx.assets.AssetDescriptor(modelTexture.fileName, classOf[com.badlogic.gdx.graphics.Texture], textureParameter))
         }
       } else ()
     }
@@ -61,21 +61,23 @@ abstract class ModelLoader[P <: ModelParameters] extends com.badlogic.gdx.assets
     if (data == null) {
       return null
     } else ()
-    val result: com.badlogic.gdx.graphics.g3d.Model = new com.badlogic.gdx.graphics.g3d.Model(data, new com.badlogic.gdx.graphics.g3d.utils.TextureProvider#AssetTextureProvider(manager))
+    val result: com.badlogic.gdx.graphics.g3d.Model = new com.badlogic.gdx.graphics.g3d.Model(data, new com.badlogic.gdx.graphics.g3d.utils.TextureProvider.AssetTextureProvider(manager))
     val disposables: scala.collection.Iterator[com.badlogic.gdx.utils.Disposable] = result.getManagedDisposables().iterator
-    while (disposables.hasNext()) {
-      val disposable: com.badlogic.gdx.utils.Disposable = disposables.next()
+    while (disposables.hasNext) {
+      val disposable: com.badlogic.gdx.utils.Disposable = disposables.next
       if (disposable.isInstanceOf[com.badlogic.gdx.graphics.Texture]) {
         disposables.remove()
       } else ()
     }
     return result
   }
+}
+object ModelLoader {
   class ModelParameters extends com.badlogic.gdx.assets.AssetLoaderParameters[com.badlogic.gdx.graphics.g3d.Model] {
-    var textureParameter: com.badlogic.gdx.assets.loaders.TextureLoader#TextureParameter = null.asInstanceOf[com.badlogic.gdx.assets.loaders.TextureLoader#TextureParameter]
+    var textureParameter: com.badlogic.gdx.assets.loaders.TextureLoader.TextureParameter = null.asInstanceOf[com.badlogic.gdx.assets.loaders.TextureLoader.TextureParameter]
     def this() = {
       this()
-      this.textureParameter = new com.badlogic.gdx.assets.loaders.TextureLoader#TextureParameter()
+      this.textureParameter = new com.badlogic.gdx.assets.loaders.TextureLoader.TextureParameter()
       this.textureParameter.minFilter = {
         this.textureParameter.magFilter = com.badlogic.gdx.graphics.Texture.TextureFilter.Linear
         this.textureParameter.magFilter

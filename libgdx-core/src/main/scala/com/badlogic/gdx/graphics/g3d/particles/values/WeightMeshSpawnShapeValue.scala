@@ -1,15 +1,15 @@
 package com.badlogic.gdx.graphics.g3d.particles.values
 
 final class WeightMeshSpawnShapeValue extends com.badlogic.gdx.graphics.g3d.particles.values.MeshSpawnShapeValue {
-  private var distribution: com.badlogic.gdx.math.CumulativeDistribution[com.badlogic.gdx.graphics.g3d.particles.values.MeshSpawnShapeValue#Triangle] = null.asInstanceOf[com.badlogic.gdx.math.CumulativeDistribution[com.badlogic.gdx.graphics.g3d.particles.values.MeshSpawnShapeValue#Triangle]]
+  private var distribution: com.badlogic.gdx.math.CumulativeDistribution[com.badlogic.gdx.graphics.g3d.particles.values.MeshSpawnShapeValue.Triangle] = null.asInstanceOf[com.badlogic.gdx.math.CumulativeDistribution[com.badlogic.gdx.graphics.g3d.particles.values.MeshSpawnShapeValue.Triangle]]
   def this(value: WeightMeshSpawnShapeValue) = {
     this()
-    this.distribution = new com.badlogic.gdx.math.CumulativeDistribution[com.badlogic.gdx.graphics.g3d.particles.values.MeshSpawnShapeValue#Triangle]()
+    this.distribution = new com.badlogic.gdx.math.CumulativeDistribution[com.badlogic.gdx.graphics.g3d.particles.values.MeshSpawnShapeValue.Triangle]()
     this.load(value)
   }
   def this() = {
     this()
-    this.distribution = new com.badlogic.gdx.math.CumulativeDistribution[com.badlogic.gdx.graphics.g3d.particles.values.MeshSpawnShapeValue#Triangle]()
+    this.distribution = new com.badlogic.gdx.math.CumulativeDistribution[com.badlogic.gdx.graphics.g3d.particles.values.MeshSpawnShapeValue.Triangle]()
   }
   def init(): scala.Unit = {
     this.calculateWeights()
@@ -25,7 +25,7 @@ final class WeightMeshSpawnShapeValue extends com.badlogic.gdx.graphics.g3d.part
     mesh.getVertices(vertices)
     if (indicesCount > 0) {
       val indices: scala.Array[scala.Short] = new Array[scala.Short](indicesCount)
-      mesh.getIndices(indices)
+      mesh.getIndices(indices);
       { var i: scala.Int = 0; while (i < indicesCount) { {
         val p1Offset: scala.Int = (indices(i) * vertexSize) + positionOffset
         val p2Offset: scala.Int = (indices(i + 1) * vertexSize) + positionOffset
@@ -40,7 +40,7 @@ final class WeightMeshSpawnShapeValue extends com.badlogic.gdx.graphics.g3d.part
         val y3: scala.Float = vertices(p3Offset + 1)
         val z3: scala.Float = vertices(p3Offset + 2)
         val area: scala.Float = java.lang.Math.abs((((x1 * (y2 - y3)) + (x2 * (y3 - y1))) + (x3 * (y1 - y2))) / 2.0f)
-        this.distribution.add(new com.badlogic.gdx.graphics.g3d.particles.values.MeshSpawnShapeValue#Triangle(x1, y1, z1, x2, y2, z2, x3, y3, z3), area)
+        this.distribution.add(new com.badlogic.gdx.graphics.g3d.particles.values.MeshSpawnShapeValue.Triangle(x1, y1, z1, x2, y2, z2, x3, y3, z3), area)
       }; i = i + 3 } }
     } else {
       { var i: scala.Int = 0; while (i < vertexCount) { {
@@ -57,13 +57,13 @@ final class WeightMeshSpawnShapeValue extends com.badlogic.gdx.graphics.g3d.part
         val y3: scala.Float = vertices(p3Offset + 1)
         val z3: scala.Float = vertices(p3Offset + 2)
         val area: scala.Float = java.lang.Math.abs((((x1 * (y2 - y3)) + (x2 * (y3 - y1))) + (x3 * (y1 - y2))) / 2.0f)
-        this.distribution.add(new com.badlogic.gdx.graphics.g3d.particles.values.MeshSpawnShapeValue#Triangle(x1, y1, z1, x2, y2, z2, x3, y3, z3), area)
+        this.distribution.add(new com.badlogic.gdx.graphics.g3d.particles.values.MeshSpawnShapeValue.Triangle(x1, y1, z1, x2, y2, z2, x3, y3, z3), area)
       }; i = i + vertexSize } }
     }
     this.distribution.generateNormalized()
   }
   def spawnAux(vector: com.badlogic.gdx.math.Vector3, percent: scala.Float): scala.Unit = {
-    val t: com.badlogic.gdx.graphics.g3d.particles.values.MeshSpawnShapeValue#Triangle = this.distribution.value()
+    val t: com.badlogic.gdx.graphics.g3d.particles.values.MeshSpawnShapeValue.Triangle = this.distribution.value()
     val a: scala.Float = com.badlogic.gdx.math.MathUtils.random()
     val b: scala.Float = com.badlogic.gdx.math.MathUtils.random()
     vector.set((t.x1 + (a * (t.x2 - t.x1))) + (b * (t.x3 - t.x1)), (t.y1 + (a * (t.y2 - t.y1))) + (b * (t.y3 - t.y1)), (t.z1 + (a * (t.z2 - t.z1))) + (b * (t.z3 - t.z1)))

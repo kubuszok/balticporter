@@ -1,7 +1,7 @@
 package com.badlogic.gdx.scenes.scene2d.ui
 
-class SplitPane extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup with com.badlogic.gdx.scenes.scene2d.ui.Styleable[SplitPaneStyle] {
-  var style: SplitPaneStyle = null.asInstanceOf[SplitPaneStyle]
+class SplitPane extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup with com.badlogic.gdx.scenes.scene2d.ui.Styleable[com.badlogic.gdx.scenes.scene2d.ui.SplitPane.SplitPaneStyle] {
+  var style: com.badlogic.gdx.scenes.scene2d.ui.SplitPane.SplitPaneStyle = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.SplitPane.SplitPaneStyle]
   private var firstWidget: com.badlogic.gdx.scenes.scene2d.Actor = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.Actor]
   private var secondWidget: com.badlogic.gdx.scenes.scene2d.Actor = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.Actor]
   var vertical: scala.Boolean = false
@@ -15,7 +15,7 @@ class SplitPane extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup with com.
   private final val tempScissors: com.badlogic.gdx.math.Rectangle = new com.badlogic.gdx.math.Rectangle()
   var lastPoint: com.badlogic.gdx.math.Vector2 = new com.badlogic.gdx.math.Vector2()
   var handlePosition: com.badlogic.gdx.math.Vector2 = new com.badlogic.gdx.math.Vector2()
-  def this(firstWidget: com.badlogic.gdx.scenes.scene2d.Actor, secondWidget: com.badlogic.gdx.scenes.scene2d.Actor, vertical: scala.Boolean, style: SplitPaneStyle) = {
+  def this(firstWidget: com.badlogic.gdx.scenes.scene2d.Actor, secondWidget: com.badlogic.gdx.scenes.scene2d.Actor, vertical: scala.Boolean, style: com.badlogic.gdx.scenes.scene2d.ui.SplitPane.SplitPaneStyle) = {
     this()
     this.vertical = vertical
     this.setStyle(style)
@@ -25,7 +25,7 @@ class SplitPane extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup with com.
     this.initialize()
   }
   def this(firstWidget: com.badlogic.gdx.scenes.scene2d.Actor, secondWidget: com.badlogic.gdx.scenes.scene2d.Actor, vertical: scala.Boolean, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin, styleName: java.lang.String) = {
-    this(firstWidget, secondWidget, vertical, skin.get(styleName, classOf[java.lang.Class]))
+    this(firstWidget, secondWidget, vertical, skin.get(styleName, classOf[com.badlogic.gdx.scenes.scene2d.ui.SplitPane.SplitPaneStyle]))
   }
   def this(firstWidget: com.badlogic.gdx.scenes.scene2d.Actor, secondWidget: com.badlogic.gdx.scenes.scene2d.Actor, vertical: scala.Boolean, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin) = {
     this(firstWidget, secondWidget, vertical, skin, "default-" + (if (vertical) "vertical" else "horizontal"))
@@ -33,11 +33,11 @@ class SplitPane extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup with com.
   private def initialize(): scala.Unit = {
     this.addListener(new com.badlogic.gdx.scenes.scene2d.InputListener())
   }
-  def setStyle(style: SplitPaneStyle): scala.Unit = {
+  def setStyle(style: com.badlogic.gdx.scenes.scene2d.ui.SplitPane.SplitPaneStyle): scala.Unit = {
     this.style = style
     this.invalidateHierarchy()
   }
-  def getStyle(): SplitPaneStyle = {
+  def getStyle(): com.badlogic.gdx.scenes.scene2d.ui.SplitPane.SplitPaneStyle = {
     return this.style
   }
   def layout(): scala.Unit = {
@@ -167,7 +167,7 @@ class SplitPane extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup with com.
   def getSplitAmount(): scala.Float = {
     return this.splitAmount
   }
-  protected def clampSplitAmount(): scala.Unit = {
+  def clampSplitAmount(): scala.Unit = {
     var effectiveMinAmount: scala.Float = this.minAmount
     var effectiveMaxAmount: scala.Float = this.maxAmount
     if (this.vertical) {
@@ -290,13 +290,15 @@ class SplitPane extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup with com.
   def isCursorOverHandle(): scala.Boolean = {
     return this.cursorOverHandle
   }
+}
+object SplitPane {
   class SplitPaneStyle {
     var handle: com.badlogic.gdx.scenes.scene2d.utils.Drawable = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Drawable]
     def this(handle: com.badlogic.gdx.scenes.scene2d.utils.Drawable) = {
       this()
       this.handle = handle
     }
-    def this(style: SplitPaneStyle) = {
+    def this(style: com.badlogic.gdx.scenes.scene2d.ui.SplitPane.SplitPaneStyle) = {
       this()
       this.handle = style.handle
     }

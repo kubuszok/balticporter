@@ -4,7 +4,7 @@ abstract class Scaling {
   def apply(sourceWidth: scala.Float, sourceHeight: scala.Float, targetWidth: scala.Float, targetHeight: scala.Float): com.badlogic.gdx.math.Vector2
 }
 object Scaling {
-  protected final val temp: com.badlogic.gdx.math.Vector2 = new com.badlogic.gdx.math.Vector2()
+  final val temp: com.badlogic.gdx.math.Vector2 = new com.badlogic.gdx.math.Vector2()
   final val fit: Scaling = new Scaling()
   final val contain: Scaling = new Scaling()
   final val fill: Scaling = new Scaling()

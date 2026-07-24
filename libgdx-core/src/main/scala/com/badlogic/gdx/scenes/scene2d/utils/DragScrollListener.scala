@@ -2,8 +2,8 @@ package com.badlogic.gdx.scenes.scene2d.utils
 
 class DragScrollListener extends com.badlogic.gdx.scenes.scene2d.utils.DragListener {
   var scroll$field: com.badlogic.gdx.scenes.scene2d.ui.ScrollPane = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.ScrollPane]
-  private var scrollUp: com.badlogic.gdx.utils.Timer#Task = null.asInstanceOf[com.badlogic.gdx.utils.Timer#Task]
-  private var scrollDown: com.badlogic.gdx.utils.Timer#Task = null.asInstanceOf[com.badlogic.gdx.utils.Timer#Task]
+  private var scrollUp: com.badlogic.gdx.utils.Timer.Task = null.asInstanceOf[com.badlogic.gdx.utils.Timer.Task]
+  private var scrollDown: com.badlogic.gdx.utils.Timer.Task = null.asInstanceOf[com.badlogic.gdx.utils.Timer.Task]
   var interpolation: com.badlogic.gdx.math.Interpolation = com.badlogic.gdx.math.Interpolation.exp5In
   var minSpeed: scala.Float = 15
   var maxSpeed: scala.Float = 75
@@ -15,14 +15,14 @@ class DragScrollListener extends com.badlogic.gdx.scenes.scene2d.utils.DragListe
   def this(scroll: com.badlogic.gdx.scenes.scene2d.ui.ScrollPane) = {
     this()
     this.scroll$field = scroll
-    this.scrollUp = new com.badlogic.gdx.utils.Timer#Task()
-    this.scrollDown = new com.badlogic.gdx.utils.Timer#Task()
+    this.scrollUp = new com.badlogic.gdx.utils.Timer.Task()
+    this.scrollDown = new com.badlogic.gdx.utils.Timer.Task()
   }
   def setup(minSpeedPixels: scala.Float, maxSpeedPixels: scala.Float, tickSecs: scala.Float, rampSecs: scala.Float): scala.Unit = {
     this.minSpeed = minSpeedPixels
     this.maxSpeed = maxSpeedPixels
     this.tickSecs = tickSecs
-    this.rampTime = (rampSecs * 1000).asInstanceOf[scala.Long]
+    this.rampTime = (rampSecs * 1000).asInstanceOf[scala.Long].asInstanceOf[scala.Long]
   }
   def getScrollPixels(): scala.Float = {
     return this.interpolation.apply(this.minSpeed, this.maxSpeed, java.lang.Math.min(1, (java.lang.System.currentTimeMillis() - this.startTime) / this.rampTime.asInstanceOf[scala.Float]))
@@ -53,13 +53,13 @@ class DragScrollListener extends com.badlogic.gdx.scenes.scene2d.utils.DragListe
     this.scrollUp.cancel()
     this.scrollDown.cancel()
   }
-  protected def isAbove(y: scala.Float): scala.Boolean = {
+  def isAbove(y: scala.Float): scala.Boolean = {
     return y >= (this.scroll$field.getHeight() - this.padTop)
   }
-  protected def isBelow(y: scala.Float): scala.Boolean = {
+  def isBelow(y: scala.Float): scala.Boolean = {
     return y < this.padBottom
   }
-  protected def scroll(y: scala.Float): scala.Unit = {
+  def scroll(y: scala.Float): scala.Unit = {
     this.scroll$field.setScrollY(y)
   }
   def setPadding(padTop: scala.Float, padBottom: scala.Float): scala.Unit = {

@@ -1,25 +1,10 @@
 package com.badlogic.gdx.graphics.g3d.utils.shapebuilders
 
-class RenderableShapeBuilder extends com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BaseShapeBuilder {
-  private class RenderablePool extends com.badlogic.gdx.utils.FlushablePool[com.badlogic.gdx.graphics.g3d.Renderable] {
-    protected def newObject(): com.badlogic.gdx.graphics.g3d.Renderable = {
-      return new com.badlogic.gdx.graphics.g3d.Renderable()
-    }
-    def obtain(): com.badlogic.gdx.graphics.g3d.Renderable = {
-      val renderable: com.badlogic.gdx.graphics.g3d.Renderable = super.obtain()
-      renderable.environment = null
-      renderable.material = null
-      renderable.meshPart.set("", null, 0, 0, 0)
-      renderable.shader = null
-      renderable.userData = null
-      return renderable
-    }
-  }
-}
+class RenderableShapeBuilder extends com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BaseShapeBuilder
 object RenderableShapeBuilder {
   private var indices: scala.Array[scala.Short] = null.asInstanceOf[scala.Array[scala.Short]]
   private var vertices: scala.Array[scala.Float] = null.asInstanceOf[scala.Array[scala.Float]]
-  private final val renderablesPool: RenderablePool = new RenderablePool()
+  private final val renderablesPool: com.badlogic.gdx.graphics.g3d.utils.shapebuilders.RenderableShapeBuilder.RenderablePool = new com.badlogic.gdx.graphics.g3d.utils.shapebuilders.RenderableShapeBuilder.RenderablePool()
   private final val renderables: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.Renderable] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.Renderable]()
   private final val FLOAT_BYTES: scala.Int = 4
   def buildNormals(builder: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder, renderableProvider: com.badlogic.gdx.graphics.g3d.RenderableProvider, vectorSize: scala.Float): scala.Unit = {
@@ -66,7 +51,7 @@ object RenderableShapeBuilder {
       verticesQuantity = renderable.meshPart.size
     }
     RenderableShapeBuilder.ensureVerticesCapacity(verticesQuantity * attributesSize)
-    mesh.getVertices(verticesOffset * attributesSize, verticesQuantity * attributesSize, RenderableShapeBuilder.vertices, 0)
+    mesh.getVertices(verticesOffset * attributesSize, verticesQuantity * attributesSize, RenderableShapeBuilder.vertices, 0);
     { var i: scala.Int = verticesOffset; while (i < verticesQuantity) { {
       val id: scala.Int = i * attributesSize
       com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BaseShapeBuilder.tmpV0.set(RenderableShapeBuilder.vertices(id + positionOffset), RenderableShapeBuilder.vertices((id + positionOffset) + 1), RenderableShapeBuilder.vertices((id + positionOffset) + 2))
@@ -111,7 +96,7 @@ object RenderableShapeBuilder {
     } else ()
   }
   private def minVerticeInIndices(): scala.Short = {
-    var min: scala.Short = 32767.asInstanceOf[scala.Short]
+    var min: scala.Short = 32767.asInstanceOf[scala.Short].asInstanceOf[scala.Short];
     { var i: scala.Int = 0; while (i < RenderableShapeBuilder.indices.length) { {
       if (RenderableShapeBuilder.indices(i) < min) {
         min = RenderableShapeBuilder.indices(i)
@@ -120,12 +105,26 @@ object RenderableShapeBuilder {
     return min
   }
   private def maxVerticeInIndices(): scala.Short = {
-    var max: scala.Short = (-32768).asInstanceOf[scala.Short]
+    var max: scala.Short = (-32768).asInstanceOf[scala.Short].asInstanceOf[scala.Short];
     { var i: scala.Int = 0; while (i < RenderableShapeBuilder.indices.length) { {
       if (RenderableShapeBuilder.indices(i) > max) {
         max = RenderableShapeBuilder.indices(i)
       } else ()
     }; i = i + 1 } }
     return max
+  }
+  private class RenderablePool extends com.badlogic.gdx.utils.FlushablePool[com.badlogic.gdx.graphics.g3d.Renderable] {
+    def newObject(): com.badlogic.gdx.graphics.g3d.Renderable = {
+      return new com.badlogic.gdx.graphics.g3d.Renderable()
+    }
+    def obtain(): com.badlogic.gdx.graphics.g3d.Renderable = {
+      val renderable: com.badlogic.gdx.graphics.g3d.Renderable = super.obtain()
+      renderable.environment = null
+      renderable.material = null
+      renderable.meshPart.set("", null, 0, 0, 0)
+      renderable.shader = null
+      renderable.userData = null
+      return renderable
+    }
   }
 }

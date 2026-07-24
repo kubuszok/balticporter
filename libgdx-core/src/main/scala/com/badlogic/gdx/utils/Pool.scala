@@ -12,7 +12,7 @@ abstract class Pool[T] {
   def this(initialCapacity: scala.Int) = {
     this(initialCapacity, java.lang.Integer.MAX_VALUE)
   }
-  protected def newObject(): T
+  def newObject(): T
   def obtain(): T = {
     return if (this.freeObjects.size == 0) this.newObject() else this.freeObjects.pop()
   }
@@ -36,12 +36,12 @@ abstract class Pool[T] {
     }; i = i + 1 } }
     this.peak = java.lang.Math.max(this.peak, this.freeObjects.size)
   }
-  protected def reset(`object`: T): scala.Unit = {
-    if (`object`.isInstanceOf[Poolable]) {
-      `object`.asInstanceOf[Poolable].reset()
+  def reset(`object`: T): scala.Unit = {
+    if (`object`.isInstanceOf[com.badlogic.gdx.utils.Pool.Poolable]) {
+      `object`.asInstanceOf[com.badlogic.gdx.utils.Pool.Poolable].reset()
     } else ()
   }
-  protected def discard(`object`: T): scala.Unit = {
+  def discard(`object`: T): scala.Unit = {
     this.reset(`object`)
   }
   def freeAll(objects: com.badlogic.gdx.utils.Array[T]): scala.Unit = {
@@ -49,7 +49,7 @@ abstract class Pool[T] {
       throw new java.lang.IllegalArgumentException("objects cannot be null.")
     } else ()
     val freeObjects: com.badlogic.gdx.utils.Array[T] = this.freeObjects
-    val max: scala.Int = this.max
+    val max: scala.Int = this.max;
     { var i: scala.Int = 0; val n: scala.Int = objects.size; while (i < n) { {
       val `object`: T = objects.get(i)
       if (`object` == null) {
@@ -65,7 +65,7 @@ abstract class Pool[T] {
     this.peak = java.lang.Math.max(this.peak, freeObjects.size)
   }
   def clear(): scala.Unit = {
-    val freeObjects: com.badlogic.gdx.utils.Array[T] = this.freeObjects
+    val freeObjects: com.badlogic.gdx.utils.Array[T] = this.freeObjects;
     { var i: scala.Int = 0; val n: scala.Int = freeObjects.size; while (i < n) { {
       this.discard(freeObjects.get(i))
     }; i = i + 1 } }
@@ -74,6 +74,8 @@ abstract class Pool[T] {
   def getFree(): scala.Int = {
     return this.freeObjects.size
   }
+}
+object Pool {
   trait Poolable {
     def reset(): scala.Unit
   }

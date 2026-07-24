@@ -1,7 +1,7 @@
 package com.badlogic.gdx.scenes.scene2d.ui
 
-class List[T] extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlogic.gdx.scenes.scene2d.utils.Cullable with com.badlogic.gdx.scenes.scene2d.ui.Styleable[ListStyle] {
-  var style: ListStyle = null.asInstanceOf[ListStyle]
+class List[T] extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlogic.gdx.scenes.scene2d.utils.Cullable with com.badlogic.gdx.scenes.scene2d.ui.Styleable[com.badlogic.gdx.scenes.scene2d.ui.List.ListStyle] {
+  var style: com.badlogic.gdx.scenes.scene2d.ui.List.ListStyle = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.List.ListStyle]
   final val items: com.badlogic.gdx.utils.Array[T] = new com.badlogic.gdx.utils.Array()
   var selection: com.badlogic.gdx.scenes.scene2d.utils.ArraySelection[T] = new com.badlogic.gdx.scenes.scene2d.utils.ArraySelection(this.items)
   private var cullingArea: com.badlogic.gdx.math.Rectangle = null.asInstanceOf[com.badlogic.gdx.math.Rectangle]
@@ -13,7 +13,7 @@ class List[T] extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlogi
   var overIndex: scala.Int = -1
   private var keyListener: com.badlogic.gdx.scenes.scene2d.InputListener = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.InputListener]
   var typeToSelect: scala.Boolean = false
-  def this(style: ListStyle) = {
+  def this(style: com.badlogic.gdx.scenes.scene2d.ui.List.ListStyle) = {
     this()
     this.selection.setActor(this)
     this.selection.setRequired(true)
@@ -26,19 +26,19 @@ class List[T] extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlogi
     this.addListener(new com.badlogic.gdx.scenes.scene2d.InputListener())
   }
   def this(skin: com.badlogic.gdx.scenes.scene2d.ui.Skin, styleName: java.lang.String) = {
-    this(skin.get(styleName, classOf[java.lang.Class]))
+    this(skin.get(styleName, classOf[com.badlogic.gdx.scenes.scene2d.ui.List.ListStyle]))
   }
   def this(skin: com.badlogic.gdx.scenes.scene2d.ui.Skin) = {
-    this(skin.get(classOf[java.lang.Class]))
+    this(skin.get(classOf[com.badlogic.gdx.scenes.scene2d.ui.List.ListStyle]))
   }
-  def setStyle(style: ListStyle): scala.Unit = {
+  def setStyle(style: com.badlogic.gdx.scenes.scene2d.ui.List.ListStyle): scala.Unit = {
     if (style == null) {
       throw new java.lang.IllegalArgumentException("style cannot be null.")
     } else ()
     this.style = style
     this.invalidateHierarchy()
   }
-  def getStyle(): ListStyle = {
+  def getStyle(): com.badlogic.gdx.scenes.scene2d.ui.List.ListStyle = {
     return this.style
   }
   def layout(): scala.Unit = {
@@ -47,8 +47,8 @@ class List[T] extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlogi
     this.itemHeight = font.getCapHeight() - (font.getDescent() * 2)
     this.itemHeight = this.itemHeight + (selectedDrawable.getTopHeight() + selectedDrawable.getBottomHeight())
     this.prefWidth = 0
-    val layoutPool: com.badlogic.gdx.utils.Pool[com.badlogic.gdx.graphics.g2d.GlyphLayout] = com.badlogic.gdx.scenes.scene2d.Actor.POOLS.getPool(classOf[java.lang.Class])
-    val layout: com.badlogic.gdx.graphics.g2d.GlyphLayout = layoutPool.obtain()
+    val layoutPool: com.badlogic.gdx.utils.Pool[com.badlogic.gdx.graphics.g2d.GlyphLayout] = com.badlogic.gdx.scenes.scene2d.Actor.POOLS.getPool(classOf[com.badlogic.gdx.graphics.g2d.GlyphLayout])
+    val layout: com.badlogic.gdx.graphics.g2d.GlyphLayout = layoutPool.obtain();
     { var i: scala.Int = 0; while (i < this.items.size) { {
       layout.setText(font, this.toString(this.items.get(i)))
       this.prefWidth = java.lang.Math.max(layout.width, this.prefWidth)
@@ -86,7 +86,7 @@ class List[T] extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlogi
     val textOffsetX: scala.Float = selectedDrawable.getLeftWidth()
     val textWidth: scala.Float = (width - textOffsetX) - selectedDrawable.getRightWidth()
     val textOffsetY: scala.Float = selectedDrawable.getTopHeight() - font.getDescent()
-    font.setColor(fontColorUnselected.r, fontColorUnselected.g, fontColorUnselected.b, fontColorUnselected.a * parentAlpha)
+    font.setColor(fontColorUnselected.r, fontColorUnselected.g, fontColorUnselected.b, fontColorUnselected.a * parentAlpha);
     { var i: scala.Int = 0; while (i < this.items.size) { {
       if ((this.cullingArea == null) || (((itemY - this.itemHeight) <= (this.cullingArea.y + this.cullingArea.height)) && (itemY >= this.cullingArea.y))) {
         val item: T = this.items.get(i)
@@ -117,19 +117,19 @@ class List[T] extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlogi
       itemY = itemY - this.itemHeight
     }; i = i + 1 } }
   }
-  protected def drawSelection(batch: com.badlogic.gdx.graphics.g2d.Batch, drawable: com.badlogic.gdx.scenes.scene2d.utils.Drawable, x: scala.Float, y: scala.Float, width: scala.Float, height: scala.Float): scala.Unit = {
+  def drawSelection(batch: com.badlogic.gdx.graphics.g2d.Batch, drawable: com.badlogic.gdx.scenes.scene2d.utils.Drawable, x: scala.Float, y: scala.Float, width: scala.Float, height: scala.Float): scala.Unit = {
     if (drawable != null) {
       drawable.draw(batch, x, y, width, height)
     } else ()
   }
-  protected def drawBackground(batch: com.badlogic.gdx.graphics.g2d.Batch, parentAlpha: scala.Float): scala.Unit = {
+  def drawBackground(batch: com.badlogic.gdx.graphics.g2d.Batch, parentAlpha: scala.Float): scala.Unit = {
     if (this.style.background != null) {
       val color: com.badlogic.gdx.graphics.Color = this.getColor()
       batch.setColor(color.r, color.g, color.b, color.a * parentAlpha)
       this.style.background.draw(batch, this.getX(), this.getY(), this.getWidth(), this.getHeight())
     } else ()
   }
-  protected def drawItem(batch: com.badlogic.gdx.graphics.g2d.Batch, font: com.badlogic.gdx.graphics.g2d.BitmapFont, index: scala.Int, item: T, x: scala.Float, y: scala.Float, width: scala.Float): com.badlogic.gdx.graphics.g2d.GlyphLayout = {
+  def drawItem(batch: com.badlogic.gdx.graphics.g2d.Batch, font: com.badlogic.gdx.graphics.g2d.BitmapFont, index: scala.Int, item: T, x: scala.Float, y: scala.Float, width: scala.Float): com.badlogic.gdx.graphics.g2d.GlyphLayout = {
     val string: java.lang.String = this.toString(item)
     return font.draw(batch, string, x, y, 0, string.length(), width, this.alignment, false, "...")
   }
@@ -176,7 +176,7 @@ class List[T] extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlogi
   def getItemAt(y: scala.Float): T = {
     val index: scala.Int = this.getItemIndexAt(y)
     if (index == (-1)) {
-      return null
+      return null.asInstanceOf[T]
     } else ()
     return this.items.get(index)
   }
@@ -188,7 +188,7 @@ class List[T] extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlogi
       height = height - (background.getTopHeight() + background.getBottomHeight())
       y = y - background.getBottomHeight()
     } else ()
-    val index: scala.Int = ((height - y) / this.itemHeight).asInstanceOf[scala.Int]
+    val index: scala.Int = ((height - y) / this.itemHeight).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
     if ((index < 0) || (index >= this.items.size)) {
       return -1
     } else ()
@@ -210,7 +210,7 @@ class List[T] extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlogi
       this.invalidateHierarchy()
     } else ()
   }
-  def setItems(newItems: com.badlogic.gdx.utils.Array): scala.Unit = {
+  def setItems(newItems: com.badlogic.gdx.utils.Array[?]): scala.Unit = {
     if (newItems == null) {
       throw new java.lang.IllegalArgumentException("newItems cannot be null.")
     } else ()
@@ -273,6 +273,8 @@ class List[T] extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlogi
   def getKeyListener(): com.badlogic.gdx.scenes.scene2d.InputListener = {
     return this.keyListener
   }
+}
+object List {
   class ListStyle {
     var font: com.badlogic.gdx.graphics.g2d.BitmapFont = null.asInstanceOf[com.badlogic.gdx.graphics.g2d.BitmapFont]
     var fontColorSelected: com.badlogic.gdx.graphics.Color = new com.badlogic.gdx.graphics.Color(1, 1, 1, 1)
@@ -288,7 +290,7 @@ class List[T] extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlogi
       this.fontColorUnselected.set(fontColorUnselected)
       this.selection = selection
     }
-    def this(style: ListStyle) = {
+    def this(style: com.badlogic.gdx.scenes.scene2d.ui.List.ListStyle) = {
       this()
       this.font = style.font
       this.fontColorSelected.set(style.fontColorSelected)

@@ -3,9 +3,9 @@ package com.badlogic.gdx.graphics.g3d.particles.batches
 class PointSpriteParticleBatch extends com.badlogic.gdx.graphics.g3d.particles.batches.BufferedParticleBatch[com.badlogic.gdx.graphics.g3d.particles.renderers.PointSpriteControllerRenderData] {
   private var vertices: scala.Array[scala.Float] = null.asInstanceOf[scala.Array[scala.Float]]
   var renderable: com.badlogic.gdx.graphics.g3d.Renderable = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.Renderable]
-  protected var blendingAttribute: com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute]
-  protected var depthTestAttribute: com.badlogic.gdx.graphics.g3d.attributes.DepthTestAttribute = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.attributes.DepthTestAttribute]
-  def this(capacity: scala.Int, shaderConfig: com.badlogic.gdx.graphics.g3d.particles.ParticleShader#Config, blendingAttribute: com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute, depthTestAttribute: com.badlogic.gdx.graphics.g3d.attributes.DepthTestAttribute) = {
+  var blendingAttribute: com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute]
+  var depthTestAttribute: com.badlogic.gdx.graphics.g3d.attributes.DepthTestAttribute = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.attributes.DepthTestAttribute]
+  def this(capacity: scala.Int, shaderConfig: com.badlogic.gdx.graphics.g3d.particles.ParticleShader.Config, blendingAttribute: com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute, depthTestAttribute: com.badlogic.gdx.graphics.g3d.attributes.DepthTestAttribute) = {
     this()
     if (!PointSpriteParticleBatch.pointSpritesEnabled) {
       PointSpriteParticleBatch.enablePointSprites()
@@ -23,20 +23,20 @@ class PointSpriteParticleBatch extends com.badlogic.gdx.graphics.g3d.particles.b
     this.renderable.shader = new com.badlogic.gdx.graphics.g3d.particles.ParticleShader(this.renderable, shaderConfig)
     this.renderable.shader.init()
   }
-  def this(capacity: scala.Int, shaderConfig: com.badlogic.gdx.graphics.g3d.particles.ParticleShader#Config) = {
+  def this(capacity: scala.Int, shaderConfig: com.badlogic.gdx.graphics.g3d.particles.ParticleShader.Config) = {
     this(capacity, shaderConfig, null, null)
   }
   def this(capacity: scala.Int) = {
-    this(capacity, new com.badlogic.gdx.graphics.g3d.particles.ParticleShader#Config(com.badlogic.gdx.graphics.g3d.particles.ParticleShader.ParticleType.Point))
+    this(capacity, new com.badlogic.gdx.graphics.g3d.particles.ParticleShader.Config(com.badlogic.gdx.graphics.g3d.particles.ParticleShader.ParticleType.Point))
   }
-  protected def allocParticlesData(capacity: scala.Int): scala.Unit = {
+  def allocParticlesData(capacity: scala.Int): scala.Unit = {
     this.vertices = new Array[scala.Float](capacity * PointSpriteParticleBatch.CPU_VERTEX_SIZE)
     if (this.renderable.meshPart.mesh != null) {
       this.renderable.meshPart.mesh.dispose()
     } else ()
     this.renderable.meshPart.mesh = new com.badlogic.gdx.graphics.Mesh(false, capacity, 0, PointSpriteParticleBatch.CPU_ATTRIBUTES)
   }
-  protected def allocRenderable(): scala.Unit = {
+  def allocRenderable(): scala.Unit = {
     this.renderable = new com.badlogic.gdx.graphics.g3d.Renderable()
     this.renderable.meshPart.primitiveType = com.badlogic.gdx.graphics.GL20.GL_POINTS
     this.renderable.meshPart.offset = 0
@@ -53,14 +53,14 @@ class PointSpriteParticleBatch extends com.badlogic.gdx.graphics.g3d.particles.b
   def getBlendingAttribute(): com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute = {
     return this.blendingAttribute
   }
-  protected def flush(offsets: scala.Array[scala.Int]): scala.Unit = {
+  def flush(offsets: scala.Array[scala.Int]): scala.Unit = {
     var tp: scala.Int = 0
     for (data <- renderData) {
       val scaleChannel: com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel = data.scaleChannel
       val regionChannel: com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel = data.regionChannel
       val positionChannel: com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel = data.positionChannel
       val colorChannel: com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel = data.colorChannel
-      val rotationChannel: com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel = data.rotationChannel
+      val rotationChannel: com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel = data.rotationChannel;
       { var p: scala.Int = 0; while (p < data.controller.particles.size) { {
         val offset: scala.Int = offsets(tp) * PointSpriteParticleBatch.CPU_VERTEX_SIZE
         val regionOffset: scala.Int = p * regionChannel.strideSize
@@ -92,12 +92,12 @@ class PointSpriteParticleBatch extends com.badlogic.gdx.graphics.g3d.particles.b
       renderables.add(pool.obtain().set(this.renderable))
     } else ()
   }
-  def save(manager: com.badlogic.gdx.assets.AssetManager, resources: com.badlogic.gdx.graphics.g3d.particles.ResourceData): scala.Unit = {
-    val data: com.badlogic.gdx.graphics.g3d.particles.ResourceData#SaveData = resources.createSaveData("pointSpriteBatch")
-    data.saveAsset(manager.getAssetFileName(this.getTexture()), classOf[java.lang.Class])
+  def save(manager: com.badlogic.gdx.assets.AssetManager, resources: com.badlogic.gdx.graphics.g3d.particles.ResourceData[?]): scala.Unit = {
+    val data: com.badlogic.gdx.graphics.g3d.particles.ResourceData.SaveData = resources.createSaveData("pointSpriteBatch")
+    data.saveAsset(manager.getAssetFileName(this.getTexture()), classOf[com.badlogic.gdx.graphics.Texture])
   }
-  def load(manager: com.badlogic.gdx.assets.AssetManager, resources: com.badlogic.gdx.graphics.g3d.particles.ResourceData): scala.Unit = {
-    val data: com.badlogic.gdx.graphics.g3d.particles.ResourceData#SaveData = resources.getSaveData("pointSpriteBatch")
+  def load(manager: com.badlogic.gdx.assets.AssetManager, resources: com.badlogic.gdx.graphics.g3d.particles.ResourceData[?]): scala.Unit = {
+    val data: com.badlogic.gdx.graphics.g3d.particles.ResourceData.SaveData = resources.getSaveData("pointSpriteBatch")
     if (data != null) {
       this.setTexture(manager.get(data.loadAsset()).asInstanceOf[com.badlogic.gdx.graphics.Texture])
     } else ()
@@ -105,14 +105,14 @@ class PointSpriteParticleBatch extends com.badlogic.gdx.graphics.g3d.particles.b
 }
 object PointSpriteParticleBatch {
   private var pointSpritesEnabled: scala.Boolean = false
-  protected final val TMP_V1: com.badlogic.gdx.math.Vector3 = new com.badlogic.gdx.math.Vector3()
-  protected final val sizeAndRotationUsage: scala.Int = 1 << 9
-  protected final val CPU_ATTRIBUTES: com.badlogic.gdx.graphics.VertexAttributes = new com.badlogic.gdx.graphics.VertexAttributes(new com.badlogic.gdx.graphics.VertexAttribute(com.badlogic.gdx.graphics.VertexAttributes.Usage.Position, 3, com.badlogic.gdx.graphics.glutils.ShaderProgram.POSITION_ATTRIBUTE), new com.badlogic.gdx.graphics.VertexAttribute(com.badlogic.gdx.graphics.VertexAttributes.Usage.ColorUnpacked, 4, com.badlogic.gdx.graphics.glutils.ShaderProgram.COLOR_ATTRIBUTE), new com.badlogic.gdx.graphics.VertexAttribute(com.badlogic.gdx.graphics.VertexAttributes.Usage.TextureCoordinates, 4, "a_region"), new com.badlogic.gdx.graphics.VertexAttribute(PointSpriteParticleBatch.sizeAndRotationUsage, 3, "a_sizeAndRotation"))
-  protected final val CPU_VERTEX_SIZE: scala.Int = (PointSpriteParticleBatch.CPU_ATTRIBUTES.vertexSize / 4).asInstanceOf[scala.Short]
-  protected final val CPU_POSITION_OFFSET: scala.Int = (PointSpriteParticleBatch.CPU_ATTRIBUTES.findByUsage(com.badlogic.gdx.graphics.VertexAttributes.Usage.Position).offset / 4).asInstanceOf[scala.Short]
-  protected final val CPU_COLOR_OFFSET: scala.Int = (PointSpriteParticleBatch.CPU_ATTRIBUTES.findByUsage(com.badlogic.gdx.graphics.VertexAttributes.Usage.ColorUnpacked).offset / 4).asInstanceOf[scala.Short]
-  protected final val CPU_REGION_OFFSET: scala.Int = (PointSpriteParticleBatch.CPU_ATTRIBUTES.findByUsage(com.badlogic.gdx.graphics.VertexAttributes.Usage.TextureCoordinates).offset / 4).asInstanceOf[scala.Short]
-  protected final val CPU_SIZE_AND_ROTATION_OFFSET: scala.Int = (PointSpriteParticleBatch.CPU_ATTRIBUTES.findByUsage(PointSpriteParticleBatch.sizeAndRotationUsage).offset / 4).asInstanceOf[scala.Short]
+  final val TMP_V1: com.badlogic.gdx.math.Vector3 = new com.badlogic.gdx.math.Vector3()
+  final val sizeAndRotationUsage: scala.Int = 1 << 9
+  final val CPU_ATTRIBUTES: com.badlogic.gdx.graphics.VertexAttributes = new com.badlogic.gdx.graphics.VertexAttributes(new com.badlogic.gdx.graphics.VertexAttribute(com.badlogic.gdx.graphics.VertexAttributes.Usage.Position, 3, com.badlogic.gdx.graphics.glutils.ShaderProgram.POSITION_ATTRIBUTE), new com.badlogic.gdx.graphics.VertexAttribute(com.badlogic.gdx.graphics.VertexAttributes.Usage.ColorUnpacked, 4, com.badlogic.gdx.graphics.glutils.ShaderProgram.COLOR_ATTRIBUTE), new com.badlogic.gdx.graphics.VertexAttribute(com.badlogic.gdx.graphics.VertexAttributes.Usage.TextureCoordinates, 4, "a_region"), new com.badlogic.gdx.graphics.VertexAttribute(PointSpriteParticleBatch.sizeAndRotationUsage, 3, "a_sizeAndRotation"))
+  final val CPU_VERTEX_SIZE: scala.Int = (PointSpriteParticleBatch.CPU_ATTRIBUTES.vertexSize / 4).asInstanceOf[scala.Short]
+  final val CPU_POSITION_OFFSET: scala.Int = (PointSpriteParticleBatch.CPU_ATTRIBUTES.findByUsage(com.badlogic.gdx.graphics.VertexAttributes.Usage.Position).offset / 4).asInstanceOf[scala.Short]
+  final val CPU_COLOR_OFFSET: scala.Int = (PointSpriteParticleBatch.CPU_ATTRIBUTES.findByUsage(com.badlogic.gdx.graphics.VertexAttributes.Usage.ColorUnpacked).offset / 4).asInstanceOf[scala.Short]
+  final val CPU_REGION_OFFSET: scala.Int = (PointSpriteParticleBatch.CPU_ATTRIBUTES.findByUsage(com.badlogic.gdx.graphics.VertexAttributes.Usage.TextureCoordinates).offset / 4).asInstanceOf[scala.Short]
+  final val CPU_SIZE_AND_ROTATION_OFFSET: scala.Int = (PointSpriteParticleBatch.CPU_ATTRIBUTES.findByUsage(PointSpriteParticleBatch.sizeAndRotationUsage).offset / 4).asInstanceOf[scala.Short]
   private def enablePointSprites(): scala.Unit = {
     com.badlogic.gdx.Gdx.gl.glEnable(com.badlogic.gdx.graphics.GL20.GL_VERTEX_PROGRAM_POINT_SIZE)
     if (com.badlogic.gdx.Gdx.app.getType() == com.badlogic.gdx.Application.ApplicationType.Desktop) {

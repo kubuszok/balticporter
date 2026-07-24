@@ -1,9 +1,9 @@
 package com.badlogic.gdx.graphics.g3d.particles
 
-class ResourceData[T] extends com.badlogic.gdx.utils.Json#Serializable {
-  private var uniqueData: com.badlogic.gdx.utils.ObjectMap[java.lang.String, SaveData] = null.asInstanceOf[com.badlogic.gdx.utils.ObjectMap[java.lang.String, SaveData]]
-  private var data: com.badlogic.gdx.utils.Array[SaveData] = null.asInstanceOf[com.badlogic.gdx.utils.Array[SaveData]]
-  var sharedAssets: com.badlogic.gdx.utils.Array[AssetData] = null.asInstanceOf[com.badlogic.gdx.utils.Array[AssetData]]
+class ResourceData[T] extends com.badlogic.gdx.utils.Json.Serializable {
+  private var uniqueData: com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.graphics.g3d.particles.ResourceData.SaveData] = null.asInstanceOf[com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.graphics.g3d.particles.ResourceData.SaveData]]
+  private var data: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.ResourceData.SaveData] = null.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.ResourceData.SaveData]]
+  var sharedAssets: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.ResourceData.AssetData[?]] = null.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.ResourceData.AssetData[?]]]
   private var currentLoadIndex: scala.Int = 0
   var resource: T = null.asInstanceOf[T]
   def this(resource: T) = {
@@ -12,9 +12,9 @@ class ResourceData[T] extends com.badlogic.gdx.utils.Json#Serializable {
   }
   def this() = {
     this()
-    this.uniqueData = new com.badlogic.gdx.utils.ObjectMap[java.lang.String, SaveData]()
-    this.data = new com.badlogic.gdx.utils.Array[SaveData](true, 3, scala.Array[SaveData].<init>)
-    this.sharedAssets = new com.badlogic.gdx.utils.Array[AssetData]()
+    this.uniqueData = new com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.graphics.g3d.particles.ResourceData.SaveData]()
+    this.data = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.ResourceData.SaveData](true, 3, scala.Array[com.badlogic.gdx.graphics.g3d.particles.ResourceData.SaveData].<init>)
+    this.sharedAssets = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.ResourceData.AssetData[?]]()
     this.currentLoadIndex = 0
   }
   def getAssetData[K](filename: java.lang.String, `type`: java.lang.Class[K]): scala.Int = {
@@ -27,63 +27,65 @@ class ResourceData[T] extends com.badlogic.gdx.utils.Json#Serializable {
     }
     return -1
   }
-  def getAssetDescriptors(): com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor] = {
-    val descriptors: com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor]()
+  def getAssetDescriptors(): com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = {
+    val descriptors: com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]()
     for (data <- this.sharedAssets) {
       descriptors.add(new com.badlogic.gdx.assets.AssetDescriptor[T](data.filename, data.`type`))
     }
     return descriptors
   }
-  def getAssets(): com.badlogic.gdx.utils.Array[AssetData] = {
+  def getAssets(): com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.ResourceData.AssetData[?]] = {
     return this.sharedAssets
   }
-  def createSaveData(): SaveData = {
-    val saveData: SaveData = new SaveData(this)
+  def createSaveData(): com.badlogic.gdx.graphics.g3d.particles.ResourceData.SaveData = {
+    val saveData: com.badlogic.gdx.graphics.g3d.particles.ResourceData.SaveData = new com.badlogic.gdx.graphics.g3d.particles.ResourceData.SaveData(this)
     this.data.add(saveData)
     return saveData
   }
-  def createSaveData(key: java.lang.String): SaveData = {
-    val saveData: SaveData = new SaveData(this)
+  def createSaveData(key: java.lang.String): com.badlogic.gdx.graphics.g3d.particles.ResourceData.SaveData = {
+    val saveData: com.badlogic.gdx.graphics.g3d.particles.ResourceData.SaveData = new com.badlogic.gdx.graphics.g3d.particles.ResourceData.SaveData(this)
     if (this.uniqueData.containsKey(key)) {
       throw new java.lang.RuntimeException("Key already used, data must be unique, use a different key")
     } else ()
     this.uniqueData.put(key, saveData)
     return saveData
   }
-  def getSaveData(): SaveData = {
+  def getSaveData(): com.badlogic.gdx.graphics.g3d.particles.ResourceData.SaveData = {
     return this.data.get({ this.currentLoadIndex += 1; this.currentLoadIndex })
   }
-  def getSaveData(key: java.lang.String): SaveData = {
+  def getSaveData(key: java.lang.String): com.badlogic.gdx.graphics.g3d.particles.ResourceData.SaveData = {
     return this.uniqueData.get(key)
   }
   def write(json: com.badlogic.gdx.utils.Json): scala.Unit = {
-    json.writeValue("unique", this.uniqueData, classOf[java.lang.Class])
-    json.writeValue("data", this.data, classOf[java.lang.Class], classOf[java.lang.Class])
-    json.writeValue("assets", this.sharedAssets.toArray(scala.Array[AssetData].<init>), classOf[java.lang.Class])
+    json.writeValue("unique", this.uniqueData, classOf[com.badlogic.gdx.utils.ObjectMap[?, ?]])
+    json.writeValue("data", this.data, classOf[com.badlogic.gdx.utils.Array[?]], classOf[com.badlogic.gdx.graphics.g3d.particles.ResourceData.SaveData])
+    json.writeValue("assets", this.sharedAssets.toArray(scala.Array[com.badlogic.gdx.graphics.g3d.particles.ResourceData.AssetData[?]].<init>), classOf[scala.Array[com.badlogic.gdx.graphics.g3d.particles.ResourceData.AssetData[?]]])
     json.writeValue("resource", this.resource, null)
   }
   def read(json: com.badlogic.gdx.utils.Json, jsonData: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
-    this.uniqueData = json.readValue("unique", classOf[java.lang.Class], jsonData)
+    this.uniqueData = json.readValue("unique", classOf[com.badlogic.gdx.utils.ObjectMap[?, ?]], jsonData)
     for (entry <- this.uniqueData.entries()) {
       entry.value.resources = this
     }
-    this.data = json.readValue("data", classOf[java.lang.Class], classOf[java.lang.Class], jsonData)
+    this.data = json.readValue("data", classOf[com.badlogic.gdx.utils.Array[?]], classOf[com.badlogic.gdx.graphics.g3d.particles.ResourceData.SaveData], jsonData)
     for (saveData <- this.data) {
       saveData.resources = this
     }
-    this.sharedAssets.addAll(json.readValue("assets", classOf[java.lang.Class], classOf[java.lang.Class], jsonData))
+    this.sharedAssets.addAll(json.readValue("assets", classOf[com.badlogic.gdx.utils.Array[?]], classOf[com.badlogic.gdx.graphics.g3d.particles.ResourceData.AssetData[?]], jsonData))
     this.resource = json.readValue("resource", null, jsonData)
   }
+}
+object ResourceData {
   trait Configurable[T] {
     def save(manager: com.badlogic.gdx.assets.AssetManager, resources: ResourceData[T]): scala.Unit
     def load(manager: com.badlogic.gdx.assets.AssetManager, resources: ResourceData[T]): scala.Unit
   }
-  class SaveData extends com.badlogic.gdx.utils.Json#Serializable {
+  class SaveData extends com.badlogic.gdx.utils.Json.Serializable {
     var data: com.badlogic.gdx.utils.ObjectMap[java.lang.String, java.lang.Object] = null.asInstanceOf[com.badlogic.gdx.utils.ObjectMap[java.lang.String, java.lang.Object]]
     var assets: com.badlogic.gdx.utils.IntArray = null.asInstanceOf[com.badlogic.gdx.utils.IntArray]
     private var loadIndex: scala.Int = 0
-    protected var resources: ResourceData = null.asInstanceOf[ResourceData]
-    def this(resources: ResourceData) = {
+    var resources: ResourceData[?] = null.asInstanceOf[ResourceData[?]]
+    def this(resources: ResourceData[?]) = {
       this()
       this.data = new com.badlogic.gdx.utils.ObjectMap[java.lang.String, java.lang.Object]()
       this.assets = new com.badlogic.gdx.utils.IntArray()
@@ -99,7 +101,7 @@ class ResourceData[T] extends com.badlogic.gdx.utils.Json#Serializable {
     def saveAsset[K](filename: java.lang.String, `type`: java.lang.Class[K]): scala.Unit = {
       var i: scala.Int = this.resources.getAssetData(filename, `type`)
       if (i == (-1)) {
-        this.resources.sharedAssets.add(new AssetData(filename, `type`))
+        this.resources.sharedAssets.add(new com.badlogic.gdx.graphics.g3d.particles.ResourceData.AssetData(filename, `type`))
         i = this.resources.sharedAssets.size - 1
       } else ()
       this.assets.add(i)
@@ -107,26 +109,26 @@ class ResourceData[T] extends com.badlogic.gdx.utils.Json#Serializable {
     def save(key: java.lang.String, value: java.lang.Object): scala.Unit = {
       this.data.put(key, value)
     }
-    def loadAsset(): com.badlogic.gdx.assets.AssetDescriptor = {
+    def loadAsset(): com.badlogic.gdx.assets.AssetDescriptor[?] = {
       if (this.loadIndex == this.assets.size) {
         return null
       } else ()
-      val data: AssetData = this.resources.sharedAssets.get(this.assets.get({ this.loadIndex += 1; this.loadIndex })).asInstanceOf[AssetData]
+      val data: com.badlogic.gdx.graphics.g3d.particles.ResourceData.AssetData[?] = this.resources.sharedAssets.get(this.assets.get({ this.loadIndex += 1; this.loadIndex })).asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ResourceData.AssetData[?]]
       return new com.badlogic.gdx.assets.AssetDescriptor(data.filename, data.`type`)
     }
     def load[K](key: java.lang.String): K = {
       return this.data.get(key).asInstanceOf[K]
     }
     def write(json: com.badlogic.gdx.utils.Json): scala.Unit = {
-      json.writeValue("data", this.data, classOf[java.lang.Class])
-      json.writeValue("indices", this.assets.toArray(), classOf[java.lang.Class])
+      json.writeValue("data", this.data, classOf[com.badlogic.gdx.utils.ObjectMap[?, ?]])
+      json.writeValue("indices", this.assets.toArray(), classOf[scala.Array[scala.Int]])
     }
     def read(json: com.badlogic.gdx.utils.Json, jsonData: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
-      this.data = json.readValue("data", classOf[java.lang.Class], jsonData)
-      this.assets.addAll(json.readValue("indices", classOf[java.lang.Class], jsonData))
+      this.data = json.readValue("data", classOf[com.badlogic.gdx.utils.ObjectMap[?, ?]], jsonData)
+      this.assets.addAll(json.readValue("indices", classOf[scala.Array[scala.Int]], jsonData))
     }
   }
-  class AssetData[T] extends com.badlogic.gdx.utils.Json#Serializable {
+  class AssetData[T] extends com.badlogic.gdx.utils.Json.Serializable {
     var filename: java.lang.String = null.asInstanceOf[java.lang.String]
     var `type`: java.lang.Class[T] = null.asInstanceOf[java.lang.Class[T]]
     def this(filename: java.lang.String, `type`: java.lang.Class[T]) = {
@@ -139,8 +141,8 @@ class ResourceData[T] extends com.badlogic.gdx.utils.Json#Serializable {
       json.writeValue("type", this.`type`.getName())
     }
     def read(json: com.badlogic.gdx.utils.Json, jsonData: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
-      this.filename = json.readValue("filename", classOf[java.lang.Class], jsonData)
-      val className: java.lang.String = json.readValue("type", classOf[java.lang.Class], jsonData)
+      this.filename = json.readValue("filename", classOf[java.lang.String], jsonData)
+      val className: java.lang.String = json.readValue("type", classOf[java.lang.String], jsonData)
       try {
         this.`type` = com.badlogic.gdx.utils.reflect.ClassReflection.forName(className).asInstanceOf[java.lang.Class[T]]
       } catch {

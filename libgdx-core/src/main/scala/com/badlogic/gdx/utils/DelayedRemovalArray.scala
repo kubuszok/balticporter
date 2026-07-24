@@ -10,19 +10,19 @@ class DelayedRemovalArray[T] extends com.badlogic.gdx.utils.Array[T] {
   def this(ordered: scala.Boolean, capacity: scala.Int, arraySupplier: com.badlogic.gdx.utils.ArraySupplier[scala.Array[T]]) = {
     this()
   }
-  def this(ordered: scala.Boolean, capacity: scala.Int, arrayType: java.lang.Class) = {
+  def this(ordered: scala.Boolean, capacity: scala.Int, arrayType: java.lang.Class[?]) = {
     this()
   }
   def this(ordered: scala.Boolean, capacity: scala.Int) = {
     this()
   }
-  def this(array: com.badlogic.gdx.utils.Array) = {
+  def this(array: com.badlogic.gdx.utils.Array[?]) = {
     this()
   }
   def this(arraySupplier: com.badlogic.gdx.utils.ArraySupplier[scala.Array[T]]) = {
     this()
   }
-  def this(arrayType: java.lang.Class) = {
+  def this(arrayType: java.lang.Class[?]) = {
     this()
   }
   def this(capacity: scala.Int) = {
@@ -49,7 +49,7 @@ class DelayedRemovalArray[T] extends com.badlogic.gdx.utils.Array[T] {
           if (index >= this.clear$field) {
             this.removeIndex(index)
           } else ()
-        }; i = i + 1 } }
+        }; i = i + 1 } };
         { var i: scala.Int = this.clear$field - 1; while (i >= 0) { {
           this.removeIndex(i)
         }; i = i - 1 } }
@@ -60,7 +60,7 @@ class DelayedRemovalArray[T] extends com.badlogic.gdx.utils.Array[T] {
   private def remove(index: scala.Int): scala.Unit = {
     if (index < this.clear$field) {
       return
-    } else ()
+    } else ();
     { var i: scala.Int = 0; val n: scala.Int = this.remove$field.size; while (i < n) { {
       val removeIndex: scala.Int = this.remove$field.get(i)
       if (index == removeIndex) {
@@ -183,7 +183,7 @@ class DelayedRemovalArray[T] extends com.badlogic.gdx.utils.Array[T] {
     if (this.iterating > 0) {
       throw new java.lang.IllegalStateException("Invalid between begin/end.")
     } else ()
-    return super.setSize(newSize)
+    return super.setSize(newSize).asInstanceOf[scala.Array[T]]
   }
 }
 object DelayedRemovalArray {

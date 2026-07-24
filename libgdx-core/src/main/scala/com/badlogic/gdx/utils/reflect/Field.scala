@@ -9,10 +9,10 @@ final class Field {
   def getName(): java.lang.String = {
     return this.field.getName()
   }
-  def getType(): java.lang.Class = {
+  def getType(): java.lang.Class[?] = {
     return this.field.getType()
   }
-  def getDeclaringClass(): java.lang.Class = {
+  def getDeclaringClass(): java.lang.Class[?] = {
     return this.field.getDeclaringClass()
   }
   def isAccessible(): scala.Boolean = {
@@ -48,22 +48,22 @@ final class Field {
   def isSynthetic(): scala.Boolean = {
     return this.field.isSynthetic()
   }
-  def getElementType(index: scala.Int): java.lang.Class = {
+  def getElementType(index: scala.Int): java.lang.Class[?] = {
     val genericType: java.lang.reflect.Type = this.field.getGenericType()
     if (genericType.isInstanceOf[java.lang.reflect.ParameterizedType]) {
       val actualTypes: scala.Array[java.lang.reflect.Type] = genericType.asInstanceOf[java.lang.reflect.ParameterizedType].getActualTypeArguments()
       if ((actualTypes.length - 1) >= index) {
         val actualType: java.lang.reflect.Type = actualTypes(index)
-        if (actualType.isInstanceOf[java.lang.Class]) {
-          return actualType.asInstanceOf[java.lang.Class]
+        if (actualType.isInstanceOf[java.lang.Class[?]]) {
+          return actualType.asInstanceOf[java.lang.Class[?]]
         } else {
           if (actualType.isInstanceOf[java.lang.reflect.ParameterizedType]) {
-            return actualType.asInstanceOf[java.lang.reflect.ParameterizedType].getRawType().asInstanceOf[java.lang.Class]
+            return actualType.asInstanceOf[java.lang.reflect.ParameterizedType].getRawType().asInstanceOf[java.lang.Class[?]]
           } else {
             if (actualType.isInstanceOf[java.lang.reflect.GenericArrayType]) {
               val componentType: java.lang.reflect.Type = actualType.asInstanceOf[java.lang.reflect.GenericArrayType].getGenericComponentType()
-              if (componentType.isInstanceOf[java.lang.Class]) {
-                return com.badlogic.gdx.utils.reflect.ArrayReflection.newInstance(componentType.asInstanceOf[java.lang.Class], 0).getClass()
+              if (componentType.isInstanceOf[java.lang.Class[?]]) {
+                return com.badlogic.gdx.utils.reflect.ArrayReflection.newInstance(componentType.asInstanceOf[java.lang.Class[?]], 0).getClass()
               } else ()
             } else ()
           }
@@ -77,7 +77,7 @@ final class Field {
   }
   def getDeclaredAnnotations(): scala.Array[com.badlogic.gdx.utils.reflect.Annotation] = {
     val annotations: scala.Array[java.lang.annotation.Annotation] = this.field.getDeclaredAnnotations()
-    val result: scala.Array[com.badlogic.gdx.utils.reflect.Annotation] = new Array[com.badlogic.gdx.utils.reflect.Annotation](annotations.length)
+    val result: scala.Array[com.badlogic.gdx.utils.reflect.Annotation] = new Array[com.badlogic.gdx.utils.reflect.Annotation](annotations.length);
     { var i: scala.Int = 0; while (i < annotations.length) { {
       result(i) = new com.badlogic.gdx.utils.reflect.Annotation(annotations(i))
     }; i = i + 1 } }

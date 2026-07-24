@@ -1,14 +1,14 @@
 package com.badlogic.gdx.assets.loaders
 
-class CubemapLoader extends com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader[com.badlogic.gdx.graphics.Cubemap, CubemapParameter] {
-  var info: CubemapLoaderInfo = new CubemapLoaderInfo()
+class CubemapLoader extends com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader[com.badlogic.gdx.graphics.Cubemap, com.badlogic.gdx.assets.loaders.CubemapLoader.CubemapParameter] {
+  var info: com.badlogic.gdx.assets.loaders.CubemapLoader.CubemapLoaderInfo = new com.badlogic.gdx.assets.loaders.CubemapLoader.CubemapLoaderInfo()
   def this(resolver: com.badlogic.gdx.assets.loaders.FileHandleResolver) = {
     this()
   }
-  def loadAsync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: CubemapParameter): scala.Unit = {
+  def loadAsync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.assets.loaders.CubemapLoader.CubemapParameter): scala.Unit = {
     this.info.filename = fileName
     if ((parameter == null) || (parameter.cubemapData == null)) {
-      var format: com.badlogic.gdx.graphics.Pixmap#Format = null
+      var format: com.badlogic.gdx.graphics.Pixmap.Format = null
       val genMipMaps: scala.Boolean = false
       this.info.cubemap = null
       if (parameter != null) {
@@ -26,7 +26,7 @@ class CubemapLoader extends com.badlogic.gdx.assets.loaders.AsynchronousAssetLoa
       this.info.data.prepare()
     } else ()
   }
-  def loadSync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: CubemapParameter): com.badlogic.gdx.graphics.Cubemap = {
+  def loadSync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.assets.loaders.CubemapLoader.CubemapParameter): com.badlogic.gdx.graphics.Cubemap = {
     if (this.info == null) {
       return null
     } else ()
@@ -42,21 +42,23 @@ class CubemapLoader extends com.badlogic.gdx.assets.loaders.AsynchronousAssetLoa
     } else ()
     return cubemap
   }
-  def getDependencies(fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: CubemapParameter): com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor] = {
+  def getDependencies(fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.assets.loaders.CubemapLoader.CubemapParameter): com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = {
     return null
   }
+}
+object CubemapLoader {
   class CubemapLoaderInfo {
     var filename: java.lang.String = null.asInstanceOf[java.lang.String]
     var data: com.badlogic.gdx.graphics.CubemapData = null.asInstanceOf[com.badlogic.gdx.graphics.CubemapData]
     var cubemap: com.badlogic.gdx.graphics.Cubemap = null.asInstanceOf[com.badlogic.gdx.graphics.Cubemap]
   }
   class CubemapParameter extends com.badlogic.gdx.assets.AssetLoaderParameters[com.badlogic.gdx.graphics.Cubemap] {
-    var format: com.badlogic.gdx.graphics.Pixmap#Format = null
+    var format: com.badlogic.gdx.graphics.Pixmap.Format = null
     var cubemap: com.badlogic.gdx.graphics.Cubemap = null
     var cubemapData: com.badlogic.gdx.graphics.CubemapData = null
-    var minFilter: com.badlogic.gdx.graphics.Texture#TextureFilter = com.badlogic.gdx.graphics.Texture.TextureFilter.Nearest
-    var magFilter: com.badlogic.gdx.graphics.Texture#TextureFilter = com.badlogic.gdx.graphics.Texture.TextureFilter.Nearest
-    var wrapU: com.badlogic.gdx.graphics.Texture#TextureWrap = com.badlogic.gdx.graphics.Texture.TextureWrap.ClampToEdge
-    var wrapV: com.badlogic.gdx.graphics.Texture#TextureWrap = com.badlogic.gdx.graphics.Texture.TextureWrap.ClampToEdge
+    var minFilter: com.badlogic.gdx.graphics.Texture.TextureFilter = com.badlogic.gdx.graphics.Texture.TextureFilter.Nearest
+    var magFilter: com.badlogic.gdx.graphics.Texture.TextureFilter = com.badlogic.gdx.graphics.Texture.TextureFilter.Nearest
+    var wrapU: com.badlogic.gdx.graphics.Texture.TextureWrap = com.badlogic.gdx.graphics.Texture.TextureWrap.ClampToEdge
+    var wrapV: com.badlogic.gdx.graphics.Texture.TextureWrap = com.badlogic.gdx.graphics.Texture.TextureWrap.ClampToEdge
   }
 }

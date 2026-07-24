@@ -17,11 +17,11 @@ class ReflectionPool[T] extends com.badlogic.gdx.utils.Pool[T] {
   }
   private def findConstructor(`type`: java.lang.Class[T]): com.badlogic.gdx.utils.reflect.Constructor = {
     try {
-      return com.badlogic.gdx.utils.reflect.ClassReflection.getConstructor(`type`, null.asInstanceOf[scala.Array[java.lang.Class]])
+      return com.badlogic.gdx.utils.reflect.ClassReflection.getConstructor(`type`, null.asInstanceOf[scala.Array[java.lang.Class[?]]])
     } catch {
       case ex1: java.lang.Exception => {
         try {
-          val constructor: com.badlogic.gdx.utils.reflect.Constructor = com.badlogic.gdx.utils.reflect.ClassReflection.getDeclaredConstructor(`type`, null.asInstanceOf[scala.Array[java.lang.Class]])
+          val constructor: com.badlogic.gdx.utils.reflect.Constructor = com.badlogic.gdx.utils.reflect.ClassReflection.getDeclaredConstructor(`type`, null.asInstanceOf[scala.Array[java.lang.Class[?]]])
           constructor.setAccessible(true)
           return constructor
         } catch {
@@ -32,7 +32,7 @@ class ReflectionPool[T] extends com.badlogic.gdx.utils.Pool[T] {
       }
     }
   }
-  protected def newObject(): T = {
+  def newObject(): T = {
     try {
       return this.constructor.newInstance(null.asInstanceOf[scala.Array[java.lang.Object]]).asInstanceOf[T]
     } catch {

@@ -7,24 +7,24 @@ class Slider extends com.badlogic.gdx.scenes.scene2d.ui.ProgressBar {
   private var visualInterpolationInverse: com.badlogic.gdx.math.Interpolation = com.badlogic.gdx.math.Interpolation.linear
   private var snapValues: scala.Array[scala.Float] = null.asInstanceOf[scala.Array[scala.Float]]
   private var threshold: scala.Float = 0.0f
-  def this(min: scala.Float, max: scala.Float, stepSize: scala.Float, vertical: scala.Boolean, style: SliderStyle) = {
+  def this(min: scala.Float, max: scala.Float, stepSize: scala.Float, vertical: scala.Boolean, style: com.badlogic.gdx.scenes.scene2d.ui.Slider.SliderStyle) = {
     this()
     this.addListener(new com.badlogic.gdx.scenes.scene2d.InputListener())
   }
   def this(min: scala.Float, max: scala.Float, stepSize: scala.Float, vertical: scala.Boolean, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin, styleName: java.lang.String) = {
-    this(min, max, stepSize, vertical, skin.get(styleName, classOf[java.lang.Class]))
+    this(min, max, stepSize, vertical, skin.get(styleName, classOf[com.badlogic.gdx.scenes.scene2d.ui.Slider.SliderStyle]))
   }
   def this(min: scala.Float, max: scala.Float, stepSize: scala.Float, vertical: scala.Boolean, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin) = {
-    this(min, max, stepSize, vertical, skin.get("default-" + (if (vertical) "vertical" else "horizontal"), classOf[java.lang.Class]))
+    this(min, max, stepSize, vertical, skin.get("default-" + (if (vertical) "vertical" else "horizontal"), classOf[com.badlogic.gdx.scenes.scene2d.ui.Slider.SliderStyle]))
   }
-  def getStyle(): SliderStyle = {
-    return super.getStyle().asInstanceOf[SliderStyle]
+  def getStyle(): com.badlogic.gdx.scenes.scene2d.ui.Slider.SliderStyle = {
+    return super.getStyle().asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Slider.SliderStyle]
   }
   def isOver(): scala.Boolean = {
     return this.mouseOver
   }
-  protected def getBackgroundDrawable(): com.badlogic.gdx.scenes.scene2d.utils.Drawable = {
-    val style: SliderStyle = super.getStyle().asInstanceOf[SliderStyle]
+  def getBackgroundDrawable(): com.badlogic.gdx.scenes.scene2d.utils.Drawable = {
+    val style: com.badlogic.gdx.scenes.scene2d.ui.Slider.SliderStyle = super.getStyle().asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Slider.SliderStyle]
     if (disabled && (style.disabledBackground != null)) {
       return style.disabledBackground
     } else ()
@@ -36,8 +36,8 @@ class Slider extends com.badlogic.gdx.scenes.scene2d.ui.ProgressBar {
     } else ()
     return style.background
   }
-  protected def getKnobDrawable(): com.badlogic.gdx.scenes.scene2d.utils.Drawable = {
-    val style: SliderStyle = super.getStyle().asInstanceOf[SliderStyle]
+  def getKnobDrawable(): com.badlogic.gdx.scenes.scene2d.utils.Drawable = {
+    val style: com.badlogic.gdx.scenes.scene2d.ui.Slider.SliderStyle = super.getStyle().asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Slider.SliderStyle]
     if (disabled && (style.disabledKnob != null)) {
       return style.disabledKnob
     } else ()
@@ -49,8 +49,8 @@ class Slider extends com.badlogic.gdx.scenes.scene2d.ui.ProgressBar {
     } else ()
     return style.knob
   }
-  protected def getKnobBeforeDrawable(): com.badlogic.gdx.scenes.scene2d.utils.Drawable = {
-    val style: SliderStyle = super.getStyle().asInstanceOf[SliderStyle]
+  def getKnobBeforeDrawable(): com.badlogic.gdx.scenes.scene2d.utils.Drawable = {
+    val style: com.badlogic.gdx.scenes.scene2d.ui.Slider.SliderStyle = super.getStyle().asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Slider.SliderStyle]
     if (disabled && (style.disabledKnobBefore != null)) {
       return style.disabledKnobBefore
     } else ()
@@ -62,8 +62,8 @@ class Slider extends com.badlogic.gdx.scenes.scene2d.ui.ProgressBar {
     } else ()
     return style.knobBefore
   }
-  protected def getKnobAfterDrawable(): com.badlogic.gdx.scenes.scene2d.utils.Drawable = {
-    val style: SliderStyle = super.getStyle().asInstanceOf[SliderStyle]
+  def getKnobAfterDrawable(): com.badlogic.gdx.scenes.scene2d.utils.Drawable = {
+    val style: com.badlogic.gdx.scenes.scene2d.ui.Slider.SliderStyle = super.getStyle().asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Slider.SliderStyle]
     if (disabled && (style.disabledKnobAfter != null)) {
       return style.disabledKnobAfter
     } else ()
@@ -76,7 +76,7 @@ class Slider extends com.badlogic.gdx.scenes.scene2d.ui.ProgressBar {
     return style.knobAfter
   }
   def calculatePositionAndValue(x: scala.Float, y: scala.Float): scala.Boolean = {
-    val style: SliderStyle = this.getStyle()
+    val style: com.badlogic.gdx.scenes.scene2d.ui.Slider.SliderStyle = this.getStyle()
     val knob: com.badlogic.gdx.scenes.scene2d.utils.Drawable = style.knob
     val bg: com.badlogic.gdx.scenes.scene2d.utils.Drawable = this.getBackgroundDrawable()
     var value: scala.Float = 0.0f
@@ -108,12 +108,12 @@ class Slider extends com.badlogic.gdx.scenes.scene2d.ui.ProgressBar {
     } else ()
     return valueSet
   }
-  protected def snap(value: scala.Float): scala.Float = {
+  def snap(value: scala.Float): scala.Float = {
     if ((this.snapValues == null) || (this.snapValues.length == 0)) {
       return value
     } else ()
     var bestDiff: scala.Float = -1
-    var bestValue: scala.Float = 0
+    var bestValue: scala.Float = 0;
     { var i: scala.Int = 0; while (i < this.snapValues.length) { {
       val snapValue: scala.Float = this.snapValues(i)
       val diff: scala.Float = java.lang.Math.abs(value - snapValue)
@@ -154,7 +154,9 @@ class Slider extends com.badlogic.gdx.scenes.scene2d.ui.ProgressBar {
   def setVisualPercent(percent: scala.Float): scala.Unit = {
     this.setValue(min + ((max - min) * this.visualInterpolationInverse.apply(percent)))
   }
-  class SliderStyle extends com.badlogic.gdx.scenes.scene2d.ui.ProgressBar#ProgressBarStyle {
+}
+object Slider {
+  class SliderStyle extends com.badlogic.gdx.scenes.scene2d.ui.ProgressBar.ProgressBarStyle {
     var backgroundOver: com.badlogic.gdx.scenes.scene2d.utils.Drawable = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Drawable]
     var backgroundDown: com.badlogic.gdx.scenes.scene2d.utils.Drawable = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Drawable]
     var knobOver: com.badlogic.gdx.scenes.scene2d.utils.Drawable = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Drawable]
@@ -166,7 +168,7 @@ class Slider extends com.badlogic.gdx.scenes.scene2d.ui.ProgressBar {
     def this(background: com.badlogic.gdx.scenes.scene2d.utils.Drawable, knob: com.badlogic.gdx.scenes.scene2d.utils.Drawable) = {
       this()
     }
-    def this(style: SliderStyle) = {
+    def this(style: com.badlogic.gdx.scenes.scene2d.ui.Slider.SliderStyle) = {
       this()
       this.backgroundOver = style.backgroundOver
       this.backgroundDown = style.backgroundDown

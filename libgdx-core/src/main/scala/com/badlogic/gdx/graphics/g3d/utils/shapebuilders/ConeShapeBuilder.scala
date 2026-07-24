@@ -19,7 +19,7 @@ object ConeShapeBuilder {
     val us: scala.Float = 1.0f / divisions
     var u: scala.Float = 0.0f
     var angle: scala.Float = 0.0f
-    val curr1: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder#VertexInfo = com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BaseShapeBuilder.vertTmp3.set(null, null, null, null)
+    val curr1: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo = com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BaseShapeBuilder.vertTmp3.set(null, null, null, null)
     curr1.hasUV = {
       curr1.hasPosition = {
         curr1.hasNormal = true
@@ -27,10 +27,10 @@ object ConeShapeBuilder {
       }
       curr1.hasPosition
     }
-    val curr2: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder#VertexInfo = com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BaseShapeBuilder.vertTmp4.set(null, null, null, null).setPos(0, hh, 0).setNor(0, 1, 0).setUV(0.5f, 0)
+    val curr2: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo = com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BaseShapeBuilder.vertTmp4.set(null, null, null, null).setPos(0, hh, 0).setNor(0, 1, 0).setUV(0.5f, 0)
     val base: scala.Short = builder.vertex(curr2)
     var i1: scala.Short = 0
-    var i2: scala.Short = 0
+    var i2: scala.Short = 0.asInstanceOf[scala.Short];
     { var i: scala.Int = 0; while (i <= divisions) { {
       angle = ao + (step * i)
       u = 1.0f - (us * i)

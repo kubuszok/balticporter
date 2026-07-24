@@ -1,22 +1,22 @@
 package com.badlogic.gdx.utils
 
 class Timer {
-  final val tasks: com.badlogic.gdx.utils.Array[Task] = new com.badlogic.gdx.utils.Array(false, 8)
+  final val tasks: com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.Timer.Task] = new com.badlogic.gdx.utils.Array(false, 8)
   var stopTimeMillis: scala.Long = 0L
   def this() = {
     this()
     this.start()
   }
-  def postTask(task: Task): Task = {
+  def postTask(task: com.badlogic.gdx.utils.Timer.Task): com.badlogic.gdx.utils.Timer.Task = {
     return this.scheduleTask(task, 0, 0, 0)
   }
-  def scheduleTask(task: Task, delaySeconds: scala.Float): Task = {
+  def scheduleTask(task: com.badlogic.gdx.utils.Timer.Task, delaySeconds: scala.Float): com.badlogic.gdx.utils.Timer.Task = {
     return this.scheduleTask(task, delaySeconds, 0, 0)
   }
-  def scheduleTask(task: Task, delaySeconds: scala.Float, intervalSeconds: scala.Float): Task = {
+  def scheduleTask(task: com.badlogic.gdx.utils.Timer.Task, delaySeconds: scala.Float, intervalSeconds: scala.Float): com.badlogic.gdx.utils.Timer.Task = {
     return this.scheduleTask(task, delaySeconds, intervalSeconds, -1)
   }
-  def scheduleTask(task: Task, delaySeconds: scala.Float, intervalSeconds: scala.Float, repeatCount: scala.Int): Task = {
+  def scheduleTask(task: com.badlogic.gdx.utils.Timer.Task, delaySeconds: scala.Float, intervalSeconds: scala.Float, repeatCount: scala.Int): com.badlogic.gdx.utils.Timer.Task = {
     Timer.threadLock.synchronized {
       this.synchronized {
         task.synchronized {
@@ -30,7 +30,7 @@ class Timer {
             executeTimeMillis = executeTimeMillis - (timeMillis - Timer.thread$field.pauseTimeMillis)
           } else ()
           task.executeTimeMillis = executeTimeMillis
-          task.intervalMillis = (intervalSeconds * 1000).asInstanceOf[scala.Long]
+          task.intervalMillis = (intervalSeconds * 1000).asInstanceOf[scala.Long].asInstanceOf[scala.Long]
           task.repeatCount = repeatCount
           this.tasks.add(task)
         }
@@ -48,7 +48,7 @@ class Timer {
   }
   def start(): scala.Unit = {
     Timer.threadLock.synchronized {
-      val thread: TimerThread = Timer.thread()
+      val thread: com.badlogic.gdx.utils.Timer.TimerThread = Timer.thread()
       val instances: com.badlogic.gdx.utils.Array[Timer] = thread.instances
       if (instances.contains(this, true)) {
         return
@@ -63,11 +63,11 @@ class Timer {
   }
   def clear(): scala.Unit = {
     Timer.threadLock.synchronized {
-      val thread: TimerThread = Timer.thread()
+      val thread: com.badlogic.gdx.utils.Timer.TimerThread = Timer.thread()
       this.synchronized {
         thread.postedTasks.synchronized {
           { var i: scala.Int = 0; val n: scala.Int = this.tasks.size; while (i < n) { {
-            val task: Task = this.tasks.get(i)
+            val task: com.badlogic.gdx.utils.Timer.Task = this.tasks.get(i)
             thread.removePostedTask(task)
             task.reset()
           }; i = i + 1 } }
@@ -79,10 +79,10 @@ class Timer {
   def isEmpty(): scala.Boolean = {
     return this.tasks.size == 0
   }
-  def update(thread: TimerThread, timeMillis: scala.Long, waitMillis$arg: scala.Long): scala.Long = {
-    var waitMillis: scala.Long = waitMillis$arg
+  def update(thread: com.badlogic.gdx.utils.Timer.TimerThread, timeMillis: scala.Long, waitMillis$arg: scala.Long): scala.Long = {
+    var waitMillis: scala.Long = waitMillis$arg;
     { var i: scala.Int = 0; var n: scala.Int = this.tasks.size; while (i < n) { {
-      val task: Task = this.tasks.get(i)
+      val task: com.badlogic.gdx.utils.Timer.Task = this.tasks.get(i)
       task.synchronized {
         if (task.executeTimeMillis > timeMillis) {
           waitMillis = java.lang.Math.min(waitMillis, task.executeTimeMillis - timeMillis)
@@ -107,11 +107,47 @@ class Timer {
   }
   def delay(delayMillis: scala.Long): scala.Unit = {
     { var i: scala.Int = 0; val n: scala.Int = this.tasks.size; while (i < n) { {
-      val task: Task = this.tasks.get(i)
+      val task: com.badlogic.gdx.utils.Timer.Task = this.tasks.get(i)
       task.synchronized {
         task.executeTimeMillis = task.executeTimeMillis + delayMillis
       }
     }; i = i + 1 } }
+  }
+}
+object Timer {
+  final val threadLock: java.lang.Object = new java.lang.Object()
+  var thread$field: com.badlogic.gdx.utils.Timer.TimerThread = null.asInstanceOf[com.badlogic.gdx.utils.Timer.TimerThread]
+  def instance(): Timer = {
+    Timer.threadLock.synchronized {
+      val thread: com.badlogic.gdx.utils.Timer.TimerThread = Timer.thread()
+      if (thread.instance == null) {
+        thread.instance = new Timer()
+      } else ()
+      return thread.instance
+    }
+  }
+  def thread(): com.badlogic.gdx.utils.Timer.TimerThread = {
+    Timer.threadLock.synchronized {
+      if ((Timer.thread$field == null) || (Timer.thread$field.files != com.badlogic.gdx.Gdx.files)) {
+        if (Timer.thread$field != null) {
+          Timer.thread$field.dispose()
+        } else ()
+        Timer.thread$field = new com.badlogic.gdx.utils.Timer.TimerThread()
+      } else ()
+      return Timer.thread$field
+    }
+  }
+  def post(task: com.badlogic.gdx.utils.Timer.Task): com.badlogic.gdx.utils.Timer.Task = {
+    return Timer.instance().postTask(task)
+  }
+  def schedule(task: com.badlogic.gdx.utils.Timer.Task, delaySeconds: scala.Float): com.badlogic.gdx.utils.Timer.Task = {
+    return Timer.instance().scheduleTask(task, delaySeconds)
+  }
+  def schedule(task: com.badlogic.gdx.utils.Timer.Task, delaySeconds: scala.Float, intervalSeconds: scala.Float): com.badlogic.gdx.utils.Timer.Task = {
+    return Timer.instance().scheduleTask(task, delaySeconds, intervalSeconds)
+  }
+  def schedule(task: com.badlogic.gdx.utils.Timer.Task, delaySeconds: scala.Float, intervalSeconds: scala.Float, repeatCount: scala.Int): com.badlogic.gdx.utils.Timer.Task = {
+    return Timer.instance().scheduleTask(task, delaySeconds, intervalSeconds, repeatCount)
   }
   abstract class Task extends java.lang.Runnable {
     var app: com.badlogic.gdx.Application = null.asInstanceOf[com.badlogic.gdx.Application]
@@ -158,8 +194,8 @@ class Timer {
     final val instances: com.badlogic.gdx.utils.Array[Timer] = new com.badlogic.gdx.utils.Array(1)
     var instance: Timer = null.asInstanceOf[Timer]
     var pauseTimeMillis: scala.Long = 0L
-    final val postedTasks: com.badlogic.gdx.utils.Array[Task] = new com.badlogic.gdx.utils.Array(2)
-    final val runTasks: com.badlogic.gdx.utils.Array[Task] = new com.badlogic.gdx.utils.Array(2)
+    final val postedTasks: com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.Timer.Task] = new com.badlogic.gdx.utils.Array(2)
+    final val runTasks: com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.Timer.Task] = new com.badlogic.gdx.utils.Array(2)
     final val runPostedTasks$field: java.lang.Runnable = new java.lang.Runnable()
     def this() = {
       this()
@@ -179,7 +215,7 @@ class Timer {
           } else ()
           var waitMillis: scala.Long = 5000
           if (this.pauseTimeMillis == 0) {
-            val timeMillis: scala.Long = java.lang.System.nanoTime() / 1000000
+            val timeMillis: scala.Long = java.lang.System.nanoTime() / 1000000;
             { var i: scala.Int = 0; val n: scala.Int = this.instances.size; while (i < n) { {
               try {
                 waitMillis = this.instances.get(i).update(this, timeMillis, waitMillis)
@@ -211,13 +247,13 @@ class Timer {
         this.runTasks.addAll(this.postedTasks)
         this.postedTasks.clear()
       }
-      val items: scala.Array[java.lang.Object] = this.runTasks.items
+      val items: scala.Array[java.lang.Object] = this.runTasks.items.asInstanceOf[scala.Array[java.lang.Object]];
       { var i: scala.Int = 0; val n: scala.Int = this.runTasks.size; while (i < n) { {
-        items(i).asInstanceOf[Task].run()
+        items(i).asInstanceOf[com.badlogic.gdx.utils.Timer.Task].run()
       }; i = i + 1 } }
       this.runTasks.clear()
     }
-    def addPostedTask(task: Task): scala.Unit = {
+    def addPostedTask(task: com.badlogic.gdx.utils.Timer.Task): scala.Unit = {
       this.postedTasks.synchronized {
         if (this.postedTasks.isEmpty()) {
           task.app.postRunnable(this.runPostedTasks$field)
@@ -225,9 +261,9 @@ class Timer {
         this.postedTasks.add(task)
       }
     }
-    def removePostedTask(task: Task): scala.Unit = {
+    def removePostedTask(task: com.badlogic.gdx.utils.Timer.Task): scala.Unit = {
       this.postedTasks.synchronized {
-        val items: scala.Array[java.lang.Object] = this.postedTasks.items
+        val items: scala.Array[java.lang.Object] = this.postedTasks.items.asInstanceOf[scala.Array[java.lang.Object]];
         { var i: scala.Int = this.postedTasks.size - 1; while (i >= 0) { {
           if (items(i) == task) {
             this.postedTasks.removeIndex(i)
@@ -237,7 +273,7 @@ class Timer {
     }
     def resume(): scala.Unit = {
       Timer.threadLock.synchronized {
-        val delayMillis: scala.Long = (java.lang.System.nanoTime() / 1000000) - this.pauseTimeMillis
+        val delayMillis: scala.Long = (java.lang.System.nanoTime() / 1000000) - this.pauseTimeMillis;
         { var i: scala.Int = 0; val n: scala.Int = this.instances.size; while (i < n) { {
           this.instances.get(i).delay(delayMillis)
         }; i = i + 1 } }
@@ -264,41 +300,5 @@ class Timer {
       }
       this.app.removeLifecycleListener(this)
     }
-  }
-}
-object Timer {
-  final val threadLock: java.lang.Object = new java.lang.Object()
-  var thread$field: TimerThread = null.asInstanceOf[TimerThread]
-  def instance(): Timer = {
-    Timer.threadLock.synchronized {
-      val thread: TimerThread = Timer.thread()
-      if (thread.instance == null) {
-        thread.instance = new Timer()
-      } else ()
-      return thread.instance
-    }
-  }
-  def thread(): TimerThread = {
-    Timer.threadLock.synchronized {
-      if ((Timer.thread$field == null) || (Timer.thread$field.files != com.badlogic.gdx.Gdx.files)) {
-        if (Timer.thread$field != null) {
-          Timer.thread$field.dispose()
-        } else ()
-        Timer.thread$field = new TimerThread()
-      } else ()
-      return Timer.thread$field
-    }
-  }
-  def post(task: Task): Task = {
-    return Timer.instance().postTask(task)
-  }
-  def schedule(task: Task, delaySeconds: scala.Float): Task = {
-    return Timer.instance().scheduleTask(task, delaySeconds)
-  }
-  def schedule(task: Task, delaySeconds: scala.Float, intervalSeconds: scala.Float): Task = {
-    return Timer.instance().scheduleTask(task, delaySeconds, intervalSeconds)
-  }
-  def schedule(task: Task, delaySeconds: scala.Float, intervalSeconds: scala.Float, repeatCount: scala.Int): Task = {
-    return Timer.instance().scheduleTask(task, delaySeconds, intervalSeconds, repeatCount)
   }
 }

@@ -85,7 +85,7 @@ class JsonReader extends com.badlogic.gdx.utils.BaseJsonReader {
       {
         cs = JsonReader.json_start
         top = 0
-      }
+      };
       {
         var _klen: scala.Int = 0
         var _trans: scala.Int = 0
@@ -204,7 +204,7 @@ class JsonReader extends com.badlogic.gdx.utils.BaseJsonReader {
                               }
                             }
                             var couldBeDouble: scala.Boolean = false
-                            var couldBeLong: scala.Boolean = true
+                            var couldBeLong: scala.Boolean = true;
                             { var i: scala.Int = s; while (i < p) { {
                               data(i) match {
                                 case '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | '-' | '+' => {
@@ -269,11 +269,11 @@ class JsonReader extends com.badlogic.gdx.utils.BaseJsonReader {
                         if (this.stop$field) {
                           /* break */ ()
                         } else ()
-                        name = null
+                        name = null;
                         {
                           if (top == stack.length) {
                             stack = java.util.Arrays.copyOf(stack, stack.length * 2)
-                          } else ()
+                          } else ();
                           {
                             stack({ top += 1; top }) = cs
                             cs = 5
@@ -293,7 +293,7 @@ class JsonReader extends com.badlogic.gdx.utils.BaseJsonReader {
                         this.pop()
                         if (this.stop$field) {
                           /* break */ ()
-                        } else ()
+                        } else ();
                         {
                           cs = stack({ top -= 1; top })
                           _goto_targ = 2
@@ -312,11 +312,11 @@ class JsonReader extends com.badlogic.gdx.utils.BaseJsonReader {
                         if (this.stop$field) {
                           /* break */ ()
                         } else ()
-                        name = null
+                        name = null;
                         {
                           if (top == stack.length) {
                             stack = java.util.Arrays.copyOf(stack, stack.length * 2)
-                          } else ()
+                          } else ();
                           {
                             stack({ top += 1; top }) = cs
                             cs = 23
@@ -336,7 +336,7 @@ class JsonReader extends com.badlogic.gdx.utils.BaseJsonReader {
                         this.pop()
                         if (this.stop$field) {
                           /* break */ ()
-                        } else ()
+                        } else ();
                         {
                           cs = stack({ top -= 1; top })
                           _goto_targ = 2
@@ -515,7 +515,7 @@ class JsonReader extends com.badlogic.gdx.utils.BaseJsonReader {
                               }
                             }
                             var couldBeDouble: scala.Boolean = false
-                            var couldBeLong: scala.Boolean = true
+                            var couldBeLong: scala.Boolean = true;
                             { var i: scala.Int = s; while (i < p) { {
                               data(i) match {
                                 case '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | '-' | '+' => {
@@ -676,7 +676,7 @@ class JsonReader extends com.badlogic.gdx.utils.BaseJsonReader {
                               }
                             }
                             var couldBeDouble: scala.Boolean = false
-                            var couldBeLong: scala.Boolean = true
+                            var couldBeLong: scala.Boolean = true;
                             { var i: scala.Int = s; while (i < p) { {
                               data(i) match {
                                 case '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | '-' | '+' => {
@@ -741,11 +741,11 @@ class JsonReader extends com.badlogic.gdx.utils.BaseJsonReader {
                         if (this.stop$field) {
                           /* break */ ()
                         } else ()
-                        name = null
+                        name = null;
                         {
                           if (top == stack.length) {
                             stack = java.util.Arrays.copyOf(stack, stack.length * 2)
-                          } else ()
+                          } else ();
                           {
                             stack({ top += 1; top }) = cs
                             cs = 5
@@ -765,7 +765,7 @@ class JsonReader extends com.badlogic.gdx.utils.BaseJsonReader {
                         this.pop()
                         if (this.stop$field) {
                           /* break */ ()
-                        } else ()
+                        } else ();
                         {
                           cs = stack({ top -= 1; top })
                           _goto_targ = 2
@@ -784,11 +784,11 @@ class JsonReader extends com.badlogic.gdx.utils.BaseJsonReader {
                         if (this.stop$field) {
                           /* break */ ()
                         } else ()
-                        name = null
+                        name = null;
                         {
                           if (top == stack.length) {
                             stack = java.util.Arrays.copyOf(stack, stack.length * 2)
-                          } else ()
+                          } else ();
                           {
                             stack({ top += 1; top }) = cs
                             cs = 23
@@ -808,7 +808,7 @@ class JsonReader extends com.badlogic.gdx.utils.BaseJsonReader {
                         this.pop()
                         if (this.stop$field) {
                           /* break */ ()
-                        } else ()
+                        } else ();
                         {
                           cs = stack({ top -= 1; top })
                           _goto_targ = 2
@@ -987,7 +987,7 @@ class JsonReader extends com.badlogic.gdx.utils.BaseJsonReader {
                               }
                             }
                             var couldBeDouble: scala.Boolean = false
-                            var couldBeLong: scala.Boolean = true
+                            var couldBeLong: scala.Boolean = true;
                             { var i: scala.Int = s; while (i < p) { {
                               data(i) match {
                                 case '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | '-' | '+' => {
@@ -1098,7 +1098,7 @@ class JsonReader extends com.badlogic.gdx.utils.BaseJsonReader {
                               }
                             }
                             var couldBeDouble: scala.Boolean = false
-                            var couldBeLong: scala.Boolean = true
+                            var couldBeLong: scala.Boolean = true;
                             { var i: scala.Int = s; while (i < p) { {
                               data(i) match {
                                 case '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | '-' | '+' => {
@@ -1201,7 +1201,7 @@ class JsonReader extends com.badlogic.gdx.utils.BaseJsonReader {
                               }
                             }
                             var couldBeDouble: scala.Boolean = false
-                            var couldBeLong: scala.Boolean = true
+                            var couldBeLong: scala.Boolean = true;
                             { var i: scala.Int = s; while (i < p) { {
                               data(i) match {
                                 case '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | '-' | '+' => {
@@ -1278,7 +1278,7 @@ class JsonReader extends com.badlogic.gdx.utils.BaseJsonReader {
     this.current = null
     if (!this.stop$field) {
       if (p < pe) {
-        var lineNumber: scala.Int = 1
+        var lineNumber: scala.Int = 1;
         { var i: scala.Int = 0; while (i < p) { {
           if (data(i) == '\n') {
             lineNumber = lineNumber + 1
@@ -1321,7 +1321,7 @@ class JsonReader extends com.badlogic.gdx.utils.BaseJsonReader {
       }
     }
   }
-  protected def startObject(name: java.lang.String): scala.Unit = {
+  def startObject(name: java.lang.String): scala.Unit = {
     val value: com.badlogic.gdx.utils.JsonValue = new com.badlogic.gdx.utils.JsonValue(com.badlogic.gdx.utils.JsonValue.ValueType.`object`)
     if (this.current != null) {
       this.addChild(name, value)
@@ -1329,7 +1329,7 @@ class JsonReader extends com.badlogic.gdx.utils.BaseJsonReader {
     this.elements.add(value)
     this.current = value
   }
-  protected def startArray(name: java.lang.String): scala.Unit = {
+  def startArray(name: java.lang.String): scala.Unit = {
     val value: com.badlogic.gdx.utils.JsonValue = new com.badlogic.gdx.utils.JsonValue(com.badlogic.gdx.utils.JsonValue.ValueType.array)
     if (this.current != null) {
       this.addChild(name, value)
@@ -1337,25 +1337,25 @@ class JsonReader extends com.badlogic.gdx.utils.BaseJsonReader {
     this.elements.add(value)
     this.current = value
   }
-  protected def pop(): scala.Unit = {
+  def pop(): scala.Unit = {
     this.root = this.elements.pop()
     this.current = if (this.elements.size > 0) this.elements.peek() else null
   }
-  protected def string(name: java.lang.String, value: java.lang.String): scala.Unit = {
+  def string(name: java.lang.String, value: java.lang.String): scala.Unit = {
     this.addChild(name, new com.badlogic.gdx.utils.JsonValue(value))
   }
-  protected def number(name: java.lang.String, value: scala.Double, stringValue: java.lang.String): scala.Unit = {
+  def number(name: java.lang.String, value: scala.Double, stringValue: java.lang.String): scala.Unit = {
     this.addChild(name, new com.badlogic.gdx.utils.JsonValue(value, stringValue))
   }
-  protected def number(name: java.lang.String, value: scala.Long, stringValue: java.lang.String): scala.Unit = {
+  def number(name: java.lang.String, value: scala.Long, stringValue: java.lang.String): scala.Unit = {
     this.addChild(name, new com.badlogic.gdx.utils.JsonValue(value, stringValue))
   }
-  protected def bool(name: java.lang.String, value: scala.Boolean): scala.Unit = {
+  def bool(name: java.lang.String, value: scala.Boolean): scala.Unit = {
     this.addChild(name, new com.badlogic.gdx.utils.JsonValue(value))
   }
-  protected def unescape(value: java.lang.String): java.lang.String = {
+  def unescape(value: java.lang.String): java.lang.String = {
     val length: scala.Int = value.length()
-    val buffer: java.lang.StringBuilder = new java.lang.StringBuilder(length + 16)
+    val buffer: java.lang.StringBuilder = new java.lang.StringBuilder(length + 16);
     { var i: scala.Int = 0; while (i < length) { {
       var c: scala.Char = value.charAt({ i += 1; i })
       if (c != '\\') {

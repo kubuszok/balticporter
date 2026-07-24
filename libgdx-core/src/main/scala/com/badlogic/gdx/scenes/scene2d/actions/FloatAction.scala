@@ -24,10 +24,10 @@ class FloatAction extends com.badlogic.gdx.scenes.scene2d.actions.TemporalAction
     this.start = 0
     this.`end` = 1
   }
-  protected def begin(): scala.Unit = {
+  def begin(): scala.Unit = {
     this.value = this.start
   }
-  protected def update(percent: scala.Float): scala.Unit = {
+  def update(percent: scala.Float): scala.Unit = {
     if (percent == 0) {
       this.value = this.start
     } else {

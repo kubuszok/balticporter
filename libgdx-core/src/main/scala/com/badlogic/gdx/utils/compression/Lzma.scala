@@ -2,7 +2,7 @@ package com.badlogic.gdx.utils.compression
 
 object Lzma {
   def compress(in: java.io.InputStream, out: java.io.OutputStream): scala.Unit = {
-    val params: CommandLine = new CommandLine()
+    val params: com.badlogic.gdx.utils.compression.Lzma.CommandLine = new com.badlogic.gdx.utils.compression.Lzma.CommandLine()
     var eos: scala.Boolean = false
     if (params.Eos) {
       eos = true
@@ -35,7 +35,7 @@ object Lzma {
       } == 0) {
         fileSize = -1
       } else ()
-    }
+    };
     { var i: scala.Int = 0; while (i < 8) { {
       out.write((fileSize >>> (8 * i)).asInstanceOf[scala.Int] & 255)
     }; i = i + 1 } }
@@ -51,7 +51,7 @@ object Lzma {
     if (!decoder.SetDecoderProperties(properties)) {
       throw new java.lang.RuntimeException("Incorrect stream properties")
     } else ()
-    var outSize: scala.Long = 0
+    var outSize: scala.Long = 0;
     { var i: scala.Int = 0; while (i < 8) { {
       val v: scala.Int = in.read()
       if (v < 0) {

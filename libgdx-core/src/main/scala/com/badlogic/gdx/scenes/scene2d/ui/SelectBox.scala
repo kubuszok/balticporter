@@ -1,9 +1,9 @@
 package com.badlogic.gdx.scenes.scene2d.ui
 
-class SelectBox[T] extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlogic.gdx.scenes.scene2d.utils.Disableable with com.badlogic.gdx.scenes.scene2d.ui.Styleable[SelectBoxStyle] {
-  var style: SelectBoxStyle = null.asInstanceOf[SelectBoxStyle]
+class SelectBox[T] extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlogic.gdx.scenes.scene2d.utils.Disableable with com.badlogic.gdx.scenes.scene2d.ui.Styleable[com.badlogic.gdx.scenes.scene2d.ui.SelectBox.SelectBoxStyle] {
+  var style: com.badlogic.gdx.scenes.scene2d.ui.SelectBox.SelectBoxStyle = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.SelectBox.SelectBoxStyle]
   final val items: com.badlogic.gdx.utils.Array[T] = new com.badlogic.gdx.utils.Array()
-  var scrollPane: SelectBoxScrollPane[T] = null.asInstanceOf[SelectBoxScrollPane[T]]
+  var scrollPane: com.badlogic.gdx.scenes.scene2d.ui.SelectBox.SelectBoxScrollPane[T] = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.SelectBox.SelectBoxScrollPane[T]]
   private var prefWidth: scala.Float = 0.0f
   private var prefHeight: scala.Float = 0.0f
   private var clickListener: com.badlogic.gdx.scenes.scene2d.utils.ClickListener = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.ClickListener]
@@ -11,7 +11,7 @@ class SelectBox[T] extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.ba
   private var alignment: scala.Int = com.badlogic.gdx.utils.Align.left
   var selectedPrefWidth: scala.Boolean = false
   final val selection: com.badlogic.gdx.scenes.scene2d.utils.ArraySelection[T] = new com.badlogic.gdx.scenes.scene2d.utils.ArraySelection(this.items)
-  def this(style: SelectBoxStyle) = {
+  def this(style: com.badlogic.gdx.scenes.scene2d.ui.SelectBox.SelectBoxStyle) = {
     this()
     this.setStyle(style)
     this.setSize(this.getPrefWidth(), this.getPrefHeight())
@@ -24,13 +24,13 @@ class SelectBox[T] extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.ba
     })
   }
   def this(skin: com.badlogic.gdx.scenes.scene2d.ui.Skin, styleName: java.lang.String) = {
-    this(skin.get(styleName, classOf[java.lang.Class]))
+    this(skin.get(styleName, classOf[com.badlogic.gdx.scenes.scene2d.ui.SelectBox.SelectBoxStyle]))
   }
   def this(skin: com.badlogic.gdx.scenes.scene2d.ui.Skin) = {
-    this(skin.get(classOf[java.lang.Class]))
+    this(skin.get(classOf[com.badlogic.gdx.scenes.scene2d.ui.SelectBox.SelectBoxStyle]))
   }
-  protected def newScrollPane(): SelectBoxScrollPane[T] = {
-    return new SelectBoxScrollPane(this)
+  def newScrollPane(): com.badlogic.gdx.scenes.scene2d.ui.SelectBox.SelectBoxScrollPane[T] = {
+    return new com.badlogic.gdx.scenes.scene2d.ui.SelectBox.SelectBoxScrollPane(this)
   }
   def setMaxListCount(maxListCount: scala.Int): scala.Unit = {
     this.scrollPane.maxListCount = maxListCount
@@ -38,13 +38,13 @@ class SelectBox[T] extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.ba
   def getMaxListCount(): scala.Int = {
     return this.scrollPane.maxListCount
   }
-  protected def setStage(stage: com.badlogic.gdx.scenes.scene2d.Stage): scala.Unit = {
+  def setStage(stage: com.badlogic.gdx.scenes.scene2d.Stage): scala.Unit = {
     if (stage == null) {
       this.scrollPane.hide()
     } else ()
     super.setStage(stage)
   }
-  def setStyle(style: SelectBoxStyle): scala.Unit = {
+  def setStyle(style: com.badlogic.gdx.scenes.scene2d.ui.SelectBox.SelectBoxStyle): scala.Unit = {
     if (style == null) {
       throw new java.lang.IllegalArgumentException("style cannot be null.")
     } else ()
@@ -55,7 +55,7 @@ class SelectBox[T] extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.ba
     } else ()
     this.invalidateHierarchy()
   }
-  def getStyle(): SelectBoxStyle = {
+  def getStyle(): com.badlogic.gdx.scenes.scene2d.ui.SelectBox.SelectBoxStyle = {
     return this.style
   }
   def setItems(newItems: scala.Array[T]): scala.Unit = {
@@ -108,7 +108,7 @@ class SelectBox[T] extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.ba
     } else {
       this.prefHeight = font.getCapHeight() - (font.getDescent() * 2)
     }
-    val layoutPool: com.badlogic.gdx.utils.Pool[com.badlogic.gdx.graphics.g2d.GlyphLayout] = com.badlogic.gdx.scenes.scene2d.Actor.POOLS.getPool(classOf[java.lang.Class])
+    val layoutPool: com.badlogic.gdx.utils.Pool[com.badlogic.gdx.graphics.g2d.GlyphLayout] = com.badlogic.gdx.scenes.scene2d.Actor.POOLS.getPool(classOf[com.badlogic.gdx.graphics.g2d.GlyphLayout])
     val layout: com.badlogic.gdx.graphics.g2d.GlyphLayout = layoutPool.obtain()
     if (this.selectedPrefWidth) {
       this.prefWidth = 0
@@ -121,7 +121,7 @@ class SelectBox[T] extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.ba
         this.prefWidth = this.prefWidth + layout.width
       } else ()
     } else {
-      var maxItemWidth: scala.Float = 0
+      var maxItemWidth: scala.Float = 0;
       { var i: scala.Int = 0; while (i < this.items.size) { {
         layout.setText(font, this.toString(this.items.get(i)))
         maxItemWidth = java.lang.Math.max(layout.width, maxItemWidth)
@@ -130,8 +130,8 @@ class SelectBox[T] extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.ba
       if (bg != null) {
         this.prefWidth = java.lang.Math.max((this.prefWidth + bg.getLeftWidth()) + bg.getRightWidth(), bg.getMinWidth())
       } else ()
-      val listStyle: com.badlogic.gdx.scenes.scene2d.ui.List#ListStyle = this.style.listStyle
-      val scrollStyle: com.badlogic.gdx.scenes.scene2d.ui.ScrollPane#ScrollPaneStyle = this.style.scrollStyle
+      val listStyle: com.badlogic.gdx.scenes.scene2d.ui.List.ListStyle = this.style.listStyle
+      val scrollStyle: com.badlogic.gdx.scenes.scene2d.ui.ScrollPane.ScrollPaneStyle = this.style.scrollStyle
       var scrollWidth: scala.Float = (maxItemWidth + listStyle.selection.getLeftWidth()) + listStyle.selection.getRightWidth()
       bg = scrollStyle.background
       if (bg != null) {
@@ -144,7 +144,7 @@ class SelectBox[T] extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.ba
     }
     layoutPool.free(layout)
   }
-  protected def getBackgroundDrawable(): com.badlogic.gdx.scenes.scene2d.utils.Drawable = {
+  def getBackgroundDrawable(): com.badlogic.gdx.scenes.scene2d.utils.Drawable = {
     if (this.isDisabled() && (this.style.backgroundDisabled != null)) {
       return this.style.backgroundDisabled
     } else ()
@@ -156,7 +156,7 @@ class SelectBox[T] extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.ba
     } else ()
     return this.style.background
   }
-  protected def getFontColor(): com.badlogic.gdx.graphics.Color = {
+  def getFontColor(): com.badlogic.gdx.graphics.Color = {
     if (this.isDisabled() && (this.style.disabledFontColor != null)) {
       return this.style.disabledFontColor
     } else ()
@@ -193,7 +193,7 @@ class SelectBox[T] extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.ba
       this.drawItem(batch, font, selected, x, y, width)
     } else ()
   }
-  protected def drawItem(batch: com.badlogic.gdx.graphics.g2d.Batch, font: com.badlogic.gdx.graphics.g2d.BitmapFont, item: T, x: scala.Float, y: scala.Float, width: scala.Float): com.badlogic.gdx.graphics.g2d.GlyphLayout = {
+  def drawItem(batch: com.badlogic.gdx.graphics.g2d.Batch, font: com.badlogic.gdx.graphics.g2d.BitmapFont, item: T, x: scala.Float, y: scala.Float, width: scala.Float): com.badlogic.gdx.graphics.g2d.GlyphLayout = {
     val string: java.lang.String = this.toString(item)
     return font.draw(batch, string, x, y, 0, string.length(), width, this.alignment, false, "...")
   }
@@ -231,9 +231,9 @@ class SelectBox[T] extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.ba
     return this.selectedPrefWidth
   }
   def getMaxSelectedPrefWidth(): scala.Float = {
-    val layoutPool: com.badlogic.gdx.utils.Pool[com.badlogic.gdx.graphics.g2d.GlyphLayout] = com.badlogic.gdx.scenes.scene2d.Actor.POOLS.getPool(classOf[java.lang.Class])
+    val layoutPool: com.badlogic.gdx.utils.Pool[com.badlogic.gdx.graphics.g2d.GlyphLayout] = com.badlogic.gdx.scenes.scene2d.Actor.POOLS.getPool(classOf[com.badlogic.gdx.graphics.g2d.GlyphLayout])
     val layout: com.badlogic.gdx.graphics.g2d.GlyphLayout = layoutPool.obtain()
-    var width: scala.Float = 0
+    var width: scala.Float = 0;
     { var i: scala.Int = 0; while (i < this.items.size) { {
       layout.setText(this.style.font, this.toString(this.items.get(i)))
       width = java.lang.Math.max(layout.width, width)
@@ -262,7 +262,7 @@ class SelectBox[T] extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.ba
     this.validate()
     return this.prefHeight
   }
-  protected def toString(item: T): java.lang.String = {
+  def toString(item: T): java.lang.String = {
     return item.toString()
   }
   def showList(): scala.Unit = {
@@ -289,7 +289,7 @@ class SelectBox[T] extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.ba
     this.scrollPane.setScrollingDisabled(true, y)
     this.invalidateHierarchy()
   }
-  def getScrollPane(): SelectBoxScrollPane = {
+  def getScrollPane(): com.badlogic.gdx.scenes.scene2d.ui.SelectBox.SelectBoxScrollPane[?] = {
     return this.scrollPane
   }
   def isOver(): scala.Boolean = {
@@ -298,14 +298,17 @@ class SelectBox[T] extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.ba
   def getClickListener(): com.badlogic.gdx.scenes.scene2d.utils.ClickListener = {
     return this.clickListener
   }
-  protected def onShow(scrollPane: com.badlogic.gdx.scenes.scene2d.Actor, below: scala.Boolean): scala.Unit = {
+  def onShow(scrollPane: com.badlogic.gdx.scenes.scene2d.Actor, below: scala.Boolean): scala.Unit = {
     scrollPane.getColor().a = 0
     scrollPane.addAction(com.badlogic.gdx.scenes.scene2d.actions.Actions.fadeIn(0.3f, com.badlogic.gdx.math.Interpolation.fade))
   }
-  protected def onHide(scrollPane: com.badlogic.gdx.scenes.scene2d.Actor): scala.Unit = {
+  def onHide(scrollPane: com.badlogic.gdx.scenes.scene2d.Actor): scala.Unit = {
     scrollPane.getColor().a = 1
     scrollPane.addAction(com.badlogic.gdx.scenes.scene2d.actions.Actions.sequence(com.badlogic.gdx.scenes.scene2d.actions.Actions.fadeOut(0.15f, com.badlogic.gdx.math.Interpolation.fade), com.badlogic.gdx.scenes.scene2d.actions.Actions.removeActor()))
   }
+}
+object SelectBox {
+  final val temp: com.badlogic.gdx.math.Vector2 = new com.badlogic.gdx.math.Vector2()
   class SelectBoxScrollPane[T] extends com.badlogic.gdx.scenes.scene2d.ui.ScrollPane {
     var selectBox: SelectBox[T] = null.asInstanceOf[SelectBox[T]]
     var maxListCount: scala.Int = 0
@@ -327,7 +330,7 @@ class SelectBox[T] extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.ba
       this.addListener(new com.badlogic.gdx.scenes.scene2d.InputListener())
       this.hideListener = new com.badlogic.gdx.scenes.scene2d.InputListener()
     }
-    protected def newList(): com.badlogic.gdx.scenes.scene2d.ui.List[T] = {
+    def newList(): com.badlogic.gdx.scenes.scene2d.ui.List[T] = {
       return new com.badlogic.gdx.scenes.scene2d.ui.List[T](this.selectBox.style.listStyle)
     }
     def show(stage: com.badlogic.gdx.scenes.scene2d.Stage): scala.Unit = {
@@ -421,7 +424,7 @@ class SelectBox[T] extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.ba
       super.act(delta)
       this.toFront()
     }
-    protected def setStage(stage: com.badlogic.gdx.scenes.scene2d.Stage): scala.Unit = {
+    def setStage(stage: com.badlogic.gdx.scenes.scene2d.Stage): scala.Unit = {
       val oldStage: com.badlogic.gdx.scenes.scene2d.Stage = this.getStage()
       if (oldStage != null) {
         oldStage.removeCaptureListener(this.hideListener)
@@ -442,12 +445,12 @@ class SelectBox[T] extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.ba
     var overFontColor: com.badlogic.gdx.graphics.Color = null.asInstanceOf[com.badlogic.gdx.graphics.Color]
     var disabledFontColor: com.badlogic.gdx.graphics.Color = null.asInstanceOf[com.badlogic.gdx.graphics.Color]
     var background: com.badlogic.gdx.scenes.scene2d.utils.Drawable = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Drawable]
-    var scrollStyle: com.badlogic.gdx.scenes.scene2d.ui.ScrollPane#ScrollPaneStyle = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.ScrollPane#ScrollPaneStyle]
-    var listStyle: com.badlogic.gdx.scenes.scene2d.ui.List#ListStyle = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.List#ListStyle]
+    var scrollStyle: com.badlogic.gdx.scenes.scene2d.ui.ScrollPane.ScrollPaneStyle = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.ScrollPane.ScrollPaneStyle]
+    var listStyle: com.badlogic.gdx.scenes.scene2d.ui.List.ListStyle = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.List.ListStyle]
     var backgroundOver: com.badlogic.gdx.scenes.scene2d.utils.Drawable = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Drawable]
     var backgroundOpen: com.badlogic.gdx.scenes.scene2d.utils.Drawable = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Drawable]
     var backgroundDisabled: com.badlogic.gdx.scenes.scene2d.utils.Drawable = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Drawable]
-    def this(font: com.badlogic.gdx.graphics.g2d.BitmapFont, fontColor: com.badlogic.gdx.graphics.Color, background: com.badlogic.gdx.scenes.scene2d.utils.Drawable, scrollStyle: com.badlogic.gdx.scenes.scene2d.ui.ScrollPane#ScrollPaneStyle, listStyle: com.badlogic.gdx.scenes.scene2d.ui.List#ListStyle) = {
+    def this(font: com.badlogic.gdx.graphics.g2d.BitmapFont, fontColor: com.badlogic.gdx.graphics.Color, background: com.badlogic.gdx.scenes.scene2d.utils.Drawable, scrollStyle: com.badlogic.gdx.scenes.scene2d.ui.ScrollPane.ScrollPaneStyle, listStyle: com.badlogic.gdx.scenes.scene2d.ui.List.ListStyle) = {
       this()
       this.font = font
       this.fontColor.set(fontColor)
@@ -455,7 +458,7 @@ class SelectBox[T] extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.ba
       this.scrollStyle = scrollStyle
       this.listStyle = listStyle
     }
-    def this(style: SelectBoxStyle) = {
+    def this(style: com.badlogic.gdx.scenes.scene2d.ui.SelectBox.SelectBoxStyle) = {
       this()
       this.font = style.font
       this.fontColor.set(style.fontColor)
@@ -466,14 +469,11 @@ class SelectBox[T] extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.ba
         this.disabledFontColor = new com.badlogic.gdx.graphics.Color(style.disabledFontColor)
       } else ()
       this.background = style.background
-      this.scrollStyle = new com.badlogic.gdx.scenes.scene2d.ui.ScrollPane#ScrollPaneStyle(style.scrollStyle)
-      this.listStyle = new com.badlogic.gdx.scenes.scene2d.ui.List#ListStyle(style.listStyle)
+      this.scrollStyle = new com.badlogic.gdx.scenes.scene2d.ui.ScrollPane.ScrollPaneStyle(style.scrollStyle)
+      this.listStyle = new com.badlogic.gdx.scenes.scene2d.ui.List.ListStyle(style.listStyle)
       this.backgroundOver = style.backgroundOver
       this.backgroundOpen = style.backgroundOpen
       this.backgroundDisabled = style.backgroundDisabled
     }
   }
-}
-object SelectBox {
-  final val temp: com.badlogic.gdx.math.Vector2 = new com.badlogic.gdx.math.Vector2()
 }

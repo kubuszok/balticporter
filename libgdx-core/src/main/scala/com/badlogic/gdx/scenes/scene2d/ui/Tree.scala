@@ -1,7 +1,7 @@
 package com.badlogic.gdx.scenes.scene2d.ui
 
-class Tree[N <: Node, V] extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup with com.badlogic.gdx.scenes.scene2d.ui.Styleable[TreeStyle] {
-  var style: TreeStyle = null.asInstanceOf[TreeStyle]
+class Tree[N <: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[?, ?, ?], V] extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup with com.badlogic.gdx.scenes.scene2d.ui.Styleable[com.badlogic.gdx.scenes.scene2d.ui.Tree.TreeStyle] {
+  var style: com.badlogic.gdx.scenes.scene2d.ui.Tree.TreeStyle = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Tree.TreeStyle]
   final val rootNodes: com.badlogic.gdx.utils.Array[N] = new com.badlogic.gdx.utils.Array()
   var selection: com.badlogic.gdx.scenes.scene2d.utils.Selection[N] = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Selection[N]]
   var ySpacing: scala.Float = 4
@@ -17,7 +17,7 @@ class Tree[N <: Node, V] extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup 
   private var overNode: N = null.asInstanceOf[N]
   var rangeStart: N = null.asInstanceOf[N]
   private var clickListener: com.badlogic.gdx.scenes.scene2d.utils.ClickListener = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.ClickListener]
-  def this(style: TreeStyle) = {
+  def this(style: com.badlogic.gdx.scenes.scene2d.ui.Tree.TreeStyle) = {
     this()
     this.selection = new com.badlogic.gdx.scenes.scene2d.utils.Selection[N]()
     this.selection.setActor(this)
@@ -26,10 +26,10 @@ class Tree[N <: Node, V] extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup 
     this.initialize()
   }
   def this(skin: com.badlogic.gdx.scenes.scene2d.ui.Skin, styleName: java.lang.String) = {
-    this(skin.get(styleName, classOf[java.lang.Class]))
+    this(skin.get(styleName, classOf[com.badlogic.gdx.scenes.scene2d.ui.Tree.TreeStyle]))
   }
   def this(skin: com.badlogic.gdx.scenes.scene2d.ui.Skin) = {
-    this(skin.get(classOf[java.lang.Class]))
+    this(skin.get(classOf[com.badlogic.gdx.scenes.scene2d.ui.Tree.TreeStyle]))
   }
   private def initialize(): scala.Unit = {
     this.addListener({
@@ -37,7 +37,7 @@ class Tree[N <: Node, V] extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup 
       this.clickListener
     })
   }
-  def setStyle(style: TreeStyle): scala.Unit = {
+  def setStyle(style: com.badlogic.gdx.scenes.scene2d.ui.Tree.TreeStyle): scala.Unit = {
     this.style = style
     if (this.indentSpacing == 0) {
       this.indentSpacing = this.plusMinusWidth()
@@ -123,7 +123,7 @@ class Tree[N <: Node, V] extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup 
   }
   private def computeSize(nodes: com.badlogic.gdx.utils.Array[N], indent: scala.Float, plusMinusWidth: scala.Float): scala.Unit = {
     val ySpacing: scala.Float = this.ySpacing
-    val spacing: scala.Float = this.iconSpacingLeft + this.iconSpacingRight
+    val spacing: scala.Float = this.iconSpacingLeft + this.iconSpacingRight;
     { var i: scala.Int = 0; val n: scala.Int = nodes.size; while (i < n) { {
       val node: N = nodes.get(i)
       var rowWidth: scala.Float = indent + plusMinusWidth
@@ -157,7 +157,7 @@ class Tree[N <: Node, V] extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup 
     var y: scala.Float = y$arg
     val ySpacing: scala.Float = this.ySpacing
     val iconSpacingLeft: scala.Float = this.iconSpacingLeft
-    val spacing: scala.Float = iconSpacingLeft + this.iconSpacingRight
+    val spacing: scala.Float = iconSpacingLeft + this.iconSpacingRight;
     { var i: scala.Int = 0; val n: scala.Int = nodes.size; while (i < n) { {
       val node: N = nodes.get(i)
       var x: scala.Float = indent + plusMinusWidth
@@ -186,14 +186,14 @@ class Tree[N <: Node, V] extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup 
     this.drawIcons(batch, color.r, color.g, color.b, a, null, this.rootNodes, this.paddingLeft, this.plusMinusWidth())
     super.draw(batch, parentAlpha)
   }
-  protected def drawBackground(batch: com.badlogic.gdx.graphics.g2d.Batch, parentAlpha: scala.Float): scala.Unit = {
+  def drawBackground(batch: com.badlogic.gdx.graphics.g2d.Batch, parentAlpha: scala.Float): scala.Unit = {
     if (this.style.background != null) {
       val color: com.badlogic.gdx.graphics.Color = this.getColor()
       batch.setColor(color.r, color.g, color.b, color.a * parentAlpha)
       this.style.background.draw(batch, this.getX(), this.getY(), this.getWidth(), this.getHeight())
     } else ()
   }
-  protected def drawIcons(batch: com.badlogic.gdx.graphics.g2d.Batch, r: scala.Float, g: scala.Float, b: scala.Float, a: scala.Float, parent: N, nodes: com.badlogic.gdx.utils.Array[N], indent: scala.Float, plusMinusWidth: scala.Float): scala.Float = {
+  def drawIcons(batch: com.badlogic.gdx.graphics.g2d.Batch, r: scala.Float, g: scala.Float, b: scala.Float, a: scala.Float, parent: N, nodes: com.badlogic.gdx.utils.Array[N], indent: scala.Float, plusMinusWidth: scala.Float): scala.Float = {
     val cullingArea: com.badlogic.gdx.math.Rectangle = this.getCullingArea()
     var cullBottom: scala.Float = 0
     var cullTop: scala.Float = 0
@@ -201,12 +201,12 @@ class Tree[N <: Node, V] extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup 
       cullBottom = cullingArea.y
       cullTop = cullBottom + cullingArea.height
     } else ()
-    val style: TreeStyle = this.style
+    val style: com.badlogic.gdx.scenes.scene2d.ui.Tree.TreeStyle = this.style
     val x: scala.Float = this.getX()
     val y: scala.Float = this.getY()
     val expandX: scala.Float = x + indent
     val iconX: scala.Float = (expandX + plusMinusWidth) + this.iconSpacingLeft
-    var actorY: scala.Float = 0
+    var actorY: scala.Float = 0;
     { var i: scala.Int = 0; val n: scala.Int = nodes.size; while (i < n) { {
       val node: N = nodes.get(i)
       val actor: com.badlogic.gdx.scenes.scene2d.Actor = node.actor
@@ -243,19 +243,19 @@ class Tree[N <: Node, V] extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup 
     }; i = i + 1 } }
     return actorY
   }
-  protected def drawSelection(node: N, selection: com.badlogic.gdx.scenes.scene2d.utils.Drawable, batch: com.badlogic.gdx.graphics.g2d.Batch, x: scala.Float, y: scala.Float, width: scala.Float, height: scala.Float): scala.Unit = {
+  def drawSelection(node: N, selection: com.badlogic.gdx.scenes.scene2d.utils.Drawable, batch: com.badlogic.gdx.graphics.g2d.Batch, x: scala.Float, y: scala.Float, width: scala.Float, height: scala.Float): scala.Unit = {
     selection.draw(batch, x, y, width, height)
   }
-  protected def drawOver(node: N, over: com.badlogic.gdx.scenes.scene2d.utils.Drawable, batch: com.badlogic.gdx.graphics.g2d.Batch, x: scala.Float, y: scala.Float, width: scala.Float, height: scala.Float): scala.Unit = {
+  def drawOver(node: N, over: com.badlogic.gdx.scenes.scene2d.utils.Drawable, batch: com.badlogic.gdx.graphics.g2d.Batch, x: scala.Float, y: scala.Float, width: scala.Float, height: scala.Float): scala.Unit = {
     over.draw(batch, x, y, width, height)
   }
-  protected def drawExpandIcon(node: N, expandIcon: com.badlogic.gdx.scenes.scene2d.utils.Drawable, batch: com.badlogic.gdx.graphics.g2d.Batch, x: scala.Float, y: scala.Float): scala.Unit = {
+  def drawExpandIcon(node: N, expandIcon: com.badlogic.gdx.scenes.scene2d.utils.Drawable, batch: com.badlogic.gdx.graphics.g2d.Batch, x: scala.Float, y: scala.Float): scala.Unit = {
     expandIcon.draw(batch, x, y, expandIcon.getMinWidth(), expandIcon.getMinHeight())
   }
-  protected def drawIcon(node: N, icon: com.badlogic.gdx.scenes.scene2d.utils.Drawable, batch: com.badlogic.gdx.graphics.g2d.Batch, x: scala.Float, y: scala.Float): scala.Unit = {
+  def drawIcon(node: N, icon: com.badlogic.gdx.scenes.scene2d.utils.Drawable, batch: com.badlogic.gdx.graphics.g2d.Batch, x: scala.Float, y: scala.Float): scala.Unit = {
     icon.draw(batch, x, y, icon.getMinWidth(), icon.getMinHeight())
   }
-  protected def getExpandIcon(node: N, iconX: scala.Float): com.badlogic.gdx.scenes.scene2d.utils.Drawable = {
+  def getExpandIcon(node: N, iconX: scala.Float): com.badlogic.gdx.scenes.scene2d.utils.Drawable = {
     if (((node == this.overNode) && (com.badlogic.gdx.Gdx.app.getType() == com.badlogic.gdx.Application.ApplicationType.Desktop)) && ((!this.selection.getMultiple()) || ((!com.badlogic.gdx.scenes.scene2d.utils.UIUtils.ctrl()) && (!com.badlogic.gdx.scenes.scene2d.utils.UIUtils.shift())))) {
       val mouseX: scala.Float = this.screenToLocalCoordinates(Tree.tmp.set(com.badlogic.gdx.Gdx.input.getX(), 0)).x + this.getX()
       if ((mouseX >= 0) && (mouseX < iconX)) {
@@ -268,16 +268,16 @@ class Tree[N <: Node, V] extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup 
     return if (node.expanded) this.style.minus else this.style.plus
   }
   def getNodeAt(y: scala.Float): N = {
-    this.foundNode = null
+    this.foundNode = null.asInstanceOf[N]
     this.getNodeAt(this.rootNodes, y, this.getHeight())
     try {
       return this.foundNode
     } finally {
-      this.foundNode = null
+      this.foundNode = null.asInstanceOf[N]
     }
   }
   private def getNodeAt(nodes: com.badlogic.gdx.utils.Array[N], y: scala.Float, rowY$arg: scala.Float): scala.Float = {
-    var rowY: scala.Float = rowY$arg
+    var rowY: scala.Float = rowY$arg;
     { var i: scala.Int = 0; val n: scala.Int = nodes.size; while (i < n) { {
       val node: N = nodes.get(i)
       val height: scala.Float = node.height
@@ -323,7 +323,7 @@ class Tree[N <: Node, V] extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup 
     val node: N = this.selection.first()
     return if (node == null) null else node.getValue().asInstanceOf[V]
   }
-  def getStyle(): TreeStyle = {
+  def getStyle(): com.badlogic.gdx.scenes.scene2d.ui.Tree.TreeStyle = {
     return this.style
   }
   def getRootNodes(): com.badlogic.gdx.utils.Array[N] = {
@@ -339,7 +339,7 @@ class Tree[N <: Node, V] extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup 
       if (actorIndex != (-1)) {
         node.removeFromTree(this, actorIndex)
       } else ()
-    }; i = i + 1 } }
+    }; i = i + 1 } };
     { var i: scala.Int = 0; val n: scala.Int = this.rootNodes.size; var actorIndex: scala.Int = 0; while (i < n) { {
       actorIndex = actorIndex + this.rootNodes.get(i).addToTree(this, actorIndex)
     }; i = i + 1 } }
@@ -349,7 +349,7 @@ class Tree[N <: Node, V] extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup 
   }
   def getOverValue(): V = {
     if (this.overNode == null) {
-      return null
+      return null.asInstanceOf[V]
     } else ()
     return this.overNode.getValue().asInstanceOf[V]
   }
@@ -419,7 +419,48 @@ class Tree[N <: Node, V] extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup 
   def getClickListener(): com.badlogic.gdx.scenes.scene2d.utils.ClickListener = {
     return this.clickListener
   }
-  abstract class Node[N <: Node, V, A <: com.badlogic.gdx.scenes.scene2d.Actor] {
+}
+object Tree {
+  private final val tmp: com.badlogic.gdx.math.Vector2 = new com.badlogic.gdx.math.Vector2()
+  def findExpandedValues(nodes: com.badlogic.gdx.utils.Array[? <: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[?, ?, ?]], values: com.badlogic.gdx.utils.Array[?]): scala.Boolean = {
+    val expanded: scala.Boolean = false;
+    { var i: scala.Int = 0; val n: scala.Int = nodes.size; while (i < n) { {
+      val node: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[?, ?, ?] = nodes.get(i)
+      if (node.expanded && (!Tree.findExpandedValues(node.children, values))) {
+        values.add(node.value)
+      } else ()
+    }; i = i + 1 } }
+    return expanded
+  }
+  def findNode(nodes: com.badlogic.gdx.utils.Array[? <: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[?, ?, ?]], value: java.lang.Object): com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[?, ?, ?] = {
+    { var i: scala.Int = 0; val n: scala.Int = nodes.size; while (i < n) { {
+      val node: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[?, ?, ?] = nodes.get(i)
+      if (value.equals(node.value)) {
+        return node
+      } else ()
+    }; i = i + 1 } };
+    { var i: scala.Int = 0; val n: scala.Int = nodes.size; while (i < n) { {
+      val node: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[?, ?, ?] = nodes.get(i)
+      val found: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[?, ?, ?] = Tree.findNode(node.children, value)
+      if (found != null) {
+        return found
+      } else ()
+    }; i = i + 1 } }
+    return null
+  }
+  def collapseAll(nodes: com.badlogic.gdx.utils.Array[? <: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[?, ?, ?]]): scala.Unit = {
+    { var i: scala.Int = 0; val n: scala.Int = nodes.size; while (i < n) { {
+      val node: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[?, ?, ?] = nodes.get(i)
+      node.setExpanded(false)
+      Tree.collapseAll(node.children)
+    }; i = i + 1 } }
+  }
+  def expandAll(nodes: com.badlogic.gdx.utils.Array[? <: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[?, ?, ?]]): scala.Unit = {
+    { var i: scala.Int = 0; val n: scala.Int = nodes.size; while (i < n) { {
+      nodes.get(i).expandAll()
+    }; i = i + 1 } }
+  }
+  abstract class Node[N <: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[?, ?, ?], V, A <: com.badlogic.gdx.scenes.scene2d.Actor] {
     var actor: A = null.asInstanceOf[A]
     var parent: N = null.asInstanceOf[N]
     final val children: com.badlogic.gdx.utils.Array[N] = new com.badlogic.gdx.utils.Array(0)
@@ -443,11 +484,11 @@ class Tree[N <: Node, V] extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup 
       if (this.children.size == 0) {
         return
       } else ()
-      val tree: Tree = this.getTree()
+      val tree: Tree[?, ?] = this.getTree()
       if (tree == null) {
         return
       } else ()
-      val children: scala.Array[java.lang.Object] = this.children.items
+      val children: scala.Array[java.lang.Object] = this.children.items.asInstanceOf[scala.Array[java.lang.Object]]
       var actorIndex: scala.Int = this.actor.getZIndex() + 1
       if (expanded) {
         { var i: scala.Int = 0; val n: scala.Int = this.children.size; while (i < n) { {
@@ -459,24 +500,24 @@ class Tree[N <: Node, V] extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup 
         }; i = i + 1 } }
       }
     }
-    protected def addToTree(tree: Tree[N, V], actorIndex: scala.Int): scala.Int = {
+    def addToTree(tree: Tree[N, V], actorIndex: scala.Int): scala.Int = {
       tree.addActorAt(actorIndex, this.actor)
       if (!this.expanded) {
         return 1
       } else ()
       var childIndex: scala.Int = actorIndex + 1
-      val children: scala.Array[java.lang.Object] = this.children.items
+      val children: scala.Array[java.lang.Object] = this.children.items.asInstanceOf[scala.Array[java.lang.Object]];
       { var i: scala.Int = 0; val n: scala.Int = this.children.size; while (i < n) { {
         childIndex = childIndex + children(i).asInstanceOf[N].addToTree(tree, childIndex)
       }; i = i + 1 } }
       return childIndex - actorIndex
     }
-    protected def removeFromTree(tree: Tree[N, V], actorIndex: scala.Int): scala.Unit = {
+    def removeFromTree(tree: Tree[N, V], actorIndex: scala.Int): scala.Unit = {
       val removeActorAt: com.badlogic.gdx.scenes.scene2d.Actor = tree.removeActorAt(actorIndex, true)
       if (!this.expanded) {
         return
       } else ()
-      val children: scala.Array[java.lang.Object] = this.children.items
+      val children: scala.Array[java.lang.Object] = this.children.items.asInstanceOf[scala.Array[java.lang.Object]];
       { var i: scala.Int = 0; val n: scala.Int = this.children.size; while (i < n) { {
         children(i).asInstanceOf[N].removeFromTree(tree, actorIndex)
       }; i = i + 1 } }
@@ -495,7 +536,7 @@ class Tree[N <: Node, V] extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup 
       if (!this.expanded) {
         return
       } else ()
-      val tree: Tree = this.getTree()
+      val tree: Tree[?, ?] = this.getTree()
       if (tree != null) {
         var actorIndex: scala.Int = 0
         if (childIndex == 0) {
@@ -516,14 +557,14 @@ class Tree[N <: Node, V] extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup 
         return 1
       } else ()
       var count: scala.Int = 1
-      val children: scala.Array[java.lang.Object] = this.children.items
+      val children: scala.Array[java.lang.Object] = this.children.items.asInstanceOf[scala.Array[java.lang.Object]];
       { var i: scala.Int = 0; val n: scala.Int = this.children.size; while (i < n) { {
         count = count + children(i).asInstanceOf[N].countActors()
       }; i = i + 1 } }
       return count
     }
     def remove(): scala.Unit = {
-      val tree: Tree = this.getTree()
+      val tree: Tree[?, ?] = this.getTree()
       if (tree != null) {
         tree.remove(this)
       } else {
@@ -539,17 +580,17 @@ class Tree[N <: Node, V] extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup 
       if (!this.expanded) {
         return
       } else ()
-      val tree: Tree = this.getTree()
+      val tree: Tree[?, ?] = this.getTree()
       if (tree != null) {
         node.removeFromTree(tree, node.actor.getZIndex())
       } else ()
     }
     def clearChildren(): scala.Unit = {
       if (this.expanded) {
-        val tree: Tree = this.getTree()
+        val tree: Tree[?, ?] = this.getTree()
         if (tree != null) {
           val actorIndex: scala.Int = this.actor.getZIndex() + 1
-          val children: scala.Array[java.lang.Object] = this.children.items
+          val children: scala.Array[java.lang.Object] = this.children.items.asInstanceOf[scala.Array[java.lang.Object]];
           { var i: scala.Int = 0; val n: scala.Int = this.children.size; while (i < n) { {
             children(i).asInstanceOf[N].removeFromTree(tree, actorIndex)
           }; i = i + 1 } }
@@ -559,8 +600,8 @@ class Tree[N <: Node, V] extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup 
     }
     def getTree(): Tree[N, V] = {
       val parent: com.badlogic.gdx.scenes.scene2d.Group = this.actor.getParent()
-      if (parent.isInstanceOf[Tree]) {
-        return parent.asInstanceOf[Tree]
+      if (parent.isInstanceOf[Tree[?, ?]]) {
+        return parent.asInstanceOf[Tree[?, ?]]
       } else ()
       return null
     }
@@ -591,16 +632,16 @@ class Tree[N <: Node, V] extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup 
       if (!this.expanded) {
         return
       } else ()
-      val tree: Tree = this.getTree()
+      val tree: Tree[?, ?] = this.getTree()
       if (tree == null) {
         return
       } else ()
-      val children: scala.Array[java.lang.Object] = this.children.items
+      val children: scala.Array[java.lang.Object] = this.children.items.asInstanceOf[scala.Array[java.lang.Object]]
       val n: scala.Int = this.children.size
-      var actorIndex: scala.Int = this.actor.getZIndex() + 1
+      var actorIndex: scala.Int = this.actor.getZIndex() + 1;
       { var i: scala.Int = 0; while (i < n) { {
         children(i).asInstanceOf[N].removeFromTree(tree, actorIndex)
-      }; i = i + 1 } }
+      }; i = i + 1 } };
       { var i: scala.Int = 0; while (i < n) { {
         actorIndex = actorIndex + children(i).asInstanceOf[N].addToTree(tree, actorIndex)
       }; i = i + 1 } }
@@ -622,7 +663,7 @@ class Tree[N <: Node, V] extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup 
     }
     def getLevel(): scala.Int = {
       var level: scala.Int = 0
-      var current: Node = this
+      var current: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[?, ?, ?] = this
       while ({ {
         level = level + 1
         current = current.getParent()
@@ -649,7 +690,7 @@ class Tree[N <: Node, V] extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup 
       } else ()
     }
     def expandTo(): scala.Unit = {
-      var node: Node = this.parent
+      var node: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[?, ?, ?] = this.parent
       while (node != null) {
         node.setExpanded(true)
         node = node.parent
@@ -682,7 +723,7 @@ class Tree[N <: Node, V] extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup 
       if (node == null) {
         throw new java.lang.IllegalArgumentException("node cannot be null.")
       } else ()
-      var current: Node = node
+      var current: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[?, ?, ?] = node
       while ({ {
         if (current == this) {
           return true
@@ -695,7 +736,7 @@ class Tree[N <: Node, V] extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup 
       if (node == null) {
         throw new java.lang.IllegalArgumentException("node cannot be null.")
       } else ()
-      var parent: Node = this
+      var parent: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[?, ?, ?] = this
       while ({ {
         if (parent == node) {
           return true
@@ -719,7 +760,7 @@ class Tree[N <: Node, V] extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup 
       this.minus = minus
       this.selection = selection
     }
-    def this(style: TreeStyle) = {
+    def this(style: com.badlogic.gdx.scenes.scene2d.ui.Tree.TreeStyle) = {
       this()
       this.plus = style.plus
       this.minus = style.minus
@@ -729,46 +770,5 @@ class Tree[N <: Node, V] extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup 
       this.selection = style.selection
       this.background = style.background
     }
-  }
-}
-object Tree {
-  private final val tmp: com.badlogic.gdx.math.Vector2 = new com.badlogic.gdx.math.Vector2()
-  def findExpandedValues(nodes: com.badlogic.gdx.utils.Array[? <: Node], values: com.badlogic.gdx.utils.Array): scala.Boolean = {
-    val expanded: scala.Boolean = false
-    { var i: scala.Int = 0; val n: scala.Int = nodes.size; while (i < n) { {
-      val node: Node = nodes.get(i)
-      if (node.expanded && (!Tree.findExpandedValues(node.children, values))) {
-        values.add(node.value)
-      } else ()
-    }; i = i + 1 } }
-    return expanded
-  }
-  def findNode(nodes: com.badlogic.gdx.utils.Array[? <: Node], value: java.lang.Object): Node = {
-    { var i: scala.Int = 0; val n: scala.Int = nodes.size; while (i < n) { {
-      val node: Node = nodes.get(i)
-      if (value.equals(node.value)) {
-        return node
-      } else ()
-    }; i = i + 1 } }
-    { var i: scala.Int = 0; val n: scala.Int = nodes.size; while (i < n) { {
-      val node: Node = nodes.get(i)
-      val found: Node = Tree.findNode(node.children, value)
-      if (found != null) {
-        return found
-      } else ()
-    }; i = i + 1 } }
-    return null
-  }
-  def collapseAll(nodes: com.badlogic.gdx.utils.Array[? <: Node]): scala.Unit = {
-    { var i: scala.Int = 0; val n: scala.Int = nodes.size; while (i < n) { {
-      val node: Node = nodes.get(i)
-      node.setExpanded(false)
-      Tree.collapseAll(node.children)
-    }; i = i + 1 } }
-  }
-  def expandAll(nodes: com.badlogic.gdx.utils.Array[? <: Node]): scala.Unit = {
-    { var i: scala.Int = 0; val n: scala.Int = nodes.size; while (i < n) { {
-      nodes.get(i).expandAll()
-    }; i = i + 1 } }
   }
 }

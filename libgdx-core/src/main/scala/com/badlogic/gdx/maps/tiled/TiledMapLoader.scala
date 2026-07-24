@@ -1,6 +1,6 @@
 package com.badlogic.gdx.maps.tiled
 
-class TiledMapLoader extends com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader[com.badlogic.gdx.maps.tiled.TiledMap, com.badlogic.gdx.maps.tiled.BaseTiledMapLoader#Parameters] {
+class TiledMapLoader extends com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader[com.badlogic.gdx.maps.tiled.TiledMap, com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.Parameters] {
   private var tmxMapLoader: com.badlogic.gdx.maps.tiled.TmxMapLoader = null.asInstanceOf[com.badlogic.gdx.maps.tiled.TmxMapLoader]
   private var tmjMapLoader: com.badlogic.gdx.maps.tiled.TmjMapLoader = null.asInstanceOf[com.badlogic.gdx.maps.tiled.TmjMapLoader]
   private var atlasTmxMapLoader: com.badlogic.gdx.maps.tiled.AtlasTmxMapLoader = null.asInstanceOf[com.badlogic.gdx.maps.tiled.AtlasTmxMapLoader]
@@ -17,12 +17,12 @@ class TiledMapLoader extends com.badlogic.gdx.assets.loaders.AsynchronousAssetLo
     this.jsonReader = new com.badlogic.gdx.utils.JsonReader()
   }
   def load(fileName: java.lang.String): com.badlogic.gdx.maps.tiled.TiledMap = {
-    return this.load(fileName, new com.badlogic.gdx.maps.tiled.BaseTiledMapLoader#Parameters())
+    return this.load(fileName, new com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.Parameters())
   }
-  def load(fileName: java.lang.String, parameter$arg: com.badlogic.gdx.maps.tiled.BaseTiledMapLoader#Parameters): com.badlogic.gdx.maps.tiled.TiledMap = {
-    var parameter: com.badlogic.gdx.maps.tiled.BaseTiledMapLoader#Parameters = parameter$arg
+  def load(fileName: java.lang.String, parameter$arg: com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.Parameters): com.badlogic.gdx.maps.tiled.TiledMap = {
+    var parameter: com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.Parameters = parameter$arg
     if (parameter == null) {
-      parameter = new com.badlogic.gdx.maps.tiled.BaseTiledMapLoader#Parameters()
+      parameter = new com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.Parameters()
     } else ()
     val file: com.badlogic.gdx.files.FileHandle = this.resolve(fileName)
     val `extension`: java.lang.String = file.`extension`().toLowerCase()
@@ -44,10 +44,10 @@ class TiledMapLoader extends com.badlogic.gdx.assets.loaders.AsynchronousAssetLo
       }
     }
   }
-  def getDependencies(fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter$arg: com.badlogic.gdx.maps.tiled.BaseTiledMapLoader#Parameters): com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor] = {
-    var parameter: com.badlogic.gdx.maps.tiled.BaseTiledMapLoader#Parameters = parameter$arg
+  def getDependencies(fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter$arg: com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.Parameters): com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = {
+    var parameter: com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.Parameters = parameter$arg
     if (parameter == null) {
-      parameter = new com.badlogic.gdx.maps.tiled.BaseTiledMapLoader#Parameters()
+      parameter = new com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.Parameters()
     } else ()
     val `extension`: java.lang.String = file.`extension`().toLowerCase()
     if (`extension`.equals("tmx")) {
@@ -68,10 +68,10 @@ class TiledMapLoader extends com.badlogic.gdx.assets.loaders.AsynchronousAssetLo
       }
     }
   }
-  def loadAsync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter$arg: com.badlogic.gdx.maps.tiled.BaseTiledMapLoader#Parameters): scala.Unit = {
-    var parameter: com.badlogic.gdx.maps.tiled.BaseTiledMapLoader#Parameters = parameter$arg
+  def loadAsync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter$arg: com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.Parameters): scala.Unit = {
+    var parameter: com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.Parameters = parameter$arg
     if (parameter == null) {
-      parameter = new com.badlogic.gdx.maps.tiled.BaseTiledMapLoader#Parameters()
+      parameter = new com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.Parameters()
     } else ()
     val `extension`: java.lang.String = file.`extension`().toLowerCase()
     if (`extension`.equals("tmx")) {
@@ -92,11 +92,11 @@ class TiledMapLoader extends com.badlogic.gdx.assets.loaders.AsynchronousAssetLo
       }
     }
   }
-  def loadSync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter$arg: com.badlogic.gdx.maps.tiled.BaseTiledMapLoader#Parameters): com.badlogic.gdx.maps.tiled.TiledMap = {
-    var parameter: com.badlogic.gdx.maps.tiled.BaseTiledMapLoader#Parameters = parameter$arg
+  def loadSync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter$arg: com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.Parameters): com.badlogic.gdx.maps.tiled.TiledMap = {
+    var parameter: com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.Parameters = parameter$arg
     var map: com.badlogic.gdx.maps.tiled.TiledMap = null.asInstanceOf[com.badlogic.gdx.maps.tiled.TiledMap]
     if (parameter == null) {
-      parameter = new com.badlogic.gdx.maps.tiled.BaseTiledMapLoader#Parameters()
+      parameter = new com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.Parameters()
     } else ()
     val `extension`: java.lang.String = file.`extension`().toLowerCase()
     if (`extension`.equals("tmx")) {
@@ -121,8 +121,8 @@ class TiledMapLoader extends com.badlogic.gdx.assets.loaders.AsynchronousAssetLo
   private def usesAtlas(file: com.badlogic.gdx.files.FileHandle): scala.Boolean = {
     val `extension`: java.lang.String = file.`extension`().toLowerCase()
     if (`extension`.equals("tmx")) {
-      val root: com.badlogic.gdx.utils.XmlReader#Element = this.xmlReader.parse(file)
-      val properties: com.badlogic.gdx.utils.XmlReader#Element = root.getChildByName("properties")
+      val root: com.badlogic.gdx.utils.XmlReader.Element = this.xmlReader.parse(file)
+      val properties: com.badlogic.gdx.utils.XmlReader.Element = root.getChildByName("properties")
       if (properties != null) {
         for (property <- properties.getChildrenByName("property")) {
           val name: java.lang.String = property.getAttribute("name", "")

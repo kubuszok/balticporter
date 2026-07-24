@@ -104,7 +104,7 @@ class FloatArray {
     this.items(index) = this.items(index) + value
   }
   def incr(value: scala.Float): scala.Unit = {
-    val items: scala.Array[scala.Float] = this.items
+    val items: scala.Array[scala.Float] = this.items;
     { var i: scala.Int = 0; val n: scala.Int = this.size; while (i < n) { {
       items(i) = items(i) + value
     }; i = i + 1 } }
@@ -116,7 +116,7 @@ class FloatArray {
     this.items(index) = this.items(index) * value
   }
   def mul(value: scala.Float): scala.Unit = {
-    val items: scala.Array[scala.Float] = this.items
+    val items: scala.Array[scala.Float] = this.items;
     { var i: scala.Int = 0; val n: scala.Int = this.size; while (i < n) { {
       items(i) = items(i) * value
     }; i = i + 1 } }
@@ -161,7 +161,7 @@ class FloatArray {
     items(second) = firstValue
   }
   def replaceFirst(value: scala.Float, replacement: scala.Float): scala.Boolean = {
-    val items: scala.Array[scala.Float] = this.items
+    val items: scala.Array[scala.Float] = this.items;
     { var i: scala.Int = 0; val n: scala.Int = this.size; while (i < n) { {
       if (items(i) == value) {
         items(i) = replacement
@@ -172,7 +172,7 @@ class FloatArray {
   }
   def replaceAll(value: scala.Float, replacement: scala.Float): scala.Int = {
     val items: scala.Array[scala.Float] = this.items
-    var replacements: scala.Int = 0
+    var replacements: scala.Int = 0;
     { var i: scala.Int = 0; val n: scala.Int = this.size; while (i < n) { {
       if (items(i) == value) {
         items(i) = replacement
@@ -192,7 +192,7 @@ class FloatArray {
     return false
   }
   def indexOf(value: scala.Float): scala.Int = {
-    val items: scala.Array[scala.Float] = this.items
+    val items: scala.Array[scala.Float] = this.items;
     { var i: scala.Int = 0; val n: scala.Int = this.size; while (i < n) { {
       if (items(i) == value) {
         return i
@@ -201,7 +201,7 @@ class FloatArray {
     return -1
   }
   def lastIndexOf(value: scala.Float): scala.Int = {
-    val items: scala.Array[scala.Float] = this.items
+    val items: scala.Array[scala.Float] = this.items;
     { var i: scala.Int = this.size - 1; while (i >= 0) { {
       if (items(i) == value) {
         return i
@@ -210,7 +210,7 @@ class FloatArray {
     return -1
   }
   def removeValue(value: scala.Float): scala.Boolean = {
-    val items: scala.Array[scala.Float] = this.items
+    val items: scala.Array[scala.Float] = this.items;
     { var i: scala.Int = 0; val n: scala.Int = this.size; while (i < n) { {
       if (items(i) == value) {
         this.removeIndex(i)
@@ -254,9 +254,9 @@ class FloatArray {
   def removeAll(array: FloatArray): scala.Boolean = {
     var size: scala.Int = this.size
     val startSize: scala.Int = size
-    val items: scala.Array[scala.Float] = this.items
+    val items: scala.Array[scala.Float] = this.items;
     { var i: scala.Int = 0; val n: scala.Int = array.size; while (i < n) { {
-      val item: scala.Float = array.get(i)
+      val item: scala.Float = array.get(i);
       { var ii: scala.Int = 0; while (ii < size) { {
         if (item == items(ii)) {
           this.removeIndex(ii)
@@ -314,7 +314,7 @@ class FloatArray {
     this.size = newSize
     return this.items
   }
-  protected def resize(newSize: scala.Int): scala.Array[scala.Float] = {
+  def resize(newSize: scala.Int): scala.Array[scala.Float] = {
     val newItems: scala.Array[scala.Float] = new Array[scala.Float](newSize)
     var items: scala.Array[scala.Float] = this.items
     java.lang.System.arraycopy(items, 0, newItems, 0, java.lang.Math.min(this.size, newItems.length))
@@ -325,7 +325,7 @@ class FloatArray {
     java.util.Arrays.sort(this.items, 0, this.size)
   }
   def reverse(): scala.Unit = {
-    val items: scala.Array[scala.Float] = this.items
+    val items: scala.Array[scala.Float] = this.items;
     { var i: scala.Int = 0; val lastIndex: scala.Int = this.size - 1; val n: scala.Int = this.size / 2; while (i < n) { {
       val ii: scala.Int = lastIndex - i
       val temp: scala.Float = items(i)
@@ -334,7 +334,7 @@ class FloatArray {
     }; i = i + 1 } }
   }
   def shuffle(): scala.Unit = {
-    val items: scala.Array[scala.Float] = this.items
+    val items: scala.Array[scala.Float] = this.items;
     { var i: scala.Int = this.size - 1; while (i >= 0) { {
       val ii: scala.Int = com.badlogic.gdx.math.MathUtils.random(i)
       val temp: scala.Float = items(i)
@@ -366,7 +366,7 @@ class FloatArray {
       return super.hashCode()
     } else ()
     val items: scala.Array[scala.Float] = this.items
-    var h: scala.Int = 1
+    var h: scala.Int = 1;
     { var i: scala.Int = 0; val n: scala.Int = this.size; while (i < n) { {
       h = (h * 31) + com.badlogic.gdx.utils.NumberUtils.floatToRawIntBits(items(i))
     }; i = i + 1 } }
@@ -391,7 +391,7 @@ class FloatArray {
       return false
     } else ()
     val items1: scala.Array[scala.Float] = this.items
-    val items2: scala.Array[scala.Float] = array.items
+    val items2: scala.Array[scala.Float] = array.items;
     { var i: scala.Int = 0; while (i < n) { {
       if (items1(i) != items2(i)) {
         return false
@@ -418,7 +418,7 @@ class FloatArray {
       return false
     } else ()
     val items1: scala.Array[scala.Float] = this.items
-    val items2: scala.Array[scala.Float] = array.items
+    val items2: scala.Array[scala.Float] = array.items;
     { var i: scala.Int = 0; while (i < n) { {
       if (java.lang.Math.abs(items1(i) - items2(i)) > epsilon) {
         return false
@@ -433,7 +433,7 @@ class FloatArray {
     val items: scala.Array[scala.Float] = this.items
     val buffer: java.lang.StringBuilder = new java.lang.StringBuilder(32)
     buffer.append('[')
-    buffer.append(items(0))
+    buffer.append(items(0));
     { var i: scala.Int = 1; while (i < this.size) { {
       buffer.append(", ")
       buffer.append(items(i))
@@ -447,7 +447,7 @@ class FloatArray {
     } else ()
     val items: scala.Array[scala.Float] = this.items
     val buffer: java.lang.StringBuilder = new java.lang.StringBuilder(32)
-    buffer.append(items(0))
+    buffer.append(items(0));
     { var i: scala.Int = 1; while (i < this.size) { {
       buffer.append(separator)
       buffer.append(items(i))

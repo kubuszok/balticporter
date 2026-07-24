@@ -240,7 +240,7 @@ class Matrix4 extends java.io.Serializable {
   }
   def setToProjection(near: scala.Float, far: scala.Float, fovy: scala.Float, aspectRatio: scala.Float): Matrix4 = {
     this.idt()
-    val l_fd: scala.Float = (1.0 / java.lang.Math.tan((fovy * (java.lang.Math.PI / 180)) / 2.0)).asInstanceOf[scala.Float]
+    val l_fd: scala.Float = (1.0 / java.lang.Math.tan((fovy * (java.lang.Math.PI / 180)) / 2.0)).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
     val l_a1: scala.Float = (far + near) / (near - far)
     val l_a2: scala.Float = ((2 * far) * near) / (near - far)
     this.`val`(Matrix4.M00) = l_fd / aspectRatio
@@ -472,7 +472,7 @@ class Matrix4 extends java.io.Serializable {
     val w: scala.Float = 1.0f / t.length
     Matrix4.tmpVec.set(t(0).getScale(Matrix4.tmpUp).scl(w))
     Matrix4.quat.set(t(0).getRotation(Matrix4.quat2).exp(w))
-    Matrix4.tmpForward.set(t(0).getTranslation(Matrix4.tmpUp).scl(w))
+    Matrix4.tmpForward.set(t(0).getTranslation(Matrix4.tmpUp).scl(w));
     { var i: scala.Int = 1; while (i < t.length) { {
       Matrix4.tmpVec.add(t(i).getScale(Matrix4.tmpUp).scl(w))
       Matrix4.quat.mul(t(i).getRotation(Matrix4.quat2).exp(w))
@@ -487,7 +487,7 @@ class Matrix4 extends java.io.Serializable {
   def avg(t: scala.Array[Matrix4], w: scala.Array[scala.Float]): Matrix4 = {
     Matrix4.tmpVec.set(t(0).getScale(Matrix4.tmpUp).scl(w(0)))
     Matrix4.quat.set(t(0).getRotation(Matrix4.quat2).exp(w(0)))
-    Matrix4.tmpForward.set(t(0).getTranslation(Matrix4.tmpUp).scl(w(0)))
+    Matrix4.tmpForward.set(t(0).getTranslation(Matrix4.tmpUp).scl(w(0)));
     { var i: scala.Int = 1; while (i < t.length) { {
       Matrix4.tmpVec.add(t(i).getScale(Matrix4.tmpUp).scl(w(i)))
       Matrix4.quat.mul(t(i).getRotation(Matrix4.quat2).exp(w(i)))

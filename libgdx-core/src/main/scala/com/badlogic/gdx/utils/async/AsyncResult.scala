@@ -14,7 +14,7 @@ class AsyncResult[T] {
       return this.future.get()
     } catch {
       case ex: java.lang.InterruptedException => {
-        return null
+        return null.asInstanceOf[T]
       }
       case ex: java.util.concurrent.ExecutionException => {
         throw new com.badlogic.gdx.utils.GdxRuntimeException(ex.getCause())

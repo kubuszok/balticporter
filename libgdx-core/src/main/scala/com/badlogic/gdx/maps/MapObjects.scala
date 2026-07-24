@@ -40,7 +40,7 @@ class MapObjects extends scala.collection.Iterable[com.badlogic.gdx.maps.MapObje
     return this.getByType(`type`, new com.badlogic.gdx.utils.Array[T]())
   }
   def getByType[T <: com.badlogic.gdx.maps.MapObject](`type`: java.lang.Class[T], fill: com.badlogic.gdx.utils.Array[T]): com.badlogic.gdx.utils.Array[T] = {
-    fill.clear()
+    fill.clear();
     { var i: scala.Int = 0; val n: scala.Int = this.objects.size; while (i < n) { {
       val `object`: com.badlogic.gdx.maps.MapObject = this.objects.get(i)
       if (com.badlogic.gdx.utils.reflect.ClassReflection.isInstance(`type`, `object`)) {

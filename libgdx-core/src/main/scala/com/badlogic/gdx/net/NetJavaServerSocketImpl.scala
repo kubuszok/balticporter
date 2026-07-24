@@ -1,9 +1,9 @@
 package com.badlogic.gdx.net
 
 class NetJavaServerSocketImpl extends com.badlogic.gdx.net.ServerSocket {
-  private var protocol: com.badlogic.gdx.Net#Protocol = null.asInstanceOf[com.badlogic.gdx.Net#Protocol]
+  private var protocol: com.badlogic.gdx.Net.Protocol = null.asInstanceOf[com.badlogic.gdx.Net.Protocol]
   private var server: java.net.ServerSocket = null.asInstanceOf[java.net.ServerSocket]
-  def this(protocol: com.badlogic.gdx.Net#Protocol, hostname: java.lang.String, port: scala.Int, hints: com.badlogic.gdx.net.ServerSocketHints) = {
+  def this(protocol: com.badlogic.gdx.Net.Protocol, hostname: java.lang.String, port: scala.Int, hints: com.badlogic.gdx.net.ServerSocketHints) = {
     this()
     this.protocol = protocol
     try {
@@ -31,10 +31,10 @@ class NetJavaServerSocketImpl extends com.badlogic.gdx.net.ServerSocket {
       }
     }
   }
-  def this(protocol: com.badlogic.gdx.Net#Protocol, port: scala.Int, hints: com.badlogic.gdx.net.ServerSocketHints) = {
+  def this(protocol: com.badlogic.gdx.Net.Protocol, port: scala.Int, hints: com.badlogic.gdx.net.ServerSocketHints) = {
     this(protocol, null, port, hints)
   }
-  def getProtocol(): com.badlogic.gdx.Net#Protocol = {
+  def getProtocol(): com.badlogic.gdx.Net.Protocol = {
     return this.protocol
   }
   def accept(hints: com.badlogic.gdx.net.SocketHints): com.badlogic.gdx.net.Socket = {

@@ -17,10 +17,10 @@ class TiledMapImageLayer extends com.badlogic.gdx.maps.MapLayer {
     this.supportsTransparency$field = this.checkTransparencySupport(region)
   }
   private def checkTransparencySupport(region: com.badlogic.gdx.graphics.g2d.TextureRegion): scala.Boolean = {
-    val format: com.badlogic.gdx.graphics.Pixmap#Format = region.getTexture().getTextureData().getFormat()
+    val format: com.badlogic.gdx.graphics.Pixmap.Format = region.getTexture().getTextureData().getFormat()
     return (format != null) && this.formatHasAlpha(format)
   }
-  private def formatHasAlpha(format: com.badlogic.gdx.graphics.Pixmap#Format): scala.Boolean = {
+  private def formatHasAlpha(format: com.badlogic.gdx.graphics.Pixmap.Format): scala.Boolean = {
     format match {
       case com.badlogic.gdx.graphics.Pixmap.Format.Alpha | com.badlogic.gdx.graphics.Pixmap.Format.LuminanceAlpha | com.badlogic.gdx.graphics.Pixmap.Format.RGBA4444 | com.badlogic.gdx.graphics.Pixmap.Format.RGBA8888 => {
         return true

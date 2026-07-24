@@ -138,7 +138,7 @@ class ClickListener extends com.badlogic.gdx.scenes.scene2d.InputListener {
     return this.tapSquareSize
   }
   def setTapCountInterval(tapCountInterval: scala.Float): scala.Unit = {
-    this.tapCountInterval = (tapCountInterval * 1000000000L).asInstanceOf[scala.Long]
+    this.tapCountInterval = (tapCountInterval * 1000000000L).asInstanceOf[scala.Long].asInstanceOf[scala.Long]
   }
   def getTapCount(): scala.Int = {
     return this.tapCount

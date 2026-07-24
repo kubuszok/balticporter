@@ -32,7 +32,7 @@ class ShortArray {
     if (this.size == items.length) {
       items = this.resize(java.lang.Math.max(8, (this.size * 1.75f).asInstanceOf[scala.Int]))
     } else ()
-    items({ this.size += 1; this.size }) = value.asInstanceOf[scala.Short]
+    items({ this.size += 1; this.size }) = value.asInstanceOf[scala.Short].asInstanceOf[scala.Short]
   }
   def add(value: scala.Short): scala.Unit = {
     var items: scala.Array[scala.Short] = this.items
@@ -111,7 +111,7 @@ class ShortArray {
     this.items(index) = this.items(index) + value
   }
   def incr(value: scala.Short): scala.Unit = {
-    val items: scala.Array[scala.Short] = this.items
+    val items: scala.Array[scala.Short] = this.items;
     { var i: scala.Int = 0; val n: scala.Int = this.size; while (i < n) { {
       items(i) = items(i) + value
     }; i = i + 1 } }
@@ -123,7 +123,7 @@ class ShortArray {
     this.items(index) = this.items(index) * value
   }
   def mul(value: scala.Short): scala.Unit = {
-    val items: scala.Array[scala.Short] = this.items
+    val items: scala.Array[scala.Short] = this.items;
     { var i: scala.Int = 0; val n: scala.Int = this.size; while (i < n) { {
       items(i) = items(i) * value
     }; i = i + 1 } }
@@ -168,7 +168,7 @@ class ShortArray {
     items(second) = firstValue
   }
   def replaceFirst(value: scala.Short, replacement: scala.Short): scala.Boolean = {
-    val items: scala.Array[scala.Short] = this.items
+    val items: scala.Array[scala.Short] = this.items;
     { var i: scala.Int = 0; val n: scala.Int = this.size; while (i < n) { {
       if (items(i) == value) {
         items(i) = replacement
@@ -179,7 +179,7 @@ class ShortArray {
   }
   def replaceAll(value: scala.Short, replacement: scala.Short): scala.Int = {
     val items: scala.Array[scala.Short] = this.items
-    var replacements: scala.Int = 0
+    var replacements: scala.Int = 0;
     { var i: scala.Int = 0; val n: scala.Int = this.size; while (i < n) { {
       if (items(i) == value) {
         items(i) = replacement
@@ -199,7 +199,7 @@ class ShortArray {
     return false
   }
   def indexOf(value: scala.Short): scala.Int = {
-    val items: scala.Array[scala.Short] = this.items
+    val items: scala.Array[scala.Short] = this.items;
     { var i: scala.Int = 0; val n: scala.Int = this.size; while (i < n) { {
       if (items(i) == value) {
         return i
@@ -208,7 +208,7 @@ class ShortArray {
     return -1
   }
   def lastIndexOf(value: scala.Short): scala.Int = {
-    val items: scala.Array[scala.Short] = this.items
+    val items: scala.Array[scala.Short] = this.items;
     { var i: scala.Int = this.size - 1; while (i >= 0) { {
       if (items(i) == value) {
         return i
@@ -217,7 +217,7 @@ class ShortArray {
     return -1
   }
   def removeValue(value: scala.Short): scala.Boolean = {
-    val items: scala.Array[scala.Short] = this.items
+    val items: scala.Array[scala.Short] = this.items;
     { var i: scala.Int = 0; val n: scala.Int = this.size; while (i < n) { {
       if (items(i) == value) {
         this.removeIndex(i)
@@ -261,9 +261,9 @@ class ShortArray {
   def removeAll(array: ShortArray): scala.Boolean = {
     var size: scala.Int = this.size
     val startSize: scala.Int = size
-    val items: scala.Array[scala.Short] = this.items
+    val items: scala.Array[scala.Short] = this.items;
     { var i: scala.Int = 0; val n: scala.Int = array.size; while (i < n) { {
-      val item: scala.Short = array.get(i)
+      val item: scala.Short = array.get(i);
       { var ii: scala.Int = 0; while (ii < size) { {
         if (item == items(ii)) {
           this.removeIndex(ii)
@@ -321,7 +321,7 @@ class ShortArray {
     this.size = newSize
     return this.items
   }
-  protected def resize(newSize: scala.Int): scala.Array[scala.Short] = {
+  def resize(newSize: scala.Int): scala.Array[scala.Short] = {
     val newItems: scala.Array[scala.Short] = new Array[scala.Short](newSize)
     var items: scala.Array[scala.Short] = this.items
     java.lang.System.arraycopy(items, 0, newItems, 0, java.lang.Math.min(this.size, newItems.length))
@@ -332,7 +332,7 @@ class ShortArray {
     java.util.Arrays.sort(this.items, 0, this.size)
   }
   def reverse(): scala.Unit = {
-    val items: scala.Array[scala.Short] = this.items
+    val items: scala.Array[scala.Short] = this.items;
     { var i: scala.Int = 0; val lastIndex: scala.Int = this.size - 1; val n: scala.Int = this.size / 2; while (i < n) { {
       val ii: scala.Int = lastIndex - i
       val temp: scala.Short = items(i)
@@ -341,7 +341,7 @@ class ShortArray {
     }; i = i + 1 } }
   }
   def shuffle(): scala.Unit = {
-    val items: scala.Array[scala.Short] = this.items
+    val items: scala.Array[scala.Short] = this.items;
     { var i: scala.Int = this.size - 1; while (i >= 0) { {
       val ii: scala.Int = com.badlogic.gdx.math.MathUtils.random(i)
       val temp: scala.Short = items(i)
@@ -359,7 +359,7 @@ class ShortArray {
   }
   def random(): scala.Short = {
     if (this.size == 0) {
-      return 0
+      return 0.asInstanceOf[scala.Short]
     } else ()
     return this.items(com.badlogic.gdx.math.MathUtils.random(0, this.size - 1))
   }
@@ -373,7 +373,7 @@ class ShortArray {
       return super.hashCode()
     } else ()
     val items: scala.Array[scala.Short] = this.items
-    var h: scala.Int = 1
+    var h: scala.Int = 1;
     { var i: scala.Int = 0; val n: scala.Int = this.size; while (i < n) { {
       h = (h * 31) + items(i)
     }; i = i + 1 } }
@@ -398,7 +398,7 @@ class ShortArray {
       return false
     } else ()
     val items1: scala.Array[scala.Short] = this.items
-    val items2: scala.Array[scala.Short] = array.items
+    val items2: scala.Array[scala.Short] = array.items;
     { var i: scala.Int = 0; while (i < n) { {
       if (items1(i) != items2(i)) {
         return false
@@ -413,7 +413,7 @@ class ShortArray {
     val items: scala.Array[scala.Short] = this.items
     val buffer: java.lang.StringBuilder = new java.lang.StringBuilder(32)
     buffer.append('[')
-    buffer.append(items(0))
+    buffer.append(items(0));
     { var i: scala.Int = 1; while (i < this.size) { {
       buffer.append(", ")
       buffer.append(items(i))
@@ -427,7 +427,7 @@ class ShortArray {
     } else ()
     val items: scala.Array[scala.Short] = this.items
     val buffer: java.lang.StringBuilder = new java.lang.StringBuilder(32)
-    buffer.append(items(0))
+    buffer.append(items(0));
     { var i: scala.Int = 1; while (i < this.size) { {
       buffer.append(separator)
       buffer.append(items(i))

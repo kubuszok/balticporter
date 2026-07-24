@@ -1,11 +1,11 @@
 package com.badlogic.gdx
 
 abstract class AbstractInput extends com.badlogic.gdx.Input {
-  protected var pressedKeys: scala.Array[scala.Boolean] = null.asInstanceOf[scala.Array[scala.Boolean]]
-  protected var justPressedKeys: scala.Array[scala.Boolean] = null.asInstanceOf[scala.Array[scala.Boolean]]
+  var pressedKeys: scala.Array[scala.Boolean] = null.asInstanceOf[scala.Array[scala.Boolean]]
+  var justPressedKeys: scala.Array[scala.Boolean] = null.asInstanceOf[scala.Array[scala.Boolean]]
   private final val keysToCatch: com.badlogic.gdx.utils.IntSet = new com.badlogic.gdx.utils.IntSet()
-  protected var pressedKeyCount: scala.Int = 0
-  protected var keyJustPressed: scala.Boolean = false
+  var pressedKeyCount: scala.Int = 0
+  var keyJustPressed: scala.Boolean = false
   def this() = {
     this()
     this.pressedKeys = new Array[scala.Boolean](com.badlogic.gdx.Input.Keys.MAX_KEYCODE + 1)

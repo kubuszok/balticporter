@@ -1,7 +1,7 @@
 package com.badlogic.gdx.graphics.g2d
 
 class SpriteBatch extends com.badlogic.gdx.graphics.g2d.Batch {
-  private var currentDataType: com.badlogic.gdx.graphics.Mesh#VertexDataType = null.asInstanceOf[com.badlogic.gdx.graphics.Mesh#VertexDataType]
+  private var currentDataType: com.badlogic.gdx.graphics.Mesh.VertexDataType = null.asInstanceOf[com.badlogic.gdx.graphics.Mesh.VertexDataType]
   private var mesh: com.badlogic.gdx.graphics.Mesh = null.asInstanceOf[com.badlogic.gdx.graphics.Mesh]
   var vertices: scala.Array[scala.Float] = null.asInstanceOf[scala.Array[scala.Float]]
   var idx: scala.Int = 0
@@ -30,7 +30,7 @@ class SpriteBatch extends com.badlogic.gdx.graphics.g2d.Batch {
     if (size > 8191) {
       throw new java.lang.IllegalArgumentException("Can't have more than 8191 sprites per batch: " + size)
     } else ()
-    var vertexDataType: com.badlogic.gdx.graphics.Mesh#VertexDataType = if (com.badlogic.gdx.Gdx.gl30 != null) com.badlogic.gdx.graphics.Mesh.VertexDataType.VertexBufferObjectWithVAO else SpriteBatch.defaultVertexDataType
+    var vertexDataType: com.badlogic.gdx.graphics.Mesh.VertexDataType = if (com.badlogic.gdx.Gdx.gl30 != null) com.badlogic.gdx.graphics.Mesh.VertexDataType.VertexBufferObjectWithVAO else SpriteBatch.defaultVertexDataType
     if (SpriteBatch.overrideVertexType != null) {
       vertexDataType = SpriteBatch.overrideVertexType
     } else ()
@@ -40,13 +40,13 @@ class SpriteBatch extends com.badlogic.gdx.graphics.g2d.Batch {
     this.vertices = new Array[scala.Float](size * com.badlogic.gdx.graphics.g2d.Sprite.SPRITE_SIZE)
     val len: scala.Int = size * 6
     val indices: scala.Array[scala.Short] = new Array[scala.Short](len)
-    var j: scala.Short = 0
+    var j: scala.Short = 0.asInstanceOf[scala.Short]
     { var i: scala.Int = 0; while (i < len) { {
       indices(i) = j
-      indices(i + 1) = (j + 1).asInstanceOf[scala.Short]
-      indices(i + 2) = (j + 2).asInstanceOf[scala.Short]
-      indices(i + 3) = (j + 2).asInstanceOf[scala.Short]
-      indices(i + 4) = (j + 3).asInstanceOf[scala.Short]
+      indices(i + 1) = (j + 1).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
+      indices(i + 2) = (j + 2).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
+      indices(i + 3) = (j + 2).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
+      indices(i + 4) = (j + 3).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
       indices(i + 5) = j
     }; i = i + 6; j = j + 4 } }
     this.mesh.setIndices(indices)
@@ -838,7 +838,7 @@ class SpriteBatch extends com.badlogic.gdx.graphics.g2d.Batch {
       this.setupMatrices()
     } else ()
   }
-  protected def setupMatrices(): scala.Unit = {
+  def setupMatrices(): scala.Unit = {
     this.combinedMatrix.set(this.projectionMatrix).mul(this.transformMatrix)
     if (this.customShader != null) {
       this.customShader.setUniformMatrix("u_projTrans", this.combinedMatrix)
@@ -848,7 +848,7 @@ class SpriteBatch extends com.badlogic.gdx.graphics.g2d.Batch {
       this.shader.setUniformi("u_texture", 0)
     }
   }
-  protected def switchTexture(texture: com.badlogic.gdx.graphics.Texture): scala.Unit = {
+  def switchTexture(texture: com.badlogic.gdx.graphics.Texture): scala.Unit = {
     this.flush()
     this.lastTexture = texture
     this.invTexWidth = 1.0f / texture.getWidth()
@@ -885,8 +885,8 @@ class SpriteBatch extends com.badlogic.gdx.graphics.g2d.Batch {
   }
 }
 object SpriteBatch {
-  var defaultVertexDataType: com.badlogic.gdx.graphics.Mesh#VertexDataType = com.badlogic.gdx.graphics.Mesh.VertexDataType.VertexBufferObject
-  var overrideVertexType: com.badlogic.gdx.graphics.Mesh#VertexDataType = null
+  var defaultVertexDataType: com.badlogic.gdx.graphics.Mesh.VertexDataType = com.badlogic.gdx.graphics.Mesh.VertexDataType.VertexBufferObject
+  var overrideVertexType: com.badlogic.gdx.graphics.Mesh.VertexDataType = null
   def createDefaultShader(): com.badlogic.gdx.graphics.glutils.ShaderProgram = {
     val vertexShader: java.lang.String = (((((((((((((((((((((((("attribute vec4 " + com.badlogic.gdx.graphics.glutils.ShaderProgram.POSITION_ATTRIBUTE) + ";\n") + "attribute vec4 ") + com.badlogic.gdx.graphics.glutils.ShaderProgram.COLOR_ATTRIBUTE) + ";\n") + "attribute vec2 ") + com.badlogic.gdx.graphics.glutils.ShaderProgram.TEXCOORD_ATTRIBUTE) + "0;\n") + "uniform mat4 u_projTrans;\n") + "varying vec4 v_color;\n") + "varying vec2 v_texCoords;\n") + "\n") + "void main()\n") + "{\n") + "   v_color = ") + com.badlogic.gdx.graphics.glutils.ShaderProgram.COLOR_ATTRIBUTE) + ";\n") + "   v_color.a = v_color.a * (255.0/254.0);\n") + "   v_texCoords = ") + com.badlogic.gdx.graphics.glutils.ShaderProgram.TEXCOORD_ATTRIBUTE) + "0;\n") + "   gl_Position =  u_projTrans * ") + com.badlogic.gdx.graphics.glutils.ShaderProgram.POSITION_ATTRIBUTE) + ";\n") + "}\n"
     val fragmentShader: java.lang.String = ((((((((((("#ifdef GL_ES\n" + "#define LOWP lowp\n") + "precision mediump float;\n") + "#else\n") + "#define LOWP \n") + "#endif\n") + "varying LOWP vec4 v_color;\n") + "varying vec2 v_texCoords;\n") + "uniform sampler2D u_texture;\n") + "void main()\n") + "{\n") + "  gl_FragColor = v_color * texture2D(u_texture, v_texCoords);\n") + "}"

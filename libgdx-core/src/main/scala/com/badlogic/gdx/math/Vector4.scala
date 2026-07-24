@@ -54,7 +54,7 @@ class Vector4 extends java.io.Serializable with com.badlogic.gdx.math.Vector[Vec
       v2 = (com.badlogic.gdx.math.MathUtils.random() - 0.5f) * 2
       s = (v1 * v1) + (v2 * v2)
     }; (s >= 1) || (s == 0) }) ()
-    multiplier = java.lang.Math.sqrt(((-2) * java.lang.Math.log(s)) / s).asInstanceOf[scala.Float]
+    multiplier = java.lang.Math.sqrt(((-2) * java.lang.Math.log(s)) / s).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
     this.x = v1 * multiplier
     this.y = v2 * multiplier
     while ({ {
@@ -62,7 +62,7 @@ class Vector4 extends java.io.Serializable with com.badlogic.gdx.math.Vector[Vec
       v2 = (com.badlogic.gdx.math.MathUtils.random() - 0.5f) * 2
       s = (v1 * v1) + (v2 * v2)
     }; (s >= 1) || (s == 0) }) ()
-    multiplier = java.lang.Math.sqrt(((-2) * java.lang.Math.log(s)) / s).asInstanceOf[scala.Float]
+    multiplier = java.lang.Math.sqrt(((-2) * java.lang.Math.log(s)) / s).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
     this.z = v1 * multiplier
     this.w = v2 * multiplier
     return this.nor()
@@ -112,7 +112,7 @@ class Vector4 extends java.io.Serializable with com.badlogic.gdx.math.Vector[Vec
     return this
   }
   def len(): scala.Float = {
-    return java.lang.Math.sqrt((((this.x * this.x) + (this.y * this.y)) + (this.z * this.z)) + (this.w * this.w)).asInstanceOf[scala.Float]
+    return java.lang.Math.sqrt((((this.x * this.x) + (this.y * this.y)) + (this.z * this.z)) + (this.w * this.w)).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
   }
   def len2(): scala.Float = {
     return (((this.x * this.x) + (this.y * this.y)) + (this.z * this.z)) + (this.w * this.w)
@@ -125,14 +125,14 @@ class Vector4 extends java.io.Serializable with com.badlogic.gdx.math.Vector[Vec
     val b: scala.Float = vector.y - this.y
     val c: scala.Float = vector.z - this.z
     val d: scala.Float = vector.w - this.w
-    return java.lang.Math.sqrt((((a * a) + (b * b)) + (c * c)) + (d * d)).asInstanceOf[scala.Float]
+    return java.lang.Math.sqrt((((a * a) + (b * b)) + (c * c)) + (d * d)).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
   }
   def dst(x: scala.Float, y: scala.Float, z: scala.Float, w: scala.Float): scala.Float = {
     val a: scala.Float = x - this.x
     val b: scala.Float = y - this.y
     val c: scala.Float = z - this.z
     val d: scala.Float = w - this.w
-    return java.lang.Math.sqrt((((a * a) + (b * b)) + (c * c)) + (d * d)).asInstanceOf[scala.Float]
+    return java.lang.Math.sqrt((((a * a) + (b * b)) + (c * c)) + (d * d)).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
   }
   def dst2(point: Vector4): scala.Float = {
     val a: scala.Float = point.x - this.x
@@ -431,7 +431,7 @@ object Vector4 {
   final val Zero: Vector4 = new Vector4(0, 0, 0, 0)
   final val One: Vector4 = new Vector4(1, 1, 1, 1)
   def len(x: scala.Float, y: scala.Float, z: scala.Float, w: scala.Float): scala.Float = {
-    return java.lang.Math.sqrt((((x * x) + (y * y)) + (z * z)) + (w * w)).asInstanceOf[scala.Float]
+    return java.lang.Math.sqrt((((x * x) + (y * y)) + (z * z)) + (w * w)).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
   }
   def len2(x: scala.Float, y: scala.Float, z: scala.Float, w: scala.Float): scala.Float = {
     return (((x * x) + (y * y)) + (z * z)) + (w * w)
@@ -441,7 +441,7 @@ object Vector4 {
     val b: scala.Float = y2 - y1
     val c: scala.Float = z2 - z1
     val d: scala.Float = w2 - w1
-    return java.lang.Math.sqrt((((a * a) + (b * b)) + (c * c)) + (d * d)).asInstanceOf[scala.Float]
+    return java.lang.Math.sqrt((((a * a) + (b * b)) + (c * c)) + (d * d)).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
   }
   def dst2(x1: scala.Float, y1: scala.Float, z1: scala.Float, w1: scala.Float, x2: scala.Float, y2: scala.Float, z2: scala.Float, w2: scala.Float): scala.Float = {
     val a: scala.Float = x2 - x1

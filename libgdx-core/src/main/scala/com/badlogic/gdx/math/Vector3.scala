@@ -46,7 +46,7 @@ class Vector3 extends java.io.Serializable with com.badlogic.gdx.math.Vector[Vec
     val u: scala.Float = com.badlogic.gdx.math.MathUtils.random()
     val v: scala.Float = com.badlogic.gdx.math.MathUtils.random()
     val theta: scala.Float = com.badlogic.gdx.math.MathUtils.PI2 * u
-    val phi: scala.Float = java.lang.Math.acos((2.0f * v) - 1.0f).asInstanceOf[scala.Float]
+    val phi: scala.Float = java.lang.Math.acos((2.0f * v) - 1.0f).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
     return this.setFromSpherical(theta, phi)
   }
   def cpy(): Vector3 = {
@@ -92,7 +92,7 @@ class Vector3 extends java.io.Serializable with com.badlogic.gdx.math.Vector[Vec
     return this
   }
   def len(): scala.Float = {
-    return java.lang.Math.sqrt(((this.x * this.x) + (this.y * this.y)) + (this.z * this.z)).asInstanceOf[scala.Float]
+    return java.lang.Math.sqrt(((this.x * this.x) + (this.y * this.y)) + (this.z * this.z)).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
   }
   def len2(): scala.Float = {
     return ((this.x * this.x) + (this.y * this.y)) + (this.z * this.z)
@@ -104,13 +104,13 @@ class Vector3 extends java.io.Serializable with com.badlogic.gdx.math.Vector[Vec
     val a: scala.Float = vector.x - this.x
     val b: scala.Float = vector.y - this.y
     val c: scala.Float = vector.z - this.z
-    return java.lang.Math.sqrt(((a * a) + (b * b)) + (c * c)).asInstanceOf[scala.Float]
+    return java.lang.Math.sqrt(((a * a) + (b * b)) + (c * c)).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
   }
   def dst(x: scala.Float, y: scala.Float, z: scala.Float): scala.Float = {
     val a: scala.Float = x - this.x
     val b: scala.Float = y - this.y
     val c: scala.Float = z - this.z
-    return java.lang.Math.sqrt(((a * a) + (b * b)) + (c * c)).asInstanceOf[scala.Float]
+    return java.lang.Math.sqrt(((a * a) + (b * b)) + (c * c)).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
   }
   def dst2(point: Vector3): scala.Float = {
     val a: scala.Float = point.x - this.x
@@ -255,9 +255,9 @@ class Vector3 extends java.io.Serializable with com.badlogic.gdx.math.Vector[Vec
     if ((dot > 0.9995) || (dot < (-0.9995))) {
       return this.lerp(target, alpha)
     } else ()
-    val theta0: scala.Float = java.lang.Math.acos(dot).asInstanceOf[scala.Float]
+    val theta0: scala.Float = java.lang.Math.acos(dot).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
     val theta: scala.Float = theta0 * alpha
-    val st: scala.Float = java.lang.Math.sin(theta).asInstanceOf[scala.Float]
+    val st: scala.Float = java.lang.Math.sin(theta).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
     val tx: scala.Float = target.x - (this.x * dot)
     val ty: scala.Float = target.y - (this.y * dot)
     val tz: scala.Float = target.z - (this.z * dot)
@@ -396,7 +396,7 @@ object Vector3 {
   final val One: Vector3 = new Vector3(1, 1, 1)
   private final val tmpMat: com.badlogic.gdx.math.Matrix4 = new com.badlogic.gdx.math.Matrix4()
   def len(x: scala.Float, y: scala.Float, z: scala.Float): scala.Float = {
-    return java.lang.Math.sqrt(((x * x) + (y * y)) + (z * z)).asInstanceOf[scala.Float]
+    return java.lang.Math.sqrt(((x * x) + (y * y)) + (z * z)).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
   }
   def len2(x: scala.Float, y: scala.Float, z: scala.Float): scala.Float = {
     return ((x * x) + (y * y)) + (z * z)
@@ -405,7 +405,7 @@ object Vector3 {
     val a: scala.Float = x2 - x1
     val b: scala.Float = y2 - y1
     val c: scala.Float = z2 - z1
-    return java.lang.Math.sqrt(((a * a) + (b * b)) + (c * c)).asInstanceOf[scala.Float]
+    return java.lang.Math.sqrt(((a * a) + (b * b)) + (c * c)).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
   }
   def dst2(x1: scala.Float, y1: scala.Float, z1: scala.Float, x2: scala.Float, y2: scala.Float, z2: scala.Float): scala.Float = {
     val a: scala.Float = x2 - x1

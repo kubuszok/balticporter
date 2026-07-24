@@ -11,10 +11,10 @@ class SerializationException extends java.lang.RuntimeException {
   def this(cause: java.lang.Throwable) = {
     this()
   }
-  def causedBy(`type`: java.lang.Class): scala.Boolean = {
+  def causedBy(`type`: java.lang.Class[?]): scala.Boolean = {
     return this.causedBy(this, `type`)
   }
-  private def causedBy(ex: java.lang.Throwable, `type`: java.lang.Class): scala.Boolean = {
+  private def causedBy(ex: java.lang.Throwable, `type`: java.lang.Class[?]): scala.Boolean = {
     val cause: java.lang.Throwable = ex.getCause()
     if ((cause == null) || (cause == ex)) {
       return false

@@ -20,7 +20,7 @@ class NodePart {
   def copy(): NodePart = {
     return new NodePart().set(this)
   }
-  protected def set(other: NodePart): NodePart = {
+  def set(other: NodePart): NodePart = {
     this.meshPart = new com.badlogic.gdx.graphics.g3d.model.MeshPart(other.meshPart)
     this.material = other.material
     this.enabled = other.enabled
@@ -36,7 +36,7 @@ class NodePart {
       this.invBoneBindTransforms.putAll(other.invBoneBindTransforms)
       if ((this.bones == null) || (this.bones.length != this.invBoneBindTransforms.size)) {
         this.bones = new Array[com.badlogic.gdx.math.Matrix4](this.invBoneBindTransforms.size)
-      } else ()
+      } else ();
       { var i: scala.Int = 0; while (i < this.bones.length) { {
         if (this.bones(i) == null) {
           this.bones(i) = new com.badlogic.gdx.math.Matrix4()

@@ -2,13 +2,13 @@ package com.badlogic.gdx.graphics.g2d
 
 class TextureAtlas extends com.badlogic.gdx.utils.Disposable {
   private final val textures: com.badlogic.gdx.utils.ObjectSet[com.badlogic.gdx.graphics.Texture] = new com.badlogic.gdx.utils.ObjectSet(4)
-  private final val regions: com.badlogic.gdx.utils.Array[AtlasRegion] = new com.badlogic.gdx.utils.Array()
-  def this(data: TextureAtlasData) = {
+  private final val regions: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion] = new com.badlogic.gdx.utils.Array()
+  def this(data: com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData) = {
     this()
     this.load(data)
   }
   def this(packFile: com.badlogic.gdx.files.FileHandle, imagesDir: com.badlogic.gdx.files.FileHandle, flip: scala.Boolean) = {
-    this(new TextureAtlasData(packFile, imagesDir, flip))
+    this(new com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData(packFile, imagesDir, flip))
   }
   def this(packFile: com.badlogic.gdx.files.FileHandle, flip: scala.Boolean) = {
     this(packFile, packFile.parent(), flip)
@@ -22,7 +22,7 @@ class TextureAtlas extends com.badlogic.gdx.utils.Disposable {
   def this(packFile: com.badlogic.gdx.files.FileHandle) = {
     this(packFile, packFile.parent())
   }
-  def load(data: TextureAtlasData): scala.Unit = {
+  def load(data: com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData): scala.Unit = {
     this.textures.ensureCapacity(data.pages.size)
     for (page <- data.pages) {
       if (page.texture == null) {
@@ -34,7 +34,7 @@ class TextureAtlas extends com.badlogic.gdx.utils.Disposable {
     }
     this.regions.ensureCapacity(data.regions.size)
     for (region <- data.regions) {
-      val atlasRegion: AtlasRegion = new AtlasRegion(region.page.texture, region.left, region.top, if (region.rotate) region.height else region.width, if (region.rotate) region.width else region.height)
+      val atlasRegion: com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion = new com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion(region.page.texture, region.left, region.top, if (region.rotate) region.height else region.width, if (region.rotate) region.width else region.height)
       atlasRegion.index = region.index
       atlasRegion.name = region.name
       atlasRegion.offsetX = region.offsetX
@@ -51,24 +51,24 @@ class TextureAtlas extends com.badlogic.gdx.utils.Disposable {
       this.regions.add(atlasRegion)
     }
   }
-  def addRegion(name: java.lang.String, texture: com.badlogic.gdx.graphics.Texture, x: scala.Int, y: scala.Int, width: scala.Int, height: scala.Int): AtlasRegion = {
+  def addRegion(name: java.lang.String, texture: com.badlogic.gdx.graphics.Texture, x: scala.Int, y: scala.Int, width: scala.Int, height: scala.Int): com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion = {
     this.textures.add(texture)
-    val region: AtlasRegion = new AtlasRegion(texture, x, y, width, height)
+    val region: com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion = new com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion(texture, x, y, width, height)
     region.name = name
     this.regions.add(region)
     return region
   }
-  def addRegion(name: java.lang.String, textureRegion: com.badlogic.gdx.graphics.g2d.TextureRegion): AtlasRegion = {
+  def addRegion(name: java.lang.String, textureRegion: com.badlogic.gdx.graphics.g2d.TextureRegion): com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion = {
     this.textures.add(textureRegion.texture)
-    val region: AtlasRegion = new AtlasRegion(textureRegion)
+    val region: com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion = new com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion(textureRegion)
     region.name = name
     this.regions.add(region)
     return region
   }
-  def getRegions(): com.badlogic.gdx.utils.Array[AtlasRegion] = {
+  def getRegions(): com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion] = {
     return this.regions
   }
-  def findRegion(name: java.lang.String): AtlasRegion = {
+  def findRegion(name: java.lang.String): com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion = {
     { var i: scala.Int = 0; val n: scala.Int = this.regions.size; while (i < n) { {
       if (this.regions.get(i).name.equals(name)) {
         return this.regions.get(i)
@@ -76,9 +76,9 @@ class TextureAtlas extends com.badlogic.gdx.utils.Disposable {
     }; i = i + 1 } }
     return null
   }
-  def findRegion(name: java.lang.String, index: scala.Int): AtlasRegion = {
+  def findRegion(name: java.lang.String, index: scala.Int): com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion = {
     { var i: scala.Int = 0; val n: scala.Int = this.regions.size; while (i < n) { {
-      val region: AtlasRegion = this.regions.get(i)
+      val region: com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion = this.regions.get(i)
       if (!region.name.equals(name)) {
         /* continue */ ()
       } else ()
@@ -89,18 +89,18 @@ class TextureAtlas extends com.badlogic.gdx.utils.Disposable {
     }; i = i + 1 } }
     return null
   }
-  def findRegions(name: java.lang.String): com.badlogic.gdx.utils.Array[AtlasRegion] = {
-    val matched: com.badlogic.gdx.utils.Array[AtlasRegion] = new com.badlogic.gdx.utils.Array[AtlasRegion](scala.Array[AtlasRegion].<init>)
+  def findRegions(name: java.lang.String): com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion] = {
+    val matched: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion](scala.Array[com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion].<init>);
     { var i: scala.Int = 0; val n: scala.Int = this.regions.size; while (i < n) { {
-      val region: AtlasRegion = this.regions.get(i)
+      val region: com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion = this.regions.get(i)
       if (region.name.equals(name)) {
-        matched.add(new AtlasRegion(region))
+        matched.add(new com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion(region))
       } else ()
     }; i = i + 1 } }
     return matched
   }
   def createSprites(): com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.Sprite] = {
-    val sprites: com.badlogic.gdx.utils.Array = new com.badlogic.gdx.utils.Array(true, this.regions.size, scala.Array[com.badlogic.gdx.graphics.g2d.Sprite].<init>)
+    val sprites: com.badlogic.gdx.utils.Array[?] = new com.badlogic.gdx.utils.Array(true, this.regions.size, scala.Array[com.badlogic.gdx.graphics.g2d.Sprite].<init>);
     { var i: scala.Int = 0; val n: scala.Int = this.regions.size; while (i < n) { {
       sprites.add(this.newSprite(this.regions.get(i)))
     }; i = i + 1 } }
@@ -116,7 +116,7 @@ class TextureAtlas extends com.badlogic.gdx.utils.Disposable {
   }
   def createSprite(name: java.lang.String, index: scala.Int): com.badlogic.gdx.graphics.g2d.Sprite = {
     { var i: scala.Int = 0; val n: scala.Int = this.regions.size; while (i < n) { {
-      val region: AtlasRegion = this.regions.get(i)
+      val region: com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion = this.regions.get(i)
       if (region.index != index) {
         /* continue */ ()
       } else ()
@@ -128,16 +128,16 @@ class TextureAtlas extends com.badlogic.gdx.utils.Disposable {
     return null
   }
   def createSprites(name: java.lang.String): com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.Sprite] = {
-    val matched: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.Sprite] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.Sprite](scala.Array[com.badlogic.gdx.graphics.g2d.Sprite].<init>)
+    val matched: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.Sprite] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.Sprite](scala.Array[com.badlogic.gdx.graphics.g2d.Sprite].<init>);
     { var i: scala.Int = 0; val n: scala.Int = this.regions.size; while (i < n) { {
-      val region: AtlasRegion = this.regions.get(i)
+      val region: com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion = this.regions.get(i)
       if (region.name.equals(name)) {
         matched.add(this.newSprite(region))
       } else ()
     }; i = i + 1 } }
     return matched
   }
-  private def newSprite(region: AtlasRegion): com.badlogic.gdx.graphics.g2d.Sprite = {
+  private def newSprite(region: com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion): com.badlogic.gdx.graphics.g2d.Sprite = {
     if ((region.packedWidth == region.originalWidth) && (region.packedHeight == region.originalHeight)) {
       if (region.rotate) {
         val sprite: com.badlogic.gdx.graphics.g2d.Sprite = new com.badlogic.gdx.graphics.g2d.Sprite(region)
@@ -147,11 +147,11 @@ class TextureAtlas extends com.badlogic.gdx.utils.Disposable {
       } else ()
       return new com.badlogic.gdx.graphics.g2d.Sprite(region)
     } else ()
-    return new AtlasSprite(region)
+    return new com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasSprite(region)
   }
   def createPatch(name: java.lang.String): com.badlogic.gdx.graphics.g2d.NinePatch = {
     { var i: scala.Int = 0; val n: scala.Int = this.regions.size; while (i < n) { {
-      val region: AtlasRegion = this.regions.get(i)
+      val region: com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion = this.regions.get(i)
       if (region.name.equals(name)) {
         val splits: scala.Array[scala.Int] = region.findValue("split")
         if (splits == null) {
@@ -176,31 +176,33 @@ class TextureAtlas extends com.badlogic.gdx.utils.Disposable {
     }
     this.textures.clear(0)
   }
+}
+object TextureAtlas {
   class TextureAtlasData {
-    final val pages: com.badlogic.gdx.utils.Array[Page] = new com.badlogic.gdx.utils.Array()
-    final val regions: com.badlogic.gdx.utils.Array[Region] = new com.badlogic.gdx.utils.Array()
+    final val pages: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Page] = new com.badlogic.gdx.utils.Array()
+    final val regions: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Region] = new com.badlogic.gdx.utils.Array()
     def this(packFile: com.badlogic.gdx.files.FileHandle, imagesDir: com.badlogic.gdx.files.FileHandle, flip: scala.Boolean) = {
       this()
       this.load(packFile, imagesDir, flip)
     }
     def load(packFile: com.badlogic.gdx.files.FileHandle, imagesDir: com.badlogic.gdx.files.FileHandle, flip: scala.Boolean): scala.Unit = {
       val entry: scala.Array[java.lang.String] = new Array[java.lang.String](5)
-      val pageFields: com.badlogic.gdx.utils.ObjectMap[java.lang.String, Field[Page]] = new com.badlogic.gdx.utils.ObjectMap(15, 0.99f)
-      pageFields.put("size", new Field[Page]())
-      pageFields.put("format", new Field[Page]())
-      pageFields.put("filter", new Field[Page]())
-      pageFields.put("repeat", new Field[Page]())
-      pageFields.put("pma", new Field[Page]())
+      val pageFields: com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Page]] = new com.badlogic.gdx.utils.ObjectMap(15, 0.99f)
+      pageFields.put("size", new com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Page]())
+      pageFields.put("format", new com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Page]())
+      pageFields.put("filter", new com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Page]())
+      pageFields.put("repeat", new com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Page]())
+      pageFields.put("pma", new com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Page]())
       val hasIndexes: scala.Array[scala.Boolean] = Array[scala.Boolean](false)
-      val regionFields: com.badlogic.gdx.utils.ObjectMap[java.lang.String, Field[Region]] = new com.badlogic.gdx.utils.ObjectMap(127, 0.99f)
-      regionFields.put("xy", new Field[Region]())
-      regionFields.put("size", new Field[Region]())
-      regionFields.put("bounds", new Field[Region]())
-      regionFields.put("offset", new Field[Region]())
-      regionFields.put("orig", new Field[Region]())
-      regionFields.put("offsets", new Field[Region]())
-      regionFields.put("rotate", new Field[Region]())
-      regionFields.put("index", new Field[Region]())
+      val regionFields: com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Region]] = new com.badlogic.gdx.utils.ObjectMap(127, 0.99f)
+      regionFields.put("xy", new com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Region]())
+      regionFields.put("size", new com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Region]())
+      regionFields.put("bounds", new com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Region]())
+      regionFields.put("offset", new com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Region]())
+      regionFields.put("orig", new com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Region]())
+      regionFields.put("offsets", new com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Region]())
+      regionFields.put("rotate", new com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Region]())
+      regionFields.put("index", new com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Region]())
       val reader: java.io.BufferedReader = packFile.reader(1024)
       var line: java.lang.String = null
       try {
@@ -212,12 +214,12 @@ class TextureAtlas extends com.badlogic.gdx.utils.Disposable {
           if ((line == null) || (line.trim().length() == 0)) {
             /* break */ ()
           } else ()
-          if (TextureAtlasData.readEntry(entry, line) == 0) {
+          if (com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.readEntry(entry, line) == 0) {
             /* break */ ()
           } else ()
           line = reader.readLine()
         }
-        var page: Page = null
+        var page: com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Page = null
         var names: com.badlogic.gdx.utils.Array[java.lang.String] = null
         var values: com.badlogic.gdx.utils.Array[scala.Array[scala.Int]] = null
         while (true) {
@@ -229,38 +231,38 @@ class TextureAtlas extends com.badlogic.gdx.utils.Disposable {
             line = reader.readLine()
           } else {
             if (page == null) {
-              page = new Page()
+              page = new com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Page()
               page.name = line
               page.textureFile = imagesDir.child(line)
               while (true) {
-                if (TextureAtlasData.readEntry(entry, {
+                if (com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.readEntry(entry, {
                   line = reader.readLine()
                   line
                 }) == 0) {
                   /* break */ ()
                 } else ()
-                val field: Field = pageFields.get(entry(0))
+                val field: com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[?] = pageFields.get(entry(0))
                 if (field != null) {
                   field.parse(page)
                 } else ()
               }
               this.pages.add(page)
             } else {
-              val region: Region = new Region()
+              val region: com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Region = new com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Region()
               region.page = page
               region.name = line.trim()
               if (flip) {
                 region.flip = true
               } else ()
               while (true) {
-                val count: scala.Int = TextureAtlasData.readEntry(entry, {
+                val count: scala.Int = com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.readEntry(entry, {
                   line = reader.readLine()
                   line
                 })
                 if (count == 0) {
                   /* break */ ()
                 } else ()
-                val field: Field = regionFields.get(entry(0))
+                val field: com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[?] = regionFields.get(entry(0))
                 if (field != null) {
                   field.parse(region)
                 } else {
@@ -269,7 +271,7 @@ class TextureAtlas extends com.badlogic.gdx.utils.Disposable {
                     values = new com.badlogic.gdx.utils.Array(8)
                   } else ()
                   names.add(entry(0))
-                  val entryValues: scala.Array[scala.Int] = new Array[scala.Int](count)
+                  val entryValues: scala.Array[scala.Int] = new Array[scala.Int](count);
                   { var i: scala.Int = 0; while (i < count) { {
                     try {
                       entryValues(i) = java.lang.Integer.parseInt(entry(i + 1))
@@ -304,14 +306,43 @@ class TextureAtlas extends com.badlogic.gdx.utils.Disposable {
         com.badlogic.gdx.utils.StreamUtils.closeQuietly(reader)
       }
       if (hasIndexes(0)) {
-        this.regions.sort(new java.util.Comparator[Region]())
+        this.regions.sort(new java.util.Comparator[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Region]())
       } else ()
     }
-    def getPages(): com.badlogic.gdx.utils.Array[Page] = {
+    def getPages(): com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Page] = {
       return this.pages
     }
-    def getRegions(): com.badlogic.gdx.utils.Array[Region] = {
+    def getRegions(): com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Region] = {
       return this.regions
+    }
+  }
+  object TextureAtlasData {
+    private def readEntry(entry: scala.Array[java.lang.String], line$arg: java.lang.String): scala.Int = {
+      var line: java.lang.String = line$arg
+      if (line == null) {
+        return 0
+      } else ()
+      line = line.trim()
+      if (line.length() == 0) {
+        return 0
+      } else ()
+      val colon: scala.Int = line.indexOf(':')
+      if (colon == (-1)) {
+        return 0
+      } else ()
+      entry(0) = line.substring(0, colon).trim();
+      { var i: scala.Int = 1; var lastMatch: scala.Int = colon + 1; while (true) { {
+        val comma: scala.Int = line.indexOf(',', lastMatch)
+        if (comma == (-1)) {
+          entry(i) = line.substring(lastMatch).trim()
+          return i
+        } else ()
+        entry(i) = line.substring(lastMatch, comma).trim()
+        lastMatch = comma + 1
+        if (i == 4) {
+          return 4
+        } else ()
+      }; i = i + 1 } }
     }
     private trait Field[T] {
       def parse(`object`: T): scala.Unit
@@ -323,15 +354,15 @@ class TextureAtlas extends com.badlogic.gdx.utils.Disposable {
       var width: scala.Float = 0.0f
       var height: scala.Float = 0.0f
       var useMipMaps: scala.Boolean = false
-      var format: com.badlogic.gdx.graphics.Pixmap#Format = com.badlogic.gdx.graphics.Pixmap.Format.RGBA8888
-      var minFilter: com.badlogic.gdx.graphics.Texture#TextureFilter = com.badlogic.gdx.graphics.Texture.TextureFilter.Nearest
-      var magFilter: com.badlogic.gdx.graphics.Texture#TextureFilter = com.badlogic.gdx.graphics.Texture.TextureFilter.Nearest
-      var uWrap: com.badlogic.gdx.graphics.Texture#TextureWrap = com.badlogic.gdx.graphics.Texture.TextureWrap.ClampToEdge
-      var vWrap: com.badlogic.gdx.graphics.Texture#TextureWrap = com.badlogic.gdx.graphics.Texture.TextureWrap.ClampToEdge
+      var format: com.badlogic.gdx.graphics.Pixmap.Format = com.badlogic.gdx.graphics.Pixmap.Format.RGBA8888
+      var minFilter: com.badlogic.gdx.graphics.Texture.TextureFilter = com.badlogic.gdx.graphics.Texture.TextureFilter.Nearest
+      var magFilter: com.badlogic.gdx.graphics.Texture.TextureFilter = com.badlogic.gdx.graphics.Texture.TextureFilter.Nearest
+      var uWrap: com.badlogic.gdx.graphics.Texture.TextureWrap = com.badlogic.gdx.graphics.Texture.TextureWrap.ClampToEdge
+      var vWrap: com.badlogic.gdx.graphics.Texture.TextureWrap = com.badlogic.gdx.graphics.Texture.TextureWrap.ClampToEdge
       var pma: scala.Boolean = false
     }
     class Region {
-      var page: Page = null.asInstanceOf[Page]
+      var page: com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Page = null.asInstanceOf[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Page]
       var name: java.lang.String = null.asInstanceOf[java.lang.String]
       var left: scala.Int = 0
       var top: scala.Int = 0
@@ -359,35 +390,6 @@ class TextureAtlas extends com.badlogic.gdx.utils.Disposable {
       }
     }
   }
-  object TextureAtlasData {
-    private def readEntry(entry: scala.Array[java.lang.String], line$arg: java.lang.String): scala.Int = {
-      var line: java.lang.String = line$arg
-      if (line == null) {
-        return 0
-      } else ()
-      line = line.trim()
-      if (line.length() == 0) {
-        return 0
-      } else ()
-      val colon: scala.Int = line.indexOf(':')
-      if (colon == (-1)) {
-        return 0
-      } else ()
-      entry(0) = line.substring(0, colon).trim()
-      { var i: scala.Int = 1; var lastMatch: scala.Int = colon + 1; while (true) { {
-        val comma: scala.Int = line.indexOf(',', lastMatch)
-        if (comma == (-1)) {
-          entry(i) = line.substring(lastMatch).trim()
-          return i
-        } else ()
-        entry(i) = line.substring(lastMatch, comma).trim()
-        lastMatch = comma + 1
-        if (i == 4) {
-          return 4
-        } else ()
-      }; i = i + 1 } }
-    }
-  }
   class AtlasRegion extends com.badlogic.gdx.graphics.g2d.TextureRegion {
     var index: scala.Int = -1
     var name: java.lang.String = null.asInstanceOf[java.lang.String]
@@ -408,7 +410,7 @@ class TextureAtlas extends com.badlogic.gdx.utils.Disposable {
       this.packedWidth = width
       this.packedHeight = height
     }
-    def this(region: AtlasRegion) = {
+    def this(region: com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion) = {
       this()
       this.setRegion(region)
       this.index = region.index
@@ -462,12 +464,12 @@ class TextureAtlas extends com.badlogic.gdx.utils.Disposable {
     }
   }
   class AtlasSprite extends com.badlogic.gdx.graphics.g2d.Sprite {
-    var region: AtlasRegion = null.asInstanceOf[AtlasRegion]
+    var region: com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion = null.asInstanceOf[com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion]
     var originalOffsetX: scala.Float = 0.0f
     var originalOffsetY: scala.Float = 0.0f
-    def this(region: AtlasRegion) = {
+    def this(region: com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion) = {
       this()
-      this.region = new AtlasRegion(region)
+      this.region = new com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion(region)
       this.originalOffsetX = region.offsetX
       this.originalOffsetY = region.offsetY
       this.setRegion(region)
@@ -482,7 +484,7 @@ class TextureAtlas extends com.badlogic.gdx.utils.Disposable {
       }
       this.setColor(1, 1, 1, 1)
     }
-    def this(sprite: AtlasSprite) = {
+    def this(sprite: com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasSprite) = {
       this()
       this.region = sprite.region
       this.originalOffsetX = sprite.originalOffsetX
@@ -580,7 +582,7 @@ class TextureAtlas extends com.badlogic.gdx.utils.Disposable {
     def getHeightRatio(): scala.Float = {
       return super.getHeight() / this.region.getRotatedPackedHeight()
     }
-    def getAtlasRegion(): AtlasRegion = {
+    def getAtlasRegion(): com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion = {
       return this.region
     }
     def toString(): java.lang.String = {

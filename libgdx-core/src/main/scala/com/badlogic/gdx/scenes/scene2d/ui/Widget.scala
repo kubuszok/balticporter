@@ -68,7 +68,7 @@ class Widget extends com.badlogic.gdx.scenes.scene2d.Actor with com.badlogic.gdx
       parent.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Layout].invalidateHierarchy()
     } else ()
   }
-  protected def sizeChanged(): scala.Unit = {
+  def sizeChanged(): scala.Unit = {
     this.invalidate()
   }
   def pack(): scala.Unit = {

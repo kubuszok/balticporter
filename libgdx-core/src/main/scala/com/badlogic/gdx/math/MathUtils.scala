@@ -25,16 +25,16 @@ object MathUtils {
   private final val BIG_ENOUGH_CEIL: scala.Double = 16384.999999999996
   private final val BIG_ENOUGH_ROUND: scala.Double = MathUtils.BIG_ENOUGH_INT + 0.5f
   def sin(radians: scala.Float): scala.Float = {
-    return Sin.table((radians * MathUtils.radToIndex).asInstanceOf[scala.Int] & MathUtils.SIN_MASK)
+    return com.badlogic.gdx.math.MathUtils.Sin.table((radians * MathUtils.radToIndex).asInstanceOf[scala.Int] & MathUtils.SIN_MASK)
   }
   def cos(radians: scala.Float): scala.Float = {
-    return Sin.table(((radians + MathUtils.HALF_PI) * MathUtils.radToIndex).asInstanceOf[scala.Int] & MathUtils.SIN_MASK)
+    return com.badlogic.gdx.math.MathUtils.Sin.table(((radians + MathUtils.HALF_PI) * MathUtils.radToIndex).asInstanceOf[scala.Int] & MathUtils.SIN_MASK)
   }
   def sinDeg(degrees: scala.Float): scala.Float = {
-    return Sin.table((degrees * MathUtils.degToIndex).asInstanceOf[scala.Int] & MathUtils.SIN_MASK)
+    return com.badlogic.gdx.math.MathUtils.Sin.table((degrees * MathUtils.degToIndex).asInstanceOf[scala.Int] & MathUtils.SIN_MASK)
   }
   def cosDeg(degrees: scala.Float): scala.Float = {
-    return Sin.table(((degrees + 90) * MathUtils.degToIndex).asInstanceOf[scala.Int] & MathUtils.SIN_MASK)
+    return com.badlogic.gdx.math.MathUtils.Sin.table(((degrees + 90) * MathUtils.degToIndex).asInstanceOf[scala.Int] & MathUtils.SIN_MASK)
   }
   def tan(radians$arg: scala.Float): scala.Float = {
     var radians: scala.Float = radians$arg
@@ -67,7 +67,7 @@ object MathUtils {
     val c7: scala.Double = c5 * c2
     val c9: scala.Double = c7 * c2
     val c11: scala.Double = c9 * c2
-    return (java.lang.Math.signum(i) * ((java.lang.Math.PI * 0.25) + ((((((0.99997726 * c) - (0.33262347 * c3)) + (0.19354346 * c5)) - (0.11643287 * c7)) + (0.05265332 * c9)) - (0.0117212 * c11)))).asInstanceOf[scala.Float]
+    return (java.lang.Math.signum(i) * ((java.lang.Math.PI * 0.25) + ((((((0.99997726 * c) - (0.33262347 * c3)) + (0.19354346 * c5)) - (0.11643287 * c7)) + (0.05265332 * c9)) - (0.0117212 * c11)))).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
   }
   def atan2(y: scala.Float, x$arg: scala.Float): scala.Float = {
     var x: scala.Float = x$arg
@@ -121,13 +121,13 @@ object MathUtils {
       } else ()
     }
     if (x > 0) {
-      return MathUtils.atanUncheckedDeg(n).asInstanceOf[scala.Float]
+      return MathUtils.atanUncheckedDeg(n).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
     } else {
       if (x < 0) {
         if (y >= 0) {
-          return (MathUtils.atanUncheckedDeg(n) + 180.0).asInstanceOf[scala.Float]
+          return (MathUtils.atanUncheckedDeg(n) + 180.0).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
         } else ()
-        return (MathUtils.atanUncheckedDeg(n) - 180.0).asInstanceOf[scala.Float]
+        return (MathUtils.atanUncheckedDeg(n) - 180.0).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
       } else {
         if (y > 0) {
           return x + 90.0f
@@ -152,13 +152,13 @@ object MathUtils {
     }
     if (x > 0) {
       if (y >= 0) {
-        return MathUtils.atanUncheckedDeg(n).asInstanceOf[scala.Float]
+        return MathUtils.atanUncheckedDeg(n).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
       } else {
-        return (MathUtils.atanUncheckedDeg(n) + 360.0).asInstanceOf[scala.Float]
+        return (MathUtils.atanUncheckedDeg(n) + 360.0).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
       }
     } else {
       if (x < 0) {
-        return (MathUtils.atanUncheckedDeg(n) + 180.0).asInstanceOf[scala.Float]
+        return (MathUtils.atanUncheckedDeg(n) + 180.0).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
       } else {
         if (y > 0) {
           return x + 90.0f
@@ -223,7 +223,7 @@ object MathUtils {
     val c7: scala.Double = c5 * c2
     val c9: scala.Double = c7 * c2
     val c11: scala.Double = c9 * c2
-    return (java.lang.Math.signum(i) * (45.0 + ((((((57.2944766070562 * c) - (19.05792099799635 * c3)) + (11.089223410359068 * c5)) - (6.6711120475953765 * c7)) + (3.016813013351768 * c9)) - (0.6715752908287405 * c11)))).asInstanceOf[scala.Float]
+    return (java.lang.Math.signum(i) * (45.0 + ((((((57.2944766070562 * c) - (19.05792099799635 * c3)) + (11.089223410359068 * c5)) - (6.6711120475953765 * c7)) + (3.016813013351768 * c9)) - (0.6715752908287405 * c11)))).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
   }
   def random(range: scala.Int): scala.Int = {
     return MathUtils.random$field.nextInt(range + 1)
@@ -367,19 +367,19 @@ object MathUtils {
     return (value + MathUtils.BIG_ENOUGH_FLOOR).asInstanceOf[scala.Int] - MathUtils.BIG_ENOUGH_INT
   }
   def floorPositive(value: scala.Float): scala.Int = {
-    return value.asInstanceOf[scala.Int]
+    return value.asInstanceOf[scala.Int].asInstanceOf[scala.Int]
   }
   def ceil(value: scala.Float): scala.Int = {
     return MathUtils.BIG_ENOUGH_INT - (MathUtils.BIG_ENOUGH_FLOOR - value).asInstanceOf[scala.Int]
   }
   def ceilPositive(value: scala.Float): scala.Int = {
-    return (value + MathUtils.CEIL).asInstanceOf[scala.Int]
+    return (value + MathUtils.CEIL).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
   }
   def round(value: scala.Float): scala.Int = {
     return (value + MathUtils.BIG_ENOUGH_ROUND).asInstanceOf[scala.Int] - MathUtils.BIG_ENOUGH_INT
   }
   def roundPositive(value: scala.Float): scala.Int = {
-    return (value + 0.5f).asInstanceOf[scala.Int]
+    return (value + 0.5f).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
   }
   def isZero(value: scala.Float): scala.Boolean = {
     return java.lang.Math.abs(value) <= MathUtils.FLOAT_ROUNDING_ERROR
@@ -394,7 +394,7 @@ object MathUtils {
     return java.lang.Math.abs(a - b) <= tolerance
   }
   def log(a: scala.Float, value: scala.Float): scala.Float = {
-    return (java.lang.Math.log(value) / java.lang.Math.log(a)).asInstanceOf[scala.Float]
+    return (java.lang.Math.log(value) / java.lang.Math.log(a)).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
   }
   def log2(value: scala.Float): scala.Float = {
     return MathUtils.log(2, value)

@@ -27,11 +27,11 @@ class IsometricStaggeredTiledMapRenderer extends com.badlogic.gdx.maps.tiled.ren
     val minX: scala.Int = java.lang.Math.max(0, (((this.viewBounds.x - layerTileWidth50) - layerOffsetX) / layerTileWidth).asInstanceOf[scala.Int])
     val maxX: scala.Int = java.lang.Math.min(layerWidth, (((((this.viewBounds.x + this.viewBounds.width) + layerTileWidth) + layerTileWidth50) - layerOffsetX) / layerTileWidth).asInstanceOf[scala.Int])
     val minY: scala.Int = java.lang.Math.max(0, (((this.viewBounds.y - layerTileHeight) - layerOffsetY) / layerTileHeight).asInstanceOf[scala.Int])
-    val maxY: scala.Int = java.lang.Math.min(layerHeight, ((((this.viewBounds.y + this.viewBounds.height) + layerTileHeight) - layerOffsetY) / layerTileHeight50).asInstanceOf[scala.Int])
+    val maxY: scala.Int = java.lang.Math.min(layerHeight, ((((this.viewBounds.y + this.viewBounds.height) + layerTileHeight) - layerOffsetY) / layerTileHeight50).asInstanceOf[scala.Int]);
     { var y: scala.Int = maxY - 1; while (y >= minY) { {
-      val offsetX: scala.Float = if ((y % 2) == 1) layerTileWidth50 else 0
+      val offsetX: scala.Float = if ((y % 2) == 1) layerTileWidth50 else 0;
       { var x: scala.Int = maxX - 1; while (x >= minX) { {
-        val cell: com.badlogic.gdx.maps.tiled.TiledMapTileLayer#Cell = layer.getCell(x, y)
+        val cell: com.badlogic.gdx.maps.tiled.TiledMapTileLayer.Cell = layer.getCell(x, y)
         if (cell == null) {
           /* continue */ ()
         } else ()
@@ -140,7 +140,7 @@ class IsometricStaggeredTiledMapRenderer extends com.badlogic.gdx.maps.tiled.ren
     if (region == null) {
       return
     } else ()
-    val tileWidth: scala.Int = this.getMap().getProperties().get("tilewidth", classOf[java.lang.Class])
+    val tileWidth: scala.Int = this.getMap().getProperties().get("tilewidth", classOf[java.lang.Integer])
     val halfTileWidth: scala.Float = (tileWidth * 0.5f) * unitScale
     val x: scala.Float = layer.getX()
     val y: scala.Float = layer.getY()
@@ -183,7 +183,7 @@ class IsometricStaggeredTiledMapRenderer extends com.badlogic.gdx.maps.tiled.ren
       var startX: scala.Float = this.viewBounds.x
       var startY: scala.Float = this.viewBounds.y
       startX = startX - (startX % this.imageBounds.width)
-      startY = startY - (startY % this.imageBounds.height)
+      startY = startY - (startY % this.imageBounds.height);
       { var i: scala.Int = 0; while (i <= repeatX) { {
         { var j: scala.Int = 0; while (j <= repeatY) { {
           var rx1: scala.Float = x1

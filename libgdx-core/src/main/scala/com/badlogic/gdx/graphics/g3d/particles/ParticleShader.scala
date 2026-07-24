@@ -4,9 +4,9 @@ class ParticleShader extends com.badlogic.gdx.graphics.g3d.shaders.BaseShader {
   private var renderable: com.badlogic.gdx.graphics.g3d.Renderable = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.Renderable]
   private var materialMask: scala.Long = 0L
   private var vertexMask: scala.Long = 0L
-  protected var config: Config = null.asInstanceOf[Config]
+  var config: com.badlogic.gdx.graphics.g3d.particles.ParticleShader.Config = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ParticleShader.Config]
   var currentMaterial: com.badlogic.gdx.graphics.g3d.Material = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.Material]
-  def this(renderable: com.badlogic.gdx.graphics.g3d.Renderable, config: Config, shaderProgram: com.badlogic.gdx.graphics.glutils.ShaderProgram) = {
+  def this(renderable: com.badlogic.gdx.graphics.g3d.Renderable, config: com.badlogic.gdx.graphics.g3d.particles.ParticleShader.Config, shaderProgram: com.badlogic.gdx.graphics.glutils.ShaderProgram) = {
     this()
     this.config = config
     this.program = shaderProgram
@@ -19,24 +19,24 @@ class ParticleShader extends com.badlogic.gdx.graphics.g3d.shaders.BaseShader {
     this.register(com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Inputs.viewTrans, com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Setters.viewTrans)
     this.register(com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Inputs.projViewTrans, com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Setters.projViewTrans)
     this.register(com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Inputs.projTrans, com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Setters.projTrans)
-    this.register(Inputs.screenWidth, Setters.screenWidth)
-    this.register(com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Inputs.cameraUp, Setters.cameraUp)
-    this.register(Inputs.cameraRight, Setters.cameraRight)
-    this.register(Inputs.cameraInvDirection, Setters.cameraInvDirection)
-    this.register(com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Inputs.cameraPosition, Setters.cameraPosition)
+    this.register(com.badlogic.gdx.graphics.g3d.particles.ParticleShader.Inputs.screenWidth, com.badlogic.gdx.graphics.g3d.particles.ParticleShader.Setters.screenWidth)
+    this.register(com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Inputs.cameraUp, com.badlogic.gdx.graphics.g3d.particles.ParticleShader.Setters.cameraUp)
+    this.register(com.badlogic.gdx.graphics.g3d.particles.ParticleShader.Inputs.cameraRight, com.badlogic.gdx.graphics.g3d.particles.ParticleShader.Setters.cameraRight)
+    this.register(com.badlogic.gdx.graphics.g3d.particles.ParticleShader.Inputs.cameraInvDirection, com.badlogic.gdx.graphics.g3d.particles.ParticleShader.Setters.cameraInvDirection)
+    this.register(com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Inputs.cameraPosition, com.badlogic.gdx.graphics.g3d.particles.ParticleShader.Setters.cameraPosition)
     this.register(com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Inputs.diffuseTexture, com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Setters.diffuseTexture)
   }
-  def this(renderable: com.badlogic.gdx.graphics.g3d.Renderable, config: Config, prefix: java.lang.String, vertexShader: java.lang.String, fragmentShader: java.lang.String) = {
+  def this(renderable: com.badlogic.gdx.graphics.g3d.Renderable, config: com.badlogic.gdx.graphics.g3d.particles.ParticleShader.Config, prefix: java.lang.String, vertexShader: java.lang.String, fragmentShader: java.lang.String) = {
     this(renderable, config, new com.badlogic.gdx.graphics.glutils.ShaderProgram(prefix + vertexShader, prefix + fragmentShader))
   }
-  def this(renderable: com.badlogic.gdx.graphics.g3d.Renderable, config: Config, prefix: java.lang.String) = {
+  def this(renderable: com.badlogic.gdx.graphics.g3d.Renderable, config: com.badlogic.gdx.graphics.g3d.particles.ParticleShader.Config, prefix: java.lang.String) = {
     this(renderable, config, prefix, if (config.vertexShader != null) config.vertexShader else ParticleShader.getDefaultVertexShader(), if (config.fragmentShader != null) config.fragmentShader else ParticleShader.getDefaultFragmentShader())
   }
-  def this(renderable: com.badlogic.gdx.graphics.g3d.Renderable, config: Config) = {
+  def this(renderable: com.badlogic.gdx.graphics.g3d.Renderable, config: com.badlogic.gdx.graphics.g3d.particles.ParticleShader.Config) = {
     this(renderable, config, ParticleShader.createPrefix(renderable, config))
   }
   def this(renderable: com.badlogic.gdx.graphics.g3d.Renderable) = {
-    this(renderable, new Config())
+    this(renderable, new com.badlogic.gdx.graphics.g3d.particles.ParticleShader.Config())
   }
   def init(): scala.Unit = {
     var program: com.badlogic.gdx.graphics.glutils.ShaderProgram = this.program
@@ -76,7 +76,7 @@ class ParticleShader extends com.badlogic.gdx.graphics.g3d.shaders.BaseShader {
     this.currentMaterial = null
     super.`end`()
   }
-  protected def bindMaterial(renderable: com.badlogic.gdx.graphics.g3d.Renderable): scala.Unit = {
+  def bindMaterial(renderable: com.badlogic.gdx.graphics.g3d.Renderable): scala.Unit = {
     if (this.currentMaterial == renderable.material) {
       return
     } else ()
@@ -124,6 +124,44 @@ class ParticleShader extends com.badlogic.gdx.graphics.g3d.shaders.BaseShader {
   def setDefaultDepthFunc(depthFunc: scala.Int): scala.Unit = {
     this.config.defaultDepthFunc = depthFunc
   }
+}
+object ParticleShader {
+  private var defaultVertexShader: java.lang.String = null
+  private var defaultFragmentShader: java.lang.String = null
+  var implementedFlags: scala.Long = com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute.Type | com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute.Diffuse
+  final val TMP_VECTOR3: com.badlogic.gdx.math.Vector3 = new com.badlogic.gdx.math.Vector3()
+  private final val optionalAttributes: scala.Long = com.badlogic.gdx.graphics.g3d.attributes.IntAttribute.CullFace | com.badlogic.gdx.graphics.g3d.attributes.DepthTestAttribute.Type
+  def getDefaultVertexShader(): java.lang.String = {
+    if (ParticleShader.defaultVertexShader == null) {
+      ParticleShader.defaultVertexShader = com.badlogic.gdx.Gdx.files.classpath("com/badlogic/gdx/graphics/g3d/particles/particles.vertex.glsl").readString()
+    } else ()
+    return ParticleShader.defaultVertexShader
+  }
+  def getDefaultFragmentShader(): java.lang.String = {
+    if (ParticleShader.defaultFragmentShader == null) {
+      ParticleShader.defaultFragmentShader = com.badlogic.gdx.Gdx.files.classpath("com/badlogic/gdx/graphics/g3d/particles/particles.fragment.glsl").readString()
+    } else ()
+    return ParticleShader.defaultFragmentShader
+  }
+  def createPrefix(renderable: com.badlogic.gdx.graphics.g3d.Renderable, config: com.badlogic.gdx.graphics.g3d.particles.ParticleShader.Config): java.lang.String = {
+    var prefix: java.lang.String = ""
+    if (com.badlogic.gdx.Gdx.app.getType() == com.badlogic.gdx.Application.ApplicationType.Desktop) {
+      prefix = prefix + "#version 120\n"
+    } else {
+      prefix = prefix + "#version 100\n"
+    }
+    if (config.`type` == com.badlogic.gdx.graphics.g3d.particles.ParticleShader.ParticleType.Billboard) {
+      prefix = prefix + "#define billboard\n"
+      if (config.align == com.badlogic.gdx.graphics.g3d.particles.ParticleShader.AlignMode.Screen) {
+        prefix = prefix + "#define screenFacing\n"
+      } else {
+        if (config.align == com.badlogic.gdx.graphics.g3d.particles.ParticleShader.AlignMode.ViewPoint) {
+          prefix = prefix + "#define viewPointFacing\n"
+        } else ()
+      }
+    } else ()
+    return prefix
+  }
   sealed abstract class ParticleType
   object ParticleType {
     case object Billboard extends ParticleType
@@ -142,9 +180,9 @@ class ParticleShader extends com.badlogic.gdx.graphics.g3d.shaders.BaseShader {
     var ignoreUnimplemented: scala.Boolean = true
     var defaultCullFace: scala.Int = -1
     var defaultDepthFunc: scala.Int = -1
-    var align: AlignMode = AlignMode.Screen
-    var `type`: ParticleType = ParticleType.Billboard
-    def this(align: AlignMode, `type`: ParticleType) = {
+    var align: com.badlogic.gdx.graphics.g3d.particles.ParticleShader.AlignMode = com.badlogic.gdx.graphics.g3d.particles.ParticleShader.AlignMode.Screen
+    var `type`: com.badlogic.gdx.graphics.g3d.particles.ParticleShader.ParticleType = com.badlogic.gdx.graphics.g3d.particles.ParticleShader.ParticleType.Billboard
+    def this(align: com.badlogic.gdx.graphics.g3d.particles.ParticleShader.AlignMode, `type`: com.badlogic.gdx.graphics.g3d.particles.ParticleShader.ParticleType) = {
       this()
       this.align = align
       this.`type` = `type`
@@ -154,65 +192,27 @@ class ParticleShader extends com.badlogic.gdx.graphics.g3d.shaders.BaseShader {
       this.vertexShader = vertexShader
       this.fragmentShader = fragmentShader
     }
-    def this(align: AlignMode) = {
+    def this(align: com.badlogic.gdx.graphics.g3d.particles.ParticleShader.AlignMode) = {
       this()
       this.align = align
     }
-    def this(`type`: ParticleType) = {
+    def this(`type`: com.badlogic.gdx.graphics.g3d.particles.ParticleShader.ParticleType) = {
       this()
       this.`type` = `type`
     }
   }
   object Inputs {
-    final val cameraRight: com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform("u_cameraRight")
-    final val cameraInvDirection: com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform("u_cameraInvDirection")
-    final val screenWidth: com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform("u_screenWidth")
-    final val regionSize: com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Uniform("u_regionSize")
+    final val cameraRight: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform("u_cameraRight")
+    final val cameraInvDirection: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform("u_cameraInvDirection")
+    final val screenWidth: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform("u_screenWidth")
+    final val regionSize: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform("u_regionSize")
   }
   object Setters {
-    final val cameraRight: com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Setter()
-    final val cameraUp: com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Setter()
-    final val cameraInvDirection: com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Setter()
-    final val cameraPosition: com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Setter()
-    final val screenWidth: com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Setter()
-    final val worldViewTrans: com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader#Setter()
-  }
-}
-object ParticleShader {
-  private var defaultVertexShader: java.lang.String = null
-  private var defaultFragmentShader: java.lang.String = null
-  protected var implementedFlags: scala.Long = com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute.Type | com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute.Diffuse
-  final val TMP_VECTOR3: com.badlogic.gdx.math.Vector3 = new com.badlogic.gdx.math.Vector3()
-  private final val optionalAttributes: scala.Long = com.badlogic.gdx.graphics.g3d.attributes.IntAttribute.CullFace | com.badlogic.gdx.graphics.g3d.attributes.DepthTestAttribute.Type
-  def getDefaultVertexShader(): java.lang.String = {
-    if (ParticleShader.defaultVertexShader == null) {
-      ParticleShader.defaultVertexShader = com.badlogic.gdx.Gdx.files.classpath("com/badlogic/gdx/graphics/g3d/particles/particles.vertex.glsl").readString()
-    } else ()
-    return ParticleShader.defaultVertexShader
-  }
-  def getDefaultFragmentShader(): java.lang.String = {
-    if (ParticleShader.defaultFragmentShader == null) {
-      ParticleShader.defaultFragmentShader = com.badlogic.gdx.Gdx.files.classpath("com/badlogic/gdx/graphics/g3d/particles/particles.fragment.glsl").readString()
-    } else ()
-    return ParticleShader.defaultFragmentShader
-  }
-  def createPrefix(renderable: com.badlogic.gdx.graphics.g3d.Renderable, config: Config): java.lang.String = {
-    var prefix: java.lang.String = ""
-    if (com.badlogic.gdx.Gdx.app.getType() == com.badlogic.gdx.Application.ApplicationType.Desktop) {
-      prefix = prefix + "#version 120\n"
-    } else {
-      prefix = prefix + "#version 100\n"
-    }
-    if (config.`type` == ParticleType.Billboard) {
-      prefix = prefix + "#define billboard\n"
-      if (config.align == AlignMode.Screen) {
-        prefix = prefix + "#define screenFacing\n"
-      } else {
-        if (config.align == AlignMode.ViewPoint) {
-          prefix = prefix + "#define viewPointFacing\n"
-        } else ()
-      }
-    } else ()
-    return prefix
+    final val cameraRight: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter()
+    final val cameraUp: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter()
+    final val cameraInvDirection: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter()
+    final val cameraPosition: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter()
+    final val screenWidth: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter()
+    final val worldViewTrans: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter()
   }
 }

@@ -10,12 +10,12 @@ class TooltipManager {
   var offsetX: scala.Float = 15
   var offsetY: scala.Float = 19
   var edgeDistance: scala.Float = 7
-  final val shown: com.badlogic.gdx.utils.Array[com.badlogic.gdx.scenes.scene2d.ui.Tooltip] = new com.badlogic.gdx.utils.Array()
+  final val shown: com.badlogic.gdx.utils.Array[com.badlogic.gdx.scenes.scene2d.ui.Tooltip[?]] = new com.badlogic.gdx.utils.Array()
   var time: scala.Float = this.initialTime
-  final val resetTask: com.badlogic.gdx.utils.Timer#Task = new com.badlogic.gdx.utils.Timer#Task()
-  var showTooltip: com.badlogic.gdx.scenes.scene2d.ui.Tooltip = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Tooltip]
-  final val showTask: com.badlogic.gdx.utils.Timer#Task = new com.badlogic.gdx.utils.Timer#Task()
-  def touchDown(tooltip: com.badlogic.gdx.scenes.scene2d.ui.Tooltip): scala.Unit = {
+  final val resetTask: com.badlogic.gdx.utils.Timer.Task = new com.badlogic.gdx.utils.Timer.Task()
+  var showTooltip: com.badlogic.gdx.scenes.scene2d.ui.Tooltip[?] = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Tooltip[?]]
+  final val showTask: com.badlogic.gdx.utils.Timer.Task = new com.badlogic.gdx.utils.Timer.Task()
+  def touchDown(tooltip: com.badlogic.gdx.scenes.scene2d.ui.Tooltip[?]): scala.Unit = {
     this.showTask.cancel()
     if (tooltip.container.remove()) {
       this.resetTask.cancel()
@@ -26,7 +26,7 @@ class TooltipManager {
       com.badlogic.gdx.utils.Timer.schedule(this.showTask, this.time)
     } else ()
   }
-  def enter(tooltip: com.badlogic.gdx.scenes.scene2d.ui.Tooltip): scala.Unit = {
+  def enter(tooltip: com.badlogic.gdx.scenes.scene2d.ui.Tooltip[?]): scala.Unit = {
     this.showTooltip = tooltip
     this.showTask.cancel()
     if (this.enabled || tooltip.always) {
@@ -37,7 +37,7 @@ class TooltipManager {
       }
     } else ()
   }
-  def hide(tooltip: com.badlogic.gdx.scenes.scene2d.ui.Tooltip): scala.Unit = {
+  def hide(tooltip: com.badlogic.gdx.scenes.scene2d.ui.Tooltip[?]): scala.Unit = {
     this.showTooltip = null
     this.showTask.cancel()
     if (tooltip.container.hasParent()) {
@@ -47,14 +47,14 @@ class TooltipManager {
       com.badlogic.gdx.utils.Timer.schedule(this.resetTask, this.resetTime)
     } else ()
   }
-  protected def showAction(tooltip: com.badlogic.gdx.scenes.scene2d.ui.Tooltip): scala.Unit = {
+  def showAction(tooltip: com.badlogic.gdx.scenes.scene2d.ui.Tooltip[?]): scala.Unit = {
     val actionTime: scala.Float = if (this.animations) if (this.time > 0) 0.5f else 0.15f else 0.1f
     tooltip.container.setTransform(true)
     tooltip.container.getColor().a = 0.2f
     tooltip.container.setScale(0.05f)
     tooltip.container.addAction(com.badlogic.gdx.scenes.scene2d.actions.Actions.parallel(com.badlogic.gdx.scenes.scene2d.actions.Actions.fadeIn(actionTime, com.badlogic.gdx.math.Interpolation.fade), com.badlogic.gdx.scenes.scene2d.actions.Actions.scaleTo(1, 1, actionTime, com.badlogic.gdx.math.Interpolation.fade)))
   }
-  protected def hideAction(tooltip: com.badlogic.gdx.scenes.scene2d.ui.Tooltip): scala.Unit = {
+  def hideAction(tooltip: com.badlogic.gdx.scenes.scene2d.ui.Tooltip[?]): scala.Unit = {
     tooltip.container.addAction(com.badlogic.gdx.scenes.scene2d.actions.Actions.sequence(com.badlogic.gdx.scenes.scene2d.actions.Actions.parallel(com.badlogic.gdx.scenes.scene2d.actions.Actions.alpha(0.2f, 0.2f, com.badlogic.gdx.math.Interpolation.fade), com.badlogic.gdx.scenes.scene2d.actions.Actions.scaleTo(0.05f, 0.05f, 0.2f, com.badlogic.gdx.math.Interpolation.fade)), com.badlogic.gdx.scenes.scene2d.actions.Actions.removeActor()))
   }
   def hideAll(): scala.Unit = {

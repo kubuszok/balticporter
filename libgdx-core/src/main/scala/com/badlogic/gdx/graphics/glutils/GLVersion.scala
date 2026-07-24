@@ -7,38 +7,38 @@ class GLVersion {
   private var versionString: java.lang.String = null.asInstanceOf[java.lang.String]
   private var vendorString: java.lang.String = null.asInstanceOf[java.lang.String]
   private var rendererString: java.lang.String = null.asInstanceOf[java.lang.String]
-  private var `type`: Type = null.asInstanceOf[Type]
+  private var `type`: com.badlogic.gdx.graphics.glutils.GLVersion.Type = null.asInstanceOf[com.badlogic.gdx.graphics.glutils.GLVersion.Type]
   private final val TAG: java.lang.String = "GLVersion"
-  def this(appType: com.badlogic.gdx.Application#ApplicationType, versionString: java.lang.String, vendorString: java.lang.String, rendererString: java.lang.String) = {
+  def this(appType: com.badlogic.gdx.Application.ApplicationType, versionString: java.lang.String, vendorString: java.lang.String, rendererString: java.lang.String) = {
     this()
     if (appType == com.badlogic.gdx.Application.ApplicationType.Android) {
-      this.`type` = Type.GLES
+      this.`type` = com.badlogic.gdx.graphics.glutils.GLVersion.Type.GLES
     } else {
       if (appType == com.badlogic.gdx.Application.ApplicationType.iOS) {
-        this.`type` = Type.GLES
+        this.`type` = com.badlogic.gdx.graphics.glutils.GLVersion.Type.GLES
       } else {
         if (appType == com.badlogic.gdx.Application.ApplicationType.Desktop) {
-          this.`type` = Type.OpenGL
+          this.`type` = com.badlogic.gdx.graphics.glutils.GLVersion.Type.OpenGL
         } else {
           if (appType == com.badlogic.gdx.Application.ApplicationType.Applet) {
-            this.`type` = Type.OpenGL
+            this.`type` = com.badlogic.gdx.graphics.glutils.GLVersion.Type.OpenGL
           } else {
             if (appType == com.badlogic.gdx.Application.ApplicationType.WebGL) {
-              this.`type` = Type.WebGL
+              this.`type` = com.badlogic.gdx.graphics.glutils.GLVersion.Type.WebGL
             } else {
-              this.`type` = Type.NONE
+              this.`type` = com.badlogic.gdx.graphics.glutils.GLVersion.Type.NONE
             }
           }
         }
       }
     }
-    if (this.`type` == Type.GLES) {
+    if (this.`type` == com.badlogic.gdx.graphics.glutils.GLVersion.Type.GLES) {
       this.extractVersion("OpenGL ES (\\d(\\.\\d){0,2})", versionString)
     } else {
-      if (this.`type` == Type.WebGL) {
+      if (this.`type` == com.badlogic.gdx.graphics.glutils.GLVersion.Type.WebGL) {
         this.extractVersion("WebGL (\\d(\\.\\d){0,2})", versionString)
       } else {
-        if (this.`type` == Type.OpenGL) {
+        if (this.`type` == com.badlogic.gdx.graphics.glutils.GLVersion.Type.OpenGL) {
           this.extractVersion("(\\d(\\.\\d){0,2})", versionString)
         } else {
           this.majorVersion = -1
@@ -80,7 +80,7 @@ class GLVersion {
       }
     }
   }
-  def getType(): Type = {
+  def getType(): com.badlogic.gdx.graphics.glutils.GLVersion.Type = {
     return this.`type`
   }
   def getMajorVersion(): scala.Int = {
@@ -107,6 +107,8 @@ class GLVersion {
   def getDebugVersionString(): java.lang.String = {
     return ((((((((((((("Type: " + this.`type`) + "\n") + "Version: ") + this.majorVersion) + ":") + this.minorVersion) + ":") + this.releaseVersion) + "\n") + "Vendor: ") + this.vendorString) + "\n") + "Renderer: ") + this.rendererString
   }
+}
+object GLVersion {
   sealed abstract class Type
   object Type {
     case object OpenGL extends Type

@@ -4,26 +4,26 @@ class Array[T] extends scala.collection.Iterable[T] {
   var items: scala.Array[T] = null.asInstanceOf[scala.Array[T]]
   var size: scala.Int = 0
   var ordered: scala.Boolean = false
-  private var iterable: ArrayIterable[T] = null.asInstanceOf[ArrayIterable[T]]
-  private var predicateIterable: com.badlogic.gdx.utils.Predicate#PredicateIterable[T] = null.asInstanceOf[com.badlogic.gdx.utils.Predicate#PredicateIterable[T]]
+  private var iterable: com.badlogic.gdx.utils.Array.ArrayIterable[T] = null.asInstanceOf[com.badlogic.gdx.utils.Array.ArrayIterable[T]]
+  private var predicateIterable: com.badlogic.gdx.utils.Predicate.PredicateIterable[T] = null.asInstanceOf[com.badlogic.gdx.utils.Predicate.PredicateIterable[T]]
   def this(ordered: scala.Boolean, array: scala.Array[T], start: scala.Int, count: scala.Int) = {
     this()
-    this.items = java.util.Arrays.copyOfRange(array, start, start + count)
+    this.items = java.util.Arrays.copyOfRange(array, start, start + count).asInstanceOf[scala.Array[T]]
     this.ordered = ordered
     this.size = count
   }
   def this(ordered: scala.Boolean, capacity: scala.Int, arraySupplier: com.badlogic.gdx.utils.ArraySupplier[scala.Array[T]]) = {
     this()
     this.ordered = ordered
-    this.items = arraySupplier.get(capacity)
+    this.items = arraySupplier.get(capacity).asInstanceOf[scala.Array[T]]
   }
   def this(array: Array[? <: T]) = {
     this()
-    this.items = java.util.Arrays.copyOf(array.items, array.size)
+    this.items = java.util.Arrays.copyOf(array.items, array.size).asInstanceOf[scala.Array[T]]
     this.ordered = array.ordered
     this.size = array.size
   }
-  def this(ordered: scala.Boolean, capacity: scala.Int, arrayType: java.lang.Class) = {
+  def this(ordered: scala.Boolean, capacity: scala.Int, arrayType: java.lang.Class[?]) = {
     this(ordered, capacity, (size: scala.Int) => com.badlogic.gdx.utils.reflect.ArrayReflection.newInstance(arrayType, size).asInstanceOf[scala.Array[T]])
   }
   def this(ordered: scala.Boolean, capacity: scala.Int) = {
@@ -35,7 +35,7 @@ class Array[T] extends scala.collection.Iterable[T] {
   def this(arraySupplier: com.badlogic.gdx.utils.ArraySupplier[scala.Array[T]]) = {
     this(true, 16, arraySupplier)
   }
-  def this(arrayType: java.lang.Class) = {
+  def this(arrayType: java.lang.Class[?]) = {
     this(true, 16, arrayType)
   }
   def this(array: scala.Array[T]) = {
@@ -44,14 +44,14 @@ class Array[T] extends scala.collection.Iterable[T] {
   def add(value: T): scala.Unit = {
     var items: scala.Array[T] = this.items
     if (this.size == items.length) {
-      items = this.resize(java.lang.Math.max(8, (this.size * 1.75f).asInstanceOf[scala.Int]))
+      items = this.resize(java.lang.Math.max(8, (this.size * 1.75f).asInstanceOf[scala.Int])).asInstanceOf[scala.Array[T]]
     } else ()
     items({ this.size += 1; this.size }) = value
   }
   def add(value1: T, value2: T): scala.Unit = {
     var items: scala.Array[T] = this.items
     if ((this.size + 1) >= items.length) {
-      items = this.resize(java.lang.Math.max(8, (this.size * 1.75f).asInstanceOf[scala.Int]))
+      items = this.resize(java.lang.Math.max(8, (this.size * 1.75f).asInstanceOf[scala.Int])).asInstanceOf[scala.Array[T]]
     } else ()
     items(this.size) = value1
     items(this.size + 1) = value2
@@ -60,7 +60,7 @@ class Array[T] extends scala.collection.Iterable[T] {
   def add(value1: T, value2: T, value3: T): scala.Unit = {
     var items: scala.Array[T] = this.items
     if ((this.size + 2) >= items.length) {
-      items = this.resize(java.lang.Math.max(8, (this.size * 1.75f).asInstanceOf[scala.Int]))
+      items = this.resize(java.lang.Math.max(8, (this.size * 1.75f).asInstanceOf[scala.Int])).asInstanceOf[scala.Array[T]]
     } else ()
     items(this.size) = value1
     items(this.size + 1) = value2
@@ -70,7 +70,7 @@ class Array[T] extends scala.collection.Iterable[T] {
   def add(value1: T, value2: T, value3: T, value4: T): scala.Unit = {
     var items: scala.Array[T] = this.items
     if ((this.size + 3) >= items.length) {
-      items = this.resize(java.lang.Math.max(8, (this.size * 1.8f).asInstanceOf[scala.Int]))
+      items = this.resize(java.lang.Math.max(8, (this.size * 1.8f).asInstanceOf[scala.Int])).asInstanceOf[scala.Array[T]]
     } else ()
     items(this.size) = value1
     items(this.size + 1) = value2
@@ -94,7 +94,7 @@ class Array[T] extends scala.collection.Iterable[T] {
     var items: scala.Array[T] = this.items
     val sizeNeeded: scala.Int = this.size + count
     if (sizeNeeded > items.length) {
-      items = this.resize(java.lang.Math.max(java.lang.Math.max(8, sizeNeeded), (this.size * 1.75f).asInstanceOf[scala.Int]))
+      items = this.resize(java.lang.Math.max(java.lang.Math.max(8, sizeNeeded), (this.size * 1.75f).asInstanceOf[scala.Int])).asInstanceOf[scala.Array[T]]
     } else ()
     java.lang.System.arraycopy(array, start, items, this.size, count)
     this.size = sizeNeeded
@@ -117,7 +117,7 @@ class Array[T] extends scala.collection.Iterable[T] {
     } else ()
     var items: scala.Array[T] = this.items
     if (this.size == items.length) {
-      items = this.resize(java.lang.Math.max(8, (this.size * 1.75f).asInstanceOf[scala.Int]))
+      items = this.resize(java.lang.Math.max(8, (this.size * 1.75f).asInstanceOf[scala.Int])).asInstanceOf[scala.Array[T]]
     } else ()
     if (this.ordered) {
       java.lang.System.arraycopy(items, index, items, index + 1, this.size - index)
@@ -133,7 +133,7 @@ class Array[T] extends scala.collection.Iterable[T] {
     } else ()
     val sizeNeeded: scala.Int = this.size + count
     if (sizeNeeded > this.items.length) {
-      this.items = this.resize(java.lang.Math.max(java.lang.Math.max(8, sizeNeeded), (this.size * 1.75f).asInstanceOf[scala.Int]))
+      this.items = this.resize(java.lang.Math.max(java.lang.Math.max(8, sizeNeeded), (this.size * 1.75f).asInstanceOf[scala.Int])).asInstanceOf[scala.Array[T]]
     } else ()
     java.lang.System.arraycopy(this.items, index, this.items, index + count, this.size - index)
     this.size = sizeNeeded
@@ -208,7 +208,7 @@ class Array[T] extends scala.collection.Iterable[T] {
     return false
   }
   def containsAll(values: Array[? <: T], identity: scala.Boolean): scala.Boolean = {
-    val items: scala.Array[T] = values.items
+    val items: scala.Array[T] = values.items.asInstanceOf[scala.Array[T]];
     { var i: scala.Int = 0; val n: scala.Int = values.size; while (i < n) { {
       if (!this.contains(items(i), identity)) {
         return false
@@ -217,7 +217,7 @@ class Array[T] extends scala.collection.Iterable[T] {
     return true
   }
   def containsAny(values: Array[? <: T], identity: scala.Boolean): scala.Boolean = {
-    val items: scala.Array[T] = values.items
+    val items: scala.Array[T] = values.items.asInstanceOf[scala.Array[T]];
     { var i: scala.Int = 0; val n: scala.Int = values.size; while (i < n) { {
       if (this.contains(items(i), identity)) {
         return true
@@ -290,7 +290,7 @@ class Array[T] extends scala.collection.Iterable[T] {
     } else {
       items(index) = items(this.size)
     }
-    items(this.size) = null
+    items(this.size) = null.asInstanceOf[T]
     return value
   }
   def removeRange(start: scala.Int, `end`: scala.Int): scala.Unit = {
@@ -309,9 +309,9 @@ class Array[T] extends scala.collection.Iterable[T] {
     } else {
       var i: scala.Int = java.lang.Math.max(lastIndex, `end` + 1)
       java.lang.System.arraycopy(items, i, items, start, n - i)
-    }
+    };
     { var i: scala.Int = lastIndex; while (i < n) { {
-      items(i) = null
+      items(i) = null.asInstanceOf[T]
     }; i = i + 1 } }
     this.size = n - count
   }
@@ -321,7 +321,7 @@ class Array[T] extends scala.collection.Iterable[T] {
     val items: scala.Array[T] = this.items
     if (identity) {
       { var i: scala.Int = 0; val n: scala.Int = array.size; while (i < n) { {
-        val item: T = array.get(i)
+        val item: T = array.get(i);
         { var ii: scala.Int = 0; while (ii < size) { {
           if (item == items(ii)) {
             this.removeIndex(ii)
@@ -332,7 +332,7 @@ class Array[T] extends scala.collection.Iterable[T] {
       }; i = i + 1 } }
     } else {
       { var i: scala.Int = 0; val n: scala.Int = array.size; while (i < n) { {
-        val item: T = array.get(i)
+        val item: T = array.get(i);
         { var ii: scala.Int = 0; while (ii < size) { {
           if (item.equals(items(ii))) {
             this.removeIndex(ii)
@@ -350,7 +350,7 @@ class Array[T] extends scala.collection.Iterable[T] {
     } else ()
     this.size = this.size - 1
     val item: T = this.items(this.size)
-    this.items(this.size) = null
+    this.items(this.size) = null.asInstanceOf[T]
     return item
   }
   def peek(): T = {
@@ -399,8 +399,8 @@ class Array[T] extends scala.collection.Iterable[T] {
     this.size = newSize
     return this.items
   }
-  protected def resize(newSize: scala.Int): scala.Array[T] = {
-    this.items = java.util.Arrays.copyOf(this.items, newSize)
+  def resize(newSize: scala.Int): scala.Array[T] = {
+    this.items = java.util.Arrays.copyOf(this.items, newSize).asInstanceOf[scala.Array[T]]
     return this.items
   }
   def sort(): scala.Unit = {
@@ -422,7 +422,7 @@ class Array[T] extends scala.collection.Iterable[T] {
     return com.badlogic.gdx.utils.Select.instance().selectIndex(this.items, comparator, kthLowest, this.size)
   }
   def reverse(): scala.Unit = {
-    val items: scala.Array[T] = this.items
+    val items: scala.Array[T] = this.items;
     { var i: scala.Int = 0; val lastIndex: scala.Int = this.size - 1; val n: scala.Int = this.size / 2; while (i < n) { {
       val ii: scala.Int = lastIndex - i
       val temp: T = items(i)
@@ -431,7 +431,7 @@ class Array[T] extends scala.collection.Iterable[T] {
     }; i = i + 1 } }
   }
   def shuffle(): scala.Unit = {
-    val items: scala.Array[T] = this.items
+    val items: scala.Array[T] = this.items;
     { var i: scala.Int = this.size - 1; while (i >= 0) { {
       val ii: scala.Int = com.badlogic.gdx.math.MathUtils.random(i)
       val temp: T = items(i)
@@ -439,21 +439,21 @@ class Array[T] extends scala.collection.Iterable[T] {
       items(ii) = temp
     }; i = i - 1 } }
   }
-  def iterator(): ArrayIterator[T] = {
+  def iterator(): com.badlogic.gdx.utils.Array.ArrayIterator[T] = {
     if (com.badlogic.gdx.utils.Collections.allocateIterators) {
-      return new ArrayIterator[T](this, true)
+      return new com.badlogic.gdx.utils.Array.ArrayIterator[T](this, true)
     } else ()
     if (this.iterable == null) {
-      this.iterable = new ArrayIterable[T](this)
+      this.iterable = new com.badlogic.gdx.utils.Array.ArrayIterable[T](this)
     } else ()
     return this.iterable.iterator()
   }
   def select(predicate: com.badlogic.gdx.utils.Predicate[T]): scala.collection.Iterable[T] = {
     if (com.badlogic.gdx.utils.Collections.allocateIterators) {
-      return new com.badlogic.gdx.utils.Predicate#PredicateIterable[T](this, predicate)
+      return new com.badlogic.gdx.utils.Predicate.PredicateIterable[T](this, predicate)
     } else ()
     if (this.predicateIterable == null) {
-      this.predicateIterable = new com.badlogic.gdx.utils.Predicate#PredicateIterable[T](this, predicate)
+      this.predicateIterable = new com.badlogic.gdx.utils.Predicate.PredicateIterable[T](this, predicate)
     } else {
       this.predicateIterable.set(this, predicate)
     }
@@ -465,23 +465,23 @@ class Array[T] extends scala.collection.Iterable[T] {
     } else ()
     if (this.size <= newSize) {
       return
-    } else ()
+    } else ();
     { var i: scala.Int = newSize; while (i < this.size) { {
-      this.items(i) = null
+      this.items(i) = null.asInstanceOf[T]
     }; i = i + 1 } }
     this.size = newSize
   }
   def random(): T = {
     if (this.size == 0) {
-      return null
+      return null.asInstanceOf[T]
     } else ()
     return this.items(com.badlogic.gdx.math.MathUtils.random(0, this.size - 1))
   }
   def toArray(): scala.Array[T] = {
-    return java.util.Arrays.copyOf(this.items, this.size)
+    return java.util.Arrays.copyOf(this.items, this.size).asInstanceOf[scala.Array[T]]
   }
   def toArray(arraySupplier: com.badlogic.gdx.utils.ArraySupplier[scala.Array[T]]): scala.Array[T] = {
-    val result: scala.Array[T] = arraySupplier.get(this.size)
+    val result: scala.Array[T] = arraySupplier.get(this.size).asInstanceOf[scala.Array[T]]
     java.lang.System.arraycopy(this.items, 0, result, 0, this.size)
     return result
   }
@@ -494,8 +494,8 @@ class Array[T] extends scala.collection.Iterable[T] {
     if (!this.ordered) {
       return super.hashCode()
     } else ()
-    val items: scala.Array[java.lang.Object] = this.items
-    var h: scala.Int = 1
+    val items: scala.Array[java.lang.Object] = this.items.asInstanceOf[scala.Array[java.lang.Object]]
+    var h: scala.Int = 1;
     { var i: scala.Int = 0; val n: scala.Int = this.size; while (i < n) { {
       h = h * 31
       val item: java.lang.Object = items(i)
@@ -512,10 +512,10 @@ class Array[T] extends scala.collection.Iterable[T] {
     if (!this.ordered) {
       return false
     } else ()
-    if (!`object`.isInstanceOf[Array]) {
+    if (!`object`.isInstanceOf[Array[?]]) {
       return false
     } else ()
-    val array: Array = `object`.asInstanceOf[Array]
+    val array: Array[?] = `object`.asInstanceOf[Array[?]]
     if (!array.ordered) {
       return false
     } else ()
@@ -523,8 +523,8 @@ class Array[T] extends scala.collection.Iterable[T] {
     if (n != array.size) {
       return false
     } else ()
-    val items1: scala.Array[java.lang.Object] = this.items
-    val items2: scala.Array[java.lang.Object] = array.items
+    val items1: scala.Array[java.lang.Object] = this.items.asInstanceOf[scala.Array[java.lang.Object]]
+    val items2: scala.Array[java.lang.Object] = array.items;
     { var i: scala.Int = 0; while (i < n) { {
       val o1: java.lang.Object = items1(i)
       val o2: java.lang.Object = items2(i)
@@ -541,10 +541,10 @@ class Array[T] extends scala.collection.Iterable[T] {
     if (!this.ordered) {
       return false
     } else ()
-    if (!`object`.isInstanceOf[Array]) {
+    if (!`object`.isInstanceOf[Array[?]]) {
       return false
     } else ()
-    val array: Array = `object`.asInstanceOf[Array]
+    val array: Array[?] = `object`.asInstanceOf[Array[?]]
     if (!array.ordered) {
       return false
     } else ()
@@ -552,8 +552,8 @@ class Array[T] extends scala.collection.Iterable[T] {
     if (n != array.size) {
       return false
     } else ()
-    val items1: scala.Array[java.lang.Object] = this.items
-    val items2: scala.Array[java.lang.Object] = array.items
+    val items1: scala.Array[java.lang.Object] = this.items.asInstanceOf[scala.Array[java.lang.Object]]
+    val items2: scala.Array[java.lang.Object] = array.items;
     { var i: scala.Int = 0; while (i < n) { {
       if (items1(i) != items2(i)) {
         return false
@@ -568,7 +568,7 @@ class Array[T] extends scala.collection.Iterable[T] {
     val items: scala.Array[T] = this.items
     val buffer: java.lang.StringBuilder = new java.lang.StringBuilder(32)
     buffer.append('[')
-    buffer.append(items(0))
+    buffer.append(items(0));
     { var i: scala.Int = 1; while (i < this.size) { {
       buffer.append(", ")
       buffer.append(items(i))
@@ -582,12 +582,29 @@ class Array[T] extends scala.collection.Iterable[T] {
     } else ()
     val items: scala.Array[T] = this.items
     val buffer: java.lang.StringBuilder = new java.lang.StringBuilder(32)
-    buffer.append(items(0))
+    buffer.append(items(0));
     { var i: scala.Int = 1; while (i < this.size) { {
       buffer.append(separator)
       buffer.append(items(i))
     }; i = i + 1 } }
     return buffer.toString()
+  }
+}
+object Array {
+  def of[T](arraySupplier: com.badlogic.gdx.utils.ArraySupplier[scala.Array[T]]): Array[T] = {
+    return new Array[T](arraySupplier)
+  }
+  def of[T](ordered: scala.Boolean, capacity: scala.Int, arraySupplier: com.badlogic.gdx.utils.ArraySupplier[scala.Array[T]]): Array[T] = {
+    return new Array[T](ordered, capacity, arraySupplier)
+  }
+  def of[T](arrayType: java.lang.Class[T]): Array[T] = {
+    return new Array(arrayType)
+  }
+  def of[T](ordered: scala.Boolean, capacity: scala.Int, arrayType: java.lang.Class[T]): Array[T] = {
+    return new Array(ordered, capacity, arrayType)
+  }
+  def `with`[T](array: scala.Array[T]): Array[T] = {
+    return new Array(array)
   }
   class ArrayIterator[T] extends scala.collection.Iterator[T] with scala.collection.Iterable[T] {
     private var array: Array[T] = null.asInstanceOf[Array[T]]
@@ -627,15 +644,15 @@ class Array[T] extends scala.collection.Iterable[T] {
     def reset(): scala.Unit = {
       this.index = 0
     }
-    def iterator(): ArrayIterator[T] = {
+    def iterator(): com.badlogic.gdx.utils.Array.ArrayIterator[T] = {
       return this
     }
   }
   class ArrayIterable[T] extends scala.collection.Iterable[T] {
     private var array: Array[T] = null.asInstanceOf[Array[T]]
     private var allowRemove: scala.Boolean = false
-    private var iterator1: ArrayIterator[T] = null.asInstanceOf[ArrayIterator[T]]
-    private var iterator2: ArrayIterator[T] = null.asInstanceOf[ArrayIterator[T]]
+    private var iterator1: com.badlogic.gdx.utils.Array.ArrayIterator[T] = null.asInstanceOf[com.badlogic.gdx.utils.Array.ArrayIterator[T]]
+    private var iterator2: com.badlogic.gdx.utils.Array.ArrayIterator[T] = null.asInstanceOf[com.badlogic.gdx.utils.Array.ArrayIterator[T]]
     def this(array: Array[T], allowRemove: scala.Boolean) = {
       this()
       this.array = array
@@ -644,13 +661,13 @@ class Array[T] extends scala.collection.Iterable[T] {
     def this(array: Array[T]) = {
       this(array, true)
     }
-    def iterator(): ArrayIterator[T] = {
+    def iterator(): com.badlogic.gdx.utils.Array.ArrayIterator[T] = {
       if (com.badlogic.gdx.utils.Collections.allocateIterators) {
-        return new ArrayIterator[T](this.array, this.allowRemove)
+        return new com.badlogic.gdx.utils.Array.ArrayIterator[T](this.array, this.allowRemove)
       } else ()
       if (this.iterator1 == null) {
-        this.iterator1 = new ArrayIterator[T](this.array, this.allowRemove)
-        this.iterator2 = new ArrayIterator[T](this.array, this.allowRemove)
+        this.iterator1 = new com.badlogic.gdx.utils.Array.ArrayIterator[T](this.array, this.allowRemove)
+        this.iterator2 = new com.badlogic.gdx.utils.Array.ArrayIterator[T](this.array, this.allowRemove)
       } else ()
       if (!this.iterator1.valid) {
         this.iterator1.index = 0
@@ -663,22 +680,5 @@ class Array[T] extends scala.collection.Iterable[T] {
       this.iterator1.valid = false
       return this.iterator2
     }
-  }
-}
-object Array {
-  def of[T](arraySupplier: com.badlogic.gdx.utils.ArraySupplier[scala.Array[T]]): Array[T] = {
-    return new Array[T](arraySupplier)
-  }
-  def of[T](ordered: scala.Boolean, capacity: scala.Int, arraySupplier: com.badlogic.gdx.utils.ArraySupplier[scala.Array[T]]): Array[T] = {
-    return new Array[T](ordered, capacity, arraySupplier)
-  }
-  def of[T](arrayType: java.lang.Class[T]): Array[T] = {
-    return new Array(arrayType)
-  }
-  def of[T](ordered: scala.Boolean, capacity: scala.Int, arrayType: java.lang.Class[T]): Array[T] = {
-    return new Array(ordered, capacity, arrayType)
-  }
-  def `with`[T](array: scala.Array[T]): Array[T] = {
-    return new Array(array)
   }
 }

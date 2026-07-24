@@ -1,11 +1,11 @@
 package com.badlogic.gdx.graphics
 
 class Mesh extends com.badlogic.gdx.utils.Disposable {
-  protected var vertices: com.badlogic.gdx.graphics.glutils.VertexData = null.asInstanceOf[com.badlogic.gdx.graphics.glutils.VertexData]
-  protected var indices: com.badlogic.gdx.graphics.glutils.IndexData = null.asInstanceOf[com.badlogic.gdx.graphics.glutils.IndexData]
-  protected var autoBind: scala.Boolean = true
-  protected var isVertexArray: scala.Boolean = false
-  protected var instances: com.badlogic.gdx.graphics.glutils.InstanceData = null.asInstanceOf[com.badlogic.gdx.graphics.glutils.InstanceData]
+  var vertices: com.badlogic.gdx.graphics.glutils.VertexData = null.asInstanceOf[com.badlogic.gdx.graphics.glutils.VertexData]
+  var indices: com.badlogic.gdx.graphics.glutils.IndexData = null.asInstanceOf[com.badlogic.gdx.graphics.glutils.IndexData]
+  var autoBind: scala.Boolean = true
+  var isVertexArray: scala.Boolean = false
+  var instances: com.badlogic.gdx.graphics.glutils.InstanceData = null.asInstanceOf[com.badlogic.gdx.graphics.glutils.InstanceData]
   var isInstanced$field: scala.Boolean = false
   private final val tmpV: com.badlogic.gdx.math.Vector3 = new com.badlogic.gdx.math.Vector3()
   def this(staticVertices: scala.Boolean, staticIndices: scala.Boolean, maxVertices: scala.Int, maxIndices: scala.Int, attributes: com.badlogic.gdx.graphics.VertexAttributes) = {
@@ -15,20 +15,20 @@ class Mesh extends com.badlogic.gdx.utils.Disposable {
     this.isVertexArray = false
     Mesh.addManagedMesh(com.badlogic.gdx.Gdx.app, this)
   }
-  def this(`type`: VertexDataType, isStatic: scala.Boolean, maxVertices: scala.Int, maxIndices: scala.Int, attributes: com.badlogic.gdx.graphics.VertexAttributes) = {
+  def this(`type`: com.badlogic.gdx.graphics.Mesh.VertexDataType, isStatic: scala.Boolean, maxVertices: scala.Int, maxIndices: scala.Int, attributes: com.badlogic.gdx.graphics.VertexAttributes) = {
     this()
     `type` match {
-      case VertexDataType.VertexBufferObject => {
+      case com.badlogic.gdx.graphics.Mesh.VertexDataType.VertexBufferObject => {
         this.vertices = new com.badlogic.gdx.graphics.glutils.VertexBufferObject(isStatic, maxVertices, attributes)
         this.indices = new com.badlogic.gdx.graphics.glutils.IndexBufferObject(isStatic, maxIndices)
         this.isVertexArray = false
       }
-      case VertexDataType.VertexBufferObjectSubData => {
+      case com.badlogic.gdx.graphics.Mesh.VertexDataType.VertexBufferObjectSubData => {
         this.vertices = new com.badlogic.gdx.graphics.glutils.VertexBufferObjectSubData(isStatic, maxVertices, attributes)
         this.indices = new com.badlogic.gdx.graphics.glutils.IndexBufferObjectSubData(isStatic, maxIndices)
         this.isVertexArray = false
       }
-      case VertexDataType.VertexBufferObjectWithVAO => {
+      case com.badlogic.gdx.graphics.Mesh.VertexDataType.VertexBufferObjectWithVAO => {
         this.vertices = new com.badlogic.gdx.graphics.glutils.VertexBufferObjectWithVAO(isStatic, maxVertices, attributes)
         this.indices = new com.badlogic.gdx.graphics.glutils.IndexBufferObjectSubData(isStatic, maxIndices)
         this.isVertexArray = false
@@ -55,14 +55,14 @@ class Mesh extends com.badlogic.gdx.utils.Disposable {
     this.isVertexArray = false
     Mesh.addManagedMesh(com.badlogic.gdx.Gdx.app, this)
   }
-  protected def this(vertices: com.badlogic.gdx.graphics.glutils.VertexData, indices: com.badlogic.gdx.graphics.glutils.IndexData, isVertexArray: scala.Boolean) = {
+  def this(vertices: com.badlogic.gdx.graphics.glutils.VertexData, indices: com.badlogic.gdx.graphics.glutils.IndexData, isVertexArray: scala.Boolean) = {
     this()
     this.vertices = vertices
     this.indices = indices
     this.isVertexArray = isVertexArray
     Mesh.addManagedMesh(com.badlogic.gdx.Gdx.app, this)
   }
-  def this(`type`: VertexDataType, isStatic: scala.Boolean, maxVertices: scala.Int, maxIndices: scala.Int, attributes: scala.Array[com.badlogic.gdx.graphics.VertexAttribute]) = {
+  def this(`type`: com.badlogic.gdx.graphics.Mesh.VertexDataType, isStatic: scala.Boolean, maxVertices: scala.Int, maxIndices: scala.Int, attributes: scala.Array[com.badlogic.gdx.graphics.VertexAttribute]) = {
     this(`type`, isStatic, maxVertices, maxIndices, new com.badlogic.gdx.graphics.VertexAttributes(attributes))
   }
   private def makeVertexBuffer(isStatic: scala.Boolean, maxVertices: scala.Int, vertexAttributes: com.badlogic.gdx.graphics.VertexAttributes): com.badlogic.gdx.graphics.glutils.VertexData = {
@@ -326,7 +326,7 @@ class Mesh extends com.badlogic.gdx.utils.Disposable {
   }
   def getVertexAttribute(usage: scala.Int): com.badlogic.gdx.graphics.VertexAttribute = {
     val attributes: com.badlogic.gdx.graphics.VertexAttributes = this.vertices.getAttributes()
-    val len: scala.Int = attributes.size()
+    val len: scala.Int = attributes.size();
     { var i: scala.Int = 0; while (i < len) { {
       if (attributes.get(i).usage == usage) {
         return attributes.get(i)
@@ -528,7 +528,7 @@ class Mesh extends com.badlogic.gdx.utils.Disposable {
     return result
   }
   def calculateRadius(centerX: scala.Float, centerY: scala.Float, centerZ: scala.Float, offset: scala.Int, count: scala.Int, transform: com.badlogic.gdx.math.Matrix4): scala.Float = {
-    return java.lang.Math.sqrt(this.calculateRadiusSquared(centerX, centerY, centerZ, offset, count, transform)).asInstanceOf[scala.Float]
+    return java.lang.Math.sqrt(this.calculateRadiusSquared(centerX, centerY, centerZ, offset, count, transform)).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
   }
   def calculateRadius(center: com.badlogic.gdx.math.Vector3, offset: scala.Int, count: scala.Int, transform: com.badlogic.gdx.math.Matrix4): scala.Float = {
     return this.calculateRadius(center.x, center.y, center.z, offset, count, transform)
@@ -602,7 +602,7 @@ class Mesh extends com.badlogic.gdx.utils.Disposable {
   def transformUV(matrix: com.badlogic.gdx.math.Matrix3): scala.Unit = {
     this.transformUV(matrix, 0, this.getNumVertices())
   }
-  protected def transformUV(matrix: com.badlogic.gdx.math.Matrix3, start: scala.Int, count: scala.Int): scala.Unit = {
+  def transformUV(matrix: com.badlogic.gdx.math.Matrix3, start: scala.Int, count: scala.Int): scala.Unit = {
     val posAttr: com.badlogic.gdx.graphics.VertexAttribute = this.getVertexAttribute(com.badlogic.gdx.graphics.VertexAttributes.Usage.TextureCoordinates)
     val offset: scala.Int = posAttr.offset / 4
     val vertexSize: scala.Int = this.getVertexSize() / 4
@@ -622,7 +622,7 @@ class Mesh extends com.badlogic.gdx.utils.Disposable {
     var newVertexSize: scala.Int = 0
     if (usage != null) {
       var size: scala.Int = 0
-      var `as`: scala.Int = 0
+      var `as`: scala.Int = 0;
       { var i: scala.Int = 0; while (i < usage.length) { {
         if (this.getVertexAttribute(usage(i)) != null) {
           size = size + this.getVertexAttribute(usage(i)).numComponents
@@ -633,14 +633,14 @@ class Mesh extends com.badlogic.gdx.utils.Disposable {
         attrs = new Array[com.badlogic.gdx.graphics.VertexAttribute](`as`)
         checks = new Array[scala.Short](size)
         var idx: scala.Int = -1
-        var ai: scala.Int = -1
+        var ai: scala.Int = -1;
         { var i: scala.Int = 0; while (i < usage.length) { {
           val a: com.badlogic.gdx.graphics.VertexAttribute = this.getVertexAttribute(usage(i))
           if (a == null) {
             /* continue */ ()
-          } else ()
+          } else ();
           { var j: scala.Int = 0; while (j < a.numComponents) { {
-            checks({ idx += 1; idx }) = (a.offset + j).asInstanceOf[scala.Short]
+            checks({ idx += 1; idx }) = (a.offset + j).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
           }; j = j + 1 } }
           attrs({ ai += 1; ai }) = a.copy()
           newVertexSize = newVertexSize + a.numComponents
@@ -648,8 +648,8 @@ class Mesh extends com.badlogic.gdx.utils.Disposable {
       } else ()
     } else ()
     if (checks == null) {
-      checks = new Array[scala.Short](vertexSize)
-      { var i: scala.Short = 0; while (i < vertexSize) { {
+      checks = new Array[scala.Short](vertexSize);
+      { var i: scala.Short = 0.asInstanceOf[scala.Short]; while (i < vertexSize) { {
         checks(i) = i
       }; i = i + 1 } }
       newVertexSize = vertexSize
@@ -661,14 +661,14 @@ class Mesh extends com.badlogic.gdx.utils.Disposable {
       this.getIndices(indices)
       if (removeDuplicates || (newVertexSize != vertexSize)) {
         val tmp: scala.Array[scala.Float] = new Array[scala.Float](vertices.length)
-        var size: scala.Int = 0
+        var size: scala.Int = 0;
         { var i: scala.Int = 0; while (i < numIndices) { {
           val idx1: scala.Int = indices(i) * vertexSize
-          var newIndex: scala.Short = -1
+          var newIndex: scala.Short = (-1).asInstanceOf[scala.Short]
           if (removeDuplicates) {
-            { var j: scala.Short = 0; while ((j < size) && (newIndex < 0)) { {
+            { var j: scala.Short = 0.asInstanceOf[scala.Short]; while ((j < size) && (newIndex < 0)) { {
               val idx2: scala.Int = j * newVertexSize
-              var found: scala.Boolean = true
+              var found: scala.Boolean = true;
               { var k: scala.Int = 0; while ((k < checks.length) && found) { {
                 if (tmp(idx2 + k) != vertices(idx1 + checks(k))) {
                   found = false
@@ -682,11 +682,11 @@ class Mesh extends com.badlogic.gdx.utils.Disposable {
           if (newIndex > 0) {
             indices(i) = newIndex
           } else {
-            var idx: scala.Int = size * newVertexSize
+            var idx: scala.Int = size * newVertexSize;
             { var j: scala.Int = 0; while (j < checks.length) { {
               tmp(idx + j) = vertices(idx1 + checks(j))
             }; j = j + 1 } }
-            indices(i) = size.asInstanceOf[scala.Short]
+            indices(i) = size.asInstanceOf[scala.Short].asInstanceOf[scala.Short]
             size = size + 1
           }
         }; i = i + 1 } }
@@ -709,14 +709,6 @@ class Mesh extends com.badlogic.gdx.utils.Disposable {
   def copy(isStatic: scala.Boolean): Mesh = {
     return this.copy(isStatic, false, null)
   }
-  sealed abstract class VertexDataType
-  object VertexDataType {
-    case object VertexArray extends VertexDataType
-    case object VertexBufferObject extends VertexDataType
-    case object VertexBufferObjectSubData extends VertexDataType
-    case object VertexBufferObjectWithVAO extends VertexDataType
-    def values(): Array[VertexDataType] = Array(VertexArray, VertexBufferObject, VertexBufferObjectSubData, VertexBufferObjectWithVAO)
-  }
 }
 object Mesh {
   final val meshes: scala.collection.mutable.Map[com.badlogic.gdx.Application, com.badlogic.gdx.utils.Array[Mesh]] = new scala.collection.mutable.HashMap[com.badlogic.gdx.Application, com.badlogic.gdx.utils.Array[Mesh]]()
@@ -732,7 +724,7 @@ object Mesh {
     val meshesArray: com.badlogic.gdx.utils.Array[Mesh] = Mesh.meshes.getOrElse(app, null.asInstanceOf[com.badlogic.gdx.utils.Array[Mesh]])
     if (meshesArray == null) {
       return
-    } else ()
+    } else ();
     { var i: scala.Int = 0; while (i < meshesArray.size) { {
       meshesArray.get(i).vertices.invalidate()
       meshesArray.get(i).indices.invalidate()
@@ -793,12 +785,20 @@ object Mesh {
       throw new java.lang.IndexOutOfBoundsException((((((("start = " + start) + ", count = ") + count) + ", vertexSize = ") + vertexSize) + ", length = ") + vertices.length)
     } else ()
     val tmp: com.badlogic.gdx.math.Vector2 = new com.badlogic.gdx.math.Vector2()
-    var idx: scala.Int = offset + (start * vertexSize)
+    var idx: scala.Int = offset + (start * vertexSize);
     { var i: scala.Int = 0; while (i < count) { {
       tmp.set(vertices(idx), vertices(idx + 1)).mul(matrix)
       vertices(idx) = tmp.x
       vertices(idx + 1) = tmp.y
       idx = idx + vertexSize
     }; i = i + 1 } }
+  }
+  sealed abstract class VertexDataType
+  object VertexDataType {
+    case object VertexArray extends VertexDataType
+    case object VertexBufferObject extends VertexDataType
+    case object VertexBufferObjectSubData extends VertexDataType
+    case object VertexBufferObjectWithVAO extends VertexDataType
+    def values(): Array[VertexDataType] = Array(VertexArray, VertexBufferObject, VertexBufferObjectSubData, VertexBufferObjectWithVAO)
   }
 }

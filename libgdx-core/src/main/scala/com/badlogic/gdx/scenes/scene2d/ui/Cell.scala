@@ -1,6 +1,6 @@
 package com.badlogic.gdx.scenes.scene2d.ui
 
-class Cell[T <: com.badlogic.gdx.scenes.scene2d.Actor] extends com.badlogic.gdx.utils.Pool#Poolable {
+class Cell[T <: com.badlogic.gdx.scenes.scene2d.Actor] extends com.badlogic.gdx.utils.Pool.Poolable {
   var minWidth$field: com.badlogic.gdx.scenes.scene2d.ui.Value = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Value]
   var minHeight$field: com.badlogic.gdx.scenes.scene2d.ui.Value = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Value]
   var prefWidth$field: com.badlogic.gdx.scenes.scene2d.ui.Value = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Value]
@@ -40,7 +40,7 @@ class Cell[T <: com.badlogic.gdx.scenes.scene2d.Actor] extends com.badlogic.gdx.
   def this() = {
     this()
     this.cellAboveIndex = -1
-    val defaults: Cell = Cell.defaults()
+    val defaults: Cell[?] = Cell.defaults()
     if (defaults != null) {
       this.set(defaults)
     } else ()
@@ -804,7 +804,7 @@ class Cell[T <: com.badlogic.gdx.scenes.scene2d.Actor] extends com.badlogic.gdx.
     this.cellAboveIndex = -1
     this.set(Cell.defaults())
   }
-  def set(cell: Cell): scala.Unit = {
+  def set(cell: Cell[?]): scala.Unit = {
     this.minWidth$field = cell.minWidth$field
     this.minHeight$field = cell.minHeight$field
     this.prefWidth$field = cell.prefWidth$field
@@ -828,7 +828,7 @@ class Cell[T <: com.badlogic.gdx.scenes.scene2d.Actor] extends com.badlogic.gdx.
     this.uniformX$field = cell.uniformX$field
     this.uniformY$field = cell.uniformY$field
   }
-  def merge(cell: Cell): scala.Unit = {
+  def merge(cell: Cell[?]): scala.Unit = {
     if (cell == null) {
       return
     } else ()
@@ -914,8 +914,8 @@ object Cell {
   private final val lefti: java.lang.Integer = com.badlogic.gdx.utils.Align.left
   private final val righti: java.lang.Integer = com.badlogic.gdx.utils.Align.right
   private var files: com.badlogic.gdx.Files = null.asInstanceOf[com.badlogic.gdx.Files]
-  var defaults$field: Cell = null.asInstanceOf[Cell]
-  def defaults(): Cell = {
+  var defaults$field: Cell[?] = null.asInstanceOf[Cell[?]]
+  def defaults(): Cell[?] = {
     if ((Cell.files == null) || (Cell.files != com.badlogic.gdx.Gdx.files)) {
       Cell.files = com.badlogic.gdx.Gdx.files
       Cell.defaults$field = new Cell()

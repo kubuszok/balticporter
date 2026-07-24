@@ -1,9 +1,9 @@
 package com.badlogic.gdx.utils
 
 class Sort {
-  private var timSort: com.badlogic.gdx.utils.TimSort = null.asInstanceOf[com.badlogic.gdx.utils.TimSort]
+  private var timSort: com.badlogic.gdx.utils.TimSort[?] = null.asInstanceOf[com.badlogic.gdx.utils.TimSort[?]]
   private var comparableTimSort: com.badlogic.gdx.utils.ComparableTimSort = null.asInstanceOf[com.badlogic.gdx.utils.ComparableTimSort]
-  def sort[T <: java.lang.Comparable](a: com.badlogic.gdx.utils.Array[T]): scala.Unit = {
+  def sort[T <: java.lang.Comparable[?]](a: com.badlogic.gdx.utils.Array[T]): scala.Unit = {
     if (this.comparableTimSort == null) {
       this.comparableTimSort = new com.badlogic.gdx.utils.ComparableTimSort()
     } else ()

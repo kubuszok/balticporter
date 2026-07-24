@@ -76,8 +76,8 @@ class Matrix3 extends java.io.Serializable {
     return this.setToRotationRad(com.badlogic.gdx.math.MathUtils.degreesToRadians * degrees)
   }
   def setToRotationRad(radians: scala.Float): Matrix3 = {
-    val cos: scala.Float = java.lang.Math.cos(radians).asInstanceOf[scala.Float]
-    val sin: scala.Float = java.lang.Math.sin(radians).asInstanceOf[scala.Float]
+    val cos: scala.Float = java.lang.Math.cos(radians).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
+    val sin: scala.Float = java.lang.Math.sin(radians).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
     val `val`: scala.Array[scala.Float] = this.`val`
     `val`(Matrix3.M00) = cos
     `val`(Matrix3.M10) = sin
@@ -272,8 +272,8 @@ class Matrix3 extends java.io.Serializable {
     if (radians == 0) {
       return this
     } else ()
-    val cos: scala.Float = java.lang.Math.cos(radians).asInstanceOf[scala.Float]
-    val sin: scala.Float = java.lang.Math.sin(radians).asInstanceOf[scala.Float]
+    val cos: scala.Float = java.lang.Math.cos(radians).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
+    val sin: scala.Float = java.lang.Math.sin(radians).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
     val tmp: scala.Array[scala.Float] = this.tmp
     tmp(Matrix3.M00) = cos
     tmp(Matrix3.M10) = sin
@@ -316,15 +316,15 @@ class Matrix3 extends java.io.Serializable {
   }
   def getScale(scale: com.badlogic.gdx.math.Vector2): com.badlogic.gdx.math.Vector2 = {
     val `val`: scala.Array[scala.Float] = this.`val`
-    scale.x = java.lang.Math.sqrt((`val`(Matrix3.M00) * `val`(Matrix3.M00)) + (`val`(Matrix3.M01) * `val`(Matrix3.M01))).asInstanceOf[scala.Float]
-    scale.y = java.lang.Math.sqrt((`val`(Matrix3.M10) * `val`(Matrix3.M10)) + (`val`(Matrix3.M11) * `val`(Matrix3.M11))).asInstanceOf[scala.Float]
+    scale.x = java.lang.Math.sqrt((`val`(Matrix3.M00) * `val`(Matrix3.M00)) + (`val`(Matrix3.M01) * `val`(Matrix3.M01))).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
+    scale.y = java.lang.Math.sqrt((`val`(Matrix3.M10) * `val`(Matrix3.M10)) + (`val`(Matrix3.M11) * `val`(Matrix3.M11))).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
     return scale
   }
   def getRotation(): scala.Float = {
     return com.badlogic.gdx.math.MathUtils.radiansToDegrees * java.lang.Math.atan2(this.`val`(Matrix3.M10), this.`val`(Matrix3.M00)).asInstanceOf[scala.Float]
   }
   def getRotationRad(): scala.Float = {
-    return java.lang.Math.atan2(this.`val`(Matrix3.M10), this.`val`(Matrix3.M00)).asInstanceOf[scala.Float]
+    return java.lang.Math.atan2(this.`val`(Matrix3.M10), this.`val`(Matrix3.M00)).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
   }
   def scl(scale: scala.Float): Matrix3 = {
     this.`val`(Matrix3.M00) = this.`val`(Matrix3.M00) * scale
