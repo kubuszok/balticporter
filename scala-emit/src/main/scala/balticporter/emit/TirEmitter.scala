@@ -445,6 +445,10 @@ final class TirEmitter(source: Program):
         // `scala.Array`, fully qualified: a bare `Array` collides with libGDX's own
         // `com.badlogic.gdx.utils.Array` inside that package (same-package name resolution).
         case Some(es) => s"scala.Array[${tpe(el.tpe)}](${es.map(term(_, i)).mkString(", ")})"
+        // Java `new T[a][b]` gives every dimension a size; Scala's `new Array` takes only ONE, so a
+        // MULTI-dimension allocation lowers to `Array.ofDim[base](a, b)`. A single dim (incl. partial
+        // `new T[a][]`) stays `new Array[elem](a)`.
+        case None if dims.sizeIs > 1 => s"scala.Array.ofDim[${tpe(baseElem(el.tpe))}](${dims.map(term(_, i)).mkString(", ")})"
         case None     => s"new scala.Array[${tpe(el.tpe)}](${dims.map(term(_, i)).mkString(", ")})"
     case Tree.ForEach(b, it, body, _, _) => s"for (${esc(sym(b.symbol).name)} <- ${term(it, i)}) ${term(body, i)}"
     case Tree.For(init, cond, upd, body, _, _) =>
@@ -527,6 +531,11 @@ final class TirEmitter(source: Program):
   private def ctorTpe(t: TypeRepr): String = t match
     case TypeRepr.AppliedType(tc, args) if args.exists(_.isInstanceOf[TypeRepr.TypeBounds]) => tpe(tc)
     case _ => tpe(t)
+
+  /** strip `scala.Array[...]` layers to the base element type (for `Array.ofDim[base](dims)`). */
+  private def baseElem(t: TypeRepr): TypeRepr = t match
+    case TypeRepr.AppliedType(TypeRepr.TypeRef(_, s), List(e)) if sym(s).fullName == "scala.Array" => baseElem(e)
+    case _ => t
 
   private def tpe(t: TypeRepr): String = t match
     case TypeRepr.NoType | TypeRepr.NoPrefix   => "Any"
