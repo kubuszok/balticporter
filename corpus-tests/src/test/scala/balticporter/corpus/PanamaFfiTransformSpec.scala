@@ -23,7 +23,7 @@ class PanamaFfiTransformSpec extends munit.FunSuite:
   private val out   = new TirEmitter(after).emit
 
   test("generates a downcall MethodHandle per native, with a signature-derived descriptor") {
-    assert(clue(out).contains("private val add$handle: java.lang.invoke.MethodHandle"))
+    assert(clue(out).matches("(?s).*private val add\\$\\d+\\$handle: java.lang.invoke.MethodHandle.*"))
     assert(out.contains("""java.lang.foreign.Linker.nativeLinker().downcallHandle("""))
     assert(out.contains("""defaultLookup().find("add").orElseThrow()"""))
     // int add(int,int) → descriptor of JAVA_INT × 3
@@ -33,10 +33,10 @@ class PanamaFfiTransformSpec extends munit.FunSuite:
   }
 
   test("replaces the native body with a handle invocation") {
-    assert(out.contains("def add(a: scala.Int, b: scala.Int): scala.Int = add$handle.invokeExact(a, b).asInstanceOf[scala.Int]"))
+    assert(out.matches("(?s).*def add\\(a: scala.Int, b: scala.Int\\): scala.Int = add\\$\\d+\\$handle.invokeExact\\(a, b\\).asInstanceOf\\[scala.Int\\].*"))
   }
 
   test("void native uses ofVoid and a Unit-discarding body") {
     assert(out.contains("FunctionDescriptor.ofVoid(java.lang.foreign.ValueLayout.JAVA_INT)"))
-    assert(out.contains("def log(level: scala.Int): scala.Unit = { log$handle.invokeExact(level); () }"))
+    assert(out.matches("(?s).*def log\\(level: scala.Int\\): scala.Unit = \\{ log\\$\\d+\\$handle.invokeExact\\(level\\); \\(\\) \\}.*"))
   }
