@@ -239,10 +239,23 @@ emission backend (step 3), since projecting the delta onto Scala output needs em
      type param), and **nested-static VALUE access** (path-dependent `Outer.Inner.CONST`).
      Those want either the collections transform (step 5) or dedicated nesting-placement /
      capture machinery — tracked, not yet built.
-4. **First transform** — pick one real case (java→scala collection, or a field
-   usage rewrite) end-to-end to validate the substrate against an actual migration.
-5. **Transform API + the sge/ssg cases** — globals→implicits (call graph),
-   Int→opaque, collections, Panama.
+4. **First transform — STARTED: `CollectionsTransform` (`core`, `balticporter.transform`).**
+   The java→scala collections production transform, as a `Phase` on the pipeline. `run`
+   interns the scala symbols into the table and builds a java→scala `SymId` remap; then the
+   standard traversal applies `transformType` (retype every collection occurrence — field,
+   param, return, type arg, `new`, and every signature, because it also maps symbol infos)
+   and `transformApply` (`size()`/`isEmpty()` drop parens, `get(i)`→`apply`, `add`→`+=`,
+   `put`→`update`, guarded by the receiver's already-retyped type). Validated end-to-end:
+   `List`→`mutable.Buffer`, `ArrayList`→`ArrayBuffer`, `Map`→`mutable.Map`, `HashMap`→
+   `mutable.HashMap`; `xs.add(s)`→`xs += s`, `xs.get(0)`→`xs(0)`, `xs.size()`→`xs.size`,
+   `m.put(k,v)`→`m.update(k,v)`. The transformed output **compiles with scalac**.
+   `CollectionsTransformSpec` (2/2) asserts both the xref (old type vacated, `Buffer` inherits
+   its positions) and the emitted Scala; `CollectionsDemo` (runMain) shows before/after. This
+   is the first real proof of the whole substrate: populate → transform (symbol-driven,
+   whole-program) → emit compiling code.
+5. **Transform API + the remaining sge/ssg cases** — globals→implicits (call graph),
+   Int→opaque, Panama; grow the collections transform (more methods, `for`-each, immutable
+   variants).
 
 The old string-printer compile grind (M6 at ~61 errors) is **subsumed** by step 3:
 a types-carrying backend emits compiling code by construction. We stop patching the
