@@ -540,7 +540,10 @@ object SpoonTir:
           val ps = Option(ex.getExecutableDeclaration).map(_.getParameters.asScala.toList.map(_.getType))
           i => ps.flatMap(l => if i < l.size then Option(l(i)) else None)
         if formals.size == argEs.size then
-          argEs.zipWithIndex.map { (e, i) => nullToTypeParam(e, declFormals(i), coerce(formals(i), e, expr(e), arrayCov = external)) }
+          argEs.zipWithIndex.map { (e, i) =>
+            val c = nullToTypeParam(e, declFormals(i), coerce(formals(i), e, expr(e), arrayCov = external))
+            typeParamToObject(e, declFormals(i), c)
+          }
         else argEs.map(expr)
 
       /** `null` passed to a callee slot whose real (un-erased) formal is a type parameter — cast it,
@@ -553,6 +556,20 @@ object SpoonTir:
           // the same generic class) — otherwise `tpe` yields the `?T` unresolved stub, invalid syntax.
           case Some(tp: CtTypeParameterReference) if isNull && resolveTypeParam(tp.getSimpleName).isDefined =>
             Tree.Typed(t, tt(tpe(tp), e), tpe(tp), originOf(e))
+          case _ => t
+
+      /** A type-parameter-typed value flowing into a slot whose real formal is concretely
+        * `java.lang.Object` (`Json.writeValue(String, Object, …)`): Java erases `T` to `Object`, but
+        * Scala's unbounded `T <: Any` does NOT conform to `Object`. Cast (`resource.asInstanceOf[Object]`).
+        * Gated on the DECLARED formal being Object — NOT a type parameter erased to Object — so we
+        * never break our own `foo(x: T)` methods (whose real Scala signature keeps the invariant `T`). */
+      private def typeParamToObject(e: CtExpression[?], declFormal: Option[CtTypeReference[?]], t: Term): Term =
+        val et = try e.getType catch { case _: Throwable => null }
+        declFormal match
+          case Some(f) if !f.isInstanceOf[CtTypeParameterReference] && f.getQualifiedName == "java.lang.Object"
+                       && et != null && et.isInstanceOf[CtTypeParameterReference] =>
+            val obj = TypeRef(NoPrefix, minter.external("java.lang.Object", "Object"))
+            Tree.Typed(t, tt(obj, e), obj, originOf(e))
           case _ => t
 
       private def tryStmt(t: CtTry, resources: List[Tree.ValDef]): Term =

@@ -708,7 +708,7 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
   }
   def appendAll(iter: scala.collection.Iterator[?]): CharArray = {
     while (iter.hasNext) {
-      this.append(iter.next)
+      this.append(iter.next.asInstanceOf[java.lang.Object])
     }
     return this
   }
@@ -918,7 +918,7 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
   def appendWithSeparators(it: scala.collection.Iterator[?], separator: java.lang.String): CharArray = {
     val sep: java.lang.String = java.util.Objects.toString(separator, "")
     while (it.hasNext) {
-      this.append(it.next)
+      this.append(it.next.asInstanceOf[java.lang.Object])
       if (it.hasNext) {
         this.append(sep)
       } else ()

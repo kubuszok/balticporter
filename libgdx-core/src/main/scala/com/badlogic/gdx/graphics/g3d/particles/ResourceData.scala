@@ -57,7 +57,7 @@ class ResourceData[T] extends com.badlogic.gdx.utils.Json.Serializable {
     json.writeValue("unique", this.uniqueData, classOf[com.badlogic.gdx.utils.ObjectMap[?, ?]])
     json.writeValue("data", this.data, classOf[com.badlogic.gdx.utils.Array[?]], classOf[com.badlogic.gdx.graphics.g3d.particles.ResourceData.SaveData])
     json.writeValue("assets", this.sharedAssets.toArray((() => new scala.Array[com.badlogic.gdx.graphics.g3d.particles.ResourceData.AssetData[?]]())), classOf[scala.Array[com.badlogic.gdx.graphics.g3d.particles.ResourceData.AssetData[?]]])
-    json.writeValue("resource", this.resource, null)
+    json.writeValue("resource", this.resource.asInstanceOf[java.lang.Object], null)
   }
   def read(json: com.badlogic.gdx.utils.Json, jsonData: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
     this.uniqueData = json.readValue("unique", classOf[com.badlogic.gdx.utils.ObjectMap[?, ?]], jsonData)

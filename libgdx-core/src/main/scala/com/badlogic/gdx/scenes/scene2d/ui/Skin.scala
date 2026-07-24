@@ -350,7 +350,7 @@ class Skin extends com.badlogic.gdx.utils.Disposable {
   }
   def setEnabled[V](styleable: com.badlogic.gdx.scenes.scene2d.ui.Styleable[V], enabled: scala.Boolean): scala.Unit = {
     var style: V = styleable.getStyle().asInstanceOf[V]
-    var name: java.lang.String = this.find(style)
+    var name: java.lang.String = this.find(style.asInstanceOf[java.lang.Object])
     if (name == null) {
       return
     } else ()

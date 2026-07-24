@@ -408,7 +408,7 @@ class Tree[N <: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[?, ?, ?], V] extend
     if (value == null) {
       throw new java.lang.IllegalArgumentException("value cannot be null.")
     } else ()
-    return Tree.findNode(this.rootNodes, value).asInstanceOf[N]
+    return Tree.findNode(this.rootNodes, value.asInstanceOf[java.lang.Object]).asInstanceOf[N]
   }
   def collapseAll(): scala.Unit = {
     Tree.collapseAll(this.rootNodes)
@@ -675,10 +675,10 @@ object Tree {
       if (value == null) {
         throw new java.lang.IllegalArgumentException("value cannot be null.")
       } else ()
-      if (value.equals(this.value)) {
+      if (value.equals(this.value.asInstanceOf[java.lang.Object])) {
         return this.asInstanceOf[N]
       } else ()
-      return Tree.findNode(this.children, value).asInstanceOf[N]
+      return Tree.findNode(this.children, value.asInstanceOf[java.lang.Object]).asInstanceOf[N]
     }
     def collapseAll(): scala.Unit = {
       this.setExpanded(false)

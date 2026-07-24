@@ -43,7 +43,7 @@ class ObjectSet[T] extends scala.collection.Iterable[T] {
         if (other == null) {
           return -(i + 1)
         } else ()
-        if (other.equals(key)) {
+        if (other.equals(key.asInstanceOf[java.lang.Object])) {
           return i
         } else ()
       }; i = (i + 1) & this.mask } }

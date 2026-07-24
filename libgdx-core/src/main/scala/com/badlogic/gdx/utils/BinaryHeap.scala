@@ -36,7 +36,7 @@ class BinaryHeap[T <: com.badlogic.gdx.utils.BinaryHeap.Node] {
       }
     } else {
       for (other <- this.nodes) {
-        if (other.equals(node)) {
+        if (other.equals(node.asInstanceOf[java.lang.Object])) {
           return true
         } else ()
       }

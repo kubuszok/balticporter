@@ -126,18 +126,18 @@ class Queue[T] extends scala.collection.Iterable[T] {
     } else {
       if (head < tail) {
         { var i: scala.Int = head; while (i < tail) { {
-          if (value.equals(values(i))) {
+          if (value.equals(values(i).asInstanceOf[java.lang.Object])) {
             return i - head
           } else ()
         }; i = i + 1 } }
       } else {
         { var i: scala.Int = head; val n: scala.Int = values.length; while (i < n) { {
-          if (value.equals(values(i))) {
+          if (value.equals(values(i).asInstanceOf[java.lang.Object])) {
             return i - head
           } else ()
         }; i = i + 1 } };
         { var i: scala.Int = 0; while (i < tail) { {
-          if (value.equals(values(i))) {
+          if (value.equals(values(i).asInstanceOf[java.lang.Object])) {
             return (i + values.length) - head
           } else ()
         }; i = i + 1 } }
@@ -269,9 +269,9 @@ class Queue[T] extends scala.collection.Iterable[T] {
     val tail: scala.Int = this.tail
     val sb: java.lang.StringBuilder = new java.lang.StringBuilder(64)
     sb.append('[')
-    sb.append(values(head));
+    sb.append(values(head).asInstanceOf[java.lang.Object]);
     { var i: scala.Int = (head + 1) % values.length; while (i != tail) { {
-      sb.append(", ").append(values(i))
+      sb.append(", ").append(values(i).asInstanceOf[java.lang.Object])
     }; i = (i + 1) % values.length } }
     sb.append(']')
     return sb.toString()
@@ -284,9 +284,9 @@ class Queue[T] extends scala.collection.Iterable[T] {
     val head: scala.Int = this.head
     val tail: scala.Int = this.tail
     val sb: java.lang.StringBuilder = new java.lang.StringBuilder(64)
-    sb.append(values(head));
+    sb.append(values(head).asInstanceOf[java.lang.Object]);
     { var i: scala.Int = (head + 1) % values.length; while (i != tail) { {
-      sb.append(separator).append(values(i))
+      sb.append(separator).append(values(i).asInstanceOf[java.lang.Object])
     }; i = (i + 1) % values.length } }
     return sb.toString()
   }

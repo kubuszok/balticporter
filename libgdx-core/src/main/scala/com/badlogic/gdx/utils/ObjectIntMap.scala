@@ -50,7 +50,7 @@ class ObjectIntMap[K] extends scala.collection.Iterable[com.badlogic.gdx.utils.O
         if (other == null) {
           return -(i + 1)
         } else ()
-        if (other.equals(key)) {
+        if (other.equals(key.asInstanceOf[java.lang.Object])) {
           return i
         } else ()
       }; i = (i + 1) & this.mask } }
@@ -293,7 +293,7 @@ class ObjectIntMap[K] extends scala.collection.Iterable[com.badlogic.gdx.utils.O
       if (key == null) {
         /* continue */ ()
       } else ()
-      buffer.append(key)
+      buffer.append(key.asInstanceOf[java.lang.Object])
       buffer.append('=')
       buffer.append(valueTable(i))
       /* break */ ()
@@ -304,7 +304,7 @@ class ObjectIntMap[K] extends scala.collection.Iterable[com.badlogic.gdx.utils.O
         /* continue */ ()
       } else ()
       buffer.append(separator)
-      buffer.append(key)
+      buffer.append(key.asInstanceOf[java.lang.Object])
       buffer.append('=')
       buffer.append(valueTable(i))
     }

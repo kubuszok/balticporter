@@ -145,10 +145,10 @@ class OrderedSet[T] extends com.badlogic.gdx.utils.ObjectSet[T] {
     val items: scala.Array[T] = this.items.items
     val buffer: java.lang.StringBuilder = new java.lang.StringBuilder(32)
     buffer.append('{')
-    buffer.append(items(0));
+    buffer.append(items(0).asInstanceOf[java.lang.Object]);
     { var i: scala.Int = 1; while (i < size) { {
       buffer.append(", ")
-      buffer.append(items(i))
+      buffer.append(items(i).asInstanceOf[java.lang.Object])
     }; i = i + 1 } }
     buffer.append('}')
     return buffer.toString()

@@ -186,7 +186,7 @@ class ArrayMap[K, V] extends scala.collection.Iterable[com.badlogic.gdx.utils.Ob
       }
     } else {
       while (i >= 0) {
-        if (key.equals(keys({ i -= 1; i }))) {
+        if (key.equals(keys({ i -= 1; i }).asInstanceOf[java.lang.Object])) {
           return true
         } else ()
       }
@@ -204,7 +204,7 @@ class ArrayMap[K, V] extends scala.collection.Iterable[com.badlogic.gdx.utils.Ob
       }
     } else {
       while (i >= 0) {
-        if (value.equals(values({ i -= 1; i }))) {
+        if (value.equals(values({ i -= 1; i }).asInstanceOf[java.lang.Object])) {
           return true
         } else ()
       }
@@ -452,14 +452,14 @@ class ArrayMap[K, V] extends scala.collection.Iterable[com.badlogic.gdx.utils.Ob
     val values: scala.Array[V] = this.values$field
     val buffer: java.lang.StringBuilder = new java.lang.StringBuilder(32)
     buffer.append('{')
-    buffer.append(keys(0))
+    buffer.append(keys(0).asInstanceOf[java.lang.Object])
     buffer.append('=')
-    buffer.append(values(0));
+    buffer.append(values(0).asInstanceOf[java.lang.Object]);
     { var i: scala.Int = 1; while (i < this.size) { {
       buffer.append(", ")
-      buffer.append(keys(i))
+      buffer.append(keys(i).asInstanceOf[java.lang.Object])
       buffer.append('=')
-      buffer.append(values(i))
+      buffer.append(values(i).asInstanceOf[java.lang.Object])
     }; i = i + 1 } }
     buffer.append('}')
     return buffer.toString()

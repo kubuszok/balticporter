@@ -217,11 +217,11 @@ class IntMap[V] extends scala.collection.Iterable[com.badlogic.gdx.utils.IntMap.
           } else ()
         }; i = i - 1 } }
       } else {
-        if (this.hasZeroValue && value.equals(this.zeroValue)) {
+        if (this.hasZeroValue && value.equals(this.zeroValue.asInstanceOf[java.lang.Object])) {
           return true
         } else ();
         { var i: scala.Int = valueTable.length - 1; while (i >= 0) { {
-          if (value.equals(valueTable(i))) {
+          if (value.equals(valueTable(i).asInstanceOf[java.lang.Object])) {
             return true
           } else ()
         }; i = i - 1 } }
@@ -258,11 +258,11 @@ class IntMap[V] extends scala.collection.Iterable[com.badlogic.gdx.utils.IntMap.
           } else ()
         }; i = i - 1 } }
       } else {
-        if (this.hasZeroValue && value.equals(this.zeroValue)) {
+        if (this.hasZeroValue && value.equals(this.zeroValue.asInstanceOf[java.lang.Object])) {
           return 0
         } else ();
         { var i: scala.Int = valueTable.length - 1; while (i >= 0) { {
-          if (value.equals(valueTable(i))) {
+          if (value.equals(valueTable(i).asInstanceOf[java.lang.Object])) {
             return this.keyTable(i)
           } else ()
         }; i = i - 1 } }
@@ -333,7 +333,7 @@ class IntMap[V] extends scala.collection.Iterable[com.badlogic.gdx.utils.IntMap.
           return false
         } else ()
       } else {
-        if (!other.zeroValue.equals(this.zeroValue)) {
+        if (!other.zeroValue.equals(this.zeroValue.asInstanceOf[java.lang.Object])) {
           return false
         } else ()
       }
@@ -395,7 +395,7 @@ class IntMap[V] extends scala.collection.Iterable[com.badlogic.gdx.utils.IntMap.
     var i: scala.Int = keyTable.length
     if (this.hasZeroValue) {
       buffer.append("0=")
-      buffer.append(this.zeroValue)
+      buffer.append(this.zeroValue.asInstanceOf[java.lang.Object])
     } else {
       while ({ i -= 1; i } > 0) {
         val key: scala.Int = keyTable(i)
@@ -404,7 +404,7 @@ class IntMap[V] extends scala.collection.Iterable[com.badlogic.gdx.utils.IntMap.
         } else ()
         buffer.append(key)
         buffer.append('=')
-        buffer.append(valueTable(i))
+        buffer.append(valueTable(i).asInstanceOf[java.lang.Object])
         /* break */ ()
       }
     }
@@ -416,7 +416,7 @@ class IntMap[V] extends scala.collection.Iterable[com.badlogic.gdx.utils.IntMap.
       buffer.append(", ")
       buffer.append(key)
       buffer.append('=')
-      buffer.append(valueTable(i))
+      buffer.append(valueTable(i).asInstanceOf[java.lang.Object])
     }
     buffer.append(']')
     return buffer.toString()

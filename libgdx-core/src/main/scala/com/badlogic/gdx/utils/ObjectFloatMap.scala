@@ -50,7 +50,7 @@ class ObjectFloatMap[K] extends scala.collection.Iterable[com.badlogic.gdx.utils
         if (other == null) {
           return -(i + 1)
         } else ()
-        if (other.equals(key)) {
+        if (other.equals(key.asInstanceOf[java.lang.Object])) {
           return i
         } else ()
       }; i = (i + 1) & this.mask } }
@@ -314,7 +314,7 @@ class ObjectFloatMap[K] extends scala.collection.Iterable[com.badlogic.gdx.utils
       if (key == null) {
         /* continue */ ()
       } else ()
-      buffer.append(key)
+      buffer.append(key.asInstanceOf[java.lang.Object])
       buffer.append('=')
       buffer.append(valueTable(i))
       /* break */ ()
@@ -325,7 +325,7 @@ class ObjectFloatMap[K] extends scala.collection.Iterable[com.badlogic.gdx.utils
         /* continue */ ()
       } else ()
       buffer.append(separator)
-      buffer.append(key)
+      buffer.append(key.asInstanceOf[java.lang.Object])
       buffer.append('=')
       buffer.append(valueTable(i))
     }

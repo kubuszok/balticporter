@@ -50,7 +50,7 @@ class ObjectMap[K, V] extends scala.collection.Iterable[com.badlogic.gdx.utils.O
         if (other == null) {
           return -(i + 1)
         } else ()
-        if (other.equals(key)) {
+        if (other.equals(key.asInstanceOf[java.lang.Object])) {
           return i
         } else ()
       }; i = (i + 1) & this.mask } }
@@ -180,7 +180,7 @@ class ObjectMap[K, V] extends scala.collection.Iterable[com.badlogic.gdx.utils.O
         }; i = i - 1 } }
       } else {
         { var i: scala.Int = valueTable.length - 1; while (i >= 0) { {
-          if (value.equals(valueTable(i))) {
+          if (value.equals(valueTable(i).asInstanceOf[java.lang.Object])) {
             return true
           } else ()
         }; i = i - 1 } }
@@ -209,7 +209,7 @@ class ObjectMap[K, V] extends scala.collection.Iterable[com.badlogic.gdx.utils.O
         }; i = i - 1 } }
       } else {
         { var i: scala.Int = valueTable.length - 1; while (i >= 0) { {
-          if (value.equals(valueTable(i))) {
+          if (value.equals(valueTable(i).asInstanceOf[java.lang.Object])) {
             return this.keyTable(i)
           } else ()
         }; i = i - 1 } }

@@ -11,7 +11,7 @@ class IdentityMap[K, V] extends com.badlogic.gdx.utils.ObjectMap[K, V] {
     this()
   }
   def place(item: K): scala.Int = {
-    return ((java.lang.System.identityHashCode(item) * -7046029254386353131L) >>> shift).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
+    return ((java.lang.System.identityHashCode(item.asInstanceOf[java.lang.Object]) * -7046029254386353131L) >>> shift).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
   }
   def locateKey(key: K): scala.Int = {
     {
@@ -38,7 +38,7 @@ class IdentityMap[K, V] extends com.badlogic.gdx.utils.ObjectMap[K, V] {
     { var i: scala.Int = 0; val n: scala.Int = keyTable.length; while (i < n) { {
       val key: K = keyTable(i)
       if (key != null) {
-        h = h + java.lang.System.identityHashCode(key)
+        h = h + java.lang.System.identityHashCode(key.asInstanceOf[java.lang.Object])
         val value: V = valueTable(i)
         if (value != null) {
           h = h + value.hashCode()

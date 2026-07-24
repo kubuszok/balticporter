@@ -161,7 +161,7 @@ class Array[T] extends scala.collection.Iterable[T] {
       }; i = i + 1 } }
     } else {
       { var i: scala.Int = 0; val n: scala.Int = this.size; while (i < n) { {
-        if (value.equals(items(i))) {
+        if (value.equals(items(i).asInstanceOf[java.lang.Object])) {
           items(i) = replacement
           return true
         } else ()
@@ -181,7 +181,7 @@ class Array[T] extends scala.collection.Iterable[T] {
       }; i = i + 1 } }
     } else {
       { var i: scala.Int = 0; val n: scala.Int = this.size; while (i < n) { {
-        if (value.equals(items(i))) {
+        if (value.equals(items(i).asInstanceOf[java.lang.Object])) {
           items(i) = replacement
           replacements = replacements + 1
         } else ()
@@ -200,7 +200,7 @@ class Array[T] extends scala.collection.Iterable[T] {
       }
     } else {
       while (i >= 0) {
-        if (value.equals(items({ i -= 1; i }))) {
+        if (value.equals(items({ i -= 1; i }).asInstanceOf[java.lang.Object])) {
           return true
         } else ()
       }
@@ -235,7 +235,7 @@ class Array[T] extends scala.collection.Iterable[T] {
       }; i = i + 1 } }
     } else {
       { var i: scala.Int = 0; val n: scala.Int = this.size; while (i < n) { {
-        if (value.equals(items(i))) {
+        if (value.equals(items(i).asInstanceOf[java.lang.Object])) {
           return i
         } else ()
       }; i = i + 1 } }
@@ -252,7 +252,7 @@ class Array[T] extends scala.collection.Iterable[T] {
       }; i = i - 1 } }
     } else {
       { var i: scala.Int = this.size - 1; while (i >= 0) { {
-        if (value.equals(items(i))) {
+        if (value.equals(items(i).asInstanceOf[java.lang.Object])) {
           return i
         } else ()
       }; i = i - 1 } }
@@ -270,7 +270,7 @@ class Array[T] extends scala.collection.Iterable[T] {
       }; i = i + 1 } }
     } else {
       { var i: scala.Int = 0; val n: scala.Int = this.size; while (i < n) { {
-        if (value.equals(items(i))) {
+        if (value.equals(items(i).asInstanceOf[java.lang.Object])) {
           this.removeIndex(i)
           return true
         } else ()
@@ -334,7 +334,7 @@ class Array[T] extends scala.collection.Iterable[T] {
       { var i: scala.Int = 0; val n: scala.Int = array.size; while (i < n) { {
         val item: T = array.get(i);
         { var ii: scala.Int = 0; while (ii < size) { {
-          if (item.equals(items(ii))) {
+          if (item.equals(items(ii).asInstanceOf[java.lang.Object])) {
             this.removeIndex(ii)
             size = size - 1
             /* break */ ()
@@ -568,10 +568,10 @@ class Array[T] extends scala.collection.Iterable[T] {
     val items: scala.Array[T] = this.items
     val buffer: java.lang.StringBuilder = new java.lang.StringBuilder(32)
     buffer.append('[')
-    buffer.append(items(0));
+    buffer.append(items(0).asInstanceOf[java.lang.Object]);
     { var i: scala.Int = 1; while (i < this.size) { {
       buffer.append(", ")
-      buffer.append(items(i))
+      buffer.append(items(i).asInstanceOf[java.lang.Object])
     }; i = i + 1 } }
     buffer.append(']')
     return buffer.toString()
@@ -582,10 +582,10 @@ class Array[T] extends scala.collection.Iterable[T] {
     } else ()
     val items: scala.Array[T] = this.items
     val buffer: java.lang.StringBuilder = new java.lang.StringBuilder(32)
-    buffer.append(items(0));
+    buffer.append(items(0).asInstanceOf[java.lang.Object]);
     { var i: scala.Int = 1; while (i < this.size) { {
       buffer.append(separator)
-      buffer.append(items(i))
+      buffer.append(items(i).asInstanceOf[java.lang.Object])
     }; i = i + 1 } }
     return buffer.toString()
   }
