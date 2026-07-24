@@ -90,7 +90,7 @@ class TextureAtlas extends com.badlogic.gdx.utils.Disposable {
     return null
   }
   def findRegions(name: java.lang.String): com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion] = {
-    val matched: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion](scala.Array[com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion].<init>);
+    val matched: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion]((() => new scala.Array[com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion]()));
     { var i: scala.Int = 0; val n: scala.Int = this.regions.size; while (i < n) { {
       val region: com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion = this.regions.get(i)
       if (region.name.equals(name)) {
@@ -100,7 +100,7 @@ class TextureAtlas extends com.badlogic.gdx.utils.Disposable {
     return matched
   }
   def createSprites(): com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.Sprite] = {
-    val sprites: com.badlogic.gdx.utils.Array[?] = new com.badlogic.gdx.utils.Array(true, this.regions.size, scala.Array[com.badlogic.gdx.graphics.g2d.Sprite].<init>);
+    val sprites: com.badlogic.gdx.utils.Array[?] = new com.badlogic.gdx.utils.Array(true, this.regions.size, (() => new scala.Array[com.badlogic.gdx.graphics.g2d.Sprite]()));
     { var i: scala.Int = 0; val n: scala.Int = this.regions.size; while (i < n) { {
       sprites.add(this.newSprite(this.regions.get(i)))
     }; i = i + 1 } }
@@ -128,7 +128,7 @@ class TextureAtlas extends com.badlogic.gdx.utils.Disposable {
     return null
   }
   def createSprites(name: java.lang.String): com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.Sprite] = {
-    val matched: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.Sprite] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.Sprite](scala.Array[com.badlogic.gdx.graphics.g2d.Sprite].<init>);
+    val matched: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.Sprite] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.Sprite]((() => new scala.Array[com.badlogic.gdx.graphics.g2d.Sprite]()));
     { var i: scala.Int = 0; val n: scala.Int = this.regions.size; while (i < n) { {
       val region: com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion = this.regions.get(i)
       if (region.name.equals(name)) {
@@ -289,8 +289,8 @@ object TextureAtlas {
                 region.originalHeight = region.height
               } else ()
               if ((names != null) && (names.size > 0)) {
-                region.names = names.toArray(scala.Array[java.lang.String].<init>)
-                region.values = values.toArray(scala.Array[scala.Array[scala.Int]].<init>)
+                region.names = names.toArray((() => new scala.Array[java.lang.String]()))
+                region.values = values.toArray((() => new scala.Array[scala.Array[scala.Int]]()))
                 names.clear()
                 values.clear()
               } else ()

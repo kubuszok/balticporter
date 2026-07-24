@@ -423,7 +423,7 @@ class GlyphLayout extends com.badlogic.gdx.utils.Pool.Poolable {
   }
 }
 object GlyphLayout {
-  private final val glyphRunPool: com.badlogic.gdx.utils.Pool[com.badlogic.gdx.graphics.g2d.GlyphLayout.GlyphRun] = new com.badlogic.gdx.utils.DefaultPool[com.badlogic.gdx.graphics.g2d.GlyphLayout.GlyphRun](com.badlogic.gdx.graphics.g2d.GlyphLayout.GlyphRun.<init>)
+  private final val glyphRunPool: com.badlogic.gdx.utils.Pool[com.badlogic.gdx.graphics.g2d.GlyphLayout.GlyphRun] = new com.badlogic.gdx.utils.DefaultPool[com.badlogic.gdx.graphics.g2d.GlyphLayout.GlyphRun]((() => new com.badlogic.gdx.graphics.g2d.GlyphLayout.GlyphRun()))
   private final val colorStack: com.badlogic.gdx.utils.IntArray = new com.badlogic.gdx.utils.IntArray(4)
   private final val epsilon: scala.Float = 1.0E-4f
   class GlyphRun extends com.badlogic.gdx.utils.Pool.Poolable {

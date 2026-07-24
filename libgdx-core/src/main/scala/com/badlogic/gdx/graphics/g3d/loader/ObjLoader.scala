@@ -200,7 +200,7 @@ class ObjLoader extends com.badlogic.gdx.assets.loaders.ModelLoader[com.badlogic
       part.primitiveType = com.badlogic.gdx.graphics.GL20.GL_TRIANGLES
       val mesh: com.badlogic.gdx.graphics.g3d.model.data.ModelMesh = new com.badlogic.gdx.graphics.g3d.model.data.ModelMesh()
       mesh.id = meshId
-      mesh.attributes = attributes.toArray(scala.Array[com.badlogic.gdx.graphics.VertexAttribute].<init>)
+      mesh.attributes = attributes.toArray((() => new scala.Array[com.badlogic.gdx.graphics.VertexAttribute]()))
       mesh.vertices = finalVerts
       mesh.parts = Array[com.badlogic.gdx.graphics.g3d.model.data.ModelMeshPart](part)
       data.nodes.add(node)

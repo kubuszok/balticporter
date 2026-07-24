@@ -28,7 +28,7 @@ object PatternParser {
     var keyCapture: scala.Boolean = false
     var star: scala.Boolean = false
     var starStar: scala.Boolean = false
-    val matches: com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.JsonMatcher.Match] = new com.badlogic.gdx.utils.Array(scala.Array[com.badlogic.gdx.utils.JsonMatcher.Match].<init>)
+    val matches: com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.JsonMatcher.Match] = new com.badlogic.gdx.utils.Array((() => new scala.Array[com.badlogic.gdx.utils.JsonMatcher.Match]()))
     var root: com.badlogic.gdx.utils.JsonMatcher.Node = null
     var prev: com.badlogic.gdx.utils.JsonMatcher.Node = null
     var backtrack: com.badlogic.gdx.utils.JsonMatcher.Node = null

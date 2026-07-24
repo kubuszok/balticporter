@@ -16,7 +16,7 @@ class ParticleEffect extends com.badlogic.gdx.utils.Disposable with com.badlogic
   }
   def this() = {
     this()
-    this.controllers = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.ParticleController](true, 3, scala.Array[com.badlogic.gdx.graphics.g3d.particles.ParticleController].<init>)
+    this.controllers = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.ParticleController](true, 3, (() => new scala.Array[com.badlogic.gdx.graphics.g3d.particles.ParticleController]()))
   }
   def init(): scala.Unit = {
     { var i: scala.Int = 0; val n: scala.Int = this.controllers.size; while (i < n) { {

@@ -170,6 +170,8 @@ object SpoonTir:
           case Nil =>
             // a RAW use of a generic type — Java allows it, Scala requires arguments. Fill the
             // declared arity with wildcards (`Class` → `Class[?]`), so the reference type-checks.
+            // (Wildcards beat `Object` overall: a raw value more often flows INTO a generic slot
+            // than needs a concrete arg. The residual raw-into-type-param sites are cast below.)
             val arity = try Option(r.getTypeDeclaration).map(_.getFormalCtTypeParameters.size).getOrElse(0)
                         catch { case _: Throwable => 0 }
             if arity > 0 then AppliedType(head, List.fill(arity)(TypeBounds(NoType, NoType))) else head

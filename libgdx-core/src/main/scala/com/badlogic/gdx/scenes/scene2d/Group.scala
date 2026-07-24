@@ -1,7 +1,7 @@
 package com.badlogic.gdx.scenes.scene2d
 
 class Group extends com.badlogic.gdx.scenes.scene2d.Actor with com.badlogic.gdx.scenes.scene2d.utils.Cullable {
-  final val children: com.badlogic.gdx.utils.SnapshotArray[com.badlogic.gdx.scenes.scene2d.Actor] = new com.badlogic.gdx.utils.SnapshotArray[com.badlogic.gdx.scenes.scene2d.Actor](true, 4, scala.Array[com.badlogic.gdx.scenes.scene2d.Actor].<init>)
+  final val children: com.badlogic.gdx.utils.SnapshotArray[com.badlogic.gdx.scenes.scene2d.Actor] = new com.badlogic.gdx.utils.SnapshotArray[com.badlogic.gdx.scenes.scene2d.Actor](true, 4, (() => new scala.Array[com.badlogic.gdx.scenes.scene2d.Actor]()))
   private final val worldTransform: com.badlogic.gdx.math.Affine2 = new com.badlogic.gdx.math.Affine2()
   private final val computedTransform: com.badlogic.gdx.math.Matrix4 = new com.badlogic.gdx.math.Matrix4()
   private final val oldTransform: com.badlogic.gdx.math.Matrix4 = new com.badlogic.gdx.math.Matrix4()

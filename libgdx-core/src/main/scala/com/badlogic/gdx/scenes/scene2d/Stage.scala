@@ -16,7 +16,7 @@ class Stage extends com.badlogic.gdx.InputAdapter with com.badlogic.gdx.utils.Di
   private var mouseOverActor: com.badlogic.gdx.scenes.scene2d.Actor = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.Actor]
   private var keyboardFocus: com.badlogic.gdx.scenes.scene2d.Actor = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.Actor]
   private var scrollFocus: com.badlogic.gdx.scenes.scene2d.Actor = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.Actor]
-  final val touchFocuses: com.badlogic.gdx.utils.SnapshotArray[com.badlogic.gdx.scenes.scene2d.Stage.TouchFocus] = new com.badlogic.gdx.utils.SnapshotArray[com.badlogic.gdx.scenes.scene2d.Stage.TouchFocus](true, 4, scala.Array[com.badlogic.gdx.scenes.scene2d.Stage.TouchFocus].<init>)
+  final val touchFocuses: com.badlogic.gdx.utils.SnapshotArray[com.badlogic.gdx.scenes.scene2d.Stage.TouchFocus] = new com.badlogic.gdx.utils.SnapshotArray[com.badlogic.gdx.scenes.scene2d.Stage.TouchFocus](true, 4, (() => new scala.Array[com.badlogic.gdx.scenes.scene2d.Stage.TouchFocus]()))
   private var actionsRequestRendering: scala.Boolean = true
   private var debugShapes: com.badlogic.gdx.graphics.glutils.ShapeRenderer = null.asInstanceOf[com.badlogic.gdx.graphics.glutils.ShapeRenderer]
   private var debugInvisible: scala.Boolean = false
@@ -35,9 +35,9 @@ class Stage extends com.badlogic.gdx.InputAdapter with com.badlogic.gdx.utils.Di
     } else ()
     this.viewport = viewport
     this.batch = batch
-    this.pools.addPool(classOf[com.badlogic.gdx.scenes.scene2d.InputEvent], com.badlogic.gdx.scenes.scene2d.InputEvent.<init>)
-    this.pools.addPool(classOf[com.badlogic.gdx.scenes.scene2d.utils.FocusListener.FocusEvent], com.badlogic.gdx.scenes.scene2d.utils.FocusListener.FocusEvent.<init>)
-    this.pools.addPool(classOf[com.badlogic.gdx.scenes.scene2d.Stage.TouchFocus], com.badlogic.gdx.scenes.scene2d.Stage.TouchFocus.<init>)
+    this.pools.addPool(classOf[com.badlogic.gdx.scenes.scene2d.InputEvent], (() => new com.badlogic.gdx.scenes.scene2d.InputEvent()))
+    this.pools.addPool(classOf[com.badlogic.gdx.scenes.scene2d.utils.FocusListener.FocusEvent], (() => new com.badlogic.gdx.scenes.scene2d.utils.FocusListener.FocusEvent()))
+    this.pools.addPool(classOf[com.badlogic.gdx.scenes.scene2d.Stage.TouchFocus], (() => new com.badlogic.gdx.scenes.scene2d.Stage.TouchFocus()))
     this.root = new com.badlogic.gdx.scenes.scene2d.Group()
     this.root.setStage(this)
     viewport.update(com.badlogic.gdx.Gdx.graphics.getWidth(), com.badlogic.gdx.Gdx.graphics.getHeight(), true)

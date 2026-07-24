@@ -9,10 +9,10 @@ abstract class ModelInfluencer extends com.badlogic.gdx.graphics.g3d.particles.i
   }
   def this() = {
     this()
-    this.models = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.Model](true, 1, scala.Array[com.badlogic.gdx.graphics.g3d.Model].<init>)
+    this.models = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.Model](true, 1, (() => new scala.Array[com.badlogic.gdx.graphics.g3d.Model]()))
   }
   def this(influencer: ModelInfluencer) = {
-    this(influencer.models.toArray(scala.Array[com.badlogic.gdx.graphics.g3d.Model].<init>))
+    this(influencer.models.toArray((() => new scala.Array[com.badlogic.gdx.graphics.g3d.Model]())))
   }
   def allocateChannels(): scala.Unit = {
     this.modelChannel = this.controller.particles.addChannel(com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.ModelInstance)

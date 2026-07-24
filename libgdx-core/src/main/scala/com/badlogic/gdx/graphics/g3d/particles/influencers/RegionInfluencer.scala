@@ -6,12 +6,12 @@ abstract class RegionInfluencer extends com.badlogic.gdx.graphics.g3d.particles.
   var atlasName: java.lang.String = null.asInstanceOf[java.lang.String]
   def this(regionsCount: scala.Int) = {
     this()
-    this.regions = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.influencers.RegionInfluencer.AspectTextureRegion](false, regionsCount, scala.Array[com.badlogic.gdx.graphics.g3d.particles.influencers.RegionInfluencer.AspectTextureRegion].<init>)
+    this.regions = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.influencers.RegionInfluencer.AspectTextureRegion](false, regionsCount, (() => new scala.Array[com.badlogic.gdx.graphics.g3d.particles.influencers.RegionInfluencer.AspectTextureRegion]()))
   }
   def this(regions: scala.Array[com.badlogic.gdx.graphics.g2d.TextureRegion]) = {
     this()
     this.setAtlasName(null)
-    this.regions = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.influencers.RegionInfluencer.AspectTextureRegion](false, regions.length, scala.Array[com.badlogic.gdx.graphics.g3d.particles.influencers.RegionInfluencer.AspectTextureRegion].<init>)
+    this.regions = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.influencers.RegionInfluencer.AspectTextureRegion](false, regions.length, (() => new scala.Array[com.badlogic.gdx.graphics.g3d.particles.influencers.RegionInfluencer.AspectTextureRegion]()))
     this.add(regions)
   }
   def this(texture: com.badlogic.gdx.graphics.Texture) = {

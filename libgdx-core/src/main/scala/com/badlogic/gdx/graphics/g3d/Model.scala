@@ -79,7 +79,7 @@ class Model extends com.badlogic.gdx.utils.Disposable {
     }
     for (e <- this.nodePartBones.entries()) {
       if (e.key.invBoneBindTransforms == null) {
-        e.key.invBoneBindTransforms = new com.badlogic.gdx.utils.ArrayMap[com.badlogic.gdx.graphics.g3d.model.Node, com.badlogic.gdx.math.Matrix4](scala.Array[com.badlogic.gdx.graphics.g3d.model.Node].<init>, scala.Array[com.badlogic.gdx.math.Matrix4].<init>)
+        e.key.invBoneBindTransforms = new com.badlogic.gdx.utils.ArrayMap[com.badlogic.gdx.graphics.g3d.model.Node, com.badlogic.gdx.math.Matrix4]((() => new scala.Array[com.badlogic.gdx.graphics.g3d.model.Node]()), (() => new scala.Array[com.badlogic.gdx.math.Matrix4]()))
       } else ()
       e.key.invBoneBindTransforms.clear()
       for (b <- e.value.entries()) {

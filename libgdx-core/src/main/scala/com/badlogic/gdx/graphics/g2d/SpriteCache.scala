@@ -100,7 +100,7 @@ class SpriteCache extends com.badlogic.gdx.utils.Disposable {
     if (cache.textures == null) {
       cache.maxCount = cacheCount
       cache.textureCount = this.textures.size
-      cache.textures = this.textures.toArray(scala.Array[com.badlogic.gdx.graphics.Texture].<init>)
+      cache.textures = this.textures.toArray((() => new scala.Array[com.badlogic.gdx.graphics.Texture]()))
       cache.counts = new Array[scala.Int](cache.textureCount);
       { var i: scala.Int = 0; val n: scala.Int = this.counts.size; while (i < n) { {
         cache.counts(i) = this.counts.get(i)

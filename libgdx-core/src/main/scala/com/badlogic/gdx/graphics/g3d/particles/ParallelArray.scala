@@ -6,7 +6,7 @@ class ParallelArray {
   var size: scala.Int = 0
   def this(capacity: scala.Int) = {
     this()
-    this.arrays = new com.badlogic.gdx.utils.Array[Channel](false, 2, scala.Array[Channel].<init>)
+    this.arrays = new com.badlogic.gdx.utils.Array[Channel](false, 2, (() => new scala.Array[Channel]()))
     this.capacity = capacity
     this.size = 0
   }

@@ -146,8 +146,9 @@ final class TirEmitter(source: Program):
   // a Java `static` nested class has no instance home in Scala → it moves to the companion
   // `object` alongside static vals/defs. A non-static inner class stays in the class body.
   /** A Java no-arg constructor with a body has no home in Scala — `def this()` clashes with the
-    * implicit primary constructor. When it's the class's ONLY constructor, inline its body as the
-    * primary (its statements run at construction), dropping any leading no-arg super()/this(). */
+    * implicit primary constructor. Inline that no-arg constructor's body as the primary (its
+    * statements run at construction), dropping any leading no-arg super()/this(); other (param)
+    * constructors stay as secondary `def this(...)` and delegate to the now-implicit primary. */
   private def inlineSoleNoArgCtor(body: List[Statement]): List[Statement] =
     val ctors = body.collect { case d: Tree.DefDef if sym(d.symbol).name == "<init>" => d }
     ctors match
@@ -351,9 +352,12 @@ final class TirEmitter(source: Program):
       s"{ $is; while ($c) $bodyWithUpd }"
     case Tree.Try(res, body, catches, fin, _, _) => tryStr(res, body, catches, fin, i)
     case Tree.Match(scr, cases, _, _)   => matchStr(scr, cases, i)
-    case Tree.MethodRef(q, s, _, _)     => q match
-        case Left(tt)  => s"${tpe(tt.tpe)}.${local(s)}"
-        case Right(e)  => s"${term(e, i)}.${local(s)}"
+    case Tree.MethodRef(q, s, _, _)     =>
+      val isCtor = sym(s).name == "<init>" // `Type::new` → a factory function `() => new Type()`
+      q match
+        case Left(tt) if isCtor => s"(() => new ${tpe(tt.tpe)}())"
+        case Left(tt)           => s"${tpe(tt.tpe)}.${local(s)}"
+        case Right(e)           => s"${term(e, i)}.${local(s)}"
     case Tree.Break(_, _, _)            => "/* break */ ()"    // TODO: scala.util.boundary
     case Tree.Continue(_, _, _)         => "/* continue */ ()" // TODO: scala.util.boundary
     case Tree.Assert(c, m, _, _)        => s"assert(${term(c, i)}${m.map(x => ", " + term(x, i)).getOrElse("")})"
