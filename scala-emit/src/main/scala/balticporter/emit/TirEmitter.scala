@@ -173,14 +173,25 @@ final class TirEmitter(source: Program):
     val name    = esc(s.name)
     val parents = cd.parents.map(parent).filter(p => p.nonEmpty && !p.startsWith("java.lang.Enum"))
     val ext     = if parents.isEmpty then "" else " extends " + parents.mkString(" with ")
-    val (statics, instance) = cd.body.partition(isStatic)
+    val (statics, instance0) = cd.body.partition(isStatic)
+    // A Java enum constructor's PARAMS become the sealed class's primary constructor params (as `var`
+    // fields), so `case object Nearest extends TextureFilter(GL_NEAREST)` has somewhere to pass its
+    // arg. Drop the constructor itself and any field that a param supersedes (same name).
+    val ctorParams = instance0.collectFirst { case d: Tree.DefDef if sym(d.symbol).name == "<init>" => d.paramss.flatten }.getOrElse(Nil)
+    val paramNames = ctorParams.map(v => sym(v.symbol).name).toSet
+    val instance   = instance0.filterNot {
+      case d: Tree.DefDef => sym(d.symbol).name == "<init>"
+      case v: Tree.ValDef => paramNames(sym(v.symbol).name)
+      case _              => false
+    }
+    val eprimary = if ctorParams.isEmpty then "" else s"(${ctorParams.map(v => s"var ${esc(sym(v.symbol).name)}: ${tpe(v.tpt.tpe)}").mkString(", ")})"
     // Java's final `Enum.name()` — a `case object`'s `toString` IS its declared name (= the Java
     // constant name), so `name()` returns it. Skip if the enum already declares a `name` member.
     val hasName = instance.exists { case d: Definition => sym(d.symbol).name == "name"; case _ => false }
     val nameM   = if hasName then Nil else List(s"${ind(i + 1)}def name(): java.lang.String = this.toString()")
     val members = orderBody(instance).map(stat(_, i + 1)).filter(_.nonEmpty) ++ nameM
     val cbody   = members.mkString("\n")
-    val cls     = s"${ind(i)}sealed abstract class $name$ext" + (if cbody.isEmpty then "" else s" {\n$cbody\n${ind(i)}}")
+    val cls     = s"${ind(i)}sealed abstract class $name$eprimary$ext" + (if cbody.isEmpty then "" else s" {\n$cbody\n${ind(i)}}")
     val cases = cd.enumCases.map { ec =>
       val cn   = esc(sym(ec.symbol).name)
       val args = if ec.ctorArgs.isEmpty then "" else s"(${ec.ctorArgs.map(term(_, i + 1)).mkString(", ")})"

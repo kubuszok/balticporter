@@ -196,9 +196,9 @@ object SpoonTir:
         .filterNot(_.isInstanceOf[CtEnumValue[?]])
         .sortBy(posKey)
         .map(fieldDef(id, _))
-      // enum constructors are folded into the sealed-class lowering, not emitted as secondary ctors.
+      // include enum constructors too — the emitter folds their PARAMS into the sealed class's primary
+      // constructor so each constant (`Nearest(GL_NEAREST)`) has a matching parameter to pass to.
       val ctors = t match
-        case _: CtEnum[?]  => Nil
         case c: CtClass[?] => c.getConstructors.asScala.toList.sortBy(posKey).map(execDef(id, _, "<init>"))
         case _             => Nil
       val methods = t.getMethods.asScala.toList.sortBy(posKey).map(m => execDef(id, m, m.getSimpleName))

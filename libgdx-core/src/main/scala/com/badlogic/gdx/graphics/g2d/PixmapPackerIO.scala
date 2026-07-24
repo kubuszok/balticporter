@@ -55,8 +55,7 @@ class PixmapPackerIO {
   }
 }
 object PixmapPackerIO {
-  sealed abstract class ImageFormat {
-    private var `extension`: java.lang.String = null.asInstanceOf[java.lang.String]
+  sealed abstract class ImageFormat(var `extension`: java.lang.String) {
     def getExtension(): java.lang.String = {
       return this.`extension`
     }

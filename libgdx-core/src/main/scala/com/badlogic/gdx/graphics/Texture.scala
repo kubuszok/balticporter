@@ -168,8 +168,7 @@ object Texture {
   def getNumManagedTextures(): scala.Int = {
     return Texture.managedTextures.getOrElse(com.badlogic.gdx.Gdx.app, null.asInstanceOf[com.badlogic.gdx.utils.Array[Texture]]).size
   }
-  sealed abstract class TextureFilter {
-    var glEnum: scala.Int = 0
+  sealed abstract class TextureFilter(var glEnum: scala.Int) {
     def isMipMap(): scala.Boolean = {
       return (this.glEnum != com.badlogic.gdx.graphics.GL20.GL_NEAREST) && (this.glEnum != com.badlogic.gdx.graphics.GL20.GL_LINEAR)
     }
@@ -198,8 +197,7 @@ object Texture {
       case _ => throw new java.lang.IllegalArgumentException(name)
     }
   }
-  sealed abstract class TextureWrap {
-    var glEnum: scala.Int = 0
+  sealed abstract class TextureWrap(var glEnum: scala.Int) {
     def getGLEnum(): scala.Int = {
       return this.glEnum
     }

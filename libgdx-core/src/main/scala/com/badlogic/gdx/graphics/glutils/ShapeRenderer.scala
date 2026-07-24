@@ -938,8 +938,7 @@ class ShapeRenderer extends com.badlogic.gdx.utils.Disposable {
   }
 }
 object ShapeRenderer {
-  sealed abstract class ShapeType {
-    private var glType: scala.Int = 0
+  sealed abstract class ShapeType(var glType: scala.Int) {
     def getGlType(): scala.Int = {
       return this.glType
     }

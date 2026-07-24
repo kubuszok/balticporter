@@ -142,9 +142,7 @@ object Cubemap {
   def getNumManagedCubemaps(): scala.Int = {
     return Cubemap.managedCubemaps.getOrElse(com.badlogic.gdx.Gdx.app, null.asInstanceOf[com.badlogic.gdx.utils.Array[Cubemap]]).size
   }
-  sealed abstract class CubemapSide {
-    var index: scala.Int = 0
-    var glEnum: scala.Int = 0
+  sealed abstract class CubemapSide(var index: scala.Int, var glEnum: scala.Int, var upX: scala.Float, var upY: scala.Float, var upZ: scala.Float, var directionX: scala.Float, var directionY: scala.Float, var directionZ: scala.Float) {
     var up: com.badlogic.gdx.math.Vector3 = null.asInstanceOf[com.badlogic.gdx.math.Vector3]
     var direction: com.badlogic.gdx.math.Vector3 = null.asInstanceOf[com.badlogic.gdx.math.Vector3]
     def getGLEnum(): scala.Int = {
