@@ -3,10 +3,10 @@ package com.badlogic.gdx.math
 object MathUtils {
   final val nanoToSec: scala.Float = 1 / 1.0E9f
   final val FLOAT_ROUNDING_ERROR: scala.Float = 1.0E-6f
-  final val PI: scala.Float = java.lang.Math.PI.asInstanceOf[scala.Float]
+  final val PI: scala.Float = java.lang.Math.PI.asInstanceOf[scala.Float].asInstanceOf[scala.Float]
   final val PI2: scala.Float = MathUtils.PI * 2
   final val HALF_PI: scala.Float = MathUtils.PI / 2
-  final val E: scala.Float = java.lang.Math.E.asInstanceOf[scala.Float]
+  final val E: scala.Float = java.lang.Math.E.asInstanceOf[scala.Float].asInstanceOf[scala.Float]
   private final val SIN_BITS: scala.Int = 14
   private final val SIN_MASK: scala.Int = ~((-1) << MathUtils.SIN_BITS)
   private final val SIN_COUNT: scala.Int = MathUtils.SIN_MASK + 1

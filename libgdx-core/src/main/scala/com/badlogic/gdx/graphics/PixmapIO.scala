@@ -230,11 +230,11 @@ object PixmapIO {
     private final val IHDR: scala.Int = 1229472850
     private final val IDAT: scala.Int = 1229209940
     private final val IEND: scala.Int = 1229278788
-    private final val COLOR_ARGB: scala.Byte = 6
-    private final val COMPRESSION_DEFLATE: scala.Byte = 0
-    private final val FILTER_NONE: scala.Byte = 0
-    private final val INTERLACE_NONE: scala.Byte = 0
-    private final val PAETH: scala.Byte = 4
+    private final val COLOR_ARGB: scala.Byte = 6.asInstanceOf[scala.Byte]
+    private final val COMPRESSION_DEFLATE: scala.Byte = 0.asInstanceOf[scala.Byte]
+    private final val FILTER_NONE: scala.Byte = 0.asInstanceOf[scala.Byte]
+    private final val INTERLACE_NONE: scala.Byte = 0.asInstanceOf[scala.Byte]
+    private final val PAETH: scala.Byte = 4.asInstanceOf[scala.Byte]
     class ChunkBuffer extends java.io.DataOutputStream {
       var buffer: java.io.ByteArrayOutputStream = null.asInstanceOf[java.io.ByteArrayOutputStream]
       var crc: java.util.zip.CRC32 = null.asInstanceOf[java.util.zip.CRC32]

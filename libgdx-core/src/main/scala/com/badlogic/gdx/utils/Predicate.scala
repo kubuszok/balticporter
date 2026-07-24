@@ -9,7 +9,7 @@ object Predicate {
     var predicate: Predicate[T] = null.asInstanceOf[Predicate[T]]
     var `end`: scala.Boolean = false
     var peeked: scala.Boolean = false
-    var next$field: T = null
+    var next$field: T = null.asInstanceOf[T]
     def this(iterator: scala.collection.Iterator[T], predicate: Predicate[T]) = {
       this()
       this.set(iterator, predicate)

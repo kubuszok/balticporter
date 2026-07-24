@@ -250,7 +250,7 @@ object SpoonTir:
       )
       // a field initializer is a real expression: translate it so its usages are traced,
       // attributed to the field (not a method).
-      val rhs = Option(f.getDefaultExpression).map(e => new BodyTranslator(id, owner).exprOf(e))
+      val rhs = Option(f.getDefaultExpression).map(e => new BodyTranslator(id, owner).coercedExprOf(f.getType, e))
       Tree.ValDef(id, tt(ft, f), rhs = rhs, origin = originOf(f))
 
     private def execDef(owner: SymId, m: CtExecutable[?], name: String): Tree.DefDef =
@@ -371,6 +371,8 @@ object SpoonTir:
         Tree.Block(b.getStatements.asScala.toList.map(stmt), unit(b), unitT, originOf(b))
 
       def exprOf(e: CtExpression[?]): Term = expr(e)
+      /** translate an initializer, coercing it to `target` (null → type param, narrowing, etc.). */
+      def coercedExprOf(target: CtTypeReference[?], e: CtExpression[?]): Term = coerce(target, e, expr(e))
 
       private def unit(el: CtElement): Term = Tree.Literal(Constant.UnitC, unitT, originOf(el))
 

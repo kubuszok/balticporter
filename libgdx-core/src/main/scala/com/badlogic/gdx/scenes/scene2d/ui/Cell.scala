@@ -901,15 +901,15 @@ class Cell[T <: com.badlogic.gdx.scenes.scene2d.Actor] extends com.badlogic.gdx.
   }
 }
 object Cell {
-  private final val zerof: java.lang.Float = 0.0f
-  private final val onef: java.lang.Float = 1.0f
-  private final val zeroi: java.lang.Integer = 0
-  private final val onei: java.lang.Integer = 1
+  private final val zerof: java.lang.Float = 0.0f.asInstanceOf[java.lang.Float]
+  private final val onef: java.lang.Float = 1.0f.asInstanceOf[java.lang.Float]
+  private final val zeroi: java.lang.Integer = 0.asInstanceOf[java.lang.Integer]
+  private final val onei: java.lang.Integer = 1.asInstanceOf[java.lang.Integer]
   private final val centeri: java.lang.Integer = Cell.onei
-  private final val topi: java.lang.Integer = com.badlogic.gdx.utils.Align.top
-  private final val bottomi: java.lang.Integer = com.badlogic.gdx.utils.Align.bottom
-  private final val lefti: java.lang.Integer = com.badlogic.gdx.utils.Align.left
-  private final val righti: java.lang.Integer = com.badlogic.gdx.utils.Align.right
+  private final val topi: java.lang.Integer = com.badlogic.gdx.utils.Align.top.asInstanceOf[java.lang.Integer]
+  private final val bottomi: java.lang.Integer = com.badlogic.gdx.utils.Align.bottom.asInstanceOf[java.lang.Integer]
+  private final val lefti: java.lang.Integer = com.badlogic.gdx.utils.Align.left.asInstanceOf[java.lang.Integer]
+  private final val righti: java.lang.Integer = com.badlogic.gdx.utils.Align.right.asInstanceOf[java.lang.Integer]
   private var files: com.badlogic.gdx.Files = null.asInstanceOf[com.badlogic.gdx.Files]
   var defaults$field: Cell[?] = null.asInstanceOf[Cell[?]]
   def defaults(): Cell[?] = {

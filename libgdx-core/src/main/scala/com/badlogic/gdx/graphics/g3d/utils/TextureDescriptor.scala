@@ -1,7 +1,7 @@
 package com.badlogic.gdx.graphics.g3d.utils
 
 class TextureDescriptor[T <: com.badlogic.gdx.graphics.GLTexture] extends java.lang.Comparable[TextureDescriptor[T]] {
-  var texture: T = null
+  var texture: T = null.asInstanceOf[T]
   var minFilter: com.badlogic.gdx.graphics.Texture.TextureFilter = null.asInstanceOf[com.badlogic.gdx.graphics.Texture.TextureFilter]
   var magFilter: com.badlogic.gdx.graphics.Texture.TextureFilter = null.asInstanceOf[com.badlogic.gdx.graphics.Texture.TextureFilter]
   var uWrap: com.badlogic.gdx.graphics.Texture.TextureWrap = null.asInstanceOf[com.badlogic.gdx.graphics.Texture.TextureWrap]

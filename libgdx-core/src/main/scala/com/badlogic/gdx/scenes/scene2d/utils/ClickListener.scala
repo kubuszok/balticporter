@@ -11,7 +11,7 @@ class ClickListener extends com.badlogic.gdx.scenes.scene2d.InputListener {
   private var over: scala.Boolean = false
   private var cancelled: scala.Boolean = false
   private var visualPressedTime: scala.Long = 0L
-  private var tapCountInterval: scala.Long = (0.4f * 1000000000L).asInstanceOf[scala.Long]
+  private var tapCountInterval: scala.Long = (0.4f * 1000000000L).asInstanceOf[scala.Long].asInstanceOf[scala.Long]
   private var tapCount: scala.Int = 0
   private var lastTapTime: scala.Long = 0L
   def this(button: scala.Int) = {

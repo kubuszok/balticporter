@@ -978,12 +978,12 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
   }
 }
 object TextField {
-  final val BACKSPACE: scala.Char = 8
+  final val BACKSPACE: scala.Char = 8.asInstanceOf[scala.Char]
   final val CARRIAGE_RETURN: scala.Char = '\r'
   final val NEWLINE: scala.Char = '\n'
   final val TAB: scala.Char = '\t'
-  final val DELETE: scala.Char = 127
-  final val BULLET: scala.Char = 149
+  final val DELETE: scala.Char = 127.asInstanceOf[scala.Char]
+  final val BULLET: scala.Char = 149.asInstanceOf[scala.Char]
   var DEFAULT_ONSCREEN_KEYBOARD: com.badlogic.gdx.scenes.scene2d.ui.TextField.OnscreenKeyboard = new com.badlogic.gdx.scenes.scene2d.ui.TextField.DefaultOnscreenKeyboard()
   private final val tmp1: com.badlogic.gdx.math.Vector2 = new com.badlogic.gdx.math.Vector2()
   private final val tmp2: com.badlogic.gdx.math.Vector2 = new com.badlogic.gdx.math.Vector2()
