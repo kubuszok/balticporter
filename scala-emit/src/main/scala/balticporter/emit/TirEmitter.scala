@@ -250,8 +250,29 @@ final class TirEmitter(source: Program):
     val tps   = if d.tparams.isEmpty then "" else "[" + d.tparams.map(typeParam).mkString(", ") + "]"
     val pss   = d.paramss.map(paramClause).mkString
     val ret   = if isCtor then "" else s": ${tpe(d.returnTpt.tpe)}"
-    val rhs   = if isCtor then s" = ${ctorBody(d.rhs, i)}" else d.rhs.map(r => s" = ${term(r, i)}").getOrElse("")
+    // a Java `while(true){ … return … }` idiom: the loop never falls through, but Scala types
+    // `while(true)` as Unit, so a non-Unit method needs an unreachable tail after it.
+    val needsUnreachable = !isCtor && !isUnitType(d.returnTpt.tpe) && d.rhs.exists(endsInInfiniteLoop)
+    val rhs =
+      if isCtor then s" = ${ctorBody(d.rhs, i)}"
+      else d.rhs.map(r =>
+        if needsUnreachable then s" = {\n${ind(i + 1)}${term(r, i + 1)}\n${ind(i + 1)}throw new java.lang.RuntimeException(\"unreachable\")\n${ind(i)}}"
+        else s" = ${term(r, i)}").getOrElse("")
     s"${ind(i)}${mods(s.flags)}def $name$tps$pss$ret$rhs"
+
+  private def isUnitType(t: TypeRepr): Boolean = t match
+    case TypeRepr.TypeRef(_, s) => sym(s).fullName == "scala.Unit"
+    case _ => false
+  /** the method body is (or ends in) an infinite `while(true)` / `for(;;)`. */
+  private def endsInInfiniteLoop(t: Term): Boolean = t match
+    case Tree.While(Tree.Literal(Constant.BoolC(true), _, _), _, _, _) => true
+    case Tree.For(_, None, _, _, _, _)                                 => true
+    case Tree.Block(stats, e, _, _) =>
+      endsInInfiniteLoop(e) || (e match {
+        case Tree.Literal(Constant.UnitC, _, _) => stats.lastOption.collect { case x: Term => x }.exists(endsInInfiniteLoop)
+        case _ => false
+      })
+    case _ => false
 
   /** A Scala secondary constructor must delegate to `this(...)` first — never `super(...)`.
     * Keep a Java `this(args)` delegation; rewrite a leading `super(...)`/implicit-super to

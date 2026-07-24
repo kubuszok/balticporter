@@ -288,17 +288,20 @@ class AssetManager extends com.badlogic.gdx.utils.Disposable {
     }
   }
   def update(millis: scala.Int): scala.Boolean = {
-    if (com.badlogic.gdx.Gdx.app.getType() == com.badlogic.gdx.Application.ApplicationType.WebGL) {
-      return this.update()
-    } else ()
-    val endTime: scala.Long = com.badlogic.gdx.utils.TimeUtils.millis() + millis
-    while (true) {
-      val done: scala.Boolean = this.update()
-      if (done || (com.badlogic.gdx.utils.TimeUtils.millis() > endTime)) {
-        return done
+    {
+      if (com.badlogic.gdx.Gdx.app.getType() == com.badlogic.gdx.Application.ApplicationType.WebGL) {
+        return this.update()
       } else ()
-      com.badlogic.gdx.utils.async.ThreadUtils.`yield`()
+      val endTime: scala.Long = com.badlogic.gdx.utils.TimeUtils.millis() + millis
+      while (true) {
+        val done: scala.Boolean = this.update()
+        if (done || (com.badlogic.gdx.utils.TimeUtils.millis() > endTime)) {
+          return done
+        } else ()
+        com.badlogic.gdx.utils.async.ThreadUtils.`yield`()
+      }
     }
+    throw new java.lang.RuntimeException("unreachable")
   }
   def isFinished(): scala.Boolean = {
     return (this.loadQueue.size == 0) && (this.tasks.size == 0)
@@ -314,24 +317,27 @@ class AssetManager extends com.badlogic.gdx.utils.Disposable {
     return this.finishLoadingAsset(assetDesc.fileName).asInstanceOf[T]
   }
   def finishLoadingAsset[T](fileName: java.lang.String): T = {
-    this.log.debug("Waiting for asset to be loaded: " + fileName)
-    while (true) {
-      this.synchronized {
-        val `type`: java.lang.Class[T] = this.assetTypes.get(fileName)
-        if (`type` != null) {
-          val assetsByType: com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.assets.AssetManager.RefCountedContainer] = this.assets.get(`type`)
-          if (assetsByType != null) {
-            val assetContainer: com.badlogic.gdx.assets.AssetManager.RefCountedContainer = assetsByType.get(fileName)
-            if (assetContainer != null) {
-              this.log.debug("Asset loaded: " + fileName)
-              return assetContainer.`object`.asInstanceOf[T].asInstanceOf[T]
+    {
+      this.log.debug("Waiting for asset to be loaded: " + fileName)
+      while (true) {
+        this.synchronized {
+          val `type`: java.lang.Class[T] = this.assetTypes.get(fileName)
+          if (`type` != null) {
+            val assetsByType: com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.assets.AssetManager.RefCountedContainer] = this.assets.get(`type`)
+            if (assetsByType != null) {
+              val assetContainer: com.badlogic.gdx.assets.AssetManager.RefCountedContainer = assetsByType.get(fileName)
+              if (assetContainer != null) {
+                this.log.debug("Asset loaded: " + fileName)
+                return assetContainer.`object`.asInstanceOf[T].asInstanceOf[T]
+              } else ()
             } else ()
           } else ()
-        } else ()
-        this.update()
+          this.update()
+        }
+        com.badlogic.gdx.utils.async.ThreadUtils.`yield`()
       }
-      com.badlogic.gdx.utils.async.ThreadUtils.`yield`()
     }
+    throw new java.lang.RuntimeException("unreachable")
   }
   def injectDependencies(parentAssetFilename: java.lang.String, dependendAssetDescs: com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]): scala.Unit = {
     val injected: com.badlogic.gdx.utils.ObjectSet[java.lang.String] = this.injected

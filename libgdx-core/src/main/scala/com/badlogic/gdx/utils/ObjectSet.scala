@@ -33,19 +33,22 @@ class ObjectSet[T] extends scala.collection.Iterable[T] {
     return ((item.hashCode() * -7046029254386353131L) >>> this.shift).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
   }
   def locateKey(key: T): scala.Int = {
-    if (key == null) {
-      throw new java.lang.IllegalArgumentException("key cannot be null.")
-    } else ()
-    val keyTable: scala.Array[T] = this.keyTable;
-    { var i: scala.Int = this.place(key); while (true) { {
-      val other: T = keyTable(i)
-      if (other == null) {
-        return -(i + 1)
+    {
+      if (key == null) {
+        throw new java.lang.IllegalArgumentException("key cannot be null.")
       } else ()
-      if (other.equals(key)) {
-        return i
-      } else ()
-    }; i = (i + 1) & this.mask } }
+      val keyTable: scala.Array[T] = this.keyTable;
+      { var i: scala.Int = this.place(key); while (true) { {
+        val other: T = keyTable(i)
+        if (other == null) {
+          return -(i + 1)
+        } else ()
+        if (other.equals(key)) {
+          return i
+        } else ()
+      }; i = (i + 1) & this.mask } }
+    }
+    throw new java.lang.RuntimeException("unreachable")
   }
   def add(key: T): scala.Boolean = {
     var i: scala.Int = this.locateKey(key)

@@ -1144,47 +1144,50 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
     return -1
   }
   def indexOfIgnoreCase(str: java.lang.String, start$arg: scala.Int): scala.Int = {
-    var start: scala.Int = start$arg
-    if (start < 0) {
-      start = 0
-    } else ()
-    val length: scala.Int = str.length()
-    if (length == 0) {
-      return if ((start < this.size) || (start == 0)) start else this.size
-    } else ()
-    val maxIndex: scala.Int = this.size - length
-    if (start > maxIndex) {
-      return -1
-    } else ()
-    val firstUpper: scala.Char = java.lang.Character.toUpperCase(str.charAt(0))
-    val firstLower: scala.Char = java.lang.Character.toLowerCase(firstUpper)
-    while (true) {
-      var i: scala.Int = start
-      var found: scala.Boolean = false;
-      { ; while (i <= maxIndex) { {
-        val c: scala.Char = this.items(i)
-        if ((c == firstUpper) || (c == firstLower)) {
-          found = true
-          /* break */ ()
-        } else ()
-      }; i = i + 1 } }
-      if (!found) {
+    {
+      var start: scala.Int = start$arg
+      if (start < 0) {
+        start = 0
+      } else ()
+      val length: scala.Int = str.length()
+      if (length == 0) {
+        return if ((start < this.size) || (start == 0)) start else this.size
+      } else ()
+      val maxIndex: scala.Int = this.size - length
+      if (start > maxIndex) {
         return -1
       } else ()
-      var o1: scala.Int = i
-      var o2: scala.Int = 0
-      while ({ o2 += 1; o2 } < length) {
-        val c: scala.Char = this.items({ o1 += 1; o1 })
-        val upper: scala.Char = java.lang.Character.toUpperCase(str.charAt(o2))
-        if ((c != upper) && (c != java.lang.Character.toLowerCase(upper))) {
-          /* break */ ()
+      val firstUpper: scala.Char = java.lang.Character.toUpperCase(str.charAt(0))
+      val firstLower: scala.Char = java.lang.Character.toLowerCase(firstUpper)
+      while (true) {
+        var i: scala.Int = start
+        var found: scala.Boolean = false;
+        { ; while (i <= maxIndex) { {
+          val c: scala.Char = this.items(i)
+          if ((c == firstUpper) || (c == firstLower)) {
+            found = true
+            /* break */ ()
+          } else ()
+        }; i = i + 1 } }
+        if (!found) {
+          return -1
         } else ()
+        var o1: scala.Int = i
+        var o2: scala.Int = 0
+        while ({ o2 += 1; o2 } < length) {
+          val c: scala.Char = this.items({ o1 += 1; o1 })
+          val upper: scala.Char = java.lang.Character.toUpperCase(str.charAt(o2))
+          if ((c != upper) && (c != java.lang.Character.toLowerCase(upper))) {
+            /* break */ ()
+          } else ()
+        }
+        if (o2 == length) {
+          return i
+        } else ()
+        start = i + 1
       }
-      if (o2 == length) {
-        return i
-      } else ()
-      start = i + 1
     }
+    throw new java.lang.RuntimeException("unreachable")
   }
   def insert(index: scala.Int, value: scala.Boolean): CharArray = {
     this.validateIndex(index)
@@ -1438,21 +1441,24 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
     return this
   }
   def replace(find: scala.Char, replace: java.lang.String): CharArray = {
-    val replaceLength: scala.Int = replace.length()
-    var index: scala.Int = 0
-    while (true) {
+    {
+      val replaceLength: scala.Int = replace.length()
+      var index: scala.Int = 0
       while (true) {
-        if (index == this.size) {
-          return this
-        } else ()
-        if (this.items(index) == find) {
-          /* break */ ()
-        } else ()
-        index = index + 1
+        while (true) {
+          if (index == this.size) {
+            return this
+          } else ()
+          if (this.items(index) == find) {
+            /* break */ ()
+          } else ()
+          index = index + 1
+        }
+        this.replace(index, index + 1, 1, replace, replaceLength)
+        index = index + replaceLength
       }
-      this.replace(index, index + 1, 1, replace, replaceLength)
-      index = index + replaceLength
     }
+    throw new java.lang.RuntimeException("unreachable")
   }
   def replaceFirst(searchStr: java.lang.String, replaceStr: java.lang.String): CharArray = {
     val searchLength: scala.Int = searchStr.length()

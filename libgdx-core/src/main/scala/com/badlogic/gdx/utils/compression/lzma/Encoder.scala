@@ -189,377 +189,320 @@ class Encoder {
     return this._optimumCurrentIndex
   }
   def GetOptimum(position$arg: scala.Int): scala.Int = {
-    var position: scala.Int = position$arg
-    if (this._optimumEndIndex != this._optimumCurrentIndex) {
-      val lenRes: scala.Int = this._optimum(this._optimumCurrentIndex).PosPrev - this._optimumCurrentIndex
-      this.backRes = this._optimum(this._optimumCurrentIndex).BackPrev
-      this._optimumCurrentIndex = this._optimum(this._optimumCurrentIndex).PosPrev
-      return lenRes
-    } else ()
-    this._optimumCurrentIndex = {
-      this._optimumEndIndex = 0
-      this._optimumEndIndex
-    }
-    var lenMain: scala.Int = 0
-    var numDistancePairs: scala.Int = 0
-    if (!this._longestMatchWasFound) {
-      lenMain = this.ReadMatchDistances()
-    } else {
-      lenMain = this._longestMatchLength
-      this._longestMatchWasFound = false
-    }
-    numDistancePairs = this._numDistancePairs
-    var numAvailableBytes: scala.Int = this._matchFinder.GetNumAvailableBytes() + 1
-    if (numAvailableBytes < 2) {
-      this.backRes = -1
-      return 1
-    } else ()
-    if (numAvailableBytes > com.badlogic.gdx.utils.compression.lzma.Base.kMatchMaxLen) {
-      numAvailableBytes = com.badlogic.gdx.utils.compression.lzma.Base.kMatchMaxLen
-    } else ()
-    var repMaxIndex: scala.Int = 0
-    var i: scala.Int = 0;
-    { i = 0; while (i < com.badlogic.gdx.utils.compression.lzma.Base.kNumRepDistances) { {
-      this.reps(i) = this._repDistances(i)
-      this.repLens(i) = this._matchFinder.GetMatchLen(0 - 1, this.reps(i), com.badlogic.gdx.utils.compression.lzma.Base.kMatchMaxLen)
-      if (this.repLens(i) > this.repLens(repMaxIndex)) {
-        repMaxIndex = i
+    {
+      var position: scala.Int = position$arg
+      if (this._optimumEndIndex != this._optimumCurrentIndex) {
+        val lenRes: scala.Int = this._optimum(this._optimumCurrentIndex).PosPrev - this._optimumCurrentIndex
+        this.backRes = this._optimum(this._optimumCurrentIndex).BackPrev
+        this._optimumCurrentIndex = this._optimum(this._optimumCurrentIndex).PosPrev
+        return lenRes
       } else ()
-    }; i = i + 1 } }
-    if (this.repLens(repMaxIndex) >= this._numFastBytes) {
-      this.backRes = repMaxIndex
-      val lenRes: scala.Int = this.repLens(repMaxIndex)
-      this.MovePos(lenRes - 1)
-      return lenRes
-    } else ()
-    if (lenMain >= this._numFastBytes) {
-      this.backRes = this._matchDistances(numDistancePairs - 1) + com.badlogic.gdx.utils.compression.lzma.Base.kNumRepDistances
-      this.MovePos(lenMain - 1)
-      return lenMain
-    } else ()
-    var currentByte: scala.Byte = this._matchFinder.GetIndexByte(0 - 1)
-    var matchByte: scala.Byte = this._matchFinder.GetIndexByte(((0 - this._repDistances(0)) - 1) - 1)
-    if (((lenMain < 2) && (currentByte != matchByte)) && (this.repLens(repMaxIndex) < 2)) {
-      this.backRes = -1
-      return 1
-    } else ()
-    this._optimum(0).State = this._state
-    var posState: scala.Int = position & this._posStateMask
-    this._optimum(1).Price = com.badlogic.gdx.utils.compression.rangecoder.Encoder.GetPrice0(this._isMatch((this._state << com.badlogic.gdx.utils.compression.lzma.Base.kNumPosStatesBitsMax) + posState)) + this._literalEncoder.GetSubCoder(position, this._previousByte).GetPrice(!com.badlogic.gdx.utils.compression.lzma.Base.StateIsCharState(this._state), matchByte, currentByte)
-    this._optimum(1).MakeAsChar()
-    var matchPrice: scala.Int = com.badlogic.gdx.utils.compression.rangecoder.Encoder.GetPrice1(this._isMatch((this._state << com.badlogic.gdx.utils.compression.lzma.Base.kNumPosStatesBitsMax) + posState))
-    var repMatchPrice: scala.Int = matchPrice + com.badlogic.gdx.utils.compression.rangecoder.Encoder.GetPrice1(this._isRep(this._state))
-    if (matchByte == currentByte) {
-      val shortRepPrice: scala.Int = repMatchPrice + this.GetRepLen1Price(this._state, posState)
-      if (shortRepPrice < this._optimum(1).Price) {
-        this._optimum(1).Price = shortRepPrice
-        this._optimum(1).MakeAsShortRep()
-      } else ()
-    } else ()
-    var lenEnd: scala.Int = if (lenMain >= this.repLens(repMaxIndex)) lenMain else this.repLens(repMaxIndex)
-    if (lenEnd < 2) {
-      this.backRes = this._optimum(1).BackPrev
-      return 1
-    } else ()
-    this._optimum(1).PosPrev = 0
-    this._optimum(0).Backs0 = this.reps(0)
-    this._optimum(0).Backs1 = this.reps(1)
-    this._optimum(0).Backs2 = this.reps(2)
-    this._optimum(0).Backs3 = this.reps(3)
-    var len: scala.Int = lenEnd
-    while ({ {
-      this._optimum({ len -= 1; len }).Price = Encoder.kIfinityPrice
-    }; len >= 2 }) ();
-    { i = 0; while (i < com.badlogic.gdx.utils.compression.lzma.Base.kNumRepDistances) { {
-      var repLen: scala.Int = this.repLens(i)
-      if (repLen < 2) {
-        /* continue */ ()
-      } else ()
-      val price: scala.Int = repMatchPrice + this.GetPureRepPrice(i, this._state, posState)
-      while ({ {
-        var curAndLenPrice: scala.Int = price + this._repMatchLenEncoder.GetPrice(repLen - 2, posState)
-        var optimum: Optimal = this._optimum(repLen)
-        if (curAndLenPrice < optimum.Price) {
-          optimum.Price = curAndLenPrice
-          optimum.PosPrev = 0
-          optimum.BackPrev = i
-          optimum.Prev1IsChar = false
-        } else ()
-      }; { repLen -= 1; repLen } >= 2 }) ()
-    }; i = i + 1 } }
-    var normalMatchPrice: scala.Int = matchPrice + com.badlogic.gdx.utils.compression.rangecoder.Encoder.GetPrice0(this._isRep(this._state))
-    len = if (this.repLens(0) >= 2) this.repLens(0) + 1 else 2
-    if (len <= lenMain) {
-      var offs: scala.Int = 0
-      while (len > this._matchDistances(offs)) {
-        offs = offs + 2
-      };
-      { ; while (true) { {
-        val distance: scala.Int = this._matchDistances(offs + 1)
-        var curAndLenPrice: scala.Int = normalMatchPrice + this.GetPosLenPrice(distance, len, posState)
-        var optimum: Optimal = this._optimum(len)
-        if (curAndLenPrice < optimum.Price) {
-          optimum.Price = curAndLenPrice
-          optimum.PosPrev = 0
-          optimum.BackPrev = distance + com.badlogic.gdx.utils.compression.lzma.Base.kNumRepDistances
-          optimum.Prev1IsChar = false
-        } else ()
-        if (len == this._matchDistances(offs)) {
-          offs = offs + 2
-          if (offs == numDistancePairs) {
-            /* break */ ()
-          } else ()
-        } else ()
-      }; len = len + 1 } }
-    } else ()
-    var cur: scala.Int = 0
-    while (true) {
-      cur = cur + 1
-      if (cur == lenEnd) {
-        return this.Backward(cur)
-      } else ()
-      var newLen: scala.Int = this.ReadMatchDistances()
+      this._optimumCurrentIndex = {
+        this._optimumEndIndex = 0
+        this._optimumEndIndex
+      }
+      var lenMain: scala.Int = 0
+      var numDistancePairs: scala.Int = 0
+      if (!this._longestMatchWasFound) {
+        lenMain = this.ReadMatchDistances()
+      } else {
+        lenMain = this._longestMatchLength
+        this._longestMatchWasFound = false
+      }
       numDistancePairs = this._numDistancePairs
-      if (newLen >= this._numFastBytes) {
-        this._longestMatchLength = newLen
-        this._longestMatchWasFound = true
-        return this.Backward(cur)
+      var numAvailableBytes: scala.Int = this._matchFinder.GetNumAvailableBytes() + 1
+      if (numAvailableBytes < 2) {
+        this.backRes = -1
+        return 1
       } else ()
-      position = position + 1
-      var posPrev: scala.Int = this._optimum(cur).PosPrev
-      var state: scala.Int = 0
-      if (this._optimum(cur).Prev1IsChar) {
-        posPrev = posPrev - 1
-        if (this._optimum(cur).Prev2) {
-          state = this._optimum(this._optimum(cur).PosPrev2).State
-          if (this._optimum(cur).BackPrev2 < com.badlogic.gdx.utils.compression.lzma.Base.kNumRepDistances) {
-            state = com.badlogic.gdx.utils.compression.lzma.Base.StateUpdateRep(state)
+      if (numAvailableBytes > com.badlogic.gdx.utils.compression.lzma.Base.kMatchMaxLen) {
+        numAvailableBytes = com.badlogic.gdx.utils.compression.lzma.Base.kMatchMaxLen
+      } else ()
+      var repMaxIndex: scala.Int = 0
+      var i: scala.Int = 0;
+      { i = 0; while (i < com.badlogic.gdx.utils.compression.lzma.Base.kNumRepDistances) { {
+        this.reps(i) = this._repDistances(i)
+        this.repLens(i) = this._matchFinder.GetMatchLen(0 - 1, this.reps(i), com.badlogic.gdx.utils.compression.lzma.Base.kMatchMaxLen)
+        if (this.repLens(i) > this.repLens(repMaxIndex)) {
+          repMaxIndex = i
+        } else ()
+      }; i = i + 1 } }
+      if (this.repLens(repMaxIndex) >= this._numFastBytes) {
+        this.backRes = repMaxIndex
+        val lenRes: scala.Int = this.repLens(repMaxIndex)
+        this.MovePos(lenRes - 1)
+        return lenRes
+      } else ()
+      if (lenMain >= this._numFastBytes) {
+        this.backRes = this._matchDistances(numDistancePairs - 1) + com.badlogic.gdx.utils.compression.lzma.Base.kNumRepDistances
+        this.MovePos(lenMain - 1)
+        return lenMain
+      } else ()
+      var currentByte: scala.Byte = this._matchFinder.GetIndexByte(0 - 1)
+      var matchByte: scala.Byte = this._matchFinder.GetIndexByte(((0 - this._repDistances(0)) - 1) - 1)
+      if (((lenMain < 2) && (currentByte != matchByte)) && (this.repLens(repMaxIndex) < 2)) {
+        this.backRes = -1
+        return 1
+      } else ()
+      this._optimum(0).State = this._state
+      var posState: scala.Int = position & this._posStateMask
+      this._optimum(1).Price = com.badlogic.gdx.utils.compression.rangecoder.Encoder.GetPrice0(this._isMatch((this._state << com.badlogic.gdx.utils.compression.lzma.Base.kNumPosStatesBitsMax) + posState)) + this._literalEncoder.GetSubCoder(position, this._previousByte).GetPrice(!com.badlogic.gdx.utils.compression.lzma.Base.StateIsCharState(this._state), matchByte, currentByte)
+      this._optimum(1).MakeAsChar()
+      var matchPrice: scala.Int = com.badlogic.gdx.utils.compression.rangecoder.Encoder.GetPrice1(this._isMatch((this._state << com.badlogic.gdx.utils.compression.lzma.Base.kNumPosStatesBitsMax) + posState))
+      var repMatchPrice: scala.Int = matchPrice + com.badlogic.gdx.utils.compression.rangecoder.Encoder.GetPrice1(this._isRep(this._state))
+      if (matchByte == currentByte) {
+        val shortRepPrice: scala.Int = repMatchPrice + this.GetRepLen1Price(this._state, posState)
+        if (shortRepPrice < this._optimum(1).Price) {
+          this._optimum(1).Price = shortRepPrice
+          this._optimum(1).MakeAsShortRep()
+        } else ()
+      } else ()
+      var lenEnd: scala.Int = if (lenMain >= this.repLens(repMaxIndex)) lenMain else this.repLens(repMaxIndex)
+      if (lenEnd < 2) {
+        this.backRes = this._optimum(1).BackPrev
+        return 1
+      } else ()
+      this._optimum(1).PosPrev = 0
+      this._optimum(0).Backs0 = this.reps(0)
+      this._optimum(0).Backs1 = this.reps(1)
+      this._optimum(0).Backs2 = this.reps(2)
+      this._optimum(0).Backs3 = this.reps(3)
+      var len: scala.Int = lenEnd
+      while ({ {
+        this._optimum({ len -= 1; len }).Price = Encoder.kIfinityPrice
+      }; len >= 2 }) ();
+      { i = 0; while (i < com.badlogic.gdx.utils.compression.lzma.Base.kNumRepDistances) { {
+        var repLen: scala.Int = this.repLens(i)
+        if (repLen < 2) {
+          /* continue */ ()
+        } else ()
+        val price: scala.Int = repMatchPrice + this.GetPureRepPrice(i, this._state, posState)
+        while ({ {
+          var curAndLenPrice: scala.Int = price + this._repMatchLenEncoder.GetPrice(repLen - 2, posState)
+          var optimum: Optimal = this._optimum(repLen)
+          if (curAndLenPrice < optimum.Price) {
+            optimum.Price = curAndLenPrice
+            optimum.PosPrev = 0
+            optimum.BackPrev = i
+            optimum.Prev1IsChar = false
+          } else ()
+        }; { repLen -= 1; repLen } >= 2 }) ()
+      }; i = i + 1 } }
+      var normalMatchPrice: scala.Int = matchPrice + com.badlogic.gdx.utils.compression.rangecoder.Encoder.GetPrice0(this._isRep(this._state))
+      len = if (this.repLens(0) >= 2) this.repLens(0) + 1 else 2
+      if (len <= lenMain) {
+        var offs: scala.Int = 0
+        while (len > this._matchDistances(offs)) {
+          offs = offs + 2
+        };
+        { ; while (true) { {
+          val distance: scala.Int = this._matchDistances(offs + 1)
+          var curAndLenPrice: scala.Int = normalMatchPrice + this.GetPosLenPrice(distance, len, posState)
+          var optimum: Optimal = this._optimum(len)
+          if (curAndLenPrice < optimum.Price) {
+            optimum.Price = curAndLenPrice
+            optimum.PosPrev = 0
+            optimum.BackPrev = distance + com.badlogic.gdx.utils.compression.lzma.Base.kNumRepDistances
+            optimum.Prev1IsChar = false
+          } else ()
+          if (len == this._matchDistances(offs)) {
+            offs = offs + 2
+            if (offs == numDistancePairs) {
+              /* break */ ()
+            } else ()
+          } else ()
+        }; len = len + 1 } }
+      } else ()
+      var cur: scala.Int = 0
+      while (true) {
+        cur = cur + 1
+        if (cur == lenEnd) {
+          return this.Backward(cur)
+        } else ()
+        var newLen: scala.Int = this.ReadMatchDistances()
+        numDistancePairs = this._numDistancePairs
+        if (newLen >= this._numFastBytes) {
+          this._longestMatchLength = newLen
+          this._longestMatchWasFound = true
+          return this.Backward(cur)
+        } else ()
+        position = position + 1
+        var posPrev: scala.Int = this._optimum(cur).PosPrev
+        var state: scala.Int = 0
+        if (this._optimum(cur).Prev1IsChar) {
+          posPrev = posPrev - 1
+          if (this._optimum(cur).Prev2) {
+            state = this._optimum(this._optimum(cur).PosPrev2).State
+            if (this._optimum(cur).BackPrev2 < com.badlogic.gdx.utils.compression.lzma.Base.kNumRepDistances) {
+              state = com.badlogic.gdx.utils.compression.lzma.Base.StateUpdateRep(state)
+            } else {
+              state = com.badlogic.gdx.utils.compression.lzma.Base.StateUpdateMatch(state)
+            }
           } else {
-            state = com.badlogic.gdx.utils.compression.lzma.Base.StateUpdateMatch(state)
+            state = this._optimum(posPrev).State
           }
+          state = com.badlogic.gdx.utils.compression.lzma.Base.StateUpdateChar(state)
         } else {
           state = this._optimum(posPrev).State
         }
-        state = com.badlogic.gdx.utils.compression.lzma.Base.StateUpdateChar(state)
-      } else {
-        state = this._optimum(posPrev).State
-      }
-      if (posPrev == (cur - 1)) {
-        if (this._optimum(cur).IsShortRep()) {
-          state = com.badlogic.gdx.utils.compression.lzma.Base.StateUpdateShortRep(state)
+        if (posPrev == (cur - 1)) {
+          if (this._optimum(cur).IsShortRep()) {
+            state = com.badlogic.gdx.utils.compression.lzma.Base.StateUpdateShortRep(state)
+          } else {
+            state = com.badlogic.gdx.utils.compression.lzma.Base.StateUpdateChar(state)
+          }
         } else {
-          state = com.badlogic.gdx.utils.compression.lzma.Base.StateUpdateChar(state)
-        }
-      } else {
-        var pos: scala.Int = 0
-        if (this._optimum(cur).Prev1IsChar && this._optimum(cur).Prev2) {
-          posPrev = this._optimum(cur).PosPrev2
-          pos = this._optimum(cur).BackPrev2
-          state = com.badlogic.gdx.utils.compression.lzma.Base.StateUpdateRep(state)
-        } else {
-          pos = this._optimum(cur).BackPrev
-          if (pos < com.badlogic.gdx.utils.compression.lzma.Base.kNumRepDistances) {
+          var pos: scala.Int = 0
+          if (this._optimum(cur).Prev1IsChar && this._optimum(cur).Prev2) {
+            posPrev = this._optimum(cur).PosPrev2
+            pos = this._optimum(cur).BackPrev2
             state = com.badlogic.gdx.utils.compression.lzma.Base.StateUpdateRep(state)
           } else {
-            state = com.badlogic.gdx.utils.compression.lzma.Base.StateUpdateMatch(state)
+            pos = this._optimum(cur).BackPrev
+            if (pos < com.badlogic.gdx.utils.compression.lzma.Base.kNumRepDistances) {
+              state = com.badlogic.gdx.utils.compression.lzma.Base.StateUpdateRep(state)
+            } else {
+              state = com.badlogic.gdx.utils.compression.lzma.Base.StateUpdateMatch(state)
+            }
           }
-        }
-        val opt: Optimal = this._optimum(posPrev)
-        if (pos < com.badlogic.gdx.utils.compression.lzma.Base.kNumRepDistances) {
-          if (pos == 0) {
-            this.reps(0) = opt.Backs0
-            this.reps(1) = opt.Backs1
-            this.reps(2) = opt.Backs2
-            this.reps(3) = opt.Backs3
-          } else {
-            if (pos == 1) {
-              this.reps(0) = opt.Backs1
-              this.reps(1) = opt.Backs0
+          val opt: Optimal = this._optimum(posPrev)
+          if (pos < com.badlogic.gdx.utils.compression.lzma.Base.kNumRepDistances) {
+            if (pos == 0) {
+              this.reps(0) = opt.Backs0
+              this.reps(1) = opt.Backs1
               this.reps(2) = opt.Backs2
               this.reps(3) = opt.Backs3
             } else {
-              if (pos == 2) {
-                this.reps(0) = opt.Backs2
+              if (pos == 1) {
+                this.reps(0) = opt.Backs1
                 this.reps(1) = opt.Backs0
-                this.reps(2) = opt.Backs1
+                this.reps(2) = opt.Backs2
                 this.reps(3) = opt.Backs3
               } else {
-                this.reps(0) = opt.Backs3
-                this.reps(1) = opt.Backs0
-                this.reps(2) = opt.Backs1
-                this.reps(3) = opt.Backs2
+                if (pos == 2) {
+                  this.reps(0) = opt.Backs2
+                  this.reps(1) = opt.Backs0
+                  this.reps(2) = opt.Backs1
+                  this.reps(3) = opt.Backs3
+                } else {
+                  this.reps(0) = opt.Backs3
+                  this.reps(1) = opt.Backs0
+                  this.reps(2) = opt.Backs1
+                  this.reps(3) = opt.Backs2
+                }
               }
             }
+          } else {
+            this.reps(0) = pos - com.badlogic.gdx.utils.compression.lzma.Base.kNumRepDistances
+            this.reps(1) = opt.Backs0
+            this.reps(2) = opt.Backs1
+            this.reps(3) = opt.Backs2
           }
-        } else {
-          this.reps(0) = pos - com.badlogic.gdx.utils.compression.lzma.Base.kNumRepDistances
-          this.reps(1) = opt.Backs0
-          this.reps(2) = opt.Backs1
-          this.reps(3) = opt.Backs2
         }
-      }
-      this._optimum(cur).State = state
-      this._optimum(cur).Backs0 = this.reps(0)
-      this._optimum(cur).Backs1 = this.reps(1)
-      this._optimum(cur).Backs2 = this.reps(2)
-      this._optimum(cur).Backs3 = this.reps(3)
-      val curPrice: scala.Int = this._optimum(cur).Price
-      currentByte = this._matchFinder.GetIndexByte(0 - 1)
-      matchByte = this._matchFinder.GetIndexByte(((0 - this.reps(0)) - 1) - 1)
-      posState = position & this._posStateMask
-      val curAnd1Price: scala.Int = (curPrice + com.badlogic.gdx.utils.compression.rangecoder.Encoder.GetPrice0(this._isMatch((state << com.badlogic.gdx.utils.compression.lzma.Base.kNumPosStatesBitsMax) + posState))) + this._literalEncoder.GetSubCoder(position, this._matchFinder.GetIndexByte(0 - 2)).GetPrice(!com.badlogic.gdx.utils.compression.lzma.Base.StateIsCharState(state), matchByte, currentByte)
-      val nextOptimum: Optimal = this._optimum(cur + 1)
-      var nextIsChar: scala.Boolean = false
-      if (curAnd1Price < nextOptimum.Price) {
-        nextOptimum.Price = curAnd1Price
-        nextOptimum.PosPrev = cur
-        nextOptimum.MakeAsChar()
-        nextIsChar = true
-      } else ()
-      matchPrice = curPrice + com.badlogic.gdx.utils.compression.rangecoder.Encoder.GetPrice1(this._isMatch((state << com.badlogic.gdx.utils.compression.lzma.Base.kNumPosStatesBitsMax) + posState))
-      repMatchPrice = matchPrice + com.badlogic.gdx.utils.compression.rangecoder.Encoder.GetPrice1(this._isRep(state))
-      if ((matchByte == currentByte) && (!((nextOptimum.PosPrev < cur) && (nextOptimum.BackPrev == 0)))) {
-        val shortRepPrice: scala.Int = repMatchPrice + this.GetRepLen1Price(state, posState)
-        if (shortRepPrice <= nextOptimum.Price) {
-          nextOptimum.Price = shortRepPrice
+        this._optimum(cur).State = state
+        this._optimum(cur).Backs0 = this.reps(0)
+        this._optimum(cur).Backs1 = this.reps(1)
+        this._optimum(cur).Backs2 = this.reps(2)
+        this._optimum(cur).Backs3 = this.reps(3)
+        val curPrice: scala.Int = this._optimum(cur).Price
+        currentByte = this._matchFinder.GetIndexByte(0 - 1)
+        matchByte = this._matchFinder.GetIndexByte(((0 - this.reps(0)) - 1) - 1)
+        posState = position & this._posStateMask
+        val curAnd1Price: scala.Int = (curPrice + com.badlogic.gdx.utils.compression.rangecoder.Encoder.GetPrice0(this._isMatch((state << com.badlogic.gdx.utils.compression.lzma.Base.kNumPosStatesBitsMax) + posState))) + this._literalEncoder.GetSubCoder(position, this._matchFinder.GetIndexByte(0 - 2)).GetPrice(!com.badlogic.gdx.utils.compression.lzma.Base.StateIsCharState(state), matchByte, currentByte)
+        val nextOptimum: Optimal = this._optimum(cur + 1)
+        var nextIsChar: scala.Boolean = false
+        if (curAnd1Price < nextOptimum.Price) {
+          nextOptimum.Price = curAnd1Price
           nextOptimum.PosPrev = cur
-          nextOptimum.MakeAsShortRep()
+          nextOptimum.MakeAsChar()
           nextIsChar = true
         } else ()
-      } else ()
-      var numAvailableBytesFull: scala.Int = this._matchFinder.GetNumAvailableBytes() + 1
-      numAvailableBytesFull = java.lang.Math.min((Encoder.kNumOpts - 1) - cur, numAvailableBytesFull)
-      numAvailableBytes = numAvailableBytesFull
-      if (numAvailableBytes < 2) {
-        /* continue */ ()
-      } else ()
-      if (numAvailableBytes > this._numFastBytes) {
-        numAvailableBytes = this._numFastBytes
-      } else ()
-      if ((!nextIsChar) && (matchByte != currentByte)) {
-        val t: scala.Int = java.lang.Math.min(numAvailableBytesFull - 1, this._numFastBytes)
-        val lenTest2: scala.Int = this._matchFinder.GetMatchLen(0, this.reps(0), t)
-        if (lenTest2 >= 2) {
-          var state2: scala.Int = com.badlogic.gdx.utils.compression.lzma.Base.StateUpdateChar(state)
-          var posStateNext: scala.Int = (position + 1) & this._posStateMask
-          val nextRepMatchPrice: scala.Int = (curAnd1Price + com.badlogic.gdx.utils.compression.rangecoder.Encoder.GetPrice1(this._isMatch((state2 << com.badlogic.gdx.utils.compression.lzma.Base.kNumPosStatesBitsMax) + posStateNext))) + com.badlogic.gdx.utils.compression.rangecoder.Encoder.GetPrice1(this._isRep(state2));
-          {
-            val offset: scala.Int = (cur + 1) + lenTest2
-            while (lenEnd < offset) {
-              this._optimum({ lenEnd += 1; lenEnd }).Price = Encoder.kIfinityPrice
-            }
-            var curAndLenPrice: scala.Int = nextRepMatchPrice + this.GetRepPrice(0, lenTest2, state2, posStateNext)
-            var optimum: Optimal = this._optimum(offset)
-            if (curAndLenPrice < optimum.Price) {
-              optimum.Price = curAndLenPrice
-              optimum.PosPrev = cur + 1
-              optimum.BackPrev = 0
-              optimum.Prev1IsChar = true
-              optimum.Prev2 = false
-            } else ()
-          }
+        matchPrice = curPrice + com.badlogic.gdx.utils.compression.rangecoder.Encoder.GetPrice1(this._isMatch((state << com.badlogic.gdx.utils.compression.lzma.Base.kNumPosStatesBitsMax) + posState))
+        repMatchPrice = matchPrice + com.badlogic.gdx.utils.compression.rangecoder.Encoder.GetPrice1(this._isRep(state))
+        if ((matchByte == currentByte) && (!((nextOptimum.PosPrev < cur) && (nextOptimum.BackPrev == 0)))) {
+          val shortRepPrice: scala.Int = repMatchPrice + this.GetRepLen1Price(state, posState)
+          if (shortRepPrice <= nextOptimum.Price) {
+            nextOptimum.Price = shortRepPrice
+            nextOptimum.PosPrev = cur
+            nextOptimum.MakeAsShortRep()
+            nextIsChar = true
+          } else ()
         } else ()
-      } else ()
-      var startLen: scala.Int = 2;
-      { var repIndex: scala.Int = 0; while (repIndex < com.badlogic.gdx.utils.compression.lzma.Base.kNumRepDistances) { {
-        var lenTest: scala.Int = this._matchFinder.GetMatchLen(0 - 1, this.reps(repIndex), numAvailableBytes)
-        if (lenTest < 2) {
+        var numAvailableBytesFull: scala.Int = this._matchFinder.GetNumAvailableBytes() + 1
+        numAvailableBytesFull = java.lang.Math.min((Encoder.kNumOpts - 1) - cur, numAvailableBytesFull)
+        numAvailableBytes = numAvailableBytesFull
+        if (numAvailableBytes < 2) {
           /* continue */ ()
         } else ()
-        val lenTestTemp: scala.Int = lenTest
-        while ({ {
-          while (lenEnd < (cur + lenTest)) {
-            this._optimum({ lenEnd += 1; lenEnd }).Price = Encoder.kIfinityPrice
-          }
-          var curAndLenPrice: scala.Int = repMatchPrice + this.GetRepPrice(repIndex, lenTest, state, posState)
-          var optimum: Optimal = this._optimum(cur + lenTest)
-          if (curAndLenPrice < optimum.Price) {
-            optimum.Price = curAndLenPrice
-            optimum.PosPrev = cur
-            optimum.BackPrev = repIndex
-            optimum.Prev1IsChar = false
-          } else ()
-        }; { lenTest -= 1; lenTest } >= 2 }) ()
-        lenTest = lenTestTemp
-        if (repIndex == 0) {
-          startLen = lenTest + 1
+        if (numAvailableBytes > this._numFastBytes) {
+          numAvailableBytes = this._numFastBytes
         } else ()
-        if (lenTest < numAvailableBytesFull) {
-          val t: scala.Int = java.lang.Math.min((numAvailableBytesFull - 1) - lenTest, this._numFastBytes)
-          val lenTest2: scala.Int = this._matchFinder.GetMatchLen(lenTest, this.reps(repIndex), t)
+        if ((!nextIsChar) && (matchByte != currentByte)) {
+          val t: scala.Int = java.lang.Math.min(numAvailableBytesFull - 1, this._numFastBytes)
+          val lenTest2: scala.Int = this._matchFinder.GetMatchLen(0, this.reps(0), t)
           if (lenTest2 >= 2) {
-            var state2: scala.Int = com.badlogic.gdx.utils.compression.lzma.Base.StateUpdateRep(state)
-            var posStateNext: scala.Int = (position + lenTest) & this._posStateMask
-            val curAndLenCharPrice: scala.Int = ((repMatchPrice + this.GetRepPrice(repIndex, lenTest, state, posState)) + com.badlogic.gdx.utils.compression.rangecoder.Encoder.GetPrice0(this._isMatch((state2 << com.badlogic.gdx.utils.compression.lzma.Base.kNumPosStatesBitsMax) + posStateNext))) + this._literalEncoder.GetSubCoder(position + lenTest, this._matchFinder.GetIndexByte((lenTest - 1) - 1)).GetPrice(true, this._matchFinder.GetIndexByte((lenTest - 1) - (this.reps(repIndex) + 1)), this._matchFinder.GetIndexByte(lenTest - 1))
-            state2 = com.badlogic.gdx.utils.compression.lzma.Base.StateUpdateChar(state2)
-            posStateNext = ((position + lenTest) + 1) & this._posStateMask
-            val nextMatchPrice: scala.Int = curAndLenCharPrice + com.badlogic.gdx.utils.compression.rangecoder.Encoder.GetPrice1(this._isMatch((state2 << com.badlogic.gdx.utils.compression.lzma.Base.kNumPosStatesBitsMax) + posStateNext))
-            val nextRepMatchPrice: scala.Int = nextMatchPrice + com.badlogic.gdx.utils.compression.rangecoder.Encoder.GetPrice1(this._isRep(state2));
+            var state2: scala.Int = com.badlogic.gdx.utils.compression.lzma.Base.StateUpdateChar(state)
+            var posStateNext: scala.Int = (position + 1) & this._posStateMask
+            val nextRepMatchPrice: scala.Int = (curAnd1Price + com.badlogic.gdx.utils.compression.rangecoder.Encoder.GetPrice1(this._isMatch((state2 << com.badlogic.gdx.utils.compression.lzma.Base.kNumPosStatesBitsMax) + posStateNext))) + com.badlogic.gdx.utils.compression.rangecoder.Encoder.GetPrice1(this._isRep(state2));
             {
-              val offset: scala.Int = (lenTest + 1) + lenTest2
-              while (lenEnd < (cur + offset)) {
+              val offset: scala.Int = (cur + 1) + lenTest2
+              while (lenEnd < offset) {
                 this._optimum({ lenEnd += 1; lenEnd }).Price = Encoder.kIfinityPrice
               }
               var curAndLenPrice: scala.Int = nextRepMatchPrice + this.GetRepPrice(0, lenTest2, state2, posStateNext)
-              var optimum: Optimal = this._optimum(cur + offset)
+              var optimum: Optimal = this._optimum(offset)
               if (curAndLenPrice < optimum.Price) {
                 optimum.Price = curAndLenPrice
-                optimum.PosPrev = (cur + lenTest) + 1
+                optimum.PosPrev = cur + 1
                 optimum.BackPrev = 0
                 optimum.Prev1IsChar = true
-                optimum.Prev2 = true
-                optimum.PosPrev2 = cur
-                optimum.BackPrev2 = repIndex
+                optimum.Prev2 = false
               } else ()
             }
           } else ()
         } else ()
-      }; repIndex = repIndex + 1 } }
-      if (newLen > numAvailableBytes) {
-        newLen = numAvailableBytes;
-        { numDistancePairs = 0; while (newLen > this._matchDistances(numDistancePairs)) { {
-          ()
-        }; numDistancePairs = numDistancePairs + 2 } }
-        this._matchDistances(numDistancePairs) = newLen
-        numDistancePairs = numDistancePairs + 2
-      } else ()
-      if (newLen >= startLen) {
-        normalMatchPrice = matchPrice + com.badlogic.gdx.utils.compression.rangecoder.Encoder.GetPrice0(this._isRep(state))
-        while (lenEnd < (cur + newLen)) {
-          this._optimum({ lenEnd += 1; lenEnd }).Price = Encoder.kIfinityPrice
-        }
-        var offs: scala.Int = 0
-        while (startLen > this._matchDistances(offs)) {
-          offs = offs + 2
-        };
-        { var lenTest: scala.Int = startLen; while (true) { {
-          val curBack: scala.Int = this._matchDistances(offs + 1)
-          var curAndLenPrice: scala.Int = normalMatchPrice + this.GetPosLenPrice(curBack, lenTest, posState)
-          var optimum: Optimal = this._optimum(cur + lenTest)
-          if (curAndLenPrice < optimum.Price) {
-            optimum.Price = curAndLenPrice
-            optimum.PosPrev = cur
-            optimum.BackPrev = curBack + com.badlogic.gdx.utils.compression.lzma.Base.kNumRepDistances
-            optimum.Prev1IsChar = false
+        var startLen: scala.Int = 2;
+        { var repIndex: scala.Int = 0; while (repIndex < com.badlogic.gdx.utils.compression.lzma.Base.kNumRepDistances) { {
+          var lenTest: scala.Int = this._matchFinder.GetMatchLen(0 - 1, this.reps(repIndex), numAvailableBytes)
+          if (lenTest < 2) {
+            /* continue */ ()
           } else ()
-          if (lenTest == this._matchDistances(offs)) {
-            if (lenTest < numAvailableBytesFull) {
-              val t: scala.Int = java.lang.Math.min((numAvailableBytesFull - 1) - lenTest, this._numFastBytes)
-              val lenTest2: scala.Int = this._matchFinder.GetMatchLen(lenTest, curBack, t)
-              if (lenTest2 >= 2) {
-                var state2: scala.Int = com.badlogic.gdx.utils.compression.lzma.Base.StateUpdateMatch(state)
-                var posStateNext: scala.Int = (position + lenTest) & this._posStateMask
-                val curAndLenCharPrice: scala.Int = (curAndLenPrice + com.badlogic.gdx.utils.compression.rangecoder.Encoder.GetPrice0(this._isMatch((state2 << com.badlogic.gdx.utils.compression.lzma.Base.kNumPosStatesBitsMax) + posStateNext))) + this._literalEncoder.GetSubCoder(position + lenTest, this._matchFinder.GetIndexByte((lenTest - 1) - 1)).GetPrice(true, this._matchFinder.GetIndexByte((lenTest - (curBack + 1)) - 1), this._matchFinder.GetIndexByte(lenTest - 1))
-                state2 = com.badlogic.gdx.utils.compression.lzma.Base.StateUpdateChar(state2)
-                posStateNext = ((position + lenTest) + 1) & this._posStateMask
-                val nextMatchPrice: scala.Int = curAndLenCharPrice + com.badlogic.gdx.utils.compression.rangecoder.Encoder.GetPrice1(this._isMatch((state2 << com.badlogic.gdx.utils.compression.lzma.Base.kNumPosStatesBitsMax) + posStateNext))
-                val nextRepMatchPrice: scala.Int = nextMatchPrice + com.badlogic.gdx.utils.compression.rangecoder.Encoder.GetPrice1(this._isRep(state2))
+          val lenTestTemp: scala.Int = lenTest
+          while ({ {
+            while (lenEnd < (cur + lenTest)) {
+              this._optimum({ lenEnd += 1; lenEnd }).Price = Encoder.kIfinityPrice
+            }
+            var curAndLenPrice: scala.Int = repMatchPrice + this.GetRepPrice(repIndex, lenTest, state, posState)
+            var optimum: Optimal = this._optimum(cur + lenTest)
+            if (curAndLenPrice < optimum.Price) {
+              optimum.Price = curAndLenPrice
+              optimum.PosPrev = cur
+              optimum.BackPrev = repIndex
+              optimum.Prev1IsChar = false
+            } else ()
+          }; { lenTest -= 1; lenTest } >= 2 }) ()
+          lenTest = lenTestTemp
+          if (repIndex == 0) {
+            startLen = lenTest + 1
+          } else ()
+          if (lenTest < numAvailableBytesFull) {
+            val t: scala.Int = java.lang.Math.min((numAvailableBytesFull - 1) - lenTest, this._numFastBytes)
+            val lenTest2: scala.Int = this._matchFinder.GetMatchLen(lenTest, this.reps(repIndex), t)
+            if (lenTest2 >= 2) {
+              var state2: scala.Int = com.badlogic.gdx.utils.compression.lzma.Base.StateUpdateRep(state)
+              var posStateNext: scala.Int = (position + lenTest) & this._posStateMask
+              val curAndLenCharPrice: scala.Int = ((repMatchPrice + this.GetRepPrice(repIndex, lenTest, state, posState)) + com.badlogic.gdx.utils.compression.rangecoder.Encoder.GetPrice0(this._isMatch((state2 << com.badlogic.gdx.utils.compression.lzma.Base.kNumPosStatesBitsMax) + posStateNext))) + this._literalEncoder.GetSubCoder(position + lenTest, this._matchFinder.GetIndexByte((lenTest - 1) - 1)).GetPrice(true, this._matchFinder.GetIndexByte((lenTest - 1) - (this.reps(repIndex) + 1)), this._matchFinder.GetIndexByte(lenTest - 1))
+              state2 = com.badlogic.gdx.utils.compression.lzma.Base.StateUpdateChar(state2)
+              posStateNext = ((position + lenTest) + 1) & this._posStateMask
+              val nextMatchPrice: scala.Int = curAndLenCharPrice + com.badlogic.gdx.utils.compression.rangecoder.Encoder.GetPrice1(this._isMatch((state2 << com.badlogic.gdx.utils.compression.lzma.Base.kNumPosStatesBitsMax) + posStateNext))
+              val nextRepMatchPrice: scala.Int = nextMatchPrice + com.badlogic.gdx.utils.compression.rangecoder.Encoder.GetPrice1(this._isRep(state2));
+              {
                 val offset: scala.Int = (lenTest + 1) + lenTest2
                 while (lenEnd < (cur + offset)) {
                   this._optimum({ lenEnd += 1; lenEnd }).Price = Encoder.kIfinityPrice
                 }
-                curAndLenPrice = nextRepMatchPrice + this.GetRepPrice(0, lenTest2, state2, posStateNext)
-                optimum = this._optimum(cur + offset)
+                var curAndLenPrice: scala.Int = nextRepMatchPrice + this.GetRepPrice(0, lenTest2, state2, posStateNext)
+                var optimum: Optimal = this._optimum(cur + offset)
                 if (curAndLenPrice < optimum.Price) {
                   optimum.Price = curAndLenPrice
                   optimum.PosPrev = (cur + lenTest) + 1
@@ -567,18 +510,78 @@ class Encoder {
                   optimum.Prev1IsChar = true
                   optimum.Prev2 = true
                   optimum.PosPrev2 = cur
-                  optimum.BackPrev2 = curBack + com.badlogic.gdx.utils.compression.lzma.Base.kNumRepDistances
+                  optimum.BackPrev2 = repIndex
                 } else ()
-              } else ()
-            } else ()
-            offs = offs + 2
-            if (offs == numDistancePairs) {
-              /* break */ ()
+              }
             } else ()
           } else ()
-        }; lenTest = lenTest + 1 } }
-      } else ()
+        }; repIndex = repIndex + 1 } }
+        if (newLen > numAvailableBytes) {
+          newLen = numAvailableBytes;
+          { numDistancePairs = 0; while (newLen > this._matchDistances(numDistancePairs)) { {
+            ()
+          }; numDistancePairs = numDistancePairs + 2 } }
+          this._matchDistances(numDistancePairs) = newLen
+          numDistancePairs = numDistancePairs + 2
+        } else ()
+        if (newLen >= startLen) {
+          normalMatchPrice = matchPrice + com.badlogic.gdx.utils.compression.rangecoder.Encoder.GetPrice0(this._isRep(state))
+          while (lenEnd < (cur + newLen)) {
+            this._optimum({ lenEnd += 1; lenEnd }).Price = Encoder.kIfinityPrice
+          }
+          var offs: scala.Int = 0
+          while (startLen > this._matchDistances(offs)) {
+            offs = offs + 2
+          };
+          { var lenTest: scala.Int = startLen; while (true) { {
+            val curBack: scala.Int = this._matchDistances(offs + 1)
+            var curAndLenPrice: scala.Int = normalMatchPrice + this.GetPosLenPrice(curBack, lenTest, posState)
+            var optimum: Optimal = this._optimum(cur + lenTest)
+            if (curAndLenPrice < optimum.Price) {
+              optimum.Price = curAndLenPrice
+              optimum.PosPrev = cur
+              optimum.BackPrev = curBack + com.badlogic.gdx.utils.compression.lzma.Base.kNumRepDistances
+              optimum.Prev1IsChar = false
+            } else ()
+            if (lenTest == this._matchDistances(offs)) {
+              if (lenTest < numAvailableBytesFull) {
+                val t: scala.Int = java.lang.Math.min((numAvailableBytesFull - 1) - lenTest, this._numFastBytes)
+                val lenTest2: scala.Int = this._matchFinder.GetMatchLen(lenTest, curBack, t)
+                if (lenTest2 >= 2) {
+                  var state2: scala.Int = com.badlogic.gdx.utils.compression.lzma.Base.StateUpdateMatch(state)
+                  var posStateNext: scala.Int = (position + lenTest) & this._posStateMask
+                  val curAndLenCharPrice: scala.Int = (curAndLenPrice + com.badlogic.gdx.utils.compression.rangecoder.Encoder.GetPrice0(this._isMatch((state2 << com.badlogic.gdx.utils.compression.lzma.Base.kNumPosStatesBitsMax) + posStateNext))) + this._literalEncoder.GetSubCoder(position + lenTest, this._matchFinder.GetIndexByte((lenTest - 1) - 1)).GetPrice(true, this._matchFinder.GetIndexByte((lenTest - (curBack + 1)) - 1), this._matchFinder.GetIndexByte(lenTest - 1))
+                  state2 = com.badlogic.gdx.utils.compression.lzma.Base.StateUpdateChar(state2)
+                  posStateNext = ((position + lenTest) + 1) & this._posStateMask
+                  val nextMatchPrice: scala.Int = curAndLenCharPrice + com.badlogic.gdx.utils.compression.rangecoder.Encoder.GetPrice1(this._isMatch((state2 << com.badlogic.gdx.utils.compression.lzma.Base.kNumPosStatesBitsMax) + posStateNext))
+                  val nextRepMatchPrice: scala.Int = nextMatchPrice + com.badlogic.gdx.utils.compression.rangecoder.Encoder.GetPrice1(this._isRep(state2))
+                  val offset: scala.Int = (lenTest + 1) + lenTest2
+                  while (lenEnd < (cur + offset)) {
+                    this._optimum({ lenEnd += 1; lenEnd }).Price = Encoder.kIfinityPrice
+                  }
+                  curAndLenPrice = nextRepMatchPrice + this.GetRepPrice(0, lenTest2, state2, posStateNext)
+                  optimum = this._optimum(cur + offset)
+                  if (curAndLenPrice < optimum.Price) {
+                    optimum.Price = curAndLenPrice
+                    optimum.PosPrev = (cur + lenTest) + 1
+                    optimum.BackPrev = 0
+                    optimum.Prev1IsChar = true
+                    optimum.Prev2 = true
+                    optimum.PosPrev2 = cur
+                    optimum.BackPrev2 = curBack + com.badlogic.gdx.utils.compression.lzma.Base.kNumRepDistances
+                  } else ()
+                } else ()
+              } else ()
+              offs = offs + 2
+              if (offs == numDistancePairs) {
+                /* break */ ()
+              } else ()
+            } else ()
+          }; lenTest = lenTest + 1 } }
+        } else ()
+      }
     }
+    throw new java.lang.RuntimeException("unreachable")
   }
   def ChangePair(smallDist: scala.Int, bigDist: scala.Int): scala.Boolean = {
     val kDif: scala.Int = 7

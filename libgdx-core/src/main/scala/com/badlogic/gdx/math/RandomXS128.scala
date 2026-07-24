@@ -32,16 +32,19 @@ class RandomXS128 extends java.util.Random {
     return this.nextLong(n).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
   }
   def nextLong(n: scala.Long): scala.Long = {
-    if (n <= 0) {
-      throw new java.lang.IllegalArgumentException("n must be positive")
-    } else ();
-    { ; while (true) { {
-      val bits: scala.Long = this.nextLong() >>> 1
-      val value: scala.Long = bits % n
-      if (((bits - value) + (n - 1)) >= 0) {
-        return value
-      } else ()
-    };  } }
+    {
+      if (n <= 0) {
+        throw new java.lang.IllegalArgumentException("n must be positive")
+      } else ();
+      { ; while (true) { {
+        val bits: scala.Long = this.nextLong() >>> 1
+        val value: scala.Long = bits % n
+        if (((bits - value) + (n - 1)) >= 0) {
+          return value
+        } else ()
+      };  } }
+    }
+    throw new java.lang.RuntimeException("unreachable")
   }
   def nextDouble(): scala.Double = {
     return (this.nextLong() >>> 11) * RandomXS128.NORM_DOUBLE

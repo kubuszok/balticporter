@@ -443,33 +443,36 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
     return minIndex
   }
   def next(up: scala.Boolean): TextField = {
-    val stage: com.badlogic.gdx.scenes.scene2d.Stage = this.getStage()
-    if (stage == null) {
-      return null
-    } else ()
-    var current: TextField = this
-    val currentCoords: com.badlogic.gdx.math.Vector2 = current.getParent().localToStageCoordinates(TextField.tmp2.set(current.getX(), current.getY()))
-    val bestCoords: com.badlogic.gdx.math.Vector2 = TextField.tmp1
-    while (true) {
-      var textField: TextField = current.findNextTextField(stage.getActors(), null, bestCoords, currentCoords, up)
-      if (textField == null) {
-        if (up) {
-          currentCoords.set(-java.lang.Float.MAX_VALUE, -java.lang.Float.MAX_VALUE)
-        } else {
-          currentCoords.set(java.lang.Float.MAX_VALUE, java.lang.Float.MAX_VALUE)
-        }
-        textField = current.findNextTextField(stage.getActors(), null, bestCoords, currentCoords, up)
-      } else ()
-      if (textField == null) {
+    {
+      val stage: com.badlogic.gdx.scenes.scene2d.Stage = this.getStage()
+      if (stage == null) {
         return null
       } else ()
-      if (stage.setKeyboardFocus(textField)) {
-        textField.selectAll()
-        return textField
-      } else ()
-      current = textField
-      currentCoords.set(bestCoords)
+      var current: TextField = this
+      val currentCoords: com.badlogic.gdx.math.Vector2 = current.getParent().localToStageCoordinates(TextField.tmp2.set(current.getX(), current.getY()))
+      val bestCoords: com.badlogic.gdx.math.Vector2 = TextField.tmp1
+      while (true) {
+        var textField: TextField = current.findNextTextField(stage.getActors(), null, bestCoords, currentCoords, up)
+        if (textField == null) {
+          if (up) {
+            currentCoords.set(-java.lang.Float.MAX_VALUE, -java.lang.Float.MAX_VALUE)
+          } else {
+            currentCoords.set(java.lang.Float.MAX_VALUE, java.lang.Float.MAX_VALUE)
+          }
+          textField = current.findNextTextField(stage.getActors(), null, bestCoords, currentCoords, up)
+        } else ()
+        if (textField == null) {
+          return null
+        } else ()
+        if (stage.setKeyboardFocus(textField)) {
+          textField.selectAll()
+          return textField
+        } else ()
+        current = textField
+        currentCoords.set(bestCoords)
+      }
     }
+    throw new java.lang.RuntimeException("unreachable")
   }
   private def findNextTextField(actors: com.badlogic.gdx.utils.Array[com.badlogic.gdx.scenes.scene2d.Actor], best$arg: TextField, bestCoords: com.badlogic.gdx.math.Vector2, currentCoords: com.badlogic.gdx.math.Vector2, up: scala.Boolean): TextField = {
     var best: TextField = best$arg;

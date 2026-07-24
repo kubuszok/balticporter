@@ -318,31 +318,34 @@ object TextureAtlas {
   }
   object TextureAtlasData {
     private def readEntry(entry: scala.Array[java.lang.String], line$arg: java.lang.String): scala.Int = {
-      var line: java.lang.String = line$arg
-      if (line == null) {
-        return 0
-      } else ()
-      line = line.trim()
-      if (line.length() == 0) {
-        return 0
-      } else ()
-      val colon: scala.Int = line.indexOf(':')
-      if (colon == (-1)) {
-        return 0
-      } else ()
-      entry(0) = line.substring(0, colon).trim();
-      { var i: scala.Int = 1; var lastMatch: scala.Int = colon + 1; while (true) { {
-        val comma: scala.Int = line.indexOf(',', lastMatch)
-        if (comma == (-1)) {
-          entry(i) = line.substring(lastMatch).trim()
-          return i
+      {
+        var line: java.lang.String = line$arg
+        if (line == null) {
+          return 0
         } else ()
-        entry(i) = line.substring(lastMatch, comma).trim()
-        lastMatch = comma + 1
-        if (i == 4) {
-          return 4
+        line = line.trim()
+        if (line.length() == 0) {
+          return 0
         } else ()
-      }; i = i + 1 } }
+        val colon: scala.Int = line.indexOf(':')
+        if (colon == (-1)) {
+          return 0
+        } else ()
+        entry(0) = line.substring(0, colon).trim();
+        { var i: scala.Int = 1; var lastMatch: scala.Int = colon + 1; while (true) { {
+          val comma: scala.Int = line.indexOf(',', lastMatch)
+          if (comma == (-1)) {
+            entry(i) = line.substring(lastMatch).trim()
+            return i
+          } else ()
+          entry(i) = line.substring(lastMatch, comma).trim()
+          lastMatch = comma + 1
+          if (i == 4) {
+            return 4
+          } else ()
+        }; i = i + 1 } }
+      }
+      throw new java.lang.RuntimeException("unreachable")
     }
     private trait Field[T] {
       def parse(`object`: T): scala.Unit

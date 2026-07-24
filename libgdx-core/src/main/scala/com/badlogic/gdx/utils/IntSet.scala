@@ -35,16 +35,19 @@ class IntSet {
     return ((item * -7046029254386353131L) >>> this.shift).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
   }
   private def locateKey(key: scala.Int): scala.Int = {
-    val keyTable: scala.Array[scala.Int] = this.keyTable;
-    { var i: scala.Int = this.place(key); while (true) { {
-      val other: scala.Int = keyTable(i)
-      if (other == 0) {
-        return -(i + 1)
-      } else ()
-      if (other == key) {
-        return i
-      } else ()
-    }; i = (i + 1) & this.mask } }
+    {
+      val keyTable: scala.Array[scala.Int] = this.keyTable;
+      { var i: scala.Int = this.place(key); while (true) { {
+        val other: scala.Int = keyTable(i)
+        if (other == 0) {
+          return -(i + 1)
+        } else ()
+        if (other == key) {
+          return i
+        } else ()
+      }; i = (i + 1) & this.mask } }
+    }
+    throw new java.lang.RuntimeException("unreachable")
   }
   def add(key: scala.Int): scala.Boolean = {
     if (key == 0) {

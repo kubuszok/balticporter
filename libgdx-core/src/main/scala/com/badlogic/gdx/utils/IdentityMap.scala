@@ -14,19 +14,22 @@ class IdentityMap[K, V] extends com.badlogic.gdx.utils.ObjectMap[K, V] {
     return ((java.lang.System.identityHashCode(item) * -7046029254386353131L) >>> shift).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
   }
   def locateKey(key: K): scala.Int = {
-    if (key == null) {
-      throw new java.lang.IllegalArgumentException("key cannot be null.")
-    } else ()
-    val keyTable: scala.Array[K] = this.keyTable;
-    { var i: scala.Int = this.place(key); while (true) { {
-      val other: K = keyTable(i)
-      if (other == null) {
-        return -(i + 1)
+    {
+      if (key == null) {
+        throw new java.lang.IllegalArgumentException("key cannot be null.")
       } else ()
-      if (other == key) {
-        return i
-      } else ()
-    }; i = (i + 1) & mask } }
+      val keyTable: scala.Array[K] = this.keyTable;
+      { var i: scala.Int = this.place(key); while (true) { {
+        val other: K = keyTable(i)
+        if (other == null) {
+          return -(i + 1)
+        } else ()
+        if (other == key) {
+          return i
+        } else ()
+      }; i = (i + 1) & mask } }
+    }
+    throw new java.lang.RuntimeException("unreachable")
   }
   def hashCode(): scala.Int = {
     var h: scala.Int = size
