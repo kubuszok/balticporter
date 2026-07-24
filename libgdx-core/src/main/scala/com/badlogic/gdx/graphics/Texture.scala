@@ -176,6 +176,7 @@ object Texture {
     def getGLEnum(): scala.Int = {
       return this.glEnum
     }
+    def name(): java.lang.String = this.toString()
   }
   object TextureFilter {
     case object Nearest extends TextureFilter(com.badlogic.gdx.graphics.GL20.GL_NEAREST)
@@ -202,6 +203,7 @@ object Texture {
     def getGLEnum(): scala.Int = {
       return this.glEnum
     }
+    def name(): java.lang.String = this.toString()
   }
   object TextureWrap {
     case object MirroredRepeat extends TextureWrap(com.badlogic.gdx.graphics.GL20.GL_MIRRORED_REPEAT)

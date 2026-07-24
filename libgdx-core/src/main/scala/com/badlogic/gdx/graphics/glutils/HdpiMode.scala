@@ -1,6 +1,8 @@
 package com.badlogic.gdx.graphics.glutils
 
-sealed abstract class HdpiMode
+sealed abstract class HdpiMode {
+  def name(): java.lang.String = this.toString()
+}
 object HdpiMode {
   case object Logical extends HdpiMode
   case object Pixels extends HdpiMode

@@ -943,6 +943,7 @@ object ShapeRenderer {
     def getGlType(): scala.Int = {
       return this.glType
     }
+    def name(): java.lang.String = this.toString()
   }
   object ShapeType {
     case object Point extends ShapeType(com.badlogic.gdx.graphics.GL20.GL_POINTS)

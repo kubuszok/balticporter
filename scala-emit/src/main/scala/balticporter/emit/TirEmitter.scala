@@ -174,7 +174,12 @@ final class TirEmitter(source: Program):
     val parents = cd.parents.map(parent).filter(p => p.nonEmpty && !p.startsWith("java.lang.Enum"))
     val ext     = if parents.isEmpty then "" else " extends " + parents.mkString(" with ")
     val (statics, instance) = cd.body.partition(isStatic)
-    val cbody   = orderBody(instance).map(stat(_, i + 1)).filter(_.nonEmpty).mkString("\n")
+    // Java's final `Enum.name()` — a `case object`'s `toString` IS its declared name (= the Java
+    // constant name), so `name()` returns it. Skip if the enum already declares a `name` member.
+    val hasName = instance.exists { case d: Definition => sym(d.symbol).name == "name"; case _ => false }
+    val nameM   = if hasName then Nil else List(s"${ind(i + 1)}def name(): java.lang.String = this.toString()")
+    val members = orderBody(instance).map(stat(_, i + 1)).filter(_.nonEmpty) ++ nameM
+    val cbody   = members.mkString("\n")
     val cls     = s"${ind(i)}sealed abstract class $name$ext" + (if cbody.isEmpty then "" else s" {\n$cbody\n${ind(i)}}")
     val cases = cd.enumCases.map { ec =>
       val cn   = esc(sym(ec.symbol).name)

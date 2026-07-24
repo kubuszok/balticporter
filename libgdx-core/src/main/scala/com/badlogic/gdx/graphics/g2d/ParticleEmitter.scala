@@ -1648,7 +1648,9 @@ object ParticleEmitter {
       this.side = value.side
     }
   }
-  sealed abstract class SpawnShape
+  sealed abstract class SpawnShape {
+    def name(): java.lang.String = this.toString()
+  }
   object SpawnShape {
     case object point extends SpawnShape
     case object line extends SpawnShape
@@ -1663,7 +1665,9 @@ object ParticleEmitter {
       case _ => throw new java.lang.IllegalArgumentException(name)
     }
   }
-  sealed abstract class SpawnEllipseSide
+  sealed abstract class SpawnEllipseSide {
+    def name(): java.lang.String = this.toString()
+  }
   object SpawnEllipseSide {
     case object both extends SpawnEllipseSide
     case object top extends SpawnEllipseSide
@@ -1676,7 +1680,9 @@ object ParticleEmitter {
       case _ => throw new java.lang.IllegalArgumentException(name)
     }
   }
-  sealed abstract class SpriteMode
+  sealed abstract class SpriteMode {
+    def name(): java.lang.String = this.toString()
+  }
   object SpriteMode {
     case object single extends SpriteMode
     case object random extends SpriteMode

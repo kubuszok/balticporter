@@ -225,7 +225,9 @@ class RegularEmitter extends com.badlogic.gdx.graphics.g3d.particles.emitters.Em
 }
 object RegularEmitter {
   export com.badlogic.gdx.graphics.g3d.particles.emitters.Emitter.{EmissionMode => _, *}
-  sealed abstract class EmissionMode
+  sealed abstract class EmissionMode {
+    def name(): java.lang.String = this.toString()
+  }
   object EmissionMode {
     case object Enabled extends EmissionMode
     case object EnabledUntilCycleEnd extends EmissionMode

@@ -1,6 +1,8 @@
 package com.badlogic.gdx.scenes.scene2d
 
-sealed abstract class Touchable
+sealed abstract class Touchable {
+  def name(): java.lang.String = this.toString()
+}
 object Touchable {
   case object enabled extends Touchable
   case object disabled extends Touchable

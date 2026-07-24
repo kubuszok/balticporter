@@ -156,6 +156,7 @@ object Cubemap {
     def getDirection(out: com.badlogic.gdx.math.Vector3): com.badlogic.gdx.math.Vector3 = {
       return out.set(this.direction)
     }
+    def name(): java.lang.String = this.toString()
   }
   object CubemapSide {
     case object PositiveX extends CubemapSide(0, com.badlogic.gdx.graphics.GL20.GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, -1, 0, 1, 0, 0)

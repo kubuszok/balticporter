@@ -114,7 +114,9 @@ object Net {
     def failed(t: java.lang.Throwable): scala.Unit
     def cancelled(): scala.Unit
   }
-  sealed abstract class Protocol
+  sealed abstract class Protocol {
+    def name(): java.lang.String = this.toString()
+  }
   object Protocol {
     case object TCP extends Protocol
     def values(): scala.Array[Protocol] = scala.Array(TCP)

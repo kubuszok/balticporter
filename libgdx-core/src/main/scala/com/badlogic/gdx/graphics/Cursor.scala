@@ -2,7 +2,9 @@ package com.badlogic.gdx.graphics
 
 trait Cursor extends com.badlogic.gdx.utils.Disposable
 object Cursor {
-  sealed abstract class SystemCursor
+  sealed abstract class SystemCursor {
+    def name(): java.lang.String = this.toString()
+  }
   object SystemCursor {
     case object Arrow extends SystemCursor
     case object Ibeam extends SystemCursor

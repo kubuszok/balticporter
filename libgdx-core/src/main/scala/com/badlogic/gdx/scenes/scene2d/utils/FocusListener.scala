@@ -52,7 +52,9 @@ object FocusListener {
     }
   }
   object FocusEvent {
-    sealed abstract class Type
+    sealed abstract class Type {
+      def name(): java.lang.String = this.toString()
+    }
     object Type {
       case object keyboard extends Type
       case object scroll extends Type

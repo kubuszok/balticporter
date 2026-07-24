@@ -13,7 +13,9 @@ trait Files {
   def isLocalStorageAvailable(): scala.Boolean
 }
 object Files {
-  sealed abstract class FileType
+  sealed abstract class FileType {
+    def name(): java.lang.String = this.toString()
+  }
   object FileType {
     case object Classpath extends FileType
     case object Internal extends FileType

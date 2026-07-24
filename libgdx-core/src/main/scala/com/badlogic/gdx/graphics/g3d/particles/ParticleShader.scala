@@ -163,7 +163,9 @@ object ParticleShader {
     } else ()
     return prefix
   }
-  sealed abstract class ParticleType
+  sealed abstract class ParticleType {
+    def name(): java.lang.String = this.toString()
+  }
   object ParticleType {
     case object Billboard extends ParticleType
     case object Point extends ParticleType
@@ -174,7 +176,9 @@ object ParticleShader {
       case _ => throw new java.lang.IllegalArgumentException(name)
     }
   }
-  sealed abstract class AlignMode
+  sealed abstract class AlignMode {
+    def name(): java.lang.String = this.toString()
+  }
   object AlignMode {
     case object Screen extends AlignMode
     case object ViewPoint extends AlignMode

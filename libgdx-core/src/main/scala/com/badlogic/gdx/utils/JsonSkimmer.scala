@@ -1136,7 +1136,9 @@ object JsonSkimmer {
     }
   }
   object JsonToken {
-    sealed abstract class TokenType
+    sealed abstract class TokenType {
+      def name(): java.lang.String = this.toString()
+    }
     object TokenType {
       case object nullValue extends TokenType
       case object trueValue extends TokenType

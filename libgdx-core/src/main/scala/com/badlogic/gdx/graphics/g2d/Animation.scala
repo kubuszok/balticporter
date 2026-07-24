@@ -114,7 +114,9 @@ class Animation[T] {
   }
 }
 object Animation {
-  sealed abstract class PlayMode
+  sealed abstract class PlayMode {
+    def name(): java.lang.String = this.toString()
+  }
   object PlayMode {
     case object NORMAL extends PlayMode
     case object REVERSED extends PlayMode

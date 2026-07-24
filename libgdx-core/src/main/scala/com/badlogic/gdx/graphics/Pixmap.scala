@@ -171,7 +171,9 @@ object Pixmap {
     request.setUrl(url)
     com.badlogic.gdx.Gdx.net.sendHttpRequest(request, new com.badlogic.gdx.Net.HttpResponseListener())
   }
-  sealed abstract class Format
+  sealed abstract class Format {
+    def name(): java.lang.String = this.toString()
+  }
   object Format {
     case object Alpha extends Format
     case object Intensity extends Format
@@ -243,7 +245,9 @@ object Pixmap {
       return com.badlogic.gdx.graphics.g2d.Gdx2DPixmap.toGlType(com.badlogic.gdx.graphics.Pixmap.Format.toGdx2DPixmapFormat(format))
     }
   }
-  sealed abstract class Blending
+  sealed abstract class Blending {
+    def name(): java.lang.String = this.toString()
+  }
   object Blending {
     case object None extends Blending
     case object SourceOver extends Blending
@@ -254,7 +258,9 @@ object Pixmap {
       case _ => throw new java.lang.IllegalArgumentException(name)
     }
   }
-  sealed abstract class Filter
+  sealed abstract class Filter {
+    def name(): java.lang.String = this.toString()
+  }
   object Filter {
     case object NearestNeighbour extends Filter
     case object BiLinear extends Filter

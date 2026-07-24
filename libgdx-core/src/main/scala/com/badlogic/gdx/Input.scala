@@ -789,7 +789,9 @@ object Input {
       }; i = i + 1 } }
     }
   }
-  sealed abstract class Peripheral
+  sealed abstract class Peripheral {
+    def name(): java.lang.String = this.toString()
+  }
   object Peripheral {
     case object HardwareKeyboard extends Peripheral
     case object OnscreenKeyboard extends Peripheral
@@ -824,7 +826,9 @@ object Input {
     def onKeyboardShow(height: scala.Int): scala.Unit
     def onKeyboardHide(): scala.Unit
   }
-  sealed abstract class OnscreenKeyboardType
+  sealed abstract class OnscreenKeyboardType {
+    def name(): java.lang.String = this.toString()
+  }
   object OnscreenKeyboardType {
     case object Default extends OnscreenKeyboardType
     case object NumberPad extends OnscreenKeyboardType
@@ -843,7 +847,9 @@ object Input {
       case _ => throw new java.lang.IllegalArgumentException(name)
     }
   }
-  sealed abstract class VibrationType
+  sealed abstract class VibrationType {
+    def name(): java.lang.String = this.toString()
+  }
   object VibrationType {
     case object LIGHT extends VibrationType
     case object MEDIUM extends VibrationType
@@ -856,7 +862,9 @@ object Input {
       case _ => throw new java.lang.IllegalArgumentException(name)
     }
   }
-  sealed abstract class Orientation
+  sealed abstract class Orientation {
+    def name(): java.lang.String = this.toString()
+  }
   object Orientation {
     case object Landscape extends Orientation
     case object Portrait extends Orientation

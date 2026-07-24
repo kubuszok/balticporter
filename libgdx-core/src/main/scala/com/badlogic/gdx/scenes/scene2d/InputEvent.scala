@@ -96,7 +96,9 @@ class InputEvent extends com.badlogic.gdx.scenes.scene2d.Event {
   }
 }
 object InputEvent {
-  sealed abstract class Type
+  sealed abstract class Type {
+    def name(): java.lang.String = this.toString()
+  }
   object Type {
     case object touchDown extends Type
     case object touchUp extends Type

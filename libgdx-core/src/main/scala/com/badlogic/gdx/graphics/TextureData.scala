@@ -14,7 +14,9 @@ trait TextureData {
   def isManaged(): scala.Boolean
 }
 object TextureData {
-  sealed abstract class TextureDataType
+  sealed abstract class TextureDataType {
+    def name(): java.lang.String = this.toString()
+  }
   object TextureDataType {
     case object Pixmap extends TextureDataType
     case object Custom extends TextureDataType

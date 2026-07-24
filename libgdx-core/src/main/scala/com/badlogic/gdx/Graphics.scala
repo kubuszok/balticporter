@@ -58,7 +58,9 @@ trait Graphics {
   def setSystemCursor(systemCursor: com.badlogic.gdx.graphics.Cursor.SystemCursor): scala.Unit
 }
 object Graphics {
-  sealed abstract class GraphicsType
+  sealed abstract class GraphicsType {
+    def name(): java.lang.String = this.toString()
+  }
   object GraphicsType {
     case object AndroidGL extends GraphicsType
     case object LWJGL extends GraphicsType

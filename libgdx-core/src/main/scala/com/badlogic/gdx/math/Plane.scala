@@ -80,7 +80,9 @@ class Plane extends java.io.Serializable {
 }
 object Plane {
   private final val serialVersionUID: scala.Long = -1240652082930747866L
-  sealed abstract class PlaneSide
+  sealed abstract class PlaneSide {
+    def name(): java.lang.String = this.toString()
+  }
   object PlaneSide {
     case object OnPlane extends PlaneSide
     case object Back extends PlaneSide

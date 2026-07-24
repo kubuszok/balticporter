@@ -1241,7 +1241,9 @@ object Table {
     export com.badlogic.gdx.math.Rectangle.{pool => _, *}
     var pool: com.badlogic.gdx.utils.Pool[com.badlogic.gdx.scenes.scene2d.ui.Table.DebugRect] = new com.badlogic.gdx.utils.DefaultPool[com.badlogic.gdx.scenes.scene2d.ui.Table.DebugRect]((() => new com.badlogic.gdx.scenes.scene2d.ui.Table.DebugRect()))
   }
-  sealed abstract class Debug
+  sealed abstract class Debug {
+    def name(): java.lang.String = this.toString()
+  }
   object Debug {
     case object none extends Debug
     case object all extends Debug

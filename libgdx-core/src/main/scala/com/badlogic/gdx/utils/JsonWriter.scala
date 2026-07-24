@@ -279,6 +279,7 @@ object JsonWriter {
       }
       return if (quote) com.badlogic.gdx.utils.JsonWriter.OutputType.escapeQuote(value) else (java.lang.String.valueOf('\"') + value) + '\"'
     }
+    def name(): java.lang.String = this.toString()
   }
   object OutputType {
     case object json extends OutputType

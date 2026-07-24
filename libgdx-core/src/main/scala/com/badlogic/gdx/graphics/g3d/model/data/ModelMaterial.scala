@@ -13,7 +13,9 @@ class ModelMaterial {
   var textures: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.model.data.ModelTexture] = null.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.model.data.ModelTexture]]
 }
 object ModelMaterial {
-  sealed abstract class MaterialType
+  sealed abstract class MaterialType {
+    def name(): java.lang.String = this.toString()
+  }
   object MaterialType {
     case object Lambert extends MaterialType
     case object Phong extends MaterialType

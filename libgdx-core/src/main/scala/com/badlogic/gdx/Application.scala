@@ -33,7 +33,9 @@ object Application {
   final val LOG_DEBUG: scala.Int = 3
   final val LOG_INFO: scala.Int = 2
   final val LOG_ERROR: scala.Int = 1
-  sealed abstract class ApplicationType
+  sealed abstract class ApplicationType {
+    def name(): java.lang.String = this.toString()
+  }
   object ApplicationType {
     case object Android extends ApplicationType
     case object Desktop extends ApplicationType

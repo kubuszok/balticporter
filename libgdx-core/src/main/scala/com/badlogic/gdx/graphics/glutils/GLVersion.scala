@@ -111,7 +111,9 @@ class GLVersion {
   }
 }
 object GLVersion {
-  sealed abstract class Type
+  sealed abstract class Type {
+    def name(): java.lang.String = this.toString()
+  }
   object Type {
     case object OpenGL extends Type
     case object GLES extends Type

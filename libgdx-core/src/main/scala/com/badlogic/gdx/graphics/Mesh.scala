@@ -793,7 +793,9 @@ object Mesh {
       idx = idx + vertexSize
     }; i = i + 1 } }
   }
-  sealed abstract class VertexDataType
+  sealed abstract class VertexDataType {
+    def name(): java.lang.String = this.toString()
+  }
   object VertexDataType {
     case object VertexArray extends VertexDataType
     case object VertexBufferObject extends VertexDataType

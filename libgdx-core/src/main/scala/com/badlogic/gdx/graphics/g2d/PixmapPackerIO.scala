@@ -60,6 +60,7 @@ object PixmapPackerIO {
     def getExtension(): java.lang.String = {
       return this.`extension`
     }
+    def name(): java.lang.String = this.toString()
   }
   object ImageFormat {
     case object CIM extends ImageFormat(".cim")

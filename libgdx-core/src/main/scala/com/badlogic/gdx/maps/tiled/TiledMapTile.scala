@@ -15,7 +15,9 @@ trait TiledMapTile {
   def getObjects(): com.badlogic.gdx.maps.MapObjects
 }
 object TiledMapTile {
-  sealed abstract class BlendMode
+  sealed abstract class BlendMode {
+    def name(): java.lang.String = this.toString()
+  }
   object BlendMode {
     case object NONE extends BlendMode
     case object ALPHA extends BlendMode

@@ -1296,7 +1296,9 @@ object JsonValue {
       writer.write('\t')
     }; i = i + 1 } }
   }
-  sealed abstract class ValueType
+  sealed abstract class ValueType {
+    def name(): java.lang.String = this.toString()
+  }
   object ValueType {
     case object `object` extends ValueType
     case object array extends ValueType

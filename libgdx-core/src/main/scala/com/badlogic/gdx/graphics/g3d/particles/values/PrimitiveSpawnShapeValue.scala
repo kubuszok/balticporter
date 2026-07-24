@@ -88,7 +88,9 @@ abstract class PrimitiveSpawnShapeValue extends com.badlogic.gdx.graphics.g3d.pa
 }
 object PrimitiveSpawnShapeValue {
   final val TMP_V1: com.badlogic.gdx.math.Vector3 = new com.badlogic.gdx.math.Vector3()
-  sealed abstract class SpawnSide
+  sealed abstract class SpawnSide {
+    def name(): java.lang.String = this.toString()
+  }
   object SpawnSide {
     case object both extends SpawnSide
     case object top extends SpawnSide
