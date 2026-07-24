@@ -55,6 +55,7 @@ final case class Flags(
     isPrivate: Boolean = false,
     isProtected: Boolean = false,
     isStatic: Boolean = false, // JavaStatic
+    isNative: Boolean = false, // Java `native` (JNI) — a Panama-FFI rewrite target
     isCovariant: Boolean = false,
     isContravariant: Boolean = false,
 )

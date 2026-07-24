@@ -314,6 +314,7 @@ object SpoonTir:
           isStatic = has(mod, STATIC),
           isPrivate = has(mod, PRIVATE),
           isProtected = has(mod, PROTECTED),
+          isNative = has(mod, NATIVE),
         )
       case _ => Flags()
 

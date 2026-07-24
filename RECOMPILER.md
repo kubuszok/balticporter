@@ -283,7 +283,22 @@ emission backend (step 3), since projecting the delta onto Scala output needs em
      `given C = new C()` is synthesized in C's companion so a true entry point still resolves.
      `GlobalsToImplicitsTransformSpec` (4/4) + `GlobalsDemo`; emitted output compiles with
      scalac. Needed emitter support for a `using` param clause and a `given` val.
-   - **TODO:** Panama FFI; immutable-collection variants.
+   - **Panama FFI — DONE (`PanamaFfiTransform`).** JNI `native` methods → `java.lang.foreign`
+     downcall bindings. Detection is `isNative`, now carried from Spoon's `native` modifier
+     (so it genuinely FINDS the JNI surface). Per native method it generates a private
+     `MethodHandle` field — `Linker.nativeLinker().downcallHandle(lookup.find("name")…,
+     FunctionDescriptor.of/ofVoid(…))` with each param/return type mapped to its `ValueLayout`
+     (primitives → `JAVA_*`, else `ADDRESS`) — and replaces the bodyless method with a handle
+     invocation cast back to the declared type. The public method stays STRUCTURAL (its real
+     signature drives the descriptor); only the FFI plumbing (generated boilerplate) is
+     synthesized `Tree.Opaque` glue. `PanamaFfiTransformSpec` (3/3) + `PanamaDemo`; generated
+     bindings compile against `java.lang.foreign` (JDK 22+). Refinement points: an exact-typed
+     per-arity invoker (the `invokeExact` shape compiles but boxes) and a Scala Native linker
+     backend.
+
+   **All four production transforms named in §1 are now implemented, each verified emitting
+   scalac-compiling Scala with a spec.** Remaining polish: immutable-collection variants; the
+   Int→opaque agent-hint loop wired to the emit gate; the Panama exact invoker / Native backend.
 
 The old string-printer compile grind (M6 at ~61 errors) is **subsumed** by step 3:
 a types-carrying backend emits compiling code by construction. We stop patching the
