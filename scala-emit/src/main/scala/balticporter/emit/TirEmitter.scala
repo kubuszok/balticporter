@@ -149,7 +149,14 @@ final class TirEmitter(source: Program):
       case Some(Tree.Block((Tree.Apply(Tree.Select(r, m, _, _), args, _, _, _)) :: _, _, _, _)) =>
         sym(m).name == "<init>" && args.nonEmpty && !r.isInstanceOf[Tree.Super]
       case _ => false
-    val ctors  = body.collect { case d: Tree.DefDef if isCtor(d) => d }
+    // a no-arg constructor whose body is only super/this delegation is degenerate — Scala's
+    // implicit primary constructor already is no-arg, and `def this() = this()` self-recurses.
+    def degenerate(d: Tree.DefDef): Boolean =
+      d.paramss.flatten.isEmpty && (d.rhs match
+        case Some(Tree.Block(stats, _, _, _)) =>
+          stats.forall { case Tree.Apply(Tree.Select(_, m, _, _), _, _, _, _) => sym(m).name == "<init>"; case _ => false }
+        case _ => true)
+    val ctors = body.collect { case d: Tree.DefDef if isCtor(d) && !degenerate(d) => d }
       .sortBy(d => (if delegatesToPeer(d) then 1 else 0, -d.paramss.map(_.size).sum))
     val fields = body.collect { case v: Tree.ValDef => v }
     val rest   = body.filterNot(s => isCtor(s) || s.isInstanceOf[Tree.ValDef])
@@ -296,7 +303,7 @@ final class TirEmitter(source: Program):
     case Tree.Break(_, _, _)            => "/* break */ ()"    // TODO: scala.util.boundary
     case Tree.Continue(_, _, _)         => "/* continue */ ()" // TODO: scala.util.boundary
     case Tree.Assert(c, m, _, _)        => s"assert(${term(c, i)}${m.map(x => ", " + term(x, i)).getOrElse("")})"
-    case Tree.IncDec(tgt, op, _, _, _)  => s"{ ${term(tgt, i)} $op= 1 }" // value-position is approximate
+    case Tree.IncDec(tgt, op, _, _, _)  => s"{ ${term(tgt, i)} $op= 1; ${term(tgt, i)} }" // yields the value
     case Tree.DoWhile(b, c, _, _)       => s"while ({ ${term(b, i)}; ${term(c, i)} }) ()" // Scala 3 has no do-while
     case Tree.Synchronized(l, b, _, _)  => s"${term(l, i)}.synchronized ${term(b, i)}"
     case Tree.Opaque(raw, _, _)         => raw
