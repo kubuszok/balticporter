@@ -59,4 +59,7 @@ object SkinLoader {
       this(textureAtlasPath, null)
     }
   }
+  object SkinParameter {
+    export com.badlogic.gdx.assets.AssetLoaderParameters.*
+  }
 }

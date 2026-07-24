@@ -111,6 +111,9 @@ object RegionInfluencer {
       return new com.badlogic.gdx.graphics.g3d.particles.influencers.RegionInfluencer.Single(this)
     }
   }
+  object Single {
+    export RegionInfluencer.*
+  }
   class Random extends RegionInfluencer {
     def this(regionInfluencer: com.badlogic.gdx.graphics.g3d.particles.influencers.RegionInfluencer.Random) = {
       this()
@@ -135,6 +138,9 @@ object RegionInfluencer {
     def copy(): com.badlogic.gdx.graphics.g3d.particles.influencers.RegionInfluencer.Random = {
       return new com.badlogic.gdx.graphics.g3d.particles.influencers.RegionInfluencer.Random(this)
     }
+  }
+  object Random {
+    export RegionInfluencer.*
   }
   class Animated extends RegionInfluencer {
     var lifeChannel: com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel]
@@ -165,6 +171,9 @@ object RegionInfluencer {
     def copy(): com.badlogic.gdx.graphics.g3d.particles.influencers.RegionInfluencer.Animated = {
       return new com.badlogic.gdx.graphics.g3d.particles.influencers.RegionInfluencer.Animated(this)
     }
+  }
+  object Animated {
+    export RegionInfluencer.*
   }
   class AspectTextureRegion {
     var u: scala.Float = 0.0f

@@ -166,5 +166,6 @@ class ClickListener extends com.badlogic.gdx.scenes.scene2d.InputListener {
   }
 }
 object ClickListener {
+  export com.badlogic.gdx.scenes.scene2d.InputListener.*
   var visualPressedDuration: scala.Float = 0.1f
 }

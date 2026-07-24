@@ -231,3 +231,6 @@ class GL32Interceptor extends com.badlogic.gdx.graphics.profiling.GL31Intercepto
     this.check()
   }
 }
+object GL32Interceptor {
+  export com.badlogic.gdx.graphics.GL32.*
+}

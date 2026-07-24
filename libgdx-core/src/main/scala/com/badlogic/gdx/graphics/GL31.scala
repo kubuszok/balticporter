@@ -71,6 +71,7 @@ trait GL31 extends com.badlogic.gdx.graphics.GL30 {
   def glVertexBindingDivisor(bindingindex: scala.Int, divisor: scala.Int): scala.Unit
 }
 object GL31 {
+  export com.badlogic.gdx.graphics.GL30.*
   final val GL_VERTEX_SHADER_BIT: scala.Int = 1
   final val GL_FRAGMENT_SHADER_BIT: scala.Int = 2
   final val GL_COMPUTE_SHADER_BIT: scala.Int = 32

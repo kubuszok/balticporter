@@ -231,3 +231,6 @@ class IsometricStaggeredTiledMapRenderer extends com.badlogic.gdx.maps.tiled.ren
     }
   }
 }
+object IsometricStaggeredTiledMapRenderer {
+  export com.badlogic.gdx.maps.tiled.renderers.BatchTiledMapRenderer.*
+}

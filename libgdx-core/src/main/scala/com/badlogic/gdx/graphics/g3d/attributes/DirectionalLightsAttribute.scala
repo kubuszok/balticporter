@@ -25,6 +25,7 @@ class DirectionalLightsAttribute extends com.badlogic.gdx.graphics.g3d.Attribute
   }
 }
 object DirectionalLightsAttribute {
+  export com.badlogic.gdx.graphics.g3d.Attribute.*
   final val Alias: java.lang.String = "directionalLights"
   final val Type: scala.Long = com.badlogic.gdx.graphics.g3d.Attribute.register(DirectionalLightsAttribute.Alias)
   final def is(mask: scala.Long): scala.Boolean = {

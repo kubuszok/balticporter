@@ -20,4 +20,7 @@ class PixmapLoader extends com.badlogic.gdx.assets.loaders.AsynchronousAssetLoad
 }
 object PixmapLoader {
   class PixmapParameter extends com.badlogic.gdx.assets.AssetLoaderParameters[com.badlogic.gdx.graphics.Pixmap]
+  object PixmapParameter {
+    export com.badlogic.gdx.assets.AssetLoaderParameters.*
+  }
 }

@@ -156,6 +156,7 @@ class Slider extends com.badlogic.gdx.scenes.scene2d.ui.ProgressBar {
   }
 }
 object Slider {
+  export com.badlogic.gdx.scenes.scene2d.ui.ProgressBar.*
   class SliderStyle extends com.badlogic.gdx.scenes.scene2d.ui.ProgressBar.ProgressBarStyle {
     var backgroundOver: com.badlogic.gdx.scenes.scene2d.utils.Drawable = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Drawable]
     var backgroundDown: com.badlogic.gdx.scenes.scene2d.utils.Drawable = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Drawable]

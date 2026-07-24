@@ -134,6 +134,7 @@ class SnapshotArray[T] extends com.badlogic.gdx.utils.Array[T] {
   }
 }
 object SnapshotArray {
+  export com.badlogic.gdx.utils.Array.*
   def `with`[T](array: scala.Array[T]): SnapshotArray[T] = {
     return new SnapshotArray(array.asInstanceOf[scala.Array[java.lang.Object]])
   }

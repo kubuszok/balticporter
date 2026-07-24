@@ -25,6 +25,7 @@ class SpotLightsAttribute extends com.badlogic.gdx.graphics.g3d.Attribute(SpotLi
   }
 }
 object SpotLightsAttribute {
+  export com.badlogic.gdx.graphics.g3d.Attribute.*
   final val Alias: java.lang.String = "spotLights"
   final val Type: scala.Long = com.badlogic.gdx.graphics.g3d.Attribute.register(SpotLightsAttribute.Alias)
   final def is(mask: scala.Long): scala.Boolean = {

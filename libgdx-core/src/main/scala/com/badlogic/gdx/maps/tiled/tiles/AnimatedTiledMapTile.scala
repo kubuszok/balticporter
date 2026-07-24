@@ -103,6 +103,7 @@ class AnimatedTiledMapTile extends com.badlogic.gdx.maps.tiled.TiledMapTile {
   }
 }
 object AnimatedTiledMapTile {
+  export com.badlogic.gdx.maps.tiled.TiledMapTile.*
   private var lastTiledMapRenderTime: scala.Long = 0
   private final val initialTimeOffset: scala.Long = com.badlogic.gdx.utils.TimeUtils.millis()
   def updateAnimationBaseTime(): scala.Unit = {

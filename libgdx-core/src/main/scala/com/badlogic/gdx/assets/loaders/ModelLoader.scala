@@ -85,4 +85,7 @@ object ModelLoader {
       this.textureParameter.wrapV
     }
   }
+  object ModelParameters {
+    export com.badlogic.gdx.assets.AssetLoaderParameters.*
+  }
 }

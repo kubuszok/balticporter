@@ -41,4 +41,7 @@ object TextureAtlasLoader {
       this.flip = flip
     }
   }
+  object TextureAtlasParameter {
+    export com.badlogic.gdx.assets.AssetLoaderParameters.*
+  }
 }

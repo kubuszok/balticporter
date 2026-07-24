@@ -25,3 +25,6 @@ abstract class ParticleControllerRenderer[D <: com.badlogic.gdx.graphics.g3d.par
     } else ()
   }
 }
+object ParticleControllerRenderer {
+  export com.badlogic.gdx.graphics.g3d.particles.ParticleControllerComponent.*
+}

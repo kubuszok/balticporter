@@ -119,3 +119,6 @@ class TmxMapLoader extends com.badlogic.gdx.maps.tiled.BaseTmxMapLoader[com.badl
     }
   }
 }
+object TmxMapLoader {
+  export com.badlogic.gdx.maps.tiled.BaseTmxMapLoader.*
+}

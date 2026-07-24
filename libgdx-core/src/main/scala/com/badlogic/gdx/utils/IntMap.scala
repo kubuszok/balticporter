@@ -595,6 +595,9 @@ object IntMap {
       return this
     }
   }
+  object Entries {
+    export com.badlogic.gdx.utils.IntMap.MapIterator.*
+  }
   class Values[V] extends com.badlogic.gdx.utils.IntMap.MapIterator[V] with scala.collection.Iterable[V] with scala.collection.Iterator[V] {
     def this(map: IntMap[V]) = {
       this()
@@ -633,6 +636,9 @@ object IntMap {
       return array
     }
   }
+  object Values {
+    export com.badlogic.gdx.utils.IntMap.MapIterator.*
+  }
   class Keys extends com.badlogic.gdx.utils.IntMap.MapIterator[scala.AnyRef] {
     def this(map: IntMap[?]) = {
       this()
@@ -662,5 +668,8 @@ object IntMap {
       }
       return array
     }
+  }
+  object Keys {
+    export com.badlogic.gdx.utils.IntMap.MapIterator.*
   }
 }

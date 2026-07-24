@@ -2,6 +2,7 @@ package com.badlogic.gdx.graphics.g3d.utils.shapebuilders
 
 class RenderableShapeBuilder extends com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BaseShapeBuilder
 object RenderableShapeBuilder {
+  export com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BaseShapeBuilder.*
   private var indices: scala.Array[scala.Short] = null.asInstanceOf[scala.Array[scala.Short]]
   private var vertices: scala.Array[scala.Float] = null.asInstanceOf[scala.Array[scala.Float]]
   private final val renderablesPool: com.badlogic.gdx.graphics.g3d.utils.shapebuilders.RenderableShapeBuilder.RenderablePool = new com.badlogic.gdx.graphics.g3d.utils.shapebuilders.RenderableShapeBuilder.RenderablePool()

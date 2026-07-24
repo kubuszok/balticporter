@@ -52,6 +52,23 @@ final class TirEmitter(source: Program):
     cd.body.foreach { case c: Tree.ClassDef => acc ++= declaredTypes(c); case _ => () }
     acc.toSet
 
+  /** head symbols of a class's parent types (extends + mixins). */
+  private def parentSymsOf(cd: Tree.ClassDef): List[SymId] =
+    def headSym(t: TypeRepr): Option[SymId] = t match
+      case TypeRepr.TypeRef(_, s) => Some(s)
+      case TypeRepr.AppliedType(tc, _) => headSym(tc)
+      case _ => None
+    cd.parents.flatMap { case tt: TypeTree => headSym(tt.tpe); case term: Term => headSym(term.tpe) }
+
+  /** our-own types that have at least one `static` member (so a companion `object` holds it). */
+  private lazy val typesWithStatics: Set[SymId] =
+    val acc = collection.mutable.Set[SymId]()
+    def scan(cd: Tree.ClassDef): Unit =
+      if cd.body.exists { case d: Definition => sym(d.symbol).flags.isStatic; case _ => false } then acc += cd.symbol
+      cd.body.foreach { case c: Tree.ClassDef => scan(c); case _ => () }
+    program.units.foreach(scan)
+    acc.toSet
+
   // ---- names ----
   private def sym(id: SymId): Symbol = program.symbolOf(id).getOrElse(Symbol(id, "?", "?", Flags(), SymId.None, TypeRepr.NoType))
   private def local(id: SymId): String = esc(sym(id).name)
@@ -123,9 +140,13 @@ final class TirEmitter(source: Program):
     val open    = if body.isEmpty && self.isEmpty then "" else s" {\n$self$body\n${ind(i)}}"
     val abs     = if kw == "class" && s.flags.isAbstract then "abstract " else ""
     val cls     = s"${ind(i)}${mods(s.flags)}$abs$kw ${esc(s.name)}$tps$ext$open"
-    if statics.isEmpty then cls
+    // Java interface/parent CONSTANTS are `static`, so they live in the parent's companion object
+    // — which Scala does NOT inherit. Re-export each static-bearing parent's companion so an
+    // inherited constant accessed via a subclass (`GL30.GL_LUMINANCE`, declared in `GL20`) resolves.
+    val parentExports = parentSymsOf(cd).filter(typesWithStatics).map(p => s"${ind(i + 1)}export ${typeValue(p)}.*")
+    if statics.isEmpty && parentExports.isEmpty then cls
     else
-      val sb = orderBody(statics).map(stat(_, i + 1)).filter(_.nonEmpty).mkString("\n")
+      val sb = (parentExports ++ orderBody(statics).map(stat(_, i + 1)).filter(_.nonEmpty)).mkString("\n")
       s"$cls\n${ind(i)}object ${esc(s.name)} {\n$sb\n${ind(i)}}"
 
   /** Java enum → `sealed abstract class Name <parents-minus-Enum> { members }` plus a

@@ -72,6 +72,7 @@ class DepthShader extends com.badlogic.gdx.graphics.g3d.shaders.DefaultShader {
   }
 }
 object DepthShader {
+  export com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.*
   private var defaultVertexShader: java.lang.String = null
   private var defaultFragmentShader: java.lang.String = null
   private final val tmpAttributes: com.badlogic.gdx.graphics.g3d.Attributes = new com.badlogic.gdx.graphics.g3d.Attributes()

@@ -64,6 +64,9 @@ object Interpolation {
       return (java.lang.Math.pow((a - 1) * 2, this.power).asInstanceOf[scala.Float] / (if ((this.power % 2) == 0) -2 else 2)) + 1
     }
   }
+  object Pow {
+    export Interpolation.*
+  }
   class PowIn extends com.badlogic.gdx.math.Interpolation.Pow {
     def this(power: scala.Int) = {
       this()
@@ -98,6 +101,9 @@ object Interpolation {
       } else ()
       return (2 - ((java.lang.Math.pow(this.value, (-this.power) * ((a * 2) - 1)).asInstanceOf[scala.Float] - this.min) * this.scale)) / 2
     }
+  }
+  object Exp {
+    export Interpolation.*
   }
   class ExpIn extends com.badlogic.gdx.math.Interpolation.Exp {
     def this(value: scala.Float, power: scala.Float) = {
@@ -137,6 +143,9 @@ object Interpolation {
       a = a * 2
       return 1 - (((java.lang.Math.pow(this.value, this.power * (a - 1)).asInstanceOf[scala.Float] * com.badlogic.gdx.math.MathUtils.sin(a * this.bounces)) * this.scale) / 2)
     }
+  }
+  object Elastic {
+    export Interpolation.*
   }
   class ElasticIn extends com.badlogic.gdx.math.Interpolation.Elastic {
     def this(value: scala.Float, power: scala.Float, bounces: scala.Int, scale: scala.Float) = {
@@ -259,6 +268,9 @@ object Interpolation {
       return 1 - ((z - (z * a)) * width)
     }
   }
+  object BounceOut {
+    export Interpolation.*
+  }
   class BounceIn extends com.badlogic.gdx.math.Interpolation.BounceOut {
     def this(widths: scala.Array[scala.Float], heights: scala.Array[scala.Float]) = {
       this()
@@ -287,6 +299,9 @@ object Interpolation {
       return (((a * a) * (((this.scale + 1) * a) + this.scale)) / 2) + 1
     }
   }
+  object Swing {
+    export Interpolation.*
+  }
   class SwingOut extends Interpolation {
     private var scale: scala.Float = 0.0f
     def this(scale: scala.Float) = {
@@ -299,6 +314,9 @@ object Interpolation {
       return ((a * a) * (((this.scale + 1) * a) + this.scale)) + 1
     }
   }
+  object SwingOut {
+    export Interpolation.*
+  }
   class SwingIn extends Interpolation {
     private var scale: scala.Float = 0.0f
     def this(scale: scala.Float) = {
@@ -308,5 +326,8 @@ object Interpolation {
     def apply(a: scala.Float): scala.Float = {
       return (a * a) * (((this.scale + 1) * a) - this.scale)
     }
+  }
+  object SwingIn {
+    export Interpolation.*
   }
 }

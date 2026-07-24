@@ -2,6 +2,7 @@ package com.badlogic.gdx.graphics.g3d.utils.shapebuilders
 
 class SphereShapeBuilder extends com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BaseShapeBuilder
 object SphereShapeBuilder {
+  export com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BaseShapeBuilder.*
   private final val tmpIndices: com.badlogic.gdx.utils.ShortArray = new com.badlogic.gdx.utils.ShortArray()
   private final val normalTransform: com.badlogic.gdx.math.Matrix3 = new com.badlogic.gdx.math.Matrix3()
   def build(builder: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder, width: scala.Float, height: scala.Float, depth: scala.Float, divisionsU: scala.Int, divisionsV: scala.Int): scala.Unit = {

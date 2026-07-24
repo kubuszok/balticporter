@@ -35,6 +35,7 @@ abstract class GLInterceptor extends com.badlogic.gdx.graphics.GL20 {
   }
 }
 object GLInterceptor {
+  export com.badlogic.gdx.graphics.GL20.*
   def resolveErrorNumber(error: scala.Int): java.lang.String = {
     error match {
       case com.badlogic.gdx.graphics.GL20.GL_INVALID_VALUE => {

@@ -108,5 +108,6 @@ class Tooltip[T <: com.badlogic.gdx.scenes.scene2d.Actor] extends com.badlogic.g
   }
 }
 object Tooltip {
+  export com.badlogic.gdx.scenes.scene2d.InputListener.*
   var tmp: com.badlogic.gdx.math.Vector2 = new com.badlogic.gdx.math.Vector2()
 }

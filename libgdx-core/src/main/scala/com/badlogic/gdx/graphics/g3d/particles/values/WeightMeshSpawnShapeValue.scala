@@ -69,3 +69,6 @@ final class WeightMeshSpawnShapeValue extends com.badlogic.gdx.graphics.g3d.part
     return new WeightMeshSpawnShapeValue(this)
   }
 }
+object WeightMeshSpawnShapeValue {
+  export com.badlogic.gdx.graphics.g3d.particles.values.MeshSpawnShapeValue.*
+}

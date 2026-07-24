@@ -71,3 +71,6 @@ final class EllipseSpawnShapeValue extends com.badlogic.gdx.graphics.g3d.particl
     this.side = json.readValue("side", classOf[com.badlogic.gdx.graphics.g3d.particles.values.PrimitiveSpawnShapeValue.SpawnSide], jsonData)
   }
 }
+object EllipseSpawnShapeValue {
+  export com.badlogic.gdx.graphics.g3d.particles.values.PrimitiveSpawnShapeValue.*
+}

@@ -61,4 +61,7 @@ object CubemapLoader {
     var wrapU: com.badlogic.gdx.graphics.Texture.TextureWrap = com.badlogic.gdx.graphics.Texture.TextureWrap.ClampToEdge
     var wrapV: com.badlogic.gdx.graphics.Texture.TextureWrap = com.badlogic.gdx.graphics.Texture.TextureWrap.ClampToEdge
   }
+  object CubemapParameter {
+    export com.badlogic.gdx.assets.AssetLoaderParameters.*
+  }
 }

@@ -466,6 +466,9 @@ object TextureAtlas {
       return this.name
     }
   }
+  object AtlasRegion {
+    export com.badlogic.gdx.graphics.g2d.TextureRegion.*
+  }
   class AtlasSprite extends com.badlogic.gdx.graphics.g2d.Sprite {
     var region: com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion = null.asInstanceOf[com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion]
     var originalOffsetX: scala.Float = 0.0f
@@ -591,5 +594,8 @@ object TextureAtlas {
     def toString(): java.lang.String = {
       return this.region.toString()
     }
+  }
+  object AtlasSprite {
+    export com.badlogic.gdx.graphics.g2d.Sprite.*
   }
 }

@@ -37,3 +37,6 @@ abstract class AbstractInput extends com.badlogic.gdx.Input {
     return this.keysToCatch.contains(keycode)
   }
 }
+object AbstractInput {
+  export com.badlogic.gdx.Input.*
+}

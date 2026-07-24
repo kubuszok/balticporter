@@ -12,3 +12,6 @@ abstract class AbstractGraphics extends com.badlogic.gdx.Graphics {
     return this.getBackBufferWidth() / this.getWidth().asInstanceOf[scala.Float]
   }
 }
+object AbstractGraphics {
+  export com.badlogic.gdx.Graphics.*
+}

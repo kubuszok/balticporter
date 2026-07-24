@@ -234,4 +234,7 @@ object TideMapLoader {
     return result
   }
   class Parameters extends com.badlogic.gdx.assets.AssetLoaderParameters[com.badlogic.gdx.maps.tiled.TiledMap]
+  object Parameters {
+    export com.badlogic.gdx.assets.AssetLoaderParameters.*
+  }
 }

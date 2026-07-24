@@ -223,6 +223,9 @@ object BaseTiledMapLoader {
     var projectFilePath: java.lang.String = null
     var forceTextureFilters: scala.Boolean = false
   }
+  object Parameters {
+    export com.badlogic.gdx.assets.AssetLoaderParameters.*
+  }
   class ProjectClassMember {
     var name: java.lang.String = null.asInstanceOf[java.lang.String]
     var `type`: java.lang.String = null.asInstanceOf[java.lang.String]

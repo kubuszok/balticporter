@@ -36,3 +36,6 @@ class FloatFrameBuffer extends com.badlogic.gdx.graphics.glutils.FrameBuffer {
     } else ()
   }
 }
+object FloatFrameBuffer {
+  export com.badlogic.gdx.graphics.glutils.FrameBuffer.*
+}

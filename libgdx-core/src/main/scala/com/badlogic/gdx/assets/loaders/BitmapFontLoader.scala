@@ -61,4 +61,7 @@ object BitmapFontLoader {
     var bitmapFontData: com.badlogic.gdx.graphics.g2d.BitmapFont.BitmapFontData = null
     var atlasName: java.lang.String = null
   }
+  object BitmapFontParameter {
+    export com.badlogic.gdx.assets.AssetLoaderParameters.*
+  }
 }

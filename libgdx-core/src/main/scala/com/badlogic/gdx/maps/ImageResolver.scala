@@ -14,6 +14,9 @@ object ImageResolver {
       return new com.badlogic.gdx.graphics.g2d.TextureRegion(this.images.get(name))
     }
   }
+  object DirectImageResolver {
+    export ImageResolver.*
+  }
   class AssetManagerImageResolver extends ImageResolver {
     private var assetManager: com.badlogic.gdx.assets.AssetManager = null.asInstanceOf[com.badlogic.gdx.assets.AssetManager]
     def this(assetManager: com.badlogic.gdx.assets.AssetManager) = {
@@ -24,6 +27,9 @@ object ImageResolver {
       return new com.badlogic.gdx.graphics.g2d.TextureRegion(this.assetManager.get(name, classOf[com.badlogic.gdx.graphics.Texture]))
     }
   }
+  object AssetManagerImageResolver {
+    export ImageResolver.*
+  }
   class TextureAtlasImageResolver extends ImageResolver {
     private var atlas: com.badlogic.gdx.graphics.g2d.TextureAtlas = null.asInstanceOf[com.badlogic.gdx.graphics.g2d.TextureAtlas]
     def this(atlas: com.badlogic.gdx.graphics.g2d.TextureAtlas) = {
@@ -33,5 +39,8 @@ object ImageResolver {
     def getImage(name: java.lang.String): com.badlogic.gdx.graphics.g2d.TextureRegion = {
       return this.atlas.findRegion(name)
     }
+  }
+  object TextureAtlasImageResolver {
+    export ImageResolver.*
   }
 }

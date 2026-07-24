@@ -64,3 +64,6 @@ class StaticTiledMapTile extends com.badlogic.gdx.maps.tiled.TiledMapTile {
     this.offsetY = offsetY
   }
 }
+object StaticTiledMapTile {
+  export com.badlogic.gdx.maps.tiled.TiledMapTile.*
+}

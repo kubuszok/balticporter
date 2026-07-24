@@ -44,4 +44,7 @@ object I18NBundleLoader {
       this(locale, null)
     }
   }
+  object I18NBundleParameter {
+    export com.badlogic.gdx.assets.AssetLoaderParameters.*
+  }
 }

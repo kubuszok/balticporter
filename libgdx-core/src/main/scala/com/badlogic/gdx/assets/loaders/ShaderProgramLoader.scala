@@ -61,4 +61,7 @@ object ShaderProgramLoader {
     var prependVertexCode: java.lang.String = null.asInstanceOf[java.lang.String]
     var prependFragmentCode: java.lang.String = null.asInstanceOf[java.lang.String]
   }
+  object ShaderProgramParameter {
+    export com.badlogic.gdx.assets.AssetLoaderParameters.*
+  }
 }

@@ -61,4 +61,7 @@ object TextureLoader {
     var wrapU: com.badlogic.gdx.graphics.Texture.TextureWrap = com.badlogic.gdx.graphics.Texture.TextureWrap.ClampToEdge
     var wrapV: com.badlogic.gdx.graphics.Texture.TextureWrap = com.badlogic.gdx.graphics.Texture.TextureWrap.ClampToEdge
   }
+  object TextureParameter {
+    export com.badlogic.gdx.assets.AssetLoaderParameters.*
+  }
 }

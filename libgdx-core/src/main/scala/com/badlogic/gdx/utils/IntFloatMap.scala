@@ -573,6 +573,9 @@ object IntFloatMap {
       super.remove()
     }
   }
+  object Entries {
+    export com.badlogic.gdx.utils.IntFloatMap.MapIterator.*
+  }
   class Values extends com.badlogic.gdx.utils.IntFloatMap.MapIterator {
     def this(map: IntFloatMap) = {
       this()
@@ -612,6 +615,9 @@ object IntFloatMap {
       return array
     }
   }
+  object Values {
+    export com.badlogic.gdx.utils.IntFloatMap.MapIterator.*
+  }
   class Keys extends com.badlogic.gdx.utils.IntFloatMap.MapIterator {
     def this(map: IntFloatMap) = {
       this()
@@ -641,5 +647,8 @@ object IntFloatMap {
       }
       return array
     }
+  }
+  object Keys {
+    export com.badlogic.gdx.utils.IntFloatMap.MapIterator.*
   }
 }

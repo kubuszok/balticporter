@@ -125,3 +125,6 @@ class DragListener extends com.badlogic.gdx.scenes.scene2d.InputListener {
     this.button = button
   }
 }
+object DragListener {
+  export com.badlogic.gdx.scenes.scene2d.InputListener.*
+}

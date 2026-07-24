@@ -328,6 +328,7 @@ class KTXTextureData extends com.badlogic.gdx.graphics.TextureData with com.badl
   }
 }
 object KTXTextureData {
+  export com.badlogic.gdx.graphics.TextureData.*
   private final val GL_TEXTURE_1D: scala.Int = 4660
   private final val GL_TEXTURE_3D: scala.Int = 4660
   private final val GL_TEXTURE_1D_ARRAY_EXT: scala.Int = 4660

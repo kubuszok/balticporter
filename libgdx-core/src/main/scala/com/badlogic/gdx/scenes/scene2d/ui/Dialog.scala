@@ -161,3 +161,6 @@ class Dialog extends com.badlogic.gdx.scenes.scene2d.ui.Window {
     this.cancelHide = true
   }
 }
+object Dialog {
+  export com.badlogic.gdx.scenes.scene2d.ui.Window.*
+}

@@ -50,6 +50,9 @@ object DynamicsModifier {
       return new com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.FaceDirection(this)
     }
   }
+  object FaceDirection {
+    export DynamicsModifier.*
+  }
   abstract class Strength extends DynamicsModifier {
     var strengthChannel: com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel]
     var strengthValue: com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue]
@@ -85,6 +88,9 @@ object DynamicsModifier {
       super.read(json, jsonData)
       this.strengthValue = json.readValue("strengthValue", classOf[com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue], jsonData)
     }
+  }
+  object Strength {
+    export DynamicsModifier.*
   }
   abstract class Angular extends com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.Strength {
     var angularChannel: com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel]

@@ -18,3 +18,6 @@ final class LineSpawnShapeValue extends com.badlogic.gdx.graphics.g3d.particles.
     return new LineSpawnShapeValue(this)
   }
 }
+object LineSpawnShapeValue {
+  export com.badlogic.gdx.graphics.g3d.particles.values.PrimitiveSpawnShapeValue.*
+}

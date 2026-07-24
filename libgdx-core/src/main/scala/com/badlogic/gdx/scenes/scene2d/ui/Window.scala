@@ -189,6 +189,7 @@ class Window extends com.badlogic.gdx.scenes.scene2d.ui.Table with com.badlogic.
   }
 }
 object Window {
+  export com.badlogic.gdx.scenes.scene2d.ui.Table.*
   private final val tmpPosition: com.badlogic.gdx.math.Vector2 = new com.badlogic.gdx.math.Vector2()
   private final val tmpSize: com.badlogic.gdx.math.Vector2 = new com.badlogic.gdx.math.Vector2()
   private final val MOVE: scala.Int = 1 << 5

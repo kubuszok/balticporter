@@ -198,6 +198,7 @@ class CameraInputController extends com.badlogic.gdx.input.GestureDetector {
   }
 }
 object CameraInputController {
+  export com.badlogic.gdx.input.GestureDetector.*
   class CameraGestureListener extends com.badlogic.gdx.input.GestureDetector.GestureAdapter {
     var controller: CameraInputController = null.asInstanceOf[CameraInputController]
     private var previousZoom: scala.Float = 0.0f

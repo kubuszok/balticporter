@@ -53,6 +53,9 @@ object ModelInfluencer {
       return new com.badlogic.gdx.graphics.g3d.particles.influencers.ModelInfluencer.Single(this)
     }
   }
+  object Single {
+    export ModelInfluencer.*
+  }
   class Random extends ModelInfluencer {
     var pool: ModelInstancePool = null.asInstanceOf[ModelInstancePool]
     def this(influencer: com.badlogic.gdx.graphics.g3d.particles.influencers.ModelInfluencer.Random) = {
@@ -86,5 +89,11 @@ object ModelInfluencer {
         return new com.badlogic.gdx.graphics.g3d.ModelInstance(models.random())
       }
     }
+    object ModelInstancePool {
+      export com.badlogic.gdx.utils.Pool.*
+    }
+  }
+  object Random {
+    export ModelInfluencer.*
   }
 }

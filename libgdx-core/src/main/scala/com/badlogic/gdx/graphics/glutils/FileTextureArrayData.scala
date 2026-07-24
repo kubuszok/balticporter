@@ -98,3 +98,6 @@ class FileTextureArrayData extends com.badlogic.gdx.graphics.TextureArrayData {
     return true
   }
 }
+object FileTextureArrayData {
+  export com.badlogic.gdx.graphics.TextureArrayData.*
+}

@@ -1347,3 +1347,7 @@ class GL30Interceptor extends com.badlogic.gdx.graphics.profiling.GLInterceptor 
     this.check()
   }
 }
+object GL30Interceptor {
+  export com.badlogic.gdx.graphics.profiling.GLInterceptor.*
+  export com.badlogic.gdx.graphics.GL30.*
+}

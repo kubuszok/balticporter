@@ -83,3 +83,6 @@ class FileTextureData extends com.badlogic.gdx.graphics.TextureData {
     return this.file.toString()
   }
 }
+object FileTextureData {
+  export com.badlogic.gdx.graphics.TextureData.*
+}

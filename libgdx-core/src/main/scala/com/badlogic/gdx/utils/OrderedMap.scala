@@ -163,6 +163,7 @@ class OrderedMap[K, V] extends com.badlogic.gdx.utils.ObjectMap[K, V] {
   }
 }
 object OrderedMap {
+  export com.badlogic.gdx.utils.ObjectMap.*
   class OrderedMapEntries[K, V] extends com.badlogic.gdx.utils.ObjectMap.Entries[K, V] {
     private var keys: com.badlogic.gdx.utils.Array[K] = null.asInstanceOf[com.badlogic.gdx.utils.Array[K]]
     def this(map: OrderedMap[K, V]) = {

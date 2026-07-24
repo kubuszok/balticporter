@@ -85,3 +85,6 @@ class ParticleEffectActor extends com.badlogic.gdx.scenes.scene2d.Actor with com
     } else ()
   }
 }
+object ParticleEffectActor {
+  export com.badlogic.gdx.scenes.scene2d.Actor.*
+}

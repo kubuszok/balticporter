@@ -99,6 +99,7 @@ trait GL30 extends com.badlogic.gdx.graphics.GL20 {
   def glVertexAttribPointer(indx: scala.Int, size: scala.Int, `type`: scala.Int, normalized: scala.Boolean, stride: scala.Int, ptr: java.nio.Buffer): scala.Unit
 }
 object GL30 {
+  export com.badlogic.gdx.graphics.GL20.*
   final val GL_READ_BUFFER: scala.Int = 3074
   final val GL_UNPACK_ROW_LENGTH: scala.Int = 3314
   final val GL_UNPACK_SKIP_ROWS: scala.Int = 3315

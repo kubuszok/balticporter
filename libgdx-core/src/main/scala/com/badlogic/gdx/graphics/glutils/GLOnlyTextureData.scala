@@ -54,3 +54,6 @@ class GLOnlyTextureData extends com.badlogic.gdx.graphics.TextureData {
     return false
   }
 }
+object GLOnlyTextureData {
+  export com.badlogic.gdx.graphics.TextureData.*
+}

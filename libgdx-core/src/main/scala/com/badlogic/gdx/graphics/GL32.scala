@@ -45,6 +45,7 @@ trait GL32 extends com.badlogic.gdx.graphics.GL31 {
   def glTexStorage3DMultisample(target: scala.Int, samples: scala.Int, internalformat: scala.Int, width: scala.Int, height: scala.Int, depth: scala.Int, fixedsamplelocations: scala.Boolean): scala.Unit
 }
 object GL32 {
+  export com.badlogic.gdx.graphics.GL31.*
   final val GL_CONTEXT_FLAG_DEBUG_BIT: scala.Int = 2
   final val GL_CONTEXT_FLAG_ROBUST_ACCESS_BIT: scala.Int = 4
   final val GL_GEOMETRY_SHADER_BIT: scala.Int = 4

@@ -116,3 +116,6 @@ class WidgetGroup extends com.badlogic.gdx.scenes.scene2d.Group with com.badlogi
     super.draw(batch, parentAlpha)
   }
 }
+object WidgetGroup {
+  export com.badlogic.gdx.scenes.scene2d.Group.*
+}

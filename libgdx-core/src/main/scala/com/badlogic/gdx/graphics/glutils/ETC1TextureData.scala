@@ -84,3 +84,6 @@ class ETC1TextureData extends com.badlogic.gdx.graphics.TextureData {
     return true
   }
 }
+object ETC1TextureData {
+  export com.badlogic.gdx.graphics.TextureData.*
+}

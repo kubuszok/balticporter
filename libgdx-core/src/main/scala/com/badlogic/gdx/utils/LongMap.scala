@@ -595,6 +595,9 @@ object LongMap {
       return this
     }
   }
+  object Entries {
+    export com.badlogic.gdx.utils.LongMap.MapIterator.*
+  }
   class Values[V] extends com.badlogic.gdx.utils.LongMap.MapIterator[V] with scala.collection.Iterable[V] with scala.collection.Iterator[V] {
     def this(map: LongMap[V]) = {
       this()
@@ -633,6 +636,9 @@ object LongMap {
       return array
     }
   }
+  object Values {
+    export com.badlogic.gdx.utils.LongMap.MapIterator.*
+  }
   class Keys extends com.badlogic.gdx.utils.LongMap.MapIterator[scala.AnyRef] {
     def this(map: LongMap[?]) = {
       this()
@@ -662,5 +668,8 @@ object LongMap {
       }
       return array
     }
+  }
+  object Keys {
+    export com.badlogic.gdx.utils.LongMap.MapIterator.*
   }
 }

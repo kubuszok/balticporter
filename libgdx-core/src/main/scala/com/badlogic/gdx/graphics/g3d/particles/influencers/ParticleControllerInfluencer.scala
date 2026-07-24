@@ -112,6 +112,9 @@ object ParticleControllerInfluencer {
       return new com.badlogic.gdx.graphics.g3d.particles.influencers.ParticleControllerInfluencer.Single(this)
     }
   }
+  object Single {
+    export ParticleControllerInfluencer.*
+  }
   class Random extends ParticleControllerInfluencer {
     var pool: ParticleControllerPool = null.asInstanceOf[ParticleControllerPool]
     def this(templates: scala.Array[com.badlogic.gdx.graphics.g3d.particles.ParticleController]) = {
@@ -164,5 +167,11 @@ object ParticleControllerInfluencer {
         super.clear()
       }
     }
+    object ParticleControllerPool {
+      export com.badlogic.gdx.utils.Pool.*
+    }
+  }
+  object Random {
+    export ParticleControllerInfluencer.*
   }
 }

@@ -53,3 +53,6 @@ abstract class FileHandleStream extends com.badlogic.gdx.files.FileHandle {
     throw new java.lang.UnsupportedOperationException()
   }
 }
+object FileHandleStream {
+  export com.badlogic.gdx.files.FileHandle.*
+}

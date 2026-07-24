@@ -78,4 +78,7 @@ object PolygonRegionLoader {
     var readerBuffer: scala.Int = 1024
     var textureExtensions: scala.Array[java.lang.String] = scala.Array[java.lang.String]("png", "PNG", "jpeg", "JPEG", "jpg", "JPG", "cim", "CIM", "etc1", "ETC1", "ktx", "KTX", "zktx", "ZKTX")
   }
+  object PolygonRegionParameters {
+    export com.badlogic.gdx.assets.AssetLoaderParameters.*
+  }
 }

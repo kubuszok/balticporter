@@ -545,6 +545,9 @@ object IntIntMap {
       return this
     }
   }
+  object Entries {
+    export com.badlogic.gdx.utils.IntIntMap.MapIterator.*
+  }
   class Values extends com.badlogic.gdx.utils.IntIntMap.MapIterator {
     def this(map: IntIntMap) = {
       this()
@@ -584,6 +587,9 @@ object IntIntMap {
       return array
     }
   }
+  object Values {
+    export com.badlogic.gdx.utils.IntIntMap.MapIterator.*
+  }
   class Keys extends com.badlogic.gdx.utils.IntIntMap.MapIterator {
     def this(map: IntIntMap) = {
       this()
@@ -613,5 +619,8 @@ object IntIntMap {
       }
       return array
     }
+  }
+  object Keys {
+    export com.badlogic.gdx.utils.IntIntMap.MapIterator.*
   }
 }

@@ -439,6 +439,9 @@ object SelectBox {
       return this.selectBox
     }
   }
+  object SelectBoxScrollPane {
+    export com.badlogic.gdx.scenes.scene2d.ui.ScrollPane.*
+  }
   class SelectBoxStyle {
     var font: com.badlogic.gdx.graphics.g2d.BitmapFont = null.asInstanceOf[com.badlogic.gdx.graphics.g2d.BitmapFont]
     var fontColor: com.badlogic.gdx.graphics.Color = new com.badlogic.gdx.graphics.Color(1, 1, 1, 1)

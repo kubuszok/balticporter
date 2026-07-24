@@ -46,3 +46,6 @@ abstract class Emitter extends com.badlogic.gdx.graphics.g3d.particles.ParticleC
     this.maxParticleCount = json.readValue("maxParticleCount", classOf[scala.Int], jsonData)
   }
 }
+object Emitter {
+  export com.badlogic.gdx.graphics.g3d.particles.ParticleControllerComponent.*
+}

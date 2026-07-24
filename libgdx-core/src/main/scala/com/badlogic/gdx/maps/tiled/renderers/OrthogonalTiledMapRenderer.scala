@@ -137,3 +137,6 @@ class OrthogonalTiledMapRenderer extends com.badlogic.gdx.maps.tiled.renderers.B
     }; row = row - 1 } }
   }
 }
+object OrthogonalTiledMapRenderer {
+  export com.badlogic.gdx.maps.tiled.renderers.BatchTiledMapRenderer.*
+}

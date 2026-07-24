@@ -43,3 +43,6 @@ class MipMapTextureData extends com.badlogic.gdx.graphics.TextureData {
     return true
   }
 }
+object MipMapTextureData {
+  export com.badlogic.gdx.graphics.TextureData.*
+}

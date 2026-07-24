@@ -48,3 +48,6 @@ class IdentityMap[K, V] extends com.badlogic.gdx.utils.ObjectMap[K, V] {
     return h
   }
 }
+object IdentityMap {
+  export com.badlogic.gdx.utils.ObjectMap.*
+}

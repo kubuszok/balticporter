@@ -24,6 +24,9 @@ object ColorInfluencer {
       return new com.badlogic.gdx.graphics.g3d.particles.influencers.ColorInfluencer.Random()
     }
   }
+  object Random {
+    export ColorInfluencer.*
+  }
   class Single extends ColorInfluencer {
     var alphaInterpolationChannel: com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel]
     var lifeChannel: com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel]
@@ -74,5 +77,8 @@ object ColorInfluencer {
       this.alphaValue = json.readValue("alpha", classOf[com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue], jsonData)
       this.colorValue = json.readValue("color", classOf[com.badlogic.gdx.graphics.g3d.particles.values.GradientColorValue], jsonData)
     }
+  }
+  object Single {
+    export ColorInfluencer.*
   }
 }

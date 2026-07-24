@@ -85,3 +85,6 @@ class Widget extends com.badlogic.gdx.scenes.scene2d.Actor with com.badlogic.gdx
     ()
   }
 }
+object Widget {
+  export com.badlogic.gdx.scenes.scene2d.Actor.*
+}

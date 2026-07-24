@@ -57,3 +57,6 @@ final class RectangleSpawnShapeValue extends com.badlogic.gdx.graphics.g3d.parti
     return new RectangleSpawnShapeValue(this)
   }
 }
+object RectangleSpawnShapeValue {
+  export com.badlogic.gdx.graphics.g3d.particles.values.PrimitiveSpawnShapeValue.*
+}

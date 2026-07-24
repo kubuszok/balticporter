@@ -852,3 +852,7 @@ class GL20Interceptor extends com.badlogic.gdx.graphics.profiling.GLInterceptor 
     this.check()
   }
 }
+object GL20Interceptor {
+  export com.badlogic.gdx.graphics.profiling.GLInterceptor.*
+  export com.badlogic.gdx.graphics.GL20.*
+}

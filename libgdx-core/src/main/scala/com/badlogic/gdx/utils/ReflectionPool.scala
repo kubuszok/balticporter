@@ -42,3 +42,6 @@ class ReflectionPool[T] extends com.badlogic.gdx.utils.Pool[T] {
     }
   }
 }
+object ReflectionPool {
+  export com.badlogic.gdx.utils.Pool.*
+}

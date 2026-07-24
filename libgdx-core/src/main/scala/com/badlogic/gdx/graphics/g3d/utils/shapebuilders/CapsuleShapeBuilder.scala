@@ -2,6 +2,7 @@ package com.badlogic.gdx.graphics.g3d.utils.shapebuilders
 
 class CapsuleShapeBuilder extends com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BaseShapeBuilder
 object CapsuleShapeBuilder {
+  export com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BaseShapeBuilder.*
   def build(builder: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder, radius: scala.Float, height: scala.Float, divisions: scala.Int): scala.Unit = {
     if (height < (2.0f * radius)) {
       throw new com.badlogic.gdx.utils.GdxRuntimeException("Height must be at least twice the radius")

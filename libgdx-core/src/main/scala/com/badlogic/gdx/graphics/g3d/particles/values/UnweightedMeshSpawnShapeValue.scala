@@ -64,3 +64,6 @@ final class UnweightedMeshSpawnShapeValue extends com.badlogic.gdx.graphics.g3d.
     return new UnweightedMeshSpawnShapeValue(this)
   }
 }
+object UnweightedMeshSpawnShapeValue {
+  export com.badlogic.gdx.graphics.g3d.particles.values.MeshSpawnShapeValue.*
+}

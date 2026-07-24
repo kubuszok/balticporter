@@ -125,4 +125,7 @@ object SortedIntList {
       return newNode
     }
   }
+  object NodePool {
+    export com.badlogic.gdx.utils.Pool.*
+  }
 }

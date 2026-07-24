@@ -321,3 +321,6 @@ class HexagonalTiledMapRenderer extends com.badlogic.gdx.maps.tiled.renderers.Ba
     this.hexSideLength = hexSideLength
   }
 }
+object HexagonalTiledMapRenderer {
+  export com.badlogic.gdx.maps.tiled.renderers.BatchTiledMapRenderer.*
+}

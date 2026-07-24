@@ -22,4 +22,7 @@ class MusicLoader extends com.badlogic.gdx.assets.loaders.AsynchronousAssetLoade
 }
 object MusicLoader {
   class MusicParameter extends com.badlogic.gdx.assets.AssetLoaderParameters[com.badlogic.gdx.audio.Music]
+  object MusicParameter {
+    export com.badlogic.gdx.assets.AssetLoaderParameters.*
+  }
 }

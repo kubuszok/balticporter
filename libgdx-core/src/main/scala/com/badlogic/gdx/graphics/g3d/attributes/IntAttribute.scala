@@ -25,6 +25,7 @@ class IntAttribute extends com.badlogic.gdx.graphics.g3d.Attribute {
   }
 }
 object IntAttribute {
+  export com.badlogic.gdx.graphics.g3d.Attribute.*
   final val CullFaceAlias: java.lang.String = "cullface"
   final val CullFace: scala.Long = com.badlogic.gdx.graphics.g3d.Attribute.register(IntAttribute.CullFaceAlias)
   def createCullFace(value: scala.Int): IntAttribute = {

@@ -1195,6 +1195,9 @@ object ParticleEmitter {
       this()
     }
   }
+  object Particle {
+    export com.badlogic.gdx.graphics.g2d.Sprite.*
+  }
   class ParticleValue {
     var active: scala.Boolean = false
     var alwaysActive: scala.Boolean = false

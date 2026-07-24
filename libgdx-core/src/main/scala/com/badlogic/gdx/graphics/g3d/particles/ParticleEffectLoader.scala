@@ -97,6 +97,9 @@ object ParticleEffectLoader {
       this.batches = batches
     }
   }
+  object ParticleEffectLoadParameter {
+    export com.badlogic.gdx.assets.AssetLoaderParameters.*
+  }
   class ParticleEffectSaveParameter extends com.badlogic.gdx.assets.AssetLoaderParameters[com.badlogic.gdx.graphics.g3d.particles.ParticleEffect] {
     var batches: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.batches.ParticleBatch[?]] = null.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.batches.ParticleBatch[?]]]
     var file: com.badlogic.gdx.files.FileHandle = null.asInstanceOf[com.badlogic.gdx.files.FileHandle]
@@ -114,5 +117,8 @@ object ParticleEffectLoader {
     def this(file: com.badlogic.gdx.files.FileHandle, manager: com.badlogic.gdx.assets.AssetManager, batches: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.batches.ParticleBatch[?]]) = {
       this(file, manager, batches, com.badlogic.gdx.utils.JsonWriter.OutputType.minimal, false)
     }
+  }
+  object ParticleEffectSaveParameter {
+    export com.badlogic.gdx.assets.AssetLoaderParameters.*
   }
 }

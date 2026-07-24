@@ -132,3 +132,6 @@ class TmjMapLoader extends com.badlogic.gdx.maps.tiled.BaseTmjMapLoader[com.badl
     }
   }
 }
+object TmjMapLoader {
+  export com.badlogic.gdx.maps.tiled.BaseTmjMapLoader.*
+}

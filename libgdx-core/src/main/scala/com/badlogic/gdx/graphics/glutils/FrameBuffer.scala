@@ -38,6 +38,7 @@ class FrameBuffer extends com.badlogic.gdx.graphics.glutils.GLFrameBuffer[com.ba
   }
 }
 object FrameBuffer {
+  export com.badlogic.gdx.graphics.glutils.GLFrameBuffer.*
   def unbind(): scala.Unit = {
     com.badlogic.gdx.graphics.glutils.GLFrameBuffer.unbind()
   }

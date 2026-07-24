@@ -26,3 +26,6 @@ abstract class FlushablePool[T] extends com.badlogic.gdx.utils.Pool[T] {
     super.freeAll(objects)
   }
 }
+object FlushablePool {
+  export com.badlogic.gdx.utils.Pool.*
+}

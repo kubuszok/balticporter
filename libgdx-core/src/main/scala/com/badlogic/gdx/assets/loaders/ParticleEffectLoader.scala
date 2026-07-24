@@ -32,4 +32,7 @@ object ParticleEffectLoader {
     var atlasPrefix: java.lang.String = null.asInstanceOf[java.lang.String]
     var imagesDir: com.badlogic.gdx.files.FileHandle = null.asInstanceOf[com.badlogic.gdx.files.FileHandle]
   }
+  object ParticleEffectParameter {
+    export com.badlogic.gdx.assets.AssetLoaderParameters.*
+  }
 }

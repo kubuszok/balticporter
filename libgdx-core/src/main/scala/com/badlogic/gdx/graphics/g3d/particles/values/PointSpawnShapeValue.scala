@@ -14,3 +14,6 @@ final class PointSpawnShapeValue extends com.badlogic.gdx.graphics.g3d.particles
     return new PointSpawnShapeValue(this)
   }
 }
+object PointSpawnShapeValue {
+  export com.badlogic.gdx.graphics.g3d.particles.values.PrimitiveSpawnShapeValue.*
+}

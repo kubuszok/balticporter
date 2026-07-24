@@ -28,6 +28,9 @@ object ParticleSorter {
       return this.indices
     }
   }
+  object None {
+    export ParticleSorter.*
+  }
   class Distance extends ParticleSorter {
     private var distances: scala.Array[scala.Float] = null.asInstanceOf[scala.Array[scala.Float]]
     private var particleIndices: scala.Array[scala.Int] = null.asInstanceOf[scala.Array[scala.Int]]
@@ -103,5 +106,8 @@ object ParticleSorter {
         this.qsort(i, ei)
       } else ()
     }
+  }
+  object Distance {
+    export ParticleSorter.*
   }
 }

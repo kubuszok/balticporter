@@ -979,6 +979,9 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
       return true
     }
   }
+  object TextFieldClickListener {
+    export com.badlogic.gdx.scenes.scene2d.utils.ClickListener.*
+  }
 }
 object TextField {
   final val BACKSPACE: scala.Char = 8.asInstanceOf[scala.Char]
@@ -1004,6 +1007,9 @@ object TextField {
       def acceptChar(textField: TextField, c: scala.Char): scala.Boolean = {
         return java.lang.Character.isDigit(c)
       }
+    }
+    object DigitsOnlyFilter {
+      export com.badlogic.gdx.scenes.scene2d.ui.TextField.TextFieldFilter.*
     }
   }
   trait OnscreenKeyboard {

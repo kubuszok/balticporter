@@ -44,6 +44,7 @@ class DistanceFieldFont extends com.badlogic.gdx.graphics.g2d.BitmapFont {
   }
 }
 object DistanceFieldFont {
+  export com.badlogic.gdx.graphics.g2d.BitmapFont.*
   def createDistanceFieldShader(): com.badlogic.gdx.graphics.glutils.ShaderProgram = {
     val vertexShader: java.lang.String = ((((((((((((((((((((((("attribute vec4 " + com.badlogic.gdx.graphics.glutils.ShaderProgram.POSITION_ATTRIBUTE) + ";\n") + "attribute vec4 ") + com.badlogic.gdx.graphics.glutils.ShaderProgram.COLOR_ATTRIBUTE) + ";\n") + "attribute vec2 ") + com.badlogic.gdx.graphics.glutils.ShaderProgram.TEXCOORD_ATTRIBUTE) + "0;\n") + "uniform mat4 u_projTrans;\n") + "varying vec4 v_color;\n") + "varying vec2 v_texCoords;\n") + "\n") + "void main() {\n") + "\tv_color = ") + com.badlogic.gdx.graphics.glutils.ShaderProgram.COLOR_ATTRIBUTE) + ";\n") + "\tv_color.a = v_color.a * (255.0/254.0);\n") + "\tv_texCoords = ") + com.badlogic.gdx.graphics.glutils.ShaderProgram.TEXCOORD_ATTRIBUTE) + "0;\n") + "\tgl_Position =  u_projTrans * ") + com.badlogic.gdx.graphics.glutils.ShaderProgram.POSITION_ATTRIBUTE) + ";\n") + "}\n"
     val fragmentShader: java.lang.String = (((((((((((((((((("#ifdef GL_ES\n" + "\tprecision mediump float;\n") + "\tprecision mediump int;\n") + "#endif\n") + "\n") + "uniform sampler2D u_texture;\n") + "uniform float u_smoothing;\n") + "varying vec4 v_color;\n") + "varying vec2 v_texCoords;\n") + "\n") + "void main() {\n") + "\tif (u_smoothing > 0.0) {\n") + "\t\tfloat smoothing = 0.25 / u_smoothing;\n") + "\t\tfloat distance = texture2D(u_texture, v_texCoords).a;\n") + "\t\tfloat alpha = smoothstep(0.5 - smoothing, 0.5 + smoothing, distance);\n") + "\t\tgl_FragColor = vec4(v_color.rgb, alpha * v_color.a);\n") + "\t} else {\n") + "\t\tgl_FragColor = v_color * texture2D(u_texture, v_texCoords);\n") + "\t}\n") + "}\n"
@@ -78,5 +79,8 @@ object DistanceFieldFont {
       super.draw(spriteBatch, start, `end`)
       this.setSmoothingUniform(spriteBatch, 0)
     }
+  }
+  object DistanceFieldFontCache {
+    export com.badlogic.gdx.graphics.g2d.BitmapFontCache.*
   }
 }

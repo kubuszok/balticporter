@@ -37,3 +37,6 @@ class ParticleEffectPool extends com.badlogic.gdx.utils.Pool[PooledEffect] {
     }
   }
 }
+object ParticleEffectPool {
+  export com.badlogic.gdx.utils.Pool.*
+}

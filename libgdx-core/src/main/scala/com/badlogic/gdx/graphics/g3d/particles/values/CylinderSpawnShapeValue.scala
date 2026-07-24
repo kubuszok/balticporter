@@ -40,3 +40,6 @@ final class CylinderSpawnShapeValue extends com.badlogic.gdx.graphics.g3d.partic
     return new CylinderSpawnShapeValue(this)
   }
 }
+object CylinderSpawnShapeValue {
+  export com.badlogic.gdx.graphics.g3d.particles.values.PrimitiveSpawnShapeValue.*
+}

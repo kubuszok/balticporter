@@ -351,6 +351,9 @@ class BillboardParticleBatch extends com.badlogic.gdx.graphics.g3d.particles.bat
       return allocRenderable()
     }
   }
+  object RenderablePool {
+    export com.badlogic.gdx.utils.Pool.*
+  }
 }
 object BillboardParticleBatch {
   final val TMP_V1: com.badlogic.gdx.math.Vector3 = new com.badlogic.gdx.math.Vector3()

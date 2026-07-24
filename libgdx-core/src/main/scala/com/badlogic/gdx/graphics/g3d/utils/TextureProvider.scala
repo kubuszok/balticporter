@@ -34,6 +34,9 @@ object TextureProvider {
       return result
     }
   }
+  object FileTextureProvider {
+    export TextureProvider.*
+  }
   class AssetTextureProvider extends TextureProvider {
     var assetManager: com.badlogic.gdx.assets.AssetManager = null.asInstanceOf[com.badlogic.gdx.assets.AssetManager]
     def this(assetManager: com.badlogic.gdx.assets.AssetManager) = {
@@ -43,5 +46,8 @@ object TextureProvider {
     def load(fileName: java.lang.String): com.badlogic.gdx.graphics.Texture = {
       return this.assetManager.get(fileName, classOf[com.badlogic.gdx.graphics.Texture])
     }
+  }
+  object AssetTextureProvider {
+    export TextureProvider.*
   }
 }

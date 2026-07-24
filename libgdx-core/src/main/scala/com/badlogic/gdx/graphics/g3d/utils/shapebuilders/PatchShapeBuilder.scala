@@ -2,6 +2,7 @@ package com.badlogic.gdx.graphics.g3d.utils.shapebuilders
 
 class PatchShapeBuilder extends com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BaseShapeBuilder
 object PatchShapeBuilder {
+  export com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BaseShapeBuilder.*
   def build(builder: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder, corner00: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo, corner10: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo, corner11: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo, corner01: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo, divisionsU: scala.Int, divisionsV: scala.Int): scala.Unit = {
     if ((divisionsU < 1) || (divisionsV < 1)) {
       throw new com.badlogic.gdx.utils.GdxRuntimeException((("divisionsU and divisionV must be > 0, u,v: " + divisionsU) + ", ") + divisionsV)

@@ -88,3 +88,6 @@ class FloatTextureData extends com.badlogic.gdx.graphics.TextureData {
     return this.buffer
   }
 }
+object FloatTextureData {
+  export com.badlogic.gdx.graphics.TextureData.*
+}

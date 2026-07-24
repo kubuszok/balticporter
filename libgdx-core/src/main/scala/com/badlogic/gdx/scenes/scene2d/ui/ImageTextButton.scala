@@ -167,6 +167,7 @@ class ImageTextButton extends com.badlogic.gdx.scenes.scene2d.ui.Button {
   }
 }
 object ImageTextButton {
+  export com.badlogic.gdx.scenes.scene2d.ui.Button.*
   class ImageTextButtonStyle extends com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle {
     var imageUp: com.badlogic.gdx.scenes.scene2d.utils.Drawable = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Drawable]
     var imageDown: com.badlogic.gdx.scenes.scene2d.utils.Drawable = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Drawable]
