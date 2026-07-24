@@ -62,7 +62,7 @@ class G3dModelLoader extends com.badlogic.gdx.assets.loaders.ModelLoader[com.bad
           jsonPart.indices = meshPart.require("indices").asShortArray()
           parts.add(jsonPart)
         }; meshPart = meshPart.next$field } }
-        jsonMesh.parts = parts.toArray((() => new scala.Array[com.badlogic.gdx.graphics.g3d.model.data.ModelMeshPart]()))
+        jsonMesh.parts = parts.toArray(((size: scala.Int) => new scala.Array[com.badlogic.gdx.graphics.g3d.model.data.ModelMeshPart](size)))
         model.meshes.add(jsonMesh)
       }; mesh = mesh.next$field } }
     } else ()
@@ -131,7 +131,7 @@ class G3dModelLoader extends com.badlogic.gdx.assets.loaders.ModelLoader[com.bad
         }
       }
     }; value = value.next$field } }
-    return vertexAttributes.toArray((() => new scala.Array[com.badlogic.gdx.graphics.VertexAttribute]()))
+    return vertexAttributes.toArray(((size: scala.Int) => new scala.Array[com.badlogic.gdx.graphics.VertexAttribute](size)))
   }
   def parseMaterials(model: com.badlogic.gdx.graphics.g3d.model.data.ModelData, json: com.badlogic.gdx.utils.JsonValue, materialDir: java.lang.String): scala.Unit = {
     val materials: com.badlogic.gdx.utils.JsonValue = json.get("materials")
@@ -310,7 +310,7 @@ class G3dModelLoader extends com.badlogic.gdx.assets.loaders.ModelLoader[com.bad
         nodePart.meshPartId = meshPartId
         var bones: com.badlogic.gdx.utils.JsonValue = material.get("bones")
         if (bones != null) {
-          nodePart.bones = new com.badlogic.gdx.utils.ArrayMap[java.lang.String, com.badlogic.gdx.math.Matrix4](true, bones.size$field, (() => new scala.Array[java.lang.String]()), (() => new scala.Array[com.badlogic.gdx.math.Matrix4]()))
+          nodePart.bones = new com.badlogic.gdx.utils.ArrayMap[java.lang.String, com.badlogic.gdx.math.Matrix4](true, bones.size$field, ((size: scala.Int) => new scala.Array[java.lang.String](size)), ((size: scala.Int) => new scala.Array[com.badlogic.gdx.math.Matrix4](size)))
           var j: scala.Int = 0;
           { var bone: com.badlogic.gdx.utils.JsonValue = bones.child$field; while (bone != null) { {
             val nodeId: java.lang.String = bone.getString("node", null)

@@ -22,7 +22,7 @@ class ParticleController extends com.badlogic.gdx.utils.Json.Serializable with c
   }
   this.transform = new com.badlogic.gdx.math.Matrix4()
   this.scale$field = new com.badlogic.gdx.math.Vector3(1, 1, 1)
-  this.influencers = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.influencers.Influencer](true, 3, (() => new scala.Array[com.badlogic.gdx.graphics.g3d.particles.influencers.Influencer]()))
+  this.influencers = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.influencers.Influencer](true, 3, ((size: scala.Int) => new scala.Array[com.badlogic.gdx.graphics.g3d.particles.influencers.Influencer](size)))
   this.setTimeStep(ParticleController.DEFAULT_TIME_STEP)
   private def setTimeStep(timeStep: scala.Float): scala.Unit = {
     this.deltaTime = timeStep

@@ -16,7 +16,7 @@ class Stage extends com.badlogic.gdx.InputAdapter with com.badlogic.gdx.utils.Di
   private var mouseOverActor: com.badlogic.gdx.scenes.scene2d.Actor = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.Actor]
   private var keyboardFocus: com.badlogic.gdx.scenes.scene2d.Actor = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.Actor]
   private var scrollFocus: com.badlogic.gdx.scenes.scene2d.Actor = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.Actor]
-  final val touchFocuses: com.badlogic.gdx.utils.SnapshotArray[com.badlogic.gdx.scenes.scene2d.Stage.TouchFocus] = new com.badlogic.gdx.utils.SnapshotArray[com.badlogic.gdx.scenes.scene2d.Stage.TouchFocus](true, 4, (() => new scala.Array[com.badlogic.gdx.scenes.scene2d.Stage.TouchFocus]()))
+  final val touchFocuses: com.badlogic.gdx.utils.SnapshotArray[com.badlogic.gdx.scenes.scene2d.Stage.TouchFocus] = new com.badlogic.gdx.utils.SnapshotArray[com.badlogic.gdx.scenes.scene2d.Stage.TouchFocus](true, 4, ((size: scala.Int) => new scala.Array[com.badlogic.gdx.scenes.scene2d.Stage.TouchFocus](size)))
   private var actionsRequestRendering: scala.Boolean = true
   private var debugShapes: com.badlogic.gdx.graphics.glutils.ShapeRenderer = null.asInstanceOf[com.badlogic.gdx.graphics.glutils.ShapeRenderer]
   private var debugInvisible: scala.Boolean = false

@@ -12,15 +12,15 @@ class DynamicsInfluencer extends com.badlogic.gdx.graphics.g3d.particles.influen
   var has3dAngularVelocity: scala.Boolean = false
   def this(velocities: scala.Array[com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier]) = {
     this()
-    this.velocities = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier](true, velocities.length, (() => new scala.Array[com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier]()))
+    this.velocities = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier](true, velocities.length, ((size: scala.Int) => new scala.Array[com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier](size)))
     for (value <- velocities) {
       this.velocities.add(value.copy().asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier])
     }
   }
   def this(velocityInfluencer: DynamicsInfluencer) = {
-    this(velocityInfluencer.velocities.toArray((() => new scala.Array[com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier]())))
+    this(velocityInfluencer.velocities.toArray(((size: scala.Int) => new scala.Array[com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier](size))))
   }
-  this.velocities = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier](true, 3, (() => new scala.Array[com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier]()))
+  this.velocities = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier](true, 3, ((size: scala.Int) => new scala.Array[com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier](size)))
   def allocateChannels(): scala.Unit = {
     { var k: scala.Int = 0; while (k < this.velocities.size) { {
       this.velocities.items(k).allocateChannels()

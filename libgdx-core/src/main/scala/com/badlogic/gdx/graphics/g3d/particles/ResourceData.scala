@@ -11,7 +11,7 @@ class ResourceData[T] extends com.badlogic.gdx.utils.Json.Serializable {
     this.resource = resource
   }
   this.uniqueData = new com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.graphics.g3d.particles.ResourceData.SaveData]()
-  this.data = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.ResourceData.SaveData](true, 3, (() => new scala.Array[com.badlogic.gdx.graphics.g3d.particles.ResourceData.SaveData]()))
+  this.data = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.ResourceData.SaveData](true, 3, ((size: scala.Int) => new scala.Array[com.badlogic.gdx.graphics.g3d.particles.ResourceData.SaveData](size)))
   this.sharedAssets = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.ResourceData.AssetData[?]]()
   this.currentLoadIndex = 0
   def getAssetData[K](filename: java.lang.String, `type`: java.lang.Class[K]): scala.Int = {
@@ -56,7 +56,7 @@ class ResourceData[T] extends com.badlogic.gdx.utils.Json.Serializable {
   def write(json: com.badlogic.gdx.utils.Json): scala.Unit = {
     json.writeValue("unique", this.uniqueData, classOf[com.badlogic.gdx.utils.ObjectMap[?, ?]])
     json.writeValue("data", this.data, classOf[com.badlogic.gdx.utils.Array[?]], classOf[com.badlogic.gdx.graphics.g3d.particles.ResourceData.SaveData])
-    json.writeValue("assets", this.sharedAssets.toArray((() => new scala.Array[com.badlogic.gdx.graphics.g3d.particles.ResourceData.AssetData[?]]())), classOf[scala.Array[com.badlogic.gdx.graphics.g3d.particles.ResourceData.AssetData[?]]])
+    json.writeValue("assets", this.sharedAssets.toArray(((size: scala.Int) => new scala.Array[com.badlogic.gdx.graphics.g3d.particles.ResourceData.AssetData[?]](size))), classOf[scala.Array[com.badlogic.gdx.graphics.g3d.particles.ResourceData.AssetData[?]]])
     json.writeValue("resource", this.resource.asInstanceOf[java.lang.Object], null)
   }
   def read(json: com.badlogic.gdx.utils.Json, jsonData: com.badlogic.gdx.utils.JsonValue): scala.Unit = {

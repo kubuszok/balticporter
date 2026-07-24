@@ -10,7 +10,7 @@ abstract class ParticleControllerInfluencer extends com.badlogic.gdx.graphics.g3
   def this(influencer: ParticleControllerInfluencer) = {
     this(influencer.templates.items)
   }
-  this.templates = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.ParticleController](true, 1, (() => new scala.Array[com.badlogic.gdx.graphics.g3d.particles.ParticleController]()))
+  this.templates = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.ParticleController](true, 1, ((size: scala.Int) => new scala.Array[com.badlogic.gdx.graphics.g3d.particles.ParticleController](size)))
   def allocateChannels(): scala.Unit = {
     this.particleControllerChannel = this.controller.particles.addChannel(com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.ParticleController)
   }

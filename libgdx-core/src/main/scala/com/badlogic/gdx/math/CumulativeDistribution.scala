@@ -2,7 +2,7 @@ package com.badlogic.gdx.math
 
 class CumulativeDistribution[T] {
   private var values: com.badlogic.gdx.utils.Array[com.badlogic.gdx.math.CumulativeDistribution.CumulativeValue[T]] = null.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.math.CumulativeDistribution.CumulativeValue[T]]]
-  this.values = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.math.CumulativeDistribution.CumulativeValue[T]](false, 10, (() => new scala.Array[com.badlogic.gdx.math.CumulativeDistribution.CumulativeValue[?]]()))
+  this.values = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.math.CumulativeDistribution.CumulativeValue[T]](false, 10, ((size: scala.Int) => new scala.Array[com.badlogic.gdx.math.CumulativeDistribution.CumulativeValue[?]](size)))
   def add(value: T, intervalSize: scala.Float): scala.Unit = {
     this.values.add(new com.badlogic.gdx.math.CumulativeDistribution.CumulativeValue[T](value, 0, intervalSize))
   }

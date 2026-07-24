@@ -496,7 +496,12 @@ final class TirEmitter(source: Program):
     case Tree.MethodRef(q, s, _, _)     =>
       val isCtor = sym(s).name == "<init>" // `Type::new` → a factory function `() => new Type()`
       q match
-        case Left(tt) if isCtor => s"(() => new ${tpe(tt.tpe)}())"
+        // an ARRAY constructor reference `T[]::new` is an `IntFunction[T[]]` — `(size) => new T[size]`
+        // (Scala arrays need a length), NOT a no-arg supplier. One-layer element = the array's row type.
+        case Left(tt) if isCtor => tt.tpe match
+          case TypeRepr.AppliedType(TypeRepr.TypeRef(_, as), List(el)) if sym(as).fullName == "scala.Array" =>
+            s"((size: scala.Int) => new scala.Array[${tpe(el)}](size))"
+          case _ => s"(() => new ${tpe(tt.tpe)}())"
         case Left(tt)           => s"${tpe(tt.tpe)}.${local(s)}"
         case Right(e)           => s"${term(e, i)}.${local(s)}"
     case Tree.Break(_, _, _)            => "/* break */ ()"    // TODO: scala.util.boundary
