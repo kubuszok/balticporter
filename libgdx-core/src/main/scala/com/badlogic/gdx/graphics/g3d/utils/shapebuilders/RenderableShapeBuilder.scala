@@ -114,7 +114,7 @@ object RenderableShapeBuilder {
     }; i = i + 1 } }
     return max
   }
-  private class RenderablePool extends com.badlogic.gdx.utils.FlushablePool[com.badlogic.gdx.graphics.g3d.Renderable] {
+  class RenderablePool extends com.badlogic.gdx.utils.FlushablePool[com.badlogic.gdx.graphics.g3d.Renderable] {
     def newObject(): com.badlogic.gdx.graphics.g3d.Renderable = {
       return new com.badlogic.gdx.graphics.g3d.Renderable()
     }

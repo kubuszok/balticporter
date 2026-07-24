@@ -155,7 +155,7 @@ object ParticleControllerInfluencer {
     def copy(): com.badlogic.gdx.graphics.g3d.particles.influencers.ParticleControllerInfluencer.Random = {
       return new com.badlogic.gdx.graphics.g3d.particles.influencers.ParticleControllerInfluencer.Random(this)
     }
-    private class ParticleControllerPool extends com.badlogic.gdx.utils.Pool[com.badlogic.gdx.graphics.g3d.particles.ParticleController] {
+    class ParticleControllerPool extends com.badlogic.gdx.utils.Pool[com.badlogic.gdx.graphics.g3d.particles.ParticleController] {
       def newObject(): com.badlogic.gdx.graphics.g3d.particles.ParticleController = {
         val controller: com.badlogic.gdx.graphics.g3d.particles.ParticleController = templates.random().copy()
         controller.init()

@@ -114,7 +114,7 @@ class MtlLoader {
   }
 }
 object MtlLoader {
-  private class ObjMaterial {
+  class ObjMaterial {
     var materialName: java.lang.String = "default"
     var ambientColor: com.badlogic.gdx.graphics.Color = null.asInstanceOf[com.badlogic.gdx.graphics.Color]
     var diffuseColor: com.badlogic.gdx.graphics.Color = null.asInstanceOf[com.badlogic.gdx.graphics.Color]

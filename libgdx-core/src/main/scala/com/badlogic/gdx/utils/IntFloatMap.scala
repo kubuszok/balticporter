@@ -467,7 +467,7 @@ object IntFloatMap {
       return (java.lang.String.valueOf(this.key) + "=") + this.value
     }
   }
-  private class MapIterator {
+  class MapIterator {
     var hasNext$field: scala.Boolean = false
     var map: IntFloatMap = null.asInstanceOf[IntFloatMap]
     var nextIndex: scala.Int = 0

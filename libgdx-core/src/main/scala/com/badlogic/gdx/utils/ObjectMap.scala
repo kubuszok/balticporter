@@ -422,7 +422,7 @@ object ObjectMap {
       return (java.lang.String.valueOf(this.key) + "=") + this.value
     }
   }
-  private abstract class MapIterator[K, V, I] extends scala.collection.Iterable[I] with scala.collection.Iterator[I] {
+  abstract class MapIterator[K, V, I] extends scala.collection.Iterable[I] with scala.collection.Iterator[I] {
     var hasNext$field: scala.Boolean = false
     var map: ObjectMap[K, V] = null.asInstanceOf[ObjectMap[K, V]]
     var nextIndex: scala.Int = 0

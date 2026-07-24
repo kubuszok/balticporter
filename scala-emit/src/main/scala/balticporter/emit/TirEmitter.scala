@@ -152,7 +152,11 @@ final class TirEmitter(source: Program):
     val body    = joinStats(orderBody(instance).map(stat(_, i + 1)).filter(_.nonEmpty))
     val open    = if body.isEmpty && self.isEmpty then "" else s" {\n$self$body\n${ind(i)}}"
     val abs     = if kw == "class" && s.flags.isAbstract then "abstract " else ""
-    val cls     = s"${ind(i)}${mods(s.flags)}$abs$kw ${esc(s.name)}$tps$ext$open"
+    // Scala (unlike Java) forbids a NON-private member from referring to a `private` type in its
+    // signature — a public `Values extends MapIterator` / field `pool: ModelInstancePool` where the
+    // referent is private is an error. Java nested classes leak this way constantly; drop the class's
+    // `private` (visibility-widening is always compile-safe) so those references type-check.
+    val cls     = s"${ind(i)}${mods(s.flags.copy(isPrivate = false))}$abs$kw ${esc(s.name)}$tps$ext$open"
     // Java interface/parent CONSTANTS are `static`, so they live in the parent's companion object
     // — which Scala does NOT inherit. Re-export each static-bearing parent's companion so an
     // inherited constant accessed via a subclass (`GL30.GL_LUMINANCE`, declared in `GL20`) resolves.

@@ -403,7 +403,7 @@ object ObjectFloatMap {
       return (java.lang.String.valueOf(this.key) + "=") + this.value
     }
   }
-  private class MapIterator[K] {
+  class MapIterator[K] {
     var hasNext$field: scala.Boolean = false
     var map: ObjectFloatMap[K] = null.asInstanceOf[ObjectFloatMap[K]]
     var nextIndex: scala.Int = 0

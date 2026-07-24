@@ -82,7 +82,7 @@ class CumulativeDistribution[T] {
   }
 }
 object CumulativeDistribution {
-  private class CumulativeValue[T] {
+  class CumulativeValue[T] {
     var value: T = null.asInstanceOf[T]
     var frequency: scala.Float = 0.0f
     var interval: scala.Float = 0.0f

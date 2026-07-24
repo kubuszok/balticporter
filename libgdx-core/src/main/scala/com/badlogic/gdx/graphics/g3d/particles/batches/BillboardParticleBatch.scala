@@ -346,7 +346,7 @@ class BillboardParticleBatch extends com.badlogic.gdx.graphics.g3d.particles.bat
       this.setAlignMode(cfg.mode)
     } else ()
   }
-  private class RenderablePool extends com.badlogic.gdx.utils.Pool[com.badlogic.gdx.graphics.g3d.Renderable] {
+  class RenderablePool extends com.badlogic.gdx.utils.Pool[com.badlogic.gdx.graphics.g3d.Renderable] {
     def newObject(): com.badlogic.gdx.graphics.g3d.Renderable = {
       return allocRenderable()
     }

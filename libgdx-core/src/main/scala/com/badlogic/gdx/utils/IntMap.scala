@@ -490,7 +490,7 @@ object IntMap {
       return (java.lang.String.valueOf(this.key) + "=") + this.value
     }
   }
-  private class MapIterator[V] {
+  class MapIterator[V] {
     var hasNext$field: scala.Boolean = false
     var map: IntMap[V] = null.asInstanceOf[IntMap[V]]
     var nextIndex: scala.Int = 0

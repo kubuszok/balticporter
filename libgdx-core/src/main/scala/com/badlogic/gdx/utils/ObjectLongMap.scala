@@ -382,7 +382,7 @@ object ObjectLongMap {
       return (java.lang.String.valueOf(this.key) + "=") + this.value
     }
   }
-  private class MapIterator[K] {
+  class MapIterator[K] {
     var hasNext$field: scala.Boolean = false
     var map: ObjectLongMap[K] = null.asInstanceOf[ObjectLongMap[K]]
     var nextIndex: scala.Int = 0

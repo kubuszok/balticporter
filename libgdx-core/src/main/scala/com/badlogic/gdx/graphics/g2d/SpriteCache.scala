@@ -769,7 +769,7 @@ object SpriteCache {
     } else ()
     return shader
   }
-  private class Cache {
+  class Cache {
     var id: scala.Int = 0
     var offset: scala.Int = 0
     var maxCount: scala.Int = 0

@@ -347,7 +347,7 @@ object TextureAtlas {
       }
       throw new java.lang.RuntimeException("unreachable")
     }
-    private trait Field[T] {
+    trait Field[T] {
       def parse(`object`: T): scala.Unit
     }
     class Page {

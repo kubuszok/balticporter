@@ -257,7 +257,7 @@ object ObjLoader {
   object ObjLoaderParameters {
     export com.badlogic.gdx.assets.loaders.ModelLoader.ModelParameters.*
   }
-  private class Group {
+  class Group {
     var name: java.lang.String = null.asInstanceOf[java.lang.String]
     var materialName: java.lang.String = null.asInstanceOf[java.lang.String]
     var faces: com.badlogic.gdx.utils.Array[java.lang.Integer] = null.asInstanceOf[com.badlogic.gdx.utils.Array[java.lang.Integer]]

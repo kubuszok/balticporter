@@ -452,7 +452,7 @@ class UBJsonWriter extends java.io.Closeable {
     }
     this.out.close()
   }
-  private class JsonObject {
+  class JsonObject {
     var array: scala.Boolean = false
     def this(array: scala.Boolean) = {
       this()

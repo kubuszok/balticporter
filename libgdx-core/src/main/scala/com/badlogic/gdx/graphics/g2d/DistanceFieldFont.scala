@@ -54,7 +54,7 @@ object DistanceFieldFont {
     } else ()
     return shader
   }
-  private class DistanceFieldFontCache extends com.badlogic.gdx.graphics.g2d.BitmapFontCache {
+  class DistanceFieldFontCache extends com.badlogic.gdx.graphics.g2d.BitmapFontCache {
     def this(font: DistanceFieldFont) = {
       this()
     }

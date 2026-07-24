@@ -85,7 +85,7 @@ object ModelInfluencer {
     def copy(): com.badlogic.gdx.graphics.g3d.particles.influencers.ModelInfluencer.Random = {
       return new com.badlogic.gdx.graphics.g3d.particles.influencers.ModelInfluencer.Random(this)
     }
-    private class ModelInstancePool extends com.badlogic.gdx.utils.Pool[com.badlogic.gdx.graphics.g3d.ModelInstance] {
+    class ModelInstancePool extends com.badlogic.gdx.utils.Pool[com.badlogic.gdx.graphics.g3d.ModelInstance] {
       def newObject(): com.badlogic.gdx.graphics.g3d.ModelInstance = {
         return new com.badlogic.gdx.graphics.g3d.ModelInstance(models.random())
       }

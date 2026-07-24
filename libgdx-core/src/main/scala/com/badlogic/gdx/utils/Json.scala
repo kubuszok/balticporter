@@ -1209,7 +1209,7 @@ class Json {
 }
 object Json {
   private final val debug: scala.Boolean = false
-  private class FieldMetadata {
+  class FieldMetadata {
     var field: com.badlogic.gdx.utils.reflect.Field = null.asInstanceOf[com.badlogic.gdx.utils.reflect.Field]
     var elementType: java.lang.Class[?] = null.asInstanceOf[java.lang.Class[?]]
     var deprecated: scala.Boolean = false
