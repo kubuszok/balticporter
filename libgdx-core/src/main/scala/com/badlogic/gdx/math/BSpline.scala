@@ -11,7 +11,7 @@ class BSpline[T <: com.badlogic.gdx.math.Vector[T]] extends com.badlogic.gdx.mat
   private var tmp3: T = null.asInstanceOf[T]
   def this(controlPoints: scala.Array[T], degree: scala.Int, continuous: scala.Boolean) = {
     this()
-    this.set(controlPoints.asInstanceOf[scala.Array[com.badlogic.gdx.math.Vector[T]]], degree, continuous)
+    this.set(controlPoints, degree, continuous)
   }
   def set(controlPoints: scala.Array[T], degree: scala.Int, continuous: scala.Boolean): BSpline[?] = {
     if (this.tmp == null) {
@@ -35,7 +35,7 @@ class BSpline[T <: com.badlogic.gdx.math.Vector[T]] extends com.badlogic.gdx.mat
       this.knots.ensureCapacity(knotCount)
     };
     { var i: scala.Int = 0; while (i < knotCount) { {
-      this.knots.add(BSpline.calculate(controlPoints(0).cpy(), if (continuous) i else i + (0.5f * degree).asInstanceOf[scala.Int], 0.0f, controlPoints.asInstanceOf[scala.Array[com.badlogic.gdx.math.Vector[T]]], degree, continuous, this.tmp))
+      this.knots.add(BSpline.calculate(controlPoints(0).cpy(), if (continuous) i else i + (0.5f * degree).asInstanceOf[scala.Int], 0.0f, controlPoints, degree, continuous, this.tmp))
     }; i = i + 1 } }
     return this
   }
@@ -47,7 +47,7 @@ class BSpline[T <: com.badlogic.gdx.math.Vector[T]] extends com.badlogic.gdx.mat
     return this.valueAt(out, i, u)
   }
   def valueAt(out: T, span: scala.Int, u: scala.Float): T = {
-    return BSpline.calculate(out, if (this.continuous) span else span + (this.degree * 0.5f).asInstanceOf[scala.Int], u, this.controlPoints.asInstanceOf[scala.Array[com.badlogic.gdx.math.Vector[T]]], this.degree, this.continuous, this.tmp)
+    return BSpline.calculate(out, if (this.continuous) span else span + (this.degree * 0.5f).asInstanceOf[scala.Int], u, this.controlPoints, this.degree, this.continuous, this.tmp)
   }
   def derivativeAt(out: T, t: scala.Float): T = {
     val n: scala.Int = this.spanCount
@@ -57,7 +57,7 @@ class BSpline[T <: com.badlogic.gdx.math.Vector[T]] extends com.badlogic.gdx.mat
     return this.derivativeAt(out, i, u)
   }
   def derivativeAt(out: T, span: scala.Int, u: scala.Float): T = {
-    return BSpline.derivative(out, if (this.continuous) span else span + (this.degree * 0.5f).asInstanceOf[scala.Int], u, this.controlPoints.asInstanceOf[scala.Array[com.badlogic.gdx.math.Vector[T]]], this.degree, this.continuous, this.tmp)
+    return BSpline.derivative(out, if (this.continuous) span else span + (this.degree * 0.5f).asInstanceOf[scala.Int], u, this.controlPoints, this.degree, this.continuous, this.tmp)
   }
   def nearest(in: T): scala.Int = {
     return this.nearest(in, 0, this.spanCount)
@@ -136,14 +136,14 @@ object BSpline {
     var u: scala.Float = t * n
     val i: scala.Int = if (t >= 1.0f) n - 1 else u.asInstanceOf[scala.Int]
     u = u - i
-    return BSpline.cubic(out, i, u, points.asInstanceOf[scala.Array[com.badlogic.gdx.math.Vector[T]]], continuous, tmp)
+    return BSpline.cubic(out, i, u, points, continuous, tmp)
   }
   def cubic_derivative[T <: com.badlogic.gdx.math.Vector[T]](out: T, t: scala.Float, points: scala.Array[T], continuous: scala.Boolean, tmp: T): T = {
     val n: scala.Int = if (continuous) points.length else points.length - 3
     var u: scala.Float = t * n
     val i: scala.Int = if (t >= 1.0f) n - 1 else u.asInstanceOf[scala.Int]
     u = u - i
-    return BSpline.cubic(out, i, u, points.asInstanceOf[scala.Array[com.badlogic.gdx.math.Vector[T]]], continuous, tmp)
+    return BSpline.cubic(out, i, u, points, continuous, tmp)
   }
   def cubic[T <: com.badlogic.gdx.math.Vector[T]](out: T, i: scala.Int, u: scala.Float, points: scala.Array[T], continuous: scala.Boolean, tmp: T): T = {
     val n: scala.Int = points.length
@@ -184,19 +184,19 @@ object BSpline {
     var u: scala.Float = t * n
     val i: scala.Int = if (t >= 1.0f) n - 1 else u.asInstanceOf[scala.Int]
     u = u - i
-    return BSpline.calculate(out, i, u, points.asInstanceOf[scala.Array[com.badlogic.gdx.math.Vector[T]]], degree, continuous, tmp)
+    return BSpline.calculate(out, i, u, points, degree, continuous, tmp)
   }
   def derivative[T <: com.badlogic.gdx.math.Vector[T]](out: T, t: scala.Float, points: scala.Array[T], degree: scala.Int, continuous: scala.Boolean, tmp: T): T = {
     val n: scala.Int = if (continuous) points.length else points.length - degree
     var u: scala.Float = t * n
     val i: scala.Int = if (t >= 1.0f) n - 1 else u.asInstanceOf[scala.Int]
     u = u - i
-    return BSpline.derivative(out, i, u, points.asInstanceOf[scala.Array[com.badlogic.gdx.math.Vector[T]]], degree, continuous, tmp)
+    return BSpline.derivative(out, i, u, points, degree, continuous, tmp)
   }
   def calculate[T <: com.badlogic.gdx.math.Vector[T]](out: T, i: scala.Int, u: scala.Float, points: scala.Array[T], degree: scala.Int, continuous: scala.Boolean, tmp: T): T = {
     degree match {
       case 3 => {
-        return BSpline.cubic(out, i, u, points.asInstanceOf[scala.Array[com.badlogic.gdx.math.Vector[T]]], continuous, tmp)
+        return BSpline.cubic(out, i, u, points, continuous, tmp)
       }
     }
     throw new java.lang.IllegalArgumentException()
@@ -204,7 +204,7 @@ object BSpline {
   def derivative[T <: com.badlogic.gdx.math.Vector[T]](out: T, i: scala.Int, u: scala.Float, points: scala.Array[T], degree: scala.Int, continuous: scala.Boolean, tmp: T): T = {
     degree match {
       case 3 => {
-        return BSpline.cubic_derivative(out, i, u, points.asInstanceOf[scala.Array[com.badlogic.gdx.math.Vector[T]]], continuous, tmp)
+        return BSpline.cubic_derivative(out, i, u, points, continuous, tmp)
       }
     }
     throw new java.lang.IllegalArgumentException()

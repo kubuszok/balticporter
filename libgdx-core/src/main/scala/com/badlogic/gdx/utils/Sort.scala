@@ -7,7 +7,7 @@ class Sort {
     if (this.comparableTimSort == null) {
       this.comparableTimSort = new com.badlogic.gdx.utils.ComparableTimSort()
     } else ()
-    this.comparableTimSort.doSort(a.items.asInstanceOf[scala.Array[java.lang.Object]], 0, a.size)
+    this.comparableTimSort.doSort(a.items, 0, a.size)
   }
   def sort(a: scala.Array[java.lang.Object]): scala.Unit = {
     if (this.comparableTimSort == null) {
@@ -25,19 +25,19 @@ class Sort {
     if (this.timSort == null) {
       this.timSort = new com.badlogic.gdx.utils.TimSort()
     } else ()
-    this.timSort.doSort(a.items.asInstanceOf[scala.Array[java.lang.Object]], c, 0, a.size)
+    this.timSort.doSort(a.items, c, 0, a.size)
   }
   def sort[T](a: scala.Array[T], c: java.util.Comparator[? >: T]): scala.Unit = {
     if (this.timSort == null) {
       this.timSort = new com.badlogic.gdx.utils.TimSort()
     } else ()
-    this.timSort.doSort(a.asInstanceOf[scala.Array[java.lang.Object]], c, 0, a.length)
+    this.timSort.doSort(a, c, 0, a.length)
   }
   def sort[T](a: scala.Array[T], c: java.util.Comparator[? >: T], fromIndex: scala.Int, toIndex: scala.Int): scala.Unit = {
     if (this.timSort == null) {
       this.timSort = new com.badlogic.gdx.utils.TimSort()
     } else ()
-    this.timSort.doSort(a.asInstanceOf[scala.Array[java.lang.Object]], c, fromIndex, toIndex)
+    this.timSort.doSort(a, c, fromIndex, toIndex)
   }
 }
 object Sort {

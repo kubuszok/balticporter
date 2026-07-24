@@ -189,6 +189,6 @@ class DelayedRemovalArray[T] extends com.badlogic.gdx.utils.Array[T] {
 object DelayedRemovalArray {
   export com.badlogic.gdx.utils.Array.{`with` => _, *}
   def `with`[T](array: scala.Array[T]): DelayedRemovalArray[T] = {
-    return new DelayedRemovalArray(array.asInstanceOf[scala.Array[java.lang.Object]])
+    return new DelayedRemovalArray(array)
   }
 }

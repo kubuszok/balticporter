@@ -5,7 +5,7 @@ abstract class ModelInfluencer extends com.badlogic.gdx.graphics.g3d.particles.i
   var modelChannel: com.badlogic.gdx.graphics.g3d.particles.ParallelArray#ObjectChannel[com.badlogic.gdx.graphics.g3d.ModelInstance] = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ParallelArray#ObjectChannel[com.badlogic.gdx.graphics.g3d.ModelInstance]]
   def this(models: scala.Array[com.badlogic.gdx.graphics.g3d.Model]) = {
     this()
-    this.models = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.Model](models.asInstanceOf[scala.Array[java.lang.Object]])
+    this.models = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.Model](models)
   }
   def this(influencer: ModelInfluencer) = {
     this(influencer.models.toArray((() => new scala.Array[com.badlogic.gdx.graphics.g3d.Model]())))

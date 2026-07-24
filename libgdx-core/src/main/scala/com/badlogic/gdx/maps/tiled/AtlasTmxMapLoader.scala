@@ -16,7 +16,7 @@ class AtlasTmxMapLoader extends com.badlogic.gdx.maps.tiled.BaseTmxMapLoader[com
     val atlas: com.badlogic.gdx.graphics.g2d.TextureAtlas = new com.badlogic.gdx.graphics.g2d.TextureAtlas(atlasFileHandle)
     this.atlasResolver = new com.badlogic.gdx.maps.tiled.AtlasTmxMapLoader.AtlasResolver.DirectAtlasResolver(atlas)
     val map: com.badlogic.gdx.maps.tiled.TiledMap = this.loadTiledMap(tmxFile, parameter, this.atlasResolver)
-    map.setOwnedResources(new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.TextureAtlas](scala.Array[com.badlogic.gdx.graphics.g2d.TextureAtlas](atlas).asInstanceOf[scala.Array[java.lang.Object]]))
+    map.setOwnedResources(new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.TextureAtlas](scala.Array[com.badlogic.gdx.graphics.g2d.TextureAtlas](atlas)))
     this.setTextureFilters(parameter.textureMinFilter, parameter.textureMagFilter)
     return map
   }

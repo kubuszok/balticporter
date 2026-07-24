@@ -10,7 +10,7 @@ class ButtonGroup[T <: com.badlogic.gdx.scenes.scene2d.ui.Button] {
   def this(buttons: scala.Array[T]) = {
     this()
     this.minCheckCount = 0
-    this.add(buttons.asInstanceOf[scala.Array[com.badlogic.gdx.scenes.scene2d.ui.Button]])
+    this.add(buttons)
     this.minCheckCount = 1
   }
   this.minCheckCount = 1

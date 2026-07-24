@@ -8,7 +8,7 @@ class Array[T] extends scala.collection.Iterable[T] {
   private var predicateIterable: com.badlogic.gdx.utils.Predicate.PredicateIterable[T] = null.asInstanceOf[com.badlogic.gdx.utils.Predicate.PredicateIterable[T]]
   def this(ordered: scala.Boolean, array: scala.Array[T], start: scala.Int, count: scala.Int) = {
     this()
-    this.items = java.util.Arrays.copyOfRange(array.asInstanceOf[scala.Array[java.lang.Object]], start, start + count).asInstanceOf[scala.Array[T]]
+    this.items = java.util.Arrays.copyOfRange(array, start, start + count).asInstanceOf[scala.Array[T]]
     this.ordered = ordered
     this.size = count
   }
@@ -19,7 +19,7 @@ class Array[T] extends scala.collection.Iterable[T] {
   }
   def this(array: Array[? <: T]) = {
     this()
-    this.items = java.util.Arrays.copyOf(array.items.asInstanceOf[scala.Array[java.lang.Object]], array.size).asInstanceOf[scala.Array[T]]
+    this.items = java.util.Arrays.copyOf(array.items, array.size).asInstanceOf[scala.Array[T]]
     this.ordered = array.ordered
     this.size = array.size
   }
@@ -39,7 +39,7 @@ class Array[T] extends scala.collection.Iterable[T] {
     this(true, 16, arrayType)
   }
   def this(array: scala.Array[T]) = {
-    this(true, array.asInstanceOf[scala.Array[java.lang.Object]], 0, array.length)
+    this(true, array, 0, array.length)
   }
   def add(value: T): scala.Unit = {
     var items: scala.Array[T] = this.items
@@ -79,16 +79,16 @@ class Array[T] extends scala.collection.Iterable[T] {
     this.size = this.size + 4
   }
   def addAll(array: Array[? <: T]): scala.Unit = {
-    this.addAll(array.items.asInstanceOf[scala.Array[java.lang.Object]], 0, array.size)
+    this.addAll(array.items, 0, array.size)
   }
   def addAll(array: Array[? <: T], start: scala.Int, count: scala.Int): scala.Unit = {
     if ((start + count) > array.size) {
       throw new java.lang.IllegalArgumentException((((("start + count must be <= size: " + start) + " + ") + count) + " <= ") + array.size)
     } else ()
-    this.addAll(array.items.asInstanceOf[scala.Array[java.lang.Object]], start, count)
+    this.addAll(array.items, start, count)
   }
   def addAll(array: scala.Array[T]): scala.Unit = {
-    this.addAll(array.asInstanceOf[scala.Array[java.lang.Object]], 0, array.length)
+    this.addAll(array, 0, array.length)
   }
   def addAll(array: scala.Array[T], start: scala.Int, count: scala.Int): scala.Unit = {
     var items: scala.Array[T] = this.items
@@ -372,7 +372,7 @@ class Array[T] extends scala.collection.Iterable[T] {
     return this.size == 0
   }
   def clear(): scala.Unit = {
-    java.util.Arrays.fill(this.items.asInstanceOf[scala.Array[java.lang.Object]], 0, this.size, null)
+    java.util.Arrays.fill(this.items, 0, this.size, null)
     this.size = 0
   }
   def shrink(): scala.Array[T] = {
@@ -400,26 +400,26 @@ class Array[T] extends scala.collection.Iterable[T] {
     return this.items
   }
   def resize(newSize: scala.Int): scala.Array[T] = {
-    this.items = java.util.Arrays.copyOf(this.items.asInstanceOf[scala.Array[java.lang.Object]], newSize).asInstanceOf[scala.Array[T]]
+    this.items = java.util.Arrays.copyOf(this.items, newSize).asInstanceOf[scala.Array[T]]
     return this.items
   }
   def sort(): scala.Unit = {
-    com.badlogic.gdx.utils.Sort.instance().sort(this.items.asInstanceOf[scala.Array[java.lang.Object]], 0, this.size)
+    com.badlogic.gdx.utils.Sort.instance().sort(this.items, 0, this.size)
   }
   def sort(comparator: java.util.Comparator[? >: T]): scala.Unit = {
-    com.badlogic.gdx.utils.Sort.instance().sort(this.items.asInstanceOf[scala.Array[java.lang.Object]], comparator, 0, this.size)
+    com.badlogic.gdx.utils.Sort.instance().sort(this.items, comparator, 0, this.size)
   }
   def selectRanked(comparator: java.util.Comparator[T], kthLowest: scala.Int): T = {
     if (kthLowest < 1) {
       throw new com.badlogic.gdx.utils.GdxRuntimeException("nth_lowest must be greater than 0, 1 = first, 2 = second...")
     } else ()
-    return com.badlogic.gdx.utils.Select.instance().select(this.items.asInstanceOf[scala.Array[java.lang.Object]], comparator, kthLowest, this.size).asInstanceOf[T]
+    return com.badlogic.gdx.utils.Select.instance().select(this.items, comparator, kthLowest, this.size).asInstanceOf[T]
   }
   def selectRankedIndex(comparator: java.util.Comparator[T], kthLowest: scala.Int): scala.Int = {
     if (kthLowest < 1) {
       throw new com.badlogic.gdx.utils.GdxRuntimeException("nth_lowest must be greater than 0, 1 = first, 2 = second...")
     } else ()
-    return com.badlogic.gdx.utils.Select.instance().selectIndex(this.items.asInstanceOf[scala.Array[java.lang.Object]], comparator, kthLowest, this.size)
+    return com.badlogic.gdx.utils.Select.instance().selectIndex(this.items, comparator, kthLowest, this.size)
   }
   def reverse(): scala.Unit = {
     val items: scala.Array[T] = this.items;
@@ -478,7 +478,7 @@ class Array[T] extends scala.collection.Iterable[T] {
     return this.items(com.badlogic.gdx.math.MathUtils.random(0, this.size - 1))
   }
   def toArray(): scala.Array[T] = {
-    return java.util.Arrays.copyOf(this.items.asInstanceOf[scala.Array[java.lang.Object]], this.size).asInstanceOf[scala.Array[T]]
+    return java.util.Arrays.copyOf(this.items, this.size).asInstanceOf[scala.Array[T]]
   }
   def toArray(arraySupplier: com.badlogic.gdx.utils.ArraySupplier[scala.Array[T]]): scala.Array[T] = {
     val result: scala.Array[T] = arraySupplier.get(this.size).asInstanceOf[scala.Array[T]]
@@ -604,7 +604,7 @@ object Array {
     return new Array(ordered, capacity, arrayType)
   }
   def `with`[T](array: scala.Array[T]): Array[T] = {
-    return new Array(array.asInstanceOf[scala.Array[java.lang.Object]])
+    return new Array(array)
   }
   class ArrayIterator[T] extends scala.collection.Iterator[T] with scala.collection.Iterable[T] {
     private var array: Array[T] = null.asInstanceOf[Array[T]]

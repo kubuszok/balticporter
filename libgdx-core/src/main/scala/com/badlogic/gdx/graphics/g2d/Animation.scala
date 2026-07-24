@@ -10,13 +10,13 @@ class Animation[T] {
   def this(frameDuration: scala.Float, keyFrames: com.badlogic.gdx.utils.Array[? <: T]) = {
     this()
     this.frameDuration = frameDuration
-    val frames: scala.Array[T] = java.util.Arrays.copyOf(keyFrames.items.asInstanceOf[scala.Array[java.lang.Object]], keyFrames.size).asInstanceOf[scala.Array[T]]
-    this.setKeyFrames(frames.asInstanceOf[scala.Array[java.lang.Object]])
+    val frames: scala.Array[T] = java.util.Arrays.copyOf(keyFrames.items, keyFrames.size).asInstanceOf[scala.Array[T]]
+    this.setKeyFrames(frames)
   }
   def this(frameDuration: scala.Float, keyFrames: scala.Array[T]) = {
     this()
     this.frameDuration = frameDuration
-    this.setKeyFrames(keyFrames.asInstanceOf[scala.Array[java.lang.Object]])
+    this.setKeyFrames(keyFrames)
   }
   def this(frameDuration: scala.Float, keyFrames: com.badlogic.gdx.utils.Array[? <: T], playMode: com.badlogic.gdx.graphics.g2d.Animation.PlayMode) = {
     this(frameDuration, keyFrames)

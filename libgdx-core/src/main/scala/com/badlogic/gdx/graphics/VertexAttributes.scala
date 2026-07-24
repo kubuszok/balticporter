@@ -165,7 +165,7 @@ final class VertexAttributes extends scala.collection.Iterable[com.badlogic.gdx.
   }
   def iterator(): scala.collection.Iterator[com.badlogic.gdx.graphics.VertexAttribute] = {
     if (this.iterable == null) {
-      this.iterable = new com.badlogic.gdx.graphics.VertexAttributes.ReadonlyIterable[com.badlogic.gdx.graphics.VertexAttribute](this.attributes.asInstanceOf[scala.Array[java.lang.Object]])
+      this.iterable = new com.badlogic.gdx.graphics.VertexAttributes.ReadonlyIterable[com.badlogic.gdx.graphics.VertexAttribute](this.attributes)
     } else ()
     return this.iterable.iterator()
   }
@@ -225,11 +225,11 @@ object VertexAttributes {
     }
     def iterator(): scala.collection.Iterator[T] = {
       if (com.badlogic.gdx.utils.Collections.allocateIterators) {
-        return new com.badlogic.gdx.graphics.VertexAttributes.ReadonlyIterator(this.array.asInstanceOf[scala.Array[java.lang.Object]])
+        return new com.badlogic.gdx.graphics.VertexAttributes.ReadonlyIterator(this.array)
       } else ()
       if (this.iterator1 == null) {
-        this.iterator1 = new com.badlogic.gdx.graphics.VertexAttributes.ReadonlyIterator(this.array.asInstanceOf[scala.Array[java.lang.Object]])
-        this.iterator2 = new com.badlogic.gdx.graphics.VertexAttributes.ReadonlyIterator(this.array.asInstanceOf[scala.Array[java.lang.Object]])
+        this.iterator1 = new com.badlogic.gdx.graphics.VertexAttributes.ReadonlyIterator(this.array)
+        this.iterator2 = new com.badlogic.gdx.graphics.VertexAttributes.ReadonlyIterator(this.array)
       } else ()
       if (!this.iterator1.valid) {
         this.iterator1.index = 0

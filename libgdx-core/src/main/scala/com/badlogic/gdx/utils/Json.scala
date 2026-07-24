@@ -106,7 +106,7 @@ class Json {
     }
     val allFields: scala.collection.mutable.ArrayBuffer[com.badlogic.gdx.utils.reflect.Field] = new scala.collection.mutable.ArrayBuffer();
     { var i: scala.Int = classHierarchy.size - 1; while (i >= 0) { {
-      java.util.Collections.addAll(allFields, com.badlogic.gdx.utils.reflect.ClassReflection.getDeclaredFields(classHierarchy.get(i)).asInstanceOf[scala.Array[java.lang.Object]])
+      java.util.Collections.addAll(allFields, com.badlogic.gdx.utils.reflect.ClassReflection.getDeclaredFields(classHierarchy.get(i)))
     }; i = i - 1 } }
     val nameToField: com.badlogic.gdx.utils.OrderedMap[java.lang.String, com.badlogic.gdx.utils.Json.FieldMetadata] = new com.badlogic.gdx.utils.OrderedMap(allFields.size);
     { var i: scala.Int = 0; val n: scala.Int = allFields.size; while (i < n) { {

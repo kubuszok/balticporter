@@ -9,7 +9,7 @@ class CatmullRomSpline[T <: com.badlogic.gdx.math.Vector[T]] extends com.badlogi
   private var tmp3: T = null.asInstanceOf[T]
   def this(controlPoints: scala.Array[T], continuous: scala.Boolean) = {
     this()
-    this.set(controlPoints.asInstanceOf[scala.Array[com.badlogic.gdx.math.Vector[T]]], continuous)
+    this.set(controlPoints, continuous)
   }
   def set(controlPoints: scala.Array[T], continuous: scala.Boolean): CatmullRomSpline[?] = {
     if (this.tmp == null) {
@@ -34,7 +34,7 @@ class CatmullRomSpline[T <: com.badlogic.gdx.math.Vector[T]] extends com.badlogi
     return this.valueAt(out, i, u)
   }
   def valueAt(out: T, span: scala.Int, u: scala.Float): T = {
-    return CatmullRomSpline.calculate(out, if (this.continuous) span else span + 1, u, this.controlPoints.asInstanceOf[scala.Array[com.badlogic.gdx.math.Vector[T]]], this.continuous, this.tmp)
+    return CatmullRomSpline.calculate(out, if (this.continuous) span else span + 1, u, this.controlPoints, this.continuous, this.tmp)
   }
   def derivativeAt(out: T, t: scala.Float): T = {
     val n: scala.Int = this.spanCount
@@ -44,7 +44,7 @@ class CatmullRomSpline[T <: com.badlogic.gdx.math.Vector[T]] extends com.badlogi
     return this.derivativeAt(out, i, u)
   }
   def derivativeAt(out: T, span: scala.Int, u: scala.Float): T = {
-    return CatmullRomSpline.derivative(out, if (this.continuous) span else span + 1, u, this.controlPoints.asInstanceOf[scala.Array[com.badlogic.gdx.math.Vector[T]]], this.continuous, this.tmp)
+    return CatmullRomSpline.derivative(out, if (this.continuous) span else span + 1, u, this.controlPoints, this.continuous, this.tmp)
   }
   def nearest(in: T): scala.Int = {
     return this.nearest(in, 0, this.spanCount)
@@ -121,7 +121,7 @@ object CatmullRomSpline {
     var u: scala.Float = t * n
     val i: scala.Int = if (t >= 1.0f) n - 1 else u.asInstanceOf[scala.Int]
     u = u - i
-    return CatmullRomSpline.calculate(out, i, u, points.asInstanceOf[scala.Array[com.badlogic.gdx.math.Vector[T]]], continuous, tmp)
+    return CatmullRomSpline.calculate(out, i, u, points, continuous, tmp)
   }
   def calculate[T <: com.badlogic.gdx.math.Vector[T]](out: T, i: scala.Int, u: scala.Float, points: scala.Array[T], continuous: scala.Boolean, tmp: T): T = {
     val n: scala.Int = points.length
@@ -144,7 +144,7 @@ object CatmullRomSpline {
     var u: scala.Float = t * n
     val i: scala.Int = if (t >= 1.0f) n - 1 else u.asInstanceOf[scala.Int]
     u = u - i
-    return CatmullRomSpline.derivative(out, i, u, points.asInstanceOf[scala.Array[com.badlogic.gdx.math.Vector[T]]], continuous, tmp)
+    return CatmullRomSpline.derivative(out, i, u, points, continuous, tmp)
   }
   def derivative[T <: com.badlogic.gdx.math.Vector[T]](out: T, i: scala.Int, u: scala.Float, points: scala.Array[T], continuous: scala.Boolean, tmp: T): T = {
     val n: scala.Int = points.length

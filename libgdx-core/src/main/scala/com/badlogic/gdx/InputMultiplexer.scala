@@ -4,7 +4,7 @@ class InputMultiplexer extends com.badlogic.gdx.InputProcessor {
   private var processors: com.badlogic.gdx.utils.SnapshotArray[com.badlogic.gdx.InputProcessor] = new com.badlogic.gdx.utils.SnapshotArray(4)
   def this(processors: scala.Array[com.badlogic.gdx.InputProcessor]) = {
     this()
-    this.processors.addAll(processors.asInstanceOf[scala.Array[java.lang.Object]])
+    this.processors.addAll(processors)
   }
   def addProcessor(index: scala.Int, processor: com.badlogic.gdx.InputProcessor): scala.Unit = {
     if (processor == null) {
@@ -32,7 +32,7 @@ class InputMultiplexer extends com.badlogic.gdx.InputProcessor {
   }
   def setProcessors(processors: scala.Array[com.badlogic.gdx.InputProcessor]): scala.Unit = {
     this.processors.clear()
-    this.processors.addAll(processors.asInstanceOf[scala.Array[java.lang.Object]])
+    this.processors.addAll(processors)
   }
   def setProcessors(processors: com.badlogic.gdx.utils.Array[com.badlogic.gdx.InputProcessor]): scala.Unit = {
     this.processors.clear()

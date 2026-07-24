@@ -44,7 +44,7 @@ class SnapshotArray[T] extends com.badlogic.gdx.utils.Array[T] {
     } else ()
     if ((this.snapshot != items) && (this.snapshots == 0)) {
       this.recycled = this.snapshot
-      java.util.Arrays.fill(this.recycled.asInstanceOf[scala.Array[java.lang.Object]], null)
+      java.util.Arrays.fill(this.recycled, null)
     } else ()
     this.snapshot = null
   }
@@ -136,6 +136,6 @@ class SnapshotArray[T] extends com.badlogic.gdx.utils.Array[T] {
 object SnapshotArray {
   export com.badlogic.gdx.utils.Array.{`with` => _, *}
   def `with`[T](array: scala.Array[T]): SnapshotArray[T] = {
-    return new SnapshotArray(array.asInstanceOf[scala.Array[java.lang.Object]])
+    return new SnapshotArray(array)
   }
 }

@@ -82,7 +82,7 @@ class BinaryHeap[T <: com.badlogic.gdx.utils.BinaryHeap.Node] {
     return this.size == 0
   }
   def clear(): scala.Unit = {
-    java.util.Arrays.fill(this.nodes.asInstanceOf[scala.Array[java.lang.Object]], 0, this.size, null)
+    java.util.Arrays.fill(this.nodes, 0, this.size, null)
     this.size = 0
   }
   def setValue(node: T, value: scala.Float): scala.Unit = {

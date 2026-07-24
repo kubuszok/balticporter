@@ -159,8 +159,8 @@ class ObjectMap[K, V] extends scala.collection.Iterable[com.badlogic.gdx.utils.O
       return
     } else ()
     this.size = 0
-    java.util.Arrays.fill(this.keyTable.asInstanceOf[scala.Array[java.lang.Object]], null)
-    java.util.Arrays.fill(this.valueTable.asInstanceOf[scala.Array[java.lang.Object]], null)
+    java.util.Arrays.fill(this.keyTable, null)
+    java.util.Arrays.fill(this.valueTable, null)
   }
   def containsValue(value: java.lang.Object, identity: scala.Boolean): scala.Boolean = {
     val valueTable: scala.Array[V] = this.valueTable

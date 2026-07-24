@@ -477,7 +477,7 @@ object SpoonTir:
         * ported assignment/initializer type-checks. */
       private val primRank = Map("byte" -> 1, "short" -> 2, "char" -> 2, "int" -> 3, "long" -> 4, "float" -> 5, "double" -> 6)
 
-      private def coerce(target: CtTypeReference[?], e: CtExpression[?], t: Term): Term =
+      private def coerce(target: CtTypeReference[?], e: CtExpression[?], t: Term, arrayCov: Boolean = true): Term =
         val isNull = e match { case l: CtLiteral[?] => l.getValue == null; case _ => false }
         val et     = try e.getType catch { case _: Throwable => null }
         val narrowing = target.isPrimitive && et != null && et.isPrimitive &&
@@ -492,7 +492,7 @@ object SpoonTir:
           !target.isPrimitive && target.getQualifiedName != "java.lang.Object"
         val cast =
           (isNull && target.isInstanceOf[CtTypeParameterReference]) ||             // null → type param
-          (target.isInstanceOf[CtArrayTypeReference[?]] && et != null &&           // array covariance
+          (arrayCov && target.isInstanceOf[CtArrayTypeReference[?]] && et != null &&  // array covariance
             et.isInstanceOf[CtArrayTypeReference[?]] && target.getQualifiedName != et.getQualifiedName) ||
           narrowing ||                                                            // int → short/byte/char
           boxing ||                                                               // int → Object/Number
@@ -502,7 +502,10 @@ object SpoonTir:
       /** coerce each argument to its formal parameter type (Java autoboxing / numeric narrowing
         * that Scala won't do implicitly). Skipped when arities differ (varargs spread etc.). */
       private def coerceArgs(formals: List[CtTypeReference[?]], argEs: List[CtExpression[?]]): List[Term] =
-        if formals.size == argEs.size then argEs.zip(formals).map((e, ft) => coerce(ft, e, expr(e)))
+        // NB: array covariance is DISABLED for call args — Spoon erases a generic array formal
+        // (`T[]`) to `Object[]`, and casting the arg to `Array[Object]` breaks the (overloaded)
+        // Scala method that actually wants `Array[T]`.
+        if formals.size == argEs.size then argEs.zip(formals).map((e, ft) => coerce(ft, e, expr(e), arrayCov = false))
         else argEs.map(expr)
 
       private def tryStmt(t: CtTry, resources: List[Tree.ValDef]): Term =
