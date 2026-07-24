@@ -5,8 +5,9 @@ class UBJsonWriter extends java.io.Closeable {
   private var current: JsonObject = null.asInstanceOf[JsonObject]
   private var named: scala.Boolean = false
   private final val stack: com.badlogic.gdx.utils.Array[JsonObject] = new com.badlogic.gdx.utils.Array()
-  def this(out: java.io.OutputStream) = {
+  def this(out$arg: java.io.OutputStream) = {
     this()
+    var out: java.io.OutputStream = out$arg
     if (!out.isInstanceOf[java.io.DataOutputStream]) {
       out = new java.io.DataOutputStream(out)
     } else ()

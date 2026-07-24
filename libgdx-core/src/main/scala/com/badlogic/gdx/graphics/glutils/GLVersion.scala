@@ -9,8 +9,10 @@ class GLVersion {
   private var rendererString: java.lang.String = null.asInstanceOf[java.lang.String]
   private var `type`: com.badlogic.gdx.graphics.glutils.GLVersion.Type = null.asInstanceOf[com.badlogic.gdx.graphics.glutils.GLVersion.Type]
   private final val TAG: java.lang.String = "GLVersion"
-  def this(appType: com.badlogic.gdx.Application.ApplicationType, versionString: java.lang.String, vendorString: java.lang.String, rendererString: java.lang.String) = {
+  def this(appType: com.badlogic.gdx.Application.ApplicationType, versionString: java.lang.String, vendorString$arg: java.lang.String, rendererString$arg: java.lang.String) = {
     this()
+    var vendorString: java.lang.String = vendorString$arg
+    var rendererString: java.lang.String = rendererString$arg
     if (appType == com.badlogic.gdx.Application.ApplicationType.Android) {
       this.`type` = com.badlogic.gdx.graphics.glutils.GLVersion.Type.GLES
     } else {

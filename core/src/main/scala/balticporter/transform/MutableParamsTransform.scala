@@ -27,9 +27,6 @@ final class MutableParamsTransform extends Phase:
       id
 
     def scanDef(d: Tree.DefDef): Unit =
-      // skip constructors: their body must lead with `this(...)`/`super(...)` delegation, which a
-      // prepended `var` would displace (and Scala ctor params are rarely reassigned anyway).
-      if program.symbolOf(d.symbol).exists(_.name == "<init>") then return
       val params = d.paramss.flatten.map(_.symbol).toSet
       val written = d.rhs.map(reassignedIn(_, params)).getOrElse(Set.empty)
       written.foreach { p =>
@@ -64,10 +61,18 @@ final class MutableParamsTransform extends Phase:
     // prepend `var name: T = name$arg` for each shadowed parameter
     val prelude: List[Statement] = shadows.map(v =>
       Tree.ValDef(v.symbol, v.tpt, Some(Tree.Ident(argOf(v.symbol), v.tpt.tpe, o)), o))
+    val isCtor = summon[Program].symbolOf(d.symbol).exists(_.name == "<init>")
     val body = d.rhs match
-      case Some(Tree.Block(stats, expr, tp, bo)) => Tree.Block(prelude ++ stats, expr, tp, bo)
-      case Some(other)                           => Tree.Block(prelude, other, other.tpe, o)
-      case None                                  => Tree.Block(prelude, Tree.Literal(Constant.UnitC, TypeRepr.NoType, o), TypeRepr.NoType, o)
+      case Some(Tree.Block(stats, expr, tp, bo)) =>
+        // a constructor body must LEAD with `this(...)`/`super(...)` delegation — insert the
+        // `var` shadows right AFTER it, not before.
+        stats match
+          case (deleg @ Tree.Apply(Tree.Select(_, m, _, _), _, _, _, _)) :: rest
+              if isCtor && summon[Program].symbolOf(m).exists(_.name == "<init>") =>
+            Tree.Block(deleg :: (prelude ++ rest), expr, tp, bo)
+          case _ => Tree.Block(prelude ++ stats, expr, tp, bo)
+      case Some(other) => Tree.Block(prelude, other, other.tpe, o)
+      case None        => Tree.Block(prelude, Tree.Literal(Constant.UnitC, TypeRepr.NoType, o), TypeRepr.NoType, o)
     d.copy(paramss = paramss2, rhs = Some(body))
 
   private def collectDefs(s: Statement, f: Tree.DefDef => Unit): Unit = s match

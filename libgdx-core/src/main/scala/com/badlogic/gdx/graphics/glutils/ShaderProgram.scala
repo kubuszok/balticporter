@@ -21,8 +21,10 @@ class ShaderProgram extends com.badlogic.gdx.utils.Disposable {
   private var refCount: scala.Int = 0
   var params: java.nio.IntBuffer = com.badlogic.gdx.utils.BufferUtils.newIntBuffer(1)
   var `type`: java.nio.IntBuffer = com.badlogic.gdx.utils.BufferUtils.newIntBuffer(1)
-  def this(vertexShader: java.lang.String, fragmentShader: java.lang.String) = {
+  def this(vertexShader$arg: java.lang.String, fragmentShader$arg: java.lang.String) = {
     this()
+    var vertexShader: java.lang.String = vertexShader$arg
+    var fragmentShader: java.lang.String = fragmentShader$arg
     if (vertexShader == null) {
       throw new java.lang.IllegalArgumentException("vertex shader must not be null")
     } else ()

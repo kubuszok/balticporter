@@ -11,8 +11,9 @@ final class DefaultTextureBinder extends com.badlogic.gdx.graphics.g3d.utils.Tex
   private var bindCount: scala.Int = 0
   private final val tempDesc: com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[?] = new com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor()
   private var currentTexture: scala.Int = 0
-  def this(method: scala.Int, offset: scala.Int, count: scala.Int) = {
+  def this(method: scala.Int, offset: scala.Int, count$arg: scala.Int) = {
     this()
+    var count: scala.Int = count$arg
     val max: scala.Int = java.lang.Math.min(DefaultTextureBinder.getMaxTextureUnits(), DefaultTextureBinder.MAX_GLES_UNITS)
     if (count < 0) {
       count = max - offset

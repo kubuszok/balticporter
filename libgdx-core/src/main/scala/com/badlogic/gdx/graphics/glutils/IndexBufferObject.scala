@@ -10,8 +10,9 @@ class IndexBufferObject extends com.badlogic.gdx.graphics.glutils.IndexData {
   var isBound: scala.Boolean = false
   var usage: scala.Int = 0
   private var empty: scala.Boolean = false
-  def this(isStatic: scala.Boolean, maxIndices: scala.Int) = {
+  def this(isStatic: scala.Boolean, maxIndices$arg: scala.Int) = {
     this()
+    var maxIndices: scala.Int = maxIndices$arg
     this.empty = maxIndices == 0
     if (this.empty) {
       maxIndices = 1

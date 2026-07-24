@@ -4,8 +4,9 @@ class IndexArray extends com.badlogic.gdx.graphics.glutils.IndexData {
   var buffer: java.nio.ShortBuffer = null.asInstanceOf[java.nio.ShortBuffer]
   var byteBuffer: java.nio.ByteBuffer = null.asInstanceOf[java.nio.ByteBuffer]
   private var empty: scala.Boolean = false
-  def this(maxIndices: scala.Int) = {
+  def this(maxIndices$arg: scala.Int) = {
     this()
+    var maxIndices: scala.Int = maxIndices$arg
     this.empty = maxIndices == 0
     if (this.empty) {
       maxIndices = 1
