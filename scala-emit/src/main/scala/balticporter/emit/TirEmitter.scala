@@ -189,7 +189,7 @@ final class TirEmitter(source: Program):
     val isCtor = s.name == "<init>"
     val name  = if isCtor then "this" else esc(s.name)
     val tps   = if d.tparams.isEmpty then "" else "[" + d.tparams.map(typeParam).mkString(", ") + "]"
-    val pss   = d.paramss.map(ps => "(" + ps.map(param).mkString(", ") + ")").mkString
+    val pss   = d.paramss.map(paramClause).mkString
     val ret   = if isCtor then "" else s": ${tpe(d.returnTpt.tpe)}"
     val rhs   = if isCtor then s" = ${ctorBody(d.rhs, i)}" else d.rhs.map(r => s" = ${term(r, i)}").getOrElse("")
     s"${ind(i)}${mods(s.flags)}def $name$tps$pss$ret$rhs"
@@ -212,10 +212,17 @@ final class TirEmitter(source: Program):
     val lines = (ind(i + 1) + deleg) :: rest.map(stat(_, i + 1)).filter(_.trim.nonEmpty)
     s"{\n${lines.mkString("\n")}\n${ind(i)}}"
 
+  /** a parameter clause; a clause of `given` params renders as a Scala 3 `using` clause. */
+  private def paramClause(ps: List[Tree.ValDef]): String =
+    if ps.nonEmpty && ps.forall(p => sym(p.symbol).flags.isGiven) then s"(using ${ps.map(param).mkString(", ")})"
+    else s"(${ps.map(param).mkString(", ")})"
+
   private def param(v: Tree.ValDef): String = s"${esc(sym(v.symbol).name)}: ${tpe(v.tpt.tpe)}"
 
   private def valDef(v: Tree.ValDef, i: Int): String =
     val s = sym(v.symbol)
+    if s.flags.isGiven then
+      return s"${ind(i)}given ${esc(s.name)}: ${tpe(v.tpt.tpe)}${v.rhs.map(r => s" = ${term(r, i)}").getOrElse("")}"
     v.rhs match
       case Some(r) =>
         val kw = if s.flags.isMutable then "var" else "val"

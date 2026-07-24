@@ -272,7 +272,18 @@ emission backend (step 3), since projecting the delta onto Scala output needs em
      + `OpaqueDemo`; emitted output compiles with scalac. Needed a `Flags.isOpaque` + emitter
      `opaque type` support, and a `Name.T` (module-owned type member, path-dependent) reference
      form in the emitter.
-   - **TODO:** globals→implicits (call graph), Panama FFI; immutable-collection variants.
+   - **globals→implicits — DONE (`GlobalsToImplicitsTransform`).** The `ResearchPlugin` case —
+     it needs the CALL GRAPH before rewriting. A context class `C`'s `static` state becomes an
+     instance threaded as a Scala 3 `using c: C` parameter through every method that
+     transitively reaches it: the seeds (methods directly referencing a static member, found
+     via the xref's recorded `enclosing`) are closed under `callersOf`; each gets a `(using
+     c: C)` clause; `C.member` → `c.member` inside them (and `this.member` inside C's own
+     former-static methods); a call to another threaded method is UNCHANGED — its `using` is
+     auto-satisfied by the `c` in scope, which is the whole point of `using`. A boundary
+     `given C = new C()` is synthesized in C's companion so a true entry point still resolves.
+     `GlobalsToImplicitsTransformSpec` (4/4) + `GlobalsDemo`; emitted output compiles with
+     scalac. Needed emitter support for a `using` param clause and a `given` val.
+   - **TODO:** Panama FFI; immutable-collection variants.
 
 The old string-printer compile grind (M6 at ~61 errors) is **subsumed** by step 3:
 a types-carrying backend emits compiling code by construction. We stop patching the
