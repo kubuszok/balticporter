@@ -376,7 +376,7 @@ object ObjectIntMap {
     var key: K = null.asInstanceOf[K]
     var value: scala.Int = 0
     def toString(): java.lang.String = {
-      return (this.key + "=") + this.value
+      return (java.lang.String.valueOf(this.key) + "=") + this.value
     }
   }
   private class MapIterator[K] {

@@ -219,7 +219,7 @@ class ObjectSet[T] extends scala.collection.Iterable[T] {
     return true
   }
   def toString(): java.lang.String = {
-    return ('{' + this.toString(", ")) + '}'
+    return (java.lang.String.valueOf('{') + this.toString(", ")) + '}'
   }
   def toString(separator: java.lang.String): java.lang.String = {
     if (this.size == 0) {

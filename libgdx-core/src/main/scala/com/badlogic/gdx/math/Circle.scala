@@ -96,7 +96,7 @@ class Circle extends java.io.Serializable with com.badlogic.gdx.math.Shape2D {
     return distance < (radiusSum * radiusSum)
   }
   def toString(): java.lang.String = {
-    return (((this.x + ",") + this.y) + ",") + this.radius
+    return (((java.lang.String.valueOf(this.x) + ",") + this.y) + ",") + this.radius
   }
   def circumference(): scala.Float = {
     return this.radius * com.badlogic.gdx.math.MathUtils.PI2

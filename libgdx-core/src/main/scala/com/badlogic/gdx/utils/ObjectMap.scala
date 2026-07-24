@@ -416,7 +416,7 @@ object ObjectMap {
     var key: K = null.asInstanceOf[K]
     var value: V = null.asInstanceOf[V]
     def toString(): java.lang.String = {
-      return (this.key + "=") + this.value
+      return (java.lang.String.valueOf(this.key) + "=") + this.value
     }
   }
   private abstract class MapIterator[K, V, I] extends scala.collection.Iterable[I] with scala.collection.Iterator[I] {

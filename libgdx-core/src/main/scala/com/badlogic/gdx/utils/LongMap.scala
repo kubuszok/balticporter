@@ -484,7 +484,7 @@ object LongMap {
     var key: scala.Long = 0L
     var value: V = null.asInstanceOf[V]
     def toString(): java.lang.String = {
-      return (this.key + "=") + this.value
+      return (java.lang.String.valueOf(this.key) + "=") + this.value
     }
   }
   private class MapIterator[V] {

@@ -24,7 +24,7 @@ class ResolutionFileResolver extends com.badlogic.gdx.assets.loaders.FileHandleR
     var parentString: java.lang.String = ""
     val parent: com.badlogic.gdx.files.FileHandle = originalHandle.parent()
     if ((parent != null) && (!parent.name().equals(""))) {
-      parentString = parent + "/"
+      parentString = java.lang.String.valueOf(parent) + "/"
     } else ()
     return ((parentString + suffix) + "/") + originalHandle.name()
   }

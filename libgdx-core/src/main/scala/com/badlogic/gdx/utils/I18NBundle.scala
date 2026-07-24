@@ -110,7 +110,7 @@ object I18NBundle {
     }; targetLocale != null }) ()
     if (bundle == null) {
       if (baseBundle == null) {
-        throw new java.util.MissingResourceException((("Can't find bundle for base file handle " + baseFileHandle.path()) + ", locale ") + locale, (baseFileHandle + "_") + locale, "")
+        throw new java.util.MissingResourceException((("Can't find bundle for base file handle " + baseFileHandle.path()) + ", locale ") + locale, (java.lang.String.valueOf(baseFileHandle) + "_") + locale, "")
       } else ()
       bundle = baseBundle
     } else ()

@@ -246,7 +246,7 @@ object JsonWriter {
           return string
         } else ()
       } else ()
-      return if (quote) com.badlogic.gdx.utils.JsonWriter.OutputType.escapeQuote(string) else ('\"' + string) + '\"'
+      return if (quote) com.badlogic.gdx.utils.JsonWriter.OutputType.escapeQuote(string) else (java.lang.String.valueOf('\"') + string) + '\"'
     }
     def quoteName(value$arg: java.lang.String): java.lang.String = {
       var value: java.lang.String = value$arg
@@ -277,7 +277,7 @@ object JsonWriter {
           } else ()
         }
       }
-      return if (quote) com.badlogic.gdx.utils.JsonWriter.OutputType.escapeQuote(value) else ('\"' + value) + '\"'
+      return if (quote) com.badlogic.gdx.utils.JsonWriter.OutputType.escapeQuote(value) else (java.lang.String.valueOf('\"') + value) + '\"'
     }
   }
   object OutputType {

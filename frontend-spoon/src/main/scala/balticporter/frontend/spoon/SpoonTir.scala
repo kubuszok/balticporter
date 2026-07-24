@@ -569,6 +569,10 @@ object SpoonTir:
               case ta: CtTypeAccess[?] => tpe(ta.getAccessedType)
               case other               => unsupported(other, "instanceof right operand")
             Tree.InstanceOf(expr(b.getLeftHandOperand), tt(tp, b), ty(b), originOf(b))
+          else if b.getKind == BinaryOperatorKind.PLUS && isStringConcat(b) && !isStringTyped(b.getLeftHandOperand) then
+            // Java string concatenation with a non-String LEFT operand (`obj + "s"`): Scala has no
+            // `+` on `obj`, so stringify the left (`String.valueOf(obj) + "s"`).
+            binApply("+", stringify(expr(b.getLeftHandOperand), b), expr(b.getRightHandOperand), ty(b))
           else binApply(opText(b.getKind), expr(b.getLeftHandOperand), expr(b.getRightHandOperand), ty(b))
         case u: CtUnaryOperator[?] =>
           import UnaryOperatorKind.*
@@ -730,6 +734,17 @@ object SpoonTir:
 
       // operators as `recv.op(args)` — the quotes.reflect shape (no dedicated node).
       private def opId(op: String): SymId = minter.external("scala.<op>#" + op, op)
+      private def isStringConcat(b: CtBinaryOperator[?]): Boolean =
+        try b.getType.getQualifiedName == "java.lang.String" catch { case _: Throwable => false }
+      private def isStringTyped(e: CtExpression[?]): Boolean =
+        try e.getType.getQualifiedName == "java.lang.String" catch { case _: Throwable => false }
+      /** `java.lang.String.valueOf(t)` — make a non-String operand a String for concatenation. */
+      private def stringify(t: Term, el: CtElement): Term =
+        val strSym = minter.external("java.lang.String", "String")
+        val vSym   = minter.external("java.lang.String#valueOf", "valueOf")
+        Tree.Apply(Tree.Select(Tree.Ident(strSym, TypeRef(NoPrefix, strSym), originOf(el)), vSym, NoType, originOf(el)),
+          List(t), vSym, TypeRef(NoPrefix, strSym), originOf(el))
+
       private def binApply(op: String, l: Term, r: Term, resT: TypeRepr): Term =
         Tree.Apply(Tree.Select(l, opId(op), NoType, l.origin), List(r), opId(op), resT, l.origin)
       private def unApply(op: String, o: Term, resT: TypeRepr): Term =

@@ -92,7 +92,7 @@ object Graphics {
       this.bitsPerPixel = bitsPerPixel
     }
     def toString(): java.lang.String = {
-      return (((((this.width + "x") + this.height) + ", bpp: ") + this.bitsPerPixel) + ", hz: ") + this.refreshRate
+      return (((((java.lang.String.valueOf(this.width) + "x") + this.height) + ", bpp: ") + this.bitsPerPixel) + ", hz: ") + this.refreshRate
     }
   }
   class Monitor {

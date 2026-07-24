@@ -1057,7 +1057,7 @@ class JsonValue extends scala.collection.Iterable[JsonValue] {
       if (this.name$field.indexOf('.') != (-1)) {
         trace = (".\"" + this.name$field.replace("\"", "\\\"")) + "\""
       } else {
-        trace = '.' + this.name$field
+        trace = java.lang.String.valueOf('.') + this.name$field
       }
     }
     return this.parent$field.trace() + trace

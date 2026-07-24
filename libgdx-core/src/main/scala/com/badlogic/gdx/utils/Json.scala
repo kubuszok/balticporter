@@ -240,12 +240,12 @@ class Json {
           throw new com.badlogic.gdx.utils.SerializationException(((("Error accessing field: " + field.getName()) + " (") + `type`.getName()) + ")", ex)
         }
         case ex: com.badlogic.gdx.utils.SerializationException => {
-          ex.addTrace(((field + " (") + `type`.getName()) + ")")
+          ex.addTrace(((java.lang.String.valueOf(field) + " (") + `type`.getName()) + ")")
           throw ex
         }
         case runtimeEx: java.lang.Exception => {
           val ex: com.badlogic.gdx.utils.SerializationException = new com.badlogic.gdx.utils.SerializationException(runtimeEx)
-          ex.addTrace(((field + " (") + `type`.getName()) + ")")
+          ex.addTrace(((java.lang.String.valueOf(field) + " (") + `type`.getName()) + ")")
           throw ex
         }
       }
@@ -285,12 +285,12 @@ class Json {
           throw new com.badlogic.gdx.utils.SerializationException(((("Error accessing field: " + field.getName()) + " (") + `type`.getName()) + ")", ex)
         }
         case ex: com.badlogic.gdx.utils.SerializationException => {
-          ex.addTrace(((field + " (") + `type`.getName()) + ")")
+          ex.addTrace(((java.lang.String.valueOf(field) + " (") + `type`.getName()) + ")")
           throw ex
         }
         case runtimeEx: java.lang.RuntimeException => {
           val ex: com.badlogic.gdx.utils.SerializationException = new com.badlogic.gdx.utils.SerializationException(runtimeEx)
-          ex.addTrace(((field + " (") + `type`.getName()) + ")")
+          ex.addTrace(((java.lang.String.valueOf(field) + " (") + `type`.getName()) + ")")
           throw ex
         }
       }
@@ -328,12 +328,12 @@ class Json {
         throw new com.badlogic.gdx.utils.SerializationException(((("Error accessing field: " + field.getName()) + " (") + `type`.getName()) + ")", ex)
       }
       case ex: com.badlogic.gdx.utils.SerializationException => {
-        ex.addTrace(((field + " (") + `type`.getName()) + ")")
+        ex.addTrace(((java.lang.String.valueOf(field) + " (") + `type`.getName()) + ")")
         throw ex
       }
       case runtimeEx: java.lang.Exception => {
         val ex: com.badlogic.gdx.utils.SerializationException = new com.badlogic.gdx.utils.SerializationException(runtimeEx)
-        ex.addTrace(((field + " (") + `type`.getName()) + ")")
+        ex.addTrace(((java.lang.String.valueOf(field) + " (") + `type`.getName()) + ")")
         throw ex
       }
     }

@@ -384,7 +384,7 @@ class PixmapPacker extends com.badlogic.gdx.utils.Disposable {
         return next
       } else ()
       if ((!startPoint) && ((((rgba(0) != 0) || (rgba(1) != 0)) || (rgba(2) != 0)) || (rgba(3) != 255))) {
-        java.lang.System.out.println(((((x + "  ") + y) + " ") + rgba) + " ")
+        java.lang.System.out.println(((((java.lang.String.valueOf(x) + "  ") + y) + " ") + rgba) + " ")
       } else ()
       next = next + 1
     }
