@@ -142,7 +142,8 @@ class ShapeRenderer extends com.badlogic.gdx.utils.Disposable {
     this.renderer.color(c2.r, c2.g, c2.b, c2.a)
     this.renderer.vertex(x2, y2, z2)
   }
-  def curve(x1: scala.Float, y1: scala.Float, cx1: scala.Float, cy1: scala.Float, cx2: scala.Float, cy2: scala.Float, x2: scala.Float, y2: scala.Float, segments: scala.Int): scala.Unit = {
+  def curve(x1: scala.Float, y1: scala.Float, cx1: scala.Float, cy1: scala.Float, cx2: scala.Float, cy2: scala.Float, x2: scala.Float, y2: scala.Float, segments$arg: scala.Int): scala.Unit = {
+    var segments: scala.Int = segments$arg
     this.check(com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Line, null, (segments * 2) + 2)
     val colorBits: scala.Float = this.color.toFloatBits()
     val subdiv_step: scala.Float = 1.0f / segments

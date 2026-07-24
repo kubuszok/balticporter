@@ -482,7 +482,8 @@ object ComparableTimSort {
     }
     return runHi - lo
   }
-  private def reverseRange(a: scala.Array[java.lang.Object], lo: scala.Int, hi$arg: scala.Int): scala.Unit = {
+  private def reverseRange(a: scala.Array[java.lang.Object], lo$arg: scala.Int, hi$arg: scala.Int): scala.Unit = {
+    var lo: scala.Int = lo$arg
     var hi: scala.Int = hi$arg
     hi = hi - 1
     while (lo < hi) {

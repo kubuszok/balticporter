@@ -87,6 +87,7 @@ final class MutableParamsTransform extends Phase:
     def walk(x: Term): Unit =
       x match
         case Tree.Assign(Tree.Ident(s, _, _), rhs, _, _) => if params(s) then found += s; walk(rhs)
+        case Tree.IncDec(Tree.Ident(s, _, _), _, _, _, _) => if params(s) then found += s // `p++`/`p--`
         case _ => ()
       subterms(x).foreach(walk)
     walk(t)
@@ -108,4 +109,9 @@ final class MutableParamsTransform extends Phase:
     case Tree.Throw(e, _, _)            => List(e)
     case Tree.Synchronized(l, b, _, _)  => List(l, b)
     case Tree.Typed(e, _, _, _)         => List(e)
+    case Tree.ArrayAccess(a, idx, _, _) => List(a, idx)
+    case Tree.ArrayLength(a, _, _)      => List(a)
+    case Tree.IncDec(tgt, _, _, _, _)   => List(tgt)
+    case Tree.New(_, _, _)              => Nil
+    case Tree.TypeApply(fun, _, _, _)   => List(fun)
     case _                              => Nil

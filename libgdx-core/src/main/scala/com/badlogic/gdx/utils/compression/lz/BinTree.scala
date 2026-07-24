@@ -208,7 +208,8 @@ class BinTree extends com.badlogic.gdx.utils.compression.lz.InWindow {
     this.MovePos()
     return offset
   }
-  def Skip(num: scala.Int): scala.Unit = {
+  def Skip(num$arg: scala.Int): scala.Unit = {
+    var num: scala.Int = num$arg
     while ({ {
       var lenLimit: scala.Int = 0
       if ((_pos + this._matchMaxLen) <= _streamPos) {

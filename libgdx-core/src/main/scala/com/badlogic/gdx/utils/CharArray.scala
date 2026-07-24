@@ -720,7 +720,8 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
     } else ()
     return this
   }
-  private def appendFalse(index: scala.Int): scala.Unit = {
+  private def appendFalse(index$arg: scala.Int): scala.Unit = {
+    var index: scala.Int = index$arg
     this.items({ index += 1; index }) = 'f'
     this.items({ index += 1; index }) = 'a'
     this.items({ index += 1; index }) = 'l'
@@ -902,7 +903,8 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
       }
     }
   }
-  private def appendTrue(index: scala.Int): scala.Unit = {
+  private def appendTrue(index$arg: scala.Int): scala.Unit = {
+    var index: scala.Int = index$arg
     this.items({ index += 1; index }) = 't'
     this.items({ index += 1; index }) = 'r'
     this.items({ index += 1; index }) = 'u'

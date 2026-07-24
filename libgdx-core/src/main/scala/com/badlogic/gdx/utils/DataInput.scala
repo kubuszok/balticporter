@@ -55,7 +55,8 @@ class DataInput extends java.io.DataInputStream {
     } else ()
     return new java.lang.String(chars, 0, charCount)
   }
-  private def readUtf8_slow(charCount: scala.Int, charIndex: scala.Int, b$arg: scala.Int): scala.Unit = {
+  private def readUtf8_slow(charCount: scala.Int, charIndex$arg: scala.Int, b$arg: scala.Int): scala.Unit = {
+    var charIndex: scala.Int = charIndex$arg
     var b: scala.Int = b$arg
     val chars: scala.Array[scala.Char] = this.chars
     while (true) {
