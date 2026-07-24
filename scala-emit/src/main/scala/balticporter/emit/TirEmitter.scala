@@ -240,8 +240,14 @@ final class TirEmitter(source: Program):
     case Some(_)                => false
     case None                   => val f = sym(id).fullName; f.contains('.') && !f.contains('#') && sym(id).info == TypeRepr.NoType
 
+  /** a type used as a VALUE (static-access receiver) — dotted path, never a `#` projection
+    * (which is type-position-only syntax). */
+  private def typeValue(id: SymId): String =
+    val s = sym(id)
+    if currentDeclared(id) then esc(s.name) else s.fullName.replace('$', '.')
+
   private def term(t: Term, i: Int): String = t match
-    case Tree.Ident(s, _, _)            => if isTypeRef(s) then typeSym(s) else local(s)
+    case Tree.Ident(s, _, _)            => if isTypeRef(s) then typeValue(s) else local(s)
     case Tree.Literal(c, _, _)          => constant(c)
     case Tree.This(_, _, _)             => "this"
     case Tree.Super(_, _, _)            => "super"

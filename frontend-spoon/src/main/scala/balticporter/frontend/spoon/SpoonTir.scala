@@ -353,6 +353,10 @@ object SpoonTir:
       private def ty(e: CtTypedElement[?]): TypeRepr = Option(e.getType).map(tpe).getOrElse(NoType)
       private def thisTerm(el: CtElement): Term  = Tree.This(classId, selfT, originOf(el))
       private def superTerm(el: CtElement): Term = Tree.Super(classId, selfT, originOf(el))
+      /** true when a `this`-access targets THIS class (not an enclosing one) — only then does
+        * it need qualifying; an outer `Outer.this.x` resolves bare in Scala. */
+      private def isOwnThis(ta: CtThisAccess[?]): Boolean =
+        Option(ta.getType).map(_.getQualifiedName).forall(_ == minter.fullNameOf(classId))
 
       /** entry: a method/ctor block → a TIR `Block` (statements, Unit result). */
       def methodBody(b: CtBlock[?]): Term =
@@ -597,12 +601,15 @@ object SpoonTir:
           Tree.ArrayLength(expr(target), ty(at), originOf(at))
         else
           val fid = fieldSym(ref)
-          val qual: Term = target match
-            case _: CtSuperAccess[?]                => superTerm(at)
-            case null | (_: CtThisAccess[?])        => thisTerm(at)
-            case ta: CtTypeAccess[?]                => typeTerm(ta, at) // static access
-            case other                              => expr(other)
-          Tree.Select(qual, fid, ty(at), originOf(at))
+          target match
+            case ta: CtTypeAccess[?]                 => Tree.Select(typeTerm(ta, at), fid, ty(at), originOf(at)) // static
+            // fields: `super.f`, an outer `Outer.this.f`, and implicit `f` all resolve as a BARE
+            // name in Scala (inherited or enclosing). Only an OWN `this.f` needs qualifying.
+            case _: CtSuperAccess[?]                 => Tree.Ident(fid, ty(at), originOf(at))
+            case null                                => Tree.Ident(fid, ty(at), originOf(at))
+            case ta: CtThisAccess[?] if !isOwnThis(ta) => Tree.Ident(fid, ty(at), originOf(at))
+            case _: CtThisAccess[?]                  => Tree.Select(thisTerm(at), fid, ty(at), originOf(at))
+            case other                               => Tree.Select(expr(other), fid, ty(at), originOf(at))
 
       private def fieldSym(ref: CtFieldReference[?]): SymId =
         val ownerQ = Option(ref.getFieldDeclaration).flatMap(fd => Option(fd.getDeclaringType)).map(_.getQualifiedName)
@@ -615,17 +622,24 @@ object SpoonTir:
         val ex   = inv.getExecutable
         val mid  = methodSym(ex)
         val args = inv.getArguments.asScala.toList.map(expr)
-        val recv: Term = inv.getTarget match
-          case _: CtSuperAccess[?] => superTerm(inv)
-          case ta: CtTypeAccess[?] => typeTerm(ta, inv) // static call
-          case null | (_: CtThisAccess[?]) =>
-            // a constructor call whose target class isn't the enclosing class is `super(...)`
-            // (Spoon often leaves such invocations with a null/this target).
-            val superCtor = ex.isConstructor &&
+        val o    = originOf(inv)
+        val fun: Term =
+          if ex.isConstructor then
+            // super()/this() delegation — target class ≠ enclosing ⇒ super (Spoon often nulls the target).
+            val superCtor = inv.getTarget.isInstanceOf[CtSuperAccess[?]] ||
               Option(ex.getDeclaringType).map(_.getQualifiedName).exists(_ != minter.fullNameOf(classId))
-            if superCtor then superTerm(inv) else thisTerm(inv)
-          case t => expr(t)
-        Tree.Apply(Tree.Select(recv, mid, NoType, originOf(inv)), args, mid, ty(inv), originOf(inv))
+            Tree.Select(if superCtor then superTerm(inv) else thisTerm(inv), mid, NoType, o)
+          else inv.getTarget match
+            case _: CtSuperAccess[?]  => Tree.Select(superTerm(inv), mid, NoType, o)
+            case ta: CtTypeAccess[?]  => Tree.Select(typeTerm(ta, inv), mid, NoType, o) // static call
+            // implicit (no target): a BARE reference resolves an own OR an ENCLOSING member
+            // (Scala inner classes see the outer's members by simple name). Explicit `this.m`
+            // stays qualified — it's used precisely to defeat param/local shadowing.
+            case null                                  => Tree.Ident(mid, NoType, o)
+            case ta: CtThisAccess[?] if !isOwnThis(ta) => Tree.Ident(mid, NoType, o) // outer method → bare
+            case _: CtThisAccess[?]                    => Tree.Select(thisTerm(inv), mid, NoType, o)
+            case t                                     => Tree.Select(expr(t), mid, NoType, o)
+        Tree.Apply(fun, args, mid, ty(inv), o)
 
       private def ctorCall(cc: CtConstructorCall[?]): Term =
         val t    = tpe(cc.getType)
