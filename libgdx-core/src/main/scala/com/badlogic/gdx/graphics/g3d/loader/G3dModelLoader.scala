@@ -280,17 +280,17 @@ class G3dModelLoader extends com.badlogic.gdx.assets.loaders.ModelLoader[com.bad
     if ((translation != null) && (translation.size$field != 3)) {
       throw new com.badlogic.gdx.utils.GdxRuntimeException("Node translation incomplete")
     } else ()
-    jsonNode.translation = if (translation == null) null else new com.badlogic.gdx.math.Vector3(translation.getFloat(0), translation.getFloat(1), translation.getFloat(2))
+    jsonNode.translation = if (translation == null) null.asInstanceOf[com.badlogic.gdx.math.Vector3] else new com.badlogic.gdx.math.Vector3(translation.getFloat(0), translation.getFloat(1), translation.getFloat(2))
     var rotation: com.badlogic.gdx.utils.JsonValue = json.get("rotation")
     if ((rotation != null) && (rotation.size$field != 4)) {
       throw new com.badlogic.gdx.utils.GdxRuntimeException("Node rotation incomplete")
     } else ()
-    jsonNode.rotation = if (rotation == null) null else new com.badlogic.gdx.math.Quaternion(rotation.getFloat(0), rotation.getFloat(1), rotation.getFloat(2), rotation.getFloat(3))
+    jsonNode.rotation = if (rotation == null) null.asInstanceOf[com.badlogic.gdx.math.Quaternion] else new com.badlogic.gdx.math.Quaternion(rotation.getFloat(0), rotation.getFloat(1), rotation.getFloat(2), rotation.getFloat(3))
     var scale: com.badlogic.gdx.utils.JsonValue = json.get("scale")
     if ((scale != null) && (scale.size$field != 3)) {
       throw new com.badlogic.gdx.utils.GdxRuntimeException("Node scale incomplete")
     } else ()
-    jsonNode.scale = if (scale == null) null else new com.badlogic.gdx.math.Vector3(scale.getFloat(0), scale.getFloat(1), scale.getFloat(2))
+    jsonNode.scale = if (scale == null) null.asInstanceOf[com.badlogic.gdx.math.Vector3] else new com.badlogic.gdx.math.Vector3(scale.getFloat(0), scale.getFloat(1), scale.getFloat(2))
     var meshId: java.lang.String = json.getString("mesh", null)
     if (meshId != null) {
       jsonNode.meshId = meshId

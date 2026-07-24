@@ -292,7 +292,7 @@ class JsonMatcher extends com.badlogic.gdx.utils.JsonSkimmer {
   private def captureValue(pattern: com.badlogic.gdx.utils.JsonMatcher.Pattern, flags: scala.Int, name: com.badlogic.gdx.utils.JsonSkimmer.JsonToken, value: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
     val capture: com.badlogic.gdx.utils.JsonValue = pattern.capture
     if ((flags & JsonMatcher.single) != 0) {
-      capture.name$field = if (name == null) null else name.toString()
+      capture.name$field = if (name == null) null.asInstanceOf[java.lang.String] else name.toString()
       if ((flags & JsonMatcher.array) != 0) {
         if (pattern.captured == 0) {
           capture.setType(com.badlogic.gdx.utils.JsonValue.ValueType.array)
@@ -338,7 +338,7 @@ class JsonMatcher extends com.badlogic.gdx.utils.JsonSkimmer {
     if ((flags & (JsonMatcher.single | JsonMatcher.array)) == JsonMatcher.single) {
       capture = pattern.capture
       capture.setType(`type`)
-      capture.name$field = if (name == null) null else name.toString()
+      capture.name$field = if (name == null) null.asInstanceOf[java.lang.String] else name.toString()
     } else {
       capture = new com.badlogic.gdx.utils.JsonValue(`type`)
       this.captureValue(pattern, flags, name, capture)

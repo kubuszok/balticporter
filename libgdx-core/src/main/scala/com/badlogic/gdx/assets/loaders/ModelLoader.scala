@@ -12,7 +12,7 @@ abstract class ModelLoader[P <: com.badlogic.gdx.assets.loaders.ModelLoader.Mode
   }
   def loadModel(fileHandle: com.badlogic.gdx.files.FileHandle, textureProvider: com.badlogic.gdx.graphics.g3d.utils.TextureProvider, parameters: P): com.badlogic.gdx.graphics.g3d.Model = {
     val data: com.badlogic.gdx.graphics.g3d.model.data.ModelData = this.loadModelData(fileHandle, parameters)
-    return if (data == null) null else new com.badlogic.gdx.graphics.g3d.Model(data, textureProvider)
+    return if (data == null) null.asInstanceOf[com.badlogic.gdx.graphics.g3d.Model] else new com.badlogic.gdx.graphics.g3d.Model(data, textureProvider)
   }
   def loadModel(fileHandle: com.badlogic.gdx.files.FileHandle, parameters: P): com.badlogic.gdx.graphics.g3d.Model = {
     return this.loadModel(fileHandle, new com.badlogic.gdx.graphics.g3d.utils.TextureProvider.FileTextureProvider(), parameters)

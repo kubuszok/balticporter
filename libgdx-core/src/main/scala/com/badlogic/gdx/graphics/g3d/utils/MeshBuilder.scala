@@ -396,7 +396,7 @@ class MeshBuilder extends com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder {
     return this.lastIndex$field.asInstanceOf[scala.Short].asInstanceOf[scala.Short]
   }
   def vertex(info: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo): scala.Short = {
-    return this.vertex(if (info.hasPosition) info.position else null, if (info.hasNormal) info.normal else null, if (info.hasColor) info.color else null, if (info.hasUV) info.uv else null)
+    return this.vertex(if (info.hasPosition) info.position else null.asInstanceOf[com.badlogic.gdx.math.Vector3], if (info.hasNormal) info.normal else null.asInstanceOf[com.badlogic.gdx.math.Vector3], if (info.hasColor) info.color else null.asInstanceOf[com.badlogic.gdx.graphics.Color], if (info.hasUV) info.uv else null.asInstanceOf[com.badlogic.gdx.math.Vector2])
   }
   def index(value: scala.Short): scala.Unit = {
     this.indices.add(value)

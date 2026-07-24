@@ -197,7 +197,7 @@ class AnimationController extends com.badlogic.gdx.graphics.g3d.utils.BaseAnimat
     if ((this.current == null) || (this.current.loopCount == 0)) {
       this.animate(anim, transitionTime)
     } else {
-      val toQueue: com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationDesc = if (this.inAction) null else this.obtain(this.current)
+      val toQueue: com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationDesc = if (this.inAction) null.asInstanceOf[com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationDesc] else this.obtain(this.current)
       this.inAction = false
       this.animate(anim, transitionTime)
       this.inAction = true

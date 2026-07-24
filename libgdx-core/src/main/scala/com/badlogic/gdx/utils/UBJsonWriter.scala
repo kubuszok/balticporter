@@ -440,7 +440,7 @@ class UBJsonWriter extends java.io.Closeable {
     } else {
       this.stack.pop().close()
     }
-    this.current = if (this.stack.size == 0) null else this.stack.peek()
+    this.current = if (this.stack.size == 0) null.asInstanceOf[JsonObject] else this.stack.peek()
     return this
   }
   def flush(): scala.Unit = {

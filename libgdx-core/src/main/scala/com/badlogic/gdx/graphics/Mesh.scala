@@ -338,7 +338,7 @@ class Mesh extends com.badlogic.gdx.utils.Disposable {
     return this.vertices.getAttributes()
   }
   def getInstancedAttributes(): com.badlogic.gdx.graphics.VertexAttributes = {
-    return if (this.instances != null) this.instances.getAttributes() else null
+    return if (this.instances != null) this.instances.getAttributes() else null.asInstanceOf[com.badlogic.gdx.graphics.VertexAttributes]
   }
   def getVerticesBuffer(): java.nio.FloatBuffer = {
     return this.vertices.getBuffer(true)

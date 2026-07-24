@@ -51,7 +51,7 @@ object Attribute {
     while (((`type` != 0) && ({ idx += 1; idx } < 63)) && (((`type` >> idx) & 1) == 0)) {
       ()
     }
-    return if ((idx >= 0) && (idx < Attribute.types.size)) Attribute.types.get(idx) else null
+    return if ((idx >= 0) && (idx < Attribute.types.size)) Attribute.types.get(idx) else null.asInstanceOf[java.lang.String]
   }
   final def register(alias: java.lang.String): scala.Long = {
     val result: scala.Long = Attribute.getAttributeType(alias)

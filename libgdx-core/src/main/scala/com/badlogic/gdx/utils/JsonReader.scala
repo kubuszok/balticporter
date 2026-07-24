@@ -1339,7 +1339,7 @@ class JsonReader extends com.badlogic.gdx.utils.BaseJsonReader {
   }
   def pop(): scala.Unit = {
     this.root = this.elements.pop()
-    this.current = if (this.elements.size > 0) this.elements.peek() else null
+    this.current = if (this.elements.size > 0) this.elements.peek() else null.asInstanceOf[com.badlogic.gdx.utils.JsonValue]
   }
   def string(name: java.lang.String, value: java.lang.String): scala.Unit = {
     this.addChild(name, new com.badlogic.gdx.utils.JsonValue(value))

@@ -67,7 +67,7 @@ class Selection[T] extends com.badlogic.gdx.scenes.scene2d.utils.Disableable wit
     return this.selected
   }
   def first(): T = {
-    return if (this.selected.size == 0) null else this.selected.first()
+    return if (this.selected.size == 0) null.asInstanceOf[T] else this.selected.first()
   }
   def snapshot(): scala.Unit = {
     this.old.clear(this.selected.size)

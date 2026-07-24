@@ -176,7 +176,7 @@ class ParticleController extends com.badlogic.gdx.utils.Json.Serializable with c
   }
   def findInfluencer[K <: com.badlogic.gdx.graphics.g3d.particles.influencers.Influencer](influencerClass: java.lang.Class[K]): K = {
     val index: scala.Int = this.findIndex(influencerClass)
-    return if (index > (-1)) this.influencers.get(index).asInstanceOf[K] else null
+    return if (index > (-1)) this.influencers.get(index).asInstanceOf[K] else null.asInstanceOf[K]
   }
   def removeInfluencer[K <: com.badlogic.gdx.graphics.g3d.particles.influencers.Influencer](`type`: java.lang.Class[K]): scala.Unit = {
     val index: scala.Int = this.findIndex(`type`)

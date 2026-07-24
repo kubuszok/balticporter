@@ -627,9 +627,25 @@ object SpoonTir:
           val st  = Tree.Assign(lhs, expr(a.getAssignment), unitT, originOf(a))
           Tree.Block(List(st), lhs, ty(a), originOf(a))
         case c: CtConditional[?] =>
-          Tree.If(expr(c.getCondition), expr(c.getThenExpression), expr(c.getElseExpression), ty(c), originOf(c))
+          // Java `b ? x : null` typed as the type parameter `V`; Scala infers `x.type | Null`, which
+          // won't satisfy a `V` slot. Cast a null branch to the conditional's own type so the ternary
+          // stays `V`. Guarded: only when that type resolves (never emit the `?T` unresolved stub).
+          val ct = ty(c)
+          def branch(be: CtExpression[?]): Term =
+            val t      = expr(be)
+            val isNull = be match { case l: CtLiteral[?] => l.getValue == null; case _ => false }
+            if isNull && ct != NoType && condTypeResolves(c) then Tree.Typed(t, tt(ct, be), ct, originOf(be)) else t
+          Tree.If(expr(c.getCondition), branch(c.getThenExpression), branch(c.getElseExpression), ct, originOf(c))
         case ta: CtTypeAccess[?] => Tree.Literal(Constant.ClassOfC(tpe(ta.getAccessedType)), ty(e), originOf(e))
         case other => unsupported(other, s"expression ${other.getClass.getSimpleName}")
+
+      /** the conditional's static type is safe to ascribe onto a null branch — a concrete type, or a
+        * type parameter that actually resolves in scope (not the `?T` unresolved stub). */
+      private def condTypeResolves(c: CtConditional[?]): Boolean =
+        (try c.getType catch { case _: Throwable => null }) match
+          case null                         => false
+          case tp: CtTypeParameterReference => resolveTypeParam(tp.getSimpleName).isDefined
+          case _                            => true
 
       private def literal(l: CtLiteral[?]): Term =
         val c: Constant = l.getValue match

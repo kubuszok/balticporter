@@ -96,7 +96,7 @@ class ObjectMap[K, V] extends scala.collection.Iterable[com.badlogic.gdx.utils.O
   }
   def get[T <: K](key: T): V = {
     val i: scala.Int = this.locateKey(key)
-    return if (i < 0) null else this.valueTable(i)
+    return if (i < 0) null.asInstanceOf[V] else this.valueTable(i)
   }
   def get(key: K, defaultValue: V): V = {
     val i: scala.Int = this.locateKey(key)

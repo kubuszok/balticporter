@@ -511,7 +511,7 @@ abstract class BaseTmxMapLoader[P <: com.badlogic.gdx.maps.tiled.BaseTiledMapLoa
     } else ()
     for (projectClassMember <- projectClassMembers) {
       val propName: java.lang.String = projectClassMember.name
-      val classProp: com.badlogic.gdx.utils.XmlReader.Element = if (classElement == null) null else this.getPropertyByName(classElement, propName)
+      val classProp: com.badlogic.gdx.utils.XmlReader.Element = if (classElement == null) null.asInstanceOf[com.badlogic.gdx.utils.XmlReader.Element] else this.getPropertyByName(classElement, propName)
       projectClassMember.`type` match {
         case "object" => {
           val value: java.lang.String = if (classProp == null) projectClassMember.defaultValue.asString() else BaseTmxMapLoader.getPropertyValue(classProp)

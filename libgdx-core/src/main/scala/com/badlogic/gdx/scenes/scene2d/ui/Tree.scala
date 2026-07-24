@@ -321,7 +321,7 @@ class Tree[N <: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[?, ?, ?], V] extend
   }
   def getSelectedValue(): V = {
     val node: N = this.selection.first()
-    return if (node == null) null else node.getValue().asInstanceOf[V]
+    return if (node == null) null.asInstanceOf[V] else node.getValue().asInstanceOf[V]
   }
   def getStyle(): com.badlogic.gdx.scenes.scene2d.ui.Tree.TreeStyle = {
     return this.style

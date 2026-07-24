@@ -317,11 +317,11 @@ class DefaultShader extends com.badlogic.gdx.graphics.g3d.shaders.BaseShader {
   def bindLights(renderable: com.badlogic.gdx.graphics.g3d.Renderable, attributes: com.badlogic.gdx.graphics.g3d.Attributes): scala.Unit = {
     val lights: com.badlogic.gdx.graphics.g3d.Environment = renderable.environment
     val dla: com.badlogic.gdx.graphics.g3d.attributes.DirectionalLightsAttribute = attributes.get(classOf[com.badlogic.gdx.graphics.g3d.attributes.DirectionalLightsAttribute], com.badlogic.gdx.graphics.g3d.attributes.DirectionalLightsAttribute.Type)
-    val dirs: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.environment.DirectionalLight] = if (dla == null) null else dla.lights
+    val dirs: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.environment.DirectionalLight] = if (dla == null) null.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.environment.DirectionalLight]] else dla.lights
     val pla: com.badlogic.gdx.graphics.g3d.attributes.PointLightsAttribute = attributes.get(classOf[com.badlogic.gdx.graphics.g3d.attributes.PointLightsAttribute], com.badlogic.gdx.graphics.g3d.attributes.PointLightsAttribute.Type)
-    val points: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.environment.PointLight] = if (pla == null) null else pla.lights
+    val points: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.environment.PointLight] = if (pla == null) null.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.environment.PointLight]] else pla.lights
     val sla: com.badlogic.gdx.graphics.g3d.attributes.SpotLightsAttribute = attributes.get(classOf[com.badlogic.gdx.graphics.g3d.attributes.SpotLightsAttribute], com.badlogic.gdx.graphics.g3d.attributes.SpotLightsAttribute.Type)
-    val spots: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.environment.SpotLight] = if (sla == null) null else sla.lights
+    val spots: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.environment.SpotLight] = if (sla == null) null.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.environment.SpotLight]] else sla.lights
     if (this.dirLightsLoc >= 0) {
       { var i: scala.Int = 0; while (i < this.directionalLights.length) { {
         if ((dirs == null) || (i >= dirs.size)) {

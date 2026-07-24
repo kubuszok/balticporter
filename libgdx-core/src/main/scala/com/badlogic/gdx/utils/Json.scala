@@ -136,7 +136,7 @@ class Json {
     return nameToField
   }
   def toJson(`object`: java.lang.Object): java.lang.String = {
-    return this.toJson(`object`, if (`object` == null) null else `object`.getClass(), null.asInstanceOf[java.lang.Class[?]])
+    return this.toJson(`object`, if (`object` == null) null.asInstanceOf[java.lang.Class[?]] else `object`.getClass(), null.asInstanceOf[java.lang.Class[?]])
   }
   def toJson(`object`: java.lang.Object, knownType: java.lang.Class[?]): java.lang.String = {
     return this.toJson(`object`, knownType, null.asInstanceOf[java.lang.Class[?]])
@@ -147,7 +147,7 @@ class Json {
     return buffer.toString()
   }
   def toJson(`object`: java.lang.Object, file: com.badlogic.gdx.files.FileHandle): scala.Unit = {
-    this.toJson(`object`, if (`object` == null) null else `object`.getClass(), null, file)
+    this.toJson(`object`, if (`object` == null) null.asInstanceOf[java.lang.Class[?]] else `object`.getClass(), null, file)
   }
   def toJson(`object`: java.lang.Object, knownType: java.lang.Class[?], file: com.badlogic.gdx.files.FileHandle): scala.Unit = {
     this.toJson(`object`, knownType, null, file)
@@ -166,7 +166,7 @@ class Json {
     }
   }
   def toJson(`object`: java.lang.Object, writer: java.io.Writer): scala.Unit = {
-    this.toJson(`object`, if (`object` == null) null else `object`.getClass(), null, writer)
+    this.toJson(`object`, if (`object` == null) null.asInstanceOf[java.lang.Class[?]] else `object`.getClass(), null, writer)
   }
   def toJson(`object`: java.lang.Object, knownType: java.lang.Class[?], writer: java.io.Writer): scala.Unit = {
     this.toJson(`object`, knownType, null, writer)
@@ -867,7 +867,7 @@ class Json {
       return null.asInstanceOf[T]
     } else ()
     if (jsonData.isObject()) {
-      val className: java.lang.String = if (this.typeName == null) null else jsonData.getString(this.typeName, null)
+      val className: java.lang.String = if (this.typeName == null) null.asInstanceOf[java.lang.String] else jsonData.getString(this.typeName, null)
       if (className != null) {
         `type` = this.getClass(className)
         if (`type` == null) {

@@ -613,7 +613,7 @@ class JsonValue extends scala.collection.Iterable[JsonValue] {
   }
   def getChild(name: java.lang.String): JsonValue = {
     val child: JsonValue = this.get(name)
-    return if (child == null) null else child.child$field
+    return if (child == null) null.asInstanceOf[JsonValue] else child.child$field
   }
   def getString(name: java.lang.String, defaultValue: java.lang.String): java.lang.String = {
     val child: JsonValue = this.get(name)

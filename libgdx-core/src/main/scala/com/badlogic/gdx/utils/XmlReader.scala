@@ -571,7 +571,7 @@ class XmlReader {
   }
   def close(): scala.Unit = {
     this.root = this.elements.pop()
-    this.current = if (this.elements.size > 0) this.elements.peek() else null
+    this.current = if (this.elements.size > 0) this.elements.peek() else null.asInstanceOf[com.badlogic.gdx.utils.XmlReader.Element]
   }
 }
 object XmlReader {

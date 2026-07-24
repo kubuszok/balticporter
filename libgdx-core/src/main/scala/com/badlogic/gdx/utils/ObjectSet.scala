@@ -161,7 +161,7 @@ class ObjectSet[T] extends scala.collection.Iterable[T] {
   }
   def get(key: T): T = {
     val i: scala.Int = this.locateKey(key)
-    return if (i < 0) null else this.keyTable(i)
+    return if (i < 0) null.asInstanceOf[T] else this.keyTable(i)
   }
   def first(): T = {
     val keyTable: scala.Array[T] = this.keyTable;

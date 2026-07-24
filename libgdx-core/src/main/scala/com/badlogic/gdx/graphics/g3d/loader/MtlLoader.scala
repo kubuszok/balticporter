@@ -130,7 +130,7 @@ object MtlLoader {
     def build(): com.badlogic.gdx.graphics.g3d.model.data.ModelMaterial = {
       val mat: com.badlogic.gdx.graphics.g3d.model.data.ModelMaterial = new com.badlogic.gdx.graphics.g3d.model.data.ModelMaterial()
       mat.id = this.materialName
-      mat.ambient = if (this.ambientColor == null) null else new com.badlogic.gdx.graphics.Color(this.ambientColor)
+      mat.ambient = if (this.ambientColor == null) null.asInstanceOf[com.badlogic.gdx.graphics.Color] else new com.badlogic.gdx.graphics.Color(this.ambientColor)
       mat.diffuse = new com.badlogic.gdx.graphics.Color(this.diffuseColor)
       mat.specular = new com.badlogic.gdx.graphics.Color(this.specularColor)
       mat.opacity = this.opacity

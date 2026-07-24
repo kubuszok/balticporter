@@ -131,7 +131,7 @@ class Actor {
     if (!this.isVisible()) {
       return null
     } else ()
-    return if ((((x >= 0) && (x < this.width$field)) && (y >= 0)) && (y < this.height$field)) this else null
+    return if ((((x >= 0) && (x < this.width$field)) && (y >= 0)) && (y < this.height$field)) this else null.asInstanceOf[Actor]
   }
   def remove(): scala.Boolean = {
     if (this.parent != null) {

@@ -11,7 +11,7 @@ class FloatCounter extends com.badlogic.gdx.utils.Pool.Poolable {
   var mean: com.badlogic.gdx.math.WindowedMean = null.asInstanceOf[com.badlogic.gdx.math.WindowedMean]
   def this(windowSize: scala.Int) = {
     this()
-    this.mean = if (windowSize > 1) new com.badlogic.gdx.math.WindowedMean(windowSize) else null
+    this.mean = if (windowSize > 1) new com.badlogic.gdx.math.WindowedMean(windowSize) else null.asInstanceOf[com.badlogic.gdx.math.WindowedMean]
     this.reset()
   }
   def put(value: scala.Float): scala.Unit = {

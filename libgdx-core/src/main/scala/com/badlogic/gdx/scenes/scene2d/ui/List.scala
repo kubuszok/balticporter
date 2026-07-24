@@ -168,10 +168,10 @@ class List[T] extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlogi
     }
   }
   def getOverItem(): T = {
-    return if (this.overIndex == (-1)) null else this.items.get(this.overIndex)
+    return if (this.overIndex == (-1)) null.asInstanceOf[T] else this.items.get(this.overIndex)
   }
   def getPressedItem(): T = {
-    return if (this.pressedIndex == (-1)) null else this.items.get(this.pressedIndex)
+    return if (this.pressedIndex == (-1)) null.asInstanceOf[T] else this.items.get(this.pressedIndex)
   }
   def getItemAt(y: scala.Float): T = {
     val index: scala.Int = this.getItemIndexAt(y)

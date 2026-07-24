@@ -135,7 +135,7 @@ object I18NBundle {
   }
   private def getFallbackLocale(locale: java.util.Locale): java.util.Locale = {
     val defaultLocale: java.util.Locale = java.util.Locale.getDefault()
-    return if (locale.equals(defaultLocale)) null else defaultLocale
+    return if (locale.equals(defaultLocale)) null.asInstanceOf[java.util.Locale] else defaultLocale
   }
   private def loadBundleChain(baseFileHandle: com.badlogic.gdx.files.FileHandle, encoding: java.lang.String, candidateLocales: scala.collection.mutable.Buffer[java.util.Locale], candidateIndex: scala.Int, baseBundle: I18NBundle): I18NBundle = {
     val targetLocale: java.util.Locale = candidateLocales(candidateIndex)

@@ -46,7 +46,7 @@ class BitmapFont extends com.badlogic.gdx.utils.Disposable {
     this(fontFile, imageFile, flip, true)
   }
   def this(data: com.badlogic.gdx.graphics.g2d.BitmapFont.BitmapFontData, region: com.badlogic.gdx.graphics.g2d.TextureRegion, integer: scala.Boolean) = {
-    this(data, if (region != null) com.badlogic.gdx.utils.Array.`with`(region) else null, integer)
+    this(data, if (region != null) com.badlogic.gdx.utils.Array.`with`(region) else null.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.TextureRegion]], integer)
   }
   def this(fontFile: com.badlogic.gdx.files.FileHandle, region: com.badlogic.gdx.graphics.g2d.TextureRegion) = {
     this(fontFile, region, false)

@@ -322,7 +322,7 @@ class Table extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup {
     this.cells.peek().endRow = true
   }
   def columnDefaults(column: scala.Int): com.badlogic.gdx.scenes.scene2d.ui.Cell[?] = {
-    var cell: com.badlogic.gdx.scenes.scene2d.ui.Cell[?] = if (this.columnDefaults$field.size > column) this.columnDefaults$field.get(column) else null
+    var cell: com.badlogic.gdx.scenes.scene2d.ui.Cell[?] = if (this.columnDefaults$field.size > column) this.columnDefaults$field.get(column) else null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]]
     if (cell == null) {
       cell = this.obtainCell()
       cell.clear()

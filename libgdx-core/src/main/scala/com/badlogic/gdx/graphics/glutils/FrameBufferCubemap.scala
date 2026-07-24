@@ -59,7 +59,7 @@ class FrameBufferCubemap extends com.badlogic.gdx.graphics.glutils.GLFrameBuffer
     com.badlogic.gdx.Gdx.gl20.glFramebufferTexture2D(com.badlogic.gdx.graphics.GL20.GL_FRAMEBUFFER, com.badlogic.gdx.graphics.GL20.GL_COLOR_ATTACHMENT0, side.glEnum, this.getColorBufferTexture().getTextureObjectHandle(), 0)
   }
   def getSide(): com.badlogic.gdx.graphics.Cubemap.CubemapSide = {
-    return if (this.currentSide < 0) null else FrameBufferCubemap.cubemapSides(this.currentSide)
+    return if (this.currentSide < 0) null.asInstanceOf[com.badlogic.gdx.graphics.Cubemap.CubemapSide] else FrameBufferCubemap.cubemapSides(this.currentSide)
   }
 }
 object FrameBufferCubemap {

@@ -76,7 +76,7 @@ class Touchpad extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlog
     if (!this.isVisible()) {
       return null
     } else ()
-    return if (this.touchBounds.contains(x, y)) this else null
+    return if (this.touchBounds.contains(x, y)) this else null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.Actor]
   }
   def layout(): scala.Unit = {
     val halfWidth: scala.Float = this.getWidth() / 2

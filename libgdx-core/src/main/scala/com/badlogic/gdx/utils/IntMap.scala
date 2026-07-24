@@ -108,10 +108,10 @@ class IntMap[V] extends scala.collection.Iterable[com.badlogic.gdx.utils.IntMap.
   }
   def get(key: scala.Int): V = {
     if (key == 0) {
-      return if (this.hasZeroValue) this.zeroValue else null
+      return if (this.hasZeroValue) this.zeroValue else null.asInstanceOf[V]
     } else ()
     val i: scala.Int = this.locateKey(key)
-    return if (i >= 0) this.valueTable(i) else null
+    return if (i >= 0) this.valueTable(i) else null.asInstanceOf[V]
   }
   def get(key: scala.Int, defaultValue: V): V = {
     if (key == 0) {
