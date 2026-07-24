@@ -68,7 +68,9 @@ final class PanamaFfiTransform(isNative: Symbol => Boolean = _.flags.isNative) e
     cd.copy(body = body)
 
   // ---- FFI codegen ----
-  private def handleName(p: Program, m: SymId): String = p.symbolOf(m).map(_.name).getOrElse("fn") + "$handle"
+  // include the method's SymId so OVERLOADED natives (same name, e.g. `copyJni(float[])` and
+  // `copyJni(int[])`) get DISTINCT handle fields instead of colliding.
+  private def handleName(p: Program, m: SymId): String = p.symbolOf(m).map(_.name).getOrElse("fn") + "$" + m.raw + "$handle"
 
   /** `Linker.nativeLinker().downcallHandle(lookup.find("name").orElseThrow(), descriptor)`. */
   private def downcall(d: Tree.DefDef)(using p: Program): String =
