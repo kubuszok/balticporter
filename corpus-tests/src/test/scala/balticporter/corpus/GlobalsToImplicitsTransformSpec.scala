@@ -33,8 +33,9 @@ class GlobalsToImplicitsTransformSpec extends munit.FunSuite:
   }
 
   test("threads `using Config` through the call-graph closure") {
-    assert(out.contains("def log(msg: java.lang.String)(using ctx: Config)")) // direct reference
-    assert(out.contains("def run(l: Logger, m: java.lang.String)(using ctx: Config)")) // caller of log — closure
+    // cross-unit type references are fully qualified (FQN emission, no imports).
+    assert(out.contains("def log(msg: java.lang.String)(using ctx: demo.Config)")) // direct reference
+    assert(out.contains("def run(l: demo.Logger, m: java.lang.String)(using ctx: demo.Config)")) // caller of log — closure
     assert(out.contains("l.log(m)")) // call site UNCHANGED: `using` auto-forwards from `ctx` in scope
   }
 

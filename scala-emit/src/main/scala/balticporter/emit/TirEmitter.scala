@@ -20,29 +20,15 @@ final class TirEmitter(source: Program):
 
   def emit: String = program.units.map(emitUnit).mkString("\n\n")
 
-  /** type symbols referenced while rendering the current unit — drives import generation. */
-  private val referenced = collection.mutable.LinkedHashSet[SymId]()
   /** types declared in the unit currently being rendered (in scope by simple name). */
   private var currentDeclared: Set[SymId] = Set.empty
 
   def emitUnit(cd: Tree.ClassDef): String =
-    referenced.clear()
     currentDeclared = declaredTypes(cd)
-    val body = classDef(cd, 0) // fills `referenced` via typeSym
+    val body = classDef(cd, 0)
     val full = sym(cd.symbol).fullName
     val pkg  = if full.contains('.') then s"package ${full.substring(0, full.lastIndexOf('.'))}\n\n" else ""
-    pkg + imports(cd) + body
-
-  /** import every our-own type this unit references but does not itself declare, so those can
-    * be named simply. (No same-package elision or clash resolution yet — good enough here.) */
-  private def imports(cd: Tree.ClassDef): String =
-    val declared = declaredTypes(cd)
-    val lines = referenced.filterNot(declared).toList
-      .map(id => sym(id).fullName.replace('$', '.'))
-      .filter(_.contains('.'))
-      .distinct.sorted
-      .map(q => s"import $q")
-    if lines.isEmpty then "" else lines.mkString("", "\n", "\n\n")
+    pkg + body
 
   private def declaredTypes(cd: Tree.ClassDef): Set[SymId] =
     val acc = collection.mutable.Set[SymId](cd.symbol)
@@ -62,17 +48,19 @@ final class TirEmitter(source: Program):
   )
   /** backtick an identifier that collides with a Scala keyword. */
   private def esc(name: String): String = if keywords(name) then s"`$name`" else name
-  /** a TYPE symbol's rendered name. Type params and our own declarations render by simple
-    * name (and get imported if from elsewhere — see `imports`); externals stay fully qualified. */
+  /** a TYPE symbol's rendered name. FULLY QUALIFIED by default — for the structural Java→Scala
+    * phase we emit fully-qualified references and generate NO imports, which deletes the entire
+    * import-decision bug class (import-vs-projection, shadowing, static-receiver qualification):
+    * a reference is now a context-free function of the symbol's owner chain. Only two things
+    * stay unqualified: type params, and a type declared in THIS unit (in scope by simple name).
+    * Human-readable imports are a separate, optional beautification backend, not a correctness
+    * prerequisite. (A later refinement handles givens/extensions, which FQN genuinely can't name.) */
   private def typeSym(id: SymId): String =
     val s = sym(id)
     if s.flags.isParam then esc(s.name)
-    else if program.definitionOf(id).isDefined then
-      if currentDeclared(id) then esc(s.name)                       // declared here — in scope
-      else if program.symbolOf(s.owner).exists(_.flags.isModule) then s"${typeValue(s.owner)}.${esc(s.name)}" // object's type member → path-dependent `O.T`
-      else if s.fullName.contains('$') then s.fullName.replace('$', '#').replace(".", ".") // nested elsewhere → projection
-      else { referenced += id; esc(s.name) }                        // top-level elsewhere → import + simple
-    else s.fullName.replace('$', '.')                               // external, fully qualified
+    else if program.definitionOf(id).isDefined && currentDeclared(id) then esc(s.name) // declared here — in scope
+    else if program.symbolOf(s.owner).exists(_.flags.isModule) then s"${typeValue(s.owner)}.${esc(s.name)}" // object's type member → path-dependent `O.T`
+    else s.fullName.replace('$', '#')                               // everything else → fully qualified (class-nested → `Outer#Inner`)
 
   private def ind(n: Int): String = "  " * n
 

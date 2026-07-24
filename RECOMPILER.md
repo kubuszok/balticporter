@@ -119,6 +119,18 @@ Because the tree carries types and symbols, emission inserts the correct form by
 construction (the diamond/inference bugs cannot occur). The determinism / comment-
 invariant / API-parity checks become backend verifications, not the driver.
 
+**Reference emission is fully-qualified, no imports.** Every stable global reference (type,
+object, static, top-level def) renders as its fully-qualified path — a context-free function of
+the symbol's owner chain — and NO `import`s are generated. This deletes the entire
+import-decision bug class (import-vs-projection, class/companion shadowing, static-receiver
+qualification) at its root, and de-risks transforms that mint symbols. Only two things stay
+unqualified: type parameters, and a type declared in the unit being rendered. Class-nested
+types are `Outer#Inner`, object type members `Obj.T` — those ARE the FQN for a nested type.
+Human-readable imports are a separate, optional beautification backend, never a correctness
+prerequisite; a small refinement still owes explicit handling for givens/extension methods,
+which FQN genuinely cannot name. (Measured neutral on the noise4j gate — it doesn't fix the
+structural residuals, but removes a class of latent hazards.)
+
 ## Design goal: semantic diff between two portings (planned, not yet built)
 
 The re-compiler must be able to produce a **semantic diff between any two portings of the
