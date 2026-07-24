@@ -43,7 +43,7 @@ class Group extends com.badlogic.gdx.scenes.scene2d.Actor with com.badlogic.gdx.
           } else ()
           val cx: scala.Float = child.x
           val cy: scala.Float = child.y
-          if ((((cx <= cullRight) && (cy <= cullTop)) && ((cx + child.width) >= cullLeft)) && ((cy + child.height) >= cullBottom)) {
+          if ((((cx <= cullRight) && (cy <= cullTop)) && ((cx + child.width$field) >= cullLeft)) && ((cy + child.height$field) >= cullBottom)) {
             child.draw(batch, parentAlpha)
           } else ()
         }; i = i + 1 } }
@@ -59,7 +59,7 @@ class Group extends com.badlogic.gdx.scenes.scene2d.Actor with com.badlogic.gdx.
           } else ()
           val cx: scala.Float = child.x
           val cy: scala.Float = child.y
-          if ((((cx <= cullRight) && (cy <= cullTop)) && ((cx + child.width) >= cullLeft)) && ((cy + child.height) >= cullBottom)) {
+          if ((((cx <= cullRight) && (cy <= cullTop)) && ((cx + child.width$field) >= cullLeft)) && ((cy + child.height$field) >= cullBottom)) {
             child.x = cx + offsetX
             child.y = cy + offsetY
             child.draw(batch, parentAlpha)

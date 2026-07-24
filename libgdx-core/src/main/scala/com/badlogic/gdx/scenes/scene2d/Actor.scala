@@ -12,8 +12,8 @@ class Actor {
   var debug$field: scala.Boolean = false
   var x: scala.Float = 0.0f
   var y: scala.Float = 0.0f
-  var width: scala.Float = 0.0f
-  var height: scala.Float = 0.0f
+  var width$field: scala.Float = 0.0f
+  var height$field: scala.Float = 0.0f
   var originX: scala.Float = 0.0f
   var originY: scala.Float = 0.0f
   var scaleX: scala.Float = 1
@@ -131,7 +131,7 @@ class Actor {
     if (!this.isVisible()) {
       return null
     } else ()
-    return if ((((x >= 0) && (x < this.width)) && (y >= 0)) && (y < this.height)) this else null
+    return if ((((x >= 0) && (x < this.width$field)) && (y >= 0)) && (y < this.height$field)) this else null
   }
   def remove(): scala.Boolean = {
     if (this.parent != null) {
@@ -334,10 +334,10 @@ class Actor {
   def getX(alignment: scala.Int): scala.Float = {
     var x: scala.Float = this.x
     if ((alignment & com.badlogic.gdx.utils.Align.right) != 0) {
-      x = x + this.width
+      x = x + this.width$field
     } else {
       if ((alignment & com.badlogic.gdx.utils.Align.left) == 0) {
-        x = x + (this.width / 2)
+        x = x + (this.width$field / 2)
       } else ()
     }
     return x
@@ -351,10 +351,10 @@ class Actor {
   def setX(x$arg: scala.Float, alignment: scala.Int): scala.Unit = {
     var x: scala.Float = x$arg
     if ((alignment & com.badlogic.gdx.utils.Align.right) != 0) {
-      x = x - this.width
+      x = x - this.width$field
     } else {
       if ((alignment & com.badlogic.gdx.utils.Align.left) == 0) {
-        x = x - (this.width / 2)
+        x = x - (this.width$field / 2)
       } else ()
     }
     if (this.x != x) {
@@ -374,10 +374,10 @@ class Actor {
   def setY(y$arg: scala.Float, alignment: scala.Int): scala.Unit = {
     var y: scala.Float = y$arg
     if ((alignment & com.badlogic.gdx.utils.Align.top) != 0) {
-      y = y - this.height
+      y = y - this.height$field
     } else {
       if ((alignment & com.badlogic.gdx.utils.Align.bottom) == 0) {
-        y = y - (this.height / 2)
+        y = y - (this.height$field / 2)
       } else ()
     }
     if (this.y != y) {
@@ -388,10 +388,10 @@ class Actor {
   def getY(alignment: scala.Int): scala.Float = {
     var y: scala.Float = this.y
     if ((alignment & com.badlogic.gdx.utils.Align.top) != 0) {
-      y = y + this.height
+      y = y + this.height$field
     } else {
       if ((alignment & com.badlogic.gdx.utils.Align.bottom) == 0) {
-        y = y + (this.height / 2)
+        y = y + (this.height$field / 2)
       } else ()
     }
     return y
@@ -407,17 +407,17 @@ class Actor {
     var x: scala.Float = x$arg
     var y: scala.Float = y$arg
     if ((alignment & com.badlogic.gdx.utils.Align.right) != 0) {
-      x = x - this.width
+      x = x - this.width$field
     } else {
       if ((alignment & com.badlogic.gdx.utils.Align.left) == 0) {
-        x = x - (this.width / 2)
+        x = x - (this.width$field / 2)
       } else ()
     }
     if ((alignment & com.badlogic.gdx.utils.Align.top) != 0) {
-      y = y - this.height
+      y = y - this.height$field
     } else {
       if ((alignment & com.badlogic.gdx.utils.Align.bottom) == 0) {
-        y = y - (this.height / 2)
+        y = y - (this.height$field / 2)
       } else ()
     }
     if ((this.x != x) || (this.y != y)) {
@@ -434,28 +434,28 @@ class Actor {
     } else ()
   }
   def getWidth(): scala.Float = {
-    return this.width
+    return this.width$field
   }
   def setWidth(width: scala.Float): scala.Unit = {
-    if (this.width != width) {
-      this.width = width
+    if (this.width$field != width) {
+      this.width$field = width
       this.sizeChanged()
     } else ()
   }
   def getHeight(): scala.Float = {
-    return this.height
+    return this.height$field
   }
   def setHeight(height: scala.Float): scala.Unit = {
-    if (this.height != height) {
-      this.height = height
+    if (this.height$field != height) {
+      this.height$field = height
       this.sizeChanged()
     } else ()
   }
   def getTop(): scala.Float = {
-    return this.y + this.height
+    return this.y + this.height$field
   }
   def getRight(): scala.Float = {
-    return this.x + this.width
+    return this.x + this.width$field
   }
   def positionChanged(): scala.Unit = {
     ()
@@ -470,23 +470,23 @@ class Actor {
     ()
   }
   def setSize(width: scala.Float, height: scala.Float): scala.Unit = {
-    if ((this.width != width) || (this.height != height)) {
-      this.width = width
-      this.height = height
+    if ((this.width$field != width) || (this.height$field != height)) {
+      this.width$field = width
+      this.height$field = height
       this.sizeChanged()
     } else ()
   }
   def sizeBy(size: scala.Float): scala.Unit = {
     if (size != 0) {
-      this.width = this.width + size
-      this.height = this.height + size
+      this.width$field = this.width$field + size
+      this.height$field = this.height$field + size
       this.sizeChanged()
     } else ()
   }
   def sizeBy(width: scala.Float, height: scala.Float): scala.Unit = {
     if ((width != 0) || (height != 0)) {
-      this.width = this.width + width
-      this.height = this.height + height
+      this.width$field = this.width$field + width
+      this.height$field = this.height$field + height
       this.sizeChanged()
     } else ()
   }
@@ -496,9 +496,9 @@ class Actor {
       this.y = y
       this.positionChanged()
     } else ()
-    if ((this.width != width) || (this.height != height)) {
-      this.width = width
-      this.height = height
+    if ((this.width$field != width) || (this.height$field != height)) {
+      this.width$field = width
+      this.height$field = height
       this.sizeChanged()
     } else ()
   }
@@ -523,18 +523,18 @@ class Actor {
       this.originX = 0
     } else {
       if ((alignment & com.badlogic.gdx.utils.Align.right) != 0) {
-        this.originX = this.width
+        this.originX = this.width$field
       } else {
-        this.originX = this.width / 2
+        this.originX = this.width$field / 2
       }
     }
     if ((alignment & com.badlogic.gdx.utils.Align.bottom) != 0) {
       this.originY = 0
     } else {
       if ((alignment & com.badlogic.gdx.utils.Align.top) != 0) {
-        this.originY = this.height
+        this.originY = this.height$field
       } else {
-        this.originY = this.height / 2
+        this.originY = this.height$field / 2
       }
     }
   }
@@ -651,7 +651,7 @@ class Actor {
     return parent.children.indexOf(this, true)
   }
   def clipBegin(): scala.Boolean = {
-    return this.clipBegin(this.x, this.y, this.width, this.height)
+    return this.clipBegin(this.x, this.y, this.width$field, this.height$field)
   }
   def clipBegin(x: scala.Float, y: scala.Float, width: scala.Float, height: scala.Float): scala.Boolean = {
     if ((width <= 0) || (height <= 0)) {
@@ -783,7 +783,7 @@ class Actor {
     if (this.stage != null) {
       shapes.setColor(this.stage.getDebugColor())
     } else ()
-    shapes.rect(this.x, this.y, this.originX, this.originY, this.width, this.height, this.scaleX, this.scaleY, this.rotation)
+    shapes.rect(this.x, this.y, this.originX, this.originY, this.width$field, this.height$field, this.scaleX, this.scaleY, this.rotation)
   }
   def setDebug(enabled: scala.Boolean): scala.Unit = {
     this.debug$field = enabled

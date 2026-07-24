@@ -423,7 +423,7 @@ object ObjectMap {
     }
   }
   private abstract class MapIterator[K, V, I] extends scala.collection.Iterable[I] with scala.collection.Iterator[I] {
-    var hasNext: scala.Boolean = false
+    var hasNext$field: scala.Boolean = false
     var map: ObjectMap[K, V] = null.asInstanceOf[ObjectMap[K, V]]
     var nextIndex: scala.Int = 0
     var currentIndex: scala.Int = 0
@@ -442,11 +442,11 @@ object ObjectMap {
       val keyTable: scala.Array[K] = this.map.keyTable;
       { val n: scala.Int = keyTable.length; while ({ this.nextIndex += 1; this.nextIndex } < n) { {
         if (keyTable(this.nextIndex) != null) {
-          this.hasNext = true
+          this.hasNext$field = true
           return
         } else ()
       };  } }
-      this.hasNext = false
+      this.hasNext$field = false
     }
     def remove(): scala.Unit = {
       var i: scala.Int = this.currentIndex
@@ -485,7 +485,7 @@ object ObjectMap {
       this()
     }
     def next(): com.badlogic.gdx.utils.ObjectMap.Entry[K, V] = {
-      if (!hasNext) {
+      if (!hasNext$field) {
         throw new java.util.NoSuchElementException()
       } else ()
       if (!valid) {
@@ -502,7 +502,7 @@ object ObjectMap {
       if (!valid) {
         throw new com.badlogic.gdx.utils.GdxRuntimeException("#iterator() cannot be used nested.")
       } else ()
-      return hasNext
+      return hasNext$field
     }
     def iterator(): com.badlogic.gdx.utils.ObjectMap.Entries[K, V] = {
       return this
@@ -516,10 +516,10 @@ object ObjectMap {
       if (!valid) {
         throw new com.badlogic.gdx.utils.GdxRuntimeException("#iterator() cannot be used nested.")
       } else ()
-      return hasNext
+      return hasNext$field
     }
     def next(): V = {
-      if (!hasNext) {
+      if (!hasNext$field) {
         throw new java.util.NoSuchElementException()
       } else ()
       if (!valid) {
@@ -537,7 +537,7 @@ object ObjectMap {
       return this.toArray(new com.badlogic.gdx.utils.Array(true, this.map.size))
     }
     def toArray(array: com.badlogic.gdx.utils.Array[V]): com.badlogic.gdx.utils.Array[V] = {
-      while (hasNext) {
+      while (hasNext$field) {
         array.add(this.next())
       }
       return array
@@ -551,10 +551,10 @@ object ObjectMap {
       if (!valid) {
         throw new com.badlogic.gdx.utils.GdxRuntimeException("#iterator() cannot be used nested.")
       } else ()
-      return hasNext
+      return hasNext$field
     }
     def next(): K = {
-      if (!hasNext) {
+      if (!hasNext$field) {
         throw new java.util.NoSuchElementException()
       } else ()
       if (!valid) {
@@ -572,7 +572,7 @@ object ObjectMap {
       return this.toArray(new com.badlogic.gdx.utils.Array[K](true, this.map.size))
     }
     def toArray(array: com.badlogic.gdx.utils.Array[K]): com.badlogic.gdx.utils.Array[K] = {
-      while (hasNext) {
+      while (hasNext$field) {
         array.add(this.next())
       }
       return array

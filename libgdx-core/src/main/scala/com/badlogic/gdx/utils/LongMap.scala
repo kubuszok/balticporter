@@ -491,7 +491,7 @@ object LongMap {
     }
   }
   private class MapIterator[V] {
-    var hasNext: scala.Boolean = false
+    var hasNext$field: scala.Boolean = false
     var map: LongMap[V] = null.asInstanceOf[LongMap[V]]
     var nextIndex: scala.Int = 0
     var currentIndex: scala.Int = 0
@@ -505,7 +505,7 @@ object LongMap {
       this.currentIndex = com.badlogic.gdx.utils.LongMap.MapIterator.INDEX_ILLEGAL
       this.nextIndex = com.badlogic.gdx.utils.LongMap.MapIterator.INDEX_ZERO
       if (this.map.hasZeroValue) {
-        this.hasNext = true
+        this.hasNext$field = true
       } else {
         this.findNextIndex()
       }
@@ -514,11 +514,11 @@ object LongMap {
       val keyTable: scala.Array[scala.Long] = this.map.keyTable;
       { val n: scala.Int = keyTable.length; while ({ this.nextIndex += 1; this.nextIndex } < n) { {
         if (keyTable(this.nextIndex) != 0) {
-          this.hasNext = true
+          this.hasNext$field = true
           return
         } else ()
       };  } }
-      this.hasNext = false
+      this.hasNext$field = false
     }
     def remove(): scala.Unit = {
       var i: scala.Int = this.currentIndex
@@ -567,7 +567,7 @@ object LongMap {
       this()
     }
     def next(): com.badlogic.gdx.utils.LongMap.Entry[V] = {
-      if (!hasNext) {
+      if (!hasNext$field) {
         throw new java.util.NoSuchElementException()
       } else ()
       if (!valid) {
@@ -589,7 +589,7 @@ object LongMap {
       if (!valid) {
         throw new com.badlogic.gdx.utils.GdxRuntimeException("#iterator() cannot be used nested.")
       } else ()
-      return hasNext
+      return hasNext$field
     }
     def iterator(): scala.collection.Iterator[com.badlogic.gdx.utils.LongMap.Entry[V]] = {
       return this
@@ -606,10 +606,10 @@ object LongMap {
       if (!valid) {
         throw new com.badlogic.gdx.utils.GdxRuntimeException("#iterator() cannot be used nested.")
       } else ()
-      return hasNext
+      return hasNext$field
     }
     def next(): V = {
-      if (!hasNext) {
+      if (!hasNext$field) {
         throw new java.util.NoSuchElementException()
       } else ()
       if (!valid) {
@@ -630,7 +630,7 @@ object LongMap {
     }
     def toArray(): com.badlogic.gdx.utils.Array[V] = {
       val array: com.badlogic.gdx.utils.Array[?] = new com.badlogic.gdx.utils.Array(true, this.map.size)
-      while (hasNext) {
+      while (hasNext$field) {
         array.add(this.next())
       }
       return array
@@ -644,7 +644,7 @@ object LongMap {
       this()
     }
     def next(): scala.Long = {
-      if (!hasNext) {
+      if (!hasNext$field) {
         throw new java.util.NoSuchElementException()
       } else ()
       if (!valid) {
@@ -657,13 +657,13 @@ object LongMap {
     }
     def toArray(): com.badlogic.gdx.utils.LongArray = {
       val array: com.badlogic.gdx.utils.LongArray = new com.badlogic.gdx.utils.LongArray(true, this.map.size)
-      while (hasNext) {
+      while (hasNext$field) {
         array.add(this.next())
       }
       return array
     }
     def toArray(array: com.badlogic.gdx.utils.LongArray): com.badlogic.gdx.utils.LongArray = {
-      while (hasNext) {
+      while (hasNext$field) {
         array.add(this.next())
       }
       return array

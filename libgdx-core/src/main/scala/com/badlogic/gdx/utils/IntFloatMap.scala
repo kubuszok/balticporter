@@ -468,7 +468,7 @@ object IntFloatMap {
     }
   }
   private class MapIterator {
-    var hasNext: scala.Boolean = false
+    var hasNext$field: scala.Boolean = false
     var map: IntFloatMap = null.asInstanceOf[IntFloatMap]
     var nextIndex: scala.Int = 0
     var currentIndex: scala.Int = 0
@@ -482,7 +482,7 @@ object IntFloatMap {
       this.currentIndex = com.badlogic.gdx.utils.IntFloatMap.MapIterator.INDEX_ILLEGAL
       this.nextIndex = com.badlogic.gdx.utils.IntFloatMap.MapIterator.INDEX_ZERO
       if (this.map.hasZeroValue) {
-        this.hasNext = true
+        this.hasNext$field = true
       } else {
         this.findNextIndex()
       }
@@ -491,11 +491,11 @@ object IntFloatMap {
       val keyTable: scala.Array[scala.Int] = this.map.keyTable;
       { val n: scala.Int = keyTable.length; while ({ this.nextIndex += 1; this.nextIndex } < n) { {
         if (keyTable(this.nextIndex) != 0) {
-          this.hasNext = true
+          this.hasNext$field = true
           return
         } else ()
       };  } }
-      this.hasNext = false
+      this.hasNext$field = false
     }
     def remove(): scala.Unit = {
       var i: scala.Int = this.currentIndex
@@ -542,7 +542,7 @@ object IntFloatMap {
       this()
     }
     def next(): com.badlogic.gdx.utils.IntFloatMap.Entry = {
-      if (!hasNext) {
+      if (!hasNext$field) {
         throw new java.util.NoSuchElementException()
       } else ()
       if (!valid) {
@@ -564,7 +564,7 @@ object IntFloatMap {
       if (!valid) {
         throw new com.badlogic.gdx.utils.GdxRuntimeException("#iterator() cannot be used nested.")
       } else ()
-      return hasNext
+      return hasNext$field
     }
     def iterator(): scala.collection.Iterator[com.badlogic.gdx.utils.IntFloatMap.Entry] = {
       return this
@@ -584,10 +584,10 @@ object IntFloatMap {
       if (!valid) {
         throw new com.badlogic.gdx.utils.GdxRuntimeException("#iterator() cannot be used nested.")
       } else ()
-      return hasNext
+      return hasNext$field
     }
     def next(): scala.Float = {
-      if (!hasNext) {
+      if (!hasNext$field) {
         throw new java.util.NoSuchElementException()
       } else ()
       if (!valid) {
@@ -603,13 +603,13 @@ object IntFloatMap {
     }
     def toArray(): com.badlogic.gdx.utils.FloatArray = {
       val array: com.badlogic.gdx.utils.FloatArray = new com.badlogic.gdx.utils.FloatArray(true, this.map.size)
-      while (hasNext) {
+      while (hasNext$field) {
         array.add(this.next())
       }
       return array
     }
     def toArray(array: com.badlogic.gdx.utils.FloatArray): com.badlogic.gdx.utils.FloatArray = {
-      while (hasNext) {
+      while (hasNext$field) {
         array.add(this.next())
       }
       return array
@@ -623,7 +623,7 @@ object IntFloatMap {
       this()
     }
     def next(): scala.Int = {
-      if (!hasNext) {
+      if (!hasNext$field) {
         throw new java.util.NoSuchElementException()
       } else ()
       if (!valid) {
@@ -636,13 +636,13 @@ object IntFloatMap {
     }
     def toArray(): com.badlogic.gdx.utils.IntArray = {
       val array: com.badlogic.gdx.utils.IntArray = new com.badlogic.gdx.utils.IntArray(true, this.map.size)
-      while (hasNext) {
+      while (hasNext$field) {
         array.add(this.next())
       }
       return array
     }
     def toArray(array: com.badlogic.gdx.utils.IntArray): com.badlogic.gdx.utils.IntArray = {
-      while (hasNext) {
+      while (hasNext$field) {
         array.add(this.next())
       }
       return array

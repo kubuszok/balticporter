@@ -443,7 +443,7 @@ object IntIntMap {
     }
   }
   private class MapIterator {
-    var hasNext: scala.Boolean = false
+    var hasNext$field: scala.Boolean = false
     var map: IntIntMap = null.asInstanceOf[IntIntMap]
     var nextIndex: scala.Int = 0
     var currentIndex: scala.Int = 0
@@ -457,7 +457,7 @@ object IntIntMap {
       this.currentIndex = com.badlogic.gdx.utils.IntIntMap.MapIterator.INDEX_ILLEGAL
       this.nextIndex = com.badlogic.gdx.utils.IntIntMap.MapIterator.INDEX_ZERO
       if (this.map.hasZeroValue) {
-        this.hasNext = true
+        this.hasNext$field = true
       } else {
         this.findNextIndex()
       }
@@ -466,11 +466,11 @@ object IntIntMap {
       val keyTable: scala.Array[scala.Int] = this.map.keyTable;
       { val n: scala.Int = keyTable.length; while ({ this.nextIndex += 1; this.nextIndex } < n) { {
         if (keyTable(this.nextIndex) != 0) {
-          this.hasNext = true
+          this.hasNext$field = true
           return
         } else ()
       };  } }
-      this.hasNext = false
+      this.hasNext$field = false
     }
     def remove(): scala.Unit = {
       var i: scala.Int = this.currentIndex
@@ -517,7 +517,7 @@ object IntIntMap {
       this()
     }
     def next(): com.badlogic.gdx.utils.IntIntMap.Entry = {
-      if (!hasNext) {
+      if (!hasNext$field) {
         throw new java.util.NoSuchElementException()
       } else ()
       if (!valid) {
@@ -539,7 +539,7 @@ object IntIntMap {
       if (!valid) {
         throw new com.badlogic.gdx.utils.GdxRuntimeException("#iterator() cannot be used nested.")
       } else ()
-      return hasNext
+      return hasNext$field
     }
     def iterator(): scala.collection.Iterator[com.badlogic.gdx.utils.IntIntMap.Entry] = {
       return this
@@ -556,10 +556,10 @@ object IntIntMap {
       if (!valid) {
         throw new com.badlogic.gdx.utils.GdxRuntimeException("#iterator() cannot be used nested.")
       } else ()
-      return hasNext
+      return hasNext$field
     }
     def next(): scala.Int = {
-      if (!hasNext) {
+      if (!hasNext$field) {
         throw new java.util.NoSuchElementException()
       } else ()
       if (!valid) {
@@ -575,13 +575,13 @@ object IntIntMap {
     }
     def toArray(): com.badlogic.gdx.utils.IntArray = {
       val array: com.badlogic.gdx.utils.IntArray = new com.badlogic.gdx.utils.IntArray(true, this.map.size)
-      while (hasNext) {
+      while (hasNext$field) {
         array.add(this.next())
       }
       return array
     }
     def toArray(array: com.badlogic.gdx.utils.IntArray): com.badlogic.gdx.utils.IntArray = {
-      while (hasNext) {
+      while (hasNext$field) {
         array.add(this.next())
       }
       return array
@@ -595,7 +595,7 @@ object IntIntMap {
       this()
     }
     def next(): scala.Int = {
-      if (!hasNext) {
+      if (!hasNext$field) {
         throw new java.util.NoSuchElementException()
       } else ()
       if (!valid) {
@@ -608,13 +608,13 @@ object IntIntMap {
     }
     def toArray(): com.badlogic.gdx.utils.IntArray = {
       val array: com.badlogic.gdx.utils.IntArray = new com.badlogic.gdx.utils.IntArray(true, this.map.size)
-      while (hasNext) {
+      while (hasNext$field) {
         array.add(this.next())
       }
       return array
     }
     def toArray(array: com.badlogic.gdx.utils.IntArray): com.badlogic.gdx.utils.IntArray = {
-      while (hasNext) {
+      while (hasNext$field) {
         array.add(this.next())
       }
       return array

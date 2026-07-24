@@ -579,11 +579,25 @@ object TirEmitter:
   def resolveMemberClashes(p: Program): Program =
     val renames = collection.mutable.Map[SymId, String]()
     def nm(id: SymId): String = p.symbolOf(id).map(_.name).getOrElse("")
+    def headSym(t: TypeRepr): Option[SymId] = t match
+      case TypeRepr.TypeRef(_, s) => Some(s); case TypeRepr.AppliedType(tc, _) => headSym(tc); case _ => None
+    // per-class method names, and the parent edges — a Java field can coexist with a same-named
+    // METHOD in a SUBCLASS (`hasNext` field + `hasNext()` from Iterator), which Scala forbids.
+    val methodsOf = collection.mutable.Map[SymId, Set[String]]()
+    val childrenOf = collection.mutable.Map[SymId, List[SymId]]().withDefaultValue(Nil)
+    def index(cd: Tree.ClassDef): Unit =
+      methodsOf(cd.symbol) = cd.body.collect { case d: Tree.DefDef => nm(d.symbol) }.toSet
+      cd.parents.foreach { case tt: TypeTree => headSym(tt.tpe).foreach(pp => childrenOf(pp) = cd.symbol :: childrenOf(pp)); case _ => () }
+      cd.body.foreach { case c: Tree.ClassDef => index(c); case _ => () }
+    p.units.foreach(index)
+    def selfOrDescMethods(c: SymId, seen: Set[SymId] = Set.empty): Set[String] =
+      if seen(c) then Set.empty
+      else methodsOf.getOrElse(c, Set.empty) ++ childrenOf(c).flatMap(ch => selfOrDescMethods(ch, seen + c))
     def scan(cd: Tree.ClassDef): Unit =
-      val methodNames = cd.body.collect { case d: Tree.DefDef => nm(d.symbol) }.toSet
+      val clashNames = selfOrDescMethods(cd.symbol)
       cd.body.foreach {
-        case v: Tree.ValDef if methodNames(nm(v.symbol)) => renames(v.symbol) = nm(v.symbol) + "$field"
-        case c: Tree.ClassDef                            => scan(c)
+        case v: Tree.ValDef if clashNames(nm(v.symbol)) => renames(v.symbol) = nm(v.symbol) + "$field"
+        case c: Tree.ClassDef                           => scan(c)
         case _                                           => ()
       }
       cd.enumCases.foreach(_.body.foreach { case c: Tree.ClassDef => scan(c); case _ => () })

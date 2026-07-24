@@ -404,7 +404,7 @@ object ObjectFloatMap {
     }
   }
   private class MapIterator[K] {
-    var hasNext: scala.Boolean = false
+    var hasNext$field: scala.Boolean = false
     var map: ObjectFloatMap[K] = null.asInstanceOf[ObjectFloatMap[K]]
     var nextIndex: scala.Int = 0
     var currentIndex: scala.Int = 0
@@ -423,11 +423,11 @@ object ObjectFloatMap {
       val keyTable: scala.Array[K] = this.map.keyTable;
       { val n: scala.Int = keyTable.length; while ({ this.nextIndex += 1; this.nextIndex } < n) { {
         if (keyTable(this.nextIndex) != null) {
-          this.hasNext = true
+          this.hasNext$field = true
           return
         } else ()
       };  } }
-      this.hasNext = false
+      this.hasNext$field = false
     }
     def remove(): scala.Unit = {
       var i: scala.Int = this.currentIndex
@@ -465,7 +465,7 @@ object ObjectFloatMap {
       this()
     }
     def next(): com.badlogic.gdx.utils.ObjectFloatMap.Entry[K] = {
-      if (!hasNext) {
+      if (!hasNext$field) {
         throw new java.util.NoSuchElementException()
       } else ()
       if (!valid) {
@@ -482,7 +482,7 @@ object ObjectFloatMap {
       if (!valid) {
         throw new com.badlogic.gdx.utils.GdxRuntimeException("#iterator() cannot be used nested.")
       } else ()
-      return hasNext
+      return hasNext$field
     }
     def iterator(): com.badlogic.gdx.utils.ObjectFloatMap.Entries[K] = {
       return this
@@ -496,10 +496,10 @@ object ObjectFloatMap {
       if (!valid) {
         throw new com.badlogic.gdx.utils.GdxRuntimeException("#iterator() cannot be used nested.")
       } else ()
-      return hasNext
+      return hasNext$field
     }
     def next(): scala.Float = {
-      if (!hasNext) {
+      if (!hasNext$field) {
         throw new java.util.NoSuchElementException()
       } else ()
       if (!valid) {
@@ -515,13 +515,13 @@ object ObjectFloatMap {
     }
     def toArray(): com.badlogic.gdx.utils.FloatArray = {
       val array: com.badlogic.gdx.utils.FloatArray = new com.badlogic.gdx.utils.FloatArray(true, this.map.size)
-      while (hasNext) {
+      while (hasNext$field) {
         array.add(this.next())
       }
       return array
     }
     def toArray(array: com.badlogic.gdx.utils.FloatArray): com.badlogic.gdx.utils.FloatArray = {
-      while (hasNext) {
+      while (hasNext$field) {
         array.add(this.next())
       }
       return array
@@ -535,10 +535,10 @@ object ObjectFloatMap {
       if (!valid) {
         throw new com.badlogic.gdx.utils.GdxRuntimeException("#iterator() cannot be used nested.")
       } else ()
-      return hasNext
+      return hasNext$field
     }
     def next(): K = {
-      if (!hasNext) {
+      if (!hasNext$field) {
         throw new java.util.NoSuchElementException()
       } else ()
       if (!valid) {
@@ -556,7 +556,7 @@ object ObjectFloatMap {
       return this.toArray(new com.badlogic.gdx.utils.Array[K](true, this.map.size))
     }
     def toArray(array: com.badlogic.gdx.utils.Array[K]): com.badlogic.gdx.utils.Array[K] = {
-      while (hasNext) {
+      while (hasNext$field) {
         array.add(this.next())
       }
       return array

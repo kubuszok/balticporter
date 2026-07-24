@@ -173,10 +173,10 @@ object OrderedMap {
     def reset(): scala.Unit = {
       currentIndex = -1
       nextIndex = 0
-      hasNext = this.map.size > 0
+      hasNext$field = this.map.size > 0
     }
     def next(): com.badlogic.gdx.utils.ObjectMap.Entry[?, ?] = {
-      if (!hasNext) {
+      if (!hasNext$field) {
         throw new java.util.NoSuchElementException()
       } else ()
       if (!valid) {
@@ -186,7 +186,7 @@ object OrderedMap {
       this.entry.key = this.keys.get(nextIndex).asInstanceOf[K]
       this.entry.value = map.get(this.entry.key).asInstanceOf[V]
       nextIndex = nextIndex + 1
-      hasNext = nextIndex < this.map.size
+      hasNext$field = nextIndex < this.map.size
       return entry
     }
     def remove(): scala.Unit = {
@@ -207,10 +207,10 @@ object OrderedMap {
     def reset(): scala.Unit = {
       currentIndex = -1
       nextIndex = 0
-      hasNext = this.map.size > 0
+      hasNext$field = this.map.size > 0
     }
     def next(): K = {
-      if (!hasNext) {
+      if (!hasNext$field) {
         throw new java.util.NoSuchElementException()
       } else ()
       if (!valid) {
@@ -219,7 +219,7 @@ object OrderedMap {
       val key: K = this.keys.get(nextIndex).asInstanceOf[K]
       currentIndex = nextIndex
       nextIndex = nextIndex + 1
-      hasNext = nextIndex < this.map.size
+      hasNext$field = nextIndex < this.map.size
       return key
     }
     def remove(): scala.Unit = {
@@ -233,7 +233,7 @@ object OrderedMap {
     def toArray(array: com.badlogic.gdx.utils.Array[K]): com.badlogic.gdx.utils.Array[K] = {
       array.addAll(this.keys, nextIndex, this.keys.size - nextIndex)
       nextIndex = this.keys.size
-      hasNext = false
+      hasNext$field = false
       return array
     }
     def toArray(): com.badlogic.gdx.utils.Array[K] = {
@@ -249,10 +249,10 @@ object OrderedMap {
     def reset(): scala.Unit = {
       currentIndex = -1
       nextIndex = 0
-      hasNext = this.map.size > 0
+      hasNext$field = this.map.size > 0
     }
     def next(): V = {
-      if (!hasNext) {
+      if (!hasNext$field) {
         throw new java.util.NoSuchElementException()
       } else ()
       if (!valid) {
@@ -261,7 +261,7 @@ object OrderedMap {
       val value: V = map.get(this.keys.get(nextIndex)).asInstanceOf[V]
       currentIndex = nextIndex
       nextIndex = nextIndex + 1
-      hasNext = nextIndex < this.map.size
+      hasNext$field = nextIndex < this.map.size
       return value
     }
     def remove(): scala.Unit = {
@@ -281,7 +281,7 @@ object OrderedMap {
       }; i = i + 1 } }
       currentIndex = n - 1
       nextIndex = n
-      hasNext = false
+      hasNext$field = false
       return array
     }
     def toArray(): com.badlogic.gdx.utils.Array[V] = {
