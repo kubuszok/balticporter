@@ -1514,10 +1514,7 @@ object ParticleEmitter {
   class GradientColorValue extends com.badlogic.gdx.graphics.g2d.ParticleEmitter.ParticleValue {
     private var colors: scala.Array[scala.Float] = Array[scala.Float](1, 1, 1)
     var timeline: scala.Array[scala.Float] = Array[scala.Float](0)
-    def this() = {
-      this()
-      alwaysActive = true
-    }
+    alwaysActive = true
     def getTimeline(): scala.Array[scala.Float] = {
       return this.timeline
     }

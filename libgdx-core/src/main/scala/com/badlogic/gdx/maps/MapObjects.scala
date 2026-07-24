@@ -2,10 +2,7 @@ package com.badlogic.gdx.maps
 
 class MapObjects extends scala.collection.Iterable[com.badlogic.gdx.maps.MapObject] {
   private var objects: com.badlogic.gdx.utils.Array[com.badlogic.gdx.maps.MapObject] = null.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.maps.MapObject]]
-  def this() = {
-    this()
-    this.objects = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.maps.MapObject]()
-  }
+  this.objects = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.maps.MapObject]()
   def get(index: scala.Int): com.badlogic.gdx.maps.MapObject = {
     return this.objects.get(index)
   }

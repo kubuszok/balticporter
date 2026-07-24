@@ -17,13 +17,10 @@ class Decoder {
   var m_LiteralDecoder: LiteralDecoder = new LiteralDecoder()
   var m_DictionarySize: scala.Int = -1
   var m_DictionarySizeCheck: scala.Int = -1
-  var m_PosStateMask: scala.Int = 0
-  def this() = {
-    this()
-    { var i: scala.Int = 0; while (i < com.badlogic.gdx.utils.compression.lzma.Base.kNumLenToPosStates) { {
-      this.m_PosSlotDecoder(i) = new com.badlogic.gdx.utils.compression.rangecoder.BitTreeDecoder(com.badlogic.gdx.utils.compression.lzma.Base.kNumPosSlotBits)
-    }; i = i + 1 } }
-  }
+  var m_PosStateMask: scala.Int = 0;
+  { var i: scala.Int = 0; while (i < com.badlogic.gdx.utils.compression.lzma.Base.kNumLenToPosStates) { {
+    this.m_PosSlotDecoder(i) = new com.badlogic.gdx.utils.compression.rangecoder.BitTreeDecoder(com.badlogic.gdx.utils.compression.lzma.Base.kNumPosSlotBits)
+  }; i = i + 1 } }
   def SetDictionarySize(dictionarySize: scala.Int): scala.Boolean = {
     if (dictionarySize < 0) {
       return false

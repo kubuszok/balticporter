@@ -3,10 +3,7 @@ package com.badlogic.gdx.utils
 class Timer {
   final val tasks: com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.Timer.Task] = new com.badlogic.gdx.utils.Array(false, 8)
   var stopTimeMillis: scala.Long = 0L
-  def this() = {
-    this()
-    this.start()
-  }
+  this.start()
   def postTask(task: com.badlogic.gdx.utils.Timer.Task): com.badlogic.gdx.utils.Timer.Task = {
     return this.scheduleTask(task, 0, 0, 0)
   }
@@ -155,13 +152,10 @@ object Timer {
     var intervalMillis: scala.Long = 0L
     var repeatCount: scala.Int = 0
     var timer: Timer = null.asInstanceOf[Timer]
-    def this() = {
-      this()
-      this.app = com.badlogic.gdx.Gdx.app
-      if (this.app == null) {
-        throw new java.lang.IllegalStateException("Gdx.app not available.")
-      } else ()
-    }
+    this.app = com.badlogic.gdx.Gdx.app
+    if (this.app == null) {
+      throw new java.lang.IllegalStateException("Gdx.app not available.")
+    } else ()
     def run(): scala.Unit
     def cancel(): scala.Unit = {
       Timer.threadLock.synchronized {
@@ -197,16 +191,13 @@ object Timer {
     final val postedTasks: com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.Timer.Task] = new com.badlogic.gdx.utils.Array(2)
     final val runTasks: com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.Timer.Task] = new com.badlogic.gdx.utils.Array(2)
     final val runPostedTasks$field: java.lang.Runnable = new java.lang.Runnable()
-    def this() = {
-      this()
-      this.files = com.badlogic.gdx.Gdx.files
-      this.app = com.badlogic.gdx.Gdx.app
-      this.app.addLifecycleListener(this)
-      this.resume()
-      val thread: java.lang.Thread = new java.lang.Thread(this, "Timer")
-      thread.setDaemon(true)
-      thread.start()
-    }
+    val thread: java.lang.Thread = new java.lang.Thread(this, "Timer")
+    this.files = com.badlogic.gdx.Gdx.files
+    this.app = com.badlogic.gdx.Gdx.app
+    this.app.addLifecycleListener(this)
+    this.resume()
+    thread.setDaemon(true)
+    thread.start()
     def run(): scala.Unit = {
       while (true) {
         Timer.threadLock.synchronized {

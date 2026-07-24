@@ -264,7 +264,7 @@ object SpoonTir:
       val pvs = ps.map { p =>
         val pt  = tpe(p.getType)
         val pid = minter.define(minterKeyOf(id) + "%" + p.getSimpleName)(sid =>
-          Symbol(sid, p.getSimpleName, qualified(id, p.getSimpleName), Flags(isParam = true), id, pt)
+          Symbol(sid, p.getSimpleName, qualified(id, p.getSimpleName), Flags(isParam = true, isVararg = p.isVarArgs), id, pt)
         )
         bt.registerVar(p, pid)
         Tree.ValDef(pid, tt(pt, p), rhs = None, origin = originOf(p))

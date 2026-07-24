@@ -75,17 +75,14 @@ abstract class ModelLoader[P <: com.badlogic.gdx.assets.loaders.ModelLoader.Mode
 object ModelLoader {
   class ModelParameters extends com.badlogic.gdx.assets.AssetLoaderParameters[com.badlogic.gdx.graphics.g3d.Model] {
     var textureParameter: com.badlogic.gdx.assets.loaders.TextureLoader.TextureParameter = null.asInstanceOf[com.badlogic.gdx.assets.loaders.TextureLoader.TextureParameter]
-    def this() = {
-      this()
-      this.textureParameter = new com.badlogic.gdx.assets.loaders.TextureLoader.TextureParameter()
-      this.textureParameter.minFilter = {
-        this.textureParameter.magFilter = com.badlogic.gdx.graphics.Texture.TextureFilter.Linear
-        this.textureParameter.magFilter
-      }
-      this.textureParameter.wrapU = {
-        this.textureParameter.wrapV = com.badlogic.gdx.graphics.Texture.TextureWrap.Repeat
-        this.textureParameter.wrapV
-      }
+    this.textureParameter = new com.badlogic.gdx.assets.loaders.TextureLoader.TextureParameter()
+    this.textureParameter.minFilter = {
+      this.textureParameter.magFilter = com.badlogic.gdx.graphics.Texture.TextureFilter.Linear
+      this.textureParameter.magFilter
+    }
+    this.textureParameter.wrapU = {
+      this.textureParameter.wrapV = com.badlogic.gdx.graphics.Texture.TextureWrap.Repeat
+      this.textureParameter.wrapV
     }
   }
 }

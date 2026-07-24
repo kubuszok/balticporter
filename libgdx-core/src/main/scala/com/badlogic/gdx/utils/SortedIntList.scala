@@ -76,10 +76,7 @@ class SortedIntList[E] extends scala.collection.Iterable[com.badlogic.gdx.utils.
   class Iterator extends scala.collection.Iterator[com.badlogic.gdx.utils.SortedIntList.Node[E]] {
     private var position: com.badlogic.gdx.utils.SortedIntList.Node[E] = null.asInstanceOf[com.badlogic.gdx.utils.SortedIntList.Node[E]]
     private var previousPosition: com.badlogic.gdx.utils.SortedIntList.Node[E] = null.asInstanceOf[com.badlogic.gdx.utils.SortedIntList.Node[E]]
-    def this() = {
-      this()
-      this.reset()
-    }
+    this.reset()
     def hasNext(): scala.Boolean = {
       return this.position != null
     }

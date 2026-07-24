@@ -37,14 +37,11 @@ class Cell[T <: com.badlogic.gdx.scenes.scene2d.Actor] extends com.badlogic.gdx.
   var computedPadLeft: scala.Float = 0.0f
   var computedPadBottom: scala.Float = 0.0f
   var computedPadRight: scala.Float = 0.0f
-  def this() = {
-    this()
-    this.cellAboveIndex = -1
-    val defaults: Cell[?] = Cell.defaults()
-    if (defaults != null) {
-      this.set(defaults)
-    } else ()
-  }
+  val defaults: Cell[?] = Cell.defaults()
+  this.cellAboveIndex = -1
+  if (defaults != null) {
+    this.set(defaults)
+  } else ()
   def setTable(table: com.badlogic.gdx.scenes.scene2d.ui.Table): scala.Unit = {
     this.table = table
   }

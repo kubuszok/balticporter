@@ -29,7 +29,7 @@ class ImmediateModeRenderer20 extends com.badlogic.gdx.graphics.glutils.Immediat
     this.normalOffset = if (this.mesh.getVertexAttribute(com.badlogic.gdx.graphics.VertexAttributes.Usage.Normal) != null) this.mesh.getVertexAttribute(com.badlogic.gdx.graphics.VertexAttributes.Usage.Normal).offset / 4 else 0
     this.colorOffset = if (this.mesh.getVertexAttribute(com.badlogic.gdx.graphics.VertexAttributes.Usage.ColorPacked) != null) this.mesh.getVertexAttribute(com.badlogic.gdx.graphics.VertexAttributes.Usage.ColorPacked).offset / 4 else 0
     this.texCoordOffset = if (this.mesh.getVertexAttribute(com.badlogic.gdx.graphics.VertexAttributes.Usage.TextureCoordinates) != null) this.mesh.getVertexAttribute(com.badlogic.gdx.graphics.VertexAttributes.Usage.TextureCoordinates).offset / 4 else 0
-    this.shaderUniformNames = new Array[java.lang.String](numTexCoords)
+    this.shaderUniformNames = new Array[java.lang.String](numTexCoords);
     { var i: scala.Int = 0; while (i < numTexCoords) { {
       this.shaderUniformNames(i) = "u_sampler" + i
     }; i = i + 1 } }

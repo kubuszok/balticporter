@@ -12,7 +12,7 @@ class AnimatedTiledMapTile extends com.badlogic.gdx.maps.tiled.TiledMapTile {
     this()
     this.frameTiles = new Array[com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile](frameTiles.size)
     this.loopDuration = frameTiles.size * (interval * 1000.0f).asInstanceOf[scala.Int]
-    this.animationIntervals = new Array[scala.Int](frameTiles.size)
+    this.animationIntervals = new Array[scala.Int](frameTiles.size);
     { var i: scala.Int = 0; while (i < frameTiles.size) { {
       this.frameTiles(i) = frameTiles.get(i)
       this.animationIntervals(i) = (interval * 1000.0f).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
@@ -22,7 +22,7 @@ class AnimatedTiledMapTile extends com.badlogic.gdx.maps.tiled.TiledMapTile {
     this()
     this.frameTiles = new Array[com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile](frameTiles.size)
     this.animationIntervals = intervals.toArray()
-    this.loopDuration = 0
+    this.loopDuration = 0;
     { var i: scala.Int = 0; while (i < intervals.size) { {
       this.frameTiles(i) = frameTiles.get(i)
       this.loopDuration = this.loopDuration + intervals.get(i)

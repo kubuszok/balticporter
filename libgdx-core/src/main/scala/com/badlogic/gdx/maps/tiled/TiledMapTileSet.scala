@@ -4,11 +4,8 @@ class TiledMapTileSet extends scala.collection.Iterable[com.badlogic.gdx.maps.ti
   private var name: java.lang.String = null.asInstanceOf[java.lang.String]
   private var tiles: com.badlogic.gdx.utils.IntMap[com.badlogic.gdx.maps.tiled.TiledMapTile] = null.asInstanceOf[com.badlogic.gdx.utils.IntMap[com.badlogic.gdx.maps.tiled.TiledMapTile]]
   private var properties: com.badlogic.gdx.maps.MapProperties = null.asInstanceOf[com.badlogic.gdx.maps.MapProperties]
-  def this() = {
-    this()
-    this.tiles = new com.badlogic.gdx.utils.IntMap[com.badlogic.gdx.maps.tiled.TiledMapTile]()
-    this.properties = new com.badlogic.gdx.maps.MapProperties()
-  }
+  this.tiles = new com.badlogic.gdx.utils.IntMap[com.badlogic.gdx.maps.tiled.TiledMapTile]()
+  this.properties = new com.badlogic.gdx.maps.MapProperties()
   def getName(): java.lang.String = {
     return this.name
   }

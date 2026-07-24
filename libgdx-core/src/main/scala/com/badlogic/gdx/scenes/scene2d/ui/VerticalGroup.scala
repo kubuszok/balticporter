@@ -19,11 +19,8 @@ class VerticalGroup extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup {
   var padLeft$field: scala.Float = 0.0f
   var padBottom$field: scala.Float = 0.0f
   var padRight$field: scala.Float = 0.0f
-  def this() = {
-    this()
-    this.setTransform(false)
-    this.setTouchable(com.badlogic.gdx.scenes.scene2d.Touchable.childrenOnly)
-  }
+  this.setTransform(false)
+  this.setTouchable(com.badlogic.gdx.scenes.scene2d.Touchable.childrenOnly)
   def invalidate(): scala.Unit = {
     super.invalidate()
     this.sizeInvalid = true

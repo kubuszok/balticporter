@@ -165,21 +165,21 @@ object Base64Coder {
     final val decodingMap: scala.Array[scala.Byte] = new Array[scala.Byte](128)
     def this(char63: scala.Char, char64: scala.Char) = {
       this()
-      var i: scala.Int = 0
+      var i: scala.Int = 0;
       { var c: scala.Char = 'A'; while (c <= 'Z') { {
         this.encodingMap({ i += 1; i }) = c
-      }; c = c + 1 } }
+      }; c = c + 1 } };
       { var c: scala.Char = 'a'; while (c <= 'z') { {
         this.encodingMap({ i += 1; i }) = c
-      }; c = c + 1 } }
+      }; c = c + 1 } };
       { var c: scala.Char = '0'; while (c <= '9') { {
         this.encodingMap({ i += 1; i }) = c
       }; c = c + 1 } }
       this.encodingMap({ i += 1; i }) = char63
-      this.encodingMap({ i += 1; i }) = char64
+      this.encodingMap({ i += 1; i }) = char64;
       { i = 0; while (i < this.decodingMap.length) { {
         this.decodingMap(i) = (-1).asInstanceOf[scala.Byte]
-      }; i = i + 1 } }
+      }; i = i + 1 } };
       { i = 0; while (i < 64) { {
         this.decodingMap(this.encodingMap(i)) = i.asInstanceOf[scala.Byte].asInstanceOf[scala.Byte]
       }; i = i + 1 } }

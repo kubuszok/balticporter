@@ -2,10 +2,7 @@ package com.badlogic.gdx.graphics.g3d.particles
 
 class ParticleChannels {
   private var currentId: scala.Int = 0
-  def this() = {
-    this()
-    this.resetIds()
-  }
+  this.resetIds()
   def newId(): scala.Int = {
     return { this.currentId += 1; this.currentId }
   }

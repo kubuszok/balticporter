@@ -3,13 +3,10 @@ package com.badlogic.gdx.math
 class Frustum {
   final val planes: scala.Array[com.badlogic.gdx.math.Plane] = new Array[com.badlogic.gdx.math.Plane](6)
   final val planePoints: scala.Array[com.badlogic.gdx.math.Vector3] = Array[com.badlogic.gdx.math.Vector3](new com.badlogic.gdx.math.Vector3(), new com.badlogic.gdx.math.Vector3(), new com.badlogic.gdx.math.Vector3(), new com.badlogic.gdx.math.Vector3(), new com.badlogic.gdx.math.Vector3(), new com.badlogic.gdx.math.Vector3(), new com.badlogic.gdx.math.Vector3(), new com.badlogic.gdx.math.Vector3())
-  final val planePointsArray: scala.Array[scala.Float] = new Array[scala.Float](8 * 3)
-  def this() = {
-    this()
-    { var i: scala.Int = 0; while (i < 6) { {
-      this.planes(i) = new com.badlogic.gdx.math.Plane(new com.badlogic.gdx.math.Vector3(), 0)
-    }; i = i + 1 } }
-  }
+  final val planePointsArray: scala.Array[scala.Float] = new Array[scala.Float](8 * 3);
+  { var i: scala.Int = 0; while (i < 6) { {
+    this.planes(i) = new com.badlogic.gdx.math.Plane(new com.badlogic.gdx.math.Vector3(), 0)
+  }; i = i + 1 } }
   def update(inverseProjectionView: com.badlogic.gdx.math.Matrix4): scala.Unit = {
     java.lang.System.arraycopy(Frustum.clipSpacePlanePointsArray, 0, this.planePointsArray, 0, Frustum.clipSpacePlanePointsArray.length)
     com.badlogic.gdx.math.Matrix4.prj(inverseProjectionView.`val`, this.planePointsArray, 0, 8, 3);

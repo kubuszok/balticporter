@@ -2,10 +2,7 @@ package com.badlogic.gdx.maps
 
 class MapProperties {
   private var properties: com.badlogic.gdx.utils.ObjectMap[java.lang.String, java.lang.Object] = null.asInstanceOf[com.badlogic.gdx.utils.ObjectMap[java.lang.String, java.lang.Object]]
-  def this() = {
-    this()
-    this.properties = new com.badlogic.gdx.utils.ObjectMap[java.lang.String, java.lang.Object]()
-  }
+  this.properties = new com.badlogic.gdx.utils.ObjectMap[java.lang.String, java.lang.Object]()
   def containsKey(key: java.lang.String): scala.Boolean = {
     return this.properties.containsKey(key)
   }

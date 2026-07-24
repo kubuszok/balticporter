@@ -19,7 +19,7 @@ abstract class RegionInfluencer extends com.badlogic.gdx.graphics.g3d.particles.
   }
   def this(regionInfluencer: RegionInfluencer) = {
     this(regionInfluencer.regions.size)
-    this.regions.ensureCapacity(regionInfluencer.regions.size)
+    this.regions.ensureCapacity(regionInfluencer.regions.size);
     { var i: scala.Int = 0; while (i < regionInfluencer.regions.size) { {
       this.regions.add(new com.badlogic.gdx.graphics.g3d.particles.influencers.RegionInfluencer.AspectTextureRegion(regionInfluencer.regions.get(i).asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.influencers.RegionInfluencer.AspectTextureRegion]))
     }; i = i + 1 } }

@@ -12,7 +12,7 @@ final class VertexAttributes extends scala.collection.Iterable[com.badlogic.gdx.
     if (attributes.length == 0) {
       throw new java.lang.IllegalArgumentException("attributes must be >= 1")
     } else ()
-    val list: scala.Array[com.badlogic.gdx.graphics.VertexAttribute] = new Array[com.badlogic.gdx.graphics.VertexAttribute](attributes.length)
+    val list: scala.Array[com.badlogic.gdx.graphics.VertexAttribute] = new Array[com.badlogic.gdx.graphics.VertexAttribute](attributes.length);
     { var i: scala.Int = 0; while (i < attributes.length) { {
       list(i) = attributes(i)
     }; i = i + 1 } }

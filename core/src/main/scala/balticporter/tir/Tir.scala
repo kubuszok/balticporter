@@ -51,6 +51,7 @@ final case class Flags(
     isMutable: Boolean = false, // `var`
     isLazy: Boolean = false,
     isParam: Boolean = false,
+    isVararg: Boolean = false, // Java `T...` → Scala `T*`
     isParamAccessor: Boolean = false,
     isPrivate: Boolean = false,
     isProtected: Boolean = false,

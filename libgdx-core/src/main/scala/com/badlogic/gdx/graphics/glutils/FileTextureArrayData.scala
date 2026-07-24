@@ -11,7 +11,7 @@ class FileTextureArrayData extends com.badlogic.gdx.graphics.TextureArrayData {
     this.format = format
     this.useMipMaps = useMipMaps
     this.depth = files.length
-    this.textureDatas = new Array[com.badlogic.gdx.graphics.TextureData](files.length)
+    this.textureDatas = new Array[com.badlogic.gdx.graphics.TextureData](files.length);
     { var i: scala.Int = 0; while (i < files.length) { {
       this.textureDatas(i) = com.badlogic.gdx.graphics.TextureData.Factory.loadFromFile(files(i), format, useMipMaps)
     }; i = i + 1 } }

@@ -2,10 +2,7 @@ package com.badlogic.gdx.maps.tiled
 
 class TiledMapTileSets extends scala.collection.Iterable[com.badlogic.gdx.maps.tiled.TiledMapTileSet] {
   private var tilesets: com.badlogic.gdx.utils.Array[com.badlogic.gdx.maps.tiled.TiledMapTileSet] = null.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.maps.tiled.TiledMapTileSet]]
-  def this() = {
-    this()
-    this.tilesets = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.maps.tiled.TiledMapTileSet]()
-  }
+  this.tilesets = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.maps.tiled.TiledMapTileSet]()
   def getTileSet(index: scala.Int): com.badlogic.gdx.maps.tiled.TiledMapTileSet = {
     return this.tilesets.get(index)
   }

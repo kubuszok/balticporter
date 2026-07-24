@@ -4,7 +4,7 @@ import balticporter.core.FrontendConfig
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.{Pipeline, Program}
-import balticporter.transform.{CollectionsTransform, MutableParamsTransform}
+import balticporter.transform.{CollectionsTransform, MutableParamsTransform, PanamaFfiTransform}
 
 import java.nio.file.{Files, Path}
 import scala.jdk.CollectionConverters.*
@@ -33,7 +33,8 @@ object LibgdxCoreMigrate:
     println(s"[libgdx-core] building model over ${files.size} files…")
     val types   = SpoonTir.buildModel(FrontendConfig(base, files, Nil, Nil), lenient = true)
     val raw0    = SpoonTir.fromTypes(types)
-    val program = if raw then raw0 else Pipeline.run(raw0, List(new CollectionsTransform, new MutableParamsTransform))
+    val program = if raw then raw0
+                  else Pipeline.run(raw0, List(new CollectionsTransform, new MutableParamsTransform, new PanamaFfiTransform()))
     println(s"[libgdx-core] TIR: ${program.units.size} units, ${program.symbols.all.size} symbols")
 
     val outDir = repoRoot.resolve("libgdx-core/src/main/scala")

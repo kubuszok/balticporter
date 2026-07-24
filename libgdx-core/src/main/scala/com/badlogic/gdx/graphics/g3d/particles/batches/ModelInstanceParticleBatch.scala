@@ -3,10 +3,7 @@ package com.badlogic.gdx.graphics.g3d.particles.batches
 class ModelInstanceParticleBatch extends com.badlogic.gdx.graphics.g3d.particles.batches.ParticleBatch[com.badlogic.gdx.graphics.g3d.particles.renderers.ModelInstanceControllerRenderData] {
   var controllersRenderData: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.renderers.ModelInstanceControllerRenderData] = null.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.renderers.ModelInstanceControllerRenderData]]
   var bufferedParticlesCount: scala.Int = 0
-  def this() = {
-    this()
-    this.controllersRenderData = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.renderers.ModelInstanceControllerRenderData](false, 5)
-  }
+  this.controllersRenderData = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.renderers.ModelInstanceControllerRenderData](false, 5)
   def getRenderables(renderables: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.Renderable], pool: com.badlogic.gdx.utils.Pool[com.badlogic.gdx.graphics.g3d.Renderable]): scala.Unit = {
     for (data <- this.controllersRenderData) {
       { var i: scala.Int = 0; val count: scala.Int = data.controller.particles.size; while (i < count) { {

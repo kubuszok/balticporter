@@ -5,7 +5,7 @@ class ParticleEffect extends com.badlogic.gdx.utils.Disposable with com.badlogic
   private var bounds: com.badlogic.gdx.math.collision.BoundingBox = null.asInstanceOf[com.badlogic.gdx.math.collision.BoundingBox]
   def this(effect: ParticleEffect) = {
     this()
-    this.controllers = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.ParticleController](true, effect.controllers.size)
+    this.controllers = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.ParticleController](true, effect.controllers.size);
     { var i: scala.Int = 0; val n: scala.Int = effect.controllers.size; while (i < n) { {
       this.controllers.add(effect.controllers.get(i).copy())
     }; i = i + 1 } }

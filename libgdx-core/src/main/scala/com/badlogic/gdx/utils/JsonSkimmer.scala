@@ -6,11 +6,8 @@ class JsonSkimmer {
   var stack: scala.Array[scala.Int] = new Array[scala.Int](8)
   final val buffer: com.badlogic.gdx.utils.CharArray = new com.badlogic.gdx.utils.CharArray()
   var stop$field: scala.Boolean = false
-  def this() = {
-    this()
-    this.nameString = new com.badlogic.gdx.utils.JsonSkimmer.JsonToken(this.buffer)
-    this.value$field = new com.badlogic.gdx.utils.JsonSkimmer.JsonToken(this.buffer)
-  }
+  this.nameString = new com.badlogic.gdx.utils.JsonSkimmer.JsonToken(this.buffer)
+  this.value$field = new com.badlogic.gdx.utils.JsonSkimmer.JsonToken(this.buffer)
   def parse(json: java.lang.String): scala.Unit = {
     val data: scala.Array[scala.Char] = json.toCharArray()
     this.parse(data, 0, data.length)

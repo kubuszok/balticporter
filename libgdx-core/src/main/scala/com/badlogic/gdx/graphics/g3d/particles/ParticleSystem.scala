@@ -3,11 +3,8 @@ package com.badlogic.gdx.graphics.g3d.particles
 final class ParticleSystem extends com.badlogic.gdx.graphics.g3d.RenderableProvider {
   private var batches: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.batches.ParticleBatch[?]] = null.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.batches.ParticleBatch[?]]]
   private var effects: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.ParticleEffect] = null.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.ParticleEffect]]
-  def this() = {
-    this()
-    this.batches = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.batches.ParticleBatch[?]]()
-    this.effects = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.ParticleEffect]()
-  }
+  this.batches = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.batches.ParticleBatch[?]]()
+  this.effects = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.ParticleEffect]()
   def add(batch: com.badlogic.gdx.graphics.g3d.particles.batches.ParticleBatch[?]): scala.Unit = {
     this.batches.add(batch)
   }

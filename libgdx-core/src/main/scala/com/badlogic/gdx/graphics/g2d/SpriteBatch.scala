@@ -40,7 +40,7 @@ class SpriteBatch extends com.badlogic.gdx.graphics.g2d.Batch {
     this.vertices = new Array[scala.Float](size * com.badlogic.gdx.graphics.g2d.Sprite.SPRITE_SIZE)
     val len: scala.Int = size * 6
     val indices: scala.Array[scala.Short] = new Array[scala.Short](len)
-    var j: scala.Short = 0.asInstanceOf[scala.Short]
+    var j: scala.Short = 0.asInstanceOf[scala.Short];
     { var i: scala.Int = 0; while (i < len) { {
       indices(i) = j
       indices(i + 1) = (j + 1).asInstanceOf[scala.Short].asInstanceOf[scala.Short]

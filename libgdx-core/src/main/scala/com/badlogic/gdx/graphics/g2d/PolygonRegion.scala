@@ -19,7 +19,7 @@ class PolygonRegion {
     val uvWidth: scala.Float = region.u2 - u
     val uvHeight: scala.Float = region.v2 - v
     val width: scala.Int = region.regionWidth
-    val height: scala.Int = region.regionHeight
+    val height: scala.Int = region.regionHeight;
     { var i: scala.Int = 0; val n: scala.Int = vertices.length; while (i < n) { {
       textureCoords(i) = u + (uvWidth * (vertices(i) / width))
       textureCoords(i + 1) = v + (uvHeight * (1 - (vertices(i + 1) / height)))

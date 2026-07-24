@@ -53,16 +53,13 @@ class Encoder {
   var finished: scala.Array[scala.Boolean] = new Array[scala.Boolean](1)
   var properties: scala.Array[scala.Byte] = new Array[scala.Byte](Encoder.kPropSize)
   var tempPrices: scala.Array[scala.Int] = new Array[scala.Int](com.badlogic.gdx.utils.compression.lzma.Base.kNumFullDistances)
-  var _matchPriceCount: scala.Int = 0
-  def this() = {
-    this()
-    { var i: scala.Int = 0; while (i < Encoder.kNumOpts) { {
-      this._optimum(i) = new Optimal()
-    }; i = i + 1 } }
-    { var i: scala.Int = 0; while (i < com.badlogic.gdx.utils.compression.lzma.Base.kNumLenToPosStates) { {
-      this._posSlotEncoder(i) = new com.badlogic.gdx.utils.compression.rangecoder.BitTreeEncoder(com.badlogic.gdx.utils.compression.lzma.Base.kNumPosSlotBits)
-    }; i = i + 1 } }
-  }
+  var _matchPriceCount: scala.Int = 0;
+  { var i: scala.Int = 0; while (i < Encoder.kNumOpts) { {
+    this._optimum(i) = new Optimal()
+  }; i = i + 1 } };
+  { var i: scala.Int = 0; while (i < com.badlogic.gdx.utils.compression.lzma.Base.kNumLenToPosStates) { {
+    this._posSlotEncoder(i) = new com.badlogic.gdx.utils.compression.rangecoder.BitTreeEncoder(com.badlogic.gdx.utils.compression.lzma.Base.kNumPosSlotBits)
+  }; i = i + 1 } }
   def BaseInit(): scala.Unit = {
     this._state = com.badlogic.gdx.utils.compression.lzma.Base.StateInit()
     this._previousByte = 0.asInstanceOf[scala.Byte];
@@ -968,14 +965,11 @@ class Encoder {
     var _choice: scala.Array[scala.Short] = new Array[scala.Short](2)
     var _lowCoder: scala.Array[com.badlogic.gdx.utils.compression.rangecoder.BitTreeEncoder] = new Array[com.badlogic.gdx.utils.compression.rangecoder.BitTreeEncoder](com.badlogic.gdx.utils.compression.lzma.Base.kNumPosStatesEncodingMax)
     var _midCoder: scala.Array[com.badlogic.gdx.utils.compression.rangecoder.BitTreeEncoder] = new Array[com.badlogic.gdx.utils.compression.rangecoder.BitTreeEncoder](com.badlogic.gdx.utils.compression.lzma.Base.kNumPosStatesEncodingMax)
-    var _highCoder: com.badlogic.gdx.utils.compression.rangecoder.BitTreeEncoder = new com.badlogic.gdx.utils.compression.rangecoder.BitTreeEncoder(com.badlogic.gdx.utils.compression.lzma.Base.kNumHighLenBits)
-    def this() = {
-      this()
-      { var posState: scala.Int = 0; while (posState < com.badlogic.gdx.utils.compression.lzma.Base.kNumPosStatesEncodingMax) { {
-        this._lowCoder(posState) = new com.badlogic.gdx.utils.compression.rangecoder.BitTreeEncoder(com.badlogic.gdx.utils.compression.lzma.Base.kNumLowLenBits)
-        this._midCoder(posState) = new com.badlogic.gdx.utils.compression.rangecoder.BitTreeEncoder(com.badlogic.gdx.utils.compression.lzma.Base.kNumMidLenBits)
-      }; posState = posState + 1 } }
-    }
+    var _highCoder: com.badlogic.gdx.utils.compression.rangecoder.BitTreeEncoder = new com.badlogic.gdx.utils.compression.rangecoder.BitTreeEncoder(com.badlogic.gdx.utils.compression.lzma.Base.kNumHighLenBits);
+    { var posState: scala.Int = 0; while (posState < com.badlogic.gdx.utils.compression.lzma.Base.kNumPosStatesEncodingMax) { {
+      this._lowCoder(posState) = new com.badlogic.gdx.utils.compression.rangecoder.BitTreeEncoder(com.badlogic.gdx.utils.compression.lzma.Base.kNumLowLenBits)
+      this._midCoder(posState) = new com.badlogic.gdx.utils.compression.rangecoder.BitTreeEncoder(com.badlogic.gdx.utils.compression.lzma.Base.kNumMidLenBits)
+    }; posState = posState + 1 } }
     def Init(numPosStates: scala.Int): scala.Unit = {
       com.badlogic.gdx.utils.compression.rangecoder.Encoder.InitBitModels(this._choice);
       { var posState: scala.Int = 0; while (posState < numPosStates) { {

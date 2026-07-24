@@ -126,10 +126,7 @@ object MtlLoader {
     var diffuseTexFilename: java.lang.String = null.asInstanceOf[java.lang.String]
     var shininessTexFilename: java.lang.String = null.asInstanceOf[java.lang.String]
     var specularTexFilename: java.lang.String = null.asInstanceOf[java.lang.String]
-    def this() = {
-      this()
-      this.reset()
-    }
+    this.reset()
     def build(): com.badlogic.gdx.graphics.g3d.model.data.ModelMaterial = {
       val mat: com.badlogic.gdx.graphics.g3d.model.data.ModelMaterial = new com.badlogic.gdx.graphics.g3d.model.data.ModelMaterial()
       mat.id = this.materialName

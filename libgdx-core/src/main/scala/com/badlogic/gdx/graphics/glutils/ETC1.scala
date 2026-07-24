@@ -3,6 +3,14 @@ package com.badlogic.gdx.graphics.glutils
 object ETC1 {
   var PKM_HEADER_SIZE: scala.Int = 16
   var ETC1_RGB8_OES: scala.Int = 36196
+  private val getCompressedDataSize$handle: java.lang.invoke.MethodHandle = java.lang.foreign.Linker.nativeLinker().downcallHandle(java.lang.foreign.Linker.nativeLinker().defaultLookup().find("getCompressedDataSize").orElseThrow(), java.lang.foreign.FunctionDescriptor.of(java.lang.foreign.ValueLayout.JAVA_INT, java.lang.foreign.ValueLayout.JAVA_INT, java.lang.foreign.ValueLayout.JAVA_INT))
+  private val formatHeader$handle: java.lang.invoke.MethodHandle = java.lang.foreign.Linker.nativeLinker().downcallHandle(java.lang.foreign.Linker.nativeLinker().defaultLookup().find("formatHeader").orElseThrow(), java.lang.foreign.FunctionDescriptor.ofVoid(java.lang.foreign.ValueLayout.ADDRESS, java.lang.foreign.ValueLayout.JAVA_INT, java.lang.foreign.ValueLayout.JAVA_INT, java.lang.foreign.ValueLayout.JAVA_INT))
+  private val getWidthPKM$handle: java.lang.invoke.MethodHandle = java.lang.foreign.Linker.nativeLinker().downcallHandle(java.lang.foreign.Linker.nativeLinker().defaultLookup().find("getWidthPKM").orElseThrow(), java.lang.foreign.FunctionDescriptor.of(java.lang.foreign.ValueLayout.JAVA_INT, java.lang.foreign.ValueLayout.ADDRESS, java.lang.foreign.ValueLayout.JAVA_INT))
+  private val getHeightPKM$handle: java.lang.invoke.MethodHandle = java.lang.foreign.Linker.nativeLinker().downcallHandle(java.lang.foreign.Linker.nativeLinker().defaultLookup().find("getHeightPKM").orElseThrow(), java.lang.foreign.FunctionDescriptor.of(java.lang.foreign.ValueLayout.JAVA_INT, java.lang.foreign.ValueLayout.ADDRESS, java.lang.foreign.ValueLayout.JAVA_INT))
+  private val isValidPKM$handle: java.lang.invoke.MethodHandle = java.lang.foreign.Linker.nativeLinker().downcallHandle(java.lang.foreign.Linker.nativeLinker().defaultLookup().find("isValidPKM").orElseThrow(), java.lang.foreign.FunctionDescriptor.of(java.lang.foreign.ValueLayout.JAVA_BOOLEAN, java.lang.foreign.ValueLayout.ADDRESS, java.lang.foreign.ValueLayout.JAVA_INT))
+  private val decodeImage$handle: java.lang.invoke.MethodHandle = java.lang.foreign.Linker.nativeLinker().downcallHandle(java.lang.foreign.Linker.nativeLinker().defaultLookup().find("decodeImage").orElseThrow(), java.lang.foreign.FunctionDescriptor.ofVoid(java.lang.foreign.ValueLayout.ADDRESS, java.lang.foreign.ValueLayout.JAVA_INT, java.lang.foreign.ValueLayout.ADDRESS, java.lang.foreign.ValueLayout.JAVA_INT, java.lang.foreign.ValueLayout.JAVA_INT, java.lang.foreign.ValueLayout.JAVA_INT, java.lang.foreign.ValueLayout.JAVA_INT))
+  private val encodeImage$handle: java.lang.invoke.MethodHandle = java.lang.foreign.Linker.nativeLinker().downcallHandle(java.lang.foreign.Linker.nativeLinker().defaultLookup().find("encodeImage").orElseThrow(), java.lang.foreign.FunctionDescriptor.of(java.lang.foreign.ValueLayout.ADDRESS, java.lang.foreign.ValueLayout.ADDRESS, java.lang.foreign.ValueLayout.JAVA_INT, java.lang.foreign.ValueLayout.JAVA_INT, java.lang.foreign.ValueLayout.JAVA_INT, java.lang.foreign.ValueLayout.JAVA_INT))
+  private val encodeImagePKM$handle: java.lang.invoke.MethodHandle = java.lang.foreign.Linker.nativeLinker().downcallHandle(java.lang.foreign.Linker.nativeLinker().defaultLookup().find("encodeImagePKM").orElseThrow(), java.lang.foreign.FunctionDescriptor.of(java.lang.foreign.ValueLayout.ADDRESS, java.lang.foreign.ValueLayout.ADDRESS, java.lang.foreign.ValueLayout.JAVA_INT, java.lang.foreign.ValueLayout.JAVA_INT, java.lang.foreign.ValueLayout.JAVA_INT, java.lang.foreign.ValueLayout.JAVA_INT))
   private def getPixelSize(format: com.badlogic.gdx.graphics.Pixmap.Format): scala.Int = {
     if (format == com.badlogic.gdx.graphics.Pixmap.Format.RGB565) {
       return 2
@@ -42,14 +50,14 @@ object ETC1 {
     ETC1.decodeImage(etc1Data.compressedData, dataOffset, pixmap.getPixels(), 0, width, height, pixelSize)
     return pixmap
   }
-  def getCompressedDataSize(width: scala.Int, height: scala.Int): scala.Int
-  def formatHeader(header: java.nio.ByteBuffer, offset: scala.Int, width: scala.Int, height: scala.Int): scala.Unit
-  def getWidthPKM(header: java.nio.ByteBuffer, offset: scala.Int): scala.Int
-  def getHeightPKM(header: java.nio.ByteBuffer, offset: scala.Int): scala.Int
-  def isValidPKM(header: java.nio.ByteBuffer, offset: scala.Int): scala.Boolean
-  private def decodeImage(compressedData: java.nio.ByteBuffer, offset: scala.Int, decodedData: java.nio.ByteBuffer, offsetDec: scala.Int, width: scala.Int, height: scala.Int, pixelSize: scala.Int): scala.Unit
-  private def encodeImage(imageData: java.nio.ByteBuffer, offset: scala.Int, width: scala.Int, height: scala.Int, pixelSize: scala.Int): java.nio.ByteBuffer
-  private def encodeImagePKM(imageData: java.nio.ByteBuffer, offset: scala.Int, width: scala.Int, height: scala.Int, pixelSize: scala.Int): java.nio.ByteBuffer
+  def getCompressedDataSize(width: scala.Int, height: scala.Int): scala.Int = getCompressedDataSize$handle.invokeExact(width, height).asInstanceOf[scala.Int]
+  def formatHeader(header: java.nio.ByteBuffer, offset: scala.Int, width: scala.Int, height: scala.Int): scala.Unit = { formatHeader$handle.invokeExact(header, offset, width, height); () }
+  def getWidthPKM(header: java.nio.ByteBuffer, offset: scala.Int): scala.Int = getWidthPKM$handle.invokeExact(header, offset).asInstanceOf[scala.Int]
+  def getHeightPKM(header: java.nio.ByteBuffer, offset: scala.Int): scala.Int = getHeightPKM$handle.invokeExact(header, offset).asInstanceOf[scala.Int]
+  def isValidPKM(header: java.nio.ByteBuffer, offset: scala.Int): scala.Boolean = isValidPKM$handle.invokeExact(header, offset).asInstanceOf[scala.Boolean]
+  private def decodeImage(compressedData: java.nio.ByteBuffer, offset: scala.Int, decodedData: java.nio.ByteBuffer, offsetDec: scala.Int, width: scala.Int, height: scala.Int, pixelSize: scala.Int): scala.Unit = { decodeImage$handle.invokeExact(compressedData, offset, decodedData, offsetDec, width, height, pixelSize); () }
+  private def encodeImage(imageData: java.nio.ByteBuffer, offset: scala.Int, width: scala.Int, height: scala.Int, pixelSize: scala.Int): java.nio.ByteBuffer = encodeImage$handle.invokeExact(imageData, offset, width, height, pixelSize).asInstanceOf[java.nio.ByteBuffer]
+  private def encodeImagePKM(imageData: java.nio.ByteBuffer, offset: scala.Int, width: scala.Int, height: scala.Int, pixelSize: scala.Int): java.nio.ByteBuffer = encodeImagePKM$handle.invokeExact(imageData, offset, width, height, pixelSize).asInstanceOf[java.nio.ByteBuffer]
   final class ETC1Data extends com.badlogic.gdx.utils.Disposable {
     var width: scala.Int = 0
     var height: scala.Int = 0

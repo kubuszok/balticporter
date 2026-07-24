@@ -110,9 +110,10 @@ final class TirEmitter(source: Program):
       val ob = orderBody(members).map(stat(_, i + 1)).filter(_.nonEmpty).mkString("\n")
       return s"${ind(i)}object ${esc(s.name)}$tps {\n$ob\n${ind(i)}}"
     // Java statics have no instance home in Scala — they move to the companion object.
-    val (statics, instance) = if s.flags.isModule then (Nil, cd.body) else cd.body.partition(isStatic)
+    val (statics, instance0) = if s.flags.isModule then (Nil, cd.body) else cd.body.partition(isStatic)
+    val instance = inlineSoleNoArgCtor(instance0)
     val self    = cd.selfType.map(st => s"${ind(i + 1)}self: ${tpe(st.tpe)} =>\n").getOrElse("")
-    val body    = orderBody(instance).map(stat(_, i + 1)).filter(_.nonEmpty).mkString("\n")
+    val body    = joinStats(orderBody(instance).map(stat(_, i + 1)).filter(_.nonEmpty))
     val open    = if body.isEmpty && self.isEmpty then "" else s" {\n$self$body\n${ind(i)}}"
     val abs     = if kw == "class" && s.flags.isAbstract then "abstract " else ""
     val cls     = s"${ind(i)}${mods(s.flags)}$abs$kw ${esc(s.name)}$tps$ext$open"
@@ -144,6 +145,23 @@ final class TirEmitter(source: Program):
 
   // a Java `static` nested class has no instance home in Scala → it moves to the companion
   // `object` alongside static vals/defs. A non-static inner class stays in the class body.
+  /** A Java no-arg constructor with a body has no home in Scala — `def this()` clashes with the
+    * implicit primary constructor. When it's the class's ONLY constructor, inline its body as the
+    * primary (its statements run at construction), dropping any leading no-arg super()/this(). */
+  private def inlineSoleNoArgCtor(body: List[Statement]): List[Statement] =
+    val ctors = body.collect { case d: Tree.DefDef if sym(d.symbol).name == "<init>" => d }
+    ctors match
+      case List(c) if c.paramss.flatten.isEmpty =>
+        val stats = c.rhs match
+          case Some(Tree.Block(s, _, _, _)) => s
+          case Some(t)                      => List(t)
+          case None                         => Nil
+        val inlined = stats match // drop a leading no-arg super()/this() delegation
+          case Tree.Apply(Tree.Select(_, m, _, _), args, _, _, _) :: tl if sym(m).name == "<init>" && args.isEmpty => tl
+          case all => all
+        body.flatMap { case d: Tree.DefDef if d.symbol == c.symbol => inlined; case s => List(s) }
+      case _ => body
+
   private def isStatic(s: Statement): Boolean = s match
     case d: Tree.ClassDef => sym(d.symbol).flags.isStatic
     case d: Definition    => sym(d.symbol).flags.isStatic
@@ -220,13 +238,16 @@ final class TirEmitter(source: Program):
         (d, tl)
       case all => ("this()", all)
     val lines = (ind(i + 1) + deleg) :: rest.map(stat(_, i + 1)).filter(_.trim.nonEmpty)
-    s"{\n${lines.mkString("\n")}\n${ind(i)}}"
+    s"{\n${joinStats(lines)}\n${ind(i)}}"
 
   /** a parameter clause; a clause of `given` params renders as a Scala 3 `using` clause. */
   private def paramClause(ps: List[Tree.ValDef]): String =
     if ps.nonEmpty && ps.forall(p => sym(p.symbol).flags.isGiven) then s"(using ${ps.map(param).mkString(", ")})"
     else s"(${ps.map(param).mkString(", ")})"
 
+  // NOTE: Java `T...` → Scala `T*` is deferred — it also needs array-spread (`arr: _*`) at call
+  // sites and overload-aware resolution, else `f(array)` calls break. Emitting the param type
+  // as `Array[T]` keeps varargs callable positionally via the array.
   private def param(v: Tree.ValDef): String = s"${esc(sym(v.symbol).name)}: ${tpe(v.tpt.tpe)}"
 
   private def valDef(v: Tree.ValDef, i: Int): String =
