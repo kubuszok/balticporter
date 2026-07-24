@@ -116,24 +116,24 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
     if (index >= this.size) {
       throw new java.lang.IndexOutOfBoundsException((("index can't be >= size: " + index) + " >= ") + this.size)
     } else ()
-    this.items(index) = this.items(index) + value
+    this.items(index) = (this.items(index) + value).asInstanceOf[scala.Char]
   }
   def incr(value: scala.Char): scala.Unit = {
     val items: scala.Array[scala.Char] = this.items;
     { var i: scala.Int = 0; val n: scala.Int = this.size; while (i < n) { {
-      items(i) = items(i) + value
+      items(i) = (items(i) + value).asInstanceOf[scala.Char]
     }; i = i + 1 } }
   }
   def mul(index: scala.Int, value: scala.Char): scala.Unit = {
     if (index >= this.size) {
       throw new java.lang.IndexOutOfBoundsException((("index can't be >= size: " + index) + " >= ") + this.size)
     } else ()
-    this.items(index) = this.items(index) * value
+    this.items(index) = (this.items(index) * value).asInstanceOf[scala.Char]
   }
   def mul(value: scala.Char): scala.Unit = {
     val items: scala.Array[scala.Char] = this.items;
     { var i: scala.Int = 0; val n: scala.Int = this.size; while (i < n) { {
-      items(i) = items(i) * value
+      items(i) = (items(i) * value).asInstanceOf[scala.Char]
     }; i = i + 1 } }
   }
   def swap(first: scala.Int, second: scala.Int): scala.Unit = {

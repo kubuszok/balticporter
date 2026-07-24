@@ -108,24 +108,24 @@ class ShortArray {
     if (index >= this.size) {
       throw new java.lang.IndexOutOfBoundsException((("index can't be >= size: " + index) + " >= ") + this.size)
     } else ()
-    this.items(index) = this.items(index) + value
+    this.items(index) = (this.items(index) + value).asInstanceOf[scala.Short]
   }
   def incr(value: scala.Short): scala.Unit = {
     val items: scala.Array[scala.Short] = this.items;
     { var i: scala.Int = 0; val n: scala.Int = this.size; while (i < n) { {
-      items(i) = items(i) + value
+      items(i) = (items(i) + value).asInstanceOf[scala.Short]
     }; i = i + 1 } }
   }
   def mul(index: scala.Int, value: scala.Short): scala.Unit = {
     if (index >= this.size) {
       throw new java.lang.IndexOutOfBoundsException((("index can't be >= size: " + index) + " >= ") + this.size)
     } else ()
-    this.items(index) = this.items(index) * value
+    this.items(index) = (this.items(index) * value).asInstanceOf[scala.Short]
   }
   def mul(value: scala.Short): scala.Unit = {
     val items: scala.Array[scala.Short] = this.items;
     { var i: scala.Int = 0; val n: scala.Int = this.size; while (i < n) { {
-      items(i) = items(i) * value
+      items(i) = (items(i) * value).asInstanceOf[scala.Short]
     }; i = i + 1 } }
   }
   def insert(index: scala.Int, value: scala.Short): scala.Unit = {

@@ -101,24 +101,24 @@ class ByteArray {
     if (index >= this.size) {
       throw new java.lang.IndexOutOfBoundsException((("index can't be >= size: " + index) + " >= ") + this.size)
     } else ()
-    this.items(index) = this.items(index) + value
+    this.items(index) = (this.items(index) + value).asInstanceOf[scala.Byte]
   }
   def incr(value: scala.Byte): scala.Unit = {
     val items: scala.Array[scala.Byte] = this.items;
     { var i: scala.Int = 0; val n: scala.Int = this.size; while (i < n) { {
-      items(i) = items(i) + value
+      items(i) = (items(i) + value).asInstanceOf[scala.Byte]
     }; i = i + 1 } }
   }
   def mul(index: scala.Int, value: scala.Byte): scala.Unit = {
     if (index >= this.size) {
       throw new java.lang.IndexOutOfBoundsException((("index can't be >= size: " + index) + " >= ") + this.size)
     } else ()
-    this.items(index) = this.items(index) * value
+    this.items(index) = (this.items(index) * value).asInstanceOf[scala.Byte]
   }
   def mul(value: scala.Byte): scala.Unit = {
     val items: scala.Array[scala.Byte] = this.items;
     { var i: scala.Int = 0; val n: scala.Int = this.size; while (i < n) { {
-      items(i) = items(i) * value
+      items(i) = (items(i) * value).asInstanceOf[scala.Byte]
     }; i = i + 1 } }
   }
   def insert(index: scala.Int, value: scala.Byte): scala.Unit = {

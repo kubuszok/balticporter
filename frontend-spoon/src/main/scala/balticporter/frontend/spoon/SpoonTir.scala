@@ -394,8 +394,11 @@ object SpoonTir:
           val res = binApply(opText(a.getKind), lhs, expr(a.getAssignment), ty(a))
           val lt  = a.getAssigned.getType
           val rt  = try a.getAssignment.getType catch { case _: Throwable => null }
+          // Java binary numeric promotion lifts byte/short/char operands to at least `int`, so the
+          // op result (rank ≥ int) may be wider than the target — e.g. `byte += byte` computes an
+          // `int`. Narrow back to the target whenever `max(rhsRank, intRank) > targetRank`.
           val narrow = lt != null && lt.isPrimitive && rt != null && rt.isPrimitive &&
-            primRank.get(lt.getSimpleName).exists(l => primRank.get(rt.getSimpleName).exists(_ > l))
+            primRank.get(lt.getSimpleName).exists(l => primRank.get(rt.getSimpleName).exists(r => math.max(r, primRank("int")) > l))
           val out = if narrow then Tree.Typed(res, tt(tpe(lt), a), tpe(lt), originOf(a)) else res
           Tree.Assign(lhs, out, unitT, originOf(a))
         case a: CtAssignment[?, ?] =>
