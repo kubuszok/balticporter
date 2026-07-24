@@ -1115,3 +1115,6 @@ class PolygonSpriteBatch extends com.badlogic.gdx.graphics.g2d.PolygonBatch {
     return this.drawing
   }
 }
+object PolygonSpriteBatch {
+  export com.badlogic.gdx.graphics.g2d.PolygonBatch.*
+}

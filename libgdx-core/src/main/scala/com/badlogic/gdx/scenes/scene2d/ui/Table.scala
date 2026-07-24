@@ -1223,6 +1223,7 @@ class Table extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup {
   }
 }
 object Table {
+  export com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup.*
   var debugTableColor: com.badlogic.gdx.graphics.Color = new com.badlogic.gdx.graphics.Color(0, 0, 1, 1)
   var debugCellColor: com.badlogic.gdx.graphics.Color = new com.badlogic.gdx.graphics.Color(1, 0, 0, 1)
   var debugActorColor: com.badlogic.gdx.graphics.Color = new com.badlogic.gdx.graphics.Color(0, 1, 0, 1)

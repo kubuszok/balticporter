@@ -20,3 +20,6 @@ class ParticleControllerControllerRenderer extends com.badlogic.gdx.graphics.g3d
     return false
   }
 }
+object ParticleControllerControllerRenderer {
+  export com.badlogic.gdx.graphics.g3d.particles.renderers.ParticleControllerRenderer.*
+}

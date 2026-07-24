@@ -53,3 +53,6 @@ abstract class SimpleInfluencer extends com.badlogic.gdx.graphics.g3d.particles.
     this.value = json.readValue("value", classOf[com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue], jsonData)
   }
 }
+object SimpleInfluencer {
+  export com.badlogic.gdx.graphics.g3d.particles.influencers.Influencer.*
+}

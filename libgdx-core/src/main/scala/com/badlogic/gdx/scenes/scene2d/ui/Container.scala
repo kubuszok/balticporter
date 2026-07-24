@@ -711,3 +711,6 @@ class Container[T <: com.badlogic.gdx.scenes.scene2d.Actor] extends com.badlogic
     }
   }
 }
+object Container {
+  export com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup.*
+}

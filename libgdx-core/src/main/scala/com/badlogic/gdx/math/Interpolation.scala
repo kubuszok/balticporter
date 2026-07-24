@@ -75,6 +75,9 @@ object Interpolation {
       return java.lang.Math.pow(a, power).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
     }
   }
+  object PowIn {
+    export com.badlogic.gdx.math.Interpolation.Pow.*
+  }
   class PowOut extends com.badlogic.gdx.math.Interpolation.Pow {
     def this(power: scala.Int) = {
       this()
@@ -82,6 +85,9 @@ object Interpolation {
     def apply(a: scala.Float): scala.Float = {
       return (java.lang.Math.pow(a - 1, power).asInstanceOf[scala.Float] * (if ((power % 2) == 0) -1 else 1)) + 1
     }
+  }
+  object PowOut {
+    export com.badlogic.gdx.math.Interpolation.Pow.*
   }
   class Exp extends Interpolation {
     var value: scala.Float = 0.0f
@@ -113,6 +119,9 @@ object Interpolation {
       return (java.lang.Math.pow(value, power * (a - 1)).asInstanceOf[scala.Float] - min) * scale
     }
   }
+  object ExpIn {
+    export com.badlogic.gdx.math.Interpolation.Exp.*
+  }
   class ExpOut extends com.badlogic.gdx.math.Interpolation.Exp {
     def this(value: scala.Float, power: scala.Float) = {
       this()
@@ -120,6 +129,9 @@ object Interpolation {
     def apply(a: scala.Float): scala.Float = {
       return 1 - ((java.lang.Math.pow(value, (-power) * a).asInstanceOf[scala.Float] - min) * scale)
     }
+  }
+  object ExpOut {
+    export com.badlogic.gdx.math.Interpolation.Exp.*
   }
   class Elastic extends Interpolation {
     var value: scala.Float = 0.0f
@@ -158,6 +170,9 @@ object Interpolation {
       return (java.lang.Math.pow(value, power * (a - 1)).asInstanceOf[scala.Float] * com.badlogic.gdx.math.MathUtils.sin(a * bounces)) * scale
     }
   }
+  object ElasticIn {
+    export com.badlogic.gdx.math.Interpolation.Elastic.*
+  }
   class ElasticOut extends com.badlogic.gdx.math.Interpolation.Elastic {
     def this(value: scala.Float, power: scala.Float, bounces: scala.Int, scale: scala.Float) = {
       this()
@@ -170,6 +185,9 @@ object Interpolation {
       a = 1 - a
       return 1 - ((java.lang.Math.pow(value, power * (a - 1)).asInstanceOf[scala.Float] * com.badlogic.gdx.math.MathUtils.sin(a * bounces)) * scale)
     }
+  }
+  object ElasticOut {
+    export com.badlogic.gdx.math.Interpolation.Elastic.*
   }
   class Bounce extends com.badlogic.gdx.math.Interpolation.BounceOut {
     def this(widths: scala.Array[scala.Float], heights: scala.Array[scala.Float]) = {
@@ -191,6 +209,9 @@ object Interpolation {
       } else ()
       return (this.out((a * 2) - 1) / 2) + 0.5f
     }
+  }
+  object Bounce {
+    export com.badlogic.gdx.math.Interpolation.BounceOut.*
   }
   class BounceOut extends Interpolation {
     var widths: scala.Array[scala.Float] = null.asInstanceOf[scala.Array[scala.Float]]
@@ -281,6 +302,9 @@ object Interpolation {
     def apply(a: scala.Float): scala.Float = {
       return 1 - super.apply(1 - a)
     }
+  }
+  object BounceIn {
+    export com.badlogic.gdx.math.Interpolation.BounceOut.*
   }
   class Swing extends Interpolation {
     private var scale: scala.Float = 0.0f

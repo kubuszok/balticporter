@@ -114,3 +114,6 @@ class Stack extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup {
     return this.maxHeight
   }
 }
+object Stack {
+  export com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup.*
+}

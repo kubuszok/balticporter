@@ -254,6 +254,9 @@ object ObjLoader {
       this.flipV = flipV
     }
   }
+  object ObjLoaderParameters {
+    export com.badlogic.gdx.assets.loaders.ModelLoader.ModelParameters.*
+  }
   private class Group {
     var name: java.lang.String = null.asInstanceOf[java.lang.String]
     var materialName: java.lang.String = null.asInstanceOf[java.lang.String]

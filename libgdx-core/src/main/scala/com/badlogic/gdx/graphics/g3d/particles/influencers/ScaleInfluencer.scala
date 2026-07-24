@@ -28,3 +28,6 @@ class ScaleInfluencer extends com.badlogic.gdx.graphics.g3d.particles.influencer
     return new ScaleInfluencer(this)
   }
 }
+object ScaleInfluencer {
+  export com.badlogic.gdx.graphics.g3d.particles.influencers.SimpleInfluencer.*
+}

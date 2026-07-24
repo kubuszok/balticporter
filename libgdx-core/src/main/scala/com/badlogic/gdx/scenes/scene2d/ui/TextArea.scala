@@ -377,6 +377,9 @@ class TextArea extends com.badlogic.gdx.scenes.scene2d.ui.TextField {
       }
     }
   }
+  object TextAreaListener {
+    export com.badlogic.gdx.scenes.scene2d.ui.TextField.TextFieldClickListener.*
+  }
 }
 object TextArea {
   export com.badlogic.gdx.scenes.scene2d.ui.TextField.*

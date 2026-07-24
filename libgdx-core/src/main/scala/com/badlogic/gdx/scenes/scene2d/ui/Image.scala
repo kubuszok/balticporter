@@ -158,3 +158,6 @@ class Image extends com.badlogic.gdx.scenes.scene2d.ui.Widget {
     return (((if (className.indexOf('$') != (-1)) "Image " else "") + className) + ": ") + this.drawable
   }
 }
+object Image {
+  export com.badlogic.gdx.scenes.scene2d.ui.Widget.*
+}

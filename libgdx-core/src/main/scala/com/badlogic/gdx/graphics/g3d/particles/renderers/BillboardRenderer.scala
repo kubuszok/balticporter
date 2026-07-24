@@ -19,3 +19,6 @@ class BillboardRenderer extends com.badlogic.gdx.graphics.g3d.particles.renderer
     return batch.isInstanceOf[com.badlogic.gdx.graphics.g3d.particles.batches.BillboardParticleBatch]
   }
 }
+object BillboardRenderer {
+  export com.badlogic.gdx.graphics.g3d.particles.renderers.ParticleControllerRenderer.*
+}

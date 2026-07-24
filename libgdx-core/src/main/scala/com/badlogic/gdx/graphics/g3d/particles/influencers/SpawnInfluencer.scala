@@ -55,3 +55,6 @@ class SpawnInfluencer extends com.badlogic.gdx.graphics.g3d.particles.influencer
     this.spawnShapeValue.load(manager, data)
   }
 }
+object SpawnInfluencer {
+  export com.badlogic.gdx.graphics.g3d.particles.influencers.Influencer.*
+}

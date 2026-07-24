@@ -128,4 +128,7 @@ object RenderableShapeBuilder {
       return renderable
     }
   }
+  object RenderablePool {
+    export com.badlogic.gdx.utils.FlushablePool.*
+  }
 }

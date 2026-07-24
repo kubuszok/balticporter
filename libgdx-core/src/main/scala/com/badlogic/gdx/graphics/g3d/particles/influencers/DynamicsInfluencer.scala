@@ -148,3 +148,6 @@ class DynamicsInfluencer extends com.badlogic.gdx.graphics.g3d.particles.influen
     this.velocities.addAll(json.readValue("velocities", classOf[com.badlogic.gdx.utils.Array[?]], classOf[com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier], jsonData))
   }
 }
+object DynamicsInfluencer {
+  export com.badlogic.gdx.graphics.g3d.particles.influencers.Influencer.*
+}

@@ -497,3 +497,6 @@ class VerticalGroup extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup {
     shapes.rect(this.getX() + this.padLeft$field, this.getY() + this.padBottom$field, this.getOriginX(), this.getOriginY(), (this.getWidth() - this.padLeft$field) - this.padRight$field, (this.getHeight() - this.padBottom$field) - this.padTop$field, this.getScaleX(), this.getScaleY(), this.getRotation())
   }
 }
+object VerticalGroup {
+  export com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup.*
+}

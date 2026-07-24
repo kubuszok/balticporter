@@ -69,6 +69,18 @@ final class TirEmitter(source: Program):
     program.units.foreach(scan)
     acc.toSet
 
+  /** each type → its parent symbols (whole program). */
+  private lazy val parentsBySym: Map[SymId, List[SymId]] =
+    val m = collection.mutable.Map[SymId, List[SymId]]()
+    def scan(cd: Tree.ClassDef): Unit =
+      m(cd.symbol) = parentSymsOf(cd); cd.body.foreach { case c: Tree.ClassDef => scan(c); case _ => () }
+    program.units.foreach(scan); m.toMap
+
+  /** does this type OR any ancestor have static members? (so its companion carries or re-exports
+    * them — the export chain must pass THROUGH intermediates that add no statics of their own). */
+  private def staticsReachable(s: SymId, seen: Set[SymId] = Set.empty): Boolean =
+    !seen(s) && (typesWithStatics(s) || parentsBySym.getOrElse(s, Nil).exists(p => staticsReachable(p, seen + s)))
+
   // ---- names ----
   private def sym(id: SymId): Symbol = program.symbolOf(id).getOrElse(Symbol(id, "?", "?", Flags(), SymId.None, TypeRepr.NoType))
   private def local(id: SymId): String = esc(sym(id).name)
@@ -143,7 +155,7 @@ final class TirEmitter(source: Program):
     // Java interface/parent CONSTANTS are `static`, so they live in the parent's companion object
     // — which Scala does NOT inherit. Re-export each static-bearing parent's companion so an
     // inherited constant accessed via a subclass (`GL30.GL_LUMINANCE`, declared in `GL20`) resolves.
-    val parentExports = parentSymsOf(cd).filter(typesWithStatics).map(p => s"${ind(i + 1)}export ${typeValue(p)}.*")
+    val parentExports = parentSymsOf(cd).filter(p => staticsReachable(p)).map(p => s"${ind(i + 1)}export ${typeValue(p)}.*")
     if statics.isEmpty && parentExports.isEmpty then cls
     else
       val sb = (parentExports ++ orderBody(statics).map(stat(_, i + 1)).filter(_.nonEmpty)).mkString("\n")

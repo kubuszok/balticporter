@@ -20,6 +20,7 @@ abstract class DynamicsModifier extends com.badlogic.gdx.graphics.g3d.particles.
   }
 }
 object DynamicsModifier {
+  export com.badlogic.gdx.graphics.g3d.particles.influencers.Influencer.*
   final val TMP_V1: com.badlogic.gdx.math.Vector3 = new com.badlogic.gdx.math.Vector3()
   final val TMP_V2: com.badlogic.gdx.math.Vector3 = new com.badlogic.gdx.math.Vector3()
   final val TMP_V3: com.badlogic.gdx.math.Vector3 = new com.badlogic.gdx.math.Vector3()
@@ -142,6 +143,9 @@ object DynamicsModifier {
       this.phiValue = json.readValue("phiValue", classOf[com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue], jsonData)
     }
   }
+  object Angular {
+    export com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.Strength.*
+  }
   class Rotational2D extends com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.Strength {
     var rotationalVelocity2dChannel: com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel]
     def this(rotation: com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.Rotational2D) = {
@@ -159,6 +163,9 @@ object DynamicsModifier {
     def copy(): com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.Rotational2D = {
       return new com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.Rotational2D(this)
     }
+  }
+  object Rotational2D {
+    export com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.Strength.*
   }
   class Rotational3D extends com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.Angular {
     var rotationChannel: com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel]
@@ -191,6 +198,9 @@ object DynamicsModifier {
     def copy(): com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.Rotational3D = {
       return new com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.Rotational3D(this)
     }
+  }
+  object Rotational3D {
+    export com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.Angular.*
   }
   class CentripetalAcceleration extends com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.Strength {
     var accelerationChannel: com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel]
@@ -229,6 +239,9 @@ object DynamicsModifier {
       return new com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.CentripetalAcceleration(this)
     }
   }
+  object CentripetalAcceleration {
+    export com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.Strength.*
+  }
   class PolarAcceleration extends com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.Angular {
     var directionalVelocityChannel: com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel]
     def this(rotation: com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.PolarAcceleration) = {
@@ -261,6 +274,9 @@ object DynamicsModifier {
     def copy(): com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.PolarAcceleration = {
       return new com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.PolarAcceleration(this)
     }
+  }
+  object PolarAcceleration {
+    export com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.Angular.*
   }
   class TangentialAcceleration extends com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.Angular {
     var directionalVelocityChannel: com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel]
@@ -301,6 +317,9 @@ object DynamicsModifier {
       return new com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.TangentialAcceleration(this)
     }
   }
+  object TangentialAcceleration {
+    export com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.Angular.*
+  }
   class BrownianAcceleration extends com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.Strength {
     var accelerationChannel: com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel]
     def this(rotation: com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.BrownianAcceleration) = {
@@ -325,5 +344,8 @@ object DynamicsModifier {
     def copy(): com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.BrownianAcceleration = {
       return new com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.BrownianAcceleration(this)
     }
+  }
+  object BrownianAcceleration {
+    export com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.Strength.*
   }
 }

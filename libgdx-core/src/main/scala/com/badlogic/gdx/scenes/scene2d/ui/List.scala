@@ -275,6 +275,7 @@ class List[T] extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlogi
   }
 }
 object List {
+  export com.badlogic.gdx.scenes.scene2d.ui.Widget.*
   class ListStyle {
     var font: com.badlogic.gdx.graphics.g2d.BitmapFont = null.asInstanceOf[com.badlogic.gdx.graphics.g2d.BitmapFont]
     var fontColorSelected: com.badlogic.gdx.graphics.Color = new com.badlogic.gdx.graphics.Color(1, 1, 1, 1)

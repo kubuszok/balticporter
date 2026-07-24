@@ -292,6 +292,7 @@ class SplitPane extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup with com.
   }
 }
 object SplitPane {
+  export com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup.*
   class SplitPaneStyle {
     var handle: com.badlogic.gdx.scenes.scene2d.utils.Drawable = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Drawable]
     def this(handle: com.badlogic.gdx.scenes.scene2d.utils.Drawable) = {

@@ -178,4 +178,7 @@ object ModelBatch {
       return renderable
     }
   }
+  object RenderablePool {
+    export com.badlogic.gdx.utils.FlushablePool.*
+  }
 }

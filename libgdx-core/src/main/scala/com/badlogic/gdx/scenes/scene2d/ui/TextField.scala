@@ -984,6 +984,7 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
   }
 }
 object TextField {
+  export com.badlogic.gdx.scenes.scene2d.ui.Widget.*
   final val BACKSPACE: scala.Char = 8.asInstanceOf[scala.Char]
   final val CARRIAGE_RETURN: scala.Char = '\r'
   final val NEWLINE: scala.Char = '\n'

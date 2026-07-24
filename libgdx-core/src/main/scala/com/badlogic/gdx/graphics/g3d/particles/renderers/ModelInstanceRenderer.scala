@@ -57,3 +57,6 @@ class ModelInstanceRenderer extends com.badlogic.gdx.graphics.g3d.particles.rend
     return batch.isInstanceOf[com.badlogic.gdx.graphics.g3d.particles.batches.ModelInstanceParticleBatch]
   }
 }
+object ModelInstanceRenderer {
+  export com.badlogic.gdx.graphics.g3d.particles.renderers.ParticleControllerRenderer.*
+}

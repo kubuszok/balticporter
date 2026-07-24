@@ -19,3 +19,6 @@ class PointSpriteRenderer extends com.badlogic.gdx.graphics.g3d.particles.render
     return new PointSpriteRenderer(batch)
   }
 }
+object PointSpriteRenderer {
+  export com.badlogic.gdx.graphics.g3d.particles.renderers.ParticleControllerRenderer.*
+}

@@ -43,3 +43,6 @@ class ParticleControllerFinalizerInfluencer extends com.badlogic.gdx.graphics.g3
     return new ParticleControllerFinalizerInfluencer()
   }
 }
+object ParticleControllerFinalizerInfluencer {
+  export com.badlogic.gdx.graphics.g3d.particles.influencers.Influencer.*
+}
