@@ -1,6 +1,6 @@
 package com.badlogic.gdx.graphics
 
-class Texture extends com.badlogic.gdx.graphics.GLTexture {
+class Texture extends com.badlogic.gdx.graphics.GLTexture(0, 0) {
   var data: com.badlogic.gdx.graphics.TextureData = null.asInstanceOf[com.badlogic.gdx.graphics.TextureData]
   def this(glTarget: scala.Int, glHandle: scala.Int, data: com.badlogic.gdx.graphics.TextureData) = {
     this()

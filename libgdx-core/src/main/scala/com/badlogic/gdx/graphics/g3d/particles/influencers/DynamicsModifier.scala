@@ -58,10 +58,7 @@ object DynamicsModifier {
       this.strengthValue = new com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue()
       this.strengthValue.load(rotation.strengthValue)
     }
-    def this() = {
-      this()
-      this.strengthValue = new com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue()
-    }
+    this.strengthValue = new com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue()
     def allocateChannels(): scala.Unit = {
       super.allocateChannels()
       com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.Interpolation.id = this.controller.particleChannels.newId()
@@ -100,11 +97,8 @@ object DynamicsModifier {
       this.thetaValue.load(value.thetaValue)
       this.phiValue.load(value.phiValue)
     }
-    def this() = {
-      this()
-      this.thetaValue = new com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue()
-      this.phiValue = new com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue()
-    }
+    this.thetaValue = new com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue()
+    this.phiValue = new com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue()
     def allocateChannels(): scala.Unit = {
       super.allocateChannels()
       com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.Interpolation4.id = this.controller.particleChannels.newId()

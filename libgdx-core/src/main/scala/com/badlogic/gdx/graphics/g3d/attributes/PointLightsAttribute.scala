@@ -1,15 +1,12 @@
 package com.badlogic.gdx.graphics.g3d.attributes
 
-class PointLightsAttribute extends com.badlogic.gdx.graphics.g3d.Attribute {
+class PointLightsAttribute extends com.badlogic.gdx.graphics.g3d.Attribute(PointLightsAttribute.Type) {
   var lights: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.environment.PointLight] = null.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.environment.PointLight]]
   def this(copyFrom: PointLightsAttribute) = {
     this()
     this.lights.addAll(copyFrom.lights)
   }
-  def this() = {
-    this()
-    this.lights = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.environment.PointLight](1)
-  }
+  this.lights = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.environment.PointLight](1)
   def copy(): PointLightsAttribute = {
     return new PointLightsAttribute(this)
   }

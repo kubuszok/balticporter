@@ -18,12 +18,9 @@ class ComparableTimSort {
     this.runBase = new scala.Array[scala.Int](stackLen)
     this.runLen = new scala.Array[scala.Int](stackLen)
   }
-  def this() = {
-    this()
-    this.tmp = new scala.Array[java.lang.Object](ComparableTimSort.INITIAL_TMP_STORAGE_LENGTH)
-    this.runBase = new scala.Array[scala.Int](40)
-    this.runLen = new scala.Array[scala.Int](40)
-  }
+  this.tmp = new scala.Array[java.lang.Object](ComparableTimSort.INITIAL_TMP_STORAGE_LENGTH)
+  this.runBase = new scala.Array[scala.Int](40)
+  this.runLen = new scala.Array[scala.Int](40)
   def doSort(a: scala.Array[java.lang.Object], lo$arg: scala.Int, hi: scala.Int): scala.Unit = {
     var lo: scala.Int = lo$arg
     this.stackSize = 0

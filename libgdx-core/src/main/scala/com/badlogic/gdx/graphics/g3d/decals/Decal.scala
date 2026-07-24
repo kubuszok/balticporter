@@ -15,10 +15,7 @@ class Decal {
     this()
     this.material = material
   }
-  def this() = {
-    this()
-    this.material = new com.badlogic.gdx.graphics.g3d.decals.DecalMaterial()
-  }
+  this.material = new com.badlogic.gdx.graphics.g3d.decals.DecalMaterial()
   def setColor(r: scala.Float, g: scala.Float, b: scala.Float, a: scala.Float): scala.Unit = {
     this.color.set(r, g, b, a)
     val intBits: scala.Int = ((((255 * a).asInstanceOf[scala.Int] << 24) | ((255 * b).asInstanceOf[scala.Int] << 16)) | ((255 * g).asInstanceOf[scala.Int] << 8)) | (255 * r).asInstanceOf[scala.Int]

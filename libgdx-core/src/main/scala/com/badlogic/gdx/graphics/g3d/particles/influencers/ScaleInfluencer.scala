@@ -4,10 +4,7 @@ class ScaleInfluencer extends com.badlogic.gdx.graphics.g3d.particles.influencer
   def this(scaleInfluencer: ScaleInfluencer) = {
     this()
   }
-  def this() = {
-    this()
-    valueChannelDescriptor = com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.Scale
-  }
+  valueChannelDescriptor = com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.Scale
   def activateParticles(startIndex: scala.Int, count: scala.Int): scala.Unit = {
     if (value.isRelative()) {
       { var i: scala.Int = startIndex * this.valueChannel.strideSize; var a: scala.Int = startIndex * this.interpolationChannel.strideSize; val c: scala.Int = i + (count * this.valueChannel.strideSize); while (i < c) { {

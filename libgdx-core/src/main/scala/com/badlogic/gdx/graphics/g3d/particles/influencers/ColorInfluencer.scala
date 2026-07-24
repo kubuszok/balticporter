@@ -33,12 +33,9 @@ object ColorInfluencer {
       this()
       this.set(billboardColorInfluencer)
     }
-    def this() = {
-      this()
-      this.colorValue = new com.badlogic.gdx.graphics.g3d.particles.values.GradientColorValue()
-      this.alphaValue = new com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue()
-      this.alphaValue.setHigh(1)
-    }
+    this.colorValue = new com.badlogic.gdx.graphics.g3d.particles.values.GradientColorValue()
+    this.alphaValue = new com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue()
+    this.alphaValue.setHigh(1)
     def set(colorInfluencer: com.badlogic.gdx.graphics.g3d.particles.influencers.ColorInfluencer.Single): scala.Unit = {
       this.colorValue.load(colorInfluencer.colorValue)
       this.alphaValue.load(colorInfluencer.alphaValue)

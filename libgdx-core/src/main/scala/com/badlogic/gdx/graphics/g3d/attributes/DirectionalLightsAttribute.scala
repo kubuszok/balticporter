@@ -1,15 +1,12 @@
 package com.badlogic.gdx.graphics.g3d.attributes
 
-class DirectionalLightsAttribute extends com.badlogic.gdx.graphics.g3d.Attribute {
+class DirectionalLightsAttribute extends com.badlogic.gdx.graphics.g3d.Attribute(DirectionalLightsAttribute.Type) {
   var lights: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.environment.DirectionalLight] = null.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.environment.DirectionalLight]]
   def this(copyFrom: DirectionalLightsAttribute) = {
     this()
     this.lights.addAll(copyFrom.lights)
   }
-  def this() = {
-    this()
-    this.lights = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.environment.DirectionalLight](1)
-  }
+  this.lights = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.environment.DirectionalLight](1)
   def copy(): DirectionalLightsAttribute = {
     return new DirectionalLightsAttribute(this)
   }

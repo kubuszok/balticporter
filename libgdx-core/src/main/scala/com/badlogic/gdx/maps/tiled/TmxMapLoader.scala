@@ -1,6 +1,6 @@
 package com.badlogic.gdx.maps.tiled
 
-class TmxMapLoader extends com.badlogic.gdx.maps.tiled.BaseTmxMapLoader[com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.Parameters] {
+class TmxMapLoader extends com.badlogic.gdx.maps.tiled.BaseTmxMapLoader[com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.Parameters](new com.badlogic.gdx.assets.loaders.resolvers.InternalFileHandleResolver()) {
   def this(resolver: com.badlogic.gdx.assets.loaders.FileHandleResolver) = {
     this()
   }

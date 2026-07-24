@@ -19,11 +19,8 @@ class FloatAction extends com.badlogic.gdx.scenes.scene2d.actions.TemporalAction
     this.start = start
     this.`end` = `end`
   }
-  def this() = {
-    this()
-    this.start = 0
-    this.`end` = 1
-  }
+  this.start = 0
+  this.`end` = 1
   def begin(): scala.Unit = {
     this.value = this.start
   }

@@ -41,10 +41,7 @@ object Net {
       this()
       this.httpMethod = httpMethod
     }
-    def this() = {
-      this()
-      this.headers = new scala.collection.mutable.HashMap[java.lang.String, java.lang.String]()
-    }
+    this.headers = new scala.collection.mutable.HashMap[java.lang.String, java.lang.String]()
     def setUrl(url: java.lang.String): scala.Unit = {
       this.url = url
     }

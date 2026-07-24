@@ -17,10 +17,7 @@ class Quaternion extends java.io.Serializable {
     this()
     this.set(quaternion)
   }
-  def this() = {
-    this()
-    this.idt()
-  }
+  this.idt()
   def set(x: scala.Float, y: scala.Float, z: scala.Float, w: scala.Float): Quaternion = {
     this.x = x
     this.y = y

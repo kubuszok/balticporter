@@ -24,19 +24,16 @@ class RegularEmitter extends com.badlogic.gdx.graphics.g3d.particles.emitters.Em
     this()
     this.set(regularEmitter)
   }
-  def this() = {
-    this()
-    this.delayValue = new com.badlogic.gdx.graphics.g3d.particles.values.RangedNumericValue()
-    this.durationValue = new com.badlogic.gdx.graphics.g3d.particles.values.RangedNumericValue()
-    this.lifeOffsetValue = new com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue()
-    this.lifeValue = new com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue()
-    this.emissionValue = new com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue()
-    this.durationValue.setActive(true)
-    this.emissionValue.setActive(true)
-    this.lifeValue.setActive(true)
-    this.continuous = true
-    this.emissionMode = com.badlogic.gdx.graphics.g3d.particles.emitters.RegularEmitter.EmissionMode.Enabled
-  }
+  this.delayValue = new com.badlogic.gdx.graphics.g3d.particles.values.RangedNumericValue()
+  this.durationValue = new com.badlogic.gdx.graphics.g3d.particles.values.RangedNumericValue()
+  this.lifeOffsetValue = new com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue()
+  this.lifeValue = new com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue()
+  this.emissionValue = new com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue()
+  this.durationValue.setActive(true)
+  this.emissionValue.setActive(true)
+  this.lifeValue.setActive(true)
+  this.continuous = true
+  this.emissionMode = com.badlogic.gdx.graphics.g3d.particles.emitters.RegularEmitter.EmissionMode.Enabled
   def allocateChannels(): scala.Unit = {
     this.lifeChannel = this.controller.particles.addChannel(com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.Life)
   }

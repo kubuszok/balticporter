@@ -32,10 +32,6 @@ class Button extends com.badlogic.gdx.scenes.scene2d.ui.Table with com.badlogic.
     this.setStyle(style)
     this.setSize(this.getPrefWidth(), this.getPrefHeight())
   }
-  def this() = {
-    this()
-    this.initialize()
-  }
   def this(child: com.badlogic.gdx.scenes.scene2d.Actor, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin, styleName: java.lang.String) = {
     this(child, skin.get(styleName, classOf[com.badlogic.gdx.scenes.scene2d.ui.Button.ButtonStyle]))
     this.setSkin(skin)
@@ -52,6 +48,7 @@ class Button extends com.badlogic.gdx.scenes.scene2d.ui.Table with com.badlogic.
   def this(up: com.badlogic.gdx.scenes.scene2d.utils.Drawable) = {
     this(new com.badlogic.gdx.scenes.scene2d.ui.Button.ButtonStyle(up, null, null))
   }
+  this.initialize()
   private def initialize(): scala.Unit = {
     this.setTouchable(com.badlogic.gdx.scenes.scene2d.Touchable.enabled)
     this.addListener({

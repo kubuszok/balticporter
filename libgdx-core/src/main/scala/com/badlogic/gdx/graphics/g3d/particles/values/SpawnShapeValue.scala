@@ -7,12 +7,9 @@ abstract class SpawnShapeValue extends com.badlogic.gdx.graphics.g3d.particles.v
   def this(spawnShapeValue: SpawnShapeValue) = {
     this()
   }
-  def this() = {
-    this()
-    this.xOffsetValue = new com.badlogic.gdx.graphics.g3d.particles.values.RangedNumericValue()
-    this.yOffsetValue = new com.badlogic.gdx.graphics.g3d.particles.values.RangedNumericValue()
-    this.zOffsetValue = new com.badlogic.gdx.graphics.g3d.particles.values.RangedNumericValue()
-  }
+  this.xOffsetValue = new com.badlogic.gdx.graphics.g3d.particles.values.RangedNumericValue()
+  this.yOffsetValue = new com.badlogic.gdx.graphics.g3d.particles.values.RangedNumericValue()
+  this.zOffsetValue = new com.badlogic.gdx.graphics.g3d.particles.values.RangedNumericValue()
   def spawnAux(vector: com.badlogic.gdx.math.Vector3, percent: scala.Float): scala.Unit
   final def spawn(vector: com.badlogic.gdx.math.Vector3, percent: scala.Float): com.badlogic.gdx.math.Vector3 = {
     this.spawnAux(vector, percent)

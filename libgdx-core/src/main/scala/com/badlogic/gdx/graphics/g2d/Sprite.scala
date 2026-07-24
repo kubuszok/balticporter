@@ -44,16 +44,13 @@ class Sprite extends com.badlogic.gdx.graphics.g2d.TextureRegion {
     this()
     this.set(sprite)
   }
-  def this() = {
-    this()
-    this.setColor(1, 1, 1, 1)
-  }
   def this(texture: com.badlogic.gdx.graphics.Texture, srcWidth: scala.Int, srcHeight: scala.Int) = {
     this(texture, 0, 0, srcWidth, srcHeight)
   }
   def this(texture: com.badlogic.gdx.graphics.Texture) = {
     this(texture, 0, 0, texture.getWidth(), texture.getHeight())
   }
+  this.setColor(1, 1, 1, 1)
   def set(sprite: Sprite): scala.Unit = {
     if (sprite == null) {
       throw new java.lang.IllegalArgumentException("sprite cannot be null.")

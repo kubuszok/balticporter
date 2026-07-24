@@ -14,10 +14,7 @@ class OrderedMap[K, V] extends com.badlogic.gdx.utils.ObjectMap[K, V] {
     this()
     this.keys$field = new com.badlogic.gdx.utils.Array(map.keys$field)
   }
-  def this() = {
-    this()
-    this.keys$field = new com.badlogic.gdx.utils.Array()
-  }
+  this.keys$field = new com.badlogic.gdx.utils.Array()
   def put(key: K, value: V): V = {
     var i: scala.Int = this.locateKey(key)
     if (i >= 0) {

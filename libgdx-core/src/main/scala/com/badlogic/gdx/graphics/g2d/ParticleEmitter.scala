@@ -104,10 +104,7 @@ class ParticleEmitter {
     this.spriteMode = emitter.spriteMode
     this.setPosition(emitter.getX(), emitter.getY())
   }
-  def this() = {
-    this()
-    this.initialize()
-  }
+  this.initialize()
   private def initialize(): scala.Unit = {
     this.sprites = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.Sprite]()
     this.imagePaths = new com.badlogic.gdx.utils.Array[java.lang.String]()

@@ -13,10 +13,7 @@ class BoundingBox extends java.io.Serializable {
     this()
     this.set(bounds)
   }
-  def this() = {
-    this()
-    this.clr()
-  }
+  this.clr()
   def getCenter(out: com.badlogic.gdx.math.Vector3): com.badlogic.gdx.math.Vector3 = {
     return out.set(this.cnt)
   }

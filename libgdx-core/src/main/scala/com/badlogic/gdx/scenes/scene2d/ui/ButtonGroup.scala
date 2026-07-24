@@ -13,10 +13,7 @@ class ButtonGroup[T <: com.badlogic.gdx.scenes.scene2d.ui.Button] {
     this.add(buttons.asInstanceOf[scala.Array[com.badlogic.gdx.scenes.scene2d.ui.Button]])
     this.minCheckCount = 1
   }
-  def this() = {
-    this()
-    this.minCheckCount = 1
-  }
+  this.minCheckCount = 1
   def add(button: T): scala.Unit = {
     if (button == null) {
       throw new java.lang.IllegalArgumentException("button cannot be null.")

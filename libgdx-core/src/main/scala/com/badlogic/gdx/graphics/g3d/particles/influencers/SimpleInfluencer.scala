@@ -10,11 +10,8 @@ abstract class SimpleInfluencer extends com.badlogic.gdx.graphics.g3d.particles.
     this()
     this.set(billboardScaleinfluencer)
   }
-  def this() = {
-    this()
-    this.value = new com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue()
-    this.value.setHigh(1)
-  }
+  this.value = new com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue()
+  this.value.setHigh(1)
   private def set(scaleInfluencer: SimpleInfluencer): scala.Unit = {
     this.value.load(scaleInfluencer.value)
     this.valueChannelDescriptor = scaleInfluencer.valueChannelDescriptor

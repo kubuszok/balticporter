@@ -17,11 +17,8 @@ class OrientedBoundingBox extends java.io.Serializable {
     this.bounds.set(bounds.min$field, bounds.max$field)
     this.init()
   }
-  def this() = {
-    this()
-    this.bounds.clr()
-    this.init()
-  }
+  this.bounds.clr()
+  this.init()
   private def init(): scala.Unit = {
     { var i: scala.Int = 0; while (i < this.axes.length) { {
       this.axes(i) = new com.badlogic.gdx.math.Vector3()

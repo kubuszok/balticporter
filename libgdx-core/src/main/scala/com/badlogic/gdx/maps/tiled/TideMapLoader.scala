@@ -1,6 +1,6 @@
 package com.badlogic.gdx.maps.tiled
 
-class TideMapLoader extends com.badlogic.gdx.assets.loaders.SynchronousAssetLoader[com.badlogic.gdx.maps.tiled.TiledMap, com.badlogic.gdx.maps.tiled.TideMapLoader.Parameters] {
+class TideMapLoader extends com.badlogic.gdx.assets.loaders.SynchronousAssetLoader[com.badlogic.gdx.maps.tiled.TiledMap, com.badlogic.gdx.maps.tiled.TideMapLoader.Parameters](new com.badlogic.gdx.assets.loaders.resolvers.InternalFileHandleResolver()) {
   private var xml: com.badlogic.gdx.utils.XmlReader = new com.badlogic.gdx.utils.XmlReader()
   private var root: com.badlogic.gdx.utils.XmlReader.Element = null.asInstanceOf[com.badlogic.gdx.utils.XmlReader.Element]
   def this(resolver: com.badlogic.gdx.assets.loaders.FileHandleResolver) = {

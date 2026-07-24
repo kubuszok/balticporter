@@ -14,13 +14,10 @@ class Stack extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup {
       this.addActor(actor)
     }
   }
-  def this() = {
-    this()
-    this.setTransform(false)
-    this.setWidth(150)
-    this.setHeight(150)
-    this.setTouchable(com.badlogic.gdx.scenes.scene2d.Touchable.childrenOnly)
-  }
+  this.setTransform(false)
+  this.setWidth(150)
+  this.setHeight(150)
+  this.setTouchable(com.badlogic.gdx.scenes.scene2d.Touchable.childrenOnly)
   def invalidate(): scala.Unit = {
     super.invalidate()
     this.sizeInvalid = true

@@ -7,10 +7,7 @@ final class WeightMeshSpawnShapeValue extends com.badlogic.gdx.graphics.g3d.part
     this.distribution = new com.badlogic.gdx.math.CumulativeDistribution[com.badlogic.gdx.graphics.g3d.particles.values.MeshSpawnShapeValue.Triangle]()
     this.load(value)
   }
-  def this() = {
-    this()
-    this.distribution = new com.badlogic.gdx.math.CumulativeDistribution[com.badlogic.gdx.graphics.g3d.particles.values.MeshSpawnShapeValue.Triangle]()
-  }
+  this.distribution = new com.badlogic.gdx.math.CumulativeDistribution[com.badlogic.gdx.graphics.g3d.particles.values.MeshSpawnShapeValue.Triangle]()
   def init(): scala.Unit = {
     this.calculateWeights()
   }

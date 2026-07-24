@@ -23,11 +23,8 @@ class Container[T <: com.badlogic.gdx.scenes.scene2d.Actor] extends com.badlogic
     this()
     this.setActor(actor)
   }
-  def this() = {
-    this()
-    this.setTouchable(com.badlogic.gdx.scenes.scene2d.Touchable.childrenOnly)
-    this.setTransform(false)
-  }
+  this.setTouchable(com.badlogic.gdx.scenes.scene2d.Touchable.childrenOnly)
+  this.setTransform(false)
   def draw(batch: com.badlogic.gdx.graphics.g2d.Batch, parentAlpha: scala.Float): scala.Unit = {
     this.validate()
     if (this.isTransform()) {

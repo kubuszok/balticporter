@@ -24,10 +24,7 @@ class Json {
     this()
     this.outputType = outputType
   }
-  def this() = {
-    this()
-    this.outputType = com.badlogic.gdx.utils.JsonWriter.OutputType.minimal
-  }
+  this.outputType = com.badlogic.gdx.utils.JsonWriter.OutputType.minimal
   def setIgnoreUnknownFields(ignoreUnknownFields: scala.Boolean): scala.Unit = {
     this.ignoreUnknownFields = ignoreUnknownFields
   }

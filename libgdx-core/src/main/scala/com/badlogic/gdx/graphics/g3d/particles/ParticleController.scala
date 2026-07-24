@@ -20,13 +20,10 @@ class ParticleController extends com.badlogic.gdx.utils.Json.Serializable with c
     this.particleChannels = new com.badlogic.gdx.graphics.g3d.particles.ParticleChannels()
     this.influencers = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.influencers.Influencer](influencers.asInstanceOf[scala.Array[java.lang.Object]])
   }
-  def this() = {
-    this()
-    this.transform = new com.badlogic.gdx.math.Matrix4()
-    this.scale$field = new com.badlogic.gdx.math.Vector3(1, 1, 1)
-    this.influencers = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.influencers.Influencer](true, 3, (() => new scala.Array[com.badlogic.gdx.graphics.g3d.particles.influencers.Influencer]()))
-    this.setTimeStep(ParticleController.DEFAULT_TIME_STEP)
-  }
+  this.transform = new com.badlogic.gdx.math.Matrix4()
+  this.scale$field = new com.badlogic.gdx.math.Vector3(1, 1, 1)
+  this.influencers = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.influencers.Influencer](true, 3, (() => new scala.Array[com.badlogic.gdx.graphics.g3d.particles.influencers.Influencer]()))
+  this.setTimeStep(ParticleController.DEFAULT_TIME_STEP)
   private def setTimeStep(timeStep: scala.Float): scala.Unit = {
     this.deltaTime = timeStep
     this.deltaTimeSqr = this.deltaTime * this.deltaTime

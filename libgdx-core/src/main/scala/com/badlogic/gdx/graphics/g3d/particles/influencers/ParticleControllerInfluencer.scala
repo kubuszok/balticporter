@@ -7,13 +7,10 @@ abstract class ParticleControllerInfluencer extends com.badlogic.gdx.graphics.g3
     this()
     this.templates = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.ParticleController](templates.asInstanceOf[scala.Array[java.lang.Object]])
   }
-  def this() = {
-    this()
-    this.templates = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.ParticleController](true, 1, (() => new scala.Array[com.badlogic.gdx.graphics.g3d.particles.ParticleController]()))
-  }
   def this(influencer: ParticleControllerInfluencer) = {
     this(influencer.templates.items)
   }
+  this.templates = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.ParticleController](true, 1, (() => new scala.Array[com.badlogic.gdx.graphics.g3d.particles.ParticleController]()))
   def allocateChannels(): scala.Unit = {
     this.particleControllerChannel = this.controller.particles.addChannel(com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.ParticleController)
   }
@@ -125,10 +122,7 @@ object ParticleControllerInfluencer {
       this()
       this.pool = new ParticleControllerPool()
     }
-    def this() = {
-      this()
-      this.pool = new ParticleControllerPool()
-    }
+    this.pool = new ParticleControllerPool()
     def init(): scala.Unit = {
       this.pool.clear();
       { var i: scala.Int = 0; while (i < this.controller.emitter.maxParticleCount) { {

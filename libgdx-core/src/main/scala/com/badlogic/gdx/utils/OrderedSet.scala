@@ -16,10 +16,7 @@ class OrderedSet[T] extends com.badlogic.gdx.utils.ObjectSet[T] {
     this()
     this.items = new com.badlogic.gdx.utils.Array(set.items)
   }
-  def this() = {
-    this()
-    this.items = new com.badlogic.gdx.utils.Array()
-  }
+  this.items = new com.badlogic.gdx.utils.Array()
   def add(key: T): scala.Boolean = {
     if (!super.add(key)) {
       return false

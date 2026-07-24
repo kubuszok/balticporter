@@ -11,10 +11,7 @@ class RandomXS128 extends java.util.Random {
     this()
     this.setSeed(seed)
   }
-  def this() = {
-    this()
-    this.setSeed(new java.util.Random().nextLong())
-  }
+  this.setSeed(new java.util.Random().nextLong())
   def nextLong(): scala.Long = {
     var s1: scala.Long = this.seed0
     val s0: scala.Long = this.seed1

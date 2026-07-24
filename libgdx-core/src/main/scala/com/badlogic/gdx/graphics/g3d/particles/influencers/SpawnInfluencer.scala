@@ -12,10 +12,7 @@ class SpawnInfluencer extends com.badlogic.gdx.graphics.g3d.particles.influencer
     this()
     this.spawnShapeValue = source.spawnShapeValue.copy()
   }
-  def this() = {
-    this()
-    this.spawnShapeValue = new com.badlogic.gdx.graphics.g3d.particles.values.PointSpawnShapeValue()
-  }
+  this.spawnShapeValue = new com.badlogic.gdx.graphics.g3d.particles.values.PointSpawnShapeValue()
   def init(): scala.Unit = {
     this.spawnShapeValue.init()
   }

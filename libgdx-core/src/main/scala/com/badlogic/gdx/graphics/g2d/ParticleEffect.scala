@@ -14,10 +14,7 @@ class ParticleEffect extends com.badlogic.gdx.utils.Disposable {
       this.emitters.add(this.newEmitter(effect.emitters.get(i)))
     }; i = i + 1 } }
   }
-  def this() = {
-    this()
-    this.emitters = new com.badlogic.gdx.utils.Array(8)
-  }
+  this.emitters = new com.badlogic.gdx.utils.Array(8)
   def start(): scala.Unit = {
     { var i: scala.Int = 0; val n: scala.Int = this.emitters.size; while (i < n) { {
       this.emitters.get(i).start()

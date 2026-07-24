@@ -18,13 +18,10 @@ class Matrix4 extends java.io.Serializable {
     this()
     this.set(quaternion)
   }
-  def this() = {
-    this()
-    this.`val`(Matrix4.M00) = 1.0f
-    this.`val`(Matrix4.M11) = 1.0f
-    this.`val`(Matrix4.M22) = 1.0f
-    this.`val`(Matrix4.M33) = 1.0f
-  }
+  this.`val`(Matrix4.M00) = 1.0f
+  this.`val`(Matrix4.M11) = 1.0f
+  this.`val`(Matrix4.M22) = 1.0f
+  this.`val`(Matrix4.M33) = 1.0f
   def set(matrix: Matrix4): Matrix4 = {
     return this.set(matrix.`val`)
   }

@@ -1,6 +1,6 @@
 package com.badlogic.gdx.graphics.g3d.particles.renderers
 
-class ModelInstanceRenderer extends com.badlogic.gdx.graphics.g3d.particles.renderers.ParticleControllerRenderer[com.badlogic.gdx.graphics.g3d.particles.renderers.ModelInstanceControllerRenderData, com.badlogic.gdx.graphics.g3d.particles.batches.ModelInstanceParticleBatch] {
+class ModelInstanceRenderer extends com.badlogic.gdx.graphics.g3d.particles.renderers.ParticleControllerRenderer[com.badlogic.gdx.graphics.g3d.particles.renderers.ModelInstanceControllerRenderData, com.badlogic.gdx.graphics.g3d.particles.batches.ModelInstanceParticleBatch](new com.badlogic.gdx.graphics.g3d.particles.renderers.ModelInstanceControllerRenderData()) {
   private var hasColor: scala.Boolean = false
   private var hasScale: scala.Boolean = false
   private var hasRotation: scala.Boolean = false

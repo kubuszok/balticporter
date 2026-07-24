@@ -11,10 +11,7 @@ class Matrix3 extends java.io.Serializable {
     this()
     this.set(values)
   }
-  def this() = {
-    this()
-    this.idt()
-  }
+  this.idt()
   def idt(): Matrix3 = {
     val `val`: scala.Array[scala.Float] = this.`val`
     `val`(Matrix3.M00) = 1

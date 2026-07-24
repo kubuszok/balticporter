@@ -1,6 +1,6 @@
 package com.badlogic.gdx.maps.tiled
 
-class AtlasTmjMapLoader extends com.badlogic.gdx.maps.tiled.BaseTmjMapLoader[com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.Parameters] {
+class AtlasTmjMapLoader extends com.badlogic.gdx.maps.tiled.BaseTmjMapLoader[com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.Parameters](new com.badlogic.gdx.assets.loaders.resolvers.InternalFileHandleResolver()) {
   var trackedTextures: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.Texture] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.Texture]()
   var atlasResolver: com.badlogic.gdx.maps.tiled.AtlasTmjMapLoader.AtlasResolver = null.asInstanceOf[com.badlogic.gdx.maps.tiled.AtlasTmjMapLoader.AtlasResolver]
   def this(resolver: com.badlogic.gdx.assets.loaders.FileHandleResolver) = {

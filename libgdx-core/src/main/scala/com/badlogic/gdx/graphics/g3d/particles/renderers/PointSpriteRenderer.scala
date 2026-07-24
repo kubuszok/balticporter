@@ -1,6 +1,6 @@
 package com.badlogic.gdx.graphics.g3d.particles.renderers
 
-class PointSpriteRenderer extends com.badlogic.gdx.graphics.g3d.particles.renderers.ParticleControllerRenderer[com.badlogic.gdx.graphics.g3d.particles.renderers.PointSpriteControllerRenderData, com.badlogic.gdx.graphics.g3d.particles.batches.PointSpriteParticleBatch] {
+class PointSpriteRenderer extends com.badlogic.gdx.graphics.g3d.particles.renderers.ParticleControllerRenderer[com.badlogic.gdx.graphics.g3d.particles.renderers.PointSpriteControllerRenderData, com.badlogic.gdx.graphics.g3d.particles.batches.PointSpriteParticleBatch](new com.badlogic.gdx.graphics.g3d.particles.renderers.PointSpriteControllerRenderData()) {
   def this(batch: com.badlogic.gdx.graphics.g3d.particles.batches.PointSpriteParticleBatch) = {
     this()
     this.setBatch(batch)

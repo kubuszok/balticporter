@@ -23,10 +23,7 @@ class Polyline extends com.badlogic.gdx.math.Shape2D {
     } else ()
     this.localVertices = vertices
   }
-  def this() = {
-    this()
-    this.localVertices = new scala.Array[scala.Float](0)
-  }
+  this.localVertices = new scala.Array[scala.Float](0)
   def getVertices(): scala.Array[scala.Float] = {
     return this.localVertices
   }

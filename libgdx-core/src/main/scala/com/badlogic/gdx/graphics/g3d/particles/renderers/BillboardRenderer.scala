@@ -1,6 +1,6 @@
 package com.badlogic.gdx.graphics.g3d.particles.renderers
 
-class BillboardRenderer extends com.badlogic.gdx.graphics.g3d.particles.renderers.ParticleControllerRenderer[com.badlogic.gdx.graphics.g3d.particles.renderers.BillboardControllerRenderData, com.badlogic.gdx.graphics.g3d.particles.batches.BillboardParticleBatch] {
+class BillboardRenderer extends com.badlogic.gdx.graphics.g3d.particles.renderers.ParticleControllerRenderer[com.badlogic.gdx.graphics.g3d.particles.renderers.BillboardControllerRenderData, com.badlogic.gdx.graphics.g3d.particles.batches.BillboardParticleBatch](new com.badlogic.gdx.graphics.g3d.particles.renderers.BillboardControllerRenderData()) {
   def this(batch: com.badlogic.gdx.graphics.g3d.particles.batches.BillboardParticleBatch) = {
     this()
     this.setBatch(batch)

@@ -94,7 +94,14 @@ final class TirEmitter(source: Program):
       else if s.flags.isTrait then "trait"
       else "class"
     val tps     = if cd.tparams.isEmpty then "" else "[" + cd.tparams.map(typeParam).mkString(", ") + "]"
-    val parents = cd.parents.map(parent).filter(_.nonEmpty)
+    // lower Java constructors: promote the no-arg constructor to the PRIMARY (its `def this()`
+    // would clash with Scala's implicit primary), inlining its body and moving any `super(args)`
+    // it passes into the `extends` clause (which also fixes parents that need constructor args).
+    val (loweredBody, superArgs) = if s.flags.isModule then (cd.body, Nil) else lowerCtors(cd.body)
+    val parents = cd.parents.map(parent).filter(_.nonEmpty) match
+      case Nil                          => Nil
+      case h :: t if superArgs.nonEmpty => s"$h(${superArgs.map(term(_, i)).mkString(", ")})" :: t
+      case all                          => all
     val ext     = if parents.isEmpty then "" else " extends " + parents.mkString(" with ")
     // an all-static utility class (no instance state, no supertype) is just an `object` — so its
     // static members and nested types live together and see each other by simple name.
@@ -110,8 +117,7 @@ final class TirEmitter(source: Program):
       val ob = orderBody(members).map(stat(_, i + 1)).filter(_.nonEmpty).mkString("\n")
       return s"${ind(i)}object ${esc(s.name)}$tps {\n$ob\n${ind(i)}}"
     // Java statics have no instance home in Scala — they move to the companion object.
-    val (statics, instance0) = if s.flags.isModule then (Nil, cd.body) else cd.body.partition(isStatic)
-    val instance = inlineSoleNoArgCtor(instance0)
+    val (statics, instance) = if s.flags.isModule then (Nil, loweredBody) else loweredBody.partition(isStatic)
     val self    = cd.selfType.map(st => s"${ind(i + 1)}self: ${tpe(st.tpe)} =>\n").getOrElse("")
     val body    = joinStats(orderBody(instance).map(stat(_, i + 1)).filter(_.nonEmpty))
     val open    = if body.isEmpty && self.isEmpty then "" else s" {\n$self$body\n${ind(i)}}"
@@ -148,23 +154,32 @@ final class TirEmitter(source: Program):
 
   // a Java `static` nested class has no instance home in Scala → it moves to the companion
   // `object` alongside static vals/defs. A non-static inner class stays in the class body.
-  /** A Java no-arg constructor with a body has no home in Scala — `def this()` clashes with the
-    * implicit primary constructor. Inline that no-arg constructor's body as the primary (its
-    * statements run at construction), dropping any leading no-arg super()/this(); other (param)
-    * constructors stay as secondary `def this(...)` and delegate to the now-implicit primary. */
-  private def inlineSoleNoArgCtor(body: List[Statement]): List[Statement] =
-    val ctors = body.collect { case d: Tree.DefDef if sym(d.symbol).name == "<init>" => d }
-    ctors match
-      case List(c) if c.paramss.flatten.isEmpty =>
-        val stats = c.rhs match
-          case Some(Tree.Block(s, _, _, _)) => s
-          case Some(t)                      => List(t)
-          case None                         => Nil
-        val inlined = stats match // drop a leading no-arg super()/this() delegation
-          case Tree.Apply(Tree.Select(_, m, _, _), args, _, _, _) :: tl if sym(m).name == "<init>" && args.isEmpty => tl
-          case all => all
-        body.flatMap { case d: Tree.DefDef if d.symbol == c.symbol => inlined; case s => List(s) }
-      case _ => body
+  /** Promote a Java no-arg constructor to Scala's PRIMARY: `def this()` would clash with the
+    * implicit primary, so inline its body (statements run at construction) in place of the `def
+    * this()`, and lift a leading `super(args)` out for the `extends` clause (returned separately).
+    * Other constructors stay secondary and delegate to `this()`. Returns (body, super-args). */
+  private def lowerCtors(body: List[Statement]): (List[Statement], List[Term]) =
+    def stmts(c: Tree.DefDef): List[Statement] = c.rhs match
+      case Some(Tree.Block(s, _, _, _)) => s
+      case Some(t)                      => List(t)
+      case None                         => Nil
+    // promote ONLY a no-arg constructor that is an actual BASE (calls super, explicitly or
+    // implicitly) — not one that DELEGATES via `this(args)` to another constructor (promoting
+    // that would make the class both take and not-take those params).
+    def delegatesToThis(c: Tree.DefDef): Boolean = stmts(c).headOption.exists {
+      case Tree.Apply(Tree.Select(r, m, _, _), args, _, _, _) => sym(m).name == "<init>" && !r.isInstanceOf[Tree.Super] && args.nonEmpty
+      case _ => false
+    }
+    body.collectFirst {
+      case d: Tree.DefDef if sym(d.symbol).name == "<init>" && d.paramss.flatten.isEmpty && !delegatesToThis(d) => d
+    } match
+      case Some(c) =>
+        val (superArgs, rest) = stmts(c) match
+          case Tree.Apply(Tree.Select(_: Tree.Super, m, _, _), args, _, _, _) :: tl if sym(m).name == "<init>" => (args, tl)
+          case Tree.Apply(Tree.Select(_, m, _, _), args, _, _, _) :: tl if sym(m).name == "<init>" && args.isEmpty => (Nil, tl)
+          case all => (Nil, all)
+        (body.flatMap { case d: Tree.DefDef if d.symbol == c.symbol => rest; case s => List(s) }, superArgs)
+      case None => (body, Nil)
 
   private def isStatic(s: Statement): Boolean = s match
     case d: Tree.ClassDef => sym(d.symbol).flags.isStatic

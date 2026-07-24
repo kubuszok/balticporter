@@ -10,13 +10,10 @@ class ResourceData[T] extends com.badlogic.gdx.utils.Json.Serializable {
     this()
     this.resource = resource
   }
-  def this() = {
-    this()
-    this.uniqueData = new com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.graphics.g3d.particles.ResourceData.SaveData]()
-    this.data = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.ResourceData.SaveData](true, 3, (() => new scala.Array[com.badlogic.gdx.graphics.g3d.particles.ResourceData.SaveData]()))
-    this.sharedAssets = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.ResourceData.AssetData[?]]()
-    this.currentLoadIndex = 0
-  }
+  this.uniqueData = new com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.graphics.g3d.particles.ResourceData.SaveData]()
+  this.data = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.ResourceData.SaveData](true, 3, (() => new scala.Array[com.badlogic.gdx.graphics.g3d.particles.ResourceData.SaveData]()))
+  this.sharedAssets = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.ResourceData.AssetData[?]]()
+  this.currentLoadIndex = 0
   def getAssetData[K](filename: java.lang.String, `type`: java.lang.Class[K]): scala.Int = {
     var i: scala.Int = 0
     for (data <- this.sharedAssets) {
@@ -92,12 +89,9 @@ object ResourceData {
       this.loadIndex = 0
       this.resources = resources
     }
-    def this() = {
-      this()
-      this.data = new com.badlogic.gdx.utils.ObjectMap[java.lang.String, java.lang.Object]()
-      this.assets = new com.badlogic.gdx.utils.IntArray()
-      this.loadIndex = 0
-    }
+    this.data = new com.badlogic.gdx.utils.ObjectMap[java.lang.String, java.lang.Object]()
+    this.assets = new com.badlogic.gdx.utils.IntArray()
+    this.loadIndex = 0
     def saveAsset[K](filename: java.lang.String, `type`: java.lang.Class[K]): scala.Unit = {
       var i: scala.Int = this.resources.getAssetData(filename, `type`)
       if (i == (-1)) {

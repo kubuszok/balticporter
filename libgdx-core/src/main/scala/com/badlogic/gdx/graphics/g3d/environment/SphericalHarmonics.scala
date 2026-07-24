@@ -9,10 +9,7 @@ class SphericalHarmonics {
     } else ()
     this.data = copyFrom.clone()
   }
-  def this() = {
-    this()
-    this.data = new scala.Array[scala.Float](9 * 3)
-  }
+  this.data = new scala.Array[scala.Float](9 * 3)
   def set(values: scala.Array[scala.Float]): SphericalHarmonics = {
     { var i: scala.Int = 0; while (i < this.data.length) { {
       this.data(i) = values(i)

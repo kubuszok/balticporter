@@ -10,13 +10,10 @@ class AmbientCubemap {
     this.data = new scala.Array[scala.Float](copyFrom.length)
     java.lang.System.arraycopy(copyFrom, 0, this.data, 0, this.data.length)
   }
-  def this() = {
-    this()
-    this.data = new scala.Array[scala.Float](AmbientCubemap.NUM_VALUES)
-  }
   def this(copyFrom: AmbientCubemap) = {
     this(copyFrom.data)
   }
+  this.data = new scala.Array[scala.Float](AmbientCubemap.NUM_VALUES)
   def set(values: scala.Array[scala.Float]): AmbientCubemap = {
     { var i: scala.Int = 0; while (i < this.data.length) { {
       this.data(i) = values(i)

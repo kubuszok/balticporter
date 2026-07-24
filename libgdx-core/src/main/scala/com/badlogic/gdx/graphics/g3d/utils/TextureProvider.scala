@@ -18,18 +18,15 @@ object TextureProvider {
       this.vWrap = vWrap
       this.useMipMaps = useMipMaps
     }
-    def this() = {
-      this()
-      this.minFilter = {
-        this.magFilter = com.badlogic.gdx.graphics.Texture.TextureFilter.Linear
-        this.magFilter
-      }
-      this.uWrap = {
-        this.vWrap = com.badlogic.gdx.graphics.Texture.TextureWrap.Repeat
-        this.vWrap
-      }
-      this.useMipMaps = false
+    this.minFilter = {
+      this.magFilter = com.badlogic.gdx.graphics.Texture.TextureFilter.Linear
+      this.magFilter
     }
+    this.uWrap = {
+      this.vWrap = com.badlogic.gdx.graphics.Texture.TextureWrap.Repeat
+      this.vWrap
+    }
+    this.useMipMaps = false
     def load(fileName: java.lang.String): com.badlogic.gdx.graphics.Texture = {
       val result: com.badlogic.gdx.graphics.Texture = new com.badlogic.gdx.graphics.Texture(com.badlogic.gdx.Gdx.files.internal(fileName), this.useMipMaps)
       result.setFilter(this.minFilter, this.magFilter)

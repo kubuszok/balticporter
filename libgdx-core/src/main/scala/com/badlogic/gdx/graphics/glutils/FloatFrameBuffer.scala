@@ -16,10 +16,7 @@ class FloatFrameBuffer extends com.badlogic.gdx.graphics.glutils.FrameBuffer {
     this()
     this.checkExtensions()
   }
-  def this() = {
-    this()
-    this.checkExtensions()
-  }
+  this.checkExtensions()
   def createTexture(attachmentSpec: com.badlogic.gdx.graphics.glutils.GLFrameBuffer.FrameBufferTextureAttachmentSpec): com.badlogic.gdx.graphics.Texture = {
     val data: com.badlogic.gdx.graphics.glutils.FloatTextureData = new com.badlogic.gdx.graphics.glutils.FloatTextureData(this.bufferBuilder.width, this.bufferBuilder.height, attachmentSpec.internalFormat, attachmentSpec.format, attachmentSpec.`type`, attachmentSpec.isGpuOnly)
     val result: com.badlogic.gdx.graphics.Texture = new com.badlogic.gdx.graphics.Texture(data)

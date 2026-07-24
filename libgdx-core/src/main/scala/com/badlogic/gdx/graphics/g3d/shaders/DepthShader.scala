@@ -110,9 +110,6 @@ object DepthShader {
     def this(vertexShader: java.lang.String, fragmentShader: java.lang.String) = {
       this()
     }
-    def this() = {
-      this()
-      defaultCullFace = com.badlogic.gdx.graphics.GL20.GL_FRONT
-    }
+    defaultCullFace = com.badlogic.gdx.graphics.GL20.GL_FRONT
   }
 }

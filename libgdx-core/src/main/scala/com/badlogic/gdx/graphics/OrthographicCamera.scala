@@ -10,10 +10,7 @@ class OrthographicCamera extends com.badlogic.gdx.graphics.Camera {
     this.near = 0
     this.update()
   }
-  def this() = {
-    this()
-    this.near = 0
-  }
+  this.near = 0
   def update(): scala.Unit = {
     this.update(true)
   }
