@@ -376,7 +376,7 @@ class Skin extends com.badlogic.gdx.utils.Disposable {
       return
     } else ()
     name = name.replace("-disabled", "") + (if (enabled) "" else "-disabled")
-    style = this.get(name, style.getClass())
+    style = this.get(name, style.getClass()).asInstanceOf[java.lang.Object]
     method = Skin.findMethod(actor.getClass(), "setStyle")
     if (method == null) {
       return

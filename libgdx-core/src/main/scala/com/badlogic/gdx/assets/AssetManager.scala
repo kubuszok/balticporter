@@ -401,7 +401,7 @@ class AssetManager extends com.badlogic.gdx.utils.Disposable {
       this.assets.put(`type`, typeToAssets)
     } else ()
     val assetRef: com.badlogic.gdx.assets.AssetManager.RefCountedContainer = new com.badlogic.gdx.assets.AssetManager.RefCountedContainer()
-    assetRef.`object` = asset
+    assetRef.`object` = asset.asInstanceOf[java.lang.Object]
     typeToAssets.put(fileName, assetRef)
   }
   private def updateTask(): scala.Boolean = {

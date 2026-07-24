@@ -480,7 +480,7 @@ object SpoonTir:
         * ported assignment/initializer type-checks. */
       private val primRank = Map("byte" -> 1, "short" -> 2, "char" -> 2, "int" -> 3, "long" -> 4, "float" -> 5, "double" -> 6)
 
-      private def coerce(target: CtTypeReference[?], e: CtExpression[?], t: Term, arrayCov: Boolean = true): Term =
+      private def coerce(target: CtTypeReference[?], e: CtExpression[?], t: Term, arrayCov: Boolean = true, tpToObject: Boolean = true): Term =
         val isNull = e match { case l: CtLiteral[?] => l.getValue == null; case _ => false }
         val et     = try e.getType catch { case _: Throwable => null }
         val narrowing = target.isPrimitive && et != null && et.isPrimitive &&
@@ -502,7 +502,14 @@ object SpoonTir:
         if et != null && !et.isPrimitive && target.isPrimitive && wrapperOf.values.toSet(et.getQualifiedName)
           && wrapperOf.get(target.getSimpleName).exists(_ != et.getQualifiedName) then
           return unbox(t, target.getSimpleName, e)
+        // a type-parameter value flowing into a genuinely-`Object` slot (a return/assignment/var-init
+        // where the target type is really `java.lang.Object`, not an erased formal — call args are
+        // handled by `typeParamToObject` off the DECLARED formal, so this stays off that path):
+        // Java erases `T` to `Object`; Scala's unbounded `T <: Any` does not conform. Cast it.
+        val tpObj = tpToObject && et != null && et.isInstanceOf[CtTypeParameterReference] &&
+          target.getQualifiedName == "java.lang.Object"
         val cast =
+          tpObj ||                                                                // T → Object (non-arg)
           (isNull && target.isInstanceOf[CtTypeParameterReference]) ||             // null → type param
           (arrayCov && target.isInstanceOf[CtArrayTypeReference[?]] && et != null &&  // array covariance
             et.isInstanceOf[CtArrayTypeReference[?]] && target.getQualifiedName != et.getQualifiedName) ||
@@ -561,7 +568,7 @@ object SpoonTir:
           i => ps.flatMap(l => if i < l.size then Option(l(i)) else None)
         if formals.size == argEs.size then
           argEs.zipWithIndex.map { (e, i) =>
-            val c = nullToTypeParam(e, declFormals(i), coerce(formals(i), e, expr(e), arrayCov = external))
+            val c = nullToTypeParam(e, declFormals(i), coerce(formals(i), e, expr(e), arrayCov = external, tpToObject = false))
             typeParamToObject(e, declFormals(i), c)
           }
         else argEs.map(expr)
