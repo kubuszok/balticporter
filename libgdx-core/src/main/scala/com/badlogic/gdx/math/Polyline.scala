@@ -73,7 +73,7 @@ class Polyline extends com.badlogic.gdx.math.Shape2D {
     { var i: scala.Int = 0; val n: scala.Int = this.localVertices.length - 2; while (i < n) { {
       val x: scala.Float = this.localVertices(i + 2) - this.localVertices(i)
       val y: scala.Float = this.localVertices(i + 1) - this.localVertices(i + 3)
-      this.length = this.length + java.lang.Math.sqrt((x * x) + (y * y)).asInstanceOf[scala.Float]
+      this.length = (this.length + java.lang.Math.sqrt((x * x) + (y * y)).asInstanceOf[scala.Float]).asInstanceOf[scala.Float]
     }; i = i + 2 } }
     return this.length
   }
@@ -86,7 +86,7 @@ class Polyline extends com.badlogic.gdx.math.Shape2D {
     { var i: scala.Int = 0; val n: scala.Int = this.localVertices.length - 2; while (i < n) { {
       val x: scala.Float = (this.localVertices(i + 2) * this.scaleX) - (this.localVertices(i) * this.scaleX)
       val y: scala.Float = (this.localVertices(i + 1) * this.scaleY) - (this.localVertices(i + 3) * this.scaleY)
-      this.scaledLength = this.scaledLength + java.lang.Math.sqrt((x * x) + (y * y)).asInstanceOf[scala.Float]
+      this.scaledLength = (this.scaledLength + java.lang.Math.sqrt((x * x) + (y * y)).asInstanceOf[scala.Float]).asInstanceOf[scala.Float]
     }; i = i + 2 } }
     return this.scaledLength
   }

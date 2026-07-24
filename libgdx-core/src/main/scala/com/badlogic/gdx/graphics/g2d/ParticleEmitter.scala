@@ -191,8 +191,8 @@ class ParticleEmitter {
           if (this.emissionDelta >= emissionTime) {
             var emitCount: scala.Int = (this.emissionDelta / emissionTime).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
             emitCount = java.lang.Math.min(emitCount, this.maxParticleCount - this.activeCount)
-            this.emissionDelta = this.emissionDelta - (emitCount * emissionTime)
-            this.emissionDelta = this.emissionDelta % emissionTime
+            this.emissionDelta = (this.emissionDelta - (emitCount * emissionTime)).asInstanceOf[scala.Int]
+            this.emissionDelta = (this.emissionDelta % emissionTime).asInstanceOf[scala.Int]
             this.addParticles(emitCount)
           } else ()
         } else ()
@@ -291,8 +291,8 @@ class ParticleEmitter {
       if (this.emissionDelta >= emissionTime) {
         var emitCount: scala.Int = (this.emissionDelta / emissionTime).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
         emitCount = java.lang.Math.min(emitCount, this.maxParticleCount - activeCount)
-        this.emissionDelta = this.emissionDelta - (emitCount * emissionTime)
-        this.emissionDelta = this.emissionDelta % emissionTime
+        this.emissionDelta = (this.emissionDelta - (emitCount * emissionTime)).asInstanceOf[scala.Int]
+        this.emissionDelta = (this.emissionDelta % emissionTime).asInstanceOf[scala.Int]
         this.addParticles(emitCount)
       } else ()
     } else ()

@@ -98,15 +98,15 @@ class RegularEmitter extends com.badlogic.gdx.graphics.g3d.particles.emitters.Em
         }
       }
       if (emit) {
-        this.emissionDelta = this.emissionDelta + deltaMillis
+        this.emissionDelta = (this.emissionDelta + deltaMillis).asInstanceOf[scala.Int]
         var emissionTime: scala.Float = this.emission + (this.emissionDiff * this.emissionValue.getScale(percent))
         if (emissionTime > 0) {
           emissionTime = 1000 / emissionTime
           if (this.emissionDelta >= emissionTime) {
             var emitCount: scala.Int = (this.emissionDelta / emissionTime).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
             emitCount = java.lang.Math.min(emitCount, maxParticleCount - this.controller.particles.size)
-            this.emissionDelta = this.emissionDelta - (emitCount * emissionTime)
-            this.emissionDelta = this.emissionDelta % emissionTime
+            this.emissionDelta = (this.emissionDelta - (emitCount * emissionTime)).asInstanceOf[scala.Int]
+            this.emissionDelta = (this.emissionDelta % emissionTime).asInstanceOf[scala.Int]
             this.addParticles(emitCount)
           } else ()
         } else ()

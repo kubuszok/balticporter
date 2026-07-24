@@ -1840,7 +1840,7 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
       if (n < 0) {
         return 0
       } else ()
-      this.pos = this.pos + n.asInstanceOf[scala.Int]
+      this.pos = (this.pos + n.asInstanceOf[scala.Int]).asInstanceOf[scala.Int]
       return n
     }
   }

@@ -575,20 +575,20 @@ object BitmapFont {
       if (offsetX > 0) {
         x = x - offsetX
         if (x < 0) {
-          glyph.width = glyph.width + x
-          glyph.xoffset = glyph.xoffset - x
+          glyph.width = (glyph.width + x).asInstanceOf[scala.Int]
+          glyph.xoffset = (glyph.xoffset - x).asInstanceOf[scala.Int]
           x = 0
         } else ()
         x2 = x2 - offsetX
         if (x2 > regionWidth) {
-          glyph.width = glyph.width - (x2 - regionWidth)
+          glyph.width = (glyph.width - (x2 - regionWidth)).asInstanceOf[scala.Int]
           x2 = regionWidth
         } else ()
       } else ()
       if (offsetY > 0) {
         y = y - offsetY
         if (y < 0) {
-          glyph.height = glyph.height + y
+          glyph.height = (glyph.height + y).asInstanceOf[scala.Int]
           if (glyph.height < 0) {
             glyph.height = 0
           } else ()
@@ -597,8 +597,8 @@ object BitmapFont {
         y2 = y2 - offsetY
         if (y2 > regionHeight) {
           val amount: scala.Float = y2 - regionHeight
-          glyph.height = glyph.height - amount
-          glyph.yoffset = glyph.yoffset + amount
+          glyph.height = (glyph.height - amount).asInstanceOf[scala.Int]
+          glyph.yoffset = (glyph.yoffset + amount).asInstanceOf[scala.Int]
           y2 = regionHeight
         } else ()
       } else ()

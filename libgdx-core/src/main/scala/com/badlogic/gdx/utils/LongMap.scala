@@ -301,7 +301,7 @@ class LongMap[V] extends scala.collection.Iterable[com.badlogic.gdx.utils.LongMa
     { var i: scala.Int = 0; val n: scala.Int = keyTable.length; while (i < n) { {
       val key: scala.Long = keyTable(i)
       if (key != 0) {
-        h = h + (key * 31)
+        h = (h + (key * 31)).asInstanceOf[scala.Int]
         val value: V = valueTable(i)
         if (value != null) {
           h = h + value.hashCode()

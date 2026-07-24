@@ -611,7 +611,7 @@ class PolygonSpriteBatch extends com.badlogic.gdx.graphics.g2d.PolygonBatch {
       triangles(triangleIndex + 3) = (vertex + 2).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
       triangles(triangleIndex + 4) = (vertex + 3).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
       triangles(triangleIndex + 5) = vertex
-    }; triangleIndex = triangleIndex + 6; vertex = vertex + 4 } }
+    }; triangleIndex = triangleIndex + 6; vertex = (vertex + 4).asInstanceOf[scala.Short] } }
     while (true) {
       java.lang.System.arraycopy(spriteVertices, offset, vertices, vertexIndex, batch)
       this.vertexIndex = vertexIndex + batch

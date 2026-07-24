@@ -236,7 +236,7 @@ class ObjectLongMap[K] extends scala.collection.Iterable[com.badlogic.gdx.utils.
     { var i: scala.Int = 0; val n: scala.Int = keyTable.length; while (i < n) { {
       val key: K = keyTable(i)
       if (key != null) {
-        h = h + (key.hashCode() + valueTable(i))
+        h = (h + (key.hashCode() + valueTable(i))).asInstanceOf[scala.Int]
       } else ()
     }; i = i + 1 } }
     return h

@@ -40,7 +40,7 @@ object MathUtils {
     var radians: scala.Float = radians$arg
     radians = radians / MathUtils.PI
     radians = radians + 0.5f
-    radians = radians - java.lang.Math.floor(radians)
+    radians = (radians - java.lang.Math.floor(radians)).asInstanceOf[scala.Float]
     radians = radians - 0.5f
     radians = radians * MathUtils.PI
     val x2: scala.Float = radians * radians
@@ -51,7 +51,7 @@ object MathUtils {
     var degrees: scala.Float = degrees$arg
     degrees = degrees * (1.0f / 180.0f)
     degrees = degrees + 0.5f
-    degrees = degrees - java.lang.Math.floor(degrees)
+    degrees = (degrees - java.lang.Math.floor(degrees)).asInstanceOf[scala.Float]
     degrees = degrees - 0.5f
     degrees = degrees * MathUtils.PI
     val x2: scala.Float = degrees * degrees

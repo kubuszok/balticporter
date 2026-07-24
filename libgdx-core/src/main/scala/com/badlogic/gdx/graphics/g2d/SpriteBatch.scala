@@ -48,7 +48,7 @@ class SpriteBatch extends com.badlogic.gdx.graphics.g2d.Batch {
       indices(i + 3) = (j + 2).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
       indices(i + 4) = (j + 3).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
       indices(i + 5) = j
-    }; i = i + 6; j = j + 4 } }
+    }; i = i + 6; j = (j + 4).asInstanceOf[scala.Short] } }
     this.mesh.setIndices(indices)
     if (defaultShader == null) {
       this.shader = SpriteBatch.createDefaultShader()

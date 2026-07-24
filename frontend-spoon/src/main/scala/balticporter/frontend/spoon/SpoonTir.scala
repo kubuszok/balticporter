@@ -387,8 +387,15 @@ object SpoonTir:
           val rhs = Option(v.getDefaultExpression).map(e => coerce(v.getType, e, expr(e)))
           Tree.ValDef(id, tt(vt, v), rhs, originOf(v))
         case a: CtOperatorAssignment[?, ?] =>
+          // Java compound assignment narrows implicitly: `int += float` means `= (int)(i + f)`.
           val lhs = expr(a.getAssigned)
-          Tree.Assign(lhs, binApply(opText(a.getKind), lhs, expr(a.getAssignment), ty(a)), unitT, originOf(a))
+          val res = binApply(opText(a.getKind), lhs, expr(a.getAssignment), ty(a))
+          val lt  = a.getAssigned.getType
+          val rt  = try a.getAssignment.getType catch { case _: Throwable => null }
+          val narrow = lt != null && lt.isPrimitive && rt != null && rt.isPrimitive &&
+            primRank.get(lt.getSimpleName).exists(l => primRank.get(rt.getSimpleName).exists(_ > l))
+          val out = if narrow then Tree.Typed(res, tt(tpe(lt), a), tpe(lt), originOf(a)) else res
+          Tree.Assign(lhs, out, unitT, originOf(a))
         case a: CtAssignment[?, ?] =>
           val tgt = Option(a.getAssigned.getType)
           val rhs = a.getAssignment
@@ -466,12 +473,13 @@ object SpoonTir:
       /** Java permits two implicit conversions Scala forbids: array covariance (`Sub[]` → a
         * `Super[]` slot) and `null` → a type parameter. Insert an explicit `asInstanceOf` so the
         * ported assignment/initializer type-checks. */
+      private val primRank = Map("byte" -> 1, "short" -> 2, "char" -> 2, "int" -> 3, "long" -> 4, "float" -> 5, "double" -> 6)
+
       private def coerce(target: CtTypeReference[?], e: CtExpression[?], t: Term): Term =
         val isNull = e match { case l: CtLiteral[?] => l.getValue == null; case _ => false }
         val et     = try e.getType catch { case _: Throwable => null }
-        val rank   = Map("byte" -> 1, "short" -> 2, "char" -> 2, "int" -> 3, "long" -> 4, "float" -> 5, "double" -> 6)
         val narrowing = target.isPrimitive && et != null && et.isPrimitive &&
-          rank.get(target.getSimpleName).exists(tr => rank.get(et.getSimpleName).exists(_ > tr))
+          primRank.get(target.getSimpleName).exists(tr => primRank.get(et.getSimpleName).exists(_ > tr))
         // a primitive flowing into a concrete REFERENCE slot (`Object`, `Number`, …) is Java
         // autoboxing — Scala won't box into every such position, so make it explicit.
         val boxing = et != null && et.isPrimitive && !target.isPrimitive &&

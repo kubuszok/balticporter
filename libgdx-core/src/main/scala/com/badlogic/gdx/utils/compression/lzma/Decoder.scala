@@ -248,7 +248,7 @@ class Decoder {
         var symbol: scala.Int = 1
         while ({ {
           val matchBit: scala.Int = (matchByte >> 7) & 1
-          matchByte = matchByte << 1
+          matchByte = (matchByte << 1).asInstanceOf[scala.Byte]
           val bit: scala.Int = rangeDecoder.DecodeBit(this.m_Decoders, ((1 + matchBit) << 8) + symbol)
           symbol = (symbol << 1) | bit
           if (matchBit != bit) {
