@@ -18,13 +18,21 @@ object CollectionsDemo:
       |class Bag {
       |  private List<String> items = new ArrayList<String>();
       |  private Map<String, Integer> counts = new HashMap<String, Integer>();
+      |  private Set<String> seen = new HashSet<String>();
       |  void add(String s) {
       |    items.add(s);
       |    counts.put(s, size());
+      |    seen.add(s);
       |  }
       |  String first() { return items.get(0); }
+      |  Integer count(String s) { return counts.get(s); }
+      |  void bump(String s) { counts.put(s, counts.getOrDefault(s, 0) + 1); }
+      |  boolean known(String s) { return counts.containsKey(s) && seen.contains(s); }
+      |  void drop(String s) { seen.remove(s); counts.remove(s); }
+      |  void merge(List<String> more) { items.addAll(more); }
       |  int size() { return items.size(); }
       |  boolean empty() { return items.isEmpty(); }
+      |  void each() { for (String s : items) { System.out.println(s); } }
       |}
       |""".stripMargin
 

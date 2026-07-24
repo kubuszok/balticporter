@@ -16,9 +16,16 @@ class CollectionsTransformSpec extends munit.FunSuite:
       |class Bag {
       |  private List<String> items = new ArrayList<String>();
       |  private Map<String, Integer> counts = new HashMap<String, Integer>();
-      |  void add(String s) { items.add(s); counts.put(s, items.size()); }
+      |  private Set<String> seen = new HashSet<String>();
+      |  void add(String s) { items.add(s); counts.put(s, items.size()); seen.add(s); }
       |  String first() { return items.get(0); }
+      |  Integer count(String s) { return counts.get(s); }
+      |  void bump(String s) { counts.put(s, counts.getOrDefault(s, 0) + 1); }
+      |  boolean known(String s) { return counts.containsKey(s) && seen.contains(s); }
+      |  void drop(String s) { seen.remove(s); counts.remove(s); }
+      |  void merge(List<String> more) { items.addAll(more); }
       |  boolean empty() { return items.isEmpty(); }
+      |  void each() { for (String s : items) { first(); } }
       |}
       |""".stripMargin
 
@@ -39,13 +46,22 @@ class CollectionsTransformSpec extends munit.FunSuite:
     assert(after.usages(bufId).map(_.kind).contains(UsageKind.Tycon))
   }
 
-  test("emits scala collection types and rewritten calls") {
+  test("emits scala collection types and kind-aware rewritten calls") {
     assert(clue(out).contains("scala.collection.mutable.Buffer[java.lang.String]"))
     assert(out.contains("new scala.collection.mutable.ArrayBuffer["))
     assert(out.contains("scala.collection.mutable.HashMap["))
-    assert(out.contains("this.items += s"))          // add -> +=
-    assert(out.contains("this.counts.update(s,"))    // put -> update
-    assert(out.contains("this.items(0)"))            // get(i) -> apply
+    assert(out.contains("scala.collection.mutable.HashSet["))
+    assert(out.contains("this.items += s"))          // List.add     -> +=
+    assert(out.contains("this.seen += s"))           // Set.add      -> +=
+    assert(out.contains("this.counts.update(s,"))    // Map.put      -> update
+    assert(out.contains("this.items(0)"))            // List.get(i)  -> apply
+    assert(out.contains("this.counts.getOrElse(s, null.asInstanceOf["))   // Map.get -> getOrElse(_, null: V)
+    assert(out.contains("this.counts.getOrElse(s, 0.asInstanceOf["))      // getOrDefault -> getOrElse(_, d: V)
+    assert(out.contains("this.counts.contains(s)"))  // containsKey  -> contains
+    assert(out.contains("this.seen -= s"))           // Set.remove   -> -=
+    assert(out.contains("this.counts -= s"))         // Map.remove   -> -=
+    assert(out.contains("this.items ++= more"))      // addAll       -> ++=
     assert(out.contains("this.items.isEmpty\n") || out.contains("this.items.isEmpty "))  // drop ()
-    assert(!out.contains("java.util.List"))          // nothing left un-migrated
+    assert(out.contains("for (s <- this.items)"))    // for-each over retyped collection
+    assert(!out.contains("java.util."))              // nothing left un-migrated
   }

@@ -4,6 +4,8 @@ import balticporter.core.FrontendConfig
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.runner.M0Pipeline
+import balticporter.tir.Pipeline
+import balticporter.transform.CollectionsTransform
 
 import java.nio.file.{Files, Path}
 import scala.jdk.CollectionConverters.*
@@ -17,6 +19,7 @@ object SpoonTirEmitProject:
 
   def main(args: Array[String]): Unit =
     val lib      = args.headOption.getOrElse("noise4j")
+    val transform = args.contains("--transform")
     val repoRoot = Path.of(sys.props.getOrElse("balticporter.root", ".")).toAbsolutePath.normalize
     val base     = repoRoot.resolve(s"../sge/original-src/$lib").normalize
     val files = Files.walk(base).iterator().asScala
@@ -25,8 +28,12 @@ object SpoonTirEmitProject:
       .filterNot(f => f.contains("/test/") || f.endsWith("package-info.java") || f.endsWith("module-info.java"))
       .toList.sorted
 
-    val types   = SpoonTir.buildModel(FrontendConfig(base, files, Nil, Nil), lenient = true)
-    val program = SpoonTir.fromTypes(types)
+    val types = SpoonTir.buildModel(FrontendConfig(base, files, Nil, Nil), lenient = true)
+    val raw   = SpoonTir.fromTypes(types)
+    // the real product path applies the transform pipeline before emission; `--transform`
+    // runs it so the gate measures compiling code AFTER migration, not just the raw port.
+    val program = if transform then Pipeline.run(raw, List(new CollectionsTransform)) else raw
+    if transform then println(s"[emit] $lib: applied CollectionsTransform")
     val emitter = new TirEmitter(program)
 
     val outDir = repoRoot.resolve(s"out/tir-emit/$lib")
@@ -43,14 +50,15 @@ object SpoonTirEmitProject:
     M0Pipeline.compileGate("3.8.4", List(outDir)) match
       case Right(())  => println(s"[emit] $lib: SCALAC GREEN")
       case Left(err)  =>
-        val errs = err.linesIterator.filter(l => l.contains("error") && l.contains(".scala")).toList
-        println(s"[emit] $lib: scalac FAILED — ${errs.size} error line(s)")
-        // tally by message signature
+        // dotty emits one `-- [E<code>] <Kind> Error:` header per diagnostic.
+        val errs = err.linesIterator.filter(_.matches("^-- \\[E\\d+\\].*")).toList
+        println(s"[emit] $lib: scalac FAILED — ${errs.size} error(s)")
+        // tally by error kind (E-code + category)
         val byKind = errs.groupBy(errSignature).view.mapValues(_.size).toList.sortBy(-_._2)
         byKind.foreach { case (sig, n) => println(f"  $n%3d  $sig") }
         println("\n--- first errors ---")
-        err.linesIterator.filter(_.contains(".scala")).take(20).foreach(println)
+        err.linesIterator.filter(_.startsWith("-- [E")).take(20)
+          .map(_.replaceAll("/.*/tir-emit/", "").replaceAll(":\\d+:\\d+ *$", "")).foreach(println)
 
   private def errSignature(line: String): String =
-    val msg = line.split("error(:| )").drop(1).mkString(" ").trim
-    msg.replaceAll("\"[^\"]*\"", "\"…\"").replaceAll("[A-Za-z0-9_.]+\\.scala:\\d+:\\d+", "").take(70)
+    line.replaceAll(":.*$", "").replaceAll("/.*$", "").trim.take(70)
