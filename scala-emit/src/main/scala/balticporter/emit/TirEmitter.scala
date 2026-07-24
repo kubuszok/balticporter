@@ -221,8 +221,20 @@ final class TirEmitter(source: Program):
       case other => s"$name <: ${tpe(other)}"
 
   private def parent(p: Term | TypeTree): String = p match
-    case tt: TypeTree  => tpe(tt.tpe)
-    case t: Term  => tpe(t.tpe)
+    case tt: TypeTree  => parentTpe(tt.tpe)
+    case t: Term  => parentTpe(t.tpe)
+
+  /** a parent type in an `extends` clause: a wildcard type argument (`Foo[?, ?]`, from a raw
+    * generic supertype) is ILLEGAL here — replace each `?` with its upper bound (or `AnyRef`). */
+  private def parentTpe(t: TypeRepr): String = t match
+    case TypeRepr.AppliedType(tc, args) if args.exists(_.isInstanceOf[TypeRepr.TypeBounds]) =>
+      val as = args.map {
+        case TypeRepr.TypeBounds(_, hi) if hi != TypeRepr.NoType => tpe(hi)
+        case _: TypeRepr.TypeBounds                              => "scala.AnyRef"
+        case other                                              => tpe(other)
+      }
+      s"${tpe(tc)}[${as.mkString(", ")}]"
+    case _ => tpe(t)
 
   private def stat(s: Statement, i: Int): String = s match
     case c: Tree.ClassDef => classDef(c, i)

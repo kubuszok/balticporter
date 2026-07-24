@@ -630,7 +630,7 @@ object LongMap {
       return array
     }
   }
-  class Keys extends com.badlogic.gdx.utils.LongMap.MapIterator[?] {
+  class Keys extends com.badlogic.gdx.utils.LongMap.MapIterator[scala.AnyRef] {
     def this(map: LongMap[?]) = {
       this()
     }

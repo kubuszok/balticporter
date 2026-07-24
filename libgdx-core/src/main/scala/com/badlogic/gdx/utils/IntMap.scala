@@ -630,7 +630,7 @@ object IntMap {
       return array
     }
   }
-  class Keys extends com.badlogic.gdx.utils.IntMap.MapIterator[?] {
+  class Keys extends com.badlogic.gdx.utils.IntMap.MapIterator[scala.AnyRef] {
     def this(map: IntMap[?]) = {
       this()
     }

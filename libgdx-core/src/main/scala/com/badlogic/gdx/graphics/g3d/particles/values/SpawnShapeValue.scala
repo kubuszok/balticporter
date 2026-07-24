@@ -1,6 +1,6 @@
 package com.badlogic.gdx.graphics.g3d.particles.values
 
-abstract class SpawnShapeValue extends com.badlogic.gdx.graphics.g3d.particles.values.ParticleValue with com.badlogic.gdx.graphics.g3d.particles.ResourceData.Configurable[?] with com.badlogic.gdx.utils.Json.Serializable {
+abstract class SpawnShapeValue extends com.badlogic.gdx.graphics.g3d.particles.values.ParticleValue with com.badlogic.gdx.graphics.g3d.particles.ResourceData.Configurable[scala.AnyRef] with com.badlogic.gdx.utils.Json.Serializable {
   var xOffsetValue: com.badlogic.gdx.graphics.g3d.particles.values.RangedNumericValue = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.values.RangedNumericValue]
   var yOffsetValue: com.badlogic.gdx.graphics.g3d.particles.values.RangedNumericValue = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.values.RangedNumericValue]
   var zOffsetValue: com.badlogic.gdx.graphics.g3d.particles.values.RangedNumericValue = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.values.RangedNumericValue]

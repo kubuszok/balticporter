@@ -1,6 +1,6 @@
 package com.badlogic.gdx.graphics.g3d.particles.renderers
 
-class ParticleControllerControllerRenderer extends com.badlogic.gdx.graphics.g3d.particles.renderers.ParticleControllerRenderer[?, ?] {
+class ParticleControllerControllerRenderer extends com.badlogic.gdx.graphics.g3d.particles.renderers.ParticleControllerRenderer[scala.AnyRef, scala.AnyRef] {
   var controllerChannel: com.badlogic.gdx.graphics.g3d.particles.ParallelArray#ObjectChannel[com.badlogic.gdx.graphics.g3d.particles.ParticleController] = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ParallelArray#ObjectChannel[com.badlogic.gdx.graphics.g3d.particles.ParticleController]]
   def init(): scala.Unit = {
     this.controllerChannel = this.controller.particles.getChannel(com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.ParticleController)

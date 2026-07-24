@@ -1,6 +1,6 @@
 package com.badlogic.gdx.graphics.g3d.particles
 
-class ParticleEffect extends com.badlogic.gdx.utils.Disposable with com.badlogic.gdx.graphics.g3d.particles.ResourceData.Configurable[?] {
+class ParticleEffect extends com.badlogic.gdx.utils.Disposable with com.badlogic.gdx.graphics.g3d.particles.ResourceData.Configurable[scala.AnyRef] {
   private var controllers: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.ParticleController] = null.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.ParticleController]]
   private var bounds: com.badlogic.gdx.math.collision.BoundingBox = null.asInstanceOf[com.badlogic.gdx.math.collision.BoundingBox]
   def this(effect: ParticleEffect) = {
