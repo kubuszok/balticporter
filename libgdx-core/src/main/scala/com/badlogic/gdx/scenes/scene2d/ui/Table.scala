@@ -179,11 +179,11 @@ class Table extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup {
       cell.row$field = 0
     }
     this.cells.add(cell)
-    cell.set(this.cellDefaults)
+    cell.set(this.cellDefaults.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[T]])
     if (cell.column < this.columnDefaults$field.size) {
-      cell.merge(this.columnDefaults$field.get(cell.column))
+      cell.merge(this.columnDefaults$field.get(cell.column).asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[T]])
     } else ()
-    cell.merge(this.rowDefaults)
+    cell.merge(this.rowDefaults.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[T]])
     if (actor != null) {
       this.addActor(actor)
     } else ()

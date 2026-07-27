@@ -1064,14 +1064,46 @@ object SpoonTir:
             }
           case _ => args
 
+      /** A method whose formal is a RAW use of its OWN class (`class Cell<T> { void set (Cell cell) }`
+        * — Java's idiom for "another one like me"): we emit that formal filled with the class's own
+        * parameters (`def set(cell: Cell[T])`), so at a call site it means the RECEIVER's
+        * instantiation. A raw/wildcarded argument (`this.cellDefaults : Cell[?]`) then stops
+        * conforming, though Java accepted it unchecked. Restate that: cast such an argument to the
+        * receiver's own type. Narrow — the formal must be the callee's declaring class, raw, and the
+        * receiver a wildcard-free instantiation of exactly that class. */
+      private def selfRawFormalArgs(inv: CtInvocation[?], argEs: List[CtExpression[?]], args: List[Term]): List[Term] =
+        val recvT = inv.getTarget match
+          case null => null
+          case _: CtSuperAccess[?] | _: CtTypeAccess[?] | _: CtThisAccess[?] => null
+          case t    => try t.getType catch { case _: Throwable => null }
+        val ownerQ = Option(inv.getExecutable.getDeclaringType).map(_.getQualifiedName).orNull
+        if recvT == null || ownerQ == null || recvT.getQualifiedName != ownerQ then args
+        else tpe(recvT) match
+          case rt @ AppliedType(_, ras) if ras.nonEmpty && !ras.exists(_.isInstanceOf[TypeBounds]) =>
+            val ps = try Option(inv.getExecutable.getExecutableDeclaration).map(_.getParameters.asScala.toList.map(_.getType))
+                     catch { case _: Throwable => None }
+            ps match
+              case Some(l) if l.sizeIs == args.size && argEs.sizeIs == args.size =>
+                args.zipWithIndex.map { (t, i) =>
+                  val f  = l(i)
+                  val at = try argEs(i).getType catch { case _: Throwable => null }
+                  val needs = t.tpe match { case AppliedType(_, as) => as.exists(_.isInstanceOf[TypeBounds]); case _ => false }
+                  if f != null && isRawGenericUse(f) && f.getQualifiedName == ownerQ && (needs || isRawGenericUse(at))
+                  then Tree.Typed(t, tt(rt, argEs(i)), rt, t.origin)
+                  else t
+                }
+              case _ => args
+          case _ => args
+
       private def invocation(inv: CtInvocation[?]): Term =
         val ex   = inv.getExecutable
         val mid  = methodSym(ex)
         val argEs = inv.getArguments.asScala.toList
         val erasedRecv = erasedReceiverView(inv)
-        val args = erasedRecv match
+        val args0 = erasedRecv match
           case Some((_, names)) => eraseDependentArgs(ex, argEs, coerceArgs(ex, argEs), names)
           case None             => coerceArgs(ex, argEs)
+        val args = selfRawFormalArgs(inv, argEs, args0)
         val o    = originOf(inv)
         val fun: Term =
           if ex.isConstructor then
