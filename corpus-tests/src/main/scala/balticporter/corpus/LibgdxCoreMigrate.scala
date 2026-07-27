@@ -39,11 +39,12 @@ object LibgdxCoreMigrate:
         // the reflection-based serializer itself — replaced by Kindlings Jsoniter/UBJson codecs.
         // (JsonValue/JsonReader/JsonWriter/JsonMatcher are DOM/parsing types and port fine.)
         "com.badlogic.gdx.utils.Json",
+        // dropped with NO replacement — every reference eliminated, so CHECK 2 proves they are gone
         "com.badlogic.gdx.utils.reflect.Annotation",
+        "com.badlogic.gdx.utils.reflect.Field",
         "com.badlogic.gdx.utils.reflect.ArrayReflection",
         "com.badlogic.gdx.utils.reflect.ClassReflection",
         "com.badlogic.gdx.utils.reflect.Constructor",
-        "com.badlogic.gdx.utils.reflect.Field",
         "com.badlogic.gdx.utils.reflect.Method",
         "com.badlogic.gdx.utils.reflect.ReflectionException",
       ),

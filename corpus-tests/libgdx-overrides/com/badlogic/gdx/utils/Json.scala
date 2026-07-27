@@ -174,8 +174,6 @@ class Json:
     codec("Json.readField")
   def readField(`object`: Object, fieldName: String, jsonName: String, elementType: Class[?], jsonMap: JsonValue): Unit =
     codec("Json.readField")
-  def readField(`object`: Object, field: com.badlogic.gdx.utils.reflect.Field, jsonName: String,
-                elementType: Class[?], jsonMap: JsonValue): Unit = codec("Json.readField")
 
   def readValue[T](`type`: Class[T], jsonData: JsonValue): T = codec("Json.readValue")
   def readValue[T](`type`: Class[T], elementType: Class[?], jsonData: JsonValue): T = codec("Json.readValue")
