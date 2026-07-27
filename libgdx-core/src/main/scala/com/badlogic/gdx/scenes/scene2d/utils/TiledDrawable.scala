@@ -6,9 +6,20 @@ class TiledDrawable extends com.badlogic.gdx.scenes.scene2d.utils.TextureRegionD
   private var align: scala.Int = com.badlogic.gdx.utils.Align.bottomLeft
   def this(region: com.badlogic.gdx.graphics.g2d.TextureRegion) = {
     this()
+    this.setRegion(region)
   }
   def this(drawable: com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable) = {
     this()
+    if (drawable.isInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.BaseDrawable]) {
+      this.name = drawable.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.BaseDrawable].getName()
+    } else ()
+    this.leftWidth = drawable.getLeftWidth()
+    this.rightWidth = drawable.getRightWidth()
+    this.topHeight = drawable.getTopHeight()
+    this.bottomHeight = drawable.getBottomHeight()
+    this.minWidth = drawable.getMinWidth()
+    this.minHeight = drawable.getMinHeight()
+    this.setRegion(drawable.region)
   }
   def draw(batch: com.badlogic.gdx.graphics.g2d.Batch, x: scala.Float, y: scala.Float, width: scala.Float, height: scala.Float): scala.Unit = {
     val oldColor: scala.Float = batch.getPackedColor()

@@ -1,13 +1,13 @@
 package com.badlogic.gdx.scenes.scene2d.utils
 
 class BaseDrawable extends com.badlogic.gdx.scenes.scene2d.utils.Drawable {
-  private var name: java.lang.String = null.asInstanceOf[java.lang.String]
-  private var leftWidth: scala.Float = 0.0f
-  private var rightWidth: scala.Float = 0.0f
-  private var topHeight: scala.Float = 0.0f
-  private var bottomHeight: scala.Float = 0.0f
-  private var minWidth: scala.Float = 0.0f
-  private var minHeight: scala.Float = 0.0f
+  var name: java.lang.String = null.asInstanceOf[java.lang.String]
+  var leftWidth: scala.Float = 0.0f
+  var rightWidth: scala.Float = 0.0f
+  var topHeight: scala.Float = 0.0f
+  var bottomHeight: scala.Float = 0.0f
+  var minWidth: scala.Float = 0.0f
+  var minHeight: scala.Float = 0.0f
   def this(drawable: com.badlogic.gdx.scenes.scene2d.utils.Drawable) = {
     this()
     if (drawable.isInstanceOf[BaseDrawable]) {

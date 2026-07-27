@@ -165,9 +165,19 @@ object Slider {
     var knobAfterDown: com.badlogic.gdx.scenes.scene2d.utils.Drawable = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Drawable]
     def this(background: com.badlogic.gdx.scenes.scene2d.utils.Drawable, knob: com.badlogic.gdx.scenes.scene2d.utils.Drawable) = {
       this()
+      this.background = background
+      this.knob = knob
     }
     def this(style: com.badlogic.gdx.scenes.scene2d.ui.Slider.SliderStyle) = {
       this()
+      this.background = style.background
+      this.disabledBackground = style.disabledBackground
+      this.knob = style.knob
+      this.disabledKnob = style.disabledKnob
+      this.knobBefore = style.knobBefore
+      this.disabledKnobBefore = style.disabledKnobBefore
+      this.knobAfter = style.knobAfter
+      this.disabledKnobAfter = style.disabledKnobAfter
       this.backgroundOver = style.backgroundOver
       this.backgroundDown = style.backgroundDown
       this.knobOver = style.knobOver

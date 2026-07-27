@@ -4,6 +4,8 @@ class FrameBufferCubemap extends com.badlogic.gdx.graphics.glutils.GLFrameBuffer
   private var currentSide: scala.Int = 0
   def this(bufferBuilder: com.badlogic.gdx.graphics.glutils.GLFrameBuffer.GLFrameBufferBuilder[? <: com.badlogic.gdx.graphics.glutils.GLFrameBuffer[com.badlogic.gdx.graphics.Cubemap]]) = {
     this()
+    this.bufferBuilder = bufferBuilder
+    this.build()
   }
   def this(format: com.badlogic.gdx.graphics.Pixmap.Format, width: scala.Int, height: scala.Int, hasDepth: scala.Boolean, hasStencil: scala.Boolean) = {
     this()

@@ -32,8 +32,9 @@ object OmissionCheck:
     * of these classes do across many distinct parent overloads. [[CtorFunnel]] performs that
     * nomination, and this check is derived from ITS decision, so the two can never disagree: the
     * constructor `CtorFunnel` promotes to primary has its super arguments EMITTED (into the
-    * `extends` clause) and is not reported; every other constructor whose `super(...)` carries
-    * arguments still loses them, and is.
+    * `extends` clause) and is not reported; nor is one whose parent constructor `CtorFunnel`
+    * can REPLAY as statements after `this()`. Every other constructor whose `super(...)` carries
+    * arguments still loses them, and is reported.
     */
   def droppedSuperArgs(program: Program): List[Finding] =
     def classes(cd: Tree.ClassDef): List[Tree.ClassDef] =
@@ -44,7 +45,7 @@ object OmissionCheck:
       val primary = plans(cd).primary.map(_.symbol)
       CtorFunnel.ctorsOf(program, cd.body).flatMap { d =>
         val args = CtorFunnel.superArgsOf(program, d)
-        if args.isEmpty || primary.contains(d.symbol) then Nil
+        if args.isEmpty || primary.contains(d.symbol) || plans.replayFor(cd, d).isDefined then Nil
         else
           val owner = program.symbolOf(cd.symbol).map(_.fullName).getOrElse("?")
           List(Finding("super(args) dropped", owner, s"${args.size} argument(s) discarded", d.origin))

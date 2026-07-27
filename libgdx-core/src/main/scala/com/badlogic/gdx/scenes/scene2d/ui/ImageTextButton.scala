@@ -175,9 +175,56 @@ object ImageTextButton {
     var imageCheckedOver: com.badlogic.gdx.scenes.scene2d.utils.Drawable = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Drawable]
     def this(up: com.badlogic.gdx.scenes.scene2d.utils.Drawable, down: com.badlogic.gdx.scenes.scene2d.utils.Drawable, checked: com.badlogic.gdx.scenes.scene2d.utils.Drawable, font: com.badlogic.gdx.graphics.g2d.BitmapFont) = {
       this()
+      this.up = up
+      this.down = down
+      this.checked = checked
+      this.font = font
     }
     def this(style: com.badlogic.gdx.scenes.scene2d.ui.ImageTextButton.ImageTextButtonStyle) = {
       this()
+      this.up = style.up
+      this.down = style.down
+      this.over = style.over
+      this.focused = style.focused
+      this.disabled = style.disabled
+      this.checked = style.checked
+      this.checkedOver = style.checkedOver
+      this.checkedDown = style.checkedDown
+      this.checkedFocused = style.checkedFocused
+      this.pressedOffsetX = style.pressedOffsetX
+      this.pressedOffsetY = style.pressedOffsetY
+      this.unpressedOffsetX = style.unpressedOffsetX
+      this.unpressedOffsetY = style.unpressedOffsetY
+      this.checkedOffsetX = style.checkedOffsetX
+      this.checkedOffsetY = style.checkedOffsetY
+      this.font = style.font
+      if (style.fontColor != null) {
+        this.fontColor = new com.badlogic.gdx.graphics.Color(style.fontColor)
+      } else ()
+      if (style.downFontColor != null) {
+        this.downFontColor = new com.badlogic.gdx.graphics.Color(style.downFontColor)
+      } else ()
+      if (style.overFontColor != null) {
+        this.overFontColor = new com.badlogic.gdx.graphics.Color(style.overFontColor)
+      } else ()
+      if (style.focusedFontColor != null) {
+        this.focusedFontColor = new com.badlogic.gdx.graphics.Color(style.focusedFontColor)
+      } else ()
+      if (style.disabledFontColor != null) {
+        this.disabledFontColor = new com.badlogic.gdx.graphics.Color(style.disabledFontColor)
+      } else ()
+      if (style.checkedFontColor != null) {
+        this.checkedFontColor = new com.badlogic.gdx.graphics.Color(style.checkedFontColor)
+      } else ()
+      if (style.checkedDownFontColor != null) {
+        this.checkedDownFontColor = new com.badlogic.gdx.graphics.Color(style.checkedDownFontColor)
+      } else ()
+      if (style.checkedOverFontColor != null) {
+        this.checkedOverFontColor = new com.badlogic.gdx.graphics.Color(style.checkedOverFontColor)
+      } else ()
+      if (style.checkedFocusedFontColor != null) {
+        this.checkedFocusedFontColor = new com.badlogic.gdx.graphics.Color(style.checkedFocusedFontColor)
+      } else ()
       this.imageUp = style.imageUp
       this.imageDown = style.imageDown
       this.imageOver = style.imageOver
@@ -188,6 +235,49 @@ object ImageTextButton {
     }
     def this(style: com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle) = {
       this()
+      this.up = style.up
+      this.down = style.down
+      this.over = style.over
+      this.focused = style.focused
+      this.disabled = style.disabled
+      this.checked = style.checked
+      this.checkedOver = style.checkedOver
+      this.checkedDown = style.checkedDown
+      this.checkedFocused = style.checkedFocused
+      this.pressedOffsetX = style.pressedOffsetX
+      this.pressedOffsetY = style.pressedOffsetY
+      this.unpressedOffsetX = style.unpressedOffsetX
+      this.unpressedOffsetY = style.unpressedOffsetY
+      this.checkedOffsetX = style.checkedOffsetX
+      this.checkedOffsetY = style.checkedOffsetY
+      this.font = style.font
+      if (style.fontColor != null) {
+        this.fontColor = new com.badlogic.gdx.graphics.Color(style.fontColor)
+      } else ()
+      if (style.downFontColor != null) {
+        this.downFontColor = new com.badlogic.gdx.graphics.Color(style.downFontColor)
+      } else ()
+      if (style.overFontColor != null) {
+        this.overFontColor = new com.badlogic.gdx.graphics.Color(style.overFontColor)
+      } else ()
+      if (style.focusedFontColor != null) {
+        this.focusedFontColor = new com.badlogic.gdx.graphics.Color(style.focusedFontColor)
+      } else ()
+      if (style.disabledFontColor != null) {
+        this.disabledFontColor = new com.badlogic.gdx.graphics.Color(style.disabledFontColor)
+      } else ()
+      if (style.checkedFontColor != null) {
+        this.checkedFontColor = new com.badlogic.gdx.graphics.Color(style.checkedFontColor)
+      } else ()
+      if (style.checkedDownFontColor != null) {
+        this.checkedDownFontColor = new com.badlogic.gdx.graphics.Color(style.checkedDownFontColor)
+      } else ()
+      if (style.checkedOverFontColor != null) {
+        this.checkedOverFontColor = new com.badlogic.gdx.graphics.Color(style.checkedOverFontColor)
+      } else ()
+      if (style.checkedFocusedFontColor != null) {
+        this.checkedFocusedFontColor = new com.badlogic.gdx.graphics.Color(style.checkedFocusedFontColor)
+      } else ()
     }
   }
 }

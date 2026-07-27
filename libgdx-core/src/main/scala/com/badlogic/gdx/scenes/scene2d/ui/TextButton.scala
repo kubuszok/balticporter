@@ -130,10 +130,28 @@ object TextButton {
     var checkedFocusedFontColor: com.badlogic.gdx.graphics.Color = null.asInstanceOf[com.badlogic.gdx.graphics.Color]
     def this(up: com.badlogic.gdx.scenes.scene2d.utils.Drawable, down: com.badlogic.gdx.scenes.scene2d.utils.Drawable, checked: com.badlogic.gdx.scenes.scene2d.utils.Drawable, font: com.badlogic.gdx.graphics.g2d.BitmapFont) = {
       this()
+      this.up = up
+      this.down = down
+      this.checked = checked
       this.font = font
     }
     def this(style: com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle) = {
       this()
+      this.up = style.up
+      this.down = style.down
+      this.over = style.over
+      this.focused = style.focused
+      this.disabled = style.disabled
+      this.checked = style.checked
+      this.checkedOver = style.checkedOver
+      this.checkedDown = style.checkedDown
+      this.checkedFocused = style.checkedFocused
+      this.pressedOffsetX = style.pressedOffsetX
+      this.pressedOffsetY = style.pressedOffsetY
+      this.unpressedOffsetX = style.unpressedOffsetX
+      this.unpressedOffsetY = style.unpressedOffsetY
+      this.checkedOffsetX = style.checkedOffsetX
+      this.checkedOffsetY = style.checkedOffsetY
       this.font = style.font
       if (style.fontColor != null) {
         this.fontColor = new com.badlogic.gdx.graphics.Color(style.fontColor)

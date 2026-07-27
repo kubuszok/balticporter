@@ -30,6 +30,7 @@ object DynamicsModifier {
     var accellerationChannel: com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel]
     def this(rotation: com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.FaceDirection) = {
       this()
+      this.isGlobal = rotation.isGlobal
     }
     def allocateChannels(): scala.Unit = {
       this.rotationChannel = this.controller.particles.addChannel(com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.Rotation3D)

@@ -1,7 +1,7 @@
 package com.badlogic.gdx.scenes.scene2d.utils
 
 class TextureRegionDrawable extends com.badlogic.gdx.scenes.scene2d.utils.BaseDrawable with com.badlogic.gdx.scenes.scene2d.utils.TransformDrawable {
-  private var region: com.badlogic.gdx.graphics.g2d.TextureRegion = null.asInstanceOf[com.badlogic.gdx.graphics.g2d.TextureRegion]
+  var region: com.badlogic.gdx.graphics.g2d.TextureRegion = null.asInstanceOf[com.badlogic.gdx.graphics.g2d.TextureRegion]
   def this(texture: com.badlogic.gdx.graphics.Texture) = {
     this()
     this.setRegion(new com.badlogic.gdx.graphics.g2d.TextureRegion(texture))
@@ -12,6 +12,15 @@ class TextureRegionDrawable extends com.badlogic.gdx.scenes.scene2d.utils.BaseDr
   }
   def this(drawable: TextureRegionDrawable) = {
     this()
+    if (drawable.isInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.BaseDrawable]) {
+      this.name = drawable.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.BaseDrawable].getName()
+    } else ()
+    this.leftWidth = drawable.getLeftWidth()
+    this.rightWidth = drawable.getRightWidth()
+    this.topHeight = drawable.getTopHeight()
+    this.bottomHeight = drawable.getBottomHeight()
+    this.minWidth = drawable.getMinWidth()
+    this.minHeight = drawable.getMinHeight()
     this.setRegion(drawable.region)
   }
   def draw(batch: com.badlogic.gdx.graphics.g2d.Batch, x: scala.Float, y: scala.Float, width: scala.Float, height: scala.Float): scala.Unit = {

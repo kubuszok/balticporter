@@ -8,6 +8,15 @@ class NinePatchDrawable extends com.badlogic.gdx.scenes.scene2d.utils.BaseDrawab
   }
   def this(drawable: NinePatchDrawable) = {
     this()
+    if (drawable.isInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.BaseDrawable]) {
+      this.name = drawable.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.BaseDrawable].getName()
+    } else ()
+    this.leftWidth = drawable.getLeftWidth()
+    this.rightWidth = drawable.getRightWidth()
+    this.topHeight = drawable.getTopHeight()
+    this.bottomHeight = drawable.getBottomHeight()
+    this.minWidth = drawable.getMinWidth()
+    this.minHeight = drawable.getMinHeight()
     this.patch = drawable.patch
   }
   def draw(batch: com.badlogic.gdx.graphics.g2d.Batch, x: scala.Float, y: scala.Float, width: scala.Float, height: scala.Float): scala.Unit = {

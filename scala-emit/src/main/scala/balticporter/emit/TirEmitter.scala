@@ -16,14 +16,21 @@ import balticporter.tir.*
 final class TirEmitter(source: Program):
   // normalize away Java member-name clashes (a field `x` alongside a method `x()`) before
   // rendering — Scala forbids them; renaming the field symbol propagates to every reference.
-  private val program = TirEmitter.funnelParamRenames(TirEmitter.resolveMemberClashes(source))
-  /** which Java constructor becomes each class's Scala primary — a whole-program decision. */
-  private val plans = CtorFunnel.Plans(program)
+  private val prepared = TirEmitter.funnelParamRenames(TirEmitter.resolveMemberClashes(source))
+  /** which Java constructor becomes each class's Scala primary, and which `super(args)` can be
+    * replayed as statements — whole-program decisions. */
+  private val plans = CtorFunnel.Plans(prepared)
+  // a replayed parent constructor's statements execute one level down, so the private members
+  // they reach must be visible there. Widening only rewrites symbol FLAGS — the trees `plans`
+  // was computed over are untouched, so it still applies.
+  private val program = TirEmitter.widen(prepared, plans.widenedMembers)
 
   def emit: String = program.units.map(emitUnit).mkString("\n\n")
 
   /** types declared in the unit currently being rendered (in scope by simple name). */
   private var currentDeclared: Set[SymId] = Set.empty
+  /** the class whose body is being rendered — a constructor's funnel plan is looked up by it. */
+  private var currentClass: Option[Tree.ClassDef] = None
 
   def emitUnit(cd: Tree.ClassDef): String =
     currentDeclared = declaredTypes(cd)
@@ -143,6 +150,11 @@ final class TirEmitter(source: Program):
 
   // ---- definitions ----
   private def classDef(cd: Tree.ClassDef, i: Int): String =
+    val outer = currentClass
+    currentClass = Some(cd)
+    try classDef0(cd, i) finally currentClass = outer
+
+  private def classDef0(cd: Tree.ClassDef, i: Int): String =
     if sym(cd.symbol).flags.isEnum then return enumDef(cd, i)
     val s  = sym(cd.symbol)
     val kw =
@@ -365,7 +377,7 @@ final class TirEmitter(source: Program):
     // `while(true)` as Unit, so a non-Unit method needs an unreachable tail after it.
     val needsUnreachable = !isCtor && !isUnitType(d.returnTpt.tpe) && d.rhs.exists(endsInInfiniteLoop)
     val rhs =
-      if isCtor then s" = ${ctorBody(d.rhs, i)}"
+      if isCtor then s" = ${ctorBody(d, i)}"
       else d.rhs.map(r =>
         if needsUnreachable then s" = {\n${ind(i + 1)}${term(r, i + 1)}\n${ind(i + 1)}throw new java.lang.RuntimeException(\"unreachable\")\n${ind(i)}}"
         else s" = ${term(r, i)}").getOrElse("")
@@ -387,13 +399,13 @@ final class TirEmitter(source: Program):
     case _ => false
 
   /** A Scala secondary constructor must delegate to `this(...)` first — never `super(...)`.
-    * Keep a Java `this(args)` delegation; rewrite a leading `super(...)`/implicit-super to
-    * `this()` (its super args are dropped — the primary-vs-secondary split is future work). */
-  private def ctorBody(rhs: Option[Term], i: Int): String =
-    val stats = rhs match
-      case Some(Tree.Block(s, _, _, _)) => s
-      case Some(t)                      => List(t)
-      case None                         => Nil
+    * Keep a Java `this(args)` delegation. A leading `super(args)` becomes `this()` followed by
+    * the parent constructor's own statements, when `CtorFunnel` has established that the two
+    * together run exactly what `super(args)` ran; where it has not, the arguments are still lost
+    * and `OmissionCheck` still counts them. */
+  private def ctorBody(cdef: Tree.DefDef, i: Int): String =
+    val stats  = CtorFunnel.stmtsOf(cdef)
+    val replay = currentClass.flatMap(plans.replayFor(_, cdef)).getOrElse(Nil)
     val (deleg, rest) = stats match
       case (Tree.Apply(Tree.Select(r, m, _, _), args, _, _, _)) :: tl if sym(m).name == "<init>" =>
         val d = r match
@@ -401,7 +413,7 @@ final class TirEmitter(source: Program):
           case _             => s"this(${args.map(term(_, i + 1)).mkString(", ")})"
         (d, tl)
       case all => ("this()", all)
-    val lines = (ind(i + 1) + deleg) :: rest.map(stat(_, i + 1)).filter(_.trim.nonEmpty)
+    val lines = (ind(i + 1) + deleg) :: (replay ++ rest).map(stat(_, i + 1)).filter(_.trim.nonEmpty)
     s"{\n${joinStats(lines)}\n${ind(i)}}"
 
   /** a parameter clause; a clause of `given` params renders as a Scala 3 `using` clause. */
@@ -657,6 +669,18 @@ final class TirEmitter(source: Program):
     }
 
 object TirEmitter:
+  /** Drop `private` from the given members. Java lets a parent constructor write its own private
+    * fields; when those statements are REPLAYED one level down (see `CtorFunnel.replayFor`) they
+    * execute in the subclass, where `private` no longer reaches. Widening visibility can only
+    * remove access errors, never introduce one, and never changes behaviour. */
+  def widen(p: Program, members: Set[SymId]): Program =
+    if members.isEmpty then p
+    else
+      val syms = p.symbols.all.map(s =>
+        if members(s.id) then s.copy(flags = s.flags.copy(isPrivate = false)) else s
+      )
+      new Program(p.units, SymbolTable(syms), p.xref)
+
   /** Promoting a constructor to Scala's primary widens the SCOPE of everything it declares: its
     * parameters become class parameters and its top-level locals become class members, both
     * visible to the whole body instead of to the constructor alone. That is the only hazard in

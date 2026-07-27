@@ -408,6 +408,8 @@ object TextureAtlas {
     var values: scala.Array[scala.Array[scala.Int]] = null.asInstanceOf[scala.Array[scala.Array[scala.Int]]]
     def this(texture: com.badlogic.gdx.graphics.Texture, x: scala.Int, y: scala.Int, width: scala.Int, height: scala.Int) = {
       this()
+      this.texture = texture
+      this.setRegion(x, y, width, height)
       this.originalWidth = width
       this.originalHeight = height
       this.packedWidth = width
