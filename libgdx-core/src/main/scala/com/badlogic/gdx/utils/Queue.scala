@@ -258,7 +258,7 @@ class Queue[T] extends scala.collection.Iterable[T] {
     if (this.iterable == null) {
       this.iterable = new com.badlogic.gdx.utils.Queue.QueueIterable[T](this)
     } else ()
-    return this.iterable.iterator()
+    return this.iterable.iterator().asInstanceOf[scala.collection.Iterator[T]]
   }
   def toString(): java.lang.String = {
     if (this.size == 0) {

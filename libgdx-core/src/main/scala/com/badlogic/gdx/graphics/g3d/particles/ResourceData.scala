@@ -60,7 +60,7 @@ class ResourceData[T] extends com.badlogic.gdx.utils.Json.Serializable {
     json.writeValue("resource", this.resource.asInstanceOf[java.lang.Object], null)
   }
   def read(json: com.badlogic.gdx.utils.Json, jsonData: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
-    this.uniqueData = json.readValue("unique", classOf[com.badlogic.gdx.utils.ObjectMap[?, ?]], jsonData)
+    this.uniqueData = json.readValue("unique", classOf[com.badlogic.gdx.utils.ObjectMap[?, ?]], jsonData).asInstanceOf[com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.graphics.g3d.particles.ResourceData.SaveData]]
     for (entry <- this.uniqueData.entries()) {
       entry.value.resources = this
     }
@@ -118,7 +118,7 @@ object ResourceData {
       json.writeValue("indices", this.assets.toArray(), classOf[scala.Array[scala.Int]])
     }
     def read(json: com.badlogic.gdx.utils.Json, jsonData: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
-      this.data = json.readValue("data", classOf[com.badlogic.gdx.utils.ObjectMap[?, ?]], jsonData)
+      this.data = json.readValue("data", classOf[com.badlogic.gdx.utils.ObjectMap[?, ?]], jsonData).asInstanceOf[com.badlogic.gdx.utils.ObjectMap[java.lang.String, java.lang.Object]]
       this.assets.addAll(json.readValue("indices", classOf[scala.Array[scala.Int]], jsonData))
     }
   }

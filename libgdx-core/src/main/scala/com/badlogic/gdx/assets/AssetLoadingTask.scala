@@ -27,7 +27,7 @@ class AssetLoadingTask extends com.badlogic.gdx.utils.async.AsyncTask[java.lang.
     } else ()
     val asyncLoader: com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader[?, ?] = this.loader.asInstanceOf[com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader[?, ?]]
     if (!this.dependenciesLoaded) {
-      this.dependencies = asyncLoader.asInstanceOf[com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader[java.lang.Object, com.badlogic.gdx.assets.AssetLoaderParameters[java.lang.Object]]].getDependencies(this.assetDesc.fileName, this.resolve(this.loader, this.assetDesc), this.assetDesc.params.asInstanceOf[com.badlogic.gdx.assets.AssetLoaderParameters[java.lang.Object]])
+      this.dependencies = asyncLoader.asInstanceOf[com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader[java.lang.Object, com.badlogic.gdx.assets.AssetLoaderParameters[java.lang.Object]]].getDependencies(this.assetDesc.fileName, this.resolve(this.loader, this.assetDesc), this.assetDesc.params.asInstanceOf[com.badlogic.gdx.assets.AssetLoaderParameters[java.lang.Object]]).asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]]
       if (this.dependencies != null) {
         this.removeDuplicates(this.dependencies)
         this.manager.injectDependencies(this.assetDesc.fileName, this.dependencies)
@@ -53,7 +53,7 @@ class AssetLoadingTask extends com.badlogic.gdx.utils.async.AsyncTask[java.lang.
     val syncLoader: com.badlogic.gdx.assets.loaders.SynchronousAssetLoader[?, ?] = this.loader.asInstanceOf[com.badlogic.gdx.assets.loaders.SynchronousAssetLoader[?, ?]]
     if (!this.dependenciesLoaded) {
       this.dependenciesLoaded = true
-      this.dependencies = syncLoader.asInstanceOf[com.badlogic.gdx.assets.loaders.SynchronousAssetLoader[java.lang.Object, com.badlogic.gdx.assets.AssetLoaderParameters[java.lang.Object]]].getDependencies(this.assetDesc.fileName, this.resolve(this.loader, this.assetDesc), this.assetDesc.params.asInstanceOf[com.badlogic.gdx.assets.AssetLoaderParameters[java.lang.Object]])
+      this.dependencies = syncLoader.asInstanceOf[com.badlogic.gdx.assets.loaders.SynchronousAssetLoader[java.lang.Object, com.badlogic.gdx.assets.AssetLoaderParameters[java.lang.Object]]].getDependencies(this.assetDesc.fileName, this.resolve(this.loader, this.assetDesc), this.assetDesc.params.asInstanceOf[com.badlogic.gdx.assets.AssetLoaderParameters[java.lang.Object]]).asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]]
       if (this.dependencies == null) {
         this.asset = syncLoader.asInstanceOf[com.badlogic.gdx.assets.loaders.SynchronousAssetLoader[java.lang.Object, com.badlogic.gdx.assets.AssetLoaderParameters[java.lang.Object]]].load(this.manager, this.assetDesc.fileName, this.resolve(this.loader, this.assetDesc), this.assetDesc.params.asInstanceOf[com.badlogic.gdx.assets.AssetLoaderParameters[java.lang.Object]])
         return

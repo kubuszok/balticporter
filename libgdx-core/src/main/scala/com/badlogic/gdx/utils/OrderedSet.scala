@@ -121,7 +121,7 @@ class OrderedSet[T] extends com.badlogic.gdx.utils.ObjectSet[T] {
   }
   def iterator(): com.badlogic.gdx.utils.OrderedSet.OrderedSetIterator[T] = {
     if (com.badlogic.gdx.utils.Collections.allocateIterators) {
-      return new com.badlogic.gdx.utils.OrderedSet.OrderedSetIterator(this)
+      return new com.badlogic.gdx.utils.OrderedSet.OrderedSetIterator(this).asInstanceOf[com.badlogic.gdx.utils.OrderedSet.OrderedSetIterator[T]]
     } else ()
     if (this.iterator1 == null) {
       this.iterator1 = new com.badlogic.gdx.utils.OrderedSet.OrderedSetIterator(this)
@@ -131,12 +131,12 @@ class OrderedSet[T] extends com.badlogic.gdx.utils.ObjectSet[T] {
       this.iterator1.reset()
       this.iterator1.valid = true
       this.iterator2.valid = false
-      return this.iterator1
+      return this.iterator1.asInstanceOf[com.badlogic.gdx.utils.OrderedSet.OrderedSetIterator[T]]
     } else ()
     this.iterator2.reset()
     this.iterator2.valid = true
     this.iterator1.valid = false
-    return this.iterator2
+    return this.iterator2.asInstanceOf[com.badlogic.gdx.utils.OrderedSet.OrderedSetIterator[T]]
   }
   def toString(): java.lang.String = {
     if (size == 0) {

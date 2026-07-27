@@ -1,7 +1,7 @@
 package com.badlogic.gdx.utils
 
 class XmlReader {
-  private final val elements: com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.XmlReader.Element] = new com.badlogic.gdx.utils.Array(8)
+  private final val elements: com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.XmlReader.Element] = new com.badlogic.gdx.utils.Array(8).asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.XmlReader.Element]]
   private var root: com.badlogic.gdx.utils.XmlReader.Element = null.asInstanceOf[com.badlogic.gdx.utils.XmlReader.Element]
   private var current: com.badlogic.gdx.utils.XmlReader.Element = null.asInstanceOf[com.badlogic.gdx.utils.XmlReader.Element]
   private final val textBuffer: java.lang.StringBuilder = new java.lang.StringBuilder(64)
@@ -661,7 +661,7 @@ object XmlReader {
     }
     def setAttribute(name: java.lang.String, value: java.lang.String): scala.Unit = {
       if (this.attributes == null) {
-        this.attributes = new com.badlogic.gdx.utils.ObjectMap(8)
+        this.attributes = new com.badlogic.gdx.utils.ObjectMap(8).asInstanceOf[com.badlogic.gdx.utils.ObjectMap[java.lang.String, java.lang.String]]
       } else ()
       this.attributes.put(name, value)
     }
@@ -685,7 +685,7 @@ object XmlReader {
         throw new java.lang.IllegalArgumentException("element cannot be null.")
       } else ()
       if (this.children == null) {
-        this.children = new com.badlogic.gdx.utils.Array(8)
+        this.children = new com.badlogic.gdx.utils.Array(8).asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.XmlReader.Element]]
       } else ()
       this.children.add(element)
       element.parent = this

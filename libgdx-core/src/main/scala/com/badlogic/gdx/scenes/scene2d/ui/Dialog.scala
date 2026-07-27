@@ -4,7 +4,7 @@ class Dialog extends com.badlogic.gdx.scenes.scene2d.ui.Window {
   var contentTable: com.badlogic.gdx.scenes.scene2d.ui.Table = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Table]
   var buttonTable: com.badlogic.gdx.scenes.scene2d.ui.Table = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Table]
   private var skin: com.badlogic.gdx.scenes.scene2d.ui.Skin = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Skin]
-  var values: com.badlogic.gdx.utils.ObjectMap[com.badlogic.gdx.scenes.scene2d.Actor, java.lang.Object] = new com.badlogic.gdx.utils.ObjectMap()
+  var values: com.badlogic.gdx.utils.ObjectMap[com.badlogic.gdx.scenes.scene2d.Actor, java.lang.Object] = new com.badlogic.gdx.utils.ObjectMap().asInstanceOf[com.badlogic.gdx.utils.ObjectMap[com.badlogic.gdx.scenes.scene2d.Actor, java.lang.Object]]
   var cancelHide: scala.Boolean = false
   var previousKeyboardFocus: com.badlogic.gdx.scenes.scene2d.Actor = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.Actor]
   var previousScrollFocus: com.badlogic.gdx.scenes.scene2d.Actor = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.Actor]

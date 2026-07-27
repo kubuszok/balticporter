@@ -1,7 +1,7 @@
 package com.badlogic.gdx.scenes.scene2d.actions
 
 class ParallelAction extends com.badlogic.gdx.scenes.scene2d.Action {
-  var actions: com.badlogic.gdx.utils.Array[com.badlogic.gdx.scenes.scene2d.Action] = new com.badlogic.gdx.utils.Array(4)
+  var actions: com.badlogic.gdx.utils.Array[com.badlogic.gdx.scenes.scene2d.Action] = new com.badlogic.gdx.utils.Array(4).asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.scenes.scene2d.Action]]
   private var complete: scala.Boolean = false
   def this(action1: com.badlogic.gdx.scenes.scene2d.Action) = {
     this()

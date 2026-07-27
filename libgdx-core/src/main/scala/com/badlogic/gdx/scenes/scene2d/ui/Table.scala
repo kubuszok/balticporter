@@ -4,9 +4,9 @@ class Table extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup {
   private var columns: scala.Int = 0
   private var rows: scala.Int = 0
   private var implicitEndRow: scala.Boolean = false
-  private final val cells: com.badlogic.gdx.utils.Array[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]] = new com.badlogic.gdx.utils.Array(4)
+  private final val cells: com.badlogic.gdx.utils.Array[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]] = new com.badlogic.gdx.utils.Array(4).asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]]]
   private var cellDefaults: com.badlogic.gdx.scenes.scene2d.ui.Cell[?] = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]]
-  final val columnDefaults$field: com.badlogic.gdx.utils.Array[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]] = new com.badlogic.gdx.utils.Array(2)
+  final val columnDefaults$field: com.badlogic.gdx.utils.Array[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]] = new com.badlogic.gdx.utils.Array(2).asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]]]
   private var rowDefaults: com.badlogic.gdx.scenes.scene2d.ui.Cell[?] = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]]
   private var sizeInvalid: scala.Boolean = true
   private var columnMinWidth: scala.Array[scala.Float] = null.asInstanceOf[scala.Array[scala.Float]]
@@ -1155,7 +1155,7 @@ class Table extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup {
   }
   private def clearDebugRects(): scala.Unit = {
     if (this.debugRects == null) {
-      this.debugRects = new com.badlogic.gdx.utils.Array()
+      this.debugRects = new com.badlogic.gdx.utils.Array().asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.scenes.scene2d.ui.Table.DebugRect]]
     } else ()
     com.badlogic.gdx.scenes.scene2d.ui.Table.DebugRect.pool.freeAll(this.debugRects)
     this.debugRects.clear()
@@ -1239,7 +1239,7 @@ object Table {
   }
   object DebugRect {
     export com.badlogic.gdx.math.Rectangle.{pool => _, *}
-    var pool: com.badlogic.gdx.utils.Pool[com.badlogic.gdx.scenes.scene2d.ui.Table.DebugRect] = new com.badlogic.gdx.utils.DefaultPool[com.badlogic.gdx.scenes.scene2d.ui.Table.DebugRect]((() => new com.badlogic.gdx.scenes.scene2d.ui.Table.DebugRect()))
+    var pool: com.badlogic.gdx.utils.Pool[com.badlogic.gdx.scenes.scene2d.ui.Table.DebugRect] = new com.badlogic.gdx.utils.DefaultPool[com.badlogic.gdx.scenes.scene2d.ui.Table.DebugRect](((() => new com.badlogic.gdx.scenes.scene2d.ui.Table.DebugRect()): com.badlogic.gdx.utils.DefaultPool.PoolSupplier[com.badlogic.gdx.scenes.scene2d.ui.Table.DebugRect]))
   }
   sealed abstract class Debug {
     def name(): java.lang.String = this.toString()

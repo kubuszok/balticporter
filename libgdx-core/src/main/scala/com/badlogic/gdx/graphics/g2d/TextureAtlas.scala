@@ -1,8 +1,8 @@
 package com.badlogic.gdx.graphics.g2d
 
 class TextureAtlas extends com.badlogic.gdx.utils.Disposable {
-  private final val textures: com.badlogic.gdx.utils.ObjectSet[com.badlogic.gdx.graphics.Texture] = new com.badlogic.gdx.utils.ObjectSet(4)
-  private final val regions: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion] = new com.badlogic.gdx.utils.Array()
+  private final val textures: com.badlogic.gdx.utils.ObjectSet[com.badlogic.gdx.graphics.Texture] = new com.badlogic.gdx.utils.ObjectSet(4).asInstanceOf[com.badlogic.gdx.utils.ObjectSet[com.badlogic.gdx.graphics.Texture]]
+  private final val regions: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion] = new com.badlogic.gdx.utils.Array().asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion]]
   def this(data: com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData) = {
     this()
     this.load(data)
@@ -104,7 +104,7 @@ class TextureAtlas extends com.badlogic.gdx.utils.Disposable {
     { var i: scala.Int = 0; val n: scala.Int = this.regions.size; while (i < n) { {
       sprites.asInstanceOf[com.badlogic.gdx.utils.Array[java.lang.Object]].add(this.newSprite(this.regions.get(i)).asInstanceOf[java.lang.Object])
     }; i = i + 1 } }
-    return sprites
+    return sprites.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.Sprite]]
   }
   def createSprite(name: java.lang.String): com.badlogic.gdx.graphics.g2d.Sprite = {
     { var i: scala.Int = 0; val n: scala.Int = this.regions.size; while (i < n) { {
@@ -179,22 +179,22 @@ class TextureAtlas extends com.badlogic.gdx.utils.Disposable {
 }
 object TextureAtlas {
   class TextureAtlasData {
-    final val pages: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Page] = new com.badlogic.gdx.utils.Array()
-    final val regions: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Region] = new com.badlogic.gdx.utils.Array()
+    final val pages: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Page] = new com.badlogic.gdx.utils.Array().asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Page]]
+    final val regions: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Region] = new com.badlogic.gdx.utils.Array().asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Region]]
     def this(packFile: com.badlogic.gdx.files.FileHandle, imagesDir: com.badlogic.gdx.files.FileHandle, flip: scala.Boolean) = {
       this()
       this.load(packFile, imagesDir, flip)
     }
     def load(packFile: com.badlogic.gdx.files.FileHandle, imagesDir: com.badlogic.gdx.files.FileHandle, flip: scala.Boolean): scala.Unit = {
       val entry: scala.Array[java.lang.String] = new scala.Array[java.lang.String](5)
-      val pageFields: com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Page]] = new com.badlogic.gdx.utils.ObjectMap(15, 0.99f)
+      val pageFields: com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Page]] = new com.badlogic.gdx.utils.ObjectMap(15, 0.99f).asInstanceOf[com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Page]]]
       pageFields.put("size", new com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Page]())
       pageFields.put("format", new com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Page]())
       pageFields.put("filter", new com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Page]())
       pageFields.put("repeat", new com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Page]())
       pageFields.put("pma", new com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Page]())
       val hasIndexes: scala.Array[scala.Boolean] = scala.Array[scala.Boolean](false)
-      val regionFields: com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Region]] = new com.badlogic.gdx.utils.ObjectMap(127, 0.99f)
+      val regionFields: com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Region]] = new com.badlogic.gdx.utils.ObjectMap(127, 0.99f).asInstanceOf[com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Region]]]
       regionFields.put("xy", new com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Region]())
       regionFields.put("size", new com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Region]())
       regionFields.put("bounds", new com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Region]())
@@ -267,8 +267,8 @@ object TextureAtlas {
                   field.asInstanceOf[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[java.lang.Object]].parse(region.asInstanceOf[java.lang.Object])
                 } else {
                   if (names == null) {
-                    names = new com.badlogic.gdx.utils.Array(8)
-                    values = new com.badlogic.gdx.utils.Array(8)
+                    names = new com.badlogic.gdx.utils.Array(8).asInstanceOf[com.badlogic.gdx.utils.Array[java.lang.String]]
+                    values = new com.badlogic.gdx.utils.Array(8).asInstanceOf[com.badlogic.gdx.utils.Array[scala.Array[scala.Int]]]
                   } else ()
                   names.add(entry(0))
                   val entryValues: scala.Array[scala.Int] = new scala.Array[scala.Int](count);

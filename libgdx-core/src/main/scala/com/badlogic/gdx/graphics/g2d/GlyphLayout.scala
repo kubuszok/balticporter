@@ -1,7 +1,7 @@
 package com.badlogic.gdx.graphics.g2d
 
 class GlyphLayout extends com.badlogic.gdx.utils.Pool.Poolable {
-  final val runs: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.GlyphLayout.GlyphRun] = new com.badlogic.gdx.utils.Array(1)
+  final val runs: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.GlyphLayout.GlyphRun] = new com.badlogic.gdx.utils.Array(1).asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.GlyphLayout.GlyphRun]]
   final val colors: com.badlogic.gdx.utils.IntArray = new com.badlogic.gdx.utils.IntArray(2)
   var glyphCount: scala.Int = 0
   var width: scala.Float = 0.0f
@@ -423,11 +423,11 @@ class GlyphLayout extends com.badlogic.gdx.utils.Pool.Poolable {
   }
 }
 object GlyphLayout {
-  private final val glyphRunPool: com.badlogic.gdx.utils.Pool[com.badlogic.gdx.graphics.g2d.GlyphLayout.GlyphRun] = new com.badlogic.gdx.utils.DefaultPool[com.badlogic.gdx.graphics.g2d.GlyphLayout.GlyphRun]((() => new com.badlogic.gdx.graphics.g2d.GlyphLayout.GlyphRun()))
+  private final val glyphRunPool: com.badlogic.gdx.utils.Pool[com.badlogic.gdx.graphics.g2d.GlyphLayout.GlyphRun] = new com.badlogic.gdx.utils.DefaultPool[com.badlogic.gdx.graphics.g2d.GlyphLayout.GlyphRun](((() => new com.badlogic.gdx.graphics.g2d.GlyphLayout.GlyphRun()): com.badlogic.gdx.utils.DefaultPool.PoolSupplier[com.badlogic.gdx.graphics.g2d.GlyphLayout.GlyphRun]))
   private final val colorStack: com.badlogic.gdx.utils.IntArray = new com.badlogic.gdx.utils.IntArray(4)
   private final val epsilon: scala.Float = 1.0E-4f
   class GlyphRun extends com.badlogic.gdx.utils.Pool.Poolable {
-    var glyphs: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.BitmapFont.Glyph] = new com.badlogic.gdx.utils.Array()
+    var glyphs: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.BitmapFont.Glyph] = new com.badlogic.gdx.utils.Array().asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.BitmapFont.Glyph]]
     var xAdvances: com.badlogic.gdx.utils.FloatArray = new com.badlogic.gdx.utils.FloatArray()
     var x: scala.Float = 0.0f
     var y: scala.Float = 0.0f

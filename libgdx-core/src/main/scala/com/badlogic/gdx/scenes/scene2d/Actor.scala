@@ -3,9 +3,9 @@ package com.badlogic.gdx.scenes.scene2d
 class Actor {
   private var stage: com.badlogic.gdx.scenes.scene2d.Stage = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.Stage]
   var parent: com.badlogic.gdx.scenes.scene2d.Group = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.Group]
-  private final val listeners: com.badlogic.gdx.utils.DelayedRemovalArray[com.badlogic.gdx.scenes.scene2d.EventListener] = new com.badlogic.gdx.utils.DelayedRemovalArray(0)
-  private final val captureListeners: com.badlogic.gdx.utils.DelayedRemovalArray[com.badlogic.gdx.scenes.scene2d.EventListener] = new com.badlogic.gdx.utils.DelayedRemovalArray(0)
-  private final val actions: com.badlogic.gdx.utils.Array[com.badlogic.gdx.scenes.scene2d.Action] = new com.badlogic.gdx.utils.Array(0)
+  private final val listeners: com.badlogic.gdx.utils.DelayedRemovalArray[com.badlogic.gdx.scenes.scene2d.EventListener] = new com.badlogic.gdx.utils.DelayedRemovalArray(0).asInstanceOf[com.badlogic.gdx.utils.DelayedRemovalArray[com.badlogic.gdx.scenes.scene2d.EventListener]]
+  private final val captureListeners: com.badlogic.gdx.utils.DelayedRemovalArray[com.badlogic.gdx.scenes.scene2d.EventListener] = new com.badlogic.gdx.utils.DelayedRemovalArray(0).asInstanceOf[com.badlogic.gdx.utils.DelayedRemovalArray[com.badlogic.gdx.scenes.scene2d.EventListener]]
+  private final val actions: com.badlogic.gdx.utils.Array[com.badlogic.gdx.scenes.scene2d.Action] = new com.badlogic.gdx.utils.Array(0).asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.scenes.scene2d.Action]]
   private var name: java.lang.String = null.asInstanceOf[java.lang.String]
   private var touchable: com.badlogic.gdx.scenes.scene2d.Touchable = com.badlogic.gdx.scenes.scene2d.Touchable.enabled
   private var visible: scala.Boolean = true
@@ -57,7 +57,7 @@ class Actor {
       event.setStage(this.getStage())
     } else ()
     event.setTarget(this)
-    val ascendants: com.badlogic.gdx.utils.Array[com.badlogic.gdx.scenes.scene2d.Group] = Actor.POOLS.obtain(classOf[com.badlogic.gdx.utils.Array[?]])
+    val ascendants: com.badlogic.gdx.utils.Array[com.badlogic.gdx.scenes.scene2d.Group] = Actor.POOLS.obtain(classOf[com.badlogic.gdx.utils.Array[?]]).asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.scenes.scene2d.Group]]
     var parent: com.badlogic.gdx.scenes.scene2d.Group = this.parent
     while (parent != null) {
       ascendants.add(parent)
@@ -813,9 +813,9 @@ class Actor {
 object Actor {
   var POOLS: com.badlogic.gdx.utils.PoolManager = new com.badlogic.gdx.utils.PoolManager()
   locally {
-    Actor.POOLS.addPool(classOf[com.badlogic.gdx.math.Rectangle], (() => new com.badlogic.gdx.math.Rectangle()))
+    Actor.POOLS.addPool(classOf[com.badlogic.gdx.math.Rectangle], ((() => new com.badlogic.gdx.math.Rectangle()): com.badlogic.gdx.utils.DefaultPool.PoolSupplier[com.badlogic.gdx.math.Rectangle]))
     Actor.POOLS.addPool(classOf[com.badlogic.gdx.utils.Array[?]], (() => new com.badlogic.gdx.utils.Array()))
-    Actor.POOLS.addPool(classOf[com.badlogic.gdx.graphics.g2d.GlyphLayout], (() => new com.badlogic.gdx.graphics.g2d.GlyphLayout()))
-    Actor.POOLS.addPool(classOf[com.badlogic.gdx.scenes.scene2d.utils.ChangeListener.ChangeEvent], (() => new com.badlogic.gdx.scenes.scene2d.utils.ChangeListener.ChangeEvent()))
+    Actor.POOLS.addPool(classOf[com.badlogic.gdx.graphics.g2d.GlyphLayout], ((() => new com.badlogic.gdx.graphics.g2d.GlyphLayout()): com.badlogic.gdx.utils.DefaultPool.PoolSupplier[com.badlogic.gdx.graphics.g2d.GlyphLayout]))
+    Actor.POOLS.addPool(classOf[com.badlogic.gdx.scenes.scene2d.utils.ChangeListener.ChangeEvent], ((() => new com.badlogic.gdx.scenes.scene2d.utils.ChangeListener.ChangeEvent()): com.badlogic.gdx.utils.DefaultPool.PoolSupplier[com.badlogic.gdx.scenes.scene2d.utils.ChangeListener.ChangeEvent]))
   }
 }

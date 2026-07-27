@@ -633,7 +633,7 @@ object IntMap {
       while (hasNext$field) {
         array.asInstanceOf[com.badlogic.gdx.utils.Array[java.lang.Object]].add(this.next().asInstanceOf[java.lang.Object])
       }
-      return array
+      return array.asInstanceOf[com.badlogic.gdx.utils.Array[V]]
     }
   }
   object Values {

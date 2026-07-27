@@ -1,14 +1,14 @@
 package com.badlogic.gdx.assets
 
 class AssetManager extends com.badlogic.gdx.utils.Disposable {
-  final val assets: com.badlogic.gdx.utils.ObjectMap[java.lang.Class[?], com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.assets.AssetManager.RefCountedContainer]] = new com.badlogic.gdx.utils.ObjectMap()
-  final val assetTypes: com.badlogic.gdx.utils.ObjectMap[java.lang.String, java.lang.Class[?]] = new com.badlogic.gdx.utils.ObjectMap()
-  final val assetDependencies: com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.utils.Array[java.lang.String]] = new com.badlogic.gdx.utils.ObjectMap()
-  final val injected: com.badlogic.gdx.utils.ObjectSet[java.lang.String] = new com.badlogic.gdx.utils.ObjectSet()
-  final val loaders: com.badlogic.gdx.utils.ObjectMap[java.lang.Class[?], com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.assets.loaders.AssetLoader[?, ?]]] = new com.badlogic.gdx.utils.ObjectMap()
-  final val loadQueue: com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = new com.badlogic.gdx.utils.Array()
+  final val assets: com.badlogic.gdx.utils.ObjectMap[java.lang.Class[?], com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.assets.AssetManager.RefCountedContainer]] = new com.badlogic.gdx.utils.ObjectMap().asInstanceOf[com.badlogic.gdx.utils.ObjectMap[java.lang.Class[?], com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.assets.AssetManager.RefCountedContainer]]]
+  final val assetTypes: com.badlogic.gdx.utils.ObjectMap[java.lang.String, java.lang.Class[?]] = new com.badlogic.gdx.utils.ObjectMap().asInstanceOf[com.badlogic.gdx.utils.ObjectMap[java.lang.String, java.lang.Class[?]]]
+  final val assetDependencies: com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.utils.Array[java.lang.String]] = new com.badlogic.gdx.utils.ObjectMap().asInstanceOf[com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.utils.Array[java.lang.String]]]
+  final val injected: com.badlogic.gdx.utils.ObjectSet[java.lang.String] = new com.badlogic.gdx.utils.ObjectSet().asInstanceOf[com.badlogic.gdx.utils.ObjectSet[java.lang.String]]
+  final val loaders: com.badlogic.gdx.utils.ObjectMap[java.lang.Class[?], com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.assets.loaders.AssetLoader[?, ?]]] = new com.badlogic.gdx.utils.ObjectMap().asInstanceOf[com.badlogic.gdx.utils.ObjectMap[java.lang.Class[?], com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.assets.loaders.AssetLoader[?, ?]]]]
+  final val loadQueue: com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = new com.badlogic.gdx.utils.Array().asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]]
   var executor: com.badlogic.gdx.utils.async.AsyncExecutor = null.asInstanceOf[com.badlogic.gdx.utils.async.AsyncExecutor]
-  final val tasks: com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetLoadingTask] = new com.badlogic.gdx.utils.Array()
+  final val tasks: com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetLoadingTask] = new com.badlogic.gdx.utils.Array().asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetLoadingTask]]
   var listener: com.badlogic.gdx.assets.AssetErrorListener = null.asInstanceOf[com.badlogic.gdx.assets.AssetErrorListener]
   var loaded: scala.Int = 0
   var toLoad: scala.Int = 0
@@ -353,7 +353,7 @@ class AssetManager extends com.badlogic.gdx.utils.Disposable {
   private def injectDependency(parentAssetFilename: java.lang.String, dependendAssetDesc: com.badlogic.gdx.assets.AssetDescriptor[?]): scala.Unit = {
     var dependencies: com.badlogic.gdx.utils.Array[java.lang.String] = this.assetDependencies.get(parentAssetFilename)
     if (dependencies == null) {
-      dependencies = new com.badlogic.gdx.utils.Array()
+      dependencies = new com.badlogic.gdx.utils.Array().asInstanceOf[com.badlogic.gdx.utils.Array[java.lang.String]]
       this.assetDependencies.put(parentAssetFilename, dependencies)
     } else ()
     dependencies.add(dependendAssetDesc.fileName)

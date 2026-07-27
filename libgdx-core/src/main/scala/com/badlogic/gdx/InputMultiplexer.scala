@@ -1,7 +1,7 @@
 package com.badlogic.gdx
 
 class InputMultiplexer extends com.badlogic.gdx.InputProcessor {
-  private var processors: com.badlogic.gdx.utils.SnapshotArray[com.badlogic.gdx.InputProcessor] = new com.badlogic.gdx.utils.SnapshotArray(4)
+  private var processors: com.badlogic.gdx.utils.SnapshotArray[com.badlogic.gdx.InputProcessor] = new com.badlogic.gdx.utils.SnapshotArray(4).asInstanceOf[com.badlogic.gdx.utils.SnapshotArray[com.badlogic.gdx.InputProcessor]]
   def this(processors: scala.Array[com.badlogic.gdx.InputProcessor]) = {
     this()
     this.processors.addAll(processors)

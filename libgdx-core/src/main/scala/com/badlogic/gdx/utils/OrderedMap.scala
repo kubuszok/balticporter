@@ -4,17 +4,17 @@ class OrderedMap[K, V] extends com.badlogic.gdx.utils.ObjectMap[K, V] {
   var keys$field: com.badlogic.gdx.utils.Array[K] = null.asInstanceOf[com.badlogic.gdx.utils.Array[K]]
   def this(initialCapacity: scala.Int) = {
     this()
-    this.keys$field = new com.badlogic.gdx.utils.Array(initialCapacity)
+    this.keys$field = new com.badlogic.gdx.utils.Array(initialCapacity).asInstanceOf[com.badlogic.gdx.utils.Array[K]]
   }
   def this(initialCapacity: scala.Int, loadFactor: scala.Float) = {
     this()
-    this.keys$field = new com.badlogic.gdx.utils.Array(initialCapacity)
+    this.keys$field = new com.badlogic.gdx.utils.Array(initialCapacity).asInstanceOf[com.badlogic.gdx.utils.Array[K]]
   }
   def this(map: OrderedMap[? <: K, ? <: V]) = {
     this()
-    this.keys$field = new com.badlogic.gdx.utils.Array(map.keys$field)
+    this.keys$field = new com.badlogic.gdx.utils.Array(map.keys$field).asInstanceOf[com.badlogic.gdx.utils.Array[K]]
   }
-  this.keys$field = new com.badlogic.gdx.utils.Array()
+  this.keys$field = new com.badlogic.gdx.utils.Array().asInstanceOf[com.badlogic.gdx.utils.Array[K]]
   def put(key: K, value: V): V = {
     var i: scala.Int = this.locateKey(key)
     if (i >= 0) {

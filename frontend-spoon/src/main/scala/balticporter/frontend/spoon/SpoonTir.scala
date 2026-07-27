@@ -625,7 +625,7 @@ object SpoonTir:
         * ported assignment/initializer type-checks. */
       private val primRank = Map("byte" -> 1, "short" -> 2, "char" -> 2, "int" -> 3, "long" -> 4, "float" -> 5, "double" -> 6)
 
-      private def coerce(target: CtTypeReference[?], e: CtExpression[?], t: Term, arrayCov: Boolean = true, tpToObject: Boolean = true): Term =
+      private def coerce(target: CtTypeReference[?], e: CtExpression[?], t: Term, arrayCov: Boolean = true, tpToObject: Boolean = true, rawFill: Boolean = true): Term =
         val isNull = e match { case l: CtLiteral[?] => l.getValue == null; case _ => false }
         val et     = try e.getType catch { case _: Throwable => null }
         val narrowing = target.isPrimitive && et != null && et.isPrimitive &&
@@ -654,6 +654,7 @@ object SpoonTir:
         val tpObj = tpToObject && et != null && et.isInstanceOf[CtTypeParameterReference] &&
           target.getQualifiedName == "java.lang.Object"
         val cast =
+          (rawFill && rawToParameterized(t.tpe, target)) ||                       // raw Cell → Cell[T]
           tpObj ||                                                                // T → Object (non-arg)
           (isNull && target.isInstanceOf[CtTypeParameterReference]) ||             // null → type param
           (arrayCov && target.isInstanceOf[CtArrayTypeReference[?]] && et != null &&  // array covariance
@@ -667,6 +668,20 @@ object SpoonTir:
         // `Integer` parameter that Spoon erased at the call reference.
         val ct = if boxing then boxedPrimitive(et.getSimpleName) else tpe(target)
         if cast then Tree.Typed(t, tt(ct, e), ct, originOf(e)) else t
+
+      /** Java's UNCHECKED CONVERSION — a RAW generic value flowing into a PARAMETERIZED slot of the
+        * SAME type constructor (`Cell<T> cell = obtainCell()` where `obtainCell()` returns a raw
+        * `Cell`; `Array<Group> a = POOLS.obtain(Array.class)`). Java permits it with a warning and an
+        * unchecked cast at runtime. Our raw fill (see `tpe`) makes the source side a WILDCARD
+        * instantiation (`Cell[?]`), which Scala refuses to pass for `Cell[T]` — so restate Java's
+        * unchecked step explicitly. Deliberately narrow: SAME head symbol, same arity, wildcards only
+        * on the source side, so this can never bridge two unrelated types. */
+      private def rawToParameterized(from: TypeRepr, target: CtTypeReference[?]): Boolean =
+        (from, tpe(target)) match
+          case (AppliedType(TypeRef(_, a), as), AppliedType(TypeRef(_, b), bs)) =>
+            a == b && as.sizeIs == bs.size &&
+              as.exists(_.isInstanceOf[TypeBounds]) && !bs.exists(_.isInstanceOf[TypeBounds])
+          case _ => false
 
       private val wrapperOf = Map(
         "byte" -> "java.lang.Byte", "short" -> "java.lang.Short", "char" -> "java.lang.Character",
@@ -713,7 +728,10 @@ object SpoonTir:
           i => ps.flatMap(l => if i < l.size then Option(l(i)) else None)
         if formals.size == argEs.size then
           argEs.zipWithIndex.map { (e, i) =>
-            val c = nullToTypeParam(e, declFormals(i), coerce(formals(i), e, expr(e), arrayCov = external, tpToObject = false))
+            // `rawFill` is OFF for arguments: an executable reference's formal can carry the CALLEE's
+            // own (here unresolvable) type variables, and ascribing to those emits a name the call
+            // site cannot see. Assignment/initializer/return targets are written types — safe.
+            val c = nullToTypeParam(e, declFormals(i), coerce(formals(i), e, expr(e), arrayCov = external, tpToObject = false, rawFill = false))
             typeParamToObject(e, declFormals(i), c)
           }
         else argEs.map(expr)

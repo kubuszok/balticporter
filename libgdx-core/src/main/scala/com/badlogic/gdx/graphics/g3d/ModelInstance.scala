@@ -1,9 +1,9 @@
 package com.badlogic.gdx.graphics.g3d
 
 class ModelInstance extends com.badlogic.gdx.graphics.g3d.RenderableProvider {
-  final val materials: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.Material] = new com.badlogic.gdx.utils.Array()
-  final val nodes: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.model.Node] = new com.badlogic.gdx.utils.Array()
-  final val animations: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.model.Animation] = new com.badlogic.gdx.utils.Array()
+  final val materials: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.Material] = new com.badlogic.gdx.utils.Array().asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.Material]]
+  final val nodes: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.model.Node] = new com.badlogic.gdx.utils.Array().asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.model.Node]]
+  final val animations: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.model.Animation] = new com.badlogic.gdx.utils.Array().asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.model.Animation]]
   var model: com.badlogic.gdx.graphics.g3d.Model = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.Model]
   var transform: com.badlogic.gdx.math.Matrix4 = null.asInstanceOf[com.badlogic.gdx.math.Matrix4]
   var userData: java.lang.Object = null.asInstanceOf[java.lang.Object]

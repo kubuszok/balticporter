@@ -598,13 +598,13 @@ object Array {
     return new Array[T](ordered, capacity, arraySupplier)
   }
   def of[T](arrayType: java.lang.Class[T]): Array[T] = {
-    return new Array(arrayType)
+    return new Array(arrayType).asInstanceOf[Array[T]]
   }
   def of[T](ordered: scala.Boolean, capacity: scala.Int, arrayType: java.lang.Class[T]): Array[T] = {
-    return new Array(ordered, capacity, arrayType)
+    return new Array(ordered, capacity, arrayType).asInstanceOf[Array[T]]
   }
   def `with`[T](array: scala.Array[T]): Array[T] = {
-    return new Array(array)
+    return new Array(array).asInstanceOf[Array[T]]
   }
   class ArrayIterator[T] extends scala.collection.Iterator[T] with scala.collection.Iterable[T] {
     private var array: Array[T] = null.asInstanceOf[Array[T]]

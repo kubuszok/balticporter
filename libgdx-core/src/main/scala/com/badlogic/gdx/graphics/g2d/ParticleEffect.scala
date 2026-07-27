@@ -9,12 +9,12 @@ class ParticleEffect extends com.badlogic.gdx.utils.Disposable {
   var motionScale: scala.Float = 1.0f
   def this(effect: ParticleEffect) = {
     this()
-    this.emitters = new com.badlogic.gdx.utils.Array(true, effect.emitters.size);
+    this.emitters = new com.badlogic.gdx.utils.Array(true, effect.emitters.size).asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.ParticleEmitter]];
     { var i: scala.Int = 0; val n: scala.Int = effect.emitters.size; while (i < n) { {
       this.emitters.add(this.newEmitter(effect.emitters.get(i)))
     }; i = i + 1 } }
   }
-  this.emitters = new com.badlogic.gdx.utils.Array(8)
+  this.emitters = new com.badlogic.gdx.utils.Array(8).asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.ParticleEmitter]]
   def start(): scala.Unit = {
     { var i: scala.Int = 0; val n: scala.Int = this.emitters.size; while (i < n) { {
       this.emitters.get(i).start()

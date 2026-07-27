@@ -1,12 +1,12 @@
 package com.badlogic.gdx.graphics.g3d
 
 class Model extends com.badlogic.gdx.utils.Disposable {
-  final val materials: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.Material] = new com.badlogic.gdx.utils.Array()
-  final val nodes: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.model.Node] = new com.badlogic.gdx.utils.Array()
-  final val animations: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.model.Animation] = new com.badlogic.gdx.utils.Array()
-  final val meshes: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.Mesh] = new com.badlogic.gdx.utils.Array()
-  final val meshParts: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.model.MeshPart] = new com.badlogic.gdx.utils.Array()
-  final val disposables: com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.Disposable] = new com.badlogic.gdx.utils.Array()
+  final val materials: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.Material] = new com.badlogic.gdx.utils.Array().asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.Material]]
+  final val nodes: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.model.Node] = new com.badlogic.gdx.utils.Array().asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.model.Node]]
+  final val animations: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.model.Animation] = new com.badlogic.gdx.utils.Array().asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.model.Animation]]
+  final val meshes: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.Mesh] = new com.badlogic.gdx.utils.Array().asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.Mesh]]
+  final val meshParts: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.model.MeshPart] = new com.badlogic.gdx.utils.Array().asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.model.MeshPart]]
+  final val disposables: com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.Disposable] = new com.badlogic.gdx.utils.Array().asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.Disposable]]
   private var nodePartBones: com.badlogic.gdx.utils.ObjectMap[com.badlogic.gdx.graphics.g3d.model.NodePart, com.badlogic.gdx.utils.ArrayMap[java.lang.String, com.badlogic.gdx.math.Matrix4]] = new com.badlogic.gdx.utils.ObjectMap[com.badlogic.gdx.graphics.g3d.model.NodePart, com.badlogic.gdx.utils.ArrayMap[java.lang.String, com.badlogic.gdx.math.Matrix4]]()
   def this(modelData: com.badlogic.gdx.graphics.g3d.model.data.ModelData, textureProvider: com.badlogic.gdx.graphics.g3d.utils.TextureProvider) = {
     this()

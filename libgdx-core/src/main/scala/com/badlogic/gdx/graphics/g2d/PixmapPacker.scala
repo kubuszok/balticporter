@@ -12,7 +12,7 @@ class PixmapPacker extends com.badlogic.gdx.utils.Disposable {
   var stripWhitespaceY: scala.Boolean = false
   var alphaThreshold: scala.Int = 0
   var transparentColor: com.badlogic.gdx.graphics.Color = new com.badlogic.gdx.graphics.Color(0.0f, 0.0f, 0.0f, 0.0f)
-  final val pages: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.PixmapPacker.Page] = new com.badlogic.gdx.utils.Array()
+  final val pages: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.PixmapPacker.Page] = new com.badlogic.gdx.utils.Array().asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.PixmapPacker.Page]]
   var packStrategy: com.badlogic.gdx.graphics.g2d.PixmapPacker.PackStrategy = null.asInstanceOf[com.badlogic.gdx.graphics.g2d.PixmapPacker.PackStrategy]
   private var c: com.badlogic.gdx.graphics.Color = new com.badlogic.gdx.graphics.Color()
   def this(pageWidth: scala.Int, pageHeight: scala.Int, pageFormat: com.badlogic.gdx.graphics.Pixmap.Format, padding: scala.Int, duplicateBorder: scala.Boolean, stripWhitespaceX: scala.Boolean, stripWhitespaceY: scala.Boolean, packStrategy: com.badlogic.gdx.graphics.g2d.PixmapPacker.PackStrategy) = {
@@ -394,10 +394,10 @@ class PixmapPacker extends com.badlogic.gdx.utils.Disposable {
 object PixmapPacker {
   var indexPattern: java.util.regex.Pattern = java.util.regex.Pattern.compile("(.+)_(\\d+)$")
   class Page {
-    var rects: com.badlogic.gdx.utils.OrderedMap[java.lang.String, com.badlogic.gdx.graphics.g2d.PixmapPacker.PixmapPackerRectangle] = new com.badlogic.gdx.utils.OrderedMap()
+    var rects: com.badlogic.gdx.utils.OrderedMap[java.lang.String, com.badlogic.gdx.graphics.g2d.PixmapPacker.PixmapPackerRectangle] = new com.badlogic.gdx.utils.OrderedMap().asInstanceOf[com.badlogic.gdx.utils.OrderedMap[java.lang.String, com.badlogic.gdx.graphics.g2d.PixmapPacker.PixmapPackerRectangle]]
     var image: com.badlogic.gdx.graphics.Pixmap = null.asInstanceOf[com.badlogic.gdx.graphics.Pixmap]
     var texture: com.badlogic.gdx.graphics.Texture = null.asInstanceOf[com.badlogic.gdx.graphics.Texture]
-    final val addedRects: com.badlogic.gdx.utils.Array[java.lang.String] = new com.badlogic.gdx.utils.Array()
+    final val addedRects: com.badlogic.gdx.utils.Array[java.lang.String] = new com.badlogic.gdx.utils.Array().asInstanceOf[com.badlogic.gdx.utils.Array[java.lang.String]]
     var dirty: scala.Boolean = false
     def this(packer: PixmapPacker) = {
       this()
@@ -595,7 +595,7 @@ object PixmapPacker {
   }
   object SkylineStrategy {
     class SkylinePage extends com.badlogic.gdx.graphics.g2d.PixmapPacker.Page {
-      var rows: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.PixmapPacker.SkylineStrategy.SkylinePage.Row] = new com.badlogic.gdx.utils.Array()
+      var rows: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.PixmapPacker.SkylineStrategy.SkylinePage.Row] = new com.badlogic.gdx.utils.Array().asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.PixmapPacker.SkylineStrategy.SkylinePage.Row]]
       def this(packer: PixmapPacker) = {
         this()
       }

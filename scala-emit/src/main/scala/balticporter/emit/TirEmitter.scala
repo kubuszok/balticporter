@@ -505,7 +505,7 @@ final class TirEmitter(source: Program):
       s"{ $is; while ($c) $bodyWithUpd }"
     case Tree.Try(res, body, catches, fin, _, _) => tryStr(res, body, catches, fin, i)
     case Tree.Match(scr, cases, _, _)   => matchStr(scr, cases, i)
-    case Tree.MethodRef(q, s, _, _)     =>
+    case Tree.MethodRef(q, s, mrT, _)   =>
       val isCtor = sym(s).name == "<init>" // `Type::new` → a factory function `() => new Type()`
       q match
         // an ARRAY constructor reference `T[]::new` is an `IntFunction[T[]]` — `(size) => new T[size]`
@@ -520,7 +520,7 @@ final class TirEmitter(source: Program):
               case _: TypeRepr.TypeBounds => "java.lang.Object"
               case other                  => tpe(other)
             s"((size: scala.Int) => new scala.Array[$elem](size))"
-          case _ => s"(() => new ${ctorTpe(tt.tpe)}())"
+          case _ => samAscribed(s"(() => new ${ctorTpe(tt.tpe)}())", mrT, tt.tpe)
         case Left(tt)           => s"${tpe(tt.tpe)}.${local(s)}"
         case Right(e)           => s"${term(e, i)}.${local(s)}"
     case Tree.Break(_, _, _)            => "/* break */ ()"    // TODO: scala.util.boundary
@@ -530,6 +530,28 @@ final class TirEmitter(source: Program):
     case Tree.DoWhile(b, c, _, _)       => s"while ({ ${term(b, i)}; ${term(c, i)} }) ()" // Scala 3 has no do-while
     case Tree.Synchronized(l, b, _, _)  => s"${term(l, i)}.synchronized ${term(b, i)}"
     case Tree.Opaque(raw, _, _)         => raw
+
+  /** A Java constructor reference (`Foo::new`) is typed by the TARGET functional interface Java
+    * resolved, not by `Foo`. Emitted bare, `() => new Foo()` is a `Function0`, which Scala
+    * SAM-converts to ANY single-abstract-method type — so an overload set offering two of them
+    * (`PoolManager.addPool(Class, Pool)` vs `(Class, PoolSupplier)`) becomes AMBIGUOUS where
+    * Java's was not. Re-state the resolved target as an ascription.
+    *
+    * Strictly guarded, because the ascription is only sound when the frontend really gave us the
+    * functional interface: the type must be concrete (no wildcards, no type variables, no `NoType`)
+    * and must not be the constructed type itself. Anything else falls back to the bare lambda —
+    * the previous behaviour — so this can only ever narrow, never mis-type. */
+  private def samAscribed(fn: String, target: TypeRepr, ctor: TypeRepr): String =
+    def headOf(t: TypeRepr): Option[SymId] = t match
+      case TypeRepr.TypeRef(_, s)      => Some(s)
+      case TypeRepr.AppliedType(tc, _) => headOf(tc)
+      case _                           => None
+    def concrete(t: TypeRepr): Boolean = t match
+      case TypeRepr.TypeRef(_, s)       => !sym(s).flags.isParam
+      case TypeRepr.AppliedType(tc, as) => concrete(tc) && as.forall(concrete)
+      case _                            => false
+    val ok = concrete(target) && headOf(target) != headOf(ctor)
+    if ok then s"($fn: ${tpe(target)})" else fn
 
   private def applyStr(fun: Term, args: List[Term], i: Int): String = fun match
     case Tree.New(tpt, _, _) => s"new ${ctorTpe(tpt.tpe)}(${args.map(term(_, i)).mkString(", ")})"

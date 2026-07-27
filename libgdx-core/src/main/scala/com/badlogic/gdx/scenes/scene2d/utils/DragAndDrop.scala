@@ -7,8 +7,8 @@ class DragAndDrop {
   var removeDragActor: scala.Boolean = false
   var target: com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop.Target = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop.Target]
   var isValidTarget: scala.Boolean = false
-  final val targets: com.badlogic.gdx.utils.Array[com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop.Target] = new com.badlogic.gdx.utils.Array(8)
-  final val sourceListeners: com.badlogic.gdx.utils.ObjectMap[com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop.Source, com.badlogic.gdx.scenes.scene2d.utils.DragListener] = new com.badlogic.gdx.utils.ObjectMap(8)
+  final val targets: com.badlogic.gdx.utils.Array[com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop.Target] = new com.badlogic.gdx.utils.Array(8).asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop.Target]]
+  final val sourceListeners: com.badlogic.gdx.utils.ObjectMap[com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop.Source, com.badlogic.gdx.scenes.scene2d.utils.DragListener] = new com.badlogic.gdx.utils.ObjectMap(8).asInstanceOf[com.badlogic.gdx.utils.ObjectMap[com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop.Source, com.badlogic.gdx.scenes.scene2d.utils.DragListener]]
   private var tapSquareSize: scala.Float = 8
   private var button: scala.Int = 0
   var dragActorX: scala.Float = 0

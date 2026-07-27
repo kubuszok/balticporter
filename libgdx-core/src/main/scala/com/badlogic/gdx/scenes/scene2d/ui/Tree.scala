@@ -2,7 +2,7 @@ package com.badlogic.gdx.scenes.scene2d.ui
 
 class Tree[N <: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[N, V, ?], V] extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup with com.badlogic.gdx.scenes.scene2d.ui.Styleable[com.badlogic.gdx.scenes.scene2d.ui.Tree.TreeStyle] {
   var style: com.badlogic.gdx.scenes.scene2d.ui.Tree.TreeStyle = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Tree.TreeStyle]
-  final val rootNodes: com.badlogic.gdx.utils.Array[N] = new com.badlogic.gdx.utils.Array()
+  final val rootNodes: com.badlogic.gdx.utils.Array[N] = new com.badlogic.gdx.utils.Array().asInstanceOf[com.badlogic.gdx.utils.Array[N]]
   var selection: com.badlogic.gdx.scenes.scene2d.utils.Selection[N] = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Selection[N]]
   var ySpacing: scala.Float = 4
   var iconSpacingLeft: scala.Float = 2
@@ -464,7 +464,7 @@ object Tree {
   abstract class Node[N <: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[N, V, A], V, A <: com.badlogic.gdx.scenes.scene2d.Actor] {
     var actor: A = null.asInstanceOf[A]
     var parent: N = null.asInstanceOf[N]
-    final val children: com.badlogic.gdx.utils.Array[N] = new com.badlogic.gdx.utils.Array(0)
+    final val children: com.badlogic.gdx.utils.Array[N] = new com.badlogic.gdx.utils.Array(0).asInstanceOf[com.badlogic.gdx.utils.Array[N]]
     var selectable: scala.Boolean = true
     var expanded: scala.Boolean = false
     var icon: com.badlogic.gdx.scenes.scene2d.utils.Drawable = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Drawable]

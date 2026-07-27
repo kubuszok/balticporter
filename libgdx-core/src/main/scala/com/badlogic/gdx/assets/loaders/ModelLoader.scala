@@ -24,7 +24,7 @@ abstract class ModelLoader[P <: com.badlogic.gdx.assets.loaders.ModelLoader.Mode
     return this.loadModel(fileHandle, new com.badlogic.gdx.graphics.g3d.utils.TextureProvider.FileTextureProvider(), null.asInstanceOf[P])
   }
   def getDependencies(fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameters: P): com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = {
-    val deps: com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = new com.badlogic.gdx.utils.Array()
+    val deps: com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = new com.badlogic.gdx.utils.Array().asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]]
     val data: com.badlogic.gdx.graphics.g3d.model.data.ModelData = this.loadModelData(file, parameters)
     if (data == null) {
       return deps

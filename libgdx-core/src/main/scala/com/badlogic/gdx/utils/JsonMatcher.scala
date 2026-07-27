@@ -678,7 +678,7 @@ object JsonMatcher {
     var captureAll: scala.Boolean = false
     var captureRoot: scala.Boolean = false
     var at: scala.Boolean = false
-    final val stack: com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.JsonValue] = new com.badlogic.gdx.utils.Array()
+    final val stack: com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.JsonValue] = new com.badlogic.gdx.utils.Array().asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.JsonValue]]
     var current: com.badlogic.gdx.utils.JsonMatcher.Node = null.asInstanceOf[com.badlogic.gdx.utils.JsonMatcher.Node]
     def this(root: com.badlogic.gdx.utils.JsonMatcher.Node, processor: com.badlogic.gdx.utils.JsonMatcher.Processor, total: scala.Int, at: scala.Boolean) = {
       this()

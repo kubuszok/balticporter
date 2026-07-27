@@ -1,10 +1,10 @@
 package com.badlogic.gdx.scenes.scene2d.ui
 
 class Skin extends com.badlogic.gdx.utils.Disposable {
-  var resources: com.badlogic.gdx.utils.ObjectMap[java.lang.Class[?], com.badlogic.gdx.utils.ObjectMap[java.lang.String, java.lang.Object]] = new com.badlogic.gdx.utils.ObjectMap()
+  var resources: com.badlogic.gdx.utils.ObjectMap[java.lang.Class[?], com.badlogic.gdx.utils.ObjectMap[java.lang.String, java.lang.Object]] = new com.badlogic.gdx.utils.ObjectMap().asInstanceOf[com.badlogic.gdx.utils.ObjectMap[java.lang.Class[?], com.badlogic.gdx.utils.ObjectMap[java.lang.String, java.lang.Object]]]
   var atlas: com.badlogic.gdx.graphics.g2d.TextureAtlas = null.asInstanceOf[com.badlogic.gdx.graphics.g2d.TextureAtlas]
   var scale$field: scala.Float = 1
-  private final val jsonClassTags: com.badlogic.gdx.utils.ObjectMap[java.lang.String, java.lang.Class[?]] = new com.badlogic.gdx.utils.ObjectMap(Skin.defaultTagClasses.length)
+  private final val jsonClassTags: com.badlogic.gdx.utils.ObjectMap[java.lang.String, java.lang.Class[?]] = new com.badlogic.gdx.utils.ObjectMap(Skin.defaultTagClasses.length).asInstanceOf[com.badlogic.gdx.utils.ObjectMap[java.lang.String, java.lang.Class[?]]]
   def this(skinFile: com.badlogic.gdx.files.FileHandle) = {
     this()
     val atlasFile: com.badlogic.gdx.files.FileHandle = skinFile.sibling(skinFile.nameWithoutExtension() + ".atlas")
@@ -57,7 +57,7 @@ class Skin extends com.badlogic.gdx.utils.Disposable {
     } else ()
     var typeResources: com.badlogic.gdx.utils.ObjectMap[java.lang.String, java.lang.Object] = this.resources.get(`type`)
     if (typeResources == null) {
-      typeResources = new com.badlogic.gdx.utils.ObjectMap(if (((`type` == classOf[com.badlogic.gdx.graphics.g2d.TextureRegion]) || (`type` == classOf[com.badlogic.gdx.scenes.scene2d.utils.Drawable])) || (`type` == classOf[com.badlogic.gdx.graphics.g2d.Sprite])) 256 else 64)
+      typeResources = new com.badlogic.gdx.utils.ObjectMap(if (((`type` == classOf[com.badlogic.gdx.graphics.g2d.TextureRegion]) || (`type` == classOf[com.badlogic.gdx.scenes.scene2d.utils.Drawable])) || (`type` == classOf[com.badlogic.gdx.graphics.g2d.Sprite])) 256 else 64).asInstanceOf[com.badlogic.gdx.utils.ObjectMap[java.lang.String, java.lang.Object]]
       this.resources.put(`type`, typeResources)
     } else ()
     typeResources.put(name, resource)

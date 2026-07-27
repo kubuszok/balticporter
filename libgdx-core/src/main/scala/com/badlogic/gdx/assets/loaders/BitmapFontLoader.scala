@@ -6,7 +6,7 @@ class BitmapFontLoader extends com.badlogic.gdx.assets.loaders.AsynchronousAsset
     this()
   }
   def getDependencies(fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.assets.loaders.BitmapFontLoader.BitmapFontParameter): com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = {
-    val deps: com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = new com.badlogic.gdx.utils.Array()
+    val deps: com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = new com.badlogic.gdx.utils.Array().asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]]
     if ((parameter != null) && (parameter.bitmapFontData != null)) {
       this.data = parameter.bitmapFontData
       return deps
@@ -44,7 +44,7 @@ class BitmapFontLoader extends com.badlogic.gdx.assets.loaders.AsynchronousAsset
       return new com.badlogic.gdx.graphics.g2d.BitmapFont(file, region)
     } else {
       val n: scala.Int = this.data.getImagePaths().length
-      val regs: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.TextureRegion] = new com.badlogic.gdx.utils.Array(n);
+      val regs: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.TextureRegion] = new com.badlogic.gdx.utils.Array(n).asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.TextureRegion]];
       { var i: scala.Int = 0; while (i < n) { {
         regs.add(new com.badlogic.gdx.graphics.g2d.TextureRegion(manager.get(this.data.getImagePath(i), classOf[com.badlogic.gdx.graphics.Texture])))
       }; i = i + 1 } }

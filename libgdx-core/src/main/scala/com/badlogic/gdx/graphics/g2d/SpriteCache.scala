@@ -5,11 +5,11 @@ class SpriteCache extends com.badlogic.gdx.utils.Disposable {
   private var drawing: scala.Boolean = false
   private final val transformMatrix: com.badlogic.gdx.math.Matrix4 = new com.badlogic.gdx.math.Matrix4()
   private final val projectionMatrix: com.badlogic.gdx.math.Matrix4 = new com.badlogic.gdx.math.Matrix4()
-  private var caches: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.SpriteCache.Cache] = new com.badlogic.gdx.utils.Array()
+  private var caches: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.SpriteCache.Cache] = new com.badlogic.gdx.utils.Array().asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.SpriteCache.Cache]]
   private final val combinedMatrix: com.badlogic.gdx.math.Matrix4 = new com.badlogic.gdx.math.Matrix4()
   private var shader: com.badlogic.gdx.graphics.glutils.ShaderProgram = null.asInstanceOf[com.badlogic.gdx.graphics.glutils.ShaderProgram]
   private var currentCache: com.badlogic.gdx.graphics.g2d.SpriteCache.Cache = null.asInstanceOf[com.badlogic.gdx.graphics.g2d.SpriteCache.Cache]
-  private final val textures: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.Texture] = new com.badlogic.gdx.utils.Array(8)
+  private final val textures: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.Texture] = new com.badlogic.gdx.utils.Array(8).asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.Texture]]
   private final val counts: com.badlogic.gdx.utils.IntArray = new com.badlogic.gdx.utils.IntArray(8)
   private final val color: com.badlogic.gdx.graphics.Color = new com.badlogic.gdx.graphics.Color(1, 1, 1, 1)
   private var colorPacked: scala.Float = com.badlogic.gdx.graphics.Color.WHITE_FLOAT_BITS

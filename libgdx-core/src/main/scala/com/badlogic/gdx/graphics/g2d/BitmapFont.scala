@@ -17,7 +17,7 @@ class BitmapFont extends com.badlogic.gdx.utils.Disposable {
         throw new java.lang.IllegalArgumentException("If no regions are specified, the font data must have an images path.")
       } else ()
       val n: scala.Int = data.imagePaths.length
-      this.regions = new com.badlogic.gdx.utils.Array(n);
+      this.regions = new com.badlogic.gdx.utils.Array(n).asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.TextureRegion]];
       { var i: scala.Int = 0; while (i < n) { {
         var file: com.badlogic.gdx.files.FileHandle = null.asInstanceOf[com.badlogic.gdx.files.FileHandle]
         if (data.fontFile == null) {

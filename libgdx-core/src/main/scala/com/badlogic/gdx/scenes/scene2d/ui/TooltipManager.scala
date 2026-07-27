@@ -10,7 +10,7 @@ class TooltipManager {
   var offsetX: scala.Float = 15
   var offsetY: scala.Float = 19
   var edgeDistance: scala.Float = 7
-  final val shown: com.badlogic.gdx.utils.Array[com.badlogic.gdx.scenes.scene2d.ui.Tooltip[?]] = new com.badlogic.gdx.utils.Array()
+  final val shown: com.badlogic.gdx.utils.Array[com.badlogic.gdx.scenes.scene2d.ui.Tooltip[?]] = new com.badlogic.gdx.utils.Array().asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.scenes.scene2d.ui.Tooltip[?]]]
   var time: scala.Float = this.initialTime
   final val resetTask: com.badlogic.gdx.utils.Timer.Task = new com.badlogic.gdx.utils.Timer.Task()
   var showTooltip: com.badlogic.gdx.scenes.scene2d.ui.Tooltip[?] = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Tooltip[?]]

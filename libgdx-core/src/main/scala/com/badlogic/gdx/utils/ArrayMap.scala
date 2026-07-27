@@ -597,11 +597,11 @@ object ArrayMap {
       this.index = 0
     }
     def toArray(): com.badlogic.gdx.utils.Array[V] = {
-      return new com.badlogic.gdx.utils.Array(true, this.map.values$field, this.index, this.map.size - this.index)
+      return new com.badlogic.gdx.utils.Array(true, this.map.values$field, this.index, this.map.size - this.index).asInstanceOf[com.badlogic.gdx.utils.Array[V]]
     }
     def toArray(array: com.badlogic.gdx.utils.Array[?]): com.badlogic.gdx.utils.Array[V] = {
       array.asInstanceOf[com.badlogic.gdx.utils.Array[java.lang.Object]].addAll(this.map.values$field.asInstanceOf[scala.Array[java.lang.Object]], this.index, this.map.size - this.index)
-      return array
+      return array.asInstanceOf[com.badlogic.gdx.utils.Array[V]]
     }
   }
   class Keys[K] extends scala.collection.Iterable[K] with scala.collection.Iterator[K] {
@@ -638,11 +638,11 @@ object ArrayMap {
       this.index = 0
     }
     def toArray(): com.badlogic.gdx.utils.Array[K] = {
-      return new com.badlogic.gdx.utils.Array(true, this.map.keys$field, this.index, this.map.size - this.index)
+      return new com.badlogic.gdx.utils.Array(true, this.map.keys$field, this.index, this.map.size - this.index).asInstanceOf[com.badlogic.gdx.utils.Array[K]]
     }
     def toArray(array: com.badlogic.gdx.utils.Array[?]): com.badlogic.gdx.utils.Array[K] = {
       array.asInstanceOf[com.badlogic.gdx.utils.Array[java.lang.Object]].addAll(this.map.keys$field.asInstanceOf[scala.Array[java.lang.Object]], this.index, this.map.size - this.index)
-      return array
+      return array.asInstanceOf[com.badlogic.gdx.utils.Array[K]]
     }
   }
 }

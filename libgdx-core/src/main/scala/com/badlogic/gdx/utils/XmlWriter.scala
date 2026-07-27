@@ -2,7 +2,7 @@ package com.badlogic.gdx.utils
 
 class XmlWriter extends java.io.Writer {
   private var writer: java.io.Writer = null.asInstanceOf[java.io.Writer]
-  private final val stack: com.badlogic.gdx.utils.Array[java.lang.String] = new com.badlogic.gdx.utils.Array()
+  private final val stack: com.badlogic.gdx.utils.Array[java.lang.String] = new com.badlogic.gdx.utils.Array().asInstanceOf[com.badlogic.gdx.utils.Array[java.lang.String]]
   private var currentElement: java.lang.String = null.asInstanceOf[java.lang.String]
   private var indentNextClose: scala.Boolean = false
   var indent$field: scala.Int = 0

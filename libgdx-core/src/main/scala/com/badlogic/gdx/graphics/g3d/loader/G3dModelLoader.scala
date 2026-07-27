@@ -394,7 +394,7 @@ class G3dModelLoader extends com.badlogic.gdx.assets.loaders.ModelLoader[com.bad
               if (nodeAnim.scaling == null) {
                 nodeAnim.scaling = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.model.data.ModelNodeKeyframe[com.badlogic.gdx.math.Vector3]]()
               } else ()
-              val skf: com.badlogic.gdx.graphics.g3d.model.data.ModelNodeKeyframe[com.badlogic.gdx.math.Vector3] = new com.badlogic.gdx.graphics.g3d.model.data.ModelNodeKeyframe()
+              val skf: com.badlogic.gdx.graphics.g3d.model.data.ModelNodeKeyframe[com.badlogic.gdx.math.Vector3] = new com.badlogic.gdx.graphics.g3d.model.data.ModelNodeKeyframe().asInstanceOf[com.badlogic.gdx.graphics.g3d.model.data.ModelNodeKeyframe[com.badlogic.gdx.math.Vector3]]
               skf.keytime = keytime
               skf.value = new com.badlogic.gdx.math.Vector3(scale.getFloat(0), scale.getFloat(1), scale.getFloat(2))
               nodeAnim.scaling.add(skf)

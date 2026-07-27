@@ -21,7 +21,7 @@ class TextureAtlasLoader extends com.badlogic.gdx.assets.loaders.SynchronousAsse
     } else {
       this.data = new com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData(atlasFile, imgDir, false)
     }
-    val dependencies: com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = new com.badlogic.gdx.utils.Array()
+    val dependencies: com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = new com.badlogic.gdx.utils.Array().asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]]
     for (page <- this.data.getPages()) {
       val params: com.badlogic.gdx.assets.loaders.TextureLoader.TextureParameter = new com.badlogic.gdx.assets.loaders.TextureLoader.TextureParameter()
       params.format = page.format

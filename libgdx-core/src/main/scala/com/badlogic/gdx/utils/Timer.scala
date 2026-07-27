@@ -1,7 +1,7 @@
 package com.badlogic.gdx.utils
 
 class Timer {
-  final val tasks: com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.Timer.Task] = new com.badlogic.gdx.utils.Array(false, 8)
+  final val tasks: com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.Timer.Task] = new com.badlogic.gdx.utils.Array(false, 8).asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.Timer.Task]]
   var stopTimeMillis: scala.Long = 0L
   this.start()
   def postTask(task: com.badlogic.gdx.utils.Timer.Task): com.badlogic.gdx.utils.Timer.Task = {
@@ -185,11 +185,11 @@ object Timer {
   class TimerThread extends java.lang.Runnable with com.badlogic.gdx.LifecycleListener {
     var files: com.badlogic.gdx.Files = null.asInstanceOf[com.badlogic.gdx.Files]
     var app: com.badlogic.gdx.Application = null.asInstanceOf[com.badlogic.gdx.Application]
-    final val instances: com.badlogic.gdx.utils.Array[Timer] = new com.badlogic.gdx.utils.Array(1)
+    final val instances: com.badlogic.gdx.utils.Array[Timer] = new com.badlogic.gdx.utils.Array(1).asInstanceOf[com.badlogic.gdx.utils.Array[Timer]]
     var instance: Timer = null.asInstanceOf[Timer]
     var pauseTimeMillis: scala.Long = 0L
-    final val postedTasks: com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.Timer.Task] = new com.badlogic.gdx.utils.Array(2)
-    final val runTasks: com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.Timer.Task] = new com.badlogic.gdx.utils.Array(2)
+    final val postedTasks: com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.Timer.Task] = new com.badlogic.gdx.utils.Array(2).asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.Timer.Task]]
+    final val runTasks: com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.Timer.Task] = new com.badlogic.gdx.utils.Array(2).asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.Timer.Task]]
     final val runPostedTasks$field: java.lang.Runnable = new java.lang.Runnable()
     val thread: java.lang.Thread = new java.lang.Thread(this, "Timer")
     this.files = com.badlogic.gdx.Gdx.files

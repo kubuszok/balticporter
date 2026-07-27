@@ -3,7 +3,7 @@ package com.badlogic.gdx.graphics.g2d
 class BitmapFontCache {
   private var font: com.badlogic.gdx.graphics.g2d.BitmapFont = null.asInstanceOf[com.badlogic.gdx.graphics.g2d.BitmapFont]
   private var integer: scala.Boolean = false
-  private final val layouts: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.GlyphLayout] = new com.badlogic.gdx.utils.Array(1)
+  private final val layouts: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.GlyphLayout] = new com.badlogic.gdx.utils.Array(1).asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.GlyphLayout]]
   private final val pooledLayouts: com.badlogic.gdx.utils.FlushablePool[com.badlogic.gdx.graphics.g2d.GlyphLayout] = new com.badlogic.gdx.utils.FlushablePool[com.badlogic.gdx.graphics.g2d.GlyphLayout]()
   private var glyphCount: scala.Int = 0
   private var x: scala.Float = 0.0f

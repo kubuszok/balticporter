@@ -5,7 +5,7 @@ class SkinLoader extends com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader
     this()
   }
   def getDependencies(fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.assets.loaders.SkinLoader.SkinParameter): com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = {
-    val deps: com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = new com.badlogic.gdx.utils.Array()
+    val deps: com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = new com.badlogic.gdx.utils.Array().asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]]
     if ((parameter == null) || (parameter.textureAtlasPath == null)) {
       deps.add(new com.badlogic.gdx.assets.AssetDescriptor(file.pathWithoutExtension() + ".atlas", classOf[com.badlogic.gdx.graphics.g2d.TextureAtlas]))
     } else {

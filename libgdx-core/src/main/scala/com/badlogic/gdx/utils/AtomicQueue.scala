@@ -6,7 +6,7 @@ class AtomicQueue[T] {
   private var queue: java.util.concurrent.atomic.AtomicReferenceArray[T] = null.asInstanceOf[java.util.concurrent.atomic.AtomicReferenceArray[T]]
   def this(capacity: scala.Int) = {
     this()
-    this.queue = new java.util.concurrent.atomic.AtomicReferenceArray(capacity)
+    this.queue = new java.util.concurrent.atomic.AtomicReferenceArray(capacity).asInstanceOf[java.util.concurrent.atomic.AtomicReferenceArray[T]]
   }
   private def next(idx: scala.Int): scala.Int = {
     return (idx + 1) % this.queue.length()
