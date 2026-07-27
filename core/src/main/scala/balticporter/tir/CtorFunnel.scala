@@ -105,12 +105,17 @@ object CtorFunnel:
           ctorsOf(program, cd.body).foreach { d =>
             if !p.primary.contains(d.symbol) then
               superApply(d).foreach { case (m, args) =>
-                effectsOf(m, args, 0).foreach { stats =>
+                effects(m, args, 0).foreach { e =>
+                  val stats   = e.stats
                   val touched = collection.mutable.Set[SymId]()
                   // the constructor's OWN statements run after the replay, so they count towards
                   // superseding the prologue too
                   val after = stats ++ stmtsOf(d).tail
-                  if usable(cd, d, stats, touched) && supersedes(after, prologue.get) then
+                  // a prologue the chain DEFERRED to is what Java ran there as well — it is shared,
+                  // not stranded, so it needs no superseding. `prologueOf` builds parents first, so
+                  // the deferred class's prologue is a prefix of this one.
+                  val shared = e.deferredTo.flatMap(prologueOf(_, 0)).map(_.size).getOrElse(0)
+                  if usable(cd, d, stats, touched) && supersedes(after, prologue.get.drop(shared)) then
                     out((cd.symbol, d.symbol)) = stats
                     widened ++= touched.filter { s =>
                       program.symbolOf(s).exists(sy => sy.flags.isPrivate && sy.owner != cd.symbol)
@@ -224,7 +229,16 @@ object CtorFunnel:
 
     /** the statements `<ctor>(args)` executes, its own delegation chain inlined ahead of its body
       * — the whole of what a `super(args)` did. */
+    /** the statements `<ctor>(args)` runs, and — when the chain bottoms out at an explicit nilary
+      * `this()`/`super()` — the class whose nilary construction it thereby DEFERS to. Those
+      * statements are omitted here because the emitted `this()` already ran exactly them; the
+      * caller must not then demand that the replay supersede them. */
+    private final case class Effects(stats: List[Statement], deferredTo: Option[SymId])
+
     private def effectsOf(ctor: SymId, args: List[Term], depth: Int): Option[List[Statement]] =
+      effects(ctor, args, depth).map(_.stats)
+
+    private def effects(ctor: SymId, args: List[Term], depth: Int): Option[Effects] =
       if depth > 6 then scala.None
       else
         defOf(ctor).flatMap { d =>
@@ -245,8 +259,9 @@ object CtorFunnel:
             val body = substituted(stms, ps.map(_.symbol).zip(args).toMap)
             body match
               case Tree.Apply(Tree.Select(_, m, _, _), as, _, _, _) :: tl if isInitName(program, m) =>
-                if as.isEmpty then Some(tl) else effectsOf(m, as, depth + 1).map(_ ++ tl)
-              case all => Some(all)
+                if as.isEmpty then Some(Effects(tl, program.symbolOf(m).map(_.owner)))
+                else effects(m, as, depth + 1).map(e => Effects(e.stats ++ tl, e.deferredTo))
+              case all => Some(Effects(all, scala.None))
         }
 
     /** can these statements legally run one level down, in `cd`'s constructor? */

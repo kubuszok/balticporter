@@ -3,6 +3,9 @@ package com.badlogic.gdx.graphics.g3d.particles.values
 final class CylinderSpawnShapeValue extends com.badlogic.gdx.graphics.g3d.particles.values.PrimitiveSpawnShapeValue {
   def this(cylinderSpawnShapeValue: CylinderSpawnShapeValue) = {
     this()
+    this.spawnWidthValue = new com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue()
+    this.spawnHeightValue = new com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue()
+    this.spawnDepthValue = new com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue()
     this.load(cylinderSpawnShapeValue)
   }
   def spawnAux(vector: com.badlogic.gdx.math.Vector3, percent: scala.Float): scala.Unit = {
