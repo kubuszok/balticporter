@@ -196,7 +196,16 @@ object SpoonTir:
     private def erasedType(b: CtTypeReference[?], seen: Set[String], depth: Int): TypeRepr =
       if depth <= 0 then objectT
       else b match
-        case _: CtTypeParameterReference  => objectT
+        // a NESTED type variable erases through its own declaration, exactly as a bare one does (see
+        // `erasedFormal`) — collapsing it straight to `Object` made the two sides of the same erased
+        // call disagree: the RECEIVER cast said `Node[Node[Object,Object,Actor], Object, Actor]`
+        // while the ARGUMENT cast for the very same `N` said `Tree[Object, Object]`. `seen` breaks
+        // F-bounded cycles; the depth is pinned to the one both call sites use.
+        case tv: CtTypeParameterReference =>
+          if seen(tv.getSimpleName) then objectT
+          else
+            val d = try Option(tv.getDeclaration) catch { case _: Throwable => None }
+            d.map(erasureOfFormal(_, seen + tv.getSimpleName, 2)).getOrElse(objectT)
         case arr: CtArrayTypeReference[?] =>
           AppliedType(TypeRef(NoPrefix, minter.external("scala.Array", "Array")),
                       List(erasedType(arr.getComponentType, seen, depth)))
