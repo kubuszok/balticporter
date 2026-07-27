@@ -117,7 +117,7 @@ final class TirEmitter(source: Program):
     // a Java `static` nested class is lowered into the enclosing type's companion `object`, so it
     // is named through the value path `Outer.Inner` — NOT by simple name (companion members aren't
     // in the class's scope) and NOT `Outer#Inner` (a type projection can't reach a companion member).
-    else if s.flags.isStatic && s.fullName.contains('$') then s.fullName.replace('$', '.')
+    else if s.flags.isStatic && s.fullName.contains('$') then nestedPath(id)
     // a Java INNER (non-static) class is a PATH-dependent type in Scala: named by simple name inside
     // the enclosing class it means `this.Inner`, so the same Java type reached through two different
     // instances (`pa.Channel` vs `ParallelArray#Channel` from another file) never unifies, and a
@@ -126,9 +126,24 @@ final class TirEmitter(source: Program):
     // `new` need an instantiable/stable name, so those two positions opt out (see `namedInner`).
     else if program.definitionOf(id).isDefined && currentDeclared(id) then
       if namedInner || !isInnerClass(id) then esc(s.name) // declared here — in scope
-      else s.fullName.replace('$', '#')
+      else nestedPath(id)
     else if program.symbolOf(s.owner).exists(_.flags.isModule) then s"${typeValue(s.owner)}.${esc(s.name)}" // object's type member → path-dependent `O.T`
-    else s.fullName.replace('$', '#')                               // non-static inner class elsewhere → `Outer#Inner`
+    else nestedPath(id)                                             // non-static inner class elsewhere → `Outer#Inner`
+
+  /** the path to a NESTED type, choosing a separator PER LEVEL: `.` where that level is a Java
+    * `static` nested class (lowered into the enclosing companion `object`, so reachable only through
+    * the value path) and `#` where it is a genuine inner class (a type projection). A blanket
+    * `fullName.replace('$', '#')` gets a MIXED chain wrong — `ModelInfluencer.Random` is static and
+    * holds the inner `ModelInstancePool`, so the type is `ModelInfluencer.Random#ModelInstancePool`
+    * while `ModelInfluencer#Random#ModelInstancePool` names nothing at all. Falls back to the
+    * blanket form whenever an owner symbol is unknown, so this can only ever add precision. */
+  private def nestedPath(id: SymId): String =
+    def go(x: SymId): Option[String] =
+      val sx = sym(x)
+      if !sx.fullName.contains('$') then Some(sx.fullName)
+      else if sx.owner == SymId.None || program.symbolOf(sx.owner).isEmpty then None
+      else go(sx.owner).map(p => p + (if sx.flags.isStatic then "." else "#") + esc(sx.name))
+    go(id).getOrElse(sym(id).fullName.replace('$', '#'))
 
   /** a NON-static nested class of one of our own NON-GENERIC classes (not of a companion `object`).
     * A generic enclosing class is excluded: `Octree#OctreeNode` is not a legal projection — the

@@ -119,7 +119,7 @@ object ParticleControllerInfluencer {
     export ParticleControllerInfluencer.*
   }
   class Random extends ParticleControllerInfluencer {
-    var pool: com.badlogic.gdx.graphics.g3d.particles.influencers.ParticleControllerInfluencer#Random#ParticleControllerPool = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.influencers.ParticleControllerInfluencer#Random#ParticleControllerPool]
+    var pool: com.badlogic.gdx.graphics.g3d.particles.influencers.ParticleControllerInfluencer.Random#ParticleControllerPool = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.influencers.ParticleControllerInfluencer.Random#ParticleControllerPool]
     def this(templates: scala.Array[com.badlogic.gdx.graphics.g3d.particles.ParticleController]) = {
       this()
       this.templates = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.ParticleController](templates)
