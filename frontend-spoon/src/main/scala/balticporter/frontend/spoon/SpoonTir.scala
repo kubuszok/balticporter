@@ -1467,8 +1467,14 @@ object SpoonTir:
             // stays qualified — it's used precisely to defeat param/local shadowing.
             case null                                  =>
               shadowedImplicitCall(inv, mid, o).getOrElse(Tree.Ident(mid, NoType, o))
-            case ta: CtThisAccess[?] if !isOwnThis(ta) => // outer method → bare
-              shadowedImplicitCall(inv, mid, o).getOrElse(Tree.Ident(mid, NoType, o))
+            // `Outer.this.m(…)`. Java resolves a simple name against the INNERMOST type that has
+            // such a member, so `CharArray.this.append(cbuf)` inside `CharArrayWriter extends Writer`
+            // is qualified precisely because the inherited `Writer.append` would otherwise win.
+            // Emitted bare, Scala calls that ambiguous. Keep Java's qualification.
+            case ta: CtThisAccess[?] if !isOwnThis(ta) =>
+              shadowedImplicitCall(inv, mid, o)
+                .orElse(outerThis(ta).map(q => Tree.Select(q, mid, NoType, o)))
+                .getOrElse(Tree.Ident(mid, NoType, o))
             case _: CtThisAccess[?]                    => Tree.Select(thisTerm(inv), mid, NoType, o)
             case t =>
               val recv = expr(t)

@@ -348,7 +348,7 @@ class BillboardParticleBatch(mode$p: com.badlogic.gdx.graphics.g3d.particles.Par
   }
   class RenderablePool extends com.badlogic.gdx.utils.Pool[com.badlogic.gdx.graphics.g3d.Renderable] {
     def newObject(): com.badlogic.gdx.graphics.g3d.Renderable = {
-      return allocRenderable()
+      return BillboardParticleBatch.this.allocRenderable()
     }
   }
   object RenderablePool {

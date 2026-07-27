@@ -63,14 +63,14 @@ class Octree[T](minimum: com.badlogic.gdx.math.Vector3, maximum: com.badlogic.gd
       if (this.children == null) {
         this.children = new scala.Array[OctreeNode](8)
       } else ()
-      this.children(0) = createNode(new com.badlogic.gdx.math.Vector3(this.bounds.min$field.x, midy, midz), new com.badlogic.gdx.math.Vector3(midx, this.bounds.max$field.y, this.bounds.max$field.z), deeperLevel)
-      this.children(1) = createNode(new com.badlogic.gdx.math.Vector3(midx, midy, midz), new com.badlogic.gdx.math.Vector3(this.bounds.max$field.x, this.bounds.max$field.y, this.bounds.max$field.z), deeperLevel)
-      this.children(2) = createNode(new com.badlogic.gdx.math.Vector3(midx, midy, this.bounds.min$field.z), new com.badlogic.gdx.math.Vector3(this.bounds.max$field.x, this.bounds.max$field.y, midz), deeperLevel)
-      this.children(3) = createNode(new com.badlogic.gdx.math.Vector3(this.bounds.min$field.x, midy, this.bounds.min$field.z), new com.badlogic.gdx.math.Vector3(midx, this.bounds.max$field.y, midz), deeperLevel)
-      this.children(4) = createNode(new com.badlogic.gdx.math.Vector3(this.bounds.min$field.x, this.bounds.min$field.y, midz), new com.badlogic.gdx.math.Vector3(midx, midy, this.bounds.max$field.z), deeperLevel)
-      this.children(5) = createNode(new com.badlogic.gdx.math.Vector3(midx, this.bounds.min$field.y, midz), new com.badlogic.gdx.math.Vector3(this.bounds.max$field.x, midy, this.bounds.max$field.z), deeperLevel)
-      this.children(6) = createNode(new com.badlogic.gdx.math.Vector3(midx, this.bounds.min$field.y, this.bounds.min$field.z), new com.badlogic.gdx.math.Vector3(this.bounds.max$field.x, midy, midz), deeperLevel)
-      this.children(7) = createNode(new com.badlogic.gdx.math.Vector3(this.bounds.min$field.x, this.bounds.min$field.y, this.bounds.min$field.z), new com.badlogic.gdx.math.Vector3(midx, midy, midz), deeperLevel)
+      this.children(0) = Octree.this.createNode(new com.badlogic.gdx.math.Vector3(this.bounds.min$field.x, midy, midz), new com.badlogic.gdx.math.Vector3(midx, this.bounds.max$field.y, this.bounds.max$field.z), deeperLevel)
+      this.children(1) = Octree.this.createNode(new com.badlogic.gdx.math.Vector3(midx, midy, midz), new com.badlogic.gdx.math.Vector3(this.bounds.max$field.x, this.bounds.max$field.y, this.bounds.max$field.z), deeperLevel)
+      this.children(2) = Octree.this.createNode(new com.badlogic.gdx.math.Vector3(midx, midy, this.bounds.min$field.z), new com.badlogic.gdx.math.Vector3(this.bounds.max$field.x, this.bounds.max$field.y, midz), deeperLevel)
+      this.children(3) = Octree.this.createNode(new com.badlogic.gdx.math.Vector3(this.bounds.min$field.x, midy, this.bounds.min$field.z), new com.badlogic.gdx.math.Vector3(midx, this.bounds.max$field.y, midz), deeperLevel)
+      this.children(4) = Octree.this.createNode(new com.badlogic.gdx.math.Vector3(this.bounds.min$field.x, this.bounds.min$field.y, midz), new com.badlogic.gdx.math.Vector3(midx, midy, this.bounds.max$field.z), deeperLevel)
+      this.children(5) = Octree.this.createNode(new com.badlogic.gdx.math.Vector3(midx, this.bounds.min$field.y, midz), new com.badlogic.gdx.math.Vector3(this.bounds.max$field.x, midy, this.bounds.max$field.z), deeperLevel)
+      this.children(6) = Octree.this.createNode(new com.badlogic.gdx.math.Vector3(midx, this.bounds.min$field.y, this.bounds.min$field.z), new com.badlogic.gdx.math.Vector3(this.bounds.max$field.x, midy, midz), deeperLevel)
+      this.children(7) = Octree.this.createNode(new com.badlogic.gdx.math.Vector3(this.bounds.min$field.x, this.bounds.min$field.y, this.bounds.min$field.z), new com.badlogic.gdx.math.Vector3(midx, midy, midz), deeperLevel)
       for (child <- this.children) {
         for (geometry <- this.geometries) {
           child.add(geometry)

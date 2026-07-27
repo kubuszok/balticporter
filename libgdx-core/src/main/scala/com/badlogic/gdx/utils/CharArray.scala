@@ -1814,7 +1814,7 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
       if (!this.ready()) {
         return -1
       } else ()
-      return charAt({ this.pos += 1; this.pos })
+      return CharArray.this.charAt({ this.pos += 1; this.pos })
     }
     def read(b: scala.Array[scala.Char], off: scala.Int, length$arg: scala.Int): scala.Int = {
       var length: scala.Int = length$arg
@@ -1830,7 +1830,7 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
       if ((this.pos + length) > size) {
         length = size - this.pos
       } else ()
-      getChars(this.pos, this.pos + length, b, off)
+      CharArray.this.getChars(this.pos, this.pos + length, b, off)
       this.pos = this.pos + length
       return length
     }
@@ -1860,19 +1860,19 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
       ()
     }
     def write(cbuf: scala.Array[scala.Char]): scala.Unit = {
-      append(cbuf)
+      CharArray.this.append(cbuf)
     }
     def write(cbuf: scala.Array[scala.Char], off: scala.Int, length: scala.Int): scala.Unit = {
-      append(cbuf, off, length)
+      CharArray.this.append(cbuf, off, length)
     }
     def write(c: scala.Int): scala.Unit = {
-      append(c.asInstanceOf[scala.Char].asInstanceOf[scala.Char])
+      CharArray.this.append(c.asInstanceOf[scala.Char].asInstanceOf[scala.Char])
     }
     def write(str: java.lang.String): scala.Unit = {
-      append(str)
+      CharArray.this.append(str)
     }
     def write(str: java.lang.String, off: scala.Int, length: scala.Int): scala.Unit = {
-      append(str, off, length)
+      CharArray.this.append(str, off, length)
     }
   }
 }

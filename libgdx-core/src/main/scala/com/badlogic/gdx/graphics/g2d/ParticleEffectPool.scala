@@ -27,7 +27,7 @@ class ParticleEffectPool(effect$p: com.badlogic.gdx.graphics.g2d.ParticleEffect,
   }
   class PooledEffect(effect: com.badlogic.gdx.graphics.g2d.ParticleEffect) extends com.badlogic.gdx.graphics.g2d.ParticleEffect(effect) {
     def free(): scala.Unit = {
-      free(this)
+      ParticleEffectPool.this.free(this)
     }
   }
 }

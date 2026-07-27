@@ -311,7 +311,7 @@ class TextArea extends com.badlogic.gdx.scenes.scene2d.ui.TextField {
       moveOffset = -1
       val background: com.badlogic.gdx.scenes.scene2d.utils.Drawable = style.background
       val font: com.badlogic.gdx.graphics.g2d.BitmapFont = style.font
-      var height: scala.Float = getHeight()
+      var height: scala.Float = TextArea.this.getHeight()
       if (background != null) {
         height = height - background.getTopHeight()
         x = x - background.getLeftWidth()
@@ -321,13 +321,13 @@ class TextArea extends com.badlogic.gdx.scenes.scene2d.ui.TextField {
         y = y - background.getTopHeight()
       } else ()
       cursorLine = java.lang.Math.floor((height - y) / font.getLineHeight()).asInstanceOf[scala.Int] + firstLineShowing
-      cursorLine = java.lang.Math.max(0, java.lang.Math.min(cursorLine, getLines() - 1))
+      cursorLine = java.lang.Math.max(0, java.lang.Math.min(cursorLine, TextArea.this.getLines() - 1))
       super.setCursorPosition(x, y)
-      updateCurrentLine()
+      TextArea.this.updateCurrentLine()
     }
     def keyDown(event: com.badlogic.gdx.scenes.scene2d.InputEvent, keycode: scala.Int): scala.Boolean = {
       val result: scala.Boolean = super.keyDown(event, keycode)
-      if (hasKeyboardFocus()) {
+      if (TextArea.this.hasKeyboardFocus()) {
         var repeat: scala.Boolean = false
         val shift: scala.Boolean = com.badlogic.gdx.Gdx.input.isKeyPressed(com.badlogic.gdx.Input.Keys.SHIFT_LEFT) || com.badlogic.gdx.Gdx.input.isKeyPressed(com.badlogic.gdx.Input.Keys.SHIFT_RIGHT)
         if (keycode == com.badlogic.gdx.Input.Keys.DOWN) {
@@ -337,9 +337,9 @@ class TextArea extends com.badlogic.gdx.scenes.scene2d.ui.TextField {
               hasSelection = true
             } else ()
           } else {
-            clearSelection()
+            TextArea.this.clearSelection()
           }
-          moveCursorLine(cursorLine + 1)
+          TextArea.this.moveCursorLine(cursorLine + 1)
           repeat = true
         } else {
           if (keycode == com.badlogic.gdx.Input.Keys.UP) {
@@ -349,9 +349,9 @@ class TextArea extends com.badlogic.gdx.scenes.scene2d.ui.TextField {
                 hasSelection = true
               } else ()
             } else {
-              clearSelection()
+              TextArea.this.clearSelection()
             }
-            moveCursorLine(cursorLine - 1)
+            TextArea.this.moveCursorLine(cursorLine - 1)
             repeat = true
           } else {
             moveOffset = -1
@@ -360,7 +360,7 @@ class TextArea extends com.badlogic.gdx.scenes.scene2d.ui.TextField {
         if (repeat) {
           this.scheduleKeyRepeatTask(keycode)
         } else ()
-        showCursor()
+        TextArea.this.showCursor()
         return true
       } else ()
       return result
@@ -370,7 +370,7 @@ class TextArea extends com.badlogic.gdx.scenes.scene2d.ui.TextField {
     }
     def keyTyped(event: com.badlogic.gdx.scenes.scene2d.InputEvent, character: scala.Char): scala.Boolean = {
       val result: scala.Boolean = super.keyTyped(event, character)
-      showCursor()
+      TextArea.this.showCursor()
       return result
     }
     def goHome(jump: scala.Boolean): scala.Unit = {
@@ -383,7 +383,7 @@ class TextArea extends com.badlogic.gdx.scenes.scene2d.ui.TextField {
       }
     }
     def goEnd(jump: scala.Boolean): scala.Unit = {
-      if (jump || (cursorLine >= getLines())) {
+      if (jump || (cursorLine >= TextArea.this.getLines())) {
         cursor = text.length()
       } else {
         if (((cursorLine * 2) + 1) < linesBreak.size) {

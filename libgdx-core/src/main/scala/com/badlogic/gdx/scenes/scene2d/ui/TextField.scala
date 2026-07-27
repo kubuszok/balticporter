@@ -699,7 +699,7 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
   class KeyRepeatTask extends com.badlogic.gdx.utils.Timer.Task {
     var keycode: scala.Int = 0
     def run(): scala.Unit = {
-      if (getStage() == null) {
+      if (TextField.this.getStage() == null) {
         this.cancel()
         return
       } else ()
@@ -710,14 +710,14 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
     def clicked(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float): scala.Unit = {
       val count: scala.Int = this.getTapCount() % 4
       if (count == 0) {
-        clearSelection()
+        TextField.this.clearSelection()
       } else ()
       if (count == 2) {
-        val array: scala.Array[scala.Int] = wordUnderCursor(x)
-        setSelection(array(0), array(1))
+        val array: scala.Array[scala.Int] = TextField.this.wordUnderCursor(x)
+        TextField.this.setSelection(array(0), array(1))
       } else ()
       if (count == 3) {
-        selectAll()
+        TextField.this.selectAll()
       } else ()
     }
     def touchDown(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float, pointer: scala.Int, button: scala.Int): scala.Boolean = {
@@ -732,7 +732,7 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
       } else ()
       this.setCursorPosition(x, y)
       selectionStart = cursor
-      val stage: com.badlogic.gdx.scenes.scene2d.Stage = getStage()
+      val stage: com.badlogic.gdx.scenes.scene2d.Stage = TextField.this.getStage()
       if (stage != null) {
         stage.setKeyboardFocus(TextField.this)
       } else ()
@@ -751,7 +751,7 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
       super.touchUp(event, x, y, pointer, button)
     }
     def setCursorPosition(x: scala.Float, y: scala.Float): scala.Unit = {
-      cursor = letterUnderCursor(x)
+      cursor = TextField.this.letterUnderCursor(x)
       cursorOn = focused
       blinkTask.cancel()
       if (focused) {
@@ -773,7 +773,7 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
       if (focused) {
         com.badlogic.gdx.utils.Timer.schedule(blinkTask, blinkTime, blinkTime)
       } else ()
-      if (!hasKeyboardFocus()) {
+      if (!TextField.this.hasKeyboardFocus()) {
         return false
       } else ()
       var repeat: scala.Boolean = false
@@ -783,26 +783,26 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
       if (ctrl) {
         keycode match {
           case com.badlogic.gdx.Input.Keys.V => {
-            paste(clipboard.getContents(), true)
+            TextField.this.paste(clipboard.getContents(), true)
             repeat = true
           }
           case com.badlogic.gdx.Input.Keys.C | com.badlogic.gdx.Input.Keys.INSERT => {
-            copy()
+            TextField.this.copy()
             return true
           }
           case com.badlogic.gdx.Input.Keys.X => {
-            cut(true)
+            TextField.this.cut(true)
             return true
           }
           case com.badlogic.gdx.Input.Keys.A => {
-            selectAll()
+            TextField.this.selectAll()
             return true
           }
           case com.badlogic.gdx.Input.Keys.Z => {
             val oldText: java.lang.String = text
-            setText(undoText)
+            TextField.this.setText(undoText)
             undoText = oldText
-            updateDisplayText()
+            TextField.this.updateDisplayText()
             return true
           }
           case _ => {
@@ -813,10 +813,10 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
       if (com.badlogic.gdx.scenes.scene2d.utils.UIUtils.shift()) {
         keycode match {
           case com.badlogic.gdx.Input.Keys.INSERT => {
-            paste(clipboard.getContents(), true)
+            TextField.this.paste(clipboard.getContents(), true)
           }
           case com.badlogic.gdx.Input.Keys.FORWARD_DEL => {
-            cut(true)
+            TextField.this.cut(true)
           }
         };
         {
@@ -824,12 +824,12 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
           {
             keycode match {
               case com.badlogic.gdx.Input.Keys.LEFT => {
-                moveCursor(false, jump)
+                TextField.this.moveCursor(false, jump)
                 repeat = true
                 handled = true
               }
               case com.badlogic.gdx.Input.Keys.RIGHT => {
-                moveCursor(true, jump)
+                TextField.this.moveCursor(true, jump)
                 repeat = true
                 handled = true
               }
@@ -852,25 +852,25 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
       } else {
         keycode match {
           case com.badlogic.gdx.Input.Keys.LEFT => {
-            moveCursor(false, jump)
-            clearSelection()
+            TextField.this.moveCursor(false, jump)
+            TextField.this.clearSelection()
             repeat = true
             handled = true
           }
           case com.badlogic.gdx.Input.Keys.RIGHT => {
-            moveCursor(true, jump)
-            clearSelection()
+            TextField.this.moveCursor(true, jump)
+            TextField.this.clearSelection()
             repeat = true
             handled = true
           }
           case com.badlogic.gdx.Input.Keys.HOME => {
             this.goHome(jump)
-            clearSelection()
+            TextField.this.clearSelection()
             handled = true
           }
           case com.badlogic.gdx.Input.Keys.END => {
             this.goEnd(jump)
-            clearSelection()
+            TextField.this.clearSelection()
             handled = true
           }
         }
@@ -912,14 +912,14 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
           } else ()
         }
       }
-      if (!hasKeyboardFocus()) {
+      if (!TextField.this.hasKeyboardFocus()) {
         return false
       } else ()
       if (com.badlogic.gdx.scenes.scene2d.utils.UIUtils.isMac && com.badlogic.gdx.Gdx.input.isKeyPressed(com.badlogic.gdx.Input.Keys.SYM)) {
         return true
       } else ()
       if (this.checkFocusTraversal(character)) {
-        val transferred: TextField = next(com.badlogic.gdx.scenes.scene2d.utils.UIUtils.shift())
+        val transferred: TextField = TextField.this.next(com.badlogic.gdx.scenes.scene2d.utils.UIUtils.shift())
         if (transferred == null) {
           keyboard.close()
         } else ()
@@ -949,23 +949,23 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
             if (((!enter) && (filter != null)) && (!filter.acceptChar(TextField.this, character))) {
               return true
             } else ()
-            if (!withinMaxLength(text.length() - (if (hasSelection) java.lang.Math.abs(cursor - selectionStart) else 0))) {
+            if (!TextField.this.withinMaxLength(text.length() - (if (hasSelection) java.lang.Math.abs(cursor - selectionStart) else 0))) {
               return true
             } else ()
             if (hasSelection) {
               cursor = TextField.this.delete(false)
             } else ()
             val insertion: java.lang.String = if (enter) "\n" else java.lang.String.valueOf(character)
-            text = insert({ cursor += 1; cursor }, insertion, text)
+            text = TextField.this.insert({ cursor += 1; cursor }, insertion, text)
           } else ()
           val tempUndoText: java.lang.String = undoText
-          if (changeText(oldText, text)) {
+          if (TextField.this.changeText(oldText, text)) {
             val time: scala.Long = java.lang.System.currentTimeMillis()
             if ((time - 750) > lastChangeTime) {
               undoText = oldText
             } else ()
             lastChangeTime = time
-            updateDisplayText()
+            TextField.this.updateDisplayText()
           } else {
             if (!text.equals(oldText)) {
               cursor = oldCursor
