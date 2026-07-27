@@ -70,7 +70,7 @@ final class CollectionsTransform extends Phase:
   private var kindOf: Map[SymId, Kind]    = Map.empty // scala collection symbol → kind
   private var opPlusEq, opMinusEq, opPlusPlusEq: SymId = SymId.None
   private var updateSym, insertSym, getOrElseSym, containsSym: SymId = SymId.None
-  private var key1Sym, value2Sym: SymId = SymId.None
+  private var key1Sym, value2Sym, roSetSym: SymId = SymId.None
 
   override def run(program: Program): Program =
     val added = collection.mutable.ListBuffer[Symbol]()
@@ -99,6 +99,7 @@ final class CollectionsTransform extends Phase:
     containsSym  = mint("contains", "contains")
     key1Sym      = mint("_1", "_1") // Map.Entry#getKey   on a Tuple2
     value2Sym    = mint("_2", "_2") // Map.Entry#getValue on a Tuple2
+    roSetSym     = mint("Set", "scala.collection.Set") // see `transformValDef`
 
     val symbols = SymbolTable(program.symbols.all ++ added)
     given Program = new Program(program.units, symbols, program.xref)
@@ -109,6 +110,31 @@ final class CollectionsTransform extends Phase:
   override def transformType(t: TypeRepr)(using Program): TypeRepr = t match
     case TypeRepr.TypeRef(prefix, s) if remap.contains(s) => TypeRepr.TypeRef(prefix, remap(s))
     case other                                            => other
+
+  /** `java.util.Set` has TWO faithful scala counterparts, and which one it is depends on where
+    * the set came from — a distinction java's type system does not draw and scala's does.
+    *
+    *   - a set you OWN (`new HashSet<>()`, a field, a parameter) is `mutable.Set`;
+    *   - `map.keySet()` is a live, read-only VIEW of the map's keys. Scala models it as
+    *     `scala.collection.Set` — same view, same write-through on the map, but not typed as
+    *     something you may add to (java lets you `remove` through it but not `add`, so scala's
+    *     type is the closer of the two anyway).
+    *
+    * So a declaration INITIALISED from `keySet` gets the view type. The alternative —
+    * `.to(mutable.Set)` to satisfy the declared type — would COPY, and silently turn a view of
+    * the map into a detached snapshot. Provenance decides the type; the value is never touched.
+    */
+  override def transformValDef(t: Tree.ValDef)(using Program): Tree.ValDef = t.rhs match
+    case Some(Tree.Select(recv, sym, _, _))
+        if methodName(sym) == "keySet" && kindAt(recv).contains(Kind.Map) && headSym(t.tpt.tpe).exists(kindOf.get(_).contains(Kind.Set)) =>
+      t.copy(tpt = TypeTree(withHead(t.tpt.tpe, roSetSym), t.tpt.origin))
+    case _ => t
+
+  /** replace the head (type-constructor) symbol of a `TypeRef` / `AppliedType`, keeping args. */
+  private def withHead(t: TypeRepr, s: SymId): TypeRepr = t match
+    case TypeRepr.TypeRef(prefix, _)    => TypeRepr.TypeRef(prefix, s)
+    case TypeRepr.AppliedType(tc, args) => TypeRepr.AppliedType(withHead(tc, s), args)
+    case other                          => other
 
   override def transformApply(t: Tree.Apply)(using Program): Term = t.fun match
     case Tree.Select(recv, m, _, so) => kindAt(recv) match
