@@ -151,6 +151,9 @@ object DynamicsModifier {
     var rotationalVelocity2dChannel: com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel]
     def this(rotation: com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.Rotational2D) = {
       this()
+      this.isGlobal = rotation.isGlobal
+      this.strengthValue = new com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue()
+      this.strengthValue.load(rotation.strengthValue)
     }
     def allocateChannels(): scala.Unit = {
       super.allocateChannels()
@@ -173,6 +176,13 @@ object DynamicsModifier {
     var rotationalForceChannel: com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel]
     def this(rotation: com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.Rotational3D) = {
       this()
+      this.isGlobal = rotation.isGlobal
+      this.strengthValue = new com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue()
+      this.strengthValue.load(rotation.strengthValue)
+      this.thetaValue = new com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue()
+      this.phiValue = new com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue()
+      this.thetaValue.load(rotation.thetaValue)
+      this.phiValue.load(rotation.phiValue)
     }
     def allocateChannels(): scala.Unit = {
       super.allocateChannels()
@@ -208,6 +218,9 @@ object DynamicsModifier {
     var positionChannel: com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel]
     def this(rotation: com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.CentripetalAcceleration) = {
       this()
+      this.isGlobal = rotation.isGlobal
+      this.strengthValue = new com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue()
+      this.strengthValue.load(rotation.strengthValue)
     }
     def allocateChannels(): scala.Unit = {
       super.allocateChannels()
@@ -247,6 +260,13 @@ object DynamicsModifier {
     var directionalVelocityChannel: com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel]
     def this(rotation: com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.PolarAcceleration) = {
       this()
+      this.isGlobal = rotation.isGlobal
+      this.strengthValue = new com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue()
+      this.strengthValue.load(rotation.strengthValue)
+      this.thetaValue = new com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue()
+      this.phiValue = new com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue()
+      this.thetaValue.load(rotation.thetaValue)
+      this.phiValue.load(rotation.phiValue)
     }
     def allocateChannels(): scala.Unit = {
       super.allocateChannels()
@@ -284,6 +304,13 @@ object DynamicsModifier {
     var positionChannel: com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel]
     def this(rotation: com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.TangentialAcceleration) = {
       this()
+      this.isGlobal = rotation.isGlobal
+      this.strengthValue = new com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue()
+      this.strengthValue.load(rotation.strengthValue)
+      this.thetaValue = new com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue()
+      this.phiValue = new com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue()
+      this.thetaValue.load(rotation.thetaValue)
+      this.phiValue.load(rotation.phiValue)
     }
     def allocateChannels(): scala.Unit = {
       super.allocateChannels()
@@ -325,6 +352,9 @@ object DynamicsModifier {
     var accelerationChannel: com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel]
     def this(rotation: com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.BrownianAcceleration) = {
       this()
+      this.isGlobal = rotation.isGlobal
+      this.strengthValue = new com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue()
+      this.strengthValue.load(rotation.strengthValue)
     }
     def allocateChannels(): scala.Unit = {
       super.allocateChannels()

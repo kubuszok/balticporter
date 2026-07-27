@@ -40,9 +40,11 @@ object ModelInfluencer {
   class Single extends ModelInfluencer {
     def this(influencer: com.badlogic.gdx.graphics.g3d.particles.influencers.ModelInfluencer.Single) = {
       this()
+      this.models = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.Model](influencer.models.toArray(((size: scala.Int) => new scala.Array[com.badlogic.gdx.graphics.g3d.Model](size))))
     }
     def this(models: scala.Array[com.badlogic.gdx.graphics.g3d.Model]) = {
       this()
+      this.models = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.Model](models)
     }
     def init(): scala.Unit = {
       val first: com.badlogic.gdx.graphics.g3d.Model = models.first();

@@ -4,9 +4,13 @@ abstract class FlushablePool[T] extends com.badlogic.gdx.utils.Pool[T] {
   var obtained: com.badlogic.gdx.utils.Array[T] = new com.badlogic.gdx.utils.Array[T]()
   def this(initialCapacity: scala.Int) = {
     this()
+    this.freeObjects = new com.badlogic.gdx.utils.Array[T](false, initialCapacity).asInstanceOf[com.badlogic.gdx.utils.Array[T]]
+    this.max = java.lang.Integer.MAX_VALUE
   }
   def this(initialCapacity: scala.Int, max: scala.Int) = {
     this()
+    this.freeObjects = new com.badlogic.gdx.utils.Array[T](false, initialCapacity).asInstanceOf[com.badlogic.gdx.utils.Array[T]]
+    this.max = max
   }
   def obtain(): T = {
     val result: T = super.obtain().asInstanceOf[T]

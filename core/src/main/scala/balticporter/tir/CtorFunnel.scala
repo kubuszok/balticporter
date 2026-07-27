@@ -98,16 +98,18 @@ object CtorFunnel:
       classes.foreach { cd =>
         // `this()` must run nothing beyond the parent's nilary construction: the class's own
         // primary contributes no statements and passes no super arguments of its own.
-        val p        = plans.getOrElse(cd.symbol, Plan.none)
+        val p          = plans.getOrElse(cd.symbol, Plan.none)
         val thisIsNoOp = p.primaryParams.isEmpty && p.primaryBody.isEmpty && p.superArgs.isEmpty
-        val parents  = parentSyms(cd)
-        if thisIsNoOp && parents.forall(nilaryEmpty(_)) then
+        val prologue   = parentSyms(cd).foldLeft(Option(List.empty[Statement])) { (acc, s) =>
+          acc.zip(nilaryEffects(s, 0)).map(_ ++ _)
+        }
+        if thisIsNoOp && prologue.isDefined then
           ctorsOf(program, cd.body).foreach { d =>
             if !p.primary.contains(d.symbol) then
               superApply(d).foreach { case (m, args) =>
                 effectsOf(m, args, 0).foreach { stats =>
                   val touched = collection.mutable.Set[SymId]()
-                  if usable(cd, d, stats, touched) then
+                  if usable(cd, d, stats, touched) && supersedes(stats, prologue.get) then
                     out((cd.symbol, d.symbol)) = stats
                     widened ++= touched.filter { s =>
                       program.symbolOf(s).exists(sy => sy.flags.isPrivate && sy.owner != cd.symbol)
@@ -127,21 +129,50 @@ object CtorFunnel:
           if args.nonEmpty && isInitName(program, m) => Some((m, args))
       case _ => scala.None
 
-    /** `new C()` runs no statements — so a `this()` that reaches it adds nothing that the
-      * replayed constructor would then have to undo or duplicate. A class outside the translated
-      * set (the JDK) qualifies: its nilary constructor touches only its own private state, which
-      * no replay of ours can reach anyway. */
-    private def nilaryEmpty(cls: SymId, depth: Int = 0): Boolean =
-      if depth > 8 then false
+    /** what `new C()` runs — the PROLOGUE a replay lands after, since the secondary's `this()`
+      * reaches it. `None` when not computable. A class outside the translated set (the JDK)
+      * contributes nothing: its nilary constructor touches only its own private state, which no
+      * replay of ours can reach anyway. */
+    private def nilaryEffects(cls: SymId, depth: Int): Option[List[Statement]] =
+      if depth > 8 then scala.None
       else
         classOfSym(cls) match
-          case scala.None => true
+          case scala.None => Some(Nil)
           case Some(cd) =>
             val cs = ctorsOf(program, cd.body)
-            val own = cs.find(_.paramss.flatten.isEmpty) match
-              case scala.None => cs.isEmpty
-              case Some(c)    => val (sa, rest) = split(program, c); sa.isEmpty && rest.isEmpty
-            own && parentSyms(cd).forall(nilaryEmpty(_, depth + 1))
+            cs.find(_.paramss.flatten.isEmpty) match
+              // `effectsOf` already inlines the constructor's own super/this chain
+              case Some(c)                 => effectsOf(c.symbol, Nil, 0)
+              case scala.None if cs.isEmpty =>
+                parentSyms(cd).foldLeft(Option(List.empty[Statement])) { (acc, s) =>
+                  acc.zip(nilaryEffects(s, depth + 1)).map(_ ++ _)
+                }
+              // no nilary construction path at all — `this()` could not have reached here
+              case scala.None => scala.None
+
+    /** the field a top-level statement assigns, when it is a plain `this.f = <e>` / `f = <e>`. */
+    private def assignedField(st: Statement): Option[SymId] = st match
+      case Tree.Assign(Tree.Ident(f, _, _), _, _, _)            => Some(f)
+      case Tree.Assign(Tree.Select(_: Tree.This, f, _, _), _, _, _) => Some(f)
+      case _                                                    => scala.None
+
+    /** Does replaying `stats` after `prologue` leave the same state Java's `super(args)` left?
+      *
+      * `prologue` is what the secondary's own `this()` already ran. It is invisible only if it is
+      * pure field assignment (no call whose effect escapes the object, nothing that publishes
+      * `this`) and the replay assigns EVERY field it touched — then each of those fields ends up
+      * holding what Java put there, and the prologue's contribution is dead.
+      *
+      * What this does NOT preserve is the work: `new DelayedRemovalArray(1000)` allocates the
+      * nilary path's 16-element backing array and then throws it away. That is a cost, not a
+      * behavioural difference — and it replaces the previous behaviour, which was to silently
+      * hand back the 16-element array. */
+    private def supersedes(stats: List[Statement], prologue: List[Statement]): Boolean =
+      if prologue.isEmpty then true
+      else
+        val pre = prologue.map(assignedField)
+        val set = stats.flatMap(assignedField).toSet
+        pre.forall(f => f.exists(set.contains))
 
     /** a term that may be substituted for a parameter: evaluating it twice is evaluating it once,
       * so inlining it at each of the parameter's uses preserves Java's evaluate-arguments-once. */
@@ -149,7 +180,32 @@ object CtorFunnel:
       case _: Tree.Ident | _: Tree.Literal | _: Tree.This => true
       case Tree.Select(q, _, _, _)                        => simple(q)
       case Tree.Typed(e, _, _, _)                         => simple(e)
+      case Tree.ArrayLength(a, _, _)                      => simple(a)
       case _                                              => false
+
+    /** how many times each symbol is referenced by these statements. */
+    private def useCounts(stats: List[Statement]): Map[SymId, Int] =
+      given Program = program
+      val acc = collection.mutable.Map[SymId, Int]().withDefaultValue(0)
+      val ph = new Phase:
+        def name = "ctor-replay-uses"
+        override def transformIdent(t: Tree.Ident)(using Program): Term = { acc(t.sym) += 1; t }
+      stats.foreach(StandardTraversal.mapStat(ph, _))
+      acc.toMap
+
+    /** true when some construct here could execute a sub-expression more than once. */
+    private def repeats(stats: List[Statement]): Boolean =
+      given Program = program
+      var found = false
+      val ph = new Phase:
+        def name = "ctor-replay-loops"
+        override def transformTerm(t: Term)(using Program): Term =
+          t match
+            case _: Tree.While | _: Tree.DoWhile | _: Tree.For | _: Tree.ForEach | _: Tree.Lambda => found = true
+            case _ => ()
+          t
+      stats.foreach(StandardTraversal.mapStat(ph, _))
+      found
 
     private def substituted(stats: List[Statement], m: Map[SymId, Term]): List[Statement] =
       if m.isEmpty then stats
@@ -166,10 +222,21 @@ object CtorFunnel:
       if depth > 6 then scala.None
       else
         defOf(ctor).flatMap { d =>
-          val ps = d.paramss.flatten
-          if ps.length != args.length || !args.forall(simple) then scala.None
+          val ps   = d.paramss.flatten
+          val stms = stmtsOf(d)
+          // Substitution inlines an argument at each of its parameter's uses. That is Java's
+          // evaluate-once only when re-evaluating is free (`simple`) or the parameter is used
+          // exactly once and nothing in the body can run that use repeatedly. A parameter used
+          // ZERO times would otherwise DISCARD a side-effecting argument, so it needs `simple`
+          // too. (An argument cannot read `this` — Java forbids it before `super(...)` — so
+          // evaluating it at the use site rather than up front cannot observe the body's own
+          // field writes.)
+          lazy val counts = useCounts(stms)
+          lazy val loopFree = !repeats(stms)
+          def ok(p: Tree.ValDef, a: Term) = simple(a) || (loopFree && counts.getOrElse(p.symbol, 0) == 1)
+          if ps.length != args.length || !ps.zip(args).forall(ok) then scala.None
           else
-            val body = substituted(stmtsOf(d), ps.map(_.symbol).zip(args).toMap)
+            val body = substituted(stms, ps.map(_.symbol).zip(args).toMap)
             body match
               case Tree.Apply(Tree.Select(_, m, _, _), as, _, _, _) :: tl if isInitName(program, m) =>
                 if as.isEmpty then Some(tl) else effectsOf(m, as, depth + 1).map(_ ++ tl)

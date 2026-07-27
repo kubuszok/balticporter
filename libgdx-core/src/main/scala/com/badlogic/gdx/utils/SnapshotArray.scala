@@ -6,24 +6,41 @@ class SnapshotArray[T] extends com.badlogic.gdx.utils.Array[T] {
   private var snapshots: scala.Int = 0
   def this(array: com.badlogic.gdx.utils.Array[T]) = {
     this()
+    this.items = java.util.Arrays.copyOf(array.items.asInstanceOf[scala.Array[java.lang.Object]], array.size).asInstanceOf[scala.Array[T]]
+    this.ordered = array.ordered
+    this.size = array.size
   }
   def this(ordered: scala.Boolean, capacity: scala.Int, arraySupplier: com.badlogic.gdx.utils.ArraySupplier[scala.Array[T]]) = {
     this()
+    this.ordered = ordered
+    this.items = arraySupplier.get(capacity).asInstanceOf[scala.Array[T]]
   }
   def this(ordered: scala.Boolean, capacity: scala.Int) = {
     this()
+    this.ordered = ordered
+    this.items = com.badlogic.gdx.utils.ArraySupplier.`object`().get(capacity).asInstanceOf[scala.Array[T]]
   }
   def this(ordered: scala.Boolean, array: scala.Array[T], startIndex: scala.Int, count: scala.Int) = {
     this()
+    this.items = java.util.Arrays.copyOfRange(array.asInstanceOf[scala.Array[java.lang.Object]], startIndex, startIndex + count).asInstanceOf[scala.Array[T]]
+    this.ordered = ordered
+    this.size = count
   }
   def this(arraySupplier: com.badlogic.gdx.utils.ArraySupplier[scala.Array[T]]) = {
     this()
+    this.ordered = true
+    this.items = arraySupplier.get(16).asInstanceOf[scala.Array[T]]
   }
   def this(capacity: scala.Int) = {
     this()
+    this.ordered = true
+    this.items = com.badlogic.gdx.utils.ArraySupplier.`object`().get(capacity).asInstanceOf[scala.Array[T]]
   }
   def this(array: scala.Array[T]) = {
     this()
+    this.items = java.util.Arrays.copyOfRange(array.asInstanceOf[scala.Array[java.lang.Object]], 0, 0 + array.length).asInstanceOf[scala.Array[T]]
+    this.ordered = true
+    this.size = array.length
   }
   def begin(): scala.Array[T] = {
     this.modified()

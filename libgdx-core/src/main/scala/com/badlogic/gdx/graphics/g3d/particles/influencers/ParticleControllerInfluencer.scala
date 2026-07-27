@@ -87,9 +87,11 @@ object ParticleControllerInfluencer {
   class Single extends ParticleControllerInfluencer {
     def this(templates: scala.Array[com.badlogic.gdx.graphics.g3d.particles.ParticleController]) = {
       this()
+      this.templates = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.ParticleController](templates)
     }
     def this(particleControllerSingle: com.badlogic.gdx.graphics.g3d.particles.influencers.ParticleControllerInfluencer.Single) = {
       this()
+      this.templates = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.ParticleController](particleControllerSingle.templates.items)
     }
     def init(): scala.Unit = {
       val first: com.badlogic.gdx.graphics.g3d.particles.ParticleController = templates.first();
