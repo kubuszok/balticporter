@@ -372,17 +372,19 @@ final class TirEmitter(source: Program):
 
   /** a parent type in an `extends` clause: a wildcard type argument (`Foo[?, ?]`, from a raw
     * generic supertype) is ILLEGAL here — replace each `?` with its upper bound (or `AnyRef`). */
-  private def parentTpe(t: TypeRepr): String = byName(parentTpe0(t))
-
-  private def parentTpe0(t: TypeRepr): String = t match
-    case TypeRepr.AppliedType(tc, args) if args.exists(_.isInstanceOf[TypeRepr.TypeBounds]) =>
+  /** Only the HEAD is a `namedInner` position. A type ARGUMENT of the parent is an ordinary type
+    * position: the simple name of an inner class is NOT in scope in an `extends` clause
+    * (`ParticleEffectPool extends Pool[PooledEffect]` → `Not found: type PooledEffect`), while the
+    * projection that `typeSym` would otherwise give is both legal and correct there. */
+  private def parentTpe(t: TypeRepr): String = t match
+    case TypeRepr.AppliedType(tc, args) =>
       val as = args.map {
         case TypeRepr.TypeBounds(_, hi) if hi != TypeRepr.NoType => tpe(hi)
         case _: TypeRepr.TypeBounds                              => "scala.AnyRef"
-        case other                                              => tpe(other)
+        case other                                               => tpe(other)
       }
-      s"${tpe(tc)}[${as.mkString(", ")}]"
-    case _ => tpe(t)
+      s"${byName(tpe(tc))}[${as.mkString(", ")}]"
+    case _ => byName(tpe(t))
 
   private def stat(s: Statement, i: Int): String = s match
     case c: Tree.ClassDef => classDef(c, i)

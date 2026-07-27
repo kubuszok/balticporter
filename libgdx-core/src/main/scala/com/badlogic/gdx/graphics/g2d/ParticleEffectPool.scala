@@ -1,6 +1,6 @@
 package com.badlogic.gdx.graphics.g2d
 
-class ParticleEffectPool(effect$p: com.badlogic.gdx.graphics.g2d.ParticleEffect, initialCapacity: scala.Int, max$p: scala.Int) extends com.badlogic.gdx.utils.Pool[PooledEffect](initialCapacity, max$p) {
+class ParticleEffectPool(effect$p: com.badlogic.gdx.graphics.g2d.ParticleEffect, initialCapacity: scala.Int, max$p: scala.Int) extends com.badlogic.gdx.utils.Pool[com.badlogic.gdx.graphics.g2d.ParticleEffectPool#PooledEffect](initialCapacity, max$p) {
   private var effect: com.badlogic.gdx.graphics.g2d.ParticleEffect = null.asInstanceOf[com.badlogic.gdx.graphics.g2d.ParticleEffect]
   this.effect = effect$p
   def newObject(): com.badlogic.gdx.graphics.g2d.ParticleEffectPool#PooledEffect = {
