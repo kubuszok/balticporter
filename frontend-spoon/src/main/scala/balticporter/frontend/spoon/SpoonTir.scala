@@ -1293,8 +1293,10 @@ object SpoonTir:
             // implicit (no target): a BARE reference resolves an own OR an ENCLOSING member
             // (Scala inner classes see the outer's members by simple name). Explicit `this.m`
             // stays qualified — it's used precisely to defeat param/local shadowing.
-            case null                                  => Tree.Ident(mid, NoType, o)
-            case ta: CtThisAccess[?] if !isOwnThis(ta) => Tree.Ident(mid, NoType, o) // outer method → bare
+            case null                                  =>
+              shadowedImplicitCall(inv, mid, o).getOrElse(Tree.Ident(mid, NoType, o))
+            case ta: CtThisAccess[?] if !isOwnThis(ta) => // outer method → bare
+              shadowedImplicitCall(inv, mid, o).getOrElse(Tree.Ident(mid, NoType, o))
             case _: CtThisAccess[?]                    => Tree.Select(thisTerm(inv), mid, NoType, o)
             case t =>
               val recv = expr(t)
@@ -1305,6 +1307,34 @@ object SpoonTir:
                 case None          => recv
               Tree.Select(recv2, mid, NoType, o)
         Tree.Apply(pinTypeArgs(fun, inv, o), args, mid, ty(inv), o)
+
+      /** Java keeps SEPARATE namespaces for variables and methods; Scala does not. `boolean delete =
+        * …; cursor = delete(false);` is legal Java — the call still reaches the METHOD `delete` —
+        * but in Scala the local hides it ("value delete does not take parameters"). Qualify such an
+        * implicit-target call with the instance whose class provides the method, which is exactly
+        * what Java resolved (`TextField.this.delete(false)` from an inner listener). Only for
+        * INSTANCE methods in a non-static context; anything else keeps the bare name. */
+      private def shadowedImplicitCall(inv: CtInvocation[?], mid: SymId, o: Origin): Option[Term] =
+        val name = inv.getExecutable.getSimpleName
+        val exec = inv.getParent(classOf[CtExecutable[?]])
+        val shadowed = !inStatic && exec != null &&
+          exec.getElements(new spoon.reflect.visitor.filter.TypeFilter(classOf[CtVariable[?]])).asScala
+            .exists(v => !v.isInstanceOf[CtField[?]] && v.getSimpleName == name)
+        if !shadowed then None
+        else
+          // innermost enclosing class that PROVIDES the method (own or inherited) — that is the
+          // `this` Java picked.
+          var t: CtType[?]      = inv.getParent(classOf[CtType[?]])
+          var res: Option[Term] = None
+          while t != null && res.isEmpty do
+            val provides =
+              try t.getAllMethods.asScala.exists(m => m.getSimpleName == name && !m.hasModifier(ModifierKind.STATIC))
+              catch { case _: Throwable => false }
+            if provides then
+              val id = minter.external(t.getQualifiedName, t.getSimpleName)
+              res = Some(Tree.Select(Tree.This(id, TypeRef(NoPrefix, id), o), mid, NoType, o))
+            else t = t.getDeclaringType
+          res
 
       /** Java resolves a generic call's type arguments (often by inference — e.g. `props.get("k",
         * Integer.class)` binds `T=Integer`); Scala re-infers from the EXPECTED type, which can pick
