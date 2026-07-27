@@ -1,9 +1,9 @@
 package balticporter.corpus
 
-import balticporter.core.{FrontendConfig, Substitutions}
+import balticporter.core.{FrontendConfig, Substituted, Substitutions}
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
-import balticporter.tir.{Pipeline, Program}
+import balticporter.tir.{Pipeline, Program, RewriteTrace}
 import balticporter.transform.{CollectionsTransform, MutableParamsTransform, PanamaFfiTransform}
 
 import java.nio.file.{Files, Path, StandardCopyOption}
@@ -67,6 +67,18 @@ object LibgdxCoreMigrate:
     val program = if raw then raw0
                   else Pipeline.run(raw0, List(new CollectionsTransform, new MutableParamsTransform, new PanamaFfiTransform()))
     println(s"[libgdx-core] TIR: ${program.units.size} units, ${program.symbols.all.size} symbols")
+
+    // Signature-changing rewrites are only safe if every USE follows. Report the blast radius of
+    // the substituted types, then check the whole program for uses that disagree with their
+    // declaration's current signature — derived from the tree, so it catches sites no one listed.
+    val substituted = program.symbols.all.collect { case s if Substituted.tags(s) => s.id }.toSet
+    if substituted.nonEmpty then
+      println(s"[libgdx-core] substitution blast radius:\n${RewriteTrace.impactSummary(program, substituted)}")
+    val mismatches = RewriteTrace.check(program)
+    if mismatches.isEmpty then println("[libgdx-core] signature check: all call sites agree with their declarations")
+    else
+      println(s"[libgdx-core] signature check: ${mismatches.size} site(s) disagree with their declaration")
+      mismatches.take(20).foreach(m => println("  " + m.render))
 
     val outDir = repoRoot.resolve("libgdx-core/src/main/scala")
     if Files.exists(outDir) then Files.walk(outDir).iterator().asScala.toList.reverse.foreach(Files.delete)
