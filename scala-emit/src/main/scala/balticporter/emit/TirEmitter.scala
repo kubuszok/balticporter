@@ -564,8 +564,12 @@ final class TirEmitter(source: Program):
       case _                           => None
     def concrete(t: TypeRepr): Boolean = t match
       case TypeRepr.TypeRef(_, s)       => !sym(s).flags.isParam
-      case TypeRepr.AppliedType(tc, as) => concrete(tc) && as.forall(concrete)
+      case TypeRepr.AppliedType(tc, as) => concrete(tc) && as.forall(arg)
       case _                            => false
+    // a bare `?` is a legal type ARGUMENT (`PoolSupplier[Array[?]]`) though not a legal type
+    def arg(t: TypeRepr): Boolean = t match
+      case TypeRepr.TypeBounds(TypeRepr.NoType, TypeRepr.NoType) => true
+      case other                                                 => concrete(other)
     val ok = concrete(target) && headOf(target) != headOf(ctor)
     if ok then s"($fn: ${tpe(target)})" else fn
 
