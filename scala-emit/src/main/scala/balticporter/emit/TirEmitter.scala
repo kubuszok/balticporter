@@ -510,10 +510,17 @@ final class TirEmitter(source: Program):
       q match
         // an ARRAY constructor reference `T[]::new` is an `IntFunction[T[]]` — `(size) => new T[size]`
         // (Scala arrays need a length), NOT a no-arg supplier. One-layer element = the array's row type.
+        // a constructor reference must name an INSTANTIABLE type: `new T[?]()` is rejected
+        // ("type argument must be fully defined"), so route through `ctorTpe`, which drops
+        // wildcard arguments and lets Scala infer them — and erase a wildcard array element to
+        // `Object`, which is what Java's raw `T[]::new` means anyway.
         case Left(tt) if isCtor => tt.tpe match
           case TypeRepr.AppliedType(TypeRepr.TypeRef(_, as), List(el)) if sym(as).fullName == "scala.Array" =>
-            s"((size: scala.Int) => new scala.Array[${tpe(el)}](size))"
-          case _ => s"(() => new ${tpe(tt.tpe)}())"
+            val elem = el match
+              case _: TypeRepr.TypeBounds => "java.lang.Object"
+              case other                  => tpe(other)
+            s"((size: scala.Int) => new scala.Array[$elem](size))"
+          case _ => s"(() => new ${ctorTpe(tt.tpe)}())"
         case Left(tt)           => s"${tpe(tt.tpe)}.${local(s)}"
         case Right(e)           => s"${term(e, i)}.${local(s)}"
     case Tree.Break(_, _, _)            => "/* break */ ()"    // TODO: scala.util.boundary
