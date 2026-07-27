@@ -555,7 +555,9 @@ object SpoonTir:
         case a: CtAssignment[?, ?] =>
           val tgt = Option(a.getAssigned.getType)
           val rhs = a.getAssignment
-          Tree.Assign(expr(a.getAssigned), tgt.map(coerce(_, rhs, expr(rhs))).getOrElse(expr(rhs)), unitT, originOf(a))
+          val lhs = expr(a.getAssigned)
+          val v   = tgt.map(coerce(_, rhs, expr(rhs))).getOrElse(expr(rhs))
+          Tree.Assign(lhs, toDeclaredTypeParam(a.getAssigned, rhs, v), unitT, originOf(a))
         case i: CtIf =>
           val elze = Option(i.getElseStatement).map(blockTerm).getOrElse(unit(i))
           Tree.If(expr(i.getCondition), blockTerm(i.getThenStatement), elze, unitT, originOf(i))
@@ -625,6 +627,34 @@ object SpoonTir:
           Set(POSTINC, POSTDEC, PREINC, PREDEC).contains(u.getKind) &&
             (u.getOperand match { case va: CtVariableAccess[?] => va.getVariable.getSimpleName == name; case _ => false })
         }
+
+      /** Assignment to a member whose DECLARED (emitted) type is a bare TYPE PARAMETER, where Java's
+        * own view of the access was the ERASED one. Reading a member through a RAW-bounded type
+        * variable (`N extends Node`, `N node; node.parent`) erases it to the bound, so Java accepts
+        * `node.parent = null` and `node.parent = this` unchecked — while the emitted field keeps its
+        * `N`. Restate the unchecked step. Guarded on the parameter's NAME resolving in the current
+        * scope (never emit the `?T` unresolved stub) and on the value not already having that type. */
+      private def toDeclaredTypeParam(assigned: CtExpression[?], e: CtExpression[?], t: Term): Term =
+        declaredTypeOf(assigned) match
+          case Some(tp: CtTypeParameterReference) => toTypeParam(tp, e, t)
+          case _                                  => t
+
+      /** the DECLARED type of an assignment target — the field's / local's own declaration, not
+        * Spoon's (possibly raw-erased) view of the access. */
+      private def declaredTypeOf(assigned: CtExpression[?]): Option[CtTypeReference[?]] =
+        try assigned match
+          case fw: CtFieldWrite[?]    => Option(fw.getVariable.getFieldDeclaration).map(_.getType)
+          case vw: CtVariableWrite[?] => Option(vw.getVariable.getDeclaration).map(_.getType)
+          case _                      => None
+        catch { case _: Throwable => None }
+
+      /** cast `t` to the in-scope resolution of type parameter `tp`, unless it already has it. */
+      private def toTypeParam(tp: CtTypeParameterReference, e: CtExpression[?], t: Term): Term =
+        resolveTypeParam(tp.getSimpleName) match
+          case Some(inScope) if t.tpe != TypeRef(NoPrefix, inScope) =>
+            val tr = TypeRef(NoPrefix, inScope)
+            Tree.Typed(t, tt(tr, e), tr, originOf(e))
+          case _ => t
 
       /** Java permits two implicit conversions Scala forbids: array covariance (`Sub[]` → a
         * `Super[]` slot) and `null` → a type parameter. Insert an explicit `asInstanceOf` so the

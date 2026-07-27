@@ -50,7 +50,7 @@ class Tree[N <: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[N, V, ?], V] extend
     var index: scala.Int = index$arg
     if (node.parent != null) {
       node.parent.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[java.lang.Object, java.lang.Object, com.badlogic.gdx.scenes.scene2d.Actor], java.lang.Object, com.badlogic.gdx.scenes.scene2d.Actor]].remove(node.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[java.lang.Object, java.lang.Object, com.badlogic.gdx.scenes.scene2d.Actor]])
-      node.parent = null
+      node.parent = null.asInstanceOf[N]
     } else {
       val existingIndex: scala.Int = this.rootNodes.indexOf(node, true)
       if (existingIndex != (-1)) {
@@ -532,7 +532,7 @@ object Tree {
       }; i = i + 1 } }
     }
     def insert(childIndex: scala.Int, node: N): scala.Unit = {
-      node.parent = this
+      node.parent = this.asInstanceOf[N]
       this.children.insert(childIndex, node)
       if (!this.expanded) {
         return

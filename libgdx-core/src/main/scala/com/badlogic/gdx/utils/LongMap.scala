@@ -37,7 +37,7 @@ class LongMap[V] extends scala.collection.Iterable[com.badlogic.gdx.utils.LongMa
     java.lang.System.arraycopy(map.keyTable, 0, this.keyTable, 0, map.keyTable.length)
     java.lang.System.arraycopy(map.valueTable, 0, this.valueTable, 0, map.valueTable.length)
     this.size = map.size
-    this.zeroValue = map.zeroValue
+    this.zeroValue = map.zeroValue.asInstanceOf[V]
     this.hasZeroValue = map.hasZeroValue
   }
   def place(item: scala.Long): scala.Int = {

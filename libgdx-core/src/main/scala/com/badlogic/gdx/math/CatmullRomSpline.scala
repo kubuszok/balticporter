@@ -13,13 +13,13 @@ class CatmullRomSpline[T <: com.badlogic.gdx.math.Vector[T]] extends com.badlogi
   }
   def set(controlPoints: scala.Array[T], continuous: scala.Boolean): CatmullRomSpline[T] = {
     if (this.tmp == null) {
-      this.tmp = controlPoints(0).cpy()
+      this.tmp = controlPoints(0).cpy().asInstanceOf[T]
     } else ()
     if (this.tmp2 == null) {
-      this.tmp2 = controlPoints(0).cpy()
+      this.tmp2 = controlPoints(0).cpy().asInstanceOf[T]
     } else ()
     if (this.tmp3 == null) {
-      this.tmp3 = controlPoints(0).cpy()
+      this.tmp3 = controlPoints(0).cpy().asInstanceOf[T]
     } else ()
     this.controlPoints = controlPoints
     this.continuous = continuous
