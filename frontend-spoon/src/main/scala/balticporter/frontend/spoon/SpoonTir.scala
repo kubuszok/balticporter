@@ -586,16 +586,18 @@ object SpoonTir:
         val id = minter.define(key)(sid =>
           Symbol(sid, "<anon>", minter.fullNameOf(enclosing) + "$" + anonSeq, Flags(), enclosing, TypeRef(NoPrefix, sid))
         )
+        // the name Spoon gives the anonymous class (`DragAndDrop$1`) — how a `this` inside the body
+        // that means the ANONYMOUS instance is recognised.
+        val qname = try ac.getQualifiedName catch { case _: Throwable => "" }
         val dropped = List.newBuilder[String]
         val members = ac.getTypeMembers.asScala.toList.sortBy(posKey).flatMap {
-          case f: CtField[?]  => List(fieldDef(id, f, selfClass = enclosing, outerVars = outerVars))
+          case f: CtField[?]  => List(fieldDef(id, f, enclosing, outerVars, id, qname))
           case m: CtMethod[?] =>
-            List(execDef(id, m, m.getSimpleName, selfClass = enclosing, outerVars = outerVars,
-                         overrides = overridesInherited(m)))
+            List(execDef(id, m, m.getSimpleName, enclosing, outerVars, overridesInherited(m), id, qname))
           case c: CtConstructor[?] if c.isImplicit => Nil // the compiler-synthesised anonymous ctor
           // instance-initializer block (the double-brace idiom) — plain statements in the anon body
           case a: CtAnonymousExecutable if !a.hasModifier(ModifierKind.STATIC) =>
-            List(execDef(id, a, "<initblock>", selfClass = enclosing, outerVars = outerVars))
+            List(execDef(id, a, "<initblock>", enclosing, outerVars, false, id, qname))
           case other =>
             dropped += s"${other.getClass.getSimpleName.stripSuffix("Impl")} ${other.getSimpleName}"
             Nil
@@ -659,7 +661,8 @@ object SpoonTir:
     private def selfOf(owner: SymId, selfClass: SymId): SymId =
       if selfClass == SymId.None then owner else selfClass
 
-    private def fieldDef(owner: SymId, f: CtField[?], selfClass: SymId = SymId.None, outerVars: Map[String, SymId] = Map.empty): Tree.ValDef = withStatic(fieldFlags(f).isStatic) {
+    private def fieldDef(owner: SymId, f: CtField[?], selfClass: SymId = SymId.None, outerVars: Map[String, SymId] = Map.empty,
+                         anonSelf: SymId = SymId.None, anonQName: String = ""): Tree.ValDef = withStatic(fieldFlags(f).isStatic) {
       val ft = tpe(f.getType)
       val id = minter.define(memberKey(owner, f.getSimpleName))(sid =>
         Symbol(sid, f.getSimpleName, qualified(owner, f.getSimpleName), fieldFlags(f), owner, ft)
@@ -667,13 +670,15 @@ object SpoonTir:
       // a field initializer is a real expression: translate it so its usages are traced,
       // attributed to the field (not a method).
       val rhs = Option(f.getDefaultExpression).map { e =>
-        val bt = new BodyTranslator(id, selfOf(owner, selfClass)); bt.seedVars(outerVars); bt.coercedExprOf(f.getType, e)
+        val bt = new BodyTranslator(id, selfOf(owner, selfClass), anonSelf, anonQName)
+        bt.seedVars(outerVars); bt.coercedExprOf(f.getType, e)
       }
       Tree.ValDef(id, tt(ft, f), rhs = rhs, origin = originOf(f))
     }
 
     private def execDef(owner: SymId, m: CtExecutable[?], name: String, selfClass: SymId = SymId.None,
-                        outerVars: Map[String, SymId] = Map.empty, overrides: Boolean = false): Tree.DefDef = withStatic(execFlags(m).isStatic) {
+                        outerVars: Map[String, SymId] = Map.empty, overrides: Boolean = false,
+                        anonSelf: SymId = SymId.None, anonQName: String = ""): Tree.DefDef = withStatic(execFlags(m).isStatic) {
       val mkey = memberKey(owner, name + erasedSig(m))
       val id   = minter.resolve(mkey)
       val mtps = m match
@@ -684,7 +689,7 @@ object SpoonTir:
       // a method sees its class's accessible params (unless static — gated at the fill site) plus
       // its own; `withStatic` already carries `inStatic` for this exec.
       tpAccessible.prepend(tpAccessible.headOption.getOrElse(Map.empty) ++ frame)
-      val bt = new BodyTranslator(id, selfOf(owner, selfClass))
+      val bt = new BodyTranslator(id, selfOf(owner, selfClass), anonSelf, anonQName)
       bt.seedVars(outerVars) // an anonymous class captures the enclosing method's effectively-final locals
       val ps = m.getParameters.asScala.toList
       val pvs = ps.map { p =>
@@ -774,7 +779,12 @@ object SpoonTir:
       * set grows the same way the BIR one did.
       *
       * `classId` is the enclosing class (for `this`); `methodId` owns locals. */
-    private final class BodyTranslator(methodId: SymId, classId: SymId):
+    /** `anonSelf`/`anonQName` are set only for the members of an ANONYMOUS class: the synthetic
+      * symbol standing for the anonymous instance, and the name Spoon gives it (`DragAndDrop$1`).
+      * `classId` stays the ENCLOSING class, because that is what Spoon reports for the implicit
+      * `this` of every enclosing member the body reaches. */
+    private final class BodyTranslator(methodId: SymId, classId: SymId,
+                                       anonSelf: SymId = SymId.None, anonQName: String = ""):
       private val varIds  = new java.util.IdentityHashMap[CtVariable[?], SymId]()
       private val nameIds = collection.mutable.Map[String, SymId]()
 
@@ -796,6 +806,22 @@ object SpoonTir:
         * it need qualifying; an outer `Outer.this.x` resolves bare in Scala. */
       private def isOwnThis(ta: CtThisAccess[?]): Boolean =
         Option(ta.getType).map(_.getQualifiedName).forall(_ == minter.fullNameOf(classId))
+
+      /** A `this` used as a VALUE. Inside an anonymous class body it denotes the ANONYMOUS
+        * instance — `DragAndDrop`'s drag listener passes `this` to `stage.cancelTouchFocusExcept(
+        * EventListener, Actor)`, and it means the LISTENER, not the `DragAndDrop`; emitting
+        * `DragAndDrop.this` there is not merely verbose, it is a different object.
+        *
+        * Only for a `this` Spoon EXPLICITLY types as the anonymous class, and only in value
+        * position. As the TARGET of a member access Spoon reports the anonymous class whatever the
+        * member's real owner is (`List`'s key listener calling `setSelectedIndex`, declared on
+        * `List`), so there the existing resolution — which falls back to the bare name Scala
+        * resolves lexically, exactly as Java did — stays in charge. */
+      private def thisOf(ta: CtThisAccess[?], el: CtElement): Term =
+        if anonSelf != SymId.None && anonQName.nonEmpty &&
+           Option(ta.getType).map(_.getQualifiedName).contains(anonQName)
+        then Tree.This(anonSelf, TypeRef(NoPrefix, anonSelf), originOf(el))
+        else thisTerm(el)
 
       /** `Outer.this` — the enclosing instance, as its own class symbol. Only for a type that
         * LEXICALLY ENCLOSES the class the access sits in: Spoon also reports a plain `this` used to
@@ -1222,7 +1248,7 @@ object SpoonTir:
         // listener): Scala's bare `this` names the INNERMOST class, so the enclosing instance has
         // to be named explicitly. Carry the enclosing class's symbol; the emitter qualifies it.
         case ta: CtThisAccess[?] if !isOwnThis(ta) && outerThis(ta).isDefined => outerThis(ta).get
-        case _: CtThisAccess[?]   => thisTerm(e)
+        case ta: CtThisAccess[?]  => thisOf(ta, e)
         case v: CtVariableRead[?] => Tree.Ident(resolveVar(v.getVariable), ty(e), originOf(e))
         case v: CtVariableWrite[?] => Tree.Ident(resolveVar(v.getVariable), ty(e), originOf(e))
         case inv: CtInvocation[?] => invocation(inv)

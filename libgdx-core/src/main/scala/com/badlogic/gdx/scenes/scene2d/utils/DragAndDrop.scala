@@ -35,7 +35,7 @@ class DragAndDrop {
         if (DragAndDrop.this.cancelTouchFocus && (DragAndDrop.this.payload != null)) {
           val stage: com.badlogic.gdx.scenes.scene2d.Stage = source.getActor().getStage()
           if (stage != null) {
-            stage.cancelTouchFocusExcept(DragAndDrop.this, source.getActor())
+            stage.cancelTouchFocusExcept(this, source.getActor())
           } else ()
         } else ()
       }
