@@ -308,9 +308,9 @@ class TextArea extends com.badlogic.gdx.scenes.scene2d.ui.TextField {
     def setCursorPosition(x$arg: scala.Float, y$arg: scala.Float): scala.Unit = {
       var x: scala.Float = x$arg
       var y: scala.Float = y$arg
-      moveOffset = -1
-      val background: com.badlogic.gdx.scenes.scene2d.utils.Drawable = style.background
-      val font: com.badlogic.gdx.graphics.g2d.BitmapFont = style.font
+      TextArea.this.moveOffset = -1
+      val background: com.badlogic.gdx.scenes.scene2d.utils.Drawable = TextArea.this.style.background
+      val font: com.badlogic.gdx.graphics.g2d.BitmapFont = TextArea.this.style.font
       var height: scala.Float = TextArea.this.getHeight()
       if (background != null) {
         height = height - background.getTopHeight()
@@ -320,8 +320,8 @@ class TextArea extends com.badlogic.gdx.scenes.scene2d.ui.TextField {
       if (background != null) {
         y = y - background.getTopHeight()
       } else ()
-      cursorLine = java.lang.Math.floor((height - y) / font.getLineHeight()).asInstanceOf[scala.Int] + firstLineShowing
-      cursorLine = java.lang.Math.max(0, java.lang.Math.min(cursorLine, TextArea.this.getLines() - 1))
+      TextArea.this.cursorLine = java.lang.Math.floor((height - y) / font.getLineHeight()).asInstanceOf[scala.Int] + TextArea.this.firstLineShowing
+      TextArea.this.cursorLine = java.lang.Math.max(0, java.lang.Math.min(TextArea.this.cursorLine, TextArea.this.getLines() - 1))
       super.setCursorPosition(x, y)
       TextArea.this.updateCurrentLine()
     }
@@ -339,7 +339,7 @@ class TextArea extends com.badlogic.gdx.scenes.scene2d.ui.TextField {
           } else {
             TextArea.this.clearSelection()
           }
-          TextArea.this.moveCursorLine(cursorLine + 1)
+          TextArea.this.moveCursorLine(TextArea.this.cursorLine + 1)
           repeat = true
         } else {
           if (keycode == com.badlogic.gdx.Input.Keys.UP) {
@@ -351,10 +351,10 @@ class TextArea extends com.badlogic.gdx.scenes.scene2d.ui.TextField {
             } else {
               TextArea.this.clearSelection()
             }
-            TextArea.this.moveCursorLine(cursorLine - 1)
+            TextArea.this.moveCursorLine(TextArea.this.cursorLine - 1)
             repeat = true
           } else {
-            moveOffset = -1
+            TextArea.this.moveOffset = -1
           }
         }
         if (repeat) {
@@ -377,17 +377,17 @@ class TextArea extends com.badlogic.gdx.scenes.scene2d.ui.TextField {
       if (jump) {
         cursor = 0
       } else {
-        if ((cursorLine * 2) < linesBreak.size) {
-          cursor = linesBreak.get(cursorLine * 2)
+        if ((TextArea.this.cursorLine * 2) < TextArea.this.linesBreak.size) {
+          cursor = TextArea.this.linesBreak.get(TextArea.this.cursorLine * 2)
         } else ()
       }
     }
     def goEnd(jump: scala.Boolean): scala.Unit = {
-      if (jump || (cursorLine >= TextArea.this.getLines())) {
+      if (jump || (TextArea.this.cursorLine >= TextArea.this.getLines())) {
         cursor = text.length()
       } else {
-        if (((cursorLine * 2) + 1) < linesBreak.size) {
-          cursor = linesBreak.get((cursorLine * 2) + 1)
+        if (((TextArea.this.cursorLine * 2) + 1) < TextArea.this.linesBreak.size) {
+          cursor = TextArea.this.linesBreak.get((TextArea.this.cursorLine * 2) + 1)
         } else ()
       }
     }

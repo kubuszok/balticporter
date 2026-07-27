@@ -53,7 +53,7 @@ class Octree[T](minimum: com.badlogic.gdx.math.Vector3, maximum: com.badlogic.gd
     final val bounds: com.badlogic.gdx.math.collision.BoundingBox = new com.badlogic.gdx.math.collision.BoundingBox()
     var leaf: scala.Boolean = false
     private var children: scala.Array[OctreeNode] = null.asInstanceOf[scala.Array[OctreeNode]]
-    private final val geometries: com.badlogic.gdx.utils.Array[T] = new com.badlogic.gdx.utils.Array[T](java.lang.Math.min(16, maxItemsPerNode))
+    private final val geometries: com.badlogic.gdx.utils.Array[T] = new com.badlogic.gdx.utils.Array[T](java.lang.Math.min(16, Octree.this.maxItemsPerNode))
     private def split(): scala.Unit = {
       val midx: scala.Float = (this.bounds.max$field.x + this.bounds.min$field.x) * 0.5f
       val midy: scala.Float = (this.bounds.max$field.y + this.bounds.min$field.y) * 0.5f
@@ -87,7 +87,7 @@ class Octree[T](minimum: com.badlogic.gdx.math.Vector3, maximum: com.badlogic.gd
       if (!this.leaf) {
         this.clearChildren()
       } else ()
-      nodePool.free(this)
+      Octree.this.nodePool.free(this)
     }
     private def clearChildren(): scala.Unit = {
       { var i: scala.Int = 0; while (i < 8) { {
@@ -96,7 +96,7 @@ class Octree[T](minimum: com.badlogic.gdx.math.Vector3, maximum: com.badlogic.gd
       }; i = i + 1 } }
     }
     def add(geometry: T): scala.Unit = {
-      if (!collider.intersects(this.bounds, geometry)) {
+      if (!Octree.this.collider.intersects(this.bounds, geometry)) {
         return
       } else ()
       if (!this.leaf) {
@@ -104,7 +104,7 @@ class Octree[T](minimum: com.badlogic.gdx.math.Vector3, maximum: com.badlogic.gd
           child.add(geometry)
         }
       } else {
-        if ((this.geometries.size >= maxItemsPerNode) && (this.level > 0)) {
+        if ((this.geometries.size >= Octree.this.maxItemsPerNode) && (this.level > 0)) {
           this.split()
           for (child <- this.children) {
             child.add(geometry)
@@ -125,7 +125,7 @@ class Octree[T](minimum: com.badlogic.gdx.math.Vector3, maximum: com.badlogic.gd
           for (node <- this.children) {
             node.getAll(geometrySet)
           }
-          if (geometrySet.size <= maxItemsPerNode) {
+          if (geometrySet.size <= Octree.this.maxItemsPerNode) {
             for (geometry <- geometrySet) {
               this.geometries.add(geometry)
             }
@@ -149,7 +149,7 @@ class Octree[T](minimum: com.badlogic.gdx.math.Vector3, maximum: com.badlogic.gd
         }
       } else {
         for (geometry <- this.geometries) {
-          if (collider.intersects(aabb, geometry)) {
+          if (Octree.this.collider.intersects(aabb, geometry)) {
             result.add(geometry)
           } else ()
         }
@@ -165,7 +165,7 @@ class Octree[T](minimum: com.badlogic.gdx.math.Vector3, maximum: com.badlogic.gd
         }
       } else {
         for (geometry <- this.geometries) {
-          if (collider.intersects(frustum, geometry)) {
+          if (Octree.this.collider.intersects(frustum, geometry)) {
             result.add(geometry)
           } else ()
         }
@@ -187,7 +187,7 @@ class Octree[T](minimum: com.badlogic.gdx.math.Vector3, maximum: com.badlogic.gd
         }
       } else {
         for (geometry <- this.geometries) {
-          var distance: scala.Float = collider.intersects(ray, geometry)
+          var distance: scala.Float = Octree.this.collider.intersects(ray, geometry)
           if ((result.geometry == null) || (distance < result.distance)) {
             result.geometry = geometry
             result.distance = distance

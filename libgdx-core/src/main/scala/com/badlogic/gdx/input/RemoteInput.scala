@@ -351,58 +351,58 @@ class RemoteInput(port$p: scala.Int, listener$p: com.badlogic.gdx.input.RemoteIn
     this.touchEvent = touchEvent$p
     this.keyEvent = keyEvent$p
     def run(): scala.Unit = {
-      justTouched$field = false
-      if (keyJustPressed) {
-        keyJustPressed = false;
-        { var i: scala.Int = 0; while (i < justPressedKeys.length) { {
-          justPressedKeys(i) = false
+      RemoteInput.this.justTouched$field = false
+      if (RemoteInput.this.keyJustPressed) {
+        RemoteInput.this.keyJustPressed = false;
+        { var i: scala.Int = 0; while (i < RemoteInput.this.justPressedKeys.length) { {
+          RemoteInput.this.justPressedKeys(i) = false
         }; i = i + 1 } }
       } else ()
-      if (processor != null) {
+      if (RemoteInput.this.processor != null) {
         if (this.touchEvent != null) {
           this.touchEvent.`type` match {
             case TouchEvent.TOUCH_DOWN => {
-              deltaX(this.touchEvent.pointer) = 0
-              deltaY(this.touchEvent.pointer) = 0
-              processor.touchDown(this.touchEvent.x, this.touchEvent.y, this.touchEvent.pointer, com.badlogic.gdx.Input.Buttons.LEFT)
-              isTouched$field(this.touchEvent.pointer) = true
-              justTouched$field = true
+              RemoteInput.this.deltaX(this.touchEvent.pointer) = 0
+              RemoteInput.this.deltaY(this.touchEvent.pointer) = 0
+              RemoteInput.this.processor.touchDown(this.touchEvent.x, this.touchEvent.y, this.touchEvent.pointer, com.badlogic.gdx.Input.Buttons.LEFT)
+              RemoteInput.this.isTouched$field(this.touchEvent.pointer) = true
+              RemoteInput.this.justTouched$field = true
             }
             case TouchEvent.TOUCH_UP => {
-              deltaX(this.touchEvent.pointer) = 0
-              deltaY(this.touchEvent.pointer) = 0
-              processor.touchUp(this.touchEvent.x, this.touchEvent.y, this.touchEvent.pointer, com.badlogic.gdx.Input.Buttons.LEFT)
-              isTouched$field(this.touchEvent.pointer) = false
+              RemoteInput.this.deltaX(this.touchEvent.pointer) = 0
+              RemoteInput.this.deltaY(this.touchEvent.pointer) = 0
+              RemoteInput.this.processor.touchUp(this.touchEvent.x, this.touchEvent.y, this.touchEvent.pointer, com.badlogic.gdx.Input.Buttons.LEFT)
+              RemoteInput.this.isTouched$field(this.touchEvent.pointer) = false
             }
             case TouchEvent.TOUCH_DRAGGED => {
-              deltaX(this.touchEvent.pointer) = this.touchEvent.x - touchX(this.touchEvent.pointer)
-              deltaY(this.touchEvent.pointer) = this.touchEvent.y - touchY(this.touchEvent.pointer)
-              processor.touchDragged(this.touchEvent.x, this.touchEvent.y, this.touchEvent.pointer)
+              RemoteInput.this.deltaX(this.touchEvent.pointer) = this.touchEvent.x - RemoteInput.this.touchX(this.touchEvent.pointer)
+              RemoteInput.this.deltaY(this.touchEvent.pointer) = this.touchEvent.y - RemoteInput.this.touchY(this.touchEvent.pointer)
+              RemoteInput.this.processor.touchDragged(this.touchEvent.x, this.touchEvent.y, this.touchEvent.pointer)
             }
           }
-          touchX(this.touchEvent.pointer) = this.touchEvent.x
-          touchY(this.touchEvent.pointer) = this.touchEvent.y
+          RemoteInput.this.touchX(this.touchEvent.pointer) = this.touchEvent.x
+          RemoteInput.this.touchY(this.touchEvent.pointer) = this.touchEvent.y
         } else ()
         if (this.keyEvent != null) {
           this.keyEvent.`type` match {
             case KeyEvent.KEY_DOWN => {
-              processor.keyDown(this.keyEvent.keyCode)
-              if (!keys(this.keyEvent.keyCode)) {
-                keyCount = keyCount + 1
-                keys(this.keyEvent.keyCode) = true
+              RemoteInput.this.processor.keyDown(this.keyEvent.keyCode)
+              if (!RemoteInput.this.keys(this.keyEvent.keyCode)) {
+                RemoteInput.this.keyCount = RemoteInput.this.keyCount + 1
+                RemoteInput.this.keys(this.keyEvent.keyCode) = true
               } else ()
-              keyJustPressed = true
-              justPressedKeys(this.keyEvent.keyCode) = true
+              RemoteInput.this.keyJustPressed = true
+              RemoteInput.this.justPressedKeys(this.keyEvent.keyCode) = true
             }
             case KeyEvent.KEY_UP => {
-              processor.keyUp(this.keyEvent.keyCode)
-              if (keys(this.keyEvent.keyCode)) {
-                keyCount = keyCount - 1
-                keys(this.keyEvent.keyCode) = false
+              RemoteInput.this.processor.keyUp(this.keyEvent.keyCode)
+              if (RemoteInput.this.keys(this.keyEvent.keyCode)) {
+                RemoteInput.this.keyCount = RemoteInput.this.keyCount - 1
+                RemoteInput.this.keys(this.keyEvent.keyCode) = false
               } else ()
             }
             case KeyEvent.KEY_TYPED => {
-              processor.keyTyped(this.keyEvent.keyChar)
+              RemoteInput.this.processor.keyTyped(this.keyEvent.keyChar)
             }
           }
         } else ()
@@ -410,37 +410,37 @@ class RemoteInput(port$p: scala.Int, listener$p: com.badlogic.gdx.input.RemoteIn
         if (this.touchEvent != null) {
           this.touchEvent.`type` match {
             case TouchEvent.TOUCH_DOWN => {
-              deltaX(this.touchEvent.pointer) = 0
-              deltaY(this.touchEvent.pointer) = 0
-              isTouched$field(this.touchEvent.pointer) = true
-              justTouched$field = true
+              RemoteInput.this.deltaX(this.touchEvent.pointer) = 0
+              RemoteInput.this.deltaY(this.touchEvent.pointer) = 0
+              RemoteInput.this.isTouched$field(this.touchEvent.pointer) = true
+              RemoteInput.this.justTouched$field = true
             }
             case TouchEvent.TOUCH_UP => {
-              deltaX(this.touchEvent.pointer) = 0
-              deltaY(this.touchEvent.pointer) = 0
-              isTouched$field(this.touchEvent.pointer) = false
+              RemoteInput.this.deltaX(this.touchEvent.pointer) = 0
+              RemoteInput.this.deltaY(this.touchEvent.pointer) = 0
+              RemoteInput.this.isTouched$field(this.touchEvent.pointer) = false
             }
             case TouchEvent.TOUCH_DRAGGED => {
-              deltaX(this.touchEvent.pointer) = this.touchEvent.x - touchX(this.touchEvent.pointer)
-              deltaY(this.touchEvent.pointer) = this.touchEvent.y - touchY(this.touchEvent.pointer)
+              RemoteInput.this.deltaX(this.touchEvent.pointer) = this.touchEvent.x - RemoteInput.this.touchX(this.touchEvent.pointer)
+              RemoteInput.this.deltaY(this.touchEvent.pointer) = this.touchEvent.y - RemoteInput.this.touchY(this.touchEvent.pointer)
             }
           }
-          touchX(this.touchEvent.pointer) = this.touchEvent.x
-          touchY(this.touchEvent.pointer) = this.touchEvent.y
+          RemoteInput.this.touchX(this.touchEvent.pointer) = this.touchEvent.x
+          RemoteInput.this.touchY(this.touchEvent.pointer) = this.touchEvent.y
         } else ()
         if (this.keyEvent != null) {
           if (this.keyEvent.`type` == KeyEvent.KEY_DOWN) {
-            if (!keys(this.keyEvent.keyCode)) {
-              keyCount = keyCount + 1
-              keys(this.keyEvent.keyCode) = true
+            if (!RemoteInput.this.keys(this.keyEvent.keyCode)) {
+              RemoteInput.this.keyCount = RemoteInput.this.keyCount + 1
+              RemoteInput.this.keys(this.keyEvent.keyCode) = true
             } else ()
-            keyJustPressed = true
-            justPressedKeys(this.keyEvent.keyCode) = true
+            RemoteInput.this.keyJustPressed = true
+            RemoteInput.this.justPressedKeys(this.keyEvent.keyCode) = true
           } else ()
           if (this.keyEvent.`type` == KeyEvent.KEY_UP) {
-            if (keys(this.keyEvent.keyCode)) {
-              keyCount = keyCount - 1
-              keys(this.keyEvent.keyCode) = false
+            if (RemoteInput.this.keys(this.keyEvent.keyCode)) {
+              RemoteInput.this.keyCount = RemoteInput.this.keyCount - 1
+              RemoteInput.this.keys(this.keyEvent.keyCode) = false
             } else ()
           } else ()
         } else ()

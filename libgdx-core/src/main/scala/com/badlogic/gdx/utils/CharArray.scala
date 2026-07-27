@@ -1824,26 +1824,26 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
       if (length == 0) {
         return 0
       } else ()
-      if (this.pos >= size) {
+      if (this.pos >= CharArray.this.size) {
         return -1
       } else ()
-      if ((this.pos + length) > size) {
-        length = size - this.pos
+      if ((this.pos + length) > CharArray.this.size) {
+        length = CharArray.this.size - this.pos
       } else ()
       CharArray.this.getChars(this.pos, this.pos + length, b, off)
       this.pos = this.pos + length
       return length
     }
     def ready(): scala.Boolean = {
-      return this.pos < size
+      return this.pos < CharArray.this.size
     }
     def reset(): scala.Unit = {
       this.pos = this.mark$field
     }
     def skip(n$arg: scala.Long): scala.Long = {
       var n: scala.Long = n$arg
-      if ((this.pos + n) > size) {
-        n = size - this.pos
+      if ((this.pos + n) > CharArray.this.size) {
+        n = CharArray.this.size - this.pos
       } else ()
       if (n < 0) {
         return 0

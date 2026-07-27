@@ -1246,7 +1246,12 @@ object SpoonTir:
             // name in Scala (inherited or enclosing). Only an OWN `this.f` needs qualifying.
             case _: CtSuperAccess[?]                 => Tree.Ident(fid, ty(at), originOf(at))
             case null                                => Tree.Ident(fid, ty(at), originOf(at))
-            case ta: CtThisAccess[?] if !isOwnThis(ta) => Tree.Ident(fid, ty(at), originOf(at))
+            case ta: CtThisAccess[?] if !isOwnThis(ta) =>
+              // as for calls: `Outer.this.f` is written precisely when an inherited/own `f` would
+              // otherwise win, so the qualification is load-bearing. Bare only when the enclosing
+              // instance is not really reachable (a static-nested boundary, or an inherited owner).
+              outerThis(ta).map(q => Tree.Select(q, fid, ty(at), originOf(at)))
+                .getOrElse(Tree.Ident(fid, ty(at), originOf(at)))
             case _: CtThisAccess[?]                  => Tree.Select(thisTerm(at), fid, ty(at), originOf(at))
             case other =>
               // wildcard/raw receiver whose field type depends on its type vars → read through the

@@ -1248,7 +1248,7 @@ class JsonValue extends scala.collection.Iterable[JsonValue] {
     }
   }
   class JsonIterator extends scala.collection.Iterator[JsonValue] with scala.collection.Iterable[JsonValue] {
-    var entry: JsonValue = child$field
+    var entry: JsonValue = JsonValue.this.child$field
     var current: JsonValue = null.asInstanceOf[JsonValue]
     def hasNext(): scala.Boolean = {
       return this.entry != null

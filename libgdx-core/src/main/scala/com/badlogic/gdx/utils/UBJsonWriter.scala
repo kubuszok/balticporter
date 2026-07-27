@@ -452,9 +452,9 @@ class UBJsonWriter(out$arg: java.io.OutputStream) extends java.io.Closeable {
   class JsonObject(array$p: scala.Boolean) {
     var array: scala.Boolean = false
     this.array = array$p
-    out.writeByte(if (array$p) '[' else '{')
+    UBJsonWriter.this.out.writeByte(if (array$p) '[' else '{')
     def close(): scala.Unit = {
-      out.writeByte(if (this.array) ']' else '}')
+      UBJsonWriter.this.out.writeByte(if (this.array) ']' else '}')
     }
   }
 }

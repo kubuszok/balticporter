@@ -87,19 +87,19 @@ class SortedIntList[E] extends scala.collection.Iterable[com.badlogic.gdx.utils.
     }
     def remove(): scala.Unit = {
       if (this.previousPosition != null) {
-        if (this.previousPosition == first) {
-          first = this.position
+        if (this.previousPosition == SortedIntList.this.first) {
+          SortedIntList.this.first = this.position
         } else {
           this.previousPosition.p.n = this.position
           if (this.position != null) {
             this.position.p = this.previousPosition.p
           } else ()
         }
-        size$field = size$field - 1
+        SortedIntList.this.size$field = SortedIntList.this.size$field - 1
       } else ()
     }
     def reset(): Iterator = {
-      this.position = first
+      this.position = SortedIntList.this.first
       this.previousPosition = null
       return this
     }

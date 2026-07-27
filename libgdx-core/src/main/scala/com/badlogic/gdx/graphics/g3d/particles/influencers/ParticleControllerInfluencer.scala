@@ -166,8 +166,8 @@ object ParticleControllerInfluencer {
         return controller
       }
       def clear(): scala.Unit = {
-        { var i: scala.Int = 0; val free: scala.Int = pool.getFree(); while (i < free) { {
-          pool.obtain().dispose()
+        { var i: scala.Int = 0; val free: scala.Int = Random.this.pool.getFree(); while (i < free) { {
+          Random.this.pool.obtain().dispose()
         }; i = i + 1 } }
         super.clear()
       }
