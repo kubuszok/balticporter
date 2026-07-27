@@ -3,7 +3,7 @@ package balticporter.corpus
 import balticporter.core.{FrontendConfig, Substituted, Substitutions}
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
-import balticporter.tir.{Pipeline, PortabilityCheck, Program, RewriteTrace}
+import balticporter.tir.{OmissionCheck, Pipeline, PortabilityCheck, Program, RewriteTrace}
 import balticporter.transform.{ClassTableTransform, CollectionsTransform, MutableParamsTransform, PanamaFfiTransform, ReflectionToPortableTransform}
 
 import java.nio.file.{Files, Path, StandardCopyOption}
@@ -132,6 +132,14 @@ object LibgdxCoreMigrate:
     // the Scala.js linker does, and only for code reachable from an entry point, which a library
     // has none of. Over the TIR we see all of it.
     val droppedIds = program.symbols.all.collect { case s if subs.dropsType(s.fullName) => s.id }.toSet
+    // Constructs carried in the TIR but not emitted — a silent omission compiles green and
+    // misbehaves at runtime, so it must show up as a number on every run.
+    val omissions = OmissionCheck.check(program)
+    if omissions.isEmpty then println("[libgdx-core] omissions: none")
+    else
+      println(s"[libgdx-core] OMISSIONS (emitted code silently loses these): ${omissions.size}")
+      println(OmissionCheck.summary(omissions).linesIterator.take(8).mkString("\n"))
+
     val portability = PortabilityCheck.inEmittedCode(program, PortabilityCheck.check(program), droppedIds)
     println(s"[libgdx-core] portability (Scala.js/Native): ${portability.size} site(s) on JVM-only APIs in EMITTED code")
     println(PortabilityCheck.summary(portability))
