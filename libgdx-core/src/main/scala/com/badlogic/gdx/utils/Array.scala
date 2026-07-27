@@ -20,10 +20,10 @@ class Array[T] extends scala.collection.Iterable[T] {
   def this(arraySupplier: com.badlogic.gdx.utils.ArraySupplier[scala.Array[T]]) = {
     this(true, 16, arraySupplier)
   }
-  def this(ordered: scala.Boolean, capacity: scala.Int, arrayType: java.lang.Class[?]) = {
+  def this(ordered: scala.Boolean, capacity: scala.Int, arrayType: java.lang.Class[T]) = {
     this(ordered, capacity, (size: scala.Int) => com.badlogic.gdx.utils.reflect.ArrayReflection.newInstance(arrayType, size).asInstanceOf[scala.Array[T]])
   }
-  def this(arrayType: java.lang.Class[?]) = {
+  def this(arrayType: java.lang.Class[T]) = {
     this(true, 16, arrayType)
   }
   def this(array: Array[? <: T]) = {

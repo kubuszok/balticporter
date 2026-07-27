@@ -154,7 +154,7 @@ class Table extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup {
     } else ()
     val cellCount: scala.Int = this.cells.size
     if (cellCount > 0) {
-      val lastCell: com.badlogic.gdx.scenes.scene2d.ui.Cell[?] = this.cells.peek()
+      val lastCell: com.badlogic.gdx.scenes.scene2d.ui.Cell[T] = this.cells.peek()
       if (!lastCell.endRow) {
         cell.column = lastCell.column + lastCell.colspan$field
         cell.row$field = lastCell.row$field
@@ -165,7 +165,7 @@ class Table extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup {
       if (cell.row$field > 0) {
         val cells: scala.Array[java.lang.Object] = this.cells.items.asInstanceOf[scala.Array[java.lang.Object]];
         { var i: scala.Int = cellCount - 1; while (i >= 0) { {
-          val other: com.badlogic.gdx.scenes.scene2d.ui.Cell[?] = cells(i).asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]].asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]];
+          val other: com.badlogic.gdx.scenes.scene2d.ui.Cell[T] = cells(i).asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[T]].asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[T]];
           { var column: scala.Int = other.column; val nn: scala.Int = column + other.colspan$field; while (column < nn) { {
             if (column == cell.column) {
               cell.cellAboveIndex = i
@@ -343,7 +343,7 @@ class Table extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup {
     } else ()
     val cells: scala.Array[java.lang.Object] = this.cells.items.asInstanceOf[scala.Array[java.lang.Object]];
     { var i: scala.Int = 0; val n: scala.Int = this.cells.size; while (i < n) { {
-      val c: com.badlogic.gdx.scenes.scene2d.ui.Cell[?] = cells(i).asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]].asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]]
+      val c: com.badlogic.gdx.scenes.scene2d.ui.Cell[T] = cells(i).asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[T]].asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[T]]
       if (c.actor == actor) {
         return c
       } else ()

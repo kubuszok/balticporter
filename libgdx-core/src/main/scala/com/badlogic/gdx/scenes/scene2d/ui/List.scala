@@ -2,8 +2,8 @@ package com.badlogic.gdx.scenes.scene2d.ui
 
 class List[T] extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlogic.gdx.scenes.scene2d.utils.Cullable with com.badlogic.gdx.scenes.scene2d.ui.Styleable[com.badlogic.gdx.scenes.scene2d.ui.List.ListStyle] {
   var style: com.badlogic.gdx.scenes.scene2d.ui.List.ListStyle = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.List.ListStyle]
-  final val items: com.badlogic.gdx.utils.Array[T] = new com.badlogic.gdx.utils.Array()
-  var selection: com.badlogic.gdx.scenes.scene2d.utils.ArraySelection[T] = new com.badlogic.gdx.scenes.scene2d.utils.ArraySelection(this.items)
+  final val items: com.badlogic.gdx.utils.Array[T] = new com.badlogic.gdx.utils.Array[T]()
+  var selection: com.badlogic.gdx.scenes.scene2d.utils.ArraySelection[T] = new com.badlogic.gdx.scenes.scene2d.utils.ArraySelection[T](this.items)
   private var cullingArea: com.badlogic.gdx.math.Rectangle = null.asInstanceOf[com.badlogic.gdx.math.Rectangle]
   private var prefWidth: scala.Float = 0.0f
   private var prefHeight: scala.Float = 0.0f
@@ -210,7 +210,7 @@ class List[T] extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlogi
       this.invalidateHierarchy()
     } else ()
   }
-  def setItems(newItems: com.badlogic.gdx.utils.Array[?]): scala.Unit = {
+  def setItems(newItems: com.badlogic.gdx.utils.Array[T]): scala.Unit = {
     if (newItems == null) {
       throw new java.lang.IllegalArgumentException("newItems cannot be null.")
     } else ()

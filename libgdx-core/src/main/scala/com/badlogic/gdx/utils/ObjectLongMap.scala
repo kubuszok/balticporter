@@ -8,12 +8,12 @@ class ObjectLongMap[K] extends scala.collection.Iterable[com.badlogic.gdx.utils.
   var threshold: scala.Int = 0
   var shift: scala.Int = 0
   var mask: scala.Int = 0
-  var entries1: com.badlogic.gdx.utils.ObjectLongMap.Entries[?] = null.asInstanceOf[com.badlogic.gdx.utils.ObjectLongMap.Entries[?]]
-  var entries2: com.badlogic.gdx.utils.ObjectLongMap.Entries[?] = null.asInstanceOf[com.badlogic.gdx.utils.ObjectLongMap.Entries[?]]
+  var entries1: com.badlogic.gdx.utils.ObjectLongMap.Entries[K] = null.asInstanceOf[com.badlogic.gdx.utils.ObjectLongMap.Entries[K]]
+  var entries2: com.badlogic.gdx.utils.ObjectLongMap.Entries[K] = null.asInstanceOf[com.badlogic.gdx.utils.ObjectLongMap.Entries[K]]
   var values1: com.badlogic.gdx.utils.ObjectLongMap.Values = null.asInstanceOf[com.badlogic.gdx.utils.ObjectLongMap.Values]
   var values2: com.badlogic.gdx.utils.ObjectLongMap.Values = null.asInstanceOf[com.badlogic.gdx.utils.ObjectLongMap.Values]
-  var keys1: com.badlogic.gdx.utils.ObjectLongMap.Keys[?] = null.asInstanceOf[com.badlogic.gdx.utils.ObjectLongMap.Keys[?]]
-  var keys2: com.badlogic.gdx.utils.ObjectLongMap.Keys[?] = null.asInstanceOf[com.badlogic.gdx.utils.ObjectLongMap.Keys[?]]
+  var keys1: com.badlogic.gdx.utils.ObjectLongMap.Keys[K] = null.asInstanceOf[com.badlogic.gdx.utils.ObjectLongMap.Keys[K]]
+  var keys2: com.badlogic.gdx.utils.ObjectLongMap.Keys[K] = null.asInstanceOf[com.badlogic.gdx.utils.ObjectLongMap.Keys[K]]
   def this(initialCapacity: scala.Int, loadFactor: scala.Float) = {
     this()
     if ((loadFactor <= 0.0f) || (loadFactor >= 1.0f)) {
@@ -318,11 +318,11 @@ class ObjectLongMap[K] extends scala.collection.Iterable[com.badlogic.gdx.utils.
   }
   def entries(): com.badlogic.gdx.utils.ObjectLongMap.Entries[K] = {
     if (com.badlogic.gdx.utils.Collections.allocateIterators) {
-      return new com.badlogic.gdx.utils.ObjectLongMap.Entries(this)
+      return new com.badlogic.gdx.utils.ObjectLongMap.Entries[K](this)
     } else ()
     if (this.entries1 == null) {
-      this.entries1 = new com.badlogic.gdx.utils.ObjectLongMap.Entries(this)
-      this.entries2 = new com.badlogic.gdx.utils.ObjectLongMap.Entries(this)
+      this.entries1 = new com.badlogic.gdx.utils.ObjectLongMap.Entries[K](this)
+      this.entries2 = new com.badlogic.gdx.utils.ObjectLongMap.Entries[K](this)
     } else ()
     if (!this.entries1.valid) {
       this.entries1.reset()
@@ -356,11 +356,11 @@ class ObjectLongMap[K] extends scala.collection.Iterable[com.badlogic.gdx.utils.
   }
   def keys(): com.badlogic.gdx.utils.ObjectLongMap.Keys[K] = {
     if (com.badlogic.gdx.utils.Collections.allocateIterators) {
-      return new com.badlogic.gdx.utils.ObjectLongMap.Keys(this)
+      return new com.badlogic.gdx.utils.ObjectLongMap.Keys[K](this)
     } else ()
     if (this.keys1 == null) {
-      this.keys1 = new com.badlogic.gdx.utils.ObjectLongMap.Keys(this)
-      this.keys2 = new com.badlogic.gdx.utils.ObjectLongMap.Keys(this)
+      this.keys1 = new com.badlogic.gdx.utils.ObjectLongMap.Keys[K](this)
+      this.keys2 = new com.badlogic.gdx.utils.ObjectLongMap.Keys[K](this)
     } else ()
     if (!this.keys1.valid) {
       this.keys1.reset()

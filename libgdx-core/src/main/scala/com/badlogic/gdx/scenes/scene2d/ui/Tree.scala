@@ -485,7 +485,7 @@ object Tree {
       if (this.children.size == 0) {
         return
       } else ()
-      val tree: Tree[?, ?] = this.getTree()
+      val tree: Tree[N, V] = this.getTree()
       if (tree == null) {
         return
       } else ()
@@ -537,7 +537,7 @@ object Tree {
       if (!this.expanded) {
         return
       } else ()
-      val tree: Tree[?, ?] = this.getTree()
+      val tree: Tree[N, V] = this.getTree()
       if (tree != null) {
         var actorIndex: scala.Int = 0
         if (childIndex == 0) {
@@ -565,7 +565,7 @@ object Tree {
       return count
     }
     def remove(): scala.Unit = {
-      val tree: Tree[?, ?] = this.getTree()
+      val tree: Tree[N, V] = this.getTree()
       if (tree != null) {
         tree.remove(this)
       } else {
@@ -581,14 +581,14 @@ object Tree {
       if (!this.expanded) {
         return
       } else ()
-      val tree: Tree[?, ?] = this.getTree()
+      val tree: Tree[N, V] = this.getTree()
       if (tree != null) {
         node.removeFromTree(tree, node.actor.getZIndex())
       } else ()
     }
     def clearChildren(): scala.Unit = {
       if (this.expanded) {
-        val tree: Tree[?, ?] = this.getTree()
+        val tree: Tree[N, V] = this.getTree()
         if (tree != null) {
           val actorIndex: scala.Int = this.actor.getZIndex() + 1
           val children: scala.Array[java.lang.Object] = this.children.items.asInstanceOf[scala.Array[java.lang.Object]];
@@ -601,8 +601,8 @@ object Tree {
     }
     def getTree(): Tree[N, V] = {
       val parent: com.badlogic.gdx.scenes.scene2d.Group = this.actor.getParent()
-      if (parent.isInstanceOf[Tree[?, ?]]) {
-        return parent.asInstanceOf[Tree[?, ?]]
+      if (parent.isInstanceOf[Tree[N, V]]) {
+        return parent.asInstanceOf[Tree[N, V]]
       } else ()
       return null
     }
@@ -633,7 +633,7 @@ object Tree {
       if (!this.expanded) {
         return
       } else ()
-      val tree: Tree[?, ?] = this.getTree()
+      val tree: Tree[N, V] = this.getTree()
       if (tree == null) {
         return
       } else ()

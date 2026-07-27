@@ -2,7 +2,7 @@ package com.badlogic.gdx.scenes.scene2d.ui
 
 class SelectBox[T] extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlogic.gdx.scenes.scene2d.utils.Disableable with com.badlogic.gdx.scenes.scene2d.ui.Styleable[com.badlogic.gdx.scenes.scene2d.ui.SelectBox.SelectBoxStyle] {
   var style: com.badlogic.gdx.scenes.scene2d.ui.SelectBox.SelectBoxStyle = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.SelectBox.SelectBoxStyle]
-  final val items: com.badlogic.gdx.utils.Array[T] = new com.badlogic.gdx.utils.Array()
+  final val items: com.badlogic.gdx.utils.Array[T] = new com.badlogic.gdx.utils.Array[T]()
   var scrollPane: com.badlogic.gdx.scenes.scene2d.ui.SelectBox.SelectBoxScrollPane[T] = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.SelectBox.SelectBoxScrollPane[T]]
   private var prefWidth: scala.Float = 0.0f
   private var prefHeight: scala.Float = 0.0f
@@ -10,7 +10,7 @@ class SelectBox[T] extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.ba
   var disabled: scala.Boolean = false
   private var alignment: scala.Int = com.badlogic.gdx.utils.Align.left
   var selectedPrefWidth: scala.Boolean = false
-  final val selection: com.badlogic.gdx.scenes.scene2d.utils.ArraySelection[T] = new com.badlogic.gdx.scenes.scene2d.utils.ArraySelection(this.items)
+  final val selection: com.badlogic.gdx.scenes.scene2d.utils.ArraySelection[T] = new com.badlogic.gdx.scenes.scene2d.utils.ArraySelection[T](this.items)
   def this(style: com.badlogic.gdx.scenes.scene2d.ui.SelectBox.SelectBoxStyle) = {
     this()
     this.setStyle(style)
@@ -30,7 +30,7 @@ class SelectBox[T] extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.ba
     this(skin.get(styleName, classOf[com.badlogic.gdx.scenes.scene2d.ui.SelectBox.SelectBoxStyle]))
   }
   def newScrollPane(): com.badlogic.gdx.scenes.scene2d.ui.SelectBox.SelectBoxScrollPane[T] = {
-    return new com.badlogic.gdx.scenes.scene2d.ui.SelectBox.SelectBoxScrollPane(this)
+    return new com.badlogic.gdx.scenes.scene2d.ui.SelectBox.SelectBoxScrollPane[T](this)
   }
   def setMaxListCount(maxListCount: scala.Int): scala.Unit = {
     this.scrollPane.maxListCount = maxListCount
@@ -289,7 +289,7 @@ class SelectBox[T] extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.ba
     this.scrollPane.setScrollingDisabled(true, y)
     this.invalidateHierarchy()
   }
-  def getScrollPane(): com.badlogic.gdx.scenes.scene2d.ui.SelectBox.SelectBoxScrollPane[?] = {
+  def getScrollPane(): com.badlogic.gdx.scenes.scene2d.ui.SelectBox.SelectBoxScrollPane[T] = {
     return this.scrollPane
   }
   def isOver(): scala.Boolean = {

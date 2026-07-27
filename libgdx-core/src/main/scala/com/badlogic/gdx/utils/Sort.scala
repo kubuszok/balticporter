@@ -23,19 +23,19 @@ class Sort {
   }
   def sort[T](a: com.badlogic.gdx.utils.Array[T], c: java.util.Comparator[? >: T]): scala.Unit = {
     if (this.timSort == null) {
-      this.timSort = new com.badlogic.gdx.utils.TimSort()
+      this.timSort = new com.badlogic.gdx.utils.TimSort[T]()
     } else ()
     this.timSort.doSort(a.items, c, 0, a.size)
   }
   def sort[T](a: scala.Array[T], c: java.util.Comparator[? >: T]): scala.Unit = {
     if (this.timSort == null) {
-      this.timSort = new com.badlogic.gdx.utils.TimSort()
+      this.timSort = new com.badlogic.gdx.utils.TimSort[T]()
     } else ()
     this.timSort.doSort(a, c, 0, a.length)
   }
   def sort[T](a: scala.Array[T], c: java.util.Comparator[? >: T], fromIndex: scala.Int, toIndex: scala.Int): scala.Unit = {
     if (this.timSort == null) {
-      this.timSort = new com.badlogic.gdx.utils.TimSort()
+      this.timSort = new com.badlogic.gdx.utils.TimSort[T]()
     } else ()
     this.timSort.doSort(a, c, fromIndex, toIndex)
   }

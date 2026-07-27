@@ -82,11 +82,11 @@ class OrderedMap[K, V] extends com.badlogic.gdx.utils.ObjectMap[K, V] {
   }
   def entries(): com.badlogic.gdx.utils.ObjectMap.Entries[K, V] = {
     if (com.badlogic.gdx.utils.Collections.allocateIterators) {
-      return new com.badlogic.gdx.utils.OrderedMap.OrderedMapEntries(this)
+      return new com.badlogic.gdx.utils.OrderedMap.OrderedMapEntries[K, V](this)
     } else ()
     if (entries1 == null) {
-      entries1 = new com.badlogic.gdx.utils.OrderedMap.OrderedMapEntries(this)
-      entries2 = new com.badlogic.gdx.utils.OrderedMap.OrderedMapEntries(this)
+      entries1 = new com.badlogic.gdx.utils.OrderedMap.OrderedMapEntries[K, V](this)
+      entries2 = new com.badlogic.gdx.utils.OrderedMap.OrderedMapEntries[K, V](this)
     } else ()
     if (!this.entries1.valid) {
       entries1.reset()
@@ -101,11 +101,11 @@ class OrderedMap[K, V] extends com.badlogic.gdx.utils.ObjectMap[K, V] {
   }
   def values(): com.badlogic.gdx.utils.ObjectMap.Values[V] = {
     if (com.badlogic.gdx.utils.Collections.allocateIterators) {
-      return new com.badlogic.gdx.utils.OrderedMap.OrderedMapValues(this)
+      return new com.badlogic.gdx.utils.OrderedMap.OrderedMapValues[V](this)
     } else ()
     if (values1 == null) {
-      values1 = new com.badlogic.gdx.utils.OrderedMap.OrderedMapValues(this)
-      values2 = new com.badlogic.gdx.utils.OrderedMap.OrderedMapValues(this)
+      values1 = new com.badlogic.gdx.utils.OrderedMap.OrderedMapValues[V](this)
+      values2 = new com.badlogic.gdx.utils.OrderedMap.OrderedMapValues[V](this)
     } else ()
     if (!this.values1.valid) {
       values1.reset()
@@ -120,11 +120,11 @@ class OrderedMap[K, V] extends com.badlogic.gdx.utils.ObjectMap[K, V] {
   }
   def keys(): com.badlogic.gdx.utils.ObjectMap.Keys[K] = {
     if (com.badlogic.gdx.utils.Collections.allocateIterators) {
-      return new com.badlogic.gdx.utils.OrderedMap.OrderedMapKeys(this)
+      return new com.badlogic.gdx.utils.OrderedMap.OrderedMapKeys[K](this)
     } else ()
     if (keys1 == null) {
-      keys1 = new com.badlogic.gdx.utils.OrderedMap.OrderedMapKeys(this)
-      keys2 = new com.badlogic.gdx.utils.OrderedMap.OrderedMapKeys(this)
+      keys1 = new com.badlogic.gdx.utils.OrderedMap.OrderedMapKeys[K](this)
+      keys2 = new com.badlogic.gdx.utils.OrderedMap.OrderedMapKeys[K](this)
     } else ()
     if (!this.keys1.valid) {
       keys1.reset()
@@ -175,7 +175,7 @@ object OrderedMap {
       nextIndex = 0
       hasNext$field = this.map.size > 0
     }
-    def next(): com.badlogic.gdx.utils.ObjectMap.Entry[?, ?] = {
+    def next(): com.badlogic.gdx.utils.ObjectMap.Entry[K, V] = {
       if (!hasNext$field) {
         throw new java.util.NoSuchElementException()
       } else ()
@@ -226,7 +226,7 @@ object OrderedMap {
       if (currentIndex < 0) {
         throw new java.lang.IllegalStateException("next must be called before remove.")
       } else ()
-      map.asInstanceOf[OrderedMap[?, ?]].removeIndex(currentIndex)
+      map.asInstanceOf[OrderedMap[K, ?]].removeIndex(currentIndex)
       nextIndex = currentIndex
       currentIndex = -1
     }
@@ -268,7 +268,7 @@ object OrderedMap {
       if (currentIndex < 0) {
         throw new java.lang.IllegalStateException("next must be called before remove.")
       } else ()
-      map.asInstanceOf[OrderedMap[?, ?]].removeIndex(currentIndex)
+      map.asInstanceOf[OrderedMap[?, V]].removeIndex(currentIndex)
       nextIndex = currentIndex
       currentIndex = -1
     }

@@ -8,12 +8,12 @@ class ObjectMap[K, V] extends scala.collection.Iterable[com.badlogic.gdx.utils.O
   var threshold: scala.Int = 0
   var shift: scala.Int = 0
   var mask: scala.Int = 0
-  var entries1: com.badlogic.gdx.utils.ObjectMap.Entries[?, ?] = null.asInstanceOf[com.badlogic.gdx.utils.ObjectMap.Entries[?, ?]]
-  var entries2: com.badlogic.gdx.utils.ObjectMap.Entries[?, ?] = null.asInstanceOf[com.badlogic.gdx.utils.ObjectMap.Entries[?, ?]]
-  var values1: com.badlogic.gdx.utils.ObjectMap.Values[?] = null.asInstanceOf[com.badlogic.gdx.utils.ObjectMap.Values[?]]
-  var values2: com.badlogic.gdx.utils.ObjectMap.Values[?] = null.asInstanceOf[com.badlogic.gdx.utils.ObjectMap.Values[?]]
-  var keys1: com.badlogic.gdx.utils.ObjectMap.Keys[?] = null.asInstanceOf[com.badlogic.gdx.utils.ObjectMap.Keys[?]]
-  var keys2: com.badlogic.gdx.utils.ObjectMap.Keys[?] = null.asInstanceOf[com.badlogic.gdx.utils.ObjectMap.Keys[?]]
+  var entries1: com.badlogic.gdx.utils.ObjectMap.Entries[K, V] = null.asInstanceOf[com.badlogic.gdx.utils.ObjectMap.Entries[K, V]]
+  var entries2: com.badlogic.gdx.utils.ObjectMap.Entries[K, V] = null.asInstanceOf[com.badlogic.gdx.utils.ObjectMap.Entries[K, V]]
+  var values1: com.badlogic.gdx.utils.ObjectMap.Values[V] = null.asInstanceOf[com.badlogic.gdx.utils.ObjectMap.Values[V]]
+  var values2: com.badlogic.gdx.utils.ObjectMap.Values[V] = null.asInstanceOf[com.badlogic.gdx.utils.ObjectMap.Values[V]]
+  var keys1: com.badlogic.gdx.utils.ObjectMap.Keys[K] = null.asInstanceOf[com.badlogic.gdx.utils.ObjectMap.Keys[K]]
+  var keys2: com.badlogic.gdx.utils.ObjectMap.Keys[K] = null.asInstanceOf[com.badlogic.gdx.utils.ObjectMap.Keys[K]]
   def this(initialCapacity: scala.Int, loadFactor: scala.Float) = {
     this()
     if ((loadFactor <= 0.0f) || (loadFactor >= 1.0f)) {
@@ -357,11 +357,11 @@ class ObjectMap[K, V] extends scala.collection.Iterable[com.badlogic.gdx.utils.O
   }
   def entries(): com.badlogic.gdx.utils.ObjectMap.Entries[K, V] = {
     if (com.badlogic.gdx.utils.Collections.allocateIterators) {
-      return new com.badlogic.gdx.utils.ObjectMap.Entries(this)
+      return new com.badlogic.gdx.utils.ObjectMap.Entries[K, V](this)
     } else ()
     if (this.entries1 == null) {
-      this.entries1 = new com.badlogic.gdx.utils.ObjectMap.Entries(this)
-      this.entries2 = new com.badlogic.gdx.utils.ObjectMap.Entries(this)
+      this.entries1 = new com.badlogic.gdx.utils.ObjectMap.Entries[K, V](this)
+      this.entries2 = new com.badlogic.gdx.utils.ObjectMap.Entries[K, V](this)
     } else ()
     if (!this.entries1.valid) {
       this.entries1.reset()
@@ -376,11 +376,11 @@ class ObjectMap[K, V] extends scala.collection.Iterable[com.badlogic.gdx.utils.O
   }
   def values(): com.badlogic.gdx.utils.ObjectMap.Values[V] = {
     if (com.badlogic.gdx.utils.Collections.allocateIterators) {
-      return new com.badlogic.gdx.utils.ObjectMap.Values(this)
+      return new com.badlogic.gdx.utils.ObjectMap.Values[V](this)
     } else ()
     if (this.values1 == null) {
-      this.values1 = new com.badlogic.gdx.utils.ObjectMap.Values(this)
-      this.values2 = new com.badlogic.gdx.utils.ObjectMap.Values(this)
+      this.values1 = new com.badlogic.gdx.utils.ObjectMap.Values[V](this)
+      this.values2 = new com.badlogic.gdx.utils.ObjectMap.Values[V](this)
     } else ()
     if (!this.values1.valid) {
       this.values1.reset()
@@ -395,11 +395,11 @@ class ObjectMap[K, V] extends scala.collection.Iterable[com.badlogic.gdx.utils.O
   }
   def keys(): com.badlogic.gdx.utils.ObjectMap.Keys[K] = {
     if (com.badlogic.gdx.utils.Collections.allocateIterators) {
-      return new com.badlogic.gdx.utils.ObjectMap.Keys(this)
+      return new com.badlogic.gdx.utils.ObjectMap.Keys[K](this)
     } else ()
     if (this.keys1 == null) {
-      this.keys1 = new com.badlogic.gdx.utils.ObjectMap.Keys(this)
-      this.keys2 = new com.badlogic.gdx.utils.ObjectMap.Keys(this)
+      this.keys1 = new com.badlogic.gdx.utils.ObjectMap.Keys[K](this)
+      this.keys2 = new com.badlogic.gdx.utils.ObjectMap.Keys[K](this)
     } else ()
     if (!this.keys1.valid) {
       this.keys1.reset()

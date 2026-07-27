@@ -31,7 +31,7 @@ class ParallelArray {
       if (channelDescriptor.`type` == classOf[scala.Int]) {
         return new IntChannel(channelDescriptor.id, channelDescriptor.count, this.capacity).asInstanceOf[T]
       } else {
-        return new ObjectChannel(channelDescriptor.id, channelDescriptor.count, this.capacity, channelDescriptor.arraySupplier).asInstanceOf[T]
+        return new ObjectChannel[T](channelDescriptor.id, channelDescriptor.count, this.capacity, channelDescriptor.arraySupplier).asInstanceOf[T]
       }
     }
   }

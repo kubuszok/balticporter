@@ -22,7 +22,7 @@ class Select {
         idx = this.fastMax(items, comp, size)
       } else {
         if (this.quickSelect == null) {
-          this.quickSelect = new com.badlogic.gdx.utils.QuickSelect()
+          this.quickSelect = new com.badlogic.gdx.utils.QuickSelect[T]()
         } else ()
         idx = this.quickSelect.select(items, comp, kthLowest, size)
       }

@@ -10,10 +10,10 @@ class LongMap[V] extends scala.collection.Iterable[com.badlogic.gdx.utils.LongMa
   private var threshold: scala.Int = 0
   var shift: scala.Int = 0
   var mask: scala.Int = 0
-  private var entries1: com.badlogic.gdx.utils.LongMap.Entries[?] = null.asInstanceOf[com.badlogic.gdx.utils.LongMap.Entries[?]]
-  private var entries2: com.badlogic.gdx.utils.LongMap.Entries[?] = null.asInstanceOf[com.badlogic.gdx.utils.LongMap.Entries[?]]
-  private var values1: com.badlogic.gdx.utils.LongMap.Values[?] = null.asInstanceOf[com.badlogic.gdx.utils.LongMap.Values[?]]
-  private var values2: com.badlogic.gdx.utils.LongMap.Values[?] = null.asInstanceOf[com.badlogic.gdx.utils.LongMap.Values[?]]
+  private var entries1: com.badlogic.gdx.utils.LongMap.Entries[V] = null.asInstanceOf[com.badlogic.gdx.utils.LongMap.Entries[V]]
+  private var entries2: com.badlogic.gdx.utils.LongMap.Entries[V] = null.asInstanceOf[com.badlogic.gdx.utils.LongMap.Entries[V]]
+  private var values1: com.badlogic.gdx.utils.LongMap.Values[V] = null.asInstanceOf[com.badlogic.gdx.utils.LongMap.Values[V]]
+  private var values2: com.badlogic.gdx.utils.LongMap.Values[V] = null.asInstanceOf[com.badlogic.gdx.utils.LongMap.Values[V]]
   private var keys1: com.badlogic.gdx.utils.LongMap.Keys = null.asInstanceOf[com.badlogic.gdx.utils.LongMap.Keys]
   private var keys2: com.badlogic.gdx.utils.LongMap.Keys = null.asInstanceOf[com.badlogic.gdx.utils.LongMap.Keys]
   def this(initialCapacity: scala.Int, loadFactor: scala.Float) = {
@@ -426,11 +426,11 @@ class LongMap[V] extends scala.collection.Iterable[com.badlogic.gdx.utils.LongMa
   }
   def entries(): com.badlogic.gdx.utils.LongMap.Entries[V] = {
     if (com.badlogic.gdx.utils.Collections.allocateIterators) {
-      return new com.badlogic.gdx.utils.LongMap.Entries(this)
+      return new com.badlogic.gdx.utils.LongMap.Entries[V](this)
     } else ()
     if (this.entries1 == null) {
-      this.entries1 = new com.badlogic.gdx.utils.LongMap.Entries(this)
-      this.entries2 = new com.badlogic.gdx.utils.LongMap.Entries(this)
+      this.entries1 = new com.badlogic.gdx.utils.LongMap.Entries[V](this)
+      this.entries2 = new com.badlogic.gdx.utils.LongMap.Entries[V](this)
     } else ()
     if (!this.entries1.valid) {
       this.entries1.reset()
@@ -445,11 +445,11 @@ class LongMap[V] extends scala.collection.Iterable[com.badlogic.gdx.utils.LongMa
   }
   def values(): com.badlogic.gdx.utils.LongMap.Values[V] = {
     if (com.badlogic.gdx.utils.Collections.allocateIterators) {
-      return new com.badlogic.gdx.utils.LongMap.Values(this)
+      return new com.badlogic.gdx.utils.LongMap.Values[V](this)
     } else ()
     if (this.values1 == null) {
-      this.values1 = new com.badlogic.gdx.utils.LongMap.Values(this)
-      this.values2 = new com.badlogic.gdx.utils.LongMap.Values(this)
+      this.values1 = new com.badlogic.gdx.utils.LongMap.Values[V](this)
+      this.values2 = new com.badlogic.gdx.utils.LongMap.Values[V](this)
     } else ()
     if (!this.values1.valid) {
       this.values1.reset()
@@ -562,8 +562,8 @@ object LongMap {
     final val INDEX_ZERO: scala.Int = -1
   }
   class Entries[V] extends com.badlogic.gdx.utils.LongMap.MapIterator[V] with scala.collection.Iterable[com.badlogic.gdx.utils.LongMap.Entry[V]] with scala.collection.Iterator[com.badlogic.gdx.utils.LongMap.Entry[V]] {
-    private final val entry: com.badlogic.gdx.utils.LongMap.Entry[V] = new com.badlogic.gdx.utils.LongMap.Entry()
-    def this(map: LongMap[?]) = {
+    private final val entry: com.badlogic.gdx.utils.LongMap.Entry[V] = new com.badlogic.gdx.utils.LongMap.Entry[V]()
+    def this(map: LongMap[V]) = {
       this()
     }
     def next(): com.badlogic.gdx.utils.LongMap.Entry[V] = {

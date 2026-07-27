@@ -104,6 +104,16 @@ object SpoonTir:
     private val minter   = new Minter
     private val tpScopes = collection.mutable.ArrayDeque[Map[String, SymId]]()
     private val selfRawStack = collection.mutable.ArrayDeque[(SymId, List[SymId])]()
+    /** Type params LEGALLY in scope at the current point, respecting static-nested boundaries: a
+      * static nested class / interface / enum cannot see its enclosing type's params, unlike a
+      * non-static inner class. Distinct from `tpScopes`/`resolveTypeParam`, which keep every
+      * enclosing frame for reference resolution — name-directed raw-fill must NOT emit a param the
+      * emitted Scala can't see (that produced `Not found: type T` inside static-nested `SaveData`). */
+    private val tpAccessible = collection.mutable.ArrayDeque[Map[String, SymId]]()
+    private def accessibleTp(name: String): Option[SymId] = tpAccessible.headOption.flatMap(_.get(name))
+    /** A nested type captures its enclosing type's params iff it is a NON-static inner class. */
+    private def capturesEnclosing(t: CtType[?]): Boolean =
+      t.getDeclaringType != null && t.isInstanceOf[CtClass[?]] && !t.hasModifier(ModifierKind.STATIC)
     private var inStatic = false
     private def withStatic[A](s: Boolean)(f: => A): A =
       val prev = inStatic; inStatic = s
@@ -155,30 +165,35 @@ object SpoonTir:
         case Some(hi) => TypeBounds(NoType, hi)
         case None     => TypeBounds(NoType, NoType)
 
-    /** Translate a type-parameter bound. A RAW generic bound (`N extends Node`) is Java's
-      * idiom for a self-referential (F-)bound; a plain wildcard fill (`Node[?, ?, ?]`) erases
-      * the self-reference, so a `node : N` value's members become path-dependent (`node.N`)
-      * and unify with nothing — the source of Tree's whole error cluster. Instead fill each of
-      * the raw type's formals with an IN-SCOPE type parameter of the same NAME (the current
-      * decl's params are already in scope here, minted before bounds are translated), falling
-      * back to a wildcard: `Node` under `Tree[N, V]` → `Node[N, V, ?]`, under `Node[N, V, A]`
-      * → `Node[N, V, A]`. Non-raw / array / intersection / type-var bounds defer to `tpe`. */
+    /** Reconstruct a raw generic type's args from IN-SCOPE type parameters of the same NAME
+      * (wildcards for the rest): `Node` under `Tree[N,V]` → `[N, V, ?]`, `Node` under
+      * `Node[N,V,A]` → `[N, V, A]`, nested `Entries` under `ObjectMap[K,V]` → `[K, V]`, a
+      * libgdx `Array` param → `[T]`. This preserves the self-reference / enclosing
+      * instantiation that a plain wildcard fill erases — the erasure is what turns
+      * `node.parent`, `this.entries1`, `array.items` into path-dependent captures that unify
+      * with nothing. Returns None for a non-generic (arity-0) type. */
+    private def nameFilledArgs(r: CtTypeReference[?], resolve: String => Option[SymId]): Option[List[TypeRepr]] =
+      val formals = try Option(r.getTypeDeclaration).map(_.getFormalCtTypeParameters.asScala.toList).getOrElse(Nil)
+                    catch { case _: Throwable => Nil }
+      if formals.isEmpty then None
+      else Some(formals.map { f =>
+        resolve(f.getSimpleName).map(pid => TypeRef(NoPrefix, pid)).getOrElse(TypeBounds(NoType, NoType))
+      })
+
+    /** Translate a type-parameter bound. A RAW generic bound (`N extends Node`) is Java's idiom
+      * for a self-referential (F-)bound; name-directed fill (see [[nameFilledArgs]]) rebuilds it
+      * — the decl's own params are already in scope here (minted before bounds are translated) —
+      * rather than erasing to `Node[?, ?, ?]`. Non-raw / array / intersection / type-var bounds
+      * defer to `tpe`. */
     private def fbound(tr: CtTypeReference[?]): TypeRepr =
       val isRawGeneric = !tr.isInstanceOf[CtTypeParameterReference] &&
         !tr.isInstanceOf[CtArrayTypeReference[?]] && !tr.isInstanceOf[CtIntersectionTypeReference[?]] &&
         !tr.isInstanceOf[CtWildcardReference] && !tr.isPrimitive && tr.getActualTypeArguments.isEmpty
-      val formals = if !isRawGeneric then Nil
-        else try Option(tr.getTypeDeclaration).map(_.getFormalCtTypeParameters.asScala.toList).getOrElse(Nil)
-             catch { case _: Throwable => Nil }
-      if formals.isEmpty then tpe(tr)
-      else
-        val head = TypeRef(NoPrefix, typeSym(tr))
-        val args = formals.map { f =>
-          resolveTypeParam(f.getSimpleName) match
-            case Some(pid) => TypeRef(NoPrefix, pid)
-            case None      => TypeBounds(NoType, NoType) // wildcard
-        }
-        AppliedType(head, args)
+      // bounds are translated inside `mintTypeParams` with the decl's own frame freshly in scope
+      // (no static-nested boundary crossed), so `resolveTypeParam` is the right, complete source.
+      (if isRawGeneric then nameFilledArgs(tr, resolveTypeParam) else None) match
+        case Some(args) => AppliedType(TypeRef(NoPrefix, typeSym(tr)), args)
+        case None       => tpe(tr)
 
     // ---- types ----
     private def tpe(tr: CtTypeReference[?]): TypeRepr = tr match
@@ -212,7 +227,14 @@ object SpoonTir:
               case Some((cls, params)) if !inStatic && cls == typeSym(r) && params.nonEmpty && params.sizeIs == arity =>
                 AppliedType(head, params.map(p => TypeRef(NoPrefix, p)))
               case _ =>
-                if arity > 0 then AppliedType(head, List.fill(arity)(TypeBounds(NoType, NoType))) else head
+                // outside the enclosing class: reconstruct args from same-named in-scope params
+                // (nested `Entries` → `Entries[K,V]`, param `Array` → `Array[T]`) so member
+                // projections stay path-INdependent. Gated to non-static contexts — a companion
+                // object can't see the class's type params. Falls back to wildcards.
+                if arity <= 0 then head
+                else if inStatic then AppliedType(head, List.fill(arity)(TypeBounds(NoType, NoType)))
+                else nameFilledArgs(r, accessibleTp).map(args => AppliedType(head, args))
+                       .getOrElse(AppliedType(head, List.fill(arity)(TypeBounds(NoType, NoType))))
           case args => AppliedType(head, args.map(tpe))
 
     /** id of a referenced class type — our own (already defined) or an external stub. */
@@ -230,6 +252,8 @@ object SpoonTir:
       val (frame, tpDefs) = mintTypeParams(typeKey(t.getReference), id, t.getFormalCtTypeParameters.asScala.toList)
       tpScopes.prepend(frame)
       selfRawStack.prepend(id -> t.getFormalCtTypeParameters.asScala.toList.map(tp => frame(tp.getSimpleName)))
+      val enclosingAcc = if capturesEnclosing(t) then tpAccessible.headOption.getOrElse(Map.empty) else Map.empty
+      tpAccessible.prepend(enclosingAcc ++ frame)
       val savedStatic = inStatic; inStatic = false // a class body isn't a static context for its instance members
       val parents = superTypes(t)
       val fields = t.getFields.asScala.toList
@@ -251,7 +275,7 @@ object SpoonTir:
         case e: CtEnum[?] => e.getEnumValues.asScala.toList.map(enumCase(id, _))
         case _            => Nil
       tpScopes.remove(0)
-      selfRawStack.remove(0); inStatic = savedStatic
+      selfRawStack.remove(0); tpAccessible.remove(0); inStatic = savedStatic
       Tree.ClassDef(id, parents, selfType = None, body = fields ++ ctors ++ methods ++ nested,
         origin = originOf(t), tparams = tpDefs, enumCases = enumCases)
 
@@ -307,6 +331,9 @@ object SpoonTir:
         case _                         => Nil
       val (frame, tpDefs) = mintTypeParams(mkey, id, mtps)
       tpScopes.prepend(frame)
+      // a method sees its class's accessible params (unless static — gated at the fill site) plus
+      // its own; `withStatic` already carries `inStatic` for this exec.
+      tpAccessible.prepend(tpAccessible.headOption.getOrElse(Map.empty) ++ frame)
       val bt = new BodyTranslator(id, owner)
       val ps = m.getParameters.asScala.toList
       val pvs = ps.map { p =>
@@ -328,7 +355,7 @@ object SpoonTir:
       // translate the body (with param + type-param scope in place) — this is what makes
       // Call / field-ref usages and `callersOf` real. Abstract/interface methods have none.
       val body = Option(m.getBody).map(b => bt.methodBody(b))
-      tpScopes.remove(0)
+      tpScopes.remove(0); tpAccessible.remove(0)
       Tree.DefDef(id, paramss = List(pvs), returnTpt = tt(ret, m), rhs = body, origin = originOf(m), tparams = tpDefs)
     }
 

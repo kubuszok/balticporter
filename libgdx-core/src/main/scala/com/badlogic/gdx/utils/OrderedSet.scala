@@ -6,17 +6,17 @@ class OrderedSet[T] extends com.badlogic.gdx.utils.ObjectSet[T] {
   var iterator2: com.badlogic.gdx.utils.OrderedSet.OrderedSetIterator[?] = null.asInstanceOf[com.badlogic.gdx.utils.OrderedSet.OrderedSetIterator[?]]
   def this(initialCapacity: scala.Int, loadFactor: scala.Float) = {
     this()
-    this.items = new com.badlogic.gdx.utils.Array(initialCapacity)
+    this.items = new com.badlogic.gdx.utils.Array[T](initialCapacity)
   }
   def this(initialCapacity: scala.Int) = {
     this()
-    this.items = new com.badlogic.gdx.utils.Array(initialCapacity)
+    this.items = new com.badlogic.gdx.utils.Array[T](initialCapacity)
   }
   def this(set: OrderedSet[? <: T]) = {
     this()
-    this.items = new com.badlogic.gdx.utils.Array(set.items)
+    this.items = new com.badlogic.gdx.utils.Array[T](set.items)
   }
-  this.items = new com.badlogic.gdx.utils.Array()
+  this.items = new com.badlogic.gdx.utils.Array[T]()
   def add(key: T): scala.Boolean = {
     if (!super.add(key)) {
       return false
@@ -104,10 +104,10 @@ class OrderedSet[T] extends com.badlogic.gdx.utils.ObjectSet[T] {
     return h
   }
   def equals(obj: java.lang.Object): scala.Boolean = {
-    if (!obj.isInstanceOf[com.badlogic.gdx.utils.ObjectSet[?]]) {
+    if (!obj.isInstanceOf[com.badlogic.gdx.utils.ObjectSet[T]]) {
       return false
     } else ()
-    val other: com.badlogic.gdx.utils.ObjectSet[?] = obj.asInstanceOf[com.badlogic.gdx.utils.ObjectSet[?]].asInstanceOf[com.badlogic.gdx.utils.ObjectSet[?]]
+    val other: com.badlogic.gdx.utils.ObjectSet[T] = obj.asInstanceOf[com.badlogic.gdx.utils.ObjectSet[T]].asInstanceOf[com.badlogic.gdx.utils.ObjectSet[T]]
     if (other.size != size) {
       return false
     } else ()
