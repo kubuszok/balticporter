@@ -2,8 +2,8 @@ package com.badlogic.gdx.scenes.scene2d.utils
 
 class Selection[T] extends com.badlogic.gdx.scenes.scene2d.utils.Disableable with scala.collection.Iterable[T] {
   private var actor: com.badlogic.gdx.scenes.scene2d.Actor = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.Actor]
-  final val selected: com.badlogic.gdx.utils.OrderedSet[T] = new com.badlogic.gdx.utils.OrderedSet[T]()
-  private final val old: com.badlogic.gdx.utils.OrderedSet[T] = new com.badlogic.gdx.utils.OrderedSet[T]()
+  final val selected: com.badlogic.gdx.utils.OrderedSet[T] = new com.badlogic.gdx.utils.OrderedSet[T]().asInstanceOf[com.badlogic.gdx.utils.OrderedSet[T]]
+  private final val old: com.badlogic.gdx.utils.OrderedSet[T] = new com.badlogic.gdx.utils.OrderedSet[T]().asInstanceOf[com.badlogic.gdx.utils.OrderedSet[T]]
   var isDisabled$field: scala.Boolean = false
   private var toggle: scala.Boolean = false
   var multiple: scala.Boolean = false

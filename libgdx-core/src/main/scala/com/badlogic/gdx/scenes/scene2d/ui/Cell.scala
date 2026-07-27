@@ -37,7 +37,7 @@ class Cell[T <: com.badlogic.gdx.scenes.scene2d.Actor] extends com.badlogic.gdx.
   var computedPadLeft: scala.Float = 0.0f
   var computedPadBottom: scala.Float = 0.0f
   var computedPadRight: scala.Float = 0.0f
-  val defaults: Cell[T] = Cell.defaults()
+  val defaults: Cell[T] = Cell.defaults().asInstanceOf[Cell[T]]
   this.cellAboveIndex = -1
   if (defaults != null) {
     this.set(defaults)

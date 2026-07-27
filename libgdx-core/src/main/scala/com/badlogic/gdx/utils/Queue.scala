@@ -256,7 +256,7 @@ class Queue[T] extends scala.collection.Iterable[T] {
       return new com.badlogic.gdx.utils.Queue.QueueIterator[T](this, true)
     } else ()
     if (this.iterable == null) {
-      this.iterable = new com.badlogic.gdx.utils.Queue.QueueIterable[T](this)
+      this.iterable = new com.badlogic.gdx.utils.Queue.QueueIterable[T](this).asInstanceOf[com.badlogic.gdx.utils.Queue.QueueIterable[T]]
     } else ()
     return this.iterable.iterator().asInstanceOf[scala.collection.Iterator[T]]
   }
@@ -439,8 +439,8 @@ object Queue {
         return new com.badlogic.gdx.utils.Queue.QueueIterator[T](this.queue, this.allowRemove)
       } else ()
       if (this.iterator1 == null) {
-        this.iterator1 = new com.badlogic.gdx.utils.Queue.QueueIterator[T](this.queue, this.allowRemove)
-        this.iterator2 = new com.badlogic.gdx.utils.Queue.QueueIterator[T](this.queue, this.allowRemove)
+        this.iterator1 = new com.badlogic.gdx.utils.Queue.QueueIterator[T](this.queue, this.allowRemove).asInstanceOf[com.badlogic.gdx.utils.Queue.QueueIterator[T]]
+        this.iterator2 = new com.badlogic.gdx.utils.Queue.QueueIterator[T](this.queue, this.allowRemove).asInstanceOf[com.badlogic.gdx.utils.Queue.QueueIterator[T]]
       } else ()
       if (!this.iterator1.valid) {
         this.iterator1.index = 0

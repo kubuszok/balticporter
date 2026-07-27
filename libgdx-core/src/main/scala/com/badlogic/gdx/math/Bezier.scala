@@ -18,7 +18,7 @@ class Bezier[T <: com.badlogic.gdx.math.Vector[T]] extends com.badlogic.gdx.math
     this.set(points, offset, length)
   }
   def set(points: scala.Array[T]): Bezier[T] = {
-    return this.set(points, 0, points.length)
+    return this.set(points, 0, points.length).asInstanceOf[Bezier[T]]
   }
   def set(points: scala.Array[T], offset: scala.Int, length: scala.Int): Bezier[T] = {
     if ((length < 2) || (length > 4)) {

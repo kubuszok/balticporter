@@ -92,12 +92,12 @@ class OrderedMap[K, V] extends com.badlogic.gdx.utils.ObjectMap[K, V] {
       entries1.reset()
       this.entries1.valid = true
       this.entries2.valid = false
-      return entries1
+      return entries1.asInstanceOf[com.badlogic.gdx.utils.ObjectMap.Entries[K, V]]
     } else ()
     entries2.reset()
     this.entries2.valid = true
     this.entries1.valid = false
-    return entries2
+    return entries2.asInstanceOf[com.badlogic.gdx.utils.ObjectMap.Entries[K, V]]
   }
   def values(): com.badlogic.gdx.utils.ObjectMap.Values[V] = {
     if (com.badlogic.gdx.utils.Collections.allocateIterators) {
@@ -111,12 +111,12 @@ class OrderedMap[K, V] extends com.badlogic.gdx.utils.ObjectMap[K, V] {
       values1.reset()
       this.values1.valid = true
       this.values2.valid = false
-      return values1
+      return values1.asInstanceOf[com.badlogic.gdx.utils.ObjectMap.Values[V]]
     } else ()
     values2.reset()
     this.values2.valid = true
     this.values1.valid = false
-    return values2
+    return values2.asInstanceOf[com.badlogic.gdx.utils.ObjectMap.Values[V]]
   }
   def keys(): com.badlogic.gdx.utils.ObjectMap.Keys[K] = {
     if (com.badlogic.gdx.utils.Collections.allocateIterators) {
@@ -130,12 +130,12 @@ class OrderedMap[K, V] extends com.badlogic.gdx.utils.ObjectMap[K, V] {
       keys1.reset()
       this.keys1.valid = true
       this.keys2.valid = false
-      return keys1
+      return keys1.asInstanceOf[com.badlogic.gdx.utils.ObjectMap.Keys[K]]
     } else ()
     keys2.reset()
     this.keys2.valid = true
     this.keys1.valid = false
-    return keys2
+    return keys2.asInstanceOf[com.badlogic.gdx.utils.ObjectMap.Keys[K]]
   }
   def toString(separator: java.lang.String, braces: scala.Boolean): java.lang.String = {
     if (size == 0) {

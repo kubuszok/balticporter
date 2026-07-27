@@ -64,7 +64,7 @@ class ResourceData[T] extends com.badlogic.gdx.utils.Json.Serializable {
     for (entry <- this.uniqueData.entries()) {
       entry.value.resources = this
     }
-    this.data = json.readValue("data", classOf[com.badlogic.gdx.utils.Array[T]], classOf[com.badlogic.gdx.graphics.g3d.particles.ResourceData.SaveData], jsonData)
+    this.data = json.readValue("data", classOf[com.badlogic.gdx.utils.Array[T]], classOf[com.badlogic.gdx.graphics.g3d.particles.ResourceData.SaveData], jsonData).asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.ResourceData.SaveData]]
     for (saveData <- this.data) {
       saveData.resources = this
     }
@@ -138,7 +138,7 @@ object ResourceData {
       this.filename = json.readValue("filename", classOf[java.lang.String], jsonData)
       val className: java.lang.String = json.readValue("type", classOf[java.lang.String], jsonData)
       try {
-        this.`type` = com.badlogic.gdx.graphics.g3d.particles.AssetTypeRegistry.classFor(className).asInstanceOf[java.lang.Class[T]]
+        this.`type` = com.badlogic.gdx.graphics.g3d.particles.AssetTypeRegistry.classFor(className).asInstanceOf[java.lang.Class[T]].asInstanceOf[java.lang.Class[T]]
       } catch {
         case e: com.badlogic.gdx.utils.reflect.ReflectionException => {
           throw new com.badlogic.gdx.utils.GdxRuntimeException("Class not found: " + className, e)

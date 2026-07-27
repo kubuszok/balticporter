@@ -22,7 +22,7 @@ class Select {
         idx = this.fastMax(items, comp, size)
       } else {
         if (this.quickSelect == null) {
-          this.quickSelect = new com.badlogic.gdx.utils.QuickSelect[T]()
+          this.quickSelect = new com.badlogic.gdx.utils.QuickSelect[T]().asInstanceOf[com.badlogic.gdx.utils.QuickSelect[T]]
         } else ()
         idx = this.quickSelect.asInstanceOf[com.badlogic.gdx.utils.QuickSelect[java.lang.Object]].select(items.asInstanceOf[scala.Array[java.lang.Object]], comp.asInstanceOf[java.util.Comparator[java.lang.Object]], kthLowest, size)
       }

@@ -667,7 +667,7 @@ object Tree {
       var current: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[N, V, A] = this
       while ({ {
         level = level + 1
-        current = current.getParent()
+        current = current.getParent().asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[N, V, A]]
       }; current != null }) ()
       return level
     }
@@ -694,7 +694,7 @@ object Tree {
       var node: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[N, V, A] = this.parent
       while (node != null) {
         node.setExpanded(true)
-        node = node.parent
+        node = node.parent.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[N, V, A]]
       }
     }
     def isSelectable(): scala.Boolean = {
@@ -729,7 +729,7 @@ object Tree {
         if (current == this) {
           return true
         } else ()
-        current = current.parent
+        current = current.parent.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[N, V, A]]
       }; current != null }) ()
       return false
     }
@@ -742,7 +742,7 @@ object Tree {
         if (parent == node) {
           return true
         } else ()
-        parent = parent.parent
+        parent = parent.parent.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[N, V, A]]
       }; parent != null }) ()
       return false
     }

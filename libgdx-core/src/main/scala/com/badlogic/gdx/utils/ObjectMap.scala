@@ -357,60 +357,60 @@ class ObjectMap[K, V] extends scala.collection.Iterable[com.badlogic.gdx.utils.O
   }
   def entries(): com.badlogic.gdx.utils.ObjectMap.Entries[K, V] = {
     if (com.badlogic.gdx.utils.Collections.allocateIterators) {
-      return new com.badlogic.gdx.utils.ObjectMap.Entries[K, V](this)
+      return new com.badlogic.gdx.utils.ObjectMap.Entries[K, V](this).asInstanceOf[com.badlogic.gdx.utils.ObjectMap.Entries[K, V]]
     } else ()
     if (this.entries1 == null) {
-      this.entries1 = new com.badlogic.gdx.utils.ObjectMap.Entries[K, V](this)
-      this.entries2 = new com.badlogic.gdx.utils.ObjectMap.Entries[K, V](this)
+      this.entries1 = new com.badlogic.gdx.utils.ObjectMap.Entries[K, V](this).asInstanceOf[com.badlogic.gdx.utils.ObjectMap.Entries[K, V]]
+      this.entries2 = new com.badlogic.gdx.utils.ObjectMap.Entries[K, V](this).asInstanceOf[com.badlogic.gdx.utils.ObjectMap.Entries[K, V]]
     } else ()
     if (!this.entries1.valid) {
       this.entries1.reset()
       this.entries1.valid = true
       this.entries2.valid = false
-      return this.entries1
+      return this.entries1.asInstanceOf[com.badlogic.gdx.utils.ObjectMap.Entries[K, V]]
     } else ()
     this.entries2.reset()
     this.entries2.valid = true
     this.entries1.valid = false
-    return this.entries2
+    return this.entries2.asInstanceOf[com.badlogic.gdx.utils.ObjectMap.Entries[K, V]]
   }
   def values(): com.badlogic.gdx.utils.ObjectMap.Values[V] = {
     if (com.badlogic.gdx.utils.Collections.allocateIterators) {
-      return new com.badlogic.gdx.utils.ObjectMap.Values[V](this)
+      return new com.badlogic.gdx.utils.ObjectMap.Values[V](this).asInstanceOf[com.badlogic.gdx.utils.ObjectMap.Values[V]]
     } else ()
     if (this.values1 == null) {
-      this.values1 = new com.badlogic.gdx.utils.ObjectMap.Values[V](this)
-      this.values2 = new com.badlogic.gdx.utils.ObjectMap.Values[V](this)
+      this.values1 = new com.badlogic.gdx.utils.ObjectMap.Values[V](this).asInstanceOf[com.badlogic.gdx.utils.ObjectMap.Values[V]]
+      this.values2 = new com.badlogic.gdx.utils.ObjectMap.Values[V](this).asInstanceOf[com.badlogic.gdx.utils.ObjectMap.Values[V]]
     } else ()
     if (!this.values1.valid) {
       this.values1.reset()
       this.values1.valid = true
       this.values2.valid = false
-      return this.values1
+      return this.values1.asInstanceOf[com.badlogic.gdx.utils.ObjectMap.Values[V]]
     } else ()
     this.values2.reset()
     this.values2.valid = true
     this.values1.valid = false
-    return this.values2
+    return this.values2.asInstanceOf[com.badlogic.gdx.utils.ObjectMap.Values[V]]
   }
   def keys(): com.badlogic.gdx.utils.ObjectMap.Keys[K] = {
     if (com.badlogic.gdx.utils.Collections.allocateIterators) {
-      return new com.badlogic.gdx.utils.ObjectMap.Keys[K](this)
+      return new com.badlogic.gdx.utils.ObjectMap.Keys[K](this).asInstanceOf[com.badlogic.gdx.utils.ObjectMap.Keys[K]]
     } else ()
     if (this.keys1 == null) {
-      this.keys1 = new com.badlogic.gdx.utils.ObjectMap.Keys[K](this)
-      this.keys2 = new com.badlogic.gdx.utils.ObjectMap.Keys[K](this)
+      this.keys1 = new com.badlogic.gdx.utils.ObjectMap.Keys[K](this).asInstanceOf[com.badlogic.gdx.utils.ObjectMap.Keys[K]]
+      this.keys2 = new com.badlogic.gdx.utils.ObjectMap.Keys[K](this).asInstanceOf[com.badlogic.gdx.utils.ObjectMap.Keys[K]]
     } else ()
     if (!this.keys1.valid) {
       this.keys1.reset()
       this.keys1.valid = true
       this.keys2.valid = false
-      return this.keys1
+      return this.keys1.asInstanceOf[com.badlogic.gdx.utils.ObjectMap.Keys[K]]
     } else ()
     this.keys2.reset()
     this.keys2.valid = true
     this.keys1.valid = false
-    return this.keys2
+    return this.keys2.asInstanceOf[com.badlogic.gdx.utils.ObjectMap.Keys[K]]
   }
 }
 object ObjectMap {

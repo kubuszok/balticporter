@@ -6,17 +6,17 @@ class OrderedSet[T] extends com.badlogic.gdx.utils.ObjectSet[T] {
   var iterator2: com.badlogic.gdx.utils.OrderedSet.OrderedSetIterator[?] = null.asInstanceOf[com.badlogic.gdx.utils.OrderedSet.OrderedSetIterator[?]]
   def this(initialCapacity: scala.Int, loadFactor: scala.Float) = {
     this()
-    this.items = new com.badlogic.gdx.utils.Array[T](initialCapacity)
+    this.items = new com.badlogic.gdx.utils.Array[T](initialCapacity).asInstanceOf[com.badlogic.gdx.utils.Array[T]]
   }
   def this(initialCapacity: scala.Int) = {
     this()
-    this.items = new com.badlogic.gdx.utils.Array[T](initialCapacity)
+    this.items = new com.badlogic.gdx.utils.Array[T](initialCapacity).asInstanceOf[com.badlogic.gdx.utils.Array[T]]
   }
   def this(set: OrderedSet[? <: T]) = {
     this()
-    this.items = new com.badlogic.gdx.utils.Array[T](set.items)
+    this.items = new com.badlogic.gdx.utils.Array[T](set.items).asInstanceOf[com.badlogic.gdx.utils.Array[T]]
   }
-  this.items = new com.badlogic.gdx.utils.Array[T]()
+  this.items = new com.badlogic.gdx.utils.Array[T]().asInstanceOf[com.badlogic.gdx.utils.Array[T]]
   def add(key: T): scala.Boolean = {
     if (!super.add(key)) {
       return false

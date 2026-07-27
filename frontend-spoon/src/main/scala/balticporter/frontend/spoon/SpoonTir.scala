@@ -660,7 +660,7 @@ object SpoonTir:
         val tpObj = tpToObject && et != null && et.isInstanceOf[CtTypeParameterReference] &&
           target.getQualifiedName == "java.lang.Object"
         val cast =
-          (rawFill && rawToParameterized(t.tpe, target)) ||                       // raw Cell → Cell[T]
+          (rawFill && rawToParameterized(t.tpe, et, target)) ||                   // raw Cell → Cell[T]
           tpObj ||                                                                // T → Object (non-arg)
           (isNull && target.isInstanceOf[CtTypeParameterReference]) ||             // null → type param
           (arrayCov && target.isInstanceOf[CtArrayTypeReference[?]] && et != null &&  // array covariance
@@ -682,12 +682,31 @@ object SpoonTir:
         * instantiation (`Cell[?]`), which Scala refuses to pass for `Cell[T]` — so restate Java's
         * unchecked step explicitly. Deliberately narrow: SAME head symbol, same arity, wildcards only
         * on the source side, so this can never bridge two unrelated types. */
-      private def rawToParameterized(from: TypeRepr, target: CtTypeReference[?]): Boolean =
-        (from, tpe(target)) match
-          case (AppliedType(TypeRef(_, a), as), AppliedType(TypeRef(_, b), bs)) =>
-            a == b && as.sizeIs == bs.size &&
-              as.exists(_.isInstanceOf[TypeBounds]) && !bs.exists(_.isInstanceOf[TypeBounds])
+      private def rawToParameterized(from: TypeRepr, et: CtTypeReference[?], target: CtTypeReference[?]): Boolean =
+        def headOf(t: TypeRepr): Option[SymId] = t match
+          case TypeRef(_, s)      => Some(s)
+          case AppliedType(tc, _) => headOf(tc)
+          case _                  => None
+        def wildcarded(t: TypeRepr): Boolean = t match
+          case AppliedType(_, as) => as.exists(_.isInstanceOf[TypeBounds])
+          case _                  => false
+        tpe(target) match
+          // the target must be a FULLY APPLIED, wildcard-free instantiation of the same type
+          case to @ AppliedType(_, bs) if bs.nonEmpty && !bs.exists(_.isInstanceOf[TypeBounds]) &&
+                                          headOf(from) == headOf(to) =>
+            // either our own translation left the source wildcarded, or Java's own type for the
+            // expression is a RAW use (which the emitted declaration renders as `X[?]`).
+            wildcarded(from) || isRawGenericUse(et)
           case _ => false
+
+      /** a RAW use of a generic type in Java source — no type arguments where the declaration has
+        * formals (`Cell` for `Cell<T>`). Its emitted counterpart is a wildcard instantiation. */
+      private def isRawGenericUse(t: CtTypeReference[?]): Boolean =
+        t != null && !t.isPrimitive && !t.isInstanceOf[CtTypeParameterReference] &&
+          !t.isInstanceOf[CtArrayTypeReference[?]] && !t.isInstanceOf[CtWildcardReference] &&
+          t.getActualTypeArguments.isEmpty &&
+          (try Option(t.getTypeDeclaration).exists(_.getFormalCtTypeParameters.size > 0)
+           catch { case _: Throwable => false })
 
       private val wrapperOf = Map(
         "byte" -> "java.lang.Byte", "short" -> "java.lang.Short", "char" -> "java.lang.Character",

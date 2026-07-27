@@ -228,8 +228,8 @@ object VertexAttributes {
         return new com.badlogic.gdx.graphics.VertexAttributes.ReadonlyIterator[T](this.array)
       } else ()
       if (this.iterator1 == null) {
-        this.iterator1 = new com.badlogic.gdx.graphics.VertexAttributes.ReadonlyIterator[T](this.array)
-        this.iterator2 = new com.badlogic.gdx.graphics.VertexAttributes.ReadonlyIterator[T](this.array)
+        this.iterator1 = new com.badlogic.gdx.graphics.VertexAttributes.ReadonlyIterator[T](this.array).asInstanceOf[com.badlogic.gdx.graphics.VertexAttributes.ReadonlyIterator[T]]
+        this.iterator2 = new com.badlogic.gdx.graphics.VertexAttributes.ReadonlyIterator[T](this.array).asInstanceOf[com.badlogic.gdx.graphics.VertexAttributes.ReadonlyIterator[T]]
       } else ()
       if (!this.iterator1.valid) {
         this.iterator1.index = 0

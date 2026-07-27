@@ -10,7 +10,7 @@ class Tooltip[T <: com.badlogic.gdx.scenes.scene2d.Actor] extends com.badlogic.g
   def this(contents: T, manager: com.badlogic.gdx.scenes.scene2d.ui.TooltipManager) = {
     this()
     this.manager = manager
-    this.container = new com.badlogic.gdx.scenes.scene2d.ui.Container[T](contents)
+    this.container = new com.badlogic.gdx.scenes.scene2d.ui.Container[T](contents).asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Container[T]]
     this.container.setTouchable(com.badlogic.gdx.scenes.scene2d.Touchable.disabled)
   }
   def this(contents: T) = {

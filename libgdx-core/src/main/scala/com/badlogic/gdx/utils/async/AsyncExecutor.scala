@@ -13,7 +13,7 @@ class AsyncExecutor extends com.badlogic.gdx.utils.Disposable {
     if (this.executor.isShutdown()) {
       throw new com.badlogic.gdx.utils.GdxRuntimeException("Cannot run tasks on an executor that has been shutdown (disposed)")
     } else ()
-    return new com.badlogic.gdx.utils.async.AsyncResult[T](this.executor.submit(new java.util.concurrent.Callable[T]()))
+    return new com.badlogic.gdx.utils.async.AsyncResult[T](this.executor.submit(new java.util.concurrent.Callable[T]())).asInstanceOf[com.badlogic.gdx.utils.async.AsyncResult[T]]
   }
   def dispose(): scala.Unit = {
     this.executor.shutdown()
