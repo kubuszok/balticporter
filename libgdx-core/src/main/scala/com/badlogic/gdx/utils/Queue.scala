@@ -1,6 +1,6 @@
 package com.badlogic.gdx.utils
 
-class Queue[T](initialSize: scala.Int, arraySupplier: com.badlogic.gdx.utils.ArraySupplier[scala.Array[T]]) extends scala.collection.Iterable[T] {
+class Queue[T](initialSize: scala.Int, arraySupplier: com.badlogic.gdx.utils.ArraySupplier[scala.Array[T]]) extends balticporter.runtime.JavaIterable[T] {
   var values: scala.Array[T] = null.asInstanceOf[scala.Array[T]]
   var head: scala.Int = 0
   var tail: scala.Int = 0
@@ -248,14 +248,14 @@ class Queue[T](initialSize: scala.Int, arraySupplier: com.badlogic.gdx.utils.Arr
     this.tail = 0
     this.size = 0
   }
-  def iterator(): scala.collection.Iterator[T] = {
+  def iterator(): balticporter.runtime.JavaIterator[T] = {
     if (com.badlogic.gdx.utils.Collections.allocateIterators) {
-      return new com.badlogic.gdx.utils.Queue.QueueIterator[T](this.asInstanceOf[Queue[T]], true).asInstanceOf[scala.collection.Iterator[T]]
+      return new com.badlogic.gdx.utils.Queue.QueueIterator[T](this.asInstanceOf[Queue[T]], true).asInstanceOf[balticporter.runtime.JavaIterator[T]]
     } else ()
     if (this.iterable == null) {
       this.iterable = new com.badlogic.gdx.utils.Queue.QueueIterable[T](this.asInstanceOf[Queue[T]]).asInstanceOf[com.badlogic.gdx.utils.Queue.QueueIterable[T]]
     } else ()
-    return this.iterable.iterator().asInstanceOf[scala.collection.Iterator[T]]
+    return this.iterable.iterator().asInstanceOf[balticporter.runtime.JavaIterator[T]]
   }
   def toString(): java.lang.String = {
     if (this.size == 0) {
@@ -376,7 +376,7 @@ class Queue[T](initialSize: scala.Int, arraySupplier: com.badlogic.gdx.utils.Arr
   }
 }
 object Queue {
-  class QueueIterator[T](queue$p: Queue[T], allowRemove$p: scala.Boolean) extends scala.collection.Iterator[T] with scala.collection.Iterable[T] {
+  class QueueIterator[T](queue$p: Queue[T], allowRemove$p: scala.Boolean) extends balticporter.runtime.JavaIterator[T] with balticporter.runtime.JavaIterable[T] {
     private var queue: Queue[T] = null.asInstanceOf[Queue[T]]
     private var allowRemove: scala.Boolean = false
     var index: scala.Int = 0
@@ -411,11 +411,11 @@ object Queue {
     def reset(): scala.Unit = {
       this.index = 0
     }
-    def iterator(): scala.collection.Iterator[T] = {
+    def iterator(): balticporter.runtime.JavaIterator[T] = {
       return this
     }
   }
-  class QueueIterable[T](queue$p: Queue[T], allowRemove$p: scala.Boolean) extends scala.collection.Iterable[T] {
+  class QueueIterable[T](queue$p: Queue[T], allowRemove$p: scala.Boolean) extends balticporter.runtime.JavaIterable[T] {
     private var queue: Queue[T] = null.asInstanceOf[Queue[T]]
     private var allowRemove: scala.Boolean = false
     private var iterator1: com.badlogic.gdx.utils.Queue.QueueIterator[T] = null.asInstanceOf[com.badlogic.gdx.utils.Queue.QueueIterator[T]]
@@ -425,9 +425,9 @@ object Queue {
     }
     this.queue = queue$p
     this.allowRemove = allowRemove$p
-    def iterator(): scala.collection.Iterator[T] = {
+    def iterator(): balticporter.runtime.JavaIterator[T] = {
       if (com.badlogic.gdx.utils.Collections.allocateIterators) {
-        return new com.badlogic.gdx.utils.Queue.QueueIterator[T](this.queue, this.allowRemove).asInstanceOf[scala.collection.Iterator[T]]
+        return new com.badlogic.gdx.utils.Queue.QueueIterator[T](this.queue, this.allowRemove).asInstanceOf[balticporter.runtime.JavaIterator[T]]
       } else ()
       if (this.iterator1 == null) {
         this.iterator1 = new com.badlogic.gdx.utils.Queue.QueueIterator[T](this.queue, this.allowRemove).asInstanceOf[com.badlogic.gdx.utils.Queue.QueueIterator[T]]
@@ -437,12 +437,12 @@ object Queue {
         this.iterator1.index = 0
         this.iterator1.valid = true
         this.iterator2.valid = false
-        return this.iterator1.asInstanceOf[scala.collection.Iterator[T]]
+        return this.iterator1.asInstanceOf[balticporter.runtime.JavaIterator[T]]
       } else ()
       this.iterator2.index = 0
       this.iterator2.valid = true
       this.iterator1.valid = false
-      return this.iterator2.asInstanceOf[scala.collection.Iterator[T]]
+      return this.iterator2.asInstanceOf[balticporter.runtime.JavaIterator[T]]
     }
   }
 }
