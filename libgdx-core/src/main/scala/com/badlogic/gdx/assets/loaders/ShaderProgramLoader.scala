@@ -5,9 +5,11 @@ class ShaderProgramLoader extends com.badlogic.gdx.assets.loaders.AsynchronousAs
   private var fragmentFileSuffix: java.lang.String = ".frag"
   def this(resolver: com.badlogic.gdx.assets.loaders.FileHandleResolver) = {
     this()
+    this.resolver = resolver
   }
   def this(resolver: com.badlogic.gdx.assets.loaders.FileHandleResolver, vertexFileSuffix: java.lang.String, fragmentFileSuffix: java.lang.String) = {
     this()
+    this.resolver = resolver
     this.vertexFileSuffix = vertexFileSuffix
     this.fragmentFileSuffix = fragmentFileSuffix
   }

@@ -1,8 +1,8 @@
 package com.badlogic.gdx.graphics.g2d
 
 class BitmapFontCache {
-  private var font: com.badlogic.gdx.graphics.g2d.BitmapFont = null.asInstanceOf[com.badlogic.gdx.graphics.g2d.BitmapFont]
-  private var integer: scala.Boolean = false
+  var font: com.badlogic.gdx.graphics.g2d.BitmapFont = null.asInstanceOf[com.badlogic.gdx.graphics.g2d.BitmapFont]
+  var integer: scala.Boolean = false
   private final val layouts: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.GlyphLayout] = new com.badlogic.gdx.utils.Array(1).asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.GlyphLayout]]
   private final val pooledLayouts: com.badlogic.gdx.utils.FlushablePool[com.badlogic.gdx.graphics.g2d.GlyphLayout] = new com.badlogic.gdx.utils.FlushablePool[com.badlogic.gdx.graphics.g2d.GlyphLayout]()
   private var glyphCount: scala.Int = 0
@@ -10,10 +10,10 @@ class BitmapFontCache {
   private var y: scala.Float = 0.0f
   private final val color: com.badlogic.gdx.graphics.Color = new com.badlogic.gdx.graphics.Color(1, 1, 1, 1)
   private var currentTint: scala.Float = 0.0f
-  private var pageVertices: scala.Array[scala.Array[scala.Float]] = null.asInstanceOf[scala.Array[scala.Array[scala.Float]]]
-  private var idx: scala.Array[scala.Int] = null.asInstanceOf[scala.Array[scala.Int]]
-  private var pageGlyphIndices: scala.Array[com.badlogic.gdx.utils.IntArray] = null.asInstanceOf[scala.Array[com.badlogic.gdx.utils.IntArray]]
-  private var tempGlyphCount: scala.Array[scala.Int] = null.asInstanceOf[scala.Array[scala.Int]]
+  var pageVertices: scala.Array[scala.Array[scala.Float]] = null.asInstanceOf[scala.Array[scala.Array[scala.Float]]]
+  var idx: scala.Array[scala.Int] = null.asInstanceOf[scala.Array[scala.Int]]
+  var pageGlyphIndices: scala.Array[com.badlogic.gdx.utils.IntArray] = null.asInstanceOf[scala.Array[com.badlogic.gdx.utils.IntArray]]
+  var tempGlyphCount: scala.Array[scala.Int] = null.asInstanceOf[scala.Array[scala.Int]]
   def this(font: com.badlogic.gdx.graphics.g2d.BitmapFont, integer: scala.Boolean) = {
     this()
     this.font = font

@@ -10,18 +10,38 @@ class IsometricTiledMapRenderer extends com.badlogic.gdx.maps.tiled.renderers.Ba
   private var bottomRight: com.badlogic.gdx.math.Vector2 = new com.badlogic.gdx.math.Vector2()
   def this(map: com.badlogic.gdx.maps.tiled.TiledMap) = {
     this()
+    this.map = map
+    this.unitScale = 1.0f
+    this.viewBounds = new com.badlogic.gdx.math.Rectangle()
+    this.batch = new com.badlogic.gdx.graphics.g2d.SpriteBatch()
+    this.ownsBatch = true
     this.init()
   }
   def this(map: com.badlogic.gdx.maps.tiled.TiledMap, batch: com.badlogic.gdx.graphics.g2d.Batch) = {
     this()
+    this.map = map
+    this.unitScale = 1.0f
+    this.viewBounds = new com.badlogic.gdx.math.Rectangle()
+    this.batch = batch
+    this.ownsBatch = false
     this.init()
   }
   def this(map: com.badlogic.gdx.maps.tiled.TiledMap, unitScale: scala.Float) = {
     this()
+    this.map = map
+    this.unitScale = unitScale
+    this.viewBounds = new com.badlogic.gdx.math.Rectangle()
+    this.batch = new com.badlogic.gdx.graphics.g2d.SpriteBatch()
+    this.ownsBatch = true
     this.init()
   }
   def this(map: com.badlogic.gdx.maps.tiled.TiledMap, unitScale: scala.Float, batch: com.badlogic.gdx.graphics.g2d.Batch) = {
     this()
+    this.map = map
+    this.unitScale = unitScale
+    this.viewBounds = new com.badlogic.gdx.math.Rectangle()
+    this.batch = batch
+    this.ownsBatch = false
     this.init()
   }
   private def init(): scala.Unit = {

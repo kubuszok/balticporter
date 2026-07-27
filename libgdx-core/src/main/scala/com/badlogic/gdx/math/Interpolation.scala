@@ -165,9 +165,55 @@ object Interpolation {
   class Bounce extends com.badlogic.gdx.math.Interpolation.BounceOut {
     def this(widths: scala.Array[scala.Float], heights: scala.Array[scala.Float]) = {
       this()
+      if (widths.length != heights.length) {
+        throw new java.lang.IllegalArgumentException("Must be the same number of widths and heights.")
+      } else ()
+      this.widths = widths
+      this.heights = heights
     }
     def this(bounces: scala.Int) = {
       this()
+      if ((bounces < 2) || (bounces > 5)) {
+        throw new java.lang.IllegalArgumentException("bounces cannot be < 2 or > 5: " + bounces)
+      } else ()
+      this.widths = new scala.Array[scala.Float](bounces)
+      this.heights = new scala.Array[scala.Float](bounces)
+      this.heights(0) = 1
+      bounces match {
+        case 2 => {
+          this.widths(0) = 0.6f
+          this.widths(1) = 0.4f
+          this.heights(1) = 0.33f
+        }
+        case 3 => {
+          this.widths(0) = 0.4f
+          this.widths(1) = 0.4f
+          this.widths(2) = 0.2f
+          this.heights(1) = 0.33f
+          this.heights(2) = 0.1f
+        }
+        case 4 => {
+          this.widths(0) = 0.34f
+          this.widths(1) = 0.34f
+          this.widths(2) = 0.2f
+          this.widths(3) = 0.15f
+          this.heights(1) = 0.26f
+          this.heights(2) = 0.11f
+          this.heights(3) = 0.03f
+        }
+        case 5 => {
+          this.widths(0) = 0.3f
+          this.widths(1) = 0.3f
+          this.widths(2) = 0.2f
+          this.widths(3) = 0.1f
+          this.widths(4) = 0.1f
+          this.heights(1) = 0.45f
+          this.heights(2) = 0.3f
+          this.heights(3) = 0.15f
+          this.heights(4) = 0.06f
+        }
+      }
+      this.widths(0) = this.widths(0) * 2
     }
     private def out(a: scala.Float): scala.Float = {
       val test: scala.Float = a + (widths(0) / 2)
@@ -268,9 +314,55 @@ object Interpolation {
   class BounceIn extends com.badlogic.gdx.math.Interpolation.BounceOut {
     def this(widths: scala.Array[scala.Float], heights: scala.Array[scala.Float]) = {
       this()
+      if (widths.length != heights.length) {
+        throw new java.lang.IllegalArgumentException("Must be the same number of widths and heights.")
+      } else ()
+      this.widths = widths
+      this.heights = heights
     }
     def this(bounces: scala.Int) = {
       this()
+      if ((bounces < 2) || (bounces > 5)) {
+        throw new java.lang.IllegalArgumentException("bounces cannot be < 2 or > 5: " + bounces)
+      } else ()
+      this.widths = new scala.Array[scala.Float](bounces)
+      this.heights = new scala.Array[scala.Float](bounces)
+      this.heights(0) = 1
+      bounces match {
+        case 2 => {
+          this.widths(0) = 0.6f
+          this.widths(1) = 0.4f
+          this.heights(1) = 0.33f
+        }
+        case 3 => {
+          this.widths(0) = 0.4f
+          this.widths(1) = 0.4f
+          this.widths(2) = 0.2f
+          this.heights(1) = 0.33f
+          this.heights(2) = 0.1f
+        }
+        case 4 => {
+          this.widths(0) = 0.34f
+          this.widths(1) = 0.34f
+          this.widths(2) = 0.2f
+          this.widths(3) = 0.15f
+          this.heights(1) = 0.26f
+          this.heights(2) = 0.11f
+          this.heights(3) = 0.03f
+        }
+        case 5 => {
+          this.widths(0) = 0.3f
+          this.widths(1) = 0.3f
+          this.widths(2) = 0.2f
+          this.widths(3) = 0.1f
+          this.widths(4) = 0.1f
+          this.heights(1) = 0.45f
+          this.heights(2) = 0.3f
+          this.heights(3) = 0.15f
+          this.heights(4) = 0.06f
+        }
+      }
+      this.widths(0) = this.widths(0) * 2
     }
     def apply(a: scala.Float): scala.Float = {
       return 1 - super.apply(1 - a)

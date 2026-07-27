@@ -24,6 +24,21 @@ class Dialog extends com.badlogic.gdx.scenes.scene2d.ui.Window {
   }
   def this(title: java.lang.String, windowStyle: com.badlogic.gdx.scenes.scene2d.ui.Window.WindowStyle) = {
     this()
+    if (title == null) {
+      throw new java.lang.IllegalArgumentException("title cannot be null.")
+    } else ()
+    this.setTouchable(com.badlogic.gdx.scenes.scene2d.Touchable.enabled)
+    this.setClip(true)
+    this.titleLabel = this.newLabel(title, new com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle(windowStyle.titleFont, windowStyle.titleFontColor))
+    this.titleLabel.setEllipsis(true)
+    this.titleTable = new com.badlogic.gdx.scenes.scene2d.ui.Table()
+    this.titleTable.add(this.titleLabel).growX().minWidth(0)
+    this.addActor(this.titleTable)
+    this.setStyle(windowStyle)
+    this.setWidth(150)
+    this.setHeight(150)
+    this.addCaptureListener(new com.badlogic.gdx.scenes.scene2d.InputListener())
+    this.addListener(new com.badlogic.gdx.scenes.scene2d.InputListener())
     this.initialize()
   }
   private def initialize(): scala.Unit = {

@@ -101,7 +101,7 @@ object CtorFunnel:
         val p          = plans.getOrElse(cd.symbol, Plan.none)
         val thisIsNoOp = p.primaryParams.isEmpty && p.primaryBody.isEmpty && p.superArgs.isEmpty
         val prologue   = parentSyms(cd).foldLeft(Option(List.empty[Statement])) { (acc, s) =>
-          acc.zip(nilaryEffects(s, 0)).map(_ ++ _)
+          acc.zip(prologueOf(s, 0)).map(_ ++ _)
         }
         if thisIsNoOp && prologue.isDefined then
           ctorsOf(program, cd.body).foreach { d =>
@@ -129,26 +129,31 @@ object CtorFunnel:
           if args.nonEmpty && isInitName(program, m) => Some((m, args))
       case _ => scala.None
 
-    /** what `new C()` runs — the PROLOGUE a replay lands after, since the secondary's `this()`
-      * reaches it. `None` when not computable. A class outside the translated set (the JDK)
-      * contributes nothing: its nilary constructor touches only its own private state, which no
-      * replay of ours can reach anyway. */
-    private def nilaryEffects(cls: SymId, depth: Int): Option[List[Statement]] =
+    /** The PROLOGUE a replay lands after: what the EMITTED `class C extends P` runs on the way in,
+      * which is what the secondary's `this()` reaches. That is P's funnel plan — its promoted
+      * primary's super call and body — NOT P's Java nilary constructor, which may not even exist
+      * (`BatchTiledMapRenderer` has none, yet the class Scala emits for it has an implicit,
+      * effect-free primary). Field initialisers are excluded deliberately: they run identically on
+      * both paths. A class outside the translated set contributes nothing — its constructor
+      * touches only its own private state, which no replay of ours can reach. */
+    private def prologueOf(cls: SymId, depth: Int): Option[List[Statement]] =
       if depth > 8 then scala.None
       else
         classOfSym(cls) match
           case scala.None => Some(Nil)
           case Some(cd) =>
-            val cs = ctorsOf(program, cd.body)
-            cs.find(_.paramss.flatten.isEmpty) match
-              // `effectsOf` already inlines the constructor's own super/this chain
-              case Some(c)                 => effectsOf(c.symbol, Nil, 0)
-              case scala.None if cs.isEmpty =>
-                parentSyms(cd).foldLeft(Option(List.empty[Statement])) { (acc, s) =>
-                  acc.zip(nilaryEffects(s, depth + 1)).map(_ ++ _)
-                }
-              // no nilary construction path at all — `this()` could not have reached here
-              case scala.None => scala.None
+            val p = plans.getOrElse(cd.symbol, Plan.none)
+            // a paramful primary means `extends P` with no arguments does not compile; `Plans`
+            // withholds such promotions wherever a subclass needs them, so this cannot be reached
+            if p.primaryParams.nonEmpty then scala.None
+            else
+              val up = p.primary.flatMap(superApply) match
+                case Some((m, args)) => effectsOf(m, args, 0)
+                case scala.None =>
+                  parentSyms(cd).foldLeft(Option(List.empty[Statement])) { (acc, s) =>
+                    acc.zip(prologueOf(s, depth + 1)).map(_ ++ _)
+                  }
+              up.map(_ ++ p.primaryBody)
 
     /** the field a top-level statement assigns, when it is a plain `this.f = <e>` / `f = <e>`. */
     private def assignedField(st: Statement): Option[SymId] = st match

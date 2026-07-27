@@ -495,9 +495,15 @@ object GLFrameBuffer {
   class FrameBufferBuilder extends com.badlogic.gdx.graphics.glutils.GLFrameBuffer.GLFrameBufferBuilder[com.badlogic.gdx.graphics.glutils.FrameBuffer] {
     def this(width: scala.Int, height: scala.Int) = {
       this()
+      this.width = width
+      this.height = height
+      this.samples = 0
     }
     def this(width: scala.Int, height: scala.Int, samples: scala.Int) = {
       this()
+      this.width = width
+      this.height = height
+      this.samples = samples
     }
     def build(): com.badlogic.gdx.graphics.glutils.FrameBuffer = {
       return new com.badlogic.gdx.graphics.glutils.FrameBuffer(this)
@@ -506,9 +512,15 @@ object GLFrameBuffer {
   class FloatFrameBufferBuilder extends com.badlogic.gdx.graphics.glutils.GLFrameBuffer.GLFrameBufferBuilder[com.badlogic.gdx.graphics.glutils.FloatFrameBuffer] {
     def this(width: scala.Int, height: scala.Int) = {
       this()
+      this.width = width
+      this.height = height
+      this.samples = 0
     }
     def this(width: scala.Int, height: scala.Int, samples: scala.Int) = {
       this()
+      this.width = width
+      this.height = height
+      this.samples = samples
     }
     def build(): com.badlogic.gdx.graphics.glutils.FloatFrameBuffer = {
       return new com.badlogic.gdx.graphics.glutils.FloatFrameBuffer(this)
@@ -517,9 +529,15 @@ object GLFrameBuffer {
   class FrameBufferCubemapBuilder extends com.badlogic.gdx.graphics.glutils.GLFrameBuffer.GLFrameBufferBuilder[com.badlogic.gdx.graphics.glutils.FrameBufferCubemap] {
     def this(width: scala.Int, height: scala.Int) = {
       this()
+      this.width = width
+      this.height = height
+      this.samples = 0
     }
     def this(width: scala.Int, height: scala.Int, samples: scala.Int) = {
       this()
+      this.width = width
+      this.height = height
+      this.samples = samples
     }
     def build(): com.badlogic.gdx.graphics.glutils.FrameBufferCubemap = {
       return new com.badlogic.gdx.graphics.glutils.FrameBufferCubemap(this)

@@ -3,8 +3,8 @@ package com.badlogic.gdx.graphics.g2d
 class BitmapFont extends com.badlogic.gdx.utils.Disposable {
   var data: com.badlogic.gdx.graphics.g2d.BitmapFont.BitmapFontData = null.asInstanceOf[com.badlogic.gdx.graphics.g2d.BitmapFont.BitmapFontData]
   var regions: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.TextureRegion] = null.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.TextureRegion]]
-  private var cache: com.badlogic.gdx.graphics.g2d.BitmapFontCache = null.asInstanceOf[com.badlogic.gdx.graphics.g2d.BitmapFontCache]
-  private var flipped: scala.Boolean = false
+  var cache: com.badlogic.gdx.graphics.g2d.BitmapFontCache = null.asInstanceOf[com.badlogic.gdx.graphics.g2d.BitmapFontCache]
+  var flipped: scala.Boolean = false
   var integer: scala.Boolean = false
   var ownsTexture$field: scala.Boolean = false
   def this(data: com.badlogic.gdx.graphics.g2d.BitmapFont.BitmapFontData, pageRegions: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.TextureRegion], integer: scala.Boolean) = {

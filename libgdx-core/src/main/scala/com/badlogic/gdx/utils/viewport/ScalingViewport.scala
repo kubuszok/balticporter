@@ -1,7 +1,7 @@
 package com.badlogic.gdx.utils.viewport
 
 class ScalingViewport extends com.badlogic.gdx.utils.viewport.Viewport {
-  private var scaling: com.badlogic.gdx.utils.Scaling = null.asInstanceOf[com.badlogic.gdx.utils.Scaling]
+  var scaling: com.badlogic.gdx.utils.Scaling = null.asInstanceOf[com.badlogic.gdx.utils.Scaling]
   def this(scaling: com.badlogic.gdx.utils.Scaling, worldWidth: scala.Float, worldHeight: scala.Float, camera: com.badlogic.gdx.graphics.Camera) = {
     this()
     this.scaling = scaling

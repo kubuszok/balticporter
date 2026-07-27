@@ -10,12 +10,27 @@ class TextArea extends com.badlogic.gdx.scenes.scene2d.ui.TextField {
   private var prefRows: scala.Float = 0.0f
   def this(text: java.lang.String, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin) = {
     this()
+    this.setStyle(skin.get(classOf[com.badlogic.gdx.scenes.scene2d.ui.TextField.TextFieldStyle]))
+    this.clipboard = com.badlogic.gdx.Gdx.app.getClipboard()
+    this.initialize()
+    this.setText(text)
+    this.setSize(this.getPrefWidth(), this.getPrefHeight())
   }
   def this(text: java.lang.String, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin, styleName: java.lang.String) = {
     this()
+    this.setStyle(skin.get(styleName, classOf[com.badlogic.gdx.scenes.scene2d.ui.TextField.TextFieldStyle]))
+    this.clipboard = com.badlogic.gdx.Gdx.app.getClipboard()
+    this.initialize()
+    this.setText(text)
+    this.setSize(this.getPrefWidth(), this.getPrefHeight())
   }
   def this(text: java.lang.String, style: com.badlogic.gdx.scenes.scene2d.ui.TextField.TextFieldStyle) = {
     this()
+    this.setStyle(style)
+    this.clipboard = com.badlogic.gdx.Gdx.app.getClipboard()
+    this.initialize()
+    this.setText(text)
+    this.setSize(this.getPrefWidth(), this.getPrefHeight())
   }
   def initialize(): scala.Unit = {
     super.initialize()

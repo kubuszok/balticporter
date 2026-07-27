@@ -3,15 +3,35 @@ package com.badlogic.gdx.maps.tiled.renderers
 class IsometricStaggeredTiledMapRenderer extends com.badlogic.gdx.maps.tiled.renderers.BatchTiledMapRenderer {
   def this(map: com.badlogic.gdx.maps.tiled.TiledMap) = {
     this()
+    this.map = map
+    this.unitScale = 1.0f
+    this.viewBounds = new com.badlogic.gdx.math.Rectangle()
+    this.batch = new com.badlogic.gdx.graphics.g2d.SpriteBatch()
+    this.ownsBatch = true
   }
   def this(map: com.badlogic.gdx.maps.tiled.TiledMap, batch: com.badlogic.gdx.graphics.g2d.Batch) = {
     this()
+    this.map = map
+    this.unitScale = 1.0f
+    this.viewBounds = new com.badlogic.gdx.math.Rectangle()
+    this.batch = batch
+    this.ownsBatch = false
   }
   def this(map: com.badlogic.gdx.maps.tiled.TiledMap, unitScale: scala.Float) = {
     this()
+    this.map = map
+    this.unitScale = unitScale
+    this.viewBounds = new com.badlogic.gdx.math.Rectangle()
+    this.batch = new com.badlogic.gdx.graphics.g2d.SpriteBatch()
+    this.ownsBatch = true
   }
   def this(map: com.badlogic.gdx.maps.tiled.TiledMap, unitScale: scala.Float, batch: com.badlogic.gdx.graphics.g2d.Batch) = {
     this()
+    this.map = map
+    this.unitScale = unitScale
+    this.viewBounds = new com.badlogic.gdx.math.Rectangle()
+    this.batch = batch
+    this.ownsBatch = false
   }
   def renderTileLayer(layer: com.badlogic.gdx.maps.tiled.TiledMapTileLayer): scala.Unit = {
     val batchColor: com.badlogic.gdx.graphics.Color = batch.getColor()

@@ -90,6 +90,11 @@ object RegionInfluencer {
   class Single extends RegionInfluencer {
     def this(regionInfluencer: com.badlogic.gdx.graphics.g3d.particles.influencers.RegionInfluencer.Single) = {
       this()
+      this.regions = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.influencers.RegionInfluencer.AspectTextureRegion](false, regionInfluencer.regions.size, ((size: scala.Int) => new scala.Array[com.badlogic.gdx.graphics.g3d.particles.influencers.RegionInfluencer.AspectTextureRegion](size)))
+      this.regions.ensureCapacity(regionInfluencer.regions.size);
+      { var i: scala.Int = 0; while (i < regionInfluencer.regions.size) { {
+        this.regions.add(new com.badlogic.gdx.graphics.g3d.particles.influencers.RegionInfluencer.AspectTextureRegion(regionInfluencer.regions.get(i).asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.influencers.RegionInfluencer.AspectTextureRegion]))
+      }; i = i + 1 } }
     }
     def this(textureRegion: com.badlogic.gdx.graphics.g2d.TextureRegion) = {
       this()
@@ -118,6 +123,11 @@ object RegionInfluencer {
   class Random extends RegionInfluencer {
     def this(regionInfluencer: com.badlogic.gdx.graphics.g3d.particles.influencers.RegionInfluencer.Random) = {
       this()
+      this.regions = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.influencers.RegionInfluencer.AspectTextureRegion](false, regionInfluencer.regions.size, ((size: scala.Int) => new scala.Array[com.badlogic.gdx.graphics.g3d.particles.influencers.RegionInfluencer.AspectTextureRegion](size)))
+      this.regions.ensureCapacity(regionInfluencer.regions.size);
+      { var i: scala.Int = 0; while (i < regionInfluencer.regions.size) { {
+        this.regions.add(new com.badlogic.gdx.graphics.g3d.particles.influencers.RegionInfluencer.AspectTextureRegion(regionInfluencer.regions.get(i).asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.influencers.RegionInfluencer.AspectTextureRegion]))
+      }; i = i + 1 } }
     }
     def this(textureRegion: com.badlogic.gdx.graphics.g2d.TextureRegion) = {
       this()
@@ -147,6 +157,11 @@ object RegionInfluencer {
     var lifeChannel: com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel]
     def this(regionInfluencer: com.badlogic.gdx.graphics.g3d.particles.influencers.RegionInfluencer.Animated) = {
       this()
+      this.regions = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.influencers.RegionInfluencer.AspectTextureRegion](false, regionInfluencer.regions.size, ((size: scala.Int) => new scala.Array[com.badlogic.gdx.graphics.g3d.particles.influencers.RegionInfluencer.AspectTextureRegion](size)))
+      this.regions.ensureCapacity(regionInfluencer.regions.size);
+      { var i: scala.Int = 0; while (i < regionInfluencer.regions.size) { {
+        this.regions.add(new com.badlogic.gdx.graphics.g3d.particles.influencers.RegionInfluencer.AspectTextureRegion(regionInfluencer.regions.get(i).asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.influencers.RegionInfluencer.AspectTextureRegion]))
+      }; i = i + 1 } }
     }
     def this(textureRegion: com.badlogic.gdx.graphics.g2d.TextureRegion) = {
       this()

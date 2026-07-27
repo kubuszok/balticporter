@@ -4,9 +4,13 @@ class IntAttribute extends com.badlogic.gdx.graphics.g3d.Attribute {
   var value: scala.Int = 0
   def this(`type`: scala.Long) = {
     this()
+    this.`type` = `type`
+    this.typeBit = java.lang.Long.numberOfTrailingZeros(`type`)
   }
   def this(`type`: scala.Long, value: scala.Int) = {
     this()
+    this.`type` = `type`
+    this.typeBit = java.lang.Long.numberOfTrailingZeros(`type`)
     this.value = value
   }
   def copy(): com.badlogic.gdx.graphics.g3d.Attribute = {

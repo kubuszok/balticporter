@@ -4,6 +4,31 @@ class DistanceFieldFont extends com.badlogic.gdx.graphics.g2d.BitmapFont {
   private var distanceFieldSmoothing: scala.Float = 0.0f
   def this(data: com.badlogic.gdx.graphics.g2d.BitmapFont.BitmapFontData, pageRegions: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.TextureRegion], integer: scala.Boolean) = {
     this()
+    this.flipped = data.flipped
+    this.data = data
+    this.integer = integer
+    if ((pageRegions == null) || (pageRegions.size == 0)) {
+      if (data.imagePaths == null) {
+        throw new java.lang.IllegalArgumentException("If no regions are specified, the font data must have an images path.")
+      } else ()
+      val n: scala.Int = data.imagePaths.length
+      this.regions = new com.badlogic.gdx.utils.Array(n).asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.TextureRegion]];
+      { var i: scala.Int = 0; while (i < n) { {
+        var file: com.badlogic.gdx.files.FileHandle = null.asInstanceOf[com.badlogic.gdx.files.FileHandle]
+        if (data.fontFile == null) {
+          file = com.badlogic.gdx.Gdx.files.internal(data.imagePaths(i))
+        } else {
+          file = com.badlogic.gdx.Gdx.files.getFileHandle(data.imagePaths(i), data.fontFile.`type`())
+        }
+        this.regions.add(new com.badlogic.gdx.graphics.g2d.TextureRegion(new com.badlogic.gdx.graphics.Texture(file, false)))
+      }; i = i + 1 } }
+      this.ownsTexture$field = true
+    } else {
+      this.regions = pageRegions
+      this.ownsTexture$field = false
+    }
+    this.cache = this.newFontCache()
+    this.load(data)
   }
   def this(data: com.badlogic.gdx.graphics.g2d.BitmapFont.BitmapFontData, region: com.badlogic.gdx.graphics.g2d.TextureRegion, integer: scala.Boolean) = {
     this()
@@ -60,6 +85,21 @@ object DistanceFieldFont {
     }
     def this(font: DistanceFieldFont, integer: scala.Boolean) = {
       this()
+      this.font = font
+      this.integer = integer
+      val pageCount: scala.Int = font.regions.size
+      if (pageCount == 0) {
+        throw new java.lang.IllegalArgumentException("The specified font must contain at least one texture page.")
+      } else ()
+      this.pageVertices = new scala.Array[scala.Array[scala.Float]](pageCount)
+      this.idx = new scala.Array[scala.Int](pageCount)
+      if (pageCount > 1) {
+        this.pageGlyphIndices = new scala.Array[com.badlogic.gdx.utils.IntArray](pageCount);
+        { var i: scala.Int = 0; val n: scala.Int = this.pageGlyphIndices.length; while (i < n) { {
+          this.pageGlyphIndices(i) = new com.badlogic.gdx.utils.IntArray()
+        }; i = i + 1 } }
+      } else ()
+      this.tempGlyphCount = new scala.Array[scala.Int](pageCount)
     }
     private def getSmoothingFactor(): scala.Float = {
       val font: DistanceFieldFont = super.getFont().asInstanceOf[DistanceFieldFont]

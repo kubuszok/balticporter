@@ -2,7 +2,7 @@ package com.badlogic.gdx.graphics.g3d
 
 abstract class Attribute extends java.lang.Comparable[Attribute] {
   var `type`: scala.Long = 0L
-  private var typeBit: scala.Int = 0
+  var typeBit: scala.Int = 0
   def this(`type`: scala.Long) = {
     this()
     this.`type` = `type`
