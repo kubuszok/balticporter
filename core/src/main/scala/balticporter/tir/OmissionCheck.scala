@@ -17,7 +17,33 @@ object OmissionCheck:
   final case class Finding(what: String, owner: String, detail: String, origin: Origin):
     def render: String = s"$what: $owner — $detail  (${origin.javaPath}:${origin.line})"
 
-  def check(program: Program): List[Finding] = droppedSuperArgs(program)
+  def check(program: Program): List[Finding] = droppedSuperArgs(program) ++ droppedAnonMembers(program)
+
+  /** A member of a Java ANONYMOUS class body that did not survive translation.
+    *
+    * The body itself used to be dropped WHOLESALE and nothing here saw it: `SpoonTir.ctorCall`
+    * read `CtConstructorCall` and never asked whether the node was the `CtNewClass` subtype, so
+    * `new ClickListener() { public void clicked(…) {…} }` emitted as `new ClickListener()` — a
+    * listener that compiles and does nothing. That is now translated ([[Tree.AnonClass]]), and
+    * this is the counterpart check: `AnonClass.dropped` names any member kind the frontend could
+    * not carry, so a future gap is a NUMBER on every run rather than another green-and-wrong port.
+    */
+  def droppedAnonMembers(program: Program): List[Finding] =
+    val out = collection.mutable.ListBuffer[Finding]()
+    // walk with the STANDARD traversal rather than a private one: a term node added to the tree
+    // later is then covered here for free, which is exactly the property whose absence let the
+    // whole-body omission survive unnoticed for the project's entire history.
+    val collect = new Phase:
+      def name: String = "omission-check/anonymous-class"
+      override def transformNew(t: Tree.New)(using Program): Term =
+        t.anon.filter(_.dropped.nonEmpty).foreach { a =>
+          out += Finding("anonymous-class member dropped",
+            program.symbolOf(a.symbol).map(_.fullName).getOrElse("?"), a.dropped.mkString(", "), a.origin)
+        }
+        t
+    given Program = program
+    program.units.foreach(u => StandardTraversal.mapClassDef(collect, u))
+    out.toList
 
   /** A Java secondary constructor whose `super(args)` cannot be expressed in Scala.
     *
@@ -52,10 +78,12 @@ object OmissionCheck:
       }
     }
 
-  /** grouped one-line summary, most-affected owner first. */
+  /** grouped one-line summary, most-affected owner first. Grouped by KIND as well as owner —
+    * there is more than one kind of omission now, and a summary that words them all the same way
+    * would misreport the newer one. */
   def summary(findings: List[Finding]): String =
     if findings.isEmpty then "  none"
     else
-      findings.groupBy(_.owner).toList.sortBy(-_._2.size)
-        .map((owner, fs) => s"  $owner: ${fs.size} constructor(s)")
+      findings.groupBy(f => (f.what, f.owner)).toList.sortBy { case ((w, o), fs) => (-fs.size, w, o) }
+        .map { case ((what, owner), fs) => s"  $owner: ${fs.size} × $what" }
         .mkString("\n")

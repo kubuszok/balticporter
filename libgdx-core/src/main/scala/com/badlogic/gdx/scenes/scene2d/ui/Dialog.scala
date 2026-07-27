@@ -9,7 +9,12 @@ class Dialog extends com.badlogic.gdx.scenes.scene2d.ui.Window {
   var previousKeyboardFocus: com.badlogic.gdx.scenes.scene2d.Actor = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.Actor]
   var previousScrollFocus: com.badlogic.gdx.scenes.scene2d.Actor = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.Actor]
   var focusListener: com.badlogic.gdx.scenes.scene2d.utils.FocusListener = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.FocusListener]
-  var ignoreTouchDown: com.badlogic.gdx.scenes.scene2d.InputListener = new com.badlogic.gdx.scenes.scene2d.InputListener()
+  var ignoreTouchDown: com.badlogic.gdx.scenes.scene2d.InputListener = new com.badlogic.gdx.scenes.scene2d.InputListener() {
+    override def touchDown(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float, pointer: scala.Int, button: scala.Int): scala.Boolean = {
+      event.cancel()
+      return false
+    }
+  }
   def this(title: java.lang.String, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin) = {
     this()
     this.setSkin(skin)
@@ -24,21 +29,6 @@ class Dialog extends com.badlogic.gdx.scenes.scene2d.ui.Window {
   }
   def this(title: java.lang.String, windowStyle: com.badlogic.gdx.scenes.scene2d.ui.Window.WindowStyle) = {
     this()
-    if (title == null) {
-      throw new java.lang.IllegalArgumentException("title cannot be null.")
-    } else ()
-    this.setTouchable(com.badlogic.gdx.scenes.scene2d.Touchable.enabled)
-    this.setClip(true)
-    this.titleLabel = this.newLabel(title, new com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle(windowStyle.titleFont, windowStyle.titleFontColor))
-    this.titleLabel.setEllipsis(true)
-    this.titleTable = new com.badlogic.gdx.scenes.scene2d.ui.Table()
-    this.titleTable.add(this.titleLabel).growX().minWidth(0)
-    this.addActor(this.titleTable)
-    this.setStyle(windowStyle)
-    this.setWidth(150)
-    this.setHeight(150)
-    this.addCaptureListener(new com.badlogic.gdx.scenes.scene2d.InputListener())
-    this.addListener(new com.badlogic.gdx.scenes.scene2d.InputListener())
     this.initialize()
   }
   private def initialize(): scala.Unit = {
@@ -55,8 +45,43 @@ class Dialog extends com.badlogic.gdx.scenes.scene2d.ui.Window {
     }).fillX()
     this.contentTable.defaults().space(6)
     this.buttonTable.defaults().space(6)
-    this.buttonTable.addListener(new com.badlogic.gdx.scenes.scene2d.utils.ChangeListener())
-    this.focusListener = new com.badlogic.gdx.scenes.scene2d.utils.FocusListener()
+    this.buttonTable.addListener(new com.badlogic.gdx.scenes.scene2d.utils.ChangeListener() {
+      override def changed(event: com.badlogic.gdx.scenes.scene2d.utils.ChangeListener.ChangeEvent, actor$arg: com.badlogic.gdx.scenes.scene2d.Actor): scala.Unit = {
+        var actor: com.badlogic.gdx.scenes.scene2d.Actor = actor$arg
+        if (!Dialog.this.values.containsKey(actor)) {
+          return
+        } else ()
+        while (actor.getParent() != Dialog.this.buttonTable) {
+          actor = actor.getParent()
+        }
+        Dialog.this.result(Dialog.this.values.get(actor))
+        if (!Dialog.this.cancelHide) {
+          Dialog.this.hide()
+        } else ()
+        Dialog.this.cancelHide = false
+      }
+    })
+    this.focusListener = new com.badlogic.gdx.scenes.scene2d.utils.FocusListener() {
+      override def keyboardFocusChanged(event: com.badlogic.gdx.scenes.scene2d.utils.FocusListener.FocusEvent, actor: com.badlogic.gdx.scenes.scene2d.Actor, focused: scala.Boolean): scala.Unit = {
+        if (!focused) {
+          focusChanged(event)
+        } else ()
+      }
+      override def scrollFocusChanged(event: com.badlogic.gdx.scenes.scene2d.utils.FocusListener.FocusEvent, actor: com.badlogic.gdx.scenes.scene2d.Actor, focused: scala.Boolean): scala.Unit = {
+        if (!focused) {
+          focusChanged(event)
+        } else ()
+      }
+      private def focusChanged(event: com.badlogic.gdx.scenes.scene2d.utils.FocusListener.FocusEvent): scala.Unit = {
+        val stage: com.badlogic.gdx.scenes.scene2d.Stage = Dialog.this.getStage()
+        if (((isModal$field && (stage != null)) && (stage.getRoot().getChildren().size > 0)) && (stage.getRoot().getChildren().peek() == Dialog.this)) {
+          val newFocusedActor: com.badlogic.gdx.scenes.scene2d.Actor = event.getRelatedActor()
+          if (((newFocusedActor != null) && (!newFocusedActor.isDescendantOf(Dialog.this))) && (!(newFocusedActor.equals(Dialog.this.previousKeyboardFocus) || newFocusedActor.equals(Dialog.this.previousScrollFocus)))) {
+            event.cancel()
+          } else ()
+        } else ()
+      }
+    }
   }
   def setStage(stage: com.badlogic.gdx.scenes.scene2d.Stage): scala.Unit = {
     if (stage == null) {
@@ -166,7 +191,22 @@ class Dialog extends com.badlogic.gdx.scenes.scene2d.ui.Window {
     this.values.put(actor, `object`)
   }
   def key(keycode: scala.Int, `object`: java.lang.Object): Dialog = {
-    this.addListener(new com.badlogic.gdx.scenes.scene2d.InputListener())
+    this.addListener(new com.badlogic.gdx.scenes.scene2d.InputListener() {
+      override def keyDown(event: com.badlogic.gdx.scenes.scene2d.InputEvent, keycode2: scala.Int): scala.Boolean = {
+        if (keycode == keycode2) {
+          com.badlogic.gdx.Gdx.app.postRunnable(new java.lang.Runnable() {
+            override def run(): scala.Unit = {
+              Dialog.this.result(`object`)
+              if (!Dialog.this.cancelHide) {
+                Dialog.this.hide()
+              } else ()
+              Dialog.this.cancelHide = false
+            }
+          })
+        } else ()
+        return false
+      }
+    })
     return this
   }
   def result(`object`: java.lang.Object): scala.Unit = {

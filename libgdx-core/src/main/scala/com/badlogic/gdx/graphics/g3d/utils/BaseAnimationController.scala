@@ -1,7 +1,11 @@
 package com.badlogic.gdx.graphics.g3d.utils
 
 class BaseAnimationController(target$p: com.badlogic.gdx.graphics.g3d.ModelInstance) {
-  private final val transformPool: com.badlogic.gdx.utils.Pool[com.badlogic.gdx.graphics.g3d.utils.BaseAnimationController.Transform] = new com.badlogic.gdx.utils.Pool[com.badlogic.gdx.graphics.g3d.utils.BaseAnimationController.Transform]()
+  private final val transformPool: com.badlogic.gdx.utils.Pool[com.badlogic.gdx.graphics.g3d.utils.BaseAnimationController.Transform] = new com.badlogic.gdx.utils.Pool[com.badlogic.gdx.graphics.g3d.utils.BaseAnimationController.Transform]() {
+    override def newObject(): com.badlogic.gdx.graphics.g3d.utils.BaseAnimationController.Transform = {
+      return new com.badlogic.gdx.graphics.g3d.utils.BaseAnimationController.Transform()
+    }
+  }
   private var applying: scala.Boolean = false
   var target: com.badlogic.gdx.graphics.g3d.ModelInstance = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.ModelInstance]
   this.target = target$p

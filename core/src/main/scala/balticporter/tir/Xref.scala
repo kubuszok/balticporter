@@ -117,7 +117,11 @@ object Xref:
         args.foreach(walkTerm)
       case Tree.TypeApply(fun, targs, _, _) =>
         walkTerm(fun); targs.foreach(tt => walkType(tt.tpe, UsageKind.TypeArg, tt))
-      case n @ Tree.New(tpt, _, _)          => walkType(tpt.tpe, UsageKind.Instantiate, n)
+      case n @ Tree.New(tpt, _, _, anon)    =>
+        walkType(tpt.tpe, UsageKind.Instantiate, n)
+        // an anonymous class's members are real declarations with real usages — index them, or
+        // every check derived from this index (portability, rewrite-trace) is blind inside them.
+        anon.foreach(a => within(a.symbol)(a.body.foreach(walkStat)))
       // `this` is an implicit self-reference, not a cross-reference to rewrite — recording
       // it would flood every enclosing class with a usage per method body. Self-TYPES are
       // captured separately via `walkType`'s `ThisType` case.

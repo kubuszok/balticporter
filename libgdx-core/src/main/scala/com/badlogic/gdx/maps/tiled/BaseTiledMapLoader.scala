@@ -73,7 +73,12 @@ abstract class BaseTiledMapLoader[P <: com.badlogic.gdx.maps.tiled.BaseTiledMapL
   def loadObjectProperty(properties: com.badlogic.gdx.maps.MapProperties, name: java.lang.String, value: java.lang.String): scala.Unit = {
     try {
       val id: scala.Int = java.lang.Integer.parseInt(value)
-      val fetch: java.lang.Runnable = new java.lang.Runnable()
+      val fetch: java.lang.Runnable = new java.lang.Runnable() {
+        override def run(): scala.Unit = {
+          val `object`: com.badlogic.gdx.maps.MapObject = BaseTiledMapLoader.this.idToObject.get(id)
+          properties.put(name, `object`)
+        }
+      }
       this.runOnEndOfLoadTiled.add(fetch)
     } catch {
       case exception: java.lang.Exception => {

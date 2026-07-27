@@ -23,14 +23,86 @@ class Tree[N <: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[N, V, ?], V](style$
   def this(skin: com.badlogic.gdx.scenes.scene2d.ui.Skin, styleName: java.lang.String) = {
     this(skin.get(styleName, classOf[com.badlogic.gdx.scenes.scene2d.ui.Tree.TreeStyle]))
   }
-  this.selection = new com.badlogic.gdx.scenes.scene2d.utils.Selection[N]()
+  this.selection = new com.badlogic.gdx.scenes.scene2d.utils.Selection[N]() {
+    override def changed(): scala.Unit = {
+      size() match {
+        case 0 => {
+          Tree.this.rangeStart = null.asInstanceOf[N]
+        }
+        case 1 => {
+          Tree.this.rangeStart = first().asInstanceOf[N]
+        }
+      }
+    }
+  }
   this.selection.setActor(this)
   this.selection.setMultiple(true)
   this.setStyle(style$p)
   this.initialize()
   private def initialize(): scala.Unit = {
     this.addListener({
-      this.clickListener = new com.badlogic.gdx.scenes.scene2d.utils.ClickListener()
+      this.clickListener = new com.badlogic.gdx.scenes.scene2d.utils.ClickListener() {
+        override def clicked(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float): scala.Unit = {
+          val node: N = getNodeAt(y)
+          if (node == null) {
+            return
+          } else ()
+          if (node != getNodeAt(getTouchDownY())) {
+            return
+          } else ()
+          if ((Tree.this.selection.getMultiple() && Tree.this.selection.notEmpty()) && com.badlogic.gdx.scenes.scene2d.utils.UIUtils.shift()) {
+            if (Tree.this.rangeStart == null) {
+              Tree.this.rangeStart = node
+            } else ()
+            var rangeStart: N = Tree.this.rangeStart
+            if (!com.badlogic.gdx.scenes.scene2d.utils.UIUtils.ctrl()) {
+              Tree.this.selection.clear()
+            } else ()
+            val start: scala.Float = rangeStart.actor.getY()
+            val `end`: scala.Float = node.actor.getY()
+            if (start > `end`) {
+              selectNodes(Tree.this.rootNodes, `end`, start)
+            } else {
+              selectNodes(Tree.this.rootNodes, start, `end`)
+              Tree.this.selection.items().orderedItems().reverse()
+            }
+            Tree.this.selection.fireChangeEvent()
+            Tree.this.rangeStart = rangeStart
+            return
+          } else ()
+          if ((node.children.size > 0) && ((!Tree.this.selection.getMultiple()) || (!com.badlogic.gdx.scenes.scene2d.utils.UIUtils.ctrl()))) {
+            var rowX: scala.Float = node.actor.getX()
+            if (node.icon != null) {
+              rowX = rowX - (Tree.this.iconSpacingRight + node.icon.getMinWidth())
+            } else ()
+            if (x < rowX) {
+              node.setExpanded(!node.expanded)
+              return
+            } else ()
+          } else ()
+          if (!node.isSelectable()) {
+            return
+          } else ()
+          Tree.this.selection.choose(node)
+          if (!Tree.this.selection.isEmpty()) {
+            Tree.this.rangeStart = node
+          } else ()
+        }
+        override def mouseMoved(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float): scala.Boolean = {
+          setOverNode(getNodeAt(y))
+          return false
+        }
+        override def enter(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float, pointer: scala.Int, fromActor: com.badlogic.gdx.scenes.scene2d.Actor): scala.Unit = {
+          super.enter(event, x, y, pointer, fromActor)
+          setOverNode(getNodeAt(y))
+        }
+        override def exit(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float, pointer: scala.Int, toActor: com.badlogic.gdx.scenes.scene2d.Actor): scala.Unit = {
+          super.exit(event, x, y, pointer, toActor)
+          if ((toActor == null) || (!toActor.isDescendantOf(Tree.this))) {
+            setOverNode(null.asInstanceOf[N])
+          } else ()
+        }
+      }
       this.clickListener
     })
   }

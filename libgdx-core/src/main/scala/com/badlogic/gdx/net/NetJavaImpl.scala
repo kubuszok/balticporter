@@ -9,7 +9,14 @@ class NetJavaImpl(maxThreads: scala.Int) {
   def this() = {
     this(java.lang.Integer.MAX_VALUE)
   }
-  this.executorService = new java.util.concurrent.ThreadPoolExecutor(if (isCachedPool) 0 else maxThreads, maxThreads, 60L, java.util.concurrent.TimeUnit.SECONDS, if (isCachedPool) new java.util.concurrent.SynchronousQueue[java.lang.Runnable]() else new java.util.concurrent.LinkedBlockingQueue[java.lang.Runnable](), new java.util.concurrent.ThreadFactory())
+  this.executorService = new java.util.concurrent.ThreadPoolExecutor(if (isCachedPool) 0 else maxThreads, maxThreads, 60L, java.util.concurrent.TimeUnit.SECONDS, if (isCachedPool) new java.util.concurrent.SynchronousQueue[java.lang.Runnable]() else new java.util.concurrent.LinkedBlockingQueue[java.lang.Runnable](), new java.util.concurrent.ThreadFactory() {
+    var threadID: java.util.concurrent.atomic.AtomicInteger = new java.util.concurrent.atomic.AtomicInteger()
+    override def newThread(r: java.lang.Runnable): java.lang.Thread = {
+      val thread: java.lang.Thread = new java.lang.Thread(r, "NetThread" + threadID.getAndIncrement())
+      thread.setDaemon(true)
+      return thread
+    }
+  })
   this.executorService.allowCoreThreadTimeOut(!isCachedPool)
   this.connections = new com.badlogic.gdx.utils.ObjectMap[com.badlogic.gdx.Net.HttpRequest, java.net.HttpURLConnection]()
   this.listeners = new com.badlogic.gdx.utils.ObjectMap[com.badlogic.gdx.Net.HttpRequest, com.badlogic.gdx.Net.HttpResponseListener]()
@@ -45,7 +52,53 @@ class NetJavaImpl(maxThreads: scala.Int) {
       }
       connection.setConnectTimeout(httpRequest.getTimeOut())
       connection.setReadTimeout(httpRequest.getTimeOut())
-      this.tasks.put(httpRequest, this.executorService.submit(new java.lang.Runnable()))
+      this.tasks.put(httpRequest, this.executorService.submit(new java.lang.Runnable() {
+        override def run(): scala.Unit = {
+          try {
+            if (doingOutPut) {
+              val contentAsString: java.lang.String = httpRequest.getContent()
+              if (contentAsString != null) {
+                val writer: java.io.OutputStreamWriter = new java.io.OutputStreamWriter(connection.getOutputStream(), "UTF8")
+                try {
+                  writer.write(contentAsString)
+                } finally {
+                  com.badlogic.gdx.utils.StreamUtils.closeQuietly(writer)
+                }
+              } else {
+                val contentAsStream: java.io.InputStream = httpRequest.getContentStream()
+                if (contentAsStream != null) {
+                  val os: java.io.OutputStream = connection.getOutputStream()
+                  try {
+                    com.badlogic.gdx.utils.StreamUtils.copyStream(contentAsStream, os)
+                  } finally {
+                    com.badlogic.gdx.utils.StreamUtils.closeQuietly(os)
+                  }
+                } else ()
+              }
+            } else ()
+            connection.connect()
+            val clientResponse: com.badlogic.gdx.net.NetJavaImpl.HttpClientResponse = new com.badlogic.gdx.net.NetJavaImpl.HttpClientResponse(connection)
+            try {
+              val listener: com.badlogic.gdx.Net.HttpResponseListener = NetJavaImpl.this.getFromListeners(httpRequest)
+              if (listener != null) {
+                listener.handleHttpResponse(clientResponse)
+              } else ()
+            } finally {
+              NetJavaImpl.this.removeFromConnectionsAndListeners(httpRequest)
+              connection.disconnect()
+            }
+          } catch {
+            case e: java.lang.Exception => {
+              connection.disconnect()
+              try {
+                httpResponseListener.failed(e)
+              } finally {
+                NetJavaImpl.this.removeFromConnectionsAndListeners(httpRequest)
+              }
+            }
+          }
+        }
+      }))
     } catch {
       case e: java.lang.Exception => {
         try {

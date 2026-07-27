@@ -40,7 +40,16 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
   var focused: scala.Boolean = false
   var cursorOn: scala.Boolean = false
   var blinkTime: scala.Float = 0.32f
-  final val blinkTask: com.badlogic.gdx.utils.Timer.Task = new com.badlogic.gdx.utils.Timer.Task()
+  final val blinkTask: com.badlogic.gdx.utils.Timer.Task = new com.badlogic.gdx.utils.Timer.Task() {
+    override def run(): scala.Unit = {
+      if (TextField.this.getStage() == null) {
+        cancel()
+        return
+      } else ()
+      TextField.this.cursorOn = !TextField.this.cursorOn
+      com.badlogic.gdx.Gdx.graphics.requestRendering()
+    }
+  }
   final val keyRepeatTask: com.badlogic.gdx.scenes.scene2d.ui.TextField#KeyRepeatTask = new KeyRepeatTask()
   var programmaticChangeEvents: scala.Boolean = false
   def this(text: java.lang.String, style: com.badlogic.gdx.scenes.scene2d.ui.TextField.TextFieldStyle) = {
@@ -1063,7 +1072,33 @@ object TextField {
         } else ()
         return false
       })
-      configuration.setTextInputWrapper(new com.badlogic.gdx.input.TextInputWrapper())
+      configuration.setTextInputWrapper(new com.badlogic.gdx.input.TextInputWrapper() {
+        override def getText(): java.lang.String = {
+          return textField.getText()
+        }
+        override def getSelectionStart(): scala.Int = {
+          return textField.getSelectionStart()
+        }
+        override def getSelectionEnd(): scala.Int = {
+          return textField.getCursorPosition()
+        }
+        override def writeResults(text$arg: java.lang.String, selectionStart$arg: scala.Int, selectionEnd$arg: scala.Int): scala.Unit = {
+          var text: java.lang.String = text$arg
+          var selectionStart: scala.Int = selectionStart$arg
+          var selectionEnd: scala.Int = selectionEnd$arg
+          if (textField.preventAutoCorrection) {
+            text = text.trim()
+            selectionStart = java.lang.Math.min(selectionStart, text.length())
+            selectionEnd = java.lang.Math.min(selectionEnd, text.length())
+          } else ()
+          textField.setText(text)
+          if (selectionStart == selectionEnd) {
+            textField.setCursorPosition(selectionEnd)
+          } else {
+            textField.setSelection(selectionStart, selectionEnd)
+          }
+        }
+      })
       com.badlogic.gdx.Gdx.input.openTextInputField(configuration)
     }
   }

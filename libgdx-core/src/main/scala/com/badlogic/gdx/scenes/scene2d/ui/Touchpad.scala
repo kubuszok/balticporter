@@ -23,7 +23,23 @@ class Touchpad(deadzoneRadius$p: scala.Float, style$p: com.badlogic.gdx.scenes.s
   this.knobPosition.set(this.getWidth() / 2.0f, this.getHeight() / 2.0f)
   this.setStyle(style$p)
   this.setSize(this.getPrefWidth(), this.getPrefHeight())
-  this.addListener(new com.badlogic.gdx.scenes.scene2d.InputListener())
+  this.addListener(new com.badlogic.gdx.scenes.scene2d.InputListener() {
+    override def touchDown(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float, pointer: scala.Int, button: scala.Int): scala.Boolean = {
+      if (Touchpad.this.touched) {
+        return false
+      } else ()
+      Touchpad.this.touched = true
+      Touchpad.this.calculatePositionAndValue(x, y, false)
+      return true
+    }
+    override def touchDragged(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float, pointer: scala.Int): scala.Unit = {
+      Touchpad.this.calculatePositionAndValue(x, y, false)
+    }
+    override def touchUp(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float, pointer: scala.Int, button: scala.Int): scala.Unit = {
+      Touchpad.this.touched = false
+      Touchpad.this.calculatePositionAndValue(x, y, Touchpad.this.resetOnTouchUp)
+    }
+  })
   def calculatePositionAndValue(x: scala.Float, y: scala.Float, isTouchUp: scala.Boolean): scala.Unit = {
     val oldPositionX: scala.Float = this.knobPosition.x
     val oldPositionY: scala.Float = this.knobPosition.y

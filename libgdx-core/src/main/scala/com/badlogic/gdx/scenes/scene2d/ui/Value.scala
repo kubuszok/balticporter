@@ -8,29 +8,87 @@ abstract class Value {
 }
 object Value {
   final val zero: com.badlogic.gdx.scenes.scene2d.ui.Value.Fixed = new com.badlogic.gdx.scenes.scene2d.ui.Value.Fixed(0)
-  var minWidth: Value = new Value()
-  var minHeight: Value = new Value()
-  var prefWidth: Value = new Value()
-  var prefHeight: Value = new Value()
-  var maxWidth: Value = new Value()
-  var maxHeight: Value = new Value()
+  var minWidth: Value = new Value() {
+    override def get(context: com.badlogic.gdx.scenes.scene2d.Actor): scala.Float = {
+      if (context.isInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Layout]) {
+        return context.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Layout].getMinWidth()
+      } else ()
+      return if (context == null) 0 else context.getWidth()
+    }
+  }
+  var minHeight: Value = new Value() {
+    override def get(context: com.badlogic.gdx.scenes.scene2d.Actor): scala.Float = {
+      if (context.isInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Layout]) {
+        return context.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Layout].getMinHeight()
+      } else ()
+      return if (context == null) 0 else context.getHeight()
+    }
+  }
+  var prefWidth: Value = new Value() {
+    override def get(context: com.badlogic.gdx.scenes.scene2d.Actor): scala.Float = {
+      if (context.isInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Layout]) {
+        return context.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Layout].getPrefWidth()
+      } else ()
+      return if (context == null) 0 else context.getWidth()
+    }
+  }
+  var prefHeight: Value = new Value() {
+    override def get(context: com.badlogic.gdx.scenes.scene2d.Actor): scala.Float = {
+      if (context.isInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Layout]) {
+        return context.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Layout].getPrefHeight()
+      } else ()
+      return if (context == null) 0 else context.getHeight()
+    }
+  }
+  var maxWidth: Value = new Value() {
+    override def get(context: com.badlogic.gdx.scenes.scene2d.Actor): scala.Float = {
+      if (context.isInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Layout]) {
+        return context.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Layout].getMaxWidth()
+      } else ()
+      return if (context == null) 0 else context.getWidth()
+    }
+  }
+  var maxHeight: Value = new Value() {
+    override def get(context: com.badlogic.gdx.scenes.scene2d.Actor): scala.Float = {
+      if (context.isInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Layout]) {
+        return context.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Layout].getMaxHeight()
+      } else ()
+      return if (context == null) 0 else context.getHeight()
+    }
+  }
   def percentWidth(percent: scala.Float): Value = {
-    return new Value()
+    return new Value() {
+      override def get(actor: com.badlogic.gdx.scenes.scene2d.Actor): scala.Float = {
+        return actor.getWidth() * percent
+      }
+    }
   }
   def percentHeight(percent: scala.Float): Value = {
-    return new Value()
+    return new Value() {
+      override def get(actor: com.badlogic.gdx.scenes.scene2d.Actor): scala.Float = {
+        return actor.getHeight() * percent
+      }
+    }
   }
   def percentWidth(percent: scala.Float, actor: com.badlogic.gdx.scenes.scene2d.Actor): Value = {
     if (actor == null) {
       throw new java.lang.IllegalArgumentException("actor cannot be null.")
     } else ()
-    return new Value()
+    return new Value() {
+      override def get(context: com.badlogic.gdx.scenes.scene2d.Actor): scala.Float = {
+        return actor.getWidth() * percent
+      }
+    }
   }
   def percentHeight(percent: scala.Float, actor: com.badlogic.gdx.scenes.scene2d.Actor): Value = {
     if (actor == null) {
       throw new java.lang.IllegalArgumentException("actor cannot be null.")
     } else ()
-    return new Value()
+    return new Value() {
+      override def get(context: com.badlogic.gdx.scenes.scene2d.Actor): scala.Float = {
+        return actor.getHeight() * percent
+      }
+    }
   }
   class Fixed(value$p: scala.Float) extends Value {
     private var value: scala.Float = 0.0f

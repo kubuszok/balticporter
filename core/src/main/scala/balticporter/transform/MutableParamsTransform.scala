@@ -32,7 +32,17 @@ final class MutableParamsTransform extends Phase:
       written.foreach { p =>
         program.symbolOf(p).foreach { s => argOf(p) = mint(s); nowVar += p }
       }
-    program.units.foreach(_.body.foreach(collectDefs(_, scanDef)))
+    // walk with the STANDARD traversal: it reaches every `DefDef` in the tree, INCLUDING the
+    // methods of an anonymous class (`new ClickListener() { … }`), which a hand-rolled recursion
+    // over class bodies alone does not — and libGDX reassigns parameters inside listener bodies
+    // constantly (`ScrollPane`'s `deltaX = 0`, `Interpolation`'s `a = a * 2`).
+    locally {
+      given Program = program
+      val scan = new Phase:
+        def name = "reassigned-params->var/scan"
+        override def transformDefDef(d: Tree.DefDef)(using Program): Tree.DefDef = { scanDef(d); d }
+      program.units.foreach(u => StandardTraversal.mapClassDef(scan, u))
+    }
     if argOf.isEmpty then return program
 
     // param symbol becomes a mutable local (same name/id → references follow); fresh arg symbol
@@ -42,15 +52,11 @@ final class MutableParamsTransform extends Phase:
     }
     val symbols = SymbolTable(symbols0 ++ minted)
     given Program = new Program(program.units, symbols, program.xref)
-    val units = program.units.map(u => rewriteClass(u))
+    val rewrite = new Phase:
+      def name = "reassigned-params->var/rewrite"
+      override def transformDefDef(d: Tree.DefDef)(using Program): Tree.DefDef = rewriteDef(d)
+    val units = program.units.map(u => StandardTraversal.mapClassDef(rewrite, u))
     new Program(units, symbols, program.xref)
-
-  private def rewriteClass(cd: Tree.ClassDef)(using Program): Tree.ClassDef =
-    cd.copy(body = cd.body.map {
-      case d: Tree.DefDef   => rewriteDef(d)
-      case c: Tree.ClassDef => rewriteClass(c)
-      case other            => other
-    })
 
   private def rewriteDef(d: Tree.DefDef)(using Program): Tree.DefDef =
     val shadows = d.paramss.flatten.filter(v => argOf.contains(v.symbol))
@@ -74,12 +80,6 @@ final class MutableParamsTransform extends Phase:
       case Some(other) => Tree.Block(prelude, other, other.tpe, o)
       case None        => Tree.Block(prelude, Tree.Literal(Constant.UnitC, TypeRepr.NoType, o), TypeRepr.NoType, o)
     d.copy(paramss = paramss2, rhs = Some(body))
-
-  private def collectDefs(s: Statement, f: Tree.DefDef => Unit): Unit = s match
-    case d: Tree.DefDef   => f(d); d.rhs.foreach(collectTermDefs(_, f))
-    case c: Tree.ClassDef => c.body.foreach(collectDefs(_, f))
-    case _                => ()
-  private def collectTermDefs(t: Term, f: Tree.DefDef => Unit): Unit = () // nested local defs: none in our model
 
   /** parameters (from `params`) that are the target of an assignment anywhere in `t`. */
   private def reassignedIn(t: Term, params: Set[SymId]): Set[SymId] =
@@ -112,6 +112,6 @@ final class MutableParamsTransform extends Phase:
     case Tree.ArrayAccess(a, idx, _, _) => List(a, idx)
     case Tree.ArrayLength(a, _, _)      => List(a)
     case Tree.IncDec(tgt, _, _, _, _)   => List(tgt)
-    case Tree.New(_, _, _)              => Nil
+    case _: Tree.New                    => Nil
     case Tree.TypeApply(fun, _, _, _)   => List(fun)
     case _                              => Nil

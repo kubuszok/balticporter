@@ -28,7 +28,59 @@ class SplitPane(firstWidget$p: com.badlogic.gdx.scenes.scene2d.Actor, secondWidg
   this.setSize(this.getPrefWidth(), this.getPrefHeight())
   this.initialize()
   private def initialize(): scala.Unit = {
-    this.addListener(new com.badlogic.gdx.scenes.scene2d.InputListener())
+    this.addListener(new com.badlogic.gdx.scenes.scene2d.InputListener() {
+      var draggingPointer: scala.Int = -1
+      override def touchDown(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float, pointer: scala.Int, button: scala.Int): scala.Boolean = {
+        if (draggingPointer != (-1)) {
+          return false
+        } else ()
+        if ((pointer == 0) && (button != 0)) {
+          return false
+        } else ()
+        if (SplitPane.this.handleBounds.contains(x, y)) {
+          draggingPointer = pointer
+          SplitPane.this.lastPoint.set(x, y)
+          SplitPane.this.handlePosition.set(SplitPane.this.handleBounds.x, SplitPane.this.handleBounds.y)
+          return true
+        } else ()
+        return false
+      }
+      override def touchUp(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float, pointer: scala.Int, button: scala.Int): scala.Unit = {
+        if (pointer == draggingPointer) {
+          draggingPointer = -1
+        } else ()
+      }
+      override def touchDragged(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float, pointer: scala.Int): scala.Unit = {
+        if (pointer != draggingPointer) {
+          return
+        } else ()
+        val handle: com.badlogic.gdx.scenes.scene2d.utils.Drawable = SplitPane.this.style.handle
+        if (!SplitPane.this.vertical) {
+          val delta: scala.Float = x - SplitPane.this.lastPoint.x
+          val availWidth: scala.Float = SplitPane.this.getWidth() - handle.getMinWidth()
+          var dragX: scala.Float = SplitPane.this.handlePosition.x + delta
+          SplitPane.this.handlePosition.x = dragX
+          dragX = java.lang.Math.max(0, dragX)
+          dragX = java.lang.Math.min(availWidth, dragX)
+          SplitPane.this.splitAmount = dragX / availWidth
+          SplitPane.this.lastPoint.set(x, y)
+        } else {
+          val delta: scala.Float = y - SplitPane.this.lastPoint.y
+          val availHeight: scala.Float = SplitPane.this.getHeight() - handle.getMinHeight()
+          var dragY: scala.Float = SplitPane.this.handlePosition.y + delta
+          SplitPane.this.handlePosition.y = dragY
+          dragY = java.lang.Math.max(0, dragY)
+          dragY = java.lang.Math.min(availHeight, dragY)
+          SplitPane.this.splitAmount = 1 - (dragY / availHeight)
+          SplitPane.this.lastPoint.set(x, y)
+        }
+        SplitPane.this.invalidate()
+      }
+      override def mouseMoved(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float): scala.Boolean = {
+        SplitPane.this.cursorOverHandle = SplitPane.this.handleBounds.contains(x, y)
+        return false
+      }
+    })
   }
   def setStyle(style: com.badlogic.gdx.scenes.scene2d.ui.SplitPane.SplitPaneStyle): scala.Unit = {
     this.style = style

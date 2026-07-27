@@ -13,8 +13,16 @@ class DragScrollListener(scroll$p: com.badlogic.gdx.scenes.scene2d.ui.ScrollPane
   var padTop: scala.Float = 0.0f
   var padBottom: scala.Float = 0.0f
   this.scroll$field = scroll$p
-  this.scrollUp = new com.badlogic.gdx.utils.Timer.Task()
-  this.scrollDown = new com.badlogic.gdx.utils.Timer.Task()
+  this.scrollUp = new com.badlogic.gdx.utils.Timer.Task() {
+    override def run(): scala.Unit = {
+      DragScrollListener.this.scroll(scroll$p.getScrollY() - DragScrollListener.this.getScrollPixels())
+    }
+  }
+  this.scrollDown = new com.badlogic.gdx.utils.Timer.Task() {
+    override def run(): scala.Unit = {
+      DragScrollListener.this.scroll(scroll$p.getScrollY() + DragScrollListener.this.getScrollPixels())
+    }
+  }
   def setup(minSpeedPixels: scala.Float, maxSpeedPixels: scala.Float, tickSecs: scala.Float, rampSecs: scala.Float): scala.Unit = {
     this.minSpeed = minSpeedPixels
     this.maxSpeed = maxSpeedPixels

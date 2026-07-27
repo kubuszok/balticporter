@@ -12,9 +12,32 @@ class TooltipManager {
   var edgeDistance: scala.Float = 7
   final val shown: com.badlogic.gdx.utils.Array[com.badlogic.gdx.scenes.scene2d.ui.Tooltip[?]] = new com.badlogic.gdx.utils.Array().asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.scenes.scene2d.ui.Tooltip[?]]]
   var time: scala.Float = this.initialTime
-  final val resetTask: com.badlogic.gdx.utils.Timer.Task = new com.badlogic.gdx.utils.Timer.Task()
+  final val resetTask: com.badlogic.gdx.utils.Timer.Task = new com.badlogic.gdx.utils.Timer.Task() {
+    override def run(): scala.Unit = {
+      TooltipManager.this.time = TooltipManager.this.initialTime
+    }
+  }
   var showTooltip: com.badlogic.gdx.scenes.scene2d.ui.Tooltip[?] = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Tooltip[?]]
-  final val showTask: com.badlogic.gdx.utils.Timer.Task = new com.badlogic.gdx.utils.Timer.Task()
+  final val showTask: com.badlogic.gdx.utils.Timer.Task = new com.badlogic.gdx.utils.Timer.Task() {
+    override def run(): scala.Unit = {
+      if ((TooltipManager.this.showTooltip == null) || (TooltipManager.this.showTooltip.targetActor == null)) {
+        return
+      } else ()
+      val stage: com.badlogic.gdx.scenes.scene2d.Stage = TooltipManager.this.showTooltip.targetActor.getStage()
+      if (stage == null) {
+        return
+      } else ()
+      stage.addActor(TooltipManager.this.showTooltip.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Tooltip[com.badlogic.gdx.scenes.scene2d.Actor]].container)
+      TooltipManager.this.showTooltip.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Tooltip[com.badlogic.gdx.scenes.scene2d.Actor]].container.toFront()
+      TooltipManager.this.shown.add(TooltipManager.this.showTooltip)
+      TooltipManager.this.showTooltip.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Tooltip[com.badlogic.gdx.scenes.scene2d.Actor]].container.clearActions()
+      TooltipManager.this.showAction(TooltipManager.this.showTooltip.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Tooltip[?]])
+      if (!TooltipManager.this.showTooltip.instant) {
+        TooltipManager.this.time = TooltipManager.this.subsequentTime
+        TooltipManager.this.resetTask.cancel()
+      } else ()
+    }
+  }
   def touchDown(tooltip: com.badlogic.gdx.scenes.scene2d.ui.Tooltip[?]): scala.Unit = {
     this.showTask.cancel()
     if (tooltip.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Tooltip[com.badlogic.gdx.scenes.scene2d.Actor]].container.remove()) {

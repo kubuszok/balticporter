@@ -169,7 +169,29 @@ object Pixmap {
   def downloadFromUrl(url: java.lang.String, responseListener: com.badlogic.gdx.graphics.Pixmap.DownloadPixmapResponseListener): scala.Unit = {
     val request: com.badlogic.gdx.Net.HttpRequest = new com.badlogic.gdx.Net.HttpRequest(com.badlogic.gdx.Net.HttpMethods.GET)
     request.setUrl(url)
-    com.badlogic.gdx.Gdx.net.sendHttpRequest(request, new com.badlogic.gdx.Net.HttpResponseListener())
+    com.badlogic.gdx.Gdx.net.sendHttpRequest(request, new com.badlogic.gdx.Net.HttpResponseListener() {
+      override def handleHttpResponse(httpResponse: com.badlogic.gdx.Net.HttpResponse): scala.Unit = {
+        val result: scala.Array[scala.Byte] = httpResponse.getResult()
+        com.badlogic.gdx.Gdx.app.postRunnable(new java.lang.Runnable() {
+          override def run(): scala.Unit = {
+            try {
+              val pixmap: Pixmap = new Pixmap(result, 0, result.length)
+              responseListener.downloadComplete(pixmap)
+            } catch {
+              case t: java.lang.Throwable => {
+                this.failed(t)
+              }
+            }
+          }
+        })
+      }
+      override def failed(t: java.lang.Throwable): scala.Unit = {
+        responseListener.downloadFailed(t)
+      }
+      override def cancelled(): scala.Unit = {
+        ()
+      }
+    })
   }
   sealed abstract class Format {
     def name(): java.lang.String = this.toString()

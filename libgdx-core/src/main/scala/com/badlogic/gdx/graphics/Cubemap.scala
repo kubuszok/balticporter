@@ -113,7 +113,11 @@ object Cubemap {
           params.wrapU = cubemap.getUWrap()
           params.wrapV = cubemap.getVWrap()
           params.cubemap = cubemap
-          params.loadedCallback = new com.badlogic.gdx.assets.AssetLoaderParameters.LoadedCallback()
+          params.loadedCallback = new com.badlogic.gdx.assets.AssetLoaderParameters.LoadedCallback() {
+            override def finishedLoading(assetManager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, `type`: java.lang.Class[?]): scala.Unit = {
+              assetManager.setReferenceCount(fileName, refCount)
+            }
+          }
           Cubemap.assetManager.unload(fileName)
           cubemap.glHandle = com.badlogic.gdx.Gdx.gl.glGenTexture()
           Cubemap.assetManager.load(fileName, classOf[Cubemap], params)

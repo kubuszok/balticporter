@@ -21,14 +21,163 @@ class Window extends com.badlogic.gdx.scenes.scene2d.ui.Table with com.badlogic.
     this.setClip(true)
     this.titleLabel = this.newLabel(title, new com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle(style.titleFont, style.titleFontColor))
     this.titleLabel.setEllipsis(true)
-    this.titleTable = new com.badlogic.gdx.scenes.scene2d.ui.Table()
+    this.titleTable = new com.badlogic.gdx.scenes.scene2d.ui.Table() {
+      override def draw(batch: com.badlogic.gdx.graphics.g2d.Batch, parentAlpha: scala.Float): scala.Unit = {
+        if (Window.this.drawTitleTable) {
+          super.draw(batch, parentAlpha)
+        } else ()
+      }
+    }
     this.titleTable.add(this.titleLabel).growX().minWidth(0)
     this.addActor(this.titleTable)
     this.setStyle(style)
     this.setWidth(150)
     this.setHeight(150)
-    this.addCaptureListener(new com.badlogic.gdx.scenes.scene2d.InputListener())
-    this.addListener(new com.badlogic.gdx.scenes.scene2d.InputListener())
+    this.addCaptureListener(new com.badlogic.gdx.scenes.scene2d.InputListener() {
+      override def touchDown(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float, pointer: scala.Int, button: scala.Int): scala.Boolean = {
+        Window.this.toFront()
+        return false
+      }
+    })
+    this.addListener(new com.badlogic.gdx.scenes.scene2d.InputListener() {
+      var startX: scala.Float = 0.0f
+      var startY: scala.Float = 0.0f
+      var lastX: scala.Float = 0.0f
+      var lastY: scala.Float = 0.0f
+      private def updateEdge(x: scala.Float, y: scala.Float): scala.Unit = {
+        var border: scala.Float = Window.this.resizeBorder / 2.0f
+        val width: scala.Float = Window.this.getWidth()
+        val height: scala.Float = Window.this.getHeight()
+        val padTop: scala.Float = Window.this.getPadTop()
+        val padLeft: scala.Float = Window.this.getPadLeft()
+        val padBottom: scala.Float = Window.this.getPadBottom()
+        val padRight: scala.Float = Window.this.getPadRight()
+        val left: scala.Float = padLeft
+        val right: scala.Float = width - padRight
+        val bottom: scala.Float = padBottom
+        Window.this.edge = 0
+        if (((Window.this.isResizable$field && (x >= (left - border))) && (x <= (right + border))) && (y >= (bottom - border))) {
+          if (x < (left + border)) {
+            Window.this.edge = Window.this.edge | com.badlogic.gdx.utils.Align.left
+          } else ()
+          if (x > (right - border)) {
+            Window.this.edge = Window.this.edge | com.badlogic.gdx.utils.Align.right
+          } else ()
+          if (y < (bottom + border)) {
+            Window.this.edge = Window.this.edge | com.badlogic.gdx.utils.Align.bottom
+          } else ()
+          if (Window.this.edge != 0) {
+            border = border + 25
+          } else ()
+          if (x < (left + border)) {
+            Window.this.edge = Window.this.edge | com.badlogic.gdx.utils.Align.left
+          } else ()
+          if (x > (right - border)) {
+            Window.this.edge = Window.this.edge | com.badlogic.gdx.utils.Align.right
+          } else ()
+          if (y < (bottom + border)) {
+            Window.this.edge = Window.this.edge | com.badlogic.gdx.utils.Align.bottom
+          } else ()
+        } else ()
+        if (((((Window.this.isMovable$field && (Window.this.edge == 0)) && (y <= height)) && (y >= (height - padTop))) && (x >= left)) && (x <= right)) {
+          Window.this.edge = Window.MOVE
+        } else ()
+      }
+      override def touchDown(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float, pointer: scala.Int, button: scala.Int): scala.Boolean = {
+        if (button == 0) {
+          updateEdge(x, y)
+          Window.this.dragging = Window.this.edge != 0
+          startX = x
+          startY = y
+          lastX = x - Window.this.getWidth()
+          lastY = y - Window.this.getHeight()
+        } else ()
+        return (Window.this.edge != 0) || Window.this.isModal$field
+      }
+      override def touchUp(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float, pointer: scala.Int, button: scala.Int): scala.Unit = {
+        Window.this.dragging = false
+      }
+      override def touchDragged(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float, pointer: scala.Int): scala.Unit = {
+        if (!Window.this.dragging) {
+          return
+        } else ()
+        var width: scala.Float = Window.this.getWidth()
+        var height: scala.Float = Window.this.getHeight()
+        var windowX: scala.Float = Window.this.getX()
+        var windowY: scala.Float = Window.this.getY()
+        val minWidth: scala.Float = Window.this.getMinWidth()
+        val maxWidth: scala.Float = Window.this.getMaxWidth()
+        val minHeight: scala.Float = Window.this.getMinHeight()
+        val maxHeight: scala.Float = Window.this.getMaxHeight()
+        val stage: com.badlogic.gdx.scenes.scene2d.Stage = Window.this.getStage()
+        val clampPosition: scala.Boolean = (Window.this.keepWithinStage$field && (stage != null)) && (Window.this.getParent() == stage.getRoot())
+        if ((Window.this.edge & Window.MOVE) != 0) {
+          var amountX: scala.Float = x - startX
+          var amountY: scala.Float = y - startY
+          windowX = windowX + amountX
+          windowY = windowY + amountY
+        } else ()
+        if ((Window.this.edge & com.badlogic.gdx.utils.Align.left) != 0) {
+          var amountX: scala.Float = x - startX
+          if ((width - amountX) < minWidth) {
+            amountX = -(minWidth - width)
+          } else ()
+          if (clampPosition && ((windowX + amountX) < 0)) {
+            amountX = -windowX
+          } else ()
+          width = width - amountX
+          windowX = windowX + amountX
+        } else ()
+        if ((Window.this.edge & com.badlogic.gdx.utils.Align.bottom) != 0) {
+          var amountY: scala.Float = y - startY
+          if ((height - amountY) < minHeight) {
+            amountY = -(minHeight - height)
+          } else ()
+          if (clampPosition && ((windowY + amountY) < 0)) {
+            amountY = -windowY
+          } else ()
+          height = height - amountY
+          windowY = windowY + amountY
+        } else ()
+        if ((Window.this.edge & com.badlogic.gdx.utils.Align.right) != 0) {
+          var amountX: scala.Float = (x - lastX) - width
+          if ((width + amountX) < minWidth) {
+            amountX = minWidth - width
+          } else ()
+          if (clampPosition && (((windowX + width) + amountX) > stage.getWidth())) {
+            amountX = (stage.getWidth() - windowX) - width
+          } else ()
+          width = width + amountX
+        } else ()
+        if ((Window.this.edge & com.badlogic.gdx.utils.Align.top) != 0) {
+          var amountY: scala.Float = (y - lastY) - height
+          if ((height + amountY) < minHeight) {
+            amountY = minHeight - height
+          } else ()
+          if (clampPosition && (((windowY + height) + amountY) > stage.getHeight())) {
+            amountY = (stage.getHeight() - windowY) - height
+          } else ()
+          height = height + amountY
+        } else ()
+        Window.this.setBounds(java.lang.Math.round(windowX), java.lang.Math.round(windowY), java.lang.Math.round(width), java.lang.Math.round(height))
+      }
+      override def mouseMoved(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float): scala.Boolean = {
+        updateEdge(x, y)
+        return Window.this.isModal$field
+      }
+      def scrolled(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float, amount: scala.Int): scala.Boolean = {
+        return Window.this.isModal$field
+      }
+      override def keyDown(event: com.badlogic.gdx.scenes.scene2d.InputEvent, keycode: scala.Int): scala.Boolean = {
+        return Window.this.isModal$field
+      }
+      override def keyUp(event: com.badlogic.gdx.scenes.scene2d.InputEvent, keycode: scala.Int): scala.Boolean = {
+        return Window.this.isModal$field
+      }
+      override def keyTyped(event: com.badlogic.gdx.scenes.scene2d.InputEvent, character: scala.Char): scala.Boolean = {
+        return Window.this.isModal$field
+      }
+    })
   }
   def this(title: java.lang.String, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin) = {
     this(title, skin.get(classOf[com.badlogic.gdx.scenes.scene2d.ui.Window.WindowStyle]))

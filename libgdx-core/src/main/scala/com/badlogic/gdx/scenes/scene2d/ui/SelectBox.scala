@@ -10,7 +10,14 @@ class SelectBox[T](style$p: com.badlogic.gdx.scenes.scene2d.ui.SelectBox.SelectB
   var disabled: scala.Boolean = false
   private var alignment: scala.Int = com.badlogic.gdx.utils.Align.left
   var selectedPrefWidth: scala.Boolean = false
-  final val selection: com.badlogic.gdx.scenes.scene2d.utils.ArraySelection[T] = new com.badlogic.gdx.scenes.scene2d.utils.ArraySelection[T](this.items).asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.ArraySelection[T]]
+  final val selection: com.badlogic.gdx.scenes.scene2d.utils.ArraySelection[T] = new com.badlogic.gdx.scenes.scene2d.utils.ArraySelection[T](this.items) {
+    override def fireChangeEvent(): scala.Boolean = {
+      if (SelectBox.this.selectedPrefWidth) {
+        invalidateHierarchy()
+      } else ()
+      return super.fireChangeEvent()
+    }
+  }.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.ArraySelection[T]]
   def this(skin: com.badlogic.gdx.scenes.scene2d.ui.Skin) = {
     this(skin.get(classOf[com.badlogic.gdx.scenes.scene2d.ui.SelectBox.SelectBoxStyle]))
   }
@@ -23,7 +30,22 @@ class SelectBox[T](style$p: com.badlogic.gdx.scenes.scene2d.ui.SelectBox.SelectB
   this.selection.setRequired(true)
   this.scrollPane = this.newScrollPane()
   this.addListener({
-    this.clickListener = new com.badlogic.gdx.scenes.scene2d.utils.ClickListener()
+    this.clickListener = new com.badlogic.gdx.scenes.scene2d.utils.ClickListener() {
+      override def touchDown(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float, pointer: scala.Int, button: scala.Int): scala.Boolean = {
+        if ((pointer == 0) && (button != 0)) {
+          return false
+        } else ()
+        if (isDisabled()) {
+          return false
+        } else ()
+        if (SelectBox.this.scrollPane.hasParent()) {
+          hideScrollPane()
+        } else {
+          showScrollPane()
+        }
+        return true
+      }
+    }
     this.clickListener
   })
   def newScrollPane(): com.badlogic.gdx.scenes.scene2d.ui.SelectBox.SelectBoxScrollPane[T] = {
@@ -322,11 +344,66 @@ object SelectBox {
     this.list.setTouchable(com.badlogic.gdx.scenes.scene2d.Touchable.disabled)
     this.list.setTypeToSelect(true)
     this.setActor(this.list)
-    this.list.addListener(new com.badlogic.gdx.scenes.scene2d.utils.ClickListener())
-    this.addListener(new com.badlogic.gdx.scenes.scene2d.InputListener())
-    this.hideListener = new com.badlogic.gdx.scenes.scene2d.InputListener()
+    this.list.addListener(new com.badlogic.gdx.scenes.scene2d.utils.ClickListener() {
+      override def clicked(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float): scala.Unit = {
+        val selected: T = SelectBoxScrollPane.this.list.getSelected().asInstanceOf[T]
+        if (selected != null) {
+          selectBox$p.selection.items().clear(51)
+        } else ()
+        selectBox$p.selection.choose(selected)
+        hide()
+      }
+      override def mouseMoved(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float): scala.Boolean = {
+        val index: scala.Int = SelectBoxScrollPane.this.list.getItemIndexAt(y)
+        if (index != (-1)) {
+          SelectBoxScrollPane.this.list.setSelectedIndex(index)
+        } else ()
+        return true
+      }
+    })
+    this.addListener(new com.badlogic.gdx.scenes.scene2d.InputListener() {
+      override def exit(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float, pointer: scala.Int, toActor: com.badlogic.gdx.scenes.scene2d.Actor): scala.Unit = {
+        if ((toActor == null) || (!isAscendantOf(toActor))) {
+          val selected: T = selectBox$p.getSelected().asInstanceOf[T]
+          if (selected != null) {
+            SelectBoxScrollPane.this.list.selection.set(selected)
+          } else ()
+        } else ()
+      }
+    })
+    this.hideListener = new com.badlogic.gdx.scenes.scene2d.InputListener() {
+      override def touchDown(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float, pointer: scala.Int, button: scala.Int): scala.Boolean = {
+        val target: com.badlogic.gdx.scenes.scene2d.Actor = event.getTarget()
+        if (isAscendantOf(target)) {
+          return false
+        } else ()
+        SelectBoxScrollPane.this.list.selection.set(selectBox$p.getSelected())
+        hide()
+        return false
+      }
+      override def keyDown(event: com.badlogic.gdx.scenes.scene2d.InputEvent, keycode: scala.Int): scala.Boolean = {
+        keycode match {
+          case com.badlogic.gdx.Input.Keys.NUMPAD_ENTER | com.badlogic.gdx.Input.Keys.ENTER => {
+            selectBox$p.selection.choose(SelectBoxScrollPane.this.list.getSelected())
+            hide()
+            event.stop()
+            return true
+          }
+          case com.badlogic.gdx.Input.Keys.ESCAPE => {
+            hide()
+            event.stop()
+            return true
+          }
+        }
+        return false
+      }
+    }
     def newList(): com.badlogic.gdx.scenes.scene2d.ui.List[T] = {
-      return new com.badlogic.gdx.scenes.scene2d.ui.List[T](this.selectBox.style.listStyle)
+      return new com.badlogic.gdx.scenes.scene2d.ui.List[T](this.selectBox.style.listStyle) {
+        override def toString(obj: T): java.lang.String = {
+          return SelectBoxScrollPane.this.selectBox.toString(obj)
+        }
+      }
     }
     def show(stage: com.badlogic.gdx.scenes.scene2d.Stage): scala.Unit = {
       if (this.list.isTouchable()) {

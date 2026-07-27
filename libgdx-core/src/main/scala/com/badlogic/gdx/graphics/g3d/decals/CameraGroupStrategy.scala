@@ -1,7 +1,11 @@
 package com.badlogic.gdx.graphics.g3d.decals
 
 class CameraGroupStrategy extends com.badlogic.gdx.graphics.g3d.decals.GroupStrategy with com.badlogic.gdx.utils.Disposable {
-  var arrayPool: com.badlogic.gdx.utils.Pool[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.decals.Decal]] = new com.badlogic.gdx.utils.Pool[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.decals.Decal]](16)
+  var arrayPool: com.badlogic.gdx.utils.Pool[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.decals.Decal]] = new com.badlogic.gdx.utils.Pool[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.decals.Decal]](16) {
+    override def newObject(): com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.decals.Decal] = {
+      return new com.badlogic.gdx.utils.Array().asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.decals.Decal]]
+    }
+  }
   var usedArrays: com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.decals.Decal]] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.decals.Decal]]()
   var materialGroups: com.badlogic.gdx.utils.ObjectMap[com.badlogic.gdx.graphics.g3d.decals.DecalMaterial, com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.decals.Decal]] = new com.badlogic.gdx.utils.ObjectMap[com.badlogic.gdx.graphics.g3d.decals.DecalMaterial, com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.decals.Decal]]()
   var camera: com.badlogic.gdx.graphics.Camera = null.asInstanceOf[com.badlogic.gdx.graphics.Camera]
@@ -10,7 +14,13 @@ class CameraGroupStrategy extends com.badlogic.gdx.graphics.g3d.decals.GroupStra
   def this(camera: com.badlogic.gdx.graphics.Camera) = {
     this()
     this.camera = camera
-    this.cameraSorter = new java.util.Comparator[com.badlogic.gdx.graphics.g3d.decals.Decal]()
+    this.cameraSorter = new java.util.Comparator[com.badlogic.gdx.graphics.g3d.decals.Decal]() {
+      override def compare(o1: com.badlogic.gdx.graphics.g3d.decals.Decal, o2: com.badlogic.gdx.graphics.g3d.decals.Decal): scala.Int = {
+        val dist1: scala.Float = CameraGroupStrategy.this.camera.position.dst(o1.position)
+        val dist2: scala.Float = CameraGroupStrategy.this.camera.position.dst(o2.position)
+        return java.lang.Math.signum(dist2 - dist1).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
+      }
+    }
     this.createDefaultShader()
   }
   def this(camera: com.badlogic.gdx.graphics.Camera, sorter: java.util.Comparator[com.badlogic.gdx.graphics.g3d.decals.Decal]) = {

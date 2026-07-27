@@ -375,13 +375,156 @@ class Skin extends com.badlogic.gdx.utils.Disposable {
   }
   def getJsonLoader(skinFile: com.badlogic.gdx.files.FileHandle): com.badlogic.gdx.utils.Json = {
     val skin: Skin = this
-    val json: com.badlogic.gdx.utils.Json = new com.badlogic.gdx.utils.Json()
+    val json: com.badlogic.gdx.utils.Json = new com.badlogic.gdx.utils.Json() {
+      private final val parentFieldName: java.lang.String = "parent"
+      override def readValue[T](`type`: java.lang.Class[T], elementType: java.lang.Class[T], jsonData: com.badlogic.gdx.utils.JsonValue): T = {
+        if (((jsonData != null) && jsonData.isString()) && (!classOf[java.lang.CharSequence].isAssignableFrom(`type`))) {
+          return Skin.this.get(jsonData.asString(), `type`).asInstanceOf[T]
+        } else ()
+        return super.readValue(`type`, elementType.asInstanceOf[java.lang.Class[T]], jsonData).asInstanceOf[T]
+      }
+      override def ignoreUnknownField(`type`: java.lang.Class[?], fieldName: java.lang.String): scala.Boolean = {
+        return fieldName.equals(parentFieldName)
+      }
+      override def readFields(`object`: java.lang.Object, jsonMap: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
+        if (jsonMap.has(parentFieldName)) {
+          val parentName: java.lang.String = readValue(parentFieldName, classOf[java.lang.String], jsonMap)
+          var parentType: java.lang.Class[?] = `object`.getClass().asInstanceOf[java.lang.Class[?]]
+          while (true) {
+            try {
+              copyFields(Skin.this.get(parentName, parentType), `object`)
+              /* break */ ()
+            } catch {
+              case ex: com.badlogic.gdx.utils.GdxRuntimeException => {
+                parentType = parentType.getSuperclass().asInstanceOf[java.lang.Class[?]]
+                if (parentType == classOf[java.lang.Object]) {
+                  val se: com.badlogic.gdx.utils.SerializationException = new com.badlogic.gdx.utils.SerializationException("Unable to find parent resource with name: " + parentName)
+                  se.addTrace(jsonMap.child$field.trace())
+                  throw se
+                } else ()
+              }
+            }
+          }
+        } else ()
+        super.readFields(`object`, jsonMap)
+      }
+    }
     json.setTypeName(null)
     json.setUsePrototypes(false)
-    json.setSerializer(classOf[Skin], new com.badlogic.gdx.utils.Json.ReadOnlySerializer[Skin]())
-    json.setSerializer(classOf[com.badlogic.gdx.graphics.g2d.BitmapFont], new com.badlogic.gdx.utils.Json.ReadOnlySerializer[com.badlogic.gdx.graphics.g2d.BitmapFont]())
-    json.setSerializer(classOf[com.badlogic.gdx.graphics.Color], new com.badlogic.gdx.utils.Json.ReadOnlySerializer[com.badlogic.gdx.graphics.Color]())
-    json.setSerializer(classOf[com.badlogic.gdx.scenes.scene2d.ui.Skin.TintedDrawable], new com.badlogic.gdx.utils.Json.ReadOnlySerializer())
+    json.setSerializer(classOf[Skin], new com.badlogic.gdx.utils.Json.ReadOnlySerializer[Skin]() {
+      override def read(json: com.badlogic.gdx.utils.Json, typeToValueMap: com.badlogic.gdx.utils.JsonValue, ignored: java.lang.Class[?]): Skin = {
+        { var valueMap: com.badlogic.gdx.utils.JsonValue = typeToValueMap.child$field; while (valueMap != null) { {
+          try {
+            var `type`: java.lang.Class[?] = json.getClass(valueMap.name()).asInstanceOf[java.lang.Class[?]]
+            if (`type` == null) {
+              `type` = com.badlogic.gdx.graphics.g3d.particles.AssetTypeRegistry.classFor(valueMap.name()).asInstanceOf[java.lang.Class[?]]
+            } else ()
+            readNamedObjects(json, `type`.asInstanceOf[java.lang.Class[?]], valueMap)
+          } catch {
+            case ex: com.badlogic.gdx.utils.reflect.ReflectionException => {
+              throw new com.badlogic.gdx.utils.SerializationException(ex)
+            }
+          }
+        }; valueMap = valueMap.next$field } }
+        return skin
+      }
+      private def readNamedObjects(json: com.badlogic.gdx.utils.Json, `type`: java.lang.Class[?], valueMap: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
+        val addType: java.lang.Class[?] = if (`type` == classOf[com.badlogic.gdx.scenes.scene2d.ui.Skin.TintedDrawable]) classOf[com.badlogic.gdx.scenes.scene2d.utils.Drawable] else `type`;
+        { var valueEntry: com.badlogic.gdx.utils.JsonValue = valueMap.child$field; while (valueEntry != null) { {
+          val `object`: java.lang.Object = json.readValue(`type`, valueEntry)
+          if (`object` == null) {
+            /* continue */ ()
+          } else ()
+          try {
+            Skin.this.add(valueEntry.name$field, `object`, addType.asInstanceOf[java.lang.Class[?]])
+            if ((addType != classOf[com.badlogic.gdx.scenes.scene2d.utils.Drawable]) && classOf[com.badlogic.gdx.scenes.scene2d.utils.Drawable].isAssignableFrom(addType.asInstanceOf[java.lang.Class[?]])) {
+              Skin.this.add(valueEntry.name$field, `object`, classOf[com.badlogic.gdx.scenes.scene2d.utils.Drawable])
+            } else ()
+          } catch {
+            case ex: java.lang.Exception => {
+              throw new com.badlogic.gdx.utils.SerializationException((("Error reading " + `type`.asInstanceOf[java.lang.Class[?]].getSimpleName()) + ": ") + valueEntry.name$field, ex)
+            }
+          }
+        }; valueEntry = valueEntry.next$field } }
+      }
+    })
+    json.setSerializer(classOf[com.badlogic.gdx.graphics.g2d.BitmapFont], new com.badlogic.gdx.utils.Json.ReadOnlySerializer[com.badlogic.gdx.graphics.g2d.BitmapFont]() {
+      override def read(json: com.badlogic.gdx.utils.Json, jsonData: com.badlogic.gdx.utils.JsonValue, `type`: java.lang.Class[?]): com.badlogic.gdx.graphics.g2d.BitmapFont = {
+        val path: java.lang.String = json.readValue("file", classOf[java.lang.String], jsonData)
+        val scaledSize: scala.Float = json.readValue("scaledSize", classOf[scala.Float], (-1.0f).asInstanceOf[java.lang.Float], jsonData)
+        val flip: java.lang.Boolean = json.readValue[java.lang.Boolean]("flip", classOf[java.lang.Boolean], false.asInstanceOf[java.lang.Boolean], jsonData)
+        var markupEnabled: java.lang.Boolean = json.readValue[java.lang.Boolean]("markupEnabled", classOf[java.lang.Boolean], false.asInstanceOf[java.lang.Boolean], jsonData)
+        val useIntegerPositions: java.lang.Boolean = json.readValue[java.lang.Boolean]("useIntegerPositions", classOf[java.lang.Boolean], true.asInstanceOf[java.lang.Boolean], jsonData)
+        var fontFile: com.badlogic.gdx.files.FileHandle = skinFile.parent().child(path)
+        if (!fontFile.exists()) {
+          fontFile = com.badlogic.gdx.Gdx.files.internal(path)
+        } else ()
+        if (!fontFile.exists()) {
+          throw new com.badlogic.gdx.utils.SerializationException("Font file not found: " + fontFile)
+        } else ()
+        val regionName: java.lang.String = fontFile.nameWithoutExtension()
+        try {
+          var font: com.badlogic.gdx.graphics.g2d.BitmapFont = null.asInstanceOf[com.badlogic.gdx.graphics.g2d.BitmapFont]
+          val regions: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.TextureRegion] = skin.getRegions(regionName)
+          if (regions != null) {
+            font = new com.badlogic.gdx.graphics.g2d.BitmapFont(new com.badlogic.gdx.graphics.g2d.BitmapFont.BitmapFontData(fontFile, flip), regions, true)
+          } else {
+            val region: com.badlogic.gdx.graphics.g2d.TextureRegion = skin.optional(regionName, classOf[com.badlogic.gdx.graphics.g2d.TextureRegion])
+            if (region != null) {
+              font = new com.badlogic.gdx.graphics.g2d.BitmapFont(fontFile, region, flip)
+            } else {
+              val imageFile: com.badlogic.gdx.files.FileHandle = fontFile.parent().child(regionName + ".png")
+              if (imageFile.exists()) {
+                font = new com.badlogic.gdx.graphics.g2d.BitmapFont(fontFile, imageFile, flip)
+              } else {
+                font = new com.badlogic.gdx.graphics.g2d.BitmapFont(fontFile, flip)
+              }
+            }
+          }
+          font.getData().markupEnabled = markupEnabled
+          font.setUseIntegerPositions(useIntegerPositions)
+          if (scaledSize != (-1)) {
+            font.getData().setScale(scaledSize / font.getCapHeight())
+          } else ()
+          return font
+        } catch {
+          case ex: java.lang.RuntimeException => {
+            throw new com.badlogic.gdx.utils.SerializationException("Error loading bitmap font: " + fontFile, ex)
+          }
+        }
+      }
+    })
+    json.setSerializer(classOf[com.badlogic.gdx.graphics.Color], new com.badlogic.gdx.utils.Json.ReadOnlySerializer[com.badlogic.gdx.graphics.Color]() {
+      override def read(json: com.badlogic.gdx.utils.Json, jsonData: com.badlogic.gdx.utils.JsonValue, `type`: java.lang.Class[?]): com.badlogic.gdx.graphics.Color = {
+        if (jsonData.isString()) {
+          return Skin.this.get(jsonData.asString(), classOf[com.badlogic.gdx.graphics.Color])
+        } else ()
+        val hex: java.lang.String = json.readValue("hex", classOf[java.lang.String], null.asInstanceOf[java.lang.String], jsonData)
+        if (hex != null) {
+          return com.badlogic.gdx.graphics.Color.valueOf(hex)
+        } else ()
+        val r: scala.Float = json.readValue("r", classOf[scala.Float], 0.0f.asInstanceOf[java.lang.Float], jsonData)
+        val g: scala.Float = json.readValue("g", classOf[scala.Float], 0.0f.asInstanceOf[java.lang.Float], jsonData)
+        val b: scala.Float = json.readValue("b", classOf[scala.Float], 0.0f.asInstanceOf[java.lang.Float], jsonData)
+        val a: scala.Float = json.readValue("a", classOf[scala.Float], 1.0f.asInstanceOf[java.lang.Float], jsonData)
+        return new com.badlogic.gdx.graphics.Color(r, g, b, a)
+      }
+    })
+    json.setSerializer(classOf[com.badlogic.gdx.scenes.scene2d.ui.Skin.TintedDrawable], new com.badlogic.gdx.utils.Json.ReadOnlySerializer() {
+      override def read(json: com.badlogic.gdx.utils.Json, jsonData: com.badlogic.gdx.utils.JsonValue, `type`: java.lang.Class[?]): java.lang.Object = {
+        val name: java.lang.String = json.readValue("name", classOf[java.lang.String], jsonData)
+        val color: com.badlogic.gdx.graphics.Color = json.readValue("color", classOf[com.badlogic.gdx.graphics.Color], jsonData)
+        if (color == null) {
+          throw new com.badlogic.gdx.utils.SerializationException("TintedDrawable missing color: " + jsonData)
+        } else ()
+        val drawable: com.badlogic.gdx.scenes.scene2d.utils.Drawable = Skin.this.newDrawable(name, color)
+        if (drawable.isInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.BaseDrawable]) {
+          val named: com.badlogic.gdx.scenes.scene2d.utils.BaseDrawable = drawable.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.BaseDrawable]
+          named.setName(((((jsonData.name$field + " (") + name) + ", ") + color) + ")")
+        } else ()
+        return drawable
+      }
+    })
     for (entry <- this.jsonClassTags) {
       json.addClassTag(entry.key, entry.value.asInstanceOf[java.lang.Class[?]])
     }

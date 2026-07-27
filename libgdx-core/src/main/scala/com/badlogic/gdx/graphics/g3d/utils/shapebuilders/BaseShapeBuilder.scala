@@ -25,8 +25,16 @@ object BaseShapeBuilder {
   final val vertTmp7: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo = new com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo()
   final val vertTmp8: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo = new com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo()
   final val matTmp1: com.badlogic.gdx.math.Matrix4 = new com.badlogic.gdx.math.Matrix4()
-  private final val vectorPool: com.badlogic.gdx.utils.FlushablePool[com.badlogic.gdx.math.Vector3] = new com.badlogic.gdx.utils.FlushablePool[com.badlogic.gdx.math.Vector3]()
-  private final val matrices4Pool: com.badlogic.gdx.utils.FlushablePool[com.badlogic.gdx.math.Matrix4] = new com.badlogic.gdx.utils.FlushablePool[com.badlogic.gdx.math.Matrix4]()
+  private final val vectorPool: com.badlogic.gdx.utils.FlushablePool[com.badlogic.gdx.math.Vector3] = new com.badlogic.gdx.utils.FlushablePool[com.badlogic.gdx.math.Vector3]() {
+    override def newObject(): com.badlogic.gdx.math.Vector3 = {
+      return new com.badlogic.gdx.math.Vector3()
+    }
+  }
+  private final val matrices4Pool: com.badlogic.gdx.utils.FlushablePool[com.badlogic.gdx.math.Matrix4] = new com.badlogic.gdx.utils.FlushablePool[com.badlogic.gdx.math.Matrix4]() {
+    override def newObject(): com.badlogic.gdx.math.Matrix4 = {
+      return new com.badlogic.gdx.math.Matrix4()
+    }
+  }
   def obtainV3(): com.badlogic.gdx.math.Vector3 = {
     return BaseShapeBuilder.vectorPool.obtain()
   }

@@ -1227,13 +1227,37 @@ object Table {
   var debugTableColor: com.badlogic.gdx.graphics.Color = new com.badlogic.gdx.graphics.Color(0, 0, 1, 1)
   var debugCellColor: com.badlogic.gdx.graphics.Color = new com.badlogic.gdx.graphics.Color(1, 0, 0, 1)
   var debugActorColor: com.badlogic.gdx.graphics.Color = new com.badlogic.gdx.graphics.Color(0, 1, 0, 1)
-  final val cellPool: com.badlogic.gdx.utils.Pool[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]] = new com.badlogic.gdx.utils.Pool[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]]().asInstanceOf[com.badlogic.gdx.utils.Pool[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]]]
+  final val cellPool: com.badlogic.gdx.utils.Pool[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]] = new com.badlogic.gdx.utils.Pool[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]]() {
+    override def newObject(): com.badlogic.gdx.scenes.scene2d.ui.Cell[?] = {
+      return new com.badlogic.gdx.scenes.scene2d.ui.Cell().asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]]
+    }
+  }.asInstanceOf[com.badlogic.gdx.utils.Pool[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]]]
   private var columnWeightedWidth: scala.Array[scala.Float] = null.asInstanceOf[scala.Array[scala.Float]]
   private var rowWeightedHeight: scala.Array[scala.Float] = null.asInstanceOf[scala.Array[scala.Float]]
-  var backgroundTop: com.badlogic.gdx.scenes.scene2d.ui.Value = new com.badlogic.gdx.scenes.scene2d.ui.Value()
-  var backgroundLeft: com.badlogic.gdx.scenes.scene2d.ui.Value = new com.badlogic.gdx.scenes.scene2d.ui.Value()
-  var backgroundBottom: com.badlogic.gdx.scenes.scene2d.ui.Value = new com.badlogic.gdx.scenes.scene2d.ui.Value()
-  var backgroundRight: com.badlogic.gdx.scenes.scene2d.ui.Value = new com.badlogic.gdx.scenes.scene2d.ui.Value()
+  var backgroundTop: com.badlogic.gdx.scenes.scene2d.ui.Value = new com.badlogic.gdx.scenes.scene2d.ui.Value() {
+    override def get(context: com.badlogic.gdx.scenes.scene2d.Actor): scala.Float = {
+      val background: com.badlogic.gdx.scenes.scene2d.utils.Drawable = context.asInstanceOf[Table].background$field
+      return if (background == null) 0 else background.getTopHeight()
+    }
+  }
+  var backgroundLeft: com.badlogic.gdx.scenes.scene2d.ui.Value = new com.badlogic.gdx.scenes.scene2d.ui.Value() {
+    override def get(context: com.badlogic.gdx.scenes.scene2d.Actor): scala.Float = {
+      val background: com.badlogic.gdx.scenes.scene2d.utils.Drawable = context.asInstanceOf[Table].background$field
+      return if (background == null) 0 else background.getLeftWidth()
+    }
+  }
+  var backgroundBottom: com.badlogic.gdx.scenes.scene2d.ui.Value = new com.badlogic.gdx.scenes.scene2d.ui.Value() {
+    override def get(context: com.badlogic.gdx.scenes.scene2d.Actor): scala.Float = {
+      val background: com.badlogic.gdx.scenes.scene2d.utils.Drawable = context.asInstanceOf[Table].background$field
+      return if (background == null) 0 else background.getBottomHeight()
+    }
+  }
+  var backgroundRight: com.badlogic.gdx.scenes.scene2d.ui.Value = new com.badlogic.gdx.scenes.scene2d.ui.Value() {
+    override def get(context: com.badlogic.gdx.scenes.scene2d.Actor): scala.Float = {
+      val background: com.badlogic.gdx.scenes.scene2d.utils.Drawable = context.asInstanceOf[Table].background$field
+      return if (background == null) 0 else background.getRightWidth()
+    }
+  }
   class DebugRect extends com.badlogic.gdx.math.Rectangle {
     var color: com.badlogic.gdx.graphics.Color = null.asInstanceOf[com.badlogic.gdx.graphics.Color]
   }

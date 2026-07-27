@@ -1,7 +1,11 @@
 package com.badlogic.gdx.graphics.g3d.utils
 
 class AnimationController(target$p: com.badlogic.gdx.graphics.g3d.ModelInstance) extends com.badlogic.gdx.graphics.g3d.utils.BaseAnimationController(target$p) {
-  final val animationPool: com.badlogic.gdx.utils.Pool[com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationDesc] = new com.badlogic.gdx.utils.Pool[com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationDesc]()
+  final val animationPool: com.badlogic.gdx.utils.Pool[com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationDesc] = new com.badlogic.gdx.utils.Pool[com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationDesc]() {
+    override def newObject(): com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationDesc = {
+      return new com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationDesc()
+    }
+  }
   var current: com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationDesc = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationDesc]
   var queued: com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationDesc = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationDesc]
   var queuedTransitionTime: scala.Float = 0.0f

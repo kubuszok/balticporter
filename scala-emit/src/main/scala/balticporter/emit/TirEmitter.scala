@@ -544,7 +544,7 @@ final class TirEmitter(source: Program):
     case Tree.This(s, _, _)             => thisRef(s)
     case Tree.Super(_, _, _)            => "super"
     case Tree.Select(q, s, _, _)        => s"${term(q, i)}.${local(s)}"
-    case Tree.New(tpt, _, _)            => s"new ${ctorTpe(tpt.tpe)}"
+    case Tree.New(tpt, _, _, anon)      => s"new ${ctorTpe(tpt.tpe)}${anonBody(anon, i)}"
     case Tree.Apply(fun, args, _, _, _) => applyStr(fun, args, i)
     case Tree.TypeApply(fun, targs, _, _) => s"${term(fun, i)}[${targs.map(a => tpe(a.tpe)).mkString(", ")}]"
     case Tree.Assign(l, r, _, _)        => s"${term(l, i)} = ${term(r, i)}"
@@ -630,7 +630,8 @@ final class TirEmitter(source: Program):
     if ok then s"($fn: ${tpe(target)})" else fn
 
   private def applyStr(fun: Term, args: List[Term], i: Int): String = fun match
-    case Tree.New(tpt, _, _) => s"new ${ctorTpe(tpt.tpe)}(${args.map(term(_, i)).mkString(", ")})"
+    case Tree.New(tpt, _, _, anon) =>
+      s"new ${ctorTpe(tpt.tpe)}(${args.map(term(_, i)).mkString(", ")})${anonBody(anon, i)}"
     // operators (populator tags them `scala.<op>#…`) render infix / prefix, not `.op(x)`.
     case Tree.Select(recv, m, _, _) if sym(m).fullName.startsWith("scala.<op>#") =>
       val op = sym(m).name
@@ -640,6 +641,23 @@ final class TirEmitter(source: Program):
       val kw = recv match { case _: Tree.Super => "super"; case _ => "this" }
       s"$kw(${args.map(term(_, i)).mkString(", ")})"
     case _ => s"${term(fun, i)}(${args.map(term(_, i)).mkString(", ")})"
+
+  /** A Java anonymous class's body → Scala's anonymous-class expression `new Base(args) { … }`.
+    *
+    * The anonymous class's own symbol is pushed on `classStack` while its members render, which is
+    * what makes `thisRef` qualify an enclosing reference as `Outer.this.m`: inside a Scala
+    * anonymous class the bare `this` is the anonymous instance, exactly as in Java, so an enclosing
+    * member reached implicitly must be named through the outer instance. Captured locals need no
+    * lowering at all — Scala closes over them where javac had to synthesise ctor parameters.
+    *
+    * `Some(Nil)` (the super-type-token idiom `new Base(){}`) still renders the braces: `new Base()`
+    * and `new Base(){}` are DIFFERENT types, and only the latter has the reified supertype. */
+  private def anonBody(anon: Option[Tree.AnonClass], i: Int): String = anon match
+    case None    => ""
+    case Some(a) =>
+      classStack.append(a.symbol)
+      val members = try a.body.map(stat(_, i + 1)).filter(_.trim.nonEmpty) finally classStack.removeLast()
+      if members.isEmpty then " {}" else s" {\n${joinStats(members)}\n${ind(i)}}"
 
   /** parenthesize a term when it is an operand, where bare juxtaposition would misparse:
     * an operator application (precedence) and any control-flow expression — `if`/`match`

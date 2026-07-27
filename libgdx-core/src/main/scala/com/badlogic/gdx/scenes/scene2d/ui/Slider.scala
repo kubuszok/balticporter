@@ -13,7 +13,46 @@ class Slider(min$p: scala.Float, max$p: scala.Float, stepSize$p: scala.Float, ve
   def this(min: scala.Float, max: scala.Float, stepSize: scala.Float, vertical: scala.Boolean, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin, styleName: java.lang.String) = {
     this(min, max, stepSize, vertical, skin.get(styleName, classOf[com.badlogic.gdx.scenes.scene2d.ui.Slider.SliderStyle]))
   }
-  this.addListener(new com.badlogic.gdx.scenes.scene2d.InputListener())
+  this.addListener(new com.badlogic.gdx.scenes.scene2d.InputListener() {
+    override def touchDown(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float, pointer: scala.Int, button: scala.Int): scala.Boolean = {
+      if (disabled) {
+        return false
+      } else ()
+      if ((Slider.this.button != (-1)) && (Slider.this.button != button)) {
+        return false
+      } else ()
+      if (Slider.this.draggingPointer != (-1)) {
+        return false
+      } else ()
+      Slider.this.draggingPointer = pointer
+      Slider.this.calculatePositionAndValue(x, y)
+      return true
+    }
+    override def touchUp(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float, pointer: scala.Int, button: scala.Int): scala.Unit = {
+      if (pointer != Slider.this.draggingPointer) {
+        return
+      } else ()
+      Slider.this.draggingPointer = -1
+      if (event.isTouchFocusCancel() || (!Slider.this.calculatePositionAndValue(x, y))) {
+        val changeEvent: com.badlogic.gdx.scenes.scene2d.utils.ChangeListener.ChangeEvent = com.badlogic.gdx.scenes.scene2d.Actor.POOLS.obtain(classOf[com.badlogic.gdx.scenes.scene2d.utils.ChangeListener.ChangeEvent])
+        Slider.this.fire(changeEvent)
+        com.badlogic.gdx.scenes.scene2d.Actor.POOLS.free(changeEvent)
+      } else ()
+    }
+    override def touchDragged(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float, pointer: scala.Int): scala.Unit = {
+      Slider.this.calculatePositionAndValue(x, y)
+    }
+    override def enter(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float, pointer: scala.Int, fromActor: com.badlogic.gdx.scenes.scene2d.Actor): scala.Unit = {
+      if (pointer == (-1)) {
+        Slider.this.mouseOver = true
+      } else ()
+    }
+    override def exit(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float, pointer: scala.Int, toActor: com.badlogic.gdx.scenes.scene2d.Actor): scala.Unit = {
+      if (pointer == (-1)) {
+        Slider.this.mouseOver = false
+      } else ()
+    }
+  })
   def getStyle(): com.badlogic.gdx.scenes.scene2d.ui.Slider.SliderStyle = {
     return super.getStyle().asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Slider.SliderStyle]
   }

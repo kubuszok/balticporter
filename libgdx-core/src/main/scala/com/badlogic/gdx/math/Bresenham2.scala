@@ -2,7 +2,11 @@ package com.badlogic.gdx.math
 
 class Bresenham2 {
   private final val points: com.badlogic.gdx.utils.Array[com.badlogic.gdx.math.GridPoint2] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.math.GridPoint2]()
-  private final val pool: com.badlogic.gdx.utils.Pool[com.badlogic.gdx.math.GridPoint2] = new com.badlogic.gdx.utils.Pool[com.badlogic.gdx.math.GridPoint2]()
+  private final val pool: com.badlogic.gdx.utils.Pool[com.badlogic.gdx.math.GridPoint2] = new com.badlogic.gdx.utils.Pool[com.badlogic.gdx.math.GridPoint2]() {
+    override def newObject(): com.badlogic.gdx.math.GridPoint2 = {
+      return new com.badlogic.gdx.math.GridPoint2()
+    }
+  }
   def line(start: com.badlogic.gdx.math.GridPoint2, `end`: com.badlogic.gdx.math.GridPoint2): com.badlogic.gdx.utils.Array[com.badlogic.gdx.math.GridPoint2] = {
     return this.line(start.x, start.y, `end`.x, `end`.y)
   }

@@ -11,7 +11,14 @@ class Tooltip[T <: com.badlogic.gdx.scenes.scene2d.Actor](contents: T, manager$p
     this(contents, com.badlogic.gdx.scenes.scene2d.ui.TooltipManager.getInstance())
   }
   this.manager = manager$p
-  this.container = new com.badlogic.gdx.scenes.scene2d.ui.Container[T](contents).asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Container[T]]
+  this.container = new com.badlogic.gdx.scenes.scene2d.ui.Container[T](contents) {
+    override def act(delta: scala.Float): scala.Unit = {
+      super.act(delta)
+      if ((Tooltip.this.targetActor != null) && (Tooltip.this.targetActor.getStage() == null)) {
+        remove()
+      } else ()
+    }
+  }.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Container[T]]
   this.container.setTouchable(com.badlogic.gdx.scenes.scene2d.Touchable.disabled)
   def getManager(): com.badlogic.gdx.scenes.scene2d.ui.TooltipManager = {
     return this.manager

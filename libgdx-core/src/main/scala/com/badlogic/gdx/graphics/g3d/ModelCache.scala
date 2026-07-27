@@ -2,8 +2,16 @@ package com.badlogic.gdx.graphics.g3d
 
 class ModelCache(sorter$p: com.badlogic.gdx.graphics.g3d.utils.RenderableSorter, meshPool$p: com.badlogic.gdx.graphics.g3d.ModelCache.MeshPool) extends com.badlogic.gdx.utils.Disposable with com.badlogic.gdx.graphics.g3d.RenderableProvider {
   private var renderables: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.Renderable] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.Renderable]()
-  private var renderablesPool: com.badlogic.gdx.utils.FlushablePool[com.badlogic.gdx.graphics.g3d.Renderable] = new com.badlogic.gdx.utils.FlushablePool[com.badlogic.gdx.graphics.g3d.Renderable]()
-  private var meshPartPool: com.badlogic.gdx.utils.FlushablePool[com.badlogic.gdx.graphics.g3d.model.MeshPart] = new com.badlogic.gdx.utils.FlushablePool[com.badlogic.gdx.graphics.g3d.model.MeshPart]()
+  private var renderablesPool: com.badlogic.gdx.utils.FlushablePool[com.badlogic.gdx.graphics.g3d.Renderable] = new com.badlogic.gdx.utils.FlushablePool[com.badlogic.gdx.graphics.g3d.Renderable]() {
+    override def newObject(): com.badlogic.gdx.graphics.g3d.Renderable = {
+      return new com.badlogic.gdx.graphics.g3d.Renderable()
+    }
+  }
+  private var meshPartPool: com.badlogic.gdx.utils.FlushablePool[com.badlogic.gdx.graphics.g3d.model.MeshPart] = new com.badlogic.gdx.utils.FlushablePool[com.badlogic.gdx.graphics.g3d.model.MeshPart]() {
+    override def newObject(): com.badlogic.gdx.graphics.g3d.model.MeshPart = {
+      return new com.badlogic.gdx.graphics.g3d.model.MeshPart()
+    }
+  }
   private var items: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.Renderable] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.Renderable]()
   private var tmp: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.Renderable] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.Renderable]()
   private var meshBuilder: com.badlogic.gdx.graphics.g3d.utils.MeshBuilder = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.utils.MeshBuilder]

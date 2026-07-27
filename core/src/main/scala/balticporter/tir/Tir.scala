@@ -202,7 +202,22 @@ object Tree:
   /** `super` (receiver of `super.m(...)` / `super(...)`) — distinct from `this` so the
     * backend can emit `super`-dispatch and constructor delegation correctly. */
   final case class Super(cls: SymId, tpe: TypeRepr, origin: Origin)                     extends Term
-  final case class New(tpt: TypeTree, tpe: TypeRepr, origin: Origin)                    extends Term
+  /** the BODY of a Java anonymous class — `new Base(args) { members }`. `symbol` is a synthetic
+    * type symbol that OWNS the members (so their keys never collide with the enclosing class's,
+    * and `this` inside them names the anonymous instance, as in Java). `body` carries fields,
+    * methods and instance-initializer blocks; `dropped` names any member the frontend could NOT
+    * translate, so [[OmissionCheck]] can report it instead of losing it silently.
+    *
+    * An empty `body` is meaningful: `new Base(){}` (the super-type-token idiom) really has none.
+    * `New.anon = None` means "not an anonymous class at all", which is why the distinction is an
+    * `Option` and not a possibly-empty list. */
+  final case class AnonClass(symbol: SymId, body: List[Statement], origin: Origin, dropped: List[String] = Nil)
+
+  /** `new T` / `new T { … }`. `anon` is present exactly when Java wrote an anonymous-class body
+    * (a `CtNewClass`); its members are Scala's anonymous-class-expression members. Dropping it
+    * is the failure this node's shape exists to prevent — a listener that compiles and does
+    * nothing. */
+  final case class New(tpt: TypeTree, tpe: TypeRepr, origin: Origin, anon: Option[AnonClass] = None) extends Term
   final case class Apply(fun: Term, args: List[Term], method: SymId, tpe: TypeRepr, origin: Origin) extends Term
   final case class TypeApply(fun: Term, targs: List[TypeTree], tpe: TypeRepr, origin: Origin)       extends Term
   final case class Assign(lhs: Term, rhs: Term, tpe: TypeRepr, origin: Origin)          extends Term

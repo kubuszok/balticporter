@@ -5,7 +5,11 @@ class DecalBatch(size: scala.Int, groupStrategy$p: com.badlogic.gdx.graphics.g3d
   private var mesh: com.badlogic.gdx.graphics.Mesh = null.asInstanceOf[com.badlogic.gdx.graphics.Mesh]
   private final val groupList: com.badlogic.gdx.utils.SortedIntList[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.decals.Decal]] = new com.badlogic.gdx.utils.SortedIntList[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.decals.Decal]]()
   private var groupStrategy: com.badlogic.gdx.graphics.g3d.decals.GroupStrategy = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.decals.GroupStrategy]
-  private final val groupPool: com.badlogic.gdx.utils.Pool[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.decals.Decal]] = new com.badlogic.gdx.utils.Pool[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.decals.Decal]](16)
+  private final val groupPool: com.badlogic.gdx.utils.Pool[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.decals.Decal]] = new com.badlogic.gdx.utils.Pool[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.decals.Decal]](16) {
+    override def newObject(): com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.decals.Decal] = {
+      return new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.decals.Decal](false, 100)
+    }
+  }
   private final val usedGroups: com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.decals.Decal]] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.decals.Decal]](16)
   def this(groupStrategy: com.badlogic.gdx.graphics.g3d.decals.GroupStrategy) = {
     this(DecalBatch.DEFAULT_SIZE, groupStrategy)

@@ -8,7 +8,57 @@ class ActorGestureListener(halfTapSquareSize: scala.Float, tapCountInterval: sca
   def this() = {
     this(20, 0.4f, 1.1f, java.lang.Integer.MAX_VALUE)
   }
-  this.detector = new com.badlogic.gdx.input.GestureDetector(halfTapSquareSize, tapCountInterval, longPressDuration, maxFlingDelay, new com.badlogic.gdx.input.GestureDetector.GestureAdapter())
+  this.detector = new com.badlogic.gdx.input.GestureDetector(halfTapSquareSize, tapCountInterval, longPressDuration, maxFlingDelay, new com.badlogic.gdx.input.GestureDetector.GestureAdapter() {
+    private final val initialPointer1: com.badlogic.gdx.math.Vector2 = new com.badlogic.gdx.math.Vector2()
+    private final val initialPointer2: com.badlogic.gdx.math.Vector2 = new com.badlogic.gdx.math.Vector2()
+    private final val pointer1: com.badlogic.gdx.math.Vector2 = new com.badlogic.gdx.math.Vector2()
+    private final val pointer2: com.badlogic.gdx.math.Vector2 = new com.badlogic.gdx.math.Vector2()
+    override def tap(stageX: scala.Float, stageY: scala.Float, count: scala.Int, button: scala.Int): scala.Boolean = {
+      ActorGestureListener.this.actor.stageToLocalCoordinates(ActorGestureListener.tmpCoords.set(stageX, stageY))
+      ActorGestureListener.this.tap(ActorGestureListener.this.event, ActorGestureListener.tmpCoords.x, ActorGestureListener.tmpCoords.y, count, button)
+      return true
+    }
+    override def longPress(stageX: scala.Float, stageY: scala.Float): scala.Boolean = {
+      ActorGestureListener.this.actor.stageToLocalCoordinates(ActorGestureListener.tmpCoords.set(stageX, stageY))
+      return ActorGestureListener.this.longPress(ActorGestureListener.this.actor, ActorGestureListener.tmpCoords.x, ActorGestureListener.tmpCoords.y)
+    }
+    override def fling(velocityX: scala.Float, velocityY: scala.Float, button: scala.Int): scala.Boolean = {
+      stageToLocalAmount(ActorGestureListener.tmpCoords.set(velocityX, velocityY))
+      ActorGestureListener.this.fling(ActorGestureListener.this.event, ActorGestureListener.tmpCoords.x, ActorGestureListener.tmpCoords.y, button)
+      return true
+    }
+    override def pan(stageX: scala.Float, stageY: scala.Float, deltaX$arg: scala.Float, deltaY$arg: scala.Float): scala.Boolean = {
+      var deltaX: scala.Float = deltaX$arg
+      var deltaY: scala.Float = deltaY$arg
+      stageToLocalAmount(ActorGestureListener.tmpCoords.set(deltaX, deltaY))
+      deltaX = ActorGestureListener.tmpCoords.x
+      deltaY = ActorGestureListener.tmpCoords.y
+      ActorGestureListener.this.actor.stageToLocalCoordinates(ActorGestureListener.tmpCoords.set(stageX, stageY))
+      ActorGestureListener.this.pan(ActorGestureListener.this.event, ActorGestureListener.tmpCoords.x, ActorGestureListener.tmpCoords.y, deltaX, deltaY)
+      return true
+    }
+    override def panStop(stageX: scala.Float, stageY: scala.Float, pointer: scala.Int, button: scala.Int): scala.Boolean = {
+      ActorGestureListener.this.actor.stageToLocalCoordinates(ActorGestureListener.tmpCoords.set(stageX, stageY))
+      ActorGestureListener.this.panStop(ActorGestureListener.this.event, ActorGestureListener.tmpCoords.x, ActorGestureListener.tmpCoords.y, pointer, button)
+      return true
+    }
+    override def zoom(initialDistance: scala.Float, distance: scala.Float): scala.Boolean = {
+      ActorGestureListener.this.zoom(ActorGestureListener.this.event, initialDistance, distance)
+      return true
+    }
+    override def pinch(stageInitialPointer1: com.badlogic.gdx.math.Vector2, stageInitialPointer2: com.badlogic.gdx.math.Vector2, stagePointer1: com.badlogic.gdx.math.Vector2, stagePointer2: com.badlogic.gdx.math.Vector2): scala.Boolean = {
+      ActorGestureListener.this.actor.stageToLocalCoordinates(initialPointer1.set(stageInitialPointer1))
+      ActorGestureListener.this.actor.stageToLocalCoordinates(initialPointer2.set(stageInitialPointer2))
+      ActorGestureListener.this.actor.stageToLocalCoordinates(pointer1.set(stagePointer1))
+      ActorGestureListener.this.actor.stageToLocalCoordinates(pointer2.set(stagePointer2))
+      ActorGestureListener.this.pinch(ActorGestureListener.this.event, initialPointer1, initialPointer2, pointer1, pointer2)
+      return true
+    }
+    private def stageToLocalAmount(amount: com.badlogic.gdx.math.Vector2): scala.Unit = {
+      ActorGestureListener.this.actor.stageToLocalCoordinates(amount)
+      amount.sub(ActorGestureListener.this.actor.stageToLocalCoordinates(ActorGestureListener.tmpCoords2.set(0, 0)))
+    }
+  })
   def handle(e: com.badlogic.gdx.scenes.scene2d.Event): scala.Boolean = {
     if (!e.isInstanceOf[com.badlogic.gdx.scenes.scene2d.InputEvent]) {
       return false

@@ -4,7 +4,15 @@ abstract class EventAction[T <: com.badlogic.gdx.scenes.scene2d.Event](eventClas
   var eventClass: java.lang.Class[? <: T] = null.asInstanceOf[java.lang.Class[? <: T]]
   var result: scala.Boolean = false
   var active: scala.Boolean = false
-  private final val listener: com.badlogic.gdx.scenes.scene2d.EventListener = new com.badlogic.gdx.scenes.scene2d.EventListener()
+  private final val listener: com.badlogic.gdx.scenes.scene2d.EventListener = new com.badlogic.gdx.scenes.scene2d.EventListener() {
+    override def handle(event: com.badlogic.gdx.scenes.scene2d.Event): scala.Boolean = {
+      if ((!EventAction.this.active) || (!EventAction.this.eventClass.isInstance(event))) {
+        return false
+      } else ()
+      EventAction.this.result = EventAction.this.handle(event.asInstanceOf[T])
+      return EventAction.this.result
+    }
+  }
   this.eventClass = eventClass$p
   def restart(): scala.Unit = {
     this.result = false

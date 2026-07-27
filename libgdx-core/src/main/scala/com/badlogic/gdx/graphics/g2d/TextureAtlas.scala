@@ -188,21 +188,102 @@ object TextureAtlas {
     def load(packFile: com.badlogic.gdx.files.FileHandle, imagesDir: com.badlogic.gdx.files.FileHandle, flip: scala.Boolean): scala.Unit = {
       val entry: scala.Array[java.lang.String] = new scala.Array[java.lang.String](5)
       val pageFields: com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Page]] = new com.badlogic.gdx.utils.ObjectMap(15, 0.99f).asInstanceOf[com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Page]]]
-      pageFields.put("size", new com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Page]())
-      pageFields.put("format", new com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Page]())
-      pageFields.put("filter", new com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Page]())
-      pageFields.put("repeat", new com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Page]())
-      pageFields.put("pma", new com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Page]())
+      pageFields.put("size", new com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Page]() {
+        override def parse(page: com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Page): scala.Unit = {
+          page.width = java.lang.Integer.parseInt(entry(1))
+          page.height = java.lang.Integer.parseInt(entry(2))
+        }
+      })
+      pageFields.put("format", new com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Page]() {
+        override def parse(page: com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Page): scala.Unit = {
+          page.format = com.badlogic.gdx.graphics.Pixmap.Format.valueOf(entry(1))
+        }
+      })
+      pageFields.put("filter", new com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Page]() {
+        override def parse(page: com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Page): scala.Unit = {
+          page.minFilter = com.badlogic.gdx.graphics.Texture.TextureFilter.valueOf(entry(1))
+          page.magFilter = com.badlogic.gdx.graphics.Texture.TextureFilter.valueOf(entry(2))
+          page.useMipMaps = page.minFilter.isMipMap()
+        }
+      })
+      pageFields.put("repeat", new com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Page]() {
+        override def parse(page: com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Page): scala.Unit = {
+          if (entry(1).indexOf('x') != (-1)) {
+            page.uWrap = com.badlogic.gdx.graphics.Texture.TextureWrap.Repeat
+          } else ()
+          if (entry(1).indexOf('y') != (-1)) {
+            page.vWrap = com.badlogic.gdx.graphics.Texture.TextureWrap.Repeat
+          } else ()
+        }
+      })
+      pageFields.put("pma", new com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Page]() {
+        override def parse(page: com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Page): scala.Unit = {
+          page.pma = entry(1).equals("true")
+        }
+      })
       val hasIndexes: scala.Array[scala.Boolean] = scala.Array[scala.Boolean](false)
       val regionFields: com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Region]] = new com.badlogic.gdx.utils.ObjectMap(127, 0.99f).asInstanceOf[com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Region]]]
-      regionFields.put("xy", new com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Region]())
-      regionFields.put("size", new com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Region]())
-      regionFields.put("bounds", new com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Region]())
-      regionFields.put("offset", new com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Region]())
-      regionFields.put("orig", new com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Region]())
-      regionFields.put("offsets", new com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Region]())
-      regionFields.put("rotate", new com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Region]())
-      regionFields.put("index", new com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Region]())
+      regionFields.put("xy", new com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Region]() {
+        override def parse(region: com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Region): scala.Unit = {
+          region.left = java.lang.Integer.parseInt(entry(1))
+          region.top = java.lang.Integer.parseInt(entry(2))
+        }
+      })
+      regionFields.put("size", new com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Region]() {
+        override def parse(region: com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Region): scala.Unit = {
+          region.width = java.lang.Integer.parseInt(entry(1))
+          region.height = java.lang.Integer.parseInt(entry(2))
+        }
+      })
+      regionFields.put("bounds", new com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Region]() {
+        override def parse(region: com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Region): scala.Unit = {
+          region.left = java.lang.Integer.parseInt(entry(1))
+          region.top = java.lang.Integer.parseInt(entry(2))
+          region.width = java.lang.Integer.parseInt(entry(3))
+          region.height = java.lang.Integer.parseInt(entry(4))
+        }
+      })
+      regionFields.put("offset", new com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Region]() {
+        override def parse(region: com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Region): scala.Unit = {
+          region.offsetX = java.lang.Integer.parseInt(entry(1))
+          region.offsetY = java.lang.Integer.parseInt(entry(2))
+        }
+      })
+      regionFields.put("orig", new com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Region]() {
+        override def parse(region: com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Region): scala.Unit = {
+          region.originalWidth = java.lang.Integer.parseInt(entry(1))
+          region.originalHeight = java.lang.Integer.parseInt(entry(2))
+        }
+      })
+      regionFields.put("offsets", new com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Region]() {
+        override def parse(region: com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Region): scala.Unit = {
+          region.offsetX = java.lang.Integer.parseInt(entry(1))
+          region.offsetY = java.lang.Integer.parseInt(entry(2))
+          region.originalWidth = java.lang.Integer.parseInt(entry(3))
+          region.originalHeight = java.lang.Integer.parseInt(entry(4))
+        }
+      })
+      regionFields.put("rotate", new com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Region]() {
+        override def parse(region: com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Region): scala.Unit = {
+          val value: java.lang.String = entry(1)
+          if (value.equals("true")) {
+            region.degrees = 90
+          } else {
+            if (!value.equals("false")) {
+              region.degrees = java.lang.Integer.parseInt(value)
+            } else ()
+          }
+          region.rotate = region.degrees == 90
+        }
+      })
+      regionFields.put("index", new com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Region]() {
+        override def parse(region: com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Region): scala.Unit = {
+          region.index = java.lang.Integer.parseInt(entry(1))
+          if (region.index != (-1)) {
+            hasIndexes(0) = true
+          } else ()
+        }
+      })
       val reader: java.io.BufferedReader = packFile.reader(1024)
       var line: java.lang.String = null
       try {
@@ -306,7 +387,19 @@ object TextureAtlas {
         com.badlogic.gdx.utils.StreamUtils.closeQuietly(reader)
       }
       if (hasIndexes(0)) {
-        this.regions.sort(new java.util.Comparator[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Region]())
+        this.regions.sort(new java.util.Comparator[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Region]() {
+          override def compare(region1: com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Region, region2: com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Region): scala.Int = {
+            var i1: scala.Int = region1.index
+            if (i1 == (-1)) {
+              i1 = java.lang.Integer.MAX_VALUE
+            } else ()
+            var i2: scala.Int = region2.index
+            if (i2 == (-1)) {
+              i2 = java.lang.Integer.MAX_VALUE
+            } else ()
+            return i1 - i2
+          }
+        })
       } else ()
     }
     def getPages(): com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Page] = {

@@ -138,7 +138,7 @@ object LibgdxCoreMigrate:
     if omissions.isEmpty then println("[libgdx-core] omissions: none")
     else
       println(s"[libgdx-core] OMISSIONS (emitted code silently loses these): ${omissions.size}")
-      println(OmissionCheck.summary(omissions).linesIterator.take(8).mkString("\n"))
+      println(OmissionCheck.summary(omissions).linesIterator.take(14).mkString("\n"))
 
     val portability = PortabilityCheck.inEmittedCode(program, PortabilityCheck.check(program), droppedIds)
     println(s"[libgdx-core] portability (Scala.js/Native): ${portability.size} site(s) on JVM-only APIs in EMITTED code")

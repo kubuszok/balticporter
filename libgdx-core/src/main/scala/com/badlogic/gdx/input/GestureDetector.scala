@@ -25,7 +25,13 @@ class GestureDetector(halfTapRectangleWidth: scala.Float, halfTapRectangleHeight
   private final val pointer2: com.badlogic.gdx.math.Vector2 = new com.badlogic.gdx.math.Vector2()
   private final val initialPointer1: com.badlogic.gdx.math.Vector2 = new com.badlogic.gdx.math.Vector2()
   private final val initialPointer2: com.badlogic.gdx.math.Vector2 = new com.badlogic.gdx.math.Vector2()
-  private final val longPressTask: com.badlogic.gdx.utils.Timer.Task = new com.badlogic.gdx.utils.Timer.Task()
+  private final val longPressTask: com.badlogic.gdx.utils.Timer.Task = new com.badlogic.gdx.utils.Timer.Task() {
+    override def run(): scala.Unit = {
+      if (!GestureDetector.this.longPressFired) {
+        GestureDetector.this.longPressFired = GestureDetector.this.listener.longPress(GestureDetector.this.pointer1.x, GestureDetector.this.pointer1.y)
+      } else ()
+    }
+  }
   def this(halfTapSquareSize: scala.Float, tapCountInterval: scala.Float, longPressDuration: scala.Float, maxFlingDelay: scala.Float, listener: com.badlogic.gdx.input.GestureDetector.GestureListener) = {
     this(halfTapSquareSize, halfTapSquareSize, tapCountInterval, longPressDuration, maxFlingDelay, listener)
   }

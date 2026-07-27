@@ -175,7 +175,11 @@ object StandardTraversal:
         ph.transformTypeApply(
           x.copy(fun = mapTerm(ph, x.fun), targs = x.targs.map(mapTpt(ph, _)), tpe = mapType(ph, x.tpe))
         )
-      case x: Tree.New => ph.transformNew(x.copy(tpt = mapTpt(ph, x.tpt), tpe = mapType(ph, x.tpe)))
+      // an anonymous-class body is ordinary program text: its members must be transformed like any
+      // other, or a rewrite (collections, globals→implicits, …) silently stops at the `new`.
+      case x: Tree.New =>
+        ph.transformNew(x.copy(tpt = mapTpt(ph, x.tpt), tpe = mapType(ph, x.tpe),
+          anon = x.anon.map(a => a.copy(body = a.body.map(mapStat(ph, _))))))
       case x: Tree.Lambda =>
         ph.transformLambda(x.copy(params = x.params.map(mapValDef(ph, _)), body = mapTerm(ph, x.body), tpe = mapType(ph, x.tpe)))
       case x: Tree.Block =>

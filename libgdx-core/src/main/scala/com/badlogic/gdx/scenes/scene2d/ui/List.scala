@@ -24,10 +24,120 @@ class List[T](style$p: com.badlogic.gdx.scenes.scene2d.ui.List.ListStyle) extend
   this.setStyle(style$p)
   this.setSize(this.getPrefWidth(), this.getPrefHeight())
   this.addListener({
-    this.keyListener = new com.badlogic.gdx.scenes.scene2d.InputListener()
+    this.keyListener = new com.badlogic.gdx.scenes.scene2d.InputListener() {
+      var typeTimeout: scala.Long = 0L
+      var prefix: java.lang.String = null.asInstanceOf[java.lang.String]
+      override def keyDown(event: com.badlogic.gdx.scenes.scene2d.InputEvent, keycode: scala.Int): scala.Boolean = {
+        if (List.this.items.isEmpty()) {
+          return false
+        } else ()
+        var index: scala.Int = 0
+        keycode match {
+          case com.badlogic.gdx.Input.Keys.A => {
+            if (com.badlogic.gdx.scenes.scene2d.utils.UIUtils.ctrl() && List.this.selection.getMultiple()) {
+              List.this.selection.clear()
+              List.this.selection.addAll(List.this.items)
+              return true
+            } else ()
+          }
+          case com.badlogic.gdx.Input.Keys.HOME => {
+            setSelectedIndex(0)
+            return true
+          }
+          case com.badlogic.gdx.Input.Keys.END => {
+            setSelectedIndex(List.this.items.size - 1)
+            return true
+          }
+          case com.badlogic.gdx.Input.Keys.DOWN => {
+            index = List.this.items.indexOf(getSelected(), false) + 1
+            if (index >= List.this.items.size) {
+              index = 0
+            } else ()
+            setSelectedIndex(index)
+            return true
+          }
+          case com.badlogic.gdx.Input.Keys.UP => {
+            index = List.this.items.indexOf(getSelected(), false) - 1
+            if (index < 0) {
+              index = List.this.items.size - 1
+            } else ()
+            setSelectedIndex(index)
+            return true
+          }
+          case com.badlogic.gdx.Input.Keys.ESCAPE => {
+            if (getStage() != null) {
+              getStage().setKeyboardFocus(null)
+            } else ()
+            return true
+          }
+        }
+        return false
+      }
+      override def keyTyped(event: com.badlogic.gdx.scenes.scene2d.InputEvent, character: scala.Char): scala.Boolean = {
+        if (!List.this.typeToSelect) {
+          return false
+        } else ()
+        val time: scala.Long = java.lang.System.currentTimeMillis()
+        if (time > typeTimeout) {
+          prefix = ""
+        } else ()
+        typeTimeout = time + 300
+        prefix = prefix + java.lang.Character.toLowerCase(character);
+        { var i: scala.Int = 0; val n: scala.Int = List.this.items.size; while (i < n) { {
+          if (List.this.toString(List.this.items.get(i)).toLowerCase().startsWith(prefix)) {
+            setSelectedIndex(i)
+            /* break */ ()
+          } else ()
+        }; i = i + 1 } }
+        return false
+      }
+    }
     this.keyListener
   })
-  this.addListener(new com.badlogic.gdx.scenes.scene2d.InputListener())
+  this.addListener(new com.badlogic.gdx.scenes.scene2d.InputListener() {
+    override def touchDown(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float, pointer: scala.Int, button: scala.Int): scala.Boolean = {
+      if ((pointer != 0) || (button != 0)) {
+        return true
+      } else ()
+      if (List.this.selection.isDisabled()) {
+        return true
+      } else ()
+      if (getStage() != null) {
+        getStage().setKeyboardFocus(List.this)
+      } else ()
+      if (List.this.items.size == 0) {
+        return true
+      } else ()
+      val index: scala.Int = getItemIndexAt(y)
+      if (index == (-1)) {
+        return true
+      } else ()
+      List.this.selection.choose(List.this.items.get(index))
+      List.this.pressedIndex = index
+      return true
+    }
+    override def touchUp(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float, pointer: scala.Int, button: scala.Int): scala.Unit = {
+      if ((pointer != 0) || (button != 0)) {
+        return
+      } else ()
+      List.this.pressedIndex = -1
+    }
+    override def touchDragged(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float, pointer: scala.Int): scala.Unit = {
+      List.this.overIndex = getItemIndexAt(y)
+    }
+    override def mouseMoved(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float): scala.Boolean = {
+      List.this.overIndex = getItemIndexAt(y)
+      return false
+    }
+    override def exit(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float, pointer: scala.Int, toActor: com.badlogic.gdx.scenes.scene2d.Actor): scala.Unit = {
+      if (pointer == 0) {
+        List.this.pressedIndex = -1
+      } else ()
+      if (pointer == (-1)) {
+        List.this.overIndex = -1
+      } else ()
+    }
+  })
   def setStyle(style: com.badlogic.gdx.scenes.scene2d.ui.List.ListStyle): scala.Unit = {
     if (style == null) {
       throw new java.lang.IllegalArgumentException("style cannot be null.")

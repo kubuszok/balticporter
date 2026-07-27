@@ -7,41 +7,117 @@ abstract class Interpolation {
   }
 }
 object Interpolation {
-  final val linear: Interpolation = new Interpolation()
-  final val smooth: Interpolation = new Interpolation()
-  final val smooth2: Interpolation = new Interpolation()
-  final val smoother: Interpolation = new Interpolation()
+  final val linear: Interpolation = new Interpolation() {
+    override def apply(a: scala.Float): scala.Float = {
+      return a
+    }
+  }
+  final val smooth: Interpolation = new Interpolation() {
+    override def apply(a: scala.Float): scala.Float = {
+      return (a * a) * (3 - (2 * a))
+    }
+  }
+  final val smooth2: Interpolation = new Interpolation() {
+    override def apply(a$arg: scala.Float): scala.Float = {
+      var a: scala.Float = a$arg
+      a = (a * a) * (3 - (2 * a))
+      return (a * a) * (3 - (2 * a))
+    }
+  }
+  final val smoother: Interpolation = new Interpolation() {
+    override def apply(a: scala.Float): scala.Float = {
+      return ((a * a) * a) * ((a * ((a * 6) - 15)) + 10)
+    }
+  }
   final val fade: Interpolation = Interpolation.smoother
   final val pow2: com.badlogic.gdx.math.Interpolation.Pow = new com.badlogic.gdx.math.Interpolation.Pow(2)
   final val pow2In: com.badlogic.gdx.math.Interpolation.PowIn = new com.badlogic.gdx.math.Interpolation.PowIn(2)
   final val slowFast: com.badlogic.gdx.math.Interpolation.PowIn = Interpolation.pow2In
   final val pow2Out: com.badlogic.gdx.math.Interpolation.PowOut = new com.badlogic.gdx.math.Interpolation.PowOut(2)
   final val fastSlow: com.badlogic.gdx.math.Interpolation.PowOut = Interpolation.pow2Out
-  final val pow2InInverse: Interpolation = new Interpolation()
-  final val pow2OutInverse: Interpolation = new Interpolation()
+  final val pow2InInverse: Interpolation = new Interpolation() {
+    override def apply(a: scala.Float): scala.Float = {
+      if (a < com.badlogic.gdx.math.MathUtils.FLOAT_ROUNDING_ERROR) {
+        return 0
+      } else ()
+      return java.lang.Math.sqrt(a).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
+    }
+  }
+  final val pow2OutInverse: Interpolation = new Interpolation() {
+    override def apply(a: scala.Float): scala.Float = {
+      if (a < com.badlogic.gdx.math.MathUtils.FLOAT_ROUNDING_ERROR) {
+        return 0
+      } else ()
+      if (a > 1) {
+        return 1
+      } else ()
+      return 1 - java.lang.Math.sqrt(-(a - 1)).asInstanceOf[scala.Float]
+    }
+  }
   final val pow3: com.badlogic.gdx.math.Interpolation.Pow = new com.badlogic.gdx.math.Interpolation.Pow(3)
   final val pow3In: com.badlogic.gdx.math.Interpolation.PowIn = new com.badlogic.gdx.math.Interpolation.PowIn(3)
   final val pow3Out: com.badlogic.gdx.math.Interpolation.PowOut = new com.badlogic.gdx.math.Interpolation.PowOut(3)
-  final val pow3InInverse: Interpolation = new Interpolation()
-  final val pow3OutInverse: Interpolation = new Interpolation()
+  final val pow3InInverse: Interpolation = new Interpolation() {
+    override def apply(a: scala.Float): scala.Float = {
+      return java.lang.Math.cbrt(a).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
+    }
+  }
+  final val pow3OutInverse: Interpolation = new Interpolation() {
+    override def apply(a: scala.Float): scala.Float = {
+      return 1 - java.lang.Math.cbrt(-(a - 1)).asInstanceOf[scala.Float]
+    }
+  }
   final val pow4: com.badlogic.gdx.math.Interpolation.Pow = new com.badlogic.gdx.math.Interpolation.Pow(4)
   final val pow4In: com.badlogic.gdx.math.Interpolation.PowIn = new com.badlogic.gdx.math.Interpolation.PowIn(4)
   final val pow4Out: com.badlogic.gdx.math.Interpolation.PowOut = new com.badlogic.gdx.math.Interpolation.PowOut(4)
   final val pow5: com.badlogic.gdx.math.Interpolation.Pow = new com.badlogic.gdx.math.Interpolation.Pow(5)
   final val pow5In: com.badlogic.gdx.math.Interpolation.PowIn = new com.badlogic.gdx.math.Interpolation.PowIn(5)
   final val pow5Out: com.badlogic.gdx.math.Interpolation.PowOut = new com.badlogic.gdx.math.Interpolation.PowOut(5)
-  final val sine: Interpolation = new Interpolation()
-  final val sineIn: Interpolation = new Interpolation()
-  final val sineOut: Interpolation = new Interpolation()
+  final val sine: Interpolation = new Interpolation() {
+    override def apply(a: scala.Float): scala.Float = {
+      return (1 - com.badlogic.gdx.math.MathUtils.cos(a * com.badlogic.gdx.math.MathUtils.PI)) / 2
+    }
+  }
+  final val sineIn: Interpolation = new Interpolation() {
+    override def apply(a: scala.Float): scala.Float = {
+      return 1 - com.badlogic.gdx.math.MathUtils.cos(a * com.badlogic.gdx.math.MathUtils.HALF_PI)
+    }
+  }
+  final val sineOut: Interpolation = new Interpolation() {
+    override def apply(a: scala.Float): scala.Float = {
+      return com.badlogic.gdx.math.MathUtils.sin(a * com.badlogic.gdx.math.MathUtils.HALF_PI)
+    }
+  }
   final val exp10: com.badlogic.gdx.math.Interpolation.Exp = new com.badlogic.gdx.math.Interpolation.Exp(2, 10)
   final val exp10In: com.badlogic.gdx.math.Interpolation.ExpIn = new com.badlogic.gdx.math.Interpolation.ExpIn(2, 10)
   final val exp10Out: com.badlogic.gdx.math.Interpolation.ExpOut = new com.badlogic.gdx.math.Interpolation.ExpOut(2, 10)
   final val exp5: com.badlogic.gdx.math.Interpolation.Exp = new com.badlogic.gdx.math.Interpolation.Exp(2, 5)
   final val exp5In: com.badlogic.gdx.math.Interpolation.ExpIn = new com.badlogic.gdx.math.Interpolation.ExpIn(2, 5)
   final val exp5Out: com.badlogic.gdx.math.Interpolation.ExpOut = new com.badlogic.gdx.math.Interpolation.ExpOut(2, 5)
-  final val circle: Interpolation = new Interpolation()
-  final val circleIn: Interpolation = new Interpolation()
-  final val circleOut: Interpolation = new Interpolation()
+  final val circle: Interpolation = new Interpolation() {
+    override def apply(a$arg: scala.Float): scala.Float = {
+      var a: scala.Float = a$arg
+      if (a <= 0.5f) {
+        a = a * 2
+        return (1 - java.lang.Math.sqrt(1 - (a * a)).asInstanceOf[scala.Float]) / 2
+      } else ()
+      a = a - 1
+      a = a * 2
+      return (java.lang.Math.sqrt(1 - (a * a)).asInstanceOf[scala.Float] + 1) / 2
+    }
+  }
+  final val circleIn: Interpolation = new Interpolation() {
+    override def apply(a: scala.Float): scala.Float = {
+      return 1 - java.lang.Math.sqrt(1 - (a * a)).asInstanceOf[scala.Float]
+    }
+  }
+  final val circleOut: Interpolation = new Interpolation() {
+    override def apply(a$arg: scala.Float): scala.Float = {
+      var a: scala.Float = a$arg
+      a = a - 1
+      return java.lang.Math.sqrt(1 - (a * a)).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
+    }
+  }
   final val elastic: com.badlogic.gdx.math.Interpolation.Elastic = new com.badlogic.gdx.math.Interpolation.Elastic(2, 10, 7, 1)
   final val elasticIn: com.badlogic.gdx.math.Interpolation.ElasticIn = new com.badlogic.gdx.math.Interpolation.ElasticIn(2, 10, 6, 1)
   final val elasticOut: com.badlogic.gdx.math.Interpolation.ElasticOut = new com.badlogic.gdx.math.Interpolation.ElasticOut(2, 10, 7, 1)

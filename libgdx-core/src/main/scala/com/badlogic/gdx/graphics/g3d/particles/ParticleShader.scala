@@ -220,11 +220,54 @@ object ParticleShader {
     final val regionSize: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform("u_regionSize")
   }
   object Setters {
-    final val cameraRight: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter()
-    final val cameraUp: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter()
-    final val cameraInvDirection: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter()
-    final val cameraPosition: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter()
-    final val screenWidth: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter()
-    final val worldViewTrans: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter()
+    final val cameraRight: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter() {
+      override def isGlobal(shader: com.badlogic.gdx.graphics.g3d.shaders.BaseShader, inputID: scala.Int): scala.Boolean = {
+        return true
+      }
+      override def set(shader: com.badlogic.gdx.graphics.g3d.shaders.BaseShader, inputID: scala.Int, renderable: com.badlogic.gdx.graphics.g3d.Renderable, combinedAttributes: com.badlogic.gdx.graphics.g3d.Attributes): scala.Unit = {
+        shader.set(inputID, ParticleShader.TMP_VECTOR3.set(shader.camera.direction).crs(shader.camera.up).nor())
+      }
+    }
+    final val cameraUp: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter() {
+      override def isGlobal(shader: com.badlogic.gdx.graphics.g3d.shaders.BaseShader, inputID: scala.Int): scala.Boolean = {
+        return true
+      }
+      override def set(shader: com.badlogic.gdx.graphics.g3d.shaders.BaseShader, inputID: scala.Int, renderable: com.badlogic.gdx.graphics.g3d.Renderable, combinedAttributes: com.badlogic.gdx.graphics.g3d.Attributes): scala.Unit = {
+        shader.set(inputID, ParticleShader.TMP_VECTOR3.set(shader.camera.up).nor())
+      }
+    }
+    final val cameraInvDirection: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter() {
+      override def isGlobal(shader: com.badlogic.gdx.graphics.g3d.shaders.BaseShader, inputID: scala.Int): scala.Boolean = {
+        return true
+      }
+      override def set(shader: com.badlogic.gdx.graphics.g3d.shaders.BaseShader, inputID: scala.Int, renderable: com.badlogic.gdx.graphics.g3d.Renderable, combinedAttributes: com.badlogic.gdx.graphics.g3d.Attributes): scala.Unit = {
+        shader.set(inputID, ParticleShader.TMP_VECTOR3.set(-shader.camera.direction.x, -shader.camera.direction.y, -shader.camera.direction.z).nor())
+      }
+    }
+    final val cameraPosition: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter() {
+      override def isGlobal(shader: com.badlogic.gdx.graphics.g3d.shaders.BaseShader, inputID: scala.Int): scala.Boolean = {
+        return true
+      }
+      override def set(shader: com.badlogic.gdx.graphics.g3d.shaders.BaseShader, inputID: scala.Int, renderable: com.badlogic.gdx.graphics.g3d.Renderable, combinedAttributes: com.badlogic.gdx.graphics.g3d.Attributes): scala.Unit = {
+        shader.set(inputID, shader.camera.position)
+      }
+    }
+    final val screenWidth: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter() {
+      override def isGlobal(shader: com.badlogic.gdx.graphics.g3d.shaders.BaseShader, inputID: scala.Int): scala.Boolean = {
+        return true
+      }
+      override def set(shader: com.badlogic.gdx.graphics.g3d.shaders.BaseShader, inputID: scala.Int, renderable: com.badlogic.gdx.graphics.g3d.Renderable, combinedAttributes: com.badlogic.gdx.graphics.g3d.Attributes): scala.Unit = {
+        shader.set(inputID, com.badlogic.gdx.Gdx.graphics.getWidth().asInstanceOf[scala.Float])
+      }
+    }
+    final val worldViewTrans: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter() {
+      final val temp: com.badlogic.gdx.math.Matrix4 = new com.badlogic.gdx.math.Matrix4()
+      override def isGlobal(shader: com.badlogic.gdx.graphics.g3d.shaders.BaseShader, inputID: scala.Int): scala.Boolean = {
+        return false
+      }
+      override def set(shader: com.badlogic.gdx.graphics.g3d.shaders.BaseShader, inputID: scala.Int, renderable: com.badlogic.gdx.graphics.g3d.Renderable, combinedAttributes: com.badlogic.gdx.graphics.g3d.Attributes): scala.Unit = {
+        shader.set(inputID, temp.set(shader.camera.view).mul(renderable.worldTransform))
+      }
+    }
   }
 }

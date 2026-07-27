@@ -144,7 +144,11 @@ object Texture {
           params.wrapV = texture.getVWrap()
           params.genMipMaps = texture.data.useMipMaps()
           params.texture = texture
-          params.loadedCallback = new com.badlogic.gdx.assets.AssetLoaderParameters.LoadedCallback()
+          params.loadedCallback = new com.badlogic.gdx.assets.AssetLoaderParameters.LoadedCallback() {
+            override def finishedLoading(assetManager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, `type`: java.lang.Class[?]): scala.Unit = {
+              assetManager.setReferenceCount(fileName, refCount)
+            }
+          }
           Texture.assetManager.unload(fileName)
           texture.glHandle = com.badlogic.gdx.Gdx.gl.glGenTexture()
           Texture.assetManager.load(fileName, classOf[Texture], params)

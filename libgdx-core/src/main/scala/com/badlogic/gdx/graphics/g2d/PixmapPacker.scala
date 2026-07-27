@@ -416,7 +416,12 @@ object PixmapPacker {
         } else ()
         this.texture.load(this.texture.getTextureData())
       } else {
-        this.texture = new com.badlogic.gdx.graphics.Texture(new com.badlogic.gdx.graphics.glutils.PixmapTextureData(this.image, this.image.getFormat(), useMipMaps, false, true))
+        this.texture = new com.badlogic.gdx.graphics.Texture(new com.badlogic.gdx.graphics.glutils.PixmapTextureData(this.image, this.image.getFormat(), useMipMaps, false, true)) {
+          override def dispose(): scala.Unit = {
+            super.dispose()
+            Page.this.image.dispose()
+          }
+        }
         this.texture.setFilter(minFilter, magFilter)
       }
       this.dirty = false
@@ -431,7 +436,11 @@ object PixmapPacker {
     var comparator: java.util.Comparator[com.badlogic.gdx.graphics.Pixmap] = null.asInstanceOf[java.util.Comparator[com.badlogic.gdx.graphics.Pixmap]]
     def sort(pixmaps: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.Pixmap]): scala.Unit = {
       if (this.comparator == null) {
-        this.comparator = new java.util.Comparator[com.badlogic.gdx.graphics.Pixmap]()
+        this.comparator = new java.util.Comparator[com.badlogic.gdx.graphics.Pixmap]() {
+          override def compare(o1: com.badlogic.gdx.graphics.Pixmap, o2: com.badlogic.gdx.graphics.Pixmap): scala.Int = {
+            return java.lang.Math.max(o1.getWidth(), o1.getHeight()) - java.lang.Math.max(o2.getWidth(), o2.getHeight())
+          }
+        }
       } else ()
       pixmaps.sort(this.comparator)
     }
@@ -520,7 +529,11 @@ object PixmapPacker {
     var comparator: java.util.Comparator[com.badlogic.gdx.graphics.Pixmap] = null.asInstanceOf[java.util.Comparator[com.badlogic.gdx.graphics.Pixmap]]
     def sort(images: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.Pixmap]): scala.Unit = {
       if (this.comparator == null) {
-        this.comparator = new java.util.Comparator[com.badlogic.gdx.graphics.Pixmap]()
+        this.comparator = new java.util.Comparator[com.badlogic.gdx.graphics.Pixmap]() {
+          override def compare(o1: com.badlogic.gdx.graphics.Pixmap, o2: com.badlogic.gdx.graphics.Pixmap): scala.Int = {
+            return o1.getHeight() - o2.getHeight()
+          }
+        }
       } else ()
       images.sort(this.comparator)
     }

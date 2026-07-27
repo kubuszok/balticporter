@@ -69,13 +69,165 @@ class ScrollPane(actor$p: com.badlogic.gdx.scenes.scene2d.Actor, style$p: com.ba
   this.addListener(this.flickScrollListener)
   this.addScrollListener()
   def addCaptureListener(): scala.Unit = {
-    this.addCaptureListener(new com.badlogic.gdx.scenes.scene2d.InputListener())
+    this.addCaptureListener(new com.badlogic.gdx.scenes.scene2d.InputListener() {
+      private var handlePosition: scala.Float = 0.0f
+      override def touchDown(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float, pointer: scala.Int, button: scala.Int): scala.Boolean = {
+        if (ScrollPane.this.draggingPointer != (-1)) {
+          return false
+        } else ()
+        if ((pointer == 0) && (button != 0)) {
+          return false
+        } else ()
+        if (ScrollPane.this.getStage() != null) {
+          ScrollPane.this.getStage().setScrollFocus(ScrollPane.this)
+        } else ()
+        if (!ScrollPane.this.flickScroll) {
+          ScrollPane.this.setScrollbarsVisible(true)
+        } else ()
+        if (ScrollPane.this.fadeAlpha == 0) {
+          return false
+        } else ()
+        if ((ScrollPane.this.scrollBarTouch && ScrollPane.this.scrollX$field) && ScrollPane.this.hScrollBounds.contains(x, y)) {
+          event.stop()
+          ScrollPane.this.setScrollbarsVisible(true)
+          if (ScrollPane.this.hKnobBounds.contains(x, y)) {
+            ScrollPane.this.lastPoint.set(x, y)
+            handlePosition = ScrollPane.this.hKnobBounds.x
+            ScrollPane.this.touchScrollH = true
+            ScrollPane.this.draggingPointer = pointer
+            return true
+          } else ()
+          ScrollPane.this.setScrollX(ScrollPane.this.amountX + (ScrollPane.this.actorArea.width * (if (x < ScrollPane.this.hKnobBounds.x) -1 else 1)))
+          return true
+        } else ()
+        if ((ScrollPane.this.scrollBarTouch && ScrollPane.this.scrollY$field) && ScrollPane.this.vScrollBounds.contains(x, y)) {
+          event.stop()
+          ScrollPane.this.setScrollbarsVisible(true)
+          if (ScrollPane.this.vKnobBounds.contains(x, y)) {
+            ScrollPane.this.lastPoint.set(x, y)
+            handlePosition = ScrollPane.this.vKnobBounds.y
+            ScrollPane.this.touchScrollV = true
+            ScrollPane.this.draggingPointer = pointer
+            return true
+          } else ()
+          ScrollPane.this.setScrollY(ScrollPane.this.amountY + (ScrollPane.this.actorArea.height * (if (y < ScrollPane.this.vKnobBounds.y) 1 else -1)))
+          return true
+        } else ()
+        return false
+      }
+      override def touchUp(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float, pointer: scala.Int, button: scala.Int): scala.Unit = {
+        if (pointer != ScrollPane.this.draggingPointer) {
+          return
+        } else ()
+        ScrollPane.this.cancel()
+      }
+      override def touchDragged(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float, pointer: scala.Int): scala.Unit = {
+        if (pointer != ScrollPane.this.draggingPointer) {
+          return
+        } else ()
+        if (ScrollPane.this.touchScrollH) {
+          val delta: scala.Float = x - ScrollPane.this.lastPoint.x
+          var scrollH: scala.Float = handlePosition + delta
+          handlePosition = scrollH
+          scrollH = java.lang.Math.max(ScrollPane.this.hScrollBounds.x, scrollH)
+          scrollH = java.lang.Math.min((ScrollPane.this.hScrollBounds.x + ScrollPane.this.hScrollBounds.width) - ScrollPane.this.hKnobBounds.width, scrollH)
+          val total: scala.Float = ScrollPane.this.hScrollBounds.width - ScrollPane.this.hKnobBounds.width
+          if (total != 0) {
+            ScrollPane.this.setScrollPercentX((scrollH - ScrollPane.this.hScrollBounds.x) / total)
+          } else ()
+          ScrollPane.this.lastPoint.set(x, y)
+        } else {
+          if (ScrollPane.this.touchScrollV) {
+            val delta: scala.Float = y - ScrollPane.this.lastPoint.y
+            var scrollV: scala.Float = handlePosition + delta
+            handlePosition = scrollV
+            scrollV = java.lang.Math.max(ScrollPane.this.vScrollBounds.y, scrollV)
+            scrollV = java.lang.Math.min((ScrollPane.this.vScrollBounds.y + ScrollPane.this.vScrollBounds.height) - ScrollPane.this.vKnobBounds.height, scrollV)
+            val total: scala.Float = ScrollPane.this.vScrollBounds.height - ScrollPane.this.vKnobBounds.height
+            if (total != 0) {
+              ScrollPane.this.setScrollPercentY(1 - ((scrollV - ScrollPane.this.vScrollBounds.y) / total))
+            } else ()
+            ScrollPane.this.lastPoint.set(x, y)
+          } else ()
+        }
+      }
+      override def mouseMoved(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float): scala.Boolean = {
+        if (!ScrollPane.this.flickScroll) {
+          ScrollPane.this.setScrollbarsVisible(true)
+        } else ()
+        return false
+      }
+    })
   }
   def getFlickScrollListener(): com.badlogic.gdx.scenes.scene2d.utils.ActorGestureListener = {
-    return new com.badlogic.gdx.scenes.scene2d.utils.ActorGestureListener()
+    return new com.badlogic.gdx.scenes.scene2d.utils.ActorGestureListener() {
+      override def pan(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float, deltaX$arg: scala.Float, deltaY$arg: scala.Float): scala.Unit = {
+        var deltaX: scala.Float = deltaX$arg
+        var deltaY: scala.Float = deltaY$arg
+        ScrollPane.this.setScrollbarsVisible(true)
+        if (!ScrollPane.this.scrollX$field) {
+          deltaX = 0
+        } else ()
+        if (!ScrollPane.this.scrollY$field) {
+          deltaY = 0
+        } else ()
+        ScrollPane.this.amountX = ScrollPane.this.amountX - deltaX
+        ScrollPane.this.amountY = ScrollPane.this.amountY + deltaY
+        ScrollPane.this.clamp()
+        if (ScrollPane.this.cancelTouchFocus$field && ((deltaX != 0) || (deltaY != 0))) {
+          ScrollPane.this.cancelTouchFocus()
+        } else ()
+      }
+      override def fling(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float, button: scala.Int): scala.Unit = {
+        val velocityX: scala.Float = if ((java.lang.Math.abs(x) > 150) && ScrollPane.this.scrollX$field) x else 0
+        val velocityY: scala.Float = if ((java.lang.Math.abs(y) > 150) && ScrollPane.this.scrollY$field) -y else 0
+        if ((velocityX != 0) || (velocityY != 0)) {
+          if (ScrollPane.this.cancelTouchFocus$field) {
+            ScrollPane.this.cancelTouchFocus()
+          } else ()
+          ScrollPane.this.fling(ScrollPane.this.flingTime, velocityX, velocityY)
+        } else ()
+      }
+      override def handle(event: com.badlogic.gdx.scenes.scene2d.Event): scala.Boolean = {
+        if (super.handle(event)) {
+          if (event.asInstanceOf[com.badlogic.gdx.scenes.scene2d.InputEvent].getType() == com.badlogic.gdx.scenes.scene2d.InputEvent.Type.touchDown) {
+            ScrollPane.this.flingTimer = 0
+          } else ()
+          return true
+        } else {
+          if (event.isInstanceOf[com.badlogic.gdx.scenes.scene2d.InputEvent] && event.asInstanceOf[com.badlogic.gdx.scenes.scene2d.InputEvent].isTouchFocusCancel()) {
+            ScrollPane.this.cancel()
+          } else ()
+        }
+        return false
+      }
+    }
   }
   def addScrollListener(): scala.Unit = {
-    this.addListener(new com.badlogic.gdx.scenes.scene2d.InputListener())
+    this.addListener(new com.badlogic.gdx.scenes.scene2d.InputListener() {
+      override def scrolled(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float, scrollAmountX$arg: scala.Float, scrollAmountY$arg: scala.Float): scala.Boolean = {
+        var scrollAmountX: scala.Float = scrollAmountX$arg
+        var scrollAmountY: scala.Float = scrollAmountY$arg
+        event.cancel()
+        ScrollPane.this.setScrollbarsVisible(true)
+        if (ScrollPane.this.scrollY$field || ScrollPane.this.scrollX$field) {
+          if (ScrollPane.this.scrollY$field) {
+            if ((!ScrollPane.this.scrollX$field) && (scrollAmountY == 0)) {
+              scrollAmountY = scrollAmountX
+            } else ()
+          } else {
+            if (ScrollPane.this.scrollX$field && (scrollAmountX == 0)) {
+              scrollAmountX = scrollAmountY
+            } else ()
+          }
+          ScrollPane.this.setScrollY(ScrollPane.this.amountY + (ScrollPane.this.getMouseWheelY() * scrollAmountY))
+          ScrollPane.this.setScrollX(ScrollPane.this.amountX + (ScrollPane.this.getMouseWheelX() * scrollAmountX))
+        } else {
+          return false
+        }
+        return true
+      }
+    })
   }
   def setScrollbarsVisible(visible: scala.Boolean): scala.Unit = {
     if (visible) {

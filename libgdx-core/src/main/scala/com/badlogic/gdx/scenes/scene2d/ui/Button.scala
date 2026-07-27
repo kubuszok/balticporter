@@ -52,7 +52,14 @@ class Button extends com.badlogic.gdx.scenes.scene2d.ui.Table with com.badlogic.
   private def initialize(): scala.Unit = {
     this.setTouchable(com.badlogic.gdx.scenes.scene2d.Touchable.enabled)
     this.addListener({
-      this.clickListener = new com.badlogic.gdx.scenes.scene2d.utils.ClickListener()
+      this.clickListener = new com.badlogic.gdx.scenes.scene2d.utils.ClickListener() {
+        override def clicked(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float): scala.Unit = {
+          if (Button.this.isDisabled()) {
+            return
+          } else ()
+          Button.this.setChecked(!Button.this.isChecked$field, true)
+        }
+      }
       this.clickListener
     })
   }

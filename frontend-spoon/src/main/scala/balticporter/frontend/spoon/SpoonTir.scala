@@ -554,6 +554,85 @@ object SpoonTir:
         case _                        => (Nil, Nil)
       Tree.EnumCase(caseId, args, body, originOf(v))
 
+    /** distinguishes anonymous classes within one enclosing type; traversal order is deterministic
+      * (every member list is `sortBy(posKey)`), so the minted keys are stable across runs. */
+    private var anonSeq = 0
+
+    /** A Java ANONYMOUS CLASS — `new Base(args) { members }`.
+      *
+      * Until this existed, `ctorCall` read `CtConstructorCall` and never asked whether the node was
+      * the `CtNewClass` subtype, so every anonymous body in the corpus was DISCARDED: `addListener(
+      * new ClickListener() { public void clicked(…) {…} })` emitted as a bare `new ClickListener()`.
+      * That compiles — a listener with no overrides is a valid listener — and every libGDX button
+      * silently did nothing. Scala's anonymous-class expression is the exact counterpart, so the
+      * members translate through the ordinary declaration machinery.
+      *
+      * Two things differ from a named class:
+      *   - the members are owned by a SYNTHETIC symbol, so their keys cannot collide with the
+      *     enclosing class's (two listeners in one class both declaring `clicked` would otherwise
+      *     intern to one symbol);
+      *   - but their bodies translate with `this` bound to the ENCLOSING class, because that is what
+      *     Spoon reports for the implicit `this` of every enclosing member they reach. The emitter
+      *     renders it `Outer.this.m` — inside a Scala anonymous class a bare `this` is the anonymous
+      *     instance, exactly as in Java.
+      *
+      * Captured locals need no lowering: javac synthesises constructor parameters for them, Scala
+      * closes over them directly. They are seeded by NAME so the xref resolves them to the real
+      * local rather than a stub. */
+    private def anonClass(nc: CtNewClass[?], enclosing: SymId, outerVars: Map[String, SymId]): Option[Tree.AnonClass] =
+      Option(nc.getAnonymousClass).map { ac =>
+        anonSeq += 1
+        val key = s"${minterKeyOf(enclosing)}#<anon>$anonSeq"
+        val id = minter.define(key)(sid =>
+          Symbol(sid, "<anon>", minter.fullNameOf(enclosing) + "$" + anonSeq, Flags(), enclosing, TypeRef(NoPrefix, sid))
+        )
+        val dropped = List.newBuilder[String]
+        val members = ac.getTypeMembers.asScala.toList.sortBy(posKey).flatMap {
+          case f: CtField[?]  => List(fieldDef(id, f, selfClass = enclosing, outerVars = outerVars))
+          case m: CtMethod[?] =>
+            List(execDef(id, m, m.getSimpleName, selfClass = enclosing, outerVars = outerVars,
+                         overrides = overridesInherited(m)))
+          case c: CtConstructor[?] if c.isImplicit => Nil // the compiler-synthesised anonymous ctor
+          // instance-initializer block (the double-brace idiom) — plain statements in the anon body
+          case a: CtAnonymousExecutable if !a.hasModifier(ModifierKind.STATIC) =>
+            List(execDef(id, a, "<initblock>", selfClass = enclosing, outerVars = outerVars))
+          case other =>
+            dropped += s"${other.getClass.getSimpleName.stripSuffix("Impl")} ${other.getSimpleName}"
+            Nil
+        }
+        Tree.AnonClass(id, members, originOf(nc), dropped.result())
+      }
+
+    /** Does this anonymous-class method OVERRIDE an inherited one? Scala REQUIRES `override` when
+      * the redefined member is concrete — and `ClickListener.clicked` has an empty body, so every
+      * listener body in libGDX is one — while merely PERMITTING it when the member is abstract
+      * (`Comparator.compare`). Marking every genuine override is therefore both necessary and safe.
+      *
+      * Spoon answers it from the resolved hierarchy; where it cannot (an unresolved supertype under
+      * noClasspath), fall back to a name+arity match over the supertypes that DO resolve, and to
+      * `false` when even that is unknown — an absent `override` fails loudly, a spurious one would
+      * too, so neither can be silent. */
+    private def overridesInherited(m: CtMethod[?]): Boolean =
+      val top = try m.getTopDefinitions.asScala.toList catch { case _: Throwable => Nil }
+      if top.exists(_ ne m) then true
+      else
+        val n     = m.getSimpleName
+        val arity = m.getParameters.size
+        def declares(t: CtTypeReference[?], fuel: Int): Boolean =
+          if t == null || fuel <= 0 then false
+          else
+            val decl = try t.getTypeDeclaration catch { case _: Throwable => null }
+            if decl == null then false
+            else
+              decl.getMethods.asScala.exists(x => x.getSimpleName == n && x.getParameters.size == arity) ||
+                (decl match { case c: CtClass[?] => declares(c.getSuperclass, fuel - 1); case _ => false }) ||
+                (try decl.getSuperInterfaces.asScala.exists(declares(_, fuel - 1)) catch { case _: Throwable => false })
+        m.getDeclaringType match
+          case c: CtClass[?] =>
+            declares(c.getSuperclass, 8) ||
+              (try c.getSuperInterfaces.asScala.exists(declares(_, 8)) catch { case _: Throwable => false })
+          case _ => false
+
     private def defineType(t: CtType[?]): SymId =
       val q = typeKey(t.getReference)
       // A substituted type stays in the model with its references resolved (see `Substituted`), but
@@ -572,18 +651,29 @@ object SpoonTir:
         case _             => None
       (sc.toList ++ t.getSuperInterfaces.asScala.toList).map(tr => tt(tpe(tr), t))
 
-    private def fieldDef(owner: SymId, f: CtField[?]): Tree.ValDef = withStatic(fieldFlags(f).isStatic) {
+    /** `selfClass` is the class a body's `this` denotes when it is NOT the member's owner — the
+      * case for an ANONYMOUS class, whose members are owned by a synthetic symbol (so their keys
+      * stay distinct) while Java's implicit `this` inside them still reports the ENCLOSING class
+      * for every enclosing member it reaches. Defaulting to `owner` keeps every other caller
+      * unchanged. */
+    private def selfOf(owner: SymId, selfClass: SymId): SymId =
+      if selfClass == SymId.None then owner else selfClass
+
+    private def fieldDef(owner: SymId, f: CtField[?], selfClass: SymId = SymId.None, outerVars: Map[String, SymId] = Map.empty): Tree.ValDef = withStatic(fieldFlags(f).isStatic) {
       val ft = tpe(f.getType)
       val id = minter.define(memberKey(owner, f.getSimpleName))(sid =>
         Symbol(sid, f.getSimpleName, qualified(owner, f.getSimpleName), fieldFlags(f), owner, ft)
       )
       // a field initializer is a real expression: translate it so its usages are traced,
       // attributed to the field (not a method).
-      val rhs = Option(f.getDefaultExpression).map(e => new BodyTranslator(id, owner).coercedExprOf(f.getType, e))
+      val rhs = Option(f.getDefaultExpression).map { e =>
+        val bt = new BodyTranslator(id, selfOf(owner, selfClass)); bt.seedVars(outerVars); bt.coercedExprOf(f.getType, e)
+      }
       Tree.ValDef(id, tt(ft, f), rhs = rhs, origin = originOf(f))
     }
 
-    private def execDef(owner: SymId, m: CtExecutable[?], name: String): Tree.DefDef = withStatic(execFlags(m).isStatic) {
+    private def execDef(owner: SymId, m: CtExecutable[?], name: String, selfClass: SymId = SymId.None,
+                        outerVars: Map[String, SymId] = Map.empty, overrides: Boolean = false): Tree.DefDef = withStatic(execFlags(m).isStatic) {
       val mkey = memberKey(owner, name + erasedSig(m))
       val id   = minter.resolve(mkey)
       val mtps = m match
@@ -594,7 +684,8 @@ object SpoonTir:
       // a method sees its class's accessible params (unless static — gated at the fill site) plus
       // its own; `withStatic` already carries `inStatic` for this exec.
       tpAccessible.prepend(tpAccessible.headOption.getOrElse(Map.empty) ++ frame)
-      val bt = new BodyTranslator(id, owner)
+      val bt = new BodyTranslator(id, selfOf(owner, selfClass))
+      bt.seedVars(outerVars) // an anonymous class captures the enclosing method's effectively-final locals
       val ps = m.getParameters.asScala.toList
       val pvs = ps.map { p =>
         val pt  = tpe(p.getType)
@@ -611,7 +702,7 @@ object SpoonTir:
         case named: CtTypedElement[?] => tpe(named.getType)
         case _                        => unitT
       val sig = MethodType(ps.map(p => p.getSimpleName -> tpe(p.getType)), ret)
-      minter.set(id, Symbol(id, name, qualified(owner, name), execFlags(m), owner, sig))
+      minter.set(id, Symbol(id, name, qualified(owner, name), execFlags(m).copy(isOverride = overrides), owner, sig))
       // translate the body (with param + type-param scope in place) — this is what makes
       // Call / field-ref usages and `callersOf` real. Abstract/interface methods have none.
       val body = Option(m.getBody).map(b => bt.methodBody(b))
@@ -689,6 +780,12 @@ object SpoonTir:
 
       def registerVar(v: CtVariable[?], id: SymId): Unit =
         varIds.put(v, id); nameIds(v.getSimpleName) = id
+
+      /** locals visible from HERE, by name — handed to a nested anonymous class so the locals it
+        * CAPTURES resolve to the real symbols rather than to `?var$x` stubs (the emitted text was
+        * already right, since Scala captures by name too; this keeps the xref honest). */
+      def varScope: Map[String, SymId] = nameIds.toMap
+      def seedVars(m: Map[String, SymId]): Unit = m.foreach { (n, id) => if !nameIds.contains(n) then nameIds(n) = id }
 
       private def nothingT = TypeRef(NoPrefix, minter.external("scala.Nothing", "Nothing"))
       private def selfT    = TypeRef(NoPrefix, classId)
@@ -1563,7 +1660,12 @@ object SpoonTir:
         val cid  = methodSym(cc.getExecutable)
         val argEs = cc.getArguments.asScala.toList
         val args = rawCtorArgs(cc, argEs, coerceArgs(cc.getExecutable, argEs))
-        Tree.Apply(Tree.New(tt(t, cc), t, originOf(cc)), args, cid, t, originOf(cc))
+        // `CtNewClass` IS a `CtConstructorCall` — the anonymous body hangs off the subtype, and
+        // reading only the supertype is what silently dropped every one of them.
+        val anon = cc match
+          case nc: CtNewClass[?] => anonClass(nc, classId, varScope)
+          case _                 => None
+        Tree.Apply(Tree.New(tt(t, cc), t, originOf(cc), anon), args, cid, t, originOf(cc))
 
       /** A RAW constructor call — `return new Values(this)` inside `ArrayMap<K,V>`, where
         * `Values<V>(ArrayMap<Object,V> map)`. Java checks a raw `new`'s arguments against the ERASED

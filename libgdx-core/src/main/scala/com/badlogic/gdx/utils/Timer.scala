@@ -190,7 +190,11 @@ object Timer {
     var pauseTimeMillis: scala.Long = 0L
     final val postedTasks: com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.Timer.Task] = new com.badlogic.gdx.utils.Array(2).asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.Timer.Task]]
     final val runTasks: com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.Timer.Task] = new com.badlogic.gdx.utils.Array(2).asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.Timer.Task]]
-    final val runPostedTasks$field: java.lang.Runnable = new java.lang.Runnable()
+    final val runPostedTasks$field: java.lang.Runnable = new java.lang.Runnable() {
+      override def run(): scala.Unit = {
+        TimerThread.this.runPostedTasks()
+      }
+    }
     val thread: java.lang.Thread = new java.lang.Thread(this, "Timer")
     this.files = com.badlogic.gdx.Gdx.files
     this.app = com.badlogic.gdx.Gdx.app
