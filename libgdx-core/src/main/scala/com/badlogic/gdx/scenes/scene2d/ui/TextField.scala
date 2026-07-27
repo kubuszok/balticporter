@@ -934,7 +934,7 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
           val oldCursor: scala.Int = cursor
           if (remove) {
             if (hasSelection) {
-              cursor = delete(false)
+              cursor = TextField.this.delete(false)
             } else {
               if (backspace && (cursor > 0)) {
                 text = text.substring(0, cursor - 1) + text.substring({ cursor -= 1; cursor })
@@ -953,7 +953,7 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
               return true
             } else ()
             if (hasSelection) {
-              cursor = delete(false)
+              cursor = TextField.this.delete(false)
             } else ()
             val insertion: java.lang.String = if (enter) "\n" else java.lang.String.valueOf(character)
             text = insert({ cursor += 1; cursor }, insertion, text)
