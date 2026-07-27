@@ -734,9 +734,9 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
       selectionStart = cursor
       val stage: com.badlogic.gdx.scenes.scene2d.Stage = getStage()
       if (stage != null) {
-        stage.setKeyboardFocus(this)
+        stage.setKeyboardFocus(TextField.this)
       } else ()
-      keyboard.show(this)
+      keyboard.show(TextField.this)
       hasSelection = true
       return true
     }
@@ -946,7 +946,7 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
             }
           } else ()
           if (add && (!remove)) {
-            if (((!enter) && (filter != null)) && (!filter.acceptChar(this, character))) {
+            if (((!enter) && (filter != null)) && (!filter.acceptChar(TextField.this, character))) {
               return true
             } else ()
             if (!withinMaxLength(text.length() - (if (hasSelection) java.lang.Math.abs(cursor - selectionStart) else 0))) {
@@ -974,7 +974,7 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
         } else ()
       }
       if (listener != null) {
-        listener.keyTyped(this, character)
+        listener.keyTyped(TextField.this, character)
       } else ()
       return true
     }

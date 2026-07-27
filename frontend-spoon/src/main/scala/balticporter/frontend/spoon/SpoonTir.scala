@@ -626,6 +626,26 @@ object SpoonTir:
       private def isOwnThis(ta: CtThisAccess[?]): Boolean =
         Option(ta.getType).map(_.getQualifiedName).forall(_ == minter.fullNameOf(classId))
 
+      /** `Outer.this` — the enclosing instance, as its own class symbol. Only for a type that
+        * LEXICALLY ENCLOSES the class the access sits in: Spoon also reports a plain `this` used to
+        * reach an INHERITED member under the member's DECLARING type (`this.isGlobal` inside
+        * `DynamicsModifier.Rotation2D extends DynamicsModifier` comes back typed `DynamicsModifier`),
+        * and qualifying that would name a supertype Scala's `Outer.this` syntax cannot denote. */
+      private def outerThis(ta: CtThisAccess[?]): Option[Term] =
+        val q     = ta.getType.getQualifiedName
+        var here  = ta.getParent(classOf[CtType[?]])
+        var found = false
+        // walk OUT only while each step really captures an enclosing instance (a non-static inner
+        // class); a `static` nested class has no `Outer.this` at all, and Spoon reporting one there
+        // means it was an inherited-member access, not an enclosing-instance one.
+        while here != null && capturesEnclosing(here) && !found do
+          here = here.getDeclaringType
+          if here != null && here.getQualifiedName == q then found = true
+        Option.when(found) {
+          val id = minter.external(q, simpleName(q))
+          Tree.This(id, TypeRef(NoPrefix, id), originOf(ta))
+        }
+
       /** entry: a method/ctor block → a TIR `Block` (statements, Unit result). */
       def methodBody(b: CtBlock[?]): Term =
         Tree.Block(b.getStatements.asScala.toList.map(stmt), unit(b), unitT, originOf(b))
@@ -991,6 +1011,10 @@ object SpoonTir:
         case l: CtLiteral[?]      => literal(l)
         case f: CtFieldRead[?]    => fieldAccess(f.getVariable, f.getTarget, e)
         case f: CtFieldWrite[?]   => fieldAccess(f.getVariable, f.getTarget, e)
+        // `Outer.this` USED AS A VALUE (`listener.keyTyped(TextField.this, c)` from an inner
+        // listener): Scala's bare `this` names the INNERMOST class, so the enclosing instance has
+        // to be named explicitly. Carry the enclosing class's symbol; the emitter qualifies it.
+        case ta: CtThisAccess[?] if !isOwnThis(ta) && outerThis(ta).isDefined => outerThis(ta).get
         case _: CtThisAccess[?]   => thisTerm(e)
         case v: CtVariableRead[?] => Tree.Ident(resolveVar(v.getVariable), ty(e), originOf(e))
         case v: CtVariableWrite[?] => Tree.Ident(resolveVar(v.getVariable), ty(e), originOf(e))

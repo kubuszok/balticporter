@@ -149,10 +149,37 @@ final class TirEmitter(source: Program):
   private def ind(n: Int): String = "  " * n
 
   // ---- definitions ----
+  /** the classes currently being rendered, outermost first. Lets a `Tree.This` naming an ENCLOSING
+    * class render Java's qualified `Outer.this` rather than a bare `this` (which names the inner one). */
+  private val classStack = collection.mutable.ArrayDeque[SymId]()
+
   private def classDef(cd: Tree.ClassDef, i: Int): String =
     val outer = currentClass
     currentClass = Some(cd)
-    try classDef0(cd, i) finally currentClass = outer
+    classStack.append(cd.symbol)
+    try classDef0(cd, i) finally { classStack.removeLast(); currentClass = outer }
+
+  /** `this` in Scala always names the INNERMOST class, where Java's `Outer.this` names an enclosing
+    * one. Qualify by simple name when the symbol is an enclosing class actually being rendered
+    * around this point; anything else (an inherited/unknown owner) keeps the bare `this`.
+    *
+    * A SUPERTYPE is never qualified even when it also encloses: libGDX nests subclasses inside their
+    * own base (`DynamicsModifier.FaceDirection extends DynamicsModifier`), and constructor replay
+    * moves the base's `this` statements into the subclass body — there the bare `this` is exactly
+    * right, while `DynamicsModifier.this` would name the companion object. */
+  private def thisRef(s: SymId): String =
+    val inner = classStack.lastOption
+    if inner.contains(s) || !classStack.contains(s) || inner.exists(inheritsFrom(_, s)) then "this"
+    else s"${esc(sym(s).name)}.this"
+
+  /** is `child` `anc`, or a (transitive) subtype of it, among our own definitions? */
+  private def inheritsFrom(child: SymId, anc: SymId): Boolean =
+    val seen = collection.mutable.Set[SymId]()
+    def go(c: SymId): Boolean =
+      c == anc || (seen.add(c) && program.definitionOf(c).collect { case cd: Tree.ClassDef =>
+        parentSymsOf(cd).exists(go)
+      }.getOrElse(false))
+    go(child)
 
   private def classDef0(cd: Tree.ClassDef, i: Int): String =
     if sym(cd.symbol).flags.isEnum then return enumDef(cd, i)
@@ -497,7 +524,7 @@ final class TirEmitter(source: Program):
   private def term(t: Term, i: Int): String = t match
     case Tree.Ident(s, _, _)            => if isTypeRef(s) then typeValue(s) else staticRef(s)
     case Tree.Literal(c, _, _)          => constant(c)
-    case Tree.This(_, _, _)             => "this"
+    case Tree.This(s, _, _)             => thisRef(s)
     case Tree.Super(_, _, _)            => "super"
     case Tree.Select(q, s, _, _)        => s"${term(q, i)}.${local(s)}"
     case Tree.New(tpt, _, _)            => s"new ${ctorTpe(tpt.tpe)}"
