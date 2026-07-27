@@ -812,7 +812,13 @@ object SpoonTir:
         while here != null && capturesEnclosing(here) && !found do
           here = here.getDeclaringType
           if here != null && here.getQualifiedName == q then found = true
-        Option.when(found) {
+        // An ANONYMOUS enclosing class has NO NAME, so Scala has no `Outer.this` for it (`Pixmap`'s
+        // download listener calls its own `failed(t)` from a nested `Runnable`). Emitted bare, the
+        // reference resolves lexically to that enclosing anonymous class's member — which is exactly
+        // what Java resolved it to. Qualifying it with the name Spoon reports (`Pixmap$1`) would
+        // name a type that does not exist in the emitted code.
+        val anonymous = here match { case c: CtClass[?] => c.isAnonymous; case _ => false }
+        Option.when(found && !anonymous) {
           val id = minter.external(q, simpleName(q))
           Tree.This(id, TypeRef(NoPrefix, id), originOf(ta))
         }

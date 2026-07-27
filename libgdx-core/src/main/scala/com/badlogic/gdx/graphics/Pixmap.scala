@@ -179,7 +179,7 @@ object Pixmap {
               responseListener.downloadComplete(pixmap)
             } catch {
               case t: java.lang.Throwable => {
-                this.failed(t)
+                failed(t)
               }
             }
           }
