@@ -1,5 +1,7 @@
 package balticporter.core
 
+import balticporter.tir.{SymTag, Symbol}
+
 import java.nio.file.Path
 
 /** Principled, typed directives for replacing constructs the port must NOT
@@ -37,3 +39,29 @@ final case class Substitutions(
 
 object Substitutions:
   val none: Substitutions = Substitutions()
+
+/** Marks a symbol the port must NOT emit, so INTERMEDIATE layers can still see it.
+  *
+  * A dropped type is deliberately kept in the model and its references stay resolved — dropping it
+  * from the parse set instead would leave every use unresolved and silently degrade translation of
+  * the code around it. But those uses must be recognisable as substitution targets rather than as
+  * ordinary references, because a replacement is not necessarily name- or API-compatible: a
+  * transform may need to rewrite `Json.readValue(…)` into a Kindlings codec call, or re-point a
+  * type reference somewhere else entirely.
+  *
+  * So the frontend tags the symbol and any phase can detect it:
+  * {{{
+  * program.symbolOf(id).flatMap(Substituted.of) match
+  *   case Some(Substituted(fqn)) => rewriteIntoReplacement(fqn)
+  *   case None                   => leaveAlone
+  * }}}
+  *
+  * The declaration itself is never emitted; what remains at that FQN is whatever the substitution
+  * supplies — injected Scala, a rewrite performed by a phase, or nothing at all if every use was
+  * rewritten away. Emission is verified against exactly that expectation.
+  */
+final case class Substituted(fqn: String) extends SymTag
+
+object Substituted:
+  def of(sym: Symbol): Option[Substituted] = sym.tags.collectFirst { case s: Substituted => s }
+  def tags(sym: Symbol): Boolean           = of(sym).isDefined

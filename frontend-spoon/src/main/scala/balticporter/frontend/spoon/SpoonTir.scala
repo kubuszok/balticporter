@@ -1,6 +1,6 @@
 package balticporter.frontend.spoon
 
-import balticporter.core.{FrontendConfig, Substitutions}
+import balticporter.core.{FrontendConfig, Substituted, Substitutions}
 import balticporter.tir.*
 import balticporter.tir.TypeRepr.*
 
@@ -353,7 +353,11 @@ object SpoonTir:
 
     private def defineType(t: CtType[?]): SymId =
       val q = typeKey(t.getReference)
-      minter.define(q)(id => Symbol(id, t.getSimpleName, q, typeFlags(t), ownerSym(t), TypeRef(NoPrefix, id)))
+      // A substituted type stays in the model with its references resolved (see `Substituted`), but
+      // carries the tag so later phases can rewrite uses into whatever replaces it.
+      val tags: Set[SymTag] = if subs.dropsType(q) then Set(Substituted(q)) else Set.empty
+      minter.define(q)(id =>
+        Symbol(id, t.getSimpleName, q, typeFlags(t), ownerSym(t), TypeRef(NoPrefix, id), tags = tags))
 
     private def ownerSym(t: CtType[?]): SymId =
       Option(t.getDeclaringType).map(dt => minter.external(typeKey(dt.getReference), dt.getSimpleName)).getOrElse(SymId.None)

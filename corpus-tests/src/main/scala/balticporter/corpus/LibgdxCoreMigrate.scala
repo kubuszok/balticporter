@@ -83,6 +83,12 @@ object LibgdxCoreMigrate:
         Files.writeString(p, emitter.emitUnit(u))
         written += 1
     }
+    // CHECK 1 — the engine itself must not have emitted any dropped type. (Run before injection,
+    // so a file present here can only have come from the emitter.)
+    val leaked = subs.dropTypes.filter(fqn => Files.exists(outDir.resolve(fqn.replace('.', '/') + ".scala")))
+    if leaked.nonEmpty then
+      sys.error(s"[libgdx-core] dropped types were still EMITTED: ${leaked.toList.sorted.mkString(", ")}")
+
     // inject ready-made Scala verbatim (survives the wipe-and-regenerate above):
     // new types with no Java counterpart, or whole-file replacements for dropped ones.
     var injected = 0
@@ -97,5 +103,24 @@ object LibgdxCoreMigrate:
           injected += 1
         }
     }
+    // CHECK 2 — what stands at a dropped type's FQN in the FINAL code must be either an injected
+    // replacement or nothing at all (every use rewritten away by a phase, via the `Substituted`
+    // tag). A dangling reference means the substitution was declared but never carried out — fail
+    // loudly rather than ship code that depends on a type this port claims not to have.
+    val sources = Files.walk(outDir).iterator().asScala
+      .filter(p => p.toString.endsWith(".scala")).toList
+      .map(p => p -> Files.readString(p))
+    val incomplete = subs.dropTypes.toList.sorted.flatMap { fqn =>
+      if Files.exists(outDir.resolve(fqn.replace('.', '/') + ".scala")) then None // replaced
+      else
+        val refs = sources.count((_, src) => src.contains(fqn))
+        if refs == 0 then None else Some(fqn -> refs) // rewritten away vs. dangling
+    }
+    if incomplete.nonEmpty then
+      incomplete.foreach: (fqn, n) =>
+        System.err.println(s"[libgdx-core] SUBSTITUTION INCOMPLETE: $fqn is dropped, has no replacement, and is still referenced by $n file(s)")
+      sys.error(s"[libgdx-core] ${incomplete.size} declared substitution(s) not carried out")
+    println(s"[libgdx-core] substitutions: ${subs.dropTypes.size} dropped types verified removed from the final code")
+
     println(s"[libgdx-core] wrote $written Scala files ($dropped dropped, $injected injected) -> $outDir")
     println(s"[libgdx-core] now: sbt libgdx-core/compile")
