@@ -36,6 +36,9 @@ object LibgdxCoreMigrate:
       // not port it — the reflection-driven decoding it served was replaced by Kindlings'
       // Jsoniter/UBJson codecs — so it is substituted wholesale by injected Scala at the same FQNs.
       dropTypes = Set(
+        // the reflection-based serializer itself — replaced by Kindlings Jsoniter/UBJson codecs.
+        // (JsonValue/JsonReader/JsonWriter/JsonMatcher are DOM/parsing types and port fine.)
+        "com.badlogic.gdx.utils.Json",
         "com.badlogic.gdx.utils.reflect.Annotation",
         "com.badlogic.gdx.utils.reflect.ArrayReflection",
         "com.badlogic.gdx.utils.reflect.ClassReflection",
