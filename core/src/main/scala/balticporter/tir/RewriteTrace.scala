@@ -54,8 +54,12 @@ object RewriteTrace:
     *     (varargs allow a tail, so those require only the fixed prefix).
     *   - TYPE-ARGUMENT ARITY: an `F[…]` whose argument count contradicts `F`'s declared type
     *     parameters — the exact failure mode of adding a type parameter and missing a use.
+    *   - ORPHANED CALL: a call to a member of a type we DO define, where the member itself has no
+    *     declaration left — the failure mode of `Substitutions.dropMethods`, and invisible to the
+    *     arity check (with nothing to compare against, it has nothing to say).
     */
-  def check(program: Program): List[Mismatch] = callArity(program) ++ typeArity(program)
+  def check(program: Program): List[Mismatch] =
+    callArity(program) ++ typeArity(program) ++ orphanedCalls(program)
 
   private def callArity(program: Program): List[Mismatch] =
     program.referenced.toList.flatMap { s =>
@@ -71,6 +75,32 @@ object RewriteTrace:
               Mismatch("call arity", s, name, ps.size, a.args.size, a.origin)
           }
         case _ => Nil
+    }
+
+  /** A call to a member whose OWNER is a type this port defines, but which has no declaration in
+    * the program. Dropping a method (or one overload of it) leaves exactly this: a live call site
+    * pointing at nothing. [[callArity]] cannot see it — with no parameter list there is no arity to
+    * contradict — so without this the completeness guarantee has a hole precisely where signature
+    * rewrites are performed. Confined to owners we define; an external (JDK/library) member has no
+    * declaration here by construction and is not a finding.
+    */
+  private def orphanedCalls(program: Program): List[Mismatch] =
+    program.referenced.toList.flatMap { s =>
+      val sym    = program.symbolOf(s)
+      val ownerD = sym.map(_.owner).filter(_ != SymId.None).flatMap(program.definitionOf)
+      val known  = program.definitionOf(s).isDefined
+      // `values`/`valueOf` on an enum are not declared by anyone — Java synthesises them and so
+      // does the Scala `enum` we emit, so a call to one is correct precisely BECAUSE it has no
+      // declaration in the tree.
+      val enumSynthetic = (sym.map(_.name).exists(Set("values", "valueOf"))) &&
+        ownerD.exists(d => program.symbolOf(d.symbol).exists(_.flags.isEnum))
+      if known || enumSynthetic || !ownerD.exists(_.isInstanceOf[Tree.ClassDef]) then Nil
+      else
+        val name = sym.map(_.fullName).getOrElse("?")
+        program.usages(s).collect {
+          case Usage(UsageKind.Call, a: Tree.Apply, _) =>
+            Mismatch("call to a member with no declaration", s, name, 0, a.args.size, a.origin)
+        }
     }
 
   private def typeArity(program: Program): List[Mismatch] =

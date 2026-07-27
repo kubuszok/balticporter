@@ -424,13 +424,19 @@ object SpoonTir:
         .map(fieldDef(id, _))
       // include enum constructors too — the emitter folds their PARAMS into the sealed class's primary
       // constructor so each constant (`Nearest(GL_NEAREST)`) has a matching parameter to pass to.
+      // Substitutions.dropMethods: a member opted out of mechanical translation (a ready Scala
+      // equivalent is injected in its place, or every use of it was rewritten away). Keyed
+      // `owner#name` for all overloads, or `owner#name(P1,P2)` on erased parameter simple names
+      // for one. Constructors are keyed `<init>` and need that precision to be droppable at all.
+      def isDropped(e: CtExecutable[?], name: String): Boolean =
+        subs.dropsMethod(t.getQualifiedName, name,
+          e.getParameters.asScala.toList.map(p => Option(p.getType).map(_.getSimpleName).getOrElse("?")))
       val ctors = t match
-        case c: CtClass[?] => c.getConstructors.asScala.toList.sortBy(posKey).map(execDef(id, _, "<init>"))
+        case c: CtClass[?] => c.getConstructors.asScala.toList.sortBy(posKey)
+                               .filterNot(isDropped(_, "<init>")).map(execDef(id, _, "<init>"))
         case _             => Nil
-      // Substitutions.dropMethods: a method opted out of mechanical translation (a ready Scala
-      // equivalent is injected in its place). Keyed `owner#method` by simple name.
       val methods = t.getMethods.asScala.toList.sortBy(posKey)
-        .filterNot(m => subs.dropsMethod(t.getQualifiedName, m.getSimpleName))
+        .filterNot(m => isDropped(m, m.getSimpleName))
         .map(m => execDef(id, m, m.getSimpleName))
       // Java INITIALIZER BLOCKS — `static { … }` and instance `{ … }`. These were previously
       // dropped on the floor: nothing referenced `CtAnonymousExecutable`, so `MathUtils` never

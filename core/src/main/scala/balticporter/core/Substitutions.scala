@@ -34,8 +34,14 @@ final case class Substitutions(
     inject: List[Path] = Nil,
 ):
   def dropsType(fqcn: String): Boolean = dropTypes.contains(fqcn)
-  def dropsMethod(ownerFqcn: String, method: String): Boolean =
-    dropMethods.contains(s"$ownerFqcn#$method")
+
+  /** `owner#name` drops EVERY overload of that name; `owner#name(P1,P2)` — the erased parameter
+    * type SIMPLE names — drops exactly one. Overload precision is what makes constructors
+    * droppable at all: a type's constructors all share the one name `<init>`, so the bare key
+    * could only ever mean "drop them all". */
+  def dropsMethod(ownerFqcn: String, method: String, paramTypes: List[String] = Nil): Boolean =
+    dropMethods.contains(s"$ownerFqcn#$method") ||
+      dropMethods.contains(s"$ownerFqcn#$method(${paramTypes.mkString(",")})")
 
 object Substitutions:
   val none: Substitutions = Substitutions()

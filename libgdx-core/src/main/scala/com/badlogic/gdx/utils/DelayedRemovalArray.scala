@@ -10,9 +10,6 @@ class DelayedRemovalArray[T] extends com.badlogic.gdx.utils.Array[T] {
   def this(ordered: scala.Boolean, capacity: scala.Int, arraySupplier: com.badlogic.gdx.utils.ArraySupplier[scala.Array[T]]) = {
     this()
   }
-  def this(ordered: scala.Boolean, capacity: scala.Int, arrayType: java.lang.Class[T]) = {
-    this()
-  }
   def this(ordered: scala.Boolean, capacity: scala.Int) = {
     this()
   }
@@ -20,9 +17,6 @@ class DelayedRemovalArray[T] extends com.badlogic.gdx.utils.Array[T] {
     this()
   }
   def this(arraySupplier: com.badlogic.gdx.utils.ArraySupplier[scala.Array[T]]) = {
-    this()
-  }
-  def this(arrayType: java.lang.Class[T]) = {
     this()
   }
   def this(capacity: scala.Int) = {

@@ -20,12 +20,6 @@ class Array[T] extends scala.collection.Iterable[T] {
   def this(arraySupplier: com.badlogic.gdx.utils.ArraySupplier[scala.Array[T]]) = {
     this(true, 16, arraySupplier)
   }
-  def this(ordered: scala.Boolean, capacity: scala.Int, arrayType: java.lang.Class[T]) = {
-    this(ordered, capacity, (size: scala.Int) => com.badlogic.gdx.utils.reflect.ArrayReflection.newInstance(arrayType.asInstanceOf[java.lang.Class[T]], size).asInstanceOf[scala.Array[T]])
-  }
-  def this(arrayType: java.lang.Class[T]) = {
-    this(true, 16, arrayType.asInstanceOf[java.lang.Class[T]])
-  }
   def this(array: Array[? <: T]) = {
     this()
     this.items = java.util.Arrays.copyOf(array.items.asInstanceOf[scala.Array[java.lang.Object]], array.size).asInstanceOf[scala.Array[T]]
@@ -485,11 +479,6 @@ class Array[T] extends scala.collection.Iterable[T] {
     java.lang.System.arraycopy(this.items, 0, result, 0, this.size)
     return result
   }
-  def toArray[V](`type`: java.lang.Class[V]): scala.Array[V] = {
-    val result: scala.Array[V] = com.badlogic.gdx.utils.reflect.ArrayReflection.newInstance(`type`, this.size).asInstanceOf[scala.Array[V]].asInstanceOf[scala.Array[V]]
-    java.lang.System.arraycopy(this.items, 0, result, 0, this.size)
-    return result
-  }
   def hashCode(): scala.Int = {
     if (!this.ordered) {
       return super.hashCode()
@@ -596,12 +585,6 @@ object Array {
   }
   def of[T](ordered: scala.Boolean, capacity: scala.Int, arraySupplier: com.badlogic.gdx.utils.ArraySupplier[scala.Array[T]]): Array[T] = {
     return new Array[T](ordered, capacity, arraySupplier)
-  }
-  def of[T](arrayType: java.lang.Class[T]): Array[T] = {
-    return new Array(arrayType).asInstanceOf[Array[T]]
-  }
-  def of[T](ordered: scala.Boolean, capacity: scala.Int, arrayType: java.lang.Class[T]): Array[T] = {
-    return new Array(ordered, capacity, arrayType).asInstanceOf[Array[T]]
   }
   def `with`[T](array: scala.Array[T]): Array[T] = {
     return new Array(array).asInstanceOf[Array[T]]

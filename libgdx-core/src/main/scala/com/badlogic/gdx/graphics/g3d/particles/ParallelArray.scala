@@ -200,13 +200,6 @@ object ParallelArray {
     var `type`: java.lang.Class[?] = null.asInstanceOf[java.lang.Class[?]]
     var arraySupplier: com.badlogic.gdx.utils.ArraySupplier[?] = null.asInstanceOf[com.badlogic.gdx.utils.ArraySupplier[?]]
     var count: scala.Int = 0
-    def this(id: scala.Int, `type`: java.lang.Class[?], count: scala.Int) = {
-      this()
-      this.id = id
-      this.`type` = `type`
-      this.count = count
-      this.arraySupplier = (size: scala.Int) => com.badlogic.gdx.utils.reflect.ArrayReflection.newInstance(`type`, size)
-    }
     def this(id: scala.Int, arraySupplier: com.badlogic.gdx.utils.ArraySupplier[?], count: scala.Int) = {
       this()
       this.id = id

@@ -26,12 +26,6 @@ class ArrayMap[K, V] extends scala.collection.Iterable[com.badlogic.gdx.utils.Ob
   def this(keyArraySupplier: com.badlogic.gdx.utils.ArraySupplier[scala.Array[K]], valueArraySupplier: com.badlogic.gdx.utils.ArraySupplier[scala.Array[V]]) = {
     this(false, 16, keyArraySupplier, valueArraySupplier)
   }
-  def this(ordered: scala.Boolean, capacity: scala.Int, keyArrayType: java.lang.Class[?], valueArrayType: java.lang.Class[?]) = {
-    this(ordered, capacity, (size: scala.Int) => com.badlogic.gdx.utils.reflect.ArrayReflection.newInstance(keyArrayType.asInstanceOf[java.lang.Class[?]], size).asInstanceOf[scala.Array[K]], (size: scala.Int) => com.badlogic.gdx.utils.reflect.ArrayReflection.newInstance(valueArrayType.asInstanceOf[java.lang.Class[?]], size).asInstanceOf[scala.Array[V]])
-  }
-  def this(keyArrayType: java.lang.Class[?], valueArrayType: java.lang.Class[?]) = {
-    this(false, 16, keyArrayType.asInstanceOf[java.lang.Class[?]], valueArrayType.asInstanceOf[java.lang.Class[?]])
-  }
   def this(array: ArrayMap[K, V]) = {
     this()
     this.ordered = array.ordered

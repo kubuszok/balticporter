@@ -13,9 +13,6 @@ class Queue[T] extends scala.collection.Iterable[T] {
   def this(initialSize: scala.Int) = {
     this(initialSize, com.badlogic.gdx.utils.ArraySupplier.`object`())
   }
-  def this(initialSize: scala.Int, `type`: java.lang.Class[T]) = {
-    this(initialSize, (size: scala.Int) => com.badlogic.gdx.utils.reflect.ArrayReflection.newInstance(`type`, size).asInstanceOf[scala.Array[T]])
-  }
   def addLast(`object`: T): scala.Unit = {
     var values: scala.Array[T] = this.values
     if (this.size == values.length) {

@@ -60,6 +60,32 @@ object LibgdxCoreMigrate:
       dropMethods = Set(
         "com.badlogic.gdx.scenes.scene2d.ui.Skin#setEnabledReflection",
         "com.badlogic.gdx.scenes.scene2d.ui.Skin#findMethod",
+        // `ArrayReflection` — `java.lang.reflect.Array`, which neither Scala.js nor Native has.
+        // Every remaining use of it sits inside a member libGDX ITSELF deprecated in favour of an
+        // `ArraySupplier` overload that is already portable (`Array(boolean, int, ArraySupplier)`,
+        // `toArray(ArraySupplier)`, `ChannelDescriptor(int, ArraySupplier, int)`, …). The corpus
+        // calls none of the deprecated forms — `ParticleChannels` already builds every descriptor
+        // with `float[]::new` — so dropping them costs no call site and removes the last JVM-only
+        // dependency outright. Overload-precise keys: the `ArraySupplier` twins must survive.
+        "com.badlogic.gdx.utils.Array#<init>(boolean,int,Class)",
+        "com.badlogic.gdx.utils.Array#<init>(Class)",
+        "com.badlogic.gdx.utils.Array#toArray(Class)",
+        "com.badlogic.gdx.utils.Array#of(Class)",
+        "com.badlogic.gdx.utils.Array#of(boolean,int,Class)",
+        // the Array subclasses' own deprecated pairs only forward to Array's, so they go with them.
+        // (`DelayedRemovalArray` was found by RewriteTrace's orphaned-call check, not by grep.)
+        "com.badlogic.gdx.utils.SnapshotArray#<init>(boolean,int,Class)",
+        "com.badlogic.gdx.utils.SnapshotArray#<init>(Class)",
+        "com.badlogic.gdx.utils.DelayedRemovalArray#<init>(boolean,int,Class)",
+        "com.badlogic.gdx.utils.DelayedRemovalArray#<init>(Class)",
+        "com.badlogic.gdx.utils.ArrayMap#<init>(boolean,int,Class,Class)",
+        "com.badlogic.gdx.utils.ArrayMap#<init>(Class,Class)",
+        "com.badlogic.gdx.utils.Queue#<init>(int,Class)",
+        "com.badlogic.gdx.graphics.g3d.particles.ParallelArray$ChannelDescriptor#<init>(int,Class,int)",
+        // the one in-corpus caller of a dropped ctor: itself deprecated, with an `ArraySupplier`
+        // twin, and both subclasses (`BillboardParticleBatch`, `PointSpriteParticleBatch`) already
+        // call the twin — so it too goes with no call site left behind.
+        "com.badlogic.gdx.graphics.g3d.particles.batches.BufferedParticleBatch#<init>(Class)",
       ),
       inject = List(overridesRoot),
     )

@@ -6,11 +6,6 @@ abstract class BufferedParticleBatch[T <: com.badlogic.gdx.graphics.g3d.particle
   var currentCapacity: scala.Int = 0
   var sorter: com.badlogic.gdx.graphics.g3d.particles.ParticleSorter = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ParticleSorter]
   var camera: com.badlogic.gdx.graphics.Camera = null.asInstanceOf[com.badlogic.gdx.graphics.Camera]
-  def this(`type`: java.lang.Class[T]) = {
-    this()
-    this.sorter = new com.badlogic.gdx.graphics.g3d.particles.ParticleSorter.Distance()
-    this.renderData = new com.badlogic.gdx.utils.Array[T](false, 10, `type`)
-  }
   def this(arraySupplier: com.badlogic.gdx.utils.ArraySupplier[scala.Array[T]]) = {
     this()
     this.sorter = new com.badlogic.gdx.graphics.g3d.particles.ParticleSorter.Distance()
