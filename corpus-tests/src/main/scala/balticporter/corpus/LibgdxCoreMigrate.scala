@@ -3,7 +3,7 @@ package balticporter.corpus
 import balticporter.core.{FrontendConfig, Substituted, Substitutions}
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
-import balticporter.tir.{Pipeline, Program, RewriteTrace}
+import balticporter.tir.{Pipeline, PortabilityCheck, Program, RewriteTrace}
 import balticporter.transform.{CollectionsTransform, MutableParamsTransform, PanamaFfiTransform}
 
 import java.nio.file.{Files, Path, StandardCopyOption}
@@ -80,6 +80,15 @@ object LibgdxCoreMigrate:
       println(s"[libgdx-core] signature check: ${mismatches.size} site(s) disagree with their declaration")
       mismatches.take(20).foreach(m => println("  " + m.render))
 
+    // Cross-platform target (sge ships Scala.js / Native): report every JDK API the port still
+    // depends on that those platforms cannot provide. `--js` COMPILE does not catch these — only
+    // the Scala.js linker does, and only for code reachable from an entry point, which a library
+    // has none of. Over the TIR we see all of it.
+    val droppedIds = program.symbols.all.collect { case s if subs.dropsType(s.fullName) => s.id }.toSet
+    val portability = PortabilityCheck.inEmittedCode(program, PortabilityCheck.check(program), droppedIds)
+    println(s"[libgdx-core] portability (Scala.js/Native): ${portability.size} site(s) on JVM-only APIs in EMITTED code")
+    println(PortabilityCheck.summary(portability))
+
     val outDir = repoRoot.resolve("libgdx-core/src/main/scala")
     if Files.exists(outDir) then Files.walk(outDir).iterator().asScala.toList.reverse.foreach(Files.delete)
     Files.createDirectories(outDir)
@@ -118,6 +127,18 @@ object LibgdxCoreMigrate:
           injected += 1
         }
     }
+    // injected replacements bypass the TIR — scan their text for the same portability rules, so a
+    // hand-written shim cannot quietly reintroduce the API the substitution was meant to remove.
+    val injectedViolations = subs.inject.filter(Files.exists(_)).flatMap { root =>
+      Files.walk(root).iterator().asScala.filter(_.toString.endsWith(".scala")).toList.flatMap { src =>
+        PortabilityCheck.inInjectedSource(root.relativize(src).toString, Files.readString(src))
+      }
+    }
+    if injectedViolations.isEmpty then println("[libgdx-core] portability of injected replacements: clean")
+    else
+      println(s"[libgdx-core] portability of injected replacements: ${injectedViolations.size} finding(s)")
+      injectedViolations.foreach(v => println("  " + v))
+
     // CHECK 2 — what stands at a dropped type's FQN in the FINAL code must be either an injected
     // replacement or nothing at all (every use rewritten away by a phase, via the `Substituted`
     // tag). A dangling reference means the substitution was declared but never carried out — fail
