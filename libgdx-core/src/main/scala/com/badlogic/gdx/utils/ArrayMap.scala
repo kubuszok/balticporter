@@ -463,11 +463,11 @@ class ArrayMap[K, V] extends scala.collection.Iterable[com.badlogic.gdx.utils.Ob
   }
   def entries(): com.badlogic.gdx.utils.ArrayMap.Entries[K, V] = {
     if (com.badlogic.gdx.utils.Collections.allocateIterators) {
-      return new com.badlogic.gdx.utils.ArrayMap.Entries[K, V](this).asInstanceOf[com.badlogic.gdx.utils.ArrayMap.Entries[K, V]]
+      return new com.badlogic.gdx.utils.ArrayMap.Entries[K, V](this.asInstanceOf[ArrayMap[K, V]]).asInstanceOf[com.badlogic.gdx.utils.ArrayMap.Entries[K, V]]
     } else ()
     if (this.entries1 == null) {
-      this.entries1 = new com.badlogic.gdx.utils.ArrayMap.Entries[K, V](this).asInstanceOf[com.badlogic.gdx.utils.ArrayMap.Entries[K, V]]
-      this.entries2 = new com.badlogic.gdx.utils.ArrayMap.Entries[K, V](this).asInstanceOf[com.badlogic.gdx.utils.ArrayMap.Entries[K, V]]
+      this.entries1 = new com.badlogic.gdx.utils.ArrayMap.Entries[K, V](this.asInstanceOf[ArrayMap[K, V]]).asInstanceOf[com.badlogic.gdx.utils.ArrayMap.Entries[K, V]]
+      this.entries2 = new com.badlogic.gdx.utils.ArrayMap.Entries[K, V](this.asInstanceOf[ArrayMap[K, V]]).asInstanceOf[com.badlogic.gdx.utils.ArrayMap.Entries[K, V]]
     } else ()
     if (!this.entries1.valid) {
       this.entries1.index = 0
@@ -482,11 +482,11 @@ class ArrayMap[K, V] extends scala.collection.Iterable[com.badlogic.gdx.utils.Ob
   }
   def values(): com.badlogic.gdx.utils.ArrayMap.Values[V] = {
     if (com.badlogic.gdx.utils.Collections.allocateIterators) {
-      return new com.badlogic.gdx.utils.ArrayMap.Values[V](this).asInstanceOf[com.badlogic.gdx.utils.ArrayMap.Values[V]]
+      return new com.badlogic.gdx.utils.ArrayMap.Values[V](this.asInstanceOf[ArrayMap[java.lang.Object, V]]).asInstanceOf[com.badlogic.gdx.utils.ArrayMap.Values[V]]
     } else ()
     if (this.values1 == null) {
-      this.values1 = new com.badlogic.gdx.utils.ArrayMap.Values[V](this).asInstanceOf[com.badlogic.gdx.utils.ArrayMap.Values[V]]
-      this.values2 = new com.badlogic.gdx.utils.ArrayMap.Values[V](this).asInstanceOf[com.badlogic.gdx.utils.ArrayMap.Values[V]]
+      this.values1 = new com.badlogic.gdx.utils.ArrayMap.Values[V](this.asInstanceOf[ArrayMap[java.lang.Object, V]]).asInstanceOf[com.badlogic.gdx.utils.ArrayMap.Values[V]]
+      this.values2 = new com.badlogic.gdx.utils.ArrayMap.Values[V](this.asInstanceOf[ArrayMap[java.lang.Object, V]]).asInstanceOf[com.badlogic.gdx.utils.ArrayMap.Values[V]]
     } else ()
     if (!this.values1.valid) {
       this.values1.index = 0
@@ -501,11 +501,11 @@ class ArrayMap[K, V] extends scala.collection.Iterable[com.badlogic.gdx.utils.Ob
   }
   def keys(): com.badlogic.gdx.utils.ArrayMap.Keys[K] = {
     if (com.badlogic.gdx.utils.Collections.allocateIterators) {
-      return new com.badlogic.gdx.utils.ArrayMap.Keys[K](this).asInstanceOf[com.badlogic.gdx.utils.ArrayMap.Keys[K]]
+      return new com.badlogic.gdx.utils.ArrayMap.Keys[K](this.asInstanceOf[ArrayMap[K, java.lang.Object]]).asInstanceOf[com.badlogic.gdx.utils.ArrayMap.Keys[K]]
     } else ()
     if (this.keys1 == null) {
-      this.keys1 = new com.badlogic.gdx.utils.ArrayMap.Keys[K](this).asInstanceOf[com.badlogic.gdx.utils.ArrayMap.Keys[K]]
-      this.keys2 = new com.badlogic.gdx.utils.ArrayMap.Keys[K](this).asInstanceOf[com.badlogic.gdx.utils.ArrayMap.Keys[K]]
+      this.keys1 = new com.badlogic.gdx.utils.ArrayMap.Keys[K](this.asInstanceOf[ArrayMap[K, java.lang.Object]]).asInstanceOf[com.badlogic.gdx.utils.ArrayMap.Keys[K]]
+      this.keys2 = new com.badlogic.gdx.utils.ArrayMap.Keys[K](this.asInstanceOf[ArrayMap[K, java.lang.Object]]).asInstanceOf[com.badlogic.gdx.utils.ArrayMap.Keys[K]]
     } else ()
     if (!this.keys1.valid) {
       this.keys1.index = 0

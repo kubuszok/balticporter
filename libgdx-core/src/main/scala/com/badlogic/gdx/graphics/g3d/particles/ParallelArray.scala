@@ -28,7 +28,7 @@ class ParallelArray(capacity$p: scala.Int) {
       if (channelDescriptor.`type` == classOf[scala.Int]) {
         return new IntChannel(channelDescriptor.id, channelDescriptor.count, this.capacity).asInstanceOf[T]
       } else {
-        return new ObjectChannel[T](channelDescriptor.id, channelDescriptor.count, this.capacity, channelDescriptor.arraySupplier).asInstanceOf[T]
+        return new ObjectChannel[T](channelDescriptor.id, channelDescriptor.count, this.capacity, channelDescriptor.arraySupplier.asInstanceOf[com.badlogic.gdx.utils.ArraySupplier[scala.Array[T]]]).asInstanceOf[T]
       }
     }
   }

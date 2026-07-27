@@ -339,11 +339,11 @@ class ObjectFloatMap[K](initialCapacity: scala.Int, loadFactor$p: scala.Float) e
   }
   def entries(): com.badlogic.gdx.utils.ObjectFloatMap.Entries[K] = {
     if (com.badlogic.gdx.utils.Collections.allocateIterators) {
-      return new com.badlogic.gdx.utils.ObjectFloatMap.Entries[K](this).asInstanceOf[com.badlogic.gdx.utils.ObjectFloatMap.Entries[K]]
+      return new com.badlogic.gdx.utils.ObjectFloatMap.Entries[K](this.asInstanceOf[ObjectFloatMap[K]]).asInstanceOf[com.badlogic.gdx.utils.ObjectFloatMap.Entries[K]]
     } else ()
     if (this.entries1 == null) {
-      this.entries1 = new com.badlogic.gdx.utils.ObjectFloatMap.Entries[K](this).asInstanceOf[com.badlogic.gdx.utils.ObjectFloatMap.Entries[K]]
-      this.entries2 = new com.badlogic.gdx.utils.ObjectFloatMap.Entries[K](this).asInstanceOf[com.badlogic.gdx.utils.ObjectFloatMap.Entries[K]]
+      this.entries1 = new com.badlogic.gdx.utils.ObjectFloatMap.Entries[K](this.asInstanceOf[ObjectFloatMap[K]]).asInstanceOf[com.badlogic.gdx.utils.ObjectFloatMap.Entries[K]]
+      this.entries2 = new com.badlogic.gdx.utils.ObjectFloatMap.Entries[K](this.asInstanceOf[ObjectFloatMap[K]]).asInstanceOf[com.badlogic.gdx.utils.ObjectFloatMap.Entries[K]]
     } else ()
     if (!this.entries1.valid) {
       this.entries1.reset()
@@ -377,11 +377,11 @@ class ObjectFloatMap[K](initialCapacity: scala.Int, loadFactor$p: scala.Float) e
   }
   def keys(): com.badlogic.gdx.utils.ObjectFloatMap.Keys[K] = {
     if (com.badlogic.gdx.utils.Collections.allocateIterators) {
-      return new com.badlogic.gdx.utils.ObjectFloatMap.Keys[K](this).asInstanceOf[com.badlogic.gdx.utils.ObjectFloatMap.Keys[K]]
+      return new com.badlogic.gdx.utils.ObjectFloatMap.Keys[K](this.asInstanceOf[ObjectFloatMap[K]]).asInstanceOf[com.badlogic.gdx.utils.ObjectFloatMap.Keys[K]]
     } else ()
     if (this.keys1 == null) {
-      this.keys1 = new com.badlogic.gdx.utils.ObjectFloatMap.Keys[K](this).asInstanceOf[com.badlogic.gdx.utils.ObjectFloatMap.Keys[K]]
-      this.keys2 = new com.badlogic.gdx.utils.ObjectFloatMap.Keys[K](this).asInstanceOf[com.badlogic.gdx.utils.ObjectFloatMap.Keys[K]]
+      this.keys1 = new com.badlogic.gdx.utils.ObjectFloatMap.Keys[K](this.asInstanceOf[ObjectFloatMap[K]]).asInstanceOf[com.badlogic.gdx.utils.ObjectFloatMap.Keys[K]]
+      this.keys2 = new com.badlogic.gdx.utils.ObjectFloatMap.Keys[K](this.asInstanceOf[ObjectFloatMap[K]]).asInstanceOf[com.badlogic.gdx.utils.ObjectFloatMap.Keys[K]]
     } else ()
     if (!this.keys1.valid) {
       this.keys1.reset()

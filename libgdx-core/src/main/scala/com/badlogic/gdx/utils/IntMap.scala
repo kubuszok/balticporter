@@ -445,11 +445,11 @@ class IntMap[V](initialCapacity: scala.Int, loadFactor$p: scala.Float) extends s
   }
   def values(): com.badlogic.gdx.utils.IntMap.Values[V] = {
     if (com.badlogic.gdx.utils.Collections.allocateIterators) {
-      return new com.badlogic.gdx.utils.IntMap.Values[V](this).asInstanceOf[com.badlogic.gdx.utils.IntMap.Values[V]]
+      return new com.badlogic.gdx.utils.IntMap.Values[V](this.asInstanceOf[IntMap[V]]).asInstanceOf[com.badlogic.gdx.utils.IntMap.Values[V]]
     } else ()
     if (this.values1 == null) {
-      this.values1 = new com.badlogic.gdx.utils.IntMap.Values[V](this).asInstanceOf[com.badlogic.gdx.utils.IntMap.Values[V]]
-      this.values2 = new com.badlogic.gdx.utils.IntMap.Values[V](this).asInstanceOf[com.badlogic.gdx.utils.IntMap.Values[V]]
+      this.values1 = new com.badlogic.gdx.utils.IntMap.Values[V](this.asInstanceOf[IntMap[V]]).asInstanceOf[com.badlogic.gdx.utils.IntMap.Values[V]]
+      this.values2 = new com.badlogic.gdx.utils.IntMap.Values[V](this.asInstanceOf[IntMap[V]]).asInstanceOf[com.badlogic.gdx.utils.IntMap.Values[V]]
     } else ()
     if (!this.values1.valid) {
       this.values1.reset()

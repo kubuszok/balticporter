@@ -250,10 +250,10 @@ class Queue[T](initialSize: scala.Int, arraySupplier: com.badlogic.gdx.utils.Arr
   }
   def iterator(): scala.collection.Iterator[T] = {
     if (com.badlogic.gdx.utils.Collections.allocateIterators) {
-      return new com.badlogic.gdx.utils.Queue.QueueIterator[T](this, true).asInstanceOf[scala.collection.Iterator[T]]
+      return new com.badlogic.gdx.utils.Queue.QueueIterator[T](this.asInstanceOf[Queue[T]], true).asInstanceOf[scala.collection.Iterator[T]]
     } else ()
     if (this.iterable == null) {
-      this.iterable = new com.badlogic.gdx.utils.Queue.QueueIterable[T](this).asInstanceOf[com.badlogic.gdx.utils.Queue.QueueIterable[T]]
+      this.iterable = new com.badlogic.gdx.utils.Queue.QueueIterable[T](this.asInstanceOf[Queue[T]]).asInstanceOf[com.badlogic.gdx.utils.Queue.QueueIterable[T]]
     } else ()
     return this.iterable.iterator().asInstanceOf[scala.collection.Iterator[T]]
   }

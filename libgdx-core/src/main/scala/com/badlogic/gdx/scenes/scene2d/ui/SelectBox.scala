@@ -27,7 +27,7 @@ class SelectBox[T](style$p: com.badlogic.gdx.scenes.scene2d.ui.SelectBox.SelectB
     this.clickListener
   })
   def newScrollPane(): com.badlogic.gdx.scenes.scene2d.ui.SelectBox.SelectBoxScrollPane[T] = {
-    return new com.badlogic.gdx.scenes.scene2d.ui.SelectBox.SelectBoxScrollPane[T](this).asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.SelectBox.SelectBoxScrollPane[T]]
+    return new com.badlogic.gdx.scenes.scene2d.ui.SelectBox.SelectBoxScrollPane[T](this.asInstanceOf[SelectBox[T]]).asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.SelectBox.SelectBoxScrollPane[T]]
   }
   def setMaxListCount(maxListCount: scala.Int): scala.Unit = {
     this.scrollPane.maxListCount = maxListCount

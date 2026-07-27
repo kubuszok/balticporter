@@ -357,11 +357,11 @@ class ObjectMap[K, V] extends scala.collection.Iterable[com.badlogic.gdx.utils.O
   }
   def entries(): com.badlogic.gdx.utils.ObjectMap.Entries[K, V] = {
     if (com.badlogic.gdx.utils.Collections.allocateIterators) {
-      return new com.badlogic.gdx.utils.ObjectMap.Entries[K, V](this).asInstanceOf[com.badlogic.gdx.utils.ObjectMap.Entries[K, V]]
+      return new com.badlogic.gdx.utils.ObjectMap.Entries[K, V](this.asInstanceOf[ObjectMap[K, V]]).asInstanceOf[com.badlogic.gdx.utils.ObjectMap.Entries[K, V]]
     } else ()
     if (this.entries1 == null) {
-      this.entries1 = new com.badlogic.gdx.utils.ObjectMap.Entries[K, V](this).asInstanceOf[com.badlogic.gdx.utils.ObjectMap.Entries[K, V]]
-      this.entries2 = new com.badlogic.gdx.utils.ObjectMap.Entries[K, V](this).asInstanceOf[com.badlogic.gdx.utils.ObjectMap.Entries[K, V]]
+      this.entries1 = new com.badlogic.gdx.utils.ObjectMap.Entries[K, V](this.asInstanceOf[ObjectMap[K, V]]).asInstanceOf[com.badlogic.gdx.utils.ObjectMap.Entries[K, V]]
+      this.entries2 = new com.badlogic.gdx.utils.ObjectMap.Entries[K, V](this.asInstanceOf[ObjectMap[K, V]]).asInstanceOf[com.badlogic.gdx.utils.ObjectMap.Entries[K, V]]
     } else ()
     if (!this.entries1.valid) {
       this.entries1.reset()

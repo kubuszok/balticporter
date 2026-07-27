@@ -115,11 +115,11 @@ class OrderedMap[K, V] extends com.badlogic.gdx.utils.ObjectMap[K, V] {
   }
   def entries(): com.badlogic.gdx.utils.ObjectMap.Entries[K, V] = {
     if (com.badlogic.gdx.utils.Collections.allocateIterators) {
-      return new com.badlogic.gdx.utils.OrderedMap.OrderedMapEntries[K, V](this).asInstanceOf[com.badlogic.gdx.utils.ObjectMap.Entries[K, V]]
+      return new com.badlogic.gdx.utils.OrderedMap.OrderedMapEntries[K, V](this.asInstanceOf[OrderedMap[K, V]]).asInstanceOf[com.badlogic.gdx.utils.ObjectMap.Entries[K, V]]
     } else ()
     if (entries1 == null) {
-      entries1 = new com.badlogic.gdx.utils.OrderedMap.OrderedMapEntries[K, V](this).asInstanceOf[com.badlogic.gdx.utils.ObjectMap.Entries[K, V]]
-      entries2 = new com.badlogic.gdx.utils.OrderedMap.OrderedMapEntries[K, V](this).asInstanceOf[com.badlogic.gdx.utils.ObjectMap.Entries[K, V]]
+      entries1 = new com.badlogic.gdx.utils.OrderedMap.OrderedMapEntries[K, V](this.asInstanceOf[OrderedMap[K, V]]).asInstanceOf[com.badlogic.gdx.utils.ObjectMap.Entries[K, V]]
+      entries2 = new com.badlogic.gdx.utils.OrderedMap.OrderedMapEntries[K, V](this.asInstanceOf[OrderedMap[K, V]]).asInstanceOf[com.badlogic.gdx.utils.ObjectMap.Entries[K, V]]
     } else ()
     if (!this.entries1.valid) {
       entries1.reset()

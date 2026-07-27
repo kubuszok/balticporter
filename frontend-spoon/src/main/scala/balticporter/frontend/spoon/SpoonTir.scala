@@ -384,6 +384,24 @@ object SpoonTir:
         if args.nonEmpty then args.exists(mentionsTypeVarBounded(_, names))
         else rawFormalsOf(tr).exists(names)
 
+    /** [[tpResolvable]], but through the BARRIER-aware frame: `resolveTypeParam` sees every enclosing
+      * scope's parameters by name, while a `static` nested class cannot actually name the outer
+      * class's — emitting one there is `Not found: type T`. */
+    private def tpAccessibleHere(tr: CtTypeReference[?]): Boolean = tr match
+      case null                         => true
+      case tv: CtTypeParameterReference => accessibleTp(tv.getSimpleName).isDefined
+      case w: CtWildcardReference       => Option(w.getBoundingType).forall(tpAccessibleHere)
+      case arr: CtArrayTypeReference[?] => tpAccessibleHere(arr.getComponentType)
+      case r => try r.getActualTypeArguments.asScala.forall(tpAccessibleHere) catch { case _: Throwable => true }
+
+    /** does this type mention ANY type variable (directly, in an array element, or in an argument)? */
+    private def mentionsAnyTypeVar(tr: CtTypeReference[?]): Boolean = tr match
+      case null                         => false
+      case _: CtTypeParameterReference  => true
+      case w: CtWildcardReference       => Option(w.getBoundingType).exists(mentionsAnyTypeVar)
+      case arr: CtArrayTypeReference[?] => mentionsAnyTypeVar(arr.getComponentType)
+      case r => try r.getActualTypeArguments.asScala.exists(mentionsAnyTypeVar) catch { case _: Throwable => false }
+
     /** does this rendered type carry a WILDCARD anywhere — i.e. is it the product of our raw fill? */
     private def hasWildcard(t: TypeRepr): Boolean = t match
       case _: TypeBounds       => true
@@ -1532,8 +1550,31 @@ object SpoonTir:
       private def ctorCall(cc: CtConstructorCall[?]): Term =
         val t    = tpe(cc.getType)
         val cid  = methodSym(cc.getExecutable)
-        val args = coerceArgs(cc.getExecutable, cc.getArguments.asScala.toList)
+        val argEs = cc.getArguments.asScala.toList
+        val args = rawCtorArgs(cc, argEs, coerceArgs(cc.getExecutable, argEs))
         Tree.Apply(Tree.New(tt(t, cc), t, originOf(cc)), args, cid, t, originOf(cc))
+
+      /** A RAW constructor call — `return new Values(this)` inside `ArrayMap<K,V>`, where
+        * `Values<V>(ArrayMap<Object,V> map)`. Java checks a raw `new`'s arguments against the ERASED
+        * constructor, so `this : ArrayMap<K,V>` passes unchecked. We render the raw type name-FILLED
+        * from the in-scope parameters (`new Values[V](…)`), which re-imposes the un-erased formal —
+        * so the arguments have to be filled by the SAME name-directed rule, or the two halves of one
+        * raw use disagree. Only for formals that mention a type variable resolving here. */
+      private def rawCtorArgs(cc: CtConstructorCall[?], argEs: List[CtExpression[?]], args: List[Term]): List[Term] =
+        if !isRawGenericUse(cc.getType) then args
+        else
+          val ps = try Option(cc.getExecutable.getExecutableDeclaration).map(_.getParameters.asScala.toList.map(_.getType))
+                   catch { case _: Throwable => None }
+          ps match
+            case Some(l) if l.sizeIs == args.size && argEs.sizeIs == args.size =>
+              args.zipWithIndex.map { (t, i) =>
+                val f = l(i)
+                if f == null || !isGenericUse(f) || !mentionsAnyTypeVar(f) || !tpAccessibleHere(f) then t
+                else
+                  val ct = tpe(f)
+                  if ct == t.tpe || hasWildcard(ct) then t else Tree.Typed(t, tt(ct, argEs(i)), ct, t.origin)
+              }
+            case _ => args
 
       /** SymId of a called executable — via its declaration (keyed identically to how we
         * define our own methods, so call sites and defs share one symbol) or, for
