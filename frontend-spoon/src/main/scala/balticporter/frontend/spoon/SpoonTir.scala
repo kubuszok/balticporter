@@ -1125,6 +1125,34 @@ object SpoonTir:
               case _ => args
           case _ => args
 
+      /** A call THROUGH A TYPE VARIABLE whose bound is a RAW generic (`N extends Node`;
+        * `N parent; parent.remove(this)`): Java sees the callee's members ERASED, so it accepts
+        * arguments the un-erased Scala signature (`def remove(node: N)`) rejects. Cast each argument
+        * whose DECLARED formal is a type parameter to that parameter as resolved HERE. Gated on the
+        * receiver being a type variable, so it can never touch an ordinary generic call (where
+        * casting to a same-named parameter of the callee would be plain wrong). */
+      private def typeVarReceiverArgs(inv: CtInvocation[?], argEs: List[CtExpression[?]], args: List[Term]): List[Term] =
+        val recvIsTypeVar = inv.getTarget match
+          case null => false
+          case t    => (try t.getType catch { case _: Throwable => null }) match
+            case tv: CtTypeParameterReference =>
+              // only a RAW-generic bound erases the members; a properly applied bound does not.
+              val d = try Option(tv.getDeclaration) catch { case _: Throwable => None }
+              d.flatMap(x => Option(x.getSuperclass)).exists(b => isRawGenericUse(b))
+            case _ => false
+        if !recvIsTypeVar then args
+        else
+          val ps = try Option(inv.getExecutable.getExecutableDeclaration).map(_.getParameters.asScala.toList.map(_.getType))
+                   catch { case _: Throwable => None }
+          ps match
+            case Some(l) if l.sizeIs == args.size && argEs.sizeIs == args.size =>
+              args.zipWithIndex.map { (t, i) =>
+                l(i) match
+                  case tp: CtTypeParameterReference => toTypeParam(tp, argEs(i), t)
+                  case _                            => t
+              }
+            case _ => args
+
       private def invocation(inv: CtInvocation[?]): Term =
         val ex   = inv.getExecutable
         val mid  = methodSym(ex)
@@ -1133,7 +1161,7 @@ object SpoonTir:
         val args0 = erasedRecv match
           case Some((_, names)) => eraseDependentArgs(ex, argEs, coerceArgs(ex, argEs), names)
           case None             => coerceArgs(ex, argEs)
-        val args = selfRawFormalArgs(inv, argEs, args0)
+        val args = typeVarReceiverArgs(inv, argEs, selfRawFormalArgs(inv, argEs, args0))
         val o    = originOf(inv)
         val fun: Term =
           if ex.isConstructor then

@@ -570,7 +570,7 @@ object Tree {
         tree.asInstanceOf[Tree[com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[java.lang.Object, java.lang.Object, com.badlogic.gdx.scenes.scene2d.Actor], java.lang.Object]].remove(this.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[java.lang.Object, java.lang.Object, com.badlogic.gdx.scenes.scene2d.Actor]])
       } else {
         if (this.parent != null) {
-          this.parent.remove(this)
+          this.parent.remove(this.asInstanceOf[N])
         } else ()
       }
     }
