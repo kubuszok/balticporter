@@ -10,34 +10,52 @@ scala-cli 3.8.4). The migration itself prints four independent checks on every r
 
 | metric | value | source |
 |---|---|---|
-| clean-compile errors | **86** | `scripts/gdx_measure.sh` |
+| clean-compile errors | **83** | `scripts/gdx_measure.sh` |
 | portability (JVM-only APIs in emitted code) | **0** | `PortabilityCheck` |
 | portability (injected replacements) | **clean** | `PortabilityCheck.inInjectedSource` |
-| silent omissions | **266** | `OmissionCheck` |
+| silent omissions | **30** | `OmissionCheck` |
 | signature consistency | clean | `RewriteTrace.check` |
 | substitutions verified removed | 10 dropped types | migration CHECK 1 + CHECK 2 |
 
-Error breakdown: E007 37, E134 14, E051 8, E120 6, E049 6, E008 6, E171 4, E050 2, E083 1,
-E006 1, + 1 uncoded.
+Error breakdown: E007 39, E134 14, E051 8, E049 6, E008 6, E120 5, E050 2, E083 1, E006 1,
++ 1 uncoded.
 
 ## Remaining work, highest value first
 
-### 1. Constructor funnelling — CORRECTNESS, largest known gap
-`OmissionCheck` reports **266 constructors** whose `super(args)` is silently discarded. The emitter
-rewrites a leading `super(…)` to `this()`, which is correct for a no-arg super and **lossy**
-otherwise: `new DelayedRemovalArray(16)` builds an empty array and compiles cleanly.
+### 1. Constructor funnelling — mostly DONE, 30 left
+`tir.CtorFunnel` makes the primary-constructor nomination a whole-program decision that BOTH the
+emitter and `OmissionCheck` derive from, so the check can never drift from what is emitted. Two
+mechanisms, both exact:
 
-Scala secondary constructors cannot call `super` at all — only the primary can — and
-`DelayedRemovalArray` alone targets eight distinct parent overloads, so no single primary reaches
-them all. A faithful fix parameterises the primary to reach each targeted parent constructor.
-**The BIR path already has `CtorPlan` for exactly this; the TIR path has nothing** — port it.
+- **promotion** — the class's UNIQUE ROOT constructor (the only one not delegating `this(args)`)
+  becomes the Scala primary whatever its arity: super arguments into `extends`, parameters into
+  class parameters, body into class body. `TirEmitter.funnelParamRenames` suffixes `$p` on any
+  name that would then collide with an own or inherited member. A promotion that would remove a
+  nilary construction path a subclass needs is withheld (fixpoint in `CtorFunnel.Plans`).
+- **replay** — a secondary's `super(args)` becomes `this()` plus the parent constructor's own
+  statements, when the prologue `this()` runs is provably DEAD by the time the constructor returns
+  (pure field assignment, every field re-assigned afterwards) and the arguments can be substituted
+  without changing Java's evaluate-once. Private parent members the replay reaches are widened
+  (`TirEmitter.widen`).
 
-Related, same area: E120 ×6 duplicate no-arg constructor (`Stage`, `RegionInfluencer`) — a class
-whose Java no-arg ctor delegates `this(...)` cannot become Scala's primary without changing what
-runs on every instantiation. Needs a synthesized private marker-param primary threaded through
-every `extends` clause.
+**Declared caveat:** where the prologue is dead but not empty, the replay repeats work Java did
+once — `new DelayedRemovalArray(1000)` allocates the nilary path's 16-element backing array and
+discards it. Final state is identical; this is a cost, not a behavioural difference, and it
+replaces the previous behaviour of silently returning the 16-element array.
 
-### 2. Type-level residue — E007 37 + E134 14
+The 30 that remain, and why each is refused rather than approximated:
+
+| class(es) | n | why |
+|---|---|---|
+| `GdxRuntimeException`, `SerializationException`, `ReflectionException` | 9 | parent is `java.lang.RuntimeException` — no body to replay, and `super(msg)` vs `super(msg, null)` differ in `Throwable`'s cause semantics (unset vs null), which no delegation reproduces |
+| `DistanceFieldFont` (+`DistanceFieldFontCache`) | 8 | `BitmapFont()`'s nilary path loads the default Liberation Sans font from the classpath; replaying after it would do that I/O and leak a `Texture` |
+| `RegionInfluencer$Single/$Random/$Animated` | 6 | `super` targets a VARARGS parent constructor; the argument is a single element, not a `Repeated` |
+| `Dialog`, `Button`, `ScaleInfluencer`, `DepthShader$Config`, `FloatFrameBuffer` | 7 | prologue not superseded — the parent's nilary path does work the constructor does not re-do |
+
+The remaining E120 ×5 are unrelated (4 × `GL*Interceptor` export collisions, 1 × `RegionInfluencer`,
+whose nilary Java constructor delegates `this(1)` while two paramful roots leave nothing to promote).
+
+### 2. Type-level residue — E007 39 + E134 14
 Long tail of distinct patterns, no single dominant cause left. Known shapes: `classOf[X[?]]` vs
 `Class[X[T]]`; raw JDK types needing a concrete argument (`Comparator` → `Comparator[Pixmap]`);
 raw rendering that differs between a field's declaration scope and a method's (name-directed raw
@@ -51,9 +69,9 @@ the visible cost. The branch is preserved; re-derive on the current engine.
 
 ### 4. Smaller clusters
 E049 ×6 (multiple-inheritance ambiguity), E008 ×6 (CollectionsTransform API gaps — `Iterator.remove`,
-`Map.entrySet`, `+=` on a mapped collection; each needs a semantic mapping decision), E171 ×4
-(parent-needs-args ctor — folds into item 1), E050 ×2 (local variable shadows a method name; Java
-has separate namespaces, Scala does not).
+`Map.entrySet`, `+=` on a mapped collection; each needs a semantic mapping decision), E050 ×2
+(local variable shadows a method name; Java has separate namespaces, Scala does not).
+E171 (parent-needs-args ctor) is **gone** — constructor funnelling fixed all four.
 
 ## Substitutions in force
 
@@ -86,6 +104,15 @@ site (`readValue("resource", null, …)`) is class-tag driven and needs explicit
   but we emit a precise `classOf[X]`.
 - **Argument-position raw→parameterized via `coerce`**: an executable reference's formal can name
   the callee's own type variables, which do not resolve at the call site.
+- **Promoting a paramful constructor to the primary without a whole-program check**: +14 errors.
+  It removes the class's nilary construction path, and every subclass whose `extends` clause passes
+  no arguments then fails (`FillViewport extends ScalingViewport`, `FloatAttribute extends
+  Attribute`). `CtorFunnel.Plans` withholds those promotions at a fixpoint.
+- **Inlining a promoted constructor's body without renaming what it declares**: its parameters
+  become class parameters and its top-level locals become class members, both then colliding with
+  fields (`GLVersion.vendorString`, `PolygonRegion.textureCoords`). `TirEmitter.funnelParamRenames`
+  suffixes `$p`; the INHERITED-name case matters as much as the own-name one, since it captures
+  unqualified reads instead of failing to compile.
 
 ## Guarantees that must not be weakened
 
