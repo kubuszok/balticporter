@@ -25,13 +25,13 @@ class Bezier[T <: com.badlogic.gdx.math.Vector[T]] extends com.badlogic.gdx.math
       throw new com.badlogic.gdx.utils.GdxRuntimeException("Only first, second and third degree Bezier curves are supported.")
     } else ()
     if (this.tmp == null) {
-      this.tmp = points(0).cpy()
+      this.tmp = points(0).cpy().asInstanceOf[T]
     } else ()
     if (this.tmp2 == null) {
-      this.tmp2 = points(0).cpy()
+      this.tmp2 = points(0).cpy().asInstanceOf[T]
     } else ()
     if (this.tmp3 == null) {
-      this.tmp3 = points(0).cpy()
+      this.tmp3 = points(0).cpy().asInstanceOf[T]
     } else ()
     this.points.clear()
     this.points.addAll(points, offset, length)
@@ -42,13 +42,13 @@ class Bezier[T <: com.badlogic.gdx.math.Vector[T]] extends com.badlogic.gdx.math
       throw new com.badlogic.gdx.utils.GdxRuntimeException("Only first, second and third degree Bezier curves are supported.")
     } else ()
     if (this.tmp == null) {
-      this.tmp = points.get(0).cpy()
+      this.tmp = points.get(0).cpy().asInstanceOf[T]
     } else ()
     if (this.tmp2 == null) {
-      this.tmp2 = points.get(0).cpy()
+      this.tmp2 = points.get(0).cpy().asInstanceOf[T]
     } else ()
     if (this.tmp3 == null) {
-      this.tmp3 = points.get(0).cpy()
+      this.tmp3 = points.get(0).cpy().asInstanceOf[T]
     } else ()
     this.points.clear()
     this.points.addAll(points, offset, length)

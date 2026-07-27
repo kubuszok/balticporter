@@ -13,7 +13,7 @@ class ParallelArray(capacity$p: scala.Int) {
   def addChannel[T <: com.badlogic.gdx.graphics.g3d.particles.ParallelArray#Channel](channelDescriptor: com.badlogic.gdx.graphics.g3d.particles.ParallelArray.ChannelDescriptor, initializer: com.badlogic.gdx.graphics.g3d.particles.ParallelArray.ChannelInitializer[T]): T = {
     var channel: T = this.getChannel(channelDescriptor)
     if (channel == null) {
-      channel = this.allocateChannel(channelDescriptor)
+      channel = this.allocateChannel(channelDescriptor).asInstanceOf[T]
       if (initializer != null) {
         initializer.init(channel)
       } else ()

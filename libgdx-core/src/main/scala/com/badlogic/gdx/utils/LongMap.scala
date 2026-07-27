@@ -28,7 +28,7 @@ class LongMap[V](initialCapacity: scala.Int, loadFactor$p: scala.Float) extends 
     java.lang.System.arraycopy(map.keyTable, 0, this.keyTable, 0, map.keyTable.length)
     java.lang.System.arraycopy(map.valueTable, 0, this.valueTable, 0, map.valueTable.length)
     this.size = map.size
-    this.zeroValue = map.zeroValue
+    this.zeroValue = map.zeroValue.asInstanceOf[V]
     this.hasZeroValue = map.hasZeroValue
   }
   if ((loadFactor$p <= 0.0f) || (loadFactor$p >= 1.0f)) {

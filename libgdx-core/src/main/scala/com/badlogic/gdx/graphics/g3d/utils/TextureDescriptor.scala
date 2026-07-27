@@ -21,7 +21,7 @@ class TextureDescriptor[T <: com.badlogic.gdx.graphics.GLTexture] extends java.l
     this.vWrap = vWrap
   }
   def set[V <: T](other: TextureDescriptor[V]): scala.Unit = {
-    this.texture = other.texture
+    this.texture = other.texture.asInstanceOf[T]
     this.minFilter = other.minFilter
     this.magFilter = other.magFilter
     this.uWrap = other.uWrap
