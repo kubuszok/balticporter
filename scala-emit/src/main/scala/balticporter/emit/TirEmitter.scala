@@ -116,7 +116,23 @@ final class TirEmitter(source: Program):
   private def ind(n: Int): String = "  " * n
 
   // ---- definitions ----
+  /** the classes currently being rendered, outermost first. Lets a `Tree.This` naming an ENCLOSING
+    * class render Java's qualified `Outer.this` rather than a bare `this` (which would name the
+    * inner one). */
+  private val classStack = collection.mutable.ArrayDeque[SymId]()
+
   private def classDef(cd: Tree.ClassDef, i: Int): String =
+    classStack.append(cd.symbol)
+    try classDefBody(cd, i) finally classStack.removeLast()
+
+  /** `this` in Scala always names the INNERMOST class, where Java's `Outer.this` names an enclosing
+    * one. Qualify by simple name when the symbol is an enclosing class actually being rendered
+    * around this point; anything else (an inherited/unknown owner) keeps the bare `this`. */
+  private def thisRef(s: SymId): String =
+    if classStack.lastOption.contains(s) || !classStack.contains(s) then "this"
+    else s"${esc(sym(s).name)}.this"
+
+  private def classDefBody(cd: Tree.ClassDef, i: Int): String =
     if sym(cd.symbol).flags.isEnum then return enumDef(cd, i)
     val s  = sym(cd.symbol)
     val kw =
@@ -469,7 +485,7 @@ final class TirEmitter(source: Program):
   private def term(t: Term, i: Int): String = t match
     case Tree.Ident(s, _, _)            => if isTypeRef(s) then typeValue(s) else staticRef(s)
     case Tree.Literal(c, _, _)          => constant(c)
-    case Tree.This(_, _, _)             => "this"
+    case Tree.This(s, _, _)             => thisRef(s)
     case Tree.Super(_, _, _)            => "super"
     case Tree.Select(q, s, _, _)        => s"${term(q, i)}.${local(s)}"
     case Tree.New(tpt, _, _)            => s"new ${ctorTpe(tpt.tpe)}"

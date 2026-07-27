@@ -511,6 +511,12 @@ object SpoonTir:
       private def isOwnThis(ta: CtThisAccess[?]): Boolean =
         Option(ta.getType).map(_.getQualifiedName).forall(_ == minter.fullNameOf(classId))
 
+      /** `Outer.this` — the enclosing instance, as its own class symbol. */
+      private def outerThis(ta: CtThisAccess[?]): Term =
+        val q  = ta.getType.getQualifiedName
+        val id = minter.external(q, simpleName(q))
+        Tree.This(id, TypeRef(NoPrefix, id), originOf(ta))
+
       /** entry: a method/ctor block → a TIR `Block` (statements, Unit result). */
       def methodBody(b: CtBlock[?]): Term =
         Tree.Block(b.getStatements.asScala.toList.map(stmt), unit(b), unitT, originOf(b))
@@ -817,6 +823,10 @@ object SpoonTir:
         case l: CtLiteral[?]      => literal(l)
         case f: CtFieldRead[?]    => fieldAccess(f.getVariable, f.getTarget, e)
         case f: CtFieldWrite[?]   => fieldAccess(f.getVariable, f.getTarget, e)
+        // `Outer.this` USED AS A VALUE (`stage.setKeyboardFocus(TextField.this)` from an inner
+        // listener): Scala's bare `this` names the INNERMOST class, so the enclosing instance has
+        // to be named explicitly. Carry the enclosing class's symbol; the emitter qualifies it.
+        case ta: CtThisAccess[?] if !isOwnThis(ta) => outerThis(ta)
         case _: CtThisAccess[?]   => thisTerm(e)
         case v: CtVariableRead[?] => Tree.Ident(resolveVar(v.getVariable), ty(e), originOf(e))
         case v: CtVariableWrite[?] => Tree.Ident(resolveVar(v.getVariable), ty(e), originOf(e))
