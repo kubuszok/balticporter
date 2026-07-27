@@ -1,6 +1,6 @@
 package com.badlogic.gdx.graphics.g3d
 
-class ModelBatch extends com.badlogic.gdx.utils.Disposable {
+class ModelBatch(context$p: com.badlogic.gdx.graphics.g3d.utils.RenderContext, shaderProvider$p: com.badlogic.gdx.graphics.g3d.utils.ShaderProvider, sorter$p: com.badlogic.gdx.graphics.g3d.utils.RenderableSorter) extends com.badlogic.gdx.utils.Disposable {
   var camera: com.badlogic.gdx.graphics.Camera = null.asInstanceOf[com.badlogic.gdx.graphics.Camera]
   final val renderablesPool: com.badlogic.gdx.graphics.g3d.ModelBatch.RenderablePool = new com.badlogic.gdx.graphics.g3d.ModelBatch.RenderablePool()
   final val renderables: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.Renderable] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.Renderable]()
@@ -8,13 +8,6 @@ class ModelBatch extends com.badlogic.gdx.utils.Disposable {
   private var ownContext: scala.Boolean = false
   var shaderProvider: com.badlogic.gdx.graphics.g3d.utils.ShaderProvider = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.utils.ShaderProvider]
   var sorter: com.badlogic.gdx.graphics.g3d.utils.RenderableSorter = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.utils.RenderableSorter]
-  def this(context: com.badlogic.gdx.graphics.g3d.utils.RenderContext, shaderProvider: com.badlogic.gdx.graphics.g3d.utils.ShaderProvider, sorter: com.badlogic.gdx.graphics.g3d.utils.RenderableSorter) = {
-    this()
-    this.sorter = if (sorter == null) new com.badlogic.gdx.graphics.g3d.utils.DefaultRenderableSorter() else sorter
-    this.ownContext = context == null
-    this.context = if (context == null) new com.badlogic.gdx.graphics.g3d.utils.RenderContext(new com.badlogic.gdx.graphics.g3d.utils.DefaultTextureBinder(com.badlogic.gdx.graphics.g3d.utils.DefaultTextureBinder.LRU, 1)) else context
-    this.shaderProvider = if (shaderProvider == null) new com.badlogic.gdx.graphics.g3d.utils.DefaultShaderProvider() else shaderProvider
-  }
   def this(context: com.badlogic.gdx.graphics.g3d.utils.RenderContext, shaderProvider: com.badlogic.gdx.graphics.g3d.utils.ShaderProvider) = {
     this(context, shaderProvider, null)
   }
@@ -39,6 +32,13 @@ class ModelBatch extends com.badlogic.gdx.utils.Disposable {
   def this(vertexShader: java.lang.String, fragmentShader: java.lang.String) = {
     this(null, new com.badlogic.gdx.graphics.g3d.utils.DefaultShaderProvider(vertexShader, fragmentShader), null)
   }
+  def this() = {
+    this(null, null, null)
+  }
+  this.sorter = if (sorter$p == null) new com.badlogic.gdx.graphics.g3d.utils.DefaultRenderableSorter() else sorter$p
+  this.ownContext = context$p == null
+  this.context = if (context$p == null) new com.badlogic.gdx.graphics.g3d.utils.RenderContext(new com.badlogic.gdx.graphics.g3d.utils.DefaultTextureBinder(com.badlogic.gdx.graphics.g3d.utils.DefaultTextureBinder.LRU, 1)) else context$p
+  this.shaderProvider = if (shaderProvider$p == null) new com.badlogic.gdx.graphics.g3d.utils.DefaultShaderProvider() else shaderProvider$p
   def begin(cam: com.badlogic.gdx.graphics.Camera): scala.Unit = {
     if (this.camera != null) {
       throw new com.badlogic.gdx.utils.GdxRuntimeException("Call end() first.")

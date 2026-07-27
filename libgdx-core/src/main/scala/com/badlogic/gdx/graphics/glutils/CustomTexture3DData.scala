@@ -1,6 +1,6 @@
 package com.badlogic.gdx.graphics.glutils
 
-class CustomTexture3DData extends com.badlogic.gdx.graphics.Texture3DData {
+class CustomTexture3DData(width$p: scala.Int, height$p: scala.Int, depth$p: scala.Int, mipMapLevel$p: scala.Int, glFormat$p: scala.Int, glInternalFormat$p: scala.Int, glType$p: scala.Int) extends com.badlogic.gdx.graphics.Texture3DData {
   private var width: scala.Int = 0
   private var height: scala.Int = 0
   private var depth: scala.Int = 0
@@ -9,16 +9,13 @@ class CustomTexture3DData extends com.badlogic.gdx.graphics.Texture3DData {
   private var glInternalFormat: scala.Int = 0
   private var glType: scala.Int = 0
   private var pixels: java.nio.ByteBuffer = null.asInstanceOf[java.nio.ByteBuffer]
-  def this(width: scala.Int, height: scala.Int, depth: scala.Int, mipMapLevel: scala.Int, glFormat: scala.Int, glInternalFormat: scala.Int, glType: scala.Int) = {
-    this()
-    this.width = width
-    this.height = height
-    this.depth = depth
-    this.glFormat = glFormat
-    this.glInternalFormat = glInternalFormat
-    this.glType = glType
-    this.mipMapLevel = mipMapLevel
-  }
+  this.width = width$p
+  this.height = height$p
+  this.depth = depth$p
+  this.glFormat = glFormat$p
+  this.glInternalFormat = glInternalFormat$p
+  this.glType = glType$p
+  this.mipMapLevel = mipMapLevel$p
   def isPrepared(): scala.Boolean = {
     return true
   }

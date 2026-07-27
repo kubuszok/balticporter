@@ -1,6 +1,6 @@
 package com.badlogic.gdx.graphics.glutils
 
-class FileTextureData extends com.badlogic.gdx.graphics.TextureData {
+class FileTextureData(file$p: com.badlogic.gdx.files.FileHandle, preloadedPixmap: com.badlogic.gdx.graphics.Pixmap, format$p: com.badlogic.gdx.graphics.Pixmap.Format, useMipMaps$p: scala.Boolean) extends com.badlogic.gdx.graphics.TextureData {
   var file: com.badlogic.gdx.files.FileHandle = null.asInstanceOf[com.badlogic.gdx.files.FileHandle]
   var width: scala.Int = 0
   var height: scala.Int = 0
@@ -8,20 +8,17 @@ class FileTextureData extends com.badlogic.gdx.graphics.TextureData {
   var pixmap: com.badlogic.gdx.graphics.Pixmap = null.asInstanceOf[com.badlogic.gdx.graphics.Pixmap]
   var useMipMaps$field: scala.Boolean = false
   var isPrepared$field: scala.Boolean = false
-  def this(file: com.badlogic.gdx.files.FileHandle, preloadedPixmap: com.badlogic.gdx.graphics.Pixmap, format: com.badlogic.gdx.graphics.Pixmap.Format, useMipMaps: scala.Boolean) = {
-    this()
-    this.file = file
-    this.pixmap = preloadedPixmap
-    this.format = format
-    this.useMipMaps$field = useMipMaps
-    if (this.pixmap != null) {
-      this.width = this.pixmap.getWidth()
-      this.height = this.pixmap.getHeight()
-      if (format == null) {
-        this.format = this.pixmap.getFormat()
-      } else ()
+  this.file = file$p
+  this.pixmap = preloadedPixmap
+  this.format = format$p
+  this.useMipMaps$field = useMipMaps$p
+  if (this.pixmap != null) {
+    this.width = this.pixmap.getWidth()
+    this.height = this.pixmap.getHeight()
+    if (format$p == null) {
+      this.format = this.pixmap.getFormat()
     } else ()
-  }
+  } else ()
   def isPrepared(): scala.Boolean = {
     return this.isPrepared$field
   }

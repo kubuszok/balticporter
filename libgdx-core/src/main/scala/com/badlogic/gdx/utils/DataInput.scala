@@ -1,10 +1,7 @@
 package com.badlogic.gdx.utils
 
-class DataInput extends java.io.DataInputStream {
+class DataInput(in: java.io.InputStream) extends java.io.DataInputStream(in) {
   private var chars: scala.Array[scala.Char] = new scala.Array[scala.Char](32)
-  def this(in: java.io.InputStream) = {
-    this()
-  }
   def readInt(optimizePositive: scala.Boolean): scala.Int = {
     var b: scala.Int = this.readByte()
     var result: scala.Int = b & 127

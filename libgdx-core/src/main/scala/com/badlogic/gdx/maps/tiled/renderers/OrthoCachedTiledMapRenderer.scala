@@ -1,6 +1,6 @@
 package com.badlogic.gdx.maps.tiled.renderers
 
-class OrthoCachedTiledMapRenderer extends com.badlogic.gdx.maps.tiled.TiledMapRenderer with com.badlogic.gdx.utils.Disposable {
+class OrthoCachedTiledMapRenderer(map$p: com.badlogic.gdx.maps.tiled.TiledMap, unitScale$p: scala.Float, cacheSize: scala.Int) extends com.badlogic.gdx.maps.tiled.TiledMapRenderer with com.badlogic.gdx.utils.Disposable {
   var map: com.badlogic.gdx.maps.tiled.TiledMap = null.asInstanceOf[com.badlogic.gdx.maps.tiled.TiledMap]
   var spriteCache: com.badlogic.gdx.graphics.g2d.SpriteCache = null.asInstanceOf[com.badlogic.gdx.graphics.g2d.SpriteCache]
   final val vertices: scala.Array[scala.Float] = new scala.Array[scala.Float](20)
@@ -18,18 +18,15 @@ class OrthoCachedTiledMapRenderer extends com.badlogic.gdx.maps.tiled.TiledMapRe
   var canCacheMoreW: scala.Boolean = false
   var canCacheMoreS: scala.Boolean = false
   var imageBounds: com.badlogic.gdx.math.Rectangle = new com.badlogic.gdx.math.Rectangle()
-  def this(map: com.badlogic.gdx.maps.tiled.TiledMap, unitScale: scala.Float, cacheSize: scala.Int) = {
-    this()
-    this.map = map
-    this.unitScale = unitScale
-    this.spriteCache = new com.badlogic.gdx.graphics.g2d.SpriteCache(cacheSize, true)
-  }
   def this(map: com.badlogic.gdx.maps.tiled.TiledMap) = {
     this(map, 1, 2000)
   }
   def this(map: com.badlogic.gdx.maps.tiled.TiledMap, unitScale: scala.Float) = {
     this(map, unitScale, 2000)
   }
+  this.map = map$p
+  this.unitScale = unitScale$p
+  this.spriteCache = new com.badlogic.gdx.graphics.g2d.SpriteCache(cacheSize, true)
   def setView(camera: com.badlogic.gdx.graphics.OrthographicCamera): scala.Unit = {
     this.spriteCache.setProjectionMatrix(camera.combined)
     val width: scala.Float = (camera.viewportWidth * camera.zoom) + ((this.maxTileWidth * 2) * this.unitScale)

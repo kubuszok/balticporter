@@ -1,11 +1,8 @@
 package com.badlogic.gdx.net
 
-class HttpStatus {
+class HttpStatus(statusCode$p: scala.Int) {
   var statusCode: scala.Int = 0
-  def this(statusCode: scala.Int) = {
-    this()
-    this.statusCode = statusCode
-  }
+  this.statusCode = statusCode$p
   def getStatusCode(): scala.Int = {
     return this.statusCode
   }

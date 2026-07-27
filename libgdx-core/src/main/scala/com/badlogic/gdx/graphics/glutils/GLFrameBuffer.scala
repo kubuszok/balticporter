@@ -394,7 +394,7 @@ object GLFrameBuffer {
   def getManagedStatus(): java.lang.String = {
     return GLFrameBuffer.getManagedStatus(new java.lang.StringBuilder()).toString()
   }
-  class FrameBufferTextureAttachmentSpec {
+  class FrameBufferTextureAttachmentSpec(internalformat: scala.Int, format$p: scala.Int, type$p: scala.Int) {
     var internalFormat: scala.Int = 0
     var format: scala.Int = 0
     var `type`: scala.Int = 0
@@ -402,22 +402,16 @@ object GLFrameBuffer {
     var isGpuOnly: scala.Boolean = false
     var isDepth: scala.Boolean = false
     var isStencil: scala.Boolean = false
-    def this(internalformat: scala.Int, format: scala.Int, `type`: scala.Int) = {
-      this()
-      this.internalFormat = internalformat
-      this.format = format
-      this.`type` = `type`
-    }
+    this.internalFormat = internalformat
+    this.format = format$p
+    this.`type` = type$p
     def isColorTexture(): scala.Boolean = {
       return (!this.isDepth) && (!this.isStencil)
     }
   }
-  class FrameBufferRenderBufferAttachmentSpec {
+  class FrameBufferRenderBufferAttachmentSpec(internalFormat$p: scala.Int) {
     var internalFormat: scala.Int = 0
-    def this(internalFormat: scala.Int) = {
-      this()
-      this.internalFormat = internalFormat
-    }
+    this.internalFormat = internalFormat$p
   }
   abstract class GLFrameBufferBuilder[U <: GLFrameBuffer[? <: com.badlogic.gdx.graphics.GLTexture]] {
     var width: scala.Int = 0

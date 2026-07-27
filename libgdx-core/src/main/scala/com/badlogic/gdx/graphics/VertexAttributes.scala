@@ -1,24 +1,21 @@
 package com.badlogic.gdx.graphics
 
-final class VertexAttributes extends scala.collection.Iterable[com.badlogic.gdx.graphics.VertexAttribute] with java.lang.Comparable[VertexAttributes] {
+final class VertexAttributes(attributes$p: scala.Array[com.badlogic.gdx.graphics.VertexAttribute]) extends scala.collection.Iterable[com.badlogic.gdx.graphics.VertexAttribute] with java.lang.Comparable[VertexAttributes] {
   private var attributes: scala.Array[com.badlogic.gdx.graphics.VertexAttribute] = null.asInstanceOf[scala.Array[com.badlogic.gdx.graphics.VertexAttribute]]
   var vertexSize: scala.Int = 0
   private var mask: scala.Long = -1
   private var boneWeightUnits: scala.Int = -1
   private var textureCoordinates: scala.Int = -1
   private var iterable: com.badlogic.gdx.graphics.VertexAttributes.ReadonlyIterable[com.badlogic.gdx.graphics.VertexAttribute] = null.asInstanceOf[com.badlogic.gdx.graphics.VertexAttributes.ReadonlyIterable[com.badlogic.gdx.graphics.VertexAttribute]]
-  def this(attributes: scala.Array[com.badlogic.gdx.graphics.VertexAttribute]) = {
-    this()
-    if (attributes.length == 0) {
-      throw new java.lang.IllegalArgumentException("attributes must be >= 1")
-    } else ()
-    val list: scala.Array[com.badlogic.gdx.graphics.VertexAttribute] = new scala.Array[com.badlogic.gdx.graphics.VertexAttribute](attributes.length);
-    { var i: scala.Int = 0; while (i < attributes.length) { {
-      list(i) = attributes(i)
-    }; i = i + 1 } }
-    this.attributes = list
-    this.vertexSize = this.calculateOffsets()
-  }
+  val list: scala.Array[com.badlogic.gdx.graphics.VertexAttribute] = new scala.Array[com.badlogic.gdx.graphics.VertexAttribute](attributes$p.length)
+  if (attributes$p.length == 0) {
+    throw new java.lang.IllegalArgumentException("attributes must be >= 1")
+  } else ();
+  { var i: scala.Int = 0; while (i < attributes$p.length) { {
+    list(i) = attributes$p(i)
+  }; i = i + 1 } }
+  this.attributes = list
+  this.vertexSize = this.calculateOffsets()
   def getOffset(usage: scala.Int, defaultIfNotFound: scala.Int): scala.Int = {
     val vertexAttribute: com.badlogic.gdx.graphics.VertexAttribute = this.findByUsage(usage)
     if (vertexAttribute == null) {
@@ -182,14 +179,11 @@ object VertexAttributes {
     final val Tangent: scala.Int = 128
     final val BiNormal: scala.Int = 256
   }
-  class ReadonlyIterator[T] extends scala.collection.Iterator[T] with scala.collection.Iterable[T] {
+  class ReadonlyIterator[T](array$p: scala.Array[T]) extends scala.collection.Iterator[T] with scala.collection.Iterable[T] {
     private var array: scala.Array[T] = null.asInstanceOf[scala.Array[T]]
     var index: scala.Int = 0
     var valid: scala.Boolean = true
-    def this(array: scala.Array[T]) = {
-      this()
-      this.array = array
-    }
+    this.array = array$p
     def hasNext(): scala.Boolean = {
       if (!this.valid) {
         throw new com.badlogic.gdx.utils.GdxRuntimeException("#iterator() cannot be used nested.")
@@ -215,14 +209,11 @@ object VertexAttributes {
       return this
     }
   }
-  class ReadonlyIterable[T] extends scala.collection.Iterable[T] {
+  class ReadonlyIterable[T](array$p: scala.Array[T]) extends scala.collection.Iterable[T] {
     private var array: scala.Array[T] = null.asInstanceOf[scala.Array[T]]
     private var iterator1: com.badlogic.gdx.graphics.VertexAttributes.ReadonlyIterator[T] = null.asInstanceOf[com.badlogic.gdx.graphics.VertexAttributes.ReadonlyIterator[T]]
     private var iterator2: com.badlogic.gdx.graphics.VertexAttributes.ReadonlyIterator[T] = null.asInstanceOf[com.badlogic.gdx.graphics.VertexAttributes.ReadonlyIterator[T]]
-    def this(array: scala.Array[T]) = {
-      this()
-      this.array = array
-    }
+    this.array = array$p
     def iterator(): scala.collection.Iterator[T] = {
       if (com.badlogic.gdx.utils.Collections.allocateIterators) {
         return new com.badlogic.gdx.graphics.VertexAttributes.ReadonlyIterator[T](this.array).asInstanceOf[scala.collection.Iterator[T]]

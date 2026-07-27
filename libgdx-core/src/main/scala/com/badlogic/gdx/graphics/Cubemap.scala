@@ -1,15 +1,7 @@
 package com.badlogic.gdx.graphics
 
-class Cubemap extends com.badlogic.gdx.graphics.GLTexture {
+class Cubemap(data$p: com.badlogic.gdx.graphics.CubemapData) extends com.badlogic.gdx.graphics.GLTexture(com.badlogic.gdx.graphics.GL20.GL_TEXTURE_CUBE_MAP) {
   var data: com.badlogic.gdx.graphics.CubemapData = null.asInstanceOf[com.badlogic.gdx.graphics.CubemapData]
-  def this(data: com.badlogic.gdx.graphics.CubemapData) = {
-    this()
-    this.data = data
-    this.load(data)
-    if (data.isManaged()) {
-      Cubemap.addManagedCubemap(com.badlogic.gdx.Gdx.app, this)
-    } else ()
-  }
   def this(positiveX: com.badlogic.gdx.graphics.TextureData, negativeX: com.badlogic.gdx.graphics.TextureData, positiveY: com.badlogic.gdx.graphics.TextureData, negativeY: com.badlogic.gdx.graphics.TextureData, positiveZ: com.badlogic.gdx.graphics.TextureData, negativeZ: com.badlogic.gdx.graphics.TextureData) = {
     this(new com.badlogic.gdx.graphics.glutils.FacedCubemapData(positiveX, negativeX, positiveY, negativeY, positiveZ, negativeZ))
   }
@@ -28,6 +20,11 @@ class Cubemap extends com.badlogic.gdx.graphics.GLTexture {
   def this(width: scala.Int, height: scala.Int, depth: scala.Int, format: com.badlogic.gdx.graphics.Pixmap.Format) = {
     this(new com.badlogic.gdx.graphics.glutils.PixmapTextureData(new com.badlogic.gdx.graphics.Pixmap(depth, height, format), null, false, true), new com.badlogic.gdx.graphics.glutils.PixmapTextureData(new com.badlogic.gdx.graphics.Pixmap(depth, height, format), null, false, true), new com.badlogic.gdx.graphics.glutils.PixmapTextureData(new com.badlogic.gdx.graphics.Pixmap(width, depth, format), null, false, true), new com.badlogic.gdx.graphics.glutils.PixmapTextureData(new com.badlogic.gdx.graphics.Pixmap(width, depth, format), null, false, true), new com.badlogic.gdx.graphics.glutils.PixmapTextureData(new com.badlogic.gdx.graphics.Pixmap(width, height, format), null, false, true), new com.badlogic.gdx.graphics.glutils.PixmapTextureData(new com.badlogic.gdx.graphics.Pixmap(width, height, format), null, false, true))
   }
+  this.data = data$p
+  this.load(data$p)
+  if (data$p.isManaged()) {
+    Cubemap.addManagedCubemap(com.badlogic.gdx.Gdx.app, this)
+  } else ()
   def load(data: com.badlogic.gdx.graphics.CubemapData): scala.Unit = {
     if (!data.isPrepared()) {
       data.prepare()

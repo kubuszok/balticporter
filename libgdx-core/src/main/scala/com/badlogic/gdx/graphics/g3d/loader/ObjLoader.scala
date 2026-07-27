@@ -1,12 +1,12 @@
 package com.badlogic.gdx.graphics.g3d.loader
 
-class ObjLoader extends com.badlogic.gdx.assets.loaders.ModelLoader[com.badlogic.gdx.graphics.g3d.loader.ObjLoader.ObjLoaderParameters] {
+class ObjLoader(resolver$p: com.badlogic.gdx.assets.loaders.FileHandleResolver) extends com.badlogic.gdx.assets.loaders.ModelLoader[com.badlogic.gdx.graphics.g3d.loader.ObjLoader.ObjLoaderParameters](resolver$p) {
   final val verts: com.badlogic.gdx.utils.FloatArray = new com.badlogic.gdx.utils.FloatArray(300)
   final val norms: com.badlogic.gdx.utils.FloatArray = new com.badlogic.gdx.utils.FloatArray(300)
   final val uvs: com.badlogic.gdx.utils.FloatArray = new com.badlogic.gdx.utils.FloatArray(200)
   final val groups: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.loader.ObjLoader.Group] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.loader.ObjLoader.Group](10)
-  def this(resolver: com.badlogic.gdx.assets.loaders.FileHandleResolver) = {
-    this()
+  def this() = {
+    this(null)
   }
   def loadModel(fileHandle: com.badlogic.gdx.files.FileHandle, flipV: scala.Boolean): com.badlogic.gdx.graphics.g3d.Model = {
     return this.loadModel(fileHandle, new com.badlogic.gdx.graphics.g3d.loader.ObjLoader.ObjLoaderParameters(flipV))
@@ -257,7 +257,7 @@ object ObjLoader {
   object ObjLoaderParameters {
     export com.badlogic.gdx.assets.loaders.ModelLoader.ModelParameters.*
   }
-  class Group {
+  class Group(name$p: java.lang.String) {
     var name: java.lang.String = null.asInstanceOf[java.lang.String]
     var materialName: java.lang.String = null.asInstanceOf[java.lang.String]
     var faces: com.badlogic.gdx.utils.Array[java.lang.Integer] = null.asInstanceOf[com.badlogic.gdx.utils.Array[java.lang.Integer]]
@@ -265,13 +265,10 @@ object ObjLoader {
     var hasNorms: scala.Boolean = false
     var hasUVs: scala.Boolean = false
     var mat: com.badlogic.gdx.graphics.g3d.Material = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.Material]
-    def this(name: java.lang.String) = {
-      this()
-      this.name = name
-      this.faces = new com.badlogic.gdx.utils.Array[java.lang.Integer](200)
-      this.numFaces = 0
-      this.mat = new com.badlogic.gdx.graphics.g3d.Material("")
-      this.materialName = "default"
-    }
+    this.name = name$p
+    this.faces = new com.badlogic.gdx.utils.Array[java.lang.Integer](200)
+    this.numFaces = 0
+    this.mat = new com.badlogic.gdx.graphics.g3d.Material("")
+    this.materialName = "default"
   }
 }

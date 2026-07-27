@@ -1,14 +1,11 @@
 package com.badlogic.gdx.utils.async
 
-class AsyncExecutor extends com.badlogic.gdx.utils.Disposable {
+class AsyncExecutor(maxConcurrent: scala.Int, name: java.lang.String) extends com.badlogic.gdx.utils.Disposable {
   private var executor: java.util.concurrent.ExecutorService = null.asInstanceOf[java.util.concurrent.ExecutorService]
-  def this(maxConcurrent: scala.Int, name: java.lang.String) = {
-    this()
-    this.executor = java.util.concurrent.Executors.newFixedThreadPool(maxConcurrent, new java.util.concurrent.ThreadFactory())
-  }
   def this(maxConcurrent: scala.Int) = {
     this(maxConcurrent, "AsyncExecutor-Thread")
   }
+  this.executor = java.util.concurrent.Executors.newFixedThreadPool(maxConcurrent, new java.util.concurrent.ThreadFactory())
   def submit[T](task: com.badlogic.gdx.utils.async.AsyncTask[T]): com.badlogic.gdx.utils.async.AsyncResult[T] = {
     if (this.executor.isShutdown()) {
       throw new com.badlogic.gdx.utils.GdxRuntimeException("Cannot run tasks on an executor that has been shutdown (disposed)")

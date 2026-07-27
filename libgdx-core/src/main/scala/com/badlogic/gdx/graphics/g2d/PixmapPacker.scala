@@ -1,6 +1,6 @@
 package com.badlogic.gdx.graphics.g2d
 
-class PixmapPacker extends com.badlogic.gdx.utils.Disposable {
+class PixmapPacker(pageWidth$p: scala.Int, pageHeight$p: scala.Int, pageFormat$p: com.badlogic.gdx.graphics.Pixmap.Format, padding$p: scala.Int, duplicateBorder$p: scala.Boolean, stripWhitespaceX$p: scala.Boolean, stripWhitespaceY$p: scala.Boolean, packStrategy$p: com.badlogic.gdx.graphics.g2d.PixmapPacker.PackStrategy) extends com.badlogic.gdx.utils.Disposable {
   var packToTexture: scala.Boolean = false
   var disposed: scala.Boolean = false
   var pageWidth: scala.Int = 0
@@ -15,23 +15,20 @@ class PixmapPacker extends com.badlogic.gdx.utils.Disposable {
   final val pages: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.PixmapPacker.Page] = new com.badlogic.gdx.utils.Array().asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.PixmapPacker.Page]]
   var packStrategy: com.badlogic.gdx.graphics.g2d.PixmapPacker.PackStrategy = null.asInstanceOf[com.badlogic.gdx.graphics.g2d.PixmapPacker.PackStrategy]
   private var c: com.badlogic.gdx.graphics.Color = new com.badlogic.gdx.graphics.Color()
-  def this(pageWidth: scala.Int, pageHeight: scala.Int, pageFormat: com.badlogic.gdx.graphics.Pixmap.Format, padding: scala.Int, duplicateBorder: scala.Boolean, stripWhitespaceX: scala.Boolean, stripWhitespaceY: scala.Boolean, packStrategy: com.badlogic.gdx.graphics.g2d.PixmapPacker.PackStrategy) = {
-    this()
-    this.pageWidth = pageWidth
-    this.pageHeight = pageHeight
-    this.pageFormat = pageFormat
-    this.padding = padding
-    this.duplicateBorder = duplicateBorder
-    this.stripWhitespaceX = stripWhitespaceX
-    this.stripWhitespaceY = stripWhitespaceY
-    this.packStrategy = packStrategy
-  }
   def this(pageWidth: scala.Int, pageHeight: scala.Int, pageFormat: com.badlogic.gdx.graphics.Pixmap.Format, padding: scala.Int, duplicateBorder: scala.Boolean) = {
     this(pageWidth, pageHeight, pageFormat, padding, duplicateBorder, false, false, new com.badlogic.gdx.graphics.g2d.PixmapPacker.GuillotineStrategy())
   }
   def this(pageWidth: scala.Int, pageHeight: scala.Int, pageFormat: com.badlogic.gdx.graphics.Pixmap.Format, padding: scala.Int, duplicateBorder: scala.Boolean, packStrategy: com.badlogic.gdx.graphics.g2d.PixmapPacker.PackStrategy) = {
     this(pageWidth, pageHeight, pageFormat, padding, duplicateBorder, false, false, packStrategy)
   }
+  this.pageWidth = pageWidth$p
+  this.pageHeight = pageHeight$p
+  this.pageFormat = pageFormat$p
+  this.padding = padding$p
+  this.duplicateBorder = duplicateBorder$p
+  this.stripWhitespaceX = stripWhitespaceX$p
+  this.stripWhitespaceY = stripWhitespaceY$p
+  this.packStrategy = packStrategy$p
   def sort(images: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.Pixmap]): scala.Unit = {
     this.packStrategy.sort(images)
   }
@@ -393,19 +390,16 @@ class PixmapPacker extends com.badlogic.gdx.utils.Disposable {
 }
 object PixmapPacker {
   var indexPattern: java.util.regex.Pattern = java.util.regex.Pattern.compile("(.+)_(\\d+)$")
-  class Page {
+  class Page(packer: PixmapPacker) {
     var rects: com.badlogic.gdx.utils.OrderedMap[java.lang.String, com.badlogic.gdx.graphics.g2d.PixmapPacker.PixmapPackerRectangle] = new com.badlogic.gdx.utils.OrderedMap().asInstanceOf[com.badlogic.gdx.utils.OrderedMap[java.lang.String, com.badlogic.gdx.graphics.g2d.PixmapPacker.PixmapPackerRectangle]]
     var image: com.badlogic.gdx.graphics.Pixmap = null.asInstanceOf[com.badlogic.gdx.graphics.Pixmap]
     var texture: com.badlogic.gdx.graphics.Texture = null.asInstanceOf[com.badlogic.gdx.graphics.Texture]
     final val addedRects: com.badlogic.gdx.utils.Array[java.lang.String] = new com.badlogic.gdx.utils.Array().asInstanceOf[com.badlogic.gdx.utils.Array[java.lang.String]]
     var dirty: scala.Boolean = false
-    def this(packer: PixmapPacker) = {
-      this()
-      this.image = new com.badlogic.gdx.graphics.Pixmap(packer.pageWidth, packer.pageHeight, packer.pageFormat)
-      this.image.setBlending(com.badlogic.gdx.graphics.Pixmap.Blending.None)
-      this.image.setColor(packer.getTransparentColor())
-      this.image.fill()
-    }
+    this.image = new com.badlogic.gdx.graphics.Pixmap(packer.pageWidth, packer.pageHeight, packer.pageFormat)
+    this.image.setBlending(com.badlogic.gdx.graphics.Pixmap.Blending.None)
+    this.image.setColor(packer.getTransparentColor())
+    this.image.fill()
     def getPixmap(): com.badlogic.gdx.graphics.Pixmap = {
       return this.image
     }
@@ -513,16 +507,13 @@ object PixmapPacker {
       final val rect: com.badlogic.gdx.graphics.g2d.PixmapPacker.Bounds = new com.badlogic.gdx.graphics.g2d.PixmapPacker.Bounds()
       var full: scala.Boolean = false
     }
-    class GuillotinePage extends com.badlogic.gdx.graphics.g2d.PixmapPacker.Page {
+    class GuillotinePage(packer: PixmapPacker) extends com.badlogic.gdx.graphics.g2d.PixmapPacker.Page(packer) {
       var root: com.badlogic.gdx.graphics.g2d.PixmapPacker.GuillotineStrategy.Node = null.asInstanceOf[com.badlogic.gdx.graphics.g2d.PixmapPacker.GuillotineStrategy.Node]
-      def this(packer: PixmapPacker) = {
-        this()
-        this.root = new com.badlogic.gdx.graphics.g2d.PixmapPacker.GuillotineStrategy.Node()
-        this.root.rect.x = packer.padding
-        this.root.rect.y = packer.padding
-        this.root.rect.width = packer.pageWidth - (packer.padding * 2)
-        this.root.rect.height = packer.pageHeight - (packer.padding * 2)
-      }
+      this.root = new com.badlogic.gdx.graphics.g2d.PixmapPacker.GuillotineStrategy.Node()
+      this.root.rect.x = packer.padding
+      this.root.rect.y = packer.padding
+      this.root.rect.width = packer.pageWidth - (packer.padding * 2)
+      this.root.rect.height = packer.pageHeight - (packer.padding * 2)
     }
   }
   class SkylineStrategy extends com.badlogic.gdx.graphics.g2d.PixmapPacker.PackStrategy {
@@ -594,11 +585,8 @@ object PixmapPacker {
     }
   }
   object SkylineStrategy {
-    class SkylinePage extends com.badlogic.gdx.graphics.g2d.PixmapPacker.Page {
+    class SkylinePage(packer: PixmapPacker) extends com.badlogic.gdx.graphics.g2d.PixmapPacker.Page(packer) {
       var rows: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.PixmapPacker.SkylineStrategy.SkylinePage.Row] = new com.badlogic.gdx.utils.Array().asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.PixmapPacker.SkylineStrategy.SkylinePage.Row]]
-      def this(packer: PixmapPacker) = {
-        this()
-      }
     }
     object SkylinePage {
       class Row {

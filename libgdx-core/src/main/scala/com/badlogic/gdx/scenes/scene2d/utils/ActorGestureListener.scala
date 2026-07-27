@@ -1,14 +1,14 @@
 package com.badlogic.gdx.scenes.scene2d.utils
 
-class ActorGestureListener extends com.badlogic.gdx.scenes.scene2d.EventListener {
+class ActorGestureListener(halfTapSquareSize: scala.Float, tapCountInterval: scala.Float, longPressDuration: scala.Float, maxFlingDelay: scala.Float) extends com.badlogic.gdx.scenes.scene2d.EventListener {
   private var detector: com.badlogic.gdx.input.GestureDetector = null.asInstanceOf[com.badlogic.gdx.input.GestureDetector]
   var event: com.badlogic.gdx.scenes.scene2d.InputEvent = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.InputEvent]
   var actor: com.badlogic.gdx.scenes.scene2d.Actor = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.Actor]
   var touchDownTarget: com.badlogic.gdx.scenes.scene2d.Actor = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.Actor]
-  def this(halfTapSquareSize: scala.Float, tapCountInterval: scala.Float, longPressDuration: scala.Float, maxFlingDelay: scala.Float) = {
-    this()
-    this.detector = new com.badlogic.gdx.input.GestureDetector(halfTapSquareSize, tapCountInterval, longPressDuration, maxFlingDelay, new com.badlogic.gdx.input.GestureDetector.GestureAdapter())
+  def this() = {
+    this(20, 0.4f, 1.1f, java.lang.Integer.MAX_VALUE)
   }
+  this.detector = new com.badlogic.gdx.input.GestureDetector(halfTapSquareSize, tapCountInterval, longPressDuration, maxFlingDelay, new com.badlogic.gdx.input.GestureDetector.GestureAdapter())
   def handle(e: com.badlogic.gdx.scenes.scene2d.Event): scala.Boolean = {
     if (!e.isInstanceOf[com.badlogic.gdx.scenes.scene2d.InputEvent]) {
       return false

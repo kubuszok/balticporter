@@ -1,11 +1,8 @@
 package com.badlogic.gdx.assets.loaders
 
-abstract class ModelLoader[P <: com.badlogic.gdx.assets.loaders.ModelLoader.ModelParameters] extends com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader[com.badlogic.gdx.graphics.g3d.Model, P] {
+abstract class ModelLoader[P <: com.badlogic.gdx.assets.loaders.ModelLoader.ModelParameters](resolver$p: com.badlogic.gdx.assets.loaders.FileHandleResolver) extends com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader[com.badlogic.gdx.graphics.g3d.Model, P](resolver$p) {
   var items: com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.ObjectMap.Entry[java.lang.String, com.badlogic.gdx.graphics.g3d.model.data.ModelData]] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.ObjectMap.Entry[java.lang.String, com.badlogic.gdx.graphics.g3d.model.data.ModelData]]()
   var defaultParameters: com.badlogic.gdx.assets.loaders.ModelLoader.ModelParameters = new com.badlogic.gdx.assets.loaders.ModelLoader.ModelParameters()
-  def this(resolver: com.badlogic.gdx.assets.loaders.FileHandleResolver) = {
-    this()
-  }
   def loadModelData(fileHandle: com.badlogic.gdx.files.FileHandle, parameters: P): com.badlogic.gdx.graphics.g3d.model.data.ModelData
   def loadModelData(fileHandle: com.badlogic.gdx.files.FileHandle): com.badlogic.gdx.graphics.g3d.model.data.ModelData = {
     return this.loadModelData(fileHandle, null.asInstanceOf[P])

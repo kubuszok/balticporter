@@ -1,10 +1,7 @@
 package com.badlogic.gdx.graphics.g3d.particles
 
-class ParticleEffectLoader extends com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader[com.badlogic.gdx.graphics.g3d.particles.ParticleEffect, com.badlogic.gdx.graphics.g3d.particles.ParticleEffectLoader.ParticleEffectLoadParameter] {
+class ParticleEffectLoader(resolver$p: com.badlogic.gdx.assets.loaders.FileHandleResolver) extends com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader[com.badlogic.gdx.graphics.g3d.particles.ParticleEffect, com.badlogic.gdx.graphics.g3d.particles.ParticleEffectLoader.ParticleEffectLoadParameter](resolver$p) {
   var items: com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.ObjectMap.Entry[java.lang.String, com.badlogic.gdx.graphics.g3d.particles.ResourceData[com.badlogic.gdx.graphics.g3d.particles.ParticleEffect]]] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.ObjectMap.Entry[java.lang.String, com.badlogic.gdx.graphics.g3d.particles.ResourceData[com.badlogic.gdx.graphics.g3d.particles.ParticleEffect]]]()
-  def this(resolver: com.badlogic.gdx.assets.loaders.FileHandleResolver) = {
-    this()
-  }
   def loadAsync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.graphics.g3d.particles.ParticleEffectLoader.ParticleEffectLoadParameter): scala.Unit = {
     ()
   }
@@ -90,33 +87,27 @@ class ParticleEffectLoader extends com.badlogic.gdx.assets.loaders.AsynchronousA
   }
 }
 object ParticleEffectLoader {
-  class ParticleEffectLoadParameter extends com.badlogic.gdx.assets.AssetLoaderParameters[com.badlogic.gdx.graphics.g3d.particles.ParticleEffect] {
+  class ParticleEffectLoadParameter(batches$p: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.batches.ParticleBatch[?]]) extends com.badlogic.gdx.assets.AssetLoaderParameters[com.badlogic.gdx.graphics.g3d.particles.ParticleEffect] {
     var batches: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.batches.ParticleBatch[?]] = null.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.batches.ParticleBatch[?]]]
-    def this(batches: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.batches.ParticleBatch[?]]) = {
-      this()
-      this.batches = batches
-    }
+    this.batches = batches$p
   }
   object ParticleEffectLoadParameter {
     export com.badlogic.gdx.assets.AssetLoaderParameters.*
   }
-  class ParticleEffectSaveParameter extends com.badlogic.gdx.assets.AssetLoaderParameters[com.badlogic.gdx.graphics.g3d.particles.ParticleEffect] {
+  class ParticleEffectSaveParameter(file$p: com.badlogic.gdx.files.FileHandle, manager$p: com.badlogic.gdx.assets.AssetManager, batches$p: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.batches.ParticleBatch[?]], jsonOutputType$p: com.badlogic.gdx.utils.JsonWriter.OutputType, prettyPrint$p: scala.Boolean) extends com.badlogic.gdx.assets.AssetLoaderParameters[com.badlogic.gdx.graphics.g3d.particles.ParticleEffect] {
     var batches: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.batches.ParticleBatch[?]] = null.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.batches.ParticleBatch[?]]]
     var file: com.badlogic.gdx.files.FileHandle = null.asInstanceOf[com.badlogic.gdx.files.FileHandle]
     var manager: com.badlogic.gdx.assets.AssetManager = null.asInstanceOf[com.badlogic.gdx.assets.AssetManager]
     var jsonOutputType: com.badlogic.gdx.utils.JsonWriter.OutputType = null.asInstanceOf[com.badlogic.gdx.utils.JsonWriter.OutputType]
     var prettyPrint: scala.Boolean = false
-    def this(file: com.badlogic.gdx.files.FileHandle, manager: com.badlogic.gdx.assets.AssetManager, batches: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.batches.ParticleBatch[?]], jsonOutputType: com.badlogic.gdx.utils.JsonWriter.OutputType, prettyPrint: scala.Boolean) = {
-      this()
-      this.batches = batches
-      this.file = file
-      this.manager = manager
-      this.jsonOutputType = jsonOutputType
-      this.prettyPrint = prettyPrint
-    }
     def this(file: com.badlogic.gdx.files.FileHandle, manager: com.badlogic.gdx.assets.AssetManager, batches: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.batches.ParticleBatch[?]]) = {
       this(file, manager, batches, com.badlogic.gdx.utils.JsonWriter.OutputType.minimal, false)
     }
+    this.batches = batches$p
+    this.file = file$p
+    this.manager = manager$p
+    this.jsonOutputType = jsonOutputType$p
+    this.prettyPrint = prettyPrint$p
   }
   object ParticleEffectSaveParameter {
     export com.badlogic.gdx.assets.AssetLoaderParameters.*

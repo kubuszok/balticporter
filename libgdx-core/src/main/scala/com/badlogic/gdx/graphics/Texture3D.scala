@@ -1,21 +1,18 @@
 package com.badlogic.gdx.graphics
 
-class Texture3D extends com.badlogic.gdx.graphics.GLTexture {
+class Texture3D(data$p: com.badlogic.gdx.graphics.Texture3DData) extends com.badlogic.gdx.graphics.GLTexture(com.badlogic.gdx.graphics.GL30.GL_TEXTURE_3D, com.badlogic.gdx.Gdx.gl.glGenTexture()) {
   private var data: com.badlogic.gdx.graphics.Texture3DData = null.asInstanceOf[com.badlogic.gdx.graphics.Texture3DData]
   var rWrap: com.badlogic.gdx.graphics.Texture.TextureWrap = com.badlogic.gdx.graphics.Texture.TextureWrap.ClampToEdge
-  def this(data: com.badlogic.gdx.graphics.Texture3DData) = {
-    this()
-    if (com.badlogic.gdx.Gdx.gl30 == null) {
-      throw new com.badlogic.gdx.utils.GdxRuntimeException("Texture3D requires a device running with GLES 3.0 compatibilty")
-    } else ()
-    this.load(data)
-    if (data.isManaged()) {
-      Texture3D.addManagedTexture(com.badlogic.gdx.Gdx.app, this)
-    } else ()
-  }
   def this(width: scala.Int, height: scala.Int, depth: scala.Int, glFormat: scala.Int, glInternalFormat: scala.Int, glType: scala.Int) = {
     this(new com.badlogic.gdx.graphics.glutils.CustomTexture3DData(width, height, depth, 0, glFormat, glInternalFormat, glType))
   }
+  if (com.badlogic.gdx.Gdx.gl30 == null) {
+    throw new com.badlogic.gdx.utils.GdxRuntimeException("Texture3D requires a device running with GLES 3.0 compatibilty")
+  } else ()
+  this.load(data$p)
+  if (data$p.isManaged()) {
+    Texture3D.addManagedTexture(com.badlogic.gdx.Gdx.app, this)
+  } else ()
   private def load(data: com.badlogic.gdx.graphics.Texture3DData): scala.Unit = {
     if ((this.data != null) && (data.isManaged() != this.data.isManaged())) {
       throw new com.badlogic.gdx.utils.GdxRuntimeException("New data must have the same managed status as the old data")

@@ -1,6 +1,6 @@
 package com.badlogic.gdx.graphics.g2d
 
-class SpriteCache extends com.badlogic.gdx.utils.Disposable {
+class SpriteCache(size: scala.Int, shader$p: com.badlogic.gdx.graphics.glutils.ShaderProgram, useIndices: scala.Boolean) extends com.badlogic.gdx.utils.Disposable {
   private var mesh: com.badlogic.gdx.graphics.Mesh = null.asInstanceOf[com.badlogic.gdx.graphics.Mesh]
   private var drawing: scala.Boolean = false
   private final val transformMatrix: com.badlogic.gdx.math.Matrix4 = new com.badlogic.gdx.math.Matrix4()
@@ -16,33 +16,33 @@ class SpriteCache extends com.badlogic.gdx.utils.Disposable {
   private var customShader: com.badlogic.gdx.graphics.glutils.ShaderProgram = null
   var renderCalls: scala.Int = 0
   var totalRenderCalls: scala.Int = 0
-  def this(size: scala.Int, shader: com.badlogic.gdx.graphics.glutils.ShaderProgram, useIndices: scala.Boolean) = {
-    this()
-    this.shader = shader
-    if (useIndices && (size > 8191)) {
-      throw new java.lang.IllegalArgumentException("Can't have more than 8191 sprites per batch: " + size)
-    } else ()
-    this.mesh = new com.badlogic.gdx.graphics.Mesh(true, size * (if (useIndices) 4 else 6), if (useIndices) size * 6 else 0, scala.Array[com.badlogic.gdx.graphics.VertexAttribute](new com.badlogic.gdx.graphics.VertexAttribute(com.badlogic.gdx.graphics.VertexAttributes.Usage.Position, 2, com.badlogic.gdx.graphics.glutils.ShaderProgram.POSITION_ATTRIBUTE), new com.badlogic.gdx.graphics.VertexAttribute(com.badlogic.gdx.graphics.VertexAttributes.Usage.ColorPacked, 4, com.badlogic.gdx.graphics.glutils.ShaderProgram.COLOR_ATTRIBUTE), new com.badlogic.gdx.graphics.VertexAttribute(com.badlogic.gdx.graphics.VertexAttributes.Usage.TextureCoordinates, 2, com.badlogic.gdx.graphics.glutils.ShaderProgram.TEXCOORD_ATTRIBUTE + "0")))
-    this.mesh.setAutoBind(false)
-    if (useIndices) {
-      val length: scala.Int = size * 6
-      val indices: scala.Array[scala.Short] = new scala.Array[scala.Short](length)
-      var j: scala.Short = 0.asInstanceOf[scala.Short];
-      { var i: scala.Int = 0; while (i < length) { {
-        indices(i + 0) = j
-        indices(i + 1) = (j + 1).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
-        indices(i + 2) = (j + 2).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
-        indices(i + 3) = (j + 2).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
-        indices(i + 4) = (j + 3).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
-        indices(i + 5) = j
-      }; i = i + 6; j = (j + 4).asInstanceOf[scala.Short] } }
-      this.mesh.setIndices(indices)
-    } else ()
-    this.projectionMatrix.setToOrtho2D(0, 0, com.badlogic.gdx.Gdx.graphics.getWidth(), com.badlogic.gdx.Gdx.graphics.getHeight())
-  }
   def this(size: scala.Int, useIndices: scala.Boolean) = {
     this(size, SpriteCache.createDefaultShader(), useIndices)
   }
+  def this() = {
+    this(1000, false)
+  }
+  this.shader = shader$p
+  if (useIndices && (size > 8191)) {
+    throw new java.lang.IllegalArgumentException("Can't have more than 8191 sprites per batch: " + size)
+  } else ()
+  this.mesh = new com.badlogic.gdx.graphics.Mesh(true, size * (if (useIndices) 4 else 6), if (useIndices) size * 6 else 0, scala.Array[com.badlogic.gdx.graphics.VertexAttribute](new com.badlogic.gdx.graphics.VertexAttribute(com.badlogic.gdx.graphics.VertexAttributes.Usage.Position, 2, com.badlogic.gdx.graphics.glutils.ShaderProgram.POSITION_ATTRIBUTE), new com.badlogic.gdx.graphics.VertexAttribute(com.badlogic.gdx.graphics.VertexAttributes.Usage.ColorPacked, 4, com.badlogic.gdx.graphics.glutils.ShaderProgram.COLOR_ATTRIBUTE), new com.badlogic.gdx.graphics.VertexAttribute(com.badlogic.gdx.graphics.VertexAttributes.Usage.TextureCoordinates, 2, com.badlogic.gdx.graphics.glutils.ShaderProgram.TEXCOORD_ATTRIBUTE + "0")))
+  this.mesh.setAutoBind(false)
+  if (useIndices) {
+    val length: scala.Int = size * 6
+    val indices: scala.Array[scala.Short] = new scala.Array[scala.Short](length)
+    var j: scala.Short = 0.asInstanceOf[scala.Short];
+    { var i: scala.Int = 0; while (i < length) { {
+      indices(i + 0) = j
+      indices(i + 1) = (j + 1).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
+      indices(i + 2) = (j + 2).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
+      indices(i + 3) = (j + 2).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
+      indices(i + 4) = (j + 3).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
+      indices(i + 5) = j
+    }; i = i + 6; j = (j + 4).asInstanceOf[scala.Short] } }
+    this.mesh.setIndices(indices)
+  } else ()
+  this.projectionMatrix.setToOrtho2D(0, 0, com.badlogic.gdx.Gdx.graphics.getWidth(), com.badlogic.gdx.Gdx.graphics.getHeight())
   def setColor(tint: com.badlogic.gdx.graphics.Color): scala.Unit = {
     this.color.set(tint)
     this.colorPacked = tint.toFloatBits()
@@ -769,17 +769,14 @@ object SpriteCache {
     } else ()
     return shader
   }
-  class Cache {
+  class Cache(id$p: scala.Int, offset$p: scala.Int) {
     var id: scala.Int = 0
     var offset: scala.Int = 0
     var maxCount: scala.Int = 0
     var textureCount: scala.Int = 0
     var textures: scala.Array[com.badlogic.gdx.graphics.Texture] = null.asInstanceOf[scala.Array[com.badlogic.gdx.graphics.Texture]]
     var counts: scala.Array[scala.Int] = null.asInstanceOf[scala.Array[scala.Int]]
-    def this(id: scala.Int, offset: scala.Int) = {
-      this()
-      this.id = id
-      this.offset = offset
-    }
+    this.id = id$p
+    this.offset = offset$p
   }
 }

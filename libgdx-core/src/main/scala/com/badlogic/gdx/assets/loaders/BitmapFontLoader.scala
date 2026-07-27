@@ -1,10 +1,7 @@
 package com.badlogic.gdx.assets.loaders
 
-class BitmapFontLoader extends com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader[com.badlogic.gdx.graphics.g2d.BitmapFont, com.badlogic.gdx.assets.loaders.BitmapFontLoader.BitmapFontParameter] {
+class BitmapFontLoader(resolver$p: com.badlogic.gdx.assets.loaders.FileHandleResolver) extends com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader[com.badlogic.gdx.graphics.g2d.BitmapFont, com.badlogic.gdx.assets.loaders.BitmapFontLoader.BitmapFontParameter](resolver$p) {
   var data: com.badlogic.gdx.graphics.g2d.BitmapFont.BitmapFontData = null.asInstanceOf[com.badlogic.gdx.graphics.g2d.BitmapFont.BitmapFontData]
-  def this(resolver: com.badlogic.gdx.assets.loaders.FileHandleResolver) = {
-    this()
-  }
   def getDependencies(fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.assets.loaders.BitmapFontLoader.BitmapFontParameter): com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = {
     val deps: com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = new com.badlogic.gdx.utils.Array().asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]]
     if ((parameter != null) && (parameter.bitmapFontData != null)) {

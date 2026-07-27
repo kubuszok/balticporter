@@ -1,6 +1,6 @@
 package com.badlogic.gdx.graphics.g3d.particles.batches
 
-class BillboardParticleBatch extends com.badlogic.gdx.graphics.g3d.particles.batches.BufferedParticleBatch[com.badlogic.gdx.graphics.g3d.particles.renderers.BillboardControllerRenderData] {
+class BillboardParticleBatch(mode$p: com.badlogic.gdx.graphics.g3d.particles.ParticleShader.AlignMode, useGPU$p: scala.Boolean, capacity: scala.Int, blendingAttribute$p: com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute, depthTestAttribute$p: com.badlogic.gdx.graphics.g3d.attributes.DepthTestAttribute) extends com.badlogic.gdx.graphics.g3d.particles.batches.BufferedParticleBatch[com.badlogic.gdx.graphics.g3d.particles.renderers.BillboardControllerRenderData](((size: scala.Int) => new scala.Array[com.badlogic.gdx.graphics.g3d.particles.renderers.BillboardControllerRenderData](size))) {
   private var renderablePool: com.badlogic.gdx.graphics.g3d.particles.batches.BillboardParticleBatch#RenderablePool = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.batches.BillboardParticleBatch#RenderablePool]
   private var renderables: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.Renderable] = null.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.Renderable]]
   private var vertices: scala.Array[scala.Float] = null.asInstanceOf[scala.Array[scala.Float]]
@@ -13,30 +13,30 @@ class BillboardParticleBatch extends com.badlogic.gdx.graphics.g3d.particles.bat
   var blendingAttribute: com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute]
   var depthTestAttribute: com.badlogic.gdx.graphics.g3d.attributes.DepthTestAttribute = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.attributes.DepthTestAttribute]
   var shader: com.badlogic.gdx.graphics.g3d.Shader = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.Shader]
-  def this(mode: com.badlogic.gdx.graphics.g3d.particles.ParticleShader.AlignMode, useGPU: scala.Boolean, capacity: scala.Int, blendingAttribute: com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute, depthTestAttribute: com.badlogic.gdx.graphics.g3d.attributes.DepthTestAttribute) = {
-    this()
-    this.renderables = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.Renderable]()
-    this.renderablePool = new RenderablePool()
-    this.blendingAttribute = blendingAttribute
-    this.depthTestAttribute = depthTestAttribute
-    if (this.blendingAttribute == null) {
-      this.blendingAttribute = new com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute(com.badlogic.gdx.graphics.GL20.GL_ONE, com.badlogic.gdx.graphics.GL20.GL_ONE_MINUS_SRC_ALPHA, 1.0f)
-    } else ()
-    if (this.depthTestAttribute == null) {
-      this.depthTestAttribute = new com.badlogic.gdx.graphics.g3d.attributes.DepthTestAttribute(com.badlogic.gdx.graphics.GL20.GL_LEQUAL, false)
-    } else ()
-    this.allocIndices()
-    this.initRenderData()
-    this.ensureCapacity(capacity)
-    this.setUseGpu(useGPU)
-    this.setAlignMode(mode)
-  }
   def this(mode: com.badlogic.gdx.graphics.g3d.particles.ParticleShader.AlignMode, useGPU: scala.Boolean, capacity: scala.Int) = {
     this(mode, useGPU, capacity, null, null)
+  }
+  def this() = {
+    this(com.badlogic.gdx.graphics.g3d.particles.ParticleShader.AlignMode.Screen, false, 100)
   }
   def this(capacity: scala.Int) = {
     this(com.badlogic.gdx.graphics.g3d.particles.ParticleShader.AlignMode.Screen, false, capacity)
   }
+  this.renderables = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.Renderable]()
+  this.renderablePool = new RenderablePool()
+  this.blendingAttribute = blendingAttribute$p
+  this.depthTestAttribute = depthTestAttribute$p
+  if (this.blendingAttribute == null) {
+    this.blendingAttribute = new com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute(com.badlogic.gdx.graphics.GL20.GL_ONE, com.badlogic.gdx.graphics.GL20.GL_ONE_MINUS_SRC_ALPHA, 1.0f)
+  } else ()
+  if (this.depthTestAttribute == null) {
+    this.depthTestAttribute = new com.badlogic.gdx.graphics.g3d.attributes.DepthTestAttribute(com.badlogic.gdx.graphics.GL20.GL_LEQUAL, false)
+  } else ()
+  this.allocIndices()
+  this.initRenderData()
+  this.ensureCapacity(capacity)
+  this.setUseGpu(useGPU$p)
+  this.setAlignMode(mode$p)
   def allocParticlesData(capacity: scala.Int): scala.Unit = {
     this.vertices = new scala.Array[scala.Float]((this.currentVertexSize * 4) * capacity)
     this.allocRenderables(capacity)

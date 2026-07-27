@@ -1,34 +1,34 @@
 package com.badlogic.gdx.graphics.g3d.particles.batches
 
-class PointSpriteParticleBatch extends com.badlogic.gdx.graphics.g3d.particles.batches.BufferedParticleBatch[com.badlogic.gdx.graphics.g3d.particles.renderers.PointSpriteControllerRenderData] {
+class PointSpriteParticleBatch(capacity: scala.Int, shaderConfig: com.badlogic.gdx.graphics.g3d.particles.ParticleShader.Config, blendingAttribute$p: com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute, depthTestAttribute$p: com.badlogic.gdx.graphics.g3d.attributes.DepthTestAttribute) extends com.badlogic.gdx.graphics.g3d.particles.batches.BufferedParticleBatch[com.badlogic.gdx.graphics.g3d.particles.renderers.PointSpriteControllerRenderData](((size: scala.Int) => new scala.Array[com.badlogic.gdx.graphics.g3d.particles.renderers.PointSpriteControllerRenderData](size))) {
   private var vertices: scala.Array[scala.Float] = null.asInstanceOf[scala.Array[scala.Float]]
   var renderable: com.badlogic.gdx.graphics.g3d.Renderable = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.Renderable]
   var blendingAttribute: com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute]
   var depthTestAttribute: com.badlogic.gdx.graphics.g3d.attributes.DepthTestAttribute = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.attributes.DepthTestAttribute]
-  def this(capacity: scala.Int, shaderConfig: com.badlogic.gdx.graphics.g3d.particles.ParticleShader.Config, blendingAttribute: com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute, depthTestAttribute: com.badlogic.gdx.graphics.g3d.attributes.DepthTestAttribute) = {
-    this()
-    if (!PointSpriteParticleBatch.pointSpritesEnabled) {
-      PointSpriteParticleBatch.enablePointSprites()
-    } else ()
-    this.blendingAttribute = blendingAttribute
-    this.depthTestAttribute = depthTestAttribute
-    if (this.blendingAttribute == null) {
-      this.blendingAttribute = new com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute(com.badlogic.gdx.graphics.GL20.GL_ONE, com.badlogic.gdx.graphics.GL20.GL_ONE_MINUS_SRC_ALPHA, 1.0f)
-    } else ()
-    if (this.depthTestAttribute == null) {
-      this.depthTestAttribute = new com.badlogic.gdx.graphics.g3d.attributes.DepthTestAttribute(com.badlogic.gdx.graphics.GL20.GL_LEQUAL, false)
-    } else ()
-    this.allocRenderable()
-    this.ensureCapacity(capacity)
-    this.renderable.shader = new com.badlogic.gdx.graphics.g3d.particles.ParticleShader(this.renderable, shaderConfig)
-    this.renderable.shader.init()
-  }
   def this(capacity: scala.Int, shaderConfig: com.badlogic.gdx.graphics.g3d.particles.ParticleShader.Config) = {
     this(capacity, shaderConfig, null, null)
   }
   def this(capacity: scala.Int) = {
     this(capacity, new com.badlogic.gdx.graphics.g3d.particles.ParticleShader.Config(com.badlogic.gdx.graphics.g3d.particles.ParticleShader.ParticleType.Point))
   }
+  def this() = {
+    this(1000)
+  }
+  if (!PointSpriteParticleBatch.pointSpritesEnabled) {
+    PointSpriteParticleBatch.enablePointSprites()
+  } else ()
+  this.blendingAttribute = blendingAttribute$p
+  this.depthTestAttribute = depthTestAttribute$p
+  if (this.blendingAttribute == null) {
+    this.blendingAttribute = new com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute(com.badlogic.gdx.graphics.GL20.GL_ONE, com.badlogic.gdx.graphics.GL20.GL_ONE_MINUS_SRC_ALPHA, 1.0f)
+  } else ()
+  if (this.depthTestAttribute == null) {
+    this.depthTestAttribute = new com.badlogic.gdx.graphics.g3d.attributes.DepthTestAttribute(com.badlogic.gdx.graphics.GL20.GL_LEQUAL, false)
+  } else ()
+  this.allocRenderable()
+  this.ensureCapacity(capacity)
+  this.renderable.shader = new com.badlogic.gdx.graphics.g3d.particles.ParticleShader(this.renderable, shaderConfig)
+  this.renderable.shader.init()
   def allocParticlesData(capacity: scala.Int): scala.Unit = {
     this.vertices = new scala.Array[scala.Float](capacity * PointSpriteParticleBatch.CPU_VERTEX_SIZE)
     if (this.renderable.meshPart.mesh != null) {

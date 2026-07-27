@@ -1,9 +1,6 @@
 package com.badlogic.gdx.utils
 
-class DataOutput extends java.io.DataOutputStream {
-  def this(out: java.io.OutputStream) = {
-    this()
-  }
+class DataOutput(out: java.io.OutputStream) extends java.io.DataOutputStream(out) {
   def writeInt(value$arg: scala.Int, optimizePositive: scala.Boolean): scala.Int = {
     var value: scala.Int = value$arg
     if (!optimizePositive) {

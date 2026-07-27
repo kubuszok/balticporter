@@ -1,6 +1,6 @@
 package com.badlogic.gdx.graphics.glutils
 
-class ShaderProgram extends com.badlogic.gdx.utils.Disposable {
+class ShaderProgram(vertexShader$arg: java.lang.String, fragmentShader$arg: java.lang.String) extends com.badlogic.gdx.utils.Disposable {
   private var log: java.lang.String = ""
   var isCompiled$field: scala.Boolean = false
   private final val uniforms: com.badlogic.gdx.utils.ObjectIntMap[java.lang.String] = new com.badlogic.gdx.utils.ObjectIntMap[java.lang.String]()
@@ -21,35 +21,32 @@ class ShaderProgram extends com.badlogic.gdx.utils.Disposable {
   private var refCount: scala.Int = 0
   var params: java.nio.IntBuffer = com.badlogic.gdx.utils.BufferUtils.newIntBuffer(1)
   var `type`: java.nio.IntBuffer = com.badlogic.gdx.utils.BufferUtils.newIntBuffer(1)
-  def this(vertexShader$arg: java.lang.String, fragmentShader$arg: java.lang.String) = {
-    this()
-    var vertexShader: java.lang.String = vertexShader$arg
-    var fragmentShader: java.lang.String = fragmentShader$arg
-    if (vertexShader == null) {
-      throw new java.lang.IllegalArgumentException("vertex shader must not be null")
-    } else ()
-    if (fragmentShader == null) {
-      throw new java.lang.IllegalArgumentException("fragment shader must not be null")
-    } else ()
-    if ((ShaderProgram.prependVertexCode != null) && (ShaderProgram.prependVertexCode.length() > 0)) {
-      vertexShader = ShaderProgram.prependVertexCode + vertexShader
-    } else ()
-    if ((ShaderProgram.prependFragmentCode != null) && (ShaderProgram.prependFragmentCode.length() > 0)) {
-      fragmentShader = ShaderProgram.prependFragmentCode + fragmentShader
-    } else ()
-    this.vertexShaderSource = vertexShader
-    this.fragmentShaderSource = fragmentShader
-    this.matrix = com.badlogic.gdx.utils.BufferUtils.newFloatBuffer(16)
-    this.compileShaders(vertexShader, fragmentShader)
-    if (this.isCompiled()) {
-      this.fetchAttributes()
-      this.fetchUniforms()
-      this.addManagedShader(com.badlogic.gdx.Gdx.app, this)
-    } else ()
-  }
+  var vertexShader: java.lang.String = vertexShader$arg
+  var fragmentShader: java.lang.String = fragmentShader$arg
   def this(vertexShader: com.badlogic.gdx.files.FileHandle, fragmentShader: com.badlogic.gdx.files.FileHandle) = {
     this(vertexShader.readString(), fragmentShader.readString())
   }
+  if (vertexShader == null) {
+    throw new java.lang.IllegalArgumentException("vertex shader must not be null")
+  } else ()
+  if (fragmentShader == null) {
+    throw new java.lang.IllegalArgumentException("fragment shader must not be null")
+  } else ()
+  if ((ShaderProgram.prependVertexCode != null) && (ShaderProgram.prependVertexCode.length() > 0)) {
+    vertexShader = ShaderProgram.prependVertexCode + vertexShader
+  } else ()
+  if ((ShaderProgram.prependFragmentCode != null) && (ShaderProgram.prependFragmentCode.length() > 0)) {
+    fragmentShader = ShaderProgram.prependFragmentCode + fragmentShader
+  } else ()
+  this.vertexShaderSource = vertexShader
+  this.fragmentShaderSource = fragmentShader
+  this.matrix = com.badlogic.gdx.utils.BufferUtils.newFloatBuffer(16)
+  this.compileShaders(vertexShader, fragmentShader)
+  if (this.isCompiled()) {
+    this.fetchAttributes()
+    this.fetchUniforms()
+    this.addManagedShader(com.badlogic.gdx.Gdx.app, this)
+  } else ()
   private def compileShaders(vertexShader: java.lang.String, fragmentShader: java.lang.String): scala.Unit = {
     this.vertexShaderHandle = this.loadShader(com.badlogic.gdx.graphics.GL20.GL_VERTEX_SHADER, vertexShader)
     this.fragmentShaderHandle = this.loadShader(com.badlogic.gdx.graphics.GL20.GL_FRAGMENT_SHADER, fragmentShader)

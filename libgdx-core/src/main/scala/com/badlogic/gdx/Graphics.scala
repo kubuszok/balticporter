@@ -81,34 +81,28 @@ object Graphics {
       case _ => throw new java.lang.IllegalArgumentException(name)
     }
   }
-  class DisplayMode {
+  class DisplayMode(width$p: scala.Int, height$p: scala.Int, refreshRate$p: scala.Int, bitsPerPixel$p: scala.Int) {
     var width: scala.Int = 0
     var height: scala.Int = 0
     var refreshRate: scala.Int = 0
     var bitsPerPixel: scala.Int = 0
-    def this(width: scala.Int, height: scala.Int, refreshRate: scala.Int, bitsPerPixel: scala.Int) = {
-      this()
-      this.width = width
-      this.height = height
-      this.refreshRate = refreshRate
-      this.bitsPerPixel = bitsPerPixel
-    }
+    this.width = width$p
+    this.height = height$p
+    this.refreshRate = refreshRate$p
+    this.bitsPerPixel = bitsPerPixel$p
     def toString(): java.lang.String = {
       return (((((java.lang.String.valueOf(this.width) + "x") + this.height) + ", bpp: ") + this.bitsPerPixel) + ", hz: ") + this.refreshRate
     }
   }
-  class Monitor {
+  class Monitor(virtualX$p: scala.Int, virtualY$p: scala.Int, name$p: java.lang.String) {
     var virtualX: scala.Int = 0
     var virtualY: scala.Int = 0
     var name: java.lang.String = null.asInstanceOf[java.lang.String]
-    def this(virtualX: scala.Int, virtualY: scala.Int, name: java.lang.String) = {
-      this()
-      this.virtualX = virtualX
-      this.virtualY = virtualY
-      this.name = name
-    }
+    this.virtualX = virtualX$p
+    this.virtualY = virtualY$p
+    this.name = name$p
   }
-  class BufferFormat {
+  class BufferFormat(r$p: scala.Int, g$p: scala.Int, b$p: scala.Int, a$p: scala.Int, depth$p: scala.Int, stencil$p: scala.Int, samples$p: scala.Int, coverageSampling$p: scala.Boolean) {
     var r: scala.Int = 0
     var g: scala.Int = 0
     var b: scala.Int = 0
@@ -117,17 +111,14 @@ object Graphics {
     var stencil: scala.Int = 0
     var samples: scala.Int = 0
     var coverageSampling: scala.Boolean = false
-    def this(r: scala.Int, g: scala.Int, b: scala.Int, a: scala.Int, depth: scala.Int, stencil: scala.Int, samples: scala.Int, coverageSampling: scala.Boolean) = {
-      this()
-      this.r = r
-      this.g = g
-      this.b = b
-      this.a = a
-      this.depth = depth
-      this.stencil = stencil
-      this.samples = samples
-      this.coverageSampling = coverageSampling
-    }
+    this.r = r$p
+    this.g = g$p
+    this.b = b$p
+    this.a = a$p
+    this.depth = depth$p
+    this.stencil = stencil$p
+    this.samples = samples$p
+    this.coverageSampling = coverageSampling$p
     def toString(): java.lang.String = {
       return (((((((((((((("r: " + this.r) + ", g: ") + this.g) + ", b: ") + this.b) + ", a: ") + this.a) + ", depth: ") + this.depth) + ", stencil: ") + this.stencil) + ", num samples: ") + this.samples) + ", coverage sampling: ") + this.coverageSampling
     }

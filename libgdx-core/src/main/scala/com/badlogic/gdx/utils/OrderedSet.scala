@@ -164,12 +164,9 @@ object OrderedSet {
     set.addAll(array)
     return set
   }
-  class OrderedSetIterator[K] extends com.badlogic.gdx.utils.ObjectSet.ObjectSetIterator[K] {
+  class OrderedSetIterator[K](set$p: OrderedSet[K]) extends com.badlogic.gdx.utils.ObjectSet.ObjectSetIterator[K](set$p) {
     private var items: com.badlogic.gdx.utils.Array[K] = null.asInstanceOf[com.badlogic.gdx.utils.Array[K]]
-    def this(set: OrderedSet[K]) = {
-      this()
-      this.items = set.items
-    }
+    this.items = set$p.items
     def reset(): scala.Unit = {
       nextIndex = 0
       hasNext$field = this.set.size > 0

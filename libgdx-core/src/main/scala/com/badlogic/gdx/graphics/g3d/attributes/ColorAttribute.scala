@@ -1,13 +1,7 @@
 package com.badlogic.gdx.graphics.g3d.attributes
 
-class ColorAttribute extends com.badlogic.gdx.graphics.g3d.Attribute {
+class ColorAttribute(type$p: scala.Long) extends com.badlogic.gdx.graphics.g3d.Attribute(type$p) {
   final val color: com.badlogic.gdx.graphics.Color = new com.badlogic.gdx.graphics.Color()
-  def this(`type`: scala.Long) = {
-    this()
-    if (!ColorAttribute.is(`type`)) {
-      throw new com.badlogic.gdx.utils.GdxRuntimeException("Invalid type specified")
-    } else ()
-  }
   def this(`type`: scala.Long, color: com.badlogic.gdx.graphics.Color) = {
     this(`type`)
     if (color != null) {
@@ -21,6 +15,9 @@ class ColorAttribute extends com.badlogic.gdx.graphics.g3d.Attribute {
   def this(copyFrom: ColorAttribute) = {
     this(copyFrom.`type`, copyFrom.color)
   }
+  if (!ColorAttribute.is(type$p)) {
+    throw new com.badlogic.gdx.utils.GdxRuntimeException("Invalid type specified")
+  } else ()
   def copy(): com.badlogic.gdx.graphics.g3d.Attribute = {
     return new ColorAttribute(this)
   }

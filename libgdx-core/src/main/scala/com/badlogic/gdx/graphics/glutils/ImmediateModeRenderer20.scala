@@ -1,6 +1,6 @@
 package com.badlogic.gdx.graphics.glutils
 
-class ImmediateModeRenderer20 extends com.badlogic.gdx.graphics.glutils.ImmediateModeRenderer {
+class ImmediateModeRenderer20(maxVertices$p: scala.Int, hasNormals: scala.Boolean, hasColors: scala.Boolean, numTexCoords$p: scala.Int, shader$p: com.badlogic.gdx.graphics.glutils.ShaderProgram) extends com.badlogic.gdx.graphics.glutils.ImmediateModeRenderer {
   private var primitiveType: scala.Int = 0
   private var vertexIdx: scala.Int = 0
   private var numSetTexCoords: scala.Int = 0
@@ -17,23 +17,7 @@ class ImmediateModeRenderer20 extends com.badlogic.gdx.graphics.glutils.Immediat
   private final val projModelView: com.badlogic.gdx.math.Matrix4 = new com.badlogic.gdx.math.Matrix4()
   private var vertices: scala.Array[scala.Float] = null.asInstanceOf[scala.Array[scala.Float]]
   private var shaderUniformNames: scala.Array[java.lang.String] = null.asInstanceOf[scala.Array[java.lang.String]]
-  def this(maxVertices: scala.Int, hasNormals: scala.Boolean, hasColors: scala.Boolean, numTexCoords: scala.Int, shader: com.badlogic.gdx.graphics.glutils.ShaderProgram) = {
-    this()
-    this.maxVertices = maxVertices
-    this.numTexCoords = numTexCoords
-    this.shader = shader
-    val attribs: scala.Array[com.badlogic.gdx.graphics.VertexAttribute] = this.buildVertexAttributes(hasNormals, hasColors, numTexCoords)
-    this.mesh = new com.badlogic.gdx.graphics.Mesh(false, maxVertices, 0, attribs)
-    this.vertices = new scala.Array[scala.Float](maxVertices * (this.mesh.getVertexAttributes().vertexSize / 4))
-    this.vertexSize = this.mesh.getVertexAttributes().vertexSize / 4
-    this.normalOffset = if (this.mesh.getVertexAttribute(com.badlogic.gdx.graphics.VertexAttributes.Usage.Normal) != null) this.mesh.getVertexAttribute(com.badlogic.gdx.graphics.VertexAttributes.Usage.Normal).offset / 4 else 0
-    this.colorOffset = if (this.mesh.getVertexAttribute(com.badlogic.gdx.graphics.VertexAttributes.Usage.ColorPacked) != null) this.mesh.getVertexAttribute(com.badlogic.gdx.graphics.VertexAttributes.Usage.ColorPacked).offset / 4 else 0
-    this.texCoordOffset = if (this.mesh.getVertexAttribute(com.badlogic.gdx.graphics.VertexAttributes.Usage.TextureCoordinates) != null) this.mesh.getVertexAttribute(com.badlogic.gdx.graphics.VertexAttributes.Usage.TextureCoordinates).offset / 4 else 0
-    this.shaderUniformNames = new scala.Array[java.lang.String](numTexCoords);
-    { var i: scala.Int = 0; while (i < numTexCoords) { {
-      this.shaderUniformNames(i) = "u_sampler" + i
-    }; i = i + 1 } }
-  }
+  val attribs: scala.Array[com.badlogic.gdx.graphics.VertexAttribute] = this.buildVertexAttributes(hasNormals, hasColors, numTexCoords$p)
   def this(hasNormals: scala.Boolean, hasColors: scala.Boolean, numTexCoords: scala.Int) = {
     this(5000, hasNormals, hasColors, numTexCoords, ImmediateModeRenderer20.createDefaultShader(hasNormals, hasColors, numTexCoords))
     this.ownsShader = true
@@ -42,6 +26,19 @@ class ImmediateModeRenderer20 extends com.badlogic.gdx.graphics.glutils.Immediat
     this(maxVertices, hasNormals, hasColors, numTexCoords, ImmediateModeRenderer20.createDefaultShader(hasNormals, hasColors, numTexCoords))
     this.ownsShader = true
   }
+  this.maxVertices = maxVertices$p
+  this.numTexCoords = numTexCoords$p
+  this.shader = shader$p
+  this.mesh = new com.badlogic.gdx.graphics.Mesh(false, maxVertices$p, 0, attribs)
+  this.vertices = new scala.Array[scala.Float](maxVertices$p * (this.mesh.getVertexAttributes().vertexSize / 4))
+  this.vertexSize = this.mesh.getVertexAttributes().vertexSize / 4
+  this.normalOffset = if (this.mesh.getVertexAttribute(com.badlogic.gdx.graphics.VertexAttributes.Usage.Normal) != null) this.mesh.getVertexAttribute(com.badlogic.gdx.graphics.VertexAttributes.Usage.Normal).offset / 4 else 0
+  this.colorOffset = if (this.mesh.getVertexAttribute(com.badlogic.gdx.graphics.VertexAttributes.Usage.ColorPacked) != null) this.mesh.getVertexAttribute(com.badlogic.gdx.graphics.VertexAttributes.Usage.ColorPacked).offset / 4 else 0
+  this.texCoordOffset = if (this.mesh.getVertexAttribute(com.badlogic.gdx.graphics.VertexAttributes.Usage.TextureCoordinates) != null) this.mesh.getVertexAttribute(com.badlogic.gdx.graphics.VertexAttributes.Usage.TextureCoordinates).offset / 4 else 0
+  this.shaderUniformNames = new scala.Array[java.lang.String](numTexCoords$p);
+  { var i: scala.Int = 0; while (i < numTexCoords$p) { {
+    this.shaderUniformNames(i) = "u_sampler" + i
+  }; i = i + 1 } }
   private def buildVertexAttributes(hasNormals: scala.Boolean, hasColor: scala.Boolean, numTexCoords: scala.Int): scala.Array[com.badlogic.gdx.graphics.VertexAttribute] = {
     val attribs: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.VertexAttribute] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.VertexAttribute]()
     attribs.add(new com.badlogic.gdx.graphics.VertexAttribute(com.badlogic.gdx.graphics.VertexAttributes.Usage.Position, 3, com.badlogic.gdx.graphics.glutils.ShaderProgram.POSITION_ATTRIBUTE))

@@ -1,18 +1,18 @@
 package com.badlogic.gdx.utils
 
-class Queue[T] extends scala.collection.Iterable[T] {
+class Queue[T](initialSize: scala.Int, arraySupplier: com.badlogic.gdx.utils.ArraySupplier[scala.Array[T]]) extends scala.collection.Iterable[T] {
   var values: scala.Array[T] = null.asInstanceOf[scala.Array[T]]
   var head: scala.Int = 0
   var tail: scala.Int = 0
   var size: scala.Int = 0
   private var iterable: com.badlogic.gdx.utils.Queue.QueueIterable[T] = null.asInstanceOf[com.badlogic.gdx.utils.Queue.QueueIterable[T]]
-  def this(initialSize: scala.Int, arraySupplier: com.badlogic.gdx.utils.ArraySupplier[scala.Array[T]]) = {
-    this()
-    this.values = arraySupplier.get(initialSize).asInstanceOf[scala.Array[T]]
-  }
   def this(initialSize: scala.Int) = {
     this(initialSize, com.badlogic.gdx.utils.ArraySupplier.`object`())
   }
+  def this() = {
+    this(16)
+  }
+  this.values = arraySupplier.get(initialSize).asInstanceOf[scala.Array[T]]
   def addLast(`object`: T): scala.Unit = {
     var values: scala.Array[T] = this.values
     if (this.size == values.length) {
@@ -376,19 +376,16 @@ class Queue[T] extends scala.collection.Iterable[T] {
   }
 }
 object Queue {
-  class QueueIterator[T] extends scala.collection.Iterator[T] with scala.collection.Iterable[T] {
+  class QueueIterator[T](queue$p: Queue[T], allowRemove$p: scala.Boolean) extends scala.collection.Iterator[T] with scala.collection.Iterable[T] {
     private var queue: Queue[T] = null.asInstanceOf[Queue[T]]
     private var allowRemove: scala.Boolean = false
     var index: scala.Int = 0
     var valid: scala.Boolean = true
-    def this(queue: Queue[T], allowRemove: scala.Boolean) = {
-      this()
-      this.queue = queue
-      this.allowRemove = allowRemove
-    }
     def this(queue: Queue[T]) = {
       this(queue, true)
     }
+    this.queue = queue$p
+    this.allowRemove = allowRemove$p
     def hasNext(): scala.Boolean = {
       if (!this.valid) {
         throw new com.badlogic.gdx.utils.GdxRuntimeException("#iterator() cannot be used nested.")
@@ -418,19 +415,16 @@ object Queue {
       return this
     }
   }
-  class QueueIterable[T] extends scala.collection.Iterable[T] {
+  class QueueIterable[T](queue$p: Queue[T], allowRemove$p: scala.Boolean) extends scala.collection.Iterable[T] {
     private var queue: Queue[T] = null.asInstanceOf[Queue[T]]
     private var allowRemove: scala.Boolean = false
     private var iterator1: com.badlogic.gdx.utils.Queue.QueueIterator[T] = null.asInstanceOf[com.badlogic.gdx.utils.Queue.QueueIterator[T]]
     private var iterator2: com.badlogic.gdx.utils.Queue.QueueIterator[T] = null.asInstanceOf[com.badlogic.gdx.utils.Queue.QueueIterator[T]]
-    def this(queue: Queue[T], allowRemove: scala.Boolean) = {
-      this()
-      this.queue = queue
-      this.allowRemove = allowRemove
-    }
     def this(queue: Queue[T]) = {
       this(queue, true)
     }
+    this.queue = queue$p
+    this.allowRemove = allowRemove$p
     def iterator(): scala.collection.Iterator[T] = {
       if (com.badlogic.gdx.utils.Collections.allocateIterators) {
         return new com.badlogic.gdx.utils.Queue.QueueIterator[T](this.queue, this.allowRemove).asInstanceOf[scala.collection.Iterator[T]]

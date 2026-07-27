@@ -1,6 +1,6 @@
 package com.badlogic.gdx.graphics.glutils
 
-class GLOnlyTextureData extends com.badlogic.gdx.graphics.TextureData {
+class GLOnlyTextureData(width$p: scala.Int, height$p: scala.Int, mipMapLevel: scala.Int, internalFormat$p: scala.Int, format$p: scala.Int, type$p: scala.Int) extends com.badlogic.gdx.graphics.TextureData {
   var width: scala.Int = 0
   var height: scala.Int = 0
   var isPrepared$field: scala.Boolean = false
@@ -8,15 +8,12 @@ class GLOnlyTextureData extends com.badlogic.gdx.graphics.TextureData {
   var internalFormat: scala.Int = 0
   var format: scala.Int = 0
   var `type`: scala.Int = 0
-  def this(width: scala.Int, height: scala.Int, mipMapLevel: scala.Int, internalFormat: scala.Int, format: scala.Int, `type`: scala.Int) = {
-    this()
-    this.width = width
-    this.height = height
-    this.mipLevel = mipMapLevel
-    this.internalFormat = internalFormat
-    this.format = format
-    this.`type` = `type`
-  }
+  this.width = width$p
+  this.height = height$p
+  this.mipLevel = mipMapLevel
+  this.internalFormat = internalFormat$p
+  this.format = format$p
+  this.`type` = type$p
   def getType(): com.badlogic.gdx.graphics.TextureData.TextureDataType = {
     return com.badlogic.gdx.graphics.TextureData.TextureDataType.Custom
   }

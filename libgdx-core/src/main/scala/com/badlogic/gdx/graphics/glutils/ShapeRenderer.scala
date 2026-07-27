@@ -1,6 +1,6 @@
 package com.badlogic.gdx.graphics.glutils
 
-class ShapeRenderer extends com.badlogic.gdx.utils.Disposable {
+class ShapeRenderer(maxVertices: scala.Int, defaultShader: com.badlogic.gdx.graphics.glutils.ShaderProgram) extends com.badlogic.gdx.utils.Disposable {
   private var renderer: com.badlogic.gdx.graphics.glutils.ImmediateModeRenderer = null.asInstanceOf[com.badlogic.gdx.graphics.glutils.ImmediateModeRenderer]
   private var matrixDirty: scala.Boolean = false
   private final val projectionMatrix: com.badlogic.gdx.math.Matrix4 = new com.badlogic.gdx.math.Matrix4()
@@ -11,19 +11,19 @@ class ShapeRenderer extends com.badlogic.gdx.utils.Disposable {
   private var shapeType: com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType = null.asInstanceOf[com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType]
   private var autoShapeType: scala.Boolean = false
   private var defaultRectLineWidth: scala.Float = 0.75f
-  def this(maxVertices: scala.Int, defaultShader: com.badlogic.gdx.graphics.glutils.ShaderProgram) = {
-    this()
-    if (defaultShader == null) {
-      this.renderer = new com.badlogic.gdx.graphics.glutils.ImmediateModeRenderer20(maxVertices, false, true, 0)
-    } else {
-      this.renderer = new com.badlogic.gdx.graphics.glutils.ImmediateModeRenderer20(maxVertices, false, true, 0, defaultShader)
-    }
-    this.projectionMatrix.setToOrtho2D(0, 0, com.badlogic.gdx.Gdx.graphics.getWidth(), com.badlogic.gdx.Gdx.graphics.getHeight())
-    this.matrixDirty = true
-  }
   def this(maxVertices: scala.Int) = {
     this(maxVertices, null)
   }
+  def this() = {
+    this(5000)
+  }
+  if (defaultShader == null) {
+    this.renderer = new com.badlogic.gdx.graphics.glutils.ImmediateModeRenderer20(maxVertices, false, true, 0)
+  } else {
+    this.renderer = new com.badlogic.gdx.graphics.glutils.ImmediateModeRenderer20(maxVertices, false, true, 0, defaultShader)
+  }
+  this.projectionMatrix.setToOrtho2D(0, 0, com.badlogic.gdx.Gdx.graphics.getWidth(), com.badlogic.gdx.Gdx.graphics.getHeight())
+  this.matrixDirty = true
   def setColor(color: com.badlogic.gdx.graphics.Color): scala.Unit = {
     this.color.set(color)
   }

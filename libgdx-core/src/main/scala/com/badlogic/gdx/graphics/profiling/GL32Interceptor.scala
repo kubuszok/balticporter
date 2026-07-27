@@ -1,11 +1,8 @@
 package com.badlogic.gdx.graphics.profiling
 
-class GL32Interceptor extends com.badlogic.gdx.graphics.profiling.GL31Interceptor with com.badlogic.gdx.graphics.GL32 {
+class GL32Interceptor(glProfiler$p: com.badlogic.gdx.graphics.profiling.GLProfiler, gl32$p: com.badlogic.gdx.graphics.GL32) extends com.badlogic.gdx.graphics.profiling.GL31Interceptor(glProfiler$p, gl32$p) with com.badlogic.gdx.graphics.GL32 {
   var gl32: com.badlogic.gdx.graphics.GL32 = null.asInstanceOf[com.badlogic.gdx.graphics.GL32]
-  def this(glProfiler: com.badlogic.gdx.graphics.profiling.GLProfiler, gl32: com.badlogic.gdx.graphics.GL32) = {
-    this()
-    this.gl32 = gl32
-  }
+  this.gl32 = gl32$p
   def glBlendBarrier(): scala.Unit = {
     calls = calls + 1
     this.gl32.glBlendBarrier()

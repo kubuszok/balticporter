@@ -1,13 +1,13 @@
 package com.badlogic.gdx.graphics
 
-class FPSLogger {
+class FPSLogger(bound$p: scala.Int) {
   var startTime: scala.Long = 0L
   var bound: scala.Int = 0
-  def this(bound: scala.Int) = {
-    this()
-    this.bound = bound
-    this.startTime = com.badlogic.gdx.utils.TimeUtils.nanoTime()
+  def this() = {
+    this(java.lang.Integer.MAX_VALUE)
   }
+  this.bound = bound$p
+  this.startTime = com.badlogic.gdx.utils.TimeUtils.nanoTime()
   def setBound(bound: scala.Int): scala.Unit = {
     this.bound = bound
     this.startTime = com.badlogic.gdx.utils.TimeUtils.nanoTime()

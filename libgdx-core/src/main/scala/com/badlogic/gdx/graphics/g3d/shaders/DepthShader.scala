@@ -1,21 +1,10 @@
 package com.badlogic.gdx.graphics.g3d.shaders
 
-class DepthShader extends com.badlogic.gdx.graphics.g3d.shaders.DefaultShader {
+class DepthShader(renderable$p: com.badlogic.gdx.graphics.g3d.Renderable, config$p: com.badlogic.gdx.graphics.g3d.shaders.DepthShader.Config, shaderProgram: com.badlogic.gdx.graphics.glutils.ShaderProgram) extends com.badlogic.gdx.graphics.g3d.shaders.DefaultShader(renderable$p, config$p, shaderProgram) {
   var numBones: scala.Int = 0
   private var alphaTestAttribute: com.badlogic.gdx.graphics.g3d.attributes.FloatAttribute = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.attributes.FloatAttribute]
-  def this(renderable: com.badlogic.gdx.graphics.g3d.Renderable, config: com.badlogic.gdx.graphics.g3d.shaders.DepthShader.Config, shaderProgram: com.badlogic.gdx.graphics.glutils.ShaderProgram) = {
-    this()
-    val attributes: com.badlogic.gdx.graphics.g3d.Attributes = DepthShader.combineAttributes(renderable)
-    if ((renderable.bones != null) && (renderable.bones.length > config.numBones)) {
-      throw new com.badlogic.gdx.utils.GdxRuntimeException((("too many bones: " + renderable.bones.length) + ", max configured: ") + config.numBones)
-    } else ()
-    this.numBones = if (renderable.bones == null) 0 else config.numBones
-    val boneWeights: scala.Int = renderable.meshPart.mesh.getVertexAttributes().getBoneWeights()
-    if (boneWeights > config.numBoneWeights) {
-      throw new com.badlogic.gdx.utils.GdxRuntimeException((("too many bone weights: " + boneWeights) + ", max configured: ") + config.numBoneWeights)
-    } else ()
-    this.alphaTestAttribute = new com.badlogic.gdx.graphics.g3d.attributes.FloatAttribute(com.badlogic.gdx.graphics.g3d.attributes.FloatAttribute.AlphaTest, config.defaultAlphaTest)
-  }
+  val attributes$p: com.badlogic.gdx.graphics.g3d.Attributes = DepthShader.combineAttributes(renderable$p)
+  val boneWeights: scala.Int = renderable$p.meshPart.mesh.getVertexAttributes().getBoneWeights()
   def this(renderable: com.badlogic.gdx.graphics.g3d.Renderable, config: com.badlogic.gdx.graphics.g3d.shaders.DepthShader.Config, prefix: java.lang.String, vertexShader: java.lang.String, fragmentShader: java.lang.String) = {
     this(renderable, config, new com.badlogic.gdx.graphics.glutils.ShaderProgram(prefix + vertexShader, prefix + fragmentShader))
   }
@@ -28,6 +17,14 @@ class DepthShader extends com.badlogic.gdx.graphics.g3d.shaders.DefaultShader {
   def this(renderable: com.badlogic.gdx.graphics.g3d.Renderable) = {
     this(renderable, new com.badlogic.gdx.graphics.g3d.shaders.DepthShader.Config())
   }
+  if ((renderable$p.bones != null) && (renderable$p.bones.length > config$p.numBones)) {
+    throw new com.badlogic.gdx.utils.GdxRuntimeException((("too many bones: " + renderable$p.bones.length) + ", max configured: ") + config$p.numBones)
+  } else ()
+  this.numBones = if (renderable$p.bones == null) 0 else config$p.numBones
+  if (boneWeights > config$p.numBoneWeights) {
+    throw new com.badlogic.gdx.utils.GdxRuntimeException((("too many bone weights: " + boneWeights) + ", max configured: ") + config$p.numBoneWeights)
+  } else ()
+  this.alphaTestAttribute = new com.badlogic.gdx.graphics.g3d.attributes.FloatAttribute(com.badlogic.gdx.graphics.g3d.attributes.FloatAttribute.AlphaTest, config$p.defaultAlphaTest)
   def begin(camera: com.badlogic.gdx.graphics.Camera, context: com.badlogic.gdx.graphics.g3d.utils.RenderContext): scala.Unit = {
     super.begin(camera, context)
   }

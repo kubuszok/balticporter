@@ -1,6 +1,6 @@
 package com.badlogic.gdx.utils
 
-class LongMap[V] extends scala.collection.Iterable[com.badlogic.gdx.utils.LongMap.Entry[V]] {
+class LongMap[V](initialCapacity: scala.Int, loadFactor$p: scala.Float) extends scala.collection.Iterable[com.badlogic.gdx.utils.LongMap.Entry[V]] {
   var size: scala.Int = 0
   var keyTable: scala.Array[scala.Long] = null.asInstanceOf[scala.Array[scala.Long]]
   var valueTable: scala.Array[V] = null.asInstanceOf[scala.Array[V]]
@@ -16,18 +16,9 @@ class LongMap[V] extends scala.collection.Iterable[com.badlogic.gdx.utils.LongMa
   private var values2: com.badlogic.gdx.utils.LongMap.Values[V] = null.asInstanceOf[com.badlogic.gdx.utils.LongMap.Values[V]]
   private var keys1: com.badlogic.gdx.utils.LongMap.Keys = null.asInstanceOf[com.badlogic.gdx.utils.LongMap.Keys]
   private var keys2: com.badlogic.gdx.utils.LongMap.Keys = null.asInstanceOf[com.badlogic.gdx.utils.LongMap.Keys]
-  def this(initialCapacity: scala.Int, loadFactor: scala.Float) = {
-    this()
-    if ((loadFactor <= 0.0f) || (loadFactor >= 1.0f)) {
-      throw new java.lang.IllegalArgumentException("loadFactor must be > 0 and < 1: " + loadFactor)
-    } else ()
-    this.loadFactor = loadFactor
-    val tableSize: scala.Int = com.badlogic.gdx.utils.ObjectSet.tableSize(initialCapacity, loadFactor)
-    this.threshold = (tableSize * loadFactor).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
-    this.mask = tableSize - 1
-    this.shift = java.lang.Long.numberOfLeadingZeros(this.mask)
-    this.keyTable = new scala.Array[scala.Long](tableSize)
-    this.valueTable = new scala.Array[java.lang.Object](tableSize).asInstanceOf[scala.Array[V]].asInstanceOf[scala.Array[V]]
+  val tableSize: scala.Int = com.badlogic.gdx.utils.ObjectSet.tableSize(initialCapacity, loadFactor$p)
+  def this() = {
+    this(51, 0.8f)
   }
   def this(initialCapacity: scala.Int) = {
     this(initialCapacity, 0.8f)
@@ -40,6 +31,15 @@ class LongMap[V] extends scala.collection.Iterable[com.badlogic.gdx.utils.LongMa
     this.zeroValue = map.zeroValue
     this.hasZeroValue = map.hasZeroValue
   }
+  if ((loadFactor$p <= 0.0f) || (loadFactor$p >= 1.0f)) {
+    throw new java.lang.IllegalArgumentException("loadFactor must be > 0 and < 1: " + loadFactor$p)
+  } else ()
+  this.loadFactor = loadFactor$p
+  this.threshold = (tableSize * loadFactor$p).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
+  this.mask = tableSize - 1
+  this.shift = java.lang.Long.numberOfLeadingZeros(this.mask)
+  this.keyTable = new scala.Array[scala.Long](tableSize)
+  this.valueTable = new scala.Array[java.lang.Object](tableSize).asInstanceOf[scala.Array[V]].asInstanceOf[scala.Array[V]]
   def place(item: scala.Long): scala.Int = {
     return (((item ^ (item >>> 32)) * -7046029254386353131L) >>> this.shift).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
   }
@@ -490,17 +490,14 @@ object LongMap {
       return (java.lang.String.valueOf(this.key) + "=") + this.value
     }
   }
-  class MapIterator[V] {
+  class MapIterator[V](map$p: LongMap[V]) {
     var hasNext$field: scala.Boolean = false
     var map: LongMap[V] = null.asInstanceOf[LongMap[V]]
     var nextIndex: scala.Int = 0
     var currentIndex: scala.Int = 0
     var valid: scala.Boolean = true
-    def this(map: LongMap[V]) = {
-      this()
-      this.map = map
-      this.reset()
-    }
+    this.map = map$p
+    this.reset()
     def reset(): scala.Unit = {
       this.currentIndex = com.badlogic.gdx.utils.LongMap.MapIterator.INDEX_ILLEGAL
       this.nextIndex = com.badlogic.gdx.utils.LongMap.MapIterator.INDEX_ZERO
@@ -561,11 +558,8 @@ object LongMap {
     private final val INDEX_ILLEGAL: scala.Int = -2
     final val INDEX_ZERO: scala.Int = -1
   }
-  class Entries[V] extends com.badlogic.gdx.utils.LongMap.MapIterator[V] with scala.collection.Iterable[com.badlogic.gdx.utils.LongMap.Entry[V]] with scala.collection.Iterator[com.badlogic.gdx.utils.LongMap.Entry[V]] {
+  class Entries[V](map$p: LongMap[V]) extends com.badlogic.gdx.utils.LongMap.MapIterator[V](map$p) with scala.collection.Iterable[com.badlogic.gdx.utils.LongMap.Entry[V]] with scala.collection.Iterator[com.badlogic.gdx.utils.LongMap.Entry[V]] {
     private final val entry: com.badlogic.gdx.utils.LongMap.Entry[V] = new com.badlogic.gdx.utils.LongMap.Entry[V]().asInstanceOf[com.badlogic.gdx.utils.LongMap.Entry[V]]
-    def this(map: LongMap[V]) = {
-      this()
-    }
     def next(): com.badlogic.gdx.utils.LongMap.Entry[V] = {
       if (!hasNext$field) {
         throw new java.util.NoSuchElementException()
@@ -598,10 +592,7 @@ object LongMap {
   object Entries {
     export com.badlogic.gdx.utils.LongMap.MapIterator.*
   }
-  class Values[V] extends com.badlogic.gdx.utils.LongMap.MapIterator[V] with scala.collection.Iterable[V] with scala.collection.Iterator[V] {
-    def this(map: LongMap[V]) = {
-      this()
-    }
+  class Values[V](map$p: LongMap[V]) extends com.badlogic.gdx.utils.LongMap.MapIterator[V](map$p) with scala.collection.Iterable[V] with scala.collection.Iterator[V] {
     def hasNext(): scala.Boolean = {
       if (!valid) {
         throw new com.badlogic.gdx.utils.GdxRuntimeException("#iterator() cannot be used nested.")
@@ -639,10 +630,7 @@ object LongMap {
   object Values {
     export com.badlogic.gdx.utils.LongMap.MapIterator.*
   }
-  class Keys extends com.badlogic.gdx.utils.LongMap.MapIterator[scala.AnyRef] {
-    def this(map: LongMap[?]) = {
-      this()
-    }
+  class Keys(map$p: LongMap[?]) extends com.badlogic.gdx.utils.LongMap.MapIterator[scala.AnyRef](map$p) {
     def next(): scala.Long = {
       if (!hasNext$field) {
         throw new java.util.NoSuchElementException()

@@ -1,16 +1,8 @@
 package com.badlogic.gdx.scenes.scene2d.ui
 
-class TextButton extends com.badlogic.gdx.scenes.scene2d.ui.Button {
+class TextButton(text: java.lang.String, style$p: com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle) extends com.badlogic.gdx.scenes.scene2d.ui.Button {
   private var label: com.badlogic.gdx.scenes.scene2d.ui.Label = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Label]
   private var style: com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle]
-  def this(text: java.lang.String, style: com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle) = {
-    this()
-    this.setStyle(style)
-    this.label = this.newLabel(text, new com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle(style.font, style.fontColor))
-    this.label.setAlignment(com.badlogic.gdx.utils.Align.center)
-    this.add(this.label).grow()
-    this.setSize(this.getPrefWidth(), this.getPrefHeight())
-  }
   def this(text: java.lang.String, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin) = {
     this(text, skin.get(classOf[com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle]))
     this.setSkin(skin)
@@ -19,6 +11,11 @@ class TextButton extends com.badlogic.gdx.scenes.scene2d.ui.Button {
     this(text, skin.get(styleName, classOf[com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle]))
     this.setSkin(skin)
   }
+  this.setStyle(style$p)
+  this.label = this.newLabel(text, new com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle(style$p.font, style$p.fontColor))
+  this.label.setAlignment(com.badlogic.gdx.utils.Align.center)
+  this.add(this.label).grow()
+  this.setSize(this.getPrefWidth(), this.getPrefHeight())
   def newLabel(text: java.lang.String, style: com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle): com.badlogic.gdx.scenes.scene2d.ui.Label = {
     return new com.badlogic.gdx.scenes.scene2d.ui.Label(text, style)
   }

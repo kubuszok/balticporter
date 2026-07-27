@@ -1,6 +1,6 @@
 package com.badlogic.gdx.utils
 
-class PerformanceCounter {
+class PerformanceCounter(name$p: java.lang.String, windowSize: scala.Int) {
   private var startTime: scala.Long = 0L
   private var lastTick: scala.Long = 0L
   var time: com.badlogic.gdx.math.FloatCounter = null.asInstanceOf[com.badlogic.gdx.math.FloatCounter]
@@ -8,15 +8,12 @@ class PerformanceCounter {
   var name: java.lang.String = null.asInstanceOf[java.lang.String]
   var current: scala.Float = 0.0f
   var valid: scala.Boolean = false
-  def this(name: java.lang.String, windowSize: scala.Int) = {
-    this()
-    this.name = name
-    this.time = new com.badlogic.gdx.math.FloatCounter(windowSize)
-    this.load = new com.badlogic.gdx.math.FloatCounter(1)
-  }
   def this(name: java.lang.String) = {
     this(name, 5)
   }
+  this.name = name$p
+  this.time = new com.badlogic.gdx.math.FloatCounter(windowSize)
+  this.load = new com.badlogic.gdx.math.FloatCounter(1)
   def tick(): scala.Unit = {
     val t: scala.Long = com.badlogic.gdx.utils.TimeUtils.nanoTime()
     if (this.lastTick > 0L) {

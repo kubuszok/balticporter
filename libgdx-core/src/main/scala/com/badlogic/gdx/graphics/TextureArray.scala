@@ -1,17 +1,7 @@
 package com.badlogic.gdx.graphics
 
-class TextureArray extends com.badlogic.gdx.graphics.GLTexture {
+class TextureArray(data$p: com.badlogic.gdx.graphics.TextureArrayData) extends com.badlogic.gdx.graphics.GLTexture(com.badlogic.gdx.graphics.GL30.GL_TEXTURE_2D_ARRAY, com.badlogic.gdx.Gdx.gl.glGenTexture()) {
   private var data: com.badlogic.gdx.graphics.TextureArrayData = null.asInstanceOf[com.badlogic.gdx.graphics.TextureArrayData]
-  def this(data: com.badlogic.gdx.graphics.TextureArrayData) = {
-    this()
-    if (com.badlogic.gdx.Gdx.gl30 == null) {
-      throw new com.badlogic.gdx.utils.GdxRuntimeException("TextureArray requires a device running with GLES 3.0 compatibilty")
-    } else ()
-    this.load(data)
-    if (data.isManaged()) {
-      TextureArray.addManagedTexture(com.badlogic.gdx.Gdx.app, this)
-    } else ()
-  }
   def this(useMipMaps: scala.Boolean, format: com.badlogic.gdx.graphics.Pixmap.Format, files: scala.Array[com.badlogic.gdx.files.FileHandle]) = {
     this(com.badlogic.gdx.graphics.TextureArrayData.Factory.loadFromFiles(format, useMipMaps, files))
   }
@@ -24,6 +14,13 @@ class TextureArray extends com.badlogic.gdx.graphics.GLTexture {
   def this(internalPaths: scala.Array[java.lang.String]) = {
     this(TextureArray.getInternalHandles(internalPaths))
   }
+  if (com.badlogic.gdx.Gdx.gl30 == null) {
+    throw new com.badlogic.gdx.utils.GdxRuntimeException("TextureArray requires a device running with GLES 3.0 compatibilty")
+  } else ()
+  this.load(data$p)
+  if (data$p.isManaged()) {
+    TextureArray.addManagedTexture(com.badlogic.gdx.Gdx.app, this)
+  } else ()
   private def load(data: com.badlogic.gdx.graphics.TextureArrayData): scala.Unit = {
     if ((this.data != null) && (data.isManaged() != this.data.isManaged())) {
       throw new com.badlogic.gdx.utils.GdxRuntimeException("New data must have the same managed status as the old data")

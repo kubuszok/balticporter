@@ -520,15 +520,12 @@ class ArrayMap[K, V] extends scala.collection.Iterable[com.badlogic.gdx.utils.Ob
   }
 }
 object ArrayMap {
-  class Entries[K, V] extends scala.collection.Iterable[com.badlogic.gdx.utils.ObjectMap.Entry[K, V]] with scala.collection.Iterator[com.badlogic.gdx.utils.ObjectMap.Entry[K, V]] {
+  class Entries[K, V](map$p: ArrayMap[K, V]) extends scala.collection.Iterable[com.badlogic.gdx.utils.ObjectMap.Entry[K, V]] with scala.collection.Iterator[com.badlogic.gdx.utils.ObjectMap.Entry[K, V]] {
     private var map: ArrayMap[K, V] = null.asInstanceOf[ArrayMap[K, V]]
     var entry: com.badlogic.gdx.utils.ObjectMap.Entry[K, V] = new com.badlogic.gdx.utils.ObjectMap.Entry[K, V]().asInstanceOf[com.badlogic.gdx.utils.ObjectMap.Entry[K, V]]
     var index: scala.Int = 0
     var valid: scala.Boolean = true
-    def this(map: ArrayMap[K, V]) = {
-      this()
-      this.map = map
-    }
+    this.map = map$p
     def hasNext(): scala.Boolean = {
       if (!this.valid) {
         throw new com.badlogic.gdx.utils.GdxRuntimeException("#iterator() cannot be used nested.")
@@ -557,14 +554,11 @@ object ArrayMap {
       this.index = 0
     }
   }
-  class Values[V] extends scala.collection.Iterable[V] with scala.collection.Iterator[V] {
+  class Values[V](map$p: ArrayMap[java.lang.Object, V]) extends scala.collection.Iterable[V] with scala.collection.Iterator[V] {
     private var map: ArrayMap[java.lang.Object, V] = null.asInstanceOf[ArrayMap[java.lang.Object, V]]
     var index: scala.Int = 0
     var valid: scala.Boolean = true
-    def this(map: ArrayMap[java.lang.Object, V]) = {
-      this()
-      this.map = map
-    }
+    this.map = map$p
     def hasNext(): scala.Boolean = {
       if (!this.valid) {
         throw new com.badlogic.gdx.utils.GdxRuntimeException("#iterator() cannot be used nested.")
@@ -598,14 +592,11 @@ object ArrayMap {
       return array.asInstanceOf[com.badlogic.gdx.utils.Array[V]]
     }
   }
-  class Keys[K] extends scala.collection.Iterable[K] with scala.collection.Iterator[K] {
+  class Keys[K](map$p: ArrayMap[K, java.lang.Object]) extends scala.collection.Iterable[K] with scala.collection.Iterator[K] {
     private var map: ArrayMap[K, java.lang.Object] = null.asInstanceOf[ArrayMap[K, java.lang.Object]]
     var index: scala.Int = 0
     var valid: scala.Boolean = true
-    def this(map: ArrayMap[K, java.lang.Object]) = {
-      this()
-      this.map = map
-    }
+    this.map = map$p
     def hasNext(): scala.Boolean = {
       if (!this.valid) {
         throw new com.badlogic.gdx.utils.GdxRuntimeException("#iterator() cannot be used nested.")

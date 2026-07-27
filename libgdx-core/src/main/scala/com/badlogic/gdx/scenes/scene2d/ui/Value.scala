@@ -32,12 +32,9 @@ object Value {
     } else ()
     return new Value()
   }
-  class Fixed extends Value {
+  class Fixed(value$p: scala.Float) extends Value {
     private var value: scala.Float = 0.0f
-    def this(value: scala.Float) = {
-      this()
-      this.value = value
-    }
+    this.value = value$p
     def get(context: com.badlogic.gdx.scenes.scene2d.Actor): scala.Float = {
       return this.value
     }

@@ -1,9 +1,6 @@
 package com.badlogic.gdx.files
 
-abstract class FileHandleStream extends com.badlogic.gdx.files.FileHandle {
-  def this(path: java.lang.String) = {
-    this()
-  }
+abstract class FileHandleStream(path$p: java.lang.String) extends com.badlogic.gdx.files.FileHandle(new java.io.File(path$p), com.badlogic.gdx.Files.FileType.Absolute) {
   def isDirectory(): scala.Boolean = {
     return false
   }

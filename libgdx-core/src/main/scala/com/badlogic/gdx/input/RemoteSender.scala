@@ -1,22 +1,19 @@
 package com.badlogic.gdx.input
 
-class RemoteSender extends com.badlogic.gdx.InputProcessor {
+class RemoteSender(ip: java.lang.String, port: scala.Int) extends com.badlogic.gdx.InputProcessor {
   private var out: java.io.DataOutputStream = null.asInstanceOf[java.io.DataOutputStream]
   private var connected: scala.Boolean = false
-  def this(ip: java.lang.String, port: scala.Int) = {
-    this()
-    try {
-      val socket: java.net.Socket = new java.net.Socket(ip, port)
-      socket.setTcpNoDelay(true)
-      socket.setSoTimeout(3000)
-      this.out = new java.io.DataOutputStream(socket.getOutputStream())
-      this.out.writeBoolean(com.badlogic.gdx.Gdx.input.isPeripheralAvailable(com.badlogic.gdx.Input.Peripheral.MultitouchScreen))
-      this.connected = true
-      com.badlogic.gdx.Gdx.input.setInputProcessor(this)
-    } catch {
-      case e: java.lang.Exception => {
-        com.badlogic.gdx.Gdx.app.log("RemoteSender", (("couldn't connect to " + ip) + ":") + port)
-      }
+  try {
+    val socket: java.net.Socket = new java.net.Socket(ip, port)
+    socket.setTcpNoDelay(true)
+    socket.setSoTimeout(3000)
+    this.out = new java.io.DataOutputStream(socket.getOutputStream())
+    this.out.writeBoolean(com.badlogic.gdx.Gdx.input.isPeripheralAvailable(com.badlogic.gdx.Input.Peripheral.MultitouchScreen))
+    this.connected = true
+    com.badlogic.gdx.Gdx.input.setInputProcessor(this)
+  } catch {
+    case e: java.lang.Exception => {
+      com.badlogic.gdx.Gdx.app.log("RemoteSender", (("couldn't connect to " + ip) + ":") + port)
     }
   }
   def sendUpdate(): scala.Unit = {

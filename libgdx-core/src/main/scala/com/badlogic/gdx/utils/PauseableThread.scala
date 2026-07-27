@@ -1,13 +1,10 @@
 package com.badlogic.gdx.utils
 
-class PauseableThread extends java.lang.Thread {
+class PauseableThread(runnable$p: java.lang.Runnable) extends java.lang.Thread {
   var runnable: java.lang.Runnable = null.asInstanceOf[java.lang.Runnable]
   var paused: scala.Boolean = false
   var exit: scala.Boolean = false
-  def this(runnable: java.lang.Runnable) = {
-    this()
-    this.runnable = runnable
-  }
+  this.runnable = runnable$p
   def run(): scala.Unit = {
     while (true) {
       this.synchronized {

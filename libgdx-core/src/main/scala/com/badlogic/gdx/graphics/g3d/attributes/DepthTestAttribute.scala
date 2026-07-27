@@ -1,31 +1,24 @@
 package com.badlogic.gdx.graphics.g3d.attributes
 
-class DepthTestAttribute extends com.badlogic.gdx.graphics.g3d.Attribute {
+class DepthTestAttribute(type$p: scala.Long, depthFunc$p: scala.Int, depthRangeNear$p: scala.Float, depthRangeFar$p: scala.Float, depthMask$p: scala.Boolean) extends com.badlogic.gdx.graphics.g3d.Attribute(type$p) {
   var depthFunc: scala.Int = 0
   var depthRangeNear: scala.Float = 0.0f
   var depthRangeFar: scala.Float = 0.0f
   var depthMask: scala.Boolean = false
-  def this(`type`: scala.Long, depthFunc: scala.Int, depthRangeNear: scala.Float, depthRangeFar: scala.Float, depthMask: scala.Boolean) = {
-    this()
-    if (!DepthTestAttribute.is(`type`)) {
-      throw new com.badlogic.gdx.utils.GdxRuntimeException("Invalid type specified")
-    } else ()
-    this.depthFunc = depthFunc
-    this.depthRangeNear = depthRangeNear
-    this.depthRangeFar = depthRangeFar
-    this.depthMask = depthMask
-  }
   def this(depthFunc: scala.Int, depthRangeNear: scala.Float, depthRangeFar: scala.Float, depthMask: scala.Boolean) = {
     this(DepthTestAttribute.Type, depthFunc, depthRangeNear, depthRangeFar, depthMask)
   }
   def this(depthFunc: scala.Int, depthMask: scala.Boolean) = {
     this(depthFunc, 0, 1, depthMask)
   }
-  def this(depthMask: scala.Boolean) = {
-    this(com.badlogic.gdx.graphics.GL20.GL_LEQUAL, depthMask)
-  }
   def this(depthFunc: scala.Int) = {
     this(depthFunc, true)
+  }
+  def this() = {
+    this(com.badlogic.gdx.graphics.GL20.GL_LEQUAL)
+  }
+  def this(depthMask: scala.Boolean) = {
+    this(com.badlogic.gdx.graphics.GL20.GL_LEQUAL, depthMask)
   }
   def this(depthFunc: scala.Int, depthRangeNear: scala.Float, depthRangeFar: scala.Float) = {
     this(depthFunc, depthRangeNear, depthRangeFar, true)
@@ -33,6 +26,13 @@ class DepthTestAttribute extends com.badlogic.gdx.graphics.g3d.Attribute {
   def this(rhs: DepthTestAttribute) = {
     this(rhs.`type`, rhs.depthFunc, rhs.depthRangeNear, rhs.depthRangeFar, rhs.depthMask)
   }
+  if (!DepthTestAttribute.is(type$p)) {
+    throw new com.badlogic.gdx.utils.GdxRuntimeException("Invalid type specified")
+  } else ()
+  this.depthFunc = depthFunc$p
+  this.depthRangeNear = depthRangeNear$p
+  this.depthRangeFar = depthRangeFar$p
+  this.depthMask = depthMask$p
   def copy(): com.badlogic.gdx.graphics.g3d.Attribute = {
     return new DepthTestAttribute(this)
   }

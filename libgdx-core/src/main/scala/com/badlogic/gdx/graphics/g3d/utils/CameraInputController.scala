@@ -1,6 +1,6 @@
 package com.badlogic.gdx.graphics.g3d.utils
 
-class CameraInputController extends com.badlogic.gdx.input.GestureDetector {
+class CameraInputController(gestureListener$p: com.badlogic.gdx.graphics.g3d.utils.CameraInputController.CameraGestureListener, camera$p: com.badlogic.gdx.graphics.Camera) extends com.badlogic.gdx.input.GestureDetector(gestureListener$p) {
   var rotateButton: scala.Int = com.badlogic.gdx.Input.Buttons.LEFT
   var rotateAngle: scala.Float = 360.0f
   var translateButton: scala.Int = com.badlogic.gdx.Input.Buttons.RIGHT
@@ -34,15 +34,12 @@ class CameraInputController extends com.badlogic.gdx.input.GestureDetector {
   var gestureListener: com.badlogic.gdx.graphics.g3d.utils.CameraInputController.CameraGestureListener = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.utils.CameraInputController.CameraGestureListener]
   private var touched: scala.Int = 0
   private var multiTouch: scala.Boolean = false
-  def this(gestureListener: com.badlogic.gdx.graphics.g3d.utils.CameraInputController.CameraGestureListener, camera: com.badlogic.gdx.graphics.Camera) = {
-    this()
-    this.gestureListener = gestureListener
-    this.gestureListener.controller = this
-    this.camera = camera
-  }
   def this(camera: com.badlogic.gdx.graphics.Camera) = {
     this(new com.badlogic.gdx.graphics.g3d.utils.CameraInputController.CameraGestureListener(), camera)
   }
+  this.gestureListener = gestureListener$p
+  this.gestureListener.controller = this
+  this.camera = camera$p
   def update(): scala.Unit = {
     if (((this.rotateRightPressed || this.rotateLeftPressed) || this.forwardPressed) || this.backwardPressed) {
       val delta: scala.Float = com.badlogic.gdx.Gdx.graphics.getDeltaTime()

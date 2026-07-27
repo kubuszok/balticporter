@@ -1,10 +1,7 @@
 package com.badlogic.gdx.assets.loaders
 
-class TextureLoader extends com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader[com.badlogic.gdx.graphics.Texture, com.badlogic.gdx.assets.loaders.TextureLoader.TextureParameter] {
+class TextureLoader(resolver$p: com.badlogic.gdx.assets.loaders.FileHandleResolver) extends com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader[com.badlogic.gdx.graphics.Texture, com.badlogic.gdx.assets.loaders.TextureLoader.TextureParameter](resolver$p) {
   var info: com.badlogic.gdx.assets.loaders.TextureLoader.TextureLoaderInfo = new com.badlogic.gdx.assets.loaders.TextureLoader.TextureLoaderInfo()
-  def this(resolver: com.badlogic.gdx.assets.loaders.FileHandleResolver) = {
-    this()
-  }
   def loadAsync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.assets.loaders.TextureLoader.TextureParameter): scala.Unit = {
     this.info.filename = fileName
     if ((parameter == null) || (parameter.textureData == null)) {

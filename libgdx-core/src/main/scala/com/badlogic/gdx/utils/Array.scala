@@ -589,19 +589,16 @@ object Array {
   def `with`[T](array: scala.Array[T]): Array[T] = {
     return new Array(array).asInstanceOf[Array[T]]
   }
-  class ArrayIterator[T] extends scala.collection.Iterator[T] with scala.collection.Iterable[T] {
+  class ArrayIterator[T](array$p: Array[T], allowRemove$p: scala.Boolean) extends scala.collection.Iterator[T] with scala.collection.Iterable[T] {
     private var array: Array[T] = null.asInstanceOf[Array[T]]
     private var allowRemove: scala.Boolean = false
     var index: scala.Int = 0
     var valid: scala.Boolean = true
-    def this(array: Array[T], allowRemove: scala.Boolean) = {
-      this()
-      this.array = array
-      this.allowRemove = allowRemove
-    }
     def this(array: Array[T]) = {
       this(array, true)
     }
+    this.array = array$p
+    this.allowRemove = allowRemove$p
     def hasNext(): scala.Boolean = {
       if (!this.valid) {
         throw new com.badlogic.gdx.utils.GdxRuntimeException("#iterator() cannot be used nested.")
@@ -631,19 +628,16 @@ object Array {
       return this
     }
   }
-  class ArrayIterable[T] extends scala.collection.Iterable[T] {
+  class ArrayIterable[T](array$p: Array[T], allowRemove$p: scala.Boolean) extends scala.collection.Iterable[T] {
     private var array: Array[T] = null.asInstanceOf[Array[T]]
     private var allowRemove: scala.Boolean = false
     private var iterator1: com.badlogic.gdx.utils.Array.ArrayIterator[T] = null.asInstanceOf[com.badlogic.gdx.utils.Array.ArrayIterator[T]]
     private var iterator2: com.badlogic.gdx.utils.Array.ArrayIterator[T] = null.asInstanceOf[com.badlogic.gdx.utils.Array.ArrayIterator[T]]
-    def this(array: Array[T], allowRemove: scala.Boolean) = {
-      this()
-      this.array = array
-      this.allowRemove = allowRemove
-    }
     def this(array: Array[T]) = {
       this(array, true)
     }
+    this.array = array$p
+    this.allowRemove = allowRemove$p
     def iterator(): com.badlogic.gdx.utils.Array.ArrayIterator[T] = {
       if (com.badlogic.gdx.utils.Collections.allocateIterators) {
         return new com.badlogic.gdx.utils.Array.ArrayIterator[T](this.array, this.allowRemove)

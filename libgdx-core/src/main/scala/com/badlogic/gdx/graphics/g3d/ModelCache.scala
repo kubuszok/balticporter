@@ -1,6 +1,6 @@
 package com.badlogic.gdx.graphics.g3d
 
-class ModelCache extends com.badlogic.gdx.utils.Disposable with com.badlogic.gdx.graphics.g3d.RenderableProvider {
+class ModelCache(sorter$p: com.badlogic.gdx.graphics.g3d.utils.RenderableSorter, meshPool$p: com.badlogic.gdx.graphics.g3d.ModelCache.MeshPool) extends com.badlogic.gdx.utils.Disposable with com.badlogic.gdx.graphics.g3d.RenderableProvider {
   private var renderables: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.Renderable] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.Renderable]()
   private var renderablesPool: com.badlogic.gdx.utils.FlushablePool[com.badlogic.gdx.graphics.g3d.Renderable] = new com.badlogic.gdx.utils.FlushablePool[com.badlogic.gdx.graphics.g3d.Renderable]()
   private var meshPartPool: com.badlogic.gdx.utils.FlushablePool[com.badlogic.gdx.graphics.g3d.model.MeshPart] = new com.badlogic.gdx.utils.FlushablePool[com.badlogic.gdx.graphics.g3d.model.MeshPart]()
@@ -11,12 +11,12 @@ class ModelCache extends com.badlogic.gdx.utils.Disposable with com.badlogic.gdx
   private var sorter: com.badlogic.gdx.graphics.g3d.utils.RenderableSorter = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.utils.RenderableSorter]
   private var meshPool: com.badlogic.gdx.graphics.g3d.ModelCache.MeshPool = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.ModelCache.MeshPool]
   private var camera: com.badlogic.gdx.graphics.Camera = null.asInstanceOf[com.badlogic.gdx.graphics.Camera]
-  def this(sorter: com.badlogic.gdx.graphics.g3d.utils.RenderableSorter, meshPool: com.badlogic.gdx.graphics.g3d.ModelCache.MeshPool) = {
-    this()
-    this.sorter = sorter
-    this.meshPool = meshPool
-    this.meshBuilder = new com.badlogic.gdx.graphics.g3d.utils.MeshBuilder()
+  def this() = {
+    this(new com.badlogic.gdx.graphics.g3d.ModelCache.Sorter(), new com.badlogic.gdx.graphics.g3d.ModelCache.SimpleMeshPool())
   }
+  this.sorter = sorter$p
+  this.meshPool = meshPool$p
+  this.meshBuilder = new com.badlogic.gdx.graphics.g3d.utils.MeshBuilder()
   def begin(): scala.Unit = {
     this.begin(null)
   }

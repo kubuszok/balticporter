@@ -1,16 +1,16 @@
 package com.badlogic.gdx.utils
 
-class JsonString {
+class JsonString(initialBufferSize: scala.Int) {
   var buffer: java.lang.StringBuilder = null.asInstanceOf[java.lang.StringBuilder]
   private final val stack: com.badlogic.gdx.utils.IntArray = new com.badlogic.gdx.utils.IntArray()
   private var current: scala.Int = 0
   private var named: scala.Boolean = false
   private var outputType: com.badlogic.gdx.utils.JsonWriter.OutputType = com.badlogic.gdx.utils.JsonWriter.OutputType.json
   private var quoteLongValues: scala.Boolean = false
-  def this(initialBufferSize: scala.Int) = {
-    this()
-    this.buffer = new java.lang.StringBuilder(initialBufferSize)
+  def this() = {
+    this(64)
   }
+  this.buffer = new java.lang.StringBuilder(initialBufferSize)
   def getBuffer(): java.lang.StringBuilder = {
     return this.buffer
   }

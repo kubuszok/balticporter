@@ -1168,7 +1168,7 @@ object ParticleEmitter {
   def readFloat(reader: java.io.BufferedReader, name: java.lang.String): scala.Float = {
     return java.lang.Float.parseFloat(ParticleEmitter.readString(reader, name))
   }
-  class Particle extends com.badlogic.gdx.graphics.g2d.Sprite {
+  class Particle(sprite: com.badlogic.gdx.graphics.g2d.Sprite) extends com.badlogic.gdx.graphics.g2d.Sprite(sprite) {
     var life: scala.Int = 0
     var currentLife: scala.Int = 0
     var xScale: scala.Float = 0.0f
@@ -1191,9 +1191,6 @@ object ParticleEmitter {
     var gravityDiff: scala.Float = 0.0f
     var tint: scala.Array[scala.Float] = null.asInstanceOf[scala.Array[scala.Float]]
     var frame: scala.Int = 0
-    def this(sprite: com.badlogic.gdx.graphics.g2d.Sprite) = {
-      this()
-    }
   }
   object Particle {
     export com.badlogic.gdx.graphics.g2d.Sprite.*

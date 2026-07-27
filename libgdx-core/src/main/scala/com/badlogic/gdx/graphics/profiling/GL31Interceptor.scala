@@ -1,11 +1,8 @@
 package com.badlogic.gdx.graphics.profiling
 
-class GL31Interceptor extends com.badlogic.gdx.graphics.profiling.GL30Interceptor with com.badlogic.gdx.graphics.GL31 {
+class GL31Interceptor(glProfiler$p: com.badlogic.gdx.graphics.profiling.GLProfiler, gl31$p: com.badlogic.gdx.graphics.GL31) extends com.badlogic.gdx.graphics.profiling.GL30Interceptor(glProfiler$p, gl31$p) with com.badlogic.gdx.graphics.GL31 {
   var gl31: com.badlogic.gdx.graphics.GL31 = null.asInstanceOf[com.badlogic.gdx.graphics.GL31]
-  def this(glProfiler: com.badlogic.gdx.graphics.profiling.GLProfiler, gl31: com.badlogic.gdx.graphics.GL31) = {
-    this()
-    this.gl31 = gl31
-  }
+  this.gl31 = gl31$p
   def check(): scala.Unit = {
     var error: scala.Int = gl30.glGetError()
     while (error != com.badlogic.gdx.graphics.GL20.GL_NO_ERROR) {

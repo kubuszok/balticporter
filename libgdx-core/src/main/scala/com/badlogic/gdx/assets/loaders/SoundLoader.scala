@@ -1,10 +1,7 @@
 package com.badlogic.gdx.assets.loaders
 
-class SoundLoader extends com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader[com.badlogic.gdx.audio.Sound, com.badlogic.gdx.assets.loaders.SoundLoader.SoundParameter] {
+class SoundLoader(resolver$p: com.badlogic.gdx.assets.loaders.FileHandleResolver) extends com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader[com.badlogic.gdx.audio.Sound, com.badlogic.gdx.assets.loaders.SoundLoader.SoundParameter](resolver$p) {
   private var sound: com.badlogic.gdx.audio.Sound = null.asInstanceOf[com.badlogic.gdx.audio.Sound]
-  def this(resolver: com.badlogic.gdx.assets.loaders.FileHandleResolver) = {
-    this()
-  }
   def getLoadedSound(): com.badlogic.gdx.audio.Sound = {
     return this.sound
   }

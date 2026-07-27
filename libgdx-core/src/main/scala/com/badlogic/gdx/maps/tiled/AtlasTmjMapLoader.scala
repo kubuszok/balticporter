@@ -125,12 +125,9 @@ object AtlasTmjMapLoader {
   }
   object AtlasResolver {
     export com.badlogic.gdx.maps.ImageResolver.{DirectAtlasResolver => _, AssetManagerAtlasResolver => _, *}
-    class DirectAtlasResolver extends com.badlogic.gdx.maps.tiled.AtlasTmjMapLoader.AtlasResolver {
+    class DirectAtlasResolver(atlas$p: com.badlogic.gdx.graphics.g2d.TextureAtlas) extends com.badlogic.gdx.maps.tiled.AtlasTmjMapLoader.AtlasResolver {
       private var atlas: com.badlogic.gdx.graphics.g2d.TextureAtlas = null.asInstanceOf[com.badlogic.gdx.graphics.g2d.TextureAtlas]
-      def this(atlas: com.badlogic.gdx.graphics.g2d.TextureAtlas) = {
-        this()
-        this.atlas = atlas
-      }
+      this.atlas = atlas$p
       def getAtlas(): com.badlogic.gdx.graphics.g2d.TextureAtlas = {
         return this.atlas
       }
@@ -142,14 +139,11 @@ object AtlasTmjMapLoader {
     object DirectAtlasResolver {
       export com.badlogic.gdx.maps.tiled.AtlasTmjMapLoader.AtlasResolver.*
     }
-    class AssetManagerAtlasResolver extends com.badlogic.gdx.maps.tiled.AtlasTmjMapLoader.AtlasResolver {
+    class AssetManagerAtlasResolver(assetManager$p: com.badlogic.gdx.assets.AssetManager, atlasName$p: java.lang.String) extends com.badlogic.gdx.maps.tiled.AtlasTmjMapLoader.AtlasResolver {
       private var assetManager: com.badlogic.gdx.assets.AssetManager = null.asInstanceOf[com.badlogic.gdx.assets.AssetManager]
       private var atlasName: java.lang.String = null.asInstanceOf[java.lang.String]
-      def this(assetManager: com.badlogic.gdx.assets.AssetManager, atlasName: java.lang.String) = {
-        this()
-        this.assetManager = assetManager
-        this.atlasName = atlasName
-      }
+      this.assetManager = assetManager$p
+      this.atlasName = atlasName$p
       def getAtlas(): com.badlogic.gdx.graphics.g2d.TextureAtlas = {
         return this.assetManager.get(this.atlasName, classOf[com.badlogic.gdx.graphics.g2d.TextureAtlas])
       }

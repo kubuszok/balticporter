@@ -1,6 +1,6 @@
 package com.badlogic.gdx.maps.tiled
 
-abstract class BaseTiledMapLoader[P <: com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.Parameters] extends com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader[com.badlogic.gdx.maps.tiled.TiledMap, P] {
+abstract class BaseTiledMapLoader[P <: com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.Parameters](resolver$p: com.badlogic.gdx.assets.loaders.FileHandleResolver) extends com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader[com.badlogic.gdx.maps.tiled.TiledMap, P](resolver$p) {
   var convertObjectToTileSpace: scala.Boolean = false
   var flipY: scala.Boolean = true
   var mapTileWidth: scala.Int = 0
@@ -11,9 +11,6 @@ abstract class BaseTiledMapLoader[P <: com.badlogic.gdx.maps.tiled.BaseTiledMapL
   var idToObject: com.badlogic.gdx.utils.IntMap[com.badlogic.gdx.maps.MapObject] = null.asInstanceOf[com.badlogic.gdx.utils.IntMap[com.badlogic.gdx.maps.MapObject]]
   var runOnEndOfLoadTiled: com.badlogic.gdx.utils.Array[java.lang.Runnable] = null.asInstanceOf[com.badlogic.gdx.utils.Array[java.lang.Runnable]]
   var projectClassInfo: com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.utils.Array[com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.ProjectClassMember]] = null.asInstanceOf[com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.utils.Array[com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.ProjectClassMember]]]
-  def this(resolver: com.badlogic.gdx.assets.loaders.FileHandleResolver) = {
-    this()
-  }
   def getDependencyAssetDescriptors(mapFile: com.badlogic.gdx.files.FileHandle, textureParameter: com.badlogic.gdx.assets.loaders.TextureLoader.TextureParameter): com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]
   def loadTiledMap(mapFile: com.badlogic.gdx.files.FileHandle, parameter: P, imageResolver: com.badlogic.gdx.maps.ImageResolver): com.badlogic.gdx.maps.tiled.TiledMap
   def getIdToObject(): com.badlogic.gdx.utils.IntMap[com.badlogic.gdx.maps.MapObject] = {

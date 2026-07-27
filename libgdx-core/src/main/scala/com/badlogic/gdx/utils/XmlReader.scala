@@ -616,17 +616,14 @@ object XmlReader {
   private def init__xml_trans_actions_0(): scala.Array[scala.Byte] = {
     return scala.Array[scala.Byte](0, 0, 0, 1, 0, 3, 3, 13, 1, 0, 0, 9, 0, 11, 11, 0, 0, 0, 0, 1, 25, 0, 19, 5, 16, 0, 1, 0, 1, 0, 0, 0, 22, 1, 0, 0, 3, 3, 13, 1, 0, 0, 9, 0, 11, 11, 0, 0, 0, 0, 1, 25, 0, 19, 5, 16, 0, 0, 0, 7, 1, 0, 0)
   }
-  class Element {
+  class Element(name$p: java.lang.String, parent$p: com.badlogic.gdx.utils.XmlReader.Element) {
     private var name: java.lang.String = null.asInstanceOf[java.lang.String]
     private var attributes: com.badlogic.gdx.utils.ObjectMap[java.lang.String, java.lang.String] = null.asInstanceOf[com.badlogic.gdx.utils.ObjectMap[java.lang.String, java.lang.String]]
     private var children: com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.XmlReader.Element] = null.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.XmlReader.Element]]
     private var text: java.lang.String = null.asInstanceOf[java.lang.String]
     private var parent: com.badlogic.gdx.utils.XmlReader.Element = null.asInstanceOf[com.badlogic.gdx.utils.XmlReader.Element]
-    def this(name: java.lang.String, parent: com.badlogic.gdx.utils.XmlReader.Element) = {
-      this()
-      this.name = name
-      this.parent = parent
-    }
+    this.name = name$p
+    this.parent = parent$p
     def getName(): java.lang.String = {
       return this.name
     }

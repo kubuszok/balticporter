@@ -1,15 +1,8 @@
 package com.badlogic.gdx.scenes.scene2d.ui
 
-class ImageButton extends com.badlogic.gdx.scenes.scene2d.ui.Button {
+class ImageButton(style$p: com.badlogic.gdx.scenes.scene2d.ui.ImageButton.ImageButtonStyle) extends com.badlogic.gdx.scenes.scene2d.ui.Button(style$p) {
   private var image: com.badlogic.gdx.scenes.scene2d.ui.Image = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Image]
   private var style: com.badlogic.gdx.scenes.scene2d.ui.ImageButton.ImageButtonStyle = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.ImageButton.ImageButtonStyle]
-  def this(style: com.badlogic.gdx.scenes.scene2d.ui.ImageButton.ImageButtonStyle) = {
-    this()
-    this.image = this.newImage()
-    this.add(this.image)
-    this.setStyle(style)
-    this.setSize(this.getPrefWidth(), this.getPrefHeight())
-  }
   def this(skin: com.badlogic.gdx.scenes.scene2d.ui.Skin) = {
     this(skin.get(classOf[com.badlogic.gdx.scenes.scene2d.ui.ImageButton.ImageButtonStyle]))
     this.setSkin(skin)
@@ -27,6 +20,10 @@ class ImageButton extends com.badlogic.gdx.scenes.scene2d.ui.Button {
   def this(imageUp: com.badlogic.gdx.scenes.scene2d.utils.Drawable, imageDown: com.badlogic.gdx.scenes.scene2d.utils.Drawable, imageChecked: com.badlogic.gdx.scenes.scene2d.utils.Drawable) = {
     this(new com.badlogic.gdx.scenes.scene2d.ui.ImageButton.ImageButtonStyle(null, null, null, imageUp, imageDown, imageChecked))
   }
+  this.image = this.newImage()
+  this.add(this.image)
+  this.setStyle(style$p)
+  this.setSize(this.getPrefWidth(), this.getPrefHeight())
   def newImage(): com.badlogic.gdx.scenes.scene2d.ui.Image = {
     return new com.badlogic.gdx.scenes.scene2d.ui.Image(null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Drawable], com.badlogic.gdx.utils.Scaling.fit)
   }

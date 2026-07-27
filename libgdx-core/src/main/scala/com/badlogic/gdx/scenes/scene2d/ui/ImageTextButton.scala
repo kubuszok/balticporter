@@ -1,21 +1,9 @@
 package com.badlogic.gdx.scenes.scene2d.ui
 
-class ImageTextButton extends com.badlogic.gdx.scenes.scene2d.ui.Button {
+class ImageTextButton(text: java.lang.String, style$p: com.badlogic.gdx.scenes.scene2d.ui.ImageTextButton.ImageTextButtonStyle) extends com.badlogic.gdx.scenes.scene2d.ui.Button(style$p) {
   private var image: com.badlogic.gdx.scenes.scene2d.ui.Image = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Image]
   private var label: com.badlogic.gdx.scenes.scene2d.ui.Label = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Label]
   private var style: com.badlogic.gdx.scenes.scene2d.ui.ImageTextButton.ImageTextButtonStyle = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.ImageTextButton.ImageTextButtonStyle]
-  def this(text: java.lang.String, style: com.badlogic.gdx.scenes.scene2d.ui.ImageTextButton.ImageTextButtonStyle) = {
-    this()
-    this.style = style
-    this.defaults().space(3)
-    this.image = this.newImage()
-    this.label = this.newLabel(text, new com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle(style.font, style.fontColor))
-    this.label.setAlignment(com.badlogic.gdx.utils.Align.center)
-    this.add(this.image)
-    this.add(this.label)
-    this.setStyle(style)
-    this.setSize(this.getPrefWidth(), this.getPrefHeight())
-  }
   def this(text: java.lang.String, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin) = {
     this(text, skin.get(classOf[com.badlogic.gdx.scenes.scene2d.ui.ImageTextButton.ImageTextButtonStyle]))
     this.setSkin(skin)
@@ -24,6 +12,15 @@ class ImageTextButton extends com.badlogic.gdx.scenes.scene2d.ui.Button {
     this(text, skin.get(styleName, classOf[com.badlogic.gdx.scenes.scene2d.ui.ImageTextButton.ImageTextButtonStyle]))
     this.setSkin(skin)
   }
+  this.style = style$p
+  this.defaults().space(3)
+  this.image = this.newImage()
+  this.label = this.newLabel(text, new com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle(style$p.font, style$p.fontColor))
+  this.label.setAlignment(com.badlogic.gdx.utils.Align.center)
+  this.add(this.image)
+  this.add(this.label)
+  this.setStyle(style$p)
+  this.setSize(this.getPrefWidth(), this.getPrefHeight())
   def newImage(): com.badlogic.gdx.scenes.scene2d.ui.Image = {
     return new com.badlogic.gdx.scenes.scene2d.ui.Image(null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Drawable], com.badlogic.gdx.utils.Scaling.fit)
   }

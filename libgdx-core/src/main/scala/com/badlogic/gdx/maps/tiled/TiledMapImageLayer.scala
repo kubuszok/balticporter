@@ -1,21 +1,18 @@
 package com.badlogic.gdx.maps.tiled
 
-class TiledMapImageLayer extends com.badlogic.gdx.maps.MapLayer {
+class TiledMapImageLayer(region$p: com.badlogic.gdx.graphics.g2d.TextureRegion, x$p: scala.Float, y$p: scala.Float, repeatX$p: scala.Boolean, repeatY$p: scala.Boolean) extends com.badlogic.gdx.maps.MapLayer {
   private var region: com.badlogic.gdx.graphics.g2d.TextureRegion = null.asInstanceOf[com.badlogic.gdx.graphics.g2d.TextureRegion]
   private var x: scala.Float = 0.0f
   private var y: scala.Float = 0.0f
   private var repeatX: scala.Boolean = false
   private var repeatY: scala.Boolean = false
   var supportsTransparency$field: scala.Boolean = false
-  def this(region: com.badlogic.gdx.graphics.g2d.TextureRegion, x: scala.Float, y: scala.Float, repeatX: scala.Boolean, repeatY: scala.Boolean) = {
-    this()
-    this.region = region
-    this.x = x
-    this.y = y
-    this.repeatX = repeatX
-    this.repeatY = repeatY
-    this.supportsTransparency$field = this.checkTransparencySupport(region)
-  }
+  this.region = region$p
+  this.x = x$p
+  this.y = y$p
+  this.repeatX = repeatX$p
+  this.repeatY = repeatY$p
+  this.supportsTransparency$field = this.checkTransparencySupport(region$p)
   private def checkTransparencySupport(region: com.badlogic.gdx.graphics.g2d.TextureRegion): scala.Boolean = {
     val format: com.badlogic.gdx.graphics.Pixmap.Format = region.getTexture().getTextureData().getFormat()
     return (format != null) && this.formatHasAlpha(format)

@@ -1,15 +1,12 @@
 package com.badlogic.gdx.utils
 
-class TextFormatter {
+class TextFormatter(locale: java.util.Locale, useMessageFormat: scala.Boolean) {
   private var messageFormat: java.text.MessageFormat = null.asInstanceOf[java.text.MessageFormat]
   private var buffer: java.lang.StringBuilder = null.asInstanceOf[java.lang.StringBuilder]
-  def this(locale: java.util.Locale, useMessageFormat: scala.Boolean) = {
-    this()
-    this.buffer = new java.lang.StringBuilder()
-    if (useMessageFormat) {
-      this.messageFormat = new java.text.MessageFormat("", locale)
-    } else ()
-  }
+  this.buffer = new java.lang.StringBuilder()
+  if (useMessageFormat) {
+    this.messageFormat = new java.text.MessageFormat("", locale)
+  } else ()
   def format(pattern: java.lang.String, args: scala.Array[java.lang.Object]): java.lang.String = {
     if (this.messageFormat != null) {
       this.messageFormat.applyPattern(this.replaceEscapeChars(pattern))

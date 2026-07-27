@@ -1,6 +1,6 @@
 package com.badlogic.gdx.scenes.scene2d.ui
 
-class Touchpad extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlogic.gdx.scenes.scene2d.ui.Styleable[com.badlogic.gdx.scenes.scene2d.ui.Touchpad.TouchpadStyle] {
+class Touchpad(deadzoneRadius$p: scala.Float, style$p: com.badlogic.gdx.scenes.scene2d.ui.Touchpad.TouchpadStyle) extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlogic.gdx.scenes.scene2d.ui.Styleable[com.badlogic.gdx.scenes.scene2d.ui.Touchpad.TouchpadStyle] {
   private var style: com.badlogic.gdx.scenes.scene2d.ui.Touchpad.TouchpadStyle = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Touchpad.TouchpadStyle]
   var touched: scala.Boolean = false
   var resetOnTouchUp: scala.Boolean = true
@@ -10,23 +10,20 @@ class Touchpad extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlog
   private final val deadzoneBounds: com.badlogic.gdx.math.Circle = new com.badlogic.gdx.math.Circle(0, 0, 0)
   private final val knobPosition: com.badlogic.gdx.math.Vector2 = new com.badlogic.gdx.math.Vector2()
   private final val knobPercent: com.badlogic.gdx.math.Vector2 = new com.badlogic.gdx.math.Vector2()
-  def this(deadzoneRadius: scala.Float, style: com.badlogic.gdx.scenes.scene2d.ui.Touchpad.TouchpadStyle) = {
-    this()
-    if (deadzoneRadius < 0) {
-      throw new java.lang.IllegalArgumentException("deadzoneRadius must be > 0")
-    } else ()
-    this.deadzoneRadius = deadzoneRadius
-    this.knobPosition.set(this.getWidth() / 2.0f, this.getHeight() / 2.0f)
-    this.setStyle(style)
-    this.setSize(this.getPrefWidth(), this.getPrefHeight())
-    this.addListener(new com.badlogic.gdx.scenes.scene2d.InputListener())
-  }
   def this(deadzoneRadius: scala.Float, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin) = {
     this(deadzoneRadius, skin.get(classOf[com.badlogic.gdx.scenes.scene2d.ui.Touchpad.TouchpadStyle]))
   }
   def this(deadzoneRadius: scala.Float, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin, styleName: java.lang.String) = {
     this(deadzoneRadius, skin.get(styleName, classOf[com.badlogic.gdx.scenes.scene2d.ui.Touchpad.TouchpadStyle]))
   }
+  if (deadzoneRadius$p < 0) {
+    throw new java.lang.IllegalArgumentException("deadzoneRadius must be > 0")
+  } else ()
+  this.deadzoneRadius = deadzoneRadius$p
+  this.knobPosition.set(this.getWidth() / 2.0f, this.getHeight() / 2.0f)
+  this.setStyle(style$p)
+  this.setSize(this.getPrefWidth(), this.getPrefHeight())
+  this.addListener(new com.badlogic.gdx.scenes.scene2d.InputListener())
   def calculatePositionAndValue(x: scala.Float, y: scala.Float, isTouchUp: scala.Boolean): scala.Unit = {
     val oldPositionX: scala.Float = this.knobPosition.x
     val oldPositionY: scala.Float = this.knobPosition.y

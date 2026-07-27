@@ -1,6 +1,6 @@
 package com.badlogic.gdx.assets
 
-class AssetManager extends com.badlogic.gdx.utils.Disposable {
+class AssetManager(resolver$p: com.badlogic.gdx.assets.loaders.FileHandleResolver, defaultLoaders: scala.Boolean) extends com.badlogic.gdx.utils.Disposable {
   final val assets: com.badlogic.gdx.utils.ObjectMap[java.lang.Class[?], com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.assets.AssetManager.RefCountedContainer]] = new com.badlogic.gdx.utils.ObjectMap().asInstanceOf[com.badlogic.gdx.utils.ObjectMap[java.lang.Class[?], com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.assets.AssetManager.RefCountedContainer]]]
   final val assetTypes: com.badlogic.gdx.utils.ObjectMap[java.lang.String, java.lang.Class[?]] = new com.badlogic.gdx.utils.ObjectMap().asInstanceOf[com.badlogic.gdx.utils.ObjectMap[java.lang.String, java.lang.Class[?]]]
   final val assetDependencies: com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.utils.Array[java.lang.String]] = new com.badlogic.gdx.utils.ObjectMap().asInstanceOf[com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.utils.Array[java.lang.String]]]
@@ -15,32 +15,32 @@ class AssetManager extends com.badlogic.gdx.utils.Disposable {
   var peakTasks: scala.Int = 0
   var resolver: com.badlogic.gdx.assets.loaders.FileHandleResolver = null.asInstanceOf[com.badlogic.gdx.assets.loaders.FileHandleResolver]
   var log: com.badlogic.gdx.utils.Logger = new com.badlogic.gdx.utils.Logger("AssetManager", com.badlogic.gdx.Application.LOG_NONE)
-  def this(resolver: com.badlogic.gdx.assets.loaders.FileHandleResolver, defaultLoaders: scala.Boolean) = {
-    this()
-    this.resolver = resolver
-    if (defaultLoaders) {
-      this.setLoader(classOf[com.badlogic.gdx.graphics.g2d.BitmapFont], new com.badlogic.gdx.assets.loaders.BitmapFontLoader(resolver))
-      this.setLoader(classOf[com.badlogic.gdx.audio.Music], new com.badlogic.gdx.assets.loaders.MusicLoader(resolver))
-      this.setLoader(classOf[com.badlogic.gdx.graphics.Pixmap], new com.badlogic.gdx.assets.loaders.PixmapLoader(resolver))
-      this.setLoader(classOf[com.badlogic.gdx.audio.Sound], new com.badlogic.gdx.assets.loaders.SoundLoader(resolver))
-      this.setLoader(classOf[com.badlogic.gdx.graphics.g2d.TextureAtlas], new com.badlogic.gdx.assets.loaders.TextureAtlasLoader(resolver))
-      this.setLoader(classOf[com.badlogic.gdx.graphics.Texture], new com.badlogic.gdx.assets.loaders.TextureLoader(resolver))
-      this.setLoader(classOf[com.badlogic.gdx.scenes.scene2d.ui.Skin], new com.badlogic.gdx.assets.loaders.SkinLoader(resolver))
-      this.setLoader(classOf[com.badlogic.gdx.graphics.g2d.ParticleEffect], new com.badlogic.gdx.assets.loaders.ParticleEffectLoader(resolver))
-      this.setLoader(classOf[com.badlogic.gdx.graphics.g3d.particles.ParticleEffect], new com.badlogic.gdx.graphics.g3d.particles.ParticleEffectLoader(resolver))
-      this.setLoader(classOf[com.badlogic.gdx.graphics.g2d.PolygonRegion], new com.badlogic.gdx.graphics.g2d.PolygonRegionLoader(resolver))
-      this.setLoader(classOf[com.badlogic.gdx.utils.I18NBundle], new com.badlogic.gdx.assets.loaders.I18NBundleLoader(resolver))
-      this.setLoader(classOf[com.badlogic.gdx.graphics.g3d.Model], ".g3dj", new com.badlogic.gdx.graphics.g3d.loader.G3dModelLoader(new com.badlogic.gdx.utils.JsonReader(), resolver))
-      this.setLoader(classOf[com.badlogic.gdx.graphics.g3d.Model], ".g3db", new com.badlogic.gdx.graphics.g3d.loader.G3dModelLoader(new com.badlogic.gdx.utils.UBJsonReader(), resolver))
-      this.setLoader(classOf[com.badlogic.gdx.graphics.g3d.Model], ".obj", new com.badlogic.gdx.graphics.g3d.loader.ObjLoader(resolver))
-      this.setLoader(classOf[com.badlogic.gdx.graphics.glutils.ShaderProgram], new com.badlogic.gdx.assets.loaders.ShaderProgramLoader(resolver))
-      this.setLoader(classOf[com.badlogic.gdx.graphics.Cubemap], new com.badlogic.gdx.assets.loaders.CubemapLoader(resolver))
-    } else ()
-    this.executor = new com.badlogic.gdx.utils.async.AsyncExecutor(1, "AssetManager")
-  }
   def this(resolver: com.badlogic.gdx.assets.loaders.FileHandleResolver) = {
     this(resolver, true)
   }
+  def this() = {
+    this(new com.badlogic.gdx.assets.loaders.resolvers.InternalFileHandleResolver())
+  }
+  this.resolver = resolver$p
+  if (defaultLoaders) {
+    this.setLoader(classOf[com.badlogic.gdx.graphics.g2d.BitmapFont], new com.badlogic.gdx.assets.loaders.BitmapFontLoader(resolver$p))
+    this.setLoader(classOf[com.badlogic.gdx.audio.Music], new com.badlogic.gdx.assets.loaders.MusicLoader(resolver$p))
+    this.setLoader(classOf[com.badlogic.gdx.graphics.Pixmap], new com.badlogic.gdx.assets.loaders.PixmapLoader(resolver$p))
+    this.setLoader(classOf[com.badlogic.gdx.audio.Sound], new com.badlogic.gdx.assets.loaders.SoundLoader(resolver$p))
+    this.setLoader(classOf[com.badlogic.gdx.graphics.g2d.TextureAtlas], new com.badlogic.gdx.assets.loaders.TextureAtlasLoader(resolver$p))
+    this.setLoader(classOf[com.badlogic.gdx.graphics.Texture], new com.badlogic.gdx.assets.loaders.TextureLoader(resolver$p))
+    this.setLoader(classOf[com.badlogic.gdx.scenes.scene2d.ui.Skin], new com.badlogic.gdx.assets.loaders.SkinLoader(resolver$p))
+    this.setLoader(classOf[com.badlogic.gdx.graphics.g2d.ParticleEffect], new com.badlogic.gdx.assets.loaders.ParticleEffectLoader(resolver$p))
+    this.setLoader(classOf[com.badlogic.gdx.graphics.g3d.particles.ParticleEffect], new com.badlogic.gdx.graphics.g3d.particles.ParticleEffectLoader(resolver$p))
+    this.setLoader(classOf[com.badlogic.gdx.graphics.g2d.PolygonRegion], new com.badlogic.gdx.graphics.g2d.PolygonRegionLoader(resolver$p))
+    this.setLoader(classOf[com.badlogic.gdx.utils.I18NBundle], new com.badlogic.gdx.assets.loaders.I18NBundleLoader(resolver$p))
+    this.setLoader(classOf[com.badlogic.gdx.graphics.g3d.Model], ".g3dj", new com.badlogic.gdx.graphics.g3d.loader.G3dModelLoader(new com.badlogic.gdx.utils.JsonReader(), resolver$p))
+    this.setLoader(classOf[com.badlogic.gdx.graphics.g3d.Model], ".g3db", new com.badlogic.gdx.graphics.g3d.loader.G3dModelLoader(new com.badlogic.gdx.utils.UBJsonReader(), resolver$p))
+    this.setLoader(classOf[com.badlogic.gdx.graphics.g3d.Model], ".obj", new com.badlogic.gdx.graphics.g3d.loader.ObjLoader(resolver$p))
+    this.setLoader(classOf[com.badlogic.gdx.graphics.glutils.ShaderProgram], new com.badlogic.gdx.assets.loaders.ShaderProgramLoader(resolver$p))
+    this.setLoader(classOf[com.badlogic.gdx.graphics.Cubemap], new com.badlogic.gdx.assets.loaders.CubemapLoader(resolver$p))
+  } else ()
+  this.executor = new com.badlogic.gdx.utils.async.AsyncExecutor(1, "AssetManager")
   def getFileHandleResolver(): com.badlogic.gdx.assets.loaders.FileHandleResolver = {
     return this.resolver
   }

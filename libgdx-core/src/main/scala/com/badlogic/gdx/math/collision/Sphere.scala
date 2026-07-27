@@ -1,13 +1,10 @@
 package com.badlogic.gdx.math.collision
 
-class Sphere extends java.io.Serializable {
+class Sphere(center$p: com.badlogic.gdx.math.Vector3, radius$p: scala.Float) extends java.io.Serializable {
   var radius: scala.Float = 0.0f
   var center: com.badlogic.gdx.math.Vector3 = null.asInstanceOf[com.badlogic.gdx.math.Vector3]
-  def this(center: com.badlogic.gdx.math.Vector3, radius: scala.Float) = {
-    this()
-    this.center = new com.badlogic.gdx.math.Vector3(center)
-    this.radius = radius
-  }
+  this.center = new com.badlogic.gdx.math.Vector3(center$p)
+  this.radius = radius$p
   def overlaps(sphere: Sphere): scala.Boolean = {
     return this.center.dst2(sphere.center) < ((this.radius + sphere.radius) * (this.radius + sphere.radius))
   }

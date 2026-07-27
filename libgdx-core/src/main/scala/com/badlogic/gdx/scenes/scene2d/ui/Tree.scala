@@ -1,6 +1,6 @@
 package com.badlogic.gdx.scenes.scene2d.ui
 
-class Tree[N <: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[N, V, ?], V] extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup with com.badlogic.gdx.scenes.scene2d.ui.Styleable[com.badlogic.gdx.scenes.scene2d.ui.Tree.TreeStyle] {
+class Tree[N <: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[N, V, ?], V](style$p: com.badlogic.gdx.scenes.scene2d.ui.Tree.TreeStyle) extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup with com.badlogic.gdx.scenes.scene2d.ui.Styleable[com.badlogic.gdx.scenes.scene2d.ui.Tree.TreeStyle] {
   var style: com.badlogic.gdx.scenes.scene2d.ui.Tree.TreeStyle = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Tree.TreeStyle]
   final val rootNodes: com.badlogic.gdx.utils.Array[N] = new com.badlogic.gdx.utils.Array().asInstanceOf[com.badlogic.gdx.utils.Array[N]]
   var selection: com.badlogic.gdx.scenes.scene2d.utils.Selection[N] = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Selection[N]]
@@ -17,20 +17,17 @@ class Tree[N <: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[N, V, ?], V] extend
   private var overNode: N = null.asInstanceOf[N]
   var rangeStart: N = null.asInstanceOf[N]
   private var clickListener: com.badlogic.gdx.scenes.scene2d.utils.ClickListener = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.ClickListener]
-  def this(style: com.badlogic.gdx.scenes.scene2d.ui.Tree.TreeStyle) = {
-    this()
-    this.selection = new com.badlogic.gdx.scenes.scene2d.utils.Selection[N]()
-    this.selection.setActor(this)
-    this.selection.setMultiple(true)
-    this.setStyle(style)
-    this.initialize()
-  }
   def this(skin: com.badlogic.gdx.scenes.scene2d.ui.Skin) = {
     this(skin.get(classOf[com.badlogic.gdx.scenes.scene2d.ui.Tree.TreeStyle]))
   }
   def this(skin: com.badlogic.gdx.scenes.scene2d.ui.Skin, styleName: java.lang.String) = {
     this(skin.get(styleName, classOf[com.badlogic.gdx.scenes.scene2d.ui.Tree.TreeStyle]))
   }
+  this.selection = new com.badlogic.gdx.scenes.scene2d.utils.Selection[N]()
+  this.selection.setActor(this)
+  this.selection.setMultiple(true)
+  this.setStyle(style$p)
+  this.initialize()
   private def initialize(): scala.Unit = {
     this.addListener({
       this.clickListener = new com.badlogic.gdx.scenes.scene2d.utils.ClickListener()

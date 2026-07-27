@@ -1,12 +1,9 @@
 package com.badlogic.gdx.maps.tiled
 
-abstract class BaseTmjMapLoader[P <: com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.Parameters] extends com.badlogic.gdx.maps.tiled.BaseTiledMapLoader[P] {
+abstract class BaseTmjMapLoader[P <: com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.Parameters](resolver$p: com.badlogic.gdx.assets.loaders.FileHandleResolver) extends com.badlogic.gdx.maps.tiled.BaseTiledMapLoader[P](resolver$p) {
   var json: com.badlogic.gdx.utils.JsonReader = new com.badlogic.gdx.utils.JsonReader()
   var root: com.badlogic.gdx.utils.JsonValue = null.asInstanceOf[com.badlogic.gdx.utils.JsonValue]
   var templateCache: com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.utils.JsonValue] = null.asInstanceOf[com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.utils.JsonValue]]
-  def this(resolver: com.badlogic.gdx.assets.loaders.FileHandleResolver) = {
-    this()
-  }
   def getDependencies(fileName: java.lang.String, tmjFile: com.badlogic.gdx.files.FileHandle, parameter: P): com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = {
     this.root = this.json.parse(tmjFile)
     val textureParameter: com.badlogic.gdx.assets.loaders.TextureLoader.TextureParameter = new com.badlogic.gdx.assets.loaders.TextureLoader.TextureParameter()

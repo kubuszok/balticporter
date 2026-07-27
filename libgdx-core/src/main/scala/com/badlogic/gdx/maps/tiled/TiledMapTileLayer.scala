@@ -1,19 +1,16 @@
 package com.badlogic.gdx.maps.tiled
 
-class TiledMapTileLayer extends com.badlogic.gdx.maps.MapLayer {
+class TiledMapTileLayer(width$p: scala.Int, height$p: scala.Int, tileWidth$p: scala.Int, tileHeight$p: scala.Int) extends com.badlogic.gdx.maps.MapLayer {
   private var width: scala.Int = 0
   private var height: scala.Int = 0
   private var tileWidth: scala.Int = 0
   private var tileHeight: scala.Int = 0
   private var cells: scala.Array[scala.Array[com.badlogic.gdx.maps.tiled.TiledMapTileLayer.Cell]] = null.asInstanceOf[scala.Array[scala.Array[com.badlogic.gdx.maps.tiled.TiledMapTileLayer.Cell]]]
-  def this(width: scala.Int, height: scala.Int, tileWidth: scala.Int, tileHeight: scala.Int) = {
-    this()
-    this.width = width
-    this.height = height
-    this.tileWidth = tileWidth
-    this.tileHeight = tileHeight
-    this.cells = scala.Array.ofDim[com.badlogic.gdx.maps.tiled.TiledMapTileLayer.Cell](width, height)
-  }
+  this.width = width$p
+  this.height = height$p
+  this.tileWidth = tileWidth$p
+  this.tileHeight = tileHeight$p
+  this.cells = scala.Array.ofDim[com.badlogic.gdx.maps.tiled.TiledMapTileLayer.Cell](width$p, height$p)
   def getWidth(): scala.Int = {
     return this.width
   }

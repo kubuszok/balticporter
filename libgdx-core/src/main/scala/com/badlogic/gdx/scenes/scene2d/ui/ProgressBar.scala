@@ -1,6 +1,6 @@
 package com.badlogic.gdx.scenes.scene2d.ui
 
-class ProgressBar extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlogic.gdx.scenes.scene2d.utils.Disableable with com.badlogic.gdx.scenes.scene2d.ui.Styleable[com.badlogic.gdx.scenes.scene2d.ui.ProgressBar.ProgressBarStyle] {
+class ProgressBar(min$p: scala.Float, max$p: scala.Float, stepSize$p: scala.Float, vertical$p: scala.Boolean, style$p: com.badlogic.gdx.scenes.scene2d.ui.ProgressBar.ProgressBarStyle) extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlogic.gdx.scenes.scene2d.utils.Disableable with com.badlogic.gdx.scenes.scene2d.ui.Styleable[com.badlogic.gdx.scenes.scene2d.ui.ProgressBar.ProgressBarStyle] {
   private var style: com.badlogic.gdx.scenes.scene2d.ui.ProgressBar.ProgressBarStyle = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.ProgressBar.ProgressBarStyle]
   var min: scala.Float = 0.0f
   var max: scala.Float = 0.0f
@@ -16,28 +16,25 @@ class ProgressBar extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.bad
   var disabled: scala.Boolean = false
   var round$field: scala.Boolean = true
   private var programmaticChangeEvents: scala.Boolean = true
-  def this(min: scala.Float, max: scala.Float, stepSize: scala.Float, vertical: scala.Boolean, style: com.badlogic.gdx.scenes.scene2d.ui.ProgressBar.ProgressBarStyle) = {
-    this()
-    if (min > max) {
-      throw new java.lang.IllegalArgumentException((("max must be > min. min,max: " + min) + ", ") + max)
-    } else ()
-    if (stepSize <= 0) {
-      throw new java.lang.IllegalArgumentException("stepSize must be > 0: " + stepSize)
-    } else ()
-    this.setStyle(style)
-    this.min = min
-    this.max = max
-    this.stepSize = stepSize
-    this.vertical = vertical
-    this.value = min
-    this.setSize(this.getPrefWidth(), this.getPrefHeight())
-  }
   def this(min: scala.Float, max: scala.Float, stepSize: scala.Float, vertical: scala.Boolean, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin) = {
     this(min, max, stepSize, vertical, skin.get("default-" + (if (vertical) "vertical" else "horizontal"), classOf[com.badlogic.gdx.scenes.scene2d.ui.ProgressBar.ProgressBarStyle]))
   }
   def this(min: scala.Float, max: scala.Float, stepSize: scala.Float, vertical: scala.Boolean, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin, styleName: java.lang.String) = {
     this(min, max, stepSize, vertical, skin.get(styleName, classOf[com.badlogic.gdx.scenes.scene2d.ui.ProgressBar.ProgressBarStyle]))
   }
+  if (min$p > max$p) {
+    throw new java.lang.IllegalArgumentException((("max must be > min. min,max: " + min$p) + ", ") + max$p)
+  } else ()
+  if (stepSize$p <= 0) {
+    throw new java.lang.IllegalArgumentException("stepSize must be > 0: " + stepSize$p)
+  } else ()
+  this.setStyle(style$p)
+  this.min = min$p
+  this.max = max$p
+  this.stepSize = stepSize$p
+  this.vertical = vertical$p
+  this.value = min$p
+  this.setSize(this.getPrefWidth(), this.getPrefHeight())
   def setStyle(style: com.badlogic.gdx.scenes.scene2d.ui.ProgressBar.ProgressBarStyle): scala.Unit = {
     if (style == null) {
       throw new java.lang.IllegalArgumentException("style cannot be null.")

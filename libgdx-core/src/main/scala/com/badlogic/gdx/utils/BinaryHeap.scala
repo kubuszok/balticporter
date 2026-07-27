@@ -1,14 +1,14 @@
 package com.badlogic.gdx.utils
 
-class BinaryHeap[T <: com.badlogic.gdx.utils.BinaryHeap.Node] {
+class BinaryHeap[T <: com.badlogic.gdx.utils.BinaryHeap.Node](capacity: scala.Int, isMaxHeap$p: scala.Boolean) {
   var size: scala.Int = 0
   private var nodes: scala.Array[com.badlogic.gdx.utils.BinaryHeap.Node] = null.asInstanceOf[scala.Array[com.badlogic.gdx.utils.BinaryHeap.Node]]
   private var isMaxHeap: scala.Boolean = false
-  def this(capacity: scala.Int, isMaxHeap: scala.Boolean) = {
-    this()
-    this.isMaxHeap = isMaxHeap
-    this.nodes = new scala.Array[com.badlogic.gdx.utils.BinaryHeap.Node](capacity)
+  def this() = {
+    this(16, false)
   }
+  this.isMaxHeap = isMaxHeap$p
+  this.nodes = new scala.Array[com.badlogic.gdx.utils.BinaryHeap.Node](capacity)
   def add(node: T): T = {
     if (this.size == this.nodes.length) {
       val newNodes: scala.Array[com.badlogic.gdx.utils.BinaryHeap.Node] = new scala.Array[com.badlogic.gdx.utils.BinaryHeap.Node](this.size << 1)
@@ -199,13 +199,10 @@ class BinaryHeap[T <: com.badlogic.gdx.utils.BinaryHeap.Node] {
   }
 }
 object BinaryHeap {
-  class Node {
+  class Node(value$p: scala.Float) {
     var value: scala.Float = 0.0f
     var index: scala.Int = 0
-    def this(value: scala.Float) = {
-      this()
-      this.value = value
-    }
+    this.value = value$p
     def getValue(): scala.Float = {
       return this.value
     }

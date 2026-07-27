@@ -1,6 +1,6 @@
 package com.badlogic.gdx.maps.objects
 
-class TextMapObject extends com.badlogic.gdx.maps.MapObject {
+class TextMapObject(x: scala.Float, y: scala.Float, width: scala.Float, height: scala.Float, text$p: java.lang.String) extends com.badlogic.gdx.maps.MapObject {
   private var rotation: scala.Float = 0.0f
   private var text: java.lang.String = ""
   private var pixelSize: scala.Int = 16
@@ -14,11 +14,11 @@ class TextMapObject extends com.badlogic.gdx.maps.MapObject {
   private var horizontalAlign: java.lang.String = "left"
   private var verticalAlign: java.lang.String = "top"
   private var rectangle: com.badlogic.gdx.math.Rectangle = null.asInstanceOf[com.badlogic.gdx.math.Rectangle]
-  def this(x: scala.Float, y: scala.Float, width: scala.Float, height: scala.Float, text: java.lang.String) = {
-    this()
-    this.rectangle = new com.badlogic.gdx.math.Rectangle(x, y, width, height)
-    this.text = text
+  def this() = {
+    this(0.0f, 0.0f, 1.0f, 1.0f, "")
   }
+  this.rectangle = new com.badlogic.gdx.math.Rectangle(x, y, width, height)
+  this.text = text$p
   def getRectangle(): com.badlogic.gdx.math.Rectangle = {
     return this.rectangle
   }

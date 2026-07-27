@@ -1,6 +1,6 @@
 package com.badlogic.gdx.scenes.scene2d.ui
 
-class List[T] extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlogic.gdx.scenes.scene2d.utils.Cullable with com.badlogic.gdx.scenes.scene2d.ui.Styleable[com.badlogic.gdx.scenes.scene2d.ui.List.ListStyle] {
+class List[T](style$p: com.badlogic.gdx.scenes.scene2d.ui.List.ListStyle) extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlogic.gdx.scenes.scene2d.utils.Cullable with com.badlogic.gdx.scenes.scene2d.ui.Styleable[com.badlogic.gdx.scenes.scene2d.ui.List.ListStyle] {
   var style: com.badlogic.gdx.scenes.scene2d.ui.List.ListStyle = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.List.ListStyle]
   final val items: com.badlogic.gdx.utils.Array[T] = new com.badlogic.gdx.utils.Array[T]().asInstanceOf[com.badlogic.gdx.utils.Array[T]]
   var selection: com.badlogic.gdx.scenes.scene2d.utils.ArraySelection[T] = new com.badlogic.gdx.scenes.scene2d.utils.ArraySelection[T](this.items).asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.ArraySelection[T]]
@@ -13,24 +13,21 @@ class List[T] extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlogi
   var overIndex: scala.Int = -1
   private var keyListener: com.badlogic.gdx.scenes.scene2d.InputListener = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.InputListener]
   var typeToSelect: scala.Boolean = false
-  def this(style: com.badlogic.gdx.scenes.scene2d.ui.List.ListStyle) = {
-    this()
-    this.selection.setActor(this)
-    this.selection.setRequired(true)
-    this.setStyle(style)
-    this.setSize(this.getPrefWidth(), this.getPrefHeight())
-    this.addListener({
-      this.keyListener = new com.badlogic.gdx.scenes.scene2d.InputListener()
-      this.keyListener
-    })
-    this.addListener(new com.badlogic.gdx.scenes.scene2d.InputListener())
-  }
   def this(skin: com.badlogic.gdx.scenes.scene2d.ui.Skin) = {
     this(skin.get(classOf[com.badlogic.gdx.scenes.scene2d.ui.List.ListStyle]))
   }
   def this(skin: com.badlogic.gdx.scenes.scene2d.ui.Skin, styleName: java.lang.String) = {
     this(skin.get(styleName, classOf[com.badlogic.gdx.scenes.scene2d.ui.List.ListStyle]))
   }
+  this.selection.setActor(this)
+  this.selection.setRequired(true)
+  this.setStyle(style$p)
+  this.setSize(this.getPrefWidth(), this.getPrefHeight())
+  this.addListener({
+    this.keyListener = new com.badlogic.gdx.scenes.scene2d.InputListener()
+    this.keyListener
+  })
+  this.addListener(new com.badlogic.gdx.scenes.scene2d.InputListener())
   def setStyle(style: com.badlogic.gdx.scenes.scene2d.ui.List.ListStyle): scala.Unit = {
     if (style == null) {
       throw new java.lang.IllegalArgumentException("style cannot be null.")

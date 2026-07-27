@@ -1,16 +1,15 @@
 package com.badlogic.gdx.graphics.g3d.attributes
 
-class BlendingAttribute extends com.badlogic.gdx.graphics.g3d.Attribute {
+class BlendingAttribute(blended$p: scala.Boolean, sourceFunc: scala.Int, destFunc: scala.Int, opacity$p: scala.Float) extends com.badlogic.gdx.graphics.g3d.Attribute(BlendingAttribute.Type) {
   var blended: scala.Boolean = false
   var sourceFunction: scala.Int = 0
   var destFunction: scala.Int = 0
   var opacity: scala.Float = 1.0f
-  def this(blended: scala.Boolean, sourceFunc: scala.Int, destFunc: scala.Int, opacity: scala.Float) = {
-    this()
-    this.blended = blended
-    this.sourceFunction = sourceFunc
-    this.destFunction = destFunc
-    this.opacity = opacity
+  def this(copyFrom: BlendingAttribute) = {
+    this((copyFrom == null) || copyFrom.blended, if (copyFrom == null) com.badlogic.gdx.graphics.GL20.GL_SRC_ALPHA else copyFrom.sourceFunction, if (copyFrom == null) com.badlogic.gdx.graphics.GL20.GL_ONE_MINUS_SRC_ALPHA else copyFrom.destFunction, if (copyFrom == null) 1.0f else copyFrom.opacity)
+  }
+  def this() = {
+    this(null)
   }
   def this(sourceFunc: scala.Int, destFunc: scala.Int, opacity: scala.Float) = {
     this(true, sourceFunc, destFunc, opacity)
@@ -24,9 +23,10 @@ class BlendingAttribute extends com.badlogic.gdx.graphics.g3d.Attribute {
   def this(opacity: scala.Float) = {
     this(true, opacity)
   }
-  def this(copyFrom: BlendingAttribute) = {
-    this((copyFrom == null) || copyFrom.blended, if (copyFrom == null) com.badlogic.gdx.graphics.GL20.GL_SRC_ALPHA else copyFrom.sourceFunction, if (copyFrom == null) com.badlogic.gdx.graphics.GL20.GL_ONE_MINUS_SRC_ALPHA else copyFrom.destFunction, if (copyFrom == null) 1.0f else copyFrom.opacity)
-  }
+  this.blended = blended$p
+  this.sourceFunction = sourceFunc
+  this.destFunction = destFunc
+  this.opacity = opacity$p
   def copy(): BlendingAttribute = {
     return new BlendingAttribute(this)
   }

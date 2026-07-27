@@ -1,26 +1,23 @@
 package com.badlogic.gdx.scenes.scene2d.ui
 
-class CheckBox extends com.badlogic.gdx.scenes.scene2d.ui.TextButton {
+class CheckBox(text: java.lang.String, style$p: com.badlogic.gdx.scenes.scene2d.ui.CheckBox.CheckBoxStyle) extends com.badlogic.gdx.scenes.scene2d.ui.TextButton(text, style$p) {
   private var image: com.badlogic.gdx.scenes.scene2d.ui.Image = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Image]
   private var imageCell: com.badlogic.gdx.scenes.scene2d.ui.Cell[?] = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]]
   private var style: com.badlogic.gdx.scenes.scene2d.ui.CheckBox.CheckBoxStyle = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.CheckBox.CheckBoxStyle]
-  def this(text: java.lang.String, style: com.badlogic.gdx.scenes.scene2d.ui.CheckBox.CheckBoxStyle) = {
-    this()
-    val label: com.badlogic.gdx.scenes.scene2d.ui.Label = this.getLabel()
-    label.setAlignment(com.badlogic.gdx.utils.Align.left)
-    this.image = this.newImage()
-    this.image.setDrawable(style.checkboxOff)
-    this.clearChildren()
-    this.imageCell = this.add(this.image).asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]]
-    this.add(label)
-    this.setSize(this.getPrefWidth(), this.getPrefHeight())
-  }
+  val label$p: com.badlogic.gdx.scenes.scene2d.ui.Label = this.getLabel()
   def this(text: java.lang.String, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin) = {
     this(text, skin.get(classOf[com.badlogic.gdx.scenes.scene2d.ui.CheckBox.CheckBoxStyle]))
   }
   def this(text: java.lang.String, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin, styleName: java.lang.String) = {
     this(text, skin.get(styleName, classOf[com.badlogic.gdx.scenes.scene2d.ui.CheckBox.CheckBoxStyle]))
   }
+  label$p.setAlignment(com.badlogic.gdx.utils.Align.left)
+  this.image = this.newImage()
+  this.image.setDrawable(style$p.checkboxOff)
+  this.clearChildren()
+  this.imageCell = this.add(this.image).asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]]
+  this.add(label$p)
+  this.setSize(this.getPrefWidth(), this.getPrefHeight())
   def newImage(): com.badlogic.gdx.scenes.scene2d.ui.Image = {
     return new com.badlogic.gdx.scenes.scene2d.ui.Image(null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Drawable], com.badlogic.gdx.utils.Scaling.none)
   }

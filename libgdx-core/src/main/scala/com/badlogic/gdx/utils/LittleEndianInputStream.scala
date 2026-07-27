@@ -1,11 +1,8 @@
 package com.badlogic.gdx.utils
 
-class LittleEndianInputStream extends java.io.FilterInputStream with java.io.DataInput {
+class LittleEndianInputStream(in: java.io.InputStream) extends java.io.FilterInputStream(in) with java.io.DataInput {
   private var din: java.io.DataInputStream = null.asInstanceOf[java.io.DataInputStream]
-  def this(in: java.io.InputStream) = {
-    this()
-    this.din = new java.io.DataInputStream(in)
-  }
+  this.din = new java.io.DataInputStream(in)
   def readFully(b: scala.Array[scala.Byte]): scala.Unit = {
     this.din.readFully(b)
   }

@@ -1,6 +1,6 @@
 package com.badlogic.gdx.assets
 
-class AssetLoadingTask extends com.badlogic.gdx.utils.async.AsyncTask[java.lang.Void] {
+class AssetLoadingTask(manager$p: com.badlogic.gdx.assets.AssetManager, assetDesc$p: com.badlogic.gdx.assets.AssetDescriptor[?], loader$p: com.badlogic.gdx.assets.loaders.AssetLoader[?, ?], threadPool: com.badlogic.gdx.utils.async.AsyncExecutor) extends com.badlogic.gdx.utils.async.AsyncTask[java.lang.Void] {
   var manager: com.badlogic.gdx.assets.AssetManager = null.asInstanceOf[com.badlogic.gdx.assets.AssetManager]
   var assetDesc: com.badlogic.gdx.assets.AssetDescriptor[?] = null.asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[?]]
   var loader: com.badlogic.gdx.assets.loaders.AssetLoader[?, ?] = null.asInstanceOf[com.badlogic.gdx.assets.loaders.AssetLoader[?, ?]]
@@ -13,14 +13,11 @@ class AssetLoadingTask extends com.badlogic.gdx.utils.async.AsyncTask[java.lang.
   var loadFuture: com.badlogic.gdx.utils.async.AsyncResult[java.lang.Void] = null.asInstanceOf[com.badlogic.gdx.utils.async.AsyncResult[java.lang.Void]]
   var asset: java.lang.Object = null.asInstanceOf[java.lang.Object]
   var cancel: scala.Boolean = false
-  def this(manager: com.badlogic.gdx.assets.AssetManager, assetDesc: com.badlogic.gdx.assets.AssetDescriptor[?], loader: com.badlogic.gdx.assets.loaders.AssetLoader[?, ?], threadPool: com.badlogic.gdx.utils.async.AsyncExecutor) = {
-    this()
-    this.manager = manager
-    this.assetDesc = assetDesc.asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[?]]
-    this.loader = loader.asInstanceOf[com.badlogic.gdx.assets.loaders.AssetLoader[?, ?]]
-    this.executor = threadPool
-    this.startTime = if (manager.log.getLevel() == com.badlogic.gdx.utils.Logger.DEBUG) com.badlogic.gdx.utils.TimeUtils.nanoTime() else 0
-  }
+  this.manager = manager$p
+  this.assetDesc = assetDesc$p.asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[?]]
+  this.loader = loader$p.asInstanceOf[com.badlogic.gdx.assets.loaders.AssetLoader[?, ?]]
+  this.executor = threadPool
+  this.startTime = if (manager$p.log.getLevel() == com.badlogic.gdx.utils.Logger.DEBUG) com.badlogic.gdx.utils.TimeUtils.nanoTime() else 0
   def call(): java.lang.Void = {
     if (this.cancel) {
       return null

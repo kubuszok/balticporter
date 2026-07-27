@@ -1,6 +1,6 @@
 package com.badlogic.gdx.scenes.scene2d.ui
 
-class ScrollPane extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup with com.badlogic.gdx.scenes.scene2d.ui.Styleable[com.badlogic.gdx.scenes.scene2d.ui.ScrollPane.ScrollPaneStyle] {
+class ScrollPane(actor$p: com.badlogic.gdx.scenes.scene2d.Actor, style$p: com.badlogic.gdx.scenes.scene2d.ui.ScrollPane.ScrollPaneStyle) extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup with com.badlogic.gdx.scenes.scene2d.ui.Styleable[com.badlogic.gdx.scenes.scene2d.ui.ScrollPane.ScrollPaneStyle] {
   private var style: com.badlogic.gdx.scenes.scene2d.ui.ScrollPane.ScrollPaneStyle = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.ScrollPane.ScrollPaneStyle]
   private var actor: com.badlogic.gdx.scenes.scene2d.Actor = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.Actor]
   final val actorArea: com.badlogic.gdx.math.Rectangle = new com.badlogic.gdx.math.Rectangle()
@@ -49,19 +49,6 @@ class ScrollPane extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup with com
   private var scrollbarsOnTop: scala.Boolean = false
   private var variableSizeKnobs: scala.Boolean = true
   var draggingPointer: scala.Int = -1
-  def this(actor: com.badlogic.gdx.scenes.scene2d.Actor, style: com.badlogic.gdx.scenes.scene2d.ui.ScrollPane.ScrollPaneStyle) = {
-    this()
-    if (style == null) {
-      throw new java.lang.IllegalArgumentException("style cannot be null.")
-    } else ()
-    this.style = style
-    this.setActor(actor)
-    this.setSize(150, 150)
-    this.addCaptureListener()
-    this.flickScrollListener = this.getFlickScrollListener()
-    this.addListener(this.flickScrollListener)
-    this.addScrollListener()
-  }
   def this(actor: com.badlogic.gdx.scenes.scene2d.Actor) = {
     this(actor, new com.badlogic.gdx.scenes.scene2d.ui.ScrollPane.ScrollPaneStyle())
   }
@@ -71,6 +58,16 @@ class ScrollPane extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup with com
   def this(actor: com.badlogic.gdx.scenes.scene2d.Actor, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin, styleName: java.lang.String) = {
     this(actor, skin.get(styleName, classOf[com.badlogic.gdx.scenes.scene2d.ui.ScrollPane.ScrollPaneStyle]))
   }
+  if (style$p == null) {
+    throw new java.lang.IllegalArgumentException("style cannot be null.")
+  } else ()
+  this.style = style$p
+  this.setActor(actor$p)
+  this.setSize(150, 150)
+  this.addCaptureListener()
+  this.flickScrollListener = this.getFlickScrollListener()
+  this.addListener(this.flickScrollListener)
+  this.addScrollListener()
   def addCaptureListener(): scala.Unit = {
     this.addCaptureListener(new com.badlogic.gdx.scenes.scene2d.InputListener())
   }

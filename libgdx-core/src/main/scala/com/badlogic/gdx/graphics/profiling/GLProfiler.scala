@@ -1,31 +1,28 @@
 package com.badlogic.gdx.graphics.profiling
 
-class GLProfiler {
+class GLProfiler(graphics$p: com.badlogic.gdx.Graphics) {
   private var graphics: com.badlogic.gdx.Graphics = null.asInstanceOf[com.badlogic.gdx.Graphics]
   private var glInterceptor: com.badlogic.gdx.graphics.profiling.GLInterceptor = null.asInstanceOf[com.badlogic.gdx.graphics.profiling.GLInterceptor]
   private var listener: com.badlogic.gdx.graphics.profiling.GLErrorListener = null.asInstanceOf[com.badlogic.gdx.graphics.profiling.GLErrorListener]
   private var enabled: scala.Boolean = false
-  def this(graphics: com.badlogic.gdx.Graphics) = {
-    this()
-    this.graphics = graphics
-    val gl32: com.badlogic.gdx.graphics.GL32 = graphics.getGL32()
-    val gl31: com.badlogic.gdx.graphics.GL31 = graphics.getGL31()
-    val gl30: com.badlogic.gdx.graphics.GL30 = graphics.getGL30()
-    if (gl32 != null) {
-      this.glInterceptor = new com.badlogic.gdx.graphics.profiling.GL32Interceptor(this, gl32)
+  val gl32: com.badlogic.gdx.graphics.GL32 = graphics$p.getGL32()
+  val gl31: com.badlogic.gdx.graphics.GL31 = graphics$p.getGL31()
+  val gl30: com.badlogic.gdx.graphics.GL30 = graphics$p.getGL30()
+  this.graphics = graphics$p
+  if (gl32 != null) {
+    this.glInterceptor = new com.badlogic.gdx.graphics.profiling.GL32Interceptor(this, gl32)
+  } else {
+    if (gl31 != null) {
+      this.glInterceptor = new com.badlogic.gdx.graphics.profiling.GL31Interceptor(this, gl31)
     } else {
-      if (gl31 != null) {
-        this.glInterceptor = new com.badlogic.gdx.graphics.profiling.GL31Interceptor(this, gl31)
+      if (gl30 != null) {
+        this.glInterceptor = new com.badlogic.gdx.graphics.profiling.GL30Interceptor(this, gl30)
       } else {
-        if (gl30 != null) {
-          this.glInterceptor = new com.badlogic.gdx.graphics.profiling.GL30Interceptor(this, gl30)
-        } else {
-          this.glInterceptor = new com.badlogic.gdx.graphics.profiling.GL20Interceptor(this, graphics.getGL20())
-        }
+        this.glInterceptor = new com.badlogic.gdx.graphics.profiling.GL20Interceptor(this, graphics$p.getGL20())
       }
     }
-    this.listener = com.badlogic.gdx.graphics.profiling.GLErrorListener.LOGGING_LISTENER
   }
+  this.listener = com.badlogic.gdx.graphics.profiling.GLErrorListener.LOGGING_LISTENER
   def enable(): scala.Unit = {
     if (this.enabled) {
       return

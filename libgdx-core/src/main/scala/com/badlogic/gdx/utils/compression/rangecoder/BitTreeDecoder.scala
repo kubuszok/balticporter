@@ -1,13 +1,10 @@
 package com.badlogic.gdx.utils.compression.rangecoder
 
-class BitTreeDecoder {
+class BitTreeDecoder(numBitLevels: scala.Int) {
   var Models: scala.Array[scala.Short] = null.asInstanceOf[scala.Array[scala.Short]]
   var NumBitLevels: scala.Int = 0
-  def this(numBitLevels: scala.Int) = {
-    this()
-    this.NumBitLevels = numBitLevels
-    this.Models = new scala.Array[scala.Short](1 << numBitLevels)
-  }
+  this.NumBitLevels = numBitLevels
+  this.Models = new scala.Array[scala.Short](1 << numBitLevels)
   def Init(): scala.Unit = {
     com.badlogic.gdx.utils.compression.rangecoder.Decoder.InitBitModels(this.Models)
   }

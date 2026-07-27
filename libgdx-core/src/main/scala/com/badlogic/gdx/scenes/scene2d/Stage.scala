@@ -1,6 +1,6 @@
 package com.badlogic.gdx.scenes.scene2d
 
-class Stage extends com.badlogic.gdx.InputAdapter with com.badlogic.gdx.utils.Disposable {
+class Stage(viewport$p: com.badlogic.gdx.utils.viewport.Viewport, batch$p: com.badlogic.gdx.graphics.g2d.Batch) extends com.badlogic.gdx.InputAdapter with com.badlogic.gdx.utils.Disposable {
   var pools: com.badlogic.gdx.utils.PoolManager = new com.badlogic.gdx.utils.PoolManager()
   private var viewport: com.badlogic.gdx.utils.viewport.Viewport = null.asInstanceOf[com.badlogic.gdx.utils.viewport.Viewport]
   private var batch: com.badlogic.gdx.graphics.g2d.Batch = null.asInstanceOf[com.badlogic.gdx.graphics.g2d.Batch]
@@ -25,23 +25,6 @@ class Stage extends com.badlogic.gdx.InputAdapter with com.badlogic.gdx.utils.Di
   private var debugParentUnderMouse: scala.Boolean = false
   private var debugTableUnderMouse: com.badlogic.gdx.scenes.scene2d.ui.Table.Debug = com.badlogic.gdx.scenes.scene2d.ui.Table.Debug.none
   private final val debugColor: com.badlogic.gdx.graphics.Color = new com.badlogic.gdx.graphics.Color(0, 1, 0, 0.85f)
-  def this(viewport: com.badlogic.gdx.utils.viewport.Viewport, batch: com.badlogic.gdx.graphics.g2d.Batch) = {
-    this()
-    if (viewport == null) {
-      throw new java.lang.IllegalArgumentException("viewport cannot be null.")
-    } else ()
-    if (batch == null) {
-      throw new java.lang.IllegalArgumentException("batch cannot be null.")
-    } else ()
-    this.viewport = viewport
-    this.batch = batch
-    this.pools.addPool(classOf[com.badlogic.gdx.scenes.scene2d.InputEvent], (() => new com.badlogic.gdx.scenes.scene2d.InputEvent()))
-    this.pools.addPool(classOf[com.badlogic.gdx.scenes.scene2d.utils.FocusListener.FocusEvent], (() => new com.badlogic.gdx.scenes.scene2d.utils.FocusListener.FocusEvent()))
-    this.pools.addPool(classOf[com.badlogic.gdx.scenes.scene2d.Stage.TouchFocus], (() => new com.badlogic.gdx.scenes.scene2d.Stage.TouchFocus()))
-    this.root = new com.badlogic.gdx.scenes.scene2d.Group()
-    this.root.setStage(this)
-    viewport.update(com.badlogic.gdx.Gdx.graphics.getWidth(), com.badlogic.gdx.Gdx.graphics.getHeight(), true)
-  }
   def this() = {
     this(new com.badlogic.gdx.utils.viewport.ScalingViewport(com.badlogic.gdx.utils.Scaling.stretch, com.badlogic.gdx.Gdx.graphics.getWidth(), com.badlogic.gdx.Gdx.graphics.getHeight(), new com.badlogic.gdx.graphics.OrthographicCamera()), new com.badlogic.gdx.graphics.g2d.SpriteBatch())
     this.ownsBatch = true
@@ -50,6 +33,20 @@ class Stage extends com.badlogic.gdx.InputAdapter with com.badlogic.gdx.utils.Di
     this(viewport, new com.badlogic.gdx.graphics.g2d.SpriteBatch())
     this.ownsBatch = true
   }
+  if (viewport$p == null) {
+    throw new java.lang.IllegalArgumentException("viewport cannot be null.")
+  } else ()
+  if (batch$p == null) {
+    throw new java.lang.IllegalArgumentException("batch cannot be null.")
+  } else ()
+  this.viewport = viewport$p
+  this.batch = batch$p
+  this.pools.addPool(classOf[com.badlogic.gdx.scenes.scene2d.InputEvent], (() => new com.badlogic.gdx.scenes.scene2d.InputEvent()))
+  this.pools.addPool(classOf[com.badlogic.gdx.scenes.scene2d.utils.FocusListener.FocusEvent], (() => new com.badlogic.gdx.scenes.scene2d.utils.FocusListener.FocusEvent()))
+  this.pools.addPool(classOf[com.badlogic.gdx.scenes.scene2d.Stage.TouchFocus], (() => new com.badlogic.gdx.scenes.scene2d.Stage.TouchFocus()))
+  this.root = new com.badlogic.gdx.scenes.scene2d.Group()
+  this.root.setStage(this)
+  viewport$p.update(com.badlogic.gdx.Gdx.graphics.getWidth(), com.badlogic.gdx.Gdx.graphics.getHeight(), true)
   def draw(): scala.Unit = {
     val camera: com.badlogic.gdx.graphics.Camera = this.viewport.getCamera()
     camera.update()

@@ -1,21 +1,21 @@
 package com.badlogic.gdx.maps.tiled
 
-class TiledMapLoader extends com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader[com.badlogic.gdx.maps.tiled.TiledMap, com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.Parameters] {
+class TiledMapLoader(resolver$p: com.badlogic.gdx.assets.loaders.FileHandleResolver) extends com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader[com.badlogic.gdx.maps.tiled.TiledMap, com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.Parameters](resolver$p) {
   private var tmxMapLoader: com.badlogic.gdx.maps.tiled.TmxMapLoader = null.asInstanceOf[com.badlogic.gdx.maps.tiled.TmxMapLoader]
   private var tmjMapLoader: com.badlogic.gdx.maps.tiled.TmjMapLoader = null.asInstanceOf[com.badlogic.gdx.maps.tiled.TmjMapLoader]
   private var atlasTmxMapLoader: com.badlogic.gdx.maps.tiled.AtlasTmxMapLoader = null.asInstanceOf[com.badlogic.gdx.maps.tiled.AtlasTmxMapLoader]
   private var xmlReader: com.badlogic.gdx.utils.XmlReader = null.asInstanceOf[com.badlogic.gdx.utils.XmlReader]
   private var atlasTmjMapLoader: com.badlogic.gdx.maps.tiled.AtlasTmjMapLoader = null.asInstanceOf[com.badlogic.gdx.maps.tiled.AtlasTmjMapLoader]
   private var jsonReader: com.badlogic.gdx.utils.JsonReader = null.asInstanceOf[com.badlogic.gdx.utils.JsonReader]
-  def this(resolver: com.badlogic.gdx.assets.loaders.FileHandleResolver) = {
-    this()
-    this.tmxMapLoader = new com.badlogic.gdx.maps.tiled.TmxMapLoader(resolver)
-    this.tmjMapLoader = new com.badlogic.gdx.maps.tiled.TmjMapLoader(resolver)
-    this.atlasTmxMapLoader = new com.badlogic.gdx.maps.tiled.AtlasTmxMapLoader(resolver)
-    this.xmlReader = new com.badlogic.gdx.utils.XmlReader()
-    this.atlasTmjMapLoader = new com.badlogic.gdx.maps.tiled.AtlasTmjMapLoader(resolver)
-    this.jsonReader = new com.badlogic.gdx.utils.JsonReader()
+  def this() = {
+    this(new com.badlogic.gdx.assets.loaders.resolvers.InternalFileHandleResolver())
   }
+  this.tmxMapLoader = new com.badlogic.gdx.maps.tiled.TmxMapLoader(resolver$p)
+  this.tmjMapLoader = new com.badlogic.gdx.maps.tiled.TmjMapLoader(resolver$p)
+  this.atlasTmxMapLoader = new com.badlogic.gdx.maps.tiled.AtlasTmxMapLoader(resolver$p)
+  this.xmlReader = new com.badlogic.gdx.utils.XmlReader()
+  this.atlasTmjMapLoader = new com.badlogic.gdx.maps.tiled.AtlasTmjMapLoader(resolver$p)
+  this.jsonReader = new com.badlogic.gdx.utils.JsonReader()
   def load(fileName: java.lang.String): com.badlogic.gdx.maps.tiled.TiledMap = {
     return this.load(fileName, new com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.Parameters())
   }

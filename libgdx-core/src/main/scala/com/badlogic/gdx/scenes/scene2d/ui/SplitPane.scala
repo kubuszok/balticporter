@@ -1,6 +1,6 @@
 package com.badlogic.gdx.scenes.scene2d.ui
 
-class SplitPane extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup with com.badlogic.gdx.scenes.scene2d.ui.Styleable[com.badlogic.gdx.scenes.scene2d.ui.SplitPane.SplitPaneStyle] {
+class SplitPane(firstWidget$p: com.badlogic.gdx.scenes.scene2d.Actor, secondWidget$p: com.badlogic.gdx.scenes.scene2d.Actor, vertical$p: scala.Boolean, style$p: com.badlogic.gdx.scenes.scene2d.ui.SplitPane.SplitPaneStyle) extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup with com.badlogic.gdx.scenes.scene2d.ui.Styleable[com.badlogic.gdx.scenes.scene2d.ui.SplitPane.SplitPaneStyle] {
   var style: com.badlogic.gdx.scenes.scene2d.ui.SplitPane.SplitPaneStyle = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.SplitPane.SplitPaneStyle]
   private var firstWidget: com.badlogic.gdx.scenes.scene2d.Actor = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.Actor]
   private var secondWidget: com.badlogic.gdx.scenes.scene2d.Actor = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.Actor]
@@ -15,21 +15,18 @@ class SplitPane extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup with com.
   private final val tempScissors: com.badlogic.gdx.math.Rectangle = new com.badlogic.gdx.math.Rectangle()
   var lastPoint: com.badlogic.gdx.math.Vector2 = new com.badlogic.gdx.math.Vector2()
   var handlePosition: com.badlogic.gdx.math.Vector2 = new com.badlogic.gdx.math.Vector2()
-  def this(firstWidget: com.badlogic.gdx.scenes.scene2d.Actor, secondWidget: com.badlogic.gdx.scenes.scene2d.Actor, vertical: scala.Boolean, style: com.badlogic.gdx.scenes.scene2d.ui.SplitPane.SplitPaneStyle) = {
-    this()
-    this.vertical = vertical
-    this.setStyle(style)
-    this.setFirstWidget(firstWidget)
-    this.setSecondWidget(secondWidget)
-    this.setSize(this.getPrefWidth(), this.getPrefHeight())
-    this.initialize()
-  }
   def this(firstWidget: com.badlogic.gdx.scenes.scene2d.Actor, secondWidget: com.badlogic.gdx.scenes.scene2d.Actor, vertical: scala.Boolean, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin, styleName: java.lang.String) = {
     this(firstWidget, secondWidget, vertical, skin.get(styleName, classOf[com.badlogic.gdx.scenes.scene2d.ui.SplitPane.SplitPaneStyle]))
   }
   def this(firstWidget: com.badlogic.gdx.scenes.scene2d.Actor, secondWidget: com.badlogic.gdx.scenes.scene2d.Actor, vertical: scala.Boolean, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin) = {
     this(firstWidget, secondWidget, vertical, skin, "default-" + (if (vertical) "vertical" else "horizontal"))
   }
+  this.vertical = vertical$p
+  this.setStyle(style$p)
+  this.setFirstWidget(firstWidget$p)
+  this.setSecondWidget(secondWidget$p)
+  this.setSize(this.getPrefWidth(), this.getPrefHeight())
+  this.initialize()
   private def initialize(): scala.Unit = {
     this.addListener(new com.badlogic.gdx.scenes.scene2d.InputListener())
   }

@@ -669,7 +669,7 @@ object JsonMatcher {
   final val array: scala.Int = 8
   final val keys: scala.Int = 16
   final val single: scala.Int = 32
-  class Pattern {
+  class Pattern(root$p: com.badlogic.gdx.utils.JsonMatcher.Node, processor$p: com.badlogic.gdx.utils.JsonMatcher.Processor, total$p: scala.Int, at$p: scala.Boolean) {
     var root: com.badlogic.gdx.utils.JsonMatcher.Node = null.asInstanceOf[com.badlogic.gdx.utils.JsonMatcher.Node]
     var processor: com.badlogic.gdx.utils.JsonMatcher.Processor = null.asInstanceOf[com.badlogic.gdx.utils.JsonMatcher.Processor]
     var capture: com.badlogic.gdx.utils.JsonValue = new com.badlogic.gdx.utils.JsonValue(com.badlogic.gdx.utils.JsonValue.ValueType.`object`)
@@ -680,14 +680,11 @@ object JsonMatcher {
     var at: scala.Boolean = false
     final val stack: com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.JsonValue] = new com.badlogic.gdx.utils.Array().asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.JsonValue]]
     var current: com.badlogic.gdx.utils.JsonMatcher.Node = null.asInstanceOf[com.badlogic.gdx.utils.JsonMatcher.Node]
-    def this(root: com.badlogic.gdx.utils.JsonMatcher.Node, processor: com.badlogic.gdx.utils.JsonMatcher.Processor, total: scala.Int, at: scala.Boolean) = {
-      this()
-      this.root = root
-      this.processor = processor
-      this.total = total
-      this.at = at
-      this.current = root
-    }
+    this.root = root$p
+    this.processor = processor$p
+    this.total = total$p
+    this.at = at$p
+    this.current = root$p
     def clearCapture(): scala.Unit = {
       this.captured = 0
       this.capture.name$field = null
@@ -714,7 +711,7 @@ object JsonMatcher {
       return this.root.toString() + (if (this.total < java.lang.Integer.MAX_VALUE) "!" else "")
     }
   }
-  class Node {
+  class Node(matches$p: scala.Array[com.badlogic.gdx.utils.JsonMatcher.Match], processEach$p: scala.Boolean, backtrack$p: com.badlogic.gdx.utils.JsonMatcher.Node) {
     var matches: scala.Array[com.badlogic.gdx.utils.JsonMatcher.Match] = null.asInstanceOf[scala.Array[com.badlogic.gdx.utils.JsonMatcher.Match]]
     var processEach: scala.Boolean = false
     var processPop: scala.Boolean = false
@@ -725,19 +722,16 @@ object JsonMatcher {
     var backtrack: com.badlogic.gdx.utils.JsonMatcher.Node = null.asInstanceOf[com.badlogic.gdx.utils.JsonMatcher.Node]
     var pop: scala.Int = 0
     var dead: scala.Int = java.lang.Integer.MAX_VALUE
-    def this(matches: scala.Array[com.badlogic.gdx.utils.JsonMatcher.Match], processEach: scala.Boolean, backtrack: com.badlogic.gdx.utils.JsonMatcher.Node) = {
-      this()
-      this.matches = matches
-      this.processEach = processEach
-      this.backtrack = backtrack
-      for (`match` <- matches) {
-        if (`match`.starStar) {
-          this.starStar = true
-        } else ()
-        if ((`match`.flags & JsonMatcher.process$field) != 0) {
-          this.processPop = true
-        } else ()
-      }
+    this.matches = matches$p
+    this.processEach = processEach$p
+    this.backtrack = backtrack$p
+    for (`match` <- matches$p) {
+      if (`match`.starStar) {
+        this.starStar = true
+      } else ()
+      if ((`match`.flags & JsonMatcher.process$field) != 0) {
+        this.processPop = true
+      } else ()
     }
     def `match`(name: com.badlogic.gdx.utils.JsonSkimmer.JsonToken): scala.Int = {
       if (name != null) {
@@ -776,20 +770,17 @@ object JsonMatcher {
       return buffer.toString()
     }
   }
-  class Match {
+  class Match(name$p: java.lang.String, flags$p: scala.Int, star$p: scala.Boolean, starStar$p: scala.Boolean) {
     var name: java.lang.String = null.asInstanceOf[java.lang.String]
     var flags: scala.Int = 0
     var star: scala.Boolean = false
     var starStar: scala.Boolean = false
     var any: scala.Boolean = false
-    def this(name: java.lang.String, flags: scala.Int, star: scala.Boolean, starStar: scala.Boolean) = {
-      this()
-      this.name = name
-      this.flags = flags
-      this.star = star
-      this.starStar = starStar
-      this.any = star || starStar
-    }
+    this.name = name$p
+    this.flags = flags$p
+    this.star = star$p
+    this.starStar = starStar$p
+    this.any = star$p || starStar$p
     def toString(buffer: java.lang.StringBuilder): scala.Unit = {
       if ((this.flags & JsonMatcher.capture) != 0) {
         buffer.append('(')

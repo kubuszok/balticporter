@@ -1,15 +1,12 @@
 package com.badlogic.gdx.math
 
-final class WindowedMean {
+final class WindowedMean(window_size: scala.Int) {
   var values: scala.Array[scala.Float] = null.asInstanceOf[scala.Array[scala.Float]]
   var added_values: scala.Int = 0
   var last_value: scala.Int = 0
   var mean: scala.Float = 0
   var dirty: scala.Boolean = true
-  def this(window_size: scala.Int) = {
-    this()
-    this.values = new scala.Array[scala.Float](window_size)
-  }
+  this.values = new scala.Array[scala.Float](window_size)
   def hasEnoughData(): scala.Boolean = {
     return this.added_values >= this.values.length
   }

@@ -1,16 +1,13 @@
 package com.badlogic.gdx.utils
 
-class PooledLinkedList[T] {
+class PooledLinkedList[T](maxPoolSize: scala.Int) {
   private var head: com.badlogic.gdx.utils.PooledLinkedList.Item[T] = null.asInstanceOf[com.badlogic.gdx.utils.PooledLinkedList.Item[T]]
   private var tail: com.badlogic.gdx.utils.PooledLinkedList.Item[T] = null.asInstanceOf[com.badlogic.gdx.utils.PooledLinkedList.Item[T]]
   var iter$field: com.badlogic.gdx.utils.PooledLinkedList.Item[T] = null.asInstanceOf[com.badlogic.gdx.utils.PooledLinkedList.Item[T]]
   private var curr: com.badlogic.gdx.utils.PooledLinkedList.Item[T] = null.asInstanceOf[com.badlogic.gdx.utils.PooledLinkedList.Item[T]]
   var size$field: scala.Int = 0
   private var pool: com.badlogic.gdx.utils.Pool[com.badlogic.gdx.utils.PooledLinkedList.Item[T]] = null.asInstanceOf[com.badlogic.gdx.utils.Pool[com.badlogic.gdx.utils.PooledLinkedList.Item[T]]]
-  def this(maxPoolSize: scala.Int) = {
-    this()
-    this.pool = new com.badlogic.gdx.utils.Pool[com.badlogic.gdx.utils.PooledLinkedList.Item[T]](16, maxPoolSize)
-  }
+  this.pool = new com.badlogic.gdx.utils.Pool[com.badlogic.gdx.utils.PooledLinkedList.Item[T]](16, maxPoolSize)
   def add(`object`: T): scala.Unit = {
     val item: com.badlogic.gdx.utils.PooledLinkedList.Item[T] = this.pool.obtain()
     item.payload = `object`

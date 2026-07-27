@@ -1,6 +1,6 @@
 package com.badlogic.gdx.math
 
-class FloatCounter extends com.badlogic.gdx.utils.Pool.Poolable {
+class FloatCounter(windowSize: scala.Int) extends com.badlogic.gdx.utils.Pool.Poolable {
   var count: scala.Int = 0
   var total: scala.Float = 0.0f
   var min: scala.Float = 0.0f
@@ -9,11 +9,8 @@ class FloatCounter extends com.badlogic.gdx.utils.Pool.Poolable {
   var latest: scala.Float = 0.0f
   var value: scala.Float = 0.0f
   var mean: com.badlogic.gdx.math.WindowedMean = null.asInstanceOf[com.badlogic.gdx.math.WindowedMean]
-  def this(windowSize: scala.Int) = {
-    this()
-    this.mean = if (windowSize > 1) new com.badlogic.gdx.math.WindowedMean(windowSize) else null.asInstanceOf[com.badlogic.gdx.math.WindowedMean]
-    this.reset()
-  }
+  this.mean = if (windowSize > 1) new com.badlogic.gdx.math.WindowedMean(windowSize) else null.asInstanceOf[com.badlogic.gdx.math.WindowedMean]
+  this.reset()
   def put(value: scala.Float): scala.Unit = {
     this.latest = value
     this.total = this.total + value

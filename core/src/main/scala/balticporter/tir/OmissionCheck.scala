@@ -29,25 +29,26 @@ object OmissionCheck:
     *
     * Expressing these needs real constructor funnelling — the class's primary must be
     * parameterised to reach each parent constructor its Java constructors target, which several
-    * of these classes do across many distinct parent overloads. Until that exists, every affected
-    * constructor is reported here rather than quietly shipped.
+    * of these classes do across many distinct parent overloads. [[CtorFunnel]] performs that
+    * nomination, and this check is derived from ITS decision, so the two can never disagree: the
+    * constructor `CtorFunnel` promotes to primary has its super arguments EMITTED (into the
+    * `extends` clause) and is not reported; every other constructor whose `super(...)` carries
+    * arguments still loses them, and is.
     */
   def droppedSuperArgs(program: Program): List[Finding] =
-    def ctorsOf(cd: Tree.ClassDef): List[(Tree.ClassDef, Tree.DefDef)] =
-      cd.body.collect { case d: Tree.DefDef if program.symbolOf(d.symbol).exists(_.name == "<init>") => (cd, d) } ++
-        cd.body.collect { case c: Tree.ClassDef => ctorsOf(c) }.flatten
+    def classes(cd: Tree.ClassDef): List[Tree.ClassDef] =
+      cd :: cd.body.collect { case c: Tree.ClassDef => classes(c) }.flatten
 
-    program.units.flatMap(ctorsOf).flatMap { (cd, d) =>
-      val stats = d.rhs match
-        case Some(Tree.Block(s, _, _, _)) => s
-        case Some(t)                      => List(t)
-        case None                         => Nil
-      stats.headOption match
-        case Some(Tree.Apply(Tree.Select(_: Tree.Super, m, _, _), args, _, _, _))
-            if args.nonEmpty && program.symbolOf(m).exists(_.name == "<init>") =>
+    val plans = CtorFunnel.Plans(program)
+    program.units.flatMap(classes).flatMap { cd =>
+      val primary = plans(cd).primary.map(_.symbol)
+      CtorFunnel.ctorsOf(program, cd.body).flatMap { d =>
+        val args = CtorFunnel.superArgsOf(program, d)
+        if args.isEmpty || primary.contains(d.symbol) then Nil
+        else
           val owner = program.symbolOf(cd.symbol).map(_.fullName).getOrElse("?")
           List(Finding("super(args) dropped", owner, s"${args.size} argument(s) discarded", d.origin))
-        case _ => Nil
+      }
     }
 
   /** grouped one-line summary, most-affected owner first. */

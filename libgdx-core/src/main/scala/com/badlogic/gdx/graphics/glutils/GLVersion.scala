@@ -1,6 +1,6 @@
 package com.badlogic.gdx.graphics.glutils
 
-class GLVersion {
+class GLVersion(appType: com.badlogic.gdx.Application.ApplicationType, versionString$p: java.lang.String, vendorString$arg: java.lang.String, rendererString$arg: java.lang.String) {
   private var majorVersion: scala.Int = 0
   private var minorVersion: scala.Int = 0
   private var releaseVersion: scala.Int = 0
@@ -9,52 +9,49 @@ class GLVersion {
   private var rendererString: java.lang.String = null.asInstanceOf[java.lang.String]
   private var `type`: com.badlogic.gdx.graphics.glutils.GLVersion.Type = null.asInstanceOf[com.badlogic.gdx.graphics.glutils.GLVersion.Type]
   private final val TAG: java.lang.String = "GLVersion"
-  def this(appType: com.badlogic.gdx.Application.ApplicationType, versionString: java.lang.String, vendorString$arg: java.lang.String, rendererString$arg: java.lang.String) = {
-    this()
-    var vendorString: java.lang.String = vendorString$arg
-    var rendererString: java.lang.String = rendererString$arg
-    if (appType == com.badlogic.gdx.Application.ApplicationType.Android) {
+  var vendorString$p: java.lang.String = vendorString$arg
+  var rendererString$p: java.lang.String = rendererString$arg
+  if (appType == com.badlogic.gdx.Application.ApplicationType.Android) {
+    this.`type` = com.badlogic.gdx.graphics.glutils.GLVersion.Type.GLES
+  } else {
+    if (appType == com.badlogic.gdx.Application.ApplicationType.iOS) {
       this.`type` = com.badlogic.gdx.graphics.glutils.GLVersion.Type.GLES
     } else {
-      if (appType == com.badlogic.gdx.Application.ApplicationType.iOS) {
-        this.`type` = com.badlogic.gdx.graphics.glutils.GLVersion.Type.GLES
+      if (appType == com.badlogic.gdx.Application.ApplicationType.Desktop) {
+        this.`type` = com.badlogic.gdx.graphics.glutils.GLVersion.Type.OpenGL
       } else {
-        if (appType == com.badlogic.gdx.Application.ApplicationType.Desktop) {
+        if (appType == com.badlogic.gdx.Application.ApplicationType.Applet) {
           this.`type` = com.badlogic.gdx.graphics.glutils.GLVersion.Type.OpenGL
         } else {
-          if (appType == com.badlogic.gdx.Application.ApplicationType.Applet) {
-            this.`type` = com.badlogic.gdx.graphics.glutils.GLVersion.Type.OpenGL
+          if (appType == com.badlogic.gdx.Application.ApplicationType.WebGL) {
+            this.`type` = com.badlogic.gdx.graphics.glutils.GLVersion.Type.WebGL
           } else {
-            if (appType == com.badlogic.gdx.Application.ApplicationType.WebGL) {
-              this.`type` = com.badlogic.gdx.graphics.glutils.GLVersion.Type.WebGL
-            } else {
-              this.`type` = com.badlogic.gdx.graphics.glutils.GLVersion.Type.NONE
-            }
+            this.`type` = com.badlogic.gdx.graphics.glutils.GLVersion.Type.NONE
           }
         }
       }
     }
-    if (this.`type` == com.badlogic.gdx.graphics.glutils.GLVersion.Type.GLES) {
-      this.extractVersion("OpenGL ES (\\d(\\.\\d){0,2})", versionString)
+  }
+  if (this.`type` == com.badlogic.gdx.graphics.glutils.GLVersion.Type.GLES) {
+    this.extractVersion("OpenGL ES (\\d(\\.\\d){0,2})", versionString$p)
+  } else {
+    if (this.`type` == com.badlogic.gdx.graphics.glutils.GLVersion.Type.WebGL) {
+      this.extractVersion("WebGL (\\d(\\.\\d){0,2})", versionString$p)
     } else {
-      if (this.`type` == com.badlogic.gdx.graphics.glutils.GLVersion.Type.WebGL) {
-        this.extractVersion("WebGL (\\d(\\.\\d){0,2})", versionString)
+      if (this.`type` == com.badlogic.gdx.graphics.glutils.GLVersion.Type.OpenGL) {
+        this.extractVersion("(\\d(\\.\\d){0,2})", versionString$p)
       } else {
-        if (this.`type` == com.badlogic.gdx.graphics.glutils.GLVersion.Type.OpenGL) {
-          this.extractVersion("(\\d(\\.\\d){0,2})", versionString)
-        } else {
-          this.majorVersion = -1
-          this.minorVersion = -1
-          this.releaseVersion = -1
-          vendorString = ""
-          rendererString = ""
-        }
+        this.majorVersion = -1
+        this.minorVersion = -1
+        this.releaseVersion = -1
+        vendorString$p = ""
+        rendererString$p = ""
       }
     }
-    this.versionString = versionString
-    this.vendorString = vendorString
-    this.rendererString = rendererString
   }
+  this.versionString = versionString$p
+  this.vendorString = vendorString$p
+  this.rendererString = rendererString$p
   private def extractVersion(patternString: java.lang.String, versionString: java.lang.String): scala.Unit = {
     val pattern: java.util.regex.Pattern = java.util.regex.Pattern.compile(patternString)
     val matcher: java.util.regex.Matcher = pattern.matcher(versionString)

@@ -1,16 +1,13 @@
 package com.badlogic.gdx.assets.loaders.resolvers
 
-class ResolutionFileResolver extends com.badlogic.gdx.assets.loaders.FileHandleResolver {
+class ResolutionFileResolver(baseResolver$p: com.badlogic.gdx.assets.loaders.FileHandleResolver, descriptors$p: scala.Array[com.badlogic.gdx.assets.loaders.resolvers.ResolutionFileResolver.Resolution]) extends com.badlogic.gdx.assets.loaders.FileHandleResolver {
   var baseResolver: com.badlogic.gdx.assets.loaders.FileHandleResolver = null.asInstanceOf[com.badlogic.gdx.assets.loaders.FileHandleResolver]
   var descriptors: scala.Array[com.badlogic.gdx.assets.loaders.resolvers.ResolutionFileResolver.Resolution] = null.asInstanceOf[scala.Array[com.badlogic.gdx.assets.loaders.resolvers.ResolutionFileResolver.Resolution]]
-  def this(baseResolver: com.badlogic.gdx.assets.loaders.FileHandleResolver, descriptors: scala.Array[com.badlogic.gdx.assets.loaders.resolvers.ResolutionFileResolver.Resolution]) = {
-    this()
-    if (descriptors.length == 0) {
-      throw new java.lang.IllegalArgumentException("At least one Resolution needs to be supplied.")
-    } else ()
-    this.baseResolver = baseResolver
-    this.descriptors = descriptors
-  }
+  if (descriptors$p.length == 0) {
+    throw new java.lang.IllegalArgumentException("At least one Resolution needs to be supplied.")
+  } else ()
+  this.baseResolver = baseResolver$p
+  this.descriptors = descriptors$p
   def resolve(fileName: java.lang.String): com.badlogic.gdx.files.FileHandle = {
     val bestResolution: com.badlogic.gdx.assets.loaders.resolvers.ResolutionFileResolver.Resolution = ResolutionFileResolver.choose(this.descriptors)
     val originalHandle: com.badlogic.gdx.files.FileHandle = new com.badlogic.gdx.files.FileHandle(fileName)
@@ -51,15 +48,12 @@ object ResolutionFileResolver {
     }
     return best
   }
-  class Resolution {
+  class Resolution(portraitWidth$p: scala.Int, portraitHeight$p: scala.Int, folder$p: java.lang.String) {
     var portraitWidth: scala.Int = 0
     var portraitHeight: scala.Int = 0
     var folder: java.lang.String = null.asInstanceOf[java.lang.String]
-    def this(portraitWidth: scala.Int, portraitHeight: scala.Int, folder: java.lang.String) = {
-      this()
-      this.portraitWidth = portraitWidth
-      this.portraitHeight = portraitHeight
-      this.folder = folder
-    }
+    this.portraitWidth = portraitWidth$p
+    this.portraitHeight = portraitHeight$p
+    this.folder = folder$p
   }
 }

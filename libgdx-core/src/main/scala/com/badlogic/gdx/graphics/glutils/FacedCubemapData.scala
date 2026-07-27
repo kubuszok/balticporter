@@ -1,15 +1,9 @@
 package com.badlogic.gdx.graphics.glutils
 
-class FacedCubemapData extends com.badlogic.gdx.graphics.CubemapData {
+class FacedCubemapData(positiveX: com.badlogic.gdx.graphics.TextureData, negativeX: com.badlogic.gdx.graphics.TextureData, positiveY: com.badlogic.gdx.graphics.TextureData, negativeY: com.badlogic.gdx.graphics.TextureData, positiveZ: com.badlogic.gdx.graphics.TextureData, negativeZ: com.badlogic.gdx.graphics.TextureData) extends com.badlogic.gdx.graphics.CubemapData {
   final val data: scala.Array[com.badlogic.gdx.graphics.TextureData] = new scala.Array[com.badlogic.gdx.graphics.TextureData](6)
-  def this(positiveX: com.badlogic.gdx.graphics.TextureData, negativeX: com.badlogic.gdx.graphics.TextureData, positiveY: com.badlogic.gdx.graphics.TextureData, negativeY: com.badlogic.gdx.graphics.TextureData, positiveZ: com.badlogic.gdx.graphics.TextureData, negativeZ: com.badlogic.gdx.graphics.TextureData) = {
-    this()
-    this.data(0) = positiveX
-    this.data(1) = negativeX
-    this.data(2) = positiveY
-    this.data(3) = negativeY
-    this.data(4) = positiveZ
-    this.data(5) = negativeZ
+  def this() = {
+    this(null.asInstanceOf[com.badlogic.gdx.graphics.TextureData], null.asInstanceOf[com.badlogic.gdx.graphics.TextureData], null.asInstanceOf[com.badlogic.gdx.graphics.TextureData], null.asInstanceOf[com.badlogic.gdx.graphics.TextureData], null.asInstanceOf[com.badlogic.gdx.graphics.TextureData], null.asInstanceOf[com.badlogic.gdx.graphics.TextureData])
   }
   def this(positiveX: com.badlogic.gdx.files.FileHandle, negativeX: com.badlogic.gdx.files.FileHandle, positiveY: com.badlogic.gdx.files.FileHandle, negativeY: com.badlogic.gdx.files.FileHandle, positiveZ: com.badlogic.gdx.files.FileHandle, negativeZ: com.badlogic.gdx.files.FileHandle) = {
     this(com.badlogic.gdx.graphics.TextureData.Factory.loadFromFile(positiveX, false), com.badlogic.gdx.graphics.TextureData.Factory.loadFromFile(negativeX, false), com.badlogic.gdx.graphics.TextureData.Factory.loadFromFile(positiveY, false), com.badlogic.gdx.graphics.TextureData.Factory.loadFromFile(negativeY, false), com.badlogic.gdx.graphics.TextureData.Factory.loadFromFile(positiveZ, false), com.badlogic.gdx.graphics.TextureData.Factory.loadFromFile(negativeZ, false))
@@ -26,6 +20,12 @@ class FacedCubemapData extends com.badlogic.gdx.graphics.CubemapData {
   def this(width: scala.Int, height: scala.Int, depth: scala.Int, format: com.badlogic.gdx.graphics.Pixmap.Format) = {
     this(new com.badlogic.gdx.graphics.glutils.PixmapTextureData(new com.badlogic.gdx.graphics.Pixmap(depth, height, format), null, false, true), new com.badlogic.gdx.graphics.glutils.PixmapTextureData(new com.badlogic.gdx.graphics.Pixmap(depth, height, format), null, false, true), new com.badlogic.gdx.graphics.glutils.PixmapTextureData(new com.badlogic.gdx.graphics.Pixmap(width, depth, format), null, false, true), new com.badlogic.gdx.graphics.glutils.PixmapTextureData(new com.badlogic.gdx.graphics.Pixmap(width, depth, format), null, false, true), new com.badlogic.gdx.graphics.glutils.PixmapTextureData(new com.badlogic.gdx.graphics.Pixmap(width, height, format), null, false, true), new com.badlogic.gdx.graphics.glutils.PixmapTextureData(new com.badlogic.gdx.graphics.Pixmap(width, height, format), null, false, true))
   }
+  this.data(0) = positiveX
+  this.data(1) = negativeX
+  this.data(2) = positiveY
+  this.data(3) = negativeY
+  this.data(4) = positiveZ
+  this.data(5) = negativeZ
   def isManaged(): scala.Boolean = {
     for (data <- this.data) {
       if (!data.isManaged()) {

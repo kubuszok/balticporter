@@ -1,11 +1,8 @@
 package com.badlogic.gdx.utils.async
 
-class AsyncResult[T] {
+class AsyncResult[T](future$p: java.util.concurrent.Future[T]) {
   private var future: java.util.concurrent.Future[T] = null.asInstanceOf[java.util.concurrent.Future[T]]
-  def this(future: java.util.concurrent.Future[T]) = {
-    this()
-    this.future = future
-  }
+  this.future = future$p
   def isDone(): scala.Boolean = {
     return this.future.isDone()
   }

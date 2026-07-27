@@ -1,10 +1,7 @@
 package com.badlogic.gdx.assets.loaders
 
-class CubemapLoader extends com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader[com.badlogic.gdx.graphics.Cubemap, com.badlogic.gdx.assets.loaders.CubemapLoader.CubemapParameter] {
+class CubemapLoader(resolver$p: com.badlogic.gdx.assets.loaders.FileHandleResolver) extends com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader[com.badlogic.gdx.graphics.Cubemap, com.badlogic.gdx.assets.loaders.CubemapLoader.CubemapParameter](resolver$p) {
   var info: com.badlogic.gdx.assets.loaders.CubemapLoader.CubemapLoaderInfo = new com.badlogic.gdx.assets.loaders.CubemapLoader.CubemapLoaderInfo()
-  def this(resolver: com.badlogic.gdx.assets.loaders.FileHandleResolver) = {
-    this()
-  }
   def loadAsync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.assets.loaders.CubemapLoader.CubemapParameter): scala.Unit = {
     this.info.filename = fileName
     if ((parameter == null) || (parameter.cubemapData == null)) {

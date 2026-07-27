@@ -1,13 +1,10 @@
 package com.badlogic.gdx.assets.loaders.resolvers
 
-class PrefixFileHandleResolver extends com.badlogic.gdx.assets.loaders.FileHandleResolver {
+class PrefixFileHandleResolver(baseResolver$p: com.badlogic.gdx.assets.loaders.FileHandleResolver, prefix$p: java.lang.String) extends com.badlogic.gdx.assets.loaders.FileHandleResolver {
   private var prefix: java.lang.String = null.asInstanceOf[java.lang.String]
   private var baseResolver: com.badlogic.gdx.assets.loaders.FileHandleResolver = null.asInstanceOf[com.badlogic.gdx.assets.loaders.FileHandleResolver]
-  def this(baseResolver: com.badlogic.gdx.assets.loaders.FileHandleResolver, prefix: java.lang.String) = {
-    this()
-    this.baseResolver = baseResolver
-    this.prefix = prefix
-  }
+  this.baseResolver = baseResolver$p
+  this.prefix = prefix$p
   def setBaseResolver(baseResolver: com.badlogic.gdx.assets.loaders.FileHandleResolver): scala.Unit = {
     this.baseResolver = baseResolver
   }

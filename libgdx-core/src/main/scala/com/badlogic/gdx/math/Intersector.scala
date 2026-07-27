@@ -1110,7 +1110,7 @@ object Intersector {
     }
     return true
   }
-  class SplitTriangle {
+  class SplitTriangle(numAttributes: scala.Int) {
     var front: scala.Array[scala.Float] = null.asInstanceOf[scala.Array[scala.Float]]
     var back: scala.Array[scala.Float] = null.asInstanceOf[scala.Array[scala.Float]]
     var edgeSplit: scala.Array[scala.Float] = null.asInstanceOf[scala.Array[scala.Float]]
@@ -1120,12 +1120,9 @@ object Intersector {
     var frontCurrent: scala.Boolean = false
     var frontOffset: scala.Int = 0
     var backOffset: scala.Int = 0
-    def this(numAttributes: scala.Int) = {
-      this()
-      this.front = new scala.Array[scala.Float]((numAttributes * 3) * 2)
-      this.back = new scala.Array[scala.Float]((numAttributes * 3) * 2)
-      this.edgeSplit = new scala.Array[scala.Float](numAttributes)
-    }
+    this.front = new scala.Array[scala.Float]((numAttributes * 3) * 2)
+    this.back = new scala.Array[scala.Float]((numAttributes * 3) * 2)
+    this.edgeSplit = new scala.Array[scala.Float](numAttributes)
     def toString(): java.lang.String = {
       return ((((((((("SplitTriangle [front=" + java.util.Arrays.toString(this.front)) + ", back=") + java.util.Arrays.toString(this.back)) + ", numFront=") + this.numFront) + ", numBack=") + this.numBack) + ", total=") + this.total) + "]"
     }

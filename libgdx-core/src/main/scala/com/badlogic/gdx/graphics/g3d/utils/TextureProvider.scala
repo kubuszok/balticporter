@@ -37,12 +37,9 @@ object TextureProvider {
   object FileTextureProvider {
     export TextureProvider.*
   }
-  class AssetTextureProvider extends TextureProvider {
+  class AssetTextureProvider(assetManager$p: com.badlogic.gdx.assets.AssetManager) extends TextureProvider {
     var assetManager: com.badlogic.gdx.assets.AssetManager = null.asInstanceOf[com.badlogic.gdx.assets.AssetManager]
-    def this(assetManager: com.badlogic.gdx.assets.AssetManager) = {
-      this()
-      this.assetManager = assetManager
-    }
+    this.assetManager = assetManager$p
     def load(fileName: java.lang.String): com.badlogic.gdx.graphics.Texture = {
       return this.assetManager.get(fileName, classOf[com.badlogic.gdx.graphics.Texture])
     }

@@ -1,6 +1,6 @@
 package com.badlogic.gdx.scenes.scene2d.ui
 
-class SelectBox[T] extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlogic.gdx.scenes.scene2d.utils.Disableable with com.badlogic.gdx.scenes.scene2d.ui.Styleable[com.badlogic.gdx.scenes.scene2d.ui.SelectBox.SelectBoxStyle] {
+class SelectBox[T](style$p: com.badlogic.gdx.scenes.scene2d.ui.SelectBox.SelectBoxStyle) extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlogic.gdx.scenes.scene2d.utils.Disableable with com.badlogic.gdx.scenes.scene2d.ui.Styleable[com.badlogic.gdx.scenes.scene2d.ui.SelectBox.SelectBoxStyle] {
   var style: com.badlogic.gdx.scenes.scene2d.ui.SelectBox.SelectBoxStyle = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.SelectBox.SelectBoxStyle]
   final val items: com.badlogic.gdx.utils.Array[T] = new com.badlogic.gdx.utils.Array[T]().asInstanceOf[com.badlogic.gdx.utils.Array[T]]
   var scrollPane: com.badlogic.gdx.scenes.scene2d.ui.SelectBox.SelectBoxScrollPane[T] = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.SelectBox.SelectBoxScrollPane[T]]
@@ -11,24 +11,21 @@ class SelectBox[T] extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.ba
   private var alignment: scala.Int = com.badlogic.gdx.utils.Align.left
   var selectedPrefWidth: scala.Boolean = false
   final val selection: com.badlogic.gdx.scenes.scene2d.utils.ArraySelection[T] = new com.badlogic.gdx.scenes.scene2d.utils.ArraySelection[T](this.items).asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.ArraySelection[T]]
-  def this(style: com.badlogic.gdx.scenes.scene2d.ui.SelectBox.SelectBoxStyle) = {
-    this()
-    this.setStyle(style)
-    this.setSize(this.getPrefWidth(), this.getPrefHeight())
-    this.selection.setActor(this)
-    this.selection.setRequired(true)
-    this.scrollPane = this.newScrollPane()
-    this.addListener({
-      this.clickListener = new com.badlogic.gdx.scenes.scene2d.utils.ClickListener()
-      this.clickListener
-    })
-  }
   def this(skin: com.badlogic.gdx.scenes.scene2d.ui.Skin) = {
     this(skin.get(classOf[com.badlogic.gdx.scenes.scene2d.ui.SelectBox.SelectBoxStyle]))
   }
   def this(skin: com.badlogic.gdx.scenes.scene2d.ui.Skin, styleName: java.lang.String) = {
     this(skin.get(styleName, classOf[com.badlogic.gdx.scenes.scene2d.ui.SelectBox.SelectBoxStyle]))
   }
+  this.setStyle(style$p)
+  this.setSize(this.getPrefWidth(), this.getPrefHeight())
+  this.selection.setActor(this)
+  this.selection.setRequired(true)
+  this.scrollPane = this.newScrollPane()
+  this.addListener({
+    this.clickListener = new com.badlogic.gdx.scenes.scene2d.utils.ClickListener()
+    this.clickListener
+  })
   def newScrollPane(): com.badlogic.gdx.scenes.scene2d.ui.SelectBox.SelectBoxScrollPane[T] = {
     return new com.badlogic.gdx.scenes.scene2d.ui.SelectBox.SelectBoxScrollPane[T](this).asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.SelectBox.SelectBoxScrollPane[T]]
   }
@@ -310,27 +307,24 @@ class SelectBox[T] extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.ba
 object SelectBox {
   export com.badlogic.gdx.scenes.scene2d.ui.Widget.{temp => _, SelectBoxScrollPane => _, SelectBoxStyle => _, *}
   final val temp: com.badlogic.gdx.math.Vector2 = new com.badlogic.gdx.math.Vector2()
-  class SelectBoxScrollPane[T] extends com.badlogic.gdx.scenes.scene2d.ui.ScrollPane {
+  class SelectBoxScrollPane[T](selectBox$p: SelectBox[T]) extends com.badlogic.gdx.scenes.scene2d.ui.ScrollPane(null, selectBox$p.style.scrollStyle) {
     var selectBox: SelectBox[T] = null.asInstanceOf[SelectBox[T]]
     var maxListCount: scala.Int = 0
     private final val stagePosition: com.badlogic.gdx.math.Vector2 = new com.badlogic.gdx.math.Vector2()
     var list: com.badlogic.gdx.scenes.scene2d.ui.List[T] = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.List[T]]
     private var hideListener: com.badlogic.gdx.scenes.scene2d.InputListener = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.InputListener]
     private var previousScrollFocus: com.badlogic.gdx.scenes.scene2d.Actor = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.Actor]
-    def this(selectBox: SelectBox[T]) = {
-      this()
-      this.selectBox = selectBox
-      this.setOverscroll(false, false)
-      this.setFadeScrollBars(false)
-      this.setScrollingDisabled(true, false)
-      this.list = this.newList()
-      this.list.setTouchable(com.badlogic.gdx.scenes.scene2d.Touchable.disabled)
-      this.list.setTypeToSelect(true)
-      this.setActor(this.list)
-      this.list.addListener(new com.badlogic.gdx.scenes.scene2d.utils.ClickListener())
-      this.addListener(new com.badlogic.gdx.scenes.scene2d.InputListener())
-      this.hideListener = new com.badlogic.gdx.scenes.scene2d.InputListener()
-    }
+    this.selectBox = selectBox$p
+    this.setOverscroll(false, false)
+    this.setFadeScrollBars(false)
+    this.setScrollingDisabled(true, false)
+    this.list = this.newList()
+    this.list.setTouchable(com.badlogic.gdx.scenes.scene2d.Touchable.disabled)
+    this.list.setTypeToSelect(true)
+    this.setActor(this.list)
+    this.list.addListener(new com.badlogic.gdx.scenes.scene2d.utils.ClickListener())
+    this.addListener(new com.badlogic.gdx.scenes.scene2d.InputListener())
+    this.hideListener = new com.badlogic.gdx.scenes.scene2d.InputListener()
     def newList(): com.badlogic.gdx.scenes.scene2d.ui.List[T] = {
       return new com.badlogic.gdx.scenes.scene2d.ui.List[T](this.selectBox.style.listStyle)
     }

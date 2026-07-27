@@ -98,15 +98,12 @@ class DragAndDrop {
 }
 object DragAndDrop {
   final val tmpVector: com.badlogic.gdx.math.Vector2 = new com.badlogic.gdx.math.Vector2()
-  abstract class Source {
+  abstract class Source(actor$p: com.badlogic.gdx.scenes.scene2d.Actor) {
     var actor: com.badlogic.gdx.scenes.scene2d.Actor = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.Actor]
-    def this(actor: com.badlogic.gdx.scenes.scene2d.Actor) = {
-      this()
-      if (actor == null) {
-        throw new java.lang.IllegalArgumentException("actor cannot be null.")
-      } else ()
-      this.actor = actor
-    }
+    if (actor$p == null) {
+      throw new java.lang.IllegalArgumentException("actor cannot be null.")
+    } else ()
+    this.actor = actor$p
     def dragStart(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float, pointer: scala.Int): com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop.Payload
     def drag(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float, pointer: scala.Int): scala.Unit = {
       ()
@@ -118,19 +115,16 @@ object DragAndDrop {
       return this.actor
     }
   }
-  abstract class Target {
+  abstract class Target(actor$p: com.badlogic.gdx.scenes.scene2d.Actor) {
     var actor: com.badlogic.gdx.scenes.scene2d.Actor = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.Actor]
-    def this(actor: com.badlogic.gdx.scenes.scene2d.Actor) = {
-      this()
-      if (actor == null) {
-        throw new java.lang.IllegalArgumentException("actor cannot be null.")
-      } else ()
-      this.actor = actor
-      val stage: com.badlogic.gdx.scenes.scene2d.Stage = actor.getStage()
-      if ((stage != null) && (actor == stage.getRoot())) {
-        throw new java.lang.IllegalArgumentException("The stage root cannot be a drag and drop target.")
-      } else ()
-    }
+    val stage: com.badlogic.gdx.scenes.scene2d.Stage = actor$p.getStage()
+    if (actor$p == null) {
+      throw new java.lang.IllegalArgumentException("actor cannot be null.")
+    } else ()
+    this.actor = actor$p
+    if ((stage != null) && (actor$p == stage.getRoot())) {
+      throw new java.lang.IllegalArgumentException("The stage root cannot be a drag and drop target.")
+    } else ()
     def drag(source: com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop.Source, payload: com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop.Payload, x: scala.Float, y: scala.Float, pointer: scala.Int): scala.Boolean
     def reset(source: com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop.Source, payload: com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop.Payload): scala.Unit = {
       ()

@@ -1,10 +1,7 @@
 package com.badlogic.gdx.assets.loaders
 
-class I18NBundleLoader extends com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader[com.badlogic.gdx.utils.I18NBundle, com.badlogic.gdx.assets.loaders.I18NBundleLoader.I18NBundleParameter] {
+class I18NBundleLoader(resolver$p: com.badlogic.gdx.assets.loaders.FileHandleResolver) extends com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader[com.badlogic.gdx.utils.I18NBundle, com.badlogic.gdx.assets.loaders.I18NBundleLoader.I18NBundleParameter](resolver$p) {
   var bundle: com.badlogic.gdx.utils.I18NBundle = null.asInstanceOf[com.badlogic.gdx.utils.I18NBundle]
-  def this(resolver: com.badlogic.gdx.assets.loaders.FileHandleResolver) = {
-    this()
-  }
   def loadAsync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.assets.loaders.I18NBundleLoader.I18NBundleParameter): scala.Unit = {
     this.bundle = null
     var locale: java.util.Locale = null.asInstanceOf[java.util.Locale]
@@ -32,17 +29,17 @@ class I18NBundleLoader extends com.badlogic.gdx.assets.loaders.AsynchronousAsset
   }
 }
 object I18NBundleLoader {
-  class I18NBundleParameter extends com.badlogic.gdx.assets.AssetLoaderParameters[com.badlogic.gdx.utils.I18NBundle] {
+  class I18NBundleParameter(locale$p: java.util.Locale, encoding$p: java.lang.String) extends com.badlogic.gdx.assets.AssetLoaderParameters[com.badlogic.gdx.utils.I18NBundle] {
     var locale: java.util.Locale = null.asInstanceOf[java.util.Locale]
     var encoding: java.lang.String = null.asInstanceOf[java.lang.String]
-    def this(locale: java.util.Locale, encoding: java.lang.String) = {
-      this()
-      this.locale = locale
-      this.encoding = encoding
+    def this() = {
+      this(null, null)
     }
     def this(locale: java.util.Locale) = {
       this(locale, null)
     }
+    this.locale = locale$p
+    this.encoding = encoding$p
   }
   object I18NBundleParameter {
     export com.badlogic.gdx.assets.AssetLoaderParameters.*

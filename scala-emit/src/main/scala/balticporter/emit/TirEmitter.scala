@@ -16,7 +16,9 @@ import balticporter.tir.*
 final class TirEmitter(source: Program):
   // normalize away Java member-name clashes (a field `x` alongside a method `x()`) before
   // rendering — Scala forbids them; renaming the field symbol propagates to every reference.
-  private val program = TirEmitter.resolveMemberClashes(source)
+  private val program = TirEmitter.funnelParamRenames(TirEmitter.resolveMemberClashes(source))
+  /** which Java constructor becomes each class's Scala primary — a whole-program decision. */
+  private val plans = CtorFunnel.Plans(program)
 
   def emit: String = program.units.map(emitUnit).mkString("\n\n")
 
@@ -148,10 +150,14 @@ final class TirEmitter(source: Program):
       else if s.flags.isTrait then "trait"
       else "class"
     val tps     = if cd.tparams.isEmpty then "" else "[" + cd.tparams.map(typeParam).mkString(", ") + "]"
-    // lower Java constructors: promote the no-arg constructor to the PRIMARY (its `def this()`
-    // would clash with Scala's implicit primary), inlining its body and moving any `super(args)`
-    // it passes into the `extends` clause (which also fixes parents that need constructor args).
-    val (loweredBody, superArgs) = if s.flags.isModule then (cd.body, Nil) else lowerCtors(cd.body)
+    // lower Java constructors: `CtorFunnel` nominates one to become Scala's PRIMARY. Its body is
+    // inlined (those statements run at construction), its `super(args)` moves into the `extends`
+    // clause (which also fixes parents that need constructor arguments), and its PARAMETERS become
+    // the class's parameters. Every other constructor stays a `def this(...)` delegating to it.
+    val plan    = if s.flags.isModule then CtorFunnel.Plan.none else plans(cd)
+    val (loweredBody, superArgs) = (lowerCtors(cd.body, plan), plan.superArgs)
+    val pparams = plan.primaryParams
+    val prim    = if pparams.isEmpty then "" else s"(${pparams.map(param).mkString(", ")})"
     val parents = cd.parents.map(parent).filter(_.nonEmpty) match
       case Nil                          => Nil
       case h :: t if superArgs.nonEmpty => s"$h(${superArgs.map(term(_, i)).mkString(", ")})" :: t
@@ -166,21 +172,21 @@ final class TirEmitter(source: Program):
     }
     // an all-static class can only collapse to an `object` if nobody EXTENDS it (you can't extend
     // an object) — otherwise it stays a `class` with its statics in a companion object.
-    if kw == "class" && parents.isEmpty && cd.body.nonEmpty && !hasInstanceState && !extendedTypes(cd.symbol) then
+    if kw == "class" && parents.isEmpty && cd.body.nonEmpty && !hasInstanceState && pparams.isEmpty && !extendedTypes(cd.symbol) then
       val members = cd.body.filterNot { case d: Tree.DefDef => sym(d.symbol).name == "<init>"; case _ => false }
-      val ob = orderBody(members).map(stat(_, i + 1)).filter(_.nonEmpty).mkString("\n")
+      val ob = orderBody(members, pparams.nonEmpty).map(stat(_, i + 1)).filter(_.nonEmpty).mkString("\n")
       return s"${ind(i)}object ${esc(s.name)}$tps {\n$ob\n${ind(i)}}"
     // Java statics have no instance home in Scala — they move to the companion object.
     val (statics, instance) = if s.flags.isModule then (Nil, loweredBody) else loweredBody.partition(isStatic)
     val self    = cd.selfType.map(st => s"${ind(i + 1)}self: ${tpe(st.tpe)} =>\n").getOrElse("")
-    val body    = joinStats(orderBody(instance).map(stat(_, i + 1)).filter(_.nonEmpty))
+    val body    = joinStats(orderBody(instance, pparams.nonEmpty).map(stat(_, i + 1)).filter(_.nonEmpty))
     val open    = if body.isEmpty && self.isEmpty then "" else s" {\n$self$body\n${ind(i)}}"
     val abs     = if kw == "class" && s.flags.isAbstract then "abstract " else ""
     // Scala (unlike Java) forbids a NON-private member from referring to a `private` type in its
     // signature — a public `Values extends MapIterator` / field `pool: ModelInstancePool` where the
     // referent is private is an error. Java nested classes leak this way constantly; drop the class's
     // `private` (visibility-widening is always compile-safe) so those references type-check.
-    val cls     = s"${ind(i)}${mods(s.flags.copy(isPrivate = false))}$abs$kw ${esc(s.name)}$tps$ext$open"
+    val cls     = s"${ind(i)}${mods(s.flags.copy(isPrivate = false))}$abs$kw ${esc(s.name)}$tps$prim$ext$open"
     // Java interface/parent CONSTANTS are `static`, so they live in the parent's companion object
     // — which Scala does NOT inherit. Re-export each static-bearing parent's companion so an
     // inherited constant accessed via a subclass (`GL30.GL_LUMINANCE`, declared in `GL20`) resolves.
@@ -236,32 +242,14 @@ final class TirEmitter(source: Program):
 
   // a Java `static` nested class has no instance home in Scala → it moves to the companion
   // `object` alongside static vals/defs. A non-static inner class stays in the class body.
-  /** Promote a Java no-arg constructor to Scala's PRIMARY: `def this()` would clash with the
-    * implicit primary, so inline its body (statements run at construction) in place of the `def
-    * this()`, and lift a leading `super(args)` out for the `extends` clause (returned separately).
-    * Other constructors stay secondary and delegate to `this()`. Returns (body, super-args). */
-  private def lowerCtors(body: List[Statement]): (List[Statement], List[Term]) =
-    def stmts(c: Tree.DefDef): List[Statement] = c.rhs match
-      case Some(Tree.Block(s, _, _, _)) => s
-      case Some(t)                      => List(t)
-      case None                         => Nil
-    // promote ONLY a no-arg constructor that is an actual BASE (calls super, explicitly or
-    // implicitly) — not one that DELEGATES via `this(args)` to another constructor (promoting
-    // that would make the class both take and not-take those params).
-    def delegatesToThis(c: Tree.DefDef): Boolean = stmts(c).headOption.exists {
-      case Tree.Apply(Tree.Select(r, m, _, _), args, _, _, _) => sym(m).name == "<init>" && !r.isInstanceOf[Tree.Super] && args.nonEmpty
-      case _ => false
-    }
-    body.collectFirst {
-      case d: Tree.DefDef if sym(d.symbol).name == "<init>" && d.paramss.flatten.isEmpty && !delegatesToThis(d) => d
-    } match
-      case Some(c) =>
-        val (superArgs, rest) = stmts(c) match
-          case Tree.Apply(Tree.Select(_: Tree.Super, m, _, _), args, _, _, _) :: tl if sym(m).name == "<init>" => (args, tl)
-          case Tree.Apply(Tree.Select(_, m, _, _), args, _, _, _) :: tl if sym(m).name == "<init>" && args.isEmpty => (Nil, tl)
-          case all => (Nil, all)
-        (body.flatMap { case d: Tree.DefDef if d.symbol == c.symbol => rest; case s => List(s) }, superArgs)
-      case None => (body, Nil)
+  /** Replace the constructor `CtorFunnel` promoted to Scala's PRIMARY by its own body statements
+    * — they run at construction, which is where a Scala class body runs them too. Its `super(args)`
+    * has already been lifted into the `extends` clause and its parameters into the class's
+    * parameter list; every other constructor stays a secondary `def this(...)`. */
+  private def lowerCtors(body: List[Statement], plan: CtorFunnel.Plan): List[Statement] =
+    plan.primary match
+      case None    => body
+      case Some(c) => body.flatMap { case d: Tree.DefDef if d.symbol == c.symbol => plan.primaryBody; case s => List(s) }
 
   /** a Java `static { … }` / instance `{ … }` initializer block, carried as a synthetic member. */
   private def isInitBlock(d: Tree.DefDef): Boolean =
@@ -278,7 +266,7 @@ final class TirEmitter(source: Program):
     * before it), then everything else. Arity is not a reliable proxy — a 3-arg convenience ctor can
     * delegate to a 1-arg one (`Texture(pixmap,fmt,mip)` → `Texture(data)`), so we follow the actual
     * `this(...)` edges, keyed by the target ctor's own symbol. */
-  private def orderBody(body: List[Statement]): List[Statement] =
+  private def orderBody(body: List[Statement], paramfulPrimary: Boolean = false): List[Statement] =
     def isCtor(s: Statement) = s match { case d: Tree.DefDef => sym(d.symbol).name == "<init>"; case _ => false }
     // the peer ctor this one delegates to via a leading `this(args)` (NOT super, NOT the no-arg
     // primary) — its symbol identifies the exact target constructor.
@@ -288,8 +276,10 @@ final class TirEmitter(source: Program):
       case _ => None
     // a no-arg constructor whose body is only super/this delegation is degenerate — Scala's
     // implicit primary constructor already is no-arg, and `def this() = this()` self-recurses.
+    // Only when the primary IS no-arg: against a PARAMFUL primary a `C() { this(16); }` is the
+    // only thing that makes `new C()` legal at all, so it must be emitted.
     def degenerate(d: Tree.DefDef): Boolean =
-      d.paramss.flatten.isEmpty && (d.rhs match
+      !paramfulPrimary && d.paramss.flatten.isEmpty && (d.rhs match
         case Some(Tree.Block(stats, _, _, _)) =>
           stats.forall { case Tree.Apply(Tree.Select(_, m, _, _), _, _, _, _) => sym(m).name == "<init>"; case _ => false }
         case _ => true)
@@ -667,6 +657,59 @@ final class TirEmitter(source: Program):
     }
 
 object TirEmitter:
+  /** Promoting a constructor to Scala's primary widens the SCOPE of everything it declares: its
+    * parameters become class parameters and its top-level locals become class members, both
+    * visible to the whole body instead of to the constructor alone. That is the only hazard in
+    * the promotion, and it has two faces — a name shared with one of the class's own members is
+    * a double definition, and a name shared with an INHERITED member silently captures every
+    * unqualified read of it (`this.viewport = viewport` still works; a bare `viewport` no longer
+    * means the field). Suffixing `$p` removes both: parameters are positional and the locals are
+    * unreachable from outside, so the rename is invisible everywhere it matters.
+    */
+  def funnelParamRenames(p: Program): Program =
+    val renames = collection.mutable.Map[SymId, String]()
+    def nm(id: SymId): String = p.symbolOf(id).map(_.name).getOrElse("")
+    def parentSyms(cd: Tree.ClassDef): List[SymId] =
+      def hs(t: TypeRepr): Option[SymId] = t match
+        case TypeRepr.TypeRef(_, s)      => Some(s)
+        case TypeRepr.AppliedType(tc, _) => hs(tc)
+        case _                           => scala.None
+      cd.parents.flatMap { case tt: TypeTree => hs(tt.tpe); case t: Term => hs(t.tpe) }
+    val declOf   = collection.mutable.Map[SymId, Tree.ClassDef]()
+    def index(cd: Tree.ClassDef): Unit =
+      declOf(cd.symbol) = cd
+      cd.body.foreach { case c: Tree.ClassDef => index(c); case _ => () }
+    p.units.foreach(index)
+    def ownNames(cd: Tree.ClassDef): Set[String] =
+      cd.body.collect {
+        case d: Tree.DefDef if nm(d.symbol) != "<init>" => nm(d.symbol)
+        case v: Tree.ValDef                             => nm(v.symbol)
+        case c: Tree.ClassDef                           => nm(c.symbol)
+      }.toSet
+    def visibleNames(cd: Tree.ClassDef, seen: Set[SymId] = Set.empty): Set[String] =
+      if seen(cd.symbol) then Set.empty
+      else ownNames(cd) ++ parentSyms(cd).flatMap(declOf.get).flatMap(visibleNames(_, seen + cd.symbol))
+    val plans = CtorFunnel.Plans(p)
+    def scan(cd: Tree.ClassDef): Unit =
+      val plan = plans(cd)
+      if plan.primary.isDefined then
+        val taken = collection.mutable.Set.from(visibleNames(cd))
+        // the promoted constructor's params, then the top-level locals of its body (nested
+        // blocks keep their own scope and never reach the class body)
+        val widened = plan.primaryParams ++ plan.primaryBody.collect { case v: Tree.ValDef => v }
+        widened.foreach { v =>
+          val n = nm(v.symbol)
+          if taken(n) then
+            var fresh = n + "$p"
+            while taken(fresh) do fresh += "$"
+            taken += fresh
+            renames(v.symbol) = fresh
+        }
+      cd.body.foreach { case c: Tree.ClassDef => scan(c); case _ => () }
+    p.units.foreach(scan)
+    if renames.isEmpty then p
+    else new Program(p.units, SymbolTable(p.symbols.all.map(s => renames.get(s.id).map(n => s.copy(name = n)).getOrElse(s))), p.xref)
+
   /** Rename any field whose simple name collides with a method in the same class (legal in
     * Java, illegal in Scala) by suffixing `$field`. Renaming the symbol propagates to every
     * reference, since the emitter reads names from the symbol table. */

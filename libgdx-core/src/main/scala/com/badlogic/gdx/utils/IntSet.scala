@@ -1,6 +1,6 @@
 package com.badlogic.gdx.utils
 
-class IntSet {
+class IntSet(initialCapacity: scala.Int, loadFactor$p: scala.Float) {
   var size: scala.Int = 0
   var keyTable: scala.Array[scala.Int] = null.asInstanceOf[scala.Array[scala.Int]]
   var hasZeroValue: scala.Boolean = false
@@ -10,17 +10,9 @@ class IntSet {
   var mask: scala.Int = 0
   private var iterator1: com.badlogic.gdx.utils.IntSet.IntSetIterator = null.asInstanceOf[com.badlogic.gdx.utils.IntSet.IntSetIterator]
   private var iterator2: com.badlogic.gdx.utils.IntSet.IntSetIterator = null.asInstanceOf[com.badlogic.gdx.utils.IntSet.IntSetIterator]
-  def this(initialCapacity: scala.Int, loadFactor: scala.Float) = {
-    this()
-    if ((loadFactor <= 0.0f) || (loadFactor >= 1.0f)) {
-      throw new java.lang.IllegalArgumentException("loadFactor must be > 0 and < 1: " + loadFactor)
-    } else ()
-    this.loadFactor = loadFactor
-    val tableSize: scala.Int = com.badlogic.gdx.utils.ObjectSet.tableSize(initialCapacity, loadFactor)
-    this.threshold = (tableSize * loadFactor).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
-    this.mask = tableSize - 1
-    this.shift = java.lang.Long.numberOfLeadingZeros(this.mask)
-    this.keyTable = new scala.Array[scala.Int](tableSize)
+  val tableSize: scala.Int = com.badlogic.gdx.utils.ObjectSet.tableSize(initialCapacity, loadFactor$p)
+  def this() = {
+    this(51, 0.8f)
   }
   def this(initialCapacity: scala.Int) = {
     this(initialCapacity, 0.8f)
@@ -31,6 +23,14 @@ class IntSet {
     this.size = set.size
     this.hasZeroValue = set.hasZeroValue
   }
+  if ((loadFactor$p <= 0.0f) || (loadFactor$p >= 1.0f)) {
+    throw new java.lang.IllegalArgumentException("loadFactor must be > 0 and < 1: " + loadFactor$p)
+  } else ()
+  this.loadFactor = loadFactor$p
+  this.threshold = (tableSize * loadFactor$p).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
+  this.mask = tableSize - 1
+  this.shift = java.lang.Long.numberOfLeadingZeros(this.mask)
+  this.keyTable = new scala.Array[scala.Int](tableSize)
   def place(item: scala.Int): scala.Int = {
     return ((item * -7046029254386353131L) >>> this.shift).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
   }
@@ -301,17 +301,14 @@ object IntSet {
     set.addAll(array)
     return set
   }
-  class IntSetIterator {
+  class IntSetIterator(set$p: IntSet) {
     var hasNext: scala.Boolean = false
     var set: IntSet = null.asInstanceOf[IntSet]
     var nextIndex: scala.Int = 0
     var currentIndex: scala.Int = 0
     var valid: scala.Boolean = true
-    def this(set: IntSet) = {
-      this()
-      this.set = set
-      this.reset()
-    }
+    this.set = set$p
+    this.reset()
     def reset(): scala.Unit = {
       this.currentIndex = com.badlogic.gdx.utils.IntSet.IntSetIterator.INDEX_ILLEGAL
       this.nextIndex = com.badlogic.gdx.utils.IntSet.IntSetIterator.INDEX_ZERO

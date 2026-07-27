@@ -1,6 +1,6 @@
 package com.badlogic.gdx.graphics.g3d.utils
 
-final class DefaultTextureBinder extends com.badlogic.gdx.graphics.g3d.utils.TextureBinder {
+final class DefaultTextureBinder(method$p: scala.Int, offset$p: scala.Int, count$arg: scala.Int) extends com.badlogic.gdx.graphics.g3d.utils.TextureBinder {
   private var offset: scala.Int = 0
   private var count: scala.Int = 0
   private var textures: scala.Array[com.badlogic.gdx.graphics.GLTexture] = null.asInstanceOf[scala.Array[com.badlogic.gdx.graphics.GLTexture]]
@@ -11,28 +11,25 @@ final class DefaultTextureBinder extends com.badlogic.gdx.graphics.g3d.utils.Tex
   private var bindCount: scala.Int = 0
   private final val tempDesc: com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[?] = new com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor().asInstanceOf[com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[?]]
   private var currentTexture: scala.Int = 0
-  def this(method: scala.Int, offset: scala.Int, count$arg: scala.Int) = {
-    this()
-    var count: scala.Int = count$arg
-    val max: scala.Int = java.lang.Math.min(DefaultTextureBinder.getMaxTextureUnits(), DefaultTextureBinder.MAX_GLES_UNITS)
-    if (count < 0) {
-      count = max - offset
-    } else ()
-    if (((offset < 0) || (count < 0)) || ((offset + count) > max)) {
-      throw new com.badlogic.gdx.utils.GdxRuntimeException("Illegal arguments")
-    } else ()
-    this.method = method
-    this.offset = offset
-    this.count = count
-    this.textures = new scala.Array[com.badlogic.gdx.graphics.GLTexture](count)
-    this.unitsLRU = if (method == DefaultTextureBinder.LRU) new scala.Array[scala.Int](count) else null.asInstanceOf[scala.Array[scala.Int]]
-  }
+  var count$p: scala.Int = count$arg
+  val max: scala.Int = java.lang.Math.min(DefaultTextureBinder.getMaxTextureUnits(), DefaultTextureBinder.MAX_GLES_UNITS)
   def this(method: scala.Int, offset: scala.Int) = {
     this(method, offset, -1)
   }
   def this(method: scala.Int) = {
     this(method, 0)
   }
+  if (count$p < 0) {
+    count$p = max - offset$p
+  } else ()
+  if (((offset$p < 0) || (count$p < 0)) || ((offset$p + count$p) > max)) {
+    throw new com.badlogic.gdx.utils.GdxRuntimeException("Illegal arguments")
+  } else ()
+  this.method = method$p
+  this.offset = offset$p
+  this.count = count$p
+  this.textures = new scala.Array[com.badlogic.gdx.graphics.GLTexture](count$p)
+  this.unitsLRU = if (method$p == DefaultTextureBinder.LRU) new scala.Array[scala.Int](count$p) else null.asInstanceOf[scala.Array[scala.Int]]
   def begin(): scala.Unit = {
     { var i: scala.Int = 0; while (i < this.count) { {
       this.textures(i) = null

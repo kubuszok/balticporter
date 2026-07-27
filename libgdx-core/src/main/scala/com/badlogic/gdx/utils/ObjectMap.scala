@@ -422,17 +422,14 @@ object ObjectMap {
       return (java.lang.String.valueOf(this.key) + "=") + this.value
     }
   }
-  abstract class MapIterator[K, V, I] extends scala.collection.Iterable[I] with scala.collection.Iterator[I] {
+  abstract class MapIterator[K, V, I](map$p: ObjectMap[K, V]) extends scala.collection.Iterable[I] with scala.collection.Iterator[I] {
     var hasNext$field: scala.Boolean = false
     var map: ObjectMap[K, V] = null.asInstanceOf[ObjectMap[K, V]]
     var nextIndex: scala.Int = 0
     var currentIndex: scala.Int = 0
     var valid: scala.Boolean = true
-    def this(map: ObjectMap[K, V]) = {
-      this()
-      this.map = map
-      this.reset()
-    }
+    this.map = map$p
+    this.reset()
     def reset(): scala.Unit = {
       this.currentIndex = -1
       this.nextIndex = -1
@@ -479,11 +476,8 @@ object ObjectMap {
       this.currentIndex = -1
     }
   }
-  class Entries[K, V] extends com.badlogic.gdx.utils.ObjectMap.MapIterator[K, V, com.badlogic.gdx.utils.ObjectMap.Entry[K, V]] {
+  class Entries[K, V](map$p: ObjectMap[K, V]) extends com.badlogic.gdx.utils.ObjectMap.MapIterator[K, V, com.badlogic.gdx.utils.ObjectMap.Entry[K, V]](map$p) {
     var entry: com.badlogic.gdx.utils.ObjectMap.Entry[K, V] = new com.badlogic.gdx.utils.ObjectMap.Entry[K, V]()
-    def this(map: ObjectMap[K, V]) = {
-      this()
-    }
     def next(): com.badlogic.gdx.utils.ObjectMap.Entry[K, V] = {
       if (!hasNext$field) {
         throw new java.util.NoSuchElementException()
@@ -508,10 +502,7 @@ object ObjectMap {
       return this
     }
   }
-  class Values[V] extends com.badlogic.gdx.utils.ObjectMap.MapIterator[java.lang.Object, V, V] {
-    def this(map: ObjectMap[?, V]) = {
-      this()
-    }
+  class Values[V](map$p: ObjectMap[?, V]) extends com.badlogic.gdx.utils.ObjectMap.MapIterator[java.lang.Object, V, V](map$p.asInstanceOf[ObjectMap[java.lang.Object, V]]) {
     def hasNext(): scala.Boolean = {
       if (!valid) {
         throw new com.badlogic.gdx.utils.GdxRuntimeException("#iterator() cannot be used nested.")
@@ -543,10 +534,7 @@ object ObjectMap {
       return array
     }
   }
-  class Keys[K] extends com.badlogic.gdx.utils.ObjectMap.MapIterator[K, java.lang.Object, K] {
-    def this(map: ObjectMap[K, ?]) = {
-      this()
-    }
+  class Keys[K](map$p: ObjectMap[K, ?]) extends com.badlogic.gdx.utils.ObjectMap.MapIterator[K, java.lang.Object, K](map$p.asInstanceOf[ObjectMap[K, java.lang.Object]]) {
     def hasNext(): scala.Boolean = {
       if (!valid) {
         throw new com.badlogic.gdx.utils.GdxRuntimeException("#iterator() cannot be used nested.")

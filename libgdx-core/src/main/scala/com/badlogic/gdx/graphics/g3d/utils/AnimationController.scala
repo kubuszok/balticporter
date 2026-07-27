@@ -1,6 +1,6 @@
 package com.badlogic.gdx.graphics.g3d.utils
 
-class AnimationController extends com.badlogic.gdx.graphics.g3d.utils.BaseAnimationController {
+class AnimationController(target$p: com.badlogic.gdx.graphics.g3d.ModelInstance) extends com.badlogic.gdx.graphics.g3d.utils.BaseAnimationController(target$p) {
   final val animationPool: com.badlogic.gdx.utils.Pool[com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationDesc] = new com.badlogic.gdx.utils.Pool[com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationDesc]()
   var current: com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationDesc = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationDesc]
   var queued: com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationDesc = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationDesc]
@@ -12,9 +12,6 @@ class AnimationController extends com.badlogic.gdx.graphics.g3d.utils.BaseAnimat
   var paused: scala.Boolean = false
   var allowSameAnimation: scala.Boolean = false
   private var justChangedAnimation: scala.Boolean = false
-  def this(target: com.badlogic.gdx.graphics.g3d.ModelInstance) = {
-    this()
-  }
   private def obtain(anim: com.badlogic.gdx.graphics.g3d.model.Animation, offset: scala.Float, duration: scala.Float, loopCount: scala.Int, speed: scala.Float, listener: com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationListener): com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationDesc = {
     if (anim == null) {
       return null

@@ -1,16 +1,13 @@
 package com.badlogic.gdx.utils
 
-class Logger {
+class Logger(tag$p: java.lang.String, level$p: scala.Int) {
   private var tag: java.lang.String = null.asInstanceOf[java.lang.String]
   private var level: scala.Int = 0
-  def this(tag: java.lang.String, level: scala.Int) = {
-    this()
-    this.tag = tag
-    this.level = level
-  }
   def this(tag: java.lang.String) = {
     this(tag, Logger.ERROR)
   }
+  this.tag = tag$p
+  this.level = level$p
   def debug(message: java.lang.String): scala.Unit = {
     if (this.level >= Logger.DEBUG) {
       com.badlogic.gdx.Gdx.app.debug(this.tag, message)

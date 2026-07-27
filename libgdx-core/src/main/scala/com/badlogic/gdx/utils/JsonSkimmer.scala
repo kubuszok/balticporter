@@ -1024,17 +1024,14 @@ object JsonSkimmer {
   private def init__json_eof_actions_0(): scala.Array[scala.Byte] = {
     return scala.Array[scala.Byte](0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 17, 0, 0, 0)
   }
-  class JsonToken {
+  class JsonToken(buffer$p: com.badlogic.gdx.utils.CharArray) {
     var buffer: com.badlogic.gdx.utils.CharArray = null.asInstanceOf[com.badlogic.gdx.utils.CharArray]
     var chars: scala.Array[scala.Char] = null.asInstanceOf[scala.Array[scala.Char]]
     var start: scala.Int = 0
     var length: scala.Int = 0
     var unescape$field: scala.Boolean = false
     var `type`: com.badlogic.gdx.utils.JsonSkimmer.JsonToken.TokenType = com.badlogic.gdx.utils.JsonSkimmer.JsonToken.TokenType.other
-    def this(buffer: com.badlogic.gdx.utils.CharArray) = {
-      this()
-      this.buffer = buffer
-    }
+    this.buffer = buffer$p
     def equalsString(string: java.lang.String): scala.Boolean = {
       if (string == null) {
         return false

@@ -1,22 +1,19 @@
 package com.badlogic.gdx.scenes.scene2d.ui
 
-class Slider extends com.badlogic.gdx.scenes.scene2d.ui.ProgressBar {
+class Slider(min$p: scala.Float, max$p: scala.Float, stepSize$p: scala.Float, vertical$p: scala.Boolean, style$p: com.badlogic.gdx.scenes.scene2d.ui.Slider.SliderStyle) extends com.badlogic.gdx.scenes.scene2d.ui.ProgressBar(min$p, max$p, stepSize$p, vertical$p, style$p) {
   var button: scala.Int = -1
   var draggingPointer: scala.Int = -1
   var mouseOver: scala.Boolean = false
   private var visualInterpolationInverse: com.badlogic.gdx.math.Interpolation = com.badlogic.gdx.math.Interpolation.linear
   private var snapValues: scala.Array[scala.Float] = null.asInstanceOf[scala.Array[scala.Float]]
   private var threshold: scala.Float = 0.0f
-  def this(min: scala.Float, max: scala.Float, stepSize: scala.Float, vertical: scala.Boolean, style: com.badlogic.gdx.scenes.scene2d.ui.Slider.SliderStyle) = {
-    this()
-    this.addListener(new com.badlogic.gdx.scenes.scene2d.InputListener())
-  }
   def this(min: scala.Float, max: scala.Float, stepSize: scala.Float, vertical: scala.Boolean, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin) = {
     this(min, max, stepSize, vertical, skin.get("default-" + (if (vertical) "vertical" else "horizontal"), classOf[com.badlogic.gdx.scenes.scene2d.ui.Slider.SliderStyle]))
   }
   def this(min: scala.Float, max: scala.Float, stepSize: scala.Float, vertical: scala.Boolean, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin, styleName: java.lang.String) = {
     this(min, max, stepSize, vertical, skin.get(styleName, classOf[com.badlogic.gdx.scenes.scene2d.ui.Slider.SliderStyle]))
   }
+  this.addListener(new com.badlogic.gdx.scenes.scene2d.InputListener())
   def getStyle(): com.badlogic.gdx.scenes.scene2d.ui.Slider.SliderStyle = {
     return super.getStyle().asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Slider.SliderStyle]
   }

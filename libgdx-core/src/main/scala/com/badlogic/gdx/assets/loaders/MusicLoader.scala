@@ -1,10 +1,7 @@
 package com.badlogic.gdx.assets.loaders
 
-class MusicLoader extends com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader[com.badlogic.gdx.audio.Music, com.badlogic.gdx.assets.loaders.MusicLoader.MusicParameter] {
+class MusicLoader(resolver$p: com.badlogic.gdx.assets.loaders.FileHandleResolver) extends com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader[com.badlogic.gdx.audio.Music, com.badlogic.gdx.assets.loaders.MusicLoader.MusicParameter](resolver$p) {
   private var music: com.badlogic.gdx.audio.Music = null.asInstanceOf[com.badlogic.gdx.audio.Music]
-  def this(resolver: com.badlogic.gdx.assets.loaders.FileHandleResolver) = {
-    this()
-  }
   def getLoadedMusic(): com.badlogic.gdx.audio.Music = {
     return this.music
   }

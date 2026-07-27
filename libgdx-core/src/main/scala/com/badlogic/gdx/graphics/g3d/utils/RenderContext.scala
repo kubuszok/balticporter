@@ -1,6 +1,6 @@
 package com.badlogic.gdx.graphics.g3d.utils
 
-class RenderContext {
+class RenderContext(textures: com.badlogic.gdx.graphics.g3d.utils.TextureBinder) {
   var textureBinder: com.badlogic.gdx.graphics.g3d.utils.TextureBinder = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.utils.TextureBinder]
   private var blending: scala.Boolean = false
   private var blendSourceRgbFactor: scala.Int = 0
@@ -12,10 +12,7 @@ class RenderContext {
   private var depthRangeFar: scala.Float = 0.0f
   private var depthMask: scala.Boolean = false
   private var cullFace: scala.Int = 0
-  def this(textures: com.badlogic.gdx.graphics.g3d.utils.TextureBinder) = {
-    this()
-    this.textureBinder = textures
-  }
+  this.textureBinder = textures
   def begin(): scala.Unit = {
     com.badlogic.gdx.Gdx.gl.glDisable(com.badlogic.gdx.graphics.GL20.GL_DEPTH_TEST)
     this.depthFunc = 0

@@ -1,22 +1,19 @@
 package com.badlogic.gdx.graphics.glutils
 
-class PixmapTextureData extends com.badlogic.gdx.graphics.TextureData {
+class PixmapTextureData(pixmap$p: com.badlogic.gdx.graphics.Pixmap, format$p: com.badlogic.gdx.graphics.Pixmap.Format, useMipMaps$p: scala.Boolean, disposePixmap$p: scala.Boolean, managed$p: scala.Boolean) extends com.badlogic.gdx.graphics.TextureData {
   var pixmap: com.badlogic.gdx.graphics.Pixmap = null.asInstanceOf[com.badlogic.gdx.graphics.Pixmap]
   var format: com.badlogic.gdx.graphics.Pixmap.Format = null.asInstanceOf[com.badlogic.gdx.graphics.Pixmap.Format]
   var useMipMaps$field: scala.Boolean = false
   var disposePixmap$field: scala.Boolean = false
   var managed: scala.Boolean = false
-  def this(pixmap: com.badlogic.gdx.graphics.Pixmap, format: com.badlogic.gdx.graphics.Pixmap.Format, useMipMaps: scala.Boolean, disposePixmap: scala.Boolean, managed: scala.Boolean) = {
-    this()
-    this.pixmap = pixmap
-    this.format = if (format == null) pixmap.getFormat() else format
-    this.useMipMaps$field = useMipMaps
-    this.disposePixmap$field = disposePixmap
-    this.managed = managed
-  }
   def this(pixmap: com.badlogic.gdx.graphics.Pixmap, format: com.badlogic.gdx.graphics.Pixmap.Format, useMipMaps: scala.Boolean, disposePixmap: scala.Boolean) = {
     this(pixmap, format, useMipMaps, disposePixmap, false)
   }
+  this.pixmap = pixmap$p
+  this.format = if (format$p == null) pixmap$p.getFormat() else format$p
+  this.useMipMaps$field = useMipMaps$p
+  this.disposePixmap$field = disposePixmap$p
+  this.managed = managed$p
   def disposePixmap(): scala.Boolean = {
     return this.disposePixmap$field
   }

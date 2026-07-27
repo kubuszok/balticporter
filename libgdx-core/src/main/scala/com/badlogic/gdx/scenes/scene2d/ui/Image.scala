@@ -1,6 +1,6 @@
 package com.badlogic.gdx.scenes.scene2d.ui
 
-class Image extends com.badlogic.gdx.scenes.scene2d.ui.Widget {
+class Image(drawable$p: com.badlogic.gdx.scenes.scene2d.utils.Drawable, scaling$p: com.badlogic.gdx.utils.Scaling, align$p: scala.Int) extends com.badlogic.gdx.scenes.scene2d.ui.Widget {
   private var scaling: com.badlogic.gdx.utils.Scaling = null.asInstanceOf[com.badlogic.gdx.utils.Scaling]
   private var align: scala.Int = com.badlogic.gdx.utils.Align.center
   private var imageX: scala.Float = 0.0f
@@ -8,21 +8,17 @@ class Image extends com.badlogic.gdx.scenes.scene2d.ui.Widget {
   private var imageWidth: scala.Float = 0.0f
   private var imageHeight: scala.Float = 0.0f
   private var drawable: com.badlogic.gdx.scenes.scene2d.utils.Drawable = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Drawable]
-  def this(drawable: com.badlogic.gdx.scenes.scene2d.utils.Drawable, scaling: com.badlogic.gdx.utils.Scaling, align: scala.Int) = {
-    this()
-    this.setDrawable(drawable)
-    this.scaling = scaling
-    this.align = align
-    this.setSize(this.getPrefWidth(), this.getPrefHeight())
+  def this(drawable: com.badlogic.gdx.scenes.scene2d.utils.Drawable) = {
+    this(drawable, com.badlogic.gdx.utils.Scaling.stretch, com.badlogic.gdx.utils.Align.center)
+  }
+  def this() = {
+    this(null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Drawable])
   }
   def this(patch: com.badlogic.gdx.graphics.g2d.NinePatch) = {
     this(new com.badlogic.gdx.scenes.scene2d.utils.NinePatchDrawable(patch), com.badlogic.gdx.utils.Scaling.stretch, com.badlogic.gdx.utils.Align.center)
   }
   def this(region: com.badlogic.gdx.graphics.g2d.TextureRegion) = {
     this(new com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable(region), com.badlogic.gdx.utils.Scaling.stretch, com.badlogic.gdx.utils.Align.center)
-  }
-  def this(drawable: com.badlogic.gdx.scenes.scene2d.utils.Drawable) = {
-    this(drawable, com.badlogic.gdx.utils.Scaling.stretch, com.badlogic.gdx.utils.Align.center)
   }
   def this(texture: com.badlogic.gdx.graphics.Texture) = {
     this(new com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable(new com.badlogic.gdx.graphics.g2d.TextureRegion(texture)))
@@ -33,6 +29,10 @@ class Image extends com.badlogic.gdx.scenes.scene2d.ui.Widget {
   def this(drawable: com.badlogic.gdx.scenes.scene2d.utils.Drawable, scaling: com.badlogic.gdx.utils.Scaling) = {
     this(drawable, scaling, com.badlogic.gdx.utils.Align.center)
   }
+  this.setDrawable(drawable$p)
+  this.scaling = scaling$p
+  this.align = align$p
+  this.setSize(this.getPrefWidth(), this.getPrefHeight())
   def layout(): scala.Unit = {
     if (this.drawable == null) {
       return

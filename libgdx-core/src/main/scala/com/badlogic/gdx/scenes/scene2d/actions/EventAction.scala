@@ -1,14 +1,11 @@
 package com.badlogic.gdx.scenes.scene2d.actions
 
-abstract class EventAction[T <: com.badlogic.gdx.scenes.scene2d.Event] extends com.badlogic.gdx.scenes.scene2d.Action {
+abstract class EventAction[T <: com.badlogic.gdx.scenes.scene2d.Event](eventClass$p: java.lang.Class[? <: T]) extends com.badlogic.gdx.scenes.scene2d.Action {
   var eventClass: java.lang.Class[? <: T] = null.asInstanceOf[java.lang.Class[? <: T]]
   var result: scala.Boolean = false
   var active: scala.Boolean = false
   private final val listener: com.badlogic.gdx.scenes.scene2d.EventListener = new com.badlogic.gdx.scenes.scene2d.EventListener()
-  def this(eventClass: java.lang.Class[? <: T]) = {
-    this()
-    this.eventClass = eventClass
-  }
+  this.eventClass = eventClass$p
   def restart(): scala.Unit = {
     this.result = false
     this.active = false

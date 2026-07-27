@@ -1,6 +1,6 @@
 package com.badlogic.gdx.graphics.glutils
 
-class KTXTextureData extends com.badlogic.gdx.graphics.TextureData with com.badlogic.gdx.graphics.CubemapData {
+class KTXTextureData(file$p: com.badlogic.gdx.files.FileHandle, genMipMaps: scala.Boolean) extends com.badlogic.gdx.graphics.TextureData with com.badlogic.gdx.graphics.CubemapData {
   private var file: com.badlogic.gdx.files.FileHandle = null.asInstanceOf[com.badlogic.gdx.files.FileHandle]
   private var glType: scala.Int = 0
   private var glTypeSize: scala.Int = 0
@@ -16,11 +16,8 @@ class KTXTextureData extends com.badlogic.gdx.graphics.TextureData with com.badl
   private var imagePos: scala.Int = 0
   private var compressedData: java.nio.ByteBuffer = null.asInstanceOf[java.nio.ByteBuffer]
   var useMipMaps$field: scala.Boolean = false
-  def this(file: com.badlogic.gdx.files.FileHandle, genMipMaps: scala.Boolean) = {
-    this()
-    this.file = file
-    this.useMipMaps$field = genMipMaps
-  }
+  this.file = file$p
+  this.useMipMaps$field = genMipMaps
   def getType(): com.badlogic.gdx.graphics.TextureData.TextureDataType = {
     return com.badlogic.gdx.graphics.TextureData.TextureDataType.Custom
   }

@@ -1,6 +1,6 @@
 package com.badlogic.gdx.graphics.glutils
 
-class FloatTextureData extends com.badlogic.gdx.graphics.TextureData {
+class FloatTextureData(w: scala.Int, h: scala.Int, internalFormat$p: scala.Int, format$p: scala.Int, type$p: scala.Int, isGpuOnly$p: scala.Boolean) extends com.badlogic.gdx.graphics.TextureData {
   var width: scala.Int = 0
   var height: scala.Int = 0
   var internalFormat: scala.Int = 0
@@ -9,15 +9,12 @@ class FloatTextureData extends com.badlogic.gdx.graphics.TextureData {
   var isGpuOnly: scala.Boolean = false
   var isPrepared$field: scala.Boolean = false
   var buffer: java.nio.FloatBuffer = null.asInstanceOf[java.nio.FloatBuffer]
-  def this(w: scala.Int, h: scala.Int, internalFormat: scala.Int, format: scala.Int, `type`: scala.Int, isGpuOnly: scala.Boolean) = {
-    this()
-    this.width = w
-    this.height = h
-    this.internalFormat = internalFormat
-    this.format = format
-    this.`type` = `type`
-    this.isGpuOnly = isGpuOnly
-  }
+  this.width = w
+  this.height = h
+  this.internalFormat = internalFormat$p
+  this.format = format$p
+  this.`type` = type$p
+  this.isGpuOnly = isGpuOnly$p
   def getType(): com.badlogic.gdx.graphics.TextureData.TextureDataType = {
     return com.badlogic.gdx.graphics.TextureData.TextureDataType.Custom
   }

@@ -1,13 +1,10 @@
 package com.badlogic.gdx.graphics.g3d.utils
 
-class BaseAnimationController {
+class BaseAnimationController(target$p: com.badlogic.gdx.graphics.g3d.ModelInstance) {
   private final val transformPool: com.badlogic.gdx.utils.Pool[com.badlogic.gdx.graphics.g3d.utils.BaseAnimationController.Transform] = new com.badlogic.gdx.utils.Pool[com.badlogic.gdx.graphics.g3d.utils.BaseAnimationController.Transform]()
   private var applying: scala.Boolean = false
   var target: com.badlogic.gdx.graphics.g3d.ModelInstance = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.ModelInstance]
-  def this(target: com.badlogic.gdx.graphics.g3d.ModelInstance) = {
-    this()
-    this.target = target
-  }
+  this.target = target$p
   def begin(): scala.Unit = {
     if (this.applying) {
       throw new com.badlogic.gdx.utils.GdxRuntimeException("You must call end() after each call to being()")

@@ -285,17 +285,14 @@ object ObjectSet {
     } else ()
     return tableSize
   }
-  class ObjectSetIterator[K] extends scala.collection.Iterable[K] with scala.collection.Iterator[K] {
+  class ObjectSetIterator[K](set$p: ObjectSet[K]) extends scala.collection.Iterable[K] with scala.collection.Iterator[K] {
     var hasNext$field: scala.Boolean = false
     var set: ObjectSet[K] = null.asInstanceOf[ObjectSet[K]]
     var nextIndex: scala.Int = 0
     var currentIndex: scala.Int = 0
     var valid: scala.Boolean = true
-    def this(set: ObjectSet[K]) = {
-      this()
-      this.set = set
-      this.reset()
-    }
+    this.set = set$p
+    this.reset()
     def reset(): scala.Unit = {
       this.currentIndex = -1
       this.nextIndex = -1

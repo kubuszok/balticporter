@@ -1,21 +1,18 @@
 package com.badlogic.gdx.scenes.scene2d.ui
 
-class Tooltip[T <: com.badlogic.gdx.scenes.scene2d.Actor] extends com.badlogic.gdx.scenes.scene2d.InputListener {
+class Tooltip[T <: com.badlogic.gdx.scenes.scene2d.Actor](contents: T, manager$p: com.badlogic.gdx.scenes.scene2d.ui.TooltipManager) extends com.badlogic.gdx.scenes.scene2d.InputListener {
   private var manager: com.badlogic.gdx.scenes.scene2d.ui.TooltipManager = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.TooltipManager]
   var container: com.badlogic.gdx.scenes.scene2d.ui.Container[T] = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Container[T]]
   var instant: scala.Boolean = false
   var always: scala.Boolean = false
   var touchIndependent: scala.Boolean = false
   var targetActor: com.badlogic.gdx.scenes.scene2d.Actor = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.Actor]
-  def this(contents: T, manager: com.badlogic.gdx.scenes.scene2d.ui.TooltipManager) = {
-    this()
-    this.manager = manager
-    this.container = new com.badlogic.gdx.scenes.scene2d.ui.Container[T](contents).asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Container[T]]
-    this.container.setTouchable(com.badlogic.gdx.scenes.scene2d.Touchable.disabled)
-  }
   def this(contents: T) = {
     this(contents, com.badlogic.gdx.scenes.scene2d.ui.TooltipManager.getInstance())
   }
+  this.manager = manager$p
+  this.container = new com.badlogic.gdx.scenes.scene2d.ui.Container[T](contents).asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Container[T]]
+  this.container.setTouchable(com.badlogic.gdx.scenes.scene2d.Touchable.disabled)
   def getManager(): com.badlogic.gdx.scenes.scene2d.ui.TooltipManager = {
     return this.manager
   }

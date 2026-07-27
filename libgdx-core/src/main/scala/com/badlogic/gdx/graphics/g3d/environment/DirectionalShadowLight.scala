@@ -1,29 +1,26 @@
 package com.badlogic.gdx.graphics.g3d.environment
 
-class DirectionalShadowLight extends com.badlogic.gdx.graphics.g3d.environment.DirectionalLight with com.badlogic.gdx.graphics.g3d.environment.ShadowMap with com.badlogic.gdx.utils.Disposable {
+class DirectionalShadowLight(shadowMapWidth: scala.Int, shadowMapHeight: scala.Int, shadowViewportWidth: scala.Float, shadowViewportHeight: scala.Float, shadowNear: scala.Float, shadowFar: scala.Float) extends com.badlogic.gdx.graphics.g3d.environment.DirectionalLight with com.badlogic.gdx.graphics.g3d.environment.ShadowMap with com.badlogic.gdx.utils.Disposable {
   var fbo: com.badlogic.gdx.graphics.glutils.FrameBuffer = null.asInstanceOf[com.badlogic.gdx.graphics.glutils.FrameBuffer]
   var cam: com.badlogic.gdx.graphics.Camera = null.asInstanceOf[com.badlogic.gdx.graphics.Camera]
   var halfDepth: scala.Float = 0.0f
   var halfHeight: scala.Float = 0.0f
   final val tmpV: com.badlogic.gdx.math.Vector3 = new com.badlogic.gdx.math.Vector3()
   var textureDesc: com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[?] = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[?]]
-  def this(shadowMapWidth: scala.Int, shadowMapHeight: scala.Int, shadowViewportWidth: scala.Float, shadowViewportHeight: scala.Float, shadowNear: scala.Float, shadowFar: scala.Float) = {
-    this()
-    this.fbo = new com.badlogic.gdx.graphics.glutils.FrameBuffer(com.badlogic.gdx.graphics.Pixmap.Format.RGBA8888, shadowMapWidth, shadowMapHeight, true)
-    this.cam = new com.badlogic.gdx.graphics.OrthographicCamera(shadowViewportWidth, shadowViewportHeight)
-    this.cam.near = shadowNear
-    this.cam.far = shadowFar
-    this.halfHeight = shadowViewportHeight * 0.5f
-    this.halfDepth = shadowNear + (0.5f * (shadowFar - shadowNear))
-    this.textureDesc = new com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor().asInstanceOf[com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[?]]
-    this.textureDesc.minFilter = {
-      this.textureDesc.magFilter = com.badlogic.gdx.graphics.Texture.TextureFilter.Nearest
-      this.textureDesc.magFilter
-    }
-    this.textureDesc.uWrap = {
-      this.textureDesc.vWrap = com.badlogic.gdx.graphics.Texture.TextureWrap.ClampToEdge
-      this.textureDesc.vWrap
-    }
+  this.fbo = new com.badlogic.gdx.graphics.glutils.FrameBuffer(com.badlogic.gdx.graphics.Pixmap.Format.RGBA8888, shadowMapWidth, shadowMapHeight, true)
+  this.cam = new com.badlogic.gdx.graphics.OrthographicCamera(shadowViewportWidth, shadowViewportHeight)
+  this.cam.near = shadowNear
+  this.cam.far = shadowFar
+  this.halfHeight = shadowViewportHeight * 0.5f
+  this.halfDepth = shadowNear + (0.5f * (shadowFar - shadowNear))
+  this.textureDesc = new com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor().asInstanceOf[com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[?]]
+  this.textureDesc.minFilter = {
+    this.textureDesc.magFilter = com.badlogic.gdx.graphics.Texture.TextureFilter.Nearest
+    this.textureDesc.magFilter
+  }
+  this.textureDesc.uWrap = {
+    this.textureDesc.vWrap = com.badlogic.gdx.graphics.Texture.TextureWrap.ClampToEdge
+    this.textureDesc.vWrap
   }
   def update(camera: com.badlogic.gdx.graphics.Camera): scala.Unit = {
     this.update(this.tmpV.set(camera.direction).scl(this.halfHeight), camera.direction)

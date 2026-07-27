@@ -1,12 +1,9 @@
 package com.badlogic.gdx.graphics.glutils
 
-class MipMapTextureData extends com.badlogic.gdx.graphics.TextureData {
+class MipMapTextureData(mipMapData: scala.Array[com.badlogic.gdx.graphics.TextureData]) extends com.badlogic.gdx.graphics.TextureData {
   var mips: scala.Array[com.badlogic.gdx.graphics.TextureData] = null.asInstanceOf[scala.Array[com.badlogic.gdx.graphics.TextureData]]
-  def this(mipMapData: scala.Array[com.badlogic.gdx.graphics.TextureData]) = {
-    this()
-    this.mips = new scala.Array[com.badlogic.gdx.graphics.TextureData](mipMapData.length)
-    java.lang.System.arraycopy(mipMapData, 0, this.mips, 0, mipMapData.length)
-  }
+  this.mips = new scala.Array[com.badlogic.gdx.graphics.TextureData](mipMapData.length)
+  java.lang.System.arraycopy(mipMapData, 0, this.mips, 0, mipMapData.length)
   def getType(): com.badlogic.gdx.graphics.TextureData.TextureDataType = {
     return com.badlogic.gdx.graphics.TextureData.TextureDataType.Custom
   }

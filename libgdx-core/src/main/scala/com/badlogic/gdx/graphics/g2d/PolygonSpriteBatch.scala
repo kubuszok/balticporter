@@ -1,6 +1,6 @@
 package com.badlogic.gdx.graphics.g2d
 
-class PolygonSpriteBatch extends com.badlogic.gdx.graphics.g2d.PolygonBatch {
+class PolygonSpriteBatch(maxVertices: scala.Int, maxTriangles: scala.Int, defaultShader: com.badlogic.gdx.graphics.glutils.ShaderProgram) extends com.badlogic.gdx.graphics.g2d.PolygonBatch {
   private var mesh: com.badlogic.gdx.graphics.Mesh = null.asInstanceOf[com.badlogic.gdx.graphics.Mesh]
   private var vertices: scala.Array[scala.Float] = null.asInstanceOf[scala.Array[scala.Float]]
   private var triangles: scala.Array[scala.Short] = null.asInstanceOf[scala.Array[scala.Short]]
@@ -26,32 +26,32 @@ class PolygonSpriteBatch extends com.badlogic.gdx.graphics.g2d.PolygonBatch {
   var renderCalls: scala.Int = 0
   var totalRenderCalls: scala.Int = 0
   var maxTrianglesInBatch: scala.Int = 0
-  def this(maxVertices: scala.Int, maxTriangles: scala.Int, defaultShader: com.badlogic.gdx.graphics.glutils.ShaderProgram) = {
-    this()
-    if (maxVertices > 32767) {
-      throw new java.lang.IllegalArgumentException("Can't have more than 32767 vertices per batch: " + maxVertices)
-    } else ()
-    var vertexDataType: com.badlogic.gdx.graphics.Mesh.VertexDataType = com.badlogic.gdx.graphics.Mesh.VertexDataType.VertexArray
-    if (com.badlogic.gdx.Gdx.gl30 != null) {
-      vertexDataType = com.badlogic.gdx.graphics.Mesh.VertexDataType.VertexBufferObjectWithVAO
-    } else ()
-    this.mesh = new com.badlogic.gdx.graphics.Mesh(vertexDataType, false, maxVertices, maxTriangles * 3, scala.Array[com.badlogic.gdx.graphics.VertexAttribute](new com.badlogic.gdx.graphics.VertexAttribute(com.badlogic.gdx.graphics.VertexAttributes.Usage.Position, 2, com.badlogic.gdx.graphics.glutils.ShaderProgram.POSITION_ATTRIBUTE), new com.badlogic.gdx.graphics.VertexAttribute(com.badlogic.gdx.graphics.VertexAttributes.Usage.ColorPacked, 4, com.badlogic.gdx.graphics.glutils.ShaderProgram.COLOR_ATTRIBUTE), new com.badlogic.gdx.graphics.VertexAttribute(com.badlogic.gdx.graphics.VertexAttributes.Usage.TextureCoordinates, 2, com.badlogic.gdx.graphics.glutils.ShaderProgram.TEXCOORD_ATTRIBUTE + "0")))
-    this.vertices = new scala.Array[scala.Float](maxVertices * com.badlogic.gdx.graphics.g2d.Sprite.VERTEX_SIZE)
-    this.triangles = new scala.Array[scala.Short](maxTriangles * 3)
-    if (defaultShader == null) {
-      this.shader = com.badlogic.gdx.graphics.g2d.SpriteBatch.createDefaultShader()
-      this.ownsShader = true
-    } else {
-      this.shader = defaultShader
-    }
-    this.projectionMatrix.setToOrtho2D(0, 0, com.badlogic.gdx.Gdx.graphics.getWidth(), com.badlogic.gdx.Gdx.graphics.getHeight())
+  var vertexDataType: com.badlogic.gdx.graphics.Mesh.VertexDataType = com.badlogic.gdx.graphics.Mesh.VertexDataType.VertexArray
+  def this(size: scala.Int, defaultShader: com.badlogic.gdx.graphics.glutils.ShaderProgram) = {
+    this(size, size * 2, defaultShader)
+  }
+  def this() = {
+    this(2000, null)
   }
   def this(size: scala.Int) = {
     this(size, size * 2, null)
   }
-  def this(size: scala.Int, defaultShader: com.badlogic.gdx.graphics.glutils.ShaderProgram) = {
-    this(size, size * 2, defaultShader)
+  if (maxVertices > 32767) {
+    throw new java.lang.IllegalArgumentException("Can't have more than 32767 vertices per batch: " + maxVertices)
+  } else ()
+  if (com.badlogic.gdx.Gdx.gl30 != null) {
+    vertexDataType = com.badlogic.gdx.graphics.Mesh.VertexDataType.VertexBufferObjectWithVAO
+  } else ()
+  this.mesh = new com.badlogic.gdx.graphics.Mesh(vertexDataType, false, maxVertices, maxTriangles * 3, scala.Array[com.badlogic.gdx.graphics.VertexAttribute](new com.badlogic.gdx.graphics.VertexAttribute(com.badlogic.gdx.graphics.VertexAttributes.Usage.Position, 2, com.badlogic.gdx.graphics.glutils.ShaderProgram.POSITION_ATTRIBUTE), new com.badlogic.gdx.graphics.VertexAttribute(com.badlogic.gdx.graphics.VertexAttributes.Usage.ColorPacked, 4, com.badlogic.gdx.graphics.glutils.ShaderProgram.COLOR_ATTRIBUTE), new com.badlogic.gdx.graphics.VertexAttribute(com.badlogic.gdx.graphics.VertexAttributes.Usage.TextureCoordinates, 2, com.badlogic.gdx.graphics.glutils.ShaderProgram.TEXCOORD_ATTRIBUTE + "0")))
+  this.vertices = new scala.Array[scala.Float](maxVertices * com.badlogic.gdx.graphics.g2d.Sprite.VERTEX_SIZE)
+  this.triangles = new scala.Array[scala.Short](maxTriangles * 3)
+  if (defaultShader == null) {
+    this.shader = com.badlogic.gdx.graphics.g2d.SpriteBatch.createDefaultShader()
+    this.ownsShader = true
+  } else {
+    this.shader = defaultShader
   }
+  this.projectionMatrix.setToOrtho2D(0, 0, com.badlogic.gdx.Gdx.graphics.getWidth(), com.badlogic.gdx.Gdx.graphics.getHeight())
   def begin(): scala.Unit = {
     if (this.drawing) {
       throw new java.lang.IllegalStateException("PolygonSpriteBatch.end must be called before begin.")

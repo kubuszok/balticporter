@@ -1,10 +1,10 @@
 package com.badlogic.gdx.graphics.g2d
 
-class PolygonRegionLoader extends com.badlogic.gdx.assets.loaders.SynchronousAssetLoader[com.badlogic.gdx.graphics.g2d.PolygonRegion, com.badlogic.gdx.graphics.g2d.PolygonRegionLoader.PolygonRegionParameters] {
+class PolygonRegionLoader(resolver$p: com.badlogic.gdx.assets.loaders.FileHandleResolver) extends com.badlogic.gdx.assets.loaders.SynchronousAssetLoader[com.badlogic.gdx.graphics.g2d.PolygonRegion, com.badlogic.gdx.graphics.g2d.PolygonRegionLoader.PolygonRegionParameters](resolver$p) {
   private var defaultParameters: com.badlogic.gdx.graphics.g2d.PolygonRegionLoader.PolygonRegionParameters = new com.badlogic.gdx.graphics.g2d.PolygonRegionLoader.PolygonRegionParameters()
   private var triangulator: com.badlogic.gdx.math.EarClippingTriangulator = new com.badlogic.gdx.math.EarClippingTriangulator()
-  def this(resolver: com.badlogic.gdx.assets.loaders.FileHandleResolver) = {
-    this()
+  def this() = {
+    this(new com.badlogic.gdx.assets.loaders.resolvers.InternalFileHandleResolver())
   }
   def load(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.graphics.g2d.PolygonRegionLoader.PolygonRegionParameters): com.badlogic.gdx.graphics.g2d.PolygonRegion = {
     val texture: com.badlogic.gdx.graphics.Texture = manager.get(manager.getDependencies(fileName).first())

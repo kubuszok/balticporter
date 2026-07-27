@@ -1,6 +1,6 @@
 package com.badlogic.gdx.input
 
-class RemoteInput extends java.lang.Runnable with com.badlogic.gdx.Input {
+class RemoteInput(port$p: scala.Int, listener$p: com.badlogic.gdx.input.RemoteInput.RemoteInputListener) extends java.lang.Runnable with com.badlogic.gdx.Input {
   private var serverSocket: java.net.ServerSocket = null.asInstanceOf[java.net.ServerSocket]
   private var accel: scala.Array[scala.Float] = new scala.Array[scala.Float](3)
   private var gyrate: scala.Array[scala.Float] = new scala.Array[scala.Float](3)
@@ -23,31 +23,31 @@ class RemoteInput extends java.lang.Runnable with com.badlogic.gdx.Input {
   var processor: com.badlogic.gdx.InputProcessor = null
   private var port: scala.Int = 0
   var ips: scala.Array[java.lang.String] = null.asInstanceOf[scala.Array[java.lang.String]]
-  def this(port: scala.Int, listener: com.badlogic.gdx.input.RemoteInput.RemoteInputListener) = {
-    this()
-    this.listener = listener
-    try {
-      this.port = port
-      this.serverSocket = new java.net.ServerSocket(port)
-      val thread: java.lang.Thread = new java.lang.Thread(this)
-      thread.setDaemon(true)
-      thread.start()
-      val allByName: scala.Array[java.net.InetAddress] = java.net.InetAddress.getAllByName(java.net.InetAddress.getLocalHost().getHostName())
-      this.ips = new scala.Array[java.lang.String](allByName.length);
-      { var i: scala.Int = 0; while (i < allByName.length) { {
-        this.ips(i) = allByName(i).getHostAddress()
-      }; i = i + 1 } }
-    } catch {
-      case e: java.lang.Exception => {
-        throw new com.badlogic.gdx.utils.GdxRuntimeException(("Couldn't open listening socket at port '" + port) + "'", e)
-      }
-    }
+  def this(port: scala.Int) = {
+    this(port, null)
+  }
+  def this() = {
+    this(RemoteInput.DEFAULT_PORT)
   }
   def this(listener: com.badlogic.gdx.input.RemoteInput.RemoteInputListener) = {
     this(RemoteInput.DEFAULT_PORT, listener)
   }
-  def this(port: scala.Int) = {
-    this(port, null)
+  this.listener = listener$p
+  try {
+    this.port = port$p
+    this.serverSocket = new java.net.ServerSocket(port$p)
+    val thread: java.lang.Thread = new java.lang.Thread(this)
+    thread.setDaemon(true)
+    thread.start()
+    val allByName: scala.Array[java.net.InetAddress] = java.net.InetAddress.getAllByName(java.net.InetAddress.getLocalHost().getHostName())
+    this.ips = new scala.Array[java.lang.String](allByName.length);
+    { var i: scala.Int = 0; while (i < allByName.length) { {
+      this.ips(i) = allByName(i).getHostAddress()
+    }; i = i + 1 } }
+  } catch {
+    case e: java.lang.Exception => {
+      throw new com.badlogic.gdx.utils.GdxRuntimeException(("Couldn't open listening socket at port '" + port$p) + "'", e)
+    }
   }
   def run(): scala.Unit = {
     while (true) {
@@ -345,14 +345,11 @@ class RemoteInput extends java.lang.Runnable with com.badlogic.gdx.Input {
     final val TOUCH_UP: scala.Int = 1
     final val TOUCH_DRAGGED: scala.Int = 2
   }
-  class EventTrigger extends java.lang.Runnable {
+  class EventTrigger(touchEvent$p: com.badlogic.gdx.input.RemoteInput#TouchEvent, keyEvent$p: com.badlogic.gdx.input.RemoteInput#KeyEvent) extends java.lang.Runnable {
     var touchEvent: com.badlogic.gdx.input.RemoteInput#TouchEvent = null.asInstanceOf[com.badlogic.gdx.input.RemoteInput#TouchEvent]
     var keyEvent: com.badlogic.gdx.input.RemoteInput#KeyEvent = null.asInstanceOf[com.badlogic.gdx.input.RemoteInput#KeyEvent]
-    def this(touchEvent: com.badlogic.gdx.input.RemoteInput#TouchEvent, keyEvent: com.badlogic.gdx.input.RemoteInput#KeyEvent) = {
-      this()
-      this.touchEvent = touchEvent
-      this.keyEvent = keyEvent
-    }
+    this.touchEvent = touchEvent$p
+    this.keyEvent = keyEvent$p
     def run(): scala.Unit = {
       justTouched$field = false
       if (keyJustPressed) {

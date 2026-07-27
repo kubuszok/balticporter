@@ -1,18 +1,15 @@
 package com.badlogic.gdx.maps.tiled.objects
 
-class TiledMapTileMapObject extends com.badlogic.gdx.maps.objects.TextureMapObject {
+class TiledMapTileMapObject(tile$p: com.badlogic.gdx.maps.tiled.TiledMapTile, flipHorizontally$p: scala.Boolean, flipVertically$p: scala.Boolean) extends com.badlogic.gdx.maps.objects.TextureMapObject {
   private var flipHorizontally: scala.Boolean = false
   private var flipVertically: scala.Boolean = false
   private var tile: com.badlogic.gdx.maps.tiled.TiledMapTile = null.asInstanceOf[com.badlogic.gdx.maps.tiled.TiledMapTile]
-  def this(tile: com.badlogic.gdx.maps.tiled.TiledMapTile, flipHorizontally: scala.Boolean, flipVertically: scala.Boolean) = {
-    this()
-    this.flipHorizontally = flipHorizontally
-    this.flipVertically = flipVertically
-    this.tile = tile
-    val textureRegion: com.badlogic.gdx.graphics.g2d.TextureRegion = new com.badlogic.gdx.graphics.g2d.TextureRegion(tile.getTextureRegion())
-    textureRegion.flip(flipHorizontally, flipVertically)
-    this.setTextureRegion(textureRegion)
-  }
+  val textureRegion$p: com.badlogic.gdx.graphics.g2d.TextureRegion = new com.badlogic.gdx.graphics.g2d.TextureRegion(tile$p.getTextureRegion())
+  this.flipHorizontally = flipHorizontally$p
+  this.flipVertically = flipVertically$p
+  this.tile = tile$p
+  textureRegion$p.flip(flipHorizontally$p, flipVertically$p)
+  this.setTextureRegion(textureRegion$p)
   def isFlipHorizontally(): scala.Boolean = {
     return this.flipHorizontally
   }

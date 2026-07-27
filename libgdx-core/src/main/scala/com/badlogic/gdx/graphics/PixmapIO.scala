@@ -93,7 +93,7 @@ object PixmapIO {
       }
     }
   }
-  class PNG extends com.badlogic.gdx.utils.Disposable {
+  class PNG(initialBufferSize: scala.Int) extends com.badlogic.gdx.utils.Disposable {
     private var buffer: com.badlogic.gdx.graphics.PixmapIO.PNG.ChunkBuffer = null.asInstanceOf[com.badlogic.gdx.graphics.PixmapIO.PNG.ChunkBuffer]
     private var deflater: java.util.zip.Deflater = null.asInstanceOf[java.util.zip.Deflater]
     private var lineOutBytes: com.badlogic.gdx.utils.ByteArray = null.asInstanceOf[com.badlogic.gdx.utils.ByteArray]
@@ -101,11 +101,11 @@ object PixmapIO {
     private var prevLineBytes: com.badlogic.gdx.utils.ByteArray = null.asInstanceOf[com.badlogic.gdx.utils.ByteArray]
     private var flipY: scala.Boolean = true
     private var lastLineLen: scala.Int = 0
-    def this(initialBufferSize: scala.Int) = {
-      this()
-      this.buffer = new com.badlogic.gdx.graphics.PixmapIO.PNG.ChunkBuffer(initialBufferSize)
-      this.deflater = new java.util.zip.Deflater()
+    def this() = {
+      this(128 * 128)
     }
+    this.buffer = new com.badlogic.gdx.graphics.PixmapIO.PNG.ChunkBuffer(initialBufferSize)
+    this.deflater = new java.util.zip.Deflater()
     def setFlipY(flipY: scala.Boolean): scala.Unit = {
       this.flipY = flipY
     }
@@ -235,17 +235,14 @@ object PixmapIO {
     private final val FILTER_NONE: scala.Byte = 0.asInstanceOf[scala.Byte]
     private final val INTERLACE_NONE: scala.Byte = 0.asInstanceOf[scala.Byte]
     private final val PAETH: scala.Byte = 4.asInstanceOf[scala.Byte]
-    class ChunkBuffer extends java.io.DataOutputStream {
+    class ChunkBuffer(buffer$p: java.io.ByteArrayOutputStream, crc$p: java.util.zip.CRC32) extends java.io.DataOutputStream(new java.util.zip.CheckedOutputStream(buffer$p, crc$p)) {
       var buffer: java.io.ByteArrayOutputStream = null.asInstanceOf[java.io.ByteArrayOutputStream]
       var crc: java.util.zip.CRC32 = null.asInstanceOf[java.util.zip.CRC32]
-      private def this(buffer: java.io.ByteArrayOutputStream, crc: java.util.zip.CRC32) = {
-        this()
-        this.buffer = buffer
-        this.crc = crc
-      }
       def this(initialSize: scala.Int) = {
         this(new java.io.ByteArrayOutputStream(initialSize), new java.util.zip.CRC32())
       }
+      this.buffer = buffer$p
+      this.crc = crc$p
       def endChunk(target: java.io.DataOutputStream): scala.Unit = {
         this.flush()
         target.writeInt(this.buffer.size() - 4)

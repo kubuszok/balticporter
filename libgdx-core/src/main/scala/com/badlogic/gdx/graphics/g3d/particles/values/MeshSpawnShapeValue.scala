@@ -38,7 +38,7 @@ abstract class MeshSpawnShapeValue extends com.badlogic.gdx.graphics.g3d.particl
   }
 }
 object MeshSpawnShapeValue {
-  class Triangle {
+  class Triangle(x1$p: scala.Float, y1$p: scala.Float, z1$p: scala.Float, x2$p: scala.Float, y2$p: scala.Float, z2$p: scala.Float, x3$p: scala.Float, y3$p: scala.Float, z3$p: scala.Float) {
     var x1: scala.Float = 0.0f
     var y1: scala.Float = 0.0f
     var z1: scala.Float = 0.0f
@@ -48,18 +48,15 @@ object MeshSpawnShapeValue {
     var x3: scala.Float = 0.0f
     var y3: scala.Float = 0.0f
     var z3: scala.Float = 0.0f
-    def this(x1: scala.Float, y1: scala.Float, z1: scala.Float, x2: scala.Float, y2: scala.Float, z2: scala.Float, x3: scala.Float, y3: scala.Float, z3: scala.Float) = {
-      this()
-      this.x1 = x1
-      this.y1 = y1
-      this.z1 = z1
-      this.x2 = x2
-      this.y2 = y2
-      this.z2 = z2
-      this.x3 = x3
-      this.y3 = y3
-      this.z3 = z3
-    }
+    this.x1 = x1$p
+    this.y1 = y1$p
+    this.z1 = z1$p
+    this.x2 = x2$p
+    this.y2 = y2$p
+    this.z2 = z2$p
+    this.x3 = x3$p
+    this.y3 = y3$p
+    this.z3 = z3$p
     def pick(vector: com.badlogic.gdx.math.Vector3): com.badlogic.gdx.math.Vector3 = {
       val a: scala.Float = com.badlogic.gdx.math.MathUtils.random()
       val b: scala.Float = com.badlogic.gdx.math.MathUtils.random()

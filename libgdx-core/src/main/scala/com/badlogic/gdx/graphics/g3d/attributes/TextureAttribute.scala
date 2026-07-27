@@ -1,19 +1,12 @@
 package com.badlogic.gdx.graphics.g3d.attributes
 
-class TextureAttribute extends com.badlogic.gdx.graphics.g3d.Attribute {
+class TextureAttribute(type$p: scala.Long) extends com.badlogic.gdx.graphics.g3d.Attribute(type$p) {
   var textureDescription: com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[com.badlogic.gdx.graphics.Texture] = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[com.badlogic.gdx.graphics.Texture]]
   var offsetU: scala.Float = 0
   var offsetV: scala.Float = 0
   var scaleU: scala.Float = 1
   var scaleV: scala.Float = 1
   var uvIndex: scala.Int = 0
-  def this(`type`: scala.Long) = {
-    this()
-    if (!TextureAttribute.is(`type`)) {
-      throw new com.badlogic.gdx.utils.GdxRuntimeException("Invalid type specified")
-    } else ()
-    this.textureDescription = new com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[com.badlogic.gdx.graphics.Texture]()
-  }
   def this(`type`: scala.Long, textureDescription: com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[com.badlogic.gdx.graphics.Texture]) = {
     this(`type`)
     this.textureDescription.set(textureDescription)
@@ -40,6 +33,10 @@ class TextureAttribute extends com.badlogic.gdx.graphics.g3d.Attribute {
   def this(copyFrom: TextureAttribute) = {
     this(copyFrom.`type`, copyFrom.textureDescription, copyFrom.offsetU, copyFrom.offsetV, copyFrom.scaleU, copyFrom.scaleV, copyFrom.uvIndex)
   }
+  if (!TextureAttribute.is(type$p)) {
+    throw new com.badlogic.gdx.utils.GdxRuntimeException("Invalid type specified")
+  } else ()
+  this.textureDescription = new com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[com.badlogic.gdx.graphics.Texture]()
   def set(region: com.badlogic.gdx.graphics.g2d.TextureRegion): scala.Unit = {
     this.textureDescription.texture = region.getTexture()
     this.offsetU = region.getU()

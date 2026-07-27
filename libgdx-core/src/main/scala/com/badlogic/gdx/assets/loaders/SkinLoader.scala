@@ -1,9 +1,6 @@
 package com.badlogic.gdx.assets.loaders
 
-class SkinLoader extends com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader[com.badlogic.gdx.scenes.scene2d.ui.Skin, com.badlogic.gdx.assets.loaders.SkinLoader.SkinParameter] {
-  def this(resolver: com.badlogic.gdx.assets.loaders.FileHandleResolver) = {
-    this()
-  }
+class SkinLoader(resolver$p: com.badlogic.gdx.assets.loaders.FileHandleResolver) extends com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader[com.badlogic.gdx.scenes.scene2d.ui.Skin, com.badlogic.gdx.assets.loaders.SkinLoader.SkinParameter](resolver$p) {
   def getDependencies(fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.assets.loaders.SkinLoader.SkinParameter): com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = {
     val deps: com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = new com.badlogic.gdx.utils.Array().asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]]
     if ((parameter == null) || (parameter.textureAtlasPath == null)) {
@@ -44,13 +41,11 @@ class SkinLoader extends com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader
   }
 }
 object SkinLoader {
-  class SkinParameter extends com.badlogic.gdx.assets.AssetLoaderParameters[com.badlogic.gdx.scenes.scene2d.ui.Skin] {
+  class SkinParameter(textureAtlasPath$p: java.lang.String, resources$p: com.badlogic.gdx.utils.ObjectMap[java.lang.String, java.lang.Object]) extends com.badlogic.gdx.assets.AssetLoaderParameters[com.badlogic.gdx.scenes.scene2d.ui.Skin] {
     var textureAtlasPath: java.lang.String = null.asInstanceOf[java.lang.String]
     var resources: com.badlogic.gdx.utils.ObjectMap[java.lang.String, java.lang.Object] = null.asInstanceOf[com.badlogic.gdx.utils.ObjectMap[java.lang.String, java.lang.Object]]
-    def this(textureAtlasPath: java.lang.String, resources: com.badlogic.gdx.utils.ObjectMap[java.lang.String, java.lang.Object]) = {
-      this()
-      this.textureAtlasPath = textureAtlasPath
-      this.resources = resources
+    def this() = {
+      this(null, null)
     }
     def this(resources: com.badlogic.gdx.utils.ObjectMap[java.lang.String, java.lang.Object]) = {
       this(null, resources)
@@ -58,6 +53,8 @@ object SkinLoader {
     def this(textureAtlasPath: java.lang.String) = {
       this(textureAtlasPath, null)
     }
+    this.textureAtlasPath = textureAtlasPath$p
+    this.resources = resources$p
   }
   object SkinParameter {
     export com.badlogic.gdx.assets.AssetLoaderParameters.*

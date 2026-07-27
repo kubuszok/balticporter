@@ -1,6 +1,6 @@
 package com.badlogic.gdx.scenes.scene2d.ui
 
-class Label extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlogic.gdx.scenes.scene2d.ui.Styleable[com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle] {
+class Label(text$p: java.lang.CharSequence, style$p: com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle) extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlogic.gdx.scenes.scene2d.ui.Styleable[com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle] {
   private var style: com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle]
   final val layout$field: com.badlogic.gdx.graphics.g2d.GlyphLayout = new com.badlogic.gdx.graphics.g2d.GlyphLayout()
   private var prefWidth: scala.Float = 0.0f
@@ -17,16 +17,6 @@ class Label extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlogic.
   private var fontScaleY: scala.Float = 1
   private var fontScaleChanged: scala.Boolean = false
   private var ellipsis: java.lang.String = null.asInstanceOf[java.lang.String]
-  def this(text: java.lang.CharSequence, style: com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle) = {
-    this()
-    if (text != null) {
-      this.text.append(text)
-    } else ()
-    this.setStyle(style)
-    if ((text != null) && (text.length() > 0)) {
-      this.setSize(this.getPrefWidth(), this.getPrefHeight())
-    } else ()
-  }
   def this(text: java.lang.CharSequence, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin) = {
     this(text, skin.get(classOf[com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle]))
   }
@@ -39,6 +29,13 @@ class Label extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlogic.
   def this(text: java.lang.CharSequence, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin, fontName: java.lang.String, colorName: java.lang.String) = {
     this(text, new com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle(skin.getFont(fontName), skin.getColor(colorName)))
   }
+  if (text$p != null) {
+    this.text.append(text$p)
+  } else ()
+  this.setStyle(style$p)
+  if ((text$p != null) && (text$p.length() > 0)) {
+    this.setSize(this.getPrefWidth(), this.getPrefHeight())
+  } else ()
   def setStyle(style: com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle): scala.Unit = {
     if (style == null) {
       throw new java.lang.IllegalArgumentException("style cannot be null.")

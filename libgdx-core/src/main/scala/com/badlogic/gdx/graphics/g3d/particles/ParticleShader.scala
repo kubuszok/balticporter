@@ -1,31 +1,11 @@
 package com.badlogic.gdx.graphics.g3d.particles
 
-class ParticleShader extends com.badlogic.gdx.graphics.g3d.shaders.BaseShader {
+class ParticleShader(renderable$p: com.badlogic.gdx.graphics.g3d.Renderable, config$p: com.badlogic.gdx.graphics.g3d.particles.ParticleShader.Config, shaderProgram: com.badlogic.gdx.graphics.glutils.ShaderProgram) extends com.badlogic.gdx.graphics.g3d.shaders.BaseShader {
   private var renderable: com.badlogic.gdx.graphics.g3d.Renderable = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.Renderable]
   private var materialMask: scala.Long = 0L
   private var vertexMask: scala.Long = 0L
   var config: com.badlogic.gdx.graphics.g3d.particles.ParticleShader.Config = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ParticleShader.Config]
   var currentMaterial: com.badlogic.gdx.graphics.g3d.Material = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.Material]
-  def this(renderable: com.badlogic.gdx.graphics.g3d.Renderable, config: com.badlogic.gdx.graphics.g3d.particles.ParticleShader.Config, shaderProgram: com.badlogic.gdx.graphics.glutils.ShaderProgram) = {
-    this()
-    this.config = config
-    this.program = shaderProgram
-    this.renderable = renderable
-    this.materialMask = renderable.material.getMask() | ParticleShader.optionalAttributes
-    this.vertexMask = renderable.meshPart.mesh.getVertexAttributes().getMask()
-    if ((!config.ignoreUnimplemented) && ((ParticleShader.implementedFlags & this.materialMask) != this.materialMask)) {
-      throw new com.badlogic.gdx.utils.GdxRuntimeException(("Some attributes not implemented yet (" + this.materialMask) + ")")
-    } else ()
-    this.register(com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Inputs.viewTrans, com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Setters.viewTrans)
-    this.register(com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Inputs.projViewTrans, com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Setters.projViewTrans)
-    this.register(com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Inputs.projTrans, com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Setters.projTrans)
-    this.register(com.badlogic.gdx.graphics.g3d.particles.ParticleShader.Inputs.screenWidth, com.badlogic.gdx.graphics.g3d.particles.ParticleShader.Setters.screenWidth)
-    this.register(com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Inputs.cameraUp, com.badlogic.gdx.graphics.g3d.particles.ParticleShader.Setters.cameraUp)
-    this.register(com.badlogic.gdx.graphics.g3d.particles.ParticleShader.Inputs.cameraRight, com.badlogic.gdx.graphics.g3d.particles.ParticleShader.Setters.cameraRight)
-    this.register(com.badlogic.gdx.graphics.g3d.particles.ParticleShader.Inputs.cameraInvDirection, com.badlogic.gdx.graphics.g3d.particles.ParticleShader.Setters.cameraInvDirection)
-    this.register(com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Inputs.cameraPosition, com.badlogic.gdx.graphics.g3d.particles.ParticleShader.Setters.cameraPosition)
-    this.register(com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Inputs.diffuseTexture, com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Setters.diffuseTexture)
-  }
   def this(renderable: com.badlogic.gdx.graphics.g3d.Renderable, config: com.badlogic.gdx.graphics.g3d.particles.ParticleShader.Config, prefix: java.lang.String, vertexShader: java.lang.String, fragmentShader: java.lang.String) = {
     this(renderable, config, new com.badlogic.gdx.graphics.glutils.ShaderProgram(prefix + vertexShader, prefix + fragmentShader))
   }
@@ -38,6 +18,23 @@ class ParticleShader extends com.badlogic.gdx.graphics.g3d.shaders.BaseShader {
   def this(renderable: com.badlogic.gdx.graphics.g3d.Renderable) = {
     this(renderable, new com.badlogic.gdx.graphics.g3d.particles.ParticleShader.Config())
   }
+  this.config = config$p
+  this.program = shaderProgram
+  this.renderable = renderable$p
+  this.materialMask = renderable$p.material.getMask() | ParticleShader.optionalAttributes
+  this.vertexMask = renderable$p.meshPart.mesh.getVertexAttributes().getMask()
+  if ((!config$p.ignoreUnimplemented) && ((ParticleShader.implementedFlags & this.materialMask) != this.materialMask)) {
+    throw new com.badlogic.gdx.utils.GdxRuntimeException(("Some attributes not implemented yet (" + this.materialMask) + ")")
+  } else ()
+  this.register(com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Inputs.viewTrans, com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Setters.viewTrans)
+  this.register(com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Inputs.projViewTrans, com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Setters.projViewTrans)
+  this.register(com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Inputs.projTrans, com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Setters.projTrans)
+  this.register(com.badlogic.gdx.graphics.g3d.particles.ParticleShader.Inputs.screenWidth, com.badlogic.gdx.graphics.g3d.particles.ParticleShader.Setters.screenWidth)
+  this.register(com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Inputs.cameraUp, com.badlogic.gdx.graphics.g3d.particles.ParticleShader.Setters.cameraUp)
+  this.register(com.badlogic.gdx.graphics.g3d.particles.ParticleShader.Inputs.cameraRight, com.badlogic.gdx.graphics.g3d.particles.ParticleShader.Setters.cameraRight)
+  this.register(com.badlogic.gdx.graphics.g3d.particles.ParticleShader.Inputs.cameraInvDirection, com.badlogic.gdx.graphics.g3d.particles.ParticleShader.Setters.cameraInvDirection)
+  this.register(com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Inputs.cameraPosition, com.badlogic.gdx.graphics.g3d.particles.ParticleShader.Setters.cameraPosition)
+  this.register(com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Inputs.diffuseTexture, com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Setters.diffuseTexture)
   def init(): scala.Unit = {
     var program: com.badlogic.gdx.graphics.glutils.ShaderProgram = this.program
     this.program = null

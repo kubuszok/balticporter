@@ -1,21 +1,18 @@
 package com.badlogic.gdx.graphics.glutils
 
-class VertexArray extends com.badlogic.gdx.graphics.glutils.VertexData {
+class VertexArray(numVertices: scala.Int, attributes$p: com.badlogic.gdx.graphics.VertexAttributes) extends com.badlogic.gdx.graphics.glutils.VertexData {
   var attributes: com.badlogic.gdx.graphics.VertexAttributes = null.asInstanceOf[com.badlogic.gdx.graphics.VertexAttributes]
   var buffer: java.nio.FloatBuffer = null.asInstanceOf[java.nio.FloatBuffer]
   var byteBuffer: java.nio.ByteBuffer = null.asInstanceOf[java.nio.ByteBuffer]
   var isBound: scala.Boolean = false
-  def this(numVertices: scala.Int, attributes: com.badlogic.gdx.graphics.VertexAttributes) = {
-    this()
-    this.attributes = attributes
-    this.byteBuffer = com.badlogic.gdx.utils.BufferUtils.newUnsafeByteBuffer(this.attributes.vertexSize * numVertices)
-    this.buffer = this.byteBuffer.asFloatBuffer()
-    this.buffer.asInstanceOf[java.nio.Buffer].flip()
-    this.byteBuffer.asInstanceOf[java.nio.Buffer].flip()
-  }
   def this(numVertices: scala.Int, attributes: scala.Array[com.badlogic.gdx.graphics.VertexAttribute]) = {
     this(numVertices, new com.badlogic.gdx.graphics.VertexAttributes(attributes))
   }
+  this.attributes = attributes$p
+  this.byteBuffer = com.badlogic.gdx.utils.BufferUtils.newUnsafeByteBuffer(this.attributes.vertexSize * numVertices)
+  this.buffer = this.byteBuffer.asFloatBuffer()
+  this.buffer.asInstanceOf[java.nio.Buffer].flip()
+  this.byteBuffer.asInstanceOf[java.nio.Buffer].flip()
   def dispose(): scala.Unit = {
     com.badlogic.gdx.utils.BufferUtils.disposeUnsafeByteBuffer(this.byteBuffer)
   }

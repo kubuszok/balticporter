@@ -1,6 +1,6 @@
 package com.badlogic.gdx.graphics.g2d
 
-class SpriteBatch extends com.badlogic.gdx.graphics.g2d.Batch {
+class SpriteBatch(size: scala.Int, defaultShader: com.badlogic.gdx.graphics.glutils.ShaderProgram) extends com.badlogic.gdx.graphics.g2d.Batch {
   private var currentDataType: com.badlogic.gdx.graphics.Mesh.VertexDataType = null.asInstanceOf[com.badlogic.gdx.graphics.Mesh.VertexDataType]
   private var mesh: com.badlogic.gdx.graphics.Mesh = null.asInstanceOf[com.badlogic.gdx.graphics.Mesh]
   var vertices: scala.Array[scala.Float] = null.asInstanceOf[scala.Array[scala.Float]]
@@ -25,45 +25,45 @@ class SpriteBatch extends com.badlogic.gdx.graphics.g2d.Batch {
   var renderCalls: scala.Int = 0
   var totalRenderCalls: scala.Int = 0
   var maxSpritesInBatch: scala.Int = 0
-  def this(size: scala.Int, defaultShader: com.badlogic.gdx.graphics.glutils.ShaderProgram) = {
-    this()
-    if (size > 8191) {
-      throw new java.lang.IllegalArgumentException("Can't have more than 8191 sprites per batch: " + size)
-    } else ()
-    var vertexDataType: com.badlogic.gdx.graphics.Mesh.VertexDataType = if (com.badlogic.gdx.Gdx.gl30 != null) com.badlogic.gdx.graphics.Mesh.VertexDataType.VertexBufferObjectWithVAO else SpriteBatch.defaultVertexDataType
-    if (SpriteBatch.overrideVertexType != null) {
-      vertexDataType = SpriteBatch.overrideVertexType
-    } else ()
-    this.currentDataType = vertexDataType
-    this.mesh = new com.badlogic.gdx.graphics.Mesh(this.currentDataType, false, size * 4, size * 6, scala.Array[com.badlogic.gdx.graphics.VertexAttribute](new com.badlogic.gdx.graphics.VertexAttribute(com.badlogic.gdx.graphics.VertexAttributes.Usage.Position, 2, com.badlogic.gdx.graphics.glutils.ShaderProgram.POSITION_ATTRIBUTE), new com.badlogic.gdx.graphics.VertexAttribute(com.badlogic.gdx.graphics.VertexAttributes.Usage.ColorPacked, 4, com.badlogic.gdx.graphics.glutils.ShaderProgram.COLOR_ATTRIBUTE), new com.badlogic.gdx.graphics.VertexAttribute(com.badlogic.gdx.graphics.VertexAttributes.Usage.TextureCoordinates, 2, com.badlogic.gdx.graphics.glutils.ShaderProgram.TEXCOORD_ATTRIBUTE + "0")))
-    this.projectionMatrix.setToOrtho2D(0, 0, com.badlogic.gdx.Gdx.graphics.getWidth(), com.badlogic.gdx.Gdx.graphics.getHeight())
-    this.vertices = new scala.Array[scala.Float](size * com.badlogic.gdx.graphics.g2d.Sprite.SPRITE_SIZE)
-    val len: scala.Int = size * 6
-    val indices: scala.Array[scala.Short] = new scala.Array[scala.Short](len)
-    var j: scala.Short = 0.asInstanceOf[scala.Short];
-    { var i: scala.Int = 0; while (i < len) { {
-      indices(i) = j
-      indices(i + 1) = (j + 1).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
-      indices(i + 2) = (j + 2).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
-      indices(i + 3) = (j + 2).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
-      indices(i + 4) = (j + 3).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
-      indices(i + 5) = j
-    }; i = i + 6; j = (j + 4).asInstanceOf[scala.Short] } }
-    this.mesh.setIndices(indices)
-    if (defaultShader == null) {
-      this.shader = SpriteBatch.createDefaultShader()
-      this.ownsShader = true
-    } else {
-      this.shader = defaultShader
-    }
-    if (vertexDataType != com.badlogic.gdx.graphics.Mesh.VertexDataType.VertexArray) {
-      this.mesh.getIndexData().bind()
-      this.mesh.getIndexData().unbind()
-    } else ()
+  var vertexDataType: com.badlogic.gdx.graphics.Mesh.VertexDataType = if (com.badlogic.gdx.Gdx.gl30 != null) com.badlogic.gdx.graphics.Mesh.VertexDataType.VertexBufferObjectWithVAO else SpriteBatch.defaultVertexDataType
+  val len: scala.Int = size * 6
+  val indices: scala.Array[scala.Short] = new scala.Array[scala.Short](len)
+  var j: scala.Short = 0.asInstanceOf[scala.Short]
+  def this() = {
+    this(1000, null)
   }
   def this(size: scala.Int) = {
     this(size, null)
   }
+  if (size > 8191) {
+    throw new java.lang.IllegalArgumentException("Can't have more than 8191 sprites per batch: " + size)
+  } else ()
+  if (SpriteBatch.overrideVertexType != null) {
+    vertexDataType = SpriteBatch.overrideVertexType
+  } else ()
+  this.currentDataType = vertexDataType
+  this.mesh = new com.badlogic.gdx.graphics.Mesh(this.currentDataType, false, size * 4, size * 6, scala.Array[com.badlogic.gdx.graphics.VertexAttribute](new com.badlogic.gdx.graphics.VertexAttribute(com.badlogic.gdx.graphics.VertexAttributes.Usage.Position, 2, com.badlogic.gdx.graphics.glutils.ShaderProgram.POSITION_ATTRIBUTE), new com.badlogic.gdx.graphics.VertexAttribute(com.badlogic.gdx.graphics.VertexAttributes.Usage.ColorPacked, 4, com.badlogic.gdx.graphics.glutils.ShaderProgram.COLOR_ATTRIBUTE), new com.badlogic.gdx.graphics.VertexAttribute(com.badlogic.gdx.graphics.VertexAttributes.Usage.TextureCoordinates, 2, com.badlogic.gdx.graphics.glutils.ShaderProgram.TEXCOORD_ATTRIBUTE + "0")))
+  this.projectionMatrix.setToOrtho2D(0, 0, com.badlogic.gdx.Gdx.graphics.getWidth(), com.badlogic.gdx.Gdx.graphics.getHeight())
+  this.vertices = new scala.Array[scala.Float](size * com.badlogic.gdx.graphics.g2d.Sprite.SPRITE_SIZE);
+  { var i: scala.Int = 0; while (i < len) { {
+    indices(i) = j
+    indices(i + 1) = (j + 1).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
+    indices(i + 2) = (j + 2).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
+    indices(i + 3) = (j + 2).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
+    indices(i + 4) = (j + 3).asInstanceOf[scala.Short].asInstanceOf[scala.Short]
+    indices(i + 5) = j
+  }; i = i + 6; j = (j + 4).asInstanceOf[scala.Short] } }
+  this.mesh.setIndices(indices)
+  if (defaultShader == null) {
+    this.shader = SpriteBatch.createDefaultShader()
+    this.ownsShader = true
+  } else {
+    this.shader = defaultShader
+  }
+  if (vertexDataType != com.badlogic.gdx.graphics.Mesh.VertexDataType.VertexArray) {
+    this.mesh.getIndexData().bind()
+    this.mesh.getIndexData().unbind()
+  } else ()
   def begin(): scala.Unit = {
     if (this.drawing) {
       throw new java.lang.IllegalStateException("SpriteBatch.end must be called before begin.")

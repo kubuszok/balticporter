@@ -1,11 +1,8 @@
 package com.badlogic.gdx.graphics.profiling
 
-class GL20Interceptor extends com.badlogic.gdx.graphics.profiling.GLInterceptor with com.badlogic.gdx.graphics.GL20 {
+class GL20Interceptor(glProfiler$p: com.badlogic.gdx.graphics.profiling.GLProfiler, gl20$p: com.badlogic.gdx.graphics.GL20) extends com.badlogic.gdx.graphics.profiling.GLInterceptor(glProfiler$p) with com.badlogic.gdx.graphics.GL20 {
   var gl20: com.badlogic.gdx.graphics.GL20 = null.asInstanceOf[com.badlogic.gdx.graphics.GL20]
-  def this(glProfiler: com.badlogic.gdx.graphics.profiling.GLProfiler, gl20: com.badlogic.gdx.graphics.GL20) = {
-    this()
-    this.gl20 = gl20
-  }
+  this.gl20 = gl20$p
   private def check(): scala.Unit = {
     var error: scala.Int = this.gl20.glGetError()
     while (error != com.badlogic.gdx.graphics.GL20.GL_NO_ERROR) {

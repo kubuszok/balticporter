@@ -1,6 +1,6 @@
 package com.badlogic.gdx.graphics.glutils
 
-class InstanceBufferObject extends com.badlogic.gdx.graphics.glutils.InstanceData {
+class InstanceBufferObject(isStatic: scala.Boolean, numVertices: scala.Int, instanceAttributes: com.badlogic.gdx.graphics.VertexAttributes) extends com.badlogic.gdx.graphics.glutils.InstanceData {
   private var attributes: com.badlogic.gdx.graphics.VertexAttributes = null.asInstanceOf[com.badlogic.gdx.graphics.VertexAttributes]
   private var buffer: java.nio.FloatBuffer = null.asInstanceOf[java.nio.FloatBuffer]
   private var byteBuffer: java.nio.ByteBuffer = null.asInstanceOf[java.nio.ByteBuffer]
@@ -9,20 +9,17 @@ class InstanceBufferObject extends com.badlogic.gdx.graphics.glutils.InstanceDat
   private var usage: scala.Int = 0
   var isDirty: scala.Boolean = false
   var isBound: scala.Boolean = false
-  def this(isStatic: scala.Boolean, numVertices: scala.Int, instanceAttributes: com.badlogic.gdx.graphics.VertexAttributes) = {
-    this()
-    if (com.badlogic.gdx.Gdx.gl30 == null) {
-      throw new com.badlogic.gdx.utils.GdxRuntimeException("InstanceBufferObject requires a device running with GLES 3.0 compatibilty")
-    } else ()
-    this.bufferHandle = com.badlogic.gdx.Gdx.gl20.glGenBuffer()
-    val data: java.nio.ByteBuffer = com.badlogic.gdx.utils.BufferUtils.newUnsafeByteBuffer(instanceAttributes.vertexSize * numVertices)
-    data.asInstanceOf[java.nio.Buffer].limit(0)
-    this.setBuffer(data, true, instanceAttributes)
-    this.setUsage(if (isStatic) com.badlogic.gdx.graphics.GL20.GL_STATIC_DRAW else com.badlogic.gdx.graphics.GL20.GL_DYNAMIC_DRAW)
-  }
+  val data: java.nio.ByteBuffer = com.badlogic.gdx.utils.BufferUtils.newUnsafeByteBuffer(instanceAttributes.vertexSize * numVertices)
   def this(isStatic: scala.Boolean, numVertices: scala.Int, attributes: scala.Array[com.badlogic.gdx.graphics.VertexAttribute]) = {
     this(isStatic, numVertices, new com.badlogic.gdx.graphics.VertexAttributes(attributes))
   }
+  if (com.badlogic.gdx.Gdx.gl30 == null) {
+    throw new com.badlogic.gdx.utils.GdxRuntimeException("InstanceBufferObject requires a device running with GLES 3.0 compatibilty")
+  } else ()
+  this.bufferHandle = com.badlogic.gdx.Gdx.gl20.glGenBuffer()
+  data.asInstanceOf[java.nio.Buffer].limit(0)
+  this.setBuffer(data, true, instanceAttributes)
+  this.setUsage(if (isStatic) com.badlogic.gdx.graphics.GL20.GL_STATIC_DRAW else com.badlogic.gdx.graphics.GL20.GL_DYNAMIC_DRAW)
   def getAttributes(): com.badlogic.gdx.graphics.VertexAttributes = {
     return this.attributes
   }

@@ -1,6 +1,6 @@
 package com.badlogic.gdx.graphics.g3d.utils
 
-class FirstPersonCameraController extends com.badlogic.gdx.InputAdapter {
+class FirstPersonCameraController(camera$p: com.badlogic.gdx.graphics.Camera) extends com.badlogic.gdx.InputAdapter {
   var camera: com.badlogic.gdx.graphics.Camera = null.asInstanceOf[com.badlogic.gdx.graphics.Camera]
   final val keys: com.badlogic.gdx.utils.IntIntMap = new com.badlogic.gdx.utils.IntIntMap()
   var strafeLeftKey: scala.Int = com.badlogic.gdx.Input.Keys.A
@@ -13,10 +13,7 @@ class FirstPersonCameraController extends com.badlogic.gdx.InputAdapter {
   var velocity: scala.Float = 5
   var degreesPerPixel: scala.Float = 0.5f
   final val tmp: com.badlogic.gdx.math.Vector3 = new com.badlogic.gdx.math.Vector3()
-  def this(camera: com.badlogic.gdx.graphics.Camera) = {
-    this()
-    this.camera = camera
-  }
+  this.camera = camera$p
   def keyDown(keycode: scala.Int): scala.Boolean = {
     this.keys.put(keycode, keycode)
     return true

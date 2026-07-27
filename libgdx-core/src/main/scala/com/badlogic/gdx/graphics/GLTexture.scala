@@ -1,6 +1,6 @@
 package com.badlogic.gdx.graphics
 
-abstract class GLTexture extends com.badlogic.gdx.utils.Disposable {
+abstract class GLTexture(glTarget$p: scala.Int, glHandle$p: scala.Int) extends com.badlogic.gdx.utils.Disposable {
   var glTarget: scala.Int = 0
   var glHandle: scala.Int = 0
   var minFilter: com.badlogic.gdx.graphics.Texture.TextureFilter = com.badlogic.gdx.graphics.Texture.TextureFilter.Nearest
@@ -8,14 +8,11 @@ abstract class GLTexture extends com.badlogic.gdx.utils.Disposable {
   var uWrap: com.badlogic.gdx.graphics.Texture.TextureWrap = com.badlogic.gdx.graphics.Texture.TextureWrap.ClampToEdge
   var vWrap: com.badlogic.gdx.graphics.Texture.TextureWrap = com.badlogic.gdx.graphics.Texture.TextureWrap.ClampToEdge
   var anisotropicFilterLevel: scala.Float = 1.0f
-  def this(glTarget: scala.Int, glHandle: scala.Int) = {
-    this()
-    this.glTarget = glTarget
-    this.glHandle = glHandle
-  }
   def this(glTarget: scala.Int) = {
     this(glTarget, com.badlogic.gdx.Gdx.gl.glGenTexture())
   }
+  this.glTarget = glTarget$p
+  this.glHandle = glHandle$p
   def getWidth(): scala.Int
   def getHeight(): scala.Int
   def getDepth(): scala.Int

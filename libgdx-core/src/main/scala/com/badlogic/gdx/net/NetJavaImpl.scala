@@ -1,19 +1,19 @@
 package com.badlogic.gdx.net
 
-class NetJavaImpl {
+class NetJavaImpl(maxThreads: scala.Int) {
   private var executorService: java.util.concurrent.ThreadPoolExecutor = null.asInstanceOf[java.util.concurrent.ThreadPoolExecutor]
   var connections: com.badlogic.gdx.utils.ObjectMap[com.badlogic.gdx.Net.HttpRequest, java.net.HttpURLConnection] = null.asInstanceOf[com.badlogic.gdx.utils.ObjectMap[com.badlogic.gdx.Net.HttpRequest, java.net.HttpURLConnection]]
   var listeners: com.badlogic.gdx.utils.ObjectMap[com.badlogic.gdx.Net.HttpRequest, com.badlogic.gdx.Net.HttpResponseListener] = null.asInstanceOf[com.badlogic.gdx.utils.ObjectMap[com.badlogic.gdx.Net.HttpRequest, com.badlogic.gdx.Net.HttpResponseListener]]
   var tasks: com.badlogic.gdx.utils.ObjectMap[com.badlogic.gdx.Net.HttpRequest, java.util.concurrent.Future[?]] = null.asInstanceOf[com.badlogic.gdx.utils.ObjectMap[com.badlogic.gdx.Net.HttpRequest, java.util.concurrent.Future[?]]]
-  def this(maxThreads: scala.Int) = {
-    this()
-    val isCachedPool: scala.Boolean = maxThreads == java.lang.Integer.MAX_VALUE
-    this.executorService = new java.util.concurrent.ThreadPoolExecutor(if (isCachedPool) 0 else maxThreads, maxThreads, 60L, java.util.concurrent.TimeUnit.SECONDS, if (isCachedPool) new java.util.concurrent.SynchronousQueue[java.lang.Runnable]() else new java.util.concurrent.LinkedBlockingQueue[java.lang.Runnable](), new java.util.concurrent.ThreadFactory())
-    this.executorService.allowCoreThreadTimeOut(!isCachedPool)
-    this.connections = new com.badlogic.gdx.utils.ObjectMap[com.badlogic.gdx.Net.HttpRequest, java.net.HttpURLConnection]()
-    this.listeners = new com.badlogic.gdx.utils.ObjectMap[com.badlogic.gdx.Net.HttpRequest, com.badlogic.gdx.Net.HttpResponseListener]()
-    this.tasks = new com.badlogic.gdx.utils.ObjectMap[com.badlogic.gdx.Net.HttpRequest, java.util.concurrent.Future[?]]()
+  val isCachedPool: scala.Boolean = maxThreads == java.lang.Integer.MAX_VALUE
+  def this() = {
+    this(java.lang.Integer.MAX_VALUE)
   }
+  this.executorService = new java.util.concurrent.ThreadPoolExecutor(if (isCachedPool) 0 else maxThreads, maxThreads, 60L, java.util.concurrent.TimeUnit.SECONDS, if (isCachedPool) new java.util.concurrent.SynchronousQueue[java.lang.Runnable]() else new java.util.concurrent.LinkedBlockingQueue[java.lang.Runnable](), new java.util.concurrent.ThreadFactory())
+  this.executorService.allowCoreThreadTimeOut(!isCachedPool)
+  this.connections = new com.badlogic.gdx.utils.ObjectMap[com.badlogic.gdx.Net.HttpRequest, java.net.HttpURLConnection]()
+  this.listeners = new com.badlogic.gdx.utils.ObjectMap[com.badlogic.gdx.Net.HttpRequest, com.badlogic.gdx.Net.HttpResponseListener]()
+  this.tasks = new com.badlogic.gdx.utils.ObjectMap[com.badlogic.gdx.Net.HttpRequest, java.util.concurrent.Future[?]]()
   def sendHttpRequest(httpRequest: com.badlogic.gdx.Net.HttpRequest, httpResponseListener: com.badlogic.gdx.Net.HttpResponseListener): scala.Unit = {
     if (httpRequest.getUrl() == null) {
       httpResponseListener.failed(new com.badlogic.gdx.utils.GdxRuntimeException("can't process a HTTP request without URL set"))
@@ -89,18 +89,15 @@ class NetJavaImpl {
   }
 }
 object NetJavaImpl {
-  class HttpClientResponse extends com.badlogic.gdx.Net.HttpResponse {
+  class HttpClientResponse(connection$p: java.net.HttpURLConnection) extends com.badlogic.gdx.Net.HttpResponse {
     private var connection: java.net.HttpURLConnection = null.asInstanceOf[java.net.HttpURLConnection]
     private var status: com.badlogic.gdx.net.HttpStatus = null.asInstanceOf[com.badlogic.gdx.net.HttpStatus]
-    def this(connection: java.net.HttpURLConnection) = {
-      this()
-      this.connection = connection
-      try {
-        this.status = new com.badlogic.gdx.net.HttpStatus(connection.getResponseCode())
-      } catch {
-        case e: java.io.IOException => {
-          this.status = new com.badlogic.gdx.net.HttpStatus(-1)
-        }
+    this.connection = connection$p
+    try {
+      this.status = new com.badlogic.gdx.net.HttpStatus(connection$p.getResponseCode())
+    } catch {
+      case e: java.io.IOException => {
+        this.status = new com.badlogic.gdx.net.HttpStatus(-1)
       }
     }
     def getResult(): scala.Array[scala.Byte] = {

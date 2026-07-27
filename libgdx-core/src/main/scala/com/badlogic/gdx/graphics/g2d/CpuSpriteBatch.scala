@@ -1,16 +1,16 @@
 package com.badlogic.gdx.graphics.g2d
 
-class CpuSpriteBatch extends com.badlogic.gdx.graphics.g2d.SpriteBatch {
+class CpuSpriteBatch(size: scala.Int, defaultShader: com.badlogic.gdx.graphics.glutils.ShaderProgram) extends com.badlogic.gdx.graphics.g2d.SpriteBatch(size, defaultShader) {
   private final val virtualMatrix: com.badlogic.gdx.math.Matrix4 = new com.badlogic.gdx.math.Matrix4()
   private final val adjustAffine: com.badlogic.gdx.math.Affine2 = new com.badlogic.gdx.math.Affine2()
   private var adjustNeeded: scala.Boolean = false
   private var haveIdentityRealMatrix: scala.Boolean = true
   private final val tmpAffine: com.badlogic.gdx.math.Affine2 = new com.badlogic.gdx.math.Affine2()
-  def this(size: scala.Int, defaultShader: com.badlogic.gdx.graphics.glutils.ShaderProgram) = {
-    this()
-  }
   def this(size: scala.Int) = {
     this(size, null)
+  }
+  def this() = {
+    this(1000)
   }
   def flushAndSyncTransformMatrix(): scala.Unit = {
     this.flush()

@@ -1,15 +1,12 @@
 package com.badlogic.gdx.graphics.g3d.particles
 
-class ParallelArray {
+class ParallelArray(capacity$p: scala.Int) {
   var arrays: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.ParallelArray#Channel] = null.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.ParallelArray#Channel]]
   var capacity: scala.Int = 0
   var size: scala.Int = 0
-  def this(capacity: scala.Int) = {
-    this()
-    this.arrays = new com.badlogic.gdx.utils.Array[Channel](false, 2, ((size: scala.Int) => new scala.Array[com.badlogic.gdx.graphics.g3d.particles.ParallelArray#Channel](size)))
-    this.capacity = capacity
-    this.size = 0
-  }
+  this.arrays = new com.badlogic.gdx.utils.Array[Channel](false, 2, ((size: scala.Int) => new scala.Array[com.badlogic.gdx.graphics.g3d.particles.ParallelArray#Channel](size)))
+  this.capacity = capacity$p
+  this.size = 0
   def addChannel[T <: com.badlogic.gdx.graphics.g3d.particles.ParallelArray#Channel](channelDescriptor: com.badlogic.gdx.graphics.g3d.particles.ParallelArray.ChannelDescriptor): T = {
     return this.addChannel(channelDescriptor, null)
   }
@@ -85,26 +82,20 @@ class ParallelArray {
       this.capacity = requiredCapacity
     } else ()
   }
-  abstract class Channel {
+  abstract class Channel(id$p: scala.Int, data$p: java.lang.Object, strideSize$p: scala.Int) {
     var id: scala.Int = 0
     var data: java.lang.Object = null.asInstanceOf[java.lang.Object]
     var strideSize: scala.Int = 0
-    def this(id: scala.Int, data: java.lang.Object, strideSize: scala.Int) = {
-      this()
-      this.id = id
-      this.strideSize = strideSize
-      this.data = data
-    }
+    this.id = id$p
+    this.strideSize = strideSize$p
+    this.data = data$p
     def add(index: scala.Int, objects: scala.Array[java.lang.Object]): scala.Unit
     def swap(i: scala.Int, k: scala.Int): scala.Unit
     def setCapacity(requiredCapacity: scala.Int): scala.Unit
   }
-  class FloatChannel extends Channel {
+  class FloatChannel(id$p: scala.Int, strideSize$p: scala.Int, size: scala.Int) extends Channel(id$p, new scala.Array[scala.Float](size * strideSize$p), strideSize$p) {
     var data: scala.Array[scala.Float] = null.asInstanceOf[scala.Array[scala.Float]]
-    def this(id: scala.Int, strideSize: scala.Int, size: scala.Int) = {
-      this()
-      this.data = data.asInstanceOf[scala.Array[scala.Float]].asInstanceOf[scala.Array[scala.Float]]
-    }
+    this.data = data.asInstanceOf[scala.Array[scala.Float]].asInstanceOf[scala.Array[scala.Float]]
     def add(index: scala.Int, objects: scala.Array[java.lang.Object]): scala.Unit = {
       { var i: scala.Int = strideSize * size; val c: scala.Int = i + strideSize; var k: scala.Int = 0; while (i < c) { {
         this.data(i) = objects(k).asInstanceOf[java.lang.Float]
@@ -131,12 +122,9 @@ class ParallelArray {
       }
     }
   }
-  class IntChannel extends Channel {
+  class IntChannel(id$p: scala.Int, strideSize$p: scala.Int, size: scala.Int) extends Channel(id$p, new scala.Array[scala.Int](size * strideSize$p), strideSize$p) {
     var data: scala.Array[scala.Int] = null.asInstanceOf[scala.Array[scala.Int]]
-    def this(id: scala.Int, strideSize: scala.Int, size: scala.Int) = {
-      this()
-      this.data = data.asInstanceOf[scala.Array[scala.Int]].asInstanceOf[scala.Array[scala.Int]]
-    }
+    this.data = data.asInstanceOf[scala.Array[scala.Int]].asInstanceOf[scala.Array[scala.Int]]
     def add(index: scala.Int, objects: scala.Array[java.lang.Object]): scala.Unit = {
       { var i: scala.Int = strideSize * size; val c: scala.Int = i + strideSize; var k: scala.Int = 0; while (i < c) { {
         this.data(i) = objects(k).asInstanceOf[java.lang.Integer]
@@ -163,12 +151,9 @@ class ParallelArray {
       }
     }
   }
-  class ObjectChannel[T] extends Channel {
+  class ObjectChannel[T](id$p: scala.Int, strideSize$p: scala.Int, size: scala.Int, arraySupplier: com.badlogic.gdx.utils.ArraySupplier[scala.Array[T]]) extends Channel(id$p, arraySupplier.get(size * strideSize$p), strideSize$p) {
     var data: scala.Array[T] = null.asInstanceOf[scala.Array[T]]
-    def this(id: scala.Int, strideSize: scala.Int, size: scala.Int, arraySupplier: com.badlogic.gdx.utils.ArraySupplier[scala.Array[T]]) = {
-      this()
-      this.data = data.asInstanceOf[scala.Array[T]].asInstanceOf[scala.Array[T]]
-    }
+    this.data = data.asInstanceOf[scala.Array[T]].asInstanceOf[scala.Array[T]]
     def add(index: scala.Int, objects: scala.Array[java.lang.Object]): scala.Unit = {
       { var i: scala.Int = strideSize * size; val c: scala.Int = i + strideSize; var k: scala.Int = 0; while (i < c) { {
         this.data(i) = objects(k).asInstanceOf[T].asInstanceOf[T]
@@ -195,18 +180,15 @@ class ParallelArray {
   }
 }
 object ParallelArray {
-  class ChannelDescriptor {
+  class ChannelDescriptor(id$p: scala.Int, arraySupplier$p: com.badlogic.gdx.utils.ArraySupplier[?], count$p: scala.Int) {
     var id: scala.Int = 0
     var `type`: java.lang.Class[?] = null.asInstanceOf[java.lang.Class[?]]
     var arraySupplier: com.badlogic.gdx.utils.ArraySupplier[?] = null.asInstanceOf[com.badlogic.gdx.utils.ArraySupplier[?]]
     var count: scala.Int = 0
-    def this(id: scala.Int, arraySupplier: com.badlogic.gdx.utils.ArraySupplier[?], count: scala.Int) = {
-      this()
-      this.id = id
-      this.arraySupplier = arraySupplier
-      this.count = count
-      this.`type` = arraySupplier.get(0).getClass().getComponentType()
-    }
+    this.id = id$p
+    this.arraySupplier = arraySupplier$p
+    this.count = count$p
+    this.`type` = arraySupplier$p.get(0).getClass().getComponentType()
   }
   trait ChannelInitializer[T <: com.badlogic.gdx.graphics.g3d.particles.ParallelArray#Channel] {
     def init(channel: T): scala.Unit

@@ -1,14 +1,7 @@
 package com.badlogic.gdx.graphics.g3d.attributes
 
-class CubemapAttribute extends com.badlogic.gdx.graphics.g3d.Attribute {
+class CubemapAttribute(type$p: scala.Long) extends com.badlogic.gdx.graphics.g3d.Attribute(type$p) {
   var textureDescription: com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[com.badlogic.gdx.graphics.Cubemap] = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[com.badlogic.gdx.graphics.Cubemap]]
-  def this(`type`: scala.Long) = {
-    this()
-    if (!CubemapAttribute.is(`type`)) {
-      throw new com.badlogic.gdx.utils.GdxRuntimeException("Invalid type specified")
-    } else ()
-    this.textureDescription = new com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[com.badlogic.gdx.graphics.Cubemap]()
-  }
   def this(`type`: scala.Long, textureDescription: com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[com.badlogic.gdx.graphics.Cubemap]) = {
     this(`type`)
     this.textureDescription.set(textureDescription)
@@ -20,6 +13,10 @@ class CubemapAttribute extends com.badlogic.gdx.graphics.g3d.Attribute {
   def this(copyFrom: CubemapAttribute) = {
     this(copyFrom.`type`, copyFrom.textureDescription)
   }
+  if (!CubemapAttribute.is(type$p)) {
+    throw new com.badlogic.gdx.utils.GdxRuntimeException("Invalid type specified")
+  } else ()
+  this.textureDescription = new com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[com.badlogic.gdx.graphics.Cubemap]()
   def copy(): com.badlogic.gdx.graphics.g3d.Attribute = {
     return new CubemapAttribute(this)
   }

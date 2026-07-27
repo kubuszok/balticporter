@@ -1,10 +1,7 @@
 package com.badlogic.gdx.assets.loaders
 
-class PixmapLoader extends com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader[com.badlogic.gdx.graphics.Pixmap, com.badlogic.gdx.assets.loaders.PixmapLoader.PixmapParameter] {
+class PixmapLoader(resolver$p: com.badlogic.gdx.assets.loaders.FileHandleResolver) extends com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader[com.badlogic.gdx.graphics.Pixmap, com.badlogic.gdx.assets.loaders.PixmapLoader.PixmapParameter](resolver$p) {
   var pixmap: com.badlogic.gdx.graphics.Pixmap = null.asInstanceOf[com.badlogic.gdx.graphics.Pixmap]
-  def this(resolver: com.badlogic.gdx.assets.loaders.FileHandleResolver) = {
-    this()
-  }
   def loadAsync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.assets.loaders.PixmapLoader.PixmapParameter): scala.Unit = {
     this.pixmap = null
     this.pixmap = new com.badlogic.gdx.graphics.Pixmap(file)

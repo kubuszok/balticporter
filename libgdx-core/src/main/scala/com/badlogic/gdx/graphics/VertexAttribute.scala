@@ -1,6 +1,6 @@
 package com.badlogic.gdx.graphics
 
-final class VertexAttribute {
+final class VertexAttribute(usage$p: scala.Int, numComponents$p: scala.Int, type$p: scala.Int, normalized$p: scala.Boolean, alias$p: java.lang.String, unit$p: scala.Int) {
   var usage: scala.Int = 0
   var numComponents: scala.Int = 0
   var normalized: scala.Boolean = false
@@ -9,16 +9,6 @@ final class VertexAttribute {
   var alias: java.lang.String = null.asInstanceOf[java.lang.String]
   var unit: scala.Int = 0
   private var usageIndex: scala.Int = 0
-  def this(usage: scala.Int, numComponents: scala.Int, `type`: scala.Int, normalized: scala.Boolean, alias: java.lang.String, unit: scala.Int) = {
-    this()
-    this.usage = usage
-    this.numComponents = numComponents
-    this.`type` = `type`
-    this.normalized = normalized
-    this.alias = alias
-    this.unit = unit
-    this.usageIndex = java.lang.Integer.numberOfTrailingZeros(usage)
-  }
   def this(usage: scala.Int, numComponents: scala.Int, alias: java.lang.String, unit: scala.Int) = {
     this(usage, numComponents, if (usage == com.badlogic.gdx.graphics.VertexAttributes.Usage.ColorPacked) com.badlogic.gdx.graphics.GL20.GL_UNSIGNED_BYTE else com.badlogic.gdx.graphics.GL20.GL_FLOAT, usage == com.badlogic.gdx.graphics.VertexAttributes.Usage.ColorPacked, alias, unit)
   }
@@ -28,6 +18,13 @@ final class VertexAttribute {
   def this(usage: scala.Int, numComponents: scala.Int, `type`: scala.Int, normalized: scala.Boolean, alias: java.lang.String) = {
     this(usage, numComponents, `type`, normalized, alias, 0)
   }
+  this.usage = usage$p
+  this.numComponents = numComponents$p
+  this.`type` = type$p
+  this.normalized = normalized$p
+  this.alias = alias$p
+  this.unit = unit$p
+  this.usageIndex = java.lang.Integer.numberOfTrailingZeros(usage$p)
   def copy(): VertexAttribute = {
     return new VertexAttribute(this.usage, this.numComponents, this.`type`, this.normalized, this.alias, this.unit)
   }

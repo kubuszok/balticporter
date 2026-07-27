@@ -1,21 +1,18 @@
 package com.badlogic.gdx.graphics.glutils
 
-class IndexArray extends com.badlogic.gdx.graphics.glutils.IndexData {
+class IndexArray(maxIndices$arg: scala.Int) extends com.badlogic.gdx.graphics.glutils.IndexData {
   var buffer: java.nio.ShortBuffer = null.asInstanceOf[java.nio.ShortBuffer]
   var byteBuffer: java.nio.ByteBuffer = null.asInstanceOf[java.nio.ByteBuffer]
   private var empty: scala.Boolean = false
-  def this(maxIndices$arg: scala.Int) = {
-    this()
-    var maxIndices: scala.Int = maxIndices$arg
-    this.empty = maxIndices == 0
-    if (this.empty) {
-      maxIndices = 1
-    } else ()
-    this.byteBuffer = com.badlogic.gdx.utils.BufferUtils.newUnsafeByteBuffer(maxIndices * 2)
-    this.buffer = this.byteBuffer.asShortBuffer()
-    this.buffer.asInstanceOf[java.nio.Buffer].flip()
-    this.byteBuffer.asInstanceOf[java.nio.Buffer].flip()
-  }
+  var maxIndices: scala.Int = maxIndices$arg
+  this.empty = maxIndices == 0
+  if (this.empty) {
+    maxIndices = 1
+  } else ()
+  this.byteBuffer = com.badlogic.gdx.utils.BufferUtils.newUnsafeByteBuffer(maxIndices * 2)
+  this.buffer = this.byteBuffer.asShortBuffer()
+  this.buffer.asInstanceOf[java.nio.Buffer].flip()
+  this.byteBuffer.asInstanceOf[java.nio.Buffer].flip()
   def getNumIndices(): scala.Int = {
     return if (this.empty) 0 else this.buffer.limit()
   }

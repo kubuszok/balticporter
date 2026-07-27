@@ -1,6 +1,6 @@
 package com.badlogic.gdx.graphics.glutils
 
-class InstanceBufferObjectSubData extends com.badlogic.gdx.graphics.glutils.InstanceData {
+class InstanceBufferObjectSubData(isStatic$p: scala.Boolean, numInstances: scala.Int, instanceAttributes: com.badlogic.gdx.graphics.VertexAttributes) extends com.badlogic.gdx.graphics.glutils.InstanceData {
   var attributes: com.badlogic.gdx.graphics.VertexAttributes = null.asInstanceOf[com.badlogic.gdx.graphics.VertexAttributes]
   var buffer: java.nio.FloatBuffer = null.asInstanceOf[java.nio.FloatBuffer]
   var byteBuffer: java.nio.ByteBuffer = null.asInstanceOf[java.nio.ByteBuffer]
@@ -10,21 +10,18 @@ class InstanceBufferObjectSubData extends com.badlogic.gdx.graphics.glutils.Inst
   var usage: scala.Int = 0
   var isDirty: scala.Boolean = false
   var isBound: scala.Boolean = false
-  def this(isStatic: scala.Boolean, numInstances: scala.Int, instanceAttributes: com.badlogic.gdx.graphics.VertexAttributes) = {
-    this()
-    this.isStatic = isStatic
-    this.attributes = instanceAttributes
-    this.byteBuffer = com.badlogic.gdx.utils.BufferUtils.newByteBuffer(this.attributes.vertexSize * numInstances)
-    this.isDirect = true
-    this.usage = if (isStatic) com.badlogic.gdx.graphics.GL20.GL_STATIC_DRAW else com.badlogic.gdx.graphics.GL20.GL_DYNAMIC_DRAW
-    this.buffer = this.byteBuffer.asFloatBuffer()
-    this.bufferHandle = this.createBufferObject()
-    this.buffer.asInstanceOf[java.nio.Buffer].flip()
-    this.byteBuffer.asInstanceOf[java.nio.Buffer].flip()
-  }
   def this(isStatic: scala.Boolean, numInstances: scala.Int, instanceAttributes: scala.Array[com.badlogic.gdx.graphics.VertexAttribute]) = {
     this(isStatic, numInstances, new com.badlogic.gdx.graphics.VertexAttributes(instanceAttributes))
   }
+  this.isStatic = isStatic$p
+  this.attributes = instanceAttributes
+  this.byteBuffer = com.badlogic.gdx.utils.BufferUtils.newByteBuffer(this.attributes.vertexSize * numInstances)
+  this.isDirect = true
+  this.usage = if (isStatic$p) com.badlogic.gdx.graphics.GL20.GL_STATIC_DRAW else com.badlogic.gdx.graphics.GL20.GL_DYNAMIC_DRAW
+  this.buffer = this.byteBuffer.asFloatBuffer()
+  this.bufferHandle = this.createBufferObject()
+  this.buffer.asInstanceOf[java.nio.Buffer].flip()
+  this.byteBuffer.asInstanceOf[java.nio.Buffer].flip()
   private def createBufferObject(): scala.Int = {
     val result: scala.Int = com.badlogic.gdx.Gdx.gl20.glGenBuffer()
     com.badlogic.gdx.Gdx.gl20.glBindBuffer(com.badlogic.gdx.graphics.GL20.GL_ARRAY_BUFFER, result)

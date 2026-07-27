@@ -1,6 +1,6 @@
 package com.badlogic.gdx.input
 
-class GestureDetector extends com.badlogic.gdx.InputAdapter {
+class GestureDetector(halfTapRectangleWidth: scala.Float, halfTapRectangleHeight: scala.Float, tapCountInterval$p: scala.Float, longPressDuration: scala.Float, maxFlingDelay$p: scala.Float, listener$p: com.badlogic.gdx.input.GestureDetector.GestureListener) extends com.badlogic.gdx.InputAdapter {
   var listener: com.badlogic.gdx.input.GestureDetector.GestureListener = null.asInstanceOf[com.badlogic.gdx.input.GestureDetector.GestureListener]
   private var tapRectangleWidth: scala.Float = 0.0f
   private var tapRectangleHeight: scala.Float = 0.0f
@@ -26,24 +26,21 @@ class GestureDetector extends com.badlogic.gdx.InputAdapter {
   private final val initialPointer1: com.badlogic.gdx.math.Vector2 = new com.badlogic.gdx.math.Vector2()
   private final val initialPointer2: com.badlogic.gdx.math.Vector2 = new com.badlogic.gdx.math.Vector2()
   private final val longPressTask: com.badlogic.gdx.utils.Timer.Task = new com.badlogic.gdx.utils.Timer.Task()
-  def this(halfTapRectangleWidth: scala.Float, halfTapRectangleHeight: scala.Float, tapCountInterval: scala.Float, longPressDuration: scala.Float, maxFlingDelay: scala.Float, listener: com.badlogic.gdx.input.GestureDetector.GestureListener) = {
-    this()
-    if (listener == null) {
-      throw new java.lang.IllegalArgumentException("listener cannot be null.")
-    } else ()
-    this.tapRectangleWidth = halfTapRectangleWidth
-    this.tapRectangleHeight = halfTapRectangleHeight
-    this.tapCountInterval = (tapCountInterval * 1000000000L).asInstanceOf[scala.Long].asInstanceOf[scala.Long]
-    this.longPressSeconds = longPressDuration
-    this.maxFlingDelay = (maxFlingDelay * 1000000000L).asInstanceOf[scala.Long].asInstanceOf[scala.Long]
-    this.listener = listener
-  }
   def this(halfTapSquareSize: scala.Float, tapCountInterval: scala.Float, longPressDuration: scala.Float, maxFlingDelay: scala.Float, listener: com.badlogic.gdx.input.GestureDetector.GestureListener) = {
     this(halfTapSquareSize, halfTapSquareSize, tapCountInterval, longPressDuration, maxFlingDelay, listener)
   }
   def this(listener: com.badlogic.gdx.input.GestureDetector.GestureListener) = {
     this(20, 0.4f, 1.1f, java.lang.Integer.MAX_VALUE, listener)
   }
+  if (listener$p == null) {
+    throw new java.lang.IllegalArgumentException("listener cannot be null.")
+  } else ()
+  this.tapRectangleWidth = halfTapRectangleWidth
+  this.tapRectangleHeight = halfTapRectangleHeight
+  this.tapCountInterval = (tapCountInterval$p * 1000000000L).asInstanceOf[scala.Long].asInstanceOf[scala.Long]
+  this.longPressSeconds = longPressDuration
+  this.maxFlingDelay = (maxFlingDelay$p * 1000000000L).asInstanceOf[scala.Long].asInstanceOf[scala.Long]
+  this.listener = listener$p
   def touchDown(x: scala.Int, y: scala.Int, pointer: scala.Int, button: scala.Int): scala.Boolean = {
     return this.touchDown(x.asInstanceOf[scala.Float], y.asInstanceOf[scala.Float], pointer, button)
   }

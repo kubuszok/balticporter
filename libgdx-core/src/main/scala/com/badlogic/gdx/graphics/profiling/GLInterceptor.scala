@@ -1,16 +1,13 @@
 package com.badlogic.gdx.graphics.profiling
 
-abstract class GLInterceptor extends com.badlogic.gdx.graphics.GL20 {
+abstract class GLInterceptor(profiler: com.badlogic.gdx.graphics.profiling.GLProfiler) extends com.badlogic.gdx.graphics.GL20 {
   var calls: scala.Int = 0
   var textureBindings: scala.Int = 0
   var drawCalls: scala.Int = 0
   var shaderSwitches: scala.Int = 0
   final val vertexCount: com.badlogic.gdx.math.FloatCounter = new com.badlogic.gdx.math.FloatCounter(0)
   var glProfiler: com.badlogic.gdx.graphics.profiling.GLProfiler = null.asInstanceOf[com.badlogic.gdx.graphics.profiling.GLProfiler]
-  def this(profiler: com.badlogic.gdx.graphics.profiling.GLProfiler) = {
-    this()
-    this.glProfiler = profiler
-  }
+  this.glProfiler = profiler
   def getCalls(): scala.Int = {
     return this.calls
   }

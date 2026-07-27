@@ -323,18 +323,11 @@ object BaseShader {
       return false
     }
   }
-  class Uniform extends com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Validator {
+  class Uniform(alias$p: java.lang.String, materialMask$p: scala.Long, environmentMask$p: scala.Long, overallMask$p: scala.Long) extends com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Validator {
     var alias: java.lang.String = null.asInstanceOf[java.lang.String]
     var materialMask: scala.Long = 0L
     var environmentMask: scala.Long = 0L
     var overallMask: scala.Long = 0L
-    def this(alias: java.lang.String, materialMask: scala.Long, environmentMask: scala.Long, overallMask: scala.Long) = {
-      this()
-      this.alias = alias
-      this.materialMask = materialMask
-      this.environmentMask = environmentMask
-      this.overallMask = overallMask
-    }
     def this(alias: java.lang.String, materialMask: scala.Long, environmentMask: scala.Long) = {
       this(alias, materialMask, environmentMask, 0)
     }
@@ -344,6 +337,10 @@ object BaseShader {
     def this(alias: java.lang.String) = {
       this(alias, 0, 0)
     }
+    this.alias = alias$p
+    this.materialMask = materialMask$p
+    this.environmentMask = environmentMask$p
+    this.overallMask = overallMask$p
     def validate(shader: BaseShader, inputID: scala.Int, renderable: com.badlogic.gdx.graphics.g3d.Renderable): scala.Boolean = {
       val matFlags: scala.Long = if ((renderable != null) && (renderable.material != null)) renderable.material.getMask() else 0
       val envFlags: scala.Long = if ((renderable != null) && (renderable.environment != null)) renderable.environment.getMask() else 0

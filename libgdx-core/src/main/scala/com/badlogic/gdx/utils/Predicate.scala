@@ -4,19 +4,16 @@ trait Predicate[T] {
   def evaluate(arg0: T): scala.Boolean
 }
 object Predicate {
-  class PredicateIterator[T] extends scala.collection.Iterator[T] {
+  class PredicateIterator[T](iterator$p: scala.collection.Iterator[T], predicate$p: Predicate[T]) extends scala.collection.Iterator[T] {
     var iterator: scala.collection.Iterator[T] = null.asInstanceOf[scala.collection.Iterator[T]]
     var predicate: Predicate[T] = null.asInstanceOf[Predicate[T]]
     var `end`: scala.Boolean = false
     var peeked: scala.Boolean = false
     var next$field: T = null.asInstanceOf[T]
-    def this(iterator: scala.collection.Iterator[T], predicate: Predicate[T]) = {
-      this()
-      this.set(iterator, predicate)
-    }
     def this(iterable: scala.collection.Iterable[T], predicate: Predicate[T]) = {
       this(iterable.iterator, predicate)
     }
+    this.set(iterator$p, predicate$p)
     def set(iterable: scala.collection.Iterable[T], predicate: Predicate[T]): scala.Unit = {
       this.set(iterable.iterator, predicate)
     }
@@ -63,14 +60,11 @@ object Predicate {
       this.iterator.remove()
     }
   }
-  class PredicateIterable[T] extends scala.collection.Iterable[T] {
+  class PredicateIterable[T](iterable$p: scala.collection.Iterable[T], predicate$p: Predicate[T]) extends scala.collection.Iterable[T] {
     var iterable: scala.collection.Iterable[T] = null.asInstanceOf[scala.collection.Iterable[T]]
     var predicate: Predicate[T] = null.asInstanceOf[Predicate[T]]
     var iterator$field: com.badlogic.gdx.utils.Predicate.PredicateIterator[T] = null
-    def this(iterable: scala.collection.Iterable[T], predicate: Predicate[T]) = {
-      this()
-      this.set(iterable, predicate)
-    }
+    this.set(iterable$p, predicate$p)
     def set(iterable: scala.collection.Iterable[T], predicate: Predicate[T]): scala.Unit = {
       this.iterable = iterable
       this.predicate = predicate

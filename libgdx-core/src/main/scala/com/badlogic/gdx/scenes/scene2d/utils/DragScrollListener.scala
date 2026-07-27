@@ -1,6 +1,6 @@
 package com.badlogic.gdx.scenes.scene2d.utils
 
-class DragScrollListener extends com.badlogic.gdx.scenes.scene2d.utils.DragListener {
+class DragScrollListener(scroll$p: com.badlogic.gdx.scenes.scene2d.ui.ScrollPane) extends com.badlogic.gdx.scenes.scene2d.utils.DragListener {
   var scroll$field: com.badlogic.gdx.scenes.scene2d.ui.ScrollPane = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.ScrollPane]
   private var scrollUp: com.badlogic.gdx.utils.Timer.Task = null.asInstanceOf[com.badlogic.gdx.utils.Timer.Task]
   private var scrollDown: com.badlogic.gdx.utils.Timer.Task = null.asInstanceOf[com.badlogic.gdx.utils.Timer.Task]
@@ -12,12 +12,9 @@ class DragScrollListener extends com.badlogic.gdx.scenes.scene2d.utils.DragListe
   var rampTime: scala.Long = 1750
   var padTop: scala.Float = 0.0f
   var padBottom: scala.Float = 0.0f
-  def this(scroll: com.badlogic.gdx.scenes.scene2d.ui.ScrollPane) = {
-    this()
-    this.scroll$field = scroll
-    this.scrollUp = new com.badlogic.gdx.utils.Timer.Task()
-    this.scrollDown = new com.badlogic.gdx.utils.Timer.Task()
-  }
+  this.scroll$field = scroll$p
+  this.scrollUp = new com.badlogic.gdx.utils.Timer.Task()
+  this.scrollDown = new com.badlogic.gdx.utils.Timer.Task()
   def setup(minSpeedPixels: scala.Float, maxSpeedPixels: scala.Float, tickSecs: scala.Float, rampSecs: scala.Float): scala.Unit = {
     this.minSpeed = minSpeedPixels
     this.maxSpeed = maxSpeedPixels

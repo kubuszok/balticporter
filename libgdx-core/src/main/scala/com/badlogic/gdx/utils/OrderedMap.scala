@@ -164,12 +164,9 @@ class OrderedMap[K, V] extends com.badlogic.gdx.utils.ObjectMap[K, V] {
 }
 object OrderedMap {
   export com.badlogic.gdx.utils.ObjectMap.{OrderedMapEntries => _, OrderedMapKeys => _, OrderedMapValues => _, *}
-  class OrderedMapEntries[K, V] extends com.badlogic.gdx.utils.ObjectMap.Entries[K, V] {
+  class OrderedMapEntries[K, V](map$p: OrderedMap[K, V]) extends com.badlogic.gdx.utils.ObjectMap.Entries[K, V](map$p) {
     private var keys: com.badlogic.gdx.utils.Array[K] = null.asInstanceOf[com.badlogic.gdx.utils.Array[K]]
-    def this(map: OrderedMap[K, V]) = {
-      this()
-      this.keys = map.keys$field
-    }
+    this.keys = map$p.keys$field
     def reset(): scala.Unit = {
       currentIndex = -1
       nextIndex = 0
@@ -198,12 +195,9 @@ object OrderedMap {
       currentIndex = -1
     }
   }
-  class OrderedMapKeys[K] extends com.badlogic.gdx.utils.ObjectMap.Keys[K] {
+  class OrderedMapKeys[K](map$p: OrderedMap[K, ?]) extends com.badlogic.gdx.utils.ObjectMap.Keys[K](map$p) {
     private var keys: com.badlogic.gdx.utils.Array[K] = null.asInstanceOf[com.badlogic.gdx.utils.Array[K]]
-    def this(map: OrderedMap[K, ?]) = {
-      this()
-      this.keys = map.asInstanceOf[OrderedMap[java.lang.Object, java.lang.Object]].keys$field
-    }
+    this.keys = map$p.asInstanceOf[OrderedMap[java.lang.Object, java.lang.Object]].keys$field
     def reset(): scala.Unit = {
       currentIndex = -1
       nextIndex = 0
@@ -240,12 +234,9 @@ object OrderedMap {
       return this.toArray(new com.badlogic.gdx.utils.Array(true, this.keys.size - nextIndex))
     }
   }
-  class OrderedMapValues[V] extends com.badlogic.gdx.utils.ObjectMap.Values[V] {
+  class OrderedMapValues[V](map$p: OrderedMap[?, V]) extends com.badlogic.gdx.utils.ObjectMap.Values[V](map$p) {
     private var keys: com.badlogic.gdx.utils.Array[?] = null.asInstanceOf[com.badlogic.gdx.utils.Array[?]]
-    def this(map: OrderedMap[?, V]) = {
-      this()
-      this.keys = map.asInstanceOf[OrderedMap[java.lang.Object, java.lang.Object]].keys$field.asInstanceOf[com.badlogic.gdx.utils.Array[?]]
-    }
+    this.keys = map$p.asInstanceOf[OrderedMap[java.lang.Object, java.lang.Object]].keys$field.asInstanceOf[com.badlogic.gdx.utils.Array[?]]
     def reset(): scala.Unit = {
       currentIndex = -1
       nextIndex = 0

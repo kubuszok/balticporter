@@ -1,12 +1,9 @@
 package com.badlogic.gdx.maps.tiled
 
-abstract class BaseTmxMapLoader[P <: com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.Parameters] extends com.badlogic.gdx.maps.tiled.BaseTiledMapLoader[P] {
+abstract class BaseTmxMapLoader[P <: com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.Parameters](resolver$p: com.badlogic.gdx.assets.loaders.FileHandleResolver) extends com.badlogic.gdx.maps.tiled.BaseTiledMapLoader[P](resolver$p) {
   var xml: com.badlogic.gdx.utils.XmlReader = new com.badlogic.gdx.utils.XmlReader()
   var root: com.badlogic.gdx.utils.XmlReader.Element = null.asInstanceOf[com.badlogic.gdx.utils.XmlReader.Element]
   var templateCache: com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.utils.XmlReader.Element] = null.asInstanceOf[com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.utils.XmlReader.Element]]
-  def this(resolver: com.badlogic.gdx.assets.loaders.FileHandleResolver) = {
-    this()
-  }
   def getDependencies(fileName: java.lang.String, tmxFile: com.badlogic.gdx.files.FileHandle, parameter: P): com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = {
     this.root = this.xml.parse(tmxFile)
     val textureParameter: com.badlogic.gdx.assets.loaders.TextureLoader.TextureParameter = new com.badlogic.gdx.assets.loaders.TextureLoader.TextureParameter()

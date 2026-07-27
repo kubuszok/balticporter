@@ -1,14 +1,14 @@
 package com.badlogic.gdx.utils
 
-class LongQueue {
+class LongQueue(initialSize: scala.Int) {
   var values: scala.Array[scala.Long] = null.asInstanceOf[scala.Array[scala.Long]]
   var head: scala.Int = 0
   var tail: scala.Int = 0
   var size: scala.Int = 0
-  def this(initialSize: scala.Int) = {
-    this()
-    this.values = new scala.Array[scala.Long](initialSize)
+  def this() = {
+    this(16)
   }
+  this.values = new scala.Array[scala.Long](initialSize)
   def addLast(value: scala.Long): scala.Unit = {
     var values: scala.Array[scala.Long] = this.values
     if (this.size == values.length) {

@@ -1,12 +1,7 @@
 package com.badlogic.gdx.scenes.scene2d.ui
 
-class TextTooltip extends com.badlogic.gdx.scenes.scene2d.ui.Tooltip[com.badlogic.gdx.scenes.scene2d.ui.Label] with com.badlogic.gdx.scenes.scene2d.ui.Styleable[com.badlogic.gdx.scenes.scene2d.ui.TextTooltip.TextTooltipStyle] {
+class TextTooltip(text: java.lang.String, manager$p: com.badlogic.gdx.scenes.scene2d.ui.TooltipManager, style$p: com.badlogic.gdx.scenes.scene2d.ui.TextTooltip.TextTooltipStyle) extends com.badlogic.gdx.scenes.scene2d.ui.Tooltip[com.badlogic.gdx.scenes.scene2d.ui.Label](null, manager$p) with com.badlogic.gdx.scenes.scene2d.ui.Styleable[com.badlogic.gdx.scenes.scene2d.ui.TextTooltip.TextTooltipStyle] {
   private var style: com.badlogic.gdx.scenes.scene2d.ui.TextTooltip.TextTooltipStyle = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.TextTooltip.TextTooltipStyle]
-  def this(text: java.lang.String, manager: com.badlogic.gdx.scenes.scene2d.ui.TooltipManager, style: com.badlogic.gdx.scenes.scene2d.ui.TextTooltip.TextTooltipStyle) = {
-    this()
-    container.setActor(this.newLabel(text, style.label))
-    this.setStyle(style)
-  }
   def this(text: java.lang.String, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin) = {
     this(text, com.badlogic.gdx.scenes.scene2d.ui.TooltipManager.getInstance(), skin.get(classOf[com.badlogic.gdx.scenes.scene2d.ui.TextTooltip.TextTooltipStyle]))
   }
@@ -22,6 +17,8 @@ class TextTooltip extends com.badlogic.gdx.scenes.scene2d.ui.Tooltip[com.badlogi
   def this(text: java.lang.String, manager: com.badlogic.gdx.scenes.scene2d.ui.TooltipManager, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin, styleName: java.lang.String) = {
     this(text, manager, skin.get(styleName, classOf[com.badlogic.gdx.scenes.scene2d.ui.TextTooltip.TextTooltipStyle]))
   }
+  container.setActor(this.newLabel(text, style$p.label))
+  this.setStyle(style$p)
   def newLabel(text: java.lang.String, style: com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle): com.badlogic.gdx.scenes.scene2d.ui.Label = {
     return new com.badlogic.gdx.scenes.scene2d.ui.Label(text, style)
   }

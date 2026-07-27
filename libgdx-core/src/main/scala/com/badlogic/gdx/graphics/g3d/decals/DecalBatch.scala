@@ -1,20 +1,17 @@
 package com.badlogic.gdx.graphics.g3d.decals
 
-class DecalBatch extends com.badlogic.gdx.utils.Disposable {
+class DecalBatch(size: scala.Int, groupStrategy$p: com.badlogic.gdx.graphics.g3d.decals.GroupStrategy) extends com.badlogic.gdx.utils.Disposable {
   private var vertices: scala.Array[scala.Float] = null.asInstanceOf[scala.Array[scala.Float]]
   private var mesh: com.badlogic.gdx.graphics.Mesh = null.asInstanceOf[com.badlogic.gdx.graphics.Mesh]
   private final val groupList: com.badlogic.gdx.utils.SortedIntList[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.decals.Decal]] = new com.badlogic.gdx.utils.SortedIntList[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.decals.Decal]]()
   private var groupStrategy: com.badlogic.gdx.graphics.g3d.decals.GroupStrategy = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.decals.GroupStrategy]
   private final val groupPool: com.badlogic.gdx.utils.Pool[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.decals.Decal]] = new com.badlogic.gdx.utils.Pool[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.decals.Decal]](16)
   private final val usedGroups: com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.decals.Decal]] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.decals.Decal]](16)
-  def this(size: scala.Int, groupStrategy: com.badlogic.gdx.graphics.g3d.decals.GroupStrategy) = {
-    this()
-    this.initialize(size)
-    this.setGroupStrategy(groupStrategy)
-  }
   def this(groupStrategy: com.badlogic.gdx.graphics.g3d.decals.GroupStrategy) = {
     this(DecalBatch.DEFAULT_SIZE, groupStrategy)
   }
+  this.initialize(size)
+  this.setGroupStrategy(groupStrategy$p)
   def setGroupStrategy(groupStrategy: com.badlogic.gdx.graphics.g3d.decals.GroupStrategy): scala.Unit = {
     this.groupStrategy = groupStrategy
   }

@@ -1,15 +1,12 @@
 package com.badlogic.gdx.graphics.g3d.loader
 
-class G3dModelLoader extends com.badlogic.gdx.assets.loaders.ModelLoader[com.badlogic.gdx.assets.loaders.ModelLoader.ModelParameters] {
+class G3dModelLoader(reader$p: com.badlogic.gdx.utils.BaseJsonReader, resolver$p: com.badlogic.gdx.assets.loaders.FileHandleResolver) extends com.badlogic.gdx.assets.loaders.ModelLoader[com.badlogic.gdx.assets.loaders.ModelLoader.ModelParameters](resolver$p) {
   var reader: com.badlogic.gdx.utils.BaseJsonReader = null.asInstanceOf[com.badlogic.gdx.utils.BaseJsonReader]
   final val tempQ: com.badlogic.gdx.math.Quaternion = new com.badlogic.gdx.math.Quaternion()
-  def this(reader: com.badlogic.gdx.utils.BaseJsonReader, resolver: com.badlogic.gdx.assets.loaders.FileHandleResolver) = {
-    this()
-    this.reader = reader
-  }
   def this(reader: com.badlogic.gdx.utils.BaseJsonReader) = {
     this(reader, null)
   }
+  this.reader = reader$p
   def loadModelData(fileHandle: com.badlogic.gdx.files.FileHandle, parameters: com.badlogic.gdx.assets.loaders.ModelLoader.ModelParameters): com.badlogic.gdx.graphics.g3d.model.data.ModelData = {
     return this.parseModel(fileHandle)
   }

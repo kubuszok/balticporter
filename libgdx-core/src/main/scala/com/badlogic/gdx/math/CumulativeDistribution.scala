@@ -82,15 +82,12 @@ class CumulativeDistribution[T] {
   }
 }
 object CumulativeDistribution {
-  class CumulativeValue[T] {
+  class CumulativeValue[T](value$p: T, frequency$p: scala.Float, interval$p: scala.Float) {
     var value: T = null.asInstanceOf[T]
     var frequency: scala.Float = 0.0f
     var interval: scala.Float = 0.0f
-    def this(value: T, frequency: scala.Float, interval: scala.Float) = {
-      this()
-      this.value = value
-      this.frequency = frequency
-      this.interval = interval
-    }
+    this.value = value$p
+    this.frequency = frequency$p
+    this.interval = interval$p
   }
 }

@@ -1,18 +1,15 @@
 package com.badlogic.gdx.utils
 
-class UBJsonWriter extends java.io.Closeable {
+class UBJsonWriter(out$arg: java.io.OutputStream) extends java.io.Closeable {
   var out: java.io.DataOutputStream = null.asInstanceOf[java.io.DataOutputStream]
   private var current: com.badlogic.gdx.utils.UBJsonWriter#JsonObject = null.asInstanceOf[com.badlogic.gdx.utils.UBJsonWriter#JsonObject]
   private var named: scala.Boolean = false
   private final val stack: com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.UBJsonWriter#JsonObject] = new com.badlogic.gdx.utils.Array().asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.UBJsonWriter#JsonObject]]
-  def this(out$arg: java.io.OutputStream) = {
-    this()
-    var out: java.io.OutputStream = out$arg
-    if (!out.isInstanceOf[java.io.DataOutputStream]) {
-      out = new java.io.DataOutputStream(out)
-    } else ()
-    this.out = out.asInstanceOf[java.io.DataOutputStream]
-  }
+  var out$p: java.io.OutputStream = out$arg
+  if (!out$p.isInstanceOf[java.io.DataOutputStream]) {
+    out$p = new java.io.DataOutputStream(out$p)
+  } else ()
+  this.out = out$p.asInstanceOf[java.io.DataOutputStream]
   def `object`(): UBJsonWriter = {
     if (this.current != null) {
       if (!this.current.array) {
@@ -452,13 +449,10 @@ class UBJsonWriter extends java.io.Closeable {
     }
     this.out.close()
   }
-  class JsonObject {
+  class JsonObject(array$p: scala.Boolean) {
     var array: scala.Boolean = false
-    def this(array: scala.Boolean) = {
-      this()
-      this.array = array
-      out.writeByte(if (array) '[' else '{')
-    }
+    this.array = array$p
+    out.writeByte(if (array$p) '[' else '{')
     def close(): scala.Unit = {
       out.writeByte(if (this.array) ']' else '}')
     }
