@@ -13,7 +13,7 @@ class QuickSelect[T] {
     this.swap(right, pivot)
     var storage: scala.Int = left;
     { var i: scala.Int = left; while (i < right) { {
-      if (this.comp.compare(this.array(i), pivotValue) < 0) {
+      if (this.comp.asInstanceOf[java.util.Comparator[java.lang.Object]].compare(this.array(i).asInstanceOf[java.lang.Object], pivotValue.asInstanceOf[java.lang.Object]) < 0) {
         this.swap(storage, i)
         storage = storage + 1
       } else ()
@@ -45,21 +45,21 @@ class QuickSelect[T] {
     val midIdx: scala.Int = (leftIdx + rightIdx) / 2
     val mid: T = this.array(midIdx)
     val right: T = this.array(rightIdx)
-    if (this.comp.compare(left, mid) > 0) {
-      if (this.comp.compare(mid, right) > 0) {
+    if (this.comp.asInstanceOf[java.util.Comparator[java.lang.Object]].compare(left.asInstanceOf[java.lang.Object], mid.asInstanceOf[java.lang.Object]) > 0) {
+      if (this.comp.asInstanceOf[java.util.Comparator[java.lang.Object]].compare(mid.asInstanceOf[java.lang.Object], right.asInstanceOf[java.lang.Object]) > 0) {
         return midIdx
       } else {
-        if (this.comp.compare(left, right) > 0) {
+        if (this.comp.asInstanceOf[java.util.Comparator[java.lang.Object]].compare(left.asInstanceOf[java.lang.Object], right.asInstanceOf[java.lang.Object]) > 0) {
           return rightIdx
         } else {
           return leftIdx
         }
       }
     } else {
-      if (this.comp.compare(left, right) > 0) {
+      if (this.comp.asInstanceOf[java.util.Comparator[java.lang.Object]].compare(left.asInstanceOf[java.lang.Object], right.asInstanceOf[java.lang.Object]) > 0) {
         return leftIdx
       } else {
-        if (this.comp.compare(mid, right) > 0) {
+        if (this.comp.asInstanceOf[java.util.Comparator[java.lang.Object]].compare(mid.asInstanceOf[java.lang.Object], right.asInstanceOf[java.lang.Object]) > 0) {
           return rightIdx
         } else {
           return midIdx

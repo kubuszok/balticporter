@@ -95,7 +95,7 @@ object ResourceData {
     def saveAsset[K](filename: java.lang.String, `type`: java.lang.Class[K]): scala.Unit = {
       var i: scala.Int = this.resources.getAssetData(filename, `type`)
       if (i == (-1)) {
-        this.resources.sharedAssets.add(new com.badlogic.gdx.graphics.g3d.particles.ResourceData.AssetData(filename, `type`))
+        this.resources.sharedAssets.asInstanceOf[com.badlogic.gdx.utils.Array[java.lang.Object]].add(new com.badlogic.gdx.graphics.g3d.particles.ResourceData.AssetData(filename, `type`).asInstanceOf[java.lang.Object])
         i = this.resources.sharedAssets.size - 1
       } else ()
       this.assets.add(i)

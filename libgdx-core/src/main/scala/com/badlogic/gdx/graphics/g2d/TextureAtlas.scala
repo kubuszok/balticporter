@@ -102,7 +102,7 @@ class TextureAtlas extends com.badlogic.gdx.utils.Disposable {
   def createSprites(): com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.Sprite] = {
     val sprites: com.badlogic.gdx.utils.Array[?] = new com.badlogic.gdx.utils.Array(true, this.regions.size, ((size: scala.Int) => new scala.Array[com.badlogic.gdx.graphics.g2d.Sprite](size)));
     { var i: scala.Int = 0; val n: scala.Int = this.regions.size; while (i < n) { {
-      sprites.add(this.newSprite(this.regions.get(i)))
+      sprites.asInstanceOf[com.badlogic.gdx.utils.Array[java.lang.Object]].add(this.newSprite(this.regions.get(i)).asInstanceOf[java.lang.Object])
     }; i = i + 1 } }
     return sprites
   }
@@ -243,7 +243,7 @@ object TextureAtlas {
                 } else ()
                 val field: com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[?] = pageFields.get(entry(0))
                 if (field != null) {
-                  field.parse(page)
+                  field.asInstanceOf[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[java.lang.Object]].parse(page.asInstanceOf[java.lang.Object])
                 } else ()
               }
               this.pages.add(page)
@@ -264,7 +264,7 @@ object TextureAtlas {
                 } else ()
                 val field: com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[?] = regionFields.get(entry(0))
                 if (field != null) {
-                  field.parse(region)
+                  field.asInstanceOf[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[java.lang.Object]].parse(region.asInstanceOf[java.lang.Object])
                 } else {
                   if (names == null) {
                     names = new com.badlogic.gdx.utils.Array(8)

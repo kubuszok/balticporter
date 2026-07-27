@@ -174,7 +174,7 @@ class TimSort[T] {
         if (TimSort.DEBUG) {
           assert((len1 > 1) && (len2 > 0))
         } else ()
-        if (c.compare(a(cursor2), tmp(cursor1)) < 0) {
+        if (c.asInstanceOf[java.util.Comparator[java.lang.Object]].compare(a(cursor2).asInstanceOf[java.lang.Object], tmp(cursor1).asInstanceOf[java.lang.Object]) < 0) {
           a({ dest += 1; dest }) = a({ cursor2 += 1; cursor2 })
           count2 = count2 + 1
           count1 = 0
@@ -283,7 +283,7 @@ class TimSort[T] {
         if (TimSort.DEBUG) {
           assert((len1 > 0) && (len2 > 1))
         } else ()
-        if (c.compare(tmp(cursor2), a(cursor1)) < 0) {
+        if (c.asInstanceOf[java.util.Comparator[java.lang.Object]].compare(tmp(cursor2).asInstanceOf[java.lang.Object], a(cursor1).asInstanceOf[java.lang.Object]) < 0) {
           a({ dest -= 1; dest }) = a({ cursor1 -= 1; cursor1 })
           count1 = count1 + 1
           count2 = 0
@@ -445,7 +445,7 @@ object TimSort {
       } else ()
       while (left < right) {
         val mid: scala.Int = (left + right) >>> 1
-        if (c.compare(pivot, a(mid)) < 0) {
+        if (c.asInstanceOf[java.util.Comparator[java.lang.Object]].compare(pivot.asInstanceOf[java.lang.Object], a(mid).asInstanceOf[java.lang.Object]) < 0) {
           right = mid
         } else {
           left = mid + 1
@@ -478,13 +478,13 @@ object TimSort {
     if (runHi == hi) {
       return 1
     } else ()
-    if (c.compare(a({ runHi += 1; runHi }), a(lo)) < 0) {
-      while ((runHi < hi) && (c.compare(a(runHi), a(runHi - 1)) < 0)) {
+    if (c.asInstanceOf[java.util.Comparator[java.lang.Object]].compare(a({ runHi += 1; runHi }).asInstanceOf[java.lang.Object], a(lo).asInstanceOf[java.lang.Object]) < 0) {
+      while ((runHi < hi) && (c.asInstanceOf[java.util.Comparator[java.lang.Object]].compare(a(runHi).asInstanceOf[java.lang.Object], a(runHi - 1).asInstanceOf[java.lang.Object]) < 0)) {
         runHi = runHi + 1
       }
       TimSort.reverseRange(a, lo, runHi)
     } else {
-      while ((runHi < hi) && (c.compare(a(runHi), a(runHi - 1)) >= 0)) {
+      while ((runHi < hi) && (c.asInstanceOf[java.util.Comparator[java.lang.Object]].compare(a(runHi).asInstanceOf[java.lang.Object], a(runHi - 1).asInstanceOf[java.lang.Object]) >= 0)) {
         runHi = runHi + 1
       }
     }
@@ -518,9 +518,9 @@ object TimSort {
     } else ()
     var lastOfs: scala.Int = 0
     var ofs: scala.Int = 1
-    if (c.compare(key, a(base + hint)) > 0) {
+    if (c.asInstanceOf[java.util.Comparator[java.lang.Object]].compare(key.asInstanceOf[java.lang.Object], a(base + hint).asInstanceOf[java.lang.Object]) > 0) {
       val maxOfs: scala.Int = len - hint
-      while ((ofs < maxOfs) && (c.compare(key, a((base + hint) + ofs)) > 0)) {
+      while ((ofs < maxOfs) && (c.asInstanceOf[java.util.Comparator[java.lang.Object]].compare(key.asInstanceOf[java.lang.Object], a((base + hint) + ofs).asInstanceOf[java.lang.Object]) > 0)) {
         lastOfs = ofs
         ofs = (ofs << 1) + 1
         if (ofs <= 0) {
@@ -534,7 +534,7 @@ object TimSort {
       ofs = ofs + hint
     } else {
       val maxOfs: scala.Int = hint + 1
-      while ((ofs < maxOfs) && (c.compare(key, a((base + hint) - ofs)) <= 0)) {
+      while ((ofs < maxOfs) && (c.asInstanceOf[java.util.Comparator[java.lang.Object]].compare(key.asInstanceOf[java.lang.Object], a((base + hint) - ofs).asInstanceOf[java.lang.Object]) <= 0)) {
         lastOfs = ofs
         ofs = (ofs << 1) + 1
         if (ofs <= 0) {
@@ -554,7 +554,7 @@ object TimSort {
     lastOfs = lastOfs + 1
     while (lastOfs < ofs) {
       val m: scala.Int = lastOfs + ((ofs - lastOfs) >>> 1)
-      if (c.compare(key, a(base + m)) > 0) {
+      if (c.asInstanceOf[java.util.Comparator[java.lang.Object]].compare(key.asInstanceOf[java.lang.Object], a(base + m).asInstanceOf[java.lang.Object]) > 0) {
         lastOfs = m + 1
       } else {
         ofs = m
@@ -571,9 +571,9 @@ object TimSort {
     } else ()
     var ofs: scala.Int = 1
     var lastOfs: scala.Int = 0
-    if (c.compare(key, a(base + hint)) < 0) {
+    if (c.asInstanceOf[java.util.Comparator[java.lang.Object]].compare(key.asInstanceOf[java.lang.Object], a(base + hint).asInstanceOf[java.lang.Object]) < 0) {
       val maxOfs: scala.Int = hint + 1
-      while ((ofs < maxOfs) && (c.compare(key, a((base + hint) - ofs)) < 0)) {
+      while ((ofs < maxOfs) && (c.asInstanceOf[java.util.Comparator[java.lang.Object]].compare(key.asInstanceOf[java.lang.Object], a((base + hint) - ofs).asInstanceOf[java.lang.Object]) < 0)) {
         lastOfs = ofs
         ofs = (ofs << 1) + 1
         if (ofs <= 0) {
@@ -588,7 +588,7 @@ object TimSort {
       ofs = hint - tmp
     } else {
       val maxOfs: scala.Int = len - hint
-      while ((ofs < maxOfs) && (c.compare(key, a((base + hint) + ofs)) >= 0)) {
+      while ((ofs < maxOfs) && (c.asInstanceOf[java.util.Comparator[java.lang.Object]].compare(key.asInstanceOf[java.lang.Object], a((base + hint) + ofs).asInstanceOf[java.lang.Object]) >= 0)) {
         lastOfs = ofs
         ofs = (ofs << 1) + 1
         if (ofs <= 0) {
@@ -607,7 +607,7 @@ object TimSort {
     lastOfs = lastOfs + 1
     while (lastOfs < ofs) {
       val m: scala.Int = lastOfs + ((ofs - lastOfs) >>> 1)
-      if (c.compare(key, a(base + m)) < 0) {
+      if (c.asInstanceOf[java.util.Comparator[java.lang.Object]].compare(key.asInstanceOf[java.lang.Object], a(base + m).asInstanceOf[java.lang.Object]) < 0) {
         ofs = m
       } else {
         lastOfs = m + 1

@@ -345,7 +345,7 @@ class IntMap[V] extends scala.collection.Iterable[com.badlogic.gdx.utils.IntMap.
       if (key != 0) {
         val value: V = valueTable(i)
         if (value == null) {
-          if (other.get(key, com.badlogic.gdx.utils.ObjectMap.dummy) != null) {
+          if (other.asInstanceOf[IntMap[java.lang.Object]].get(key, com.badlogic.gdx.utils.ObjectMap.dummy.asInstanceOf[java.lang.Object]) != null) {
             return false
           } else ()
         } else {
@@ -378,7 +378,7 @@ class IntMap[V] extends scala.collection.Iterable[com.badlogic.gdx.utils.IntMap.
     val valueTable: scala.Array[V] = this.valueTable;
     { var i: scala.Int = 0; val n: scala.Int = keyTable.length; while (i < n) { {
       val key: scala.Int = keyTable(i)
-      if ((key != 0) && (valueTable(i) != other.get(key, com.badlogic.gdx.utils.ObjectMap.dummy))) {
+      if ((key != 0) && (valueTable(i) != other.asInstanceOf[IntMap[java.lang.Object]].get(key, com.badlogic.gdx.utils.ObjectMap.dummy.asInstanceOf[java.lang.Object]))) {
         return false
       } else ()
     }; i = i + 1 } }
@@ -631,7 +631,7 @@ object IntMap {
     def toArray(): com.badlogic.gdx.utils.Array[V] = {
       val array: com.badlogic.gdx.utils.Array[?] = new com.badlogic.gdx.utils.Array(true, this.map.size)
       while (hasNext$field) {
-        array.add(this.next())
+        array.asInstanceOf[com.badlogic.gdx.utils.Array[java.lang.Object]].add(this.next().asInstanceOf[java.lang.Object])
       }
       return array
     }

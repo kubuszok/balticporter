@@ -48,7 +48,7 @@ final class DefaultTextureBinder extends com.badlogic.gdx.graphics.g3d.utils.Tex
     return this.bindTexture(textureDesc, false)
   }
   final def bind(texture: com.badlogic.gdx.graphics.GLTexture): scala.Int = {
-    this.tempDesc.set(texture, null, null, null, null)
+    this.tempDesc.asInstanceOf[com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[com.badlogic.gdx.graphics.GLTexture]].set(texture.asInstanceOf[com.badlogic.gdx.graphics.GLTexture], null, null, null, null)
     return this.bindTexture(this.tempDesc, false)
   }
   private final def bindTexture(textureDesc: com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[?], rebind: scala.Boolean): scala.Int = {

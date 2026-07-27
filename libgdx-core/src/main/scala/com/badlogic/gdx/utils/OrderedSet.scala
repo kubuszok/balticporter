@@ -113,7 +113,7 @@ class OrderedSet[T] extends com.badlogic.gdx.utils.ObjectSet[T] {
     } else ()
     val items: scala.Array[T] = this.items.items;
     { var i: scala.Int = 0; val n: scala.Int = this.items.size; while (i < n) { {
-      if ((items(i) != null) && (!other.contains(items(i)))) {
+      if ((items(i) != null) && (!other.asInstanceOf[com.badlogic.gdx.utils.ObjectSet[java.lang.Object]].contains(items(i).asInstanceOf[java.lang.Object]))) {
         return false
       } else ()
     }; i = i + 1 } }

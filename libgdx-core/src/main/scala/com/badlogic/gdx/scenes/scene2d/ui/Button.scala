@@ -63,7 +63,7 @@ class Button extends com.badlogic.gdx.scenes.scene2d.ui.Table with com.badlogic.
     if (this.isChecked$field == isChecked) {
       return
     } else ()
-    if ((this.buttonGroup != null) && (!this.buttonGroup.canCheck(this, isChecked))) {
+    if ((this.buttonGroup != null) && (!this.buttonGroup.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.ButtonGroup[Button]].canCheck(this.asInstanceOf[Button], isChecked))) {
       return
     } else ()
     this.isChecked$field = isChecked

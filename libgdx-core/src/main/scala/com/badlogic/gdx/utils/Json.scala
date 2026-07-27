@@ -409,7 +409,7 @@ class Json {
       } else ()
       val serializer: com.badlogic.gdx.utils.Json.Serializer[?] = this.classToSerializer.get(actualType)
       if (serializer != null) {
-        serializer.write(this, value, knownType)
+        serializer.asInstanceOf[com.badlogic.gdx.utils.Json.Serializer[java.lang.Object]].write(this, value.asInstanceOf[java.lang.Object], knownType)
         return
       } else ()
       if (value.isInstanceOf[com.badlogic.gdx.utils.Array[?]]) {
@@ -907,42 +907,42 @@ class Json {
         if (`object`.isInstanceOf[com.badlogic.gdx.utils.ObjectMap[?, ?]]) {
           val result: com.badlogic.gdx.utils.ObjectMap[?, ?] = `object`.asInstanceOf[com.badlogic.gdx.utils.ObjectMap[?, ?]].asInstanceOf[com.badlogic.gdx.utils.ObjectMap[?, ?]];
           { var child: com.badlogic.gdx.utils.JsonValue = jsonData.child$field; while (child != null) { {
-            result.put(child.name$field, this.readValue(elementType, null, child))
+            result.asInstanceOf[com.badlogic.gdx.utils.ObjectMap[java.lang.Object, java.lang.Object]].put(child.name$field.asInstanceOf[java.lang.Object], this.readValue(elementType, null, child).asInstanceOf[java.lang.Object])
           }; child = child.next$field } }
           return result.asInstanceOf[T]
         } else ()
         if (`object`.isInstanceOf[com.badlogic.gdx.utils.ObjectIntMap[?]]) {
           val result: com.badlogic.gdx.utils.ObjectIntMap[?] = `object`.asInstanceOf[com.badlogic.gdx.utils.ObjectIntMap[?]].asInstanceOf[com.badlogic.gdx.utils.ObjectIntMap[?]];
           { var child: com.badlogic.gdx.utils.JsonValue = jsonData.child$field; while (child != null) { {
-            result.put(child.name$field, this.readValue[java.lang.Integer](classOf[java.lang.Integer], null, child))
+            result.asInstanceOf[com.badlogic.gdx.utils.ObjectIntMap[java.lang.Object]].put(child.name$field.asInstanceOf[java.lang.Object], this.readValue[java.lang.Integer](classOf[java.lang.Integer], null, child))
           }; child = child.next$field } }
           return result.asInstanceOf[T]
         } else ()
         if (`object`.isInstanceOf[com.badlogic.gdx.utils.ObjectFloatMap[?]]) {
           val result: com.badlogic.gdx.utils.ObjectFloatMap[?] = `object`.asInstanceOf[com.badlogic.gdx.utils.ObjectFloatMap[?]].asInstanceOf[com.badlogic.gdx.utils.ObjectFloatMap[?]];
           { var child: com.badlogic.gdx.utils.JsonValue = jsonData.child$field; while (child != null) { {
-            result.put(child.name$field, this.readValue[java.lang.Float](classOf[java.lang.Float], null, child))
+            result.asInstanceOf[com.badlogic.gdx.utils.ObjectFloatMap[java.lang.Object]].put(child.name$field.asInstanceOf[java.lang.Object], this.readValue[java.lang.Float](classOf[java.lang.Float], null, child))
           }; child = child.next$field } }
           return result.asInstanceOf[T]
         } else ()
         if (`object`.isInstanceOf[com.badlogic.gdx.utils.ObjectSet[T]]) {
           val result: com.badlogic.gdx.utils.ObjectSet[T] = `object`.asInstanceOf[com.badlogic.gdx.utils.ObjectSet[T]].asInstanceOf[com.badlogic.gdx.utils.ObjectSet[T]];
           { var child: com.badlogic.gdx.utils.JsonValue = jsonData.getChild("values"); while (child != null) { {
-            result.add(this.readValue(elementType, null, child))
+            result.asInstanceOf[com.badlogic.gdx.utils.ObjectSet[java.lang.Object]].add(this.readValue(elementType, null, child).asInstanceOf[java.lang.Object])
           }; child = child.next$field } }
           return result.asInstanceOf[T]
         } else ()
         if (`object`.isInstanceOf[com.badlogic.gdx.utils.IntMap[?]]) {
           val result: com.badlogic.gdx.utils.IntMap[?] = `object`.asInstanceOf[com.badlogic.gdx.utils.IntMap[?]].asInstanceOf[com.badlogic.gdx.utils.IntMap[?]];
           { var child: com.badlogic.gdx.utils.JsonValue = jsonData.child$field; while (child != null) { {
-            result.put(java.lang.Integer.parseInt(child.name$field), this.readValue(elementType, null, child))
+            result.asInstanceOf[com.badlogic.gdx.utils.IntMap[java.lang.Object]].put(java.lang.Integer.parseInt(child.name$field), this.readValue(elementType, null, child).asInstanceOf[java.lang.Object])
           }; child = child.next$field } }
           return result.asInstanceOf[T]
         } else ()
         if (`object`.isInstanceOf[com.badlogic.gdx.utils.LongMap[?]]) {
           val result: com.badlogic.gdx.utils.LongMap[?] = `object`.asInstanceOf[com.badlogic.gdx.utils.LongMap[?]].asInstanceOf[com.badlogic.gdx.utils.LongMap[?]];
           { var child: com.badlogic.gdx.utils.JsonValue = jsonData.child$field; while (child != null) { {
-            result.put(java.lang.Long.parseLong(child.name$field), this.readValue(elementType, null, child))
+            result.asInstanceOf[com.badlogic.gdx.utils.LongMap[java.lang.Object]].put(java.lang.Long.parseLong(child.name$field), this.readValue(elementType, null, child).asInstanceOf[java.lang.Object])
           }; child = child.next$field } }
           return result.asInstanceOf[T]
         } else ()
@@ -956,7 +956,7 @@ class Json {
         if (`object`.isInstanceOf[com.badlogic.gdx.utils.ArrayMap[?, ?]]) {
           val result: com.badlogic.gdx.utils.ArrayMap[?, ?] = `object`.asInstanceOf[com.badlogic.gdx.utils.ArrayMap[?, ?]].asInstanceOf[com.badlogic.gdx.utils.ArrayMap[?, ?]];
           { var child: com.badlogic.gdx.utils.JsonValue = jsonData.child$field; while (child != null) { {
-            result.put(child.name$field, this.readValue(elementType, null, child))
+            result.asInstanceOf[com.badlogic.gdx.utils.ArrayMap[java.lang.Object, java.lang.Object]].put(child.name$field.asInstanceOf[java.lang.Object], this.readValue(elementType, null, child).asInstanceOf[java.lang.Object])
           }; child = child.next$field } }
           return result.asInstanceOf[T]
         } else ()
@@ -966,7 +966,7 @@ class Json {
             if (child.name$field.equals(this.typeName)) {
               /* continue */ ()
             } else ()
-            result.update(child.name$field, this.readValue(elementType, null, child))
+            result.asInstanceOf[scala.collection.mutable.Map[java.lang.Object, java.lang.Object]].update(child.name$field.asInstanceOf[java.lang.Object], this.readValue(elementType, null, child).asInstanceOf[java.lang.Object])
           }; child = child.next$field } }
           return result.asInstanceOf[T]
         } else ()
@@ -992,21 +992,21 @@ class Json {
       if (com.badlogic.gdx.utils.reflect.ClassReflection.isAssignableFrom(classOf[com.badlogic.gdx.utils.Array[T]], `type`)) {
         val result: com.badlogic.gdx.utils.Array[T] = if (`type` == classOf[com.badlogic.gdx.utils.Array[T]]) new com.badlogic.gdx.utils.Array[T]() else this.newInstance(`type`).asInstanceOf[com.badlogic.gdx.utils.Array[T]];
         { var child: com.badlogic.gdx.utils.JsonValue = jsonData.child$field; while (child != null) { {
-          result.add(this.readValue(elementType, null, child))
+          result.asInstanceOf[com.badlogic.gdx.utils.Array[java.lang.Object]].add(this.readValue(elementType, null, child).asInstanceOf[java.lang.Object])
         }; child = child.next$field } }
         return result.asInstanceOf[T]
       } else ()
       if (com.badlogic.gdx.utils.reflect.ClassReflection.isAssignableFrom(classOf[com.badlogic.gdx.utils.Queue[T]], `type`)) {
         val result: com.badlogic.gdx.utils.Queue[T] = if (`type` == classOf[com.badlogic.gdx.utils.Queue[T]]) new com.badlogic.gdx.utils.Queue[T]() else this.newInstance(`type`).asInstanceOf[com.badlogic.gdx.utils.Queue[T]];
         { var child: com.badlogic.gdx.utils.JsonValue = jsonData.child$field; while (child != null) { {
-          result.addLast(this.readValue(elementType, null, child))
+          result.asInstanceOf[com.badlogic.gdx.utils.Queue[java.lang.Object]].addLast(this.readValue(elementType, null, child).asInstanceOf[java.lang.Object])
         }; child = child.next$field } }
         return result.asInstanceOf[T]
       } else ()
       if (com.badlogic.gdx.utils.reflect.ClassReflection.isAssignableFrom(classOf[java.util.Collection[?]], `type`)) {
         val result: scala.collection.mutable.Iterable[?] = if (`type`.isInterface()) new scala.collection.mutable.ArrayBuffer() else this.newInstance(`type`).asInstanceOf[scala.collection.mutable.Iterable[?]];
         { var child: com.badlogic.gdx.utils.JsonValue = jsonData.child$field; while (child != null) { {
-          result += this.readValue(elementType, null, child)
+          result.asInstanceOf[scala.collection.mutable.Iterable[java.lang.Object]] += this.readValue(elementType, null, child).asInstanceOf[java.lang.Object]
         }; child = child.next$field } }
         return result.asInstanceOf[T]
       } else ()

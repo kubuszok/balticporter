@@ -41,7 +41,7 @@ object Pools {
     if (pool == null) {
       return
     } else ()
-    pool.free(`object`)
+    pool.asInstanceOf[com.badlogic.gdx.utils.Pool[java.lang.Object]].free(`object`.asInstanceOf[java.lang.Object])
   }
   def freeAll(objects: com.badlogic.gdx.utils.Array[?]): scala.Unit = {
     Pools.freeAll(objects, false)
@@ -62,7 +62,7 @@ object Pools {
           /* continue */ ()
         } else ()
       } else ()
-      pool.free(`object`)
+      pool.asInstanceOf[com.badlogic.gdx.utils.Pool[java.lang.Object]].free(`object`.asInstanceOf[java.lang.Object])
       if (!samePool) {
         pool = null
       } else ()

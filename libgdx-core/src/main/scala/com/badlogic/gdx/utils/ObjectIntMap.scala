@@ -260,8 +260,8 @@ class ObjectIntMap[K] extends scala.collection.Iterable[com.badlogic.gdx.utils.O
     { var i: scala.Int = 0; val n: scala.Int = keyTable.length; while (i < n) { {
       val key: K = keyTable(i)
       if (key != null) {
-        val otherValue: scala.Int = other.get(key, 0)
-        if ((otherValue == 0) && (!other.containsKey(key))) {
+        val otherValue: scala.Int = other.asInstanceOf[ObjectIntMap[java.lang.Object]].get(key.asInstanceOf[java.lang.Object], 0)
+        if ((otherValue == 0) && (!other.asInstanceOf[ObjectIntMap[java.lang.Object]].containsKey(key.asInstanceOf[java.lang.Object]))) {
           return false
         } else ()
         if (otherValue != valueTable(i)) {

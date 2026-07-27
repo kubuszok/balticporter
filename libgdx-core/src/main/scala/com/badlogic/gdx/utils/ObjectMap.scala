@@ -275,7 +275,7 @@ class ObjectMap[K, V] extends scala.collection.Iterable[com.badlogic.gdx.utils.O
       if (key != null) {
         val value: V = valueTable(i)
         if (value == null) {
-          if (other.get(key, ObjectMap.dummy) != null) {
+          if (other.asInstanceOf[ObjectMap[java.lang.Object, java.lang.Object]].get(key.asInstanceOf[java.lang.Object], ObjectMap.dummy.asInstanceOf[java.lang.Object]) != null) {
             return false
           } else ()
         } else {
@@ -302,7 +302,7 @@ class ObjectMap[K, V] extends scala.collection.Iterable[com.badlogic.gdx.utils.O
     val valueTable: scala.Array[V] = this.valueTable;
     { var i: scala.Int = 0; val n: scala.Int = keyTable.length; while (i < n) { {
       val key: K = keyTable(i)
-      if ((key != null) && (valueTable(i) != other.get(key, ObjectMap.dummy))) {
+      if ((key != null) && (valueTable(i) != other.asInstanceOf[ObjectMap[java.lang.Object, java.lang.Object]].get(key.asInstanceOf[java.lang.Object], ObjectMap.dummy.asInstanceOf[java.lang.Object]))) {
         return false
       } else ()
     }; i = i + 1 } }

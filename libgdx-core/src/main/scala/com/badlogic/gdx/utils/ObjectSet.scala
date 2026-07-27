@@ -215,7 +215,7 @@ class ObjectSet[T] extends scala.collection.Iterable[T] {
     } else ()
     val keyTable: scala.Array[T] = this.keyTable;
     { var i: scala.Int = 0; val n: scala.Int = keyTable.length; while (i < n) { {
-      if ((keyTable(i) != null) && (!other.contains(keyTable(i)))) {
+      if ((keyTable(i) != null) && (!other.asInstanceOf[ObjectSet[java.lang.Object]].contains(keyTable(i).asInstanceOf[java.lang.Object]))) {
         return false
       } else ()
     }; i = i + 1 } }

@@ -15,7 +15,7 @@ abstract class Action extends com.badlogic.gdx.utils.Pool.Poolable {
     } else ()
     if (actor == null) {
       if (this.pool != null) {
-        this.pool.free(this)
+        this.pool.asInstanceOf[com.badlogic.gdx.utils.Pool[java.lang.Object]].free(this.asInstanceOf[java.lang.Object])
         this.pool = null
       } else ()
     } else ()

@@ -24,7 +24,7 @@ class Select {
         if (this.quickSelect == null) {
           this.quickSelect = new com.badlogic.gdx.utils.QuickSelect[T]()
         } else ()
-        idx = this.quickSelect.select(items, comp, kthLowest, size)
+        idx = this.quickSelect.asInstanceOf[com.badlogic.gdx.utils.QuickSelect[java.lang.Object]].select(items.asInstanceOf[scala.Array[java.lang.Object]], comp.asInstanceOf[java.util.Comparator[java.lang.Object]], kthLowest, size)
       }
     }
     return idx

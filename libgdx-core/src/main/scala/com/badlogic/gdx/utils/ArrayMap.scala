@@ -413,11 +413,11 @@ class ArrayMap[K, V] extends scala.collection.Iterable[com.badlogic.gdx.utils.Ob
       val key: K = keys(i)
       val value: V = values(i)
       if (value == null) {
-        if (other.get(key, com.badlogic.gdx.utils.ObjectMap.dummy) != null) {
+        if (other.asInstanceOf[ArrayMap[java.lang.Object, java.lang.Object]].get(key.asInstanceOf[java.lang.Object], com.badlogic.gdx.utils.ObjectMap.dummy.asInstanceOf[java.lang.Object]) != null) {
           return false
         } else ()
       } else {
-        if (!value.equals(other.get(key))) {
+        if (!value.equals(other.asInstanceOf[ArrayMap[java.lang.Object, java.lang.Object]].get(key.asInstanceOf[java.lang.Object]))) {
           return false
         } else ()
       }
@@ -438,7 +438,7 @@ class ArrayMap[K, V] extends scala.collection.Iterable[com.badlogic.gdx.utils.Ob
     val keys: scala.Array[K] = this.keys$field
     val values: scala.Array[V] = this.values$field;
     { var i: scala.Int = 0; val n: scala.Int = this.size; while (i < n) { {
-      if (values(i) != other.get(keys(i), com.badlogic.gdx.utils.ObjectMap.dummy)) {
+      if (values(i) != other.asInstanceOf[ArrayMap[java.lang.Object, java.lang.Object]].get(keys(i).asInstanceOf[java.lang.Object], com.badlogic.gdx.utils.ObjectMap.dummy.asInstanceOf[java.lang.Object])) {
         return false
       } else ()
     }; i = i + 1 } }
@@ -600,7 +600,7 @@ object ArrayMap {
       return new com.badlogic.gdx.utils.Array(true, this.map.values$field, this.index, this.map.size - this.index)
     }
     def toArray(array: com.badlogic.gdx.utils.Array[?]): com.badlogic.gdx.utils.Array[V] = {
-      array.addAll(this.map.values$field, this.index, this.map.size - this.index)
+      array.asInstanceOf[com.badlogic.gdx.utils.Array[java.lang.Object]].addAll(this.map.values$field.asInstanceOf[scala.Array[java.lang.Object]], this.index, this.map.size - this.index)
       return array
     }
   }
@@ -641,7 +641,7 @@ object ArrayMap {
       return new com.badlogic.gdx.utils.Array(true, this.map.keys$field, this.index, this.map.size - this.index)
     }
     def toArray(array: com.badlogic.gdx.utils.Array[?]): com.badlogic.gdx.utils.Array[K] = {
-      array.addAll(this.map.keys$field, this.index, this.map.size - this.index)
+      array.asInstanceOf[com.badlogic.gdx.utils.Array[java.lang.Object]].addAll(this.map.keys$field.asInstanceOf[scala.Array[java.lang.Object]], this.index, this.map.size - this.index)
       return array
     }
   }
