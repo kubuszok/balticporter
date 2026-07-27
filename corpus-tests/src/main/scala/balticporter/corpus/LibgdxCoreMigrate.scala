@@ -4,7 +4,7 @@ import balticporter.core.{FrontendConfig, Substituted, Substitutions}
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.{Pipeline, PortabilityCheck, Program, RewriteTrace}
-import balticporter.transform.{CollectionsTransform, MutableParamsTransform, PanamaFfiTransform, ReflectionToPortableTransform}
+import balticporter.transform.{ClassTableTransform, CollectionsTransform, MutableParamsTransform, PanamaFfiTransform, ReflectionToPortableTransform}
 
 import java.nio.file.{Files, Path, StandardCopyOption}
 import scala.jdk.CollectionConverters.*
@@ -39,7 +39,13 @@ object LibgdxCoreMigrate:
         // the reflection-based serializer itself — replaced by Kindlings Jsoniter/UBJson codecs.
         // (JsonValue/JsonReader/JsonWriter/JsonMatcher are DOM/parsing types and port fine.)
         "com.badlogic.gdx.utils.Json",
+        // `Pools` fabricated a pool from a `Class` via `ReflectionPool` (reflective no-arg ctor
+        // lookup + invoke) — the one thing Scala.js/Native cannot do. Replaced by an injected
+        // `Pools` whose creation path takes a factory; `ReflectionPool` is dropped outright
+        // (upstream deprecated it for the factory-backed `DefaultPool`, which ports mechanically).
+        "com.badlogic.gdx.utils.Pools",
         // dropped with NO replacement — every reference eliminated, so CHECK 2 proves they are gone
+        "com.badlogic.gdx.utils.ReflectionPool",
         "com.badlogic.gdx.utils.reflect.Annotation",
         "com.badlogic.gdx.utils.reflect.Field",
         "com.badlogic.gdx.utils.reflect.ArrayReflection",
@@ -48,7 +54,13 @@ object LibgdxCoreMigrate:
         "com.badlogic.gdx.utils.reflect.Method",
         "com.badlogic.gdx.utils.reflect.ReflectionException",
       ),
-      dropMethods = Set.empty,
+      // libGDX itself deprecated `setEnabledReflection` (superseded by the typed
+      // `setEnabled(Styleable, Boolean)`, already ported); its private `findMethod` helper was the
+      // only reflective method scan left. Dropping both removes the last use of `reflect.Method`.
+      dropMethods = Set(
+        "com.badlogic.gdx.scenes.scene2d.ui.Skin#setEnabledReflection",
+        "com.badlogic.gdx.scenes.scene2d.ui.Skin#findMethod",
+      ),
       inject = List(overridesRoot),
     )
 
@@ -65,8 +77,16 @@ object LibgdxCoreMigrate:
     println(s"[libgdx-core] building model over ${files.size} files…")
     val types   = SpoonTir.buildModel(FrontendConfig(base, files, Nil, Nil), lenient = true)
     val raw0    = SpoonTir.fromTypes(types, subs)
+    // libGDX's ONE runtime class lookup by name (`ResourceData.AssetData` resolving a persisted
+    // asset type) has no counterpart off the JVM, so it is re-pointed at an explicit name->class
+    // table — injected as `particles.AssetTypeRegistry`, seeded with the types libGDX core itself
+    // stores and open for a downstream port to extend.
+    val classTable = new ClassTableTransform(Map(
+      "com.badlogic.gdx.utils.reflect.ClassReflection#forName" ->
+        "com.badlogic.gdx.graphics.g3d.particles.AssetTypeRegistry#classFor"
+    ))
     val program = if raw then raw0
-                  else Pipeline.run(raw0, List(new CollectionsTransform, new MutableParamsTransform, new PanamaFfiTransform(), new ReflectionToPortableTransform))
+                  else Pipeline.run(raw0, List(new CollectionsTransform, new MutableParamsTransform, new PanamaFfiTransform(), new ReflectionToPortableTransform, classTable))
     println(s"[libgdx-core] TIR: ${program.units.size} units, ${program.symbols.all.size} symbols")
 
     // Signature-changing rewrites are only safe if every USE follows. Report the blast radius of

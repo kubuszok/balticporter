@@ -138,7 +138,7 @@ object ResourceData {
       this.filename = json.readValue("filename", classOf[java.lang.String], jsonData)
       val className: java.lang.String = json.readValue("type", classOf[java.lang.String], jsonData)
       try {
-        this.`type` = com.badlogic.gdx.utils.reflect.ClassReflection.forName(className).asInstanceOf[java.lang.Class[T]]
+        this.`type` = com.badlogic.gdx.graphics.g3d.particles.AssetTypeRegistry.classFor(className).asInstanceOf[java.lang.Class[T]]
       } catch {
         case e: com.badlogic.gdx.utils.reflect.ReflectionException => {
           throw new com.badlogic.gdx.utils.GdxRuntimeException("Class not found: " + className, e)

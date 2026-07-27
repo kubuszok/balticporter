@@ -358,37 +358,6 @@ class Skin extends com.badlogic.gdx.utils.Disposable {
     style = this.get(name, style.getClass().asInstanceOf[java.lang.Class[V]]).asInstanceOf[V]
     styleable.setStyle(style)
   }
-  def setEnabledReflection(actor: com.badlogic.gdx.scenes.scene2d.Actor, enabled: scala.Boolean): scala.Unit = {
-    var method: com.badlogic.gdx.utils.reflect.Method = Skin.findMethod(actor.getClass(), "getStyle")
-    if (method == null) {
-      return
-    } else ()
-    var style: java.lang.Object = null.asInstanceOf[java.lang.Object]
-    try {
-      style = method.invoke(actor)
-    } catch {
-      case ignored: java.lang.Exception => {
-        return
-      }
-    }
-    var name: java.lang.String = this.find(style)
-    if (name == null) {
-      return
-    } else ()
-    name = name.replace("-disabled", "") + (if (enabled) "" else "-disabled")
-    style = this.get(name, style.getClass()).asInstanceOf[java.lang.Object]
-    method = Skin.findMethod(actor.getClass(), "setStyle")
-    if (method == null) {
-      return
-    } else ()
-    try {
-      method.invoke(actor, style.asInstanceOf[scala.Array[java.lang.Object]])
-    } catch {
-      case ignored: java.lang.Exception => {
-        ()
-      }
-    }
-  }
   def getAtlas(): com.badlogic.gdx.graphics.g2d.TextureAtlas = {
     return this.atlas
   }
@@ -424,16 +393,6 @@ class Skin extends com.badlogic.gdx.utils.Disposable {
 }
 object Skin {
   private final val defaultTagClasses: scala.Array[java.lang.Class[?]] = scala.Array[java.lang.Class[?]](classOf[com.badlogic.gdx.graphics.g2d.BitmapFont], classOf[com.badlogic.gdx.graphics.Color], classOf[com.badlogic.gdx.scenes.scene2d.ui.Skin.TintedDrawable], classOf[com.badlogic.gdx.scenes.scene2d.utils.NinePatchDrawable], classOf[com.badlogic.gdx.scenes.scene2d.utils.SpriteDrawable], classOf[com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable], classOf[com.badlogic.gdx.scenes.scene2d.utils.TiledDrawable], classOf[com.badlogic.gdx.scenes.scene2d.ui.Button.ButtonStyle], classOf[com.badlogic.gdx.scenes.scene2d.ui.CheckBox.CheckBoxStyle], classOf[com.badlogic.gdx.scenes.scene2d.ui.ImageButton.ImageButtonStyle], classOf[com.badlogic.gdx.scenes.scene2d.ui.ImageTextButton.ImageTextButtonStyle], classOf[com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle], classOf[com.badlogic.gdx.scenes.scene2d.ui.List.ListStyle], classOf[com.badlogic.gdx.scenes.scene2d.ui.ProgressBar.ProgressBarStyle], classOf[com.badlogic.gdx.scenes.scene2d.ui.ScrollPane.ScrollPaneStyle], classOf[com.badlogic.gdx.scenes.scene2d.ui.SelectBox.SelectBoxStyle], classOf[com.badlogic.gdx.scenes.scene2d.ui.Slider.SliderStyle], classOf[com.badlogic.gdx.scenes.scene2d.ui.SplitPane.SplitPaneStyle], classOf[com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle], classOf[com.badlogic.gdx.scenes.scene2d.ui.TextField.TextFieldStyle], classOf[com.badlogic.gdx.scenes.scene2d.ui.TextTooltip.TextTooltipStyle], classOf[com.badlogic.gdx.scenes.scene2d.ui.Touchpad.TouchpadStyle], classOf[com.badlogic.gdx.scenes.scene2d.ui.Tree.TreeStyle], classOf[com.badlogic.gdx.scenes.scene2d.ui.Window.WindowStyle])
-  private def findMethod(`type`: java.lang.Class[?], name: java.lang.String): com.badlogic.gdx.utils.reflect.Method = {
-    val methods: scala.Array[com.badlogic.gdx.utils.reflect.Method] = com.badlogic.gdx.utils.reflect.ClassReflection.getMethods(`type`);
-    { var i: scala.Int = 0; val n: scala.Int = methods.length; while (i < n) { {
-      val method: com.badlogic.gdx.utils.reflect.Method = methods(i)
-      if (method.getName().equals(name)) {
-        return method
-      } else ()
-    }; i = i + 1 } }
-    return null
-  }
   class TintedDrawable {
     var name: java.lang.String = null.asInstanceOf[java.lang.String]
     var color: com.badlogic.gdx.graphics.Color = null.asInstanceOf[com.badlogic.gdx.graphics.Color]
