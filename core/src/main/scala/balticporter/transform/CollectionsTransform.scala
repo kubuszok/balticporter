@@ -52,7 +52,8 @@ final class CollectionsTransform extends Phase:
     "java.util.TreeMap"       -> ("scala.collection.mutable.TreeMap", Kind.Map),
     // a scala `Map` IS an `Iterable[(K, V)]`, so java's `Map.Entry` — a key/value pair with no
     // identity of its own — is a `Tuple2`. `getKey`/`getValue` become `_1`/`_2` (below).
-    // Spoon spells nested types with `$`; the second key is for frontends that use `.`.
+    // Spoon's qualified name for a nested type separates with `$` — that is the key that fires;
+    // the dotted spelling is an alias for frontends that name nested types with `.`.
     "java.util.Map$Entry"     -> ("scala.Tuple2", Kind.Entry),
     "java.util.Map.Entry"     -> ("scala.Tuple2", Kind.Entry),
     "java.util.Set"           -> ("scala.collection.mutable.Set", Kind.Set),
