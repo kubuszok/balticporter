@@ -32,18 +32,31 @@ object LibgdxCoreMigrate:
     // or method out of mechanical translation when a replacement is supplied here.
     val overridesRoot = repoRoot.resolve("corpus-tests/libgdx-overrides")
     val subs = Substitutions(
-      dropTypes = Set.empty,
+      // `utils.reflect` is libGDX's thin cross-platform wrapper over `java.lang.reflect`. sge does
+      // not port it — the reflection-driven decoding it served was replaced by Kindlings'
+      // Jsoniter/UBJson codecs — so it is substituted wholesale by injected Scala at the same FQNs.
+      dropTypes = Set(
+        "com.badlogic.gdx.utils.reflect.Annotation",
+        "com.badlogic.gdx.utils.reflect.ArrayReflection",
+        "com.badlogic.gdx.utils.reflect.ClassReflection",
+        "com.badlogic.gdx.utils.reflect.Constructor",
+        "com.badlogic.gdx.utils.reflect.Field",
+        "com.badlogic.gdx.utils.reflect.Method",
+        "com.badlogic.gdx.utils.reflect.ReflectionException",
+      ),
       dropMethods = Set.empty,
       inject = List(overridesRoot),
     )
 
-    val allFiles = Files.walk(base).iterator().asScala
+    // NB: a dropped type is still PARSED — only its OUTPUT is replaced by the injected Scala.
+    // Removing it from the model instead would leave references to it unresolved, silently
+    // degrading translation of the code that USES it (a `Field` of unknown type stops being
+    // recognised as a non-String operand, so Java string concat loses its `String.valueOf` wrap).
+    val files = Files.walk(base).iterator().asScala
       .filter(p => p.toString.endsWith(".java"))
       .map(p => base.relativize(p).toString)
       .filterNot(f => f.endsWith("package-info.java") || f.endsWith("module-info.java"))
       .toList.sorted
-    // a dropped type's source is not translated (its replacement is injected instead)
-    val files = allFiles.filterNot(f => subs.dropsType(f.stripSuffix(".java").replace('/', '.')))
 
     println(s"[libgdx-core] building model over ${files.size} files…")
     val types   = SpoonTir.buildModel(FrontendConfig(base, files, Nil, Nil), lenient = true)
@@ -57,13 +70,18 @@ object LibgdxCoreMigrate:
     Files.createDirectories(outDir)
     val emitter = new TirEmitter(program)
     var written = 0
+    var dropped = 0
     program.units.foreach { u =>
       val full = program.symbolOf(u.symbol).map(_.fullName).getOrElse("Unit")
-      val rel  = full.replace('.', '/') + ".scala"
-      val p    = outDir.resolve(rel)
-      Files.createDirectories(p.getParent)
-      Files.writeString(p, emitter.emitUnit(u))
-      written += 1
+      // Substitutions.dropTypes: parsed (so every reference to it still resolves) but NOT emitted —
+      // the injected Scala below supplies this FQN instead.
+      if subs.dropsType(full) then dropped += 1
+      else
+        val rel = full.replace('.', '/') + ".scala"
+        val p   = outDir.resolve(rel)
+        Files.createDirectories(p.getParent)
+        Files.writeString(p, emitter.emitUnit(u))
+        written += 1
     }
     // inject ready-made Scala verbatim (survives the wipe-and-regenerate above):
     // new types with no Java counterpart, or whole-file replacements for dropped ones.
@@ -79,5 +97,5 @@ object LibgdxCoreMigrate:
           injected += 1
         }
     }
-    println(s"[libgdx-core] wrote $written Scala files ($injected injected) -> $outDir")
+    println(s"[libgdx-core] wrote $written Scala files ($dropped dropped, $injected injected) -> $outDir")
     println(s"[libgdx-core] now: sbt libgdx-core/compile")
