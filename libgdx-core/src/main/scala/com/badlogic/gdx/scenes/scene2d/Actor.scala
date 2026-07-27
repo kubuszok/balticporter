@@ -813,9 +813,9 @@ class Actor {
 object Actor {
   var POOLS: com.badlogic.gdx.utils.PoolManager = new com.badlogic.gdx.utils.PoolManager()
   locally {
-    Actor.POOLS.addPool(classOf[com.badlogic.gdx.math.Rectangle], (() => new com.badlogic.gdx.math.Rectangle()))
-    Actor.POOLS.addPool(classOf[com.badlogic.gdx.utils.Array[?]], (() => new com.badlogic.gdx.utils.Array()))
-    Actor.POOLS.addPool(classOf[com.badlogic.gdx.graphics.g2d.GlyphLayout], (() => new com.badlogic.gdx.graphics.g2d.GlyphLayout()))
-    Actor.POOLS.addPool(classOf[com.badlogic.gdx.scenes.scene2d.utils.ChangeListener.ChangeEvent], (() => new com.badlogic.gdx.scenes.scene2d.utils.ChangeListener.ChangeEvent()))
+    Actor.POOLS.addPool(classOf[com.badlogic.gdx.math.Rectangle], ((() => new com.badlogic.gdx.math.Rectangle()): com.badlogic.gdx.utils.DefaultPool.PoolSupplier[com.badlogic.gdx.math.Rectangle]))
+    Actor.POOLS.addPool(classOf[com.badlogic.gdx.utils.Array[?]], ((() => new com.badlogic.gdx.utils.Array()): com.badlogic.gdx.utils.DefaultPool.PoolSupplier[com.badlogic.gdx.utils.Array[?]]))
+    Actor.POOLS.addPool(classOf[com.badlogic.gdx.graphics.g2d.GlyphLayout], ((() => new com.badlogic.gdx.graphics.g2d.GlyphLayout()): com.badlogic.gdx.utils.DefaultPool.PoolSupplier[com.badlogic.gdx.graphics.g2d.GlyphLayout]))
+    Actor.POOLS.addPool(classOf[com.badlogic.gdx.scenes.scene2d.utils.ChangeListener.ChangeEvent], ((() => new com.badlogic.gdx.scenes.scene2d.utils.ChangeListener.ChangeEvent()): com.badlogic.gdx.utils.DefaultPool.PoolSupplier[com.badlogic.gdx.scenes.scene2d.utils.ChangeListener.ChangeEvent]))
   }
 }

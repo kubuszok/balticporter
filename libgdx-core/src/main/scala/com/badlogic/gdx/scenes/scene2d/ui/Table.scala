@@ -1239,7 +1239,7 @@ object Table {
   }
   object DebugRect {
     export com.badlogic.gdx.math.Rectangle.{pool => _, *}
-    var pool: com.badlogic.gdx.utils.Pool[com.badlogic.gdx.scenes.scene2d.ui.Table.DebugRect] = new com.badlogic.gdx.utils.DefaultPool[com.badlogic.gdx.scenes.scene2d.ui.Table.DebugRect]((() => new com.badlogic.gdx.scenes.scene2d.ui.Table.DebugRect()))
+    var pool: com.badlogic.gdx.utils.Pool[com.badlogic.gdx.scenes.scene2d.ui.Table.DebugRect] = new com.badlogic.gdx.utils.DefaultPool[com.badlogic.gdx.scenes.scene2d.ui.Table.DebugRect](((() => new com.badlogic.gdx.scenes.scene2d.ui.Table.DebugRect()): com.badlogic.gdx.utils.DefaultPool.PoolSupplier[com.badlogic.gdx.scenes.scene2d.ui.Table.DebugRect]))
   }
   sealed abstract class Debug {
     def name(): java.lang.String = this.toString()

@@ -41,9 +41,9 @@ class Stage(viewport$p: com.badlogic.gdx.utils.viewport.Viewport, batch$p: com.b
   } else ()
   this.viewport = viewport$p
   this.batch = batch$p
-  this.pools.addPool(classOf[com.badlogic.gdx.scenes.scene2d.InputEvent], (() => new com.badlogic.gdx.scenes.scene2d.InputEvent()))
-  this.pools.addPool(classOf[com.badlogic.gdx.scenes.scene2d.utils.FocusListener.FocusEvent], (() => new com.badlogic.gdx.scenes.scene2d.utils.FocusListener.FocusEvent()))
-  this.pools.addPool(classOf[com.badlogic.gdx.scenes.scene2d.Stage.TouchFocus], (() => new com.badlogic.gdx.scenes.scene2d.Stage.TouchFocus()))
+  this.pools.addPool(classOf[com.badlogic.gdx.scenes.scene2d.InputEvent], ((() => new com.badlogic.gdx.scenes.scene2d.InputEvent()): com.badlogic.gdx.utils.DefaultPool.PoolSupplier[com.badlogic.gdx.scenes.scene2d.InputEvent]))
+  this.pools.addPool(classOf[com.badlogic.gdx.scenes.scene2d.utils.FocusListener.FocusEvent], ((() => new com.badlogic.gdx.scenes.scene2d.utils.FocusListener.FocusEvent()): com.badlogic.gdx.utils.DefaultPool.PoolSupplier[com.badlogic.gdx.scenes.scene2d.utils.FocusListener.FocusEvent]))
+  this.pools.addPool(classOf[com.badlogic.gdx.scenes.scene2d.Stage.TouchFocus], ((() => new com.badlogic.gdx.scenes.scene2d.Stage.TouchFocus()): com.badlogic.gdx.utils.DefaultPool.PoolSupplier[com.badlogic.gdx.scenes.scene2d.Stage.TouchFocus]))
   this.root = new com.badlogic.gdx.scenes.scene2d.Group()
   this.root.setStage(this)
   viewport$p.update(com.badlogic.gdx.Gdx.graphics.getWidth(), com.badlogic.gdx.Gdx.graphics.getHeight(), true)
