@@ -87,7 +87,7 @@ class ImageButton extends com.badlogic.gdx.scenes.scene2d.ui.Button {
     return this.image
   }
   def getImageCell(): com.badlogic.gdx.scenes.scene2d.ui.Cell[?] = {
-    return this.getCell(this.image)
+    return this.getCell(this.image).asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]]
   }
   def toString(): java.lang.String = {
     val name: java.lang.String = this.getName()

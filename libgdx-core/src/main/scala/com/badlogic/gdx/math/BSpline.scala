@@ -15,13 +15,13 @@ class BSpline[T <: com.badlogic.gdx.math.Vector[T]] extends com.badlogic.gdx.mat
   }
   def set(controlPoints: scala.Array[T], degree: scala.Int, continuous: scala.Boolean): BSpline[T] = {
     if (this.tmp == null) {
-      this.tmp = controlPoints(0).cpy().asInstanceOf[T]
+      this.tmp = controlPoints(0).cpy()
     } else ()
     if (this.tmp2 == null) {
-      this.tmp2 = controlPoints(0).cpy().asInstanceOf[T]
+      this.tmp2 = controlPoints(0).cpy()
     } else ()
     if (this.tmp3 == null) {
-      this.tmp3 = controlPoints(0).cpy().asInstanceOf[T]
+      this.tmp3 = controlPoints(0).cpy()
     } else ()
     this.controlPoints = controlPoints
     this.degree = degree
@@ -37,7 +37,7 @@ class BSpline[T <: com.badlogic.gdx.math.Vector[T]] extends com.badlogic.gdx.mat
     { var i: scala.Int = 0; while (i < knotCount) { {
       this.knots.add(BSpline.calculate(controlPoints(0).cpy(), if (continuous) i else i + (0.5f * degree).asInstanceOf[scala.Int], 0.0f, controlPoints, degree, continuous, this.tmp))
     }; i = i + 1 } }
-    return this
+    return this.asInstanceOf[BSpline[T]]
   }
   def valueAt(out: T, t: scala.Float): T = {
     val n: scala.Int = this.spanCount

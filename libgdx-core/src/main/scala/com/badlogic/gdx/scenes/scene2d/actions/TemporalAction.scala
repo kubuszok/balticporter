@@ -20,7 +20,7 @@ abstract class TemporalAction extends com.badlogic.gdx.scenes.scene2d.Action wit
     if (this.complete) {
       return true
     } else ()
-    val pool: com.badlogic.gdx.utils.Pool[?] = this.getPool()
+    val pool: com.badlogic.gdx.utils.Pool[?] = this.getPool().asInstanceOf[com.badlogic.gdx.utils.Pool[?]]
     this.setPool(null)
     try {
       if (!this.began) {
@@ -39,7 +39,7 @@ abstract class TemporalAction extends com.badlogic.gdx.scenes.scene2d.Action wit
       } else ()
       return this.complete
     } finally {
-      this.setPool(pool)
+      this.setPool(pool.asInstanceOf[com.badlogic.gdx.utils.Pool[?]])
     }
   }
   def begin(): scala.Unit = {

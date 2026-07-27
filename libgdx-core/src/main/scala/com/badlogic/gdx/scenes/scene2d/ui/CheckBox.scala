@@ -11,7 +11,7 @@ class CheckBox extends com.badlogic.gdx.scenes.scene2d.ui.TextButton {
     this.image = this.newImage()
     this.image.setDrawable(style.checkboxOff)
     this.clearChildren()
-    this.imageCell = this.add(this.image)
+    this.imageCell = this.add(this.image).asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]]
     this.add(label)
     this.setSize(this.getPrefWidth(), this.getPrefHeight())
   }
@@ -58,7 +58,7 @@ class CheckBox extends com.badlogic.gdx.scenes.scene2d.ui.TextButton {
     return this.image
   }
   def getImageCell(): com.badlogic.gdx.scenes.scene2d.ui.Cell[?] = {
-    return this.imageCell
+    return this.imageCell.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]]
   }
 }
 object CheckBox {

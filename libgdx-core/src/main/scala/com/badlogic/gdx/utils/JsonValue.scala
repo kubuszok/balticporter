@@ -92,10 +92,10 @@ class JsonValue extends scala.collection.Iterable[JsonValue] {
   def has(name: java.lang.String): scala.Boolean = {
     return this.get(name) != null
   }
-  def iterator(name: java.lang.String): JsonIterator = {
+  def iterator(name: java.lang.String): com.badlogic.gdx.utils.JsonValue#JsonIterator = {
     val current: JsonValue = this.get(name)
     if (current == null) {
-      val iter: JsonIterator = new JsonIterator()
+      val iter: com.badlogic.gdx.utils.JsonValue#JsonIterator = new JsonIterator()
       iter.entry = null
       return iter
     } else ()
@@ -1024,7 +1024,7 @@ class JsonValue extends scala.collection.Iterable[JsonValue] {
       }
     }
   }
-  def iterator(): JsonIterator = {
+  def iterator(): com.badlogic.gdx.utils.JsonValue#JsonIterator = {
     return new JsonIterator()
   }
   def toString(): java.lang.String = {

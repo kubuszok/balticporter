@@ -17,20 +17,20 @@ class ParticleEffectLoader extends com.badlogic.gdx.assets.loaders.AsynchronousA
       entry.key = fileName
       entry.value = data
       this.items.add(entry)
-      assets = data.getAssets()
+      assets = data.getAssets().asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.ResourceData.AssetData[?]]]
     }
-    val descriptors: com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]()
+    val descriptors: com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]().asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]]
     for (assetData <- assets) {
       if (!this.resolve(assetData.filename).exists()) {
         assetData.filename = file.parent().child(com.badlogic.gdx.Gdx.files.internal(assetData.filename).name()).path()
       } else ()
-      if (assetData.`type` == classOf[com.badlogic.gdx.graphics.g3d.particles.ParticleEffect]) {
-        descriptors.add(new com.badlogic.gdx.assets.AssetDescriptor(assetData.filename, assetData.`type`, parameter))
+      if (assetData.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ResourceData.AssetData[java.lang.Object]].`type` == classOf[com.badlogic.gdx.graphics.g3d.particles.ParticleEffect]) {
+        descriptors.add(new com.badlogic.gdx.assets.AssetDescriptor(assetData.filename, assetData.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ResourceData.AssetData[java.lang.Object]].`type`, parameter))
       } else {
-        descriptors.add(new com.badlogic.gdx.assets.AssetDescriptor(assetData.filename, assetData.`type`))
+        descriptors.add(new com.badlogic.gdx.assets.AssetDescriptor(assetData.filename, assetData.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ResourceData.AssetData[java.lang.Object]].`type`))
       }
     }
-    return descriptors
+    return descriptors.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]]
   }
   def save(effect: com.badlogic.gdx.graphics.g3d.particles.ParticleEffect, parameter: com.badlogic.gdx.graphics.g3d.particles.ParticleEffectLoader.ParticleEffectSaveParameter): scala.Unit = {
     val data: com.badlogic.gdx.graphics.g3d.particles.ResourceData[com.badlogic.gdx.graphics.g3d.particles.ParticleEffect] = new com.badlogic.gdx.graphics.g3d.particles.ResourceData[com.badlogic.gdx.graphics.g3d.particles.ParticleEffect](effect)
@@ -45,7 +45,7 @@ class ParticleEffectLoader extends com.badlogic.gdx.assets.loaders.AsynchronousA
           } else ()
         }
         if (save) {
-          batch.save(parameter.manager, data)
+          batch.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.batches.ParticleBatch[com.badlogic.gdx.graphics.g3d.particles.renderers.ParticleControllerRenderData]].save(parameter.manager, data.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ResourceData[com.badlogic.gdx.graphics.g3d.particles.renderers.ParticleControllerRenderData]])
         } else ()
       }
     } else ()
@@ -73,7 +73,7 @@ class ParticleEffectLoader extends com.badlogic.gdx.assets.loaders.AsynchronousA
     if (parameter != null) {
       if (parameter.batches != null) {
         for (batch <- parameter.batches) {
-          batch.load(manager, effectData)
+          batch.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.batches.ParticleBatch[com.badlogic.gdx.graphics.g3d.particles.renderers.ParticleControllerRenderData]].load(manager, effectData.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ResourceData[com.badlogic.gdx.graphics.g3d.particles.renderers.ParticleControllerRenderData]])
         }
       } else ()
       effectData.resource.setBatch(parameter.batches)

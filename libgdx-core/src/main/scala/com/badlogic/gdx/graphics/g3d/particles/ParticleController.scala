@@ -206,18 +206,18 @@ class ParticleController extends com.badlogic.gdx.utils.Json.Serializable with c
     this.renderer = json.readValue("renderer", classOf[com.badlogic.gdx.graphics.g3d.particles.renderers.ParticleControllerRenderer[?, ?]], jsonMap)
   }
   def save(manager: com.badlogic.gdx.assets.AssetManager, data: com.badlogic.gdx.graphics.g3d.particles.ResourceData[?]): scala.Unit = {
-    this.emitter.save(manager, data)
+    this.emitter.save(manager, data.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ResourceData[?]])
     for (influencer <- this.influencers) {
-      influencer.save(manager, data)
+      influencer.save(manager, data.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ResourceData[?]])
     }
-    this.renderer.save(manager, data)
+    this.renderer.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.renderers.ParticleControllerRenderer[com.badlogic.gdx.graphics.g3d.particles.renderers.ParticleControllerRenderData, com.badlogic.gdx.graphics.g3d.particles.batches.ParticleBatch[java.lang.Object]]].save(manager, data.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ResourceData[?]].asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ResourceData[com.badlogic.gdx.graphics.g3d.particles.batches.ParticleBatch[java.lang.Object]]])
   }
   def load(manager: com.badlogic.gdx.assets.AssetManager, data: com.badlogic.gdx.graphics.g3d.particles.ResourceData[?]): scala.Unit = {
-    this.emitter.load(manager, data)
+    this.emitter.load(manager, data.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ResourceData[?]])
     for (influencer <- this.influencers) {
-      influencer.load(manager, data)
+      influencer.load(manager, data.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ResourceData[?]])
     }
-    this.renderer.load(manager, data)
+    this.renderer.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.renderers.ParticleControllerRenderer[com.badlogic.gdx.graphics.g3d.particles.renderers.ParticleControllerRenderData, com.badlogic.gdx.graphics.g3d.particles.batches.ParticleBatch[java.lang.Object]]].load(manager, data.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ResourceData[?]].asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ResourceData[com.badlogic.gdx.graphics.g3d.particles.batches.ParticleBatch[java.lang.Object]]])
   }
 }
 object ParticleController {

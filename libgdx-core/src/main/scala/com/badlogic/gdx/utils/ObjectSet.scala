@@ -254,8 +254,8 @@ class ObjectSet[T] extends scala.collection.Iterable[T] {
       return new com.badlogic.gdx.utils.ObjectSet.ObjectSetIterator(this).asInstanceOf[com.badlogic.gdx.utils.ObjectSet.ObjectSetIterator[T]]
     } else ()
     if (this.iterator1 == null) {
-      this.iterator1 = new com.badlogic.gdx.utils.ObjectSet.ObjectSetIterator(this)
-      this.iterator2 = new com.badlogic.gdx.utils.ObjectSet.ObjectSetIterator(this)
+      this.iterator1 = new com.badlogic.gdx.utils.ObjectSet.ObjectSetIterator(this).asInstanceOf[com.badlogic.gdx.utils.ObjectSet.ObjectSetIterator[?]]
+      this.iterator2 = new com.badlogic.gdx.utils.ObjectSet.ObjectSetIterator(this).asInstanceOf[com.badlogic.gdx.utils.ObjectSet.ObjectSetIterator[?]]
     } else ()
     if (!this.iterator1.valid) {
       this.iterator1.reset()

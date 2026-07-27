@@ -29,7 +29,7 @@ abstract class RegionInfluencer extends com.badlogic.gdx.graphics.g3d.particles.
     this.add(regions)
   }
   def this(texture: com.badlogic.gdx.graphics.Texture) = {
-    this(new com.badlogic.gdx.graphics.g2d.TextureRegion(texture))
+    this(scala.Array[com.badlogic.gdx.graphics.g2d.TextureRegion](new com.badlogic.gdx.graphics.g2d.TextureRegion(texture)))
   }
   def this(regionInfluencer: RegionInfluencer) = {
     this(regionInfluencer.regions.size)
@@ -52,7 +52,7 @@ abstract class RegionInfluencer extends com.badlogic.gdx.graphics.g3d.particles.
     this.regions.clear()
   }
   def load(manager: com.badlogic.gdx.assets.AssetManager, resources: com.badlogic.gdx.graphics.g3d.particles.ResourceData[?]): scala.Unit = {
-    super.load(manager, resources)
+    super.load(manager, resources.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ResourceData[?]])
     val data: com.badlogic.gdx.graphics.g3d.particles.ResourceData.SaveData = resources.getSaveData(RegionInfluencer.ASSET_DATA)
     if (data == null) {
       return
@@ -64,7 +64,7 @@ abstract class RegionInfluencer extends com.badlogic.gdx.graphics.g3d.particles.
     }
   }
   def save(manager: com.badlogic.gdx.assets.AssetManager, resources: com.badlogic.gdx.graphics.g3d.particles.ResourceData[?]): scala.Unit = {
-    super.save(manager, resources)
+    super.save(manager, resources.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ResourceData[?]])
     if (this.atlasName != null) {
       var data: com.badlogic.gdx.graphics.g3d.particles.ResourceData.SaveData = resources.getSaveData(RegionInfluencer.ASSET_DATA)
       if (data == null) {

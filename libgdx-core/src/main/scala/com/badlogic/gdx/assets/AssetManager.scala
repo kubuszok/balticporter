@@ -104,18 +104,18 @@ class AssetManager extends com.badlogic.gdx.utils.Disposable {
   }
   def contains(fileName: java.lang.String, `type`: java.lang.Class[?]): scala.Boolean = {
     if (this.tasks.size > 0) {
-      val assetDesc: com.badlogic.gdx.assets.AssetDescriptor[?] = this.tasks.first().assetDesc
-      if ((assetDesc.`type` == `type`) && assetDesc.fileName.equals(fileName)) {
+      val assetDesc: com.badlogic.gdx.assets.AssetDescriptor[?] = this.tasks.first().assetDesc.asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[?]]
+      if ((assetDesc.asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[java.lang.Object]].`type` == `type`) && assetDesc.fileName.equals(fileName)) {
         return true
       } else ()
     } else ();
     { var i: scala.Int = 0; while (i < this.loadQueue.size) { {
-      val assetDesc: com.badlogic.gdx.assets.AssetDescriptor[?] = this.loadQueue.get(i)
-      if ((assetDesc.`type` == `type`) && assetDesc.fileName.equals(fileName)) {
+      val assetDesc: com.badlogic.gdx.assets.AssetDescriptor[?] = this.loadQueue.get(i).asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[?]]
+      if ((assetDesc.asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[java.lang.Object]].`type` == `type`) && assetDesc.fileName.equals(fileName)) {
         return true
       } else ()
     }; i = i + 1 } }
-    return this.isLoaded(fileName, `type`)
+    return this.isLoaded(fileName, `type`.asInstanceOf[java.lang.Class[?]])
   }
   def unload(fileName: java.lang.String): scala.Unit = {
     if (this.tasks.size > 0) {
@@ -127,7 +127,7 @@ class AssetManager extends com.badlogic.gdx.utils.Disposable {
         return
       } else ()
     } else ()
-    val `type`: java.lang.Class[?] = this.assetTypes.get(fileName)
+    val `type`: java.lang.Class[?] = this.assetTypes.get(fileName).asInstanceOf[java.lang.Class[?]]
     var foundIndex: scala.Int = -1;
     { var i: scala.Int = 0; while (i < this.loadQueue.size) { {
       if (this.loadQueue.get(i).fileName.equals(fileName)) {
@@ -137,10 +137,10 @@ class AssetManager extends com.badlogic.gdx.utils.Disposable {
     }; i = i + 1 } }
     if (foundIndex != (-1)) {
       this.toLoad = this.toLoad - 1
-      val desc: com.badlogic.gdx.assets.AssetDescriptor[?] = this.loadQueue.removeIndex(foundIndex)
+      val desc: com.badlogic.gdx.assets.AssetDescriptor[?] = this.loadQueue.removeIndex(foundIndex).asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[?]]
       this.log.info("Unload (from queue): " + fileName)
-      if (((`type` != null) && (desc.params != null)) && (desc.params.loadedCallback != null)) {
-        desc.params.loadedCallback.finishedLoading(this, desc.fileName, desc.`type`)
+      if (((`type` != null) && (desc.asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[java.lang.Object]].params != null)) && (desc.asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[java.lang.Object]].params.loadedCallback != null)) {
+        desc.asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[java.lang.Object]].params.loadedCallback.finishedLoading(this, desc.fileName, desc.asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[java.lang.Object]].`type`.asInstanceOf[java.lang.Class[?]])
       } else ()
       return
     } else ()
@@ -212,31 +212,31 @@ class AssetManager extends com.badlogic.gdx.utils.Disposable {
     return assetsByType.get(fileName) != null
   }
   def getLoader[T](`type`: java.lang.Class[T]): com.badlogic.gdx.assets.loaders.AssetLoader[T, ?] = {
-    return this.getLoader(`type`, null)
+    return this.getLoader(`type`, null).asInstanceOf[com.badlogic.gdx.assets.loaders.AssetLoader[T, ?]]
   }
   def getLoader[T](`type`: java.lang.Class[T], fileName: java.lang.String): com.badlogic.gdx.assets.loaders.AssetLoader[T, ?] = {
-    val loaders: com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.assets.loaders.AssetLoader[T, ?]] = this.loaders.get(`type`)
+    val loaders: com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.assets.loaders.AssetLoader[T, ?]] = this.loaders.get(`type`).asInstanceOf[com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.assets.loaders.AssetLoader[T, ?]]]
     if ((loaders == null) || (loaders.size < 1)) {
       return null
     } else ()
     if (fileName == null) {
-      return loaders.get("")
+      return loaders.get("").asInstanceOf[com.badlogic.gdx.assets.loaders.AssetLoader[T, ?]]
     } else ()
     var result: com.badlogic.gdx.assets.loaders.AssetLoader[T, ?] = null
     var length: scala.Int = -1
     for (entry <- loaders.entries()) {
       if ((entry.key.length() > length) && fileName.endsWith(entry.key)) {
-        result = entry.value
+        result = entry.value.asInstanceOf[com.badlogic.gdx.assets.loaders.AssetLoader[T, ?]]
         length = entry.key.length()
       } else ()
     }
-    return result
+    return result.asInstanceOf[com.badlogic.gdx.assets.loaders.AssetLoader[T, ?]]
   }
   def load[T](fileName: java.lang.String, `type`: java.lang.Class[T]): scala.Unit = {
     this.load(fileName, `type`, null)
   }
   def load[T](fileName: java.lang.String, `type`: java.lang.Class[T], parameter: com.badlogic.gdx.assets.AssetLoaderParameters[T]): scala.Unit = {
-    val loader: com.badlogic.gdx.assets.loaders.AssetLoader[T, ?] = this.getLoader(`type`, fileName)
+    val loader: com.badlogic.gdx.assets.loaders.AssetLoader[T, ?] = this.getLoader(`type`, fileName).asInstanceOf[com.badlogic.gdx.assets.loaders.AssetLoader[T, ?]]
     if (loader == null) {
       throw new com.badlogic.gdx.utils.GdxRuntimeException("No loader for type: " + `type`.getSimpleName())
     } else ()
@@ -247,19 +247,19 @@ class AssetManager extends com.badlogic.gdx.utils.Disposable {
     } else ();
     { var i: scala.Int = 0; while (i < this.loadQueue.size) { {
       val desc: com.badlogic.gdx.assets.AssetDescriptor[T] = this.loadQueue.get(i).asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[T]]
-      if (desc.fileName.equals(fileName) && (!desc.`type`.equals(`type`))) {
-        throw new com.badlogic.gdx.utils.GdxRuntimeException(((((("Asset with name '" + fileName) + "' already in preload queue, but has different type (expected: ") + `type`.getSimpleName()) + ", found: ") + desc.`type`.getSimpleName()) + ")")
+      if (desc.fileName.equals(fileName) && (!desc.asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[java.lang.Object]].`type`.equals(`type`))) {
+        throw new com.badlogic.gdx.utils.GdxRuntimeException(((((("Asset with name '" + fileName) + "' already in preload queue, but has different type (expected: ") + `type`.getSimpleName()) + ", found: ") + desc.asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[java.lang.Object]].`type`.asInstanceOf[java.lang.Class[T]].getSimpleName()) + ")")
       } else ()
     }; i = i + 1 } };
     { var i: scala.Int = 0; while (i < this.tasks.size) { {
       val desc: com.badlogic.gdx.assets.AssetDescriptor[T] = this.tasks.get(i).assetDesc.asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[T]]
-      if (desc.fileName.equals(fileName) && (!desc.`type`.equals(`type`))) {
-        throw new com.badlogic.gdx.utils.GdxRuntimeException(((((("Asset with name '" + fileName) + "' already in task list, but has different type (expected: ") + `type`.getSimpleName()) + ", found: ") + desc.`type`.getSimpleName()) + ")")
+      if (desc.fileName.equals(fileName) && (!desc.asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[java.lang.Object]].`type`.equals(`type`))) {
+        throw new com.badlogic.gdx.utils.GdxRuntimeException(((((("Asset with name '" + fileName) + "' already in task list, but has different type (expected: ") + `type`.getSimpleName()) + ", found: ") + desc.asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[java.lang.Object]].`type`.asInstanceOf[java.lang.Class[T]].getSimpleName()) + ")")
       } else ()
     }; i = i + 1 } }
     val otherType: java.lang.Class[T] = this.assetTypes.get(fileName).asInstanceOf[java.lang.Class[T]]
     if ((otherType != null) && (!otherType.equals(`type`))) {
-      throw new com.badlogic.gdx.utils.GdxRuntimeException(((((("Asset with name '" + fileName) + "' already loaded, but has different type (expected: ") + `type`.getSimpleName()) + ", found: ") + otherType.getSimpleName()) + ")")
+      throw new com.badlogic.gdx.utils.GdxRuntimeException(((((("Asset with name '" + fileName) + "' already loaded, but has different type (expected: ") + `type`.getSimpleName()) + ", found: ") + otherType.asInstanceOf[java.lang.Class[T]].getSimpleName()) + ")")
     } else ()
     this.toLoad = this.toLoad + 1
     val assetDesc: com.badlogic.gdx.assets.AssetDescriptor[T] = new com.badlogic.gdx.assets.AssetDescriptor[T](fileName, `type`, parameter).asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[T]]
@@ -267,7 +267,7 @@ class AssetManager extends com.badlogic.gdx.utils.Disposable {
     this.log.debug("Queued: " + assetDesc)
   }
   def load(desc: com.badlogic.gdx.assets.AssetDescriptor[?]): scala.Unit = {
-    this.load(desc.fileName, desc.`type`, desc.params)
+    this.load(desc.fileName, desc.asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[java.lang.Object]].`type`, desc.asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[java.lang.Object]].params)
   }
   def update(): scala.Boolean = {
     try {
@@ -346,7 +346,7 @@ class AssetManager extends com.badlogic.gdx.utils.Disposable {
         /* continue */ ()
       } else ()
       injected.add(desc.fileName)
-      this.injectDependency(parentAssetFilename, desc)
+      this.injectDependency(parentAssetFilename, desc.asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[?]])
     }
     injected.clear(32)
   }
@@ -359,38 +359,38 @@ class AssetManager extends com.badlogic.gdx.utils.Disposable {
     dependencies.add(dependendAssetDesc.fileName)
     if (this.isLoaded(dependendAssetDesc.fileName)) {
       this.log.debug("Dependency already loaded: " + dependendAssetDesc)
-      val `type`: java.lang.Class[?] = this.assetTypes.get(dependendAssetDesc.fileName)
+      val `type`: java.lang.Class[?] = this.assetTypes.get(dependendAssetDesc.fileName).asInstanceOf[java.lang.Class[?]]
       val assetRef: com.badlogic.gdx.assets.AssetManager.RefCountedContainer = this.assets.get(`type`).get(dependendAssetDesc.fileName)
       assetRef.refCount = assetRef.refCount + 1
       this.incrementRefCountedDependencies(dependendAssetDesc.fileName)
     } else {
       this.log.info("Loading dependency: " + dependendAssetDesc)
-      this.addTask(dependendAssetDesc)
+      this.addTask(dependendAssetDesc.asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[?]])
     }
   }
   private def nextTask(): scala.Unit = {
-    val assetDesc: com.badlogic.gdx.assets.AssetDescriptor[?] = this.loadQueue.removeIndex(0)
+    val assetDesc: com.badlogic.gdx.assets.AssetDescriptor[?] = this.loadQueue.removeIndex(0).asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[?]]
     if (this.isLoaded(assetDesc.fileName)) {
       this.log.debug("Already loaded: " + assetDesc)
-      val `type`: java.lang.Class[?] = this.assetTypes.get(assetDesc.fileName)
+      val `type`: java.lang.Class[?] = this.assetTypes.get(assetDesc.fileName).asInstanceOf[java.lang.Class[?]]
       val assetRef: com.badlogic.gdx.assets.AssetManager.RefCountedContainer = this.assets.get(`type`).get(assetDesc.fileName)
       assetRef.refCount = assetRef.refCount + 1
       this.incrementRefCountedDependencies(assetDesc.fileName)
-      if ((assetDesc.params != null) && (assetDesc.params.loadedCallback != null)) {
-        assetDesc.params.loadedCallback.finishedLoading(this, assetDesc.fileName, assetDesc.`type`)
+      if ((assetDesc.asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[java.lang.Object]].params != null) && (assetDesc.asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[java.lang.Object]].params.loadedCallback != null)) {
+        assetDesc.asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[java.lang.Object]].params.loadedCallback.finishedLoading(this, assetDesc.fileName, assetDesc.asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[java.lang.Object]].`type`.asInstanceOf[java.lang.Class[?]])
       } else ()
       this.loaded = this.loaded + 1
     } else {
       this.log.info("Loading: " + assetDesc)
-      this.addTask(assetDesc)
+      this.addTask(assetDesc.asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[?]])
     }
   }
   private def addTask(assetDesc: com.badlogic.gdx.assets.AssetDescriptor[?]): scala.Unit = {
-    val loader: com.badlogic.gdx.assets.loaders.AssetLoader[?, ?] = this.getLoader(assetDesc.`type`, assetDesc.fileName)
+    val loader: com.badlogic.gdx.assets.loaders.AssetLoader[?, ?] = this.getLoader(assetDesc.asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[java.lang.Object]].`type`, assetDesc.fileName).asInstanceOf[com.badlogic.gdx.assets.loaders.AssetLoader[?, ?]]
     if (loader == null) {
-      throw new com.badlogic.gdx.utils.GdxRuntimeException("No loader for type: " + assetDesc.`type`.getSimpleName())
+      throw new com.badlogic.gdx.utils.GdxRuntimeException("No loader for type: " + assetDesc.asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[java.lang.Object]].`type`.asInstanceOf[java.lang.Class[?]].getSimpleName())
     } else ()
-    this.tasks.add(new com.badlogic.gdx.assets.AssetLoadingTask(this, assetDesc, loader, this.executor))
+    this.tasks.add(new com.badlogic.gdx.assets.AssetLoadingTask(this, assetDesc.asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[?]], loader.asInstanceOf[com.badlogic.gdx.assets.loaders.AssetLoader[?, ?]], this.executor))
     this.peakTasks = this.peakTasks + 1
   }
   def addAsset[T](fileName: java.lang.String, `type`: java.lang.Class[T], asset: T): scala.Unit = {
@@ -412,7 +412,7 @@ class AssetManager extends com.badlogic.gdx.utils.Disposable {
     } catch {
       case ex: java.lang.RuntimeException => {
         task.cancel = true
-        this.taskFailed(task.assetDesc, ex)
+        this.taskFailed(task.assetDesc.asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[?]], ex)
       }
     }
     if (complete) {
@@ -424,9 +424,9 @@ class AssetManager extends com.badlogic.gdx.utils.Disposable {
       if (task.cancel) {
         return true
       } else ()
-      this.addAsset(task.assetDesc.fileName, task.assetDesc.`type`, task.asset)
-      if ((task.assetDesc.params != null) && (task.assetDesc.params.loadedCallback != null)) {
-        task.assetDesc.params.loadedCallback.finishedLoading(this, task.assetDesc.fileName, task.assetDesc.`type`)
+      this.addAsset(task.assetDesc.fileName, task.assetDesc.asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[java.lang.Object]].`type`, task.asset)
+      if ((task.assetDesc.asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[java.lang.Object]].params != null) && (task.assetDesc.asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[java.lang.Object]].params.loadedCallback != null)) {
+        task.assetDesc.asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[java.lang.Object]].params.loadedCallback.finishedLoading(this, task.assetDesc.fileName, task.assetDesc.asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[java.lang.Object]].`type`.asInstanceOf[java.lang.Class[?]])
       } else ()
       val endTime: scala.Long = com.badlogic.gdx.utils.TimeUtils.nanoTime()
       this.log.debug((("Loaded: " + ((endTime - task.startTime) / 1000000.0f)) + "ms ") + task.assetDesc)
@@ -443,7 +443,7 @@ class AssetManager extends com.badlogic.gdx.utils.Disposable {
       return
     } else ()
     for (dependency <- dependencies) {
-      val `type`: java.lang.Class[?] = this.assetTypes.get(dependency)
+      val `type`: java.lang.Class[?] = this.assetTypes.get(dependency).asInstanceOf[java.lang.Class[?]]
       val assetRef: com.badlogic.gdx.assets.AssetManager.RefCountedContainer = this.assets.get(`type`).get(dependency)
       assetRef.refCount = assetRef.refCount + 1
       this.incrementRefCountedDependencies(dependency)
@@ -455,7 +455,7 @@ class AssetManager extends com.badlogic.gdx.utils.Disposable {
       throw new com.badlogic.gdx.utils.GdxRuntimeException(t)
     } else ()
     val task: com.badlogic.gdx.assets.AssetLoadingTask = this.tasks.pop()
-    val assetDesc: com.badlogic.gdx.assets.AssetDescriptor[?] = task.assetDesc
+    val assetDesc: com.badlogic.gdx.assets.AssetDescriptor[?] = task.assetDesc.asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[?]]
     if (task.dependenciesLoaded && (task.dependencies != null)) {
       for (desc <- task.dependencies) {
         this.unload(desc.fileName)
@@ -463,7 +463,7 @@ class AssetManager extends com.badlogic.gdx.utils.Disposable {
     } else ()
     this.tasks.clear()
     if (this.listener != null) {
-      this.listener.error(assetDesc, t)
+      this.listener.error(assetDesc.asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[?]], t)
     } else {
       throw new com.badlogic.gdx.utils.GdxRuntimeException(t)
     }
@@ -479,7 +479,7 @@ class AssetManager extends com.badlogic.gdx.utils.Disposable {
       throw new java.lang.IllegalArgumentException("loader cannot be null.")
     } else ()
     this.log.debug((("Loader set: " + `type`.getSimpleName()) + " -> ") + loader.getClass().getSimpleName())
-    var loaders: com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.assets.loaders.AssetLoader[T, P]] = this.loaders.get(`type`)
+    var loaders: com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.assets.loaders.AssetLoader[T, P]] = this.loaders.get(`type`).asInstanceOf[com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.assets.loaders.AssetLoader[T, P]]]
     if (loaders == null) {
       this.loaders.put(`type`, {
         loaders = new com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.assets.loaders.AssetLoader[T, P]]()
@@ -554,14 +554,14 @@ class AssetManager extends com.badlogic.gdx.utils.Disposable {
     this.log = logger
   }
   def getReferenceCount(fileName: java.lang.String): scala.Int = {
-    val `type`: java.lang.Class[?] = this.assetTypes.get(fileName)
+    val `type`: java.lang.Class[?] = this.assetTypes.get(fileName).asInstanceOf[java.lang.Class[?]]
     if (`type` == null) {
       throw new com.badlogic.gdx.utils.GdxRuntimeException("Asset not loaded: " + fileName)
     } else ()
     return this.assets.get(`type`).get(fileName).refCount
   }
   def setReferenceCount(fileName: java.lang.String, refCount: scala.Int): scala.Unit = {
-    val `type`: java.lang.Class[?] = this.assetTypes.get(fileName)
+    val `type`: java.lang.Class[?] = this.assetTypes.get(fileName).asInstanceOf[java.lang.Class[?]]
     if (`type` == null) {
       throw new com.badlogic.gdx.utils.GdxRuntimeException("Asset not loaded: " + fileName)
     } else ()
@@ -571,13 +571,13 @@ class AssetManager extends com.badlogic.gdx.utils.Disposable {
     val buffer: java.lang.StringBuilder = new java.lang.StringBuilder(256)
     for (entry <- this.assetTypes) {
       val fileName: java.lang.String = entry.key
-      val `type`: java.lang.Class[?] = entry.value
+      val `type`: java.lang.Class[?] = entry.value.asInstanceOf[java.lang.Class[?]]
       if (buffer.length() > 0) {
         buffer.append('\n')
       } else ()
       buffer.append(fileName)
       buffer.append(", ")
-      buffer.append(`type`.getSimpleName())
+      buffer.append(`type`.asInstanceOf[java.lang.Class[?]].getSimpleName())
       buffer.append(", refs: ")
       buffer.append(this.assets.get(`type`).get(fileName).refCount)
       val dependencies: com.badlogic.gdx.utils.Array[java.lang.String] = this.assetDependencies.get(fileName)
@@ -599,7 +599,7 @@ class AssetManager extends com.badlogic.gdx.utils.Disposable {
     return this.assetDependencies.get(fileName)
   }
   def getAssetType(fileName: java.lang.String): java.lang.Class[?] = {
-    return this.assetTypes.get(fileName)
+    return this.assetTypes.get(fileName).asInstanceOf[java.lang.Class[?]]
   }
 }
 object AssetManager {

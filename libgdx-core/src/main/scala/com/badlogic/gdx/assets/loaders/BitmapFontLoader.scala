@@ -9,7 +9,7 @@ class BitmapFontLoader extends com.badlogic.gdx.assets.loaders.AsynchronousAsset
     val deps: com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = new com.badlogic.gdx.utils.Array().asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]]
     if ((parameter != null) && (parameter.bitmapFontData != null)) {
       this.data = parameter.bitmapFontData
-      return deps
+      return deps.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]]
     } else ()
     this.data = new com.badlogic.gdx.graphics.g2d.BitmapFont.BitmapFontData(file, (parameter != null) && parameter.flip)
     if ((parameter != null) && (parameter.atlasName != null)) {
@@ -24,11 +24,11 @@ class BitmapFontLoader extends com.badlogic.gdx.assets.loaders.AsynchronousAsset
           textureParams.minFilter = parameter.minFilter
           textureParams.magFilter = parameter.magFilter
         } else ()
-        val descriptor: com.badlogic.gdx.assets.AssetDescriptor[?] = new com.badlogic.gdx.assets.AssetDescriptor(resolved, classOf[com.badlogic.gdx.graphics.Texture], textureParams)
+        val descriptor: com.badlogic.gdx.assets.AssetDescriptor[?] = new com.badlogic.gdx.assets.AssetDescriptor(resolved, classOf[com.badlogic.gdx.graphics.Texture], textureParams).asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[?]]
         deps.add(descriptor)
       }; i = i + 1 } }
     }
-    return deps
+    return deps.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]]
   }
   def loadAsync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.assets.loaders.BitmapFontLoader.BitmapFontParameter): scala.Unit = {
     ()

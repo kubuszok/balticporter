@@ -352,7 +352,7 @@ abstract class GLFrameBuffer[T <: com.badlogic.gdx.graphics.GLTexture] extends c
   }
 }
 object GLFrameBuffer {
-  final val buffers: scala.collection.mutable.Map[com.badlogic.gdx.Application, com.badlogic.gdx.utils.Array[GLFrameBuffer[?]]] = new scala.collection.mutable.HashMap[com.badlogic.gdx.Application, com.badlogic.gdx.utils.Array[GLFrameBuffer[?]]]()
+  final val buffers: scala.collection.mutable.Map[com.badlogic.gdx.Application, com.badlogic.gdx.utils.Array[GLFrameBuffer[?]]] = new scala.collection.mutable.HashMap[com.badlogic.gdx.Application, com.badlogic.gdx.utils.Array[GLFrameBuffer[?]]]().asInstanceOf[scala.collection.mutable.Map[com.badlogic.gdx.Application, com.badlogic.gdx.utils.Array[GLFrameBuffer[?]]]]
   final val GL_DEPTH24_STENCIL8_OES: scala.Int = 35056
   var defaultFramebufferHandle: scala.Int = 0
   var defaultFramebufferHandleInitialized: scala.Boolean = false
@@ -360,9 +360,9 @@ object GLFrameBuffer {
     com.badlogic.gdx.Gdx.gl20.glBindFramebuffer(com.badlogic.gdx.graphics.GL20.GL_FRAMEBUFFER, GLFrameBuffer.defaultFramebufferHandle)
   }
   private def addManagedFrameBuffer(app: com.badlogic.gdx.Application, frameBuffer: GLFrameBuffer[?]): scala.Unit = {
-    var managedResources: com.badlogic.gdx.utils.Array[GLFrameBuffer[?]] = GLFrameBuffer.buffers.getOrElse(app, null.asInstanceOf[com.badlogic.gdx.utils.Array[GLFrameBuffer[?]]])
+    var managedResources: com.badlogic.gdx.utils.Array[GLFrameBuffer[?]] = GLFrameBuffer.buffers.getOrElse(app, null.asInstanceOf[com.badlogic.gdx.utils.Array[GLFrameBuffer[?]]]).asInstanceOf[com.badlogic.gdx.utils.Array[GLFrameBuffer[?]]]
     if (managedResources == null) {
-      managedResources = new com.badlogic.gdx.utils.Array[GLFrameBuffer[?]]()
+      managedResources = new com.badlogic.gdx.utils.Array[GLFrameBuffer[?]]().asInstanceOf[com.badlogic.gdx.utils.Array[GLFrameBuffer[?]]]
     } else ()
     managedResources.add(frameBuffer)
     GLFrameBuffer.buffers.update(app, managedResources)
@@ -371,7 +371,7 @@ object GLFrameBuffer {
     if (com.badlogic.gdx.Gdx.gl20 == null) {
       return
     } else ()
-    val bufferArray: com.badlogic.gdx.utils.Array[GLFrameBuffer[?]] = GLFrameBuffer.buffers.getOrElse(app, null.asInstanceOf[com.badlogic.gdx.utils.Array[GLFrameBuffer[?]]])
+    val bufferArray: com.badlogic.gdx.utils.Array[GLFrameBuffer[?]] = GLFrameBuffer.buffers.getOrElse(app, null.asInstanceOf[com.badlogic.gdx.utils.Array[GLFrameBuffer[?]]]).asInstanceOf[com.badlogic.gdx.utils.Array[GLFrameBuffer[?]]]
     if (bufferArray == null) {
       return
     } else ();

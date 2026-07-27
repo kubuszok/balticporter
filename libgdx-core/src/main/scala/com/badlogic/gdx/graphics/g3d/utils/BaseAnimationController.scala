@@ -95,8 +95,8 @@ object BaseAnimationController {
       return out.set(nodeAnim.translation.get(0).value)
     } else ()
     var index: scala.Int = BaseAnimationController.getFirstKeyframeIndexAtTime(nodeAnim.translation, time)
-    val firstKeyframe: com.badlogic.gdx.graphics.g3d.model.NodeKeyframe[?] = nodeAnim.translation.get(index)
-    out.set(firstKeyframe.value.asInstanceOf[com.badlogic.gdx.math.Vector3].asInstanceOf[com.badlogic.gdx.math.Vector3])
+    val firstKeyframe: com.badlogic.gdx.graphics.g3d.model.NodeKeyframe[?] = nodeAnim.translation.get(index).asInstanceOf[com.badlogic.gdx.graphics.g3d.model.NodeKeyframe[?]]
+    out.set(firstKeyframe.asInstanceOf[com.badlogic.gdx.graphics.g3d.model.NodeKeyframe[java.lang.Object]].value.asInstanceOf[com.badlogic.gdx.math.Vector3].asInstanceOf[com.badlogic.gdx.math.Vector3])
     if ({ index += 1; index } < nodeAnim.translation.size) {
       val secondKeyframe: com.badlogic.gdx.graphics.g3d.model.NodeKeyframe[com.badlogic.gdx.math.Vector3] = nodeAnim.translation.get(index)
       val t: scala.Float = (time - firstKeyframe.keytime) / (secondKeyframe.keytime - firstKeyframe.keytime)
@@ -112,8 +112,8 @@ object BaseAnimationController {
       return out.set(nodeAnim.rotation.get(0).value)
     } else ()
     var index: scala.Int = BaseAnimationController.getFirstKeyframeIndexAtTime(nodeAnim.rotation, time)
-    val firstKeyframe: com.badlogic.gdx.graphics.g3d.model.NodeKeyframe[?] = nodeAnim.rotation.get(index)
-    out.set(firstKeyframe.value.asInstanceOf[com.badlogic.gdx.math.Quaternion].asInstanceOf[com.badlogic.gdx.math.Quaternion])
+    val firstKeyframe: com.badlogic.gdx.graphics.g3d.model.NodeKeyframe[?] = nodeAnim.rotation.get(index).asInstanceOf[com.badlogic.gdx.graphics.g3d.model.NodeKeyframe[?]]
+    out.set(firstKeyframe.asInstanceOf[com.badlogic.gdx.graphics.g3d.model.NodeKeyframe[java.lang.Object]].value.asInstanceOf[com.badlogic.gdx.math.Quaternion].asInstanceOf[com.badlogic.gdx.math.Quaternion])
     if ({ index += 1; index } < nodeAnim.rotation.size) {
       val secondKeyframe: com.badlogic.gdx.graphics.g3d.model.NodeKeyframe[com.badlogic.gdx.math.Quaternion] = nodeAnim.rotation.get(index)
       val t: scala.Float = (time - firstKeyframe.keytime) / (secondKeyframe.keytime - firstKeyframe.keytime)
@@ -129,8 +129,8 @@ object BaseAnimationController {
       return out.set(nodeAnim.scaling.get(0).value)
     } else ()
     var index: scala.Int = BaseAnimationController.getFirstKeyframeIndexAtTime(nodeAnim.scaling, time)
-    val firstKeyframe: com.badlogic.gdx.graphics.g3d.model.NodeKeyframe[?] = nodeAnim.scaling.get(index)
-    out.set(firstKeyframe.value.asInstanceOf[com.badlogic.gdx.math.Vector3].asInstanceOf[com.badlogic.gdx.math.Vector3])
+    val firstKeyframe: com.badlogic.gdx.graphics.g3d.model.NodeKeyframe[?] = nodeAnim.scaling.get(index).asInstanceOf[com.badlogic.gdx.graphics.g3d.model.NodeKeyframe[?]]
+    out.set(firstKeyframe.asInstanceOf[com.badlogic.gdx.graphics.g3d.model.NodeKeyframe[java.lang.Object]].value.asInstanceOf[com.badlogic.gdx.math.Vector3].asInstanceOf[com.badlogic.gdx.math.Vector3])
     if ({ index += 1; index } < nodeAnim.scaling.size) {
       val secondKeyframe: com.badlogic.gdx.graphics.g3d.model.NodeKeyframe[com.badlogic.gdx.math.Vector3] = nodeAnim.scaling.get(index)
       val t: scala.Float = (time - firstKeyframe.keytime) / (secondKeyframe.keytime - firstKeyframe.keytime)

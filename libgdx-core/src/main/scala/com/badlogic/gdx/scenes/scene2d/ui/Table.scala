@@ -35,14 +35,14 @@ class Table extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup {
   def this(skin: com.badlogic.gdx.scenes.scene2d.ui.Skin) = {
     this()
     this.skin = skin
-    this.cellDefaults = this.obtainCell()
+    this.cellDefaults = this.obtainCell().asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]]
     this.setTransform(false)
     this.setTouchable(com.badlogic.gdx.scenes.scene2d.Touchable.childrenOnly)
   }
   private def obtainCell(): com.badlogic.gdx.scenes.scene2d.ui.Cell[?] = {
-    val cell: com.badlogic.gdx.scenes.scene2d.ui.Cell[?] = Table.cellPool.obtain()
+    val cell: com.badlogic.gdx.scenes.scene2d.ui.Cell[?] = Table.cellPool.obtain().asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]]
     cell.setTable(this)
-    return cell
+    return cell.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]]
   }
   def draw(batch: com.badlogic.gdx.graphics.g2d.Batch, parentAlpha: scala.Float): scala.Unit = {
     this.validate()
@@ -220,7 +220,7 @@ class Table extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup {
     return this.add(new com.badlogic.gdx.scenes.scene2d.ui.Label(text, new com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle(this.skin.getFont(fontName), this.skin.getColor(colorName))))
   }
   def add(): com.badlogic.gdx.scenes.scene2d.ui.Cell[?] = {
-    return this.add(null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.Actor])
+    return this.add(null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.Actor]).asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]]
   }
   def stack(actors: scala.Array[com.badlogic.gdx.scenes.scene2d.Actor]): com.badlogic.gdx.scenes.scene2d.ui.Cell[com.badlogic.gdx.scenes.scene2d.ui.Stack] = {
     val stack: com.badlogic.gdx.scenes.scene2d.ui.Stack = new com.badlogic.gdx.scenes.scene2d.ui.Stack()
@@ -238,7 +238,7 @@ class Table extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup {
     if (!super.removeActor(actor, unfocus)) {
       return false
     } else ()
-    val cell: com.badlogic.gdx.scenes.scene2d.ui.Cell[?] = this.getCell(actor)
+    val cell: com.badlogic.gdx.scenes.scene2d.ui.Cell[?] = this.getCell(actor).asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]]
     if (cell != null) {
       cell.actor = null
     } else ()
@@ -246,7 +246,7 @@ class Table extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup {
   }
   def removeActorAt(index: scala.Int, unfocus: scala.Boolean): com.badlogic.gdx.scenes.scene2d.Actor = {
     var actor: com.badlogic.gdx.scenes.scene2d.Actor = super.removeActorAt(index, unfocus)
-    val cell: com.badlogic.gdx.scenes.scene2d.ui.Cell[?] = this.getCell(actor)
+    val cell: com.badlogic.gdx.scenes.scene2d.ui.Cell[?] = this.getCell(actor).asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]]
     if (cell != null) {
       cell.actor = null
     } else ()
@@ -282,7 +282,7 @@ class Table extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup {
     this.debug(com.badlogic.gdx.scenes.scene2d.ui.Table.Debug.none)
     this.cellDefaults.reset();
     { var i: scala.Int = 0; val n: scala.Int = this.columnDefaults$field.size; while (i < n) { {
-      val columnCell: com.badlogic.gdx.scenes.scene2d.ui.Cell[?] = this.columnDefaults$field.get(i)
+      val columnCell: com.badlogic.gdx.scenes.scene2d.ui.Cell[?] = this.columnDefaults$field.get(i).asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]]
       if (columnCell != null) {
         Table.cellPool.free(columnCell)
       } else ()
@@ -293,7 +293,7 @@ class Table extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup {
     if (this.cells.size > 0) {
       if (!this.implicitEndRow) {
         if (this.cells.peek().endRow) {
-          return this.rowDefaults
+          return this.rowDefaults.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]]
         } else ()
         this.endRow()
       } else ()
@@ -303,9 +303,9 @@ class Table extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup {
     if (this.rowDefaults != null) {
       Table.cellPool.free(this.rowDefaults)
     } else ()
-    this.rowDefaults = this.obtainCell()
+    this.rowDefaults = this.obtainCell().asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]]
     this.rowDefaults.clear()
-    return this.rowDefaults
+    return this.rowDefaults.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]]
   }
   private def endRow(): scala.Unit = {
     val cells: scala.Array[java.lang.Object] = this.cells.items.asInstanceOf[scala.Array[java.lang.Object]]
@@ -324,7 +324,7 @@ class Table extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup {
   def columnDefaults(column: scala.Int): com.badlogic.gdx.scenes.scene2d.ui.Cell[?] = {
     var cell: com.badlogic.gdx.scenes.scene2d.ui.Cell[?] = if (this.columnDefaults$field.size > column) this.columnDefaults$field.get(column) else null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]]
     if (cell == null) {
-      cell = this.obtainCell()
+      cell = this.obtainCell().asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]]
       cell.clear()
       if (column >= this.columnDefaults$field.size) {
         { var i: scala.Int = this.columnDefaults$field.size; while (i < column) { {
@@ -335,7 +335,7 @@ class Table extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup {
         this.columnDefaults$field.set(column, cell)
       }
     } else ()
-    return cell
+    return cell.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]]
   }
   def getCell[T <: com.badlogic.gdx.scenes.scene2d.Actor](actor: T): com.badlogic.gdx.scenes.scene2d.ui.Cell[T] = {
     if (actor == null) {
@@ -351,7 +351,7 @@ class Table extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup {
     return null
   }
   def getCells(): com.badlogic.gdx.utils.Array[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]] = {
-    return this.cells
+    return this.cells.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]]]
   }
   def getPrefWidth(): scala.Float = {
     if (this.sizeInvalid) {
@@ -386,7 +386,7 @@ class Table extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup {
     return this.tableMinHeight
   }
   def defaults(): com.badlogic.gdx.scenes.scene2d.ui.Cell[?] = {
-    return this.cellDefaults
+    return this.cellDefaults.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]]
   }
   def pad(pad: com.badlogic.gdx.scenes.scene2d.ui.Value): Table = {
     if (pad == null) {
@@ -1130,7 +1130,7 @@ class Table extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup {
     } else ()
     val x: scala.Float = currentX;
     { var i: scala.Int = 0; val n: scala.Int = this.cells.size; while (i < n) { {
-      val c: com.badlogic.gdx.scenes.scene2d.ui.Cell[?] = this.cells.get(i)
+      val c: com.badlogic.gdx.scenes.scene2d.ui.Cell[?] = this.cells.get(i).asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]]
       if ((this.debug$field == com.badlogic.gdx.scenes.scene2d.ui.Table.Debug.actor) || (this.debug$field == com.badlogic.gdx.scenes.scene2d.ui.Table.Debug.all)) {
         this.addDebugRect(c.actorX, c.actorY, c.actorWidth, c.actorHeight, Table.debugActorColor)
       } else ()
@@ -1227,7 +1227,7 @@ object Table {
   var debugTableColor: com.badlogic.gdx.graphics.Color = new com.badlogic.gdx.graphics.Color(0, 0, 1, 1)
   var debugCellColor: com.badlogic.gdx.graphics.Color = new com.badlogic.gdx.graphics.Color(1, 0, 0, 1)
   var debugActorColor: com.badlogic.gdx.graphics.Color = new com.badlogic.gdx.graphics.Color(0, 1, 0, 1)
-  final val cellPool: com.badlogic.gdx.utils.Pool[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]] = new com.badlogic.gdx.utils.Pool[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]]()
+  final val cellPool: com.badlogic.gdx.utils.Pool[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]] = new com.badlogic.gdx.utils.Pool[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]]().asInstanceOf[com.badlogic.gdx.utils.Pool[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]]]
   private var columnWeightedWidth: scala.Array[scala.Float] = null.asInstanceOf[scala.Array[scala.Float]]
   private var rowWeightedHeight: scala.Array[scala.Float] = null.asInstanceOf[scala.Array[scala.Float]]
   var backgroundTop: com.badlogic.gdx.scenes.scene2d.ui.Value = new com.badlogic.gdx.scenes.scene2d.ui.Value()
@@ -1239,7 +1239,7 @@ object Table {
   }
   object DebugRect {
     export com.badlogic.gdx.math.Rectangle.{pool => _, *}
-    var pool: com.badlogic.gdx.utils.Pool[com.badlogic.gdx.scenes.scene2d.ui.Table.DebugRect] = new com.badlogic.gdx.utils.DefaultPool[com.badlogic.gdx.scenes.scene2d.ui.Table.DebugRect](((() => new com.badlogic.gdx.scenes.scene2d.ui.Table.DebugRect()): com.badlogic.gdx.utils.DefaultPool.PoolSupplier[com.badlogic.gdx.scenes.scene2d.ui.Table.DebugRect]))
+    var pool: com.badlogic.gdx.utils.Pool[com.badlogic.gdx.scenes.scene2d.ui.Table.DebugRect] = new com.badlogic.gdx.utils.DefaultPool[com.badlogic.gdx.scenes.scene2d.ui.Table.DebugRect]((() => new com.badlogic.gdx.scenes.scene2d.ui.Table.DebugRect()))
   }
   sealed abstract class Debug {
     def name(): java.lang.String = this.toString()

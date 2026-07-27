@@ -50,7 +50,7 @@ class Tree[N <: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[N, V, ?], V] extend
     var index: scala.Int = index$arg
     if (node.parent != null) {
       node.parent.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[java.lang.Object, java.lang.Object, com.badlogic.gdx.scenes.scene2d.Actor], java.lang.Object, com.badlogic.gdx.scenes.scene2d.Actor]].remove(node.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[java.lang.Object, java.lang.Object, com.badlogic.gdx.scenes.scene2d.Actor]])
-      node.parent = null.asInstanceOf[N]
+      node.parent = null
     } else {
       val existingIndex: scala.Int = this.rootNodes.indexOf(node, true)
       if (existingIndex != (-1)) {
@@ -73,7 +73,7 @@ class Tree[N <: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[N, V, ?], V] extend
       actorIndex = 0
     } else {
       if (index < (this.rootNodes.size - 1)) {
-        actorIndex = this.rootNodes.get(index + 1).actor.getZIndex()
+        actorIndex = this.rootNodes.get(index + 1).asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[java.lang.Object, java.lang.Object, com.badlogic.gdx.scenes.scene2d.Actor], java.lang.Object, com.badlogic.gdx.scenes.scene2d.Actor]].actor.getZIndex()
       } else {
         val before: N = this.rootNodes.get(index - 1)
         actorIndex = before.actor.getZIndex() + before.countActors()
@@ -341,7 +341,7 @@ class Tree[N <: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[N, V, ?], V] extend
       } else ()
     }; i = i + 1 } };
     { var i: scala.Int = 0; val n: scala.Int = this.rootNodes.size; var actorIndex: scala.Int = 0; while (i < n) { {
-      actorIndex = actorIndex + this.rootNodes.get(i).asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[java.lang.Object, java.lang.Object, com.badlogic.gdx.scenes.scene2d.Actor], java.lang.Object, com.badlogic.gdx.scenes.scene2d.Actor]].addToTree(this.asInstanceOf[Tree[com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[java.lang.Object, java.lang.Object, com.badlogic.gdx.scenes.scene2d.Actor], java.lang.Object]], actorIndex)
+      actorIndex = actorIndex + this.rootNodes.get(i).asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[java.lang.Object, java.lang.Object, com.badlogic.gdx.scenes.scene2d.Actor], java.lang.Object, com.badlogic.gdx.scenes.scene2d.Actor]].addToTree(this.asInstanceOf[Tree[java.lang.Object, java.lang.Object]], actorIndex)
     }; i = i + 1 } }
   }
   def getOverNode(): N = {
@@ -426,34 +426,34 @@ object Tree {
   def findExpandedValues(nodes: com.badlogic.gdx.utils.Array[? <: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[?, ?, ?]], values: com.badlogic.gdx.utils.Array[?]): scala.Boolean = {
     val expanded: scala.Boolean = false;
     { var i: scala.Int = 0; val n: scala.Int = nodes.size; while (i < n) { {
-      val node: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[?, ?, ?] = nodes.get(i)
-      if (node.expanded && (!Tree.findExpandedValues(node.children, values))) {
-        values.asInstanceOf[com.badlogic.gdx.utils.Array[java.lang.Object]].add(node.value.asInstanceOf[java.lang.Object])
+      val node: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[?, ?, ?] = nodes.get(i).asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[?, ?, ?]]
+      if (node.expanded && (!Tree.findExpandedValues(node.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[java.lang.Object, java.lang.Object, com.badlogic.gdx.scenes.scene2d.Actor], java.lang.Object, com.badlogic.gdx.scenes.scene2d.Actor]].children, values.asInstanceOf[com.badlogic.gdx.utils.Array[?]]))) {
+        values.asInstanceOf[com.badlogic.gdx.utils.Array[java.lang.Object]].add(node.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[java.lang.Object, java.lang.Object, com.badlogic.gdx.scenes.scene2d.Actor], java.lang.Object, com.badlogic.gdx.scenes.scene2d.Actor]].value.asInstanceOf[java.lang.Object])
       } else ()
     }; i = i + 1 } }
     return expanded
   }
   def findNode(nodes: com.badlogic.gdx.utils.Array[? <: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[?, ?, ?]], value: java.lang.Object): com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[?, ?, ?] = {
     { var i: scala.Int = 0; val n: scala.Int = nodes.size; while (i < n) { {
-      val node: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[?, ?, ?] = nodes.get(i)
-      if (value.equals(node.value)) {
-        return node
+      val node: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[?, ?, ?] = nodes.get(i).asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[?, ?, ?]]
+      if (value.equals(node.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[java.lang.Object, java.lang.Object, com.badlogic.gdx.scenes.scene2d.Actor], java.lang.Object, com.badlogic.gdx.scenes.scene2d.Actor]].value)) {
+        return node.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[?, ?, ?]]
       } else ()
     }; i = i + 1 } };
     { var i: scala.Int = 0; val n: scala.Int = nodes.size; while (i < n) { {
-      val node: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[?, ?, ?] = nodes.get(i)
-      val found: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[?, ?, ?] = Tree.findNode(node.children, value)
+      val node: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[?, ?, ?] = nodes.get(i).asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[?, ?, ?]]
+      val found: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[?, ?, ?] = Tree.findNode(node.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[java.lang.Object, java.lang.Object, com.badlogic.gdx.scenes.scene2d.Actor], java.lang.Object, com.badlogic.gdx.scenes.scene2d.Actor]].children, value).asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[?, ?, ?]]
       if (found != null) {
-        return found
+        return found.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[?, ?, ?]]
       } else ()
     }; i = i + 1 } }
     return null
   }
   def collapseAll(nodes: com.badlogic.gdx.utils.Array[? <: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[?, ?, ?]]): scala.Unit = {
     { var i: scala.Int = 0; val n: scala.Int = nodes.size; while (i < n) { {
-      val node: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[?, ?, ?] = nodes.get(i)
+      val node: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[?, ?, ?] = nodes.get(i).asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[?, ?, ?]]
       node.setExpanded(false)
-      Tree.collapseAll(node.children)
+      Tree.collapseAll(node.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[java.lang.Object, java.lang.Object, com.badlogic.gdx.scenes.scene2d.Actor], java.lang.Object, com.badlogic.gdx.scenes.scene2d.Actor]].children)
     }; i = i + 1 } }
   }
   def expandAll(nodes: com.badlogic.gdx.utils.Array[? <: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[?, ?, ?]]): scala.Unit = {
@@ -485,7 +485,7 @@ object Tree {
       if (this.children.size == 0) {
         return
       } else ()
-      val tree: Tree[N, V] = this.getTree()
+      val tree: Tree[N, V] = this.getTree().asInstanceOf[Tree[N, V]]
       if (tree == null) {
         return
       } else ()
@@ -532,19 +532,19 @@ object Tree {
       }; i = i + 1 } }
     }
     def insert(childIndex: scala.Int, node: N): scala.Unit = {
-      node.parent = this.asInstanceOf[N]
+      node.parent = this.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[N, V, A]]
       this.children.insert(childIndex, node)
       if (!this.expanded) {
         return
       } else ()
-      val tree: Tree[N, V] = this.getTree()
+      val tree: Tree[N, V] = this.getTree().asInstanceOf[Tree[N, V]]
       if (tree != null) {
         var actorIndex: scala.Int = 0
         if (childIndex == 0) {
           actorIndex = this.actor.getZIndex() + 1
         } else {
           if (childIndex < (this.children.size - 1)) {
-            actorIndex = this.children.get(childIndex + 1).actor.getZIndex()
+            actorIndex = this.children.get(childIndex + 1).asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[java.lang.Object, java.lang.Object, com.badlogic.gdx.scenes.scene2d.Actor], java.lang.Object, com.badlogic.gdx.scenes.scene2d.Actor]].actor.getZIndex()
           } else {
             val before: N = this.children.get(childIndex - 1)
             actorIndex = before.actor.getZIndex() + before.countActors()
@@ -565,12 +565,12 @@ object Tree {
       return count
     }
     def remove(): scala.Unit = {
-      val tree: Tree[N, V] = this.getTree()
+      val tree: Tree[N, V] = this.getTree().asInstanceOf[Tree[N, V]]
       if (tree != null) {
         tree.asInstanceOf[Tree[com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[java.lang.Object, java.lang.Object, com.badlogic.gdx.scenes.scene2d.Actor], java.lang.Object]].remove(this.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[java.lang.Object, java.lang.Object, com.badlogic.gdx.scenes.scene2d.Actor]])
       } else {
         if (this.parent != null) {
-          this.parent.remove(this.asInstanceOf[N])
+          this.parent.remove(this)
         } else ()
       }
     }
@@ -581,14 +581,14 @@ object Tree {
       if (!this.expanded) {
         return
       } else ()
-      val tree: Tree[N, V] = this.getTree()
+      val tree: Tree[N, V] = this.getTree().asInstanceOf[Tree[N, V]]
       if (tree != null) {
         node.removeFromTree(tree, node.actor.getZIndex())
       } else ()
     }
     def clearChildren(): scala.Unit = {
       if (this.expanded) {
-        val tree: Tree[N, V] = this.getTree()
+        val tree: Tree[N, V] = this.getTree().asInstanceOf[Tree[N, V]]
         if (tree != null) {
           val actorIndex: scala.Int = this.actor.getZIndex() + 1
           val children: scala.Array[java.lang.Object] = this.children.items.asInstanceOf[scala.Array[java.lang.Object]];
@@ -633,7 +633,7 @@ object Tree {
       if (!this.expanded) {
         return
       } else ()
-      val tree: Tree[N, V] = this.getTree()
+      val tree: Tree[N, V] = this.getTree().asInstanceOf[Tree[N, V]]
       if (tree == null) {
         return
       } else ()
@@ -664,7 +664,7 @@ object Tree {
     }
     def getLevel(): scala.Int = {
       var level: scala.Int = 0
-      var current: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[N, V, A] = this
+      var current: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[N, V, A] = this.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[N, V, A]]
       while ({ {
         level = level + 1
         current = current.getParent().asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[N, V, A]]
@@ -691,10 +691,10 @@ object Tree {
       } else ()
     }
     def expandTo(): scala.Unit = {
-      var node: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[N, V, A] = this.parent
+      var node: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[N, V, A] = this.parent.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[N, V, A]]
       while (node != null) {
         node.setExpanded(true)
-        node = node.parent.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[N, V, A]]
+        node = node.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[java.lang.Object, java.lang.Object, com.badlogic.gdx.scenes.scene2d.Actor], java.lang.Object, com.badlogic.gdx.scenes.scene2d.Actor]].parent.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[N, V, A]]
       }
     }
     def isSelectable(): scala.Boolean = {
@@ -724,12 +724,12 @@ object Tree {
       if (node == null) {
         throw new java.lang.IllegalArgumentException("node cannot be null.")
       } else ()
-      var current: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[N, V, A] = node
+      var current: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[N, V, A] = node.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[N, V, A]]
       while ({ {
         if (current == this) {
           return true
         } else ()
-        current = current.parent.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[N, V, A]]
+        current = current.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[java.lang.Object, java.lang.Object, com.badlogic.gdx.scenes.scene2d.Actor], java.lang.Object, com.badlogic.gdx.scenes.scene2d.Actor]].parent.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[N, V, A]]
       }; current != null }) ()
       return false
     }
@@ -737,12 +737,12 @@ object Tree {
       if (node == null) {
         throw new java.lang.IllegalArgumentException("node cannot be null.")
       } else ()
-      var parent: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[N, V, A] = this
+      var parent: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[N, V, A] = this.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[N, V, A]]
       while ({ {
         if (parent == node) {
           return true
         } else ()
-        parent = parent.parent.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[N, V, A]]
+        parent = parent.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[java.lang.Object, java.lang.Object, com.badlogic.gdx.scenes.scene2d.Actor], java.lang.Object, com.badlogic.gdx.scenes.scene2d.Actor]].parent.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[N, V, A]]
       }; parent != null }) ()
       return false
     }

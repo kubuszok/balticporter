@@ -9,7 +9,7 @@ final class DefaultTextureBinder extends com.badlogic.gdx.graphics.g3d.utils.Tex
   private var reused: scala.Boolean = false
   private var reuseCount: scala.Int = 0
   private var bindCount: scala.Int = 0
-  private final val tempDesc: com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[?] = new com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor()
+  private final val tempDesc: com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[?] = new com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor().asInstanceOf[com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[?]]
   private var currentTexture: scala.Int = 0
   def this(method: scala.Int, offset: scala.Int, count$arg: scala.Int) = {
     this()
@@ -45,16 +45,16 @@ final class DefaultTextureBinder extends com.badlogic.gdx.graphics.g3d.utils.Tex
     com.badlogic.gdx.Gdx.gl.glActiveTexture(com.badlogic.gdx.graphics.GL20.GL_TEXTURE0)
   }
   final def bind(textureDesc: com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[?]): scala.Int = {
-    return this.bindTexture(textureDesc, false)
+    return this.bindTexture(textureDesc.asInstanceOf[com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[?]], false)
   }
   final def bind(texture: com.badlogic.gdx.graphics.GLTexture): scala.Int = {
     this.tempDesc.asInstanceOf[com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[com.badlogic.gdx.graphics.GLTexture]].set(texture.asInstanceOf[com.badlogic.gdx.graphics.GLTexture], null, null, null, null)
-    return this.bindTexture(this.tempDesc, false)
+    return this.bindTexture(this.tempDesc.asInstanceOf[com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[?]], false)
   }
   private final def bindTexture(textureDesc: com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[?], rebind: scala.Boolean): scala.Int = {
     var idx: scala.Int = 0
     var result: scala.Int = 0
-    val texture: com.badlogic.gdx.graphics.GLTexture = textureDesc.texture
+    val texture: com.badlogic.gdx.graphics.GLTexture = textureDesc.asInstanceOf[com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[com.badlogic.gdx.graphics.GLTexture]].texture
     this.reused = false
     this.method match {
       case DefaultTextureBinder.ROUNDROBIN => {

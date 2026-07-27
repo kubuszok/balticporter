@@ -253,7 +253,7 @@ class Queue[T] extends scala.collection.Iterable[T] {
   }
   def iterator(): scala.collection.Iterator[T] = {
     if (com.badlogic.gdx.utils.Collections.allocateIterators) {
-      return new com.badlogic.gdx.utils.Queue.QueueIterator[T](this, true)
+      return new com.badlogic.gdx.utils.Queue.QueueIterator[T](this, true).asInstanceOf[scala.collection.Iterator[T]]
     } else ()
     if (this.iterable == null) {
       this.iterable = new com.badlogic.gdx.utils.Queue.QueueIterable[T](this).asInstanceOf[com.badlogic.gdx.utils.Queue.QueueIterable[T]]
@@ -323,7 +323,7 @@ class Queue[T] extends scala.collection.Iterable[T] {
     } else ()
     val myValues: scala.Array[T] = this.values
     val myBackingLength: scala.Int = myValues.length
-    val itsValues: scala.Array[java.lang.Object] = q.values.asInstanceOf[scala.Array[java.lang.Object]]
+    val itsValues: scala.Array[java.lang.Object] = q.asInstanceOf[Queue[java.lang.Object]].values.asInstanceOf[scala.Array[java.lang.Object]]
     val itsBackingLength: scala.Int = itsValues.length
     var myIndex: scala.Int = this.head
     var itsIndex: scala.Int = q.head;
@@ -358,7 +358,7 @@ class Queue[T] extends scala.collection.Iterable[T] {
     } else ()
     val myValues: scala.Array[T] = this.values
     val myBackingLength: scala.Int = myValues.length
-    val itsValues: scala.Array[java.lang.Object] = q.values.asInstanceOf[scala.Array[java.lang.Object]]
+    val itsValues: scala.Array[java.lang.Object] = q.asInstanceOf[Queue[java.lang.Object]].values.asInstanceOf[scala.Array[java.lang.Object]]
     val itsBackingLength: scala.Int = itsValues.length
     var myIndex: scala.Int = this.head
     var itsIndex: scala.Int = q.head;
@@ -436,7 +436,7 @@ object Queue {
     }
     def iterator(): scala.collection.Iterator[T] = {
       if (com.badlogic.gdx.utils.Collections.allocateIterators) {
-        return new com.badlogic.gdx.utils.Queue.QueueIterator[T](this.queue, this.allowRemove)
+        return new com.badlogic.gdx.utils.Queue.QueueIterator[T](this.queue, this.allowRemove).asInstanceOf[scala.collection.Iterator[T]]
       } else ()
       if (this.iterator1 == null) {
         this.iterator1 = new com.badlogic.gdx.utils.Queue.QueueIterator[T](this.queue, this.allowRemove).asInstanceOf[com.badlogic.gdx.utils.Queue.QueueIterator[T]]
@@ -446,12 +446,12 @@ object Queue {
         this.iterator1.index = 0
         this.iterator1.valid = true
         this.iterator2.valid = false
-        return this.iterator1
+        return this.iterator1.asInstanceOf[scala.collection.Iterator[T]]
       } else ()
       this.iterator2.index = 0
       this.iterator2.valid = true
       this.iterator1.valid = false
-      return this.iterator2
+      return this.iterator2.asInstanceOf[scala.collection.Iterator[T]]
     }
   }
 }

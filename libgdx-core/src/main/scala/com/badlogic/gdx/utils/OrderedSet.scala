@@ -124,8 +124,8 @@ class OrderedSet[T] extends com.badlogic.gdx.utils.ObjectSet[T] {
       return new com.badlogic.gdx.utils.OrderedSet.OrderedSetIterator(this).asInstanceOf[com.badlogic.gdx.utils.OrderedSet.OrderedSetIterator[T]]
     } else ()
     if (this.iterator1 == null) {
-      this.iterator1 = new com.badlogic.gdx.utils.OrderedSet.OrderedSetIterator(this)
-      this.iterator2 = new com.badlogic.gdx.utils.OrderedSet.OrderedSetIterator(this)
+      this.iterator1 = new com.badlogic.gdx.utils.OrderedSet.OrderedSetIterator(this).asInstanceOf[com.badlogic.gdx.utils.OrderedSet.OrderedSetIterator[?]]
+      this.iterator2 = new com.badlogic.gdx.utils.OrderedSet.OrderedSetIterator(this).asInstanceOf[com.badlogic.gdx.utils.OrderedSet.OrderedSetIterator[?]]
     } else ()
     if (!this.iterator1.valid) {
       this.iterator1.reset()

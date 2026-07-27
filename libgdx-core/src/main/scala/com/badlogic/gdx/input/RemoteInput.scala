@@ -69,8 +69,8 @@ class RemoteInput extends java.lang.Runnable with com.badlogic.gdx.Input {
         this.multiTouch = in.readBoolean()
         while (true) {
           val event: scala.Int = in.readInt()
-          var keyEvent: KeyEvent = null
-          var touchEvent: TouchEvent = null
+          var keyEvent: com.badlogic.gdx.input.RemoteInput#KeyEvent = null
+          var touchEvent: com.badlogic.gdx.input.RemoteInput#TouchEvent = null
           event match {
             case com.badlogic.gdx.input.RemoteSender.ACCEL => {
               this.accel(0) = in.readFloat()
@@ -346,9 +346,9 @@ class RemoteInput extends java.lang.Runnable with com.badlogic.gdx.Input {
     final val TOUCH_DRAGGED: scala.Int = 2
   }
   class EventTrigger extends java.lang.Runnable {
-    var touchEvent: TouchEvent = null.asInstanceOf[TouchEvent]
-    var keyEvent: KeyEvent = null.asInstanceOf[KeyEvent]
-    def this(touchEvent: TouchEvent, keyEvent: KeyEvent) = {
+    var touchEvent: com.badlogic.gdx.input.RemoteInput#TouchEvent = null.asInstanceOf[com.badlogic.gdx.input.RemoteInput#TouchEvent]
+    var keyEvent: com.badlogic.gdx.input.RemoteInput#KeyEvent = null.asInstanceOf[com.badlogic.gdx.input.RemoteInput#KeyEvent]
+    def this(touchEvent: com.badlogic.gdx.input.RemoteInput#TouchEvent, keyEvent: com.badlogic.gdx.input.RemoteInput#KeyEvent) = {
       this()
       this.touchEvent = touchEvent
       this.keyEvent = keyEvent

@@ -36,10 +36,10 @@ abstract class Action extends com.badlogic.gdx.utils.Pool.Poolable {
     this.restart()
   }
   def getPool(): com.badlogic.gdx.utils.Pool[?] = {
-    return this.pool
+    return this.pool.asInstanceOf[com.badlogic.gdx.utils.Pool[?]]
   }
   def setPool(pool: com.badlogic.gdx.utils.Pool[?]): scala.Unit = {
-    this.pool = pool
+    this.pool = pool.asInstanceOf[com.badlogic.gdx.utils.Pool[?]]
   }
   def toString(): java.lang.String = {
     var name: java.lang.String = this.getClass().getName()

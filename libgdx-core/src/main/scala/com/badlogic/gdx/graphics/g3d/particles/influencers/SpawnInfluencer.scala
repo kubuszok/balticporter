@@ -49,10 +49,10 @@ class SpawnInfluencer extends com.badlogic.gdx.graphics.g3d.particles.influencer
     this.spawnShapeValue = json.readValue("spawnShape", classOf[com.badlogic.gdx.graphics.g3d.particles.values.SpawnShapeValue], jsonData)
   }
   def save(manager: com.badlogic.gdx.assets.AssetManager, data: com.badlogic.gdx.graphics.g3d.particles.ResourceData[?]): scala.Unit = {
-    this.spawnShapeValue.save(manager, data)
+    this.spawnShapeValue.save(manager, data.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ResourceData[?]])
   }
   def load(manager: com.badlogic.gdx.assets.AssetManager, data: com.badlogic.gdx.graphics.g3d.particles.ResourceData[?]): scala.Unit = {
-    this.spawnShapeValue.load(manager, data)
+    this.spawnShapeValue.load(manager, data.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ResourceData[?]])
   }
 }
 object SpawnInfluencer {

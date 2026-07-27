@@ -41,7 +41,7 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
   var cursorOn: scala.Boolean = false
   var blinkTime: scala.Float = 0.32f
   final val blinkTask: com.badlogic.gdx.utils.Timer.Task = new com.badlogic.gdx.utils.Timer.Task()
-  final val keyRepeatTask: KeyRepeatTask = new KeyRepeatTask()
+  final val keyRepeatTask: com.badlogic.gdx.scenes.scene2d.ui.TextField#KeyRepeatTask = new KeyRepeatTask()
   var programmaticChangeEvents: scala.Boolean = false
   def this(text: java.lang.String, style: com.badlogic.gdx.scenes.scene2d.ui.TextField.TextFieldStyle) = {
     this()
@@ -734,9 +734,9 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
       selectionStart = cursor
       val stage: com.badlogic.gdx.scenes.scene2d.Stage = getStage()
       if (stage != null) {
-        stage.setKeyboardFocus(TextField.this)
+        stage.setKeyboardFocus(this)
       } else ()
-      keyboard.show(TextField.this)
+      keyboard.show(this)
       hasSelection = true
       return true
     }
@@ -934,7 +934,7 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
           val oldCursor: scala.Int = cursor
           if (remove) {
             if (hasSelection) {
-              cursor = TextField.this.delete(false)
+              cursor = delete(false)
             } else {
               if (backspace && (cursor > 0)) {
                 text = text.substring(0, cursor - 1) + text.substring({ cursor -= 1; cursor })
@@ -946,14 +946,14 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
             }
           } else ()
           if (add && (!remove)) {
-            if (((!enter) && (filter != null)) && (!filter.acceptChar(TextField.this, character))) {
+            if (((!enter) && (filter != null)) && (!filter.acceptChar(this, character))) {
               return true
             } else ()
             if (!withinMaxLength(text.length() - (if (hasSelection) java.lang.Math.abs(cursor - selectionStart) else 0))) {
               return true
             } else ()
             if (hasSelection) {
-              cursor = TextField.this.delete(false)
+              cursor = delete(false)
             } else ()
             val insertion: java.lang.String = if (enter) "\n" else java.lang.String.valueOf(character)
             text = insert({ cursor += 1; cursor }, insertion, text)
@@ -974,7 +974,7 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
         } else ()
       }
       if (listener != null) {
-        listener.keyTyped(TextField.this, character)
+        listener.keyTyped(this, character)
       } else ()
       return true
     }

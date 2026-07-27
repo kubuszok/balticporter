@@ -15,7 +15,7 @@ class DirectionalShadowLight extends com.badlogic.gdx.graphics.g3d.environment.D
     this.cam.far = shadowFar
     this.halfHeight = shadowViewportHeight * 0.5f
     this.halfDepth = shadowNear + (0.5f * (shadowFar - shadowNear))
-    this.textureDesc = new com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor()
+    this.textureDesc = new com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor().asInstanceOf[com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[?]]
     this.textureDesc.minFilter = {
       this.textureDesc.magFilter = com.badlogic.gdx.graphics.Texture.TextureFilter.Nearest
       this.textureDesc.magFilter
@@ -66,8 +66,8 @@ class DirectionalShadowLight extends com.badlogic.gdx.graphics.g3d.environment.D
     return this.cam.combined
   }
   def getDepthMap(): com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[?] = {
-    this.textureDesc.texture = this.fbo.getColorBufferTexture()
-    return this.textureDesc
+    this.textureDesc.asInstanceOf[com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[com.badlogic.gdx.graphics.GLTexture]].texture = this.fbo.getColorBufferTexture()
+    return this.textureDesc.asInstanceOf[com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[?]]
   }
   def dispose(): scala.Unit = {
     if (this.fbo != null) {

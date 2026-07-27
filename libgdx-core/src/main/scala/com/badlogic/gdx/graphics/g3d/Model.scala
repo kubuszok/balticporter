@@ -216,7 +216,7 @@ class Model extends com.badlogic.gdx.utils.Disposable {
           textures.put(tex.fileName, texture)
           this.disposables.add(texture)
         }
-        val descriptor: com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[?] = new com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor(texture)
+        val descriptor: com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[?] = new com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor(texture).asInstanceOf[com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[?]]
         descriptor.minFilter = texture.getMinFilter()
         descriptor.magFilter = texture.getMagFilter()
         descriptor.uWrap = texture.getUWrap()
@@ -227,25 +227,25 @@ class Model extends com.badlogic.gdx.utils.Disposable {
         val scaleV: scala.Float = if (tex.uvScaling == null) 1.0f else tex.uvScaling.y
         tex.usage match {
           case com.badlogic.gdx.graphics.g3d.model.data.ModelTexture.USAGE_DIFFUSE => {
-            result.set(new com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute(com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute.Diffuse, descriptor, offsetU, offsetV, scaleU, scaleV))
+            result.set(new com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute(com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute.Diffuse, descriptor.asInstanceOf[com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[com.badlogic.gdx.graphics.Texture]], offsetU, offsetV, scaleU, scaleV))
           }
           case com.badlogic.gdx.graphics.g3d.model.data.ModelTexture.USAGE_SPECULAR => {
-            result.set(new com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute(com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute.Specular, descriptor, offsetU, offsetV, scaleU, scaleV))
+            result.set(new com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute(com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute.Specular, descriptor.asInstanceOf[com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[com.badlogic.gdx.graphics.Texture]], offsetU, offsetV, scaleU, scaleV))
           }
           case com.badlogic.gdx.graphics.g3d.model.data.ModelTexture.USAGE_BUMP => {
-            result.set(new com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute(com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute.Bump, descriptor, offsetU, offsetV, scaleU, scaleV))
+            result.set(new com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute(com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute.Bump, descriptor.asInstanceOf[com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[com.badlogic.gdx.graphics.Texture]], offsetU, offsetV, scaleU, scaleV))
           }
           case com.badlogic.gdx.graphics.g3d.model.data.ModelTexture.USAGE_NORMAL => {
-            result.set(new com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute(com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute.Normal, descriptor, offsetU, offsetV, scaleU, scaleV))
+            result.set(new com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute(com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute.Normal, descriptor.asInstanceOf[com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[com.badlogic.gdx.graphics.Texture]], offsetU, offsetV, scaleU, scaleV))
           }
           case com.badlogic.gdx.graphics.g3d.model.data.ModelTexture.USAGE_AMBIENT => {
-            result.set(new com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute(com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute.Ambient, descriptor, offsetU, offsetV, scaleU, scaleV))
+            result.set(new com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute(com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute.Ambient, descriptor.asInstanceOf[com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[com.badlogic.gdx.graphics.Texture]], offsetU, offsetV, scaleU, scaleV))
           }
           case com.badlogic.gdx.graphics.g3d.model.data.ModelTexture.USAGE_EMISSIVE => {
-            result.set(new com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute(com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute.Emissive, descriptor, offsetU, offsetV, scaleU, scaleV))
+            result.set(new com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute(com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute.Emissive, descriptor.asInstanceOf[com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[com.badlogic.gdx.graphics.Texture]], offsetU, offsetV, scaleU, scaleV))
           }
           case com.badlogic.gdx.graphics.g3d.model.data.ModelTexture.USAGE_REFLECTION => {
-            result.set(new com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute(com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute.Reflection, descriptor, offsetU, offsetV, scaleU, scaleV))
+            result.set(new com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute(com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute.Reflection, descriptor.asInstanceOf[com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[com.badlogic.gdx.graphics.Texture]], offsetU, offsetV, scaleU, scaleV))
           }
         }
       }

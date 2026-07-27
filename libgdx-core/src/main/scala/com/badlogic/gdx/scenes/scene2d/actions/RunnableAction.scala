@@ -11,12 +11,12 @@ class RunnableAction extends com.badlogic.gdx.scenes.scene2d.Action {
     return true
   }
   def run(): scala.Unit = {
-    val pool: com.badlogic.gdx.utils.Pool[?] = this.getPool()
+    val pool: com.badlogic.gdx.utils.Pool[?] = this.getPool().asInstanceOf[com.badlogic.gdx.utils.Pool[?]]
     this.setPool(null)
     try {
       this.runnable.run()
     } finally {
-      this.setPool(pool)
+      this.setPool(pool.asInstanceOf[com.badlogic.gdx.utils.Pool[?]])
     }
   }
   def restart(): scala.Unit = {

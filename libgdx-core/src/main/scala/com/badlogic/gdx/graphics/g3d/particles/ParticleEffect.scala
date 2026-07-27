@@ -130,13 +130,13 @@ class ParticleEffect extends com.badlogic.gdx.utils.Disposable with com.badlogic
   }
   def save(assetManager: com.badlogic.gdx.assets.AssetManager, data: com.badlogic.gdx.graphics.g3d.particles.ResourceData[?]): scala.Unit = {
     for (controller <- this.controllers) {
-      controller.save(assetManager, data)
+      controller.save(assetManager, data.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ResourceData[?]])
     }
   }
   def load(assetManager: com.badlogic.gdx.assets.AssetManager, data: com.badlogic.gdx.graphics.g3d.particles.ResourceData[?]): scala.Unit = {
     val i: scala.Int = 0
     for (controller <- this.controllers) {
-      controller.load(assetManager, data)
+      controller.load(assetManager, data.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ResourceData[?]])
     }
   }
 }

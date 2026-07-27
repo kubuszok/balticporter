@@ -40,7 +40,7 @@ class Cell[T <: com.badlogic.gdx.scenes.scene2d.Actor] extends com.badlogic.gdx.
   val defaults: Cell[T] = Cell.defaults().asInstanceOf[Cell[T]]
   this.cellAboveIndex = -1
   if (defaults != null) {
-    this.set(defaults)
+    this.set(defaults.asInstanceOf[Cell[T]])
   } else ()
   def setTable(table: com.badlogic.gdx.scenes.scene2d.ui.Table): scala.Unit = {
     this.table = table
@@ -799,7 +799,7 @@ class Cell[T <: com.badlogic.gdx.scenes.scene2d.Actor] extends com.badlogic.gdx.
     this.table = null
     this.endRow = false
     this.cellAboveIndex = -1
-    this.set(Cell.defaults())
+    this.set(Cell.defaults().asInstanceOf[Cell[T]])
   }
   def set(cell: Cell[T]): scala.Unit = {
     this.minWidth$field = cell.minWidth$field
@@ -915,7 +915,7 @@ object Cell {
   def defaults(): Cell[?] = {
     if ((Cell.files == null) || (Cell.files != com.badlogic.gdx.Gdx.files)) {
       Cell.files = com.badlogic.gdx.Gdx.files
-      Cell.defaults$field = new Cell()
+      Cell.defaults$field = new Cell().asInstanceOf[Cell[?]]
       Cell.defaults$field.minWidth$field = com.badlogic.gdx.scenes.scene2d.ui.Value.minWidth
       Cell.defaults$field.minHeight$field = com.badlogic.gdx.scenes.scene2d.ui.Value.minHeight
       Cell.defaults$field.prefWidth$field = com.badlogic.gdx.scenes.scene2d.ui.Value.prefWidth
@@ -939,6 +939,6 @@ object Cell {
       Cell.defaults$field.uniformX$field = null
       Cell.defaults$field.uniformY$field = null
     } else ()
-    return Cell.defaults$field
+    return Cell.defaults$field.asInstanceOf[Cell[?]]
   }
 }

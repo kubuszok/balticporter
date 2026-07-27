@@ -12,7 +12,7 @@ class SerializationException extends java.lang.RuntimeException {
     this()
   }
   def causedBy(`type`: java.lang.Class[?]): scala.Boolean = {
-    return this.causedBy(this, `type`)
+    return this.causedBy(this, `type`.asInstanceOf[java.lang.Class[?]])
   }
   private def causedBy(ex: java.lang.Throwable, `type`: java.lang.Class[?]): scala.Boolean = {
     val cause: java.lang.Throwable = ex.getCause()
@@ -22,7 +22,7 @@ class SerializationException extends java.lang.RuntimeException {
     if (`type`.isAssignableFrom(cause.getClass())) {
       return true
     } else ()
-    return this.causedBy(cause, `type`)
+    return this.causedBy(cause, `type`.asInstanceOf[java.lang.Class[?]])
   }
   def getMessage(): java.lang.String = {
     if (this.trace == null) {

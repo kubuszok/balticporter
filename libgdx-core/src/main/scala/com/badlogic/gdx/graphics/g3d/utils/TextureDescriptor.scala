@@ -21,7 +21,7 @@ class TextureDescriptor[T <: com.badlogic.gdx.graphics.GLTexture] extends java.l
     this.vWrap = vWrap
   }
   def set[V <: T](other: TextureDescriptor[V]): scala.Unit = {
-    this.texture = other.texture.asInstanceOf[T]
+    this.texture = other.texture
     this.minFilter = other.minFilter
     this.magFilter = other.magFilter
     this.uWrap = other.uWrap
@@ -38,7 +38,7 @@ class TextureDescriptor[T <: com.badlogic.gdx.graphics.GLTexture] extends java.l
       return false
     } else ()
     val other: TextureDescriptor[?] = obj.asInstanceOf[TextureDescriptor[?]].asInstanceOf[TextureDescriptor[?]]
-    return ((((other.texture == this.texture) && (other.minFilter == this.minFilter)) && (other.magFilter == this.magFilter)) && (other.uWrap == this.uWrap)) && (other.vWrap == this.vWrap)
+    return ((((other.asInstanceOf[TextureDescriptor[com.badlogic.gdx.graphics.GLTexture]].texture == this.texture) && (other.minFilter == this.minFilter)) && (other.magFilter == this.magFilter)) && (other.uWrap == this.uWrap)) && (other.vWrap == this.vWrap)
   }
   def hashCode(): scala.Int = {
     var result: scala.Long = if (this.texture == null) 0 else this.texture.glTarget

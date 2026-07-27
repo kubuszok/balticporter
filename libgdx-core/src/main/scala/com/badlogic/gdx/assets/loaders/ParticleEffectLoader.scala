@@ -23,7 +23,7 @@ class ParticleEffectLoader extends com.badlogic.gdx.assets.loaders.SynchronousAs
       deps = new com.badlogic.gdx.utils.Array().asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]]
       deps.add(new com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.graphics.g2d.TextureAtlas](param.atlasFile, classOf[com.badlogic.gdx.graphics.g2d.TextureAtlas]))
     } else ()
-    return deps
+    return deps.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]]
   }
 }
 object ParticleEffectLoader {

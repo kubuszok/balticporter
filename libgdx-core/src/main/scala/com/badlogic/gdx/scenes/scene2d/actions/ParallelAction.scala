@@ -38,7 +38,7 @@ class ParallelAction extends com.badlogic.gdx.scenes.scene2d.Action {
       return true
     } else ()
     this.complete = true
-    val pool: com.badlogic.gdx.utils.Pool[?] = this.getPool()
+    val pool: com.badlogic.gdx.utils.Pool[?] = this.getPool().asInstanceOf[com.badlogic.gdx.utils.Pool[?]]
     this.setPool(null)
     try {
       val actions: com.badlogic.gdx.utils.Array[com.badlogic.gdx.scenes.scene2d.Action] = this.actions;
@@ -53,7 +53,7 @@ class ParallelAction extends com.badlogic.gdx.scenes.scene2d.Action {
       }; i = i + 1 } }
       return this.complete
     } finally {
-      this.setPool(pool)
+      this.setPool(pool.asInstanceOf[com.badlogic.gdx.utils.Pool[?]])
     }
   }
   def restart(): scala.Unit = {

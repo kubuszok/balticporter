@@ -1,22 +1,22 @@
 package com.badlogic.gdx.graphics.g3d.particles
 
 class ParallelArray {
-  var arrays: com.badlogic.gdx.utils.Array[Channel] = null.asInstanceOf[com.badlogic.gdx.utils.Array[Channel]]
+  var arrays: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.ParallelArray#Channel] = null.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.ParallelArray#Channel]]
   var capacity: scala.Int = 0
   var size: scala.Int = 0
   def this(capacity: scala.Int) = {
     this()
-    this.arrays = new com.badlogic.gdx.utils.Array[Channel](false, 2, ((size: scala.Int) => new scala.Array[Channel](size)))
+    this.arrays = new com.badlogic.gdx.utils.Array[Channel](false, 2, ((size: scala.Int) => new scala.Array[com.badlogic.gdx.graphics.g3d.particles.ParallelArray#Channel](size)))
     this.capacity = capacity
     this.size = 0
   }
-  def addChannel[T <: Channel](channelDescriptor: com.badlogic.gdx.graphics.g3d.particles.ParallelArray.ChannelDescriptor): T = {
+  def addChannel[T <: com.badlogic.gdx.graphics.g3d.particles.ParallelArray#Channel](channelDescriptor: com.badlogic.gdx.graphics.g3d.particles.ParallelArray.ChannelDescriptor): T = {
     return this.addChannel(channelDescriptor, null)
   }
-  def addChannel[T <: Channel](channelDescriptor: com.badlogic.gdx.graphics.g3d.particles.ParallelArray.ChannelDescriptor, initializer: com.badlogic.gdx.graphics.g3d.particles.ParallelArray.ChannelInitializer[T]): T = {
+  def addChannel[T <: com.badlogic.gdx.graphics.g3d.particles.ParallelArray#Channel](channelDescriptor: com.badlogic.gdx.graphics.g3d.particles.ParallelArray.ChannelDescriptor, initializer: com.badlogic.gdx.graphics.g3d.particles.ParallelArray.ChannelInitializer[T]): T = {
     var channel: T = this.getChannel(channelDescriptor)
     if (channel == null) {
-      channel = this.allocateChannel(channelDescriptor).asInstanceOf[T]
+      channel = this.allocateChannel(channelDescriptor)
       if (initializer != null) {
         initializer.init(channel)
       } else ()
@@ -24,7 +24,7 @@ class ParallelArray {
     } else ()
     return channel
   }
-  private def allocateChannel[T <: Channel](channelDescriptor: com.badlogic.gdx.graphics.g3d.particles.ParallelArray.ChannelDescriptor): T = {
+  private def allocateChannel[T <: com.badlogic.gdx.graphics.g3d.particles.ParallelArray#Channel](channelDescriptor: com.badlogic.gdx.graphics.g3d.particles.ParallelArray.ChannelDescriptor): T = {
     if (channelDescriptor.`type` == classOf[scala.Float]) {
       return new FloatChannel(channelDescriptor.id, channelDescriptor.count, this.capacity).asInstanceOf[T]
     } else {
@@ -40,7 +40,7 @@ class ParallelArray {
   }
   private def findIndex(id: scala.Int): scala.Int = {
     { var i: scala.Int = 0; while (i < this.arrays.size) { {
-      val array: Channel = this.arrays.items(i)
+      val array: com.badlogic.gdx.graphics.g3d.particles.ParallelArray#Channel = this.arrays.items(i)
       if (array.id == id) {
         return i
       } else ()
@@ -65,7 +65,7 @@ class ParallelArray {
     }
     this.size = last
   }
-  def getChannel[T <: Channel](descriptor: com.badlogic.gdx.graphics.g3d.particles.ParallelArray.ChannelDescriptor): T = {
+  def getChannel[T <: com.badlogic.gdx.graphics.g3d.particles.ParallelArray#Channel](descriptor: com.badlogic.gdx.graphics.g3d.particles.ParallelArray.ChannelDescriptor): T = {
     for (array <- this.arrays) {
       if (array.id == descriptor.id) {
         return array.asInstanceOf[T]
@@ -215,7 +215,7 @@ object ParallelArray {
       this.`type` = arraySupplier.get(0).getClass().getComponentType()
     }
   }
-  trait ChannelInitializer[T <: Channel] {
+  trait ChannelInitializer[T <: com.badlogic.gdx.graphics.g3d.particles.ParallelArray#Channel] {
     def init(channel: T): scala.Unit
   }
 }

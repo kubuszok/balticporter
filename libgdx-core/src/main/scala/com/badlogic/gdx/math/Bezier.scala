@@ -25,34 +25,34 @@ class Bezier[T <: com.badlogic.gdx.math.Vector[T]] extends com.badlogic.gdx.math
       throw new com.badlogic.gdx.utils.GdxRuntimeException("Only first, second and third degree Bezier curves are supported.")
     } else ()
     if (this.tmp == null) {
-      this.tmp = points(0).cpy().asInstanceOf[T]
+      this.tmp = points(0).cpy()
     } else ()
     if (this.tmp2 == null) {
-      this.tmp2 = points(0).cpy().asInstanceOf[T]
+      this.tmp2 = points(0).cpy()
     } else ()
     if (this.tmp3 == null) {
-      this.tmp3 = points(0).cpy().asInstanceOf[T]
+      this.tmp3 = points(0).cpy()
     } else ()
     this.points.clear()
     this.points.addAll(points, offset, length)
-    return this
+    return this.asInstanceOf[Bezier[T]]
   }
   def set(points: com.badlogic.gdx.utils.Array[T], offset: scala.Int, length: scala.Int): Bezier[T] = {
     if ((length < 2) || (length > 4)) {
       throw new com.badlogic.gdx.utils.GdxRuntimeException("Only first, second and third degree Bezier curves are supported.")
     } else ()
     if (this.tmp == null) {
-      this.tmp = points.get(0).cpy().asInstanceOf[T]
+      this.tmp = points.get(0).cpy()
     } else ()
     if (this.tmp2 == null) {
-      this.tmp2 = points.get(0).cpy().asInstanceOf[T]
+      this.tmp2 = points.get(0).cpy()
     } else ()
     if (this.tmp3 == null) {
-      this.tmp3 = points.get(0).cpy().asInstanceOf[T]
+      this.tmp3 = points.get(0).cpy()
     } else ()
     this.points.clear()
     this.points.addAll(points, offset, length)
-    return this
+    return this.asInstanceOf[Bezier[T]]
   }
   def valueAt(out: T, t: scala.Float): T = {
     val n: scala.Int = this.points.size

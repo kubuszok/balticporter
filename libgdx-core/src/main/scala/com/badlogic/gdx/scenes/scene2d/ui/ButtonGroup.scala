@@ -21,7 +21,7 @@ class ButtonGroup[T <: com.badlogic.gdx.scenes.scene2d.ui.Button] {
     button.buttonGroup = null
     val shouldCheck: scala.Boolean = button.isChecked() || (this.buttons.size < this.minCheckCount)
     button.setChecked(false)
-    button.buttonGroup = this
+    button.buttonGroup = this.asInstanceOf[ButtonGroup[T]]
     this.buttons.add(button)
     button.setChecked(shouldCheck)
   }

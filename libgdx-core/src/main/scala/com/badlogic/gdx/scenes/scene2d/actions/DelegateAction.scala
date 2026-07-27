@@ -10,12 +10,12 @@ abstract class DelegateAction extends com.badlogic.gdx.scenes.scene2d.Action {
   }
   def delegate(delta: scala.Float): scala.Boolean
   final def act(delta: scala.Float): scala.Boolean = {
-    val pool: com.badlogic.gdx.utils.Pool[?] = this.getPool()
+    val pool: com.badlogic.gdx.utils.Pool[?] = this.getPool().asInstanceOf[com.badlogic.gdx.utils.Pool[?]]
     this.setPool(null)
     try {
       return this.delegate(delta)
     } finally {
-      this.setPool(pool)
+      this.setPool(pool.asInstanceOf[com.badlogic.gdx.utils.Pool[?]])
     }
   }
   def restart(): scala.Unit = {

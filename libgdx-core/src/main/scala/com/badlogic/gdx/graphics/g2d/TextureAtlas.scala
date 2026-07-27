@@ -100,7 +100,7 @@ class TextureAtlas extends com.badlogic.gdx.utils.Disposable {
     return matched
   }
   def createSprites(): com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.Sprite] = {
-    val sprites: com.badlogic.gdx.utils.Array[?] = new com.badlogic.gdx.utils.Array(true, this.regions.size, ((size: scala.Int) => new scala.Array[com.badlogic.gdx.graphics.g2d.Sprite](size)));
+    val sprites: com.badlogic.gdx.utils.Array[?] = new com.badlogic.gdx.utils.Array(true, this.regions.size, ((size: scala.Int) => new scala.Array[com.badlogic.gdx.graphics.g2d.Sprite](size))).asInstanceOf[com.badlogic.gdx.utils.Array[?]];
     { var i: scala.Int = 0; val n: scala.Int = this.regions.size; while (i < n) { {
       sprites.asInstanceOf[com.badlogic.gdx.utils.Array[java.lang.Object]].add(this.newSprite(this.regions.get(i)).asInstanceOf[java.lang.Object])
     }; i = i + 1 } }
@@ -241,7 +241,7 @@ object TextureAtlas {
                 }) == 0) {
                   /* break */ ()
                 } else ()
-                val field: com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[?] = pageFields.get(entry(0))
+                val field: com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[?] = pageFields.get(entry(0)).asInstanceOf[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[?]]
                 if (field != null) {
                   field.asInstanceOf[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[java.lang.Object]].parse(page.asInstanceOf[java.lang.Object])
                 } else ()
@@ -262,7 +262,7 @@ object TextureAtlas {
                 if (count == 0) {
                   /* break */ ()
                 } else ()
-                val field: com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[?] = regionFields.get(entry(0))
+                val field: com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[?] = regionFields.get(entry(0)).asInstanceOf[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[?]]
                 if (field != null) {
                   field.asInstanceOf[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Field[java.lang.Object]].parse(region.asInstanceOf[java.lang.Object])
                 } else {

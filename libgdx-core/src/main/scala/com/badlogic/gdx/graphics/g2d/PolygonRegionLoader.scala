@@ -39,9 +39,9 @@ class PolygonRegionLoader extends com.badlogic.gdx.assets.loaders.SynchronousAss
       }
     } else ()
     if (image != null) {
-      val deps: com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]](1)
+      val deps: com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]](1).asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]]
       deps.add(new com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.graphics.Texture](file.sibling(image), classOf[com.badlogic.gdx.graphics.Texture]))
-      return deps
+      return deps.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]]
     } else ()
     return null
   }

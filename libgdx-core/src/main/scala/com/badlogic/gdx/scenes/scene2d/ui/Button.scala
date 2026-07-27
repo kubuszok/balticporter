@@ -113,7 +113,7 @@ class Button extends com.badlogic.gdx.scenes.scene2d.ui.Table with com.badlogic.
     return this.style
   }
   def getButtonGroup(): com.badlogic.gdx.scenes.scene2d.ui.ButtonGroup[?] = {
-    return this.buttonGroup
+    return this.buttonGroup.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.ButtonGroup[?]]
   }
   def getBackgroundDrawable(): com.badlogic.gdx.scenes.scene2d.utils.Drawable = {
     if (this.isDisabled() && (this.style.disabled != null)) {

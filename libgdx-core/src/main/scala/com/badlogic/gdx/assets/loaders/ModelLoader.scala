@@ -27,7 +27,7 @@ abstract class ModelLoader[P <: com.badlogic.gdx.assets.loaders.ModelLoader.Mode
     val deps: com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = new com.badlogic.gdx.utils.Array().asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]]
     val data: com.badlogic.gdx.graphics.g3d.model.data.ModelData = this.loadModelData(file, parameters)
     if (data == null) {
-      return deps
+      return deps.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]]
     } else ()
     val item: com.badlogic.gdx.utils.ObjectMap.Entry[java.lang.String, com.badlogic.gdx.graphics.g3d.model.data.ModelData] = new com.badlogic.gdx.utils.ObjectMap.Entry[java.lang.String, com.badlogic.gdx.graphics.g3d.model.data.ModelData]()
     item.key = fileName
@@ -43,7 +43,7 @@ abstract class ModelLoader[P <: com.badlogic.gdx.assets.loaders.ModelLoader.Mode
         }
       } else ()
     }
-    return deps
+    return deps.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]]
   }
   def loadAsync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameters: P): scala.Unit = {
     ()

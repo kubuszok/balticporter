@@ -2,9 +2,9 @@ package com.badlogic.gdx.utils
 
 class UBJsonWriter extends java.io.Closeable {
   var out: java.io.DataOutputStream = null.asInstanceOf[java.io.DataOutputStream]
-  private var current: JsonObject = null.asInstanceOf[JsonObject]
+  private var current: com.badlogic.gdx.utils.UBJsonWriter#JsonObject = null.asInstanceOf[com.badlogic.gdx.utils.UBJsonWriter#JsonObject]
   private var named: scala.Boolean = false
-  private final val stack: com.badlogic.gdx.utils.Array[JsonObject] = new com.badlogic.gdx.utils.Array().asInstanceOf[com.badlogic.gdx.utils.Array[JsonObject]]
+  private final val stack: com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.UBJsonWriter#JsonObject] = new com.badlogic.gdx.utils.Array().asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.UBJsonWriter#JsonObject]]
   def this(out$arg: java.io.OutputStream) = {
     this()
     var out: java.io.OutputStream = out$arg
@@ -440,7 +440,7 @@ class UBJsonWriter extends java.io.Closeable {
     } else {
       this.stack.pop().close()
     }
-    this.current = if (this.stack.size == 0) null.asInstanceOf[JsonObject] else this.stack.peek()
+    this.current = if (this.stack.size == 0) null.asInstanceOf[com.badlogic.gdx.utils.UBJsonWriter#JsonObject] else this.stack.peek()
     return this
   }
   def flush(): scala.Unit = {

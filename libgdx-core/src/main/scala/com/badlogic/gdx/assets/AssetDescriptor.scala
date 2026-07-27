@@ -9,7 +9,7 @@ class AssetDescriptor[T] {
     this()
     this.fileName = fileName
     this.`type` = assetType
-    this.params = params
+    this.params = params.asInstanceOf[com.badlogic.gdx.assets.AssetLoaderParameters[T]]
   }
   def this(fileName: java.lang.String, assetType: java.lang.Class[T]) = {
     this(fileName, assetType, null)
@@ -19,7 +19,7 @@ class AssetDescriptor[T] {
     this.fileName = file.path()
     this.file = file
     this.`type` = assetType
-    this.params = params
+    this.params = params.asInstanceOf[com.badlogic.gdx.assets.AssetLoaderParameters[T]]
   }
   def this(file: com.badlogic.gdx.files.FileHandle, assetType: java.lang.Class[T]) = {
     this(file, assetType, null)

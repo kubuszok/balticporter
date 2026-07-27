@@ -13,7 +13,7 @@ class SkinLoader extends com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader
         deps.add(new com.badlogic.gdx.assets.AssetDescriptor(parameter.textureAtlasPath, classOf[com.badlogic.gdx.graphics.g2d.TextureAtlas]))
       } else ()
     }
-    return deps
+    return deps.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]]
   }
   def loadAsync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.assets.loaders.SkinLoader.SkinParameter): scala.Unit = {
     ()

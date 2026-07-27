@@ -40,7 +40,7 @@ class PointSpriteParticleBatch extends com.badlogic.gdx.graphics.g3d.particles.b
     this.renderable = new com.badlogic.gdx.graphics.g3d.Renderable()
     this.renderable.meshPart.primitiveType = com.badlogic.gdx.graphics.GL20.GL_POINTS
     this.renderable.meshPart.offset = 0
-    this.renderable.material = new com.badlogic.gdx.graphics.g3d.Material(this.blendingAttribute, this.depthTestAttribute, com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute.createDiffuse(null.asInstanceOf[com.badlogic.gdx.graphics.Texture]))
+    this.renderable.material = new com.badlogic.gdx.graphics.g3d.Material(scala.Array[com.badlogic.gdx.graphics.g3d.Attribute](this.blendingAttribute, this.depthTestAttribute, com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute.createDiffuse(null.asInstanceOf[com.badlogic.gdx.graphics.Texture])))
   }
   def setTexture(texture: com.badlogic.gdx.graphics.Texture): scala.Unit = {
     val attribute: com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute = this.renderable.material.get(com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute.Diffuse).asInstanceOf[com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute]
@@ -107,7 +107,7 @@ object PointSpriteParticleBatch {
   private var pointSpritesEnabled: scala.Boolean = false
   final val TMP_V1: com.badlogic.gdx.math.Vector3 = new com.badlogic.gdx.math.Vector3()
   final val sizeAndRotationUsage: scala.Int = 1 << 9
-  final val CPU_ATTRIBUTES: com.badlogic.gdx.graphics.VertexAttributes = new com.badlogic.gdx.graphics.VertexAttributes(new com.badlogic.gdx.graphics.VertexAttribute(com.badlogic.gdx.graphics.VertexAttributes.Usage.Position, 3, com.badlogic.gdx.graphics.glutils.ShaderProgram.POSITION_ATTRIBUTE), new com.badlogic.gdx.graphics.VertexAttribute(com.badlogic.gdx.graphics.VertexAttributes.Usage.ColorUnpacked, 4, com.badlogic.gdx.graphics.glutils.ShaderProgram.COLOR_ATTRIBUTE), new com.badlogic.gdx.graphics.VertexAttribute(com.badlogic.gdx.graphics.VertexAttributes.Usage.TextureCoordinates, 4, "a_region"), new com.badlogic.gdx.graphics.VertexAttribute(PointSpriteParticleBatch.sizeAndRotationUsage, 3, "a_sizeAndRotation"))
+  final val CPU_ATTRIBUTES: com.badlogic.gdx.graphics.VertexAttributes = new com.badlogic.gdx.graphics.VertexAttributes(scala.Array[com.badlogic.gdx.graphics.VertexAttribute](new com.badlogic.gdx.graphics.VertexAttribute(com.badlogic.gdx.graphics.VertexAttributes.Usage.Position, 3, com.badlogic.gdx.graphics.glutils.ShaderProgram.POSITION_ATTRIBUTE), new com.badlogic.gdx.graphics.VertexAttribute(com.badlogic.gdx.graphics.VertexAttributes.Usage.ColorUnpacked, 4, com.badlogic.gdx.graphics.glutils.ShaderProgram.COLOR_ATTRIBUTE), new com.badlogic.gdx.graphics.VertexAttribute(com.badlogic.gdx.graphics.VertexAttributes.Usage.TextureCoordinates, 4, "a_region"), new com.badlogic.gdx.graphics.VertexAttribute(PointSpriteParticleBatch.sizeAndRotationUsage, 3, "a_sizeAndRotation")))
   final val CPU_VERTEX_SIZE: scala.Int = (PointSpriteParticleBatch.CPU_ATTRIBUTES.vertexSize / 4).asInstanceOf[scala.Short]
   final val CPU_POSITION_OFFSET: scala.Int = (PointSpriteParticleBatch.CPU_ATTRIBUTES.findByUsage(com.badlogic.gdx.graphics.VertexAttributes.Usage.Position).offset / 4).asInstanceOf[scala.Short]
   final val CPU_COLOR_OFFSET: scala.Int = (PointSpriteParticleBatch.CPU_ATTRIBUTES.findByUsage(com.badlogic.gdx.graphics.VertexAttributes.Usage.ColorUnpacked).offset / 4).asInstanceOf[scala.Short]

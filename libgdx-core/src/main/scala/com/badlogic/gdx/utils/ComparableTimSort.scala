@@ -171,7 +171,7 @@ class ComparableTimSort {
         if (ComparableTimSort.DEBUG) {
           assert((len1 > 1) && (len2 > 0))
         } else ()
-        if (a(cursor2).asInstanceOf[java.lang.Comparable[?]].compareTo(tmp(cursor1)) < 0) {
+        if (a(cursor2).asInstanceOf[java.lang.Comparable[?]].asInstanceOf[java.lang.Comparable[java.lang.Object]].compareTo(tmp(cursor1).asInstanceOf[java.lang.Object]) < 0) {
           a({ dest += 1; dest }) = a({ cursor2 += 1; cursor2 })
           count2 = count2 + 1
           count1 = 0
@@ -279,7 +279,7 @@ class ComparableTimSort {
         if (ComparableTimSort.DEBUG) {
           assert((len1 > 0) && (len2 > 1))
         } else ()
-        if (tmp(cursor2).asInstanceOf[java.lang.Comparable[?]].compareTo(a(cursor1)) < 0) {
+        if (tmp(cursor2).asInstanceOf[java.lang.Comparable[?]].asInstanceOf[java.lang.Comparable[java.lang.Object]].compareTo(a(cursor1).asInstanceOf[java.lang.Object]) < 0) {
           a({ dest -= 1; dest }) = a({ cursor1 -= 1; cursor1 })
           count1 = count1 + 1
           count2 = 0
@@ -470,13 +470,13 @@ object ComparableTimSort {
     if (runHi == hi) {
       return 1
     } else ()
-    if (a({ runHi += 1; runHi }).asInstanceOf[java.lang.Comparable[?]].compareTo(a(lo)) < 0) {
-      while ((runHi < hi) && (a(runHi).asInstanceOf[java.lang.Comparable[?]].compareTo(a(runHi - 1)) < 0)) {
+    if (a({ runHi += 1; runHi }).asInstanceOf[java.lang.Comparable[?]].asInstanceOf[java.lang.Comparable[java.lang.Object]].compareTo(a(lo).asInstanceOf[java.lang.Object]) < 0) {
+      while ((runHi < hi) && (a(runHi).asInstanceOf[java.lang.Comparable[?]].asInstanceOf[java.lang.Comparable[java.lang.Object]].compareTo(a(runHi - 1).asInstanceOf[java.lang.Object]) < 0)) {
         runHi = runHi + 1
       }
       ComparableTimSort.reverseRange(a, lo, runHi)
     } else {
-      while ((runHi < hi) && (a(runHi).asInstanceOf[java.lang.Comparable[?]].compareTo(a(runHi - 1)) >= 0)) {
+      while ((runHi < hi) && (a(runHi).asInstanceOf[java.lang.Comparable[?]].asInstanceOf[java.lang.Comparable[java.lang.Object]].compareTo(a(runHi - 1).asInstanceOf[java.lang.Object]) >= 0)) {
         runHi = runHi + 1
       }
     }

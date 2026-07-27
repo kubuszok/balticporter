@@ -1,7 +1,7 @@
 package com.badlogic.gdx.graphics.g3d.decals
 
 class SimpleOrthoGroupStrategy extends com.badlogic.gdx.graphics.g3d.decals.GroupStrategy {
-  private var comparator: Comparator = new Comparator()
+  private var comparator: com.badlogic.gdx.graphics.g3d.decals.SimpleOrthoGroupStrategy#Comparator = new Comparator()
   def decideGroup(decal: com.badlogic.gdx.graphics.g3d.decals.Decal): scala.Int = {
     return if (decal.getMaterial().isOpaque()) SimpleOrthoGroupStrategy.GROUP_OPAQUE else SimpleOrthoGroupStrategy.GROUP_BLEND
   }

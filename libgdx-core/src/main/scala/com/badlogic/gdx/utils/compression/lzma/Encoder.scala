@@ -4,7 +4,7 @@ class Encoder {
   var _state: scala.Int = com.badlogic.gdx.utils.compression.lzma.Base.StateInit()
   var _previousByte: scala.Byte = 0
   var _repDistances: scala.Array[scala.Int] = new scala.Array[scala.Int](com.badlogic.gdx.utils.compression.lzma.Base.kNumRepDistances)
-  var _optimum: scala.Array[Optimal] = new scala.Array[Optimal](Encoder.kNumOpts)
+  var _optimum: scala.Array[com.badlogic.gdx.utils.compression.lzma.Encoder#Optimal] = new scala.Array[com.badlogic.gdx.utils.compression.lzma.Encoder#Optimal](Encoder.kNumOpts)
   var _matchFinder: com.badlogic.gdx.utils.compression.lz.BinTree = null
   var _rangeEncoder: com.badlogic.gdx.utils.compression.rangecoder.Encoder = new com.badlogic.gdx.utils.compression.rangecoder.Encoder()
   var _isMatch: scala.Array[scala.Short] = new scala.Array[scala.Short](com.badlogic.gdx.utils.compression.lzma.Base.kNumStates << com.badlogic.gdx.utils.compression.lzma.Base.kNumPosStatesBitsMax)
@@ -16,9 +16,9 @@ class Encoder {
   var _posSlotEncoder: scala.Array[com.badlogic.gdx.utils.compression.rangecoder.BitTreeEncoder] = new scala.Array[com.badlogic.gdx.utils.compression.rangecoder.BitTreeEncoder](com.badlogic.gdx.utils.compression.lzma.Base.kNumLenToPosStates)
   var _posEncoders: scala.Array[scala.Short] = new scala.Array[scala.Short](com.badlogic.gdx.utils.compression.lzma.Base.kNumFullDistances - com.badlogic.gdx.utils.compression.lzma.Base.kEndPosModelIndex)
   var _posAlignEncoder: com.badlogic.gdx.utils.compression.rangecoder.BitTreeEncoder = new com.badlogic.gdx.utils.compression.rangecoder.BitTreeEncoder(com.badlogic.gdx.utils.compression.lzma.Base.kNumAlignBits)
-  var _lenEncoder: LenPriceTableEncoder = new LenPriceTableEncoder()
-  var _repMatchLenEncoder: LenPriceTableEncoder = new LenPriceTableEncoder()
-  var _literalEncoder: LiteralEncoder = new LiteralEncoder()
+  var _lenEncoder: com.badlogic.gdx.utils.compression.lzma.Encoder#LenPriceTableEncoder = new LenPriceTableEncoder()
+  var _repMatchLenEncoder: com.badlogic.gdx.utils.compression.lzma.Encoder#LenPriceTableEncoder = new LenPriceTableEncoder()
+  var _literalEncoder: com.badlogic.gdx.utils.compression.lzma.Encoder#LiteralEncoder = new LiteralEncoder()
   var _matchDistances: scala.Array[scala.Int] = new scala.Array[scala.Int]((com.badlogic.gdx.utils.compression.lzma.Base.kMatchMaxLen * 2) + 2)
   var _numFastBytes: scala.Int = Encoder.kNumFastBytesDefault
   var _longestMatchLength: scala.Int = 0
@@ -279,7 +279,7 @@ class Encoder {
         val price: scala.Int = repMatchPrice + this.GetPureRepPrice(i, this._state, posState)
         while ({ {
           var curAndLenPrice: scala.Int = price + this._repMatchLenEncoder.GetPrice(repLen - 2, posState)
-          var optimum: Optimal = this._optimum(repLen)
+          var optimum: com.badlogic.gdx.utils.compression.lzma.Encoder#Optimal = this._optimum(repLen)
           if (curAndLenPrice < optimum.Price) {
             optimum.Price = curAndLenPrice
             optimum.PosPrev = 0
@@ -298,7 +298,7 @@ class Encoder {
         { ; while (true) { {
           val distance: scala.Int = this._matchDistances(offs + 1)
           var curAndLenPrice: scala.Int = normalMatchPrice + this.GetPosLenPrice(distance, len, posState)
-          var optimum: Optimal = this._optimum(len)
+          var optimum: com.badlogic.gdx.utils.compression.lzma.Encoder#Optimal = this._optimum(len)
           if (curAndLenPrice < optimum.Price) {
             optimum.Price = curAndLenPrice
             optimum.PosPrev = 0
@@ -365,7 +365,7 @@ class Encoder {
               state = com.badlogic.gdx.utils.compression.lzma.Base.StateUpdateMatch(state)
             }
           }
-          val opt: Optimal = this._optimum(posPrev)
+          val opt: com.badlogic.gdx.utils.compression.lzma.Encoder#Optimal = this._optimum(posPrev)
           if (pos < com.badlogic.gdx.utils.compression.lzma.Base.kNumRepDistances) {
             if (pos == 0) {
               this.reps(0) = opt.Backs0
@@ -409,7 +409,7 @@ class Encoder {
         matchByte = this._matchFinder.GetIndexByte(((0 - this.reps(0)) - 1) - 1)
         posState = position & this._posStateMask
         val curAnd1Price: scala.Int = (curPrice + com.badlogic.gdx.utils.compression.rangecoder.Encoder.GetPrice0(this._isMatch((state << com.badlogic.gdx.utils.compression.lzma.Base.kNumPosStatesBitsMax) + posState))) + this._literalEncoder.GetSubCoder(position, this._matchFinder.GetIndexByte(0 - 2)).GetPrice(!com.badlogic.gdx.utils.compression.lzma.Base.StateIsCharState(state), matchByte, currentByte)
-        val nextOptimum: Optimal = this._optimum(cur + 1)
+        val nextOptimum: com.badlogic.gdx.utils.compression.lzma.Encoder#Optimal = this._optimum(cur + 1)
         var nextIsChar: scala.Boolean = false
         if (curAnd1Price < nextOptimum.Price) {
           nextOptimum.Price = curAnd1Price
@@ -450,7 +450,7 @@ class Encoder {
                 this._optimum({ lenEnd += 1; lenEnd }).Price = Encoder.kIfinityPrice
               }
               var curAndLenPrice: scala.Int = nextRepMatchPrice + this.GetRepPrice(0, lenTest2, state2, posStateNext)
-              var optimum: Optimal = this._optimum(offset)
+              var optimum: com.badlogic.gdx.utils.compression.lzma.Encoder#Optimal = this._optimum(offset)
               if (curAndLenPrice < optimum.Price) {
                 optimum.Price = curAndLenPrice
                 optimum.PosPrev = cur + 1
@@ -473,7 +473,7 @@ class Encoder {
               this._optimum({ lenEnd += 1; lenEnd }).Price = Encoder.kIfinityPrice
             }
             var curAndLenPrice: scala.Int = repMatchPrice + this.GetRepPrice(repIndex, lenTest, state, posState)
-            var optimum: Optimal = this._optimum(cur + lenTest)
+            var optimum: com.badlogic.gdx.utils.compression.lzma.Encoder#Optimal = this._optimum(cur + lenTest)
             if (curAndLenPrice < optimum.Price) {
               optimum.Price = curAndLenPrice
               optimum.PosPrev = cur
@@ -502,7 +502,7 @@ class Encoder {
                   this._optimum({ lenEnd += 1; lenEnd }).Price = Encoder.kIfinityPrice
                 }
                 var curAndLenPrice: scala.Int = nextRepMatchPrice + this.GetRepPrice(0, lenTest2, state2, posStateNext)
-                var optimum: Optimal = this._optimum(cur + offset)
+                var optimum: com.badlogic.gdx.utils.compression.lzma.Encoder#Optimal = this._optimum(cur + offset)
                 if (curAndLenPrice < optimum.Price) {
                   optimum.Price = curAndLenPrice
                   optimum.PosPrev = (cur + lenTest) + 1
@@ -536,7 +536,7 @@ class Encoder {
           { var lenTest: scala.Int = startLen; while (true) { {
             val curBack: scala.Int = this._matchDistances(offs + 1)
             var curAndLenPrice: scala.Int = normalMatchPrice + this.GetPosLenPrice(curBack, lenTest, posState)
-            var optimum: Optimal = this._optimum(cur + lenTest)
+            var optimum: com.badlogic.gdx.utils.compression.lzma.Encoder#Optimal = this._optimum(cur + lenTest)
             if (curAndLenPrice < optimum.Price) {
               optimum.Price = curAndLenPrice
               optimum.PosPrev = cur
@@ -652,7 +652,7 @@ class Encoder {
       if ((len == 1) && (pos == (-1))) {
         this._rangeEncoder.Encode(this._isMatch, complexState, 0)
         val curByte: scala.Byte = this._matchFinder.GetIndexByte((0 - this._additionalOffset).asInstanceOf[scala.Int])
-        val subCoder: Encoder2 = this._literalEncoder.GetSubCoder(this.nowPos64.asInstanceOf[scala.Int].asInstanceOf[scala.Int], this._previousByte)
+        val subCoder: com.badlogic.gdx.utils.compression.lzma.Encoder#LiteralEncoder#Encoder2 = this._literalEncoder.GetSubCoder(this.nowPos64.asInstanceOf[scala.Int].asInstanceOf[scala.Int], this._previousByte)
         if (!com.badlogic.gdx.utils.compression.lzma.Base.StateIsCharState(this._state)) {
           val matchByte: scala.Byte = this._matchFinder.GetIndexByte((((0 - this._repDistances(0)) - 1) - this._additionalOffset).asInstanceOf[scala.Int])
           subCoder.EncodeMatched(this._rangeEncoder, matchByte, curByte)
@@ -885,7 +885,7 @@ class Encoder {
     this._writeEndMark = endMarkerMode
   }
   class LiteralEncoder {
-    var m_Coders: scala.Array[Encoder2] = null.asInstanceOf[scala.Array[Encoder2]]
+    var m_Coders: scala.Array[com.badlogic.gdx.utils.compression.lzma.Encoder#LiteralEncoder#Encoder2] = null.asInstanceOf[scala.Array[com.badlogic.gdx.utils.compression.lzma.Encoder#LiteralEncoder#Encoder2]]
     var m_NumPrevBits: scala.Int = 0
     var m_NumPosBits: scala.Int = 0
     var m_PosMask: scala.Int = 0
@@ -897,7 +897,7 @@ class Encoder {
       this.m_PosMask = (1 << numPosBits) - 1
       this.m_NumPrevBits = numPrevBits
       val numStates: scala.Int = 1 << (this.m_NumPrevBits + this.m_NumPosBits)
-      this.m_Coders = new scala.Array[Encoder2](numStates);
+      this.m_Coders = new scala.Array[com.badlogic.gdx.utils.compression.lzma.Encoder#LiteralEncoder#Encoder2](numStates);
       { var i: scala.Int = 0; while (i < numStates) { {
         this.m_Coders(i) = new Encoder2()
       }; i = i + 1 } }
@@ -908,7 +908,7 @@ class Encoder {
         this.m_Coders(i).Init()
       }; i = i + 1 } }
     }
-    def GetSubCoder(pos: scala.Int, prevByte: scala.Byte): Encoder2 = {
+    def GetSubCoder(pos: scala.Int, prevByte: scala.Byte): com.badlogic.gdx.utils.compression.lzma.Encoder#LiteralEncoder#Encoder2 = {
       return this.m_Coders(((pos & this.m_PosMask) << this.m_NumPrevBits) + ((prevByte & 255) >>> (8 - this.m_NumPrevBits)))
     }
     class Encoder2 {

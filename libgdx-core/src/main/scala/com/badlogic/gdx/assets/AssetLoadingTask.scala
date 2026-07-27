@@ -16,8 +16,8 @@ class AssetLoadingTask extends com.badlogic.gdx.utils.async.AsyncTask[java.lang.
   def this(manager: com.badlogic.gdx.assets.AssetManager, assetDesc: com.badlogic.gdx.assets.AssetDescriptor[?], loader: com.badlogic.gdx.assets.loaders.AssetLoader[?, ?], threadPool: com.badlogic.gdx.utils.async.AsyncExecutor) = {
     this()
     this.manager = manager
-    this.assetDesc = assetDesc
-    this.loader = loader
+    this.assetDesc = assetDesc.asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[?]]
+    this.loader = loader.asInstanceOf[com.badlogic.gdx.assets.loaders.AssetLoader[?, ?]]
     this.executor = threadPool
     this.startTime = if (manager.log.getLevel() == com.badlogic.gdx.utils.Logger.DEBUG) com.badlogic.gdx.utils.TimeUtils.nanoTime() else 0
   }
@@ -25,18 +25,18 @@ class AssetLoadingTask extends com.badlogic.gdx.utils.async.AsyncTask[java.lang.
     if (this.cancel) {
       return null
     } else ()
-    val asyncLoader: com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader[?, ?] = this.loader.asInstanceOf[com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader[?, ?]]
+    val asyncLoader: com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader[?, ?] = this.loader.asInstanceOf[com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader[?, ?]].asInstanceOf[com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader[?, ?]]
     if (!this.dependenciesLoaded) {
-      this.dependencies = asyncLoader.asInstanceOf[com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader[java.lang.Object, com.badlogic.gdx.assets.AssetLoaderParameters[java.lang.Object]]].getDependencies(this.assetDesc.fileName, this.resolve(this.loader, this.assetDesc), this.assetDesc.params.asInstanceOf[com.badlogic.gdx.assets.AssetLoaderParameters[java.lang.Object]]).asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]]
+      this.dependencies = asyncLoader.asInstanceOf[com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader[java.lang.Object, com.badlogic.gdx.assets.AssetLoaderParameters[java.lang.Object]]].getDependencies(this.assetDesc.fileName, this.resolve(this.loader.asInstanceOf[com.badlogic.gdx.assets.loaders.AssetLoader[?, ?]], this.assetDesc.asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[?]]), this.assetDesc.asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[java.lang.Object]].params.asInstanceOf[com.badlogic.gdx.assets.AssetLoaderParameters[java.lang.Object]]).asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]]
       if (this.dependencies != null) {
-        this.removeDuplicates(this.dependencies)
-        this.manager.injectDependencies(this.assetDesc.fileName, this.dependencies)
+        this.removeDuplicates(this.dependencies.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]])
+        this.manager.injectDependencies(this.assetDesc.fileName, this.dependencies.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]])
       } else {
-        asyncLoader.asInstanceOf[com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader[java.lang.Object, com.badlogic.gdx.assets.AssetLoaderParameters[java.lang.Object]]].loadAsync(this.manager, this.assetDesc.fileName, this.resolve(this.loader, this.assetDesc), this.assetDesc.params.asInstanceOf[com.badlogic.gdx.assets.AssetLoaderParameters[java.lang.Object]])
+        asyncLoader.asInstanceOf[com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader[java.lang.Object, com.badlogic.gdx.assets.AssetLoaderParameters[java.lang.Object]]].loadAsync(this.manager, this.assetDesc.fileName, this.resolve(this.loader.asInstanceOf[com.badlogic.gdx.assets.loaders.AssetLoader[?, ?]], this.assetDesc.asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[?]]), this.assetDesc.asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[java.lang.Object]].params.asInstanceOf[com.badlogic.gdx.assets.AssetLoaderParameters[java.lang.Object]])
         this.asyncDone = true
       }
     } else {
-      asyncLoader.asInstanceOf[com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader[java.lang.Object, com.badlogic.gdx.assets.AssetLoaderParameters[java.lang.Object]]].loadAsync(this.manager, this.assetDesc.fileName, this.resolve(this.loader, this.assetDesc), this.assetDesc.params.asInstanceOf[com.badlogic.gdx.assets.AssetLoaderParameters[java.lang.Object]])
+      asyncLoader.asInstanceOf[com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader[java.lang.Object, com.badlogic.gdx.assets.AssetLoaderParameters[java.lang.Object]]].loadAsync(this.manager, this.assetDesc.fileName, this.resolve(this.loader.asInstanceOf[com.badlogic.gdx.assets.loaders.AssetLoader[?, ?]], this.assetDesc.asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[?]]), this.assetDesc.asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[java.lang.Object]].params.asInstanceOf[com.badlogic.gdx.assets.AssetLoaderParameters[java.lang.Object]])
       this.asyncDone = true
     }
     return null
@@ -50,22 +50,22 @@ class AssetLoadingTask extends com.badlogic.gdx.utils.async.AsyncTask[java.lang.
     return this.asset != null
   }
   private def handleSyncLoader(): scala.Unit = {
-    val syncLoader: com.badlogic.gdx.assets.loaders.SynchronousAssetLoader[?, ?] = this.loader.asInstanceOf[com.badlogic.gdx.assets.loaders.SynchronousAssetLoader[?, ?]]
+    val syncLoader: com.badlogic.gdx.assets.loaders.SynchronousAssetLoader[?, ?] = this.loader.asInstanceOf[com.badlogic.gdx.assets.loaders.SynchronousAssetLoader[?, ?]].asInstanceOf[com.badlogic.gdx.assets.loaders.SynchronousAssetLoader[?, ?]]
     if (!this.dependenciesLoaded) {
       this.dependenciesLoaded = true
-      this.dependencies = syncLoader.asInstanceOf[com.badlogic.gdx.assets.loaders.SynchronousAssetLoader[java.lang.Object, com.badlogic.gdx.assets.AssetLoaderParameters[java.lang.Object]]].getDependencies(this.assetDesc.fileName, this.resolve(this.loader, this.assetDesc), this.assetDesc.params.asInstanceOf[com.badlogic.gdx.assets.AssetLoaderParameters[java.lang.Object]]).asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]]
+      this.dependencies = syncLoader.asInstanceOf[com.badlogic.gdx.assets.loaders.SynchronousAssetLoader[java.lang.Object, com.badlogic.gdx.assets.AssetLoaderParameters[java.lang.Object]]].getDependencies(this.assetDesc.fileName, this.resolve(this.loader.asInstanceOf[com.badlogic.gdx.assets.loaders.AssetLoader[?, ?]], this.assetDesc.asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[?]]), this.assetDesc.asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[java.lang.Object]].params.asInstanceOf[com.badlogic.gdx.assets.AssetLoaderParameters[java.lang.Object]]).asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]]
       if (this.dependencies == null) {
-        this.asset = syncLoader.asInstanceOf[com.badlogic.gdx.assets.loaders.SynchronousAssetLoader[java.lang.Object, com.badlogic.gdx.assets.AssetLoaderParameters[java.lang.Object]]].load(this.manager, this.assetDesc.fileName, this.resolve(this.loader, this.assetDesc), this.assetDesc.params.asInstanceOf[com.badlogic.gdx.assets.AssetLoaderParameters[java.lang.Object]])
+        this.asset = syncLoader.asInstanceOf[com.badlogic.gdx.assets.loaders.SynchronousAssetLoader[java.lang.Object, com.badlogic.gdx.assets.AssetLoaderParameters[java.lang.Object]]].load(this.manager, this.assetDesc.fileName, this.resolve(this.loader.asInstanceOf[com.badlogic.gdx.assets.loaders.AssetLoader[?, ?]], this.assetDesc.asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[?]]), this.assetDesc.asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[java.lang.Object]].params.asInstanceOf[com.badlogic.gdx.assets.AssetLoaderParameters[java.lang.Object]])
         return
       } else ()
-      this.removeDuplicates(this.dependencies)
-      this.manager.injectDependencies(this.assetDesc.fileName, this.dependencies)
+      this.removeDuplicates(this.dependencies.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]])
+      this.manager.injectDependencies(this.assetDesc.fileName, this.dependencies.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]])
     } else {
-      this.asset = syncLoader.asInstanceOf[com.badlogic.gdx.assets.loaders.SynchronousAssetLoader[java.lang.Object, com.badlogic.gdx.assets.AssetLoaderParameters[java.lang.Object]]].load(this.manager, this.assetDesc.fileName, this.resolve(this.loader, this.assetDesc), this.assetDesc.params.asInstanceOf[com.badlogic.gdx.assets.AssetLoaderParameters[java.lang.Object]])
+      this.asset = syncLoader.asInstanceOf[com.badlogic.gdx.assets.loaders.SynchronousAssetLoader[java.lang.Object, com.badlogic.gdx.assets.AssetLoaderParameters[java.lang.Object]]].load(this.manager, this.assetDesc.fileName, this.resolve(this.loader.asInstanceOf[com.badlogic.gdx.assets.loaders.AssetLoader[?, ?]], this.assetDesc.asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[?]]), this.assetDesc.asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[java.lang.Object]].params.asInstanceOf[com.badlogic.gdx.assets.AssetLoaderParameters[java.lang.Object]])
     }
   }
   private def handleAsyncLoader(): scala.Unit = {
-    val asyncLoader: com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader[?, ?] = this.loader.asInstanceOf[com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader[?, ?]]
+    val asyncLoader: com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader[?, ?] = this.loader.asInstanceOf[com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader[?, ?]].asInstanceOf[com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader[?, ?]]
     if (!this.dependenciesLoaded) {
       if (this.depsFuture == null) {
         this.depsFuture = this.executor.submit(this)
@@ -80,7 +80,7 @@ class AssetLoadingTask extends com.badlogic.gdx.utils.async.AsyncTask[java.lang.
           }
           this.dependenciesLoaded = true
           if (this.asyncDone) {
-            this.asset = asyncLoader.asInstanceOf[com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader[java.lang.Object, com.badlogic.gdx.assets.AssetLoaderParameters[java.lang.Object]]].loadSync(this.manager, this.assetDesc.fileName, this.resolve(this.loader, this.assetDesc), this.assetDesc.params.asInstanceOf[com.badlogic.gdx.assets.AssetLoaderParameters[java.lang.Object]])
+            this.asset = asyncLoader.asInstanceOf[com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader[java.lang.Object, com.badlogic.gdx.assets.AssetLoaderParameters[java.lang.Object]]].loadSync(this.manager, this.assetDesc.fileName, this.resolve(this.loader.asInstanceOf[com.badlogic.gdx.assets.loaders.AssetLoader[?, ?]], this.assetDesc.asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[?]]), this.assetDesc.asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[java.lang.Object]].params.asInstanceOf[com.badlogic.gdx.assets.AssetLoaderParameters[java.lang.Object]])
           } else ()
         } else ()
       }
@@ -89,7 +89,7 @@ class AssetLoadingTask extends com.badlogic.gdx.utils.async.AsyncTask[java.lang.
         this.loadFuture = this.executor.submit(this)
       } else {
         if (this.asyncDone) {
-          this.asset = asyncLoader.asInstanceOf[com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader[java.lang.Object, com.badlogic.gdx.assets.AssetLoaderParameters[java.lang.Object]]].loadSync(this.manager, this.assetDesc.fileName, this.resolve(this.loader, this.assetDesc), this.assetDesc.params.asInstanceOf[com.badlogic.gdx.assets.AssetLoaderParameters[java.lang.Object]])
+          this.asset = asyncLoader.asInstanceOf[com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader[java.lang.Object, com.badlogic.gdx.assets.AssetLoaderParameters[java.lang.Object]]].loadSync(this.manager, this.assetDesc.fileName, this.resolve(this.loader.asInstanceOf[com.badlogic.gdx.assets.loaders.AssetLoader[?, ?]], this.assetDesc.asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[?]]), this.assetDesc.asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[java.lang.Object]].params.asInstanceOf[com.badlogic.gdx.assets.AssetLoaderParameters[java.lang.Object]])
         } else {
           if (this.loadFuture.isDone()) {
             try {
@@ -99,7 +99,7 @@ class AssetLoadingTask extends com.badlogic.gdx.utils.async.AsyncTask[java.lang.
                 throw new com.badlogic.gdx.utils.GdxRuntimeException("Couldn't load asset: " + this.assetDesc.fileName, e)
               }
             }
-            this.asset = asyncLoader.asInstanceOf[com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader[java.lang.Object, com.badlogic.gdx.assets.AssetLoaderParameters[java.lang.Object]]].loadSync(this.manager, this.assetDesc.fileName, this.resolve(this.loader, this.assetDesc), this.assetDesc.params.asInstanceOf[com.badlogic.gdx.assets.AssetLoaderParameters[java.lang.Object]])
+            this.asset = asyncLoader.asInstanceOf[com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader[java.lang.Object, com.badlogic.gdx.assets.AssetLoaderParameters[java.lang.Object]]].loadSync(this.manager, this.assetDesc.fileName, this.resolve(this.loader.asInstanceOf[com.badlogic.gdx.assets.loaders.AssetLoader[?, ?]], this.assetDesc.asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[?]]), this.assetDesc.asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[java.lang.Object]].params.asInstanceOf[com.badlogic.gdx.assets.AssetLoaderParameters[java.lang.Object]])
           } else ()
         }
       }
@@ -107,7 +107,7 @@ class AssetLoadingTask extends com.badlogic.gdx.utils.async.AsyncTask[java.lang.
   }
   def unload(): scala.Unit = {
     if (this.loader.isInstanceOf[com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader[?, ?]]) {
-      this.loader.asInstanceOf[com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader[?, ?]].asInstanceOf[com.badlogic.gdx.assets.loaders.AssetLoader[java.lang.Object, com.badlogic.gdx.assets.AssetLoaderParameters[java.lang.Object]]].unloadAsync(this.manager, this.assetDesc.fileName, this.resolve(this.loader, this.assetDesc), this.assetDesc.params.asInstanceOf[com.badlogic.gdx.assets.AssetLoaderParameters[java.lang.Object]])
+      this.loader.asInstanceOf[com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader[?, ?]].asInstanceOf[com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader[java.lang.Object, com.badlogic.gdx.assets.AssetLoaderParameters[java.lang.Object]]].unloadAsync(this.manager, this.assetDesc.fileName, this.resolve(this.loader.asInstanceOf[com.badlogic.gdx.assets.loaders.AssetLoader[?, ?]], this.assetDesc.asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[?]]), this.assetDesc.asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[java.lang.Object]].params.asInstanceOf[com.badlogic.gdx.assets.AssetLoaderParameters[java.lang.Object]])
     } else ()
   }
   private def resolve(loader: com.badlogic.gdx.assets.loaders.AssetLoader[?, ?], assetDesc: com.badlogic.gdx.assets.AssetDescriptor[?]): com.badlogic.gdx.files.FileHandle = {
@@ -121,9 +121,9 @@ class AssetLoadingTask extends com.badlogic.gdx.utils.async.AsyncTask[java.lang.
     array.ordered = true;
     { var i: scala.Int = 0; while (i < array.size) { {
       val fn: java.lang.String = array.get(i).fileName
-      val `type`: java.lang.Class[?] = array.get(i).`type`;
+      val `type`: java.lang.Class[?] = array.get(i).asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[java.lang.Object]].`type`.asInstanceOf[java.lang.Class[?]];
       { var j: scala.Int = array.size - 1; while (j > i) { {
-        if ((`type` == array.get(j).`type`) && fn.equals(array.get(j).fileName)) {
+        if ((`type` == array.get(j).asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[java.lang.Object]].`type`) && fn.equals(array.get(j).fileName)) {
           array.removeIndex(j)
         } else ()
       }; j = j - 1 } }

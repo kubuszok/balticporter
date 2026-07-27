@@ -52,16 +52,16 @@ class TiledMapLoader extends com.badlogic.gdx.assets.loaders.AsynchronousAssetLo
     val `extension`: java.lang.String = file.`extension`().toLowerCase()
     if (`extension`.equals("tmx")) {
       if (this.usesAtlas(file)) {
-        return this.atlasTmxMapLoader.getDependencies(fileName, file, parameter)
+        return this.atlasTmxMapLoader.getDependencies(fileName, file, parameter).asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]]
       } else {
-        return this.tmxMapLoader.getDependencies(fileName, file, parameter)
+        return this.tmxMapLoader.getDependencies(fileName, file, parameter).asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]]
       }
     } else {
       if (`extension`.equals("tmj")) {
         if (this.usesAtlas(file)) {
-          return this.atlasTmjMapLoader.getDependencies(fileName, file, parameter)
+          return this.atlasTmjMapLoader.getDependencies(fileName, file, parameter).asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]]
         } else {
-          return this.tmjMapLoader.getDependencies(fileName, file, parameter)
+          return this.tmjMapLoader.getDependencies(fileName, file, parameter).asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]]
         }
       } else {
         throw new java.lang.IllegalArgumentException("Unsupported map format: " + `extension`)

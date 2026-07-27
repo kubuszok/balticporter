@@ -383,12 +383,12 @@ class Skin extends com.badlogic.gdx.utils.Disposable {
     json.setSerializer(classOf[com.badlogic.gdx.graphics.Color], new com.badlogic.gdx.utils.Json.ReadOnlySerializer[com.badlogic.gdx.graphics.Color]())
     json.setSerializer(classOf[com.badlogic.gdx.scenes.scene2d.ui.Skin.TintedDrawable], new com.badlogic.gdx.utils.Json.ReadOnlySerializer())
     for (entry <- this.jsonClassTags) {
-      json.addClassTag(entry.key, entry.value)
+      json.addClassTag(entry.key, entry.value.asInstanceOf[java.lang.Class[?]])
     }
     return json
   }
   def getJsonClassTags(): com.badlogic.gdx.utils.ObjectMap[java.lang.String, java.lang.Class[?]] = {
-    return this.jsonClassTags
+    return this.jsonClassTags.asInstanceOf[com.badlogic.gdx.utils.ObjectMap[java.lang.String, java.lang.Class[?]]]
   }
   locally {
     for (c <- Skin.defaultTagClasses) {

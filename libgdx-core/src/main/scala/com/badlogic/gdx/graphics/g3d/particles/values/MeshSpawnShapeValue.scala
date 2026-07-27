@@ -30,7 +30,7 @@ abstract class MeshSpawnShapeValue extends com.badlogic.gdx.graphics.g3d.particl
   }
   def load(manager: com.badlogic.gdx.assets.AssetManager, data: com.badlogic.gdx.graphics.g3d.particles.ResourceData[?]): scala.Unit = {
     val saveData: com.badlogic.gdx.graphics.g3d.particles.ResourceData.SaveData = data.getSaveData()
-    val descriptor: com.badlogic.gdx.assets.AssetDescriptor[?] = saveData.loadAsset()
+    val descriptor: com.badlogic.gdx.assets.AssetDescriptor[?] = saveData.loadAsset().asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[?]]
     if (descriptor != null) {
       val model: com.badlogic.gdx.graphics.g3d.Model = manager.get(descriptor).asInstanceOf[com.badlogic.gdx.graphics.g3d.Model].asInstanceOf[com.badlogic.gdx.graphics.g3d.Model]
       this.setMesh(model.meshes.get(saveData.load("index").asInstanceOf[java.lang.Integer]), model)

@@ -15,7 +15,7 @@ abstract class BaseTmjMapLoader[P <: com.badlogic.gdx.maps.tiled.BaseTiledMapLoa
       textureParameter.minFilter = parameter.textureMinFilter
       textureParameter.magFilter = parameter.textureMagFilter
     } else ()
-    return this.getDependencyAssetDescriptors(tmjFile, textureParameter)
+    return this.getDependencyAssetDescriptors(tmjFile, textureParameter).asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]]
   }
   def loadTiledMap(tmjFile: com.badlogic.gdx.files.FileHandle, parameter: P, imageResolver: com.badlogic.gdx.maps.ImageResolver): com.badlogic.gdx.maps.tiled.TiledMap = {
     this.map = new com.badlogic.gdx.maps.tiled.TiledMap()

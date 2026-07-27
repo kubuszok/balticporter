@@ -109,30 +109,38 @@ final class TirEmitter(source: Program):
     // is named through the value path `Outer.Inner` — NOT by simple name (companion members aren't
     // in the class's scope) and NOT `Outer#Inner` (a type projection can't reach a companion member).
     else if s.flags.isStatic && s.fullName.contains('$') then s.fullName.replace('$', '.')
-    else if program.definitionOf(id).isDefined && currentDeclared(id) then esc(s.name) // declared here — in scope
+    // a Java INNER (non-static) class is a PATH-dependent type in Scala: named by simple name inside
+    // the enclosing class it means `this.Inner`, so the same Java type reached through two different
+    // instances (`pa.Channel` vs `ParallelArray#Channel` from another file) never unifies, and a
+    // method bounded `<T extends Channel>` cannot accept an initializer written against the outer
+    // view. Name it by PROJECTION everywhere instead — one type for all instances. `extends` and
+    // `new` need an instantiable/stable name, so those two positions opt out (see `namedInner`).
+    else if program.definitionOf(id).isDefined && currentDeclared(id) then
+      if namedInner || !isInnerClass(id) then esc(s.name) // declared here — in scope
+      else s.fullName.replace('$', '#')
     else if program.symbolOf(s.owner).exists(_.flags.isModule) then s"${typeValue(s.owner)}.${esc(s.name)}" // object's type member → path-dependent `O.T`
     else s.fullName.replace('$', '#')                               // non-static inner class elsewhere → `Outer#Inner`
+
+  /** a NON-static nested class of one of our own NON-GENERIC classes (not of a companion `object`).
+    * A generic enclosing class is excluded: `Octree#OctreeNode` is not a legal projection — the
+    * prefix would need type arguments, which the reference does not carry. */
+  private def isInnerClass(id: SymId): Boolean =
+    val s = sym(id)
+    !s.flags.isStatic && s.owner != SymId.None && s.fullName.contains('$') &&
+      !program.symbolOf(s.owner).exists(_.flags.isModule) &&
+      program.definitionOf(s.owner).exists { case c: Tree.ClassDef => c.tparams.isEmpty; case _ => false }
+
+  /** inside an `extends` clause or a `new`, where a type projection is not legal — render inner
+    * classes by their simple (in-scope) name there. */
+  private var namedInner = false
+  private def byName[A](f: => String): String =
+    val prev = namedInner; namedInner = true
+    try f finally namedInner = prev
 
   private def ind(n: Int): String = "  " * n
 
   // ---- definitions ----
-  /** the classes currently being rendered, outermost first. Lets a `Tree.This` naming an ENCLOSING
-    * class render Java's qualified `Outer.this` rather than a bare `this` (which would name the
-    * inner one). */
-  private val classStack = collection.mutable.ArrayDeque[SymId]()
-
   private def classDef(cd: Tree.ClassDef, i: Int): String =
-    classStack.append(cd.symbol)
-    try classDefBody(cd, i) finally classStack.removeLast()
-
-  /** `this` in Scala always names the INNERMOST class, where Java's `Outer.this` names an enclosing
-    * one. Qualify by simple name when the symbol is an enclosing class actually being rendered
-    * around this point; anything else (an inherited/unknown owner) keeps the bare `this`. */
-  private def thisRef(s: SymId): String =
-    if classStack.lastOption.contains(s) || !classStack.contains(s) then "this"
-    else s"${esc(sym(s).name)}.this"
-
-  private def classDefBody(cd: Tree.ClassDef, i: Int): String =
     if sym(cd.symbol).flags.isEnum then return enumDef(cd, i)
     val s  = sym(cd.symbol)
     val kw =
@@ -320,7 +328,9 @@ final class TirEmitter(source: Program):
 
   /** a parent type in an `extends` clause: a wildcard type argument (`Foo[?, ?]`, from a raw
     * generic supertype) is ILLEGAL here — replace each `?` with its upper bound (or `AnyRef`). */
-  private def parentTpe(t: TypeRepr): String = t match
+  private def parentTpe(t: TypeRepr): String = byName(parentTpe0(t))
+
+  private def parentTpe0(t: TypeRepr): String = t match
     case TypeRepr.AppliedType(tc, args) if args.exists(_.isInstanceOf[TypeRepr.TypeBounds]) =>
       val as = args.map {
         case TypeRepr.TypeBounds(_, hi) if hi != TypeRepr.NoType => tpe(hi)
@@ -485,7 +495,7 @@ final class TirEmitter(source: Program):
   private def term(t: Term, i: Int): String = t match
     case Tree.Ident(s, _, _)            => if isTypeRef(s) then typeValue(s) else staticRef(s)
     case Tree.Literal(c, _, _)          => constant(c)
-    case Tree.This(s, _, _)             => thisRef(s)
+    case Tree.This(_, _, _)             => "this"
     case Tree.Super(_, _, _)            => "super"
     case Tree.Select(q, s, _, _)        => s"${term(q, i)}.${local(s)}"
     case Tree.New(tpt, _, _)            => s"new ${ctorTpe(tpt.tpe)}"
@@ -521,7 +531,7 @@ final class TirEmitter(source: Program):
       s"{ $is; while ($c) $bodyWithUpd }"
     case Tree.Try(res, body, catches, fin, _, _) => tryStr(res, body, catches, fin, i)
     case Tree.Match(scr, cases, _, _)   => matchStr(scr, cases, i)
-    case Tree.MethodRef(q, s, mrT, _)   =>
+    case Tree.MethodRef(q, s, _, _)     =>
       val isCtor = sym(s).name == "<init>" // `Type::new` → a factory function `() => new Type()`
       q match
         // an ARRAY constructor reference `T[]::new` is an `IntFunction[T[]]` — `(size) => new T[size]`
@@ -536,7 +546,7 @@ final class TirEmitter(source: Program):
               case _: TypeRepr.TypeBounds => "java.lang.Object"
               case other                  => tpe(other)
             s"((size: scala.Int) => new scala.Array[$elem](size))"
-          case _ => samAscribed(s"(() => new ${ctorTpe(tt.tpe)}())", mrT, tt.tpe)
+          case _ => s"(() => new ${ctorTpe(tt.tpe)}())"
         case Left(tt)           => s"${tpe(tt.tpe)}.${local(s)}"
         case Right(e)           => s"${term(e, i)}.${local(s)}"
     case Tree.Break(_, _, _)            => "/* break */ ()"    // TODO: scala.util.boundary
@@ -546,32 +556,6 @@ final class TirEmitter(source: Program):
     case Tree.DoWhile(b, c, _, _)       => s"while ({ ${term(b, i)}; ${term(c, i)} }) ()" // Scala 3 has no do-while
     case Tree.Synchronized(l, b, _, _)  => s"${term(l, i)}.synchronized ${term(b, i)}"
     case Tree.Opaque(raw, _, _)         => raw
-
-  /** A Java constructor reference (`Foo::new`) is typed by the TARGET functional interface Java
-    * resolved, not by `Foo`. Emitted bare, `() => new Foo()` is a `Function0`, which Scala
-    * SAM-converts to ANY single-abstract-method type — so an overload set offering two of them
-    * (`PoolManager.addPool(Class, Pool)` vs `(Class, PoolSupplier)`) becomes AMBIGUOUS where
-    * Java's was not. Re-state the resolved target as an ascription.
-    *
-    * Strictly guarded, because the ascription is only sound when the frontend really gave us the
-    * functional interface: the type must be concrete (no wildcards, no type variables, no `NoType`)
-    * and must not be the constructed type itself. Anything else falls back to the bare lambda —
-    * the previous behaviour — so this can only ever narrow, never mis-type. */
-  private def samAscribed(fn: String, target: TypeRepr, ctor: TypeRepr): String =
-    def headOf(t: TypeRepr): Option[SymId] = t match
-      case TypeRepr.TypeRef(_, s)      => Some(s)
-      case TypeRepr.AppliedType(tc, _) => headOf(tc)
-      case _                           => None
-    def concrete(t: TypeRepr): Boolean = t match
-      case TypeRepr.TypeRef(_, s)       => !sym(s).flags.isParam
-      case TypeRepr.AppliedType(tc, as) => concrete(tc) && as.forall(arg)
-      case _                            => false
-    // a bare `?` is a legal type ARGUMENT (`PoolSupplier[Array[?]]`) though not a legal type
-    def arg(t: TypeRepr): Boolean = t match
-      case TypeRepr.TypeBounds(TypeRepr.NoType, TypeRepr.NoType) => true
-      case other                                                 => concrete(other)
-    val ok = concrete(target) && headOf(target) != headOf(ctor)
-    if ok then s"($fn: ${tpe(target)})" else fn
 
   private def applyStr(fun: Term, args: List[Term], i: Int): String = fun match
     case Tree.New(tpt, _, _) => s"new ${ctorTpe(tpt.tpe)}(${args.map(term(_, i)).mkString(", ")})"
@@ -629,9 +613,9 @@ final class TirEmitter(source: Program):
   /** a type in `new` position: `new Foo[?]` is illegal (you can't instantiate a wildcard), so
     * when a raw generic type carries wildcard args, drop them and let Scala infer the arguments
     * from the expected type (`new Foo(...)`). */
-  private def ctorTpe(t: TypeRepr): String = t match
+  private def ctorTpe(t: TypeRepr): String = byName(t match
     case TypeRepr.AppliedType(tc, args) if args.exists(_.isInstanceOf[TypeRepr.TypeBounds]) => tpe(tc)
-    case _ => tpe(t)
+    case _ => tpe(t))
 
   /** strip `scala.Array[...]` layers to the base element type (for `Array.ofDim[base](dims)`). */
   private def baseElem(t: TypeRepr): TypeRepr = t match

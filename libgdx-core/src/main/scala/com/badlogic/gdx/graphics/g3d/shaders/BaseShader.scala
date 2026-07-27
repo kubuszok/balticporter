@@ -294,7 +294,7 @@ abstract class BaseShader extends com.badlogic.gdx.graphics.g3d.Shader {
     if (this.locations(uniform) < 0) {
       return false
     } else ()
-    this.program.setUniformi(this.locations(uniform), this.context.textureBinder.bind(textureDesc))
+    this.program.setUniformi(this.locations(uniform), this.context.textureBinder.bind(textureDesc.asInstanceOf[com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[?]]))
     return true
   }
   final def set(uniform: scala.Int, texture: com.badlogic.gdx.graphics.GLTexture): scala.Boolean = {

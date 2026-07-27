@@ -12,9 +12,9 @@ class Decoder {
   var m_PosSlotDecoder: scala.Array[com.badlogic.gdx.utils.compression.rangecoder.BitTreeDecoder] = new scala.Array[com.badlogic.gdx.utils.compression.rangecoder.BitTreeDecoder](com.badlogic.gdx.utils.compression.lzma.Base.kNumLenToPosStates)
   var m_PosDecoders: scala.Array[scala.Short] = new scala.Array[scala.Short](com.badlogic.gdx.utils.compression.lzma.Base.kNumFullDistances - com.badlogic.gdx.utils.compression.lzma.Base.kEndPosModelIndex)
   var m_PosAlignDecoder: com.badlogic.gdx.utils.compression.rangecoder.BitTreeDecoder = new com.badlogic.gdx.utils.compression.rangecoder.BitTreeDecoder(com.badlogic.gdx.utils.compression.lzma.Base.kNumAlignBits)
-  var m_LenDecoder: LenDecoder = new LenDecoder()
-  var m_RepLenDecoder: LenDecoder = new LenDecoder()
-  var m_LiteralDecoder: LiteralDecoder = new LiteralDecoder()
+  var m_LenDecoder: com.badlogic.gdx.utils.compression.lzma.Decoder#LenDecoder = new LenDecoder()
+  var m_RepLenDecoder: com.badlogic.gdx.utils.compression.lzma.Decoder#LenDecoder = new LenDecoder()
+  var m_LiteralDecoder: com.badlogic.gdx.utils.compression.lzma.Decoder#LiteralDecoder = new LiteralDecoder()
   var m_DictionarySize: scala.Int = -1
   var m_DictionarySizeCheck: scala.Int = -1
   var m_PosStateMask: scala.Int = 0;
@@ -76,7 +76,7 @@ class Decoder {
     while ((outSize < 0) || (nowPos64 < outSize)) {
       val posState: scala.Int = nowPos64.asInstanceOf[scala.Int] & this.m_PosStateMask
       if (this.m_RangeDecoder.DecodeBit(this.m_IsMatchDecoders, (state << com.badlogic.gdx.utils.compression.lzma.Base.kNumPosStatesBitsMax) + posState) == 0) {
-        val decoder2: Decoder2 = this.m_LiteralDecoder.GetDecoder(nowPos64.asInstanceOf[scala.Int].asInstanceOf[scala.Int], prevByte)
+        val decoder2: com.badlogic.gdx.utils.compression.lzma.Decoder#LiteralDecoder#Decoder2 = this.m_LiteralDecoder.GetDecoder(nowPos64.asInstanceOf[scala.Int].asInstanceOf[scala.Int], prevByte)
         if (!com.badlogic.gdx.utils.compression.lzma.Base.StateIsCharState(state)) {
           prevByte = decoder2.DecodeWithMatchByte(this.m_RangeDecoder, this.m_OutWindow.GetByte(rep0))
         } else {
@@ -205,7 +205,7 @@ class Decoder {
     }
   }
   class LiteralDecoder {
-    var m_Coders: scala.Array[Decoder2] = null.asInstanceOf[scala.Array[Decoder2]]
+    var m_Coders: scala.Array[com.badlogic.gdx.utils.compression.lzma.Decoder#LiteralDecoder#Decoder2] = null.asInstanceOf[scala.Array[com.badlogic.gdx.utils.compression.lzma.Decoder#LiteralDecoder#Decoder2]]
     var m_NumPrevBits: scala.Int = 0
     var m_NumPosBits: scala.Int = 0
     var m_PosMask: scala.Int = 0
@@ -217,7 +217,7 @@ class Decoder {
       this.m_PosMask = (1 << numPosBits) - 1
       this.m_NumPrevBits = numPrevBits
       val numStates: scala.Int = 1 << (this.m_NumPrevBits + this.m_NumPosBits)
-      this.m_Coders = new scala.Array[Decoder2](numStates);
+      this.m_Coders = new scala.Array[com.badlogic.gdx.utils.compression.lzma.Decoder#LiteralDecoder#Decoder2](numStates);
       { var i: scala.Int = 0; while (i < numStates) { {
         this.m_Coders(i) = new Decoder2()
       }; i = i + 1 } }
@@ -228,7 +228,7 @@ class Decoder {
         this.m_Coders(i).Init()
       }; i = i + 1 } }
     }
-    def GetDecoder(pos: scala.Int, prevByte: scala.Byte): Decoder2 = {
+    def GetDecoder(pos: scala.Int, prevByte: scala.Byte): com.badlogic.gdx.utils.compression.lzma.Decoder#LiteralDecoder#Decoder2 = {
       return this.m_Coders(((pos & this.m_PosMask) << this.m_NumPrevBits) + ((prevByte & 255) >>> (8 - this.m_NumPrevBits)))
     }
     class Decoder2 {

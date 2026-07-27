@@ -290,7 +290,7 @@ class SelectBox[T] extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.ba
     this.invalidateHierarchy()
   }
   def getScrollPane(): com.badlogic.gdx.scenes.scene2d.ui.SelectBox.SelectBoxScrollPane[T] = {
-    return this.scrollPane
+    return this.scrollPane.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.SelectBox.SelectBoxScrollPane[T]]
   }
   def isOver(): scala.Boolean = {
     return this.clickListener.isOver()

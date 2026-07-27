@@ -17,17 +17,17 @@ class TooltipManager {
   final val showTask: com.badlogic.gdx.utils.Timer.Task = new com.badlogic.gdx.utils.Timer.Task()
   def touchDown(tooltip: com.badlogic.gdx.scenes.scene2d.ui.Tooltip[?]): scala.Unit = {
     this.showTask.cancel()
-    if (tooltip.container.remove()) {
+    if (tooltip.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Tooltip[com.badlogic.gdx.scenes.scene2d.Actor]].container.remove()) {
       this.resetTask.cancel()
     } else ()
     this.resetTask.run()
     if (this.enabled || tooltip.always) {
-      this.showTooltip = tooltip
+      this.showTooltip = tooltip.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Tooltip[?]]
       com.badlogic.gdx.utils.Timer.schedule(this.showTask, this.time)
     } else ()
   }
   def enter(tooltip: com.badlogic.gdx.scenes.scene2d.ui.Tooltip[?]): scala.Unit = {
-    this.showTooltip = tooltip
+    this.showTooltip = tooltip.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Tooltip[?]]
     this.showTask.cancel()
     if (this.enabled || tooltip.always) {
       if ((this.time == 0) || tooltip.instant) {
@@ -40,22 +40,22 @@ class TooltipManager {
   def hide(tooltip: com.badlogic.gdx.scenes.scene2d.ui.Tooltip[?]): scala.Unit = {
     this.showTooltip = null
     this.showTask.cancel()
-    if (tooltip.container.hasParent()) {
+    if (tooltip.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Tooltip[com.badlogic.gdx.scenes.scene2d.Actor]].container.hasParent()) {
       this.shown.removeValue(tooltip, true)
-      this.hideAction(tooltip)
+      this.hideAction(tooltip.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Tooltip[?]])
       this.resetTask.cancel()
       com.badlogic.gdx.utils.Timer.schedule(this.resetTask, this.resetTime)
     } else ()
   }
   def showAction(tooltip: com.badlogic.gdx.scenes.scene2d.ui.Tooltip[?]): scala.Unit = {
     val actionTime: scala.Float = if (this.animations) if (this.time > 0) 0.5f else 0.15f else 0.1f
-    tooltip.container.setTransform(true)
-    tooltip.container.getColor().a = 0.2f
-    tooltip.container.setScale(0.05f)
-    tooltip.container.addAction(com.badlogic.gdx.scenes.scene2d.actions.Actions.parallel(com.badlogic.gdx.scenes.scene2d.actions.Actions.fadeIn(actionTime, com.badlogic.gdx.math.Interpolation.fade), com.badlogic.gdx.scenes.scene2d.actions.Actions.scaleTo(1, 1, actionTime, com.badlogic.gdx.math.Interpolation.fade)))
+    tooltip.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Tooltip[com.badlogic.gdx.scenes.scene2d.Actor]].container.setTransform(true)
+    tooltip.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Tooltip[com.badlogic.gdx.scenes.scene2d.Actor]].container.getColor().a = 0.2f
+    tooltip.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Tooltip[com.badlogic.gdx.scenes.scene2d.Actor]].container.setScale(0.05f)
+    tooltip.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Tooltip[com.badlogic.gdx.scenes.scene2d.Actor]].container.addAction(com.badlogic.gdx.scenes.scene2d.actions.Actions.parallel(com.badlogic.gdx.scenes.scene2d.actions.Actions.fadeIn(actionTime, com.badlogic.gdx.math.Interpolation.fade), com.badlogic.gdx.scenes.scene2d.actions.Actions.scaleTo(1, 1, actionTime, com.badlogic.gdx.math.Interpolation.fade)))
   }
   def hideAction(tooltip: com.badlogic.gdx.scenes.scene2d.ui.Tooltip[?]): scala.Unit = {
-    tooltip.container.addAction(com.badlogic.gdx.scenes.scene2d.actions.Actions.sequence(com.badlogic.gdx.scenes.scene2d.actions.Actions.parallel(com.badlogic.gdx.scenes.scene2d.actions.Actions.alpha(0.2f, 0.2f, com.badlogic.gdx.math.Interpolation.fade), com.badlogic.gdx.scenes.scene2d.actions.Actions.scaleTo(0.05f, 0.05f, 0.2f, com.badlogic.gdx.math.Interpolation.fade)), com.badlogic.gdx.scenes.scene2d.actions.Actions.removeActor()))
+    tooltip.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Tooltip[com.badlogic.gdx.scenes.scene2d.Actor]].container.addAction(com.badlogic.gdx.scenes.scene2d.actions.Actions.sequence(com.badlogic.gdx.scenes.scene2d.actions.Actions.parallel(com.badlogic.gdx.scenes.scene2d.actions.Actions.alpha(0.2f, 0.2f, com.badlogic.gdx.math.Interpolation.fade), com.badlogic.gdx.scenes.scene2d.actions.Actions.scaleTo(0.05f, 0.05f, 0.2f, com.badlogic.gdx.math.Interpolation.fade)), com.badlogic.gdx.scenes.scene2d.actions.Actions.removeActor()))
   }
   def hideAll(): scala.Unit = {
     this.resetTask.cancel()

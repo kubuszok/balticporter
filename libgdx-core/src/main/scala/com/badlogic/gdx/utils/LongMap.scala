@@ -37,7 +37,7 @@ class LongMap[V] extends scala.collection.Iterable[com.badlogic.gdx.utils.LongMa
     java.lang.System.arraycopy(map.keyTable, 0, this.keyTable, 0, map.keyTable.length)
     java.lang.System.arraycopy(map.valueTable, 0, this.valueTable, 0, map.valueTable.length)
     this.size = map.size
-    this.zeroValue = map.zeroValue.asInstanceOf[V]
+    this.zeroValue = map.zeroValue
     this.hasZeroValue = map.hasZeroValue
   }
   def place(item: scala.Long): scala.Int = {
@@ -328,12 +328,12 @@ class LongMap[V] extends scala.collection.Iterable[com.badlogic.gdx.utils.LongMa
       return false
     } else ()
     if (this.hasZeroValue) {
-      if (other.zeroValue == null) {
+      if (other.asInstanceOf[LongMap[java.lang.Object]].zeroValue == null) {
         if (this.zeroValue != null) {
           return false
         } else ()
       } else {
-        if (!other.zeroValue.equals(this.zeroValue.asInstanceOf[java.lang.Object])) {
+        if (!other.asInstanceOf[LongMap[java.lang.Object]].zeroValue.equals(this.zeroValue.asInstanceOf[java.lang.Object])) {
           return false
         } else ()
       }
@@ -371,7 +371,7 @@ class LongMap[V] extends scala.collection.Iterable[com.badlogic.gdx.utils.LongMa
     if (other.hasZeroValue != this.hasZeroValue) {
       return false
     } else ()
-    if (this.hasZeroValue && (this.zeroValue != other.zeroValue)) {
+    if (this.hasZeroValue && (this.zeroValue != other.asInstanceOf[LongMap[java.lang.Object]].zeroValue)) {
       return false
     } else ()
     val keyTable: scala.Array[scala.Long] = this.keyTable
@@ -629,7 +629,7 @@ object LongMap {
       return this
     }
     def toArray(): com.badlogic.gdx.utils.Array[V] = {
-      val array: com.badlogic.gdx.utils.Array[?] = new com.badlogic.gdx.utils.Array(true, this.map.size)
+      val array: com.badlogic.gdx.utils.Array[?] = new com.badlogic.gdx.utils.Array(true, this.map.size).asInstanceOf[com.badlogic.gdx.utils.Array[?]]
       while (hasNext$field) {
         array.asInstanceOf[com.badlogic.gdx.utils.Array[java.lang.Object]].add(this.next().asInstanceOf[java.lang.Object])
       }

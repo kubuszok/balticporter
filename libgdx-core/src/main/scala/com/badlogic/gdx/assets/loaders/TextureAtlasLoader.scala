@@ -30,7 +30,7 @@ class TextureAtlasLoader extends com.badlogic.gdx.assets.loaders.SynchronousAsse
       params.magFilter = page.magFilter
       dependencies.add(new com.badlogic.gdx.assets.AssetDescriptor(page.textureFile, classOf[com.badlogic.gdx.graphics.Texture], params))
     }
-    return dependencies
+    return dependencies.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]]
   }
 }
 object TextureAtlasLoader {

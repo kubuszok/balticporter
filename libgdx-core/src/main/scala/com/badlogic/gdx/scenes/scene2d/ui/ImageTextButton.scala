@@ -135,7 +135,7 @@ class ImageTextButton extends com.badlogic.gdx.scenes.scene2d.ui.Button {
     return this.image
   }
   def getImageCell(): com.badlogic.gdx.scenes.scene2d.ui.Cell[?] = {
-    return this.getCell(this.image)
+    return this.getCell(this.image).asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]]
   }
   def setLabel(label: com.badlogic.gdx.scenes.scene2d.ui.Label): scala.Unit = {
     this.getLabelCell().setActor(label)
@@ -145,7 +145,7 @@ class ImageTextButton extends com.badlogic.gdx.scenes.scene2d.ui.Button {
     return this.label
   }
   def getLabelCell(): com.badlogic.gdx.scenes.scene2d.ui.Cell[?] = {
-    return this.getCell(this.label)
+    return this.getCell(this.label).asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]]
   }
   def setText(text: java.lang.CharSequence): scala.Unit = {
     this.label.setText(text)

@@ -402,8 +402,8 @@ class DefaultShader extends com.badlogic.gdx.graphics.g3d.shaders.BaseShader {
     } else ()
     if ((lights != null) && (lights.shadowMap != null)) {
       this.set(this.u_shadowMapProjViewTrans, lights.shadowMap.getProjViewTrans())
-      this.set(this.u_shadowTexture, lights.shadowMap.getDepthMap())
-      this.set(this.u_shadowPCFOffset, 1.0f / (2.0f * lights.shadowMap.getDepthMap().texture.getWidth()))
+      this.set(this.u_shadowTexture, lights.shadowMap.getDepthMap().asInstanceOf[com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[?]])
+      this.set(this.u_shadowPCFOffset, 1.0f / (2.0f * lights.shadowMap.getDepthMap().asInstanceOf[com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[com.badlogic.gdx.graphics.GLTexture]].texture.getWidth()))
     } else ()
     this.lightsSet = true
   }

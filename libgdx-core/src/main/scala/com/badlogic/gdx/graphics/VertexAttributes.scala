@@ -225,7 +225,7 @@ object VertexAttributes {
     }
     def iterator(): scala.collection.Iterator[T] = {
       if (com.badlogic.gdx.utils.Collections.allocateIterators) {
-        return new com.badlogic.gdx.graphics.VertexAttributes.ReadonlyIterator[T](this.array)
+        return new com.badlogic.gdx.graphics.VertexAttributes.ReadonlyIterator[T](this.array).asInstanceOf[scala.collection.Iterator[T]]
       } else ()
       if (this.iterator1 == null) {
         this.iterator1 = new com.badlogic.gdx.graphics.VertexAttributes.ReadonlyIterator[T](this.array).asInstanceOf[com.badlogic.gdx.graphics.VertexAttributes.ReadonlyIterator[T]]
@@ -235,12 +235,12 @@ object VertexAttributes {
         this.iterator1.index = 0
         this.iterator1.valid = true
         this.iterator2.valid = false
-        return this.iterator1
+        return this.iterator1.asInstanceOf[scala.collection.Iterator[T]]
       } else ()
       this.iterator2.index = 0
       this.iterator2.valid = true
       this.iterator1.valid = false
-      return this.iterator2
+      return this.iterator2.asInstanceOf[scala.collection.Iterator[T]]
     }
   }
 }
