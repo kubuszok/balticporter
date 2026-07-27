@@ -1,9 +1,9 @@
 package com.badlogic.gdx.scenes.scene2d.actions
 
 abstract class TemporalAction extends com.badlogic.gdx.scenes.scene2d.Action with com.badlogic.gdx.scenes.scene2d.actions.FinishableAction {
-  private var duration: scala.Float = 0.0f
+  var duration: scala.Float = 0.0f
   private var time: scala.Float = 0.0f
-  private var interpolation: com.badlogic.gdx.math.Interpolation = null.asInstanceOf[com.badlogic.gdx.math.Interpolation]
+  var interpolation: com.badlogic.gdx.math.Interpolation = null.asInstanceOf[com.badlogic.gdx.math.Interpolation]
   private var reverse: scala.Boolean = false
   private var began: scala.Boolean = false
   private var complete: scala.Boolean = false

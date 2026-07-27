@@ -5,6 +5,7 @@ class TideMapLoader extends com.badlogic.gdx.assets.loaders.SynchronousAssetLoad
   private var root: com.badlogic.gdx.utils.XmlReader.Element = null.asInstanceOf[com.badlogic.gdx.utils.XmlReader.Element]
   def this(resolver: com.badlogic.gdx.assets.loaders.FileHandleResolver) = {
     this()
+    this.resolver = resolver
   }
   def load(fileName: java.lang.String): com.badlogic.gdx.maps.tiled.TiledMap = {
     try {

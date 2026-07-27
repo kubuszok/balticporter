@@ -60,6 +60,7 @@ object DynamicsModifier {
     var strengthValue: com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue]
     def this(rotation: com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.Strength) = {
       this()
+      this.isGlobal = rotation.isGlobal
       this.strengthValue = new com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue()
       this.strengthValue.load(rotation.strengthValue)
     }
@@ -100,6 +101,9 @@ object DynamicsModifier {
     var phiValue: com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue]
     def this(value: com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.Angular) = {
       this()
+      this.isGlobal = value.isGlobal
+      this.strengthValue = new com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue()
+      this.strengthValue.load(value.strengthValue)
       this.thetaValue = new com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue()
       this.phiValue = new com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue()
       this.thetaValue.load(value.thetaValue)

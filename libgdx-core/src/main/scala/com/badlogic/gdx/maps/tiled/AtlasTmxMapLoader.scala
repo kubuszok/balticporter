@@ -5,6 +5,7 @@ class AtlasTmxMapLoader extends com.badlogic.gdx.maps.tiled.BaseTmxMapLoader[com
   var atlasResolver: com.badlogic.gdx.maps.tiled.AtlasTmxMapLoader.AtlasResolver = null.asInstanceOf[com.badlogic.gdx.maps.tiled.AtlasTmxMapLoader.AtlasResolver]
   def this(resolver: com.badlogic.gdx.assets.loaders.FileHandleResolver) = {
     this()
+    this.resolver = resolver
   }
   def load(fileName: java.lang.String): com.badlogic.gdx.maps.tiled.TiledMap = {
     return this.load(fileName, new com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.Parameters())

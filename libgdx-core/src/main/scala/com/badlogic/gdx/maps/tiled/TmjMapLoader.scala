@@ -3,6 +3,7 @@ package com.badlogic.gdx.maps.tiled
 class TmjMapLoader extends com.badlogic.gdx.maps.tiled.BaseTmjMapLoader[com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.Parameters](new com.badlogic.gdx.assets.loaders.resolvers.InternalFileHandleResolver()) {
   def this(resolver: com.badlogic.gdx.assets.loaders.FileHandleResolver) = {
     this()
+    this.resolver = resolver
   }
   def load(fileName: java.lang.String): com.badlogic.gdx.maps.tiled.TiledMap = {
     return this.load(fileName, new com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.Parameters())

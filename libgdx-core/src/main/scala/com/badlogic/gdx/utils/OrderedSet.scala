@@ -6,14 +6,43 @@ class OrderedSet[T] extends com.badlogic.gdx.utils.ObjectSet[T] {
   var iterator2: com.badlogic.gdx.utils.OrderedSet.OrderedSetIterator[?] = null.asInstanceOf[com.badlogic.gdx.utils.OrderedSet.OrderedSetIterator[?]]
   def this(initialCapacity: scala.Int, loadFactor: scala.Float) = {
     this()
+    if ((loadFactor <= 0.0f) || (loadFactor >= 1.0f)) {
+      throw new java.lang.IllegalArgumentException("loadFactor must be > 0 and < 1: " + loadFactor)
+    } else ()
+    this.loadFactor = loadFactor
+    val tableSize: scala.Int = com.badlogic.gdx.utils.ObjectSet.tableSize(initialCapacity, loadFactor)
+    this.threshold = (tableSize * loadFactor).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
+    this.mask = tableSize - 1
+    this.shift = java.lang.Long.numberOfLeadingZeros(this.mask)
+    this.keyTable = new scala.Array[java.lang.Object](tableSize).asInstanceOf[scala.Array[T]].asInstanceOf[scala.Array[T]]
     this.items = new com.badlogic.gdx.utils.Array[T](initialCapacity).asInstanceOf[com.badlogic.gdx.utils.Array[T]]
   }
   def this(initialCapacity: scala.Int) = {
     this()
+    if ((0.8f <= 0.0f) || (0.8f >= 1.0f)) {
+      throw new java.lang.IllegalArgumentException("loadFactor must be > 0 and < 1: " + 0.8f)
+    } else ()
+    this.loadFactor = 0.8f
+    val tableSize: scala.Int = com.badlogic.gdx.utils.ObjectSet.tableSize(initialCapacity, 0.8f)
+    this.threshold = (tableSize * 0.8f).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
+    this.mask = tableSize - 1
+    this.shift = java.lang.Long.numberOfLeadingZeros(this.mask)
+    this.keyTable = new scala.Array[java.lang.Object](tableSize).asInstanceOf[scala.Array[T]].asInstanceOf[scala.Array[T]]
     this.items = new com.badlogic.gdx.utils.Array[T](initialCapacity).asInstanceOf[com.badlogic.gdx.utils.Array[T]]
   }
   def this(set: OrderedSet[? <: T]) = {
     this()
+    if ((set.loadFactor <= 0.0f) || (set.loadFactor >= 1.0f)) {
+      throw new java.lang.IllegalArgumentException("loadFactor must be > 0 and < 1: " + set.loadFactor)
+    } else ()
+    this.loadFactor = set.loadFactor
+    val tableSize: scala.Int = com.badlogic.gdx.utils.ObjectSet.tableSize((set.keyTable.length * set.loadFactor).asInstanceOf[scala.Int].asInstanceOf[scala.Int], set.loadFactor)
+    this.threshold = (tableSize * set.loadFactor).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
+    this.mask = tableSize - 1
+    this.shift = java.lang.Long.numberOfLeadingZeros(this.mask)
+    this.keyTable = new scala.Array[java.lang.Object](tableSize).asInstanceOf[scala.Array[T]].asInstanceOf[scala.Array[T]]
+    java.lang.System.arraycopy(set.keyTable, 0, this.keyTable, 0, set.keyTable.length)
+    this.size = set.size
     this.items = new com.badlogic.gdx.utils.Array[T](set.items).asInstanceOf[com.badlogic.gdx.utils.Array[T]]
   }
   this.items = new com.badlogic.gdx.utils.Array[T]().asInstanceOf[com.badlogic.gdx.utils.Array[T]]

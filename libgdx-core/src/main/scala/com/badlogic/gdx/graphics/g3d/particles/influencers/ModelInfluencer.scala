@@ -63,10 +63,12 @@ object ModelInfluencer {
     var pool: com.badlogic.gdx.graphics.g3d.particles.influencers.ModelInfluencer#Random#ModelInstancePool = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.influencers.ModelInfluencer#Random#ModelInstancePool]
     def this(influencer: com.badlogic.gdx.graphics.g3d.particles.influencers.ModelInfluencer.Random) = {
       this()
+      this.models = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.Model](influencer.models.toArray(((size: scala.Int) => new scala.Array[com.badlogic.gdx.graphics.g3d.Model](size))))
       this.pool = new ModelInstancePool()
     }
     def this(models: scala.Array[com.badlogic.gdx.graphics.g3d.Model]) = {
       this()
+      this.models = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.Model](models)
       this.pool = new ModelInstancePool()
     }
     this.pool = new ModelInstancePool()

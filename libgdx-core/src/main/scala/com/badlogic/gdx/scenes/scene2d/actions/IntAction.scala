@@ -11,11 +11,14 @@ class IntAction extends com.badlogic.gdx.scenes.scene2d.actions.TemporalAction {
   }
   def this(start: scala.Int, `end`: scala.Int, duration: scala.Float) = {
     this()
+    this.duration = duration
     this.start = start
     this.`end` = `end`
   }
   def this(start: scala.Int, `end`: scala.Int, duration: scala.Float, interpolation: com.badlogic.gdx.math.Interpolation) = {
     this()
+    this.duration = duration
+    this.interpolation = interpolation
     this.start = start
     this.`end` = `end`
   }

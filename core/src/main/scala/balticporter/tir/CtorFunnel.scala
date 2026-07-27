@@ -98,18 +98,19 @@ object CtorFunnel:
       classes.foreach { cd =>
         // `this()` must run nothing beyond the parent's nilary construction: the class's own
         // primary contributes no statements and passes no super arguments of its own.
-        val p          = plans.getOrElse(cd.symbol, Plan.none)
-        val thisIsNoOp = p.primaryParams.isEmpty && p.primaryBody.isEmpty && p.superArgs.isEmpty
-        val prologue   = parentSyms(cd).foldLeft(Option(List.empty[Statement])) { (acc, s) =>
-          acc.zip(prologueOf(s, 0)).map(_ ++ _)
-        }
-        if thisIsNoOp && prologue.isDefined then
+        val p = plans.getOrElse(cd.symbol, Plan.none)
+        // everything `this()` runs: the class's own promoted primary, and whatever IT reaches
+        val prologue = if p.primaryParams.nonEmpty then scala.None else prologueOf(cd.symbol, 0)
+        if prologue.isDefined then
           ctorsOf(program, cd.body).foreach { d =>
             if !p.primary.contains(d.symbol) then
               superApply(d).foreach { case (m, args) =>
                 effectsOf(m, args, 0).foreach { stats =>
                   val touched = collection.mutable.Set[SymId]()
-                  if usable(cd, d, stats, touched) && supersedes(stats, prologue.get) then
+                  // the constructor's OWN statements run after the replay, so they count towards
+                  // superseding the prologue too
+                  val after = stats ++ stmtsOf(d).tail
+                  if usable(cd, d, stats, touched) && supersedes(after, prologue.get) then
                     out((cd.symbol, d.symbol)) = stats
                     widened ++= touched.filter { s =>
                       program.symbolOf(s).exists(sy => sy.flags.isPrivate && sy.owner != cd.symbol)
@@ -250,7 +251,11 @@ object CtorFunnel:
 
     /** can these statements legally run one level down, in `cd`'s constructor? */
     private def usable(cd: Tree.ClassDef, d: Tree.DefDef, stats: List[Statement], touched: collection.mutable.Set[SymId]): Boolean =
-      if stats.isEmpty then false
+      // an EMPTY replay is a real answer, not a failure: `super(value)` on a parent constructor
+      // whose whole body is `this();` adds nothing beyond the nilary construction the emitted
+      // `this()` already performed. Dropping the ARGUMENTS' effects would not be sound, but a
+      // parameter used zero times already requires a re-evaluable argument (see `effectsOf`).
+      if stats.isEmpty then true
       else
         given Program = program
         var ok = true
