@@ -1,6 +1,6 @@
 package balticporter.frontend.spoon
 
-import balticporter.core.FrontendConfig
+import balticporter.core.{FrontendConfig, Substitutions}
 import balticporter.tir.*
 import balticporter.tir.TypeRepr.*
 
@@ -27,7 +27,8 @@ import scala.jdk.CollectionConverters.*
   */
 object SpoonTir:
   /** Build a [[Program]] from already-resolved top-level Spoon types. */
-  def fromTypes(types: List[CtType[?]]): Program = new Builder().build(types)
+  def fromTypes(types: List[CtType[?]], subs: Substitutions = Substitutions.none): Program =
+    new Builder(subs).build(types)
 
   /** Build the Spoon model over a whole closure and return its top-level types. Full
     * classpath by default (like the BIR frontend); `lenient` uses noClasspath mode so a
@@ -99,7 +100,7 @@ object SpoonTir:
     def idOf(key: String): SymId  = byKey(key)
     def fullNameOf(id: SymId): String = syms.get(id).map(_.fullName).getOrElse("?")
 
-  private final class Builder:
+  private final class Builder(subs: Substitutions = Substitutions.none):
     private val minter   = new Minter
     private val tpScopes = collection.mutable.ArrayDeque[Map[String, SymId]]()
     private val selfRawStack = collection.mutable.ArrayDeque[(SymId, List[SymId])]()
@@ -215,7 +216,11 @@ object SpoonTir:
       val ctors = t match
         case c: CtClass[?] => c.getConstructors.asScala.toList.sortBy(posKey).map(execDef(id, _, "<init>"))
         case _             => Nil
-      val methods = t.getMethods.asScala.toList.sortBy(posKey).map(m => execDef(id, m, m.getSimpleName))
+      // Substitutions.dropMethods: a method opted out of mechanical translation (a ready Scala
+      // equivalent is injected in its place). Keyed `owner#method` by simple name.
+      val methods = t.getMethods.asScala.toList.sortBy(posKey)
+        .filterNot(m => subs.dropsMethod(t.getQualifiedName, m.getSimpleName))
+        .map(m => execDef(id, m, m.getSimpleName))
       val nested  = t.getNestedTypes.asScala.toList.sortBy(posKey).map(classDef)
       val enumCases = t match
         case e: CtEnum[?] => e.getEnumValues.asScala.toList.map(enumCase(id, _))
