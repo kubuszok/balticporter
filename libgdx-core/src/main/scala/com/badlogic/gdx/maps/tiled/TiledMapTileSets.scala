@@ -1,6 +1,6 @@
 package com.badlogic.gdx.maps.tiled
 
-class TiledMapTileSets extends scala.collection.Iterable[com.badlogic.gdx.maps.tiled.TiledMapTileSet] {
+class TiledMapTileSets extends balticporter.runtime.JavaIterable[com.badlogic.gdx.maps.tiled.TiledMapTileSet] {
   private var tilesets: com.badlogic.gdx.utils.Array[com.badlogic.gdx.maps.tiled.TiledMapTileSet] = null.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.maps.tiled.TiledMapTileSet]]
   this.tilesets = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.maps.tiled.TiledMapTileSet]()
   def getTileSet(index: scala.Int): com.badlogic.gdx.maps.tiled.TiledMapTileSet = {
@@ -33,7 +33,7 @@ class TiledMapTileSets extends scala.collection.Iterable[com.badlogic.gdx.maps.t
     }; i = i - 1 } }
     return null
   }
-  def iterator(): scala.collection.Iterator[com.badlogic.gdx.maps.tiled.TiledMapTileSet] = {
+  def iterator(): balticporter.runtime.JavaIterator[com.badlogic.gdx.maps.tiled.TiledMapTileSet] = {
     return this.tilesets.iterator()
   }
 }

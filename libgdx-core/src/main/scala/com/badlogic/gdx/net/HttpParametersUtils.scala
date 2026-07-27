@@ -5,7 +5,7 @@ object HttpParametersUtils {
   var nameValueSeparator: java.lang.String = "="
   var parameterSeparator: java.lang.String = "&"
   def convertHttpParameters(parameters: scala.collection.mutable.Map[java.lang.String, java.lang.String]): java.lang.String = {
-    val keySet: scala.collection.mutable.Set[java.lang.String] = parameters.keySet
+    val keySet: scala.collection.Set[java.lang.String] = parameters.keySet
     val convertedParameters: java.lang.StringBuilder = new java.lang.StringBuilder()
     for (name <- keySet) {
       convertedParameters.append(HttpParametersUtils.encode(name, HttpParametersUtils.defaultEncoding))

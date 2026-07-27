@@ -105,7 +105,7 @@ class Node {
   def addChild[T <: Node](child: T): scala.Int = {
     return this.insertChild(-1, child)
   }
-  def addChildren[T <: Node](nodes: scala.collection.Iterable[T]): scala.Int = {
+  def addChildren[T <: Node](nodes: balticporter.runtime.JavaIterable[T]): scala.Int = {
     return this.insertChildren(-1, nodes)
   }
   def insertChild[T <: Node](index$arg: scala.Int, child: T): scala.Int = {
@@ -128,7 +128,7 @@ class Node {
     child.parent = this
     return index
   }
-  def insertChildren[T <: Node](index$arg: scala.Int, nodes: scala.collection.Iterable[T]): scala.Int = {
+  def insertChildren[T <: Node](index$arg: scala.Int, nodes: balticporter.runtime.JavaIterable[T]): scala.Int = {
     var index: scala.Int = index$arg
     if ((index < 0) || (index > this.children.size)) {
       index = this.children.size
@@ -146,7 +146,7 @@ class Node {
     child.parent = null
     return true
   }
-  def getChildren(): scala.collection.Iterable[Node] = {
+  def getChildren(): balticporter.runtime.JavaIterable[Node] = {
     return this.children
   }
   def getParent(): Node = {

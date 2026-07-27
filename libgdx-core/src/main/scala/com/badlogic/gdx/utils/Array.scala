@@ -1,6 +1,6 @@
 package com.badlogic.gdx.utils
 
-class Array[T] extends scala.collection.Iterable[T] {
+class Array[T] extends balticporter.runtime.JavaIterable[T] {
   var items: scala.Array[T] = null.asInstanceOf[scala.Array[T]]
   var size: scala.Int = 0
   var ordered: scala.Boolean = false
@@ -442,7 +442,7 @@ class Array[T] extends scala.collection.Iterable[T] {
     } else ()
     return this.iterable.iterator()
   }
-  def select(predicate: com.badlogic.gdx.utils.Predicate[T]): scala.collection.Iterable[T] = {
+  def select(predicate: com.badlogic.gdx.utils.Predicate[T]): balticporter.runtime.JavaIterable[T] = {
     if (com.badlogic.gdx.utils.Collections.allocateIterators) {
       return new com.badlogic.gdx.utils.Predicate.PredicateIterable[T](this, predicate)
     } else ()
@@ -589,7 +589,7 @@ object Array {
   def `with`[T](array: scala.Array[T]): Array[T] = {
     return new Array(array).asInstanceOf[Array[T]]
   }
-  class ArrayIterator[T](array$p: Array[T], allowRemove$p: scala.Boolean) extends scala.collection.Iterator[T] with scala.collection.Iterable[T] {
+  class ArrayIterator[T](array$p: Array[T], allowRemove$p: scala.Boolean) extends balticporter.runtime.JavaIterator[T] with balticporter.runtime.JavaIterable[T] {
     private var array: Array[T] = null.asInstanceOf[Array[T]]
     private var allowRemove: scala.Boolean = false
     var index: scala.Int = 0
@@ -628,7 +628,7 @@ object Array {
       return this
     }
   }
-  class ArrayIterable[T](array$p: Array[T], allowRemove$p: scala.Boolean) extends scala.collection.Iterable[T] {
+  class ArrayIterable[T](array$p: Array[T], allowRemove$p: scala.Boolean) extends balticporter.runtime.JavaIterable[T] {
     private var array: Array[T] = null.asInstanceOf[Array[T]]
     private var allowRemove: scala.Boolean = false
     private var iterator1: com.badlogic.gdx.utils.Array.ArrayIterator[T] = null.asInstanceOf[com.badlogic.gdx.utils.Array.ArrayIterator[T]]

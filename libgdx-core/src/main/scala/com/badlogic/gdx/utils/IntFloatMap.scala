@@ -1,6 +1,6 @@
 package com.badlogic.gdx.utils
 
-class IntFloatMap(initialCapacity: scala.Int, loadFactor$p: scala.Float) extends scala.collection.Iterable[com.badlogic.gdx.utils.IntFloatMap.Entry] {
+class IntFloatMap(initialCapacity: scala.Int, loadFactor$p: scala.Float) extends balticporter.runtime.JavaIterable[com.badlogic.gdx.utils.IntFloatMap.Entry] {
   var size: scala.Int = 0
   var keyTable: scala.Array[scala.Int] = null.asInstanceOf[scala.Array[scala.Int]]
   var valueTable: scala.Array[scala.Float] = null.asInstanceOf[scala.Array[scala.Float]]
@@ -398,7 +398,7 @@ class IntFloatMap(initialCapacity: scala.Int, loadFactor$p: scala.Float) extends
     buffer.append(']')
     return buffer.toString()
   }
-  def iterator(): scala.collection.Iterator[com.badlogic.gdx.utils.IntFloatMap.Entry] = {
+  def iterator(): balticporter.runtime.JavaIterator[com.badlogic.gdx.utils.IntFloatMap.Entry] = {
     return this.entries()
   }
   def entries(): com.badlogic.gdx.utils.IntFloatMap.Entries = {
@@ -533,7 +533,7 @@ object IntFloatMap {
     private final val INDEX_ILLEGAL: scala.Int = -2
     final val INDEX_ZERO: scala.Int = -1
   }
-  class Entries(map$p: IntFloatMap) extends com.badlogic.gdx.utils.IntFloatMap.MapIterator(map$p) with scala.collection.Iterable[com.badlogic.gdx.utils.IntFloatMap.Entry] with scala.collection.Iterator[com.badlogic.gdx.utils.IntFloatMap.Entry] {
+  class Entries(map$p: IntFloatMap) extends com.badlogic.gdx.utils.IntFloatMap.MapIterator(map$p) with balticporter.runtime.JavaIterable[com.badlogic.gdx.utils.IntFloatMap.Entry] with balticporter.runtime.JavaIterator[com.badlogic.gdx.utils.IntFloatMap.Entry] {
     private final val entry: com.badlogic.gdx.utils.IntFloatMap.Entry = new com.badlogic.gdx.utils.IntFloatMap.Entry()
     def next(): com.badlogic.gdx.utils.IntFloatMap.Entry = {
       if (!hasNext$field) {
@@ -560,7 +560,7 @@ object IntFloatMap {
       } else ()
       return hasNext$field
     }
-    def iterator(): scala.collection.Iterator[com.badlogic.gdx.utils.IntFloatMap.Entry] = {
+    def iterator(): balticporter.runtime.JavaIterator[com.badlogic.gdx.utils.IntFloatMap.Entry] = {
       return this
     }
     def remove(): scala.Unit = {

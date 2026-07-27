@@ -1,6 +1,6 @@
 package com.badlogic.gdx.utils
 
-class ObjectSet[T] extends scala.collection.Iterable[T] {
+class ObjectSet[T] extends balticporter.runtime.JavaIterable[T] {
   var size: scala.Int = 0
   var keyTable: scala.Array[T] = null.asInstanceOf[scala.Array[T]]
   var loadFactor: scala.Float = 0.0f
@@ -285,7 +285,7 @@ object ObjectSet {
     } else ()
     return tableSize
   }
-  class ObjectSetIterator[K](set$p: ObjectSet[K]) extends scala.collection.Iterable[K] with scala.collection.Iterator[K] {
+  class ObjectSetIterator[K](set$p: ObjectSet[K]) extends balticporter.runtime.JavaIterable[K] with balticporter.runtime.JavaIterator[K] {
     var hasNext$field: scala.Boolean = false
     var set: ObjectSet[K] = null.asInstanceOf[ObjectSet[K]]
     var nextIndex: scala.Int = 0

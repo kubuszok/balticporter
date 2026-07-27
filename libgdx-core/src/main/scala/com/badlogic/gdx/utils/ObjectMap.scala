@@ -1,6 +1,6 @@
 package com.badlogic.gdx.utils
 
-class ObjectMap[K, V] extends scala.collection.Iterable[com.badlogic.gdx.utils.ObjectMap.Entry[K, V]] {
+class ObjectMap[K, V] extends balticporter.runtime.JavaIterable[com.badlogic.gdx.utils.ObjectMap.Entry[K, V]] {
   var size: scala.Int = 0
   var keyTable: scala.Array[K] = null.asInstanceOf[scala.Array[K]]
   var valueTable: scala.Array[V] = null.asInstanceOf[scala.Array[V]]
@@ -422,7 +422,7 @@ object ObjectMap {
       return (java.lang.String.valueOf(this.key) + "=") + this.value
     }
   }
-  abstract class MapIterator[K, V, I](map$p: ObjectMap[K, V]) extends scala.collection.Iterable[I] with scala.collection.Iterator[I] {
+  abstract class MapIterator[K, V, I](map$p: ObjectMap[K, V]) extends balticporter.runtime.JavaIterable[I] with balticporter.runtime.JavaIterator[I] {
     var hasNext$field: scala.Boolean = false
     var map: ObjectMap[K, V] = null.asInstanceOf[ObjectMap[K, V]]
     var nextIndex: scala.Int = 0

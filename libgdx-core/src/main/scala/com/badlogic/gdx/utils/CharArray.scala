@@ -700,13 +700,13 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
     } else ()
     return this
   }
-  def appendAll(iterable: scala.collection.Iterable[?]): CharArray = {
-    { val iter: scala.collection.Iterator[?] = iterable.iterator.asInstanceOf[scala.collection.Iterator[?]]; while (iter.hasNext) { {
+  def appendAll(iterable: balticporter.runtime.JavaIterable[?]): CharArray = {
+    { val iter: balticporter.runtime.JavaIterator[?] = iterable.iterator.asInstanceOf[balticporter.runtime.JavaIterator[?]]; while (iter.hasNext) { {
       this.append(iter.next)
     };  } }
     return this
   }
-  def appendAll(iter: scala.collection.Iterator[?]): CharArray = {
+  def appendAll(iter: balticporter.runtime.JavaIterator[?]): CharArray = {
     while (iter.hasNext) {
       this.append(iter.next.asInstanceOf[java.lang.Object])
     }
@@ -911,11 +911,11 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
     this.items(index) = 'e'
     this.size = this.size + CharArray.TRUE_STRING_SIZE
   }
-  def appendWithSeparators(iterable: scala.collection.Iterable[?], separator: java.lang.String): CharArray = {
+  def appendWithSeparators(iterable: balticporter.runtime.JavaIterable[?], separator: java.lang.String): CharArray = {
     this.appendWithSeparators(iterable.iterator, separator)
     return this
   }
-  def appendWithSeparators(it: scala.collection.Iterator[?], separator: java.lang.String): CharArray = {
+  def appendWithSeparators(it: balticporter.runtime.JavaIterator[?], separator: java.lang.String): CharArray = {
     val sep: java.lang.String = java.util.Objects.toString(separator, "")
     while (it.hasNext) {
       this.append(it.next.asInstanceOf[java.lang.Object])

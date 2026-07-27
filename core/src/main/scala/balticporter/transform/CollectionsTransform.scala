@@ -23,7 +23,7 @@ import balticporter.tir.*
 final class CollectionsTransform extends Phase:
   def name = "java-collections->scala"
 
-  import CollectionsTransform.Kind
+  import CollectionsTransform.{JavaIterableFqn, JavaIteratorFqn, Kind}
 
   /** java fully-qualified name → (scala fully-qualified name, collection kind). */
   private val typeMap: Map[String, (String, Kind)] = Map(
@@ -34,12 +34,28 @@ final class CollectionsTransform extends Phase:
     "java.util.Deque"         -> ("scala.collection.mutable.ArrayDeque", Kind.Seq),
     "java.util.ArrayDeque"    -> ("scala.collection.mutable.ArrayDeque", Kind.Seq),
     "java.util.Collection"    -> ("scala.collection.mutable.Iterable", Kind.Seq),
-    "java.lang.Iterable"      -> ("scala.collection.Iterable", Kind.Seq),
-    "java.util.Iterator"      -> ("scala.collection.Iterator", Kind.Seq),
+    // likewise NOT `scala.collection.Iterable`: java's `Iterable.iterator()` hands back a
+    // REMOVAL-CAPABLE iterator, scala's hands back a `scala.collection.Iterator`. Mapping the
+    // two independently would leave the pair inconsistent — `for (x <- xs)` would still work,
+    // but `xs.iterator()` would no longer be something you can remove through, which is the
+    // only reason libGDX takes an `Iterable` in `Predicate`/`CharArray`/`ModelLoader`.
+    "java.lang.Iterable"      -> (JavaIterableFqn, Kind.Seq),
+    // NOT `scala.collection.Iterator`: java's `Iterator` is `hasNext/next/REMOVE`, scala's is
+    // `hasNext/next`. Mapping it to scala's silently drops a method the source uses (and uses
+    // POLYMORPHICALLY, through the interface — so no call-site narrowing recovers it). The
+    // target is the shim in [[CollectionsTransform.runtimeSources]], which is scala's `Iterator`
+    // PLUS java's `remove`, defaulted to java's own default (throw UnsupportedOperationException).
+    "java.util.Iterator"      -> (JavaIteratorFqn, Kind.Seq),
     "java.util.Map"           -> ("scala.collection.mutable.Map", Kind.Map),
     "java.util.HashMap"       -> ("scala.collection.mutable.HashMap", Kind.Map),
     "java.util.LinkedHashMap" -> ("scala.collection.mutable.LinkedHashMap", Kind.Map),
     "java.util.TreeMap"       -> ("scala.collection.mutable.TreeMap", Kind.Map),
+    // a scala `Map` IS an `Iterable[(K, V)]`, so java's `Map.Entry` — a key/value pair with no
+    // identity of its own — is a `Tuple2`. `getKey`/`getValue` become `_1`/`_2` (below).
+    // Spoon's qualified name for a nested type separates with `$` — that is the key that fires;
+    // the dotted spelling is an alias for frontends that name nested types with `.`.
+    "java.util.Map$Entry"     -> ("scala.Tuple2", Kind.Entry),
+    "java.util.Map.Entry"     -> ("scala.Tuple2", Kind.Entry),
     "java.util.Set"           -> ("scala.collection.mutable.Set", Kind.Set),
     "java.util.HashSet"       -> ("scala.collection.mutable.HashSet", Kind.Set),
     "java.util.LinkedHashSet" -> ("scala.collection.mutable.LinkedHashSet", Kind.Set),
@@ -55,6 +71,7 @@ final class CollectionsTransform extends Phase:
   private var kindOf: Map[SymId, Kind]    = Map.empty // scala collection symbol → kind
   private var opPlusEq, opMinusEq, opPlusPlusEq: SymId = SymId.None
   private var updateSym, insertSym, getOrElseSym, containsSym: SymId = SymId.None
+  private var key1Sym, value2Sym, roSetSym: SymId = SymId.None
 
   override def run(program: Program): Program =
     val added = collection.mutable.ListBuffer[Symbol]()
@@ -81,6 +98,9 @@ final class CollectionsTransform extends Phase:
     insertSym    = mint("insert", "insert")
     getOrElseSym = mint("getOrElse", "getOrElse")
     containsSym  = mint("contains", "contains")
+    key1Sym      = mint("_1", "_1") // Map.Entry#getKey   on a Tuple2
+    value2Sym    = mint("_2", "_2") // Map.Entry#getValue on a Tuple2
+    roSetSym     = mint("Set", "scala.collection.Set") // see `transformValDef`
 
     val symbols = SymbolTable(program.symbols.all ++ added)
     given Program = new Program(program.units, symbols, program.xref)
@@ -91,6 +111,31 @@ final class CollectionsTransform extends Phase:
   override def transformType(t: TypeRepr)(using Program): TypeRepr = t match
     case TypeRepr.TypeRef(prefix, s) if remap.contains(s) => TypeRepr.TypeRef(prefix, remap(s))
     case other                                            => other
+
+  /** `java.util.Set` has TWO faithful scala counterparts, and which one it is depends on where
+    * the set came from — a distinction java's type system does not draw and scala's does.
+    *
+    *   - a set you OWN (`new HashSet<>()`, a field, a parameter) is `mutable.Set`;
+    *   - `map.keySet()` is a live, read-only VIEW of the map's keys. Scala models it as
+    *     `scala.collection.Set` — same view, same write-through on the map, but not typed as
+    *     something you may add to (java lets you `remove` through it but not `add`, so scala's
+    *     type is the closer of the two anyway).
+    *
+    * So a declaration INITIALISED from `keySet` gets the view type. The alternative —
+    * `.to(mutable.Set)` to satisfy the declared type — would COPY, and silently turn a view of
+    * the map into a detached snapshot. Provenance decides the type; the value is never touched.
+    */
+  override def transformValDef(t: Tree.ValDef)(using Program): Tree.ValDef = t.rhs match
+    case Some(Tree.Select(recv, sym, _, _))
+        if methodName(sym) == "keySet" && kindAt(recv).contains(Kind.Map) && headSym(t.tpt.tpe).exists(kindOf.get(_).contains(Kind.Set)) =>
+      t.copy(tpt = TypeTree(withHead(t.tpt.tpe, roSetSym), t.tpt.origin))
+    case _ => t
+
+  /** replace the head (type-constructor) symbol of a `TypeRef` / `AppliedType`, keeping args. */
+  private def withHead(t: TypeRepr, s: SymId): TypeRepr = t match
+    case TypeRepr.TypeRef(prefix, _)    => TypeRepr.TypeRef(prefix, s)
+    case TypeRepr.AppliedType(tc, args) => TypeRepr.AppliedType(withHead(tc, s), args)
+    case other                          => other
 
   override def transformApply(t: Tree.Apply)(using Program): Term = t.fun match
     case Tree.Select(recv, m, _, so) => kindAt(recv) match
@@ -103,6 +148,15 @@ final class CollectionsTransform extends Phase:
   private def rewrite(k: Kind, recv: Term, m: SymId, so: Origin, t: Tree.Apply)(using Program): Option[Term] =
     val name = methodName(m)
     (name, t.args, k) match
+      // `m.entrySet()` is the VIEW of the map as its (key, value) pairs, and a scala `Map[K, V]`
+      // already IS an `Iterable[(K, V)]` — so the view is the map itself. `m.toSet` would be the
+      // unfaithful choice: java's `entrySet` is live, and a snapshot silently changes what a
+      // concurrent `put` is observed to do. The one thing `Tuple2` does NOT carry over is
+      // `Entry.setValue` (write-through to the map); that is deliberate — a `setValue` call now
+      // fails to COMPILE rather than being turned into a write to a detached copy.
+      case ("entrySet", Nil, Kind.Map)          => Some(recv)
+      case ("getKey", Nil, Kind.Entry)          => Some(Tree.Select(recv, key1Sym, t.tpe, t.origin))
+      case ("getValue", Nil, Kind.Entry)        => Some(Tree.Select(recv, value2Sym, t.tpe, t.origin))
       case (n, Nil, _) if parenless(n)          => Some(Tree.Select(recv, m, t.tpe, t.origin)) // drop `()`
       case ("get", List(i), Kind.Seq)           => Some(Tree.Apply(recv, List(i), m, t.tpe, t.origin)) // xs(i)
       case ("get", List(key), Kind.Map)         => Some(call(recv, getOrElseSym, List(key, dflt(nullOf(so), recv, so)), t, so))
@@ -156,3 +210,70 @@ object CollectionsTransform:
     * a `Map` `get` is `getOrElse`). */
   enum Kind:
     case Seq, Map, Set
+    /** a `java.util.Map.Entry`, mapped to `Tuple2` — `getKey`/`getValue` are `_1`/`_2`. */
+    case Entry
+
+  val JavaIteratorFqn = "balticporter.runtime.JavaIterator"
+  val JavaIterableFqn = "balticporter.runtime.JavaIterable"
+
+  /** Support types the retyping REQUIRES, as ready Scala. The emitted program is compiled
+    * standalone, so a target type that is not in the scala stdlib has to be shipped WITH it;
+    * a consumer of this phase writes these out next to the emitted units (keyed by FQN).
+    *
+    * Only one so far, and it exists because the obvious mapping is wrong: `java.util.Iterator`
+    * declares `hasNext`, `next` AND `remove`, while `scala.collection.Iterator` declares only
+    * the first two. Mapping java's onto scala's therefore DELETES a method — and libGDX calls
+    * it (`ModelLoader`, `ParticleControllerInfluencer`, `ArraySelection`, `Predicate`), always
+    * through the interface, so no amount of call-site type narrowing brings it back. Nor can
+    * the *loop* be rewritten to a scala idiom (`filterInPlace`): the receiver is not a scala
+    * collection at all, it is an arbitrary user `Iterator` implementation, and in `Predicate`
+    * the removal is a straight delegation from one iterator to another with no loop in sight.
+    *
+    * So the mapping's target is java's interface expressed in scala: scala's `Iterator` plus
+    * `remove`, whose default body is java's own documented default for the method. An
+    * implementation that overrides it (every libGDX iterator does) keeps its behaviour; one
+    * that does not gets exactly what java gives it. Nothing is approximated.
+    *
+    * `JavaIterable` follows from it and is not optional: java's `Iterable.iterator()` is
+    * DECLARED to return a `java.util.Iterator`, so retyping `Iterator` without retyping
+    * `Iterable` splits the pair — `iterable.iterator` would yield the removal-less scala
+    * iterator, and every place libGDX takes an `Iterable` only to iterate-and-remove through it
+    * (`Predicate.PredicateIterator`, `CharArray.appendWithSeparators`, `ModelLoader.loadSync`)
+    * would stop type-checking. Two types, one decision.
+    */
+  val runtimeSources: Map[String, String] = Map(
+    JavaIterableFqn ->
+      """package balticporter.runtime
+        |
+        |/** `java.lang.Iterable`, as Scala — `scala.collection.Iterable` whose `iterator` is the
+        |  * removal-capable [[JavaIterator]] that java's `Iterable.iterator()` is declared to
+        |  * return. Iteration is unaffected (it IS a `scala.collection.Iterable`, so `for (x <- xs)`,
+        |  * `map`, `foreach` all work); what it adds back is the guarantee java gives, that the
+        |  * iterator you get can remove from the collection you got it from.
+        |  */
+        |trait JavaIterable[A] extends scala.collection.Iterable[A]:
+        |  def iterator: JavaIterator[A]
+        |""".stripMargin,
+    JavaIteratorFqn ->
+      """package balticporter.runtime
+        |
+        |/** `java.util.Iterator`, as Scala — what `scala.collection.Iterator` is missing.
+        |  *
+        |  * Java's `Iterator` has a third method, `remove()`, which removes from the underlying
+        |  * collection the element last returned by `next()`. `scala.collection.Iterator` has no
+        |  * such operation and no way to express one, so a port that maps `java.util.Iterator` to
+        |  * it drops the method — quietly, until a call site fails to compile, and dangerously if
+        |  * the call site is instead "fixed" by dropping the removal.
+        |  *
+        |  * Ported code implementing a Java `Iterator` extends THIS instead. Removal support is
+        |  * therefore preserved exactly: an implementation that defines `remove()` keeps its own
+        |  * behaviour, and one that does not inherits the default the JDK itself specifies for
+        |  * `Iterator.remove` — throw `UnsupportedOperationException`.
+        |  *
+        |  * Portable: no JVM-only API, nothing reflective.
+        |  */
+        |trait JavaIterator[A] extends scala.collection.Iterator[A]:
+        |  /** `java.util.Iterator.remove` — the JDK's own default implementation. */
+        |  def remove(): Unit = throw new UnsupportedOperationException("remove")
+        |""".stripMargin,
+  )

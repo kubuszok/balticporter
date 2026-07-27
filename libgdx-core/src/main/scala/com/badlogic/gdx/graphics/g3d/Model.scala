@@ -22,7 +22,7 @@ class Model extends com.badlogic.gdx.utils.Disposable {
     this.loadAnimations(modelData.animations)
     this.calculateTransforms()
   }
-  def loadAnimations(modelAnimations: scala.collection.Iterable[com.badlogic.gdx.graphics.g3d.model.data.ModelAnimation]): scala.Unit = {
+  def loadAnimations(modelAnimations: balticporter.runtime.JavaIterable[com.badlogic.gdx.graphics.g3d.model.data.ModelAnimation]): scala.Unit = {
     for (anim <- modelAnimations) {
       val animation: com.badlogic.gdx.graphics.g3d.model.Animation = new com.badlogic.gdx.graphics.g3d.model.Animation()
       animation.id = anim.id
@@ -72,7 +72,7 @@ class Model extends com.badlogic.gdx.utils.Disposable {
       } else ()
     }
   }
-  def loadNodes(modelNodes: scala.collection.Iterable[com.badlogic.gdx.graphics.g3d.model.data.ModelNode]): scala.Unit = {
+  def loadNodes(modelNodes: balticporter.runtime.JavaIterable[com.badlogic.gdx.graphics.g3d.model.data.ModelNode]): scala.Unit = {
     this.nodePartBones.clear()
     for (node <- modelNodes) {
       this.nodes.add(this.loadNode(node))
@@ -138,7 +138,7 @@ class Model extends com.badlogic.gdx.utils.Disposable {
     } else ()
     return node
   }
-  def loadMeshes(meshes: scala.collection.Iterable[com.badlogic.gdx.graphics.g3d.model.data.ModelMesh]): scala.Unit = {
+  def loadMeshes(meshes: balticporter.runtime.JavaIterable[com.badlogic.gdx.graphics.g3d.model.data.ModelMesh]): scala.Unit = {
     for (mesh <- meshes) {
       this.convertMesh(mesh)
     }
@@ -176,7 +176,7 @@ class Model extends com.badlogic.gdx.utils.Disposable {
       part.update()
     }
   }
-  def loadMaterials(modelMaterials: scala.collection.Iterable[com.badlogic.gdx.graphics.g3d.model.data.ModelMaterial], textureProvider: com.badlogic.gdx.graphics.g3d.utils.TextureProvider): scala.Unit = {
+  def loadMaterials(modelMaterials: balticporter.runtime.JavaIterable[com.badlogic.gdx.graphics.g3d.model.data.ModelMaterial], textureProvider: com.badlogic.gdx.graphics.g3d.utils.TextureProvider): scala.Unit = {
     for (mtl <- modelMaterials) {
       this.materials.add(this.convertMaterial(mtl, textureProvider))
     }
@@ -257,7 +257,7 @@ class Model extends com.badlogic.gdx.utils.Disposable {
       this.disposables.add(disposable)
     } else ()
   }
-  def getManagedDisposables(): scala.collection.Iterable[com.badlogic.gdx.utils.Disposable] = {
+  def getManagedDisposables(): balticporter.runtime.JavaIterable[com.badlogic.gdx.utils.Disposable] = {
     return this.disposables
   }
   def dispose(): scala.Unit = {

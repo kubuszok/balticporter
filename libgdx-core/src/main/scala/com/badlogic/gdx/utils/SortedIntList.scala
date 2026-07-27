@@ -1,6 +1,6 @@
 package com.badlogic.gdx.utils
 
-class SortedIntList[E] extends scala.collection.Iterable[com.badlogic.gdx.utils.SortedIntList.Node[E]] {
+class SortedIntList[E] extends balticporter.runtime.JavaIterable[com.badlogic.gdx.utils.SortedIntList.Node[E]] {
   private var nodePool: com.badlogic.gdx.utils.SortedIntList.NodePool[E] = new com.badlogic.gdx.utils.SortedIntList.NodePool[E]()
   var iterator$field: Iterator = null.asInstanceOf[Iterator]
   var size$field: scala.Int = 0
@@ -61,7 +61,7 @@ class SortedIntList[E] extends scala.collection.Iterable[com.badlogic.gdx.utils.
   def isEmpty(): scala.Boolean = {
     return this.size$field == 0
   }
-  def iterator(): scala.collection.Iterator[com.badlogic.gdx.utils.SortedIntList.Node[E]] = {
+  def iterator(): balticporter.runtime.JavaIterator[com.badlogic.gdx.utils.SortedIntList.Node[E]] = {
     if (com.badlogic.gdx.utils.Collections.allocateIterators) {
       return new Iterator()
     } else ()
@@ -73,7 +73,7 @@ class SortedIntList[E] extends scala.collection.Iterable[com.badlogic.gdx.utils.
     } else ()
     return this.iterator$field.reset()
   }
-  class Iterator extends scala.collection.Iterator[com.badlogic.gdx.utils.SortedIntList.Node[E]] {
+  class Iterator extends balticporter.runtime.JavaIterator[com.badlogic.gdx.utils.SortedIntList.Node[E]] {
     private var position: com.badlogic.gdx.utils.SortedIntList.Node[E] = null.asInstanceOf[com.badlogic.gdx.utils.SortedIntList.Node[E]]
     private var previousPosition: com.badlogic.gdx.utils.SortedIntList.Node[E] = null.asInstanceOf[com.badlogic.gdx.utils.SortedIntList.Node[E]]
     this.reset()
