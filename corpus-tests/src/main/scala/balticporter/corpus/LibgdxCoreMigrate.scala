@@ -4,7 +4,7 @@ import balticporter.core.{FrontendConfig, Substituted, Substitutions}
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.{Pipeline, PortabilityCheck, Program, RewriteTrace}
-import balticporter.transform.{CollectionsTransform, MutableParamsTransform, PanamaFfiTransform}
+import balticporter.transform.{CollectionsTransform, MutableParamsTransform, PanamaFfiTransform, ReflectionToPortableTransform}
 
 import java.nio.file.{Files, Path, StandardCopyOption}
 import scala.jdk.CollectionConverters.*
@@ -65,7 +65,7 @@ object LibgdxCoreMigrate:
     val types   = SpoonTir.buildModel(FrontendConfig(base, files, Nil, Nil), lenient = true)
     val raw0    = SpoonTir.fromTypes(types, subs)
     val program = if raw then raw0
-                  else Pipeline.run(raw0, List(new CollectionsTransform, new MutableParamsTransform, new PanamaFfiTransform()))
+                  else Pipeline.run(raw0, List(new CollectionsTransform, new MutableParamsTransform, new PanamaFfiTransform(), new ReflectionToPortableTransform))
     println(s"[libgdx-core] TIR: ${program.units.size} units, ${program.symbols.all.size} symbols")
 
     // Signature-changing rewrites are only safe if every USE follows. Report the blast radius of

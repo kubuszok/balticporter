@@ -246,7 +246,7 @@ class Actor {
     } else ()
     var actor: Actor = this
     while ({ {
-      if (com.badlogic.gdx.utils.reflect.ClassReflection.isInstance(`type`, actor)) {
+      if (`type`.isInstance(actor)) {
         return actor.asInstanceOf[T]
       } else ()
       actor = actor.parent

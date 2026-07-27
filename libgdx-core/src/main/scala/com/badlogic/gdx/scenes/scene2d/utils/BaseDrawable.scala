@@ -67,7 +67,7 @@ class BaseDrawable extends com.badlogic.gdx.scenes.scene2d.utils.Drawable {
   }
   def toString(): java.lang.String = {
     if (this.name == null) {
-      return com.badlogic.gdx.utils.reflect.ClassReflection.getSimpleName(this.getClass())
+      return this.getClass().getSimpleName()
     } else ()
     return this.name
   }

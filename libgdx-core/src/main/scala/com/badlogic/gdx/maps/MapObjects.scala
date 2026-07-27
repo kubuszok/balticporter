@@ -40,7 +40,7 @@ class MapObjects extends scala.collection.Iterable[com.badlogic.gdx.maps.MapObje
     fill.clear();
     { var i: scala.Int = 0; val n: scala.Int = this.objects.size; while (i < n) { {
       val `object`: com.badlogic.gdx.maps.MapObject = this.objects.get(i)
-      if (com.badlogic.gdx.utils.reflect.ClassReflection.isInstance(`type`, `object`)) {
+      if (`type`.isInstance(`object`)) {
         fill.add(`object`.asInstanceOf[T])
       } else ()
     }; i = i + 1 } }
