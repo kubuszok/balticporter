@@ -40,8 +40,8 @@ class NetJavaImpl(maxThreads: scala.Int) {
       connection.setRequestMethod(method)
       java.net.HttpURLConnection.setFollowRedirects(httpRequest.getFollowRedirects())
       this.putIntoConnectionsAndListeners(httpRequest, httpResponseListener, connection)
-      for (header <- httpRequest.getHeaders().entrySet()) {
-        connection.addRequestProperty(header.getKey(), header.getValue())
+      for (header <- httpRequest.getHeaders()) {
+        connection.addRequestProperty(header._1, header._2)
       }
       connection.setConnectTimeout(httpRequest.getTimeOut())
       connection.setReadTimeout(httpRequest.getTimeOut())

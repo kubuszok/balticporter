@@ -50,6 +50,11 @@ final class CollectionsTransform extends Phase:
     "java.util.HashMap"       -> ("scala.collection.mutable.HashMap", Kind.Map),
     "java.util.LinkedHashMap" -> ("scala.collection.mutable.LinkedHashMap", Kind.Map),
     "java.util.TreeMap"       -> ("scala.collection.mutable.TreeMap", Kind.Map),
+    // a scala `Map` IS an `Iterable[(K, V)]`, so java's `Map.Entry` — a key/value pair with no
+    // identity of its own — is a `Tuple2`. `getKey`/`getValue` become `_1`/`_2` (below).
+    // Spoon spells nested types with `$`; the second key is for frontends that use `.`.
+    "java.util.Map$Entry"     -> ("scala.Tuple2", Kind.Entry),
+    "java.util.Map.Entry"     -> ("scala.Tuple2", Kind.Entry),
     "java.util.Set"           -> ("scala.collection.mutable.Set", Kind.Set),
     "java.util.HashSet"       -> ("scala.collection.mutable.HashSet", Kind.Set),
     "java.util.LinkedHashSet" -> ("scala.collection.mutable.LinkedHashSet", Kind.Set),
@@ -65,6 +70,7 @@ final class CollectionsTransform extends Phase:
   private var kindOf: Map[SymId, Kind]    = Map.empty // scala collection symbol → kind
   private var opPlusEq, opMinusEq, opPlusPlusEq: SymId = SymId.None
   private var updateSym, insertSym, getOrElseSym, containsSym: SymId = SymId.None
+  private var key1Sym, value2Sym: SymId = SymId.None
 
   override def run(program: Program): Program =
     val added = collection.mutable.ListBuffer[Symbol]()
@@ -91,6 +97,8 @@ final class CollectionsTransform extends Phase:
     insertSym    = mint("insert", "insert")
     getOrElseSym = mint("getOrElse", "getOrElse")
     containsSym  = mint("contains", "contains")
+    key1Sym      = mint("_1", "_1") // Map.Entry#getKey   on a Tuple2
+    value2Sym    = mint("_2", "_2") // Map.Entry#getValue on a Tuple2
 
     val symbols = SymbolTable(program.symbols.all ++ added)
     given Program = new Program(program.units, symbols, program.xref)
@@ -113,6 +121,15 @@ final class CollectionsTransform extends Phase:
   private def rewrite(k: Kind, recv: Term, m: SymId, so: Origin, t: Tree.Apply)(using Program): Option[Term] =
     val name = methodName(m)
     (name, t.args, k) match
+      // `m.entrySet()` is the VIEW of the map as its (key, value) pairs, and a scala `Map[K, V]`
+      // already IS an `Iterable[(K, V)]` — so the view is the map itself. `m.toSet` would be the
+      // unfaithful choice: java's `entrySet` is live, and a snapshot silently changes what a
+      // concurrent `put` is observed to do. The one thing `Tuple2` does NOT carry over is
+      // `Entry.setValue` (write-through to the map); that is deliberate — a `setValue` call now
+      // fails to COMPILE rather than being turned into a write to a detached copy.
+      case ("entrySet", Nil, Kind.Map)          => Some(recv)
+      case ("getKey", Nil, Kind.Entry)          => Some(Tree.Select(recv, key1Sym, t.tpe, t.origin))
+      case ("getValue", Nil, Kind.Entry)        => Some(Tree.Select(recv, value2Sym, t.tpe, t.origin))
       case (n, Nil, _) if parenless(n)          => Some(Tree.Select(recv, m, t.tpe, t.origin)) // drop `()`
       case ("get", List(i), Kind.Seq)           => Some(Tree.Apply(recv, List(i), m, t.tpe, t.origin)) // xs(i)
       case ("get", List(key), Kind.Map)         => Some(call(recv, getOrElseSym, List(key, dflt(nullOf(so), recv, so)), t, so))
@@ -166,6 +183,8 @@ object CollectionsTransform:
     * a `Map` `get` is `getOrElse`). */
   enum Kind:
     case Seq, Map, Set
+    /** a `java.util.Map.Entry`, mapped to `Tuple2` — `getKey`/`getValue` are `_1`/`_2`. */
+    case Entry
 
   val JavaIteratorFqn = "balticporter.runtime.JavaIterator"
   val JavaIterableFqn = "balticporter.runtime.JavaIterable"
