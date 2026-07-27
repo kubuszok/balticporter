@@ -4,7 +4,7 @@ class ParallelArray(capacity$p: scala.Int) {
   var arrays: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.ParallelArray#Channel] = null.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.ParallelArray#Channel]]
   var capacity: scala.Int = 0
   var size: scala.Int = 0
-  this.arrays = new com.badlogic.gdx.utils.Array[Channel](false, 2, ((size: scala.Int) => new scala.Array[com.badlogic.gdx.graphics.g3d.particles.ParallelArray#Channel](size)))
+  this.arrays = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.ParallelArray#Channel](false, 2, ((size: scala.Int) => new scala.Array[com.badlogic.gdx.graphics.g3d.particles.ParallelArray#Channel](size)))
   this.capacity = capacity$p
   this.size = 0
   def addChannel[T <: com.badlogic.gdx.graphics.g3d.particles.ParallelArray#Channel](channelDescriptor: com.badlogic.gdx.graphics.g3d.particles.ParallelArray.ChannelDescriptor): T = {

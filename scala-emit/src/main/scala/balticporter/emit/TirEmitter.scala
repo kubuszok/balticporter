@@ -685,9 +685,11 @@ final class TirEmitter(source: Program):
   /** a type in `new` position: `new Foo[?]` is illegal (you can't instantiate a wildcard), so
     * when a raw generic type carries wildcard args, drop them and let Scala infer the arguments
     * from the expected type (`new Foo(...)`). */
-  private def ctorTpe(t: TypeRepr): String = byName(t match
-    case TypeRepr.AppliedType(tc, args) if args.exists(_.isInstanceOf[TypeRepr.TypeBounds]) => tpe(tc)
-    case _ => tpe(t))
+  /** As in `parentTpe`, only the HEAD is a `namedInner` position — the arguments are ordinary. */
+  private def ctorTpe(t: TypeRepr): String = t match
+    case TypeRepr.AppliedType(tc, args) if args.exists(_.isInstanceOf[TypeRepr.TypeBounds]) => byName(tpe(tc))
+    case TypeRepr.AppliedType(tc, args) => s"${byName(tpe(tc))}[${args.map(tpe).mkString(", ")}]"
+    case _ => byName(tpe(t))
 
   /** strip `scala.Array[...]` layers to the base element type (for `Array.ofDim[base](dims)`). */
   private def baseElem(t: TypeRepr): TypeRepr = t match
