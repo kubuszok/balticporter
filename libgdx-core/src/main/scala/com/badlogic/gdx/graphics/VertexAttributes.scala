@@ -1,6 +1,6 @@
 package com.badlogic.gdx.graphics
 
-final class VertexAttributes(attributes$p: scala.Array[com.badlogic.gdx.graphics.VertexAttribute]) extends scala.collection.Iterable[com.badlogic.gdx.graphics.VertexAttribute] with java.lang.Comparable[VertexAttributes] {
+final class VertexAttributes(attributes$p: scala.Array[com.badlogic.gdx.graphics.VertexAttribute]) extends balticporter.runtime.JavaIterable[com.badlogic.gdx.graphics.VertexAttribute] with java.lang.Comparable[VertexAttributes] {
   private var attributes: scala.Array[com.badlogic.gdx.graphics.VertexAttribute] = null.asInstanceOf[scala.Array[com.badlogic.gdx.graphics.VertexAttribute]]
   var vertexSize: scala.Int = 0
   private var mask: scala.Long = -1
@@ -160,7 +160,7 @@ final class VertexAttributes(attributes$p: scala.Array[com.badlogic.gdx.graphics
     }; i = i - 1 } }
     return 0
   }
-  def iterator(): scala.collection.Iterator[com.badlogic.gdx.graphics.VertexAttribute] = {
+  def iterator(): balticporter.runtime.JavaIterator[com.badlogic.gdx.graphics.VertexAttribute] = {
     if (this.iterable == null) {
       this.iterable = new com.badlogic.gdx.graphics.VertexAttributes.ReadonlyIterable[com.badlogic.gdx.graphics.VertexAttribute](this.attributes)
     } else ()
@@ -179,7 +179,7 @@ object VertexAttributes {
     final val Tangent: scala.Int = 128
     final val BiNormal: scala.Int = 256
   }
-  class ReadonlyIterator[T](array$p: scala.Array[T]) extends scala.collection.Iterator[T] with scala.collection.Iterable[T] {
+  class ReadonlyIterator[T](array$p: scala.Array[T]) extends balticporter.runtime.JavaIterator[T] with balticporter.runtime.JavaIterable[T] {
     private var array: scala.Array[T] = null.asInstanceOf[scala.Array[T]]
     var index: scala.Int = 0
     var valid: scala.Boolean = true
@@ -205,18 +205,18 @@ object VertexAttributes {
     def reset(): scala.Unit = {
       this.index = 0
     }
-    def iterator(): scala.collection.Iterator[T] = {
+    def iterator(): balticporter.runtime.JavaIterator[T] = {
       return this
     }
   }
-  class ReadonlyIterable[T](array$p: scala.Array[T]) extends scala.collection.Iterable[T] {
+  class ReadonlyIterable[T](array$p: scala.Array[T]) extends balticporter.runtime.JavaIterable[T] {
     private var array: scala.Array[T] = null.asInstanceOf[scala.Array[T]]
     private var iterator1: com.badlogic.gdx.graphics.VertexAttributes.ReadonlyIterator[T] = null.asInstanceOf[com.badlogic.gdx.graphics.VertexAttributes.ReadonlyIterator[T]]
     private var iterator2: com.badlogic.gdx.graphics.VertexAttributes.ReadonlyIterator[T] = null.asInstanceOf[com.badlogic.gdx.graphics.VertexAttributes.ReadonlyIterator[T]]
     this.array = array$p
-    def iterator(): scala.collection.Iterator[T] = {
+    def iterator(): balticporter.runtime.JavaIterator[T] = {
       if (com.badlogic.gdx.utils.Collections.allocateIterators) {
-        return new com.badlogic.gdx.graphics.VertexAttributes.ReadonlyIterator[T](this.array).asInstanceOf[scala.collection.Iterator[T]]
+        return new com.badlogic.gdx.graphics.VertexAttributes.ReadonlyIterator[T](this.array).asInstanceOf[balticporter.runtime.JavaIterator[T]]
       } else ()
       if (this.iterator1 == null) {
         this.iterator1 = new com.badlogic.gdx.graphics.VertexAttributes.ReadonlyIterator[T](this.array).asInstanceOf[com.badlogic.gdx.graphics.VertexAttributes.ReadonlyIterator[T]]
@@ -226,12 +226,12 @@ object VertexAttributes {
         this.iterator1.index = 0
         this.iterator1.valid = true
         this.iterator2.valid = false
-        return this.iterator1.asInstanceOf[scala.collection.Iterator[T]]
+        return this.iterator1.asInstanceOf[balticporter.runtime.JavaIterator[T]]
       } else ()
       this.iterator2.index = 0
       this.iterator2.valid = true
       this.iterator1.valid = false
-      return this.iterator2.asInstanceOf[scala.collection.Iterator[T]]
+      return this.iterator2.asInstanceOf[balticporter.runtime.JavaIterator[T]]
     }
   }
 }

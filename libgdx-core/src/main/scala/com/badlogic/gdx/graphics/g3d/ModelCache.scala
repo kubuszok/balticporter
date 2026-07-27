@@ -131,7 +131,7 @@ class ModelCache(sorter$p: com.badlogic.gdx.graphics.g3d.utils.RenderableSorter,
     }; i = i + 1 } }
     this.tmp.clear()
   }
-  def add[T <: com.badlogic.gdx.graphics.g3d.RenderableProvider](renderableProviders: scala.collection.Iterable[T]): scala.Unit = {
+  def add[T <: com.badlogic.gdx.graphics.g3d.RenderableProvider](renderableProviders: balticporter.runtime.JavaIterable[T]): scala.Unit = {
     for (renderableProvider <- renderableProviders) {
       this.add(renderableProvider)
     }

@@ -1,6 +1,6 @@
 package com.badlogic.gdx.utils
 
-class JsonValue extends scala.collection.Iterable[JsonValue] {
+class JsonValue extends balticporter.runtime.JavaIterable[JsonValue] {
   var type$field: com.badlogic.gdx.utils.JsonValue.ValueType = null.asInstanceOf[com.badlogic.gdx.utils.JsonValue.ValueType]
   private var stringValue: java.lang.String = null.asInstanceOf[java.lang.String]
   private var doubleValue: scala.Double = 0.0
@@ -1247,7 +1247,7 @@ class JsonValue extends scala.collection.Iterable[JsonValue] {
       }
     }
   }
-  class JsonIterator extends scala.collection.Iterator[JsonValue] with scala.collection.Iterable[JsonValue] {
+  class JsonIterator extends balticporter.runtime.JavaIterator[JsonValue] with balticporter.runtime.JavaIterable[JsonValue] {
     var entry: JsonValue = child$field
     var current: JsonValue = null.asInstanceOf[JsonValue]
     def hasNext(): scala.Boolean = {
@@ -1264,7 +1264,7 @@ class JsonValue extends scala.collection.Iterable[JsonValue] {
     def remove(): scala.Unit = {
       this.current.remove()
     }
-    def iterator(): scala.collection.Iterator[JsonValue] = {
+    def iterator(): balticporter.runtime.JavaIterator[JsonValue] = {
       return this
     }
   }

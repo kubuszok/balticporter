@@ -1,6 +1,6 @@
 package com.badlogic.gdx.utils
 
-class ObjectLongMap[K](initialCapacity: scala.Int, loadFactor$p: scala.Float) extends scala.collection.Iterable[com.badlogic.gdx.utils.ObjectLongMap.Entry[K]] {
+class ObjectLongMap[K](initialCapacity: scala.Int, loadFactor$p: scala.Float) extends balticporter.runtime.JavaIterable[com.badlogic.gdx.utils.ObjectLongMap.Entry[K]] {
   var size: scala.Int = 0
   var keyTable: scala.Array[K] = null.asInstanceOf[scala.Array[K]]
   var valueTable: scala.Array[scala.Long] = null.asInstanceOf[scala.Array[scala.Long]]
@@ -435,7 +435,7 @@ object ObjectLongMap {
       this.currentIndex = -1
     }
   }
-  class Entries[K](map$p: ObjectLongMap[K]) extends com.badlogic.gdx.utils.ObjectLongMap.MapIterator[K](map$p) with scala.collection.Iterable[com.badlogic.gdx.utils.ObjectLongMap.Entry[K]] with scala.collection.Iterator[com.badlogic.gdx.utils.ObjectLongMap.Entry[K]] {
+  class Entries[K](map$p: ObjectLongMap[K]) extends com.badlogic.gdx.utils.ObjectLongMap.MapIterator[K](map$p) with balticporter.runtime.JavaIterable[com.badlogic.gdx.utils.ObjectLongMap.Entry[K]] with balticporter.runtime.JavaIterator[com.badlogic.gdx.utils.ObjectLongMap.Entry[K]] {
     var entry: com.badlogic.gdx.utils.ObjectLongMap.Entry[K] = new com.badlogic.gdx.utils.ObjectLongMap.Entry[K]()
     def next(): com.badlogic.gdx.utils.ObjectLongMap.Entry[K] = {
       if (!hasNext$field) {
@@ -497,7 +497,7 @@ object ObjectLongMap {
       return array
     }
   }
-  class Keys[K](map$p: ObjectLongMap[K]) extends com.badlogic.gdx.utils.ObjectLongMap.MapIterator[K](map$p) with scala.collection.Iterable[K] with scala.collection.Iterator[K] {
+  class Keys[K](map$p: ObjectLongMap[K]) extends com.badlogic.gdx.utils.ObjectLongMap.MapIterator[K](map$p) with balticporter.runtime.JavaIterable[K] with balticporter.runtime.JavaIterator[K] {
     def hasNext(): scala.Boolean = {
       if (!valid) {
         throw new com.badlogic.gdx.utils.GdxRuntimeException("#iterator() cannot be used nested.")

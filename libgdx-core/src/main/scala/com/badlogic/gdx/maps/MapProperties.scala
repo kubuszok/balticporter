@@ -28,10 +28,10 @@ class MapProperties {
   def clear(): scala.Unit = {
     this.properties.clear()
   }
-  def getKeys(): scala.collection.Iterator[java.lang.String] = {
+  def getKeys(): balticporter.runtime.JavaIterator[java.lang.String] = {
     return this.properties.keys()
   }
-  def getValues(): scala.collection.Iterator[java.lang.Object] = {
+  def getValues(): balticporter.runtime.JavaIterator[java.lang.Object] = {
     return this.properties.values()
   }
   def toString(): java.lang.String = {

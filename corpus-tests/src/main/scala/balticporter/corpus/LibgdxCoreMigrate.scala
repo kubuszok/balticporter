@@ -162,6 +162,14 @@ object LibgdxCoreMigrate:
         Files.writeString(p, emitter.emitUnit(u))
         written += 1
     }
+    // Support types a phase RETYPED code onto (see CollectionsTransform.runtimeSources): the
+    // output is compiled standalone, so a target type outside the scala stdlib ships with it.
+    CollectionsTransform.runtimeSources.foreach { (fqn, src) =>
+      val p = outDir.resolve(fqn.replace('.', '/') + ".scala")
+      Files.createDirectories(p.getParent)
+      Files.writeString(p, src)
+      written += 1
+    }
     // CHECK 1 — the engine itself must not have emitted any dropped type. (Run before injection,
     // so a file present here can only have come from the emitter.)
     val leaked = subs.dropTypes.filter(fqn => Files.exists(outDir.resolve(fqn.replace('.', '/') + ".scala")))

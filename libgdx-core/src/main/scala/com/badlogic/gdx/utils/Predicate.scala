@@ -4,20 +4,20 @@ trait Predicate[T] {
   def evaluate(arg0: T): scala.Boolean
 }
 object Predicate {
-  class PredicateIterator[T](iterator$p: scala.collection.Iterator[T], predicate$p: Predicate[T]) extends scala.collection.Iterator[T] {
-    var iterator: scala.collection.Iterator[T] = null.asInstanceOf[scala.collection.Iterator[T]]
+  class PredicateIterator[T](iterator$p: balticporter.runtime.JavaIterator[T], predicate$p: Predicate[T]) extends balticporter.runtime.JavaIterator[T] {
+    var iterator: balticporter.runtime.JavaIterator[T] = null.asInstanceOf[balticporter.runtime.JavaIterator[T]]
     var predicate: Predicate[T] = null.asInstanceOf[Predicate[T]]
     var `end`: scala.Boolean = false
     var peeked: scala.Boolean = false
     var next$field: T = null.asInstanceOf[T]
-    def this(iterable: scala.collection.Iterable[T], predicate: Predicate[T]) = {
+    def this(iterable: balticporter.runtime.JavaIterable[T], predicate: Predicate[T]) = {
       this(iterable.iterator, predicate)
     }
     this.set(iterator$p, predicate$p)
-    def set(iterable: scala.collection.Iterable[T], predicate: Predicate[T]): scala.Unit = {
+    def set(iterable: balticporter.runtime.JavaIterable[T], predicate: Predicate[T]): scala.Unit = {
       this.set(iterable.iterator, predicate)
     }
-    def set(iterator: scala.collection.Iterator[T], predicate: Predicate[T]): scala.Unit = {
+    def set(iterator: balticporter.runtime.JavaIterator[T], predicate: Predicate[T]): scala.Unit = {
       this.iterator = iterator
       this.predicate = predicate
       this.`end` = {
@@ -60,16 +60,16 @@ object Predicate {
       this.iterator.remove()
     }
   }
-  class PredicateIterable[T](iterable$p: scala.collection.Iterable[T], predicate$p: Predicate[T]) extends scala.collection.Iterable[T] {
-    var iterable: scala.collection.Iterable[T] = null.asInstanceOf[scala.collection.Iterable[T]]
+  class PredicateIterable[T](iterable$p: balticporter.runtime.JavaIterable[T], predicate$p: Predicate[T]) extends balticporter.runtime.JavaIterable[T] {
+    var iterable: balticporter.runtime.JavaIterable[T] = null.asInstanceOf[balticporter.runtime.JavaIterable[T]]
     var predicate: Predicate[T] = null.asInstanceOf[Predicate[T]]
     var iterator$field: com.badlogic.gdx.utils.Predicate.PredicateIterator[T] = null
     this.set(iterable$p, predicate$p)
-    def set(iterable: scala.collection.Iterable[T], predicate: Predicate[T]): scala.Unit = {
+    def set(iterable: balticporter.runtime.JavaIterable[T], predicate: Predicate[T]): scala.Unit = {
       this.iterable = iterable
       this.predicate = predicate
     }
-    def iterator(): scala.collection.Iterator[T] = {
+    def iterator(): balticporter.runtime.JavaIterator[T] = {
       if (com.badlogic.gdx.utils.Collections.allocateIterators) {
         return new com.badlogic.gdx.utils.Predicate.PredicateIterator[T](this.iterable.iterator, this.predicate)
       } else ()

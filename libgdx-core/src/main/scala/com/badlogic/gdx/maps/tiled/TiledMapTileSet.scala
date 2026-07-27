@@ -1,6 +1,6 @@
 package com.badlogic.gdx.maps.tiled
 
-class TiledMapTileSet extends scala.collection.Iterable[com.badlogic.gdx.maps.tiled.TiledMapTile] {
+class TiledMapTileSet extends balticporter.runtime.JavaIterable[com.badlogic.gdx.maps.tiled.TiledMapTile] {
   private var name: java.lang.String = null.asInstanceOf[java.lang.String]
   private var tiles: com.badlogic.gdx.utils.IntMap[com.badlogic.gdx.maps.tiled.TiledMapTile] = null.asInstanceOf[com.badlogic.gdx.utils.IntMap[com.badlogic.gdx.maps.tiled.TiledMapTile]]
   private var properties: com.badlogic.gdx.maps.MapProperties = null.asInstanceOf[com.badlogic.gdx.maps.MapProperties]
@@ -18,7 +18,7 @@ class TiledMapTileSet extends scala.collection.Iterable[com.badlogic.gdx.maps.ti
   def getTile(id: scala.Int): com.badlogic.gdx.maps.tiled.TiledMapTile = {
     return this.tiles.get(id)
   }
-  def iterator(): scala.collection.Iterator[com.badlogic.gdx.maps.tiled.TiledMapTile] = {
+  def iterator(): balticporter.runtime.JavaIterator[com.badlogic.gdx.maps.tiled.TiledMapTile] = {
     return this.tiles.values().iterator()
   }
   def putTile(id: scala.Int, tile: com.badlogic.gdx.maps.tiled.TiledMapTile): scala.Unit = {

@@ -23,7 +23,7 @@ import balticporter.tir.*
 final class CollectionsTransform extends Phase:
   def name = "java-collections->scala"
 
-  import CollectionsTransform.Kind
+  import CollectionsTransform.{JavaIterableFqn, JavaIteratorFqn, Kind}
 
   /** java fully-qualified name → (scala fully-qualified name, collection kind). */
   private val typeMap: Map[String, (String, Kind)] = Map(
@@ -34,8 +34,18 @@ final class CollectionsTransform extends Phase:
     "java.util.Deque"         -> ("scala.collection.mutable.ArrayDeque", Kind.Seq),
     "java.util.ArrayDeque"    -> ("scala.collection.mutable.ArrayDeque", Kind.Seq),
     "java.util.Collection"    -> ("scala.collection.mutable.Iterable", Kind.Seq),
-    "java.lang.Iterable"      -> ("scala.collection.Iterable", Kind.Seq),
-    "java.util.Iterator"      -> ("scala.collection.Iterator", Kind.Seq),
+    // likewise NOT `scala.collection.Iterable`: java's `Iterable.iterator()` hands back a
+    // REMOVAL-CAPABLE iterator, scala's hands back a `scala.collection.Iterator`. Mapping the
+    // two independently would leave the pair inconsistent — `for (x <- xs)` would still work,
+    // but `xs.iterator()` would no longer be something you can remove through, which is the
+    // only reason libGDX takes an `Iterable` in `Predicate`/`CharArray`/`ModelLoader`.
+    "java.lang.Iterable"      -> (JavaIterableFqn, Kind.Seq),
+    // NOT `scala.collection.Iterator`: java's `Iterator` is `hasNext/next/REMOVE`, scala's is
+    // `hasNext/next`. Mapping it to scala's silently drops a method the source uses (and uses
+    // POLYMORPHICALLY, through the interface — so no call-site narrowing recovers it). The
+    // target is the shim in [[CollectionsTransform.runtimeSources]], which is scala's `Iterator`
+    // PLUS java's `remove`, defaulted to java's own default (throw UnsupportedOperationException).
+    "java.util.Iterator"      -> (JavaIteratorFqn, Kind.Seq),
     "java.util.Map"           -> ("scala.collection.mutable.Map", Kind.Map),
     "java.util.HashMap"       -> ("scala.collection.mutable.HashMap", Kind.Map),
     "java.util.LinkedHashMap" -> ("scala.collection.mutable.LinkedHashMap", Kind.Map),
@@ -156,3 +166,68 @@ object CollectionsTransform:
     * a `Map` `get` is `getOrElse`). */
   enum Kind:
     case Seq, Map, Set
+
+  val JavaIteratorFqn = "balticporter.runtime.JavaIterator"
+  val JavaIterableFqn = "balticporter.runtime.JavaIterable"
+
+  /** Support types the retyping REQUIRES, as ready Scala. The emitted program is compiled
+    * standalone, so a target type that is not in the scala stdlib has to be shipped WITH it;
+    * a consumer of this phase writes these out next to the emitted units (keyed by FQN).
+    *
+    * Only one so far, and it exists because the obvious mapping is wrong: `java.util.Iterator`
+    * declares `hasNext`, `next` AND `remove`, while `scala.collection.Iterator` declares only
+    * the first two. Mapping java's onto scala's therefore DELETES a method — and libGDX calls
+    * it (`ModelLoader`, `ParticleControllerInfluencer`, `ArraySelection`, `Predicate`), always
+    * through the interface, so no amount of call-site type narrowing brings it back. Nor can
+    * the *loop* be rewritten to a scala idiom (`filterInPlace`): the receiver is not a scala
+    * collection at all, it is an arbitrary user `Iterator` implementation, and in `Predicate`
+    * the removal is a straight delegation from one iterator to another with no loop in sight.
+    *
+    * So the mapping's target is java's interface expressed in scala: scala's `Iterator` plus
+    * `remove`, whose default body is java's own documented default for the method. An
+    * implementation that overrides it (every libGDX iterator does) keeps its behaviour; one
+    * that does not gets exactly what java gives it. Nothing is approximated.
+    *
+    * `JavaIterable` follows from it and is not optional: java's `Iterable.iterator()` is
+    * DECLARED to return a `java.util.Iterator`, so retyping `Iterator` without retyping
+    * `Iterable` splits the pair — `iterable.iterator` would yield the removal-less scala
+    * iterator, and every place libGDX takes an `Iterable` only to iterate-and-remove through it
+    * (`Predicate.PredicateIterator`, `CharArray.appendWithSeparators`, `ModelLoader.loadSync`)
+    * would stop type-checking. Two types, one decision.
+    */
+  val runtimeSources: Map[String, String] = Map(
+    JavaIterableFqn ->
+      """package balticporter.runtime
+        |
+        |/** `java.lang.Iterable`, as Scala — `scala.collection.Iterable` whose `iterator` is the
+        |  * removal-capable [[JavaIterator]] that java's `Iterable.iterator()` is declared to
+        |  * return. Iteration is unaffected (it IS a `scala.collection.Iterable`, so `for (x <- xs)`,
+        |  * `map`, `foreach` all work); what it adds back is the guarantee java gives, that the
+        |  * iterator you get can remove from the collection you got it from.
+        |  */
+        |trait JavaIterable[A] extends scala.collection.Iterable[A]:
+        |  def iterator: JavaIterator[A]
+        |""".stripMargin,
+    JavaIteratorFqn ->
+      """package balticporter.runtime
+        |
+        |/** `java.util.Iterator`, as Scala — what `scala.collection.Iterator` is missing.
+        |  *
+        |  * Java's `Iterator` has a third method, `remove()`, which removes from the underlying
+        |  * collection the element last returned by `next()`. `scala.collection.Iterator` has no
+        |  * such operation and no way to express one, so a port that maps `java.util.Iterator` to
+        |  * it drops the method — quietly, until a call site fails to compile, and dangerously if
+        |  * the call site is instead "fixed" by dropping the removal.
+        |  *
+        |  * Ported code implementing a Java `Iterator` extends THIS instead. Removal support is
+        |  * therefore preserved exactly: an implementation that defines `remove()` keeps its own
+        |  * behaviour, and one that does not inherits the default the JDK itself specifies for
+        |  * `Iterator.remove` — throw `UnsupportedOperationException`.
+        |  *
+        |  * Portable: no JVM-only API, nothing reflective.
+        |  */
+        |trait JavaIterator[A] extends scala.collection.Iterator[A]:
+        |  /** `java.util.Iterator.remove` — the JDK's own default implementation. */
+        |  def remove(): Unit = throw new UnsupportedOperationException("remove")
+        |""".stripMargin,
+  )

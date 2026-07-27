@@ -1,6 +1,6 @@
 package com.badlogic.gdx.maps
 
-class MapLayers extends scala.collection.Iterable[com.badlogic.gdx.maps.MapLayer] {
+class MapLayers extends balticporter.runtime.JavaIterable[com.badlogic.gdx.maps.MapLayer] {
   private var layers: com.badlogic.gdx.utils.Array[com.badlogic.gdx.maps.MapLayer] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.maps.MapLayer]()
   def get(index: scala.Int): com.badlogic.gdx.maps.MapLayer = {
     return this.layers.get(index)
@@ -48,7 +48,7 @@ class MapLayers extends scala.collection.Iterable[com.badlogic.gdx.maps.MapLayer
     }; i = i + 1 } }
     return fill
   }
-  def iterator(): scala.collection.Iterator[com.badlogic.gdx.maps.MapLayer] = {
+  def iterator(): balticporter.runtime.JavaIterator[com.badlogic.gdx.maps.MapLayer] = {
     return this.layers.iterator()
   }
 }

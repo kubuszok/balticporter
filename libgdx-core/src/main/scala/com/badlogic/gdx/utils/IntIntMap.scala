@@ -1,6 +1,6 @@
 package com.badlogic.gdx.utils
 
-class IntIntMap(initialCapacity: scala.Int, loadFactor$p: scala.Float) extends scala.collection.Iterable[com.badlogic.gdx.utils.IntIntMap.Entry] {
+class IntIntMap(initialCapacity: scala.Int, loadFactor$p: scala.Float) extends balticporter.runtime.JavaIterable[com.badlogic.gdx.utils.IntIntMap.Entry] {
   var size: scala.Int = 0
   var keyTable: scala.Array[scala.Int] = null.asInstanceOf[scala.Array[scala.Int]]
   var valueTable: scala.Array[scala.Int] = null.asInstanceOf[scala.Array[scala.Int]]
@@ -373,7 +373,7 @@ class IntIntMap(initialCapacity: scala.Int, loadFactor$p: scala.Float) extends s
     buffer.append(']')
     return buffer.toString()
   }
-  def iterator(): scala.collection.Iterator[com.badlogic.gdx.utils.IntIntMap.Entry] = {
+  def iterator(): balticporter.runtime.JavaIterator[com.badlogic.gdx.utils.IntIntMap.Entry] = {
     return this.entries()
   }
   def entries(): com.badlogic.gdx.utils.IntIntMap.Entries = {
@@ -508,7 +508,7 @@ object IntIntMap {
     private final val INDEX_ILLEGAL: scala.Int = -2
     final val INDEX_ZERO: scala.Int = -1
   }
-  class Entries(map$p: IntIntMap) extends com.badlogic.gdx.utils.IntIntMap.MapIterator(map$p) with scala.collection.Iterable[com.badlogic.gdx.utils.IntIntMap.Entry] with scala.collection.Iterator[com.badlogic.gdx.utils.IntIntMap.Entry] {
+  class Entries(map$p: IntIntMap) extends com.badlogic.gdx.utils.IntIntMap.MapIterator(map$p) with balticporter.runtime.JavaIterable[com.badlogic.gdx.utils.IntIntMap.Entry] with balticporter.runtime.JavaIterator[com.badlogic.gdx.utils.IntIntMap.Entry] {
     private final val entry: com.badlogic.gdx.utils.IntIntMap.Entry = new com.badlogic.gdx.utils.IntIntMap.Entry()
     def next(): com.badlogic.gdx.utils.IntIntMap.Entry = {
       if (!hasNext$field) {
@@ -535,7 +535,7 @@ object IntIntMap {
       } else ()
       return hasNext$field
     }
-    def iterator(): scala.collection.Iterator[com.badlogic.gdx.utils.IntIntMap.Entry] = {
+    def iterator(): balticporter.runtime.JavaIterator[com.badlogic.gdx.utils.IntIntMap.Entry] = {
       return this
     }
   }

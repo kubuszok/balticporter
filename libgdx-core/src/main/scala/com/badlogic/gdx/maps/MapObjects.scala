@@ -1,6 +1,6 @@
 package com.badlogic.gdx.maps
 
-class MapObjects extends scala.collection.Iterable[com.badlogic.gdx.maps.MapObject] {
+class MapObjects extends balticporter.runtime.JavaIterable[com.badlogic.gdx.maps.MapObject] {
   private var objects: com.badlogic.gdx.utils.Array[com.badlogic.gdx.maps.MapObject] = null.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.maps.MapObject]]
   this.objects = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.maps.MapObject]()
   def get(index: scala.Int): com.badlogic.gdx.maps.MapObject = {
@@ -46,7 +46,7 @@ class MapObjects extends scala.collection.Iterable[com.badlogic.gdx.maps.MapObje
     }; i = i + 1 } }
     return fill
   }
-  def iterator(): scala.collection.Iterator[com.badlogic.gdx.maps.MapObject] = {
+  def iterator(): balticporter.runtime.JavaIterator[com.badlogic.gdx.maps.MapObject] = {
     return this.objects.iterator()
   }
 }

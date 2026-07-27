@@ -111,7 +111,7 @@ class ModelBatch(context$p: com.badlogic.gdx.graphics.g3d.utils.RenderContext, s
       renderable.shader = this.shaderProvider.getShader(renderable)
     }; i = i + 1 } }
   }
-  def render[T <: com.badlogic.gdx.graphics.g3d.RenderableProvider](renderableProviders: scala.collection.Iterable[T]): scala.Unit = {
+  def render[T <: com.badlogic.gdx.graphics.g3d.RenderableProvider](renderableProviders: balticporter.runtime.JavaIterable[T]): scala.Unit = {
     for (renderableProvider <- renderableProviders) {
       this.render(renderableProvider)
     }
@@ -125,7 +125,7 @@ class ModelBatch(context$p: com.badlogic.gdx.graphics.g3d.utils.RenderContext, s
       renderable.shader = this.shaderProvider.getShader(renderable)
     }; i = i + 1 } }
   }
-  def render[T <: com.badlogic.gdx.graphics.g3d.RenderableProvider](renderableProviders: scala.collection.Iterable[T], environment: com.badlogic.gdx.graphics.g3d.Environment): scala.Unit = {
+  def render[T <: com.badlogic.gdx.graphics.g3d.RenderableProvider](renderableProviders: balticporter.runtime.JavaIterable[T], environment: com.badlogic.gdx.graphics.g3d.Environment): scala.Unit = {
     for (renderableProvider <- renderableProviders) {
       this.render(renderableProvider, environment)
     }
@@ -139,7 +139,7 @@ class ModelBatch(context$p: com.badlogic.gdx.graphics.g3d.utils.RenderContext, s
       renderable.shader = this.shaderProvider.getShader(renderable)
     }; i = i + 1 } }
   }
-  def render[T <: com.badlogic.gdx.graphics.g3d.RenderableProvider](renderableProviders: scala.collection.Iterable[T], shader: com.badlogic.gdx.graphics.g3d.Shader): scala.Unit = {
+  def render[T <: com.badlogic.gdx.graphics.g3d.RenderableProvider](renderableProviders: balticporter.runtime.JavaIterable[T], shader: com.badlogic.gdx.graphics.g3d.Shader): scala.Unit = {
     for (renderableProvider <- renderableProviders) {
       this.render(renderableProvider, shader)
     }
@@ -154,7 +154,7 @@ class ModelBatch(context$p: com.badlogic.gdx.graphics.g3d.utils.RenderContext, s
       renderable.shader = this.shaderProvider.getShader(renderable)
     }; i = i + 1 } }
   }
-  def render[T <: com.badlogic.gdx.graphics.g3d.RenderableProvider](renderableProviders: scala.collection.Iterable[T], environment: com.badlogic.gdx.graphics.g3d.Environment, shader: com.badlogic.gdx.graphics.g3d.Shader): scala.Unit = {
+  def render[T <: com.badlogic.gdx.graphics.g3d.RenderableProvider](renderableProviders: balticporter.runtime.JavaIterable[T], environment: com.badlogic.gdx.graphics.g3d.Environment, shader: com.badlogic.gdx.graphics.g3d.Shader): scala.Unit = {
     for (renderableProvider <- renderableProviders) {
       this.render(renderableProvider, environment, shader)
     }

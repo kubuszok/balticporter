@@ -1,6 +1,6 @@
 package com.badlogic.gdx.scenes.scene2d.utils
 
-class Selection[T] extends com.badlogic.gdx.scenes.scene2d.utils.Disableable with scala.collection.Iterable[T] {
+class Selection[T] extends com.badlogic.gdx.scenes.scene2d.utils.Disableable with balticporter.runtime.JavaIterable[T] {
   private var actor: com.badlogic.gdx.scenes.scene2d.Actor = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.Actor]
   final val selected: com.badlogic.gdx.utils.OrderedSet[T] = new com.badlogic.gdx.utils.OrderedSet[T]().asInstanceOf[com.badlogic.gdx.utils.OrderedSet[T]]
   private final val old: com.badlogic.gdx.utils.OrderedSet[T] = new com.badlogic.gdx.utils.OrderedSet[T]().asInstanceOf[com.badlogic.gdx.utils.OrderedSet[T]]
@@ -241,7 +241,7 @@ class Selection[T] extends com.badlogic.gdx.scenes.scene2d.utils.Disableable wit
     }
     return null.asInstanceOf[T]
   }
-  def iterator(): scala.collection.Iterator[T] = {
+  def iterator(): balticporter.runtime.JavaIterator[T] = {
     return this.selected.iterator()
   }
   def toArray(): com.badlogic.gdx.utils.Array[T] = {

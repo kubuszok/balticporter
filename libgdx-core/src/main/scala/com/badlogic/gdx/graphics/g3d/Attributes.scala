@@ -1,6 +1,6 @@
 package com.badlogic.gdx.graphics.g3d
 
-class Attributes extends scala.collection.Iterable[com.badlogic.gdx.graphics.g3d.Attribute] with java.util.Comparator[com.badlogic.gdx.graphics.g3d.Attribute] with java.lang.Comparable[Attributes] {
+class Attributes extends balticporter.runtime.JavaIterable[com.badlogic.gdx.graphics.g3d.Attribute] with java.util.Comparator[com.badlogic.gdx.graphics.g3d.Attribute] with java.lang.Comparable[Attributes] {
   var mask: scala.Long = 0L
   final val attributes: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.Attribute] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.Attribute]()
   var sorted: scala.Boolean = true
@@ -78,7 +78,7 @@ class Attributes extends scala.collection.Iterable[com.badlogic.gdx.graphics.g3d
       this.set(attr)
     }
   }
-  final def set(attributes: scala.collection.Iterable[com.badlogic.gdx.graphics.g3d.Attribute]): scala.Unit = {
+  final def set(attributes: balticporter.runtime.JavaIterable[com.badlogic.gdx.graphics.g3d.Attribute]): scala.Unit = {
     for (attr <- attributes) {
       this.set(attr)
     }
@@ -132,7 +132,7 @@ class Attributes extends scala.collection.Iterable[com.badlogic.gdx.graphics.g3d
   final def compare(arg0: com.badlogic.gdx.graphics.g3d.Attribute, arg1: com.badlogic.gdx.graphics.g3d.Attribute): scala.Int = {
     return (arg0.`type` - arg1.`type`).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
   }
-  final def iterator(): scala.collection.Iterator[com.badlogic.gdx.graphics.g3d.Attribute] = {
+  final def iterator(): balticporter.runtime.JavaIterator[com.badlogic.gdx.graphics.g3d.Attribute] = {
     return this.attributes.iterator()
   }
   def attributesHash(): scala.Int = {

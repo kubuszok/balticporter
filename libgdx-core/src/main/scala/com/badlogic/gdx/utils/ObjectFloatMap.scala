@@ -1,6 +1,6 @@
 package com.badlogic.gdx.utils
 
-class ObjectFloatMap[K](initialCapacity: scala.Int, loadFactor$p: scala.Float) extends scala.collection.Iterable[com.badlogic.gdx.utils.ObjectFloatMap.Entry[K]] {
+class ObjectFloatMap[K](initialCapacity: scala.Int, loadFactor$p: scala.Float) extends balticporter.runtime.JavaIterable[com.badlogic.gdx.utils.ObjectFloatMap.Entry[K]] {
   var size: scala.Int = 0
   var keyTable: scala.Array[K] = null.asInstanceOf[scala.Array[K]]
   var valueTable: scala.Array[scala.Float] = null.asInstanceOf[scala.Array[scala.Float]]
@@ -456,7 +456,7 @@ object ObjectFloatMap {
       this.currentIndex = -1
     }
   }
-  class Entries[K](map$p: ObjectFloatMap[K]) extends com.badlogic.gdx.utils.ObjectFloatMap.MapIterator[K](map$p) with scala.collection.Iterable[com.badlogic.gdx.utils.ObjectFloatMap.Entry[K]] with scala.collection.Iterator[com.badlogic.gdx.utils.ObjectFloatMap.Entry[K]] {
+  class Entries[K](map$p: ObjectFloatMap[K]) extends com.badlogic.gdx.utils.ObjectFloatMap.MapIterator[K](map$p) with balticporter.runtime.JavaIterable[com.badlogic.gdx.utils.ObjectFloatMap.Entry[K]] with balticporter.runtime.JavaIterator[com.badlogic.gdx.utils.ObjectFloatMap.Entry[K]] {
     var entry: com.badlogic.gdx.utils.ObjectFloatMap.Entry[K] = new com.badlogic.gdx.utils.ObjectFloatMap.Entry[K]()
     def next(): com.badlogic.gdx.utils.ObjectFloatMap.Entry[K] = {
       if (!hasNext$field) {
@@ -518,7 +518,7 @@ object ObjectFloatMap {
       return array
     }
   }
-  class Keys[K](map$p: ObjectFloatMap[K]) extends com.badlogic.gdx.utils.ObjectFloatMap.MapIterator[K](map$p) with scala.collection.Iterable[K] with scala.collection.Iterator[K] {
+  class Keys[K](map$p: ObjectFloatMap[K]) extends com.badlogic.gdx.utils.ObjectFloatMap.MapIterator[K](map$p) with balticporter.runtime.JavaIterable[K] with balticporter.runtime.JavaIterator[K] {
     def hasNext(): scala.Boolean = {
       if (!valid) {
         throw new com.badlogic.gdx.utils.GdxRuntimeException("#iterator() cannot be used nested.")

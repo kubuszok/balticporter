@@ -63,7 +63,7 @@ class ArraySelection[T](array$p: com.badlogic.gdx.utils.Array[T]) extends com.ba
       return
     } else ()
     var changed: scala.Boolean = false;
-    { val iter: scala.collection.Iterator[T] = this.items().iterator(); while (iter.hasNext) { {
+    { val iter: balticporter.runtime.JavaIterator[T] = this.items().iterator(); while (iter.hasNext) { {
       val selected: T = iter.next.asInstanceOf[T]
       if (!array.contains(selected, false)) {
         iter.remove()

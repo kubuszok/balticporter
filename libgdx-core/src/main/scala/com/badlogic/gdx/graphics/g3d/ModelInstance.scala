@@ -170,12 +170,12 @@ class ModelInstance extends com.badlogic.gdx.graphics.g3d.RenderableProvider {
       this.invalidate(this.nodes.get(i))
     }; i = i + 1 } }
   }
-  def copyAnimations(source: scala.collection.Iterable[com.badlogic.gdx.graphics.g3d.model.Animation]): scala.Unit = {
+  def copyAnimations(source: balticporter.runtime.JavaIterable[com.badlogic.gdx.graphics.g3d.model.Animation]): scala.Unit = {
     for (anim <- source) {
       this.copyAnimation(anim, ModelInstance.defaultShareKeyframes)
     }
   }
-  def copyAnimations(source: scala.collection.Iterable[com.badlogic.gdx.graphics.g3d.model.Animation], shareKeyframes: scala.Boolean): scala.Unit = {
+  def copyAnimations(source: balticporter.runtime.JavaIterable[com.badlogic.gdx.graphics.g3d.model.Animation], shareKeyframes: scala.Boolean): scala.Unit = {
     for (anim <- source) {
       this.copyAnimation(anim, shareKeyframes)
     }

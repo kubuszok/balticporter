@@ -59,7 +59,7 @@ abstract class ModelLoader[P <: com.badlogic.gdx.assets.loaders.ModelLoader.Mode
       return null
     } else ()
     val result: com.badlogic.gdx.graphics.g3d.Model = new com.badlogic.gdx.graphics.g3d.Model(data, new com.badlogic.gdx.graphics.g3d.utils.TextureProvider.AssetTextureProvider(manager))
-    val disposables: scala.collection.Iterator[com.badlogic.gdx.utils.Disposable] = result.getManagedDisposables().iterator
+    val disposables: balticporter.runtime.JavaIterator[com.badlogic.gdx.utils.Disposable] = result.getManagedDisposables().iterator
     while (disposables.hasNext) {
       val disposable: com.badlogic.gdx.utils.Disposable = disposables.next
       if (disposable.isInstanceOf[com.badlogic.gdx.graphics.Texture]) {

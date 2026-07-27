@@ -1,6 +1,6 @@
 package com.badlogic.gdx.utils
 
-class ArrayMap[K, V] extends scala.collection.Iterable[com.badlogic.gdx.utils.ObjectMap.Entry[K, V]] {
+class ArrayMap[K, V] extends balticporter.runtime.JavaIterable[com.badlogic.gdx.utils.ObjectMap.Entry[K, V]] {
   var keys$field: scala.Array[K] = null.asInstanceOf[scala.Array[K]]
   var values$field: scala.Array[V] = null.asInstanceOf[scala.Array[V]]
   var size: scala.Int = 0
@@ -458,7 +458,7 @@ class ArrayMap[K, V] extends scala.collection.Iterable[com.badlogic.gdx.utils.Ob
     buffer.append('}')
     return buffer.toString()
   }
-  def iterator(): scala.collection.Iterator[com.badlogic.gdx.utils.ObjectMap.Entry[K, V]] = {
+  def iterator(): balticporter.runtime.JavaIterator[com.badlogic.gdx.utils.ObjectMap.Entry[K, V]] = {
     return this.entries()
   }
   def entries(): com.badlogic.gdx.utils.ArrayMap.Entries[K, V] = {
@@ -520,7 +520,7 @@ class ArrayMap[K, V] extends scala.collection.Iterable[com.badlogic.gdx.utils.Ob
   }
 }
 object ArrayMap {
-  class Entries[K, V](map$p: ArrayMap[K, V]) extends scala.collection.Iterable[com.badlogic.gdx.utils.ObjectMap.Entry[K, V]] with scala.collection.Iterator[com.badlogic.gdx.utils.ObjectMap.Entry[K, V]] {
+  class Entries[K, V](map$p: ArrayMap[K, V]) extends balticporter.runtime.JavaIterable[com.badlogic.gdx.utils.ObjectMap.Entry[K, V]] with balticporter.runtime.JavaIterator[com.badlogic.gdx.utils.ObjectMap.Entry[K, V]] {
     private var map: ArrayMap[K, V] = null.asInstanceOf[ArrayMap[K, V]]
     var entry: com.badlogic.gdx.utils.ObjectMap.Entry[K, V] = new com.badlogic.gdx.utils.ObjectMap.Entry[K, V]().asInstanceOf[com.badlogic.gdx.utils.ObjectMap.Entry[K, V]]
     var index: scala.Int = 0
@@ -532,7 +532,7 @@ object ArrayMap {
       } else ()
       return this.index < this.map.size
     }
-    def iterator(): scala.collection.Iterator[com.badlogic.gdx.utils.ObjectMap.Entry[K, V]] = {
+    def iterator(): balticporter.runtime.JavaIterator[com.badlogic.gdx.utils.ObjectMap.Entry[K, V]] = {
       return this
     }
     def next(): com.badlogic.gdx.utils.ObjectMap.Entry[K, V] = {
@@ -554,7 +554,7 @@ object ArrayMap {
       this.index = 0
     }
   }
-  class Values[V](map$p: ArrayMap[java.lang.Object, V]) extends scala.collection.Iterable[V] with scala.collection.Iterator[V] {
+  class Values[V](map$p: ArrayMap[java.lang.Object, V]) extends balticporter.runtime.JavaIterable[V] with balticporter.runtime.JavaIterator[V] {
     private var map: ArrayMap[java.lang.Object, V] = null.asInstanceOf[ArrayMap[java.lang.Object, V]]
     var index: scala.Int = 0
     var valid: scala.Boolean = true
@@ -565,7 +565,7 @@ object ArrayMap {
       } else ()
       return this.index < this.map.size
     }
-    def iterator(): scala.collection.Iterator[V] = {
+    def iterator(): balticporter.runtime.JavaIterator[V] = {
       return this
     }
     def next(): V = {
@@ -592,7 +592,7 @@ object ArrayMap {
       return array.asInstanceOf[com.badlogic.gdx.utils.Array[V]]
     }
   }
-  class Keys[K](map$p: ArrayMap[K, java.lang.Object]) extends scala.collection.Iterable[K] with scala.collection.Iterator[K] {
+  class Keys[K](map$p: ArrayMap[K, java.lang.Object]) extends balticporter.runtime.JavaIterable[K] with balticporter.runtime.JavaIterator[K] {
     private var map: ArrayMap[K, java.lang.Object] = null.asInstanceOf[ArrayMap[K, java.lang.Object]]
     var index: scala.Int = 0
     var valid: scala.Boolean = true
@@ -603,7 +603,7 @@ object ArrayMap {
       } else ()
       return this.index < this.map.size
     }
-    def iterator(): scala.collection.Iterator[K] = {
+    def iterator(): balticporter.runtime.JavaIterator[K] = {
       return this
     }
     def next(): K = {

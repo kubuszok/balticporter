@@ -38,7 +38,7 @@ abstract class ParticleControllerInfluencer extends com.badlogic.gdx.graphics.g3
     { var i: scala.Int = 0; while ((i < effects.size) && (controllers.size > 0)) { {
       val effect: com.badlogic.gdx.graphics.g3d.particles.ParticleEffect = effects.get(i)
       val effectControllers: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.ParticleController] = effect.getControllers()
-      val iterator: scala.collection.Iterator[com.badlogic.gdx.graphics.g3d.particles.ParticleController] = controllers.iterator()
+      val iterator: balticporter.runtime.JavaIterator[com.badlogic.gdx.graphics.g3d.particles.ParticleController] = controllers.iterator()
       var indices: com.badlogic.gdx.utils.IntArray = null
       while (iterator.hasNext) {
         val controller: com.badlogic.gdx.graphics.g3d.particles.ParticleController = iterator.next
@@ -65,7 +65,7 @@ abstract class ParticleControllerInfluencer extends com.badlogic.gdx.graphics.g3
     val data: com.badlogic.gdx.graphics.g3d.particles.ResourceData.SaveData = resources.getSaveData()
     val effectsIndices: com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.IntArray] = data.load("indices")
     var descriptor: com.badlogic.gdx.assets.AssetDescriptor[?] = null.asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[?]]
-    val iterator: scala.collection.Iterator[com.badlogic.gdx.utils.IntArray] = effectsIndices.iterator()
+    val iterator: balticporter.runtime.JavaIterator[com.badlogic.gdx.utils.IntArray] = effectsIndices.iterator()
     while ({
       descriptor = data.loadAsset()
       descriptor
