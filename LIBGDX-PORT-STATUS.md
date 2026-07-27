@@ -10,14 +10,14 @@ scala-cli 3.8.4). The migration itself prints four independent checks on every r
 
 | metric | value | source |
 |---|---|---|
-| clean-compile errors | **43** | `scripts/gdx_measure.sh` |
+| clean-compile errors | **37** | `scripts/gdx_measure.sh` |
 | portability (JVM-only APIs in emitted code) | **0** | `PortabilityCheck` |
 | portability (injected replacements) | **clean** | `PortabilityCheck.inInjectedSource` |
 | silent omissions | **30** (see §0 — the check does not yet see anonymous classes) | `OmissionCheck` |
 | signature consistency | clean | `RewriteTrace.check` |
 | substitutions verified removed | 10 dropped types | migration CHECK 1 + CHECK 2 |
 
-Error breakdown: E007 18, E134 11, E008 6, E120 5, E083 1, E051 1, E049 1.
+Error breakdown: E007 17, E134 11, E120 5, E083 1, E051 1, E049 1, E008 1.
 (E050 and E006 are gone; E051 8→1, E049 6→1.)
 
 ## 0. UNTRACKED SILENT OMISSION — anonymous class bodies are dropped
