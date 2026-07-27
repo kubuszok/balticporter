@@ -151,9 +151,34 @@ object SpoonTir:
       (frame, defs)
 
     private def boundsOf(tp: CtTypeParameter): TypeBounds =
-      Option(tp.getSuperclass).filter(_.getQualifiedName != "java.lang.Object").map(tpe) match
+      Option(tp.getSuperclass).filter(_.getQualifiedName != "java.lang.Object").map(fbound) match
         case Some(hi) => TypeBounds(NoType, hi)
         case None     => TypeBounds(NoType, NoType)
+
+    /** Translate a type-parameter bound. A RAW generic bound (`N extends Node`) is Java's
+      * idiom for a self-referential (F-)bound; a plain wildcard fill (`Node[?, ?, ?]`) erases
+      * the self-reference, so a `node : N` value's members become path-dependent (`node.N`)
+      * and unify with nothing — the source of Tree's whole error cluster. Instead fill each of
+      * the raw type's formals with an IN-SCOPE type parameter of the same NAME (the current
+      * decl's params are already in scope here, minted before bounds are translated), falling
+      * back to a wildcard: `Node` under `Tree[N, V]` → `Node[N, V, ?]`, under `Node[N, V, A]`
+      * → `Node[N, V, A]`. Non-raw / array / intersection / type-var bounds defer to `tpe`. */
+    private def fbound(tr: CtTypeReference[?]): TypeRepr =
+      val isRawGeneric = !tr.isInstanceOf[CtTypeParameterReference] &&
+        !tr.isInstanceOf[CtArrayTypeReference[?]] && !tr.isInstanceOf[CtIntersectionTypeReference[?]] &&
+        !tr.isInstanceOf[CtWildcardReference] && !tr.isPrimitive && tr.getActualTypeArguments.isEmpty
+      val formals = if !isRawGeneric then Nil
+        else try Option(tr.getTypeDeclaration).map(_.getFormalCtTypeParameters.asScala.toList).getOrElse(Nil)
+             catch { case _: Throwable => Nil }
+      if formals.isEmpty then tpe(tr)
+      else
+        val head = TypeRef(NoPrefix, typeSym(tr))
+        val args = formals.map { f =>
+          resolveTypeParam(f.getSimpleName) match
+            case Some(pid) => TypeRef(NoPrefix, pid)
+            case None      => TypeBounds(NoType, NoType) // wildcard
+        }
+        AppliedType(head, args)
 
     // ---- types ----
     private def tpe(tr: CtTypeReference[?]): TypeRepr = tr match
