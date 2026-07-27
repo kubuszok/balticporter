@@ -401,5 +401,14 @@ object MathUtils {
   }
   object Sin {
     final val table: scala.Array[scala.Float] = new scala.Array[scala.Float](MathUtils.SIN_COUNT)
+    locally {
+      { var i: scala.Int = 0; while (i < MathUtils.SIN_COUNT) { {
+        com.badlogic.gdx.math.MathUtils.Sin.table(i) = java.lang.Math.sin(((i + 0.5f) / MathUtils.SIN_COUNT) * MathUtils.radFull).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
+      }; i = i + 1 } }
+      com.badlogic.gdx.math.MathUtils.Sin.table(0) = 0.0f
+      com.badlogic.gdx.math.MathUtils.Sin.table((90 * MathUtils.degToIndex).asInstanceOf[scala.Int] & MathUtils.SIN_MASK) = 1.0f
+      com.badlogic.gdx.math.MathUtils.Sin.table((180 * MathUtils.degToIndex).asInstanceOf[scala.Int] & MathUtils.SIN_MASK) = 0.0f
+      com.badlogic.gdx.math.MathUtils.Sin.table((270 * MathUtils.degToIndex).asInstanceOf[scala.Int] & MathUtils.SIN_MASK) = -1.0f
+    }
   }
 }

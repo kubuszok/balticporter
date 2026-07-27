@@ -1101,4 +1101,16 @@ object Encoder {
     } else ()
     return Encoder.g_FastPos(pos >> 26) + 52
   }
+  locally {
+    val kFastSlots: scala.Int = 22
+    var c: scala.Int = 2
+    Encoder.g_FastPos(0) = 0.asInstanceOf[scala.Byte]
+    Encoder.g_FastPos(1) = 1.asInstanceOf[scala.Byte];
+    { var slotFast: scala.Int = 2; while (slotFast < kFastSlots) { {
+      val k: scala.Int = 1 << ((slotFast >> 1) - 1);
+      { var j: scala.Int = 0; while (j < k) { {
+        Encoder.g_FastPos(c) = slotFast.asInstanceOf[scala.Byte].asInstanceOf[scala.Byte]
+      }; j = j + 1; c = c + 1 } }
+    }; slotFast = slotFast + 1 } }
+  }
 }

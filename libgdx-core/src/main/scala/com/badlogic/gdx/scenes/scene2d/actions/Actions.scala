@@ -387,4 +387,33 @@ object Actions {
     action.setTarget(target)
     return action
   }
+  locally {
+    Actions.registerAction(classOf[com.badlogic.gdx.scenes.scene2d.actions.AddAction], (() => new com.badlogic.gdx.scenes.scene2d.actions.AddAction()))
+    Actions.registerAction(classOf[com.badlogic.gdx.scenes.scene2d.actions.AddListenerAction], (() => new com.badlogic.gdx.scenes.scene2d.actions.AddListenerAction()))
+    Actions.registerAction(classOf[com.badlogic.gdx.scenes.scene2d.actions.AfterAction], (() => new com.badlogic.gdx.scenes.scene2d.actions.AfterAction()))
+    Actions.registerAction(classOf[com.badlogic.gdx.scenes.scene2d.actions.AlphaAction], (() => new com.badlogic.gdx.scenes.scene2d.actions.AlphaAction()))
+    Actions.registerAction(classOf[com.badlogic.gdx.scenes.scene2d.actions.ColorAction], (() => new com.badlogic.gdx.scenes.scene2d.actions.ColorAction()))
+    Actions.registerAction(classOf[com.badlogic.gdx.scenes.scene2d.actions.DelayAction], (() => new com.badlogic.gdx.scenes.scene2d.actions.DelayAction()))
+    Actions.registerAction(classOf[com.badlogic.gdx.scenes.scene2d.actions.FloatAction], (() => new com.badlogic.gdx.scenes.scene2d.actions.FloatAction()))
+    Actions.registerAction(classOf[com.badlogic.gdx.scenes.scene2d.actions.IntAction], (() => new com.badlogic.gdx.scenes.scene2d.actions.IntAction()))
+    Actions.registerAction(classOf[com.badlogic.gdx.scenes.scene2d.actions.LayoutAction], (() => new com.badlogic.gdx.scenes.scene2d.actions.LayoutAction()))
+    Actions.registerAction(classOf[com.badlogic.gdx.scenes.scene2d.actions.MoveByAction], (() => new com.badlogic.gdx.scenes.scene2d.actions.MoveByAction()))
+    Actions.registerAction(classOf[com.badlogic.gdx.scenes.scene2d.actions.MoveToAction], (() => new com.badlogic.gdx.scenes.scene2d.actions.MoveToAction()))
+    Actions.registerAction(classOf[com.badlogic.gdx.scenes.scene2d.actions.ParallelAction], (() => new com.badlogic.gdx.scenes.scene2d.actions.ParallelAction()))
+    Actions.registerAction(classOf[com.badlogic.gdx.scenes.scene2d.actions.RemoveAction], (() => new com.badlogic.gdx.scenes.scene2d.actions.RemoveAction()))
+    Actions.registerAction(classOf[com.badlogic.gdx.scenes.scene2d.actions.RemoveActorAction], (() => new com.badlogic.gdx.scenes.scene2d.actions.RemoveActorAction()))
+    Actions.registerAction(classOf[com.badlogic.gdx.scenes.scene2d.actions.RemoveListenerAction], (() => new com.badlogic.gdx.scenes.scene2d.actions.RemoveListenerAction()))
+    Actions.registerAction(classOf[com.badlogic.gdx.scenes.scene2d.actions.RepeatAction], (() => new com.badlogic.gdx.scenes.scene2d.actions.RepeatAction()))
+    Actions.registerAction(classOf[com.badlogic.gdx.scenes.scene2d.actions.RotateByAction], (() => new com.badlogic.gdx.scenes.scene2d.actions.RotateByAction()))
+    Actions.registerAction(classOf[com.badlogic.gdx.scenes.scene2d.actions.RotateToAction], (() => new com.badlogic.gdx.scenes.scene2d.actions.RotateToAction()))
+    Actions.registerAction(classOf[com.badlogic.gdx.scenes.scene2d.actions.RunnableAction], (() => new com.badlogic.gdx.scenes.scene2d.actions.RunnableAction()))
+    Actions.registerAction(classOf[com.badlogic.gdx.scenes.scene2d.actions.ScaleByAction], (() => new com.badlogic.gdx.scenes.scene2d.actions.ScaleByAction()))
+    Actions.registerAction(classOf[com.badlogic.gdx.scenes.scene2d.actions.ScaleToAction], (() => new com.badlogic.gdx.scenes.scene2d.actions.ScaleToAction()))
+    Actions.registerAction(classOf[com.badlogic.gdx.scenes.scene2d.actions.SequenceAction], (() => new com.badlogic.gdx.scenes.scene2d.actions.SequenceAction()))
+    Actions.registerAction(classOf[com.badlogic.gdx.scenes.scene2d.actions.SizeByAction], (() => new com.badlogic.gdx.scenes.scene2d.actions.SizeByAction()))
+    Actions.registerAction(classOf[com.badlogic.gdx.scenes.scene2d.actions.SizeToAction], (() => new com.badlogic.gdx.scenes.scene2d.actions.SizeToAction()))
+    Actions.registerAction(classOf[com.badlogic.gdx.scenes.scene2d.actions.TimeScaleAction], (() => new com.badlogic.gdx.scenes.scene2d.actions.TimeScaleAction()))
+    Actions.registerAction(classOf[com.badlogic.gdx.scenes.scene2d.actions.TouchableAction], (() => new com.badlogic.gdx.scenes.scene2d.actions.TouchableAction()))
+    Actions.registerAction(classOf[com.badlogic.gdx.scenes.scene2d.actions.VisibleAction], (() => new com.badlogic.gdx.scenes.scene2d.actions.VisibleAction()))
+  }
 }

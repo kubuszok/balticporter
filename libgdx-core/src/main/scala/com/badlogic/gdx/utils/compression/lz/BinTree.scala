@@ -315,4 +315,17 @@ object BinTree {
   final val kEmptyHashValue: scala.Int = 0
   final val kMaxValForNormalize: scala.Int = (1 << 30) - 1
   private final val CrcTable: scala.Array[scala.Int] = new scala.Array[scala.Int](256)
+  locally {
+    { var i: scala.Int = 0; while (i < 256) { {
+      var r: scala.Int = i;
+      { var j: scala.Int = 0; while (j < 8) { {
+        if ((r & 1) != 0) {
+          r = (r >>> 1) ^ -306674912
+        } else {
+          r = r >>> 1
+        }
+      }; j = j + 1 } }
+      BinTree.CrcTable(i) = r
+    }; i = i + 1 } }
+  }
 }

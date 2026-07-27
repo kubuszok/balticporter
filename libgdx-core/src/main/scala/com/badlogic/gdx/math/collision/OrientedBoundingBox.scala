@@ -171,4 +171,12 @@ object OrientedBoundingBox {
   private final val tempAxes: scala.Array[com.badlogic.gdx.math.Vector3] = new scala.Array[com.badlogic.gdx.math.Vector3](15)
   private final val tempVertices: scala.Array[com.badlogic.gdx.math.Vector3] = new scala.Array[com.badlogic.gdx.math.Vector3](8)
   private final val tmpVectors: scala.Array[com.badlogic.gdx.math.Vector3] = new scala.Array[com.badlogic.gdx.math.Vector3](9)
+  locally {
+    { var i: scala.Int = 0; while (i < OrientedBoundingBox.tmpVectors.length) { {
+      OrientedBoundingBox.tmpVectors(i) = new com.badlogic.gdx.math.Vector3()
+    }; i = i + 1 } };
+    { var i: scala.Int = 0; while (i < OrientedBoundingBox.tempVertices.length) { {
+      OrientedBoundingBox.tempVertices(i) = new com.badlogic.gdx.math.Vector3()
+    }; i = i + 1 } }
+  }
 }

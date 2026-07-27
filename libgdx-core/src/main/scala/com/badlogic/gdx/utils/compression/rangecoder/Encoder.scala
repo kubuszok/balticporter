@@ -96,4 +96,14 @@ object Encoder {
   def GetPrice1(Prob: scala.Int): scala.Int = {
     return Encoder.ProbPrices((Encoder.kBitModelTotal - Prob) >>> Encoder.kNumMoveReducingBits)
   }
+  locally {
+    val kNumBits: scala.Int = Encoder.kNumBitModelTotalBits - Encoder.kNumMoveReducingBits;
+    { var i: scala.Int = kNumBits - 1; while (i >= 0) { {
+      val start: scala.Int = 1 << ((kNumBits - i) - 1)
+      val `end`: scala.Int = 1 << (kNumBits - i);
+      { var j: scala.Int = start; while (j < `end`) { {
+        Encoder.ProbPrices(j) = (i << Encoder.kNumBitPriceShiftBits) + (((`end` - j) << Encoder.kNumBitPriceShiftBits) >>> ((kNumBits - i) - 1))
+      }; j = j + 1 } }
+    }; i = i - 1 } }
+  }
 }

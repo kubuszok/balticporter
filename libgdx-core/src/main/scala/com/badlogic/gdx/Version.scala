@@ -29,4 +29,16 @@ object Version {
     } else ()
     return Version.REVISION <= revision
   }
+  locally {
+    try {
+      val v: scala.Array[java.lang.String] = Version.VERSION.split("\\.")
+      Version.MAJOR = if (v.length < 1) 0 else java.lang.Integer.valueOf(v(0))
+      Version.MINOR = if (v.length < 2) 0 else java.lang.Integer.valueOf(v(1))
+      Version.REVISION = if (v.length < 3) 0 else java.lang.Integer.valueOf(v(2))
+    } catch {
+      case t: java.lang.Throwable => {
+        throw new com.badlogic.gdx.utils.GdxRuntimeException("Invalid version " + Version.VERSION, t)
+      }
+    }
+  }
 }

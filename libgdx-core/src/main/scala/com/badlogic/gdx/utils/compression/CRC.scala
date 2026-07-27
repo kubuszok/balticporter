@@ -25,4 +25,17 @@ class CRC {
 }
 object CRC {
   var Table: scala.Array[scala.Int] = new scala.Array[scala.Int](256)
+  locally {
+    { var i: scala.Int = 0; while (i < 256) { {
+      var r: scala.Int = i;
+      { var j: scala.Int = 0; while (j < 8) { {
+        if ((r & 1) != 0) {
+          r = (r >>> 1) ^ -306674912
+        } else {
+          r = r >>> 1
+        }
+      }; j = j + 1 } }
+      CRC.Table(i) = r
+    }; i = i + 1 } }
+  }
 }

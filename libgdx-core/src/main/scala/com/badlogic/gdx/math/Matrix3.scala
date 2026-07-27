@@ -354,6 +354,9 @@ class Matrix3 extends java.io.Serializable {
     `val`(Matrix3.M21) = v21
     return this
   }
+  locally {
+    this.tmp(Matrix3.M22) = 1
+  }
 }
 object Matrix3 {
   private final val serialVersionUID: scala.Long = 7907569533774959788L

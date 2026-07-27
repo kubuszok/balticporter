@@ -239,6 +239,11 @@ final class TirEmitter(source: Program):
         (body.flatMap { case d: Tree.DefDef if d.symbol == c.symbol => rest; case s => List(s) }, superArgs)
       case None => (body, Nil)
 
+  /** a Java `static { … }` / instance `{ … }` initializer block, carried as a synthetic member. */
+  private def isInitBlock(d: Tree.DefDef): Boolean =
+    val n = sym(d.symbol).name
+    n == "<clinit>" || n == "<initblock>"
+
   private def isStatic(s: Statement): Boolean = s match
     case d: Tree.ClassDef => sym(d.symbol).flags.isStatic
     case d: Definition    => sym(d.symbol).flags.isStatic
@@ -311,6 +316,13 @@ final class TirEmitter(source: Program):
 
   private def stat(s: Statement, i: Int): String = s match
     case c: Tree.ClassDef => classDef(c, i)
+    // a Java initializer block is carried as a synthetic member; emit its BODY inline rather than
+    // a `def`, since a block in a class/object body runs at initialisation — where Java runs it
+    // too — and `orderBody` has already placed it after the field declarations it fills.
+    // `locally` is REQUIRED, not decoration: a bare `{ … }` on the line after a field initialised
+    // with `new T(…)` is parsed as that constructor's anonymous-class body
+    // (`new Array[Float](n) { … }`), which fails as "anonymous class cannot extend final class".
+    case d: Tree.DefDef if isInitBlock(d) => d.rhs.map(r => s"${ind(i)}locally ${term(r, i)}").getOrElse("")
     case d: Tree.DefDef   => defDef(d, i)
     case v: Tree.ValDef   => valDef(v, i)
     case t: Tree.TypeDef  => s"${ind(i)}${if sym(t.symbol).flags.isOpaque then "opaque " else ""}type ${esc(sym(t.symbol).name)} = ${tpe(t.rhs.tpe)}"

@@ -49,4 +49,7 @@ object Colors {
     Colors.map.put("VIOLET", com.badlogic.gdx.graphics.Color.VIOLET)
     Colors.map.put("MAROON", com.badlogic.gdx.graphics.Color.MAROON)
   }
+  locally {
+    Colors.reset()
+  }
 }

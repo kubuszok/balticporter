@@ -171,4 +171,12 @@ object Frustum {
   final val clipSpacePlanePoints: scala.Array[com.badlogic.gdx.math.Vector3] = scala.Array[com.badlogic.gdx.math.Vector3](new com.badlogic.gdx.math.Vector3(-1, -1, -1), new com.badlogic.gdx.math.Vector3(1, -1, -1), new com.badlogic.gdx.math.Vector3(1, 1, -1), new com.badlogic.gdx.math.Vector3(-1, 1, -1), new com.badlogic.gdx.math.Vector3(-1, -1, 1), new com.badlogic.gdx.math.Vector3(1, -1, 1), new com.badlogic.gdx.math.Vector3(1, 1, 1), new com.badlogic.gdx.math.Vector3(-1, 1, 1))
   final val clipSpacePlanePointsArray: scala.Array[scala.Float] = new scala.Array[scala.Float](8 * 3)
   private final val tmpV: com.badlogic.gdx.math.Vector3 = new com.badlogic.gdx.math.Vector3()
+  locally {
+    var j: scala.Int = 0
+    for (v <- Frustum.clipSpacePlanePoints) {
+      Frustum.clipSpacePlanePointsArray({ j += 1; j }) = v.x
+      Frustum.clipSpacePlanePointsArray({ j += 1; j }) = v.y
+      Frustum.clipSpacePlanePointsArray({ j += 1; j }) = v.z
+    }
+  }
 }

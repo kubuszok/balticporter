@@ -390,6 +390,11 @@ class Skin extends com.badlogic.gdx.utils.Disposable {
   def getJsonClassTags(): com.badlogic.gdx.utils.ObjectMap[java.lang.String, java.lang.Class[?]] = {
     return this.jsonClassTags
   }
+  locally {
+    for (c <- Skin.defaultTagClasses) {
+      this.jsonClassTags.put(c.getSimpleName(), c)
+    }
+  }
 }
 object Skin {
   private final val defaultTagClasses: scala.Array[java.lang.Class[?]] = scala.Array[java.lang.Class[?]](classOf[com.badlogic.gdx.graphics.g2d.BitmapFont], classOf[com.badlogic.gdx.graphics.Color], classOf[com.badlogic.gdx.scenes.scene2d.ui.Skin.TintedDrawable], classOf[com.badlogic.gdx.scenes.scene2d.utils.NinePatchDrawable], classOf[com.badlogic.gdx.scenes.scene2d.utils.SpriteDrawable], classOf[com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable], classOf[com.badlogic.gdx.scenes.scene2d.utils.TiledDrawable], classOf[com.badlogic.gdx.scenes.scene2d.ui.Button.ButtonStyle], classOf[com.badlogic.gdx.scenes.scene2d.ui.CheckBox.CheckBoxStyle], classOf[com.badlogic.gdx.scenes.scene2d.ui.ImageButton.ImageButtonStyle], classOf[com.badlogic.gdx.scenes.scene2d.ui.ImageTextButton.ImageTextButtonStyle], classOf[com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle], classOf[com.badlogic.gdx.scenes.scene2d.ui.List.ListStyle], classOf[com.badlogic.gdx.scenes.scene2d.ui.ProgressBar.ProgressBarStyle], classOf[com.badlogic.gdx.scenes.scene2d.ui.ScrollPane.ScrollPaneStyle], classOf[com.badlogic.gdx.scenes.scene2d.ui.SelectBox.SelectBoxStyle], classOf[com.badlogic.gdx.scenes.scene2d.ui.Slider.SliderStyle], classOf[com.badlogic.gdx.scenes.scene2d.ui.SplitPane.SplitPaneStyle], classOf[com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle], classOf[com.badlogic.gdx.scenes.scene2d.ui.TextField.TextFieldStyle], classOf[com.badlogic.gdx.scenes.scene2d.ui.TextTooltip.TextTooltipStyle], classOf[com.badlogic.gdx.scenes.scene2d.ui.Touchpad.TouchpadStyle], classOf[com.badlogic.gdx.scenes.scene2d.ui.Tree.TreeStyle], classOf[com.badlogic.gdx.scenes.scene2d.ui.Window.WindowStyle])

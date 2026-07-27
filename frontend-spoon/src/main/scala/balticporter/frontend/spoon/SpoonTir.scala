@@ -323,13 +323,27 @@ object SpoonTir:
       val methods = t.getMethods.asScala.toList.sortBy(posKey)
         .filterNot(m => subs.dropsMethod(t.getQualifiedName, m.getSimpleName))
         .map(m => execDef(id, m, m.getSimpleName))
+      // Java INITIALIZER BLOCKS — `static { … }` and instance `{ … }`. These were previously
+      // dropped on the floor: nothing referenced `CtAnonymousExecutable`, so `MathUtils` never
+      // built its sin/cos table, `CRC` never built its table and `Colors` never registered a
+      // colour — a port that compiles clean and computes `sin(x) = 0`. Silent omission is exactly
+      // what this engine forbids (PLAN.md §3.3), so they are translated like any other executable
+      // and carried as synthetic members; the emitter inlines their body at the right place (a
+      // static block into the companion object, an instance block into the class body), where
+      // Scala runs it at initialisation — the same point Java does.
+      val initBlocks = t match
+        case c: CtClass[?] =>
+          c.getAnonymousExecutables.asScala.toList.sortBy(posKey).map { ae =>
+            execDef(id, ae, if ae.hasModifier(ModifierKind.STATIC) then "<clinit>" else "<initblock>")
+          }
+        case _ => Nil
       val nested  = t.getNestedTypes.asScala.toList.sortBy(posKey).map(classDef)
       val enumCases = t match
         case e: CtEnum[?] => e.getEnumValues.asScala.toList.map(enumCase(id, _))
         case _            => Nil
       tpScopes.remove(0)
       selfRawStack.remove(0); tpAccessible.remove(0); inStatic = savedStatic
-      Tree.ClassDef(id, parents, selfType = None, body = fields ++ ctors ++ methods ++ nested,
+      Tree.ClassDef(id, parents, selfType = None, body = fields ++ ctors ++ methods ++ initBlocks ++ nested,
         origin = originOf(t), tparams = tpDefs, enumCases = enumCases)
 
     /** a Java enum constant → `EnumCase`: its ctor args, and any per-constant method overrides
