@@ -145,7 +145,7 @@ class DynamicsInfluencer extends com.badlogic.gdx.graphics.g3d.particles.influen
     json.writeValue("velocities", this.velocities, classOf[com.badlogic.gdx.utils.Array[?]], classOf[com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier])
   }
   def read(json: com.badlogic.gdx.utils.Json, jsonData: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
-    this.velocities.addAll(json.readValue("velocities", classOf[com.badlogic.gdx.utils.Array[?]], classOf[com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier], jsonData))
+    this.velocities.addAll(json.readValue("velocities", classOf[com.badlogic.gdx.utils.Array[?]], classOf[com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier], jsonData).asInstanceOf[com.badlogic.gdx.utils.Array[? <: com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier]])
   }
 }
 object DynamicsInfluencer {

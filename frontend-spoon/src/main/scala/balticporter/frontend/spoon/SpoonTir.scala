@@ -347,6 +347,49 @@ object SpoonTir:
         AppliedType(TypeRef(NoPrefix, typeSym(r)), r.getActualTypeArguments.asScala.toList.map(tpBoundErased))
       case other => tpe(other)
 
+    /** `tpe` of a callee's DECLARED formal with the receiver's type variables replaced by the
+      * receiver's own (known) type ARGUMENTS. `None` whenever any part cannot be named here — a raw
+      * generic, an intersection, or a variable outside `subst` that does not resolve in this scope —
+      * so a cast is only ever built out of a type the emitted Scala can actually see. */
+    private def substFormal(f: CtTypeReference[?], subst: Map[String, TypeRepr]): Option[TypeRepr] =
+      def all(l: List[CtTypeReference[?]]): Option[List[TypeRepr]] =
+        l.foldRight(Option(List.empty[TypeRepr]))((x, acc) => acc.flatMap(t => substFormal(x, subst).map(_ :: t)))
+      f match
+        case null => None
+        case arr: CtArrayTypeReference[?] =>
+          substFormal(arr.getComponentType, subst).map(c =>
+            AppliedType(TypeRef(NoPrefix, minter.external("scala.Array", "Array")), List(c)))
+        case w: CtWildcardReference =>
+          Option(w.getBoundingType).filter(_.getQualifiedName != "java.lang.Object") match
+            case None    => Some(TypeBounds(NoType, NoType))
+            case Some(b) => substFormal(b, subst).map(u =>
+                              if w.isUpper then TypeBounds(NoType, u) else TypeBounds(u, NoType))
+        case tv: CtTypeParameterReference =>
+          subst.get(tv.getSimpleName).orElse(resolveTypeParam(tv.getSimpleName).map(id => TypeRef(NoPrefix, id)))
+        case p if p.isPrimitive                   => Some(tpe(p))
+        case _: CtIntersectionTypeReference[?]    => None
+        case r => r.getActualTypeArguments.asScala.toList match
+          case Nil  => Option.when(formalArity(r) == 0)(TypeRef(NoPrefix, typeSym(r)))
+          case as   => all(as).map(x => AppliedType(TypeRef(NoPrefix, typeSym(r)), x))
+
+    /** [[mentionsTypeVarFilled]], but also descending into WILDCARD BOUNDS (`Array<? extends T>`
+      * does depend on `T`). Kept separate: the existing predicate gates the erased-receiver path,
+      * whose measured behaviour must not shift. */
+    private def mentionsTypeVarBounded(tr: CtTypeReference[?], names: Set[String]): Boolean = tr match
+      case w: CtWildcardReference => Option(w.getBoundingType).exists(mentionsTypeVarBounded(_, names))
+      case tv: CtTypeParameterReference => names(tv.getSimpleName)
+      case arr: CtArrayTypeReference[?] => mentionsTypeVarBounded(arr.getComponentType, names)
+      case _ =>
+        val args = try tr.getActualTypeArguments.asScala.toList catch { case _: Throwable => Nil }
+        if args.nonEmpty then args.exists(mentionsTypeVarBounded(_, names))
+        else rawFormalsOf(tr).exists(names)
+
+    /** does this rendered type carry a WILDCARD anywhere — i.e. is it the product of our raw fill? */
+    private def hasWildcard(t: TypeRepr): Boolean = t match
+      case _: TypeBounds       => true
+      case AppliedType(tc, as) => hasWildcard(tc) || as.exists(hasWildcard)
+      case _                   => false
+
     /** does this type mention any of `names` as a type variable (directly or in its arguments)? */
     private def mentionsTypeVar(tr: CtTypeReference[?], names: Set[String]): Boolean = tr match
       case tv: CtTypeParameterReference => names(tv.getSimpleName)
@@ -1315,6 +1358,45 @@ object SpoonTir:
             }
           case _ => args
 
+      /** Java's UNCHECKED conversion at an ARGUMENT, when the RECEIVER's instantiation is KNOWN.
+        * `influencers.addAll(json.readValue("influencers", Array.class, Influencer.class, map))`:
+        * `Array.class` is a RAW class literal, so Java's result is the raw `Array` and the call is
+        * accepted unchecked — while we render that result `Array[?]`, which matches none of
+        * `addAll`'s overloads. The formal Java actually asked for is `Array<? extends T>` with the
+        * receiver's `T`, and the receiver names it (`Array[Influencer]`), so substitute and cast.
+        *
+        * The complement of [[erasedReceiverView]], which handles the receiver whose arguments are
+        * UNKNOWN — the two gates are mutually exclusive. Narrow on both ends: only a formal that
+        * mentions a receiver type variable, only an argument our raw fill actually wildcarded, and
+        * only when the substituted formal is fully nameable here. */
+      private def knownReceiverArgs(inv: CtInvocation[?], argEs: List[CtExpression[?]], args: List[Term]): List[Term] =
+        val rt = inv.getTarget match
+          case null => null
+          case _: CtSuperAccess[?] | _: CtTypeAccess[?] | _: CtThisAccess[?] => null
+          case t    => try t.getTypeCasts.asScala.lastOption.getOrElse(t.getType) catch { case _: Throwable => null }
+        if rt == null || rt.isPrimitive || rt.isInstanceOf[CtArrayTypeReference[?]] ||
+           rt.isInstanceOf[CtTypeParameterReference] || rt.isInstanceOf[CtWildcardReference] then args
+        else
+          val formals = try Option(rt.getTypeDeclaration).map(_.getFormalCtTypeParameters.asScala.toList).getOrElse(Nil)
+                        catch { case _: Throwable => Nil }
+          val actuals = rt.getActualTypeArguments.asScala.toList
+          // fully KNOWN instantiation: same arity, no wildcards, every variable nameable here
+          val known = formals.nonEmpty && actuals.sizeIs == formals.size &&
+            !actuals.exists(_.isInstanceOf[CtWildcardReference]) && actuals.forall(tpResolvable)
+          val ps = try Option(inv.getExecutable.getExecutableDeclaration).map(_.getParameters.asScala.toList.map(_.getType))
+                   catch { case _: Throwable => None }
+          (known, ps) match
+            case (true, Some(l)) if l.sizeIs == args.size && argEs.sizeIs == args.size =>
+              val subst = formals.map(_.getSimpleName).zip(actuals.map(tpe)).toMap
+              args.zipWithIndex.map { (t, i) =>
+                val f = l(i)
+                if f == null || !mentionsTypeVarBounded(f, subst.keySet) || !hasWildcard(t.tpe) then t
+                else substFormal(f, subst) match
+                  case Some(ct) if ct != t.tpe => Tree.Typed(t, tt(ct, argEs(i)), ct, t.origin)
+                  case _                       => t
+              }
+            case _ => args
+
       /** A call THROUGH A TYPE VARIABLE whose bound is a RAW generic (`N extends Node`;
         * `N parent; parent.remove(this)`): Java sees the callee's members ERASED, so it accepts
         * arguments the un-erased Scala signature (`def remove(node: N)`) rejects. Cast each argument
@@ -1351,7 +1433,7 @@ object SpoonTir:
         val args0 = erasedRecv match
           case Some((_, subst)) => eraseDependentArgs(ex, argEs, coerceArgs(ex, argEs), subst)
           case None             => coerceArgs(ex, argEs)
-        val args = typeVarReceiverArgs(inv, argEs, args0)
+        val args = typeVarReceiverArgs(inv, argEs, knownReceiverArgs(inv, argEs, args0))
         val o    = originOf(inv)
         val fun: Term =
           if ex.isConstructor then

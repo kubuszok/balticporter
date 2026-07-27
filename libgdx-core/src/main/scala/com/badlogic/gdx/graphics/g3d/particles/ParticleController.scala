@@ -202,7 +202,7 @@ class ParticleController extends com.badlogic.gdx.utils.Json.Serializable with c
   def read(json: com.badlogic.gdx.utils.Json, jsonMap: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
     this.name = json.readValue("name", classOf[java.lang.String], jsonMap)
     this.emitter = json.readValue("emitter", classOf[com.badlogic.gdx.graphics.g3d.particles.emitters.Emitter], jsonMap)
-    this.influencers.addAll(json.readValue("influencers", classOf[com.badlogic.gdx.utils.Array[?]], classOf[com.badlogic.gdx.graphics.g3d.particles.influencers.Influencer], jsonMap))
+    this.influencers.addAll(json.readValue("influencers", classOf[com.badlogic.gdx.utils.Array[?]], classOf[com.badlogic.gdx.graphics.g3d.particles.influencers.Influencer], jsonMap).asInstanceOf[com.badlogic.gdx.utils.Array[? <: com.badlogic.gdx.graphics.g3d.particles.influencers.Influencer]])
     this.renderer = json.readValue("renderer", classOf[com.badlogic.gdx.graphics.g3d.particles.renderers.ParticleControllerRenderer[?, ?]], jsonMap)
   }
   def save(manager: com.badlogic.gdx.assets.AssetManager, data: com.badlogic.gdx.graphics.g3d.particles.ResourceData[?]): scala.Unit = {

@@ -81,7 +81,7 @@ abstract class RegionInfluencer extends com.badlogic.gdx.graphics.g3d.particles.
   }
   def read(json: com.badlogic.gdx.utils.Json, jsonData: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
     this.regions.clear()
-    this.regions.addAll(json.readValue("regions", classOf[com.badlogic.gdx.utils.Array[?]], classOf[com.badlogic.gdx.graphics.g3d.particles.influencers.RegionInfluencer.AspectTextureRegion], jsonData))
+    this.regions.addAll(json.readValue("regions", classOf[com.badlogic.gdx.utils.Array[?]], classOf[com.badlogic.gdx.graphics.g3d.particles.influencers.RegionInfluencer.AspectTextureRegion], jsonData).asInstanceOf[com.badlogic.gdx.utils.Array[? <: com.badlogic.gdx.graphics.g3d.particles.influencers.RegionInfluencer.AspectTextureRegion]])
   }
 }
 object RegionInfluencer {
