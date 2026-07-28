@@ -228,9 +228,9 @@ object OrderedMap {
       currentIndex = -1
     }
   }
-  class OrderedMapKeys[K](map$p: OrderedMap[K, ?]) extends com.badlogic.gdx.utils.ObjectMap.Keys[K](map$p) {
+  class OrderedMapKeys[K](map$p: OrderedMap[K, ?]) extends com.badlogic.gdx.utils.ObjectMap.Keys[K](map$p.asInstanceOf[OrderedMap[K, scala.AnyRef]]) {
     private var keys: com.badlogic.gdx.utils.Array[K] = null.asInstanceOf[com.badlogic.gdx.utils.Array[K]]
-    this.keys = map$p.asInstanceOf[OrderedMap[java.lang.Object, java.lang.Object]].keys$field
+    this.keys = map$p.asInstanceOf[OrderedMap[java.lang.Object, java.lang.Object]].keys$field.asInstanceOf[com.badlogic.gdx.utils.Array[K]]
     def reset(): scala.Unit = {
       currentIndex = -1
       nextIndex = 0
@@ -267,7 +267,7 @@ object OrderedMap {
       return this.toArray(new com.badlogic.gdx.utils.Array(true, this.keys.size - nextIndex))
     }
   }
-  class OrderedMapValues[V](map$p: OrderedMap[?, V]) extends com.badlogic.gdx.utils.ObjectMap.Values[V](map$p) {
+  class OrderedMapValues[V](map$p: OrderedMap[?, V]) extends com.badlogic.gdx.utils.ObjectMap.Values[V](map$p.asInstanceOf[OrderedMap[scala.AnyRef, V]]) {
     private var keys: com.badlogic.gdx.utils.Array[?] = null.asInstanceOf[com.badlogic.gdx.utils.Array[?]]
     this.keys = map$p.asInstanceOf[OrderedMap[java.lang.Object, java.lang.Object]].keys$field.asInstanceOf[com.badlogic.gdx.utils.Array[?]]
     def reset(): scala.Unit = {

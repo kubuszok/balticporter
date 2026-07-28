@@ -630,7 +630,7 @@ object LongMap {
   object Values {
     export com.badlogic.gdx.utils.LongMap.MapIterator.*
   }
-  class Keys(map$p: LongMap[?]) extends com.badlogic.gdx.utils.LongMap.MapIterator[scala.AnyRef](map$p) {
+  class Keys(map$p: LongMap[?]) extends com.badlogic.gdx.utils.LongMap.MapIterator[scala.AnyRef](map$p.asInstanceOf[LongMap[scala.AnyRef]]) {
     def next(): scala.Long = {
       if (!hasNext$field) {
         throw new java.util.NoSuchElementException()

@@ -241,7 +241,7 @@ final class TirEmitter(source: Program):
     val prim    = if pparams.isEmpty then "" else s"(${pparams.map(param).mkString(", ")})"
     val parents = cd.parents.map(parent).filter(_.nonEmpty) match
       case Nil                          => Nil
-      case h :: t if superArgs.nonEmpty => s"$h(${superArgs.map(term(_, i)).mkString(", ")})" :: t
+      case h :: t if superArgs.nonEmpty => s"$h(${superArgs.map(superArg(_, i)).mkString(", ")})" :: t
       case all                          => all
     val ext     = if parents.isEmpty then "" else " extends " + parents.mkString(" with ")
     // an all-static utility class (no instance state, no supertype) is just an `object` — so its
@@ -421,6 +421,18 @@ final class TirEmitter(source: Program):
         s"$name$l$h"
       case other => s"$name <: ${tpe(other)}"
 
+  /** An argument lifted into the `extends` clause.
+    *
+    * The parent's own wildcards were eliminated to get there ([[deWildcarded]]) — `Keys extends
+    * MapIterator` becomes `MapIterator[AnyRef]`, so its constructor now asks for `IntMap[AnyRef]`
+    * — while the argument beside it kept the wildcard fill its DECLARATION was rendered with
+    * (`map$p: IntMap[?]`). Both are the same Java raw type read in two positions, and only one of
+    * them could keep the wildcard, so the argument needs the same elimination applied as a cast.
+    * Java passed it unchecked; this writes that down. */
+  private def superArg(a: Term, i: Int): String =
+    if !hasWildcardArg(a.tpe) then term(a, i)
+    else s"${term(a, i)}.asInstanceOf[${deWildcarded(a.tpe, named = false)}]"
+
   private def parent(p: Term | TypeTree): String = p match
     case tt: TypeTree  => parentTpe(tt.tpe)
     case t: Term  => parentTpe(t.tpe)
@@ -431,15 +443,67 @@ final class TirEmitter(source: Program):
     * position: the simple name of an inner class is NOT in scope in an `extends` clause
     * (`ParticleEffectPool extends Pool[PooledEffect]` → `Not found: type PooledEffect`), while the
     * projection that `typeSym` would otherwise give is both legal and correct there. */
-  private def parentTpe(t: TypeRepr): String = t match
-    case TypeRepr.AppliedType(tc, args) =>
-      val as = args.map {
-        case TypeRepr.TypeBounds(_, hi) if hi != TypeRepr.NoType => tpe(hi)
-        case _: TypeRepr.TypeBounds                              => "scala.AnyRef"
-        case other                                               => tpe(other)
-      }
-      s"${byName(tpe(tc))}[${as.mkString(", ")}]"
-    case _ => byName(tpe(t))
+  private def parentTpe(t: TypeRepr): String = deWildcarded(t, named = true)
+
+  /** the head symbol of a (possibly applied) type. */
+  private def headSymOf(t: TypeRepr): Option[SymId] = t match
+    case TypeRepr.TypeRef(_, s)      => Some(s)
+    case TypeRepr.AppliedType(tc, _) => headSymOf(tc)
+    case _                           => None
+
+  /** a type's own parameters paired with their declared upper bounds (`NoType` when unbounded). */
+  private def declBounds(tycon: SymId): List[(SymId, TypeRepr)] =
+    program.definitionOf(tycon).collect { case c: Tree.ClassDef =>
+      c.tparams.map(tp => tp.symbol -> (tp.rhs.tpe match
+        case TypeRepr.TypeBounds(_, hi) if hi != TypeRepr.NoType => hi
+        case _                                                   => TypeRepr.NoType))
+    }.getOrElse(Nil)
+
+  private def substTp(t: TypeRepr, m: Map[SymId, TypeRepr]): TypeRepr = t match
+    case TypeRepr.TypeRef(_, s) if m.contains(s) => m(s)
+    case TypeRepr.AppliedType(tc, as)            => TypeRepr.AppliedType(substTp(tc, m), as.map(substTp(_, m)))
+    case other                                   => other
+
+  /** Render a type with every WILDCARD argument eliminated — illegal in an `extends` clause, and
+    * illegal as the target of a cast.
+    *
+    * A wildcard becomes its own written bound, else the type PARAMETER's declared upper bound, else
+    * `AnyRef`. Consulting the declaration is what the plain `AnyRef` fill got wrong: it produced
+    * `extends ParticleControllerRenderer[AnyRef, AnyRef]` for a class whose parameters are
+    * `D <: ParticleControllerRenderData, T <: ParticleBatch[D]`, which fails its own bounds.
+    * Arguments resolve LEFT TO RIGHT with the earlier choices substituted in, because a later bound
+    * may name an earlier parameter — as `T <: ParticleBatch[D]` does.
+    *
+    * `named` selects the head's rendering. It is a Boolean rather than the `byName` combinator
+    * passed as a function because `byName` sets a mutable flag AROUND evaluating its by-name
+    * argument; handing it to a strict `String => String` parameter evaluates the head first and
+    * silently loses the flag (which turned `extends Channel` into `extends ParallelArray#Channel`). */
+  private def deWildcarded(t: TypeRepr, named: Boolean): String =
+    def head(f: => String): String = if named then byName(f) else f
+    t match
+      case TypeRepr.AppliedType(tc, args) =>
+        val bounds = headSymOf(tc).map(declBounds).getOrElse(Nil)
+        val (as, _) = args.zipWithIndex.foldLeft((List.empty[String], Map.empty[SymId, TypeRepr])) {
+          case ((acc, m), (a, i)) =>
+            val chosen: Option[TypeRepr] = a match
+              case TypeRepr.TypeBounds(_, hi) if hi != TypeRepr.NoType => Some(substTp(hi, m))
+              case _: TypeRepr.TypeBounds =>
+                bounds.lift(i).map(_._2).filter(_ != TypeRepr.NoType).map(substTp(_, m))
+              case other => Some(other)
+            val rendered = chosen.map(tpe).getOrElse("scala.AnyRef")
+            val m2 = (bounds.lift(i), chosen) match
+              case (Some((p, _)), Some(c)) => m + (p -> c)
+              case _                       => m
+            (acc :+ rendered, m2)
+        }
+        s"${head(tpe(tc))}[${as.mkString(", ")}]"
+      case _ => head(tpe(t))
+
+  /** does this type carry a wildcard argument anywhere? */
+  private def hasWildcardArg(t: TypeRepr): Boolean = t match
+    case _: TypeRepr.TypeBounds      => true
+    case TypeRepr.AppliedType(tc, a) => hasWildcardArg(tc) || a.exists(hasWildcardArg)
+    case _                           => false
 
   private def stat(s: Statement, i: Int): String = s match
     case c: Tree.ClassDef => classDef(c, i)

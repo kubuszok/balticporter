@@ -630,7 +630,7 @@ object IntMap {
   object Values {
     export com.badlogic.gdx.utils.IntMap.MapIterator.*
   }
-  class Keys(map$p: IntMap[?]) extends com.badlogic.gdx.utils.IntMap.MapIterator[scala.AnyRef](map$p) {
+  class Keys(map$p: IntMap[?]) extends com.badlogic.gdx.utils.IntMap.MapIterator[scala.AnyRef](map$p.asInstanceOf[IntMap[scala.AnyRef]]) {
     def next(): scala.Int = {
       if (!hasNext$field) {
         throw new java.util.NoSuchElementException()

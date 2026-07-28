@@ -402,6 +402,21 @@ object SpoonTir:
       case arr: CtArrayTypeReference[?] => mentionsAnyTypeVar(arr.getComponentType)
       case r => try r.getActualTypeArguments.asScala.exists(mentionsAnyTypeVar) catch { case _: Throwable => false }
 
+    /** Is `actual` the same type as `want` with some type ARGUMENTS collapsed — to `Object` (read
+      * through an erased view) or to a wildcard (our raw fill)? That is precisely the shape of an
+      * UNCHECKED CONVERSION: Java stops checking at a raw or erased use and lets the value flow
+      * into any instantiation, so a mismatch of exactly this shape is one Java performed silently
+      * and Scala needs written out.
+      *
+      * Deliberately narrow. It compares the RENDERED types, so it can only fire where the emitted
+      * Scala really does disagree, and it demands the same type constructor and arity — an
+      * unrelated mismatch, a subtype, or a differently-shaped type is not this and is left alone. */
+    private def uncheckedFrom(actual: TypeRepr, want: TypeRepr): Boolean = (actual, want) match
+      case (AppliedType(tc1, as1), AppliedType(tc2, as2)) if tc1 == tc2 && as1.sizeIs == as2.size =>
+        as1.zip(as2).exists((a, w) => a != w) &&
+          as1.zip(as2).forall((a, w) => a == w || a == objectT || a.isInstanceOf[TypeBounds] || uncheckedFrom(a, w))
+      case _ => false
+
     /** does this rendered type carry a WILDCARD anywhere — i.e. is it the product of our raw fill? */
     private def hasWildcard(t: TypeRepr): Boolean = t match
       case _: TypeBounds       => true
@@ -1092,7 +1107,16 @@ object SpoonTir:
         // `Integer` parameter that Spoon erased at the call reference.
         val ct = if boxing then boxedPrimitive(et.getSimpleName) else tpe(target)
         if cast then Tree.Typed(t, tt(ct, e), ct, originOf(e))
-        else if unchecked then uncheckedGeneric(target, e, t)
+        else if unchecked then
+          val u = uncheckedGeneric(target, e, t)
+          // Java's unchecked conversion, decided on the RENDERED types rather than Spoon's. A value
+          // read through an ERASED receiver (`map.keys$field` off an `OrderedMap[Object, Object]`)
+          // has a Spoon type that still says `Array<K>`, so nothing above sees a mismatch — but the
+          // Scala we emit for it really is `Array[Object]` flowing into an `Array[K]` slot. The TIR
+          // now carries that erased type honestly (see `erasedFieldReceiver`), which is what makes
+          // this decidable here at all.
+          if (u ne t) || !tpAccessibleHere(target) || !uncheckedFrom(t.tpe, ct) then u
+          else Tree.Typed(t, tt(ct, e), ct, originOf(e))
         else t
 
       private val wrapperOf = Map(
