@@ -104,8 +104,21 @@ final class TestFrameworkTransform(
       // it is the base class that supplies those members. Rewriting program-wide (via a traversal
       // in `run`) un-qualified the calls in helper classes that never gained the base class, and
       // they failed with `Not found: assertTrue`.
-      val body = StandardTraversal.mapClassDef(this, cd2).body.flatMap {
-        case d: Tree.DefDef if isAnnotated(d, TestAnn)   => List(testCase(d))
+      val mapped = StandardTraversal.mapClassDef(this, cd2)
+      // JUnit runs `@Before` before EVERY test, on a FRESH instance of the class. MUnit has
+      // neither: one suite instance, and no such annotation — so the emitted `@Before def setUp`
+      // was never called and `SortTest`'s `sortInstance` was null in all 19 of its tests. Nothing
+      // failed to compile; the suite failed at run time, which is the only place this shows.
+      //
+      // Call it at the head of each test body. That reproduces java's per-test setup exactly
+      // wherever setup ASSIGNS the fields it needs, which is the shape `@Before` exists for. It
+      // does NOT reproduce JUnit's fresh instance, so a field carrying state through its own
+      // INITIALISER rather than through setup still leaks between tests — recorded, not hidden.
+      val setups = mapped.body.collect {
+        case d: Tree.DefDef if isAnnotated(d, BeforeAnn) => d.symbol
+      }
+      val body = mapped.body.flatMap {
+        case d: Tree.DefDef if isAnnotated(d, TestAnn)   => List(testCase(d, setups))
         case d: Tree.DefDef if isAnnotated(d, BeforeAnn) => List(beforeEach(d))
         case other                                       => List(other)
       }
@@ -128,7 +141,7 @@ final class TestFrameworkTransform(
     * asserts an exception and instead runs the body bare would PASS while checking nothing, which
     * is the silent-omission shape this engine exists to prevent. Until `intercept` is wired the
     * method is left alone, so such a test stays a compile error rather than a false green. */
-  private def testCase(d: Tree.DefDef)(using p: Program): Statement =
+  private def testCase(d: Tree.DefDef, setups: List[SymId] = Nil)(using p: Program): Statement =
     val nm = p.symbolOf(d.symbol).map(_.name).getOrElse("test")
     val expectsThrow = p.symbolOf(d.symbol).exists(_.annotations.exists { a =>
       nameOf(a.tpe) == TestAnn && a.args.exists(_._1 == "expected")
@@ -143,7 +156,13 @@ final class TestFrameworkTransform(
       val lit = Tree.Literal(Constant.StringC(nm), TypeRepr.NoType, d.origin)
       val head = Tree.Apply(Tree.Ident(testSym, TypeRepr.NoType, d.origin), List(lit),
                             testSym, TypeRepr.NoType, d.origin)
-      Tree.Apply(head, List(d.rhs.get), testSym, TypeRepr.NoType, d.origin)
+      val rhs =
+        if setups.isEmpty then d.rhs.get
+        else
+          val calls = setups.map(s => Tree.Apply(Tree.Ident(s, TypeRepr.NoType, d.origin), Nil,
+                                                 s, TypeRepr.NoType, d.origin))
+          Tree.Block(calls, d.rhs.get, d.rhs.get.tpe, d.origin)
+      Tree.Apply(head, List(rhs), testSym, TypeRepr.NoType, d.origin)
 
   /** `@Before` is the framework's per-test setup hook under a fixed name. */
   private def beforeEach(d: Tree.DefDef)(using p: Program): Statement = d
