@@ -440,12 +440,31 @@ object SpoonTir:
       * same-named in-scope parameters — so `ResourceData` inside `ParticleBatch<T>` really does
       * depend on `T`, even though nothing in the Spoon type says so. */
     private def mentionsTypeVarFilled(tr: CtTypeReference[?], names: Set[String]): Boolean = tr match
-      case tv: CtTypeParameterReference => names(tv.getSimpleName)
+      case tv: CtTypeParameterReference => names(tv.getSimpleName) || boundMentions(tv, names)
       case arr: CtArrayTypeReference[?] => mentionsTypeVarFilled(arr.getComponentType, names)
       case _ =>
         val args = try tr.getActualTypeArguments.asScala.toList catch { case _: Throwable => Nil }
         if args.nonEmpty then args.exists(mentionsTypeVarFilled(_, names))
         else rawFormalsOf(tr).exists(names)
+
+    /** A METHOD type variable declared in terms of the receiver's — `<T extends K> V get(T key)` on
+      * `ObjectMap<K,V>` — depends on the receiver just as surely as a bare `K` formal does. Java
+      * erases the bound along with everything else at a raw receiver, so a caller holding a real
+      * `K` cannot reach that formal without the same erasure the receiver got.
+      *
+      * Bound only, never the variable's own name: a callee's `<T>` that happens to share a name
+      * with one of the receiver's parameters is a different variable, and matching it would be the
+      * name-based confusion [[tpConcrete]] exists to avoid. Depth-limited because a Java bound may
+      * be F-bounded (`N extends Node<N,…>`) and would otherwise recurse forever. */
+    private def boundMentions(tv: CtTypeParameterReference, names: Set[String], fuel: Int = 2): Boolean =
+      fuel > 0 && (try
+        Option(tv.getDeclaration).flatMap(d => Option(d.getSuperclass))
+          .filter(_.getQualifiedName != "java.lang.Object")
+          .exists {
+            case b: CtTypeParameterReference => names(b.getSimpleName) || boundMentions(b, names, fuel - 1)
+            case b                           => mentionsTypeVarFilled(b, names)
+          }
+      catch { case _: Throwable => false })
 
     /** does this type involve a RAW use of a generic type — itself, or anywhere in its arguments
       * (`Class`, `ObjectMap<String, AssetLoader>`)? A raw use is exactly where Java stops checking
@@ -2235,7 +2254,53 @@ object SpoonTir:
                 case Some((et, _, _)) => Tree.Typed(recv, tt(et, t), et, originOf(t))
                 case None             => recv
               Tree.Select(recv2, mid, NoType, o)
-        Tree.Apply(pinTypeArgs(fun, inv, o), args, mid, erasedResult(args, ty(inv)), o)
+        val app = Tree.Apply(pinTypeArgs(fun, inv, o), args, mid, erasedResult(args, ty(inv)), o)
+        erasedRecvResult(inv, erasedRecv, app)
+
+      /** The downcast an ERASED RECEIVER's result needs.
+        *
+        * Calling through the erased view ([[erasedReceiverView]]) is Java's own move, and Java pays
+        * for it the same way at the other end: a result declared in the receiver's type variables
+        * comes back ERASED, and every use of it carries an implicit downcast. `OrderedMap<K,V>`'s
+        * `putAll(OrderedMap<T, ? extends V> map)` calls `map.get((T) key)` and hands the result
+        * straight to `put(K, V)` — through `OrderedMap[Object, Object]` that is an `Object`, and
+        * `V` is required. Java inserted the checkcast; this writes it down.
+        *
+        * Gated on the un-erased result being nameable HERE and actually different, so a callee
+        * whose result does not move with the receiver (or one Spoon already types as erased) is
+        * untouched. */
+      private def erasedRecvResult(
+          inv: CtInvocation[?], recv: Option[(TypeRepr, Map[String, TypeRepr], Map[String, TypeRepr])], app: Term,
+      ): Term = recv match
+        case None => app
+        case Some((_, subst, _)) =>
+          val declRet = try Option(inv.getExecutable.getExecutableDeclaration)
+                              .collect { case m: CtMethod[?] => m.getType }
+                        catch { case _: Throwable => None }
+          // The un-erased reading comes from the receiver's DECLARED arguments, not from Spoon's
+          // type for the call: through a wildcard receiver Spoon reports the CAPTURE (`map.V`),
+          // which has no Scala name. `OrderedMap<T, ? extends V> map` says `V ↦ ? extends V`, and
+          // the bound is what Java's own checkcast lands on — `put(K, V)` accepts it precisely
+          // because every `? extends V` is a `V`.
+          val declSubst: Map[String, TypeRepr] =
+            try
+              val t  = inv.getTarget
+              val rt = t.getTypeCasts.asScala.lastOption.getOrElse(t.getType)
+              val fs = Option(rt.getTypeDeclaration).map(_.getFormalCtTypeParameters.asScala.toList).getOrElse(Nil)
+              val as = rt.getActualTypeArguments.asScala.toList
+              if fs.sizeIs != as.size then Map.empty
+              else fs.map(_.getSimpleName).zip(as.map {
+                case w: CtWildcardReference => Option(w.getBoundingType).filter(_ => w.isUpper).orNull
+                case a                      => a
+              }).collect { case (n, a) if a != null && tpResolvable(a) => n -> tpe(a) }.toMap
+            catch { case _: Throwable => Map.empty }
+          declRet match
+            case Some(d) if d != null && !d.isPrimitive && mentionsTypeVarFilled(d, subst.keySet) =>
+              substFormal(d, declSubst) match
+                case Some(ct) if ct != app.tpe && ct != NoType && !hasWildcard(ct) =>
+                  Tree.Typed(app, tt(ct, inv), ct, originOf(inv))
+                case _ => app
+            case _ => app
 
       /** The result type an ERASED ARGUMENT drags with it.
         *
