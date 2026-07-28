@@ -43,6 +43,7 @@ final class TestFrameworkTransform(
   def name: String = "junit->portable-suite"
 
   private val AssertClass = "org.junit.Assert"
+  private val AssertsObject = "balticporter.runtime.Asserts"
   private val AssertMembers = Set("assertEquals", "assertNotEquals", "assertTrue", "assertFalse",
     "assertNull", "assertNotNull", "assertSame", "assertArrayEquals", "fail")
   private val TestAnn   = "org.junit.Test"
@@ -64,7 +65,10 @@ final class TestFrameworkTransform(
     testSym  = mint(testMember, testMember)
     // keyed by the member's SIMPLE name: a static call renders as `<receiver FQN>.<name>`, so the
     // member symbol itself is not keyed by the owner's FQN and cannot be found that way.
-    assertSyms = AssertMembers.map(nm => nm -> mint(nm, nm)).toMap
+    // fully-qualified to an OBJECT, not inherited from the base class. A java `static` helper
+    // emits into the COMPANION object, which does not extend the suite, so inherited assertions are
+    // invisible there (`Not found: assertTrue`). An object member resolves the same from both.
+    assertSyms = AssertMembers.map(nm => nm -> mint(nm, AssertsObject + "." + nm)).toMap
 
     val symbols = SymbolTable(program.symbols.all ++ added)
     given Program = new Program(program.units, symbols, program.xref)
@@ -159,17 +163,26 @@ object TestFrameworkTransform:
         |  * the porting engine has no node for a curried application.
         |  */
         |abstract class PortedSuite extends munit.FunSuite:
-        |
         |  def testCase(name: String, body: => Unit): Unit = test(name)(body)
         |
+        |/** JUnit's assertions, in JAVA's argument order and with java's loose typing.
+        |  *
+        |  * An OBJECT, not members of the suite: a java `static` helper emits into the companion
+        |  * object, which does not extend the suite, so inherited assertions would be invisible
+        |  * exactly where java put half of them.
+        |  */
+        |object Asserts:
+        |  private def check(cond: Boolean, msg: => String): Unit =
+        |    if !cond then throw new AssertionError(msg)
+        |
         |  def assertEquals(expected: Any, actual: Any): Unit =
-        |    assert(expected == actual, s"expected <$expected> but was <$actual>")
+        |    check(expected == actual, s"expected <$expected> but was <$actual>")
         |  def assertEquals(message: String, expected: Any, actual: Any): Unit =
-        |    assert(expected == actual, message)
+        |    check(expected == actual, message)
         |  def assertEquals(expected: Double, actual: Double, delta: Double): Unit =
-        |    assert(math.abs(expected - actual) <= delta, s"expected <$expected> but was <$actual>")
+        |    check(math.abs(expected - actual) <= delta, s"expected <$expected> but was <$actual>")
         |  def assertNotEquals(unexpected: Any, actual: Any): Unit =
-        |    assert(unexpected != actual, s"did not expect <$unexpected>")
+        |    check(unexpected != actual, s"did not expect <$unexpected>")
         |  def assertTrue(b: Boolean): Unit                  = assert(b)
         |  def assertTrue(message: String, b: Boolean): Unit = assert(b, message)
         |  def assertFalse(b: Boolean): Unit                 = assert(!b)
@@ -177,47 +190,47 @@ object TestFrameworkTransform:
         |  def assertNull(o: Any): Unit                      = assert(o == null, s"expected null, was <$o>")
         |  def assertNotNull(o: Any): Unit                   = assert(o != null, "expected non-null")
         |  def assertSame(expected: AnyRef, actual: AnyRef): Unit =
-        |    assert(expected eq actual, "expected the same instance")
+        |    check(expected eq actual, "expected the same instance")
         |
         |  def assertArrayEquals(expected: Array[Byte], actual: Array[Byte]): Unit =
-        |    assert(expected.sameElements(actual), "arrays differ")
+        |    check(expected.sameElements(actual), "arrays differ")
         |  def assertArrayEquals(expected: Array[Int], actual: Array[Int]): Unit =
-        |    assert(expected.sameElements(actual), "arrays differ")
+        |    check(expected.sameElements(actual), "arrays differ")
         |  def assertArrayEquals(expected: Array[Long], actual: Array[Long]): Unit =
-        |    assert(expected.sameElements(actual), "arrays differ")
+        |    check(expected.sameElements(actual), "arrays differ")
         |  def assertArrayEquals(expected: Array[Char], actual: Array[Char]): Unit =
-        |    assert(expected.sameElements(actual), "arrays differ")
+        |    check(expected.sameElements(actual), "arrays differ")
         |  def assertArrayEquals(expected: Array[Object], actual: Array[Object]): Unit =
-        |    assert(expected.sameElements(actual), "arrays differ")
+        |    check(expected.sameElements(actual), "arrays differ")
         |  // JUnit's `fail()` and `fail(String)`; MUnit's `fail` demands a message and a Location.
         |  // the message-carrying delta forms java also has
         |  def assertEquals(message: String, expected: Double, actual: Double, delta: Double): Unit =
-        |    assert(math.abs(expected - actual) <= delta, message)
+        |    check(math.abs(expected - actual) <= delta, message)
         |  def assertArrayEquals(message: String, expected: Array[Float], actual: Array[Float],
         |                        delta: Float): Unit =
-        |    assert(expected.length == actual.length &&
+        |    check(expected.length == actual.length &&
         |             expected.indices.forall(i => math.abs(expected(i) - actual(i)) <= delta), message)
         |  def assertArrayEquals(message: String, expected: Array[Double], actual: Array[Double],
         |                        delta: Double): Unit =
-        |    assert(expected.length == actual.length &&
+        |    check(expected.length == actual.length &&
         |             expected.indices.forall(i => math.abs(expected(i) - actual(i)) <= delta), message)
         |
-        |  def fail(): Nothing                = super.fail("failed")
-        |  override def fail(message: String)(implicit loc: munit.Location): Nothing = super.fail(message)
+        |  def fail(): Nothing                = throw new AssertionError("failed")
+        |  def fail(message: String): Nothing = throw new AssertionError(message)
         |
         |  def assertEquals(expected: Long, actual: Long): Unit =
-        |    assert(expected == actual, s"expected <$expected> but was <$actual>")
+        |    check(expected == actual, s"expected <$expected> but was <$actual>")
         |  def assertEquals(expected: Double, actual: Double): Unit =
-        |    assert(expected == actual, s"expected <$expected> but was <$actual>")
+        |    check(expected == actual, s"expected <$expected> but was <$actual>")
         |  def assertArrayEquals(expected: Array[Short], actual: Array[Short]): Unit =
-        |    assert(expected.sameElements(actual), "arrays differ")
+        |    check(expected.sameElements(actual), "arrays differ")
         |  def assertArrayEquals(expected: Array[Double], actual: Array[Double], delta: Double): Unit =
-        |    assert(expected.length == actual.length &&
+        |    check(expected.length == actual.length &&
         |             expected.indices.forall(i => math.abs(expected(i) - actual(i)) <= delta),
-        |           "arrays differ")
+        |          "arrays differ")
         |  def assertArrayEquals(expected: Array[Float], actual: Array[Float], delta: Float): Unit =
-        |    assert(expected.length == actual.length &&
+        |    check(expected.length == actual.length &&
         |             expected.indices.forall(i => math.abs(expected(i) - actual(i)) <= delta),
-        |           "arrays differ")
+        |          "arrays differ")
         |""".stripMargin,
   )

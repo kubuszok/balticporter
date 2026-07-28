@@ -14,48 +14,48 @@ class AnimationDescTest extends balticporter.runtime.PortedSuite {
     this.anim.time = 0.0f
   }
   testCase("testUpdateNominal", {
-    assertEquals(-1, this.anim.update(0.75f), AnimationDescTest.epsilon)
-    assertEquals(0.5f, this.anim.update(0.75f), AnimationDescTest.epsilon)
-    assertEquals(0.75f, this.anim.update(0.75f), AnimationDescTest.epsilon)
+    balticporter.runtime.Asserts.assertEquals(-1, this.anim.update(0.75f), AnimationDescTest.epsilon)
+    balticporter.runtime.Asserts.assertEquals(0.5f, this.anim.update(0.75f), AnimationDescTest.epsilon)
+    balticporter.runtime.Asserts.assertEquals(0.75f, this.anim.update(0.75f), AnimationDescTest.epsilon)
   })
   testCase("testUpdateJustEnd", {
-    assertEquals(-1, this.anim.update(0.5f), AnimationDescTest.epsilon)
-    assertEquals(0, this.anim.update(0.5f), AnimationDescTest.epsilon)
-    assertEquals(0.5f, this.anim.update(0.5f), AnimationDescTest.epsilon)
+    balticporter.runtime.Asserts.assertEquals(-1, this.anim.update(0.5f), AnimationDescTest.epsilon)
+    balticporter.runtime.Asserts.assertEquals(0, this.anim.update(0.5f), AnimationDescTest.epsilon)
+    balticporter.runtime.Asserts.assertEquals(0.5f, this.anim.update(0.5f), AnimationDescTest.epsilon)
   })
   testCase("testUpdateBigDelta", {
-    assertEquals(4.2f, this.anim.update(5.2f), AnimationDescTest.epsilon)
-    assertEquals(7.3f, this.anim.update(7.3f), AnimationDescTest.epsilon)
+    balticporter.runtime.Asserts.assertEquals(4.2f, this.anim.update(5.2f), AnimationDescTest.epsilon)
+    balticporter.runtime.Asserts.assertEquals(7.3f, this.anim.update(7.3f), AnimationDescTest.epsilon)
   })
   testCase("testUpdateZeroDelta", {
-    assertEquals(-1, this.anim.update(0.0f), AnimationDescTest.epsilon)
-    assertEquals(0.0f, this.anim.time, AnimationDescTest.epsilon)
+    balticporter.runtime.Asserts.assertEquals(-1, this.anim.update(0.0f), AnimationDescTest.epsilon)
+    balticporter.runtime.Asserts.assertEquals(0.0f, this.anim.time, AnimationDescTest.epsilon)
   })
   testCase("testUpdateReverseNominal", {
     this.anim.speed = -1
     this.anim.time = this.anim.duration
-    assertEquals(-1, this.anim.update(0.75f), AnimationDescTest.epsilon)
-    assertEquals(0.5f, this.anim.update(0.75f), AnimationDescTest.epsilon)
-    assertEquals(0.75f, this.anim.update(0.75f), AnimationDescTest.epsilon)
+    balticporter.runtime.Asserts.assertEquals(-1, this.anim.update(0.75f), AnimationDescTest.epsilon)
+    balticporter.runtime.Asserts.assertEquals(0.5f, this.anim.update(0.75f), AnimationDescTest.epsilon)
+    balticporter.runtime.Asserts.assertEquals(0.75f, this.anim.update(0.75f), AnimationDescTest.epsilon)
   })
   testCase("testUpdateReverseJustEnd", {
     this.anim.speed = -1
     this.anim.time = this.anim.duration
-    assertEquals(-1, this.anim.update(0.5f), AnimationDescTest.epsilon)
-    assertEquals(0, this.anim.update(0.5f), AnimationDescTest.epsilon)
-    assertEquals(0.5f, this.anim.update(0.5f), AnimationDescTest.epsilon)
+    balticporter.runtime.Asserts.assertEquals(-1, this.anim.update(0.5f), AnimationDescTest.epsilon)
+    balticporter.runtime.Asserts.assertEquals(0, this.anim.update(0.5f), AnimationDescTest.epsilon)
+    balticporter.runtime.Asserts.assertEquals(0.5f, this.anim.update(0.5f), AnimationDescTest.epsilon)
   })
   testCase("testUpdateReverseBigDelta", {
     this.anim.speed = -1
     this.anim.time = this.anim.duration
-    assertEquals(4.2f, this.anim.update(5.2f), AnimationDescTest.epsilon)
-    assertEquals(7.3f, this.anim.update(7.3f), AnimationDescTest.epsilon)
+    balticporter.runtime.Asserts.assertEquals(4.2f, this.anim.update(5.2f), AnimationDescTest.epsilon)
+    balticporter.runtime.Asserts.assertEquals(7.3f, this.anim.update(7.3f), AnimationDescTest.epsilon)
   })
   testCase("testUpdateReverseZeroDelta", {
     this.anim.speed = -1
     this.anim.time = this.anim.duration
-    assertEquals(-1, this.anim.update(0.0f), AnimationDescTest.epsilon)
-    assertEquals(this.anim.duration, this.anim.time, AnimationDescTest.epsilon)
+    balticporter.runtime.Asserts.assertEquals(-1, this.anim.update(0.0f), AnimationDescTest.epsilon)
+    balticporter.runtime.Asserts.assertEquals(this.anim.duration, this.anim.time, AnimationDescTest.epsilon)
   })
 }
 object AnimationDescTest {

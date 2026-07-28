@@ -22,9 +22,9 @@ class MixedPutRemoveTest extends balticporter.runtime.PortedSuite {
       if (jdkMap.put(item.asInstanceOf[java.lang.Long], i.asInstanceOf[java.lang.Integer]).getOrElse(null.asInstanceOf[java.lang.Integer]) != null) {
         jdkRepeats = jdkRepeats + 1
       } else ()
-      assertEquals(gdxMap.size, jdkMap.size)
+      balticporter.runtime.Asserts.assertEquals(gdxMap.size, jdkMap.size)
     }; i = i + 1 } }
-    assertEquals(gdxRepeats, jdkRepeats)
+    balticporter.runtime.Asserts.assertEquals(gdxRepeats, jdkRepeats)
   })
   testCase("testLongMapMix", {
     val gdxMap: com.badlogic.gdx.utils.LongMap[java.lang.Integer] = new com.badlogic.gdx.utils.LongMap[java.lang.Integer]()
@@ -51,9 +51,9 @@ class MixedPutRemoveTest extends balticporter.runtime.PortedSuite {
       } else {
         jdkRemovals = jdkRemovals + 1
       }
-      assertEquals(gdxMap.size, jdkMap.size)
+      balticporter.runtime.Asserts.assertEquals(gdxMap.size, jdkMap.size)
     }; i = i + 1 } }
-    assertEquals(gdxRemovals, jdkRemovals)
+    balticporter.runtime.Asserts.assertEquals(gdxRemovals, jdkRemovals)
   })
   testCase("testLongMapIterator", {
     val gdxMap: com.badlogic.gdx.utils.LongMap[java.lang.Long] = new com.badlogic.gdx.utils.LongMap[java.lang.Long]()
@@ -91,10 +91,10 @@ class MixedPutRemoveTest extends balticporter.runtime.PortedSuite {
           } else ()
         }; j = j + 1 } }
       } else ()
-      assertEquals(gdxMap.size, actualSize)
+      balticporter.runtime.Asserts.assertEquals(gdxMap.size, actualSize)
     }; i = i + 1 } }
     for (ent <- gdxMap) {
-      assertEquals(ent.key, ent.value.longValue())
+      balticporter.runtime.Asserts.assertEquals(ent.key, ent.value.longValue())
     }
   })
   testCase("testIntMapPut", {
@@ -119,9 +119,9 @@ class MixedPutRemoveTest extends balticporter.runtime.PortedSuite {
       if (jdkMap.put(item.asInstanceOf[java.lang.Integer], i.asInstanceOf[java.lang.Integer]).getOrElse(null.asInstanceOf[java.lang.Integer]) != null) {
         jdkRepeats = jdkRepeats + 1
       } else ()
-      assertEquals(gdxMap.size, jdkMap.size)
+      balticporter.runtime.Asserts.assertEquals(gdxMap.size, jdkMap.size)
     }; i = i + 1 } }
-    assertEquals(gdxRepeats, jdkRepeats)
+    balticporter.runtime.Asserts.assertEquals(gdxRepeats, jdkRepeats)
   })
   testCase("testIntMapMix", {
     val gdxMap: com.badlogic.gdx.utils.IntMap[java.lang.Integer] = new com.badlogic.gdx.utils.IntMap[java.lang.Integer]()
@@ -149,9 +149,9 @@ class MixedPutRemoveTest extends balticporter.runtime.PortedSuite {
       } else {
         jdkRemovals = jdkRemovals + 1
       }
-      assertEquals(gdxMap.size, jdkMap.size)
+      balticporter.runtime.Asserts.assertEquals(gdxMap.size, jdkMap.size)
     }; i = i + 1 } }
-    assertEquals(gdxRemovals, jdkRemovals)
+    balticporter.runtime.Asserts.assertEquals(gdxRemovals, jdkRemovals)
   })
   testCase("testIntMapIterator", {
     val gdxMap: com.badlogic.gdx.utils.IntMap[java.lang.Integer] = new com.badlogic.gdx.utils.IntMap[java.lang.Integer]()
@@ -190,10 +190,10 @@ class MixedPutRemoveTest extends balticporter.runtime.PortedSuite {
           } else ()
         }; j = j + 1 } }
       } else ()
-      assertEquals(gdxMap.size, actualSize)
+      balticporter.runtime.Asserts.assertEquals(gdxMap.size, actualSize)
     }; i = i + 1 } }
     for (ent <- gdxMap) {
-      assertEquals(ent.key, ent.value.intValue())
+      balticporter.runtime.Asserts.assertEquals(ent.key, ent.value.intValue())
     }
   })
   testCase("testObjectMapPut", {
@@ -218,9 +218,9 @@ class MixedPutRemoveTest extends balticporter.runtime.PortedSuite {
       if (jdkMap.put(item.asInstanceOf[java.lang.Integer], i.asInstanceOf[java.lang.Integer]).getOrElse(null.asInstanceOf[java.lang.Integer]) != null) {
         jdkRepeats = jdkRepeats + 1
       } else ()
-      assertEquals(gdxMap.size, jdkMap.size)
+      balticporter.runtime.Asserts.assertEquals(gdxMap.size, jdkMap.size)
     }; i = i + 1 } }
-    assertEquals(gdxRepeats, jdkRepeats)
+    balticporter.runtime.Asserts.assertEquals(gdxRepeats, jdkRepeats)
   })
   testCase("testObjectMapMix", {
     val gdxMap: com.badlogic.gdx.utils.ObjectMap[java.lang.Integer, java.lang.Integer] = new com.badlogic.gdx.utils.ObjectMap[java.lang.Integer, java.lang.Integer]()
@@ -248,8 +248,8 @@ class MixedPutRemoveTest extends balticporter.runtime.PortedSuite {
       } else {
         jdkRemovals = jdkRemovals + 1
       }
-      assertEquals(gdxMap.size, jdkMap.size)
+      balticporter.runtime.Asserts.assertEquals(gdxMap.size, jdkMap.size)
     }; i = i + 1 } }
-    assertEquals(gdxRemovals, jdkRemovals)
+    balticporter.runtime.Asserts.assertEquals(gdxRemovals, jdkRemovals)
   })
 }

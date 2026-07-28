@@ -7,24 +7,24 @@ class AnimationControllerTest extends balticporter.runtime.PortedSuite {
     keyFrames.add(new com.badlogic.gdx.graphics.g3d.model.NodeKeyframe[java.lang.String](3.0f, "2nd"))
     keyFrames.add(new com.badlogic.gdx.graphics.g3d.model.NodeKeyframe[java.lang.String](12.0f, "3rd"))
     keyFrames.add(new com.badlogic.gdx.graphics.g3d.model.NodeKeyframe[java.lang.String](13.0f, "4th"))
-    assertEquals(0, com.badlogic.gdx.graphics.g3d.utils.BaseAnimationController.getFirstKeyframeIndexAtTime(keyFrames, -1.0f))
-    assertEquals(0, com.badlogic.gdx.graphics.g3d.utils.BaseAnimationController.getFirstKeyframeIndexAtTime(keyFrames, 0.0f))
-    assertEquals(0, com.badlogic.gdx.graphics.g3d.utils.BaseAnimationController.getFirstKeyframeIndexAtTime(keyFrames, 2.0f))
-    assertEquals(1, com.badlogic.gdx.graphics.g3d.utils.BaseAnimationController.getFirstKeyframeIndexAtTime(keyFrames, 9.0f))
-    assertEquals(2, com.badlogic.gdx.graphics.g3d.utils.BaseAnimationController.getFirstKeyframeIndexAtTime(keyFrames, 12.5f))
-    assertEquals(2, com.badlogic.gdx.graphics.g3d.utils.BaseAnimationController.getFirstKeyframeIndexAtTime(keyFrames, 13.0f))
-    assertEquals(0, com.badlogic.gdx.graphics.g3d.utils.BaseAnimationController.getFirstKeyframeIndexAtTime(keyFrames, 14.0f))
+    balticporter.runtime.Asserts.assertEquals(0, com.badlogic.gdx.graphics.g3d.utils.BaseAnimationController.getFirstKeyframeIndexAtTime(keyFrames, -1.0f))
+    balticporter.runtime.Asserts.assertEquals(0, com.badlogic.gdx.graphics.g3d.utils.BaseAnimationController.getFirstKeyframeIndexAtTime(keyFrames, 0.0f))
+    balticporter.runtime.Asserts.assertEquals(0, com.badlogic.gdx.graphics.g3d.utils.BaseAnimationController.getFirstKeyframeIndexAtTime(keyFrames, 2.0f))
+    balticporter.runtime.Asserts.assertEquals(1, com.badlogic.gdx.graphics.g3d.utils.BaseAnimationController.getFirstKeyframeIndexAtTime(keyFrames, 9.0f))
+    balticporter.runtime.Asserts.assertEquals(2, com.badlogic.gdx.graphics.g3d.utils.BaseAnimationController.getFirstKeyframeIndexAtTime(keyFrames, 12.5f))
+    balticporter.runtime.Asserts.assertEquals(2, com.badlogic.gdx.graphics.g3d.utils.BaseAnimationController.getFirstKeyframeIndexAtTime(keyFrames, 13.0f))
+    balticporter.runtime.Asserts.assertEquals(0, com.badlogic.gdx.graphics.g3d.utils.BaseAnimationController.getFirstKeyframeIndexAtTime(keyFrames, 14.0f))
   })
   testCase("testGetFirstKeyframeIndexAtTimeSingleKey", {
     val keyFrames: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.model.NodeKeyframe[java.lang.String]] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.model.NodeKeyframe[java.lang.String]]()
     keyFrames.add(new com.badlogic.gdx.graphics.g3d.model.NodeKeyframe[java.lang.String](10.0f, "1st"))
-    assertEquals(0, com.badlogic.gdx.graphics.g3d.utils.BaseAnimationController.getFirstKeyframeIndexAtTime(keyFrames, 9.0f))
-    assertEquals(0, com.badlogic.gdx.graphics.g3d.utils.BaseAnimationController.getFirstKeyframeIndexAtTime(keyFrames, 10.0f))
-    assertEquals(0, com.badlogic.gdx.graphics.g3d.utils.BaseAnimationController.getFirstKeyframeIndexAtTime(keyFrames, 11.0f))
+    balticporter.runtime.Asserts.assertEquals(0, com.badlogic.gdx.graphics.g3d.utils.BaseAnimationController.getFirstKeyframeIndexAtTime(keyFrames, 9.0f))
+    balticporter.runtime.Asserts.assertEquals(0, com.badlogic.gdx.graphics.g3d.utils.BaseAnimationController.getFirstKeyframeIndexAtTime(keyFrames, 10.0f))
+    balticporter.runtime.Asserts.assertEquals(0, com.badlogic.gdx.graphics.g3d.utils.BaseAnimationController.getFirstKeyframeIndexAtTime(keyFrames, 11.0f))
   })
   testCase("testGetFirstKeyframeIndexAtTimeEmpty", {
     val keyFrames: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.model.NodeKeyframe[java.lang.String]] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.model.NodeKeyframe[java.lang.String]]()
-    assertEquals(0, com.badlogic.gdx.graphics.g3d.utils.BaseAnimationController.getFirstKeyframeIndexAtTime(keyFrames, 3.0f))
+    balticporter.runtime.Asserts.assertEquals(0, com.badlogic.gdx.graphics.g3d.utils.BaseAnimationController.getFirstKeyframeIndexAtTime(keyFrames, 3.0f))
   })
   testCase("testEndUpActionAtDurationTime", {
     val loop: com.badlogic.gdx.graphics.g3d.model.Animation = new com.badlogic.gdx.graphics.g3d.model.Animation()
@@ -74,7 +74,7 @@ class AnimationControllerTest extends balticporter.runtime.PortedSuite {
 object AnimationControllerTest {
   private def assertSameAnimation(expected: com.badlogic.gdx.graphics.g3d.model.Animation, actual: com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationDesc): scala.Unit = {
     if (!expected.id.equals(actual.animation.id)) {
-      fail((("expected: " + expected.id) + ", actual: ") + actual.animation.id)
+      balticporter.runtime.Asserts.fail((("expected: " + expected.id) + ", actual: ") + actual.animation.id)
     } else ()
   }
 }
