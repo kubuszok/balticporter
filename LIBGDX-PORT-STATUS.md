@@ -91,6 +91,36 @@ but not its BODY — the natural reading of "its only customer is override agree
 **1 -> 20**. Bodies need it too, because a local whose value flows into the signature must carry the
 same instantiation. So the fill's scope is not decomposable into signature-vs-body either.
 
+### SGE SETTLES IT: raw generics render `[?]`, everywhere
+
+sge is the reference port and it resolved this. In `../sge/sge/src/main/scala/sge/`:
+
+```scala
+// parent — assets/loaders/AssetLoader.scala:52
+def getDependencies(fileName: String, file: FileHandle, parameter: P): DynamicArray[AssetDescriptor[?]]
+// every override — maps/tiled/TideMapLoader.scala:87, BaseTmxMapLoader, BaseTmjMapLoader, TiledMapLoader
+override def getDependencies(…): DynamicArray[AssetDescriptor[?]]
+// the field — assets/AssetLoadingTask.scala:43
+@volatile var dependencies: Nullable[DynamicArray[AssetDescriptor[?]]] = Nullable.empty
+```
+
+Parent, overrides and field are ALL `AssetDescriptor[?]`. Two consequences:
+
+1. **`?` DOES round-trip across an override.** The 110 x E164 seen when `inheritedTp` is disabled are
+   not evidence against wildcards — that experiment only disabled the CHILD half, leaving the parent
+   at `[T]` from the ordinary name-directed fill. Both halves must move together.
+2. **`[T]` is semantically wrong**, not merely different: a `BitmapFont`'s dependencies are a
+   `TextureAtlas` and a `Texture`. Java wrote the element raw because it is heterogeneous.
+
+So the target design is sge's: a raw generic renders `[?]` unless it is the enclosing class itself or
+nested in it (`Entries` inside `ObjectMap[K,V]`), and `inheritedTp` disappears entirely. That exact
+pairing was already measured — **19 errors** — versus 1 today. The correct rendering costs an
+18-error residue, which is a list of individual sites to work through, NOT a wall.
+
+sge also renamed `AsyncTask -> () => Unit` (see the header comment in AssetLoadingTask.scala), which
+is why the `T -> Void` collision never arises for them. That half is sge skipping a port rather than
+solving it, and is not a model to copy.
+
 ### Where the name coincidence actually ORIGINATES
 
 Instrumented, not assumed. With `inheritedTp` disabled the PARENT still renders
