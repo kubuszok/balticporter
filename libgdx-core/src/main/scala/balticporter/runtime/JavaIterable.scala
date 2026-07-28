@@ -8,3 +8,15 @@ package balticporter.runtime
   */
 trait JavaIterable[A] extends scala.collection.Iterable[A]:
   def iterator: JavaIterator[A]
+
+object JavaIterable:
+  /** Adapt a plain scala collection to the java-shaped one. Inserted by the engine at call
+    * sites where a shim-typed parameter meets a collection the port ITSELF mapped to scala
+    * (`CharArray.appendAll(list)`). `remove()` stays at [[JavaIterator]]'s default —
+    * `UnsupportedOperationException` — because a scala iterator genuinely cannot remove,
+    * which is what java reports for a non-removable iterator too. */
+  def from[A](xs: scala.collection.Iterable[A]): JavaIterable[A] = new JavaIterable[A]:
+    def iterator: JavaIterator[A] = new JavaIterator[A]:
+      private val underlying = xs.iterator
+      def hasNext: Boolean = underlying.hasNext
+      def next(): A = underlying.next()

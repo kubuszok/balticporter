@@ -80,6 +80,8 @@ final class CollectionsTransform extends Phase:
     * `update`/`-=` silently discard. */
   private var putSym, removeSym: SymId = SymId.None
   private var key1Sym, value2Sym, roSetSym: SymId = SymId.None
+  /** `JavaIterable` + its `from` factory — see `wrapIterableArgs`. */
+  private var javaIterableSym, iterableFromSym: SymId = SymId.None
 
   override def run(program: Program): Program =
     val added = collection.mutable.ListBuffer[Symbol]()
@@ -109,6 +111,8 @@ final class CollectionsTransform extends Phase:
     key1Sym      = mint("_1", "_1") // Map.Entry#getKey   on a Tuple2
     value2Sym    = mint("_2", "_2") // Map.Entry#getValue on a Tuple2
     roSetSym     = mint("Set", "scala.collection.Set") // see `transformValDef`
+    javaIterableSym = byScala.getOrElse(JavaIterableFqn, SymId.None)
+    iterableFromSym = mint("from", JavaIterableFqn + ".from")
     putSym       = mint("put", "put")     // scala `mutable.Map.put`: returns the PREVIOUS value
     removeSym    = mint("remove", "remove") // scala `mutable.Map.remove`: returns the REMOVED value
 
@@ -147,11 +151,51 @@ final class CollectionsTransform extends Phase:
     case TypeRepr.AppliedType(tc, args) => TypeRepr.AppliedType(withHead(tc, s), args)
     case other                          => other
 
-  override def transformApply(t: Tree.Apply)(using Program): Term = t.fun match
-    case Tree.Select(recv, m, _, so) => kindAt(recv) match
-      case Some(k) => rewrite(k, recv, m, so, t).getOrElse(t)
-      case None    => t
-    case _ => t
+  override def transformApply(t: Tree.Apply)(using Program): Term =
+    val t2 = wrapIterableArgs(t)
+    t2.fun match
+      case Tree.Select(recv, m, _, so) => kindAt(recv) match
+        case Some(k) => rewrite(k, recv, m, so, t2).getOrElse(t2)
+        case None    => t2
+      case _ => t2
+
+  /** Bridge a scala collection into a shim-typed parameter, AT THE CALL SITE.
+    *
+    * `java.util.List` becomes a `Buffer` and `java.lang.Iterable` becomes [[JavaIterable]]; each
+    * mapping is right on its own, and together they leave the port unable to pass its own
+    * collections to its own methods — `CharArray.appendAll(list)`, which java accepted because
+    * there `List` IS an `Iterable`.
+    *
+    * Both obvious repairs are measured dead ends (LIBGDX-PORT-STATUS.md): a `given Conversion`
+    * never fires, because scala does not look for one when no OVERLOAD alternative matches; and
+    * widening the parameter to `scala.collection.Iterable` breaks the bodies that iterate-and-
+    * REMOVE through it. Wrapping the ARGUMENT has neither problem — the type is exact before
+    * overload resolution runs, and the parameter keeps the capability it declares.
+    *
+    * The wrapper's `remove()` inherits [[JavaIterator]]'s `UnsupportedOperationException`, which is
+    * the truth: a scala collection's iterator cannot remove through it. Nothing is lost silently. */
+  private def wrapIterableArgs(t: Tree.Apply)(using p: Program): Tree.Apply =
+    if javaIterableSym == SymId.None then t
+    else
+      val formals = p.symbolOf(t.method).map(_.info).collect {
+        case TypeRepr.MethodType(ps, _, _)                       => ps.map(_._2)
+        case TypeRepr.PolyType(_, TypeRepr.MethodType(ps, _, _)) => ps.map(_._2)
+      }.getOrElse(Nil)
+      if formals.sizeIs != t.args.size then t
+      else
+        // the symbol table is retyped AFTER the trees (see `run`), so a formal read here is still
+        // the ORIGINAL java symbol — `java.lang.Iterable`, not the shim. Compare through `remap`,
+        // which makes this correct on either side of that pass.
+        def scalaSym(x: SymId): SymId = remap.getOrElse(x, x)
+        val as = t.args.zip(formals).map { (a, f) =>
+          val wants = headSym(f).map(scalaSym).contains(javaIterableSym)
+          val argS  = headSym(a.tpe).map(scalaSym)
+          if wants && argS.exists(kindOf.contains) && !argS.contains(javaIterableSym)
+          then Tree.Apply(Tree.Ident(iterableFromSym, TypeRepr.NoType, a.origin), List(a),
+                          iterableFromSym, f, a.origin)
+          else a
+        }
+        if as == t.args then t else t.copy(args = as)
 
   /** kind-aware call rewrite; `None` = leave the call as-is (same-named method binds to
     * the scala API against the retyped receiver at compile time). */
@@ -271,6 +315,18 @@ object CollectionsTransform:
         |  */
         |trait JavaIterable[A] extends scala.collection.Iterable[A]:
         |  def iterator: JavaIterator[A]
+        |
+        |object JavaIterable:
+        |  /** Adapt a plain scala collection to the java-shaped one. Inserted by the engine at call
+        |    * sites where a shim-typed parameter meets a collection the port ITSELF mapped to scala
+        |    * (`CharArray.appendAll(list)`). `remove()` stays at [[JavaIterator]]'s default —
+        |    * `UnsupportedOperationException` — because a scala iterator genuinely cannot remove,
+        |    * which is what java reports for a non-removable iterator too. */
+        |  def from[A](xs: scala.collection.Iterable[A]): JavaIterable[A] = new JavaIterable[A]:
+        |    def iterator: JavaIterator[A] = new JavaIterator[A]:
+        |      private val underlying = xs.iterator
+        |      def hasNext: Boolean = underlying.hasNext
+        |      def next(): A = underlying.next()
         |""".stripMargin,
     JavaIteratorFqn ->
       """package balticporter.runtime
