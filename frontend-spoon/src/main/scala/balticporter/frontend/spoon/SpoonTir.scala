@@ -1768,7 +1768,12 @@ object SpoonTir:
               if f == null || !mentionsTypeVarFilled(f, names) then t
               else
                 val et = erasedFormal(f, subst)
-                Tree.Typed(t, tt(et, argEs(i)), et, t.origin)
+                // a BARE `?` is not a type one can cast to (`asInstanceOf[?]` is a syntax error).
+                // It arises when the formal is exactly an F-bounded variable, whose erasure is now
+                // the wildcard — and there the cast has nothing to say anyway: the receiver was
+                // already erased to `Node[?, …]`, so the argument's own type is what must match it.
+                if et.isInstanceOf[TypeBounds] then t
+                else Tree.Typed(t, tt(et, argEs(i)), et, t.origin)
             }
           case _ => args
 
