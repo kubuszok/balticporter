@@ -49,7 +49,31 @@ FAIL TO COMPILE after conversion. Loud, not silent, which is the outcome to want
 Per CLAUDE.md §1 this is **(a) universal** — every java library ported to cross-platform scala needs
 it — so it belongs in the engine with the target framework parameterised, not in libgdx policy.
 
-### The cheap shape: a JUnit-compatible FAÇADE over MUnit, not 872 rewrites
+### `PortedSuite` IS A SCAFFOLD — it must not survive
+
+A base class whose every member is `assertEquals(a, b) => assert(a == b)` or
+`testCase(n, b) => test(n)(b)` contributes NOTHING over what it wraps: it only reorders arguments
+and un-curries. Shipping it means every new porting effort copy-pastes shared glue, which is a
+failure of a re-compiler — that transformation is the engine's job, not the output's.
+
+It exists only because the TIR has no node for a CURRIED APPLICATION, so `test(name)(body)` could
+not be emitted and an un-curried forwarder was used instead. The assertion members rode along on the
+same file.
+
+**End state:** teach `Tree.Apply` multiple argument lists (or add a curried-apply node), then
+
+- emit `test("name") { … }` directly; suites extend `munit.FunSuite` itself, with no class of ours;
+- have the TRANSFORM swap `Assert.assertEquals(expected, actual)` into MUnit's
+  `(obtained, expected)` order — mechanical, and exactly what the engine is for;
+- resolve MUnit's `B <:< A` constraint in the transform, which knows both operand types.
+
+Distinguish this from `JavaIterator`/`JavaIterable`: those add real semantics scala lacks (a
+removal-capable iterator), so they are a genuine RUNTIME. They should be a PUBLISHED
+`balticporter-runtime` artifact the ported project depends on — not injected source either. The rule
+is the same in both cases: **injected sources are for semantics the target language lacks, never for
+adapting shapes the engine could emit correctly in the first place.**
+
+### The interim shape: a JUnit-compatible FAÇADE over MUnit
 
 Rewriting every assertion is the expensive route AND the risky one: MUnit's `assertEquals` is
 type-constrained (`B <:< A`) and takes `(obtained, expected)`, so 558 call sites would each need an
