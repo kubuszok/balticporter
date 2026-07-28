@@ -619,9 +619,21 @@ instantiation from Spoon, and the receiver's Spoon type is raw. Our RENDERED typ
 Spoon type is not, and the function only sees the latter. Adding a raw-argument disjunct alone is a
 NO-OP for this reason (measured 6 -> 6, the same six sites).
 
-**Next step: give `knownReceiverArgs` the RENDERED receiver type.** The translated receiver Term is
-built later in `invocation`, which is exactly why it was never available there. This is the same
-"the TIR must carry what the emitted scala has" root cause named throughout this document.
+~~**Next step: give `knownReceiverArgs` the RENDERED receiver type.**~~ **WRONG — disproved by
+instrumentation.** Built it (a `Minter.infoOf` accessor feeding a `renderedArgs` fallback) and
+printed the gate's inputs at the failing site. `deps`'s Spoon type is
+`Array<AssetDescriptor>` — **one actual, not raw** — so `known` was ALREADY true and nothing was
+ever blocked there. Reverted; the change is inert (6 -> 6, same six sites).
+
+The block is further down, in the PER-ARGUMENT gate, and the remaining unknown is narrow: with
+`subst = {T -> AssetDescriptor[ParticleEffect]}` and an argument of type
+`AssetDescriptor[TextureAtlas]`, either `substFormal` returns `None` or the formal fails
+`mentionsTypeVarBounded` — most likely because `add` is OVERLOADED and
+`getExecutableDeclaration` resolves to a different alternative than the one javac chose. One print
+inside that branch settles it.
+
+Recorded because the wrong diagnosis was committed first and looked plausible: the receiver being
+"raw in Spoon" was an assumption, never measured.
 
 ### The remaining 6
 
