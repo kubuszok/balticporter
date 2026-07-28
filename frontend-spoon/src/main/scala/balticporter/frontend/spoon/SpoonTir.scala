@@ -1726,7 +1726,19 @@ object SpoonTir:
             // (`((AsynchronousAssetLoader) loader).unloadAsync(…)`) — Spoon keeps it beside the
             // expression, whose own type is still the field's, so the outermost cast wins.
             val rt = try t.getTypeCasts.asScala.lastOption.getOrElse(t.getType) catch { case _: Throwable => null }
-            if rt == null || rt.isPrimitive || rt.isInstanceOf[CtArrayTypeReference[?]]
+            // A FIELD read reports the reference's erased view, not the declaration's: `node.parent`
+            // of `public N parent` types as the RAW `Node` under noClasspath, which reads as "the
+            // arguments are unknown" and triggers an erasure the code never needed — Java's own type
+            // for it is simply `N`. The declaration is the honest source, exactly as it is for the
+            // raw fill (`atDeclScope`), so consult it and decline when it names a type variable.
+            val declaredVar = t match
+              case fa: CtFieldAccess[?] =>
+                try Option(fa.getVariable.getFieldDeclaration).map(_.getType)
+                      .exists(_.isInstanceOf[CtTypeParameterReference])
+                catch { case _: Throwable => false }
+              case _ => false
+            if declaredVar then None
+            else if rt == null || rt.isPrimitive || rt.isInstanceOf[CtArrayTypeReference[?]]
                || rt.isInstanceOf[CtTypeParameterReference] || rt.isInstanceOf[CtWildcardReference] then None
             else
               val formals = try Option(rt.getTypeDeclaration).map(_.getFormalCtTypeParameters.asScala.toList).getOrElse(Nil)

@@ -118,7 +118,7 @@ class Tree[N <: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[N, V, ?], V <: java
   def insert(index$arg: scala.Int, node: N): scala.Unit = {
     var index: scala.Int = index$arg
     if (node.parent != null) {
-      node.parent.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[?, java.lang.Object, com.badlogic.gdx.scenes.scene2d.Actor]].remove(node)
+      node.parent.remove(node)
       node.parent = null.asInstanceOf[N]
     } else {
       val existingIndex: scala.Int = this.rootNodes.indexOf(node, true)
@@ -152,7 +152,7 @@ class Tree[N <: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[N, V, ?], V <: java
   }
   def remove(node: N): scala.Unit = {
     if (node.parent != null) {
-      node.parent.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[?, java.lang.Object, com.badlogic.gdx.scenes.scene2d.Actor]].remove(node)
+      node.parent.remove(node)
       return
     } else ()
     if (!this.rootNodes.removeValue(node, true)) {
