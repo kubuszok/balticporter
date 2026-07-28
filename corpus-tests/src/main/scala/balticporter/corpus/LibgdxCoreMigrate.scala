@@ -53,6 +53,19 @@ object LibgdxCoreMigrate:
         "com.badlogic.gdx.utils.reflect.Constructor",
         "com.badlogic.gdx.utils.reflect.Method",
         "com.badlogic.gdx.utils.reflect.ReflectionException",
+        // `NetJavaImpl` implements `Net`'s HTTP half over `java.net.HttpURLConnection` — a type
+        // Scala.js and Scala Native do not have, so NO member of it survives to either target and
+        // there is nothing to port mechanically. It is a BACKEND helper: nothing in `gdx/src`
+        // references it (the desktop/android backends do), so like `ReflectionPool` it is dropped
+        // with no replacement and CHECK 2 proves the references are gone. The portable `Net`
+        // interface, `HttpRequestBuilder`, `HttpStatus` and `HttpParametersUtils` all stay.
+        //
+        // NB — dropping it CONCEALS a real engine gap, recorded in LIBGDX-PORT-STATUS.md: the one
+        // compile error it produced was `CollectionsTransform` rewriting OUR signature to
+        // `mutable.Map[String, Buffer[String]]` while the body returned an unported JDK method's
+        // real `java.util.Map`. That JDK/Scala collection boundary is universal and still open;
+        // this drop is justified by portability alone and must not be read as closing it.
+        "com.badlogic.gdx.net.NetJavaImpl",
       ),
       // libGDX itself deprecated `setEnabledReflection` (superseded by the typed
       // `setEnabled(Styleable, Boolean)`, already ported); its private `findMethod` helper was the

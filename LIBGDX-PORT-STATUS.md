@@ -431,6 +431,23 @@ Per-library adjustments (sge replaced these rather than porting them). Declared 
 | `utils.Pools` / `ReflectionPool` | injected factory-based `Pools`; `ReflectionPool` dropped (upstream deprecated it for `DefaultPool`) |
 | `SharedLibraryLoader` / `Os` | injected shims (removed upstream in sge) |
 | `ResourceData` class-by-name | `AssetTypeRegistry` name→class table via `ClassTableTransform` |
+| `net.NetJavaImpl` | **eliminated**; `java.net.HttpURLConnection` exists on neither Scala.js nor Native, and no member of it survives to either target. Backend-only: nothing in `gdx/src` references it. `Net`, `HttpRequestBuilder`, `HttpStatus`, `HttpParametersUtils` all stay. |
+
+### ENGINE GAP CONCEALED BY THE `NetJavaImpl` DROP — still open
+
+The drop is justified by portability alone, and must not be read as closing the defect it removed
+from the error count. `NetJavaImpl.getHeaderFields` failed because:
+
+- `CollectionsTransform` rewrote **our** signature to `mutable.Map[String, Buffer[String]]`;
+- the body was `return connection.getHeaderFields()`, a call into an **unported JDK class**, whose
+  real `java.util.Map[String, java.util.List[String]]` we cannot retype — scalac reads the true JDK
+  signature at the emitted call, not our TIR's opinion of it.
+
+**This boundary is universal**, not a libGDX fact: every library that rewrites its own collection
+types while still calling the JDK hits it. It stays open because the obvious fix is not obviously
+right — `.asScala` on a nested collection COPIES, turning a live view into a detached snapshot, and
+under Spoon's `noClasspath` a JDK shadow may carry no return type at all to convert from. It wants
+the "approximation we must not emit" marker rather than a silent conversion.
 
 **Open behavioural caveat:** JSON *decoding* raises `UnsupportedOperationException` naming the swap
 point. Chosen over returning null/empty, which would corrupt data silently. 49 of 50 decode sites
