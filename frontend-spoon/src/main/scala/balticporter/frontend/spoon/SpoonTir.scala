@@ -265,6 +265,13 @@ object SpoonTir:
       * generic formal (`void save(AssetManager, ResourceData)` inside `ParticleBatch<T>`) is emitted
       * name-FILLED as `ResourceData[T]` — so it too must resolve through `subst`, or the cast we
       * build would not be the type the declaration actually asks for. */
+    /** replace every occurrence of one rendered type by another. */
+    private def substRepr(t: TypeRepr, from: TypeRepr, to: TypeRepr): TypeRepr =
+      if t == from then to
+      else t match
+        case AppliedType(tc, as) => AppliedType(substRepr(tc, from, to), as.map(substRepr(_, from, to)))
+        case other               => other
+
     private def erasedFormal(f: CtTypeReference[?], subst: Map[String, TypeRepr] = Map.empty): TypeRepr = f match
       case tv: CtTypeParameterReference =>
         subst.getOrElse(tv.getSimpleName, {
@@ -2002,14 +2009,87 @@ object SpoonTir:
                    catch { case _: Throwable => None }
           ps match
             case Some(l) if l.sizeIs == args.size && argEs.sizeIs == args.size =>
+              val specialised = rawCtorSpecialisation(cc, l, argEs, args)
               args.zipWithIndex.map { (t, i) =>
                 val f = l(i)
-                if f == null || !isGenericUse(f) || !mentionsAnyTypeVar(f) || !tpAccessibleHere(f) then t
+                if f == null || !isGenericUse(f) || !mentionsAnyTypeVar(f) || !tpAccessibleHere(f) then
+                  specialised.get(i).fold(t)(ct => Tree.Typed(t, tt(ct, argEs(i)), ct, t.origin))
                 else
                   val ct = tpe(f)
                   if ct == t.tpe || hasWildcard(ct) then t else Tree.Typed(t, tt(ct, argEs(i)), ct, t.origin)
               }
             case _ => args
+
+      /** SPECIALISE the erased arguments of a raw constructor call, rather than erasing the precise
+        * ones.
+        *
+        * `new AssetDescriptor(data.filename, data.type, parameter)` inside a scope with no `T`:
+        * argument 2 is read through an erased receiver, so it arrives as `Class[Object]` and pins
+        * `T = Object`; argument 3 is a `ParticleEffectParameter`, so Scala rejects the call. Java
+        * checked none of it — the constructor is raw — but SOME instantiation has to be chosen, and
+        * the one Java means is recoverable: argument 3's own supertype chain reaches
+        * `AssetLoaderParameters<ParticleEffect>`, giving `T = ParticleEffect`.
+        *
+        * Casting the other way (the precise argument DOWN to `AssetLoaderParameters[Object]`) was
+        * tried under three separate gates and measured 23, 5 and 43 errors — see
+        * LIBGDX-PORT-STATUS.md. It destroys the only information at the call site that says what the
+        * instantiation is. This direction keeps it: the ERASED argument is cast UP to the binding
+        * the precise one implies, which is exactly the unchecked conversion javac performed.
+        *
+        * Deliberately narrow: one class type parameter, a binding found in exactly one place, and
+        * only arguments currently sitting AT the erasure are touched. Returns index -> cast target.
+        */
+      private def rawCtorSpecialisation(
+          cc: CtConstructorCall[?], l: List[CtTypeReference[?]], argEs: List[CtExpression[?]], args: List[Term],
+      ): Map[Int, TypeRepr] =
+        val clsFormals = try Option(cc.getType.getTypeDeclaration)
+                               .map(_.getFormalCtTypeParameters.asScala.toList).getOrElse(Nil)
+                         catch { case _: Throwable => Nil }
+        if clsFormals.sizeIs != 1 then Map.empty
+        else
+          val v = clsFormals.head.getSimpleName
+          val erased = erasureOfFormal(clsFormals.head, Set.empty, 2)
+          // where does the class variable sit inside a formal, and what does the ACTUAL argument
+          // bind it to? Only `G<...V...>` shapes; the argument's own supertype chain supplies it.
+          def bindingFrom(f: CtTypeReference[?], e: CtExpression[?]): Option[CtTypeReference[?]] =
+            val idx = f.getActualTypeArguments.asScala.toList.indexWhere {
+              case tv: CtTypeParameterReference => tv.getSimpleName == v
+              case _                            => false
+            }
+            if idx < 0 then None
+            else
+              val head = f.getQualifiedName
+              def walk(t: CtTypeReference[?], depth: Int): Option[CtTypeReference[?]] =
+                if t == null || depth <= 0 then None
+                else if t.getQualifiedName == head then
+                  t.getActualTypeArguments.asScala.toList.lift(idx)
+                    .filterNot(a => a == null || a.isInstanceOf[CtWildcardReference] ||
+                                    a.isInstanceOf[CtTypeParameterReference])
+                else
+                  val ups = Option(t.getSuperclass).toList ++ t.getSuperInterfaces.asScala.toList
+                  ups.iterator.flatMap(u => walk(u, depth - 1)).nextOption()
+              try walk(e.getType, 6) catch { case _: Throwable => None }
+
+          val bindings = l.zipWithIndex.flatMap { (f, i) =>
+            if f == null then Nil else bindingFrom(f, argEs(i)).map(b => tpe(b)).toList
+          }.distinct
+          bindings match
+            case List(b) if b != erased =>
+              // only rewrite the arguments that are AT the erasure — those are the ones whose own
+              // rendering lost the instantiation and would otherwise pin `T` to `Object`.
+              l.zipWithIndex.flatMap { (f, i) =>
+                if f == null || !mentionsTypeVarFilled(f, Set(v)) then Nil
+                else
+                  val at = erasedFormal(f, Map(v -> erased))
+                  if at != args(i).tpe then Nil
+                  // `erasedFormal` resolves `subst` only for a BARE type variable; inside
+                  // `Class<T>` it erases the nested `T` regardless, so it hands back the same
+                  // `Class[Object]` we are trying to move away from. Substitute on the RENDERED
+                  // type instead — sound precisely because this arm already established that the
+                  // argument sits AT the erasure, so every `Object` in it stands for `v`.
+                  else List(i -> substRepr(at, erased, b))
+              }.toMap
+            case _ => Map.empty
 
       /** An APPLIED generic constructor call whose argument Java unchecked-converted.
         *

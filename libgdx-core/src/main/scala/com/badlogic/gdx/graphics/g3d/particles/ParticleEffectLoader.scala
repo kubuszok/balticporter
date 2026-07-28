@@ -24,7 +24,7 @@ class ParticleEffectLoader(resolver$p: com.badlogic.gdx.assets.loaders.FileHandl
         assetData.filename = file.parent().child(com.badlogic.gdx.Gdx.files.internal(assetData.filename).name()).path()
       } else ()
       if (assetData.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ResourceData.AssetData[java.lang.Object]].`type` == classOf[com.badlogic.gdx.graphics.g3d.particles.ParticleEffect]) {
-        descriptors.add(new com.badlogic.gdx.assets.AssetDescriptor(assetData.filename, assetData.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ResourceData.AssetData[java.lang.Object]].`type`, parameter))
+        descriptors.add(new com.badlogic.gdx.assets.AssetDescriptor(assetData.filename, assetData.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ResourceData.AssetData[java.lang.Object]].`type`.asInstanceOf[java.lang.Class[com.badlogic.gdx.graphics.g3d.particles.ParticleEffect]], parameter))
       } else {
         descriptors.add(new com.badlogic.gdx.assets.AssetDescriptor(assetData.filename, assetData.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ResourceData.AssetData[java.lang.Object]].`type`))
       }
