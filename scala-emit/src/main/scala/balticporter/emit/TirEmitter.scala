@@ -179,7 +179,13 @@ final class TirEmitter(source: Program):
       if !sx.fullName.contains('$') then Some(sx.fullName)
       else if sx.owner == SymId.None || program.symbolOf(sx.owner).isEmpty then None
       else go(sx.owner).map(p => p + (if sx.flags.isStatic then "." else "#") + esc(sx.name))
-    go(id).getOrElse(sym(id).fullName.replace('$', '#'))
+    // The fallback fires exactly when an owner is UNKNOWN, which for a type we do not define means
+    // an external/JDK one. Name those with `.`: a Java nested type is reached as `Outer.Inner` in
+    // Scala, and a `#` projection is not even available — it needs the prefix to be an immutable
+    // path, which a bare external class name is not (`java.nio.channels.FileChannel#MapMode`).
+    go(id).getOrElse:
+      val sep = if program.definitionOf(id).isEmpty then '.' else '#'
+      sym(id).fullName.replace('$', sep)
 
   /** a NON-static nested class of one of our own NON-GENERIC classes (not of a companion `object`).
     * A generic enclosing class is excluded: `Octree#OctreeNode` is not a legal projection — the

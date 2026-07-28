@@ -178,7 +178,7 @@ class FileHandle {
   def map(): java.nio.ByteBuffer = {
     return this.map(java.nio.channels.FileChannel.MapMode.READ_ONLY)
   }
-  def map(mode: java.nio.channels.FileChannel#MapMode): java.nio.ByteBuffer = {
+  def map(mode: java.nio.channels.FileChannel.MapMode): java.nio.ByteBuffer = {
     if (this.type$field == com.badlogic.gdx.Files.FileType.Classpath) {
       throw new com.badlogic.gdx.utils.GdxRuntimeException("Cannot map a classpath file: " + this)
     } else ()
