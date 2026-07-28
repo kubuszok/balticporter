@@ -1014,7 +1014,14 @@ final class TirEmitter(source: Program, externalConcrete: Map[String, Set[(Strin
     case Tree.Break(_, _, _)            => "/* break */ ()"    // TODO: scala.util.boundary
     case Tree.Continue(_, _, _)         => "/* continue */ ()" // TODO: scala.util.boundary
     case Tree.Assert(c, m, _, _)        => s"assert(${term(c, i)}${m.map(x => ", " + term(x, i)).getOrElse("")})"
-    case Tree.IncDec(tgt, op, _, _, _)  => s"{ ${term(tgt, i)} $op= 1; ${term(tgt, i)} }" // yields the value
+    // Java's POST-increment yields the value BEFORE the update; the pre-form yields it after.
+    // Rendered identically, `values[tail++] = object` stored at the NEW index — every circular
+    // buffer in the corpus was off by one, `Queue.indexOf` among them, and it compiled. The
+    // temporary is what makes the post-form exact; the target is still re-evaluated for the
+    // assignment, exactly as the pre-form already did.
+    case Tree.IncDec(tgt, op, post, _, _) =>
+      if post then s"{ val ${'$'}prev = ${term(tgt, i)}; ${term(tgt, i)} $op= 1; ${'$'}prev }"
+      else s"{ ${term(tgt, i)} $op= 1; ${term(tgt, i)} }"
     case Tree.DoWhile(b, c, _, _)       => s"while ({ ${term(b, i)}; ${term(c, i)} }) ()" // Scala 3 has no do-while
     case Tree.Synchronized(l, b, _, _)  => s"${term(l, i)}.synchronized ${term(b, i)}"
     case Tree.Opaque(raw, _, _)         => raw
