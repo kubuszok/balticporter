@@ -104,7 +104,43 @@ libgdx names DO appear in engine doc comments — `GL30Interceptor` witnessing t
 general rule exists, and drive no behaviour. Re-run the sweep with
 `grep -rn --include='*.scala' -E "badlogic|libgdx" core frontend-spoon scala-emit | grep -vE ":\s*(\*|//)"`.
 
-## 0. Anonymous class bodies — FIXED
+## 0. ANNOTATIONS ARE DROPPED ENTIRELY — the fifth silent defect
+
+**Found 2026-07-28, by doing exactly what the goal's third clause demanded.** The moment `gdx/test`
+was ported, the defect was obvious:
+
+```
+@Test in Java: 221   @Test in emitted Scala: 0
+```
+
+**The TIR has no annotation model at all.** Not `Symbol`, not `Tree`, nowhere. Across 597 emitted
+main files and 29 emitted test files there is not one annotation — the only `@` in the output is
+inside a string literal.
+
+Why this is the worst one yet: a JUnit suite with no `@Test` **runs zero tests and reports
+success**. Green build, green suite, nothing executed. Every earlier silent defect at least needed
+someone to look at behaviour; this one would have *manufactured the evidence* that behaviour was
+fine. It is also self-concealing — the gate meant to catch silent omissions is itself the thing
+being silently omitted.
+
+It matters beyond tests. `@Override` is checkable intent, `@Deprecated` and `@Null`/`@NotNull` are
+API contract, `@SuppressWarnings` is deliberate, and a library that ports annotations away loses all
+of it without a word.
+
+What it needs:
+
+1. `Symbol` (and `Tree.ClassDef`/`DefDef`/`ValDef`) carry `annotations`, read from Spoon's
+   `getAnnotations`, with arguments as `Term`s — an annotation with a dropped argument is the same
+   class of defect one level down.
+2. The emitter renders them; Java's `@Test` maps to Scala's `@org.junit.Test`, per the FQN rule.
+3. `OmissionCheck` counts every annotation the frontend could not carry — **added at the same time
+   as the translation**, per `CLAUDE.md` §3. `scripts/gdx_test_measure.sh` already fails loudly on
+   the `@Test` count mismatch, so this specific case can never silently return.
+
+Until this is done, **the goal's third clause cannot be met**: the tests emit and will compile, but
+running them proves nothing.
+
+## 0.0 Anonymous class bodies — FIXED
 
 **Found and fixed 2026-07-28.** `SpoonTir.ctorCall` translated a `CtConstructorCall` and never asked
 whether the node was the `CtNewClass` SUBTYPE, so every Java anonymous class was emitted as a bare
