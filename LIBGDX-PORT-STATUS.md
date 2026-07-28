@@ -138,7 +138,31 @@ So the remaining single error is NOT the tip of a systemic wildcard problem. It 
 the name-keyed fill's collision (`AsyncTask<Void>`'s `T` reaching `AssetDescriptor<T>`) is not also
 made harmlessly-consistent on both sides of an override.
 
-### `Asserts` IS justified — but must SHIP as a dependency, not as injected source
+### CORRECTION: `Asserts` is NOT justified either — it must go the way of `PortedSuite`
+
+An earlier version of this section claimed MUnit's type constraint was a genuine semantic gap. That
+was wrong, and the breakdown of the 33 errors the direct mapping produced says so:
+
+| cause | count | shimmable by the transform? |
+|---|---|---|
+| `Can't compare these two types: Long / Int` | 26 | YES — the engine has both static types and can widen the narrower operand |
+| `Not found: assertEquals` / `fail` | 6 | YES — java `static` helpers emit into the COMPANION object, where MUnit's instance members are invisible; emit them as suite members instead |
+| pre-existing `AssetLoadingTask` | 1 | unrelated |
+
+Probed directly against MUnit 1.0.2, all of these COMPILE, so nothing else is missing:
+`assertEquals(o, s)`, `assertEquals(s, o)`, `assertEquals(o, null)`, `assertEquals(b, false)`,
+`assertNotEquals(o, null)`, `assertEquals(a.toSeq, b.toSeq)` (the `assertArrayEquals` route),
+`intercept[E]{…}`, and MUnit's own `assertEqualsDouble`/`assertEqualsFloat` for the delta forms.
+
+So the whole helper is shape adaptation, which the rule below forbids. Deleting it needs two
+transform-side, TYPE-DIRECTED changes:
+
+1. widen the narrower operand of a mixed-numeric comparison (`i` -> `i.toLong`);
+2. do not emit a test class's java `static` helpers into the companion object.
+
+Nothing then ships with the port at all.
+
+### Superseded: the argument that `Asserts` should SHIP as a dependency
 
 Mapping java's assertions directly onto MUnit's, with the argument permutation done by the transform
 (no helper at all), was implemented and measured: **1 -> 33**. The cause is not the permutation — it
