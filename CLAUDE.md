@@ -193,6 +193,25 @@ class made every `for` ambiguous.
 
 Note this whole class of defect is invisible while any typer error remains (§3).
 
+## 4.55 A renaming pass reads EFFECTIVE names, PARENTS-FIRST
+
+Java lets a name be reused where Scala cannot: a field shadows an inherited field, a field coexists
+with a same-named method, a constructor local becomes a member. Each is fixed by renaming, and
+renaming the symbol propagates to every reference — which is exact, because Java resolved all of
+these STATICALLY, so each reference already points at the symbol Java chose.
+
+Two things every such pass must do, learned by getting both wrong:
+
+- **Read effective names, not original ones.** If an ancestor has already been renamed, the new name
+  is what a descendant must avoid. Reading originals renames `CheckBox.style` and `TextButton.style`
+  to the same `style$shadow` and just moves the collision up a level. Then keep appending until the
+  name is free.
+- **Scan parents before children**, or the previous point cannot hold.
+
+And count what the constructor funnel PROMOTES — the chosen constructor's parameters *and* its
+top-level locals. Neither is in the class body, both become members, and a Java constructor local
+becoming a Scala member is exactly what a subclass then collides with.
+
 ## 4.6 A kill switch beats another condition
 
 When a synthesized construct is wrong, first establish **which code produces it** — do not add a
