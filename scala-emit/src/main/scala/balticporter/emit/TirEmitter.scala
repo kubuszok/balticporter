@@ -670,7 +670,29 @@ final class TirEmitter(source: Program):
     val sm = sym(s)
     if sm.flags.isStatic && sm.owner != SymId.None && program.symbolOf(sm.owner).exists(_.info.isInstanceOf[TypeRepr.TypeRef])
     then s"${typeValue(sm.owner)}.${esc(sm.name)}"
+    else if shadowedByCompanionStatic(s) then s"this.${esc(sm.name)}"
     else local(s)
+
+  /** Does a bare reference to this INSTANCE member collide with a static of the same name that the
+    * enclosing companion carries or re-exports?
+    *
+    * `DepthShader.Config` inherits an instance field `defaultCullFace` and writes it bare, exactly
+    * as Java did — but `object DepthShader` also holds a static `defaultCullFace`, and Scala reports
+    * the bare name as ambiguous between the two. Java had no such clash: statics and instance
+    * fields live in one namespace there, and the inherited instance field simply wins.
+    *
+    * `this.` says what Java meant. Decided from the TIR symbol — the reference resolves to an
+    * instance member of an ANCESTOR — rather than from the frontend, which cannot see it: Spoon
+    * does not resolve this reference to a `CtFieldWrite` under noClasspath at all. */
+  private def shadowedByCompanionStatic(s: SymId): Boolean =
+    val sm = sym(s)
+    !sm.flags.isStatic && sm.owner != SymId.None && sm.info != TypeRepr.NoType &&
+      !sm.info.isInstanceOf[TypeRepr.MethodType] && !sm.info.isInstanceOf[TypeRepr.PolyType] &&
+      classStack.lastOption.exists { cur =>
+        // an INHERITED member (declaring it here would shadow the static on its own)
+        cur != sm.owner && ancestorsOf(cur).contains(sm.owner) &&
+          classStack.exists(c => staticOwnersOf(c).contains(esc(sm.name)))
+      }
 
   private def term(t: Term, i: Int): String = t match
     case Tree.Ident(s, _, _)            => if isTypeRef(s) then typeValue(s) else staticRef(s)
