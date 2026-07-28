@@ -1740,7 +1740,15 @@ object SpoonTir:
                       .exists(_.exists(p => p != null && mentionsTypeVarFilled(p, names)))
                 catch { case _: Throwable => false }
               if unknown && depends then
-                val args  = formals.map(erasureOfFormal(_, Set.empty, 2))
+                // An F-bounded formal erases to a WILDCARD here too, for the same reason it does
+                // inside `erasedType`: `Node[Node[?, Object, Actor], Object, Actor]` still fails
+                // `N <: Node[N,V,A]`, because `Node` is invariant and the argument would have to be
+                // the very type being written. Only `?` discharges the bound.
+                val args  = formals.map { f =>
+                  val fBounded = try Option(f.getSuperclass).exists(b => mentionsTypeVarFilled(b, Set(f.getSimpleName)))
+                                 catch { case _: Throwable => false }
+                  if fBounded then TypeBounds(NoType, NoType) else erasureOfFormal(f, Set.empty, 2)
+                }
                 val subst = formals.map(_.getSimpleName).zip(args).toMap
                 Some(AppliedType(TypeRef(NoPrefix, typeSym(rt)), args) -> subst)
               else None
