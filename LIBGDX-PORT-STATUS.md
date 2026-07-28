@@ -665,9 +665,28 @@ What instrumentation established (do not re-derive):
 - `AssetLoadingTask`'s bad entry comes from `AsyncTask<Void>`, whose only member is `T call()`.
   That one SHOULD be rejected by any working version of this test.
 
-**Next action is a print of what `mentionedIn(AsynchronousAssetLoader)` actually contains** — not a
-third variant of the test. Every variant reasoned from an assumption about what Spoon returns has
-failed; every fix this session that worked came from printing first.
+That print was done. `mentionedIn` WORKS — the transitive scan finds
+`getDependencies -> Array<AssetDescriptor>` exactly as intended. The test was never buggy; the THEORY
+was wrong. Requiring positive evidence rejects the many good name matches the 162 -> 4 run depends
+on, because the fill succeeds broadly BECAUSE it is name-keyed and only two sites collide.
+
+Four guards have now been measured, and each is too narrow to keep the wins or too broad to catch
+the misses:
+
+| guard | measured |
+|---|---|
+| ancestor must MENTION the type being filled | 4 -> 161 |
+| …transitively through its own supertypes | 4 -> 161 |
+| SUPERCLASS chain only, no interfaces | 4 -> 142 |
+| reject `java.lang.Void` as an uninhabited candidate | 4 -> 141 |
+
+The last one is the most informative: `AsyncTask<Void>`'s `T -> Void` is genuinely NEEDED, because
+`AssetLoadingTask.call()` really does return `Void`. So the entry must exist for the ancestor's OWN
+members and must not reach an unrelated raw type — which means the fix is not a filter on the map at
+all. **The map needs to be consulted differently depending on WHAT is being filled**: a type
+mentioned in the ancestor's signatures resolves through that ancestor's instantiation; an unrelated
+raw type should fall back to `?`. That is a change to `tpe`'s raw-fill call site, not to
+`instantiationOfParents`, and it is where the next attempt should start.
 
 ### The earlier remaining-6 note
 
