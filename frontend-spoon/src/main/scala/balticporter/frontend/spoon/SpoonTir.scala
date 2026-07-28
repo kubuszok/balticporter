@@ -278,7 +278,8 @@ object SpoonTir:
         case AppliedType(tc, as) => AppliedType(substRepr(tc, from, to), as.map(substRepr(_, from, to)))
         case other               => other
 
-    private def erasedFormal(f: CtTypeReference[?], subst: Map[String, TypeRepr] = Map.empty): TypeRepr = f match
+    private def erasedFormal(f: CtTypeReference[?], subst: Map[String, TypeRepr] = Map.empty,
+                             named: Map[String, TypeRepr] = Map.empty): TypeRepr = f match
       case tv: CtTypeParameterReference =>
         subst.getOrElse(tv.getSimpleName, {
           val d = try Option(tv.getDeclaration) catch { case _: Throwable => None }
@@ -1720,7 +1721,7 @@ object SpoonTir:
         * Gated to calls that genuinely DEPEND on the receiver's type variables; a wildcard receiver
         * whose callee ignores them needs no cast. Returns the erased receiver type + the receiver's
         * type-variable names. */
-      private def erasedReceiverView(inv: CtInvocation[?]): Option[(TypeRepr, Map[String, TypeRepr])] =
+      private def erasedReceiverView(inv: CtInvocation[?]): Option[(TypeRepr, Map[String, TypeRepr], Map[String, TypeRepr])] =
         val ex = inv.getExecutable
         if ex.isConstructor then None
         else inv.getTarget match
@@ -1768,6 +1769,7 @@ object SpoonTir:
                 // inside `erasedType`: `Node[Node[?, Object, Actor], Object, Actor]` still fails
                 // `N <: Node[N,V,A]`, because `Node` is invariant and the argument would have to be
                 // the very type being written. Only `?` discharges the bound.
+                val namedOf = collection.mutable.Map[String, TypeRepr]()
                 val args  = formals.map { f =>
                   // Prefer the NAME-DIRECTED fill over the erasure. `Tree tree = getTree();
                   // tree.remove(this)` inside `Node<N,V,A>` is raw in Java's own source, and the
@@ -1780,18 +1782,19 @@ object SpoonTir:
                   // Same rule the raw FILL already applies to types (`nameFilledArgs`); this brings
                   // the erased-receiver path into line with it instead of contradicting it.
                   val named = if inStatic || !anyFBounded then scala.None else accessibleTp(f.getSimpleName)
-                  named.map(id => TypeRef(NoPrefix, id)).getOrElse {
+                  named.map { id => val r = TypeRef(NoPrefix, id); namedOf(f.getSimpleName) = r; r }.getOrElse {
                     if isFBounded(f) then TypeBounds(NoType, NoType) else erasureOfFormal(f, Set.empty, 2)
                   }
                 }
                 val subst = formals.map(_.getSimpleName).zip(args).toMap
-                Some(AppliedType(TypeRef(NoPrefix, typeSym(rt)), args) -> subst)
+                Some((AppliedType(TypeRef(NoPrefix, typeSym(rt)), args), subst, namedOf.toMap))
               else None
 
       /** cast each argument whose DECLARED formal mentions a receiver type variable to that
         * formal's erasure, matching the erased receiver the call is now made through. */
       private def eraseDependentArgs(
           ex: CtExecutableReference[?], argEs: List[CtExpression[?]], args: List[Term], subst: Map[String, TypeRepr],
+          named: Map[String, TypeRepr] = Map.empty,
       ): List[Term] =
         val names = subst.keySet
         val ps = try Option(ex.getExecutableDeclaration).map(_.getParameters.asScala.toList.map(_.getType))
@@ -1903,7 +1906,13 @@ object SpoonTir:
         val argEs = inv.getArguments.asScala.toList
         val erasedRecv = erasedReceiverView(inv)
         val args0 = erasedRecv match
-          case Some((_, subst)) => eraseDependentArgs(ex, argEs, coerceArgs(ex, argEs), subst)
+          // A NAME-FILLED receiver needs no argument erasure at all. The callee's formals are then
+          // expressed in the caller's OWN type variables (`addToTree(Tree<N,V>)` against a receiver
+          // read as `Node[N, V, Actor]`), and the values at hand already have those types — `this`
+          // IS a `Tree[N, V]`. Erasing them re-introduced the mismatch the name-fill just removed.
+          case Some((_, subst, named)) if named.isEmpty =>
+            eraseDependentArgs(ex, argEs, coerceArgs(ex, argEs), subst)
+          case Some(_) => coerceArgs(ex, argEs)
           case None             => coerceArgs(ex, argEs)
         val args = typeVarReceiverArgs(inv, argEs, knownReceiverArgs(inv, argEs, args0))
         val o    = originOf(inv)
@@ -1935,8 +1944,8 @@ object SpoonTir:
               // wildcard/raw receiver whose callee depends on its type vars → call through the
               // ERASED view (Java's own), so the formals stop being per-access captures.
               val recv2 = erasedRecv match
-                case Some((et, _)) => Tree.Typed(recv, tt(et, t), et, originOf(t))
-                case None          => recv
+                case Some((et, _, _)) => Tree.Typed(recv, tt(et, t), et, originOf(t))
+                case None             => recv
               Tree.Select(recv2, mid, NoType, o)
         Tree.Apply(pinTypeArgs(fun, inv, o), args, mid, erasedResult(args, ty(inv)), o)
 

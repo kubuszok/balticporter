@@ -414,7 +414,7 @@ class Tree[N <: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[N, V, ?], V <: java
       } else ()
     }; i = i + 1 } };
     { var i: scala.Int = 0; val n: scala.Int = this.rootNodes.size; var actorIndex: scala.Int = 0; while (i < n) { {
-      actorIndex = actorIndex + this.rootNodes.get(i).asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[N, V, com.badlogic.gdx.scenes.scene2d.Actor]].addToTree(this.asInstanceOf[Tree[com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[?, java.lang.Object, com.badlogic.gdx.scenes.scene2d.Actor], java.lang.Object]], actorIndex)
+      actorIndex = actorIndex + this.rootNodes.get(i).asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[N, V, com.badlogic.gdx.scenes.scene2d.Actor]].addToTree(this, actorIndex)
     }; i = i + 1 } }
   }
   @com.badlogic.gdx.utils.Null
@@ -644,7 +644,7 @@ object Tree {
     def remove(): scala.Unit = {
       val tree: Tree[N, V] = this.getTree().asInstanceOf[Tree[N, V]]
       if (tree != null) {
-        tree.asInstanceOf[Tree[N, V]].remove(this.asInstanceOf[N])
+        tree.asInstanceOf[Tree[N, V]].remove(this)
       } else {
         if (this.parent != null) {
           this.parent.remove(this.asInstanceOf[N])
