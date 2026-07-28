@@ -566,6 +566,47 @@ Unmeasured. It is a real coercion inserted by the engine, in the same spirit as 
 and unchecked-conversion casts, rather than a mapping change — which is why it may sidestep the
 decision about which mapping gives way.
 
+## CURRENT STATE — 6 errors, post-RefChecks
+
+**300 -> 6**, and this 6 is not comparable to the earlier small counts: FOUR compiler phases now run
+that never had. Each was unblocked in turn, and each time the count ROSE first, exactly as §3
+predicts — parser/naming (`illegal combination of modifiers`) -> typer -> PostTyper bound checks
+(11 latent E057) -> RefChecks (907 latent E164). A number measured before those phases ran was
+measuring less than it appeared to.
+
+### The rule that closed 162 -> 7: a class must see its INHERITED INSTANTIATION
+
+`AssetLoader<T, P>` declares a RAW `Array<AssetDescriptor> getDependencies(…)`. Inside the parent,
+the name-directed fill matches `AssetDescriptor`'s own `T` to `AssetLoader`'s `T`, so the inherited
+member reads `Array[AssetDescriptor[T]]` — `Array[AssetDescriptor[BitmapFont]]` in
+`BitmapFontLoader extends AsynchronousAssetLoader<BitmapFont, BitmapFontParameter>`. The OVERRIDE
+re-renders the same raw type with no `T` in scope, gets `Array[AssetDescriptor[?]]`, and scala
+rejects the pair. Java checks neither side, so it never notices.
+
+`instantiationOfParents` gives each class the map from its ancestors' formal NAMES to what it
+instantiated them as. Three refinements were each measured, and each is load-bearing:
+
+| refinement | measured |
+|---|---|
+| the fill itself | 162 -> 45 |
+| skip a parent arg naming an out-of-scope var (it leaked `new Array[?I](…)` into the output) | 45 -> 36 |
+| suppress it at a RAW `new` — there the ARGUMENTS decide the parameter | 36 -> 7 |
+| require the candidate to satisfy the formal's BOUND (name match != evidence) | 7 -> 6 |
+
+Suppressing it for whole method BODIES instead of just at a raw `new` measured **36 -> 59**: local
+declarations inside a body genuinely need it, to match the signatures they feed.
+
+### The remaining 6
+
+| site | shape |
+|---|---|
+| `AssetManager:395` x2, `AssetLoadingTask:31,60` | a RAW `new AssetLoadingTask(…)` whose arguments are cast to `AssetDescriptor[?]`; inference then picks `Void` for the class parameter and the wildcard does not match it |
+| `ParticleEffectLoader:23`, `PolygonRegionLoader:45` | not yet classified |
+
+Same family as the raw-`new` work already recorded: a raw constructor call whose argument casts and
+whose inferred instantiation disagree. `rawCtorSpecialisation` handles the case where a sibling
+argument pins the instantiation; this is the case where a WILDCARD cast leaves nothing to pin it.
+
 ## Do NOT retry (measured failures)
 
 - **Rendering an OVERRIDING method's return type from the parent'''s declaration**: 162 -> **438**.
