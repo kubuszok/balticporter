@@ -5,7 +5,16 @@
 # Note the discovery check below: a JUnit suite with no @Test annotations runs ZERO tests and
 # reports success, which is exactly the silent-omission failure this project keeps finding.
 cd "$(dirname "$0")/.."
-sbt -client "corpus-tests/runMain balticporter.corpus.LibgdxTestMigrate" 2>&1 | sed 's/\x1b\[[0-9;]*m//g' | grep -E "wrote|WARNING|OMISSIONS \(|signature"
+# ABORT if the migration did not run — the same stale-output defect fixed in gdx_measure.sh: piping
+# into grep discards the exit status, so an engine that fails to COMPILE measures the PREVIOUS emit
+# and reports it as a result.
+MIGRATE_OUT=$(sbt -client "corpus-tests/runMain balticporter.corpus.LibgdxTestMigrate" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
+if ! grep -qE "wrote [0-9]+ Scala test files" <<<"$MIGRATE_OUT"; then
+  echo "!! TEST MIGRATION DID NOT RUN — refusing to measure stale output"
+  grep -E "^\[error\].*\.scala:[0-9]+" <<<"$MIGRATE_OUT" | head -20
+  exit 1
+fi
+grep -E "wrote|WARNING|OMISSIONS \(|signature" <<<"$MIGRATE_OUT"
 
 echo "-- test discovery --"
 JAVA_TESTS=$(grep -rh "@Test" ../sge/original-src/libgdx/gdx/test | wc -l | tr -d ' ')
