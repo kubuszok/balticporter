@@ -91,6 +91,34 @@ but not its BODY — the natural reading of "its only customer is override agree
 **1 -> 20**. Bodies need it too, because a local whose value flows into the signature must carry the
 same instantiation. So the fill's scope is not decomposable into signature-vs-body either.
 
+### Where the name coincidence actually ORIGINATES
+
+Instrumented, not assumed. With `inheritedTp` disabled the PARENT still renders
+`Array[AssetDescriptor[BitmapFont]]` — so the collision does not start in the inherited map at all.
+It starts in the ORDINARY name-directed fill (`nameFilledArgs(r, accessibleTp)`): inside
+`AssetLoader<T,P>`, a raw `Array<AssetDescriptor>` becomes `Array[AssetDescriptor[T]]` because
+`AssetDescriptor` also calls its parameter `T`. `inheritedTp` exists only to make CHILDREN agree
+with that rendering.
+
+Note this is semantically wrong even where it compiles: a `BitmapFont`'s dependencies are a
+`TextureAtlas` and a `Texture`, never `BitmapFont`s. Java wrote the element type raw precisely
+because it is heterogeneous.
+
+Restricting the ordinary fill to types NESTED in a class whose parameters are in scope — the
+documented motivating case (`Entries` inside `ObjectMap[K,V]`) — was measured both ways:
+
+| configuration | errors |
+|---|---|
+| nested-only fill, `inheritedTp` ON | 14 |
+| nested-only fill, `inheritedTp` OFF (the coherent pairing) | 19 |
+| **current: unrestricted fill + `inheritedTp`** | **1** |
+
+So the coincidence is load-bearing: libGDX names the asset type `T` consistently enough that the
+"wrong" fill agrees on both sides of nearly every override. Correcting it at the source costs more
+than it fixes, on THIS corpus. That is worth re-testing on the next library added, since a codebase
+with less uniform naming would invert the result — and this is exactly the kind of rule §2 expects
+to move from (c) toward (a) as the corpus grows.
+
 So the remaining single error is NOT the tip of a systemic wildcard problem. It is the one site where
 the name-keyed fill's collision (`AsyncTask<Void>`'s `T` reaching `AssetDescriptor<T>`) is not also
 made harmlessly-consistent on both sides of an override.

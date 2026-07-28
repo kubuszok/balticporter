@@ -118,8 +118,8 @@ class OrderedMap[K <: java.lang.Object, V <: java.lang.Object] extends com.badlo
       return new com.badlogic.gdx.utils.OrderedMap.OrderedMapEntries[K, V](this.asInstanceOf[OrderedMap[K, V]]).asInstanceOf[com.badlogic.gdx.utils.ObjectMap.Entries[K, V]]
     } else ()
     if (entries1 == null) {
-      entries1 = new com.badlogic.gdx.utils.OrderedMap.OrderedMapEntries[K, V](this.asInstanceOf[OrderedMap[K, V]]).asInstanceOf[com.badlogic.gdx.utils.ObjectMap.Entries[K, V]]
-      entries2 = new com.badlogic.gdx.utils.OrderedMap.OrderedMapEntries[K, V](this.asInstanceOf[OrderedMap[K, V]]).asInstanceOf[com.badlogic.gdx.utils.ObjectMap.Entries[K, V]]
+      entries1 = new com.badlogic.gdx.utils.OrderedMap.OrderedMapEntries[K, V](this.asInstanceOf[OrderedMap[K, V]]).asInstanceOf[com.badlogic.gdx.utils.ObjectMap.Entries[?, ?]]
+      entries2 = new com.badlogic.gdx.utils.OrderedMap.OrderedMapEntries[K, V](this.asInstanceOf[OrderedMap[K, V]]).asInstanceOf[com.badlogic.gdx.utils.ObjectMap.Entries[?, ?]]
     } else ()
     if (!this.entries1.valid) {
       entries1.reset()
@@ -137,8 +137,8 @@ class OrderedMap[K <: java.lang.Object, V <: java.lang.Object] extends com.badlo
       return new com.badlogic.gdx.utils.OrderedMap.OrderedMapValues[V](this).asInstanceOf[com.badlogic.gdx.utils.ObjectMap.Values[V]]
     } else ()
     if (values1 == null) {
-      values1 = new com.badlogic.gdx.utils.OrderedMap.OrderedMapValues[V](this).asInstanceOf[com.badlogic.gdx.utils.ObjectMap.Values[V]]
-      values2 = new com.badlogic.gdx.utils.OrderedMap.OrderedMapValues[V](this).asInstanceOf[com.badlogic.gdx.utils.ObjectMap.Values[V]]
+      values1 = new com.badlogic.gdx.utils.OrderedMap.OrderedMapValues[V](this).asInstanceOf[com.badlogic.gdx.utils.ObjectMap.Values[?]]
+      values2 = new com.badlogic.gdx.utils.OrderedMap.OrderedMapValues[V](this).asInstanceOf[com.badlogic.gdx.utils.ObjectMap.Values[?]]
     } else ()
     if (!this.values1.valid) {
       values1.reset()
@@ -156,8 +156,8 @@ class OrderedMap[K <: java.lang.Object, V <: java.lang.Object] extends com.badlo
       return new com.badlogic.gdx.utils.OrderedMap.OrderedMapKeys[K](this).asInstanceOf[com.badlogic.gdx.utils.ObjectMap.Keys[K]]
     } else ()
     if (keys1 == null) {
-      keys1 = new com.badlogic.gdx.utils.OrderedMap.OrderedMapKeys[K](this).asInstanceOf[com.badlogic.gdx.utils.ObjectMap.Keys[K]]
-      keys2 = new com.badlogic.gdx.utils.OrderedMap.OrderedMapKeys[K](this).asInstanceOf[com.badlogic.gdx.utils.ObjectMap.Keys[K]]
+      keys1 = new com.badlogic.gdx.utils.OrderedMap.OrderedMapKeys[K](this).asInstanceOf[com.badlogic.gdx.utils.ObjectMap.Keys[?]]
+      keys2 = new com.badlogic.gdx.utils.OrderedMap.OrderedMapKeys[K](this).asInstanceOf[com.badlogic.gdx.utils.ObjectMap.Keys[?]]
     } else ()
     if (!this.keys1.valid) {
       keys1.reset()
@@ -205,7 +205,7 @@ object OrderedMap {
       nextIndex = 0
       hasNext$field = this.map.size > 0
     }
-    override def next(): com.badlogic.gdx.utils.ObjectMap.Entry[K, V] = {
+    override def next(): com.badlogic.gdx.utils.ObjectMap.Entry[?, ?] = {
       if (!hasNext$field) {
         throw new java.util.NoSuchElementException()
       } else ()
@@ -217,7 +217,7 @@ object OrderedMap {
       this.entry.value = map.get(this.entry.key).asInstanceOf[V]
       nextIndex = nextIndex + 1
       hasNext$field = nextIndex < this.map.size
-      return entry.asInstanceOf[com.badlogic.gdx.utils.ObjectMap.Entry[K, V]]
+      return entry.asInstanceOf[com.badlogic.gdx.utils.ObjectMap.Entry[?, ?]]
     }
     override def remove(): scala.Unit = {
       if (currentIndex < 0) {
@@ -253,7 +253,7 @@ object OrderedMap {
       if (currentIndex < 0) {
         throw new java.lang.IllegalStateException("next must be called before remove.")
       } else ()
-      map.asInstanceOf[OrderedMap[K, java.lang.Object]].removeIndex(currentIndex)
+      map.asInstanceOf[OrderedMap[?, ?]].removeIndex(currentIndex)
       nextIndex = currentIndex
       currentIndex = -1
     }
@@ -292,7 +292,7 @@ object OrderedMap {
       if (currentIndex < 0) {
         throw new java.lang.IllegalStateException("next must be called before remove.")
       } else ()
-      map.asInstanceOf[OrderedMap[java.lang.Object, V]].removeIndex(currentIndex)
+      map.asInstanceOf[OrderedMap[?, ?]].removeIndex(currentIndex)
       nextIndex = currentIndex
       currentIndex = -1
     }

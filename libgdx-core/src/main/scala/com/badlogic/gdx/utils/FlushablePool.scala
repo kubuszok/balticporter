@@ -4,12 +4,12 @@ abstract class FlushablePool[T <: java.lang.Object] extends com.badlogic.gdx.uti
   var obtained: com.badlogic.gdx.utils.Array[T] = new com.badlogic.gdx.utils.Array[T]()
   def this(initialCapacity: scala.Int) = {
     this()
-    this.freeObjects = new com.badlogic.gdx.utils.Array[T](false, initialCapacity).asInstanceOf[com.badlogic.gdx.utils.Array[T]]
+    this.freeObjects = new com.badlogic.gdx.utils.Array(false, initialCapacity).asInstanceOf[com.badlogic.gdx.utils.Array[T]]
     this.max = java.lang.Integer.MAX_VALUE
   }
   def this(initialCapacity: scala.Int, max: scala.Int) = {
     this()
-    this.freeObjects = new com.badlogic.gdx.utils.Array[T](false, initialCapacity).asInstanceOf[com.badlogic.gdx.utils.Array[T]]
+    this.freeObjects = new com.badlogic.gdx.utils.Array(false, initialCapacity).asInstanceOf[com.badlogic.gdx.utils.Array[T]]
     this.max = max
   }
   @java.lang.Override

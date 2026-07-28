@@ -96,12 +96,12 @@ class PointSpriteParticleBatch(capacity: scala.Int, shaderConfig: com.badlogic.g
     } else ()
   }
   @java.lang.Override
-  override def save(manager: com.badlogic.gdx.assets.AssetManager, resources: com.badlogic.gdx.graphics.g3d.particles.ResourceData[com.badlogic.gdx.graphics.g3d.particles.renderers.PointSpriteControllerRenderData]): scala.Unit = {
+  override def save(manager: com.badlogic.gdx.assets.AssetManager, resources: com.badlogic.gdx.graphics.g3d.particles.ResourceData[?]): scala.Unit = {
     val data: com.badlogic.gdx.graphics.g3d.particles.ResourceData.SaveData = resources.createSaveData("pointSpriteBatch")
     data.saveAsset(manager.getAssetFileName(this.getTexture()), classOf[com.badlogic.gdx.graphics.Texture])
   }
   @java.lang.Override
-  override def load(manager: com.badlogic.gdx.assets.AssetManager, resources: com.badlogic.gdx.graphics.g3d.particles.ResourceData[com.badlogic.gdx.graphics.g3d.particles.renderers.PointSpriteControllerRenderData]): scala.Unit = {
+  override def load(manager: com.badlogic.gdx.assets.AssetManager, resources: com.badlogic.gdx.graphics.g3d.particles.ResourceData[?]): scala.Unit = {
     val data: com.badlogic.gdx.graphics.g3d.particles.ResourceData.SaveData = resources.getSaveData("pointSpriteBatch")
     if (data != null) {
       this.setTexture(manager.get(data.loadAsset()).asInstanceOf[com.badlogic.gdx.graphics.Texture].asInstanceOf[com.badlogic.gdx.graphics.Texture])

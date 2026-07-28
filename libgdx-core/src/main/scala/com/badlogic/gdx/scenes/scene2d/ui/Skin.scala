@@ -382,11 +382,11 @@ class Skin extends com.badlogic.gdx.utils.Disposable {
     val skin: Skin = this
     val json: com.badlogic.gdx.utils.Json = new com.badlogic.gdx.utils.Json() {
       private final val parentFieldName: java.lang.String = "parent"
-      override def readValue[T <: java.lang.Object](`type`: java.lang.Class[T], elementType: java.lang.Class[T], jsonData: com.badlogic.gdx.utils.JsonValue): T = {
+      override def readValue[T <: java.lang.Object](`type`: java.lang.Class[T], elementType: java.lang.Class[?], jsonData: com.badlogic.gdx.utils.JsonValue): T = {
         if (((jsonData != null) && jsonData.isString()) && (!classOf[java.lang.CharSequence].isAssignableFrom(`type`))) {
           return Skin.this.get(jsonData.asString(), `type`).asInstanceOf[T]
         } else ()
-        return super.readValue(`type`, elementType.asInstanceOf[java.lang.Class[T]], jsonData).asInstanceOf[T]
+        return super.readValue(`type`, elementType.asInstanceOf[java.lang.Class[?]], jsonData).asInstanceOf[T]
       }
       override def ignoreUnknownField(`type`: java.lang.Class[?], fieldName: java.lang.String): scala.Boolean = {
         return fieldName.equals(parentFieldName)

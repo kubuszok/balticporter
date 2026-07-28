@@ -4,7 +4,7 @@ class DelayedRemovalArray[T <: java.lang.Object] extends com.badlogic.gdx.utils.
   private var iterating: scala.Int = 0
   var remove$field: com.badlogic.gdx.utils.IntArray = new com.badlogic.gdx.utils.IntArray(0)
   var clear$field: scala.Int = 0
-  def this(array: com.badlogic.gdx.utils.Array[T]) = {
+  def this(array: com.badlogic.gdx.utils.Array[?]) = {
     this()
     this.items = java.util.Arrays.copyOf(array.items.asInstanceOf[scala.Array[java.lang.Object]], array.size).asInstanceOf[scala.Array[T]]
     this.ordered = array.ordered

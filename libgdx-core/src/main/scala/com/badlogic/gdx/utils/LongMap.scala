@@ -561,7 +561,7 @@ object LongMap {
     private final val INDEX_ILLEGAL: scala.Int = -2
     final val INDEX_ZERO: scala.Int = -1
   }
-  class Entries[V <: java.lang.Object](map$p: LongMap[V]) extends com.badlogic.gdx.utils.LongMap.MapIterator[V](map$p) with balticporter.runtime.JavaIterable[com.badlogic.gdx.utils.LongMap.Entry[V]] with balticporter.runtime.JavaIterator[com.badlogic.gdx.utils.LongMap.Entry[V]] {
+  class Entries[V <: java.lang.Object](map$p: LongMap[?]) extends com.badlogic.gdx.utils.LongMap.MapIterator[V](map$p.asInstanceOf[LongMap[java.lang.Object]]) with balticporter.runtime.JavaIterable[com.badlogic.gdx.utils.LongMap.Entry[V]] with balticporter.runtime.JavaIterator[com.badlogic.gdx.utils.LongMap.Entry[V]] {
     private final val entry: com.badlogic.gdx.utils.LongMap.Entry[V] = new com.badlogic.gdx.utils.LongMap.Entry[V]().asInstanceOf[com.badlogic.gdx.utils.LongMap.Entry[V]]
     override def next(): com.badlogic.gdx.utils.LongMap.Entry[V] = {
       if (!hasNext$field) {
