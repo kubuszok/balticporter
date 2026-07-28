@@ -513,19 +513,25 @@ object SpoonTir:
           case _ => false
       catch { case _: Throwable => false }
 
-    /** Concrete, or mentioning only type variables OWNED BY THE CALLEE that carry a real (non-
-      * `Object`) upper bound. Such a variable is never in scope at the call site, so Java's view of
-      * the formal is its bound — `TextureDescriptor<T extends Texture>` is `TextureDescriptor<Texture>`
-      * there, which is exactly what an unchecked cast must name for Scala to then infer `T = Texture`.
-      * UNBOUNDED callee variables are excluded: erasing them to `Object` would only defeat the
-      * inference that was going to work off the expected type. */
+    /** Concrete, or mentioning only type variables OWNED BY THE CALLEE. Such a variable is never in
+      * scope at the call site, so Java's view of the formal is its erasure — `TextureDescriptor<T
+      * extends Texture>` is `TextureDescriptor<Texture>` there, and an unbounded `<T>` is
+      * `Object` — which is exactly what an unchecked cast must name for Scala to then infer `T`.
+      *
+      * Unbounded variables were once excluded here, on the theory that erasing them to `Object`
+      * defeats an inference that would have worked off the expected type. Measured false: it costs
+      * `AssetManager.load(AssetDescriptor)` — passing a RAW `AssetLoaderParameters` field into
+      * `load(String, Class<T>, AssetLoaderParameters<T>)`, where the sibling `Class` argument
+      * already pins `T = Object` — and the one case it protected was a poly expression, now
+      * excluded at source in [[uncheckedGeneric]]'s `bad` list where it belongs. sge writes the
+      * same two casts by hand (`desc.type.asInstanceOf[Class[Any]]`, `desc.params.asInstanceOf[…
+      * AssetLoaderParameters[Any]]`), which is the shape this produces. */
     private def calleeBounded(tr: CtTypeReference[?]): Boolean = tr match
       case null => true
       case tv: CtTypeParameterReference if sameVarInScope(tv) => true
       case tv: CtTypeParameterReference =>
         (try Option(tv.getDeclaration) catch { case _: Throwable => None }).exists { d =>
-          d.getParent.isInstanceOf[CtExecutable[?]] &&
-            Option(d.getSuperclass).exists(_.getQualifiedName != "java.lang.Object")
+          d.getParent.isInstanceOf[CtExecutable[?]]
         }
       case w: CtWildcardReference       => Option(w.getBoundingType).forall(calleeBounded)
       case arr: CtArrayTypeReference[?] => calleeBounded(arr.getComponentType)
@@ -1378,8 +1384,14 @@ object SpoonTir:
         val classLit = e match
           case fr: CtFieldRead[?] => fr.getVariable.getSimpleName == "class"
           case _                  => false
+        // A METHOD REFERENCE (`Array::new`) belongs with the lambda: both are poly expressions
+        // whose type comes FROM the target, so a cast can only destroy the inference it feeds.
+        // Measured: without this, `addPool(Array.class, Array::new)` casts the supplier to
+        // `PoolSupplier[Object]` while `Array.class` pins `T = Array[?]`, and the overload
+        // resolves against nothing.
         val bad = classLit || e.isInstanceOf[CtLambda[?]] || e.isInstanceOf[CtLiteral[?]] ||
-          e.isInstanceOf[CtNewArray[?]] || e.isInstanceOf[CtConditional[?]]
+          e.isInstanceOf[CtNewArray[?]] || e.isInstanceOf[CtConditional[?]] ||
+          e.isInstanceOf[CtExecutableReferenceExpression[?, ?]]
         if target == null || et == null || bad then t
         else if !isGenericUse(target) then t
         else if !(if ownScope then tpResolvable(target) else tpConcrete(target) || calleeBounded(target)) then t
