@@ -1751,15 +1751,33 @@ object SpoonTir:
                       .map(_.getParameters.asScala.toList.map(_.getType))
                       .exists(_.exists(p => p != null && mentionsTypeVarFilled(p, names)))
                 catch { case _: Throwable => false }
+              // Only an F-BOUNDED class needs this: there the erasure has no Scala image at all,
+              // so the name-directed fill is the only expressible reading. Everywhere else the
+              // erasure is load-bearing and preferring in-scope names by NAME measured 2 -> 9.
+              def isFBounded(f: CtTypeParameter): Boolean =
+                try Option(f.getSuperclass).exists(b => mentionsTypeVarFilled(b, Set(f.getSimpleName)))
+                catch { case _: Throwable => false }
+              val anyFBounded = formals.exists(isFBounded)
               if unknown && depends then
                 // An F-bounded formal erases to a WILDCARD here too, for the same reason it does
                 // inside `erasedType`: `Node[Node[?, Object, Actor], Object, Actor]` still fails
                 // `N <: Node[N,V,A]`, because `Node` is invariant and the argument would have to be
                 // the very type being written. Only `?` discharges the bound.
                 val args  = formals.map { f =>
-                  val fBounded = try Option(f.getSuperclass).exists(b => mentionsTypeVarFilled(b, Set(f.getSimpleName)))
-                                 catch { case _: Throwable => false }
-                  if fBounded then TypeBounds(NoType, NoType) else erasureOfFormal(f, Set.empty, 2)
+                  // Prefer the NAME-DIRECTED fill over the erasure. `Tree tree = getTree();
+                  // tree.remove(this)` inside `Node<N,V,A>` is raw in Java's own source, and the
+                  // erasure has no Scala image at all: `Tree<N extends Node<N,V,?>, V>` admits no
+                  // finite argument, since every candidate must equal the type being written and
+                  // `Tree` is invariant. But `Tree[N, V]` — the enclosing scope's OWN variables —
+                  // discharges the bound by construction, because `N`'s bound is exactly what
+                  // `Tree` asks for. It is also the more faithful reading: Java resolved the raw
+                  // call against the very instantiation the enclosing class is parameterised by.
+                  // Same rule the raw FILL already applies to types (`nameFilledArgs`); this brings
+                  // the erased-receiver path into line with it instead of contradicting it.
+                  val named = if inStatic || !anyFBounded then scala.None else accessibleTp(f.getSimpleName)
+                  named.map(id => TypeRef(NoPrefix, id)).getOrElse {
+                    if isFBounded(f) then TypeBounds(NoType, NoType) else erasureOfFormal(f, Set.empty, 2)
+                  }
                 }
                 val subst = formals.map(_.getSimpleName).zip(args).toMap
                 Some(AppliedType(TypeRef(NoPrefix, typeSym(rt)), args) -> subst)
