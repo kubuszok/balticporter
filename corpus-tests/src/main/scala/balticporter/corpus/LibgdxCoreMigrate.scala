@@ -4,7 +4,7 @@ import balticporter.core.{FrontendConfig, Substituted, Substitutions}
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.{OmissionCheck, Pipeline, PortabilityCheck, Program, RewriteTrace}
-import balticporter.transform.{ClassTableTransform, CollectionsTransform, MutableParamsTransform, PanamaFfiTransform, ReflectionToPortableTransform}
+import balticporter.transform.{ClassTableTransform, CollectionsTransform, MutableParamsTransform, PanamaFfiTransform, StaticForwarderTransform}
 
 import java.nio.file.{Files, Path, StandardCopyOption}
 import scala.jdk.CollectionConverters.*
@@ -111,8 +111,23 @@ object LibgdxCoreMigrate:
       "com.badlogic.gdx.utils.reflect.ClassReflection#forName" ->
         "com.badlogic.gdx.graphics.g3d.particles.AssetTypeRegistry#classFor"
     ))
+    // libGDX routes every reflective operation through `ClassReflection` so its GWT/Android
+    // backends can supply their own implementation. sge drops that wrapper: it targets Scala
+    // Native and Scala.js, where runtime reflection does not exist. But most of what the corpus
+    // actually calls is not reflection at all — these are plain `java.lang.Class` members that
+    // both platforms DO provide, reached through the call's first argument. Re-pointing them
+    // leaves behind exactly the members that genuinely need replacing (`forName` above, and the
+    // declared-field/method/constructor readers, which stay in `Substitutions.dropTypes`).
+    val unwrapReflection = new StaticForwarderTransform(List(
+      StaticForwarderTransform.Forwarder(
+        wrapper  = "com.badlogic.gdx.utils.reflect.ClassReflection",
+        receiver = "java.lang.Class",
+        members  = Set("getSimpleName", "getName", "isInstance", "isAssignableFrom", "isArray",
+                       "isEnum", "isInterface", "isPrimitive", "isAnnotation", "getComponentType"),
+      )
+    ))
     val program = if raw then raw0
-                  else Pipeline.run(raw0, List(new CollectionsTransform, new MutableParamsTransform, new PanamaFfiTransform(), new ReflectionToPortableTransform, classTable))
+                  else Pipeline.run(raw0, List(new CollectionsTransform, new MutableParamsTransform, new PanamaFfiTransform(), unwrapReflection, classTable))
     println(s"[libgdx-core] TIR: ${program.units.size} units, ${program.symbols.all.size} symbols")
 
     // Signature-changing rewrites are only safe if every USE follows. Report the blast radius of
