@@ -528,12 +528,22 @@ raises a feature warning. Against the corpus it changed nothing: **5 → 5**. Th
 and worth keeping: **`appendAll` is OVERLOADED, and Scala does not attempt implicit conversions when
 no overload alternative matches.** No bridge placed anywhere can rescue an overloaded call.
 
-So the fix must be in the TYPE MAPPING, not a conversion: `java.lang.Iterable` should map to
-`scala.collection.Iterable` in a PARAMETER position (any java `Iterable` is a scala one, so widening
-a consumer position cannot break a caller) and keep `JavaIterable` in an `extends` position and
-wherever the body removes through `.iterator()`. That is the same provenance-decides-the-type rule
-`transformValDef` already applies to `keySet`. The risk to measure is bodies that DO remove — they
-fail loudly, so the measurement is the check.
+The obvious next move — map `java.lang.Iterable` to `scala.collection.Iterable` in a PARAMETER
+position via `transformDefDef`, keeping the shim in `extends` positions — was tried and is ALSO a
+dead end: core **1 → 5**. Widening the parameter breaks the bodies that iterate-and-remove through
+it, which is precisely what the existing comment on the `java.lang.Iterable` entry predicts. The
+provenance rule that works for `keySet` does not transfer, because there the two candidates differ
+only in mutability, whereas here they differ in a CAPABILITY the body may already use.
+
+**Measurement-process note:** `gdx_test_measure.sh` re-emits only the TESTS. A change to a core
+transform is invisible to it until `gdx_measure.sh` runs, so the first reading of this experiment
+was against a stale core and looked like a harmless 5 → 5. Run the core measure first whenever the
+change is to the engine. (The stale-emit aborts added to both scripts do not cover this: each script
+is individually honest about its OWN stage.)
+
+What is left, then, is the boundary itself: `java.util.List` → `Buffer` and `java.lang.Iterable` →
+shim are individually defensible and jointly inconsistent. Fixing it means deciding which of the two
+mappings gives way — a framework-direction decision, not a missing case.
 
 ## Do NOT retry (measured failures)
 
