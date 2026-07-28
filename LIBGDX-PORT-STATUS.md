@@ -1,10 +1,46 @@
-# libgdx-core port — measured state and remaining work
+# libgdx port — measured state and remaining work
 
-Scope: migrating libGDX's core module (`../sge/original-src/libgdx/gdx/src`, 605 types) through the
-TIR into `libgdx-core/src/main/scala`. Distinct from GOAL.md's M6 phase (the xwiki cold port).
+**GOAL (set 2026-07-28): the WHOLE libgdx project ports; the ported code compiles AND passes the
+migrated tests.**
 
-Reproduce everything below with `bash scripts/gdx_measure.sh` (re-emits, then compiles with
+That last clause is the important one. Everything measured in this document so far is *compiles* —
+and four silent correctness defects were found this session (§0) that all compiled green, one of
+them for the project's entire history. `gdx/test` holds **221 JUnit test methods making ~900
+assertions**. Porting and RUNNING them is the first behavioural gate this project has ever had, and
+it is worth more than any number of additional compile fixes.
+
+Reproduce the compile numbers below with `bash scripts/gdx_measure.sh` (re-emits, then compiles with
 scala-cli 3.8.4). The migration itself prints four independent checks on every run.
+
+## Scope of the goal
+
+`../sge/original-src/libgdx`, 1534 Java files across 18 modules. They are not equally in scope —
+sge targets Scala Native and Scala.js, so the platform backends are largely irrelevant to it:
+
+| module | files | standing |
+|---|---|---|
+| `gdx/src` | 605 | **in progress** — 14 typer errors, this document |
+| `gdx/test` | 29 | **the goal's test clause** — 221 `@Test`, ~900 assertions |
+| `backends/gdx-backend-headless` | 15 | plausible next port target — no windowing, pure JVM |
+| `backends/gdx-backend-lwjgl3` | 39 | desktop JVM backend |
+| `backends/gdx-backend-lwjgl` | 32 | superseded by lwjgl3 upstream |
+| `backends/gdx-backends-gwt` | 209 | GWT/JS — sge replaces this wholesale with Scala.js |
+| `backends/gdx-backend-android`, `robovm`, `robovm-metalangle` | 144 | platform SDKs; out of scope for a Native/JS target |
+| `extensions/gdx-tools` | 80 | desktop authoring tools, not runtime |
+| `extensions/gdx-bullet`, `gdx-freetype`, `gdx-lwjgl3-angle` | 9 | JNI wrappers — `PanamaFfiTransform` territory |
+| `tests/gdx-tests` | 372 | visual demo apps, NOT assertions — a compile target, not a gate |
+
+### Ordering, and why
+
+1. **Close the last 14 typer errors in `gdx/src`.** Nothing downstream can run until this is 0.
+2. **Then RefChecks runs for the first time** (§0.1) and a new error class appears — missing
+   `override`, unimplemented members, variance. Expect the count to RISE here; that is the gate
+   beginning to tell the truth, not a regression.
+3. **Port `gdx/test` and run it.** JUnit 4 (`org.junit.Test`, `Assert.*`, one `Parameterized`).
+   This converts the project from "compiles" to "verified" and is where the goal's second clause
+   is actually met.
+4. **Widen**: `gdx-backend-headless` first (15 files, no windowing), then lwjgl3, then
+   `tests/gdx-tests` as a bulk compile target.
 
 ## Measured state
 
