@@ -502,6 +502,39 @@ That is a genuine expressiveness limit, not a missing case — the strongest can
 `UNPORTABLE-DESIGN.md` marker, since the honest output is "this construct has no Scala image, here
 is what a hand-porter would write" rather than another gate.
 
+## The remaining FIVE errors, fully scoped
+
+Core+tests compile together reports **5**, and test discovery is **221 / 221** with the signature
+check clean — so the whole remaining gap is these five, not five plus an unknown test-side tail.
+
+| site | count | cause |
+|---|---|---|
+| `Tree.scala:417` | 1 | the F-bound limit above |
+| `CharArrayTest` | 3 | `JavaIterable` / scala-collection boundary, below |
+| `JsonMatcherTests` | 1 | overload with a cast `null` |
+
+### The `JavaIterable` boundary — and why a CONVERSION cannot fix it
+
+`CharArray.appendAll(list)` wants `JavaIterable[?]` (from `java.lang.Iterable`) and is handed a
+`mutable.ArrayBuffer` (from `java.util.List`). The engine's own two mappings create two collection
+worlds that then cannot meet — a problem java does not have, where `List` IS an `Iterable`. This is
+the same universal JDK/scala boundary gap that the `NetJavaImpl` drop concealed; that is now TWO
+independent witnesses, so it wants a real fix rather than another per-site patch.
+
+**Measured dead end:** a `given Conversion[scala.collection.Iterable[A], JavaIterable[A]]` in
+`JavaIterable`'s companion. Verified in isolation first — it compiles and applies with NO import
+(companion of the target type is in implicit scope, so it respects the FQN-no-imports rule) and only
+raises a feature warning. Against the corpus it changed nothing: **5 → 5**. The reason is decisive
+and worth keeping: **`appendAll` is OVERLOADED, and Scala does not attempt implicit conversions when
+no overload alternative matches.** No bridge placed anywhere can rescue an overloaded call.
+
+So the fix must be in the TYPE MAPPING, not a conversion: `java.lang.Iterable` should map to
+`scala.collection.Iterable` in a PARAMETER position (any java `Iterable` is a scala one, so widening
+a consumer position cannot break a caller) and keep `JavaIterable` in an `extends` position and
+wherever the body removes through `.iterator()`. That is the same provenance-decides-the-type rule
+`transformValDef` already applies to `keySet`. The risk to measure is bodies that DO remove — they
+fail loudly, so the measurement is the check.
+
 ## Do NOT retry (measured failures)
 
 - **Falling back to ERASED formals in `rawCtorArgs` when nothing names the class's parameters** —
