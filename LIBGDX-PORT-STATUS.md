@@ -308,6 +308,90 @@ emitter at all.
 Assertion names/orders differ per target framework, so the façade is the PARAMETER: point the
 transform at a different base suite for utest or ScalaTest and nothing else changes.
 
+## THE TYPER IS GREEN — REFCHECKS RUNS — 69 errors, three named root causes
+
+Measured 2026-07-28, `bash scripts/gdx_measure.sh`, at commit `2f953ac`.
+Trajectory this pass: **11 -> 4 -> 3 -> 1 -> 145 -> 47 -> 69**.
+
+The 1 -> 145 step is CLAUDE.md §3 happening exactly as written. dotty's `Phase.isRunnable` is
+`!ctx.reporter.hasErrors`, so ONE typer error had been skipping `RefChecks` for the whole program.
+The moment E007 reached zero, 93 override errors and 8 unimplemented-member errors became visible
+for the first time. They had been there all along. 145 -> 47 -> 69 is burning them down; 69 is
+lower than 145 and every one of them is now a real, nameable defect.
+
+| fix | measured |
+|---|---|
+| `sameVarInScope` — a callee formal's type var that IS ours renders exactly | 11 -> 4 |
+| unbounded callee vars erase too; method refs join the poly-expression exclusion | 4 -> 3 |
+| a lifted super-arg's cast target comes from the PARENT's formal | 3 -> 1 |
+| erased-receiver: bound-dependency + result downcast (**typer green**) | 1 -> 145 |
+| Java `Iterable`/`Iterator` as STANDALONE traits, not scala collection subtypes | 145 -> 47 -> 69 |
+
+### The three remaining clusters
+
+**(a) A raw PARENT and its overrides disagree — 8 classes, `needs to be abstract`.**
+`class ParticleController implements ResourceData.Configurable` (raw). The emitter must
+de-wildcard a parent (Scala forbids `extends Configurable[?]`) and picks `Object`; the
+implementing members were rendered `ResourceData[?]` by the raw fill. Two renderings of one raw
+type in one class — this engine's most persistent defect shape.
+*sge's answer is a shape change, not an instantiation:* `trait Configurable` with NO type
+parameter at all, and `ResourceData[?]` in the signatures (`ResourceData.scala:175`,
+`ParticleController.scala:332`). That is per-library surgery. The engine's version has to be
+automatic: **the type argument the EMITTER chose for a raw parent must be the fill for that
+variable in every member of the class that overrides one from that parent.** Keyed off the
+emitted parent it cannot disagree with itself, which is what the reverted name-directed
+`inheritedInst` rule could not guarantee.
+
+**(b) Concrete-member diamond — 11 sites, `inherits conflicting members`.**
+`class Entries extends MapIterator with JavaIterator` — `remove()` is concrete in both. Java has
+no such rule: `MapIterator.remove()` simply implements `Iterator.remove()`. Scala's linearisation
+demands an explicit disambiguation. This is a UNIVERSAL Java->Scala fact (§1a), not a shim
+artefact: any Java class inheriting a concrete method from its superclass while also implementing
+an interface that has a default for it produces the same conflict.
+Fix shape: synthesise `override def remove(): Unit = super[MapIterator].remove()`.
+**Blocker:** `Tree.Super(cls, ...)` carries the class the `super` belongs to, and `TirEmitter`
+prints it as a bare `super` (`TirEmitter.scala:773`). Qualified `super[X]` is not expressible in
+the TIR today. Do not attempt the transform before that is added.
+
+**(c) Missing `override` — 8 sites**, plus a handful of one-offs (`Channel.data`,
+`ColorInfluencer.colorChannel`, `DefaultShader.boneWeights`, `Json.readValue`, `Widget.layout`).
+`overridesInherited` already computes this for methods; these are FIELDS overriding fields and a
+few signature mismatches. Cheapest cluster of the three.
+
+### Why the iterator shims had to stop being scala collections
+
+A Java class may implement BOTH `Iterable<E>` and `Iterator<E>`; **14 classes in gdx core do**.
+Modelled on `scala.collection.{Iterable, Iterator}` that shape is not awkward, it is ILLEGAL —
+`Iterator.iterator` is `final`, and `seq` arrives from both parents. No `override` recovers it,
+because the conflict is in the PARENTS. The cluster it was generating: 24 "cannot override final
+member", 19 `size` vs `IterableOnceOps`, 15 `isEmpty`, 15 "inherits conflicting members".
+
+Both shims are now java's interface and nothing else, carrying java's ARITY — `iterator()`,
+`hasNext()`, `next()` — which is also the arity every ported override was already written with
+(49 `override def iterator()`, 25 `hasNext()`). Interop returns as `asScala` plus a `foreach`
+extension: an extension adds a VIEW and cannot conflict, a parent adds MEMBERS and does.
+
+Two measured consequences worth keeping:
+- `foreach` on BOTH shims made every `for` over a class that is both **ambiguous** (23 errors). It
+  lives on `JavaIterable` only, which is what java's own for-each requires anyway.
+- `CollectionsTransform.parenless` had been stripping `()` from `iterator`/`hasNext`/`next` on
+  SHIM receivers. It exists for scala collections' parameterless accessors and must decline on a
+  shim (24 errors).
+
+### Diagnosis method that worked, after three failed guesses
+
+The `IntMap`/`LongMap` cast was chased for three edits by widening conditions inside
+`uncheckedGeneric` — all measured 11 -> 11, INERT. What settled it in two runs:
+1. a kill switch returning `t` at the top of `uncheckedGeneric`, printing on entry: **72120 calls
+   suppressed, cast unchanged** — the frontend gate was provably not responsible;
+2. a tracer on all 16 `Tree.Typed` construction sites in `SpoonTir`: **no cast recorded at
+   `IntMap.java:590`** — the frontend was not responsible at all.
+The cast was `TirEmitter.superArg`. **Do not add a condition to a gate until it is known that the
+gate is consulted.** A kill switch is one run and answers that question outright.
+
+Note the env-var trap: `sbt -client` sends commands to a long-running SERVER, so a shell `FOO=1`
+never reaches the forked migration. Use a marker FILE.
+
 ## Scope of the goal
 
 `../sge/original-src/libgdx`, 1534 Java files across 18 modules. They are not equally in scope —

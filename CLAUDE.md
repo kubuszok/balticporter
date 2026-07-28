@@ -173,6 +173,38 @@ It runs on the **Fable 5** model and is expensive, so it is **not** run on every
 
 ---
 
+## 4.5 Never model a Java interface on a Scala COLLECTION trait
+
+When a Java interface needs a Scala counterpart the stdlib does not have, write a standalone trait
+with Java's own shape — Java's method *arity* included (`iterator()`, `hasNext()`, `next()`, not
+Scala's parameterless forms). Restore Scala interop with **extension methods**, never by extending
+`scala.collection.*`.
+
+The reason is not taste. Java interfaces are small and orthogonal, so a class routinely implements
+several: 14 classes in libGDX core implement both `Iterable<E>` and `Iterator<E>`. Scala's
+collection traits are large and interlocking, and that same shape is *illegal* under them —
+`Iterator.iterator` is `final`, `seq` arrives from both parents. No `override` recovers it, because
+the conflict is in the parents. Inheriting also imports hundreds of members that then clash with
+the ported class's own `size`, `isEmpty`, `remove`.
+
+An extension adds a VIEW and cannot conflict; a parent adds MEMBERS and does. Put such an extension
+on **one** of a pair of related shims, never both — with `foreach` on both an iterable-and-iterator
+class made every `for` ambiguous.
+
+Note this whole class of defect is invisible while any typer error remains (§3).
+
+## 4.6 A kill switch beats another condition
+
+When a synthesized construct is wrong, first establish **which code produces it** — do not add a
+condition to the gate you suspect. Return the input unchanged at the top of that function, print on
+entry, and re-emit: one run tells you whether the gate is even consulted. If it is not, tag every
+construction site of that node kind and grep the trace for the source line. Three consecutive edits
+to `uncheckedGeneric` measured no change at all before a kill switch showed, in one run, that the
+cast came from the emitter.
+
+`sbt -client` talks to a long-running server, so a shell environment variable never reaches the
+forked migration. Gate the switch on a marker FILE.
+
 ## 5.5 Emitted code is a BUILD PRODUCT — `src_managed/`, never `src/`
 
 Every port writes its generated Scala to `<port>/src_managed/{main,test}/scala`, which is
