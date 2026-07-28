@@ -49,6 +49,42 @@ FAIL TO COMPILE after conversion. Loud, not silent, which is the outcome to want
 Per CLAUDE.md §1 this is **(a) universal** — every java library ported to cross-platform scala needs
 it — so it belongs in the engine with the target framework parameterised, not in libgdx policy.
 
+### The cheap shape: a JUnit-compatible FAÇADE over MUnit, not 872 rewrites
+
+Rewriting every assertion is the expensive route AND the risky one: MUnit's `assertEquals` is
+type-constrained (`B <:< A`) and takes `(obtained, expected)`, so 558 call sites would each need an
+argument swap plus a type check. Inject a base suite instead and the call sites do not move at all:
+
+```scala
+package balticporter.runtime
+abstract class PortedSuite extends munit.FunSuite:
+  // java's own argument order and loose typing, preserved exactly
+  def assertEquals(expected: Any, actual: Any): Unit = assert(expected == actual, …)
+  def assertArrayEquals[A](expected: Array[A], actual: Array[A]): Unit = …
+  def assertTrue(b: Boolean): Unit = assert(b)
+  …
+  /** un-curried so the emitter can build ONE Apply with two arguments */
+  def testCase(name: String, body: => Unit): Unit = test(name)(body)
+```
+
+The transform then does only three things, all mechanical:
+
+1. a class holding `@Test` methods gains parent `balticporter.runtime.PortedSuite`;
+2. `@Test def m(): Unit = { … }` becomes the class-body statement `testCase("m", { … })` —
+   **already emittable**: `Tree.ClassDef.body` is `List[Statement]` and the emitter maps `stat` over
+   it, so a bare `Apply` in a class body needs no emitter change;
+3. `@Test(expected = classOf[E])` wraps the block in `intercept[E] { … }` (16 sites).
+
+`@Before` becomes `override def beforeEach`; the one `Parameterized` suite still needs hand work and
+should be reported by name rather than silently mistranslated.
+
+`testCase` is un-curried deliberately: MUnit's `test(name)(body)` is two argument lists, and the
+frontend has no node for a curried application. One indirection in the façade avoids touching the
+emitter at all.
+
+Assertion names/orders differ per target framework, so the façade is the PARAMETER: point the
+transform at a different base suite for utest or ScalaTest and nothing else changes.
+
 ## Scope of the goal
 
 `../sge/original-src/libgdx`, 1534 Java files across 18 modules. They are not equally in scope —
