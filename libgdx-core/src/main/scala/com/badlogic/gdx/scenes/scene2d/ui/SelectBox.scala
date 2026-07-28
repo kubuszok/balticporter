@@ -2,7 +2,7 @@ package com.badlogic.gdx.scenes.scene2d.ui
 
 class SelectBox[T <: java.lang.Object](style$p: com.badlogic.gdx.scenes.scene2d.ui.SelectBox.SelectBoxStyle) extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlogic.gdx.scenes.scene2d.utils.Disableable with com.badlogic.gdx.scenes.scene2d.ui.Styleable[com.badlogic.gdx.scenes.scene2d.ui.SelectBox.SelectBoxStyle] {
   var style: com.badlogic.gdx.scenes.scene2d.ui.SelectBox.SelectBoxStyle = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.SelectBox.SelectBoxStyle]
-  final val items: com.badlogic.gdx.utils.Array[T] = new com.badlogic.gdx.utils.Array().asInstanceOf[com.badlogic.gdx.utils.Array[T]]
+  final val items: com.badlogic.gdx.utils.Array[T] = new com.badlogic.gdx.utils.Array[T]().asInstanceOf[com.badlogic.gdx.utils.Array[T]]
   var scrollPane: com.badlogic.gdx.scenes.scene2d.ui.SelectBox.SelectBoxScrollPane[T] = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.SelectBox.SelectBoxScrollPane[T]]
   private var prefWidth: scala.Float = 0.0f
   private var prefHeight: scala.Float = 0.0f
@@ -10,7 +10,7 @@ class SelectBox[T <: java.lang.Object](style$p: com.badlogic.gdx.scenes.scene2d.
   var disabled: scala.Boolean = false
   private var alignment: scala.Int = com.badlogic.gdx.utils.Align.left
   var selectedPrefWidth: scala.Boolean = false
-  final val selection: com.badlogic.gdx.scenes.scene2d.utils.ArraySelection[T] = new com.badlogic.gdx.scenes.scene2d.utils.ArraySelection(this.items) {
+  final val selection: com.badlogic.gdx.scenes.scene2d.utils.ArraySelection[T] = new com.badlogic.gdx.scenes.scene2d.utils.ArraySelection[T](this.items) {
     override def fireChangeEvent(): scala.Boolean = {
       if (SelectBox.this.selectedPrefWidth) {
         invalidateHierarchy()

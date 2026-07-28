@@ -17,7 +17,7 @@ class AsyncExecutor(maxConcurrent: scala.Int, name: java.lang.String) extends co
     if (this.executor.isShutdown()) {
       throw new com.badlogic.gdx.utils.GdxRuntimeException("Cannot run tasks on an executor that has been shutdown (disposed)")
     } else ()
-    return new com.badlogic.gdx.utils.async.AsyncResult(this.executor.submit(new java.util.concurrent.Callable[T]() {
+    return new com.badlogic.gdx.utils.async.AsyncResult[T](this.executor.submit(new java.util.concurrent.Callable[T]() {
       @java.lang.Override
       override def call(): T = {
         return task.call().asInstanceOf[T]

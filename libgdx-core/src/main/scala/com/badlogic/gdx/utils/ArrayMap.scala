@@ -529,7 +529,7 @@ class ArrayMap[K <: java.lang.Object, V <: java.lang.Object] extends balticporte
 object ArrayMap {
   class Entries[K <: java.lang.Object, V <: java.lang.Object](map$p: ArrayMap[K, V]) extends balticporter.runtime.JavaIterable[com.badlogic.gdx.utils.ObjectMap.Entry[K, V]] with balticporter.runtime.JavaIterator[com.badlogic.gdx.utils.ObjectMap.Entry[K, V]] {
     private var map: ArrayMap[K, V] = null.asInstanceOf[ArrayMap[K, V]]
-    var entry: com.badlogic.gdx.utils.ObjectMap.Entry[K, V] = new com.badlogic.gdx.utils.ObjectMap.Entry().asInstanceOf[com.badlogic.gdx.utils.ObjectMap.Entry[K, V]]
+    var entry: com.badlogic.gdx.utils.ObjectMap.Entry[K, V] = new com.badlogic.gdx.utils.ObjectMap.Entry[K, V]().asInstanceOf[com.badlogic.gdx.utils.ObjectMap.Entry[K, V]]
     var index: scala.Int = 0
     var valid: scala.Boolean = true
     this.map = map$p

@@ -27,7 +27,7 @@ class I18NBundleLoader(resolver$p: com.badlogic.gdx.assets.loaders.FileHandleRes
     return bundle
   }
   @java.lang.Override
-  override def getDependencies(fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.assets.loaders.I18NBundleLoader.I18NBundleParameter): com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = {
+  override def getDependencies(fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.assets.loaders.I18NBundleLoader.I18NBundleParameter): com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.utils.I18NBundle]] = {
     return null
   }
 }

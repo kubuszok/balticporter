@@ -6,7 +6,7 @@ abstract class Pool[T <: java.lang.Object] {
   var freeObjects: com.badlogic.gdx.utils.Array[T] = null.asInstanceOf[com.badlogic.gdx.utils.Array[T]]
   def this(initialCapacity: scala.Int, max: scala.Int) = {
     this()
-    this.freeObjects = new com.badlogic.gdx.utils.Array(false, initialCapacity).asInstanceOf[com.badlogic.gdx.utils.Array[T]]
+    this.freeObjects = new com.badlogic.gdx.utils.Array[T](false, initialCapacity).asInstanceOf[com.badlogic.gdx.utils.Array[T]]
     this.max = max
   }
   def this(initialCapacity: scala.Int) = {

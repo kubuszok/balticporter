@@ -4,7 +4,7 @@ class SnapshotArray[T <: java.lang.Object] extends com.badlogic.gdx.utils.Array[
   private var snapshot: scala.Array[T] = null.asInstanceOf[scala.Array[T]]
   private var recycled: scala.Array[T] = null.asInstanceOf[scala.Array[T]]
   private var snapshots: scala.Int = 0
-  def this(array: com.badlogic.gdx.utils.Array[?]) = {
+  def this(array: com.badlogic.gdx.utils.Array[T]) = {
     this()
     this.items = java.util.Arrays.copyOf(array.items.asInstanceOf[scala.Array[java.lang.Object]], array.size).asInstanceOf[scala.Array[T]]
     this.ordered = array.ordered
