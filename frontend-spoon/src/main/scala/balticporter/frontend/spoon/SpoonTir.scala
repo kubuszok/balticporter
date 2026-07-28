@@ -1264,9 +1264,18 @@ object SpoonTir:
         * never break our own `foo(x: T)` methods (whose real Scala signature keeps the invariant `T`). */
       private def typeParamToObject(e: CtExpression[?], declFormal: Option[CtTypeReference[?]], t: Term): Term =
         val et = try e.getType catch { case _: Throwable => null }
+        // A read through a WILDCARD-filled receiver is the other value Scala types as `Any`.
+        // `for (Iterator iter = it.iterator(); …) append(iter.next())` reads a RAW `Iterator`, which
+        // Java types as `Object`; we render the raw receiver `JavaIterator[?]`, so Scala's result is
+        // the wildcard — weaker than `Object`, and rejected by an `Object` slot.
+        val wildcardRead = e match
+          case inv: CtInvocation[?] =>
+            val rt = try Option(inv.getTarget).map(_.getType).orNull catch { case _: Throwable => null }
+            rt != null && !rt.isPrimitive && isGenericUse(rt) && hasWildcard(tpe(rt))
+          case _ => false
         declFormal match
           case Some(f) if !f.isInstanceOf[CtTypeParameterReference] && f.getQualifiedName == "java.lang.Object"
-                       && et != null && et.isInstanceOf[CtTypeParameterReference] =>
+                       && ((et != null && et.isInstanceOf[CtTypeParameterReference]) || wildcardRead) =>
             val obj = TypeRef(NoPrefix, minter.external("java.lang.Object", "Object"))
             Tree.Typed(t, tt(obj, e), obj, originOf(e))
           case _ => t

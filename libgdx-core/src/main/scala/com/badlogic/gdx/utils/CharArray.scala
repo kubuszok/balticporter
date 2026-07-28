@@ -702,7 +702,7 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
   }
   def appendAll(iterable: balticporter.runtime.JavaIterable[?]): CharArray = {
     { val iter: balticporter.runtime.JavaIterator[?] = iterable.iterator.asInstanceOf[balticporter.runtime.JavaIterator[?]]; while (iter.hasNext) { {
-      this.append(iter.next)
+      this.append(iter.next.asInstanceOf[java.lang.Object])
     };  } }
     return this
   }
