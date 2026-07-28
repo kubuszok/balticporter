@@ -36,10 +36,10 @@ class AtlasTmjMapLoader extends com.badlogic.gdx.maps.tiled.BaseTmjMapLoader[com
   }
   @java.lang.Override
   override def getDependencyAssetDescriptors(tmxFile: com.badlogic.gdx.files.FileHandle, textureParameter: com.badlogic.gdx.assets.loaders.TextureLoader.TextureParameter): com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.maps.tiled.TiledMap]] = {
-    val descriptors: com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.maps.tiled.TiledMap]] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.maps.tiled.TiledMap]]().asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.maps.tiled.TiledMap]]]
+    val descriptors: com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.maps.tiled.TiledMap]] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]().asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.maps.tiled.TiledMap]]]
     val atlasFileHandle: com.badlogic.gdx.files.FileHandle = this.getAtlasFileHandle(tmxFile)
     if (atlasFileHandle != null) {
-      descriptors.add(new com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.maps.tiled.TiledMap](atlasFileHandle, classOf[com.badlogic.gdx.graphics.g2d.TextureAtlas]))
+      descriptors.add(new com.badlogic.gdx.assets.AssetDescriptor(atlasFileHandle, classOf[com.badlogic.gdx.graphics.g2d.TextureAtlas]).asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.maps.tiled.TiledMap]])
     } else ()
     return descriptors.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.maps.tiled.TiledMap]]]
   }

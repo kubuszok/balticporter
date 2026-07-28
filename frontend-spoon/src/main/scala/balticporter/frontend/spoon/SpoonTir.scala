@@ -126,8 +126,9 @@ object SpoonTir:
       *
       * So a class must be able to see what it instantiated its parents' names AS. */
     private val inheritedInst = collection.mutable.ArrayDeque[Map[String, TypeRepr]]()
+    private var noInheritFill = false
     private def inheritedTp(name: String): Option[TypeRepr] =
-      inheritedInst.headOption.flatMap(_.get(name))
+      if noInheritFill then scala.None else inheritedInst.headOption.flatMap(_.get(name))
     private def accessibleTp(name: String): Option[SymId] =
       if declScopeOnly && tpExecNames.headOption.exists(_.contains(name)) then None
       else tpAccessible.headOption.flatMap(_.get(name))
@@ -2178,7 +2179,16 @@ object SpoonTir:
         try boxedWrappers(t.getQualifiedName) catch { case _: Throwable => false }
 
       private def ctorCall(cc: CtConstructorCall[?]): Term =
+        // A RAW `new` is the one place the inherited instantiation must NOT fill: the constructor
+        // ARGUMENTS decide the parameter there. `new AssetDescriptor(name, TextureAtlas.class)`
+        // inside `BitmapFontLoader extends …<BitmapFont, …>` is a `TextureAtlas` descriptor, not a
+        // `BitmapFont` one — java resolved it from the argument, having erased the constructor.
+        // (Suppressing the inherited fill for whole method BODIES instead measured 36 -> 59; local
+        // declarations there genuinely do need it to match the signatures they feed.)
+        val savedNoInherit = noInheritFill
+        noInheritFill = true
         val t    = tpe(cc.getType)
+        noInheritFill = savedNoInherit
         val cid  = methodSym(cc.getExecutable)
         val argEs = cc.getArguments.asScala.toList
         val args = appliedCtorArgs(cc, argEs, rawCtorArgs(cc, argEs, coerceArgs(cc.getExecutable, argEs)))

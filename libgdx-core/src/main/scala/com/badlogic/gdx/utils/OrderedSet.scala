@@ -226,7 +226,7 @@ object OrderedSet {
       return array
     }
     override def toArray(): com.badlogic.gdx.utils.Array[K] = {
-      return this.toArray(new com.badlogic.gdx.utils.Array[K](true, this.set.size - nextIndex))
+      return this.toArray(new com.badlogic.gdx.utils.Array(true, this.set.size - nextIndex))
     }
   }
 }

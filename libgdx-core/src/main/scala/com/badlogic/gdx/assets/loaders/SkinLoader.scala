@@ -3,12 +3,12 @@ package com.badlogic.gdx.assets.loaders
 class SkinLoader(resolver$p: com.badlogic.gdx.assets.loaders.FileHandleResolver) extends com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader[com.badlogic.gdx.scenes.scene2d.ui.Skin, com.badlogic.gdx.assets.loaders.SkinLoader.SkinParameter](resolver$p) {
   @java.lang.Override
   override def getDependencies(fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.assets.loaders.SkinLoader.SkinParameter): com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.scenes.scene2d.ui.Skin]] = {
-    val deps: com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.scenes.scene2d.ui.Skin]] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.scenes.scene2d.ui.Skin]().asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.scenes.scene2d.ui.Skin]]]
+    val deps: com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.scenes.scene2d.ui.Skin]] = new com.badlogic.gdx.utils.Array().asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.scenes.scene2d.ui.Skin]]]
     if ((parameter == null) || (parameter.textureAtlasPath == null)) {
-      deps.add(new com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.scenes.scene2d.ui.Skin](file.pathWithoutExtension() + ".atlas", classOf[com.badlogic.gdx.graphics.g2d.TextureAtlas]))
+      deps.add(new com.badlogic.gdx.assets.AssetDescriptor(file.pathWithoutExtension() + ".atlas", classOf[com.badlogic.gdx.graphics.g2d.TextureAtlas]).asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.scenes.scene2d.ui.Skin]])
     } else {
       if (parameter.textureAtlasPath != null) {
-        deps.add(new com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.scenes.scene2d.ui.Skin](parameter.textureAtlasPath, classOf[com.badlogic.gdx.graphics.g2d.TextureAtlas]))
+        deps.add(new com.badlogic.gdx.assets.AssetDescriptor(parameter.textureAtlasPath, classOf[com.badlogic.gdx.graphics.g2d.TextureAtlas]).asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.scenes.scene2d.ui.Skin]])
       } else ()
     }
     return deps.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.scenes.scene2d.ui.Skin]]]

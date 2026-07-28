@@ -14,7 +14,7 @@ class OrderedMap[K <: java.lang.Object, V <: java.lang.Object] extends com.badlo
     this.shift = java.lang.Long.numberOfLeadingZeros(this.mask)
     this.keyTable = new scala.Array[java.lang.Object](tableSize).asInstanceOf[scala.Array[K]].asInstanceOf[scala.Array[K]]
     this.valueTable = new scala.Array[java.lang.Object](tableSize).asInstanceOf[scala.Array[V]].asInstanceOf[scala.Array[V]]
-    this.keys$field = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.ObjectMap.Entry[K, V]](initialCapacity).asInstanceOf[com.badlogic.gdx.utils.Array[K]]
+    this.keys$field = new com.badlogic.gdx.utils.Array(initialCapacity).asInstanceOf[com.badlogic.gdx.utils.Array[K]]
   }
   def this(initialCapacity: scala.Int, loadFactor: scala.Float) = {
     this()
@@ -28,7 +28,7 @@ class OrderedMap[K <: java.lang.Object, V <: java.lang.Object] extends com.badlo
     this.shift = java.lang.Long.numberOfLeadingZeros(this.mask)
     this.keyTable = new scala.Array[java.lang.Object](tableSize).asInstanceOf[scala.Array[K]].asInstanceOf[scala.Array[K]]
     this.valueTable = new scala.Array[java.lang.Object](tableSize).asInstanceOf[scala.Array[V]].asInstanceOf[scala.Array[V]]
-    this.keys$field = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.ObjectMap.Entry[K, V]](initialCapacity).asInstanceOf[com.badlogic.gdx.utils.Array[K]]
+    this.keys$field = new com.badlogic.gdx.utils.Array(initialCapacity).asInstanceOf[com.badlogic.gdx.utils.Array[K]]
   }
   def this(map: OrderedMap[? <: K, ? <: V]) = {
     this()
@@ -45,9 +45,9 @@ class OrderedMap[K <: java.lang.Object, V <: java.lang.Object] extends com.badlo
     java.lang.System.arraycopy(map.keyTable, 0, this.keyTable, 0, map.keyTable.length)
     java.lang.System.arraycopy(map.valueTable, 0, this.valueTable, 0, map.valueTable.length)
     this.size = map.size
-    this.keys$field = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.ObjectMap.Entry[K, V]](map.keys$field).asInstanceOf[com.badlogic.gdx.utils.Array[K]]
+    this.keys$field = new com.badlogic.gdx.utils.Array(map.keys$field).asInstanceOf[com.badlogic.gdx.utils.Array[K]]
   }
-  this.keys$field = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.ObjectMap.Entry[K, V]]().asInstanceOf[com.badlogic.gdx.utils.Array[K]]
+  this.keys$field = new com.badlogic.gdx.utils.Array().asInstanceOf[com.badlogic.gdx.utils.Array[K]]
   override def put(key: K, value: V): V = {
     var i: scala.Int = this.locateKey(key)
     if (i >= 0) {

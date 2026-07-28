@@ -18,15 +18,15 @@ class ParticleEffectLoader(resolver$p: com.badlogic.gdx.assets.loaders.FileHandl
       this.items.add(entry)
       assets = data.getAssets().asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.ResourceData.AssetData[com.badlogic.gdx.graphics.g3d.particles.ParticleEffect]]]
     }
-    val descriptors: com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.graphics.g3d.particles.ParticleEffect]] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.graphics.g3d.particles.ParticleEffect]]().asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.graphics.g3d.particles.ParticleEffect]]]
+    val descriptors: com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.graphics.g3d.particles.ParticleEffect]] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]().asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.graphics.g3d.particles.ParticleEffect]]]
     for (assetData <- assets) {
       if (!this.resolve(assetData.filename).exists()) {
         assetData.filename = file.parent().child(com.badlogic.gdx.Gdx.files.internal(assetData.filename).name()).path()
       } else ()
       if (assetData.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ResourceData.AssetData[java.lang.Object]].`type` == classOf[com.badlogic.gdx.graphics.g3d.particles.ParticleEffect]) {
-        descriptors.add(new com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.graphics.g3d.particles.ParticleEffect](assetData.filename, assetData.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ResourceData.AssetData[java.lang.Object]].`type`.asInstanceOf[java.lang.Class[com.badlogic.gdx.graphics.g3d.particles.ParticleEffect]], parameter))
+        descriptors.add(new com.badlogic.gdx.assets.AssetDescriptor(assetData.filename, assetData.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ResourceData.AssetData[java.lang.Object]].`type`.asInstanceOf[java.lang.Class[com.badlogic.gdx.graphics.g3d.particles.ParticleEffect]], parameter).asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.graphics.g3d.particles.ParticleEffect]])
       } else {
-        descriptors.add(new com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.graphics.g3d.particles.ParticleEffect](assetData.filename, assetData.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ResourceData.AssetData[java.lang.Object]].`type`))
+        descriptors.add(new com.badlogic.gdx.assets.AssetDescriptor(assetData.filename, assetData.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ResourceData.AssetData[java.lang.Object]].`type`).asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.graphics.g3d.particles.ParticleEffect]])
       }
     }
     return descriptors.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.graphics.g3d.particles.ParticleEffect]]]

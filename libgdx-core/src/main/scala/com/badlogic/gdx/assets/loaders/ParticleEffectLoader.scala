@@ -19,7 +19,7 @@ class ParticleEffectLoader(resolver$p: com.badlogic.gdx.assets.loaders.FileHandl
   override def getDependencies(fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, param: com.badlogic.gdx.assets.loaders.ParticleEffectLoader.ParticleEffectParameter): com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.graphics.g2d.ParticleEffect]] = {
     var deps: com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.graphics.g2d.ParticleEffect]] = null
     if ((param != null) && (param.atlasFile != null)) {
-      deps = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.ParticleEffect]().asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.graphics.g2d.ParticleEffect]]]
+      deps = new com.badlogic.gdx.utils.Array().asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.graphics.g2d.ParticleEffect]]]
       deps.add(new com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.graphics.g2d.TextureAtlas](param.atlasFile, classOf[com.badlogic.gdx.graphics.g2d.TextureAtlas]))
     } else ()
     return deps.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.graphics.g2d.ParticleEffect]]]

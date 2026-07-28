@@ -2,7 +2,7 @@ package com.badlogic.gdx.scenes.scene2d.ui
 
 class Tree[N <: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[N, V, ?], V <: java.lang.Object](style$p: com.badlogic.gdx.scenes.scene2d.ui.Tree.TreeStyle) extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup with com.badlogic.gdx.scenes.scene2d.ui.Styleable[com.badlogic.gdx.scenes.scene2d.ui.Tree.TreeStyle] {
   var style: com.badlogic.gdx.scenes.scene2d.ui.Tree.TreeStyle = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Tree.TreeStyle]
-  final val rootNodes: com.badlogic.gdx.utils.Array[N] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.scenes.scene2d.ui.Tree.TreeStyle]().asInstanceOf[com.badlogic.gdx.utils.Array[N]]
+  final val rootNodes: com.badlogic.gdx.utils.Array[N] = new com.badlogic.gdx.utils.Array().asInstanceOf[com.badlogic.gdx.utils.Array[N]]
   var selection: com.badlogic.gdx.scenes.scene2d.utils.Selection[N] = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Selection[N]]
   var ySpacing: scala.Float = 4
   var iconSpacingLeft: scala.Float = 2

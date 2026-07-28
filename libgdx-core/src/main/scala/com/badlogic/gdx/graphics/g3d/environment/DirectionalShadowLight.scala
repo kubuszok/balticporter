@@ -13,7 +13,7 @@ class DirectionalShadowLight(shadowMapWidth: scala.Int, shadowMapHeight: scala.I
   this.cam.far = shadowFar
   this.halfHeight = shadowViewportHeight * 0.5f
   this.halfDepth = shadowNear + (0.5f * (shadowFar - shadowNear))
-  this.textureDesc = new com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[com.badlogic.gdx.graphics.g3d.environment.DirectionalLight]().asInstanceOf[com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[com.badlogic.gdx.graphics.g3d.environment.DirectionalLight]]
+  this.textureDesc = new com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor().asInstanceOf[com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[com.badlogic.gdx.graphics.g3d.environment.DirectionalLight]]
   this.textureDesc.minFilter = {
     this.textureDesc.magFilter = com.badlogic.gdx.graphics.Texture.TextureFilter.Nearest
     this.textureDesc.magFilter

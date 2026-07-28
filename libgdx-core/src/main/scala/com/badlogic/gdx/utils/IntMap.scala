@@ -623,7 +623,7 @@ object IntMap {
       return this
     }
     def toArray(): com.badlogic.gdx.utils.Array[V] = {
-      val array: com.badlogic.gdx.utils.Array[V] = new com.badlogic.gdx.utils.Array[V](true, this.map.size).asInstanceOf[com.badlogic.gdx.utils.Array[V]]
+      val array: com.badlogic.gdx.utils.Array[V] = new com.badlogic.gdx.utils.Array(true, this.map.size).asInstanceOf[com.badlogic.gdx.utils.Array[V]]
       while (hasNext$field) {
         array.asInstanceOf[com.badlogic.gdx.utils.Array[java.lang.Object]].add(this.next().asInstanceOf[java.lang.Object])
       }
