@@ -426,11 +426,28 @@ So one site wants the bound and sixteen want it absent.
 
 The second is worth reading: the cast is CORRECT — same runtime object, java's own static type —
 but with inference still free the ASSIGNMENT's expected type leaks in and scala demands
-`Class[Object & Int]`. The fix has to pin `T` at the same time, and a third attempt adding that to
-`pinTypeArgs` (a branch for `formals == 1 && actuals.isEmpty` with a primitive class literal at a
-`Class<T>` formal) **did not fire at all** — the cast appeared in the output, the `readValue[…]`
-pin did not. Per §4.6 of CLAUDE.md that is where to start next time: find out why the branch is not
-reached before adding another condition to it. Do not re-run the first two.
+`Class[Object & Int]`. The fix has to pin `T` at the same time.
+
+Two more attempts, both DIAGNOSED rather than left as guesses:
+
+| attempt | measured |
+|---|---|
+| drop java's implicit `Object` bound on METHOD type params | 1 -> 7 |
+| pin `T` + cast the literal + give the substitute the bound | 1 -> 52 |
+
+The first is a clean refutation: the bound is load-bearing wherever a method's `T` flows into a
+CLASS's `T`. `Array.with[T](…): Array[T]` calling `new Array[T](…)` needs `T <: Object` because
+`Array`'s own parameter has it — 6 sites, plus `CharArray.append`. So "an override may simply drop
+the bound" is wrong; only "an override COPIES the parent's bounds" can work.
+
+The second was reached by tracing `pinTypeArgs` rather than editing it (CLAUDE.md §4.6). The
+finding, which contradicts what that method's own comment assumes: **Spoon reports `actuals = 1`
+for these calls** — it hands back the INFERRED type argument (`Integer`) even though the java
+source writes none. So the existing code is not failing to see the case; it deliberately declines
+it via `!inv.getArguments.exists(isPrimitiveClassLiteral)`. Removing that exclusion and supplying a
+conforming argument compiles the 16 — and produces 52 `equals(Object)` vs `equals(Any)` name
+clashes across unrelated files, which is NOT yet understood and is where the next attempt must
+start. Do not re-run any of the four above without that answer.
 
 ### The real options, in preference order
 
