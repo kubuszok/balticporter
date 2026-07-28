@@ -49,6 +49,22 @@ FAIL TO COMPILE after conversion. Loud, not silent, which is the outcome to want
 Per CLAUDE.md §1 this is **(a) universal** — every java library ported to cross-platform scala needs
 it — so it belongs in the engine with the target framework parameterised, not in libgdx policy.
 
+### Test-port state: 11 errors, portability 1028 -> 148
+
+205/221 suites are structurally MUnit (`class X extends …PortedSuite` + `testCase("m", { … })`), and
+the `org.junit.Assert` statics are rewritten onto the façade. What is left:
+
+| cause | count |
+|---|---|
+| a STATIC java helper emits into the COMPANION OBJECT, which does not extend the suite base class — so its rewritten `assertTrue`/`fail` resolve to nothing | ~9 |
+| the long-standing `AssetLoadingTask:28` raw-fill error | 1 |
+
+The companion case is the interesting one and it argues the same way the section below does: the
+façade puts the assertions on an INSTANCE base class, so anything java made `static` cannot see
+them. Emitting MUnit's own calls directly — no base class — does not have this problem at all,
+because `munit.Assertions` members would be imported rather than inherited. It is a second,
+independent reason the scaffold should go.
+
 ### `PortedSuite` IS A SCAFFOLD — it must not survive
 
 A base class whose every member is `assertEquals(a, b) => assert(a == b)` or
