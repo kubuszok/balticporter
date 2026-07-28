@@ -454,12 +454,34 @@ point. Chosen over returning null/empty, which would corrupt data silently. 49 o
 pass a `classOf[X]` literal, so a call-site rewrite to statically-derived codecs is viable; one
 site (`readValue("resource", null, …)`) is class-tag driven and needs explicit handling.
 
+## THE TYPER GATE IS CLOSED — and the count rose, as predicted
+
+`773ddca` closed the last **typer** error. The total then went **1 → 43**, and every one of the 43 is
+`E057` (*type argument does not conform to upper bound*).
+
+**This is not a regression.** Bound checking runs in a phase AFTER the typer, and dotty's
+`Phase.isRunnable` is `!ctx.reporter.hasErrors` — so for this project's entire history a single typer
+error suppressed that phase across the whole program. The 43 were always there and were never
+reported. Verified directly rather than assumed: `Tree.scala:121` is **byte-identical** with and
+without the commit that closed the typer error, yet errors only with it.
+
+CLAUDE.md §3 called this in advance — "the number will RISE. That is the gate beginning to tell the
+truth, not a regression." It is the first evidence that the prediction was right.
+
+What the 43 actually are: F-bounded erasure casts. `Tree.Node<N extends Node<N,V,A>, V, A>` cast to
+`Node[Object, Object, Actor]`, where `Object` cannot satisfy `N <: Node[N,V,A]`. `erasureOfFormal`
+erases an F-bounded variable to `Object`, which is what javac does — but Scala CHECKS the bound and
+Java does not. So the erased-receiver view needs an F-bound-aware erasure: erase `N` to its own
+bound with the recursion cut (`Node[Object, Object, Actor]` at the outer level), not to `Object`.
+This is universal — rule (a) — and is the next piece of work.
+
 ## Do NOT retry (measured failures)
 
 - **Falling back to ERASED formals in `rawCtorArgs` when nothing names the class's parameters** —
-  THREE gates tried, all worse than leaving it alone. This is the last remaining core error
-  (`ParticleEffectLoader:27`) and it has now cost a full cycle; do not attack it from this direction
-  again without a new idea.
+  THREE gates tried, all worse than leaving it alone. SOLVED, but only by inverting the direction:
+  see `rawCtorSpecialisation`, which casts the ERASED argument UP to the binding a precise sibling
+  implies, instead of casting the precise argument DOWN to the erasure. The entries below are the
+  record of the wrong direction; keep them, because the wrong direction is the intuitive one.
 
   | gate | measured |
   |---|---|
