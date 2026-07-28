@@ -1246,6 +1246,7 @@ object TirEmitter:
     */
   def funnelParamRenames(p: Program): Program =
     val renames = collection.mutable.Map[SymId, String]()
+    val plans = CtorFunnel.Plans(p)
     def nm(id: SymId): String = p.symbolOf(id).map(_.name).getOrElse("")
     def parentSyms(cd: Tree.ClassDef): List[SymId] =
       def hs(t: TypeRepr): Option[SymId] = t match
@@ -1258,23 +1259,38 @@ object TirEmitter:
       declOf(cd.symbol) = cd
       cd.body.foreach { case c: Tree.ClassDef => index(c); case _ => () }
     p.units.foreach(index)
+    // EFFECTIVE names: a parent's promoted param already renamed to `attributes$p` must read as
+    // TAKEN here, or the child renames its own `attributes` to the same thing and the collision
+    // simply moves up a level (measured on `DepthShader extends DefaultShader`). Requires the
+    // parents-first scan below.
+    def eff(id: SymId): String = renames.getOrElse(id, nm(id))
     def ownNames(cd: Tree.ClassDef): Set[String] =
       cd.body.collect {
-        case d: Tree.DefDef if nm(d.symbol) != "<init>" => nm(d.symbol)
-        case v: Tree.ValDef                             => nm(v.symbol)
-        case c: Tree.ClassDef                           => nm(c.symbol)
-      }.toSet
+        case d: Tree.DefDef if nm(d.symbol) != "<init>" => eff(d.symbol)
+        case v: Tree.ValDef                             => eff(v.symbol)
+        case c: Tree.ClassDef                           => eff(c.symbol)
+      }.toSet ++ widenedOf(cd).map(v => eff(v.symbol))
+    /** everything this class's promoted constructor contributes to the class BODY — its params and
+      * its top-level locals. Neither is in `cd.body`, and both become members, so both are names a
+      * SUBCLASS must avoid: `DepthShader extends DefaultShader` promotes the same two constructor
+      * locals and landed on `attributes$p` twice. */
+    def widenedOf(cd: Tree.ClassDef): List[Tree.ValDef] =
+      val pl = plans(cd)
+      pl.primaryParams ++ pl.primaryBody.collect { case v: Tree.ValDef => v }
     def visibleNames(cd: Tree.ClassDef, seen: Set[SymId] = Set.empty): Set[String] =
       if seen(cd.symbol) then Set.empty
       else ownNames(cd) ++ parentSyms(cd).flatMap(declOf.get).flatMap(visibleNames(_, seen + cd.symbol))
-    val plans = CtorFunnel.Plans(p)
+    val scanned = collection.mutable.Set[SymId]()
     def scan(cd: Tree.ClassDef): Unit =
+      if scanned(cd.symbol) then return
+      scanned += cd.symbol
+      parentSyms(cd).flatMap(declOf.get).foreach(scan) // parents first, so `eff` is settled
       val plan = plans(cd)
       if plan.primary.isDefined then
         val taken = collection.mutable.Set.from(visibleNames(cd))
         // the promoted constructor's params, then the top-level locals of its body (nested
         // blocks keep their own scope and never reach the class body)
-        val widened = plan.primaryParams ++ plan.primaryBody.collect { case v: Tree.ValDef => v }
+        val widened = widenedOf(cd)
         widened.foreach { v =>
           val n = nm(v.symbol)
           if taken(n) then
