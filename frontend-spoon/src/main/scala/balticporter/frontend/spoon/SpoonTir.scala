@@ -919,7 +919,13 @@ object SpoonTir:
       * inherited declaration for them (there is no `Object` in the model under noClasspath), so the
       * hierarchy walk below cannot see it. These five are the whole set java lets you redeclare. */
     private def overridesInherited(m: CtMethod[?]): Boolean =
-      universalMember(m) || inheritedFromSource(m)
+      // A java STATIC method never overrides — it HIDES. `SnapshotArray.with` and `Array.with` are
+      // two unrelated statics that java resolves by the static type of the receiver; and in scala
+      // they land in COMPANION objects, which inherit nothing from each other at all. Spoon's
+      // `getTopDefinitions` reports the hidden one just as it reports a real override, so this has
+      // to be excluded here rather than relied on downstream.
+      !(try m.isStatic catch { case _: Throwable => false }) &&
+        (universalMember(m) || inheritedFromSource(m))
 
     /** Does this redeclare one of `java.lang.Object`'s members? Matched on the full SIGNATURE, not
       * name and arity: `equals(VertexAttribute)` is an OVERLOAD that overrides nothing, and marking
