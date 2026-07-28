@@ -205,6 +205,9 @@ final class CollectionsTransform extends Phase:
     * the scala API against the retyped receiver at compile time). */
   private def rewrite(k: Kind, recv: Term, m: SymId, so: Origin, t: Tree.Apply)(using Program): Option[Term] =
     val name = methodName(m)
+    /** is the receiver one of the runtime SHIMS rather than a scala collection? They carry java's
+      * arity and java's `iterator()`, so the scala-shaped rewrites below must leave them alone. */
+    val onShim = headSym(recv.tpe).exists(x => x == javaIterableSym || x == javaIteratorSym)
     (name, t.args, k) match
       // `m.entrySet()` is the VIEW of the map as its (key, value) pairs, and a scala `Map[K, V]`
       // already IS an `Iterable[(K, V)]` — so the view is the map itself. `m.toSet` would be the
@@ -223,15 +226,18 @@ final class CollectionsTransform extends Phase:
       // Not on the SHIMS themselves — their `iterator` already yields a `JavaIterator`; wrapping it
       // would be a no-op that also loses the parenless form below, emitting `iterable.iterator()`
       // against a scala-shaped `def iterator` (measured 2 -> 10).
-      case ("iterator", Nil, _)
-          if iteratorFromSym != SymId.None &&
-             !headSym(recv.tpe).exists(x => x == javaIterableSym || x == javaIteratorSym) =>
+      case ("iterator", Nil, _) if iteratorFromSym != SymId.None && !onShim =>
         val sel = Tree.Select(recv, m, t.tpe, t.origin) // parenless, as the generic case below
         Some(Tree.Apply(Tree.Ident(iteratorFromSym, TypeRepr.NoType, so), List(sel), iteratorFromSym, t.tpe, so))
       case ("entrySet", Nil, Kind.Map)          => Some(recv)
       case ("getKey", Nil, Kind.Entry)          => Some(Tree.Select(recv, key1Sym, t.tpe, t.origin))
       case ("getValue", Nil, Kind.Entry)        => Some(Tree.Select(recv, value2Sym, t.tpe, t.origin))
-      case (n, Nil, _) if parenless(n)          => Some(Tree.Select(recv, m, t.tpe, t.origin)) // drop `()`
+      // …but never on a SHIM receiver. `parenless` exists because a scala collection's `size`/
+      // `iterator` take no parens; the shims deliberately carry JAVA's arity (`iterator()`,
+      // `hasNext()`, `next()`), because a class that is both java `Iterable` and java `Iterator`
+      // cannot be modelled on scala's collection traits at all. Stripping `()` there emits
+      // `it.hasNext` against `def hasNext()` — 24 measured errors.
+      case (n, Nil, _) if parenless(n) && !onShim     => Some(Tree.Select(recv, m, t.tpe, t.origin)) // drop `()`
       case ("get", List(i), Kind.Seq)           => Some(Tree.Apply(recv, List(i), m, t.tpe, t.origin)) // xs(i)
       case ("get", List(key), Kind.Map)         => Some(call(recv, getOrElseSym, List(key, dflt(nullOf(so), recv, so)), t, so))
       case ("getOrDefault", List(key, d), _)    => Some(call(recv, getOrElseSym, List(key, dflt(d, recv, so)), t, so))
@@ -327,14 +333,26 @@ object CollectionsTransform:
     JavaIterableFqn ->
       """package balticporter.runtime
         |
-        |/** `java.lang.Iterable`, as Scala — `scala.collection.Iterable` whose `iterator` is the
-        |  * removal-capable [[JavaIterator]] that java's `Iterable.iterator()` is declared to
-        |  * return. Iteration is unaffected (it IS a `scala.collection.Iterable`, so `for (x <- xs)`,
-        |  * `map`, `foreach` all work); what it adds back is the guarantee java gives, that the
-        |  * iterator you get can remove from the collection you got it from.
+        |/** `java.lang.Iterable`, as Scala — java's interface, not scala's collection.
+        |  *
+        |  * STANDALONE by necessity, not by preference. Java's `Iterable` and `Iterator` are
+        |  * independent two- and three-method interfaces, and a class may implement BOTH — libGDX's
+        |  * map and array iterators all do (`Entries extends MapIterator implements Iterable<Entry>,
+        |  * Iterator<Entry>`, 14 such classes in gdx core alone). Modelled on
+        |  * `scala.collection.{Iterable, Iterator}` that shape is not merely awkward, it is
+        |  * ILLEGAL: `Iterator.iterator` is `final`, and `seq` arrives from both sides. No amount
+        |  * of `override` recovers it, because the conflict is in the parents.
+        |  *
+        |  * Nor is java's `iterator()` scala's `iterator`: java's is nilary and returns a
+        |  * REMOVAL-CAPABLE iterator, scala's is parameterless and returns one that cannot remove.
+        |  * Declaring the java shape here is what lets a ported `override def iterator()` mean what
+        |  * it meant in Java.
+        |  *
+        |  * Interop is restored by [[JavaIterable.asScala]] rather than by inheritance, which is
+        |  * the direction that cannot conflict: an extension adds a view, a parent adds members.
         |  */
-        |trait JavaIterable[A] extends scala.collection.Iterable[A]:
-        |  def iterator: JavaIterator[A]
+        |trait JavaIterable[A]:
+        |  def iterator(): JavaIterator[A]
         |
         |object JavaIterable:
         |  /** Adapt a plain scala collection to the java-shaped one. Inserted by the engine at call
@@ -343,30 +361,42 @@ object CollectionsTransform:
         |    * `UnsupportedOperationException` — because a scala iterator genuinely cannot remove,
         |    * which is what java reports for a non-removable iterator too. */
         |  def from[A](xs: scala.collection.Iterable[A]): JavaIterable[A] = new JavaIterable[A]:
-        |    def iterator: JavaIterator[A] = new JavaIterator[A]:
-        |      private val underlying = xs.iterator
-        |      def hasNext: Boolean = underlying.hasNext
-        |      def next(): A = underlying.next()
+        |    def iterator(): JavaIterator[A] = JavaIterator.from(xs.iterator)
+        |
+        |  extension [A](self: JavaIterable[A])
+        |    /** A scala view of this java iterable — `for`, `map`, `foreach` and the rest. */
+        |    def asScala: scala.collection.Iterable[A] = new scala.collection.Iterable[A]:
+        |      def iterator: scala.collection.Iterator[A] = self.iterator().asScala
+        |    /** so `for (x <- xs)` and `xs.foreach(f)` work directly on the java shape. Written as
+        |      * the loop rather than delegating to the iterator: `JavaIterator` deliberately has no
+        |      * `foreach` extension (see there), so there is nothing to delegate to. */
+        |    def foreach(f: A => Unit): Unit =
+        |      val it = self.iterator()
+        |      while it.hasNext() do f(it.next())
         |""".stripMargin,
     JavaIteratorFqn ->
       """package balticporter.runtime
         |
-        |/** `java.util.Iterator`, as Scala — what `scala.collection.Iterator` is missing.
+        |/** `java.util.Iterator`, as Scala — java's interface, not scala's.
         |  *
         |  * Java's `Iterator` has a third method, `remove()`, which removes from the underlying
         |  * collection the element last returned by `next()`. `scala.collection.Iterator` has no
-        |  * such operation and no way to express one, so a port that maps `java.util.Iterator` to
-        |  * it drops the method — quietly, until a call site fails to compile, and dangerously if
-        |  * the call site is instead "fixed" by dropping the removal.
+        |  * such operation and no way to express one, so a port that maps java's onto scala's
+        |  * drops the method — quietly, until a call site fails to compile, and dangerously if the
+        |  * call site is instead "fixed" by dropping the removal. libGDX calls it POLYMORPHICALLY,
+        |  * through the interface (`ModelLoader`, `ParticleControllerInfluencer`, `ArraySelection`,
+        |  * `Predicate`), so no call-site narrowing brings it back.
         |  *
-        |  * Ported code implementing a Java `Iterator` extends THIS instead. Removal support is
-        |  * therefore preserved exactly: an implementation that defines `remove()` keeps its own
-        |  * behaviour, and one that does not inherits the default the JDK itself specifies for
-        |  * `Iterator.remove` — throw `UnsupportedOperationException`.
+        |  * Declared standalone rather than as a `scala.collection.Iterator` subtype — see
+        |  * [[JavaIterable]] for why that subtyping is not available at all. The methods carry
+        |  * java's arity (`hasNext()`, `next()`), which is also the arity every ported override
+        |  * was written with.
         |  *
         |  * Portable: no JVM-only API, nothing reflective.
         |  */
-        |trait JavaIterator[A] extends scala.collection.Iterator[A]:
+        |trait JavaIterator[A]:
+        |  def hasNext(): Boolean
+        |  def next(): A
         |  /** `java.util.Iterator.remove` — the JDK's own default implementation. */
         |  def remove(): Unit = throw new UnsupportedOperationException("remove")
         |
@@ -376,7 +406,19 @@ object CollectionsTransform:
         |  def from[A](it: scala.collection.Iterator[A]): JavaIterator[A] = it match
         |    case ji: JavaIterator[A @unchecked] => ji
         |    case _ => new JavaIterator[A]:
-        |      def hasNext: Boolean = it.hasNext
+        |      def hasNext(): Boolean = it.hasNext
         |      def next(): A = it.next()
+        |
+        |  extension [A](self: JavaIterator[A])
+        |    /** A scala view of this java iterator. `remove()` is not expressible there and is
+        |      * simply not offered — the view is for traversal. */
+        |    def asScala: scala.collection.Iterator[A] = new scala.collection.Iterator[A]:
+        |      def hasNext: Boolean = self.hasNext()
+        |      def next(): A = self.next()
+        |    /** Deliberately NO `foreach` here, though the loop is trivial: a class that is both a
+        |      * java `Iterable` and a java `Iterator` — which is most of libGDX's — would then have
+        |      * two applicable extensions and scala reports the `for` as ambiguous rather than
+        |      * picking one. `foreach` lives on [[JavaIterable]], which is what java's own for-each
+        |      * requires anyway; traverse an iterator with `asScala`. */
         |""".stripMargin,
   )
