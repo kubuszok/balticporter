@@ -155,7 +155,16 @@ final class TirEmitter(source: Program):
       if namedInner || !isInnerClass(id) then esc(s.name) // declared here — in scope
       else nestedPath(id)
     else if program.symbolOf(s.owner).exists(_.flags.isModule) then s"${typeValue(s.owner)}.${esc(s.name)}" // object's type member → path-dependent `O.T`
+    // An inner class of an ANCESTOR is an INHERITED member type, in scope by its simple name
+    // anywhere inside the subclass — `class TextArea extends TextField` sees
+    // `TextFieldClickListener` exactly as Java did. The projection is not merely verbose here, it
+    // is illegal: `TextField#TextFieldClickListener` needs `TextField` to be an immutable path.
+    else if inheritedNested(s.owner) then esc(s.name)
     else nestedPath(id)                                             // non-static inner class elsewhere → `Outer#Inner`
+
+  /** is `owner` an ancestor of some class we are currently rendering inside? */
+  private def inheritedNested(owner: SymId): Boolean =
+    owner != SymId.None && classStack.exists(c => c != owner && ancestorsOf(c).contains(owner))
 
   /** the path to a NESTED type, choosing a separator PER LEVEL: `.` where that level is a Java
     * `static` nested class (lowered into the enclosing companion `object`, so reachable only through
@@ -646,7 +655,7 @@ final class TirEmitter(source: Program):
     // a static nested type lives in the companion `object`, so name it through the value path
     // `Outer.Inner` even from inside `Outer` (companion members aren't in the class's scope).
     if s.flags.isStatic && s.fullName.contains('$') then s.fullName.replace('$', '.')
-    else if currentDeclared(id) then esc(s.name)
+    else if currentDeclared(id) || inheritedNested(s.owner) then esc(s.name)
     else s.fullName.replace('$', '.')
 
   /** a static member lives in the companion `object`; even inside its own class it must be

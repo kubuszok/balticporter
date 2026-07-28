@@ -304,7 +304,7 @@ class TextArea extends com.badlogic.gdx.scenes.scene2d.ui.TextField {
     val font: com.badlogic.gdx.graphics.g2d.BitmapFont = this.style.font
     return (-((this.cursorLine - this.firstLineShowing) + 1)) * font.getLineHeight()
   }
-  class TextAreaListener extends com.badlogic.gdx.scenes.scene2d.ui.TextField#TextFieldClickListener {
+  class TextAreaListener extends TextFieldClickListener {
     def setCursorPosition(x$arg: scala.Float, y$arg: scala.Float): scala.Unit = {
       var x: scala.Float = x$arg
       var y: scala.Float = y$arg
@@ -393,7 +393,7 @@ class TextArea extends com.badlogic.gdx.scenes.scene2d.ui.TextField {
     }
   }
   object TextAreaListener {
-    export com.badlogic.gdx.scenes.scene2d.ui.TextField.TextFieldClickListener.*
+    export TextFieldClickListener.*
   }
 }
 object TextArea {
