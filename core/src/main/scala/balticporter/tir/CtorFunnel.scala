@@ -116,7 +116,7 @@ object CtorFunnel:
                   // the deferred class's prologue is a prefix of this one.
                   val shared = e.deferredTo.flatMap(prologueOf(_, 0)).map(_.size).getOrElse(0)
                   if usable(cd, d, stats, touched) && supersedes(after, prologue.get.drop(shared)) then
-                    out((cd.symbol, d.symbol)) = stats
+                    out((cd.symbol, d.symbol)) = retyped(stats, parentTypeSubst(cd))
                     widened ++= touched.filter { s =>
                       program.symbolOf(s).exists(sy => sy.flags.isPrivate && sy.owner != cd.symbol)
                     }
@@ -217,6 +217,54 @@ object CtorFunnel:
           t
       stats.foreach(StandardTraversal.mapStat(ph, _))
       found
+
+    /** The parent's type PARAMETERS mapped to the arguments this class instantiates them with.
+      *
+      * A replay lifts the parent constructor's statements into the subclass, and those statements
+      * are typed in the PARENT's scope: `class FlushablePoolClass extends FlushablePool[String]`
+      * replayed `new Array[T](false, n)` verbatim, where `T` is `Pool`'s parameter and nothing in
+      * the subclass can name it (`Not found: type T`). The instantiation is right there in the
+      * `extends` clause, so the substitution is exact rather than a guess. */
+    private def parentTypeSubst(cd: Tree.ClassDef): Map[SymId, TypeRepr] =
+      def headArgs(t: TypeRepr): Option[(SymId, List[TypeRepr])] = t match
+        case TypeRepr.AppliedType(TypeRepr.TypeRef(_, s), as) => Some(s -> as)
+        case _                                                => scala.None
+      // TRANSITIVE: the statements may come from a GRANDparent. `FlushablePoolClass extends
+      // FlushablePool[String]`, `FlushablePool<T> extends Pool<T>`, and the replayed `new Array[T]`
+      // is `Pool`'s `T` — so the chain has to be walked, composing each level's instantiation
+      // through the one below it.
+      def sub(t: TypeRepr, m: Map[SymId, TypeRepr]): TypeRepr = t match
+        case TypeRepr.TypeRef(_, x) if m.contains(x) => m(x)
+        case TypeRepr.AppliedType(tc, as)            => TypeRepr.AppliedType(sub(tc, m), as.map(sub(_, m)))
+        case other                                   => other
+      def walk(c: Tree.ClassDef, acc: Map[SymId, TypeRepr], depth: Int): Map[SymId, TypeRepr] =
+        if depth > 8 then acc
+        else
+          c.parents.flatMap {
+            case tt: TypeTree => headArgs(tt.tpe)
+            case t: Term      => headArgs(t.tpe)
+          }.foldLeft(acc) { case (m, (psym, as)) =>
+            classOfSym(psym) match
+              case scala.None => m
+              case Some(pc)   =>
+                val here = pc.tparams.map(_.symbol).zip(as.map(sub(_, m))).toMap
+                walk(pc, m ++ here, depth + 1)
+          }
+      walk(cd, Map.empty, 0)
+
+    /** rewrite every TYPE in these statements through `m`. */
+    private def retyped(stats: List[Statement], m: Map[SymId, TypeRepr]): List[Statement] =
+      if m.isEmpty then stats
+      else
+        given Program = program
+        def sub(t: TypeRepr): TypeRepr = t match
+          case TypeRepr.TypeRef(_, s) if m.contains(s) => m(s)
+          case TypeRepr.AppliedType(tc, as)            => TypeRepr.AppliedType(sub(tc), as.map(sub))
+          case other                                   => other
+        val ph = new Phase:
+          def name = "ctor-replay-retype"
+          override def transformType(t: TypeRepr)(using Program): TypeRepr = sub(t)
+        stats.map(StandardTraversal.mapStat(ph, _))
 
     private def substituted(stats: List[Statement], m: Map[SymId, Term]): List[Statement] =
       if m.isEmpty then stats

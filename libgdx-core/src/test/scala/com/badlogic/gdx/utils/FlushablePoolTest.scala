@@ -70,12 +70,12 @@ class FlushablePoolTest {
   class FlushablePoolClass extends com.badlogic.gdx.utils.FlushablePool[java.lang.String] {
     def this(initialCapacity: scala.Int) = {
       this()
-      this.freeObjects = new com.badlogic.gdx.utils.Array[T](false, initialCapacity).asInstanceOf[com.badlogic.gdx.utils.Array[T]]
+      this.freeObjects = new com.badlogic.gdx.utils.Array[java.lang.String](false, initialCapacity).asInstanceOf[com.badlogic.gdx.utils.Array[java.lang.String]]
       this.max = java.lang.Integer.MAX_VALUE
     }
     def this(initialCapacity: scala.Int, max: scala.Int) = {
       this()
-      this.freeObjects = new com.badlogic.gdx.utils.Array[T](false, initialCapacity).asInstanceOf[com.badlogic.gdx.utils.Array[T]]
+      this.freeObjects = new com.badlogic.gdx.utils.Array[java.lang.String](false, initialCapacity).asInstanceOf[com.badlogic.gdx.utils.Array[java.lang.String]]
       this.max = max
     }
     @java.lang.Override
