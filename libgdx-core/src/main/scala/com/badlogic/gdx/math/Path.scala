@@ -1,6 +1,6 @@
 package com.badlogic.gdx.math
 
-trait Path[T] {
+trait Path[T <: java.lang.Object] {
   def derivativeAt(out: T, t: scala.Float): T
   def valueAt(out: T, t: scala.Float): T
   def approximate(v: T): scala.Float

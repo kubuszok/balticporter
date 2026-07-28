@@ -1,6 +1,6 @@
 package com.badlogic.gdx.assets
 
-class AssetLoaderParameters[T] {
+class AssetLoaderParameters[T <: java.lang.Object] {
   var loadedCallback: com.badlogic.gdx.assets.AssetLoaderParameters.LoadedCallback = null.asInstanceOf[com.badlogic.gdx.assets.AssetLoaderParameters.LoadedCallback]
 }
 object AssetLoaderParameters {

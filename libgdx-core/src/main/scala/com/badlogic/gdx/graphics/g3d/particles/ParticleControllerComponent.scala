@@ -1,6 +1,6 @@
 package com.badlogic.gdx.graphics.g3d.particles
 
-abstract class ParticleControllerComponent extends com.badlogic.gdx.utils.Disposable with com.badlogic.gdx.utils.Json.Serializable with com.badlogic.gdx.graphics.g3d.particles.ResourceData.Configurable[scala.AnyRef] {
+abstract class ParticleControllerComponent extends com.badlogic.gdx.utils.Disposable with com.badlogic.gdx.utils.Json.Serializable with com.badlogic.gdx.graphics.g3d.particles.ResourceData.Configurable[java.lang.Object] {
   var controller: com.badlogic.gdx.graphics.g3d.particles.ParticleController = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ParticleController]
   def activateParticles(startIndex: scala.Int, count: scala.Int): scala.Unit = {
     ()

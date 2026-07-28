@@ -1,6 +1,6 @@
 package com.badlogic.gdx.utils
 
-class OrderedSet[T] extends com.badlogic.gdx.utils.ObjectSet[T] {
+class OrderedSet[T <: java.lang.Object] extends com.badlogic.gdx.utils.ObjectSet[T] {
   var items: com.badlogic.gdx.utils.Array[T] = null.asInstanceOf[com.badlogic.gdx.utils.Array[T]]
   var iterator1: com.badlogic.gdx.utils.OrderedSet.OrderedSetIterator[?] = null.asInstanceOf[com.badlogic.gdx.utils.OrderedSet.OrderedSetIterator[?]]
   var iterator2: com.badlogic.gdx.utils.OrderedSet.OrderedSetIterator[?] = null.asInstanceOf[com.badlogic.gdx.utils.OrderedSet.OrderedSetIterator[?]]
@@ -188,12 +188,12 @@ class OrderedSet[T] extends com.badlogic.gdx.utils.ObjectSet[T] {
 }
 object OrderedSet {
   export com.badlogic.gdx.utils.ObjectSet.{OrderedSetIterator => _, `with` => _, *}
-  def `with`[T](array: scala.Array[T]): OrderedSet[T] = {
+  def `with`[T <: java.lang.Object](array: scala.Array[T]): OrderedSet[T] = {
     val set: OrderedSet[T] = new OrderedSet[T]()
     set.addAll(array)
     return set
   }
-  class OrderedSetIterator[K](set$p: OrderedSet[K]) extends com.badlogic.gdx.utils.ObjectSet.ObjectSetIterator[K](set$p) {
+  class OrderedSetIterator[K <: java.lang.Object](set$p: OrderedSet[K]) extends com.badlogic.gdx.utils.ObjectSet.ObjectSetIterator[K](set$p) {
     private var items: com.badlogic.gdx.utils.Array[K] = null.asInstanceOf[com.badlogic.gdx.utils.Array[K]]
     this.items = set$p.items
     def reset(): scala.Unit = {

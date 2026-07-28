@@ -1,6 +1,6 @@
 package com.badlogic.gdx.utils
 
-class IdentityMap[K, V] extends com.badlogic.gdx.utils.ObjectMap[K, V] {
+class IdentityMap[K <: java.lang.Object, V <: java.lang.Object] extends com.badlogic.gdx.utils.ObjectMap[K, V] {
   def this(initialCapacity: scala.Int) = {
     this()
     if ((0.8f <= 0.0f) || (0.8f >= 1.0f)) {

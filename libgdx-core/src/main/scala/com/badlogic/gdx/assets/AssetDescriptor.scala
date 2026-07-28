@@ -1,6 +1,6 @@
 package com.badlogic.gdx.assets
 
-class AssetDescriptor[T] {
+class AssetDescriptor[T <: java.lang.Object] {
   var fileName: java.lang.String = null.asInstanceOf[java.lang.String]
   var `type`: java.lang.Class[T] = null.asInstanceOf[java.lang.Class[T]]
   var params: com.badlogic.gdx.assets.AssetLoaderParameters[T] = null.asInstanceOf[com.badlogic.gdx.assets.AssetLoaderParameters[T]]

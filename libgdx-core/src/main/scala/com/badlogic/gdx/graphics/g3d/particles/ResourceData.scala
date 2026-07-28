@@ -1,6 +1,6 @@
 package com.badlogic.gdx.graphics.g3d.particles
 
-class ResourceData[T] extends com.badlogic.gdx.utils.Json.Serializable {
+class ResourceData[T <: java.lang.Object] extends com.badlogic.gdx.utils.Json.Serializable {
   private var uniqueData: com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.graphics.g3d.particles.ResourceData.SaveData] = null.asInstanceOf[com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.graphics.g3d.particles.ResourceData.SaveData]]
   private var data: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.ResourceData.SaveData] = null.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.ResourceData.SaveData]]
   var sharedAssets: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.ResourceData.AssetData[T]] = null.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.ResourceData.AssetData[T]]]
@@ -14,7 +14,7 @@ class ResourceData[T] extends com.badlogic.gdx.utils.Json.Serializable {
   this.data = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.ResourceData.SaveData](true, 3, ((size: scala.Int) => new scala.Array[com.badlogic.gdx.graphics.g3d.particles.ResourceData.SaveData](size)))
   this.sharedAssets = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.ResourceData.AssetData[T]]().asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.ResourceData.AssetData[T]]]
   this.currentLoadIndex = 0
-  def getAssetData[K](filename: java.lang.String, `type`: java.lang.Class[K]): scala.Int = {
+  def getAssetData[K <: java.lang.Object](filename: java.lang.String, `type`: java.lang.Class[K]): scala.Int = {
     var i: scala.Int = 0
     for (data <- this.sharedAssets) {
       if (data.filename.equals(filename) && data.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ResourceData.AssetData[java.lang.Object]].`type`.equals(`type`)) {
@@ -75,7 +75,7 @@ class ResourceData[T] extends com.badlogic.gdx.utils.Json.Serializable {
   }
 }
 object ResourceData {
-  trait Configurable[T] {
+  trait Configurable[T <: java.lang.Object] {
     def save(manager: com.badlogic.gdx.assets.AssetManager, resources: ResourceData[T]): scala.Unit
     def load(manager: com.badlogic.gdx.assets.AssetManager, resources: ResourceData[T]): scala.Unit
   }
@@ -94,7 +94,7 @@ object ResourceData {
     this.data = new com.badlogic.gdx.utils.ObjectMap[java.lang.String, java.lang.Object]()
     this.assets = new com.badlogic.gdx.utils.IntArray()
     this.loadIndex = 0
-    def saveAsset[K](filename: java.lang.String, `type`: java.lang.Class[K]): scala.Unit = {
+    def saveAsset[K <: java.lang.Object](filename: java.lang.String, `type`: java.lang.Class[K]): scala.Unit = {
       var i: scala.Int = this.resources.getAssetData(filename, `type`)
       if (i == (-1)) {
         this.resources.asInstanceOf[ResourceData[java.lang.Object]].sharedAssets.asInstanceOf[com.badlogic.gdx.utils.Array[java.lang.Object]].add(new com.badlogic.gdx.graphics.g3d.particles.ResourceData.AssetData(filename, `type`).asInstanceOf[java.lang.Object])
@@ -112,7 +112,7 @@ object ResourceData {
       val data: com.badlogic.gdx.graphics.g3d.particles.ResourceData.AssetData[?] = this.resources.asInstanceOf[ResourceData[java.lang.Object]].sharedAssets.get(this.assets.get({ this.loadIndex += 1; this.loadIndex })).asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ResourceData.AssetData[?]].asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ResourceData.AssetData[?]]
       return new com.badlogic.gdx.assets.AssetDescriptor(data.filename, data.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ResourceData.AssetData[java.lang.Object]].`type`).asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[?]]
     }
-    def load[K](key: java.lang.String): K = {
+    def load[K <: java.lang.Object](key: java.lang.String): K = {
       return this.data.get(key).asInstanceOf[K].asInstanceOf[K]
     }
     @java.lang.Override
@@ -126,7 +126,7 @@ object ResourceData {
       this.assets.addAll(json.readValue("indices", classOf[scala.Array[scala.Int]], jsonData))
     }
   }
-  class AssetData[T] extends com.badlogic.gdx.utils.Json.Serializable {
+  class AssetData[T <: java.lang.Object] extends com.badlogic.gdx.utils.Json.Serializable {
     var filename: java.lang.String = null.asInstanceOf[java.lang.String]
     var `type`: java.lang.Class[T] = null.asInstanceOf[java.lang.Class[T]]
     def this(filename: java.lang.String, `type`: java.lang.Class[T]) = {

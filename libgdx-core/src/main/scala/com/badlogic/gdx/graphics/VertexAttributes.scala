@@ -183,7 +183,7 @@ object VertexAttributes {
     final val Tangent: scala.Int = 128
     final val BiNormal: scala.Int = 256
   }
-  class ReadonlyIterator[T](array$p: scala.Array[T]) extends balticporter.runtime.JavaIterator[T] with balticporter.runtime.JavaIterable[T] {
+  class ReadonlyIterator[T <: java.lang.Object](array$p: scala.Array[T]) extends balticporter.runtime.JavaIterator[T] with balticporter.runtime.JavaIterable[T] {
     private var array: scala.Array[T] = null.asInstanceOf[scala.Array[T]]
     var index: scala.Int = 0
     var valid: scala.Boolean = true
@@ -217,7 +217,7 @@ object VertexAttributes {
       return this
     }
   }
-  class ReadonlyIterable[T](array$p: scala.Array[T]) extends balticporter.runtime.JavaIterable[T] {
+  class ReadonlyIterable[T <: java.lang.Object](array$p: scala.Array[T]) extends balticporter.runtime.JavaIterable[T] {
     private var array: scala.Array[T] = null.asInstanceOf[scala.Array[T]]
     private var iterator1: com.badlogic.gdx.graphics.VertexAttributes.ReadonlyIterator[T] = null.asInstanceOf[com.badlogic.gdx.graphics.VertexAttributes.ReadonlyIterator[T]]
     private var iterator2: com.badlogic.gdx.graphics.VertexAttributes.ReadonlyIterator[T] = null.asInstanceOf[com.badlogic.gdx.graphics.VertexAttributes.ReadonlyIterator[T]]

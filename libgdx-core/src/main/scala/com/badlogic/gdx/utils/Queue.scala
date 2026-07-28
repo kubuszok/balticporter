@@ -1,6 +1,6 @@
 package com.badlogic.gdx.utils
 
-class Queue[T](initialSize: scala.Int, arraySupplier: com.badlogic.gdx.utils.ArraySupplier[scala.Array[T]]) extends balticporter.runtime.JavaIterable[T] {
+class Queue[T <: java.lang.Object](initialSize: scala.Int, arraySupplier: com.badlogic.gdx.utils.ArraySupplier[scala.Array[T]]) extends balticporter.runtime.JavaIterable[T] {
   var values: scala.Array[T] = null.asInstanceOf[scala.Array[T]]
   var head: scala.Int = 0
   var tail: scala.Int = 0
@@ -376,7 +376,7 @@ class Queue[T](initialSize: scala.Int, arraySupplier: com.badlogic.gdx.utils.Arr
   }
 }
 object Queue {
-  class QueueIterator[T](queue$p: Queue[T], allowRemove$p: scala.Boolean) extends balticporter.runtime.JavaIterator[T] with balticporter.runtime.JavaIterable[T] {
+  class QueueIterator[T <: java.lang.Object](queue$p: Queue[T], allowRemove$p: scala.Boolean) extends balticporter.runtime.JavaIterator[T] with balticporter.runtime.JavaIterable[T] {
     private var queue: Queue[T] = null.asInstanceOf[Queue[T]]
     private var allowRemove: scala.Boolean = false
     var index: scala.Int = 0
@@ -415,7 +415,7 @@ object Queue {
       return this
     }
   }
-  class QueueIterable[T](queue$p: Queue[T], allowRemove$p: scala.Boolean) extends balticporter.runtime.JavaIterable[T] {
+  class QueueIterable[T <: java.lang.Object](queue$p: Queue[T], allowRemove$p: scala.Boolean) extends balticporter.runtime.JavaIterable[T] {
     private var queue: Queue[T] = null.asInstanceOf[Queue[T]]
     private var allowRemove: scala.Boolean = false
     private var iterator1: com.badlogic.gdx.utils.Queue.QueueIterator[T] = null.asInstanceOf[com.badlogic.gdx.utils.Queue.QueueIterator[T]]

@@ -1,6 +1,6 @@
 package com.badlogic.gdx.scenes.scene2d.ui
 
-class SelectBox[T](style$p: com.badlogic.gdx.scenes.scene2d.ui.SelectBox.SelectBoxStyle) extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlogic.gdx.scenes.scene2d.utils.Disableable with com.badlogic.gdx.scenes.scene2d.ui.Styleable[com.badlogic.gdx.scenes.scene2d.ui.SelectBox.SelectBoxStyle] {
+class SelectBox[T <: java.lang.Object](style$p: com.badlogic.gdx.scenes.scene2d.ui.SelectBox.SelectBoxStyle) extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlogic.gdx.scenes.scene2d.utils.Disableable with com.badlogic.gdx.scenes.scene2d.ui.Styleable[com.badlogic.gdx.scenes.scene2d.ui.SelectBox.SelectBoxStyle] {
   var style: com.badlogic.gdx.scenes.scene2d.ui.SelectBox.SelectBoxStyle = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.SelectBox.SelectBoxStyle]
   final val items: com.badlogic.gdx.utils.Array[T] = new com.badlogic.gdx.utils.Array[T]().asInstanceOf[com.badlogic.gdx.utils.Array[T]]
   var scrollPane: com.badlogic.gdx.scenes.scene2d.ui.SelectBox.SelectBoxScrollPane[T] = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.SelectBox.SelectBoxScrollPane[T]]
@@ -333,7 +333,7 @@ class SelectBox[T](style$p: com.badlogic.gdx.scenes.scene2d.ui.SelectBox.SelectB
 object SelectBox {
   export com.badlogic.gdx.scenes.scene2d.ui.Widget.{SelectBoxScrollPane => _, SelectBoxStyle => _, temp => _, *}
   final val temp: com.badlogic.gdx.math.Vector2 = new com.badlogic.gdx.math.Vector2()
-  class SelectBoxScrollPane[T](selectBox$p: SelectBox[T]) extends com.badlogic.gdx.scenes.scene2d.ui.ScrollPane(null, selectBox$p.style.scrollStyle) {
+  class SelectBoxScrollPane[T <: java.lang.Object](selectBox$p: SelectBox[T]) extends com.badlogic.gdx.scenes.scene2d.ui.ScrollPane(null, selectBox$p.style.scrollStyle) {
     var selectBox: SelectBox[T] = null.asInstanceOf[SelectBox[T]]
     var maxListCount: scala.Int = 0
     private final val stagePosition: com.badlogic.gdx.math.Vector2 = new com.badlogic.gdx.math.Vector2()

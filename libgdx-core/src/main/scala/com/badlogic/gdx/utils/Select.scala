@@ -2,11 +2,11 @@ package com.badlogic.gdx.utils
 
 class Select {
   private var quickSelect: com.badlogic.gdx.utils.QuickSelect[?] = null.asInstanceOf[com.badlogic.gdx.utils.QuickSelect[?]]
-  def select[T](items: scala.Array[T], comp: java.util.Comparator[T], kthLowest: scala.Int, size: scala.Int): T = {
+  def select[T <: java.lang.Object](items: scala.Array[T], comp: java.util.Comparator[T], kthLowest: scala.Int, size: scala.Int): T = {
     val idx: scala.Int = this.selectIndex(items, comp, kthLowest, size)
     return items(idx)
   }
-  def selectIndex[T](items: scala.Array[T], comp: java.util.Comparator[T], kthLowest: scala.Int, size: scala.Int): scala.Int = {
+  def selectIndex[T <: java.lang.Object](items: scala.Array[T], comp: java.util.Comparator[T], kthLowest: scala.Int, size: scala.Int): scala.Int = {
     if (size < 1) {
       throw new com.badlogic.gdx.utils.GdxRuntimeException("cannot select from empty array (size < 1)")
     } else {
@@ -29,7 +29,7 @@ class Select {
     }
     return idx
   }
-  private def fastMin[T](items: scala.Array[T], comp: java.util.Comparator[T], size: scala.Int): scala.Int = {
+  private def fastMin[T <: java.lang.Object](items: scala.Array[T], comp: java.util.Comparator[T], size: scala.Int): scala.Int = {
     var lowestIdx: scala.Int = 0;
     { var i: scala.Int = 1; while (i < size) { {
       val comparison: scala.Int = comp.compare(items(i), items(lowestIdx))
@@ -39,7 +39,7 @@ class Select {
     }; i = i + 1 } }
     return lowestIdx
   }
-  private def fastMax[T](items: scala.Array[T], comp: java.util.Comparator[T], size: scala.Int): scala.Int = {
+  private def fastMax[T <: java.lang.Object](items: scala.Array[T], comp: java.util.Comparator[T], size: scala.Int): scala.Int = {
     var highestIdx: scala.Int = 0;
     { var i: scala.Int = 1; while (i < size) { {
       val comparison: scala.Int = comp.compare(items(i), items(highestIdx))

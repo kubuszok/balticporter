@@ -1,6 +1,6 @@
 package com.badlogic.gdx.math
 
-class Octree[T](minimum: com.badlogic.gdx.math.Vector3, maximum: com.badlogic.gdx.math.Vector3, maxDepth: scala.Int, maxItemsPerNode$p: scala.Int, collider$p: com.badlogic.gdx.math.Octree.Collider[T]) {
+class Octree[T <: java.lang.Object](minimum: com.badlogic.gdx.math.Vector3, maximum: com.badlogic.gdx.math.Vector3, maxDepth: scala.Int, maxItemsPerNode$p: scala.Int, collider$p: com.badlogic.gdx.math.Octree.Collider[T]) {
   var maxItemsPerNode: scala.Int = 0
   final val nodePool: com.badlogic.gdx.utils.Pool[OctreeNode] = new com.badlogic.gdx.utils.Pool[OctreeNode]() {
     @java.lang.Override
@@ -220,12 +220,12 @@ class Octree[T](minimum: com.badlogic.gdx.math.Vector3, maximum: com.badlogic.gd
 }
 object Octree {
   final val tmp: com.badlogic.gdx.math.Vector3 = new com.badlogic.gdx.math.Vector3()
-  trait Collider[T] {
+  trait Collider[T <: java.lang.Object] {
     def intersects(nodeBounds: com.badlogic.gdx.math.collision.BoundingBox, geometry: T): scala.Boolean
     def intersects(frustum: com.badlogic.gdx.math.Frustum, geometry: T): scala.Boolean
     def intersects(ray: com.badlogic.gdx.math.collision.Ray, geometry: T): scala.Float
   }
-  class RayCastResult[T] {
+  class RayCastResult[T <: java.lang.Object] {
     var geometry: T = null.asInstanceOf[T]
     var distance: scala.Float = 0.0f
     var maxDistanceSq: scala.Float = java.lang.Float.MAX_VALUE

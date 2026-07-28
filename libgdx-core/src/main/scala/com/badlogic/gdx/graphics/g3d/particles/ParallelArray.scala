@@ -33,7 +33,7 @@ class ParallelArray(capacity$p: scala.Int) {
       }
     }
   }
-  def removeArray[T](id: scala.Int): scala.Unit = {
+  def removeArray[T <: java.lang.Object](id: scala.Int): scala.Unit = {
     this.arrays.removeIndex(this.findIndex(id))
   }
   private def findIndex(id: scala.Int): scala.Int = {
@@ -159,7 +159,7 @@ class ParallelArray(capacity$p: scala.Int) {
       }
     }
   }
-  class ObjectChannel[T](id$p: scala.Int, strideSize$p: scala.Int, size: scala.Int, arraySupplier: com.badlogic.gdx.utils.ArraySupplier[scala.Array[T]]) extends Channel(id$p, arraySupplier.get(size * strideSize$p), strideSize$p) {
+  class ObjectChannel[T <: java.lang.Object](id$p: scala.Int, strideSize$p: scala.Int, size: scala.Int, arraySupplier: com.badlogic.gdx.utils.ArraySupplier[scala.Array[T]]) extends Channel(id$p, arraySupplier.get(size * strideSize$p), strideSize$p) {
     var data: scala.Array[T] = null.asInstanceOf[scala.Array[T]]
     this.data = data.asInstanceOf[scala.Array[T]].asInstanceOf[scala.Array[T]]
     @java.lang.Override

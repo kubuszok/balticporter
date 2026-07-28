@@ -1,6 +1,6 @@
 package com.badlogic.gdx.utils
 
-class SortedIntList[E] extends balticporter.runtime.JavaIterable[com.badlogic.gdx.utils.SortedIntList.Node[E]] {
+class SortedIntList[E <: java.lang.Object] extends balticporter.runtime.JavaIterable[com.badlogic.gdx.utils.SortedIntList.Node[E]] {
   private var nodePool: com.badlogic.gdx.utils.SortedIntList.NodePool[E] = new com.badlogic.gdx.utils.SortedIntList.NodePool[E]()
   var iterator$field: Iterator = null.asInstanceOf[Iterator]
   var size$field: scala.Int = 0
@@ -110,13 +110,13 @@ class SortedIntList[E] extends balticporter.runtime.JavaIterable[com.badlogic.gd
   }
 }
 object SortedIntList {
-  class Node[E] {
+  class Node[E <: java.lang.Object] {
     var p: com.badlogic.gdx.utils.SortedIntList.Node[E] = null.asInstanceOf[com.badlogic.gdx.utils.SortedIntList.Node[E]]
     var n: com.badlogic.gdx.utils.SortedIntList.Node[E] = null.asInstanceOf[com.badlogic.gdx.utils.SortedIntList.Node[E]]
     var value: E = null.asInstanceOf[E]
     var index: scala.Int = 0
   }
-  class NodePool[E] extends com.badlogic.gdx.utils.Pool[com.badlogic.gdx.utils.SortedIntList.Node[E]] {
+  class NodePool[E <: java.lang.Object] extends com.badlogic.gdx.utils.Pool[com.badlogic.gdx.utils.SortedIntList.Node[E]] {
     @java.lang.Override
     def newObject(): com.badlogic.gdx.utils.SortedIntList.Node[E] = {
       return new com.badlogic.gdx.utils.SortedIntList.Node[E]()

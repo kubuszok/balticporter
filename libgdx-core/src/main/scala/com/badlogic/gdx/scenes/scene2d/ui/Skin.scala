@@ -69,10 +69,10 @@ class Skin extends com.badlogic.gdx.utils.Disposable {
     val typeResources: com.badlogic.gdx.utils.ObjectMap[java.lang.String, java.lang.Object] = this.resources.get(`type`)
     typeResources.remove(name)
   }
-  def get[T](`type`: java.lang.Class[T]): T = {
+  def get[T <: java.lang.Object](`type`: java.lang.Class[T]): T = {
     return this.get("default", `type`).asInstanceOf[T]
   }
-  def get[T](name: java.lang.String, `type`: java.lang.Class[T]): T = {
+  def get[T <: java.lang.Object](name: java.lang.String, `type`: java.lang.Class[T]): T = {
     if (name == null) {
       throw new java.lang.IllegalArgumentException("name cannot be null.")
     } else ()
@@ -102,7 +102,7 @@ class Skin extends com.badlogic.gdx.utils.Disposable {
     return resource.asInstanceOf[T].asInstanceOf[T]
   }
   @com.badlogic.gdx.utils.Null
-  def optional[T](name: java.lang.String, `type`: java.lang.Class[T]): T = {
+  def optional[T <: java.lang.Object](name: java.lang.String, `type`: java.lang.Class[T]): T = {
     if (name == null) {
       throw new java.lang.IllegalArgumentException("name cannot be null.")
     } else ()
@@ -123,7 +123,7 @@ class Skin extends com.badlogic.gdx.utils.Disposable {
     return typeResources.containsKey(name)
   }
   @com.badlogic.gdx.utils.Null
-  def getAll[T](`type`: java.lang.Class[T]): com.badlogic.gdx.utils.ObjectMap[java.lang.String, T] = {
+  def getAll[T <: java.lang.Object](`type`: java.lang.Class[T]): com.badlogic.gdx.utils.ObjectMap[java.lang.String, T] = {
     return this.resources.get(`type`).asInstanceOf[com.badlogic.gdx.utils.ObjectMap[java.lang.String, T]]
   }
   def getColor(name: java.lang.String): com.badlogic.gdx.graphics.Color = {
@@ -352,7 +352,7 @@ class Skin extends com.badlogic.gdx.utils.Disposable {
   def setScale(scale: scala.Float): scala.Unit = {
     this.scale$field = scale
   }
-  def setEnabled[V](styleable: com.badlogic.gdx.scenes.scene2d.ui.Styleable[V], enabled: scala.Boolean): scala.Unit = {
+  def setEnabled[V <: java.lang.Object](styleable: com.badlogic.gdx.scenes.scene2d.ui.Styleable[V], enabled: scala.Boolean): scala.Unit = {
     var style: V = styleable.getStyle().asInstanceOf[V]
     var name: java.lang.String = this.find(style.asInstanceOf[java.lang.Object])
     if (name == null) {
@@ -382,7 +382,7 @@ class Skin extends com.badlogic.gdx.utils.Disposable {
     val skin: Skin = this
     val json: com.badlogic.gdx.utils.Json = new com.badlogic.gdx.utils.Json() {
       private final val parentFieldName: java.lang.String = "parent"
-      override def readValue[T](`type`: java.lang.Class[T], elementType: java.lang.Class[T], jsonData: com.badlogic.gdx.utils.JsonValue): T = {
+      override def readValue[T <: java.lang.Object](`type`: java.lang.Class[T], elementType: java.lang.Class[T], jsonData: com.badlogic.gdx.utils.JsonValue): T = {
         if (((jsonData != null) && jsonData.isString()) && (!classOf[java.lang.CharSequence].isAssignableFrom(`type`))) {
           return Skin.this.get(jsonData.asString(), `type`).asInstanceOf[T]
         } else ()

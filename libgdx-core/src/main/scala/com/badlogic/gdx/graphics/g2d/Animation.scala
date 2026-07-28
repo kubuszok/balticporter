@@ -1,6 +1,6 @@
 package com.badlogic.gdx.graphics.g2d
 
-class Animation[T] {
+class Animation[T <: java.lang.Object] {
   var keyFrames: scala.Array[T] = null.asInstanceOf[scala.Array[T]]
   private var frameDuration: scala.Float = 0.0f
   private var animationDuration: scala.Float = 0.0f

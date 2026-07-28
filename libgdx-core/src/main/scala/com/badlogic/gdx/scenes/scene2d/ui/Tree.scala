@@ -1,6 +1,6 @@
 package com.badlogic.gdx.scenes.scene2d.ui
 
-class Tree[N <: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[N, V, ?], V](style$p: com.badlogic.gdx.scenes.scene2d.ui.Tree.TreeStyle) extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup with com.badlogic.gdx.scenes.scene2d.ui.Styleable[com.badlogic.gdx.scenes.scene2d.ui.Tree.TreeStyle] {
+class Tree[N <: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[N, V, ?], V <: java.lang.Object](style$p: com.badlogic.gdx.scenes.scene2d.ui.Tree.TreeStyle) extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup with com.badlogic.gdx.scenes.scene2d.ui.Styleable[com.badlogic.gdx.scenes.scene2d.ui.Tree.TreeStyle] {
   var style: com.badlogic.gdx.scenes.scene2d.ui.Tree.TreeStyle = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Tree.TreeStyle]
   final val rootNodes: com.badlogic.gdx.utils.Array[N] = new com.badlogic.gdx.utils.Array().asInstanceOf[com.badlogic.gdx.utils.Array[N]]
   var selection: com.badlogic.gdx.scenes.scene2d.utils.Selection[N] = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Selection[N]]
@@ -538,7 +538,7 @@ object Tree {
       nodes.get(i).expandAll()
     }; i = i + 1 } }
   }
-  abstract class Node[N <: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[N, V, A], V, A <: com.badlogic.gdx.scenes.scene2d.Actor] {
+  abstract class Node[N <: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[N, V, A], V <: java.lang.Object, A <: com.badlogic.gdx.scenes.scene2d.Actor] {
     var actor: A = null.asInstanceOf[A]
     var parent: N = null.asInstanceOf[N]
     final val children: com.badlogic.gdx.utils.Array[N] = new com.badlogic.gdx.utils.Array(0).asInstanceOf[com.badlogic.gdx.utils.Array[N]]

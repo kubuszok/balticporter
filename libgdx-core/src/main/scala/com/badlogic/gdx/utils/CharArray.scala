@@ -714,7 +714,7 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
     }
     return this
   }
-  final def appendAll[T](array: scala.Array[T]): CharArray = {
+  final def appendAll[T <: java.lang.Object](array: scala.Array[T]): CharArray = {
     if (array != null) {
       for (element <- array) {
         this.append(element)

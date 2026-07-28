@@ -1,6 +1,6 @@
 package com.badlogic.gdx.assets.loaders
 
-abstract class AssetLoader[T, P <: com.badlogic.gdx.assets.AssetLoaderParameters[T]] {
+abstract class AssetLoader[T <: java.lang.Object, P <: com.badlogic.gdx.assets.AssetLoaderParameters[T]] {
   var resolver: com.badlogic.gdx.assets.loaders.FileHandleResolver = null.asInstanceOf[com.badlogic.gdx.assets.loaders.FileHandleResolver]
   def this(resolver: com.badlogic.gdx.assets.loaders.FileHandleResolver) = {
     this()

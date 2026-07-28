@@ -1,6 +1,6 @@
 package com.badlogic.gdx.graphics.g3d.particles
 
-class ParticleController extends com.badlogic.gdx.utils.Json.Serializable with com.badlogic.gdx.graphics.g3d.particles.ResourceData.Configurable[scala.AnyRef] {
+class ParticleController extends com.badlogic.gdx.utils.Json.Serializable with com.badlogic.gdx.graphics.g3d.particles.ResourceData.Configurable[java.lang.Object] {
   var name: java.lang.String = null.asInstanceOf[java.lang.String]
   var emitter: com.badlogic.gdx.graphics.g3d.particles.emitters.Emitter = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.emitters.Emitter]
   var influencers: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.influencers.Influencer] = null.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.influencers.Influencer]]

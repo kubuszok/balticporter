@@ -80,7 +80,7 @@ class ParticleEffectLoader(resolver$p: com.badlogic.gdx.assets.loaders.FileHandl
     } else ()
     return effectData.resource
   }
-  private def find[T](array: com.badlogic.gdx.utils.Array[?], `type`: java.lang.Class[T]): T = {
+  private def find[T <: java.lang.Object](array: com.badlogic.gdx.utils.Array[?], `type`: java.lang.Class[T]): T = {
     for (`object` <- array) {
       if (`type`.isAssignableFrom(`object`.getClass())) {
         return `object`.asInstanceOf[T].asInstanceOf[T]

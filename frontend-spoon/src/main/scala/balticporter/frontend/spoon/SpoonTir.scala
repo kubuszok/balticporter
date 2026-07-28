@@ -160,10 +160,16 @@ object SpoonTir:
       tpScopes.remove(0)
       (frame, defs)
 
+    /** Java's type parameters are ALWAYS reference types: `<T>` means `<T extends Object>`, since
+      * Java has no primitive type arguments. Scala's `[T]` means `T <: Any`, which is STRICTLY
+      * weaker — and the gap is not academic. A value read at such a `T` (through a raw receiver,
+      * say `OrderedMapValues`'s raw `Array keys`, whose `keys.get(i)` Java types as `Object`)
+      * then conforms to nothing that wants `Object`, because `Any` is not `Object`. Restoring the
+      * implicit upper bound is a fact about Java, not about any library. */
     private def boundsOf(tp: CtTypeParameter): TypeBounds =
       Option(tp.getSuperclass).filter(_.getQualifiedName != "java.lang.Object").map(fbound) match
         case Some(hi) => TypeBounds(NoType, hi)
-        case None     => TypeBounds(NoType, NoType)
+        case None     => TypeBounds(NoType, objectT)
 
     /** Reconstruct a raw generic type's args from IN-SCOPE type parameters of the same NAME
       * (wildcards for the rest): `Node` under `Tree[N,V]` → `[N, V, ?]`, `Node` under

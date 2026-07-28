@@ -1,6 +1,6 @@
 package com.badlogic.gdx.utils
 
-class PooledLinkedList[T](maxPoolSize: scala.Int) {
+class PooledLinkedList[T <: java.lang.Object](maxPoolSize: scala.Int) {
   private var head: com.badlogic.gdx.utils.PooledLinkedList.Item[T] = null.asInstanceOf[com.badlogic.gdx.utils.PooledLinkedList.Item[T]]
   private var tail: com.badlogic.gdx.utils.PooledLinkedList.Item[T] = null.asInstanceOf[com.badlogic.gdx.utils.PooledLinkedList.Item[T]]
   var iter$field: com.badlogic.gdx.utils.PooledLinkedList.Item[T] = null.asInstanceOf[com.badlogic.gdx.utils.PooledLinkedList.Item[T]]
@@ -129,7 +129,7 @@ class PooledLinkedList[T](maxPoolSize: scala.Int) {
   }
 }
 object PooledLinkedList {
-  final class Item[T] {
+  final class Item[T <: java.lang.Object] {
     var payload: T = null.asInstanceOf[T]
     var next: com.badlogic.gdx.utils.PooledLinkedList.Item[T] = null.asInstanceOf[com.badlogic.gdx.utils.PooledLinkedList.Item[T]]
     var prev: com.badlogic.gdx.utils.PooledLinkedList.Item[T] = null.asInstanceOf[com.badlogic.gdx.utils.PooledLinkedList.Item[T]]

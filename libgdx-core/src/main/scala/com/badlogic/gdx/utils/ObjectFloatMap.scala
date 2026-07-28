@@ -1,6 +1,6 @@
 package com.badlogic.gdx.utils
 
-class ObjectFloatMap[K](initialCapacity: scala.Int, loadFactor$p: scala.Float) extends balticporter.runtime.JavaIterable[com.badlogic.gdx.utils.ObjectFloatMap.Entry[K]] {
+class ObjectFloatMap[K <: java.lang.Object](initialCapacity: scala.Int, loadFactor$p: scala.Float) extends balticporter.runtime.JavaIterable[com.badlogic.gdx.utils.ObjectFloatMap.Entry[K]] {
   var size: scala.Int = 0
   var keyTable: scala.Array[K] = null.asInstanceOf[scala.Array[K]]
   var valueTable: scala.Array[scala.Float] = null.asInstanceOf[scala.Array[scala.Float]]
@@ -398,14 +398,14 @@ class ObjectFloatMap[K](initialCapacity: scala.Int, loadFactor$p: scala.Float) e
   }
 }
 object ObjectFloatMap {
-  class Entry[K] {
+  class Entry[K <: java.lang.Object] {
     var key: K = null.asInstanceOf[K]
     var value: scala.Float = 0.0f
     def toString(): java.lang.String = {
       return (java.lang.String.valueOf(this.key) + "=") + this.value
     }
   }
-  class MapIterator[K](map$p: ObjectFloatMap[K]) {
+  class MapIterator[K <: java.lang.Object](map$p: ObjectFloatMap[K]) {
     var hasNext$field: scala.Boolean = false
     var map: ObjectFloatMap[K] = null.asInstanceOf[ObjectFloatMap[K]]
     var nextIndex: scala.Int = 0
@@ -458,7 +458,7 @@ object ObjectFloatMap {
       this.currentIndex = -1
     }
   }
-  class Entries[K](map$p: ObjectFloatMap[K]) extends com.badlogic.gdx.utils.ObjectFloatMap.MapIterator[K](map$p) with balticporter.runtime.JavaIterable[com.badlogic.gdx.utils.ObjectFloatMap.Entry[K]] with balticporter.runtime.JavaIterator[com.badlogic.gdx.utils.ObjectFloatMap.Entry[K]] {
+  class Entries[K <: java.lang.Object](map$p: ObjectFloatMap[K]) extends com.badlogic.gdx.utils.ObjectFloatMap.MapIterator[K](map$p) with balticporter.runtime.JavaIterable[com.badlogic.gdx.utils.ObjectFloatMap.Entry[K]] with balticporter.runtime.JavaIterator[com.badlogic.gdx.utils.ObjectFloatMap.Entry[K]] {
     var entry: com.badlogic.gdx.utils.ObjectFloatMap.Entry[K] = new com.badlogic.gdx.utils.ObjectFloatMap.Entry[K]()
     def next(): com.badlogic.gdx.utils.ObjectFloatMap.Entry[K] = {
       if (!hasNext$field) {
@@ -520,7 +520,7 @@ object ObjectFloatMap {
       return array
     }
   }
-  class Keys[K](map$p: ObjectFloatMap[K]) extends com.badlogic.gdx.utils.ObjectFloatMap.MapIterator[K](map$p) with balticporter.runtime.JavaIterable[K] with balticporter.runtime.JavaIterator[K] {
+  class Keys[K <: java.lang.Object](map$p: ObjectFloatMap[K]) extends com.badlogic.gdx.utils.ObjectFloatMap.MapIterator[K](map$p) with balticporter.runtime.JavaIterable[K] with balticporter.runtime.JavaIterator[K] {
     def hasNext(): scala.Boolean = {
       if (!valid) {
         throw new com.badlogic.gdx.utils.GdxRuntimeException("#iterator() cannot be used nested.")

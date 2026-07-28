@@ -1,6 +1,6 @@
 package com.badlogic.gdx.utils
 
-class AtomicQueue[T](capacity: scala.Int) {
+class AtomicQueue[T <: java.lang.Object](capacity: scala.Int) {
   private final val writeIndex: java.util.concurrent.atomic.AtomicInteger = new java.util.concurrent.atomic.AtomicInteger()
   private final val readIndex: java.util.concurrent.atomic.AtomicInteger = new java.util.concurrent.atomic.AtomicInteger()
   private var queue: java.util.concurrent.atomic.AtomicReferenceArray[T] = null.asInstanceOf[java.util.concurrent.atomic.AtomicReferenceArray[T]]

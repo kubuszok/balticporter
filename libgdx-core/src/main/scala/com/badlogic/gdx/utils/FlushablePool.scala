@@ -1,6 +1,6 @@
 package com.badlogic.gdx.utils
 
-abstract class FlushablePool[T] extends com.badlogic.gdx.utils.Pool[T] {
+abstract class FlushablePool[T <: java.lang.Object] extends com.badlogic.gdx.utils.Pool[T] {
   var obtained: com.badlogic.gdx.utils.Array[T] = new com.badlogic.gdx.utils.Array[T]()
   def this(initialCapacity: scala.Int) = {
     this()

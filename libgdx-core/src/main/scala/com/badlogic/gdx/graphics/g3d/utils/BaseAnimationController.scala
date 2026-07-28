@@ -68,7 +68,7 @@ class BaseAnimationController(target$p: com.badlogic.gdx.graphics.g3d.ModelInsta
 object BaseAnimationController {
   private final val transforms: com.badlogic.gdx.utils.ObjectMap[com.badlogic.gdx.graphics.g3d.model.Node, com.badlogic.gdx.graphics.g3d.utils.BaseAnimationController.Transform] = new com.badlogic.gdx.utils.ObjectMap[com.badlogic.gdx.graphics.g3d.model.Node, com.badlogic.gdx.graphics.g3d.utils.BaseAnimationController.Transform]()
   private final val tmpT: com.badlogic.gdx.graphics.g3d.utils.BaseAnimationController.Transform = new com.badlogic.gdx.graphics.g3d.utils.BaseAnimationController.Transform()
-  final def getFirstKeyframeIndexAtTime[T](arr: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.model.NodeKeyframe[T]], time: scala.Float): scala.Int = {
+  final def getFirstKeyframeIndexAtTime[T <: java.lang.Object](arr: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.model.NodeKeyframe[T]], time: scala.Float): scala.Int = {
     val lastIndex: scala.Int = arr.size - 1
     if (((lastIndex <= 0) || (time < arr.get(0).keytime)) || (time > arr.get(lastIndex).keytime)) {
       return 0

@@ -1,6 +1,6 @@
 package com.badlogic.gdx.utils
 
-class DelayedRemovalArray[T] extends com.badlogic.gdx.utils.Array[T] {
+class DelayedRemovalArray[T <: java.lang.Object] extends com.badlogic.gdx.utils.Array[T] {
   private var iterating: scala.Int = 0
   var remove$field: com.badlogic.gdx.utils.IntArray = new com.badlogic.gdx.utils.IntArray(0)
   var clear$field: scala.Int = 0
@@ -199,7 +199,7 @@ class DelayedRemovalArray[T] extends com.badlogic.gdx.utils.Array[T] {
 }
 object DelayedRemovalArray {
   export com.badlogic.gdx.utils.Array.{`with` => _, *}
-  def `with`[T](array: scala.Array[T]): DelayedRemovalArray[T] = {
+  def `with`[T <: java.lang.Object](array: scala.Array[T]): DelayedRemovalArray[T] = {
     return new DelayedRemovalArray(array).asInstanceOf[DelayedRemovalArray[T]]
   }
 }

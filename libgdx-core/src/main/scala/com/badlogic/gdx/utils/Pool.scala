@@ -1,6 +1,6 @@
 package com.badlogic.gdx.utils
 
-abstract class Pool[T] {
+abstract class Pool[T <: java.lang.Object] {
   var max: scala.Int = 0
   var peak: scala.Int = 0
   var freeObjects: com.badlogic.gdx.utils.Array[T] = null.asInstanceOf[com.badlogic.gdx.utils.Array[T]]

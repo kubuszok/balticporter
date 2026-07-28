@@ -1,6 +1,6 @@
 package com.badlogic.gdx.assets.loaders
 
-abstract class AsynchronousAssetLoader[T, P <: com.badlogic.gdx.assets.AssetLoaderParameters[T]] extends com.badlogic.gdx.assets.loaders.AssetLoader[T, P] {
+abstract class AsynchronousAssetLoader[T <: java.lang.Object, P <: com.badlogic.gdx.assets.AssetLoaderParameters[T]] extends com.badlogic.gdx.assets.loaders.AssetLoader[T, P] {
   def this(resolver: com.badlogic.gdx.assets.loaders.FileHandleResolver) = {
     this()
     this.resolver = resolver

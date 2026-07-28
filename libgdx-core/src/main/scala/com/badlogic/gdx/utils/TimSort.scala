@@ -1,6 +1,6 @@
 package com.badlogic.gdx.utils
 
-class TimSort[T] {
+class TimSort[T <: java.lang.Object] {
   private var a: scala.Array[T] = null.asInstanceOf[scala.Array[T]]
   private var c: java.util.Comparator[? >: T] = null.asInstanceOf[java.util.Comparator[? >: T]]
   private var minGallop: scala.Int = TimSort.MIN_GALLOP
@@ -387,10 +387,10 @@ object TimSort {
   private final val MIN_GALLOP: scala.Int = 7
   private final val INITIAL_TMP_STORAGE_LENGTH: scala.Int = 256
   private final val DEBUG: scala.Boolean = false
-  def sort[T](a: scala.Array[T], c: java.util.Comparator[? >: T]): scala.Unit = {
+  def sort[T <: java.lang.Object](a: scala.Array[T], c: java.util.Comparator[? >: T]): scala.Unit = {
     TimSort.sort(a, 0, a.length, c)
   }
-  def sort[T](a: scala.Array[T], lo$arg: scala.Int, hi: scala.Int, c: java.util.Comparator[? >: T]): scala.Unit = {
+  def sort[T <: java.lang.Object](a: scala.Array[T], lo$arg: scala.Int, hi: scala.Int, c: java.util.Comparator[? >: T]): scala.Unit = {
     var lo: scala.Int = lo$arg
     if (c == null) {
       java.util.Arrays.sort(a.asInstanceOf[scala.Array[java.lang.Object]], lo, hi)
@@ -429,7 +429,7 @@ object TimSort {
     } else ()
   }
   @java.lang.SuppressWarnings(scala.Array[java.lang.String]("fallthrough"))
-  private def binarySort[T](a: scala.Array[T], lo: scala.Int, hi: scala.Int, start$arg: scala.Int, c: java.util.Comparator[? >: T]): scala.Unit = {
+  private def binarySort[T <: java.lang.Object](a: scala.Array[T], lo: scala.Int, hi: scala.Int, start$arg: scala.Int, c: java.util.Comparator[? >: T]): scala.Unit = {
     var start: scala.Int = start$arg
     if (TimSort.DEBUG) {
       assert((lo <= start) && (start <= hi))
@@ -471,7 +471,7 @@ object TimSort {
       a(left) = pivot
     }; start = start + 1 } }
   }
-  private def countRunAndMakeAscending[T](a: scala.Array[T], lo: scala.Int, hi: scala.Int, c: java.util.Comparator[? >: T]): scala.Int = {
+  private def countRunAndMakeAscending[T <: java.lang.Object](a: scala.Array[T], lo: scala.Int, hi: scala.Int, c: java.util.Comparator[? >: T]): scala.Int = {
     if (TimSort.DEBUG) {
       assert(lo < hi)
     } else ()
@@ -513,7 +513,7 @@ object TimSort {
     }
     return n + r
   }
-  private def gallopLeft[T](key: T, a: scala.Array[T], base: scala.Int, len: scala.Int, hint: scala.Int, c: java.util.Comparator[? >: T]): scala.Int = {
+  private def gallopLeft[T <: java.lang.Object](key: T, a: scala.Array[T], base: scala.Int, len: scala.Int, hint: scala.Int, c: java.util.Comparator[? >: T]): scala.Int = {
     if (TimSort.DEBUG) {
       assert(((len > 0) && (hint >= 0)) && (hint < len))
     } else ()
@@ -566,7 +566,7 @@ object TimSort {
     } else ()
     return ofs
   }
-  private def gallopRight[T](key: T, a: scala.Array[T], base: scala.Int, len: scala.Int, hint: scala.Int, c: java.util.Comparator[? >: T]): scala.Int = {
+  private def gallopRight[T <: java.lang.Object](key: T, a: scala.Array[T], base: scala.Int, len: scala.Int, hint: scala.Int, c: java.util.Comparator[? >: T]): scala.Int = {
     if (TimSort.DEBUG) {
       assert(((len > 0) && (hint >= 0)) && (hint < len))
     } else ()

@@ -1,6 +1,6 @@
 package com.badlogic.gdx.utils
 
-class QuickSelect[T] {
+class QuickSelect[T <: java.lang.Object] {
   private var array: scala.Array[T] = null.asInstanceOf[scala.Array[T]]
   private var comp: java.util.Comparator[? >: T] = null.asInstanceOf[java.util.Comparator[? >: T]]
   def select(items: scala.Array[T], comp: java.util.Comparator[T], n: scala.Int, size: scala.Int): scala.Int = {

@@ -1,6 +1,6 @@
 package com.badlogic.gdx.math
 
-class CumulativeDistribution[T] {
+class CumulativeDistribution[T <: java.lang.Object] {
   private var values: com.badlogic.gdx.utils.Array[com.badlogic.gdx.math.CumulativeDistribution.CumulativeValue[T]] = null.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.math.CumulativeDistribution.CumulativeValue[T]]]
   this.values = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.math.CumulativeDistribution.CumulativeValue[T]](false, 10, ((size: scala.Int) => new scala.Array[com.badlogic.gdx.math.CumulativeDistribution.CumulativeValue[T]](size)))
   def add(value: T, intervalSize: scala.Float): scala.Unit = {
@@ -82,7 +82,7 @@ class CumulativeDistribution[T] {
   }
 }
 object CumulativeDistribution {
-  class CumulativeValue[T](value$p: T, frequency$p: scala.Float, interval$p: scala.Float) {
+  class CumulativeValue[T <: java.lang.Object](value$p: T, frequency$p: scala.Float, interval$p: scala.Float) {
     var value: T = null.asInstanceOf[T]
     var frequency: scala.Float = 0.0f
     var interval: scala.Float = 0.0f

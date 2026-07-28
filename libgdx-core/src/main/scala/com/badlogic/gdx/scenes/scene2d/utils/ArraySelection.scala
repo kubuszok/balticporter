@@ -1,6 +1,6 @@
 package com.badlogic.gdx.scenes.scene2d.utils
 
-class ArraySelection[T](array$p: com.badlogic.gdx.utils.Array[T]) extends com.badlogic.gdx.scenes.scene2d.utils.Selection[T] {
+class ArraySelection[T <: java.lang.Object](array$p: com.badlogic.gdx.utils.Array[T]) extends com.badlogic.gdx.scenes.scene2d.utils.Selection[T] {
   private var array: com.badlogic.gdx.utils.Array[T] = null.asInstanceOf[com.badlogic.gdx.utils.Array[T]]
   private var rangeSelect: scala.Boolean = true
   private var rangeStart: T = null.asInstanceOf[T]

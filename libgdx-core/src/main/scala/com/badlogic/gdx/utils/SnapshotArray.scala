@@ -1,6 +1,6 @@
 package com.badlogic.gdx.utils
 
-class SnapshotArray[T] extends com.badlogic.gdx.utils.Array[T] {
+class SnapshotArray[T <: java.lang.Object] extends com.badlogic.gdx.utils.Array[T] {
   private var snapshot: scala.Array[T] = null.asInstanceOf[scala.Array[T]]
   private var recycled: scala.Array[T] = null.asInstanceOf[scala.Array[T]]
   private var snapshots: scala.Int = 0
@@ -146,7 +146,7 @@ class SnapshotArray[T] extends com.badlogic.gdx.utils.Array[T] {
 }
 object SnapshotArray {
   export com.badlogic.gdx.utils.Array.{`with` => _, *}
-  def `with`[T](array: scala.Array[T]): SnapshotArray[T] = {
+  def `with`[T <: java.lang.Object](array: scala.Array[T]): SnapshotArray[T] = {
     return new SnapshotArray(array).asInstanceOf[SnapshotArray[T]]
   }
 }

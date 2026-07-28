@@ -1,6 +1,6 @@
 package com.badlogic.gdx.scenes.scene2d.ui
 
-class List[T](style$p: com.badlogic.gdx.scenes.scene2d.ui.List.ListStyle) extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlogic.gdx.scenes.scene2d.utils.Cullable with com.badlogic.gdx.scenes.scene2d.ui.Styleable[com.badlogic.gdx.scenes.scene2d.ui.List.ListStyle] {
+class List[T <: java.lang.Object](style$p: com.badlogic.gdx.scenes.scene2d.ui.List.ListStyle) extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlogic.gdx.scenes.scene2d.utils.Cullable with com.badlogic.gdx.scenes.scene2d.ui.Styleable[com.badlogic.gdx.scenes.scene2d.ui.List.ListStyle] {
   var style: com.badlogic.gdx.scenes.scene2d.ui.List.ListStyle = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.List.ListStyle]
   final val items: com.badlogic.gdx.utils.Array[T] = new com.badlogic.gdx.utils.Array[T]().asInstanceOf[com.badlogic.gdx.utils.Array[T]]
   var selection: com.badlogic.gdx.scenes.scene2d.utils.ArraySelection[T] = new com.badlogic.gdx.scenes.scene2d.utils.ArraySelection[T](this.items).asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.ArraySelection[T]]

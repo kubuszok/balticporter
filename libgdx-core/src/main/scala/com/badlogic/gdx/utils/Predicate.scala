@@ -1,10 +1,10 @@
 package com.badlogic.gdx.utils
 
-trait Predicate[T] {
+trait Predicate[T <: java.lang.Object] {
   def evaluate(arg0: T): scala.Boolean
 }
 object Predicate {
-  class PredicateIterator[T](iterator$p: balticporter.runtime.JavaIterator[T], predicate$p: Predicate[T]) extends balticporter.runtime.JavaIterator[T] {
+  class PredicateIterator[T <: java.lang.Object](iterator$p: balticporter.runtime.JavaIterator[T], predicate$p: Predicate[T]) extends balticporter.runtime.JavaIterator[T] {
     var iterator: balticporter.runtime.JavaIterator[T] = null.asInstanceOf[balticporter.runtime.JavaIterator[T]]
     var predicate: Predicate[T] = null.asInstanceOf[Predicate[T]]
     var `end`: scala.Boolean = false
@@ -63,7 +63,7 @@ object Predicate {
       this.iterator.remove()
     }
   }
-  class PredicateIterable[T](iterable$p: balticporter.runtime.JavaIterable[T], predicate$p: Predicate[T]) extends balticporter.runtime.JavaIterable[T] {
+  class PredicateIterable[T <: java.lang.Object](iterable$p: balticporter.runtime.JavaIterable[T], predicate$p: Predicate[T]) extends balticporter.runtime.JavaIterable[T] {
     var iterable: balticporter.runtime.JavaIterable[T] = null.asInstanceOf[balticporter.runtime.JavaIterable[T]]
     var predicate: Predicate[T] = null.asInstanceOf[Predicate[T]]
     var iterator$field: com.badlogic.gdx.utils.Predicate.PredicateIterator[T] = null

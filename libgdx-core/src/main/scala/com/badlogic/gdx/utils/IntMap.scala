@@ -1,6 +1,6 @@
 package com.badlogic.gdx.utils
 
-class IntMap[V](initialCapacity: scala.Int, loadFactor$p: scala.Float) extends balticporter.runtime.JavaIterable[com.badlogic.gdx.utils.IntMap.Entry[V]] {
+class IntMap[V <: java.lang.Object](initialCapacity: scala.Int, loadFactor$p: scala.Float) extends balticporter.runtime.JavaIterable[com.badlogic.gdx.utils.IntMap.Entry[V]] {
   var size: scala.Int = 0
   var keyTable: scala.Array[scala.Int] = null.asInstanceOf[scala.Array[scala.Int]]
   var valueTable: scala.Array[V] = null.asInstanceOf[scala.Array[V]]
@@ -485,14 +485,14 @@ class IntMap[V](initialCapacity: scala.Int, loadFactor$p: scala.Float) extends b
   }
 }
 object IntMap {
-  class Entry[V] {
+  class Entry[V <: java.lang.Object] {
     var key: scala.Int = 0
     var value: V = null.asInstanceOf[V]
     def toString(): java.lang.String = {
       return (java.lang.String.valueOf(this.key) + "=") + this.value
     }
   }
-  class MapIterator[V](map$p: IntMap[V]) {
+  class MapIterator[V <: java.lang.Object](map$p: IntMap[V]) {
     var hasNext$field: scala.Boolean = false
     var map: IntMap[V] = null.asInstanceOf[IntMap[V]]
     var nextIndex: scala.Int = 0
@@ -560,7 +560,7 @@ object IntMap {
     private final val INDEX_ILLEGAL: scala.Int = -2
     final val INDEX_ZERO: scala.Int = -1
   }
-  class Entries[V](map$p: IntMap[V]) extends com.badlogic.gdx.utils.IntMap.MapIterator[V](map$p) with balticporter.runtime.JavaIterable[com.badlogic.gdx.utils.IntMap.Entry[V]] with balticporter.runtime.JavaIterator[com.badlogic.gdx.utils.IntMap.Entry[V]] {
+  class Entries[V <: java.lang.Object](map$p: IntMap[V]) extends com.badlogic.gdx.utils.IntMap.MapIterator[V](map$p) with balticporter.runtime.JavaIterable[com.badlogic.gdx.utils.IntMap.Entry[V]] with balticporter.runtime.JavaIterator[com.badlogic.gdx.utils.IntMap.Entry[V]] {
     private final val entry: com.badlogic.gdx.utils.IntMap.Entry[V] = new com.badlogic.gdx.utils.IntMap.Entry[V]().asInstanceOf[com.badlogic.gdx.utils.IntMap.Entry[V]]
     def next(): com.badlogic.gdx.utils.IntMap.Entry[V] = {
       if (!hasNext$field) {
@@ -594,7 +594,7 @@ object IntMap {
   object Entries {
     export com.badlogic.gdx.utils.IntMap.MapIterator.*
   }
-  class Values[V](map$p: IntMap[V]) extends com.badlogic.gdx.utils.IntMap.MapIterator[V](map$p) with balticporter.runtime.JavaIterable[V] with balticporter.runtime.JavaIterator[V] {
+  class Values[V <: java.lang.Object](map$p: IntMap[V]) extends com.badlogic.gdx.utils.IntMap.MapIterator[V](map$p) with balticporter.runtime.JavaIterable[V] with balticporter.runtime.JavaIterator[V] {
     def hasNext(): scala.Boolean = {
       if (!valid) {
         throw new com.badlogic.gdx.utils.GdxRuntimeException("#iterator() cannot be used nested.")
@@ -633,7 +633,7 @@ object IntMap {
   object Values {
     export com.badlogic.gdx.utils.IntMap.MapIterator.*
   }
-  class Keys(map$p: IntMap[?]) extends com.badlogic.gdx.utils.IntMap.MapIterator[scala.AnyRef](map$p.asInstanceOf[IntMap[scala.AnyRef]]) {
+  class Keys(map$p: IntMap[?]) extends com.badlogic.gdx.utils.IntMap.MapIterator[java.lang.Object](map$p.asInstanceOf[IntMap[java.lang.Object]]) {
     def next(): scala.Int = {
       if (!hasNext$field) {
         throw new java.util.NoSuchElementException()

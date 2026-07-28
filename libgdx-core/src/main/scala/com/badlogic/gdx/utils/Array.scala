@@ -1,6 +1,6 @@
 package com.badlogic.gdx.utils
 
-class Array[T] extends balticporter.runtime.JavaIterable[T] {
+class Array[T <: java.lang.Object] extends balticporter.runtime.JavaIterable[T] {
   var items: scala.Array[T] = null.asInstanceOf[scala.Array[T]]
   var size: scala.Int = 0
   var ordered: scala.Boolean = false
@@ -583,16 +583,16 @@ class Array[T] extends balticporter.runtime.JavaIterable[T] {
   }
 }
 object Array {
-  def of[T](arraySupplier: com.badlogic.gdx.utils.ArraySupplier[scala.Array[T]]): Array[T] = {
+  def of[T <: java.lang.Object](arraySupplier: com.badlogic.gdx.utils.ArraySupplier[scala.Array[T]]): Array[T] = {
     return new Array[T](arraySupplier)
   }
-  def of[T](ordered: scala.Boolean, capacity: scala.Int, arraySupplier: com.badlogic.gdx.utils.ArraySupplier[scala.Array[T]]): Array[T] = {
+  def of[T <: java.lang.Object](ordered: scala.Boolean, capacity: scala.Int, arraySupplier: com.badlogic.gdx.utils.ArraySupplier[scala.Array[T]]): Array[T] = {
     return new Array[T](ordered, capacity, arraySupplier)
   }
-  def `with`[T](array: scala.Array[T]): Array[T] = {
+  def `with`[T <: java.lang.Object](array: scala.Array[T]): Array[T] = {
     return new Array(array).asInstanceOf[Array[T]]
   }
-  class ArrayIterator[T](array$p: Array[T], allowRemove$p: scala.Boolean) extends balticporter.runtime.JavaIterator[T] with balticporter.runtime.JavaIterable[T] {
+  class ArrayIterator[T <: java.lang.Object](array$p: Array[T], allowRemove$p: scala.Boolean) extends balticporter.runtime.JavaIterator[T] with balticporter.runtime.JavaIterable[T] {
     private var array: Array[T] = null.asInstanceOf[Array[T]]
     private var allowRemove: scala.Boolean = false
     var index: scala.Int = 0
@@ -631,7 +631,7 @@ object Array {
       return this
     }
   }
-  class ArrayIterable[T](array$p: Array[T], allowRemove$p: scala.Boolean) extends balticporter.runtime.JavaIterable[T] {
+  class ArrayIterable[T <: java.lang.Object](array$p: Array[T], allowRemove$p: scala.Boolean) extends balticporter.runtime.JavaIterable[T] {
     private var array: Array[T] = null.asInstanceOf[Array[T]]
     private var allowRemove: scala.Boolean = false
     private var iterator1: com.badlogic.gdx.utils.Array.ArrayIterator[T] = null.asInstanceOf[com.badlogic.gdx.utils.Array.ArrayIterator[T]]
