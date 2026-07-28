@@ -54,7 +54,7 @@ class PointLight extends com.badlogic.gdx.graphics.g3d.environment.BaseLight[Poi
   override def equals(obj: java.lang.Object): scala.Boolean = {
     return obj.isInstanceOf[PointLight] && this.equals(obj.asInstanceOf[PointLight].asInstanceOf[PointLight])
   }
-  override def equals(other: PointLight): scala.Boolean = {
+  def equals(other: PointLight): scala.Boolean = {
     return (other != null) && ((other == this) || ((color.equals(other.color) && this.position.equals(other.position)) && (this.intensity == other.intensity)))
   }
 }

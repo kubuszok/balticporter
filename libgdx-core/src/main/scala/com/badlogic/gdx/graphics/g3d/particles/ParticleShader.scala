@@ -60,7 +60,7 @@ class ParticleShader(renderable$p: com.badlogic.gdx.graphics.g3d.Renderable, con
   override def equals(obj: java.lang.Object): scala.Boolean = {
     return obj.isInstanceOf[ParticleShader] && this.equals(obj.asInstanceOf[ParticleShader].asInstanceOf[ParticleShader])
   }
-  override def equals(obj: ParticleShader): scala.Boolean = {
+  def equals(obj: ParticleShader): scala.Boolean = {
     return obj == this
   }
   @java.lang.Override

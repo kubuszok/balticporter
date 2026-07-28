@@ -236,7 +236,7 @@ class DefaultShader(renderable$p: com.badlogic.gdx.graphics.g3d.Renderable, conf
   override def equals(obj: java.lang.Object): scala.Boolean = {
     return obj.isInstanceOf[DefaultShader] && this.equals(obj.asInstanceOf[DefaultShader].asInstanceOf[DefaultShader])
   }
-  override def equals(obj: DefaultShader): scala.Boolean = {
+  def equals(obj: DefaultShader): scala.Boolean = {
     return obj == this
   }
   @java.lang.Override

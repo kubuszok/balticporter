@@ -1713,7 +1713,7 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
     }; i = i + 1 } }
     return true
   }
-  override def equals(other: CharArray): scala.Boolean = {
+  def equals(other: CharArray): scala.Boolean = {
     if (this == other) {
       return true
     } else ()

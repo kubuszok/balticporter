@@ -724,11 +724,19 @@ object SpoonTir:
       * / `AnyRef` — which scala requires `override` for and java does not. Spoon reports no
       * inherited declaration for them (there is no `Object` in the model under noClasspath), so the
       * hierarchy walk below cannot see it. These five are the whole set java lets you redeclare. */
-    private val universalMembers = Set("toString" -> 0, "hashCode" -> 0, "equals" -> 1,
-                                       "clone" -> 0, "finalize" -> 0)
-
     private def overridesInherited(m: CtMethod[?]): Boolean =
-      universalMembers(m.getSimpleName -> m.getParameters.size) || inheritedFromSource(m)
+      universalMember(m) || inheritedFromSource(m)
+
+    /** Does this redeclare one of `java.lang.Object`'s members? Matched on the full SIGNATURE, not
+      * name and arity: `equals(VertexAttribute)` is an OVERLOAD that overrides nothing, and marking
+      * it `override` is an error scala reports and java has no opinion on. */
+    private def universalMember(m: CtMethod[?]): Boolean =
+      val ps = m.getParameters.asScala.toList.map(p =>
+        try p.getType.getQualifiedName catch { case _: Throwable => "?" })
+      (m.getSimpleName, ps) match
+        case ("toString" | "hashCode" | "clone" | "finalize", Nil) => true
+        case ("equals", List("java.lang.Object"))                   => true
+        case _                                                       => false
 
     private def inheritedFromSource(m: CtMethod[?]): Boolean =
       val top = try m.getTopDefinitions.asScala.toList catch { case _: Throwable => Nil }

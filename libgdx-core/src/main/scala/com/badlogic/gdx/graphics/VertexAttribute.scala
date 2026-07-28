@@ -35,7 +35,7 @@ final class VertexAttribute(usage$p: scala.Int, numComponents$p: scala.Int, type
     } else ()
     return this.equals(obj.asInstanceOf[VertexAttribute].asInstanceOf[VertexAttribute])
   }
-  override def equals(other: VertexAttribute): scala.Boolean = {
+  def equals(other: VertexAttribute): scala.Boolean = {
     return ((((((other != null) && (this.usage == other.usage)) && (this.numComponents == other.numComponents)) && (this.`type` == other.`type`)) && (this.normalized == other.normalized)) && this.alias.equals(other.alias)) && (this.unit == other.unit)
   }
   def getKey(): scala.Int = {

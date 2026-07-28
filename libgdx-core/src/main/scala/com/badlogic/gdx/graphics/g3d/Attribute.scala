@@ -9,7 +9,7 @@ abstract class Attribute extends java.lang.Comparable[Attribute] {
     this.typeBit = java.lang.Long.numberOfTrailingZeros(`type`)
   }
   def copy(): Attribute
-  override def equals(other: Attribute): scala.Boolean = {
+  def equals(other: Attribute): scala.Boolean = {
     return other.hashCode() == this.hashCode()
   }
   @java.lang.Override
