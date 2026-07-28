@@ -456,6 +456,15 @@ site (`readValue("resource", null, …)`) is class-tag driven and needs explicit
 
 ## Do NOT retry (measured failures)
 
+- **Falling back to ERASED formals in `rawCtorArgs` when nothing names the class's parameters**:
+  2 → **23** (all E007). The reasoning is sound for the one site it targets — Java really does check
+  a raw `new AssetDescriptor(name, data.type, parameter)` at the erased `(String, Class,
+  AssetLoaderParameters)` — but as a blanket fallback it casts 20-odd arguments that were already
+  correct, and an argument cast to `AssetLoaderParameters[Object]` no longer conforms to the
+  concrete instantiation Scala had rightly inferred. A raw `new` needs the erasure only when the
+  inferred instantiation is CONTRADICTED by another argument; that condition is what is missing, and
+  the blanket form is not a step towards it. `rawCtorArgs`'s existing name-directed branch is right
+  and must stay.
 - **Broadening `erasedReceiverView` to fire on a RENDERED wildcard, and to consider the callee's
   RESULT type**: 7 → **41** (21 × E008 `not a member`). Casting a receiver to its erased view LOSES
   members — `Array[Object]` has no `com.badlogic…` members the code then calls. The erased view is
