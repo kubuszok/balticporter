@@ -181,6 +181,10 @@ class Json:
   def readField(`object`: Object, fieldName: String, jsonName: String, elementType: Class[?], jsonMap: JsonValue): Unit =
     codec("Json.readField")
 
+  /** `protected boolean ignoreUnknownField (Class type, String fieldName)` — libgdx's Json calls it
+    * from `readFields`, and `Skin` overrides it. Absent here, that override compiled to nothing. */
+  def ignoreUnknownField(`type`: Class[?], fieldName: String): Boolean = false
+
   def readValue[T](`type`: Class[T], jsonData: JsonValue): T = codec("Json.readValue")
   def readValue[T](`type`: Class[T], elementType: Class[?], jsonData: JsonValue): T = codec("Json.readValue")
   def readValue[T](`type`: Class[T], elementType: Class[?], defaultValue: T, jsonData: JsonValue): T =
