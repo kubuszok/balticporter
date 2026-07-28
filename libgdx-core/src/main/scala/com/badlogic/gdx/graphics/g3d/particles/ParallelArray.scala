@@ -173,7 +173,7 @@ class ParallelArray(capacity$p: scala.Int) {
     }
     def setCapacity(requiredCapacity: scala.Int): scala.Unit = {
       data = {
-        this.data = java.util.Arrays.copyOf(this.data.asInstanceOf[scala.Array[java.lang.Object]], strideSize * requiredCapacity)
+        this.data = java.util.Arrays.copyOf(this.data.asInstanceOf[scala.Array[java.lang.Object]], strideSize * requiredCapacity).asInstanceOf[scala.Array[T]]
         this.data
       }
     }

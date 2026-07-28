@@ -67,7 +67,7 @@ abstract class ParticleControllerInfluencer extends com.badlogic.gdx.graphics.g3
     var descriptor: com.badlogic.gdx.assets.AssetDescriptor[?] = null.asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[?]]
     val iterator: balticporter.runtime.JavaIterator[com.badlogic.gdx.utils.IntArray] = effectsIndices.iterator()
     while ({
-      descriptor = data.loadAsset()
+      descriptor = data.loadAsset().asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[?]]
       descriptor
     } != null) {
       val effect: com.badlogic.gdx.graphics.g3d.particles.ParticleEffect = manager.get(descriptor).asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ParticleEffect].asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ParticleEffect]

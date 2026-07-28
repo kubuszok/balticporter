@@ -394,6 +394,16 @@ object SpoonTir:
       case arr: CtArrayTypeReference[?] => tpAccessibleHere(arr.getComponentType)
       case r => try r.getActualTypeArguments.asScala.forall(tpAccessibleHere) catch { case _: Throwable => true }
 
+    /** the NAMES of every type variable a type mentions. */
+    private def typeVarsOf(tr: CtTypeReference[?]): Set[String] = tr match
+      case null                         => Set.empty
+      case tv: CtTypeParameterReference => Set(tv.getSimpleName)
+      case w: CtWildcardReference       => Option(w.getBoundingType).map(typeVarsOf).getOrElse(Set.empty)
+      case arr: CtArrayTypeReference[?] => typeVarsOf(arr.getComponentType)
+      case r if r.isPrimitive           => Set.empty
+      case r => try r.getActualTypeArguments.asScala.toSet.flatMap(typeVarsOf)
+                catch { case _: Throwable => Set.empty }
+
     /** does this type mention ANY type variable (directly, in an array element, or in an argument)? */
     private def mentionsAnyTypeVar(tr: CtTypeReference[?]): Boolean = tr match
       case null                         => false
@@ -1389,8 +1399,14 @@ object SpoonTir:
           val st  = Tree.Assign(lhs, binApply(opText(a.getKind), lhs, expr(a.getAssignment), ty(a)), unitT, originOf(a))
           Tree.Block(List(st), lhs, ty(a), originOf(a))
         case a: CtAssignment[?, ?] =>
+          // Java's assignment-as-EXPRESSION needs the same coercion as the statement form. It did
+          // not have it, so a conversion Java made silently was written out on one path and dropped
+          // on the other — `data = (this.data = Arrays.copyOf(data, n))` kept the erased
+          // `Array[Object]` the argument cast produced, in an `Array[T]` field.
           val lhs = expr(a.getAssigned)
-          val st  = Tree.Assign(lhs, expr(a.getAssignment), unitT, originOf(a))
+          val rhs = a.getAssignment
+          val v   = Option(a.getAssigned.getType).map(coerce(_, rhs, expr(rhs))).getOrElse(expr(rhs))
+          val st  = Tree.Assign(lhs, toDeclaredTypeParam(a.getAssigned, rhs, v), unitT, originOf(a))
           Tree.Block(List(st), lhs, ty(a), originOf(a))
         case c: CtConditional[?] =>
           // Java `b ? x : null` typed as the type parameter `V`; Scala infers `x.type | Null`, which
@@ -1744,7 +1760,38 @@ object SpoonTir:
                 case Some((et, _)) => Tree.Typed(recv, tt(et, t), et, originOf(t))
                 case None          => recv
               Tree.Select(recv2, mid, NoType, o)
-        Tree.Apply(pinTypeArgs(fun, inv, o), args, mid, ty(inv), o)
+        Tree.Apply(pinTypeArgs(fun, inv, o), args, mid, erasedResult(args, ty(inv)), o)
+
+      /** The result type an ERASED ARGUMENT drags with it.
+        *
+        * `Arrays.copyOf(T[] a, int n): T[]` handed `data.asInstanceOf[Array[Object]]` — the
+        * erasure cast `coerceArgsFixed` inserts for an external array formal — returns an
+        * `Array[Object]`, whatever Spoon says the Java expression's type was. Recording Spoon's
+        * `Array[T]` on the node makes the TIR assert something the emitted Scala does not have, and
+        * then the assignment back into `Array[T]` looks fine to every rule that consults `tpe` and
+        * fails in the compiler.
+        *
+        * Only the erasure WE introduced is modelled, and only where the callee's result actually
+        * moves with that argument (`fill(Object[], Object): void` shares nothing, so nothing
+        * changes). Deciding it from the emitted argument rather than from the declaration matters:
+        * under noClasspath a JDK shadow's formals are not reliable, but what we emitted is. */
+      private def erasedResult(args: List[Term], declared: TypeRepr): TypeRepr =
+        val erasedArrayArg = args.exists { case Tree.Typed(_, _, at, _) => at == arrayOfObject; case _ => false }
+        declared match
+          // Decided from the EMITTED argument and Spoon's result type, never from the callee's
+          // declaration: `java.util.Arrays` is a shadow under noClasspath and often carries no
+          // return type at all, so a declaration-driven rule silently does nothing here.
+          case AppliedType(_, List(a)) if erasedArrayArg && isScalaArrayType(declared) && isTypeParamRef(a) =>
+            arrayOfObject
+          case _ => declared
+
+      /** is this rendered type a reference to a type PARAMETER? (they are minted `<owner>$$<name>`) */
+      private def isTypeParamRef(t: TypeRepr): Boolean = t match
+        case TypeRef(_, s) => minter.fullNameOf(s).contains("$$")
+        case _             => false
+
+      private lazy val arrayOfObject: TypeRepr =
+        AppliedType(TypeRef(NoPrefix, minter.external("scala.Array", "Array")), List(objectT))
 
       /** Java keeps SEPARATE namespaces for variables and methods; Scala does not. `boolean delete =
         * …; cursor = delete(false);` is legal Java — the call still reaches the METHOD `delete` —

@@ -24,7 +24,7 @@ abstract class ModelInfluencer extends com.badlogic.gdx.graphics.g3d.particles.i
     val data: com.badlogic.gdx.graphics.g3d.particles.ResourceData.SaveData = resources.getSaveData()
     var descriptor: com.badlogic.gdx.assets.AssetDescriptor[?] = null.asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[?]]
     while ({
-      descriptor = data.loadAsset()
+      descriptor = data.loadAsset().asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[?]]
       descriptor
     } != null) {
       val model: com.badlogic.gdx.graphics.g3d.Model = manager.get(descriptor).asInstanceOf[com.badlogic.gdx.graphics.g3d.Model].asInstanceOf[com.badlogic.gdx.graphics.g3d.Model]

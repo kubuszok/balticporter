@@ -117,7 +117,7 @@ class PooledLinkedList[T](maxPoolSize: scala.Int) {
     this.iter()
     var v: T = null.asInstanceOf[T]
     while ({
-      v = this.next()
+      v = this.next().asInstanceOf[T]
       v
     } != null) {
       this.remove()
