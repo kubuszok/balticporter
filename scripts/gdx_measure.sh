@@ -13,7 +13,7 @@ if ! grep -qE "wrote [0-9]+ Scala files" <<<"$MIGRATE_OUT"; then
 fi
 grep -E "wrote" <<<"$MIGRATE_OUT" | head -1
 pkill -9 -f scala-cli 2>/dev/null; sleep 1
-scala-cli compile --scala 3.8.4 --server=false libgdx-core/src/main/scala 2>&1 | sed 's/\x1b\[[0-9;]*m//g' > /tmp/gdxmeasure.txt
+scala-cli compile --scala 3.8.4 --server=false libgdx-core/src_managed/main/scala 2>&1 | sed 's/\x1b\[[0-9;]*m//g' > /tmp/gdxmeasure.txt
 # count ALL errors: coded `-- [Exxx] ... Error` AND bare `-- Error:` (e.g. "secondary constructor
 # must call a preceding constructor" carries no code). The coded-only count silently undercounts.
 echo "TOTAL ERRORS: $(grep -cE '^-- (\[E[0-9]+\] )?.*Error' /tmp/gdxmeasure.txt)  (coded $(grep -cE '\[E[0-9]+\].*Error' /tmp/gdxmeasure.txt) + bare $(grep -cE '^-- Error:' /tmp/gdxmeasure.txt))"

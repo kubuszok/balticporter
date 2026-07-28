@@ -173,6 +173,22 @@ It runs on the **Fable 5** model and is expensive, so it is **not** run on every
 
 ---
 
+## 5.5 Emitted code is a BUILD PRODUCT — `src_managed/`, never `src/`
+
+Every port writes its generated Scala to `<port>/src_managed/{main,test}/scala`, which is
+gitignored and deleted by `sbt clean`. `src/` holds only the hand-written part of a port — the
+shims and overrides a library needs and the engine cannot derive.
+
+This is the layout a target project is meant to use, so the engine must produce it, not
+approximate it. `SbtGen.managedMain` / `managedTest` give the paths; `SbtGen.emit` writes the
+`.gitignore` and the `sourceGenerators` + `cleanFiles` settings that make sbt see the directory
+and `clean` remove it. Never hardcode an output path in a corpus migrator.
+
+The reason is diagnostic, not tidiness: emitted code is reproducible from the Java sources plus
+the manifest and is invalidated by every engine change. Committed alongside `src/`, a `git status`
+can no longer distinguish a DECISION from an ARTEFACT — which is the single thing this project's
+measurement discipline (§5) depends on being able to see.
+
 ## 6. Scala 3 output constraints
 
 - **Never cast to `scala.Nothing`.**

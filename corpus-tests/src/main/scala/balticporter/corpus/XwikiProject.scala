@@ -59,7 +59,7 @@ object XwikiProject:
       units.flatMap(u => u.types.map(t => (if u.pkg.isEmpty then t.name else s"${u.pkg}.${t.name}") -> u)).toMap
     val ifaceHash: Map[String, String] = units.map(u => u.sourcePath -> InterfaceHash.of(u)).toMap
 
-    val srcDir = projRoot.resolve("src/main/scala")
+    val srcDir = balticporter.sbtgen.SbtGen.managedMain(projRoot)
     if Files.exists(srcDir) then Files.walk(srcDir).iterator().asScala.toList.reverse.foreach(Files.delete)
 
     // PLAN §7 whole-file overrides: hand-ported Scala for the irreducible

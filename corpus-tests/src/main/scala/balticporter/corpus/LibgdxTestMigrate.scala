@@ -65,7 +65,7 @@ object LibgdxTestMigrate:
     println(s"[libgdx-test] PORTABILITY (cannot run on Scala.js / Native): ${unportable.size}")
     println(PortabilityCheck.summary(unportable))
 
-    val outDir = repoRoot.resolve("libgdx-core/src/test/scala")
+    val outDir = balticporter.sbtgen.SbtGen.managedTest(repoRoot.resolve("libgdx-core"))
     if Files.exists(outDir) then Files.walk(outDir).iterator().asScala.toList.reverse.foreach(Files.delete)
     Files.createDirectories(outDir)
     // Spoon's model spans the resolution root as well, so the TIR carries every `gdx/src` unit too.

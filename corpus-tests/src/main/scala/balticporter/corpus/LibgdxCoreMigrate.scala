@@ -172,7 +172,7 @@ object LibgdxCoreMigrate:
     println(s"[libgdx-core] portability (Scala.js/Native): ${portability.size} site(s) on JVM-only APIs in EMITTED code")
     println(PortabilityCheck.summary(portability))
 
-    val outDir = repoRoot.resolve("libgdx-core/src/main/scala")
+    val outDir = balticporter.sbtgen.SbtGen.managedMain(repoRoot.resolve("libgdx-core"))
     if Files.exists(outDir) then Files.walk(outDir).iterator().asScala.toList.reverse.foreach(Files.delete)
     Files.createDirectories(outDir)
     val emitter = new TirEmitter(program)

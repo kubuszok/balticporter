@@ -95,12 +95,24 @@ lazy val `corpus-tests` = project
 // (`gdx/src`, 605 types), produced by `corpus-tests/runMain …LibgdxCoreMigrate`. Standalone
 // (JDK-only, like libGDX core itself) and NOT aggregated by root, so a work-in-progress port
 // can't break the main build. Lenient scalacOptions: this is generated code under burn-down.
+//
+// Its sources live in `src_managed/`, gitignored and removed by `clean` — the same layout
+// `SbtGen` writes for a real port (see `SbtGen.managedDir` for why, and `SbtGen.managedSources`
+// for the settings this mirrors). Only `src/` would ever be committed, and this port has none.
 lazy val `libgdx-core` = project
   .in(file("libgdx-core"))
   .settings(
     name := "balticporter-libgdx-core",
     scalacOptions := Seq("-nowarn"),
     publish / skip := true,
+    libraryDependencies += "org.scalameta" %% "munit" % "1.2.0" % Test,
+    Compile / sourceGenerators += Def.task {
+      ((baseDirectory.value / "src_managed" / "main" / "scala") ** "*.scala").get()
+    }.taskValue,
+    Test / sourceGenerators += Def.task {
+      ((baseDirectory.value / "src_managed" / "test" / "scala") ** "*.scala").get()
+    }.taskValue,
+    cleanFiles += baseDirectory.value / "src_managed",
   )
 
 lazy val root = project

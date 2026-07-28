@@ -48,7 +48,7 @@ object LiqpProject:
     val sentinels = SentinelRegistry.compute(units)
     val ctorReg = Some(new balticporter.emit.CtorRegistry(units))
 
-    val srcDir = projRoot.resolve("src/main/scala")
+    val srcDir = balticporter.sbtgen.SbtGen.managedMain(projRoot)
     if Files.exists(srcDir) then
       Files.walk(srcDir).iterator().asScala.toList.reverse.foreach(Files.delete)
 
@@ -178,7 +178,7 @@ object LiqpProject:
     val testCp = LiqpClasspath.resolve(repoRoot) ++ LiqpClasspath.junitClasspath(repoRoot)
     val testCfg = FrontendConfig(testRoot, testFiles, testCp, List(sourceRoot, testRoot))
     val testResults = frontend.parseTolerant(testCfg)
-    val testDir = projRoot.resolve("src/test/scala")
+    val testDir = balticporter.sbtgen.SbtGen.managedTest(projRoot)
     if Files.exists(testDir) then
       Files.walk(testDir).iterator().asScala.toList.reverse.foreach(Files.delete)
     var okTests = 0
