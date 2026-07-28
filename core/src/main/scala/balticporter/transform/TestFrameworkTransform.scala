@@ -189,6 +189,18 @@ object TestFrameworkTransform:
         |  def assertArrayEquals(expected: Array[Object], actual: Array[Object]): Unit =
         |    assert(expected.sameElements(actual), "arrays differ")
         |  // JUnit's `fail()` and `fail(String)`; MUnit's `fail` demands a message and a Location.
+        |  // the message-carrying delta forms java also has
+        |  def assertEquals(message: String, expected: Double, actual: Double, delta: Double): Unit =
+        |    assert(math.abs(expected - actual) <= delta, message)
+        |  def assertArrayEquals(message: String, expected: Array[Float], actual: Array[Float],
+        |                        delta: Float): Unit =
+        |    assert(expected.length == actual.length &&
+        |             expected.indices.forall(i => math.abs(expected(i) - actual(i)) <= delta), message)
+        |  def assertArrayEquals(message: String, expected: Array[Double], actual: Array[Double],
+        |                        delta: Double): Unit =
+        |    assert(expected.length == actual.length &&
+        |             expected.indices.forall(i => math.abs(expected(i) - actual(i)) <= delta), message)
+        |
         |  def fail(): Nothing                = super.fail("failed")
         |  override def fail(message: String)(implicit loc: munit.Location): Nothing = super.fail(message)
         |
