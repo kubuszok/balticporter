@@ -955,7 +955,11 @@ object SpoonTir:
             val decl = try t.getTypeDeclaration catch { case _: Throwable => null }
             if decl == null then false
             else
-              decl.getMethods.asScala.exists(x => x.getSimpleName == n && (x ne m) && sig(x) == mine) ||
+              // a PRIVATE ancestor method is not inherited at all, so it cannot be overridden:
+              // `GL30Interceptor.check()` is private and `GL31Interceptor.check()` is protected —
+              // two unrelated methods to java, and `override` on the second is an error.
+              decl.getMethods.asScala.exists(x => x.getSimpleName == n && (x ne m) && sig(x) == mine &&
+                                                  !(try x.isPrivate catch { case _: Throwable => false })) ||
                 (decl match { case c: CtClass[?] => declares(c.getSuperclass, fuel - 1); case _ => false }) ||
                 (try decl.getSuperInterfaces.asScala.exists(declares(_, fuel - 1)) catch { case _: Throwable => false })
         m.getDeclaringType match
