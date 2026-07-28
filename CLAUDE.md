@@ -110,6 +110,46 @@ So:
 
 ---
 
+## 3.5 Consult the REFERENCE PORT before inventing a rule
+
+sge is a hand-written port of the same library, and ssg contains hand-ported Java libraries. Where
+they solved a problem, the solution is visible and already validated against real code. **Look there
+before designing a rule, and before concluding that no faithful translation exists.**
+
+```
+grep -rn "<the construct>" ../sge/sge/src/main/scala/    # and ../ssg for its libraries
+```
+
+Two things to record when you find one:
+
+- **What they emitted.** Example: every raw generic is rendered `[?]` — parent, overrides and fields
+  alike (`AssetLoader.getDependencies` returns `DynamicArray[AssetDescriptor[?]]` and every override
+  matches). That settles both that `?` round-trips across an override, and that filling the element
+  with the loader's own `T` is semantically wrong, since a `BitmapFont`'s dependencies are a
+  `TextureAtlas`.
+- **Whether they SOLVED it or SKIPPED it.** sge also renamed `AsyncTask` to `() => Unit` and simply
+  did not port several classes. Skips are not models — this project exists precisely to port what
+  sge left out — so a construct that merely vanished from sge tells you nothing except that it is
+  still open.
+
+Reasoning from first principles when a worked answer exists nearby wastes whole sessions. It has.
+
+## 3.6 Where a discovery goes
+
+A lesson that would change how the NEXT library is ported does not belong only in that port's status
+file — nothing loads it, and it gets re-derived. Put it in whichever of these fits, in the same
+commit that learned it:
+
+| home | for |
+|---|---|
+| this file | a governing rule or constraint for all porting work |
+| a skill (`.claude/skills/**`) | a procedure, e.g. adding a library to the corpus |
+| an agent definition (`.claude/agents/**`) | what a reviewer should hunt for |
+
+The per-library status file keeps the MEASUREMENTS and the dead ends with their numbers. The rule
+extracted from them goes above. A rule that names a specific library is per-library policy and
+belongs in that library's manifest instead (§1c).
+
 ## 4. The Auditor
 
 An **adversarial reviewer** (`.claude/agents/porting-auditor.md`) that reads the engine and the
