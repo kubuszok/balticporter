@@ -134,7 +134,7 @@ class Attributes extends balticporter.runtime.JavaIterable[com.badlogic.gdx.grap
     return (arg0.`type` - arg1.`type`).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
   }
   @java.lang.Override
-  override final def iterator(): balticporter.runtime.JavaIterator[?T] = {
+  override final def iterator(): balticporter.runtime.JavaIterator[com.badlogic.gdx.graphics.g3d.Attribute] = {
     return this.attributes.iterator()
   }
   def attributesHash(): scala.Int = {

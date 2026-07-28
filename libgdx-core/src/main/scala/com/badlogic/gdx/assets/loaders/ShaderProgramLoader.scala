@@ -14,7 +14,7 @@ class ShaderProgramLoader extends com.badlogic.gdx.assets.loaders.AsynchronousAs
     this.fragmentFileSuffix = fragmentFileSuffix
   }
   @java.lang.Override
-  override def getDependencies(fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.assets.loaders.ShaderProgramLoader.ShaderProgramParameter): com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = {
+  override def getDependencies(fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.assets.loaders.ShaderProgramLoader.ShaderProgramParameter): com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.graphics.glutils.ShaderProgram]] = {
     return null
   }
   @java.lang.Override
@@ -22,7 +22,7 @@ class ShaderProgramLoader extends com.badlogic.gdx.assets.loaders.AsynchronousAs
     ()
   }
   @java.lang.Override
-  override def loadSync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.assets.loaders.ShaderProgramLoader.ShaderProgramParameter): ?T = {
+  override def loadSync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.assets.loaders.ShaderProgramLoader.ShaderProgramParameter): com.badlogic.gdx.graphics.glutils.ShaderProgram = {
     var vertFileName: java.lang.String = null
     var fragFileName: java.lang.String = null
     if (parameter != null) {

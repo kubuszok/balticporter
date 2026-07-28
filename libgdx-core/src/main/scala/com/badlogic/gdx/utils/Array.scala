@@ -435,7 +435,7 @@ class Array[T <: java.lang.Object] extends balticporter.runtime.JavaIterable[T] 
       items(ii) = temp
     }; i = i - 1 } }
   }
-  override def iterator(): balticporter.runtime.JavaIterator[T] = {
+  override def iterator(): com.badlogic.gdx.utils.Array.ArrayIterator[T] = {
     if (com.badlogic.gdx.utils.Collections.allocateIterators) {
       return new com.badlogic.gdx.utils.Array.ArrayIterator[T](this.asInstanceOf[Array[T]], true)
     } else ()
@@ -608,7 +608,7 @@ object Array {
       } else ()
       return this.index < this.array.size
     }
-    override def next(): ?E = {
+    override def next(): T = {
       if (this.index >= this.array.size) {
         throw new java.util.NoSuchElementException(java.lang.String.valueOf(this.index))
       } else ()
@@ -627,7 +627,7 @@ object Array {
     def reset(): scala.Unit = {
       this.index = 0
     }
-    override def iterator(): balticporter.runtime.JavaIterator[T] = {
+    override def iterator(): com.badlogic.gdx.utils.Array.ArrayIterator[T] = {
       return this
     }
   }
@@ -641,7 +641,7 @@ object Array {
     }
     this.array = array$p
     this.allowRemove = allowRemove$p
-    override def iterator(): balticporter.runtime.JavaIterator[T] = {
+    override def iterator(): com.badlogic.gdx.utils.Array.ArrayIterator[T] = {
       if (com.badlogic.gdx.utils.Collections.allocateIterators) {
         return new com.badlogic.gdx.utils.Array.ArrayIterator[T](this.array, this.allowRemove)
       } else ()

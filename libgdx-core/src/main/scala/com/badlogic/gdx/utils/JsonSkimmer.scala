@@ -1090,7 +1090,7 @@ object JsonSkimmer {
       { var i: scala.Int = this.start; val n: scala.Int = i + this.length; while (i < n) { {
         var c: scala.Char = chars({ i += 1; i })
         if (c != '\\') {
-          (this.buffer.append: (scala.Char) => java.lang.Appendable)(c)
+          (this.buffer.append: (scala.Char) => com.badlogic.gdx.utils.CharArray)(c)
           /* continue */ ()
         } else ()
         if (i == n) {
@@ -1127,7 +1127,7 @@ object JsonSkimmer {
             throw new com.badlogic.gdx.utils.SerializationException("Illegal escaped character: \\" + c)
           }
         }
-        (this.buffer.append: (scala.Char) => java.lang.Appendable)(c)
+        (this.buffer.append: (scala.Char) => com.badlogic.gdx.utils.CharArray)(c)
       };  } }
       return this.buffer.toString()
     }

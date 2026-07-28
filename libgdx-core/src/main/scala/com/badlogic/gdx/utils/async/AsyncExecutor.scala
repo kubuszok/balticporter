@@ -19,7 +19,7 @@ class AsyncExecutor(maxConcurrent: scala.Int, name: java.lang.String) extends co
     } else ()
     return new com.badlogic.gdx.utils.async.AsyncResult[T](this.executor.submit(new java.util.concurrent.Callable[T]() {
       @java.lang.Override
-      override def call(): ?V = {
+      override def call(): T = {
         return task.call().asInstanceOf[T]
       }
     })).asInstanceOf[com.badlogic.gdx.utils.async.AsyncResult[T]]

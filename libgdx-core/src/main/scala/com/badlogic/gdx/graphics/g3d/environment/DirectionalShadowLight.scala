@@ -6,14 +6,14 @@ class DirectionalShadowLight(shadowMapWidth: scala.Int, shadowMapHeight: scala.I
   var halfDepth: scala.Float = 0.0f
   var halfHeight: scala.Float = 0.0f
   final val tmpV: com.badlogic.gdx.math.Vector3 = new com.badlogic.gdx.math.Vector3()
-  var textureDesc: com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[?] = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[?]]
+  var textureDesc: com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[com.badlogic.gdx.graphics.g3d.environment.DirectionalLight] = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[com.badlogic.gdx.graphics.g3d.environment.DirectionalLight]]
   this.fbo = new com.badlogic.gdx.graphics.glutils.FrameBuffer(com.badlogic.gdx.graphics.Pixmap.Format.RGBA8888, shadowMapWidth, shadowMapHeight, true)
   this.cam = new com.badlogic.gdx.graphics.OrthographicCamera(shadowViewportWidth, shadowViewportHeight)
   this.cam.near = shadowNear
   this.cam.far = shadowFar
   this.halfHeight = shadowViewportHeight * 0.5f
   this.halfDepth = shadowNear + (0.5f * (shadowFar - shadowNear))
-  this.textureDesc = new com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor().asInstanceOf[com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[?]]
+  this.textureDesc = new com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[com.badlogic.gdx.graphics.g3d.environment.DirectionalLight]().asInstanceOf[com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[com.badlogic.gdx.graphics.g3d.environment.DirectionalLight]]
   this.textureDesc.minFilter = {
     this.textureDesc.magFilter = com.badlogic.gdx.graphics.Texture.TextureFilter.Nearest
     this.textureDesc.magFilter
@@ -64,9 +64,9 @@ class DirectionalShadowLight(shadowMapWidth: scala.Int, shadowMapHeight: scala.I
     return this.cam.combined
   }
   @java.lang.Override
-  override def getDepthMap(): com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[?] = {
+  override def getDepthMap(): com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[com.badlogic.gdx.graphics.g3d.environment.DirectionalLight] = {
     this.textureDesc.asInstanceOf[com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[com.badlogic.gdx.graphics.GLTexture]].texture = this.fbo.getColorBufferTexture()
-    return this.textureDesc.asInstanceOf[com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[?]]
+    return this.textureDesc.asInstanceOf[com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[com.badlogic.gdx.graphics.g3d.environment.DirectionalLight]]
   }
   @java.lang.Override
   override def dispose(): scala.Unit = {

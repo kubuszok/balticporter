@@ -62,7 +62,7 @@ class SortedIntList[E <: java.lang.Object] extends balticporter.runtime.JavaIter
   def isEmpty(): scala.Boolean = {
     return this.size$field == 0
   }
-  override def iterator(): balticporter.runtime.JavaIterator[?T] = {
+  override def iterator(): balticporter.runtime.JavaIterator[com.badlogic.gdx.utils.SortedIntList.Node[E]] = {
     if (com.badlogic.gdx.utils.Collections.allocateIterators) {
       return new Iterator()
     } else ()
@@ -83,7 +83,7 @@ class SortedIntList[E <: java.lang.Object] extends balticporter.runtime.JavaIter
       return this.position != null
     }
     @java.lang.Override
-    override def next(): E = {
+    override def next(): com.badlogic.gdx.utils.SortedIntList.Node[E] = {
       this.previousPosition = this.position
       this.position = this.position.n
       return this.previousPosition
@@ -118,7 +118,7 @@ object SortedIntList {
   }
   class NodePool[E <: java.lang.Object] extends com.badlogic.gdx.utils.Pool[com.badlogic.gdx.utils.SortedIntList.Node[E]] {
     @java.lang.Override
-    override def newObject(): ?T = {
+    override def newObject(): com.badlogic.gdx.utils.SortedIntList.Node[E] = {
       return new com.badlogic.gdx.utils.SortedIntList.Node[E]()
     }
     def obtain(p: com.badlogic.gdx.utils.SortedIntList.Node[E], n: com.badlogic.gdx.utils.SortedIntList.Node[E], value: E, index: scala.Int): com.badlogic.gdx.utils.SortedIntList.Node[E] = {

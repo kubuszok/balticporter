@@ -25,7 +25,7 @@ object ColorInfluencer {
       }; i = i + this.colorChannel.strideSize } }
     }
     @java.lang.Override
-    override def copy(): com.badlogic.gdx.graphics.g3d.particles.ParticleControllerComponent = {
+    override def copy(): com.badlogic.gdx.graphics.g3d.particles.influencers.ColorInfluencer.Random = {
       return new com.badlogic.gdx.graphics.g3d.particles.influencers.ColorInfluencer.Random()
     }
   }
@@ -75,7 +75,7 @@ object ColorInfluencer {
       }; i = i + this.colorChannel.strideSize; a = a + this.alphaInterpolationChannel.strideSize; l = l + this.lifeChannel.strideSize } }
     }
     @java.lang.Override
-    override def copy(): com.badlogic.gdx.graphics.g3d.particles.ParticleControllerComponent = {
+    override def copy(): com.badlogic.gdx.graphics.g3d.particles.influencers.ColorInfluencer.Single = {
       return new com.badlogic.gdx.graphics.g3d.particles.influencers.ColorInfluencer.Single(this)
     }
     @java.lang.Override

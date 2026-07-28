@@ -145,7 +145,7 @@ class List[T <: java.lang.Object](style$p: com.badlogic.gdx.scenes.scene2d.ui.Li
     this.style = style
     this.invalidateHierarchy()
   }
-  override def getStyle(): T = {
+  override def getStyle(): com.badlogic.gdx.scenes.scene2d.ui.List.ListStyle = {
     return this.style
   }
   override def layout(): scala.Unit = {

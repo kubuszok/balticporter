@@ -27,17 +27,17 @@ class TmxMapLoader extends com.badlogic.gdx.maps.tiled.BaseTmxMapLoader[com.badl
     this.map = this.loadTiledMap(tmxFile, parameter, new com.badlogic.gdx.maps.ImageResolver.AssetManagerImageResolver(manager))
   }
   @java.lang.Override
-  override def loadSync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.Parameters): ?T = {
+  override def loadSync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.Parameters): com.badlogic.gdx.maps.tiled.TiledMap = {
     return map
   }
   @java.lang.Override
-  override def getDependencyAssetDescriptors(tmxFile: com.badlogic.gdx.files.FileHandle, textureParameter: com.badlogic.gdx.assets.loaders.TextureLoader.TextureParameter): com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = {
-    val descriptors: com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]().asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]]
+  override def getDependencyAssetDescriptors(tmxFile: com.badlogic.gdx.files.FileHandle, textureParameter: com.badlogic.gdx.assets.loaders.TextureLoader.TextureParameter): com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.maps.tiled.TiledMap]] = {
+    val descriptors: com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.maps.tiled.TiledMap]] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.maps.tiled.TiledMap]]().asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.maps.tiled.TiledMap]]]
     val fileHandles: com.badlogic.gdx.utils.Array[com.badlogic.gdx.files.FileHandle] = this.getDependencyFileHandles(tmxFile)
     for (handle <- fileHandles) {
-      descriptors.add(new com.badlogic.gdx.assets.AssetDescriptor(handle, classOf[com.badlogic.gdx.graphics.Texture], textureParameter))
+      descriptors.add(new com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.maps.tiled.TiledMap](handle, classOf[com.badlogic.gdx.graphics.Texture], textureParameter))
     }
-    return descriptors.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]]
+    return descriptors.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.maps.tiled.TiledMap]]]
   }
   def getDependencyFileHandles(tmxFile: com.badlogic.gdx.files.FileHandle): com.badlogic.gdx.utils.Array[com.badlogic.gdx.files.FileHandle] = {
     val fileHandles: com.badlogic.gdx.utils.Array[com.badlogic.gdx.files.FileHandle] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.files.FileHandle]()

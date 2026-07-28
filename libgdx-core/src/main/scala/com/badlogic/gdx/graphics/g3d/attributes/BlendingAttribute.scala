@@ -28,7 +28,7 @@ class BlendingAttribute(blended$p: scala.Boolean, sourceFunc: scala.Int, destFun
   this.destFunction = destFunc
   this.opacity = opacity$p
   @java.lang.Override
-  override def copy(): com.badlogic.gdx.graphics.g3d.Attribute = {
+  override def copy(): BlendingAttribute = {
     return new BlendingAttribute(this)
   }
   @java.lang.Override

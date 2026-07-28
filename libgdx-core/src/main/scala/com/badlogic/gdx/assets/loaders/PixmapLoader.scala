@@ -8,13 +8,13 @@ class PixmapLoader(resolver$p: com.badlogic.gdx.assets.loaders.FileHandleResolve
     this.pixmap = new com.badlogic.gdx.graphics.Pixmap(file)
   }
   @java.lang.Override
-  override def loadSync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.assets.loaders.PixmapLoader.PixmapParameter): ?T = {
+  override def loadSync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.assets.loaders.PixmapLoader.PixmapParameter): com.badlogic.gdx.graphics.Pixmap = {
     var pixmap: com.badlogic.gdx.graphics.Pixmap = this.pixmap
     this.pixmap = null
     return pixmap
   }
   @java.lang.Override
-  override def getDependencies(fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.assets.loaders.PixmapLoader.PixmapParameter): com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = {
+  override def getDependencies(fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.assets.loaders.PixmapLoader.PixmapParameter): com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.graphics.Pixmap]] = {
     return null
   }
 }

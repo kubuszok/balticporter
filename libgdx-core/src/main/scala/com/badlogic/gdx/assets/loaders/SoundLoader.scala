@@ -10,13 +10,13 @@ class SoundLoader(resolver$p: com.badlogic.gdx.assets.loaders.FileHandleResolver
     this.sound = com.badlogic.gdx.Gdx.audio.newSound(file)
   }
   @java.lang.Override
-  override def loadSync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.assets.loaders.SoundLoader.SoundParameter): ?T = {
+  override def loadSync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.assets.loaders.SoundLoader.SoundParameter): com.badlogic.gdx.audio.Sound = {
     var sound: com.badlogic.gdx.audio.Sound = this.sound
     this.sound = null
     return sound
   }
   @java.lang.Override
-  override def getDependencies(fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.assets.loaders.SoundLoader.SoundParameter): com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = {
+  override def getDependencies(fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.assets.loaders.SoundLoader.SoundParameter): com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.audio.Sound]] = {
     return null
   }
 }

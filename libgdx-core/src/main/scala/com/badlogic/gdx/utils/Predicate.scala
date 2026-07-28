@@ -46,7 +46,7 @@ object Predicate {
       return false
     }
     @java.lang.Override
-    override def next(): ?E = {
+    override def next(): T = {
       if ((this.next$field == null) && (!this.hasNext())) {
         return null.asInstanceOf[T]
       } else ()

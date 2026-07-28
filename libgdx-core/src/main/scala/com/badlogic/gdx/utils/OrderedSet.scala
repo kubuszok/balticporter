@@ -148,7 +148,7 @@ class OrderedSet[T <: java.lang.Object] extends com.badlogic.gdx.utils.ObjectSet
     }; i = i + 1 } }
     return true
   }
-  override def iterator(): balticporter.runtime.JavaIterator[T] = {
+  override def iterator(): com.badlogic.gdx.utils.OrderedSet.OrderedSetIterator[T] = {
     if (com.badlogic.gdx.utils.Collections.allocateIterators) {
       return new com.badlogic.gdx.utils.OrderedSet.OrderedSetIterator(this).asInstanceOf[com.badlogic.gdx.utils.OrderedSet.OrderedSetIterator[T]]
     } else ()
@@ -200,7 +200,7 @@ object OrderedSet {
       nextIndex = 0
       hasNext$field = this.set.size > 0
     }
-    override def next(): ?E = {
+    override def next(): K = {
       if (!hasNext$field) {
         throw new java.util.NoSuchElementException()
       } else ()
@@ -217,7 +217,7 @@ object OrderedSet {
         throw new java.lang.IllegalStateException("next must be called before remove.")
       } else ()
       nextIndex = nextIndex - 1
-      set.asInstanceOf[OrderedSet[?]].removeIndex(nextIndex)
+      set.asInstanceOf[OrderedSet[K]].removeIndex(nextIndex)
     }
     override def toArray(array: com.badlogic.gdx.utils.Array[K]): com.badlogic.gdx.utils.Array[K] = {
       array.addAll(this.items.asInstanceOf[com.badlogic.gdx.utils.Array[? <: K]], nextIndex, this.items.size - nextIndex)
@@ -226,7 +226,7 @@ object OrderedSet {
       return array
     }
     override def toArray(): com.badlogic.gdx.utils.Array[K] = {
-      return this.toArray(new com.badlogic.gdx.utils.Array(true, this.set.size - nextIndex))
+      return this.toArray(new com.badlogic.gdx.utils.Array[K](true, this.set.size - nextIndex))
     }
   }
 }

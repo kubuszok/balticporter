@@ -113,6 +113,21 @@ object SpoonTir:
     /** names contributed by EXECUTABLES, parallel to `tpAccessible` (which merges each level into
       * one map, so a frame cannot simply be skipped). Hidden under [[atDeclScope]]. */
     private val tpExecNames = collection.mutable.ArrayDeque[Set[String]]()
+
+    /** The instantiation this class gives its ANCESTORS' type parameters, by their names.
+      *
+      * `AssetLoader<T, P>` declares a RAW `Array<AssetDescriptor> getDependencies(…)`. Inside the
+      * parent the name-directed fill matches `AssetDescriptor`'s own `T` to `AssetLoader`'s `T`, so
+      * the inherited member reads `Array[AssetDescriptor[T]]` — and in
+      * `BitmapFontLoader extends AsynchronousAssetLoader<BitmapFont, BitmapFontParameter>` that is
+      * `Array[AssetDescriptor[BitmapFont]]`. The OVERRIDE re-renders the same raw type with no `T`
+      * in scope, gets `AssetDescriptor[?]`, and scala rejects the pair. Java has no such problem:
+      * both sides are raw and it checks neither.
+      *
+      * So a class must be able to see what it instantiated its parents' names AS. */
+    private val inheritedInst = collection.mutable.ArrayDeque[Map[String, TypeRepr]]()
+    private def inheritedTp(name: String): Option[TypeRepr] =
+      inheritedInst.headOption.flatMap(_.get(name))
     private def accessibleTp(name: String): Option[SymId] =
       if declScopeOnly && tpExecNames.headOption.exists(_.contains(name)) then None
       else tpAccessible.headOption.flatMap(_.get(name))
@@ -193,6 +208,34 @@ object SpoonTir:
       * say `OrderedMapValues`'s raw `Array keys`, whose `keys.get(i)` Java types as `Object`)
       * then conforms to nothing that wants `Object`, because `Any` is not `Object`. Restoring the
       * implicit upper bound is a fact about Java, not about any library. */
+    /** parent formal NAME -> the argument this class supplies, walking supertypes breadth-first so
+      * a grandparent's names are covered too (`AsynchronousAssetLoader<T,P> extends AssetLoader<T,P>`). */
+    private def instantiationOfParents(t: CtType[?]): Map[String, TypeRepr] =
+      val out = collection.mutable.Map[String, TypeRepr]()
+      def walk(r: CtTypeReference[?], fuel: Int): Unit =
+        if r != null && fuel > 0 then
+          val decl = try r.getTypeDeclaration catch { case _: Throwable => null }
+          if decl != null then
+            val fs = decl.getFormalCtTypeParameters.asScala.toList
+            val as = r.getActualTypeArguments.asScala.toList
+            if fs.sizeIs == as.size then
+              fs.zip(as).foreach { (f, a) =>
+                if !a.isInstanceOf[CtWildcardReference] && !out.contains(f.getSimpleName) then
+                  try out(f.getSimpleName) = tpe(a) catch { case _: Throwable => () }
+              }
+            val ups: List[CtTypeReference[?]] = decl match
+              case c: CtClass[?] => Option(c.getSuperclass).toList
+              case _             => Nil
+            try (ups ++ decl.getSuperInterfaces.asScala.toList).foreach(walk(_, fuel - 1))
+            catch { case _: Throwable => () }
+      try
+        val sup: List[CtTypeReference[?]] = t match
+          case c: CtClass[?] => Option(c.getSuperclass).toList
+          case _             => Nil
+        (sup ++ t.getSuperInterfaces.asScala.toList).foreach(walk(_, 4))
+      catch { case _: Throwable => () }
+      out.toMap
+
     private def boundsOf(tp: CtTypeParameter): TypeBounds =
       Option(tp.getSuperclass).filter(_.getQualifiedName != "java.lang.Object").map(fbound) match
         case Some(hi) => TypeBounds(NoType, hi)
@@ -570,8 +613,15 @@ object SpoonTir:
                 // object can't see the class's type params. Falls back to wildcards.
                 if arity <= 0 then head
                 else if inStatic then AppliedType(head, List.fill(arity)(TypeBounds(NoType, NoType)))
-                else nameFilledArgs(r, accessibleTp).map(args => AppliedType(head, args))
-                       .getOrElse(AppliedType(head, List.fill(arity)(TypeBounds(NoType, NoType))))
+                else
+                  val formals = try Option(r.getTypeDeclaration).map(_.getFormalCtTypeParameters.asScala.toList).getOrElse(Nil)
+                                catch { case _: Throwable => Nil }
+                  if formals.isEmpty then AppliedType(head, List.fill(arity)(TypeBounds(NoType, NoType)))
+                  else AppliedType(head, formals.map { f =>
+                    accessibleTp(f.getSimpleName).map(id => TypeRef(NoPrefix, id))
+                      .orElse(inheritedTp(f.getSimpleName))          // what THIS class instantiated it as
+                      .getOrElse(TypeBounds(NoType, NoType))
+                  })
           case args => AppliedType(head, args.map(tpe))
 
     /** id of a referenced class type — our own (already defined) or an external stub. */
@@ -589,6 +639,7 @@ object SpoonTir:
       val (frame, tpDefs) = mintTypeParams(typeKey(t.getReference), id, t.getFormalCtTypeParameters.asScala.toList)
       tpScopes.prepend(frame); tpIsExec.prepend(false)
       selfRawStack.prepend(id -> t.getFormalCtTypeParameters.asScala.toList.map(tp => frame(tp.getSimpleName)))
+      inheritedInst.prepend(instantiationOfParents(t))
       val enclosingAcc = if capturesEnclosing(t) then tpAccessible.headOption.getOrElse(Map.empty) else Map.empty
       tpAccessible.prepend(enclosingAcc ++ frame)
       // an anonymous/local class capturing an enclosing method's params keeps them EXEC-contributed
@@ -636,7 +687,7 @@ object SpoonTir:
       val enumCases = t match
         case e: CtEnum[?] => e.getEnumValues.asScala.toList.map(enumCase(id, _))
         case _            => Nil
-      tpScopes.remove(0); tpIsExec.remove(0)
+      tpScopes.remove(0); tpIsExec.remove(0); inheritedInst.remove(0)
       selfRawStack.remove(0); tpAccessible.remove(0); tpExecNames.remove(0); inStatic = savedStatic
       Tree.ClassDef(id, parents, selfType = None, body = fields ++ ctors ++ methods ++ initBlocks ++ nested,
         origin = originOf(t), tparams = tpDefs, enumCases = enumCases)

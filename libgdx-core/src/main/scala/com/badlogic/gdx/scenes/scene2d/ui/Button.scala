@@ -4,7 +4,7 @@ class Button extends com.badlogic.gdx.scenes.scene2d.ui.Table with com.badlogic.
   private var style: com.badlogic.gdx.scenes.scene2d.ui.Button.ButtonStyle = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Button.ButtonStyle]
   var isChecked$field: scala.Boolean = false
   var isDisabled$field: scala.Boolean = false
-  var buttonGroup: com.badlogic.gdx.scenes.scene2d.ui.ButtonGroup[?] = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.ButtonGroup[?]]
+  var buttonGroup: com.badlogic.gdx.scenes.scene2d.ui.ButtonGroup[com.badlogic.gdx.scenes.scene2d.ui.Button.ButtonStyle] = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.ButtonGroup[com.badlogic.gdx.scenes.scene2d.ui.Button.ButtonStyle]]
   private var clickListener: com.badlogic.gdx.scenes.scene2d.utils.ClickListener = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.ClickListener]
   private var programmaticChangeEvents: scala.Boolean = true
   def this(skin: com.badlogic.gdx.scenes.scene2d.ui.Skin) = {
@@ -116,12 +116,12 @@ class Button extends com.badlogic.gdx.scenes.scene2d.ui.Table with com.badlogic.
     this.style = style
     this.setBackground(this.getBackgroundDrawable())
   }
-  override def getStyle(): ?T = {
+  override def getStyle(): com.badlogic.gdx.scenes.scene2d.ui.Button.ButtonStyle = {
     return this.style
   }
   @com.badlogic.gdx.utils.Null
-  def getButtonGroup(): com.badlogic.gdx.scenes.scene2d.ui.ButtonGroup[?] = {
-    return this.buttonGroup.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.ButtonGroup[?]]
+  def getButtonGroup(): com.badlogic.gdx.scenes.scene2d.ui.ButtonGroup[com.badlogic.gdx.scenes.scene2d.ui.Button.ButtonStyle] = {
+    return this.buttonGroup.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.ButtonGroup[com.badlogic.gdx.scenes.scene2d.ui.Button.ButtonStyle]]
   }
   @com.badlogic.gdx.utils.Null
   def getBackgroundDrawable(): com.badlogic.gdx.scenes.scene2d.utils.Drawable = {

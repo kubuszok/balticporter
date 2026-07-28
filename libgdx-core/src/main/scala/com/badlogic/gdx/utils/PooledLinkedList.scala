@@ -9,7 +9,7 @@ class PooledLinkedList[T <: java.lang.Object](maxPoolSize: scala.Int) {
   private var pool: com.badlogic.gdx.utils.Pool[com.badlogic.gdx.utils.PooledLinkedList.Item[T]] = null.asInstanceOf[com.badlogic.gdx.utils.Pool[com.badlogic.gdx.utils.PooledLinkedList.Item[T]]]
   this.pool = new com.badlogic.gdx.utils.Pool[com.badlogic.gdx.utils.PooledLinkedList.Item[T]](16, maxPoolSize) {
     @java.lang.Override
-    override def newObject(): T = {
+    override def newObject(): com.badlogic.gdx.utils.PooledLinkedList.Item[T] = {
       return new com.badlogic.gdx.utils.PooledLinkedList.Item[T]()
     }
   }

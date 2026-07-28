@@ -57,7 +57,7 @@ object ModelInfluencer {
       }; i = i + 1 } }
     }
     @java.lang.Override
-    override def copy(): com.badlogic.gdx.graphics.g3d.particles.ParticleControllerComponent = {
+    override def copy(): com.badlogic.gdx.graphics.g3d.particles.influencers.ModelInfluencer.Single = {
       return new com.badlogic.gdx.graphics.g3d.particles.influencers.ModelInfluencer.Single(this)
     }
   }
@@ -95,12 +95,12 @@ object ModelInfluencer {
       }; i = i + 1 } }
     }
     @java.lang.Override
-    override def copy(): com.badlogic.gdx.graphics.g3d.particles.ParticleControllerComponent = {
+    override def copy(): com.badlogic.gdx.graphics.g3d.particles.influencers.ModelInfluencer.Random = {
       return new com.badlogic.gdx.graphics.g3d.particles.influencers.ModelInfluencer.Random(this)
     }
     class ModelInstancePool extends com.badlogic.gdx.utils.Pool[com.badlogic.gdx.graphics.g3d.ModelInstance] {
       @java.lang.Override
-      override def newObject(): ?T = {
+      override def newObject(): com.badlogic.gdx.graphics.g3d.ModelInstance = {
         return new com.badlogic.gdx.graphics.g3d.ModelInstance(models.random())
       }
     }

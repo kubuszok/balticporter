@@ -43,7 +43,7 @@ class ParticleControllerFinalizerInfluencer extends com.badlogic.gdx.graphics.g3
     }; i = i + 1; positionOffset = positionOffset + this.positionChannel.strideSize } }
   }
   @java.lang.Override
-  override def copy(): com.badlogic.gdx.graphics.g3d.particles.ParticleControllerComponent = {
+  override def copy(): ParticleControllerFinalizerInfluencer = {
     return new ParticleControllerFinalizerInfluencer()
   }
 }

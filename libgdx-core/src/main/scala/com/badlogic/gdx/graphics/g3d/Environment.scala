@@ -2,19 +2,19 @@ package com.badlogic.gdx.graphics.g3d
 
 class Environment extends com.badlogic.gdx.graphics.g3d.Attributes {
   var shadowMap: com.badlogic.gdx.graphics.g3d.environment.ShadowMap = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.environment.ShadowMap]
-  def add(lights: scala.Array[com.badlogic.gdx.graphics.g3d.environment.BaseLight[?]]): Environment = {
+  def add(lights: scala.Array[com.badlogic.gdx.graphics.g3d.environment.BaseLight[com.badlogic.gdx.graphics.g3d.Attribute]]): Environment = {
     for (light <- lights) {
-      this.add(light.asInstanceOf[com.badlogic.gdx.graphics.g3d.environment.BaseLight[?]])
+      this.add(light.asInstanceOf[com.badlogic.gdx.graphics.g3d.environment.BaseLight[com.badlogic.gdx.graphics.g3d.Attribute]])
     }
     return this
   }
-  def add(lights: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.environment.BaseLight[?]]): Environment = {
+  def add(lights: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.environment.BaseLight[com.badlogic.gdx.graphics.g3d.Attribute]]): Environment = {
     for (light <- lights) {
-      this.add(light.asInstanceOf[com.badlogic.gdx.graphics.g3d.environment.BaseLight[?]])
+      this.add(light.asInstanceOf[com.badlogic.gdx.graphics.g3d.environment.BaseLight[com.badlogic.gdx.graphics.g3d.Attribute]])
     }
     return this
   }
-  def add(light: com.badlogic.gdx.graphics.g3d.environment.BaseLight[?]): Environment = {
+  def add(light: com.badlogic.gdx.graphics.g3d.environment.BaseLight[com.badlogic.gdx.graphics.g3d.Attribute]): Environment = {
     if (light.isInstanceOf[com.badlogic.gdx.graphics.g3d.environment.DirectionalLight]) {
       this.add(light.asInstanceOf[com.badlogic.gdx.graphics.g3d.environment.DirectionalLight])
     } else {
@@ -63,19 +63,19 @@ class Environment extends com.badlogic.gdx.graphics.g3d.Attributes {
     spotLights.lights.add(light)
     return this
   }
-  def remove(lights: scala.Array[com.badlogic.gdx.graphics.g3d.environment.BaseLight[?]]): Environment = {
+  def remove(lights: scala.Array[com.badlogic.gdx.graphics.g3d.environment.BaseLight[com.badlogic.gdx.graphics.g3d.Attribute]]): Environment = {
     for (light <- lights) {
-      this.remove(light.asInstanceOf[com.badlogic.gdx.graphics.g3d.environment.BaseLight[?]])
+      this.remove(light.asInstanceOf[com.badlogic.gdx.graphics.g3d.environment.BaseLight[com.badlogic.gdx.graphics.g3d.Attribute]])
     }
     return this
   }
-  def remove(lights: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.environment.BaseLight[?]]): Environment = {
+  def remove(lights: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.environment.BaseLight[com.badlogic.gdx.graphics.g3d.Attribute]]): Environment = {
     for (light <- lights) {
-      this.remove(light.asInstanceOf[com.badlogic.gdx.graphics.g3d.environment.BaseLight[?]])
+      this.remove(light.asInstanceOf[com.badlogic.gdx.graphics.g3d.environment.BaseLight[com.badlogic.gdx.graphics.g3d.Attribute]])
     }
     return this
   }
-  def remove(light: com.badlogic.gdx.graphics.g3d.environment.BaseLight[?]): Environment = {
+  def remove(light: com.badlogic.gdx.graphics.g3d.environment.BaseLight[com.badlogic.gdx.graphics.g3d.Attribute]): Environment = {
     if (light.isInstanceOf[com.badlogic.gdx.graphics.g3d.environment.DirectionalLight]) {
       this.remove(light.asInstanceOf[com.badlogic.gdx.graphics.g3d.environment.DirectionalLight])
     } else {

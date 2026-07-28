@@ -2,7 +2,7 @@ package com.badlogic.gdx.scenes.scene2d.ui
 
 class CheckBox(text: java.lang.String, style$p: com.badlogic.gdx.scenes.scene2d.ui.CheckBox.CheckBoxStyle) extends com.badlogic.gdx.scenes.scene2d.ui.TextButton(text, style$p) {
   private var image: com.badlogic.gdx.scenes.scene2d.ui.Image = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Image]
-  private var imageCell: com.badlogic.gdx.scenes.scene2d.ui.Cell[?] = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]]
+  private var imageCell: com.badlogic.gdx.scenes.scene2d.ui.Cell[com.badlogic.gdx.scenes.scene2d.ui.Button.ButtonStyle] = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[com.badlogic.gdx.scenes.scene2d.ui.Button.ButtonStyle]]
   private var style: com.badlogic.gdx.scenes.scene2d.ui.CheckBox.CheckBoxStyle = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.CheckBox.CheckBoxStyle]
   val label$p: com.badlogic.gdx.scenes.scene2d.ui.Label = this.getLabel()
   def this(text: java.lang.String, skin: com.badlogic.gdx.scenes.scene2d.ui.Skin) = {
@@ -15,7 +15,7 @@ class CheckBox(text: java.lang.String, style$p: com.badlogic.gdx.scenes.scene2d.
   this.image = this.newImage()
   this.image.setDrawable(style$p.checkboxOff)
   this.clearChildren()
-  this.imageCell = this.add(this.image).asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]]
+  this.imageCell = this.add(this.image).asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[com.badlogic.gdx.scenes.scene2d.ui.Button.ButtonStyle]]
   this.add(label$p)
   this.setSize(this.getPrefWidth(), this.getPrefHeight())
   def newImage(): com.badlogic.gdx.scenes.scene2d.ui.Image = {
@@ -28,7 +28,7 @@ class CheckBox(text: java.lang.String, style$p: com.badlogic.gdx.scenes.scene2d.
     this.style = style.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.CheckBox.CheckBoxStyle]
     super.setStyle(style)
   }
-  override def getStyle(): ?T = {
+  override def getStyle(): com.badlogic.gdx.scenes.scene2d.ui.CheckBox.CheckBoxStyle = {
     return this.style
   }
   override def draw(batch: com.badlogic.gdx.graphics.g2d.Batch, parentAlpha: scala.Float): scala.Unit = {
@@ -55,8 +55,8 @@ class CheckBox(text: java.lang.String, style$p: com.badlogic.gdx.scenes.scene2d.
   def getImage(): com.badlogic.gdx.scenes.scene2d.ui.Image = {
     return this.image
   }
-  def getImageCell(): com.badlogic.gdx.scenes.scene2d.ui.Cell[?] = {
-    return this.imageCell.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]]
+  def getImageCell(): com.badlogic.gdx.scenes.scene2d.ui.Cell[com.badlogic.gdx.scenes.scene2d.ui.Button.ButtonStyle] = {
+    return this.imageCell.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[com.badlogic.gdx.scenes.scene2d.ui.Button.ButtonStyle]]
   }
 }
 object CheckBox {

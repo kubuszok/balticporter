@@ -35,7 +35,7 @@ class TextTooltip(text: java.lang.String, manager$p: com.badlogic.gdx.scenes.sce
     label.setStyle(style.label)
     label.setWrap(wrap)
   }
-  override def getStyle(): ?T = {
+  override def getStyle(): com.badlogic.gdx.scenes.scene2d.ui.TextTooltip.TextTooltipStyle = {
     return this.style
   }
 }

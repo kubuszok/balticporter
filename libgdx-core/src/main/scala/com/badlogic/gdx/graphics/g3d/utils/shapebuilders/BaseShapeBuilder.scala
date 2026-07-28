@@ -27,13 +27,13 @@ object BaseShapeBuilder {
   final val matTmp1: com.badlogic.gdx.math.Matrix4 = new com.badlogic.gdx.math.Matrix4()
   private final val vectorPool: com.badlogic.gdx.utils.FlushablePool[com.badlogic.gdx.math.Vector3] = new com.badlogic.gdx.utils.FlushablePool[com.badlogic.gdx.math.Vector3]() {
     @java.lang.Override
-    override def newObject(): ?T = {
+    override def newObject(): com.badlogic.gdx.math.Vector3 = {
       return new com.badlogic.gdx.math.Vector3()
     }
   }
   private final val matrices4Pool: com.badlogic.gdx.utils.FlushablePool[com.badlogic.gdx.math.Matrix4] = new com.badlogic.gdx.utils.FlushablePool[com.badlogic.gdx.math.Matrix4]() {
     @java.lang.Override
-    override def newObject(): ?T = {
+    override def newObject(): com.badlogic.gdx.math.Matrix4 = {
       return new com.badlogic.gdx.math.Matrix4()
     }
   }

@@ -8,7 +8,7 @@ class SpotLightsAttribute extends com.badlogic.gdx.graphics.g3d.Attribute(SpotLi
   }
   this.lights = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.environment.SpotLight](1)
   @java.lang.Override
-  override def copy(): com.badlogic.gdx.graphics.g3d.Attribute = {
+  override def copy(): SpotLightsAttribute = {
     return new SpotLightsAttribute(this)
   }
   @java.lang.Override

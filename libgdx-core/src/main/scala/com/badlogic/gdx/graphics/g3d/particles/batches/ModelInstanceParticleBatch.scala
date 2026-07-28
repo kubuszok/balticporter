@@ -30,11 +30,11 @@ class ModelInstanceParticleBatch extends com.badlogic.gdx.graphics.g3d.particles
     this.bufferedParticlesCount = this.bufferedParticlesCount + data.controller.particles.size
   }
   @java.lang.Override
-  override def save(manager: com.badlogic.gdx.assets.AssetManager, assetDependencyData: com.badlogic.gdx.graphics.g3d.particles.ResourceData[?]): scala.Unit = {
+  override def save(manager: com.badlogic.gdx.assets.AssetManager, assetDependencyData: com.badlogic.gdx.graphics.g3d.particles.ResourceData[com.badlogic.gdx.graphics.g3d.particles.renderers.ModelInstanceControllerRenderData]): scala.Unit = {
     ()
   }
   @java.lang.Override
-  override def load(manager: com.badlogic.gdx.assets.AssetManager, assetDependencyData: com.badlogic.gdx.graphics.g3d.particles.ResourceData[?]): scala.Unit = {
+  override def load(manager: com.badlogic.gdx.assets.AssetManager, assetDependencyData: com.badlogic.gdx.graphics.g3d.particles.ResourceData[com.badlogic.gdx.graphics.g3d.particles.renderers.ModelInstanceControllerRenderData]): scala.Unit = {
     ()
   }
 }

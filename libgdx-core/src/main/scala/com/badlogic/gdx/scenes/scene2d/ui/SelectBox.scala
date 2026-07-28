@@ -74,7 +74,7 @@ class SelectBox[T <: java.lang.Object](style$p: com.badlogic.gdx.scenes.scene2d.
     } else ()
     this.invalidateHierarchy()
   }
-  override def getStyle(): T = {
+  override def getStyle(): com.badlogic.gdx.scenes.scene2d.ui.SelectBox.SelectBoxStyle = {
     return this.style
   }
   def setItems(newItems: scala.Array[T]): scala.Unit = {

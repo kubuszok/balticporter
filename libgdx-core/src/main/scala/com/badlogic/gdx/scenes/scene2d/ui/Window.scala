@@ -199,7 +199,7 @@ class Window extends com.badlogic.gdx.scenes.scene2d.ui.Table with com.badlogic.
     this.titleLabel.setStyle(new com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle(style.titleFont, style.titleFontColor))
     this.invalidateHierarchy()
   }
-  override def getStyle(): ?T = {
+  override def getStyle(): com.badlogic.gdx.scenes.scene2d.ui.Window.WindowStyle = {
     return this.style
   }
   def keepWithinStage(): scala.Unit = {

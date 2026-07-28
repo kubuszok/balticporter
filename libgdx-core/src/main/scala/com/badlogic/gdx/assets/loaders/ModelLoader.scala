@@ -21,11 +21,11 @@ abstract class ModelLoader[P <: com.badlogic.gdx.assets.loaders.ModelLoader.Mode
     return this.loadModel(fileHandle, new com.badlogic.gdx.graphics.g3d.utils.TextureProvider.FileTextureProvider(), null.asInstanceOf[P])
   }
   @java.lang.Override
-  override def getDependencies(fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameters: P): com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = {
-    val deps: com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = new com.badlogic.gdx.utils.Array().asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]]
+  override def getDependencies(fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameters: P): com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.graphics.g3d.Model]] = {
+    val deps: com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.graphics.g3d.Model]] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.Model]().asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.graphics.g3d.Model]]]
     val data: com.badlogic.gdx.graphics.g3d.model.data.ModelData = this.loadModelData(file, parameters)
     if (data == null) {
-      return deps.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]]
+      return deps.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.graphics.g3d.Model]]]
     } else ()
     val item: com.badlogic.gdx.utils.ObjectMap.Entry[java.lang.String, com.badlogic.gdx.graphics.g3d.model.data.ModelData] = new com.badlogic.gdx.utils.ObjectMap.Entry[java.lang.String, com.badlogic.gdx.graphics.g3d.model.data.ModelData]()
     item.key = fileName
@@ -37,18 +37,18 @@ abstract class ModelLoader[P <: com.badlogic.gdx.assets.loaders.ModelLoader.Mode
     for (modelMaterial <- data.materials) {
       if (modelMaterial.textures != null) {
         for (modelTexture <- modelMaterial.textures) {
-          deps.add(new com.badlogic.gdx.assets.AssetDescriptor(modelTexture.fileName, classOf[com.badlogic.gdx.graphics.Texture], textureParameter))
+          deps.add(new com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.graphics.g3d.Model](modelTexture.fileName, classOf[com.badlogic.gdx.graphics.Texture], textureParameter))
         }
       } else ()
     }
-    return deps.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]]
+    return deps.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.graphics.g3d.Model]]]
   }
   @java.lang.Override
   override def loadAsync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameters: P): scala.Unit = {
     ()
   }
   @java.lang.Override
-  override def loadSync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameters: P): ?T = {
+  override def loadSync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameters: P): com.badlogic.gdx.graphics.g3d.Model = {
     var data: com.badlogic.gdx.graphics.g3d.model.data.ModelData = null
     this.items.synchronized {
       { var i: scala.Int = 0; while (i < this.items.size) { {

@@ -6,7 +6,7 @@ class BitmapFontCache {
   private final val layouts: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.GlyphLayout] = new com.badlogic.gdx.utils.Array(1).asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.GlyphLayout]]
   private final val pooledLayouts: com.badlogic.gdx.utils.FlushablePool[com.badlogic.gdx.graphics.g2d.GlyphLayout] = new com.badlogic.gdx.utils.FlushablePool[com.badlogic.gdx.graphics.g2d.GlyphLayout]() {
     @java.lang.Override
-    override def newObject(): ?T = {
+    override def newObject(): com.badlogic.gdx.graphics.g2d.GlyphLayout = {
       return new com.badlogic.gdx.graphics.g2d.GlyphLayout()
     }
   }

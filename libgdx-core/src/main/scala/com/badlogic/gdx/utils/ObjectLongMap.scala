@@ -314,7 +314,7 @@ class ObjectLongMap[K <: java.lang.Object](initialCapacity: scala.Int, loadFacto
     } else ()
     return buffer.toString()
   }
-  override def iterator(): balticporter.runtime.JavaIterator[?T] = {
+  override def iterator(): com.badlogic.gdx.utils.ObjectLongMap.Entries[K] = {
     return this.entries()
   }
   def entries(): com.badlogic.gdx.utils.ObjectLongMap.Entries[K] = {
@@ -438,7 +438,7 @@ object ObjectLongMap {
   }
   class Entries[K <: java.lang.Object](map$p: ObjectLongMap[K]) extends com.badlogic.gdx.utils.ObjectLongMap.MapIterator[K](map$p) with balticporter.runtime.JavaIterable[com.badlogic.gdx.utils.ObjectLongMap.Entry[K]] with balticporter.runtime.JavaIterator[com.badlogic.gdx.utils.ObjectLongMap.Entry[K]] {
     var entry: com.badlogic.gdx.utils.ObjectLongMap.Entry[K] = new com.badlogic.gdx.utils.ObjectLongMap.Entry[K]()
-    override def next(): ?E = {
+    override def next(): com.badlogic.gdx.utils.ObjectLongMap.Entry[K] = {
       if (!hasNext$field) {
         throw new java.util.NoSuchElementException()
       } else ()
@@ -458,7 +458,7 @@ object ObjectLongMap {
       } else ()
       return hasNext$field
     }
-    override def iterator(): balticporter.runtime.JavaIterator[?T] = {
+    override def iterator(): com.badlogic.gdx.utils.ObjectLongMap.Entries[K] = {
       return this
     }
   }
@@ -505,7 +505,7 @@ object ObjectLongMap {
       } else ()
       return hasNext$field
     }
-    override def next(): ?E = {
+    override def next(): K = {
       if (!hasNext$field) {
         throw new java.util.NoSuchElementException()
       } else ()
@@ -517,7 +517,7 @@ object ObjectLongMap {
       this.findNextIndex()
       return key
     }
-    override def iterator(): balticporter.runtime.JavaIterator[?T] = {
+    override def iterator(): com.badlogic.gdx.utils.ObjectLongMap.Keys[K] = {
       return this
     }
     def toArray(): com.badlogic.gdx.utils.Array[K] = {

@@ -465,7 +465,7 @@ class ArrayMap[K <: java.lang.Object, V <: java.lang.Object] extends balticporte
     buffer.append('}')
     return buffer.toString()
   }
-  override def iterator(): balticporter.runtime.JavaIterator[?T] = {
+  override def iterator(): balticporter.runtime.JavaIterator[com.badlogic.gdx.utils.ObjectMap.Entry[K, V]] = {
     return this.entries()
   }
   def entries(): com.badlogic.gdx.utils.ArrayMap.Entries[K, V] = {
@@ -539,10 +539,10 @@ object ArrayMap {
       } else ()
       return this.index < this.map.size
     }
-    override def iterator(): balticporter.runtime.JavaIterator[?T] = {
+    override def iterator(): balticporter.runtime.JavaIterator[com.badlogic.gdx.utils.ObjectMap.Entry[K, V]] = {
       return this
     }
-    override def next(): ?E = {
+    override def next(): com.badlogic.gdx.utils.ObjectMap.Entry[K, V] = {
       if (this.index >= this.map.size) {
         throw new java.util.NoSuchElementException(java.lang.String.valueOf(this.index))
       } else ()
@@ -572,10 +572,10 @@ object ArrayMap {
       } else ()
       return this.index < this.map.size
     }
-    override def iterator(): balticporter.runtime.JavaIterator[?T] = {
+    override def iterator(): balticporter.runtime.JavaIterator[V] = {
       return this
     }
-    override def next(): ?E = {
+    override def next(): V = {
       if (this.index >= this.map.size) {
         throw new java.util.NoSuchElementException(java.lang.String.valueOf(this.index))
       } else ()
@@ -592,9 +592,9 @@ object ArrayMap {
       this.index = 0
     }
     def toArray(): com.badlogic.gdx.utils.Array[V] = {
-      return new com.badlogic.gdx.utils.Array(true, this.map.values$field, this.index, this.map.size - this.index).asInstanceOf[com.badlogic.gdx.utils.Array[V]]
+      return new com.badlogic.gdx.utils.Array[V](true, this.map.values$field, this.index, this.map.size - this.index).asInstanceOf[com.badlogic.gdx.utils.Array[V]]
     }
-    def toArray(array: com.badlogic.gdx.utils.Array[?]): com.badlogic.gdx.utils.Array[V] = {
+    def toArray(array: com.badlogic.gdx.utils.Array[V]): com.badlogic.gdx.utils.Array[V] = {
       array.asInstanceOf[com.badlogic.gdx.utils.Array[java.lang.Object]].addAll(this.map.values$field.asInstanceOf[scala.Array[java.lang.Object]], this.index, this.map.size - this.index)
       return array.asInstanceOf[com.badlogic.gdx.utils.Array[V]]
     }
@@ -610,10 +610,10 @@ object ArrayMap {
       } else ()
       return this.index < this.map.size
     }
-    override def iterator(): balticporter.runtime.JavaIterator[?T] = {
+    override def iterator(): balticporter.runtime.JavaIterator[K] = {
       return this
     }
-    override def next(): ?E = {
+    override def next(): K = {
       if (this.index >= this.map.size) {
         throw new java.util.NoSuchElementException(java.lang.String.valueOf(this.index))
       } else ()
@@ -630,9 +630,9 @@ object ArrayMap {
       this.index = 0
     }
     def toArray(): com.badlogic.gdx.utils.Array[K] = {
-      return new com.badlogic.gdx.utils.Array(true, this.map.keys$field, this.index, this.map.size - this.index).asInstanceOf[com.badlogic.gdx.utils.Array[K]]
+      return new com.badlogic.gdx.utils.Array[K](true, this.map.keys$field, this.index, this.map.size - this.index).asInstanceOf[com.badlogic.gdx.utils.Array[K]]
     }
-    def toArray(array: com.badlogic.gdx.utils.Array[?]): com.badlogic.gdx.utils.Array[K] = {
+    def toArray(array: com.badlogic.gdx.utils.Array[K]): com.badlogic.gdx.utils.Array[K] = {
       array.asInstanceOf[com.badlogic.gdx.utils.Array[java.lang.Object]].addAll(this.map.keys$field.asInstanceOf[scala.Array[java.lang.Object]], this.index, this.map.size - this.index)
       return array.asInstanceOf[com.badlogic.gdx.utils.Array[K]]
     }

@@ -37,7 +37,7 @@ class ImageButton(style$p: com.badlogic.gdx.scenes.scene2d.ui.ImageButton.ImageB
       this.updateImage()
     } else ()
   }
-  override def getStyle(): ?T = {
+  override def getStyle(): com.badlogic.gdx.scenes.scene2d.ui.ImageButton.ImageButtonStyle = {
     return this.style
   }
   @com.badlogic.gdx.utils.Null
@@ -84,8 +84,8 @@ class ImageButton(style$p: com.badlogic.gdx.scenes.scene2d.ui.ImageButton.ImageB
   def getImage(): com.badlogic.gdx.scenes.scene2d.ui.Image = {
     return this.image
   }
-  def getImageCell(): com.badlogic.gdx.scenes.scene2d.ui.Cell[?] = {
-    return this.getCell(this.image).asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]]
+  def getImageCell(): com.badlogic.gdx.scenes.scene2d.ui.Cell[com.badlogic.gdx.scenes.scene2d.ui.Button.ButtonStyle] = {
+    return this.getCell(this.image).asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[com.badlogic.gdx.scenes.scene2d.ui.Button.ButtonStyle]]
   }
   override def toString(): java.lang.String = {
     val name: java.lang.String = this.getName()

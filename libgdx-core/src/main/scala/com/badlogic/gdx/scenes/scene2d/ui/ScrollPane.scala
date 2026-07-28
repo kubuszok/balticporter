@@ -264,7 +264,7 @@ class ScrollPane(actor$p: com.badlogic.gdx.scenes.scene2d.Actor, style$p: com.ba
     this.style = style
     this.invalidateHierarchy()
   }
-  override def getStyle(): ?T = {
+  override def getStyle(): com.badlogic.gdx.scenes.scene2d.ui.ScrollPane.ScrollPaneStyle = {
     return this.style
   }
   override def act(delta: scala.Float): scala.Unit = {

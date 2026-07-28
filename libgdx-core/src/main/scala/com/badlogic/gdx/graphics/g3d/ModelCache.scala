@@ -4,13 +4,13 @@ class ModelCache(sorter$p: com.badlogic.gdx.graphics.g3d.utils.RenderableSorter,
   private var renderables: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.Renderable] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.Renderable]()
   private var renderablesPool: com.badlogic.gdx.utils.FlushablePool[com.badlogic.gdx.graphics.g3d.Renderable] = new com.badlogic.gdx.utils.FlushablePool[com.badlogic.gdx.graphics.g3d.Renderable]() {
     @java.lang.Override
-    override def newObject(): ?T = {
+    override def newObject(): com.badlogic.gdx.graphics.g3d.Renderable = {
       return new com.badlogic.gdx.graphics.g3d.Renderable()
     }
   }
   private var meshPartPool: com.badlogic.gdx.utils.FlushablePool[com.badlogic.gdx.graphics.g3d.model.MeshPart] = new com.badlogic.gdx.utils.FlushablePool[com.badlogic.gdx.graphics.g3d.model.MeshPart]() {
     @java.lang.Override
-    override def newObject(): ?T = {
+    override def newObject(): com.badlogic.gdx.graphics.g3d.model.MeshPart = {
       return new com.badlogic.gdx.graphics.g3d.model.MeshPart()
     }
   }

@@ -164,7 +164,7 @@ final class VertexAttributes(attributes$p: scala.Array[com.badlogic.gdx.graphics
     return 0
   }
   @java.lang.Override
-  override def iterator(): balticporter.runtime.JavaIterator[?T] = {
+  override def iterator(): balticporter.runtime.JavaIterator[com.badlogic.gdx.graphics.VertexAttribute] = {
     if (this.iterable == null) {
       this.iterable = new com.badlogic.gdx.graphics.VertexAttributes.ReadonlyIterable[com.badlogic.gdx.graphics.VertexAttribute](this.attributes)
     } else ()
@@ -196,7 +196,7 @@ object VertexAttributes {
       return this.index < this.array.length
     }
     @java.lang.Override
-    override def next(): ?E = {
+    override def next(): T = {
       if (this.index >= this.array.length) {
         throw new java.util.NoSuchElementException(java.lang.String.valueOf(this.index))
       } else ()

@@ -3,7 +3,7 @@ package com.badlogic.gdx.graphics.g3d.utils
 class AnimationController(target$p: com.badlogic.gdx.graphics.g3d.ModelInstance) extends com.badlogic.gdx.graphics.g3d.utils.BaseAnimationController(target$p) {
   final val animationPool: com.badlogic.gdx.utils.Pool[com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationDesc] = new com.badlogic.gdx.utils.Pool[com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationDesc]() {
     @java.lang.Override
-    override def newObject(): ?T = {
+    override def newObject(): com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationDesc = {
       return new com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationDesc()
     }
   }

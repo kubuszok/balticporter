@@ -26,7 +26,7 @@ class TideMapLoader extends com.badlogic.gdx.assets.loaders.SynchronousAssetLoad
     }
   }
   @java.lang.Override
-  override def load(assetManager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, tideFile: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.maps.tiled.TideMapLoader.Parameters): ?T = {
+  override def load(assetManager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, tideFile: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.maps.tiled.TideMapLoader.Parameters): com.badlogic.gdx.maps.tiled.TiledMap = {
     try {
       return this.loadMap(this.root, tideFile, new com.badlogic.gdx.maps.ImageResolver.AssetManagerImageResolver(assetManager))
     } catch {
@@ -36,14 +36,14 @@ class TideMapLoader extends com.badlogic.gdx.assets.loaders.SynchronousAssetLoad
     }
   }
   @java.lang.Override
-  override def getDependencies(fileName: java.lang.String, tmxFile: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.maps.tiled.TideMapLoader.Parameters): com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = {
-    val dependencies: com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]().asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]]
+  override def getDependencies(fileName: java.lang.String, tmxFile: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.maps.tiled.TideMapLoader.Parameters): com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.maps.tiled.TiledMap]] = {
+    val dependencies: com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.maps.tiled.TiledMap]] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.maps.tiled.TiledMap]]().asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.maps.tiled.TiledMap]]]
     try {
       this.root = this.xml.parse(tmxFile)
       for (image <- this.loadTileSheets(this.root, tmxFile)) {
-        dependencies.add(new com.badlogic.gdx.assets.AssetDescriptor(image.path(), classOf[com.badlogic.gdx.graphics.Texture]))
+        dependencies.add(new com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.maps.tiled.TiledMap](image.path(), classOf[com.badlogic.gdx.graphics.Texture]))
       }
-      return dependencies.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]]
+      return dependencies.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.maps.tiled.TiledMap]]]
     } catch {
       case e: java.io.IOException => {
         throw new com.badlogic.gdx.utils.GdxRuntimeException(("Couldn't load tilemap '" + fileName) + "'", e)

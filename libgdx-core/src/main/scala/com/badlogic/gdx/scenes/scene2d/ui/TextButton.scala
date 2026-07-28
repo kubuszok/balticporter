@@ -36,7 +36,7 @@ class TextButton(text: java.lang.String, style$p: com.badlogic.gdx.scenes.scene2
       this.label.setStyle(labelStyle)
     } else ()
   }
-  override def getStyle(): ?T = {
+  override def getStyle(): com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle = {
     return this.style
   }
   @com.badlogic.gdx.utils.Null

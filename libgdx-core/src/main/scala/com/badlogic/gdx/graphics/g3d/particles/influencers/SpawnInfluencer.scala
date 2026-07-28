@@ -44,7 +44,7 @@ class SpawnInfluencer extends com.badlogic.gdx.graphics.g3d.particles.influencer
     }; i = i + this.rotationChannel.strideSize } }
   }
   @java.lang.Override
-  override def copy(): com.badlogic.gdx.graphics.g3d.particles.ParticleControllerComponent = {
+  override def copy(): SpawnInfluencer = {
     return new SpawnInfluencer(this)
   }
   @java.lang.Override

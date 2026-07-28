@@ -336,7 +336,7 @@ class ObjectFloatMap[K <: java.lang.Object](initialCapacity: scala.Int, loadFact
     } else ()
     return buffer.toString()
   }
-  override def iterator(): balticporter.runtime.JavaIterator[?T] = {
+  override def iterator(): com.badlogic.gdx.utils.ObjectFloatMap.Entries[K] = {
     return this.entries()
   }
   def entries(): com.badlogic.gdx.utils.ObjectFloatMap.Entries[K] = {
@@ -460,7 +460,7 @@ object ObjectFloatMap {
   }
   class Entries[K <: java.lang.Object](map$p: ObjectFloatMap[K]) extends com.badlogic.gdx.utils.ObjectFloatMap.MapIterator[K](map$p) with balticporter.runtime.JavaIterable[com.badlogic.gdx.utils.ObjectFloatMap.Entry[K]] with balticporter.runtime.JavaIterator[com.badlogic.gdx.utils.ObjectFloatMap.Entry[K]] {
     var entry: com.badlogic.gdx.utils.ObjectFloatMap.Entry[K] = new com.badlogic.gdx.utils.ObjectFloatMap.Entry[K]()
-    override def next(): ?E = {
+    override def next(): com.badlogic.gdx.utils.ObjectFloatMap.Entry[K] = {
       if (!hasNext$field) {
         throw new java.util.NoSuchElementException()
       } else ()
@@ -480,7 +480,7 @@ object ObjectFloatMap {
       } else ()
       return hasNext$field
     }
-    override def iterator(): balticporter.runtime.JavaIterator[?T] = {
+    override def iterator(): com.badlogic.gdx.utils.ObjectFloatMap.Entries[K] = {
       return this
     }
   }
@@ -527,7 +527,7 @@ object ObjectFloatMap {
       } else ()
       return hasNext$field
     }
-    override def next(): ?E = {
+    override def next(): K = {
       if (!hasNext$field) {
         throw new java.util.NoSuchElementException()
       } else ()
@@ -539,7 +539,7 @@ object ObjectFloatMap {
       this.findNextIndex()
       return key
     }
-    override def iterator(): balticporter.runtime.JavaIterator[?T] = {
+    override def iterator(): com.badlogic.gdx.utils.ObjectFloatMap.Keys[K] = {
       return this
     }
     def toArray(): com.badlogic.gdx.utils.Array[K] = {

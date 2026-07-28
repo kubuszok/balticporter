@@ -278,7 +278,7 @@ object QuadTreeFloat {
   final val Y: scala.Int = 2
   final val DISTSQR: scala.Int = 3
   private final val pool: com.badlogic.gdx.utils.Pool[QuadTreeFloat] = new com.badlogic.gdx.utils.Pool(128, 4096) {
-    override def newObject(): ?T = {
+    override def newObject(): java.lang.Object = {
       return new QuadTreeFloat()
     }
   }.asInstanceOf[com.badlogic.gdx.utils.Pool[QuadTreeFloat]]

@@ -517,11 +517,11 @@ class Table extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup {
   override def setDebug(enabled: scala.Boolean): scala.Unit = {
     this.debug(if (enabled) com.badlogic.gdx.scenes.scene2d.ui.Table.Debug.all else com.badlogic.gdx.scenes.scene2d.ui.Table.Debug.none)
   }
-  override def debug(): com.badlogic.gdx.scenes.scene2d.Actor = {
+  override def debug(): Table = {
     super.debug()
     return this
   }
-  override def debugAll(): com.badlogic.gdx.scenes.scene2d.Group = {
+  override def debugAll(): Table = {
     super.debugAll()
     return this
   }
@@ -1232,7 +1232,7 @@ object Table {
   var debugCellColor: com.badlogic.gdx.graphics.Color = new com.badlogic.gdx.graphics.Color(1, 0, 0, 1)
   var debugActorColor: com.badlogic.gdx.graphics.Color = new com.badlogic.gdx.graphics.Color(0, 1, 0, 1)
   final val cellPool: com.badlogic.gdx.utils.Pool[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]] = new com.badlogic.gdx.utils.Pool[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]]() {
-    override def newObject(): ?T = {
+    override def newObject(): com.badlogic.gdx.scenes.scene2d.ui.Cell[?] = {
       return new com.badlogic.gdx.scenes.scene2d.ui.Cell().asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]]
     }
   }.asInstanceOf[com.badlogic.gdx.utils.Pool[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]]]

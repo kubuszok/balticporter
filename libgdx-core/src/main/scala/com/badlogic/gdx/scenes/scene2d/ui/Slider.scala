@@ -53,7 +53,7 @@ class Slider(min$p: scala.Float, max$p: scala.Float, stepSize$p: scala.Float, ve
       } else ()
     }
   })
-  override def getStyle(): ?T = {
+  override def getStyle(): com.badlogic.gdx.scenes.scene2d.ui.Slider.SliderStyle = {
     return super.getStyle().asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Slider.SliderStyle]
   }
   def isOver(): scala.Boolean = {

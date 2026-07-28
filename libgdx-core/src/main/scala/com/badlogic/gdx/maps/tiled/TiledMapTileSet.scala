@@ -19,7 +19,7 @@ class TiledMapTileSet extends balticporter.runtime.JavaIterable[com.badlogic.gdx
     return this.tiles.get(id)
   }
   @java.lang.Override
-  override def iterator(): balticporter.runtime.JavaIterator[?T] = {
+  override def iterator(): balticporter.runtime.JavaIterator[com.badlogic.gdx.maps.tiled.TiledMapTile] = {
     return this.tiles.values().iterator()
   }
   def putTile(id: scala.Int, tile: com.badlogic.gdx.maps.tiled.TiledMapTile): scala.Unit = {

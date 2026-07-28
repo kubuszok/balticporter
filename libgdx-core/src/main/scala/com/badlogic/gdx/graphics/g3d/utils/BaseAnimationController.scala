@@ -3,7 +3,7 @@ package com.badlogic.gdx.graphics.g3d.utils
 class BaseAnimationController(target$p: com.badlogic.gdx.graphics.g3d.ModelInstance) {
   private final val transformPool: com.badlogic.gdx.utils.Pool[com.badlogic.gdx.graphics.g3d.utils.BaseAnimationController.Transform] = new com.badlogic.gdx.utils.Pool[com.badlogic.gdx.graphics.g3d.utils.BaseAnimationController.Transform]() {
     @java.lang.Override
-    override def newObject(): ?T = {
+    override def newObject(): com.badlogic.gdx.graphics.g3d.utils.BaseAnimationController.Transform = {
       return new com.badlogic.gdx.graphics.g3d.utils.BaseAnimationController.Transform()
     }
   }
