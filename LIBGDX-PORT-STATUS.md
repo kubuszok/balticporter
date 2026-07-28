@@ -80,30 +80,40 @@ first use, which is the part to check first.
 | `NetJavaImpl:196` | **needs real work.** A `java.util.Map[String, java.util.List[String]]` returned by the JDK flowing into a declaration retyped to `mutable.Map[String, mutable.Buffer[String]]`. `.asScala` alone does NOT close it — the conversion is DEEP (the value type is a `java.util.List` too), so this needs either a recursive boundary conversion or a rule that a declaration whose value comes from a JDK method is not retyped. A class of issue wherever a JDK collection enters retyped code | scoped |
 | `RegionInfluencer:11` | **needs real work.** Encoding IS known (below) | scoped |
 
-### The `RegionInfluencer` encoding — scoped, not yet built
+### The `RegionInfluencer` blocker — CORRECTED DIAGNOSIS
 
-`CtorFunnel` nominates `RegionInfluencer(int)` as primary; the whole-program fixpoint withholds it
-because three subclasses reach the class with an argument-free `extends`. The nilary Java
-constructor cannot be primary either — it opens with `this(1)`. So Scala's implicit nilary primary
-and the explicit `def this()` collide.
+Two earlier write-ups of this were **wrong**, and the correction matters more than the symptom.
 
-**Defaults resolve it, and no discriminator parameter is needed.** Give the synthesized primary the
-WITHHELD constructor's parameters with default values:
+- ~~"No faithful single-primary encoding is known."~~ Wrong — defaults give one.
+- ~~"`CtorFunnel` nominates `RegionInfluencer(int)` but the whole-program fixpoint withholds it."~~
+  **Also wrong.** `plan0` never nominates anything. Verified by building promote-with-defaults end
+  to end (`Plan.defaults` from the nilary constructor's own `this(1)`, the fixpoint preferring
+  defaults to withholding, the emitter rendering `(regionsCount: Int = 1)` and `extends C()`): the
+  emitted class came out **unchanged**, so the defaults path was never consulted. Reverted rather
+  than left in as dead code.
 
-```scala
-abstract class RegionInfluencer(regionsCount: Int = 1) extends Influencer {
-  regions = new Array(false, regionsCount, …)          // the promoted body
-  def this() = { this(1); /* seed the default region */ }   // erases to (), no clash
-}
+The actual cause, from the Java:
+
+```java
+public RegionInfluencer (int regionsCount)      { this.regions = new Array<>(…); }
+public RegionInfluencer ()                      { this(1); … }
+public RegionInfluencer (TextureRegion... rs)   { setAtlasName(null); this.regions = new Array<>(…); add(rs); }
 ```
 
-The primary erases to `(Int)` and the secondary to `()`, so the E120 disappears — the clash exists
-only while the primary is nilary. Each Java constructor keeps its own body and reaches the parent
-correctly. What it needs: `CtorFunnel` must emit a plan that promotes with defaults instead of
-withholding, and the emitter must then write `extends RegionInfluencer()` at every subclass and
-`new RegionInfluencer()` at every call site — Scala requires the argument list once the primary has
-parameters. `RewriteTrace` is the utility that verifies those call sites followed; this is exactly
-the signature-changing rewrite it was built for.
+**There are TWO roots** — `(int)` and `(TextureRegion...)`; the varargs one does not delegate. So
+`plan0`'s `several.find(_.paramss.flatten.isEmpty)` looks for a NILARY root, finds none (the nilary
+constructor delegates, so it is not a root), and returns `Plan.none`. The nilary primary Scala then
+synthesises collides with the emitted `def this()`.
+
+Note that **no constructor here carries `super(args)` at all**, so the funnel is not needed for its
+original purpose. The only problem is the clash.
+
+The fix, in the machinery that already exists: when several roots exist and none is nilary but the
+class HAS an explicit nilary constructor, promote THAT one, inlining its `this(args)` delegation via
+`effects` (which already does exactly this). The other constructors then run after `this()`, which
+is sound wherever `supersedes` holds — `def this(regionsCount)` reassigns `regions` wholesale, so
+the nilary path's array is replaced, not corrupted. That is wasted allocation, not wrong behaviour,
+and it is the tradeoff `supersedes` is already written to reason about.
 
 ~~`DepthShader:111`~~ — **FIXED**, and it had been recorded as BLOCKED. Spoon really does not resolve
 that reference to a `CtFieldWrite` under noClasspath — but the TIR already knew the symbol was an
