@@ -635,7 +635,27 @@ inside that branch settles it.
 Recorded because the wrong diagnosis was committed first and looked plausible: the receiver being
 "raw in Spoon" was an assumption, never measured.
 
-### The remaining 6
+### The remaining 4 — the inherited fill's ONE weakness, isolated
+
+`instantiationOfParents` is keyed by the ancestor's formal NAME, and that is what makes it work at
+all (162 -> 4). It is also its only failure mode: two unrelated generics that both call their
+parameter `T` collide.
+
+- `AssetLoadingTask implements AsyncTask<Void>` puts `T -> Void` in the map;
+- the field `Array<AssetDescriptor> dependencies` is RAW, and `AssetDescriptor`'s own formal is also
+  called `T`;
+- so it renders `Array[AssetDescriptor[Void]]`, and every use of it fails.
+
+The `boundAdmits` guard (added for the `ButtonGroup` collision, 7 -> 6) does not catch this one:
+`AssetDescriptor<T>` declares no bound, so `Void` satisfies it vacuously.
+
+**The fix is to stop keying on the name alone.** Record the map as
+`(ancestor FQN, formal name) -> type`, and apply an entry only when the raw type being filled IS
+that ancestor or is mentioned in that ancestor's own signatures — i.e. when the name match is
+evidence that the two `T`s are the same `T`. Everything needed is already collected in
+`instantiationOfParents`; only the key and the applicability test change.
+
+### The earlier remaining-6 note
 
 | site | shape |
 |---|---|
