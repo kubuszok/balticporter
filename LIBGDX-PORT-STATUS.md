@@ -138,6 +138,27 @@ So the remaining single error is NOT the tip of a systemic wildcard problem. It 
 the name-keyed fill's collision (`AsyncTask<Void>`'s `T` reaching `AssetDescriptor<T>`) is not also
 made harmlessly-consistent on both sides of an override.
 
+### `Asserts` IS justified — but must SHIP as a dependency, not as injected source
+
+Mapping java's assertions directly onto MUnit's, with the argument permutation done by the transform
+(no helper at all), was implemented and measured: **1 -> 33**. The cause is not the permutation — it
+is that MUnit's `assertEquals` is TYPE-CONSTRAINED (`B <:< A`) while java's
+`assertEquals(Object, Object)` compares anything. Ported java compares `int` with `long`, `Object`
+with a concrete type, and so on; MUnit refuses those by design.
+
+That is a real semantic gap in the target, not shape adaptation — so a helper IS warranted under the
+rule below, unlike `PortedSuite`, which only un-curried a call the IR could express directly.
+
+What is NOT warranted is shipping it as INJECTED SOURCE copied into every port. It should be a
+published `balticporter-runtime` artifact the generated project depends on, exactly like
+`JavaIterator`/`JavaIterable`. The rule is about DISTRIBUTION as much as content:
+
+- semantics the target lacks -> a runtime the port DEPENDS ON;
+- shapes the engine can emit correctly -> the engine emits them, and nothing ships.
+
+Both currently violate the first half by being copy-pasted; only `PortedSuite` violated the second,
+and it has been deleted.
+
 ### `PortedSuite` IS A SCAFFOLD — it must not survive
 
 A base class whose every member is `assertEquals(a, b) => assert(a == b)` or

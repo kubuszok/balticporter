@@ -7,10 +7,10 @@ class LongQueueTest extends munit.FunSuite {
     queue.addLast(2)
     queue.addFirst(3)
     queue.addLast(4)
-    balticporter.runtime.Asserts.assertEquals(0, queue.indexOf(3))
-    balticporter.runtime.Asserts.assertEquals(1, queue.indexOf(1))
-    balticporter.runtime.Asserts.assertEquals(2, queue.indexOf(2))
-    balticporter.runtime.Asserts.assertEquals(3, queue.indexOf(4))
+    assertEquals(queue.indexOf(3), 0)
+    assertEquals(queue.indexOf(1), 1)
+    assertEquals(queue.indexOf(2), 2)
+    assertEquals(queue.indexOf(4), 3)
   })
   test("removeLastTest")({
     val queue: com.badlogic.gdx.utils.LongQueue = new com.badlogic.gdx.utils.LongQueue()
@@ -18,19 +18,19 @@ class LongQueueTest extends munit.FunSuite {
     queue.addLast(2)
     queue.addLast(3)
     queue.addLast(4)
-    balticporter.runtime.Asserts.assertEquals(4, queue.size)
-    balticporter.runtime.Asserts.assertEquals(3, queue.indexOf(4))
-    balticporter.runtime.Asserts.assertEquals(4, queue.removeLast())
-    balticporter.runtime.Asserts.assertEquals(3, queue.size)
-    balticporter.runtime.Asserts.assertEquals(2, queue.indexOf(3))
-    balticporter.runtime.Asserts.assertEquals(3, queue.removeLast())
-    balticporter.runtime.Asserts.assertEquals(2, queue.size)
-    balticporter.runtime.Asserts.assertEquals(1, queue.indexOf(2))
-    balticporter.runtime.Asserts.assertEquals(2, queue.removeLast())
-    balticporter.runtime.Asserts.assertEquals(1, queue.size)
-    balticporter.runtime.Asserts.assertEquals(0, queue.indexOf(1))
-    balticporter.runtime.Asserts.assertEquals(1, queue.removeLast())
-    balticporter.runtime.Asserts.assertEquals(0, queue.size)
+    assertEquals(queue.size, 4)
+    assertEquals(queue.indexOf(4), 3)
+    assertEquals(queue.removeLast(), 4)
+    assertEquals(queue.size, 3)
+    assertEquals(queue.indexOf(3), 2)
+    assertEquals(queue.removeLast(), 3)
+    assertEquals(queue.size, 2)
+    assertEquals(queue.indexOf(2), 1)
+    assertEquals(queue.removeLast(), 2)
+    assertEquals(queue.size, 1)
+    assertEquals(queue.indexOf(1), 0)
+    assertEquals(queue.removeLast(), 1)
+    assertEquals(queue.size, 0)
   })
   test("removeFirstTest")({
     val queue: com.badlogic.gdx.utils.LongQueue = new com.badlogic.gdx.utils.LongQueue()
@@ -38,89 +38,89 @@ class LongQueueTest extends munit.FunSuite {
     queue.addLast(2)
     queue.addLast(3)
     queue.addLast(4)
-    balticporter.runtime.Asserts.assertEquals(4, queue.size)
-    balticporter.runtime.Asserts.assertEquals(0, queue.indexOf(1))
-    balticporter.runtime.Asserts.assertEquals(1, queue.removeFirst())
-    balticporter.runtime.Asserts.assertEquals(3, queue.size)
-    balticporter.runtime.Asserts.assertEquals(0, queue.indexOf(2))
-    balticporter.runtime.Asserts.assertEquals(2, queue.removeFirst())
-    balticporter.runtime.Asserts.assertEquals(2, queue.size)
-    balticporter.runtime.Asserts.assertEquals(0, queue.indexOf(3))
-    balticporter.runtime.Asserts.assertEquals(3, queue.removeFirst())
-    balticporter.runtime.Asserts.assertEquals(1, queue.size)
-    balticporter.runtime.Asserts.assertEquals(0, queue.indexOf(4))
-    balticporter.runtime.Asserts.assertEquals(4, queue.removeFirst())
-    balticporter.runtime.Asserts.assertEquals(0, queue.size)
+    assertEquals(queue.size, 4)
+    assertEquals(queue.indexOf(1), 0)
+    assertEquals(queue.removeFirst(), 1)
+    assertEquals(queue.size, 3)
+    assertEquals(queue.indexOf(2), 0)
+    assertEquals(queue.removeFirst(), 2)
+    assertEquals(queue.size, 2)
+    assertEquals(queue.indexOf(3), 0)
+    assertEquals(queue.removeFirst(), 3)
+    assertEquals(queue.size, 1)
+    assertEquals(queue.indexOf(4), 0)
+    assertEquals(queue.removeFirst(), 4)
+    assertEquals(queue.size, 0)
   })
   test("resizableQueueTest")({
     val q: com.badlogic.gdx.utils.LongQueue = new com.badlogic.gdx.utils.LongQueue(8)
-    balticporter.runtime.Asserts.assertTrue("New queue is not empty!", q.size == 0);
+    assert(q.size == 0, "New queue is not empty!");
     { var i: scala.Int = 0; while (i < 100) { {
       { var j: scala.Int = 0; while (j < i) { {
         try {
           q.addLast(j)
         } catch {
           case e: java.lang.IllegalStateException => {
-            balticporter.runtime.Asserts.fail(((("Failed to add element " + j) + " (") + i) + ")")
+            fail(((("Failed to add element " + j) + " (") + i) + ")")
           }
         }
         val peeked: scala.Long = q.last()
-        balticporter.runtime.Asserts.assertTrue(((((("peekLast shows " + peeked) + ", should be ") + j) + " (") + i) + ")", peeked == j)
+        assert(peeked == j, ((((("peekLast shows " + peeked) + ", should be ") + j) + " (") + i) + ")")
         val size: scala.Int = q.size
-        balticporter.runtime.Asserts.assertTrue(((((("Size should be " + (j + 1)) + " but is ") + size) + " (") + i) + ")", size == (j + 1))
+        assert(size == (j + 1), ((((("Size should be " + (j + 1)) + " but is ") + size) + " (") + i) + ")")
       }; j = j + 1 } }
       if (i != 0) {
         val peek: scala.Long = q.first()
-        balticporter.runtime.Asserts.assertTrue(((("First thing is not zero but " + peek) + " (") + i) + ")", peek == 0)
+        assert(peek == 0, ((("First thing is not zero but " + peek) + " (") + i) + ")")
       } else ();
       { var j: scala.Int = 0; while (j < i) { {
         val pop: scala.Long = q.removeFirst()
-        balticporter.runtime.Asserts.assertTrue(((((("Popped should be " + j) + " but is ") + pop) + " (") + i) + ")", pop == j)
+        assert(pop == j, ((((("Popped should be " + j) + " but is ") + pop) + " (") + i) + ")")
         val size: scala.Int = q.size
-        balticporter.runtime.Asserts.assertTrue(((((("Size should be " + ((i - 1) - j)) + " but is ") + size) + " (") + i) + ")", size == ((i - 1) - j))
+        assert(size == ((i - 1) - j), ((((("Size should be " + ((i - 1) - j)) + " but is ") + size) + " (") + i) + ")")
       }; j = j + 1 } }
-      balticporter.runtime.Asserts.assertTrue("Not empty after cycle " + i, q.size == 0)
+      assert(q.size == 0, "Not empty after cycle " + i)
     }; i = i + 1 } };
     { var i: scala.Int = 0; while (i < 56) { {
       q.addLast(42)
     }; i = i + 1 } }
     q.clear()
-    balticporter.runtime.Asserts.assertTrue("Clear did not clear properly", q.size == 0)
+    assert(q.size == 0, "Clear did not clear properly")
   })
   test("resizableDequeTest")({
     val q: com.badlogic.gdx.utils.LongQueue = new com.badlogic.gdx.utils.LongQueue(8)
-    balticporter.runtime.Asserts.assertTrue("New deque is not empty!", q.size == 0);
+    assert(q.size == 0, "New deque is not empty!");
     { var i: scala.Int = 0; while (i < 100) { {
       { var j: scala.Int = 0; while (j < i) { {
         try {
           q.addFirst(j)
         } catch {
           case e: java.lang.IllegalStateException => {
-            balticporter.runtime.Asserts.fail(((("Failed to add element " + j) + " (") + i) + ")")
+            fail(((("Failed to add element " + j) + " (") + i) + ")")
           }
         }
         val peeked: scala.Long = q.first()
-        balticporter.runtime.Asserts.assertTrue(((((("peek shows " + peeked) + ", should be ") + j) + " (") + i) + ")", peeked == j)
+        assert(peeked == j, ((((("peek shows " + peeked) + ", should be ") + j) + " (") + i) + ")")
         val size: scala.Int = q.size
-        balticporter.runtime.Asserts.assertTrue(((((("Size should be " + (j + 1)) + " but is ") + size) + " (") + i) + ")", size == (j + 1))
+        assert(size == (j + 1), ((((("Size should be " + (j + 1)) + " but is ") + size) + " (") + i) + ")")
       }; j = j + 1 } }
       if (i != 0) {
         val peek: scala.Long = q.last()
-        balticporter.runtime.Asserts.assertTrue(((("Last thing is not zero but " + peek) + " (") + i) + ")", peek == 0)
+        assert(peek == 0, ((("Last thing is not zero but " + peek) + " (") + i) + ")")
       } else ();
       { var j: scala.Int = 0; while (j < i) { {
         val pop: scala.Long = q.removeLast()
-        balticporter.runtime.Asserts.assertTrue(((((("Popped should be " + j) + " but is ") + pop) + " (") + i) + ")", pop == j)
+        assert(pop == j, ((((("Popped should be " + j) + " but is ") + pop) + " (") + i) + ")")
         val size: scala.Int = q.size
-        balticporter.runtime.Asserts.assertTrue(((((("Size should be " + ((i - 1) - j)) + " but is ") + size) + " (") + i) + ")", size == ((i - 1) - j))
+        assert(size == ((i - 1) - j), ((((("Size should be " + ((i - 1) - j)) + " but is ") + size) + " (") + i) + ")")
       }; j = j + 1 } }
-      balticporter.runtime.Asserts.assertTrue("Not empty after cycle " + i, q.size == 0)
+      assert(q.size == 0, "Not empty after cycle " + i)
     }; i = i + 1 } };
     { var i: scala.Int = 0; while (i < 56) { {
       q.addFirst(42)
     }; i = i + 1 } }
     q.clear()
-    balticporter.runtime.Asserts.assertTrue("Clear did not clear properly", q.size == 0)
+    assert(q.size == 0, "Clear did not clear properly")
   })
   test("getTest")({
     val q: com.badlogic.gdx.utils.LongQueue = new com.badlogic.gdx.utils.LongQueue(7);
@@ -128,20 +128,20 @@ class LongQueueTest extends munit.FunSuite {
       { var j: scala.Int = 0; while (j < 4) { {
         q.addLast(j)
       }; j = j + 1 } }
-      balticporter.runtime.Asserts.assertEquals(("get(0) is not equal to peek (" + i) + ")", q.get(0), q.first())
-      balticporter.runtime.Asserts.assertEquals(("get(size-1) is not equal to peekLast (" + i) + ")", q.get(q.size - 1), q.last());
+      assertEquals(q.first(), q.get(0), ("get(0) is not equal to peek (" + i) + ")")
+      assertEquals(q.last(), q.get(q.size - 1), ("get(size-1) is not equal to peekLast (" + i) + ")");
       { var j: scala.Int = 0; while (j < 4) { {
-        balticporter.runtime.Asserts.assertTrue(q.get(j) == j)
+        assert(q.get(j) == j)
       }; j = j + 1 } };
       { var j: scala.Int = 0; while (j < (4 - 1)) { {
         q.removeFirst()
-        balticporter.runtime.Asserts.assertEquals(("get(0) is not equal to peek (" + i) + ")", q.get(0), q.first())
+        assertEquals(q.first(), q.get(0), ("get(0) is not equal to peek (" + i) + ")")
       }; j = j + 1 } }
       q.removeFirst()
       assert(q.size == 0)
       try {
         q.get(0)
-        balticporter.runtime.Asserts.fail("get() on empty queue did not throw")
+        fail("get() on empty queue did not throw")
       } catch {
         case ignore: java.lang.IndexOutOfBoundsException => {
           ()
@@ -194,7 +194,7 @@ class LongQueueTest extends munit.FunSuite {
       q.addLast(j)
     }; j = j + 1 } };
     { var j: scala.Int = 0; while (j <= 6) { {
-      balticporter.runtime.Asserts.assertEquals(q.indexOf(j), j)
+      assertEquals(j, q.indexOf(j))
     }; j = j + 1 } }
     q.clear();
     { var j: scala.Int = 2; while (j >= 0) { {
@@ -204,25 +204,25 @@ class LongQueueTest extends munit.FunSuite {
       q.addLast(j)
     }; j = j + 1 } };
     { var j: scala.Int = 0; while (j <= 6) { {
-      balticporter.runtime.Asserts.assertEquals(q.indexOf(j), j)
+      assertEquals(j, q.indexOf(j))
     }; j = j + 1 } }
   })
   test("toStringTest")({
     val q: com.badlogic.gdx.utils.LongQueue = new com.badlogic.gdx.utils.LongQueue(1)
-    balticporter.runtime.Asserts.assertTrue(q.toString().equals("[]"))
+    assert(q.toString().equals("[]"))
     q.addLast(4)
-    balticporter.runtime.Asserts.assertTrue(q.toString().equals("[4]"))
+    assert(q.toString().equals("[4]"))
     q.addLast(5)
     q.addLast(6)
     q.addLast(7)
-    balticporter.runtime.Asserts.assertTrue(q.toString().equals("[4, 5, 6, 7]"))
+    assert(q.toString().equals("[4, 5, 6, 7]"))
   })
   test("hashEqualsTest")({
     val q1: com.badlogic.gdx.utils.LongQueue = new com.badlogic.gdx.utils.LongQueue()
     val q2: com.badlogic.gdx.utils.LongQueue = new com.badlogic.gdx.utils.LongQueue()
     this.assertEqualsAndHash(q1, q2)
     q1.addFirst(1)
-    balticporter.runtime.Asserts.assertNotEquals(q1, q2)
+    assertNotEquals(q2, q1)
     q2.addFirst(1)
     this.assertEqualsAndHash(q1, q2)
     q1.clear()
@@ -234,7 +234,7 @@ class LongQueueTest extends munit.FunSuite {
       q1.addLast(i)
       q1.addLast(i)
       q1.removeFirst()
-      balticporter.runtime.Asserts.assertNotEquals(q1, q2)
+      assertNotEquals(q2, q1)
       q2.addLast(i)
       q2.addLast(i)
       q2.removeFirst()
@@ -242,12 +242,12 @@ class LongQueueTest extends munit.FunSuite {
     }; i = i + 1 } }
   })
   private def assertEqualsAndHash(q1: com.badlogic.gdx.utils.LongQueue, q2: com.badlogic.gdx.utils.LongQueue): scala.Unit = {
-    balticporter.runtime.Asserts.assertEquals(q1, q2)
-    balticporter.runtime.Asserts.assertEquals("Hash codes are not equal", q1.hashCode(), q2.hashCode())
+    assertEquals(q2, q1)
+    assertEquals(q2.hashCode(), q1.hashCode(), "Hash codes are not equal")
   }
   private def assertValues(q: com.badlogic.gdx.utils.LongQueue, values: scala.Array[scala.Long]): scala.Unit = {
     { var i: scala.Int = 0; val n: scala.Int = values.length; while (i < n) { {
-      balticporter.runtime.Asserts.assertEquals(values(i), q.get(i))
+      assertEquals(q.get(i), values(i))
     }; i = i + 1 } }
   }
 }

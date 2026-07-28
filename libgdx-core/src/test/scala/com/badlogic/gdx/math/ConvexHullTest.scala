@@ -16,10 +16,10 @@ class ConvexHullTest extends munit.FunSuite {
   })
   private def assertArraySimilar(array: com.badlogic.gdx.utils.FloatArray, witness: scala.Array[scala.Float], witnessOffset: scala.Int, witnessCount: scala.Int): scala.Unit = {
     val witnessLength: scala.Int = witnessCount + witnessOffset
-    balticporter.runtime.Asserts.assertTrue((witnessCount + witnessOffset) <= witness.length)
-    balticporter.runtime.Asserts.assertEquals(witnessCount + 2, array.size)
-    balticporter.runtime.Asserts.assertEquals(array.items(0), array.items(array.size - 2), 0)
-    balticporter.runtime.Asserts.assertEquals(array.items(1), array.items(array.size - 1), 0);
+    assert((witnessCount + witnessOffset) <= witness.length)
+    assertEquals(array.size, witnessCount + 2)
+    assertEquals(0, array.items(array.size - 2), array.items(0))
+    assertEquals(0, array.items(array.size - 1), array.items(1));
     { var offset: scala.Int = 0; while (offset < witnessLength) { {
       var contentMatches: scala.Boolean = true;
       { var i: scala.Int = 0; while (i < witnessLength) { {
@@ -33,6 +33,6 @@ class ConvexHullTest extends munit.FunSuite {
         return
       } else ()
     }; offset = offset + 1 } }
-    balticporter.runtime.Asserts.fail((("Array items " + array.toString()) + " does not match witness array ") + java.util.Arrays.toString(witness))
+    fail((("Array items " + array.toString()) + " does not match witness array ") + java.util.Arrays.toString(witness))
   }
 }

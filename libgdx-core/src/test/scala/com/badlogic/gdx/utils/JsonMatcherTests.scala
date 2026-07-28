@@ -247,8 +247,8 @@ class JsonMatcherTests extends munit.FunSuite {
       matcher.parse(JsonMatcherTests.json)
       JsonMatcherTests.assertValueCount(1, values)
       val value: com.badlogic.gdx.utils.JsonValue = values.first()
-      balticporter.runtime.Asserts.assertEquals("9834711", value.getString("serial_num"))
-      balticporter.runtime.Asserts.assertNull(value.get("percentFull"))
+      assertEquals(value.getString("serial_num"), "9834711")
+      assertEquals(value.get("percentFull"), null)
     }
     JsonMatcherTests.rejectAll(JsonMatcherTests.json, "(type@)", "**/*/*@/(serial_num)", scala.Array[java.lang.String]())
     JsonMatcherTests.rejectAll(JsonMatcherTests.json, "**/(serial_num@)", "**/*@/(serial_num[])", scala.Array[java.lang.String]())
@@ -291,14 +291,14 @@ class JsonMatcherTests extends munit.FunSuite {
   })
   test("parseValue")({
     var root: com.badlogic.gdx.utils.JsonValue = new com.badlogic.gdx.utils.JsonMatcher().parseValue(JsonMatcherTests.json)
-    balticporter.runtime.Asserts.assertTrue(root.child$field.hasChild("devices"))
+    assert(root.child$field.hasChild("devices"))
     root = new com.badlogic.gdx.utils.JsonMatcher(scala.Array[java.lang.String]("")).parseValue(JsonMatcherTests.json)
-    balticporter.runtime.Asserts.assertTrue(root.child$field.hasChild("devices"))
+    assert(root.child$field.hasChild("devices"))
     root = new com.badlogic.gdx.utils.JsonMatcher(scala.Array[java.lang.String]("*/devices/(*)")).parseValue(JsonMatcherTests.json)
-    balticporter.runtime.Asserts.assertEquals(100, root.getInt("percentFull"))
+    assertEquals(root.getInt("percentFull"), 100)
     val values: com.badlogic.gdx.utils.JsonValue = new com.badlogic.gdx.utils.JsonMatcher(scala.Array[java.lang.String]("*/(devices)", "*/devices/(*)")).parseValue(JsonMatcherTests.json)
-    balticporter.runtime.Asserts.assertEquals("devices", values.child$field.name$field)
-    balticporter.runtime.Asserts.assertEquals(100, values.child$field.next$field.getInt("percentFull"))
+    assertEquals(values.child$field.name$field, "devices")
+    assertEquals(values.child$field.next$field.getInt("percentFull"), 100)
   })
   test("paths")({
     val paths: com.badlogic.gdx.utils.Array[?] = new com.badlogic.gdx.utils.Array().asInstanceOf[com.badlogic.gdx.utils.Array[?]]
@@ -325,27 +325,27 @@ class JsonMatcherTests extends munit.FunSuite {
       matcher.parse("{a:{b:{c:{d:{e:{f:{value:deep}}}}}}}")
     }
     JsonMatcherTests.assertValueCount(6, paths.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.JsonValue]])
-    balticporter.runtime.Asserts.assertEquals("[]/{}/devices/{}", paths.first().asInstanceOf[java.lang.Object])
-    balticporter.runtime.Asserts.assertEquals("[]/{}/devices/{}", paths.first().asInstanceOf[java.lang.Object])
-    balticporter.runtime.Asserts.assertEquals("[]/{}/devices/{}", paths.get(1).asInstanceOf[java.lang.Object])
-    balticporter.runtime.Asserts.assertEquals("[]/{}/devices/{}", paths.get(2).asInstanceOf[java.lang.Object])
-    balticporter.runtime.Asserts.assertEquals("[]/{}/devices/{}/child", paths.get(3).asInstanceOf[java.lang.Object])
-    balticporter.runtime.Asserts.assertEquals("[]/{}/devices/{}/child", paths.get(4).asInstanceOf[java.lang.Object])
-    balticporter.runtime.Asserts.assertEquals("{}/a/b/c/d/e/f", paths.get(5).asInstanceOf[java.lang.Object])
+    assertEquals(paths.first().asInstanceOf[java.lang.Object], "[]/{}/devices/{}")
+    assertEquals(paths.first().asInstanceOf[java.lang.Object], "[]/{}/devices/{}")
+    assertEquals(paths.get(1).asInstanceOf[java.lang.Object], "[]/{}/devices/{}")
+    assertEquals(paths.get(2).asInstanceOf[java.lang.Object], "[]/{}/devices/{}")
+    assertEquals(paths.get(3).asInstanceOf[java.lang.Object], "[]/{}/devices/{}/child")
+    assertEquals(paths.get(4).asInstanceOf[java.lang.Object], "[]/{}/devices/{}/child")
+    assertEquals(paths.get(5).asInstanceOf[java.lang.Object], "{}/a/b/c/d/e/f")
     JsonMatcherTests.assertValueCount(6, parents.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.JsonValue]])
-    balticporter.runtime.Asserts.assertEquals("{}", parents.first().asInstanceOf[java.lang.Object])
-    balticporter.runtime.Asserts.assertEquals("{}", parents.get(1).asInstanceOf[java.lang.Object])
-    balticporter.runtime.Asserts.assertEquals("{}", parents.get(2).asInstanceOf[java.lang.Object])
-    balticporter.runtime.Asserts.assertEquals("child", parents.get(3).asInstanceOf[java.lang.Object])
-    balticporter.runtime.Asserts.assertEquals("child", parents.get(4).asInstanceOf[java.lang.Object])
-    balticporter.runtime.Asserts.assertEquals("f", parents.get(5).asInstanceOf[java.lang.Object])
+    assertEquals(parents.first().asInstanceOf[java.lang.Object], "{}")
+    assertEquals(parents.get(1).asInstanceOf[java.lang.Object], "{}")
+    assertEquals(parents.get(2).asInstanceOf[java.lang.Object], "{}")
+    assertEquals(parents.get(3).asInstanceOf[java.lang.Object], "child")
+    assertEquals(parents.get(4).asInstanceOf[java.lang.Object], "child")
+    assertEquals(parents.get(5).asInstanceOf[java.lang.Object], "f")
     JsonMatcherTests.assertValueCount(6, parents2.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.JsonValue]])
-    balticporter.runtime.Asserts.assertEquals("{}", parents2.first().asInstanceOf[java.lang.Object])
-    balticporter.runtime.Asserts.assertEquals("{}", parents2.get(1).asInstanceOf[java.lang.Object])
-    balticporter.runtime.Asserts.assertEquals("{}", parents2.get(2).asInstanceOf[java.lang.Object])
-    balticporter.runtime.Asserts.assertEquals("devices", parents2.get(3).asInstanceOf[java.lang.Object])
-    balticporter.runtime.Asserts.assertEquals("devices", parents2.get(4).asInstanceOf[java.lang.Object])
-    balticporter.runtime.Asserts.assertEquals("d", parents2.get(5).asInstanceOf[java.lang.Object])
+    assertEquals(parents2.first().asInstanceOf[java.lang.Object], "{}")
+    assertEquals(parents2.get(1).asInstanceOf[java.lang.Object], "{}")
+    assertEquals(parents2.get(2).asInstanceOf[java.lang.Object], "{}")
+    assertEquals(parents2.get(3).asInstanceOf[java.lang.Object], "devices")
+    assertEquals(parents2.get(4).asInstanceOf[java.lang.Object], "devices")
+    assertEquals(parents2.get(5).asInstanceOf[java.lang.Object], "d")
   })
   test("dataTypes")({
     val matcher: com.badlogic.gdx.utils.JsonMatcher = new com.badlogic.gdx.utils.JsonMatcher()
@@ -357,12 +357,12 @@ class JsonMatcherTests extends munit.FunSuite {
     val value: com.badlogic.gdx.utils.JsonValue = values.first()
     value.getLong("maxCellTemp")
     value.getDouble("temperature")
-    balticporter.runtime.Asserts.assertTrue(value.has("dc_switch_off"))
-    balticporter.runtime.Asserts.assertTrue(value.get("dc_switch_off").isNull())
+    assert(value.has("dc_switch_off"))
+    assert(value.get("dc_switch_off").isNull())
     value.getString("admin_state_str")
     value.getBoolean("sleep_enabled")
     value.get("device_status").asStringArray()
-    balticporter.runtime.Asserts.assertTrue(value.get("object").`type`() == com.badlogic.gdx.utils.JsonValue.ValueType.`object`)
+    assert(value.get("object").`type`() == com.badlogic.gdx.utils.JsonValue.ValueType.`object`)
   })
   test("filtering")({
     {
@@ -377,13 +377,13 @@ class JsonMatcherTests extends munit.FunSuite {
           if (value.equalsString("ENCHARGE")) {
             matcher.reject(enpower)
           } else {
-            balticporter.runtime.Asserts.fail("Unexpected type: " + value)
+            fail("Unexpected type: " + value)
           }
         }
       })
       matcher.parse(JsonMatcherTests.json)
       JsonMatcherTests.assertValueCount(3, values)
-      balticporter.runtime.Asserts.assertEquals("{serial_num:32131444,percentFull:100}, {percentFull:75,serial_num:234234211}, 9834711", JsonMatcherTests.toString(values))
+      assertEquals(JsonMatcherTests.toString(values), "{serial_num:32131444,percentFull:100}, {percentFull:75,serial_num:234234211}, 9834711")
     };
     {
       val matcher: com.badlogic.gdx.utils.JsonMatcher = new com.badlogic.gdx.utils.JsonMatcher()
@@ -409,7 +409,7 @@ class JsonMatcherTests extends munit.FunSuite {
       })
       matcher.parse(JsonMatcherTests.json)
       JsonMatcherTests.assertValueCount(3, values)
-      balticporter.runtime.Asserts.assertEquals("{serial_num:32131444,percentFull:100}, {percentFull:75,serial_num:234234211}, 9834711", JsonMatcherTests.toString(values))
+      assertEquals(JsonMatcherTests.toString(values), "{serial_num:32131444,percentFull:100}, {percentFull:75,serial_num:234234211}, 9834711")
     };
     {
       val matcher: com.badlogic.gdx.utils.JsonMatcher = new com.badlogic.gdx.utils.JsonMatcher()
@@ -434,7 +434,7 @@ class JsonMatcherTests extends munit.FunSuite {
       })
       matcher.parse(JsonMatcherTests.json)
       JsonMatcherTests.assertValueCount(3, values)
-      balticporter.runtime.Asserts.assertEquals("{serial_num:32131444,percentFull:100}, {percentFull:75,serial_num:234234211}, 9834711", JsonMatcherTests.toString(values))
+      assertEquals(JsonMatcherTests.toString(values), "{serial_num:32131444,percentFull:100}, {percentFull:75,serial_num:234234211}, 9834711")
     }
   })
   @org.junit.Test(expected = classOf[java.lang.IllegalArgumentException])
@@ -526,7 +526,7 @@ object JsonMatcherTests {
     try {
       JsonMatcherTests.assertValueCount(expected.length, values);
       { var i: scala.Int = 0; val n: scala.Int = expected.length; while (i < n) { {
-        balticporter.runtime.Asserts.assertEquals("Pattern " + i, expected(i), values.get(i).toJson(com.badlogic.gdx.utils.JsonWriter.OutputType.minimal))
+        assertEquals(values.get(i).toJson(com.badlogic.gdx.utils.JsonWriter.OutputType.minimal), expected(i), "Pattern " + i)
       }; i = i + 1 } }
     } catch {
       case ex: java.lang.AssertionError => {
@@ -548,7 +548,7 @@ object JsonMatcherTests {
       @java.lang.Override
       override def value(name: com.badlogic.gdx.utils.JsonSkimmer.JsonToken, value: com.badlogic.gdx.utils.JsonSkimmer.JsonToken): scala.Unit = {
         if ((notParsedValue != null) && name.equals(notParsedValue)) {
-          balticporter.runtime.Asserts.fail("Should have ended before parsing value: " + notParsedValue)
+          fail("Should have ended before parsing value: " + notParsedValue)
         } else ()
         super.value(name, value)
       }
@@ -567,10 +567,10 @@ object JsonMatcherTests {
       JsonMatcherTests.assertValueCount(expected.length, values);
       { var i: scala.Int = 0; val n: scala.Int = expected.length; while (i < n) { {
         val value: com.badlogic.gdx.utils.JsonValue = values.get(i)
-        balticporter.runtime.Asserts.assertEquals("Pattern " + i, expected(i), value.toJson(com.badlogic.gdx.utils.JsonWriter.OutputType.minimal))
+        assertEquals(value.toJson(com.badlogic.gdx.utils.JsonWriter.OutputType.minimal), expected(i), "Pattern " + i)
       }; i = i + 1 } }
       if ((notParsedValue != null) && (!ended(0))) {
-        balticporter.runtime.Asserts.fail("Should have ended but did not")
+        fail("Should have ended but did not")
       } else ()
     } catch {
       case ex: java.lang.AssertionError => {
@@ -594,7 +594,7 @@ object JsonMatcherTests {
     if (values.size != count) {
       java.lang.System.out.println((("Actual: " + values.size) + " ") + JsonMatcherTests.toString(values))
     } else ()
-    balticporter.runtime.Asserts.assertEquals("Wrong match count", count, values.size)
+    assertEquals(values.size, count, "Wrong match count")
   }
   def toString(matcher: com.badlogic.gdx.utils.JsonMatcher, patterns: scala.Array[java.lang.String]): java.lang.String = {
     val buffer: com.badlogic.gdx.utils.CharArray = new com.badlogic.gdx.utils.CharArray()

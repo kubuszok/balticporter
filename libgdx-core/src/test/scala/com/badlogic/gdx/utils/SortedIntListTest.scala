@@ -6,9 +6,9 @@ class SortedIntListTest extends munit.FunSuite {
     try {
       val list: com.badlogic.gdx.utils.SortedIntList[java.lang.String] = new com.badlogic.gdx.utils.SortedIntList[java.lang.String]()
       list.insert(0, "hello")
-      balticporter.runtime.Asserts.assertEquals(1, list.size$field)
-      balticporter.runtime.Asserts.assertEquals("hello", list.get(0))
-      balticporter.runtime.Asserts.assertEquals("hello", list.iterator().next.value)
+      assertEquals(list.size$field, 1)
+      assertEquals(list.get(0), "hello")
+      assertEquals(list.iterator().next.value, "hello")
     } finally {
       com.badlogic.gdx.utils.Collections.allocateIterators = false
     }
