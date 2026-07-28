@@ -1671,7 +1671,20 @@ object SpoonTir:
                         catch { case _: Throwable => None }
           val depends = declTpe.exists(mentionsTypeVarFilled(_, names))
           if unknown && depends then
-            val erasedArgs = formals.map(erasureOfFormal(_, Set.empty, 2))
+            // same F-bound treatment as `erasedReceiverView`: an F-bounded class has no erased
+            // image, so fill from the enclosing scope's own variables and leave what cannot be
+            // named as `?`. Without this a FIELD access through such a receiver still emitted
+            // `Node[Node[?, Object, Actor], Object, Actor]`, which fails its own bound.
+            def isFB(f: CtTypeParameter): Boolean =
+              try Option(f.getSuperclass).exists(b => mentionsTypeVarFilled(b, Set(f.getSimpleName)))
+              catch { case _: Throwable => false }
+            val anyFB = formals.exists(isFB)
+            val erasedArgs = formals.map { f =>
+              val nm = if inStatic || !anyFB then scala.None else accessibleTp(f.getSimpleName)
+              nm.map(id => TypeRef(NoPrefix, id)).getOrElse {
+                if isFB(f) then TypeBounds(NoType, NoType) else erasureOfFormal(f, Set.empty, 2)
+              }
+            }
             val subst      = formals.map(_.getSimpleName).zip(erasedArgs).toMap
             Some((AppliedType(TypeRef(NoPrefix, typeSym(rt)), erasedArgs),
                   declTpe.map(erasedFormal(_, subst)).getOrElse(objectT)))
