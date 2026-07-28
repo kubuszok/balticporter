@@ -77,7 +77,13 @@ class Json:
   def setDefaultSerializer(defaultSerializer: Json.Serializer[?]): Unit =
     this.defaultSerializer = defaultSerializer
 
-  def setSerializer[T](`type`: Class[T], serializer: Json.Serializer[T]): Unit =
+  /** Java's parameter is `Serializer<T>`; ours is `Serializer[?]`, for the same reason `read`
+    * returns `Object` above. libGDX registers RAW `new ReadOnlySerializer() {…}` instances, and a
+    * raw anonymous class gives Scala nothing to infer the parent's argument FROM — the expected
+    * type does not propagate into an anonymous class's parent, so it infers `Nothing` and
+    * `Serializer[Nothing]` matches no `Serializer[X]`. Accepting the erased registration is the
+    * only faithful rendering: javac accepted it unchecked, and the map below is untyped anyway. */
+  def setSerializer[T](`type`: Class[T], serializer: Json.Serializer[?]): Unit =
     this.classToSerializer.put(`type`, serializer)
 
   def getSerializer[T](`type`: Class[T]): Json.Serializer[T] =
@@ -237,14 +243,26 @@ class Json:
 
 object Json:
 
-  /** a type's custom read/write strategy — the Kindlings codec's counterpart. */
+  /** a type's custom read/write strategy — the Kindlings codec's counterpart.
+    *
+    * `read` returns `Object`, not `T`, and that is deliberate. Java declares `T read(…)`, but every
+    * serializer libGDX registers is a RAW `new ReadOnlySerializer() {…}`, so javac checks the body
+    * at the ERASED signature and never verifies the result against `T`. `Skin` relies on exactly
+    * that: the serializer registered for `TintedDrawable` returns whatever `newDrawable` gives it,
+    * a plain `Drawable`, which is NOT a `TintedDrawable`. Declaring `read: T` would make the raw
+    * registration untranslatable — the only types satisfying both the anonymous body and the
+    * `setSerializer` argument are contradictory, and Scala resolves that to `Nothing`.
+    *
+    * So the erased contract is not a weakening for convenience; it is the contract libGDX's call
+    * sites actually depend on, and writing it down is what lets them port at all. An override
+    * MAY still narrow the result (covariant return), and the ported `Color` serializer does. */
   trait Serializer[T]:
     def write(json: Json, `object`: T, knownType: Class[?]): Unit
-    def read(json: Json, jsonData: JsonValue, `type`: Class[?]): T
+    def read(json: Json, jsonData: JsonValue, `type`: Class[?]): Object
 
   abstract class ReadOnlySerializer[T] extends Serializer[T]:
     def write(json: Json, `object`: T, knownType: Class[?]): Unit = ()
-    def read(json: Json, jsonData: JsonValue, `type`: Class[?]): T
+    def read(json: Json, jsonData: JsonValue, `type`: Class[?]): Object
 
   /** implemented by types that serialize themselves — the non-reflective path, kept fully working. */
   trait Serializable:
