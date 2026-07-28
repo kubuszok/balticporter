@@ -644,7 +644,7 @@ object Tree {
     def remove(): scala.Unit = {
       val tree: Tree[N, V] = this.getTree().asInstanceOf[Tree[N, V]]
       if (tree != null) {
-        tree.asInstanceOf[Tree[N, V]].remove(this)
+        tree.asInstanceOf[Tree[N, V]].remove(this.asInstanceOf[N])
       } else {
         if (this.parent != null) {
           this.parent.remove(this.asInstanceOf[N])

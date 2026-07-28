@@ -1790,6 +1790,36 @@ object SpoonTir:
                 Some((AppliedType(TypeRef(NoPrefix, typeSym(rt)), args), subst, namedOf.toMap))
               else None
 
+      /** `(N) this` — the SELF-TYPE conversion at a raw call.
+        *
+        * `Tree tree = getTree(); tree.remove(this)` inside `Node<N, V, A>`: `Tree.remove` takes an
+        * `N`, and `this` is a `Node[N, V, A]`, which is not one. Java accepted it solely because
+        * `tree` is raw — and where the receiver is NOT raw, libGDX writes `(N) this` itself, in
+        * this very file. So this is Java's own conversion made explicit, not an invention.
+        *
+        * Restricted to `this`: a general "cast any argument to the named variable" rule reaches
+        * arguments that are already correct and measured 1 -> 11. The self-type is the only one
+        * whose intent a raw receiver leaves unambiguous. */
+      private def selfTypeArgs(
+          ex: CtExecutableReference[?], argEs: List[CtExpression[?]], args: List[Term],
+          nm: Map[String, TypeRepr],
+      ): List[Term] =
+        if nm.isEmpty then args
+        else
+          val ps = try Option(ex.getExecutableDeclaration).map(_.getParameters.asScala.toList.map(_.getType))
+                   catch { case _: Throwable => None }
+          ps match
+            case Some(l) if l.sizeIs == args.size && argEs.sizeIs == args.size =>
+              args.zipWithIndex.map { (t, i) =>
+                (l(i), argEs(i)) match
+                  case (tv: CtTypeParameterReference, _: CtThisAccess[?])
+                      if nm.contains(tv.getSimpleName) && nm(tv.getSimpleName) != t.tpe =>
+                    val ct = nm(tv.getSimpleName)
+                    Tree.Typed(t, tt(ct, argEs(i)), ct, t.origin)
+                  case _ => t
+              }
+            case _ => args
+
       /** cast each argument whose DECLARED formal mentions a receiver type variable to that
         * formal's erasure, matching the erased receiver the call is now made through. */
       private def eraseDependentArgs(
@@ -1912,7 +1942,7 @@ object SpoonTir:
           // IS a `Tree[N, V]`. Erasing them re-introduced the mismatch the name-fill just removed.
           case Some((_, subst, named)) if named.isEmpty =>
             eraseDependentArgs(ex, argEs, coerceArgs(ex, argEs), subst)
-          case Some(_) => coerceArgs(ex, argEs)
+          case Some((_, _, nm)) => selfTypeArgs(ex, argEs, coerceArgs(ex, argEs), nm)
           case None             => coerceArgs(ex, argEs)
         val args = typeVarReceiverArgs(inv, argEs, knownReceiverArgs(inv, argEs, args0))
         val o    = originOf(inv)
