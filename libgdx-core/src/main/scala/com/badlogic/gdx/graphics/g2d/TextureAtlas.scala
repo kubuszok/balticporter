@@ -502,7 +502,7 @@ object TextureAtlas {
     def this(texture: com.badlogic.gdx.graphics.Texture, x: scala.Int, y: scala.Int, width: scala.Int, height: scala.Int) = {
       this()
       this.texture = texture
-      this.setRegion(x, y, width, height)
+      (this.setRegion: (scala.Int, scala.Int, scala.Int, scala.Int) => scala.Unit)(x, y, width, height)
       this.originalWidth = width
       this.originalHeight = height
       this.packedWidth = width

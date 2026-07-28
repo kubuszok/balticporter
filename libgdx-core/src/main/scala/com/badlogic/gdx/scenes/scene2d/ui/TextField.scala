@@ -123,7 +123,7 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
     return scala.Array[scala.Int](left, right)
   }
   def wordUnderCursor(x: scala.Float): scala.Array[scala.Int] = {
-    return this.wordUnderCursor(this.letterUnderCursor(x))
+    return (this.wordUnderCursor: (scala.Int) => scala.Array[scala.Int])(this.letterUnderCursor(x))
   }
   def withinMaxLength(size: scala.Int): scala.Boolean = {
     return (this.maxLength <= 0) || (size < this.maxLength)
@@ -168,7 +168,7 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
     } else ()
     val glyphCount: scala.Int = this.glyphPositions.size
     val glyphPositions: scala.Array[scala.Float] = this.glyphPositions.items
-    this.cursor = com.badlogic.gdx.math.MathUtils.clamp(this.cursor, 0, glyphCount - 1)
+    this.cursor = (com.badlogic.gdx.math.MathUtils.clamp: (scala.Int, scala.Int, scala.Int) => scala.Int)(this.cursor, 0, glyphCount - 1)
     val distance: scala.Float = glyphPositions(java.lang.Math.max(0, this.cursor - 1)) + this.renderOffset
     if (distance <= 0) {
       this.renderOffset = this.renderOffset - distance
@@ -370,7 +370,7 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
     }
     this.glyphPositions.add(x)
     this.visibleTextStart = java.lang.Math.min(this.visibleTextStart, this.glyphPositions.size - 1)
-    this.visibleTextEnd = com.badlogic.gdx.math.MathUtils.clamp(this.visibleTextEnd, this.visibleTextStart, this.glyphPositions.size - 1)
+    this.visibleTextEnd = (com.badlogic.gdx.math.MathUtils.clamp: (scala.Int, scala.Int, scala.Int) => scala.Int)(this.visibleTextEnd, this.visibleTextStart, this.glyphPositions.size - 1)
     if (this.selectionStart > newDisplayText.length()) {
       this.selectionStart = textLength
     } else ()
@@ -884,7 +884,7 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
           }
         }
       }
-      TextField.this.cursor = com.badlogic.gdx.math.MathUtils.clamp(TextField.this.cursor, 0, TextField.this.text.length())
+      TextField.this.cursor = (com.badlogic.gdx.math.MathUtils.clamp: (scala.Int, scala.Int, scala.Int) => scala.Int)(TextField.this.cursor, 0, TextField.this.text.length())
       if (repeat) {
         this.scheduleKeyRepeatTask(keycode)
       } else ()

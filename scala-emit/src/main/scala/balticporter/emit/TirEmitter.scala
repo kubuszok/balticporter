@@ -774,7 +774,49 @@ final class TirEmitter(source: Program):
     case Tree.Select(recv, m, _, _) if sym(m).name == "<init>" =>
       val kw = recv match { case _: Tree.Super => "super"; case _ => "this" }
       s"$kw(${args.map(term(_, i)).mkString(", ")})"
+    case Tree.Select(_, m, _, _) if numericOverloadAscription(m).isDefined =>
+      s"(${term(fun, i)}: ${numericOverloadAscription(m).get})(${args.map(term(_, i)).mkString(", ")})"
     case _ => s"${term(fun, i)}(${args.map(term(_, i)).mkString(", ")})"
+
+  /** widening rank — a value of rank r converts implicitly to any numeric type of higher rank.
+    * `Char` and `Short` share a rank because neither widens to the other. */
+  private val numericRank = Map("scala.Byte" -> 1, "scala.Short" -> 2, "scala.Char" -> 2,
+                                "scala.Int" -> 3, "scala.Long" -> 4, "scala.Float" -> 5,
+                                "scala.Double" -> 6)
+
+  /** Java resolves an overload by EXACT match; Scala widens numerics first and then finds no
+    * most-specific alternative.
+    *
+    * `Sprite.setRegion(int, int, int, int)` and `setRegion(float, float, float, float)` are both
+    * applicable to four `Int` arguments — Java simply picks the `int` one, Scala reports an
+    * ambiguity. Ascribing the method's function type names the alternative Java chose:
+    * `(this.setRegion: (Int, Int, Int, Int) => Unit)(x, y, w, h)`.
+    *
+    * Fires only where the clash actually exists: a sibling of the same name and arity is WEAKLY
+    * WIDER at every position and strictly wider at one, so the very same arguments reach it by
+    * widening. `append(int)` beside `append(char)` is not that shape — `char` does not absorb an
+    * `int` — and needs no help. Checking the direction is what keeps this from ascribing every
+    * numeric call in the program (measured: 175 sites where 1 was ambiguous). */
+  private def numericOverloadAscription(m: SymId): Option[String] =
+    def numericParams(d: Tree.DefDef): Option[List[TypeRepr]] =
+      val ps = d.paramss.flatten.map(_.tpt.tpe)
+      Option.when(ps.nonEmpty && ps.forall(p => headSymOf(p).exists(s => numericRank.contains(sym(s).fullName))))(ps)
+    def rank(t: TypeRepr): Int = headSymOf(t).flatMap(s => numericRank.get(sym(s).fullName)).getOrElse(0)
+    def absorbs(wider: List[TypeRepr], here: List[TypeRepr]): Boolean =
+      wider.sizeIs == here.size &&
+        wider.zip(here).forall((w, h) => w == h || rank(w) > rank(h)) &&
+        wider.zip(here).exists((w, h) => w != h)
+    for
+      d      <- program.definitionOf(m).collect { case d: Tree.DefDef => d }
+      ps     <- numericParams(d)
+      owner  <- program.definitionOf(sym(m).owner).collect { case c: Tree.ClassDef => c }
+      if owner.body.exists {
+        case o: Tree.DefDef =>
+          o.symbol != m && sym(o.symbol).name == sym(m).name &&
+            numericParams(o).exists(absorbs(_, ps))
+        case _ => false
+      }
+    yield s"(${ps.map(tpe).mkString(", ")}) => ${tpe(d.returnTpt.tpe)}"
 
   /** A Java anonymous class's body → Scala's anonymous-class expression `new Base(args) { … }`.
     *

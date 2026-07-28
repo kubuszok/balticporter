@@ -343,7 +343,7 @@ class ShortArray {
   def shuffle(): scala.Unit = {
     val items: scala.Array[scala.Short] = this.items;
     { var i: scala.Int = this.size - 1; while (i >= 0) { {
-      val ii: scala.Int = com.badlogic.gdx.math.MathUtils.random(i)
+      val ii: scala.Int = (com.badlogic.gdx.math.MathUtils.random: (scala.Int) => scala.Int)(i)
       val temp: scala.Short = items(i)
       items(i) = items(ii)
       items(ii) = temp
@@ -361,7 +361,7 @@ class ShortArray {
     if (this.size == 0) {
       return 0.asInstanceOf[scala.Short]
     } else ()
-    return this.items(com.badlogic.gdx.math.MathUtils.random(0, this.size - 1))
+    return this.items((com.badlogic.gdx.math.MathUtils.random: (scala.Int, scala.Int) => scala.Int)(0, this.size - 1))
   }
   def toArray(): scala.Array[scala.Short] = {
     val array: scala.Array[scala.Short] = new scala.Array[scala.Short](this.size)

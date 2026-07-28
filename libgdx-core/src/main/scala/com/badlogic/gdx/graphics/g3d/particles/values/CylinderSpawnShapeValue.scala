@@ -30,10 +30,10 @@ final class CylinderSpawnShapeValue extends com.badlogic.gdx.graphics.g3d.partic
       spawnTheta = com.badlogic.gdx.math.MathUtils.random(360.0f)
     } else {
       if (isRadiusXZero) {
-        spawnTheta = if (com.badlogic.gdx.math.MathUtils.random(1) == 0) -90 else 90
+        spawnTheta = if ((com.badlogic.gdx.math.MathUtils.random: (scala.Int) => scala.Int)(1) == 0) -90 else 90
       } else {
         if (isRadiusZZero) {
-          spawnTheta = if (com.badlogic.gdx.math.MathUtils.random(1) == 0) 0 else 180
+          spawnTheta = if ((com.badlogic.gdx.math.MathUtils.random: (scala.Int) => scala.Int)(1) == 0) 0 else 180
         } else ()
       }
     }

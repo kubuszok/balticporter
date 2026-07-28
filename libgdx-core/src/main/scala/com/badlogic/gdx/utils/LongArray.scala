@@ -342,7 +342,7 @@ class LongArray {
   def shuffle(): scala.Unit = {
     val items: scala.Array[scala.Long] = this.items;
     { var i: scala.Int = this.size - 1; while (i >= 0) { {
-      val ii: scala.Int = com.badlogic.gdx.math.MathUtils.random(i)
+      val ii: scala.Int = (com.badlogic.gdx.math.MathUtils.random: (scala.Int) => scala.Int)(i)
       val temp: scala.Long = items(i)
       items(i) = items(ii)
       items(ii) = temp
@@ -360,7 +360,7 @@ class LongArray {
     if (this.size == 0) {
       return 0
     } else ()
-    return this.items(com.badlogic.gdx.math.MathUtils.random(0, this.size - 1))
+    return this.items((com.badlogic.gdx.math.MathUtils.random: (scala.Int, scala.Int) => scala.Int)(0, this.size - 1))
   }
   def toArray(): scala.Array[scala.Long] = {
     val array: scala.Array[scala.Long] = new scala.Array[scala.Long](this.size)

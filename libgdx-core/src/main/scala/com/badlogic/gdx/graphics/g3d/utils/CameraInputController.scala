@@ -78,7 +78,7 @@ class CameraInputController(gestureListener$p: com.badlogic.gdx.graphics.g3d.uti
         this.button = button
       } else ()
     }
-    return super.touchDown(screenX, screenY, pointer, button) || ((this.activateKey == 0) || this.activatePressed)
+    return (super.touchDown: (scala.Int, scala.Int, scala.Int, scala.Int) => scala.Boolean)(screenX, screenY, pointer, button) || ((this.activateKey == 0) || this.activatePressed)
   }
   def touchUp(screenX: scala.Int, screenY: scala.Int, pointer: scala.Int, button: scala.Int): scala.Boolean = {
     this.touched = this.touched & ((-1) ^ (1 << pointer))
@@ -86,7 +86,7 @@ class CameraInputController(gestureListener$p: com.badlogic.gdx.graphics.g3d.uti
     if (button == this.button) {
       this.button = -1
     } else ()
-    return super.touchUp(screenX, screenY, pointer, button) || this.activatePressed
+    return (super.touchUp: (scala.Int, scala.Int, scala.Int, scala.Int) => scala.Boolean)(screenX, screenY, pointer, button) || this.activatePressed
   }
   def setInvertedControls(invertControls: scala.Boolean): scala.Unit = {
     if (this.controlsInverted != invertControls) {
@@ -121,7 +121,7 @@ class CameraInputController(gestureListener$p: com.badlogic.gdx.graphics.g3d.uti
     return true
   }
   def touchDragged(screenX: scala.Int, screenY: scala.Int, pointer: scala.Int): scala.Boolean = {
-    val result: scala.Boolean = super.touchDragged(screenX, screenY, pointer)
+    val result: scala.Boolean = (super.touchDragged: (scala.Int, scala.Int, scala.Int) => scala.Boolean)(screenX, screenY, pointer)
     if (result || (this.button < 0)) {
       return result
     } else ()

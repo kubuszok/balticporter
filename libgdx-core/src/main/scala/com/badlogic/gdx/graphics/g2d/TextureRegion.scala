@@ -14,17 +14,17 @@ class TextureRegion {
       throw new java.lang.IllegalArgumentException("texture cannot be null.")
     } else ()
     this.texture = texture
-    this.setRegion(0, 0, texture.getWidth(), texture.getHeight())
+    (this.setRegion: (scala.Int, scala.Int, scala.Int, scala.Int) => scala.Unit)(0, 0, texture.getWidth(), texture.getHeight())
   }
   def this(texture: com.badlogic.gdx.graphics.Texture, width: scala.Int, height: scala.Int) = {
     this()
     this.texture = texture
-    this.setRegion(0, 0, width, height)
+    (this.setRegion: (scala.Int, scala.Int, scala.Int, scala.Int) => scala.Unit)(0, 0, width, height)
   }
   def this(texture: com.badlogic.gdx.graphics.Texture, x: scala.Int, y: scala.Int, width: scala.Int, height: scala.Int) = {
     this()
     this.texture = texture
-    this.setRegion(x, y, width, height)
+    (this.setRegion: (scala.Int, scala.Int, scala.Int, scala.Int) => scala.Unit)(x, y, width, height)
   }
   def this(texture: com.badlogic.gdx.graphics.Texture, u: scala.Float, v: scala.Float, u2: scala.Float, v2: scala.Float) = {
     this()
@@ -41,7 +41,7 @@ class TextureRegion {
   }
   def setRegion(texture: com.badlogic.gdx.graphics.Texture): scala.Unit = {
     this.texture = texture
-    this.setRegion(0, 0, texture.getWidth(), texture.getHeight())
+    (this.setRegion: (scala.Int, scala.Int, scala.Int, scala.Int) => scala.Unit)(0, 0, texture.getWidth(), texture.getHeight())
   }
   def setRegion(x: scala.Int, y: scala.Int, width: scala.Int, height: scala.Int): scala.Unit = {
     val invTexWidth: scala.Float = 1.0f / this.texture.getWidth()
@@ -78,7 +78,7 @@ class TextureRegion {
   }
   def setRegion(region: TextureRegion, x: scala.Int, y: scala.Int, width: scala.Int, height: scala.Int): scala.Unit = {
     this.texture = region.texture
-    this.setRegion(region.getRegionX() + x, region.getRegionY() + y, width, height)
+    (this.setRegion: (scala.Int, scala.Int, scala.Int, scala.Int) => scala.Unit)(region.getRegionX() + x, region.getRegionY() + y, width, height)
   }
   def getTexture(): com.badlogic.gdx.graphics.Texture = {
     return this.texture

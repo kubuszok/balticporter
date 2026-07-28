@@ -55,7 +55,7 @@ class Label(text$p: java.lang.CharSequence, style$p: com.badlogic.gdx.scenes.sce
       return false
     } else ()
     this.text.clear()
-    this.text.append(value)
+    (this.text.append: (scala.Int) => com.badlogic.gdx.utils.CharArray)(value)
     this.intValue = value
     this.invalidateHierarchy()
     return true

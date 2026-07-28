@@ -68,7 +68,7 @@ class Animation[T] {
       case com.badlogic.gdx.graphics.g2d.Animation.PlayMode.LOOP_RANDOM => {
         var lastFrameNumber: scala.Int = (this.lastStateTime / this.frameDuration).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
         if (lastFrameNumber != frameNumber) {
-          frameNumber = com.badlogic.gdx.math.MathUtils.random(this.keyFrames.length - 1)
+          frameNumber = (com.badlogic.gdx.math.MathUtils.random: (scala.Int) => scala.Int)(this.keyFrames.length - 1)
         } else {
           frameNumber = this.lastFrameNumber
         }

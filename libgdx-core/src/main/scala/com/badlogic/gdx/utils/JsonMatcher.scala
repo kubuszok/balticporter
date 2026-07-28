@@ -483,7 +483,7 @@ class JsonMatcher extends com.badlogic.gdx.utils.JsonSkimmer {
     this.buffer.size = 0;
     { var i: scala.Int = 0; val n: scala.Int = this.path$field.size; while (i < n) { {
       if (i > 0) {
-        buffer.append('/')
+        (buffer.append: (scala.Char) => com.badlogic.gdx.utils.CharArray)('/')
       } else ()
       val start: scala.Int = this.path$field.get(i)
       val length: scala.Int = this.path$field.get(i + 1)

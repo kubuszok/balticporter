@@ -97,7 +97,7 @@ class CatmullRomSpline[T <: com.badlogic.gdx.math.Vector[T]] extends com.badlogi
     val L3Sqr: scala.Float = P3.dst2(P1)
     val L1: scala.Float = java.lang.Math.sqrt(L1Sqr).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
     val s: scala.Float = ((L2Sqr + L1Sqr) - L3Sqr) / (2.0f * L1)
-    val u: scala.Float = com.badlogic.gdx.math.MathUtils.clamp((L1 - s) / L1, 0.0f, 1.0f)
+    val u: scala.Float = (com.badlogic.gdx.math.MathUtils.clamp: (scala.Float, scala.Float, scala.Float) => scala.Float)((L1 - s) / L1, 0.0f, 1.0f)
     return (n + u) / this.spanCount
   }
   def locate(v: T): scala.Float = {

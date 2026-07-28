@@ -232,7 +232,7 @@ object MathUtils {
     return start + MathUtils.random$field.nextInt((`end` - start) + 1)
   }
   def random(range: scala.Long): scala.Long = {
-    return MathUtils.random(0L, range)
+    return (MathUtils.random: (scala.Long, scala.Long) => scala.Long)(0L, range)
   }
   def random(start$arg: scala.Long, end$arg: scala.Long): scala.Long = {
     var start: scala.Long = start$arg

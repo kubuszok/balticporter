@@ -399,45 +399,45 @@ class MeshBuilder extends com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder {
     return this.vertex(if (info.hasPosition) info.position else null.asInstanceOf[com.badlogic.gdx.math.Vector3], if (info.hasNormal) info.normal else null.asInstanceOf[com.badlogic.gdx.math.Vector3], if (info.hasColor) info.color else null.asInstanceOf[com.badlogic.gdx.graphics.Color], if (info.hasUV) info.uv else null.asInstanceOf[com.badlogic.gdx.math.Vector2])
   }
   def index(value: scala.Short): scala.Unit = {
-    this.indices.add(value)
+    (this.indices.add: (scala.Short) => scala.Unit)(value)
   }
   def index(value1: scala.Short, value2: scala.Short): scala.Unit = {
     this.ensureIndices(2)
-    this.indices.add(value1)
-    this.indices.add(value2)
+    (this.indices.add: (scala.Short) => scala.Unit)(value1)
+    (this.indices.add: (scala.Short) => scala.Unit)(value2)
   }
   def index(value1: scala.Short, value2: scala.Short, value3: scala.Short): scala.Unit = {
     this.ensureIndices(3)
-    this.indices.add(value1)
-    this.indices.add(value2)
-    this.indices.add(value3)
+    (this.indices.add: (scala.Short) => scala.Unit)(value1)
+    (this.indices.add: (scala.Short) => scala.Unit)(value2)
+    (this.indices.add: (scala.Short) => scala.Unit)(value3)
   }
   def index(value1: scala.Short, value2: scala.Short, value3: scala.Short, value4: scala.Short): scala.Unit = {
     this.ensureIndices(4)
-    this.indices.add(value1)
-    this.indices.add(value2)
-    this.indices.add(value3)
-    this.indices.add(value4)
+    (this.indices.add: (scala.Short) => scala.Unit)(value1)
+    (this.indices.add: (scala.Short) => scala.Unit)(value2)
+    (this.indices.add: (scala.Short) => scala.Unit)(value3)
+    (this.indices.add: (scala.Short) => scala.Unit)(value4)
   }
   def index(value1: scala.Short, value2: scala.Short, value3: scala.Short, value4: scala.Short, value5: scala.Short, value6: scala.Short): scala.Unit = {
     this.ensureIndices(6)
-    this.indices.add(value1)
-    this.indices.add(value2)
-    this.indices.add(value3)
-    this.indices.add(value4)
-    this.indices.add(value5)
-    this.indices.add(value6)
+    (this.indices.add: (scala.Short) => scala.Unit)(value1)
+    (this.indices.add: (scala.Short) => scala.Unit)(value2)
+    (this.indices.add: (scala.Short) => scala.Unit)(value3)
+    (this.indices.add: (scala.Short) => scala.Unit)(value4)
+    (this.indices.add: (scala.Short) => scala.Unit)(value5)
+    (this.indices.add: (scala.Short) => scala.Unit)(value6)
   }
   def index(value1: scala.Short, value2: scala.Short, value3: scala.Short, value4: scala.Short, value5: scala.Short, value6: scala.Short, value7: scala.Short, value8: scala.Short): scala.Unit = {
     this.ensureIndices(8)
-    this.indices.add(value1)
-    this.indices.add(value2)
-    this.indices.add(value3)
-    this.indices.add(value4)
-    this.indices.add(value5)
-    this.indices.add(value6)
-    this.indices.add(value7)
-    this.indices.add(value8)
+    (this.indices.add: (scala.Short) => scala.Unit)(value1)
+    (this.indices.add: (scala.Short) => scala.Unit)(value2)
+    (this.indices.add: (scala.Short) => scala.Unit)(value3)
+    (this.indices.add: (scala.Short) => scala.Unit)(value4)
+    (this.indices.add: (scala.Short) => scala.Unit)(value5)
+    (this.indices.add: (scala.Short) => scala.Unit)(value6)
+    (this.indices.add: (scala.Short) => scala.Unit)(value7)
+    (this.indices.add: (scala.Short) => scala.Unit)(value8)
   }
   def line(index1: scala.Short, index2: scala.Short): scala.Unit = {
     if (this.primitiveType != com.badlogic.gdx.graphics.GL20.GL_LINES) {

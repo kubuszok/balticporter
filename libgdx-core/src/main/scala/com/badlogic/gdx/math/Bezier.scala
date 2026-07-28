@@ -93,7 +93,7 @@ class Bezier[T <: com.badlogic.gdx.math.Vector[T]] extends com.badlogic.gdx.math
     val l3Sqr: scala.Float = p3.dst2(p1)
     val l1: scala.Float = java.lang.Math.sqrt(l1Sqr).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
     val s: scala.Float = ((l2Sqr + l1Sqr) - l3Sqr) / (2 * l1)
-    return com.badlogic.gdx.math.MathUtils.clamp((l1 - s) / l1, 0.0f, 1.0f)
+    return (com.badlogic.gdx.math.MathUtils.clamp: (scala.Float, scala.Float, scala.Float) => scala.Float)((l1 - s) / l1, 0.0f, 1.0f)
   }
   def locate(v: T): scala.Float = {
     return this.approximate(v)

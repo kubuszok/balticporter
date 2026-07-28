@@ -82,7 +82,7 @@ class ProgressBar(min$p: scala.Float, max$p: scala.Float, stepSize$p: scala.Floa
         height = height - (bgTopHeight + bgBottomHeight)
       } else ()
       val total: scala.Float = height - knobHeight
-      val beforeHeight: scala.Float = com.badlogic.gdx.math.MathUtils.clamp(total * percent, 0, total)
+      val beforeHeight: scala.Float = (com.badlogic.gdx.math.MathUtils.clamp: (scala.Float, scala.Float, scala.Float) => scala.Float)(total * percent, 0, total)
       this.position = bgBottomHeight + beforeHeight
       val knobHeightHalf: scala.Float = knobHeight * 0.5f
       if (knobBefore != null) {
@@ -106,7 +106,7 @@ class ProgressBar(min$p: scala.Float, max$p: scala.Float, stepSize$p: scala.Floa
         width = width - (bgLeftWidth + bgRightWidth)
       } else ()
       val total: scala.Float = width - knobWidth
-      val beforeWidth: scala.Float = com.badlogic.gdx.math.MathUtils.clamp(total * percent, 0, total)
+      val beforeWidth: scala.Float = (com.badlogic.gdx.math.MathUtils.clamp: (scala.Float, scala.Float, scala.Float) => scala.Float)(total * percent, 0, total)
       this.position = bgLeftWidth + beforeWidth
       val knobWidthHalf: scala.Float = knobWidth * 0.5f
       if (knobBefore != null) {
@@ -214,7 +214,7 @@ class ProgressBar(min$p: scala.Float, max$p: scala.Float, stepSize$p: scala.Floa
     return java.lang.Math.round(value / this.stepSize) * this.stepSize
   }
   def clamp(value: scala.Float): scala.Float = {
-    return com.badlogic.gdx.math.MathUtils.clamp(value, this.min, this.max)
+    return (com.badlogic.gdx.math.MathUtils.clamp: (scala.Float, scala.Float, scala.Float) => scala.Float)(value, this.min, this.max)
   }
   def setRange(min: scala.Float, max: scala.Float): scala.Unit = {
     if (min > max) {

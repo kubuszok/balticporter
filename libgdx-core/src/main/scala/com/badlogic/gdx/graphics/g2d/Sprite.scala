@@ -21,7 +21,7 @@ class Sprite extends com.badlogic.gdx.graphics.g2d.TextureRegion {
       throw new java.lang.IllegalArgumentException("texture cannot be null.")
     } else ()
     this.texture = texture
-    this.setRegion(srcX, srcY, srcWidth, srcHeight)
+    (this.setRegion: (scala.Int, scala.Int, scala.Int, scala.Int) => scala.Unit)(srcX, srcY, srcWidth, srcHeight)
     this.setColor(1, 1, 1, 1)
     this.setSize(java.lang.Math.abs(srcWidth), java.lang.Math.abs(srcHeight))
     this.setOrigin(this.width / 2, this.height / 2)

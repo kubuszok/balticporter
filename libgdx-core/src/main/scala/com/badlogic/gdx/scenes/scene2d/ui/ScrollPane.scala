@@ -254,8 +254,8 @@ class ScrollPane(actor$p: com.badlogic.gdx.scenes.scene2d.Actor, style$p: com.ba
     if (!this.clamp$field) {
       return
     } else ()
-    this.scrollX(if (this.overscrollX) com.badlogic.gdx.math.MathUtils.clamp(this.amountX, -this.overscrollDistance, this.maxX + this.overscrollDistance) else com.badlogic.gdx.math.MathUtils.clamp(this.amountX, 0, this.maxX))
-    this.scrollY(if (this.overscrollY) com.badlogic.gdx.math.MathUtils.clamp(this.amountY, -this.overscrollDistance, this.maxY + this.overscrollDistance) else com.badlogic.gdx.math.MathUtils.clamp(this.amountY, 0, this.maxY))
+    this.scrollX(if (this.overscrollX) (com.badlogic.gdx.math.MathUtils.clamp: (scala.Float, scala.Float, scala.Float) => scala.Float)(this.amountX, -this.overscrollDistance, this.maxX + this.overscrollDistance) else (com.badlogic.gdx.math.MathUtils.clamp: (scala.Float, scala.Float, scala.Float) => scala.Float)(this.amountX, 0, this.maxX))
+    this.scrollY(if (this.overscrollY) (com.badlogic.gdx.math.MathUtils.clamp: (scala.Float, scala.Float, scala.Float) => scala.Float)(this.amountY, -this.overscrollDistance, this.maxY + this.overscrollDistance) else (com.badlogic.gdx.math.MathUtils.clamp: (scala.Float, scala.Float, scala.Float) => scala.Float)(this.amountY, 0, this.maxY))
   }
   def setStyle(style: com.badlogic.gdx.scenes.scene2d.ui.ScrollPane.ScrollPaneStyle): scala.Unit = {
     if (style == null) {
@@ -449,8 +449,8 @@ class ScrollPane(actor$p: com.badlogic.gdx.scenes.scene2d.Actor, style$p: com.ba
     actorHeight = if (this.disableY) this.actorArea.height else java.lang.Math.max(this.actorArea.height, actorHeight)
     this.maxX = actorWidth - this.actorArea.width
     this.maxY = actorHeight - this.actorArea.height
-    this.scrollX(com.badlogic.gdx.math.MathUtils.clamp(this.amountX, 0, this.maxX))
-    this.scrollY(com.badlogic.gdx.math.MathUtils.clamp(this.amountY, 0, this.maxY))
+    this.scrollX((com.badlogic.gdx.math.MathUtils.clamp: (scala.Float, scala.Float, scala.Float) => scala.Float)(this.amountX, 0, this.maxX))
+    this.scrollY((com.badlogic.gdx.math.MathUtils.clamp: (scala.Float, scala.Float, scala.Float) => scala.Float)(this.amountY, 0, this.maxY))
     if (this.scrollX$field) {
       if (hScrollKnob != null) {
         var x: scala.Float = if (this.scrollbarsOnTop) bgLeftWidth else this.actorArea.x
@@ -736,13 +736,13 @@ class ScrollPane(actor$p: com.badlogic.gdx.scenes.scene2d.Actor, style$p: com.ba
     return java.lang.Math.min(this.actorArea.height, java.lang.Math.max(this.actorArea.height * 0.9f, this.maxY * 0.1f) / 4)
   }
   def setScrollX(pixels: scala.Float): scala.Unit = {
-    this.scrollX(com.badlogic.gdx.math.MathUtils.clamp(pixels, 0, this.maxX))
+    this.scrollX((com.badlogic.gdx.math.MathUtils.clamp: (scala.Float, scala.Float, scala.Float) => scala.Float)(pixels, 0, this.maxX))
   }
   def getScrollX(): scala.Float = {
     return this.amountX
   }
   def setScrollY(pixels: scala.Float): scala.Unit = {
-    this.scrollY(com.badlogic.gdx.math.MathUtils.clamp(pixels, 0, this.maxY))
+    this.scrollY((com.badlogic.gdx.math.MathUtils.clamp: (scala.Float, scala.Float, scala.Float) => scala.Float)(pixels, 0, this.maxY))
   }
   def getScrollY(): scala.Float = {
     return this.amountY
@@ -761,31 +761,31 @@ class ScrollPane(actor$p: com.badlogic.gdx.scenes.scene2d.Actor, style$p: com.ba
     if (this.maxX == 0) {
       return 0
     } else ()
-    return com.badlogic.gdx.math.MathUtils.clamp(this.visualAmountX / this.maxX, 0, 1)
+    return (com.badlogic.gdx.math.MathUtils.clamp: (scala.Float, scala.Float, scala.Float) => scala.Float)(this.visualAmountX / this.maxX, 0, 1)
   }
   def getVisualScrollPercentY(): scala.Float = {
     if (this.maxY == 0) {
       return 0
     } else ()
-    return com.badlogic.gdx.math.MathUtils.clamp(this.visualAmountY / this.maxY, 0, 1)
+    return (com.badlogic.gdx.math.MathUtils.clamp: (scala.Float, scala.Float, scala.Float) => scala.Float)(this.visualAmountY / this.maxY, 0, 1)
   }
   def getScrollPercentX(): scala.Float = {
     if (this.maxX == 0) {
       return 0
     } else ()
-    return com.badlogic.gdx.math.MathUtils.clamp(this.amountX / this.maxX, 0, 1)
+    return (com.badlogic.gdx.math.MathUtils.clamp: (scala.Float, scala.Float, scala.Float) => scala.Float)(this.amountX / this.maxX, 0, 1)
   }
   def setScrollPercentX(percentX: scala.Float): scala.Unit = {
-    this.scrollX(this.maxX * com.badlogic.gdx.math.MathUtils.clamp(percentX, 0, 1))
+    this.scrollX(this.maxX * (com.badlogic.gdx.math.MathUtils.clamp: (scala.Float, scala.Float, scala.Float) => scala.Float)(percentX, 0, 1))
   }
   def getScrollPercentY(): scala.Float = {
     if (this.maxY == 0) {
       return 0
     } else ()
-    return com.badlogic.gdx.math.MathUtils.clamp(this.amountY / this.maxY, 0, 1)
+    return (com.badlogic.gdx.math.MathUtils.clamp: (scala.Float, scala.Float, scala.Float) => scala.Float)(this.amountY / this.maxY, 0, 1)
   }
   def setScrollPercentY(percentY: scala.Float): scala.Unit = {
-    this.scrollY(this.maxY * com.badlogic.gdx.math.MathUtils.clamp(percentY, 0, 1))
+    this.scrollY(this.maxY * (com.badlogic.gdx.math.MathUtils.clamp: (scala.Float, scala.Float, scala.Float) => scala.Float)(percentY, 0, 1))
   }
   def setFlickScroll(flickScroll: scala.Boolean): scala.Unit = {
     if (this.flickScroll == flickScroll) {
@@ -812,17 +812,17 @@ class ScrollPane(actor$p: com.badlogic.gdx.scenes.scene2d.Actor, style$p: com.ba
     if (centerHorizontal) {
       amountX = x + ((width - this.actorArea.width) / 2)
     } else {
-      amountX = com.badlogic.gdx.math.MathUtils.clamp(amountX, x, (x + width) - this.actorArea.width)
+      amountX = (com.badlogic.gdx.math.MathUtils.clamp: (scala.Float, scala.Float, scala.Float) => scala.Float)(amountX, x, (x + width) - this.actorArea.width)
     }
-    this.scrollX(com.badlogic.gdx.math.MathUtils.clamp(amountX, 0, this.maxX))
+    this.scrollX((com.badlogic.gdx.math.MathUtils.clamp: (scala.Float, scala.Float, scala.Float) => scala.Float)(amountX, 0, this.maxX))
     var amountY: scala.Float = this.amountY
     y = this.maxY - y
     if (centerVertical) {
       amountY = y + ((this.actorArea.height + height) / 2)
     } else {
-      amountY = com.badlogic.gdx.math.MathUtils.clamp(amountY, y + height, y + this.actorArea.height)
+      amountY = (com.badlogic.gdx.math.MathUtils.clamp: (scala.Float, scala.Float, scala.Float) => scala.Float)(amountY, y + height, y + this.actorArea.height)
     }
-    this.scrollY(com.badlogic.gdx.math.MathUtils.clamp(amountY, 0, this.maxY))
+    this.scrollY((com.badlogic.gdx.math.MathUtils.clamp: (scala.Float, scala.Float, scala.Float) => scala.Float)(amountY, 0, this.maxY))
   }
   def getMaxX(): scala.Float = {
     return this.maxX

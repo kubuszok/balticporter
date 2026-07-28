@@ -32,7 +32,7 @@ class Color {
     this.r = rgb.r
     this.g = rgb.g
     this.b = rgb.b
-    this.a = com.badlogic.gdx.math.MathUtils.clamp(alpha, 0.0f, 1.0f)
+    this.a = (com.badlogic.gdx.math.MathUtils.clamp: (scala.Float, scala.Float, scala.Float) => scala.Float)(alpha, 0.0f, 1.0f)
     return this
   }
   def mul(color: Color): Color = {

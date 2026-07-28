@@ -76,7 +76,7 @@ class Quaternion extends java.io.Serializable {
   }
   def getPitchRad(): scala.Float = {
     val pole: scala.Int = this.getGimbalPole()
-    return if (pole == 0) java.lang.Math.asin(com.badlogic.gdx.math.MathUtils.clamp(2.0f * ((this.w * this.x) - (this.z * this.y)), -1.0f, 1.0f)).asInstanceOf[scala.Float] else (pole.asInstanceOf[scala.Float] * com.badlogic.gdx.math.MathUtils.PI) * 0.5f
+    return if (pole == 0) java.lang.Math.asin((com.badlogic.gdx.math.MathUtils.clamp: (scala.Float, scala.Float, scala.Float) => scala.Float)(2.0f * ((this.w * this.x) - (this.z * this.y)), -1.0f, 1.0f)).asInstanceOf[scala.Float] else (pole.asInstanceOf[scala.Float] * com.badlogic.gdx.math.MathUtils.PI) * 0.5f
   }
   def getPitch(): scala.Float = {
     return this.getPitchRad() * com.badlogic.gdx.math.MathUtils.radiansToDegrees
@@ -306,12 +306,12 @@ class Quaternion extends java.io.Serializable {
     return this
   }
   def setFromCross(v1: com.badlogic.gdx.math.Vector3, v2: com.badlogic.gdx.math.Vector3): Quaternion = {
-    val dot: scala.Float = com.badlogic.gdx.math.MathUtils.clamp(v1.dot(v2), -1.0f, 1.0f)
+    val dot: scala.Float = (com.badlogic.gdx.math.MathUtils.clamp: (scala.Float, scala.Float, scala.Float) => scala.Float)(v1.dot(v2), -1.0f, 1.0f)
     val angle: scala.Float = java.lang.Math.acos(dot).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
     return this.setFromAxisRad((v1.y * v2.z) - (v1.z * v2.y), (v1.z * v2.x) - (v1.x * v2.z), (v1.x * v2.y) - (v1.y * v2.x), angle)
   }
   def setFromCross(x1: scala.Float, y1: scala.Float, z1: scala.Float, x2: scala.Float, y2: scala.Float, z2: scala.Float): Quaternion = {
-    val dot: scala.Float = com.badlogic.gdx.math.MathUtils.clamp(com.badlogic.gdx.math.Vector3.dot(x1, y1, z1, x2, y2, z2), -1.0f, 1.0f)
+    val dot: scala.Float = (com.badlogic.gdx.math.MathUtils.clamp: (scala.Float, scala.Float, scala.Float) => scala.Float)(com.badlogic.gdx.math.Vector3.dot(x1, y1, z1, x2, y2, z2), -1.0f, 1.0f)
     val angle: scala.Float = java.lang.Math.acos(dot).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
     return this.setFromAxisRad((y1 * z2) - (z1 * y2), (z1 * x2) - (x1 * z2), (x1 * y2) - (y1 * x2), angle)
   }
@@ -444,7 +444,7 @@ class Quaternion extends java.io.Serializable {
   def getAngleAroundRad(axisX: scala.Float, axisY: scala.Float, axisZ: scala.Float): scala.Float = {
     val d: scala.Float = com.badlogic.gdx.math.Vector3.dot(this.x, this.y, this.z, axisX, axisY, axisZ)
     val l2: scala.Float = Quaternion.len2(axisX * d, axisY * d, axisZ * d, this.w)
-    return if (com.badlogic.gdx.math.MathUtils.isZero(l2)) 0.0f else (2.0 * java.lang.Math.acos(com.badlogic.gdx.math.MathUtils.clamp(((if (d < 0) -this.w else this.w) / java.lang.Math.sqrt(l2)).asInstanceOf[scala.Float].asInstanceOf[scala.Float], -1.0f, 1.0f))).asInstanceOf[scala.Float]
+    return if (com.badlogic.gdx.math.MathUtils.isZero(l2)) 0.0f else (2.0 * java.lang.Math.acos((com.badlogic.gdx.math.MathUtils.clamp: (scala.Float, scala.Float, scala.Float) => scala.Float)(((if (d < 0) -this.w else this.w) / java.lang.Math.sqrt(l2)).asInstanceOf[scala.Float].asInstanceOf[scala.Float], -1.0f, 1.0f))).asInstanceOf[scala.Float]
   }
   def getAngleAroundRad(axis: com.badlogic.gdx.math.Vector3): scala.Float = {
     return this.getAngleAroundRad(axis.x, axis.y, axis.z)

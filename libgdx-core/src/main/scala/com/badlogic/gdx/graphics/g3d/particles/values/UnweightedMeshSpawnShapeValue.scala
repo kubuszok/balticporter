@@ -29,7 +29,7 @@ final class UnweightedMeshSpawnShapeValue extends com.badlogic.gdx.graphics.g3d.
   }
   def spawnAux(vector: com.badlogic.gdx.math.Vector3, percent: scala.Float): scala.Unit = {
     if (this.indices == null) {
-      val triangleIndex: scala.Int = com.badlogic.gdx.math.MathUtils.random(this.vertexCount - 3) * this.vertexSize
+      val triangleIndex: scala.Int = (com.badlogic.gdx.math.MathUtils.random: (scala.Int) => scala.Int)(this.vertexCount - 3) * this.vertexSize
       val p1Offset: scala.Int = triangleIndex + this.positionOffset
       val p2Offset: scala.Int = p1Offset + this.vertexSize
       val p3Offset: scala.Int = p2Offset + this.vertexSize
@@ -44,7 +44,7 @@ final class UnweightedMeshSpawnShapeValue extends com.badlogic.gdx.graphics.g3d.
       val z3: scala.Float = this.vertices(p3Offset + 2)
       com.badlogic.gdx.graphics.g3d.particles.values.MeshSpawnShapeValue.Triangle.pick(x1, y1, z1, x2, y2, z2, x3, y3, z3, vector)
     } else {
-      val triangleIndex: scala.Int = com.badlogic.gdx.math.MathUtils.random(this.triangleCount - 1) * 3
+      val triangleIndex: scala.Int = (com.badlogic.gdx.math.MathUtils.random: (scala.Int) => scala.Int)(this.triangleCount - 1) * 3
       val p1Offset: scala.Int = (this.indices(triangleIndex) * this.vertexSize) + this.positionOffset
       val p2Offset: scala.Int = (this.indices(triangleIndex + 1) * this.vertexSize) + this.positionOffset
       val p3Offset: scala.Int = (this.indices(triangleIndex + 2) * this.vertexSize) + this.positionOffset

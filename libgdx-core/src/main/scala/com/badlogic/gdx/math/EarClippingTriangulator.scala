@@ -62,9 +62,9 @@ class EarClippingTriangulator {
     if (this.vertexCount == 3) {
       val triangles: com.badlogic.gdx.utils.ShortArray = this.triangles
       val indices: scala.Array[scala.Short] = this.indices
-      triangles.add(indices(0))
-      triangles.add(indices(1))
-      triangles.add(indices(2))
+      (triangles.add: (scala.Short) => scala.Unit)(indices(0))
+      (triangles.add: (scala.Short) => scala.Unit)(indices(1))
+      (triangles.add: (scala.Short) => scala.Unit)(indices(2))
     } else ()
   }
   private def classifyVertex(index: scala.Int): scala.Int = {
@@ -127,9 +127,9 @@ class EarClippingTriangulator {
   private def cutEarTip(earTipIndex: scala.Int): scala.Unit = {
     val indices: scala.Array[scala.Short] = this.indices
     val triangles: com.badlogic.gdx.utils.ShortArray = this.triangles
-    triangles.add(indices(this.previousIndex(earTipIndex)))
-    triangles.add(indices(earTipIndex))
-    triangles.add(indices(this.nextIndex(earTipIndex)))
+    (triangles.add: (scala.Short) => scala.Unit)(indices(this.previousIndex(earTipIndex)))
+    (triangles.add: (scala.Short) => scala.Unit)(indices(earTipIndex))
+    (triangles.add: (scala.Short) => scala.Unit)(indices(this.nextIndex(earTipIndex)))
     this.indicesArray.removeIndex(earTipIndex)
     this.vertexTypes.removeIndex(earTipIndex)
     this.vertexCount = this.vertexCount - 1

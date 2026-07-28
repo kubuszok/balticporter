@@ -427,7 +427,7 @@ class Array[T] extends balticporter.runtime.JavaIterable[T] {
   def shuffle(): scala.Unit = {
     val items: scala.Array[T] = this.items;
     { var i: scala.Int = this.size - 1; while (i >= 0) { {
-      val ii: scala.Int = com.badlogic.gdx.math.MathUtils.random(i)
+      val ii: scala.Int = (com.badlogic.gdx.math.MathUtils.random: (scala.Int) => scala.Int)(i)
       val temp: T = items(i)
       items(i) = items(ii)
       items(ii) = temp
@@ -469,7 +469,7 @@ class Array[T] extends balticporter.runtime.JavaIterable[T] {
     if (this.size == 0) {
       return null.asInstanceOf[T]
     } else ()
-    return this.items(com.badlogic.gdx.math.MathUtils.random(0, this.size - 1))
+    return this.items((com.badlogic.gdx.math.MathUtils.random: (scala.Int, scala.Int) => scala.Int)(0, this.size - 1))
   }
   def toArray(): scala.Array[T] = {
     return java.util.Arrays.copyOf(this.items.asInstanceOf[scala.Array[java.lang.Object]], this.size).asInstanceOf[scala.Array[T]]

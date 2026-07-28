@@ -140,7 +140,7 @@ class UBJsonWriter(out$arg: java.io.OutputStream) extends java.io.Closeable {
     this.out.writeByte('$')
     this.out.writeByte('i')
     this.out.writeByte('#')
-    this.value(values.length);
+    (this.value: (scala.Int) => UBJsonWriter)(values.length);
     { var i: scala.Int = 0; val n: scala.Int = values.length; while (i < n) { {
       this.out.writeByte(values(i))
     }; i = i + 1 } }
@@ -152,7 +152,7 @@ class UBJsonWriter(out$arg: java.io.OutputStream) extends java.io.Closeable {
     this.out.writeByte('$')
     this.out.writeByte('I')
     this.out.writeByte('#')
-    this.value(values.length);
+    (this.value: (scala.Int) => UBJsonWriter)(values.length);
     { var i: scala.Int = 0; val n: scala.Int = values.length; while (i < n) { {
       this.out.writeShort(values(i))
     }; i = i + 1 } }
@@ -164,7 +164,7 @@ class UBJsonWriter(out$arg: java.io.OutputStream) extends java.io.Closeable {
     this.out.writeByte('$')
     this.out.writeByte('l')
     this.out.writeByte('#')
-    this.value(values.length);
+    (this.value: (scala.Int) => UBJsonWriter)(values.length);
     { var i: scala.Int = 0; val n: scala.Int = values.length; while (i < n) { {
       this.out.writeInt(values(i))
     }; i = i + 1 } }
@@ -176,7 +176,7 @@ class UBJsonWriter(out$arg: java.io.OutputStream) extends java.io.Closeable {
     this.out.writeByte('$')
     this.out.writeByte('L')
     this.out.writeByte('#')
-    this.value(values.length);
+    (this.value: (scala.Int) => UBJsonWriter)(values.length);
     { var i: scala.Int = 0; val n: scala.Int = values.length; while (i < n) { {
       this.out.writeLong(values(i))
     }; i = i + 1 } }
@@ -188,7 +188,7 @@ class UBJsonWriter(out$arg: java.io.OutputStream) extends java.io.Closeable {
     this.out.writeByte('$')
     this.out.writeByte('d')
     this.out.writeByte('#')
-    this.value(values.length);
+    (this.value: (scala.Int) => UBJsonWriter)(values.length);
     { var i: scala.Int = 0; val n: scala.Int = values.length; while (i < n) { {
       this.out.writeFloat(values(i))
     }; i = i + 1 } }
@@ -200,7 +200,7 @@ class UBJsonWriter(out$arg: java.io.OutputStream) extends java.io.Closeable {
     this.out.writeByte('$')
     this.out.writeByte('D')
     this.out.writeByte('#')
-    this.value(values.length);
+    (this.value: (scala.Int) => UBJsonWriter)(values.length);
     { var i: scala.Int = 0; val n: scala.Int = values.length; while (i < n) { {
       this.out.writeDouble(values(i))
     }; i = i + 1 } }
@@ -220,7 +220,7 @@ class UBJsonWriter(out$arg: java.io.OutputStream) extends java.io.Closeable {
     this.out.writeByte('$')
     this.out.writeByte('C')
     this.out.writeByte('#')
-    this.value(values.length);
+    (this.value: (scala.Int) => UBJsonWriter)(values.length);
     { var i: scala.Int = 0; val n: scala.Int = values.length; while (i < n) { {
       this.out.writeChar(values(i))
     }; i = i + 1 } }
@@ -232,7 +232,7 @@ class UBJsonWriter(out$arg: java.io.OutputStream) extends java.io.Closeable {
     this.out.writeByte('$')
     this.out.writeByte('S')
     this.out.writeByte('#')
-    this.value(values.length);
+    (this.value: (scala.Int) => UBJsonWriter)(values.length);
     { var i: scala.Int = 0; val n: scala.Int = values.length; while (i < n) { {
       val bytes: scala.Array[scala.Byte] = values(i).getBytes("UTF-8")
       if (bytes.length <= java.lang.Byte.MAX_VALUE) {
@@ -291,7 +291,7 @@ class UBJsonWriter(out$arg: java.io.OutputStream) extends java.io.Closeable {
               if (value.name$field != null) {
                 this.name(value.name$field)
               } else ()
-              this.value(value.asLong())
+              (this.value: (scala.Long) => UBJsonWriter)(value.asLong())
             } else {
               if (value.isString()) {
                 if (value.name$field != null) {
@@ -322,26 +322,26 @@ class UBJsonWriter(out$arg: java.io.OutputStream) extends java.io.Closeable {
       if (`object`.isInstanceOf[java.lang.Number]) {
         val number: java.lang.Number = `object`.asInstanceOf[java.lang.Number].asInstanceOf[java.lang.Number]
         if (`object`.isInstanceOf[java.lang.Byte]) {
-          return this.value(number.byteValue())
+          return (this.value: (scala.Byte) => UBJsonWriter)(number.byteValue())
         } else ()
         if (`object`.isInstanceOf[java.lang.Short]) {
-          return this.value(number.shortValue())
+          return (this.value: (scala.Short) => UBJsonWriter)(number.shortValue())
         } else ()
         if (`object`.isInstanceOf[java.lang.Integer]) {
-          return this.value(number.intValue())
+          return (this.value: (scala.Int) => UBJsonWriter)(number.intValue())
         } else ()
         if (`object`.isInstanceOf[java.lang.Long]) {
-          return this.value(number.longValue())
+          return (this.value: (scala.Long) => UBJsonWriter)(number.longValue())
         } else ()
         if (`object`.isInstanceOf[java.lang.Float]) {
-          return this.value(number.floatValue())
+          return (this.value: (scala.Float) => UBJsonWriter)(number.floatValue())
         } else ()
         if (`object`.isInstanceOf[java.lang.Double]) {
           return this.value(number.doubleValue())
         } else ()
       } else {
         if (`object`.isInstanceOf[java.lang.Character]) {
-          return this.value(`object`.asInstanceOf[java.lang.Character].charValue())
+          return (this.value: (scala.Char) => UBJsonWriter)(`object`.asInstanceOf[java.lang.Character].charValue())
         } else {
           if (`object`.isInstanceOf[java.lang.CharSequence]) {
             return this.value(`object`.toString())
@@ -359,19 +359,19 @@ class UBJsonWriter(out$arg: java.io.OutputStream) extends java.io.Closeable {
     return this
   }
   def set(name: java.lang.String, value: scala.Byte): UBJsonWriter = {
-    return this.name(name).value(value)
+    return (this.name(name).value: (scala.Byte) => UBJsonWriter)(value)
   }
   def set(name: java.lang.String, value: scala.Short): UBJsonWriter = {
-    return this.name(name).value(value)
+    return (this.name(name).value: (scala.Short) => UBJsonWriter)(value)
   }
   def set(name: java.lang.String, value: scala.Int): UBJsonWriter = {
-    return this.name(name).value(value)
+    return (this.name(name).value: (scala.Int) => UBJsonWriter)(value)
   }
   def set(name: java.lang.String, value: scala.Long): UBJsonWriter = {
-    return this.name(name).value(value)
+    return (this.name(name).value: (scala.Long) => UBJsonWriter)(value)
   }
   def set(name: java.lang.String, value: scala.Float): UBJsonWriter = {
-    return this.name(name).value(value)
+    return (this.name(name).value: (scala.Float) => UBJsonWriter)(value)
   }
   def set(name: java.lang.String, value: scala.Double): UBJsonWriter = {
     return this.name(name).value(value)
@@ -380,7 +380,7 @@ class UBJsonWriter(out$arg: java.io.OutputStream) extends java.io.Closeable {
     return this.name(name).value(value)
   }
   def set(name: java.lang.String, value: scala.Char): UBJsonWriter = {
-    return this.name(name).value(value)
+    return (this.name(name).value: (scala.Char) => UBJsonWriter)(value)
   }
   def set(name: java.lang.String, value: java.lang.String): UBJsonWriter = {
     return this.name(name).value(value)

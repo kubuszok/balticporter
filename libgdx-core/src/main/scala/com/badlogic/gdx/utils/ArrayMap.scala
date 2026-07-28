@@ -352,7 +352,7 @@ class ArrayMap[K, V] extends balticporter.runtime.JavaIterable[com.badlogic.gdx.
   }
   def shuffle(): scala.Unit = {
     { var i: scala.Int = this.size - 1; while (i >= 0) { {
-      val ii: scala.Int = com.badlogic.gdx.math.MathUtils.random(i)
+      val ii: scala.Int = (com.badlogic.gdx.math.MathUtils.random: (scala.Int) => scala.Int)(i)
       val tempKey: K = this.keys$field(i)
       this.keys$field(i) = this.keys$field(ii)
       this.keys$field(ii) = tempKey

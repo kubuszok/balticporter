@@ -687,7 +687,7 @@ class ShapeRenderer(maxVertices: scala.Int, defaultShader: com.badlogic.gdx.grap
     this.renderer.vertex(x + cx, y + cy, 0)
   }
   def ellipse(x: scala.Float, y: scala.Float, width: scala.Float, height: scala.Float): scala.Unit = {
-    this.ellipse(x, y, width, height, java.lang.Math.max(1, (12 * java.lang.Math.cbrt(java.lang.Math.max(width * 0.5f, height * 0.5f)).asInstanceOf[scala.Float]).asInstanceOf[scala.Int].asInstanceOf[scala.Int]))
+    (this.ellipse: (scala.Float, scala.Float, scala.Float, scala.Float, scala.Int) => scala.Unit)(x, y, width, height, java.lang.Math.max(1, (12 * java.lang.Math.cbrt(java.lang.Math.max(width * 0.5f, height * 0.5f)).asInstanceOf[scala.Float]).asInstanceOf[scala.Int].asInstanceOf[scala.Int]))
   }
   def ellipse(x: scala.Float, y: scala.Float, width: scala.Float, height: scala.Float, segments: scala.Int): scala.Unit = {
     if (segments <= 0) {
