@@ -68,10 +68,7 @@ final class TestFrameworkTransform(
 
     val symbols = SymbolTable(program.symbols.all ++ added)
     given Program = new Program(program.units, symbols, program.xref)
-    // StandardTraversal FIRST so the term hooks (`transformApply`) actually run — walking the units
-    // directly, as this did, silently skips every term-level hook. PLAN §3: walk with the standard
-    // traversal, never a private recursion.
-    new Program(program.units.map(u => convert(StandardTraversal.mapClassDef(this, u))), symbols, program.xref)
+    new Program(program.units.map(convert), symbols, program.xref)
 
   /** `org.junit.Assert.assertEquals(a, b)` → `assertEquals(a, b)`, resolving to the façade member
     * inherited from the base suite. The arguments do not move — that is the whole point of
@@ -99,7 +96,11 @@ final class TestFrameworkTransform(
     val cd2 = cd.copy(body = nested)
     if !nested.exists(isAnnotated(_, TestAnn)) then cd2
     else
-      val body = nested.flatMap {
+      // Rewrite `Assert.assertX` to the façade member ONLY inside a class that becomes a suite —
+      // it is the base class that supplies those members. Rewriting program-wide (via a traversal
+      // in `run`) un-qualified the calls in helper classes that never gained the base class, and
+      // they failed with `Not found: assertTrue`.
+      val body = StandardTraversal.mapClassDef(this, cd2).body.flatMap {
         case d: Tree.DefDef if isAnnotated(d, TestAnn)   => List(testCase(d))
         case d: Tree.DefDef if isAnnotated(d, BeforeAnn) => List(beforeEach(d))
         case other                                       => List(other)
