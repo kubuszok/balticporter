@@ -32,6 +32,19 @@ object PortabilityCheck:
   val jsAndNative: List[Rule] = List(
     Rule("java.lang.reflect.", "runtime reflection does not exist on Scala.js / Native"),
     Rule("java.lang.ClassLoader", "no class loading off the JVM"),
+    // Reflection was the only thing this checked until 2026-07-28, so it reported ZERO for a
+    // corpus containing an HTTP client, a thread pool and NIO channels. A check that reports zero
+    // is only as good as its coverage — the same failure as the annotations one, and found the
+    // same way: by asking why a known-unportable class was not being flagged.
+    Rule("java.net.", "networking is JVM-only; Scala.js needs fetch/XHR, Native its own stack"),
+    Rule("java.nio.channels.", "NIO channels are JVM-only"),
+    Rule("java.nio.file.", "the java.nio.file filesystem API is JVM-only"),
+    Rule("java.util.concurrent.", "the java.util.concurrent runtime is JVM-only (Scala.js is single-threaded)"),
+    Rule("java.lang.Thread", "threads do not exist on Scala.js"),
+    Rule("java.lang.ProcessBuilder", "process spawning is JVM-only"),
+    Rule("java.lang.System#getProperty", "system properties are JVM-only", exactMember = true),
+    Rule("java.util.zip.", "java.util.zip is JVM-only"),
+    Rule("javax.", "the javax.* stack is JVM-only"),
     Rule("java.lang.Class#forName", "runtime class lookup by name is JVM-only", exactMember = true),
     Rule("java.lang.Class#newInstance", "reflective instantiation is JVM-only", exactMember = true),
     Rule("java.lang.Class#getDeclaredFields", "reflective member access is JVM-only", exactMember = true),
