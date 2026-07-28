@@ -542,8 +542,29 @@ change is to the engine. (The stale-emit aborts added to both scripts do not cov
 is individually honest about its OWN stage.)
 
 What is left, then, is the boundary itself: `java.util.List` → `Buffer` and `java.lang.Iterable` →
-shim are individually defensible and jointly inconsistent. Fixing it means deciding which of the two
-mappings gives way — a framework-direction decision, not a missing case.
+shim are individually defensible and jointly inconsistent.
+
+### The one approach NOT yet tried — wrap at the CALL SITE
+
+Both dead ends attacked the TYPE. The third option attacks the ARGUMENT, and the two failures
+together are what point at it:
+
+- a `given Conversion` fails only because overload resolution will not *look for* one;
+- widening the parameter fails because the body may need the capability.
+
+An EXPLICIT wrap has neither problem. If the argument is rewritten to `JavaIterable.from(xs)`
+*before* overload resolution runs, its type is already exactly the formal — nothing has to be
+inferred, and the parameter keeps the shim, so iterate-and-remove bodies are untouched.
+
+Where: `CollectionsTransform.transformApply`, which already rewrites calls kind-aware and already
+holds the symbol table needed to see that a formal is the shim and an argument is a mapped scala
+collection. The shim gains a `from` factory — the same wrapper the reverted `Conversion` used, whose
+`remove()` correctly inherits [[JavaIterator]]'s `UnsupportedOperationException`, since a scala
+collection's iterator genuinely cannot remove.
+
+Unmeasured. It is a real coercion inserted by the engine, in the same spirit as the array-covariance
+and unchecked-conversion casts, rather than a mapping change — which is why it may sidestep the
+decision about which mapping gives way.
 
 ## Do NOT retry (measured failures)
 
