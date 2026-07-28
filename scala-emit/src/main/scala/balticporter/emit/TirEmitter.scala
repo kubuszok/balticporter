@@ -678,7 +678,10 @@ final class TirEmitter(source: Program):
       // `protected` (this-instance only), so a faithful port emits it as public — loosening
       // visibility can only remove access errors, never introduce them.
       "",
-      if f.isOverride then "override " else "",
+      // `private override` is illegal in scala, and the pair is contradictory: a PRIVATE java
+      // method is invisible to subclasses, so it overrides nothing — a name/arity agreement with an
+      // inherited member is coincidence. `private` is the faithful half; drop the modifier.
+      if f.isOverride && !f.isPrivate then "override " else "",
       if f.isFinal then "final " else "",
       if f.isSealed then "sealed " else "",
       if f.isImplicit then "implicit " else "",

@@ -96,7 +96,7 @@ object DepthShader {
     } else ()
     return prefix
   }
-  private override final def combineAttributes(renderable: com.badlogic.gdx.graphics.g3d.Renderable): com.badlogic.gdx.graphics.g3d.Attributes = {
+  private final def combineAttributes(renderable: com.badlogic.gdx.graphics.g3d.Renderable): com.badlogic.gdx.graphics.g3d.Attributes = {
     DepthShader.tmpAttributes.clear()
     if (renderable.environment != null) {
       DepthShader.tmpAttributes.set(renderable.environment)

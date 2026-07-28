@@ -1073,7 +1073,7 @@ object JsonSkimmer {
         }
       }
     }
-    private override def equals(string: java.lang.String): scala.Boolean = {
+    private def equals(string: java.lang.String): scala.Boolean = {
       val n: scala.Int = this.length
       val chars: scala.Array[scala.Char] = this.chars;
       { var c: scala.Int = this.start; var s: scala.Int = 0; while (s < n) { {
