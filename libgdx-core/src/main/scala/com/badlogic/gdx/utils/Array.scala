@@ -435,19 +435,19 @@ class Array[T] extends balticporter.runtime.JavaIterable[T] {
   }
   def iterator(): com.badlogic.gdx.utils.Array.ArrayIterator[T] = {
     if (com.badlogic.gdx.utils.Collections.allocateIterators) {
-      return new com.badlogic.gdx.utils.Array.ArrayIterator[T](this, true)
+      return new com.badlogic.gdx.utils.Array.ArrayIterator[T](this.asInstanceOf[Array[T]], true)
     } else ()
     if (this.iterable == null) {
-      this.iterable = new com.badlogic.gdx.utils.Array.ArrayIterable[T](this)
+      this.iterable = new com.badlogic.gdx.utils.Array.ArrayIterable[T](this.asInstanceOf[Array[T]])
     } else ()
     return this.iterable.iterator()
   }
   def select(predicate: com.badlogic.gdx.utils.Predicate[T]): balticporter.runtime.JavaIterable[T] = {
     if (com.badlogic.gdx.utils.Collections.allocateIterators) {
-      return new com.badlogic.gdx.utils.Predicate.PredicateIterable[T](this, predicate)
+      return new com.badlogic.gdx.utils.Predicate.PredicateIterable[T](this.asInstanceOf[balticporter.runtime.JavaIterable[T]], predicate)
     } else ()
     if (this.predicateIterable == null) {
-      this.predicateIterable = new com.badlogic.gdx.utils.Predicate.PredicateIterable[T](this, predicate)
+      this.predicateIterable = new com.badlogic.gdx.utils.Predicate.PredicateIterable[T](this.asInstanceOf[balticporter.runtime.JavaIterable[T]], predicate)
     } else {
       this.predicateIterable.set(this, predicate)
     }

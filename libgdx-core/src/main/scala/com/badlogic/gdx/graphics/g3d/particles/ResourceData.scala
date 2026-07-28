@@ -27,7 +27,7 @@ class ResourceData[T] extends com.badlogic.gdx.utils.Json.Serializable {
   def getAssetDescriptors(): com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[T]] = {
     val descriptors: com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[T]] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[T]]().asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[T]]]
     for (data <- this.sharedAssets) {
-      descriptors.add(new com.badlogic.gdx.assets.AssetDescriptor[T](data.filename, data.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ResourceData.AssetData[java.lang.Object]].`type`))
+      descriptors.add(new com.badlogic.gdx.assets.AssetDescriptor[T](data.filename, data.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ResourceData.AssetData[java.lang.Object]].`type`.asInstanceOf[java.lang.Class[T]]))
     }
     return descriptors.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[T]]]
   }

@@ -1442,17 +1442,27 @@ object SpoonTir:
             case _: CtThisAccess[?]                  => Tree.Select(thisTerm(at), fid, ty(at), originOf(at))
             case other =>
               // wildcard/raw receiver whose field type depends on its type vars → read through the
-              // ERASED view, exactly as for a call (see `erasedReceiverView`).
-              val recv = erasedFieldReceiver(ref, other) match
-                case Some(et) => Tree.Typed(expr(other), tt(et, other), et, originOf(other))
-                case None     => expr(other)
-              Tree.Select(recv, fid, ty(at), originOf(at))
+              // ERASED view, exactly as for a call (see `erasedReceiverView`). The READ's type
+              // moves with the receiver: `data.type` off `AssetData[Object]` is `Class[Object]`,
+              // not the `Class[T]` Spoon reports for the un-erased receiver. Carrying Spoon's type
+              // here made the TIR disagree with the Scala the emitter then produced, and every
+              // later rule that consults `t.tpe` — the argument coercions especially — silently
+              // decided there was nothing to convert.
+              erasedFieldReceiver(ref, other) match
+                case Some((et, ft)) =>
+                  val recv = Tree.Typed(expr(other), tt(et, other), et, originOf(other))
+                  Tree.Select(recv, fid, ft, originOf(at))
+                case None => Tree.Select(expr(other), fid, ty(at), originOf(at))
 
       /** A field read/written through a WILDCARD/RAW receiver: just like a call, `assetDesc.type` off
         * an `AssetDescriptor[?]` yields a fresh CAPTURE (`Class[?1.T]`) that unifies with nothing
         * downstream — `addAsset(…, task.assetDesc.type, task.asset)` then wants `?1.T` where the
-        * asset is an `Object`. Java reads such a field at the ERASED type; emit that view. */
-      private def erasedFieldReceiver(ref: CtFieldReference[?], target: CtExpression[?]): Option[TypeRepr] =
+        * asset is an `Object`. Java reads such a field at the ERASED type; emit that view.
+        *
+        * Returns BOTH the receiver's erased type and the field's type as seen through it, because
+        * the two must be produced together: a `Tree.Select` carrying Spoon's un-erased field type
+        * over an erased receiver is a TIR node whose `tpe` the emitted Scala does not have. */
+      private def erasedFieldReceiver(ref: CtFieldReference[?], target: CtExpression[?]): Option[(TypeRepr, TypeRepr)] =
         val rt = try target.getTypeCasts.asScala.lastOption.getOrElse(target.getType)
                  catch { case _: Throwable => null }
         if rt == null || rt.isPrimitive || rt.isInstanceOf[CtArrayTypeReference[?]] ||
@@ -1468,11 +1478,14 @@ object SpoonTir:
             case _                      => false
           val unknown = formals.nonEmpty && (actuals.isEmpty || actuals.exists(useless))
           val names   = formals.map(_.getSimpleName).toSet
-          val depends = try Option(ref.getFieldDeclaration).map(_.getType)
-                              .exists(t => t != null && mentionsTypeVarFilled(t, names))
-                        catch { case _: Throwable => false }
+          val declTpe = try Option(ref.getFieldDeclaration).map(_.getType).filter(_ != null)
+                        catch { case _: Throwable => None }
+          val depends = declTpe.exists(mentionsTypeVarFilled(_, names))
           if unknown && depends then
-            Some(AppliedType(TypeRef(NoPrefix, typeSym(rt)), formals.map(erasureOfFormal(_, Set.empty, 2))))
+            val erasedArgs = formals.map(erasureOfFormal(_, Set.empty, 2))
+            val subst      = formals.map(_.getSimpleName).zip(erasedArgs).toMap
+            Some((AppliedType(TypeRef(NoPrefix, typeSym(rt)), erasedArgs),
+                  declTpe.map(erasedFormal(_, subst)).getOrElse(objectT)))
           else None
 
       /** A Java static field read through a SUBCLASS (`Rotational3D.TMP_V3`, where `TMP_V3` is declared
@@ -1749,7 +1762,7 @@ object SpoonTir:
         val t    = tpe(cc.getType)
         val cid  = methodSym(cc.getExecutable)
         val argEs = cc.getArguments.asScala.toList
-        val args = rawCtorArgs(cc, argEs, coerceArgs(cc.getExecutable, argEs))
+        val args = appliedCtorArgs(cc, argEs, rawCtorArgs(cc, argEs, coerceArgs(cc.getExecutable, argEs)))
         // `CtNewClass` IS a `CtConstructorCall` — the anonymous body hangs off the subtype, and
         // reading only the supertype is what silently dropped every one of them.
         val anon = cc match
@@ -1778,6 +1791,49 @@ object SpoonTir:
                   if ct == t.tpe || hasWildcard(ct) then t else Tree.Typed(t, tt(ct, argEs(i)), ct, t.origin)
               }
             case _ => args
+
+      /** An APPLIED generic constructor call whose argument Java unchecked-converted.
+        *
+        * `new AssetDescriptor<T>(data.filename, data.type)` inside `ResourceData<T>`, where the
+        * loop variable `data` is a RAW `AssetData`: Java reads `data.type` at the ERASED `Class`
+        * and converts it to `Class<T>` without a check. We read it through the erased receiver view
+        * — `Class[Object]`, which IS its static type — so Scala then needs the conversion Java made
+        * implicitly, written out.
+        *
+        * The target is the declared formal with the class's own parameters replaced by the call's
+        * EXPLICIT type arguments (`Class<T>` ↦ `Class[T]`, `T` being `ResourceData`'s). Without that
+        * substitution the formal names a variable that exists only inside the callee, which is
+        * exactly why `coerceArgsFixed`'s `uncheckedGeneric` declines these: it would render `?T`.
+        *
+        * The raw counterpart is [[rawCtorArgs]]; this is the applied one. Gated on the ARGUMENT
+        * mentioning a raw generic, so it fires only where Java itself stopped checking — an ordinary
+        * subtype argument is left alone. */
+      private def appliedCtorArgs(cc: CtConstructorCall[?], argEs: List[CtExpression[?]], args: List[Term]): List[Term] =
+        val actuals = try cc.getType.getActualTypeArguments.asScala.toList catch { case _: Throwable => Nil }
+        val formals = try Option(cc.getType.getTypeDeclaration)
+                            .map(_.getFormalCtTypeParameters.asScala.toList.map(_.getSimpleName)).getOrElse(Nil)
+                      catch { case _: Throwable => Nil }
+        val ps = try Option(cc.getExecutable.getExecutableDeclaration).map(_.getParameters.asScala.toList.map(_.getType))
+                 catch { case _: Throwable => None }
+        if actuals.isEmpty || actuals.sizeIs != formals.size || !tpAccessibleHere(cc.getType) then args
+        else ps match
+          case Some(l) if l.sizeIs == args.size && argEs.sizeIs == args.size =>
+            val subst = formals.zip(actuals.map(tpe)).toMap
+            args.zipWithIndex.map { (t, i) =>
+              val f  = l(i)
+              // the same expression kinds `uncheckedGeneric` refuses: a class literal types as raw
+              // `Class` yet emits as `classOf[X]`, and casting a literal/lambda/array-initialiser
+              // only destroys the inference it feeds.
+              val bad = argEs(i) match
+                case fr: CtFieldRead[?] => fr.getVariable.getSimpleName == "class"
+                case e                  => e.isInstanceOf[CtLambda[?]] || e.isInstanceOf[CtLiteral[?]] ||
+                                           e.isInstanceOf[CtNewArray[?]] || e.isInstanceOf[CtConditional[?]]
+              if f == null || bad || !mentionsAnyTypeVar(f) then t
+              else substFormal(f, subst) match
+                case Some(ct) if ct != t.tpe && !hasWildcard(ct) => Tree.Typed(t, tt(ct, argEs(i)), ct, t.origin)
+                case _                                           => t
+            }
+          case _ => args
 
       /** SymId of a called executable — via its declaration (keyed identically to how we
         * define our own methods, so call sites and defs share one symbol) or, for
