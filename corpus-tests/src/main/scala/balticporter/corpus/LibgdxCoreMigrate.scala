@@ -175,7 +175,7 @@ object LibgdxCoreMigrate:
     val outDir = balticporter.sbtgen.SbtGen.managedMain(repoRoot.resolve("libgdx-core"))
     if Files.exists(outDir) then Files.walk(outDir).iterator().asScala.toList.reverse.foreach(Files.delete)
     Files.createDirectories(outDir)
-    val emitter = new TirEmitter(program)
+    val emitter = new TirEmitter(program, balticporter.transform.CollectionsTransform.runtimeConcreteMembers)
     var written = 0
     var dropped = 0
     program.units.foreach { u =>

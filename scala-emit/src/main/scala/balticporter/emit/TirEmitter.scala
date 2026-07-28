@@ -13,7 +13,13 @@ import balticporter.tir.*
   * `boundary`), do-while (dropped in Scala 3), and inc/dec used as a value; those are the
   * emitter's known refinement points, not populator gaps.
   */
-final class TirEmitter(source: Program):
+/** @param externalConcrete
+  *   concrete instance members of parents the program does NOT contain — a phase that INJECTS a
+  *   supertype as ready Scala (the collection shims) must declare what it brought, keyed by FQN as
+  *   `(name, param counts)`. Without it [[diamondOverrides]] sees the injected parent as empty and
+  *   misses every conflict against it.
+  */
+final class TirEmitter(source: Program, externalConcrete: Map[String, Set[(String, List[Int])]] = Map.empty):
   // normalize away Java member-name clashes (a field `x` alongside a method `x()`) before
   // rendering — Scala forbids them; renaming the field symbol propagates to every reference.
   private val prepared =
@@ -376,7 +382,9 @@ final class TirEmitter(source: Program):
     // Java statics have no instance home in Scala — they move to the companion object.
     val (statics, instance) = if s.flags.isModule then (Nil, loweredBody) else loweredBody.partition(isStatic)
     val self    = cd.selfType.map(st => s"${ind(i + 1)}self: ${tpe(st.tpe)} =>\n").getOrElse("")
-    val body    = joinStats(orderBody(instance, pparams.nonEmpty).map(stat(_, i + 1)).filter(_.nonEmpty))
+    val body0   = joinStats(orderBody(instance, pparams.nonEmpty).map(stat(_, i + 1)).filter(_.nonEmpty))
+    val diamonds = diamondOverrides(cd, i + 1)
+    val body    = if diamonds.isEmpty then body0 else joinStats(List(body0).filter(_.nonEmpty) ++ diamonds)
     val open    = if body.isEmpty && self.isEmpty then "" else s" {\n$self$body\n${ind(i)}}"
     val abs     = if kw == "class" && s.flags.isAbstract then "abstract " else ""
     // Scala (unlike Java) forbids a NON-private member from referring to a `private` type in its
@@ -709,6 +717,58 @@ final class TirEmitter(source: Program):
 
   /** ctor type-parameter substitution (Scala secondary ctors can't be generic) → their bounds. */
   private var tparamSubst: Map[SymId, TypeRepr] = Map.empty
+
+  /** Disambiguate a member that arrives CONCRETE from both the superclass and a mixin.
+    *
+    * Java has single inheritance of implementation, so this is never ambiguous there: a concrete
+    * superclass method simply IMPLEMENTS the interface's, default or not. `IntMap.Entries extends
+    * MapIterator implements Iterable<Entry>, Iterator<Entry>` gets `MapIterator.remove()`, and
+    * java's `Iterator.remove` is satisfied by it. Scala linearises instead and refuses: "class
+    * Entries inherits conflicting members … (Note: this can be resolved by declaring an override
+    * in class Entries.)" — 11 sites in gdx core.
+    *
+    * So declare it, forwarding to the parent JAVA would have run: the SUPERCLASS, which is the head
+    * of the parents list. This is a rendering repair rather than a tree rewrite because that is all
+    * it is — no new symbol exists, no call site changes, and the forwarder is exactly the method
+    * the class already had.
+    *
+    * `Tree.Super`'s `cls` is always the enclosing class ([[SpoonTir.superTerm]]), so a qualified
+    * `super[X]` has no TIR form; the text is emitted directly. */
+  private def diamondOverrides(cd: Tree.ClassDef, i: Int): List[String] =
+    def headOf(t: TypeRepr): Option[SymId] = headSymOf(t)
+    val parentTs = cd.parents.map { case tt: TypeTree => tt.tpe; case t: Term => t.tpe }
+    if parentTs.sizeIs < 2 then Nil
+    else
+      def classOf_(t: TypeRepr): Option[Tree.ClassDef] =
+        headOf(t).flatMap(x => program.definitionOf(x)).collect { case c: Tree.ClassDef => c }
+      /** concrete instance methods, name -> the DefDef, walking a parent chain. */
+      def externalOf(t: TypeRepr): Set[(String, List[Int])] =
+        headOf(t).map(x => sym(x).fullName).flatMap(externalConcrete.get).getOrElse(Set.empty)
+      def concrete(t: TypeRepr, seen: Set[SymId] = Set.empty): Map[(String, List[Int]), Tree.DefDef] =
+        classOf_(t) match
+          case Some(c) if !seen(c.symbol) =>
+            val own = c.body.collect {
+              case d: Tree.DefDef if d.rhs.isDefined && sym(d.symbol).name != "<init>" &&
+                                     !sym(d.symbol).flags.isStatic =>
+                (sym(d.symbol).name, d.paramss.map(_.size)) -> d
+            }.toMap
+            c.parents.map { case tt: TypeTree => tt.tpe; case x: Term => x.tpe }
+              .foldLeft(own)((acc, pt) => concrete(pt, seen + c.symbol) ++ acc)
+          case _ => Map.empty
+      val sup     = concrete(parentTs.head)
+      val mixins  = parentTs.tail.flatMap(t => concrete(t).keySet ++ externalOf(t)).toSet
+      val ownKeys = cd.body.collect {
+        case d: Tree.DefDef => (sym(d.symbol).name, d.paramss.map(_.size))
+      }.toSet
+      val supName = classOf_(parentTs.head).map(c => esc(sym(c.symbol).name))
+      supName.toList.flatMap { sn =>
+        sup.toList.filter((k, _) => mixins(k) && !ownKeys(k)).sortBy((k, _) => k._1).map { (_, d) =>
+          val n   = esc(sym(d.symbol).name)
+          val pss = d.paramss.map(paramClause).mkString
+          val as  = d.paramss.map(ps => ps.map(v => esc(sym(v.symbol).name)).mkString("(", ", ", ")")).mkString
+          s"${ind(i)}override def $n$pss: ${tpe(d.returnTpt.tpe)} = super[$sn].$n$as"
+        }
+      }
 
   private def defDef(d: Tree.DefDef, i: Int): String =
     val s     = sym(d.symbol)

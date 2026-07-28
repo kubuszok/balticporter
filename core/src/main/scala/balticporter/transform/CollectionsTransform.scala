@@ -329,6 +329,15 @@ object CollectionsTransform:
     * (`Predicate.PredicateIterator`, `CharArray.appendWithSeparators`, `ModelLoader.loadSync`)
     * would stop type-checking. Two types, one decision.
     */
+  /** What [[runtimeSources]] BRINGS, for a consumer that must reason about the injected
+    * supertypes it cannot parse. `JavaIterator.remove` is concrete (java's own documented default),
+    * so a class extending both it and a superclass that also defines `remove` is a scala
+    * linearisation conflict — `TirEmitter` needs to be told, since the shim is shipped as text. */
+  val runtimeConcreteMembers: Map[String, Set[(String, List[Int])]] = Map(
+    JavaIteratorFqn -> Set(("remove", List(0))),
+    JavaIterableFqn -> Set.empty,
+  )
+
   val runtimeSources: Map[String, String] = Map(
     JavaIterableFqn ->
       """package balticporter.runtime

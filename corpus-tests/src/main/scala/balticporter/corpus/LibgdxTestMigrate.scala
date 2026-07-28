@@ -72,7 +72,7 @@ object LibgdxTestMigrate:
     // Emit only the TEST units — `gdx/src` is ported by `LibgdxCoreMigrate`, and writing it again
     // from here would fork the output into two copies that drift.
     val testFqns = files.map(f => f.stripSuffix(".java").replace('/', '.').replace('\\', '.')).toSet
-    val emitter  = new TirEmitter(program)
+    val emitter  = new TirEmitter(program, balticporter.transform.CollectionsTransform.runtimeConcreteMembers)
     var written  = 0
     program.units.foreach { u =>
       val full = program.symbolOf(u.symbol).map(_.fullName).getOrElse("Unit")
