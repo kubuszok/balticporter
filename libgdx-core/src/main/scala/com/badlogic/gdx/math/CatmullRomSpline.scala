@@ -11,7 +11,7 @@ class CatmullRomSpline[T <: com.badlogic.gdx.math.Vector[T]] extends com.badlogi
     this()
     this.set(controlPoints, continuous)
   }
-  def set(controlPoints: scala.Array[T], continuous: scala.Boolean): CatmullRomSpline[T] = {
+  def set(controlPoints: scala.Array[T], continuous: scala.Boolean): CatmullRomSpline[?] = {
     if (this.tmp == null) {
       this.tmp = controlPoints(0).cpy().asInstanceOf[T]
     } else ()
@@ -24,7 +24,7 @@ class CatmullRomSpline[T <: com.badlogic.gdx.math.Vector[T]] extends com.badlogi
     this.controlPoints = controlPoints
     this.continuous = continuous
     this.spanCount = if (continuous) controlPoints.length else controlPoints.length - 3
-    return this.asInstanceOf[CatmullRomSpline[T]]
+    return this.asInstanceOf[CatmullRomSpline[?]]
   }
   @java.lang.Override
   override def valueAt(out: T, t: scala.Float): T = {

@@ -17,10 +17,10 @@ class Bezier[T <: com.badlogic.gdx.math.Vector[T]] extends com.badlogic.gdx.math
     this()
     this.set(points, offset, length)
   }
-  def set(points: scala.Array[T]): Bezier[T] = {
-    return this.set(points, 0, points.length).asInstanceOf[Bezier[T]]
+  def set(points: scala.Array[T]): Bezier[?] = {
+    return this.set(points, 0, points.length).asInstanceOf[Bezier[?]]
   }
-  def set(points: scala.Array[T], offset: scala.Int, length: scala.Int): Bezier[T] = {
+  def set(points: scala.Array[T], offset: scala.Int, length: scala.Int): Bezier[?] = {
     if ((length < 2) || (length > 4)) {
       throw new com.badlogic.gdx.utils.GdxRuntimeException("Only first, second and third degree Bezier curves are supported.")
     } else ()
@@ -35,9 +35,9 @@ class Bezier[T <: com.badlogic.gdx.math.Vector[T]] extends com.badlogic.gdx.math
     } else ()
     this.points.clear()
     this.points.addAll(points, offset, length)
-    return this.asInstanceOf[Bezier[T]]
+    return this.asInstanceOf[Bezier[?]]
   }
-  def set(points: com.badlogic.gdx.utils.Array[T], offset: scala.Int, length: scala.Int): Bezier[T] = {
+  def set(points: com.badlogic.gdx.utils.Array[T], offset: scala.Int, length: scala.Int): Bezier[?] = {
     if ((length < 2) || (length > 4)) {
       throw new com.badlogic.gdx.utils.GdxRuntimeException("Only first, second and third degree Bezier curves are supported.")
     } else ()
@@ -52,7 +52,7 @@ class Bezier[T <: com.badlogic.gdx.math.Vector[T]] extends com.badlogic.gdx.math
     } else ()
     this.points.clear()
     this.points.addAll(points.asInstanceOf[com.badlogic.gdx.utils.Array[? <: T]], offset, length)
-    return this.asInstanceOf[Bezier[T]]
+    return this.asInstanceOf[Bezier[?]]
   }
   @java.lang.Override
   override def valueAt(out: T, t: scala.Float): T = {

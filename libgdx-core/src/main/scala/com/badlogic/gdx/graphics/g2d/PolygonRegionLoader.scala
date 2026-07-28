@@ -12,7 +12,7 @@ class PolygonRegionLoader(resolver$p: com.badlogic.gdx.assets.loaders.FileHandle
     return this.load(new com.badlogic.gdx.graphics.g2d.TextureRegion(texture), file)
   }
   @java.lang.Override
-  override def getDependencies(fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, params$arg: com.badlogic.gdx.graphics.g2d.PolygonRegionLoader.PolygonRegionParameters): com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.graphics.g2d.PolygonRegion]] = {
+  override def getDependencies(fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, params$arg: com.badlogic.gdx.graphics.g2d.PolygonRegionLoader.PolygonRegionParameters): com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = {
     var params: com.badlogic.gdx.graphics.g2d.PolygonRegionLoader.PolygonRegionParameters = params$arg
     if (params == null) {
       params = this.defaultParameters
@@ -41,9 +41,9 @@ class PolygonRegionLoader(resolver$p: com.badlogic.gdx.assets.loaders.FileHandle
       }
     } else ()
     if (image != null) {
-      val deps: com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.graphics.g2d.PolygonRegion]] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]](1).asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.graphics.g2d.PolygonRegion]]]
-      deps.add(new com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.graphics.Texture](file.sibling(image), classOf[com.badlogic.gdx.graphics.Texture]).asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.graphics.g2d.PolygonRegion]])
-      return deps.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.graphics.g2d.PolygonRegion]]]
+      val deps: com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]](1).asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]]
+      deps.add(new com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.graphics.Texture](file.sibling(image), classOf[com.badlogic.gdx.graphics.Texture]).asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[?]])
+      return deps.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]]
     } else ()
     return null
   }

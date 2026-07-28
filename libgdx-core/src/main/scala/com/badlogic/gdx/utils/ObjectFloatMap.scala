@@ -271,10 +271,10 @@ class ObjectFloatMap[K <: java.lang.Object](initialCapacity: scala.Int, loadFact
     if (obj == this) {
       return true
     } else ()
-    if (!obj.isInstanceOf[ObjectFloatMap[K]]) {
+    if (!obj.isInstanceOf[ObjectFloatMap[?]]) {
       return false
     } else ()
-    val other: ObjectFloatMap[K] = obj.asInstanceOf[ObjectFloatMap[K]].asInstanceOf[ObjectFloatMap[K]]
+    val other: ObjectFloatMap[?] = obj.asInstanceOf[ObjectFloatMap[?]].asInstanceOf[ObjectFloatMap[?]]
     if (other.size != this.size) {
       return false
     } else ()

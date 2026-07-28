@@ -15,7 +15,7 @@ class OrderedSet[T <: java.lang.Object] extends com.badlogic.gdx.utils.ObjectSet
     this.mask = tableSize - 1
     this.shift = java.lang.Long.numberOfLeadingZeros(this.mask)
     this.keyTable = new scala.Array[java.lang.Object](tableSize).asInstanceOf[scala.Array[T]].asInstanceOf[scala.Array[T]]
-    this.items = new com.badlogic.gdx.utils.Array[T](initialCapacity).asInstanceOf[com.badlogic.gdx.utils.Array[T]]
+    this.items = new com.badlogic.gdx.utils.Array(initialCapacity).asInstanceOf[com.badlogic.gdx.utils.Array[T]]
   }
   def this(initialCapacity: scala.Int) = {
     this()
@@ -28,7 +28,7 @@ class OrderedSet[T <: java.lang.Object] extends com.badlogic.gdx.utils.ObjectSet
     this.mask = tableSize - 1
     this.shift = java.lang.Long.numberOfLeadingZeros(this.mask)
     this.keyTable = new scala.Array[java.lang.Object](tableSize).asInstanceOf[scala.Array[T]].asInstanceOf[scala.Array[T]]
-    this.items = new com.badlogic.gdx.utils.Array[T](initialCapacity).asInstanceOf[com.badlogic.gdx.utils.Array[T]]
+    this.items = new com.badlogic.gdx.utils.Array(initialCapacity).asInstanceOf[com.badlogic.gdx.utils.Array[T]]
   }
   def this(set: OrderedSet[? <: T]) = {
     this()
@@ -43,9 +43,9 @@ class OrderedSet[T <: java.lang.Object] extends com.badlogic.gdx.utils.ObjectSet
     this.keyTable = new scala.Array[java.lang.Object](tableSize).asInstanceOf[scala.Array[T]].asInstanceOf[scala.Array[T]]
     java.lang.System.arraycopy(set.keyTable, 0, this.keyTable, 0, set.keyTable.length)
     this.size = set.size
-    this.items = new com.badlogic.gdx.utils.Array[T](set.items).asInstanceOf[com.badlogic.gdx.utils.Array[T]]
+    this.items = new com.badlogic.gdx.utils.Array(set.items).asInstanceOf[com.badlogic.gdx.utils.Array[T]]
   }
-  this.items = new com.badlogic.gdx.utils.Array[T]().asInstanceOf[com.badlogic.gdx.utils.Array[T]]
+  this.items = new com.badlogic.gdx.utils.Array().asInstanceOf[com.badlogic.gdx.utils.Array[T]]
   override def add(key: T): scala.Boolean = {
     if (!super.add(key)) {
       return false
@@ -133,10 +133,10 @@ class OrderedSet[T <: java.lang.Object] extends com.badlogic.gdx.utils.ObjectSet
     return h
   }
   override def equals(obj: java.lang.Object): scala.Boolean = {
-    if (!obj.isInstanceOf[com.badlogic.gdx.utils.ObjectSet[T]]) {
+    if (!obj.isInstanceOf[com.badlogic.gdx.utils.ObjectSet[?]]) {
       return false
     } else ()
-    val other: com.badlogic.gdx.utils.ObjectSet[T] = obj.asInstanceOf[com.badlogic.gdx.utils.ObjectSet[T]].asInstanceOf[com.badlogic.gdx.utils.ObjectSet[T]]
+    val other: com.badlogic.gdx.utils.ObjectSet[?] = obj.asInstanceOf[com.badlogic.gdx.utils.ObjectSet[?]].asInstanceOf[com.badlogic.gdx.utils.ObjectSet[?]]
     if (other.size != size) {
       return false
     } else ()
@@ -217,7 +217,7 @@ object OrderedSet {
         throw new java.lang.IllegalStateException("next must be called before remove.")
       } else ()
       nextIndex = nextIndex - 1
-      set.asInstanceOf[OrderedSet[K]].removeIndex(nextIndex)
+      set.asInstanceOf[OrderedSet[?]].removeIndex(nextIndex)
     }
     override def toArray(array: com.badlogic.gdx.utils.Array[K]): com.badlogic.gdx.utils.Array[K] = {
       array.addAll(this.items.asInstanceOf[com.badlogic.gdx.utils.Array[? <: K]], nextIndex, this.items.size - nextIndex)

@@ -504,10 +504,10 @@ class Array[T <: java.lang.Object] extends balticporter.runtime.JavaIterable[T] 
     if (!this.ordered) {
       return false
     } else ()
-    if (!`object`.isInstanceOf[Array[T]]) {
+    if (!`object`.isInstanceOf[Array[?]]) {
       return false
     } else ()
-    val array: Array[T] = `object`.asInstanceOf[Array[T]].asInstanceOf[Array[T]]
+    val array: Array[?] = `object`.asInstanceOf[Array[?]].asInstanceOf[Array[?]]
     if (!array.ordered) {
       return false
     } else ()
@@ -533,10 +533,10 @@ class Array[T <: java.lang.Object] extends balticporter.runtime.JavaIterable[T] 
     if (!this.ordered) {
       return false
     } else ()
-    if (!`object`.isInstanceOf[Array[T]]) {
+    if (!`object`.isInstanceOf[Array[?]]) {
       return false
     } else ()
-    val array: Array[T] = `object`.asInstanceOf[Array[T]].asInstanceOf[Array[T]]
+    val array: Array[?] = `object`.asInstanceOf[Array[?]].asInstanceOf[Array[?]]
     if (!array.ordered) {
       return false
     } else ()

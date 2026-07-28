@@ -13,7 +13,7 @@ class BSpline[T <: com.badlogic.gdx.math.Vector[T]] extends com.badlogic.gdx.mat
     this()
     this.set(controlPoints, degree, continuous)
   }
-  def set(controlPoints: scala.Array[T], degree: scala.Int, continuous: scala.Boolean): BSpline[T] = {
+  def set(controlPoints: scala.Array[T], degree: scala.Int, continuous: scala.Boolean): BSpline[?] = {
     if (this.tmp == null) {
       this.tmp = controlPoints(0).cpy().asInstanceOf[T]
     } else ()
@@ -37,7 +37,7 @@ class BSpline[T <: com.badlogic.gdx.math.Vector[T]] extends com.badlogic.gdx.mat
     { var i: scala.Int = 0; while (i < knotCount) { {
       this.knots.add(BSpline.calculate(controlPoints(0).cpy(), if (continuous) i else i + (0.5f * degree).asInstanceOf[scala.Int], 0.0f, controlPoints, degree, continuous, this.tmp))
     }; i = i + 1 } }
-    return this.asInstanceOf[BSpline[T]]
+    return this.asInstanceOf[BSpline[?]]
   }
   @java.lang.Override
   override def valueAt(out: T, t: scala.Float): T = {

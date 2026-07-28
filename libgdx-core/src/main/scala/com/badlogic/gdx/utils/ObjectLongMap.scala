@@ -249,10 +249,10 @@ class ObjectLongMap[K <: java.lang.Object](initialCapacity: scala.Int, loadFacto
     if (obj == this) {
       return true
     } else ()
-    if (!obj.isInstanceOf[ObjectLongMap[K]]) {
+    if (!obj.isInstanceOf[ObjectLongMap[?]]) {
       return false
     } else ()
-    val other: ObjectLongMap[K] = obj.asInstanceOf[ObjectLongMap[K]].asInstanceOf[ObjectLongMap[K]]
+    val other: ObjectLongMap[?] = obj.asInstanceOf[ObjectLongMap[?]].asInstanceOf[ObjectLongMap[?]]
     if (other.size != this.size) {
       return false
     } else ()

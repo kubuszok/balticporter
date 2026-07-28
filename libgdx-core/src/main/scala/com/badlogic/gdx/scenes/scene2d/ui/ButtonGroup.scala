@@ -1,8 +1,8 @@
 package com.badlogic.gdx.scenes.scene2d.ui
 
 class ButtonGroup[T <: com.badlogic.gdx.scenes.scene2d.ui.Button] {
-  private final val buttons: com.badlogic.gdx.utils.Array[T] = new com.badlogic.gdx.utils.Array[T]().asInstanceOf[com.badlogic.gdx.utils.Array[T]]
-  private var checkedButtons: com.badlogic.gdx.utils.Array[T] = new com.badlogic.gdx.utils.Array[T](1).asInstanceOf[com.badlogic.gdx.utils.Array[T]]
+  private final val buttons: com.badlogic.gdx.utils.Array[T] = new com.badlogic.gdx.utils.Array().asInstanceOf[com.badlogic.gdx.utils.Array[T]]
+  private var checkedButtons: com.badlogic.gdx.utils.Array[T] = new com.badlogic.gdx.utils.Array(1).asInstanceOf[com.badlogic.gdx.utils.Array[T]]
   private var minCheckCount: scala.Int = 0
   private var maxCheckCount: scala.Int = 1
   private var uncheckLast: scala.Boolean = true
@@ -21,7 +21,7 @@ class ButtonGroup[T <: com.badlogic.gdx.scenes.scene2d.ui.Button] {
     button.buttonGroup = null
     val shouldCheck: scala.Boolean = button.isChecked() || (this.buttons.size < this.minCheckCount)
     button.setChecked(false)
-    button.buttonGroup = this.asInstanceOf[ButtonGroup[T]]
+    button.buttonGroup = this.asInstanceOf[ButtonGroup[?]]
     this.buttons.add(button)
     button.setChecked(shouldCheck)
   }

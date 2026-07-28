@@ -319,10 +319,10 @@ class IntMap[V <: java.lang.Object](initialCapacity: scala.Int, loadFactor$p: sc
     if (obj == this) {
       return true
     } else ()
-    if (!obj.isInstanceOf[IntMap[V]]) {
+    if (!obj.isInstanceOf[IntMap[?]]) {
       return false
     } else ()
-    val other: IntMap[V] = obj.asInstanceOf[IntMap[V]].asInstanceOf[IntMap[V]]
+    val other: IntMap[?] = obj.asInstanceOf[IntMap[?]].asInstanceOf[IntMap[?]]
     if (other.size != this.size) {
       return false
     } else ()
@@ -351,7 +351,7 @@ class IntMap[V <: java.lang.Object](initialCapacity: scala.Int, loadFactor$p: sc
             return false
           } else ()
         } else {
-          if (!value.equals(other.get(key))) {
+          if (!value.equals(other.get(key).asInstanceOf[java.lang.Object])) {
             return false
           } else ()
         }
@@ -363,10 +363,10 @@ class IntMap[V <: java.lang.Object](initialCapacity: scala.Int, loadFactor$p: sc
     if (obj == this) {
       return true
     } else ()
-    if (!obj.isInstanceOf[IntMap[V]]) {
+    if (!obj.isInstanceOf[IntMap[?]]) {
       return false
     } else ()
-    val other: IntMap[V] = obj.asInstanceOf[IntMap[V]].asInstanceOf[IntMap[V]]
+    val other: IntMap[?] = obj.asInstanceOf[IntMap[?]].asInstanceOf[IntMap[?]]
     if (other.size != this.size) {
       return false
     } else ()
@@ -560,7 +560,7 @@ object IntMap {
     private final val INDEX_ILLEGAL: scala.Int = -2
     final val INDEX_ZERO: scala.Int = -1
   }
-  class Entries[V <: java.lang.Object](map$p: IntMap[V]) extends com.badlogic.gdx.utils.IntMap.MapIterator[V](map$p) with balticporter.runtime.JavaIterable[com.badlogic.gdx.utils.IntMap.Entry[V]] with balticporter.runtime.JavaIterator[com.badlogic.gdx.utils.IntMap.Entry[V]] {
+  class Entries[V <: java.lang.Object](map$p: IntMap[?]) extends com.badlogic.gdx.utils.IntMap.MapIterator[V](map$p.asInstanceOf[IntMap[java.lang.Object]]) with balticporter.runtime.JavaIterable[com.badlogic.gdx.utils.IntMap.Entry[V]] with balticporter.runtime.JavaIterator[com.badlogic.gdx.utils.IntMap.Entry[V]] {
     private final val entry: com.badlogic.gdx.utils.IntMap.Entry[V] = new com.badlogic.gdx.utils.IntMap.Entry[V]().asInstanceOf[com.badlogic.gdx.utils.IntMap.Entry[V]]
     override def next(): com.badlogic.gdx.utils.IntMap.Entry[V] = {
       if (!hasNext$field) {

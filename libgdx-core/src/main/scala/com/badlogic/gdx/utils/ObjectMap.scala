@@ -265,10 +265,10 @@ class ObjectMap[K <: java.lang.Object, V <: java.lang.Object] extends balticport
     if (obj == this) {
       return true
     } else ()
-    if (!obj.isInstanceOf[ObjectMap[K, V]]) {
+    if (!obj.isInstanceOf[ObjectMap[?, ?]]) {
       return false
     } else ()
-    val other: ObjectMap[K, V] = obj.asInstanceOf[ObjectMap[K, V]].asInstanceOf[ObjectMap[K, V]]
+    val other: ObjectMap[?, ?] = obj.asInstanceOf[ObjectMap[?, ?]].asInstanceOf[ObjectMap[?, ?]]
     if (other.size != this.size) {
       return false
     } else ()
@@ -283,7 +283,7 @@ class ObjectMap[K <: java.lang.Object, V <: java.lang.Object] extends balticport
             return false
           } else ()
         } else {
-          if (!value.equals(other.get(key))) {
+          if (!value.equals(other.get(key).asInstanceOf[java.lang.Object])) {
             return false
           } else ()
         }
@@ -295,10 +295,10 @@ class ObjectMap[K <: java.lang.Object, V <: java.lang.Object] extends balticport
     if (obj == this) {
       return true
     } else ()
-    if (!obj.isInstanceOf[ObjectMap[K, V]]) {
+    if (!obj.isInstanceOf[ObjectMap[?, ?]]) {
       return false
     } else ()
-    val other: ObjectMap[K, V] = obj.asInstanceOf[ObjectMap[K, V]].asInstanceOf[ObjectMap[K, V]]
+    val other: ObjectMap[?, ?] = obj.asInstanceOf[ObjectMap[?, ?]].asInstanceOf[ObjectMap[?, ?]]
     if (other.size != this.size) {
       return false
     } else ()

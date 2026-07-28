@@ -91,6 +91,35 @@ but not its BODY — the natural reading of "its only customer is override agree
 **1 -> 20**. Bodies need it too, because a local whose value flows into the signature must carry the
 same instantiation. So the fill's scope is not decomposable into signature-vs-body either.
 
+## ADOPTED sge's rendering — 1 -> 11, deliberately
+
+The port now renders raw generics the way sge does. The error count ROSE from 1 to 11 and that is
+the intended trade: the 1-error state emitted `Array[AssetDescriptor[BitmapFont]]`, which type-checks
+only because it is wrong identically on both sides of every override. A `BitmapFont`'s dependencies
+are a `TextureAtlas` and a `Texture`.
+
+Three changes, each measured and each confirmed against a specific sge signature:
+
+| change | sge evidence | errors |
+|---|---|---|
+| drop the inherited name-fill; raw -> `[?]` unless self/nested | `AssetLoader.getDependencies: DynamicArray[AssetDescriptor[?]]` | 19 |
+| a type nested in an ANCESTOR is in scope too | `ObjectMap.Entries` used from `OrderedMap[K,V]` | 13 |
+| drop the SELF-reference fill as well | `Cell.set(cell: Cell[?])` inside `Cell[T]` | **11** |
+
+The original blocking error (`AssetLoadingTask:28`) is GONE — it was an artifact of the name-fill,
+not a translation problem.
+
+### The 11 remaining, all diagnosed
+
+| site | count | shape |
+|---|---|---|
+| `Tree.scala` | 7 | java has a RAW local (`Tree tree = getTree()`) passed to a parameterised `addToTree(Tree<N,V>)`. Java accepts it unchecked; we render `Tree[?, ?]` and need the cast `uncheckedGeneric` should insert but does not fire for. sge widened the PARAMETER instead: `removeFromTree(tree: Tree[? <: Node[?, ?, ?], ?], …)` |
+| `ObjectMap`, `IntMap`, `LongMap`, `AssetManager` | 4 | one each, not yet classified |
+
+Both routes are open for the `Tree` cluster: make `uncheckedGeneric` fire on a raw local flowing
+into a parameterised formal (universal, and the faithful reading of java's unchecked conversion), or
+follow sge and widen the formal. The first is preferable — it is what java actually does.
+
 ### SGE SETTLES IT: raw generics render `[?]`, everywhere
 
 sge is the reference port and it resolved this. In `../sge/sge/src/main/scala/sge/`:

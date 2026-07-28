@@ -562,7 +562,7 @@ object Tree {
       if (this.children.size == 0) {
         return
       } else ()
-      val tree: Tree[N, V] = this.getTree().asInstanceOf[Tree[N, V]]
+      val tree: Tree[?, ?] = this.getTree().asInstanceOf[Tree[?, ?]]
       if (tree == null) {
         return
       } else ()
@@ -614,7 +614,7 @@ object Tree {
       if (!this.expanded) {
         return
       } else ()
-      val tree: Tree[N, V] = this.getTree().asInstanceOf[Tree[N, V]]
+      val tree: Tree[?, ?] = this.getTree().asInstanceOf[Tree[?, ?]]
       if (tree != null) {
         var actorIndex: scala.Int = 0
         if (childIndex == 0) {
@@ -642,7 +642,7 @@ object Tree {
       return count
     }
     def remove(): scala.Unit = {
-      val tree: Tree[N, V] = this.getTree().asInstanceOf[Tree[N, V]]
+      val tree: Tree[?, ?] = this.getTree().asInstanceOf[Tree[?, ?]]
       if (tree != null) {
         tree.asInstanceOf[Tree[N, V]].remove(this.asInstanceOf[N])
       } else {
@@ -658,14 +658,14 @@ object Tree {
       if (!this.expanded) {
         return
       } else ()
-      val tree: Tree[N, V] = this.getTree().asInstanceOf[Tree[N, V]]
+      val tree: Tree[?, ?] = this.getTree().asInstanceOf[Tree[?, ?]]
       if (tree != null) {
         node.removeFromTree(tree, node.actor.getZIndex())
       } else ()
     }
     def clearChildren(): scala.Unit = {
       if (this.expanded) {
-        val tree: Tree[N, V] = this.getTree().asInstanceOf[Tree[N, V]]
+        val tree: Tree[?, ?] = this.getTree().asInstanceOf[Tree[?, ?]]
         if (tree != null) {
           val actorIndex: scala.Int = this.actor.getZIndex() + 1
           val children: scala.Array[java.lang.Object] = this.children.items.asInstanceOf[scala.Array[java.lang.Object]];
@@ -679,8 +679,8 @@ object Tree {
     @com.badlogic.gdx.utils.Null
     def getTree(): Tree[N, V] = {
       val parent: com.badlogic.gdx.scenes.scene2d.Group = this.actor.getParent()
-      if (parent.isInstanceOf[Tree[N, V]]) {
-        return parent.asInstanceOf[Tree[N, V]]
+      if (parent.isInstanceOf[Tree[?, ?]]) {
+        return parent.asInstanceOf[Tree[?, ?]].asInstanceOf[Tree[N, V]]
       } else ()
       return null
     }
@@ -711,7 +711,7 @@ object Tree {
       if (!this.expanded) {
         return
       } else ()
-      val tree: Tree[N, V] = this.getTree().asInstanceOf[Tree[N, V]]
+      val tree: Tree[?, ?] = this.getTree().asInstanceOf[Tree[?, ?]]
       if (tree == null) {
         return
       } else ()

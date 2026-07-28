@@ -126,6 +126,11 @@ object SpoonTir:
       *
       * So a class must be able to see what it instantiated its parents' names AS. */
     private val inheritedInst = collection.mutable.ArrayDeque[Map[String, (TypeRepr, CtTypeReference[?])]]()
+    /** FQNs of the enclosing class and its ancestors — a raw type NESTED in any of them is filled
+      * from the names in scope, because those names are the ones it was declared against.
+      * `Entries` lives in `ObjectMap[K,V]`; inside `OrderedMap[K,V] extends ObjectMap[K,V]` it is
+      * still `Entries[K,V]`, and the inherited field `entries1` is declared at exactly that type. */
+    private val enclosingFqns = collection.mutable.ArrayDeque[Set[String]]()
     /** FQNs of this class's ancestors — the only declarations whose formals are written in type
       * variables the inherited instantiation can speak about. */
     private val ancestorFqns = collection.mutable.ArrayDeque[Set[String]]()
@@ -146,7 +151,7 @@ object SpoonTir:
       * Button>`, which is not a `Button` at all. Require the candidate to satisfy the formal's own
       * BOUND; that is what makes the name match evidence rather than coincidence. */
     private def inheritedTp(f: CtTypeParameter): Option[TypeRepr] =
-      if noInheritFill || !inOverridingMember then scala.None
+      if true || noInheritFill || !inOverridingMember then scala.None // sge design: no inherited fill
       else inheritedInst.headOption.flatMap(_.get(f.getSimpleName)).collect {
         case (r, ref) if boundAdmits(f, ref) => r
       }
@@ -287,6 +292,41 @@ object SpoonTir:
         (sup ++ t.getSuperInterfaces.asScala.toList).foreach(walk(_, 4))
       catch { case _: Throwable => () }
       out.toMap
+
+    /** is `r` declared INSIDE a class currently on the enclosing-class stack? */
+    private def selfAndAncestors(t: CtType[?]): Set[String] =
+      val acc = collection.mutable.Set[String](t.getQualifiedName)
+      def walk(r: CtTypeReference[?], fuel: Int): Unit =
+        if r != null && fuel > 0 && !acc.contains(r.getQualifiedName) then
+          acc += r.getQualifiedName
+          val d = try r.getTypeDeclaration catch { case _: Throwable => null }
+          if d != null then
+            val ups: List[CtTypeReference[?]] =
+              (d match { case c: CtClass[?] => Option(c.getSuperclass).toList; case _ => Nil }) ++
+                (try d.getSuperInterfaces.asScala.toList catch { case _: Throwable => Nil })
+            ups.foreach(walk(_, fuel - 1))
+      try
+        val ups0: List[CtTypeReference[?]] =
+          (t match { case c: CtClass[?] => Option(c.getSuperclass).toList; case _ => Nil }) ++
+            (try t.getSuperInterfaces.asScala.toList catch { case _: Throwable => Nil })
+        ups0.foreach(walk(_, 5))
+      catch { case _: Throwable => () }
+      acc.toSet
+
+    private def nestedInScope(r: CtTypeReference[?]): Boolean =
+      try
+        val decl = r.getTypeDeclaration
+        if decl == null then false
+        else
+          val owners = enclosingFqns.headOption.getOrElse(Set.empty)
+          var d = decl.getDeclaringType
+          var hit = false
+          var fuel = 5
+          while d != null && !hit && fuel > 0 do
+            if owners.contains(d.getQualifiedName) then hit = true
+            d = d.getDeclaringType; fuel -= 1
+          hit
+      catch { case _: Throwable => false }
 
     private def boundsOf(tp: CtTypeParameter): TypeBounds =
       Option(tp.getSuperclass).filter(_.getQualifiedName != "java.lang.Object").map(fbound) match
@@ -656,7 +696,8 @@ object SpoonTir:
             // own type params are in scope): fill with them (`ArrayMap[K,V]`) instead of wildcards, so
             // member accesses stay on the enclosing instantiation rather than a path-dependent capture.
             selfRawStack.headOption match
-              case Some((cls, params)) if !inStatic && cls == typeSym(r) && params.nonEmpty && params.sizeIs == arity =>
+              // sge renders a raw SELF-use `[?]` too — `Cell.set(cell: Cell[?])` inside `Cell[T]`.
+              case Some((cls, params)) if false && !inStatic && cls == typeSym(r) && params.nonEmpty && params.sizeIs == arity =>
                 AppliedType(head, params.map(p => TypeRef(NoPrefix, p)))
               case _ =>
                 // outside the enclosing class: reconstruct args from same-named in-scope params
@@ -670,7 +711,13 @@ object SpoonTir:
                                 catch { case _: Throwable => Nil }
                   if formals.isEmpty then AppliedType(head, List.fill(arity)(TypeBounds(NoType, NoType)))
                   else AppliedType(head, formals.map { f =>
-                    accessibleTp(f.getSimpleName).map(id => TypeRef(NoPrefix, id))
+                    // sge renders EVERY raw generic `[?]` — parent, overrides and fields alike
+                    // (`AssetLoader.getDependencies: DynamicArray[AssetDescriptor[?]]`). Filling from
+                    // an in-scope name is only right when the raw type is the enclosing class or
+                    // NESTED in it (`Entries` inside `ObjectMap[K,V]`); for an unrelated generic the
+                    // name match is coincidence and the result is semantically wrong.
+                    (if nestedInScope(r) then accessibleTp(f.getSimpleName) else scala.None)
+                      .map(id => TypeRef(NoPrefix, id))
                       .orElse(inheritedTp(f))                       // what THIS class instantiated it as
                       .getOrElse(TypeBounds(NoType, NoType))
                   })
@@ -692,6 +739,7 @@ object SpoonTir:
       tpScopes.prepend(frame); tpIsExec.prepend(false)
       selfRawStack.prepend(id -> t.getFormalCtTypeParameters.asScala.toList.map(tp => frame(tp.getSimpleName)))
       inheritedInst.prepend(instantiationOfParents(t))
+      enclosingFqns.prepend(enclosingFqns.headOption.getOrElse(Set.empty) ++ selfAndAncestors(t))
       ancestorFqns.prepend(ancestorsOf(t))
       val enclosingAcc = if capturesEnclosing(t) then tpAccessible.headOption.getOrElse(Map.empty) else Map.empty
       tpAccessible.prepend(enclosingAcc ++ frame)
@@ -740,7 +788,7 @@ object SpoonTir:
       val enumCases = t match
         case e: CtEnum[?] => e.getEnumValues.asScala.toList.map(enumCase(id, _))
         case _            => Nil
-      tpScopes.remove(0); tpIsExec.remove(0); inheritedInst.remove(0); ancestorFqns.remove(0)
+      tpScopes.remove(0); tpIsExec.remove(0); inheritedInst.remove(0); enclosingFqns.remove(0); ancestorFqns.remove(0)
       selfRawStack.remove(0); tpAccessible.remove(0); tpExecNames.remove(0); inStatic = savedStatic
       Tree.ClassDef(id, parents, selfType = None, body = fields ++ ctors ++ methods ++ initBlocks ++ nested,
         origin = originOf(t), tparams = tpDefs, enumCases = enumCases)

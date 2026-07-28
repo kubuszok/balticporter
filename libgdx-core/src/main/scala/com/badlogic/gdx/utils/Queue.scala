@@ -310,7 +310,7 @@ class Queue[T <: java.lang.Object](initialSize: scala.Int, arraySupplier: com.ba
     if (this == o) {
       return true
     } else ()
-    if ((o == null) || (!o.isInstanceOf[Queue[T]])) {
+    if ((o == null) || (!o.isInstanceOf[Queue[?]])) {
       return false
     } else ()
     val q: Queue[?] = o.asInstanceOf[Queue[?]].asInstanceOf[Queue[?]]
@@ -345,7 +345,7 @@ class Queue[T <: java.lang.Object](initialSize: scala.Int, arraySupplier: com.ba
     if (this == o) {
       return true
     } else ()
-    if ((o == null) || (!o.isInstanceOf[Queue[T]])) {
+    if ((o == null) || (!o.isInstanceOf[Queue[?]])) {
       return false
     } else ()
     val q: Queue[?] = o.asInstanceOf[Queue[?]].asInstanceOf[Queue[?]]

@@ -24,12 +24,12 @@ class ResourceData[T <: java.lang.Object] extends com.badlogic.gdx.utils.Json.Se
     }
     return -1
   }
-  def getAssetDescriptors(): com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[T]] = {
-    val descriptors: com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[T]] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[T]]().asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[T]]]
+  def getAssetDescriptors(): com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = {
+    val descriptors: com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]().asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]]
     for (data <- this.sharedAssets) {
-      descriptors.add(new com.badlogic.gdx.assets.AssetDescriptor[T](data.filename, data.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ResourceData.AssetData[java.lang.Object]].`type`.asInstanceOf[java.lang.Class[T]]))
+      descriptors.add(new com.badlogic.gdx.assets.AssetDescriptor[T](data.filename, data.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ResourceData.AssetData[java.lang.Object]].`type`.asInstanceOf[java.lang.Class[T]]).asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[?]])
     }
-    return descriptors.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[T]]]
+    return descriptors.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]]
   }
   def getAssets(): com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.ResourceData.AssetData[T]] = {
     return this.sharedAssets.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.ResourceData.AssetData[T]]]
@@ -56,7 +56,7 @@ class ResourceData[T <: java.lang.Object] extends com.badlogic.gdx.utils.Json.Se
   @java.lang.Override
   override def write(json: com.badlogic.gdx.utils.Json): scala.Unit = {
     json.writeValue("unique", this.uniqueData, classOf[com.badlogic.gdx.utils.ObjectMap[?, ?]])
-    json.writeValue("data", this.data, classOf[com.badlogic.gdx.utils.Array[T]], classOf[com.badlogic.gdx.graphics.g3d.particles.ResourceData.SaveData])
+    json.writeValue("data", this.data, classOf[com.badlogic.gdx.utils.Array[?]], classOf[com.badlogic.gdx.graphics.g3d.particles.ResourceData.SaveData])
     json.writeValue("assets", this.sharedAssets.toArray(((size: scala.Int) => new scala.Array[com.badlogic.gdx.graphics.g3d.particles.ResourceData.AssetData[T]](size))), classOf[scala.Array[com.badlogic.gdx.graphics.g3d.particles.ResourceData.AssetData[T]]])
     json.writeValue("resource", this.resource.asInstanceOf[java.lang.Object], null)
   }
@@ -64,13 +64,13 @@ class ResourceData[T <: java.lang.Object] extends com.badlogic.gdx.utils.Json.Se
   override def read(json: com.badlogic.gdx.utils.Json, jsonData: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
     this.uniqueData = json.readValue("unique", classOf[com.badlogic.gdx.utils.ObjectMap[?, ?]], jsonData).asInstanceOf[com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.graphics.g3d.particles.ResourceData.SaveData]]
     for (entry <- this.uniqueData.entries()) {
-      entry.value.resources = this.asInstanceOf[ResourceData[T]]
+      entry.value.resources = this.asInstanceOf[ResourceData[?]]
     }
-    this.data = json.readValue("data", classOf[com.badlogic.gdx.utils.Array[T]], classOf[com.badlogic.gdx.graphics.g3d.particles.ResourceData.SaveData], jsonData).asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.ResourceData.SaveData]]
+    this.data = json.readValue("data", classOf[com.badlogic.gdx.utils.Array[?]], classOf[com.badlogic.gdx.graphics.g3d.particles.ResourceData.SaveData], jsonData).asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.ResourceData.SaveData]]
     for (saveData <- this.data) {
-      saveData.resources = this.asInstanceOf[ResourceData[T]]
+      saveData.resources = this.asInstanceOf[ResourceData[?]]
     }
-    this.sharedAssets.addAll(json.readValue("assets", classOf[com.badlogic.gdx.utils.Array[T]], classOf[com.badlogic.gdx.graphics.g3d.particles.ResourceData.AssetData[T]], jsonData).asInstanceOf[com.badlogic.gdx.utils.Array[? <: com.badlogic.gdx.graphics.g3d.particles.ResourceData.AssetData[T]]])
+    this.sharedAssets.addAll(json.readValue("assets", classOf[com.badlogic.gdx.utils.Array[?]], classOf[com.badlogic.gdx.graphics.g3d.particles.ResourceData.AssetData[T]], jsonData).asInstanceOf[com.badlogic.gdx.utils.Array[? <: com.badlogic.gdx.graphics.g3d.particles.ResourceData.AssetData[T]]])
     this.resource = json.readValue("resource", null, jsonData).asInstanceOf[T]
   }
 }

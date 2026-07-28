@@ -158,10 +158,10 @@ class BinaryHeap[T <: com.badlogic.gdx.utils.BinaryHeap.Node](capacity: scala.In
     node.index = index
   }
   override def equals(obj: java.lang.Object): scala.Boolean = {
-    if (!obj.isInstanceOf[BinaryHeap[T]]) {
+    if (!obj.isInstanceOf[BinaryHeap[?]]) {
       return false
     } else ()
-    val other: BinaryHeap[T] = obj.asInstanceOf[BinaryHeap[T]].asInstanceOf[BinaryHeap[T]]
+    val other: BinaryHeap[?] = obj.asInstanceOf[BinaryHeap[?]].asInstanceOf[BinaryHeap[?]]
     if (other.size != this.size) {
       return false
     } else ()

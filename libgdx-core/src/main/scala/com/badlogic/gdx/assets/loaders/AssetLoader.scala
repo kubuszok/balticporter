@@ -9,5 +9,5 @@ abstract class AssetLoader[T <: java.lang.Object, P <: com.badlogic.gdx.assets.A
   def resolve(fileName: java.lang.String): com.badlogic.gdx.files.FileHandle = {
     return this.resolver.resolve(fileName)
   }
-  def getDependencies(fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: P): com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[T]]
+  def getDependencies(fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: P): com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]
 }

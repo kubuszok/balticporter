@@ -207,10 +207,10 @@ class ObjectSet[T <: java.lang.Object] extends balticporter.runtime.JavaIterable
     return h
   }
   override def equals(obj: java.lang.Object): scala.Boolean = {
-    if (!obj.isInstanceOf[ObjectSet[T]]) {
+    if (!obj.isInstanceOf[ObjectSet[?]]) {
       return false
     } else ()
-    val other: ObjectSet[T] = obj.asInstanceOf[ObjectSet[T]].asInstanceOf[ObjectSet[T]]
+    val other: ObjectSet[?] = obj.asInstanceOf[ObjectSet[?]].asInstanceOf[ObjectSet[?]]
     if (other.size != this.size) {
       return false
     } else ()

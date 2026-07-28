@@ -249,10 +249,10 @@ class ObjectIntMap[K <: java.lang.Object](initialCapacity: scala.Int, loadFactor
     if (obj == this) {
       return true
     } else ()
-    if (!obj.isInstanceOf[ObjectIntMap[K]]) {
+    if (!obj.isInstanceOf[ObjectIntMap[?]]) {
       return false
     } else ()
-    val other: ObjectIntMap[K] = obj.asInstanceOf[ObjectIntMap[K]].asInstanceOf[ObjectIntMap[K]]
+    val other: ObjectIntMap[?] = obj.asInstanceOf[ObjectIntMap[?]].asInstanceOf[ObjectIntMap[?]]
     if (other.size != this.size) {
       return false
     } else ()
