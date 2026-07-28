@@ -217,6 +217,103 @@ final class TirEmitter(source: Program):
     classStack.append(cd.symbol)
     try classDef0(cd, i) finally { classStack.removeLast(); currentClass = outer }
 
+  /** Parameter symbol -> the type it must be RENDERED at, because the member overrides one
+    * inherited through a RAW parent.
+    *
+    * Java sees a raw supertype's members ERASED: `class ParticleController implements
+    * ResourceData.Configurable` (raw) implements `save(AssetManager, ResourceData)` at the
+    * erasure, not at any instantiation. Our raw fill independently rendered the parameter
+    * `ResourceData[?]`, while the parent — which cannot keep a wildcard, `extends
+    * Configurable[?]` being illegal Scala — was de-wildcarded to `Configurable[Object]`. Two
+    * renderings of one raw type in one class, and the override implements neither.
+    *
+    * Both now come from ONE answer: [[deWildcardedArgs]] decides the parent's arguments, and the
+    * same substitution is applied to the parent's declared parameter types to give this class's
+    * overriding parameters. Agreement is by construction rather than by two rules happening to
+    * coincide — which is what the earlier name-directed inherited-instantiation rule could not
+    * promise, and why it was reverted.
+    *
+    * Only slots where OUR rendering is a wildcard are touched, so an override that already agrees
+    * is left exactly as it is. */
+  private def rawParentAlignment: Map[SymId, TypeRepr] =
+    val out    = collection.mutable.Map[SymId, TypeRepr]()
+    val done   = collection.mutable.Set[SymId]()
+    val declOf = collection.mutable.Map[SymId, Tree.ClassDef]()
+    def index(cd: Tree.ClassDef): Unit =
+      declOf(cd.symbol) = cd
+      cd.body.foreach { case c: Tree.ClassDef => index(c); case _ => () }
+      cd.enumCases.foreach(_.body.foreach { case c: Tree.ClassDef => index(c); case _ => () })
+    program.units.foreach(index)
+    def methodsOf(cd: Tree.ClassDef) = cd.body.collect {
+      case d: Tree.DefDef if sym(d.symbol).name != "<init>" => d
+    }
+    /** parents first, so a grandchild aligns against its parent's ALREADY-aligned view. */
+    def visit(cd: Tree.ClassDef, seen: Set[SymId]): Unit =
+      if !done(cd.symbol) && !seen(cd.symbol) then
+        done += cd.symbol
+        val ours = methodsOf(cd)
+        for
+          p    <- cd.parents
+          pt    = p match { case tt: TypeTree => tt.tpe; case t: Term => t.tpe }
+          tycon <- headSymOf(pt)
+          pcd  <- declOf.get(tycon)
+        do
+          visit(pcd, seen + cd.symbol)
+          val subst = pt match
+            case TypeRepr.AppliedType(tc, args)
+                if args.exists { case _: TypeRepr.TypeBounds => true; case _ => false } &&
+                   pcd.tparams.sizeIs == args.size =>
+              pcd.tparams.map(_.symbol).zip(deWildcardedArgs(tc, args))
+                .collect { case (s, Some(t)) => s -> t }.toMap
+            case _ => Map.empty[SymId, TypeRepr]
+          for
+            od <- ours
+            pd <- methodsOf(pcd).find(d => sym(d.symbol).name == sym(od.symbol).name &&
+                                           d.paramss.map(_.size) == od.paramss.map(_.size))
+            (ops, pps) <- od.paramss.zip(pd.paramss)
+            (op, pp)   <- ops.zip(pps)
+            if hasWildcardArg(op.tpt.tpe) && !out.contains(op.symbol)
+          do
+            val aligned = substTp(out.getOrElse(pp.symbol, pp.tpt.tpe), subst)
+            // The parent member is matched by NAME AND ARITY, which is all java overriding needs
+            // — and far too little on its own. `Environment extends Attributes` inherits
+            // `remove(long mask)`, which matches `Environment.remove(BaseLight)` on both counts;
+            // aligning to it rendered three overloads as `remove(Long)`. An alignment is only ever
+            // the SAME type at different arguments, so require the head constructor to agree.
+            if !hasWildcardArg(aligned) && headSymOf(aligned) == headSymOf(op.tpt.tpe) then
+              out(op.symbol) = aligned
+    program.units.foreach(u => declOf.values.foreach(visit(_, Set.empty)))
+    out.toMap
+
+  private lazy val overrideAlign: Map[SymId, TypeRepr] = rawParentAlignment
+
+  /** An ARGUMENT reaching a parameter [[rawParentAlignment]] re-rendered. Java accepted the call
+    * because the callee's formal was RAW there (`ParticleEffect.save(AssetManager, ResourceData)`
+    * taking a `ResourceData<ParticleEffect>`); once the formal reads `ResourceData[Object]` the
+    * conversion java made silently has to be written. Only fires where the argument disagrees. */
+  private def alignedArgs(m: SymId, args: List[Term], i: Int): Option[List[String]] =
+    val ps = program.definitionOf(m).collect { case d: Tree.DefDef => d.paramss.flatten }.getOrElse(Nil)
+    if ps.sizeIs != args.size || !ps.exists(v => overrideAlign.contains(v.symbol)) then scala.None
+    else Some(args.zip(ps).map { (a, v) =>
+      overrideAlign.get(v.symbol).filter(_ != a.tpe) match
+        case Some(t) => s"${operand(a, i)}.asInstanceOf[${tpe(t)}]"
+        case None    => term(a, i)
+    })
+
+  /** A cast onto a parameter that [[rawParentAlignment]] re-rendered must land on the type the
+    * parameter now HAS. The frontend built these casts against the raw fill's `ResourceData[?]`;
+    * once the declaration reads `ResourceData[Object]` the same cast narrows to a wildcard the
+    * callee will not take — and a cast to `T[?]` asserts nothing in the first place, so following
+    * the alignment loses nothing. Only wildcarded targets on an aligned symbol are touched. */
+  private def castTarget(e: Term, target: TypeRepr): TypeRepr =
+    if !hasWildcardArg(target) then target
+    else
+      val s = e match
+        case Tree.Ident(x, _, _)     => Some(x)
+        case Tree.Select(_, x, _, _) => Some(x)
+        case _                       => scala.None
+      s.flatMap(overrideAlign.get).getOrElse(target)
+
   /** `this` in Scala always names the INNERMOST class, where Java's `Outer.this` names an enclosing
     * one. Qualify by simple name when the symbol is an enclosing class actually being rendered
     * around this point; anything else (an inherited/unknown owner) keeps the bare `this`.
@@ -538,6 +635,27 @@ final class TirEmitter(source: Program):
     * passed as a function because `byName` sets a mutable flag AROUND evaluating its by-name
     * argument; handing it to a strict `String => String` parameter evaluates the head first and
     * silently loses the flag (which turned `extends Channel` into `extends ParallelArray#Channel`). */
+  /** The de-wildcarding CHOICE, as types rather than as text — the same decision [[deWildcarded]]
+    * renders, exposed so that a parent's elimination and the members that override through it can
+    * be driven from ONE answer. `None` where the slot stays a wildcard (F-bounded, or nothing to
+    * fill from), which is exactly where an override cannot be aligned either. */
+  private def deWildcardedArgs(tc: TypeRepr, args: List[TypeRepr]): List[Option[TypeRepr]] =
+    val bounds = headSymOf(tc).map(declBounds).getOrElse(Nil)
+    args.zipWithIndex.foldLeft((List.empty[Option[TypeRepr]], Map.empty[SymId, TypeRepr])) {
+      case ((acc, m), (a, i)) =>
+        val fBounded = bounds.lift(i).exists((p, hi) => hi != TypeRepr.NoType && mentionsSym(hi, p))
+        val chosen: Option[TypeRepr] = a match
+          case _: TypeRepr.TypeBounds if fBounded                  => scala.None
+          case TypeRepr.TypeBounds(_, hi) if hi != TypeRepr.NoType => Some(substTp(hi, m))
+          case _: TypeRepr.TypeBounds =>
+            bounds.lift(i).map(_._2).filter(_ != TypeRepr.NoType).map(substTp(_, m))
+          case other => Some(other)
+        val m2 = (bounds.lift(i), chosen) match
+          case (Some((pp, _)), Some(c)) => m + (pp -> c)
+          case _                        => m
+        (acc :+ chosen, m2)
+    }._1
+
   private def deWildcarded(t: TypeRepr, named: Boolean): String =
     def head(f: => String): String = if named then byName(f) else f
     t match
@@ -657,7 +775,8 @@ final class TirEmitter(source: Program):
   // NOTE: Java `T...` → Scala `T*` is deferred — it also needs array-spread (`arr: _*`) at call
   // sites and overload-aware resolution, else `f(array)` calls break. Emitting the param type
   // as `Array[T]` keeps varargs callable positionally via the array.
-  private def param(v: Tree.ValDef): String = s"${esc(sym(v.symbol).name)}: ${tpe(v.tpt.tpe)}"
+  private def param(v: Tree.ValDef): String =
+    s"${esc(sym(v.symbol).name)}: ${tpe(overrideAlign.getOrElse(v.symbol, v.tpt.tpe))}"
 
   private def valDef(v: Tree.ValDef, i: Int): String =
     val s = sym(v.symbol)
@@ -780,7 +899,7 @@ final class TirEmitter(source: Program):
     case Tree.Block(stats, expr, _, _)  => block(stats, expr, i)
     case Tree.Lambda(ps, body, _, _)    => s"(${ps.map(param).mkString(", ")}) => ${term(body, i)}"
     case Tree.If(c, th, el, _, _)       => s"if (${term(c, i)}) ${term(th, i)} else ${term(el, i)}"
-    case Tree.Typed(e, tpt, _, _)       => s"${operand(e, i)}.asInstanceOf[${tpe(tpt.tpe)}]" // Java cast
+    case Tree.Typed(e, tpt, _, _)       => s"${operand(e, i)}.asInstanceOf[${tpe(castTarget(e, tpt.tpe))}]" // Java cast
     case Tree.Repeated(es, _, _)        => es.map(term(_, i)).mkString(", ")
     case Tree.Return(e, _, _)           => "return" + e.map(x => " " + term(x, i)).getOrElse("")
     case Tree.While(c, b, _, _)         => s"while (${term(c, i)}) ${term(b, i)}"
@@ -871,7 +990,13 @@ final class TirEmitter(source: Program):
       s"$kw(${args.map(term(_, i)).mkString(", ")})"
     case Tree.Select(_, m, _, _) if numericOverloadAscription(m).isDefined =>
       s"(${term(fun, i)}: ${numericOverloadAscription(m).get})(${args.map(term(_, i)).mkString(", ")})"
-    case _ => s"${term(fun, i)}(${args.map(term(_, i)).mkString(", ")})"
+    case _ =>
+      val as = (fun match
+        case Tree.Select(_, m, _, _) => alignedArgs(m, args, i)
+        case Tree.Ident(m, _, _)     => alignedArgs(m, args, i)
+        case _                       => scala.None
+      ).getOrElse(args.map(term(_, i)))
+      s"${term(fun, i)}(${as.mkString(", ")})"
 
   /** widening rank — a value of rank r converts implicitly to any numeric type of higher rank.
     * `Char` and `Short` share a rank because neither widens to the other. */
