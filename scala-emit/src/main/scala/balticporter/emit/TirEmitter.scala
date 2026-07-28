@@ -480,6 +480,15 @@ final class TirEmitter(source: Program):
         case _                                                   => TypeRepr.NoType))
     }.getOrElse(Nil)
 
+  /** does this type mention the given symbol anywhere — the F-bound test (`N <: Node[N,V,A]`)? */
+  private def mentionsSym(t: TypeRepr, s: SymId): Boolean = t match
+    case TypeRepr.TypeRef(_, x)             => x == s
+    case TypeRepr.AppliedType(tc, as)       => mentionsSym(tc, s) || as.exists(mentionsSym(_, s))
+    case TypeRepr.TypeBounds(lo, hi)        => mentionsSym(lo, s) || mentionsSym(hi, s)
+    case TypeRepr.AndType(l, r)             => mentionsSym(l, s) || mentionsSym(r, s)
+    case TypeRepr.OrType(l, r)              => mentionsSym(l, s) || mentionsSym(r, s)
+    case _                                  => false
+
   private def substTp(t: TypeRepr, m: Map[SymId, TypeRepr]): TypeRepr = t match
     case TypeRepr.TypeRef(_, s) if m.contains(s) => m(s)
     case TypeRepr.AppliedType(tc, as)            => TypeRepr.AppliedType(substTp(tc, m), as.map(substTp(_, m)))
@@ -506,12 +515,22 @@ final class TirEmitter(source: Program):
         val bounds = headSymOf(tc).map(declBounds).getOrElse(Nil)
         val (as, _) = args.zipWithIndex.foldLeft((List.empty[String], Map.empty[SymId, TypeRepr])) {
           case ((acc, m), (a, i)) =>
+            // An F-BOUNDED parameter (`N extends Node<N,V,A>`) cannot be eliminated at all: no
+            // finite type satisfies `N <: Node[N,V,A]` except a real subclass. `Node[Object, …]`
+            // fails the bound, and so does every unrolling — `Node[Node[Object,…], …]` needs its
+            // argument to be the very type being defined, and `Node` is invariant. Java has the
+            // same bound and simply does not check it at an erased use; Scala does. The one type
+            // that works is the WILDCARD, which asserts only that SOME type satisfies the bound —
+            // verified against scalac before writing this. So an F-bounded slot stays `?`.
+            val fBounded = bounds.lift(i).exists((p, hi) => hi != TypeRepr.NoType && mentionsSym(hi, p))
             val chosen: Option[TypeRepr] = a match
+              case _: TypeRepr.TypeBounds if fBounded                  => scala.None
               case TypeRepr.TypeBounds(_, hi) if hi != TypeRepr.NoType => Some(substTp(hi, m))
               case _: TypeRepr.TypeBounds =>
                 bounds.lift(i).map(_._2).filter(_ != TypeRepr.NoType).map(substTp(_, m))
               case other => Some(other)
-            val rendered = chosen.map(tpe).getOrElse("scala.AnyRef")
+            val rendered =
+              if chosen.isEmpty && fBounded then "?" else chosen.map(tpe).getOrElse("scala.AnyRef")
             val m2 = (bounds.lift(i), chosen) match
               case (Some((p, _)), Some(c)) => m + (p -> c)
               case _                       => m

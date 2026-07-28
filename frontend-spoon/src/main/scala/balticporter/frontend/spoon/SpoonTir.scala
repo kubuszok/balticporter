@@ -234,8 +234,13 @@ object SpoonTir:
         // call disagree: the RECEIVER cast said `Node[Node[Object,Object,Actor], Object, Actor]`
         // while the ARGUMENT cast for the very same `N` said `Tree[Object, Object]`. `seen` breaks
         // F-bounded cycles; the depth is pinned to the one both call sites use.
+        // the F-BOUND cycle. Collapsing it to `Object` produces `Node[Object, Object, Actor]`,
+        // which fails `N <: Node[N,V,A]` — and so does every finite unrolling, since `Node` is
+        // invariant in `N`. Java carries the same bound and does not check it at an erased use;
+        // Scala checks. A WILDCARD asserts only that SOME type satisfies the bound, which is
+        // exactly the erased claim, and is the one form scalac accepts here.
         case tv: CtTypeParameterReference =>
-          if seen(tv.getSimpleName) then objectT
+          if seen(tv.getSimpleName) then TypeBounds(NoType, NoType)
           else
             val d = try Option(tv.getDeclaration) catch { case _: Throwable => None }
             d.map(erasureOfFormal(_, seen + tv.getSimpleName, 2)).getOrElse(objectT)
@@ -255,7 +260,8 @@ object SpoonTir:
               if formals.isEmpty then head
               else AppliedType(head, formals.map { ff =>
                 // `seen` breaks F-bounded cycles (`N extends Node<N,…>`); depth bounds the rest
-                if seen(ff.getSimpleName) then objectT else erasureOfFormal(ff, seen, depth - 1)
+                if seen(ff.getSimpleName) then TypeBounds(NoType, NoType)
+                else erasureOfFormal(ff, seen, depth - 1)
               })
             case args => AppliedType(head, args.map(a => erasedType(a, seen, depth - 1)))
 
