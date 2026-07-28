@@ -127,12 +127,23 @@ object SpoonTir:
       * So a class must be able to see what it instantiated its parents' names AS. */
     private val inheritedInst = collection.mutable.ArrayDeque[Map[String, (TypeRepr, CtTypeReference[?])]]()
     private var noInheritFill = false
+    /** true while translating a member this class INHERITS (an override). The inherited
+      * instantiation exists to make such a member agree with the one it overrides — that is the
+      * whole reason it was introduced. A member the class declares for ITSELF carries no such
+      * obligation, and taking the entry there is exactly the `AssetLoadingTask` misfire: a private
+      * `Array<AssetDescriptor> dependencies` field picking up `T -> Void` from
+      * `implements AsyncTask<Void>`, because `AssetDescriptor`'s formal is also called `T`.
+      *
+      * Filtering the MAP cannot fix that: the `T -> Void` entry is genuinely needed, since
+      * `AssetLoadingTask.call()` really does return `Void`. Four map-level guards measured 161,
+      * 161, 142 and 141 for this reason. The obligation is a property of the SITE. */
+    private var inOverridingMember = false
     /** The map is keyed by NAME, so an unrelated ancestor's `T` can collide with the `T` of the type
       * being filled — `Button`'s inherited `T = ButtonStyle` reaching `ButtonGroup<T extends
       * Button>`, which is not a `Button` at all. Require the candidate to satisfy the formal's own
       * BOUND; that is what makes the name match evidence rather than coincidence. */
     private def inheritedTp(f: CtTypeParameter): Option[TypeRepr] =
-      if noInheritFill then scala.None
+      if noInheritFill || !inOverridingMember then scala.None
       else inheritedInst.headOption.flatMap(_.get(f.getSimpleName)).collect {
         case (r, ref) if boundAdmits(f, ref) => r
       }
@@ -888,6 +899,8 @@ object SpoonTir:
         case ftd: CtFormalTypeDeclarer => ftd.getFormalCtTypeParameters.asScala.toList
         case _                         => Nil
       val (frame, tpDefs) = mintTypeParams(mkey, id, mtps)
+      val savedOverriding = inOverridingMember
+      inOverridingMember = overrides
       tpScopes.prepend(frame); tpIsExec.prepend(true)
       // a method sees its class's accessible params (unless static — gated at the fill site) plus
       // its own; `withStatic` already carries `inStatic` for this exec.
@@ -918,6 +931,7 @@ object SpoonTir:
       // Call / field-ref usages and `callersOf` real. Abstract/interface methods have none.
       val body = Option(m.getBody).map(b => bt.methodBody(b))
       tpScopes.remove(0); tpIsExec.remove(0); tpAccessible.remove(0); tpExecNames.remove(0)
+      inOverridingMember = savedOverriding
       Tree.DefDef(id, paramss = List(pvs), returnTpt = tt(ret, m), rhs = body, origin = originOf(m), tparams = tpDefs)
     }
 
