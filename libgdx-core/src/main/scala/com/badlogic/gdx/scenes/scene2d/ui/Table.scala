@@ -330,7 +330,7 @@ class Table extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup {
       cell.clear()
       if (column >= this.columnDefaults$field.size) {
         { var i: scala.Int = this.columnDefaults$field.size; while (i < column) { {
-          this.columnDefaults$field.add(null)
+          this.columnDefaults$field.add(null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]])
         }; i = i + 1 } }
         this.columnDefaults$field.add(cell)
       } else {

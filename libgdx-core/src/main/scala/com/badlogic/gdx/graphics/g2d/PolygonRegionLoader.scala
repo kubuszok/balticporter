@@ -42,7 +42,7 @@ class PolygonRegionLoader(resolver$p: com.badlogic.gdx.assets.loaders.FileHandle
     } else ()
     if (image != null) {
       val deps: com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.graphics.g2d.PolygonRegion]] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]](1).asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.graphics.g2d.PolygonRegion]]]
-      deps.add(new com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.graphics.Texture](file.sibling(image), classOf[com.badlogic.gdx.graphics.Texture]))
+      deps.add(new com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.graphics.Texture](file.sibling(image), classOf[com.badlogic.gdx.graphics.Texture]).asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.graphics.g2d.PolygonRegion]])
       return deps.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.graphics.g2d.PolygonRegion]]]
     } else ()
     return null

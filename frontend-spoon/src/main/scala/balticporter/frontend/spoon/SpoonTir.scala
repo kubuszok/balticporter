@@ -1999,6 +1999,7 @@ object SpoonTir:
               val fieldRecv = inv.getTarget.isInstanceOf[CtFieldAccess[?]]
               val subst = formals.map(_.getSimpleName)
                 .zip(if fieldRecv then atDeclScope(actuals.map(tpe)) else actuals.map(tpe)).toMap
+              val rawElement = actuals.exists(a => try isRawGenericUse(a) catch { case _: Throwable => false })
               args.zipWithIndex.map { (t, i) =>
                 val f = l(i)
                 if f == null || !mentionsTypeVarBounded(f, subst.keySet) then t
@@ -2008,8 +2009,16 @@ object SpoonTir:
                   // `uncheckedFrom(ct, t.tpe)`: the reverse — the SLOT is wildcarded and the
                   // argument is the more precise type. Both are Java's unchecked conversion; only
                   // the direction differs. A bare `?` target is not a type one can cast to.
+                  // …or the RECEIVER's own type argument is a RAW use (`Array<AssetDescriptor> deps`).
+                  // That is where javac stopped checking: a raw element type accepts any
+                  // instantiation, so `deps.add(new AssetDescriptor<TextureAtlas>(…))` is legal java
+                  // even though our fill typed the element `AssetDescriptor[ParticleEffect]` — the
+                  // name-directed fill having resolved `AssetDescriptor`'s `T` against the enclosing
+                  // loader's. Both sides are concrete for us, so java's silent conversion must be
+                  // written. (The ARGUMENT is not raw here — spoon fills the diamond — so testing
+                  // the argument instead is a no-op; measured.)
                   case Some(ct) if ct != t.tpe && !ct.isInstanceOf[TypeBounds] &&
-                                   (hasWildcard(t.tpe) || uncheckedFrom(ct, t.tpe)) =>
+                                   (hasWildcard(t.tpe) || uncheckedFrom(ct, t.tpe) || rawElement) =>
                     Tree.Typed(t, tt(ct, argEs(i)), ct, t.origin)
                   case _ => t
               }
