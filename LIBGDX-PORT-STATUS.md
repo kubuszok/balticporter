@@ -116,6 +116,12 @@ not a translation problem.
 | `Tree.scala` | 7 | java has a RAW local (`Tree tree = getTree()`) passed to a parameterised `addToTree(Tree<N,V>)`. Java accepts it unchecked; we render `Tree[?, ?]` and need the cast `uncheckedGeneric` should insert but does not fire for. sge widened the PARAMETER instead: `removeFromTree(tree: Tree[? <: Node[?, ?, ?], ?], …)` |
 | `ObjectMap`, `IntMap`, `LongMap`, `AssetManager` | 4 | one each, not yet classified |
 
+Measured and reverted: widening `uncheckedGeneric`'s gate to fire when the ARGUMENT's rendered type
+carries a wildcard and the formal's does not is **INERT** (11 -> 11, no cast emitted). So
+`uncheckedGeneric` is not being REACHED for these arguments — something upstream in `coerceArgs`
+rejects them first. That is the next thing to instrument; do not add further conditions to the gate
+until it is known why the gate is never consulted.
+
 Both routes are open for the `Tree` cluster: make `uncheckedGeneric` fire on a raw local flowing
 into a parameterised formal (universal, and the faithful reading of java's unchecked conversion), or
 follow sge and widen the formal. The first is preferable — it is what java actually does.

@@ -7,6 +7,6 @@ object ArraySupplier {
   final val ANY: ArraySupplier[?] = ((size: scala.Int) => new scala.Array[java.lang.Object](size))
   @java.lang.SuppressWarnings(scala.Array[java.lang.String]("unchecked"))
   def `object`[T <: java.lang.Object](): ArraySupplier[scala.Array[T]] = {
-    return ArraySupplier.ANY.asInstanceOf[ArraySupplier[scala.Array[T]]]
+    return ArraySupplier.ANY.asInstanceOf[ArraySupplier[scala.Array[T]]].asInstanceOf[ArraySupplier[scala.Array[T]]]
   }
 }
