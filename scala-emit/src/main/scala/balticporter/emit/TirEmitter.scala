@@ -1316,10 +1316,13 @@ object TirEmitter:
       cd.body.foreach { case c: Tree.ClassDef => index(c); case _ => () }
       cd.enumCases.foreach(_.body.foreach { case c: Tree.ClassDef => index(c); case _ => () })
     p.units.foreach(index)
+    /** EFFECTIVE names — a renamed ancestor field contributes its NEW name, so a descendant asking
+      * "is this taken?" sees what will actually be emitted. Requires parents-first scanning. */
+    def eff(id: SymId): String = renames.getOrElse(id, nm(id))
     def instanceMembers(cd: Tree.ClassDef): Set[String] =
       cd.body.collect {
-        case d: Tree.DefDef if nm(d.symbol) != "<init>" && !p.symbolOf(d.symbol).exists(_.flags.isStatic) => nm(d.symbol)
-        case v: Tree.ValDef if !p.symbolOf(v.symbol).exists(_.flags.isStatic)                             => nm(v.symbol)
+        case d: Tree.DefDef if nm(d.symbol) != "<init>" && !p.symbolOf(d.symbol).exists(_.flags.isStatic) => eff(d.symbol)
+        case v: Tree.ValDef if !p.symbolOf(v.symbol).exists(_.flags.isStatic)                             => eff(v.symbol)
       }.toSet
     def inherited(cd: Tree.ClassDef, seen: Set[SymId] = Set.empty): Set[String] =
       cd.parents.flatMap { case tt: TypeTree => headSym(tt.tpe); case t: Term => headSym(t.tpe) }
@@ -1327,11 +1330,23 @@ object TirEmitter:
         .flatMap(declOf.get)
         .flatMap(pcd => instanceMembers(pcd) ++ inherited(pcd, seen + cd.symbol))
         .toSet
+    val scanned = collection.mutable.Set[SymId]()
     def scan(cd: Tree.ClassDef): Unit =
+      if scanned(cd.symbol) then return
+      scanned += cd.symbol
+      // parents FIRST, so `eff` above already reflects an ancestor's rename
+      cd.parents.flatMap { case tt: TypeTree => headSym(tt.tpe); case t: Term => headSym(t.tpe) }
+        .flatMap(declOf.get).foreach(scan)
       val shadowed = inherited(cd)
       cd.body.foreach {
         case v: Tree.ValDef if shadowed(nm(v.symbol)) && !p.symbolOf(v.symbol).exists(_.flags.isStatic) =>
-          renames(v.symbol) = nm(v.symbol) + "$shadow"
+          // The fresh name must not ITSELF be inherited. `CheckBox.style` shadows
+          // `TextButton.style`, which shadows `Button.style` — renaming both to `style$shadow`
+          // just relocated the collision one level up. Keep appending until the name is free
+          // (the same idiom `funnelParamRenames` uses).
+          var fresh = nm(v.symbol) + "$shadow"
+          while shadowed(fresh) do fresh += "$"
+          renames(v.symbol) = fresh
         case c: Tree.ClassDef => scan(c)
         case _                => ()
       }
