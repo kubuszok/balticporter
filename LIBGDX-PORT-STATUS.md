@@ -683,7 +683,29 @@ the misses:
 The last one is the most informative: `AsyncTask<Void>`'s `T -> Void` is genuinely NEEDED, because
 `AssetLoadingTask.call()` really does return `Void`. So the entry must exist for the ancestor's OWN
 members and must not reach an unrelated raw type — which means the fix is not a filter on the map at
-all. **SOLVED (4 -> 3): the inherited fill is an obligation of OVERRIDING MEMBERS, not of the class.**
+all. ## THE LAST ERROR — `AssetLoadingTask:28`
+
+`this.dependencies = asyncLoader.getDependencies(...)`. The FIELD now correctly declares
+`Array[AssetDescriptor[?]]`; the assignment coerces the value to `Array[AssetDescriptor[Void]]`.
+Two renderings of one field — this engine's most persistent defect shape — with the second produced
+by re-rendering the target's type inside an OVERRIDING method, where the inherited instantiation is
+in force.
+
+Three sites of that rule are fixed and committed (below). A fourth and fifth were measured and
+reverted:
+
+| attempt | measured |
+|---|---|
+| gate the call's RESULT type by the same ancestor rule | 1 -> 1 (moved the failing column; incomplete) |
+| clear the gate while rendering an ASSIGNMENT target | 1 -> **2** |
+
+The assignment variant is the right idea in the wrong place: clearing the gate for every assignment
+target breaks other sites. What the target needs is not "no instantiation" but the FIELD's OWN
+recorded rendering — `Minter.infoOf(fieldSym)`, which exists — instead of any re-render. That is the
+same fix named for the field-read path and is now wanted in three places; doing it once, properly,
+is likely worth more than a fourth gate.
+
+**SOLVED (4 -> 3): the inherited fill is an obligation of OVERRIDING MEMBERS, not of the class.**
 It exists to make an inherited member agree with the one it overrides; a member the class declares
 for itself carries no such obligation. `inOverridingMember` gates it, set from the same `overrides`
 flag `execDef` already computes. That is why every MAP-level guard failed — the `T -> Void` entry is
