@@ -699,11 +699,19 @@ reverted:
 | gate the call's RESULT type by the same ancestor rule | 1 -> 1 (moved the failing column; incomplete) |
 | clear the gate while rendering an ASSIGNMENT target | 1 -> **2** |
 
-The assignment variant is the right idea in the wrong place: clearing the gate for every assignment
-target breaks other sites. What the target needs is not "no instantiation" but the FIELD's OWN
-recorded rendering — `Minter.infoOf(fieldSym)`, which exists — instead of any re-render. That is the
-same fix named for the field-read path and is now wanted in three places; doing it once, properly,
-is likely worth more than a fourth gate.
+| coerce the assignment to the FIELD SYMBOL's recorded `info` (`Minter.infoOf`) | 1 -> **3** |
+
+That last one refutes the recommendation this section previously carried. The field symbol's `info`
+is NOT what the emitter finally prints: `CollectionsTransform.run` retypes symbol signatures AFTER
+the frontend records them (`StandardTraversal.mapSymbols`), so a frontend-recorded `info` is a
+pre-transform rendering. Consulting it is not "the honest source" — it is a THIRD rendering, and
+adding it made things worse.
+
+So the remaining error wants neither another scope gate nor the symbol table, but the one thing
+neither provides: the type the EMITTER will print for that field. That is only knowable after all
+transforms have run, which means the check belongs in a late pass over the TIR — the same place
+`RewriteTrace.check` already verifies that call sites agree with declarations. Extending THAT to
+coercion targets is the principled route, and it is a design step rather than another gate.
 
 **SOLVED (4 -> 3): the inherited fill is an obligation of OVERRIDING MEMBERS, not of the class.**
 It exists to make an inherited member agree with the one it overrides; a member the class declares
