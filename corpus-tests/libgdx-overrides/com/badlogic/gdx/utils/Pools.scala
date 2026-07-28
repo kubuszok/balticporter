@@ -71,12 +71,12 @@ object Pools:
   Pools.set(() => new com.badlogic.gdx.scenes.scene2d.actions.VisibleAction())
 
   /** Registers an existing pool for the specified type. */
-  def set[T](`type`: java.lang.Class[T], pool: Pool[T]): Unit =
+  def set[T <: java.lang.Object](`type`: java.lang.Class[T], pool: Pool[T]): Unit =
     Pools.typePools.put(`type`, pool)
 
   /** Registers a factory-backed pool, keyed by the class of an instance the factory produces.
     * `Pools.set(() => new MyClass, 50)`. */
-  def set[T](factory: () => T, max: Int): Unit =
+  def set[T <: java.lang.Object](factory: () => T, max: Int): Unit =
     val probe = factory()
     Pools.set(
       probe.asInstanceOf[java.lang.Object].getClass().asInstanceOf[java.lang.Class[T]],
@@ -84,16 +84,16 @@ object Pools:
     )
 
   /** Registers a factory-backed pool with the default maximum of 100. */
-  def set[T](factory: () => T): Unit = Pools.set(factory, 100)
+  def set[T <: java.lang.Object](factory: () => T): Unit = Pools.set(factory, 100)
 
   /** The registered pool for `type`, or `null` if there is none. */
-  def getOrNull[T](`type`: java.lang.Class[T]): Pool[T] =
+  def getOrNull[T <: java.lang.Object](`type`: java.lang.Class[T]): Pool[T] =
     Pools.typePools.get(`type`).asInstanceOf[Pool[T]]
 
   /** The registered pool for `type`. Unlike the Java original this does NOT create one on a miss —
     * a pool cannot construct `T` from a `Class` without reflection. Use the `factory` overload (or
     * `set`) to register one. */
-  def get[T](`type`: java.lang.Class[T]): Pool[T] =
+  def get[T <: java.lang.Object](`type`: java.lang.Class[T]): Pool[T] =
     val pool = Pools.getOrNull(`type`)
     if pool == null then
       throw new GdxRuntimeException(
@@ -105,7 +105,7 @@ object Pools:
   /** The registered pool for `type`, creating a factory-backed one on a miss. This is the direct
     * replacement for the Java `get(type, max)` reflective fallback: same shape, but the caller
     * supplies the construction. */
-  def get[T](`type`: java.lang.Class[T], factory: () => T, max: Int): Pool[T] =
+  def get[T <: java.lang.Object](`type`: java.lang.Class[T], factory: () => T, max: Int): Pool[T] =
     val existing = Pools.getOrNull(`type`)
     if existing != null then existing
     else
@@ -114,13 +114,13 @@ object Pools:
       pool
 
   /** As `get(type, factory, max)` with the default maximum of 100. */
-  def get[T](`type`: java.lang.Class[T], factory: () => T): Pool[T] = Pools.get(`type`, factory, 100)
+  def get[T <: java.lang.Object](`type`: java.lang.Class[T], factory: () => T): Pool[T] = Pools.get(`type`, factory, 100)
 
   /** Obtains an object from the registered pool for `type`. */
-  def obtain[T](`type`: java.lang.Class[T]): T = Pools.get(`type`).obtain()
+  def obtain[T <: java.lang.Object](`type`: java.lang.Class[T]): T = Pools.get(`type`).obtain()
 
   /** Obtains an object from the pool for `type`, registering a factory-backed pool on a miss. */
-  def obtain[T](`type`: java.lang.Class[T], factory: () => T): T = Pools.get(`type`, factory).obtain()
+  def obtain[T <: java.lang.Object](`type`: java.lang.Class[T], factory: () => T): T = Pools.get(`type`, factory).obtain()
 
   /** Frees an object to the pool registered for its runtime class. `getClass` is supported on every
     * target — only INSTANTIATION from a `Class` is not — so the lookup side is unchanged. */
