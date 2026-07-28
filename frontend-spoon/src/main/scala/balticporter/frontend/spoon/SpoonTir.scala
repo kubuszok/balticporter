@@ -1681,8 +1681,11 @@ object SpoonTir:
             val anyFB = formals.exists(isFB)
             val erasedArgs = formals.map { f =>
               val nm = if inStatic || !anyFB then scala.None else accessibleTp(f.getSimpleName)
+              // on the name-filled path a formal we cannot name must be `?`, not its erasure: the
+              // F-bound names its SIBLINGS, so pinning `A` to `Actor` while `N`'s bound still reads
+              // `Node[N, V, A]` leaves `N` failing its own bound.
               nm.map(id => TypeRef(NoPrefix, id)).getOrElse {
-                if isFB(f) then TypeBounds(NoType, NoType) else erasureOfFormal(f, Set.empty, 2)
+                if anyFB || isFB(f) then TypeBounds(NoType, NoType) else erasureOfFormal(f, Set.empty, 2)
               }
             }
             val subst      = formals.map(_.getSimpleName).zip(erasedArgs).toMap
@@ -1796,7 +1799,8 @@ object SpoonTir:
                   // the erased-receiver path into line with it instead of contradicting it.
                   val named = if inStatic || !anyFBounded then scala.None else accessibleTp(f.getSimpleName)
                   named.map { id => val r = TypeRef(NoPrefix, id); namedOf(f.getSimpleName) = r; r }.getOrElse {
-                    if isFBounded(f) then TypeBounds(NoType, NoType) else erasureOfFormal(f, Set.empty, 2)
+                    if anyFBounded || isFBounded(f) then TypeBounds(NoType, NoType)
+                    else erasureOfFormal(f, Set.empty, 2)
                   }
                 }
                 val subst = formals.map(_.getSimpleName).zip(args).toMap
