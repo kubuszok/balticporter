@@ -13,7 +13,7 @@ abstract class BaseTmxMapLoader[P <: com.badlogic.gdx.maps.tiled.BaseTiledMapLoa
       textureParameter.minFilter = parameter.textureMinFilter
       textureParameter.magFilter = parameter.textureMagFilter
     } else ()
-    return this.getDependencyAssetDescriptors(tmxFile, textureParameter).asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.maps.tiled.TiledMap]]]
+    return this.getDependencyAssetDescriptors(tmxFile, textureParameter).asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]]
   }
   @java.lang.Override
   override def loadTiledMap(tmxFile: com.badlogic.gdx.files.FileHandle, parameter: P, imageResolver: com.badlogic.gdx.maps.ImageResolver): com.badlogic.gdx.maps.tiled.TiledMap = {

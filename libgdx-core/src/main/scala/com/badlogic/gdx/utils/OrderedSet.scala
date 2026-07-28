@@ -217,7 +217,7 @@ object OrderedSet {
         throw new java.lang.IllegalStateException("next must be called before remove.")
       } else ()
       nextIndex = nextIndex - 1
-      set.asInstanceOf[OrderedSet[K]].removeIndex(nextIndex)
+      set.asInstanceOf[OrderedSet[?]].removeIndex(nextIndex)
     }
     override def toArray(array: com.badlogic.gdx.utils.Array[K]): com.badlogic.gdx.utils.Array[K] = {
       array.addAll(this.items.asInstanceOf[com.badlogic.gdx.utils.Array[? <: K]], nextIndex, this.items.size - nextIndex)

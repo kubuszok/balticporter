@@ -37,13 +37,13 @@ class TideMapLoader extends com.badlogic.gdx.assets.loaders.SynchronousAssetLoad
   }
   @java.lang.Override
   override def getDependencies(fileName: java.lang.String, tmxFile: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.maps.tiled.TideMapLoader.Parameters): com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.maps.tiled.TiledMap]] = {
-    val dependencies: com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.maps.tiled.TiledMap]] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]().asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.maps.tiled.TiledMap]]]
+    val dependencies: com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]().asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]]
     try {
       this.root = this.xml.parse(tmxFile)
       for (image <- this.loadTileSheets(this.root, tmxFile)) {
-        dependencies.add(new com.badlogic.gdx.assets.AssetDescriptor(image.path(), classOf[com.badlogic.gdx.graphics.Texture]).asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.maps.tiled.TiledMap]])
+        dependencies.add(new com.badlogic.gdx.assets.AssetDescriptor(image.path(), classOf[com.badlogic.gdx.graphics.Texture]))
       }
-      return dependencies.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.maps.tiled.TiledMap]]]
+      return dependencies.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]]
     } catch {
       case e: java.io.IOException => {
         throw new com.badlogic.gdx.utils.GdxRuntimeException(("Couldn't load tilemap '" + fileName) + "'", e)

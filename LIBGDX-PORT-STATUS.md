@@ -86,6 +86,11 @@ Two things this settles:
   `Object` is uniformly worse (97 vs 162 with the fill off; 87 vs 1 with it on). Wildcards round-trip
   across overrides in the overwhelming majority of cases.
 
+A fifth scope restriction was also measured: applying the fill to an overriding member's SIGNATURE
+but not its BODY — the natural reading of "its only customer is override agreement" — costs
+**1 -> 20**. Bodies need it too, because a local whose value flows into the signature must carry the
+same instantiation. So the fill's scope is not decomposable into signature-vs-body either.
+
 So the remaining single error is NOT the tip of a systemic wildcard problem. It is the one site where
 the name-keyed fill's collision (`AsyncTask<Void>`'s `T` reaching `AssetDescriptor<T>`) is not also
 made harmlessly-consistent on both sides of an override.

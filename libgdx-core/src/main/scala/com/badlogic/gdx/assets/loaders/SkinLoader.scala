@@ -3,15 +3,15 @@ package com.badlogic.gdx.assets.loaders
 class SkinLoader(resolver$p: com.badlogic.gdx.assets.loaders.FileHandleResolver) extends com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader[com.badlogic.gdx.scenes.scene2d.ui.Skin, com.badlogic.gdx.assets.loaders.SkinLoader.SkinParameter](resolver$p) {
   @java.lang.Override
   override def getDependencies(fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.assets.loaders.SkinLoader.SkinParameter): com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.scenes.scene2d.ui.Skin]] = {
-    val deps: com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.scenes.scene2d.ui.Skin]] = new com.badlogic.gdx.utils.Array().asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.scenes.scene2d.ui.Skin]]]
+    val deps: com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = new com.badlogic.gdx.utils.Array().asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]]
     if ((parameter == null) || (parameter.textureAtlasPath == null)) {
-      deps.add(new com.badlogic.gdx.assets.AssetDescriptor(file.pathWithoutExtension() + ".atlas", classOf[com.badlogic.gdx.graphics.g2d.TextureAtlas]).asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.scenes.scene2d.ui.Skin]])
+      deps.add(new com.badlogic.gdx.assets.AssetDescriptor(file.pathWithoutExtension() + ".atlas", classOf[com.badlogic.gdx.graphics.g2d.TextureAtlas]))
     } else {
       if (parameter.textureAtlasPath != null) {
-        deps.add(new com.badlogic.gdx.assets.AssetDescriptor(parameter.textureAtlasPath, classOf[com.badlogic.gdx.graphics.g2d.TextureAtlas]).asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.scenes.scene2d.ui.Skin]])
+        deps.add(new com.badlogic.gdx.assets.AssetDescriptor(parameter.textureAtlasPath, classOf[com.badlogic.gdx.graphics.g2d.TextureAtlas]))
       } else ()
     }
-    return deps.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.scenes.scene2d.ui.Skin]]]
+    return deps.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]]
   }
   @java.lang.Override
   override def loadAsync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.assets.loaders.SkinLoader.SkinParameter): scala.Unit = {

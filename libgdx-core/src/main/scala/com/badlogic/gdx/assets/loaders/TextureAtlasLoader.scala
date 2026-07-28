@@ -20,16 +20,16 @@ class TextureAtlasLoader(resolver$p: com.badlogic.gdx.assets.loaders.FileHandleR
     } else {
       this.data = new com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData(atlasFile, imgDir, false)
     }
-    val dependencies: com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.graphics.g2d.TextureAtlas]] = new com.badlogic.gdx.utils.Array().asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.graphics.g2d.TextureAtlas]]]
+    val dependencies: com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = new com.badlogic.gdx.utils.Array().asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]]
     for (page <- this.data.getPages()) {
       val params: com.badlogic.gdx.assets.loaders.TextureLoader.TextureParameter = new com.badlogic.gdx.assets.loaders.TextureLoader.TextureParameter()
       params.format = page.format
       params.genMipMaps = page.useMipMaps
       params.minFilter = page.minFilter
       params.magFilter = page.magFilter
-      dependencies.add(new com.badlogic.gdx.assets.AssetDescriptor(page.textureFile, classOf[com.badlogic.gdx.graphics.Texture], params).asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.graphics.g2d.TextureAtlas]])
+      dependencies.add(new com.badlogic.gdx.assets.AssetDescriptor(page.textureFile, classOf[com.badlogic.gdx.graphics.Texture], params))
     }
-    return dependencies.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.graphics.g2d.TextureAtlas]]]
+    return dependencies.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]]
   }
 }
 object TextureAtlasLoader {

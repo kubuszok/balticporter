@@ -253,7 +253,7 @@ object OrderedMap {
       if (currentIndex < 0) {
         throw new java.lang.IllegalStateException("next must be called before remove.")
       } else ()
-      map.asInstanceOf[OrderedMap[K, java.lang.Object]].removeIndex(currentIndex)
+      map.asInstanceOf[OrderedMap[K, ?]].removeIndex(currentIndex)
       nextIndex = currentIndex
       currentIndex = -1
     }
@@ -292,7 +292,7 @@ object OrderedMap {
       if (currentIndex < 0) {
         throw new java.lang.IllegalStateException("next must be called before remove.")
       } else ()
-      map.asInstanceOf[OrderedMap[java.lang.Object, V]].removeIndex(currentIndex)
+      map.asInstanceOf[OrderedMap[?, V]].removeIndex(currentIndex)
       nextIndex = currentIndex
       currentIndex = -1
     }

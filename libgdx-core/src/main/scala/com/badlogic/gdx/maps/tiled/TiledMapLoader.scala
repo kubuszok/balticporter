@@ -53,16 +53,16 @@ class TiledMapLoader(resolver$p: com.badlogic.gdx.assets.loaders.FileHandleResol
     val `extension`: java.lang.String = file.`extension`().toLowerCase()
     if (`extension`.equals("tmx")) {
       if (this.usesAtlas(file)) {
-        return this.atlasTmxMapLoader.getDependencies(fileName, file, parameter).asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.maps.tiled.TiledMap]]]
+        return this.atlasTmxMapLoader.getDependencies(fileName, file, parameter).asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]]
       } else {
-        return this.tmxMapLoader.getDependencies(fileName, file, parameter).asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.maps.tiled.TiledMap]]]
+        return this.tmxMapLoader.getDependencies(fileName, file, parameter).asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]]
       }
     } else {
       if (`extension`.equals("tmj")) {
         if (this.usesAtlas(file)) {
-          return this.atlasTmjMapLoader.getDependencies(fileName, file, parameter).asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.maps.tiled.TiledMap]]]
+          return this.atlasTmjMapLoader.getDependencies(fileName, file, parameter).asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]]
         } else {
-          return this.tmjMapLoader.getDependencies(fileName, file, parameter).asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.maps.tiled.TiledMap]]]
+          return this.tmjMapLoader.getDependencies(fileName, file, parameter).asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]]
         }
       } else {
         throw new java.lang.IllegalArgumentException("Unsupported map format: " + `extension`)
