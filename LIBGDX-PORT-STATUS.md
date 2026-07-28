@@ -10,15 +10,31 @@ scala-cli 3.8.4). The migration itself prints four independent checks on every r
 
 | metric | value | source |
 |---|---|---|
-| clean-compile errors (TYPER only — see §0.1) | **22** | `scripts/gdx_measure.sh` |
+| clean-compile errors (TYPER only — see §0.1) | **14** | `scripts/gdx_measure.sh` |
 | portability (JVM-only APIs in emitted code) | **0** | `PortabilityCheck` |
 | portability (injected replacements) | **clean** | `PortabilityCheck.inInjectedSource` |
 | silent omissions | **31** (30 `super(args)` + 1; 0 anonymous-class members) | `OmissionCheck` |
 | signature consistency | clean | `RewriteTrace.check` |
 | substitutions verified removed | 10 dropped types | migration CHECK 1 + CHECK 2 |
 
-Error breakdown: E007 11, E134 6, E120 1, E083 1, E051 1, E049 1, E008 1.
-(E050, E006 and E052 are gone; E051 8→1, E049 6→1.)
+Error breakdown: E007 7, E134 4, E120 1, E051 1, E049 1. **Every remaining error is a distinct
+one-off** — no two share a cause, which is what a long tail looks like:
+
+| where | what |
+|---|---|
+| `AssetManager:486` | `ObjectMap[String, AssetLoader[T,P]]` returned where `[?, ?]` is declared |
+| `FileHandle:181` | `FileChannel#MapMode` — a JDK nested type named by projection, not `.` |
+| `BitmapFont:39` | `Array.with(region)` — a `T...` vararg reached with one element |
+| `Sprite:24` | `setRegion(int×4)` vs `(float×4)`: Java picks `int`, Scala finds both applicable |
+| `ParallelArray:176` | `Arrays.copyOf` argument erased to `Array[Object]`, result assigned to `Array[T]` — the cast belongs on the RESULT |
+| `ParticleEffectLoader:25` | raw `new AssetDescriptor(…)` with no explicit type args to substitute (`ResourceData:30`'s applied form is fixed) |
+| `ResourceData:71` | `classOf[Array[T]]` — a class literal of a generic type |
+| `RegionInfluencer:11` | nilary Java constructor vs Scala's implicit primary (see §4 — deliberate) |
+| `DepthShader:111` | inherited instance field vs the companion's re-exported static of the same name |
+| `NetJavaImpl:196` | `CollectionsTransform` retyped a JDK method that genuinely RETURNS `java.util.Map` |
+| `Skin:513` | anonymous `new ReadOnlySerializer(){…}` of a generic type infers `[Nothing]` |
+| `CharArray:705,718` | `Iterator[Character]` element in a `char` formal — unbox across an overload set |
+| `OrderedMap:285` | `Array[?]#T` element used where `Object` is required |
 
 ### Where the engine ends and a library's manifest begins
 
@@ -199,22 +215,27 @@ Long tail of distinct patterns, none bigger than four. What is left:
   noClasspath, and casting to `Array[Object]` is exactly what would break our own
   `addAll(Array[T], …)`. Type-variable identity is checked against the id its declaring type minted
   (`<owner>$$T`), not by name, so a callee's `<T>` can never bind to an unrelated in-scope one.
-- **`AssetDescriptor` ctor ×3** (`ResourceData` ×2, `ParticleEffectLoader` ×1) — `data.type` read
-  through the erased receiver view is `Class[Object]`, but the raw `new AssetDescriptor(…)` was
-  name-filled to `AssetDescriptor[T]`, which wants `Class[T]`. The shape of the fix: at a
-  `new C[targs](args)`, coerce each argument to `substFormal(formal, C's params ↦ targs)` — the
-  substituted formal, not the declared one.
-- **`IntMap`/`LongMap` `Keys.map$p : IntMap[?]` vs `IntMap[AnyRef]` ×2** — a raw `MapIterator`
-  cannot be filled with `?` in an EXTENDS clause (wildcards are illegal there), so it fills with
-  `AnyRef` while the constructor parameter beside it fills with `?`. The two raw fills must agree:
-  substitute the parent's chosen type arguments into the super-constructor's formal.
-- `OrderedMap` ×2, `ParallelArray` ×1, and singletons in `AssetManager`, `FileHandle`,
-  `BitmapFont`, `Skin`, `ParticleControllerRenderer` (raw fill in an EXTENDS clause should use each
-  parameter's BOUND, not `AnyRef` — `D <: ParticleControllerRenderData` rejects `AnyRef`).
-- `CharArray.append` ×2 — a `java.util.Iterator<Character>` element in a `char` formal; auto-unbox
-  across the overload set.
-- `NetJavaImpl` (1) is `CollectionsTransform` territory, not type residue: a JDK method genuinely
-  RETURNING `java.util.Map` was retyped as though it were ours.
+- ~~**`AssetDescriptor` ctor (applied form)**, **`IntMap`/`LongMap` `Keys`**, **`OrderedMap:233`**,
+  **`ParticleControllerRenderer[AnyRef, AnyRef]`**~~ — **FIXED**, by three rules that all write out a
+  conversion Java performed silently:
+  - **The TIR must record the ERASED type.** `fieldAccess` cast a wildcard receiver to its erased
+    view and then kept Spoon's un-erased type on the `Select`, so the TIR said `data.type : Class[T]`
+    while the emitted Scala had `Class[Object]`. Every later rule that consults `t.tpe` therefore
+    concluded there was nothing to convert. `erasedFieldReceiver` now returns the receiver view and
+    the field's type through it TOGETHER — producing one without the other IS the inconsistency.
+  - **`appliedCtorArgs`**: at a `new C<targs>(args)`, coerce each argument to the formal with C's own
+    parameters replaced by the explicit type ARGUMENTS. Without the substitution the formal names a
+    variable that exists only inside the callee, which is why `uncheckedGeneric` declines these — it
+    would render a `?T` stub. `rawCtorArgs` is the raw counterpart.
+  - **`uncheckedFrom`**: decide unchecked conversion on the RENDERED types too. Narrow by
+    construction — same type constructor, same arity, every differing argument collapsed to `Object`
+    or a wildcard. A subtype or an unrelated mismatch is not this shape.
+  - **Wildcards in an `extends` clause take the parameter's DECLARED bound**, not `AnyRef`,
+    resolving left to right so a later bound can name an earlier parameter (`T <: ParticleBatch[D]`);
+    and super-constructor arguments get the same elimination as a cast, since the parent head and
+    the parameter beside it are one raw type read in two positions.
+- ~~`TextArea` inner-class supertype (E083 + E008)~~ — **FIXED**: an inner class of an ANCESTOR is an
+  inherited member type, in scope by simple name. The projection was not merely verbose but illegal.
 
 ### 3. Re-derive the scene2d agent's rules — DONE
 All nine rules from `worktree-agent-a3f9b81b6a4184e28` (HEAD `0223788`) were triaged one at a time
