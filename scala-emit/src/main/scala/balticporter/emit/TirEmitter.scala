@@ -16,7 +16,8 @@ import balticporter.tir.*
 final class TirEmitter(source: Program):
   // normalize away Java member-name clashes (a field `x` alongside a method `x()`) before
   // rendering — Scala forbids them; renaming the field symbol propagates to every reference.
-  private val prepared = TirEmitter.funnelParamRenames(TirEmitter.resolveMemberClashes(source))
+  private val prepared =
+    TirEmitter.funnelParamRenames(TirEmitter.resolveFieldShadowing(TirEmitter.resolveMemberClashes(source)))
   /** which Java constructor becomes each class's Scala primary, and which `super(args)` can be
     * replayed as statements — whole-program decisions. */
   private val plans = CtorFunnel.Plans(prepared)
@@ -1093,6 +1094,64 @@ object TirEmitter:
     p.units.foreach(scan)
     if renames.isEmpty then p
     else new Program(p.units, SymbolTable(p.symbols.all.map(s => renames.get(s.id).map(n => s.copy(name = n)).getOrElse(s))), p.xref)
+
+  /** Rename any field that SHADOWS an inherited member.
+    *
+    * Java fields shadow rather than override, and are resolved by the STATIC type of the receiver:
+    * `ParallelArray.Channel` declares `Object data` and `FloatChannel extends Channel` declares
+    * `float[] data`, so both objects exist and `((Channel) fc).data` and `fc.data` are different
+    * storage. Scala has no such thing — a `var` cannot be overridden at all, let alone at an
+    * incompatible type — and there is no rendering that keeps one name.
+    *
+    * So the shadowing field gets a fresh name. That is exact rather than approximate precisely
+    * BECAUSE Java resolved these statically: every reference in the TIR already points at the
+    * symbol Java chose, so renaming the symbol re-points exactly the references Java meant and no
+    * others. Confirmed against the reference port, which does the same by hand and says why:
+    * "renamed to floatData/intData/objectData … Java shadowed the field; Scala can't".
+    *
+    * Fields shadowing an inherited METHOD (`TextField`'s `layout` field under `Widget.layout()`)
+    * are the same defect through Java's separate namespaces for the two, and are renamed here too.
+    * Statics are exempt: they land in the companion, which inherits nothing. */
+  def resolveFieldShadowing(p: Program): Program =
+    val renames = collection.mutable.Map[SymId, String]()
+    def nm(id: SymId): String = p.symbolOf(id).map(_.name).getOrElse("")
+    def headSym(t: TypeRepr): Option[SymId] = t match
+      case TypeRepr.TypeRef(_, s) => Some(s); case TypeRepr.AppliedType(tc, _) => headSym(tc); case _ => None
+    val declOf  = collection.mutable.Map[SymId, Tree.ClassDef]()
+    def index(cd: Tree.ClassDef): Unit =
+      declOf(cd.symbol) = cd
+      cd.body.foreach { case c: Tree.ClassDef => index(c); case _ => () }
+      cd.enumCases.foreach(_.body.foreach { case c: Tree.ClassDef => index(c); case _ => () })
+    p.units.foreach(index)
+    def instanceMembers(cd: Tree.ClassDef): Set[String] =
+      cd.body.collect {
+        case d: Tree.DefDef if nm(d.symbol) != "<init>" && !p.symbolOf(d.symbol).exists(_.flags.isStatic) => nm(d.symbol)
+        case v: Tree.ValDef if !p.symbolOf(v.symbol).exists(_.flags.isStatic)                             => nm(v.symbol)
+      }.toSet
+    def inherited(cd: Tree.ClassDef, seen: Set[SymId] = Set.empty): Set[String] =
+      cd.parents.flatMap { case tt: TypeTree => headSym(tt.tpe); case t: Term => headSym(t.tpe) }
+        .filterNot(seen)
+        .flatMap(declOf.get)
+        .flatMap(pcd => instanceMembers(pcd) ++ inherited(pcd, seen + cd.symbol))
+        .toSet
+    def scan(cd: Tree.ClassDef): Unit =
+      val shadowed = inherited(cd)
+      cd.body.foreach {
+        case v: Tree.ValDef if shadowed(nm(v.symbol)) && !p.symbolOf(v.symbol).exists(_.flags.isStatic) =>
+          renames(v.symbol) = nm(v.symbol) + "$shadow"
+        case c: Tree.ClassDef => scan(c)
+        case _                => ()
+      }
+      cd.enumCases.foreach(_.body.foreach { case c: Tree.ClassDef => scan(c); case _ => () })
+    p.units.foreach(scan)
+    if renames.isEmpty then p
+    else
+      // same visibility relaxation as `resolveMemberClashes`: a renamed field must stay reachable
+      // from wherever java read it.
+      val syms = p.symbols.all.map(s =>
+        renames.get(s.id).map(n => s.copy(name = n, flags = s.flags.copy(isPrivate = false, isProtected = false))).getOrElse(s)
+      )
+      new Program(p.units, SymbolTable(syms), p.xref)
 
   /** Rename any field whose simple name collides with a method in the same class (legal in
     * Java, illegal in Scala) by suffixing `$field`. Renaming the symbol propagates to every
