@@ -98,7 +98,16 @@ object CtorFunnel:
           .toSet
         acc.foreach { (s, p) =>
           if p.primaryParams.nonEmpty && needNilary(s) then
-            acc = acc.updated(s, Plan.none)
+            // A subclass reaches this class with an argument-free `extends`, so its promoted
+            // primary cannot keep parameters. Falling straight to `Plan.none` DISCARDS whatever
+            // java's own no-arg constructor did: `Pool()` delegates `this(16, MAX_VALUE)`, which
+            // is what allocates `freeObjects`, and every `new NodePool()` then NPE'd on the first
+            // `obtain()`. Nothing compiled differently — the migrated suite found it.
+            //
+            // `nilaryPlan` already knows how to promote a nilary constructor and inline its
+            // `this(args)` delegation; use it, and keep `Plan.none` only where there is no nilary
+            // constructor to promote (then the class genuinely contributes nothing).
+            acc = acc.updated(s, classes.find(_.symbol == s).flatMap(nilaryPlan).getOrElse(Plan.none))
             changed = true
         }
       acc
