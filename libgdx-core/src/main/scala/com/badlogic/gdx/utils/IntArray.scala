@@ -27,6 +27,8 @@ class IntArray {
   def this(array: scala.Array[scala.Int]) = {
     this(true, array, 0, array.length)
   }
+  this.ordered = true
+  this.items = new scala.Array[scala.Int](16)
   def add(value: scala.Int): scala.Unit = {
     var items: scala.Array[scala.Int] = this.items
     if (this.size == items.length) {

@@ -10,6 +10,7 @@ class PolygonMapObject extends com.badlogic.gdx.maps.MapObject {
     this()
     this.polygon = polygon
   }
+  this.polygon = new com.badlogic.gdx.math.Polygon(new scala.Array[scala.Float](0))
   def getPolygon(): com.badlogic.gdx.math.Polygon = {
     return this.polygon
   }

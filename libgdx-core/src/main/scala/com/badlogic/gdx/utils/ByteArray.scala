@@ -27,6 +27,8 @@ class ByteArray {
   def this(array: scala.Array[scala.Byte]) = {
     this(true, array, 0, array.length)
   }
+  this.ordered = true
+  this.items = new scala.Array[scala.Byte](16)
   def add(value: scala.Byte): scala.Unit = {
     var items: scala.Array[scala.Byte] = this.items
     if (this.size == items.length) {

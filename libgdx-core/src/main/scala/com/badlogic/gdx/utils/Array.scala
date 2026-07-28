@@ -35,6 +35,8 @@ class Array[T] extends balticporter.runtime.JavaIterable[T] {
   def this(array: scala.Array[T]) = {
     this(true, array, 0, array.length)
   }
+  this.ordered = true
+  this.items = com.badlogic.gdx.utils.ArraySupplier.`object`().get(16).asInstanceOf[scala.Array[T]]
   def add(value: T): scala.Unit = {
     var items: scala.Array[T] = this.items
     if (this.size == items.length) {

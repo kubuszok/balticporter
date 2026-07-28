@@ -27,6 +27,8 @@ class ShortArray {
   def this(array: scala.Array[scala.Short]) = {
     this(true, array, 0, array.length)
   }
+  this.ordered = true
+  this.items = new scala.Array[scala.Short](16)
   def add(value: scala.Int): scala.Unit = {
     var items: scala.Array[scala.Short] = this.items
     if (this.size == items.length) {

@@ -27,6 +27,8 @@ class BooleanArray {
   def this(array: scala.Array[scala.Boolean]) = {
     this(true, array, 0, array.length)
   }
+  this.ordered = true
+  this.items = new scala.Array[scala.Boolean](16)
   def add(value: scala.Boolean): scala.Unit = {
     var items: scala.Array[scala.Boolean] = this.items
     if (this.size == items.length) {

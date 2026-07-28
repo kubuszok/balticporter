@@ -31,6 +31,7 @@ class Material extends com.badlogic.gdx.graphics.g3d.Attributes {
   def this(copyFrom: Material) = {
     this(copyFrom.id, copyFrom)
   }
+  this.id = "mtl" + { Material.counter += 1; Material.counter }
   def copy(): Material = {
     return new Material(this)
   }

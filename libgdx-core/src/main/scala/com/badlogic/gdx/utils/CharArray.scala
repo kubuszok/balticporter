@@ -45,6 +45,8 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
     this.items = initialBuffer
     this.size = length
   }
+  this.ordered = true
+  this.items = new scala.Array[scala.Char](CharArray.CAPACITY)
   def add(value: scala.Char): scala.Unit = {
     if (this.size == this.items.length) {
       this.resizeBuffer(this.size + 1)

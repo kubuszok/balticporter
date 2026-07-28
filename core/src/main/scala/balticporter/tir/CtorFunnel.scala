@@ -55,8 +55,40 @@ object CtorFunnel:
     // Withholding one promotion can force another: a class whose own promotion is withheld stops
     // passing super arguments, and so joins the set demanding a nilary parent. Iterate to a
     // fixpoint — the step only ever REMOVES promotions, so it terminates.
+    /** Promote the class's explicit NILARY constructor, inlining its `this(args)` delegation.
+      *
+      * `plan0` nominates nothing when a class has SEVERAL roots and none is nilary —
+      * `RegionInfluencer` has `(int)` and `(TextureRegion...)`, and its no-arg constructor is not a
+      * root because it delegates `this(1)`. Scala then synthesises a nilary primary that collides
+      * with the emitted `def this()`.
+      *
+      * Where no constructor carries `super(args)`, the funnel is not needed for its original
+      * purpose at all — only the clash is. Promoting the nilary constructor removes it, and the
+      * delegation is expressible because [[effects]] already inlines exactly this shape.
+      *
+      * `Effects.deferredTo` is deliberately NOT required to be empty here. It is `Some(parent)`
+      * whenever the chain bottoms out at a nilary `super()`, which every Java constructor has
+      * implicitly — and which Scala's `extends` clause runs anyway. Requiring it empty made this
+      * fire nowhere (measured: no change), which instrumenting `plan0` is what revealed. */
+    private def nilaryPlan(cd: Tree.ClassDef): Option[Plan] =
+      val ctors = ctorsOf(program, cd.body)
+      if ctors.exists(c => superArgsOf(program, c).nonEmpty) then scala.None
+      else
+        for
+          nil  <- ctors.find(_.paramss.flatten.isEmpty)
+          head <- stmtsOf(nil).headOption
+          (m, as) <- head match
+            case Tree.Apply(Tree.Select(r, mm, _, _), aas, _, _, _)
+                if isInitName(program, mm) && !r.isInstanceOf[Tree.Super] && aas.nonEmpty => Some((mm, aas))
+            case _ => scala.None
+          eff  <- effects(m, as, 0)
+        yield Plan(Some(nil), Nil, eff.stats ++ stmtsOf(nil).tail)
+
     private val plans: Map[SymId, Plan] =
       var acc     = classes.map(cd => cd.symbol -> plan0(program, cd)).toMap
+      classes.foreach { cd =>
+        if acc(cd.symbol).primary.isEmpty then nilaryPlan(cd).foreach(p => acc = acc.updated(cd.symbol, p))
+      }
       var changed = true
       while changed do
         changed = false

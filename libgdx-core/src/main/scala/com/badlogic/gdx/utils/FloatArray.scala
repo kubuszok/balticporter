@@ -27,6 +27,8 @@ class FloatArray {
   def this(array: scala.Array[scala.Float]) = {
     this(true, array, 0, array.length)
   }
+  this.ordered = true
+  this.items = new scala.Array[scala.Float](16)
   def add(value: scala.Float): scala.Unit = {
     var items: scala.Array[scala.Float] = this.items
     if (this.size == items.length) {

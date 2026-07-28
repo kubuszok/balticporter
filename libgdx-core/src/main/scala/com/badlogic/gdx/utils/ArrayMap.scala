@@ -33,6 +33,9 @@ class ArrayMap[K, V] extends balticporter.runtime.JavaIterable[com.badlogic.gdx.
     this.values$field = java.util.Arrays.copyOf(array.values$field.asInstanceOf[scala.Array[java.lang.Object]], array.values$field.length).asInstanceOf[scala.Array[V]]
     this.size = array.size
   }
+  this.ordered = true
+  this.keys$field = com.badlogic.gdx.utils.ArraySupplier.`object`().get(16).asInstanceOf[scala.Array[K]]
+  this.values$field = com.badlogic.gdx.utils.ArraySupplier.`object`().get(16).asInstanceOf[scala.Array[V]]
   def put(key: K, value: V): scala.Int = {
     var index: scala.Int = this.indexOfKey(key)
     if (index == (-1)) {

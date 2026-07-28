@@ -10,6 +10,7 @@ class PolylineMapObject extends com.badlogic.gdx.maps.MapObject {
     this()
     this.polyline = polyline
   }
+  this.polyline = new com.badlogic.gdx.math.Polyline(new scala.Array[scala.Float](0))
   def getPolyline(): com.badlogic.gdx.math.Polyline = {
     return this.polyline
   }
