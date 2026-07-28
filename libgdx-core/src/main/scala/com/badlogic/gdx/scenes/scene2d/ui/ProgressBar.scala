@@ -159,12 +159,14 @@ class ProgressBar(min$p: scala.Float, max$p: scala.Float, stepSize$p: scala.Floa
     } else ()
     return this.visualInterpolation.apply((this.getVisualValue() - this.min) / (this.max - this.min))
   }
+  @com.badlogic.gdx.utils.Null
   def getBackgroundDrawable(): com.badlogic.gdx.scenes.scene2d.utils.Drawable = {
     if (this.disabled && (this.style.disabledBackground != null)) {
       return this.style.disabledBackground
     } else ()
     return this.style.background
   }
+  @com.badlogic.gdx.utils.Null
   def getKnobDrawable(): com.badlogic.gdx.scenes.scene2d.utils.Drawable = {
     if (this.disabled && (this.style.disabledKnob != null)) {
       return this.style.disabledKnob

@@ -110,9 +110,11 @@ class Table extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup {
     this.setBackground(drawableName)
     return this
   }
+  @com.badlogic.gdx.utils.Null
   def getBackground(): com.badlogic.gdx.scenes.scene2d.utils.Drawable = {
     return this.background$field
   }
+  @com.badlogic.gdx.utils.Null
   def hit(x: scala.Float, y: scala.Float, touchable: scala.Boolean): com.badlogic.gdx.scenes.scene2d.Actor = {
     if (this.clip$field) {
       if (touchable && (this.getTouchable() == com.badlogic.gdx.scenes.scene2d.Touchable.disabled)) {
@@ -337,6 +339,7 @@ class Table extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup {
     } else ()
     return cell.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]]
   }
+  @com.badlogic.gdx.utils.Null
   def getCell[T <: com.badlogic.gdx.scenes.scene2d.Actor](actor: T): com.badlogic.gdx.scenes.scene2d.ui.Cell[T] = {
     if (actor == null) {
       throw new java.lang.IllegalArgumentException("actor cannot be null.")
@@ -1218,6 +1221,7 @@ class Table extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup {
       shapes.rect(x + debugRect.x, y + debugRect.y, debugRect.width, debugRect.height)
     }; i = i + 1 } }
   }
+  @com.badlogic.gdx.utils.Null
   def getSkin(): com.badlogic.gdx.scenes.scene2d.ui.Skin = {
     return this.skin
   }

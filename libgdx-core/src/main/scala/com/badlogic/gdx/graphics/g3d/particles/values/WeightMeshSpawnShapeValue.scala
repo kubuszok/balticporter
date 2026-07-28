@@ -8,6 +8,7 @@ final class WeightMeshSpawnShapeValue extends com.badlogic.gdx.graphics.g3d.part
     this.load(value)
   }
   this.distribution = new com.badlogic.gdx.math.CumulativeDistribution[com.badlogic.gdx.graphics.g3d.particles.values.MeshSpawnShapeValue.Triangle]()
+  @java.lang.Override
   def init(): scala.Unit = {
     this.calculateWeights()
   }
@@ -59,12 +60,14 @@ final class WeightMeshSpawnShapeValue extends com.badlogic.gdx.graphics.g3d.part
     }
     this.distribution.generateNormalized()
   }
+  @java.lang.Override
   def spawnAux(vector: com.badlogic.gdx.math.Vector3, percent: scala.Float): scala.Unit = {
     val t: com.badlogic.gdx.graphics.g3d.particles.values.MeshSpawnShapeValue.Triangle = this.distribution.value()
     val a: scala.Float = com.badlogic.gdx.math.MathUtils.random()
     val b: scala.Float = com.badlogic.gdx.math.MathUtils.random()
     vector.set((t.x1 + (a * (t.x2 - t.x1))) + (b * (t.x3 - t.x1)), (t.y1 + (a * (t.y2 - t.y1))) + (b * (t.y3 - t.y1)), (t.z1 + (a * (t.z2 - t.z1))) + (b * (t.z3 - t.z1)))
   }
+  @java.lang.Override
   def copy(): com.badlogic.gdx.graphics.g3d.particles.values.SpawnShapeValue = {
     return new WeightMeshSpawnShapeValue(this)
   }

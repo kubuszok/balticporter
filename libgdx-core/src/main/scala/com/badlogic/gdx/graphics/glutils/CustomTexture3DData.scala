@@ -16,24 +16,30 @@ class CustomTexture3DData(width$p: scala.Int, height$p: scala.Int, depth$p: scal
   this.glInternalFormat = glInternalFormat$p
   this.glType = glType$p
   this.mipMapLevel = mipMapLevel$p
+  @java.lang.Override
   def isPrepared(): scala.Boolean = {
     return true
   }
+  @java.lang.Override
   def prepare(): scala.Unit = {
     ()
   }
+  @java.lang.Override
   def getWidth(): scala.Int = {
     return this.width
   }
+  @java.lang.Override
   def getHeight(): scala.Int = {
     return this.height
   }
   def getDepth(): scala.Int = {
     return this.depth
   }
+  @java.lang.Override
   def useMipMaps(): scala.Boolean = {
     return false
   }
+  @java.lang.Override
   def isManaged(): scala.Boolean = {
     return this.pixels != null
   }
@@ -88,6 +94,7 @@ class CustomTexture3DData(width$p: scala.Int, height$p: scala.Int, depth$p: scal
     } else ()
     return this.pixels
   }
+  @java.lang.Override
   def consume3DData(): scala.Unit = {
     com.badlogic.gdx.Gdx.gl30.glTexImage3D(com.badlogic.gdx.graphics.GL30.GL_TEXTURE_3D, this.mipMapLevel, this.glInternalFormat, this.width, this.height, this.depth, 0, this.glFormat, this.glType, this.pixels)
   }

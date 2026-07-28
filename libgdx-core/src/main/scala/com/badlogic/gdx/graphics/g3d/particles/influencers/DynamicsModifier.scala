@@ -7,13 +7,16 @@ abstract class DynamicsModifier extends com.badlogic.gdx.graphics.g3d.particles.
     this()
     this.isGlobal = modifier.isGlobal
   }
+  @java.lang.Override
   def allocateChannels(): scala.Unit = {
     this.lifeChannel = this.controller.particles.addChannel(com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.Life)
   }
+  @java.lang.Override
   def write(json: com.badlogic.gdx.utils.Json): scala.Unit = {
     super.write(json)
     json.writeValue("isGlobal", this.isGlobal.asInstanceOf[java.lang.Boolean])
   }
+  @java.lang.Override
   def read(json: com.badlogic.gdx.utils.Json, jsonData: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
     super.read(json, jsonData)
     this.isGlobal = json.readValue("isGlobal", classOf[scala.Boolean], jsonData)
@@ -32,10 +35,12 @@ object DynamicsModifier {
       this()
       this.isGlobal = rotation.isGlobal
     }
+    @java.lang.Override
     def allocateChannels(): scala.Unit = {
       this.rotationChannel = this.controller.particles.addChannel(com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.Rotation3D)
       this.accellerationChannel = this.controller.particles.addChannel(com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.Acceleration)
     }
+    @java.lang.Override
     def update(): scala.Unit = {
       { var i: scala.Int = 0; var accelOffset: scala.Int = 0; val c: scala.Int = i + (this.controller.particles.size * this.rotationChannel.strideSize); while (i < c) { {
         val axisZ: com.badlogic.gdx.math.Vector3 = DynamicsModifier.TMP_V1.set(this.accellerationChannel.data(accelOffset + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.XOffset), this.accellerationChannel.data(accelOffset + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.YOffset), this.accellerationChannel.data(accelOffset + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.ZOffset)).nor()
@@ -48,6 +53,7 @@ object DynamicsModifier {
         this.rotationChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.WOffset) = DynamicsModifier.TMP_Q.w
       }; i = i + this.rotationChannel.strideSize; accelOffset = accelOffset + this.accellerationChannel.strideSize } }
     }
+    @java.lang.Override
     def copy(): com.badlogic.gdx.graphics.g3d.particles.ParticleControllerComponent = {
       return new com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.FaceDirection(this)
     }
@@ -65,11 +71,13 @@ object DynamicsModifier {
       this.strengthValue.load(rotation.strengthValue)
     }
     this.strengthValue = new com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue()
+    @java.lang.Override
     def allocateChannels(): scala.Unit = {
       super.allocateChannels()
       com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.Interpolation.id = this.controller.particleChannels.newId()
       this.strengthChannel = this.controller.particles.addChannel(com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.Interpolation)
     }
+    @java.lang.Override
     def activateParticles(startIndex: scala.Int, count: scala.Int): scala.Unit = {
       var start: scala.Float = 0.0f
       var diff: scala.Float = 0.0f;
@@ -83,10 +91,12 @@ object DynamicsModifier {
         this.strengthChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.VelocityStrengthDiffOffset) = diff
       }; i = i + this.strengthChannel.strideSize } }
     }
+    @java.lang.Override
     def write(json: com.badlogic.gdx.utils.Json): scala.Unit = {
       super.write(json)
       json.writeValue("strengthValue", this.strengthValue)
     }
+    @java.lang.Override
     def read(json: com.badlogic.gdx.utils.Json, jsonData: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
       super.read(json, jsonData)
       this.strengthValue = json.readValue("strengthValue", classOf[com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue], jsonData)
@@ -111,11 +121,13 @@ object DynamicsModifier {
     }
     this.thetaValue = new com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue()
     this.phiValue = new com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue()
+    @java.lang.Override
     def allocateChannels(): scala.Unit = {
       super.allocateChannels()
       com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.Interpolation4.id = this.controller.particleChannels.newId()
       this.angularChannel = this.controller.particles.addChannel(com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.Interpolation4)
     }
+    @java.lang.Override
     def activateParticles(startIndex: scala.Int, count: scala.Int): scala.Unit = {
       super.activateParticles(startIndex, count)
       var start: scala.Float = 0.0f
@@ -137,11 +149,13 @@ object DynamicsModifier {
         this.angularChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.VelocityPhiDiffOffset) = diff
       }; i = i + this.angularChannel.strideSize } }
     }
+    @java.lang.Override
     def write(json: com.badlogic.gdx.utils.Json): scala.Unit = {
       super.write(json)
       json.writeValue("thetaValue", this.thetaValue)
       json.writeValue("phiValue", this.phiValue)
     }
+    @java.lang.Override
     def read(json: com.badlogic.gdx.utils.Json, jsonData: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
       super.read(json, jsonData)
       this.thetaValue = json.readValue("thetaValue", classOf[com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue], jsonData)
@@ -159,15 +173,18 @@ object DynamicsModifier {
       this.strengthValue = new com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue()
       this.strengthValue.load(rotation.strengthValue)
     }
+    @java.lang.Override
     def allocateChannels(): scala.Unit = {
       super.allocateChannels()
       this.rotationalVelocity2dChannel = this.controller.particles.addChannel(com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.AngularVelocity2D)
     }
+    @java.lang.Override
     def update(): scala.Unit = {
       { var i: scala.Int = 0; var l: scala.Int = com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.LifePercentOffset; var s: scala.Int = 0; val c: scala.Int = i + (this.controller.particles.size * this.rotationalVelocity2dChannel.strideSize); while (i < c) { {
         this.rotationalVelocity2dChannel.data(i) = this.rotationalVelocity2dChannel.data(i) + (this.strengthChannel.data(s + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.VelocityStrengthStartOffset) + (this.strengthChannel.data(s + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.VelocityStrengthDiffOffset) * strengthValue.getScale(this.lifeChannel.data(l))))
       }; s = s + this.strengthChannel.strideSize; i = i + this.rotationalVelocity2dChannel.strideSize; l = l + this.lifeChannel.strideSize } }
     }
+    @java.lang.Override
     def copy(): com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.Rotational2D = {
       return new com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.Rotational2D(this)
     }
@@ -188,11 +205,13 @@ object DynamicsModifier {
       this.thetaValue.load(rotation.thetaValue)
       this.phiValue.load(rotation.phiValue)
     }
+    @java.lang.Override
     def allocateChannels(): scala.Unit = {
       super.allocateChannels()
       this.rotationChannel = this.controller.particles.addChannel(com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.Rotation3D)
       this.rotationalForceChannel = this.controller.particles.addChannel(com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.AngularVelocity3D)
     }
+    @java.lang.Override
     def update(): scala.Unit = {
       { var i: scala.Int = 0; var l: scala.Int = com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.LifePercentOffset; var s: scala.Int = 0; var a: scala.Int = 0; val c: scala.Int = this.controller.particles.size * this.rotationalForceChannel.strideSize; while (i < c) { {
         val lifePercent: scala.Float = this.lifeChannel.data(l)
@@ -210,6 +229,7 @@ object DynamicsModifier {
         this.rotationalForceChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.ZOffset) = this.rotationalForceChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.ZOffset) + DynamicsModifier.TMP_V3.z
       }; s = s + this.strengthChannel.strideSize; i = i + this.rotationalForceChannel.strideSize; a = a + this.angularChannel.strideSize; l = l + this.lifeChannel.strideSize } }
     }
+    @java.lang.Override
     def copy(): com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.Rotational3D = {
       return new com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.Rotational3D(this)
     }
@@ -226,11 +246,13 @@ object DynamicsModifier {
       this.strengthValue = new com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue()
       this.strengthValue.load(rotation.strengthValue)
     }
+    @java.lang.Override
     def allocateChannels(): scala.Unit = {
       super.allocateChannels()
       this.accelerationChannel = this.controller.particles.addChannel(com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.Acceleration)
       this.positionChannel = this.controller.particles.addChannel(com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.Position)
     }
+    @java.lang.Override
     def update(): scala.Unit = {
       var cx: scala.Float = 0
       var cy: scala.Float = 0
@@ -253,6 +275,7 @@ object DynamicsModifier {
         this.accelerationChannel.data(forceOffset + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.ZOffset) = this.accelerationChannel.data(forceOffset + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.ZOffset) + DynamicsModifier.TMP_V3.z
       }; i = i + 1; positionOffset = positionOffset + this.positionChannel.strideSize; strengthOffset = strengthOffset + this.strengthChannel.strideSize; forceOffset = forceOffset + this.accelerationChannel.strideSize; lifeOffset = lifeOffset + this.lifeChannel.strideSize } }
     }
+    @java.lang.Override
     def copy(): com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.CentripetalAcceleration = {
       return new com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.CentripetalAcceleration(this)
     }
@@ -272,10 +295,12 @@ object DynamicsModifier {
       this.thetaValue.load(rotation.thetaValue)
       this.phiValue.load(rotation.phiValue)
     }
+    @java.lang.Override
     def allocateChannels(): scala.Unit = {
       super.allocateChannels()
       this.directionalVelocityChannel = this.controller.particles.addChannel(com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.Acceleration)
     }
+    @java.lang.Override
     def update(): scala.Unit = {
       { var i: scala.Int = 0; var l: scala.Int = com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.LifePercentOffset; var s: scala.Int = 0; var a: scala.Int = 0; val c: scala.Int = i + (this.controller.particles.size * this.directionalVelocityChannel.strideSize); while (i < c) { {
         val lifePercent: scala.Float = this.lifeChannel.data(l)
@@ -296,6 +321,7 @@ object DynamicsModifier {
         this.directionalVelocityChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.ZOffset) = this.directionalVelocityChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.ZOffset) + DynamicsModifier.TMP_V3.z
       }; s = s + this.strengthChannel.strideSize; i = i + this.directionalVelocityChannel.strideSize; a = a + this.angularChannel.strideSize; l = l + this.lifeChannel.strideSize } }
     }
+    @java.lang.Override
     def copy(): com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.PolarAcceleration = {
       return new com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.PolarAcceleration(this)
     }
@@ -316,11 +342,13 @@ object DynamicsModifier {
       this.thetaValue.load(rotation.thetaValue)
       this.phiValue.load(rotation.phiValue)
     }
+    @java.lang.Override
     def allocateChannels(): scala.Unit = {
       super.allocateChannels()
       this.directionalVelocityChannel = this.controller.particles.addChannel(com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.Acceleration)
       this.positionChannel = this.controller.particles.addChannel(com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.Position)
     }
+    @java.lang.Override
     def update(): scala.Unit = {
       { var i: scala.Int = 0; var l: scala.Int = com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.LifePercentOffset; var s: scala.Int = 0; var a: scala.Int = 0; var positionOffset: scala.Int = 0; val c: scala.Int = i + (this.controller.particles.size * this.directionalVelocityChannel.strideSize); while (i < c) { {
         val lifePercent: scala.Float = this.lifeChannel.data(l)
@@ -345,6 +373,7 @@ object DynamicsModifier {
         this.directionalVelocityChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.ZOffset) = this.directionalVelocityChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.ZOffset) + DynamicsModifier.TMP_V3.z
       }; s = s + this.strengthChannel.strideSize; i = i + this.directionalVelocityChannel.strideSize; a = a + this.angularChannel.strideSize; l = l + this.lifeChannel.strideSize; positionOffset = positionOffset + this.positionChannel.strideSize } }
     }
+    @java.lang.Override
     def copy(): com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.TangentialAcceleration = {
       return new com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.TangentialAcceleration(this)
     }
@@ -360,10 +389,12 @@ object DynamicsModifier {
       this.strengthValue = new com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue()
       this.strengthValue.load(rotation.strengthValue)
     }
+    @java.lang.Override
     def allocateChannels(): scala.Unit = {
       super.allocateChannels()
       this.accelerationChannel = this.controller.particles.addChannel(com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.Acceleration)
     }
+    @java.lang.Override
     def update(): scala.Unit = {
       var lifeOffset: scala.Int = com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.LifePercentOffset
       var strengthOffset: scala.Int = 0
@@ -376,6 +407,7 @@ object DynamicsModifier {
         this.accelerationChannel.data(forceOffset + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.ZOffset) = this.accelerationChannel.data(forceOffset + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.ZOffset) + DynamicsModifier.TMP_V3.z
       }; i = i + 1; strengthOffset = strengthOffset + this.strengthChannel.strideSize; forceOffset = forceOffset + this.accelerationChannel.strideSize; lifeOffset = lifeOffset + this.lifeChannel.strideSize } }
     }
+    @java.lang.Override
     def copy(): com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.BrownianAcceleration = {
       return new com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.BrownianAcceleration(this)
     }

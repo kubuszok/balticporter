@@ -42,6 +42,7 @@ object ScreenUtils {
     pixmap.dispose()
     return textureRegion
   }
+  @java.lang.Deprecated
   def getFrameBufferPixmap(x: scala.Int, y: scala.Int, w: scala.Int, h: scala.Int): com.badlogic.gdx.graphics.Pixmap = {
     return com.badlogic.gdx.graphics.Pixmap.createFromFrameBuffer(x, y, w, h)
   }

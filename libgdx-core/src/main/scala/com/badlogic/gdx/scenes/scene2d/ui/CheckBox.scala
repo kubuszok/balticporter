@@ -35,6 +35,7 @@ class CheckBox(text: java.lang.String, style$p: com.badlogic.gdx.scenes.scene2d.
     this.image.setDrawable(this.getImageDrawable())
     super.draw(batch, parentAlpha)
   }
+  @com.badlogic.gdx.utils.Null
   def getImageDrawable(): com.badlogic.gdx.scenes.scene2d.utils.Drawable = {
     if (this.isDisabled()) {
       if (isChecked$field && (this.style.checkboxOnDisabled != null)) {

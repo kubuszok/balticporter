@@ -40,6 +40,7 @@ class ImageButton(style$p: com.badlogic.gdx.scenes.scene2d.ui.ImageButton.ImageB
   def getStyle(): com.badlogic.gdx.scenes.scene2d.ui.ImageButton.ImageButtonStyle = {
     return this.style
   }
+  @com.badlogic.gdx.utils.Null
   def getImageDrawable(): com.badlogic.gdx.scenes.scene2d.utils.Drawable = {
     if (this.isDisabled() && (this.style.imageDisabled != null)) {
       return this.style.imageDisabled

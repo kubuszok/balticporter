@@ -25,6 +25,7 @@ class AlphaAction extends com.badlogic.gdx.scenes.scene2d.actions.TemporalAction
     super.reset()
     this.color = null
   }
+  @com.badlogic.gdx.utils.Null
   def getColor(): com.badlogic.gdx.graphics.Color = {
     return this.color
   }

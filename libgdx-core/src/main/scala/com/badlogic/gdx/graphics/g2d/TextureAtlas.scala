@@ -68,6 +68,7 @@ class TextureAtlas extends com.badlogic.gdx.utils.Disposable {
   def getRegions(): com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion] = {
     return this.regions
   }
+  @com.badlogic.gdx.utils.Null
   def findRegion(name: java.lang.String): com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion = {
     { var i: scala.Int = 0; val n: scala.Int = this.regions.size; while (i < n) { {
       if (this.regions.get(i).name.equals(name)) {
@@ -76,6 +77,7 @@ class TextureAtlas extends com.badlogic.gdx.utils.Disposable {
     }; i = i + 1 } }
     return null
   }
+  @com.badlogic.gdx.utils.Null
   def findRegion(name: java.lang.String, index: scala.Int): com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion = {
     { var i: scala.Int = 0; val n: scala.Int = this.regions.size; while (i < n) { {
       val region: com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion = this.regions.get(i)
@@ -106,6 +108,7 @@ class TextureAtlas extends com.badlogic.gdx.utils.Disposable {
     }; i = i + 1 } }
     return sprites.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.Sprite]]
   }
+  @com.badlogic.gdx.utils.Null
   def createSprite(name: java.lang.String): com.badlogic.gdx.graphics.g2d.Sprite = {
     { var i: scala.Int = 0; val n: scala.Int = this.regions.size; while (i < n) { {
       if (this.regions.get(i).name.equals(name)) {
@@ -114,6 +117,7 @@ class TextureAtlas extends com.badlogic.gdx.utils.Disposable {
     }; i = i + 1 } }
     return null
   }
+  @com.badlogic.gdx.utils.Null
   def createSprite(name: java.lang.String, index: scala.Int): com.badlogic.gdx.graphics.g2d.Sprite = {
     { var i: scala.Int = 0; val n: scala.Int = this.regions.size; while (i < n) { {
       val region: com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion = this.regions.get(i)
@@ -149,6 +153,7 @@ class TextureAtlas extends com.badlogic.gdx.utils.Disposable {
     } else ()
     return new com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasSprite(region)
   }
+  @com.badlogic.gdx.utils.Null
   def createPatch(name: java.lang.String): com.badlogic.gdx.graphics.g2d.NinePatch = {
     { var i: scala.Int = 0; val n: scala.Int = this.regions.size; while (i < n) { {
       val region: com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion = this.regions.get(i)
@@ -474,6 +479,7 @@ object TextureAtlas {
       var names: scala.Array[java.lang.String] = null.asInstanceOf[scala.Array[java.lang.String]]
       var values: scala.Array[scala.Array[scala.Int]] = null.asInstanceOf[scala.Array[scala.Array[scala.Int]]]
       var flip: scala.Boolean = false
+      @com.badlogic.gdx.utils.Null
       def findValue(name: java.lang.String): scala.Array[scala.Int] = {
         if (this.names != null) {
           { var i: scala.Int = 0; val n: scala.Int = this.names.length; while (i < n) { {
@@ -532,6 +538,7 @@ object TextureAtlas {
       this.originalWidth = this.packedWidth
       this.originalHeight = this.packedHeight
     }
+    @java.lang.Override
     def flip(x: scala.Boolean, y: scala.Boolean): scala.Unit = {
       super.flip(x, y)
       if (x) {
@@ -547,6 +554,7 @@ object TextureAtlas {
     def getRotatedPackedHeight(): scala.Float = {
       return if (this.rotate) this.packedWidth else this.packedHeight
     }
+    @com.badlogic.gdx.utils.Null
     def findValue(name: java.lang.String): scala.Array[scala.Int] = {
       if (this.names != null) {
         { var i: scala.Int = 0; val n: scala.Int = this.names.length; while (i < n) { {
@@ -592,15 +600,19 @@ object TextureAtlas {
       this.originalOffsetY = sprite.originalOffsetY
       this.set(sprite)
     }
+    @java.lang.Override
     def setPosition(x: scala.Float, y: scala.Float): scala.Unit = {
       super.setPosition(x + this.region.offsetX, y + this.region.offsetY)
     }
+    @java.lang.Override
     def setX(x: scala.Float): scala.Unit = {
       super.setX(x + this.region.offsetX)
     }
+    @java.lang.Override
     def setY(y: scala.Float): scala.Unit = {
       super.setY(y + this.region.offsetY)
     }
+    @java.lang.Override
     def setBounds(x: scala.Float, y: scala.Float, width: scala.Float, height: scala.Float): scala.Unit = {
       val widthRatio: scala.Float = width / this.region.originalWidth
       val heightRatio: scala.Float = height / this.region.originalHeight
@@ -610,15 +622,19 @@ object TextureAtlas {
       val packedHeight: scala.Int = if (this.region.rotate) this.region.packedWidth else this.region.packedHeight
       super.setBounds(x + this.region.offsetX, y + this.region.offsetY, packedWidth * widthRatio, packedHeight * heightRatio)
     }
+    @java.lang.Override
     def setSize(width: scala.Float, height: scala.Float): scala.Unit = {
       this.setBounds(this.getX(), this.getY(), width, height)
     }
+    @java.lang.Override
     def setOrigin(originX: scala.Float, originY: scala.Float): scala.Unit = {
       super.setOrigin(originX - this.region.offsetX, originY - this.region.offsetY)
     }
+    @java.lang.Override
     def setOriginCenter(): scala.Unit = {
       super.setOrigin((width / 2) - this.region.offsetX, (height / 2) - this.region.offsetY)
     }
+    @java.lang.Override
     def flip(x: scala.Boolean, y: scala.Boolean): scala.Unit = {
       if (this.region.rotate) {
         super.flip(y, x)
@@ -641,6 +657,7 @@ object TextureAtlas {
       this.translate(this.region.offsetX - oldOffsetX, this.region.offsetY - oldOffsetY)
       this.setOrigin(oldOriginX, oldOriginY)
     }
+    @java.lang.Override
     def rotate90(clockwise: scala.Boolean): scala.Unit = {
       super.rotate90(clockwise)
       val oldOriginX: scala.Float = this.getOriginX()
@@ -659,21 +676,27 @@ object TextureAtlas {
       this.translate(this.region.offsetX - oldOffsetX, this.region.offsetY - oldOffsetY)
       this.setOrigin(oldOriginX, oldOriginY)
     }
+    @java.lang.Override
     def getX(): scala.Float = {
       return super.getX() - this.region.offsetX
     }
+    @java.lang.Override
     def getY(): scala.Float = {
       return super.getY() - this.region.offsetY
     }
+    @java.lang.Override
     def getOriginX(): scala.Float = {
       return super.getOriginX() + this.region.offsetX
     }
+    @java.lang.Override
     def getOriginY(): scala.Float = {
       return super.getOriginY() + this.region.offsetY
     }
+    @java.lang.Override
     def getWidth(): scala.Float = {
       return (super.getWidth() / this.region.getRotatedPackedWidth()) * this.region.originalWidth
     }
+    @java.lang.Override
     def getHeight(): scala.Float = {
       return (super.getHeight() / this.region.getRotatedPackedHeight()) * this.region.originalHeight
     }

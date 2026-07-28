@@ -1,3 +1,4 @@
 package com.badlogic.gdx.utils
 
-abstract class NonNullByDefault
+@java.lang.Deprecated
+class NonNullByDefault extends scala.annotation.StaticAnnotation

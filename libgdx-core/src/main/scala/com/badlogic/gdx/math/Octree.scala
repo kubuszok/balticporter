@@ -3,6 +3,7 @@ package com.badlogic.gdx.math
 class Octree[T](minimum: com.badlogic.gdx.math.Vector3, maximum: com.badlogic.gdx.math.Vector3, maxDepth: scala.Int, maxItemsPerNode$p: scala.Int, collider$p: com.badlogic.gdx.math.Octree.Collider[T]) {
   var maxItemsPerNode: scala.Int = 0
   final val nodePool: com.badlogic.gdx.utils.Pool[OctreeNode] = new com.badlogic.gdx.utils.Pool[OctreeNode]() {
+    @java.lang.Override
     override def newObject(): OctreeNode = {
       return new OctreeNode()
     }

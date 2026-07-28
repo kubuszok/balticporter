@@ -17,7 +17,22 @@ object OmissionCheck:
   final case class Finding(what: String, owner: String, detail: String, origin: Origin):
     def render: String = s"$what: $owner — $detail  (${origin.javaPath}:${origin.line})"
 
-  def check(program: Program): List[Finding] = droppedSuperArgs(program) ++ droppedAnonMembers(program)
+  def check(program: Program): List[Finding] =
+    droppedSuperArgs(program) ++ droppedAnonMembers(program) ++ droppedAnnotations(program)
+
+  /** A Java ANNOTATION the frontend could not carry.
+    *
+    * Annotations were dropped WHOLESALE until 2026-07-28 — 221 `@Test` in libGDX's own suite, and
+    * every `@Override`, `@Deprecated` and `@Null` in the corpus. That is the worst shape a silent
+    * omission can take: a JUnit suite with no `@Test` runs zero tests and reports SUCCESS, so the
+    * defect manufactures the evidence that behaviour is fine and disables the gate meant to catch
+    * it. Now that they are translated, this counts whatever still cannot be — an annotation whose
+    * arguments would not translate is REPORTED rather than emitted bare, since `@A` where Java
+    * wrote `@A(x)` is a different annotation. */
+  def droppedAnnotations(program: Program): List[Finding] =
+    program.symbols.all.toList.filter(_.droppedAnnotations.nonEmpty).sortBy(_.fullName).map { s =>
+      Finding("annotation dropped", s.fullName, s.droppedAnnotations.mkString(", "), s.origin)
+    }
 
   /** A member of a Java ANONYMOUS class body that did not survive translation.
     *

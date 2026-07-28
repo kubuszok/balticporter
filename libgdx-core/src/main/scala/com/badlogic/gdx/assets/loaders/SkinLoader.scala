@@ -1,6 +1,7 @@
 package com.badlogic.gdx.assets.loaders
 
 class SkinLoader(resolver$p: com.badlogic.gdx.assets.loaders.FileHandleResolver) extends com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader[com.badlogic.gdx.scenes.scene2d.ui.Skin, com.badlogic.gdx.assets.loaders.SkinLoader.SkinParameter](resolver$p) {
+  @java.lang.Override
   def getDependencies(fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.assets.loaders.SkinLoader.SkinParameter): com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = {
     val deps: com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = new com.badlogic.gdx.utils.Array().asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]]
     if ((parameter == null) || (parameter.textureAtlasPath == null)) {
@@ -12,9 +13,11 @@ class SkinLoader(resolver$p: com.badlogic.gdx.assets.loaders.FileHandleResolver)
     }
     return deps.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]]
   }
+  @java.lang.Override
   def loadAsync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.assets.loaders.SkinLoader.SkinParameter): scala.Unit = {
     ()
   }
+  @java.lang.Override
   def loadSync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.assets.loaders.SkinLoader.SkinParameter): com.badlogic.gdx.scenes.scene2d.ui.Skin = {
     var textureAtlasPath: java.lang.String = file.pathWithoutExtension() + ".atlas"
     var resources: com.badlogic.gdx.utils.ObjectMap[java.lang.String, java.lang.Object] = null

@@ -51,6 +51,7 @@ class PerformanceCounter(name$p: java.lang.String, windowSize: scala.Int) {
     this.current = 0.0f
     this.valid = false
   }
+  @java.lang.Override
   def toString(): java.lang.String = {
     val sb: java.lang.StringBuilder = new java.lang.StringBuilder()
     return this.toString(sb).toString()

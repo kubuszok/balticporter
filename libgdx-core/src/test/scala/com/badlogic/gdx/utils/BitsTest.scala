@@ -1,6 +1,7 @@
 package com.badlogic.gdx.utils
 
 class BitsTest {
+  @org.junit.Test
   def testHashcodeAndEquals(): scala.Unit = {
     val b1: com.badlogic.gdx.utils.Bits = new com.badlogic.gdx.utils.Bits()
     val b2: com.badlogic.gdx.utils.Bits = new com.badlogic.gdx.utils.Bits()
@@ -17,6 +18,7 @@ class BitsTest {
     org.junit.Assert.assertEquals(b1.hashCode(), b2.hashCode())
     org.junit.Assert.assertTrue(b1.equals(b2))
   }
+  @org.junit.Test
   def testXor(): scala.Unit = {
     val b1: com.badlogic.gdx.utils.Bits = new com.badlogic.gdx.utils.Bits()
     val b2: com.badlogic.gdx.utils.Bits = new com.badlogic.gdx.utils.Bits()
@@ -27,6 +29,7 @@ class BitsTest {
     b2.xor(b1)
     org.junit.Assert.assertTrue(b2.get(1024))
   }
+  @org.junit.Test
   def testOr(): scala.Unit = {
     val b1: com.badlogic.gdx.utils.Bits = new com.badlogic.gdx.utils.Bits()
     val b2: com.badlogic.gdx.utils.Bits = new com.badlogic.gdx.utils.Bits()
@@ -37,6 +40,7 @@ class BitsTest {
     b2.or(b1)
     org.junit.Assert.assertTrue(b2.get(1024))
   }
+  @org.junit.Test
   def testAnd(): scala.Unit = {
     val b1: com.badlogic.gdx.utils.Bits = new com.badlogic.gdx.utils.Bits()
     val b2: com.badlogic.gdx.utils.Bits = new com.badlogic.gdx.utils.Bits()
@@ -47,6 +51,7 @@ class BitsTest {
     b1.and(b2)
     org.junit.Assert.assertFalse(b1.get(400))
   }
+  @org.junit.Test
   def testCopyConstructor(): scala.Unit = {
     val b1: com.badlogic.gdx.utils.Bits = new com.badlogic.gdx.utils.Bits()
     b1.set(50)

@@ -34,9 +34,11 @@ class MapProperties {
   def getValues(): balticporter.runtime.JavaIterator[java.lang.Object] = {
     return this.properties.values()
   }
+  @java.lang.Override
   def toString(): java.lang.String = {
     return (("MapProperties{" + "properties=") + this.properties) + '}'
   }
+  @java.lang.Override
   def equals(o: java.lang.Object): scala.Boolean = {
     if (!o.isInstanceOf[MapProperties]) {
       return false
@@ -44,6 +46,7 @@ class MapProperties {
     val that: MapProperties = o.asInstanceOf[MapProperties].asInstanceOf[MapProperties]
     return java.util.Objects.equals(this.properties, that.properties)
   }
+  @java.lang.Override
   def hashCode(): scala.Int = {
     return this.properties.hashCode()
   }

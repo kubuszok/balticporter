@@ -22,12 +22,15 @@ class TmxMapLoader extends com.badlogic.gdx.maps.tiled.BaseTmxMapLoader[com.badl
     map.setOwnedResources(textures.values().toArray())
     return map
   }
+  @java.lang.Override
   def loadAsync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, tmxFile: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.Parameters): scala.Unit = {
     this.map = this.loadTiledMap(tmxFile, parameter, new com.badlogic.gdx.maps.ImageResolver.AssetManagerImageResolver(manager))
   }
+  @java.lang.Override
   def loadSync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.Parameters): com.badlogic.gdx.maps.tiled.TiledMap = {
     return map
   }
+  @java.lang.Override
   def getDependencyAssetDescriptors(tmxFile: com.badlogic.gdx.files.FileHandle, textureParameter: com.badlogic.gdx.assets.loaders.TextureLoader.TextureParameter): com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = {
     val descriptors: com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]().asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]]
     val fileHandles: com.badlogic.gdx.utils.Array[com.badlogic.gdx.files.FileHandle] = this.getDependencyFileHandles(tmxFile)
@@ -79,6 +82,7 @@ class TmxMapLoader extends com.badlogic.gdx.maps.tiled.BaseTmxMapLoader[com.badl
     }
     return fileHandles
   }
+  @java.lang.Override
   def addStaticTiles(tmxFile: com.badlogic.gdx.files.FileHandle, imageResolver: com.badlogic.gdx.maps.ImageResolver, tileSet: com.badlogic.gdx.maps.tiled.TiledMapTileSet, element: com.badlogic.gdx.utils.XmlReader.Element, tileElements: com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.XmlReader.Element], name: java.lang.String, firstgid: scala.Int, tilewidth: scala.Int, tileheight: scala.Int, spacing: scala.Int, margin: scala.Int, source: java.lang.String, offsetX: scala.Int, offsetY: scala.Int, imageSource$arg: java.lang.String, imageWidth: scala.Int, imageHeight: scala.Int, image$arg: com.badlogic.gdx.files.FileHandle): scala.Unit = {
     var imageSource: java.lang.String = imageSource$arg
     var image: com.badlogic.gdx.files.FileHandle = image$arg

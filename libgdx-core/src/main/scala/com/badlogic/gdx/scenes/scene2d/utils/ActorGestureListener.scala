@@ -131,6 +131,7 @@ class ActorGestureListener(halfTapSquareSize: scala.Float, tapCountInterval: sca
   def getGestureDetector(): com.badlogic.gdx.input.GestureDetector = {
     return this.detector
   }
+  @com.badlogic.gdx.utils.Null
   def getTouchDownTarget(): com.badlogic.gdx.scenes.scene2d.Actor = {
     return this.touchDownTarget
   }

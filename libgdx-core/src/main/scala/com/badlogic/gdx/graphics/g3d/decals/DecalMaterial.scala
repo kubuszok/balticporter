@@ -19,6 +19,7 @@ class DecalMaterial {
   def getDstBlendFactor(): scala.Int = {
     return this.dstBlendFactor
   }
+  @java.lang.Override
   def equals(o: java.lang.Object): scala.Boolean = {
     if (o == null) {
       return false
@@ -26,6 +27,7 @@ class DecalMaterial {
     val material: DecalMaterial = o.asInstanceOf[DecalMaterial].asInstanceOf[DecalMaterial]
     return ((this.dstBlendFactor == material.dstBlendFactor) && (this.srcBlendFactor == material.srcBlendFactor)) && (this.textureRegion.getTexture() == material.textureRegion.getTexture())
   }
+  @java.lang.Override
   def hashCode(): scala.Int = {
     var result: scala.Int = if (this.textureRegion.getTexture() != null) this.textureRegion.getTexture().hashCode() else 0
     result = (31 * result) + this.srcBlendFactor

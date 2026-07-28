@@ -47,6 +47,7 @@ class ImageTextButton(text: java.lang.String, style$p: com.badlogic.gdx.scenes.s
   def getStyle(): com.badlogic.gdx.scenes.scene2d.ui.ImageTextButton.ImageTextButtonStyle = {
     return this.style
   }
+  @com.badlogic.gdx.utils.Null
   def getImageDrawable(): com.badlogic.gdx.scenes.scene2d.utils.Drawable = {
     if (this.isDisabled() && (this.style.imageDisabled != null)) {
       return this.style.imageDisabled
@@ -83,6 +84,7 @@ class ImageTextButton(text: java.lang.String, style$p: com.badlogic.gdx.scenes.s
   def updateImage(): scala.Unit = {
     this.image.setDrawable(this.getImageDrawable())
   }
+  @com.badlogic.gdx.utils.Null
   def getFontColor(): com.badlogic.gdx.graphics.Color = {
     if (this.isDisabled() && (this.style.disabledFontColor != null)) {
       return this.style.disabledFontColor

@@ -93,6 +93,7 @@ class ComparableTimSort {
       this.mergeAt(n)
     }
   }
+  @java.lang.SuppressWarnings(scala.Array[java.lang.String]("unchecked"))
   private def mergeAt(i: scala.Int): scala.Unit = {
     if (ComparableTimSort.DEBUG) {
       assert(this.stackSize >= 2)
@@ -141,6 +142,7 @@ class ComparableTimSort {
       this.mergeHi(base1, len1, base2, len2)
     }
   }
+  @java.lang.SuppressWarnings(scala.Array[java.lang.String]("unchecked"))
   private def mergeLo(base1: scala.Int, len1$arg: scala.Int, base2: scala.Int, len2$arg: scala.Int): scala.Unit = {
     var len1: scala.Int = len1$arg
     var len2: scala.Int = len2$arg
@@ -247,6 +249,7 @@ class ComparableTimSort {
       }
     }
   }
+  @java.lang.SuppressWarnings(scala.Array[java.lang.String]("unchecked"))
   private def mergeHi(base1: scala.Int, len1$arg: scala.Int, base2: scala.Int, len2$arg: scala.Int): scala.Unit = {
     var len1: scala.Int = len1$arg
     var len2: scala.Int = len2$arg
@@ -420,6 +423,7 @@ object ComparableTimSort {
       assert(ts.stackSize == 1)
     } else ()
   }
+  @java.lang.SuppressWarnings(scala.Array[java.lang.String]("fallthrough"))
   private def binarySort(a: scala.Array[java.lang.Object], lo: scala.Int, hi: scala.Int, start$arg: scala.Int): scala.Unit = {
     var start: scala.Int = start$arg
     if (ComparableTimSort.DEBUG) {
@@ -462,6 +466,7 @@ object ComparableTimSort {
       a(left) = pivot
     }; start = start + 1 } }
   }
+  @java.lang.SuppressWarnings(scala.Array[java.lang.String]("unchecked"))
   private def countRunAndMakeAscending(a: scala.Array[java.lang.Object], lo: scala.Int, hi: scala.Int): scala.Int = {
     if (ComparableTimSort.DEBUG) {
       assert(lo < hi)

@@ -61,6 +61,7 @@ class Cell[T <: com.badlogic.gdx.scenes.scene2d.Actor] extends com.badlogic.gdx.
     this.setActor(null)
     return this
   }
+  @com.badlogic.gdx.utils.Null
   def getActor(): T = {
     return this.actor.asInstanceOf[T]
   }
@@ -635,84 +636,98 @@ class Cell[T <: com.badlogic.gdx.scenes.scene2d.Actor] extends com.badlogic.gdx.
   def getRow(): scala.Int = {
     return this.row$field
   }
+  @com.badlogic.gdx.utils.Null
   def getMinWidthValue(): com.badlogic.gdx.scenes.scene2d.ui.Value = {
     return this.minWidth$field
   }
   def getMinWidth(): scala.Float = {
     return this.minWidth$field.get(this.actor)
   }
+  @com.badlogic.gdx.utils.Null
   def getMinHeightValue(): com.badlogic.gdx.scenes.scene2d.ui.Value = {
     return this.minHeight$field
   }
   def getMinHeight(): scala.Float = {
     return this.minHeight$field.get(this.actor)
   }
+  @com.badlogic.gdx.utils.Null
   def getPrefWidthValue(): com.badlogic.gdx.scenes.scene2d.ui.Value = {
     return this.prefWidth$field
   }
   def getPrefWidth(): scala.Float = {
     return this.prefWidth$field.get(this.actor)
   }
+  @com.badlogic.gdx.utils.Null
   def getPrefHeightValue(): com.badlogic.gdx.scenes.scene2d.ui.Value = {
     return this.prefHeight$field
   }
   def getPrefHeight(): scala.Float = {
     return this.prefHeight$field.get(this.actor)
   }
+  @com.badlogic.gdx.utils.Null
   def getMaxWidthValue(): com.badlogic.gdx.scenes.scene2d.ui.Value = {
     return this.maxWidth$field
   }
   def getMaxWidth(): scala.Float = {
     return this.maxWidth$field.get(this.actor)
   }
+  @com.badlogic.gdx.utils.Null
   def getMaxHeightValue(): com.badlogic.gdx.scenes.scene2d.ui.Value = {
     return this.maxHeight$field
   }
   def getMaxHeight(): scala.Float = {
     return this.maxHeight$field.get(this.actor)
   }
+  @com.badlogic.gdx.utils.Null
   def getSpaceTopValue(): com.badlogic.gdx.scenes.scene2d.ui.Value = {
     return this.spaceTop$field
   }
   def getSpaceTop(): scala.Float = {
     return this.spaceTop$field.get(this.actor)
   }
+  @com.badlogic.gdx.utils.Null
   def getSpaceLeftValue(): com.badlogic.gdx.scenes.scene2d.ui.Value = {
     return this.spaceLeft$field
   }
   def getSpaceLeft(): scala.Float = {
     return this.spaceLeft$field.get(this.actor)
   }
+  @com.badlogic.gdx.utils.Null
   def getSpaceBottomValue(): com.badlogic.gdx.scenes.scene2d.ui.Value = {
     return this.spaceBottom$field
   }
   def getSpaceBottom(): scala.Float = {
     return this.spaceBottom$field.get(this.actor)
   }
+  @com.badlogic.gdx.utils.Null
   def getSpaceRightValue(): com.badlogic.gdx.scenes.scene2d.ui.Value = {
     return this.spaceRight$field
   }
   def getSpaceRight(): scala.Float = {
     return this.spaceRight$field.get(this.actor)
   }
+  @com.badlogic.gdx.utils.Null
   def getPadTopValue(): com.badlogic.gdx.scenes.scene2d.ui.Value = {
     return this.padTop$field
   }
   def getPadTop(): scala.Float = {
     return this.padTop$field.get(this.actor)
   }
+  @com.badlogic.gdx.utils.Null
   def getPadLeftValue(): com.badlogic.gdx.scenes.scene2d.ui.Value = {
     return this.padLeft$field
   }
   def getPadLeft(): scala.Float = {
     return this.padLeft$field.get(this.actor)
   }
+  @com.badlogic.gdx.utils.Null
   def getPadBottomValue(): com.badlogic.gdx.scenes.scene2d.ui.Value = {
     return this.padBottom$field
   }
   def getPadBottom(): scala.Float = {
     return this.padBottom$field.get(this.actor)
   }
+  @com.badlogic.gdx.utils.Null
   def getPadRightValue(): com.badlogic.gdx.scenes.scene2d.ui.Value = {
     return this.padRight$field
   }
@@ -725,27 +740,35 @@ class Cell[T <: com.badlogic.gdx.scenes.scene2d.Actor] extends com.badlogic.gdx.
   def getPadY(): scala.Float = {
     return this.padTop$field.get(this.actor) + this.padBottom$field.get(this.actor)
   }
+  @com.badlogic.gdx.utils.Null
   def getFillX(): java.lang.Float = {
     return this.fillX$field
   }
+  @com.badlogic.gdx.utils.Null
   def getFillY(): java.lang.Float = {
     return this.fillY$field
   }
+  @com.badlogic.gdx.utils.Null
   def getAlign(): java.lang.Integer = {
     return this.align$field
   }
+  @com.badlogic.gdx.utils.Null
   def getExpandX(): java.lang.Integer = {
     return this.expandX$field
   }
+  @com.badlogic.gdx.utils.Null
   def getExpandY(): java.lang.Integer = {
     return this.expandY$field
   }
+  @com.badlogic.gdx.utils.Null
   def getColspan(): java.lang.Integer = {
     return this.colspan$field
   }
+  @com.badlogic.gdx.utils.Null
   def getUniformX(): java.lang.Boolean = {
     return this.uniformX$field
   }
+  @com.badlogic.gdx.utils.Null
   def getUniformY(): java.lang.Boolean = {
     return this.uniformY$field
   }

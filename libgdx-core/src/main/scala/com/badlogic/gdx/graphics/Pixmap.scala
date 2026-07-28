@@ -170,9 +170,11 @@ object Pixmap {
     val request: com.badlogic.gdx.Net.HttpRequest = new com.badlogic.gdx.Net.HttpRequest(com.badlogic.gdx.Net.HttpMethods.GET)
     request.setUrl(url)
     com.badlogic.gdx.Gdx.net.sendHttpRequest(request, new com.badlogic.gdx.Net.HttpResponseListener() {
+      @java.lang.Override
       override def handleHttpResponse(httpResponse: com.badlogic.gdx.Net.HttpResponse): scala.Unit = {
         val result: scala.Array[scala.Byte] = httpResponse.getResult()
         com.badlogic.gdx.Gdx.app.postRunnable(new java.lang.Runnable() {
+          @java.lang.Override
           override def run(): scala.Unit = {
             try {
               val pixmap: Pixmap = new Pixmap(result, 0, result.length)
@@ -185,9 +187,11 @@ object Pixmap {
           }
         })
       }
+      @java.lang.Override
       override def failed(t: java.lang.Throwable): scala.Unit = {
         responseListener.downloadFailed(t)
       }
+      @java.lang.Override
       override def cancelled(): scala.Unit = {
         ()
       }

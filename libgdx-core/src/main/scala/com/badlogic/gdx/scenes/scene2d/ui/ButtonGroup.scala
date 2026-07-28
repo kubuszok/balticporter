@@ -109,6 +109,7 @@ class ButtonGroup[T <: com.badlogic.gdx.scenes.scene2d.ui.Button] {
     }; i = i + 1 } }
     this.minCheckCount = old
   }
+  @com.badlogic.gdx.utils.Null
   def getChecked(): T = {
     if (this.checkedButtons.size > 0) {
       return this.checkedButtons.get(0)

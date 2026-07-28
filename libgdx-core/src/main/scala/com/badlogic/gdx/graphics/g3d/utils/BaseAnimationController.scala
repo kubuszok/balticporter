@@ -2,6 +2,7 @@ package com.badlogic.gdx.graphics.g3d.utils
 
 class BaseAnimationController(target$p: com.badlogic.gdx.graphics.g3d.ModelInstance) {
   private final val transformPool: com.badlogic.gdx.utils.Pool[com.badlogic.gdx.graphics.g3d.utils.BaseAnimationController.Transform] = new com.badlogic.gdx.utils.Pool[com.badlogic.gdx.graphics.g3d.utils.BaseAnimationController.Transform]() {
+    @java.lang.Override
     override def newObject(): com.badlogic.gdx.graphics.g3d.utils.BaseAnimationController.Transform = {
       return new com.badlogic.gdx.graphics.g3d.utils.BaseAnimationController.Transform()
     }
@@ -222,9 +223,11 @@ object BaseAnimationController {
     def toMatrix4(out: com.badlogic.gdx.math.Matrix4): com.badlogic.gdx.math.Matrix4 = {
       return out.set(this.translation, this.rotation, this.scale)
     }
+    @java.lang.Override
     def reset(): scala.Unit = {
       this.idt()
     }
+    @java.lang.Override
     def toString(): java.lang.String = {
       return (((this.translation.toString() + " - ") + this.rotation.toString()) + " - ") + this.scale.toString()
     }

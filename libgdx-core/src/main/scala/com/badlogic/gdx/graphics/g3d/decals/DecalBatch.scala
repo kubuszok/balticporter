@@ -6,6 +6,7 @@ class DecalBatch(size: scala.Int, groupStrategy$p: com.badlogic.gdx.graphics.g3d
   private final val groupList: com.badlogic.gdx.utils.SortedIntList[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.decals.Decal]] = new com.badlogic.gdx.utils.SortedIntList[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.decals.Decal]]()
   private var groupStrategy: com.badlogic.gdx.graphics.g3d.decals.GroupStrategy = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.decals.GroupStrategy]
   private final val groupPool: com.badlogic.gdx.utils.Pool[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.decals.Decal]] = new com.badlogic.gdx.utils.Pool[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.decals.Decal]](16) {
+    @java.lang.Override
     override def newObject(): com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.decals.Decal] = {
       return new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.decals.Decal](false, 100)
     }

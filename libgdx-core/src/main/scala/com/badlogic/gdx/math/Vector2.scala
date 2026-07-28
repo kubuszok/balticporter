@@ -12,15 +12,19 @@ class Vector2 extends java.io.Serializable with com.badlogic.gdx.math.Vector[Vec
     this()
     this.set(v)
   }
+  @java.lang.Override
   def cpy(): Vector2 = {
     return new Vector2(this)
   }
+  @java.lang.Override
   def len(): scala.Float = {
     return java.lang.Math.sqrt((this.x * this.x) + (this.y * this.y)).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
   }
+  @java.lang.Override
   def len2(): scala.Float = {
     return (this.x * this.x) + (this.y * this.y)
   }
+  @java.lang.Override
   def set(v: Vector2): Vector2 = {
     this.x = v.x
     this.y = v.y
@@ -31,6 +35,7 @@ class Vector2 extends java.io.Serializable with com.badlogic.gdx.math.Vector[Vec
     this.y = y
     return this
   }
+  @java.lang.Override
   def sub(v: Vector2): Vector2 = {
     this.x = this.x - v.x
     this.y = this.y - v.y
@@ -41,6 +46,7 @@ class Vector2 extends java.io.Serializable with com.badlogic.gdx.math.Vector[Vec
     this.y = this.y - y
     return this
   }
+  @java.lang.Override
   def nor(): Vector2 = {
     val len: scala.Float = this.len()
     if (len != 0) {
@@ -49,6 +55,7 @@ class Vector2 extends java.io.Serializable with com.badlogic.gdx.math.Vector[Vec
     } else ()
     return this
   }
+  @java.lang.Override
   def add(v: Vector2): Vector2 = {
     this.x = this.x + v.x
     this.y = this.y + v.y
@@ -59,12 +66,14 @@ class Vector2 extends java.io.Serializable with com.badlogic.gdx.math.Vector[Vec
     this.y = this.y + y
     return this
   }
+  @java.lang.Override
   def dot(v: Vector2): scala.Float = {
     return (this.x * v.x) + (this.y * v.y)
   }
   def dot(ox: scala.Float, oy: scala.Float): scala.Float = {
     return (this.x * ox) + (this.y * oy)
   }
+  @java.lang.Override
   def scl(scalar: scala.Float): Vector2 = {
     this.x = this.x * scalar
     this.y = this.y * scalar
@@ -75,16 +84,19 @@ class Vector2 extends java.io.Serializable with com.badlogic.gdx.math.Vector[Vec
     this.y = this.y * y
     return this
   }
+  @java.lang.Override
   def scl(v: Vector2): Vector2 = {
     this.x = this.x * v.x
     this.y = this.y * v.y
     return this
   }
+  @java.lang.Override
   def mulAdd(vec: Vector2, scalar: scala.Float): Vector2 = {
     this.x = this.x + (vec.x * scalar)
     this.y = this.y + (vec.y * scalar)
     return this
   }
+  @java.lang.Override
   def mulAdd(vec: Vector2, mulVec: Vector2): Vector2 = {
     this.x = this.x + (vec.x * mulVec.x)
     this.y = this.y + (vec.y * mulVec.y)
@@ -93,6 +105,7 @@ class Vector2 extends java.io.Serializable with com.badlogic.gdx.math.Vector[Vec
   def idt(vector: Vector2): scala.Boolean = {
     return (this.x == vector.x) && (this.y == vector.y)
   }
+  @java.lang.Override
   def dst(v: Vector2): scala.Float = {
     val x_d: scala.Float = v.x - this.x
     val y_d: scala.Float = v.y - this.y
@@ -103,6 +116,7 @@ class Vector2 extends java.io.Serializable with com.badlogic.gdx.math.Vector[Vec
     val y_d: scala.Float = y - this.y
     return java.lang.Math.sqrt((x_d * x_d) + (y_d * y_d)).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
   }
+  @java.lang.Override
   def dst2(v: Vector2): scala.Float = {
     val x_d: scala.Float = v.x - this.x
     val y_d: scala.Float = v.y - this.y
@@ -113,9 +127,11 @@ class Vector2 extends java.io.Serializable with com.badlogic.gdx.math.Vector[Vec
     val y_d: scala.Float = y - this.y
     return (x_d * x_d) + (y_d * y_d)
   }
+  @java.lang.Override
   def limit(limit: scala.Float): Vector2 = {
     return this.limit2(limit * limit)
   }
+  @java.lang.Override
   def limit2(limit2: scala.Float): Vector2 = {
     val len2: scala.Float = this.len2()
     if (len2 > limit2) {
@@ -123,6 +139,7 @@ class Vector2 extends java.io.Serializable with com.badlogic.gdx.math.Vector[Vec
     } else ()
     return this
   }
+  @java.lang.Override
   def clamp(min: scala.Float, max: scala.Float): Vector2 = {
     val len2: scala.Float = this.len2()
     if (len2 == 0.0f) {
@@ -138,13 +155,16 @@ class Vector2 extends java.io.Serializable with com.badlogic.gdx.math.Vector[Vec
     } else ()
     return this
   }
+  @java.lang.Override
   def setLength(len: scala.Float): Vector2 = {
     return this.setLength2(len * len)
   }
+  @java.lang.Override
   def setLength2(len2: scala.Float): Vector2 = {
     val oldLen2: scala.Float = this.len2()
     return if ((oldLen2 == 0) || (oldLen2 == len2)) this else this.scl(java.lang.Math.sqrt(len2 / oldLen2).asInstanceOf[scala.Float].asInstanceOf[scala.Float])
   }
+  @java.lang.Override
   def toString(): java.lang.String = {
     return ((("(" + this.x) + ",") + this.y) + ")"
   }
@@ -176,6 +196,7 @@ class Vector2 extends java.io.Serializable with com.badlogic.gdx.math.Vector[Vec
   def crs(x: scala.Float, y: scala.Float): scala.Float = {
     return (this.x * y) - (this.y * x)
   }
+  @java.lang.Deprecated
   def angle(): scala.Float = {
     var angle: scala.Float = java.lang.Math.atan2(this.y, this.x).asInstanceOf[scala.Float] * com.badlogic.gdx.math.MathUtils.radiansToDegrees
     if (angle < 0) {
@@ -183,6 +204,7 @@ class Vector2 extends java.io.Serializable with com.badlogic.gdx.math.Vector[Vec
     } else ()
     return angle
   }
+  @java.lang.Deprecated
   def angle(reference: Vector2): scala.Float = {
     return java.lang.Math.atan2(this.crs(reference), this.dot(reference)).asInstanceOf[scala.Float] * com.badlogic.gdx.math.MathUtils.radiansToDegrees
   }
@@ -206,6 +228,7 @@ class Vector2 extends java.io.Serializable with com.badlogic.gdx.math.Vector[Vec
   def angleRad(reference: Vector2): scala.Float = {
     return java.lang.Math.atan2(reference.crs(this), reference.dot(this)).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
   }
+  @java.lang.Deprecated
   def setAngle(degrees: scala.Float): Vector2 = {
     return this.setAngleRad(degrees * com.badlogic.gdx.math.MathUtils.degreesToRadians)
   }
@@ -217,9 +240,11 @@ class Vector2 extends java.io.Serializable with com.badlogic.gdx.math.Vector[Vec
     this.rotateRad(radians)
     return this
   }
+  @java.lang.Deprecated
   def rotate(degrees: scala.Float): Vector2 = {
     return this.rotateRad(degrees * com.badlogic.gdx.math.MathUtils.degreesToRadians)
   }
+  @java.lang.Deprecated
   def rotateAround(reference: Vector2, degrees: scala.Float): Vector2 = {
     return this.sub(reference).rotateDeg(degrees).add(reference)
   }
@@ -252,19 +277,23 @@ class Vector2 extends java.io.Serializable with com.badlogic.gdx.math.Vector[Vec
     }
     return this
   }
+  @java.lang.Override
   def lerp(target: Vector2, alpha: scala.Float): Vector2 = {
     val invAlpha: scala.Float = 1.0f - alpha
     this.x = (this.x * invAlpha) + (target.x * alpha)
     this.y = (this.y * invAlpha) + (target.y * alpha)
     return this
   }
+  @java.lang.Override
   def interpolate(target: Vector2, alpha: scala.Float, interpolation: com.badlogic.gdx.math.Interpolation): Vector2 = {
     return this.lerp(target, interpolation.apply(alpha))
   }
+  @java.lang.Override
   def setToRandomDirection(): Vector2 = {
     val theta: scala.Float = com.badlogic.gdx.math.MathUtils.random(0.0f, com.badlogic.gdx.math.MathUtils.PI2)
     return this.set(com.badlogic.gdx.math.MathUtils.cos(theta), com.badlogic.gdx.math.MathUtils.sin(theta))
   }
+  @java.lang.Override
   def hashCode(): scala.Int = {
     val prime: scala.Int = 31
     var result: scala.Int = 1
@@ -272,6 +301,7 @@ class Vector2 extends java.io.Serializable with com.badlogic.gdx.math.Vector[Vec
     result = (prime * result) + com.badlogic.gdx.utils.NumberUtils.floatToIntBits(this.y)
     return result
   }
+  @java.lang.Override
   def equals(obj: java.lang.Object): scala.Boolean = {
     if (this == obj) {
       return true
@@ -291,6 +321,7 @@ class Vector2 extends java.io.Serializable with com.badlogic.gdx.math.Vector[Vec
     } else ()
     return true
   }
+  @java.lang.Override
   def epsilonEquals(other: Vector2, epsilon: scala.Float): scala.Boolean = {
     if (other == null) {
       return false
@@ -318,48 +349,63 @@ class Vector2 extends java.io.Serializable with com.badlogic.gdx.math.Vector[Vec
   def epsilonEquals(x: scala.Float, y: scala.Float): scala.Boolean = {
     return this.epsilonEquals(x, y, com.badlogic.gdx.math.MathUtils.FLOAT_ROUNDING_ERROR)
   }
+  @java.lang.Override
   def isUnit(): scala.Boolean = {
     return this.isUnit(1.0E-9f)
   }
+  @java.lang.Override
   def isUnit(margin: scala.Float): scala.Boolean = {
     return java.lang.Math.abs(this.len2() - 1.0f) < margin
   }
+  @java.lang.Override
   def isZero(): scala.Boolean = {
     return (this.x == 0) && (this.y == 0)
   }
+  @java.lang.Override
   def isZero(margin: scala.Float): scala.Boolean = {
     return this.len2() < margin
   }
+  @java.lang.Override
   def isOnLine(other: Vector2): scala.Boolean = {
     return com.badlogic.gdx.math.MathUtils.isZero((this.x * other.y) - (this.y * other.x))
   }
+  @java.lang.Override
   def isOnLine(other: Vector2, epsilon: scala.Float): scala.Boolean = {
     return com.badlogic.gdx.math.MathUtils.isZero((this.x * other.y) - (this.y * other.x), epsilon)
   }
+  @java.lang.Override
   def isCollinear(other: Vector2, epsilon: scala.Float): scala.Boolean = {
     return this.isOnLine(other, epsilon) && (this.dot(other) > 0.0f)
   }
+  @java.lang.Override
   def isCollinear(other: Vector2): scala.Boolean = {
     return this.isOnLine(other) && (this.dot(other) > 0.0f)
   }
+  @java.lang.Override
   def isCollinearOpposite(other: Vector2, epsilon: scala.Float): scala.Boolean = {
     return this.isOnLine(other, epsilon) && (this.dot(other) < 0.0f)
   }
+  @java.lang.Override
   def isCollinearOpposite(other: Vector2): scala.Boolean = {
     return this.isOnLine(other) && (this.dot(other) < 0.0f)
   }
+  @java.lang.Override
   def isPerpendicular(vector: Vector2): scala.Boolean = {
     return com.badlogic.gdx.math.MathUtils.isZero(this.dot(vector))
   }
+  @java.lang.Override
   def isPerpendicular(vector: Vector2, epsilon: scala.Float): scala.Boolean = {
     return com.badlogic.gdx.math.MathUtils.isZero(this.dot(vector), epsilon)
   }
+  @java.lang.Override
   def hasSameDirection(vector: Vector2): scala.Boolean = {
     return this.dot(vector) > 0
   }
+  @java.lang.Override
   def hasOppositeDirection(vector: Vector2): scala.Boolean = {
     return this.dot(vector) < 0
   }
+  @java.lang.Override
   def setZero(): Vector2 = {
     this.x = 0
     this.y = 0

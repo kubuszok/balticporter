@@ -6,6 +6,7 @@ abstract class MeshSpawnShapeValue extends com.badlogic.gdx.graphics.g3d.particl
   def this(value: MeshSpawnShapeValue) = {
     this()
   }
+  @java.lang.Override
   def load(value: com.badlogic.gdx.graphics.g3d.particles.values.ParticleValue): scala.Unit = {
     super.load(value)
     val spawnShapeValue: MeshSpawnShapeValue = value.asInstanceOf[MeshSpawnShapeValue]
@@ -21,6 +22,7 @@ abstract class MeshSpawnShapeValue extends com.badlogic.gdx.graphics.g3d.particl
   def setMesh(mesh: com.badlogic.gdx.graphics.Mesh): scala.Unit = {
     this.setMesh(mesh, null)
   }
+  @java.lang.Override
   def save(manager: com.badlogic.gdx.assets.AssetManager, data: com.badlogic.gdx.graphics.g3d.particles.ResourceData[?]): scala.Unit = {
     if (this.model != null) {
       val saveData: com.badlogic.gdx.graphics.g3d.particles.ResourceData.SaveData = data.createSaveData()
@@ -28,6 +30,7 @@ abstract class MeshSpawnShapeValue extends com.badlogic.gdx.graphics.g3d.particl
       saveData.save("index", this.model.meshes.indexOf(this.mesh, true).asInstanceOf[java.lang.Integer])
     } else ()
   }
+  @java.lang.Override
   def load(manager: com.badlogic.gdx.assets.AssetManager, data: com.badlogic.gdx.graphics.g3d.particles.ResourceData[?]): scala.Unit = {
     val saveData: com.badlogic.gdx.graphics.g3d.particles.ResourceData.SaveData = data.getSaveData()
     val descriptor: com.badlogic.gdx.assets.AssetDescriptor[?] = saveData.loadAsset().asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[?]]

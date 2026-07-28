@@ -98,6 +98,7 @@ class Image(drawable$p: com.badlogic.gdx.scenes.scene2d.utils.Drawable, scaling$
     }
     this.drawable = drawable
   }
+  @com.badlogic.gdx.utils.Null
   def getDrawable(): com.badlogic.gdx.scenes.scene2d.utils.Drawable = {
     return this.drawable
   }

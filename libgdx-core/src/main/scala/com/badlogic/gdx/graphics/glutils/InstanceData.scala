@@ -8,6 +8,7 @@ trait InstanceData extends com.badlogic.gdx.utils.Disposable {
   def updateInstanceData(targetOffset: scala.Int, data: scala.Array[scala.Float], sourceOffset: scala.Int, count: scala.Int): scala.Unit
   def setInstanceData(data: java.nio.FloatBuffer, count: scala.Int): scala.Unit
   def updateInstanceData(targetOffset: scala.Int, data: java.nio.FloatBuffer, sourceOffset: scala.Int, count: scala.Int): scala.Unit
+  @java.lang.Deprecated
   def getBuffer(): java.nio.FloatBuffer
   def getBuffer(forWriting: scala.Boolean): java.nio.FloatBuffer
   def bind(shader: com.badlogic.gdx.graphics.glutils.ShaderProgram): scala.Unit

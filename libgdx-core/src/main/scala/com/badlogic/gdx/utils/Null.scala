@@ -1,3 +1,4 @@
 package com.badlogic.gdx.utils
 
-abstract class Null
+@java.lang.annotation.Documented
+class Null extends scala.annotation.StaticAnnotation

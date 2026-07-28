@@ -58,6 +58,7 @@ class LongMap[V](initialCapacity: scala.Int, loadFactor$p: scala.Float) extends 
     }
     throw new java.lang.RuntimeException("unreachable")
   }
+  @com.badlogic.gdx.utils.Null
   def put(key: scala.Long, value: V): V = {
     if (key == 0) {
       val oldValue: V = this.zeroValue
@@ -106,6 +107,7 @@ class LongMap[V](initialCapacity: scala.Int, loadFactor$p: scala.Float) extends 
       } else ()
     }; i = (i + 1) & this.mask } }
   }
+  @com.badlogic.gdx.utils.Null
   def get(key: scala.Long): V = {
     if (key == 0) {
       return if (this.hasZeroValue) this.zeroValue else null.asInstanceOf[V]
@@ -120,6 +122,7 @@ class LongMap[V](initialCapacity: scala.Int, loadFactor$p: scala.Float) extends 
     val i: scala.Int = this.locateKey(key)
     return if (i >= 0) this.valueTable(i) else defaultValue
   }
+  @com.badlogic.gdx.utils.Null
   def remove(key$arg: scala.Long): V = {
     var key: scala.Long = key$arg
     if (key == 0) {
@@ -599,6 +602,7 @@ object LongMap {
       } else ()
       return hasNext$field
     }
+    @com.badlogic.gdx.utils.Null
     def next(): V = {
       if (!hasNext$field) {
         throw new java.util.NoSuchElementException()

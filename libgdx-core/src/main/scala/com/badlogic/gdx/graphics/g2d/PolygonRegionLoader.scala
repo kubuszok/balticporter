@@ -6,10 +6,12 @@ class PolygonRegionLoader(resolver$p: com.badlogic.gdx.assets.loaders.FileHandle
   def this() = {
     this(new com.badlogic.gdx.assets.loaders.resolvers.InternalFileHandleResolver())
   }
+  @java.lang.Override
   def load(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.graphics.g2d.PolygonRegionLoader.PolygonRegionParameters): com.badlogic.gdx.graphics.g2d.PolygonRegion = {
     val texture: com.badlogic.gdx.graphics.Texture = manager.get(manager.getDependencies(fileName).first())
     return this.load(new com.badlogic.gdx.graphics.g2d.TextureRegion(texture), file)
   }
+  @java.lang.Override
   def getDependencies(fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, params$arg: com.badlogic.gdx.graphics.g2d.PolygonRegionLoader.PolygonRegionParameters): com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = {
     var params: com.badlogic.gdx.graphics.g2d.PolygonRegionLoader.PolygonRegionParameters = params$arg
     if (params == null) {

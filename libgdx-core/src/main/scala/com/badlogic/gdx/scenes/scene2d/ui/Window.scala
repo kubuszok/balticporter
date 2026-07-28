@@ -277,6 +277,7 @@ class Window extends com.badlogic.gdx.scenes.scene2d.ui.Table with com.badlogic.
     this.titleTable.draw(batch, parentAlpha)
     this.drawTitleTable = false
   }
+  @com.badlogic.gdx.utils.Null
   def hit(x: scala.Float, y: scala.Float, touchable: scala.Boolean): com.badlogic.gdx.scenes.scene2d.Actor = {
     if (!this.isVisible()) {
       return null

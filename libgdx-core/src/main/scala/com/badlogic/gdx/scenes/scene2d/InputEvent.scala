@@ -71,6 +71,7 @@ class InputEvent extends com.badlogic.gdx.scenes.scene2d.Event {
   def setScrollAmountY(scrollAmount: scala.Float): scala.Unit = {
     this.scrollAmountY = scrollAmount
   }
+  @com.badlogic.gdx.utils.Null
   def getRelatedActor(): com.badlogic.gdx.scenes.scene2d.Actor = {
     return this.relatedActor
   }

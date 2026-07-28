@@ -15,6 +15,7 @@ object ParticleSorter {
   class None extends ParticleSorter {
     var currentCapacity: scala.Int = 0
     var indices: scala.Array[scala.Int] = null.asInstanceOf[scala.Array[scala.Int]]
+    @java.lang.Override
     def ensureCapacity(capacity: scala.Int): scala.Unit = {
       if (this.currentCapacity < capacity) {
         this.indices = new scala.Array[scala.Int](capacity);
@@ -24,6 +25,7 @@ object ParticleSorter {
         this.currentCapacity = capacity
       } else ()
     }
+    @java.lang.Override
     def sort[T <: com.badlogic.gdx.graphics.g3d.particles.renderers.ParticleControllerRenderData](renderData: com.badlogic.gdx.utils.Array[T]): scala.Array[scala.Int] = {
       return this.indices
     }
@@ -36,6 +38,7 @@ object ParticleSorter {
     private var particleIndices: scala.Array[scala.Int] = null.asInstanceOf[scala.Array[scala.Int]]
     private var particleOffsets: scala.Array[scala.Int] = null.asInstanceOf[scala.Array[scala.Int]]
     private var currentSize: scala.Int = 0
+    @java.lang.Override
     def ensureCapacity(capacity: scala.Int): scala.Unit = {
       if (this.currentSize < capacity) {
         this.distances = new scala.Array[scala.Float](capacity)
@@ -44,6 +47,7 @@ object ParticleSorter {
         this.currentSize = capacity
       } else ()
     }
+    @java.lang.Override
     def sort[T <: com.badlogic.gdx.graphics.g3d.particles.renderers.ParticleControllerRenderData](renderData: com.badlogic.gdx.utils.Array[T]): scala.Array[scala.Int] = {
       val `val`: scala.Array[scala.Float] = this.camera.view.`val`
       val cx: scala.Float = `val`(com.badlogic.gdx.math.Matrix4.M20)

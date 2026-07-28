@@ -8,6 +8,7 @@ class ResolutionFileResolver(baseResolver$p: com.badlogic.gdx.assets.loaders.Fil
   } else ()
   this.baseResolver = baseResolver$p
   this.descriptors = descriptors$p
+  @java.lang.Override
   def resolve(fileName: java.lang.String): com.badlogic.gdx.files.FileHandle = {
     val bestResolution: com.badlogic.gdx.assets.loaders.resolvers.ResolutionFileResolver.Resolution = ResolutionFileResolver.choose(this.descriptors)
     val originalHandle: com.badlogic.gdx.files.FileHandle = new com.badlogic.gdx.files.FileHandle(fileName)

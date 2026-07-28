@@ -10,9 +10,11 @@ class PerspectiveCamera extends com.badlogic.gdx.graphics.Camera {
     this.viewportHeight = viewportHeight
     this.update()
   }
+  @java.lang.Override
   def update(): scala.Unit = {
     this.update(true)
   }
+  @java.lang.Override
   def update(updateFrustum: scala.Boolean): scala.Unit = {
     val aspect: scala.Float = viewportWidth / viewportHeight
     projection.setToProjection(java.lang.Math.abs(near), java.lang.Math.abs(far), this.fieldOfView, aspect)

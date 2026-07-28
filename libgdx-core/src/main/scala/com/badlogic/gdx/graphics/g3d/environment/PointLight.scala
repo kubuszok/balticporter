@@ -50,6 +50,7 @@ class PointLight extends com.badlogic.gdx.graphics.g3d.environment.BaseLight[Poi
     this.intensity = intensity
     return this
   }
+  @java.lang.Override
   def equals(obj: java.lang.Object): scala.Boolean = {
     return obj.isInstanceOf[PointLight] && this.equals(obj.asInstanceOf[PointLight].asInstanceOf[PointLight])
   }

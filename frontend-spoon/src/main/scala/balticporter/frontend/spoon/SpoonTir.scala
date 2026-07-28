@@ -694,8 +694,10 @@ object SpoonTir:
       // A substituted type stays in the model with its references resolved (see `Substituted`), but
       // carries the tag so later phases can rewrite uses into whatever replaces it.
       val tags: Set[SymTag] = if subs.dropsType(q) then Set(Substituted(q)) else Set.empty
+      val (anns, annDropped) = annotationsOf(t, None)
       minter.define(q)(id =>
-        Symbol(id, t.getSimpleName, q, typeFlags(t), ownerSym(t), TypeRef(NoPrefix, id), tags = tags))
+        Symbol(id, t.getSimpleName, q, typeFlags(t), ownerSym(t), TypeRef(NoPrefix, id), tags = tags,
+               annotations = anns, droppedAnnotations = annDropped))
 
     private def ownerSym(t: CtType[?]): SymId =
       Option(t.getDeclaringType).map(dt => minter.external(typeKey(dt.getReference), dt.getSimpleName)).getOrElse(SymId.None)
@@ -718,8 +720,10 @@ object SpoonTir:
     private def fieldDef(owner: SymId, f: CtField[?], selfClass: SymId = SymId.None, outerVars: Map[String, SymId] = Map.empty,
                          anonSelf: SymId = SymId.None, anonQName: String = ""): Tree.ValDef = withStatic(fieldFlags(f).isStatic) {
       val ft = tpe(f.getType)
+      val (fanns, fannDropped) = annotationsOf(f, None)
       val id = minter.define(memberKey(owner, f.getSimpleName))(sid =>
-        Symbol(sid, f.getSimpleName, qualified(owner, f.getSimpleName), fieldFlags(f), owner, ft)
+        Symbol(sid, f.getSimpleName, qualified(owner, f.getSimpleName), fieldFlags(f), owner, ft,
+               annotations = fanns, droppedAnnotations = fannDropped)
       )
       // a field initializer is a real expression: translate it so its usages are traced,
       // attributed to the field (not a method).
@@ -761,13 +765,70 @@ object SpoonTir:
         case named: CtTypedElement[?] => tpe(named.getType)
         case _                        => unitT
       val sig = MethodType(ps.map(p => p.getSimpleName -> tpe(p.getType)), ret)
-      minter.set(id, Symbol(id, name, qualified(owner, name), execFlags(m).copy(isOverride = overrides), owner, sig))
+      val (anns, annDropped) = annotationsOf(m, Some(bt))
+      minter.set(id, Symbol(id, name, qualified(owner, name), execFlags(m).copy(isOverride = overrides), owner, sig,
+                            annotations = anns, droppedAnnotations = annDropped))
       // translate the body (with param + type-param scope in place) — this is what makes
       // Call / field-ref usages and `callersOf` real. Abstract/interface methods have none.
       val body = Option(m.getBody).map(b => bt.methodBody(b))
       tpScopes.remove(0); tpAccessible.remove(0)
       Tree.DefDef(id, paramss = List(pvs), returnTpt = tt(ret, m), rhs = body, origin = originOf(m), tparams = tpDefs)
     }
+
+    /** Java annotations on a declaration, plus the names of any this could not carry.
+      *
+      * Annotation element values are constant expressions, so they translate with the ordinary
+      * expression path; one that throws is REPORTED (its annotation goes to `dropped`) rather than
+      * silently emitted without its arguments, which would be the same defect one level down.
+      * Spoon's `@interface` for a JDK/test annotation is a shadow, so the type is taken from the
+      * reference's qualified name and needs no declaration. */
+    private def annotationsOf(el: CtElement, bt: Option[BodyTranslator]): (List[Annot], List[String]) =
+      val out     = collection.mutable.ListBuffer[Annot]()
+      val dropped = collection.mutable.ListBuffer[String]()
+      val as = try el.getAnnotations.asScala.toList catch { case _: Throwable => Nil }
+      as.foreach { a =>
+        val ref = try a.getAnnotationType catch { case _: Throwable => null }
+        if ref == null then dropped += "<unresolved>"
+        else
+          val fqn = ref.getQualifiedName
+          val vals = try a.getValues.asScala.toList catch { case _: Throwable => Nil }
+          // Without an expression translator in scope only MARKER annotations can be carried
+          // faithfully; one with arguments is REPORTED rather than emitted bare, since emitting
+          // `@A` where Java wrote `@A(x)` changes its meaning.
+          if vals.isEmpty then
+            out += Annot(TypeRef(NoPrefix, minter.external(fqn, simpleName(fqn))), Nil, originOf(a))
+          else bt match
+            case None => dropped += fqn
+            case Some(b) =>
+              try
+                val args = vals.map { (k, v) =>
+                  val e0 = v.asInstanceOf[CtExpression[?]]
+                  k -> arrayShorthand(ref, k, e0, b.exprOf(e0))
+                }
+                out += Annot(TypeRef(NoPrefix, minter.external(fqn, simpleName(fqn))), args, originOf(a))
+              catch case _: Throwable => dropped += fqn
+      }
+      (out.toList, dropped.toList)
+
+    /** Java's single-value shorthand for an ARRAY-typed annotation element.
+      *
+      * `@SuppressWarnings("unchecked")` means `value = {"unchecked"}`. Scala has no such shorthand
+      * and wants `Array("unchecked")`, so the element's DECLARED type decides whether to wrap.
+      * Left alone when the declaration cannot be read — a wrong wrap would be worse than the
+      * compile error it replaces. */
+    private def arrayShorthand(ref: CtTypeReference[?], key: String, e: CtExpression[?], t: Term): Term =
+      if e.isInstanceOf[CtNewArray[?]] then t
+      else
+        val declared =
+          try Option(ref.getTypeDeclaration).flatMap(d =>
+                d.getAllMethods.asScala.find(_.getSimpleName == key).flatMap(m => Option(m.getType)))
+          catch { case _: Throwable => None }
+        declared match
+          case Some(arr: CtArrayTypeReference[?]) =>
+            val ct = tpe(arr.getComponentType)
+            val at = AppliedType(TypeRef(NoPrefix, minter.external("scala.Array", "Array")), List(ct))
+            Tree.NewArray(TypeTree(ct, originOf(e)), Nil, Some(List(t)), at, originOf(e))
+          case _ => t
 
     private def qualified(owner: SymId, member: String): String = minter.fullNameOf(owner) + "#" + member
     private def unitT: TypeRepr = TypeRef(NoPrefix, minter.external("scala.Unit", "Unit"))
@@ -777,9 +838,14 @@ object SpoonTir:
     import ModifierKind.*
 
     private def typeFlags(t: CtType[?]): Flags =
-      val isTrait = t.isInstanceOf[CtInterface[?]]
+      val isAnnot = t.isInstanceOf[spoon.reflect.declaration.CtAnnotationType[?]]
+      // a Java `@interface` IS a `CtInterface`, but it must not become a Scala trait — see the
+      // emitter: an annotation type is a CLASS extending `scala.annotation.StaticAnnotation`, or
+      // nothing can be annotated with it.
+      val isTrait = t.isInstanceOf[CtInterface[?]] && !isAnnot
       Flags(
-        isAbstract = has(t, ABSTRACT) || isTrait,
+        isAnnotation = isAnnot,
+        isAbstract = (has(t, ABSTRACT) || isTrait) && !isAnnot,
         isFinal = has(t, FINAL),
         isTrait = isTrait,
         isEnum = t.isInstanceOf[CtEnum[?]],

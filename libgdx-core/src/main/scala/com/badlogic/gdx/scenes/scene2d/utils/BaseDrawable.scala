@@ -59,12 +59,14 @@ class BaseDrawable extends com.badlogic.gdx.scenes.scene2d.utils.Drawable {
   def setMinHeight(minHeight: scala.Float): scala.Unit = {
     this.minHeight = minHeight
   }
+  @com.badlogic.gdx.utils.Null
   def getName(): java.lang.String = {
     return this.name
   }
   def setName(name: java.lang.String): scala.Unit = {
     this.name = name
   }
+  @com.badlogic.gdx.utils.Null
   def toString(): java.lang.String = {
     if (this.name == null) {
       return this.getClass().getSimpleName()

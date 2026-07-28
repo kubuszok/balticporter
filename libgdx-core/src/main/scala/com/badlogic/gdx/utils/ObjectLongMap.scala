@@ -197,6 +197,7 @@ class ObjectLongMap[K](initialCapacity: scala.Int, loadFactor$p: scala.Float) ex
   def containsKey(key: K): scala.Boolean = {
     return this.locateKey(key) >= 0
   }
+  @com.badlogic.gdx.utils.Null
   def findKey(value: scala.Long): K = {
     val keyTable: scala.Array[K] = this.keyTable
     val valueTable: scala.Array[scala.Long] = this.valueTable;

@@ -46,6 +46,7 @@ class MapObjects extends balticporter.runtime.JavaIterable[com.badlogic.gdx.maps
     }; i = i + 1 } }
     return fill
   }
+  @java.lang.Override
   def iterator(): balticporter.runtime.JavaIterator[com.badlogic.gdx.maps.MapObject] = {
     return this.objects.iterator()
   }

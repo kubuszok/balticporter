@@ -5,6 +5,7 @@ trait GLErrorListener {
 }
 object GLErrorListener {
   final val LOGGING_LISTENER: GLErrorListener = new GLErrorListener() {
+    @java.lang.Override
     override def onError(error: scala.Int): scala.Unit = {
       var place: java.lang.String = null
       try {
@@ -31,6 +32,7 @@ object GLErrorListener {
     }
   }
   final val THROWING_LISTENER: GLErrorListener = new GLErrorListener() {
+    @java.lang.Override
     override def onError(error: scala.Int): scala.Unit = {
       throw new com.badlogic.gdx.utils.GdxRuntimeException("GLProfiler: Got GL error " + com.badlogic.gdx.graphics.profiling.GLInterceptor.resolveErrorNumber(error))
     }

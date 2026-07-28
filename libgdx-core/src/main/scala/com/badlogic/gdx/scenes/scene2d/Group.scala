@@ -193,9 +193,11 @@ class Group extends com.badlogic.gdx.scenes.scene2d.Actor with com.badlogic.gdx.
   def setCullingArea(cullingArea: com.badlogic.gdx.math.Rectangle): scala.Unit = {
     this.cullingArea = cullingArea
   }
+  @com.badlogic.gdx.utils.Null
   def getCullingArea(): com.badlogic.gdx.math.Rectangle = {
     return this.cullingArea
   }
+  @com.badlogic.gdx.utils.Null
   def hit(x: scala.Float, y: scala.Float, touchable: scala.Boolean): com.badlogic.gdx.scenes.scene2d.Actor = {
     if (touchable && (this.getTouchable() == com.badlogic.gdx.scenes.scene2d.Touchable.disabled)) {
       return null
@@ -329,6 +331,7 @@ class Group extends com.badlogic.gdx.scenes.scene2d.Actor with com.badlogic.gdx.
     super.clear()
     this.clearChildren(unfocus)
   }
+  @com.badlogic.gdx.utils.Null
   def findActor[T <: com.badlogic.gdx.scenes.scene2d.Actor](name: java.lang.String): T = {
     val children: com.badlogic.gdx.utils.Array[com.badlogic.gdx.scenes.scene2d.Actor] = this.children;
     { var i: scala.Int = 0; val n: scala.Int = children.size; while (i < n) { {

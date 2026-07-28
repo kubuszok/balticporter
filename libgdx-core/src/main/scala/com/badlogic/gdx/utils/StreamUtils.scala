@@ -78,6 +78,7 @@ object StreamUtils {
     } else ()
   }
   class OptimizedByteArrayOutputStream(initialSize: scala.Int) extends java.io.ByteArrayOutputStream(initialSize) {
+    @java.lang.Override
     def toByteArray(): scala.Array[scala.Byte] = {
       if (count == this.buf.length) {
         return buf

@@ -1,6 +1,7 @@
 package com.badlogic.gdx.assets.loaders
 
 class ParticleEffectLoader(resolver$p: com.badlogic.gdx.assets.loaders.FileHandleResolver) extends com.badlogic.gdx.assets.loaders.SynchronousAssetLoader[com.badlogic.gdx.graphics.g2d.ParticleEffect, com.badlogic.gdx.assets.loaders.ParticleEffectLoader.ParticleEffectParameter](resolver$p) {
+  @java.lang.Override
   def load(am: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, param: com.badlogic.gdx.assets.loaders.ParticleEffectLoader.ParticleEffectParameter): com.badlogic.gdx.graphics.g2d.ParticleEffect = {
     val effect: com.badlogic.gdx.graphics.g2d.ParticleEffect = new com.badlogic.gdx.graphics.g2d.ParticleEffect()
     if ((param != null) && (param.atlasFile != null)) {
@@ -14,6 +15,7 @@ class ParticleEffectLoader(resolver$p: com.badlogic.gdx.assets.loaders.FileHandl
     }
     return effect
   }
+  @java.lang.Override
   def getDependencies(fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, param: com.badlogic.gdx.assets.loaders.ParticleEffectLoader.ParticleEffectParameter): com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = {
     var deps: com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = null
     if ((param != null) && (param.atlasFile != null)) {

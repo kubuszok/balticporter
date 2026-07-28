@@ -58,6 +58,7 @@ class DistanceFieldFont extends com.badlogic.gdx.graphics.g2d.BitmapFont {
       region.getTexture().setFilter(com.badlogic.gdx.graphics.Texture.TextureFilter.Linear, com.badlogic.gdx.graphics.Texture.TextureFilter.Linear)
     }
   }
+  @java.lang.Override
   def newFontCache(): com.badlogic.gdx.graphics.g2d.BitmapFontCache = {
     return new com.badlogic.gdx.graphics.g2d.DistanceFieldFont.DistanceFieldFontCache(this, integer)
   }
@@ -109,11 +110,13 @@ object DistanceFieldFont {
       spriteBatch.flush()
       spriteBatch.getShader().setUniformf("u_smoothing", smoothing)
     }
+    @java.lang.Override
     def draw(spriteBatch: com.badlogic.gdx.graphics.g2d.Batch): scala.Unit = {
       this.setSmoothingUniform(spriteBatch, this.getSmoothingFactor())
       super.draw(spriteBatch)
       this.setSmoothingUniform(spriteBatch, 0)
     }
+    @java.lang.Override
     def draw(spriteBatch: com.badlogic.gdx.graphics.g2d.Batch, start: scala.Int, `end`: scala.Int): scala.Unit = {
       this.setSmoothingUniform(spriteBatch, this.getSmoothingFactor())
       super.draw(spriteBatch, start, `end`)

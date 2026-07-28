@@ -59,13 +59,16 @@ class DirectionalShadowLight(shadowMapWidth: scala.Int, shadowMapHeight: scala.I
   def getCamera(): com.badlogic.gdx.graphics.Camera = {
     return this.cam
   }
+  @java.lang.Override
   def getProjViewTrans(): com.badlogic.gdx.math.Matrix4 = {
     return this.cam.combined
   }
+  @java.lang.Override
   def getDepthMap(): com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[?] = {
     this.textureDesc.asInstanceOf[com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[com.badlogic.gdx.graphics.GLTexture]].texture = this.fbo.getColorBufferTexture()
     return this.textureDesc.asInstanceOf[com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[?]]
   }
+  @java.lang.Override
   def dispose(): scala.Unit = {
     if (this.fbo != null) {
       this.fbo.dispose()

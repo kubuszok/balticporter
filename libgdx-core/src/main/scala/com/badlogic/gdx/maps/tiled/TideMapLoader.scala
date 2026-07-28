@@ -25,6 +25,7 @@ class TideMapLoader extends com.badlogic.gdx.assets.loaders.SynchronousAssetLoad
       }
     }
   }
+  @java.lang.Override
   def load(assetManager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, tideFile: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.maps.tiled.TideMapLoader.Parameters): com.badlogic.gdx.maps.tiled.TiledMap = {
     try {
       return this.loadMap(this.root, tideFile, new com.badlogic.gdx.maps.ImageResolver.AssetManagerImageResolver(assetManager))
@@ -34,6 +35,7 @@ class TideMapLoader extends com.badlogic.gdx.assets.loaders.SynchronousAssetLoad
       }
     }
   }
+  @java.lang.Override
   def getDependencies(fileName: java.lang.String, tmxFile: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.maps.tiled.TideMapLoader.Parameters): com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = {
     val dependencies: com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]().asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]]
     try {

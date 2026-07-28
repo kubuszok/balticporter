@@ -101,6 +101,7 @@ class Skin extends com.badlogic.gdx.utils.Disposable {
     } else ()
     return resource.asInstanceOf[T].asInstanceOf[T]
   }
+  @com.badlogic.gdx.utils.Null
   def optional[T](name: java.lang.String, `type`: java.lang.Class[T]): T = {
     if (name == null) {
       throw new java.lang.IllegalArgumentException("name cannot be null.")
@@ -121,6 +122,7 @@ class Skin extends com.badlogic.gdx.utils.Disposable {
     } else ()
     return typeResources.containsKey(name)
   }
+  @com.badlogic.gdx.utils.Null
   def getAll[T](`type`: java.lang.Class[T]): com.badlogic.gdx.utils.ObjectMap[java.lang.String, T] = {
     return this.resources.get(`type`).asInstanceOf[com.badlogic.gdx.utils.ObjectMap[java.lang.String, T]]
   }
@@ -143,6 +145,7 @@ class Skin extends com.badlogic.gdx.utils.Disposable {
     this.add(name, region, classOf[com.badlogic.gdx.graphics.g2d.TextureRegion])
     return region
   }
+  @com.badlogic.gdx.utils.Null
   def getRegions(regionName: java.lang.String): com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.TextureRegion] = {
     var regions: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.TextureRegion] = null
     var i: scala.Int = 0
@@ -275,6 +278,7 @@ class Skin extends com.badlogic.gdx.utils.Disposable {
     this.add(name, drawable, classOf[com.badlogic.gdx.scenes.scene2d.utils.Drawable])
     return drawable
   }
+  @com.badlogic.gdx.utils.Null
   def find(resource: java.lang.Object): java.lang.String = {
     if (resource == null) {
       throw new java.lang.IllegalArgumentException("style cannot be null.")
@@ -358,6 +362,7 @@ class Skin extends com.badlogic.gdx.utils.Disposable {
     style = this.get(name, style.getClass().asInstanceOf[java.lang.Class[V]]).asInstanceOf[V]
     styleable.setStyle(style)
   }
+  @com.badlogic.gdx.utils.Null
   def getAtlas(): com.badlogic.gdx.graphics.g2d.TextureAtlas = {
     return this.atlas
   }

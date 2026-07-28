@@ -151,6 +151,7 @@ class Polygon extends com.badlogic.gdx.math.Shape2D {
     this.bounds.height = maxY - minY
     return this.bounds
   }
+  @java.lang.Override
   def contains(x: scala.Float, y: scala.Float): scala.Boolean = {
     val vertices: scala.Array[scala.Float] = this.getTransformedVertices()
     val numFloats: scala.Int = vertices.length
@@ -166,6 +167,7 @@ class Polygon extends com.badlogic.gdx.math.Shape2D {
     }; i = i + 2 } }
     return (intersects & 1) == 1
   }
+  @java.lang.Override
   def contains(point: com.badlogic.gdx.math.Vector2): scala.Boolean = {
     return this.contains(point.x, point.y)
   }

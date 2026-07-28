@@ -18,6 +18,7 @@ class AssetLoadingTask(manager$p: com.badlogic.gdx.assets.AssetManager, assetDes
   this.loader = loader$p.asInstanceOf[com.badlogic.gdx.assets.loaders.AssetLoader[?, ?]]
   this.executor = threadPool
   this.startTime = if (manager$p.log.getLevel() == com.badlogic.gdx.utils.Logger.DEBUG) com.badlogic.gdx.utils.TimeUtils.nanoTime() else 0
+  @java.lang.Override
   def call(): java.lang.Void = {
     if (this.cancel) {
       return null

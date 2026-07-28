@@ -31,9 +31,11 @@ class NetJavaServerSocketImpl(protocol$p: com.badlogic.gdx.Net.Protocol, hostnam
       throw new com.badlogic.gdx.utils.GdxRuntimeException(("Cannot create a server socket at port " + port) + ".", e)
     }
   }
+  @java.lang.Override
   def getProtocol(): com.badlogic.gdx.Net.Protocol = {
     return this.protocol
   }
+  @java.lang.Override
   def accept(hints: com.badlogic.gdx.net.SocketHints): com.badlogic.gdx.net.Socket = {
     try {
       return new com.badlogic.gdx.net.NetJavaSocketImpl(this.server.accept(), hints)
@@ -43,6 +45,7 @@ class NetJavaServerSocketImpl(protocol$p: com.badlogic.gdx.Net.Protocol, hostnam
       }
     }
   }
+  @java.lang.Override
   def dispose(): scala.Unit = {
     if (this.server != null) {
       try {

@@ -59,6 +59,7 @@ object ParticleChannels {
     return { ParticleChannels.currentGlobalId += 1; ParticleChannels.currentGlobalId }
   }
   class TextureRegionInitializer extends com.badlogic.gdx.graphics.g3d.particles.ParallelArray.ChannelInitializer[com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel] {
+    @java.lang.Override
     def init(channel: com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel): scala.Unit = {
       { var i: scala.Int = 0; val c: scala.Int = channel.data.length; while (i < c) { {
         channel.data(i + ParticleChannels.UOffset) = 0
@@ -80,6 +81,7 @@ object ParticleChannels {
     }
   }
   class ColorInitializer extends com.badlogic.gdx.graphics.g3d.particles.ParallelArray.ChannelInitializer[com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel] {
+    @java.lang.Override
     def init(channel: com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel): scala.Unit = {
       java.util.Arrays.fill(channel.data, 0, channel.data.length, 1)
     }
@@ -94,6 +96,7 @@ object ParticleChannels {
     }
   }
   class ScaleInitializer extends com.badlogic.gdx.graphics.g3d.particles.ParallelArray.ChannelInitializer[com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel] {
+    @java.lang.Override
     def init(channel: com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel): scala.Unit = {
       java.util.Arrays.fill(channel.data, 0, channel.data.length, 1)
     }
@@ -108,6 +111,7 @@ object ParticleChannels {
     }
   }
   class Rotation2dInitializer extends com.badlogic.gdx.graphics.g3d.particles.ParallelArray.ChannelInitializer[com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel] {
+    @java.lang.Override
     def init(channel: com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel): scala.Unit = {
       { var i: scala.Int = 0; val c: scala.Int = channel.data.length; while (i < c) { {
         channel.data(i + ParticleChannels.CosineOffset) = 1
@@ -125,6 +129,7 @@ object ParticleChannels {
     }
   }
   class Rotation3dInitializer extends com.badlogic.gdx.graphics.g3d.particles.ParallelArray.ChannelInitializer[com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel] {
+    @java.lang.Override
     def init(channel: com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel): scala.Unit = {
       { var i: scala.Int = 0; val c: scala.Int = channel.data.length; while (i < c) { {
         channel.data(i + ParticleChannels.XOffset) = {

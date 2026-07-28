@@ -2,6 +2,7 @@ package com.badlogic.gdx.utils
 
 class UBJsonReader extends com.badlogic.gdx.utils.BaseJsonReader {
   var oldFormat: scala.Boolean = true
+  @java.lang.Override
   def parse(input: java.io.InputStream): com.badlogic.gdx.utils.JsonValue = {
     var din: java.io.DataInputStream = null
     try {
@@ -15,6 +16,7 @@ class UBJsonReader extends com.badlogic.gdx.utils.BaseJsonReader {
       com.badlogic.gdx.utils.StreamUtils.closeQuietly(din)
     }
   }
+  @java.lang.Override
   def parse(file: com.badlogic.gdx.files.FileHandle): com.badlogic.gdx.utils.JsonValue = {
     try {
       return this.parse(file.read(8192))

@@ -44,6 +44,7 @@ class TiledMapLoader(resolver$p: com.badlogic.gdx.assets.loaders.FileHandleResol
       }
     }
   }
+  @java.lang.Override
   def getDependencies(fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter$arg: com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.Parameters): com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = {
     var parameter: com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.Parameters = parameter$arg
     if (parameter == null) {
@@ -68,6 +69,7 @@ class TiledMapLoader(resolver$p: com.badlogic.gdx.assets.loaders.FileHandleResol
       }
     }
   }
+  @java.lang.Override
   def loadAsync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter$arg: com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.Parameters): scala.Unit = {
     var parameter: com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.Parameters = parameter$arg
     if (parameter == null) {
@@ -92,6 +94,7 @@ class TiledMapLoader(resolver$p: com.badlogic.gdx.assets.loaders.FileHandleResol
       }
     }
   }
+  @java.lang.Override
   def loadSync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter$arg: com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.Parameters): com.badlogic.gdx.maps.tiled.TiledMap = {
     var parameter: com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.Parameters = parameter$arg
     var map: com.badlogic.gdx.maps.tiled.TiledMap = null.asInstanceOf[com.badlogic.gdx.maps.tiled.TiledMap]

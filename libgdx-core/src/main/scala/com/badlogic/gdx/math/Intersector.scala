@@ -1123,6 +1123,7 @@ object Intersector {
     this.front = new scala.Array[scala.Float]((numAttributes * 3) * 2)
     this.back = new scala.Array[scala.Float]((numAttributes * 3) * 2)
     this.edgeSplit = new scala.Array[scala.Float](numAttributes)
+    @java.lang.Override
     def toString(): java.lang.String = {
       return ((((((((("SplitTriangle [front=" + java.util.Arrays.toString(this.front)) + ", back=") + java.util.Arrays.toString(this.back)) + ", numFront=") + this.numFront) + ", numBack=") + this.numBack) + ", total=") + this.total) + "]"
     }

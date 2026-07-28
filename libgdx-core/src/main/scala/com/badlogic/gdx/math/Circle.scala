@@ -95,6 +95,7 @@ class Circle extends java.io.Serializable with com.badlogic.gdx.math.Shape2D {
     val radiusSum: scala.Float = this.radius + c.radius
     return distance < (radiusSum * radiusSum)
   }
+  @java.lang.Override
   def toString(): java.lang.String = {
     return (((java.lang.String.valueOf(this.x) + ",") + this.y) + ",") + this.radius
   }
@@ -104,6 +105,7 @@ class Circle extends java.io.Serializable with com.badlogic.gdx.math.Shape2D {
   def area(): scala.Float = {
     return (this.radius * this.radius) * com.badlogic.gdx.math.MathUtils.PI
   }
+  @java.lang.Override
   def equals(o: java.lang.Object): scala.Boolean = {
     if (o == this) {
       return true
@@ -114,6 +116,7 @@ class Circle extends java.io.Serializable with com.badlogic.gdx.math.Shape2D {
     val c: Circle = o.asInstanceOf[Circle].asInstanceOf[Circle]
     return ((this.x == c.x) && (this.y == c.y)) && (this.radius == c.radius)
   }
+  @java.lang.Override
   def hashCode(): scala.Int = {
     val prime: scala.Int = 41
     var result: scala.Int = 1

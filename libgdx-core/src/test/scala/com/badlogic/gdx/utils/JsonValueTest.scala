@@ -1,6 +1,7 @@
 package com.badlogic.gdx.utils
 
 class JsonValueTest {
+  @org.junit.Test
   def testAddingRemovedValue(): scala.Unit = {
     val firstObject: com.badlogic.gdx.utils.JsonValue = new com.badlogic.gdx.utils.JsonValue(com.badlogic.gdx.utils.JsonValue.ValueType.`object`)
     val secondObject: com.badlogic.gdx.utils.JsonValue = new com.badlogic.gdx.utils.JsonValue(com.badlogic.gdx.utils.JsonValue.ValueType.`object`)
@@ -16,6 +17,7 @@ class JsonValueTest {
     org.junit.Assert.assertNull(secondObject.get("b"))
     org.junit.Assert.assertNotNull(secondObject.get("c"))
   }
+  @org.junit.Test
   def testReplaceValue(): scala.Unit = {
     val `object`: com.badlogic.gdx.utils.JsonValue = new com.badlogic.gdx.utils.JsonValue(com.badlogic.gdx.utils.JsonValue.ValueType.`object`)
     `object`.addChild("a", new com.badlogic.gdx.utils.JsonValue("A"))
@@ -38,6 +40,7 @@ class JsonValueTest {
     org.junit.Assert.assertEquals(`object`.get("c").asString(), "Y")
     org.junit.Assert.assertEquals(`object`.get("d").asString(), "Z")
   }
+  @org.junit.Test
   def testCopyConstructor(): scala.Unit = {
     val b: com.badlogic.gdx.utils.JsonValue = new com.badlogic.gdx.utils.JsonValue(com.badlogic.gdx.utils.JsonValue.ValueType.`object`)
     b.addChild("c", new com.badlogic.gdx.utils.JsonValue("C"))

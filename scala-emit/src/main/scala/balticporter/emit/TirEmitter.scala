@@ -282,7 +282,13 @@ final class TirEmitter(source: Program):
     // signature — a public `Values extends MapIterator` / field `pool: ModelInstancePool` where the
     // referent is private is an error. Java nested classes leak this way constantly; drop the class's
     // `private` (visibility-widening is always compile-safe) so those references type-check.
-    val cls     = s"${ind(i)}${mods(s.flags.copy(isPrivate = false))}$abs$kw ${esc(s.name)}$tps$prim$ext$open"
+    // A Java `@interface` is an ANNOTATION TYPE. Emitted as an ordinary interface it becomes a
+    // trait, and then nothing can be annotated with it — 161 errors' worth of `@Null` in this
+    // corpus alone. Scala's equivalent is a class extending `StaticAnnotation`.
+    val cls     =
+      if s.flags.isAnnotation then
+        s"${annots(s, i)}${ind(i)}class ${esc(s.name)}$tps$prim extends scala.annotation.StaticAnnotation"
+      else s"${annots(s, i)}${ind(i)}${mods(s.flags.copy(isPrivate = false))}$abs$kw ${esc(s.name)}$tps$prim$ext$open"
     // Java interface/parent CONSTANTS are `static`, so they live in the parent's companion object
     // — which Scala does NOT inherit. Re-export each static-bearing parent's companion so an
     // inherited constant accessed via a subclass (`GL30.GL_LUMINANCE`, declared in `GL20`) resolves.
@@ -560,7 +566,7 @@ final class TirEmitter(source: Program):
         if needsUnreachable then s" = {\n${ind(i + 1)}${term(r, i + 1)}\n${ind(i + 1)}throw new java.lang.RuntimeException(\"unreachable\")\n${ind(i)}}"
         else s" = ${term(r, i)}").getOrElse("")
     tparamSubst = savedSubst // restore (ctor type-param substitution was local to this def)
-    s"${ind(i)}${mods(s.flags)}def $name$tps$pss$ret$rhs"
+    s"${annots(s, i)}${ind(i)}${mods(s.flags)}def $name$tps$pss$ret$rhs"
 
   private def isUnitType(t: TypeRepr): Boolean = t match
     case TypeRepr.TypeRef(_, s) => sym(s).fullName == "scala.Unit"
@@ -630,6 +636,21 @@ final class TirEmitter(source: Program):
         case "scala.Unit"                               => "()"
         case _                                          => s"null.asInstanceOf[${tpe(t)}]"
     case _ => s"null.asInstanceOf[${tpe(t)}]"
+
+  /** A declaration's Java annotations, rendered ahead of it.
+    *
+    * FULLY QUALIFIED like every other reference this phase emits, so `@Test` becomes
+    * `@org.junit.Test` and needs no import. Losing these is a silent correctness defect: a JUnit
+    * suite whose `@Test` did not survive runs ZERO tests and reports SUCCESS. */
+  private def annots(s: Symbol, i: Int): String =
+    if s.annotations.isEmpty then ""
+    else s.annotations.map { a =>
+      val args = if a.args.isEmpty then ""
+                 // Java's single-element `@A(x)` names its value `value`; Scala takes it positionally.
+                 else if a.args.sizeIs == 1 && a.args.head._1 == "value" then s"(${term(a.args.head._2, i)})"
+                 else s"(${a.args.map((k, v) => s"$k = ${term(v, i)}").mkString(", ")})"
+      s"${ind(i)}@${tpe(a.tpe)}$args\n"
+    }.mkString
 
   private def mods(f: Flags): String =
     val parts = List(

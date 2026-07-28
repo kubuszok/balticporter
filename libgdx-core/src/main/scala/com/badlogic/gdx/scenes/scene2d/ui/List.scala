@@ -246,6 +246,7 @@ class List[T](style$p: com.badlogic.gdx.scenes.scene2d.ui.List.ListStyle) extend
   def setSelection(selection: com.badlogic.gdx.scenes.scene2d.utils.ArraySelection[T]): scala.Unit = {
     this.selection = selection
   }
+  @com.badlogic.gdx.utils.Null
   def getSelected(): T = {
     return this.selection.first().asInstanceOf[T]
   }
@@ -280,6 +281,7 @@ class List[T](style$p: com.badlogic.gdx.scenes.scene2d.ui.List.ListStyle) extend
   def getPressedItem(): T = {
     return if (this.pressedIndex == (-1)) null.asInstanceOf[T] else this.items.get(this.pressedIndex)
   }
+  @com.badlogic.gdx.utils.Null
   def getItemAt(y: scala.Float): T = {
     val index: scala.Int = this.getItemIndexAt(y)
     if (index == (-1)) {

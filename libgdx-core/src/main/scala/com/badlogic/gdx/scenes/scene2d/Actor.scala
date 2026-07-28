@@ -124,6 +124,7 @@ class Actor {
     }
     return event.isCancelled()
   }
+  @com.badlogic.gdx.utils.Null
   def hit(x: scala.Float, y: scala.Float, touchable: scala.Boolean): Actor = {
     if (touchable && (this.touchable != com.badlogic.gdx.scenes.scene2d.Touchable.enabled)) {
       return null
@@ -208,6 +209,7 @@ class Actor {
     this.clearActions()
     this.clearListeners()
   }
+  @com.badlogic.gdx.utils.Null
   def getStage(): com.badlogic.gdx.scenes.scene2d.Stage = {
     return this.stage
   }
@@ -240,6 +242,7 @@ class Actor {
     }; actor != null }) ()
     return false
   }
+  @com.badlogic.gdx.utils.Null
   def firstAscendant[T <: Actor](`type`: java.lang.Class[T]): T = {
     if (`type` == null) {
       throw new java.lang.IllegalArgumentException("actor cannot be null.")
@@ -256,6 +259,7 @@ class Actor {
   def hasParent(): scala.Boolean = {
     return this.parent != null
   }
+  @com.badlogic.gdx.utils.Null
   def getParent(): com.badlogic.gdx.scenes.scene2d.Group = {
     return this.parent
   }
@@ -287,6 +291,7 @@ class Actor {
     }; actor != null }) ()
     return true
   }
+  @java.lang.Deprecated
   def ancestorsVisible(): scala.Boolean = {
     return this.ascendantsVisible()
   }
@@ -322,6 +327,7 @@ class Actor {
     }; i = i + 1 } }
     return false
   }
+  @com.badlogic.gdx.utils.Null
   def getUserObject(): java.lang.Object = {
     return this.userObject
   }
@@ -608,6 +614,7 @@ class Actor {
   def getColor(): com.badlogic.gdx.graphics.Color = {
     return this.color
   }
+  @com.badlogic.gdx.utils.Null
   def getName(): java.lang.String = {
     return this.name
   }

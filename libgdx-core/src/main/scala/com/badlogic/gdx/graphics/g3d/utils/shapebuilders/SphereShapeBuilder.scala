@@ -8,12 +8,14 @@ object SphereShapeBuilder {
   def build(builder: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder, width: scala.Float, height: scala.Float, depth: scala.Float, divisionsU: scala.Int, divisionsV: scala.Int): scala.Unit = {
     SphereShapeBuilder.build(builder, width, height, depth, divisionsU, divisionsV, 0, 360, 0, 180)
   }
+  @java.lang.Deprecated
   def build(builder: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder, transform: com.badlogic.gdx.math.Matrix4, width: scala.Float, height: scala.Float, depth: scala.Float, divisionsU: scala.Int, divisionsV: scala.Int): scala.Unit = {
     SphereShapeBuilder.build(builder, transform, width, height, depth, divisionsU, divisionsV, 0, 360, 0, 180)
   }
   def build(builder: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder, width: scala.Float, height: scala.Float, depth: scala.Float, divisionsU: scala.Int, divisionsV: scala.Int, angleUFrom: scala.Float, angleUTo: scala.Float, angleVFrom: scala.Float, angleVTo: scala.Float): scala.Unit = {
     SphereShapeBuilder.build(builder, com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BaseShapeBuilder.matTmp1.idt(), width, height, depth, divisionsU, divisionsV, angleUFrom, angleUTo, angleVFrom, angleVTo)
   }
+  @java.lang.Deprecated
   def build(builder: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder, transform: com.badlogic.gdx.math.Matrix4, width: scala.Float, height: scala.Float, depth: scala.Float, divisionsU: scala.Int, divisionsV: scala.Int, angleUFrom: scala.Float, angleUTo: scala.Float, angleVFrom: scala.Float, angleVTo: scala.Float): scala.Unit = {
     val closedVFrom: scala.Boolean = com.badlogic.gdx.math.MathUtils.isEqual(angleVFrom, 0.0f)
     val closedVTo: scala.Boolean = com.badlogic.gdx.math.MathUtils.isEqual(angleVTo, 180.0f)

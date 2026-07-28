@@ -20,6 +20,7 @@ abstract class ModelLoader[P <: com.badlogic.gdx.assets.loaders.ModelLoader.Mode
   def loadModel(fileHandle: com.badlogic.gdx.files.FileHandle): com.badlogic.gdx.graphics.g3d.Model = {
     return this.loadModel(fileHandle, new com.badlogic.gdx.graphics.g3d.utils.TextureProvider.FileTextureProvider(), null.asInstanceOf[P])
   }
+  @java.lang.Override
   def getDependencies(fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameters: P): com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = {
     val deps: com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = new com.badlogic.gdx.utils.Array().asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]]
     val data: com.badlogic.gdx.graphics.g3d.model.data.ModelData = this.loadModelData(file, parameters)
@@ -42,9 +43,11 @@ abstract class ModelLoader[P <: com.badlogic.gdx.assets.loaders.ModelLoader.Mode
     }
     return deps.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]]
   }
+  @java.lang.Override
   def loadAsync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameters: P): scala.Unit = {
     ()
   }
+  @java.lang.Override
   def loadSync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameters: P): com.badlogic.gdx.graphics.g3d.Model = {
     var data: com.badlogic.gdx.graphics.g3d.model.data.ModelData = null
     this.items.synchronized {

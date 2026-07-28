@@ -22,9 +22,11 @@ class InputAdapter extends com.badlogic.gdx.InputProcessor {
   def touchDragged(screenX: scala.Int, screenY: scala.Int, pointer: scala.Int): scala.Boolean = {
     return false
   }
+  @java.lang.Override
   def mouseMoved(screenX: scala.Int, screenY: scala.Int): scala.Boolean = {
     return false
   }
+  @java.lang.Override
   def scrolled(amountX: scala.Float, amountY: scala.Float): scala.Boolean = {
     return false
   }

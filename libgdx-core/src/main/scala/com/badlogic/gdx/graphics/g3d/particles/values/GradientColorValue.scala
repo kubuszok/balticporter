@@ -49,11 +49,13 @@ class GradientColorValue extends com.badlogic.gdx.graphics.g3d.particles.values.
     out(index + 1) = g1 + ((this.colors(endIndex + 1) - g1) * factor)
     out(index + 2) = b1 + ((this.colors(endIndex + 2) - b1) * factor)
   }
+  @java.lang.Override
   def write(json: com.badlogic.gdx.utils.Json): scala.Unit = {
     super.write(json)
     json.writeValue("colors", this.colors)
     json.writeValue("timeline", this.timeline)
   }
+  @java.lang.Override
   def read(json: com.badlogic.gdx.utils.Json, jsonData: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
     super.read(json, jsonData)
     this.colors = json.readValue("colors", classOf[scala.Array[scala.Float]], jsonData)

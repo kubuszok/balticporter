@@ -3,11 +3,13 @@ package com.badlogic.gdx.graphics.g3d
 class ModelCache(sorter$p: com.badlogic.gdx.graphics.g3d.utils.RenderableSorter, meshPool$p: com.badlogic.gdx.graphics.g3d.ModelCache.MeshPool) extends com.badlogic.gdx.utils.Disposable with com.badlogic.gdx.graphics.g3d.RenderableProvider {
   private var renderables: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.Renderable] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.Renderable]()
   private var renderablesPool: com.badlogic.gdx.utils.FlushablePool[com.badlogic.gdx.graphics.g3d.Renderable] = new com.badlogic.gdx.utils.FlushablePool[com.badlogic.gdx.graphics.g3d.Renderable]() {
+    @java.lang.Override
     override def newObject(): com.badlogic.gdx.graphics.g3d.Renderable = {
       return new com.badlogic.gdx.graphics.g3d.Renderable()
     }
   }
   private var meshPartPool: com.badlogic.gdx.utils.FlushablePool[com.badlogic.gdx.graphics.g3d.model.MeshPart] = new com.badlogic.gdx.utils.FlushablePool[com.badlogic.gdx.graphics.g3d.model.MeshPart]() {
+    @java.lang.Override
     override def newObject(): com.badlogic.gdx.graphics.g3d.model.MeshPart = {
       return new com.badlogic.gdx.graphics.g3d.model.MeshPart()
     }
@@ -144,6 +146,7 @@ class ModelCache(sorter$p: com.badlogic.gdx.graphics.g3d.utils.RenderableSorter,
       this.add(renderableProvider)
     }
   }
+  @java.lang.Override
   def getRenderables(renderables: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.Renderable], pool: com.badlogic.gdx.utils.Pool[com.badlogic.gdx.graphics.g3d.Renderable]): scala.Unit = {
     if (this.building) {
       throw new com.badlogic.gdx.utils.GdxRuntimeException("Cannot render a ModelCache in between .begin() and .end()")
@@ -154,6 +157,7 @@ class ModelCache(sorter$p: com.badlogic.gdx.graphics.g3d.utils.RenderableSorter,
     }
     renderables.addAll(this.renderables.asInstanceOf[com.badlogic.gdx.utils.Array[? <: com.badlogic.gdx.graphics.g3d.Renderable]])
   }
+  @java.lang.Override
   def dispose(): scala.Unit = {
     if (this.building) {
       throw new com.badlogic.gdx.utils.GdxRuntimeException("Cannot dispose a ModelCache in between .begin() and .end()")
@@ -169,10 +173,12 @@ object ModelCache {
   class SimpleMeshPool extends com.badlogic.gdx.graphics.g3d.ModelCache.MeshPool {
     private var freeMeshes: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.Mesh] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.Mesh]()
     private var usedMeshes: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.Mesh] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.Mesh]()
+    @java.lang.Override
     def flush(): scala.Unit = {
       this.freeMeshes.addAll(this.usedMeshes.asInstanceOf[com.badlogic.gdx.utils.Array[? <: com.badlogic.gdx.graphics.Mesh]])
       this.usedMeshes.clear()
     }
+    @java.lang.Override
     def obtain(vertexAttributes: com.badlogic.gdx.graphics.VertexAttributes, vertexCount$arg: scala.Int, indexCount$arg: scala.Int): com.badlogic.gdx.graphics.Mesh = {
       var vertexCount: scala.Int = vertexCount$arg
       var indexCount: scala.Int = indexCount$arg;
@@ -190,6 +196,7 @@ object ModelCache {
       this.usedMeshes.add(result)
       return result
     }
+    @java.lang.Override
     def dispose(): scala.Unit = {
       for (m <- this.usedMeshes) {
         m.dispose()
@@ -204,10 +211,12 @@ object ModelCache {
   class TightMeshPool extends com.badlogic.gdx.graphics.g3d.ModelCache.MeshPool {
     private var freeMeshes: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.Mesh] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.Mesh]()
     private var usedMeshes: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.Mesh] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.Mesh]()
+    @java.lang.Override
     def flush(): scala.Unit = {
       this.freeMeshes.addAll(this.usedMeshes.asInstanceOf[com.badlogic.gdx.utils.Array[? <: com.badlogic.gdx.graphics.Mesh]])
       this.usedMeshes.clear()
     }
+    @java.lang.Override
     def obtain(vertexAttributes: com.badlogic.gdx.graphics.VertexAttributes, vertexCount: scala.Int, indexCount: scala.Int): com.badlogic.gdx.graphics.Mesh = {
       { var i: scala.Int = 0; val n: scala.Int = this.freeMeshes.size; while (i < n) { {
         val mesh: com.badlogic.gdx.graphics.Mesh = this.freeMeshes.get(i)
@@ -221,6 +230,7 @@ object ModelCache {
       this.usedMeshes.add(result)
       return result
     }
+    @java.lang.Override
     def dispose(): scala.Unit = {
       for (m <- this.usedMeshes) {
         m.dispose()
@@ -233,9 +243,11 @@ object ModelCache {
     }
   }
   class Sorter extends com.badlogic.gdx.graphics.g3d.utils.RenderableSorter with java.util.Comparator[com.badlogic.gdx.graphics.g3d.Renderable] {
+    @java.lang.Override
     def sort(camera: com.badlogic.gdx.graphics.Camera, renderables: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.Renderable]): scala.Unit = {
       renderables.sort(this)
     }
+    @java.lang.Override
     def compare(arg0: com.badlogic.gdx.graphics.g3d.Renderable, arg1: com.badlogic.gdx.graphics.g3d.Renderable): scala.Int = {
       val va0: com.badlogic.gdx.graphics.VertexAttributes = arg0.meshPart.mesh.getVertexAttributes()
       val va1: com.badlogic.gdx.graphics.VertexAttributes = arg1.meshPart.mesh.getVertexAttributes()

@@ -8,6 +8,7 @@ class Sphere(center$p: com.badlogic.gdx.math.Vector3, radius$p: scala.Float) ext
   def overlaps(sphere: Sphere): scala.Boolean = {
     return this.center.dst2(sphere.center) < ((this.radius + sphere.radius) * (this.radius + sphere.radius))
   }
+  @java.lang.Override
   def hashCode(): scala.Int = {
     val prime: scala.Int = 71
     var result: scala.Int = 1
@@ -15,6 +16,7 @@ class Sphere(center$p: com.badlogic.gdx.math.Vector3, radius$p: scala.Float) ext
     result = (prime * result) + com.badlogic.gdx.utils.NumberUtils.floatToRawIntBits(this.radius)
     return result
   }
+  @java.lang.Override
   def equals(o: java.lang.Object): scala.Boolean = {
     if (this == o) {
       return true

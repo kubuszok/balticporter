@@ -91,6 +91,7 @@ class HexagonalTiledMapRenderer extends com.badlogic.gdx.maps.tiled.renderers.Ba
       }
     }
   }
+  @java.lang.Override
   def renderTileLayer(layer: com.badlogic.gdx.maps.tiled.TiledMapTileLayer): scala.Unit = {
     val batchColor: com.badlogic.gdx.graphics.Color = batch.getColor()
     val color: scala.Float = this.getTileLayerColor(layer, batchColor)
@@ -213,6 +214,7 @@ class HexagonalTiledMapRenderer extends com.badlogic.gdx.maps.tiled.renderers.Ba
       } else ()
     } else ()
   }
+  @java.lang.Override
   def renderImageLayer(layer: com.badlogic.gdx.maps.tiled.TiledMapImageLayer): scala.Unit = {
     val batchColor: com.badlogic.gdx.graphics.Color = batch.getColor()
     val color: scala.Float = this.getImageLayerColor(layer, batchColor)

@@ -1,6 +1,7 @@
 package com.badlogic.gdx.utils
 
 class CharArrayTest {
+  @org.junit.Test
   def constructorTest(): scala.Unit = {
     val array1: com.badlogic.gdx.utils.CharArray = new com.badlogic.gdx.utils.CharArray()
     org.junit.Assert.assertEquals(0, array1.size)
@@ -37,6 +38,7 @@ class CharArrayTest {
     org.junit.Assert.assertEquals(5, array9.size)
     org.junit.Assert.assertEquals("world", array9.toString())
   }
+  @org.junit.Test
   def addTest(): scala.Unit = {
     val array: com.badlogic.gdx.utils.CharArray = new com.badlogic.gdx.utils.CharArray()
     array.add('a')
@@ -69,6 +71,7 @@ class CharArrayTest {
     org.junit.Assert.assertEquals('r', array.get(16))
     org.junit.Assert.assertEquals('s', array.get(17))
   }
+  @org.junit.Test
   def getSetTest(): scala.Unit = {
     val array: com.badlogic.gdx.utils.CharArray = new com.badlogic.gdx.utils.CharArray()
     array.addAll(scala.Array[scala.Char]('a', 'b', 'c', 'd', 'e'))
@@ -95,6 +98,7 @@ class CharArrayTest {
     org.junit.Assert.assertEquals(6.asInstanceOf[scala.Char], array3.get(1))
     org.junit.Assert.assertEquals(8.asInstanceOf[scala.Char], array3.get(2))
   }
+  @org.junit.Test
   def removeTest(): scala.Unit = {
     val array: com.badlogic.gdx.utils.CharArray = new com.badlogic.gdx.utils.CharArray(true, 10)
     array.addAll(scala.Array[scala.Char]('a', 'b', 'c', 'd', 'e'))
@@ -132,6 +136,7 @@ class CharArrayTest {
     org.junit.Assert.assertEquals('c', unordered.get(0))
     org.junit.Assert.assertEquals('e', unordered.get(1))
   }
+  @org.junit.Test
   def searchTest(): scala.Unit = {
     val array: com.badlogic.gdx.utils.CharArray = new com.badlogic.gdx.utils.CharArray()
     array.addAll(scala.Array[scala.Char]('h', 'e', 'l', 'l', 'o', ' ', 'w', 'o', 'r', 'l', 'd'))
@@ -152,6 +157,7 @@ class CharArrayTest {
     org.junit.Assert.assertEquals(0, array.lastIndexOf("hello"))
     org.junit.Assert.assertEquals(2, array.lastIndexOf("ll"))
   }
+  @org.junit.Test
   def stackTest(): scala.Unit = {
     val array: com.badlogic.gdx.utils.CharArray = new com.badlogic.gdx.utils.CharArray()
     array.add('a')
@@ -168,6 +174,7 @@ class CharArrayTest {
     org.junit.Assert.assertFalse(array.notEmpty())
     org.junit.Assert.assertTrue(array.isEmpty())
   }
+  @org.junit.Test
   def arrayOperationsTest(): scala.Unit = {
     val array: com.badlogic.gdx.utils.CharArray = new com.badlogic.gdx.utils.CharArray()
     array.addAll(scala.Array[scala.Char]('d', 'b', 'e', 'a', 'c'))
@@ -196,6 +203,7 @@ class CharArrayTest {
     array2.clear()
     org.junit.Assert.assertEquals(0, array2.size)
   }
+  @org.junit.Test
   def appendTest(): scala.Unit = {
     val array: com.badlogic.gdx.utils.CharArray = new com.badlogic.gdx.utils.CharArray()
     array.append(true)
@@ -249,6 +257,7 @@ class CharArrayTest {
     array.append(sbuf)
     org.junit.Assert.assertEquals("buffer", array.toString())
   }
+  @org.junit.Test
   def appendlnTest(): scala.Unit = {
     val array: com.badlogic.gdx.utils.CharArray = new com.badlogic.gdx.utils.CharArray()
     array.appendln("Line 1")
@@ -260,6 +269,7 @@ class CharArrayTest {
     array.appendln()
     org.junit.Assert.assertEquals("\n", array.toString())
   }
+  @org.junit.Test
   def paddingTest(): scala.Unit = {
     val array: com.badlogic.gdx.utils.CharArray = new com.badlogic.gdx.utils.CharArray()
     array.append("Hello")
@@ -276,6 +286,7 @@ class CharArrayTest {
     org.junit.Assert.assertEquals("Hi   ", array.toString())
     array.clear()
   }
+  @org.junit.Test
   def deleteTest(): scala.Unit = {
     var array: com.badlogic.gdx.utils.CharArray = new com.badlogic.gdx.utils.CharArray("Hello World!")
     array.delete(5, 11)
@@ -295,6 +306,7 @@ class CharArrayTest {
     array.deleteFirst("Hello")
     org.junit.Assert.assertEquals(" World! Hello!", array.toString())
   }
+  @org.junit.Test
   def replaceTest(): scala.Unit = {
     var array: com.badlogic.gdx.utils.CharArray = new com.badlogic.gdx.utils.CharArray("Hello World!")
     org.junit.Assert.assertTrue(array.replaceFirst('l', 'L'))
@@ -317,6 +329,7 @@ class CharArrayTest {
     array.replace('-', " to ")
     org.junit.Assert.assertEquals("a to b to c", array.toString())
   }
+  @org.junit.Test
   def insertTest(): scala.Unit = {
     var array: com.badlogic.gdx.utils.CharArray = new com.badlogic.gdx.utils.CharArray("Hello!")
     (array.insert: (scala.Int, scala.Char) => scala.Unit)(5, ' ')
@@ -341,6 +354,7 @@ class CharArrayTest {
     array.set(2, 'B')
     org.junit.Assert.assertEquals("ABBC", array.toString())
   }
+  @org.junit.Test
   def substringTest(): scala.Unit = {
     val array: com.badlogic.gdx.utils.CharArray = new com.badlogic.gdx.utils.CharArray("Hello World!")
     org.junit.Assert.assertEquals("Hello", array.substring(0, 5))
@@ -356,6 +370,7 @@ class CharArrayTest {
     org.junit.Assert.assertEquals("", array.midString(6, 0))
     org.junit.Assert.assertEquals("World!", array.midString(6, 10))
   }
+  @org.junit.Test
   def stringComparisonTest(): scala.Unit = {
     val array: com.badlogic.gdx.utils.CharArray = new com.badlogic.gdx.utils.CharArray("Hello World")
     org.junit.Assert.assertTrue(array.startsWith("Hello"))
@@ -380,6 +395,7 @@ class CharArrayTest {
     org.junit.Assert.assertTrue(array.equalsIgnoreCase(upper))
     org.junit.Assert.assertTrue(array.equalsIgnoreCase("hello world"))
   }
+  @org.junit.Test
   def charSequenceTest(): scala.Unit = {
     val array: com.badlogic.gdx.utils.CharArray = new com.badlogic.gdx.utils.CharArray("Hello World!")
     org.junit.Assert.assertEquals(12, array.length())
@@ -388,6 +404,7 @@ class CharArrayTest {
     val sub: java.lang.CharSequence = array.subSequence(0, 5)
     org.junit.Assert.assertEquals("Hello", sub.toString())
   }
+  @org.junit.Test
   def trimCapacityTest(): scala.Unit = {
     var array: com.badlogic.gdx.utils.CharArray = new com.badlogic.gdx.utils.CharArray(100)
     array.append("Hello")
@@ -406,6 +423,7 @@ class CharArrayTest {
     array.setLength(5)
     org.junit.Assert.assertEquals(5, array.length())
   }
+  @org.junit.Test
   def hashCodeEqualsTest(): scala.Unit = {
     val array1: com.badlogic.gdx.utils.CharArray = new com.badlogic.gdx.utils.CharArray("Hello")
     val array2: com.badlogic.gdx.utils.CharArray = new com.badlogic.gdx.utils.CharArray("Hello")
@@ -417,6 +435,7 @@ class CharArrayTest {
     org.junit.Assert.assertEquals(array1.hashCode(), array2.hashCode())
     org.junit.Assert.assertNotEquals(array1.hashCode(), array3.hashCode())
   }
+  @org.junit.Test
   def readerWriterTest(): scala.Unit = {
     val array: com.badlogic.gdx.utils.CharArray = new com.badlogic.gdx.utils.CharArray("Hello World!")
     val reader: java.io.Reader = array.reader()
@@ -436,6 +455,7 @@ class CharArrayTest {
     writer.write(scala.Array[scala.Char]('1', '2', '3'))
     org.junit.Assert.assertEquals("Test 123", array2.toString())
   }
+  @org.junit.Test
   def unicodeTest(): scala.Unit = {
     val array: com.badlogic.gdx.utils.CharArray = new com.badlogic.gdx.utils.CharArray()
     val smiley: scala.Int = 128512
@@ -452,6 +472,7 @@ class CharArrayTest {
     array2.reverseCodePoints()
     org.junit.Assert.assertEquals("iH", array2.substring(0, 2))
   }
+  @org.junit.Test
   def iteratorTest(): scala.Unit = {
     val array: com.badlogic.gdx.utils.CharArray = new com.badlogic.gdx.utils.CharArray()
     val list: scala.collection.mutable.ArrayBuffer[java.lang.String] = new scala.collection.mutable.ArrayBuffer[java.lang.String]()
@@ -472,6 +493,7 @@ class CharArrayTest {
     array.appendWithSeparators(strArray.asInstanceOf[scala.Array[java.lang.Object]], "-")
     org.junit.Assert.assertEquals("A-B-C", array.toString())
   }
+  @org.junit.Test
   def edgeCasesTest(): scala.Unit = {
     val array: com.badlogic.gdx.utils.CharArray = new com.badlogic.gdx.utils.CharArray()
     org.junit.Assert.assertEquals(-1, array.indexOf('a'))
@@ -504,6 +526,7 @@ class CharArrayTest {
       }
     }
   }
+  @org.junit.Test
   def toArrayTest(): scala.Unit = {
     val array: com.badlogic.gdx.utils.CharArray = new com.badlogic.gdx.utils.CharArray()
     array.addAll(scala.Array[scala.Char]('a', 'b', 'c', 'd', 'e'))
@@ -515,6 +538,7 @@ class CharArrayTest {
     org.junit.Assert.assertEquals('c', target(3))
     org.junit.Assert.assertEquals('d', target(4))
   }
+  @org.junit.Test
   def drainTest(): scala.Unit = {
     val array: com.badlogic.gdx.utils.CharArray = new com.badlogic.gdx.utils.CharArray("Hello World!")
     val drained: scala.Char = array.drainChar(6)
@@ -526,6 +550,7 @@ class CharArrayTest {
     org.junit.Assert.assertArrayEquals(scala.Array[scala.Char]('H', 'e', 'l', 'l', 'o'), target)
     org.junit.Assert.assertEquals(" orld!", array.toString())
   }
+  @org.junit.Test
   def appendSeparatorTest(): scala.Unit = {
     val array: com.badlogic.gdx.utils.CharArray = new com.badlogic.gdx.utils.CharArray()
     array.appendSeparator(',')
@@ -551,6 +576,7 @@ class CharArrayTest {
     array4.append("C")
     org.junit.Assert.assertEquals("A | B | C", array4.toString())
   }
+  @org.junit.Test
   def randomTest(): scala.Unit = {
     val array: com.badlogic.gdx.utils.CharArray = new com.badlogic.gdx.utils.CharArray()
     array.addAll(scala.Array[scala.Char]('a', 'b', 'c', 'd', 'e'))
@@ -564,6 +590,7 @@ class CharArrayTest {
     org.junit.Assert.assertTrue(array.contains('d'))
     org.junit.Assert.assertTrue(array.contains('e'))
   }
+  @org.junit.Test
   def appendToTest(): scala.Unit = {
     val array: com.badlogic.gdx.utils.CharArray = new com.badlogic.gdx.utils.CharArray("Hello World")
     val sb: java.lang.StringBuilder = new java.lang.StringBuilder("Start: ")
@@ -573,6 +600,7 @@ class CharArrayTest {
     array.appendTo(sbuf)
     org.junit.Assert.assertEquals("Start: Hello World", sbuf.toString())
   }
+  @org.junit.Test
   def setCharAtTest(): scala.Unit = {
     val array: com.badlogic.gdx.utils.CharArray = new com.badlogic.gdx.utils.CharArray("Hello")
     array.setCharAt(1, 'a')
@@ -580,6 +608,7 @@ class CharArrayTest {
     array.setCharAt(2, 'p').setCharAt(3, 'p').setCharAt(4, 'y')
     org.junit.Assert.assertEquals("Happy", array.toString())
   }
+  @org.junit.Test
   def toStringAndClearTest(): scala.Unit = {
     val array: com.badlogic.gdx.utils.CharArray = new com.badlogic.gdx.utils.CharArray("Test String")
     val result: java.lang.String = array.toStringAndClear()
@@ -587,6 +616,7 @@ class CharArrayTest {
     org.junit.Assert.assertEquals(0, array.size)
     org.junit.Assert.assertTrue(array.isEmpty())
   }
+  @org.junit.Test
   def toStringWithSeparatorTest(): scala.Unit = {
     val array: com.badlogic.gdx.utils.CharArray = new com.badlogic.gdx.utils.CharArray()
     array.addAll(scala.Array[scala.Char]('a', 'b', 'c', 'd', 'e'))

@@ -54,6 +54,7 @@ class Bezier[T <: com.badlogic.gdx.math.Vector[T]] extends com.badlogic.gdx.math
     this.points.addAll(points.asInstanceOf[com.badlogic.gdx.utils.Array[? <: T]], offset, length)
     return this.asInstanceOf[Bezier[T]]
   }
+  @java.lang.Override
   def valueAt(out: T, t: scala.Float): T = {
     val n: scala.Int = this.points.size
     if (n == 2) {
@@ -69,6 +70,7 @@ class Bezier[T <: com.badlogic.gdx.math.Vector[T]] extends com.badlogic.gdx.math
     }
     return out
   }
+  @java.lang.Override
   def derivativeAt(out: T, t: scala.Float): T = {
     val n: scala.Int = this.points.size
     if (n == 2) {
@@ -84,6 +86,7 @@ class Bezier[T <: com.badlogic.gdx.math.Vector[T]] extends com.badlogic.gdx.math
     }
     return out
   }
+  @java.lang.Override
   def approximate(v: T): scala.Float = {
     val p1: T = this.points.get(0)
     val p2: T = this.points.get(this.points.size - 1)
@@ -95,9 +98,11 @@ class Bezier[T <: com.badlogic.gdx.math.Vector[T]] extends com.badlogic.gdx.math
     val s: scala.Float = ((l2Sqr + l1Sqr) - l3Sqr) / (2 * l1)
     return (com.badlogic.gdx.math.MathUtils.clamp: (scala.Float, scala.Float, scala.Float) => scala.Float)((l1 - s) / l1, 0.0f, 1.0f)
   }
+  @java.lang.Override
   def locate(v: T): scala.Float = {
     return this.approximate(v)
   }
+  @java.lang.Override
   def approxLength(samples: scala.Int): scala.Float = {
     var tempLength: scala.Float = 0;
     { var i: scala.Int = 0; while (i < samples) { {

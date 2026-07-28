@@ -53,6 +53,7 @@ class Texture extends com.badlogic.gdx.graphics.GLTexture(0, 0) {
     this.unsafeSetAnisotropicFilter(anisotropicFilterLevel, true)
     com.badlogic.gdx.Gdx.gl.glBindTexture(glTarget, 0)
   }
+  @java.lang.Override
   def reload(): scala.Unit = {
     if (!this.isManaged()) {
       throw new com.badlogic.gdx.utils.GdxRuntimeException("Tried to reload unmanaged Texture")
@@ -67,12 +68,15 @@ class Texture extends com.badlogic.gdx.graphics.GLTexture(0, 0) {
     this.bind()
     com.badlogic.gdx.Gdx.gl.glTexSubImage2D(glTarget, 0, x, y, pixmap.getWidth(), pixmap.getHeight(), pixmap.getGLFormat(), pixmap.getGLType(), pixmap.getPixels())
   }
+  @java.lang.Override
   def getWidth(): scala.Int = {
     return this.data.getWidth()
   }
+  @java.lang.Override
   def getHeight(): scala.Int = {
     return this.data.getHeight()
   }
+  @java.lang.Override
   def getDepth(): scala.Int = {
     return 0
   }
@@ -145,6 +149,7 @@ object Texture {
           params.genMipMaps = texture.data.useMipMaps()
           params.texture = texture
           params.loadedCallback = new com.badlogic.gdx.assets.AssetLoaderParameters.LoadedCallback() {
+            @java.lang.Override
             override def finishedLoading(assetManager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, `type`: java.lang.Class[?]): scala.Unit = {
               assetManager.setReferenceCount(fileName, refCount)
             }

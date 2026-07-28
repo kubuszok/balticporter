@@ -1,6 +1,7 @@
 package com.badlogic.gdx.utils
 
 class LongQueueTest {
+  @org.junit.Test
   def addFirstAndLastTest(): scala.Unit = {
     val queue: com.badlogic.gdx.utils.LongQueue = new com.badlogic.gdx.utils.LongQueue()
     queue.addFirst(1)
@@ -12,6 +13,7 @@ class LongQueueTest {
     org.junit.Assert.assertEquals(2, queue.indexOf(2))
     org.junit.Assert.assertEquals(3, queue.indexOf(4))
   }
+  @org.junit.Test
   def removeLastTest(): scala.Unit = {
     val queue: com.badlogic.gdx.utils.LongQueue = new com.badlogic.gdx.utils.LongQueue()
     queue.addLast(1)
@@ -32,6 +34,7 @@ class LongQueueTest {
     org.junit.Assert.assertEquals(1, queue.removeLast())
     org.junit.Assert.assertEquals(0, queue.size)
   }
+  @org.junit.Test
   def removeFirstTest(): scala.Unit = {
     val queue: com.badlogic.gdx.utils.LongQueue = new com.badlogic.gdx.utils.LongQueue()
     queue.addLast(1)
@@ -52,6 +55,7 @@ class LongQueueTest {
     org.junit.Assert.assertEquals(4, queue.removeFirst())
     org.junit.Assert.assertEquals(0, queue.size)
   }
+  @org.junit.Test
   def resizableQueueTest(): scala.Unit = {
     val q: com.badlogic.gdx.utils.LongQueue = new com.badlogic.gdx.utils.LongQueue(8)
     org.junit.Assert.assertTrue("New queue is not empty!", q.size == 0);
@@ -87,6 +91,7 @@ class LongQueueTest {
     q.clear()
     org.junit.Assert.assertTrue("Clear did not clear properly", q.size == 0)
   }
+  @org.junit.Test
   def resizableDequeTest(): scala.Unit = {
     val q: com.badlogic.gdx.utils.LongQueue = new com.badlogic.gdx.utils.LongQueue(8)
     org.junit.Assert.assertTrue("New deque is not empty!", q.size == 0);
@@ -122,6 +127,7 @@ class LongQueueTest {
     q.clear()
     org.junit.Assert.assertTrue("Clear did not clear properly", q.size == 0)
   }
+  @org.junit.Test
   def getTest(): scala.Unit = {
     val q: com.badlogic.gdx.utils.LongQueue = new com.badlogic.gdx.utils.LongQueue(7);
     { var i: scala.Int = 0; while (i < 5) { {
@@ -149,6 +155,7 @@ class LongQueueTest {
       }
     }; i = i + 1 } }
   }
+  @org.junit.Test
   def removeTest(): scala.Unit = {
     val q: com.badlogic.gdx.utils.LongQueue = new com.badlogic.gdx.utils.LongQueue();
     { var j: scala.Int = 0; while (j <= 6) { {
@@ -188,6 +195,7 @@ class LongQueueTest {
     q.removeIndex(5)
     this.assertValues(q, scala.Array[scala.Long](0, 1, 2, 3, 4))
   }
+  @org.junit.Test
   def indexOfTest(): scala.Unit = {
     val q: com.badlogic.gdx.utils.LongQueue = new com.badlogic.gdx.utils.LongQueue();
     { var j: scala.Int = 0; while (j <= 6) { {
@@ -207,6 +215,7 @@ class LongQueueTest {
       org.junit.Assert.assertEquals(q.indexOf(j), j)
     }; j = j + 1 } }
   }
+  @org.junit.Test
   def toStringTest(): scala.Unit = {
     val q: com.badlogic.gdx.utils.LongQueue = new com.badlogic.gdx.utils.LongQueue(1)
     org.junit.Assert.assertTrue(q.toString().equals("[]"))
@@ -217,6 +226,7 @@ class LongQueueTest {
     q.addLast(7)
     org.junit.Assert.assertTrue(q.toString().equals("[4, 5, 6, 7]"))
   }
+  @org.junit.Test
   def hashEqualsTest(): scala.Unit = {
     val q1: com.badlogic.gdx.utils.LongQueue = new com.badlogic.gdx.utils.LongQueue()
     val q2: com.badlogic.gdx.utils.LongQueue = new com.badlogic.gdx.utils.LongQueue()

@@ -26,6 +26,7 @@ class FacedCubemapData(positiveX: com.badlogic.gdx.graphics.TextureData, negativ
   this.data(3) = negativeY
   this.data(4) = positiveZ
   this.data(5) = negativeZ
+  @java.lang.Override
   def isManaged(): scala.Boolean = {
     for (data <- this.data) {
       if (!data.isManaged()) {
@@ -51,6 +52,7 @@ class FacedCubemapData(positiveX: com.badlogic.gdx.graphics.TextureData, negativ
   def getTextureData(side: com.badlogic.gdx.graphics.Cubemap.CubemapSide): com.badlogic.gdx.graphics.TextureData = {
     return this.data(side.index)
   }
+  @java.lang.Override
   def getWidth(): scala.Int = {
     var tmp: scala.Int = 0
     var width: scala.Int = 0
@@ -80,6 +82,7 @@ class FacedCubemapData(positiveX: com.badlogic.gdx.graphics.TextureData, negativ
     } else ()
     return width
   }
+  @java.lang.Override
   def getHeight(): scala.Int = {
     var tmp: scala.Int = 0
     var height: scala.Int = 0
@@ -109,9 +112,11 @@ class FacedCubemapData(positiveX: com.badlogic.gdx.graphics.TextureData, negativ
     } else ()
     return height
   }
+  @java.lang.Override
   def isPrepared(): scala.Boolean = {
     return false
   }
+  @java.lang.Override
   def prepare(): scala.Unit = {
     if (!this.isComplete()) {
       throw new com.badlogic.gdx.utils.GdxRuntimeException("You need to complete your cubemap data before using it")
@@ -122,6 +127,7 @@ class FacedCubemapData(positiveX: com.badlogic.gdx.graphics.TextureData, negativ
       } else ()
     }; i = i + 1 } }
   }
+  @java.lang.Override
   def consumeCubemapData(): scala.Unit = {
     { var i: scala.Int = 0; while (i < this.data.length) { {
       if (this.data(i).getType() == com.badlogic.gdx.graphics.TextureData.TextureDataType.Custom) {

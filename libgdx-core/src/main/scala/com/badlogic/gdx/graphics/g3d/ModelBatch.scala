@@ -159,15 +159,18 @@ class ModelBatch(context$p: com.badlogic.gdx.graphics.g3d.utils.RenderContext, s
       this.render(renderableProvider, environment, shader)
     }
   }
+  @java.lang.Override
   def dispose(): scala.Unit = {
     this.shaderProvider.dispose()
   }
 }
 object ModelBatch {
   class RenderablePool extends com.badlogic.gdx.utils.FlushablePool[com.badlogic.gdx.graphics.g3d.Renderable] {
+    @java.lang.Override
     def newObject(): com.badlogic.gdx.graphics.g3d.Renderable = {
       return new com.badlogic.gdx.graphics.g3d.Renderable()
     }
+    @java.lang.Override
     def obtain(): com.badlogic.gdx.graphics.g3d.Renderable = {
       val renderable: com.badlogic.gdx.graphics.g3d.Renderable = super.obtain()
       renderable.environment = null

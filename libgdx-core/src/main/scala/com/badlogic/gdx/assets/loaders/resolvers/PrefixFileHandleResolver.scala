@@ -17,6 +17,7 @@ class PrefixFileHandleResolver(baseResolver$p: com.badlogic.gdx.assets.loaders.F
   def getPrefix(): java.lang.String = {
     return this.prefix
   }
+  @java.lang.Override
   def resolve(fileName: java.lang.String): com.badlogic.gdx.files.FileHandle = {
     return this.baseResolver.resolve(this.prefix + fileName)
   }

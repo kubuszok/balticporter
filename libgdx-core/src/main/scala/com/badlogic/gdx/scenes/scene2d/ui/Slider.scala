@@ -59,6 +59,7 @@ class Slider(min$p: scala.Float, max$p: scala.Float, stepSize$p: scala.Float, ve
   def isOver(): scala.Boolean = {
     return this.mouseOver
   }
+  @com.badlogic.gdx.utils.Null
   def getBackgroundDrawable(): com.badlogic.gdx.scenes.scene2d.utils.Drawable = {
     val style: com.badlogic.gdx.scenes.scene2d.ui.Slider.SliderStyle = super.getStyle().asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Slider.SliderStyle]
     if (disabled && (style.disabledBackground != null)) {
@@ -72,6 +73,7 @@ class Slider(min$p: scala.Float, max$p: scala.Float, stepSize$p: scala.Float, ve
     } else ()
     return style.background
   }
+  @com.badlogic.gdx.utils.Null
   def getKnobDrawable(): com.badlogic.gdx.scenes.scene2d.utils.Drawable = {
     val style: com.badlogic.gdx.scenes.scene2d.ui.Slider.SliderStyle = super.getStyle().asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Slider.SliderStyle]
     if (disabled && (style.disabledKnob != null)) {
@@ -169,9 +171,11 @@ class Slider(min$p: scala.Float, max$p: scala.Float, stepSize$p: scala.Float, ve
     this.snapValues = values
     this.threshold = threshold
   }
+  @java.lang.Deprecated
   def setSnapToValues(values: scala.Array[scala.Float], threshold: scala.Float): scala.Unit = {
     this.setSnapToValues(threshold, values)
   }
+  @com.badlogic.gdx.utils.Null
   def getSnapToValues(): scala.Array[scala.Float] = {
     return this.snapValues
   }

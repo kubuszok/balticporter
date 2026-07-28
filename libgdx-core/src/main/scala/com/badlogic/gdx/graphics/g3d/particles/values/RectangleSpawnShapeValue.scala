@@ -8,6 +8,7 @@ final class RectangleSpawnShapeValue extends com.badlogic.gdx.graphics.g3d.parti
     this.spawnDepthValue = new com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue()
     this.load(value)
   }
+  @java.lang.Override
   def spawnAux(vector: com.badlogic.gdx.math.Vector3, percent: scala.Float): scala.Unit = {
     val width: scala.Float = spawnWidth + (spawnWidthDiff * spawnWidthValue.getScale(percent))
     val height: scala.Float = spawnHeight + (spawnHeightDiff * spawnHeightValue.getScale(percent))
@@ -56,6 +57,7 @@ final class RectangleSpawnShapeValue extends com.badlogic.gdx.graphics.g3d.parti
       vector.z = com.badlogic.gdx.math.MathUtils.random(depth) - (depth / 2)
     }
   }
+  @java.lang.Override
   def copy(): com.badlogic.gdx.graphics.g3d.particles.values.SpawnShapeValue = {
     return new RectangleSpawnShapeValue(this)
   }

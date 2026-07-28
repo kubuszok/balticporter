@@ -12,6 +12,7 @@ abstract class BufferedParticleBatch[T <: com.badlogic.gdx.graphics.g3d.particle
     this.renderData.clear()
     this.bufferedParticlesCount = 0
   }
+  @java.lang.Override
   def draw(data: T): scala.Unit = {
     if (data.controller.particles.size > 0) {
       this.renderData.add(data)

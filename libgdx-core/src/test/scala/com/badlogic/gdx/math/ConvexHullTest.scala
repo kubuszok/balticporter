@@ -1,6 +1,7 @@
 package com.badlogic.gdx.math
 
 class ConvexHullTest {
+  @org.junit.Test
   def testComputePolygon(): scala.Unit = {
     val convexHull: com.badlogic.gdx.math.ConvexHull = new com.badlogic.gdx.math.ConvexHull()
     val rawPolygon: scala.Array[scala.Float] = scala.Array[scala.Float](0, 0, 0, 1, 1, 1, 1, 0)

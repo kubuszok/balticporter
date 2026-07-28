@@ -46,6 +46,7 @@ abstract class BatchTiledMapRenderer extends com.badlogic.gdx.maps.tiled.TiledMa
   def getViewBounds(): com.badlogic.gdx.math.Rectangle = {
     return this.viewBounds
   }
+  @java.lang.Override
   def setView(camera: com.badlogic.gdx.graphics.OrthographicCamera): scala.Unit = {
     this.batch.setProjectionMatrix(camera.combined)
     val width: scala.Float = camera.viewportWidth * camera.zoom
@@ -54,10 +55,12 @@ abstract class BatchTiledMapRenderer extends com.badlogic.gdx.maps.tiled.TiledMa
     val h: scala.Float = (height * java.lang.Math.abs(camera.up.y)) + (width * java.lang.Math.abs(camera.up.x))
     this.viewBounds.set(camera.position.x - (w / 2), camera.position.y - (h / 2), w, h)
   }
+  @java.lang.Override
   def setView(projection: com.badlogic.gdx.math.Matrix4, x: scala.Float, y: scala.Float, width: scala.Float, height: scala.Float): scala.Unit = {
     this.batch.setProjectionMatrix(projection)
     this.viewBounds.set(x, y, width, height)
   }
+  @java.lang.Override
   def render(): scala.Unit = {
     this.beginRender()
     for (layer <- this.map.getLayers()) {
@@ -65,6 +68,7 @@ abstract class BatchTiledMapRenderer extends com.badlogic.gdx.maps.tiled.TiledMa
     }
     this.endRender()
   }
+  @java.lang.Override
   def render(layers: scala.Array[scala.Int]): scala.Unit = {
     this.beginRender()
     for (layerIdx <- layers) {
@@ -98,14 +102,17 @@ abstract class BatchTiledMapRenderer extends com.badlogic.gdx.maps.tiled.TiledMa
       }
     }
   }
+  @java.lang.Override
   def renderObjects(layer: com.badlogic.gdx.maps.MapLayer): scala.Unit = {
     for (`object` <- layer.getObjects()) {
       this.renderObject(`object`)
     }
   }
+  @java.lang.Override
   def renderObject(`object`: com.badlogic.gdx.maps.MapObject): scala.Unit = {
     ()
   }
+  @java.lang.Override
   def renderImageLayer(layer: com.badlogic.gdx.maps.tiled.TiledMapImageLayer): scala.Unit = {
     val batchColor: com.badlogic.gdx.graphics.Color = this.batch.getColor()
     val color: scala.Float = this.getImageLayerColor(layer, batchColor)
@@ -219,6 +226,7 @@ abstract class BatchTiledMapRenderer extends com.badlogic.gdx.maps.tiled.TiledMa
   def endRender(): scala.Unit = {
     this.batch.`end`()
   }
+  @java.lang.Override
   def dispose(): scala.Unit = {
     if (this.ownsBatch) {
       this.batch.dispose()

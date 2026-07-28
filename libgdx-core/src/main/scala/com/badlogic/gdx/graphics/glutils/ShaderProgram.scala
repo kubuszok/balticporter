@@ -425,6 +425,7 @@ class ShaderProgram(vertexShader$arg: java.lang.String, fragmentShader$arg: java
     this.checkManaged()
     gl.glVertexAttribPointer(location, size, `type`, normalize, stride, offset)
   }
+  @java.lang.Deprecated
   def begin(): scala.Unit = {
     this.bind()
   }
@@ -433,6 +434,7 @@ class ShaderProgram(vertexShader$arg: java.lang.String, fragmentShader$arg: java
     this.checkManaged()
     gl.glUseProgram(this.program)
   }
+  @java.lang.Deprecated
   def `end`(): scala.Unit = {
     ()
   }

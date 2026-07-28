@@ -125,6 +125,7 @@ abstract class GLTexture(glTarget$p: scala.Int, glHandle$p: scala.Int) extends c
       this.glHandle = 0
     } else ()
   }
+  @java.lang.Override
   def dispose(): scala.Unit = {
     this.delete()
   }

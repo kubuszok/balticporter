@@ -36,15 +36,19 @@ class IndexArray(maxIndices$arg: scala.Int) extends com.badlogic.gdx.graphics.gl
     this.byteBuffer.asInstanceOf[java.nio.Buffer].position(0)
     this.byteBuffer.asInstanceOf[java.nio.Buffer].limit(this.buffer.limit() << 1)
   }
+  @java.lang.Override
   def updateIndices(targetOffset: scala.Int, indices: scala.Array[scala.Short], offset: scala.Int, count: scala.Int): scala.Unit = {
     val pos: scala.Int = this.byteBuffer.position()
     this.byteBuffer.asInstanceOf[java.nio.Buffer].position(targetOffset * 2)
     com.badlogic.gdx.utils.BufferUtils.copy(indices, offset, this.byteBuffer, count)
     this.byteBuffer.asInstanceOf[java.nio.Buffer].position(pos)
   }
+  @java.lang.Override
+  @java.lang.Deprecated
   def getBuffer(): java.nio.ShortBuffer = {
     return this.buffer
   }
+  @java.lang.Override
   def getBuffer(forWriting: scala.Boolean): java.nio.ShortBuffer = {
     return this.buffer
   }

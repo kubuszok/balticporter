@@ -655,24 +655,32 @@ class ScrollPane(actor$p: com.badlogic.gdx.scenes.scene2d.Actor, style$p: com.ba
       super.addActor(actor)
     } else ()
   }
+  @com.badlogic.gdx.utils.Null
   def getActor(): com.badlogic.gdx.scenes.scene2d.Actor = {
     return this.actor
   }
+  @java.lang.Deprecated
   def setWidget(actor: com.badlogic.gdx.scenes.scene2d.Actor): scala.Unit = {
     this.setActor(actor)
   }
+  @java.lang.Deprecated
+  @com.badlogic.gdx.utils.Null
   def getWidget(): com.badlogic.gdx.scenes.scene2d.Actor = {
     return this.actor
   }
+  @java.lang.Deprecated
   def addActor(actor: com.badlogic.gdx.scenes.scene2d.Actor): scala.Unit = {
     throw new java.lang.UnsupportedOperationException("Use ScrollPane#setActor.")
   }
+  @java.lang.Deprecated
   def addActorAt(index: scala.Int, actor: com.badlogic.gdx.scenes.scene2d.Actor): scala.Unit = {
     throw new java.lang.UnsupportedOperationException("Use ScrollPane#setActor.")
   }
+  @java.lang.Deprecated
   def addActorBefore(actorBefore: com.badlogic.gdx.scenes.scene2d.Actor, actor: com.badlogic.gdx.scenes.scene2d.Actor): scala.Unit = {
     throw new java.lang.UnsupportedOperationException("Use ScrollPane#setActor.")
   }
+  @java.lang.Deprecated
   def addActorAfter(actorAfter: com.badlogic.gdx.scenes.scene2d.Actor, actor: com.badlogic.gdx.scenes.scene2d.Actor): scala.Unit = {
     throw new java.lang.UnsupportedOperationException("Use ScrollPane#setActor.")
   }
@@ -703,6 +711,7 @@ class ScrollPane(actor$p: com.badlogic.gdx.scenes.scene2d.Actor, style$p: com.ba
     } else ()
     return actor
   }
+  @com.badlogic.gdx.utils.Null
   def hit(x: scala.Float, y: scala.Float, touchable: scala.Boolean): com.badlogic.gdx.scenes.scene2d.Actor = {
     if ((((x < 0) || (x >= this.getWidth())) || (y < 0)) || (y >= this.getHeight())) {
       return null

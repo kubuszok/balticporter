@@ -44,9 +44,11 @@ class TextureAttribute(type$p: scala.Long) extends com.badlogic.gdx.graphics.g3d
     this.scaleU = region.getU2() - this.offsetU
     this.scaleV = region.getV2() - this.offsetV
   }
+  @java.lang.Override
   def copy(): com.badlogic.gdx.graphics.g3d.Attribute = {
     return new TextureAttribute(this)
   }
+  @java.lang.Override
   def hashCode(): scala.Int = {
     var result: scala.Int = super.hashCode()
     result = (991 * result) + this.textureDescription.hashCode()
@@ -57,6 +59,7 @@ class TextureAttribute(type$p: scala.Long) extends com.badlogic.gdx.graphics.g3d
     result = (991 * result) + this.uvIndex
     return result
   }
+  @java.lang.Override
   def compareTo(o: com.badlogic.gdx.graphics.g3d.Attribute): scala.Int = {
     if (`type` != o.`type`) {
       return if (`type` < o.`type`) -1 else 1

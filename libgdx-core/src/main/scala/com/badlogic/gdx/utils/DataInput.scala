@@ -23,6 +23,7 @@ class DataInput(in: java.io.InputStream) extends java.io.DataInputStream(in) {
     } else ()
     return if (optimizePositive) result else (result >>> 1) ^ (-(result & 1))
   }
+  @com.badlogic.gdx.utils.Null
   def readString(): java.lang.String = {
     var charCount: scala.Int = this.readInt(true)
     charCount match {

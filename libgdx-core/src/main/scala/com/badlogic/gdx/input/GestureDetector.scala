@@ -26,6 +26,7 @@ class GestureDetector(halfTapRectangleWidth: scala.Float, halfTapRectangleHeight
   private final val initialPointer1: com.badlogic.gdx.math.Vector2 = new com.badlogic.gdx.math.Vector2()
   private final val initialPointer2: com.badlogic.gdx.math.Vector2 = new com.badlogic.gdx.math.Vector2()
   private final val longPressTask: com.badlogic.gdx.utils.Timer.Task = new com.badlogic.gdx.utils.Timer.Task() {
+    @java.lang.Override
     override def run(): scala.Unit = {
       if (!GestureDetector.this.longPressFired) {
         GestureDetector.this.longPressFired = GestureDetector.this.listener.longPress(GestureDetector.this.pointer1.x, GestureDetector.this.pointer1.y)
@@ -47,6 +48,7 @@ class GestureDetector(halfTapRectangleWidth: scala.Float, halfTapRectangleHeight
   this.longPressSeconds = longPressDuration
   this.maxFlingDelay = (maxFlingDelay$p * 1000000000L).asInstanceOf[scala.Long].asInstanceOf[scala.Long]
   this.listener = listener$p
+  @java.lang.Override
   def touchDown(x: scala.Int, y: scala.Int, pointer: scala.Int, button: scala.Int): scala.Boolean = {
     return this.touchDown(x.asInstanceOf[scala.Float], y.asInstanceOf[scala.Float], pointer, button)
   }
@@ -84,6 +86,7 @@ class GestureDetector(halfTapRectangleWidth: scala.Float, halfTapRectangleHeight
     }
     return this.listener.touchDown(x, y, pointer, button)
   }
+  @java.lang.Override
   def touchDragged(x: scala.Int, y: scala.Int, pointer: scala.Int): scala.Boolean = {
     return this.touchDragged(x.asInstanceOf[scala.Float], y.asInstanceOf[scala.Float], pointer)
   }
@@ -114,6 +117,7 @@ class GestureDetector(halfTapRectangleWidth: scala.Float, halfTapRectangleHeight
     } else ()
     return false
   }
+  @java.lang.Override
   def touchUp(x: scala.Int, y: scala.Int, pointer: scala.Int, button: scala.Int): scala.Boolean = {
     return this.touchUp(x.asInstanceOf[scala.Float], y.asInstanceOf[scala.Float], pointer, button)
   }
@@ -166,6 +170,7 @@ class GestureDetector(halfTapRectangleWidth: scala.Float, halfTapRectangleHeight
     this.touchDownTime = 0
     return handled
   }
+  @java.lang.Override
   def touchCancelled(screenX: scala.Int, screenY: scala.Int, pointer: scala.Int, button: scala.Int): scala.Boolean = {
     this.cancel()
     return super.touchCancelled(screenX, screenY, pointer, button)
@@ -229,30 +234,39 @@ object GestureDetector {
     def pinchStop(): scala.Unit
   }
   class GestureAdapter extends com.badlogic.gdx.input.GestureDetector.GestureListener {
+    @java.lang.Override
     def touchDown(x: scala.Float, y: scala.Float, pointer: scala.Int, button: scala.Int): scala.Boolean = {
       return false
     }
+    @java.lang.Override
     def tap(x: scala.Float, y: scala.Float, count: scala.Int, button: scala.Int): scala.Boolean = {
       return false
     }
+    @java.lang.Override
     def longPress(x: scala.Float, y: scala.Float): scala.Boolean = {
       return false
     }
+    @java.lang.Override
     def fling(velocityX: scala.Float, velocityY: scala.Float, button: scala.Int): scala.Boolean = {
       return false
     }
+    @java.lang.Override
     def pan(x: scala.Float, y: scala.Float, deltaX: scala.Float, deltaY: scala.Float): scala.Boolean = {
       return false
     }
+    @java.lang.Override
     def panStop(x: scala.Float, y: scala.Float, pointer: scala.Int, button: scala.Int): scala.Boolean = {
       return false
     }
+    @java.lang.Override
     def zoom(initialDistance: scala.Float, distance: scala.Float): scala.Boolean = {
       return false
     }
+    @java.lang.Override
     def pinch(initialPointer1: com.badlogic.gdx.math.Vector2, initialPointer2: com.badlogic.gdx.math.Vector2, pointer1: com.badlogic.gdx.math.Vector2, pointer2: com.badlogic.gdx.math.Vector2): scala.Boolean = {
       return false
     }
+    @java.lang.Override
     def pinchStop(): scala.Unit = {
       ()
     }

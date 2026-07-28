@@ -4,6 +4,7 @@ abstract class BaseTmjMapLoader[P <: com.badlogic.gdx.maps.tiled.BaseTiledMapLoa
   var json: com.badlogic.gdx.utils.JsonReader = new com.badlogic.gdx.utils.JsonReader()
   var root: com.badlogic.gdx.utils.JsonValue = null.asInstanceOf[com.badlogic.gdx.utils.JsonValue]
   var templateCache: com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.utils.JsonValue] = null.asInstanceOf[com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.utils.JsonValue]]
+  @java.lang.Override
   def getDependencies(fileName: java.lang.String, tmjFile: com.badlogic.gdx.files.FileHandle, parameter: P): com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = {
     this.root = this.json.parse(tmjFile)
     val textureParameter: com.badlogic.gdx.assets.loaders.TextureLoader.TextureParameter = new com.badlogic.gdx.assets.loaders.TextureLoader.TextureParameter()

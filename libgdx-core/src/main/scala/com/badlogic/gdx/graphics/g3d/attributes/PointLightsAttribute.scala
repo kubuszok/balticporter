@@ -7,9 +7,11 @@ class PointLightsAttribute extends com.badlogic.gdx.graphics.g3d.Attribute(Point
     this.lights.addAll(copyFrom.lights.asInstanceOf[com.badlogic.gdx.utils.Array[? <: com.badlogic.gdx.graphics.g3d.environment.PointLight]])
   }
   this.lights = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.environment.PointLight](1)
+  @java.lang.Override
   def copy(): PointLightsAttribute = {
     return new PointLightsAttribute(this)
   }
+  @java.lang.Override
   def hashCode(): scala.Int = {
     var result: scala.Int = super.hashCode()
     for (light <- this.lights) {
@@ -17,6 +19,7 @@ class PointLightsAttribute extends com.badlogic.gdx.graphics.g3d.Attribute(Point
     }
     return result
   }
+  @java.lang.Override
   def compareTo(o: com.badlogic.gdx.graphics.g3d.Attribute): scala.Int = {
     if (`type` != o.`type`) {
       return if (`type` < o.`type`) -1 else 1

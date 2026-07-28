@@ -11,6 +11,7 @@ class ObjLoader(resolver$p: com.badlogic.gdx.assets.loaders.FileHandleResolver) 
   def loadModel(fileHandle: com.badlogic.gdx.files.FileHandle, flipV: scala.Boolean): com.badlogic.gdx.graphics.g3d.Model = {
     return this.loadModel(fileHandle, new com.badlogic.gdx.graphics.g3d.loader.ObjLoader.ObjLoaderParameters(flipV))
   }
+  @java.lang.Override
   def loadModelData(file: com.badlogic.gdx.files.FileHandle, parameters: com.badlogic.gdx.graphics.g3d.loader.ObjLoader.ObjLoaderParameters): com.badlogic.gdx.graphics.g3d.model.data.ModelData = {
     return this.loadModelData(file, (parameters != null) && parameters.flipV)
   }

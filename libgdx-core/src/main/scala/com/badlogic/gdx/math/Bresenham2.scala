@@ -3,6 +3,7 @@ package com.badlogic.gdx.math
 class Bresenham2 {
   private final val points: com.badlogic.gdx.utils.Array[com.badlogic.gdx.math.GridPoint2] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.math.GridPoint2]()
   private final val pool: com.badlogic.gdx.utils.Pool[com.badlogic.gdx.math.GridPoint2] = new com.badlogic.gdx.utils.Pool[com.badlogic.gdx.math.GridPoint2]() {
+    @java.lang.Override
     override def newObject(): com.badlogic.gdx.math.GridPoint2 = {
       return new com.badlogic.gdx.math.GridPoint2()
     }

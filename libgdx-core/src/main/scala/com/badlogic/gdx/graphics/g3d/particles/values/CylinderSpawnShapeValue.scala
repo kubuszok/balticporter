@@ -8,6 +8,7 @@ final class CylinderSpawnShapeValue extends com.badlogic.gdx.graphics.g3d.partic
     this.spawnDepthValue = new com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue()
     this.load(cylinderSpawnShapeValue)
   }
+  @java.lang.Override
   def spawnAux(vector: com.badlogic.gdx.math.Vector3, percent: scala.Float): scala.Unit = {
     val width: scala.Float = spawnWidth + (spawnWidthDiff * spawnWidthValue.getScale(percent))
     val height: scala.Float = spawnHeight + (spawnHeightDiff * spawnHeightValue.getScale(percent))
@@ -39,6 +40,7 @@ final class CylinderSpawnShapeValue extends com.badlogic.gdx.graphics.g3d.partic
     }
     vector.set(radiusX * com.badlogic.gdx.math.MathUtils.cosDeg(spawnTheta), ty, radiusZ * com.badlogic.gdx.math.MathUtils.sinDeg(spawnTheta))
   }
+  @java.lang.Override
   def copy(): com.badlogic.gdx.graphics.g3d.particles.values.SpawnShapeValue = {
     return new CylinderSpawnShapeValue(this)
   }

@@ -4,6 +4,7 @@ class BezierTest {
   var `type`: com.badlogic.gdx.math.BezierTest.ImportType = null.asInstanceOf[com.badlogic.gdx.math.BezierTest.ImportType]
   var useSetter: scala.Boolean = false
   private var bezier: com.badlogic.gdx.math.Bezier[com.badlogic.gdx.math.Vector2] = null.asInstanceOf[com.badlogic.gdx.math.Bezier[com.badlogic.gdx.math.Vector2]]
+  @org.junit.Before
   def setup(): scala.Unit = {
     this.bezier = null
   }
@@ -32,6 +33,7 @@ class BezierTest {
     }
     return points
   }
+  @org.junit.Test
   def testLinear2D(): scala.Unit = {
     val points: scala.Array[com.badlogic.gdx.math.Vector2] = this.create(scala.Array[com.badlogic.gdx.math.Vector2](new com.badlogic.gdx.math.Vector2(0, 0), new com.badlogic.gdx.math.Vector2(1, 1)))
     val len: scala.Float = this.bezier.approxLength(2)
@@ -51,6 +53,7 @@ class BezierTest {
 object BezierTest {
   private var epsilon: scala.Float = java.lang.Float.MIN_NORMAL
   private var epsilonApprimations: scala.Float = 1.0E-6f
+  @org.junit.runners.Parameterized.Parameters(name = "imported type {0} use setter {1}")
   def parameters(): scala.collection.mutable.Iterable[scala.Array[java.lang.Object]] = {
     val parameters: scala.collection.mutable.Iterable[scala.Array[java.lang.Object]] = new scala.collection.mutable.ArrayBuffer[scala.Array[java.lang.Object]]()
     for (`type` <- com.badlogic.gdx.math.BezierTest.ImportType.values()) {

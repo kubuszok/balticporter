@@ -10,6 +10,7 @@ class TiledMap extends com.badlogic.gdx.maps.Map {
   def setOwnedResources(resources: com.badlogic.gdx.utils.Array[? <: com.badlogic.gdx.utils.Disposable]): scala.Unit = {
     this.ownedResources = resources
   }
+  @java.lang.Override
   def dispose(): scala.Unit = {
     if (this.ownedResources != null) {
       for (resource <- this.ownedResources) {

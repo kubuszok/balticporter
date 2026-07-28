@@ -98,6 +98,7 @@ object Net {
     def getIncludeCredentials(): scala.Boolean = {
       return this.includeCredentials
     }
+    @java.lang.Override
     def reset(): scala.Unit = {
       this.httpMethod = null
       this.url = null

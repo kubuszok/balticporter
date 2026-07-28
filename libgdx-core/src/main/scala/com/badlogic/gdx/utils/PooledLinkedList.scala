@@ -8,6 +8,7 @@ class PooledLinkedList[T](maxPoolSize: scala.Int) {
   var size$field: scala.Int = 0
   private var pool: com.badlogic.gdx.utils.Pool[com.badlogic.gdx.utils.PooledLinkedList.Item[T]] = null.asInstanceOf[com.badlogic.gdx.utils.Pool[com.badlogic.gdx.utils.PooledLinkedList.Item[T]]]
   this.pool = new com.badlogic.gdx.utils.Pool[com.badlogic.gdx.utils.PooledLinkedList.Item[T]](16, maxPoolSize) {
+    @java.lang.Override
     override def newObject(): com.badlogic.gdx.utils.PooledLinkedList.Item[T] = {
       return new com.badlogic.gdx.utils.PooledLinkedList.Item[T]()
     }
@@ -50,6 +51,7 @@ class PooledLinkedList[T](maxPoolSize: scala.Int) {
   def iterReverse(): scala.Unit = {
     this.iter$field = this.tail
   }
+  @com.badlogic.gdx.utils.Null
   def next(): T = {
     if (this.iter$field == null) {
       return null.asInstanceOf[T]
@@ -59,6 +61,7 @@ class PooledLinkedList[T](maxPoolSize: scala.Int) {
     this.iter$field = this.iter$field.next
     return payload
   }
+  @com.badlogic.gdx.utils.Null
   def previous(): T = {
     if (this.iter$field == null) {
       return null.asInstanceOf[T]
@@ -96,6 +99,7 @@ class PooledLinkedList[T](maxPoolSize: scala.Int) {
     p.next = n
     n.prev = p
   }
+  @com.badlogic.gdx.utils.Null
   def removeLast(): T = {
     if (this.tail == null) {
       return null.asInstanceOf[T]

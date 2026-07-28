@@ -2,6 +2,7 @@ package com.badlogic.gdx.assets.loaders
 
 class TextureLoader(resolver$p: com.badlogic.gdx.assets.loaders.FileHandleResolver) extends com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader[com.badlogic.gdx.graphics.Texture, com.badlogic.gdx.assets.loaders.TextureLoader.TextureParameter](resolver$p) {
   var info: com.badlogic.gdx.assets.loaders.TextureLoader.TextureLoaderInfo = new com.badlogic.gdx.assets.loaders.TextureLoader.TextureLoaderInfo()
+  @java.lang.Override
   def loadAsync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.assets.loaders.TextureLoader.TextureParameter): scala.Unit = {
     this.info.filename = fileName
     if ((parameter == null) || (parameter.textureData == null)) {
@@ -22,6 +23,7 @@ class TextureLoader(resolver$p: com.badlogic.gdx.assets.loaders.FileHandleResolv
       this.info.data.prepare()
     } else ()
   }
+  @java.lang.Override
   def loadSync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.assets.loaders.TextureLoader.TextureParameter): com.badlogic.gdx.graphics.Texture = {
     if (this.info == null) {
       return null
@@ -38,6 +40,7 @@ class TextureLoader(resolver$p: com.badlogic.gdx.assets.loaders.FileHandleResolv
     } else ()
     return texture
   }
+  @java.lang.Override
   def getDependencies(fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.assets.loaders.TextureLoader.TextureParameter): com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = {
     return null
   }

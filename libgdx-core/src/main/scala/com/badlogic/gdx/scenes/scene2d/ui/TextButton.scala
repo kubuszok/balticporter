@@ -39,6 +39,7 @@ class TextButton(text: java.lang.String, style$p: com.badlogic.gdx.scenes.scene2
   def getStyle(): com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle = {
     return this.style
   }
+  @com.badlogic.gdx.utils.Null
   def getFontColor(): com.badlogic.gdx.graphics.Color = {
     if (this.isDisabled() && (this.style.disabledFontColor != null)) {
       return this.style.disabledFontColor

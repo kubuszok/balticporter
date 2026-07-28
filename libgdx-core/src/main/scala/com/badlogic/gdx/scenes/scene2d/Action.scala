@@ -35,6 +35,7 @@ abstract class Action extends com.badlogic.gdx.utils.Pool.Poolable {
     this.pool = null
     this.restart()
   }
+  @com.badlogic.gdx.utils.Null
   def getPool(): com.badlogic.gdx.utils.Pool[?] = {
     return this.pool.asInstanceOf[com.badlogic.gdx.utils.Pool[?]]
   }

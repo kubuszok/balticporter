@@ -68,6 +68,7 @@ final class VertexAttributes(attributes$p: scala.Array[com.badlogic.gdx.graphics
     builder.append("]")
     return builder.toString()
   }
+  @java.lang.Override
   def equals(obj: java.lang.Object): scala.Boolean = {
     if (obj == this) {
       return true
@@ -86,6 +87,7 @@ final class VertexAttributes(attributes$p: scala.Array[com.badlogic.gdx.graphics
     }; i = i + 1 } }
     return true
   }
+  @java.lang.Override
   def hashCode(): scala.Int = {
     var result: scala.Long = 61 * this.attributes.length;
     { var i: scala.Int = 0; while (i < this.attributes.length) { {
@@ -130,6 +132,7 @@ final class VertexAttributes(attributes$p: scala.Array[com.badlogic.gdx.graphics
     } else ()
     return this.textureCoordinates
   }
+  @java.lang.Override
   def compareTo(o: VertexAttributes): scala.Int = {
     if (this.attributes.length != o.attributes.length) {
       return this.attributes.length - o.attributes.length
@@ -160,6 +163,7 @@ final class VertexAttributes(attributes$p: scala.Array[com.badlogic.gdx.graphics
     }; i = i - 1 } }
     return 0
   }
+  @java.lang.Override
   def iterator(): balticporter.runtime.JavaIterator[com.badlogic.gdx.graphics.VertexAttribute] = {
     if (this.iterable == null) {
       this.iterable = new com.badlogic.gdx.graphics.VertexAttributes.ReadonlyIterable[com.badlogic.gdx.graphics.VertexAttribute](this.attributes)
@@ -184,12 +188,14 @@ object VertexAttributes {
     var index: scala.Int = 0
     var valid: scala.Boolean = true
     this.array = array$p
+    @java.lang.Override
     def hasNext(): scala.Boolean = {
       if (!this.valid) {
         throw new com.badlogic.gdx.utils.GdxRuntimeException("#iterator() cannot be used nested.")
       } else ()
       return this.index < this.array.length
     }
+    @java.lang.Override
     def next(): T = {
       if (this.index >= this.array.length) {
         throw new java.util.NoSuchElementException(java.lang.String.valueOf(this.index))
@@ -199,12 +205,14 @@ object VertexAttributes {
       } else ()
       return this.array({ this.index += 1; this.index })
     }
+    @java.lang.Override
     def remove(): scala.Unit = {
       throw new com.badlogic.gdx.utils.GdxRuntimeException("Remove not allowed.")
     }
     def reset(): scala.Unit = {
       this.index = 0
     }
+    @java.lang.Override
     def iterator(): balticporter.runtime.JavaIterator[T] = {
       return this
     }
@@ -214,6 +222,7 @@ object VertexAttributes {
     private var iterator1: com.badlogic.gdx.graphics.VertexAttributes.ReadonlyIterator[T] = null.asInstanceOf[com.badlogic.gdx.graphics.VertexAttributes.ReadonlyIterator[T]]
     private var iterator2: com.badlogic.gdx.graphics.VertexAttributes.ReadonlyIterator[T] = null.asInstanceOf[com.badlogic.gdx.graphics.VertexAttributes.ReadonlyIterator[T]]
     this.array = array$p
+    @java.lang.Override
     def iterator(): balticporter.runtime.JavaIterator[T] = {
       if (com.badlogic.gdx.utils.Collections.allocateIterators) {
         return new com.badlogic.gdx.graphics.VertexAttributes.ReadonlyIterator[T](this.array).asInstanceOf[balticporter.runtime.JavaIterator[T]]

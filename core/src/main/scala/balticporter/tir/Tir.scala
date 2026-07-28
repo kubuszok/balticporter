@@ -42,6 +42,8 @@ final case class Flags(
     isTrait: Boolean = false,
     isModule: Boolean = false, // `object`
     isEnum: Boolean = false,
+    /** Java `@interface` — a declaration of an ANNOTATION type, not an ordinary interface. */
+    isAnnotation: Boolean = false,
     isOpaque: Boolean = false, // `opaque type`
 
     isCase: Boolean = false,
@@ -64,6 +66,20 @@ final case class Flags(
 /** Open, extensible domain semantics attached to symbols by transforms. */
 trait SymTag
 
+/** A Java ANNOTATION on a declaration — `@Test`, `@Override`, `@Deprecated`, `@Null`.
+  *
+  * Carried because dropping annotations is not cosmetic. A JUnit suite whose `@Test` did not
+  * survive runs ZERO tests and reports SUCCESS: green build, green suite, nothing executed — the
+  * only silent-omission defect found in this corpus that manufactures the evidence that behaviour
+  * is fine, and one that conceals itself by disabling the very gate meant to catch such things.
+  * Beyond tests, `@Override` is checkable intent, `@Deprecated` and `@Null` are API contract, and
+  * `@SuppressWarnings` is deliberate.
+  *
+  * `args` are the annotation's element values, by name (Java's single-element `@A(x)` is named
+  * `value`) — dropping an ARGUMENT is the same defect one level down, so they are carried as real
+  * `Term`s rather than text. */
+final case class Annot(tpe: TypeRepr, args: List[(String, Term)], origin: Origin)
+
 /** A declaration's symbol record (the analog of `reflect.Symbol`'s backing data).
   * `info` is its type: a value/field type, a `MethodType`/`PolyType` for methods, a
   * `TypeBounds` for type params/abstract types, or the class `TypeRef` for classes.
@@ -79,6 +95,12 @@ final case class Symbol(
     privateWithin: SymId = SymId.None,
     origin: Origin = Origin.synthetic,
     tags: Set[SymTag] = Set.empty,
+    /** the declaration's Java annotations, in source order. See [[Annot]] — losing these is a
+      * silent correctness defect, not a formatting one. */
+    annotations: List[Annot] = Nil,
+    /** annotations the frontend could NOT carry, by name — reported by `OmissionCheck` rather
+      * than discarded, so a gap here is a number on every run. */
+    droppedAnnotations: List[String] = Nil,
 )
 
 // ---------------------------------------------------------------------------

@@ -428,6 +428,7 @@ object TimSort {
       assert(ts.stackSize == 1)
     } else ()
   }
+  @java.lang.SuppressWarnings(scala.Array[java.lang.String]("fallthrough"))
   private def binarySort[T](a: scala.Array[T], lo: scala.Int, hi: scala.Int, start$arg: scala.Int, c: java.util.Comparator[? >: T]): scala.Unit = {
     var start: scala.Int = start$arg
     if (TimSort.DEBUG) {

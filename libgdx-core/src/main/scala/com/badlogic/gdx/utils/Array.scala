@@ -465,6 +465,7 @@ class Array[T] extends balticporter.runtime.JavaIterable[T] {
     }; i = i + 1 } }
     this.size = newSize
   }
+  @com.badlogic.gdx.utils.Null
   def random(): T = {
     if (this.size == 0) {
       return null.asInstanceOf[T]

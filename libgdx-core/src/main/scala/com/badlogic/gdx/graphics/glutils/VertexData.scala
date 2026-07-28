@@ -6,6 +6,7 @@ trait VertexData extends com.badlogic.gdx.utils.Disposable {
   def getAttributes(): com.badlogic.gdx.graphics.VertexAttributes
   def setVertices(vertices: scala.Array[scala.Float], offset: scala.Int, count: scala.Int): scala.Unit
   def updateVertices(targetOffset: scala.Int, vertices: scala.Array[scala.Float], sourceOffset: scala.Int, count: scala.Int): scala.Unit
+  @java.lang.Deprecated
   def getBuffer(): java.nio.FloatBuffer
   def getBuffer(forWriting: scala.Boolean): java.nio.FloatBuffer
   def bind(shader: com.badlogic.gdx.graphics.glutils.ShaderProgram): scala.Unit

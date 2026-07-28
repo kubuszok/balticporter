@@ -42,6 +42,7 @@ object ScissorStack {
     }
     return old
   }
+  @com.badlogic.gdx.utils.Null
   def peekScissors(): com.badlogic.gdx.math.Rectangle = {
     if (ScissorStack.scissors.size == 0) {
       return null

@@ -2,6 +2,7 @@ package com.badlogic.gdx.graphics.g3d.decals
 
 class CameraGroupStrategy extends com.badlogic.gdx.graphics.g3d.decals.GroupStrategy with com.badlogic.gdx.utils.Disposable {
   var arrayPool: com.badlogic.gdx.utils.Pool[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.decals.Decal]] = new com.badlogic.gdx.utils.Pool[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.decals.Decal]](16) {
+    @java.lang.Override
     override def newObject(): com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.decals.Decal] = {
       return new com.badlogic.gdx.utils.Array().asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.decals.Decal]]
     }
@@ -15,6 +16,7 @@ class CameraGroupStrategy extends com.badlogic.gdx.graphics.g3d.decals.GroupStra
     this()
     this.camera = camera
     this.cameraSorter = new java.util.Comparator[com.badlogic.gdx.graphics.g3d.decals.Decal]() {
+      @java.lang.Override
       override def compare(o1: com.badlogic.gdx.graphics.g3d.decals.Decal, o2: com.badlogic.gdx.graphics.g3d.decals.Decal): scala.Int = {
         val dist1: scala.Float = CameraGroupStrategy.this.camera.position.dst(o1.position)
         val dist2: scala.Float = CameraGroupStrategy.this.camera.position.dst(o2.position)
@@ -35,9 +37,11 @@ class CameraGroupStrategy extends com.badlogic.gdx.graphics.g3d.decals.GroupStra
   def getCamera(): com.badlogic.gdx.graphics.Camera = {
     return this.camera
   }
+  @java.lang.Override
   def decideGroup(decal: com.badlogic.gdx.graphics.g3d.decals.Decal): scala.Int = {
     return if (decal.getMaterial().isOpaque()) CameraGroupStrategy.GROUP_OPAQUE else CameraGroupStrategy.GROUP_BLEND
   }
+  @java.lang.Override
   def beforeGroup(group: scala.Int, contents: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.decals.Decal]): scala.Unit = {
     if (group == CameraGroupStrategy.GROUP_BLEND) {
       com.badlogic.gdx.Gdx.gl.glEnable(com.badlogic.gdx.graphics.GL20.GL_BLEND)
@@ -64,18 +68,21 @@ class CameraGroupStrategy extends com.badlogic.gdx.graphics.g3d.decals.GroupStra
       this.usedArrays.clear()
     }
   }
+  @java.lang.Override
   def afterGroup(group: scala.Int): scala.Unit = {
     if (group == CameraGroupStrategy.GROUP_BLEND) {
       com.badlogic.gdx.Gdx.gl.glDisable(com.badlogic.gdx.graphics.GL20.GL_BLEND)
       com.badlogic.gdx.Gdx.gl.glDepthMask(true)
     } else ()
   }
+  @java.lang.Override
   def beforeGroups(): scala.Unit = {
     com.badlogic.gdx.Gdx.gl.glEnable(com.badlogic.gdx.graphics.GL20.GL_DEPTH_TEST)
     this.shader.bind()
     this.shader.setUniformMatrix("u_projectionViewMatrix", this.camera.combined)
     this.shader.setUniformi("u_texture", 0)
   }
+  @java.lang.Override
   def afterGroups(): scala.Unit = {
     com.badlogic.gdx.Gdx.gl.glDisable(com.badlogic.gdx.graphics.GL20.GL_DEPTH_TEST)
   }
@@ -87,9 +94,11 @@ class CameraGroupStrategy extends com.badlogic.gdx.graphics.g3d.decals.GroupStra
       throw new java.lang.IllegalArgumentException("couldn't compile shader: " + this.shader.getLog())
     } else ()
   }
+  @java.lang.Override
   def getGroupShader(group: scala.Int): com.badlogic.gdx.graphics.glutils.ShaderProgram = {
     return this.shader
   }
+  @java.lang.Override
   def dispose(): scala.Unit = {
     if (this.shader != null) {
       this.shader.dispose()

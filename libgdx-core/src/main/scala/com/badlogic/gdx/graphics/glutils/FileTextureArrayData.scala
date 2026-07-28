@@ -23,9 +23,11 @@ class FileTextureArrayData extends com.badlogic.gdx.graphics.TextureArrayData {
     this.depth = textureDatas.length
     this.textureDatas = textureDatas
   }
+  @java.lang.Override
   def isPrepared(): scala.Boolean = {
     return this.prepared
   }
+  @java.lang.Override
   def prepare(): scala.Unit = {
     var width: scala.Int = -1
     var height: scala.Int = -1
@@ -44,6 +46,7 @@ class FileTextureArrayData extends com.badlogic.gdx.graphics.TextureArrayData {
     }
     this.prepared = true
   }
+  @java.lang.Override
   def consumeTextureArrayData(): scala.Unit = {
     var containsCustomData: scala.Boolean = false;
     { var i: scala.Int = 0; while (i < this.textureDatas.length) { {
@@ -74,21 +77,27 @@ class FileTextureArrayData extends com.badlogic.gdx.graphics.TextureArrayData {
       com.badlogic.gdx.Gdx.gl20.glGenerateMipmap(com.badlogic.gdx.graphics.GL30.GL_TEXTURE_2D_ARRAY)
     } else ()
   }
+  @java.lang.Override
   def getWidth(): scala.Int = {
     return this.textureDatas(0).getWidth()
   }
+  @java.lang.Override
   def getHeight(): scala.Int = {
     return this.textureDatas(0).getHeight()
   }
+  @java.lang.Override
   def getDepth(): scala.Int = {
     return this.depth
   }
+  @java.lang.Override
   def getInternalFormat(): scala.Int = {
     return com.badlogic.gdx.graphics.Pixmap.Format.toGlFormat(this.format)
   }
+  @java.lang.Override
   def getGLType(): scala.Int = {
     return com.badlogic.gdx.graphics.Pixmap.Format.toGlType(this.format)
   }
+  @java.lang.Override
   def isManaged(): scala.Boolean = {
     for (data <- this.textureDatas) {
       if (!data.isManaged()) {

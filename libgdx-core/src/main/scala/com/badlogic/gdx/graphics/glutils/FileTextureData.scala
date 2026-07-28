@@ -19,9 +19,11 @@ class FileTextureData(file$p: com.badlogic.gdx.files.FileHandle, preloadedPixmap
       this.format = this.pixmap.getFormat()
     } else ()
   } else ()
+  @java.lang.Override
   def isPrepared(): scala.Boolean = {
     return this.isPrepared$field
   }
+  @java.lang.Override
   def prepare(): scala.Unit = {
     if (this.isPrepared$field) {
       throw new com.badlogic.gdx.utils.GdxRuntimeException("Already prepared")
@@ -40,6 +42,7 @@ class FileTextureData(file$p: com.badlogic.gdx.files.FileHandle, preloadedPixmap
     } else ()
     this.isPrepared$field = true
   }
+  @java.lang.Override
   def consumePixmap(): com.badlogic.gdx.graphics.Pixmap = {
     if (!this.isPrepared$field) {
       throw new com.badlogic.gdx.utils.GdxRuntimeException("Call prepare() before calling getPixmap()")
@@ -49,30 +52,38 @@ class FileTextureData(file$p: com.badlogic.gdx.files.FileHandle, preloadedPixmap
     this.pixmap = null
     return pixmap
   }
+  @java.lang.Override
   def disposePixmap(): scala.Boolean = {
     return true
   }
+  @java.lang.Override
   def getWidth(): scala.Int = {
     return this.width
   }
+  @java.lang.Override
   def getHeight(): scala.Int = {
     return this.height
   }
+  @java.lang.Override
   def getFormat(): com.badlogic.gdx.graphics.Pixmap.Format = {
     return this.format
   }
+  @java.lang.Override
   def useMipMaps(): scala.Boolean = {
     return this.useMipMaps$field
   }
+  @java.lang.Override
   def isManaged(): scala.Boolean = {
     return true
   }
   def getFileHandle(): com.badlogic.gdx.files.FileHandle = {
     return this.file
   }
+  @java.lang.Override
   def getType(): com.badlogic.gdx.graphics.TextureData.TextureDataType = {
     return com.badlogic.gdx.graphics.TextureData.TextureDataType.Pixmap
   }
+  @java.lang.Override
   def consumeCustomData(target: scala.Int): scala.Unit = {
     throw new com.badlogic.gdx.utils.GdxRuntimeException("This TextureData implementation does not upload data itself")
   }

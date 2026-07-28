@@ -77,6 +77,7 @@ class Container[T <: com.badlogic.gdx.scenes.scene2d.Actor] extends com.badlogic
     this.setBackground(background)
     return this
   }
+  @com.badlogic.gdx.utils.Null
   def getBackground(): com.badlogic.gdx.scenes.scene2d.utils.Drawable = {
     return this.background$field
   }
@@ -177,18 +178,23 @@ class Container[T <: com.badlogic.gdx.scenes.scene2d.Actor] extends com.badlogic
       super.addActor(actor)
     } else ()
   }
+  @com.badlogic.gdx.utils.Null
   def getActor(): T = {
     return this.actor
   }
+  @java.lang.Deprecated
   def addActor(actor: com.badlogic.gdx.scenes.scene2d.Actor): scala.Unit = {
     throw new java.lang.UnsupportedOperationException("Use Container#setActor.")
   }
+  @java.lang.Deprecated
   def addActorAt(index: scala.Int, actor: com.badlogic.gdx.scenes.scene2d.Actor): scala.Unit = {
     throw new java.lang.UnsupportedOperationException("Use Container#setActor.")
   }
+  @java.lang.Deprecated
   def addActorBefore(actorBefore: com.badlogic.gdx.scenes.scene2d.Actor, actor: com.badlogic.gdx.scenes.scene2d.Actor): scala.Unit = {
     throw new java.lang.UnsupportedOperationException("Use Container#setActor.")
   }
+  @java.lang.Deprecated
   def addActorAfter(actorAfter: com.badlogic.gdx.scenes.scene2d.Actor, actor: com.badlogic.gdx.scenes.scene2d.Actor): scala.Unit = {
     throw new java.lang.UnsupportedOperationException("Use Container#setActor.")
   }
@@ -678,6 +684,7 @@ class Container[T <: com.badlogic.gdx.scenes.scene2d.Actor] extends com.badlogic
   def getClip(): scala.Boolean = {
     return this.clip$field
   }
+  @com.badlogic.gdx.utils.Null
   def hit(x: scala.Float, y: scala.Float, touchable: scala.Boolean): com.badlogic.gdx.scenes.scene2d.Actor = {
     if (this.clip$field) {
       if (touchable && (this.getTouchable() == com.badlogic.gdx.scenes.scene2d.Touchable.disabled)) {

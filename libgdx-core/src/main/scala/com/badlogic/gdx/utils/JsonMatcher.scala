@@ -48,6 +48,7 @@ class JsonMatcher extends com.badlogic.gdx.utils.JsonSkimmer {
     } else ()
     return this.patterns.length - 1
   }
+  @java.lang.Override
   def parse(data: scala.Array[scala.Char], offset: scala.Int, length: scala.Int): scala.Unit = {
     if (this.chars != null) {
       throw new java.lang.IllegalStateException()
@@ -89,6 +90,7 @@ class JsonMatcher extends com.badlogic.gdx.utils.JsonSkimmer {
   def parseEnd(): scala.Unit = {
     ()
   }
+  @java.lang.Override
   def push(name: com.badlogic.gdx.utils.JsonSkimmer.JsonToken, `object`: scala.Boolean): scala.Unit = {
     if (JsonMatcher.debug$field) {
       this.debug(null, (((("push: " + name) + ":") + (if (`object`) "{}" else "[]")) + ", depth: ") + this.depth$field)
@@ -181,6 +183,7 @@ class JsonMatcher extends com.badlogic.gdx.utils.JsonSkimmer {
     }
     this.depth$field = this.depth$field + 1
   }
+  @java.lang.Override
   def pop(): scala.Unit = {
     val nextDepth: scala.Int = this.depth$field - 1
     if (JsonMatcher.debug$field) {
@@ -231,6 +234,7 @@ class JsonMatcher extends com.badlogic.gdx.utils.JsonSkimmer {
     this.depth$field = nextDepth
     this.path$field.size = this.path$field.size - 2
   }
+  @java.lang.Override
   def value(name: com.badlogic.gdx.utils.JsonSkimmer.JsonToken, value: com.badlogic.gdx.utils.JsonSkimmer.JsonToken): scala.Unit = {
     if (JsonMatcher.debug$field) {
       this.debug(null, (("value: " + name) + "=") + value)
@@ -409,6 +413,7 @@ class JsonMatcher extends com.badlogic.gdx.utils.JsonSkimmer {
     }; i = i + 1 } }
     return -1
   }
+  @java.lang.Override
   def stop(): scala.Unit = {
     this.rejected = true
     this.clearAll()

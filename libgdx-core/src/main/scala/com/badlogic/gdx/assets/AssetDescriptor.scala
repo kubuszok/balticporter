@@ -24,6 +24,7 @@ class AssetDescriptor[T] {
   def this(file: com.badlogic.gdx.files.FileHandle, assetType: java.lang.Class[T]) = {
     this(file, assetType, null)
   }
+  @java.lang.Override
   def toString(): java.lang.String = {
     val sb: java.lang.StringBuilder = new java.lang.StringBuilder()
     sb.append(this.fileName)

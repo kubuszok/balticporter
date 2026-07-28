@@ -12,10 +12,12 @@ class NumericValue extends com.badlogic.gdx.graphics.g3d.particles.values.Partic
     super.load(value)
     this.value = value.value
   }
+  @java.lang.Override
   def write(json: com.badlogic.gdx.utils.Json): scala.Unit = {
     super.write(json)
     json.writeValue("value", this.value.asInstanceOf[java.lang.Float])
   }
+  @java.lang.Override
   def read(json: com.badlogic.gdx.utils.Json, jsonData: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
     super.read(json, jsonData)
     this.value = json.readValue("value", classOf[scala.Float], jsonData)

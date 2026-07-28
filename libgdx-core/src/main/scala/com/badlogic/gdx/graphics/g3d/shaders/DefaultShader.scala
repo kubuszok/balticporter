@@ -168,6 +168,7 @@ class DefaultShader(renderable$p: com.badlogic.gdx.graphics.g3d.Renderable, conf
   this.u_alphaTest = this.register(com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Inputs.alphaTest)
   this.u_ambientCubemap = if (this.lighting) this.register(com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Inputs.ambientCube, new com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Setters.ACubemap(config$p.numDirectionalLights, config$p.numPointLights)) else -1
   this.u_environmentCubemap = if (this.environmentCubemap) this.register(com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Inputs.environmentCubemap, com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Setters.environmentCubemap) else -1
+  @java.lang.Override
   def init(): scala.Unit = {
     var program: com.badlogic.gdx.graphics.glutils.ShaderProgram = this.program
     this.program = null
@@ -205,6 +206,7 @@ class DefaultShader(renderable$p: com.badlogic.gdx.graphics.g3d.Renderable, conf
       }; i = i + 1 } }
     } else ()
   }
+  @java.lang.Override
   def canRender(renderable: com.badlogic.gdx.graphics.g3d.Renderable): scala.Boolean = {
     if (renderable.bones != null) {
       if (renderable.bones.length > this.config.numBones) {
@@ -220,6 +222,7 @@ class DefaultShader(renderable$p: com.badlogic.gdx.graphics.g3d.Renderable, conf
     val renderableMask: scala.Long = DefaultShader.combineAttributeMasks(renderable)
     return ((this.attributesMask == (renderableMask | DefaultShader.optionalAttributes)) && (this.vertexMask == renderable.meshPart.mesh.getVertexAttributes().getMaskWithSizePacked())) && ((renderable.environment != null) == this.lighting)
   }
+  @java.lang.Override
   def compareTo(other: com.badlogic.gdx.graphics.g3d.Shader): scala.Int = {
     if (other == null) {
       return -1
@@ -229,12 +232,14 @@ class DefaultShader(renderable$p: com.badlogic.gdx.graphics.g3d.Renderable, conf
     } else ()
     return 0
   }
+  @java.lang.Override
   def equals(obj: java.lang.Object): scala.Boolean = {
     return obj.isInstanceOf[DefaultShader] && this.equals(obj.asInstanceOf[DefaultShader].asInstanceOf[DefaultShader])
   }
   def equals(obj: DefaultShader): scala.Boolean = {
     return obj == this
   }
+  @java.lang.Override
   def begin(camera: com.badlogic.gdx.graphics.Camera, context: com.badlogic.gdx.graphics.g3d.utils.RenderContext): scala.Unit = {
     super.begin(camera, context)
     for (dirLight <- this.directionalLights) {
@@ -261,6 +266,7 @@ class DefaultShader(renderable$p: com.badlogic.gdx.graphics.g3d.Renderable, conf
       }
     } else ()
   }
+  @java.lang.Override
   def render(renderable: com.badlogic.gdx.graphics.g3d.Renderable, combinedAttributes: com.badlogic.gdx.graphics.g3d.Attributes): scala.Unit = {
     if (!combinedAttributes.has(com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute.Type)) {
       context.setBlending(false, com.badlogic.gdx.graphics.GL20.GL_SRC_ALPHA, com.badlogic.gdx.graphics.GL20.GL_ONE_MINUS_SRC_ALPHA)
@@ -271,6 +277,7 @@ class DefaultShader(renderable$p: com.badlogic.gdx.graphics.g3d.Renderable, conf
     } else ()
     super.render(renderable, combinedAttributes)
   }
+  @java.lang.Override
   def `end`(): scala.Unit = {
     super.`end`()
   }
@@ -404,6 +411,7 @@ class DefaultShader(renderable$p: com.badlogic.gdx.graphics.g3d.Renderable, conf
     } else ()
     this.lightsSet = true
   }
+  @java.lang.Override
   def dispose(): scala.Unit = {
     program.dispose()
     super.dispose()
@@ -625,161 +633,190 @@ object DefaultShader {
   }
   object Setters {
     final val projTrans: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.GlobalSetter() {
+      @java.lang.Override
       override def set(shader: com.badlogic.gdx.graphics.g3d.shaders.BaseShader, inputID: scala.Int, renderable: com.badlogic.gdx.graphics.g3d.Renderable, combinedAttributes: com.badlogic.gdx.graphics.g3d.Attributes): scala.Unit = {
         shader.set(inputID, shader.camera.projection)
       }
     }
     final val viewTrans: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.GlobalSetter() {
+      @java.lang.Override
       override def set(shader: com.badlogic.gdx.graphics.g3d.shaders.BaseShader, inputID: scala.Int, renderable: com.badlogic.gdx.graphics.g3d.Renderable, combinedAttributes: com.badlogic.gdx.graphics.g3d.Attributes): scala.Unit = {
         shader.set(inputID, shader.camera.view)
       }
     }
     final val projViewTrans: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.GlobalSetter() {
+      @java.lang.Override
       override def set(shader: com.badlogic.gdx.graphics.g3d.shaders.BaseShader, inputID: scala.Int, renderable: com.badlogic.gdx.graphics.g3d.Renderable, combinedAttributes: com.badlogic.gdx.graphics.g3d.Attributes): scala.Unit = {
         shader.set(inputID, shader.camera.combined)
       }
     }
     final val cameraPosition: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.GlobalSetter() {
+      @java.lang.Override
       override def set(shader: com.badlogic.gdx.graphics.g3d.shaders.BaseShader, inputID: scala.Int, renderable: com.badlogic.gdx.graphics.g3d.Renderable, combinedAttributes: com.badlogic.gdx.graphics.g3d.Attributes): scala.Unit = {
         shader.set(inputID, shader.camera.position.x, shader.camera.position.y, shader.camera.position.z, 1.1881f / (shader.camera.far * shader.camera.far))
       }
     }
     final val cameraDirection: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.GlobalSetter() {
+      @java.lang.Override
       override def set(shader: com.badlogic.gdx.graphics.g3d.shaders.BaseShader, inputID: scala.Int, renderable: com.badlogic.gdx.graphics.g3d.Renderable, combinedAttributes: com.badlogic.gdx.graphics.g3d.Attributes): scala.Unit = {
         shader.set(inputID, shader.camera.direction)
       }
     }
     final val cameraUp: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.GlobalSetter() {
+      @java.lang.Override
       override def set(shader: com.badlogic.gdx.graphics.g3d.shaders.BaseShader, inputID: scala.Int, renderable: com.badlogic.gdx.graphics.g3d.Renderable, combinedAttributes: com.badlogic.gdx.graphics.g3d.Attributes): scala.Unit = {
         shader.set(inputID, shader.camera.up)
       }
     }
     final val cameraNearFar: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.GlobalSetter() {
+      @java.lang.Override
       override def set(shader: com.badlogic.gdx.graphics.g3d.shaders.BaseShader, inputID: scala.Int, renderable: com.badlogic.gdx.graphics.g3d.Renderable, combinedAttributes: com.badlogic.gdx.graphics.g3d.Attributes): scala.Unit = {
         shader.set(inputID, shader.camera.near, shader.camera.far)
       }
     }
     final val worldTrans: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.LocalSetter() {
+      @java.lang.Override
       override def set(shader: com.badlogic.gdx.graphics.g3d.shaders.BaseShader, inputID: scala.Int, renderable: com.badlogic.gdx.graphics.g3d.Renderable, combinedAttributes: com.badlogic.gdx.graphics.g3d.Attributes): scala.Unit = {
         shader.set(inputID, renderable.worldTransform)
       }
     }
     final val viewWorldTrans: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.LocalSetter() {
       final val temp: com.badlogic.gdx.math.Matrix4 = new com.badlogic.gdx.math.Matrix4()
+      @java.lang.Override
       override def set(shader: com.badlogic.gdx.graphics.g3d.shaders.BaseShader, inputID: scala.Int, renderable: com.badlogic.gdx.graphics.g3d.Renderable, combinedAttributes: com.badlogic.gdx.graphics.g3d.Attributes): scala.Unit = {
         shader.set(inputID, temp.set(shader.camera.view).mul(renderable.worldTransform))
       }
     }
     final val projViewWorldTrans: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.LocalSetter() {
       final val temp: com.badlogic.gdx.math.Matrix4 = new com.badlogic.gdx.math.Matrix4()
+      @java.lang.Override
       override def set(shader: com.badlogic.gdx.graphics.g3d.shaders.BaseShader, inputID: scala.Int, renderable: com.badlogic.gdx.graphics.g3d.Renderable, combinedAttributes: com.badlogic.gdx.graphics.g3d.Attributes): scala.Unit = {
         shader.set(inputID, temp.set(shader.camera.combined).mul(renderable.worldTransform))
       }
     }
     final val normalMatrix: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.LocalSetter() {
       private final val tmpM: com.badlogic.gdx.math.Matrix3 = new com.badlogic.gdx.math.Matrix3()
+      @java.lang.Override
       override def set(shader: com.badlogic.gdx.graphics.g3d.shaders.BaseShader, inputID: scala.Int, renderable: com.badlogic.gdx.graphics.g3d.Renderable, combinedAttributes: com.badlogic.gdx.graphics.g3d.Attributes): scala.Unit = {
         shader.set(inputID, tmpM.set(renderable.worldTransform).inv().transpose())
       }
     }
     final val shininess: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.LocalSetter() {
+      @java.lang.Override
       override def set(shader: com.badlogic.gdx.graphics.g3d.shaders.BaseShader, inputID: scala.Int, renderable: com.badlogic.gdx.graphics.g3d.Renderable, combinedAttributes: com.badlogic.gdx.graphics.g3d.Attributes): scala.Unit = {
         shader.set(inputID, combinedAttributes.get(com.badlogic.gdx.graphics.g3d.attributes.FloatAttribute.Shininess).asInstanceOf[com.badlogic.gdx.graphics.g3d.attributes.FloatAttribute].value)
       }
     }
     final val diffuseColor: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.LocalSetter() {
+      @java.lang.Override
       override def set(shader: com.badlogic.gdx.graphics.g3d.shaders.BaseShader, inputID: scala.Int, renderable: com.badlogic.gdx.graphics.g3d.Renderable, combinedAttributes: com.badlogic.gdx.graphics.g3d.Attributes): scala.Unit = {
         shader.set(inputID, combinedAttributes.get(com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute.Diffuse).asInstanceOf[com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute].color)
       }
     }
     final val diffuseTexture: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.LocalSetter() {
+      @java.lang.Override
       override def set(shader: com.badlogic.gdx.graphics.g3d.shaders.BaseShader, inputID: scala.Int, renderable: com.badlogic.gdx.graphics.g3d.Renderable, combinedAttributes: com.badlogic.gdx.graphics.g3d.Attributes): scala.Unit = {
         val unit: scala.Int = shader.context.textureBinder.bind(combinedAttributes.get(com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute.Diffuse).asInstanceOf[com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute].textureDescription)
         (shader.set: (scala.Int, scala.Int) => scala.Boolean)(inputID, unit)
       }
     }
     final val diffuseUVTransform: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.LocalSetter() {
+      @java.lang.Override
       override def set(shader: com.badlogic.gdx.graphics.g3d.shaders.BaseShader, inputID: scala.Int, renderable: com.badlogic.gdx.graphics.g3d.Renderable, combinedAttributes: com.badlogic.gdx.graphics.g3d.Attributes): scala.Unit = {
         val ta: com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute = combinedAttributes.get(com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute.Diffuse).asInstanceOf[com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute]
         shader.set(inputID, ta.offsetU, ta.offsetV, ta.scaleU, ta.scaleV)
       }
     }
     final val specularColor: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.LocalSetter() {
+      @java.lang.Override
       override def set(shader: com.badlogic.gdx.graphics.g3d.shaders.BaseShader, inputID: scala.Int, renderable: com.badlogic.gdx.graphics.g3d.Renderable, combinedAttributes: com.badlogic.gdx.graphics.g3d.Attributes): scala.Unit = {
         shader.set(inputID, combinedAttributes.get(com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute.Specular).asInstanceOf[com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute].color)
       }
     }
     final val specularTexture: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.LocalSetter() {
+      @java.lang.Override
       override def set(shader: com.badlogic.gdx.graphics.g3d.shaders.BaseShader, inputID: scala.Int, renderable: com.badlogic.gdx.graphics.g3d.Renderable, combinedAttributes: com.badlogic.gdx.graphics.g3d.Attributes): scala.Unit = {
         val unit: scala.Int = shader.context.textureBinder.bind(combinedAttributes.get(com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute.Specular).asInstanceOf[com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute].textureDescription)
         (shader.set: (scala.Int, scala.Int) => scala.Boolean)(inputID, unit)
       }
     }
     final val specularUVTransform: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.LocalSetter() {
+      @java.lang.Override
       override def set(shader: com.badlogic.gdx.graphics.g3d.shaders.BaseShader, inputID: scala.Int, renderable: com.badlogic.gdx.graphics.g3d.Renderable, combinedAttributes: com.badlogic.gdx.graphics.g3d.Attributes): scala.Unit = {
         val ta: com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute = combinedAttributes.get(com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute.Specular).asInstanceOf[com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute]
         shader.set(inputID, ta.offsetU, ta.offsetV, ta.scaleU, ta.scaleV)
       }
     }
     final val emissiveColor: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.LocalSetter() {
+      @java.lang.Override
       override def set(shader: com.badlogic.gdx.graphics.g3d.shaders.BaseShader, inputID: scala.Int, renderable: com.badlogic.gdx.graphics.g3d.Renderable, combinedAttributes: com.badlogic.gdx.graphics.g3d.Attributes): scala.Unit = {
         shader.set(inputID, combinedAttributes.get(com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute.Emissive).asInstanceOf[com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute].color)
       }
     }
     final val emissiveTexture: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.LocalSetter() {
+      @java.lang.Override
       override def set(shader: com.badlogic.gdx.graphics.g3d.shaders.BaseShader, inputID: scala.Int, renderable: com.badlogic.gdx.graphics.g3d.Renderable, combinedAttributes: com.badlogic.gdx.graphics.g3d.Attributes): scala.Unit = {
         val unit: scala.Int = shader.context.textureBinder.bind(combinedAttributes.get(com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute.Emissive).asInstanceOf[com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute].textureDescription)
         (shader.set: (scala.Int, scala.Int) => scala.Boolean)(inputID, unit)
       }
     }
     final val emissiveUVTransform: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.LocalSetter() {
+      @java.lang.Override
       override def set(shader: com.badlogic.gdx.graphics.g3d.shaders.BaseShader, inputID: scala.Int, renderable: com.badlogic.gdx.graphics.g3d.Renderable, combinedAttributes: com.badlogic.gdx.graphics.g3d.Attributes): scala.Unit = {
         val ta: com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute = combinedAttributes.get(com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute.Emissive).asInstanceOf[com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute]
         shader.set(inputID, ta.offsetU, ta.offsetV, ta.scaleU, ta.scaleV)
       }
     }
     final val reflectionColor: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.LocalSetter() {
+      @java.lang.Override
       override def set(shader: com.badlogic.gdx.graphics.g3d.shaders.BaseShader, inputID: scala.Int, renderable: com.badlogic.gdx.graphics.g3d.Renderable, combinedAttributes: com.badlogic.gdx.graphics.g3d.Attributes): scala.Unit = {
         shader.set(inputID, combinedAttributes.get(com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute.Reflection).asInstanceOf[com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute].color)
       }
     }
     final val reflectionTexture: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.LocalSetter() {
+      @java.lang.Override
       override def set(shader: com.badlogic.gdx.graphics.g3d.shaders.BaseShader, inputID: scala.Int, renderable: com.badlogic.gdx.graphics.g3d.Renderable, combinedAttributes: com.badlogic.gdx.graphics.g3d.Attributes): scala.Unit = {
         val unit: scala.Int = shader.context.textureBinder.bind(combinedAttributes.get(com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute.Reflection).asInstanceOf[com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute].textureDescription)
         (shader.set: (scala.Int, scala.Int) => scala.Boolean)(inputID, unit)
       }
     }
     final val reflectionUVTransform: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.LocalSetter() {
+      @java.lang.Override
       override def set(shader: com.badlogic.gdx.graphics.g3d.shaders.BaseShader, inputID: scala.Int, renderable: com.badlogic.gdx.graphics.g3d.Renderable, combinedAttributes: com.badlogic.gdx.graphics.g3d.Attributes): scala.Unit = {
         val ta: com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute = combinedAttributes.get(com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute.Reflection).asInstanceOf[com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute]
         shader.set(inputID, ta.offsetU, ta.offsetV, ta.scaleU, ta.scaleV)
       }
     }
     final val normalTexture: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.LocalSetter() {
+      @java.lang.Override
       override def set(shader: com.badlogic.gdx.graphics.g3d.shaders.BaseShader, inputID: scala.Int, renderable: com.badlogic.gdx.graphics.g3d.Renderable, combinedAttributes: com.badlogic.gdx.graphics.g3d.Attributes): scala.Unit = {
         val unit: scala.Int = shader.context.textureBinder.bind(combinedAttributes.get(com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute.Normal).asInstanceOf[com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute].textureDescription)
         (shader.set: (scala.Int, scala.Int) => scala.Boolean)(inputID, unit)
       }
     }
     final val normalUVTransform: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.LocalSetter() {
+      @java.lang.Override
       override def set(shader: com.badlogic.gdx.graphics.g3d.shaders.BaseShader, inputID: scala.Int, renderable: com.badlogic.gdx.graphics.g3d.Renderable, combinedAttributes: com.badlogic.gdx.graphics.g3d.Attributes): scala.Unit = {
         val ta: com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute = combinedAttributes.get(com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute.Normal).asInstanceOf[com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute]
         shader.set(inputID, ta.offsetU, ta.offsetV, ta.scaleU, ta.scaleV)
       }
     }
     final val ambientTexture: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.LocalSetter() {
+      @java.lang.Override
       override def set(shader: com.badlogic.gdx.graphics.g3d.shaders.BaseShader, inputID: scala.Int, renderable: com.badlogic.gdx.graphics.g3d.Renderable, combinedAttributes: com.badlogic.gdx.graphics.g3d.Attributes): scala.Unit = {
         val unit: scala.Int = shader.context.textureBinder.bind(combinedAttributes.get(com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute.Ambient).asInstanceOf[com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute].textureDescription)
         (shader.set: (scala.Int, scala.Int) => scala.Boolean)(inputID, unit)
       }
     }
     final val ambientUVTransform: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.LocalSetter() {
+      @java.lang.Override
       override def set(shader: com.badlogic.gdx.graphics.g3d.shaders.BaseShader, inputID: scala.Int, renderable: com.badlogic.gdx.graphics.g3d.Renderable, combinedAttributes: com.badlogic.gdx.graphics.g3d.Attributes): scala.Unit = {
         val ta: com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute = combinedAttributes.get(com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute.Ambient).asInstanceOf[com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute]
         shader.set(inputID, ta.offsetU, ta.offsetV, ta.scaleU, ta.scaleV)
       }
     }
     final val environmentCubemap: com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter = new com.badlogic.gdx.graphics.g3d.shaders.BaseShader.LocalSetter() {
+      @java.lang.Override
       override def set(shader: com.badlogic.gdx.graphics.g3d.shaders.BaseShader, inputID: scala.Int, renderable: com.badlogic.gdx.graphics.g3d.Renderable, combinedAttributes: com.badlogic.gdx.graphics.g3d.Attributes): scala.Unit = {
         if (combinedAttributes.has(com.badlogic.gdx.graphics.g3d.attributes.CubemapAttribute.EnvironmentMap)) {
           (shader.set: (scala.Int, scala.Int) => scala.Boolean)(inputID, shader.context.textureBinder.bind(combinedAttributes.get(com.badlogic.gdx.graphics.g3d.attributes.CubemapAttribute.EnvironmentMap).asInstanceOf[com.badlogic.gdx.graphics.g3d.attributes.CubemapAttribute].textureDescription))
@@ -789,6 +826,7 @@ object DefaultShader {
     class Bones(numBones: scala.Int) extends com.badlogic.gdx.graphics.g3d.shaders.BaseShader.LocalSetter {
       var bones: scala.Array[scala.Float] = null.asInstanceOf[scala.Array[scala.Float]]
       this.bones = new scala.Array[scala.Float](numBones * 16)
+      @java.lang.Override
       def set(shader: com.badlogic.gdx.graphics.g3d.shaders.BaseShader, inputID: scala.Int, renderable: com.badlogic.gdx.graphics.g3d.Renderable, combinedAttributes: com.badlogic.gdx.graphics.g3d.Attributes): scala.Unit = {
         { var i: scala.Int = 0; while (i < this.bones.length) { {
           val idx: scala.Int = i / 16
@@ -810,6 +848,7 @@ object DefaultShader {
       var pointLightsOffset: scala.Int = 0
       this.dirLightsOffset = dirLightsOffset$p
       this.pointLightsOffset = pointLightsOffset$p
+      @java.lang.Override
       def set(shader: com.badlogic.gdx.graphics.g3d.shaders.BaseShader, inputID: scala.Int, renderable: com.badlogic.gdx.graphics.g3d.Renderable, combinedAttributes: com.badlogic.gdx.graphics.g3d.Attributes): scala.Unit = {
         if (renderable.environment == null) {
           shader.program.setUniform3fv(shader.loc(inputID), com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Setters.ACubemap.ones, 0, com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Setters.ACubemap.ones.length)

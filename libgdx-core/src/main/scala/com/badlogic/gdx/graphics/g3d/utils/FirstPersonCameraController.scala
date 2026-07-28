@@ -14,10 +14,12 @@ class FirstPersonCameraController(camera$p: com.badlogic.gdx.graphics.Camera) ex
   var degreesPerPixel: scala.Float = 0.5f
   final val tmp: com.badlogic.gdx.math.Vector3 = new com.badlogic.gdx.math.Vector3()
   this.camera = camera$p
+  @java.lang.Override
   def keyDown(keycode: scala.Int): scala.Boolean = {
     this.keys.put(keycode, keycode)
     return true
   }
+  @java.lang.Override
   def keyUp(keycode: scala.Int): scala.Boolean = {
     this.keys.remove(keycode, 0)
     return true
@@ -28,6 +30,7 @@ class FirstPersonCameraController(camera$p: com.badlogic.gdx.graphics.Camera) ex
   def setDegreesPerPixel(degreesPerPixel: scala.Float): scala.Unit = {
     this.degreesPerPixel = degreesPerPixel
   }
+  @java.lang.Override
   def touchDragged(screenX: scala.Int, screenY: scala.Int, pointer: scala.Int): scala.Boolean = {
     val deltaX: scala.Float = (-com.badlogic.gdx.Gdx.input.getDeltaX()) * this.degreesPerPixel
     val deltaY: scala.Float = (-com.badlogic.gdx.Gdx.input.getDeltaY()) * this.degreesPerPixel

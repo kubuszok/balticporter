@@ -20,6 +20,7 @@ abstract class PrimitiveSpawnShapeValue extends com.badlogic.gdx.graphics.g3d.pa
   this.spawnWidthValue = new com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue()
   this.spawnHeightValue = new com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue()
   this.spawnDepthValue = new com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue()
+  @java.lang.Override
   def setActive(active: scala.Boolean): scala.Unit = {
     super.setActive(active)
     this.spawnWidthValue.setActive(true)
@@ -46,6 +47,7 @@ abstract class PrimitiveSpawnShapeValue extends com.badlogic.gdx.graphics.g3d.pa
     this.spawnHeightValue.setHigh(height)
     this.spawnDepthValue.setHigh(depth)
   }
+  @java.lang.Override
   def start(): scala.Unit = {
     this.spawnWidth = this.spawnWidthValue.newLowValue()
     this.spawnWidthDiff = this.spawnWidthValue.newHighValue()
@@ -63,6 +65,7 @@ abstract class PrimitiveSpawnShapeValue extends com.badlogic.gdx.graphics.g3d.pa
       this.spawnDepthDiff = this.spawnDepthDiff - this.spawnDepth
     } else ()
   }
+  @java.lang.Override
   def load(value: com.badlogic.gdx.graphics.g3d.particles.values.ParticleValue): scala.Unit = {
     super.load(value)
     val shape: PrimitiveSpawnShapeValue = value.asInstanceOf[PrimitiveSpawnShapeValue]
@@ -71,6 +74,7 @@ abstract class PrimitiveSpawnShapeValue extends com.badlogic.gdx.graphics.g3d.pa
     this.spawnHeightValue.load(shape.spawnHeightValue)
     this.spawnDepthValue.load(shape.spawnDepthValue)
   }
+  @java.lang.Override
   def write(json: com.badlogic.gdx.utils.Json): scala.Unit = {
     super.write(json)
     json.writeValue("spawnWidthValue", this.spawnWidthValue)
@@ -78,6 +82,7 @@ abstract class PrimitiveSpawnShapeValue extends com.badlogic.gdx.graphics.g3d.pa
     json.writeValue("spawnDepthValue", this.spawnDepthValue)
     json.writeValue("edges", this.edges.asInstanceOf[java.lang.Boolean])
   }
+  @java.lang.Override
   def read(json: com.badlogic.gdx.utils.Json, jsonData: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
     super.read(json, jsonData)
     this.spawnWidthValue = json.readValue("spawnWidthValue", classOf[com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue], jsonData)

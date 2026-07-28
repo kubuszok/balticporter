@@ -96,6 +96,8 @@ trait GL30 extends com.badlogic.gdx.graphics.GL20 {
   def glProgramParameteri(program: scala.Int, pname: scala.Int, value: scala.Int): scala.Unit
   def glInvalidateFramebuffer(target: scala.Int, numAttachments: scala.Int, attachments: java.nio.IntBuffer): scala.Unit
   def glInvalidateSubFramebuffer(target: scala.Int, numAttachments: scala.Int, attachments: java.nio.IntBuffer, x: scala.Int, y: scala.Int, width: scala.Int, height: scala.Int): scala.Unit
+  @java.lang.Override
+  @java.lang.Deprecated
   def glVertexAttribPointer(indx: scala.Int, size: scala.Int, `type`: scala.Int, normalized: scala.Boolean, stride: scala.Int, ptr: java.nio.Buffer): scala.Unit
 }
 object GL30 {

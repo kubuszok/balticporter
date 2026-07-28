@@ -63,6 +63,7 @@ class JsonValue extends balticporter.runtime.JavaIterable[JsonValue] {
   def this(value: JsonValue) = {
     this(value, null, null)
   }
+  @com.badlogic.gdx.utils.Null
   def get(index$arg: scala.Int): JsonValue = {
     var index: scala.Int = index$arg
     if (index == (this.size$field - 1)) {
@@ -75,6 +76,7 @@ class JsonValue extends balticporter.runtime.JavaIterable[JsonValue] {
     }
     return current
   }
+  @com.badlogic.gdx.utils.Null
   def get(name: java.lang.String): JsonValue = {
     var current: JsonValue = this.child$field
     while ((current != null) && ((current.name$field == null) || (!current.name$field.equals(name)))) {
@@ -82,6 +84,7 @@ class JsonValue extends balticporter.runtime.JavaIterable[JsonValue] {
     }
     return current
   }
+  @com.badlogic.gdx.utils.Null
   def getIgnoreCase(name: java.lang.String): JsonValue = {
     var current: JsonValue = this.child$field
     while ((current != null) && ((current.name$field == null) || (!current.name$field.equalsIgnoreCase(name)))) {
@@ -115,6 +118,7 @@ class JsonValue extends balticporter.runtime.JavaIterable[JsonValue] {
     } else ()
     return current
   }
+  @com.badlogic.gdx.utils.Null
   def remove(index: scala.Int): JsonValue = {
     var child: JsonValue = this.get(index)
     if (child == null) {
@@ -137,6 +141,7 @@ class JsonValue extends balticporter.runtime.JavaIterable[JsonValue] {
     this.size$field = this.size$field - 1
     return child
   }
+  @com.badlogic.gdx.utils.Null
   def remove(name: java.lang.String): JsonValue = {
     var child: JsonValue = this.get(name)
     if (child == null) {
@@ -185,9 +190,11 @@ class JsonValue extends balticporter.runtime.JavaIterable[JsonValue] {
   def isEmpty(): scala.Boolean = {
     return this.size$field == 0
   }
+  @java.lang.Deprecated
   def size(): scala.Int = {
     return this.size$field
   }
+  @com.badlogic.gdx.utils.Null
   def asString(): java.lang.String = {
     this.type$field match {
       case com.badlogic.gdx.utils.JsonValue.ValueType.stringValue => {
@@ -611,6 +618,7 @@ class JsonValue extends balticporter.runtime.JavaIterable[JsonValue] {
   def hasChild(name: java.lang.String): scala.Boolean = {
     return this.getChild(name) != null
   }
+  @com.badlogic.gdx.utils.Null
   def getChild(name: java.lang.String): JsonValue = {
     val child: JsonValue = this.get(name)
     return if (child == null) null.asInstanceOf[JsonValue] else child.child$field
@@ -818,18 +826,22 @@ class JsonValue extends balticporter.runtime.JavaIterable[JsonValue] {
     }
     return false
   }
+  @com.badlogic.gdx.utils.Null
   def name(): java.lang.String = {
     return this.name$field
   }
   def setName(name: java.lang.String): scala.Unit = {
     this.name$field = name
   }
+  @com.badlogic.gdx.utils.Null
   def parent(): JsonValue = {
     return this.parent$field
   }
+  @com.badlogic.gdx.utils.Null
   def child(): JsonValue = {
     return this.child$field
   }
+  @com.badlogic.gdx.utils.Null
   def last(): JsonValue = {
     return this.last$field
   }
@@ -913,12 +925,14 @@ class JsonValue extends balticporter.runtime.JavaIterable[JsonValue] {
     }
     this.size$field = this.size$field + 1
   }
+  @com.badlogic.gdx.utils.Null
   def next(): JsonValue = {
     return this.next$field
   }
   def setNext(next: JsonValue): scala.Unit = {
     this.next$field = next
   }
+  @com.badlogic.gdx.utils.Null
   def prev(): JsonValue = {
     return this.prev$field
   }

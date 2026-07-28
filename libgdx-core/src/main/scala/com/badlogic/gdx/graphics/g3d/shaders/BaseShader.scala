@@ -112,6 +112,7 @@ abstract class BaseShader extends com.badlogic.gdx.graphics.g3d.Shader {
       } else ()
     } else ()
   }
+  @java.lang.Override
   def begin(camera: com.badlogic.gdx.graphics.Camera, context: com.badlogic.gdx.graphics.g3d.utils.RenderContext): scala.Unit = {
     this.camera = camera
     this.context = context
@@ -147,6 +148,7 @@ abstract class BaseShader extends com.badlogic.gdx.graphics.g3d.Shader {
     this.tempArray2.shrink()
     return this.tempArray2.items
   }
+  @java.lang.Override
   def render(renderable: com.badlogic.gdx.graphics.g3d.Renderable): scala.Unit = {
     if (renderable.worldTransform.det3x3() == 0) {
       return
@@ -178,12 +180,14 @@ abstract class BaseShader extends com.badlogic.gdx.graphics.g3d.Shader {
     } else ()
     renderable.meshPart.render(this.program, false)
   }
+  @java.lang.Override
   def `end`(): scala.Unit = {
     if (this.currentMesh != null) {
       this.currentMesh.unbind(this.program, this.tempArray.items, this.tempArray2.items)
       this.currentMesh = null
     } else ()
   }
+  @java.lang.Override
   def dispose(): scala.Unit = {
     this.program = null
     this.uniforms.clear()
@@ -314,11 +318,13 @@ object BaseShader {
     def set(shader: BaseShader, inputID: scala.Int, renderable: com.badlogic.gdx.graphics.g3d.Renderable, combinedAttributes: com.badlogic.gdx.graphics.g3d.Attributes): scala.Unit
   }
   abstract class GlobalSetter extends com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter {
+    @java.lang.Override
     def isGlobal(shader: BaseShader, inputID: scala.Int): scala.Boolean = {
       return true
     }
   }
   abstract class LocalSetter extends com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter {
+    @java.lang.Override
     def isGlobal(shader: BaseShader, inputID: scala.Int): scala.Boolean = {
       return false
     }

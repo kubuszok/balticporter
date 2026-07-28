@@ -33,6 +33,7 @@ class IsometricStaggeredTiledMapRenderer extends com.badlogic.gdx.maps.tiled.ren
     this.batch = batch
     this.ownsBatch = false
   }
+  @java.lang.Override
   def renderTileLayer(layer: com.badlogic.gdx.maps.tiled.TiledMapTileLayer): scala.Unit = {
     val batchColor: com.badlogic.gdx.graphics.Color = batch.getColor()
     val color: scala.Float = this.getTileLayerColor(layer, batchColor)
@@ -152,6 +153,7 @@ class IsometricStaggeredTiledMapRenderer extends com.badlogic.gdx.maps.tiled.ren
       }; x = x - 1 } }
     }; y = y - 1 } }
   }
+  @java.lang.Override
   def renderImageLayer(layer: com.badlogic.gdx.maps.tiled.TiledMapImageLayer): scala.Unit = {
     val batchColor: com.badlogic.gdx.graphics.Color = batch.getColor()
     val color: scala.Float = this.getImageLayerColor(layer, batchColor)

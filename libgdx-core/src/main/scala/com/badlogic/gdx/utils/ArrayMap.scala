@@ -76,9 +76,11 @@ class ArrayMap[K, V] extends balticporter.runtime.JavaIterable[com.badlogic.gdx.
     java.lang.System.arraycopy(map.values$field, offset, this.values$field, this.size, length)
     this.size = this.size + length
   }
+  @com.badlogic.gdx.utils.Null
   def get(key: K): V = {
     return this.get(key, null.asInstanceOf[V]).asInstanceOf[V]
   }
+  @com.badlogic.gdx.utils.Null
   def get(key: K, defaultValue: V): V = {
     val keys: scala.Array[java.lang.Object] = this.keys$field.asInstanceOf[scala.Array[java.lang.Object]]
     var i: scala.Int = this.size - 1
@@ -97,6 +99,7 @@ class ArrayMap[K, V] extends balticporter.runtime.JavaIterable[com.badlogic.gdx.
     }
     return defaultValue
   }
+  @com.badlogic.gdx.utils.Null
   def getKey(value: V, identity: scala.Boolean): K = {
     val values: scala.Array[java.lang.Object] = this.values$field.asInstanceOf[scala.Array[java.lang.Object]]
     var i: scala.Int = this.size - 1
@@ -239,6 +242,7 @@ class ArrayMap[K, V] extends balticporter.runtime.JavaIterable[com.badlogic.gdx.
     }
     return -1
   }
+  @com.badlogic.gdx.utils.Null
   def removeKey(key: K): V = {
     val keys: scala.Array[java.lang.Object] = this.keys$field.asInstanceOf[scala.Array[java.lang.Object]]
     if (key == null) {

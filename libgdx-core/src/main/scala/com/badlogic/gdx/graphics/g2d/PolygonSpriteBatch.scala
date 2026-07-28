@@ -52,6 +52,7 @@ class PolygonSpriteBatch(maxVertices: scala.Int, maxTriangles: scala.Int, defaul
     this.shader = defaultShader
   }
   this.projectionMatrix.setToOrtho2D(0, 0, com.badlogic.gdx.Gdx.graphics.getWidth(), com.badlogic.gdx.Gdx.graphics.getHeight())
+  @java.lang.Override
   def begin(): scala.Unit = {
     if (this.drawing) {
       throw new java.lang.IllegalStateException("PolygonSpriteBatch.end must be called before begin.")
@@ -66,6 +67,7 @@ class PolygonSpriteBatch(maxVertices: scala.Int, maxTriangles: scala.Int, defaul
     this.setupMatrices()
     this.drawing = true
   }
+  @java.lang.Override
   def `end`(): scala.Unit = {
     if (!this.drawing) {
       throw new java.lang.IllegalStateException("PolygonSpriteBatch.begin must be called before end.")
@@ -81,24 +83,30 @@ class PolygonSpriteBatch(maxVertices: scala.Int, maxTriangles: scala.Int, defaul
       gl.glDisable(com.badlogic.gdx.graphics.GL20.GL_BLEND)
     } else ()
   }
+  @java.lang.Override
   def setColor(tint: com.badlogic.gdx.graphics.Color): scala.Unit = {
     this.color.set(tint)
     this.colorPacked = tint.toFloatBits()
   }
+  @java.lang.Override
   def setColor(r: scala.Float, g: scala.Float, b: scala.Float, a: scala.Float): scala.Unit = {
     this.color.set(r, g, b, a)
     this.colorPacked = this.color.toFloatBits()
   }
+  @java.lang.Override
   def setPackedColor(packedColor: scala.Float): scala.Unit = {
     com.badlogic.gdx.graphics.Color.abgr8888ToColor(this.color, packedColor)
     this.colorPacked = packedColor
   }
+  @java.lang.Override
   def getColor(): com.badlogic.gdx.graphics.Color = {
     return this.color
   }
+  @java.lang.Override
   def getPackedColor(): scala.Float = {
     return this.colorPacked
   }
+  @java.lang.Override
   def draw(region: com.badlogic.gdx.graphics.g2d.PolygonRegion, x: scala.Float, y: scala.Float): scala.Unit = {
     if (!this.drawing) {
       throw new java.lang.IllegalStateException("PolygonSpriteBatch.begin must be called before draw.")
@@ -135,6 +143,7 @@ class PolygonSpriteBatch(maxVertices: scala.Int, maxTriangles: scala.Int, defaul
     }; i = i + 2 } }
     this.vertexIndex = vertexIndex
   }
+  @java.lang.Override
   def draw(region: com.badlogic.gdx.graphics.g2d.PolygonRegion, x: scala.Float, y: scala.Float, width: scala.Float, height: scala.Float): scala.Unit = {
     if (!this.drawing) {
       throw new java.lang.IllegalStateException("PolygonSpriteBatch.begin must be called before draw.")
@@ -174,6 +183,7 @@ class PolygonSpriteBatch(maxVertices: scala.Int, maxTriangles: scala.Int, defaul
     }; i = i + 2 } }
     this.vertexIndex = vertexIndex
   }
+  @java.lang.Override
   def draw(region: com.badlogic.gdx.graphics.g2d.PolygonRegion, x: scala.Float, y: scala.Float, originX: scala.Float, originY: scala.Float, width: scala.Float, height: scala.Float, scaleX: scala.Float, scaleY: scala.Float, rotation: scala.Float): scala.Unit = {
     if (!this.drawing) {
       throw new java.lang.IllegalStateException("PolygonSpriteBatch.begin must be called before draw.")
@@ -221,6 +231,7 @@ class PolygonSpriteBatch(maxVertices: scala.Int, maxTriangles: scala.Int, defaul
     }; i = i + 2 } }
     this.vertexIndex = vertexIndex
   }
+  @java.lang.Override
   def draw(texture: com.badlogic.gdx.graphics.Texture, polygonVertices: scala.Array[scala.Float], verticesOffset: scala.Int, verticesCount: scala.Int, polygonTriangles: scala.Array[scala.Short], trianglesOffset: scala.Int, trianglesCount: scala.Int): scala.Unit = {
     if (!this.drawing) {
       throw new java.lang.IllegalStateException("PolygonSpriteBatch.begin must be called before draw.")
@@ -244,6 +255,7 @@ class PolygonSpriteBatch(maxVertices: scala.Int, maxTriangles: scala.Int, defaul
     java.lang.System.arraycopy(polygonVertices, verticesOffset, vertices, vertexIndex, verticesCount)
     this.vertexIndex = this.vertexIndex + verticesCount
   }
+  @java.lang.Override
   def draw(texture: com.badlogic.gdx.graphics.Texture, x: scala.Float, y: scala.Float, originX: scala.Float, originY: scala.Float, width: scala.Float, height: scala.Float, scaleX: scala.Float, scaleY: scala.Float, rotation: scala.Float, srcX: scala.Int, srcY: scala.Int, srcWidth: scala.Int, srcHeight: scala.Int, flipX: scala.Boolean, flipY: scala.Boolean): scala.Unit = {
     if (!this.drawing) {
       throw new java.lang.IllegalStateException("PolygonSpriteBatch.begin must be called before draw.")
@@ -361,6 +373,7 @@ class PolygonSpriteBatch(maxVertices: scala.Int, maxTriangles: scala.Int, defaul
     vertices({ idx += 1; idx }) = v
     this.vertexIndex = idx
   }
+  @java.lang.Override
   def draw(texture: com.badlogic.gdx.graphics.Texture, x: scala.Float, y: scala.Float, width: scala.Float, height: scala.Float, srcX: scala.Int, srcY: scala.Int, srcWidth: scala.Int, srcHeight: scala.Int, flipX: scala.Boolean, flipY: scala.Boolean): scala.Unit = {
     if (!this.drawing) {
       throw new java.lang.IllegalStateException("PolygonSpriteBatch.begin must be called before draw.")
@@ -423,6 +436,7 @@ class PolygonSpriteBatch(maxVertices: scala.Int, maxTriangles: scala.Int, defaul
     vertices({ idx += 1; idx }) = v
     this.vertexIndex = idx
   }
+  @java.lang.Override
   def draw(texture: com.badlogic.gdx.graphics.Texture, x: scala.Float, y: scala.Float, srcX: scala.Int, srcY: scala.Int, srcWidth: scala.Int, srcHeight: scala.Int): scala.Unit = {
     if (!this.drawing) {
       throw new java.lang.IllegalStateException("PolygonSpriteBatch.begin must be called before draw.")
@@ -475,6 +489,7 @@ class PolygonSpriteBatch(maxVertices: scala.Int, maxTriangles: scala.Int, defaul
     vertices({ idx += 1; idx }) = v
     this.vertexIndex = idx
   }
+  @java.lang.Override
   def draw(texture: com.badlogic.gdx.graphics.Texture, x: scala.Float, y: scala.Float, width: scala.Float, height: scala.Float, u: scala.Float, v: scala.Float, u2: scala.Float, v2: scala.Float): scala.Unit = {
     if (!this.drawing) {
       throw new java.lang.IllegalStateException("PolygonSpriteBatch.begin must be called before draw.")
@@ -523,9 +538,11 @@ class PolygonSpriteBatch(maxVertices: scala.Int, maxTriangles: scala.Int, defaul
     vertices({ idx += 1; idx }) = v
     this.vertexIndex = idx
   }
+  @java.lang.Override
   def draw(texture: com.badlogic.gdx.graphics.Texture, x: scala.Float, y: scala.Float): scala.Unit = {
     this.draw(texture, x, y, texture.getWidth(), texture.getHeight())
   }
+  @java.lang.Override
   def draw(texture: com.badlogic.gdx.graphics.Texture, x: scala.Float, y: scala.Float, width: scala.Float, height: scala.Float): scala.Unit = {
     if (!this.drawing) {
       throw new java.lang.IllegalStateException("PolygonSpriteBatch.begin must be called before draw.")
@@ -578,6 +595,7 @@ class PolygonSpriteBatch(maxVertices: scala.Int, maxTriangles: scala.Int, defaul
     vertices({ idx += 1; idx }) = v
     this.vertexIndex = idx
   }
+  @java.lang.Override
   def draw(texture: com.badlogic.gdx.graphics.Texture, spriteVertices: scala.Array[scala.Float], offset$arg: scala.Int, count$arg: scala.Int): scala.Unit = {
     var offset: scala.Int = offset$arg
     var count: scala.Int = count$arg
@@ -629,9 +647,11 @@ class PolygonSpriteBatch(maxVertices: scala.Int, maxTriangles: scala.Int, defaul
       } else ()
     }
   }
+  @java.lang.Override
   def draw(region: com.badlogic.gdx.graphics.g2d.TextureRegion, x: scala.Float, y: scala.Float): scala.Unit = {
     this.draw(region, x, y, region.getRegionWidth(), region.getRegionHeight())
   }
+  @java.lang.Override
   def draw(region: com.badlogic.gdx.graphics.g2d.TextureRegion, x: scala.Float, y: scala.Float, width: scala.Float, height: scala.Float): scala.Unit = {
     if (!this.drawing) {
       throw new java.lang.IllegalStateException("PolygonSpriteBatch.begin must be called before draw.")
@@ -685,6 +705,7 @@ class PolygonSpriteBatch(maxVertices: scala.Int, maxTriangles: scala.Int, defaul
     vertices({ idx += 1; idx }) = v
     this.vertexIndex = idx
   }
+  @java.lang.Override
   def draw(region: com.badlogic.gdx.graphics.g2d.TextureRegion, x: scala.Float, y: scala.Float, originX: scala.Float, originY: scala.Float, width: scala.Float, height: scala.Float, scaleX: scala.Float, scaleY: scala.Float, rotation: scala.Float): scala.Unit = {
     if (!this.drawing) {
       throw new java.lang.IllegalStateException("PolygonSpriteBatch.begin must be called before draw.")
@@ -793,6 +814,7 @@ class PolygonSpriteBatch(maxVertices: scala.Int, maxTriangles: scala.Int, defaul
     vertices({ idx += 1; idx }) = v
     this.vertexIndex = idx
   }
+  @java.lang.Override
   def draw(region: com.badlogic.gdx.graphics.g2d.TextureRegion, x: scala.Float, y: scala.Float, originX: scala.Float, originY: scala.Float, width: scala.Float, height: scala.Float, scaleX: scala.Float, scaleY: scala.Float, rotation: scala.Float, clockwise: scala.Boolean): scala.Unit = {
     if (!this.drawing) {
       throw new java.lang.IllegalStateException("PolygonSpriteBatch.begin must be called before draw.")
@@ -924,6 +946,7 @@ class PolygonSpriteBatch(maxVertices: scala.Int, maxTriangles: scala.Int, defaul
     vertices({ idx += 1; idx }) = v4
     this.vertexIndex = idx
   }
+  @java.lang.Override
   def draw(region: com.badlogic.gdx.graphics.g2d.TextureRegion, width: scala.Float, height: scala.Float, transform: com.badlogic.gdx.math.Affine2): scala.Unit = {
     if (!this.drawing) {
       throw new java.lang.IllegalStateException("PolygonSpriteBatch.begin must be called before draw.")
@@ -983,6 +1006,7 @@ class PolygonSpriteBatch(maxVertices: scala.Int, maxTriangles: scala.Int, defaul
     vertices({ idx += 1; idx }) = v
     this.vertexIndex = idx
   }
+  @java.lang.Override
   def flush(): scala.Unit = {
     if (this.vertexIndex == 0) {
       return
@@ -1009,17 +1033,21 @@ class PolygonSpriteBatch(maxVertices: scala.Int, maxTriangles: scala.Int, defaul
     this.vertexIndex = 0
     this.triangleIndex = 0
   }
+  @java.lang.Override
   def disableBlending(): scala.Unit = {
     this.flush()
     this.blendingDisabled = true
   }
+  @java.lang.Override
   def enableBlending(): scala.Unit = {
     this.flush()
     this.blendingDisabled = false
   }
+  @java.lang.Override
   def setBlendFunction(srcFunc: scala.Int, dstFunc: scala.Int): scala.Unit = {
     this.setBlendFunctionSeparate(srcFunc, dstFunc, srcFunc, dstFunc)
   }
+  @java.lang.Override
   def setBlendFunctionSeparate(srcFuncColor: scala.Int, dstFuncColor: scala.Int, srcFuncAlpha: scala.Int, dstFuncAlpha: scala.Int): scala.Unit = {
     if ((((this.blendSrcFunc == srcFuncColor) && (this.blendDstFunc == dstFuncColor)) && (this.blendSrcFuncAlpha == srcFuncAlpha)) && (this.blendDstFuncAlpha == dstFuncAlpha)) {
       return
@@ -1030,30 +1058,38 @@ class PolygonSpriteBatch(maxVertices: scala.Int, maxTriangles: scala.Int, defaul
     this.blendSrcFuncAlpha = srcFuncAlpha
     this.blendDstFuncAlpha = dstFuncAlpha
   }
+  @java.lang.Override
   def getBlendSrcFunc(): scala.Int = {
     return this.blendSrcFunc
   }
+  @java.lang.Override
   def getBlendDstFunc(): scala.Int = {
     return this.blendDstFunc
   }
+  @java.lang.Override
   def getBlendSrcFuncAlpha(): scala.Int = {
     return this.blendSrcFuncAlpha
   }
+  @java.lang.Override
   def getBlendDstFuncAlpha(): scala.Int = {
     return this.blendDstFuncAlpha
   }
+  @java.lang.Override
   def dispose(): scala.Unit = {
     this.mesh.dispose()
     if (this.ownsShader && (this.shader != null)) {
       this.shader.dispose()
     } else ()
   }
+  @java.lang.Override
   def getProjectionMatrix(): com.badlogic.gdx.math.Matrix4 = {
     return this.projectionMatrix
   }
+  @java.lang.Override
   def getTransformMatrix(): com.badlogic.gdx.math.Matrix4 = {
     return this.transformMatrix
   }
+  @java.lang.Override
   def setProjectionMatrix(projection: com.badlogic.gdx.math.Matrix4): scala.Unit = {
     if (this.drawing) {
       this.flush()
@@ -1063,6 +1099,7 @@ class PolygonSpriteBatch(maxVertices: scala.Int, maxTriangles: scala.Int, defaul
       this.setupMatrices()
     } else ()
   }
+  @java.lang.Override
   def setTransformMatrix(transform: com.badlogic.gdx.math.Matrix4): scala.Unit = {
     if (this.drawing) {
       this.flush()
@@ -1088,6 +1125,7 @@ class PolygonSpriteBatch(maxVertices: scala.Int, maxTriangles: scala.Int, defaul
     this.invTexWidth = 1.0f / texture.getWidth()
     this.invTexHeight = 1.0f / texture.getHeight()
   }
+  @java.lang.Override
   def setShader(shader: com.badlogic.gdx.graphics.glutils.ShaderProgram): scala.Unit = {
     if (this.drawing) {
       this.flush()
@@ -1102,15 +1140,18 @@ class PolygonSpriteBatch(maxVertices: scala.Int, maxTriangles: scala.Int, defaul
       this.setupMatrices()
     } else ()
   }
+  @java.lang.Override
   def getShader(): com.badlogic.gdx.graphics.glutils.ShaderProgram = {
     if (this.customShader == null) {
       return this.shader
     } else ()
     return this.customShader
   }
+  @java.lang.Override
   def isBlendingEnabled(): scala.Boolean = {
     return !this.blendingDisabled
   }
+  @java.lang.Override
   def isDrawing(): scala.Boolean = {
     return this.drawing
   }

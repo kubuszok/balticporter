@@ -19,6 +19,7 @@ class AtomicQueue[T](capacity: scala.Int) {
     this.writeIndex.set(next)
     return true
   }
+  @com.badlogic.gdx.utils.Null
   def poll(): T = {
     val read: scala.Int = this.readIndex.get()
     val write: scala.Int = this.writeIndex.get()

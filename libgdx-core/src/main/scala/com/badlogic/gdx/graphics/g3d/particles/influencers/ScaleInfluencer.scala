@@ -5,6 +5,7 @@ class ScaleInfluencer extends com.badlogic.gdx.graphics.g3d.particles.influencer
     this()
   }
   valueChannelDescriptor = com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.Scale
+  @java.lang.Override
   def activateParticles(startIndex: scala.Int, count: scala.Int): scala.Unit = {
     if (value.isRelative()) {
       { var i: scala.Int = startIndex * this.valueChannel.strideSize; var a: scala.Int = startIndex * this.interpolationChannel.strideSize; val c: scala.Int = i + (count * this.valueChannel.strideSize); while (i < c) { {
@@ -24,6 +25,7 @@ class ScaleInfluencer extends com.badlogic.gdx.graphics.g3d.particles.influencer
       }; i = i + this.valueChannel.strideSize; a = a + this.interpolationChannel.strideSize } }
     }
   }
+  @java.lang.Override
   def copy(): com.badlogic.gdx.graphics.g3d.particles.ParticleControllerComponent = {
     return new ScaleInfluencer(this)
   }

@@ -30,15 +30,19 @@ abstract class ParticleControllerComponent extends com.badlogic.gdx.utils.Dispos
   def set(particleController: com.badlogic.gdx.graphics.g3d.particles.ParticleController): scala.Unit = {
     this.controller = particleController
   }
+  @java.lang.Override
   def save(manager: com.badlogic.gdx.assets.AssetManager, data: com.badlogic.gdx.graphics.g3d.particles.ResourceData[?]): scala.Unit = {
     ()
   }
+  @java.lang.Override
   def load(manager: com.badlogic.gdx.assets.AssetManager, data: com.badlogic.gdx.graphics.g3d.particles.ResourceData[?]): scala.Unit = {
     ()
   }
+  @java.lang.Override
   def write(json: com.badlogic.gdx.utils.Json): scala.Unit = {
     ()
   }
+  @java.lang.Override
   def read(json: com.badlogic.gdx.utils.Json, jsonData: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
     ()
   }

@@ -115,9 +115,11 @@ object RenderableShapeBuilder {
     return max
   }
   class RenderablePool extends com.badlogic.gdx.utils.FlushablePool[com.badlogic.gdx.graphics.g3d.Renderable] {
+    @java.lang.Override
     def newObject(): com.badlogic.gdx.graphics.g3d.Renderable = {
       return new com.badlogic.gdx.graphics.g3d.Renderable()
     }
+    @java.lang.Override
     def obtain(): com.badlogic.gdx.graphics.g3d.Renderable = {
       val renderable: com.badlogic.gdx.graphics.g3d.Renderable = super.obtain()
       renderable.environment = null

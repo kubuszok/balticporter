@@ -25,12 +25,15 @@ class DepthShader(renderable$p: com.badlogic.gdx.graphics.g3d.Renderable, config
     throw new com.badlogic.gdx.utils.GdxRuntimeException((("too many bone weights: " + boneWeights) + ", max configured: ") + config$p.numBoneWeights)
   } else ()
   this.alphaTestAttribute = new com.badlogic.gdx.graphics.g3d.attributes.FloatAttribute(com.badlogic.gdx.graphics.g3d.attributes.FloatAttribute.AlphaTest, config$p.defaultAlphaTest)
+  @java.lang.Override
   def begin(camera: com.badlogic.gdx.graphics.Camera, context: com.badlogic.gdx.graphics.g3d.utils.RenderContext): scala.Unit = {
     super.begin(camera, context)
   }
+  @java.lang.Override
   def `end`(): scala.Unit = {
     super.`end`()
   }
+  @java.lang.Override
   def canRender(renderable: com.badlogic.gdx.graphics.g3d.Renderable): scala.Boolean = {
     if (renderable.bones != null) {
       if (renderable.bones.length > this.config.numBones) {
@@ -48,6 +51,7 @@ class DepthShader(renderable$p: com.badlogic.gdx.graphics.g3d.Renderable, config
     } else ()
     return (renderable.bones != null) == (this.numBones > 0)
   }
+  @java.lang.Override
   def render(renderable: com.badlogic.gdx.graphics.g3d.Renderable, combinedAttributes: com.badlogic.gdx.graphics.g3d.Attributes): scala.Unit = {
     if (combinedAttributes.has(com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute.Type)) {
       val blending: com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute = combinedAttributes.get(com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute.Type).asInstanceOf[com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute]

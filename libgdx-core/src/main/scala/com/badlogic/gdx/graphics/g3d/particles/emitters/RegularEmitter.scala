@@ -34,9 +34,11 @@ class RegularEmitter extends com.badlogic.gdx.graphics.g3d.particles.emitters.Em
   this.lifeValue.setActive(true)
   this.continuous = true
   this.emissionMode = com.badlogic.gdx.graphics.g3d.particles.emitters.RegularEmitter.EmissionMode.Enabled
+  @java.lang.Override
   def allocateChannels(): scala.Unit = {
     this.lifeChannel = this.controller.particles.addChannel(com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.Life)
   }
+  @java.lang.Override
   def start(): scala.Unit = {
     this.delay = if (this.delayValue.active) this.delayValue.newLowValue() else 0
     this.delayTimer = 0
@@ -169,6 +171,7 @@ class RegularEmitter extends com.badlogic.gdx.graphics.g3d.particles.emitters.Em
   def setEmissionMode(emissionMode: com.badlogic.gdx.graphics.g3d.particles.emitters.RegularEmitter.EmissionMode): scala.Unit = {
     this.emissionMode = emissionMode
   }
+  @java.lang.Override
   def isComplete(): scala.Boolean = {
     if (this.delayTimer < this.delay) {
       return false
@@ -201,9 +204,11 @@ class RegularEmitter extends com.badlogic.gdx.graphics.g3d.particles.emitters.Em
     this.delayTimer = emitter.delayTimer
     this.continuous = emitter.continuous
   }
+  @java.lang.Override
   def copy(): com.badlogic.gdx.graphics.g3d.particles.ParticleControllerComponent = {
     return new RegularEmitter(this)
   }
+  @java.lang.Override
   def write(json: com.badlogic.gdx.utils.Json): scala.Unit = {
     super.write(json)
     json.writeValue("continous", this.continuous.asInstanceOf[java.lang.Boolean])
@@ -213,6 +218,7 @@ class RegularEmitter extends com.badlogic.gdx.graphics.g3d.particles.emitters.Em
     json.writeValue("life", this.lifeValue)
     json.writeValue("lifeOffset", this.lifeOffsetValue)
   }
+  @java.lang.Override
   def read(json: com.badlogic.gdx.utils.Json, jsonData: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
     super.read(json, jsonData)
     this.continuous = json.readValue("continous", classOf[scala.Boolean], jsonData)

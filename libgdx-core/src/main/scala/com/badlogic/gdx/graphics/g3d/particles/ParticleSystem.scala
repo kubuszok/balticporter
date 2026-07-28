@@ -54,6 +54,7 @@ final class ParticleSystem extends com.badlogic.gdx.graphics.g3d.RenderableProvi
       batch.`end`()
     }
   }
+  @java.lang.Override
   def getRenderables(renderables: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.Renderable], pool: com.badlogic.gdx.utils.Pool[com.badlogic.gdx.graphics.g3d.Renderable]): scala.Unit = {
     for (batch <- this.batches) {
       batch.getRenderables(renderables, pool)
@@ -65,6 +66,7 @@ final class ParticleSystem extends com.badlogic.gdx.graphics.g3d.RenderableProvi
 }
 object ParticleSystem {
   private var instance: ParticleSystem = null.asInstanceOf[ParticleSystem]
+  @java.lang.Deprecated
   def get(): ParticleSystem = {
     if (ParticleSystem.instance == null) {
       ParticleSystem.instance = new ParticleSystem()

@@ -36,18 +36,23 @@ class TextureArray(data$p: com.badlogic.gdx.graphics.TextureArrayData) extends c
     this.setWrap(uWrap, vWrap)
     com.badlogic.gdx.Gdx.gl.glBindTexture(glTarget, 0)
   }
+  @java.lang.Override
   def getWidth(): scala.Int = {
     return this.data.getWidth()
   }
+  @java.lang.Override
   def getHeight(): scala.Int = {
     return this.data.getHeight()
   }
+  @java.lang.Override
   def getDepth(): scala.Int = {
     return this.data.getDepth()
   }
+  @java.lang.Override
   def isManaged(): scala.Boolean = {
     return this.data.isManaged()
   }
+  @java.lang.Override
   def reload(): scala.Unit = {
     if (!this.isManaged()) {
       throw new com.badlogic.gdx.utils.GdxRuntimeException("Tried to reload an unmanaged TextureArray")

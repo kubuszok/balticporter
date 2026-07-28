@@ -122,6 +122,7 @@ class ImmediateModeRenderer20(maxVertices$p: scala.Int, hasNormals: scala.Boolea
   def getNumVertices(): scala.Int = {
     return this.numVertices
   }
+  @java.lang.Override
   def getMaxVertices(): scala.Int = {
     return this.maxVertices
   }

@@ -207,6 +207,7 @@ class ObjectFloatMap[K](initialCapacity: scala.Int, loadFactor$p: scala.Float) e
   def containsKey(key: K): scala.Boolean = {
     return this.locateKey(key) >= 0
   }
+  @com.badlogic.gdx.utils.Null
   def findKey(value: scala.Float): K = {
     val keyTable: scala.Array[K] = this.keyTable
     val valueTable: scala.Array[scala.Float] = this.valueTable;
@@ -218,6 +219,7 @@ class ObjectFloatMap[K](initialCapacity: scala.Int, loadFactor$p: scala.Float) e
     }; i = i - 1 } }
     return null.asInstanceOf[K]
   }
+  @com.badlogic.gdx.utils.Null
   def findKey(value: scala.Float, epsilon: scala.Float): K = {
     val keyTable: scala.Array[K] = this.keyTable
     val valueTable: scala.Array[scala.Float] = this.valueTable;

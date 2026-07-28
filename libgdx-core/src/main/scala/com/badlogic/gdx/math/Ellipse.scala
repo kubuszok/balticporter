@@ -101,9 +101,11 @@ class Ellipse extends java.io.Serializable with com.badlogic.gdx.math.Shape2D {
       return (com.badlogic.gdx.math.MathUtils.PI2 * java.lang.Math.sqrt(((a * a) + (b * b)) / 2)).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
     }
   }
+  @java.lang.Override
   def toString(): java.lang.String = {
     return ((((((("[" + this.x) + ",") + this.y) + ",") + this.width) + ",") + this.height) + "]"
   }
+  @java.lang.Override
   def equals(o: java.lang.Object): scala.Boolean = {
     if (o == this) {
       return true
@@ -114,6 +116,7 @@ class Ellipse extends java.io.Serializable with com.badlogic.gdx.math.Shape2D {
     val e: Ellipse = o.asInstanceOf[Ellipse].asInstanceOf[Ellipse]
     return (((this.x == e.x) && (this.y == e.y)) && (this.width == e.width)) && (this.height == e.height)
   }
+  @java.lang.Override
   def hashCode(): scala.Int = {
     val prime: scala.Int = 53
     var result: scala.Int = 1

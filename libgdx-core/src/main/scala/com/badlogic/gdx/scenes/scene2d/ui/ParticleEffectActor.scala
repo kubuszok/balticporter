@@ -24,6 +24,7 @@ class ParticleEffectActor extends com.badlogic.gdx.scenes.scene2d.Actor with com
     this.particleEffect.load(particleFile, imagesDir)
     this.ownsEffect = true
   }
+  @java.lang.Override
   def draw(batch: com.badlogic.gdx.graphics.g2d.Batch, parentAlpha: scala.Float): scala.Unit = {
     this.particleEffect.setPosition(this.getX(), this.getY())
     if (this.lastDelta > 0) {
@@ -35,6 +36,7 @@ class ParticleEffectActor extends com.badlogic.gdx.scenes.scene2d.Actor with com
       this.isRunning$field = !this.particleEffect.isComplete()
     } else ()
   }
+  @java.lang.Override
   def act(delta: scala.Float): scala.Unit = {
     super.act(delta)
     this.lastDelta = this.lastDelta + delta
@@ -69,6 +71,7 @@ class ParticleEffectActor extends com.badlogic.gdx.scenes.scene2d.Actor with com
   def getEffect(): com.badlogic.gdx.graphics.g2d.ParticleEffect = {
     return this.particleEffect
   }
+  @java.lang.Override
   def scaleChanged(): scala.Unit = {
     super.scaleChanged()
     this.particleEffect.scaleEffect(this.getScaleX(), this.getScaleY(), this.getScaleY())
@@ -79,6 +82,7 @@ class ParticleEffectActor extends com.badlogic.gdx.scenes.scene2d.Actor with com
   def allowCompletion(): scala.Unit = {
     this.particleEffect.allowCompletion()
   }
+  @java.lang.Override
   def dispose(): scala.Unit = {
     if (this.ownsEffect) {
       this.particleEffect.dispose()

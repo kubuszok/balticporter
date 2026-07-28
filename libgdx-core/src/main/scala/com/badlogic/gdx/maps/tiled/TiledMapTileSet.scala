@@ -18,6 +18,7 @@ class TiledMapTileSet extends balticporter.runtime.JavaIterable[com.badlogic.gdx
   def getTile(id: scala.Int): com.badlogic.gdx.maps.tiled.TiledMapTile = {
     return this.tiles.get(id)
   }
+  @java.lang.Override
   def iterator(): balticporter.runtime.JavaIterator[com.badlogic.gdx.maps.tiled.TiledMapTile] = {
     return this.tiles.values().iterator()
   }

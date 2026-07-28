@@ -212,12 +212,15 @@ class DragAndDrop {
   def isDragging(): scala.Boolean = {
     return this.payload != null
   }
+  @com.badlogic.gdx.utils.Null
   def getDragActor(): com.badlogic.gdx.scenes.scene2d.Actor = {
     return this.dragActor
   }
+  @com.badlogic.gdx.utils.Null
   def getDragPayload(): com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop.Payload = {
     return this.payload
   }
+  @com.badlogic.gdx.utils.Null
   def getDragSource(): com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop.Source = {
     return this.dragSource
   }
@@ -245,6 +248,7 @@ object DragAndDrop {
       throw new java.lang.IllegalArgumentException("actor cannot be null.")
     } else ()
     this.actor = actor$p
+    @com.badlogic.gdx.utils.Null
     def dragStart(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float, pointer: scala.Int): com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop.Payload
     def drag(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float, pointer: scala.Int): scala.Unit = {
       ()
@@ -283,21 +287,25 @@ object DragAndDrop {
     def setDragActor(dragActor: com.badlogic.gdx.scenes.scene2d.Actor): scala.Unit = {
       this.dragActor = dragActor
     }
+    @com.badlogic.gdx.utils.Null
     def getDragActor(): com.badlogic.gdx.scenes.scene2d.Actor = {
       return this.dragActor
     }
     def setValidDragActor(validDragActor: com.badlogic.gdx.scenes.scene2d.Actor): scala.Unit = {
       this.validDragActor = validDragActor
     }
+    @com.badlogic.gdx.utils.Null
     def getValidDragActor(): com.badlogic.gdx.scenes.scene2d.Actor = {
       return this.validDragActor
     }
     def setInvalidDragActor(invalidDragActor: com.badlogic.gdx.scenes.scene2d.Actor): scala.Unit = {
       this.invalidDragActor = invalidDragActor
     }
+    @com.badlogic.gdx.utils.Null
     def getInvalidDragActor(): com.badlogic.gdx.scenes.scene2d.Actor = {
       return this.invalidDragActor
     }
+    @com.badlogic.gdx.utils.Null
     def getObject(): java.lang.Object = {
       return this.`object`
     }

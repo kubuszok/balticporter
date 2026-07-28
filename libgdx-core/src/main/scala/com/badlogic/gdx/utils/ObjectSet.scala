@@ -159,6 +159,7 @@ class ObjectSet[T] extends balticporter.runtime.JavaIterable[T] {
   def contains(key: T): scala.Boolean = {
     return this.locateKey(key) >= 0
   }
+  @com.badlogic.gdx.utils.Null
   def get(key: T): T = {
     val i: scala.Int = this.locateKey(key)
     return if (i < 0) null.asInstanceOf[T] else this.keyTable(i)

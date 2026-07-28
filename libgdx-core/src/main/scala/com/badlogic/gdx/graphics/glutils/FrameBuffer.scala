@@ -22,6 +22,7 @@ class FrameBuffer extends com.badlogic.gdx.graphics.glutils.GLFrameBuffer[com.ba
   def this(format: com.badlogic.gdx.graphics.Pixmap.Format, width: scala.Int, height: scala.Int, hasDepth: scala.Boolean) = {
     this(format, width, height, hasDepth, false)
   }
+  @java.lang.Override
   def createTexture(attachmentSpec: com.badlogic.gdx.graphics.glutils.GLFrameBuffer.FrameBufferTextureAttachmentSpec): com.badlogic.gdx.graphics.Texture = {
     val data: com.badlogic.gdx.graphics.glutils.GLOnlyTextureData = new com.badlogic.gdx.graphics.glutils.GLOnlyTextureData(this.bufferBuilder.width, this.bufferBuilder.height, 0, attachmentSpec.internalFormat, attachmentSpec.format, attachmentSpec.`type`)
     val result: com.badlogic.gdx.graphics.Texture = new com.badlogic.gdx.graphics.Texture(data)
@@ -32,9 +33,11 @@ class FrameBuffer extends com.badlogic.gdx.graphics.glutils.GLFrameBuffer[com.ba
     result.setWrap(com.badlogic.gdx.graphics.Texture.TextureWrap.ClampToEdge, com.badlogic.gdx.graphics.Texture.TextureWrap.ClampToEdge)
     return result
   }
+  @java.lang.Override
   def disposeColorTexture(colorTexture: com.badlogic.gdx.graphics.Texture): scala.Unit = {
     colorTexture.dispose()
   }
+  @java.lang.Override
   def attachFrameBufferColorTexture(texture: com.badlogic.gdx.graphics.Texture): scala.Unit = {
     com.badlogic.gdx.Gdx.gl20.glFramebufferTexture2D(com.badlogic.gdx.graphics.GL20.GL_FRAMEBUFFER, com.badlogic.gdx.graphics.GL20.GL_COLOR_ATTACHMENT0, com.badlogic.gdx.graphics.GL20.GL_TEXTURE_2D, texture.getTextureObjectHandle(), 0)
   }

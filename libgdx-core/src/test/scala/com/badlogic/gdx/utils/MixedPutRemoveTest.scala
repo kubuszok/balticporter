@@ -1,6 +1,7 @@
 package com.badlogic.gdx.utils
 
 class MixedPutRemoveTest {
+  @org.junit.Test
   def testLongMapPut(): scala.Unit = {
     val gdxMap: com.badlogic.gdx.utils.LongMap[java.lang.Integer] = new com.badlogic.gdx.utils.LongMap[java.lang.Integer]()
     val jdkMap: scala.collection.mutable.HashMap[java.lang.Long, java.lang.Integer] = new scala.collection.mutable.HashMap[java.lang.Long, java.lang.Integer]()
@@ -26,6 +27,7 @@ class MixedPutRemoveTest {
     }; i = i + 1 } }
     org.junit.Assert.assertEquals(gdxRepeats, jdkRepeats)
   }
+  @org.junit.Test
   def testLongMapMix(): scala.Unit = {
     val gdxMap: com.badlogic.gdx.utils.LongMap[java.lang.Integer] = new com.badlogic.gdx.utils.LongMap[java.lang.Integer]()
     val jdkMap: scala.collection.mutable.HashMap[java.lang.Long, java.lang.Integer] = new scala.collection.mutable.HashMap[java.lang.Long, java.lang.Integer]()
@@ -55,6 +57,7 @@ class MixedPutRemoveTest {
     }; i = i + 1 } }
     org.junit.Assert.assertEquals(gdxRemovals, jdkRemovals)
   }
+  @org.junit.Test
   def testLongMapIterator(): scala.Unit = {
     val gdxMap: com.badlogic.gdx.utils.LongMap[java.lang.Long] = new com.badlogic.gdx.utils.LongMap[java.lang.Long]()
     var stateA: scala.Long = 0L
@@ -97,6 +100,7 @@ class MixedPutRemoveTest {
       org.junit.Assert.assertEquals(ent.key, ent.value.longValue())
     }
   }
+  @org.junit.Test
   def testIntMapPut(): scala.Unit = {
     val gdxMap: com.badlogic.gdx.utils.IntMap[java.lang.Integer] = new com.badlogic.gdx.utils.IntMap[java.lang.Integer]()
     val jdkMap: scala.collection.mutable.HashMap[java.lang.Integer, java.lang.Integer] = new scala.collection.mutable.HashMap[java.lang.Integer, java.lang.Integer]()
@@ -123,6 +127,7 @@ class MixedPutRemoveTest {
     }; i = i + 1 } }
     org.junit.Assert.assertEquals(gdxRepeats, jdkRepeats)
   }
+  @org.junit.Test
   def testIntMapMix(): scala.Unit = {
     val gdxMap: com.badlogic.gdx.utils.IntMap[java.lang.Integer] = new com.badlogic.gdx.utils.IntMap[java.lang.Integer]()
     val jdkMap: scala.collection.mutable.HashMap[java.lang.Integer, java.lang.Integer] = new scala.collection.mutable.HashMap[java.lang.Integer, java.lang.Integer]()
@@ -153,6 +158,7 @@ class MixedPutRemoveTest {
     }; i = i + 1 } }
     org.junit.Assert.assertEquals(gdxRemovals, jdkRemovals)
   }
+  @org.junit.Test
   def testIntMapIterator(): scala.Unit = {
     val gdxMap: com.badlogic.gdx.utils.IntMap[java.lang.Integer] = new com.badlogic.gdx.utils.IntMap[java.lang.Integer]()
     var stateA: scala.Long = 0L
@@ -196,6 +202,7 @@ class MixedPutRemoveTest {
       org.junit.Assert.assertEquals(ent.key, ent.value.intValue())
     }
   }
+  @org.junit.Test
   def testObjectMapPut(): scala.Unit = {
     val gdxMap: com.badlogic.gdx.utils.ObjectMap[java.lang.Integer, java.lang.Integer] = new com.badlogic.gdx.utils.ObjectMap[java.lang.Integer, java.lang.Integer]()
     val jdkMap: scala.collection.mutable.HashMap[java.lang.Integer, java.lang.Integer] = new scala.collection.mutable.HashMap[java.lang.Integer, java.lang.Integer]()
@@ -222,6 +229,7 @@ class MixedPutRemoveTest {
     }; i = i + 1 } }
     org.junit.Assert.assertEquals(gdxRepeats, jdkRepeats)
   }
+  @org.junit.Test
   def testObjectMapMix(): scala.Unit = {
     val gdxMap: com.badlogic.gdx.utils.ObjectMap[java.lang.Integer, java.lang.Integer] = new com.badlogic.gdx.utils.ObjectMap[java.lang.Integer, java.lang.Integer]()
     val jdkMap: scala.collection.mutable.HashMap[java.lang.Integer, java.lang.Integer] = new scala.collection.mutable.HashMap[java.lang.Integer, java.lang.Integer]()

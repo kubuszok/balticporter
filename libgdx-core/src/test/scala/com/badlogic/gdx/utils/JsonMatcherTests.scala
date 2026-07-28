@@ -15,6 +15,7 @@ class JsonMatcherTests {
       java.lang.System.out.println()
     }
   }
+  @org.junit.Test
   def singlePatterns(): scala.Unit = {
     JsonMatcherTests.test(JsonMatcherTests.json, "*/(type)", scala.Array[java.lang.String]("ENCHARGE"))
     JsonMatcherTests.test(JsonMatcherTests.json, "*@/(type)", scala.Array[java.lang.String]("ENCHARGE", "ENPOWER"))
@@ -167,6 +168,7 @@ class JsonMatcherTests {
     JsonMatcherTests.test((((((((((((("{\n" + "\titems: {\n") + "\t\tserver1: {\n") + "\t\t\tconfig: { // dead here\n") + "\t\t\t\thost: [ deadend ]\n") + "\t\t\t},\n") + "\t\t\tnested: {\n") + "\t\t\t\tconfig: {\n") + "\t\t\t\t\tport: 8080\n") + "\t\t\t\t}\n") + "\t\t\t}\n") + "\t\t}\n") + "\t}\n") + "}", "items/**/config/(port)", scala.Array[java.lang.String]("8080"))
     JsonMatcherTests.test("{data1:[{a:1},{b:2},{a:3},{b:4}],data2:[{a:5},{b:6},{a:7},{b:8}]}", "*/*/(a[],b[])", scala.Array[java.lang.String]("{a:[1,3,5,7],b:[2,4,6,8]}"))
   }
+  @org.junit.Test
   def wholeDocument(): scala.Unit = {
     JsonMatcherTests.test("{data:{items:[a,b,c]}}", "", scala.Array[java.lang.String]("{data:{items:[a,b,c]}}"))
     JsonMatcherTests.test("[a,b,{data:[1,2,3]},c]", "", scala.Array[java.lang.String]("[a,b,{data:[1,2,3]},c]"))
@@ -177,6 +179,7 @@ class JsonMatcherTests {
     JsonMatcherTests.test("false", "", scala.Array[java.lang.String]("false"))
     JsonMatcherTests.test("null", "", null.asInstanceOf[java.lang.String])
   }
+  @org.junit.Test
   def unescaping(): scala.Unit = {
     JsonMatcherTests.test("{data:\"He said \\\"hello\\\"\"}", "(data)", scala.Array[java.lang.String]("He said \"hello\""))
     JsonMatcherTests.test("{path:\"C:\\\\Users\\\\file.txt\"}", "(path)", scala.Array[java.lang.String]("C:\\Users\\file.txt"))
@@ -208,6 +211,7 @@ class JsonMatcherTests {
     JsonMatcherTests.test("{da\\\\ta:{it'ems:[a,b,c]}}", "'da\\\\ta'/('it''ems')", scala.Array[java.lang.String]("[a,b,c]"))
     JsonMatcherTests.test("{*/()[\\\\]@',\\\\\\\\:{items:[a,b,c]}}", "'*/()[\\\\]@'',\\\\\\\\'/(items)", scala.Array[java.lang.String]("[a,b,c]"))
   }
+  @org.junit.Test
   def multiplePatterns(): scala.Unit = {
     JsonMatcherTests.test("{user:{name:John,age:30},meta:{version:1.0}}", scala.Array[java.lang.String]("user/(name)", "meta/(version)"), scala.Array[java.lang.String]("John", "1.0"))
     JsonMatcherTests.test("{user:{name:John},profile:{user:{name:Jane}}}", scala.Array[java.lang.String]("user/(name)", "profile/user/(name)"), scala.Array[java.lang.String]("John", "Jane"))
@@ -215,6 +219,7 @@ class JsonMatcherTests {
     JsonMatcherTests.test("{a:{b:{c:1}}}", scala.Array[java.lang.String]("**@/(b)", "**@/(c)"), scala.Array[java.lang.String]("1", "{c:1}"))
     JsonMatcherTests.test(JsonMatcherTests.json, scala.Array[java.lang.String]("*/(type)", "*/devices/*/(serial_num[])"), scala.Array[java.lang.String]("ENCHARGE", "[32131444,234234211,9834711]"))
   }
+  @org.junit.Test
   def keys(): scala.Unit = {
     JsonMatcherTests.test("{a:1,b:2,c:3}", "()[]", scala.Array[java.lang.String]("[a,b,c]"))
     JsonMatcherTests.test("{a:1,b:2,c:3}", "()[],(b)", scala.Array[java.lang.String]("{\"\":[a,b,c]}"))
@@ -226,6 +231,7 @@ class JsonMatcherTests {
     JsonMatcherTests.test("{object:{a:1,b:2,c:3}}", "*/()[]", scala.Array[java.lang.String]("[a,b,c]"))
     JsonMatcherTests.test("{object:{a:1,b:2,c:{d:{e:3},f:[1,2,3]}}}", "**/()[]", scala.Array[java.lang.String]("[object,a,b,c,d,e,f]"))
   }
+  @org.junit.Test
   def earlyEnd(): scala.Unit = {
     JsonMatcherTests.test("extra", "{first:{id:1},second:{data:ignored},extra:should-not-parse}", scala.Array[java.lang.String]("first/(id@)", "(second)"), scala.Array[java.lang.String]("1", "{data:ignored}"))
     JsonMatcherTests.test("extra", "{first:{id:1},second:{id:ignored},extra:should-not-parse}", scala.Array[java.lang.String]("*/(id@)", "*/(id)"), scala.Array[java.lang.String]("1", "1"))
@@ -234,6 +240,7 @@ class JsonMatcherTests {
     JsonMatcherTests.test("extra", "{first:{id:1},second:{id:ignored},third:{other:1},extra:should-not-parse}", scala.Array[java.lang.String]("(first,second)@", "*/(other)"), scala.Array[java.lang.String]("{id:1}", "{id:ignored}", "1"))
     JsonMatcherTests.test("extra", "{value:1,nested:{value:2},extra:{value:3}}", scala.Array[java.lang.String]("(value@),*/(value@)"), scala.Array[java.lang.String]("1", "2"))
   }
+  @org.junit.Test
   def rejection(): scala.Unit = {
     {
       val values: com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.JsonValue] = new com.badlogic.gdx.utils.Array().asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.JsonValue]]
@@ -265,6 +272,7 @@ class JsonMatcherTests {
     JsonMatcherTests.rejectAll("{data:{type:[bad],info:important}}", "data/type@/(*)", "data@/(info)", scala.Array[java.lang.String]("important"))
     JsonMatcherTests.rejectAll("{a:{b:{target:{x:1}},c:{target:{x:2,reject:true}}},d:{target:{x:3}}}", "**/(reject@)", "**/(x[])", scala.Array[java.lang.String]("[3]"))
   }
+  @org.junit.Test
   def explicitEnd(): scala.Unit = {
     val matcher: com.badlogic.gdx.utils.JsonMatcher = new com.badlogic.gdx.utils.JsonMatcher()
     matcher.addPattern("*/(type@)", (value: com.badlogic.gdx.utils.JsonValue) => {
@@ -277,6 +285,7 @@ class JsonMatcherTests {
     matcher.parse(JsonMatcherTests.json)
     JsonMatcherTests.assertValueCount(0, values)
   }
+  @org.junit.Test
   def explicitStop(): scala.Unit = {
     val matcher: com.badlogic.gdx.utils.JsonMatcher = new com.badlogic.gdx.utils.JsonMatcher()
     matcher.addPattern("*/(type@)", (value: com.badlogic.gdx.utils.JsonValue) => {
@@ -289,6 +298,7 @@ class JsonMatcherTests {
     matcher.parse(JsonMatcherTests.json)
     JsonMatcherTests.assertValueCount(0, values)
   }
+  @org.junit.Test
   def parseValue(): scala.Unit = {
     var root: com.badlogic.gdx.utils.JsonValue = new com.badlogic.gdx.utils.JsonMatcher().parseValue(JsonMatcherTests.json)
     org.junit.Assert.assertTrue(root.child$field.hasChild("devices"))
@@ -300,6 +310,7 @@ class JsonMatcherTests {
     org.junit.Assert.assertEquals("devices", values.child$field.name$field)
     org.junit.Assert.assertEquals(100, values.child$field.next$field.getInt("percentFull"))
   }
+  @org.junit.Test
   def paths(): scala.Unit = {
     val paths: com.badlogic.gdx.utils.Array[?] = new com.badlogic.gdx.utils.Array().asInstanceOf[com.badlogic.gdx.utils.Array[?]]
     val parents: com.badlogic.gdx.utils.Array[?] = new com.badlogic.gdx.utils.Array().asInstanceOf[com.badlogic.gdx.utils.Array[?]]
@@ -347,6 +358,7 @@ class JsonMatcherTests {
     org.junit.Assert.assertEquals("devices", parents2.get(4).asInstanceOf[java.lang.Object])
     org.junit.Assert.assertEquals("d", parents2.get(5).asInstanceOf[java.lang.Object])
   }
+  @org.junit.Test
   def dataTypes(): scala.Unit = {
     val matcher: com.badlogic.gdx.utils.JsonMatcher = new com.badlogic.gdx.utils.JsonMatcher()
     val values: com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.JsonValue] = new com.badlogic.gdx.utils.Array().asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.JsonValue]]
@@ -364,6 +376,7 @@ class JsonMatcherTests {
     value.get("device_status").asStringArray()
     org.junit.Assert.assertTrue(value.get("object").`type`() == com.badlogic.gdx.utils.JsonValue.ValueType.`object`)
   }
+  @org.junit.Test
   def filtering(): scala.Unit = {
     {
       val matcher: com.badlogic.gdx.utils.JsonMatcher = new com.badlogic.gdx.utils.JsonMatcher()
@@ -437,62 +450,77 @@ class JsonMatcherTests {
       org.junit.Assert.assertEquals("{serial_num:32131444,percentFull:100}, {percentFull:75,serial_num:234234211}, 9834711", JsonMatcherTests.toString(values))
     }
   }
+  @org.junit.Test(expected = classOf[java.lang.IllegalArgumentException])
   def invalidPattern1(): scala.Unit = {
     val matcher: com.badlogic.gdx.utils.JsonMatcher = new com.badlogic.gdx.utils.JsonMatcher()
     matcher.addPattern("path/(to),nowhere,/")
   }
+  @org.junit.Test(expected = classOf[java.lang.IllegalArgumentException])
   def invalidPattern2(): scala.Unit = {
     val matcher: com.badlogic.gdx.utils.JsonMatcher = new com.badlogic.gdx.utils.JsonMatcher()
     matcher.addPattern("(other),path()")
   }
+  @org.junit.Test(expected = classOf[java.lang.IllegalArgumentException])
   def invalidPattern3(): scala.Unit = {
     val matcher: com.badlogic.gdx.utils.JsonMatcher = new com.badlogic.gdx.utils.JsonMatcher()
     matcher.addPattern("(other),path(name")
   }
+  @org.junit.Test(expected = classOf[java.lang.IllegalArgumentException])
   def invalidPattern4(): scala.Unit = {
     val matcher: com.badlogic.gdx.utils.JsonMatcher = new com.badlogic.gdx.utils.JsonMatcher()
     matcher.addPattern("path/name")
   }
+  @org.junit.Test(expected = classOf[java.lang.IllegalArgumentException])
   def invalidPattern5(): scala.Unit = {
     val matcher: com.badlogic.gdx.utils.JsonMatcher = new com.badlogic.gdx.utils.JsonMatcher()
     matcher.addPattern("a//b/c/(value)")
   }
+  @org.junit.Test(expected = classOf[java.lang.IllegalArgumentException])
   def invalidPattern6(): scala.Unit = {
     val matcher: com.badlogic.gdx.utils.JsonMatcher = new com.badlogic.gdx.utils.JsonMatcher()
     matcher.addPattern("a//b/(c)")
   }
+  @org.junit.Test(expected = classOf[java.lang.IllegalArgumentException])
   def invalidPattern7(): scala.Unit = {
     val matcher: com.badlogic.gdx.utils.JsonMatcher = new com.badlogic.gdx.utils.JsonMatcher()
     matcher.addPattern("a/**,b/(c)")
   }
+  @org.junit.Test(expected = classOf[java.lang.IllegalArgumentException])
   def invalidPattern8(): scala.Unit = {
     val matcher: com.badlogic.gdx.utils.JsonMatcher = new com.badlogic.gdx.utils.JsonMatcher()
     matcher.addPattern("a/[]b/(c)")
   }
+  @org.junit.Test(expected = classOf[java.lang.IllegalArgumentException])
   def invalidPattern9(): scala.Unit = {
     val matcher: com.badlogic.gdx.utils.JsonMatcher = new com.badlogic.gdx.utils.JsonMatcher()
     matcher.addPattern("a/@b/(c)")
   }
+  @org.junit.Test(expected = classOf[java.lang.IllegalArgumentException])
   def invalidPattern10(): scala.Unit = {
     val matcher: com.badlogic.gdx.utils.JsonMatcher = new com.badlogic.gdx.utils.JsonMatcher()
     matcher.addPattern("a/@b/(c)")
   }
+  @org.junit.Test(expected = classOf[java.lang.IllegalArgumentException])
   def invalidPattern11(): scala.Unit = {
     val matcher: com.badlogic.gdx.utils.JsonMatcher = new com.badlogic.gdx.utils.JsonMatcher()
     matcher.addPattern("a/(b/c)")
   }
+  @org.junit.Test(expected = classOf[java.lang.IllegalArgumentException])
   def invalidPattern12(): scala.Unit = {
     val matcher: com.badlogic.gdx.utils.JsonMatcher = new com.badlogic.gdx.utils.JsonMatcher()
     matcher.addPattern("/b/(c)")
   }
+  @org.junit.Test(expected = classOf[java.lang.IllegalArgumentException])
   def invalidPattern13(): scala.Unit = {
     val matcher: com.badlogic.gdx.utils.JsonMatcher = new com.badlogic.gdx.utils.JsonMatcher()
     matcher.addPattern("a/,/(b)")
   }
+  @org.junit.Test(expected = classOf[java.lang.IllegalArgumentException])
   def invalidPattern14(): scala.Unit = {
     val matcher: com.badlogic.gdx.utils.JsonMatcher = new com.badlogic.gdx.utils.JsonMatcher()
     matcher.addPattern("a/b[]/(c)")
   }
+  @org.junit.Test(expected = classOf[java.lang.IllegalStateException])
   def invalidPattern15(): scala.Unit = {
     new com.badlogic.gdx.utils.JsonMatcher(scala.Array[java.lang.String]("a/b/(c@)")).parseValue("{}")
   }
@@ -530,12 +558,14 @@ object JsonMatcherTests {
     val values: com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.JsonValue] = new com.badlogic.gdx.utils.Array().asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.JsonValue]]
     val ended: scala.Array[scala.Boolean] = new scala.Array[scala.Boolean](1)
     val matcher: com.badlogic.gdx.utils.JsonMatcher = new com.badlogic.gdx.utils.JsonMatcher() {
+      @java.lang.Override
       override def value(name: com.badlogic.gdx.utils.JsonSkimmer.JsonToken, value: com.badlogic.gdx.utils.JsonSkimmer.JsonToken): scala.Unit = {
         if ((notParsedValue != null) && name.equals(notParsedValue)) {
           org.junit.Assert.fail("Should have ended before parsing value: " + notParsedValue)
         } else ()
         super.value(name, value)
       }
+      @java.lang.Override
       override def `end`(): scala.Unit = {
         super.`end`()
         ended(0) = true

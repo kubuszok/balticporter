@@ -8,6 +8,7 @@ final class LineSpawnShapeValue extends com.badlogic.gdx.graphics.g3d.particles.
     this.spawnDepthValue = new com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue()
     this.load(value)
   }
+  @java.lang.Override
   def spawnAux(vector: com.badlogic.gdx.math.Vector3, percent: scala.Float): scala.Unit = {
     val width: scala.Float = spawnWidth + (spawnWidthDiff * spawnWidthValue.getScale(percent))
     val height: scala.Float = spawnHeight + (spawnHeightDiff * spawnHeightValue.getScale(percent))
@@ -17,6 +18,7 @@ final class LineSpawnShapeValue extends com.badlogic.gdx.graphics.g3d.particles.
     vector.y = a * height
     vector.z = a * depth
   }
+  @java.lang.Override
   def copy(): com.badlogic.gdx.graphics.g3d.particles.values.SpawnShapeValue = {
     return new LineSpawnShapeValue(this)
   }

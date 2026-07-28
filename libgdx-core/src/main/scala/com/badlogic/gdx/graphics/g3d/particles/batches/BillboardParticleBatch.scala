@@ -37,6 +37,7 @@ class BillboardParticleBatch(mode$p: com.badlogic.gdx.graphics.g3d.particles.Par
   this.ensureCapacity(capacity)
   this.setUseGpu(useGPU$p)
   this.setAlignMode(mode$p)
+  @java.lang.Override
   def allocParticlesData(capacity: scala.Int): scala.Unit = {
     this.vertices = new scala.Array[scala.Float]((this.currentVertexSize * 4) * capacity)
     this.allocRenderables(capacity)
@@ -146,6 +147,7 @@ class BillboardParticleBatch(mode$p: com.badlogic.gdx.graphics.g3d.particles.Par
   def getBlendingAttribute(): com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute = {
     return this.blendingAttribute
   }
+  @java.lang.Override
   def begin(): scala.Unit = {
     super.begin()
     this.renderablePool.freeAll(this.renderables)
@@ -304,6 +306,7 @@ class BillboardParticleBatch(mode$p: com.badlogic.gdx.graphics.g3d.particles.Par
       }; p = p + 1; tp = tp + 1 } }
     }
   }
+  @java.lang.Override
   def flush(offsets: scala.Array[scala.Int]): scala.Unit = {
     if (this.useGPU) {
       this.fillVerticesGPU(offsets)
@@ -327,16 +330,19 @@ class BillboardParticleBatch(mode$p: com.badlogic.gdx.graphics.g3d.particles.Par
       this.renderables.add(renderable)
     }; v = v + addedVertexCount } }
   }
+  @java.lang.Override
   def getRenderables(renderables: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.Renderable], pool: com.badlogic.gdx.utils.Pool[com.badlogic.gdx.graphics.g3d.Renderable]): scala.Unit = {
     for (renderable <- this.renderables) {
       renderables.add(pool.obtain().set(renderable))
     }
   }
+  @java.lang.Override
   def save(manager: com.badlogic.gdx.assets.AssetManager, resources: com.badlogic.gdx.graphics.g3d.particles.ResourceData[?]): scala.Unit = {
     val data: com.badlogic.gdx.graphics.g3d.particles.ResourceData.SaveData = resources.createSaveData("billboardBatch")
     data.save("cfg", new com.badlogic.gdx.graphics.g3d.particles.batches.BillboardParticleBatch.Config(this.useGPU, this.mode))
     data.saveAsset(manager.getAssetFileName(this.texture), classOf[com.badlogic.gdx.graphics.Texture])
   }
+  @java.lang.Override
   def load(manager: com.badlogic.gdx.assets.AssetManager, resources: com.badlogic.gdx.graphics.g3d.particles.ResourceData[?]): scala.Unit = {
     val data: com.badlogic.gdx.graphics.g3d.particles.ResourceData.SaveData = resources.getSaveData("billboardBatch")
     if (data != null) {
@@ -347,6 +353,7 @@ class BillboardParticleBatch(mode$p: com.badlogic.gdx.graphics.g3d.particles.Par
     } else ()
   }
   class RenderablePool extends com.badlogic.gdx.utils.Pool[com.badlogic.gdx.graphics.g3d.Renderable] {
+    @java.lang.Override
     def newObject(): com.badlogic.gdx.graphics.g3d.Renderable = {
       return BillboardParticleBatch.this.allocRenderable()
     }

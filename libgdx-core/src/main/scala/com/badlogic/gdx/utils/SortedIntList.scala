@@ -5,6 +5,7 @@ class SortedIntList[E] extends balticporter.runtime.JavaIterable[com.badlogic.gd
   var iterator$field: Iterator = null.asInstanceOf[Iterator]
   var size$field: scala.Int = 0
   var first: com.badlogic.gdx.utils.SortedIntList.Node[E] = null.asInstanceOf[com.badlogic.gdx.utils.SortedIntList.Node[E]]
+  @com.badlogic.gdx.utils.Null
   def insert(index: scala.Int, value: E): E = {
     if (this.first != null) {
       var c: com.badlogic.gdx.utils.SortedIntList.Node[E] = this.first
@@ -77,14 +78,17 @@ class SortedIntList[E] extends balticporter.runtime.JavaIterable[com.badlogic.gd
     private var position: com.badlogic.gdx.utils.SortedIntList.Node[E] = null.asInstanceOf[com.badlogic.gdx.utils.SortedIntList.Node[E]]
     private var previousPosition: com.badlogic.gdx.utils.SortedIntList.Node[E] = null.asInstanceOf[com.badlogic.gdx.utils.SortedIntList.Node[E]]
     this.reset()
+    @java.lang.Override
     def hasNext(): scala.Boolean = {
       return this.position != null
     }
+    @java.lang.Override
     def next(): com.badlogic.gdx.utils.SortedIntList.Node[E] = {
       this.previousPosition = this.position
       this.position = this.position.n
       return this.previousPosition
     }
+    @java.lang.Override
     def remove(): scala.Unit = {
       if (this.previousPosition != null) {
         if (this.previousPosition == SortedIntList.this.first) {
@@ -113,6 +117,7 @@ object SortedIntList {
     var index: scala.Int = 0
   }
   class NodePool[E] extends com.badlogic.gdx.utils.Pool[com.badlogic.gdx.utils.SortedIntList.Node[E]] {
+    @java.lang.Override
     def newObject(): com.badlogic.gdx.utils.SortedIntList.Node[E] = {
       return new com.badlogic.gdx.utils.SortedIntList.Node[E]()
     }

@@ -50,6 +50,7 @@ class AssetManager(resolver$p: com.badlogic.gdx.assets.loaders.FileHandleResolve
   def get[T](fileName: java.lang.String, `type`: java.lang.Class[T]): T = {
     return this.get(fileName, `type`, true).asInstanceOf[T]
   }
+  @com.badlogic.gdx.utils.Null
   def get[T](fileName: java.lang.String, required: scala.Boolean): T = {
     val `type`: java.lang.Class[T] = this.assetTypes.get(fileName).asInstanceOf[java.lang.Class[T]]
     if (`type` != null) {
@@ -66,6 +67,7 @@ class AssetManager(resolver$p: com.badlogic.gdx.assets.loaders.FileHandleResolve
     } else ()
     return null.asInstanceOf[T]
   }
+  @com.badlogic.gdx.utils.Null
   def get[T](fileName: java.lang.String, `type`: java.lang.Class[T], required: scala.Boolean): T = {
     val assetsByType: com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.assets.AssetManager.RefCountedContainer] = this.assets.get(`type`)
     if (assetsByType != null) {
@@ -507,6 +509,7 @@ class AssetManager(resolver$p: com.badlogic.gdx.assets.loaders.FileHandleResolve
   def setErrorListener(listener: com.badlogic.gdx.assets.AssetErrorListener): scala.Unit = {
     this.listener = listener
   }
+  @java.lang.Override
   def dispose(): scala.Unit = {
     this.log.debug("Disposing.")
     this.clear()

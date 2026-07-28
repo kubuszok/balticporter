@@ -39,6 +39,7 @@ class Ray extends java.io.Serializable {
     this.direction.set(ray.direction).nor()
     return this
   }
+  @java.lang.Override
   def equals(o: java.lang.Object): scala.Boolean = {
     if (o == this) {
       return true
@@ -49,6 +50,7 @@ class Ray extends java.io.Serializable {
     val r: Ray = o.asInstanceOf[Ray].asInstanceOf[Ray]
     return this.direction.equals(r.direction) && this.origin.equals(r.origin)
   }
+  @java.lang.Override
   def hashCode(): scala.Int = {
     val prime: scala.Int = 73
     var result: scala.Int = 1

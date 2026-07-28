@@ -27,6 +27,7 @@ class OrthoCachedTiledMapRenderer(map$p: com.badlogic.gdx.maps.tiled.TiledMap, u
   this.map = map$p
   this.unitScale = unitScale$p
   this.spriteCache = new com.badlogic.gdx.graphics.g2d.SpriteCache(cacheSize, true)
+  @java.lang.Override
   def setView(camera: com.badlogic.gdx.graphics.OrthographicCamera): scala.Unit = {
     this.spriteCache.setProjectionMatrix(camera.combined)
     val width: scala.Float = (camera.viewportWidth * camera.zoom) + ((this.maxTileWidth * 2) * this.unitScale)
@@ -36,6 +37,7 @@ class OrthoCachedTiledMapRenderer(map$p: com.badlogic.gdx.maps.tiled.TiledMap, u
       this.cached = false
     } else ()
   }
+  @java.lang.Override
   def setView(projection: com.badlogic.gdx.math.Matrix4, x$arg: scala.Float, y$arg: scala.Float, width$arg: scala.Float, height$arg: scala.Float): scala.Unit = {
     var x: scala.Float = x$arg
     var y: scala.Float = y$arg
@@ -51,6 +53,7 @@ class OrthoCachedTiledMapRenderer(map$p: com.badlogic.gdx.maps.tiled.TiledMap, u
       this.cached = false
     } else ()
   }
+  @java.lang.Override
   def render(): scala.Unit = {
     if (!this.cached) {
       this.cached = true
@@ -92,6 +95,7 @@ class OrthoCachedTiledMapRenderer(map$p: com.badlogic.gdx.maps.tiled.TiledMap, u
       com.badlogic.gdx.Gdx.gl.glDisable(com.badlogic.gdx.graphics.GL20.GL_BLEND)
     } else ()
   }
+  @java.lang.Override
   def render(layers: scala.Array[scala.Int]): scala.Unit = {
     if (!this.cached) {
       this.cached = true
@@ -133,14 +137,17 @@ class OrthoCachedTiledMapRenderer(map$p: com.badlogic.gdx.maps.tiled.TiledMap, u
       com.badlogic.gdx.Gdx.gl.glDisable(com.badlogic.gdx.graphics.GL20.GL_BLEND)
     } else ()
   }
+  @java.lang.Override
   def renderObjects(layer: com.badlogic.gdx.maps.MapLayer): scala.Unit = {
     for (`object` <- layer.getObjects()) {
       this.renderObject(`object`)
     }
   }
+  @java.lang.Override
   def renderObject(`object`: com.badlogic.gdx.maps.MapObject): scala.Unit = {
     ()
   }
+  @java.lang.Override
   def renderTileLayer(layer: com.badlogic.gdx.maps.tiled.TiledMapTileLayer): scala.Unit = {
     val color: scala.Float = com.badlogic.gdx.graphics.Color.toFloatBits(layer.getCombinedTintColor().r, layer.getCombinedTintColor().g, layer.getCombinedTintColor().b, layer.getOpacity() * layer.getCombinedTintColor().a)
     val layerWidth: scala.Int = layer.getWidth()
@@ -266,6 +273,7 @@ class OrthoCachedTiledMapRenderer(map$p: com.badlogic.gdx.maps.tiled.TiledMap, u
       }; col = col + 1 } }
     }; row = row - 1 } }
   }
+  @java.lang.Override
   def renderImageLayer(layer: com.badlogic.gdx.maps.tiled.TiledMapImageLayer): scala.Unit = {
     val combinedTint: com.badlogic.gdx.graphics.Color = layer.getCombinedTintColor()
     val supportsTransparency: scala.Boolean = layer.supportsTransparency()
@@ -379,6 +387,7 @@ class OrthoCachedTiledMapRenderer(map$p: com.badlogic.gdx.maps.tiled.TiledMap, u
   def getSpriteCache(): com.badlogic.gdx.graphics.g2d.SpriteCache = {
     return this.spriteCache
   }
+  @java.lang.Override
   def dispose(): scala.Unit = {
     this.spriteCache.dispose()
   }

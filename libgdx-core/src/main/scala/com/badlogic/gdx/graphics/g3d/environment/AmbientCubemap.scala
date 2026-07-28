@@ -105,6 +105,7 @@ class AmbientCubemap {
     val t: scala.Float = intensity / (1.0f + target.dst(point))
     return this.add(color.r * t, color.g * t, color.b * t, target.x - point.x, target.y - point.y, target.z - point.z)
   }
+  @java.lang.Override
   def toString(): java.lang.String = {
     var result: java.lang.String = "";
     { var i: scala.Int = 0; while (i < this.data.length) { {

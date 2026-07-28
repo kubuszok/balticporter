@@ -1,6 +1,7 @@
 package com.badlogic.gdx.math
 
 class Shape2DTest {
+  @org.junit.Test
   def testCircle(): scala.Unit = {
     val c1: com.badlogic.gdx.math.Circle = new com.badlogic.gdx.math.Circle(0, 0, 1)
     val c2: com.badlogic.gdx.math.Circle = new com.badlogic.gdx.math.Circle(0, 0, 1)
@@ -17,6 +18,7 @@ class Shape2DTest {
     org.junit.Assert.assertFalse(c1.contains(c4))
     org.junit.Assert.assertTrue(c4.contains(c1))
   }
+  @org.junit.Test
   def testRectangle(): scala.Unit = {
     val r1: com.badlogic.gdx.math.Rectangle = new com.badlogic.gdx.math.Rectangle(0, 0, 1, 1)
     val r2: com.badlogic.gdx.math.Rectangle = new com.badlogic.gdx.math.Rectangle(1, 0, 2, 1)

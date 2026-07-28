@@ -12,6 +12,7 @@ class DepthShaderProvider(config$p: com.badlogic.gdx.graphics.g3d.shaders.DepthS
     this(null)
   }
   this.config = if (config$p == null) new com.badlogic.gdx.graphics.g3d.shaders.DepthShader.Config() else config$p
+  @java.lang.Override
   def createShader(renderable: com.badlogic.gdx.graphics.g3d.Renderable): com.badlogic.gdx.graphics.g3d.Shader = {
     return new com.badlogic.gdx.graphics.g3d.shaders.DepthShader(renderable, this.config)
   }

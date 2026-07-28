@@ -74,6 +74,7 @@ abstract class TemporalAction extends com.badlogic.gdx.scenes.scene2d.Action wit
   def setDuration(duration: scala.Float): scala.Unit = {
     this.duration = duration
   }
+  @com.badlogic.gdx.utils.Null
   def getInterpolation(): com.badlogic.gdx.math.Interpolation = {
     return this.interpolation
   }

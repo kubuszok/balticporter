@@ -57,6 +57,7 @@ class ObjectMap[K, V] extends balticporter.runtime.JavaIterable[com.badlogic.gdx
     }
     throw new java.lang.RuntimeException("unreachable")
   }
+  @com.badlogic.gdx.utils.Null
   def put(key: K, value: V): V = {
     var i: scala.Int = this.locateKey(key)
     if (i >= 0) {
@@ -94,6 +95,7 @@ class ObjectMap[K, V] extends balticporter.runtime.JavaIterable[com.badlogic.gdx
       } else ()
     }; i = (i + 1) & this.mask } }
   }
+  @com.badlogic.gdx.utils.Null
   def get[T <: K](key: T): V = {
     val i: scala.Int = this.locateKey(key)
     return if (i < 0) null.asInstanceOf[V] else this.valueTable(i)
@@ -102,6 +104,7 @@ class ObjectMap[K, V] extends balticporter.runtime.JavaIterable[com.badlogic.gdx
     val i: scala.Int = this.locateKey(key)
     return if (i < 0) defaultValue else this.valueTable(i)
   }
+  @com.badlogic.gdx.utils.Null
   def remove(key$arg: K): V = {
     var key: K = key$arg
     var i: scala.Int = this.locateKey(key)
@@ -191,6 +194,7 @@ class ObjectMap[K, V] extends balticporter.runtime.JavaIterable[com.badlogic.gdx
   def containsKey(key: K): scala.Boolean = {
     return this.locateKey(key) >= 0
   }
+  @com.badlogic.gdx.utils.Null
   def findKey(value: java.lang.Object, identity: scala.Boolean): K = {
     val valueTable: scala.Array[V] = this.valueTable
     if (value == null) {
@@ -509,6 +513,7 @@ object ObjectMap {
       } else ()
       return hasNext$field
     }
+    @com.badlogic.gdx.utils.Null
     def next(): V = {
       if (!hasNext$field) {
         throw new java.util.NoSuchElementException()

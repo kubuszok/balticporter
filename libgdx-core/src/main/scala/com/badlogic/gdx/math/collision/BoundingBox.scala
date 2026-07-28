@@ -167,6 +167,7 @@ class BoundingBox extends java.io.Serializable {
   def contains(v: com.badlogic.gdx.math.Vector3): scala.Boolean = {
     return (((((this.min$field.x <= v.x) && (this.max$field.x >= v.x)) && (this.min$field.y <= v.y)) && (this.max$field.y >= v.y)) && (this.min$field.z <= v.z)) && (this.max$field.z >= v.z)
   }
+  @java.lang.Override
   def toString(): java.lang.String = {
     return ((("[" + this.min$field) + "|") + this.max$field) + "]"
   }

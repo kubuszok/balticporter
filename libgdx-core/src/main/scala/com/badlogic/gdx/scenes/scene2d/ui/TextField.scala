@@ -225,6 +225,7 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
       this.selectionWidth = (maxX - minX) - this.style.font.getData().cursorX
     } else ()
   }
+  @com.badlogic.gdx.utils.Null
   def getBackgroundDrawable(): com.badlogic.gdx.scenes.scene2d.utils.Drawable = {
     if (this.disabled && (this.style.disabledBackground != null)) {
       return this.style.disabledBackground
@@ -483,6 +484,7 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
     }
     throw new java.lang.RuntimeException("unreachable")
   }
+  @com.badlogic.gdx.utils.Null
   private def findNextTextField(actors: com.badlogic.gdx.utils.Array[com.badlogic.gdx.scenes.scene2d.Actor], best$arg: TextField, bestCoords: com.badlogic.gdx.math.Vector2, currentCoords: com.badlogic.gdx.math.Vector2, up: scala.Boolean): TextField = {
     var best: TextField = best$arg;
     { var i: scala.Int = 0; val n: scala.Int = actors.size; while (i < n) { {
@@ -526,6 +528,7 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
   def setTextFieldFilter(filter: com.badlogic.gdx.scenes.scene2d.ui.TextField.TextFieldFilter): scala.Unit = {
     this.filter = filter
   }
+  @com.badlogic.gdx.utils.Null
   def getTextFieldFilter(): com.badlogic.gdx.scenes.scene2d.ui.TextField.TextFieldFilter = {
     return this.filter
   }
@@ -535,6 +538,7 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
   def getFocusTraversal(): scala.Boolean = {
     return this.focusTraversal
   }
+  @com.badlogic.gdx.utils.Null
   def getMessageText(): java.lang.String = {
     return this.messageText
   }
@@ -1073,15 +1077,19 @@ object TextField {
         return false
       })
       configuration.setTextInputWrapper(new com.badlogic.gdx.input.TextInputWrapper() {
+        @java.lang.Override
         override def getText(): java.lang.String = {
           return textField.getText()
         }
+        @java.lang.Override
         override def getSelectionStart(): scala.Int = {
           return textField.getSelectionStart()
         }
+        @java.lang.Override
         override def getSelectionEnd(): scala.Int = {
           return textField.getCursorPosition()
         }
+        @java.lang.Override
         override def writeResults(text$arg: java.lang.String, selectionStart$arg: scala.Int, selectionEnd$arg: scala.Int): scala.Unit = {
           var text: java.lang.String = text$arg
           var selectionStart: scala.Int = selectionStart$arg

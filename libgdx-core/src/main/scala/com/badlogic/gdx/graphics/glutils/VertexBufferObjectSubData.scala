@@ -29,19 +29,25 @@ class VertexBufferObjectSubData(isStatic$p: scala.Boolean, numVertices: scala.In
     com.badlogic.gdx.Gdx.gl20.glBindBuffer(com.badlogic.gdx.graphics.GL20.GL_ARRAY_BUFFER, 0)
     return result
   }
+  @java.lang.Override
   def getAttributes(): com.badlogic.gdx.graphics.VertexAttributes = {
     return this.attributes
   }
+  @java.lang.Override
   def getNumVertices(): scala.Int = {
     return (this.buffer.limit() * 4) / this.attributes.vertexSize
   }
+  @java.lang.Override
   def getNumMaxVertices(): scala.Int = {
     return this.byteBuffer.capacity() / this.attributes.vertexSize
   }
+  @java.lang.Override
+  @java.lang.Deprecated
   def getBuffer(): java.nio.FloatBuffer = {
     this.isDirty = true
     return this.buffer
   }
+  @java.lang.Override
   def getBuffer(forWriting: scala.Boolean): java.nio.FloatBuffer = {
     this.isDirty = this.isDirty | forWriting
     return this.buffer
@@ -52,6 +58,7 @@ class VertexBufferObjectSubData(isStatic$p: scala.Boolean, numVertices: scala.In
       this.isDirty = false
     } else ()
   }
+  @java.lang.Override
   def setVertices(vertices: scala.Array[scala.Float], offset: scala.Int, count: scala.Int): scala.Unit = {
     this.isDirty = true
     if (this.isDirect) {
@@ -67,6 +74,7 @@ class VertexBufferObjectSubData(isStatic$p: scala.Boolean, numVertices: scala.In
     }
     this.bufferChanged()
   }
+  @java.lang.Override
   def updateVertices(targetOffset: scala.Int, vertices: scala.Array[scala.Float], sourceOffset: scala.Int, count: scala.Int): scala.Unit = {
     this.isDirty = true
     if (this.isDirect) {
@@ -79,9 +87,11 @@ class VertexBufferObjectSubData(isStatic$p: scala.Boolean, numVertices: scala.In
     }
     this.bufferChanged()
   }
+  @java.lang.Override
   def bind(shader: com.badlogic.gdx.graphics.glutils.ShaderProgram): scala.Unit = {
     this.bind(shader, null)
   }
+  @java.lang.Override
   def bind(shader: com.badlogic.gdx.graphics.glutils.ShaderProgram, locations: scala.Array[scala.Int]): scala.Unit = {
     val gl: com.badlogic.gdx.graphics.GL20 = com.badlogic.gdx.Gdx.gl20
     gl.glBindBuffer(com.badlogic.gdx.graphics.GL20.GL_ARRAY_BUFFER, this.bufferHandle)
@@ -114,9 +124,11 @@ class VertexBufferObjectSubData(isStatic$p: scala.Boolean, numVertices: scala.In
     }
     this.isBound = true
   }
+  @java.lang.Override
   def unbind(shader: com.badlogic.gdx.graphics.glutils.ShaderProgram): scala.Unit = {
     this.unbind(shader, null)
   }
+  @java.lang.Override
   def unbind(shader: com.badlogic.gdx.graphics.glutils.ShaderProgram, locations: scala.Array[scala.Int]): scala.Unit = {
     val gl: com.badlogic.gdx.graphics.GL20 = com.badlogic.gdx.Gdx.gl20
     val numAttributes: scala.Int = this.attributes.size()
@@ -139,6 +151,7 @@ class VertexBufferObjectSubData(isStatic$p: scala.Boolean, numVertices: scala.In
     this.bufferHandle = this.createBufferObject()
     this.isDirty = true
   }
+  @java.lang.Override
   def dispose(): scala.Unit = {
     val gl: com.badlogic.gdx.graphics.GL20 = com.badlogic.gdx.Gdx.gl20
     gl.glBindBuffer(com.badlogic.gdx.graphics.GL20.GL_ARRAY_BUFFER, 0)

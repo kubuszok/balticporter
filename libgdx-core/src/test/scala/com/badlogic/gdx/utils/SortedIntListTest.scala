@@ -1,6 +1,7 @@
 package com.badlogic.gdx.utils
 
 class SortedIntListTest {
+  @org.junit.Test
   def testIteratorWithAllocation(): scala.Unit = {
     com.badlogic.gdx.utils.Collections.allocateIterators = true
     try {

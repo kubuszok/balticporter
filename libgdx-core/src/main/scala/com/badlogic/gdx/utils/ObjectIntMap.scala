@@ -197,6 +197,7 @@ class ObjectIntMap[K](initialCapacity: scala.Int, loadFactor$p: scala.Float) ext
   def containsKey(key: K): scala.Boolean = {
     return this.locateKey(key) >= 0
   }
+  @com.badlogic.gdx.utils.Null
   def findKey(value: scala.Int): K = {
     val keyTable: scala.Array[K] = this.keyTable
     val valueTable: scala.Array[scala.Int] = this.valueTable;

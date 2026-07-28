@@ -9,6 +9,7 @@ class DefaultPool[T](supplier: com.badlogic.gdx.utils.DefaultPool.PoolSupplier[T
     this(supplier, initialCapacity, java.lang.Integer.MAX_VALUE)
   }
   this.poolTypeSupplier = supplier
+  @java.lang.Override
   def newObject(): T = {
     return this.poolTypeSupplier.get().asInstanceOf[T]
   }

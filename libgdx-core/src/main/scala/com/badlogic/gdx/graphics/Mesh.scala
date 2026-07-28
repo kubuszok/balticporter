@@ -340,6 +340,7 @@ class Mesh extends com.badlogic.gdx.utils.Disposable {
   def getInstancedAttributes(): com.badlogic.gdx.graphics.VertexAttributes = {
     return if (this.instances != null) this.instances.getAttributes() else null.asInstanceOf[com.badlogic.gdx.graphics.VertexAttributes]
   }
+  @java.lang.Deprecated
   def getVerticesBuffer(): java.nio.FloatBuffer = {
     return this.vertices.getBuffer(true)
   }
@@ -545,6 +546,7 @@ class Mesh extends com.badlogic.gdx.utils.Disposable {
   def calculateRadius(center: com.badlogic.gdx.math.Vector3): scala.Float = {
     return this.calculateRadius(center.x, center.y, center.z, 0, this.getNumIndices(), null)
   }
+  @java.lang.Deprecated
   def getIndicesBuffer(): java.nio.ShortBuffer = {
     return this.indices.getBuffer(true)
   }

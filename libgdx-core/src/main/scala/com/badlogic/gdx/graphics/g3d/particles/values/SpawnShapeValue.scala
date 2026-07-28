@@ -30,6 +30,7 @@ abstract class SpawnShapeValue extends com.badlogic.gdx.graphics.g3d.particles.v
   def start(): scala.Unit = {
     ()
   }
+  @java.lang.Override
   def load(value: com.badlogic.gdx.graphics.g3d.particles.values.ParticleValue): scala.Unit = {
     super.load(value)
     val shape: SpawnShapeValue = value.asInstanceOf[SpawnShapeValue]
@@ -38,21 +39,25 @@ abstract class SpawnShapeValue extends com.badlogic.gdx.graphics.g3d.particles.v
     this.zOffsetValue.load(shape.zOffsetValue)
   }
   def copy(): SpawnShapeValue
+  @java.lang.Override
   def write(json: com.badlogic.gdx.utils.Json): scala.Unit = {
     super.write(json)
     json.writeValue("xOffsetValue", this.xOffsetValue)
     json.writeValue("yOffsetValue", this.yOffsetValue)
     json.writeValue("zOffsetValue", this.zOffsetValue)
   }
+  @java.lang.Override
   def read(json: com.badlogic.gdx.utils.Json, jsonData: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
     super.read(json, jsonData)
     this.xOffsetValue = json.readValue("xOffsetValue", classOf[com.badlogic.gdx.graphics.g3d.particles.values.RangedNumericValue], jsonData)
     this.yOffsetValue = json.readValue("yOffsetValue", classOf[com.badlogic.gdx.graphics.g3d.particles.values.RangedNumericValue], jsonData)
     this.zOffsetValue = json.readValue("zOffsetValue", classOf[com.badlogic.gdx.graphics.g3d.particles.values.RangedNumericValue], jsonData)
   }
+  @java.lang.Override
   def save(manager: com.badlogic.gdx.assets.AssetManager, data: com.badlogic.gdx.graphics.g3d.particles.ResourceData[?]): scala.Unit = {
     ()
   }
+  @java.lang.Override
   def load(manager: com.badlogic.gdx.assets.AssetManager, data: com.badlogic.gdx.graphics.g3d.particles.ResourceData[?]): scala.Unit = {
     ()
   }

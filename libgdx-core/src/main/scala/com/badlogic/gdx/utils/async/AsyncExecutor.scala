@@ -6,6 +6,7 @@ class AsyncExecutor(maxConcurrent: scala.Int, name: java.lang.String) extends co
     this(maxConcurrent, "AsyncExecutor-Thread")
   }
   this.executor = java.util.concurrent.Executors.newFixedThreadPool(maxConcurrent, new java.util.concurrent.ThreadFactory() {
+    @java.lang.Override
     override def newThread(r: java.lang.Runnable): java.lang.Thread = {
       val thread: java.lang.Thread = new java.lang.Thread(r, name)
       thread.setDaemon(true)
@@ -17,11 +18,13 @@ class AsyncExecutor(maxConcurrent: scala.Int, name: java.lang.String) extends co
       throw new com.badlogic.gdx.utils.GdxRuntimeException("Cannot run tasks on an executor that has been shutdown (disposed)")
     } else ()
     return new com.badlogic.gdx.utils.async.AsyncResult[T](this.executor.submit(new java.util.concurrent.Callable[T]() {
+      @java.lang.Override
       override def call(): T = {
         return task.call().asInstanceOf[T]
       }
     })).asInstanceOf[com.badlogic.gdx.utils.async.AsyncResult[T]]
   }
+  @java.lang.Override
   def dispose(): scala.Unit = {
     this.executor.shutdown()
     try {

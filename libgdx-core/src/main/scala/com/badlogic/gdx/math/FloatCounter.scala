@@ -31,6 +31,7 @@ class FloatCounter(windowSize: scala.Int) extends com.badlogic.gdx.utils.Pool.Po
       } else ()
     } else ()
   }
+  @java.lang.Override
   def reset(): scala.Unit = {
     this.count = 0
     this.total = 0.0f
@@ -43,6 +44,7 @@ class FloatCounter(windowSize: scala.Int) extends com.badlogic.gdx.utils.Pool.Po
       this.mean.clear()
     } else ()
   }
+  @java.lang.Override
   def toString(): java.lang.String = {
     return (((((((((((((("FloatCounter{" + "count=") + this.count) + ", total=") + this.total) + ", min=") + this.min) + ", max=") + this.max) + ", average=") + this.average) + ", latest=") + this.latest) + ", value=") + this.value) + '}'
   }

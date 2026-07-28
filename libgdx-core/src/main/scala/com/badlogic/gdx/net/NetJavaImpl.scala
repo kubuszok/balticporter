@@ -11,6 +11,7 @@ class NetJavaImpl(maxThreads: scala.Int) {
   }
   this.executorService = new java.util.concurrent.ThreadPoolExecutor(if (isCachedPool) 0 else maxThreads, maxThreads, 60L, java.util.concurrent.TimeUnit.SECONDS, if (isCachedPool) new java.util.concurrent.SynchronousQueue[java.lang.Runnable]() else new java.util.concurrent.LinkedBlockingQueue[java.lang.Runnable](), new java.util.concurrent.ThreadFactory() {
     var threadID: java.util.concurrent.atomic.AtomicInteger = new java.util.concurrent.atomic.AtomicInteger()
+    @java.lang.Override
     override def newThread(r: java.lang.Runnable): java.lang.Thread = {
       val thread: java.lang.Thread = new java.lang.Thread(r, "NetThread" + threadID.getAndIncrement())
       thread.setDaemon(true)
@@ -53,6 +54,7 @@ class NetJavaImpl(maxThreads: scala.Int) {
       connection.setConnectTimeout(httpRequest.getTimeOut())
       connection.setReadTimeout(httpRequest.getTimeOut())
       this.tasks.put(httpRequest, this.executorService.submit(new java.lang.Runnable() {
+        @java.lang.Override
         override def run(): scala.Unit = {
           try {
             if (doingOutPut) {
@@ -153,6 +155,7 @@ object NetJavaImpl {
         this.status = new com.badlogic.gdx.net.HttpStatus(-1)
       }
     }
+    @java.lang.Override
     def getResult(): scala.Array[scala.Byte] = {
       val input: java.io.InputStream = this.getInputStream()
       if (input == null) {
@@ -168,6 +171,7 @@ object NetJavaImpl {
         com.badlogic.gdx.utils.StreamUtils.closeQuietly(input)
       }
     }
+    @java.lang.Override
     def getResultAsString(): java.lang.String = {
       val input: java.io.InputStream = this.getInputStream()
       if (input == null) {
@@ -183,15 +187,19 @@ object NetJavaImpl {
         com.badlogic.gdx.utils.StreamUtils.closeQuietly(input)
       }
     }
+    @java.lang.Override
     def getResultAsStream(): java.io.InputStream = {
       return this.getInputStream()
     }
+    @java.lang.Override
     def getStatus(): com.badlogic.gdx.net.HttpStatus = {
       return this.status
     }
+    @java.lang.Override
     def getHeader(name: java.lang.String): java.lang.String = {
       return this.connection.getHeaderField(name)
     }
+    @java.lang.Override
     def getHeaders(): scala.collection.mutable.Map[java.lang.String, scala.collection.mutable.Buffer[java.lang.String]] = {
       return this.connection.getHeaderFields()
     }

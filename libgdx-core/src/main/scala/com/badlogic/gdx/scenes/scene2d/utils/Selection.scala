@@ -51,6 +51,7 @@ class Selection[T] extends com.badlogic.gdx.scenes.scene2d.utils.Disableable wit
       this.cleanup()
     }
   }
+  @java.lang.Deprecated
   def hasItems(): scala.Boolean = {
     return this.selected.size > 0
   }
@@ -66,6 +67,7 @@ class Selection[T] extends com.badlogic.gdx.scenes.scene2d.utils.Disableable wit
   def items(): com.badlogic.gdx.utils.OrderedSet[T] = {
     return this.selected
   }
+  @com.badlogic.gdx.utils.Null
   def first(): T = {
     return if (this.selected.size == 0) null.asInstanceOf[T] else this.selected.first()
   }
@@ -231,6 +233,7 @@ class Selection[T] extends com.badlogic.gdx.scenes.scene2d.utils.Disableable wit
     } else ()
     return this.selected.contains(item)
   }
+  @com.badlogic.gdx.utils.Null
   def getLastSelected(): T = {
     if (this.lastSelected != null) {
       return this.lastSelected

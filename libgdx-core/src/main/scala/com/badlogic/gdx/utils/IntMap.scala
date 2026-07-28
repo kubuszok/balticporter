@@ -58,6 +58,7 @@ class IntMap[V](initialCapacity: scala.Int, loadFactor$p: scala.Float) extends b
     }
     throw new java.lang.RuntimeException("unreachable")
   }
+  @com.badlogic.gdx.utils.Null
   def put(key: scala.Int, value: V): V = {
     if (key == 0) {
       val oldValue: V = this.zeroValue
@@ -120,6 +121,7 @@ class IntMap[V](initialCapacity: scala.Int, loadFactor$p: scala.Float) extends b
     val i: scala.Int = this.locateKey(key)
     return if (i >= 0) this.valueTable(i) else defaultValue
   }
+  @com.badlogic.gdx.utils.Null
   def remove(key$arg: scala.Int): V = {
     var key: scala.Int = key$arg
     if (key == 0) {
@@ -599,6 +601,7 @@ object IntMap {
       } else ()
       return hasNext$field
     }
+    @com.badlogic.gdx.utils.Null
     def next(): V = {
       if (!hasNext$field) {
         throw new java.util.NoSuchElementException()

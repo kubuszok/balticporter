@@ -163,6 +163,7 @@ class SelectBox[T](style$p: com.badlogic.gdx.scenes.scene2d.ui.SelectBox.SelectB
     }
     layoutPool.free(layout)
   }
+  @com.badlogic.gdx.utils.Null
   def getBackgroundDrawable(): com.badlogic.gdx.scenes.scene2d.utils.Drawable = {
     if (this.isDisabled() && (this.style.backgroundDisabled != null)) {
       return this.style.backgroundDisabled
@@ -222,6 +223,7 @@ class SelectBox[T](style$p: com.badlogic.gdx.scenes.scene2d.ui.SelectBox.SelectB
   def getSelection(): com.badlogic.gdx.scenes.scene2d.utils.ArraySelection[T] = {
     return this.selection
   }
+  @com.badlogic.gdx.utils.Null
   def getSelected(): T = {
     return this.selection.first().asInstanceOf[T]
   }
@@ -284,6 +286,7 @@ class SelectBox[T](style$p: com.badlogic.gdx.scenes.scene2d.ui.SelectBox.SelectB
   def toString(item: T): java.lang.String = {
     return item.toString()
   }
+  @java.lang.Deprecated
   def showList(): scala.Unit = {
     this.showScrollPane()
   }
@@ -295,6 +298,7 @@ class SelectBox[T](style$p: com.badlogic.gdx.scenes.scene2d.ui.SelectBox.SelectB
       this.scrollPane.show(this.getStage())
     } else ()
   }
+  @java.lang.Deprecated
   def hideList(): scala.Unit = {
     this.hideScrollPane()
   }

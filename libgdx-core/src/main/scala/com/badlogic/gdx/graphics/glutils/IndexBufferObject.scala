@@ -71,6 +71,7 @@ class IndexBufferObject extends com.badlogic.gdx.graphics.glutils.IndexData {
       this.isDirty = false
     } else ()
   }
+  @java.lang.Override
   def updateIndices(targetOffset: scala.Int, indices: scala.Array[scala.Short], offset: scala.Int, count: scala.Int): scala.Unit = {
     this.isDirty = true
     val pos: scala.Int = this.byteBuffer.position()
@@ -83,10 +84,13 @@ class IndexBufferObject extends com.badlogic.gdx.graphics.glutils.IndexData {
       this.isDirty = false
     } else ()
   }
+  @java.lang.Override
+  @java.lang.Deprecated
   def getBuffer(): java.nio.ShortBuffer = {
     this.isDirty = true
     return this.buffer
   }
+  @java.lang.Override
   def getBuffer(forWriting: scala.Boolean): java.nio.ShortBuffer = {
     this.isDirty = this.isDirty | forWriting
     return this.buffer

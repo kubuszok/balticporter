@@ -29,6 +29,7 @@ class Tooltip[T <: com.badlogic.gdx.scenes.scene2d.Actor](contents: T, manager$p
   def setActor(contents: T): scala.Unit = {
     this.container.setActor(contents)
   }
+  @com.badlogic.gdx.utils.Null
   def getActor(): T = {
     return this.container.getActor()
   }

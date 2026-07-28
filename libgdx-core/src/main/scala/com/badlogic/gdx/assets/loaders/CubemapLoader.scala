@@ -2,6 +2,7 @@ package com.badlogic.gdx.assets.loaders
 
 class CubemapLoader(resolver$p: com.badlogic.gdx.assets.loaders.FileHandleResolver) extends com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader[com.badlogic.gdx.graphics.Cubemap, com.badlogic.gdx.assets.loaders.CubemapLoader.CubemapParameter](resolver$p) {
   var info: com.badlogic.gdx.assets.loaders.CubemapLoader.CubemapLoaderInfo = new com.badlogic.gdx.assets.loaders.CubemapLoader.CubemapLoaderInfo()
+  @java.lang.Override
   def loadAsync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.assets.loaders.CubemapLoader.CubemapParameter): scala.Unit = {
     this.info.filename = fileName
     if ((parameter == null) || (parameter.cubemapData == null)) {
@@ -23,6 +24,7 @@ class CubemapLoader(resolver$p: com.badlogic.gdx.assets.loaders.FileHandleResolv
       this.info.data.prepare()
     } else ()
   }
+  @java.lang.Override
   def loadSync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.assets.loaders.CubemapLoader.CubemapParameter): com.badlogic.gdx.graphics.Cubemap = {
     if (this.info == null) {
       return null
@@ -39,6 +41,7 @@ class CubemapLoader(resolver$p: com.badlogic.gdx.assets.loaders.FileHandleResolv
     } else ()
     return cubemap
   }
+  @java.lang.Override
   def getDependencies(fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.assets.loaders.CubemapLoader.CubemapParameter): com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = {
     return null
   }

@@ -12,6 +12,7 @@ abstract class Attribute extends java.lang.Comparable[Attribute] {
   def equals(other: Attribute): scala.Boolean = {
     return other.hashCode() == this.hashCode()
   }
+  @java.lang.Override
   def equals(obj: java.lang.Object): scala.Boolean = {
     if (obj == null) {
       return false
@@ -28,9 +29,11 @@ abstract class Attribute extends java.lang.Comparable[Attribute] {
     } else ()
     return this.equals(other)
   }
+  @java.lang.Override
   def toString(): java.lang.String = {
     return Attribute.getAttributeAlias(this.`type`)
   }
+  @java.lang.Override
   def hashCode(): scala.Int = {
     return 7489 * this.typeBit
   }

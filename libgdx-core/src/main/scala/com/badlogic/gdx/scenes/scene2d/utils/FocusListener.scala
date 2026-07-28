@@ -44,6 +44,7 @@ object FocusListener {
     def setType(focusType: com.badlogic.gdx.scenes.scene2d.utils.FocusListener.FocusEvent.Type): scala.Unit = {
       this.`type` = focusType
     }
+    @com.badlogic.gdx.utils.Null
     def getRelatedActor(): com.badlogic.gdx.scenes.scene2d.Actor = {
       return this.relatedActor
     }

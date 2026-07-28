@@ -41,6 +41,7 @@ class DirectionalLight extends com.badlogic.gdx.graphics.g3d.environment.BaseLig
     this.direction.set(dirX, dirY, dirZ).nor()
     return this
   }
+  @java.lang.Override
   def equals(arg0: java.lang.Object): scala.Boolean = {
     return arg0.isInstanceOf[DirectionalLight] && this.equals(arg0.asInstanceOf[DirectionalLight].asInstanceOf[DirectionalLight])
   }

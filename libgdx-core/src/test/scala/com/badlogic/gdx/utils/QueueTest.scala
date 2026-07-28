@@ -1,6 +1,7 @@
 package com.badlogic.gdx.utils
 
 class QueueTest {
+  @org.junit.Test
   def addFirstAndLastTest(): scala.Unit = {
     val queue: com.badlogic.gdx.utils.Queue[java.lang.Integer] = new com.badlogic.gdx.utils.Queue[java.lang.Integer]()
     queue.addFirst(1.asInstanceOf[java.lang.Integer])
@@ -12,6 +13,7 @@ class QueueTest {
     org.junit.Assert.assertEquals(2, queue.indexOf(2.asInstanceOf[java.lang.Integer], true))
     org.junit.Assert.assertEquals(3, queue.indexOf(4.asInstanceOf[java.lang.Integer], true))
   }
+  @org.junit.Test
   def removeLastTest(): scala.Unit = {
     val queue: com.badlogic.gdx.utils.Queue[java.lang.Integer] = new com.badlogic.gdx.utils.Queue[java.lang.Integer]()
     queue.addLast(1.asInstanceOf[java.lang.Integer])
@@ -32,6 +34,7 @@ class QueueTest {
     org.junit.Assert.assertEquals(1.asInstanceOf[java.lang.Integer], queue.removeLast().asInstanceOf[java.lang.Object])
     org.junit.Assert.assertEquals(0, queue.size)
   }
+  @org.junit.Test
   def removeFirstTest(): scala.Unit = {
     val queue: com.badlogic.gdx.utils.Queue[java.lang.Integer] = new com.badlogic.gdx.utils.Queue[java.lang.Integer]()
     queue.addLast(1.asInstanceOf[java.lang.Integer])
@@ -52,6 +55,7 @@ class QueueTest {
     org.junit.Assert.assertEquals(4.asInstanceOf[java.lang.Integer], queue.removeFirst().asInstanceOf[java.lang.Object])
     org.junit.Assert.assertEquals(0, queue.size)
   }
+  @org.junit.Test
   def resizableQueueTest(): scala.Unit = {
     val q: com.badlogic.gdx.utils.Queue[java.lang.Integer] = new com.badlogic.gdx.utils.Queue[java.lang.Integer](8)
     org.junit.Assert.assertTrue("New queue is not empty!", q.size == 0);
@@ -87,6 +91,7 @@ class QueueTest {
     q.clear()
     org.junit.Assert.assertTrue("Clear did not clear properly", q.size == 0)
   }
+  @org.junit.Test
   def resizableDequeTest(): scala.Unit = {
     val q: com.badlogic.gdx.utils.Queue[java.lang.Integer] = new com.badlogic.gdx.utils.Queue[java.lang.Integer](8)
     org.junit.Assert.assertTrue("New deque is not empty!", q.size == 0);
@@ -122,6 +127,7 @@ class QueueTest {
     q.clear()
     org.junit.Assert.assertTrue("Clear did not clear properly", q.size == 0)
   }
+  @org.junit.Test
   def getTest(): scala.Unit = {
     val q: com.badlogic.gdx.utils.Queue[java.lang.Integer] = new com.badlogic.gdx.utils.Queue[java.lang.Integer](7);
     { var i: scala.Int = 0; while (i < 5) { {
@@ -149,6 +155,7 @@ class QueueTest {
       }
     }; i = i + 1 } }
   }
+  @org.junit.Test
   def removeTest(): scala.Unit = {
     val q: com.badlogic.gdx.utils.Queue[java.lang.Integer] = new com.badlogic.gdx.utils.Queue[java.lang.Integer]();
     { var j: scala.Int = 0; while (j <= 6) { {
@@ -188,6 +195,7 @@ class QueueTest {
     q.removeIndex(5)
     this.assertValues(q, scala.Array[java.lang.Integer](0.asInstanceOf[java.lang.Integer], 1.asInstanceOf[java.lang.Integer], 2.asInstanceOf[java.lang.Integer], 3.asInstanceOf[java.lang.Integer], 4.asInstanceOf[java.lang.Integer]))
   }
+  @org.junit.Test
   def indexOfTest(): scala.Unit = {
     val q: com.badlogic.gdx.utils.Queue[java.lang.Integer] = new com.badlogic.gdx.utils.Queue[java.lang.Integer]();
     { var j: scala.Int = 0; while (j <= 6) { {
@@ -207,6 +215,7 @@ class QueueTest {
       org.junit.Assert.assertEquals(q.indexOf(j.asInstanceOf[java.lang.Integer], false), j)
     }; j = j + 1 } }
   }
+  @org.junit.Test
   def iteratorTest(): scala.Unit = {
     val q: com.badlogic.gdx.utils.Queue[java.lang.Integer] = new com.badlogic.gdx.utils.Queue[java.lang.Integer]();
     { var j: scala.Int = 0; while (j <= 6) { {
@@ -260,6 +269,7 @@ class QueueTest {
     iter.remove()
     this.assertValues(q, scala.Array[java.lang.Integer](2.asInstanceOf[java.lang.Integer], 4.asInstanceOf[java.lang.Integer], 5.asInstanceOf[java.lang.Integer]))
   }
+  @org.junit.Test
   def iteratorRemoveEdgeCaseTest(): scala.Unit = {
     val queue: com.badlogic.gdx.utils.Queue[java.lang.Integer] = new com.badlogic.gdx.utils.Queue[java.lang.Integer]();
     { var i: scala.Int = 0; while (i < 100) { {
@@ -277,6 +287,7 @@ class QueueTest {
     var i: java.lang.Integer = queue.first()
     org.junit.Assert.assertEquals(1337, i.asInstanceOf[scala.Int].longValue())
   }
+  @org.junit.Test
   def toStringTest(): scala.Unit = {
     val q: com.badlogic.gdx.utils.Queue[java.lang.Integer] = new com.badlogic.gdx.utils.Queue[java.lang.Integer](1)
     org.junit.Assert.assertTrue(q.toString().equals("[]"))
@@ -287,6 +298,7 @@ class QueueTest {
     q.addLast(7.asInstanceOf[java.lang.Integer])
     org.junit.Assert.assertTrue(q.toString().equals("[4, 5, 6, 7]"))
   }
+  @org.junit.Test
   def hashEqualsTest(): scala.Unit = {
     val q1: com.badlogic.gdx.utils.Queue[java.lang.Integer] = new com.badlogic.gdx.utils.Queue[java.lang.Integer]()
     val q2: com.badlogic.gdx.utils.Queue[java.lang.Integer] = new com.badlogic.gdx.utils.Queue[java.lang.Integer]()

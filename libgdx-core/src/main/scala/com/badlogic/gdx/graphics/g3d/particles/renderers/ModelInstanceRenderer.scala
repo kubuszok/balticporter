@@ -8,9 +8,11 @@ class ModelInstanceRenderer extends com.badlogic.gdx.graphics.g3d.particles.rend
     this()
     this.setBatch(batch)
   }
+  @java.lang.Override
   def allocateChannels(): scala.Unit = {
     this.renderData.positionChannel = this.controller.particles.addChannel(com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.Position)
   }
+  @java.lang.Override
   def init(): scala.Unit = {
     this.renderData.modelInstanceChannel = this.controller.particles.getChannel(com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.ModelInstance)
     this.renderData.colorChannel = this.controller.particles.getChannel(com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.Color)
@@ -20,6 +22,7 @@ class ModelInstanceRenderer extends com.badlogic.gdx.graphics.g3d.particles.rend
     this.hasScale = this.renderData.scaleChannel != null
     this.hasRotation = this.renderData.rotationChannel != null
   }
+  @java.lang.Override
   def update(): scala.Unit = {
     { var i: scala.Int = 0; var positionOffset: scala.Int = 0; val c: scala.Int = this.controller.particles.size; while (i < c) { {
       val instance: com.badlogic.gdx.graphics.g3d.ModelInstance = this.renderData.modelInstanceChannel.data(i)
@@ -50,9 +53,11 @@ class ModelInstanceRenderer extends com.badlogic.gdx.graphics.g3d.particles.rend
     }; i = i + 1; positionOffset = positionOffset + this.renderData.positionChannel.strideSize } }
     super.update()
   }
+  @java.lang.Override
   def copy(): com.badlogic.gdx.graphics.g3d.particles.ParticleControllerComponent = {
     return new ModelInstanceRenderer(batch)
   }
+  @java.lang.Override
   def isCompatible(batch: com.badlogic.gdx.graphics.g3d.particles.batches.ParticleBatch[?]): scala.Boolean = {
     return batch.isInstanceOf[com.badlogic.gdx.graphics.g3d.particles.batches.ModelInstanceParticleBatch]
   }

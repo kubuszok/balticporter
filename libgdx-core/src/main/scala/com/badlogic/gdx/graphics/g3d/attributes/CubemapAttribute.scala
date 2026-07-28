@@ -17,14 +17,17 @@ class CubemapAttribute(type$p: scala.Long) extends com.badlogic.gdx.graphics.g3d
     throw new com.badlogic.gdx.utils.GdxRuntimeException("Invalid type specified")
   } else ()
   this.textureDescription = new com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[com.badlogic.gdx.graphics.Cubemap]()
+  @java.lang.Override
   def copy(): com.badlogic.gdx.graphics.g3d.Attribute = {
     return new CubemapAttribute(this)
   }
+  @java.lang.Override
   def hashCode(): scala.Int = {
     var result: scala.Int = super.hashCode()
     result = (967 * result) + this.textureDescription.hashCode()
     return result
   }
+  @java.lang.Override
   def compareTo(o: com.badlogic.gdx.graphics.g3d.Attribute): scala.Int = {
     if (`type` != o.`type`) {
       return (`type` - o.`type`).asInstanceOf[scala.Int].asInstanceOf[scala.Int]

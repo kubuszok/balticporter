@@ -39,6 +39,7 @@ class BSpline[T <: com.badlogic.gdx.math.Vector[T]] extends com.badlogic.gdx.mat
     }; i = i + 1 } }
     return this.asInstanceOf[BSpline[T]]
   }
+  @java.lang.Override
   def valueAt(out: T, t: scala.Float): T = {
     val n: scala.Int = this.spanCount
     var u: scala.Float = t * n
@@ -49,6 +50,7 @@ class BSpline[T <: com.badlogic.gdx.math.Vector[T]] extends com.badlogic.gdx.mat
   def valueAt(out: T, span: scala.Int, u: scala.Float): T = {
     return BSpline.calculate(out, if (this.continuous) span else span + (this.degree * 0.5f).asInstanceOf[scala.Int], u, this.controlPoints, this.degree, this.continuous, this.tmp)
   }
+  @java.lang.Override
   def derivativeAt(out: T, t: scala.Float): T = {
     val n: scala.Int = this.spanCount
     var u: scala.Float = t * n
@@ -80,6 +82,7 @@ class BSpline[T <: com.badlogic.gdx.math.Vector[T]] extends com.badlogic.gdx.mat
     }; i = i + 1 } }
     return result
   }
+  @java.lang.Override
   def approximate(v: T): scala.Float = {
     return this.approximate(v, this.nearest(v))
   }
@@ -114,9 +117,11 @@ class BSpline[T <: com.badlogic.gdx.math.Vector[T]] extends com.badlogic.gdx.mat
     val u: scala.Float = (com.badlogic.gdx.math.MathUtils.clamp: (scala.Float, scala.Float, scala.Float) => scala.Float)((L1 - s) / L1, 0.0f, 1.0f)
     return (n + u) / this.spanCount
   }
+  @java.lang.Override
   def locate(v: T): scala.Float = {
     return this.approximate(v)
   }
+  @java.lang.Override
   def approxLength(samples: scala.Int): scala.Float = {
     var tempLength: scala.Float = 0;
     { var i: scala.Int = 0; while (i < samples) { {

@@ -221,6 +221,7 @@ object PixmapIO {
       this.buffer.endChunk(dataOutput)
       output.flush()
     }
+    @java.lang.SuppressWarnings(scala.Array[java.lang.String]("javadoc"))
     def dispose(): scala.Unit = {
       this.deflater.`end`()
     }

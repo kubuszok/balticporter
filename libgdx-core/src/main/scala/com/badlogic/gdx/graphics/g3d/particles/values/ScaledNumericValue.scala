@@ -75,6 +75,7 @@ class ScaledNumericValue extends com.badlogic.gdx.graphics.g3d.particles.values.
     java.lang.System.arraycopy(value.timeline, 0, this.timeline, 0, this.timeline.length)
     this.relative = value.relative
   }
+  @java.lang.Override
   def write(json: com.badlogic.gdx.utils.Json): scala.Unit = {
     super.write(json)
     json.writeValue("highMin", this.highMin.asInstanceOf[java.lang.Float])
@@ -83,6 +84,7 @@ class ScaledNumericValue extends com.badlogic.gdx.graphics.g3d.particles.values.
     json.writeValue("scaling", this.scaling)
     json.writeValue("timeline", this.timeline)
   }
+  @java.lang.Override
   def read(json: com.badlogic.gdx.utils.Json, jsonData: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
     super.read(json, jsonData)
     this.highMin = json.readValue("highMin", classOf[scala.Float], jsonData)

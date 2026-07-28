@@ -27,9 +27,11 @@ class BlendingAttribute(blended$p: scala.Boolean, sourceFunc: scala.Int, destFun
   this.sourceFunction = sourceFunc
   this.destFunction = destFunc
   this.opacity = opacity$p
+  @java.lang.Override
   def copy(): BlendingAttribute = {
     return new BlendingAttribute(this)
   }
+  @java.lang.Override
   def hashCode(): scala.Int = {
     var result: scala.Int = super.hashCode()
     result = (947 * result) + (if (this.blended) 1 else 0)
@@ -38,6 +40,7 @@ class BlendingAttribute(blended$p: scala.Boolean, sourceFunc: scala.Int, destFun
     result = (947 * result) + com.badlogic.gdx.utils.NumberUtils.floatToRawIntBits(this.opacity)
     return result
   }
+  @java.lang.Override
   def compareTo(o: com.badlogic.gdx.graphics.g3d.Attribute): scala.Int = {
     if (`type` != o.`type`) {
       return (`type` - o.`type`).asInstanceOf[scala.Int].asInstanceOf[scala.Int]

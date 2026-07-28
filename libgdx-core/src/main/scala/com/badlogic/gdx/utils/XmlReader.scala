@@ -544,6 +544,7 @@ class XmlReader {
   def attribute(name: java.lang.String, value: java.lang.String): scala.Unit = {
     this.current.setAttribute(name, value)
   }
+  @com.badlogic.gdx.utils.Null
   def entity(name: java.lang.String): java.lang.String = {
     if (name.equals("lt")) {
       return "<"
@@ -773,6 +774,7 @@ object XmlReader {
       }
       return buffer.toString()
     }
+    @com.badlogic.gdx.utils.Null
     def getChildByName(name: java.lang.String): com.badlogic.gdx.utils.XmlReader.Element = {
       if (this.children == null) {
         return null
@@ -791,6 +793,7 @@ object XmlReader {
       } else ()
       return this.getChildByName(name) != null
     }
+    @com.badlogic.gdx.utils.Null
     def getChildByNameRecursive(name: java.lang.String): com.badlogic.gdx.utils.XmlReader.Element = {
       if (this.children == null) {
         return null

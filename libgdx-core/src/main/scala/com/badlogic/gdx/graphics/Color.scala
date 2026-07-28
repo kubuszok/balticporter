@@ -146,6 +146,7 @@ class Color {
     this.b = this.b * this.a
     return this
   }
+  @java.lang.Override
   def equals(o: java.lang.Object): scala.Boolean = {
     if (this == o) {
       return true
@@ -156,6 +157,7 @@ class Color {
     val color: Color = o.asInstanceOf[Color].asInstanceOf[Color]
     return this.toIntBits() == color.toIntBits()
   }
+  @java.lang.Override
   def hashCode(): scala.Int = {
     var result: scala.Int = if (this.r != (+0.0f)) com.badlogic.gdx.utils.NumberUtils.floatToIntBits(this.r) else 0
     result = (31 * result) + (if (this.g != (+0.0f)) com.badlogic.gdx.utils.NumberUtils.floatToIntBits(this.g) else 0)

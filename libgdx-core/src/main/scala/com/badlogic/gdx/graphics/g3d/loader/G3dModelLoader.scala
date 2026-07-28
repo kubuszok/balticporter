@@ -7,6 +7,7 @@ class G3dModelLoader(reader$p: com.badlogic.gdx.utils.BaseJsonReader, resolver$p
     this(reader, null)
   }
   this.reader = reader$p
+  @java.lang.Override
   def loadModelData(fileHandle: com.badlogic.gdx.files.FileHandle, parameters: com.badlogic.gdx.assets.loaders.ModelLoader.ModelParameters): com.badlogic.gdx.graphics.g3d.model.data.ModelData = {
     return this.parseModel(fileHandle)
   }

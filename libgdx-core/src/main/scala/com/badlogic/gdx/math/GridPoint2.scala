@@ -66,6 +66,7 @@ class GridPoint2 extends java.io.Serializable {
   def cpy(): GridPoint2 = {
     return new GridPoint2(this)
   }
+  @java.lang.Override
   def equals(o: java.lang.Object): scala.Boolean = {
     if (this == o) {
       return true
@@ -76,6 +77,7 @@ class GridPoint2 extends java.io.Serializable {
     val g: GridPoint2 = o.asInstanceOf[GridPoint2].asInstanceOf[GridPoint2]
     return (this.x == g.x) && (this.y == g.y)
   }
+  @java.lang.Override
   def hashCode(): scala.Int = {
     val prime: scala.Int = 53
     var result: scala.Int = 1
@@ -83,6 +85,7 @@ class GridPoint2 extends java.io.Serializable {
     result = (prime * result) + this.y
     return result
   }
+  @java.lang.Override
   def toString(): java.lang.String = {
     return ((("(" + this.x) + ", ") + this.y) + ")"
   }

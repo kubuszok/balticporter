@@ -13,6 +13,7 @@ abstract class BaseTiledMapLoader[P <: com.badlogic.gdx.maps.tiled.BaseTiledMapL
   var projectClassInfo: com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.utils.Array[com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.ProjectClassMember]] = null.asInstanceOf[com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.utils.Array[com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.ProjectClassMember]]]
   def getDependencyAssetDescriptors(mapFile: com.badlogic.gdx.files.FileHandle, textureParameter: com.badlogic.gdx.assets.loaders.TextureLoader.TextureParameter): com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]
   def loadTiledMap(mapFile: com.badlogic.gdx.files.FileHandle, parameter: P, imageResolver: com.badlogic.gdx.maps.ImageResolver): com.badlogic.gdx.maps.tiled.TiledMap
+  @com.badlogic.gdx.utils.Null
   def getIdToObject(): com.badlogic.gdx.utils.IntMap[com.badlogic.gdx.maps.MapObject] = {
     return this.idToObject
   }
@@ -74,6 +75,7 @@ abstract class BaseTiledMapLoader[P <: com.badlogic.gdx.maps.tiled.BaseTiledMapL
     try {
       val id: scala.Int = java.lang.Integer.parseInt(value)
       val fetch: java.lang.Runnable = new java.lang.Runnable() {
+        @java.lang.Override
         override def run(): scala.Unit = {
           val `object`: com.badlogic.gdx.maps.MapObject = BaseTiledMapLoader.this.idToObject.get(id)
           properties.put(name, `object`)
@@ -233,6 +235,7 @@ object BaseTiledMapLoader {
     var `type`: java.lang.String = null.asInstanceOf[java.lang.String]
     var propertyType: java.lang.String = null.asInstanceOf[java.lang.String]
     var defaultValue: com.badlogic.gdx.utils.JsonValue = null.asInstanceOf[com.badlogic.gdx.utils.JsonValue]
+    @java.lang.Override
     def toString(): java.lang.String = {
       return ((((((((((("ProjectClassMember{" + "name='") + this.name) + "'") + ", type='") + this.`type`) + "'") + ", propertyType='") + this.propertyType) + "'") + ", defaultValue=") + this.defaultValue) + "}"
     }

@@ -417,6 +417,7 @@ object PixmapPacker {
         this.texture.load(this.texture.getTextureData())
       } else {
         this.texture = new com.badlogic.gdx.graphics.Texture(new com.badlogic.gdx.graphics.glutils.PixmapTextureData(this.image, this.image.getFormat(), useMipMaps, false, true)) {
+          @java.lang.Override
           override def dispose(): scala.Unit = {
             super.dispose()
             Page.this.image.dispose()

@@ -11,9 +11,11 @@ class OrthographicCamera extends com.badlogic.gdx.graphics.Camera {
     this.update()
   }
   this.near = 0
+  @java.lang.Override
   def update(): scala.Unit = {
     this.update(true)
   }
+  @java.lang.Override
   def update(updateFrustum: scala.Boolean): scala.Unit = {
     projection.setToOrtho((this.zoom * (-viewportWidth)) / 2, this.zoom * (viewportWidth / 2), this.zoom * (-(viewportHeight / 2)), (this.zoom * viewportHeight) / 2, near, far)
     view.setToLookAt(direction, up)

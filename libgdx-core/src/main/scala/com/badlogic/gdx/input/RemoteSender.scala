@@ -45,6 +45,7 @@ class RemoteSender(ip: java.lang.String, port: scala.Int) extends com.badlogic.g
       }
     }
   }
+  @java.lang.Override
   def keyDown(keycode: scala.Int): scala.Boolean = {
     this.synchronized {
       if (!this.connected) {
@@ -63,6 +64,7 @@ class RemoteSender(ip: java.lang.String, port: scala.Int) extends com.badlogic.g
     }
     return false
   }
+  @java.lang.Override
   def keyUp(keycode: scala.Int): scala.Boolean = {
     this.synchronized {
       if (!this.connected) {
@@ -81,6 +83,7 @@ class RemoteSender(ip: java.lang.String, port: scala.Int) extends com.badlogic.g
     }
     return false
   }
+  @java.lang.Override
   def keyTyped(character: scala.Char): scala.Boolean = {
     this.synchronized {
       if (!this.connected) {
@@ -99,6 +102,7 @@ class RemoteSender(ip: java.lang.String, port: scala.Int) extends com.badlogic.g
     }
     return false
   }
+  @java.lang.Override
   def touchDown(x: scala.Int, y: scala.Int, pointer: scala.Int, button: scala.Int): scala.Boolean = {
     this.synchronized {
       if (!this.connected) {
@@ -119,6 +123,7 @@ class RemoteSender(ip: java.lang.String, port: scala.Int) extends com.badlogic.g
     }
     return false
   }
+  @java.lang.Override
   def touchUp(x: scala.Int, y: scala.Int, pointer: scala.Int, button: scala.Int): scala.Boolean = {
     this.synchronized {
       if (!this.connected) {
@@ -139,9 +144,11 @@ class RemoteSender(ip: java.lang.String, port: scala.Int) extends com.badlogic.g
     }
     return false
   }
+  @java.lang.Override
   def touchCancelled(screenX: scala.Int, screenY: scala.Int, pointer: scala.Int, button: scala.Int): scala.Boolean = {
     return this.touchUp(screenX, screenY, pointer, button)
   }
+  @java.lang.Override
   def touchDragged(x: scala.Int, y: scala.Int, pointer: scala.Int): scala.Boolean = {
     this.synchronized {
       if (!this.connected) {
@@ -162,9 +169,11 @@ class RemoteSender(ip: java.lang.String, port: scala.Int) extends com.badlogic.g
     }
     return false
   }
+  @java.lang.Override
   def mouseMoved(x: scala.Int, y: scala.Int): scala.Boolean = {
     return false
   }
+  @java.lang.Override
   def scrolled(amountX: scala.Float, amountY: scala.Float): scala.Boolean = {
     return false
   }

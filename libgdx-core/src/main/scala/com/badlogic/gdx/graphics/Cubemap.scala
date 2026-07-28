@@ -39,9 +39,11 @@ class Cubemap(data$p: com.badlogic.gdx.graphics.CubemapData) extends com.badlogi
   def getCubemapData(): com.badlogic.gdx.graphics.CubemapData = {
     return this.data
   }
+  @java.lang.Override
   def isManaged(): scala.Boolean = {
     return this.data.isManaged()
   }
+  @java.lang.Override
   def reload(): scala.Unit = {
     if (!this.isManaged()) {
       throw new com.badlogic.gdx.utils.GdxRuntimeException("Tried to reload an unmanaged Cubemap")
@@ -49,15 +51,19 @@ class Cubemap(data$p: com.badlogic.gdx.graphics.CubemapData) extends com.badlogi
     glHandle = com.badlogic.gdx.Gdx.gl.glGenTexture()
     this.load(this.data)
   }
+  @java.lang.Override
   def getWidth(): scala.Int = {
     return this.data.getWidth()
   }
+  @java.lang.Override
   def getHeight(): scala.Int = {
     return this.data.getHeight()
   }
+  @java.lang.Override
   def getDepth(): scala.Int = {
     return 0
   }
+  @java.lang.Override
   def dispose(): scala.Unit = {
     if (glHandle == 0) {
       return
@@ -114,6 +120,7 @@ object Cubemap {
           params.wrapV = cubemap.getVWrap()
           params.cubemap = cubemap
           params.loadedCallback = new com.badlogic.gdx.assets.AssetLoaderParameters.LoadedCallback() {
+            @java.lang.Override
             override def finishedLoading(assetManager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, `type`: java.lang.Class[?]): scala.Unit = {
               assetManager.setReferenceCount(fileName, refCount)
             }

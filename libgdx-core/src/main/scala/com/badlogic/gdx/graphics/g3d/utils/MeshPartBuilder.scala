@@ -45,44 +45,83 @@ trait MeshPartBuilder {
   def addMesh(mesh: com.badlogic.gdx.graphics.Mesh, indexOffset: scala.Int, numIndices: scala.Int): scala.Unit
   def addMesh(vertices: scala.Array[scala.Float], indices: scala.Array[scala.Short]): scala.Unit
   def addMesh(vertices: scala.Array[scala.Float], indices: scala.Array[scala.Short], indexOffset: scala.Int, numIndices: scala.Int): scala.Unit
+  @java.lang.Deprecated
   def patch(corner00: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo, corner10: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo, corner11: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo, corner01: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo, divisionsU: scala.Int, divisionsV: scala.Int): scala.Unit
+  @java.lang.Deprecated
   def patch(corner00: com.badlogic.gdx.math.Vector3, corner10: com.badlogic.gdx.math.Vector3, corner11: com.badlogic.gdx.math.Vector3, corner01: com.badlogic.gdx.math.Vector3, normal: com.badlogic.gdx.math.Vector3, divisionsU: scala.Int, divisionsV: scala.Int): scala.Unit
+  @java.lang.Deprecated
   def patch(x00: scala.Float, y00: scala.Float, z00: scala.Float, x10: scala.Float, y10: scala.Float, z10: scala.Float, x11: scala.Float, y11: scala.Float, z11: scala.Float, x01: scala.Float, y01: scala.Float, z01: scala.Float, normalX: scala.Float, normalY: scala.Float, normalZ: scala.Float, divisionsU: scala.Int, divisionsV: scala.Int): scala.Unit
+  @java.lang.Deprecated
   def box(corner000: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo, corner010: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo, corner100: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo, corner110: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo, corner001: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo, corner011: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo, corner101: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo, corner111: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo): scala.Unit
+  @java.lang.Deprecated
   def box(corner000: com.badlogic.gdx.math.Vector3, corner010: com.badlogic.gdx.math.Vector3, corner100: com.badlogic.gdx.math.Vector3, corner110: com.badlogic.gdx.math.Vector3, corner001: com.badlogic.gdx.math.Vector3, corner011: com.badlogic.gdx.math.Vector3, corner101: com.badlogic.gdx.math.Vector3, corner111: com.badlogic.gdx.math.Vector3): scala.Unit
+  @java.lang.Deprecated
   def box(transform: com.badlogic.gdx.math.Matrix4): scala.Unit
+  @java.lang.Deprecated
   def box(width: scala.Float, height: scala.Float, depth: scala.Float): scala.Unit
+  @java.lang.Deprecated
   def box(x: scala.Float, y: scala.Float, z: scala.Float, width: scala.Float, height: scala.Float, depth: scala.Float): scala.Unit
+  @java.lang.Deprecated
   def circle(radius: scala.Float, divisions: scala.Int, centerX: scala.Float, centerY: scala.Float, centerZ: scala.Float, normalX: scala.Float, normalY: scala.Float, normalZ: scala.Float): scala.Unit
+  @java.lang.Deprecated
   def circle(radius: scala.Float, divisions: scala.Int, center: com.badlogic.gdx.math.Vector3, normal: com.badlogic.gdx.math.Vector3): scala.Unit
+  @java.lang.Deprecated
   def circle(radius: scala.Float, divisions: scala.Int, center: com.badlogic.gdx.math.Vector3, normal: com.badlogic.gdx.math.Vector3, tangent: com.badlogic.gdx.math.Vector3, binormal: com.badlogic.gdx.math.Vector3): scala.Unit
+  @java.lang.Deprecated
   def circle(radius: scala.Float, divisions: scala.Int, centerX: scala.Float, centerY: scala.Float, centerZ: scala.Float, normalX: scala.Float, normalY: scala.Float, normalZ: scala.Float, tangentX: scala.Float, tangentY: scala.Float, tangentZ: scala.Float, binormalX: scala.Float, binormalY: scala.Float, binormalZ: scala.Float): scala.Unit
+  @java.lang.Deprecated
   def circle(radius: scala.Float, divisions: scala.Int, centerX: scala.Float, centerY: scala.Float, centerZ: scala.Float, normalX: scala.Float, normalY: scala.Float, normalZ: scala.Float, angleFrom: scala.Float, angleTo: scala.Float): scala.Unit
+  @java.lang.Deprecated
   def circle(radius: scala.Float, divisions: scala.Int, center: com.badlogic.gdx.math.Vector3, normal: com.badlogic.gdx.math.Vector3, angleFrom: scala.Float, angleTo: scala.Float): scala.Unit
+  @java.lang.Deprecated
   def circle(radius: scala.Float, divisions: scala.Int, center: com.badlogic.gdx.math.Vector3, normal: com.badlogic.gdx.math.Vector3, tangent: com.badlogic.gdx.math.Vector3, binormal: com.badlogic.gdx.math.Vector3, angleFrom: scala.Float, angleTo: scala.Float): scala.Unit
+  @java.lang.Deprecated
   def circle(radius: scala.Float, divisions: scala.Int, centerX: scala.Float, centerY: scala.Float, centerZ: scala.Float, normalX: scala.Float, normalY: scala.Float, normalZ: scala.Float, tangentX: scala.Float, tangentY: scala.Float, tangentZ: scala.Float, binormalX: scala.Float, binormalY: scala.Float, binormalZ: scala.Float, angleFrom: scala.Float, angleTo: scala.Float): scala.Unit
+  @java.lang.Deprecated
   def ellipse(width: scala.Float, height: scala.Float, divisions: scala.Int, centerX: scala.Float, centerY: scala.Float, centerZ: scala.Float, normalX: scala.Float, normalY: scala.Float, normalZ: scala.Float): scala.Unit
+  @java.lang.Deprecated
   def ellipse(width: scala.Float, height: scala.Float, divisions: scala.Int, center: com.badlogic.gdx.math.Vector3, normal: com.badlogic.gdx.math.Vector3): scala.Unit
+  @java.lang.Deprecated
   def ellipse(width: scala.Float, height: scala.Float, divisions: scala.Int, center: com.badlogic.gdx.math.Vector3, normal: com.badlogic.gdx.math.Vector3, tangent: com.badlogic.gdx.math.Vector3, binormal: com.badlogic.gdx.math.Vector3): scala.Unit
+  @java.lang.Deprecated
   def ellipse(width: scala.Float, height: scala.Float, divisions: scala.Int, centerX: scala.Float, centerY: scala.Float, centerZ: scala.Float, normalX: scala.Float, normalY: scala.Float, normalZ: scala.Float, tangentX: scala.Float, tangentY: scala.Float, tangentZ: scala.Float, binormalX: scala.Float, binormalY: scala.Float, binormalZ: scala.Float): scala.Unit
+  @java.lang.Deprecated
   def ellipse(width: scala.Float, height: scala.Float, divisions: scala.Int, centerX: scala.Float, centerY: scala.Float, centerZ: scala.Float, normalX: scala.Float, normalY: scala.Float, normalZ: scala.Float, angleFrom: scala.Float, angleTo: scala.Float): scala.Unit
+  @java.lang.Deprecated
   def ellipse(width: scala.Float, height: scala.Float, divisions: scala.Int, center: com.badlogic.gdx.math.Vector3, normal: com.badlogic.gdx.math.Vector3, angleFrom: scala.Float, angleTo: scala.Float): scala.Unit
+  @java.lang.Deprecated
   def ellipse(width: scala.Float, height: scala.Float, divisions: scala.Int, center: com.badlogic.gdx.math.Vector3, normal: com.badlogic.gdx.math.Vector3, tangent: com.badlogic.gdx.math.Vector3, binormal: com.badlogic.gdx.math.Vector3, angleFrom: scala.Float, angleTo: scala.Float): scala.Unit
+  @java.lang.Deprecated
   def ellipse(width: scala.Float, height: scala.Float, divisions: scala.Int, centerX: scala.Float, centerY: scala.Float, centerZ: scala.Float, normalX: scala.Float, normalY: scala.Float, normalZ: scala.Float, tangentX: scala.Float, tangentY: scala.Float, tangentZ: scala.Float, binormalX: scala.Float, binormalY: scala.Float, binormalZ: scala.Float, angleFrom: scala.Float, angleTo: scala.Float): scala.Unit
+  @java.lang.Deprecated
   def ellipse(width: scala.Float, height: scala.Float, innerWidth: scala.Float, innerHeight: scala.Float, divisions: scala.Int, centerX: scala.Float, centerY: scala.Float, centerZ: scala.Float, normalX: scala.Float, normalY: scala.Float, normalZ: scala.Float, tangentX: scala.Float, tangentY: scala.Float, tangentZ: scala.Float, binormalX: scala.Float, binormalY: scala.Float, binormalZ: scala.Float, angleFrom: scala.Float, angleTo: scala.Float): scala.Unit
+  @java.lang.Deprecated
   def ellipse(width: scala.Float, height: scala.Float, innerWidth: scala.Float, innerHeight: scala.Float, divisions: scala.Int, centerX: scala.Float, centerY: scala.Float, centerZ: scala.Float, normalX: scala.Float, normalY: scala.Float, normalZ: scala.Float, angleFrom: scala.Float, angleTo: scala.Float): scala.Unit
+  @java.lang.Deprecated
   def ellipse(width: scala.Float, height: scala.Float, innerWidth: scala.Float, innerHeight: scala.Float, divisions: scala.Int, centerX: scala.Float, centerY: scala.Float, centerZ: scala.Float, normalX: scala.Float, normalY: scala.Float, normalZ: scala.Float): scala.Unit
+  @java.lang.Deprecated
   def ellipse(width: scala.Float, height: scala.Float, innerWidth: scala.Float, innerHeight: scala.Float, divisions: scala.Int, center: com.badlogic.gdx.math.Vector3, normal: com.badlogic.gdx.math.Vector3): scala.Unit
+  @java.lang.Deprecated
   def cylinder(width: scala.Float, height: scala.Float, depth: scala.Float, divisions: scala.Int): scala.Unit
+  @java.lang.Deprecated
   def cylinder(width: scala.Float, height: scala.Float, depth: scala.Float, divisions: scala.Int, angleFrom: scala.Float, angleTo: scala.Float): scala.Unit
+  @java.lang.Deprecated
   def cylinder(width: scala.Float, height: scala.Float, depth: scala.Float, divisions: scala.Int, angleFrom: scala.Float, angleTo: scala.Float, close: scala.Boolean): scala.Unit
+  @java.lang.Deprecated
   def cone(width: scala.Float, height: scala.Float, depth: scala.Float, divisions: scala.Int): scala.Unit
+  @java.lang.Deprecated
   def cone(width: scala.Float, height: scala.Float, depth: scala.Float, divisions: scala.Int, angleFrom: scala.Float, angleTo: scala.Float): scala.Unit
+  @java.lang.Deprecated
   def sphere(width: scala.Float, height: scala.Float, depth: scala.Float, divisionsU: scala.Int, divisionsV: scala.Int): scala.Unit
+  @java.lang.Deprecated
   def sphere(transform: com.badlogic.gdx.math.Matrix4, width: scala.Float, height: scala.Float, depth: scala.Float, divisionsU: scala.Int, divisionsV: scala.Int): scala.Unit
+  @java.lang.Deprecated
   def sphere(width: scala.Float, height: scala.Float, depth: scala.Float, divisionsU: scala.Int, divisionsV: scala.Int, angleUFrom: scala.Float, angleUTo: scala.Float, angleVFrom: scala.Float, angleVTo: scala.Float): scala.Unit
+  @java.lang.Deprecated
   def sphere(transform: com.badlogic.gdx.math.Matrix4, width: scala.Float, height: scala.Float, depth: scala.Float, divisionsU: scala.Int, divisionsV: scala.Int, angleUFrom: scala.Float, angleUTo: scala.Float, angleVFrom: scala.Float, angleVTo: scala.Float): scala.Unit
+  @java.lang.Deprecated
   def capsule(radius: scala.Float, height: scala.Float, divisions: scala.Int): scala.Unit
+  @java.lang.Deprecated
   def arrow(x1: scala.Float, y1: scala.Float, z1: scala.Float, x2: scala.Float, y2: scala.Float, z2: scala.Float, capLength: scala.Float, stemThickness: scala.Float, divisions: scala.Int): scala.Unit
 }
 object MeshPartBuilder {
@@ -95,6 +134,7 @@ object MeshPartBuilder {
     var hasColor: scala.Boolean = false
     final val uv: com.badlogic.gdx.math.Vector2 = new com.badlogic.gdx.math.Vector2()
     var hasUV: scala.Boolean = false
+    @java.lang.Override
     def reset(): scala.Unit = {
       this.position.set(0, 0, 0)
       this.normal.set(0, 1, 0)

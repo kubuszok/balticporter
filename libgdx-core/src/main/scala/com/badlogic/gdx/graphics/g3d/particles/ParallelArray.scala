@@ -21,6 +21,7 @@ class ParallelArray(capacity$p: scala.Int) {
     } else ()
     return channel
   }
+  @java.lang.SuppressWarnings(scala.Array[java.lang.String]("unchecked", "rawtypes"))
   private def allocateChannel[T <: com.badlogic.gdx.graphics.g3d.particles.ParallelArray#Channel](channelDescriptor: com.badlogic.gdx.graphics.g3d.particles.ParallelArray.ChannelDescriptor): T = {
     if (channelDescriptor.`type` == classOf[scala.Float]) {
       return new FloatChannel(channelDescriptor.id, channelDescriptor.count, this.capacity).asInstanceOf[T]
@@ -62,6 +63,7 @@ class ParallelArray(capacity$p: scala.Int) {
     }
     this.size = last
   }
+  @java.lang.SuppressWarnings(scala.Array[java.lang.String]("unchecked"))
   def getChannel[T <: com.badlogic.gdx.graphics.g3d.particles.ParallelArray#Channel](descriptor: com.badlogic.gdx.graphics.g3d.particles.ParallelArray.ChannelDescriptor): T = {
     for (array <- this.arrays) {
       if (array.id == descriptor.id) {
@@ -96,11 +98,13 @@ class ParallelArray(capacity$p: scala.Int) {
   class FloatChannel(id$p: scala.Int, strideSize$p: scala.Int, size: scala.Int) extends Channel(id$p, new scala.Array[scala.Float](size * strideSize$p), strideSize$p) {
     var data: scala.Array[scala.Float] = null.asInstanceOf[scala.Array[scala.Float]]
     this.data = data.asInstanceOf[scala.Array[scala.Float]].asInstanceOf[scala.Array[scala.Float]]
+    @java.lang.Override
     def add(index: scala.Int, objects: scala.Array[java.lang.Object]): scala.Unit = {
       { var i: scala.Int = strideSize * ParallelArray.this.size; val c: scala.Int = i + strideSize; var k: scala.Int = 0; while (i < c) { {
         this.data(i) = objects(k).asInstanceOf[java.lang.Float]
       }; i = i + 1; k = k + 1 } }
     }
+    @java.lang.Override
     def swap(i$arg: scala.Int, k$arg: scala.Int): scala.Unit = {
       var i: scala.Int = i$arg
       var k: scala.Int = k$arg
@@ -113,6 +117,7 @@ class ParallelArray(capacity$p: scala.Int) {
         this.data(k) = t
       }; i = i + 1; k = k + 1 } }
     }
+    @java.lang.Override
     def setCapacity(requiredCapacity: scala.Int): scala.Unit = {
       val newData: scala.Array[scala.Float] = new scala.Array[scala.Float](strideSize * requiredCapacity)
       java.lang.System.arraycopy(this.data, 0, newData, 0, java.lang.Math.min(this.data.length, newData.length))
@@ -125,11 +130,13 @@ class ParallelArray(capacity$p: scala.Int) {
   class IntChannel(id$p: scala.Int, strideSize$p: scala.Int, size: scala.Int) extends Channel(id$p, new scala.Array[scala.Int](size * strideSize$p), strideSize$p) {
     var data: scala.Array[scala.Int] = null.asInstanceOf[scala.Array[scala.Int]]
     this.data = data.asInstanceOf[scala.Array[scala.Int]].asInstanceOf[scala.Array[scala.Int]]
+    @java.lang.Override
     def add(index: scala.Int, objects: scala.Array[java.lang.Object]): scala.Unit = {
       { var i: scala.Int = strideSize * ParallelArray.this.size; val c: scala.Int = i + strideSize; var k: scala.Int = 0; while (i < c) { {
         this.data(i) = objects(k).asInstanceOf[java.lang.Integer]
       }; i = i + 1; k = k + 1 } }
     }
+    @java.lang.Override
     def swap(i$arg: scala.Int, k$arg: scala.Int): scala.Unit = {
       var i: scala.Int = i$arg
       var k: scala.Int = k$arg
@@ -142,6 +149,7 @@ class ParallelArray(capacity$p: scala.Int) {
         this.data(k) = t
       }; i = i + 1; k = k + 1 } }
     }
+    @java.lang.Override
     def setCapacity(requiredCapacity: scala.Int): scala.Unit = {
       val newData: scala.Array[scala.Int] = new scala.Array[scala.Int](strideSize * requiredCapacity)
       java.lang.System.arraycopy(this.data, 0, newData, 0, java.lang.Math.min(this.data.length, newData.length))
@@ -154,11 +162,13 @@ class ParallelArray(capacity$p: scala.Int) {
   class ObjectChannel[T](id$p: scala.Int, strideSize$p: scala.Int, size: scala.Int, arraySupplier: com.badlogic.gdx.utils.ArraySupplier[scala.Array[T]]) extends Channel(id$p, arraySupplier.get(size * strideSize$p), strideSize$p) {
     var data: scala.Array[T] = null.asInstanceOf[scala.Array[T]]
     this.data = data.asInstanceOf[scala.Array[T]].asInstanceOf[scala.Array[T]]
+    @java.lang.Override
     def add(index: scala.Int, objects: scala.Array[java.lang.Object]): scala.Unit = {
       { var i: scala.Int = strideSize * ParallelArray.this.size; val c: scala.Int = i + strideSize; var k: scala.Int = 0; while (i < c) { {
         this.data(i) = objects(k).asInstanceOf[T].asInstanceOf[T]
       }; i = i + 1; k = k + 1 } }
     }
+    @java.lang.Override
     def swap(i$arg: scala.Int, k$arg: scala.Int): scala.Unit = {
       var i: scala.Int = i$arg
       var k: scala.Int = k$arg
@@ -171,6 +181,7 @@ class ParallelArray(capacity$p: scala.Int) {
         this.data(k) = t
       }; i = i + 1; k = k + 1 } }
     }
+    @java.lang.Override
     def setCapacity(requiredCapacity: scala.Int): scala.Unit = {
       data = {
         this.data = java.util.Arrays.copyOf(this.data.asInstanceOf[scala.Array[java.lang.Object]], strideSize * requiredCapacity).asInstanceOf[scala.Array[T]]

@@ -4,6 +4,7 @@ class DefaultRenderableSorter extends com.badlogic.gdx.graphics.g3d.utils.Render
   private var camera: com.badlogic.gdx.graphics.Camera = null.asInstanceOf[com.badlogic.gdx.graphics.Camera]
   private final val tmpV1: com.badlogic.gdx.math.Vector3 = new com.badlogic.gdx.math.Vector3()
   private final val tmpV2: com.badlogic.gdx.math.Vector3 = new com.badlogic.gdx.math.Vector3()
+  @java.lang.Override
   def sort(camera: com.badlogic.gdx.graphics.Camera, renderables: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.Renderable]): scala.Unit = {
     this.camera = camera
     renderables.sort(this)
@@ -20,6 +21,7 @@ class DefaultRenderableSorter extends com.badlogic.gdx.graphics.g3d.utils.Render
     }
     return output
   }
+  @java.lang.Override
   def compare(o1: com.badlogic.gdx.graphics.g3d.Renderable, o2: com.badlogic.gdx.graphics.g3d.Renderable): scala.Int = {
     val b1: scala.Boolean = o1.material.has(com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute.Type) && o1.material.get(com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute.Type).asInstanceOf[com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute].blended
     val b2: scala.Boolean = o2.material.has(com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute.Type) && o2.material.get(com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute.Type).asInstanceOf[com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute].blended

@@ -139,6 +139,7 @@ class Stage(viewport$p: com.badlogic.gdx.utils.viewport.Viewport, batch$p: com.b
     } else ()
     this.root.act(delta)
   }
+  @com.badlogic.gdx.utils.Null
   private def fireEnterAndExit(overLast: com.badlogic.gdx.scenes.scene2d.Actor, screenX: scala.Int, screenY: scala.Int, pointer: scala.Int): com.badlogic.gdx.scenes.scene2d.Actor = {
     this.screenToStageCoordinates(this.tempCoords.set(screenX, screenY))
     val over: com.badlogic.gdx.scenes.scene2d.Actor = this.hit(this.tempCoords.x, this.tempCoords.y, true)
@@ -511,6 +512,7 @@ class Stage(viewport$p: com.badlogic.gdx.utils.viewport.Viewport, batch$p: com.b
     this.pools.free(event)
     return success
   }
+  @com.badlogic.gdx.utils.Null
   def getKeyboardFocus(): com.badlogic.gdx.scenes.scene2d.Actor = {
     return this.keyboardFocus
   }
@@ -543,6 +545,7 @@ class Stage(viewport$p: com.badlogic.gdx.utils.viewport.Viewport, batch$p: com.b
     this.pools.free(event)
     return success
   }
+  @com.badlogic.gdx.utils.Null
   def getScrollFocus(): com.badlogic.gdx.scenes.scene2d.Actor = {
     return this.scrollFocus
   }
@@ -575,6 +578,7 @@ class Stage(viewport$p: com.badlogic.gdx.utils.viewport.Viewport, batch$p: com.b
     root.setParent(null)
     root.setStage(this)
   }
+  @com.badlogic.gdx.utils.Null
   def hit(stageX: scala.Float, stageY: scala.Float, touchable: scala.Boolean): com.badlogic.gdx.scenes.scene2d.Actor = {
     this.root.parentToLocalCoordinates(this.tempCoords.set(stageX, stageY))
     return this.root.hit(this.tempCoords.x, this.tempCoords.y, touchable)

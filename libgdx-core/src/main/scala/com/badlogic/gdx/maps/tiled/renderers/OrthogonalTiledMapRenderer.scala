@@ -33,6 +33,7 @@ class OrthogonalTiledMapRenderer extends com.badlogic.gdx.maps.tiled.renderers.B
     this.batch = batch
     this.ownsBatch = false
   }
+  @java.lang.Override
   def renderTileLayer(layer: com.badlogic.gdx.maps.tiled.TiledMapTileLayer): scala.Unit = {
     val batchColor: com.badlogic.gdx.graphics.Color = batch.getColor()
     val color: scala.Float = this.getTileLayerColor(layer, batchColor)

@@ -26,6 +26,7 @@ object Predicate {
       }
       this.next$field = null.asInstanceOf[T]
     }
+    @java.lang.Override
     def hasNext(): scala.Boolean = {
       if (this.`end`) {
         return false
@@ -44,6 +45,7 @@ object Predicate {
       this.`end` = true
       return false
     }
+    @java.lang.Override
     def next(): T = {
       if ((this.next$field == null) && (!this.hasNext())) {
         return null.asInstanceOf[T]
@@ -53,6 +55,7 @@ object Predicate {
       this.peeked = false
       return result
     }
+    @java.lang.Override
     def remove(): scala.Unit = {
       if (this.peeked) {
         throw new com.badlogic.gdx.utils.GdxRuntimeException("Cannot remove between a call to hasNext() and next().")
@@ -69,6 +72,7 @@ object Predicate {
       this.iterable = iterable
       this.predicate = predicate
     }
+    @java.lang.Override
     def iterator(): balticporter.runtime.JavaIterator[T] = {
       if (com.badlogic.gdx.utils.Collections.allocateIterators) {
         return new com.badlogic.gdx.utils.Predicate.PredicateIterator[T](this.iterable.iterator, this.predicate)

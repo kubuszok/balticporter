@@ -89,6 +89,7 @@ class SpotLight extends com.badlogic.gdx.graphics.g3d.environment.BaseLight[Spot
     this.direction.set(target).sub(this.position).nor()
     return this
   }
+  @java.lang.Override
   def equals(obj: java.lang.Object): scala.Boolean = {
     return obj.isInstanceOf[SpotLight] && this.equals(obj.asInstanceOf[SpotLight].asInstanceOf[SpotLight])
   }

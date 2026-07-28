@@ -21,17 +21,20 @@ class AtlasTmxMapLoader extends com.badlogic.gdx.maps.tiled.BaseTmxMapLoader[com
     this.setTextureFilters(parameter.textureMinFilter, parameter.textureMagFilter)
     return map
   }
+  @java.lang.Override
   def loadAsync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, tmxFile: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.Parameters): scala.Unit = {
     val atlasHandle: com.badlogic.gdx.files.FileHandle = this.getAtlasFileHandle(tmxFile)
     this.atlasResolver = new com.badlogic.gdx.maps.tiled.AtlasTmxMapLoader.AtlasResolver.AssetManagerAtlasResolver(manager, atlasHandle.path())
     this.map = this.loadTiledMap(tmxFile, parameter, this.atlasResolver)
   }
+  @java.lang.Override
   def loadSync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.Parameters): com.badlogic.gdx.maps.tiled.TiledMap = {
     if (parameter != null) {
       this.setTextureFilters(parameter.textureMinFilter, parameter.textureMagFilter)
     } else ()
     return map
   }
+  @java.lang.Override
   def getDependencyAssetDescriptors(tmxFile: com.badlogic.gdx.files.FileHandle, textureParameter: com.badlogic.gdx.assets.loaders.TextureLoader.TextureParameter): com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = {
     val descriptors: com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]().asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]]
     val atlasFileHandle: com.badlogic.gdx.files.FileHandle = this.getAtlasFileHandle(tmxFile)
@@ -40,6 +43,7 @@ class AtlasTmxMapLoader extends com.badlogic.gdx.maps.tiled.BaseTmxMapLoader[com
     } else ()
     return descriptors.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]]
   }
+  @java.lang.Override
   def addStaticTiles(tmxFile: com.badlogic.gdx.files.FileHandle, imageResolver: com.badlogic.gdx.maps.ImageResolver, tileSet: com.badlogic.gdx.maps.tiled.TiledMapTileSet, element: com.badlogic.gdx.utils.XmlReader.Element, tileElements: com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.XmlReader.Element], name: java.lang.String, firstgid: scala.Int, tilewidth: scala.Int, tileheight: scala.Int, spacing: scala.Int, margin: scala.Int, source: java.lang.String, offsetX: scala.Int, offsetY: scala.Int, imageSource: java.lang.String, imageWidth: scala.Int, imageHeight: scala.Int, image: com.badlogic.gdx.files.FileHandle): scala.Unit = {
     val atlas: com.badlogic.gdx.graphics.g2d.TextureAtlas = this.atlasResolver.getAtlas()
     val regionsName: java.lang.String = name
@@ -129,9 +133,11 @@ object AtlasTmxMapLoader {
     class DirectAtlasResolver(atlas$p: com.badlogic.gdx.graphics.g2d.TextureAtlas) extends com.badlogic.gdx.maps.tiled.AtlasTmxMapLoader.AtlasResolver {
       private var atlas: com.badlogic.gdx.graphics.g2d.TextureAtlas = null.asInstanceOf[com.badlogic.gdx.graphics.g2d.TextureAtlas]
       this.atlas = atlas$p
+      @java.lang.Override
       def getAtlas(): com.badlogic.gdx.graphics.g2d.TextureAtlas = {
         return this.atlas
       }
+      @java.lang.Override
       def getImage(name: java.lang.String): com.badlogic.gdx.graphics.g2d.TextureRegion = {
         val regionName: java.lang.String = AtlasTmxMapLoader.parseRegionName(name)
         return this.atlas.findRegion(regionName)
@@ -145,9 +151,11 @@ object AtlasTmxMapLoader {
       private var atlasName: java.lang.String = null.asInstanceOf[java.lang.String]
       this.assetManager = assetManager$p
       this.atlasName = atlasName$p
+      @java.lang.Override
       def getAtlas(): com.badlogic.gdx.graphics.g2d.TextureAtlas = {
         return this.assetManager.get(this.atlasName, classOf[com.badlogic.gdx.graphics.g2d.TextureAtlas])
       }
+      @java.lang.Override
       def getImage(name: java.lang.String): com.badlogic.gdx.graphics.g2d.TextureRegion = {
         val regionName: java.lang.String = AtlasTmxMapLoader.parseRegionName(name)
         return this.getAtlas().findRegion(regionName)

@@ -21,6 +21,7 @@ class DynamicsInfluencer extends com.badlogic.gdx.graphics.g3d.particles.influen
     this(velocityInfluencer.velocities.toArray(((size: scala.Int) => new scala.Array[com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier](size))))
   }
   this.velocities = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier](true, 3, ((size: scala.Int) => new scala.Array[com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier](size)))
+  @java.lang.Override
   def allocateChannels(): scala.Unit = {
     { var k: scala.Int = 0; while (k < this.velocities.size) { {
       this.velocities.items(k).allocateChannels()
@@ -44,12 +45,14 @@ class DynamicsInfluencer extends com.badlogic.gdx.graphics.g3d.particles.influen
       } else ()
     }
   }
+  @java.lang.Override
   def set(particleController: com.badlogic.gdx.graphics.g3d.particles.ParticleController): scala.Unit = {
     super.set(particleController);
     { var k: scala.Int = 0; while (k < this.velocities.size) { {
       this.velocities.items(k).set(particleController)
     }; k = k + 1 } }
   }
+  @java.lang.Override
   def init(): scala.Unit = {
     { var k: scala.Int = 0; while (k < this.velocities.size) { {
       this.velocities.items(k).init()
@@ -138,12 +141,15 @@ class DynamicsInfluencer extends com.badlogic.gdx.graphics.g3d.particles.influen
       } else ()
     }
   }
+  @java.lang.Override
   def copy(): DynamicsInfluencer = {
     return new DynamicsInfluencer(this)
   }
+  @java.lang.Override
   def write(json: com.badlogic.gdx.utils.Json): scala.Unit = {
     json.writeValue("velocities", this.velocities, classOf[com.badlogic.gdx.utils.Array[?]], classOf[com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier])
   }
+  @java.lang.Override
   def read(json: com.badlogic.gdx.utils.Json, jsonData: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
     this.velocities.addAll(json.readValue("velocities", classOf[com.badlogic.gdx.utils.Array[?]], classOf[com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier], jsonData).asInstanceOf[com.badlogic.gdx.utils.Array[? <: com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier]])
   }

@@ -1,6 +1,7 @@
 package com.badlogic.gdx.math
 
 class BSplineTest {
+  @org.junit.Test
   def testCubicSplineNonContinuous(): scala.Unit = {
     val controlPoints: scala.Array[com.badlogic.gdx.math.Vector3] = scala.Array[com.badlogic.gdx.math.Vector3](new com.badlogic.gdx.math.Vector3(0, 0, 0), new com.badlogic.gdx.math.Vector3(1, 1, 0), new com.badlogic.gdx.math.Vector3(2, 0, 0), new com.badlogic.gdx.math.Vector3(3, -1, 0))
     val spline: com.badlogic.gdx.math.BSpline[com.badlogic.gdx.math.Vector3] = new com.badlogic.gdx.math.BSpline[com.badlogic.gdx.math.Vector3](controlPoints, 3, false)
@@ -11,6 +12,7 @@ class BSplineTest {
     org.junit.Assert.assertEquals(expected.y, result.y, 0.1f)
     org.junit.Assert.assertEquals(expected.z, result.z, 0.1f)
   }
+  @org.junit.Test
   def testCubicSplineContinuous(): scala.Unit = {
     val controlPoints: scala.Array[com.badlogic.gdx.math.Vector3] = scala.Array[com.badlogic.gdx.math.Vector3](new com.badlogic.gdx.math.Vector3(1, 0, 0), new com.badlogic.gdx.math.Vector3(0, 1, 0), new com.badlogic.gdx.math.Vector3(-1, 0, 0), new com.badlogic.gdx.math.Vector3(0, -1, 0))
     val spline: com.badlogic.gdx.math.BSpline[com.badlogic.gdx.math.Vector3] = new com.badlogic.gdx.math.BSpline[com.badlogic.gdx.math.Vector3](controlPoints, 3, true)
@@ -21,6 +23,7 @@ class BSplineTest {
     org.junit.Assert.assertEquals(expected.y, result.y, 0.1f)
     org.junit.Assert.assertEquals(expected.z, result.z, 0.1f)
   }
+  @org.junit.Test
   def testCubicDerivative(): scala.Unit = {
     val controlPoints: scala.Array[com.badlogic.gdx.math.Vector3] = scala.Array[com.badlogic.gdx.math.Vector3](new com.badlogic.gdx.math.Vector3(0, 0, 0), new com.badlogic.gdx.math.Vector3(1, 1, 0), new com.badlogic.gdx.math.Vector3(2, 0, 0), new com.badlogic.gdx.math.Vector3(3, -1, 0))
     val spline: com.badlogic.gdx.math.BSpline[com.badlogic.gdx.math.Vector3] = new com.badlogic.gdx.math.BSpline[com.badlogic.gdx.math.Vector3](controlPoints, 3, true)
@@ -31,6 +34,7 @@ class BSplineTest {
     org.junit.Assert.assertEquals(expectedDerivative.y, derivative.y, 0.001f)
     org.junit.Assert.assertEquals(expectedDerivative.z, derivative.z, 0.001f)
   }
+  @org.junit.Test
   def testContinuousApproximation(): scala.Unit = {
     val controlPoints: scala.Array[com.badlogic.gdx.math.Vector3] = scala.Array[com.badlogic.gdx.math.Vector3](new com.badlogic.gdx.math.Vector3(1, 0, 0), new com.badlogic.gdx.math.Vector3(0, 1, 0), new com.badlogic.gdx.math.Vector3(-1, 0, 0), new com.badlogic.gdx.math.Vector3(0, -1, 0))
     val spline: com.badlogic.gdx.math.BSpline[com.badlogic.gdx.math.Vector3] = new com.badlogic.gdx.math.BSpline[com.badlogic.gdx.math.Vector3](controlPoints, 3, true)
@@ -38,6 +42,7 @@ class BSplineTest {
     val t: scala.Float = spline.approximate(point)
     org.junit.Assert.assertEquals(0.875f, t, 0.1f)
   }
+  @org.junit.Test
   def testNonContinuousApproximation(): scala.Unit = {
     val controlPoints: scala.Array[com.badlogic.gdx.math.Vector3] = scala.Array[com.badlogic.gdx.math.Vector3](new com.badlogic.gdx.math.Vector3(1, 0, 0), new com.badlogic.gdx.math.Vector3(0, 1, 0), new com.badlogic.gdx.math.Vector3(-1, 0, 0), new com.badlogic.gdx.math.Vector3(0, -1, 0))
     val spline: com.badlogic.gdx.math.BSpline[com.badlogic.gdx.math.Vector3] = new com.badlogic.gdx.math.BSpline[com.badlogic.gdx.math.Vector3](controlPoints, 3, false)
@@ -53,6 +58,7 @@ class BSplineTest {
     t = spline.approximate(point)
     org.junit.Assert.assertEquals(0.5f, t, 0.1f)
   }
+  @org.junit.Test
   def testSplineContinuity(): scala.Unit = {
     val controlPoints: scala.Array[com.badlogic.gdx.math.Vector3] = scala.Array[com.badlogic.gdx.math.Vector3](new com.badlogic.gdx.math.Vector3(0, 0, 0), new com.badlogic.gdx.math.Vector3(1, 1, 0), new com.badlogic.gdx.math.Vector3(2, 0, 0), new com.badlogic.gdx.math.Vector3(3, -1, 0))
     val spline: com.badlogic.gdx.math.BSpline[com.badlogic.gdx.math.Vector3] = new com.badlogic.gdx.math.BSpline[com.badlogic.gdx.math.Vector3](controlPoints, 3, true)
@@ -64,6 +70,7 @@ class BSplineTest {
     org.junit.Assert.assertEquals(start.y, `end`.y, 0.001f)
     org.junit.Assert.assertEquals(start.z, `end`.z, 0.001f)
   }
+  @org.junit.Test
   def testEdgeCases(): scala.Unit = {
     val controlPoints: scala.Array[com.badlogic.gdx.math.Vector3] = scala.Array[com.badlogic.gdx.math.Vector3](new com.badlogic.gdx.math.Vector3(0, 0, 0), new com.badlogic.gdx.math.Vector3(1, 1, 0), new com.badlogic.gdx.math.Vector3(2, 0, 0), new com.badlogic.gdx.math.Vector3(3, -1, 0))
     val spline: com.badlogic.gdx.math.BSpline[com.badlogic.gdx.math.Vector3] = new com.badlogic.gdx.math.BSpline[com.badlogic.gdx.math.Vector3](controlPoints, 3, false)

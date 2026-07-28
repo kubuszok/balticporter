@@ -1,19 +1,23 @@
 package com.badlogic.gdx.math
 
 class OctreeTest {
+  @org.junit.Test
   def testInsert(): scala.Unit = {
     val maxDepth: scala.Int = 2
     val maxItemsPerNode: scala.Int = 1
     val min: com.badlogic.gdx.math.Vector3 = new com.badlogic.gdx.math.Vector3(-5.0f, -5.0f, -5.0f)
     val max: com.badlogic.gdx.math.Vector3 = new com.badlogic.gdx.math.Vector3(5.0f, 5.0f, 5.0f)
     val octree: com.badlogic.gdx.math.Octree[com.badlogic.gdx.math.collision.BoundingBox] = new com.badlogic.gdx.math.Octree[com.badlogic.gdx.math.collision.BoundingBox](min, max, maxDepth, maxItemsPerNode, new com.badlogic.gdx.math.Octree.Collider[com.badlogic.gdx.math.collision.BoundingBox]() {
+      @java.lang.Override
       override def intersects(nodeBounds: com.badlogic.gdx.math.collision.BoundingBox, geometry: com.badlogic.gdx.math.collision.BoundingBox): scala.Boolean = {
         return nodeBounds.intersects(geometry)
       }
+      @java.lang.Override
       override def intersects(frustum: com.badlogic.gdx.math.Frustum, geometry: com.badlogic.gdx.math.collision.BoundingBox): scala.Boolean = {
         return false
       }
       final val tmp: com.badlogic.gdx.math.Vector3 = new com.badlogic.gdx.math.Vector3()
+      @java.lang.Override
       override def intersects(ray: com.badlogic.gdx.math.collision.Ray, geometry: com.badlogic.gdx.math.collision.BoundingBox): scala.Float = {
         if (!com.badlogic.gdx.math.Intersector.intersectRayBounds(ray, geometry, tmp)) {
           return tmp.dst2(ray.origin)

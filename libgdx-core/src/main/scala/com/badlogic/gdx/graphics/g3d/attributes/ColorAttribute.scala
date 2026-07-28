@@ -18,14 +18,17 @@ class ColorAttribute(type$p: scala.Long) extends com.badlogic.gdx.graphics.g3d.A
   if (!ColorAttribute.is(type$p)) {
     throw new com.badlogic.gdx.utils.GdxRuntimeException("Invalid type specified")
   } else ()
+  @java.lang.Override
   def copy(): com.badlogic.gdx.graphics.g3d.Attribute = {
     return new ColorAttribute(this)
   }
+  @java.lang.Override
   def hashCode(): scala.Int = {
     var result: scala.Int = super.hashCode()
     result = (953 * result) + this.color.toIntBits()
     return result
   }
+  @java.lang.Override
   def compareTo(o: com.badlogic.gdx.graphics.g3d.Attribute): scala.Int = {
     if (`type` != o.`type`) {
       return (`type` - o.`type`).asInstanceOf[scala.Int].asInstanceOf[scala.Int]

@@ -23,6 +23,7 @@ trait Graphics {
   def getSafeInsetRight(): scala.Int
   def getFrameId(): scala.Long
   def getDeltaTime(): scala.Float
+  @java.lang.Deprecated
   def getRawDeltaTime(): scala.Float
   def getFramesPerSecond(): scala.Int
   def getType(): com.badlogic.gdx.Graphics.GraphicsType
