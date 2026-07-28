@@ -683,7 +683,22 @@ the misses:
 The last one is the most informative: `AsyncTask<Void>`'s `T -> Void` is genuinely NEEDED, because
 `AssetLoadingTask.call()` really does return `Void`. So the entry must exist for the ancestor's OWN
 members and must not reach an unrelated raw type — which means the fix is not a filter on the map at
-all. **The map needs to be consulted differently depending on WHAT is being filled**: a type
+all. **SOLVED (4 -> 3): the inherited fill is an obligation of OVERRIDING MEMBERS, not of the class.**
+It exists to make an inherited member agree with the one it overrides; a member the class declares
+for itself carries no such obligation. `inOverridingMember` gates it, set from the same `overrides`
+flag `execDef` already computes. That is why every MAP-level guard failed — the `T -> Void` entry is
+genuinely needed (`AssetLoadingTask.call()` really returns `Void`); the obligation is a property of
+the SITE.
+
+The remaining 3 are the recurring root cause in a new place: the FIELD `dependencies` now declares
+`Array[AssetDescriptor[?]]` correctly, but a cast to it emitted INSIDE an overriding method
+re-renders the raw type with the gate on and gets `Array[AssetDescriptor[Void]]` — two renderings of
+one field again. Extending `atDeclScope` to clear the gate is INERT (measured 3 -> 3): the cast path
+in `uncheckedGeneric`/`erasedFieldReceiver` does not route through it. The fix is for a field READ to
+carry the field symbol's recorded `info` — the declaration's own rendering — instead of re-rendering
+Spoon's type in the reading scope. `Minter.infoOf` was built for this and is the piece to use.
+
+~~The map needs to be consulted differently depending on WHAT is being filled~~: a type
 mentioned in the ancestor's signatures resolves through that ancestor's instantiation; an unrelated
 raw type should fall back to `?`. That is a change to `tpe`'s raw-fill call site, not to
 `instantiationOfParents`, and it is where the next attempt should start.
