@@ -18,3 +18,12 @@ package balticporter.runtime
 trait JavaIterator[A] extends scala.collection.Iterator[A]:
   /** `java.util.Iterator.remove` — the JDK's own default implementation. */
   def remove(): Unit = throw new UnsupportedOperationException("remove")
+
+object JavaIterator:
+  /** Adapt a `scala.collection.Iterator` to the java-shaped one. `remove()` keeps the
+    * default above, which is the truth: there is nothing to remove through. */
+  def from[A](it: scala.collection.Iterator[A]): JavaIterator[A] = it match
+    case ji: JavaIterator[A @unchecked] => ji
+    case _ => new JavaIterator[A]:
+      def hasNext: Boolean = it.hasNext
+      def next(): A = it.next()

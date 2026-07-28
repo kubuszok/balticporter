@@ -82,6 +82,8 @@ final class CollectionsTransform extends Phase:
   private var key1Sym, value2Sym, roSetSym: SymId = SymId.None
   /** `JavaIterable` + its `from` factory — see `wrapIterableArgs`. */
   private var javaIterableSym, iterableFromSym: SymId = SymId.None
+  /** `JavaIterator.from` — the `iterator` counterpart of `wrapIterableArgs`. */
+  private var iteratorFromSym, javaIteratorSym: SymId = SymId.None
 
   override def run(program: Program): Program =
     val added = collection.mutable.ListBuffer[Symbol]()
@@ -113,6 +115,8 @@ final class CollectionsTransform extends Phase:
     roSetSym     = mint("Set", "scala.collection.Set") // see `transformValDef`
     javaIterableSym = byScala.getOrElse(JavaIterableFqn, SymId.None)
     iterableFromSym = mint("from", JavaIterableFqn + ".from")
+    iteratorFromSym = mint("from", JavaIteratorFqn + ".from")
+    javaIteratorSym = byScala.getOrElse(JavaIteratorFqn, SymId.None)
     putSym       = mint("put", "put")     // scala `mutable.Map.put`: returns the PREVIOUS value
     removeSym    = mint("remove", "remove") // scala `mutable.Map.remove`: returns the REMOVED value
 
@@ -208,6 +212,22 @@ final class CollectionsTransform extends Phase:
       // concurrent `put` is observed to do. The one thing `Tuple2` does NOT carry over is
       // `Entry.setValue` (write-through to the map); that is deliberate — a `setValue` call now
       // fails to COMPILE rather than being turned into a write to a detached copy.
+      // `list.iterator()` on a collection the port mapped to scala yields a
+      // `scala.collection.Iterator`, but every DECLARATION the port derived from `java.util.Iterator`
+      // asks for the removal-capable shim — the same self-inflicted boundary `wrapIterableArgs`
+      // bridges, met here in a `val` initialiser instead of an argument. Invisible in the TIR (both
+      // sides read as the shim; only the emitted scala disagrees), so it is decided on PROVENANCE:
+      // a scala collection's iterator is a scala one. Widening is free — the shim IS a
+      // `scala.collection.Iterator` — and `remove()` correctly throws, since this iterator has no
+      // removal to offer.
+      // Not on the SHIMS themselves — their `iterator` already yields a `JavaIterator`; wrapping it
+      // would be a no-op that also loses the parenless form below, emitting `iterable.iterator()`
+      // against a scala-shaped `def iterator` (measured 2 -> 10).
+      case ("iterator", Nil, _)
+          if iteratorFromSym != SymId.None &&
+             !headSym(recv.tpe).exists(x => x == javaIterableSym || x == javaIteratorSym) =>
+        val sel = Tree.Select(recv, m, t.tpe, t.origin) // parenless, as the generic case below
+        Some(Tree.Apply(Tree.Ident(iteratorFromSym, TypeRepr.NoType, so), List(sel), iteratorFromSym, t.tpe, so))
       case ("entrySet", Nil, Kind.Map)          => Some(recv)
       case ("getKey", Nil, Kind.Entry)          => Some(Tree.Select(recv, key1Sym, t.tpe, t.origin))
       case ("getValue", Nil, Kind.Entry)        => Some(Tree.Select(recv, value2Sym, t.tpe, t.origin))
@@ -349,5 +369,14 @@ object CollectionsTransform:
         |trait JavaIterator[A] extends scala.collection.Iterator[A]:
         |  /** `java.util.Iterator.remove` — the JDK's own default implementation. */
         |  def remove(): Unit = throw new UnsupportedOperationException("remove")
+        |
+        |object JavaIterator:
+        |  /** Adapt a `scala.collection.Iterator` to the java-shaped one. `remove()` keeps the
+        |    * default above, which is the truth: there is nothing to remove through. */
+        |  def from[A](it: scala.collection.Iterator[A]): JavaIterator[A] = it match
+        |    case ji: JavaIterator[A @unchecked] => ji
+        |    case _ => new JavaIterator[A]:
+        |      def hasNext: Boolean = it.hasNext
+        |      def next(): A = it.next()
         |""".stripMargin,
   )

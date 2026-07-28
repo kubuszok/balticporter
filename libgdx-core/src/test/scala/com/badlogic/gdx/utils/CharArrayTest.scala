@@ -485,7 +485,7 @@ class CharArrayTest {
     array.appendWithSeparators(balticporter.runtime.JavaIterable.from(list), ", ")
     org.junit.Assert.assertEquals("One, Two, Three", array.toString())
     array.clear()
-    val iter: balticporter.runtime.JavaIterator[java.lang.String] = list.iterator
+    val iter: balticporter.runtime.JavaIterator[java.lang.String] = balticporter.runtime.JavaIterator.from(list.iterator)
     array.appendAll(iter)
     org.junit.Assert.assertEquals("OneTwoThree", array.toString())
     array.clear()
