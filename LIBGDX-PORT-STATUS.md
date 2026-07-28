@@ -65,6 +65,31 @@ them. Emitting MUnit's own calls directly — no base class — does not have th
 because `munit.Assertions` members would be imported rather than inherited. It is a second,
 independent reason the scaffold should go.
 
+### The raw-fill design space, MEASURED
+
+Four combinations of the two knobs — whether the name-keyed inherited fill runs, and what an
+un-nameable raw type argument falls back to:
+
+| inherited fill | fallback | errors |
+|---|---|---|
+| off | `?` | 162 |
+| off | `Object` | 97 |
+| on | `Object` | 87 |
+| **on** | **`?`** | **1 (current)** |
+
+Two things this settles:
+
+- The fill is carrying ~160 errors, and every one of them is an OVERRIDE-agreement error
+  (110 x E164 + 8 x E037 when it is disabled). It has exactly one customer.
+- `Object` is a NAMED type and `?` is a fresh existential per occurrence, so the hypothesis that
+  overrides fail because two `?`s do not conform was worth testing — and is WRONG in general:
+  `Object` is uniformly worse (97 vs 162 with the fill off; 87 vs 1 with it on). Wildcards round-trip
+  across overrides in the overwhelming majority of cases.
+
+So the remaining single error is NOT the tip of a systemic wildcard problem. It is the one site where
+the name-keyed fill's collision (`AsyncTask<Void>`'s `T` reaching `AssetDescriptor<T>`) is not also
+made harmlessly-consistent on both sides of an override.
+
 ### `PortedSuite` IS A SCAFFOLD — it must not survive
 
 A base class whose every member is `assertEquals(a, b) => assert(a == b)` or
