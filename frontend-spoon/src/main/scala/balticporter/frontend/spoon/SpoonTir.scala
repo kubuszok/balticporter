@@ -498,6 +498,21 @@ object SpoonTir:
       case arr: CtArrayTypeReference[?] => tpConcrete(arr.getComponentType)
       case r => try r.getActualTypeArguments.asScala.forall(tpConcrete) catch { case _: Throwable => true }
 
+    /** Is this callee type VARIABLE literally the one in scope here — the same declaration, hence
+      * the same minted symbol, not merely the same NAME? That is the case [[tpConcrete]]'s
+      * name-based caution excludes wrongly: a SELF-CALL inside the declaring class
+      * (`Node<N,V,A>.addToTree(Tree<N,V>, int)` invoked from another `Node` method) names the
+      * caller's own variables, so rendering the formal here is exact, not a guess. Class formals
+      * are minted at `<declaring FQN>$$<name>`, so equality of ids IS declaration identity. */
+    private def sameVarInScope(tv: CtTypeParameterReference): Boolean =
+      try
+        Option(tv.getDeclaration).map(_.getParent) match
+          case Some(ct: CtType[?]) =>
+            resolveTypeParam(tv.getSimpleName)
+              .contains(minter.resolve(ct.getQualifiedName + "$$" + tv.getSimpleName))
+          case _ => false
+      catch { case _: Throwable => false }
+
     /** Concrete, or mentioning only type variables OWNED BY THE CALLEE that carry a real (non-
       * `Object`) upper bound. Such a variable is never in scope at the call site, so Java's view of
       * the formal is its bound — `TextureDescriptor<T extends Texture>` is `TextureDescriptor<Texture>`
@@ -506,6 +521,7 @@ object SpoonTir:
       * inference that was going to work off the expected type. */
     private def calleeBounded(tr: CtTypeReference[?]): Boolean = tr match
       case null => true
+      case tv: CtTypeParameterReference if sameVarInScope(tv) => true
       case tv: CtTypeParameterReference =>
         (try Option(tv.getDeclaration) catch { case _: Throwable => None }).exists { d =>
           d.getParent.isInstanceOf[CtExecutable[?]] &&
@@ -518,6 +534,7 @@ object SpoonTir:
     /** `tpe`, but every type variable replaced by the erasure of its bound (see [[calleeBounded]]);
       * identical to `tpe` on a variable-free type. */
     private def tpBoundErased(tr: CtTypeReference[?]): TypeRepr = tr match
+      case tv: CtTypeParameterReference if sameVarInScope(tv) => tpe(tv)
       case tv: CtTypeParameterReference =>
         (try Option(tv.getDeclaration) catch { case _: Throwable => None })
           .map(erasureOfFormal(_, Set.empty, 2)).getOrElse(objectT)
