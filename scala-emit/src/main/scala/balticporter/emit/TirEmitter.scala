@@ -254,9 +254,12 @@ final class TirEmitter(source: Program):
     val (loweredBody, superArgs) = (lowerCtors(cd.body, plan), plan.superArgs)
     val pparams = plan.primaryParams
     val prim    = if pparams.isEmpty then "" else s"(${pparams.map(param).mkString(", ")})"
+    val superTpe = cd.parents.headOption.map { case tt: TypeTree => tt.tpe; case t: Term => t.tpe }
     val parents = cd.parents.map(parent).filter(_.nonEmpty) match
       case Nil                          => Nil
-      case h :: t if superArgs.nonEmpty => s"$h(${superArgs.map(superArg(_, i)).mkString(", ")})" :: t
+      case h :: t if superArgs.nonEmpty =>
+        val as = superArgs.zipWithIndex.map((a, n) => superArg(superTpe.getOrElse(TypeRepr.NoType), a, n, i))
+        s"$h(${as.mkString(", ")})" :: t
       case all                          => all
     val ext     = if parents.isEmpty then "" else " extends " + parents.mkString(" with ")
     // an all-static utility class (no instance state, no supertype) is just an `object` — so its
@@ -442,17 +445,43 @@ final class TirEmitter(source: Program):
         s"$name$l$h"
       case other => s"$name <: ${tpe(other)}"
 
+  /** The parent's promoted-constructor formal at position `n`, with the parent's OWN type
+    * parameters replaced by whatever the `extends` clause supplies for them — `MapIterator<V>`'s
+    * `IntMap<V>` seen from `Entries[V] extends MapIterator[V]` is `IntMap[V]`, `V` now being
+    * `Entries`'. `None` when the parent is external, has no promoted constructor, or is applied at
+    * a different arity than it declares. */
+  private def superFormal(parent: TypeRepr, n: Int): Option[TypeRepr] =
+    val actuals = parent match
+      case TypeRepr.AppliedType(_, as) => as
+      case _                           => Nil
+    for
+      tycon <- headSymOf(parent)
+      pcd   <- program.definitionOf(tycon).collect { case c: Tree.ClassDef => c }
+      if pcd.tparams.sizeIs == actuals.size
+      p     <- plans(pcd).primaryParams.lift(n)
+    yield substTp(p.tpt.tpe, pcd.tparams.map(_.symbol).zip(actuals).toMap)
+
   /** An argument lifted into the `extends` clause.
     *
-    * The parent's own wildcards were eliminated to get there ([[deWildcarded]]) — `Keys extends
-    * MapIterator` becomes `MapIterator[AnyRef]`, so its constructor now asks for `IntMap[AnyRef]`
-    * — while the argument beside it kept the wildcard fill its DECLARATION was rendered with
-    * (`map$p: IntMap[?]`). Both are the same Java raw type read in two positions, and only one of
-    * them could keep the wildcard, so the argument needs the same elimination applied as a cast.
-    * Java passed it unchecked; this writes that down. */
-  private def superArg(a: Term, i: Int): String =
+    * The argument kept the wildcard fill its DECLARATION was rendered with (`map$p: IntMap[?]`),
+    * but the parent's constructor asks for that same Java raw type read in another position, where
+    * a wildcard could not survive. Both are the same type to Java, which passed it unchecked; this
+    * writes the conversion down.
+    *
+    * WHICH type to name is decided by the parent, not by the argument alone. Where the parent's
+    * own wildcards were eliminated to reach the `extends` clause ([[deWildcarded]]) — `Keys extends
+    * MapIterator` becoming `MapIterator[AnyRef]` — the same elimination is right. But a parent
+    * applied to NAMED arguments never lost anything: `Entries[V] extends MapIterator[V]` asks for
+    * `IntMap[V]`, and eliminating the argument's wildcard independently produced
+    * `IntMap[Object]` — the right shape at the wrong type, which scalac rejects. So take the
+    * parent's formal under its actual instantiation whenever it is available, and fall back to
+    * the isolated elimination only for a parent we cannot see into. */
+  private def superArg(parent: TypeRepr, a: Term, n: Int, i: Int): String =
     if !hasWildcardArg(a.tpe) then term(a, i)
-    else s"${term(a, i)}.asInstanceOf[${deWildcarded(a.tpe, named = false)}]"
+    else
+      val target = superFormal(parent, n).filterNot(hasWildcardArg).map(tpe)
+        .getOrElse(deWildcarded(a.tpe, named = false))
+      s"${term(a, i)}.asInstanceOf[$target]"
 
   private def parent(p: Term | TypeTree): String = p match
     case tt: TypeTree  => parentTpe(tt.tpe)
