@@ -456,15 +456,32 @@ site (`readValue("resource", null, …)`) is class-tag driven and needs explicit
 
 ## Do NOT retry (measured failures)
 
-- **Falling back to ERASED formals in `rawCtorArgs` when nothing names the class's parameters**:
-  2 → **23** (all E007). The reasoning is sound for the one site it targets — Java really does check
-  a raw `new AssetDescriptor(name, data.type, parameter)` at the erased `(String, Class,
-  AssetLoaderParameters)` — but as a blanket fallback it casts 20-odd arguments that were already
-  correct, and an argument cast to `AssetLoaderParameters[Object]` no longer conforms to the
-  concrete instantiation Scala had rightly inferred. A raw `new` needs the erasure only when the
-  inferred instantiation is CONTRADICTED by another argument; that condition is what is missing, and
-  the blanket form is not a step towards it. `rawCtorArgs`'s existing name-directed branch is right
-  and must stay.
+- **Falling back to ERASED formals in `rawCtorArgs` when nothing names the class's parameters** —
+  THREE gates tried, all worse than leaving it alone. This is the last remaining core error
+  (`ParticleEffectLoader:27`) and it has now cost a full cycle; do not attack it from this direction
+  again without a new idea.
+
+  | gate | measured |
+  |---|---|
+  | none — cast every formal mentioning a class type variable | 2 → **23** |
+  | + skip when the argument already shares the target's head constructor | 1 → **5** |
+  | + require a SIBLING argument to pin the instantiation to its erasure | 1 → **43** (E057) |
+
+  What each gate taught, so the next attempt starts further along:
+  - The head-constructor gate is *correct and necessary*: casting `Array[Foo]` → `Array[Object]` or
+    `Class[Foo]` → `Class[Object]` widens nothing, it erases the argument's OWN type argument and
+    loses the members the code then calls — the +277 / 7→41 failure in a new place.
+  - "Pinned by a sibling" is the right IDEA (at `ParticleEffectLoader` argument 2 really is a
+    `Class[Object]` read through an erased receiver, which is what forces `T = Object` and makes
+    argument 3 a contradiction javac never saw) but it cannot be decided from recorded types. A
+    class literal must not count as evidence — Spoon types `Texture.class` as raw `Class`, so its
+    recorded type collapses to the erasure and every loader looks pinned — yet excluding class
+    literals BY NAME then admits ordinary field reads and the count goes to 43.
+  - The engine's recorded type is not a reliable witness of what the emitted Scala will infer. That
+    is the same root cause as the other three entries here, and it is what `UNPORTABLE-DESIGN.md`
+    proposes to make visible rather than guess at. **This site is a good first customer for that
+    marker**: there is a defensible argument that no faithful Scala exists, since the Java is
+    exploiting raw-type unsoundness.
 - **Broadening `erasedReceiverView` to fire on a RENDERED wildcard, and to consider the callee's
   RESULT type**: 7 → **41** (21 × E008 `not a member`). Casting a receiver to its erased view LOSES
   members — `Array[Object]` has no `com.badlogic…` members the code then calls. The erased view is
