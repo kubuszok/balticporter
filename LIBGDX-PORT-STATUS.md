@@ -649,11 +649,25 @@ parameter `T` collide.
 The `boundAdmits` guard (added for the `ButtonGroup` collision, 7 -> 6) does not catch this one:
 `AssetDescriptor<T>` declares no bound, so `Void` satisfies it vacuously.
 
-**The fix is to stop keying on the name alone.** Record the map as
-`(ancestor FQN, formal name) -> type`, and apply an entry only when the raw type being filled IS
-that ancestor or is mentioned in that ancestor's own signatures — i.e. when the name match is
-evidence that the two `T`s are the same `T`. Everything needed is already collected in
-`instantiationOfParents`; only the key and the applicability test change.
+**The fix is to stop keying on the name alone** — apply an entry only when the ancestor that
+supplied it actually MENTIONS the type being filled, so the name match is evidence the two `T`s are
+the same `T`. The direction is right and the implementation is not yet: TWO variants measured
+**4 -> 161**, both rejecting good entries.
+
+What instrumentation established (do not re-derive):
+
+- `BitmapFontLoader`'s entry comes from `AsynchronousAssetLoader`, whose DECLARED methods are only
+  `loadAsync/loadSync/unloadAsync`. The `Array<AssetDescriptor>` that needs filling is declared by
+  its parent `AssetLoader`. So the test must be TRANSITIVE.
+- Making it transitive (walking supertypes, unioning member signatures, recursing into type
+  arguments) still measured 161 — so transitivity was not the blocker either, and the mentions set
+  is being built wrong in some further way.
+- `AssetLoadingTask`'s bad entry comes from `AsyncTask<Void>`, whose only member is `T call()`.
+  That one SHOULD be rejected by any working version of this test.
+
+**Next action is a print of what `mentionedIn(AsynchronousAssetLoader)` actually contains** — not a
+third variant of the test. Every variant reasoned from an assumption about what Spoon returns has
+failed; every fix this session that worked came from printing first.
 
 ### The earlier remaining-6 note
 

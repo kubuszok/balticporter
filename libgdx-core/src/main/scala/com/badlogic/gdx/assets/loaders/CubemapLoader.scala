@@ -42,7 +42,7 @@ class CubemapLoader(resolver$p: com.badlogic.gdx.assets.loaders.FileHandleResolv
     return cubemap
   }
   @java.lang.Override
-  override def getDependencies(fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.assets.loaders.CubemapLoader.CubemapParameter): com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.graphics.Cubemap]] = {
+  override def getDependencies(fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.assets.loaders.CubemapLoader.CubemapParameter): com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = {
     return null
   }
 }
