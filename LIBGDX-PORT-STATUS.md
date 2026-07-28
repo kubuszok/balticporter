@@ -10,15 +10,35 @@ scala-cli 3.8.4). The migration itself prints four independent checks on every r
 
 | metric | value | source |
 |---|---|---|
-| clean-compile errors (TYPER only — see §0.1) | **33** | `scripts/gdx_measure.sh` |
+| clean-compile errors (TYPER only — see §0.1) | **22** | `scripts/gdx_measure.sh` |
 | portability (JVM-only APIs in emitted code) | **0** | `PortabilityCheck` |
 | portability (injected replacements) | **clean** | `PortabilityCheck.inInjectedSource` |
 | silent omissions | **31** (30 `super(args)` + 1; 0 anonymous-class members) | `OmissionCheck` |
 | signature consistency | clean | `RewriteTrace.check` |
 | substitutions verified removed | 10 dropped types | migration CHECK 1 + CHECK 2 |
 
-Error breakdown: E007 14, E134 10, E120 5, E083 1, E051 1, E049 1, E008 1.
+Error breakdown: E007 11, E134 6, E120 1, E083 1, E051 1, E049 1, E008 1.
 (E050, E006 and E052 are gone; E051 8→1, E049 6→1.)
+
+### Where the engine ends and a library's manifest begins
+
+Nothing in `core` / `frontend-spoon` / `scala-emit` may name a ported library. Swept
+2026-07-28: the one violation was `ReflectionToPortableTransform`, which hard-coded
+`com.badlogic.gdx.utils.reflect.ClassReflection` and its member list; it is now the general
+`StaticForwarderTransform(List[Forwarder])` with the libgdx policy stated in `LibgdxCoreMigrate`.
+The per-library seams are:
+
+| seam | states | where libgdx's lives |
+|---|---|---|
+| `Substitutions` | types/methods not to emit, Scala to inject instead | `LibgdxCoreMigrate.subs` |
+| `ClassTableTransform(Map)` | `forName` → an explicit name→class table | `LibgdxCoreMigrate.classTable` |
+| `StaticForwarderTransform(List)` | wrapper statics that are plain members of arg 1 | `LibgdxCoreMigrate.unwrapReflection` |
+| `corpus-tests/libgdx-overrides/**` | the injected Scala itself | that directory |
+
+libgdx names DO appear in engine doc comments — `GL30Interceptor` witnessing the export diamond,
+`Array<? extends T>` witnessing array covariance. Those are worked examples explaining why a
+general rule exists, and drive no behaviour. Re-run the sweep with
+`grep -rn --include='*.scala' -E "badlogic|libgdx" core frontend-spoon scala-emit | grep -vE ":\s*(\*|//)"`.
 
 ## 0. Anonymous class bodies — FIXED
 
@@ -166,25 +186,35 @@ The 31 that remain, and why each is refused rather than approximated:
 The remaining E120 ×5 are unrelated (4 × `GL*Interceptor` export collisions, 1 × `RegionInfluencer`,
 whose nilary Java constructor delegates `this(1)` while two paramful roots leave nothing to promote).
 
-### 2. Type-level residue — E007 14 + E134 10
+### 2. Type-level residue — E007 11 + E134 6
 Long tail of distinct patterns, none bigger than four. What is left:
 
 - ~~**`java.util.Comparator` raw ×4**~~ — **FIXED by §0**; they were the anonymous-class omission
   surfacing, not a type-level problem.
-- **`Array[T]` vs `Array[Object]` ×3** (`Array`, `Sort`, `TimSort`) — a generic array formal that
-  Spoon erased at the reference; array covariance is deliberately disabled for our own callees
-  (see `coerceArgsFixed`), and re-enabling it there breaks the invariant `Array[T]` overloads.
-- **capture through a BOUNDED wildcard receiver ×4** (`Array.addAll(array.items, …)`,
-  `ObjectSet` idem) — `erasedFieldReceiver` deliberately lets a bounded wildcard keep its capture
-  ("`map.zeroValue` conforms to `V`"), which holds for a bare variable but NOT when the variable sits
-  in an INVARIANT position: `Array[array.T]` does not conform to `Array[T]`. The fix is to treat a
-  bounded wildcard as needing the receiver view too when the field's declared type mentions the
-  variable NESTED, and to cast to the BOUND-substituted instantiation (`Array[? <: T]` → `Array[T]`),
-  not the erased one — the erased `Array[Object]` does not conform either.
-- `IntMap`/`LongMap` `Keys.map$p : IntMap[?]` vs `IntMap[AnyRef]` ×2; `OrderedMap` ×2;
-  `ParallelArray` ×2; `AssetDescriptor` ctor ×2; and singletons in `AssetManager`, `FileHandle`,
-  `BitmapFont`, `ResourceData`, `CharArray`, `ParticleControllerRenderer`.
-- `NetJavaImpl` / `HttpParametersUtils` (2) are `CollectionsTransform` territory, not type residue.
+- ~~**`Array[T]` vs `Array[Object]` ×3** and **capture through a BOUNDED wildcard receiver ×4**~~ —
+  **FIXED** by `SpoonTir.arrayFormalCast`. Both were the same thing: Java arrays are covariant and
+  erase their element type, Scala's are invariant, so `a.items` (an `Array[a.T]` capture) and a
+  `T[]` in an `Object[]` formal are Java-legal conversions Scala rejects. The cast is driven by the
+  DECLARATION's formal, never the reference's — a reference erases `T[]` to `Object[]` under
+  noClasspath, and casting to `Array[Object]` is exactly what would break our own
+  `addAll(Array[T], …)`. Type-variable identity is checked against the id its declaring type minted
+  (`<owner>$$T`), not by name, so a callee's `<T>` can never bind to an unrelated in-scope one.
+- **`AssetDescriptor` ctor ×3** (`ResourceData` ×2, `ParticleEffectLoader` ×1) — `data.type` read
+  through the erased receiver view is `Class[Object]`, but the raw `new AssetDescriptor(…)` was
+  name-filled to `AssetDescriptor[T]`, which wants `Class[T]`. The shape of the fix: at a
+  `new C[targs](args)`, coerce each argument to `substFormal(formal, C's params ↦ targs)` — the
+  substituted formal, not the declared one.
+- **`IntMap`/`LongMap` `Keys.map$p : IntMap[?]` vs `IntMap[AnyRef]` ×2** — a raw `MapIterator`
+  cannot be filled with `?` in an EXTENDS clause (wildcards are illegal there), so it fills with
+  `AnyRef` while the constructor parameter beside it fills with `?`. The two raw fills must agree:
+  substitute the parent's chosen type arguments into the super-constructor's formal.
+- `OrderedMap` ×2, `ParallelArray` ×1, and singletons in `AssetManager`, `FileHandle`,
+  `BitmapFont`, `Skin`, `ParticleControllerRenderer` (raw fill in an EXTENDS clause should use each
+  parameter's BOUND, not `AnyRef` — `D <: ParticleControllerRenderData` rejects `AnyRef`).
+- `CharArray.append` ×2 — a `java.util.Iterator<Character>` element in a `char` formal; auto-unbox
+  across the overload set.
+- `NetJavaImpl` (1) is `CollectionsTransform` territory, not type residue: a JDK method genuinely
+  RETURNING `java.util.Map` was retyped as though it were ours.
 
 ### 3. Re-derive the scene2d agent's rules — DONE
 All nine rules from `worktree-agent-a3f9b81b6a4184e28` (HEAD `0223788`) were triaged one at a time
@@ -192,9 +222,22 @@ against the current engine. Six were ported and paid; three were rejected as alr
 inert. See "Rules ported / rejected" below.
 
 ### 4. Smaller clusters
-E008 ×6 (CollectionsTransform API gaps — `Iterator.remove`, `Map.entrySet`, `+=` on a mapped
-collection; each needs a semantic mapping decision). E120 ×5 (4 × `GL*Interceptor` export
-collisions, 1 × `RegionInfluencer` nilary/paramful constructor clash).
+E008 is down to ×1 (`TextArea` exporting `TextField.TextFieldClickListener`, a NON-static Java inner
+class used as a supertype — the same cause as the one E083, `TextField#TextFieldClickListener` not
+being an immutable path).
+
+E120 is down to ×1: `RegionInfluencer`'s explicit nilary Java constructor clashes with Scala's
+implicit primary. `CtorFunnel` nominates `RegionInfluencer(int)` as primary but the whole-program
+fixpoint WITHHOLDS it, because three subclasses reach the class with an argument-free `extends`
+clause. The nilary constructor cannot become the primary either — it opens with `this(1)`, which a
+primary may not do. **No faithful single-primary encoding is known for this shape**; a default
+argument does not express it (the nilary constructor has a body the paramful one does not), and
+neither does inlining (`def this(int)` would then re-run the nilary body). Left as a compile error
+DELIBERATELY rather than approximated — the compiler is a louder tracker than a silent omission.
+
+~~4 × `GL*Interceptor` export collisions~~ — **FIXED**: exports now dedupe by DECLARING TYPE, so a
+diamond (`GLInterceptor` and `GL30` meeting at `GL20`) drops the duplicate while a genuine
+redeclaration (`GL31` shadowing `GL30`) keeps the most specific.
 E049 is down to ×1 (`DepthShader.Config.defaultCullFace`: an implicit access Java resolved to an
 INHERITED instance field, which Scala finds ambiguous with the companion's re-exported static of the
 same name. `this.defaultCullFace` says what Java meant — but Spoon does NOT resolve this reference to
