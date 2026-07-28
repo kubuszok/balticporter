@@ -1,23 +1,23 @@
 package com.badlogic.gdx.utils
 
-class JsonTest extends balticporter.runtime.PortedSuite {
-  testCase("testFromJsonObject", {
+class JsonTest extends munit.FunSuite {
+  test("testFromJsonObject")({
     val json: com.badlogic.gdx.utils.Json = new com.badlogic.gdx.utils.Json()
     val value: com.badlogic.gdx.utils.JsonValue = json.fromJson(null, classOf[com.badlogic.gdx.utils.JsonValue], "{\"key\":\"value\"}")
     balticporter.runtime.Asserts.assertEquals("value", value.getString("key"))
   })
-  testCase("testFromJsonArray", {
+  test("testFromJsonArray")({
     val json: com.badlogic.gdx.utils.Json = new com.badlogic.gdx.utils.Json()
     val value: com.badlogic.gdx.utils.Array[java.lang.String] = json.fromJson(null, "[\"value1\",\"value2\"]")
     balticporter.runtime.Asserts.assertEquals("value1", value.get(0))
     balticporter.runtime.Asserts.assertEquals("value2", value.get(1))
   })
-  testCase("testCharFromNumber", {
+  test("testCharFromNumber")({
     val json: com.badlogic.gdx.utils.Json = new com.badlogic.gdx.utils.Json()
     val value: scala.Char = json.fromJson(classOf[scala.Char], "90")
     balticporter.runtime.Asserts.assertEquals('Z', value)
   })
-  testCase("testReuseReader", {
+  test("testReuseReader")({
     val json: com.badlogic.gdx.utils.Json = new com.badlogic.gdx.utils.Json()
     var value: com.badlogic.gdx.utils.JsonValue = json.fromJson(null, classOf[com.badlogic.gdx.utils.JsonValue], "{\"key\":\"value\"}")
     balticporter.runtime.Asserts.assertEquals("value", value.getString("key"))

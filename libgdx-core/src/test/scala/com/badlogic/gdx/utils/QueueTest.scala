@@ -1,7 +1,7 @@
 package com.badlogic.gdx.utils
 
-class QueueTest extends balticporter.runtime.PortedSuite {
-  testCase("addFirstAndLastTest", {
+class QueueTest extends munit.FunSuite {
+  test("addFirstAndLastTest")({
     val queue: com.badlogic.gdx.utils.Queue[java.lang.Integer] = new com.badlogic.gdx.utils.Queue[java.lang.Integer]()
     queue.addFirst(1.asInstanceOf[java.lang.Integer])
     queue.addLast(2.asInstanceOf[java.lang.Integer])
@@ -12,7 +12,7 @@ class QueueTest extends balticporter.runtime.PortedSuite {
     balticporter.runtime.Asserts.assertEquals(2, queue.indexOf(2.asInstanceOf[java.lang.Integer], true))
     balticporter.runtime.Asserts.assertEquals(3, queue.indexOf(4.asInstanceOf[java.lang.Integer], true))
   })
-  testCase("removeLastTest", {
+  test("removeLastTest")({
     val queue: com.badlogic.gdx.utils.Queue[java.lang.Integer] = new com.badlogic.gdx.utils.Queue[java.lang.Integer]()
     queue.addLast(1.asInstanceOf[java.lang.Integer])
     queue.addLast(2.asInstanceOf[java.lang.Integer])
@@ -32,7 +32,7 @@ class QueueTest extends balticporter.runtime.PortedSuite {
     balticporter.runtime.Asserts.assertEquals(1.asInstanceOf[java.lang.Integer], queue.removeLast().asInstanceOf[java.lang.Object])
     balticporter.runtime.Asserts.assertEquals(0, queue.size)
   })
-  testCase("removeFirstTest", {
+  test("removeFirstTest")({
     val queue: com.badlogic.gdx.utils.Queue[java.lang.Integer] = new com.badlogic.gdx.utils.Queue[java.lang.Integer]()
     queue.addLast(1.asInstanceOf[java.lang.Integer])
     queue.addLast(2.asInstanceOf[java.lang.Integer])
@@ -52,7 +52,7 @@ class QueueTest extends balticporter.runtime.PortedSuite {
     balticporter.runtime.Asserts.assertEquals(4.asInstanceOf[java.lang.Integer], queue.removeFirst().asInstanceOf[java.lang.Object])
     balticporter.runtime.Asserts.assertEquals(0, queue.size)
   })
-  testCase("resizableQueueTest", {
+  test("resizableQueueTest")({
     val q: com.badlogic.gdx.utils.Queue[java.lang.Integer] = new com.badlogic.gdx.utils.Queue[java.lang.Integer](8)
     balticporter.runtime.Asserts.assertTrue("New queue is not empty!", q.size == 0);
     { var i: scala.Int = 0; while (i < 100) { {
@@ -87,7 +87,7 @@ class QueueTest extends balticporter.runtime.PortedSuite {
     q.clear()
     balticporter.runtime.Asserts.assertTrue("Clear did not clear properly", q.size == 0)
   })
-  testCase("resizableDequeTest", {
+  test("resizableDequeTest")({
     val q: com.badlogic.gdx.utils.Queue[java.lang.Integer] = new com.badlogic.gdx.utils.Queue[java.lang.Integer](8)
     balticporter.runtime.Asserts.assertTrue("New deque is not empty!", q.size == 0);
     { var i: scala.Int = 0; while (i < 100) { {
@@ -122,7 +122,7 @@ class QueueTest extends balticporter.runtime.PortedSuite {
     q.clear()
     balticporter.runtime.Asserts.assertTrue("Clear did not clear properly", q.size == 0)
   })
-  testCase("getTest", {
+  test("getTest")({
     val q: com.badlogic.gdx.utils.Queue[java.lang.Integer] = new com.badlogic.gdx.utils.Queue[java.lang.Integer](7);
     { var i: scala.Int = 0; while (i < 5) { {
       { var j: scala.Int = 0; while (j < 4) { {
@@ -149,7 +149,7 @@ class QueueTest extends balticporter.runtime.PortedSuite {
       }
     }; i = i + 1 } }
   })
-  testCase("removeTest", {
+  test("removeTest")({
     val q: com.badlogic.gdx.utils.Queue[java.lang.Integer] = new com.badlogic.gdx.utils.Queue[java.lang.Integer]();
     { var j: scala.Int = 0; while (j <= 6) { {
       q.addLast(j.asInstanceOf[java.lang.Integer])
@@ -188,7 +188,7 @@ class QueueTest extends balticporter.runtime.PortedSuite {
     q.removeIndex(5)
     this.assertValues(q, scala.Array[java.lang.Integer](0.asInstanceOf[java.lang.Integer], 1.asInstanceOf[java.lang.Integer], 2.asInstanceOf[java.lang.Integer], 3.asInstanceOf[java.lang.Integer], 4.asInstanceOf[java.lang.Integer]))
   })
-  testCase("indexOfTest", {
+  test("indexOfTest")({
     val q: com.badlogic.gdx.utils.Queue[java.lang.Integer] = new com.badlogic.gdx.utils.Queue[java.lang.Integer]();
     { var j: scala.Int = 0; while (j <= 6) { {
       q.addLast(j.asInstanceOf[java.lang.Integer])
@@ -207,7 +207,7 @@ class QueueTest extends balticporter.runtime.PortedSuite {
       balticporter.runtime.Asserts.assertEquals(q.indexOf(j.asInstanceOf[java.lang.Integer], false), j)
     }; j = j + 1 } }
   })
-  testCase("iteratorTest", {
+  test("iteratorTest")({
     val q: com.badlogic.gdx.utils.Queue[java.lang.Integer] = new com.badlogic.gdx.utils.Queue[java.lang.Integer]();
     { var j: scala.Int = 0; while (j <= 6) { {
       q.addLast(j.asInstanceOf[java.lang.Integer])
@@ -260,7 +260,7 @@ class QueueTest extends balticporter.runtime.PortedSuite {
     iter.remove()
     this.assertValues(q, scala.Array[java.lang.Integer](2.asInstanceOf[java.lang.Integer], 4.asInstanceOf[java.lang.Integer], 5.asInstanceOf[java.lang.Integer]))
   })
-  testCase("iteratorRemoveEdgeCaseTest", {
+  test("iteratorRemoveEdgeCaseTest")({
     val queue: com.badlogic.gdx.utils.Queue[java.lang.Integer] = new com.badlogic.gdx.utils.Queue[java.lang.Integer]();
     { var i: scala.Int = 0; while (i < 100) { {
       queue.addLast(i.asInstanceOf[java.lang.Integer])
@@ -277,7 +277,7 @@ class QueueTest extends balticporter.runtime.PortedSuite {
     var i: java.lang.Integer = queue.first()
     balticporter.runtime.Asserts.assertEquals(1337, i.asInstanceOf[scala.Int].longValue())
   })
-  testCase("toStringTest", {
+  test("toStringTest")({
     val q: com.badlogic.gdx.utils.Queue[java.lang.Integer] = new com.badlogic.gdx.utils.Queue[java.lang.Integer](1)
     balticporter.runtime.Asserts.assertTrue(q.toString().equals("[]"))
     q.addLast(4.asInstanceOf[java.lang.Integer])
@@ -287,7 +287,7 @@ class QueueTest extends balticporter.runtime.PortedSuite {
     q.addLast(7.asInstanceOf[java.lang.Integer])
     balticporter.runtime.Asserts.assertTrue(q.toString().equals("[4, 5, 6, 7]"))
   })
-  testCase("hashEqualsTest", {
+  test("hashEqualsTest")({
     val q1: com.badlogic.gdx.utils.Queue[java.lang.Integer] = new com.badlogic.gdx.utils.Queue[java.lang.Integer]()
     val q2: com.badlogic.gdx.utils.Queue[java.lang.Integer] = new com.badlogic.gdx.utils.Queue[java.lang.Integer]()
     this.assertEqualsAndHash(q1, q2)

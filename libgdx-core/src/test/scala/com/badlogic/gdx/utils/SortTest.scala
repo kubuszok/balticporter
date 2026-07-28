@@ -1,17 +1,17 @@
 package com.badlogic.gdx.utils
 
-class SortTest extends balticporter.runtime.PortedSuite {
+class SortTest extends munit.FunSuite {
   private var sortInstance: com.badlogic.gdx.utils.Sort = null.asInstanceOf[com.badlogic.gdx.utils.Sort]
   @org.junit.Before
   def setUp(): scala.Unit = {
     this.sortInstance = com.badlogic.gdx.utils.Sort.instance()
   }
-  testCase("testSortArrayComparable", {
+  test("testSortArrayComparable")({
     val array: scala.Array[java.lang.Integer] = scala.Array[java.lang.Integer](3.asInstanceOf[java.lang.Integer], 1.asInstanceOf[java.lang.Integer], 4.asInstanceOf[java.lang.Integer], 1.asInstanceOf[java.lang.Integer], 5.asInstanceOf[java.lang.Integer], 9.asInstanceOf[java.lang.Integer], 2.asInstanceOf[java.lang.Integer], 6.asInstanceOf[java.lang.Integer], 5.asInstanceOf[java.lang.Integer], 3.asInstanceOf[java.lang.Integer], 5.asInstanceOf[java.lang.Integer])
     this.sortInstance.sort(array.asInstanceOf[scala.Array[java.lang.Object]])
     balticporter.runtime.Asserts.assertArrayEquals(scala.Array[java.lang.Integer](1.asInstanceOf[java.lang.Integer], 1.asInstanceOf[java.lang.Integer], 2.asInstanceOf[java.lang.Integer], 3.asInstanceOf[java.lang.Integer], 3.asInstanceOf[java.lang.Integer], 4.asInstanceOf[java.lang.Integer], 5.asInstanceOf[java.lang.Integer], 5.asInstanceOf[java.lang.Integer], 5.asInstanceOf[java.lang.Integer], 6.asInstanceOf[java.lang.Integer], 9.asInstanceOf[java.lang.Integer]).asInstanceOf[scala.Array[java.lang.Object]], array.asInstanceOf[scala.Array[java.lang.Object]])
   })
-  testCase("testSortArrayWithComparator", {
+  test("testSortArrayWithComparator")({
     val array: scala.Array[java.lang.Integer] = scala.Array[java.lang.Integer](3.asInstanceOf[java.lang.Integer], 1.asInstanceOf[java.lang.Integer], 4.asInstanceOf[java.lang.Integer], 1.asInstanceOf[java.lang.Integer], 5.asInstanceOf[java.lang.Integer], 9.asInstanceOf[java.lang.Integer], 2.asInstanceOf[java.lang.Integer], 6.asInstanceOf[java.lang.Integer], 5.asInstanceOf[java.lang.Integer], 3.asInstanceOf[java.lang.Integer], 5.asInstanceOf[java.lang.Integer])
     val comparator: java.util.Comparator[java.lang.Integer] = new java.util.Comparator[java.lang.Integer]() {
       @java.lang.Override
@@ -22,7 +22,7 @@ class SortTest extends balticporter.runtime.PortedSuite {
     this.sortInstance.sort[java.lang.Integer](array, comparator)
     balticporter.runtime.Asserts.assertArrayEquals(scala.Array[java.lang.Integer](1.asInstanceOf[java.lang.Integer], 1.asInstanceOf[java.lang.Integer], 2.asInstanceOf[java.lang.Integer], 3.asInstanceOf[java.lang.Integer], 3.asInstanceOf[java.lang.Integer], 4.asInstanceOf[java.lang.Integer], 5.asInstanceOf[java.lang.Integer], 5.asInstanceOf[java.lang.Integer], 5.asInstanceOf[java.lang.Integer], 6.asInstanceOf[java.lang.Integer], 9.asInstanceOf[java.lang.Integer]).asInstanceOf[scala.Array[java.lang.Object]], array.asInstanceOf[scala.Array[java.lang.Object]])
   })
-  testCase("testSortArrayWithComparatorAndRange", {
+  test("testSortArrayWithComparatorAndRange")({
     val array: scala.Array[java.lang.Integer] = scala.Array[java.lang.Integer](3.asInstanceOf[java.lang.Integer], 1.asInstanceOf[java.lang.Integer], 4.asInstanceOf[java.lang.Integer], 1.asInstanceOf[java.lang.Integer], 5.asInstanceOf[java.lang.Integer], 9.asInstanceOf[java.lang.Integer], 2.asInstanceOf[java.lang.Integer], 6.asInstanceOf[java.lang.Integer], 5.asInstanceOf[java.lang.Integer], 3.asInstanceOf[java.lang.Integer], 5.asInstanceOf[java.lang.Integer])
     val comparator: java.util.Comparator[java.lang.Integer] = new java.util.Comparator[java.lang.Integer]() {
       @java.lang.Override
@@ -33,17 +33,17 @@ class SortTest extends balticporter.runtime.PortedSuite {
     this.sortInstance.sort[java.lang.Integer](array, comparator, 2, 7)
     balticporter.runtime.Asserts.assertArrayEquals(scala.Array[java.lang.Integer](3.asInstanceOf[java.lang.Integer], 1.asInstanceOf[java.lang.Integer], 1.asInstanceOf[java.lang.Integer], 2.asInstanceOf[java.lang.Integer], 4.asInstanceOf[java.lang.Integer], 5.asInstanceOf[java.lang.Integer], 9.asInstanceOf[java.lang.Integer], 6.asInstanceOf[java.lang.Integer], 5.asInstanceOf[java.lang.Integer], 3.asInstanceOf[java.lang.Integer], 5.asInstanceOf[java.lang.Integer]).asInstanceOf[scala.Array[java.lang.Object]], array.asInstanceOf[scala.Array[java.lang.Object]])
   })
-  testCase("testSortArrayRange", {
+  test("testSortArrayRange")({
     val array: scala.Array[java.lang.Integer] = scala.Array[java.lang.Integer](3.asInstanceOf[java.lang.Integer], 1.asInstanceOf[java.lang.Integer], 4.asInstanceOf[java.lang.Integer], 1.asInstanceOf[java.lang.Integer], 5.asInstanceOf[java.lang.Integer], 9.asInstanceOf[java.lang.Integer], 2.asInstanceOf[java.lang.Integer], 6.asInstanceOf[java.lang.Integer], 5.asInstanceOf[java.lang.Integer], 3.asInstanceOf[java.lang.Integer], 5.asInstanceOf[java.lang.Integer])
     this.sortInstance.sort(array.asInstanceOf[scala.Array[java.lang.Object]], 2, 7)
     balticporter.runtime.Asserts.assertArrayEquals(scala.Array[java.lang.Integer](3.asInstanceOf[java.lang.Integer], 1.asInstanceOf[java.lang.Integer], 1.asInstanceOf[java.lang.Integer], 2.asInstanceOf[java.lang.Integer], 4.asInstanceOf[java.lang.Integer], 5.asInstanceOf[java.lang.Integer], 9.asInstanceOf[java.lang.Integer], 6.asInstanceOf[java.lang.Integer], 5.asInstanceOf[java.lang.Integer], 3.asInstanceOf[java.lang.Integer], 5.asInstanceOf[java.lang.Integer]).asInstanceOf[scala.Array[java.lang.Object]], array.asInstanceOf[scala.Array[java.lang.Object]])
   })
-  testCase("testSortArray", {
+  test("testSortArray")({
     val array: com.badlogic.gdx.utils.Array[java.lang.Integer] = new com.badlogic.gdx.utils.Array[java.lang.Integer](scala.Array[java.lang.Integer](3.asInstanceOf[java.lang.Integer], 1.asInstanceOf[java.lang.Integer], 4.asInstanceOf[java.lang.Integer], 1.asInstanceOf[java.lang.Integer], 5.asInstanceOf[java.lang.Integer], 9.asInstanceOf[java.lang.Integer], 2.asInstanceOf[java.lang.Integer], 6.asInstanceOf[java.lang.Integer], 5.asInstanceOf[java.lang.Integer], 3.asInstanceOf[java.lang.Integer], 5.asInstanceOf[java.lang.Integer]))
     this.sortInstance.sort[java.lang.Integer](array)
     balticporter.runtime.Asserts.assertArrayEquals(scala.Array[java.lang.Integer](1.asInstanceOf[java.lang.Integer], 1.asInstanceOf[java.lang.Integer], 2.asInstanceOf[java.lang.Integer], 3.asInstanceOf[java.lang.Integer], 3.asInstanceOf[java.lang.Integer], 4.asInstanceOf[java.lang.Integer], 5.asInstanceOf[java.lang.Integer], 5.asInstanceOf[java.lang.Integer], 5.asInstanceOf[java.lang.Integer], 6.asInstanceOf[java.lang.Integer], 9.asInstanceOf[java.lang.Integer]).asInstanceOf[scala.Array[java.lang.Object]], array.items.asInstanceOf[scala.Array[java.lang.Object]])
   })
-  testCase("testSortArrayComparableWithPreExistingComparableTimSort", {
+  test("testSortArrayComparableWithPreExistingComparableTimSort")({
     val comparableTimSortField: java.lang.reflect.Field = classOf[com.badlogic.gdx.utils.Sort].getDeclaredField("comparableTimSort")
     comparableTimSortField.setAccessible(true)
     comparableTimSortField.set(this.sortInstance, new com.badlogic.gdx.utils.ComparableTimSort())
@@ -51,7 +51,7 @@ class SortTest extends balticporter.runtime.PortedSuite {
     this.sortInstance.sort[java.lang.Integer](array)
     balticporter.runtime.Asserts.assertArrayEquals(scala.Array[java.lang.Integer](1.asInstanceOf[java.lang.Integer], 1.asInstanceOf[java.lang.Integer], 2.asInstanceOf[java.lang.Integer], 3.asInstanceOf[java.lang.Integer], 3.asInstanceOf[java.lang.Integer], 4.asInstanceOf[java.lang.Integer], 5.asInstanceOf[java.lang.Integer], 5.asInstanceOf[java.lang.Integer], 5.asInstanceOf[java.lang.Integer], 6.asInstanceOf[java.lang.Integer], 9.asInstanceOf[java.lang.Integer]).asInstanceOf[scala.Array[java.lang.Object]], array.items.asInstanceOf[scala.Array[java.lang.Object]])
   })
-  testCase("testSortArrayComparableWithNullComparableTimSort", {
+  test("testSortArrayComparableWithNullComparableTimSort")({
     val comparableTimSortField: java.lang.reflect.Field = classOf[com.badlogic.gdx.utils.Sort].getDeclaredField("comparableTimSort")
     comparableTimSortField.setAccessible(true)
     comparableTimSortField.set(this.sortInstance, null)
@@ -59,7 +59,7 @@ class SortTest extends balticporter.runtime.PortedSuite {
     this.sortInstance.sort(array.asInstanceOf[scala.Array[java.lang.Object]])
     balticporter.runtime.Asserts.assertArrayEquals(scala.Array[java.lang.Integer](1.asInstanceOf[java.lang.Integer], 1.asInstanceOf[java.lang.Integer], 2.asInstanceOf[java.lang.Integer], 3.asInstanceOf[java.lang.Integer], 3.asInstanceOf[java.lang.Integer], 4.asInstanceOf[java.lang.Integer], 5.asInstanceOf[java.lang.Integer], 5.asInstanceOf[java.lang.Integer], 5.asInstanceOf[java.lang.Integer], 6.asInstanceOf[java.lang.Integer], 9.asInstanceOf[java.lang.Integer]).asInstanceOf[scala.Array[java.lang.Object]], array.asInstanceOf[scala.Array[java.lang.Object]])
   })
-  testCase("testSortArrayWithRangeWithNullComparableTimSort", {
+  test("testSortArrayWithRangeWithNullComparableTimSort")({
     val comparableTimSortField: java.lang.reflect.Field = classOf[com.badlogic.gdx.utils.Sort].getDeclaredField("comparableTimSort")
     comparableTimSortField.setAccessible(true)
     comparableTimSortField.set(this.sortInstance, null)
@@ -67,7 +67,7 @@ class SortTest extends balticporter.runtime.PortedSuite {
     this.sortInstance.sort(array.asInstanceOf[scala.Array[java.lang.Object]], 2, 7)
     balticporter.runtime.Asserts.assertArrayEquals(scala.Array[java.lang.Integer](3.asInstanceOf[java.lang.Integer], 1.asInstanceOf[java.lang.Integer], 1.asInstanceOf[java.lang.Integer], 2.asInstanceOf[java.lang.Integer], 4.asInstanceOf[java.lang.Integer], 5.asInstanceOf[java.lang.Integer], 9.asInstanceOf[java.lang.Integer], 6.asInstanceOf[java.lang.Integer], 5.asInstanceOf[java.lang.Integer], 3.asInstanceOf[java.lang.Integer], 5.asInstanceOf[java.lang.Integer]).asInstanceOf[scala.Array[java.lang.Object]], array.asInstanceOf[scala.Array[java.lang.Object]])
   })
-  testCase("testSortArrayWithNullTimSort", {
+  test("testSortArrayWithNullTimSort")({
     val timSortField: java.lang.reflect.Field = classOf[com.badlogic.gdx.utils.Sort].getDeclaredField("timSort")
     timSortField.setAccessible(true)
     timSortField.set(this.sortInstance, null)
@@ -81,7 +81,7 @@ class SortTest extends balticporter.runtime.PortedSuite {
     this.sortInstance.sort[java.lang.Integer](array, comparator)
     balticporter.runtime.Asserts.assertArrayEquals(scala.Array[java.lang.Integer](1.asInstanceOf[java.lang.Integer], 1.asInstanceOf[java.lang.Integer], 2.asInstanceOf[java.lang.Integer], 3.asInstanceOf[java.lang.Integer], 3.asInstanceOf[java.lang.Integer], 4.asInstanceOf[java.lang.Integer], 5.asInstanceOf[java.lang.Integer], 5.asInstanceOf[java.lang.Integer], 5.asInstanceOf[java.lang.Integer], 6.asInstanceOf[java.lang.Integer], 9.asInstanceOf[java.lang.Integer]).asInstanceOf[scala.Array[java.lang.Object]], array.asInstanceOf[scala.Array[java.lang.Object]])
   })
-  testCase("testSortArrayWithNullTimSortArray", {
+  test("testSortArrayWithNullTimSortArray")({
     val timSortField: java.lang.reflect.Field = classOf[com.badlogic.gdx.utils.Sort].getDeclaredField("timSort")
     timSortField.setAccessible(true)
     timSortField.set(this.sortInstance, null)
@@ -95,7 +95,7 @@ class SortTest extends balticporter.runtime.PortedSuite {
     this.sortInstance.sort[java.lang.Integer](array, comparator)
     balticporter.runtime.Asserts.assertArrayEquals(scala.Array[java.lang.Integer](1.asInstanceOf[java.lang.Integer], 1.asInstanceOf[java.lang.Integer], 2.asInstanceOf[java.lang.Integer], 3.asInstanceOf[java.lang.Integer], 3.asInstanceOf[java.lang.Integer], 4.asInstanceOf[java.lang.Integer], 5.asInstanceOf[java.lang.Integer], 5.asInstanceOf[java.lang.Integer], 5.asInstanceOf[java.lang.Integer], 6.asInstanceOf[java.lang.Integer], 9.asInstanceOf[java.lang.Integer]).asInstanceOf[scala.Array[java.lang.Object]], array.items.asInstanceOf[scala.Array[java.lang.Object]])
   })
-  testCase("testSortArrayWithComparatorAndRangeWithNullTimSort", {
+  test("testSortArrayWithComparatorAndRangeWithNullTimSort")({
     val timSortField: java.lang.reflect.Field = classOf[com.badlogic.gdx.utils.Sort].getDeclaredField("timSort")
     timSortField.setAccessible(true)
     timSortField.set(this.sortInstance, null)
@@ -109,7 +109,7 @@ class SortTest extends balticporter.runtime.PortedSuite {
     this.sortInstance.sort[java.lang.Integer](array, comparator, 2, 7)
     balticporter.runtime.Asserts.assertArrayEquals(scala.Array[java.lang.Integer](3.asInstanceOf[java.lang.Integer], 1.asInstanceOf[java.lang.Integer], 1.asInstanceOf[java.lang.Integer], 2.asInstanceOf[java.lang.Integer], 4.asInstanceOf[java.lang.Integer], 5.asInstanceOf[java.lang.Integer], 9.asInstanceOf[java.lang.Integer], 6.asInstanceOf[java.lang.Integer], 5.asInstanceOf[java.lang.Integer], 3.asInstanceOf[java.lang.Integer], 5.asInstanceOf[java.lang.Integer]).asInstanceOf[scala.Array[java.lang.Object]], array.asInstanceOf[scala.Array[java.lang.Object]])
   })
-  testCase("testSortArrayWithCustomComparator", {
+  test("testSortArrayWithCustomComparator")({
     val array: com.badlogic.gdx.utils.Array[java.lang.Integer] = new com.badlogic.gdx.utils.Array[java.lang.Integer](scala.Array[java.lang.Integer](3.asInstanceOf[java.lang.Integer], 1.asInstanceOf[java.lang.Integer], 4.asInstanceOf[java.lang.Integer], 1.asInstanceOf[java.lang.Integer], 5.asInstanceOf[java.lang.Integer], 9.asInstanceOf[java.lang.Integer], 2.asInstanceOf[java.lang.Integer], 6.asInstanceOf[java.lang.Integer], 5.asInstanceOf[java.lang.Integer], 3.asInstanceOf[java.lang.Integer], 5.asInstanceOf[java.lang.Integer]))
     val customComparator: java.util.Comparator[java.lang.Integer] = new java.util.Comparator[java.lang.Integer]() {
       @java.lang.Override
@@ -120,17 +120,17 @@ class SortTest extends balticporter.runtime.PortedSuite {
     this.sortInstance.sort[java.lang.Integer](array, customComparator)
     balticporter.runtime.Asserts.assertArrayEquals(scala.Array[java.lang.Integer](9.asInstanceOf[java.lang.Integer], 6.asInstanceOf[java.lang.Integer], 5.asInstanceOf[java.lang.Integer], 5.asInstanceOf[java.lang.Integer], 5.asInstanceOf[java.lang.Integer], 4.asInstanceOf[java.lang.Integer], 3.asInstanceOf[java.lang.Integer], 3.asInstanceOf[java.lang.Integer], 2.asInstanceOf[java.lang.Integer], 1.asInstanceOf[java.lang.Integer], 1.asInstanceOf[java.lang.Integer]).asInstanceOf[scala.Array[java.lang.Object]], array.items.asInstanceOf[scala.Array[java.lang.Object]])
   })
-  testCase("testSortEmptyArray", {
+  test("testSortEmptyArray")({
     val emptyArray: scala.Array[java.lang.Integer] = scala.Array[java.lang.Integer]()
     this.sortInstance.sort(emptyArray.asInstanceOf[scala.Array[java.lang.Object]])
     balticporter.runtime.Asserts.assertArrayEquals(scala.Array[java.lang.Integer]().asInstanceOf[scala.Array[java.lang.Object]], emptyArray.asInstanceOf[scala.Array[java.lang.Object]])
   })
-  testCase("testSortSingleElementArray", {
+  test("testSortSingleElementArray")({
     val singleElementArray: scala.Array[java.lang.Integer] = scala.Array[java.lang.Integer](1.asInstanceOf[java.lang.Integer])
     this.sortInstance.sort(singleElementArray.asInstanceOf[scala.Array[java.lang.Object]])
     balticporter.runtime.Asserts.assertArrayEquals(scala.Array[java.lang.Integer](1.asInstanceOf[java.lang.Integer]).asInstanceOf[scala.Array[java.lang.Object]], singleElementArray.asInstanceOf[scala.Array[java.lang.Object]])
   })
-  testCase("testSortArrayWithNulls", {
+  test("testSortArrayWithNulls")({
     val arrayWithNulls: scala.Array[java.lang.Integer] = scala.Array[java.lang.Integer](3.asInstanceOf[java.lang.Integer], null, 1.asInstanceOf[java.lang.Integer], 4.asInstanceOf[java.lang.Integer], null, 2.asInstanceOf[java.lang.Integer])
     val comparator: java.util.Comparator[java.lang.Integer] = new NullsFirstComparator()
     this.sortInstance.sort[java.lang.Integer](arrayWithNulls, comparator)
@@ -141,22 +141,22 @@ class SortTest extends balticporter.runtime.PortedSuite {
     val array: scala.Array[java.lang.Integer] = scala.Array[java.lang.Integer](3.asInstanceOf[java.lang.Integer], 1.asInstanceOf[java.lang.Integer], 4.asInstanceOf[java.lang.Integer], 1.asInstanceOf[java.lang.Integer], 5.asInstanceOf[java.lang.Integer], 9.asInstanceOf[java.lang.Integer], 2.asInstanceOf[java.lang.Integer], 6.asInstanceOf[java.lang.Integer], 5.asInstanceOf[java.lang.Integer], 3.asInstanceOf[java.lang.Integer], 5.asInstanceOf[java.lang.Integer])
     this.sortInstance.sort(array.asInstanceOf[scala.Array[java.lang.Object]], -1, 15)
   }
-  testCase("testSortAlreadySortedArrayComparable", {
+  test("testSortAlreadySortedArrayComparable")({
     val sortedArray: com.badlogic.gdx.utils.Array[java.lang.Integer] = new com.badlogic.gdx.utils.Array[java.lang.Integer](scala.Array[java.lang.Integer](1.asInstanceOf[java.lang.Integer], 2.asInstanceOf[java.lang.Integer], 3.asInstanceOf[java.lang.Integer], 4.asInstanceOf[java.lang.Integer], 5.asInstanceOf[java.lang.Integer]))
     this.sortInstance.sort[java.lang.Integer](sortedArray)
     balticporter.runtime.Asserts.assertArrayEquals(scala.Array[java.lang.Integer](1.asInstanceOf[java.lang.Integer], 2.asInstanceOf[java.lang.Integer], 3.asInstanceOf[java.lang.Integer], 4.asInstanceOf[java.lang.Integer], 5.asInstanceOf[java.lang.Integer]).asInstanceOf[scala.Array[java.lang.Object]], sortedArray.items.asInstanceOf[scala.Array[java.lang.Object]])
   })
-  testCase("testSortArrayWithEqualElements", {
+  test("testSortArrayWithEqualElements")({
     val equalElementsArray: com.badlogic.gdx.utils.Array[java.lang.Integer] = new com.badlogic.gdx.utils.Array[java.lang.Integer](scala.Array[java.lang.Integer](2.asInstanceOf[java.lang.Integer], 2.asInstanceOf[java.lang.Integer], 2.asInstanceOf[java.lang.Integer], 2.asInstanceOf[java.lang.Integer], 2.asInstanceOf[java.lang.Integer]))
     this.sortInstance.sort[java.lang.Integer](equalElementsArray)
     balticporter.runtime.Asserts.assertArrayEquals(scala.Array[java.lang.Integer](2.asInstanceOf[java.lang.Integer], 2.asInstanceOf[java.lang.Integer], 2.asInstanceOf[java.lang.Integer], 2.asInstanceOf[java.lang.Integer], 2.asInstanceOf[java.lang.Integer]).asInstanceOf[scala.Array[java.lang.Object]], equalElementsArray.items.asInstanceOf[scala.Array[java.lang.Object]])
   })
-  testCase("testSortSingleElementArrayComparable", {
+  test("testSortSingleElementArrayComparable")({
     val singleElementArray: com.badlogic.gdx.utils.Array[java.lang.Integer] = new com.badlogic.gdx.utils.Array[java.lang.Integer](scala.Array[java.lang.Integer](1.asInstanceOf[java.lang.Integer]))
     this.sortInstance.sort[java.lang.Integer](singleElementArray)
     balticporter.runtime.Asserts.assertArrayEquals(scala.Array[java.lang.Integer](1.asInstanceOf[java.lang.Integer]).asInstanceOf[scala.Array[java.lang.Object]], singleElementArray.items.asInstanceOf[scala.Array[java.lang.Object]])
   })
-  testCase("testSortEmptyArrayComparable", {
+  test("testSortEmptyArrayComparable")({
     val emptyArray: com.badlogic.gdx.utils.Array[java.lang.Integer] = new com.badlogic.gdx.utils.Array[java.lang.Integer](scala.Array[java.lang.Integer]())
     this.sortInstance.sort[java.lang.Integer](emptyArray)
     balticporter.runtime.Asserts.assertArrayEquals(scala.Array[java.lang.Integer]().asInstanceOf[scala.Array[java.lang.Object]], emptyArray.items.asInstanceOf[scala.Array[java.lang.Object]])

@@ -1,7 +1,7 @@
 package com.badlogic.gdx.utils
 
-class JsonValueTest extends balticporter.runtime.PortedSuite {
-  testCase("testAddingRemovedValue", {
+class JsonValueTest extends munit.FunSuite {
+  test("testAddingRemovedValue")({
     val firstObject: com.badlogic.gdx.utils.JsonValue = new com.badlogic.gdx.utils.JsonValue(com.badlogic.gdx.utils.JsonValue.ValueType.`object`)
     val secondObject: com.badlogic.gdx.utils.JsonValue = new com.badlogic.gdx.utils.JsonValue(com.badlogic.gdx.utils.JsonValue.ValueType.`object`)
     firstObject.addChild("a", new com.badlogic.gdx.utils.JsonValue("A"))
@@ -16,7 +16,7 @@ class JsonValueTest extends balticporter.runtime.PortedSuite {
     balticporter.runtime.Asserts.assertNull(secondObject.get("b"))
     balticporter.runtime.Asserts.assertNotNull(secondObject.get("c"))
   })
-  testCase("testReplaceValue", {
+  test("testReplaceValue")({
     val `object`: com.badlogic.gdx.utils.JsonValue = new com.badlogic.gdx.utils.JsonValue(com.badlogic.gdx.utils.JsonValue.ValueType.`object`)
     `object`.addChild("a", new com.badlogic.gdx.utils.JsonValue("A"))
     `object`.addChild("b", new com.badlogic.gdx.utils.JsonValue("B"))
@@ -38,7 +38,7 @@ class JsonValueTest extends balticporter.runtime.PortedSuite {
     balticporter.runtime.Asserts.assertEquals(`object`.get("c").asString(), "Y")
     balticporter.runtime.Asserts.assertEquals(`object`.get("d").asString(), "Z")
   })
-  testCase("testCopyConstructor", {
+  test("testCopyConstructor")({
     val b: com.badlogic.gdx.utils.JsonValue = new com.badlogic.gdx.utils.JsonValue(com.badlogic.gdx.utils.JsonValue.ValueType.`object`)
     b.addChild("c", new com.badlogic.gdx.utils.JsonValue("C"))
     b.addChild("d", new com.badlogic.gdx.utils.JsonValue("D"))

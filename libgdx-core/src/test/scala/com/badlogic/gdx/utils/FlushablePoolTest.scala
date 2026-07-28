@@ -1,22 +1,22 @@
 package com.badlogic.gdx.utils
 
-class FlushablePoolTest extends balticporter.runtime.PortedSuite {
-  testCase("initializeFlushablePoolTest1", {
+class FlushablePoolTest extends munit.FunSuite {
+  test("initializeFlushablePoolTest1")({
     val flushablePool: com.badlogic.gdx.utils.FlushablePoolTest#FlushablePoolClass = new FlushablePoolClass()
     balticporter.runtime.Asserts.assertEquals(0, flushablePool.getFree())
     balticporter.runtime.Asserts.assertEquals(java.lang.Integer.MAX_VALUE, flushablePool.max)
   })
-  testCase("initializeFlushablePoolTest2", {
+  test("initializeFlushablePoolTest2")({
     val flushablePool: com.badlogic.gdx.utils.FlushablePoolTest#FlushablePoolClass = new FlushablePoolClass(10)
     balticporter.runtime.Asserts.assertEquals(0, flushablePool.getFree())
     balticporter.runtime.Asserts.assertEquals(java.lang.Integer.MAX_VALUE, flushablePool.max)
   })
-  testCase("initializeFlushablePoolTest3", {
+  test("initializeFlushablePoolTest3")({
     val flushablePool: com.badlogic.gdx.utils.FlushablePoolTest#FlushablePoolClass = new FlushablePoolClass(10, 10)
     balticporter.runtime.Asserts.assertEquals(0, flushablePool.getFree())
     balticporter.runtime.Asserts.assertEquals(10, flushablePool.max)
   })
-  testCase("obtainTest", {
+  test("obtainTest")({
     val flushablePool: com.badlogic.gdx.utils.FlushablePoolTest#FlushablePoolClass = new FlushablePoolClass(10, 10)
     flushablePool.newObject()
     balticporter.runtime.Asserts.assertEquals(0, flushablePool.obtained.size)
@@ -25,7 +25,7 @@ class FlushablePoolTest extends balticporter.runtime.PortedSuite {
     flushablePool.flush()
     balticporter.runtime.Asserts.assertEquals(0, flushablePool.obtained.size)
   })
-  testCase("flushTest", {
+  test("flushTest")({
     val flushablePool: com.badlogic.gdx.utils.FlushablePoolTest#FlushablePoolClass = new FlushablePoolClass(10, 10)
     flushablePool.newObject()
     flushablePool.obtain()
@@ -33,7 +33,7 @@ class FlushablePoolTest extends balticporter.runtime.PortedSuite {
     flushablePool.flush()
     balticporter.runtime.Asserts.assertEquals(0, flushablePool.obtained.size)
   })
-  testCase("freeTest", {
+  test("freeTest")({
     val flushablePool: com.badlogic.gdx.utils.FlushablePoolTest#FlushablePoolClass = new FlushablePoolClass(10, 10)
     flushablePool.newObject()
     flushablePool.newObject()
@@ -45,7 +45,7 @@ class FlushablePoolTest extends balticporter.runtime.PortedSuite {
     balticporter.runtime.Asserts.assertTrue(flushablePool.obtained.contains(element1, true))
     balticporter.runtime.Asserts.assertFalse(flushablePool.obtained.contains(element2, true))
   })
-  testCase("freeAllTest", {
+  test("freeAllTest")({
     val flushablePool: com.badlogic.gdx.utils.FlushablePoolTest#FlushablePoolClass = new FlushablePoolClass(5, 5)
     flushablePool.newObject()
     flushablePool.newObject()

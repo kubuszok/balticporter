@@ -1,7 +1,7 @@
 package com.badlogic.gdx.utils
 
-class MixedPutRemoveTest extends balticporter.runtime.PortedSuite {
-  testCase("testLongMapPut", {
+class MixedPutRemoveTest extends munit.FunSuite {
+  test("testLongMapPut")({
     val gdxMap: com.badlogic.gdx.utils.LongMap[java.lang.Integer] = new com.badlogic.gdx.utils.LongMap[java.lang.Integer]()
     val jdkMap: scala.collection.mutable.HashMap[java.lang.Long, java.lang.Integer] = new scala.collection.mutable.HashMap[java.lang.Long, java.lang.Integer]()
     var stateA: scala.Long = 0L
@@ -26,7 +26,7 @@ class MixedPutRemoveTest extends balticporter.runtime.PortedSuite {
     }; i = i + 1 } }
     balticporter.runtime.Asserts.assertEquals(gdxRepeats, jdkRepeats)
   })
-  testCase("testLongMapMix", {
+  test("testLongMapMix")({
     val gdxMap: com.badlogic.gdx.utils.LongMap[java.lang.Integer] = new com.badlogic.gdx.utils.LongMap[java.lang.Integer]()
     val jdkMap: scala.collection.mutable.HashMap[java.lang.Long, java.lang.Integer] = new scala.collection.mutable.HashMap[java.lang.Long, java.lang.Integer]()
     var stateA: scala.Long = 0L
@@ -55,7 +55,7 @@ class MixedPutRemoveTest extends balticporter.runtime.PortedSuite {
     }; i = i + 1 } }
     balticporter.runtime.Asserts.assertEquals(gdxRemovals, jdkRemovals)
   })
-  testCase("testLongMapIterator", {
+  test("testLongMapIterator")({
     val gdxMap: com.badlogic.gdx.utils.LongMap[java.lang.Long] = new com.badlogic.gdx.utils.LongMap[java.lang.Long]()
     var stateA: scala.Long = 0L
     var stateB: scala.Long = 1L
@@ -97,7 +97,7 @@ class MixedPutRemoveTest extends balticporter.runtime.PortedSuite {
       balticporter.runtime.Asserts.assertEquals(ent.key, ent.value.longValue())
     }
   })
-  testCase("testIntMapPut", {
+  test("testIntMapPut")({
     val gdxMap: com.badlogic.gdx.utils.IntMap[java.lang.Integer] = new com.badlogic.gdx.utils.IntMap[java.lang.Integer]()
     val jdkMap: scala.collection.mutable.HashMap[java.lang.Integer, java.lang.Integer] = new scala.collection.mutable.HashMap[java.lang.Integer, java.lang.Integer]()
     var stateA: scala.Long = 0L
@@ -123,7 +123,7 @@ class MixedPutRemoveTest extends balticporter.runtime.PortedSuite {
     }; i = i + 1 } }
     balticporter.runtime.Asserts.assertEquals(gdxRepeats, jdkRepeats)
   })
-  testCase("testIntMapMix", {
+  test("testIntMapMix")({
     val gdxMap: com.badlogic.gdx.utils.IntMap[java.lang.Integer] = new com.badlogic.gdx.utils.IntMap[java.lang.Integer]()
     val jdkMap: scala.collection.mutable.HashMap[java.lang.Integer, java.lang.Integer] = new scala.collection.mutable.HashMap[java.lang.Integer, java.lang.Integer]()
     var stateA: scala.Long = 0L
@@ -153,7 +153,7 @@ class MixedPutRemoveTest extends balticporter.runtime.PortedSuite {
     }; i = i + 1 } }
     balticporter.runtime.Asserts.assertEquals(gdxRemovals, jdkRemovals)
   })
-  testCase("testIntMapIterator", {
+  test("testIntMapIterator")({
     val gdxMap: com.badlogic.gdx.utils.IntMap[java.lang.Integer] = new com.badlogic.gdx.utils.IntMap[java.lang.Integer]()
     var stateA: scala.Long = 0L
     var stateB: scala.Long = 1L
@@ -196,7 +196,7 @@ class MixedPutRemoveTest extends balticporter.runtime.PortedSuite {
       balticporter.runtime.Asserts.assertEquals(ent.key, ent.value.intValue())
     }
   })
-  testCase("testObjectMapPut", {
+  test("testObjectMapPut")({
     val gdxMap: com.badlogic.gdx.utils.ObjectMap[java.lang.Integer, java.lang.Integer] = new com.badlogic.gdx.utils.ObjectMap[java.lang.Integer, java.lang.Integer]()
     val jdkMap: scala.collection.mutable.HashMap[java.lang.Integer, java.lang.Integer] = new scala.collection.mutable.HashMap[java.lang.Integer, java.lang.Integer]()
     var stateA: scala.Long = 0L
@@ -222,7 +222,7 @@ class MixedPutRemoveTest extends balticporter.runtime.PortedSuite {
     }; i = i + 1 } }
     balticporter.runtime.Asserts.assertEquals(gdxRepeats, jdkRepeats)
   })
-  testCase("testObjectMapMix", {
+  test("testObjectMapMix")({
     val gdxMap: com.badlogic.gdx.utils.ObjectMap[java.lang.Integer, java.lang.Integer] = new com.badlogic.gdx.utils.ObjectMap[java.lang.Integer, java.lang.Integer]()
     val jdkMap: scala.collection.mutable.HashMap[java.lang.Integer, java.lang.Integer] = new scala.collection.mutable.HashMap[java.lang.Integer, java.lang.Integer]()
     var stateA: scala.Long = 0L

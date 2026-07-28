@@ -1,7 +1,7 @@
 package com.badlogic.gdx.math
 
-class BSplineTest extends balticporter.runtime.PortedSuite {
-  testCase("testCubicSplineNonContinuous", {
+class BSplineTest extends munit.FunSuite {
+  test("testCubicSplineNonContinuous")({
     val controlPoints: scala.Array[com.badlogic.gdx.math.Vector3] = scala.Array[com.badlogic.gdx.math.Vector3](new com.badlogic.gdx.math.Vector3(0, 0, 0), new com.badlogic.gdx.math.Vector3(1, 1, 0), new com.badlogic.gdx.math.Vector3(2, 0, 0), new com.badlogic.gdx.math.Vector3(3, -1, 0))
     val spline: com.badlogic.gdx.math.BSpline[com.badlogic.gdx.math.Vector3] = new com.badlogic.gdx.math.BSpline[com.badlogic.gdx.math.Vector3](controlPoints, 3, false)
     val result: com.badlogic.gdx.math.Vector3 = new com.badlogic.gdx.math.Vector3()
@@ -11,7 +11,7 @@ class BSplineTest extends balticporter.runtime.PortedSuite {
     balticporter.runtime.Asserts.assertEquals(expected.y, result.y, 0.1f)
     balticporter.runtime.Asserts.assertEquals(expected.z, result.z, 0.1f)
   })
-  testCase("testCubicSplineContinuous", {
+  test("testCubicSplineContinuous")({
     val controlPoints: scala.Array[com.badlogic.gdx.math.Vector3] = scala.Array[com.badlogic.gdx.math.Vector3](new com.badlogic.gdx.math.Vector3(1, 0, 0), new com.badlogic.gdx.math.Vector3(0, 1, 0), new com.badlogic.gdx.math.Vector3(-1, 0, 0), new com.badlogic.gdx.math.Vector3(0, -1, 0))
     val spline: com.badlogic.gdx.math.BSpline[com.badlogic.gdx.math.Vector3] = new com.badlogic.gdx.math.BSpline[com.badlogic.gdx.math.Vector3](controlPoints, 3, true)
     val result: com.badlogic.gdx.math.Vector3 = new com.badlogic.gdx.math.Vector3()
@@ -21,7 +21,7 @@ class BSplineTest extends balticporter.runtime.PortedSuite {
     balticporter.runtime.Asserts.assertEquals(expected.y, result.y, 0.1f)
     balticporter.runtime.Asserts.assertEquals(expected.z, result.z, 0.1f)
   })
-  testCase("testCubicDerivative", {
+  test("testCubicDerivative")({
     val controlPoints: scala.Array[com.badlogic.gdx.math.Vector3] = scala.Array[com.badlogic.gdx.math.Vector3](new com.badlogic.gdx.math.Vector3(0, 0, 0), new com.badlogic.gdx.math.Vector3(1, 1, 0), new com.badlogic.gdx.math.Vector3(2, 0, 0), new com.badlogic.gdx.math.Vector3(3, -1, 0))
     val spline: com.badlogic.gdx.math.BSpline[com.badlogic.gdx.math.Vector3] = new com.badlogic.gdx.math.BSpline[com.badlogic.gdx.math.Vector3](controlPoints, 3, true)
     val derivative: com.badlogic.gdx.math.Vector3 = new com.badlogic.gdx.math.Vector3()
@@ -31,14 +31,14 @@ class BSplineTest extends balticporter.runtime.PortedSuite {
     balticporter.runtime.Asserts.assertEquals(expectedDerivative.y, derivative.y, 0.001f)
     balticporter.runtime.Asserts.assertEquals(expectedDerivative.z, derivative.z, 0.001f)
   })
-  testCase("testContinuousApproximation", {
+  test("testContinuousApproximation")({
     val controlPoints: scala.Array[com.badlogic.gdx.math.Vector3] = scala.Array[com.badlogic.gdx.math.Vector3](new com.badlogic.gdx.math.Vector3(1, 0, 0), new com.badlogic.gdx.math.Vector3(0, 1, 0), new com.badlogic.gdx.math.Vector3(-1, 0, 0), new com.badlogic.gdx.math.Vector3(0, -1, 0))
     val spline: com.badlogic.gdx.math.BSpline[com.badlogic.gdx.math.Vector3] = new com.badlogic.gdx.math.BSpline[com.badlogic.gdx.math.Vector3](controlPoints, 3, true)
     val point: com.badlogic.gdx.math.Vector3 = new com.badlogic.gdx.math.Vector3(0.45f, -0.45f, 0.0f)
     val t: scala.Float = spline.approximate(point)
     balticporter.runtime.Asserts.assertEquals(0.875f, t, 0.1f)
   })
-  testCase("testNonContinuousApproximation", {
+  test("testNonContinuousApproximation")({
     val controlPoints: scala.Array[com.badlogic.gdx.math.Vector3] = scala.Array[com.badlogic.gdx.math.Vector3](new com.badlogic.gdx.math.Vector3(1, 0, 0), new com.badlogic.gdx.math.Vector3(0, 1, 0), new com.badlogic.gdx.math.Vector3(-1, 0, 0), new com.badlogic.gdx.math.Vector3(0, -1, 0))
     val spline: com.badlogic.gdx.math.BSpline[com.badlogic.gdx.math.Vector3] = new com.badlogic.gdx.math.BSpline[com.badlogic.gdx.math.Vector3](controlPoints, 3, false)
     var point: com.badlogic.gdx.math.Vector3 = null.asInstanceOf[com.badlogic.gdx.math.Vector3]
@@ -53,7 +53,7 @@ class BSplineTest extends balticporter.runtime.PortedSuite {
     t = spline.approximate(point)
     balticporter.runtime.Asserts.assertEquals(0.5f, t, 0.1f)
   })
-  testCase("testSplineContinuity", {
+  test("testSplineContinuity")({
     val controlPoints: scala.Array[com.badlogic.gdx.math.Vector3] = scala.Array[com.badlogic.gdx.math.Vector3](new com.badlogic.gdx.math.Vector3(0, 0, 0), new com.badlogic.gdx.math.Vector3(1, 1, 0), new com.badlogic.gdx.math.Vector3(2, 0, 0), new com.badlogic.gdx.math.Vector3(3, -1, 0))
     val spline: com.badlogic.gdx.math.BSpline[com.badlogic.gdx.math.Vector3] = new com.badlogic.gdx.math.BSpline[com.badlogic.gdx.math.Vector3](controlPoints, 3, true)
     val start: com.badlogic.gdx.math.Vector3 = new com.badlogic.gdx.math.Vector3()
@@ -64,7 +64,7 @@ class BSplineTest extends balticporter.runtime.PortedSuite {
     balticporter.runtime.Asserts.assertEquals(start.y, `end`.y, 0.001f)
     balticporter.runtime.Asserts.assertEquals(start.z, `end`.z, 0.001f)
   })
-  testCase("testEdgeCases", {
+  test("testEdgeCases")({
     val controlPoints: scala.Array[com.badlogic.gdx.math.Vector3] = scala.Array[com.badlogic.gdx.math.Vector3](new com.badlogic.gdx.math.Vector3(0, 0, 0), new com.badlogic.gdx.math.Vector3(1, 1, 0), new com.badlogic.gdx.math.Vector3(2, 0, 0), new com.badlogic.gdx.math.Vector3(3, -1, 0))
     val spline: com.badlogic.gdx.math.BSpline[com.badlogic.gdx.math.Vector3] = new com.badlogic.gdx.math.BSpline[com.badlogic.gdx.math.Vector3](controlPoints, 3, false)
     val start: com.badlogic.gdx.math.Vector3 = new com.badlogic.gdx.math.Vector3()

@@ -1,7 +1,7 @@
 package com.badlogic.gdx.utils
 
-class CharArrayTest extends balticporter.runtime.PortedSuite {
-  testCase("constructorTest", {
+class CharArrayTest extends munit.FunSuite {
+  test("constructorTest")({
     val array1: com.badlogic.gdx.utils.CharArray = new com.badlogic.gdx.utils.CharArray()
     balticporter.runtime.Asserts.assertEquals(0, array1.size)
     balticporter.runtime.Asserts.assertTrue(array1.ordered)
@@ -37,7 +37,7 @@ class CharArrayTest extends balticporter.runtime.PortedSuite {
     balticporter.runtime.Asserts.assertEquals(5, array9.size)
     balticporter.runtime.Asserts.assertEquals("world", array9.toString())
   })
-  testCase("addTest", {
+  test("addTest")({
     val array: com.badlogic.gdx.utils.CharArray = new com.badlogic.gdx.utils.CharArray()
     array.add('a')
     balticporter.runtime.Asserts.assertEquals(1, array.size)
@@ -69,7 +69,7 @@ class CharArrayTest extends balticporter.runtime.PortedSuite {
     balticporter.runtime.Asserts.assertEquals('r', array.get(16))
     balticporter.runtime.Asserts.assertEquals('s', array.get(17))
   })
-  testCase("getSetTest", {
+  test("getSetTest")({
     val array: com.badlogic.gdx.utils.CharArray = new com.badlogic.gdx.utils.CharArray()
     array.addAll(scala.Array[scala.Char]('a', 'b', 'c', 'd', 'e'))
     balticporter.runtime.Asserts.assertEquals('a', array.get(0))
@@ -95,7 +95,7 @@ class CharArrayTest extends balticporter.runtime.PortedSuite {
     balticporter.runtime.Asserts.assertEquals(6.asInstanceOf[scala.Char], array3.get(1))
     balticporter.runtime.Asserts.assertEquals(8.asInstanceOf[scala.Char], array3.get(2))
   })
-  testCase("removeTest", {
+  test("removeTest")({
     val array: com.badlogic.gdx.utils.CharArray = new com.badlogic.gdx.utils.CharArray(true, 10)
     array.addAll(scala.Array[scala.Char]('a', 'b', 'c', 'd', 'e'))
     balticporter.runtime.Asserts.assertTrue(array.removeValue('c'))
@@ -132,7 +132,7 @@ class CharArrayTest extends balticporter.runtime.PortedSuite {
     balticporter.runtime.Asserts.assertEquals('c', unordered.get(0))
     balticporter.runtime.Asserts.assertEquals('e', unordered.get(1))
   })
-  testCase("searchTest", {
+  test("searchTest")({
     val array: com.badlogic.gdx.utils.CharArray = new com.badlogic.gdx.utils.CharArray()
     array.addAll(scala.Array[scala.Char]('h', 'e', 'l', 'l', 'o', ' ', 'w', 'o', 'r', 'l', 'd'))
     balticporter.runtime.Asserts.assertTrue(array.contains('l'))
@@ -152,7 +152,7 @@ class CharArrayTest extends balticporter.runtime.PortedSuite {
     balticporter.runtime.Asserts.assertEquals(0, array.lastIndexOf("hello"))
     balticporter.runtime.Asserts.assertEquals(2, array.lastIndexOf("ll"))
   })
-  testCase("stackTest", {
+  test("stackTest")({
     val array: com.badlogic.gdx.utils.CharArray = new com.badlogic.gdx.utils.CharArray()
     array.add('a')
     array.add('b')
@@ -168,7 +168,7 @@ class CharArrayTest extends balticporter.runtime.PortedSuite {
     balticporter.runtime.Asserts.assertFalse(array.notEmpty())
     balticporter.runtime.Asserts.assertTrue(array.isEmpty())
   })
-  testCase("arrayOperationsTest", {
+  test("arrayOperationsTest")({
     val array: com.badlogic.gdx.utils.CharArray = new com.badlogic.gdx.utils.CharArray()
     array.addAll(scala.Array[scala.Char]('d', 'b', 'e', 'a', 'c'))
     array.sort()
@@ -196,7 +196,7 @@ class CharArrayTest extends balticporter.runtime.PortedSuite {
     array2.clear()
     balticporter.runtime.Asserts.assertEquals(0, array2.size)
   })
-  testCase("appendTest", {
+  test("appendTest")({
     val array: com.badlogic.gdx.utils.CharArray = new com.badlogic.gdx.utils.CharArray()
     array.append(true)
     balticporter.runtime.Asserts.assertEquals("true", array.toString())
@@ -249,7 +249,7 @@ class CharArrayTest extends balticporter.runtime.PortedSuite {
     array.append(sbuf)
     balticporter.runtime.Asserts.assertEquals("buffer", array.toString())
   })
-  testCase("appendlnTest", {
+  test("appendlnTest")({
     val array: com.badlogic.gdx.utils.CharArray = new com.badlogic.gdx.utils.CharArray()
     array.appendln("Line 1")
     array.appendln("Line 2")
@@ -260,7 +260,7 @@ class CharArrayTest extends balticporter.runtime.PortedSuite {
     array.appendln()
     balticporter.runtime.Asserts.assertEquals("\n", array.toString())
   })
-  testCase("paddingTest", {
+  test("paddingTest")({
     val array: com.badlogic.gdx.utils.CharArray = new com.badlogic.gdx.utils.CharArray()
     array.append("Hello")
     array.appendPadding(5, '*')
@@ -276,7 +276,7 @@ class CharArrayTest extends balticporter.runtime.PortedSuite {
     balticporter.runtime.Asserts.assertEquals("Hi   ", array.toString())
     array.clear()
   })
-  testCase("deleteTest", {
+  test("deleteTest")({
     var array: com.badlogic.gdx.utils.CharArray = new com.badlogic.gdx.utils.CharArray("Hello World!")
     array.delete(5, 11)
     balticporter.runtime.Asserts.assertEquals("Hello!", array.toString())
@@ -295,7 +295,7 @@ class CharArrayTest extends balticporter.runtime.PortedSuite {
     array.deleteFirst("Hello")
     balticporter.runtime.Asserts.assertEquals(" World! Hello!", array.toString())
   })
-  testCase("replaceTest", {
+  test("replaceTest")({
     var array: com.badlogic.gdx.utils.CharArray = new com.badlogic.gdx.utils.CharArray("Hello World!")
     balticporter.runtime.Asserts.assertTrue(array.replaceFirst('l', 'L'))
     balticporter.runtime.Asserts.assertEquals("HeLlo World!", array.toString())
@@ -317,7 +317,7 @@ class CharArrayTest extends balticporter.runtime.PortedSuite {
     array.replace('-', " to ")
     balticporter.runtime.Asserts.assertEquals("a to b to c", array.toString())
   })
-  testCase("insertTest", {
+  test("insertTest")({
     var array: com.badlogic.gdx.utils.CharArray = new com.badlogic.gdx.utils.CharArray("Hello!")
     (array.insert: (scala.Int, scala.Char) => scala.Unit)(5, ' ')
     balticporter.runtime.Asserts.assertEquals("Hello !", array.toString())
@@ -341,7 +341,7 @@ class CharArrayTest extends balticporter.runtime.PortedSuite {
     array.set(2, 'B')
     balticporter.runtime.Asserts.assertEquals("ABBC", array.toString())
   })
-  testCase("substringTest", {
+  test("substringTest")({
     val array: com.badlogic.gdx.utils.CharArray = new com.badlogic.gdx.utils.CharArray("Hello World!")
     balticporter.runtime.Asserts.assertEquals("Hello", array.substring(0, 5))
     balticporter.runtime.Asserts.assertEquals("World!", array.substring(6))
@@ -356,7 +356,7 @@ class CharArrayTest extends balticporter.runtime.PortedSuite {
     balticporter.runtime.Asserts.assertEquals("", array.midString(6, 0))
     balticporter.runtime.Asserts.assertEquals("World!", array.midString(6, 10))
   })
-  testCase("stringComparisonTest", {
+  test("stringComparisonTest")({
     val array: com.badlogic.gdx.utils.CharArray = new com.badlogic.gdx.utils.CharArray("Hello World")
     balticporter.runtime.Asserts.assertTrue(array.startsWith("Hello"))
     balticporter.runtime.Asserts.assertFalse(array.startsWith("World"))
@@ -380,7 +380,7 @@ class CharArrayTest extends balticporter.runtime.PortedSuite {
     balticporter.runtime.Asserts.assertTrue(array.equalsIgnoreCase(upper))
     balticporter.runtime.Asserts.assertTrue(array.equalsIgnoreCase("hello world"))
   })
-  testCase("charSequenceTest", {
+  test("charSequenceTest")({
     val array: com.badlogic.gdx.utils.CharArray = new com.badlogic.gdx.utils.CharArray("Hello World!")
     balticporter.runtime.Asserts.assertEquals(12, array.length())
     balticporter.runtime.Asserts.assertEquals('H', array.charAt(0))
@@ -388,7 +388,7 @@ class CharArrayTest extends balticporter.runtime.PortedSuite {
     val sub: java.lang.CharSequence = array.subSequence(0, 5)
     balticporter.runtime.Asserts.assertEquals("Hello", sub.toString())
   })
-  testCase("trimCapacityTest", {
+  test("trimCapacityTest")({
     var array: com.badlogic.gdx.utils.CharArray = new com.badlogic.gdx.utils.CharArray(100)
     array.append("Hello")
     balticporter.runtime.Asserts.assertEquals(100, array.capacity())
@@ -406,7 +406,7 @@ class CharArrayTest extends balticporter.runtime.PortedSuite {
     array.setLength(5)
     balticporter.runtime.Asserts.assertEquals(5, array.length())
   })
-  testCase("hashCodeEqualsTest", {
+  test("hashCodeEqualsTest")({
     val array1: com.badlogic.gdx.utils.CharArray = new com.badlogic.gdx.utils.CharArray("Hello")
     val array2: com.badlogic.gdx.utils.CharArray = new com.badlogic.gdx.utils.CharArray("Hello")
     val array3: com.badlogic.gdx.utils.CharArray = new com.badlogic.gdx.utils.CharArray("World")
@@ -417,7 +417,7 @@ class CharArrayTest extends balticporter.runtime.PortedSuite {
     balticporter.runtime.Asserts.assertEquals(array1.hashCode(), array2.hashCode())
     balticporter.runtime.Asserts.assertNotEquals(array1.hashCode(), array3.hashCode())
   })
-  testCase("readerWriterTest", {
+  test("readerWriterTest")({
     val array: com.badlogic.gdx.utils.CharArray = new com.badlogic.gdx.utils.CharArray("Hello World!")
     val reader: java.io.Reader = array.reader()
     val buffer: scala.Array[scala.Char] = new scala.Array[scala.Char](5)
@@ -436,7 +436,7 @@ class CharArrayTest extends balticporter.runtime.PortedSuite {
     writer.write(scala.Array[scala.Char]('1', '2', '3'))
     balticporter.runtime.Asserts.assertEquals("Test 123", array2.toString())
   })
-  testCase("unicodeTest", {
+  test("unicodeTest")({
     val array: com.badlogic.gdx.utils.CharArray = new com.badlogic.gdx.utils.CharArray()
     val smiley: scala.Int = 128512
     array.appendCodePoint(smiley)
@@ -452,7 +452,7 @@ class CharArrayTest extends balticporter.runtime.PortedSuite {
     array2.reverseCodePoints()
     balticporter.runtime.Asserts.assertEquals("iH", array2.substring(0, 2))
   })
-  testCase("iteratorTest", {
+  test("iteratorTest")({
     val array: com.badlogic.gdx.utils.CharArray = new com.badlogic.gdx.utils.CharArray()
     val list: scala.collection.mutable.ArrayBuffer[java.lang.String] = new scala.collection.mutable.ArrayBuffer[java.lang.String]()
     list += "One"
@@ -472,7 +472,7 @@ class CharArrayTest extends balticporter.runtime.PortedSuite {
     array.appendWithSeparators(strArray.asInstanceOf[scala.Array[java.lang.Object]], "-")
     balticporter.runtime.Asserts.assertEquals("A-B-C", array.toString())
   })
-  testCase("edgeCasesTest", {
+  test("edgeCasesTest")({
     val array: com.badlogic.gdx.utils.CharArray = new com.badlogic.gdx.utils.CharArray()
     balticporter.runtime.Asserts.assertEquals(-1, array.indexOf('a'))
     balticporter.runtime.Asserts.assertEquals(-1, array.lastIndexOf('a'))
@@ -504,7 +504,7 @@ class CharArrayTest extends balticporter.runtime.PortedSuite {
       }
     }
   })
-  testCase("toArrayTest", {
+  test("toArrayTest")({
     val array: com.badlogic.gdx.utils.CharArray = new com.badlogic.gdx.utils.CharArray()
     array.addAll(scala.Array[scala.Char]('a', 'b', 'c', 'd', 'e'))
     val chars: scala.Array[scala.Char] = array.toCharArray()
@@ -515,7 +515,7 @@ class CharArrayTest extends balticporter.runtime.PortedSuite {
     balticporter.runtime.Asserts.assertEquals('c', target(3))
     balticporter.runtime.Asserts.assertEquals('d', target(4))
   })
-  testCase("drainTest", {
+  test("drainTest")({
     val array: com.badlogic.gdx.utils.CharArray = new com.badlogic.gdx.utils.CharArray("Hello World!")
     val drained: scala.Char = array.drainChar(6)
     balticporter.runtime.Asserts.assertEquals('W', drained)
@@ -526,7 +526,7 @@ class CharArrayTest extends balticporter.runtime.PortedSuite {
     balticporter.runtime.Asserts.assertArrayEquals(scala.Array[scala.Char]('H', 'e', 'l', 'l', 'o'), target)
     balticporter.runtime.Asserts.assertEquals(" orld!", array.toString())
   })
-  testCase("appendSeparatorTest", {
+  test("appendSeparatorTest")({
     val array: com.badlogic.gdx.utils.CharArray = new com.badlogic.gdx.utils.CharArray()
     array.appendSeparator(',')
     array.append("first")
@@ -551,7 +551,7 @@ class CharArrayTest extends balticporter.runtime.PortedSuite {
     array4.append("C")
     balticporter.runtime.Asserts.assertEquals("A | B | C", array4.toString())
   })
-  testCase("randomTest", {
+  test("randomTest")({
     val array: com.badlogic.gdx.utils.CharArray = new com.badlogic.gdx.utils.CharArray()
     array.addAll(scala.Array[scala.Char]('a', 'b', 'c', 'd', 'e'))
     val random: scala.Char = array.random()
@@ -564,7 +564,7 @@ class CharArrayTest extends balticporter.runtime.PortedSuite {
     balticporter.runtime.Asserts.assertTrue(array.contains('d'))
     balticporter.runtime.Asserts.assertTrue(array.contains('e'))
   })
-  testCase("appendToTest", {
+  test("appendToTest")({
     val array: com.badlogic.gdx.utils.CharArray = new com.badlogic.gdx.utils.CharArray("Hello World")
     val sb: java.lang.StringBuilder = new java.lang.StringBuilder("Start: ")
     array.appendTo(sb)
@@ -573,21 +573,21 @@ class CharArrayTest extends balticporter.runtime.PortedSuite {
     array.appendTo(sbuf)
     balticporter.runtime.Asserts.assertEquals("Start: Hello World", sbuf.toString())
   })
-  testCase("setCharAtTest", {
+  test("setCharAtTest")({
     val array: com.badlogic.gdx.utils.CharArray = new com.badlogic.gdx.utils.CharArray("Hello")
     array.setCharAt(1, 'a')
     balticporter.runtime.Asserts.assertEquals("Hallo", array.toString())
     array.setCharAt(2, 'p').setCharAt(3, 'p').setCharAt(4, 'y')
     balticporter.runtime.Asserts.assertEquals("Happy", array.toString())
   })
-  testCase("toStringAndClearTest", {
+  test("toStringAndClearTest")({
     val array: com.badlogic.gdx.utils.CharArray = new com.badlogic.gdx.utils.CharArray("Test String")
     val result: java.lang.String = array.toStringAndClear()
     balticporter.runtime.Asserts.assertEquals("Test String", result)
     balticporter.runtime.Asserts.assertEquals(0, array.size)
     balticporter.runtime.Asserts.assertTrue(array.isEmpty())
   })
-  testCase("toStringWithSeparatorTest", {
+  test("toStringWithSeparatorTest")({
     val array: com.badlogic.gdx.utils.CharArray = new com.badlogic.gdx.utils.CharArray()
     array.addAll(scala.Array[scala.Char]('a', 'b', 'c', 'd', 'e'))
     val result: java.lang.String = array.toString(",")

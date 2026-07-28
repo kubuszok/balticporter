@@ -1,7 +1,7 @@
 package com.badlogic.gdx.math
 
-class ConvexHullTest extends balticporter.runtime.PortedSuite {
-  testCase("testComputePolygon", {
+class ConvexHullTest extends munit.FunSuite {
+  test("testComputePolygon")({
     val convexHull: com.badlogic.gdx.math.ConvexHull = new com.badlogic.gdx.math.ConvexHull()
     val rawPolygon: scala.Array[scala.Float] = scala.Array[scala.Float](0, 0, 0, 1, 1, 1, 1, 0)
     val polygonCounterclockwise: scala.Array[scala.Float] = scala.Array[scala.Float](1, 0, 1, 1, 0, 1, 0, 0)

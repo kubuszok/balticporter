@@ -1,6 +1,6 @@
 package com.badlogic.gdx.graphics.g3d.utils
 
-class AnimationDescTest extends balticporter.runtime.PortedSuite {
+class AnimationDescTest extends munit.FunSuite {
   private var anim: com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationDesc = null.asInstanceOf[com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationDesc]
   @org.junit.Before
   def setup(): scala.Unit = {
@@ -13,45 +13,45 @@ class AnimationDescTest extends balticporter.runtime.PortedSuite {
     this.anim.speed = 1.0f
     this.anim.time = 0.0f
   }
-  testCase("testUpdateNominal", {
+  test("testUpdateNominal")({
     balticporter.runtime.Asserts.assertEquals(-1, this.anim.update(0.75f), AnimationDescTest.epsilon)
     balticporter.runtime.Asserts.assertEquals(0.5f, this.anim.update(0.75f), AnimationDescTest.epsilon)
     balticporter.runtime.Asserts.assertEquals(0.75f, this.anim.update(0.75f), AnimationDescTest.epsilon)
   })
-  testCase("testUpdateJustEnd", {
+  test("testUpdateJustEnd")({
     balticporter.runtime.Asserts.assertEquals(-1, this.anim.update(0.5f), AnimationDescTest.epsilon)
     balticporter.runtime.Asserts.assertEquals(0, this.anim.update(0.5f), AnimationDescTest.epsilon)
     balticporter.runtime.Asserts.assertEquals(0.5f, this.anim.update(0.5f), AnimationDescTest.epsilon)
   })
-  testCase("testUpdateBigDelta", {
+  test("testUpdateBigDelta")({
     balticporter.runtime.Asserts.assertEquals(4.2f, this.anim.update(5.2f), AnimationDescTest.epsilon)
     balticporter.runtime.Asserts.assertEquals(7.3f, this.anim.update(7.3f), AnimationDescTest.epsilon)
   })
-  testCase("testUpdateZeroDelta", {
+  test("testUpdateZeroDelta")({
     balticporter.runtime.Asserts.assertEquals(-1, this.anim.update(0.0f), AnimationDescTest.epsilon)
     balticporter.runtime.Asserts.assertEquals(0.0f, this.anim.time, AnimationDescTest.epsilon)
   })
-  testCase("testUpdateReverseNominal", {
+  test("testUpdateReverseNominal")({
     this.anim.speed = -1
     this.anim.time = this.anim.duration
     balticporter.runtime.Asserts.assertEquals(-1, this.anim.update(0.75f), AnimationDescTest.epsilon)
     balticporter.runtime.Asserts.assertEquals(0.5f, this.anim.update(0.75f), AnimationDescTest.epsilon)
     balticporter.runtime.Asserts.assertEquals(0.75f, this.anim.update(0.75f), AnimationDescTest.epsilon)
   })
-  testCase("testUpdateReverseJustEnd", {
+  test("testUpdateReverseJustEnd")({
     this.anim.speed = -1
     this.anim.time = this.anim.duration
     balticporter.runtime.Asserts.assertEquals(-1, this.anim.update(0.5f), AnimationDescTest.epsilon)
     balticporter.runtime.Asserts.assertEquals(0, this.anim.update(0.5f), AnimationDescTest.epsilon)
     balticporter.runtime.Asserts.assertEquals(0.5f, this.anim.update(0.5f), AnimationDescTest.epsilon)
   })
-  testCase("testUpdateReverseBigDelta", {
+  test("testUpdateReverseBigDelta")({
     this.anim.speed = -1
     this.anim.time = this.anim.duration
     balticporter.runtime.Asserts.assertEquals(4.2f, this.anim.update(5.2f), AnimationDescTest.epsilon)
     balticporter.runtime.Asserts.assertEquals(7.3f, this.anim.update(7.3f), AnimationDescTest.epsilon)
   })
-  testCase("testUpdateReverseZeroDelta", {
+  test("testUpdateReverseZeroDelta")({
     this.anim.speed = -1
     this.anim.time = this.anim.duration
     balticporter.runtime.Asserts.assertEquals(-1, this.anim.update(0.0f), AnimationDescTest.epsilon)

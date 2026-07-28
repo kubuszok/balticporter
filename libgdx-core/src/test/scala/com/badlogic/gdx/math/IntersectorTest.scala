@@ -1,7 +1,7 @@
 package com.badlogic.gdx.math
 
-class IntersectorTest extends balticporter.runtime.PortedSuite {
-  testCase("testSplitTriangle", {
+class IntersectorTest extends munit.FunSuite {
+  test("testSplitTriangle")({
     val plane: com.badlogic.gdx.math.Plane = new com.badlogic.gdx.math.Plane(new com.badlogic.gdx.math.Vector3(1, 0, 0), 0)
     val split: com.badlogic.gdx.math.Intersector.SplitTriangle = new com.badlogic.gdx.math.Intersector.SplitTriangle(3);
     {
@@ -51,7 +51,7 @@ class IntersectorTest extends balticporter.runtime.PortedSuite {
       balticporter.runtime.Asserts.assertTrue(((("Either first or second way must be right (first: " + first) + ", second: ") + second) + ")", first ^ second)
     }
   })
-  testCase("intersectSegmentCircle", {
+  test("intersectSegmentCircle")({
     val circle: com.badlogic.gdx.math.Circle = new com.badlogic.gdx.math.Circle(5.0f, 5.0f, 4.0f)
     var intersects: scala.Boolean = com.badlogic.gdx.math.Intersector.intersectSegmentCircle(new com.badlogic.gdx.math.Vector2(0, 1.0f), new com.badlogic.gdx.math.Vector2(12.0f, 3.0f), circle, null)
     balticporter.runtime.Asserts.assertTrue(intersects)
@@ -75,7 +75,7 @@ class IntersectorTest extends balticporter.runtime.PortedSuite {
     balticporter.runtime.Asserts.assertTrue(mtv.normal.equals(new com.badlogic.gdx.math.Vector2(0, 1.0f)) || mtv.normal.equals(new com.badlogic.gdx.math.Vector2(0.0f, -1.0f)))
     balticporter.runtime.Asserts.assertTrue(mtv.depth == 4.0f)
   })
-  testCase("testIntersectPlanes", {
+  test("testIntersectPlanes")({
     val NEAR: scala.Int = 0
     val FAR: scala.Int = 1
     val LEFT: scala.Int = 2
@@ -107,11 +107,11 @@ class IntersectorTest extends balticporter.runtime.PortedSuite {
     balticporter.runtime.Asserts.assertEquals(-57.7337f, intersection.y, 0.1f)
     balticporter.runtime.Asserts.assertEquals(100, intersection.z, 0.1f)
   })
-  testCase("testIsPointInTriangle2D", {
+  test("testIsPointInTriangle2D")({
     balticporter.runtime.Asserts.assertFalse(com.badlogic.gdx.math.Intersector.isPointInTriangle(new com.badlogic.gdx.math.Vector2(0.1f, 0), new com.badlogic.gdx.math.Vector2(0, 0), new com.badlogic.gdx.math.Vector2(1, 1), new com.badlogic.gdx.math.Vector2(-1, -1)))
     balticporter.runtime.Asserts.assertTrue(com.badlogic.gdx.math.Intersector.isPointInTriangle(new com.badlogic.gdx.math.Vector2(0, 0.1f), new com.badlogic.gdx.math.Vector2(-1, 1), new com.badlogic.gdx.math.Vector2(1, 1), new com.badlogic.gdx.math.Vector2(-1, -2)))
   })
-  testCase("testIsPointInTriangle3D", {
+  test("testIsPointInTriangle3D")({
     balticporter.runtime.Asserts.assertFalse(com.badlogic.gdx.math.Intersector.isPointInTriangle(new com.badlogic.gdx.math.Vector3(0.1f, 0, 0), new com.badlogic.gdx.math.Vector3(0, 0, 0), new com.badlogic.gdx.math.Vector3(1, 1, 0), new com.badlogic.gdx.math.Vector3(-1, -1, 0)))
     balticporter.runtime.Asserts.assertTrue(com.badlogic.gdx.math.Intersector.isPointInTriangle(new com.badlogic.gdx.math.Vector3(0, 0.1f, 0), new com.badlogic.gdx.math.Vector3(-1, 1, 0), new com.badlogic.gdx.math.Vector3(1, 1, 0), new com.badlogic.gdx.math.Vector3(-1, -2, 0)))
     balticporter.runtime.Asserts.assertTrue(com.badlogic.gdx.math.Intersector.isPointInTriangle(new com.badlogic.gdx.math.Vector3(0.2f, 0, 1.25f), new com.badlogic.gdx.math.Vector3(-1, 1, 0), new com.badlogic.gdx.math.Vector3(1.4f, 0.99f, 2.5f), new com.badlogic.gdx.math.Vector3(-1, -2, 0)))
@@ -123,12 +123,12 @@ class IntersectorTest extends balticporter.runtime.PortedSuite {
     balticporter.runtime.Asserts.assertFalse(com.badlogic.gdx.math.Intersector.isPointInTriangle(new com.badlogic.gdx.math.Vector3(199.0f, 1.0f, 500.0f), new com.badlogic.gdx.math.Vector3(-1, 1, 0), new com.badlogic.gdx.math.Vector3(1, 1, 5.0f), new com.badlogic.gdx.math.Vector3(-1, -2, 0)))
     balticporter.runtime.Asserts.assertFalse(com.badlogic.gdx.math.Intersector.isPointInTriangle(new com.badlogic.gdx.math.Vector3(-5120.8345f, 8946.126f, -3270.5813f), new com.badlogic.gdx.math.Vector3(50.008057f, 22.20586f, 124.62208f), new com.badlogic.gdx.math.Vector3(62.282288f, 22.205864f, 109.665924f), new com.badlogic.gdx.math.Vector3(70.92052f, 7.205861f, 115.437805f)))
   })
-  testCase("testIntersectPolygons", {
+  test("testIntersectPolygons")({
     val intersectionPolygon: com.badlogic.gdx.math.Polygon = new com.badlogic.gdx.math.Polygon()
     balticporter.runtime.Asserts.assertFalse(com.badlogic.gdx.math.Intersector.intersectPolygons(new com.badlogic.gdx.math.Polygon(scala.Array[scala.Float](3200.1453f, 88.00839f, 3233.9087f, 190.34174f, 3266.2905f, 0.0f)), new com.badlogic.gdx.math.Polygon(scala.Array[scala.Float](3213.0f, 131.0f, 3214.0f, 131.0f, 3214.0f, 130.0f, 3213.0f, 130.0f)), intersectionPolygon))
     balticporter.runtime.Asserts.assertEquals(0, intersectionPolygon.getVertexCount())
   })
-  testCase("testIntersectPolygonsWithVertexLyingOnEdge", {
+  test("testIntersectPolygonsWithVertexLyingOnEdge")({
     val p1: com.badlogic.gdx.math.Polygon = new com.badlogic.gdx.math.Polygon(scala.Array[scala.Float](1, -1, 2, -1, 2, -2, 1, -2))
     val p2: com.badlogic.gdx.math.Polygon = new com.badlogic.gdx.math.Polygon(scala.Array[scala.Float](0.5f, -1.5f, 1.5f, -1.5f, 1.5f, -2.5f))
     val intersectionPolygon: com.badlogic.gdx.math.Polygon = new com.badlogic.gdx.math.Polygon()
@@ -140,7 +140,7 @@ class IntersectorTest extends balticporter.runtime.PortedSuite {
     balticporter.runtime.Asserts.assertEquals(new com.badlogic.gdx.math.Vector2(1.5f, -1.5f), intersectionPolygon.getVertex(2, new com.badlogic.gdx.math.Vector2()))
     balticporter.runtime.Asserts.assertEquals(new com.badlogic.gdx.math.Vector2(1.5f, -2.0f), intersectionPolygon.getVertex(3, new com.badlogic.gdx.math.Vector2()))
   })
-  testCase("testIntersectPolygonsWithTransformationsOnProvidedResultPolygon", {
+  test("testIntersectPolygonsWithTransformationsOnProvidedResultPolygon")({
     val p1: com.badlogic.gdx.math.Polygon = new com.badlogic.gdx.math.Polygon(scala.Array[scala.Float](1, -1, 2, -1, 2, -2, 1, -2))
     val p2: com.badlogic.gdx.math.Polygon = new com.badlogic.gdx.math.Polygon(scala.Array[scala.Float](0.5f, -1.5f, 1.5f, -1.5f, 1.5f, -2.5f))
     val intersectionPolygon: com.badlogic.gdx.math.Polygon = new com.badlogic.gdx.math.Polygon(new scala.Array[scala.Float](8))

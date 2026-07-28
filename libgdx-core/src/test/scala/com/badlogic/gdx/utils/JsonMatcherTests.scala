@@ -1,6 +1,6 @@
 package com.badlogic.gdx.utils
 
-class JsonMatcherTests extends balticporter.runtime.PortedSuite {
+class JsonMatcherTests extends munit.FunSuite {
   var watcher: org.junit.rules.TestWatcher = new org.junit.rules.TestWatcher() {
     override def failed(cause: java.lang.Throwable, desc: org.junit.runner.Description): scala.Unit = {
       val sw: java.io.StringWriter = new java.io.StringWriter()
@@ -15,7 +15,7 @@ class JsonMatcherTests extends balticporter.runtime.PortedSuite {
       java.lang.System.out.println()
     }
   }
-  testCase("singlePatterns", {
+  test("singlePatterns")({
     JsonMatcherTests.test(JsonMatcherTests.json, "*/(type)", scala.Array[java.lang.String]("ENCHARGE"))
     JsonMatcherTests.test(JsonMatcherTests.json, "*@/(type)", scala.Array[java.lang.String]("ENCHARGE", "ENPOWER"))
     JsonMatcherTests.test(JsonMatcherTests.json, "*/devices/*/(serial_num,percentFull)", scala.Array[java.lang.String]("{serial_num:32131444,percentFull:100}"))
@@ -167,7 +167,7 @@ class JsonMatcherTests extends balticporter.runtime.PortedSuite {
     JsonMatcherTests.test((((((((((((("{\n" + "\titems: {\n") + "\t\tserver1: {\n") + "\t\t\tconfig: { // dead here\n") + "\t\t\t\thost: [ deadend ]\n") + "\t\t\t},\n") + "\t\t\tnested: {\n") + "\t\t\t\tconfig: {\n") + "\t\t\t\t\tport: 8080\n") + "\t\t\t\t}\n") + "\t\t\t}\n") + "\t\t}\n") + "\t}\n") + "}", "items/**/config/(port)", scala.Array[java.lang.String]("8080"))
     JsonMatcherTests.test("{data1:[{a:1},{b:2},{a:3},{b:4}],data2:[{a:5},{b:6},{a:7},{b:8}]}", "*/*/(a[],b[])", scala.Array[java.lang.String]("{a:[1,3,5,7],b:[2,4,6,8]}"))
   })
-  testCase("wholeDocument", {
+  test("wholeDocument")({
     JsonMatcherTests.test("{data:{items:[a,b,c]}}", "", scala.Array[java.lang.String]("{data:{items:[a,b,c]}}"))
     JsonMatcherTests.test("[a,b,{data:[1,2,3]},c]", "", scala.Array[java.lang.String]("[a,b,{data:[1,2,3]},c]"))
     JsonMatcherTests.test("string", "", scala.Array[java.lang.String]("string"))
@@ -177,7 +177,7 @@ class JsonMatcherTests extends balticporter.runtime.PortedSuite {
     JsonMatcherTests.test("false", "", scala.Array[java.lang.String]("false"))
     JsonMatcherTests.test("null", "", scala.Array[java.lang.String](null.asInstanceOf[java.lang.String]))
   })
-  testCase("unescaping", {
+  test("unescaping")({
     JsonMatcherTests.test("{data:\"He said \\\"hello\\\"\"}", "(data)", scala.Array[java.lang.String]("He said \"hello\""))
     JsonMatcherTests.test("{path:\"C:\\\\Users\\\\file.txt\"}", "(path)", scala.Array[java.lang.String]("C:\\Users\\file.txt"))
     JsonMatcherTests.test("{text:\"Line 1\\nLine 2\\nLine 3\"}", "(text)", scala.Array[java.lang.String]("Line 1\nLine 2\nLine 3"))
@@ -208,14 +208,14 @@ class JsonMatcherTests extends balticporter.runtime.PortedSuite {
     JsonMatcherTests.test("{da\\\\ta:{it'ems:[a,b,c]}}", "'da\\\\ta'/('it''ems')", scala.Array[java.lang.String]("[a,b,c]"))
     JsonMatcherTests.test("{*/()[\\\\]@',\\\\\\\\:{items:[a,b,c]}}", "'*/()[\\\\]@'',\\\\\\\\'/(items)", scala.Array[java.lang.String]("[a,b,c]"))
   })
-  testCase("multiplePatterns", {
+  test("multiplePatterns")({
     JsonMatcherTests.test("{user:{name:John,age:30},meta:{version:1.0}}", scala.Array[java.lang.String]("user/(name)", "meta/(version)"), scala.Array[java.lang.String]("John", "1.0"))
     JsonMatcherTests.test("{user:{name:John},profile:{user:{name:Jane}}}", scala.Array[java.lang.String]("user/(name)", "profile/user/(name)"), scala.Array[java.lang.String]("John", "Jane"))
     JsonMatcherTests.test("{user:{name:John},profile:{user:{name:Jane}}}", scala.Array[java.lang.String]("user/(name)", "user/(name)", "profile/user/(name)", "profile/user/(name)"), scala.Array[java.lang.String]("John", "John", "Jane", "Jane"))
     JsonMatcherTests.test("{a:{b:{c:1}}}", scala.Array[java.lang.String]("**@/(b)", "**@/(c)"), scala.Array[java.lang.String]("1", "{c:1}"))
     JsonMatcherTests.test(JsonMatcherTests.json, scala.Array[java.lang.String]("*/(type)", "*/devices/*/(serial_num[])"), scala.Array[java.lang.String]("ENCHARGE", "[32131444,234234211,9834711]"))
   })
-  testCase("keys", {
+  test("keys")({
     JsonMatcherTests.test("{a:1,b:2,c:3}", "()[]", scala.Array[java.lang.String]("[a,b,c]"))
     JsonMatcherTests.test("{a:1,b:2,c:3}", "()[],(b)", scala.Array[java.lang.String]("{\"\":[a,b,c]}"))
     JsonMatcherTests.test("{a:1,b:2,c:3}", "()[],(b)", scala.Array[java.lang.String]("{\"\":[a,b,c]}"))
@@ -226,7 +226,7 @@ class JsonMatcherTests extends balticporter.runtime.PortedSuite {
     JsonMatcherTests.test("{object:{a:1,b:2,c:3}}", "*/()[]", scala.Array[java.lang.String]("[a,b,c]"))
     JsonMatcherTests.test("{object:{a:1,b:2,c:{d:{e:3},f:[1,2,3]}}}", "**/()[]", scala.Array[java.lang.String]("[object,a,b,c,d,e,f]"))
   })
-  testCase("earlyEnd", {
+  test("earlyEnd")({
     JsonMatcherTests.test("extra", "{first:{id:1},second:{data:ignored},extra:should-not-parse}", scala.Array[java.lang.String]("first/(id@)", "(second)"), scala.Array[java.lang.String]("1", "{data:ignored}"))
     JsonMatcherTests.test("extra", "{first:{id:1},second:{id:ignored},extra:should-not-parse}", scala.Array[java.lang.String]("*/(id@)", "*/(id)"), scala.Array[java.lang.String]("1", "1"))
     JsonMatcherTests.test("extra", "{first:{id:1},second:{id:ignored},extra:should-not-parse}", scala.Array[java.lang.String]("(first,second)@"), scala.Array[java.lang.String]("{id:1}", "{id:ignored}"))
@@ -234,7 +234,7 @@ class JsonMatcherTests extends balticporter.runtime.PortedSuite {
     JsonMatcherTests.test("extra", "{first:{id:1},second:{id:ignored},third:{other:1},extra:should-not-parse}", scala.Array[java.lang.String]("(first,second)@", "*/(other)"), scala.Array[java.lang.String]("{id:1}", "{id:ignored}", "1"))
     JsonMatcherTests.test("extra", "{value:1,nested:{value:2},extra:{value:3}}", scala.Array[java.lang.String]("(value@),*/(value@)"), scala.Array[java.lang.String]("1", "2"))
   })
-  testCase("rejection", {
+  test("rejection")({
     {
       val values: com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.JsonValue] = new com.badlogic.gdx.utils.Array().asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.JsonValue]]
       val matcher: com.badlogic.gdx.utils.JsonMatcher = new com.badlogic.gdx.utils.JsonMatcher()
@@ -265,7 +265,7 @@ class JsonMatcherTests extends balticporter.runtime.PortedSuite {
     JsonMatcherTests.rejectAll("{data:{type:[bad],info:important}}", "data/type@/(*)", "data@/(info)", scala.Array[java.lang.String]("important"))
     JsonMatcherTests.rejectAll("{a:{b:{target:{x:1}},c:{target:{x:2,reject:true}}},d:{target:{x:3}}}", "**/(reject@)", "**/(x[])", scala.Array[java.lang.String]("[3]"))
   })
-  testCase("explicitEnd", {
+  test("explicitEnd")({
     val matcher: com.badlogic.gdx.utils.JsonMatcher = new com.badlogic.gdx.utils.JsonMatcher()
     matcher.addPattern("*/(type@)", (value: com.badlogic.gdx.utils.JsonValue) => {
       if (value.equalsString("ENCHARGE")) {
@@ -277,7 +277,7 @@ class JsonMatcherTests extends balticporter.runtime.PortedSuite {
     matcher.parse(JsonMatcherTests.json)
     JsonMatcherTests.assertValueCount(0, values)
   })
-  testCase("explicitStop", {
+  test("explicitStop")({
     val matcher: com.badlogic.gdx.utils.JsonMatcher = new com.badlogic.gdx.utils.JsonMatcher()
     matcher.addPattern("*/(type@)", (value: com.badlogic.gdx.utils.JsonValue) => {
       if (value.equalsString("ENCHARGE")) {
@@ -289,7 +289,7 @@ class JsonMatcherTests extends balticporter.runtime.PortedSuite {
     matcher.parse(JsonMatcherTests.json)
     JsonMatcherTests.assertValueCount(0, values)
   })
-  testCase("parseValue", {
+  test("parseValue")({
     var root: com.badlogic.gdx.utils.JsonValue = new com.badlogic.gdx.utils.JsonMatcher().parseValue(JsonMatcherTests.json)
     balticporter.runtime.Asserts.assertTrue(root.child$field.hasChild("devices"))
     root = new com.badlogic.gdx.utils.JsonMatcher(scala.Array[java.lang.String]("")).parseValue(JsonMatcherTests.json)
@@ -300,7 +300,7 @@ class JsonMatcherTests extends balticporter.runtime.PortedSuite {
     balticporter.runtime.Asserts.assertEquals("devices", values.child$field.name$field)
     balticporter.runtime.Asserts.assertEquals(100, values.child$field.next$field.getInt("percentFull"))
   })
-  testCase("paths", {
+  test("paths")({
     val paths: com.badlogic.gdx.utils.Array[?] = new com.badlogic.gdx.utils.Array().asInstanceOf[com.badlogic.gdx.utils.Array[?]]
     val parents: com.badlogic.gdx.utils.Array[?] = new com.badlogic.gdx.utils.Array().asInstanceOf[com.badlogic.gdx.utils.Array[?]]
     val parents2: com.badlogic.gdx.utils.Array[?] = new com.badlogic.gdx.utils.Array().asInstanceOf[com.badlogic.gdx.utils.Array[?]];
@@ -347,7 +347,7 @@ class JsonMatcherTests extends balticporter.runtime.PortedSuite {
     balticporter.runtime.Asserts.assertEquals("devices", parents2.get(4).asInstanceOf[java.lang.Object])
     balticporter.runtime.Asserts.assertEquals("d", parents2.get(5).asInstanceOf[java.lang.Object])
   })
-  testCase("dataTypes", {
+  test("dataTypes")({
     val matcher: com.badlogic.gdx.utils.JsonMatcher = new com.badlogic.gdx.utils.JsonMatcher()
     val values: com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.JsonValue] = new com.badlogic.gdx.utils.Array().asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.JsonValue]]
     matcher.addPattern("*/devices/*/(maxCellTemp,temperature,dc_switch_off,admin_state_str,sleep_enabled,device_status,object)")
@@ -364,7 +364,7 @@ class JsonMatcherTests extends balticporter.runtime.PortedSuite {
     value.get("device_status").asStringArray()
     balticporter.runtime.Asserts.assertTrue(value.get("object").`type`() == com.badlogic.gdx.utils.JsonValue.ValueType.`object`)
   })
-  testCase("filtering", {
+  test("filtering")({
     {
       val matcher: com.badlogic.gdx.utils.JsonMatcher = new com.badlogic.gdx.utils.JsonMatcher()
       val values: com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.JsonValue] = new com.badlogic.gdx.utils.Array().asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.utils.JsonValue]]

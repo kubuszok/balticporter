@@ -1,7 +1,7 @@
 package com.badlogic.gdx.utils
 
-class LongQueueTest extends balticporter.runtime.PortedSuite {
-  testCase("addFirstAndLastTest", {
+class LongQueueTest extends munit.FunSuite {
+  test("addFirstAndLastTest")({
     val queue: com.badlogic.gdx.utils.LongQueue = new com.badlogic.gdx.utils.LongQueue()
     queue.addFirst(1)
     queue.addLast(2)
@@ -12,7 +12,7 @@ class LongQueueTest extends balticporter.runtime.PortedSuite {
     balticporter.runtime.Asserts.assertEquals(2, queue.indexOf(2))
     balticporter.runtime.Asserts.assertEquals(3, queue.indexOf(4))
   })
-  testCase("removeLastTest", {
+  test("removeLastTest")({
     val queue: com.badlogic.gdx.utils.LongQueue = new com.badlogic.gdx.utils.LongQueue()
     queue.addLast(1)
     queue.addLast(2)
@@ -32,7 +32,7 @@ class LongQueueTest extends balticporter.runtime.PortedSuite {
     balticporter.runtime.Asserts.assertEquals(1, queue.removeLast())
     balticporter.runtime.Asserts.assertEquals(0, queue.size)
   })
-  testCase("removeFirstTest", {
+  test("removeFirstTest")({
     val queue: com.badlogic.gdx.utils.LongQueue = new com.badlogic.gdx.utils.LongQueue()
     queue.addLast(1)
     queue.addLast(2)
@@ -52,7 +52,7 @@ class LongQueueTest extends balticporter.runtime.PortedSuite {
     balticporter.runtime.Asserts.assertEquals(4, queue.removeFirst())
     balticporter.runtime.Asserts.assertEquals(0, queue.size)
   })
-  testCase("resizableQueueTest", {
+  test("resizableQueueTest")({
     val q: com.badlogic.gdx.utils.LongQueue = new com.badlogic.gdx.utils.LongQueue(8)
     balticporter.runtime.Asserts.assertTrue("New queue is not empty!", q.size == 0);
     { var i: scala.Int = 0; while (i < 100) { {
@@ -87,7 +87,7 @@ class LongQueueTest extends balticporter.runtime.PortedSuite {
     q.clear()
     balticporter.runtime.Asserts.assertTrue("Clear did not clear properly", q.size == 0)
   })
-  testCase("resizableDequeTest", {
+  test("resizableDequeTest")({
     val q: com.badlogic.gdx.utils.LongQueue = new com.badlogic.gdx.utils.LongQueue(8)
     balticporter.runtime.Asserts.assertTrue("New deque is not empty!", q.size == 0);
     { var i: scala.Int = 0; while (i < 100) { {
@@ -122,7 +122,7 @@ class LongQueueTest extends balticporter.runtime.PortedSuite {
     q.clear()
     balticporter.runtime.Asserts.assertTrue("Clear did not clear properly", q.size == 0)
   })
-  testCase("getTest", {
+  test("getTest")({
     val q: com.badlogic.gdx.utils.LongQueue = new com.badlogic.gdx.utils.LongQueue(7);
     { var i: scala.Int = 0; while (i < 5) { {
       { var j: scala.Int = 0; while (j < 4) { {
@@ -149,7 +149,7 @@ class LongQueueTest extends balticporter.runtime.PortedSuite {
       }
     }; i = i + 1 } }
   })
-  testCase("removeTest", {
+  test("removeTest")({
     val q: com.badlogic.gdx.utils.LongQueue = new com.badlogic.gdx.utils.LongQueue();
     { var j: scala.Int = 0; while (j <= 6) { {
       q.addLast(j)
@@ -188,7 +188,7 @@ class LongQueueTest extends balticporter.runtime.PortedSuite {
     q.removeIndex(5)
     this.assertValues(q, scala.Array[scala.Long](0, 1, 2, 3, 4))
   })
-  testCase("indexOfTest", {
+  test("indexOfTest")({
     val q: com.badlogic.gdx.utils.LongQueue = new com.badlogic.gdx.utils.LongQueue();
     { var j: scala.Int = 0; while (j <= 6) { {
       q.addLast(j)
@@ -207,7 +207,7 @@ class LongQueueTest extends balticporter.runtime.PortedSuite {
       balticporter.runtime.Asserts.assertEquals(q.indexOf(j), j)
     }; j = j + 1 } }
   })
-  testCase("toStringTest", {
+  test("toStringTest")({
     val q: com.badlogic.gdx.utils.LongQueue = new com.badlogic.gdx.utils.LongQueue(1)
     balticporter.runtime.Asserts.assertTrue(q.toString().equals("[]"))
     q.addLast(4)
@@ -217,7 +217,7 @@ class LongQueueTest extends balticporter.runtime.PortedSuite {
     q.addLast(7)
     balticporter.runtime.Asserts.assertTrue(q.toString().equals("[4, 5, 6, 7]"))
   })
-  testCase("hashEqualsTest", {
+  test("hashEqualsTest")({
     val q1: com.badlogic.gdx.utils.LongQueue = new com.badlogic.gdx.utils.LongQueue()
     val q2: com.badlogic.gdx.utils.LongQueue = new com.badlogic.gdx.utils.LongQueue()
     this.assertEqualsAndHash(q1, q2)

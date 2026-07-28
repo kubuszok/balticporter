@@ -37,7 +37,7 @@ import balticporter.tir.*
   */
 final class TestFrameworkTransform(
     suite: String = TestFrameworkTransform.DefaultSuite,
-    testMember: String = "testCase",
+    testMember: String = "test",
 ) extends Phase:
 
   def name: String = "junit->portable-suite"
@@ -62,7 +62,7 @@ final class TestFrameworkTransform(
       added += Symbol(id, nm, full, Flags(), SymId.None, TypeRepr.NoType)
       id
     suiteSym = mint(suite.substring(suite.lastIndexOf('.') + 1), suite)
-    testSym  = mint(testMember, testMember)
+    testSym  = mint(testMember, testMember)  // MUnit's own `test`, applied CURRIED
     // keyed by the member's SIMPLE name: a static call renders as `<receiver FQN>.<name>`, so the
     // member symbol itself is not keyed by the owner's FQN and cannot be found that way.
     // fully-qualified to an OBJECT, not inherited from the base class. A java `static` helper
@@ -135,64 +135,77 @@ final class TestFrameworkTransform(
     })
     if expectsThrow || d.rhs.isEmpty then d
     else
+      // `test("name") { … }` — TWO argument lists, modelled the way `quotes.reflect` does: nested
+      // `Apply`, since `Apply.fun` is itself a `Term`. An earlier version routed around this via an
+      // un-curried forwarder in an injected base class, on the false belief that the IR could not
+      // express currying. The IR follows quotes/BeTASTy and models any correct scala tree; the
+      // forwarder was a scaffold built over a gap that did not exist.
       val lit = Tree.Literal(Constant.StringC(nm), TypeRepr.NoType, d.origin)
-      Tree.Apply(Tree.Ident(testSym, TypeRepr.NoType, d.origin), List(lit, d.rhs.get),
-                 testSym, TypeRepr.NoType, d.origin)
+      val head = Tree.Apply(Tree.Ident(testSym, TypeRepr.NoType, d.origin), List(lit),
+                            testSym, TypeRepr.NoType, d.origin)
+      Tree.Apply(head, List(d.rhs.get), testSym, TypeRepr.NoType, d.origin)
 
   /** `@Before` is the framework's per-test setup hook under a fixed name. */
   private def beforeEach(d: Tree.DefDef)(using p: Program): Statement = d
 
 object TestFrameworkTransform:
-  val DefaultSuite = "balticporter.runtime.PortedSuite"
+  val DefaultSuite = "munit.FunSuite"
+  /** Only the ASSERTIONS remain injected: java's argument order and loose typing differ from
+    * MUnit's `(obtained, expected)` with `B <:< A`. That is still shape-adaptation the transform
+    * should do itself — see LIBGDX-PORT-STATUS.md — so this too is interim. */
+  val AssertsObjectFqn = "balticporter.runtime.Asserts"
 
   /** The façade: JUnit's assertions with JAVA's argument order and loose typing, over MUnit. */
   val runtimeSources: Map[String, String] = Map(
-    DefaultSuite ->
+    AssertsObjectFqn ->
       """package balticporter.runtime
-        |
-        |/** A ported JUnit suite's base class.
-        |  *
-        |  * It re-declares JUnit's assertions rather than asking the port to rewrite them, for two
-        |  * reasons. MUnit's `assertEquals` takes `(obtained, expected)` — the REVERSE of JUnit's —
-        |  * so a mechanical rename would silently invert every failure message; and MUnit's is
-        |  * type-constrained (`B <:< A`), which java's `assertEquals(Object, Object)` is not, so
-        |  * calls mixing `int`/`long`/`Object` would stop compiling. Keeping java's shapes here
-        |  * preserves the ported assertions exactly and leaves the call sites untouched.
-        |  *
-        |  * `testCase` is un-curried because MUnit's `test(name)(body)` is two argument lists and
-        |  * the porting engine has no node for a curried application.
-        |  */
-        |abstract class PortedSuite extends munit.FunSuite:
-        |  def testCase(name: String, body: => Unit): Unit = test(name)(body)
         |
         |/** JUnit's assertions, in JAVA's argument order and with java's loose typing.
         |  *
-        |  * An OBJECT, not members of the suite: a java `static` helper emits into the companion
-        |  * object, which does not extend the suite, so inherited assertions would be invisible
-        |  * exactly where java put half of them.
+        |  * An OBJECT, not members of a base class: a java `static` helper emits into the COMPANION
+        |  * object, which does not extend the suite, so inherited assertions are invisible exactly
+        |  * where java put half of them.
+        |  *
+        |  * INTERIM. Re-declaring shapes the engine could emit correctly is not what injected
+        |  * sources are for — they exist for semantics the target language LACKS. MUnit's own
+        |  * `assertEquals(obtained, expected)` differs from java's only by argument order and a
+        |  * `B <:< A` constraint, both of which the transform can resolve because it knows the
+        |  * operand types. See LIBGDX-PORT-STATUS.md.
         |  */
         |object Asserts:
         |  private def check(cond: Boolean, msg: => String): Unit =
         |    if !cond then throw new AssertionError(msg)
         |
+        |  def fail(): Nothing                = throw new AssertionError("failed")
+        |  def fail(message: String): Nothing = throw new AssertionError(message)
+        |
         |  def assertEquals(expected: Any, actual: Any): Unit =
         |    check(expected == actual, s"expected <$expected> but was <$actual>")
         |  def assertEquals(message: String, expected: Any, actual: Any): Unit =
         |    check(expected == actual, message)
+        |  def assertEquals(expected: Long, actual: Long): Unit =
+        |    check(expected == actual, s"expected <$expected> but was <$actual>")
+        |  def assertEquals(expected: Double, actual: Double): Unit =
+        |    check(expected == actual, s"expected <$expected> but was <$actual>")
         |  def assertEquals(expected: Double, actual: Double, delta: Double): Unit =
         |    check(math.abs(expected - actual) <= delta, s"expected <$expected> but was <$actual>")
+        |  def assertEquals(message: String, expected: Double, actual: Double, delta: Double): Unit =
+        |    check(math.abs(expected - actual) <= delta, message)
         |  def assertNotEquals(unexpected: Any, actual: Any): Unit =
         |    check(unexpected != actual, s"did not expect <$unexpected>")
-        |  def assertTrue(b: Boolean): Unit                  = assert(b)
-        |  def assertTrue(message: String, b: Boolean): Unit = assert(b, message)
-        |  def assertFalse(b: Boolean): Unit                 = assert(!b)
-        |  def assertFalse(message: String, b: Boolean): Unit = assert(!b, message)
-        |  def assertNull(o: Any): Unit                      = assert(o == null, s"expected null, was <$o>")
-        |  def assertNotNull(o: Any): Unit                   = assert(o != null, "expected non-null")
+        |
+        |  def assertTrue(b: Boolean): Unit                   = check(b, "expected true")
+        |  def assertTrue(message: String, b: Boolean): Unit  = check(b, message)
+        |  def assertFalse(b: Boolean): Unit                  = check(!b, "expected false")
+        |  def assertFalse(message: String, b: Boolean): Unit = check(!b, message)
+        |  def assertNull(o: Any): Unit                       = check(o == null, s"expected null, was <$o>")
+        |  def assertNotNull(o: Any): Unit                    = check(o != null, "expected non-null")
         |  def assertSame(expected: AnyRef, actual: AnyRef): Unit =
         |    check(expected eq actual, "expected the same instance")
         |
         |  def assertArrayEquals(expected: Array[Byte], actual: Array[Byte]): Unit =
+        |    check(expected.sameElements(actual), "arrays differ")
+        |  def assertArrayEquals(expected: Array[Short], actual: Array[Short]): Unit =
         |    check(expected.sameElements(actual), "arrays differ")
         |  def assertArrayEquals(expected: Array[Int], actual: Array[Int]): Unit =
         |    check(expected.sameElements(actual), "arrays differ")
@@ -202,35 +215,21 @@ object TestFrameworkTransform:
         |    check(expected.sameElements(actual), "arrays differ")
         |  def assertArrayEquals(expected: Array[Object], actual: Array[Object]): Unit =
         |    check(expected.sameElements(actual), "arrays differ")
-        |  // JUnit's `fail()` and `fail(String)`; MUnit's `fail` demands a message and a Location.
-        |  // the message-carrying delta forms java also has
-        |  def assertEquals(message: String, expected: Double, actual: Double, delta: Double): Unit =
-        |    check(math.abs(expected - actual) <= delta, message)
+        |  def assertArrayEquals(expected: Array[Float], actual: Array[Float], delta: Float): Unit =
+        |    check(expected.length == actual.length &&
+        |            expected.indices.forall(i => math.abs(expected(i) - actual(i)) <= delta),
+        |          "arrays differ")
         |  def assertArrayEquals(message: String, expected: Array[Float], actual: Array[Float],
         |                        delta: Float): Unit =
         |    check(expected.length == actual.length &&
-        |             expected.indices.forall(i => math.abs(expected(i) - actual(i)) <= delta), message)
+        |            expected.indices.forall(i => math.abs(expected(i) - actual(i)) <= delta), message)
+        |  def assertArrayEquals(expected: Array[Double], actual: Array[Double], delta: Double): Unit =
+        |    check(expected.length == actual.length &&
+        |            expected.indices.forall(i => math.abs(expected(i) - actual(i)) <= delta),
+        |          "arrays differ")
         |  def assertArrayEquals(message: String, expected: Array[Double], actual: Array[Double],
         |                        delta: Double): Unit =
         |    check(expected.length == actual.length &&
-        |             expected.indices.forall(i => math.abs(expected(i) - actual(i)) <= delta), message)
-        |
-        |  def fail(): Nothing                = throw new AssertionError("failed")
-        |  def fail(message: String): Nothing = throw new AssertionError(message)
-        |
-        |  def assertEquals(expected: Long, actual: Long): Unit =
-        |    check(expected == actual, s"expected <$expected> but was <$actual>")
-        |  def assertEquals(expected: Double, actual: Double): Unit =
-        |    check(expected == actual, s"expected <$expected> but was <$actual>")
-        |  def assertArrayEquals(expected: Array[Short], actual: Array[Short]): Unit =
-        |    check(expected.sameElements(actual), "arrays differ")
-        |  def assertArrayEquals(expected: Array[Double], actual: Array[Double], delta: Double): Unit =
-        |    check(expected.length == actual.length &&
-        |             expected.indices.forall(i => math.abs(expected(i) - actual(i)) <= delta),
-        |          "arrays differ")
-        |  def assertArrayEquals(expected: Array[Float], actual: Array[Float], delta: Float): Unit =
-        |    check(expected.length == actual.length &&
-        |             expected.indices.forall(i => math.abs(expected(i) - actual(i)) <= delta),
-        |          "arrays differ")
+        |            expected.indices.forall(i => math.abs(expected(i) - actual(i)) <= delta), message)
         |""".stripMargin,
   )

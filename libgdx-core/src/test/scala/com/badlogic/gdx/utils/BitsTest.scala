@@ -1,7 +1,7 @@
 package com.badlogic.gdx.utils
 
-class BitsTest extends balticporter.runtime.PortedSuite {
-  testCase("testHashcodeAndEquals", {
+class BitsTest extends munit.FunSuite {
+  test("testHashcodeAndEquals")({
     val b1: com.badlogic.gdx.utils.Bits = new com.badlogic.gdx.utils.Bits()
     val b2: com.badlogic.gdx.utils.Bits = new com.badlogic.gdx.utils.Bits()
     b1.set(1)
@@ -17,7 +17,7 @@ class BitsTest extends balticporter.runtime.PortedSuite {
     balticporter.runtime.Asserts.assertEquals(b1.hashCode(), b2.hashCode())
     balticporter.runtime.Asserts.assertTrue(b1.equals(b2))
   })
-  testCase("testXor", {
+  test("testXor")({
     val b1: com.badlogic.gdx.utils.Bits = new com.badlogic.gdx.utils.Bits()
     val b2: com.badlogic.gdx.utils.Bits = new com.badlogic.gdx.utils.Bits()
     b2.set(200)
@@ -27,7 +27,7 @@ class BitsTest extends balticporter.runtime.PortedSuite {
     b2.xor(b1)
     balticporter.runtime.Asserts.assertTrue(b2.get(1024))
   })
-  testCase("testOr", {
+  test("testOr")({
     val b1: com.badlogic.gdx.utils.Bits = new com.badlogic.gdx.utils.Bits()
     val b2: com.badlogic.gdx.utils.Bits = new com.badlogic.gdx.utils.Bits()
     b2.set(200)
@@ -37,7 +37,7 @@ class BitsTest extends balticporter.runtime.PortedSuite {
     b2.or(b1)
     balticporter.runtime.Asserts.assertTrue(b2.get(1024))
   })
-  testCase("testAnd", {
+  test("testAnd")({
     val b1: com.badlogic.gdx.utils.Bits = new com.badlogic.gdx.utils.Bits()
     val b2: com.badlogic.gdx.utils.Bits = new com.badlogic.gdx.utils.Bits()
     b2.set(200)
@@ -47,7 +47,7 @@ class BitsTest extends balticporter.runtime.PortedSuite {
     b1.and(b2)
     balticporter.runtime.Asserts.assertFalse(b1.get(400))
   })
-  testCase("testCopyConstructor", {
+  test("testCopyConstructor")({
     val b1: com.badlogic.gdx.utils.Bits = new com.badlogic.gdx.utils.Bits()
     b1.set(50)
     b1.set(100)
