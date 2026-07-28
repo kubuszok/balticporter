@@ -43,6 +43,20 @@ abstract class PortedSuite extends munit.FunSuite:
     assert(expected.sameElements(actual), "arrays differ")
   def assertArrayEquals(expected: Array[Object], actual: Array[Object]): Unit =
     assert(expected.sameElements(actual), "arrays differ")
+  // JUnit's `fail()` and `fail(String)`; MUnit's `fail` demands a message and a Location.
+  def fail(): Nothing                = super.fail("failed")
+  override def fail(message: String)(implicit loc: munit.Location): Nothing = super.fail(message)
+
+  def assertEquals(expected: Long, actual: Long): Unit =
+    assert(expected == actual, s"expected <$expected> but was <$actual>")
+  def assertEquals(expected: Double, actual: Double): Unit =
+    assert(expected == actual, s"expected <$expected> but was <$actual>")
+  def assertArrayEquals(expected: Array[Short], actual: Array[Short]): Unit =
+    assert(expected.sameElements(actual), "arrays differ")
+  def assertArrayEquals(expected: Array[Double], actual: Array[Double], delta: Double): Unit =
+    assert(expected.length == actual.length &&
+             expected.indices.forall(i => math.abs(expected(i) - actual(i)) <= delta),
+           "arrays differ")
   def assertArrayEquals(expected: Array[Float], actual: Array[Float], delta: Float): Unit =
     assert(expected.length == actual.length &&
              expected.indices.forall(i => math.abs(expected(i) - actual(i)) <= delta),

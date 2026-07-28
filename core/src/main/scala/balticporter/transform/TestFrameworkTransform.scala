@@ -42,11 +42,16 @@ final class TestFrameworkTransform(
 
   def name: String = "junit->portable-suite"
 
+  private val AssertClass = "org.junit.Assert"
+  private val AssertMembers = Set("assertEquals", "assertNotEquals", "assertTrue", "assertFalse",
+    "assertNull", "assertNotNull", "assertSame", "assertArrayEquals", "fail")
   private val TestAnn   = "org.junit.Test"
   private val BeforeAnn = "org.junit.Before"
 
   private var suiteSym: SymId  = SymId.None
   private var testSym: SymId   = SymId.None
+  /** `org.junit.Assert.assertX` → the façade's own `assertX`, by simple name. */
+  private var assertSyms: Map[String, SymId] = Map.empty
 
   override def run(program: Program): Program =
     var next = program.symbols.all.map(_.id.raw).maxOption.getOrElse(-1) + 1
@@ -57,10 +62,32 @@ final class TestFrameworkTransform(
       id
     suiteSym = mint(suite.substring(suite.lastIndexOf('.') + 1), suite)
     testSym  = mint(testMember, testMember)
+    // keyed by the member's SIMPLE name: a static call renders as `<receiver FQN>.<name>`, so the
+    // member symbol itself is not keyed by the owner's FQN and cannot be found that way.
+    assertSyms = AssertMembers.map(nm => nm -> mint(nm, nm)).toMap
 
     val symbols = SymbolTable(program.symbols.all ++ added)
     given Program = new Program(program.units, symbols, program.xref)
-    new Program(program.units.map(convert), symbols, program.xref)
+    // StandardTraversal FIRST so the term hooks (`transformApply`) actually run — walking the units
+    // directly, as this did, silently skips every term-level hook. PLAN §3: walk with the standard
+    // traversal, never a private recursion.
+    new Program(program.units.map(u => convert(StandardTraversal.mapClassDef(this, u))), symbols, program.xref)
+
+  /** `org.junit.Assert.assertEquals(a, b)` → `assertEquals(a, b)`, resolving to the façade member
+    * inherited from the base suite. The arguments do not move — that is the whole point of
+    * re-declaring java's shapes there rather than rewriting 872 call sites into MUnit's own
+    * `(obtained, expected)` order. Same mechanism as [[StaticForwarderTransform]]: a wrapper's
+    * statics become plain members. */
+  override def transformApply(t: Tree.Apply)(using p: Program): Term = t.fun match
+    case Tree.Select(recv, m, _, o) if recvIs(recv, AssertClass) =>
+      val nm = p.symbolOf(m).map(_.name).getOrElse("")
+      assertSyms.get(nm).map(id => t.copy(fun = Tree.Ident(id, TypeRepr.NoType, o), method = id)).getOrElse(t)
+    case _ => t
+
+  private def recvIs(recv: Term, fqn: String)(using p: Program): Boolean = recv match
+    case Tree.Ident(s, _, _)     => p.symbolOf(s).exists(_.fullName == fqn)
+    case Tree.Select(_, s, _, _) => p.symbolOf(s).exists(_.fullName == fqn)
+    case _                       => false
 
   /** A class is a SUITE when it declares at least one `@Test` member. Nested classes are converted
     * too — libGDX nests helper suites — so the walk is explicit rather than top-level only. */
@@ -161,6 +188,20 @@ object TestFrameworkTransform:
         |    assert(expected.sameElements(actual), "arrays differ")
         |  def assertArrayEquals(expected: Array[Object], actual: Array[Object]): Unit =
         |    assert(expected.sameElements(actual), "arrays differ")
+        |  // JUnit's `fail()` and `fail(String)`; MUnit's `fail` demands a message and a Location.
+        |  def fail(): Nothing                = super.fail("failed")
+        |  override def fail(message: String)(implicit loc: munit.Location): Nothing = super.fail(message)
+        |
+        |  def assertEquals(expected: Long, actual: Long): Unit =
+        |    assert(expected == actual, s"expected <$expected> but was <$actual>")
+        |  def assertEquals(expected: Double, actual: Double): Unit =
+        |    assert(expected == actual, s"expected <$expected> but was <$actual>")
+        |  def assertArrayEquals(expected: Array[Short], actual: Array[Short]): Unit =
+        |    assert(expected.sameElements(actual), "arrays differ")
+        |  def assertArrayEquals(expected: Array[Double], actual: Array[Double], delta: Double): Unit =
+        |    assert(expected.length == actual.length &&
+        |             expected.indices.forall(i => math.abs(expected(i) - actual(i)) <= delta),
+        |           "arrays differ")
         |  def assertArrayEquals(expected: Array[Float], actual: Array[Float], delta: Float): Unit =
         |    assert(expected.length == actual.length &&
         |             expected.indices.forall(i => math.abs(expected(i) - actual(i)) <= delta),

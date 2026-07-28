@@ -14,48 +14,48 @@ class AnimationDescTest extends balticporter.runtime.PortedSuite {
     this.anim.time = 0.0f
   }
   testCase("testUpdateNominal", {
-    org.junit.Assert.assertEquals(-1, this.anim.update(0.75f), AnimationDescTest.epsilon)
-    org.junit.Assert.assertEquals(0.5f, this.anim.update(0.75f), AnimationDescTest.epsilon)
-    org.junit.Assert.assertEquals(0.75f, this.anim.update(0.75f), AnimationDescTest.epsilon)
+    assertEquals(-1, this.anim.update(0.75f), AnimationDescTest.epsilon)
+    assertEquals(0.5f, this.anim.update(0.75f), AnimationDescTest.epsilon)
+    assertEquals(0.75f, this.anim.update(0.75f), AnimationDescTest.epsilon)
   })
   testCase("testUpdateJustEnd", {
-    org.junit.Assert.assertEquals(-1, this.anim.update(0.5f), AnimationDescTest.epsilon)
-    org.junit.Assert.assertEquals(0, this.anim.update(0.5f), AnimationDescTest.epsilon)
-    org.junit.Assert.assertEquals(0.5f, this.anim.update(0.5f), AnimationDescTest.epsilon)
+    assertEquals(-1, this.anim.update(0.5f), AnimationDescTest.epsilon)
+    assertEquals(0, this.anim.update(0.5f), AnimationDescTest.epsilon)
+    assertEquals(0.5f, this.anim.update(0.5f), AnimationDescTest.epsilon)
   })
   testCase("testUpdateBigDelta", {
-    org.junit.Assert.assertEquals(4.2f, this.anim.update(5.2f), AnimationDescTest.epsilon)
-    org.junit.Assert.assertEquals(7.3f, this.anim.update(7.3f), AnimationDescTest.epsilon)
+    assertEquals(4.2f, this.anim.update(5.2f), AnimationDescTest.epsilon)
+    assertEquals(7.3f, this.anim.update(7.3f), AnimationDescTest.epsilon)
   })
   testCase("testUpdateZeroDelta", {
-    org.junit.Assert.assertEquals(-1, this.anim.update(0.0f), AnimationDescTest.epsilon)
-    org.junit.Assert.assertEquals(0.0f, this.anim.time, AnimationDescTest.epsilon)
+    assertEquals(-1, this.anim.update(0.0f), AnimationDescTest.epsilon)
+    assertEquals(0.0f, this.anim.time, AnimationDescTest.epsilon)
   })
   testCase("testUpdateReverseNominal", {
     this.anim.speed = -1
     this.anim.time = this.anim.duration
-    org.junit.Assert.assertEquals(-1, this.anim.update(0.75f), AnimationDescTest.epsilon)
-    org.junit.Assert.assertEquals(0.5f, this.anim.update(0.75f), AnimationDescTest.epsilon)
-    org.junit.Assert.assertEquals(0.75f, this.anim.update(0.75f), AnimationDescTest.epsilon)
+    assertEquals(-1, this.anim.update(0.75f), AnimationDescTest.epsilon)
+    assertEquals(0.5f, this.anim.update(0.75f), AnimationDescTest.epsilon)
+    assertEquals(0.75f, this.anim.update(0.75f), AnimationDescTest.epsilon)
   })
   testCase("testUpdateReverseJustEnd", {
     this.anim.speed = -1
     this.anim.time = this.anim.duration
-    org.junit.Assert.assertEquals(-1, this.anim.update(0.5f), AnimationDescTest.epsilon)
-    org.junit.Assert.assertEquals(0, this.anim.update(0.5f), AnimationDescTest.epsilon)
-    org.junit.Assert.assertEquals(0.5f, this.anim.update(0.5f), AnimationDescTest.epsilon)
+    assertEquals(-1, this.anim.update(0.5f), AnimationDescTest.epsilon)
+    assertEquals(0, this.anim.update(0.5f), AnimationDescTest.epsilon)
+    assertEquals(0.5f, this.anim.update(0.5f), AnimationDescTest.epsilon)
   })
   testCase("testUpdateReverseBigDelta", {
     this.anim.speed = -1
     this.anim.time = this.anim.duration
-    org.junit.Assert.assertEquals(4.2f, this.anim.update(5.2f), AnimationDescTest.epsilon)
-    org.junit.Assert.assertEquals(7.3f, this.anim.update(7.3f), AnimationDescTest.epsilon)
+    assertEquals(4.2f, this.anim.update(5.2f), AnimationDescTest.epsilon)
+    assertEquals(7.3f, this.anim.update(7.3f), AnimationDescTest.epsilon)
   })
   testCase("testUpdateReverseZeroDelta", {
     this.anim.speed = -1
     this.anim.time = this.anim.duration
-    org.junit.Assert.assertEquals(-1, this.anim.update(0.0f), AnimationDescTest.epsilon)
-    org.junit.Assert.assertEquals(this.anim.duration, this.anim.time, AnimationDescTest.epsilon)
+    assertEquals(-1, this.anim.update(0.0f), AnimationDescTest.epsilon)
+    assertEquals(this.anim.duration, this.anim.time, AnimationDescTest.epsilon)
   })
 }
 object AnimationDescTest {
