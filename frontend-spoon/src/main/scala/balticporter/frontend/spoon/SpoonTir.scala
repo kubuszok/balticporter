@@ -1773,7 +1773,8 @@ object SpoonTir:
             // Java string concatenation with a non-String LEFT operand (`obj + "s"`): Scala has no
             // `+` on `obj`, so stringify the left (`String.valueOf(obj) + "s"`).
             binApply("+", stringify(expr(b.getLeftHandOperand), b), expr(b.getRightHandOperand), ty(b))
-          else binApply(opText(b.getKind), expr(b.getLeftHandOperand), expr(b.getRightHandOperand), ty(b))
+          else referenceIdentity(b).getOrElse(
+            binApply(opText(b.getKind), expr(b.getLeftHandOperand), expr(b.getRightHandOperand), ty(b)))
         case u: CtUnaryOperator[?] =>
           import UnaryOperatorKind.*
           u.getKind match
@@ -2626,6 +2627,48 @@ object SpoonTir:
         val vSym   = minter.external("java.lang.String#valueOf", "valueOf")
         Tree.Apply(Tree.Select(Tree.Ident(strSym, TypeRef(NoPrefix, strSym), originOf(el)), vSym, NoType, originOf(el)),
           List(t), vSym, TypeRef(NoPrefix, strSym), originOf(el))
+
+      /** Java's `==` between REFERENCE types is identity; scala's `==` is `equals`.
+        *
+        * Every one of these is a silent semantic change, and inside an `equals` implementation it
+        * is an infinite recursion: `LongArray.equals` opens with java's `if (object == this)`,
+        * which as scala `==` calls `equals` again. The suite found it on the first run — no
+        * compiler ever would have. 151 sites in gdx core; the engine emitted `eq` at none of them.
+        *
+        * `eq` is the faithful operator and it is right for the cases that look like exceptions too:
+        * java compares boxed wrappers, enum constants and interned Strings by identity as well,
+        * and `==` would quietly answer a different question for each.
+        *
+        * Skipped when either side is `null` — scala's `x == null` already IS a reference check and
+        * reads better — and when either static type is PRIMITIVE, where `==` is value equality in
+        * both languages. `Any`-typed operands (java's `equals(Object)` parameter, which scala must
+        * render `equals(Any)`) go through `AnyRef`, since `eq` lives there. */
+      private def referenceIdentity(b: CtBinaryOperator[?]): Option[Term] =
+        import BinaryOperatorKind.*
+        val (l, r) = (b.getLeftHandOperand, b.getRightHandOperand)
+        def isNull(e: CtExpression[?]) = e match { case lit: CtLiteral[?] => lit.getValue == null; case _ => false }
+        def refTyped(e: CtExpression[?]) =
+          try
+            val t = e.getType
+            t != null && !t.isPrimitive
+          catch { case _: Throwable => false }
+        if (b.getKind != EQ && b.getKind != NE) || isNull(l) || isNull(r) then scala.None
+        else if !refTyped(l) || !refTyped(r) then scala.None
+        else
+          val anyRef = TypeRef(NoPrefix, minter.external("scala.AnyRef", "AnyRef"))
+          val anyT = TypeRef(NoPrefix, minter.external("scala.Any", "Any"))
+          // `eq` lives on `AnyRef`. A `java.lang.Object` operand may have been rendered `Any` —
+          // java's `equals(Object)` parameter must be, since scala's `Object.equals` takes `Any` —
+          // and the emitted term still carries spoon's type, so the rendering cannot be read off
+          // it. Ascribe on the java type instead: every `Object` value IS an `AnyRef`, so this is
+          // a no-op wherever the widening was not needed.
+          def asRef(e: CtExpression[?]): Term =
+            val t = expr(e)
+            val objTyped = try Option(e.getType).exists(_.getQualifiedName == "java.lang.Object")
+                           catch { case _: Throwable => false }
+            if objTyped || t.tpe == anyT then Tree.Typed(t, tt(anyRef, e), anyRef, originOf(e)) else t
+          val op = if b.getKind == EQ then "eq" else "ne"
+          Some(binApply(op, asRef(l), asRef(r), ty(b)))
 
       private def binApply(op: String, l: Term, r: Term, resT: TypeRepr): Term =
         Tree.Apply(Tree.Select(l, opId(op), NoType, l.origin), List(r), opId(op), resT, l.origin)
