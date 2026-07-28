@@ -220,7 +220,7 @@ object OrderedSet {
       set.asInstanceOf[OrderedSet[?]].removeIndex(nextIndex)
     }
     def toArray(array: com.badlogic.gdx.utils.Array[K]): com.badlogic.gdx.utils.Array[K] = {
-      array.addAll(this.items, nextIndex, this.items.size - nextIndex)
+      array.addAll(this.items.asInstanceOf[com.badlogic.gdx.utils.Array[? <: K]], nextIndex, this.items.size - nextIndex)
       nextIndex = this.items.size
       hasNext$field = false
       return array

@@ -36,7 +36,7 @@ class InputMultiplexer extends com.badlogic.gdx.InputProcessor {
   }
   def setProcessors(processors: com.badlogic.gdx.utils.Array[com.badlogic.gdx.InputProcessor]): scala.Unit = {
     this.processors.clear()
-    this.processors.addAll(processors)
+    this.processors.addAll(processors.asInstanceOf[com.badlogic.gdx.utils.Array[? <: com.badlogic.gdx.InputProcessor]])
   }
   def getProcessors(): com.badlogic.gdx.utils.SnapshotArray[com.badlogic.gdx.InputProcessor] = {
     return this.processors

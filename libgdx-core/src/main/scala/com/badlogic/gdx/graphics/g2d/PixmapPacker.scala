@@ -442,7 +442,7 @@ object PixmapPacker {
           }
         }
       } else ()
-      pixmaps.sort(this.comparator)
+      pixmaps.sort(this.comparator.asInstanceOf[java.util.Comparator[? >: com.badlogic.gdx.graphics.Pixmap]])
     }
     def pack(packer: PixmapPacker, name: java.lang.String, bounds: com.badlogic.gdx.graphics.g2d.PixmapPacker.Bounds): com.badlogic.gdx.graphics.g2d.PixmapPacker.Page = {
       var page: com.badlogic.gdx.graphics.g2d.PixmapPacker.GuillotineStrategy.GuillotinePage = null.asInstanceOf[com.badlogic.gdx.graphics.g2d.PixmapPacker.GuillotineStrategy.GuillotinePage]
@@ -535,7 +535,7 @@ object PixmapPacker {
           }
         }
       } else ()
-      images.sort(this.comparator)
+      images.sort(this.comparator.asInstanceOf[java.util.Comparator[? >: com.badlogic.gdx.graphics.Pixmap]])
     }
     def pack(packer: PixmapPacker, name: java.lang.String, rect: com.badlogic.gdx.graphics.g2d.PixmapPacker.Bounds): com.badlogic.gdx.graphics.g2d.PixmapPacker.Page = {
       val padding: scala.Int = packer.padding

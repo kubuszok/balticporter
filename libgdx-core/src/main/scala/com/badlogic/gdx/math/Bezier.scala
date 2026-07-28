@@ -51,7 +51,7 @@ class Bezier[T <: com.badlogic.gdx.math.Vector[T]] extends com.badlogic.gdx.math
       this.tmp3 = points.get(0).cpy().asInstanceOf[T]
     } else ()
     this.points.clear()
-    this.points.addAll(points, offset, length)
+    this.points.addAll(points.asInstanceOf[com.badlogic.gdx.utils.Array[? <: T]], offset, length)
     return this.asInstanceOf[Bezier[T]]
   }
   def valueAt(out: T, t: scala.Float): T = {

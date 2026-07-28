@@ -33,7 +33,7 @@ class NodePart {
       } else {
         this.invBoneBindTransforms.clear()
       }
-      this.invBoneBindTransforms.putAll(other.invBoneBindTransforms)
+      this.invBoneBindTransforms.putAll(other.invBoneBindTransforms.asInstanceOf[com.badlogic.gdx.utils.ArrayMap[? <: com.badlogic.gdx.graphics.g3d.model.Node, ? <: com.badlogic.gdx.math.Matrix4]])
       if ((this.bones == null) || (this.bones.length != this.invBoneBindTransforms.size)) {
         this.bones = new scala.Array[com.badlogic.gdx.math.Matrix4](this.invBoneBindTransforms.size)
       } else ();

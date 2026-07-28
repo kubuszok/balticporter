@@ -258,7 +258,7 @@ object OrderedMap {
       currentIndex = -1
     }
     def toArray(array: com.badlogic.gdx.utils.Array[K]): com.badlogic.gdx.utils.Array[K] = {
-      array.addAll(this.keys, nextIndex, this.keys.size - nextIndex)
+      array.addAll(this.keys.asInstanceOf[com.badlogic.gdx.utils.Array[? <: K]], nextIndex, this.keys.size - nextIndex)
       nextIndex = this.keys.size
       hasNext$field = false
       return array

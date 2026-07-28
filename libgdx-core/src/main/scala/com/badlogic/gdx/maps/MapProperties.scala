@@ -20,7 +20,7 @@ class MapProperties {
     this.properties.put(key, value)
   }
   def putAll(properties: MapProperties): scala.Unit = {
-    this.properties.putAll(properties.properties)
+    this.properties.putAll(properties.properties.asInstanceOf[com.badlogic.gdx.utils.ObjectMap[? <: java.lang.String, ? <: java.lang.Object]])
   }
   def remove(key: java.lang.String): scala.Unit = {
     this.properties.remove(key)

@@ -155,7 +155,7 @@ object Texture {
         }
       }
       managedTextureArray.clear()
-      managedTextureArray.addAll(textures)
+      managedTextureArray.addAll(textures.asInstanceOf[com.badlogic.gdx.utils.Array[? <: Texture]])
     }
   }
   def setAssetManager(manager: com.badlogic.gdx.assets.AssetManager): scala.Unit = {

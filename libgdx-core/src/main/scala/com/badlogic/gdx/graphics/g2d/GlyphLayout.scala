@@ -252,7 +252,7 @@ class GlyphLayout extends com.badlogic.gdx.utils.Pool.Poolable {
         }
       } else ()
     } else ()
-    run.glyphs.addAll(truncateRun.glyphs)
+    run.glyphs.addAll(truncateRun.glyphs.asInstanceOf[com.badlogic.gdx.utils.Array[? <: com.badlogic.gdx.graphics.g2d.BitmapFont.Glyph]])
     this.glyphCount = this.glyphCount + truncate.length()
     GlyphLayout.glyphRunPool.free(truncateRun)
   }
@@ -276,7 +276,7 @@ class GlyphLayout extends com.badlogic.gdx.utils.Pool.Poolable {
     if (secondStart < glyphCount) {
       second = GlyphLayout.glyphRunPool.obtain()
       val glyphs1: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.BitmapFont.Glyph] = second.glyphs
-      glyphs1.addAll(glyphs2, 0, firstEnd)
+      glyphs1.addAll(glyphs2.asInstanceOf[com.badlogic.gdx.utils.Array[? <: com.badlogic.gdx.graphics.g2d.BitmapFont.Glyph]], 0, firstEnd)
       glyphs2.removeRange(0, secondStart - 1)
       first.glyphs = glyphs1
       second.glyphs = glyphs2
@@ -433,7 +433,7 @@ object GlyphLayout {
     var y: scala.Float = 0.0f
     var width: scala.Float = 0.0f
     def appendRun(run: com.badlogic.gdx.graphics.g2d.GlyphLayout.GlyphRun): scala.Unit = {
-      this.glyphs.addAll(run.glyphs)
+      this.glyphs.addAll(run.glyphs.asInstanceOf[com.badlogic.gdx.utils.Array[? <: com.badlogic.gdx.graphics.g2d.BitmapFont.Glyph]])
       if (this.xAdvances.notEmpty()) {
         this.xAdvances.size = this.xAdvances.size - 1
       } else ()

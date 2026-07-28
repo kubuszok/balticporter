@@ -68,7 +68,7 @@ class ResourceData[T] extends com.badlogic.gdx.utils.Json.Serializable {
     for (saveData <- this.data) {
       saveData.resources = this.asInstanceOf[ResourceData[T]]
     }
-    this.sharedAssets.addAll(json.readValue("assets", classOf[com.badlogic.gdx.utils.Array[T]], classOf[com.badlogic.gdx.graphics.g3d.particles.ResourceData.AssetData[T]], jsonData))
+    this.sharedAssets.addAll(json.readValue("assets", classOf[com.badlogic.gdx.utils.Array[T]], classOf[com.badlogic.gdx.graphics.g3d.particles.ResourceData.AssetData[T]], jsonData).asInstanceOf[com.badlogic.gdx.utils.Array[? <: com.badlogic.gdx.graphics.g3d.particles.ResourceData.AssetData[T]]])
     this.resource = json.readValue("resource", null, jsonData).asInstanceOf[T]
   }
 }

@@ -26,7 +26,7 @@ abstract class FlushablePool[T] extends com.badlogic.gdx.utils.Pool[T] {
     super.free(`object`)
   }
   def freeAll(objects: com.badlogic.gdx.utils.Array[T]): scala.Unit = {
-    this.obtained.removeAll(objects, true)
+    this.obtained.removeAll(objects.asInstanceOf[com.badlogic.gdx.utils.Array[? <: T]], true)
     super.freeAll(objects)
   }
 }

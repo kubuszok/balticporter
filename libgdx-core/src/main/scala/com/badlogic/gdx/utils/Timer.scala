@@ -239,7 +239,7 @@ object Timer {
     }
     def runPostedTasks(): scala.Unit = {
       this.postedTasks.synchronized {
-        this.runTasks.addAll(this.postedTasks)
+        this.runTasks.addAll(this.postedTasks.asInstanceOf[com.badlogic.gdx.utils.Array[? <: com.badlogic.gdx.utils.Timer.Task]])
         this.postedTasks.clear()
       }
       val items: scala.Array[java.lang.Object] = this.runTasks.items.asInstanceOf[scala.Array[java.lang.Object]];

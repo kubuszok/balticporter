@@ -205,7 +205,7 @@ class Octree[T](minimum: com.badlogic.gdx.math.Vector3, maximum: com.badlogic.gd
           child.getAll(resultSet)
         }
       } else ()
-      resultSet.addAll(this.geometries)
+      resultSet.addAll(this.geometries.asInstanceOf[com.badlogic.gdx.utils.Array[? <: T]])
     }
     def getBoundingBox(bounds: com.badlogic.gdx.utils.ObjectSet[com.badlogic.gdx.math.collision.BoundingBox]): scala.Unit = {
       if (!this.leaf) {

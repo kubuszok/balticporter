@@ -1164,12 +1164,23 @@ object SpoonTir:
               (own :: casts).exists(_.isInstanceOf[CtArrayTypeReference[?]]) ||
                 (e match { case lit: CtLiteral[?] => lit.getValue == null; case _ => false })
             }
-            if comp == null || passesArray || argEs.sizeIs < fixed || !tpConcrete(comp) then None
+            // A GENERIC vararg component (`static <T> Array<T> with (T... array)`) cannot be named at
+            // the call site — but Java materialises the array from the ARGUMENTS' own type, and
+            // naming that lets Scala infer `T` exactly as Java did. Only when every trailing
+            // argument agrees on one concrete type; a mixed set would need a lub we have no business
+            // computing here.
+            val elemRef: Option[CtTypeReference[?]] =
+              if comp != null && tpConcrete(comp) then Some(comp)
+              else
+                val ts = argEs.drop(fixed).map(e => try e.getType catch { case _: Throwable => null })
+                Option.when(ts.nonEmpty && ts.forall(t => t != null && !t.isPrimitive && tpConcrete(t)) &&
+                            ts.map(_.getQualifiedName).distinct.sizeIs == 1)(ts.head)
+            if comp == null || passesArray || argEs.sizeIs < fixed || elemRef.isEmpty then None
             else
               val (head, rest) = argEs.splitAt(fixed)
               val fixedTerms = head.zipWithIndex.map { (e, i) => coerce(l(i).getType, e, expr(e)) }
-              val ct = tpe(comp)
-              val elems = rest.map(e => coerce(comp, e, expr(e)))
+              val ct = tpe(elemRef.get)
+              val elems = rest.map(e => coerce(elemRef.get, e, expr(e)))
               val at = AppliedType(TypeRef(NoPrefix, minter.external("scala.Array", "Array")), List(ct))
               val o = argEs.headOption.map(originOf).getOrElse(Origin.synthetic)
               Some(fixedTerms :+ Tree.NewArray(TypeTree(ct, o), Nil, Some(elems), at, o))
@@ -1637,8 +1648,12 @@ object SpoonTir:
                         catch { case _: Throwable => Nil }
           val actuals = rt.getActualTypeArguments.asScala.toList
           // fully KNOWN instantiation: same arity, no wildcards, every variable nameable here
-          val known = formals.nonEmpty && actuals.sizeIs == formals.size &&
-            !actuals.exists(_.isInstanceOf[CtWildcardReference]) && actuals.forall(tpResolvable)
+          // A WILDCARD actual is admitted too. It cannot drive the original cast (that one needs a
+          // fully known instantiation), but it is exactly what makes the NARROWER argument illegal:
+          // `loaders : ObjectMap[Class[?], ObjectMap[String, AssetLoader[?, ?]]]` asks its `put` for
+          // an `AssetLoader[?, ?]` while the value at hand is an `AssetLoader[T, P]`. Java converts
+          // silently at the wildcard; Scala needs it written. See the per-argument guard below.
+          val known = formals.nonEmpty && actuals.sizeIs == formals.size && actuals.forall(tpResolvable)
           val ps = try Option(inv.getExecutable.getExecutableDeclaration).map(_.getParameters.asScala.toList.map(_.getType))
                    catch { case _: Throwable => None }
           (known, ps) match
@@ -1646,10 +1661,17 @@ object SpoonTir:
               val subst = formals.map(_.getSimpleName).zip(actuals.map(tpe)).toMap
               args.zipWithIndex.map { (t, i) =>
                 val f = l(i)
-                if f == null || !mentionsTypeVarBounded(f, subst.keySet) || !hasWildcard(t.tpe) then t
+                if f == null || !mentionsTypeVarBounded(f, subst.keySet) then t
                 else substFormal(f, subst) match
-                  case Some(ct) if ct != t.tpe => Tree.Typed(t, tt(ct, argEs(i)), ct, t.origin)
-                  case _                       => t
+                  // `hasWildcard(t.tpe)`: our raw fill wildcarded the ARGUMENT, and the receiver's
+                  // known instantiation says what it really is.
+                  // `uncheckedFrom(ct, t.tpe)`: the reverse — the SLOT is wildcarded and the
+                  // argument is the more precise type. Both are Java's unchecked conversion; only
+                  // the direction differs. A bare `?` target is not a type one can cast to.
+                  case Some(ct) if ct != t.tpe && !ct.isInstanceOf[TypeBounds] &&
+                                   (hasWildcard(t.tpe) || uncheckedFrom(ct, t.tpe)) =>
+                    Tree.Typed(t, tt(ct, argEs(i)), ct, t.origin)
+                  case _ => t
               }
             case _ => args
 

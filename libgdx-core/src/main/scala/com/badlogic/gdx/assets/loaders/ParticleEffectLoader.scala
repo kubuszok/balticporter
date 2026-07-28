@@ -18,7 +18,7 @@ class ParticleEffectLoader(resolver$p: com.badlogic.gdx.assets.loaders.FileHandl
     var deps: com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = null
     if ((param != null) && (param.atlasFile != null)) {
       deps = new com.badlogic.gdx.utils.Array().asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]]
-      deps.add(new com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.graphics.g2d.TextureAtlas](param.atlasFile, classOf[com.badlogic.gdx.graphics.g2d.TextureAtlas]))
+      deps.add(new com.badlogic.gdx.assets.AssetDescriptor[com.badlogic.gdx.graphics.g2d.TextureAtlas](param.atlasFile, classOf[com.badlogic.gdx.graphics.g2d.TextureAtlas]).asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[?]])
     } else ()
     return deps.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]]]
   }

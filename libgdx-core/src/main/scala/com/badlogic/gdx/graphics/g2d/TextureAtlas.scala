@@ -399,7 +399,7 @@ object TextureAtlas {
             } else ()
             return i1 - i2
           }
-        })
+        }.asInstanceOf[java.util.Comparator[? >: com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Region]])
       } else ()
     }
     def getPages(): com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Page] = {

@@ -4,7 +4,7 @@ class DirectionalLightsAttribute extends com.badlogic.gdx.graphics.g3d.Attribute
   var lights: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.environment.DirectionalLight] = null.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.environment.DirectionalLight]]
   def this(copyFrom: DirectionalLightsAttribute) = {
     this()
-    this.lights.addAll(copyFrom.lights)
+    this.lights.addAll(copyFrom.lights.asInstanceOf[com.badlogic.gdx.utils.Array[? <: com.badlogic.gdx.graphics.g3d.environment.DirectionalLight]])
   }
   this.lights = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.environment.DirectionalLight](1)
   def copy(): DirectionalLightsAttribute = {

@@ -152,7 +152,7 @@ class ModelCache(sorter$p: com.badlogic.gdx.graphics.g3d.utils.RenderableSorter,
       r.shader = null
       r.environment = null
     }
-    renderables.addAll(this.renderables)
+    renderables.addAll(this.renderables.asInstanceOf[com.badlogic.gdx.utils.Array[? <: com.badlogic.gdx.graphics.g3d.Renderable]])
   }
   def dispose(): scala.Unit = {
     if (this.building) {
@@ -170,7 +170,7 @@ object ModelCache {
     private var freeMeshes: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.Mesh] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.Mesh]()
     private var usedMeshes: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.Mesh] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.Mesh]()
     def flush(): scala.Unit = {
-      this.freeMeshes.addAll(this.usedMeshes)
+      this.freeMeshes.addAll(this.usedMeshes.asInstanceOf[com.badlogic.gdx.utils.Array[? <: com.badlogic.gdx.graphics.Mesh]])
       this.usedMeshes.clear()
     }
     def obtain(vertexAttributes: com.badlogic.gdx.graphics.VertexAttributes, vertexCount$arg: scala.Int, indexCount$arg: scala.Int): com.badlogic.gdx.graphics.Mesh = {
@@ -205,7 +205,7 @@ object ModelCache {
     private var freeMeshes: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.Mesh] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.Mesh]()
     private var usedMeshes: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.Mesh] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.Mesh]()
     def flush(): scala.Unit = {
-      this.freeMeshes.addAll(this.usedMeshes)
+      this.freeMeshes.addAll(this.usedMeshes.asInstanceOf[com.badlogic.gdx.utils.Array[? <: com.badlogic.gdx.graphics.Mesh]])
       this.usedMeshes.clear()
     }
     def obtain(vertexAttributes: com.badlogic.gdx.graphics.VertexAttributes, vertexCount: scala.Int, indexCount: scala.Int): com.badlogic.gdx.graphics.Mesh = {

@@ -124,7 +124,7 @@ object Cubemap {
         }
       }
       managedCubemapArray.clear()
-      managedCubemapArray.addAll(cubemaps)
+      managedCubemapArray.addAll(cubemaps.asInstanceOf[com.badlogic.gdx.utils.Array[? <: Cubemap]])
     }
   }
   def setAssetManager(manager: com.badlogic.gdx.assets.AssetManager): scala.Unit = {

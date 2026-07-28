@@ -42,7 +42,7 @@ class CameraGroupStrategy extends com.badlogic.gdx.graphics.g3d.decals.GroupStra
     if (group == CameraGroupStrategy.GROUP_BLEND) {
       com.badlogic.gdx.Gdx.gl.glEnable(com.badlogic.gdx.graphics.GL20.GL_BLEND)
       com.badlogic.gdx.Gdx.gl.glDepthMask(false)
-      contents.sort(this.cameraSorter)
+      contents.sort(this.cameraSorter.asInstanceOf[java.util.Comparator[? >: com.badlogic.gdx.graphics.g3d.decals.Decal]])
     } else {
       { var i: scala.Int = 0; val n: scala.Int = contents.size; while (i < n) { {
         val decal: com.badlogic.gdx.graphics.g3d.decals.Decal = contents.get(i)
@@ -57,7 +57,7 @@ class CameraGroupStrategy extends com.badlogic.gdx.graphics.g3d.decals.GroupStra
       }; i = i + 1 } }
       contents.clear()
       for (materialGroup <- this.materialGroups.values()) {
-        contents.addAll(materialGroup)
+        contents.addAll(materialGroup.asInstanceOf[com.badlogic.gdx.utils.Array[? <: com.badlogic.gdx.graphics.g3d.decals.Decal]])
       }
       this.materialGroups.clear()
       this.arrayPool.freeAll(this.usedArrays)

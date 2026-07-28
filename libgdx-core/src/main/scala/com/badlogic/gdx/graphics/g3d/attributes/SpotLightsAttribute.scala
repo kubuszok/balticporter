@@ -4,7 +4,7 @@ class SpotLightsAttribute extends com.badlogic.gdx.graphics.g3d.Attribute(SpotLi
   var lights: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.environment.SpotLight] = null.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.environment.SpotLight]]
   def this(copyFrom: SpotLightsAttribute) = {
     this()
-    this.lights.addAll(copyFrom.lights)
+    this.lights.addAll(copyFrom.lights.asInstanceOf[com.badlogic.gdx.utils.Array[? <: com.badlogic.gdx.graphics.g3d.environment.SpotLight]])
   }
   this.lights = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.environment.SpotLight](1)
   def copy(): SpotLightsAttribute = {

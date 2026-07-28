@@ -325,7 +325,7 @@ class List[T](style$p: com.badlogic.gdx.scenes.scene2d.ui.List.ListStyle) extend
     val oldPrefHeight: scala.Float = this.getPrefHeight()
     if (newItems != this.items) {
       this.items.clear()
-      this.items.addAll(newItems)
+      this.items.addAll(newItems.asInstanceOf[com.badlogic.gdx.utils.Array[? <: T]])
     } else ()
     this.overIndex = -1
     this.pressedIndex = -1
