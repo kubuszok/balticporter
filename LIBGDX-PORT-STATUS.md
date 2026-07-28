@@ -596,6 +596,33 @@ instantiated them as. Three refinements were each measured, and each is load-bea
 Suppressing it for whole method BODIES instead of just at a raw `new` measured **36 -> 59**: local
 declarations inside a body genuinely need it, to match the signatures they feed.
 
+### Why the remaining 6 resist the obvious fixes — four measured variants
+
+The inherited-instantiation fill is right for SIGNATURES and wrong in at least one body position,
+and the boundary is not the declaration KIND:
+
+| variant | measured |
+|---|---|
+| suppress the fill for whole method BODIES | 36 -> 59 |
+| suppress it for LOCAL declarations only | 6 -> 17 |
+| suppress it at a RAW `new` (KEPT) | 36 -> 7 |
+| skip a cast whose target is wildcarded | 6 -> 7 |
+
+`ParticleEffectLoader:23` shows why. Java has `Array<AssetDescriptor> deps` (RAW) and adds a
+`TextureAtlas` descriptor to it; the enclosing loader instantiates its parent with `ParticleEffect`,
+so the fill types the local `Array[AssetDescriptor[ParticleEffect]]` and the add is rejected. But
+the local MUST keep that type — it is what the method returns into an inherited signature — so the
+conversion belongs at the `add`, not at the declaration.
+
+`knownReceiverArgs` is where that cast would go, and it cannot fire: its gate needs a KNOWN
+instantiation from Spoon, and the receiver's Spoon type is raw. Our RENDERED type is concrete, the
+Spoon type is not, and the function only sees the latter. Adding a raw-argument disjunct alone is a
+NO-OP for this reason (measured 6 -> 6, the same six sites).
+
+**Next step: give `knownReceiverArgs` the RENDERED receiver type.** The translated receiver Term is
+built later in `invocation`, which is exactly why it was never available there. This is the same
+"the TIR must carry what the emitted scala has" root cause named throughout this document.
+
 ### The remaining 6
 
 | site | shape |
