@@ -392,6 +392,91 @@ gate is consulted.** A kill switch is one run and answers that question outright
 Note the env-var trap: `sbt -client` sends commands to a long-running SERVER, so a shell `FOO=1`
 never reaches the forked migration. Use a marker FILE.
 
+## ONE ERROR — and it is a per-library SIGNATURE TENSION, not an engine defect
+
+Measured 2026-07-29, `bash scripts/gdx_measure.sh`, at commit `eeac2c3`.
+Full trajectory this pass: **11 -> 4 -> 3 -> 1 -> 145 -> 47 -> 69 -> 60 -> 33 -> 22 -> 12 -> 11 ->
+5 -> 3 -> 2 -> 1**. The typer is green; the single remaining error is a RefChecks one.
+
+```
+Skin.scala:385  override def readValue[T <: java.lang.Object](...)
+  error overriding method readValue in class Json of type [T](...)
+```
+
+`Skin` contains an anonymous `Json` subclass overriding `readValue`. The engine renders its type
+parameter `[T <: Object]`, correctly — java's `<T>` MEANS `<T extends Object>`. The hand-written
+`Json` substitute (`corpus-tests/libgdx-overrides/.../Json.scala`) declares `[T]`, unbounded. The
+two cannot both be right, and the unbounded one is load-bearing:
+
+- `Emitter.java` and 15 siblings call `json.readValue("minParticleCount", int.class, jsonData)`.
+- Java types `int.class` as `Class<Integer>` — the class LITERAL is where java boxes in the type
+  while keeping the primitive class OBJECT — binds `T = Integer`, and unboxes the result.
+- Scala's `classOf[Int]` is `Class[Int]`, and `Int` is not `<: Object`. Free inference against an
+  UNBOUNDED `[T]` binds `T = Int` and every one of the 16 compiles. `pinTypeArgs` documents exactly
+  this and deliberately keeps inference free for a call carrying a primitive class literal.
+
+So one site wants the bound and sixteen want it absent.
+
+### Two measured dead ends — do NOT retry as-is
+
+| attempt | measured |
+|---|---|
+| give the substitute `readValue[T <: Object]` | 1 -> 16, all `Class[Int]` vs `Class[Object]` |
+| …and write java's own static type, `classOf[Int].asInstanceOf[Class[Integer]]` | 1 -> 21 |
+
+The second is worth reading: the cast is CORRECT — same runtime object, java's own static type —
+but with inference still free the ASSIGNMENT's expected type leaks in and scala demands
+`Class[Object & Int]`. The fix has to pin `T` at the same time, and a third attempt adding that to
+`pinTypeArgs` (a branch for `formals == 1 && actuals.isEmpty` with a primitive class literal at a
+`Class<T>` formal) **did not fire at all** — the cast appeared in the output, the `readValue[…]`
+pin did not. Per §4.6 of CLAUDE.md that is where to start next time: find out why the branch is not
+reached before adding another condition to it. Do not re-run the first two.
+
+### The real options, in preference order
+
+1. **Bounds-of-an-override follow the PARENT.** Universal and correct: scala requires an override's
+   type-parameter bounds to match exactly, so the engine should take them from the overridden
+   member rather than re-deriving from java. It needs the engine to see an INJECTED parent's
+   signature, which is the same gap `TirEmitter(program, externalConcrete)` opened for
+   `diamondOverrides` — extend that channel rather than inventing a second one.
+2. **Finish the pin.** Then the substitute can carry java's bound and all 17 sites agree.
+3. Per-library: nothing clean. Dropping the `Skin` override would silence it and change behaviour.
+
+### What closed the other 68
+
+| fix | measured | kind |
+|---|---|---|
+| a field that SHADOWS an inherited member gets a fresh name | 69 -> 60 | universal |
+| an override through a RAW parent renders at the parent's ERASURE | 60 -> 33 | universal |
+| disambiguate a member concrete from BOTH superclass and mixin | 33 -> 22 | universal |
+| raw-parent alignment searches the parent CHAIN | 22 -> 12 | fix to the above |
+| the shadow rename must not collide with what it inherits either | 12 -> 11 | fix to the above |
+| a java STATIC method never overrides — it HIDES | 11 -> 5 | universal |
+| a promoted ctor local is a MEMBER; subclasses must avoid its name | 5 -> 3 | universal |
+| a PRIVATE ancestor method is not inherited, so cannot be overridden | 3 -> 2 | universal |
+| libgdx manifest: `Json` override was missing `ignoreUnknownField` | 2 -> 1 | library |
+
+Two of these were **silent behavioural defects**, not merely compile errors:
+
+- `ParticleEmitter.Particle.rotation` SHADOWS `Sprite.rotation` in java — two independent fields.
+  Emitted as one, writes through the subclass became visible to the superclass's own draw path.
+  It compiled.
+- `Skin`'s `ignoreUnknownField` override had no method to override, because the hand-written `Json`
+  substitute omitted it. The override compiled to nothing and libgdx's `readFields` never called it.
+
+### The recurring bug in three of the fixes above
+
+A rename must consult **effective** names, computed **parents-first**. `resolveFieldShadowing` and
+`funnelParamRenames` both read ORIGINAL names, so an ancestor already renamed to `style$shadow` /
+`attributes$p` did not read as taken and the descendant landed on the same string — the collision
+simply moved up a level. Both now scan parents first and read through the rename map. Any future
+renaming pass must do the same.
+
+Related: `funnelParamRenames` also had to count what `CtorFunnel` PROMOTES — the chosen
+constructor's params AND its top-level locals. Neither is in `cd.body`, both become members, and a
+java constructor LOCAL becoming a scala member is exactly the kind of thing a subclass then
+collides with (`DepthShader extends DefaultShader`, same two locals, same promoted name).
+
 ## Scope of the goal
 
 `../sge/original-src/libgdx`, 1534 Java files across 18 modules. They are not equally in scope —
