@@ -126,6 +126,9 @@ object SpoonTir:
       *
       * So a class must be able to see what it instantiated its parents' names AS. */
     private val inheritedInst = collection.mutable.ArrayDeque[Map[String, (TypeRepr, CtTypeReference[?])]]()
+    /** FQNs of this class's ancestors — the only declarations whose formals are written in type
+      * variables the inherited instantiation can speak about. */
+    private val ancestorFqns = collection.mutable.ArrayDeque[Set[String]]()
     private var noInheritFill = false
     /** true while translating a member this class INHERITS (an override). The inherited
       * instantiation exists to make such a member agree with the one it overrides — that is the
@@ -234,6 +237,25 @@ object SpoonTir:
       * implicit upper bound is a fact about Java, not about any library. */
     /** parent formal NAME -> the argument this class supplies, walking supertypes breadth-first so
       * a grandparent's names are covered too (`AsynchronousAssetLoader<T,P> extends AssetLoader<T,P>`). */
+    private def ancestorsOf(t: CtType[?]): Set[String] =
+      val acc = collection.mutable.Set[String](t.getQualifiedName)
+      def walk(r: CtTypeReference[?], fuel: Int): Unit =
+        if r != null && fuel > 0 && !acc.contains(r.getQualifiedName) then
+          acc += r.getQualifiedName
+          val d = try r.getTypeDeclaration catch { case _: Throwable => null }
+          if d != null then
+            val ups: List[CtTypeReference[?]] =
+              (d match { case c: CtClass[?] => Option(c.getSuperclass).toList; case _ => Nil }) ++
+                (try d.getSuperInterfaces.asScala.toList catch { case _: Throwable => Nil })
+            ups.foreach(walk(_, fuel - 1))
+      val ups0: List[CtTypeReference[?]] =
+        (t match { case c: CtClass[?] => Option(c.getSuperclass).toList; case _ => Nil }) ++
+          (try t.getSuperInterfaces.asScala.toList catch { case _: Throwable => Nil })
+      ups0.foreach(walk(_, 5))
+      // NOT the class itself: a helper it declares (`removeDuplicates`) is not written in an
+      // ancestor's variables either, so its formals must render outside the override gate too.
+      acc.toSet - t.getQualifiedName
+
     private def instantiationOfParents(t: CtType[?]): Map[String, (TypeRepr, CtTypeReference[?])] =
       val out = collection.mutable.Map[String, (TypeRepr, CtTypeReference[?])]()
       def walk(r: CtTypeReference[?], fuel: Int): Unit =
@@ -670,6 +692,7 @@ object SpoonTir:
       tpScopes.prepend(frame); tpIsExec.prepend(false)
       selfRawStack.prepend(id -> t.getFormalCtTypeParameters.asScala.toList.map(tp => frame(tp.getSimpleName)))
       inheritedInst.prepend(instantiationOfParents(t))
+      ancestorFqns.prepend(ancestorsOf(t))
       val enclosingAcc = if capturesEnclosing(t) then tpAccessible.headOption.getOrElse(Map.empty) else Map.empty
       tpAccessible.prepend(enclosingAcc ++ frame)
       // an anonymous/local class capturing an enclosing method's params keeps them EXEC-contributed
@@ -717,7 +740,7 @@ object SpoonTir:
       val enumCases = t match
         case e: CtEnum[?] => e.getEnumValues.asScala.toList.map(enumCase(id, _))
         case _            => Nil
-      tpScopes.remove(0); tpIsExec.remove(0); inheritedInst.remove(0)
+      tpScopes.remove(0); tpIsExec.remove(0); inheritedInst.remove(0); ancestorFqns.remove(0)
       selfRawStack.remove(0); tpAccessible.remove(0); tpExecNames.remove(0); inStatic = savedStatic
       Tree.ClassDef(id, parents, selfType = None, body = fields ++ ctors ++ methods ++ initBlocks ++ nested,
         origin = originOf(t), tparams = tpDefs, enumCases = enumCases)
@@ -1305,10 +1328,16 @@ object SpoonTir:
           // …but only for a callee this class DECLARES itself (`removeDuplicates`, a private
           // helper). An INHERITED callee's formals are written in the ancestor's variables and do
           // need the caller's instantiation; clearing the gate for those too measured 3 -> 35.
+          // The caller's inherited instantiation can only speak about type variables declared by
+          // its OWN ancestors. A formal belonging to any other class — `AssetManager`'s
+          // `injectDependencies(Array<AssetDescriptor>)`, called from `AssetLoadingTask` — must be
+          // rendered without it. Restricting this to same-class callees only was not enough (3 -> 2
+          // instead of 0); clearing it for ALL callees was too much (3 -> 35), because a formal
+          // inherited from an ancestor genuinely is written in the ancestor's variables.
           val ownCallee =
             try Option(e.getParent(classOf[CtInvocation[?]]))
                   .flatMap(inv => Option(inv.getExecutable.getDeclaringType))
-                  .exists(_.getQualifiedName == minter.fullNameOf(classId))
+                  .exists(dt => !ancestorFqns.headOption.getOrElse(Set.empty).contains(dt.getQualifiedName))
             catch { case _: Throwable => false }
           val savedOv = inOverridingMember
           if ownCallee then inOverridingMember = false
