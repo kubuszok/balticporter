@@ -133,8 +133,8 @@ class ImageTextButton(text: java.lang.String, style$p: com.badlogic.gdx.scenes.s
   def getImage(): com.badlogic.gdx.scenes.scene2d.ui.Image = {
     return this.image
   }
-  def getImageCell(): com.badlogic.gdx.scenes.scene2d.ui.Cell[com.badlogic.gdx.scenes.scene2d.ui.Button.ButtonStyle] = {
-    return this.getCell(this.image).asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[com.badlogic.gdx.scenes.scene2d.ui.Button.ButtonStyle]]
+  def getImageCell(): com.badlogic.gdx.scenes.scene2d.ui.Cell[?] = {
+    return this.getCell(this.image).asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]]
   }
   def setLabel(label: com.badlogic.gdx.scenes.scene2d.ui.Label): scala.Unit = {
     this.getLabelCell().setActor(label)
@@ -143,8 +143,8 @@ class ImageTextButton(text: java.lang.String, style$p: com.badlogic.gdx.scenes.s
   def getLabel(): com.badlogic.gdx.scenes.scene2d.ui.Label = {
     return this.label
   }
-  def getLabelCell(): com.badlogic.gdx.scenes.scene2d.ui.Cell[com.badlogic.gdx.scenes.scene2d.ui.Button.ButtonStyle] = {
-    return this.getCell(this.label).asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[com.badlogic.gdx.scenes.scene2d.ui.Button.ButtonStyle]]
+  def getLabelCell(): com.badlogic.gdx.scenes.scene2d.ui.Cell[?] = {
+    return this.getCell(this.label).asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]]
   }
   def setText(text: java.lang.CharSequence): scala.Unit = {
     this.label.setText(text)

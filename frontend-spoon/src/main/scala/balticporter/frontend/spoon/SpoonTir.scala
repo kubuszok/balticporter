@@ -125,10 +125,22 @@ object SpoonTir:
       * both sides are raw and it checks neither.
       *
       * So a class must be able to see what it instantiated its parents' names AS. */
-    private val inheritedInst = collection.mutable.ArrayDeque[Map[String, TypeRepr]]()
+    private val inheritedInst = collection.mutable.ArrayDeque[Map[String, (TypeRepr, CtTypeReference[?])]]()
     private var noInheritFill = false
-    private def inheritedTp(name: String): Option[TypeRepr] =
-      if noInheritFill then scala.None else inheritedInst.headOption.flatMap(_.get(name))
+    /** The map is keyed by NAME, so an unrelated ancestor's `T` can collide with the `T` of the type
+      * being filled — `Button`'s inherited `T = ButtonStyle` reaching `ButtonGroup<T extends
+      * Button>`, which is not a `Button` at all. Require the candidate to satisfy the formal's own
+      * BOUND; that is what makes the name match evidence rather than coincidence. */
+    private def inheritedTp(f: CtTypeParameter): Option[TypeRepr] =
+      if noInheritFill then scala.None
+      else inheritedInst.headOption.flatMap(_.get(f.getSimpleName)).collect {
+        case (r, ref) if boundAdmits(f, ref) => r
+      }
+
+    private def boundAdmits(f: CtTypeParameter, cand: CtTypeReference[?]): Boolean =
+      Option(f.getSuperclass).filter(_.getQualifiedName != "java.lang.Object") match
+        case None    => true
+        case Some(b) => try cand.isSubtypeOf(b) catch { case _: Throwable => false }
     private def accessibleTp(name: String): Option[SymId] =
       if declScopeOnly && tpExecNames.headOption.exists(_.contains(name)) then None
       else tpAccessible.headOption.flatMap(_.get(name))
@@ -211,8 +223,8 @@ object SpoonTir:
       * implicit upper bound is a fact about Java, not about any library. */
     /** parent formal NAME -> the argument this class supplies, walking supertypes breadth-first so
       * a grandparent's names are covered too (`AsynchronousAssetLoader<T,P> extends AssetLoader<T,P>`). */
-    private def instantiationOfParents(t: CtType[?]): Map[String, TypeRepr] =
-      val out = collection.mutable.Map[String, TypeRepr]()
+    private def instantiationOfParents(t: CtType[?]): Map[String, (TypeRepr, CtTypeReference[?])] =
+      val out = collection.mutable.Map[String, (TypeRepr, CtTypeReference[?])]()
       def walk(r: CtTypeReference[?], fuel: Int): Unit =
         if r != null && fuel > 0 then
           val decl = try r.getTypeDeclaration catch { case _: Throwable => null }
@@ -228,7 +240,7 @@ object SpoonTir:
                   case tv: CtTypeParameterReference => resolveTypeParam(tv.getSimpleName).isDefined
                   case _                            => true
                 if !a.isInstanceOf[CtWildcardReference] && nameable && !out.contains(f.getSimpleName) then
-                  try out(f.getSimpleName) = tpe(a) catch { case _: Throwable => () }
+                  try out(f.getSimpleName) = (tpe(a), a) catch { case _: Throwable => () }
               }
             val ups: List[CtTypeReference[?]] = decl match
               case c: CtClass[?] => Option(c.getSuperclass).toList
@@ -626,7 +638,7 @@ object SpoonTir:
                   if formals.isEmpty then AppliedType(head, List.fill(arity)(TypeBounds(NoType, NoType)))
                   else AppliedType(head, formals.map { f =>
                     accessibleTp(f.getSimpleName).map(id => TypeRef(NoPrefix, id))
-                      .orElse(inheritedTp(f.getSimpleName))          // what THIS class instantiated it as
+                      .orElse(inheritedTp(f))                       // what THIS class instantiated it as
                       .getOrElse(TypeBounds(NoType, NoType))
                   })
           case args => AppliedType(head, args.map(tpe))
