@@ -77,7 +77,7 @@ class Circle extends java.io.Serializable with com.badlogic.gdx.math.Shape2D {
     val dy: scala.Float = this.y - point.y
     return ((dx * dx) + (dy * dy)) <= (this.radius * this.radius)
   }
-  override def contains(c: Circle): scala.Boolean = {
+  def contains(c: Circle): scala.Boolean = {
     val radiusDiff: scala.Float = this.radius - c.radius
     if (radiusDiff < 0.0f) {
       return false

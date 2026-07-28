@@ -359,7 +359,7 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
     java.lang.System.arraycopy(this.items, 0, array, 0, this.size)
     return array
   }
-  override def append(value: scala.Boolean): CharArray = {
+  def append(value: scala.Boolean): CharArray = {
     if (value) {
       this.require(CharArray.TRUE_STRING_SIZE)
       this.appendTrue(this.size)
@@ -374,7 +374,7 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
     this.items({ this.size += 1; this.size }) = value
     return this
   }
-  override def append(ch: scala.Array[scala.Char]): CharArray = {
+  def append(ch: scala.Array[scala.Char]): CharArray = {
     if (ch == null) {
       return this.appendNull()
     } else ()
@@ -386,7 +386,7 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
     } else ()
     return this
   }
-  override def append(ch: scala.Array[scala.Char], start: scala.Int, length: scala.Int): CharArray = {
+  def append(ch: scala.Array[scala.Char], start: scala.Int, length: scala.Int): CharArray = {
     if (ch == null) {
       return this.appendNull()
     } else ()
@@ -403,7 +403,7 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
     } else ()
     return this
   }
-  override def append(str: java.nio.CharBuffer): CharArray = {
+  def append(str: java.nio.CharBuffer): CharArray = {
     if (str == null) {
       this.appendNull()
     } else {
@@ -411,7 +411,7 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
     }
     return this
   }
-  override def append(buf: java.nio.CharBuffer, start: scala.Int, `end`: scala.Int): CharArray = {
+  def append(buf: java.nio.CharBuffer, start: scala.Int, `end`: scala.Int): CharArray = {
     if (buf == null) {
       return this.appendNull()
     } else ()
@@ -456,19 +456,19 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
     } else ()
     return this.append(seq.toString(), start, `end`)
   }
-  override def append(value: scala.Double): CharArray = {
+  def append(value: scala.Double): CharArray = {
     return this.append(java.lang.String.valueOf(value))
   }
-  override def append(value: scala.Float): CharArray = {
+  def append(value: scala.Float): CharArray = {
     return this.append(java.lang.String.valueOf(value))
   }
-  override def append(value: scala.Int): CharArray = {
+  def append(value: scala.Int): CharArray = {
     return (this.append: (scala.Int, scala.Int, scala.Char) => CharArray)(value, 0, '0')
   }
   def append(value: scala.Int, minLength: scala.Int): CharArray = {
     return (this.append: (scala.Int, scala.Int, scala.Char) => CharArray)(value, minLength, '0')
   }
-  override def append(value$arg: scala.Int, minLength: scala.Int, prefix: scala.Char): CharArray = {
+  def append(value$arg: scala.Int, minLength: scala.Int, prefix: scala.Char): CharArray = {
     var value: scala.Int = value$arg
     if (value == java.lang.Integer.MIN_VALUE) {
       this.append("-2147483648")
@@ -513,13 +513,13 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
     (this.append: (scala.Char) => CharArray)(CharArray.DIGITS(value % 10))
     return this
   }
-  override def append(value: scala.Long): CharArray = {
+  def append(value: scala.Long): CharArray = {
     return this.append(value, 0, '0')
   }
   def append(value: scala.Long, minLength: scala.Int): CharArray = {
     return this.append(value, minLength, '0')
   }
-  override def append(value$arg: scala.Long, minLength: scala.Int, prefix: scala.Char): CharArray = {
+  def append(value$arg: scala.Long, minLength: scala.Int, prefix: scala.Char): CharArray = {
     var value: scala.Long = value$arg
     if (value == java.lang.Long.MIN_VALUE) {
       this.append("-9223372036854775808")
@@ -591,7 +591,7 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
     (this.append: (scala.Char) => CharArray)(CharArray.DIGITS((value % 10L).asInstanceOf[scala.Int]))
     return this
   }
-  override def append(obj: java.lang.Object): CharArray = {
+  def append(obj: java.lang.Object): CharArray = {
     if (obj == null) {
       return this.appendNull()
     } else ()
@@ -600,7 +600,7 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
     } else ()
     return this.append(obj.toString())
   }
-  override def append(str: java.lang.String): CharArray = {
+  def append(str: java.lang.String): CharArray = {
     if (str == null) {
       this.appendNull()
     } else {
@@ -618,7 +618,7 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
     this.append(str)
     return this
   }
-  override def append(str: java.lang.String, start: scala.Int, `end`: scala.Int): CharArray = {
+  def append(str: java.lang.String, start: scala.Int, `end`: scala.Int): CharArray = {
     if (str == null) {
       return this.appendNull()
     } else ()
@@ -633,7 +633,7 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
     } else ()
     return this
   }
-  override def append(str: java.lang.StringBuffer): CharArray = {
+  def append(str: java.lang.StringBuffer): CharArray = {
     if (str == null) {
       this.appendNull()
     } else {
@@ -641,7 +641,7 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
     }
     return this
   }
-  override def append(str: java.lang.StringBuffer, start: scala.Int, `end`: scala.Int): CharArray = {
+  def append(str: java.lang.StringBuffer, start: scala.Int, `end`: scala.Int): CharArray = {
     if (str == null) {
       return this.appendNull()
     } else ()
@@ -656,7 +656,7 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
     } else ()
     return this
   }
-  override def append(str: java.lang.StringBuilder): CharArray = {
+  def append(str: java.lang.StringBuilder): CharArray = {
     if (str == null) {
       this.appendNull()
     } else {
@@ -664,7 +664,7 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
     }
     return this
   }
-  override def append(str: java.lang.StringBuilder, start: scala.Int, `end`: scala.Int): CharArray = {
+  def append(str: java.lang.StringBuilder, start: scala.Int, `end`: scala.Int): CharArray = {
     if (str == null) {
       return this.appendNull()
     } else ()
@@ -679,7 +679,7 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
     } else ()
     return this
   }
-  override def append(str: CharArray): CharArray = {
+  def append(str: CharArray): CharArray = {
     if (str == null) {
       this.appendNull()
     } else {
@@ -687,7 +687,7 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
     }
     return this
   }
-  override def append(str: CharArray, start: scala.Int, `end`: scala.Int): CharArray = {
+  def append(str: CharArray, start: scala.Int, `end`: scala.Int): CharArray = {
     if (str == null) {
       return this.appendNull()
     } else ()

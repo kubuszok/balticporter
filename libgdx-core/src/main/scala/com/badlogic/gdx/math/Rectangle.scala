@@ -86,10 +86,10 @@ class Rectangle extends java.io.Serializable with com.badlogic.gdx.math.Shape2D 
   override def contains(point: com.badlogic.gdx.math.Vector2): scala.Boolean = {
     return this.contains(point.x, point.y)
   }
-  override def contains(circle: com.badlogic.gdx.math.Circle): scala.Boolean = {
+  def contains(circle: com.badlogic.gdx.math.Circle): scala.Boolean = {
     return ((((circle.x - circle.radius) >= this.x) && ((circle.x + circle.radius) <= (this.x + this.width))) && ((circle.y - circle.radius) >= this.y)) && ((circle.y + circle.radius) <= (this.y + this.height))
   }
-  override def contains(rectangle: Rectangle): scala.Boolean = {
+  def contains(rectangle: Rectangle): scala.Boolean = {
     val xmin: scala.Float = rectangle.x
     val xmax: scala.Float = xmin + rectangle.width
     val ymin: scala.Float = rectangle.y

@@ -184,7 +184,7 @@ class RegularEmitter extends com.badlogic.gdx.graphics.g3d.particles.emitters.Em
     } else ()
     return java.lang.Math.min(1, this.durationTimer / this.duration.asInstanceOf[scala.Float])
   }
-  override def set(emitter: RegularEmitter): scala.Unit = {
+  def set(emitter: RegularEmitter): scala.Unit = {
     super.set(emitter)
     this.delayValue.load(emitter.delayValue)
     this.durationValue.load(emitter.durationValue)

@@ -5,11 +5,11 @@ class JsonReader extends com.badlogic.gdx.utils.BaseJsonReader {
   private var root: com.badlogic.gdx.utils.JsonValue = null.asInstanceOf[com.badlogic.gdx.utils.JsonValue]
   private var current: com.badlogic.gdx.utils.JsonValue = null.asInstanceOf[com.badlogic.gdx.utils.JsonValue]
   var stop$field: scala.Boolean = false
-  override def parse(json: java.lang.String): com.badlogic.gdx.utils.JsonValue = {
+  def parse(json: java.lang.String): com.badlogic.gdx.utils.JsonValue = {
     val data: scala.Array[scala.Char] = json.toCharArray()
     return this.parse(data, 0, data.length)
   }
-  override def parse(reader: java.io.Reader): com.badlogic.gdx.utils.JsonValue = {
+  def parse(reader: java.io.Reader): com.badlogic.gdx.utils.JsonValue = {
     var data: scala.Array[scala.Char] = new scala.Array[scala.Char](1024)
     var offset: scala.Int = 0
     try {

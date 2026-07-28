@@ -65,7 +65,7 @@ class ScaledNumericValue extends com.badlogic.gdx.graphics.g3d.particles.values.
     val startTime: scala.Float = this.timeline(startIndex)
     return startValue + ((this.scaling(endIndex) - startValue) * ((percent - startTime) / (this.timeline(endIndex) - startTime)))
   }
-  override def load(value: ScaledNumericValue): scala.Unit = {
+  def load(value: ScaledNumericValue): scala.Unit = {
     super.load(value)
     this.highMax = value.highMax
     this.highMin = value.highMin

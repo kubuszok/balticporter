@@ -26,7 +26,7 @@ class RangedNumericValue extends com.badlogic.gdx.graphics.g3d.particles.values.
   def setLowMax(lowMax: scala.Float): scala.Unit = {
     this.lowMax = lowMax
   }
-  override def load(value: RangedNumericValue): scala.Unit = {
+  def load(value: RangedNumericValue): scala.Unit = {
     super.load(value)
     this.lowMax = value.lowMax
     this.lowMin = value.lowMin

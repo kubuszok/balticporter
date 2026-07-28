@@ -89,7 +89,7 @@ object DepthShader {
     } else ()
     return DepthShader.defaultFragmentShader
   }
-  override def createPrefix(renderable: com.badlogic.gdx.graphics.g3d.Renderable, config: com.badlogic.gdx.graphics.g3d.shaders.DepthShader.Config): java.lang.String = {
+  def createPrefix(renderable: com.badlogic.gdx.graphics.g3d.Renderable, config: com.badlogic.gdx.graphics.g3d.shaders.DepthShader.Config): java.lang.String = {
     var prefix: java.lang.String = com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.createPrefix(renderable, config)
     if (!config.depthBufferOnly) {
       prefix = prefix + "#define PackedDepthFlag\n"

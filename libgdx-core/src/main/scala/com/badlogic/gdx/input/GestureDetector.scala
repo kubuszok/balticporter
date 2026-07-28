@@ -52,7 +52,7 @@ class GestureDetector(halfTapRectangleWidth: scala.Float, halfTapRectangleHeight
   override def touchDown(x: scala.Int, y: scala.Int, pointer: scala.Int, button: scala.Int): scala.Boolean = {
     return this.touchDown(x.asInstanceOf[scala.Float], y.asInstanceOf[scala.Float], pointer, button)
   }
-  override def touchDown(x: scala.Float, y: scala.Float, pointer: scala.Int, button: scala.Int): scala.Boolean = {
+  def touchDown(x: scala.Float, y: scala.Float, pointer: scala.Int, button: scala.Int): scala.Boolean = {
     if (pointer > 1) {
       return false
     } else ()
@@ -90,7 +90,7 @@ class GestureDetector(halfTapRectangleWidth: scala.Float, halfTapRectangleHeight
   override def touchDragged(x: scala.Int, y: scala.Int, pointer: scala.Int): scala.Boolean = {
     return this.touchDragged(x.asInstanceOf[scala.Float], y.asInstanceOf[scala.Float], pointer)
   }
-  override def touchDragged(x: scala.Float, y: scala.Float, pointer: scala.Int): scala.Boolean = {
+  def touchDragged(x: scala.Float, y: scala.Float, pointer: scala.Int): scala.Boolean = {
     if (pointer > 1) {
       return false
     } else ()
@@ -121,7 +121,7 @@ class GestureDetector(halfTapRectangleWidth: scala.Float, halfTapRectangleHeight
   override def touchUp(x: scala.Int, y: scala.Int, pointer: scala.Int, button: scala.Int): scala.Boolean = {
     return this.touchUp(x.asInstanceOf[scala.Float], y.asInstanceOf[scala.Float], pointer, button)
   }
-  override def touchUp(x: scala.Float, y: scala.Float, pointer: scala.Int, button: scala.Int): scala.Boolean = {
+  def touchUp(x: scala.Float, y: scala.Float, pointer: scala.Int, button: scala.Int): scala.Boolean = {
     if (pointer > 1) {
       return false
     } else ()

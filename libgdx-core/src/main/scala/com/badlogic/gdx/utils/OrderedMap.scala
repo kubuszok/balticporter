@@ -64,7 +64,7 @@ class OrderedMap[K <: java.lang.Object, V <: java.lang.Object] extends com.badlo
     } else ()
     return null.asInstanceOf[V]
   }
-  override def putAll[T <: K](map: OrderedMap[T, ? <: V]): scala.Unit = {
+  def putAll[T <: K](map: OrderedMap[T, ? <: V]): scala.Unit = {
     this.ensureCapacity(map.size)
     val keys: scala.Array[K] = map.keys$field.items.asInstanceOf[scala.Array[K]];
     { var i: scala.Int = 0; val n: scala.Int = map.keys$field.size; while (i < n) { {

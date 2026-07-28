@@ -61,7 +61,7 @@ class GradientColorValue extends com.badlogic.gdx.graphics.g3d.particles.values.
     this.colors = json.readValue("colors", classOf[scala.Array[scala.Float]], jsonData)
     this.timeline = json.readValue("timeline", classOf[scala.Array[scala.Float]], jsonData)
   }
-  override def load(value: GradientColorValue): scala.Unit = {
+  def load(value: GradientColorValue): scala.Unit = {
     super.load(value)
     this.colors = new scala.Array[scala.Float](value.colors.length)
     java.lang.System.arraycopy(value.colors, 0, this.colors, 0, this.colors.length)

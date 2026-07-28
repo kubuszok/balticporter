@@ -64,7 +64,7 @@ class OrderedSet[T <: java.lang.Object] extends com.badlogic.gdx.utils.ObjectSet
     this.items.insert(index, key)
     return true
   }
-  override def addAll(set: OrderedSet[T]): scala.Unit = {
+  def addAll(set: OrderedSet[T]): scala.Unit = {
     this.ensureCapacity(set.size)
     val keys: scala.Array[T] = set.items.items;
     { var i: scala.Int = 0; val n: scala.Int = set.items.size; while (i < n) { {

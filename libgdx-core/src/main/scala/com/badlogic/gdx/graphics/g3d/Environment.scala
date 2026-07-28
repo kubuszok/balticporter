@@ -63,19 +63,19 @@ class Environment extends com.badlogic.gdx.graphics.g3d.Attributes {
     spotLights.lights.add(light)
     return this
   }
-  override def remove(lights: scala.Array[com.badlogic.gdx.graphics.g3d.environment.BaseLight[?]]): Environment = {
+  def remove(lights: scala.Array[com.badlogic.gdx.graphics.g3d.environment.BaseLight[?]]): Environment = {
     for (light <- lights) {
       this.remove(light.asInstanceOf[com.badlogic.gdx.graphics.g3d.environment.BaseLight[?]])
     }
     return this
   }
-  override def remove(lights: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.environment.BaseLight[?]]): Environment = {
+  def remove(lights: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.environment.BaseLight[?]]): Environment = {
     for (light <- lights) {
       this.remove(light.asInstanceOf[com.badlogic.gdx.graphics.g3d.environment.BaseLight[?]])
     }
     return this
   }
-  override def remove(light: com.badlogic.gdx.graphics.g3d.environment.BaseLight[?]): Environment = {
+  def remove(light: com.badlogic.gdx.graphics.g3d.environment.BaseLight[?]): Environment = {
     if (light.isInstanceOf[com.badlogic.gdx.graphics.g3d.environment.DirectionalLight]) {
       this.remove(light.asInstanceOf[com.badlogic.gdx.graphics.g3d.environment.DirectionalLight])
     } else {
@@ -91,7 +91,7 @@ class Environment extends com.badlogic.gdx.graphics.g3d.Attributes {
     }
     return this
   }
-  override def remove(light: com.badlogic.gdx.graphics.g3d.environment.DirectionalLight): Environment = {
+  def remove(light: com.badlogic.gdx.graphics.g3d.environment.DirectionalLight): Environment = {
     if (this.has(com.badlogic.gdx.graphics.g3d.attributes.DirectionalLightsAttribute.Type)) {
       val dirLights: com.badlogic.gdx.graphics.g3d.attributes.DirectionalLightsAttribute = this.get(com.badlogic.gdx.graphics.g3d.attributes.DirectionalLightsAttribute.Type).asInstanceOf[com.badlogic.gdx.graphics.g3d.attributes.DirectionalLightsAttribute]
       dirLights.lights.removeValue(light, false)
@@ -101,7 +101,7 @@ class Environment extends com.badlogic.gdx.graphics.g3d.Attributes {
     } else ()
     return this
   }
-  override def remove(light: com.badlogic.gdx.graphics.g3d.environment.PointLight): Environment = {
+  def remove(light: com.badlogic.gdx.graphics.g3d.environment.PointLight): Environment = {
     if (this.has(com.badlogic.gdx.graphics.g3d.attributes.PointLightsAttribute.Type)) {
       val pointLights: com.badlogic.gdx.graphics.g3d.attributes.PointLightsAttribute = this.get(com.badlogic.gdx.graphics.g3d.attributes.PointLightsAttribute.Type).asInstanceOf[com.badlogic.gdx.graphics.g3d.attributes.PointLightsAttribute]
       pointLights.lights.removeValue(light, false)
@@ -111,7 +111,7 @@ class Environment extends com.badlogic.gdx.graphics.g3d.Attributes {
     } else ()
     return this
   }
-  override def remove(light: com.badlogic.gdx.graphics.g3d.environment.SpotLight): Environment = {
+  def remove(light: com.badlogic.gdx.graphics.g3d.environment.SpotLight): Environment = {
     if (this.has(com.badlogic.gdx.graphics.g3d.attributes.SpotLightsAttribute.Type)) {
       val spotLights: com.badlogic.gdx.graphics.g3d.attributes.SpotLightsAttribute = this.get(com.badlogic.gdx.graphics.g3d.attributes.SpotLightsAttribute.Type).asInstanceOf[com.badlogic.gdx.graphics.g3d.attributes.SpotLightsAttribute]
       spotLights.lights.removeValue(light, false)

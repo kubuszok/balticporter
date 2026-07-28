@@ -26,7 +26,7 @@ class UBJsonReader extends com.badlogic.gdx.utils.BaseJsonReader {
       }
     }
   }
-  override def parse(din: java.io.DataInputStream): com.badlogic.gdx.utils.JsonValue = {
+  def parse(din: java.io.DataInputStream): com.badlogic.gdx.utils.JsonValue = {
     try {
       return this.parse(din, din.readByte())
     } finally {

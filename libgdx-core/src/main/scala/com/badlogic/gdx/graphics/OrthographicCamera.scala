@@ -44,13 +44,13 @@ class OrthographicCamera extends com.badlogic.gdx.graphics.Camera {
     this.viewportHeight = viewportHeight
     this.update()
   }
-  override def rotate(angle: scala.Float): scala.Unit = {
+  def rotate(angle: scala.Float): scala.Unit = {
     this.rotate(direction, angle)
   }
   def translate(x: scala.Float, y: scala.Float): scala.Unit = {
     this.translate(x, y, 0)
   }
-  override def translate(vec: com.badlogic.gdx.math.Vector2): scala.Unit = {
+  def translate(vec: com.badlogic.gdx.math.Vector2): scala.Unit = {
     this.translate(vec.x, vec.y, 0)
   }
 }

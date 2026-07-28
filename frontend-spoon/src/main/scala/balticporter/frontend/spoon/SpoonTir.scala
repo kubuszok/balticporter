@@ -742,15 +742,20 @@ object SpoonTir:
       val top = try m.getTopDefinitions.asScala.toList catch { case _: Throwable => Nil }
       if top.exists(_ ne m) then true
       else
-        val n     = m.getSimpleName
-        val arity = m.getParameters.size
+        val n   = m.getSimpleName
+        // by full SIGNATURE, not arity: java overloads freely, and `draw(Batch, float)` does not
+        // override an inherited `draw(Batch, int)`. Marking it `override` is an error scala reports
+        // ("overrides nothing") and java has no opinion on — 48 sites in this corpus alone.
+        def sig(x: CtMethod[?]): List[String] =
+          x.getParameters.asScala.toList.map(p => try p.getType.getQualifiedName catch { case _: Throwable => "?" })
+        val mine = sig(m)
         def declares(t: CtTypeReference[?], fuel: Int): Boolean =
           if t == null || fuel <= 0 then false
           else
             val decl = try t.getTypeDeclaration catch { case _: Throwable => null }
             if decl == null then false
             else
-              decl.getMethods.asScala.exists(x => x.getSimpleName == n && x.getParameters.size == arity) ||
+              decl.getMethods.asScala.exists(x => x.getSimpleName == n && (x ne m) && sig(x) == mine) ||
                 (decl match { case c: CtClass[?] => declares(c.getSuperclass, fuel - 1); case _ => false }) ||
                 (try decl.getSuperInterfaces.asScala.exists(declares(_, fuel - 1)) catch { case _: Throwable => false })
         m.getDeclaringType match

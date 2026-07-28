@@ -70,7 +70,7 @@ class Texture3D(data$p: com.badlogic.gdx.graphics.Texture3DData) extends com.bad
       this.rWrap = r
     } else ()
   }
-  override def unsafeSetWrap(u: com.badlogic.gdx.graphics.Texture.TextureWrap, v: com.badlogic.gdx.graphics.Texture.TextureWrap, r: com.badlogic.gdx.graphics.Texture.TextureWrap): scala.Unit = {
+  def unsafeSetWrap(u: com.badlogic.gdx.graphics.Texture.TextureWrap, v: com.badlogic.gdx.graphics.Texture.TextureWrap, r: com.badlogic.gdx.graphics.Texture.TextureWrap): scala.Unit = {
     this.unsafeSetWrap(u, v, r, false)
   }
 }

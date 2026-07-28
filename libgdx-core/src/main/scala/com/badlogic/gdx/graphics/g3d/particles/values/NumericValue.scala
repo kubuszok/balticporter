@@ -8,7 +8,7 @@ class NumericValue extends com.badlogic.gdx.graphics.g3d.particles.values.Partic
   def setValue(value: scala.Float): scala.Unit = {
     this.value = value
   }
-  override def load(value: NumericValue): scala.Unit = {
+  def load(value: NumericValue): scala.Unit = {
     super.load(value)
     this.value = value.value
   }

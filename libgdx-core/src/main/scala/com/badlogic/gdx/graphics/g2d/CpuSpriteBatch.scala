@@ -48,7 +48,7 @@ class CpuSpriteBatch(size: scala.Int, defaultShader: com.badlogic.gdx.graphics.g
       }
     }
   }
-  override def setTransformMatrix(transform: com.badlogic.gdx.math.Affine2): scala.Unit = {
+  def setTransformMatrix(transform: com.badlogic.gdx.math.Affine2): scala.Unit = {
     val realMatrix: com.badlogic.gdx.math.Matrix4 = super.getTransformMatrix()
     if (CpuSpriteBatch.checkEqual(realMatrix, transform)) {
       this.adjustNeeded = false

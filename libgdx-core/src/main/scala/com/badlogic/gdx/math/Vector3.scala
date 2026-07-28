@@ -30,7 +30,7 @@ class Vector3 extends java.io.Serializable with com.badlogic.gdx.math.Vector[Vec
   override def set(vector: Vector3): Vector3 = {
     return this.set(vector.x, vector.y, vector.z)
   }
-  override def set(values: scala.Array[scala.Float]): Vector3 = {
+  def set(values: scala.Array[scala.Float]): Vector3 = {
     return this.set(values(0), values(1), values(2))
   }
   def set(vector: com.badlogic.gdx.math.Vector2, z: scala.Float): Vector3 = {
@@ -62,7 +62,7 @@ class Vector3 extends java.io.Serializable with com.badlogic.gdx.math.Vector[Vec
   def add(x: scala.Float, y: scala.Float, z: scala.Float): Vector3 = {
     return this.set(this.x + x, this.y + y, this.z + z)
   }
-  override def add(values: scala.Float): Vector3 = {
+  def add(values: scala.Float): Vector3 = {
     return this.set(this.x + values, this.y + values, this.z + values)
   }
   @java.lang.Override
@@ -72,7 +72,7 @@ class Vector3 extends java.io.Serializable with com.badlogic.gdx.math.Vector[Vec
   def sub(x: scala.Float, y: scala.Float, z: scala.Float): Vector3 = {
     return this.set(this.x - x, this.y - y, this.z - z)
   }
-  override def sub(value: scala.Float): Vector3 = {
+  def sub(value: scala.Float): Vector3 = {
     return this.set(this.x - value, this.y - value, this.z - value)
   }
   @java.lang.Override

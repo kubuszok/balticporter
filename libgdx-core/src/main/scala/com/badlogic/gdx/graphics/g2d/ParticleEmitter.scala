@@ -1251,7 +1251,7 @@ object ParticleEmitter {
       } else ()
       this.value = ParticleEmitter.readFloat(reader, "value")
     }
-    override def load(value: com.badlogic.gdx.graphics.g2d.ParticleEmitter.NumericValue): scala.Unit = {
+    def load(value: com.badlogic.gdx.graphics.g2d.ParticleEmitter.NumericValue): scala.Unit = {
       super.load(value)
       this.value = value.value
     }
@@ -1306,7 +1306,7 @@ object ParticleEmitter {
       this.lowMin = ParticleEmitter.readFloat(reader, "lowMin")
       this.lowMax = ParticleEmitter.readFloat(reader, "lowMax")
     }
-    override def load(value: com.badlogic.gdx.graphics.g2d.ParticleEmitter.RangedNumericValue): scala.Unit = {
+    def load(value: com.badlogic.gdx.graphics.g2d.ParticleEmitter.RangedNumericValue): scala.Unit = {
       super.load(value)
       this.lowMax = value.lowMax
       this.lowMin = value.lowMin
@@ -1353,7 +1353,7 @@ object ParticleEmitter {
         super.set(value)
       }
     }
-    override def set(value: com.badlogic.gdx.graphics.g2d.ParticleEmitter.ScaledNumericValue): scala.Unit = {
+    def set(value: com.badlogic.gdx.graphics.g2d.ParticleEmitter.ScaledNumericValue): scala.Unit = {
       super.set(value)
       this.highMin = value.highMin
       this.highMax = value.highMax
@@ -1441,7 +1441,7 @@ object ParticleEmitter {
         this.timeline(i) = ParticleEmitter.readFloat(reader, "timeline" + i)
       }; i = i + 1 } }
     }
-    override def load(value: com.badlogic.gdx.graphics.g2d.ParticleEmitter.ScaledNumericValue): scala.Unit = {
+    def load(value: com.badlogic.gdx.graphics.g2d.ParticleEmitter.ScaledNumericValue): scala.Unit = {
       super.load(value)
       this.highMax = value.highMax
       this.highMin = value.highMin
@@ -1474,7 +1474,7 @@ object ParticleEmitter {
         super.set(value)
       }
     }
-    override def set(value: com.badlogic.gdx.graphics.g2d.ParticleEmitter.IndependentScaledNumericValue): scala.Unit = {
+    def set(value: com.badlogic.gdx.graphics.g2d.ParticleEmitter.IndependentScaledNumericValue): scala.Unit = {
       super.set(value)
       this.independent = value.independent
     }
@@ -1503,7 +1503,7 @@ object ParticleEmitter {
         }
       }
     }
-    override def load(value: com.badlogic.gdx.graphics.g2d.ParticleEmitter.IndependentScaledNumericValue): scala.Unit = {
+    def load(value: com.badlogic.gdx.graphics.g2d.ParticleEmitter.IndependentScaledNumericValue): scala.Unit = {
       super.load(value)
       this.independent = value.independent
     }
@@ -1583,7 +1583,7 @@ object ParticleEmitter {
         this.timeline(i) = ParticleEmitter.readFloat(reader, "timeline" + i)
       }; i = i + 1 } }
     }
-    override def load(value: com.badlogic.gdx.graphics.g2d.ParticleEmitter.GradientColorValue): scala.Unit = {
+    def load(value: com.badlogic.gdx.graphics.g2d.ParticleEmitter.GradientColorValue): scala.Unit = {
       super.load(value)
       this.colors = new scala.Array[scala.Float](value.colors.length)
       java.lang.System.arraycopy(value.colors, 0, this.colors, 0, this.colors.length)
@@ -1638,7 +1638,7 @@ object ParticleEmitter {
         this.side = com.badlogic.gdx.graphics.g2d.ParticleEmitter.SpawnEllipseSide.valueOf(ParticleEmitter.readString(reader, "side"))
       } else ()
     }
-    override def load(value: com.badlogic.gdx.graphics.g2d.ParticleEmitter.SpawnShapeValue): scala.Unit = {
+    def load(value: com.badlogic.gdx.graphics.g2d.ParticleEmitter.SpawnShapeValue): scala.Unit = {
       super.load(value)
       this.shape = value.shape
       this.edges = value.edges

@@ -346,7 +346,7 @@ class Vector2 extends java.io.Serializable with com.badlogic.gdx.math.Vector[Vec
   def epsilonEquals(other: Vector2): scala.Boolean = {
     return this.epsilonEquals(other, com.badlogic.gdx.math.MathUtils.FLOAT_ROUNDING_ERROR)
   }
-  override def epsilonEquals(x: scala.Float, y: scala.Float): scala.Boolean = {
+  def epsilonEquals(x: scala.Float, y: scala.Float): scala.Boolean = {
     return this.epsilonEquals(x, y, com.badlogic.gdx.math.MathUtils.FLOAT_ROUNDING_ERROR)
   }
   @java.lang.Override

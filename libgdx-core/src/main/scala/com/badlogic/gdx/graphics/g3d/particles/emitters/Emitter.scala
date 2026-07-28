@@ -35,7 +35,7 @@ abstract class Emitter extends com.badlogic.gdx.graphics.g3d.particles.ParticleC
     this.setMinParticleCount(aMin)
     this.setMaxParticleCount(aMax)
   }
-  override def set(emitter: Emitter): scala.Unit = {
+  def set(emitter: Emitter): scala.Unit = {
     this.minParticleCount = emitter.minParticleCount
     this.maxParticleCount = emitter.maxParticleCount
   }
