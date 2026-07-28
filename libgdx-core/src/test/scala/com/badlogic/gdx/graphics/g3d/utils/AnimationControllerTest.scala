@@ -1,8 +1,7 @@
 package com.badlogic.gdx.graphics.g3d.utils
 
-class AnimationControllerTest {
-  @org.junit.Test
-  def testGetFirstKeyframeIndexAtTimeNominal(): scala.Unit = {
+class AnimationControllerTest extends balticporter.runtime.PortedSuite {
+  testCase("testGetFirstKeyframeIndexAtTimeNominal", {
     val keyFrames: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.model.NodeKeyframe[java.lang.String]] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.model.NodeKeyframe[java.lang.String]]()
     keyFrames.add(new com.badlogic.gdx.graphics.g3d.model.NodeKeyframe[java.lang.String](0.0f, "1st"))
     keyFrames.add(new com.badlogic.gdx.graphics.g3d.model.NodeKeyframe[java.lang.String](3.0f, "2nd"))
@@ -15,22 +14,19 @@ class AnimationControllerTest {
     org.junit.Assert.assertEquals(2, com.badlogic.gdx.graphics.g3d.utils.BaseAnimationController.getFirstKeyframeIndexAtTime(keyFrames, 12.5f))
     org.junit.Assert.assertEquals(2, com.badlogic.gdx.graphics.g3d.utils.BaseAnimationController.getFirstKeyframeIndexAtTime(keyFrames, 13.0f))
     org.junit.Assert.assertEquals(0, com.badlogic.gdx.graphics.g3d.utils.BaseAnimationController.getFirstKeyframeIndexAtTime(keyFrames, 14.0f))
-  }
-  @org.junit.Test
-  def testGetFirstKeyframeIndexAtTimeSingleKey(): scala.Unit = {
+  })
+  testCase("testGetFirstKeyframeIndexAtTimeSingleKey", {
     val keyFrames: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.model.NodeKeyframe[java.lang.String]] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.model.NodeKeyframe[java.lang.String]]()
     keyFrames.add(new com.badlogic.gdx.graphics.g3d.model.NodeKeyframe[java.lang.String](10.0f, "1st"))
     org.junit.Assert.assertEquals(0, com.badlogic.gdx.graphics.g3d.utils.BaseAnimationController.getFirstKeyframeIndexAtTime(keyFrames, 9.0f))
     org.junit.Assert.assertEquals(0, com.badlogic.gdx.graphics.g3d.utils.BaseAnimationController.getFirstKeyframeIndexAtTime(keyFrames, 10.0f))
     org.junit.Assert.assertEquals(0, com.badlogic.gdx.graphics.g3d.utils.BaseAnimationController.getFirstKeyframeIndexAtTime(keyFrames, 11.0f))
-  }
-  @org.junit.Test
-  def testGetFirstKeyframeIndexAtTimeEmpty(): scala.Unit = {
+  })
+  testCase("testGetFirstKeyframeIndexAtTimeEmpty", {
     val keyFrames: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.model.NodeKeyframe[java.lang.String]] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.model.NodeKeyframe[java.lang.String]]()
     org.junit.Assert.assertEquals(0, com.badlogic.gdx.graphics.g3d.utils.BaseAnimationController.getFirstKeyframeIndexAtTime(keyFrames, 3.0f))
-  }
-  @org.junit.Test
-  def testEndUpActionAtDurationTime(): scala.Unit = {
+  })
+  testCase("testEndUpActionAtDurationTime", {
     val loop: com.badlogic.gdx.graphics.g3d.model.Animation = new com.badlogic.gdx.graphics.g3d.model.Animation()
     loop.id = "loop"
     loop.duration = 1.0f
@@ -51,9 +47,8 @@ class AnimationControllerTest {
     AnimationControllerTest.assertSameAnimation(action, animationController.current)
     animationController.update(0.2f)
     AnimationControllerTest.assertSameAnimation(loop, animationController.current)
-  }
-  @org.junit.Test
-  def testEndUpActionAtDurationTimeReverse(): scala.Unit = {
+  })
+  testCase("testEndUpActionAtDurationTimeReverse", {
     val loop: com.badlogic.gdx.graphics.g3d.model.Animation = new com.badlogic.gdx.graphics.g3d.model.Animation()
     loop.id = "loop"
     loop.duration = 1.0f
@@ -74,7 +69,7 @@ class AnimationControllerTest {
     AnimationControllerTest.assertSameAnimation(action, animationController.current)
     animationController.update(0.2f)
     AnimationControllerTest.assertSameAnimation(loop, animationController.current)
-  }
+  })
 }
 object AnimationControllerTest {
   private def assertSameAnimation(expected: com.badlogic.gdx.graphics.g3d.model.Animation, actual: com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationDesc): scala.Unit = {

@@ -1,6 +1,6 @@
 package com.badlogic.gdx.math
 
-class BezierTest {
+class BezierTest extends balticporter.runtime.PortedSuite {
   var `type`: com.badlogic.gdx.math.BezierTest.ImportType = null.asInstanceOf[com.badlogic.gdx.math.BezierTest.ImportType]
   var useSetter: scala.Boolean = false
   private var bezier: com.badlogic.gdx.math.Bezier[com.badlogic.gdx.math.Vector2] = null.asInstanceOf[com.badlogic.gdx.math.Bezier[com.badlogic.gdx.math.Vector2]]
@@ -33,8 +33,7 @@ class BezierTest {
     }
     return points
   }
-  @org.junit.Test
-  def testLinear2D(): scala.Unit = {
+  testCase("testLinear2D", {
     val points: scala.Array[com.badlogic.gdx.math.Vector2] = this.create(scala.Array[com.badlogic.gdx.math.Vector2](new com.badlogic.gdx.math.Vector2(0, 0), new com.badlogic.gdx.math.Vector2(1, 1)))
     val len: scala.Float = this.bezier.approxLength(2)
     org.junit.Assert.assertEquals(java.lang.Math.sqrt(2), len, BezierTest.epsilonApprimations)
@@ -48,7 +47,7 @@ class BezierTest {
     org.junit.Assert.assertEquals(0.5f, t, BezierTest.epsilonApprimations)
     val l: scala.Float = this.bezier.locate(new com.badlogic.gdx.math.Vector2(0.5f, 0.5f))
     org.junit.Assert.assertEquals(0.5f, t, BezierTest.epsilon)
-  }
+  })
 }
 object BezierTest {
   private var epsilon: scala.Float = java.lang.Float.MIN_NORMAL

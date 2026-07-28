@@ -1,8 +1,7 @@
 package com.badlogic.gdx.utils
 
-class BitsTest {
-  @org.junit.Test
-  def testHashcodeAndEquals(): scala.Unit = {
+class BitsTest extends balticporter.runtime.PortedSuite {
+  testCase("testHashcodeAndEquals", {
     val b1: com.badlogic.gdx.utils.Bits = new com.badlogic.gdx.utils.Bits()
     val b2: com.badlogic.gdx.utils.Bits = new com.badlogic.gdx.utils.Bits()
     b1.set(1)
@@ -17,9 +16,8 @@ class BitsTest {
     b1.clear(810)
     org.junit.Assert.assertEquals(b1.hashCode(), b2.hashCode())
     org.junit.Assert.assertTrue(b1.equals(b2))
-  }
-  @org.junit.Test
-  def testXor(): scala.Unit = {
+  })
+  testCase("testXor", {
     val b1: com.badlogic.gdx.utils.Bits = new com.badlogic.gdx.utils.Bits()
     val b2: com.badlogic.gdx.utils.Bits = new com.badlogic.gdx.utils.Bits()
     b2.set(200)
@@ -28,9 +26,8 @@ class BitsTest {
     b1.set(1024)
     b2.xor(b1)
     org.junit.Assert.assertTrue(b2.get(1024))
-  }
-  @org.junit.Test
-  def testOr(): scala.Unit = {
+  })
+  testCase("testOr", {
     val b1: com.badlogic.gdx.utils.Bits = new com.badlogic.gdx.utils.Bits()
     val b2: com.badlogic.gdx.utils.Bits = new com.badlogic.gdx.utils.Bits()
     b2.set(200)
@@ -39,9 +36,8 @@ class BitsTest {
     b1.set(1024)
     b2.or(b1)
     org.junit.Assert.assertTrue(b2.get(1024))
-  }
-  @org.junit.Test
-  def testAnd(): scala.Unit = {
+  })
+  testCase("testAnd", {
     val b1: com.badlogic.gdx.utils.Bits = new com.badlogic.gdx.utils.Bits()
     val b2: com.badlogic.gdx.utils.Bits = new com.badlogic.gdx.utils.Bits()
     b2.set(200)
@@ -50,9 +46,8 @@ class BitsTest {
     b1.set(400)
     b1.and(b2)
     org.junit.Assert.assertFalse(b1.get(400))
-  }
-  @org.junit.Test
-  def testCopyConstructor(): scala.Unit = {
+  })
+  testCase("testCopyConstructor", {
     val b1: com.badlogic.gdx.utils.Bits = new com.badlogic.gdx.utils.Bits()
     b1.set(50)
     b1.set(100)
@@ -62,5 +57,5 @@ class BitsTest {
     org.junit.Assert.assertTrue(b1.containsAll(b2))
     org.junit.Assert.assertTrue(b2.containsAll(b1))
     org.junit.Assert.assertTrue(b1.equals(b2))
-  }
+  })
 }

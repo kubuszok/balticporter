@@ -26,6 +26,7 @@ pkill -9 -f scala-cli 2>/dev/null; sleep 1
 scala-cli compile --scala 3.8.4 --server=false \
   --dependency org.junit.jupiter:junit-jupiter:5.10.2 \
   --dependency junit:junit:4.13.2 \
+  --dependency org.scalameta::munit:1.0.2 \
   libgdx-core/src/main/scala libgdx-core/src/test/scala 2>&1 | sed 's/\x1b\[[0-9;]*m//g' > /tmp/gdxtestmeasure.txt
 echo "TOTAL ERRORS: $(grep -cE '^-- (\[E[0-9]+\] )?.*Error' /tmp/gdxtestmeasure.txt)"
 grep -oE "\[E[0-9]+\][^:]*Error" /tmp/gdxtestmeasure.txt | sort | uniq -c | sort -rn | head

@@ -1,8 +1,7 @@
 package com.badlogic.gdx.utils
 
-class SortedIntListTest {
-  @org.junit.Test
-  def testIteratorWithAllocation(): scala.Unit = {
+class SortedIntListTest extends balticporter.runtime.PortedSuite {
+  testCase("testIteratorWithAllocation", {
     com.badlogic.gdx.utils.Collections.allocateIterators = true
     try {
       val list: com.badlogic.gdx.utils.SortedIntList[java.lang.String] = new com.badlogic.gdx.utils.SortedIntList[java.lang.String]()
@@ -13,5 +12,5 @@ class SortedIntListTest {
     } finally {
       com.badlogic.gdx.utils.Collections.allocateIterators = false
     }
-  }
+  })
 }

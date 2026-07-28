@@ -1,8 +1,7 @@
 package com.badlogic.gdx.math
 
-class IntersectorTest {
-  @org.junit.Test
-  def testSplitTriangle(): scala.Unit = {
+class IntersectorTest extends balticporter.runtime.PortedSuite {
+  testCase("testSplitTriangle", {
     val plane: com.badlogic.gdx.math.Plane = new com.badlogic.gdx.math.Plane(new com.badlogic.gdx.math.Vector3(1, 0, 0), 0)
     val split: com.badlogic.gdx.math.Intersector.SplitTriangle = new com.badlogic.gdx.math.Intersector.SplitTriangle(3);
     {
@@ -51,9 +50,8 @@ class IntersectorTest {
       val second: scala.Boolean = (IntersectorTest.triangleEquals(base, 0, 3, secondWay(0)) && IntersectorTest.triangleEquals(base, 9, 3, secondWay(1))) || (IntersectorTest.triangleEquals(base, 0, 3, secondWay(1)) && IntersectorTest.triangleEquals(base, 9, 3, secondWay(0)))
       org.junit.Assert.assertTrue(((("Either first or second way must be right (first: " + first) + ", second: ") + second) + ")", first ^ second)
     }
-  }
-  @org.junit.Test
-  def intersectSegmentCircle(): scala.Unit = {
+  })
+  testCase("intersectSegmentCircle", {
     val circle: com.badlogic.gdx.math.Circle = new com.badlogic.gdx.math.Circle(5.0f, 5.0f, 4.0f)
     var intersects: scala.Boolean = com.badlogic.gdx.math.Intersector.intersectSegmentCircle(new com.badlogic.gdx.math.Vector2(0, 1.0f), new com.badlogic.gdx.math.Vector2(12.0f, 3.0f), circle, null)
     org.junit.Assert.assertTrue(intersects)
@@ -76,9 +74,8 @@ class IntersectorTest {
     org.junit.Assert.assertTrue(intersects)
     org.junit.Assert.assertTrue(mtv.normal.equals(new com.badlogic.gdx.math.Vector2(0, 1.0f)) || mtv.normal.equals(new com.badlogic.gdx.math.Vector2(0.0f, -1.0f)))
     org.junit.Assert.assertTrue(mtv.depth == 4.0f)
-  }
-  @org.junit.Test
-  def testIntersectPlanes(): scala.Unit = {
+  })
+  testCase("testIntersectPlanes", {
     val NEAR: scala.Int = 0
     val FAR: scala.Int = 1
     val LEFT: scala.Int = 2
@@ -109,14 +106,12 @@ class IntersectorTest {
     org.junit.Assert.assertEquals(-102.63903f, intersection.x, 0.1f)
     org.junit.Assert.assertEquals(-57.7337f, intersection.y, 0.1f)
     org.junit.Assert.assertEquals(100, intersection.z, 0.1f)
-  }
-  @org.junit.Test
-  def testIsPointInTriangle2D(): scala.Unit = {
+  })
+  testCase("testIsPointInTriangle2D", {
     org.junit.Assert.assertFalse(com.badlogic.gdx.math.Intersector.isPointInTriangle(new com.badlogic.gdx.math.Vector2(0.1f, 0), new com.badlogic.gdx.math.Vector2(0, 0), new com.badlogic.gdx.math.Vector2(1, 1), new com.badlogic.gdx.math.Vector2(-1, -1)))
     org.junit.Assert.assertTrue(com.badlogic.gdx.math.Intersector.isPointInTriangle(new com.badlogic.gdx.math.Vector2(0, 0.1f), new com.badlogic.gdx.math.Vector2(-1, 1), new com.badlogic.gdx.math.Vector2(1, 1), new com.badlogic.gdx.math.Vector2(-1, -2)))
-  }
-  @org.junit.Test
-  def testIsPointInTriangle3D(): scala.Unit = {
+  })
+  testCase("testIsPointInTriangle3D", {
     org.junit.Assert.assertFalse(com.badlogic.gdx.math.Intersector.isPointInTriangle(new com.badlogic.gdx.math.Vector3(0.1f, 0, 0), new com.badlogic.gdx.math.Vector3(0, 0, 0), new com.badlogic.gdx.math.Vector3(1, 1, 0), new com.badlogic.gdx.math.Vector3(-1, -1, 0)))
     org.junit.Assert.assertTrue(com.badlogic.gdx.math.Intersector.isPointInTriangle(new com.badlogic.gdx.math.Vector3(0, 0.1f, 0), new com.badlogic.gdx.math.Vector3(-1, 1, 0), new com.badlogic.gdx.math.Vector3(1, 1, 0), new com.badlogic.gdx.math.Vector3(-1, -2, 0)))
     org.junit.Assert.assertTrue(com.badlogic.gdx.math.Intersector.isPointInTriangle(new com.badlogic.gdx.math.Vector3(0.2f, 0, 1.25f), new com.badlogic.gdx.math.Vector3(-1, 1, 0), new com.badlogic.gdx.math.Vector3(1.4f, 0.99f, 2.5f), new com.badlogic.gdx.math.Vector3(-1, -2, 0)))
@@ -127,15 +122,13 @@ class IntersectorTest {
     org.junit.Assert.assertFalse(com.badlogic.gdx.math.Intersector.isPointInTriangle(new com.badlogic.gdx.math.Vector3(0, -0.5f, 0.5f), new com.badlogic.gdx.math.Vector3(-1, 1, 0), new com.badlogic.gdx.math.Vector3(almost1, 1, 1), new com.badlogic.gdx.math.Vector3(-1, -2, 0)))
     org.junit.Assert.assertFalse(com.badlogic.gdx.math.Intersector.isPointInTriangle(new com.badlogic.gdx.math.Vector3(199.0f, 1.0f, 500.0f), new com.badlogic.gdx.math.Vector3(-1, 1, 0), new com.badlogic.gdx.math.Vector3(1, 1, 5.0f), new com.badlogic.gdx.math.Vector3(-1, -2, 0)))
     org.junit.Assert.assertFalse(com.badlogic.gdx.math.Intersector.isPointInTriangle(new com.badlogic.gdx.math.Vector3(-5120.8345f, 8946.126f, -3270.5813f), new com.badlogic.gdx.math.Vector3(50.008057f, 22.20586f, 124.62208f), new com.badlogic.gdx.math.Vector3(62.282288f, 22.205864f, 109.665924f), new com.badlogic.gdx.math.Vector3(70.92052f, 7.205861f, 115.437805f)))
-  }
-  @org.junit.Test
-  def testIntersectPolygons(): scala.Unit = {
+  })
+  testCase("testIntersectPolygons", {
     val intersectionPolygon: com.badlogic.gdx.math.Polygon = new com.badlogic.gdx.math.Polygon()
     org.junit.Assert.assertFalse(com.badlogic.gdx.math.Intersector.intersectPolygons(new com.badlogic.gdx.math.Polygon(scala.Array[scala.Float](3200.1453f, 88.00839f, 3233.9087f, 190.34174f, 3266.2905f, 0.0f)), new com.badlogic.gdx.math.Polygon(scala.Array[scala.Float](3213.0f, 131.0f, 3214.0f, 131.0f, 3214.0f, 130.0f, 3213.0f, 130.0f)), intersectionPolygon))
     org.junit.Assert.assertEquals(0, intersectionPolygon.getVertexCount())
-  }
-  @org.junit.Test
-  def testIntersectPolygonsWithVertexLyingOnEdge(): scala.Unit = {
+  })
+  testCase("testIntersectPolygonsWithVertexLyingOnEdge", {
     val p1: com.badlogic.gdx.math.Polygon = new com.badlogic.gdx.math.Polygon(scala.Array[scala.Float](1, -1, 2, -1, 2, -2, 1, -2))
     val p2: com.badlogic.gdx.math.Polygon = new com.badlogic.gdx.math.Polygon(scala.Array[scala.Float](0.5f, -1.5f, 1.5f, -1.5f, 1.5f, -2.5f))
     val intersectionPolygon: com.badlogic.gdx.math.Polygon = new com.badlogic.gdx.math.Polygon()
@@ -146,9 +139,8 @@ class IntersectorTest {
     org.junit.Assert.assertEquals(new com.badlogic.gdx.math.Vector2(1.0f, -1.5f), intersectionPolygon.getVertex(1, new com.badlogic.gdx.math.Vector2()))
     org.junit.Assert.assertEquals(new com.badlogic.gdx.math.Vector2(1.5f, -1.5f), intersectionPolygon.getVertex(2, new com.badlogic.gdx.math.Vector2()))
     org.junit.Assert.assertEquals(new com.badlogic.gdx.math.Vector2(1.5f, -2.0f), intersectionPolygon.getVertex(3, new com.badlogic.gdx.math.Vector2()))
-  }
-  @org.junit.Test
-  def testIntersectPolygonsWithTransformationsOnProvidedResultPolygon(): scala.Unit = {
+  })
+  testCase("testIntersectPolygonsWithTransformationsOnProvidedResultPolygon", {
     val p1: com.badlogic.gdx.math.Polygon = new com.badlogic.gdx.math.Polygon(scala.Array[scala.Float](1, -1, 2, -1, 2, -2, 1, -2))
     val p2: com.badlogic.gdx.math.Polygon = new com.badlogic.gdx.math.Polygon(scala.Array[scala.Float](0.5f, -1.5f, 1.5f, -1.5f, 1.5f, -2.5f))
     val intersectionPolygon: com.badlogic.gdx.math.Polygon = new com.badlogic.gdx.math.Polygon(new scala.Array[scala.Float](8))
@@ -162,7 +154,7 @@ class IntersectorTest {
     org.junit.Assert.assertArrayEquals(scala.Array[scala.Float](1, -2, 1, -1.5f, 1.5f, -1.5f, 1.5f, -2), intersectionPolygon.getTransformedVertices(), 0)
     intersectionPolygon.setScale(2, 2)
     org.junit.Assert.assertArrayEquals(scala.Array[scala.Float](2 * 1, 2 * (-2), 2 * 1, 2 * (-1.5f), 2 * 1.5f, 2 * (-1.5f), 2 * 1.5f, 2 * (-2)), intersectionPolygon.getTransformedVertices(), 0)
-  }
+  })
 }
 object IntersectorTest {
   private def triangleEquals(base: scala.Array[scala.Float], baseOffset: scala.Int, stride: scala.Int, comp: scala.Array[scala.Float]): scala.Boolean = {

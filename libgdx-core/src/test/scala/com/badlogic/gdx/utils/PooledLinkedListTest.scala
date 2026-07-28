@@ -1,6 +1,6 @@
 package com.badlogic.gdx.utils
 
-class PooledLinkedListTest {
+class PooledLinkedListTest extends balticporter.runtime.PortedSuite {
   private var list: com.badlogic.gdx.utils.PooledLinkedList[java.lang.Integer] = null.asInstanceOf[com.badlogic.gdx.utils.PooledLinkedList[java.lang.Integer]]
   @org.junit.Before
   def setUp(): scala.Unit = {
@@ -9,32 +9,28 @@ class PooledLinkedListTest {
     this.list.add(2.asInstanceOf[java.lang.Integer])
     this.list.add(3.asInstanceOf[java.lang.Integer])
   }
-  @org.junit.Test
-  def size(): scala.Unit = {
+  testCase("size", {
     org.junit.Assert.assertEquals(3, this.list.size())
     this.list.iter()
     this.list.next()
     this.list.remove()
     org.junit.Assert.assertEquals(2, this.list.size())
-  }
-  @org.junit.Test
-  def iteration(): scala.Unit = {
+  })
+  testCase("iteration", {
     this.list.iter()
     org.junit.Assert.assertEquals(java.lang.Integer.valueOf(1), this.list.next())
     org.junit.Assert.assertEquals(java.lang.Integer.valueOf(2), this.list.next())
     org.junit.Assert.assertEquals(java.lang.Integer.valueOf(3), this.list.next())
     org.junit.Assert.assertNull(this.list.next())
-  }
-  @org.junit.Test
-  def reverseIteration(): scala.Unit = {
+  })
+  testCase("reverseIteration", {
     this.list.iterReverse()
     org.junit.Assert.assertEquals(java.lang.Integer.valueOf(3), this.list.previous())
     org.junit.Assert.assertEquals(java.lang.Integer.valueOf(2), this.list.previous())
     org.junit.Assert.assertEquals(java.lang.Integer.valueOf(1), this.list.previous())
     org.junit.Assert.assertNull(this.list.previous())
-  }
-  @org.junit.Test
-  def remove(): scala.Unit = {
+  })
+  testCase("remove", {
     this.list.iter()
     this.list.next()
     this.list.remove()
@@ -44,20 +40,18 @@ class PooledLinkedListTest {
     this.list.iter()
     org.junit.Assert.assertEquals(java.lang.Integer.valueOf(2), this.list.next())
     org.junit.Assert.assertNull(this.list.next())
-  }
-  @org.junit.Test
-  def removeLast(): scala.Unit = {
+  })
+  testCase("removeLast", {
     this.list.iter()
     org.junit.Assert.assertEquals(java.lang.Integer.valueOf(1), this.list.next())
     this.list.removeLast()
     org.junit.Assert.assertEquals(java.lang.Integer.valueOf(2), this.list.next())
     org.junit.Assert.assertNull(this.list.next())
-  }
-  @org.junit.Test
-  def clear(): scala.Unit = {
+  })
+  testCase("clear", {
     this.list.clear()
     org.junit.Assert.assertEquals(0, this.list.size())
     this.list.iter()
     org.junit.Assert.assertNull(this.list.next())
-  }
+  })
 }

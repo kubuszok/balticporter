@@ -4,7 +4,8 @@ import balticporter.core.FrontendConfig
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.{OmissionCheck, Pipeline, PortabilityCheck, RewriteTrace}
-import balticporter.transform.{CollectionsTransform, MutableParamsTransform, PanamaFfiTransform}
+import balticporter.transform.{CollectionsTransform, MutableParamsTransform, PanamaFfiTransform,
+  TestFrameworkTransform}
 
 import java.nio.file.{Files, Path}
 import scala.jdk.CollectionConverters.*
@@ -43,7 +44,8 @@ object LibgdxTestMigrate:
       FrontendConfig(testRoot, files, Nil, resolutionRoots = List(srcRoot)), lenient = true)
     val raw0 = SpoonTir.fromTypes(types)
     val program = Pipeline.run(raw0,
-      List(new CollectionsTransform, new MutableParamsTransform, new PanamaFfiTransform()))
+      List(new CollectionsTransform, new MutableParamsTransform, new PanamaFfiTransform(),
+           new TestFrameworkTransform()))
     println(s"[libgdx-test] TIR: ${program.units.size} units, ${program.symbols.all.size} symbols")
 
     // The same anti-omission checks the main port runs. A test that silently loses a statement is
@@ -79,6 +81,13 @@ object LibgdxTestMigrate:
         Files.createDirectories(p.getParent)
         Files.writeString(p, emitter.emitUnit(u))
         written += 1
+    }
+    // the suite base class the transform retyped onto — the output is compiled standalone.
+    TestFrameworkTransform.runtimeSources.foreach { (fqn, src) =>
+      val p = outDir.resolve(fqn.replace('.', '/') + ".scala")
+      Files.createDirectories(p.getParent)
+      Files.writeString(p, src)
+      written += 1
     }
     val missing = testFqns -- program.units.flatMap(u => program.symbolOf(u.symbol).map(_.fullName))
     if missing.nonEmpty then

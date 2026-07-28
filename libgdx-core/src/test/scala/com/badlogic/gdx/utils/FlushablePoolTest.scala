@@ -1,26 +1,22 @@
 package com.badlogic.gdx.utils
 
-class FlushablePoolTest {
-  @org.junit.Test
-  def initializeFlushablePoolTest1(): scala.Unit = {
+class FlushablePoolTest extends balticporter.runtime.PortedSuite {
+  testCase("initializeFlushablePoolTest1", {
     val flushablePool: com.badlogic.gdx.utils.FlushablePoolTest#FlushablePoolClass = new FlushablePoolClass()
     org.junit.Assert.assertEquals(0, flushablePool.getFree())
     org.junit.Assert.assertEquals(java.lang.Integer.MAX_VALUE, flushablePool.max)
-  }
-  @org.junit.Test
-  def initializeFlushablePoolTest2(): scala.Unit = {
+  })
+  testCase("initializeFlushablePoolTest2", {
     val flushablePool: com.badlogic.gdx.utils.FlushablePoolTest#FlushablePoolClass = new FlushablePoolClass(10)
     org.junit.Assert.assertEquals(0, flushablePool.getFree())
     org.junit.Assert.assertEquals(java.lang.Integer.MAX_VALUE, flushablePool.max)
-  }
-  @org.junit.Test
-  def initializeFlushablePoolTest3(): scala.Unit = {
+  })
+  testCase("initializeFlushablePoolTest3", {
     val flushablePool: com.badlogic.gdx.utils.FlushablePoolTest#FlushablePoolClass = new FlushablePoolClass(10, 10)
     org.junit.Assert.assertEquals(0, flushablePool.getFree())
     org.junit.Assert.assertEquals(10, flushablePool.max)
-  }
-  @org.junit.Test
-  def obtainTest(): scala.Unit = {
+  })
+  testCase("obtainTest", {
     val flushablePool: com.badlogic.gdx.utils.FlushablePoolTest#FlushablePoolClass = new FlushablePoolClass(10, 10)
     flushablePool.newObject()
     org.junit.Assert.assertEquals(0, flushablePool.obtained.size)
@@ -28,18 +24,16 @@ class FlushablePoolTest {
     org.junit.Assert.assertEquals(1, flushablePool.obtained.size)
     flushablePool.flush()
     org.junit.Assert.assertEquals(0, flushablePool.obtained.size)
-  }
-  @org.junit.Test
-  def flushTest(): scala.Unit = {
+  })
+  testCase("flushTest", {
     val flushablePool: com.badlogic.gdx.utils.FlushablePoolTest#FlushablePoolClass = new FlushablePoolClass(10, 10)
     flushablePool.newObject()
     flushablePool.obtain()
     org.junit.Assert.assertEquals(1, flushablePool.obtained.size)
     flushablePool.flush()
     org.junit.Assert.assertEquals(0, flushablePool.obtained.size)
-  }
-  @org.junit.Test
-  def freeTest(): scala.Unit = {
+  })
+  testCase("freeTest", {
     val flushablePool: com.badlogic.gdx.utils.FlushablePoolTest#FlushablePoolClass = new FlushablePoolClass(10, 10)
     flushablePool.newObject()
     flushablePool.newObject()
@@ -50,9 +44,8 @@ class FlushablePoolTest {
     flushablePool.free(element2)
     org.junit.Assert.assertTrue(flushablePool.obtained.contains(element1, true))
     org.junit.Assert.assertFalse(flushablePool.obtained.contains(element2, true))
-  }
-  @org.junit.Test
-  def freeAllTest(): scala.Unit = {
+  })
+  testCase("freeAllTest", {
     val flushablePool: com.badlogic.gdx.utils.FlushablePoolTest#FlushablePoolClass = new FlushablePoolClass(5, 5)
     flushablePool.newObject()
     flushablePool.newObject()
@@ -66,7 +59,7 @@ class FlushablePoolTest {
     flushablePool.freeAll(elementArray)
     org.junit.Assert.assertFalse(flushablePool.obtained.contains(element1, true))
     org.junit.Assert.assertFalse(flushablePool.obtained.contains(element2, true))
-  }
+  })
   class FlushablePoolClass extends com.badlogic.gdx.utils.FlushablePool[java.lang.String] {
     def this(initialCapacity: scala.Int) = {
       this()

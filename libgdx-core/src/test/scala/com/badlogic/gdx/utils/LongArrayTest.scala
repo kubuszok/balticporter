@@ -1,8 +1,7 @@
 package com.badlogic.gdx.utils
 
-class LongArrayTest {
-  @org.junit.Test
-  def addTest(): scala.Unit = {
+class LongArrayTest extends balticporter.runtime.PortedSuite {
+  testCase("addTest", {
     val longArray1: com.badlogic.gdx.utils.LongArray = new com.badlogic.gdx.utils.LongArray(3)
     longArray1.add(3)
     org.junit.Assert.assertArrayEquals(scala.Array[scala.Long](3), longArray1.toArray())
@@ -20,9 +19,8 @@ class LongArrayTest {
     val longArray4: com.badlogic.gdx.utils.LongArray = new com.badlogic.gdx.utils.LongArray()
     longArray4.addAll(scala.Array[scala.Long](4, 5, 6, 2, 21, 45, 78), 3, 3)
     org.junit.Assert.assertArrayEquals(scala.Array[scala.Long](2, 21, 45), longArray4.toArray())
-  }
-  @org.junit.Test
-  def getTest(): scala.Unit = {
+  })
+  testCase("getTest", {
     val longArray: com.badlogic.gdx.utils.LongArray = new com.badlogic.gdx.utils.LongArray()
     longArray.add(3, 4, 5, 1)
     org.junit.Assert.assertEquals(3, longArray.get(0))
@@ -34,9 +32,8 @@ class LongArrayTest {
         ()
       }
     }
-  }
-  @org.junit.Test
-  def setTest(): scala.Unit = {
+  })
+  testCase("setTest", {
     val longArray: com.badlogic.gdx.utils.LongArray = new com.badlogic.gdx.utils.LongArray(scala.Array[scala.Long](3, 4, 5, 7))
     longArray.set(1, 51)
     org.junit.Assert.assertEquals(51, longArray.get(1))
@@ -48,9 +45,8 @@ class LongArrayTest {
         ()
       }
     }
-  }
-  @org.junit.Test
-  def incrTest(): scala.Unit = {
+  })
+  testCase("incrTest", {
     val longArray: com.badlogic.gdx.utils.LongArray = new com.badlogic.gdx.utils.LongArray(scala.Array[scala.Long](3, 4, 5, 1, 56, 32))
     longArray.incr(3, 45)
     org.junit.Assert.assertEquals(46, longArray.get(3))
@@ -64,9 +60,8 @@ class LongArrayTest {
         ()
       }
     }
-  }
-  @org.junit.Test
-  def mulTest(): scala.Unit = {
+  })
+  testCase("mulTest", {
     val longArray: com.badlogic.gdx.utils.LongArray = new com.badlogic.gdx.utils.LongArray(scala.Array[scala.Long](3, 4, 5, 1, 56, 32))
     longArray.mul(1, 3)
     org.junit.Assert.assertEquals(12, longArray.get(1))
@@ -80,9 +75,8 @@ class LongArrayTest {
         ()
       }
     }
-  }
-  @org.junit.Test
-  def insertTest(): scala.Unit = {
+  })
+  testCase("insertTest", {
     val longArray1: com.badlogic.gdx.utils.LongArray = new com.badlogic.gdx.utils.LongArray()
     longArray1.addAll(scala.Array[scala.Long](1, 3, 4, 5, 6))
     longArray1.insert(1, 2)
@@ -109,9 +103,8 @@ class LongArrayTest {
         ()
       }
     }
-  }
-  @org.junit.Test
-  def swapTest(): scala.Unit = {
+  })
+  testCase("swapTest", {
     val longArray1: com.badlogic.gdx.utils.LongArray = new com.badlogic.gdx.utils.LongArray(scala.Array[scala.Long](1, 3, 4, 5, 6))
     longArray1.swap(1, 4)
     org.junit.Assert.assertArrayEquals(scala.Array[scala.Long](1, 6, 4, 5, 3), longArray1.toArray())
@@ -131,23 +124,20 @@ class LongArrayTest {
         ()
       }
     }
-  }
-  @org.junit.Test
-  def containsTest(): scala.Unit = {
+  })
+  testCase("containsTest", {
     val longArray1: com.badlogic.gdx.utils.LongArray = new com.badlogic.gdx.utils.LongArray(scala.Array[scala.Long](1, 3, 4, 5, 6))
     org.junit.Assert.assertTrue(longArray1.contains(3))
     org.junit.Assert.assertFalse(longArray1.contains(100))
-  }
-  @org.junit.Test
-  def indexOfTest(): scala.Unit = {
+  })
+  testCase("indexOfTest", {
     val longArray1: com.badlogic.gdx.utils.LongArray = new com.badlogic.gdx.utils.LongArray(scala.Array[scala.Long](1, 3, 4, 5, 6, 6, 3, 9, 68000, 68000))
     org.junit.Assert.assertEquals(-1, longArray1.indexOf(100))
     org.junit.Assert.assertEquals(1, longArray1.indexOf(3))
     org.junit.Assert.assertEquals(9, longArray1.lastIndexOf(68000))
     org.junit.Assert.assertEquals(-1, longArray1.lastIndexOf(100))
-  }
-  @org.junit.Test
-  def removeTest(): scala.Unit = {
+  })
+  testCase("removeTest", {
     val longArray1: com.badlogic.gdx.utils.LongArray = com.badlogic.gdx.utils.LongArray.`with`(scala.Array[scala.Long](1, 3, 4, 5, 6, 6, 3, 9))
     org.junit.Assert.assertTrue(longArray1.removeValue(3))
     org.junit.Assert.assertArrayEquals(scala.Array[scala.Long](1, 4, 5, 6, 6, 3, 9), longArray1.toArray())
@@ -193,9 +183,8 @@ class LongArrayTest {
     toBeRemoved = new com.badlogic.gdx.utils.LongArray(scala.Array[scala.Long](10, 30, 22))
     org.junit.Assert.assertTrue(longArray3.removeAll(toBeRemoved))
     org.junit.Assert.assertArrayEquals(scala.Array[scala.Long](50, 40), longArray3.toArray())
-  }
-  @org.junit.Test
-  def popPeekFirstTest(): scala.Unit = {
+  })
+  testCase("popPeekFirstTest", {
     val longArray: com.badlogic.gdx.utils.LongArray = com.badlogic.gdx.utils.LongArray.`with`(scala.Array[scala.Long](1, 2, 3, 4, 5, 6, 7, 8, 9, 10))
     val emptyLongArray: com.badlogic.gdx.utils.LongArray = new com.badlogic.gdx.utils.LongArray()
     org.junit.Assert.assertEquals(1, longArray.first())
@@ -226,29 +215,25 @@ class LongArrayTest {
         ()
       }
     }
-  }
-  @org.junit.Test
-  def emptyTest(): scala.Unit = {
+  })
+  testCase("emptyTest", {
     org.junit.Assert.assertTrue(new com.badlogic.gdx.utils.LongArray().isEmpty())
     org.junit.Assert.assertFalse(new com.badlogic.gdx.utils.LongArray(scala.Array[scala.Long](1)).isEmpty())
     org.junit.Assert.assertFalse(new com.badlogic.gdx.utils.LongArray().notEmpty())
     org.junit.Assert.assertTrue(new com.badlogic.gdx.utils.LongArray(scala.Array[scala.Long](1)).notEmpty())
-  }
-  @org.junit.Test
-  def clearTest(): scala.Unit = {
+  })
+  testCase("clearTest", {
     val longArray: com.badlogic.gdx.utils.LongArray = new com.badlogic.gdx.utils.LongArray(scala.Array[scala.Long](1))
     longArray.clear()
     org.junit.Assert.assertTrue(longArray.isEmpty())
-  }
-  @org.junit.Test
-  def shrinkTest(): scala.Unit = {
+  })
+  testCase("shrinkTest", {
     val longArray: com.badlogic.gdx.utils.LongArray = new com.badlogic.gdx.utils.LongArray()
     longArray.add(1, 2, 3)
     org.junit.Assert.assertArrayEquals(scala.Array[scala.Long](1, 2, 3), longArray.shrink())
     org.junit.Assert.assertEquals(3, longArray.items.length)
-  }
-  @org.junit.Test
-  def ensureCapacityTest(): scala.Unit = {
+  })
+  testCase("ensureCapacityTest", {
     val longArray1: com.badlogic.gdx.utils.LongArray = new com.badlogic.gdx.utils.LongArray(scala.Array[scala.Long](1, 2, 4, 6, 32, 53, 564, 53, 2, 1, 89, 0, 10, 389, 8, 392, 4, 27346, 2, 234, 12))
     val longArray2: com.badlogic.gdx.utils.LongArray = new com.badlogic.gdx.utils.LongArray(scala.Array[scala.Long](1, 2, 3))
     org.junit.Assert.assertArrayEquals(scala.Array[scala.Long](1, 2, 3, 0, 0, 0, 0, 0), longArray2.ensureCapacity(2))
@@ -261,9 +246,8 @@ class LongArrayTest {
         ()
       }
     }
-  }
-  @org.junit.Test
-  def setSizeTest(): scala.Unit = {
+  })
+  testCase("setSizeTest", {
     val longArray1: com.badlogic.gdx.utils.LongArray = new com.badlogic.gdx.utils.LongArray(scala.Array[scala.Long](1, 2, 4, 6, 32, 53, 564, 53, 2, 1, 89, 90, 10, 389, 8, 392, 4, 27346, 2, 234, 12))
     longArray1.setSize(23)
     org.junit.Assert.assertEquals(23, longArray1.size)
@@ -279,22 +263,19 @@ class LongArrayTest {
         ()
       }
     }
-  }
-  @org.junit.Test
-  def resizeTest(): scala.Unit = {
+  })
+  testCase("resizeTest", {
     val longArray1: com.badlogic.gdx.utils.LongArray = new com.badlogic.gdx.utils.LongArray(scala.Array[scala.Long](1, 2, 4, 6, 32, 53, 564, 53, 2, 1, 89, 90, 10, 389, 8, 392, 4, 27346, 2, 234, 12))
     org.junit.Assert.assertArrayEquals(scala.Array[scala.Long](1, 2, 4, 6, 32, 53, 564, 53, 2, 1, 89, 90, 10, 389, 8, 392, 4, 27346, 2, 234, 12, 0, 0), longArray1.resize(23))
-  }
-  @org.junit.Test
-  def sortAndReverseTest(): scala.Unit = {
+  })
+  testCase("sortAndReverseTest", {
     val longArray1: com.badlogic.gdx.utils.LongArray = com.badlogic.gdx.utils.LongArray.`with`(scala.Array[scala.Long](1, 2, 4, 6, 32, 53, 564, 53, 2, 1, 89, 90, 10, 389, 8, 392, 4, 27346, 2, 234, 12))
     longArray1.sort()
     org.junit.Assert.assertArrayEquals(scala.Array[scala.Long](1, 1, 2, 2, 2, 4, 4, 6, 8, 10, 12, 32, 53, 53, 89, 90, 234, 389, 392, 564, 27346), longArray1.toArray())
     longArray1.reverse()
     org.junit.Assert.assertArrayEquals(scala.Array[scala.Long](27346, 564, 392, 389, 234, 90, 89, 53, 53, 32, 12, 10, 8, 6, 4, 4, 2, 2, 2, 1, 1), longArray1.toArray())
-  }
-  @org.junit.Test
-  def equalsTest(): scala.Unit = {
+  })
+  testCase("equalsTest", {
     val longArray1: com.badlogic.gdx.utils.LongArray = new com.badlogic.gdx.utils.LongArray()
     val longArray2: com.badlogic.gdx.utils.LongArray = new com.badlogic.gdx.utils.LongArray()
     longArray1.add(1, 2)
@@ -310,5 +291,5 @@ class LongArrayTest {
     org.junit.Assert.assertTrue(longArray1.equals(longArray4))
     longArray1.add(3)
     org.junit.Assert.assertFalse(longArray1.equals(longArray2))
-  }
+  })
 }

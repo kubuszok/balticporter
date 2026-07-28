@@ -1,8 +1,7 @@
 package com.badlogic.gdx.math
 
-class ConvexHullTest {
-  @org.junit.Test
-  def testComputePolygon(): scala.Unit = {
+class ConvexHullTest extends balticporter.runtime.PortedSuite {
+  testCase("testComputePolygon", {
     val convexHull: com.badlogic.gdx.math.ConvexHull = new com.badlogic.gdx.math.ConvexHull()
     val rawPolygon: scala.Array[scala.Float] = scala.Array[scala.Float](0, 0, 0, 1, 1, 1, 1, 0)
     val polygonCounterclockwise: scala.Array[scala.Float] = scala.Array[scala.Float](1, 0, 1, 1, 0, 1, 0, 0)
@@ -14,7 +13,7 @@ class ConvexHullTest {
     this.assertArraySimilar(new com.badlogic.gdx.math.ConvexHull().computePolygon(rawPolygon, false), polygonCounterclockwise, 0, 8)
     this.assertArraySimilar(new com.badlogic.gdx.math.ConvexHull().computePolygon(rawPolygon, 2, 6, false), polygonCounterclockwise, 0, 6)
     this.assertArraySimilar(new com.badlogic.gdx.math.ConvexHull().computePolygon(rawPolygon, 0, 6, false), polygonCounterclockwise, 2, 6)
-  }
+  })
   private def assertArraySimilar(array: com.badlogic.gdx.utils.FloatArray, witness: scala.Array[scala.Float], witnessOffset: scala.Int, witnessCount: scala.Int): scala.Unit = {
     val witnessLength: scala.Int = witnessCount + witnessOffset
     org.junit.Assert.assertTrue((witnessCount + witnessOffset) <= witness.length)

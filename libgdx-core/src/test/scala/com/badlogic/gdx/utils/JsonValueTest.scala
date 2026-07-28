@@ -1,8 +1,7 @@
 package com.badlogic.gdx.utils
 
-class JsonValueTest {
-  @org.junit.Test
-  def testAddingRemovedValue(): scala.Unit = {
+class JsonValueTest extends balticporter.runtime.PortedSuite {
+  testCase("testAddingRemovedValue", {
     val firstObject: com.badlogic.gdx.utils.JsonValue = new com.badlogic.gdx.utils.JsonValue(com.badlogic.gdx.utils.JsonValue.ValueType.`object`)
     val secondObject: com.badlogic.gdx.utils.JsonValue = new com.badlogic.gdx.utils.JsonValue(com.badlogic.gdx.utils.JsonValue.ValueType.`object`)
     firstObject.addChild("a", new com.badlogic.gdx.utils.JsonValue("A"))
@@ -16,9 +15,8 @@ class JsonValueTest {
     org.junit.Assert.assertNull(secondObject.get("a"))
     org.junit.Assert.assertNull(secondObject.get("b"))
     org.junit.Assert.assertNotNull(secondObject.get("c"))
-  }
-  @org.junit.Test
-  def testReplaceValue(): scala.Unit = {
+  })
+  testCase("testReplaceValue", {
     val `object`: com.badlogic.gdx.utils.JsonValue = new com.badlogic.gdx.utils.JsonValue(com.badlogic.gdx.utils.JsonValue.ValueType.`object`)
     `object`.addChild("a", new com.badlogic.gdx.utils.JsonValue("A"))
     `object`.addChild("b", new com.badlogic.gdx.utils.JsonValue("B"))
@@ -39,9 +37,8 @@ class JsonValueTest {
     org.junit.Assert.assertEquals(`object`.get("b").asString(), "X")
     org.junit.Assert.assertEquals(`object`.get("c").asString(), "Y")
     org.junit.Assert.assertEquals(`object`.get("d").asString(), "Z")
-  }
-  @org.junit.Test
-  def testCopyConstructor(): scala.Unit = {
+  })
+  testCase("testCopyConstructor", {
     val b: com.badlogic.gdx.utils.JsonValue = new com.badlogic.gdx.utils.JsonValue(com.badlogic.gdx.utils.JsonValue.ValueType.`object`)
     b.addChild("c", new com.badlogic.gdx.utils.JsonValue("C"))
     b.addChild("d", new com.badlogic.gdx.utils.JsonValue("D"))
@@ -72,5 +69,5 @@ class JsonValueTest {
     org.junit.Assert.assertEquals(bCopy.get("c").asString(), "C")
     org.junit.Assert.assertEquals(bCopy.get("d").asString(), "D")
     org.junit.Assert.assertEquals(bCopy.get("d").parent(), bCopy)
-  }
+  })
 }

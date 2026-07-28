@@ -1,8 +1,7 @@
 package com.badlogic.gdx.math
 
-class OctreeTest {
-  @org.junit.Test
-  def testInsert(): scala.Unit = {
+class OctreeTest extends balticporter.runtime.PortedSuite {
+  testCase("testInsert", {
     val maxDepth: scala.Int = 2
     val maxItemsPerNode: scala.Int = 1
     val min: com.badlogic.gdx.math.Vector3 = new com.badlogic.gdx.math.Vector3(-5.0f, -5.0f, -5.0f)
@@ -41,5 +40,5 @@ class OctreeTest {
     octree.getAll(result)
     org.junit.Assert.assertEquals(1, result.size)
     org.junit.Assert.assertTrue(result.contains(box1))
-  }
+  })
 }
