@@ -475,6 +475,33 @@ Java does not. So the erased-receiver view needs an F-bound-aware erasure: erase
 bound with the recursion cut (`Node[Object, Object, Actor]` at the outer level), not to `Object`.
 This is universal — rule (a) — and is the next piece of work.
 
+## The LAST core error — `Tree.scala:417`, and four measured dead ends
+
+State: **1 error**. Receiver renders correctly as `Node[N, V, Actor]`; the ARGUMENT cast still reads
+`Tree[Node[?, Object, Actor], Object]` where `Tree[N, V]` is wanted. Cause is exact: `erasedFormal`
+resolves its `subst` only for a BARE type variable, so an APPLIED formal (`addToTree(Tree<N,V>)`)
+falls through to `erasedType`, which rebuilds the erasure the receiver just moved away from.
+
+Four ways of closing that gap, all measured, all worse:
+
+| attempt | measured |
+|---|---|
+| prefer the DECLARATION's type for every variable access | 2 → 3 |
+| …only when the reference is RAW and the declaration is not | 2 → 3 |
+| let `subst` reach inside applied formals unconditionally | 1 → 11 |
+| …only on the name-filled path (`deep` threaded through `erasedReceiverView`) | 1 → 11 |
+| …plus wildcarding un-nameable formals on that path | 1 → 10 |
+
+The last two say something worth keeping: on the name-filled path the F-bound refers to its SIBLING
+formals, so a formal that cannot be named here poisons the others — filling `A` with `Actor` while
+`N`'s bound still reads `Node[N, V, A]` makes `N` fail its own bound. Wildcarding them helps by one
+and no more. **A partially-nameable F-bounded class has no consistent fill**: either every formal
+comes from the enclosing scope or none can.
+
+That is a genuine expressiveness limit, not a missing case — the strongest candidate yet for the
+`UNPORTABLE-DESIGN.md` marker, since the honest output is "this construct has no Scala image, here
+is what a hand-porter would write" rather than another gate.
+
 ## Do NOT retry (measured failures)
 
 - **Falling back to ERASED formals in `rawCtorArgs` when nothing names the class's parameters** —
