@@ -1032,8 +1032,19 @@ object SpoonTir:
       val bt = new BodyTranslator(id, selfOf(owner, selfClass), anonSelf, anonQName)
       bt.seedVars(outerVars) // an anonymous class captures the enclosing method's effectively-final locals
       val ps = m.getParameters.asScala.toList
+      // `public boolean equals (Object obj)` overrides `java.lang.Object.equals`, which in scala is
+      // `equals(x: Any)`. Rendered `equals(obj: Object)` it does not override it — it CLASHES with
+      // it, same signature after erasure, and scala rejects the class outright. `Any` is also the
+      // wider type, so no body that used the parameter can break: `instanceof`, `==` and a cast all
+      // work on it. (52 classes in gdx core; invisible until the last RefChecks error cleared,
+      // since the name-clash check runs in a still later phase.)
+      def anyForEquals(p: CtParameter[?]): TypeRepr =
+        if name == "equals" && ps.sizeIs == 1 &&
+           (try p.getType.getQualifiedName == "java.lang.Object" catch { case _: Throwable => false })
+        then TypeRef(NoPrefix, minter.external("scala.Any", "Any"))
+        else tpe(p.getType)
       val pvs = ps.map { p =>
-        val pt  = tpe(p.getType)
+        val pt  = anyForEquals(p)
         val pid = minter.define(minterKeyOf(id) + "%" + p.getSimpleName)(sid =>
           Symbol(sid, p.getSimpleName, qualified(id, p.getSimpleName), Flags(isParam = true, isVararg = p.isVarArgs), id, pt)
         )
@@ -1046,7 +1057,7 @@ object SpoonTir:
         case _: CtConstructor[?]      => unitT
         case named: CtTypedElement[?] => tpe(named.getType)
         case _                        => unitT
-      val sig = MethodType(ps.map(p => p.getSimpleName -> tpe(p.getType)), ret)
+      val sig = MethodType(ps.map(p => p.getSimpleName -> anyForEquals(p)), ret)
       val (anns, annDropped) = annotationsOf(m, Some(bt))
       minter.set(id, Symbol(id, name, qualified(owner, name), execFlags(m).copy(isOverride = overrides), owner, sig,
                             annotations = anns, droppedAnnotations = annDropped))

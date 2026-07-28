@@ -186,7 +186,15 @@ class Json:
   def ignoreUnknownField(`type`: Class[?], fieldName: String): Boolean = false
 
   def readValue[T](`type`: Class[T], jsonData: JsonValue): T = codec("Json.readValue")
-  def readValue[T](`type`: Class[T], elementType: Class[?], jsonData: JsonValue): T = codec("Json.readValue")
+  // java's `<T>` MEANS `<T extends Object>`, and the engine renders an override of this overload
+  // that way — `Skin`'s anonymous Json subclass does exactly that. Scala requires an override's
+  // bounds to match EXACTLY, so this one carries the bound. The SIBLING overloads deliberately do
+  // not: `readValue("minParticleCount", int.class, jsonData)` reaches
+  // `(String, Class[T], JsonValue)` in 16 places, and `classOf[scala.Int]` is `Class[Int]` where
+  // `Int` is not `<: Object` (java's `int.class` is `Class<Integer>`; scala's is honest). Until the
+  // engine pins `T` for a primitive class literal — see LIBGDX-PORT-STATUS.md, four measured
+  // refutations — the bound goes only on the overloads that are actually overridden.
+  def readValue[T <: Object](`type`: Class[T], elementType: Class[?], jsonData: JsonValue): T = codec("Json.readValue")
   def readValue[T](`type`: Class[T], elementType: Class[?], defaultValue: T, jsonData: JsonValue): T =
     codec("Json.readValue")
   def readValue[T](name: String, `type`: Class[T], jsonMap: JsonValue): T = codec("Json.readValue")
