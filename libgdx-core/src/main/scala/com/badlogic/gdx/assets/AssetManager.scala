@@ -265,7 +265,7 @@ class AssetManager(resolver$p: com.badlogic.gdx.assets.loaders.FileHandleResolve
     } else ()
     this.toLoad = this.toLoad + 1
     val assetDesc: com.badlogic.gdx.assets.AssetDescriptor[T] = new com.badlogic.gdx.assets.AssetDescriptor[T](fileName, `type`, parameter).asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[T]]
-    this.loadQueue.add(assetDesc)
+    this.loadQueue.add(assetDesc.asInstanceOf[com.badlogic.gdx.assets.AssetDescriptor[?]])
     this.log.debug("Queued: " + assetDesc)
   }
   def load(desc: com.badlogic.gdx.assets.AssetDescriptor[?]): scala.Unit = {
@@ -396,11 +396,11 @@ class AssetManager(resolver$p: com.badlogic.gdx.assets.loaders.FileHandleResolve
     this.peakTasks = this.peakTasks + 1
   }
   def addAsset[T <: java.lang.Object](fileName: java.lang.String, `type`: java.lang.Class[T], asset: T): scala.Unit = {
-    this.assetTypes.put(fileName, `type`)
+    this.assetTypes.put(fileName, `type`.asInstanceOf[java.lang.Class[?]])
     var typeToAssets: com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.assets.AssetManager.RefCountedContainer] = this.assets.get(`type`)
     if (typeToAssets == null) {
       typeToAssets = new com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.assets.AssetManager.RefCountedContainer]()
-      this.assets.put(`type`, typeToAssets)
+      this.assets.put(`type`.asInstanceOf[java.lang.Class[?]], typeToAssets)
     } else ()
     val assetRef: com.badlogic.gdx.assets.AssetManager.RefCountedContainer = new com.badlogic.gdx.assets.AssetManager.RefCountedContainer()
     assetRef.`object` = asset.asInstanceOf[java.lang.Object]
@@ -483,10 +483,10 @@ class AssetManager(resolver$p: com.badlogic.gdx.assets.loaders.FileHandleResolve
     this.log.debug((("Loader set: " + `type`.getSimpleName()) + " -> ") + loader.getClass().getSimpleName())
     var loaders: com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.assets.loaders.AssetLoader[T, P]] = this.loaders.get(`type`).asInstanceOf[com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.assets.loaders.AssetLoader[T, P]]]
     if (loaders == null) {
-      this.loaders.put(`type`, {
+      this.loaders.put(`type`.asInstanceOf[java.lang.Class[?]], {
         loaders = new com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.assets.loaders.AssetLoader[T, P]]().asInstanceOf[com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.assets.loaders.AssetLoader[T, P]]]
         loaders
-      })
+      }.asInstanceOf[com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.assets.loaders.AssetLoader[?, ?]]])
     } else ()
     loaders.put(if (suffix == null) "" else suffix, loader)
   }

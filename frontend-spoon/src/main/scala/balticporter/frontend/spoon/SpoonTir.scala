@@ -110,7 +110,12 @@ object SpoonTir:
       * enclosing frame for reference resolution — name-directed raw-fill must NOT emit a param the
       * emitted Scala can't see (that produced `Not found: type T` inside static-nested `SaveData`). */
     private val tpAccessible = collection.mutable.ArrayDeque[Map[String, SymId]]()
-    private def accessibleTp(name: String): Option[SymId] = tpAccessible.headOption.flatMap(_.get(name))
+    /** names contributed by EXECUTABLES, parallel to `tpAccessible` (which merges each level into
+      * one map, so a frame cannot simply be skipped). Hidden under [[atDeclScope]]. */
+    private val tpExecNames = collection.mutable.ArrayDeque[Set[String]]()
+    private def accessibleTp(name: String): Option[SymId] =
+      if declScopeOnly && tpExecNames.headOption.exists(_.contains(name)) then None
+      else tpAccessible.headOption.flatMap(_.get(name))
     /** A nested type captures its enclosing type's params iff it is a NON-static inner class. */
     private def capturesEnclosing(t: CtType[?]): Boolean =
       t.getDeclaringType != null && t.isInstanceOf[CtClass[?]] && !t.hasModifier(ModifierKind.STATIC)
@@ -143,21 +148,43 @@ object SpoonTir:
       s"($ps)"
 
     // ---- type parameter resolution ----
+    /** parallel to `tpScopes`: is this frame an EXECUTABLE's own type parameters? */
+    private val tpIsExec = collection.mutable.ArrayDeque[Boolean]()
+
+    /** Render a type as its DECLARATION site would have, not as the current scope would.
+      *
+      * The name-directed raw fill is scope-dependent BY DESIGN — the same raw `AssetLoader`
+      * becomes `AssetLoader[T, P]` inside `setLoader<T, P>` and `AssetLoader[?, ?]` at a field of
+      * a class with no such names. That is wanted: it is what preserves self-reference. What is
+      * NOT wanted is re-rendering a DECLARED entity's type in the reading scope, because then the
+      * engine's own two renderings of one Java type silently agree when the emitted Scala does
+      * not, and the unchecked cast that should bridge them is never emitted.
+      *
+      * A FIELD's type cannot mention a method's type parameters — no scope in Java lets it — so
+      * hiding the executable frames is exact here, not an approximation. */
+    private def atDeclScope[A](f: => A): A =
+      val saved = declScopeOnly
+      declScopeOnly = true
+      try f finally declScopeOnly = saved
+    private var declScopeOnly = false
+
     private def resolveTypeParam(name: String): Option[SymId] =
-      tpScopes.iterator.collectFirst { case m if m.contains(name) => m(name) }
+      tpScopes.iterator.zipAll(tpIsExec.iterator, Map.empty, false).collectFirst {
+        case (m, isExec) if m.contains(name) && !(declScopeOnly && isExec) => m(name)
+      }
 
     /** Mint ids for all formals FIRST (so bounds can self-reference — F-bounds), then
       * translate each bound with the frame in scope. Returns the frame and the TypeDefs. */
     private def mintTypeParams(declKey: String, owner: SymId, tps: List[CtTypeParameter]): (Map[String, SymId], List[Tree.TypeDef]) =
       val frame = tps.map(tp => tp.getSimpleName -> minter.resolve(declKey + "$$" + tp.getSimpleName)).toMap
-      tpScopes.prepend(frame)
+      tpScopes.prepend(frame); tpIsExec.prepend(false) // a bound resolves in its own declarer's scope
       val defs = tps.map { tp =>
         val id     = frame(tp.getSimpleName)
         val bounds = boundsOf(tp)
         minter.set(id, Symbol(id, tp.getSimpleName, declKey + "$$" + tp.getSimpleName, Flags(isParam = true), owner, bounds))
         Tree.TypeDef(id, tt(bounds, tp), originOf(tp))
       }
-      tpScopes.remove(0)
+      tpScopes.remove(0); tpIsExec.remove(0)
       (frame, defs)
 
     /** Java's type parameters are ALWAYS reference types: `<T>` means `<T extends Object>`, since
@@ -546,10 +573,12 @@ object SpoonTir:
     private def classDef(t: CtType[?]): Tree.ClassDef =
       val id   = defineType(t)
       val (frame, tpDefs) = mintTypeParams(typeKey(t.getReference), id, t.getFormalCtTypeParameters.asScala.toList)
-      tpScopes.prepend(frame)
+      tpScopes.prepend(frame); tpIsExec.prepend(false)
       selfRawStack.prepend(id -> t.getFormalCtTypeParameters.asScala.toList.map(tp => frame(tp.getSimpleName)))
       val enclosingAcc = if capturesEnclosing(t) then tpAccessible.headOption.getOrElse(Map.empty) else Map.empty
       tpAccessible.prepend(enclosingAcc ++ frame)
+      // an anonymous/local class capturing an enclosing method's params keeps them EXEC-contributed
+      tpExecNames.prepend(if capturesEnclosing(t) then tpExecNames.headOption.getOrElse(Set.empty) else Set.empty)
       val savedStatic = inStatic; inStatic = false // a class body isn't a static context for its instance members
       val parents = superTypes(t)
       val fields = t.getFields.asScala.toList
@@ -590,8 +619,8 @@ object SpoonTir:
       val enumCases = t match
         case e: CtEnum[?] => e.getEnumValues.asScala.toList.map(enumCase(id, _))
         case _            => Nil
-      tpScopes.remove(0)
-      selfRawStack.remove(0); tpAccessible.remove(0); inStatic = savedStatic
+      tpScopes.remove(0); tpIsExec.remove(0)
+      selfRawStack.remove(0); tpAccessible.remove(0); tpExecNames.remove(0); inStatic = savedStatic
       Tree.ClassDef(id, parents, selfType = None, body = fields ++ ctors ++ methods ++ initBlocks ++ nested,
         origin = originOf(t), tparams = tpDefs, enumCases = enumCases)
 
@@ -749,10 +778,11 @@ object SpoonTir:
         case ftd: CtFormalTypeDeclarer => ftd.getFormalCtTypeParameters.asScala.toList
         case _                         => Nil
       val (frame, tpDefs) = mintTypeParams(mkey, id, mtps)
-      tpScopes.prepend(frame)
+      tpScopes.prepend(frame); tpIsExec.prepend(true)
       // a method sees its class's accessible params (unless static — gated at the fill site) plus
       // its own; `withStatic` already carries `inStatic` for this exec.
       tpAccessible.prepend(tpAccessible.headOption.getOrElse(Map.empty) ++ frame)
+      tpExecNames.prepend(tpExecNames.headOption.getOrElse(Set.empty) ++ frame.keySet)
       val bt = new BodyTranslator(id, selfOf(owner, selfClass), anonSelf, anonQName)
       bt.seedVars(outerVars) // an anonymous class captures the enclosing method's effectively-final locals
       val ps = m.getParameters.asScala.toList
@@ -777,7 +807,7 @@ object SpoonTir:
       // translate the body (with param + type-param scope in place) — this is what makes
       // Call / field-ref usages and `callersOf` real. Abstract/interface methods have none.
       val body = Option(m.getBody).map(b => bt.methodBody(b))
-      tpScopes.remove(0); tpAccessible.remove(0)
+      tpScopes.remove(0); tpIsExec.remove(0); tpAccessible.remove(0); tpExecNames.remove(0)
       Tree.DefDef(id, paramss = List(pvs), returnTpt = tt(ret, m), rhs = body, origin = originOf(m), tparams = tpDefs)
     }
 
@@ -1754,7 +1784,14 @@ object SpoonTir:
                    catch { case _: Throwable => None }
           (known, ps) match
             case (true, Some(l)) if l.sizeIs == args.size && argEs.sizeIs == args.size =>
-              val subst = formals.map(_.getSimpleName).zip(actuals.map(tpe)).toMap
+              // A FIELD receiver's arguments must be rendered as the FIELD's declaration rendered
+              // them. Re-rendering them here let the enclosing method's type parameters feed the
+              // raw fill, so `this.loaders`'s value type came out `ObjectMap[String,
+              // AssetLoader[T, P]]` — identical to the argument, so no cast was emitted — while
+              // the field itself is declared `ObjectMap[String, AssetLoader[?, ?]]` and rejects it.
+              val fieldRecv = inv.getTarget.isInstanceOf[CtFieldAccess[?]]
+              val subst = formals.map(_.getSimpleName)
+                .zip(if fieldRecv then atDeclScope(actuals.map(tpe)) else actuals.map(tpe)).toMap
               args.zipWithIndex.map { (t, i) =>
                 val f = l(i)
                 if f == null || !mentionsTypeVarBounded(f, subst.keySet) then t
