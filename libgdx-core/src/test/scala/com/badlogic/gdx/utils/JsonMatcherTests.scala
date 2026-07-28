@@ -177,7 +177,7 @@ class JsonMatcherTests {
     JsonMatcherTests.test("1234.567", "", scala.Array[java.lang.String]("1234.567"))
     JsonMatcherTests.test("true", "", scala.Array[java.lang.String]("true"))
     JsonMatcherTests.test("false", "", scala.Array[java.lang.String]("false"))
-    JsonMatcherTests.test("null", "", null.asInstanceOf[java.lang.String])
+    JsonMatcherTests.test("null", "", scala.Array[java.lang.String](null.asInstanceOf[java.lang.String]))
   }
   @org.junit.Test
   def unescaping(): scala.Unit = {

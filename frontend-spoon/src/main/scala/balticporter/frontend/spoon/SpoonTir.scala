@@ -1287,7 +1287,12 @@ object SpoonTir:
               val casts = try e.getTypeCasts.asScala.toList catch { case _: Throwable => Nil }
               val own   = try e.getType catch { case _: Throwable => null }
               (own :: casts).exists(_.isInstanceOf[CtArrayTypeReference[?]]) ||
-                (e match { case lit: CtLiteral[?] => lit.getValue == null; case _ => false })
+                // a BARE `null` is the array itself; `(String) null` is not. The cast names the
+                // COMPONENT type, which is exactly how java disambiguates the two — `test("null",
+                // "", (String) null)` passes a one-element array holding null, not a null array.
+                // Treating every null literal as the array left the argument unpacked and no
+                // overload matched.
+                (e match { case lit: CtLiteral[?] => lit.getValue == null && casts.isEmpty; case _ => false })
             }
             // A GENERIC vararg component (`static <T> Array<T> with (T... array)`) cannot be named at
             // the call site — but Java materialises the array from the ARGUMENTS' own type, and
