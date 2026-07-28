@@ -272,10 +272,18 @@ final class TirEmitter(source: Program, externalConcrete: Map[String, Set[(Strin
               pcd.tparams.map(_.symbol).zip(deWildcardedArgs(tc, args))
                 .collect { case (s, Some(t)) => s -> t }.toMap
             case _ => Map.empty[SymId, TypeRepr]
+          // Search the parent CHAIN, not just the direct parent's own body: `RegionInfluencer
+          // extends Influencer extends ParticleControllerComponent implements Configurable` — only
+          // the last declares `load`, and `Influencer` in between declares nothing at all.
+          def findUp(c: Tree.ClassDef, name: String, ar: List[Int], seen: Set[SymId]): Option[Tree.DefDef] =
+            if seen(c.symbol) then scala.None
+            else methodsOf(c).find(d => sym(d.symbol).name == name && d.paramss.map(_.size) == ar)
+              .orElse(c.parents.iterator.map { case tt: TypeTree => tt.tpe; case x: Term => x.tpe }
+                .flatMap(t => headSymOf(t).flatMap(declOf.get))
+                .flatMap(pp => findUp(pp, name, ar, seen + c.symbol)).nextOption())
           for
             od <- ours
-            pd <- methodsOf(pcd).find(d => sym(d.symbol).name == sym(od.symbol).name &&
-                                           d.paramss.map(_.size) == od.paramss.map(_.size))
+            pd <- findUp(pcd, sym(od.symbol).name, od.paramss.map(_.size), Set.empty)
             (ops, pps) <- od.paramss.zip(pd.paramss)
             (op, pp)   <- ops.zip(pps)
             if hasWildcardArg(op.tpt.tpe) && !out.contains(op.symbol)
