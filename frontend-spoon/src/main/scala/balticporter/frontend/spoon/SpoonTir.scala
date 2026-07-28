@@ -1297,7 +1297,23 @@ object SpoonTir:
         else if !(if ownScope then tpResolvable(target) else tpConcrete(target) || calleeBounded(target)) then t
         else if !mentionsRawGeneric(et) && !(rawTarget && mentionsRawGeneric(target)) then t
         else
-          val ct = if ownScope then tpe(target) else tpBoundErased(target)
+          // A CALLEE's formal belongs to the callee's declaration, not to the caller. Rendering
+          // `removeDuplicates(Array<AssetDescriptor>)`'s parameter from inside an OVERRIDING method
+          // let that method's inherited instantiation fill it — `Array[AssetDescriptor[Void]]` —
+          // while `removeDuplicates` itself, being no override, declares `Array[AssetDescriptor[?]]`.
+          // Two renderings of one signature, which is this engine's most persistent defect shape.
+          // …but only for a callee this class DECLARES itself (`removeDuplicates`, a private
+          // helper). An INHERITED callee's formals are written in the ancestor's variables and do
+          // need the caller's instantiation; clearing the gate for those too measured 3 -> 35.
+          val ownCallee =
+            try Option(e.getParent(classOf[CtInvocation[?]]))
+                  .flatMap(inv => Option(inv.getExecutable.getDeclaringType))
+                  .exists(_.getQualifiedName == minter.fullNameOf(classId))
+            catch { case _: Throwable => false }
+          val savedOv = inOverridingMember
+          if ownCallee then inOverridingMember = false
+          val ct = try if ownScope then tpe(target) else tpBoundErased(target)
+                   finally inOverridingMember = savedOv
           Tree.Typed(t, tt(ct, e), ct, originOf(e))
 
       private def coerce(target: CtTypeReference[?], e: CtExpression[?], t: Term, arrayCov: Boolean = true,
