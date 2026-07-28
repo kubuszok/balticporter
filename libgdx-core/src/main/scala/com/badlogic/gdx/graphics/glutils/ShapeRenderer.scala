@@ -933,7 +933,7 @@ class ShapeRenderer(maxVertices: scala.Int, defaultShader: com.badlogic.gdx.grap
   def isDrawing(): scala.Boolean = {
     return this.shapeType != null
   }
-  def dispose(): scala.Unit = {
+  override def dispose(): scala.Unit = {
     this.renderer.dispose()
   }
 }

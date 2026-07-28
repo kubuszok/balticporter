@@ -67,7 +67,7 @@ class CameraInputController(gestureListener$p: com.badlogic.gdx.graphics.g3d.uti
     } else ()
   }
   @java.lang.Override
-  def touchDown(screenX: scala.Int, screenY: scala.Int, pointer: scala.Int, button: scala.Int): scala.Boolean = {
+  override def touchDown(screenX: scala.Int, screenY: scala.Int, pointer: scala.Int, button: scala.Int): scala.Boolean = {
     this.touched = this.touched | (1 << pointer)
     this.multiTouch = !com.badlogic.gdx.math.MathUtils.isPowerOfTwo(this.touched)
     if (this.multiTouch) {
@@ -82,7 +82,7 @@ class CameraInputController(gestureListener$p: com.badlogic.gdx.graphics.g3d.uti
     return (super.touchDown: (scala.Int, scala.Int, scala.Int, scala.Int) => scala.Boolean)(screenX, screenY, pointer, button) || ((this.activateKey == 0) || this.activatePressed)
   }
   @java.lang.Override
-  def touchUp(screenX: scala.Int, screenY: scala.Int, pointer: scala.Int, button: scala.Int): scala.Boolean = {
+  override def touchUp(screenX: scala.Int, screenY: scala.Int, pointer: scala.Int, button: scala.Int): scala.Boolean = {
     this.touched = this.touched & ((-1) ^ (1 << pointer))
     this.multiTouch = !com.badlogic.gdx.math.MathUtils.isPowerOfTwo(this.touched)
     if (button == this.button) {
@@ -123,7 +123,7 @@ class CameraInputController(gestureListener$p: com.badlogic.gdx.graphics.g3d.uti
     return true
   }
   @java.lang.Override
-  def touchDragged(screenX: scala.Int, screenY: scala.Int, pointer: scala.Int): scala.Boolean = {
+  override def touchDragged(screenX: scala.Int, screenY: scala.Int, pointer: scala.Int): scala.Boolean = {
     val result: scala.Boolean = (super.touchDragged: (scala.Int, scala.Int, scala.Int) => scala.Boolean)(screenX, screenY, pointer)
     if (result || (this.button < 0)) {
       return result
@@ -135,7 +135,7 @@ class CameraInputController(gestureListener$p: com.badlogic.gdx.graphics.g3d.uti
     return this.process(deltaX, deltaY, this.button)
   }
   @java.lang.Override
-  def scrolled(amountX: scala.Float, amountY: scala.Float): scala.Boolean = {
+  override def scrolled(amountX: scala.Float, amountY: scala.Float): scala.Boolean = {
     return this.zoom((amountY * this.scrollFactor) * this.translateUnits)
   }
   def zoom(amount: scala.Float): scala.Boolean = {
@@ -155,7 +155,7 @@ class CameraInputController(gestureListener$p: com.badlogic.gdx.graphics.g3d.uti
     return this.zoom(this.pinchZoomFactor * amount)
   }
   @java.lang.Override
-  def keyDown(keycode: scala.Int): scala.Boolean = {
+  override def keyDown(keycode: scala.Int): scala.Boolean = {
     if (keycode == this.activateKey) {
       this.activatePressed = true
     } else ()
@@ -177,7 +177,7 @@ class CameraInputController(gestureListener$p: com.badlogic.gdx.graphics.g3d.uti
     return false
   }
   @java.lang.Override
-  def keyUp(keycode: scala.Int): scala.Boolean = {
+  override def keyUp(keycode: scala.Int): scala.Boolean = {
     if (keycode == this.activateKey) {
       this.activatePressed = false
       this.button = -1
@@ -206,28 +206,28 @@ object CameraInputController {
     var controller: CameraInputController = null.asInstanceOf[CameraInputController]
     private var previousZoom: scala.Float = 0.0f
     @java.lang.Override
-    def touchDown(x: scala.Float, y: scala.Float, pointer: scala.Int, button: scala.Int): scala.Boolean = {
+    override def touchDown(x: scala.Float, y: scala.Float, pointer: scala.Int, button: scala.Int): scala.Boolean = {
       this.previousZoom = 0
       return false
     }
     @java.lang.Override
-    def tap(x: scala.Float, y: scala.Float, count: scala.Int, button: scala.Int): scala.Boolean = {
+    override def tap(x: scala.Float, y: scala.Float, count: scala.Int, button: scala.Int): scala.Boolean = {
       return false
     }
     @java.lang.Override
-    def longPress(x: scala.Float, y: scala.Float): scala.Boolean = {
+    override def longPress(x: scala.Float, y: scala.Float): scala.Boolean = {
       return false
     }
     @java.lang.Override
-    def fling(velocityX: scala.Float, velocityY: scala.Float, button: scala.Int): scala.Boolean = {
+    override def fling(velocityX: scala.Float, velocityY: scala.Float, button: scala.Int): scala.Boolean = {
       return false
     }
     @java.lang.Override
-    def pan(x: scala.Float, y: scala.Float, deltaX: scala.Float, deltaY: scala.Float): scala.Boolean = {
+    override def pan(x: scala.Float, y: scala.Float, deltaX: scala.Float, deltaY: scala.Float): scala.Boolean = {
       return false
     }
     @java.lang.Override
-    def zoom(initialDistance: scala.Float, distance: scala.Float): scala.Boolean = {
+    override def zoom(initialDistance: scala.Float, distance: scala.Float): scala.Boolean = {
       val newZoom: scala.Float = distance - initialDistance
       val amount: scala.Float = newZoom - this.previousZoom
       this.previousZoom = newZoom
@@ -236,7 +236,7 @@ object CameraInputController {
       return this.controller.pinchZoom(amount / (if (w > h) h else w))
     }
     @java.lang.Override
-    def pinch(initialPointer1: com.badlogic.gdx.math.Vector2, initialPointer2: com.badlogic.gdx.math.Vector2, pointer1: com.badlogic.gdx.math.Vector2, pointer2: com.badlogic.gdx.math.Vector2): scala.Boolean = {
+    override def pinch(initialPointer1: com.badlogic.gdx.math.Vector2, initialPointer2: com.badlogic.gdx.math.Vector2, pointer1: com.badlogic.gdx.math.Vector2, pointer2: com.badlogic.gdx.math.Vector2): scala.Boolean = {
       return false
     }
   }

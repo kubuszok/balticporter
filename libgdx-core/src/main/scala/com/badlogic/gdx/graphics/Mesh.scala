@@ -314,7 +314,7 @@ class Mesh extends com.badlogic.gdx.utils.Disposable {
       this.unbind(shader)
     } else ()
   }
-  def dispose(): scala.Unit = {
+  override def dispose(): scala.Unit = {
     if (Mesh.meshes.getOrElse(com.badlogic.gdx.Gdx.app, null.asInstanceOf[com.badlogic.gdx.utils.Array[Mesh]]) != null) {
       Mesh.meshes.getOrElse(com.badlogic.gdx.Gdx.app, null.asInstanceOf[com.badlogic.gdx.utils.Array[Mesh]]).removeValue(this, true)
     } else ()

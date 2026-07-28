@@ -9,11 +9,11 @@ class ModelInstanceRenderer extends com.badlogic.gdx.graphics.g3d.particles.rend
     this.setBatch(batch)
   }
   @java.lang.Override
-  def allocateChannels(): scala.Unit = {
+  override def allocateChannels(): scala.Unit = {
     this.renderData.positionChannel = this.controller.particles.addChannel(com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.Position)
   }
   @java.lang.Override
-  def init(): scala.Unit = {
+  override def init(): scala.Unit = {
     this.renderData.modelInstanceChannel = this.controller.particles.getChannel(com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.ModelInstance)
     this.renderData.colorChannel = this.controller.particles.getChannel(com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.Color)
     this.renderData.scaleChannel = this.controller.particles.getChannel(com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.Scale)
@@ -23,7 +23,7 @@ class ModelInstanceRenderer extends com.badlogic.gdx.graphics.g3d.particles.rend
     this.hasRotation = this.renderData.rotationChannel != null
   }
   @java.lang.Override
-  def update(): scala.Unit = {
+  override def update(): scala.Unit = {
     { var i: scala.Int = 0; var positionOffset: scala.Int = 0; val c: scala.Int = this.controller.particles.size; while (i < c) { {
       val instance: com.badlogic.gdx.graphics.g3d.ModelInstance = this.renderData.modelInstanceChannel.data(i)
       val scale: scala.Float = if (this.hasScale) this.renderData.scaleChannel.data(i) else 1
@@ -54,11 +54,11 @@ class ModelInstanceRenderer extends com.badlogic.gdx.graphics.g3d.particles.rend
     super.update()
   }
   @java.lang.Override
-  def copy(): com.badlogic.gdx.graphics.g3d.particles.ParticleControllerComponent = {
+  override def copy(): com.badlogic.gdx.graphics.g3d.particles.ParticleControllerComponent = {
     return new ModelInstanceRenderer(batch)
   }
   @java.lang.Override
-  def isCompatible(batch: com.badlogic.gdx.graphics.g3d.particles.batches.ParticleBatch[?]): scala.Boolean = {
+  override def isCompatible(batch: com.badlogic.gdx.graphics.g3d.particles.batches.ParticleBatch[?]): scala.Boolean = {
     return batch.isInstanceOf[com.badlogic.gdx.graphics.g3d.particles.batches.ModelInstanceParticleBatch]
   }
 }

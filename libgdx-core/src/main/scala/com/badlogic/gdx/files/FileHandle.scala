@@ -535,20 +535,20 @@ class FileHandle {
   def lastModified(): scala.Long = {
     return this.file().lastModified()
   }
-  def equals(obj: java.lang.Object): scala.Boolean = {
+  override def equals(obj: java.lang.Object): scala.Boolean = {
     if (!obj.isInstanceOf[FileHandle]) {
       return false
     } else ()
     val other: FileHandle = obj.asInstanceOf[FileHandle].asInstanceOf[FileHandle]
     return (this.type$field == other.type$field) && this.path().equals(other.path())
   }
-  def hashCode(): scala.Int = {
+  override def hashCode(): scala.Int = {
     var hash: scala.Int = 1
     hash = (hash * 37) + this.type$field.hashCode()
     hash = (hash * 67) + this.path().hashCode()
     return hash
   }
-  def toString(): java.lang.String = {
+  override def toString(): java.lang.String = {
     return this.file$field.getPath().replace('\\', '/')
   }
 }

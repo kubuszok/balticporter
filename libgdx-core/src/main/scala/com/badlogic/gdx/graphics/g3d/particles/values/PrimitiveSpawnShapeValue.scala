@@ -21,7 +21,7 @@ abstract class PrimitiveSpawnShapeValue extends com.badlogic.gdx.graphics.g3d.pa
   this.spawnHeightValue = new com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue()
   this.spawnDepthValue = new com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue()
   @java.lang.Override
-  def setActive(active: scala.Boolean): scala.Unit = {
+  override def setActive(active: scala.Boolean): scala.Unit = {
     super.setActive(active)
     this.spawnWidthValue.setActive(true)
     this.spawnHeightValue.setActive(true)
@@ -48,7 +48,7 @@ abstract class PrimitiveSpawnShapeValue extends com.badlogic.gdx.graphics.g3d.pa
     this.spawnDepthValue.setHigh(depth)
   }
   @java.lang.Override
-  def start(): scala.Unit = {
+  override def start(): scala.Unit = {
     this.spawnWidth = this.spawnWidthValue.newLowValue()
     this.spawnWidthDiff = this.spawnWidthValue.newHighValue()
     if (!this.spawnWidthValue.isRelative()) {
@@ -66,7 +66,7 @@ abstract class PrimitiveSpawnShapeValue extends com.badlogic.gdx.graphics.g3d.pa
     } else ()
   }
   @java.lang.Override
-  def load(value: com.badlogic.gdx.graphics.g3d.particles.values.ParticleValue): scala.Unit = {
+  override def load(value: com.badlogic.gdx.graphics.g3d.particles.values.ParticleValue): scala.Unit = {
     super.load(value)
     val shape: PrimitiveSpawnShapeValue = value.asInstanceOf[PrimitiveSpawnShapeValue]
     this.edges = shape.edges
@@ -75,7 +75,7 @@ abstract class PrimitiveSpawnShapeValue extends com.badlogic.gdx.graphics.g3d.pa
     this.spawnDepthValue.load(shape.spawnDepthValue)
   }
   @java.lang.Override
-  def write(json: com.badlogic.gdx.utils.Json): scala.Unit = {
+  override def write(json: com.badlogic.gdx.utils.Json): scala.Unit = {
     super.write(json)
     json.writeValue("spawnWidthValue", this.spawnWidthValue)
     json.writeValue("spawnHeightValue", this.spawnHeightValue)
@@ -83,7 +83,7 @@ abstract class PrimitiveSpawnShapeValue extends com.badlogic.gdx.graphics.g3d.pa
     json.writeValue("edges", this.edges.asInstanceOf[java.lang.Boolean])
   }
   @java.lang.Override
-  def read(json: com.badlogic.gdx.utils.Json, jsonData: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
+  override def read(json: com.badlogic.gdx.utils.Json, jsonData: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
     super.read(json, jsonData)
     this.spawnWidthValue = json.readValue("spawnWidthValue", classOf[com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue], jsonData)
     this.spawnHeightValue = json.readValue("spawnHeightValue", classOf[com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue], jsonData)

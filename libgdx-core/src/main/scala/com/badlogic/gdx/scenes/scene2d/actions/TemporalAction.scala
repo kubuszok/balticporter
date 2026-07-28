@@ -16,7 +16,7 @@ abstract class TemporalAction extends com.badlogic.gdx.scenes.scene2d.Action wit
     this.duration = duration
     this.interpolation = interpolation
   }
-  def act(delta: scala.Float): scala.Boolean = {
+  override def act(delta: scala.Float): scala.Boolean = {
     if (this.complete) {
       return true
     } else ()
@@ -49,15 +49,15 @@ abstract class TemporalAction extends com.badlogic.gdx.scenes.scene2d.Action wit
     ()
   }
   def update(percent: scala.Float): scala.Unit
-  def finish(): scala.Unit = {
+  override def finish(): scala.Unit = {
     this.time = this.duration
   }
-  def restart(): scala.Unit = {
+  override def restart(): scala.Unit = {
     this.time = 0
     this.began = false
     this.complete = false
   }
-  def reset(): scala.Unit = {
+  override def reset(): scala.Unit = {
     super.reset()
     this.reverse = false
     this.interpolation = null

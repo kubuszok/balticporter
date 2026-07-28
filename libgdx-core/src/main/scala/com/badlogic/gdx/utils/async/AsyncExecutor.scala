@@ -25,7 +25,7 @@ class AsyncExecutor(maxConcurrent: scala.Int, name: java.lang.String) extends co
     })).asInstanceOf[com.badlogic.gdx.utils.async.AsyncResult[T]]
   }
   @java.lang.Override
-  def dispose(): scala.Unit = {
+  override def dispose(): scala.Unit = {
     this.executor.shutdown()
     try {
       this.executor.awaitTermination(java.lang.Long.MAX_VALUE, java.util.concurrent.TimeUnit.SECONDS)

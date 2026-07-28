@@ -214,7 +214,7 @@ class Bits {
     return true
   }
   @java.lang.Override
-  def hashCode(): scala.Int = {
+  override def hashCode(): scala.Int = {
     val word: scala.Int = this.length() >>> 6
     var hash: scala.Int = 0;
     { var i: scala.Int = 0; while (word >= i) { {
@@ -223,7 +223,7 @@ class Bits {
     return hash
   }
   @java.lang.Override
-  def equals(obj: java.lang.Object): scala.Boolean = {
+  override def equals(obj: java.lang.Object): scala.Boolean = {
     if (this == obj) {
       return true
     } else ()

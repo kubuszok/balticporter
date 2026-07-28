@@ -25,7 +25,7 @@ class Container[T <: com.badlogic.gdx.scenes.scene2d.Actor] extends com.badlogic
   }
   this.setTouchable(com.badlogic.gdx.scenes.scene2d.Touchable.childrenOnly)
   this.setTransform(false)
-  def draw(batch: com.badlogic.gdx.graphics.g2d.Batch, parentAlpha: scala.Float): scala.Unit = {
+  override def draw(batch: com.badlogic.gdx.graphics.g2d.Batch, parentAlpha: scala.Float): scala.Unit = {
     this.validate()
     if (this.isTransform()) {
       this.applyTransform(batch, this.computeTransform())
@@ -81,7 +81,7 @@ class Container[T <: com.badlogic.gdx.scenes.scene2d.Actor] extends com.badlogic
   def getBackground(): com.badlogic.gdx.scenes.scene2d.utils.Drawable = {
     return this.background$field
   }
-  def layout(): scala.Unit = {
+  override def layout(): scala.Unit = {
     if (this.actor == null) {
       return
     } else ()
@@ -146,7 +146,7 @@ class Container[T <: com.badlogic.gdx.scenes.scene2d.Actor] extends com.badlogic
       this.actor.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Layout].validate()
     } else ()
   }
-  def setCullingArea(cullingArea$arg: com.badlogic.gdx.math.Rectangle): scala.Unit = {
+  override def setCullingArea(cullingArea$arg: com.badlogic.gdx.math.Rectangle): scala.Unit = {
     var cullingArea: com.badlogic.gdx.math.Rectangle = cullingArea$arg
     super.setCullingArea(cullingArea)
     if (this.actor.isInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Cullable]) {
@@ -183,22 +183,22 @@ class Container[T <: com.badlogic.gdx.scenes.scene2d.Actor] extends com.badlogic
     return this.actor
   }
   @java.lang.Deprecated
-  def addActor(actor: com.badlogic.gdx.scenes.scene2d.Actor): scala.Unit = {
+  override def addActor(actor: com.badlogic.gdx.scenes.scene2d.Actor): scala.Unit = {
     throw new java.lang.UnsupportedOperationException("Use Container#setActor.")
   }
   @java.lang.Deprecated
-  def addActorAt(index: scala.Int, actor: com.badlogic.gdx.scenes.scene2d.Actor): scala.Unit = {
+  override def addActorAt(index: scala.Int, actor: com.badlogic.gdx.scenes.scene2d.Actor): scala.Unit = {
     throw new java.lang.UnsupportedOperationException("Use Container#setActor.")
   }
   @java.lang.Deprecated
-  def addActorBefore(actorBefore: com.badlogic.gdx.scenes.scene2d.Actor, actor: com.badlogic.gdx.scenes.scene2d.Actor): scala.Unit = {
+  override def addActorBefore(actorBefore: com.badlogic.gdx.scenes.scene2d.Actor, actor: com.badlogic.gdx.scenes.scene2d.Actor): scala.Unit = {
     throw new java.lang.UnsupportedOperationException("Use Container#setActor.")
   }
   @java.lang.Deprecated
-  def addActorAfter(actorAfter: com.badlogic.gdx.scenes.scene2d.Actor, actor: com.badlogic.gdx.scenes.scene2d.Actor): scala.Unit = {
+  override def addActorAfter(actorAfter: com.badlogic.gdx.scenes.scene2d.Actor, actor: com.badlogic.gdx.scenes.scene2d.Actor): scala.Unit = {
     throw new java.lang.UnsupportedOperationException("Use Container#setActor.")
   }
-  def removeActor(actor: com.badlogic.gdx.scenes.scene2d.Actor): scala.Boolean = {
+  override def removeActor(actor: com.badlogic.gdx.scenes.scene2d.Actor): scala.Boolean = {
     if (actor == null) {
       throw new java.lang.IllegalArgumentException("actor cannot be null.")
     } else ()
@@ -208,7 +208,7 @@ class Container[T <: com.badlogic.gdx.scenes.scene2d.Actor] extends com.badlogic
     this.setActor(null.asInstanceOf[T])
     return true
   }
-  def removeActor(actor: com.badlogic.gdx.scenes.scene2d.Actor, unfocus: scala.Boolean): scala.Boolean = {
+  override def removeActor(actor: com.badlogic.gdx.scenes.scene2d.Actor, unfocus: scala.Boolean): scala.Boolean = {
     if (actor == null) {
       throw new java.lang.IllegalArgumentException("actor cannot be null.")
     } else ()
@@ -218,7 +218,7 @@ class Container[T <: com.badlogic.gdx.scenes.scene2d.Actor] extends com.badlogic
     this.actor = null.asInstanceOf[T]
     return super.removeActor(actor, unfocus)
   }
-  def removeActorAt(index: scala.Int, unfocus: scala.Boolean): com.badlogic.gdx.scenes.scene2d.Actor = {
+  override def removeActorAt(index: scala.Int, unfocus: scala.Boolean): com.badlogic.gdx.scenes.scene2d.Actor = {
     var actor: com.badlogic.gdx.scenes.scene2d.Actor = super.removeActorAt(index, unfocus)
     if (actor == this.actor) {
       this.actor = null.asInstanceOf[T]
@@ -577,19 +577,19 @@ class Container[T <: com.badlogic.gdx.scenes.scene2d.Actor] extends com.badlogic
     this.align$field = this.align$field & (~com.badlogic.gdx.utils.Align.left)
     return this
   }
-  def getMinWidth(): scala.Float = {
+  override def getMinWidth(): scala.Float = {
     return (this.minWidth$field.get(this.actor) + this.padLeft$field.get(this)) + this.padRight$field.get(this)
   }
   def getMinHeightValue(): com.badlogic.gdx.scenes.scene2d.ui.Value = {
     return this.minHeight$field
   }
-  def getMinHeight(): scala.Float = {
+  override def getMinHeight(): scala.Float = {
     return (this.minHeight$field.get(this.actor) + this.padTop$field.get(this)) + this.padBottom$field.get(this)
   }
   def getPrefWidthValue(): com.badlogic.gdx.scenes.scene2d.ui.Value = {
     return this.prefWidth$field
   }
-  def getPrefWidth(): scala.Float = {
+  override def getPrefWidth(): scala.Float = {
     var v: scala.Float = this.prefWidth$field.get(this.actor)
     if (this.background$field != null) {
       v = java.lang.Math.max(v, this.background$field.getMinWidth())
@@ -599,7 +599,7 @@ class Container[T <: com.badlogic.gdx.scenes.scene2d.Actor] extends com.badlogic
   def getPrefHeightValue(): com.badlogic.gdx.scenes.scene2d.ui.Value = {
     return this.prefHeight$field
   }
-  def getPrefHeight(): scala.Float = {
+  override def getPrefHeight(): scala.Float = {
     var v: scala.Float = this.prefHeight$field.get(this.actor)
     if (this.background$field != null) {
       v = java.lang.Math.max(v, this.background$field.getMinHeight())
@@ -609,7 +609,7 @@ class Container[T <: com.badlogic.gdx.scenes.scene2d.Actor] extends com.badlogic
   def getMaxWidthValue(): com.badlogic.gdx.scenes.scene2d.ui.Value = {
     return this.maxWidth$field
   }
-  def getMaxWidth(): scala.Float = {
+  override def getMaxWidth(): scala.Float = {
     var v: scala.Float = this.maxWidth$field.get(this.actor)
     if (v > 0) {
       v = v + (this.padLeft$field.get(this) + this.padRight$field.get(this))
@@ -619,7 +619,7 @@ class Container[T <: com.badlogic.gdx.scenes.scene2d.Actor] extends com.badlogic
   def getMaxHeightValue(): com.badlogic.gdx.scenes.scene2d.ui.Value = {
     return this.maxHeight$field
   }
-  def getMaxHeight(): scala.Float = {
+  override def getMaxHeight(): scala.Float = {
     var v: scala.Float = this.maxHeight$field.get(this.actor)
     if (v > 0) {
       v = v + (this.padTop$field.get(this) + this.padBottom$field.get(this))
@@ -685,7 +685,7 @@ class Container[T <: com.badlogic.gdx.scenes.scene2d.Actor] extends com.badlogic
     return this.clip$field
   }
   @com.badlogic.gdx.utils.Null
-  def hit(x: scala.Float, y: scala.Float, touchable: scala.Boolean): com.badlogic.gdx.scenes.scene2d.Actor = {
+  override def hit(x: scala.Float, y: scala.Float, touchable: scala.Boolean): com.badlogic.gdx.scenes.scene2d.Actor = {
     if (this.clip$field) {
       if (touchable && (this.getTouchable() == com.badlogic.gdx.scenes.scene2d.Touchable.disabled)) {
         return null
@@ -696,7 +696,7 @@ class Container[T <: com.badlogic.gdx.scenes.scene2d.Actor] extends com.badlogic
     } else ()
     return super.hit(x, y, touchable)
   }
-  def drawDebug(shapes: com.badlogic.gdx.graphics.glutils.ShapeRenderer): scala.Unit = {
+  override def drawDebug(shapes: com.badlogic.gdx.graphics.glutils.ShapeRenderer): scala.Unit = {
     this.validate()
     if (this.isTransform()) {
       this.applyTransform(shapes, this.computeTransform())

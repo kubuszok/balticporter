@@ -22,7 +22,7 @@ class TextTooltip(text: java.lang.String, manager$p: com.badlogic.gdx.scenes.sce
   def newLabel(text: java.lang.String, style: com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle): com.badlogic.gdx.scenes.scene2d.ui.Label = {
     return new com.badlogic.gdx.scenes.scene2d.ui.Label(text, style)
   }
-  def setStyle(style: com.badlogic.gdx.scenes.scene2d.ui.TextTooltip.TextTooltipStyle): scala.Unit = {
+  override def setStyle(style: com.badlogic.gdx.scenes.scene2d.ui.TextTooltip.TextTooltipStyle): scala.Unit = {
     if (style == null) {
       throw new java.lang.NullPointerException("style cannot be null")
     } else ()
@@ -35,7 +35,7 @@ class TextTooltip(text: java.lang.String, manager$p: com.badlogic.gdx.scenes.sce
     label.setStyle(style.label)
     label.setWrap(wrap)
   }
-  def getStyle(): com.badlogic.gdx.scenes.scene2d.ui.TextTooltip.TextTooltipStyle = {
+  override def getStyle(): com.badlogic.gdx.scenes.scene2d.ui.TextTooltip.TextTooltipStyle = {
     return this.style
   }
 }

@@ -1,7 +1,7 @@
 package com.badlogic.gdx.scenes.scene2d
 
 class InputListener extends com.badlogic.gdx.scenes.scene2d.EventListener {
-  def handle(e: com.badlogic.gdx.scenes.scene2d.Event): scala.Boolean = {
+  override def handle(e: com.badlogic.gdx.scenes.scene2d.Event): scala.Boolean = {
     if (!e.isInstanceOf[com.badlogic.gdx.scenes.scene2d.InputEvent]) {
       return false
     } else ()

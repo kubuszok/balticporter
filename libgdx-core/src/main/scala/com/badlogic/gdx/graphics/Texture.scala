@@ -54,7 +54,7 @@ class Texture extends com.badlogic.gdx.graphics.GLTexture(0, 0) {
     com.badlogic.gdx.Gdx.gl.glBindTexture(glTarget, 0)
   }
   @java.lang.Override
-  def reload(): scala.Unit = {
+  override def reload(): scala.Unit = {
     if (!this.isManaged()) {
       throw new com.badlogic.gdx.utils.GdxRuntimeException("Tried to reload unmanaged Texture")
     } else ()
@@ -69,24 +69,24 @@ class Texture extends com.badlogic.gdx.graphics.GLTexture(0, 0) {
     com.badlogic.gdx.Gdx.gl.glTexSubImage2D(glTarget, 0, x, y, pixmap.getWidth(), pixmap.getHeight(), pixmap.getGLFormat(), pixmap.getGLType(), pixmap.getPixels())
   }
   @java.lang.Override
-  def getWidth(): scala.Int = {
+  override def getWidth(): scala.Int = {
     return this.data.getWidth()
   }
   @java.lang.Override
-  def getHeight(): scala.Int = {
+  override def getHeight(): scala.Int = {
     return this.data.getHeight()
   }
   @java.lang.Override
-  def getDepth(): scala.Int = {
+  override def getDepth(): scala.Int = {
     return 0
   }
   def getTextureData(): com.badlogic.gdx.graphics.TextureData = {
     return this.data
   }
-  def isManaged(): scala.Boolean = {
+  override def isManaged(): scala.Boolean = {
     return this.data.isManaged()
   }
-  def dispose(): scala.Unit = {
+  override def dispose(): scala.Unit = {
     if (glHandle == 0) {
       return
     } else ()
@@ -97,7 +97,7 @@ class Texture extends com.badlogic.gdx.graphics.GLTexture(0, 0) {
       } else ()
     } else ()
   }
-  def toString(): java.lang.String = {
+  override def toString(): java.lang.String = {
     if (this.data.isInstanceOf[com.badlogic.gdx.graphics.glutils.FileTextureData]) {
       return this.data.toString()
     } else ()

@@ -32,7 +32,7 @@ class DragScrollListener(scroll$p: com.badlogic.gdx.scenes.scene2d.ui.ScrollPane
   def getScrollPixels(): scala.Float = {
     return this.interpolation.apply(this.minSpeed, this.maxSpeed, java.lang.Math.min(1, (java.lang.System.currentTimeMillis() - this.startTime) / this.rampTime.asInstanceOf[scala.Float]))
   }
-  def drag(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float, pointer: scala.Int): scala.Unit = {
+  override def drag(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float, pointer: scala.Int): scala.Unit = {
     event.getListenerActor().localToActorCoordinates(this.scroll$field, DragScrollListener.tmpCoords.set(x, y))
     if (this.isAbove(DragScrollListener.tmpCoords.y)) {
       this.scrollDown.cancel()
@@ -54,7 +54,7 @@ class DragScrollListener(scroll$p: com.badlogic.gdx.scenes.scene2d.ui.ScrollPane
     this.scrollUp.cancel()
     this.scrollDown.cancel()
   }
-  def dragStop(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float, pointer: scala.Int): scala.Unit = {
+  override def dragStop(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float, pointer: scala.Int): scala.Unit = {
     this.scrollUp.cancel()
     this.scrollDown.cancel()
   }

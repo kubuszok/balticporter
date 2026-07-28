@@ -24,7 +24,7 @@ class SerializationException extends java.lang.RuntimeException {
     } else ()
     return this.causedBy(cause, `type`.asInstanceOf[java.lang.Class[?]])
   }
-  def getMessage(): java.lang.String = {
+  override def getMessage(): java.lang.String = {
     if (this.trace == null) {
       return super.getMessage()
     } else ()

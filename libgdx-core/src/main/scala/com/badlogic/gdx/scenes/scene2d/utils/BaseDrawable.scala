@@ -20,43 +20,43 @@ class BaseDrawable extends com.badlogic.gdx.scenes.scene2d.utils.Drawable {
     this.minWidth = drawable.getMinWidth()
     this.minHeight = drawable.getMinHeight()
   }
-  def draw(batch: com.badlogic.gdx.graphics.g2d.Batch, x: scala.Float, y: scala.Float, width: scala.Float, height: scala.Float): scala.Unit = {
+  override def draw(batch: com.badlogic.gdx.graphics.g2d.Batch, x: scala.Float, y: scala.Float, width: scala.Float, height: scala.Float): scala.Unit = {
     ()
   }
-  def getLeftWidth(): scala.Float = {
+  override def getLeftWidth(): scala.Float = {
     return this.leftWidth
   }
-  def setLeftWidth(leftWidth: scala.Float): scala.Unit = {
+  override def setLeftWidth(leftWidth: scala.Float): scala.Unit = {
     this.leftWidth = leftWidth
   }
-  def getRightWidth(): scala.Float = {
+  override def getRightWidth(): scala.Float = {
     return this.rightWidth
   }
-  def setRightWidth(rightWidth: scala.Float): scala.Unit = {
+  override def setRightWidth(rightWidth: scala.Float): scala.Unit = {
     this.rightWidth = rightWidth
   }
-  def getTopHeight(): scala.Float = {
+  override def getTopHeight(): scala.Float = {
     return this.topHeight
   }
-  def setTopHeight(topHeight: scala.Float): scala.Unit = {
+  override def setTopHeight(topHeight: scala.Float): scala.Unit = {
     this.topHeight = topHeight
   }
-  def getBottomHeight(): scala.Float = {
+  override def getBottomHeight(): scala.Float = {
     return this.bottomHeight
   }
-  def setBottomHeight(bottomHeight: scala.Float): scala.Unit = {
+  override def setBottomHeight(bottomHeight: scala.Float): scala.Unit = {
     this.bottomHeight = bottomHeight
   }
-  def getMinWidth(): scala.Float = {
+  override def getMinWidth(): scala.Float = {
     return this.minWidth
   }
-  def setMinWidth(minWidth: scala.Float): scala.Unit = {
+  override def setMinWidth(minWidth: scala.Float): scala.Unit = {
     this.minWidth = minWidth
   }
-  def getMinHeight(): scala.Float = {
+  override def getMinHeight(): scala.Float = {
     return this.minHeight
   }
-  def setMinHeight(minHeight: scala.Float): scala.Unit = {
+  override def setMinHeight(minHeight: scala.Float): scala.Unit = {
     this.minHeight = minHeight
   }
   @com.badlogic.gdx.utils.Null
@@ -67,7 +67,7 @@ class BaseDrawable extends com.badlogic.gdx.scenes.scene2d.utils.Drawable {
     this.name = name
   }
   @com.badlogic.gdx.utils.Null
-  def toString(): java.lang.String = {
+  override def toString(): java.lang.String = {
     if (this.name == null) {
       return this.getClass().getSimpleName()
     } else ()

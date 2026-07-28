@@ -44,7 +44,7 @@ class Table extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup {
     cell.setTable(this)
     return cell.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]]
   }
-  def draw(batch: com.badlogic.gdx.graphics.g2d.Batch, parentAlpha: scala.Float): scala.Unit = {
+  override def draw(batch: com.badlogic.gdx.graphics.g2d.Batch, parentAlpha: scala.Float): scala.Unit = {
     this.validate()
     if (this.isTransform()) {
       this.applyTransform(batch, this.computeTransform())
@@ -115,7 +115,7 @@ class Table extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup {
     return this.background$field
   }
   @com.badlogic.gdx.utils.Null
-  def hit(x: scala.Float, y: scala.Float, touchable: scala.Boolean): com.badlogic.gdx.scenes.scene2d.Actor = {
+  override def hit(x: scala.Float, y: scala.Float, touchable: scala.Boolean): com.badlogic.gdx.scenes.scene2d.Actor = {
     if (this.clip$field) {
       if (touchable && (this.getTouchable() == com.badlogic.gdx.scenes.scene2d.Touchable.disabled)) {
         return null
@@ -142,7 +142,7 @@ class Table extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup {
   def getClip(): scala.Boolean = {
     return this.clip$field
   }
-  def invalidate(): scala.Unit = {
+  override def invalidate(): scala.Unit = {
     this.sizeInvalid = true
     super.invalidate()
   }
@@ -233,10 +233,10 @@ class Table extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup {
     } else ()
     return this.add(stack)
   }
-  def removeActor(actor: com.badlogic.gdx.scenes.scene2d.Actor): scala.Boolean = {
+  override def removeActor(actor: com.badlogic.gdx.scenes.scene2d.Actor): scala.Boolean = {
     return this.removeActor(actor, true)
   }
-  def removeActor(actor: com.badlogic.gdx.scenes.scene2d.Actor, unfocus: scala.Boolean): scala.Boolean = {
+  override def removeActor(actor: com.badlogic.gdx.scenes.scene2d.Actor, unfocus: scala.Boolean): scala.Boolean = {
     if (!super.removeActor(actor, unfocus)) {
       return false
     } else ()
@@ -246,7 +246,7 @@ class Table extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup {
     } else ()
     return true
   }
-  def removeActorAt(index: scala.Int, unfocus: scala.Boolean): com.badlogic.gdx.scenes.scene2d.Actor = {
+  override def removeActorAt(index: scala.Int, unfocus: scala.Boolean): com.badlogic.gdx.scenes.scene2d.Actor = {
     var actor: com.badlogic.gdx.scenes.scene2d.Actor = super.removeActorAt(index, unfocus)
     val cell: com.badlogic.gdx.scenes.scene2d.ui.Cell[?] = this.getCell(actor).asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]]
     if (cell != null) {
@@ -254,7 +254,7 @@ class Table extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup {
     } else ()
     return actor
   }
-  def clearChildren(unfocus: scala.Boolean): scala.Unit = {
+  override def clearChildren(unfocus: scala.Boolean): scala.Unit = {
     val cells: scala.Array[java.lang.Object] = this.cells.items.asInstanceOf[scala.Array[java.lang.Object]];
     { var i: scala.Int = this.cells.size - 1; while (i >= 0) { {
       val cell: com.badlogic.gdx.scenes.scene2d.ui.Cell[?] = cells(i).asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]].asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]]
@@ -356,7 +356,7 @@ class Table extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup {
   def getCells(): com.badlogic.gdx.utils.Array[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]] = {
     return this.cells.asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]]]
   }
-  def getPrefWidth(): scala.Float = {
+  override def getPrefWidth(): scala.Float = {
     if (this.sizeInvalid) {
       this.computeSize()
     } else ()
@@ -366,7 +366,7 @@ class Table extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup {
     } else ()
     return width
   }
-  def getPrefHeight(): scala.Float = {
+  override def getPrefHeight(): scala.Float = {
     if (this.sizeInvalid) {
       this.computeSize()
     } else ()
@@ -376,13 +376,13 @@ class Table extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup {
     } else ()
     return height
   }
-  def getMinWidth(): scala.Float = {
+  override def getMinWidth(): scala.Float = {
     if (this.sizeInvalid) {
       this.computeSize()
     } else ()
     return this.tableMinWidth
   }
-  def getMinHeight(): scala.Float = {
+  override def getMinHeight(): scala.Float = {
     if (this.sizeInvalid) {
       this.computeSize()
     } else ()
@@ -514,14 +514,14 @@ class Table extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup {
     this.align$field = this.align$field & (~com.badlogic.gdx.utils.Align.left)
     return this
   }
-  def setDebug(enabled: scala.Boolean): scala.Unit = {
+  override def setDebug(enabled: scala.Boolean): scala.Unit = {
     this.debug(if (enabled) com.badlogic.gdx.scenes.scene2d.ui.Table.Debug.all else com.badlogic.gdx.scenes.scene2d.ui.Table.Debug.none)
   }
-  def debug(): Table = {
+  override def debug(): Table = {
     super.debug()
     return this
   }
-  def debugAll(): Table = {
+  override def debugAll(): Table = {
     super.debugAll()
     return this
   }
@@ -868,7 +868,7 @@ class Table extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup {
     this.tablePrefWidth = java.lang.Math.max(this.tableMinWidth, this.tablePrefWidth)
     this.tablePrefHeight = java.lang.Math.max(this.tableMinHeight, this.tablePrefHeight)
   }
-  def layout(): scala.Unit = {
+  override def layout(): scala.Unit = {
     if (this.sizeInvalid) {
       this.computeSize()
     } else ()
@@ -1169,7 +1169,7 @@ class Table extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup {
     rect.set(x, y, w, h)
     this.debugRects.add(rect)
   }
-  def drawDebug(shapes: com.badlogic.gdx.graphics.glutils.ShapeRenderer): scala.Unit = {
+  override def drawDebug(shapes: com.badlogic.gdx.graphics.glutils.ShapeRenderer): scala.Unit = {
     if (this.isTransform()) {
       this.applyTransform(shapes, this.computeTransform())
       this.drawDebugRects(shapes)
@@ -1198,7 +1198,7 @@ class Table extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup {
       super.drawDebug(shapes)
     }
   }
-  def drawDebugBounds(shapes: com.badlogic.gdx.graphics.glutils.ShapeRenderer): scala.Unit = {
+  override def drawDebugBounds(shapes: com.badlogic.gdx.graphics.glutils.ShapeRenderer): scala.Unit = {
     ()
   }
   private def drawDebugRects(shapes: com.badlogic.gdx.graphics.glutils.ShapeRenderer): scala.Unit = {

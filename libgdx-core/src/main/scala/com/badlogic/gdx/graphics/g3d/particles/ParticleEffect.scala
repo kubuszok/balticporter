@@ -100,7 +100,7 @@ class ParticleEffect extends com.badlogic.gdx.utils.Disposable with com.badlogic
     }; i = i + 1 } }
     return null
   }
-  def dispose(): scala.Unit = {
+  override def dispose(): scala.Unit = {
     { var i: scala.Int = 0; val n: scala.Int = this.controllers.size; while (i < n) { {
       this.controllers.get(i).dispose()
     }; i = i + 1 } }
@@ -128,12 +128,12 @@ class ParticleEffect extends com.badlogic.gdx.utils.Disposable with com.badlogic
   def copy(): ParticleEffect = {
     return new ParticleEffect(this)
   }
-  def save(assetManager: com.badlogic.gdx.assets.AssetManager, data: com.badlogic.gdx.graphics.g3d.particles.ResourceData[?]): scala.Unit = {
+  override def save(assetManager: com.badlogic.gdx.assets.AssetManager, data: com.badlogic.gdx.graphics.g3d.particles.ResourceData[?]): scala.Unit = {
     for (controller <- this.controllers) {
       controller.save(assetManager, data.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ResourceData[?]])
     }
   }
-  def load(assetManager: com.badlogic.gdx.assets.AssetManager, data: com.badlogic.gdx.graphics.g3d.particles.ResourceData[?]): scala.Unit = {
+  override def load(assetManager: com.badlogic.gdx.assets.AssetManager, data: com.badlogic.gdx.graphics.g3d.particles.ResourceData[?]): scala.Unit = {
     val i: scala.Int = 0
     for (controller <- this.controllers) {
       controller.load(assetManager, data.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ResourceData[?]])

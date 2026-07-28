@@ -510,7 +510,7 @@ class AssetManager(resolver$p: com.badlogic.gdx.assets.loaders.FileHandleResolve
     this.listener = listener
   }
   @java.lang.Override
-  def dispose(): scala.Unit = {
+  override def dispose(): scala.Unit = {
     this.log.debug("Disposing.")
     this.clear()
     this.executor.dispose()

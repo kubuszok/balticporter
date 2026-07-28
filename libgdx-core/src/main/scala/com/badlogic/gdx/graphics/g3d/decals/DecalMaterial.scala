@@ -20,7 +20,7 @@ class DecalMaterial {
     return this.dstBlendFactor
   }
   @java.lang.Override
-  def equals(o: java.lang.Object): scala.Boolean = {
+  override def equals(o: java.lang.Object): scala.Boolean = {
     if (o == null) {
       return false
     } else ()
@@ -28,7 +28,7 @@ class DecalMaterial {
     return ((this.dstBlendFactor == material.dstBlendFactor) && (this.srcBlendFactor == material.srcBlendFactor)) && (this.textureRegion.getTexture() == material.textureRegion.getTexture())
   }
   @java.lang.Override
-  def hashCode(): scala.Int = {
+  override def hashCode(): scala.Int = {
     var result: scala.Int = if (this.textureRegion.getTexture() != null) this.textureRegion.getTexture().hashCode() else 0
     result = (31 * result) + this.srcBlendFactor
     result = (31 * result) + this.dstBlendFactor

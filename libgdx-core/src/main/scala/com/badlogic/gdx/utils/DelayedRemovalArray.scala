@@ -84,7 +84,7 @@ class DelayedRemovalArray[T <: java.lang.Object] extends com.badlogic.gdx.utils.
     }; i = i + 1 } }
     this.remove$field.add(index)
   }
-  def removeValue(value: T, identity: scala.Boolean): scala.Boolean = {
+  override def removeValue(value: T, identity: scala.Boolean): scala.Boolean = {
     if (this.iterating > 0) {
       val index: scala.Int = this.indexOf(value, identity)
       if (index == (-1)) {
@@ -95,14 +95,14 @@ class DelayedRemovalArray[T <: java.lang.Object] extends com.badlogic.gdx.utils.
     } else ()
     return super.removeValue(value, identity)
   }
-  def removeIndex(index: scala.Int): T = {
+  override def removeIndex(index: scala.Int): T = {
     if (this.iterating > 0) {
       this.remove(index)
       return this.get(index).asInstanceOf[T]
     } else ()
     return super.removeIndex(index).asInstanceOf[T]
   }
-  def removeRange(start: scala.Int, `end`: scala.Int): scala.Unit = {
+  override def removeRange(start: scala.Int, `end`: scala.Int): scala.Unit = {
     if (this.iterating > 0) {
       { var i: scala.Int = `end`; while (i >= start) { {
         this.remove(i)
@@ -111,86 +111,86 @@ class DelayedRemovalArray[T <: java.lang.Object] extends com.badlogic.gdx.utils.
       super.removeRange(start, `end`)
     }
   }
-  def clear(): scala.Unit = {
+  override def clear(): scala.Unit = {
     if (this.iterating > 0) {
       this.clear$field = size
       return
     } else ()
     super.clear()
   }
-  def set(index: scala.Int, value: T): scala.Unit = {
+  override def set(index: scala.Int, value: T): scala.Unit = {
     if (this.iterating > 0) {
       throw new java.lang.IllegalStateException("Invalid between begin/end.")
     } else ()
     super.set(index, value)
   }
-  def insert(index: scala.Int, value: T): scala.Unit = {
+  override def insert(index: scala.Int, value: T): scala.Unit = {
     if (this.iterating > 0) {
       throw new java.lang.IllegalStateException("Invalid between begin/end.")
     } else ()
     super.insert(index, value)
   }
-  def insertRange(index: scala.Int, count: scala.Int): scala.Unit = {
+  override def insertRange(index: scala.Int, count: scala.Int): scala.Unit = {
     if (this.iterating > 0) {
       throw new java.lang.IllegalStateException("Invalid between begin/end.")
     } else ()
     super.insertRange(index, count)
   }
-  def swap(first: scala.Int, second: scala.Int): scala.Unit = {
+  override def swap(first: scala.Int, second: scala.Int): scala.Unit = {
     if (this.iterating > 0) {
       throw new java.lang.IllegalStateException("Invalid between begin/end.")
     } else ()
     super.swap(first, second)
   }
-  def replaceFirst(value: T, identity: scala.Boolean, replacement: T): scala.Boolean = {
+  override def replaceFirst(value: T, identity: scala.Boolean, replacement: T): scala.Boolean = {
     if (this.iterating > 0) {
       throw new java.lang.IllegalStateException("Invalid between begin/end.")
     } else ()
     return super.replaceFirst(value, identity, replacement)
   }
-  def replaceAll(value: T, identity: scala.Boolean, replacement: T): scala.Int = {
+  override def replaceAll(value: T, identity: scala.Boolean, replacement: T): scala.Int = {
     if (this.iterating > 0) {
       throw new java.lang.IllegalStateException("Invalid between begin/end.")
     } else ()
     return super.replaceAll(value, identity, replacement)
   }
-  def pop(): T = {
+  override def pop(): T = {
     if (this.iterating > 0) {
       throw new java.lang.IllegalStateException("Invalid between begin/end.")
     } else ()
     return super.pop().asInstanceOf[T]
   }
-  def sort(): scala.Unit = {
+  override def sort(): scala.Unit = {
     if (this.iterating > 0) {
       throw new java.lang.IllegalStateException("Invalid between begin/end.")
     } else ()
     super.sort()
   }
-  def sort(comparator: java.util.Comparator[? >: T]): scala.Unit = {
+  override def sort(comparator: java.util.Comparator[? >: T]): scala.Unit = {
     if (this.iterating > 0) {
       throw new java.lang.IllegalStateException("Invalid between begin/end.")
     } else ()
     super.sort(comparator)
   }
-  def reverse(): scala.Unit = {
+  override def reverse(): scala.Unit = {
     if (this.iterating > 0) {
       throw new java.lang.IllegalStateException("Invalid between begin/end.")
     } else ()
     super.reverse()
   }
-  def shuffle(): scala.Unit = {
+  override def shuffle(): scala.Unit = {
     if (this.iterating > 0) {
       throw new java.lang.IllegalStateException("Invalid between begin/end.")
     } else ()
     super.shuffle()
   }
-  def truncate(newSize: scala.Int): scala.Unit = {
+  override def truncate(newSize: scala.Int): scala.Unit = {
     if (this.iterating > 0) {
       throw new java.lang.IllegalStateException("Invalid between begin/end.")
     } else ()
     super.truncate(newSize)
   }
-  def setSize(newSize: scala.Int): scala.Array[T] = {
+  override def setSize(newSize: scala.Int): scala.Array[T] = {
     if (this.iterating > 0) {
       throw new java.lang.IllegalStateException("Invalid between begin/end.")
     } else ()
@@ -199,7 +199,7 @@ class DelayedRemovalArray[T <: java.lang.Object] extends com.badlogic.gdx.utils.
 }
 object DelayedRemovalArray {
   export com.badlogic.gdx.utils.Array.{`with` => _, *}
-  def `with`[T <: java.lang.Object](array: scala.Array[T]): DelayedRemovalArray[T] = {
+  override def `with`[T <: java.lang.Object](array: scala.Array[T]): DelayedRemovalArray[T] = {
     return new DelayedRemovalArray(array).asInstanceOf[DelayedRemovalArray[T]]
   }
 }

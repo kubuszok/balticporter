@@ -397,7 +397,7 @@ class GlyphLayout extends com.badlogic.gdx.utils.Pool.Poolable {
     }; i = i + 1 } }
     return -1
   }
-  def reset(): scala.Unit = {
+  override def reset(): scala.Unit = {
     GlyphLayout.glyphRunPool.freeAll(this.runs)
     this.runs.clear()
     this.colors.clear()
@@ -405,7 +405,7 @@ class GlyphLayout extends com.badlogic.gdx.utils.Pool.Poolable {
     this.width = 0
     this.height = 0
   }
-  def toString(): java.lang.String = {
+  override def toString(): java.lang.String = {
     if (this.runs.size == 0) {
       return ""
     } else ()
@@ -439,11 +439,11 @@ object GlyphLayout {
       } else ()
       this.xAdvances.addAll(run.xAdvances)
     }
-    def reset(): scala.Unit = {
+    override def reset(): scala.Unit = {
       this.glyphs.clear()
       this.xAdvances.clear()
     }
-    def toString(): java.lang.String = {
+    override def toString(): java.lang.String = {
       val buffer: java.lang.StringBuilder = new java.lang.StringBuilder(this.glyphs.size + 32)
       val glyphs: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.BitmapFont.Glyph] = this.glyphs;
       { var i: scala.Int = 0; val n: scala.Int = glyphs.size; while (i < n) { {

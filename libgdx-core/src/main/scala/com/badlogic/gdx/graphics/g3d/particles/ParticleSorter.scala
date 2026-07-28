@@ -16,7 +16,7 @@ object ParticleSorter {
     var currentCapacity: scala.Int = 0
     var indices: scala.Array[scala.Int] = null.asInstanceOf[scala.Array[scala.Int]]
     @java.lang.Override
-    def ensureCapacity(capacity: scala.Int): scala.Unit = {
+    override def ensureCapacity(capacity: scala.Int): scala.Unit = {
       if (this.currentCapacity < capacity) {
         this.indices = new scala.Array[scala.Int](capacity);
         { var i: scala.Int = 0; while (i < capacity) { {
@@ -26,7 +26,7 @@ object ParticleSorter {
       } else ()
     }
     @java.lang.Override
-    def sort[T <: com.badlogic.gdx.graphics.g3d.particles.renderers.ParticleControllerRenderData](renderData: com.badlogic.gdx.utils.Array[T]): scala.Array[scala.Int] = {
+    override def sort[T <: com.badlogic.gdx.graphics.g3d.particles.renderers.ParticleControllerRenderData](renderData: com.badlogic.gdx.utils.Array[T]): scala.Array[scala.Int] = {
       return this.indices
     }
   }
@@ -39,7 +39,7 @@ object ParticleSorter {
     private var particleOffsets: scala.Array[scala.Int] = null.asInstanceOf[scala.Array[scala.Int]]
     private var currentSize: scala.Int = 0
     @java.lang.Override
-    def ensureCapacity(capacity: scala.Int): scala.Unit = {
+    override def ensureCapacity(capacity: scala.Int): scala.Unit = {
       if (this.currentSize < capacity) {
         this.distances = new scala.Array[scala.Float](capacity)
         this.particleIndices = new scala.Array[scala.Int](capacity)
@@ -48,7 +48,7 @@ object ParticleSorter {
       } else ()
     }
     @java.lang.Override
-    def sort[T <: com.badlogic.gdx.graphics.g3d.particles.renderers.ParticleControllerRenderData](renderData: com.badlogic.gdx.utils.Array[T]): scala.Array[scala.Int] = {
+    override def sort[T <: com.badlogic.gdx.graphics.g3d.particles.renderers.ParticleControllerRenderData](renderData: com.badlogic.gdx.utils.Array[T]): scala.Array[scala.Int] = {
       val `val`: scala.Array[scala.Float] = this.camera.view.`val`
       val cx: scala.Float = `val`(com.badlogic.gdx.math.Matrix4.M20)
       val cy: scala.Float = `val`(com.badlogic.gdx.math.Matrix4.M21)

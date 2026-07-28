@@ -3,7 +3,7 @@ package com.badlogic.gdx.assets.loaders
 class I18NBundleLoader(resolver$p: com.badlogic.gdx.assets.loaders.FileHandleResolver) extends com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader[com.badlogic.gdx.utils.I18NBundle, com.badlogic.gdx.assets.loaders.I18NBundleLoader.I18NBundleParameter](resolver$p) {
   var bundle: com.badlogic.gdx.utils.I18NBundle = null.asInstanceOf[com.badlogic.gdx.utils.I18NBundle]
   @java.lang.Override
-  def loadAsync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.assets.loaders.I18NBundleLoader.I18NBundleParameter): scala.Unit = {
+  override def loadAsync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.assets.loaders.I18NBundleLoader.I18NBundleParameter): scala.Unit = {
     this.bundle = null
     var locale: java.util.Locale = null.asInstanceOf[java.util.Locale]
     var encoding: java.lang.String = null.asInstanceOf[java.lang.String]
@@ -21,13 +21,13 @@ class I18NBundleLoader(resolver$p: com.badlogic.gdx.assets.loaders.FileHandleRes
     }
   }
   @java.lang.Override
-  def loadSync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.assets.loaders.I18NBundleLoader.I18NBundleParameter): com.badlogic.gdx.utils.I18NBundle = {
+  override def loadSync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.assets.loaders.I18NBundleLoader.I18NBundleParameter): com.badlogic.gdx.utils.I18NBundle = {
     var bundle: com.badlogic.gdx.utils.I18NBundle = this.bundle
     this.bundle = null
     return bundle
   }
   @java.lang.Override
-  def getDependencies(fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.assets.loaders.I18NBundleLoader.I18NBundleParameter): com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = {
+  override def getDependencies(fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.assets.loaders.I18NBundleLoader.I18NBundleParameter): com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = {
     return null
   }
 }

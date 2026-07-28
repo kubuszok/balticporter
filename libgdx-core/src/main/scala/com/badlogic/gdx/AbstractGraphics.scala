@@ -2,16 +2,16 @@ package com.badlogic.gdx
 
 abstract class AbstractGraphics extends com.badlogic.gdx.Graphics {
   @java.lang.Override
-  def getRawDeltaTime(): scala.Float = {
+  override def getRawDeltaTime(): scala.Float = {
     return this.getDeltaTime()
   }
   @java.lang.Override
-  def getDensity(): scala.Float = {
+  override def getDensity(): scala.Float = {
     val ppiX: scala.Float = this.getPpiX()
     return if ((ppiX > 0) && (ppiX <= java.lang.Float.MAX_VALUE)) ppiX / 160.0f else 1.0f
   }
   @java.lang.Override
-  def getBackBufferScale(): scala.Float = {
+  override def getBackBufferScale(): scala.Float = {
     return this.getBackBufferWidth() / this.getWidth().asInstanceOf[scala.Float]
   }
 }

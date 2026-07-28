@@ -157,7 +157,7 @@ class BinaryHeap[T <: com.badlogic.gdx.utils.BinaryHeap.Node](capacity: scala.In
     nodes(index) = node
     node.index = index
   }
-  def equals(obj: java.lang.Object): scala.Boolean = {
+  override def equals(obj: java.lang.Object): scala.Boolean = {
     if (!obj.isInstanceOf[BinaryHeap[T]]) {
       return false
     } else ()
@@ -174,7 +174,7 @@ class BinaryHeap[T <: com.badlogic.gdx.utils.BinaryHeap.Node](capacity: scala.In
     }; i = i + 1 } }
     return true
   }
-  def hashCode(): scala.Int = {
+  override def hashCode(): scala.Int = {
     var h: scala.Int = 1
     val nodes: scala.Array[com.badlogic.gdx.utils.BinaryHeap.Node] = this.nodes;
     { var i: scala.Int = 0; val n: scala.Int = this.size; while (i < n) { {
@@ -182,7 +182,7 @@ class BinaryHeap[T <: com.badlogic.gdx.utils.BinaryHeap.Node](capacity: scala.In
     }; i = i + 1 } }
     return h
   }
-  def toString(): java.lang.String = {
+  override def toString(): java.lang.String = {
     if (this.size == 0) {
       return "[]"
     } else ()
@@ -206,7 +206,7 @@ object BinaryHeap {
     def getValue(): scala.Float = {
       return this.value
     }
-    def toString(): java.lang.String = {
+    override def toString(): java.lang.String = {
       return java.lang.Float.toString(this.value)
     }
   }

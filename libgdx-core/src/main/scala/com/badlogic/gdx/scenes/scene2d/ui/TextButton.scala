@@ -19,7 +19,7 @@ class TextButton(text: java.lang.String, style$p: com.badlogic.gdx.scenes.scene2
   def newLabel(text: java.lang.String, style: com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle): com.badlogic.gdx.scenes.scene2d.ui.Label = {
     return new com.badlogic.gdx.scenes.scene2d.ui.Label(text, style)
   }
-  def setStyle(style: com.badlogic.gdx.scenes.scene2d.ui.Button.ButtonStyle): scala.Unit = {
+  override def setStyle(style: com.badlogic.gdx.scenes.scene2d.ui.Button.ButtonStyle): scala.Unit = {
     if (style == null) {
       throw new java.lang.NullPointerException("style cannot be null")
     } else ()
@@ -36,7 +36,7 @@ class TextButton(text: java.lang.String, style$p: com.badlogic.gdx.scenes.scene2
       this.label.setStyle(labelStyle)
     } else ()
   }
-  def getStyle(): com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle = {
+  override def getStyle(): com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle = {
     return this.style
   }
   @com.badlogic.gdx.utils.Null
@@ -80,7 +80,7 @@ class TextButton(text: java.lang.String, style$p: com.badlogic.gdx.scenes.scene2
     } else ()
     return this.style.fontColor
   }
-  def draw(batch: com.badlogic.gdx.graphics.g2d.Batch, parentAlpha: scala.Float): scala.Unit = {
+  override def draw(batch: com.badlogic.gdx.graphics.g2d.Batch, parentAlpha: scala.Float): scala.Unit = {
     this.label.getStyle().fontColor = this.getFontColor()
     super.draw(batch, parentAlpha)
   }
@@ -103,7 +103,7 @@ class TextButton(text: java.lang.String, style$p: com.badlogic.gdx.scenes.scene2
   def getText(): java.lang.CharSequence = {
     return this.label.getText()
   }
-  def toString(): java.lang.String = {
+  override def toString(): java.lang.String = {
     val name: java.lang.String = this.getName()
     if (name != null) {
       return name

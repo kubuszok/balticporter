@@ -8,7 +8,7 @@ abstract class ParticleControllerRenderer[D <: com.badlogic.gdx.graphics.g3d.par
     this.renderData = renderData
   }
   @java.lang.Override
-  def update(): scala.Unit = {
+  override def update(): scala.Unit = {
     this.batch.draw(this.renderData)
   }
   @java.lang.SuppressWarnings(scala.Array[java.lang.String]("unchecked"))
@@ -21,7 +21,7 @@ abstract class ParticleControllerRenderer[D <: com.badlogic.gdx.graphics.g3d.par
   }
   def isCompatible(batch: com.badlogic.gdx.graphics.g3d.particles.batches.ParticleBatch[?]): scala.Boolean
   @java.lang.Override
-  def set(particleController: com.badlogic.gdx.graphics.g3d.particles.ParticleController): scala.Unit = {
+  override def set(particleController: com.badlogic.gdx.graphics.g3d.particles.ParticleController): scala.Unit = {
     super.set(particleController)
     if (this.renderData != null) {
       this.renderData.controller = controller

@@ -38,7 +38,7 @@ class Quaternion extends java.io.Serializable {
     return java.lang.Math.sqrt((((this.x * this.x) + (this.y * this.y)) + (this.z * this.z)) + (this.w * this.w)).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
   }
   @java.lang.Override
-  def toString(): java.lang.String = {
+  override def toString(): java.lang.String = {
     return ((((((("[" + this.x) + "|") + this.y) + "|") + this.z) + "|") + this.w) + "]"
   }
   def setEulerAngles(yaw: scala.Float, pitch: scala.Float, roll: scala.Float): Quaternion = {
@@ -371,7 +371,7 @@ class Quaternion extends java.io.Serializable {
     return this
   }
   @java.lang.Override
-  def hashCode(): scala.Int = {
+  override def hashCode(): scala.Int = {
     val prime: scala.Int = 31
     var result: scala.Int = 1
     result = (prime * result) + com.badlogic.gdx.utils.NumberUtils.floatToRawIntBits(this.w)
@@ -381,7 +381,7 @@ class Quaternion extends java.io.Serializable {
     return result
   }
   @java.lang.Override
-  def equals(obj: java.lang.Object): scala.Boolean = {
+  override def equals(obj: java.lang.Object): scala.Boolean = {
     if (this == obj) {
       return true
     } else ()

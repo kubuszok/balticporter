@@ -734,7 +734,7 @@ object XmlReader {
     def getParent(): com.badlogic.gdx.utils.XmlReader.Element = {
       return this.parent
     }
-    def toString(): java.lang.String = {
+    override def toString(): java.lang.String = {
       return this.toString("")
     }
     def toString(indent: java.lang.String): java.lang.String = {

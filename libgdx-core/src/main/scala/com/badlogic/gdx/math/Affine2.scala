@@ -392,7 +392,7 @@ final class Affine2 extends java.io.Serializable {
     point.y = ((this.m10 * x) + (this.m11 * y)) + this.m12
   }
   @java.lang.Override
-  def toString(): java.lang.String = {
+  override def toString(): java.lang.String = {
     return ((((((((((("[" + this.m00) + "|") + this.m01) + "|") + this.m02) + "]\n[") + this.m10) + "|") + this.m11) + "|") + this.m12) + "]\n[0.0|0.0|0.1]"
   }
 }

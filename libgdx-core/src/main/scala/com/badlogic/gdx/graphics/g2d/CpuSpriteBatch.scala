@@ -24,11 +24,11 @@ class CpuSpriteBatch(size: scala.Int, defaultShader: com.badlogic.gdx.graphics.g
     } else ()
   }
   @java.lang.Override
-  def getTransformMatrix(): com.badlogic.gdx.math.Matrix4 = {
+  override def getTransformMatrix(): com.badlogic.gdx.math.Matrix4 = {
     return if (this.adjustNeeded) this.virtualMatrix else super.getTransformMatrix()
   }
   @java.lang.Override
-  def setTransformMatrix(transform: com.badlogic.gdx.math.Matrix4): scala.Unit = {
+  override def setTransformMatrix(transform: com.badlogic.gdx.math.Matrix4): scala.Unit = {
     val realMatrix: com.badlogic.gdx.math.Matrix4 = super.getTransformMatrix()
     if (CpuSpriteBatch.checkEqual(realMatrix, transform)) {
       this.adjustNeeded = false
@@ -48,7 +48,7 @@ class CpuSpriteBatch(size: scala.Int, defaultShader: com.badlogic.gdx.graphics.g
       }
     }
   }
-  def setTransformMatrix(transform: com.badlogic.gdx.math.Affine2): scala.Unit = {
+  override def setTransformMatrix(transform: com.badlogic.gdx.math.Affine2): scala.Unit = {
     val realMatrix: com.badlogic.gdx.math.Matrix4 = super.getTransformMatrix()
     if (CpuSpriteBatch.checkEqual(realMatrix, transform)) {
       this.adjustNeeded = false
@@ -68,7 +68,7 @@ class CpuSpriteBatch(size: scala.Int, defaultShader: com.badlogic.gdx.graphics.g
     }
   }
   @java.lang.Override
-  def draw(texture: com.badlogic.gdx.graphics.Texture, x: scala.Float, y: scala.Float, originX: scala.Float, originY: scala.Float, width: scala.Float, height: scala.Float, scaleX: scala.Float, scaleY: scala.Float, rotation: scala.Float, srcX: scala.Int, srcY: scala.Int, srcWidth: scala.Int, srcHeight: scala.Int, flipX: scala.Boolean, flipY: scala.Boolean): scala.Unit = {
+  override def draw(texture: com.badlogic.gdx.graphics.Texture, x: scala.Float, y: scala.Float, originX: scala.Float, originY: scala.Float, width: scala.Float, height: scala.Float, scaleX: scala.Float, scaleY: scala.Float, rotation: scala.Float, srcX: scala.Int, srcY: scala.Int, srcWidth: scala.Int, srcHeight: scala.Int, flipX: scala.Boolean, flipY: scala.Boolean): scala.Unit = {
     if (!this.adjustNeeded) {
       super.draw(texture, x, y, originX, originY, width, height, scaleX, scaleY, rotation, srcX, srcY, srcWidth, srcHeight, flipX, flipY)
     } else {
@@ -76,7 +76,7 @@ class CpuSpriteBatch(size: scala.Int, defaultShader: com.badlogic.gdx.graphics.g
     }
   }
   @java.lang.Override
-  def draw(texture: com.badlogic.gdx.graphics.Texture, x: scala.Float, y: scala.Float, width: scala.Float, height: scala.Float, srcX: scala.Int, srcY: scala.Int, srcWidth: scala.Int, srcHeight: scala.Int, flipX: scala.Boolean, flipY: scala.Boolean): scala.Unit = {
+  override def draw(texture: com.badlogic.gdx.graphics.Texture, x: scala.Float, y: scala.Float, width: scala.Float, height: scala.Float, srcX: scala.Int, srcY: scala.Int, srcWidth: scala.Int, srcHeight: scala.Int, flipX: scala.Boolean, flipY: scala.Boolean): scala.Unit = {
     if (!this.adjustNeeded) {
       super.draw(texture, x, y, width, height, srcX, srcY, srcWidth, srcHeight, flipX, flipY)
     } else {
@@ -84,7 +84,7 @@ class CpuSpriteBatch(size: scala.Int, defaultShader: com.badlogic.gdx.graphics.g
     }
   }
   @java.lang.Override
-  def draw(texture: com.badlogic.gdx.graphics.Texture, x: scala.Float, y: scala.Float, srcX: scala.Int, srcY: scala.Int, srcWidth: scala.Int, srcHeight: scala.Int): scala.Unit = {
+  override def draw(texture: com.badlogic.gdx.graphics.Texture, x: scala.Float, y: scala.Float, srcX: scala.Int, srcY: scala.Int, srcWidth: scala.Int, srcHeight: scala.Int): scala.Unit = {
     if (!this.adjustNeeded) {
       super.draw(texture, x, y, srcX, srcY, srcWidth, srcHeight)
     } else {
@@ -92,7 +92,7 @@ class CpuSpriteBatch(size: scala.Int, defaultShader: com.badlogic.gdx.graphics.g
     }
   }
   @java.lang.Override
-  def draw(texture: com.badlogic.gdx.graphics.Texture, x: scala.Float, y: scala.Float, width: scala.Float, height: scala.Float, u: scala.Float, v: scala.Float, u2: scala.Float, v2: scala.Float): scala.Unit = {
+  override def draw(texture: com.badlogic.gdx.graphics.Texture, x: scala.Float, y: scala.Float, width: scala.Float, height: scala.Float, u: scala.Float, v: scala.Float, u2: scala.Float, v2: scala.Float): scala.Unit = {
     if (!this.adjustNeeded) {
       super.draw(texture, x, y, width, height, u, v, u2, v2)
     } else {
@@ -100,7 +100,7 @@ class CpuSpriteBatch(size: scala.Int, defaultShader: com.badlogic.gdx.graphics.g
     }
   }
   @java.lang.Override
-  def draw(texture: com.badlogic.gdx.graphics.Texture, x: scala.Float, y: scala.Float): scala.Unit = {
+  override def draw(texture: com.badlogic.gdx.graphics.Texture, x: scala.Float, y: scala.Float): scala.Unit = {
     if (!this.adjustNeeded) {
       super.draw(texture, x, y)
     } else {
@@ -108,7 +108,7 @@ class CpuSpriteBatch(size: scala.Int, defaultShader: com.badlogic.gdx.graphics.g
     }
   }
   @java.lang.Override
-  def draw(texture: com.badlogic.gdx.graphics.Texture, x: scala.Float, y: scala.Float, width: scala.Float, height: scala.Float): scala.Unit = {
+  override def draw(texture: com.badlogic.gdx.graphics.Texture, x: scala.Float, y: scala.Float, width: scala.Float, height: scala.Float): scala.Unit = {
     if (!this.adjustNeeded) {
       super.draw(texture, x, y, width, height)
     } else {
@@ -116,7 +116,7 @@ class CpuSpriteBatch(size: scala.Int, defaultShader: com.badlogic.gdx.graphics.g
     }
   }
   @java.lang.Override
-  def draw(region: com.badlogic.gdx.graphics.g2d.TextureRegion, x: scala.Float, y: scala.Float): scala.Unit = {
+  override def draw(region: com.badlogic.gdx.graphics.g2d.TextureRegion, x: scala.Float, y: scala.Float): scala.Unit = {
     if (!this.adjustNeeded) {
       super.draw(region, x, y)
     } else {
@@ -124,7 +124,7 @@ class CpuSpriteBatch(size: scala.Int, defaultShader: com.badlogic.gdx.graphics.g
     }
   }
   @java.lang.Override
-  def draw(region: com.badlogic.gdx.graphics.g2d.TextureRegion, x: scala.Float, y: scala.Float, width: scala.Float, height: scala.Float): scala.Unit = {
+  override def draw(region: com.badlogic.gdx.graphics.g2d.TextureRegion, x: scala.Float, y: scala.Float, width: scala.Float, height: scala.Float): scala.Unit = {
     if (!this.adjustNeeded) {
       super.draw(region, x, y, width, height)
     } else {
@@ -132,7 +132,7 @@ class CpuSpriteBatch(size: scala.Int, defaultShader: com.badlogic.gdx.graphics.g
     }
   }
   @java.lang.Override
-  def draw(region: com.badlogic.gdx.graphics.g2d.TextureRegion, x: scala.Float, y: scala.Float, originX: scala.Float, originY: scala.Float, width: scala.Float, height: scala.Float, scaleX: scala.Float, scaleY: scala.Float, rotation: scala.Float): scala.Unit = {
+  override def draw(region: com.badlogic.gdx.graphics.g2d.TextureRegion, x: scala.Float, y: scala.Float, originX: scala.Float, originY: scala.Float, width: scala.Float, height: scala.Float, scaleX: scala.Float, scaleY: scala.Float, rotation: scala.Float): scala.Unit = {
     if (!this.adjustNeeded) {
       super.draw(region, x, y, originX, originY, width, height, scaleX, scaleY, rotation)
     } else {
@@ -140,7 +140,7 @@ class CpuSpriteBatch(size: scala.Int, defaultShader: com.badlogic.gdx.graphics.g
     }
   }
   @java.lang.Override
-  def draw(region: com.badlogic.gdx.graphics.g2d.TextureRegion, x: scala.Float, y: scala.Float, originX: scala.Float, originY: scala.Float, width: scala.Float, height: scala.Float, scaleX: scala.Float, scaleY: scala.Float, rotation: scala.Float, clockwise: scala.Boolean): scala.Unit = {
+  override def draw(region: com.badlogic.gdx.graphics.g2d.TextureRegion, x: scala.Float, y: scala.Float, originX: scala.Float, originY: scala.Float, width: scala.Float, height: scala.Float, scaleX: scala.Float, scaleY: scala.Float, rotation: scala.Float, clockwise: scala.Boolean): scala.Unit = {
     if (!this.adjustNeeded) {
       super.draw(region, x, y, originX, originY, width, height, scaleX, scaleY, rotation, clockwise)
     } else {
@@ -148,7 +148,7 @@ class CpuSpriteBatch(size: scala.Int, defaultShader: com.badlogic.gdx.graphics.g
     }
   }
   @java.lang.Override
-  def draw(texture: com.badlogic.gdx.graphics.Texture, spriteVertices: scala.Array[scala.Float], offset: scala.Int, count: scala.Int): scala.Unit = {
+  override def draw(texture: com.badlogic.gdx.graphics.Texture, spriteVertices: scala.Array[scala.Float], offset: scala.Int, count: scala.Int): scala.Unit = {
     if ((count % com.badlogic.gdx.graphics.g2d.Sprite.SPRITE_SIZE) != 0) {
       throw new com.badlogic.gdx.utils.GdxRuntimeException("invalid vertex count")
     } else ()
@@ -159,7 +159,7 @@ class CpuSpriteBatch(size: scala.Int, defaultShader: com.badlogic.gdx.graphics.g
     }
   }
   @java.lang.Override
-  def draw(region: com.badlogic.gdx.graphics.g2d.TextureRegion, width: scala.Float, height: scala.Float, transform: com.badlogic.gdx.math.Affine2): scala.Unit = {
+  override def draw(region: com.badlogic.gdx.graphics.g2d.TextureRegion, width: scala.Float, height: scala.Float, transform: com.badlogic.gdx.math.Affine2): scala.Unit = {
     if (!this.adjustNeeded) {
       super.draw(region, width, height, transform)
     } else {

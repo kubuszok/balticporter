@@ -31,7 +31,7 @@ final class DefaultTextureBinder(method$p: scala.Int, offset$p: scala.Int, count
   this.textures = new scala.Array[com.badlogic.gdx.graphics.GLTexture](count$p)
   this.unitsLRU = if (method$p == DefaultTextureBinder.LRU) new scala.Array[scala.Int](count$p) else null.asInstanceOf[scala.Array[scala.Int]]
   @java.lang.Override
-  def begin(): scala.Unit = {
+  override def begin(): scala.Unit = {
     { var i: scala.Int = 0; while (i < this.count) { {
       this.textures(i) = null
       if (this.unitsLRU != null) {
@@ -40,15 +40,15 @@ final class DefaultTextureBinder(method$p: scala.Int, offset$p: scala.Int, count
     }; i = i + 1 } }
   }
   @java.lang.Override
-  def `end`(): scala.Unit = {
+  override def `end`(): scala.Unit = {
     com.badlogic.gdx.Gdx.gl.glActiveTexture(com.badlogic.gdx.graphics.GL20.GL_TEXTURE0)
   }
   @java.lang.Override
-  final def bind(textureDesc: com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[?]): scala.Int = {
+  override final def bind(textureDesc: com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[?]): scala.Int = {
     return this.bindTexture(textureDesc.asInstanceOf[com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[?]], false)
   }
   @java.lang.Override
-  final def bind(texture: com.badlogic.gdx.graphics.GLTexture): scala.Int = {
+  override final def bind(texture: com.badlogic.gdx.graphics.GLTexture): scala.Int = {
     this.tempDesc.asInstanceOf[com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[com.badlogic.gdx.graphics.GLTexture]].set(texture.asInstanceOf[com.badlogic.gdx.graphics.GLTexture], null, null, null, null)
     return this.bindTexture(this.tempDesc.asInstanceOf[com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor[?]], false)
   }
@@ -129,15 +129,15 @@ final class DefaultTextureBinder(method$p: scala.Int, offset$p: scala.Int, count
     return idx
   }
   @java.lang.Override
-  final def getBindCount(): scala.Int = {
+  override final def getBindCount(): scala.Int = {
     return this.bindCount
   }
   @java.lang.Override
-  final def getReuseCount(): scala.Int = {
+  override final def getReuseCount(): scala.Int = {
     return this.reuseCount
   }
   @java.lang.Override
-  final def resetCounts(): scala.Unit = {
+  override final def resetCounts(): scala.Unit = {
     this.bindCount = {
       this.reuseCount = 0
       this.reuseCount

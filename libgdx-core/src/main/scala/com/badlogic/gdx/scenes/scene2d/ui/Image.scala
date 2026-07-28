@@ -33,7 +33,7 @@ class Image(drawable$p: com.badlogic.gdx.scenes.scene2d.utils.Drawable, scaling$
   this.scaling = scaling$p
   this.align = align$p
   this.setSize(this.getPrefWidth(), this.getPrefHeight())
-  def layout(): scala.Unit = {
+  override def layout(): scala.Unit = {
     if (this.drawable == null) {
       return
     } else ()
@@ -63,7 +63,7 @@ class Image(drawable$p: com.badlogic.gdx.scenes.scene2d.utils.Drawable, scaling$
       }
     }
   }
-  def draw(batch: com.badlogic.gdx.graphics.g2d.Batch, parentAlpha: scala.Float): scala.Unit = {
+  override def draw(batch: com.badlogic.gdx.graphics.g2d.Batch, parentAlpha: scala.Float): scala.Unit = {
     this.validate()
     val color: com.badlogic.gdx.graphics.Color = this.getColor()
     batch.setColor(color.r, color.g, color.b, color.a * parentAlpha)
@@ -116,19 +116,19 @@ class Image(drawable$p: com.badlogic.gdx.scenes.scene2d.utils.Drawable, scaling$
   def getAlign(): scala.Int = {
     return this.align
   }
-  def getMinWidth(): scala.Float = {
+  override def getMinWidth(): scala.Float = {
     return 0
   }
-  def getMinHeight(): scala.Float = {
+  override def getMinHeight(): scala.Float = {
     return 0
   }
-  def getPrefWidth(): scala.Float = {
+  override def getPrefWidth(): scala.Float = {
     if (this.drawable != null) {
       return this.drawable.getMinWidth()
     } else ()
     return 0
   }
-  def getPrefHeight(): scala.Float = {
+  override def getPrefHeight(): scala.Float = {
     if (this.drawable != null) {
       return this.drawable.getMinHeight()
     } else ()
@@ -146,7 +146,7 @@ class Image(drawable$p: com.badlogic.gdx.scenes.scene2d.utils.Drawable, scaling$
   def getImageHeight(): scala.Float = {
     return this.imageHeight
   }
-  def toString(): java.lang.String = {
+  override def toString(): java.lang.String = {
     val name: java.lang.String = this.getName()
     if (name != null) {
       return name

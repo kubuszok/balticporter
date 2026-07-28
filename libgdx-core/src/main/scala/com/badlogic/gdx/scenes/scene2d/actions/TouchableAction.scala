@@ -2,7 +2,7 @@ package com.badlogic.gdx.scenes.scene2d.actions
 
 class TouchableAction extends com.badlogic.gdx.scenes.scene2d.Action {
   private var touchable: com.badlogic.gdx.scenes.scene2d.Touchable = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.Touchable]
-  def act(delta: scala.Float): scala.Boolean = {
+  override def act(delta: scala.Float): scala.Boolean = {
     target.setTouchable(this.touchable)
     return true
   }

@@ -12,7 +12,7 @@ final class UnweightedMeshSpawnShapeValue extends com.badlogic.gdx.graphics.g3d.
     this.load(value)
   }
   @java.lang.Override
-  def setMesh(mesh: com.badlogic.gdx.graphics.Mesh, model: com.badlogic.gdx.graphics.g3d.Model): scala.Unit = {
+  override def setMesh(mesh: com.badlogic.gdx.graphics.Mesh, model: com.badlogic.gdx.graphics.g3d.Model): scala.Unit = {
     super.setMesh(mesh, model)
     this.vertexSize = mesh.getVertexSize() / 4
     this.positionOffset = mesh.getVertexAttribute(com.badlogic.gdx.graphics.VertexAttributes.Usage.Position).offset / 4
@@ -29,7 +29,7 @@ final class UnweightedMeshSpawnShapeValue extends com.badlogic.gdx.graphics.g3d.
     mesh.getVertices(this.vertices)
   }
   @java.lang.Override
-  def spawnAux(vector: com.badlogic.gdx.math.Vector3, percent: scala.Float): scala.Unit = {
+  override def spawnAux(vector: com.badlogic.gdx.math.Vector3, percent: scala.Float): scala.Unit = {
     if (this.indices == null) {
       val triangleIndex: scala.Int = (com.badlogic.gdx.math.MathUtils.random: (scala.Int) => scala.Int)(this.vertexCount - 3) * this.vertexSize
       val p1Offset: scala.Int = triangleIndex + this.positionOffset
@@ -63,7 +63,7 @@ final class UnweightedMeshSpawnShapeValue extends com.badlogic.gdx.graphics.g3d.
     }
   }
   @java.lang.Override
-  def copy(): com.badlogic.gdx.graphics.g3d.particles.values.SpawnShapeValue = {
+  override def copy(): com.badlogic.gdx.graphics.g3d.particles.values.SpawnShapeValue = {
     return new UnweightedMeshSpawnShapeValue(this)
   }
 }

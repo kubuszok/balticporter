@@ -3,7 +3,7 @@ package com.badlogic.gdx.scenes.scene2d.actions
 class RunnableAction extends com.badlogic.gdx.scenes.scene2d.Action {
   private var runnable: java.lang.Runnable = null.asInstanceOf[java.lang.Runnable]
   private var ran: scala.Boolean = false
-  def act(delta: scala.Float): scala.Boolean = {
+  override def act(delta: scala.Float): scala.Boolean = {
     if (!this.ran) {
       this.ran = true
       this.run()
@@ -19,10 +19,10 @@ class RunnableAction extends com.badlogic.gdx.scenes.scene2d.Action {
       this.setPool(pool.asInstanceOf[com.badlogic.gdx.utils.Pool[?]])
     }
   }
-  def restart(): scala.Unit = {
+  override def restart(): scala.Unit = {
     this.ran = false
   }
-  def reset(): scala.Unit = {
+  override def reset(): scala.Unit = {
     super.reset()
     this.runnable = null
   }

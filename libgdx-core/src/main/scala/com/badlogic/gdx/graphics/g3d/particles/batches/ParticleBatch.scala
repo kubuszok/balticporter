@@ -4,6 +4,6 @@ trait ParticleBatch[T <: com.badlogic.gdx.graphics.g3d.particles.renderers.Parti
   def begin(): scala.Unit
   def draw(controller: T): scala.Unit
   def `end`(): scala.Unit
-  def save(manager: com.badlogic.gdx.assets.AssetManager, assetDependencyData: com.badlogic.gdx.graphics.g3d.particles.ResourceData[T]): scala.Unit
-  def load(manager: com.badlogic.gdx.assets.AssetManager, assetDependencyData: com.badlogic.gdx.graphics.g3d.particles.ResourceData[T]): scala.Unit
+  override def save(manager: com.badlogic.gdx.assets.AssetManager, assetDependencyData: com.badlogic.gdx.graphics.g3d.particles.ResourceData[T]): scala.Unit
+  override def load(manager: com.badlogic.gdx.assets.AssetManager, assetDependencyData: com.badlogic.gdx.graphics.g3d.particles.ResourceData[T]): scala.Unit
 }

@@ -50,7 +50,7 @@ abstract class RegionInfluencer extends com.badlogic.gdx.graphics.g3d.particles.
     this.regions.clear()
   }
   @java.lang.Override
-  def load(manager: com.badlogic.gdx.assets.AssetManager, resources: com.badlogic.gdx.graphics.g3d.particles.ResourceData[?]): scala.Unit = {
+  override def load(manager: com.badlogic.gdx.assets.AssetManager, resources: com.badlogic.gdx.graphics.g3d.particles.ResourceData[?]): scala.Unit = {
     super.load(manager, resources.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ResourceData[?]])
     val data: com.badlogic.gdx.graphics.g3d.particles.ResourceData.SaveData = resources.getSaveData(RegionInfluencer.ASSET_DATA)
     if (data == null) {
@@ -63,7 +63,7 @@ abstract class RegionInfluencer extends com.badlogic.gdx.graphics.g3d.particles.
     }
   }
   @java.lang.Override
-  def save(manager: com.badlogic.gdx.assets.AssetManager, resources: com.badlogic.gdx.graphics.g3d.particles.ResourceData[?]): scala.Unit = {
+  override def save(manager: com.badlogic.gdx.assets.AssetManager, resources: com.badlogic.gdx.graphics.g3d.particles.ResourceData[?]): scala.Unit = {
     super.save(manager, resources.asInstanceOf[com.badlogic.gdx.graphics.g3d.particles.ResourceData[?]])
     if (this.atlasName != null) {
       var data: com.badlogic.gdx.graphics.g3d.particles.ResourceData.SaveData = resources.getSaveData(RegionInfluencer.ASSET_DATA)
@@ -74,15 +74,15 @@ abstract class RegionInfluencer extends com.badlogic.gdx.graphics.g3d.particles.
     } else ()
   }
   @java.lang.Override
-  def allocateChannels(): scala.Unit = {
+  override def allocateChannels(): scala.Unit = {
     this.regionChannel = this.controller.particles.addChannel(com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.TextureRegion)
   }
   @java.lang.Override
-  def write(json: com.badlogic.gdx.utils.Json): scala.Unit = {
+  override def write(json: com.badlogic.gdx.utils.Json): scala.Unit = {
     json.writeValue("regions", this.regions, classOf[com.badlogic.gdx.utils.Array[?]], classOf[com.badlogic.gdx.graphics.g3d.particles.influencers.RegionInfluencer.AspectTextureRegion])
   }
   @java.lang.Override
-  def read(json: com.badlogic.gdx.utils.Json, jsonData: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
+  override def read(json: com.badlogic.gdx.utils.Json, jsonData: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
     this.regions.clear()
     this.regions.addAll(json.readValue("regions", classOf[com.badlogic.gdx.utils.Array[?]], classOf[com.badlogic.gdx.graphics.g3d.particles.influencers.RegionInfluencer.AspectTextureRegion], jsonData).asInstanceOf[com.badlogic.gdx.utils.Array[? <: com.badlogic.gdx.graphics.g3d.particles.influencers.RegionInfluencer.AspectTextureRegion]])
   }
@@ -101,7 +101,7 @@ object RegionInfluencer {
       this()
     }
     @java.lang.Override
-    def init(): scala.Unit = {
+    override def init(): scala.Unit = {
       val region: com.badlogic.gdx.graphics.g3d.particles.influencers.RegionInfluencer.AspectTextureRegion = this.regions.items(0);
       { var i: scala.Int = 0; val c: scala.Int = this.controller.emitter.maxParticleCount * this.regionChannel.strideSize; while (i < c) { {
         this.regionChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.UOffset) = region.u
@@ -113,7 +113,7 @@ object RegionInfluencer {
       }; i = i + this.regionChannel.strideSize } }
     }
     @java.lang.Override
-    def copy(): com.badlogic.gdx.graphics.g3d.particles.influencers.RegionInfluencer.Single = {
+    override def copy(): com.badlogic.gdx.graphics.g3d.particles.influencers.RegionInfluencer.Single = {
       return new com.badlogic.gdx.graphics.g3d.particles.influencers.RegionInfluencer.Single(this)
     }
   }
@@ -131,7 +131,7 @@ object RegionInfluencer {
       this()
     }
     @java.lang.Override
-    def activateParticles(startIndex: scala.Int, count: scala.Int): scala.Unit = {
+    override def activateParticles(startIndex: scala.Int, count: scala.Int): scala.Unit = {
       { var i: scala.Int = startIndex * this.regionChannel.strideSize; val c: scala.Int = i + (count * this.regionChannel.strideSize); while (i < c) { {
         val region: com.badlogic.gdx.graphics.g3d.particles.influencers.RegionInfluencer.AspectTextureRegion = regions.random()
         this.regionChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.UOffset) = region.u
@@ -143,7 +143,7 @@ object RegionInfluencer {
       }; i = i + this.regionChannel.strideSize } }
     }
     @java.lang.Override
-    def copy(): com.badlogic.gdx.graphics.g3d.particles.influencers.RegionInfluencer.Random = {
+    override def copy(): com.badlogic.gdx.graphics.g3d.particles.influencers.RegionInfluencer.Random = {
       return new com.badlogic.gdx.graphics.g3d.particles.influencers.RegionInfluencer.Random(this)
     }
   }
@@ -162,12 +162,12 @@ object RegionInfluencer {
       this()
     }
     @java.lang.Override
-    def allocateChannels(): scala.Unit = {
+    override def allocateChannels(): scala.Unit = {
       super.allocateChannels()
       this.lifeChannel = this.controller.particles.addChannel(com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.Life)
     }
     @java.lang.Override
-    def update(): scala.Unit = {
+    override def update(): scala.Unit = {
       { var i: scala.Int = 0; var l: scala.Int = com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.LifePercentOffset; val c: scala.Int = this.controller.particles.size * this.regionChannel.strideSize; while (i < c) { {
         val region: com.badlogic.gdx.graphics.g3d.particles.influencers.RegionInfluencer.AspectTextureRegion = regions.get((this.lifeChannel.data(l) * (this.regions.size - 1)).asInstanceOf[scala.Int].asInstanceOf[scala.Int])
         this.regionChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.UOffset) = region.u
@@ -179,7 +179,7 @@ object RegionInfluencer {
       }; i = i + this.regionChannel.strideSize; l = l + this.lifeChannel.strideSize } }
     }
     @java.lang.Override
-    def copy(): com.badlogic.gdx.graphics.g3d.particles.influencers.RegionInfluencer.Animated = {
+    override def copy(): com.badlogic.gdx.graphics.g3d.particles.influencers.RegionInfluencer.Animated = {
       return new com.badlogic.gdx.graphics.g3d.particles.influencers.RegionInfluencer.Animated(this)
     }
   }

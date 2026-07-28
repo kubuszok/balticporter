@@ -5,7 +5,7 @@ class PauseableThread(runnable$p: java.lang.Runnable) extends java.lang.Thread {
   var paused: scala.Boolean = false
   var exit: scala.Boolean = false
   this.runnable = runnable$p
-  def run(): scala.Unit = {
+  override def run(): scala.Unit = {
     while (true) {
       this.synchronized {
         try {

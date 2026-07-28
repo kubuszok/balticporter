@@ -13,7 +13,7 @@ abstract class FlushablePool[T <: java.lang.Object] extends com.badlogic.gdx.uti
     this.max = max
   }
   @java.lang.Override
-  def obtain(): T = {
+  override def obtain(): T = {
     val result: T = super.obtain().asInstanceOf[T]
     this.obtained.add(result)
     return result
@@ -23,12 +23,12 @@ abstract class FlushablePool[T <: java.lang.Object] extends com.badlogic.gdx.uti
     this.obtained.clear()
   }
   @java.lang.Override
-  def free(`object`: T): scala.Unit = {
+  override def free(`object`: T): scala.Unit = {
     this.obtained.removeValue(`object`, true)
     super.free(`object`)
   }
   @java.lang.Override
-  def freeAll(objects: com.badlogic.gdx.utils.Array[T]): scala.Unit = {
+  override def freeAll(objects: com.badlogic.gdx.utils.Array[T]): scala.Unit = {
     this.obtained.removeAll(objects.asInstanceOf[com.badlogic.gdx.utils.Array[? <: T]], true)
     super.freeAll(objects)
   }

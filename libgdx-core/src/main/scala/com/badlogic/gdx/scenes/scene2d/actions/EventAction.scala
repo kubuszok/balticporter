@@ -14,11 +14,11 @@ abstract class EventAction[T <: com.badlogic.gdx.scenes.scene2d.Event](eventClas
     }
   }
   this.eventClass = eventClass$p
-  def restart(): scala.Unit = {
+  override def restart(): scala.Unit = {
     this.result = false
     this.active = false
   }
-  def setTarget(newTarget: com.badlogic.gdx.scenes.scene2d.Actor): scala.Unit = {
+  override def setTarget(newTarget: com.badlogic.gdx.scenes.scene2d.Actor): scala.Unit = {
     if (target != null) {
       target.removeListener(this.listener)
     } else ()
@@ -28,7 +28,7 @@ abstract class EventAction[T <: com.badlogic.gdx.scenes.scene2d.Event](eventClas
     } else ()
   }
   def handle(event: T): scala.Boolean
-  def act(delta: scala.Float): scala.Boolean = {
+  override def act(delta: scala.Float): scala.Boolean = {
     this.active = true
     return this.result
   }

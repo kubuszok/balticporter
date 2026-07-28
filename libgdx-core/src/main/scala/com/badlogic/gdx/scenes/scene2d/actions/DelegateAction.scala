@@ -9,7 +9,7 @@ abstract class DelegateAction extends com.badlogic.gdx.scenes.scene2d.Action {
     return this.action
   }
   def delegate(delta: scala.Float): scala.Boolean
-  final def act(delta: scala.Float): scala.Boolean = {
+  override final def act(delta: scala.Float): scala.Boolean = {
     val pool: com.badlogic.gdx.utils.Pool[?] = this.getPool().asInstanceOf[com.badlogic.gdx.utils.Pool[?]]
     this.setPool(null)
     try {
@@ -18,28 +18,28 @@ abstract class DelegateAction extends com.badlogic.gdx.scenes.scene2d.Action {
       this.setPool(pool.asInstanceOf[com.badlogic.gdx.utils.Pool[?]])
     }
   }
-  def restart(): scala.Unit = {
+  override def restart(): scala.Unit = {
     if (this.action != null) {
       this.action.restart()
     } else ()
   }
-  def reset(): scala.Unit = {
+  override def reset(): scala.Unit = {
     super.reset()
     this.action = null
   }
-  def setActor(actor: com.badlogic.gdx.scenes.scene2d.Actor): scala.Unit = {
+  override def setActor(actor: com.badlogic.gdx.scenes.scene2d.Actor): scala.Unit = {
     if (this.action != null) {
       this.action.setActor(actor)
     } else ()
     super.setActor(actor)
   }
-  def setTarget(target: com.badlogic.gdx.scenes.scene2d.Actor): scala.Unit = {
+  override def setTarget(target: com.badlogic.gdx.scenes.scene2d.Actor): scala.Unit = {
     if (this.action != null) {
       this.action.setTarget(target)
     } else ()
     super.setTarget(target)
   }
-  def toString(): java.lang.String = {
+  override def toString(): java.lang.String = {
     return super.toString() + (if (this.action == null) "" else ("(" + this.action) + ")")
   }
 }

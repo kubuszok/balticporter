@@ -286,7 +286,7 @@ class IntIntMap(initialCapacity: scala.Int, loadFactor$p: scala.Float) extends b
       }; i = i + 1 } }
     } else ()
   }
-  def hashCode(): scala.Int = {
+  override def hashCode(): scala.Int = {
     var h: scala.Int = this.size
     if (this.hasZeroValue) {
       h = h + this.zeroValue
@@ -301,7 +301,7 @@ class IntIntMap(initialCapacity: scala.Int, loadFactor$p: scala.Float) extends b
     }; i = i + 1 } }
     return h
   }
-  def equals(obj: java.lang.Object): scala.Boolean = {
+  override def equals(obj: java.lang.Object): scala.Boolean = {
     if (obj == this) {
       return true
     } else ()
@@ -336,7 +336,7 @@ class IntIntMap(initialCapacity: scala.Int, loadFactor$p: scala.Float) extends b
     }; i = i + 1 } }
     return true
   }
-  def toString(): java.lang.String = {
+  override def toString(): java.lang.String = {
     if (this.size == 0) {
       return "[]"
     } else ()
@@ -373,7 +373,7 @@ class IntIntMap(initialCapacity: scala.Int, loadFactor$p: scala.Float) extends b
     buffer.append(']')
     return buffer.toString()
   }
-  def iterator(): balticporter.runtime.JavaIterator[com.badlogic.gdx.utils.IntIntMap.Entry] = {
+  override def iterator(): balticporter.runtime.JavaIterator[com.badlogic.gdx.utils.IntIntMap.Entry] = {
     return this.entries()
   }
   def entries(): com.badlogic.gdx.utils.IntIntMap.Entries = {
@@ -438,7 +438,7 @@ object IntIntMap {
   class Entry {
     var key: scala.Int = 0
     var value: scala.Int = 0
-    def toString(): java.lang.String = {
+    override def toString(): java.lang.String = {
       return (java.lang.String.valueOf(this.key) + "=") + this.value
     }
   }
@@ -510,7 +510,7 @@ object IntIntMap {
   }
   class Entries(map$p: IntIntMap) extends com.badlogic.gdx.utils.IntIntMap.MapIterator(map$p) with balticporter.runtime.JavaIterable[com.badlogic.gdx.utils.IntIntMap.Entry] with balticporter.runtime.JavaIterator[com.badlogic.gdx.utils.IntIntMap.Entry] {
     private final val entry: com.badlogic.gdx.utils.IntIntMap.Entry = new com.badlogic.gdx.utils.IntIntMap.Entry()
-    def next(): com.badlogic.gdx.utils.IntIntMap.Entry = {
+    override def next(): com.badlogic.gdx.utils.IntIntMap.Entry = {
       if (!hasNext$field) {
         throw new java.util.NoSuchElementException()
       } else ()
@@ -529,13 +529,13 @@ object IntIntMap {
       this.findNextIndex()
       return this.entry
     }
-    def hasNext(): scala.Boolean = {
+    override def hasNext(): scala.Boolean = {
       if (!valid) {
         throw new com.badlogic.gdx.utils.GdxRuntimeException("#iterator() cannot be used nested.")
       } else ()
       return hasNext$field
     }
-    def iterator(): balticporter.runtime.JavaIterator[com.badlogic.gdx.utils.IntIntMap.Entry] = {
+    override def iterator(): balticporter.runtime.JavaIterator[com.badlogic.gdx.utils.IntIntMap.Entry] = {
       return this
     }
   }

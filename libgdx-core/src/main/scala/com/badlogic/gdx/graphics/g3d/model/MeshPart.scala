@@ -45,11 +45,11 @@ class MeshPart {
     MeshPart.bounds.getDimensions(this.halfExtents).scl(0.5f)
     this.radius = this.halfExtents.len()
   }
-  def equals(other: MeshPart): scala.Boolean = {
+  override def equals(other: MeshPart): scala.Boolean = {
     return (other == this) || (((((other != null) && (other.mesh == this.mesh)) && (other.primitiveType == this.primitiveType)) && (other.offset == this.offset)) && (other.size == this.size))
   }
   @java.lang.Override
-  def equals(arg0: java.lang.Object): scala.Boolean = {
+  override def equals(arg0: java.lang.Object): scala.Boolean = {
     if (arg0 == null) {
       return false
     } else ()

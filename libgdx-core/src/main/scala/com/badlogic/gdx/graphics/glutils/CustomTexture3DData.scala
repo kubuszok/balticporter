@@ -17,36 +17,36 @@ class CustomTexture3DData(width$p: scala.Int, height$p: scala.Int, depth$p: scal
   this.glType = glType$p
   this.mipMapLevel = mipMapLevel$p
   @java.lang.Override
-  def isPrepared(): scala.Boolean = {
+  override def isPrepared(): scala.Boolean = {
     return true
   }
   @java.lang.Override
-  def prepare(): scala.Unit = {
+  override def prepare(): scala.Unit = {
     ()
   }
   @java.lang.Override
-  def getWidth(): scala.Int = {
+  override def getWidth(): scala.Int = {
     return this.width
   }
   @java.lang.Override
-  def getHeight(): scala.Int = {
+  override def getHeight(): scala.Int = {
     return this.height
   }
-  def getDepth(): scala.Int = {
+  override def getDepth(): scala.Int = {
     return this.depth
   }
   @java.lang.Override
-  def useMipMaps(): scala.Boolean = {
+  override def useMipMaps(): scala.Boolean = {
     return false
   }
   @java.lang.Override
-  def isManaged(): scala.Boolean = {
+  override def isManaged(): scala.Boolean = {
     return this.pixels != null
   }
-  def getInternalFormat(): scala.Int = {
+  override def getInternalFormat(): scala.Int = {
     return this.glInternalFormat
   }
-  def getGLType(): scala.Int = {
+  override def getGLType(): scala.Int = {
     return this.glType
   }
   def getGLFormat(): scala.Int = {
@@ -95,7 +95,7 @@ class CustomTexture3DData(width$p: scala.Int, height$p: scala.Int, depth$p: scal
     return this.pixels
   }
   @java.lang.Override
-  def consume3DData(): scala.Unit = {
+  override def consume3DData(): scala.Unit = {
     com.badlogic.gdx.Gdx.gl30.glTexImage3D(com.badlogic.gdx.graphics.GL30.GL_TEXTURE_3D, this.mipMapLevel, this.glInternalFormat, this.width, this.height, this.depth, 0, this.glFormat, this.glType, this.pixels)
   }
 }

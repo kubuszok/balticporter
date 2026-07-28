@@ -53,14 +53,14 @@ class Slider(min$p: scala.Float, max$p: scala.Float, stepSize$p: scala.Float, ve
       } else ()
     }
   })
-  def getStyle(): com.badlogic.gdx.scenes.scene2d.ui.Slider.SliderStyle = {
+  override def getStyle(): com.badlogic.gdx.scenes.scene2d.ui.Slider.SliderStyle = {
     return super.getStyle().asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Slider.SliderStyle]
   }
   def isOver(): scala.Boolean = {
     return this.mouseOver
   }
   @com.badlogic.gdx.utils.Null
-  def getBackgroundDrawable(): com.badlogic.gdx.scenes.scene2d.utils.Drawable = {
+  override def getBackgroundDrawable(): com.badlogic.gdx.scenes.scene2d.utils.Drawable = {
     val style: com.badlogic.gdx.scenes.scene2d.ui.Slider.SliderStyle = super.getStyle().asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Slider.SliderStyle]
     if (disabled && (style.disabledBackground != null)) {
       return style.disabledBackground
@@ -74,7 +74,7 @@ class Slider(min$p: scala.Float, max$p: scala.Float, stepSize$p: scala.Float, ve
     return style.background
   }
   @com.badlogic.gdx.utils.Null
-  def getKnobDrawable(): com.badlogic.gdx.scenes.scene2d.utils.Drawable = {
+  override def getKnobDrawable(): com.badlogic.gdx.scenes.scene2d.utils.Drawable = {
     val style: com.badlogic.gdx.scenes.scene2d.ui.Slider.SliderStyle = super.getStyle().asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Slider.SliderStyle]
     if (disabled && (style.disabledKnob != null)) {
       return style.disabledKnob
@@ -87,7 +87,7 @@ class Slider(min$p: scala.Float, max$p: scala.Float, stepSize$p: scala.Float, ve
     } else ()
     return style.knob
   }
-  def getKnobBeforeDrawable(): com.badlogic.gdx.scenes.scene2d.utils.Drawable = {
+  override def getKnobBeforeDrawable(): com.badlogic.gdx.scenes.scene2d.utils.Drawable = {
     val style: com.badlogic.gdx.scenes.scene2d.ui.Slider.SliderStyle = super.getStyle().asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Slider.SliderStyle]
     if (disabled && (style.disabledKnobBefore != null)) {
       return style.disabledKnobBefore
@@ -100,7 +100,7 @@ class Slider(min$p: scala.Float, max$p: scala.Float, stepSize$p: scala.Float, ve
     } else ()
     return style.knobBefore
   }
-  def getKnobAfterDrawable(): com.badlogic.gdx.scenes.scene2d.utils.Drawable = {
+  override def getKnobAfterDrawable(): com.badlogic.gdx.scenes.scene2d.utils.Drawable = {
     val style: com.badlogic.gdx.scenes.scene2d.ui.Slider.SliderStyle = super.getStyle().asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Slider.SliderStyle]
     if (disabled && (style.disabledKnobAfter != null)) {
       return style.disabledKnobAfter

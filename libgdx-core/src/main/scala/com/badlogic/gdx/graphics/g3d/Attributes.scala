@@ -130,11 +130,11 @@ class Attributes extends balticporter.runtime.JavaIterable[com.badlogic.gdx.grap
     return this.same(other, false)
   }
   @java.lang.Override
-  final def compare(arg0: com.badlogic.gdx.graphics.g3d.Attribute, arg1: com.badlogic.gdx.graphics.g3d.Attribute): scala.Int = {
+  override final def compare(arg0: com.badlogic.gdx.graphics.g3d.Attribute, arg1: com.badlogic.gdx.graphics.g3d.Attribute): scala.Int = {
     return (arg0.`type` - arg1.`type`).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
   }
   @java.lang.Override
-  final def iterator(): balticporter.runtime.JavaIterator[com.badlogic.gdx.graphics.g3d.Attribute] = {
+  override final def iterator(): balticporter.runtime.JavaIterator[com.badlogic.gdx.graphics.g3d.Attribute] = {
     return this.attributes.iterator()
   }
   def attributesHash(): scala.Int = {
@@ -151,11 +151,11 @@ class Attributes extends balticporter.runtime.JavaIterable[com.badlogic.gdx.grap
     return (result ^ (result >> 32)).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
   }
   @java.lang.Override
-  def hashCode(): scala.Int = {
+  override def hashCode(): scala.Int = {
     return this.attributesHash()
   }
   @java.lang.Override
-  def equals(other: java.lang.Object): scala.Boolean = {
+  override def equals(other: java.lang.Object): scala.Boolean = {
     if (!other.isInstanceOf[Attributes]) {
       return false
     } else ()
@@ -165,7 +165,7 @@ class Attributes extends balticporter.runtime.JavaIterable[com.badlogic.gdx.grap
     return this.same(other.asInstanceOf[Attributes].asInstanceOf[Attributes], true)
   }
   @java.lang.Override
-  def compareTo(other: Attributes): scala.Int = {
+  override def compareTo(other: Attributes): scala.Int = {
     if (other == this) {
       return 0
     } else ()

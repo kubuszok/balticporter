@@ -214,7 +214,7 @@ class IntSet(initialCapacity: scala.Int, loadFactor$p: scala.Float) {
       }; i = i + 1 } }
     } else ()
   }
-  def hashCode(): scala.Int = {
+  override def hashCode(): scala.Int = {
     var h: scala.Int = this.size
     val keyTable: scala.Array[scala.Int] = this.keyTable;
     { var i: scala.Int = 0; val n: scala.Int = keyTable.length; while (i < n) { {
@@ -225,7 +225,7 @@ class IntSet(initialCapacity: scala.Int, loadFactor$p: scala.Float) {
     }; i = i + 1 } }
     return h
   }
-  def equals(obj: java.lang.Object): scala.Boolean = {
+  override def equals(obj: java.lang.Object): scala.Boolean = {
     if (!obj.isInstanceOf[IntSet]) {
       return false
     } else ()
@@ -244,7 +244,7 @@ class IntSet(initialCapacity: scala.Int, loadFactor$p: scala.Float) {
     }; i = i + 1 } }
     return true
   }
-  def toString(): java.lang.String = {
+  override def toString(): java.lang.String = {
     if (this.size == 0) {
       return "[]"
     } else ()

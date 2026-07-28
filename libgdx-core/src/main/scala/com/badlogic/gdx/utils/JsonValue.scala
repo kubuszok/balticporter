@@ -1038,10 +1038,10 @@ class JsonValue extends balticporter.runtime.JavaIterable[JsonValue] {
       }
     }
   }
-  def iterator(): com.badlogic.gdx.utils.JsonValue#JsonIterator = {
+  override def iterator(): com.badlogic.gdx.utils.JsonValue#JsonIterator = {
     return new JsonIterator()
   }
-  def toString(): java.lang.String = {
+  override def toString(): java.lang.String = {
     if (this.isValue()) {
       return if (this.name$field == null) this.asString() else (this.name$field + ": ") + this.asString()
     } else ()
@@ -1264,10 +1264,10 @@ class JsonValue extends balticporter.runtime.JavaIterable[JsonValue] {
   class JsonIterator extends balticporter.runtime.JavaIterator[JsonValue] with balticporter.runtime.JavaIterable[JsonValue] {
     var entry: JsonValue = JsonValue.this.child$field
     var current: JsonValue = null.asInstanceOf[JsonValue]
-    def hasNext(): scala.Boolean = {
+    override def hasNext(): scala.Boolean = {
       return this.entry != null
     }
-    def next(): JsonValue = {
+    override def next(): JsonValue = {
       this.current = this.entry
       if (this.current == null) {
         throw new java.util.NoSuchElementException()
@@ -1275,10 +1275,10 @@ class JsonValue extends balticporter.runtime.JavaIterable[JsonValue] {
       this.entry = this.current.next$field
       return this.current
     }
-    def remove(): scala.Unit = {
+    override def remove(): scala.Unit = {
       this.current.remove()
     }
-    def iterator(): balticporter.runtime.JavaIterator[JsonValue] = {
+    override def iterator(): balticporter.runtime.JavaIterator[JsonValue] = {
       return this
     }
   }

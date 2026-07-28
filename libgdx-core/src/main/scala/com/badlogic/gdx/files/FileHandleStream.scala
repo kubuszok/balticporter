@@ -1,52 +1,52 @@
 package com.badlogic.gdx.files
 
 abstract class FileHandleStream(path$p: java.lang.String) extends com.badlogic.gdx.files.FileHandle(new java.io.File(path$p), com.badlogic.gdx.Files.FileType.Absolute) {
-  def isDirectory(): scala.Boolean = {
+  override def isDirectory(): scala.Boolean = {
     return false
   }
-  def length(): scala.Long = {
+  override def length(): scala.Long = {
     return 0
   }
-  def exists(): scala.Boolean = {
+  override def exists(): scala.Boolean = {
     return true
   }
-  def child(name: java.lang.String): com.badlogic.gdx.files.FileHandle = {
+  override def child(name: java.lang.String): com.badlogic.gdx.files.FileHandle = {
     throw new java.lang.UnsupportedOperationException()
   }
-  def sibling(name: java.lang.String): com.badlogic.gdx.files.FileHandle = {
+  override def sibling(name: java.lang.String): com.badlogic.gdx.files.FileHandle = {
     throw new java.lang.UnsupportedOperationException()
   }
-  def parent(): com.badlogic.gdx.files.FileHandle = {
+  override def parent(): com.badlogic.gdx.files.FileHandle = {
     throw new java.lang.UnsupportedOperationException()
   }
-  def read(): java.io.InputStream = {
+  override def read(): java.io.InputStream = {
     throw new java.lang.UnsupportedOperationException()
   }
-  def write(overwrite: scala.Boolean): java.io.OutputStream = {
+  override def write(overwrite: scala.Boolean): java.io.OutputStream = {
     throw new java.lang.UnsupportedOperationException()
   }
-  def list(): scala.Array[com.badlogic.gdx.files.FileHandle] = {
+  override def list(): scala.Array[com.badlogic.gdx.files.FileHandle] = {
     throw new java.lang.UnsupportedOperationException()
   }
-  def mkdirs(): scala.Unit = {
+  override def mkdirs(): scala.Unit = {
     throw new java.lang.UnsupportedOperationException()
   }
-  def delete(): scala.Boolean = {
+  override def delete(): scala.Boolean = {
     throw new java.lang.UnsupportedOperationException()
   }
-  def deleteDirectory(): scala.Boolean = {
+  override def deleteDirectory(): scala.Boolean = {
     throw new java.lang.UnsupportedOperationException()
   }
-  def copyTo(dest: com.badlogic.gdx.files.FileHandle): scala.Unit = {
+  override def copyTo(dest: com.badlogic.gdx.files.FileHandle): scala.Unit = {
     throw new java.lang.UnsupportedOperationException()
   }
-  def moveTo(dest: com.badlogic.gdx.files.FileHandle): scala.Unit = {
+  override def moveTo(dest: com.badlogic.gdx.files.FileHandle): scala.Unit = {
     throw new java.lang.UnsupportedOperationException()
   }
-  def emptyDirectory(): scala.Unit = {
+  override def emptyDirectory(): scala.Unit = {
     throw new java.lang.UnsupportedOperationException()
   }
-  def emptyDirectory(preserveTree: scala.Boolean): scala.Unit = {
+  override def emptyDirectory(preserveTree: scala.Boolean): scala.Unit = {
     throw new java.lang.UnsupportedOperationException()
   }
 }

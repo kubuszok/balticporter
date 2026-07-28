@@ -29,7 +29,7 @@ abstract class Action extends com.badlogic.gdx.utils.Pool.Poolable {
   def getTarget(): com.badlogic.gdx.scenes.scene2d.Actor = {
     return this.target
   }
-  def reset(): scala.Unit = {
+  override def reset(): scala.Unit = {
     this.actor = null
     this.target = null
     this.pool = null
@@ -42,7 +42,7 @@ abstract class Action extends com.badlogic.gdx.utils.Pool.Poolable {
   def setPool(pool: com.badlogic.gdx.utils.Pool[?]): scala.Unit = {
     this.pool = pool.asInstanceOf[com.badlogic.gdx.utils.Pool[?]]
   }
-  def toString(): java.lang.String = {
+  override def toString(): java.lang.String = {
     var name: java.lang.String = this.getClass().getName()
     val dotIndex: scala.Int = name.lastIndexOf('.')
     if (dotIndex != (-1)) {

@@ -255,7 +255,7 @@ class ObjectFloatMap[K <: java.lang.Object](initialCapacity: scala.Int, loadFact
       }; i = i + 1 } }
     } else ()
   }
-  def hashCode(): scala.Int = {
+  override def hashCode(): scala.Int = {
     var h: scala.Int = this.size
     val keyTable: scala.Array[K] = this.keyTable
     val valueTable: scala.Array[scala.Float] = this.valueTable;
@@ -267,7 +267,7 @@ class ObjectFloatMap[K <: java.lang.Object](initialCapacity: scala.Int, loadFact
     }; i = i + 1 } }
     return h
   }
-  def equals(obj: java.lang.Object): scala.Boolean = {
+  override def equals(obj: java.lang.Object): scala.Boolean = {
     if (obj == this) {
       return true
     } else ()
@@ -297,7 +297,7 @@ class ObjectFloatMap[K <: java.lang.Object](initialCapacity: scala.Int, loadFact
   def toString(separator: java.lang.String): java.lang.String = {
     return this.toString(separator, false)
   }
-  def toString(): java.lang.String = {
+  override def toString(): java.lang.String = {
     return this.toString(", ", true)
   }
   private def toString(separator: java.lang.String, braces: scala.Boolean): java.lang.String = {
@@ -336,7 +336,7 @@ class ObjectFloatMap[K <: java.lang.Object](initialCapacity: scala.Int, loadFact
     } else ()
     return buffer.toString()
   }
-  def iterator(): com.badlogic.gdx.utils.ObjectFloatMap.Entries[K] = {
+  override def iterator(): com.badlogic.gdx.utils.ObjectFloatMap.Entries[K] = {
     return this.entries()
   }
   def entries(): com.badlogic.gdx.utils.ObjectFloatMap.Entries[K] = {
@@ -401,7 +401,7 @@ object ObjectFloatMap {
   class Entry[K <: java.lang.Object] {
     var key: K = null.asInstanceOf[K]
     var value: scala.Float = 0.0f
-    def toString(): java.lang.String = {
+    override def toString(): java.lang.String = {
       return (java.lang.String.valueOf(this.key) + "=") + this.value
     }
   }
@@ -460,7 +460,7 @@ object ObjectFloatMap {
   }
   class Entries[K <: java.lang.Object](map$p: ObjectFloatMap[K]) extends com.badlogic.gdx.utils.ObjectFloatMap.MapIterator[K](map$p) with balticporter.runtime.JavaIterable[com.badlogic.gdx.utils.ObjectFloatMap.Entry[K]] with balticporter.runtime.JavaIterator[com.badlogic.gdx.utils.ObjectFloatMap.Entry[K]] {
     var entry: com.badlogic.gdx.utils.ObjectFloatMap.Entry[K] = new com.badlogic.gdx.utils.ObjectFloatMap.Entry[K]()
-    def next(): com.badlogic.gdx.utils.ObjectFloatMap.Entry[K] = {
+    override def next(): com.badlogic.gdx.utils.ObjectFloatMap.Entry[K] = {
       if (!hasNext$field) {
         throw new java.util.NoSuchElementException()
       } else ()
@@ -474,13 +474,13 @@ object ObjectFloatMap {
       this.findNextIndex()
       return this.entry
     }
-    def hasNext(): scala.Boolean = {
+    override def hasNext(): scala.Boolean = {
       if (!valid) {
         throw new com.badlogic.gdx.utils.GdxRuntimeException("#iterator() cannot be used nested.")
       } else ()
       return hasNext$field
     }
-    def iterator(): com.badlogic.gdx.utils.ObjectFloatMap.Entries[K] = {
+    override def iterator(): com.badlogic.gdx.utils.ObjectFloatMap.Entries[K] = {
       return this
     }
   }
@@ -521,13 +521,13 @@ object ObjectFloatMap {
     }
   }
   class Keys[K <: java.lang.Object](map$p: ObjectFloatMap[K]) extends com.badlogic.gdx.utils.ObjectFloatMap.MapIterator[K](map$p) with balticporter.runtime.JavaIterable[K] with balticporter.runtime.JavaIterator[K] {
-    def hasNext(): scala.Boolean = {
+    override def hasNext(): scala.Boolean = {
       if (!valid) {
         throw new com.badlogic.gdx.utils.GdxRuntimeException("#iterator() cannot be used nested.")
       } else ()
       return hasNext$field
     }
-    def next(): K = {
+    override def next(): K = {
       if (!hasNext$field) {
         throw new java.util.NoSuchElementException()
       } else ()
@@ -539,7 +539,7 @@ object ObjectFloatMap {
       this.findNextIndex()
       return key
     }
-    def iterator(): com.badlogic.gdx.utils.ObjectFloatMap.Keys[K] = {
+    override def iterator(): com.badlogic.gdx.utils.ObjectFloatMap.Keys[K] = {
       return this
     }
     def toArray(): com.badlogic.gdx.utils.Array[K] = {

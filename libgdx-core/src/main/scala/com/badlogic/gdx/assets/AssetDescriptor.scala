@@ -25,7 +25,7 @@ class AssetDescriptor[T <: java.lang.Object] {
     this(file, assetType, null)
   }
   @java.lang.Override
-  def toString(): java.lang.String = {
+  override def toString(): java.lang.String = {
     val sb: java.lang.StringBuilder = new java.lang.StringBuilder()
     sb.append(this.fileName)
     sb.append(", ")

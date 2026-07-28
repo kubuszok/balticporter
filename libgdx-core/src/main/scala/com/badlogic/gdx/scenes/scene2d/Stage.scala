@@ -182,7 +182,7 @@ class Stage(viewport$p: com.badlogic.gdx.utils.viewport.Viewport, batch$p: com.b
     actor.fire(event)
     this.pools.free(event)
   }
-  def touchDown(screenX: scala.Int, screenY: scala.Int, pointer: scala.Int, button: scala.Int): scala.Boolean = {
+  override def touchDown(screenX: scala.Int, screenY: scala.Int, pointer: scala.Int, button: scala.Int): scala.Boolean = {
     if (!this.isInsideViewport(screenX, screenY)) {
       return false
     } else ()
@@ -209,7 +209,7 @@ class Stage(viewport$p: com.badlogic.gdx.utils.viewport.Viewport, batch$p: com.b
     this.pools.free(event)
     return handled
   }
-  def touchDragged(screenX: scala.Int, screenY: scala.Int, pointer: scala.Int): scala.Boolean = {
+  override def touchDragged(screenX: scala.Int, screenY: scala.Int, pointer: scala.Int): scala.Boolean = {
     this.pointerScreenX(pointer) = screenX
     this.pointerScreenY(pointer) = screenY
     this.mouseScreenX = screenX
@@ -245,7 +245,7 @@ class Stage(viewport$p: com.badlogic.gdx.utils.viewport.Viewport, batch$p: com.b
     this.pools.free(event)
     return handled
   }
-  def touchUp(screenX: scala.Int, screenY: scala.Int, pointer: scala.Int, button: scala.Int): scala.Boolean = {
+  override def touchUp(screenX: scala.Int, screenY: scala.Int, pointer: scala.Int, button: scala.Int): scala.Boolean = {
     this.pointerTouched(pointer) = false
     this.pointerScreenX(pointer) = screenX
     this.pointerScreenY(pointer) = screenY
@@ -282,11 +282,11 @@ class Stage(viewport$p: com.badlogic.gdx.utils.viewport.Viewport, batch$p: com.b
     this.pools.free(event)
     return handled
   }
-  def touchCancelled(screenX: scala.Int, screenY: scala.Int, pointer: scala.Int, button: scala.Int): scala.Boolean = {
+  override def touchCancelled(screenX: scala.Int, screenY: scala.Int, pointer: scala.Int, button: scala.Int): scala.Boolean = {
     this.cancelTouchFocus()
     return false
   }
-  def mouseMoved(screenX: scala.Int, screenY: scala.Int): scala.Boolean = {
+  override def mouseMoved(screenX: scala.Int, screenY: scala.Int): scala.Boolean = {
     this.mouseScreenX = screenX
     this.mouseScreenY = screenY
     if (!this.isInsideViewport(screenX, screenY)) {
@@ -307,7 +307,7 @@ class Stage(viewport$p: com.badlogic.gdx.utils.viewport.Viewport, batch$p: com.b
     this.pools.free(event)
     return handled
   }
-  def scrolled(amountX: scala.Float, amountY: scala.Float): scala.Boolean = {
+  override def scrolled(amountX: scala.Float, amountY: scala.Float): scala.Boolean = {
     val target: com.badlogic.gdx.scenes.scene2d.Actor = if (this.scrollFocus == null) this.root else this.scrollFocus
     this.screenToStageCoordinates(this.tempCoords.set(this.mouseScreenX, this.mouseScreenY))
     val event: com.badlogic.gdx.scenes.scene2d.InputEvent = this.pools.obtain(classOf[com.badlogic.gdx.scenes.scene2d.InputEvent])
@@ -322,7 +322,7 @@ class Stage(viewport$p: com.badlogic.gdx.utils.viewport.Viewport, batch$p: com.b
     this.pools.free(event)
     return handled
   }
-  def keyDown(keyCode: scala.Int): scala.Boolean = {
+  override def keyDown(keyCode: scala.Int): scala.Boolean = {
     val target: com.badlogic.gdx.scenes.scene2d.Actor = if (this.keyboardFocus == null) this.root else this.keyboardFocus
     val event: com.badlogic.gdx.scenes.scene2d.InputEvent = this.pools.obtain(classOf[com.badlogic.gdx.scenes.scene2d.InputEvent])
     event.setType(com.badlogic.gdx.scenes.scene2d.InputEvent.Type.keyDown)
@@ -333,7 +333,7 @@ class Stage(viewport$p: com.badlogic.gdx.utils.viewport.Viewport, batch$p: com.b
     this.pools.free(event)
     return handled
   }
-  def keyUp(keyCode: scala.Int): scala.Boolean = {
+  override def keyUp(keyCode: scala.Int): scala.Boolean = {
     val target: com.badlogic.gdx.scenes.scene2d.Actor = if (this.keyboardFocus == null) this.root else this.keyboardFocus
     val event: com.badlogic.gdx.scenes.scene2d.InputEvent = this.pools.obtain(classOf[com.badlogic.gdx.scenes.scene2d.InputEvent])
     event.setType(com.badlogic.gdx.scenes.scene2d.InputEvent.Type.keyUp)
@@ -344,7 +344,7 @@ class Stage(viewport$p: com.badlogic.gdx.utils.viewport.Viewport, batch$p: com.b
     this.pools.free(event)
     return handled
   }
-  def keyTyped(character: scala.Char): scala.Boolean = {
+  override def keyTyped(character: scala.Char): scala.Boolean = {
     val target: com.badlogic.gdx.scenes.scene2d.Actor = if (this.keyboardFocus == null) this.root else this.keyboardFocus
     val event: com.badlogic.gdx.scenes.scene2d.InputEvent = this.pools.obtain(classOf[com.badlogic.gdx.scenes.scene2d.InputEvent])
     event.setType(com.badlogic.gdx.scenes.scene2d.InputEvent.Type.keyTyped)
@@ -670,7 +670,7 @@ class Stage(viewport$p: com.badlogic.gdx.utils.viewport.Viewport, batch$p: com.b
   def setDebugTableUnderMouse(debugTableUnderMouse: scala.Boolean): scala.Unit = {
     this.setDebugTableUnderMouse(if (debugTableUnderMouse) com.badlogic.gdx.scenes.scene2d.ui.Table.Debug.all else com.badlogic.gdx.scenes.scene2d.ui.Table.Debug.none)
   }
-  def dispose(): scala.Unit = {
+  override def dispose(): scala.Unit = {
     this.clear()
     if (this.ownsBatch) {
       this.batch.dispose()
@@ -697,7 +697,7 @@ object Stage {
     var target: com.badlogic.gdx.scenes.scene2d.Actor = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.Actor]
     var pointer: scala.Int = 0
     var button: scala.Int = 0
-    def reset(): scala.Unit = {
+    override def reset(): scala.Unit = {
       this.listenerActor = null
       this.listener = null
       this.target = null

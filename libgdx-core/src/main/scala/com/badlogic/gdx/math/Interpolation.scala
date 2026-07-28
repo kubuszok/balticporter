@@ -130,7 +130,7 @@ object Interpolation {
   class Pow(power$p: scala.Int) extends Interpolation {
     var power: scala.Int = 0
     this.power = power$p
-    def apply(a: scala.Float): scala.Float = {
+    override def apply(a: scala.Float): scala.Float = {
       if (a <= 0.5f) {
         return java.lang.Math.pow(a * 2, this.power).asInstanceOf[scala.Float] / 2
       } else ()
@@ -141,7 +141,7 @@ object Interpolation {
     export Interpolation.*
   }
   class PowIn(power$p: scala.Int) extends com.badlogic.gdx.math.Interpolation.Pow(power$p) {
-    def apply(a: scala.Float): scala.Float = {
+    override def apply(a: scala.Float): scala.Float = {
       return java.lang.Math.pow(a, power).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
     }
   }
@@ -149,7 +149,7 @@ object Interpolation {
     export com.badlogic.gdx.math.Interpolation.Pow.*
   }
   class PowOut(power$p: scala.Int) extends com.badlogic.gdx.math.Interpolation.Pow(power$p) {
-    def apply(a: scala.Float): scala.Float = {
+    override def apply(a: scala.Float): scala.Float = {
       return (java.lang.Math.pow(a - 1, power).asInstanceOf[scala.Float] * (if ((power % 2) == 0) -1 else 1)) + 1
     }
   }
@@ -165,7 +165,7 @@ object Interpolation {
     this.power = power$p
     this.min = java.lang.Math.pow(value$p, -power$p).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
     this.scale = 1 / (1 - this.min)
-    def apply(a: scala.Float): scala.Float = {
+    override def apply(a: scala.Float): scala.Float = {
       if (a <= 0.5f) {
         return ((java.lang.Math.pow(this.value, this.power * ((a * 2) - 1)).asInstanceOf[scala.Float] - this.min) * this.scale) / 2
       } else ()
@@ -176,7 +176,7 @@ object Interpolation {
     export Interpolation.*
   }
   class ExpIn(value$p: scala.Float, power$p: scala.Float) extends com.badlogic.gdx.math.Interpolation.Exp(value$p, power$p) {
-    def apply(a: scala.Float): scala.Float = {
+    override def apply(a: scala.Float): scala.Float = {
       return (java.lang.Math.pow(value, power * (a - 1)).asInstanceOf[scala.Float] - min) * scale
     }
   }
@@ -184,7 +184,7 @@ object Interpolation {
     export com.badlogic.gdx.math.Interpolation.Exp.*
   }
   class ExpOut(value$p: scala.Float, power$p: scala.Float) extends com.badlogic.gdx.math.Interpolation.Exp(value$p, power$p) {
-    def apply(a: scala.Float): scala.Float = {
+    override def apply(a: scala.Float): scala.Float = {
       return 1 - ((java.lang.Math.pow(value, (-power) * a).asInstanceOf[scala.Float] - min) * scale)
     }
   }
@@ -200,7 +200,7 @@ object Interpolation {
     this.power = power$p
     this.scale = scale$p
     this.bounces = (bounces$p * com.badlogic.gdx.math.MathUtils.PI) * (if ((bounces$p % 2) == 0) 1 else -1)
-    def apply(a$arg: scala.Float): scala.Float = {
+    override def apply(a$arg: scala.Float): scala.Float = {
       var a: scala.Float = a$arg
       if (a <= 0.5f) {
         a = a * 2
@@ -215,7 +215,7 @@ object Interpolation {
     export Interpolation.*
   }
   class ElasticIn(value$p: scala.Float, power$p: scala.Float, bounces$p: scala.Int, scale$p: scala.Float) extends com.badlogic.gdx.math.Interpolation.Elastic(value$p, power$p, bounces$p, scale$p) {
-    def apply(a: scala.Float): scala.Float = {
+    override def apply(a: scala.Float): scala.Float = {
       if (a >= 0.99) {
         return 1
       } else ()
@@ -226,7 +226,7 @@ object Interpolation {
     export com.badlogic.gdx.math.Interpolation.Elastic.*
   }
   class ElasticOut(value$p: scala.Float, power$p: scala.Float, bounces$p: scala.Int, scale$p: scala.Float) extends com.badlogic.gdx.math.Interpolation.Elastic(value$p, power$p, bounces$p, scale$p) {
-    def apply(a$arg: scala.Float): scala.Float = {
+    override def apply(a$arg: scala.Float): scala.Float = {
       var a: scala.Float = a$arg
       if (a == 0) {
         return 0
@@ -298,7 +298,7 @@ object Interpolation {
       } else ()
       return super.apply(a)
     }
-    def apply(a: scala.Float): scala.Float = {
+    override def apply(a: scala.Float): scala.Float = {
       if (a <= 0.5f) {
         return (1 - this.out(1 - (a * 2))) / 2
       } else ()
@@ -363,7 +363,7 @@ object Interpolation {
       }
       this.widths(0) = this.widths(0) * 2
     }
-    def apply(a$arg: scala.Float): scala.Float = {
+    override def apply(a$arg: scala.Float): scala.Float = {
       var a: scala.Float = a$arg
       if (a == 1) {
         return 1
@@ -440,7 +440,7 @@ object Interpolation {
       }
       this.widths(0) = this.widths(0) * 2
     }
-    def apply(a: scala.Float): scala.Float = {
+    override def apply(a: scala.Float): scala.Float = {
       return 1 - super.apply(1 - a)
     }
   }
@@ -450,7 +450,7 @@ object Interpolation {
   class Swing(scale$p: scala.Float) extends Interpolation {
     private var scale: scala.Float = 0.0f
     this.scale = scale$p * 2
-    def apply(a$arg: scala.Float): scala.Float = {
+    override def apply(a$arg: scala.Float): scala.Float = {
       var a: scala.Float = a$arg
       if (a <= 0.5f) {
         a = a * 2
@@ -467,7 +467,7 @@ object Interpolation {
   class SwingOut(scale$p: scala.Float) extends Interpolation {
     private var scale: scala.Float = 0.0f
     this.scale = scale$p
-    def apply(a$arg: scala.Float): scala.Float = {
+    override def apply(a$arg: scala.Float): scala.Float = {
       var a: scala.Float = a$arg
       a = a - 1
       return ((a * a) * (((this.scale + 1) * a) + this.scale)) + 1
@@ -479,7 +479,7 @@ object Interpolation {
   class SwingIn(scale$p: scala.Float) extends Interpolation {
     private var scale: scala.Float = 0.0f
     this.scale = scale$p
-    def apply(a: scala.Float): scala.Float = {
+    override def apply(a: scala.Float): scala.Float = {
       return (a * a) * (((this.scale + 1) * a) - this.scale)
     }
   }

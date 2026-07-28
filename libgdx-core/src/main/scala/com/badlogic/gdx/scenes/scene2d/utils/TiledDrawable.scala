@@ -21,13 +21,13 @@ class TiledDrawable extends com.badlogic.gdx.scenes.scene2d.utils.TextureRegionD
     this.minHeight = drawable.getMinHeight()
     this.setRegion(drawable.region)
   }
-  def draw(batch: com.badlogic.gdx.graphics.g2d.Batch, x: scala.Float, y: scala.Float, width: scala.Float, height: scala.Float): scala.Unit = {
+  override def draw(batch: com.badlogic.gdx.graphics.g2d.Batch, x: scala.Float, y: scala.Float, width: scala.Float, height: scala.Float): scala.Unit = {
     val oldColor: scala.Float = batch.getPackedColor()
     batch.setColor(batch.getColor().mul(this.color))
     TiledDrawable.draw(batch, this.getRegion(), x, y, width, height, this.scale, this.align)
     batch.setPackedColor(oldColor)
   }
-  def draw(batch: com.badlogic.gdx.graphics.g2d.Batch, x: scala.Float, y: scala.Float, originX: scala.Float, originY: scala.Float, width: scala.Float, height: scala.Float, scaleX: scala.Float, scaleY: scala.Float, rotation: scala.Float): scala.Unit = {
+  override def draw(batch: com.badlogic.gdx.graphics.g2d.Batch, x: scala.Float, y: scala.Float, originX: scala.Float, originY: scala.Float, width: scala.Float, height: scala.Float, scaleX: scala.Float, scaleY: scala.Float, rotation: scala.Float): scala.Unit = {
     throw new java.lang.UnsupportedOperationException()
   }
   def getColor(): com.badlogic.gdx.graphics.Color = {
@@ -45,7 +45,7 @@ class TiledDrawable extends com.badlogic.gdx.scenes.scene2d.utils.TextureRegionD
   def setAlign(align: scala.Int): scala.Unit = {
     this.align = align
   }
-  def tint(tint: com.badlogic.gdx.graphics.Color): TiledDrawable = {
+  override def tint(tint: com.badlogic.gdx.graphics.Color): TiledDrawable = {
     val drawable: TiledDrawable = new TiledDrawable(this)
     drawable.color.set(tint)
     drawable.setLeftWidth(this.getLeftWidth())

@@ -381,7 +381,7 @@ class ArrayMap[K <: java.lang.Object, V <: java.lang.Object] extends balticporte
     }; i = i + 1 } }
     this.size = newSize
   }
-  def hashCode(): scala.Int = {
+  override def hashCode(): scala.Int = {
     val keys: scala.Array[K] = this.keys$field
     val values: scala.Array[V] = this.values$field
     var h: scala.Int = 0;
@@ -397,7 +397,7 @@ class ArrayMap[K <: java.lang.Object, V <: java.lang.Object] extends balticporte
     }; i = i + 1 } }
     return h
   }
-  def equals(obj: java.lang.Object): scala.Boolean = {
+  override def equals(obj: java.lang.Object): scala.Boolean = {
     if (obj == this) {
       return true
     } else ()
@@ -445,7 +445,7 @@ class ArrayMap[K <: java.lang.Object, V <: java.lang.Object] extends balticporte
     }; i = i + 1 } }
     return true
   }
-  def toString(): java.lang.String = {
+  override def toString(): java.lang.String = {
     if (this.size == 0) {
       return "{}"
     } else ()
@@ -465,7 +465,7 @@ class ArrayMap[K <: java.lang.Object, V <: java.lang.Object] extends balticporte
     buffer.append('}')
     return buffer.toString()
   }
-  def iterator(): balticporter.runtime.JavaIterator[com.badlogic.gdx.utils.ObjectMap.Entry[K, V]] = {
+  override def iterator(): balticporter.runtime.JavaIterator[com.badlogic.gdx.utils.ObjectMap.Entry[K, V]] = {
     return this.entries()
   }
   def entries(): com.badlogic.gdx.utils.ArrayMap.Entries[K, V] = {
@@ -533,16 +533,16 @@ object ArrayMap {
     var index: scala.Int = 0
     var valid: scala.Boolean = true
     this.map = map$p
-    def hasNext(): scala.Boolean = {
+    override def hasNext(): scala.Boolean = {
       if (!this.valid) {
         throw new com.badlogic.gdx.utils.GdxRuntimeException("#iterator() cannot be used nested.")
       } else ()
       return this.index < this.map.size
     }
-    def iterator(): balticporter.runtime.JavaIterator[com.badlogic.gdx.utils.ObjectMap.Entry[K, V]] = {
+    override def iterator(): balticporter.runtime.JavaIterator[com.badlogic.gdx.utils.ObjectMap.Entry[K, V]] = {
       return this
     }
-    def next(): com.badlogic.gdx.utils.ObjectMap.Entry[K, V] = {
+    override def next(): com.badlogic.gdx.utils.ObjectMap.Entry[K, V] = {
       if (this.index >= this.map.size) {
         throw new java.util.NoSuchElementException(java.lang.String.valueOf(this.index))
       } else ()
@@ -553,7 +553,7 @@ object ArrayMap {
       this.entry.value = this.map.values$field({ this.index += 1; this.index })
       return this.entry
     }
-    def remove(): scala.Unit = {
+    override def remove(): scala.Unit = {
       this.index = this.index - 1
       this.map.removeIndex(this.index)
     }
@@ -566,16 +566,16 @@ object ArrayMap {
     var index: scala.Int = 0
     var valid: scala.Boolean = true
     this.map = map$p
-    def hasNext(): scala.Boolean = {
+    override def hasNext(): scala.Boolean = {
       if (!this.valid) {
         throw new com.badlogic.gdx.utils.GdxRuntimeException("#iterator() cannot be used nested.")
       } else ()
       return this.index < this.map.size
     }
-    def iterator(): balticporter.runtime.JavaIterator[V] = {
+    override def iterator(): balticporter.runtime.JavaIterator[V] = {
       return this
     }
-    def next(): V = {
+    override def next(): V = {
       if (this.index >= this.map.size) {
         throw new java.util.NoSuchElementException(java.lang.String.valueOf(this.index))
       } else ()
@@ -584,7 +584,7 @@ object ArrayMap {
       } else ()
       return this.map.values$field({ this.index += 1; this.index })
     }
-    def remove(): scala.Unit = {
+    override def remove(): scala.Unit = {
       this.index = this.index - 1
       this.map.removeIndex(this.index)
     }
@@ -604,16 +604,16 @@ object ArrayMap {
     var index: scala.Int = 0
     var valid: scala.Boolean = true
     this.map = map$p
-    def hasNext(): scala.Boolean = {
+    override def hasNext(): scala.Boolean = {
       if (!this.valid) {
         throw new com.badlogic.gdx.utils.GdxRuntimeException("#iterator() cannot be used nested.")
       } else ()
       return this.index < this.map.size
     }
-    def iterator(): balticporter.runtime.JavaIterator[K] = {
+    override def iterator(): balticporter.runtime.JavaIterator[K] = {
       return this
     }
-    def next(): K = {
+    override def next(): K = {
       if (this.index >= this.map.size) {
         throw new java.util.NoSuchElementException(java.lang.String.valueOf(this.index))
       } else ()
@@ -622,7 +622,7 @@ object ArrayMap {
       } else ()
       return this.map.keys$field({ this.index += 1; this.index })
     }
-    def remove(): scala.Unit = {
+    override def remove(): scala.Unit = {
       this.index = this.index - 1
       this.map.removeIndex(this.index)
     }

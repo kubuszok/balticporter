@@ -9,11 +9,11 @@ abstract class Attribute extends java.lang.Comparable[Attribute] {
     this.typeBit = java.lang.Long.numberOfTrailingZeros(`type`)
   }
   def copy(): Attribute
-  def equals(other: Attribute): scala.Boolean = {
+  override def equals(other: Attribute): scala.Boolean = {
     return other.hashCode() == this.hashCode()
   }
   @java.lang.Override
-  def equals(obj: java.lang.Object): scala.Boolean = {
+  override def equals(obj: java.lang.Object): scala.Boolean = {
     if (obj == null) {
       return false
     } else ()
@@ -30,11 +30,11 @@ abstract class Attribute extends java.lang.Comparable[Attribute] {
     return this.equals(other)
   }
   @java.lang.Override
-  def toString(): java.lang.String = {
+  override def toString(): java.lang.String = {
     return Attribute.getAttributeAlias(this.`type`)
   }
   @java.lang.Override
-  def hashCode(): scala.Int = {
+  override def hashCode(): scala.Int = {
     return 7489 * this.typeBit
   }
 }

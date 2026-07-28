@@ -236,7 +236,7 @@ object BaseTiledMapLoader {
     var propertyType: java.lang.String = null.asInstanceOf[java.lang.String]
     var defaultValue: com.badlogic.gdx.utils.JsonValue = null.asInstanceOf[com.badlogic.gdx.utils.JsonValue]
     @java.lang.Override
-    def toString(): java.lang.String = {
+    override def toString(): java.lang.String = {
       return ((((((((((("ProjectClassMember{" + "name='") + this.name) + "'") + ", type='") + this.`type`) + "'") + ", propertyType='") + this.propertyType) + "'") + ", defaultValue=") + this.defaultValue) + "}"
     }
   }

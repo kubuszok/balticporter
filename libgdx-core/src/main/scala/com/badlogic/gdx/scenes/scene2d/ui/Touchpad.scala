@@ -72,17 +72,17 @@ class Touchpad(deadzoneRadius$p: scala.Float, style$p: com.badlogic.gdx.scenes.s
       com.badlogic.gdx.scenes.scene2d.Actor.POOLS.free(changeEvent)
     } else ()
   }
-  def setStyle(style: com.badlogic.gdx.scenes.scene2d.ui.Touchpad.TouchpadStyle): scala.Unit = {
+  override def setStyle(style: com.badlogic.gdx.scenes.scene2d.ui.Touchpad.TouchpadStyle): scala.Unit = {
     if (style == null) {
       throw new java.lang.IllegalArgumentException("style cannot be null")
     } else ()
     this.style = style
     this.invalidateHierarchy()
   }
-  def getStyle(): com.badlogic.gdx.scenes.scene2d.ui.Touchpad.TouchpadStyle = {
+  override def getStyle(): com.badlogic.gdx.scenes.scene2d.ui.Touchpad.TouchpadStyle = {
     return this.style
   }
-  def hit(x: scala.Float, y: scala.Float, touchable: scala.Boolean): com.badlogic.gdx.scenes.scene2d.Actor = {
+  override def hit(x: scala.Float, y: scala.Float, touchable: scala.Boolean): com.badlogic.gdx.scenes.scene2d.Actor = {
     if (touchable && (this.getTouchable() != com.badlogic.gdx.scenes.scene2d.Touchable.enabled)) {
       return null
     } else ()
@@ -91,7 +91,7 @@ class Touchpad(deadzoneRadius$p: scala.Float, style$p: com.badlogic.gdx.scenes.s
     } else ()
     return if (this.touchBounds.contains(x, y)) this else null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.Actor]
   }
-  def layout(): scala.Unit = {
+  override def layout(): scala.Unit = {
     val halfWidth: scala.Float = this.getWidth() / 2
     val halfHeight: scala.Float = this.getHeight() / 2
     var radius: scala.Float = java.lang.Math.min(halfWidth, halfHeight)
@@ -104,7 +104,7 @@ class Touchpad(deadzoneRadius$p: scala.Float, style$p: com.badlogic.gdx.scenes.s
     this.knobPosition.set(halfWidth, halfHeight)
     this.knobPercent.set(0, 0)
   }
-  def draw(batch: com.badlogic.gdx.graphics.g2d.Batch, parentAlpha: scala.Float): scala.Unit = {
+  override def draw(batch: com.badlogic.gdx.graphics.g2d.Batch, parentAlpha: scala.Float): scala.Unit = {
     this.validate()
     val c: com.badlogic.gdx.graphics.Color = this.getColor()
     batch.setColor(c.r, c.g, c.b, c.a * parentAlpha)
@@ -123,10 +123,10 @@ class Touchpad(deadzoneRadius$p: scala.Float, style$p: com.badlogic.gdx.scenes.s
       knob.draw(batch, x, y, knob.getMinWidth(), knob.getMinHeight())
     } else ()
   }
-  def getPrefWidth(): scala.Float = {
+  override def getPrefWidth(): scala.Float = {
     return if (this.style.background != null) this.style.background.getMinWidth() else 0
   }
-  def getPrefHeight(): scala.Float = {
+  override def getPrefHeight(): scala.Float = {
     return if (this.style.background != null) this.style.background.getMinHeight() else 0
   }
   def isTouched(): scala.Boolean = {

@@ -38,11 +38,11 @@ class CameraGroupStrategy extends com.badlogic.gdx.graphics.g3d.decals.GroupStra
     return this.camera
   }
   @java.lang.Override
-  def decideGroup(decal: com.badlogic.gdx.graphics.g3d.decals.Decal): scala.Int = {
+  override def decideGroup(decal: com.badlogic.gdx.graphics.g3d.decals.Decal): scala.Int = {
     return if (decal.getMaterial().isOpaque()) CameraGroupStrategy.GROUP_OPAQUE else CameraGroupStrategy.GROUP_BLEND
   }
   @java.lang.Override
-  def beforeGroup(group: scala.Int, contents: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.decals.Decal]): scala.Unit = {
+  override def beforeGroup(group: scala.Int, contents: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.decals.Decal]): scala.Unit = {
     if (group == CameraGroupStrategy.GROUP_BLEND) {
       com.badlogic.gdx.Gdx.gl.glEnable(com.badlogic.gdx.graphics.GL20.GL_BLEND)
       com.badlogic.gdx.Gdx.gl.glDepthMask(false)
@@ -69,21 +69,21 @@ class CameraGroupStrategy extends com.badlogic.gdx.graphics.g3d.decals.GroupStra
     }
   }
   @java.lang.Override
-  def afterGroup(group: scala.Int): scala.Unit = {
+  override def afterGroup(group: scala.Int): scala.Unit = {
     if (group == CameraGroupStrategy.GROUP_BLEND) {
       com.badlogic.gdx.Gdx.gl.glDisable(com.badlogic.gdx.graphics.GL20.GL_BLEND)
       com.badlogic.gdx.Gdx.gl.glDepthMask(true)
     } else ()
   }
   @java.lang.Override
-  def beforeGroups(): scala.Unit = {
+  override def beforeGroups(): scala.Unit = {
     com.badlogic.gdx.Gdx.gl.glEnable(com.badlogic.gdx.graphics.GL20.GL_DEPTH_TEST)
     this.shader.bind()
     this.shader.setUniformMatrix("u_projectionViewMatrix", this.camera.combined)
     this.shader.setUniformi("u_texture", 0)
   }
   @java.lang.Override
-  def afterGroups(): scala.Unit = {
+  override def afterGroups(): scala.Unit = {
     com.badlogic.gdx.Gdx.gl.glDisable(com.badlogic.gdx.graphics.GL20.GL_DEPTH_TEST)
   }
   private def createDefaultShader(): scala.Unit = {
@@ -95,11 +95,11 @@ class CameraGroupStrategy extends com.badlogic.gdx.graphics.g3d.decals.GroupStra
     } else ()
   }
   @java.lang.Override
-  def getGroupShader(group: scala.Int): com.badlogic.gdx.graphics.glutils.ShaderProgram = {
+  override def getGroupShader(group: scala.Int): com.badlogic.gdx.graphics.glutils.ShaderProgram = {
     return this.shader
   }
   @java.lang.Override
-  def dispose(): scala.Unit = {
+  override def dispose(): scala.Unit = {
     if (this.shader != null) {
       this.shader.dispose()
     } else ()

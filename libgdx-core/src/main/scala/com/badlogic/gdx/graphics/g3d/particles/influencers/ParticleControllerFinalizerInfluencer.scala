@@ -8,7 +8,7 @@ class ParticleControllerFinalizerInfluencer extends com.badlogic.gdx.graphics.g3
   var hasScale: scala.Boolean = false
   var hasRotation: scala.Boolean = false
   @java.lang.Override
-  def init(): scala.Unit = {
+  override def init(): scala.Unit = {
     this.controllerChannel = this.controller.particles.getChannel(com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.ParticleController)
     if (this.controllerChannel == null) {
       throw new com.badlogic.gdx.utils.GdxRuntimeException("ParticleController channel not found, specify an influencer which will allocate it please.")
@@ -19,11 +19,11 @@ class ParticleControllerFinalizerInfluencer extends com.badlogic.gdx.graphics.g3
     this.hasRotation = this.rotationChannel != null
   }
   @java.lang.Override
-  def allocateChannels(): scala.Unit = {
+  override def allocateChannels(): scala.Unit = {
     this.positionChannel = this.controller.particles.addChannel(com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.Position)
   }
   @java.lang.Override
-  def update(): scala.Unit = {
+  override def update(): scala.Unit = {
     { var i: scala.Int = 0; var positionOffset: scala.Int = 0; val c: scala.Int = this.controller.particles.size; while (i < c) { {
       val particleController: com.badlogic.gdx.graphics.g3d.particles.ParticleController = this.controllerChannel.data(i)
       val scale: scala.Float = if (this.hasScale) this.scaleChannel.data(i) else 1
@@ -43,7 +43,7 @@ class ParticleControllerFinalizerInfluencer extends com.badlogic.gdx.graphics.g3
     }; i = i + 1; positionOffset = positionOffset + this.positionChannel.strideSize } }
   }
   @java.lang.Override
-  def copy(): ParticleControllerFinalizerInfluencer = {
+  override def copy(): ParticleControllerFinalizerInfluencer = {
     return new ParticleControllerFinalizerInfluencer()
   }
 }

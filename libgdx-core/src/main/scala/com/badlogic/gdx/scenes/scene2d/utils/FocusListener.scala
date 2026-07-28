@@ -1,7 +1,7 @@
 package com.badlogic.gdx.scenes.scene2d.utils
 
 abstract class FocusListener extends com.badlogic.gdx.scenes.scene2d.EventListener {
-  def handle(event: com.badlogic.gdx.scenes.scene2d.Event): scala.Boolean = {
+  override def handle(event: com.badlogic.gdx.scenes.scene2d.Event): scala.Boolean = {
     if (!event.isInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.FocusListener.FocusEvent]) {
       return false
     } else ()
@@ -28,7 +28,7 @@ object FocusListener {
     private var focused: scala.Boolean = false
     private var `type`: com.badlogic.gdx.scenes.scene2d.utils.FocusListener.FocusEvent.Type = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.FocusListener.FocusEvent.Type]
     private var relatedActor: com.badlogic.gdx.scenes.scene2d.Actor = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.Actor]
-    def reset(): scala.Unit = {
+    override def reset(): scala.Unit = {
       super.reset()
       this.relatedActor = null
     }

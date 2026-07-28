@@ -147,7 +147,7 @@ class ModelCache(sorter$p: com.badlogic.gdx.graphics.g3d.utils.RenderableSorter,
     }
   }
   @java.lang.Override
-  def getRenderables(renderables: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.Renderable], pool: com.badlogic.gdx.utils.Pool[com.badlogic.gdx.graphics.g3d.Renderable]): scala.Unit = {
+  override def getRenderables(renderables: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.Renderable], pool: com.badlogic.gdx.utils.Pool[com.badlogic.gdx.graphics.g3d.Renderable]): scala.Unit = {
     if (this.building) {
       throw new com.badlogic.gdx.utils.GdxRuntimeException("Cannot render a ModelCache in between .begin() and .end()")
     } else ()
@@ -158,7 +158,7 @@ class ModelCache(sorter$p: com.badlogic.gdx.graphics.g3d.utils.RenderableSorter,
     renderables.addAll(this.renderables.asInstanceOf[com.badlogic.gdx.utils.Array[? <: com.badlogic.gdx.graphics.g3d.Renderable]])
   }
   @java.lang.Override
-  def dispose(): scala.Unit = {
+  override def dispose(): scala.Unit = {
     if (this.building) {
       throw new com.badlogic.gdx.utils.GdxRuntimeException("Cannot dispose a ModelCache in between .begin() and .end()")
     } else ()
@@ -174,12 +174,12 @@ object ModelCache {
     private var freeMeshes: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.Mesh] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.Mesh]()
     private var usedMeshes: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.Mesh] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.Mesh]()
     @java.lang.Override
-    def flush(): scala.Unit = {
+    override def flush(): scala.Unit = {
       this.freeMeshes.addAll(this.usedMeshes.asInstanceOf[com.badlogic.gdx.utils.Array[? <: com.badlogic.gdx.graphics.Mesh]])
       this.usedMeshes.clear()
     }
     @java.lang.Override
-    def obtain(vertexAttributes: com.badlogic.gdx.graphics.VertexAttributes, vertexCount$arg: scala.Int, indexCount$arg: scala.Int): com.badlogic.gdx.graphics.Mesh = {
+    override def obtain(vertexAttributes: com.badlogic.gdx.graphics.VertexAttributes, vertexCount$arg: scala.Int, indexCount$arg: scala.Int): com.badlogic.gdx.graphics.Mesh = {
       var vertexCount: scala.Int = vertexCount$arg
       var indexCount: scala.Int = indexCount$arg;
       { var i: scala.Int = 0; val n: scala.Int = this.freeMeshes.size; while (i < n) { {
@@ -197,7 +197,7 @@ object ModelCache {
       return result
     }
     @java.lang.Override
-    def dispose(): scala.Unit = {
+    override def dispose(): scala.Unit = {
       for (m <- this.usedMeshes) {
         m.dispose()
       }
@@ -212,12 +212,12 @@ object ModelCache {
     private var freeMeshes: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.Mesh] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.Mesh]()
     private var usedMeshes: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.Mesh] = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.Mesh]()
     @java.lang.Override
-    def flush(): scala.Unit = {
+    override def flush(): scala.Unit = {
       this.freeMeshes.addAll(this.usedMeshes.asInstanceOf[com.badlogic.gdx.utils.Array[? <: com.badlogic.gdx.graphics.Mesh]])
       this.usedMeshes.clear()
     }
     @java.lang.Override
-    def obtain(vertexAttributes: com.badlogic.gdx.graphics.VertexAttributes, vertexCount: scala.Int, indexCount: scala.Int): com.badlogic.gdx.graphics.Mesh = {
+    override def obtain(vertexAttributes: com.badlogic.gdx.graphics.VertexAttributes, vertexCount: scala.Int, indexCount: scala.Int): com.badlogic.gdx.graphics.Mesh = {
       { var i: scala.Int = 0; val n: scala.Int = this.freeMeshes.size; while (i < n) { {
         val mesh: com.badlogic.gdx.graphics.Mesh = this.freeMeshes.get(i)
         if ((mesh.getVertexAttributes().equals(vertexAttributes) && (mesh.getMaxVertices() == vertexCount)) && (mesh.getMaxIndices() == indexCount)) {
@@ -231,7 +231,7 @@ object ModelCache {
       return result
     }
     @java.lang.Override
-    def dispose(): scala.Unit = {
+    override def dispose(): scala.Unit = {
       for (m <- this.usedMeshes) {
         m.dispose()
       }
@@ -244,11 +244,11 @@ object ModelCache {
   }
   class Sorter extends com.badlogic.gdx.graphics.g3d.utils.RenderableSorter with java.util.Comparator[com.badlogic.gdx.graphics.g3d.Renderable] {
     @java.lang.Override
-    def sort(camera: com.badlogic.gdx.graphics.Camera, renderables: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.Renderable]): scala.Unit = {
+    override def sort(camera: com.badlogic.gdx.graphics.Camera, renderables: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.Renderable]): scala.Unit = {
       renderables.sort(this)
     }
     @java.lang.Override
-    def compare(arg0: com.badlogic.gdx.graphics.g3d.Renderable, arg1: com.badlogic.gdx.graphics.g3d.Renderable): scala.Int = {
+    override def compare(arg0: com.badlogic.gdx.graphics.g3d.Renderable, arg1: com.badlogic.gdx.graphics.g3d.Renderable): scala.Int = {
       val va0: com.badlogic.gdx.graphics.VertexAttributes = arg0.meshPart.mesh.getVertexAttributes()
       val va1: com.badlogic.gdx.graphics.VertexAttributes = arg1.meshPart.mesh.getVertexAttributes()
       val vc: scala.Int = va0.compareTo(va1)

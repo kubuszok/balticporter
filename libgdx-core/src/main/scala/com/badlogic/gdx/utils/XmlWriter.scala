@@ -80,17 +80,17 @@ class XmlWriter(writer$p: java.io.Writer) extends java.io.Writer {
     this.indentNextClose = true
     return this
   }
-  def close(): scala.Unit = {
+  override def close(): scala.Unit = {
     while (this.stack.size != 0) {
       this.pop()
     }
     this.writer.close()
   }
-  def write(cbuf: scala.Array[scala.Char], off: scala.Int, len: scala.Int): scala.Unit = {
+  override def write(cbuf: scala.Array[scala.Char], off: scala.Int, len: scala.Int): scala.Unit = {
     this.startElementContent()
     this.writer.write(cbuf, off, len)
   }
-  def flush(): scala.Unit = {
+  override def flush(): scala.Unit = {
     this.writer.flush()
   }
 }

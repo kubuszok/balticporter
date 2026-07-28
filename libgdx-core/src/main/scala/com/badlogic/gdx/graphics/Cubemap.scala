@@ -40,11 +40,11 @@ class Cubemap(data$p: com.badlogic.gdx.graphics.CubemapData) extends com.badlogi
     return this.data
   }
   @java.lang.Override
-  def isManaged(): scala.Boolean = {
+  override def isManaged(): scala.Boolean = {
     return this.data.isManaged()
   }
   @java.lang.Override
-  def reload(): scala.Unit = {
+  override def reload(): scala.Unit = {
     if (!this.isManaged()) {
       throw new com.badlogic.gdx.utils.GdxRuntimeException("Tried to reload an unmanaged Cubemap")
     } else ()
@@ -52,19 +52,19 @@ class Cubemap(data$p: com.badlogic.gdx.graphics.CubemapData) extends com.badlogi
     this.load(this.data)
   }
   @java.lang.Override
-  def getWidth(): scala.Int = {
+  override def getWidth(): scala.Int = {
     return this.data.getWidth()
   }
   @java.lang.Override
-  def getHeight(): scala.Int = {
+  override def getHeight(): scala.Int = {
     return this.data.getHeight()
   }
   @java.lang.Override
-  def getDepth(): scala.Int = {
+  override def getDepth(): scala.Int = {
     return 0
   }
   @java.lang.Override
-  def dispose(): scala.Unit = {
+  override def dispose(): scala.Unit = {
     if (glHandle == 0) {
       return
     } else ()

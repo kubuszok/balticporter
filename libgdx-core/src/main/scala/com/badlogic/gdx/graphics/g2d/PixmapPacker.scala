@@ -186,7 +186,7 @@ class PixmapPacker(pageWidth$p: scala.Int, pageHeight$p: scala.Int, pageFormat$p
     }; i = i + 1 } }
     return -1
   }
-  def dispose(): scala.Unit = {
+  override def dispose(): scala.Unit = {
     for (page <- this.pages) {
       if (page.texture == null) {
         page.image.dispose()
@@ -435,7 +435,7 @@ object PixmapPacker {
   }
   class GuillotineStrategy extends com.badlogic.gdx.graphics.g2d.PixmapPacker.PackStrategy {
     var comparator: java.util.Comparator[com.badlogic.gdx.graphics.Pixmap] = null.asInstanceOf[java.util.Comparator[com.badlogic.gdx.graphics.Pixmap]]
-    def sort(pixmaps: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.Pixmap]): scala.Unit = {
+    override def sort(pixmaps: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.Pixmap]): scala.Unit = {
       if (this.comparator == null) {
         this.comparator = new java.util.Comparator[com.badlogic.gdx.graphics.Pixmap]() {
           override def compare(o1: com.badlogic.gdx.graphics.Pixmap, o2: com.badlogic.gdx.graphics.Pixmap): scala.Int = {
@@ -445,7 +445,7 @@ object PixmapPacker {
       } else ()
       pixmaps.sort(this.comparator.asInstanceOf[java.util.Comparator[? >: com.badlogic.gdx.graphics.Pixmap]])
     }
-    def pack(packer: PixmapPacker, name: java.lang.String, bounds: com.badlogic.gdx.graphics.g2d.PixmapPacker.Bounds): com.badlogic.gdx.graphics.g2d.PixmapPacker.Page = {
+    override def pack(packer: PixmapPacker, name: java.lang.String, bounds: com.badlogic.gdx.graphics.g2d.PixmapPacker.Bounds): com.badlogic.gdx.graphics.g2d.PixmapPacker.Page = {
       var page: com.badlogic.gdx.graphics.g2d.PixmapPacker.GuillotineStrategy.GuillotinePage = null.asInstanceOf[com.badlogic.gdx.graphics.g2d.PixmapPacker.GuillotineStrategy.GuillotinePage]
       if (packer.pages.size == 0) {
         page = new com.badlogic.gdx.graphics.g2d.PixmapPacker.GuillotineStrategy.GuillotinePage(packer)
@@ -528,7 +528,7 @@ object PixmapPacker {
   }
   class SkylineStrategy extends com.badlogic.gdx.graphics.g2d.PixmapPacker.PackStrategy {
     var comparator: java.util.Comparator[com.badlogic.gdx.graphics.Pixmap] = null.asInstanceOf[java.util.Comparator[com.badlogic.gdx.graphics.Pixmap]]
-    def sort(images: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.Pixmap]): scala.Unit = {
+    override def sort(images: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.Pixmap]): scala.Unit = {
       if (this.comparator == null) {
         this.comparator = new java.util.Comparator[com.badlogic.gdx.graphics.Pixmap]() {
           override def compare(o1: com.badlogic.gdx.graphics.Pixmap, o2: com.badlogic.gdx.graphics.Pixmap): scala.Int = {
@@ -538,7 +538,7 @@ object PixmapPacker {
       } else ()
       images.sort(this.comparator.asInstanceOf[java.util.Comparator[? >: com.badlogic.gdx.graphics.Pixmap]])
     }
-    def pack(packer: PixmapPacker, name: java.lang.String, rect: com.badlogic.gdx.graphics.g2d.PixmapPacker.Bounds): com.badlogic.gdx.graphics.g2d.PixmapPacker.Page = {
+    override def pack(packer: PixmapPacker, name: java.lang.String, rect: com.badlogic.gdx.graphics.g2d.PixmapPacker.Bounds): com.badlogic.gdx.graphics.g2d.PixmapPacker.Page = {
       val padding: scala.Int = packer.padding
       val pageWidth: scala.Int = packer.pageWidth - (padding * 2)
       val pageHeight: scala.Int = packer.pageHeight - (padding * 2)

@@ -247,7 +247,7 @@ class QuadTreeFloat(maxValues$p: scala.Int, maxDepth$p: scala.Int) extends com.b
       } else ()
     }
   }
-  def reset(): scala.Unit = {
+  override def reset(): scala.Unit = {
     if (this.count == (-1)) {
       if (this.nw != null) {
         QuadTreeFloat.pool.free(this.nw)

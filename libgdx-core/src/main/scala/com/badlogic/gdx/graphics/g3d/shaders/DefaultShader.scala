@@ -169,7 +169,7 @@ class DefaultShader(renderable$p: com.badlogic.gdx.graphics.g3d.Renderable, conf
   this.u_ambientCubemap = if (this.lighting) this.register(com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Inputs.ambientCube, new com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Setters.ACubemap(config$p.numDirectionalLights, config$p.numPointLights)) else -1
   this.u_environmentCubemap = if (this.environmentCubemap) this.register(com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Inputs.environmentCubemap, com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Setters.environmentCubemap) else -1
   @java.lang.Override
-  def init(): scala.Unit = {
+  override def init(): scala.Unit = {
     var program: com.badlogic.gdx.graphics.glutils.ShaderProgram = this.program
     this.program = null
     this.init(program, this.renderable)
@@ -207,7 +207,7 @@ class DefaultShader(renderable$p: com.badlogic.gdx.graphics.g3d.Renderable, conf
     } else ()
   }
   @java.lang.Override
-  def canRender(renderable: com.badlogic.gdx.graphics.g3d.Renderable): scala.Boolean = {
+  override def canRender(renderable: com.badlogic.gdx.graphics.g3d.Renderable): scala.Boolean = {
     if (renderable.bones != null) {
       if (renderable.bones.length > this.config.numBones) {
         return false
@@ -223,7 +223,7 @@ class DefaultShader(renderable$p: com.badlogic.gdx.graphics.g3d.Renderable, conf
     return ((this.attributesMask == (renderableMask | DefaultShader.optionalAttributes)) && (this.vertexMask == renderable.meshPart.mesh.getVertexAttributes().getMaskWithSizePacked())) && ((renderable.environment != null) == this.lighting)
   }
   @java.lang.Override
-  def compareTo(other: com.badlogic.gdx.graphics.g3d.Shader): scala.Int = {
+  override def compareTo(other: com.badlogic.gdx.graphics.g3d.Shader): scala.Int = {
     if (other == null) {
       return -1
     } else ()
@@ -233,14 +233,14 @@ class DefaultShader(renderable$p: com.badlogic.gdx.graphics.g3d.Renderable, conf
     return 0
   }
   @java.lang.Override
-  def equals(obj: java.lang.Object): scala.Boolean = {
+  override def equals(obj: java.lang.Object): scala.Boolean = {
     return obj.isInstanceOf[DefaultShader] && this.equals(obj.asInstanceOf[DefaultShader].asInstanceOf[DefaultShader])
   }
-  def equals(obj: DefaultShader): scala.Boolean = {
+  override def equals(obj: DefaultShader): scala.Boolean = {
     return obj == this
   }
   @java.lang.Override
-  def begin(camera: com.badlogic.gdx.graphics.Camera, context: com.badlogic.gdx.graphics.g3d.utils.RenderContext): scala.Unit = {
+  override def begin(camera: com.badlogic.gdx.graphics.Camera, context: com.badlogic.gdx.graphics.g3d.utils.RenderContext): scala.Unit = {
     super.begin(camera, context)
     for (dirLight <- this.directionalLights) {
       dirLight.set(0, 0, 0, 0, -1, 0)
@@ -267,7 +267,7 @@ class DefaultShader(renderable$p: com.badlogic.gdx.graphics.g3d.Renderable, conf
     } else ()
   }
   @java.lang.Override
-  def render(renderable: com.badlogic.gdx.graphics.g3d.Renderable, combinedAttributes: com.badlogic.gdx.graphics.g3d.Attributes): scala.Unit = {
+  override def render(renderable: com.badlogic.gdx.graphics.g3d.Renderable, combinedAttributes: com.badlogic.gdx.graphics.g3d.Attributes): scala.Unit = {
     if (!combinedAttributes.has(com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute.Type)) {
       context.setBlending(false, com.badlogic.gdx.graphics.GL20.GL_SRC_ALPHA, com.badlogic.gdx.graphics.GL20.GL_ONE_MINUS_SRC_ALPHA)
     } else ()
@@ -278,7 +278,7 @@ class DefaultShader(renderable$p: com.badlogic.gdx.graphics.g3d.Renderable, conf
     super.render(renderable, combinedAttributes)
   }
   @java.lang.Override
-  def `end`(): scala.Unit = {
+  override def `end`(): scala.Unit = {
     super.`end`()
   }
   def bindMaterial(attributes: com.badlogic.gdx.graphics.g3d.Attributes): scala.Unit = {
@@ -412,7 +412,7 @@ class DefaultShader(renderable$p: com.badlogic.gdx.graphics.g3d.Renderable, conf
     this.lightsSet = true
   }
   @java.lang.Override
-  def dispose(): scala.Unit = {
+  override def dispose(): scala.Unit = {
     program.dispose()
     super.dispose()
   }
@@ -827,7 +827,7 @@ object DefaultShader {
       var bones: scala.Array[scala.Float] = null.asInstanceOf[scala.Array[scala.Float]]
       this.bones = new scala.Array[scala.Float](numBones * 16)
       @java.lang.Override
-      def set(shader: com.badlogic.gdx.graphics.g3d.shaders.BaseShader, inputID: scala.Int, renderable: com.badlogic.gdx.graphics.g3d.Renderable, combinedAttributes: com.badlogic.gdx.graphics.g3d.Attributes): scala.Unit = {
+      override def set(shader: com.badlogic.gdx.graphics.g3d.shaders.BaseShader, inputID: scala.Int, renderable: com.badlogic.gdx.graphics.g3d.Renderable, combinedAttributes: com.badlogic.gdx.graphics.g3d.Attributes): scala.Unit = {
         { var i: scala.Int = 0; while (i < this.bones.length) { {
           val idx: scala.Int = i / 16
           if (((renderable.bones == null) || (idx >= renderable.bones.length)) || (renderable.bones(idx) == null)) {
@@ -849,7 +849,7 @@ object DefaultShader {
       this.dirLightsOffset = dirLightsOffset$p
       this.pointLightsOffset = pointLightsOffset$p
       @java.lang.Override
-      def set(shader: com.badlogic.gdx.graphics.g3d.shaders.BaseShader, inputID: scala.Int, renderable: com.badlogic.gdx.graphics.g3d.Renderable, combinedAttributes: com.badlogic.gdx.graphics.g3d.Attributes): scala.Unit = {
+      override def set(shader: com.badlogic.gdx.graphics.g3d.shaders.BaseShader, inputID: scala.Int, renderable: com.badlogic.gdx.graphics.g3d.Renderable, combinedAttributes: com.badlogic.gdx.graphics.g3d.Attributes): scala.Unit = {
         if (renderable.environment == null) {
           shader.program.setUniform3fv(shader.loc(inputID), com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Setters.ACubemap.ones, 0, com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Setters.ACubemap.ones.length)
         } else {

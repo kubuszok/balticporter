@@ -55,7 +55,7 @@ class Bezier[T <: com.badlogic.gdx.math.Vector[T]] extends com.badlogic.gdx.math
     return this.asInstanceOf[Bezier[T]]
   }
   @java.lang.Override
-  def valueAt(out: T, t: scala.Float): T = {
+  override def valueAt(out: T, t: scala.Float): T = {
     val n: scala.Int = this.points.size
     if (n == 2) {
       Bezier.linear(out, t, this.points.get(0), this.points.get(1), this.tmp)
@@ -71,7 +71,7 @@ class Bezier[T <: com.badlogic.gdx.math.Vector[T]] extends com.badlogic.gdx.math
     return out
   }
   @java.lang.Override
-  def derivativeAt(out: T, t: scala.Float): T = {
+  override def derivativeAt(out: T, t: scala.Float): T = {
     val n: scala.Int = this.points.size
     if (n == 2) {
       Bezier.linear_derivative(out, t, this.points.get(0), this.points.get(1), this.tmp)
@@ -87,7 +87,7 @@ class Bezier[T <: com.badlogic.gdx.math.Vector[T]] extends com.badlogic.gdx.math
     return out
   }
   @java.lang.Override
-  def approximate(v: T): scala.Float = {
+  override def approximate(v: T): scala.Float = {
     val p1: T = this.points.get(0)
     val p2: T = this.points.get(this.points.size - 1)
     val p3: T = v
@@ -99,11 +99,11 @@ class Bezier[T <: com.badlogic.gdx.math.Vector[T]] extends com.badlogic.gdx.math
     return (com.badlogic.gdx.math.MathUtils.clamp: (scala.Float, scala.Float, scala.Float) => scala.Float)((l1 - s) / l1, 0.0f, 1.0f)
   }
   @java.lang.Override
-  def locate(v: T): scala.Float = {
+  override def locate(v: T): scala.Float = {
     return this.approximate(v)
   }
   @java.lang.Override
-  def approxLength(samples: scala.Int): scala.Float = {
+  override def approxLength(samples: scala.Int): scala.Float = {
     var tempLength: scala.Float = 0;
     { var i: scala.Int = 0; while (i < samples) { {
       this.tmp2.set(this.tmp3)

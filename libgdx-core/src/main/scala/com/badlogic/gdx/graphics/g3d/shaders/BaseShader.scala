@@ -113,7 +113,7 @@ abstract class BaseShader extends com.badlogic.gdx.graphics.g3d.Shader {
     } else ()
   }
   @java.lang.Override
-  def begin(camera: com.badlogic.gdx.graphics.Camera, context: com.badlogic.gdx.graphics.g3d.utils.RenderContext): scala.Unit = {
+  override def begin(camera: com.badlogic.gdx.graphics.Camera, context: com.badlogic.gdx.graphics.g3d.utils.RenderContext): scala.Unit = {
     this.camera = camera
     this.context = context
     this.program.bind()
@@ -149,7 +149,7 @@ abstract class BaseShader extends com.badlogic.gdx.graphics.g3d.Shader {
     return this.tempArray2.items
   }
   @java.lang.Override
-  def render(renderable: com.badlogic.gdx.graphics.g3d.Renderable): scala.Unit = {
+  override def render(renderable: com.badlogic.gdx.graphics.g3d.Renderable): scala.Unit = {
     if (renderable.worldTransform.det3x3() == 0) {
       return
     } else ()
@@ -181,14 +181,14 @@ abstract class BaseShader extends com.badlogic.gdx.graphics.g3d.Shader {
     renderable.meshPart.render(this.program, false)
   }
   @java.lang.Override
-  def `end`(): scala.Unit = {
+  override def `end`(): scala.Unit = {
     if (this.currentMesh != null) {
       this.currentMesh.unbind(this.program, this.tempArray.items, this.tempArray2.items)
       this.currentMesh = null
     } else ()
   }
   @java.lang.Override
-  def dispose(): scala.Unit = {
+  override def dispose(): scala.Unit = {
     this.program = null
     this.uniforms.clear()
     this.validators.clear()
@@ -319,13 +319,13 @@ object BaseShader {
   }
   abstract class GlobalSetter extends com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter {
     @java.lang.Override
-    def isGlobal(shader: BaseShader, inputID: scala.Int): scala.Boolean = {
+    override def isGlobal(shader: BaseShader, inputID: scala.Int): scala.Boolean = {
       return true
     }
   }
   abstract class LocalSetter extends com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Setter {
     @java.lang.Override
-    def isGlobal(shader: BaseShader, inputID: scala.Int): scala.Boolean = {
+    override def isGlobal(shader: BaseShader, inputID: scala.Int): scala.Boolean = {
       return false
     }
   }
@@ -347,7 +347,7 @@ object BaseShader {
     this.materialMask = materialMask$p
     this.environmentMask = environmentMask$p
     this.overallMask = overallMask$p
-    def validate(shader: BaseShader, inputID: scala.Int, renderable: com.badlogic.gdx.graphics.g3d.Renderable): scala.Boolean = {
+    override def validate(shader: BaseShader, inputID: scala.Int, renderable: com.badlogic.gdx.graphics.g3d.Renderable): scala.Boolean = {
       val matFlags: scala.Long = if ((renderable != null) && (renderable.material != null)) renderable.material.getMask() else 0
       val envFlags: scala.Long = if ((renderable != null) && (renderable.environment != null)) renderable.environment.getMask() else 0
       return (((matFlags & this.materialMask) == this.materialMask) && ((envFlags & this.environmentMask) == this.environmentMask)) && (((matFlags | envFlags) & this.overallMask) == this.overallMask)

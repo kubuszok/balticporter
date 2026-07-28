@@ -3,7 +3,7 @@ package com.badlogic.gdx.scenes.scene2d.actions
 class SizeByAction extends com.badlogic.gdx.scenes.scene2d.actions.RelativeTemporalAction {
   private var amountWidth: scala.Float = 0.0f
   private var amountHeight: scala.Float = 0.0f
-  def updateRelative(percentDelta: scala.Float): scala.Unit = {
+  override def updateRelative(percentDelta: scala.Float): scala.Unit = {
     target.sizeBy(this.amountWidth * percentDelta, this.amountHeight * percentDelta)
   }
   def setAmount(width: scala.Float, height: scala.Float): scala.Unit = {

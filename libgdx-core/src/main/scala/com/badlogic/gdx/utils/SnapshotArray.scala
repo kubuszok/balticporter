@@ -71,82 +71,82 @@ class SnapshotArray[T <: java.lang.Object] extends com.badlogic.gdx.utils.Array[
       this.resize(this.items.length)
     }
   }
-  def set(index: scala.Int, value: T): scala.Unit = {
+  override def set(index: scala.Int, value: T): scala.Unit = {
     this.modified()
     super.set(index, value)
   }
-  def insert(index: scala.Int, value: T): scala.Unit = {
+  override def insert(index: scala.Int, value: T): scala.Unit = {
     this.modified()
     super.insert(index, value)
   }
-  def insertRange(index: scala.Int, count: scala.Int): scala.Unit = {
+  override def insertRange(index: scala.Int, count: scala.Int): scala.Unit = {
     this.modified()
     super.insertRange(index, count)
   }
-  def swap(first: scala.Int, second: scala.Int): scala.Unit = {
+  override def swap(first: scala.Int, second: scala.Int): scala.Unit = {
     this.modified()
     super.swap(first, second)
   }
-  def replaceFirst(value: T, identity: scala.Boolean, replacement: T): scala.Boolean = {
+  override def replaceFirst(value: T, identity: scala.Boolean, replacement: T): scala.Boolean = {
     this.modified()
     return super.replaceFirst(value, identity, replacement)
   }
-  def replaceAll(value: T, identity: scala.Boolean, replacement: T): scala.Int = {
+  override def replaceAll(value: T, identity: scala.Boolean, replacement: T): scala.Int = {
     this.modified()
     return super.replaceAll(value, identity, replacement)
   }
-  def removeValue(value: T, identity: scala.Boolean): scala.Boolean = {
+  override def removeValue(value: T, identity: scala.Boolean): scala.Boolean = {
     this.modified()
     return super.removeValue(value, identity)
   }
-  def removeIndex(index: scala.Int): T = {
+  override def removeIndex(index: scala.Int): T = {
     this.modified()
     return super.removeIndex(index).asInstanceOf[T]
   }
-  def removeRange(start: scala.Int, `end`: scala.Int): scala.Unit = {
+  override def removeRange(start: scala.Int, `end`: scala.Int): scala.Unit = {
     this.modified()
     super.removeRange(start, `end`)
   }
-  def removeAll(array: com.badlogic.gdx.utils.Array[? <: T], identity: scala.Boolean): scala.Boolean = {
+  override def removeAll(array: com.badlogic.gdx.utils.Array[? <: T], identity: scala.Boolean): scala.Boolean = {
     this.modified()
     return super.removeAll(array, identity)
   }
-  def pop(): T = {
+  override def pop(): T = {
     this.modified()
     return super.pop().asInstanceOf[T]
   }
-  def clear(): scala.Unit = {
+  override def clear(): scala.Unit = {
     this.modified()
     super.clear()
   }
-  def sort(): scala.Unit = {
+  override def sort(): scala.Unit = {
     this.modified()
     super.sort()
   }
-  def sort(comparator: java.util.Comparator[? >: T]): scala.Unit = {
+  override def sort(comparator: java.util.Comparator[? >: T]): scala.Unit = {
     this.modified()
     super.sort(comparator)
   }
-  def reverse(): scala.Unit = {
+  override def reverse(): scala.Unit = {
     this.modified()
     super.reverse()
   }
-  def shuffle(): scala.Unit = {
+  override def shuffle(): scala.Unit = {
     this.modified()
     super.shuffle()
   }
-  def truncate(newSize: scala.Int): scala.Unit = {
+  override def truncate(newSize: scala.Int): scala.Unit = {
     this.modified()
     super.truncate(newSize)
   }
-  def setSize(newSize: scala.Int): scala.Array[T] = {
+  override def setSize(newSize: scala.Int): scala.Array[T] = {
     this.modified()
     return super.setSize(newSize).asInstanceOf[scala.Array[T]]
   }
 }
 object SnapshotArray {
   export com.badlogic.gdx.utils.Array.{`with` => _, *}
-  def `with`[T <: java.lang.Object](array: scala.Array[T]): SnapshotArray[T] = {
+  override def `with`[T <: java.lang.Object](array: scala.Array[T]): SnapshotArray[T] = {
     return new SnapshotArray(array).asInstanceOf[SnapshotArray[T]]
   }
 }

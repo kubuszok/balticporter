@@ -9,7 +9,7 @@ class Sphere(center$p: com.badlogic.gdx.math.Vector3, radius$p: scala.Float) ext
     return this.center.dst2(sphere.center) < ((this.radius + sphere.radius) * (this.radius + sphere.radius))
   }
   @java.lang.Override
-  def hashCode(): scala.Int = {
+  override def hashCode(): scala.Int = {
     val prime: scala.Int = 71
     var result: scala.Int = 1
     result = (prime * result) + this.center.hashCode()
@@ -17,7 +17,7 @@ class Sphere(center$p: com.badlogic.gdx.math.Vector3, radius$p: scala.Float) ext
     return result
   }
   @java.lang.Override
-  def equals(o: java.lang.Object): scala.Boolean = {
+  override def equals(o: java.lang.Object): scala.Boolean = {
     if (this == o) {
       return true
     } else ()

@@ -11,7 +11,7 @@ class ScalingViewport extends com.badlogic.gdx.utils.viewport.Viewport {
   def this(scaling: com.badlogic.gdx.utils.Scaling, worldWidth: scala.Float, worldHeight: scala.Float) = {
     this(scaling, worldWidth, worldHeight, new com.badlogic.gdx.graphics.OrthographicCamera())
   }
-  def update(screenWidth: scala.Int, screenHeight: scala.Int, centerCamera: scala.Boolean): scala.Unit = {
+  override def update(screenWidth: scala.Int, screenHeight: scala.Int, centerCamera: scala.Boolean): scala.Unit = {
     val scaled: com.badlogic.gdx.math.Vector2 = this.scaling.apply(this.getWorldWidth(), this.getWorldHeight(), screenWidth, screenHeight)
     val viewportWidth: scala.Int = java.lang.Math.round(scaled.x)
     val viewportHeight: scala.Int = java.lang.Math.round(scaled.y)

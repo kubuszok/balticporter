@@ -7,7 +7,7 @@ class Group extends com.badlogic.gdx.scenes.scene2d.Actor with com.badlogic.gdx.
   private final val oldTransform: com.badlogic.gdx.math.Matrix4 = new com.badlogic.gdx.math.Matrix4()
   var transform: scala.Boolean = true
   private var cullingArea: com.badlogic.gdx.math.Rectangle = null.asInstanceOf[com.badlogic.gdx.math.Rectangle]
-  def act(delta: scala.Float): scala.Unit = {
+  override def act(delta: scala.Float): scala.Unit = {
     super.act(delta)
     val actors: scala.Array[com.badlogic.gdx.scenes.scene2d.Actor] = this.children.begin();
     { var i: scala.Int = 0; val n: scala.Int = this.children.size; while (i < n) { {
@@ -15,7 +15,7 @@ class Group extends com.badlogic.gdx.scenes.scene2d.Actor with com.badlogic.gdx.
     }; i = i + 1 } }
     this.children.`end`()
   }
-  def draw(batch: com.badlogic.gdx.graphics.g2d.Batch, parentAlpha: scala.Float): scala.Unit = {
+  override def draw(batch: com.badlogic.gdx.graphics.g2d.Batch, parentAlpha: scala.Float): scala.Unit = {
     if (this.transform) {
       this.applyTransform(batch, this.computeTransform())
     } else ()
@@ -103,7 +103,7 @@ class Group extends com.badlogic.gdx.scenes.scene2d.Actor with com.badlogic.gdx.
     }
     children.`end`()
   }
-  def drawDebug(shapes: com.badlogic.gdx.graphics.glutils.ShapeRenderer): scala.Unit = {
+  override def drawDebug(shapes: com.badlogic.gdx.graphics.glutils.ShapeRenderer): scala.Unit = {
     this.drawDebugBounds(shapes)
     if (this.transform) {
       this.applyTransform(shapes, this.computeTransform())
@@ -190,7 +190,7 @@ class Group extends com.badlogic.gdx.scenes.scene2d.Actor with com.badlogic.gdx.
   def resetTransform(shapes: com.badlogic.gdx.graphics.glutils.ShapeRenderer): scala.Unit = {
     shapes.setTransformMatrix(this.oldTransform)
   }
-  def setCullingArea(cullingArea: com.badlogic.gdx.math.Rectangle): scala.Unit = {
+  override def setCullingArea(cullingArea: com.badlogic.gdx.math.Rectangle): scala.Unit = {
     this.cullingArea = cullingArea
   }
   @com.badlogic.gdx.utils.Null
@@ -198,7 +198,7 @@ class Group extends com.badlogic.gdx.scenes.scene2d.Actor with com.badlogic.gdx.
     return this.cullingArea
   }
   @com.badlogic.gdx.utils.Null
-  def hit(x: scala.Float, y: scala.Float, touchable: scala.Boolean): com.badlogic.gdx.scenes.scene2d.Actor = {
+  override def hit(x: scala.Float, y: scala.Float, touchable: scala.Boolean): com.badlogic.gdx.scenes.scene2d.Actor = {
     if (touchable && (this.getTouchable() == com.badlogic.gdx.scenes.scene2d.Touchable.disabled)) {
       return null
     } else ()
@@ -323,7 +323,7 @@ class Group extends com.badlogic.gdx.scenes.scene2d.Actor with com.badlogic.gdx.
     this.children.clear()
     this.childrenChanged()
   }
-  def clear(): scala.Unit = {
+  override def clear(): scala.Unit = {
     super.clear()
     this.clearChildren(true)
   }
@@ -350,7 +350,7 @@ class Group extends com.badlogic.gdx.scenes.scene2d.Actor with com.badlogic.gdx.
     }; i = i + 1 } }
     return null.asInstanceOf[T]
   }
-  def setStage(stage: com.badlogic.gdx.scenes.scene2d.Stage): scala.Unit = {
+  override def setStage(stage: com.badlogic.gdx.scenes.scene2d.Stage): scala.Unit = {
     super.setStage(stage)
     val childrenArray: scala.Array[com.badlogic.gdx.scenes.scene2d.Actor] = this.children.items;
     { var i: scala.Int = 0; val n: scala.Int = this.children.size; while (i < n) { {
@@ -419,7 +419,7 @@ class Group extends com.badlogic.gdx.scenes.scene2d.Actor with com.badlogic.gdx.
     this.setDebug(true, true)
     return this
   }
-  def toString(): java.lang.String = {
+  override def toString(): java.lang.String = {
     val buffer: java.lang.StringBuilder = new java.lang.StringBuilder(128)
     this.toString(buffer, 1)
     buffer.setLength(buffer.length() - 1)

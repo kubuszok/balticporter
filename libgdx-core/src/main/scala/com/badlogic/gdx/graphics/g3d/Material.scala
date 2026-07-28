@@ -36,11 +36,11 @@ class Material extends com.badlogic.gdx.graphics.g3d.Attributes {
     return new Material(this)
   }
   @java.lang.Override
-  def hashCode(): scala.Int = {
+  override def hashCode(): scala.Int = {
     return super.hashCode() + (3 * this.id.hashCode())
   }
   @java.lang.Override
-  def equals(other: java.lang.Object): scala.Boolean = {
+  override def equals(other: java.lang.Object): scala.Boolean = {
     return other.isInstanceOf[Material] && ((other == this) || (other.asInstanceOf[Material].id.equals(this.id) && super.equals(other)))
   }
 }

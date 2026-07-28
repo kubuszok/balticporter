@@ -135,7 +135,7 @@ object MeshPartBuilder {
     final val uv: com.badlogic.gdx.math.Vector2 = new com.badlogic.gdx.math.Vector2()
     var hasUV: scala.Boolean = false
     @java.lang.Override
-    def reset(): scala.Unit = {
+    override def reset(): scala.Unit = {
       this.position.set(0, 0, 0)
       this.normal.set(0, 1, 0)
       this.color.set(1, 1, 1, 1)

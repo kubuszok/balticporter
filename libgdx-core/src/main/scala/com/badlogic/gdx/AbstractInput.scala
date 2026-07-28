@@ -9,7 +9,7 @@ abstract class AbstractInput extends com.badlogic.gdx.Input {
   this.pressedKeys = new scala.Array[scala.Boolean](com.badlogic.gdx.Input.Keys.MAX_KEYCODE + 1)
   this.justPressedKeys = new scala.Array[scala.Boolean](com.badlogic.gdx.Input.Keys.MAX_KEYCODE + 1)
   @java.lang.Override
-  def isKeyPressed(key: scala.Int): scala.Boolean = {
+  override def isKeyPressed(key: scala.Int): scala.Boolean = {
     if (key == com.badlogic.gdx.Input.Keys.ANY_KEY) {
       return this.pressedKeyCount > 0
     } else ()
@@ -19,7 +19,7 @@ abstract class AbstractInput extends com.badlogic.gdx.Input {
     return this.pressedKeys(key)
   }
   @java.lang.Override
-  def isKeyJustPressed(key: scala.Int): scala.Boolean = {
+  override def isKeyJustPressed(key: scala.Int): scala.Boolean = {
     if (key == com.badlogic.gdx.Input.Keys.ANY_KEY) {
       return this.keyJustPressed
     } else ()
@@ -29,7 +29,7 @@ abstract class AbstractInput extends com.badlogic.gdx.Input {
     return this.justPressedKeys(key)
   }
   @java.lang.Override
-  def setCatchKey(keycode: scala.Int, catchKey: scala.Boolean): scala.Unit = {
+  override def setCatchKey(keycode: scala.Int, catchKey: scala.Boolean): scala.Unit = {
     if (!catchKey) {
       this.keysToCatch.remove(keycode)
     } else {
@@ -37,7 +37,7 @@ abstract class AbstractInput extends com.badlogic.gdx.Input {
     }
   }
   @java.lang.Override
-  def isCatchKey(keycode: scala.Int): scala.Boolean = {
+  override def isCatchKey(keycode: scala.Int): scala.Boolean = {
     return this.keysToCatch.contains(keycode)
   }
 }

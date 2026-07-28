@@ -54,14 +54,14 @@ class ResourceData[T <: java.lang.Object] extends com.badlogic.gdx.utils.Json.Se
     return this.uniqueData.get(key)
   }
   @java.lang.Override
-  def write(json: com.badlogic.gdx.utils.Json): scala.Unit = {
+  override def write(json: com.badlogic.gdx.utils.Json): scala.Unit = {
     json.writeValue("unique", this.uniqueData, classOf[com.badlogic.gdx.utils.ObjectMap[?, ?]])
     json.writeValue("data", this.data, classOf[com.badlogic.gdx.utils.Array[T]], classOf[com.badlogic.gdx.graphics.g3d.particles.ResourceData.SaveData])
     json.writeValue("assets", this.sharedAssets.toArray(((size: scala.Int) => new scala.Array[com.badlogic.gdx.graphics.g3d.particles.ResourceData.AssetData[T]](size))), classOf[scala.Array[com.badlogic.gdx.graphics.g3d.particles.ResourceData.AssetData[T]]])
     json.writeValue("resource", this.resource.asInstanceOf[java.lang.Object], null)
   }
   @java.lang.Override
-  def read(json: com.badlogic.gdx.utils.Json, jsonData: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
+  override def read(json: com.badlogic.gdx.utils.Json, jsonData: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
     this.uniqueData = json.readValue("unique", classOf[com.badlogic.gdx.utils.ObjectMap[?, ?]], jsonData).asInstanceOf[com.badlogic.gdx.utils.ObjectMap[java.lang.String, com.badlogic.gdx.graphics.g3d.particles.ResourceData.SaveData]]
     for (entry <- this.uniqueData.entries()) {
       entry.value.resources = this.asInstanceOf[ResourceData[T]]
@@ -116,12 +116,12 @@ object ResourceData {
       return this.data.get(key).asInstanceOf[K].asInstanceOf[K]
     }
     @java.lang.Override
-    def write(json: com.badlogic.gdx.utils.Json): scala.Unit = {
+    override def write(json: com.badlogic.gdx.utils.Json): scala.Unit = {
       json.writeValue("data", this.data, classOf[com.badlogic.gdx.utils.ObjectMap[?, ?]])
       json.writeValue("indices", this.assets.toArray(), classOf[scala.Array[scala.Int]])
     }
     @java.lang.Override
-    def read(json: com.badlogic.gdx.utils.Json, jsonData: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
+    override def read(json: com.badlogic.gdx.utils.Json, jsonData: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
       this.data = json.readValue("data", classOf[com.badlogic.gdx.utils.ObjectMap[?, ?]], jsonData).asInstanceOf[com.badlogic.gdx.utils.ObjectMap[java.lang.String, java.lang.Object]]
       this.assets.addAll(json.readValue("indices", classOf[scala.Array[scala.Int]], jsonData))
     }
@@ -135,12 +135,12 @@ object ResourceData {
       this.`type` = `type`
     }
     @java.lang.Override
-    def write(json: com.badlogic.gdx.utils.Json): scala.Unit = {
+    override def write(json: com.badlogic.gdx.utils.Json): scala.Unit = {
       json.writeValue("filename", this.filename)
       json.writeValue("type", this.`type`.getName())
     }
     @java.lang.Override
-    def read(json: com.badlogic.gdx.utils.Json, jsonData: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
+    override def read(json: com.badlogic.gdx.utils.Json, jsonData: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
       this.filename = json.readValue("filename", classOf[java.lang.String], jsonData)
       val className: java.lang.String = json.readValue("type", classOf[java.lang.String], jsonData)
       try {

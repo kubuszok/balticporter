@@ -724,7 +724,7 @@ class SpriteCache(size: scala.Int, shader$p: com.badlogic.gdx.graphics.glutils.S
     this.renderCalls = this.renderCalls + cache.textureCount
     this.totalRenderCalls = this.totalRenderCalls + textureCount
   }
-  def dispose(): scala.Unit = {
+  override def dispose(): scala.Unit = {
     this.mesh.dispose()
     if (this.shader != null) {
       this.shader.dispose()

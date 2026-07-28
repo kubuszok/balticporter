@@ -26,15 +26,15 @@ class DepthShader(renderable$p: com.badlogic.gdx.graphics.g3d.Renderable, config
   } else ()
   this.alphaTestAttribute = new com.badlogic.gdx.graphics.g3d.attributes.FloatAttribute(com.badlogic.gdx.graphics.g3d.attributes.FloatAttribute.AlphaTest, config$p.defaultAlphaTest)
   @java.lang.Override
-  def begin(camera: com.badlogic.gdx.graphics.Camera, context: com.badlogic.gdx.graphics.g3d.utils.RenderContext): scala.Unit = {
+  override def begin(camera: com.badlogic.gdx.graphics.Camera, context: com.badlogic.gdx.graphics.g3d.utils.RenderContext): scala.Unit = {
     super.begin(camera, context)
   }
   @java.lang.Override
-  def `end`(): scala.Unit = {
+  override def `end`(): scala.Unit = {
     super.`end`()
   }
   @java.lang.Override
-  def canRender(renderable: com.badlogic.gdx.graphics.g3d.Renderable): scala.Boolean = {
+  override def canRender(renderable: com.badlogic.gdx.graphics.g3d.Renderable): scala.Boolean = {
     if (renderable.bones != null) {
       if (renderable.bones.length > this.config.numBones) {
         return false
@@ -52,7 +52,7 @@ class DepthShader(renderable$p: com.badlogic.gdx.graphics.g3d.Renderable, config
     return (renderable.bones != null) == (this.numBones > 0)
   }
   @java.lang.Override
-  def render(renderable: com.badlogic.gdx.graphics.g3d.Renderable, combinedAttributes: com.badlogic.gdx.graphics.g3d.Attributes): scala.Unit = {
+  override def render(renderable: com.badlogic.gdx.graphics.g3d.Renderable, combinedAttributes: com.badlogic.gdx.graphics.g3d.Attributes): scala.Unit = {
     if (combinedAttributes.has(com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute.Type)) {
       val blending: com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute = combinedAttributes.get(com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute.Type).asInstanceOf[com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute]
       combinedAttributes.remove(com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute.Type)
@@ -77,26 +77,26 @@ object DepthShader {
   private var defaultVertexShader: java.lang.String = null
   private var defaultFragmentShader: java.lang.String = null
   private final val tmpAttributes: com.badlogic.gdx.graphics.g3d.Attributes = new com.badlogic.gdx.graphics.g3d.Attributes()
-  final def getDefaultVertexShader(): java.lang.String = {
+  override final def getDefaultVertexShader(): java.lang.String = {
     if (DepthShader.defaultVertexShader == null) {
       DepthShader.defaultVertexShader = com.badlogic.gdx.Gdx.files.classpath("com/badlogic/gdx/graphics/g3d/shaders/depth.vertex.glsl").readString()
     } else ()
     return DepthShader.defaultVertexShader
   }
-  final def getDefaultFragmentShader(): java.lang.String = {
+  override final def getDefaultFragmentShader(): java.lang.String = {
     if (DepthShader.defaultFragmentShader == null) {
       DepthShader.defaultFragmentShader = com.badlogic.gdx.Gdx.files.classpath("com/badlogic/gdx/graphics/g3d/shaders/depth.fragment.glsl").readString()
     } else ()
     return DepthShader.defaultFragmentShader
   }
-  def createPrefix(renderable: com.badlogic.gdx.graphics.g3d.Renderable, config: com.badlogic.gdx.graphics.g3d.shaders.DepthShader.Config): java.lang.String = {
+  override def createPrefix(renderable: com.badlogic.gdx.graphics.g3d.Renderable, config: com.badlogic.gdx.graphics.g3d.shaders.DepthShader.Config): java.lang.String = {
     var prefix: java.lang.String = com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.createPrefix(renderable, config)
     if (!config.depthBufferOnly) {
       prefix = prefix + "#define PackedDepthFlag\n"
     } else ()
     return prefix
   }
-  private final def combineAttributes(renderable: com.badlogic.gdx.graphics.g3d.Renderable): com.badlogic.gdx.graphics.g3d.Attributes = {
+  private override final def combineAttributes(renderable: com.badlogic.gdx.graphics.g3d.Renderable): com.badlogic.gdx.graphics.g3d.Attributes = {
     DepthShader.tmpAttributes.clear()
     if (renderable.environment != null) {
       DepthShader.tmpAttributes.set(renderable.environment)

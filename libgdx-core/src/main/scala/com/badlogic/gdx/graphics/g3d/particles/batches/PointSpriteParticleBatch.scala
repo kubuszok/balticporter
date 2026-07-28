@@ -30,7 +30,7 @@ class PointSpriteParticleBatch(capacity: scala.Int, shaderConfig: com.badlogic.g
   this.renderable.shader = new com.badlogic.gdx.graphics.g3d.particles.ParticleShader(this.renderable, shaderConfig)
   this.renderable.shader.init()
   @java.lang.Override
-  def allocParticlesData(capacity: scala.Int): scala.Unit = {
+  override def allocParticlesData(capacity: scala.Int): scala.Unit = {
     this.vertices = new scala.Array[scala.Float](capacity * PointSpriteParticleBatch.CPU_VERTEX_SIZE)
     if (this.renderable.meshPart.mesh != null) {
       this.renderable.meshPart.mesh.dispose()
@@ -55,7 +55,7 @@ class PointSpriteParticleBatch(capacity: scala.Int, shaderConfig: com.badlogic.g
     return this.blendingAttribute
   }
   @java.lang.Override
-  def flush(offsets: scala.Array[scala.Int]): scala.Unit = {
+  override def flush(offsets: scala.Array[scala.Int]): scala.Unit = {
     var tp: scala.Int = 0
     for (data <- renderData) {
       val scaleChannel: com.badlogic.gdx.graphics.g3d.particles.ParallelArray#FloatChannel = data.scaleChannel
@@ -90,18 +90,18 @@ class PointSpriteParticleBatch(capacity: scala.Int, shaderConfig: com.badlogic.g
     this.renderable.meshPart.update()
   }
   @java.lang.Override
-  def getRenderables(renderables: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.Renderable], pool: com.badlogic.gdx.utils.Pool[com.badlogic.gdx.graphics.g3d.Renderable]): scala.Unit = {
+  override def getRenderables(renderables: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.Renderable], pool: com.badlogic.gdx.utils.Pool[com.badlogic.gdx.graphics.g3d.Renderable]): scala.Unit = {
     if (bufferedParticlesCount > 0) {
       renderables.add(pool.obtain().set(this.renderable))
     } else ()
   }
   @java.lang.Override
-  def save(manager: com.badlogic.gdx.assets.AssetManager, resources: com.badlogic.gdx.graphics.g3d.particles.ResourceData[?]): scala.Unit = {
+  override def save(manager: com.badlogic.gdx.assets.AssetManager, resources: com.badlogic.gdx.graphics.g3d.particles.ResourceData[?]): scala.Unit = {
     val data: com.badlogic.gdx.graphics.g3d.particles.ResourceData.SaveData = resources.createSaveData("pointSpriteBatch")
     data.saveAsset(manager.getAssetFileName(this.getTexture()), classOf[com.badlogic.gdx.graphics.Texture])
   }
   @java.lang.Override
-  def load(manager: com.badlogic.gdx.assets.AssetManager, resources: com.badlogic.gdx.graphics.g3d.particles.ResourceData[?]): scala.Unit = {
+  override def load(manager: com.badlogic.gdx.assets.AssetManager, resources: com.badlogic.gdx.graphics.g3d.particles.ResourceData[?]): scala.Unit = {
     val data: com.badlogic.gdx.graphics.g3d.particles.ResourceData.SaveData = resources.getSaveData("pointSpriteBatch")
     if (data != null) {
       this.setTexture(manager.get(data.loadAsset()).asInstanceOf[com.badlogic.gdx.graphics.Texture].asInstanceOf[com.badlogic.gdx.graphics.Texture])

@@ -12,19 +12,19 @@ abstract class SimpleInfluencer extends com.badlogic.gdx.graphics.g3d.particles.
   }
   this.value = new com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue()
   this.value.setHigh(1)
-  private def set(scaleInfluencer: SimpleInfluencer): scala.Unit = {
+  private override def set(scaleInfluencer: SimpleInfluencer): scala.Unit = {
     this.value.load(scaleInfluencer.value)
     this.valueChannelDescriptor = scaleInfluencer.valueChannelDescriptor
   }
   @java.lang.Override
-  def allocateChannels(): scala.Unit = {
+  override def allocateChannels(): scala.Unit = {
     this.valueChannel = this.controller.particles.addChannel(this.valueChannelDescriptor)
     com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.Interpolation.id = this.controller.particleChannels.newId()
     this.interpolationChannel = this.controller.particles.addChannel(com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.Interpolation)
     this.lifeChannel = this.controller.particles.addChannel(com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.Life)
   }
   @java.lang.Override
-  def activateParticles(startIndex: scala.Int, count: scala.Int): scala.Unit = {
+  override def activateParticles(startIndex: scala.Int, count: scala.Int): scala.Unit = {
     if (!this.value.isRelative()) {
       { var i: scala.Int = startIndex * this.valueChannel.strideSize; var a: scala.Int = startIndex * this.interpolationChannel.strideSize; val c: scala.Int = i + (count * this.valueChannel.strideSize); while (i < c) { {
         val start: scala.Float = this.value.newLowValue()
@@ -44,17 +44,17 @@ abstract class SimpleInfluencer extends com.badlogic.gdx.graphics.g3d.particles.
     }
   }
   @java.lang.Override
-  def update(): scala.Unit = {
+  override def update(): scala.Unit = {
     { var i: scala.Int = 0; var a: scala.Int = 0; var l: scala.Int = com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.LifePercentOffset; val c: scala.Int = i + (this.controller.particles.size * this.valueChannel.strideSize); while (i < c) { {
       this.valueChannel.data(i) = this.interpolationChannel.data(a + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.InterpolationStartOffset) + (this.interpolationChannel.data(a + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.InterpolationDiffOffset) * this.value.getScale(this.lifeChannel.data(l)))
     }; i = i + this.valueChannel.strideSize; a = a + this.interpolationChannel.strideSize; l = l + this.lifeChannel.strideSize } }
   }
   @java.lang.Override
-  def write(json: com.badlogic.gdx.utils.Json): scala.Unit = {
+  override def write(json: com.badlogic.gdx.utils.Json): scala.Unit = {
     json.writeValue("value", this.value)
   }
   @java.lang.Override
-  def read(json: com.badlogic.gdx.utils.Json, jsonData: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
+  override def read(json: com.badlogic.gdx.utils.Json, jsonData: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
     this.value = json.readValue("value", classOf[com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue], jsonData)
   }
 }

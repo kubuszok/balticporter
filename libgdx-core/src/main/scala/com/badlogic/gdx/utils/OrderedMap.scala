@@ -48,7 +48,7 @@ class OrderedMap[K <: java.lang.Object, V <: java.lang.Object] extends com.badlo
     this.keys$field = new com.badlogic.gdx.utils.Array(map.keys$field).asInstanceOf[com.badlogic.gdx.utils.Array[K]]
   }
   this.keys$field = new com.badlogic.gdx.utils.Array().asInstanceOf[com.badlogic.gdx.utils.Array[K]]
-  def put(key: K, value: V): V = {
+  override def put(key: K, value: V): V = {
     var i: scala.Int = this.locateKey(key)
     if (i >= 0) {
       val oldValue: V = valueTable(i)
@@ -64,7 +64,7 @@ class OrderedMap[K <: java.lang.Object, V <: java.lang.Object] extends com.badlo
     } else ()
     return null.asInstanceOf[V]
   }
-  def putAll[T <: K](map: OrderedMap[T, ? <: V]): scala.Unit = {
+  override def putAll[T <: K](map: OrderedMap[T, ? <: V]): scala.Unit = {
     this.ensureCapacity(map.size)
     val keys: scala.Array[K] = map.keys$field.items.asInstanceOf[scala.Array[K]];
     { var i: scala.Int = 0; val n: scala.Int = map.keys$field.size; while (i < n) { {
@@ -72,7 +72,7 @@ class OrderedMap[K <: java.lang.Object, V <: java.lang.Object] extends com.badlo
       this.put(key, map.get(key.asInstanceOf[T]))
     }; i = i + 1 } }
   }
-  def remove(key: K): V = {
+  override def remove(key: K): V = {
     this.keys$field.removeValue(key, false)
     return super.remove(key).asInstanceOf[V]
   }
@@ -99,21 +99,21 @@ class OrderedMap[K <: java.lang.Object, V <: java.lang.Object] extends com.badlo
     this.keys$field.set(index, after)
     return true
   }
-  def clear(maximumCapacity: scala.Int): scala.Unit = {
+  override def clear(maximumCapacity: scala.Int): scala.Unit = {
     this.keys$field.clear()
     super.clear(maximumCapacity)
   }
-  def clear(): scala.Unit = {
+  override def clear(): scala.Unit = {
     this.keys$field.clear()
     super.clear()
   }
   def orderedKeys(): com.badlogic.gdx.utils.Array[K] = {
     return this.keys$field
   }
-  def iterator(): com.badlogic.gdx.utils.ObjectMap.Entries[K, V] = {
+  override def iterator(): com.badlogic.gdx.utils.ObjectMap.Entries[K, V] = {
     return this.entries()
   }
-  def entries(): com.badlogic.gdx.utils.ObjectMap.Entries[K, V] = {
+  override def entries(): com.badlogic.gdx.utils.ObjectMap.Entries[K, V] = {
     if (com.badlogic.gdx.utils.Collections.allocateIterators) {
       return new com.badlogic.gdx.utils.OrderedMap.OrderedMapEntries[K, V](this.asInstanceOf[OrderedMap[K, V]]).asInstanceOf[com.badlogic.gdx.utils.ObjectMap.Entries[K, V]]
     } else ()
@@ -132,7 +132,7 @@ class OrderedMap[K <: java.lang.Object, V <: java.lang.Object] extends com.badlo
     this.entries1.valid = false
     return entries2.asInstanceOf[com.badlogic.gdx.utils.ObjectMap.Entries[K, V]]
   }
-  def values(): com.badlogic.gdx.utils.ObjectMap.Values[V] = {
+  override def values(): com.badlogic.gdx.utils.ObjectMap.Values[V] = {
     if (com.badlogic.gdx.utils.Collections.allocateIterators) {
       return new com.badlogic.gdx.utils.OrderedMap.OrderedMapValues[V](this).asInstanceOf[com.badlogic.gdx.utils.ObjectMap.Values[V]]
     } else ()
@@ -151,7 +151,7 @@ class OrderedMap[K <: java.lang.Object, V <: java.lang.Object] extends com.badlo
     this.values1.valid = false
     return values2.asInstanceOf[com.badlogic.gdx.utils.ObjectMap.Values[V]]
   }
-  def keys(): com.badlogic.gdx.utils.ObjectMap.Keys[K] = {
+  override def keys(): com.badlogic.gdx.utils.ObjectMap.Keys[K] = {
     if (com.badlogic.gdx.utils.Collections.allocateIterators) {
       return new com.badlogic.gdx.utils.OrderedMap.OrderedMapKeys[K](this).asInstanceOf[com.badlogic.gdx.utils.ObjectMap.Keys[K]]
     } else ()
@@ -170,7 +170,7 @@ class OrderedMap[K <: java.lang.Object, V <: java.lang.Object] extends com.badlo
     this.keys1.valid = false
     return keys2.asInstanceOf[com.badlogic.gdx.utils.ObjectMap.Keys[K]]
   }
-  def toString(separator: java.lang.String, braces: scala.Boolean): java.lang.String = {
+  override def toString(separator: java.lang.String, braces: scala.Boolean): java.lang.String = {
     if (size == 0) {
       return if (braces) "{}" else ""
     } else ()
@@ -200,12 +200,12 @@ object OrderedMap {
   class OrderedMapEntries[K <: java.lang.Object, V <: java.lang.Object](map$p: OrderedMap[K, V]) extends com.badlogic.gdx.utils.ObjectMap.Entries[K, V](map$p) {
     private var keys: com.badlogic.gdx.utils.Array[K] = null.asInstanceOf[com.badlogic.gdx.utils.Array[K]]
     this.keys = map$p.keys$field
-    def reset(): scala.Unit = {
+    override def reset(): scala.Unit = {
       currentIndex = -1
       nextIndex = 0
       hasNext$field = this.map.size > 0
     }
-    def next(): com.badlogic.gdx.utils.ObjectMap.Entry[K, V] = {
+    override def next(): com.badlogic.gdx.utils.ObjectMap.Entry[K, V] = {
       if (!hasNext$field) {
         throw new java.util.NoSuchElementException()
       } else ()
@@ -219,7 +219,7 @@ object OrderedMap {
       hasNext$field = nextIndex < this.map.size
       return entry.asInstanceOf[com.badlogic.gdx.utils.ObjectMap.Entry[K, V]]
     }
-    def remove(): scala.Unit = {
+    override def remove(): scala.Unit = {
       if (currentIndex < 0) {
         throw new java.lang.IllegalStateException("next must be called before remove.")
       } else ()
@@ -231,12 +231,12 @@ object OrderedMap {
   class OrderedMapKeys[K <: java.lang.Object](map$p: OrderedMap[K, ?]) extends com.badlogic.gdx.utils.ObjectMap.Keys[K](map$p.asInstanceOf[OrderedMap[K, java.lang.Object]]) {
     private var keys: com.badlogic.gdx.utils.Array[K] = null.asInstanceOf[com.badlogic.gdx.utils.Array[K]]
     this.keys = map$p.asInstanceOf[OrderedMap[java.lang.Object, java.lang.Object]].keys$field.asInstanceOf[com.badlogic.gdx.utils.Array[K]]
-    def reset(): scala.Unit = {
+    override def reset(): scala.Unit = {
       currentIndex = -1
       nextIndex = 0
       hasNext$field = this.map.size > 0
     }
-    def next(): K = {
+    override def next(): K = {
       if (!hasNext$field) {
         throw new java.util.NoSuchElementException()
       } else ()
@@ -249,7 +249,7 @@ object OrderedMap {
       hasNext$field = nextIndex < this.map.size
       return key
     }
-    def remove(): scala.Unit = {
+    override def remove(): scala.Unit = {
       if (currentIndex < 0) {
         throw new java.lang.IllegalStateException("next must be called before remove.")
       } else ()
@@ -257,25 +257,25 @@ object OrderedMap {
       nextIndex = currentIndex
       currentIndex = -1
     }
-    def toArray(array: com.badlogic.gdx.utils.Array[K]): com.badlogic.gdx.utils.Array[K] = {
+    override def toArray(array: com.badlogic.gdx.utils.Array[K]): com.badlogic.gdx.utils.Array[K] = {
       array.addAll(this.keys.asInstanceOf[com.badlogic.gdx.utils.Array[? <: K]], nextIndex, this.keys.size - nextIndex)
       nextIndex = this.keys.size
       hasNext$field = false
       return array
     }
-    def toArray(): com.badlogic.gdx.utils.Array[K] = {
+    override def toArray(): com.badlogic.gdx.utils.Array[K] = {
       return this.toArray(new com.badlogic.gdx.utils.Array(true, this.keys.size - nextIndex))
     }
   }
   class OrderedMapValues[V <: java.lang.Object](map$p: OrderedMap[?, V]) extends com.badlogic.gdx.utils.ObjectMap.Values[V](map$p.asInstanceOf[OrderedMap[java.lang.Object, V]]) {
     private var keys: com.badlogic.gdx.utils.Array[?] = null.asInstanceOf[com.badlogic.gdx.utils.Array[?]]
     this.keys = map$p.asInstanceOf[OrderedMap[java.lang.Object, java.lang.Object]].keys$field.asInstanceOf[com.badlogic.gdx.utils.Array[?]]
-    def reset(): scala.Unit = {
+    override def reset(): scala.Unit = {
       currentIndex = -1
       nextIndex = 0
       hasNext$field = this.map.size > 0
     }
-    def next(): V = {
+    override def next(): V = {
       if (!hasNext$field) {
         throw new java.util.NoSuchElementException()
       } else ()
@@ -288,7 +288,7 @@ object OrderedMap {
       hasNext$field = nextIndex < this.map.size
       return value
     }
-    def remove(): scala.Unit = {
+    override def remove(): scala.Unit = {
       if (currentIndex < 0) {
         throw new java.lang.IllegalStateException("next must be called before remove.")
       } else ()
@@ -296,7 +296,7 @@ object OrderedMap {
       nextIndex = currentIndex
       currentIndex = -1
     }
-    def toArray(array: com.badlogic.gdx.utils.Array[V]): com.badlogic.gdx.utils.Array[V] = {
+    override def toArray(array: com.badlogic.gdx.utils.Array[V]): com.badlogic.gdx.utils.Array[V] = {
       val n: scala.Int = this.keys.size
       array.ensureCapacity(n - nextIndex)
       val keys: scala.Array[java.lang.Object] = this.keys.asInstanceOf[com.badlogic.gdx.utils.Array[java.lang.Object]].items;
@@ -308,7 +308,7 @@ object OrderedMap {
       hasNext$field = false
       return array
     }
-    def toArray(): com.badlogic.gdx.utils.Array[V] = {
+    override def toArray(): com.badlogic.gdx.utils.Array[V] = {
       return this.toArray(new com.badlogic.gdx.utils.Array(true, this.keys.size - nextIndex))
     }
   }

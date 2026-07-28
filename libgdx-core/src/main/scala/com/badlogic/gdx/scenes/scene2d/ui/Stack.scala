@@ -18,7 +18,7 @@ class Stack extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup {
   this.setWidth(150)
   this.setHeight(150)
   this.setTouchable(com.badlogic.gdx.scenes.scene2d.Touchable.childrenOnly)
-  def invalidate(): scala.Unit = {
+  override def invalidate(): scala.Unit = {
     super.invalidate()
     this.sizeInvalid = true
   }
@@ -62,7 +62,7 @@ class Stack extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup {
   def add(actor: com.badlogic.gdx.scenes.scene2d.Actor): scala.Unit = {
     this.addActor(actor)
   }
-  def layout(): scala.Unit = {
+  override def layout(): scala.Unit = {
     if (this.sizeInvalid) {
       this.computeSize()
     } else ()
@@ -77,37 +77,37 @@ class Stack extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup {
       } else ()
     }; i = i + 1 } }
   }
-  def getPrefWidth(): scala.Float = {
+  override def getPrefWidth(): scala.Float = {
     if (this.sizeInvalid) {
       this.computeSize()
     } else ()
     return this.prefWidth
   }
-  def getPrefHeight(): scala.Float = {
+  override def getPrefHeight(): scala.Float = {
     if (this.sizeInvalid) {
       this.computeSize()
     } else ()
     return this.prefHeight
   }
-  def getMinWidth(): scala.Float = {
+  override def getMinWidth(): scala.Float = {
     if (this.sizeInvalid) {
       this.computeSize()
     } else ()
     return this.minWidth
   }
-  def getMinHeight(): scala.Float = {
+  override def getMinHeight(): scala.Float = {
     if (this.sizeInvalid) {
       this.computeSize()
     } else ()
     return this.minHeight
   }
-  def getMaxWidth(): scala.Float = {
+  override def getMaxWidth(): scala.Float = {
     if (this.sizeInvalid) {
       this.computeSize()
     } else ()
     return this.maxWidth
   }
-  def getMaxHeight(): scala.Float = {
+  override def getMaxHeight(): scala.Float = {
     if (this.sizeInvalid) {
       this.computeSize()
     } else ()

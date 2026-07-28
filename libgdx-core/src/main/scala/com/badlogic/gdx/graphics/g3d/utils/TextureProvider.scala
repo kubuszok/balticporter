@@ -28,7 +28,7 @@ object TextureProvider {
     }
     this.useMipMaps = false
     @java.lang.Override
-    def load(fileName: java.lang.String): com.badlogic.gdx.graphics.Texture = {
+    override def load(fileName: java.lang.String): com.badlogic.gdx.graphics.Texture = {
       val result: com.badlogic.gdx.graphics.Texture = new com.badlogic.gdx.graphics.Texture(com.badlogic.gdx.Gdx.files.internal(fileName), this.useMipMaps)
       result.setFilter(this.minFilter, this.magFilter)
       result.setWrap(this.uWrap, this.vWrap)
@@ -42,7 +42,7 @@ object TextureProvider {
     var assetManager: com.badlogic.gdx.assets.AssetManager = null.asInstanceOf[com.badlogic.gdx.assets.AssetManager]
     this.assetManager = assetManager$p
     @java.lang.Override
-    def load(fileName: java.lang.String): com.badlogic.gdx.graphics.Texture = {
+    override def load(fileName: java.lang.String): com.badlogic.gdx.graphics.Texture = {
       return this.assetManager.get(fileName, classOf[com.badlogic.gdx.graphics.Texture])
     }
   }

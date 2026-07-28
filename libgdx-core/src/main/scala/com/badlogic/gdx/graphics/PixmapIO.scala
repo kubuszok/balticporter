@@ -222,7 +222,7 @@ object PixmapIO {
       output.flush()
     }
     @java.lang.SuppressWarnings(scala.Array[java.lang.String]("javadoc"))
-    def dispose(): scala.Unit = {
+    override def dispose(): scala.Unit = {
       this.deflater.`end`()
     }
   }

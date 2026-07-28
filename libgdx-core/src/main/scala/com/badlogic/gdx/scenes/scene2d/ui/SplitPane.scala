@@ -82,14 +82,14 @@ class SplitPane(firstWidget$p: com.badlogic.gdx.scenes.scene2d.Actor, secondWidg
       }
     })
   }
-  def setStyle(style: com.badlogic.gdx.scenes.scene2d.ui.SplitPane.SplitPaneStyle): scala.Unit = {
+  override def setStyle(style: com.badlogic.gdx.scenes.scene2d.ui.SplitPane.SplitPaneStyle): scala.Unit = {
     this.style = style
     this.invalidateHierarchy()
   }
-  def getStyle(): com.badlogic.gdx.scenes.scene2d.ui.SplitPane.SplitPaneStyle = {
+  override def getStyle(): com.badlogic.gdx.scenes.scene2d.ui.SplitPane.SplitPaneStyle = {
     return this.style
   }
-  def layout(): scala.Unit = {
+  override def layout(): scala.Unit = {
     this.clampSplitAmount()
     if (!this.vertical) {
       this.calculateHorizBoundsAndPositions()
@@ -113,7 +113,7 @@ class SplitPane(firstWidget$p: com.badlogic.gdx.scenes.scene2d.Actor, secondWidg
       } else ()
     } else ()
   }
-  def getPrefWidth(): scala.Float = {
+  override def getPrefWidth(): scala.Float = {
     val first: scala.Float = if (this.firstWidget == null) 0 else if (this.firstWidget.isInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Layout]) this.firstWidget.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Layout].getPrefWidth() else this.firstWidget.getWidth()
     val second: scala.Float = if (this.secondWidget == null) 0 else if (this.secondWidget.isInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Layout]) this.secondWidget.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Layout].getPrefWidth() else this.secondWidget.getWidth()
     if (this.vertical) {
@@ -121,7 +121,7 @@ class SplitPane(firstWidget$p: com.badlogic.gdx.scenes.scene2d.Actor, secondWidg
     } else ()
     return (first + this.style.handle.getMinWidth()) + second
   }
-  def getPrefHeight(): scala.Float = {
+  override def getPrefHeight(): scala.Float = {
     val first: scala.Float = if (this.firstWidget == null) 0 else if (this.firstWidget.isInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Layout]) this.firstWidget.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Layout].getPrefHeight() else this.firstWidget.getHeight()
     val second: scala.Float = if (this.secondWidget == null) 0 else if (this.secondWidget.isInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Layout]) this.secondWidget.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Layout].getPrefHeight() else this.secondWidget.getHeight()
     if (!this.vertical) {
@@ -129,7 +129,7 @@ class SplitPane(firstWidget$p: com.badlogic.gdx.scenes.scene2d.Actor, secondWidg
     } else ()
     return (first + this.style.handle.getMinHeight()) + second
   }
-  def getMinWidth(): scala.Float = {
+  override def getMinWidth(): scala.Float = {
     val first: scala.Float = if (this.firstWidget.isInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Layout]) this.firstWidget.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Layout].getMinWidth() else 0
     val second: scala.Float = if (this.secondWidget.isInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Layout]) this.secondWidget.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Layout].getMinWidth() else 0
     if (this.vertical) {
@@ -137,7 +137,7 @@ class SplitPane(firstWidget$p: com.badlogic.gdx.scenes.scene2d.Actor, secondWidg
     } else ()
     return (first + this.style.handle.getMinWidth()) + second
   }
-  def getMinHeight(): scala.Float = {
+  override def getMinHeight(): scala.Float = {
     val first: scala.Float = if (this.firstWidget.isInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Layout]) this.firstWidget.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Layout].getMinHeight() else 0
     val second: scala.Float = if (this.secondWidget.isInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Layout]) this.secondWidget.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Layout].getMinHeight() else 0
     if (!this.vertical) {
@@ -178,7 +178,7 @@ class SplitPane(firstWidget$p: com.badlogic.gdx.scenes.scene2d.Actor, secondWidg
     this.secondWidgetBounds.set(0, 0, width, bottomAreaHeight)
     this.handleBounds.set(0, bottomAreaHeight, width, handleHeight)
   }
-  def draw(batch: com.badlogic.gdx.graphics.g2d.Batch, parentAlpha: scala.Float): scala.Unit = {
+  override def draw(batch: com.badlogic.gdx.graphics.g2d.Batch, parentAlpha: scala.Float): scala.Unit = {
     val stage: com.badlogic.gdx.scenes.scene2d.Stage = this.getStage()
     if (stage == null) {
       return
@@ -280,16 +280,16 @@ class SplitPane(firstWidget$p: com.badlogic.gdx.scenes.scene2d.Actor, secondWidg
     } else ()
     this.invalidate()
   }
-  def addActor(actor: com.badlogic.gdx.scenes.scene2d.Actor): scala.Unit = {
+  override def addActor(actor: com.badlogic.gdx.scenes.scene2d.Actor): scala.Unit = {
     throw new java.lang.UnsupportedOperationException("Use SplitPane#setWidget.")
   }
-  def addActorAt(index: scala.Int, actor: com.badlogic.gdx.scenes.scene2d.Actor): scala.Unit = {
+  override def addActorAt(index: scala.Int, actor: com.badlogic.gdx.scenes.scene2d.Actor): scala.Unit = {
     throw new java.lang.UnsupportedOperationException("Use SplitPane#setWidget.")
   }
-  def addActorBefore(actorBefore: com.badlogic.gdx.scenes.scene2d.Actor, actor: com.badlogic.gdx.scenes.scene2d.Actor): scala.Unit = {
+  override def addActorBefore(actorBefore: com.badlogic.gdx.scenes.scene2d.Actor, actor: com.badlogic.gdx.scenes.scene2d.Actor): scala.Unit = {
     throw new java.lang.UnsupportedOperationException("Use SplitPane#setWidget.")
   }
-  def removeActor(actor: com.badlogic.gdx.scenes.scene2d.Actor): scala.Boolean = {
+  override def removeActor(actor: com.badlogic.gdx.scenes.scene2d.Actor): scala.Boolean = {
     if (actor == null) {
       throw new java.lang.IllegalArgumentException("actor cannot be null.")
     } else ()
@@ -303,7 +303,7 @@ class SplitPane(firstWidget$p: com.badlogic.gdx.scenes.scene2d.Actor, secondWidg
     } else ()
     return true
   }
-  def removeActor(actor: com.badlogic.gdx.scenes.scene2d.Actor, unfocus: scala.Boolean): scala.Boolean = {
+  override def removeActor(actor: com.badlogic.gdx.scenes.scene2d.Actor, unfocus: scala.Boolean): scala.Boolean = {
     if (actor == null) {
       throw new java.lang.IllegalArgumentException("actor cannot be null.")
     } else ()
@@ -321,7 +321,7 @@ class SplitPane(firstWidget$p: com.badlogic.gdx.scenes.scene2d.Actor, secondWidg
     } else ()
     return false
   }
-  def removeActorAt(index: scala.Int, unfocus: scala.Boolean): com.badlogic.gdx.scenes.scene2d.Actor = {
+  override def removeActorAt(index: scala.Int, unfocus: scala.Boolean): com.badlogic.gdx.scenes.scene2d.Actor = {
     val actor: com.badlogic.gdx.scenes.scene2d.Actor = super.removeActorAt(index, unfocus)
     if (actor == this.firstWidget) {
       super.removeActor(actor, unfocus)

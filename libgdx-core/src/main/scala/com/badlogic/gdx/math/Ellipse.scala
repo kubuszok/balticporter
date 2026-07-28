@@ -40,14 +40,14 @@ class Ellipse extends java.io.Serializable with com.badlogic.gdx.math.Shape2D {
     this.width = circle.radius * 2.0f
     this.height = circle.radius * 2.0f
   }
-  def contains(x$arg: scala.Float, y$arg: scala.Float): scala.Boolean = {
+  override def contains(x$arg: scala.Float, y$arg: scala.Float): scala.Boolean = {
     var x: scala.Float = x$arg
     var y: scala.Float = y$arg
     x = x - this.x
     y = y - this.y
     return (((x * x) / (((this.width * 0.5f) * this.width) * 0.5f)) + ((y * y) / (((this.height * 0.5f) * this.height) * 0.5f))) <= 1.0f
   }
-  def contains(point: com.badlogic.gdx.math.Vector2): scala.Boolean = {
+  override def contains(point: com.badlogic.gdx.math.Vector2): scala.Boolean = {
     return this.contains(point.x, point.y)
   }
   def set(x: scala.Float, y: scala.Float, width: scala.Float, height: scala.Float): scala.Unit = {
@@ -102,11 +102,11 @@ class Ellipse extends java.io.Serializable with com.badlogic.gdx.math.Shape2D {
     }
   }
   @java.lang.Override
-  def toString(): java.lang.String = {
+  override def toString(): java.lang.String = {
     return ((((((("[" + this.x) + ",") + this.y) + ",") + this.width) + ",") + this.height) + "]"
   }
   @java.lang.Override
-  def equals(o: java.lang.Object): scala.Boolean = {
+  override def equals(o: java.lang.Object): scala.Boolean = {
     if (o == this) {
       return true
     } else ()
@@ -117,7 +117,7 @@ class Ellipse extends java.io.Serializable with com.badlogic.gdx.math.Shape2D {
     return (((this.x == e.x) && (this.y == e.y)) && (this.width == e.width)) && (this.height == e.height)
   }
   @java.lang.Override
-  def hashCode(): scala.Int = {
+  override def hashCode(): scala.Int = {
     val prime: scala.Int = 53
     var result: scala.Int = 1
     result = (prime * result) + com.badlogic.gdx.utils.NumberUtils.floatToRawIntBits(this.height)

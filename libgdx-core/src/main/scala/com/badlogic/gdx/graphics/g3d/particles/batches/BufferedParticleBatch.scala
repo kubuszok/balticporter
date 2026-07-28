@@ -8,18 +8,18 @@ abstract class BufferedParticleBatch[T <: com.badlogic.gdx.graphics.g3d.particle
   var camera: com.badlogic.gdx.graphics.Camera = null.asInstanceOf[com.badlogic.gdx.graphics.Camera]
   this.sorter = new com.badlogic.gdx.graphics.g3d.particles.ParticleSorter.Distance()
   this.renderData = new com.badlogic.gdx.utils.Array[T](false, 10, arraySupplier)
-  def begin(): scala.Unit = {
+  override def begin(): scala.Unit = {
     this.renderData.clear()
     this.bufferedParticlesCount = 0
   }
   @java.lang.Override
-  def draw(data: T): scala.Unit = {
+  override def draw(data: T): scala.Unit = {
     if (data.controller.particles.size > 0) {
       this.renderData.add(data)
       this.bufferedParticlesCount = this.bufferedParticlesCount + data.controller.particles.size
     } else ()
   }
-  def `end`(): scala.Unit = {
+  override def `end`(): scala.Unit = {
     if (this.bufferedParticlesCount > 0) {
       this.ensureCapacity(this.bufferedParticlesCount)
       this.flush(this.sorter.sort(this.renderData))

@@ -27,7 +27,7 @@ class FacedCubemapData(positiveX: com.badlogic.gdx.graphics.TextureData, negativ
   this.data(4) = positiveZ
   this.data(5) = negativeZ
   @java.lang.Override
-  def isManaged(): scala.Boolean = {
+  override def isManaged(): scala.Boolean = {
     for (data <- this.data) {
       if (!data.isManaged()) {
         return false
@@ -53,7 +53,7 @@ class FacedCubemapData(positiveX: com.badlogic.gdx.graphics.TextureData, negativ
     return this.data(side.index)
   }
   @java.lang.Override
-  def getWidth(): scala.Int = {
+  override def getWidth(): scala.Int = {
     var tmp: scala.Int = 0
     var width: scala.Int = 0
     if ((this.data(com.badlogic.gdx.graphics.Cubemap.CubemapSide.PositiveZ.index) != null) && ({
@@ -83,7 +83,7 @@ class FacedCubemapData(positiveX: com.badlogic.gdx.graphics.TextureData, negativ
     return width
   }
   @java.lang.Override
-  def getHeight(): scala.Int = {
+  override def getHeight(): scala.Int = {
     var tmp: scala.Int = 0
     var height: scala.Int = 0
     if ((this.data(com.badlogic.gdx.graphics.Cubemap.CubemapSide.PositiveZ.index) != null) && ({
@@ -113,11 +113,11 @@ class FacedCubemapData(positiveX: com.badlogic.gdx.graphics.TextureData, negativ
     return height
   }
   @java.lang.Override
-  def isPrepared(): scala.Boolean = {
+  override def isPrepared(): scala.Boolean = {
     return false
   }
   @java.lang.Override
-  def prepare(): scala.Unit = {
+  override def prepare(): scala.Unit = {
     if (!this.isComplete()) {
       throw new com.badlogic.gdx.utils.GdxRuntimeException("You need to complete your cubemap data before using it")
     } else ();
@@ -128,7 +128,7 @@ class FacedCubemapData(positiveX: com.badlogic.gdx.graphics.TextureData, negativ
     }; i = i + 1 } }
   }
   @java.lang.Override
-  def consumeCubemapData(): scala.Unit = {
+  override def consumeCubemapData(): scala.Unit = {
     { var i: scala.Int = 0; while (i < this.data.length) { {
       if (this.data(i).getType() == com.badlogic.gdx.graphics.TextureData.TextureDataType.Custom) {
         this.data(i).consumeCustomData(com.badlogic.gdx.graphics.GL20.GL_TEXTURE_CUBE_MAP_POSITIVE_X + i)

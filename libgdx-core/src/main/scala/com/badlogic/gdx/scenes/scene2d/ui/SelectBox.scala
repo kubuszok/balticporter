@@ -57,13 +57,13 @@ class SelectBox[T <: java.lang.Object](style$p: com.badlogic.gdx.scenes.scene2d.
   def getMaxListCount(): scala.Int = {
     return this.scrollPane.maxListCount
   }
-  def setStage(stage: com.badlogic.gdx.scenes.scene2d.Stage): scala.Unit = {
+  override def setStage(stage: com.badlogic.gdx.scenes.scene2d.Stage): scala.Unit = {
     if (stage == null) {
       this.scrollPane.hide()
     } else ()
     super.setStage(stage)
   }
-  def setStyle(style: com.badlogic.gdx.scenes.scene2d.ui.SelectBox.SelectBoxStyle): scala.Unit = {
+  override def setStyle(style: com.badlogic.gdx.scenes.scene2d.ui.SelectBox.SelectBoxStyle): scala.Unit = {
     if (style == null) {
       throw new java.lang.IllegalArgumentException("style cannot be null.")
     } else ()
@@ -74,7 +74,7 @@ class SelectBox[T <: java.lang.Object](style$p: com.badlogic.gdx.scenes.scene2d.
     } else ()
     this.invalidateHierarchy()
   }
-  def getStyle(): com.badlogic.gdx.scenes.scene2d.ui.SelectBox.SelectBoxStyle = {
+  override def getStyle(): com.badlogic.gdx.scenes.scene2d.ui.SelectBox.SelectBoxStyle = {
     return this.style
   }
   def setItems(newItems: scala.Array[T]): scala.Unit = {
@@ -119,7 +119,7 @@ class SelectBox[T <: java.lang.Object](style$p: com.badlogic.gdx.scenes.scene2d.
   def getItems(): com.badlogic.gdx.utils.Array[T] = {
     return this.items
   }
-  def layout(): scala.Unit = {
+  override def layout(): scala.Unit = {
     var bg: com.badlogic.gdx.scenes.scene2d.utils.Drawable = this.style.background
     val font: com.badlogic.gdx.graphics.g2d.BitmapFont = this.style.font
     if (bg != null) {
@@ -185,7 +185,7 @@ class SelectBox[T <: java.lang.Object](style$p: com.badlogic.gdx.scenes.scene2d.
     } else ()
     return this.style.fontColor
   }
-  def draw(batch: com.badlogic.gdx.graphics.g2d.Batch, parentAlpha: scala.Float): scala.Unit = {
+  override def draw(batch: com.badlogic.gdx.graphics.g2d.Batch, parentAlpha: scala.Float): scala.Unit = {
     this.validate()
     val background: com.badlogic.gdx.scenes.scene2d.utils.Drawable = this.getBackgroundDrawable()
     val fontColor: com.badlogic.gdx.graphics.Color = this.getFontColor()
@@ -266,20 +266,20 @@ class SelectBox[T <: java.lang.Object](style$p: com.badlogic.gdx.scenes.scene2d.
     } else ()
     return width
   }
-  def setDisabled(disabled: scala.Boolean): scala.Unit = {
+  override def setDisabled(disabled: scala.Boolean): scala.Unit = {
     if (disabled && (!this.disabled)) {
       this.hideScrollPane()
     } else ()
     this.disabled = disabled
   }
-  def isDisabled(): scala.Boolean = {
+  override def isDisabled(): scala.Boolean = {
     return this.disabled
   }
-  def getPrefWidth(): scala.Float = {
+  override def getPrefWidth(): scala.Float = {
     this.validate()
     return this.prefWidth
   }
-  def getPrefHeight(): scala.Float = {
+  override def getPrefHeight(): scala.Float = {
     this.validate()
     return this.prefHeight
   }
@@ -489,18 +489,18 @@ object SelectBox {
       this.clearActions()
       this.selectBox.onHide(this)
     }
-    def draw(batch: com.badlogic.gdx.graphics.g2d.Batch, parentAlpha: scala.Float): scala.Unit = {
+    override def draw(batch: com.badlogic.gdx.graphics.g2d.Batch, parentAlpha: scala.Float): scala.Unit = {
       this.selectBox.localToStageCoordinates(SelectBox.temp.set(0, 0))
       if (!SelectBox.temp.equals(this.stagePosition)) {
         this.hide()
       } else ()
       super.draw(batch, parentAlpha)
     }
-    def act(delta: scala.Float): scala.Unit = {
+    override def act(delta: scala.Float): scala.Unit = {
       super.act(delta)
       this.toFront()
     }
-    def setStage(stage: com.badlogic.gdx.scenes.scene2d.Stage): scala.Unit = {
+    override def setStage(stage: com.badlogic.gdx.scenes.scene2d.Stage): scala.Unit = {
       val oldStage: com.badlogic.gdx.scenes.scene2d.Stage = this.getStage()
       if (oldStage != null) {
         oldStage.removeCaptureListener(this.hideListener)

@@ -257,17 +257,17 @@ class ScrollPane(actor$p: com.badlogic.gdx.scenes.scene2d.Actor, style$p: com.ba
     this.scrollX(if (this.overscrollX) (com.badlogic.gdx.math.MathUtils.clamp: (scala.Float, scala.Float, scala.Float) => scala.Float)(this.amountX, -this.overscrollDistance, this.maxX + this.overscrollDistance) else (com.badlogic.gdx.math.MathUtils.clamp: (scala.Float, scala.Float, scala.Float) => scala.Float)(this.amountX, 0, this.maxX))
     this.scrollY(if (this.overscrollY) (com.badlogic.gdx.math.MathUtils.clamp: (scala.Float, scala.Float, scala.Float) => scala.Float)(this.amountY, -this.overscrollDistance, this.maxY + this.overscrollDistance) else (com.badlogic.gdx.math.MathUtils.clamp: (scala.Float, scala.Float, scala.Float) => scala.Float)(this.amountY, 0, this.maxY))
   }
-  def setStyle(style: com.badlogic.gdx.scenes.scene2d.ui.ScrollPane.ScrollPaneStyle): scala.Unit = {
+  override def setStyle(style: com.badlogic.gdx.scenes.scene2d.ui.ScrollPane.ScrollPaneStyle): scala.Unit = {
     if (style == null) {
       throw new java.lang.IllegalArgumentException("style cannot be null.")
     } else ()
     this.style = style
     this.invalidateHierarchy()
   }
-  def getStyle(): com.badlogic.gdx.scenes.scene2d.ui.ScrollPane.ScrollPaneStyle = {
+  override def getStyle(): com.badlogic.gdx.scenes.scene2d.ui.ScrollPane.ScrollPaneStyle = {
     return this.style
   }
-  def act(delta: scala.Float): scala.Unit = {
+  override def act(delta: scala.Float): scala.Unit = {
     super.act(delta)
     val panning: scala.Boolean = this.flickScrollListener.getGestureDetector().isPanning()
     var animating: scala.Boolean = false
@@ -375,7 +375,7 @@ class ScrollPane(actor$p: com.badlogic.gdx.scenes.scene2d.Actor, style$p: com.ba
       } else ()
     } else ()
   }
-  def layout(): scala.Unit = {
+  override def layout(): scala.Unit = {
     val bg: com.badlogic.gdx.scenes.scene2d.utils.Drawable = this.style.background
     val hScrollKnob: com.badlogic.gdx.scenes.scene2d.utils.Drawable = this.style.hScrollKnob
     val vScrollKnob: com.badlogic.gdx.scenes.scene2d.utils.Drawable = this.style.vScrollKnob
@@ -523,7 +523,7 @@ class ScrollPane(actor$p: com.badlogic.gdx.scenes.scene2d.Actor, style$p: com.ba
       this.actor.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Cullable].setCullingArea(this.actorCullingArea)
     } else ()
   }
-  def draw(batch: com.badlogic.gdx.graphics.g2d.Batch, parentAlpha: scala.Float): scala.Unit = {
+  override def draw(batch: com.badlogic.gdx.graphics.g2d.Batch, parentAlpha: scala.Float): scala.Unit = {
     if (this.actor == null) {
       return
     } else ()
@@ -587,7 +587,7 @@ class ScrollPane(actor$p: com.badlogic.gdx.scenes.scene2d.Actor, style$p: com.ba
     this.velocityX = velocityX
     this.velocityY = velocityY
   }
-  def getPrefWidth(): scala.Float = {
+  override def getPrefWidth(): scala.Float = {
     var width: scala.Float = 0
     if (this.actor.isInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Layout]) {
       width = this.actor.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Layout].getPrefWidth()
@@ -612,7 +612,7 @@ class ScrollPane(actor$p: com.badlogic.gdx.scenes.scene2d.Actor, style$p: com.ba
     } else ()
     return width
   }
-  def getPrefHeight(): scala.Float = {
+  override def getPrefHeight(): scala.Float = {
     var height: scala.Float = 0
     if (this.actor.isInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Layout]) {
       height = this.actor.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Layout].getPrefHeight()
@@ -637,10 +637,10 @@ class ScrollPane(actor$p: com.badlogic.gdx.scenes.scene2d.Actor, style$p: com.ba
     } else ()
     return height
   }
-  def getMinWidth(): scala.Float = {
+  override def getMinWidth(): scala.Float = {
     return 0
   }
-  def getMinHeight(): scala.Float = {
+  override def getMinHeight(): scala.Float = {
     return 0
   }
   def setActor(actor: com.badlogic.gdx.scenes.scene2d.Actor): scala.Unit = {
@@ -669,22 +669,22 @@ class ScrollPane(actor$p: com.badlogic.gdx.scenes.scene2d.Actor, style$p: com.ba
     return this.actor
   }
   @java.lang.Deprecated
-  def addActor(actor: com.badlogic.gdx.scenes.scene2d.Actor): scala.Unit = {
+  override def addActor(actor: com.badlogic.gdx.scenes.scene2d.Actor): scala.Unit = {
     throw new java.lang.UnsupportedOperationException("Use ScrollPane#setActor.")
   }
   @java.lang.Deprecated
-  def addActorAt(index: scala.Int, actor: com.badlogic.gdx.scenes.scene2d.Actor): scala.Unit = {
+  override def addActorAt(index: scala.Int, actor: com.badlogic.gdx.scenes.scene2d.Actor): scala.Unit = {
     throw new java.lang.UnsupportedOperationException("Use ScrollPane#setActor.")
   }
   @java.lang.Deprecated
-  def addActorBefore(actorBefore: com.badlogic.gdx.scenes.scene2d.Actor, actor: com.badlogic.gdx.scenes.scene2d.Actor): scala.Unit = {
+  override def addActorBefore(actorBefore: com.badlogic.gdx.scenes.scene2d.Actor, actor: com.badlogic.gdx.scenes.scene2d.Actor): scala.Unit = {
     throw new java.lang.UnsupportedOperationException("Use ScrollPane#setActor.")
   }
   @java.lang.Deprecated
-  def addActorAfter(actorAfter: com.badlogic.gdx.scenes.scene2d.Actor, actor: com.badlogic.gdx.scenes.scene2d.Actor): scala.Unit = {
+  override def addActorAfter(actorAfter: com.badlogic.gdx.scenes.scene2d.Actor, actor: com.badlogic.gdx.scenes.scene2d.Actor): scala.Unit = {
     throw new java.lang.UnsupportedOperationException("Use ScrollPane#setActor.")
   }
-  def removeActor(actor: com.badlogic.gdx.scenes.scene2d.Actor): scala.Boolean = {
+  override def removeActor(actor: com.badlogic.gdx.scenes.scene2d.Actor): scala.Boolean = {
     if (actor == null) {
       throw new java.lang.IllegalArgumentException("actor cannot be null.")
     } else ()
@@ -694,7 +694,7 @@ class ScrollPane(actor$p: com.badlogic.gdx.scenes.scene2d.Actor, style$p: com.ba
     this.setActor(null)
     return true
   }
-  def removeActor(actor: com.badlogic.gdx.scenes.scene2d.Actor, unfocus: scala.Boolean): scala.Boolean = {
+  override def removeActor(actor: com.badlogic.gdx.scenes.scene2d.Actor, unfocus: scala.Boolean): scala.Boolean = {
     if (actor == null) {
       throw new java.lang.IllegalArgumentException("actor cannot be null.")
     } else ()
@@ -704,7 +704,7 @@ class ScrollPane(actor$p: com.badlogic.gdx.scenes.scene2d.Actor, style$p: com.ba
     this.actor = null
     return super.removeActor(actor, unfocus)
   }
-  def removeActorAt(index: scala.Int, unfocus: scala.Boolean): com.badlogic.gdx.scenes.scene2d.Actor = {
+  override def removeActorAt(index: scala.Int, unfocus: scala.Boolean): com.badlogic.gdx.scenes.scene2d.Actor = {
     var actor: com.badlogic.gdx.scenes.scene2d.Actor = super.removeActorAt(index, unfocus)
     if (actor == this.actor) {
       this.actor = null
@@ -712,7 +712,7 @@ class ScrollPane(actor$p: com.badlogic.gdx.scenes.scene2d.Actor, style$p: com.ba
     return actor
   }
   @com.badlogic.gdx.utils.Null
-  def hit(x: scala.Float, y: scala.Float, touchable: scala.Boolean): com.badlogic.gdx.scenes.scene2d.Actor = {
+  override def hit(x: scala.Float, y: scala.Float, touchable: scala.Boolean): com.badlogic.gdx.scenes.scene2d.Actor = {
     if ((((x < 0) || (x >= this.getWidth())) || (y < 0)) || (y >= this.getHeight())) {
       return null
     } else ()
@@ -992,7 +992,7 @@ class ScrollPane(actor$p: com.badlogic.gdx.scenes.scene2d.Actor, style$p: com.ba
   def setCancelTouchFocus(cancelTouchFocus: scala.Boolean): scala.Unit = {
     this.cancelTouchFocus$field = cancelTouchFocus
   }
-  def drawDebug(shapes: com.badlogic.gdx.graphics.glutils.ShapeRenderer): scala.Unit = {
+  override def drawDebug(shapes: com.badlogic.gdx.graphics.glutils.ShapeRenderer): scala.Unit = {
     this.drawDebugBounds(shapes)
     this.applyTransform(shapes, this.computeTransform())
     if (this.clipBegin(this.actorArea.x, this.actorArea.y, this.actorArea.width, this.actorArea.height)) {

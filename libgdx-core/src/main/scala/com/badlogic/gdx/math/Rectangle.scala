@@ -80,16 +80,16 @@ class Rectangle extends java.io.Serializable with com.badlogic.gdx.math.Shape2D 
   def getSize(size: com.badlogic.gdx.math.Vector2): com.badlogic.gdx.math.Vector2 = {
     return size.set(this.width, this.height)
   }
-  def contains(x: scala.Float, y: scala.Float): scala.Boolean = {
+  override def contains(x: scala.Float, y: scala.Float): scala.Boolean = {
     return (((this.x <= x) && ((this.x + this.width) >= x)) && (this.y <= y)) && ((this.y + this.height) >= y)
   }
-  def contains(point: com.badlogic.gdx.math.Vector2): scala.Boolean = {
+  override def contains(point: com.badlogic.gdx.math.Vector2): scala.Boolean = {
     return this.contains(point.x, point.y)
   }
-  def contains(circle: com.badlogic.gdx.math.Circle): scala.Boolean = {
+  override def contains(circle: com.badlogic.gdx.math.Circle): scala.Boolean = {
     return ((((circle.x - circle.radius) >= this.x) && ((circle.x + circle.radius) <= (this.x + this.width))) && ((circle.y - circle.radius) >= this.y)) && ((circle.y + circle.radius) <= (this.y + this.height))
   }
-  def contains(rectangle: Rectangle): scala.Boolean = {
+  override def contains(rectangle: Rectangle): scala.Boolean = {
     val xmin: scala.Float = rectangle.x
     val xmax: scala.Float = xmin + rectangle.width
     val ymin: scala.Float = rectangle.y
@@ -185,7 +185,7 @@ class Rectangle extends java.io.Serializable with com.badlogic.gdx.math.Shape2D 
     this.setPosition((rect.x + (rect.width / 2)) - (this.width / 2), (rect.y + (rect.height / 2)) - (this.height / 2))
     return this
   }
-  def toString(): java.lang.String = {
+  override def toString(): java.lang.String = {
     return ((((((("[" + this.x) + ",") + this.y) + ",") + this.width) + ",") + this.height) + "]"
   }
   def fromString(v: java.lang.String): Rectangle = {
@@ -213,7 +213,7 @@ class Rectangle extends java.io.Serializable with com.badlogic.gdx.math.Shape2D 
   def perimeter(): scala.Float = {
     return 2 * (this.width + this.height)
   }
-  def hashCode(): scala.Int = {
+  override def hashCode(): scala.Int = {
     val prime: scala.Int = 31
     var result: scala.Int = 1
     result = (prime * result) + com.badlogic.gdx.utils.NumberUtils.floatToRawIntBits(this.height)
@@ -222,7 +222,7 @@ class Rectangle extends java.io.Serializable with com.badlogic.gdx.math.Shape2D 
     result = (prime * result) + com.badlogic.gdx.utils.NumberUtils.floatToRawIntBits(this.y)
     return result
   }
-  def equals(obj: java.lang.Object): scala.Boolean = {
+  override def equals(obj: java.lang.Object): scala.Boolean = {
     if (this == obj) {
       return true
     } else ()

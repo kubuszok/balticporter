@@ -91,7 +91,7 @@ object Graphics {
     this.height = height$p
     this.refreshRate = refreshRate$p
     this.bitsPerPixel = bitsPerPixel$p
-    def toString(): java.lang.String = {
+    override def toString(): java.lang.String = {
       return (((((java.lang.String.valueOf(this.width) + "x") + this.height) + ", bpp: ") + this.bitsPerPixel) + ", hz: ") + this.refreshRate
     }
   }
@@ -120,7 +120,7 @@ object Graphics {
     this.stencil = stencil$p
     this.samples = samples$p
     this.coverageSampling = coverageSampling$p
-    def toString(): java.lang.String = {
+    override def toString(): java.lang.String = {
       return (((((((((((((("r: " + this.r) + ", g: ") + this.g) + ", b: ") + this.b) + ", a: ") + this.a) + ", depth: ") + this.depth) + ", stencil: ") + this.stencil) + ", num samples: ") + this.samples) + ", coverage sampling: ") + this.coverageSampling
     }
   }

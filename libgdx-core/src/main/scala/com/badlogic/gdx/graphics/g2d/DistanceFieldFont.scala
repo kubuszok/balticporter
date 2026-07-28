@@ -51,7 +51,7 @@ class DistanceFieldFont extends com.badlogic.gdx.graphics.g2d.BitmapFont {
   def this(fontFile: com.badlogic.gdx.files.FileHandle) = {
     this()
   }
-  def load(data: com.badlogic.gdx.graphics.g2d.BitmapFont.BitmapFontData): scala.Unit = {
+  override def load(data: com.badlogic.gdx.graphics.g2d.BitmapFont.BitmapFontData): scala.Unit = {
     super.load(data)
     val regions: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g2d.TextureRegion] = this.getRegions()
     for (region <- regions) {
@@ -59,7 +59,7 @@ class DistanceFieldFont extends com.badlogic.gdx.graphics.g2d.BitmapFont {
     }
   }
   @java.lang.Override
-  def newFontCache(): com.badlogic.gdx.graphics.g2d.BitmapFontCache = {
+  override def newFontCache(): com.badlogic.gdx.graphics.g2d.BitmapFontCache = {
     return new com.badlogic.gdx.graphics.g2d.DistanceFieldFont.DistanceFieldFontCache(this, integer)
   }
   def getDistanceFieldSmoothing(): scala.Float = {
@@ -111,13 +111,13 @@ object DistanceFieldFont {
       spriteBatch.getShader().setUniformf("u_smoothing", smoothing)
     }
     @java.lang.Override
-    def draw(spriteBatch: com.badlogic.gdx.graphics.g2d.Batch): scala.Unit = {
+    override def draw(spriteBatch: com.badlogic.gdx.graphics.g2d.Batch): scala.Unit = {
       this.setSmoothingUniform(spriteBatch, this.getSmoothingFactor())
       super.draw(spriteBatch)
       this.setSmoothingUniform(spriteBatch, 0)
     }
     @java.lang.Override
-    def draw(spriteBatch: com.badlogic.gdx.graphics.g2d.Batch, start: scala.Int, `end`: scala.Int): scala.Unit = {
+    override def draw(spriteBatch: com.badlogic.gdx.graphics.g2d.Batch, start: scala.Int, `end`: scala.Int): scala.Unit = {
       this.setSmoothingUniform(spriteBatch, this.getSmoothingFactor())
       super.draw(spriteBatch, start, `end`)
       this.setSmoothingUniform(spriteBatch, 0)

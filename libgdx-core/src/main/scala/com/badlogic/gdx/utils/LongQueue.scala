@@ -204,7 +204,7 @@ class LongQueue(initialSize: scala.Int) {
     this.tail = 0
     this.size = 0
   }
-  def toString(): java.lang.String = {
+  override def toString(): java.lang.String = {
     if (this.size == 0) {
       return "[]"
     } else ()
@@ -234,7 +234,7 @@ class LongQueue(initialSize: scala.Int) {
     }; i = (i + 1) % values.length } }
     return sb.toString()
   }
-  def hashCode(): scala.Int = {
+  override def hashCode(): scala.Int = {
     val size: scala.Int = this.size
     val values: scala.Array[scala.Long] = this.values
     val backingLength: scala.Int = values.length
@@ -250,7 +250,7 @@ class LongQueue(initialSize: scala.Int) {
     }; s = s + 1 } }
     return hash
   }
-  def equals(o: java.lang.Object): scala.Boolean = {
+  override def equals(o: java.lang.Object): scala.Boolean = {
     if (this == o) {
       return true
     } else ()

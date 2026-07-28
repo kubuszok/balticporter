@@ -10,7 +10,7 @@ class DefaultPool[T <: java.lang.Object](supplier: com.badlogic.gdx.utils.Defaul
   }
   this.poolTypeSupplier = supplier
   @java.lang.Override
-  def newObject(): T = {
+  override def newObject(): T = {
     return this.poolTypeSupplier.get().asInstanceOf[T]
   }
 }

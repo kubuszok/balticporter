@@ -233,7 +233,7 @@ class ObjectIntMap[K <: java.lang.Object](initialCapacity: scala.Int, loadFactor
       }; i = i + 1 } }
     } else ()
   }
-  def hashCode(): scala.Int = {
+  override def hashCode(): scala.Int = {
     var h: scala.Int = this.size
     val keyTable: scala.Array[K] = this.keyTable
     val valueTable: scala.Array[scala.Int] = this.valueTable;
@@ -245,7 +245,7 @@ class ObjectIntMap[K <: java.lang.Object](initialCapacity: scala.Int, loadFactor
     }; i = i + 1 } }
     return h
   }
-  def equals(obj: java.lang.Object): scala.Boolean = {
+  override def equals(obj: java.lang.Object): scala.Boolean = {
     if (obj == this) {
       return true
     } else ()
@@ -275,7 +275,7 @@ class ObjectIntMap[K <: java.lang.Object](initialCapacity: scala.Int, loadFactor
   def toString(separator: java.lang.String): java.lang.String = {
     return this.toString(separator, false)
   }
-  def toString(): java.lang.String = {
+  override def toString(): java.lang.String = {
     return this.toString(", ", true)
   }
   private def toString(separator: java.lang.String, braces: scala.Boolean): java.lang.String = {
@@ -314,7 +314,7 @@ class ObjectIntMap[K <: java.lang.Object](initialCapacity: scala.Int, loadFactor
     } else ()
     return buffer.toString()
   }
-  def iterator(): com.badlogic.gdx.utils.ObjectIntMap.Entries[K] = {
+  override def iterator(): com.badlogic.gdx.utils.ObjectIntMap.Entries[K] = {
     return this.entries()
   }
   def entries(): com.badlogic.gdx.utils.ObjectIntMap.Entries[K] = {
@@ -379,7 +379,7 @@ object ObjectIntMap {
   class Entry[K <: java.lang.Object] {
     var key: K = null.asInstanceOf[K]
     var value: scala.Int = 0
-    def toString(): java.lang.String = {
+    override def toString(): java.lang.String = {
       return (java.lang.String.valueOf(this.key) + "=") + this.value
     }
   }
@@ -438,7 +438,7 @@ object ObjectIntMap {
   }
   class Entries[K <: java.lang.Object](map$p: ObjectIntMap[K]) extends com.badlogic.gdx.utils.ObjectIntMap.MapIterator[K](map$p) with balticporter.runtime.JavaIterable[com.badlogic.gdx.utils.ObjectIntMap.Entry[K]] with balticporter.runtime.JavaIterator[com.badlogic.gdx.utils.ObjectIntMap.Entry[K]] {
     var entry: com.badlogic.gdx.utils.ObjectIntMap.Entry[K] = new com.badlogic.gdx.utils.ObjectIntMap.Entry[K]()
-    def next(): com.badlogic.gdx.utils.ObjectIntMap.Entry[K] = {
+    override def next(): com.badlogic.gdx.utils.ObjectIntMap.Entry[K] = {
       if (!hasNext$field) {
         throw new java.util.NoSuchElementException()
       } else ()
@@ -452,13 +452,13 @@ object ObjectIntMap {
       this.findNextIndex()
       return this.entry
     }
-    def hasNext(): scala.Boolean = {
+    override def hasNext(): scala.Boolean = {
       if (!valid) {
         throw new com.badlogic.gdx.utils.GdxRuntimeException("#iterator() cannot be used nested.")
       } else ()
       return hasNext$field
     }
-    def iterator(): com.badlogic.gdx.utils.ObjectIntMap.Entries[K] = {
+    override def iterator(): com.badlogic.gdx.utils.ObjectIntMap.Entries[K] = {
       return this
     }
   }
@@ -499,13 +499,13 @@ object ObjectIntMap {
     }
   }
   class Keys[K <: java.lang.Object](map$p: ObjectIntMap[K]) extends com.badlogic.gdx.utils.ObjectIntMap.MapIterator[K](map$p) with balticporter.runtime.JavaIterable[K] with balticporter.runtime.JavaIterator[K] {
-    def hasNext(): scala.Boolean = {
+    override def hasNext(): scala.Boolean = {
       if (!valid) {
         throw new com.badlogic.gdx.utils.GdxRuntimeException("#iterator() cannot be used nested.")
       } else ()
       return hasNext$field
     }
-    def next(): K = {
+    override def next(): K = {
       if (!hasNext$field) {
         throw new java.util.NoSuchElementException()
       } else ()
@@ -517,7 +517,7 @@ object ObjectIntMap {
       this.findNextIndex()
       return key
     }
-    def iterator(): com.badlogic.gdx.utils.ObjectIntMap.Keys[K] = {
+    override def iterator(): com.badlogic.gdx.utils.ObjectIntMap.Keys[K] = {
       return this
     }
     def toArray(): com.badlogic.gdx.utils.Array[K] = {

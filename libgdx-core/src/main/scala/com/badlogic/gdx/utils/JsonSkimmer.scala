@@ -1051,7 +1051,7 @@ object JsonSkimmer {
       }; c = c + 1; s = s + 1 } }
       return true
     }
-    def toString(): java.lang.String = {
+    override def toString(): java.lang.String = {
       if (this.`type` == com.badlogic.gdx.utils.JsonSkimmer.JsonToken.TokenType.nullValue) {
         return "null"
       } else ()
@@ -1073,7 +1073,7 @@ object JsonSkimmer {
         }
       }
     }
-    private def equals(string: java.lang.String): scala.Boolean = {
+    private override def equals(string: java.lang.String): scala.Boolean = {
       val n: scala.Int = this.length
       val chars: scala.Array[scala.Char] = this.chars;
       { var c: scala.Int = this.start; var s: scala.Int = 0; while (s < n) { {

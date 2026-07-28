@@ -366,7 +366,7 @@ class Skin extends com.badlogic.gdx.utils.Disposable {
   def getAtlas(): com.badlogic.gdx.graphics.g2d.TextureAtlas = {
     return this.atlas
   }
-  def dispose(): scala.Unit = {
+  override def dispose(): scala.Unit = {
     if (this.atlas != null) {
       this.atlas.dispose()
     } else ()

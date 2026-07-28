@@ -190,7 +190,7 @@ class Window extends com.badlogic.gdx.scenes.scene2d.ui.Table with com.badlogic.
   def newLabel(text: java.lang.String, style: com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle): com.badlogic.gdx.scenes.scene2d.ui.Label = {
     return new com.badlogic.gdx.scenes.scene2d.ui.Label(text, style)
   }
-  def setStyle(style: com.badlogic.gdx.scenes.scene2d.ui.Window.WindowStyle): scala.Unit = {
+  override def setStyle(style: com.badlogic.gdx.scenes.scene2d.ui.Window.WindowStyle): scala.Unit = {
     if (style == null) {
       throw new java.lang.IllegalArgumentException("style cannot be null.")
     } else ()
@@ -199,7 +199,7 @@ class Window extends com.badlogic.gdx.scenes.scene2d.ui.Table with com.badlogic.
     this.titleLabel.setStyle(new com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle(style.titleFont, style.titleFontColor))
     this.invalidateHierarchy()
   }
-  def getStyle(): com.badlogic.gdx.scenes.scene2d.ui.Window.WindowStyle = {
+  override def getStyle(): com.badlogic.gdx.scenes.scene2d.ui.Window.WindowStyle = {
     return this.style
   }
   def keepWithinStage(): scala.Unit = {
@@ -246,7 +246,7 @@ class Window extends com.badlogic.gdx.scenes.scene2d.ui.Table with com.badlogic.
       } else ()
     }
   }
-  def draw(batch: com.badlogic.gdx.graphics.g2d.Batch, parentAlpha: scala.Float): scala.Unit = {
+  override def draw(batch: com.badlogic.gdx.graphics.g2d.Batch, parentAlpha: scala.Float): scala.Unit = {
     val stage: com.badlogic.gdx.scenes.scene2d.Stage = this.getStage()
     if (stage != null) {
       if (stage.getKeyboardFocus() == null) {
@@ -266,7 +266,7 @@ class Window extends com.badlogic.gdx.scenes.scene2d.ui.Table with com.badlogic.
     batch.setColor(color.r, color.g, color.b, color.a * parentAlpha)
     this.style.stageBackground.draw(batch, x, y, width, height)
   }
-  def drawBackground(batch: com.badlogic.gdx.graphics.g2d.Batch, parentAlpha: scala.Float, x: scala.Float, y: scala.Float): scala.Unit = {
+  override def drawBackground(batch: com.badlogic.gdx.graphics.g2d.Batch, parentAlpha: scala.Float, x: scala.Float, y: scala.Float): scala.Unit = {
     super.drawBackground(batch, parentAlpha, x, y)
     this.titleTable.getColor().a = this.getColor().a
     val padTop: scala.Float = this.getPadTop()
@@ -278,7 +278,7 @@ class Window extends com.badlogic.gdx.scenes.scene2d.ui.Table with com.badlogic.
     this.drawTitleTable = false
   }
   @com.badlogic.gdx.utils.Null
-  def hit(x: scala.Float, y: scala.Float, touchable: scala.Boolean): com.badlogic.gdx.scenes.scene2d.Actor = {
+  override def hit(x: scala.Float, y: scala.Float, touchable: scala.Boolean): com.badlogic.gdx.scenes.scene2d.Actor = {
     if (!this.isVisible()) {
       return null
     } else ()
@@ -328,7 +328,7 @@ class Window extends com.badlogic.gdx.scenes.scene2d.ui.Table with com.badlogic.
   def isDragging(): scala.Boolean = {
     return this.dragging
   }
-  def getPrefWidth(): scala.Float = {
+  override def getPrefWidth(): scala.Float = {
     return java.lang.Math.max(super.getPrefWidth(), (this.titleTable.getPrefWidth() + this.getPadLeft()) + this.getPadRight())
   }
   def getTitleTable(): com.badlogic.gdx.scenes.scene2d.ui.Table = {

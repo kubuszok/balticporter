@@ -29,13 +29,13 @@ final class VertexAttribute(usage$p: scala.Int, numComponents$p: scala.Int, type
     return new VertexAttribute(this.usage, this.numComponents, this.`type`, this.normalized, this.alias, this.unit)
   }
   @java.lang.Override
-  def equals(obj: java.lang.Object): scala.Boolean = {
+  override def equals(obj: java.lang.Object): scala.Boolean = {
     if (!obj.isInstanceOf[VertexAttribute]) {
       return false
     } else ()
     return this.equals(obj.asInstanceOf[VertexAttribute].asInstanceOf[VertexAttribute])
   }
-  def equals(other: VertexAttribute): scala.Boolean = {
+  override def equals(other: VertexAttribute): scala.Boolean = {
     return ((((((other != null) && (this.usage == other.usage)) && (this.numComponents == other.numComponents)) && (this.`type` == other.`type`)) && (this.normalized == other.normalized)) && this.alias.equals(other.alias)) && (this.unit == other.unit)
   }
   def getKey(): scala.Int = {
@@ -56,7 +56,7 @@ final class VertexAttribute(usage$p: scala.Int, numComponents$p: scala.Int, type
     return 0
   }
   @java.lang.Override
-  def hashCode(): scala.Int = {
+  override def hashCode(): scala.Int = {
     var result: scala.Int = this.getKey()
     result = (541 * result) + this.numComponents
     result = (541 * result) + this.alias.hashCode()

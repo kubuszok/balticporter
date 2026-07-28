@@ -210,7 +210,7 @@ class ParticleEffect extends com.badlogic.gdx.utils.Disposable {
   def loadTexture(file: com.badlogic.gdx.files.FileHandle): com.badlogic.gdx.graphics.Texture = {
     return new com.badlogic.gdx.graphics.Texture(file, false)
   }
-  def dispose(): scala.Unit = {
+  override def dispose(): scala.Unit = {
     if (!this.ownsTexture) {
       return
     } else ();

@@ -4,31 +4,31 @@ class Widget extends com.badlogic.gdx.scenes.scene2d.Actor with com.badlogic.gdx
   var needsLayout$field: scala.Boolean = true
   private var fillParent: scala.Boolean = false
   private var layoutEnabled: scala.Boolean = true
-  def getMinWidth(): scala.Float = {
+  override def getMinWidth(): scala.Float = {
     return this.getPrefWidth()
   }
-  def getMinHeight(): scala.Float = {
+  override def getMinHeight(): scala.Float = {
     return this.getPrefHeight()
   }
-  def getPrefWidth(): scala.Float = {
+  override def getPrefWidth(): scala.Float = {
     return 0
   }
-  def getPrefHeight(): scala.Float = {
+  override def getPrefHeight(): scala.Float = {
     return 0
   }
-  def getMaxWidth(): scala.Float = {
+  override def getMaxWidth(): scala.Float = {
     return 0
   }
-  def getMaxHeight(): scala.Float = {
+  override def getMaxHeight(): scala.Float = {
     return 0
   }
-  def setLayoutEnabled(enabled: scala.Boolean): scala.Unit = {
+  override def setLayoutEnabled(enabled: scala.Boolean): scala.Unit = {
     this.layoutEnabled = enabled
     if (enabled) {
       this.invalidateHierarchy()
     } else ()
   }
-  def validate(): scala.Unit = {
+  override def validate(): scala.Unit = {
     if (!this.layoutEnabled) {
       return
     } else ()
@@ -55,10 +55,10 @@ class Widget extends com.badlogic.gdx.scenes.scene2d.Actor with com.badlogic.gdx
   def needsLayout(): scala.Boolean = {
     return this.needsLayout$field
   }
-  def invalidate(): scala.Unit = {
+  override def invalidate(): scala.Unit = {
     this.needsLayout$field = true
   }
-  def invalidateHierarchy(): scala.Unit = {
+  override def invalidateHierarchy(): scala.Unit = {
     if (!this.layoutEnabled) {
       return
     } else ()
@@ -68,20 +68,20 @@ class Widget extends com.badlogic.gdx.scenes.scene2d.Actor with com.badlogic.gdx
       parent.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Layout].invalidateHierarchy()
     } else ()
   }
-  def sizeChanged(): scala.Unit = {
+  override def sizeChanged(): scala.Unit = {
     this.invalidate()
   }
-  def pack(): scala.Unit = {
+  override def pack(): scala.Unit = {
     this.setSize(this.getPrefWidth(), this.getPrefHeight())
     this.validate()
   }
-  def setFillParent(fillParent: scala.Boolean): scala.Unit = {
+  override def setFillParent(fillParent: scala.Boolean): scala.Unit = {
     this.fillParent = fillParent
   }
-  def draw(batch: com.badlogic.gdx.graphics.g2d.Batch, parentAlpha: scala.Float): scala.Unit = {
+  override def draw(batch: com.badlogic.gdx.graphics.g2d.Batch, parentAlpha: scala.Float): scala.Unit = {
     this.validate()
   }
-  def layout(): scala.Unit = {
+  override def layout(): scala.Unit = {
     ()
   }
 }

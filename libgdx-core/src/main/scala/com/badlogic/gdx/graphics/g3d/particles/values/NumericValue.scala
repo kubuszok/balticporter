@@ -8,17 +8,17 @@ class NumericValue extends com.badlogic.gdx.graphics.g3d.particles.values.Partic
   def setValue(value: scala.Float): scala.Unit = {
     this.value = value
   }
-  def load(value: NumericValue): scala.Unit = {
+  override def load(value: NumericValue): scala.Unit = {
     super.load(value)
     this.value = value.value
   }
   @java.lang.Override
-  def write(json: com.badlogic.gdx.utils.Json): scala.Unit = {
+  override def write(json: com.badlogic.gdx.utils.Json): scala.Unit = {
     super.write(json)
     json.writeValue("value", this.value.asInstanceOf[java.lang.Float])
   }
   @java.lang.Override
-  def read(json: com.badlogic.gdx.utils.Json, jsonData: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
+  override def read(json: com.badlogic.gdx.utils.Json, jsonData: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
     super.read(json, jsonData)
     this.value = json.readValue("value", classOf[scala.Float], jsonData)
   }

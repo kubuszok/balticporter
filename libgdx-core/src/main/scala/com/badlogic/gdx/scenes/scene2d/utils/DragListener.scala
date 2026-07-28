@@ -15,7 +15,7 @@ class DragListener extends com.badlogic.gdx.scenes.scene2d.InputListener {
   private var pressedPointer: scala.Int = -1
   private var button: scala.Int = 0
   private var dragging: scala.Boolean = false
-  def touchDown(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float, pointer: scala.Int, button: scala.Int): scala.Boolean = {
+  override def touchDown(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float, pointer: scala.Int, button: scala.Int): scala.Boolean = {
     if (this.pressedPointer != (-1)) {
       return false
     } else ()
@@ -29,7 +29,7 @@ class DragListener extends com.badlogic.gdx.scenes.scene2d.InputListener {
     this.stageTouchDownY = event.getStageY()
     return true
   }
-  def touchDragged(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float, pointer: scala.Int): scala.Unit = {
+  override def touchDragged(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float, pointer: scala.Int): scala.Unit = {
     if (pointer != this.pressedPointer) {
       return
     } else ()
@@ -49,7 +49,7 @@ class DragListener extends com.badlogic.gdx.scenes.scene2d.InputListener {
       this.drag(event, x, y, pointer)
     } else ()
   }
-  def touchUp(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float, pointer: scala.Int, button: scala.Int): scala.Unit = {
+  override def touchUp(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float, pointer: scala.Int, button: scala.Int): scala.Unit = {
     if ((pointer == this.pressedPointer) && ((this.button == (-1)) || (button == this.button))) {
       if (this.dragging) {
         this.dragStop(event, x, y, pointer)

@@ -138,17 +138,17 @@ class List[T <: java.lang.Object](style$p: com.badlogic.gdx.scenes.scene2d.ui.Li
       } else ()
     }
   })
-  def setStyle(style: com.badlogic.gdx.scenes.scene2d.ui.List.ListStyle): scala.Unit = {
+  override def setStyle(style: com.badlogic.gdx.scenes.scene2d.ui.List.ListStyle): scala.Unit = {
     if (style == null) {
       throw new java.lang.IllegalArgumentException("style cannot be null.")
     } else ()
     this.style = style
     this.invalidateHierarchy()
   }
-  def getStyle(): com.badlogic.gdx.scenes.scene2d.ui.List.ListStyle = {
+  override def getStyle(): com.badlogic.gdx.scenes.scene2d.ui.List.ListStyle = {
     return this.style
   }
-  def layout(): scala.Unit = {
+  override def layout(): scala.Unit = {
     val font: com.badlogic.gdx.graphics.g2d.BitmapFont = this.style.font
     val selectedDrawable: com.badlogic.gdx.scenes.scene2d.utils.Drawable = this.style.selection
     this.itemHeight = font.getCapHeight() - (font.getDescent() * 2)
@@ -169,7 +169,7 @@ class List[T <: java.lang.Object](style$p: com.badlogic.gdx.scenes.scene2d.ui.Li
       this.prefHeight = java.lang.Math.max((this.prefHeight + background.getTopHeight()) + background.getBottomHeight(), background.getMinHeight())
     } else ()
   }
-  def draw(batch: com.badlogic.gdx.graphics.g2d.Batch, parentAlpha: scala.Float): scala.Unit = {
+  override def draw(batch: com.badlogic.gdx.graphics.g2d.Batch, parentAlpha: scala.Float): scala.Unit = {
     this.validate()
     this.drawBackground(batch, parentAlpha)
     val font: com.badlogic.gdx.graphics.g2d.BitmapFont = this.style.font
@@ -353,18 +353,18 @@ class List[T <: java.lang.Object](style$p: com.badlogic.gdx.scenes.scene2d.ui.Li
   def getItemHeight(): scala.Float = {
     return this.itemHeight
   }
-  def getPrefWidth(): scala.Float = {
+  override def getPrefWidth(): scala.Float = {
     this.validate()
     return this.prefWidth
   }
-  def getPrefHeight(): scala.Float = {
+  override def getPrefHeight(): scala.Float = {
     this.validate()
     return this.prefHeight
   }
   def toString(`object`: T): java.lang.String = {
     return `object`.toString()
   }
-  def setCullingArea(cullingArea: com.badlogic.gdx.math.Rectangle): scala.Unit = {
+  override def setCullingArea(cullingArea: com.badlogic.gdx.math.Rectangle): scala.Unit = {
     this.cullingArea = cullingArea
   }
   def getCullingArea(): com.badlogic.gdx.math.Rectangle = {

@@ -35,17 +35,17 @@ class ProgressBar(min$p: scala.Float, max$p: scala.Float, stepSize$p: scala.Floa
   this.vertical = vertical$p
   this.value = min$p
   this.setSize(this.getPrefWidth(), this.getPrefHeight())
-  def setStyle(style: com.badlogic.gdx.scenes.scene2d.ui.ProgressBar.ProgressBarStyle): scala.Unit = {
+  override def setStyle(style: com.badlogic.gdx.scenes.scene2d.ui.ProgressBar.ProgressBarStyle): scala.Unit = {
     if (style == null) {
       throw new java.lang.IllegalArgumentException("style cannot be null.")
     } else ()
     this.style = style
     this.invalidateHierarchy()
   }
-  def getStyle(): com.badlogic.gdx.scenes.scene2d.ui.ProgressBar.ProgressBarStyle = {
+  override def getStyle(): com.badlogic.gdx.scenes.scene2d.ui.ProgressBar.ProgressBarStyle = {
     return this.style
   }
-  def act(delta: scala.Float): scala.Unit = {
+  override def act(delta: scala.Float): scala.Unit = {
     super.act(delta)
     if (this.animateTime > 0) {
       this.animateTime = this.animateTime - delta
@@ -55,7 +55,7 @@ class ProgressBar(min$p: scala.Float, max$p: scala.Float, stepSize$p: scala.Floa
       } else ()
     } else ()
   }
-  def draw(batch: com.badlogic.gdx.graphics.g2d.Batch, parentAlpha: scala.Float): scala.Unit = {
+  override def draw(batch: com.badlogic.gdx.graphics.g2d.Batch, parentAlpha: scala.Float): scala.Unit = {
     val style: com.badlogic.gdx.scenes.scene2d.ui.ProgressBar.ProgressBarStyle = this.style
     val disabled: scala.Boolean = this.disabled
     val knob: com.badlogic.gdx.scenes.scene2d.utils.Drawable = style.knob
@@ -238,7 +238,7 @@ class ProgressBar(min$p: scala.Float, max$p: scala.Float, stepSize$p: scala.Floa
     } else ()
     this.stepSize = stepSize
   }
-  def getPrefWidth(): scala.Float = {
+  override def getPrefWidth(): scala.Float = {
     if (this.vertical) {
       val knob: com.badlogic.gdx.scenes.scene2d.utils.Drawable = this.style.knob
       val bg: com.badlogic.gdx.scenes.scene2d.utils.Drawable = this.getBackgroundDrawable()
@@ -247,7 +247,7 @@ class ProgressBar(min$p: scala.Float, max$p: scala.Float, stepSize$p: scala.Floa
       return 140
     }
   }
-  def getPrefHeight(): scala.Float = {
+  override def getPrefHeight(): scala.Float = {
     if (this.vertical) {
       return 140
     } else {
@@ -280,13 +280,13 @@ class ProgressBar(min$p: scala.Float, max$p: scala.Float, stepSize$p: scala.Floa
   def setRound(round: scala.Boolean): scala.Unit = {
     this.round$field = round
   }
-  def setDisabled(disabled: scala.Boolean): scala.Unit = {
+  override def setDisabled(disabled: scala.Boolean): scala.Unit = {
     this.disabled = disabled
   }
   def isAnimating(): scala.Boolean = {
     return this.animateTime > 0
   }
-  def isDisabled(): scala.Boolean = {
+  override def isDisabled(): scala.Boolean = {
     return this.disabled
   }
   def isVertical(): scala.Boolean = {

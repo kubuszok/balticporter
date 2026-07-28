@@ -3,12 +3,12 @@ package com.badlogic.gdx.graphics.g2d
 class ParticleEffectPool(effect$p: com.badlogic.gdx.graphics.g2d.ParticleEffect, initialCapacity: scala.Int, max$p: scala.Int) extends com.badlogic.gdx.utils.Pool[com.badlogic.gdx.graphics.g2d.ParticleEffectPool#PooledEffect](initialCapacity, max$p) {
   private var effect: com.badlogic.gdx.graphics.g2d.ParticleEffect = null.asInstanceOf[com.badlogic.gdx.graphics.g2d.ParticleEffect]
   this.effect = effect$p
-  def newObject(): com.badlogic.gdx.graphics.g2d.ParticleEffectPool#PooledEffect = {
+  override def newObject(): com.badlogic.gdx.graphics.g2d.ParticleEffectPool#PooledEffect = {
     val pooledEffect: com.badlogic.gdx.graphics.g2d.ParticleEffectPool#PooledEffect = new PooledEffect(this.effect)
     pooledEffect.start()
     return pooledEffect
   }
-  def free(effect: com.badlogic.gdx.graphics.g2d.ParticleEffectPool#PooledEffect): scala.Unit = {
+  override def free(effect: com.badlogic.gdx.graphics.g2d.ParticleEffectPool#PooledEffect): scala.Unit = {
     super.free(effect)
     effect.reset(false)
     if (((effect.xSizeScale != this.effect.xSizeScale) || (effect.ySizeScale != this.effect.ySizeScale)) || (effect.motionScale != this.effect.motionScale)) {

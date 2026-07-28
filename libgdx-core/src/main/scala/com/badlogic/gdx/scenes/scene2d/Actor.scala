@@ -805,7 +805,7 @@ class Actor {
     this.setDebug(true)
     return this
   }
-  def toString(): java.lang.String = {
+  override def toString(): java.lang.String = {
     var name: java.lang.String = this.name
     if (name == null) {
       name = this.getClass().getName()

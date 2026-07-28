@@ -97,10 +97,10 @@ class Button extends com.badlogic.gdx.scenes.scene2d.ui.Table with com.badlogic.
   def getClickListener(): com.badlogic.gdx.scenes.scene2d.utils.ClickListener = {
     return this.clickListener
   }
-  def isDisabled(): scala.Boolean = {
+  override def isDisabled(): scala.Boolean = {
     return this.isDisabled$field
   }
-  def setDisabled(isDisabled: scala.Boolean): scala.Unit = {
+  override def setDisabled(isDisabled: scala.Boolean): scala.Unit = {
     this.isDisabled$field = isDisabled
   }
   def setProgrammaticChangeEvents(programmaticChangeEvents: scala.Boolean): scala.Unit = {
@@ -109,14 +109,14 @@ class Button extends com.badlogic.gdx.scenes.scene2d.ui.Table with com.badlogic.
   def getProgrammaticChangeEvents(): scala.Boolean = {
     return this.programmaticChangeEvents
   }
-  def setStyle(style: com.badlogic.gdx.scenes.scene2d.ui.Button.ButtonStyle): scala.Unit = {
+  override def setStyle(style: com.badlogic.gdx.scenes.scene2d.ui.Button.ButtonStyle): scala.Unit = {
     if (style == null) {
       throw new java.lang.IllegalArgumentException("style cannot be null.")
     } else ()
     this.style = style
     this.setBackground(this.getBackgroundDrawable())
   }
-  def getStyle(): com.badlogic.gdx.scenes.scene2d.ui.Button.ButtonStyle = {
+  override def getStyle(): com.badlogic.gdx.scenes.scene2d.ui.Button.ButtonStyle = {
     return this.style
   }
   @com.badlogic.gdx.utils.Null
@@ -164,7 +164,7 @@ class Button extends com.badlogic.gdx.scenes.scene2d.ui.Table with com.badlogic.
     } else ()
     return this.style.up
   }
-  def draw(batch: com.badlogic.gdx.graphics.g2d.Batch, parentAlpha: scala.Float): scala.Unit = {
+  override def draw(batch: com.badlogic.gdx.graphics.g2d.Batch, parentAlpha: scala.Float): scala.Unit = {
     this.validate()
     this.setBackground(this.getBackgroundDrawable())
     var offsetX: scala.Float = 0
@@ -199,7 +199,7 @@ class Button extends com.badlogic.gdx.scenes.scene2d.ui.Table with com.badlogic.
       com.badlogic.gdx.Gdx.graphics.requestRendering()
     } else ()
   }
-  def getPrefWidth(): scala.Float = {
+  override def getPrefWidth(): scala.Float = {
     var width: scala.Float = super.getPrefWidth()
     if (this.style.up != null) {
       width = java.lang.Math.max(width, this.style.up.getMinWidth())
@@ -212,7 +212,7 @@ class Button extends com.badlogic.gdx.scenes.scene2d.ui.Table with com.badlogic.
     } else ()
     return width
   }
-  def getPrefHeight(): scala.Float = {
+  override def getPrefHeight(): scala.Float = {
     var height: scala.Float = super.getPrefHeight()
     if (this.style.up != null) {
       height = java.lang.Math.max(height, this.style.up.getMinHeight())
@@ -225,10 +225,10 @@ class Button extends com.badlogic.gdx.scenes.scene2d.ui.Table with com.badlogic.
     } else ()
     return height
   }
-  def getMinWidth(): scala.Float = {
+  override def getMinWidth(): scala.Float = {
     return this.getPrefWidth()
   }
-  def getMinHeight(): scala.Float = {
+  override def getMinHeight(): scala.Float = {
     return this.getPrefHeight()
   }
 }

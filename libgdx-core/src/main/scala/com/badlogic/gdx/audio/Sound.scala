@@ -10,7 +10,7 @@ trait Sound extends com.badlogic.gdx.utils.Disposable {
   def stop(): scala.Unit
   def pause(): scala.Unit
   def resume(): scala.Unit
-  def dispose(): scala.Unit
+  override def dispose(): scala.Unit
   def stop(soundId: scala.Long): scala.Unit
   def pause(soundId: scala.Long): scala.Unit
   def resume(soundId: scala.Long): scala.Unit

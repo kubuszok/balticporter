@@ -32,7 +32,7 @@ class SequenceAction extends com.badlogic.gdx.scenes.scene2d.actions.ParallelAct
     this.addAction(action4)
     this.addAction(action5)
   }
-  def act(delta: scala.Float): scala.Boolean = {
+  override def act(delta: scala.Float): scala.Boolean = {
     if (this.index >= this.actions.size) {
       return true
     } else ()
@@ -53,7 +53,7 @@ class SequenceAction extends com.badlogic.gdx.scenes.scene2d.actions.ParallelAct
       this.setPool(pool.asInstanceOf[com.badlogic.gdx.utils.Pool[?]])
     }
   }
-  def restart(): scala.Unit = {
+  override def restart(): scala.Unit = {
     super.restart()
     this.index = 0
   }

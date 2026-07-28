@@ -7,5 +7,5 @@ trait Screen extends com.badlogic.gdx.utils.Disposable {
   def pause(): scala.Unit
   def resume(): scala.Unit
   def hide(): scala.Unit
-  def dispose(): scala.Unit
+  override def dispose(): scala.Unit
 }

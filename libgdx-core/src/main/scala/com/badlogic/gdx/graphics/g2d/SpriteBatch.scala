@@ -65,7 +65,7 @@ class SpriteBatch(size: scala.Int, defaultShader: com.badlogic.gdx.graphics.glut
     this.mesh.getIndexData().unbind()
   } else ()
   @java.lang.Override
-  def begin(): scala.Unit = {
+  override def begin(): scala.Unit = {
     if (this.drawing) {
       throw new java.lang.IllegalStateException("SpriteBatch.end must be called before begin.")
     } else ()
@@ -80,7 +80,7 @@ class SpriteBatch(size: scala.Int, defaultShader: com.badlogic.gdx.graphics.glut
     this.drawing = true
   }
   @java.lang.Override
-  def `end`(): scala.Unit = {
+  override def `end`(): scala.Unit = {
     if (!this.drawing) {
       throw new java.lang.IllegalStateException("SpriteBatch.begin must be called before end.")
     } else ()
@@ -96,30 +96,30 @@ class SpriteBatch(size: scala.Int, defaultShader: com.badlogic.gdx.graphics.glut
     } else ()
   }
   @java.lang.Override
-  def setColor(tint: com.badlogic.gdx.graphics.Color): scala.Unit = {
+  override def setColor(tint: com.badlogic.gdx.graphics.Color): scala.Unit = {
     this.color.set(tint)
     this.colorPacked = tint.toFloatBits()
   }
   @java.lang.Override
-  def setColor(r: scala.Float, g: scala.Float, b: scala.Float, a: scala.Float): scala.Unit = {
+  override def setColor(r: scala.Float, g: scala.Float, b: scala.Float, a: scala.Float): scala.Unit = {
     this.color.set(r, g, b, a)
     this.colorPacked = this.color.toFloatBits()
   }
   @java.lang.Override
-  def getColor(): com.badlogic.gdx.graphics.Color = {
+  override def getColor(): com.badlogic.gdx.graphics.Color = {
     return this.color
   }
   @java.lang.Override
-  def setPackedColor(packedColor: scala.Float): scala.Unit = {
+  override def setPackedColor(packedColor: scala.Float): scala.Unit = {
     com.badlogic.gdx.graphics.Color.abgr8888ToColor(this.color, packedColor)
     this.colorPacked = packedColor
   }
   @java.lang.Override
-  def getPackedColor(): scala.Float = {
+  override def getPackedColor(): scala.Float = {
     return this.colorPacked
   }
   @java.lang.Override
-  def draw(texture: com.badlogic.gdx.graphics.Texture, x: scala.Float, y: scala.Float, originX: scala.Float, originY: scala.Float, width: scala.Float, height: scala.Float, scaleX: scala.Float, scaleY: scala.Float, rotation: scala.Float, srcX: scala.Int, srcY: scala.Int, srcWidth: scala.Int, srcHeight: scala.Int, flipX: scala.Boolean, flipY: scala.Boolean): scala.Unit = {
+  override def draw(texture: com.badlogic.gdx.graphics.Texture, x: scala.Float, y: scala.Float, originX: scala.Float, originY: scala.Float, width: scala.Float, height: scala.Float, scaleX: scala.Float, scaleY: scala.Float, rotation: scala.Float, srcX: scala.Int, srcY: scala.Int, srcWidth: scala.Int, srcHeight: scala.Int, flipX: scala.Boolean, flipY: scala.Boolean): scala.Unit = {
     if (!this.drawing) {
       throw new java.lang.IllegalStateException("SpriteBatch.begin must be called before draw.")
     } else ()
@@ -227,7 +227,7 @@ class SpriteBatch(size: scala.Int, defaultShader: com.badlogic.gdx.graphics.glut
     this.idx = idx + 20
   }
   @java.lang.Override
-  def draw(texture: com.badlogic.gdx.graphics.Texture, x: scala.Float, y: scala.Float, width: scala.Float, height: scala.Float, srcX: scala.Int, srcY: scala.Int, srcWidth: scala.Int, srcHeight: scala.Int, flipX: scala.Boolean, flipY: scala.Boolean): scala.Unit = {
+  override def draw(texture: com.badlogic.gdx.graphics.Texture, x: scala.Float, y: scala.Float, width: scala.Float, height: scala.Float, srcX: scala.Int, srcY: scala.Int, srcWidth: scala.Int, srcHeight: scala.Int, flipX: scala.Boolean, flipY: scala.Boolean): scala.Unit = {
     if (!this.drawing) {
       throw new java.lang.IllegalStateException("SpriteBatch.begin must be called before draw.")
     } else ()
@@ -280,7 +280,7 @@ class SpriteBatch(size: scala.Int, defaultShader: com.badlogic.gdx.graphics.glut
     this.idx = idx + 20
   }
   @java.lang.Override
-  def draw(texture: com.badlogic.gdx.graphics.Texture, x: scala.Float, y: scala.Float, srcX: scala.Int, srcY: scala.Int, srcWidth: scala.Int, srcHeight: scala.Int): scala.Unit = {
+  override def draw(texture: com.badlogic.gdx.graphics.Texture, x: scala.Float, y: scala.Float, srcX: scala.Int, srcY: scala.Int, srcWidth: scala.Int, srcHeight: scala.Int): scala.Unit = {
     if (!this.drawing) {
       throw new java.lang.IllegalStateException("SpriteBatch.begin must be called before draw.")
     } else ()
@@ -323,7 +323,7 @@ class SpriteBatch(size: scala.Int, defaultShader: com.badlogic.gdx.graphics.glut
     this.idx = idx + 20
   }
   @java.lang.Override
-  def draw(texture: com.badlogic.gdx.graphics.Texture, x: scala.Float, y: scala.Float, width: scala.Float, height: scala.Float, u: scala.Float, v: scala.Float, u2: scala.Float, v2: scala.Float): scala.Unit = {
+  override def draw(texture: com.badlogic.gdx.graphics.Texture, x: scala.Float, y: scala.Float, width: scala.Float, height: scala.Float, u: scala.Float, v: scala.Float, u2: scala.Float, v2: scala.Float): scala.Unit = {
     if (!this.drawing) {
       throw new java.lang.IllegalStateException("SpriteBatch.begin must be called before draw.")
     } else ()
@@ -362,11 +362,11 @@ class SpriteBatch(size: scala.Int, defaultShader: com.badlogic.gdx.graphics.glut
     this.idx = idx + 20
   }
   @java.lang.Override
-  def draw(texture: com.badlogic.gdx.graphics.Texture, x: scala.Float, y: scala.Float): scala.Unit = {
+  override def draw(texture: com.badlogic.gdx.graphics.Texture, x: scala.Float, y: scala.Float): scala.Unit = {
     this.draw(texture, x, y, texture.getWidth(), texture.getHeight())
   }
   @java.lang.Override
-  def draw(texture: com.badlogic.gdx.graphics.Texture, x: scala.Float, y: scala.Float, width: scala.Float, height: scala.Float): scala.Unit = {
+  override def draw(texture: com.badlogic.gdx.graphics.Texture, x: scala.Float, y: scala.Float, width: scala.Float, height: scala.Float): scala.Unit = {
     if (!this.drawing) {
       throw new java.lang.IllegalStateException("SpriteBatch.begin must be called before draw.")
     } else ()
@@ -409,7 +409,7 @@ class SpriteBatch(size: scala.Int, defaultShader: com.badlogic.gdx.graphics.glut
     this.idx = idx + 20
   }
   @java.lang.Override
-  def draw(texture: com.badlogic.gdx.graphics.Texture, spriteVertices: scala.Array[scala.Float], offset$arg: scala.Int, count$arg: scala.Int): scala.Unit = {
+  override def draw(texture: com.badlogic.gdx.graphics.Texture, spriteVertices: scala.Array[scala.Float], offset$arg: scala.Int, count$arg: scala.Int): scala.Unit = {
     var offset: scala.Int = offset$arg
     var count: scala.Int = count$arg
     if (!this.drawing) {
@@ -440,11 +440,11 @@ class SpriteBatch(size: scala.Int, defaultShader: com.badlogic.gdx.graphics.glut
     }
   }
   @java.lang.Override
-  def draw(region: com.badlogic.gdx.graphics.g2d.TextureRegion, x: scala.Float, y: scala.Float): scala.Unit = {
+  override def draw(region: com.badlogic.gdx.graphics.g2d.TextureRegion, x: scala.Float, y: scala.Float): scala.Unit = {
     this.draw(region, x, y, region.getRegionWidth(), region.getRegionHeight())
   }
   @java.lang.Override
-  def draw(region: com.badlogic.gdx.graphics.g2d.TextureRegion, x: scala.Float, y: scala.Float, width: scala.Float, height: scala.Float): scala.Unit = {
+  override def draw(region: com.badlogic.gdx.graphics.g2d.TextureRegion, x: scala.Float, y: scala.Float, width: scala.Float, height: scala.Float): scala.Unit = {
     if (!this.drawing) {
       throw new java.lang.IllegalStateException("SpriteBatch.begin must be called before draw.")
     } else ()
@@ -488,7 +488,7 @@ class SpriteBatch(size: scala.Int, defaultShader: com.badlogic.gdx.graphics.glut
     this.idx = idx + 20
   }
   @java.lang.Override
-  def draw(region: com.badlogic.gdx.graphics.g2d.TextureRegion, x: scala.Float, y: scala.Float, originX: scala.Float, originY: scala.Float, width: scala.Float, height: scala.Float, scaleX: scala.Float, scaleY: scala.Float, rotation: scala.Float): scala.Unit = {
+  override def draw(region: com.badlogic.gdx.graphics.g2d.TextureRegion, x: scala.Float, y: scala.Float, originX: scala.Float, originY: scala.Float, width: scala.Float, height: scala.Float, scaleX: scala.Float, scaleY: scala.Float, rotation: scala.Float): scala.Unit = {
     if (!this.drawing) {
       throw new java.lang.IllegalStateException("SpriteBatch.begin must be called before draw.")
     } else ()
@@ -587,7 +587,7 @@ class SpriteBatch(size: scala.Int, defaultShader: com.badlogic.gdx.graphics.glut
     this.idx = idx + 20
   }
   @java.lang.Override
-  def draw(region: com.badlogic.gdx.graphics.g2d.TextureRegion, x: scala.Float, y: scala.Float, originX: scala.Float, originY: scala.Float, width: scala.Float, height: scala.Float, scaleX: scala.Float, scaleY: scala.Float, rotation: scala.Float, clockwise: scala.Boolean): scala.Unit = {
+  override def draw(region: com.badlogic.gdx.graphics.g2d.TextureRegion, x: scala.Float, y: scala.Float, originX: scala.Float, originY: scala.Float, width: scala.Float, height: scala.Float, scaleX: scala.Float, scaleY: scala.Float, rotation: scala.Float, clockwise: scala.Boolean): scala.Unit = {
     if (!this.drawing) {
       throw new java.lang.IllegalStateException("SpriteBatch.begin must be called before draw.")
     } else ()
@@ -709,7 +709,7 @@ class SpriteBatch(size: scala.Int, defaultShader: com.badlogic.gdx.graphics.glut
     this.idx = idx + 20
   }
   @java.lang.Override
-  def draw(region: com.badlogic.gdx.graphics.g2d.TextureRegion, width: scala.Float, height: scala.Float, transform: com.badlogic.gdx.math.Affine2): scala.Unit = {
+  override def draw(region: com.badlogic.gdx.graphics.g2d.TextureRegion, width: scala.Float, height: scala.Float, transform: com.badlogic.gdx.math.Affine2): scala.Unit = {
     if (!this.drawing) {
       throw new java.lang.IllegalStateException("SpriteBatch.begin must be called before draw.")
     } else ()
@@ -759,7 +759,7 @@ class SpriteBatch(size: scala.Int, defaultShader: com.badlogic.gdx.graphics.glut
     this.idx = idx + 20
   }
   @java.lang.Override
-  def flush(): scala.Unit = {
+  override def flush(): scala.Unit = {
     if (this.idx == 0) {
       return
     } else ()
@@ -790,7 +790,7 @@ class SpriteBatch(size: scala.Int, defaultShader: com.badlogic.gdx.graphics.glut
     this.idx = 0
   }
   @java.lang.Override
-  def disableBlending(): scala.Unit = {
+  override def disableBlending(): scala.Unit = {
     if (this.blendingDisabled) {
       return
     } else ()
@@ -798,7 +798,7 @@ class SpriteBatch(size: scala.Int, defaultShader: com.badlogic.gdx.graphics.glut
     this.blendingDisabled = true
   }
   @java.lang.Override
-  def enableBlending(): scala.Unit = {
+  override def enableBlending(): scala.Unit = {
     if (!this.blendingDisabled) {
       return
     } else ()
@@ -806,11 +806,11 @@ class SpriteBatch(size: scala.Int, defaultShader: com.badlogic.gdx.graphics.glut
     this.blendingDisabled = false
   }
   @java.lang.Override
-  def setBlendFunction(srcFunc: scala.Int, dstFunc: scala.Int): scala.Unit = {
+  override def setBlendFunction(srcFunc: scala.Int, dstFunc: scala.Int): scala.Unit = {
     this.setBlendFunctionSeparate(srcFunc, dstFunc, srcFunc, dstFunc)
   }
   @java.lang.Override
-  def setBlendFunctionSeparate(srcFuncColor: scala.Int, dstFuncColor: scala.Int, srcFuncAlpha: scala.Int, dstFuncAlpha: scala.Int): scala.Unit = {
+  override def setBlendFunctionSeparate(srcFuncColor: scala.Int, dstFuncColor: scala.Int, srcFuncAlpha: scala.Int, dstFuncAlpha: scala.Int): scala.Unit = {
     if ((((this.blendSrcFunc == srcFuncColor) && (this.blendDstFunc == dstFuncColor)) && (this.blendSrcFuncAlpha == srcFuncAlpha)) && (this.blendDstFuncAlpha == dstFuncAlpha)) {
       return
     } else ()
@@ -821,38 +821,38 @@ class SpriteBatch(size: scala.Int, defaultShader: com.badlogic.gdx.graphics.glut
     this.blendDstFuncAlpha = dstFuncAlpha
   }
   @java.lang.Override
-  def getBlendSrcFunc(): scala.Int = {
+  override def getBlendSrcFunc(): scala.Int = {
     return this.blendSrcFunc
   }
   @java.lang.Override
-  def getBlendDstFunc(): scala.Int = {
+  override def getBlendDstFunc(): scala.Int = {
     return this.blendDstFunc
   }
   @java.lang.Override
-  def getBlendSrcFuncAlpha(): scala.Int = {
+  override def getBlendSrcFuncAlpha(): scala.Int = {
     return this.blendSrcFuncAlpha
   }
   @java.lang.Override
-  def getBlendDstFuncAlpha(): scala.Int = {
+  override def getBlendDstFuncAlpha(): scala.Int = {
     return this.blendDstFuncAlpha
   }
   @java.lang.Override
-  def dispose(): scala.Unit = {
+  override def dispose(): scala.Unit = {
     this.mesh.dispose()
     if (this.ownsShader && (this.shader != null)) {
       this.shader.dispose()
     } else ()
   }
   @java.lang.Override
-  def getProjectionMatrix(): com.badlogic.gdx.math.Matrix4 = {
+  override def getProjectionMatrix(): com.badlogic.gdx.math.Matrix4 = {
     return this.projectionMatrix
   }
   @java.lang.Override
-  def getTransformMatrix(): com.badlogic.gdx.math.Matrix4 = {
+  override def getTransformMatrix(): com.badlogic.gdx.math.Matrix4 = {
     return this.transformMatrix
   }
   @java.lang.Override
-  def setProjectionMatrix(projection: com.badlogic.gdx.math.Matrix4): scala.Unit = {
+  override def setProjectionMatrix(projection: com.badlogic.gdx.math.Matrix4): scala.Unit = {
     if (this.drawing) {
       this.flush()
     } else ()
@@ -862,7 +862,7 @@ class SpriteBatch(size: scala.Int, defaultShader: com.badlogic.gdx.graphics.glut
     } else ()
   }
   @java.lang.Override
-  def setTransformMatrix(transform: com.badlogic.gdx.math.Matrix4): scala.Unit = {
+  override def setTransformMatrix(transform: com.badlogic.gdx.math.Matrix4): scala.Unit = {
     if (this.drawing) {
       this.flush()
     } else ()
@@ -888,7 +888,7 @@ class SpriteBatch(size: scala.Int, defaultShader: com.badlogic.gdx.graphics.glut
     this.invTexHeight = 1.0f / texture.getHeight()
   }
   @java.lang.Override
-  def setShader(shader: com.badlogic.gdx.graphics.glutils.ShaderProgram): scala.Unit = {
+  override def setShader(shader: com.badlogic.gdx.graphics.glutils.ShaderProgram): scala.Unit = {
     if (shader == this.customShader) {
       return
     } else ()
@@ -906,17 +906,17 @@ class SpriteBatch(size: scala.Int, defaultShader: com.badlogic.gdx.graphics.glut
     } else ()
   }
   @java.lang.Override
-  def getShader(): com.badlogic.gdx.graphics.glutils.ShaderProgram = {
+  override def getShader(): com.badlogic.gdx.graphics.glutils.ShaderProgram = {
     if (this.customShader == null) {
       return this.shader
     } else ()
     return this.customShader
   }
   @java.lang.Override
-  def isBlendingEnabled(): scala.Boolean = {
+  override def isBlendingEnabled(): scala.Boolean = {
     return !this.blendingDisabled
   }
-  def isDrawing(): scala.Boolean = {
+  override def isDrawing(): scala.Boolean = {
     return this.drawing
   }
 }

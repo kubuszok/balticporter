@@ -83,7 +83,7 @@ class Dialog extends com.badlogic.gdx.scenes.scene2d.ui.Window {
       }
     }
   }
-  def setStage(stage: com.badlogic.gdx.scenes.scene2d.Stage): scala.Unit = {
+  override def setStage(stage: com.badlogic.gdx.scenes.scene2d.Stage): scala.Unit = {
     if (stage == null) {
       this.addListener(this.focusListener)
     } else {

@@ -817,7 +817,7 @@ class Cell[T <: com.badlogic.gdx.scenes.scene2d.Actor] extends com.badlogic.gdx.
     this.uniformX$field = null
     this.uniformY$field = null
   }
-  def reset(): scala.Unit = {
+  override def reset(): scala.Unit = {
     this.actor = null
     this.table = null
     this.endRow = false
@@ -919,7 +919,7 @@ class Cell[T <: com.badlogic.gdx.scenes.scene2d.Actor] extends com.badlogic.gdx.
       this.uniformY$field = cell.uniformY$field
     } else ()
   }
-  def toString(): java.lang.String = {
+  override def toString(): java.lang.String = {
     return if (this.actor != null) this.actor.toString() else super.toString()
   }
 }

@@ -36,7 +36,7 @@ class Label(text$p: java.lang.CharSequence, style$p: com.badlogic.gdx.scenes.sce
   if ((text$p != null) && (text$p.length() > 0)) {
     this.setSize(this.getPrefWidth(), this.getPrefHeight())
   } else ()
-  def setStyle(style: com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle): scala.Unit = {
+  override def setStyle(style: com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle): scala.Unit = {
     if (style == null) {
       throw new java.lang.IllegalArgumentException("style cannot be null.")
     } else ()
@@ -47,7 +47,7 @@ class Label(text$p: java.lang.CharSequence, style$p: com.badlogic.gdx.scenes.sce
     this.cache = style.font.newFontCache()
     this.invalidateHierarchy()
   }
-  def getStyle(): com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle = {
+  override def getStyle(): com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle = {
     return this.style
   }
   def setText(value: scala.Int): scala.Boolean = {
@@ -100,7 +100,7 @@ class Label(text$p: java.lang.CharSequence, style$p: com.badlogic.gdx.scenes.sce
   def getText(): com.badlogic.gdx.utils.CharArray = {
     return this.text
   }
-  def invalidate(): scala.Unit = {
+  override def invalidate(): scala.Unit = {
     super.invalidate()
     this.prefSizeInvalid = true
   }
@@ -130,7 +130,7 @@ class Label(text$p: java.lang.CharSequence, style$p: com.badlogic.gdx.scenes.sce
     this.prefWidth = layout.width
     this.prefHeight = layout.height
   }
-  def layout(): scala.Unit = {
+  override def layout(): scala.Unit = {
     val font: com.badlogic.gdx.graphics.g2d.BitmapFont = this.cache.getFont()
     val oldScaleX: scala.Float = font.getScaleX()
     val oldScaleY: scala.Float = font.getScaleY()
@@ -194,7 +194,7 @@ class Label(text$p: java.lang.CharSequence, style$p: com.badlogic.gdx.scenes.sce
       font.getData().setScale(oldScaleX, oldScaleY)
     } else ()
   }
-  def draw(batch: com.badlogic.gdx.graphics.g2d.Batch, parentAlpha: scala.Float): scala.Unit = {
+  override def draw(batch: com.badlogic.gdx.graphics.g2d.Batch, parentAlpha: scala.Float): scala.Unit = {
     this.validate()
     val color: com.badlogic.gdx.graphics.Color = Label.tempColor.set(this.getColor())
     color.a = color.a * parentAlpha
@@ -209,7 +209,7 @@ class Label(text$p: java.lang.CharSequence, style$p: com.badlogic.gdx.scenes.sce
     this.cache.setPosition(this.getX(), this.getY())
     this.cache.draw(batch)
   }
-  def getPrefWidth(): scala.Float = {
+  override def getPrefWidth(): scala.Float = {
     if (this.wrap) {
       return 0
     } else ()
@@ -223,7 +223,7 @@ class Label(text$p: java.lang.CharSequence, style$p: com.badlogic.gdx.scenes.sce
     } else ()
     return width
   }
-  def getPrefHeight(): scala.Float = {
+  override def getPrefHeight(): scala.Float = {
     if (this.prefSizeInvalid) {
       this.scaleAndComputePrefSize()
     } else ()
@@ -304,7 +304,7 @@ class Label(text$p: java.lang.CharSequence, style$p: com.badlogic.gdx.scenes.sce
   def getBitmapFontCache(): com.badlogic.gdx.graphics.g2d.BitmapFontCache = {
     return this.cache
   }
-  def toString(): java.lang.String = {
+  override def toString(): java.lang.String = {
     val name: java.lang.String = this.getName()
     if (name != null) {
       return name

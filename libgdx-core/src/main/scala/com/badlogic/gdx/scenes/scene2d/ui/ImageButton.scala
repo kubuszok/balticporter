@@ -27,7 +27,7 @@ class ImageButton(style$p: com.badlogic.gdx.scenes.scene2d.ui.ImageButton.ImageB
   def newImage(): com.badlogic.gdx.scenes.scene2d.ui.Image = {
     return new com.badlogic.gdx.scenes.scene2d.ui.Image(null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Drawable], com.badlogic.gdx.utils.Scaling.fit)
   }
-  def setStyle(style: com.badlogic.gdx.scenes.scene2d.ui.Button.ButtonStyle): scala.Unit = {
+  override def setStyle(style: com.badlogic.gdx.scenes.scene2d.ui.Button.ButtonStyle): scala.Unit = {
     if (!style.isInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.ImageButton.ImageButtonStyle]) {
       throw new java.lang.IllegalArgumentException("style must be an ImageButtonStyle.")
     } else ()
@@ -37,7 +37,7 @@ class ImageButton(style$p: com.badlogic.gdx.scenes.scene2d.ui.ImageButton.ImageB
       this.updateImage()
     } else ()
   }
-  def getStyle(): com.badlogic.gdx.scenes.scene2d.ui.ImageButton.ImageButtonStyle = {
+  override def getStyle(): com.badlogic.gdx.scenes.scene2d.ui.ImageButton.ImageButtonStyle = {
     return this.style
   }
   @com.badlogic.gdx.utils.Null
@@ -77,7 +77,7 @@ class ImageButton(style$p: com.badlogic.gdx.scenes.scene2d.ui.ImageButton.ImageB
   def updateImage(): scala.Unit = {
     this.image.setDrawable(this.getImageDrawable())
   }
-  def draw(batch: com.badlogic.gdx.graphics.g2d.Batch, parentAlpha: scala.Float): scala.Unit = {
+  override def draw(batch: com.badlogic.gdx.graphics.g2d.Batch, parentAlpha: scala.Float): scala.Unit = {
     this.updateImage()
     super.draw(batch, parentAlpha)
   }
@@ -87,7 +87,7 @@ class ImageButton(style$p: com.badlogic.gdx.scenes.scene2d.ui.ImageButton.ImageB
   def getImageCell(): com.badlogic.gdx.scenes.scene2d.ui.Cell[?] = {
     return this.getCell(this.image).asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.Cell[?]]
   }
-  def toString(): java.lang.String = {
+  override def toString(): java.lang.String = {
     val name: java.lang.String = this.getName()
     if (name != null) {
       return name

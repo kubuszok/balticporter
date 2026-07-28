@@ -3,7 +3,7 @@ package com.badlogic.gdx.scenes.scene2d.actions
 class MoveByAction extends com.badlogic.gdx.scenes.scene2d.actions.RelativeTemporalAction {
   private var amountX: scala.Float = 0.0f
   private var amountY: scala.Float = 0.0f
-  def updateRelative(percentDelta: scala.Float): scala.Unit = {
+  override def updateRelative(percentDelta: scala.Float): scala.Unit = {
     target.moveBy(this.amountX * percentDelta, this.amountY * percentDelta)
   }
   def setAmount(x: scala.Float, y: scala.Float): scala.Unit = {

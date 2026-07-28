@@ -74,7 +74,7 @@ class Plane extends java.io.Serializable {
     this.normal.set(plane.normal)
     this.d = plane.d
   }
-  def toString(): java.lang.String = {
+  override def toString(): java.lang.String = {
     return (this.normal.toString() + ", ") + this.d
   }
 }

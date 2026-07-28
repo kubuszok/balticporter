@@ -93,10 +93,10 @@ object Value {
   class Fixed(value$p: scala.Float) extends Value {
     private var value: scala.Float = 0.0f
     this.value = value$p
-    def get(context: com.badlogic.gdx.scenes.scene2d.Actor): scala.Float = {
+    override def get(context: com.badlogic.gdx.scenes.scene2d.Actor): scala.Float = {
       return this.value
     }
-    def toString(): java.lang.String = {
+    override def toString(): java.lang.String = {
       return java.lang.Float.toString(this.value)
     }
   }

@@ -12,5 +12,5 @@ trait IndexData extends com.badlogic.gdx.utils.Disposable {
   def bind(): scala.Unit
   def unbind(): scala.Unit
   def invalidate(): scala.Unit
-  def dispose(): scala.Unit
+  override def dispose(): scala.Unit
 }

@@ -23,10 +23,10 @@ class TextureRegionDrawable extends com.badlogic.gdx.scenes.scene2d.utils.BaseDr
     this.minHeight = drawable.getMinHeight()
     this.setRegion(drawable.region)
   }
-  def draw(batch: com.badlogic.gdx.graphics.g2d.Batch, x: scala.Float, y: scala.Float, width: scala.Float, height: scala.Float): scala.Unit = {
+  override def draw(batch: com.badlogic.gdx.graphics.g2d.Batch, x: scala.Float, y: scala.Float, width: scala.Float, height: scala.Float): scala.Unit = {
     batch.draw(this.region, x, y, width, height)
   }
-  def draw(batch: com.badlogic.gdx.graphics.g2d.Batch, x: scala.Float, y: scala.Float, originX: scala.Float, originY: scala.Float, width: scala.Float, height: scala.Float, scaleX: scala.Float, scaleY: scala.Float, rotation: scala.Float): scala.Unit = {
+  override def draw(batch: com.badlogic.gdx.graphics.g2d.Batch, x: scala.Float, y: scala.Float, originX: scala.Float, originY: scala.Float, width: scala.Float, height: scala.Float, scaleX: scala.Float, scaleY: scala.Float, rotation: scala.Float): scala.Unit = {
     batch.draw(this.region, x, y, originX, originY, width, height, scaleX, scaleY, rotation)
   }
   def setRegion(region: com.badlogic.gdx.graphics.g2d.TextureRegion): scala.Unit = {

@@ -14,17 +14,17 @@ class FloatAttribute extends com.badlogic.gdx.graphics.g3d.Attribute {
     this.value = value
   }
   @java.lang.Override
-  def copy(): com.badlogic.gdx.graphics.g3d.Attribute = {
+  override def copy(): com.badlogic.gdx.graphics.g3d.Attribute = {
     return new FloatAttribute(`type`, this.value)
   }
   @java.lang.Override
-  def hashCode(): scala.Int = {
+  override def hashCode(): scala.Int = {
     var result: scala.Int = super.hashCode()
     result = (977 * result) + com.badlogic.gdx.utils.NumberUtils.floatToRawIntBits(this.value)
     return result
   }
   @java.lang.Override
-  def compareTo(o: com.badlogic.gdx.graphics.g3d.Attribute): scala.Int = {
+  override def compareTo(o: com.badlogic.gdx.graphics.g3d.Attribute): scala.Int = {
     if (`type` != o.`type`) {
       return (`type` - o.`type`).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
     } else ()

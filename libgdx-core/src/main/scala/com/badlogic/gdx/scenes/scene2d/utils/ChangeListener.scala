@@ -1,7 +1,7 @@
 package com.badlogic.gdx.scenes.scene2d.utils
 
 abstract class ChangeListener extends com.badlogic.gdx.scenes.scene2d.EventListener {
-  def handle(event: com.badlogic.gdx.scenes.scene2d.Event): scala.Boolean = {
+  override def handle(event: com.badlogic.gdx.scenes.scene2d.Event): scala.Boolean = {
     if (!event.isInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.ChangeListener.ChangeEvent]) {
       return false
     } else ()

@@ -35,11 +35,11 @@ class RegularEmitter extends com.badlogic.gdx.graphics.g3d.particles.emitters.Em
   this.continuous = true
   this.emissionMode = com.badlogic.gdx.graphics.g3d.particles.emitters.RegularEmitter.EmissionMode.Enabled
   @java.lang.Override
-  def allocateChannels(): scala.Unit = {
+  override def allocateChannels(): scala.Unit = {
     this.lifeChannel = this.controller.particles.addChannel(com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.Life)
   }
   @java.lang.Override
-  def start(): scala.Unit = {
+  override def start(): scala.Unit = {
     this.delay = if (this.delayValue.active) this.delayValue.newLowValue() else 0
     this.delayTimer = 0
     this.durationTimer = 0.0f
@@ -61,12 +61,12 @@ class RegularEmitter extends com.badlogic.gdx.graphics.g3d.particles.emitters.Em
       this.lifeOffsetDiff = this.lifeOffsetDiff - this.lifeOffset
     } else ()
   }
-  def init(): scala.Unit = {
+  override def init(): scala.Unit = {
     super.init()
     this.emissionDelta = 0
     this.durationTimer = this.duration
   }
-  def activateParticles(startIndex: scala.Int, count: scala.Int): scala.Unit = {
+  override def activateParticles(startIndex: scala.Int, count: scala.Int): scala.Unit = {
     val currentTotaLife: scala.Int = this.life + (this.lifeDiff * this.lifeValue.getScale(percent)).asInstanceOf[scala.Int]
     var currentLife: scala.Int = currentTotaLife
     var offsetTime: scala.Int = (this.lifeOffset + (this.lifeOffsetDiff * this.lifeOffsetValue.getScale(percent))).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
@@ -83,7 +83,7 @@ class RegularEmitter extends com.badlogic.gdx.graphics.g3d.particles.emitters.Em
       this.lifeChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.LifePercentOffset) = lifePercent
     }; i = i + this.lifeChannel.strideSize } }
   }
-  def update(): scala.Unit = {
+  override def update(): scala.Unit = {
     val deltaMillis: scala.Float = this.controller.deltaTime * 1000
     if (this.delayTimer < this.delay) {
       this.delayTimer = this.delayTimer + deltaMillis
@@ -172,7 +172,7 @@ class RegularEmitter extends com.badlogic.gdx.graphics.g3d.particles.emitters.Em
     this.emissionMode = emissionMode
   }
   @java.lang.Override
-  def isComplete(): scala.Boolean = {
+  override def isComplete(): scala.Boolean = {
     if (this.delayTimer < this.delay) {
       return false
     } else ()
@@ -184,7 +184,7 @@ class RegularEmitter extends com.badlogic.gdx.graphics.g3d.particles.emitters.Em
     } else ()
     return java.lang.Math.min(1, this.durationTimer / this.duration.asInstanceOf[scala.Float])
   }
-  def set(emitter: RegularEmitter): scala.Unit = {
+  override def set(emitter: RegularEmitter): scala.Unit = {
     super.set(emitter)
     this.delayValue.load(emitter.delayValue)
     this.durationValue.load(emitter.durationValue)
@@ -205,11 +205,11 @@ class RegularEmitter extends com.badlogic.gdx.graphics.g3d.particles.emitters.Em
     this.continuous = emitter.continuous
   }
   @java.lang.Override
-  def copy(): com.badlogic.gdx.graphics.g3d.particles.ParticleControllerComponent = {
+  override def copy(): com.badlogic.gdx.graphics.g3d.particles.ParticleControllerComponent = {
     return new RegularEmitter(this)
   }
   @java.lang.Override
-  def write(json: com.badlogic.gdx.utils.Json): scala.Unit = {
+  override def write(json: com.badlogic.gdx.utils.Json): scala.Unit = {
     super.write(json)
     json.writeValue("continous", this.continuous.asInstanceOf[java.lang.Boolean])
     json.writeValue("emission", this.emissionValue)
@@ -219,7 +219,7 @@ class RegularEmitter extends com.badlogic.gdx.graphics.g3d.particles.emitters.Em
     json.writeValue("lifeOffset", this.lifeOffsetValue)
   }
   @java.lang.Override
-  def read(json: com.badlogic.gdx.utils.Json, jsonData: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
+  override def read(json: com.badlogic.gdx.utils.Json, jsonData: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
     super.read(json, jsonData)
     this.continuous = json.readValue("continous", classOf[scala.Boolean], jsonData)
     this.emissionValue = json.readValue("emission", classOf[com.badlogic.gdx.graphics.g3d.particles.values.ScaledNumericValue], jsonData)

@@ -21,7 +21,7 @@ class Ray extends java.io.Serializable {
     this.direction.set(Ray.tmp.sub(this.origin)).nor()
     return this
   }
-  def toString(): java.lang.String = {
+  override def toString(): java.lang.String = {
     return ((("ray [" + this.origin) + ":") + this.direction) + "]"
   }
   def set(origin: com.badlogic.gdx.math.Vector3, direction: com.badlogic.gdx.math.Vector3): Ray = {
@@ -40,7 +40,7 @@ class Ray extends java.io.Serializable {
     return this
   }
   @java.lang.Override
-  def equals(o: java.lang.Object): scala.Boolean = {
+  override def equals(o: java.lang.Object): scala.Boolean = {
     if (o == this) {
       return true
     } else ()
@@ -51,7 +51,7 @@ class Ray extends java.io.Serializable {
     return this.direction.equals(r.direction) && this.origin.equals(r.origin)
   }
   @java.lang.Override
-  def hashCode(): scala.Int = {
+  override def hashCode(): scala.Int = {
     val prime: scala.Int = 73
     var result: scala.Int = 1
     result = (prime * result) + this.direction.hashCode()

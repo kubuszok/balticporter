@@ -65,7 +65,7 @@ class ScaledNumericValue extends com.badlogic.gdx.graphics.g3d.particles.values.
     val startTime: scala.Float = this.timeline(startIndex)
     return startValue + ((this.scaling(endIndex) - startValue) * ((percent - startTime) / (this.timeline(endIndex) - startTime)))
   }
-  def load(value: ScaledNumericValue): scala.Unit = {
+  override def load(value: ScaledNumericValue): scala.Unit = {
     super.load(value)
     this.highMax = value.highMax
     this.highMin = value.highMin
@@ -76,7 +76,7 @@ class ScaledNumericValue extends com.badlogic.gdx.graphics.g3d.particles.values.
     this.relative = value.relative
   }
   @java.lang.Override
-  def write(json: com.badlogic.gdx.utils.Json): scala.Unit = {
+  override def write(json: com.badlogic.gdx.utils.Json): scala.Unit = {
     super.write(json)
     json.writeValue("highMin", this.highMin.asInstanceOf[java.lang.Float])
     json.writeValue("highMax", this.highMax.asInstanceOf[java.lang.Float])
@@ -85,7 +85,7 @@ class ScaledNumericValue extends com.badlogic.gdx.graphics.g3d.particles.values.
     json.writeValue("timeline", this.timeline)
   }
   @java.lang.Override
-  def read(json: com.badlogic.gdx.utils.Json, jsonData: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
+  override def read(json: com.badlogic.gdx.utils.Json, jsonData: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
     super.read(json, jsonData)
     this.highMin = json.readValue("highMin", classOf[scala.Float], jsonData)
     this.highMax = json.readValue("highMax", classOf[scala.Float], jsonData)

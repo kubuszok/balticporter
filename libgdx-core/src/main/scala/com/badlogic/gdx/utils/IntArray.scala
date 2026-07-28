@@ -363,7 +363,7 @@ class IntArray {
     java.lang.System.arraycopy(this.items, 0, array, 0, this.size)
     return array
   }
-  def hashCode(): scala.Int = {
+  override def hashCode(): scala.Int = {
     if (!this.ordered) {
       return super.hashCode()
     } else ()
@@ -374,7 +374,7 @@ class IntArray {
     }; i = i + 1 } }
     return h
   }
-  def equals(`object`: java.lang.Object): scala.Boolean = {
+  override def equals(`object`: java.lang.Object): scala.Boolean = {
     if (`object` == this) {
       return true
     } else ()
@@ -401,7 +401,7 @@ class IntArray {
     }; i = i + 1 } }
     return true
   }
-  def toString(): java.lang.String = {
+  override def toString(): java.lang.String = {
     if (this.size == 0) {
       return "[]"
     } else ()

@@ -19,7 +19,7 @@ class SpriteDrawable extends com.badlogic.gdx.scenes.scene2d.utils.BaseDrawable 
     this.minHeight = drawable.getMinHeight()
     this.setSprite(drawable.sprite)
   }
-  def draw(batch: com.badlogic.gdx.graphics.g2d.Batch, x: scala.Float, y: scala.Float, width: scala.Float, height: scala.Float): scala.Unit = {
+  override def draw(batch: com.badlogic.gdx.graphics.g2d.Batch, x: scala.Float, y: scala.Float, width: scala.Float, height: scala.Float): scala.Unit = {
     val spriteColor: com.badlogic.gdx.graphics.Color = this.sprite.getColor()
     val oldColor: scala.Float = this.sprite.getPackedColor()
     this.sprite.setColor(spriteColor.mul(batch.getColor()))
@@ -29,7 +29,7 @@ class SpriteDrawable extends com.badlogic.gdx.scenes.scene2d.utils.BaseDrawable 
     this.sprite.draw(batch)
     this.sprite.setPackedColor(oldColor)
   }
-  def draw(batch: com.badlogic.gdx.graphics.g2d.Batch, x: scala.Float, y: scala.Float, originX: scala.Float, originY: scala.Float, width: scala.Float, height: scala.Float, scaleX: scala.Float, scaleY: scala.Float, rotation: scala.Float): scala.Unit = {
+  override def draw(batch: com.badlogic.gdx.graphics.g2d.Batch, x: scala.Float, y: scala.Float, originX: scala.Float, originY: scala.Float, width: scala.Float, height: scala.Float, scaleX: scala.Float, scaleY: scala.Float, rotation: scala.Float): scala.Unit = {
     val spriteColor: com.badlogic.gdx.graphics.Color = this.sprite.getColor()
     val oldColor: scala.Float = this.sprite.getPackedColor()
     this.sprite.setColor(spriteColor.mul(batch.getColor()))

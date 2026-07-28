@@ -106,7 +106,7 @@ class Tree[N <: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[N, V, ?], V <: java
       this.clickListener
     })
   }
-  def setStyle(style: com.badlogic.gdx.scenes.scene2d.ui.Tree.TreeStyle): scala.Unit = {
+  override def setStyle(style: com.badlogic.gdx.scenes.scene2d.ui.Tree.TreeStyle): scala.Unit = {
     this.style = style
     if (this.indentSpacing == 0) {
       this.indentSpacing = this.plusMinusWidth()
@@ -163,13 +163,13 @@ class Tree[N <: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[N, V, ?], V <: java
       node.removeFromTree(this, actorIndex)
     } else ()
   }
-  def clearChildren(unfocus: scala.Boolean): scala.Unit = {
+  override def clearChildren(unfocus: scala.Boolean): scala.Unit = {
     super.clearChildren(unfocus)
     this.setOverNode(null.asInstanceOf[N])
     this.rootNodes.clear()
     this.selection.clear()
   }
-  def invalidate(): scala.Unit = {
+  override def invalidate(): scala.Unit = {
     super.invalidate()
     this.sizeInvalid = true
   }
@@ -216,7 +216,7 @@ class Tree[N <: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[N, V, ?], V <: java
       } else ()
     }; i = i + 1 } }
   }
-  def layout(): scala.Unit = {
+  override def layout(): scala.Unit = {
     if (this.sizeInvalid) {
       this.computeSize()
     } else ()
@@ -247,7 +247,7 @@ class Tree[N <: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[N, V, ?], V <: java
     }; i = i + 1 } }
     return y
   }
-  def draw(batch: com.badlogic.gdx.graphics.g2d.Batch, parentAlpha: scala.Float): scala.Unit = {
+  override def draw(batch: com.badlogic.gdx.graphics.g2d.Batch, parentAlpha: scala.Float): scala.Unit = {
     this.drawBackground(batch, parentAlpha)
     val color: com.badlogic.gdx.graphics.Color = this.getColor()
     val a: scala.Float = color.a * parentAlpha
@@ -395,7 +395,7 @@ class Tree[N <: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[N, V, ?], V <: java
     val node: N = this.selection.first()
     return if (node == null) null.asInstanceOf[V] else node.getValue().asInstanceOf[V]
   }
-  def getStyle(): com.badlogic.gdx.scenes.scene2d.ui.Tree.TreeStyle = {
+  override def getStyle(): com.badlogic.gdx.scenes.scene2d.ui.Tree.TreeStyle = {
     return this.style
   }
   def getRootNodes(): com.badlogic.gdx.utils.Array[N] = {
@@ -455,13 +455,13 @@ class Tree[N <: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[N, V, ?], V <: java
     this.iconSpacingLeft = left
     this.iconSpacingRight = right
   }
-  def getPrefWidth(): scala.Float = {
+  override def getPrefWidth(): scala.Float = {
     if (this.sizeInvalid) {
       this.computeSize()
     } else ()
     return this.prefWidth
   }
-  def getPrefHeight(): scala.Float = {
+  override def getPrefHeight(): scala.Float = {
     if (this.sizeInvalid) {
       this.computeSize()
     } else ()

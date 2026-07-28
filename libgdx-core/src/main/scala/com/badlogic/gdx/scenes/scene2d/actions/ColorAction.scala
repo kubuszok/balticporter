@@ -7,7 +7,7 @@ class ColorAction extends com.badlogic.gdx.scenes.scene2d.actions.TemporalAction
   private var startA: scala.Float = 0.0f
   private var color: com.badlogic.gdx.graphics.Color = null.asInstanceOf[com.badlogic.gdx.graphics.Color]
   private final val `end`: com.badlogic.gdx.graphics.Color = new com.badlogic.gdx.graphics.Color()
-  def begin(): scala.Unit = {
+  override def begin(): scala.Unit = {
     if (this.color == null) {
       this.color = target.getColor()
     } else ()
@@ -16,7 +16,7 @@ class ColorAction extends com.badlogic.gdx.scenes.scene2d.actions.TemporalAction
     this.startB = this.color.b
     this.startA = this.color.a
   }
-  def update(percent: scala.Float): scala.Unit = {
+  override def update(percent: scala.Float): scala.Unit = {
     if (percent == 0) {
       this.color.set(this.startR, this.startG, this.startB, this.startA)
     } else {
@@ -31,7 +31,7 @@ class ColorAction extends com.badlogic.gdx.scenes.scene2d.actions.TemporalAction
       }
     }
   }
-  def reset(): scala.Unit = {
+  override def reset(): scala.Unit = {
     super.reset()
     this.color = null
   }

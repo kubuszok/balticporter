@@ -100,7 +100,7 @@ class DecalBatch(size: scala.Int, groupStrategy$p: com.badlogic.gdx.graphics.g3d
     this.groupPool.freeAll(this.usedGroups)
     this.usedGroups.clear()
   }
-  def dispose(): scala.Unit = {
+  override def dispose(): scala.Unit = {
     this.clear()
     this.vertices = null
     this.mesh.dispose()

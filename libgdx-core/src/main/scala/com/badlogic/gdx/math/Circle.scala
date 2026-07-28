@@ -65,19 +65,19 @@ class Circle extends java.io.Serializable with com.badlogic.gdx.math.Shape2D {
   def setRadius(radius: scala.Float): scala.Unit = {
     this.radius = radius
   }
-  def contains(x$arg: scala.Float, y$arg: scala.Float): scala.Boolean = {
+  override def contains(x$arg: scala.Float, y$arg: scala.Float): scala.Boolean = {
     var x: scala.Float = x$arg
     var y: scala.Float = y$arg
     x = this.x - x
     y = this.y - y
     return ((x * x) + (y * y)) <= (this.radius * this.radius)
   }
-  def contains(point: com.badlogic.gdx.math.Vector2): scala.Boolean = {
+  override def contains(point: com.badlogic.gdx.math.Vector2): scala.Boolean = {
     val dx: scala.Float = this.x - point.x
     val dy: scala.Float = this.y - point.y
     return ((dx * dx) + (dy * dy)) <= (this.radius * this.radius)
   }
-  def contains(c: Circle): scala.Boolean = {
+  override def contains(c: Circle): scala.Boolean = {
     val radiusDiff: scala.Float = this.radius - c.radius
     if (radiusDiff < 0.0f) {
       return false
@@ -96,7 +96,7 @@ class Circle extends java.io.Serializable with com.badlogic.gdx.math.Shape2D {
     return distance < (radiusSum * radiusSum)
   }
   @java.lang.Override
-  def toString(): java.lang.String = {
+  override def toString(): java.lang.String = {
     return (((java.lang.String.valueOf(this.x) + ",") + this.y) + ",") + this.radius
   }
   def circumference(): scala.Float = {
@@ -106,7 +106,7 @@ class Circle extends java.io.Serializable with com.badlogic.gdx.math.Shape2D {
     return (this.radius * this.radius) * com.badlogic.gdx.math.MathUtils.PI
   }
   @java.lang.Override
-  def equals(o: java.lang.Object): scala.Boolean = {
+  override def equals(o: java.lang.Object): scala.Boolean = {
     if (o == this) {
       return true
     } else ()
@@ -117,7 +117,7 @@ class Circle extends java.io.Serializable with com.badlogic.gdx.math.Shape2D {
     return ((this.x == c.x) && (this.y == c.y)) && (this.radius == c.radius)
   }
   @java.lang.Override
-  def hashCode(): scala.Int = {
+  override def hashCode(): scala.Int = {
     val prime: scala.Int = 41
     var result: scala.Int = 1
     result = (prime * result) + com.badlogic.gdx.utils.NumberUtils.floatToRawIntBits(this.radius)

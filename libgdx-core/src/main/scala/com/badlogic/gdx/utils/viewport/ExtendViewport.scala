@@ -20,7 +20,7 @@ class ExtendViewport(minWorldWidth$p: scala.Float, minWorldHeight$p: scala.Float
   this.maxWorldWidth = maxWorldWidth$p
   this.maxWorldHeight = maxWorldHeight$p
   this.setCamera(camera$p)
-  def update(screenWidth: scala.Int, screenHeight: scala.Int, centerCamera: scala.Boolean): scala.Unit = {
+  override def update(screenWidth: scala.Int, screenHeight: scala.Int, centerCamera: scala.Boolean): scala.Unit = {
     var worldWidth: scala.Float = this.minWorldWidth
     var worldHeight: scala.Float = this.minWorldHeight
     val scaled: com.badlogic.gdx.math.Vector2 = this.scaling.apply(worldWidth, worldHeight, screenWidth, screenHeight)

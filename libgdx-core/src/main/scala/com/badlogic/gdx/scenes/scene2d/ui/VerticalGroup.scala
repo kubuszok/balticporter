@@ -21,7 +21,7 @@ class VerticalGroup extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup {
   var padRight$field: scala.Float = 0.0f
   this.setTransform(false)
   this.setTouchable(com.badlogic.gdx.scenes.scene2d.Touchable.childrenOnly)
-  def invalidate(): scala.Unit = {
+  override def invalidate(): scala.Unit = {
     super.invalidate()
     this.sizeInvalid = true
   }
@@ -110,7 +110,7 @@ class VerticalGroup extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup {
       this.prefHeight = java.lang.Math.ceil(this.prefHeight).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
     } else ()
   }
-  def layout(): scala.Unit = {
+  override def layout(): scala.Unit = {
     if (this.sizeInvalid) {
       this.computeSize()
     } else ()
@@ -300,13 +300,13 @@ class VerticalGroup extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup {
       } else ()
     }; i = i + incr } }
   }
-  def getPrefWidth(): scala.Float = {
+  override def getPrefWidth(): scala.Float = {
     if (this.sizeInvalid) {
       this.computeSize()
     } else ()
     return this.prefWidth
   }
-  def getPrefHeight(): scala.Float = {
+  override def getPrefHeight(): scala.Float = {
     if (this.wrap$field) {
       return 0
     } else ()
@@ -485,7 +485,7 @@ class VerticalGroup extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup {
     this.columnAlign$field = this.columnAlign$field & (~com.badlogic.gdx.utils.Align.left)
     return this
   }
-  def drawDebugBounds(shapes: com.badlogic.gdx.graphics.glutils.ShapeRenderer): scala.Unit = {
+  override def drawDebugBounds(shapes: com.badlogic.gdx.graphics.glutils.ShapeRenderer): scala.Unit = {
     super.drawDebugBounds(shapes)
     if (!this.getDebug()) {
       return

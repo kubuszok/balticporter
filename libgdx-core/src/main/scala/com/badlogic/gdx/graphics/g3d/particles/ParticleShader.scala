@@ -36,18 +36,18 @@ class ParticleShader(renderable$p: com.badlogic.gdx.graphics.g3d.Renderable, con
   this.register(com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Inputs.cameraPosition, com.badlogic.gdx.graphics.g3d.particles.ParticleShader.Setters.cameraPosition)
   this.register(com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Inputs.diffuseTexture, com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Setters.diffuseTexture)
   @java.lang.Override
-  def init(): scala.Unit = {
+  override def init(): scala.Unit = {
     var program: com.badlogic.gdx.graphics.glutils.ShaderProgram = this.program
     this.program = null
     this.init(program, this.renderable)
     this.renderable = null
   }
   @java.lang.Override
-  def canRender(renderable: com.badlogic.gdx.graphics.g3d.Renderable): scala.Boolean = {
+  override def canRender(renderable: com.badlogic.gdx.graphics.g3d.Renderable): scala.Boolean = {
     return (this.materialMask == (renderable.material.getMask() | ParticleShader.optionalAttributes)) && (this.vertexMask == renderable.meshPart.mesh.getVertexAttributes().getMask())
   }
   @java.lang.Override
-  def compareTo(other: com.badlogic.gdx.graphics.g3d.Shader): scala.Int = {
+  override def compareTo(other: com.badlogic.gdx.graphics.g3d.Shader): scala.Int = {
     if (other == null) {
       return -1
     } else ()
@@ -57,18 +57,18 @@ class ParticleShader(renderable$p: com.badlogic.gdx.graphics.g3d.Renderable, con
     return 0
   }
   @java.lang.Override
-  def equals(obj: java.lang.Object): scala.Boolean = {
+  override def equals(obj: java.lang.Object): scala.Boolean = {
     return obj.isInstanceOf[ParticleShader] && this.equals(obj.asInstanceOf[ParticleShader].asInstanceOf[ParticleShader])
   }
-  def equals(obj: ParticleShader): scala.Boolean = {
+  override def equals(obj: ParticleShader): scala.Boolean = {
     return obj == this
   }
   @java.lang.Override
-  def begin(camera: com.badlogic.gdx.graphics.Camera, context: com.badlogic.gdx.graphics.g3d.utils.RenderContext): scala.Unit = {
+  override def begin(camera: com.badlogic.gdx.graphics.Camera, context: com.badlogic.gdx.graphics.g3d.utils.RenderContext): scala.Unit = {
     super.begin(camera, context)
   }
   @java.lang.Override
-  def render(renderable: com.badlogic.gdx.graphics.g3d.Renderable): scala.Unit = {
+  override def render(renderable: com.badlogic.gdx.graphics.g3d.Renderable): scala.Unit = {
     if (!renderable.material.has(com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute.Type)) {
       context.setBlending(false, com.badlogic.gdx.graphics.GL20.GL_SRC_ALPHA, com.badlogic.gdx.graphics.GL20.GL_ONE_MINUS_SRC_ALPHA)
     } else ()
@@ -76,7 +76,7 @@ class ParticleShader(renderable$p: com.badlogic.gdx.graphics.g3d.Renderable, con
     super.render(renderable)
   }
   @java.lang.Override
-  def `end`(): scala.Unit = {
+  override def `end`(): scala.Unit = {
     this.currentMaterial = null
     super.`end`()
   }
@@ -113,7 +113,7 @@ class ParticleShader(renderable$p: com.badlogic.gdx.graphics.g3d.Renderable, con
     context.setDepthMask(depthMask)
   }
   @java.lang.Override
-  def dispose(): scala.Unit = {
+  override def dispose(): scala.Unit = {
     program.dispose()
     super.dispose()
   }

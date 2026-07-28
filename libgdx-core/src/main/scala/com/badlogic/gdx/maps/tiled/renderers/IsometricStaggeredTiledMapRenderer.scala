@@ -34,7 +34,7 @@ class IsometricStaggeredTiledMapRenderer extends com.badlogic.gdx.maps.tiled.ren
     this.ownsBatch = false
   }
   @java.lang.Override
-  def renderTileLayer(layer: com.badlogic.gdx.maps.tiled.TiledMapTileLayer): scala.Unit = {
+  override def renderTileLayer(layer: com.badlogic.gdx.maps.tiled.TiledMapTileLayer): scala.Unit = {
     val batchColor: com.badlogic.gdx.graphics.Color = batch.getColor()
     val color: scala.Float = this.getTileLayerColor(layer, batchColor)
     val layerWidth: scala.Int = layer.getWidth()
@@ -154,7 +154,7 @@ class IsometricStaggeredTiledMapRenderer extends com.badlogic.gdx.maps.tiled.ren
     }; y = y - 1 } }
   }
   @java.lang.Override
-  def renderImageLayer(layer: com.badlogic.gdx.maps.tiled.TiledMapImageLayer): scala.Unit = {
+  override def renderImageLayer(layer: com.badlogic.gdx.maps.tiled.TiledMapImageLayer): scala.Unit = {
     val batchColor: com.badlogic.gdx.graphics.Color = batch.getColor()
     val color: scala.Float = this.getImageLayerColor(layer, batchColor)
     val vertices: scala.Array[scala.Float] = this.vertices

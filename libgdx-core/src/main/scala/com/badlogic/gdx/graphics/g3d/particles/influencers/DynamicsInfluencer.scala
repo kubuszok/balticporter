@@ -22,7 +22,7 @@ class DynamicsInfluencer extends com.badlogic.gdx.graphics.g3d.particles.influen
   }
   this.velocities = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier](true, 3, ((size: scala.Int) => new scala.Array[com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier](size)))
   @java.lang.Override
-  def allocateChannels(): scala.Unit = {
+  override def allocateChannels(): scala.Unit = {
     { var k: scala.Int = 0; while (k < this.velocities.size) { {
       this.velocities.items(k).allocateChannels()
     }; k = k + 1 } }
@@ -46,19 +46,19 @@ class DynamicsInfluencer extends com.badlogic.gdx.graphics.g3d.particles.influen
     }
   }
   @java.lang.Override
-  def set(particleController: com.badlogic.gdx.graphics.g3d.particles.ParticleController): scala.Unit = {
+  override def set(particleController: com.badlogic.gdx.graphics.g3d.particles.ParticleController): scala.Unit = {
     super.set(particleController);
     { var k: scala.Int = 0; while (k < this.velocities.size) { {
       this.velocities.items(k).set(particleController)
     }; k = k + 1 } }
   }
   @java.lang.Override
-  def init(): scala.Unit = {
+  override def init(): scala.Unit = {
     { var k: scala.Int = 0; while (k < this.velocities.size) { {
       this.velocities.items(k).init()
     }; k = k + 1 } }
   }
-  def activateParticles(startIndex: scala.Int, count: scala.Int): scala.Unit = {
+  override def activateParticles(startIndex: scala.Int, count: scala.Int): scala.Unit = {
     if (this.hasAcceleration) {
       { var i: scala.Int = startIndex * this.positionChannel.strideSize; val c: scala.Int = i + (count * this.positionChannel.strideSize); while (i < c) { {
         this.previousPositionChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.XOffset) = this.positionChannel.data(i + com.badlogic.gdx.graphics.g3d.particles.ParticleChannels.XOffset)
@@ -85,7 +85,7 @@ class DynamicsInfluencer extends com.badlogic.gdx.graphics.g3d.particles.influen
       this.velocities.items(k).activateParticles(startIndex, count)
     }; k = k + 1 } }
   }
-  def update(): scala.Unit = {
+  override def update(): scala.Unit = {
     if (this.hasAcceleration) {
       java.util.Arrays.fill(this.accellerationChannel.data, 0, this.controller.particles.size * this.accellerationChannel.strideSize, 0)
     } else ()
@@ -142,15 +142,15 @@ class DynamicsInfluencer extends com.badlogic.gdx.graphics.g3d.particles.influen
     }
   }
   @java.lang.Override
-  def copy(): DynamicsInfluencer = {
+  override def copy(): DynamicsInfluencer = {
     return new DynamicsInfluencer(this)
   }
   @java.lang.Override
-  def write(json: com.badlogic.gdx.utils.Json): scala.Unit = {
+  override def write(json: com.badlogic.gdx.utils.Json): scala.Unit = {
     json.writeValue("velocities", this.velocities, classOf[com.badlogic.gdx.utils.Array[?]], classOf[com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier])
   }
   @java.lang.Override
-  def read(json: com.badlogic.gdx.utils.Json, jsonData: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
+  override def read(json: com.badlogic.gdx.utils.Json, jsonData: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
     this.velocities.addAll(json.readValue("velocities", classOf[com.badlogic.gdx.utils.Array[?]], classOf[com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier], jsonData).asInstanceOf[com.badlogic.gdx.utils.Array[? <: com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier]])
   }
 }

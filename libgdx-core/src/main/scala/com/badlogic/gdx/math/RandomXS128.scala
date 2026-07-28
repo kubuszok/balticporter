@@ -13,7 +13,7 @@ class RandomXS128 extends java.util.Random {
   }
   this.setSeed(new java.util.Random().nextLong())
   @java.lang.Override
-  def nextLong(): scala.Long = {
+  override def nextLong(): scala.Long = {
     var s1: scala.Long = this.seed0
     val s0: scala.Long = this.seed1
     this.seed0 = s0
@@ -24,18 +24,18 @@ class RandomXS128 extends java.util.Random {
     } + s0
   }
   @java.lang.Override
-  final def next(bits: scala.Int): scala.Int = {
+  override final def next(bits: scala.Int): scala.Int = {
     return (this.nextLong() & ((1L << bits) - 1)).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
   }
   @java.lang.Override
-  def nextInt(): scala.Int = {
+  override def nextInt(): scala.Int = {
     return this.nextLong().asInstanceOf[scala.Int].asInstanceOf[scala.Int]
   }
   @java.lang.Override
-  def nextInt(n: scala.Int): scala.Int = {
+  override def nextInt(n: scala.Int): scala.Int = {
     return this.nextLong(n).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
   }
-  def nextLong(n: scala.Long): scala.Long = {
+  override def nextLong(n: scala.Long): scala.Long = {
     {
       if (n <= 0) {
         throw new java.lang.IllegalArgumentException("n must be positive")
@@ -51,19 +51,19 @@ class RandomXS128 extends java.util.Random {
     throw new java.lang.RuntimeException("unreachable")
   }
   @java.lang.Override
-  def nextDouble(): scala.Double = {
+  override def nextDouble(): scala.Double = {
     return (this.nextLong() >>> 11) * RandomXS128.NORM_DOUBLE
   }
   @java.lang.Override
-  def nextFloat(): scala.Float = {
+  override def nextFloat(): scala.Float = {
     return ((this.nextLong() >>> 40) * RandomXS128.NORM_FLOAT).asInstanceOf[scala.Float].asInstanceOf[scala.Float]
   }
   @java.lang.Override
-  def nextBoolean(): scala.Boolean = {
+  override def nextBoolean(): scala.Boolean = {
     return (this.nextLong() & 1) != 0
   }
   @java.lang.Override
-  def nextBytes(bytes: scala.Array[scala.Byte]): scala.Unit = {
+  override def nextBytes(bytes: scala.Array[scala.Byte]): scala.Unit = {
     var n: scala.Int = 0
     var i: scala.Int = bytes.length
     while (i != 0) {
@@ -74,7 +74,7 @@ class RandomXS128 extends java.util.Random {
     }
   }
   @java.lang.Override
-  def setSeed(seed: scala.Long): scala.Unit = {
+  override def setSeed(seed: scala.Long): scala.Unit = {
     val seed0: scala.Long = RandomXS128.murmurHash3(if (seed == 0) java.lang.Long.MIN_VALUE else seed)
     this.setState(seed0, RandomXS128.murmurHash3(seed0))
   }

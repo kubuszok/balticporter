@@ -6,17 +6,17 @@ class SoundLoader(resolver$p: com.badlogic.gdx.assets.loaders.FileHandleResolver
     return this.sound
   }
   @java.lang.Override
-  def loadAsync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.assets.loaders.SoundLoader.SoundParameter): scala.Unit = {
+  override def loadAsync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.assets.loaders.SoundLoader.SoundParameter): scala.Unit = {
     this.sound = com.badlogic.gdx.Gdx.audio.newSound(file)
   }
   @java.lang.Override
-  def loadSync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.assets.loaders.SoundLoader.SoundParameter): com.badlogic.gdx.audio.Sound = {
+  override def loadSync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.assets.loaders.SoundLoader.SoundParameter): com.badlogic.gdx.audio.Sound = {
     var sound: com.badlogic.gdx.audio.Sound = this.sound
     this.sound = null
     return sound
   }
   @java.lang.Override
-  def getDependencies(fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.assets.loaders.SoundLoader.SoundParameter): com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = {
+  override def getDependencies(fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.assets.loaders.SoundLoader.SoundParameter): com.badlogic.gdx.utils.Array[com.badlogic.gdx.assets.AssetDescriptor[?]] = {
     return null
   }
 }

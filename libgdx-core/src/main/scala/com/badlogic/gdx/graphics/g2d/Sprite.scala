@@ -465,7 +465,7 @@ class Sprite extends com.badlogic.gdx.graphics.g2d.TextureRegion {
   def getPackedColor(): scala.Float = {
     return this.packedColor
   }
-  def setRegion(u: scala.Float, v: scala.Float, u2: scala.Float, v2: scala.Float): scala.Unit = {
+  override def setRegion(u: scala.Float, v: scala.Float, u2: scala.Float, v2: scala.Float): scala.Unit = {
     super.setRegion(u, v, u2, v2)
     val vertices: scala.Array[scala.Float] = this.vertices
     vertices(com.badlogic.gdx.graphics.g2d.Batch.U1) = u
@@ -477,22 +477,22 @@ class Sprite extends com.badlogic.gdx.graphics.g2d.TextureRegion {
     vertices(com.badlogic.gdx.graphics.g2d.Batch.U4) = u2
     vertices(com.badlogic.gdx.graphics.g2d.Batch.V4) = v2
   }
-  def setU(u: scala.Float): scala.Unit = {
+  override def setU(u: scala.Float): scala.Unit = {
     super.setU(u)
     this.vertices(com.badlogic.gdx.graphics.g2d.Batch.U1) = u
     this.vertices(com.badlogic.gdx.graphics.g2d.Batch.U2) = u
   }
-  def setV(v: scala.Float): scala.Unit = {
+  override def setV(v: scala.Float): scala.Unit = {
     super.setV(v)
     this.vertices(com.badlogic.gdx.graphics.g2d.Batch.V2) = v
     this.vertices(com.badlogic.gdx.graphics.g2d.Batch.V3) = v
   }
-  def setU2(u2: scala.Float): scala.Unit = {
+  override def setU2(u2: scala.Float): scala.Unit = {
     super.setU2(u2)
     this.vertices(com.badlogic.gdx.graphics.g2d.Batch.U3) = u2
     this.vertices(com.badlogic.gdx.graphics.g2d.Batch.U4) = u2
   }
-  def setV2(v2: scala.Float): scala.Unit = {
+  override def setV2(v2: scala.Float): scala.Unit = {
     super.setV2(v2)
     this.vertices(com.badlogic.gdx.graphics.g2d.Batch.V1) = v2
     this.vertices(com.badlogic.gdx.graphics.g2d.Batch.V4) = v2
@@ -508,7 +508,7 @@ class Sprite extends com.badlogic.gdx.graphics.g2d.TextureRegion {
     } else ()
     this.flip(performX, performY)
   }
-  def flip(x: scala.Boolean, y: scala.Boolean): scala.Unit = {
+  override def flip(x: scala.Boolean, y: scala.Boolean): scala.Unit = {
     super.flip(x, y)
     val vertices: scala.Array[scala.Float] = this.vertices
     if (x) {
@@ -528,7 +528,7 @@ class Sprite extends com.badlogic.gdx.graphics.g2d.TextureRegion {
       vertices(com.badlogic.gdx.graphics.g2d.Batch.V4) = temp
     } else ()
   }
-  def scroll(xAmount: scala.Float, yAmount: scala.Float): scala.Unit = {
+  override def scroll(xAmount: scala.Float, yAmount: scala.Float): scala.Unit = {
     val vertices: scala.Array[scala.Float] = this.vertices
     if (xAmount != 0) {
       var u: scala.Float = (vertices(com.badlogic.gdx.graphics.g2d.Batch.U1) + xAmount) % 1

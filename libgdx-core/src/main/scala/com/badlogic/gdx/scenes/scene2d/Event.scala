@@ -20,7 +20,7 @@ class Event extends com.badlogic.gdx.utils.Pool.Poolable {
   def stop(): scala.Unit = {
     this.stopped = true
   }
-  def reset(): scala.Unit = {
+  override def reset(): scala.Unit = {
     this.stage = null
     this.targetActor = null
     this.listenerActor = null

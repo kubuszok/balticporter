@@ -11,7 +11,7 @@ class TiledMap extends com.badlogic.gdx.maps.Map {
     this.ownedResources = resources
   }
   @java.lang.Override
-  def dispose(): scala.Unit = {
+  override def dispose(): scala.Unit = {
     if (this.ownedResources != null) {
       for (resource <- this.ownedResources) {
         resource.dispose()

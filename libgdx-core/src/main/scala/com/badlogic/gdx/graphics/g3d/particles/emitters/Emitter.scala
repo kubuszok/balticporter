@@ -9,11 +9,11 @@ abstract class Emitter extends com.badlogic.gdx.graphics.g3d.particles.ParticleC
     this.set(regularEmitter)
   }
   @java.lang.Override
-  def init(): scala.Unit = {
+  override def init(): scala.Unit = {
     this.controller.particles.size = 0
   }
   @java.lang.Override
-  def `end`(): scala.Unit = {
+  override def `end`(): scala.Unit = {
     this.controller.particles.size = 0
   }
   def isComplete(): scala.Boolean = {
@@ -35,17 +35,17 @@ abstract class Emitter extends com.badlogic.gdx.graphics.g3d.particles.ParticleC
     this.setMinParticleCount(aMin)
     this.setMaxParticleCount(aMax)
   }
-  def set(emitter: Emitter): scala.Unit = {
+  override def set(emitter: Emitter): scala.Unit = {
     this.minParticleCount = emitter.minParticleCount
     this.maxParticleCount = emitter.maxParticleCount
   }
   @java.lang.Override
-  def write(json: com.badlogic.gdx.utils.Json): scala.Unit = {
+  override def write(json: com.badlogic.gdx.utils.Json): scala.Unit = {
     json.writeValue("minParticleCount", this.minParticleCount.asInstanceOf[java.lang.Integer])
     json.writeValue("maxParticleCount", this.maxParticleCount.asInstanceOf[java.lang.Integer])
   }
   @java.lang.Override
-  def read(json: com.badlogic.gdx.utils.Json, jsonData: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
+  override def read(json: com.badlogic.gdx.utils.Json, jsonData: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
     this.minParticleCount = json.readValue("minParticleCount", classOf[scala.Int], jsonData)
     this.maxParticleCount = json.readValue("maxParticleCount", classOf[scala.Int], jsonData)
   }

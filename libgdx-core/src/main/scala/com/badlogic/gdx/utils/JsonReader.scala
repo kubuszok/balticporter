@@ -5,11 +5,11 @@ class JsonReader extends com.badlogic.gdx.utils.BaseJsonReader {
   private var root: com.badlogic.gdx.utils.JsonValue = null.asInstanceOf[com.badlogic.gdx.utils.JsonValue]
   private var current: com.badlogic.gdx.utils.JsonValue = null.asInstanceOf[com.badlogic.gdx.utils.JsonValue]
   var stop$field: scala.Boolean = false
-  def parse(json: java.lang.String): com.badlogic.gdx.utils.JsonValue = {
+  override def parse(json: java.lang.String): com.badlogic.gdx.utils.JsonValue = {
     val data: scala.Array[scala.Char] = json.toCharArray()
     return this.parse(data, 0, data.length)
   }
-  def parse(reader: java.io.Reader): com.badlogic.gdx.utils.JsonValue = {
+  override def parse(reader: java.io.Reader): com.badlogic.gdx.utils.JsonValue = {
     var data: scala.Array[scala.Char] = new scala.Array[scala.Char](1024)
     var offset: scala.Int = 0
     try {
@@ -35,7 +35,7 @@ class JsonReader extends com.badlogic.gdx.utils.BaseJsonReader {
     }
     return this.parse(data, 0, offset)
   }
-  def parse(input: java.io.InputStream): com.badlogic.gdx.utils.JsonValue = {
+  override def parse(input: java.io.InputStream): com.badlogic.gdx.utils.JsonValue = {
     var reader: java.io.Reader = null.asInstanceOf[java.io.Reader]
     try {
       reader = new java.io.InputStreamReader(input, "UTF-8")
@@ -46,7 +46,7 @@ class JsonReader extends com.badlogic.gdx.utils.BaseJsonReader {
     }
     return this.parse(reader)
   }
-  def parse(file: com.badlogic.gdx.files.FileHandle): com.badlogic.gdx.utils.JsonValue = {
+  override def parse(file: com.badlogic.gdx.files.FileHandle): com.badlogic.gdx.utils.JsonValue = {
     var reader: java.io.Reader = null.asInstanceOf[java.io.Reader]
     try {
       reader = file.reader("UTF-8")

@@ -28,7 +28,7 @@ class TextureDescriptor[T <: com.badlogic.gdx.graphics.GLTexture] extends java.l
     this.vWrap = other.vWrap
   }
   @java.lang.Override
-  def equals(obj: java.lang.Object): scala.Boolean = {
+  override def equals(obj: java.lang.Object): scala.Boolean = {
     if (obj == null) {
       return false
     } else ()
@@ -42,7 +42,7 @@ class TextureDescriptor[T <: com.badlogic.gdx.graphics.GLTexture] extends java.l
     return ((((other.asInstanceOf[TextureDescriptor[com.badlogic.gdx.graphics.GLTexture]].texture == this.texture) && (other.minFilter == this.minFilter)) && (other.magFilter == this.magFilter)) && (other.uWrap == this.uWrap)) && (other.vWrap == this.vWrap)
   }
   @java.lang.Override
-  def hashCode(): scala.Int = {
+  override def hashCode(): scala.Int = {
     var result: scala.Long = if (this.texture == null) 0 else this.texture.glTarget
     result = (811 * result) + (if (this.texture == null) 0 else this.texture.getTextureObjectHandle())
     result = (811 * result) + (if (this.minFilter == null) 0 else this.minFilter.getGLEnum())
@@ -52,7 +52,7 @@ class TextureDescriptor[T <: com.badlogic.gdx.graphics.GLTexture] extends java.l
     return (result ^ (result >> 32)).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
   }
   @java.lang.Override
-  def compareTo(o: TextureDescriptor[T]): scala.Int = {
+  override def compareTo(o: TextureDescriptor[T]): scala.Int = {
     if (o == this) {
       return 0
     } else ()

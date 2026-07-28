@@ -146,7 +146,7 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
   def setOnlyFontChars(onlyFontChars: scala.Boolean): scala.Unit = {
     this.onlyFontChars = onlyFontChars
   }
-  def setStyle(style: com.badlogic.gdx.scenes.scene2d.ui.TextField.TextFieldStyle): scala.Unit = {
+  override def setStyle(style: com.badlogic.gdx.scenes.scene2d.ui.TextField.TextFieldStyle): scala.Unit = {
     if (style == null) {
       throw new java.lang.IllegalArgumentException("style cannot be null.")
     } else ()
@@ -157,7 +157,7 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
     } else ()
     this.invalidateHierarchy()
   }
-  def getStyle(): com.badlogic.gdx.scenes.scene2d.ui.TextField.TextFieldStyle = {
+  override def getStyle(): com.badlogic.gdx.scenes.scene2d.ui.TextField.TextFieldStyle = {
     return this.style
   }
   def calculateOffsets(): scala.Unit = {
@@ -235,7 +235,7 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
     } else ()
     return this.style.background
   }
-  def draw(batch: com.badlogic.gdx.graphics.g2d.Batch, parentAlpha: scala.Float): scala.Unit = {
+  override def draw(batch: com.badlogic.gdx.graphics.g2d.Batch, parentAlpha: scala.Float): scala.Unit = {
     var focused: scala.Boolean = this.hasKeyboardFocus()
     if ((focused != this.focused) || (focused && (!this.blinkTask.isScheduled()))) {
       this.focused = focused
@@ -648,10 +648,10 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
   def setClipboard(clipboard: com.badlogic.gdx.utils.Clipboard): scala.Unit = {
     this.clipboard = clipboard
   }
-  def getPrefWidth(): scala.Float = {
+  override def getPrefWidth(): scala.Float = {
     return 150
   }
-  def getPrefHeight(): scala.Float = {
+  override def getPrefHeight(): scala.Float = {
     var topAndBottom: scala.Float = 0
     var minHeight: scala.Float = 0
     if (this.style.background != null) {
@@ -690,10 +690,10 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
   def setBlinkTime(blinkTime: scala.Float): scala.Unit = {
     this.blinkTime = blinkTime
   }
-  def setDisabled(disabled: scala.Boolean): scala.Unit = {
+  override def setDisabled(disabled: scala.Boolean): scala.Unit = {
     this.disabled = disabled
   }
-  def isDisabled(): scala.Boolean = {
+  override def isDisabled(): scala.Boolean = {
     return this.disabled
   }
   def moveCursor(forward: scala.Boolean, jump: scala.Boolean): scala.Unit = {
@@ -711,7 +711,7 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
   }
   class KeyRepeatTask extends com.badlogic.gdx.utils.Timer.Task {
     var keycode: scala.Int = 0
-    def run(): scala.Unit = {
+    override def run(): scala.Unit = {
       if (TextField.this.getStage() == null) {
         this.cancel()
         return
@@ -720,7 +720,7 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
     }
   }
   class TextFieldClickListener extends com.badlogic.gdx.scenes.scene2d.utils.ClickListener {
-    def clicked(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float): scala.Unit = {
+    override def clicked(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float): scala.Unit = {
       val count: scala.Int = this.getTapCount() % 4
       if (count == 0) {
         TextField.this.clearSelection()
@@ -733,7 +733,7 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
         TextField.this.selectAll()
       } else ()
     }
-    def touchDown(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float, pointer: scala.Int, button: scala.Int): scala.Boolean = {
+    override def touchDown(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float, pointer: scala.Int, button: scala.Int): scala.Boolean = {
       if (!super.touchDown(event, x, y, pointer, button)) {
         return false
       } else ()
@@ -753,11 +753,11 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
       TextField.this.hasSelection = true
       return true
     }
-    def touchDragged(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float, pointer: scala.Int): scala.Unit = {
+    override def touchDragged(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float, pointer: scala.Int): scala.Unit = {
       super.touchDragged(event, x, y, pointer)
       this.setCursorPosition(x, y)
     }
-    def touchUp(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float, pointer: scala.Int, button: scala.Int): scala.Unit = {
+    override def touchUp(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float, pointer: scala.Int, button: scala.Int): scala.Unit = {
       if (TextField.this.selectionStart == TextField.this.cursor) {
         TextField.this.hasSelection = false
       } else ()
@@ -777,7 +777,7 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
     def goEnd(jump: scala.Boolean): scala.Unit = {
       TextField.this.cursor = TextField.this.text.length()
     }
-    def keyDown(event: com.badlogic.gdx.scenes.scene2d.InputEvent, keycode: scala.Int): scala.Boolean = {
+    override def keyDown(event: com.badlogic.gdx.scenes.scene2d.InputEvent, keycode: scala.Int): scala.Boolean = {
       if (TextField.this.disabled) {
         return false
       } else ()
@@ -901,7 +901,7 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
         com.badlogic.gdx.utils.Timer.schedule(TextField.this.keyRepeatTask, TextField.keyRepeatInitialTime, TextField.keyRepeatTime)
       } else ()
     }
-    def keyUp(event: com.badlogic.gdx.scenes.scene2d.InputEvent, keycode: scala.Int): scala.Boolean = {
+    override def keyUp(event: com.badlogic.gdx.scenes.scene2d.InputEvent, keycode: scala.Int): scala.Boolean = {
       if (TextField.this.disabled) {
         return false
       } else ()
@@ -911,7 +911,7 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
     def checkFocusTraversal(character: scala.Char): scala.Boolean = {
       return TextField.this.focusTraversal && ((character == TextField.TAB) || (((character == TextField.CARRIAGE_RETURN) || (character == TextField.NEWLINE)) && (com.badlogic.gdx.scenes.scene2d.utils.UIUtils.isAndroid || com.badlogic.gdx.scenes.scene2d.utils.UIUtils.isIos)))
     }
-    def keyTyped(event: com.badlogic.gdx.scenes.scene2d.InputEvent, character: scala.Char): scala.Boolean = {
+    override def keyTyped(event: com.badlogic.gdx.scenes.scene2d.InputEvent, character: scala.Char): scala.Boolean = {
       if (TextField.this.disabled) {
         return false
       } else ()
@@ -1018,7 +1018,7 @@ object TextField {
   }
   object TextFieldFilter {
     class DigitsOnlyFilter extends com.badlogic.gdx.scenes.scene2d.ui.TextField.TextFieldFilter {
-      def acceptChar(textField: TextField, c: scala.Char): scala.Boolean = {
+      override def acceptChar(textField: TextField, c: scala.Char): scala.Boolean = {
         return java.lang.Character.isDigit(c)
       }
     }
@@ -1031,18 +1031,18 @@ object TextField {
     def close(): scala.Unit
   }
   class DefaultOnscreenKeyboard extends com.badlogic.gdx.scenes.scene2d.ui.TextField.OnscreenKeyboard {
-    def show(textField: TextField): scala.Unit = {
+    override def show(textField: TextField): scala.Unit = {
       com.badlogic.gdx.Gdx.input.setOnscreenKeyboardVisible(true)
     }
-    def close(): scala.Unit = {
+    override def close(): scala.Unit = {
       com.badlogic.gdx.Gdx.input.setOnscreenKeyboardVisible(false)
     }
   }
   class NativeOnscreenKeyboard extends com.badlogic.gdx.scenes.scene2d.ui.TextField.OnscreenKeyboard {
-    def close(): scala.Unit = {
+    override def close(): scala.Unit = {
       com.badlogic.gdx.Gdx.input.closeTextInputField(false)
     }
-    def show(textField: TextField): scala.Unit = {
+    override def show(textField: TextField): scala.Unit = {
       if (com.badlogic.gdx.Gdx.input.isTextInputFieldOpened()) {
         com.badlogic.gdx.Gdx.input.closeTextInputField(false, (confirmativeAction: scala.Boolean) => {
           this.openNativeInputField(textField)

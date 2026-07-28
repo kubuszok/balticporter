@@ -438,7 +438,7 @@ class ShaderProgram(vertexShader$arg: java.lang.String, fragmentShader$arg: java
   def `end`(): scala.Unit = {
     ()
   }
-  def dispose(): scala.Unit = {
+  override def dispose(): scala.Unit = {
     val gl: com.badlogic.gdx.graphics.GL20 = com.badlogic.gdx.Gdx.gl20
     gl.glUseProgram(0)
     gl.glDeleteShader(this.vertexShaderHandle)

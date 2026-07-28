@@ -226,7 +226,7 @@ class ModelInstance extends com.badlogic.gdx.graphics.g3d.RenderableProvider {
       this.animations.add(animation)
     } else ()
   }
-  def getRenderables(renderables: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.Renderable], pool: com.badlogic.gdx.utils.Pool[com.badlogic.gdx.graphics.g3d.Renderable]): scala.Unit = {
+  override def getRenderables(renderables: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.Renderable], pool: com.badlogic.gdx.utils.Pool[com.badlogic.gdx.graphics.g3d.Renderable]): scala.Unit = {
     for (node <- this.nodes) {
       this.getRenderables(node, renderables, pool)
     }

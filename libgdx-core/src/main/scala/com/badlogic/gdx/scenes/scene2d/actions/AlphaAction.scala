@@ -4,13 +4,13 @@ class AlphaAction extends com.badlogic.gdx.scenes.scene2d.actions.TemporalAction
   private var start: scala.Float = 0.0f
   private var `end`: scala.Float = 0.0f
   private var color: com.badlogic.gdx.graphics.Color = null.asInstanceOf[com.badlogic.gdx.graphics.Color]
-  def begin(): scala.Unit = {
+  override def begin(): scala.Unit = {
     if (this.color == null) {
       this.color = target.getColor()
     } else ()
     this.start = this.color.a
   }
-  def update(percent: scala.Float): scala.Unit = {
+  override def update(percent: scala.Float): scala.Unit = {
     if (percent == 0) {
       this.color.a = this.start
     } else {
@@ -21,7 +21,7 @@ class AlphaAction extends com.badlogic.gdx.scenes.scene2d.actions.TemporalAction
       }
     }
   }
-  def reset(): scala.Unit = {
+  override def reset(): scala.Unit = {
     super.reset()
     this.color = null
   }

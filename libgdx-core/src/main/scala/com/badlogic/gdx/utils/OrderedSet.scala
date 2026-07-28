@@ -46,7 +46,7 @@ class OrderedSet[T <: java.lang.Object] extends com.badlogic.gdx.utils.ObjectSet
     this.items = new com.badlogic.gdx.utils.Array[T](set.items).asInstanceOf[com.badlogic.gdx.utils.Array[T]]
   }
   this.items = new com.badlogic.gdx.utils.Array[T]().asInstanceOf[com.badlogic.gdx.utils.Array[T]]
-  def add(key: T): scala.Boolean = {
+  override def add(key: T): scala.Boolean = {
     if (!super.add(key)) {
       return false
     } else ()
@@ -64,18 +64,18 @@ class OrderedSet[T <: java.lang.Object] extends com.badlogic.gdx.utils.ObjectSet
     this.items.insert(index, key)
     return true
   }
-  def addAll(set: OrderedSet[T]): scala.Unit = {
+  override def addAll(set: OrderedSet[T]): scala.Unit = {
     this.ensureCapacity(set.size)
     val keys: scala.Array[T] = set.items.items;
     { var i: scala.Int = 0; val n: scala.Int = set.items.size; while (i < n) { {
       this.add(keys(i))
     }; i = i + 1 } }
   }
-  def ensureCapacity(additionalCapacity: scala.Int): scala.Unit = {
+  override def ensureCapacity(additionalCapacity: scala.Int): scala.Unit = {
     super.ensureCapacity(additionalCapacity)
     this.items.ensureCapacity(additionalCapacity)
   }
-  def remove(key: T): scala.Boolean = {
+  override def remove(key: T): scala.Boolean = {
     if (!super.remove(key)) {
       return false
     } else ()
@@ -107,21 +107,21 @@ class OrderedSet[T <: java.lang.Object] extends com.badlogic.gdx.utils.ObjectSet
     this.items.set(index, after)
     return true
   }
-  def clear(maximumCapacity: scala.Int): scala.Unit = {
+  override def clear(maximumCapacity: scala.Int): scala.Unit = {
     this.items.clear()
     super.clear(maximumCapacity)
   }
-  def clear(): scala.Unit = {
+  override def clear(): scala.Unit = {
     this.items.clear()
     super.clear()
   }
   def orderedItems(): com.badlogic.gdx.utils.Array[T] = {
     return this.items
   }
-  def first(): T = {
+  override def first(): T = {
     return this.items.first().asInstanceOf[T]
   }
-  def hashCode(): scala.Int = {
+  override def hashCode(): scala.Int = {
     var h: scala.Int = size
     val items: scala.Array[T] = this.items.items;
     { var i: scala.Int = 0; val n: scala.Int = this.items.size; while (i < n) { {
@@ -132,7 +132,7 @@ class OrderedSet[T <: java.lang.Object] extends com.badlogic.gdx.utils.ObjectSet
     }; i = i + 1 } }
     return h
   }
-  def equals(obj: java.lang.Object): scala.Boolean = {
+  override def equals(obj: java.lang.Object): scala.Boolean = {
     if (!obj.isInstanceOf[com.badlogic.gdx.utils.ObjectSet[T]]) {
       return false
     } else ()
@@ -148,7 +148,7 @@ class OrderedSet[T <: java.lang.Object] extends com.badlogic.gdx.utils.ObjectSet
     }; i = i + 1 } }
     return true
   }
-  def iterator(): com.badlogic.gdx.utils.OrderedSet.OrderedSetIterator[T] = {
+  override def iterator(): com.badlogic.gdx.utils.OrderedSet.OrderedSetIterator[T] = {
     if (com.badlogic.gdx.utils.Collections.allocateIterators) {
       return new com.badlogic.gdx.utils.OrderedSet.OrderedSetIterator(this).asInstanceOf[com.badlogic.gdx.utils.OrderedSet.OrderedSetIterator[T]]
     } else ()
@@ -167,7 +167,7 @@ class OrderedSet[T <: java.lang.Object] extends com.badlogic.gdx.utils.ObjectSet
     this.iterator1.valid = false
     return this.iterator2.asInstanceOf[com.badlogic.gdx.utils.OrderedSet.OrderedSetIterator[T]]
   }
-  def toString(): java.lang.String = {
+  override def toString(): java.lang.String = {
     if (size == 0) {
       return "{}"
     } else ()
@@ -182,13 +182,13 @@ class OrderedSet[T <: java.lang.Object] extends com.badlogic.gdx.utils.ObjectSet
     buffer.append('}')
     return buffer.toString()
   }
-  def toString(separator: java.lang.String): java.lang.String = {
+  override def toString(separator: java.lang.String): java.lang.String = {
     return this.items.toString(separator)
   }
 }
 object OrderedSet {
   export com.badlogic.gdx.utils.ObjectSet.{OrderedSetIterator => _, `with` => _, *}
-  def `with`[T <: java.lang.Object](array: scala.Array[T]): OrderedSet[T] = {
+  override def `with`[T <: java.lang.Object](array: scala.Array[T]): OrderedSet[T] = {
     val set: OrderedSet[T] = new OrderedSet[T]()
     set.addAll(array)
     return set
@@ -196,11 +196,11 @@ object OrderedSet {
   class OrderedSetIterator[K <: java.lang.Object](set$p: OrderedSet[K]) extends com.badlogic.gdx.utils.ObjectSet.ObjectSetIterator[K](set$p) {
     private var items: com.badlogic.gdx.utils.Array[K] = null.asInstanceOf[com.badlogic.gdx.utils.Array[K]]
     this.items = set$p.items
-    def reset(): scala.Unit = {
+    override def reset(): scala.Unit = {
       nextIndex = 0
       hasNext$field = this.set.size > 0
     }
-    def next(): K = {
+    override def next(): K = {
       if (!hasNext$field) {
         throw new java.util.NoSuchElementException()
       } else ()
@@ -212,20 +212,20 @@ object OrderedSet {
       hasNext$field = nextIndex < this.set.size
       return key
     }
-    def remove(): scala.Unit = {
+    override def remove(): scala.Unit = {
       if (nextIndex < 0) {
         throw new java.lang.IllegalStateException("next must be called before remove.")
       } else ()
       nextIndex = nextIndex - 1
       set.asInstanceOf[OrderedSet[?]].removeIndex(nextIndex)
     }
-    def toArray(array: com.badlogic.gdx.utils.Array[K]): com.badlogic.gdx.utils.Array[K] = {
+    override def toArray(array: com.badlogic.gdx.utils.Array[K]): com.badlogic.gdx.utils.Array[K] = {
       array.addAll(this.items.asInstanceOf[com.badlogic.gdx.utils.Array[? <: K]], nextIndex, this.items.size - nextIndex)
       nextIndex = this.items.size
       hasNext$field = false
       return array
     }
-    def toArray(): com.badlogic.gdx.utils.Array[K] = {
+    override def toArray(): com.badlogic.gdx.utils.Array[K] = {
       return this.toArray(new com.badlogic.gdx.utils.Array(true, this.set.size - nextIndex))
     }
   }

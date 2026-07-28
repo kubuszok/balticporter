@@ -10,7 +10,7 @@ final class EllipseSpawnShapeValue extends com.badlogic.gdx.graphics.g3d.particl
     this.load(value)
   }
   @java.lang.Override
-  def spawnAux(vector: com.badlogic.gdx.math.Vector3, percent: scala.Float): scala.Unit = {
+  override def spawnAux(vector: com.badlogic.gdx.math.Vector3, percent: scala.Float): scala.Unit = {
     val width: scala.Float = spawnWidth + (spawnWidthDiff * spawnWidthValue.getScale(percent))
     val height: scala.Float = spawnHeight + (spawnHeightDiff * spawnHeightValue.getScale(percent))
     val depth: scala.Float = spawnDepth + (spawnDepthDiff * spawnDepthValue.getScale(percent))
@@ -59,22 +59,22 @@ final class EllipseSpawnShapeValue extends com.badlogic.gdx.graphics.g3d.particl
     this.side = side
   }
   @java.lang.Override
-  def load(value: com.badlogic.gdx.graphics.g3d.particles.values.ParticleValue): scala.Unit = {
+  override def load(value: com.badlogic.gdx.graphics.g3d.particles.values.ParticleValue): scala.Unit = {
     super.load(value)
     val shape: EllipseSpawnShapeValue = value.asInstanceOf[EllipseSpawnShapeValue]
     this.side = shape.side
   }
   @java.lang.Override
-  def copy(): com.badlogic.gdx.graphics.g3d.particles.values.SpawnShapeValue = {
+  override def copy(): com.badlogic.gdx.graphics.g3d.particles.values.SpawnShapeValue = {
     return new EllipseSpawnShapeValue(this)
   }
   @java.lang.Override
-  def write(json: com.badlogic.gdx.utils.Json): scala.Unit = {
+  override def write(json: com.badlogic.gdx.utils.Json): scala.Unit = {
     super.write(json)
     json.writeValue("side", this.side)
   }
   @java.lang.Override
-  def read(json: com.badlogic.gdx.utils.Json, jsonData: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
+  override def read(json: com.badlogic.gdx.utils.Json, jsonData: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
     super.read(json, jsonData)
     this.side = json.readValue("side", classOf[com.badlogic.gdx.graphics.g3d.particles.values.PrimitiveSpawnShapeValue.SpawnSide], jsonData)
   }

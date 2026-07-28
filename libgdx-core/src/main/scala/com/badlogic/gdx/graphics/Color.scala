@@ -147,7 +147,7 @@ class Color {
     return this
   }
   @java.lang.Override
-  def equals(o: java.lang.Object): scala.Boolean = {
+  override def equals(o: java.lang.Object): scala.Boolean = {
     if (this == o) {
       return true
     } else ()
@@ -158,7 +158,7 @@ class Color {
     return this.toIntBits() == color.toIntBits()
   }
   @java.lang.Override
-  def hashCode(): scala.Int = {
+  override def hashCode(): scala.Int = {
     var result: scala.Int = if (this.r != (+0.0f)) com.badlogic.gdx.utils.NumberUtils.floatToIntBits(this.r) else 0
     result = (31 * result) + (if (this.g != (+0.0f)) com.badlogic.gdx.utils.NumberUtils.floatToIntBits(this.g) else 0)
     result = (31 * result) + (if (this.b != (+0.0f)) com.badlogic.gdx.utils.NumberUtils.floatToIntBits(this.b) else 0)
@@ -172,7 +172,7 @@ class Color {
   def toIntBits(): scala.Int = {
     return ((((255 * this.a).asInstanceOf[scala.Int] << 24) | ((255 * this.b).asInstanceOf[scala.Int] << 16)) | ((255 * this.g).asInstanceOf[scala.Int] << 8)) | (255 * this.r).asInstanceOf[scala.Int]
   }
-  def toString(): java.lang.String = {
+  override def toString(): java.lang.String = {
     var value: java.lang.String = java.lang.Integer.toHexString(((((255 * this.r).asInstanceOf[scala.Int] << 24) | ((255 * this.g).asInstanceOf[scala.Int] << 16)) | ((255 * this.b).asInstanceOf[scala.Int] << 8)) | (255 * this.a).asInstanceOf[scala.Int])
     while (value.length() < 8) {
       value = "0" + value

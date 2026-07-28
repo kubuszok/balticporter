@@ -20,7 +20,7 @@ class Segment extends java.io.Serializable {
     return this.a.dst2(this.b)
   }
   @java.lang.Override
-  def equals(o: java.lang.Object): scala.Boolean = {
+  override def equals(o: java.lang.Object): scala.Boolean = {
     if (o == this) {
       return true
     } else ()
@@ -31,7 +31,7 @@ class Segment extends java.io.Serializable {
     return this.a.equals(s.a) && this.b.equals(s.b)
   }
   @java.lang.Override
-  def hashCode(): scala.Int = {
+  override def hashCode(): scala.Int = {
     val prime: scala.Int = 71
     var result: scala.Int = 1
     result = (prime * result) + this.a.hashCode()

@@ -27,7 +27,7 @@ class CatmullRomSpline[T <: com.badlogic.gdx.math.Vector[T]] extends com.badlogi
     return this.asInstanceOf[CatmullRomSpline[T]]
   }
   @java.lang.Override
-  def valueAt(out: T, t: scala.Float): T = {
+  override def valueAt(out: T, t: scala.Float): T = {
     val n: scala.Int = this.spanCount
     var u: scala.Float = t * n
     val i: scala.Int = if (t >= 1.0f) n - 1 else u.asInstanceOf[scala.Int]
@@ -38,7 +38,7 @@ class CatmullRomSpline[T <: com.badlogic.gdx.math.Vector[T]] extends com.badlogi
     return CatmullRomSpline.calculate(out, if (this.continuous) span else span + 1, u, this.controlPoints, this.continuous, this.tmp)
   }
   @java.lang.Override
-  def derivativeAt(out: T, t: scala.Float): T = {
+  override def derivativeAt(out: T, t: scala.Float): T = {
     val n: scala.Int = this.spanCount
     var u: scala.Float = t * n
     val i: scala.Int = if (t >= 1.0f) n - 1 else u.asInstanceOf[scala.Int]
@@ -69,7 +69,7 @@ class CatmullRomSpline[T <: com.badlogic.gdx.math.Vector[T]] extends com.badlogi
     return result
   }
   @java.lang.Override
-  def approximate(v: T): scala.Float = {
+  override def approximate(v: T): scala.Float = {
     return this.approximate(v, this.nearest(v))
   }
   def approximate(in: T, start: scala.Int, count: scala.Int): scala.Float = {
@@ -104,11 +104,11 @@ class CatmullRomSpline[T <: com.badlogic.gdx.math.Vector[T]] extends com.badlogi
     return (n + u) / this.spanCount
   }
   @java.lang.Override
-  def locate(v: T): scala.Float = {
+  override def locate(v: T): scala.Float = {
     return this.approximate(v)
   }
   @java.lang.Override
-  def approxLength(samples: scala.Int): scala.Float = {
+  override def approxLength(samples: scala.Int): scala.Float = {
     var tempLength: scala.Float = 0;
     { var i: scala.Int = 0; while (i < samples) { {
       this.tmp2.set(this.tmp3)

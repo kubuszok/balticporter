@@ -5,7 +5,7 @@ class ArraySelection[T <: java.lang.Object](array$p: com.badlogic.gdx.utils.Arra
   private var rangeSelect: scala.Boolean = true
   private var rangeStart: T = null.asInstanceOf[T]
   this.array = array$p
-  def choose(item: T): scala.Unit = {
+  override def choose(item: T): scala.Unit = {
     if (item == null) {
       throw new java.lang.IllegalArgumentException("item cannot be null.")
     } else ()
@@ -47,7 +47,7 @@ class ArraySelection[T <: java.lang.Object](array$p: com.badlogic.gdx.utils.Arra
     super.choose(item)
     this.rangeStart = item
   }
-  def changed(): scala.Unit = {
+  override def changed(): scala.Unit = {
     this.rangeStart = null.asInstanceOf[T]
   }
   def getRangeSelect(): scala.Boolean = {

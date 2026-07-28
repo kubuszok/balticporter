@@ -134,10 +134,10 @@ object ETC1 {
       this.compressedData.asInstanceOf[java.nio.Buffer].position(this.dataOffset)
       this.compressedData.asInstanceOf[java.nio.Buffer].limit(this.compressedData.capacity())
     }
-    def dispose(): scala.Unit = {
+    override def dispose(): scala.Unit = {
       com.badlogic.gdx.utils.BufferUtils.disposeUnsafeByteBuffer(this.compressedData)
     }
-    def toString(): java.lang.String = {
+    override def toString(): java.lang.String = {
       if (this.hasPKMHeader()) {
         return ((((((if (ETC1.isValidPKM(this.compressedData, 0)) "valid" else "invalid") + " pkm [") + ETC1.getWidthPKM(this.compressedData, 0)) + "x") + ETC1.getHeightPKM(this.compressedData, 0)) + "], compressed: ") + (this.compressedData.capacity() - ETC1.PKM_HEADER_SIZE)
       } else {

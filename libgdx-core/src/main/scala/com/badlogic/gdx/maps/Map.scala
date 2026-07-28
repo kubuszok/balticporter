@@ -10,7 +10,7 @@ class Map extends com.badlogic.gdx.utils.Disposable {
     return this.properties
   }
   @java.lang.Override
-  def dispose(): scala.Unit = {
+  override def dispose(): scala.Unit = {
     ()
   }
 }

@@ -261,7 +261,7 @@ class Model extends com.badlogic.gdx.utils.Disposable {
     return this.disposables
   }
   @java.lang.Override
-  def dispose(): scala.Unit = {
+  override def dispose(): scala.Unit = {
     for (disposable <- this.disposables) {
       disposable.dispose()
     }

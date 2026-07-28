@@ -435,7 +435,7 @@ class Array[T <: java.lang.Object] extends balticporter.runtime.JavaIterable[T] 
       items(ii) = temp
     }; i = i - 1 } }
   }
-  def iterator(): com.badlogic.gdx.utils.Array.ArrayIterator[T] = {
+  override def iterator(): com.badlogic.gdx.utils.Array.ArrayIterator[T] = {
     if (com.badlogic.gdx.utils.Collections.allocateIterators) {
       return new com.badlogic.gdx.utils.Array.ArrayIterator[T](this.asInstanceOf[Array[T]], true)
     } else ()
@@ -482,7 +482,7 @@ class Array[T <: java.lang.Object] extends balticporter.runtime.JavaIterable[T] 
     java.lang.System.arraycopy(this.items, 0, result, 0, this.size)
     return result
   }
-  def hashCode(): scala.Int = {
+  override def hashCode(): scala.Int = {
     if (!this.ordered) {
       return super.hashCode()
     } else ()
@@ -497,7 +497,7 @@ class Array[T <: java.lang.Object] extends balticporter.runtime.JavaIterable[T] 
     }; i = i + 1 } }
     return h
   }
-  def equals(`object`: java.lang.Object): scala.Boolean = {
+  override def equals(`object`: java.lang.Object): scala.Boolean = {
     if (`object` == this) {
       return true
     } else ()
@@ -553,7 +553,7 @@ class Array[T <: java.lang.Object] extends balticporter.runtime.JavaIterable[T] 
     }; i = i + 1 } }
     return true
   }
-  def toString(): java.lang.String = {
+  override def toString(): java.lang.String = {
     if (this.size == 0) {
       return "[]"
     } else ()
@@ -602,13 +602,13 @@ object Array {
     }
     this.array = array$p
     this.allowRemove = allowRemove$p
-    def hasNext(): scala.Boolean = {
+    override def hasNext(): scala.Boolean = {
       if (!this.valid) {
         throw new com.badlogic.gdx.utils.GdxRuntimeException("#iterator() cannot be used nested.")
       } else ()
       return this.index < this.array.size
     }
-    def next(): T = {
+    override def next(): T = {
       if (this.index >= this.array.size) {
         throw new java.util.NoSuchElementException(java.lang.String.valueOf(this.index))
       } else ()
@@ -617,7 +617,7 @@ object Array {
       } else ()
       return this.array.items({ this.index += 1; this.index })
     }
-    def remove(): scala.Unit = {
+    override def remove(): scala.Unit = {
       if (!this.allowRemove) {
         throw new com.badlogic.gdx.utils.GdxRuntimeException("Remove not allowed.")
       } else ()
@@ -627,7 +627,7 @@ object Array {
     def reset(): scala.Unit = {
       this.index = 0
     }
-    def iterator(): com.badlogic.gdx.utils.Array.ArrayIterator[T] = {
+    override def iterator(): com.badlogic.gdx.utils.Array.ArrayIterator[T] = {
       return this
     }
   }
@@ -641,7 +641,7 @@ object Array {
     }
     this.array = array$p
     this.allowRemove = allowRemove$p
-    def iterator(): com.badlogic.gdx.utils.Array.ArrayIterator[T] = {
+    override def iterator(): com.badlogic.gdx.utils.Array.ArrayIterator[T] = {
       if (com.badlogic.gdx.utils.Collections.allocateIterators) {
         return new com.badlogic.gdx.utils.Array.ArrayIterator[T](this.array, this.allowRemove)
       } else ()

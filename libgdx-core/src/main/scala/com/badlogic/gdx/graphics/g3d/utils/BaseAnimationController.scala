@@ -224,11 +224,11 @@ object BaseAnimationController {
       return out.set(this.translation, this.rotation, this.scale)
     }
     @java.lang.Override
-    def reset(): scala.Unit = {
+    override def reset(): scala.Unit = {
       this.idt()
     }
     @java.lang.Override
-    def toString(): java.lang.String = {
+    override def toString(): java.lang.String = {
       return (((this.translation.toString() + " - ") + this.rotation.toString()) + " - ") + this.scale.toString()
     }
   }

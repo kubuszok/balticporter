@@ -35,11 +35,11 @@ class MapProperties {
     return this.properties.values()
   }
   @java.lang.Override
-  def toString(): java.lang.String = {
+  override def toString(): java.lang.String = {
     return (("MapProperties{" + "properties=") + this.properties) + '}'
   }
   @java.lang.Override
-  def equals(o: java.lang.Object): scala.Boolean = {
+  override def equals(o: java.lang.Object): scala.Boolean = {
     if (!o.isInstanceOf[MapProperties]) {
       return false
     } else ()
@@ -47,7 +47,7 @@ class MapProperties {
     return java.util.Objects.equals(this.properties, that.properties)
   }
   @java.lang.Override
-  def hashCode(): scala.Int = {
+  override def hashCode(): scala.Int = {
     return this.properties.hashCode()
   }
 }

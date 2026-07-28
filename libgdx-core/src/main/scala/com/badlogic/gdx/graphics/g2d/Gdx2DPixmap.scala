@@ -94,7 +94,7 @@ class Gdx2DPixmap extends com.badlogic.gdx.utils.Disposable {
     this.width = pixmap.width
   }
   @java.lang.Override
-  def dispose(): scala.Unit = {
+  override def dispose(): scala.Unit = {
     Gdx2DPixmap.free(this.basePtr)
   }
   def clear(color: scala.Int): scala.Unit = {

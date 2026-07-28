@@ -2,17 +2,17 @@ package com.badlogic.gdx.scenes.scene2d.actions
 
 class AfterAction extends com.badlogic.gdx.scenes.scene2d.actions.DelegateAction {
   private var waitForActions: com.badlogic.gdx.utils.Array[com.badlogic.gdx.scenes.scene2d.Action] = new com.badlogic.gdx.utils.Array(false, 4).asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.scenes.scene2d.Action]]
-  def setTarget(target: com.badlogic.gdx.scenes.scene2d.Actor): scala.Unit = {
+  override def setTarget(target: com.badlogic.gdx.scenes.scene2d.Actor): scala.Unit = {
     if (target != null) {
       this.waitForActions.addAll(target.getActions().asInstanceOf[com.badlogic.gdx.utils.Array[? <: com.badlogic.gdx.scenes.scene2d.Action]])
     } else ()
     super.setTarget(target)
   }
-  def restart(): scala.Unit = {
+  override def restart(): scala.Unit = {
     super.restart()
     this.waitForActions.clear()
   }
-  def delegate(delta: scala.Float): scala.Boolean = {
+  override def delegate(delta: scala.Float): scala.Boolean = {
     val currentActions: com.badlogic.gdx.utils.Array[com.badlogic.gdx.scenes.scene2d.Action] = target.getActions()
     if (currentActions.size == 1) {
       this.waitForActions.clear()

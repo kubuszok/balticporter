@@ -2,7 +2,7 @@ package com.badlogic.gdx.scenes.scene2d.actions
 
 class TimeScaleAction extends com.badlogic.gdx.scenes.scene2d.actions.DelegateAction {
   private var scale: scala.Float = 0.0f
-  def delegate(delta: scala.Float): scala.Boolean = {
+  override def delegate(delta: scala.Float): scala.Boolean = {
     if (action == null) {
       return true
     } else ()

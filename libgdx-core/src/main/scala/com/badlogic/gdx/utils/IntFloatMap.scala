@@ -311,7 +311,7 @@ class IntFloatMap(initialCapacity: scala.Int, loadFactor$p: scala.Float) extends
       }; i = i + 1 } }
     } else ()
   }
-  def hashCode(): scala.Int = {
+  override def hashCode(): scala.Int = {
     var h: scala.Int = this.size
     if (this.hasZeroValue) {
       h = h + com.badlogic.gdx.utils.NumberUtils.floatToRawIntBits(this.zeroValue)
@@ -326,7 +326,7 @@ class IntFloatMap(initialCapacity: scala.Int, loadFactor$p: scala.Float) extends
     }; i = i + 1 } }
     return h
   }
-  def equals(obj: java.lang.Object): scala.Boolean = {
+  override def equals(obj: java.lang.Object): scala.Boolean = {
     if (obj == this) {
       return true
     } else ()
@@ -361,7 +361,7 @@ class IntFloatMap(initialCapacity: scala.Int, loadFactor$p: scala.Float) extends
     }; i = i + 1 } }
     return true
   }
-  def toString(): java.lang.String = {
+  override def toString(): java.lang.String = {
     if (this.size == 0) {
       return "[]"
     } else ()
@@ -398,7 +398,7 @@ class IntFloatMap(initialCapacity: scala.Int, loadFactor$p: scala.Float) extends
     buffer.append(']')
     return buffer.toString()
   }
-  def iterator(): balticporter.runtime.JavaIterator[com.badlogic.gdx.utils.IntFloatMap.Entry] = {
+  override def iterator(): balticporter.runtime.JavaIterator[com.badlogic.gdx.utils.IntFloatMap.Entry] = {
     return this.entries()
   }
   def entries(): com.badlogic.gdx.utils.IntFloatMap.Entries = {
@@ -463,7 +463,7 @@ object IntFloatMap {
   class Entry {
     var key: scala.Int = 0
     var value: scala.Float = 0.0f
-    def toString(): java.lang.String = {
+    override def toString(): java.lang.String = {
       return (java.lang.String.valueOf(this.key) + "=") + this.value
     }
   }
@@ -535,7 +535,7 @@ object IntFloatMap {
   }
   class Entries(map$p: IntFloatMap) extends com.badlogic.gdx.utils.IntFloatMap.MapIterator(map$p) with balticporter.runtime.JavaIterable[com.badlogic.gdx.utils.IntFloatMap.Entry] with balticporter.runtime.JavaIterator[com.badlogic.gdx.utils.IntFloatMap.Entry] {
     private final val entry: com.badlogic.gdx.utils.IntFloatMap.Entry = new com.badlogic.gdx.utils.IntFloatMap.Entry()
-    def next(): com.badlogic.gdx.utils.IntFloatMap.Entry = {
+    override def next(): com.badlogic.gdx.utils.IntFloatMap.Entry = {
       if (!hasNext$field) {
         throw new java.util.NoSuchElementException()
       } else ()
@@ -554,16 +554,16 @@ object IntFloatMap {
       this.findNextIndex()
       return this.entry
     }
-    def hasNext(): scala.Boolean = {
+    override def hasNext(): scala.Boolean = {
       if (!valid) {
         throw new com.badlogic.gdx.utils.GdxRuntimeException("#iterator() cannot be used nested.")
       } else ()
       return hasNext$field
     }
-    def iterator(): balticporter.runtime.JavaIterator[com.badlogic.gdx.utils.IntFloatMap.Entry] = {
+    override def iterator(): balticporter.runtime.JavaIterator[com.badlogic.gdx.utils.IntFloatMap.Entry] = {
       return this
     }
-    def remove(): scala.Unit = {
+    override def remove(): scala.Unit = {
       super.remove()
     }
   }

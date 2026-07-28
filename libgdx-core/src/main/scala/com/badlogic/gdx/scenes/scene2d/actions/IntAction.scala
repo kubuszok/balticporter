@@ -24,10 +24,10 @@ class IntAction extends com.badlogic.gdx.scenes.scene2d.actions.TemporalAction {
   }
   this.start = 0
   this.`end` = 1
-  def begin(): scala.Unit = {
+  override def begin(): scala.Unit = {
     this.value = this.start
   }
-  def update(percent: scala.Float): scala.Unit = {
+  override def update(percent: scala.Float): scala.Unit = {
     if (percent == 0) {
       this.value = this.start
     } else {

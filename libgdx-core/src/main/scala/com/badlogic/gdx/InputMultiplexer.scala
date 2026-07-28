@@ -41,7 +41,7 @@ class InputMultiplexer extends com.badlogic.gdx.InputProcessor {
   def getProcessors(): com.badlogic.gdx.utils.SnapshotArray[com.badlogic.gdx.InputProcessor] = {
     return this.processors
   }
-  def keyDown(keycode: scala.Int): scala.Boolean = {
+  override def keyDown(keycode: scala.Int): scala.Boolean = {
     val items: scala.Array[java.lang.Object] = this.processors.begin().asInstanceOf[scala.Array[java.lang.Object]]
     try {
       { var i: scala.Int = 0; val n: scala.Int = this.processors.size; while (i < n) { {
@@ -54,7 +54,7 @@ class InputMultiplexer extends com.badlogic.gdx.InputProcessor {
     }
     return false
   }
-  def keyUp(keycode: scala.Int): scala.Boolean = {
+  override def keyUp(keycode: scala.Int): scala.Boolean = {
     val items: scala.Array[java.lang.Object] = this.processors.begin().asInstanceOf[scala.Array[java.lang.Object]]
     try {
       { var i: scala.Int = 0; val n: scala.Int = this.processors.size; while (i < n) { {
@@ -67,7 +67,7 @@ class InputMultiplexer extends com.badlogic.gdx.InputProcessor {
     }
     return false
   }
-  def keyTyped(character: scala.Char): scala.Boolean = {
+  override def keyTyped(character: scala.Char): scala.Boolean = {
     val items: scala.Array[java.lang.Object] = this.processors.begin().asInstanceOf[scala.Array[java.lang.Object]]
     try {
       { var i: scala.Int = 0; val n: scala.Int = this.processors.size; while (i < n) { {
@@ -80,7 +80,7 @@ class InputMultiplexer extends com.badlogic.gdx.InputProcessor {
     }
     return false
   }
-  def touchDown(screenX: scala.Int, screenY: scala.Int, pointer: scala.Int, button: scala.Int): scala.Boolean = {
+  override def touchDown(screenX: scala.Int, screenY: scala.Int, pointer: scala.Int, button: scala.Int): scala.Boolean = {
     val items: scala.Array[java.lang.Object] = this.processors.begin().asInstanceOf[scala.Array[java.lang.Object]]
     try {
       { var i: scala.Int = 0; val n: scala.Int = this.processors.size; while (i < n) { {
@@ -93,7 +93,7 @@ class InputMultiplexer extends com.badlogic.gdx.InputProcessor {
     }
     return false
   }
-  def touchUp(screenX: scala.Int, screenY: scala.Int, pointer: scala.Int, button: scala.Int): scala.Boolean = {
+  override def touchUp(screenX: scala.Int, screenY: scala.Int, pointer: scala.Int, button: scala.Int): scala.Boolean = {
     val items: scala.Array[java.lang.Object] = this.processors.begin().asInstanceOf[scala.Array[java.lang.Object]]
     try {
       { var i: scala.Int = 0; val n: scala.Int = this.processors.size; while (i < n) { {
@@ -106,7 +106,7 @@ class InputMultiplexer extends com.badlogic.gdx.InputProcessor {
     }
     return false
   }
-  def touchCancelled(screenX: scala.Int, screenY: scala.Int, pointer: scala.Int, button: scala.Int): scala.Boolean = {
+  override def touchCancelled(screenX: scala.Int, screenY: scala.Int, pointer: scala.Int, button: scala.Int): scala.Boolean = {
     val items: scala.Array[java.lang.Object] = this.processors.begin().asInstanceOf[scala.Array[java.lang.Object]]
     try {
       { var i: scala.Int = 0; val n: scala.Int = this.processors.size; while (i < n) { {
@@ -119,7 +119,7 @@ class InputMultiplexer extends com.badlogic.gdx.InputProcessor {
     }
     return false
   }
-  def touchDragged(screenX: scala.Int, screenY: scala.Int, pointer: scala.Int): scala.Boolean = {
+  override def touchDragged(screenX: scala.Int, screenY: scala.Int, pointer: scala.Int): scala.Boolean = {
     val items: scala.Array[java.lang.Object] = this.processors.begin().asInstanceOf[scala.Array[java.lang.Object]]
     try {
       { var i: scala.Int = 0; val n: scala.Int = this.processors.size; while (i < n) { {
@@ -132,7 +132,7 @@ class InputMultiplexer extends com.badlogic.gdx.InputProcessor {
     }
     return false
   }
-  def mouseMoved(screenX: scala.Int, screenY: scala.Int): scala.Boolean = {
+  override def mouseMoved(screenX: scala.Int, screenY: scala.Int): scala.Boolean = {
     val items: scala.Array[java.lang.Object] = this.processors.begin().asInstanceOf[scala.Array[java.lang.Object]]
     try {
       { var i: scala.Int = 0; val n: scala.Int = this.processors.size; while (i < n) { {
@@ -145,7 +145,7 @@ class InputMultiplexer extends com.badlogic.gdx.InputProcessor {
     }
     return false
   }
-  def scrolled(amountX: scala.Float, amountY: scala.Float): scala.Boolean = {
+  override def scrolled(amountX: scala.Float, amountY: scala.Float): scala.Boolean = {
     val items: scala.Array[java.lang.Object] = this.processors.begin().asInstanceOf[scala.Array[java.lang.Object]]
     try {
       { var i: scala.Int = 0; val n: scala.Int = this.processors.size; while (i < n) { {

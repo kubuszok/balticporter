@@ -99,7 +99,7 @@ object Net {
       return this.includeCredentials
     }
     @java.lang.Override
-    def reset(): scala.Unit = {
+    override def reset(): scala.Unit = {
       this.httpMethod = null
       this.url = null
       this.headers.clear()

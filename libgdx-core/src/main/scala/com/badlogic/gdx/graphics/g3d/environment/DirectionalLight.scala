@@ -42,10 +42,10 @@ class DirectionalLight extends com.badlogic.gdx.graphics.g3d.environment.BaseLig
     return this
   }
   @java.lang.Override
-  def equals(arg0: java.lang.Object): scala.Boolean = {
+  override def equals(arg0: java.lang.Object): scala.Boolean = {
     return arg0.isInstanceOf[DirectionalLight] && this.equals(arg0.asInstanceOf[DirectionalLight].asInstanceOf[DirectionalLight])
   }
-  def equals(other: DirectionalLight): scala.Boolean = {
+  override def equals(other: DirectionalLight): scala.Boolean = {
     return (other != null) && ((other == this) || (color.equals(other.color) && this.direction.equals(other.direction)))
   }
 }

@@ -12,7 +12,7 @@ class InputEvent extends com.badlogic.gdx.scenes.scene2d.Event {
   private var character: scala.Char = '\u0000'
   private var relatedActor: com.badlogic.gdx.scenes.scene2d.Actor = null.asInstanceOf[com.badlogic.gdx.scenes.scene2d.Actor]
   private var touchFocus: scala.Boolean = true
-  def reset(): scala.Unit = {
+  override def reset(): scala.Unit = {
     super.reset()
     this.relatedActor = null
     this.button = -1
@@ -92,7 +92,7 @@ class InputEvent extends com.badlogic.gdx.scenes.scene2d.Event {
   def setTouchFocus(touchFocus: scala.Boolean): scala.Unit = {
     this.touchFocus = touchFocus
   }
-  def toString(): java.lang.String = {
+  override def toString(): java.lang.String = {
     return this.`type`.toString()
   }
 }

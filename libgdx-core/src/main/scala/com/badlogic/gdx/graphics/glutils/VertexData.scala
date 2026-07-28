@@ -14,5 +14,5 @@ trait VertexData extends com.badlogic.gdx.utils.Disposable {
   def unbind(shader: com.badlogic.gdx.graphics.glutils.ShaderProgram): scala.Unit
   def unbind(shader: com.badlogic.gdx.graphics.glutils.ShaderProgram, locations: scala.Array[scala.Int]): scala.Unit
   def invalidate(): scala.Unit
-  def dispose(): scala.Unit
+  override def dispose(): scala.Unit
 }

@@ -33,7 +33,7 @@ class ParallelAction extends com.badlogic.gdx.scenes.scene2d.Action {
     this.addAction(action4)
     this.addAction(action5)
   }
-  def act(delta: scala.Float): scala.Boolean = {
+  override def act(delta: scala.Float): scala.Boolean = {
     if (this.complete) {
       return true
     } else ()
@@ -56,14 +56,14 @@ class ParallelAction extends com.badlogic.gdx.scenes.scene2d.Action {
       this.setPool(pool.asInstanceOf[com.badlogic.gdx.utils.Pool[?]])
     }
   }
-  def restart(): scala.Unit = {
+  override def restart(): scala.Unit = {
     this.complete = false
     val actions: com.badlogic.gdx.utils.Array[com.badlogic.gdx.scenes.scene2d.Action] = this.actions;
     { var i: scala.Int = 0; val n: scala.Int = actions.size; while (i < n) { {
       actions.get(i).restart()
     }; i = i + 1 } }
   }
-  def reset(): scala.Unit = {
+  override def reset(): scala.Unit = {
     super.reset()
     this.actions.clear()
   }
@@ -73,7 +73,7 @@ class ParallelAction extends com.badlogic.gdx.scenes.scene2d.Action {
       action.setActor(actor)
     } else ()
   }
-  def setActor(actor: com.badlogic.gdx.scenes.scene2d.Actor): scala.Unit = {
+  override def setActor(actor: com.badlogic.gdx.scenes.scene2d.Actor): scala.Unit = {
     val actions: com.badlogic.gdx.utils.Array[com.badlogic.gdx.scenes.scene2d.Action] = this.actions;
     { var i: scala.Int = 0; val n: scala.Int = actions.size; while (i < n) { {
       actions.get(i).setActor(actor)
@@ -83,7 +83,7 @@ class ParallelAction extends com.badlogic.gdx.scenes.scene2d.Action {
   def getActions(): com.badlogic.gdx.utils.Array[com.badlogic.gdx.scenes.scene2d.Action] = {
     return this.actions
   }
-  def toString(): java.lang.String = {
+  override def toString(): java.lang.String = {
     val buffer: java.lang.StringBuilder = new java.lang.StringBuilder(64)
     buffer.append(super.toString())
     buffer.append('(')

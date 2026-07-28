@@ -10,25 +10,25 @@ class WidgetGroup extends com.badlogic.gdx.scenes.scene2d.Group with com.badlogi
       this.addActor(actor)
     }
   }
-  def getMinWidth(): scala.Float = {
+  override def getMinWidth(): scala.Float = {
     return this.getPrefWidth()
   }
-  def getMinHeight(): scala.Float = {
+  override def getMinHeight(): scala.Float = {
     return this.getPrefHeight()
   }
-  def getPrefWidth(): scala.Float = {
+  override def getPrefWidth(): scala.Float = {
     return 0
   }
-  def getPrefHeight(): scala.Float = {
+  override def getPrefHeight(): scala.Float = {
     return 0
   }
-  def getMaxWidth(): scala.Float = {
+  override def getMaxWidth(): scala.Float = {
     return 0
   }
-  def getMaxHeight(): scala.Float = {
+  override def getMaxHeight(): scala.Float = {
     return 0
   }
-  def setLayoutEnabled(enabled: scala.Boolean): scala.Unit = {
+  override def setLayoutEnabled(enabled: scala.Boolean): scala.Unit = {
     this.layoutEnabled = enabled
     this.setLayoutEnabled(this, enabled)
   }
@@ -45,7 +45,7 @@ class WidgetGroup extends com.badlogic.gdx.scenes.scene2d.Group with com.badlogi
       }
     }; i = i + 1 } }
   }
-  def validate(): scala.Unit = {
+  override def validate(): scala.Unit = {
     if (!this.layoutEnabled) {
       return
     } else ()
@@ -79,39 +79,39 @@ class WidgetGroup extends com.badlogic.gdx.scenes.scene2d.Group with com.badlogi
   def needsLayout(): scala.Boolean = {
     return this.needsLayout$field
   }
-  def invalidate(): scala.Unit = {
+  override def invalidate(): scala.Unit = {
     this.needsLayout$field = true
   }
-  def invalidateHierarchy(): scala.Unit = {
+  override def invalidateHierarchy(): scala.Unit = {
     this.invalidate()
     val parent: com.badlogic.gdx.scenes.scene2d.Group = this.getParent()
     if (parent.isInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Layout]) {
       parent.asInstanceOf[com.badlogic.gdx.scenes.scene2d.utils.Layout].invalidateHierarchy()
     } else ()
   }
-  def childrenChanged(): scala.Unit = {
+  override def childrenChanged(): scala.Unit = {
     this.invalidateHierarchy()
   }
-  def sizeChanged(): scala.Unit = {
+  override def sizeChanged(): scala.Unit = {
     this.invalidate()
   }
-  def pack(): scala.Unit = {
+  override def pack(): scala.Unit = {
     this.setSize(this.getPrefWidth(), this.getPrefHeight())
     this.validate()
     this.setSize(this.getPrefWidth(), this.getPrefHeight())
     this.validate()
   }
-  def setFillParent(fillParent: scala.Boolean): scala.Unit = {
+  override def setFillParent(fillParent: scala.Boolean): scala.Unit = {
     this.fillParent = fillParent
   }
-  def layout(): scala.Unit = {
+  override def layout(): scala.Unit = {
     ()
   }
-  def hit(x: scala.Float, y: scala.Float, touchable: scala.Boolean): com.badlogic.gdx.scenes.scene2d.Actor = {
+  override def hit(x: scala.Float, y: scala.Float, touchable: scala.Boolean): com.badlogic.gdx.scenes.scene2d.Actor = {
     this.validate()
     return super.hit(x, y, touchable)
   }
-  def draw(batch: com.badlogic.gdx.graphics.g2d.Batch, parentAlpha: scala.Float): scala.Unit = {
+  override def draw(batch: com.badlogic.gdx.graphics.g2d.Batch, parentAlpha: scala.Float): scala.Unit = {
     this.validate()
     super.draw(batch, parentAlpha)
   }

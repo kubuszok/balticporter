@@ -34,7 +34,7 @@ class ShapeCache(maxVertices: scala.Int, maxIndices: scala.Int, attributes: com.
     this.builder.`end`(this.mesh)
   }
   @java.lang.Override
-  def getRenderables(renderables: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.Renderable], pool: com.badlogic.gdx.utils.Pool[com.badlogic.gdx.graphics.g3d.Renderable]): scala.Unit = {
+  override def getRenderables(renderables: com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.Renderable], pool: com.badlogic.gdx.utils.Pool[com.badlogic.gdx.graphics.g3d.Renderable]): scala.Unit = {
     renderables.add(this.renderable)
   }
   def getMaterial(): com.badlogic.gdx.graphics.g3d.Material = {
@@ -44,7 +44,7 @@ class ShapeCache(maxVertices: scala.Int, maxIndices: scala.Int, attributes: com.
     return this.renderable.worldTransform
   }
   @java.lang.Override
-  def dispose(): scala.Unit = {
+  override def dispose(): scala.Unit = {
     this.mesh.dispose()
   }
 }

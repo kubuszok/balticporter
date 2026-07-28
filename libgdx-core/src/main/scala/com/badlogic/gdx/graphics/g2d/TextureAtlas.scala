@@ -175,7 +175,7 @@ class TextureAtlas extends com.badlogic.gdx.utils.Disposable {
   def getTextures(): com.badlogic.gdx.utils.ObjectSet[com.badlogic.gdx.graphics.Texture] = {
     return this.textures
   }
-  def dispose(): scala.Unit = {
+  override def dispose(): scala.Unit = {
     for (texture <- this.textures) {
       texture.dispose()
     }
@@ -539,7 +539,7 @@ object TextureAtlas {
       this.originalHeight = this.packedHeight
     }
     @java.lang.Override
-    def flip(x: scala.Boolean, y: scala.Boolean): scala.Unit = {
+    override def flip(x: scala.Boolean, y: scala.Boolean): scala.Unit = {
       super.flip(x, y)
       if (x) {
         this.offsetX = (this.originalWidth - this.offsetX) - this.getRotatedPackedWidth()
@@ -565,7 +565,7 @@ object TextureAtlas {
       } else ()
       return null
     }
-    def toString(): java.lang.String = {
+    override def toString(): java.lang.String = {
       return this.name
     }
   }
@@ -601,19 +601,19 @@ object TextureAtlas {
       this.set(sprite)
     }
     @java.lang.Override
-    def setPosition(x: scala.Float, y: scala.Float): scala.Unit = {
+    override def setPosition(x: scala.Float, y: scala.Float): scala.Unit = {
       super.setPosition(x + this.region.offsetX, y + this.region.offsetY)
     }
     @java.lang.Override
-    def setX(x: scala.Float): scala.Unit = {
+    override def setX(x: scala.Float): scala.Unit = {
       super.setX(x + this.region.offsetX)
     }
     @java.lang.Override
-    def setY(y: scala.Float): scala.Unit = {
+    override def setY(y: scala.Float): scala.Unit = {
       super.setY(y + this.region.offsetY)
     }
     @java.lang.Override
-    def setBounds(x: scala.Float, y: scala.Float, width: scala.Float, height: scala.Float): scala.Unit = {
+    override def setBounds(x: scala.Float, y: scala.Float, width: scala.Float, height: scala.Float): scala.Unit = {
       val widthRatio: scala.Float = width / this.region.originalWidth
       val heightRatio: scala.Float = height / this.region.originalHeight
       this.region.offsetX = this.originalOffsetX * widthRatio
@@ -623,19 +623,19 @@ object TextureAtlas {
       super.setBounds(x + this.region.offsetX, y + this.region.offsetY, packedWidth * widthRatio, packedHeight * heightRatio)
     }
     @java.lang.Override
-    def setSize(width: scala.Float, height: scala.Float): scala.Unit = {
+    override def setSize(width: scala.Float, height: scala.Float): scala.Unit = {
       this.setBounds(this.getX(), this.getY(), width, height)
     }
     @java.lang.Override
-    def setOrigin(originX: scala.Float, originY: scala.Float): scala.Unit = {
+    override def setOrigin(originX: scala.Float, originY: scala.Float): scala.Unit = {
       super.setOrigin(originX - this.region.offsetX, originY - this.region.offsetY)
     }
     @java.lang.Override
-    def setOriginCenter(): scala.Unit = {
+    override def setOriginCenter(): scala.Unit = {
       super.setOrigin((width / 2) - this.region.offsetX, (height / 2) - this.region.offsetY)
     }
     @java.lang.Override
-    def flip(x: scala.Boolean, y: scala.Boolean): scala.Unit = {
+    override def flip(x: scala.Boolean, y: scala.Boolean): scala.Unit = {
       if (this.region.rotate) {
         super.flip(y, x)
       } else {
@@ -658,7 +658,7 @@ object TextureAtlas {
       this.setOrigin(oldOriginX, oldOriginY)
     }
     @java.lang.Override
-    def rotate90(clockwise: scala.Boolean): scala.Unit = {
+    override def rotate90(clockwise: scala.Boolean): scala.Unit = {
       super.rotate90(clockwise)
       val oldOriginX: scala.Float = this.getOriginX()
       val oldOriginY: scala.Float = this.getOriginY()
@@ -677,27 +677,27 @@ object TextureAtlas {
       this.setOrigin(oldOriginX, oldOriginY)
     }
     @java.lang.Override
-    def getX(): scala.Float = {
+    override def getX(): scala.Float = {
       return super.getX() - this.region.offsetX
     }
     @java.lang.Override
-    def getY(): scala.Float = {
+    override def getY(): scala.Float = {
       return super.getY() - this.region.offsetY
     }
     @java.lang.Override
-    def getOriginX(): scala.Float = {
+    override def getOriginX(): scala.Float = {
       return super.getOriginX() + this.region.offsetX
     }
     @java.lang.Override
-    def getOriginY(): scala.Float = {
+    override def getOriginY(): scala.Float = {
       return super.getOriginY() + this.region.offsetY
     }
     @java.lang.Override
-    def getWidth(): scala.Float = {
+    override def getWidth(): scala.Float = {
       return (super.getWidth() / this.region.getRotatedPackedWidth()) * this.region.originalWidth
     }
     @java.lang.Override
-    def getHeight(): scala.Float = {
+    override def getHeight(): scala.Float = {
       return (super.getHeight() / this.region.getRotatedPackedHeight()) * this.region.originalHeight
     }
     def getWidthRatio(): scala.Float = {
@@ -709,7 +709,7 @@ object TextureAtlas {
     def getAtlasRegion(): com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion = {
       return this.region
     }
-    def toString(): java.lang.String = {
+    override def toString(): java.lang.String = {
       return this.region.toString()
     }
   }

@@ -43,7 +43,7 @@ class NetJavaSocketImpl extends com.badlogic.gdx.net.Socket {
     } else ()
   }
   @java.lang.Override
-  def isConnected(): scala.Boolean = {
+  override def isConnected(): scala.Boolean = {
     if (this.socket != null) {
       return this.socket.isConnected()
     } else {
@@ -51,7 +51,7 @@ class NetJavaSocketImpl extends com.badlogic.gdx.net.Socket {
     }
   }
   @java.lang.Override
-  def getInputStream(): java.io.InputStream = {
+  override def getInputStream(): java.io.InputStream = {
     try {
       return this.socket.getInputStream()
     } catch {
@@ -61,7 +61,7 @@ class NetJavaSocketImpl extends com.badlogic.gdx.net.Socket {
     }
   }
   @java.lang.Override
-  def getOutputStream(): java.io.OutputStream = {
+  override def getOutputStream(): java.io.OutputStream = {
     try {
       return this.socket.getOutputStream()
     } catch {
@@ -71,11 +71,11 @@ class NetJavaSocketImpl extends com.badlogic.gdx.net.Socket {
     }
   }
   @java.lang.Override
-  def getRemoteAddress(): java.lang.String = {
+  override def getRemoteAddress(): java.lang.String = {
     return this.socket.getRemoteSocketAddress().toString()
   }
   @java.lang.Override
-  def dispose(): scala.Unit = {
+  override def dispose(): scala.Unit = {
     if (this.socket != null) {
       try {
         this.socket.close()

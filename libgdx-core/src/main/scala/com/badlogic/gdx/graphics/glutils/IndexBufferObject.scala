@@ -39,13 +39,13 @@ class IndexBufferObject extends com.badlogic.gdx.graphics.glutils.IndexData {
     this.bufferHandle = com.badlogic.gdx.Gdx.gl20.glGenBuffer()
     this.usage = if (isStatic) com.badlogic.gdx.graphics.GL20.GL_STATIC_DRAW else com.badlogic.gdx.graphics.GL20.GL_DYNAMIC_DRAW
   }
-  def getNumIndices(): scala.Int = {
+  override def getNumIndices(): scala.Int = {
     return if (this.empty) 0 else this.buffer.limit()
   }
-  def getNumMaxIndices(): scala.Int = {
+  override def getNumMaxIndices(): scala.Int = {
     return if (this.empty) 0 else this.buffer.capacity()
   }
-  def setIndices(indices: scala.Array[scala.Short], offset: scala.Int, count: scala.Int): scala.Unit = {
+  override def setIndices(indices: scala.Array[scala.Short], offset: scala.Int, count: scala.Int): scala.Unit = {
     this.isDirty = true
     this.buffer.asInstanceOf[java.nio.Buffer].clear()
     this.buffer.put(indices, offset, count)
@@ -57,7 +57,7 @@ class IndexBufferObject extends com.badlogic.gdx.graphics.glutils.IndexData {
       this.isDirty = false
     } else ()
   }
-  def setIndices(indices: java.nio.ShortBuffer): scala.Unit = {
+  override def setIndices(indices: java.nio.ShortBuffer): scala.Unit = {
     this.isDirty = true
     val pos: scala.Int = indices.position()
     this.buffer.asInstanceOf[java.nio.Buffer].clear()
@@ -72,7 +72,7 @@ class IndexBufferObject extends com.badlogic.gdx.graphics.glutils.IndexData {
     } else ()
   }
   @java.lang.Override
-  def updateIndices(targetOffset: scala.Int, indices: scala.Array[scala.Short], offset: scala.Int, count: scala.Int): scala.Unit = {
+  override def updateIndices(targetOffset: scala.Int, indices: scala.Array[scala.Short], offset: scala.Int, count: scala.Int): scala.Unit = {
     this.isDirty = true
     val pos: scala.Int = this.byteBuffer.position()
     this.byteBuffer.asInstanceOf[java.nio.Buffer].position(targetOffset * 2)
@@ -86,16 +86,16 @@ class IndexBufferObject extends com.badlogic.gdx.graphics.glutils.IndexData {
   }
   @java.lang.Override
   @java.lang.Deprecated
-  def getBuffer(): java.nio.ShortBuffer = {
+  override def getBuffer(): java.nio.ShortBuffer = {
     this.isDirty = true
     return this.buffer
   }
   @java.lang.Override
-  def getBuffer(forWriting: scala.Boolean): java.nio.ShortBuffer = {
+  override def getBuffer(forWriting: scala.Boolean): java.nio.ShortBuffer = {
     this.isDirty = this.isDirty | forWriting
     return this.buffer
   }
-  def bind(): scala.Unit = {
+  override def bind(): scala.Unit = {
     if (this.bufferHandle == 0) {
       throw new com.badlogic.gdx.utils.GdxRuntimeException("No buffer allocated!")
     } else ()
@@ -107,15 +107,15 @@ class IndexBufferObject extends com.badlogic.gdx.graphics.glutils.IndexData {
     } else ()
     this.isBound = true
   }
-  def unbind(): scala.Unit = {
+  override def unbind(): scala.Unit = {
     com.badlogic.gdx.Gdx.gl20.glBindBuffer(com.badlogic.gdx.graphics.GL20.GL_ELEMENT_ARRAY_BUFFER, 0)
     this.isBound = false
   }
-  def invalidate(): scala.Unit = {
+  override def invalidate(): scala.Unit = {
     this.bufferHandle = com.badlogic.gdx.Gdx.gl20.glGenBuffer()
     this.isDirty = true
   }
-  def dispose(): scala.Unit = {
+  override def dispose(): scala.Unit = {
     com.badlogic.gdx.Gdx.gl20.glBindBuffer(com.badlogic.gdx.graphics.GL20.GL_ELEMENT_ARRAY_BUFFER, 0)
     com.badlogic.gdx.Gdx.gl20.glDeleteBuffer(this.bufferHandle)
     this.bufferHandle = 0

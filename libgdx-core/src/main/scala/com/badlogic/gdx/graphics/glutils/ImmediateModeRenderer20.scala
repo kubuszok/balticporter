@@ -67,32 +67,32 @@ class ImmediateModeRenderer20(maxVertices$p: scala.Int, hasNormals: scala.Boolea
   def getShader(): com.badlogic.gdx.graphics.glutils.ShaderProgram = {
     return this.shader
   }
-  def begin(projModelView: com.badlogic.gdx.math.Matrix4, primitiveType: scala.Int): scala.Unit = {
+  override def begin(projModelView: com.badlogic.gdx.math.Matrix4, primitiveType: scala.Int): scala.Unit = {
     this.projModelView.set(projModelView)
     this.primitiveType = primitiveType
   }
-  def color(color: com.badlogic.gdx.graphics.Color): scala.Unit = {
+  override def color(color: com.badlogic.gdx.graphics.Color): scala.Unit = {
     this.vertices(this.vertexIdx + this.colorOffset) = color.toFloatBits()
   }
-  def color(r: scala.Float, g: scala.Float, b: scala.Float, a: scala.Float): scala.Unit = {
+  override def color(r: scala.Float, g: scala.Float, b: scala.Float, a: scala.Float): scala.Unit = {
     this.vertices(this.vertexIdx + this.colorOffset) = com.badlogic.gdx.graphics.Color.toFloatBits(r, g, b, a)
   }
-  def color(colorBits: scala.Float): scala.Unit = {
+  override def color(colorBits: scala.Float): scala.Unit = {
     this.vertices(this.vertexIdx + this.colorOffset) = colorBits
   }
-  def texCoord(u: scala.Float, v: scala.Float): scala.Unit = {
+  override def texCoord(u: scala.Float, v: scala.Float): scala.Unit = {
     val idx: scala.Int = this.vertexIdx + this.texCoordOffset
     this.vertices(idx + this.numSetTexCoords) = u
     this.vertices((idx + this.numSetTexCoords) + 1) = v
     this.numSetTexCoords = this.numSetTexCoords + 2
   }
-  def normal(x: scala.Float, y: scala.Float, z: scala.Float): scala.Unit = {
+  override def normal(x: scala.Float, y: scala.Float, z: scala.Float): scala.Unit = {
     val idx: scala.Int = this.vertexIdx + this.normalOffset
     this.vertices(idx) = x
     this.vertices(idx + 1) = y
     this.vertices(idx + 2) = z
   }
-  def vertex(x: scala.Float, y: scala.Float, z: scala.Float): scala.Unit = {
+  override def vertex(x: scala.Float, y: scala.Float, z: scala.Float): scala.Unit = {
     val idx: scala.Int = this.vertexIdx
     this.vertices(idx) = x
     this.vertices(idx + 1) = y
@@ -101,7 +101,7 @@ class ImmediateModeRenderer20(maxVertices$p: scala.Int, hasNormals: scala.Boolea
     this.vertexIdx = this.vertexIdx + this.vertexSize
     this.numVertices = this.numVertices + 1
   }
-  def flush(): scala.Unit = {
+  override def flush(): scala.Unit = {
     if (this.numVertices == 0) {
       return
     } else ()
@@ -116,17 +116,17 @@ class ImmediateModeRenderer20(maxVertices$p: scala.Int, hasNormals: scala.Boolea
     this.vertexIdx = 0
     this.numVertices = 0
   }
-  def `end`(): scala.Unit = {
+  override def `end`(): scala.Unit = {
     this.flush()
   }
-  def getNumVertices(): scala.Int = {
+  override def getNumVertices(): scala.Int = {
     return this.numVertices
   }
   @java.lang.Override
-  def getMaxVertices(): scala.Int = {
+  override def getMaxVertices(): scala.Int = {
     return this.maxVertices
   }
-  def dispose(): scala.Unit = {
+  override def dispose(): scala.Unit = {
     if (this.ownsShader && (this.shader != null)) {
       this.shader.dispose()
     } else ()

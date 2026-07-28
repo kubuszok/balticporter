@@ -200,13 +200,13 @@ class JsonWriter extends java.io.Writer {
     this.current = if (this.stack.size == 0) JsonWriter.none else this.stack.items({ this.stack.size -= 1; this.stack.size })
     return this
   }
-  def write(cbuf: scala.Array[scala.Char], off: scala.Int, len: scala.Int): scala.Unit = {
+  override def write(cbuf: scala.Array[scala.Char], off: scala.Int, len: scala.Int): scala.Unit = {
     this.writer.write(cbuf, off, len)
   }
-  def flush(): scala.Unit = {
+  override def flush(): scala.Unit = {
     this.writer.flush()
   }
-  def close(): scala.Unit = {
+  override def close(): scala.Unit = {
     while (this.stack.size > 0) {
       this.pop()
     }

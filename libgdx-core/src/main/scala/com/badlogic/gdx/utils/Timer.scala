@@ -156,7 +156,7 @@ object Timer {
     if (this.app == null) {
       throw new java.lang.IllegalStateException("Gdx.app not available.")
     } else ()
-    def run(): scala.Unit
+    override def run(): scala.Unit
     def cancel(): scala.Unit = {
       Timer.threadLock.synchronized {
         Timer.thread().removePostedTask(this)
@@ -202,7 +202,7 @@ object Timer {
     this.resume()
     thread.setDaemon(true)
     thread.start()
-    def run(): scala.Unit = {
+    override def run(): scala.Unit = {
       while (true) {
         Timer.threadLock.synchronized {
           if ((Timer.thread$field != this) || (this.files != com.badlogic.gdx.Gdx.files)) {
@@ -266,7 +266,7 @@ object Timer {
         }; i = i - 1 } }
       }
     }
-    def resume(): scala.Unit = {
+    override def resume(): scala.Unit = {
       Timer.threadLock.synchronized {
         val delayMillis: scala.Long = (java.lang.System.nanoTime() / 1000000) - this.pauseTimeMillis;
         { var i: scala.Int = 0; val n: scala.Int = this.instances.size; while (i < n) { {
@@ -276,13 +276,13 @@ object Timer {
         Timer.threadLock.notifyAll()
       }
     }
-    def pause(): scala.Unit = {
+    override def pause(): scala.Unit = {
       Timer.threadLock.synchronized {
         this.pauseTimeMillis = java.lang.System.nanoTime() / 1000000
         Timer.threadLock.notifyAll()
       }
     }
-    def dispose(): scala.Unit = {
+    override def dispose(): scala.Unit = {
       Timer.threadLock.synchronized {
         this.postedTasks.synchronized {
           this.postedTasks.clear()

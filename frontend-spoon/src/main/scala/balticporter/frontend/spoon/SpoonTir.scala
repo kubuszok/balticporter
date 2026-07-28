@@ -614,7 +614,10 @@ object SpoonTir:
         case _             => Nil
       val methods = t.getMethods.asScala.toList.sortBy(posKey)
         .filterNot(m => isDropped(m, m.getSimpleName))
-        .map(m => execDef(id, m, m.getSimpleName))
+        // ordinary methods went through with the DEFAULT `overrides = false`; only anonymous-class
+        // methods ever consulted the hierarchy. Scala requires `override` where java requires
+        // nothing, and RefChecks — the phase that says so — had never run to report it.
+        .map(m => execDef(id, m, m.getSimpleName, overrides = overridesInherited(m)))
       // Java INITIALIZER BLOCKS — `static { … }` and instance `{ … }`. These were previously
       // dropped on the floor: nothing referenced `CtAnonymousExecutable`, so `MathUtils` never
       // built its sin/cos table, `CRC` never built its table and `Colors` never registered a
@@ -717,7 +720,17 @@ object SpoonTir:
       * noClasspath), fall back to a name+arity match over the supertypes that DO resolve, and to
       * `false` when even that is unknown — an absent `override` fails loudly, a spurious one would
       * too, so neither can be silent. */
+    /** every java class silently extends `java.lang.Object`, and its members land on scala's `Any`
+      * / `AnyRef` — which scala requires `override` for and java does not. Spoon reports no
+      * inherited declaration for them (there is no `Object` in the model under noClasspath), so the
+      * hierarchy walk below cannot see it. These five are the whole set java lets you redeclare. */
+    private val universalMembers = Set("toString" -> 0, "hashCode" -> 0, "equals" -> 1,
+                                       "clone" -> 0, "finalize" -> 0)
+
     private def overridesInherited(m: CtMethod[?]): Boolean =
+      universalMembers(m.getSimpleName -> m.getParameters.size) || inheritedFromSource(m)
+
+    private def inheritedFromSource(m: CtMethod[?]): Boolean =
       val top = try m.getTopDefinitions.asScala.toList catch { case _: Throwable => Nil }
       if top.exists(_ ne m) then true
       else

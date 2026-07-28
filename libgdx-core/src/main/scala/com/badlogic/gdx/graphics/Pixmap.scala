@@ -109,7 +109,7 @@ class Pixmap extends com.badlogic.gdx.utils.Disposable {
   def getHeight(): scala.Int = {
     return this.pixmap.getHeight()
   }
-  def dispose(): scala.Unit = {
+  override def dispose(): scala.Unit = {
     if (this.disposed) {
       com.badlogic.gdx.Gdx.app.error("Pixmap", "Pixmap already disposed!")
       return

@@ -209,7 +209,7 @@ class JsonString(initialBufferSize: scala.Int) {
     this.current = JsonString.none
     this.named = false
   }
-  def toString(): java.lang.String = {
+  override def toString(): java.lang.String = {
     return this.buffer.toString()
   }
 }

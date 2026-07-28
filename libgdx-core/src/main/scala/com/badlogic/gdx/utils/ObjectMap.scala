@@ -245,7 +245,7 @@ class ObjectMap[K <: java.lang.Object, V <: java.lang.Object] extends balticport
       }; i = i + 1 } }
     } else ()
   }
-  def hashCode(): scala.Int = {
+  override def hashCode(): scala.Int = {
     var h: scala.Int = this.size
     val keyTable: scala.Array[K] = this.keyTable
     val valueTable: scala.Array[V] = this.valueTable;
@@ -261,7 +261,7 @@ class ObjectMap[K <: java.lang.Object, V <: java.lang.Object] extends balticport
     }; i = i + 1 } }
     return h
   }
-  def equals(obj: java.lang.Object): scala.Boolean = {
+  override def equals(obj: java.lang.Object): scala.Boolean = {
     if (obj == this) {
       return true
     } else ()
@@ -315,7 +315,7 @@ class ObjectMap[K <: java.lang.Object, V <: java.lang.Object] extends balticport
   def toString(separator: java.lang.String): java.lang.String = {
     return this.toString(separator, false)
   }
-  def toString(): java.lang.String = {
+  override def toString(): java.lang.String = {
     return this.toString(", ", true)
   }
   def toString(separator: java.lang.String, braces: scala.Boolean): java.lang.String = {
@@ -356,7 +356,7 @@ class ObjectMap[K <: java.lang.Object, V <: java.lang.Object] extends balticport
     } else ()
     return buffer.toString()
   }
-  def iterator(): com.badlogic.gdx.utils.ObjectMap.Entries[K, V] = {
+  override def iterator(): com.badlogic.gdx.utils.ObjectMap.Entries[K, V] = {
     return this.entries()
   }
   def entries(): com.badlogic.gdx.utils.ObjectMap.Entries[K, V] = {
@@ -422,7 +422,7 @@ object ObjectMap {
   class Entry[K <: java.lang.Object, V <: java.lang.Object] {
     var key: K = null.asInstanceOf[K]
     var value: V = null.asInstanceOf[V]
-    def toString(): java.lang.String = {
+    override def toString(): java.lang.String = {
       return (java.lang.String.valueOf(this.key) + "=") + this.value
     }
   }
@@ -449,7 +449,7 @@ object ObjectMap {
       };  } }
       this.hasNext$field = false
     }
-    def remove(): scala.Unit = {
+    override def remove(): scala.Unit = {
       var i: scala.Int = this.currentIndex
       if (i < 0) {
         throw new java.lang.IllegalStateException("next must be called before remove.")
@@ -482,7 +482,7 @@ object ObjectMap {
   }
   class Entries[K <: java.lang.Object, V <: java.lang.Object](map$p: ObjectMap[K, V]) extends com.badlogic.gdx.utils.ObjectMap.MapIterator[K, V, com.badlogic.gdx.utils.ObjectMap.Entry[K, V]](map$p) {
     var entry: com.badlogic.gdx.utils.ObjectMap.Entry[K, V] = new com.badlogic.gdx.utils.ObjectMap.Entry[K, V]()
-    def next(): com.badlogic.gdx.utils.ObjectMap.Entry[K, V] = {
+    override def next(): com.badlogic.gdx.utils.ObjectMap.Entry[K, V] = {
       if (!hasNext$field) {
         throw new java.util.NoSuchElementException()
       } else ()
@@ -496,25 +496,25 @@ object ObjectMap {
       this.findNextIndex()
       return this.entry
     }
-    def hasNext(): scala.Boolean = {
+    override def hasNext(): scala.Boolean = {
       if (!valid) {
         throw new com.badlogic.gdx.utils.GdxRuntimeException("#iterator() cannot be used nested.")
       } else ()
       return hasNext$field
     }
-    def iterator(): com.badlogic.gdx.utils.ObjectMap.Entries[K, V] = {
+    override def iterator(): com.badlogic.gdx.utils.ObjectMap.Entries[K, V] = {
       return this
     }
   }
   class Values[V <: java.lang.Object](map$p: ObjectMap[?, V]) extends com.badlogic.gdx.utils.ObjectMap.MapIterator[java.lang.Object, V, V](map$p.asInstanceOf[ObjectMap[java.lang.Object, V]]) {
-    def hasNext(): scala.Boolean = {
+    override def hasNext(): scala.Boolean = {
       if (!valid) {
         throw new com.badlogic.gdx.utils.GdxRuntimeException("#iterator() cannot be used nested.")
       } else ()
       return hasNext$field
     }
     @com.badlogic.gdx.utils.Null
-    def next(): V = {
+    override def next(): V = {
       if (!hasNext$field) {
         throw new java.util.NoSuchElementException()
       } else ()
@@ -526,7 +526,7 @@ object ObjectMap {
       this.findNextIndex()
       return value
     }
-    def iterator(): com.badlogic.gdx.utils.ObjectMap.Values[V] = {
+    override def iterator(): com.badlogic.gdx.utils.ObjectMap.Values[V] = {
       return this
     }
     def toArray(): com.badlogic.gdx.utils.Array[V] = {
@@ -540,13 +540,13 @@ object ObjectMap {
     }
   }
   class Keys[K <: java.lang.Object](map$p: ObjectMap[K, ?]) extends com.badlogic.gdx.utils.ObjectMap.MapIterator[K, java.lang.Object, K](map$p.asInstanceOf[ObjectMap[K, java.lang.Object]]) {
-    def hasNext(): scala.Boolean = {
+    override def hasNext(): scala.Boolean = {
       if (!valid) {
         throw new com.badlogic.gdx.utils.GdxRuntimeException("#iterator() cannot be used nested.")
       } else ()
       return hasNext$field
     }
-    def next(): K = {
+    override def next(): K = {
       if (!hasNext$field) {
         throw new java.util.NoSuchElementException()
       } else ()
@@ -558,7 +558,7 @@ object ObjectMap {
       this.findNextIndex()
       return key
     }
-    def iterator(): com.badlogic.gdx.utils.ObjectMap.Keys[K] = {
+    override def iterator(): com.badlogic.gdx.utils.ObjectMap.Keys[K] = {
       return this
     }
     def toArray(): com.badlogic.gdx.utils.Array[K] = {

@@ -233,7 +233,7 @@ abstract class GLFrameBuffer[T <: com.badlogic.gdx.graphics.GLTexture] extends c
     } else ()
   }
   @java.lang.Override
-  def dispose(): scala.Unit = {
+  override def dispose(): scala.Unit = {
     val gl: com.badlogic.gdx.graphics.GL20 = com.badlogic.gdx.Gdx.gl20
     for (texture <- this.textureAttachments) {
       this.disposeColorTexture(texture)
@@ -507,7 +507,7 @@ object GLFrameBuffer {
       this.samples = samples
     }
     @java.lang.Override
-    def build(): com.badlogic.gdx.graphics.glutils.FrameBuffer = {
+    override def build(): com.badlogic.gdx.graphics.glutils.FrameBuffer = {
       return new com.badlogic.gdx.graphics.glutils.FrameBuffer(this)
     }
   }
@@ -525,7 +525,7 @@ object GLFrameBuffer {
       this.samples = samples
     }
     @java.lang.Override
-    def build(): com.badlogic.gdx.graphics.glutils.FloatFrameBuffer = {
+    override def build(): com.badlogic.gdx.graphics.glutils.FloatFrameBuffer = {
       return new com.badlogic.gdx.graphics.glutils.FloatFrameBuffer(this)
     }
   }
@@ -543,7 +543,7 @@ object GLFrameBuffer {
       this.samples = samples
     }
     @java.lang.Override
-    def build(): com.badlogic.gdx.graphics.glutils.FrameBufferCubemap = {
+    override def build(): com.badlogic.gdx.graphics.glutils.FrameBufferCubemap = {
       return new com.badlogic.gdx.graphics.glutils.FrameBufferCubemap(this)
     }
   }

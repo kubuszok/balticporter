@@ -24,11 +24,11 @@ class FileTextureArrayData extends com.badlogic.gdx.graphics.TextureArrayData {
     this.textureDatas = textureDatas
   }
   @java.lang.Override
-  def isPrepared(): scala.Boolean = {
+  override def isPrepared(): scala.Boolean = {
     return this.prepared
   }
   @java.lang.Override
-  def prepare(): scala.Unit = {
+  override def prepare(): scala.Unit = {
     var width: scala.Int = -1
     var height: scala.Int = -1
     for (data <- this.textureDatas) {
@@ -47,7 +47,7 @@ class FileTextureArrayData extends com.badlogic.gdx.graphics.TextureArrayData {
     this.prepared = true
   }
   @java.lang.Override
-  def consumeTextureArrayData(): scala.Unit = {
+  override def consumeTextureArrayData(): scala.Unit = {
     var containsCustomData: scala.Boolean = false;
     { var i: scala.Int = 0; while (i < this.textureDatas.length) { {
       if (this.textureDatas(i).getType() == com.badlogic.gdx.graphics.TextureData.TextureDataType.Custom) {
@@ -78,27 +78,27 @@ class FileTextureArrayData extends com.badlogic.gdx.graphics.TextureArrayData {
     } else ()
   }
   @java.lang.Override
-  def getWidth(): scala.Int = {
+  override def getWidth(): scala.Int = {
     return this.textureDatas(0).getWidth()
   }
   @java.lang.Override
-  def getHeight(): scala.Int = {
+  override def getHeight(): scala.Int = {
     return this.textureDatas(0).getHeight()
   }
   @java.lang.Override
-  def getDepth(): scala.Int = {
+  override def getDepth(): scala.Int = {
     return this.depth
   }
   @java.lang.Override
-  def getInternalFormat(): scala.Int = {
+  override def getInternalFormat(): scala.Int = {
     return com.badlogic.gdx.graphics.Pixmap.Format.toGlFormat(this.format)
   }
   @java.lang.Override
-  def getGLType(): scala.Int = {
+  override def getGLType(): scala.Int = {
     return com.badlogic.gdx.graphics.Pixmap.Format.toGlType(this.format)
   }
   @java.lang.Override
-  def isManaged(): scala.Boolean = {
+  override def isManaged(): scala.Boolean = {
     for (data <- this.textureDatas) {
       if (!data.isManaged()) {
         return false

@@ -8,11 +8,11 @@ class DirectionalLightsAttribute extends com.badlogic.gdx.graphics.g3d.Attribute
   }
   this.lights = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.environment.DirectionalLight](1)
   @java.lang.Override
-  def copy(): DirectionalLightsAttribute = {
+  override def copy(): DirectionalLightsAttribute = {
     return new DirectionalLightsAttribute(this)
   }
   @java.lang.Override
-  def hashCode(): scala.Int = {
+  override def hashCode(): scala.Int = {
     var result: scala.Int = super.hashCode()
     for (light <- this.lights) {
       result = (1229 * result) + (if (light == null) 0 else light.hashCode())
@@ -20,7 +20,7 @@ class DirectionalLightsAttribute extends com.badlogic.gdx.graphics.g3d.Attribute
     return result
   }
   @java.lang.Override
-  def compareTo(o: com.badlogic.gdx.graphics.g3d.Attribute): scala.Int = {
+  override def compareTo(o: com.badlogic.gdx.graphics.g3d.Attribute): scala.Int = {
     if (`type` != o.`type`) {
       return if (`type` < o.`type`) -1 else 1
     } else ()

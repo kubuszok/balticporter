@@ -20,7 +20,7 @@ abstract class ParticleControllerComponent extends com.badlogic.gdx.utils.Dispos
   def `end`(): scala.Unit = {
     ()
   }
-  def dispose(): scala.Unit = {
+  override def dispose(): scala.Unit = {
     ()
   }
   def copy(): ParticleControllerComponent
@@ -31,19 +31,19 @@ abstract class ParticleControllerComponent extends com.badlogic.gdx.utils.Dispos
     this.controller = particleController
   }
   @java.lang.Override
-  def save(manager: com.badlogic.gdx.assets.AssetManager, data: com.badlogic.gdx.graphics.g3d.particles.ResourceData[?]): scala.Unit = {
+  override def save(manager: com.badlogic.gdx.assets.AssetManager, data: com.badlogic.gdx.graphics.g3d.particles.ResourceData[?]): scala.Unit = {
     ()
   }
   @java.lang.Override
-  def load(manager: com.badlogic.gdx.assets.AssetManager, data: com.badlogic.gdx.graphics.g3d.particles.ResourceData[?]): scala.Unit = {
+  override def load(manager: com.badlogic.gdx.assets.AssetManager, data: com.badlogic.gdx.graphics.g3d.particles.ResourceData[?]): scala.Unit = {
     ()
   }
   @java.lang.Override
-  def write(json: com.badlogic.gdx.utils.Json): scala.Unit = {
+  override def write(json: com.badlogic.gdx.utils.Json): scala.Unit = {
     ()
   }
   @java.lang.Override
-  def read(json: com.badlogic.gdx.utils.Json, jsonData: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
+  override def read(json: com.badlogic.gdx.utils.Json, jsonData: com.badlogic.gdx.utils.JsonValue): scala.Unit = {
     ()
   }
 }

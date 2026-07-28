@@ -43,10 +43,10 @@ class IdentityMap[K <: java.lang.Object, V <: java.lang.Object] extends com.badl
     java.lang.System.arraycopy(map.valueTable, 0, this.valueTable, 0, map.valueTable.length)
     this.size = map.size
   }
-  def place(item: K): scala.Int = {
+  override def place(item: K): scala.Int = {
     return ((java.lang.System.identityHashCode(item.asInstanceOf[java.lang.Object]) * -7046029254386353131L) >>> shift).asInstanceOf[scala.Int].asInstanceOf[scala.Int]
   }
-  def locateKey(key: K): scala.Int = {
+  override def locateKey(key: K): scala.Int = {
     {
       if (key == null) {
         throw new java.lang.IllegalArgumentException("key cannot be null.")
@@ -64,7 +64,7 @@ class IdentityMap[K <: java.lang.Object, V <: java.lang.Object] extends com.badl
     }
     throw new java.lang.RuntimeException("unreachable")
   }
-  def hashCode(): scala.Int = {
+  override def hashCode(): scala.Int = {
     var h: scala.Int = size
     val keyTable: scala.Array[K] = this.keyTable
     val valueTable: scala.Array[V] = this.valueTable;

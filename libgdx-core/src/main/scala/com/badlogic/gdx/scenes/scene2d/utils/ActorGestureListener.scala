@@ -59,7 +59,7 @@ class ActorGestureListener(halfTapSquareSize: scala.Float, tapCountInterval: sca
       amount.sub(ActorGestureListener.this.actor.stageToLocalCoordinates(ActorGestureListener.tmpCoords2.set(0, 0)))
     }
   })
-  def handle(e: com.badlogic.gdx.scenes.scene2d.Event): scala.Boolean = {
+  override def handle(e: com.badlogic.gdx.scenes.scene2d.Event): scala.Boolean = {
     if (!e.isInstanceOf[com.badlogic.gdx.scenes.scene2d.InputEvent]) {
       return false
     } else ()

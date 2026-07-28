@@ -244,7 +244,7 @@ class Selection[T <: java.lang.Object] extends com.badlogic.gdx.scenes.scene2d.u
     }
     return null.asInstanceOf[T]
   }
-  def iterator(): balticporter.runtime.JavaIterator[T] = {
+  override def iterator(): balticporter.runtime.JavaIterator[T] = {
     return this.selected.iterator()
   }
   def toArray(): com.badlogic.gdx.utils.Array[T] = {
@@ -253,10 +253,10 @@ class Selection[T <: java.lang.Object] extends com.badlogic.gdx.scenes.scene2d.u
   def toArray(array: com.badlogic.gdx.utils.Array[T]): com.badlogic.gdx.utils.Array[T] = {
     return this.selected.iterator().toArray(array)
   }
-  def setDisabled(isDisabled: scala.Boolean): scala.Unit = {
+  override def setDisabled(isDisabled: scala.Boolean): scala.Unit = {
     this.isDisabled$field = isDisabled
   }
-  def isDisabled(): scala.Boolean = {
+  override def isDisabled(): scala.Boolean = {
     return this.isDisabled$field
   }
   def getToggle(): scala.Boolean = {
@@ -283,7 +283,7 @@ class Selection[T <: java.lang.Object] extends com.badlogic.gdx.scenes.scene2d.u
   def getProgrammaticChangeEvents(): scala.Boolean = {
     return this.programmaticChangeEvents
   }
-  def toString(): java.lang.String = {
+  override def toString(): java.lang.String = {
     return this.selected.toString()
   }
 }

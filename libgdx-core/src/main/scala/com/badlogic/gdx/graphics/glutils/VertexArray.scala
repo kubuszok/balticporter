@@ -14,44 +14,44 @@ class VertexArray(numVertices: scala.Int, attributes$p: com.badlogic.gdx.graphic
   this.buffer.asInstanceOf[java.nio.Buffer].flip()
   this.byteBuffer.asInstanceOf[java.nio.Buffer].flip()
   @java.lang.Override
-  def dispose(): scala.Unit = {
+  override def dispose(): scala.Unit = {
     com.badlogic.gdx.utils.BufferUtils.disposeUnsafeByteBuffer(this.byteBuffer)
   }
   @java.lang.Override
   @java.lang.Deprecated
-  def getBuffer(): java.nio.FloatBuffer = {
+  override def getBuffer(): java.nio.FloatBuffer = {
     return this.buffer
   }
   @java.lang.Override
-  def getBuffer(forWriting: scala.Boolean): java.nio.FloatBuffer = {
+  override def getBuffer(forWriting: scala.Boolean): java.nio.FloatBuffer = {
     return this.buffer
   }
   @java.lang.Override
-  def getNumVertices(): scala.Int = {
+  override def getNumVertices(): scala.Int = {
     return (this.buffer.limit() * 4) / this.attributes.vertexSize
   }
-  def getNumMaxVertices(): scala.Int = {
+  override def getNumMaxVertices(): scala.Int = {
     return this.byteBuffer.capacity() / this.attributes.vertexSize
   }
   @java.lang.Override
-  def setVertices(vertices: scala.Array[scala.Float], offset: scala.Int, count: scala.Int): scala.Unit = {
+  override def setVertices(vertices: scala.Array[scala.Float], offset: scala.Int, count: scala.Int): scala.Unit = {
     com.badlogic.gdx.utils.BufferUtils.copy(vertices, this.byteBuffer, count, offset)
     this.buffer.asInstanceOf[java.nio.Buffer].position(0)
     this.buffer.asInstanceOf[java.nio.Buffer].limit(count)
   }
   @java.lang.Override
-  def updateVertices(targetOffset: scala.Int, vertices: scala.Array[scala.Float], sourceOffset: scala.Int, count: scala.Int): scala.Unit = {
+  override def updateVertices(targetOffset: scala.Int, vertices: scala.Array[scala.Float], sourceOffset: scala.Int, count: scala.Int): scala.Unit = {
     val pos: scala.Int = this.byteBuffer.position()
     this.byteBuffer.asInstanceOf[java.nio.Buffer].position(targetOffset * 4)
     com.badlogic.gdx.utils.BufferUtils.copy(vertices, sourceOffset, count, this.byteBuffer)
     this.byteBuffer.asInstanceOf[java.nio.Buffer].position(pos)
   }
   @java.lang.Override
-  def bind(shader: com.badlogic.gdx.graphics.glutils.ShaderProgram): scala.Unit = {
+  override def bind(shader: com.badlogic.gdx.graphics.glutils.ShaderProgram): scala.Unit = {
     this.bind(shader, null)
   }
   @java.lang.Override
-  def bind(shader: com.badlogic.gdx.graphics.glutils.ShaderProgram, locations: scala.Array[scala.Int]): scala.Unit = {
+  override def bind(shader: com.badlogic.gdx.graphics.glutils.ShaderProgram, locations: scala.Array[scala.Int]): scala.Unit = {
     val numAttributes: scala.Int = this.attributes.size()
     this.byteBuffer.asInstanceOf[java.nio.Buffer].limit(this.buffer.limit() * 4)
     if (locations == null) {
@@ -90,11 +90,11 @@ class VertexArray(numVertices: scala.Int, attributes$p: com.badlogic.gdx.graphic
     this.isBound = true
   }
   @java.lang.Override
-  def unbind(shader: com.badlogic.gdx.graphics.glutils.ShaderProgram): scala.Unit = {
+  override def unbind(shader: com.badlogic.gdx.graphics.glutils.ShaderProgram): scala.Unit = {
     this.unbind(shader, null)
   }
   @java.lang.Override
-  def unbind(shader: com.badlogic.gdx.graphics.glutils.ShaderProgram, locations: scala.Array[scala.Int]): scala.Unit = {
+  override def unbind(shader: com.badlogic.gdx.graphics.glutils.ShaderProgram, locations: scala.Array[scala.Int]): scala.Unit = {
     val numAttributes: scala.Int = this.attributes.size()
     if (locations == null) {
       { var i: scala.Int = 0; while (i < numAttributes) { {
@@ -111,11 +111,11 @@ class VertexArray(numVertices: scala.Int, attributes$p: com.badlogic.gdx.graphic
     this.isBound = false
   }
   @java.lang.Override
-  def getAttributes(): com.badlogic.gdx.graphics.VertexAttributes = {
+  override def getAttributes(): com.badlogic.gdx.graphics.VertexAttributes = {
     return this.attributes
   }
   @java.lang.Override
-  def invalidate(): scala.Unit = {
+  override def invalidate(): scala.Unit = {
     ()
   }
 }

@@ -49,7 +49,7 @@ class JsonMatcher extends com.badlogic.gdx.utils.JsonSkimmer {
     return this.patterns.length - 1
   }
   @java.lang.Override
-  def parse(data: scala.Array[scala.Char], offset: scala.Int, length: scala.Int): scala.Unit = {
+  override def parse(data: scala.Array[scala.Char], offset: scala.Int, length: scala.Int): scala.Unit = {
     if (this.chars != null) {
       throw new java.lang.IllegalStateException()
     } else ()
@@ -91,7 +91,7 @@ class JsonMatcher extends com.badlogic.gdx.utils.JsonSkimmer {
     ()
   }
   @java.lang.Override
-  def push(name: com.badlogic.gdx.utils.JsonSkimmer.JsonToken, `object`: scala.Boolean): scala.Unit = {
+  override def push(name: com.badlogic.gdx.utils.JsonSkimmer.JsonToken, `object`: scala.Boolean): scala.Unit = {
     if (JsonMatcher.debug$field) {
       this.debug(null, (((("push: " + name) + ":") + (if (`object`) "{}" else "[]")) + ", depth: ") + this.depth$field)
     } else ()
@@ -184,7 +184,7 @@ class JsonMatcher extends com.badlogic.gdx.utils.JsonSkimmer {
     this.depth$field = this.depth$field + 1
   }
   @java.lang.Override
-  def pop(): scala.Unit = {
+  override def pop(): scala.Unit = {
     val nextDepth: scala.Int = this.depth$field - 1
     if (JsonMatcher.debug$field) {
       this.debug(null, "pop " + nextDepth)
@@ -235,7 +235,7 @@ class JsonMatcher extends com.badlogic.gdx.utils.JsonSkimmer {
     this.path$field.size = this.path$field.size - 2
   }
   @java.lang.Override
-  def value(name: com.badlogic.gdx.utils.JsonSkimmer.JsonToken, value: com.badlogic.gdx.utils.JsonSkimmer.JsonToken): scala.Unit = {
+  override def value(name: com.badlogic.gdx.utils.JsonSkimmer.JsonToken, value: com.badlogic.gdx.utils.JsonSkimmer.JsonToken): scala.Unit = {
     if (JsonMatcher.debug$field) {
       this.debug(null, (("value: " + name) + "=") + value)
     } else ()
@@ -414,7 +414,7 @@ class JsonMatcher extends com.badlogic.gdx.utils.JsonSkimmer {
     return -1
   }
   @java.lang.Override
-  def stop(): scala.Unit = {
+  override def stop(): scala.Unit = {
     this.rejected = true
     this.clearAll()
     super.stop()
@@ -709,7 +709,7 @@ object JsonMatcher {
       this.stack.clear()
       this.current = this.root
     }
-    def toString(): java.lang.String = {
+    override def toString(): java.lang.String = {
       if (!JsonMatcher.debug$field) {
         return super.toString()
       } else ()
@@ -766,7 +766,7 @@ object JsonMatcher {
         this.next.toString(buffer)
       } else ()
     }
-    def toString(): java.lang.String = {
+    override def toString(): java.lang.String = {
       if (!JsonMatcher.debug$field) {
         return super.toString()
       } else ()
@@ -804,7 +804,7 @@ object JsonMatcher {
         buffer.append('1')
       } else ()
     }
-    def toString(): java.lang.String = {
+    override def toString(): java.lang.String = {
       if (!JsonMatcher.debug$field) {
         return super.toString()
       } else ()

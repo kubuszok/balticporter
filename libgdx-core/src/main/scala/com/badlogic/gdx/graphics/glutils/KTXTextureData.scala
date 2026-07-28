@@ -19,15 +19,15 @@ class KTXTextureData(file$p: com.badlogic.gdx.files.FileHandle, genMipMaps: scal
   this.file = file$p
   this.useMipMaps$field = genMipMaps
   @java.lang.Override
-  def getType(): com.badlogic.gdx.graphics.TextureData.TextureDataType = {
+  override def getType(): com.badlogic.gdx.graphics.TextureData.TextureDataType = {
     return com.badlogic.gdx.graphics.TextureData.TextureDataType.Custom
   }
   @java.lang.Override
-  def isPrepared(): scala.Boolean = {
+  override def isPrepared(): scala.Boolean = {
     return this.compressedData != null
   }
   @java.lang.Override
-  def prepare(): scala.Unit = {
+  override def prepare(): scala.Unit = {
     if (this.compressedData != null) {
       throw new com.badlogic.gdx.utils.GdxRuntimeException("Already prepared")
     } else ()
@@ -136,11 +136,11 @@ class KTXTextureData(file$p: com.badlogic.gdx.files.FileHandle, genMipMaps: scal
     } else ()
   }
   @java.lang.Override
-  def consumeCubemapData(): scala.Unit = {
+  override def consumeCubemapData(): scala.Unit = {
     this.consumeCustomData(com.badlogic.gdx.graphics.GL20.GL_TEXTURE_CUBE_MAP)
   }
   @java.lang.Override
-  def consumeCustomData(target$arg: scala.Int): scala.Unit = {
+  override def consumeCustomData(target$arg: scala.Int): scala.Unit = {
     var target: scala.Int = target$arg
     if (this.compressedData == null) {
       throw new com.badlogic.gdx.utils.GdxRuntimeException("Call prepare() before calling consumeCompressedData()")
@@ -277,19 +277,19 @@ class KTXTextureData(file$p: com.badlogic.gdx.files.FileHandle, genMipMaps: scal
     this.compressedData = null
   }
   @java.lang.Override
-  def consumePixmap(): com.badlogic.gdx.graphics.Pixmap = {
+  override def consumePixmap(): com.badlogic.gdx.graphics.Pixmap = {
     throw new com.badlogic.gdx.utils.GdxRuntimeException("This TextureData implementation does not return a Pixmap")
   }
   @java.lang.Override
-  def disposePixmap(): scala.Boolean = {
+  override def disposePixmap(): scala.Boolean = {
     throw new com.badlogic.gdx.utils.GdxRuntimeException("This TextureData implementation does not return a Pixmap")
   }
   @java.lang.Override
-  def getWidth(): scala.Int = {
+  override def getWidth(): scala.Int = {
     return this.pixelWidth
   }
   @java.lang.Override
-  def getHeight(): scala.Int = {
+  override def getHeight(): scala.Int = {
     return this.pixelHeight
   }
   def getNumberOfMipMapLevels(): scala.Int = {
@@ -324,15 +324,15 @@ class KTXTextureData(file$p: com.badlogic.gdx.files.FileHandle, genMipMaps: scal
     return null
   }
   @java.lang.Override
-  def getFormat(): com.badlogic.gdx.graphics.Pixmap.Format = {
+  override def getFormat(): com.badlogic.gdx.graphics.Pixmap.Format = {
     throw new com.badlogic.gdx.utils.GdxRuntimeException("This TextureData implementation directly handles texture formats.")
   }
   @java.lang.Override
-  def useMipMaps(): scala.Boolean = {
+  override def useMipMaps(): scala.Boolean = {
     return this.useMipMaps$field
   }
   @java.lang.Override
-  def isManaged(): scala.Boolean = {
+  override def isManaged(): scala.Boolean = {
     return true
   }
 }

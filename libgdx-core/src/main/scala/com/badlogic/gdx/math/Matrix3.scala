@@ -156,7 +156,7 @@ class Matrix3 extends java.io.Serializable {
     `val`(Matrix3.M22) = 1
     return this
   }
-  def toString(): java.lang.String = {
+  override def toString(): java.lang.String = {
     val `val`: scala.Array[scala.Float] = this.`val`
     return ((((((((((((((((((("[" + `val`(Matrix3.M00)) + "|") + `val`(Matrix3.M01)) + "|") + `val`(Matrix3.M02)) + "]\n") + "[") + `val`(Matrix3.M10)) + "|") + `val`(Matrix3.M11)) + "|") + `val`(Matrix3.M12)) + "]\n") + "[") + `val`(Matrix3.M20)) + "|") + `val`(Matrix3.M21)) + "|") + `val`(Matrix3.M22)) + "]"
   }

@@ -296,7 +296,7 @@ class IntMap[V <: java.lang.Object](initialCapacity: scala.Int, loadFactor$p: sc
       }; i = i + 1 } }
     } else ()
   }
-  def hashCode(): scala.Int = {
+  override def hashCode(): scala.Int = {
     var h: scala.Int = this.size
     if (this.hasZeroValue && (this.zeroValue != null)) {
       h = h + this.zeroValue.hashCode()
@@ -315,7 +315,7 @@ class IntMap[V <: java.lang.Object](initialCapacity: scala.Int, loadFactor$p: sc
     }; i = i + 1 } }
     return h
   }
-  def equals(obj: java.lang.Object): scala.Boolean = {
+  override def equals(obj: java.lang.Object): scala.Boolean = {
     if (obj == this) {
       return true
     } else ()
@@ -386,7 +386,7 @@ class IntMap[V <: java.lang.Object](initialCapacity: scala.Int, loadFactor$p: sc
     }; i = i + 1 } }
     return true
   }
-  def toString(): java.lang.String = {
+  override def toString(): java.lang.String = {
     if (this.size == 0) {
       return "[]"
     } else ()
@@ -423,7 +423,7 @@ class IntMap[V <: java.lang.Object](initialCapacity: scala.Int, loadFactor$p: sc
     buffer.append(']')
     return buffer.toString()
   }
-  def iterator(): balticporter.runtime.JavaIterator[com.badlogic.gdx.utils.IntMap.Entry[V]] = {
+  override def iterator(): balticporter.runtime.JavaIterator[com.badlogic.gdx.utils.IntMap.Entry[V]] = {
     return this.entries()
   }
   def entries(): com.badlogic.gdx.utils.IntMap.Entries[V] = {
@@ -488,7 +488,7 @@ object IntMap {
   class Entry[V <: java.lang.Object] {
     var key: scala.Int = 0
     var value: V = null.asInstanceOf[V]
-    def toString(): java.lang.String = {
+    override def toString(): java.lang.String = {
       return (java.lang.String.valueOf(this.key) + "=") + this.value
     }
   }
@@ -562,7 +562,7 @@ object IntMap {
   }
   class Entries[V <: java.lang.Object](map$p: IntMap[V]) extends com.badlogic.gdx.utils.IntMap.MapIterator[V](map$p) with balticporter.runtime.JavaIterable[com.badlogic.gdx.utils.IntMap.Entry[V]] with balticporter.runtime.JavaIterator[com.badlogic.gdx.utils.IntMap.Entry[V]] {
     private final val entry: com.badlogic.gdx.utils.IntMap.Entry[V] = new com.badlogic.gdx.utils.IntMap.Entry[V]().asInstanceOf[com.badlogic.gdx.utils.IntMap.Entry[V]]
-    def next(): com.badlogic.gdx.utils.IntMap.Entry[V] = {
+    override def next(): com.badlogic.gdx.utils.IntMap.Entry[V] = {
       if (!hasNext$field) {
         throw new java.util.NoSuchElementException()
       } else ()
@@ -581,13 +581,13 @@ object IntMap {
       this.findNextIndex()
       return this.entry
     }
-    def hasNext(): scala.Boolean = {
+    override def hasNext(): scala.Boolean = {
       if (!valid) {
         throw new com.badlogic.gdx.utils.GdxRuntimeException("#iterator() cannot be used nested.")
       } else ()
       return hasNext$field
     }
-    def iterator(): balticporter.runtime.JavaIterator[com.badlogic.gdx.utils.IntMap.Entry[V]] = {
+    override def iterator(): balticporter.runtime.JavaIterator[com.badlogic.gdx.utils.IntMap.Entry[V]] = {
       return this
     }
   }
@@ -595,14 +595,14 @@ object IntMap {
     export com.badlogic.gdx.utils.IntMap.MapIterator.*
   }
   class Values[V <: java.lang.Object](map$p: IntMap[V]) extends com.badlogic.gdx.utils.IntMap.MapIterator[V](map$p) with balticporter.runtime.JavaIterable[V] with balticporter.runtime.JavaIterator[V] {
-    def hasNext(): scala.Boolean = {
+    override def hasNext(): scala.Boolean = {
       if (!valid) {
         throw new com.badlogic.gdx.utils.GdxRuntimeException("#iterator() cannot be used nested.")
       } else ()
       return hasNext$field
     }
     @com.badlogic.gdx.utils.Null
-    def next(): V = {
+    override def next(): V = {
       if (!hasNext$field) {
         throw new java.util.NoSuchElementException()
       } else ()
@@ -619,7 +619,7 @@ object IntMap {
       this.findNextIndex()
       return value
     }
-    def iterator(): balticporter.runtime.JavaIterator[V] = {
+    override def iterator(): balticporter.runtime.JavaIterator[V] = {
       return this
     }
     def toArray(): com.badlogic.gdx.utils.Array[V] = {

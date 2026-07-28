@@ -42,7 +42,7 @@ class Tooltip[T <: com.badlogic.gdx.scenes.scene2d.Actor](contents: T, manager$p
   def setTouchIndependent(touchIndependent: scala.Boolean): scala.Unit = {
     this.touchIndependent = touchIndependent
   }
-  def touchDown(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float, pointer: scala.Int, button: scala.Int): scala.Boolean = {
+  override def touchDown(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float, pointer: scala.Int, button: scala.Int): scala.Boolean = {
     if (this.instant) {
       this.container.toFront()
       return false
@@ -50,7 +50,7 @@ class Tooltip[T <: com.badlogic.gdx.scenes.scene2d.Actor](contents: T, manager$p
     this.manager.touchDown(this)
     return false
   }
-  def mouseMoved(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float): scala.Boolean = {
+  override def mouseMoved(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float): scala.Boolean = {
     if (this.container.hasParent()) {
       return false
     } else ()
@@ -88,7 +88,7 @@ class Tooltip[T <: com.badlogic.gdx.scenes.scene2d.Actor](contents: T, manager$p
     point.sub(this.container.getX(), this.container.getY())
     this.container.setOrigin(point.x, point.y)
   }
-  def enter(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float, pointer: scala.Int, fromActor: com.badlogic.gdx.scenes.scene2d.Actor): scala.Unit = {
+  override def enter(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float, pointer: scala.Int, fromActor: com.badlogic.gdx.scenes.scene2d.Actor): scala.Unit = {
     if (pointer != (-1)) {
       return
     } else ()
@@ -102,7 +102,7 @@ class Tooltip[T <: com.badlogic.gdx.scenes.scene2d.Actor](contents: T, manager$p
     this.setContainerPosition(actor, x, y)
     this.manager.enter(this)
   }
-  def exit(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float, pointer: scala.Int, toActor: com.badlogic.gdx.scenes.scene2d.Actor): scala.Unit = {
+  override def exit(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float, pointer: scala.Int, toActor: com.badlogic.gdx.scenes.scene2d.Actor): scala.Unit = {
     if ((toActor != null) && toActor.isDescendantOf(event.getListenerActor())) {
       return
     } else ()

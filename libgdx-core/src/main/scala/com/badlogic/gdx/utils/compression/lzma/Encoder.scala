@@ -1040,7 +1040,7 @@ class Encoder {
         this.UpdateTable(posState)
       }; posState = posState + 1 } }
     }
-    def Encode(rangeEncoder: com.badlogic.gdx.utils.compression.rangecoder.Encoder, symbol: scala.Int, posState: scala.Int): scala.Unit = {
+    override def Encode(rangeEncoder: com.badlogic.gdx.utils.compression.rangecoder.Encoder, symbol: scala.Int, posState: scala.Int): scala.Unit = {
       super.Encode(rangeEncoder, symbol, posState)
       if ({ this._counters(posState) -= 1; this._counters(posState) } == 0) {
         this.UpdateTable(posState)

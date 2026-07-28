@@ -50,7 +50,7 @@ class RemoteInput(port$p: scala.Int, listener$p: com.badlogic.gdx.input.RemoteIn
     }
   }
   @java.lang.Override
-  def run(): scala.Unit = {
+  override def run(): scala.Unit = {
     while (true) {
       try {
         this.connected = false
@@ -142,71 +142,71 @@ class RemoteInput(port$p: scala.Int, listener$p: com.badlogic.gdx.input.RemoteIn
     return this.connected
   }
   @java.lang.Override
-  def getAccelerometerX(): scala.Float = {
+  override def getAccelerometerX(): scala.Float = {
     return this.accel(0)
   }
   @java.lang.Override
-  def getAccelerometerY(): scala.Float = {
+  override def getAccelerometerY(): scala.Float = {
     return this.accel(1)
   }
   @java.lang.Override
-  def getAccelerometerZ(): scala.Float = {
+  override def getAccelerometerZ(): scala.Float = {
     return this.accel(2)
   }
   @java.lang.Override
-  def getGyroscopeX(): scala.Float = {
+  override def getGyroscopeX(): scala.Float = {
     return this.gyrate(0)
   }
   @java.lang.Override
-  def getGyroscopeY(): scala.Float = {
+  override def getGyroscopeY(): scala.Float = {
     return this.gyrate(1)
   }
   @java.lang.Override
-  def getGyroscopeZ(): scala.Float = {
+  override def getGyroscopeZ(): scala.Float = {
     return this.gyrate(2)
   }
   @java.lang.Override
-  def getMaxPointers(): scala.Int = {
+  override def getMaxPointers(): scala.Int = {
     return RemoteInput.MAX_TOUCHES
   }
   @java.lang.Override
-  def getX(): scala.Int = {
+  override def getX(): scala.Int = {
     return this.touchX(0)
   }
   @java.lang.Override
-  def getX(pointer: scala.Int): scala.Int = {
+  override def getX(pointer: scala.Int): scala.Int = {
     return this.touchX(pointer)
   }
   @java.lang.Override
-  def getY(): scala.Int = {
+  override def getY(): scala.Int = {
     return this.touchY(0)
   }
   @java.lang.Override
-  def getY(pointer: scala.Int): scala.Int = {
+  override def getY(pointer: scala.Int): scala.Int = {
     return this.touchY(pointer)
   }
   @java.lang.Override
-  def isTouched(): scala.Boolean = {
+  override def isTouched(): scala.Boolean = {
     return this.isTouched$field(0)
   }
   @java.lang.Override
-  def justTouched(): scala.Boolean = {
+  override def justTouched(): scala.Boolean = {
     return this.justTouched$field
   }
   @java.lang.Override
-  def isTouched(pointer: scala.Int): scala.Boolean = {
+  override def isTouched(pointer: scala.Int): scala.Boolean = {
     return this.isTouched$field(pointer)
   }
   @java.lang.Override
-  def getPressure(): scala.Float = {
+  override def getPressure(): scala.Float = {
     return this.getPressure(0)
   }
   @java.lang.Override
-  def getPressure(pointer: scala.Int): scala.Float = {
+  override def getPressure(pointer: scala.Int): scala.Float = {
     return if (this.isTouched(pointer)) 1 else 0
   }
   @java.lang.Override
-  def isButtonPressed(button: scala.Int): scala.Boolean = {
+  override def isButtonPressed(button: scala.Int): scala.Boolean = {
     if (button != com.badlogic.gdx.Input.Buttons.LEFT) {
       return false
     } else ();
@@ -218,11 +218,11 @@ class RemoteInput(port$p: scala.Int, listener$p: com.badlogic.gdx.input.RemoteIn
     return false
   }
   @java.lang.Override
-  def isButtonJustPressed(button: scala.Int): scala.Boolean = {
+  override def isButtonJustPressed(button: scala.Int): scala.Boolean = {
     return (button == com.badlogic.gdx.Input.Buttons.LEFT) && this.justTouched$field
   }
   @java.lang.Override
-  def isKeyPressed(key: scala.Int): scala.Boolean = {
+  override def isKeyPressed(key: scala.Int): scala.Boolean = {
     if (key == com.badlogic.gdx.Input.Keys.ANY_KEY) {
       return this.keyCount > 0
     } else ()
@@ -232,7 +232,7 @@ class RemoteInput(port$p: scala.Int, listener$p: com.badlogic.gdx.input.RemoteIn
     return this.keys(key)
   }
   @java.lang.Override
-  def isKeyJustPressed(key: scala.Int): scala.Boolean = {
+  override def isKeyJustPressed(key: scala.Int): scala.Boolean = {
     if (key == com.badlogic.gdx.Input.Keys.ANY_KEY) {
       return this.keyJustPressed
     } else ()
@@ -242,82 +242,82 @@ class RemoteInput(port$p: scala.Int, listener$p: com.badlogic.gdx.input.RemoteIn
     return this.justPressedKeys(key)
   }
   @java.lang.Override
-  def getTextInput(listener: com.badlogic.gdx.Input.TextInputListener, title: java.lang.String, text: java.lang.String, hint: java.lang.String): scala.Unit = {
+  override def getTextInput(listener: com.badlogic.gdx.Input.TextInputListener, title: java.lang.String, text: java.lang.String, hint: java.lang.String): scala.Unit = {
     com.badlogic.gdx.Gdx.app.getInput().getTextInput(listener, title, text, hint)
   }
   @java.lang.Override
-  def getTextInput(listener: com.badlogic.gdx.Input.TextInputListener, title: java.lang.String, text: java.lang.String, hint: java.lang.String, `type`: com.badlogic.gdx.Input.OnscreenKeyboardType): scala.Unit = {
+  override def getTextInput(listener: com.badlogic.gdx.Input.TextInputListener, title: java.lang.String, text: java.lang.String, hint: java.lang.String, `type`: com.badlogic.gdx.Input.OnscreenKeyboardType): scala.Unit = {
     com.badlogic.gdx.Gdx.app.getInput().getTextInput(listener, title, text, hint, `type`)
   }
   @java.lang.Override
-  def setOnscreenKeyboardVisible(visible: scala.Boolean): scala.Unit = {
+  override def setOnscreenKeyboardVisible(visible: scala.Boolean): scala.Unit = {
     ()
   }
   @java.lang.Override
-  def setOnscreenKeyboardVisible(visible: scala.Boolean, `type`: com.badlogic.gdx.Input.OnscreenKeyboardType): scala.Unit = {
+  override def setOnscreenKeyboardVisible(visible: scala.Boolean, `type`: com.badlogic.gdx.Input.OnscreenKeyboardType): scala.Unit = {
     ()
   }
   @java.lang.Override
-  def openTextInputField(configuration: com.badlogic.gdx.input.NativeInputConfiguration): scala.Unit = {
+  override def openTextInputField(configuration: com.badlogic.gdx.input.NativeInputConfiguration): scala.Unit = {
     ()
   }
   @java.lang.Override
-  def closeTextInputField(sendReturn: scala.Boolean): scala.Unit = {
+  override def closeTextInputField(sendReturn: scala.Boolean): scala.Unit = {
     ()
   }
   @java.lang.Override
-  def setKeyboardHeightObserver(observer: com.badlogic.gdx.Input.KeyboardHeightObserver): scala.Unit = {
+  override def setKeyboardHeightObserver(observer: com.badlogic.gdx.Input.KeyboardHeightObserver): scala.Unit = {
     ()
   }
   @java.lang.Override
-  def vibrate(milliseconds: scala.Int): scala.Unit = {
+  override def vibrate(milliseconds: scala.Int): scala.Unit = {
     ()
   }
   @java.lang.Override
-  def vibrate(milliseconds: scala.Int, fallback: scala.Boolean): scala.Unit = {
+  override def vibrate(milliseconds: scala.Int, fallback: scala.Boolean): scala.Unit = {
     ()
   }
   @java.lang.Override
-  def vibrate(milliseconds: scala.Int, amplitude: scala.Int, fallback: scala.Boolean): scala.Unit = {
+  override def vibrate(milliseconds: scala.Int, amplitude: scala.Int, fallback: scala.Boolean): scala.Unit = {
     ()
   }
   @java.lang.Override
-  def vibrate(vibrationType: com.badlogic.gdx.Input.VibrationType): scala.Unit = {
+  override def vibrate(vibrationType: com.badlogic.gdx.Input.VibrationType): scala.Unit = {
     ()
   }
   @java.lang.Override
-  def getAzimuth(): scala.Float = {
+  override def getAzimuth(): scala.Float = {
     return this.compass(0)
   }
   @java.lang.Override
-  def getPitch(): scala.Float = {
+  override def getPitch(): scala.Float = {
     return this.compass(1)
   }
   @java.lang.Override
-  def getRoll(): scala.Float = {
+  override def getRoll(): scala.Float = {
     return this.compass(2)
   }
   @java.lang.Override
-  def setCatchKey(keycode: scala.Int, catchKey: scala.Boolean): scala.Unit = {
+  override def setCatchKey(keycode: scala.Int, catchKey: scala.Boolean): scala.Unit = {
     ()
   }
   @java.lang.Override
-  def isCatchKey(keycode: scala.Int): scala.Boolean = {
+  override def isCatchKey(keycode: scala.Int): scala.Boolean = {
     return false
   }
   @java.lang.Override
-  def setInputProcessor(processor: com.badlogic.gdx.InputProcessor): scala.Unit = {
+  override def setInputProcessor(processor: com.badlogic.gdx.InputProcessor): scala.Unit = {
     this.processor = processor
   }
   @java.lang.Override
-  def getInputProcessor(): com.badlogic.gdx.InputProcessor = {
+  override def getInputProcessor(): com.badlogic.gdx.InputProcessor = {
     return this.processor
   }
   def getIPs(): scala.Array[java.lang.String] = {
     return this.ips
   }
   @java.lang.Override
-  def isPeripheralAvailable(peripheral: com.badlogic.gdx.Input.Peripheral): scala.Boolean = {
+  override def isPeripheralAvailable(peripheral: com.badlogic.gdx.Input.Peripheral): scala.Boolean = {
     if (peripheral == com.badlogic.gdx.Input.Peripheral.Accelerometer) {
       return true
     } else ()
@@ -330,47 +330,47 @@ class RemoteInput(port$p: scala.Int, listener$p: com.badlogic.gdx.input.RemoteIn
     return false
   }
   @java.lang.Override
-  def getRotation(): scala.Int = {
+  override def getRotation(): scala.Int = {
     return 0
   }
   @java.lang.Override
-  def getNativeOrientation(): com.badlogic.gdx.Input.Orientation = {
+  override def getNativeOrientation(): com.badlogic.gdx.Input.Orientation = {
     return com.badlogic.gdx.Input.Orientation.Landscape
   }
   @java.lang.Override
-  def setCursorCatched(catched: scala.Boolean): scala.Unit = {
+  override def setCursorCatched(catched: scala.Boolean): scala.Unit = {
     ()
   }
   @java.lang.Override
-  def isCursorCatched(): scala.Boolean = {
+  override def isCursorCatched(): scala.Boolean = {
     return false
   }
   @java.lang.Override
-  def getDeltaX(): scala.Int = {
+  override def getDeltaX(): scala.Int = {
     return this.deltaX(0)
   }
   @java.lang.Override
-  def getDeltaX(pointer: scala.Int): scala.Int = {
+  override def getDeltaX(pointer: scala.Int): scala.Int = {
     return this.deltaX(pointer)
   }
   @java.lang.Override
-  def getDeltaY(): scala.Int = {
+  override def getDeltaY(): scala.Int = {
     return this.deltaY(0)
   }
   @java.lang.Override
-  def getDeltaY(pointer: scala.Int): scala.Int = {
+  override def getDeltaY(pointer: scala.Int): scala.Int = {
     return this.deltaY(pointer)
   }
   @java.lang.Override
-  def setCursorPosition(x: scala.Int, y: scala.Int): scala.Unit = {
+  override def setCursorPosition(x: scala.Int, y: scala.Int): scala.Unit = {
     ()
   }
   @java.lang.Override
-  def getCurrentEventTime(): scala.Long = {
+  override def getCurrentEventTime(): scala.Long = {
     return 0
   }
   @java.lang.Override
-  def getRotationMatrix(matrix: scala.Array[scala.Float]): scala.Unit = {
+  override def getRotationMatrix(matrix: scala.Array[scala.Float]): scala.Unit = {
     ()
   }
   class KeyEvent {
@@ -402,7 +402,7 @@ class RemoteInput(port$p: scala.Int, listener$p: com.badlogic.gdx.input.RemoteIn
     this.touchEvent = touchEvent$p
     this.keyEvent = keyEvent$p
     @java.lang.Override
-    def run(): scala.Unit = {
+    override def run(): scala.Unit = {
       RemoteInput.this.justTouched$field = false
       if (RemoteInput.this.keyJustPressed) {
         RemoteInput.this.keyJustPressed = false;

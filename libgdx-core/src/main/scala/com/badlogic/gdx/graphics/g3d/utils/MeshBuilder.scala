@@ -191,31 +191,31 @@ class MeshBuilder extends com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder {
     return this.indices.items
   }
   @java.lang.Override
-  def getAttributes(): com.badlogic.gdx.graphics.VertexAttributes = {
+  override def getAttributes(): com.badlogic.gdx.graphics.VertexAttributes = {
     return this.attributes
   }
   @java.lang.Override
-  def getMeshPart(): com.badlogic.gdx.graphics.g3d.model.MeshPart = {
+  override def getMeshPart(): com.badlogic.gdx.graphics.g3d.model.MeshPart = {
     return this.part$field
   }
   @java.lang.Override
-  def getPrimitiveType(): scala.Int = {
+  override def getPrimitiveType(): scala.Int = {
     return this.primitiveType
   }
   @java.lang.Override
-  def setColor(r: scala.Float, g: scala.Float, b: scala.Float, a: scala.Float): scala.Unit = {
+  override def setColor(r: scala.Float, g: scala.Float, b: scala.Float, a: scala.Float): scala.Unit = {
     this.color.set(r, g, b, a)
     this.hasColor = !this.color.equals(com.badlogic.gdx.graphics.Color.WHITE)
   }
   @java.lang.Override
-  def setColor(color: com.badlogic.gdx.graphics.Color): scala.Unit = {
+  override def setColor(color: com.badlogic.gdx.graphics.Color): scala.Unit = {
     this.color.set(if (!{
       this.hasColor = color != null
       this.hasColor
     }) com.badlogic.gdx.graphics.Color.WHITE else color)
   }
   @java.lang.Override
-  def setUVRange(u1: scala.Float, v1: scala.Float, u2: scala.Float, v2: scala.Float): scala.Unit = {
+  override def setUVRange(u1: scala.Float, v1: scala.Float, u2: scala.Float, v2: scala.Float): scala.Unit = {
     this.uOffset = u1
     this.vOffset = v1
     this.uScale = u2 - u1
@@ -223,7 +223,7 @@ class MeshBuilder extends com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder {
     this.hasUVTransform = !(((com.badlogic.gdx.math.MathUtils.isZero(u1) && com.badlogic.gdx.math.MathUtils.isZero(v1)) && com.badlogic.gdx.math.MathUtils.isEqual(u2, 1.0f)) && com.badlogic.gdx.math.MathUtils.isEqual(v2, 1.0f))
   }
   @java.lang.Override
-  def setUVRange(region: com.badlogic.gdx.graphics.g2d.TextureRegion): scala.Unit = {
+  override def setUVRange(region: com.badlogic.gdx.graphics.g2d.TextureRegion): scala.Unit = {
     if (region == null) {
       this.hasUVTransform = false
       this.uOffset = {
@@ -240,11 +240,11 @@ class MeshBuilder extends com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder {
     }
   }
   @java.lang.Override
-  def getVertexTransform(out: com.badlogic.gdx.math.Matrix4): com.badlogic.gdx.math.Matrix4 = {
+  override def getVertexTransform(out: com.badlogic.gdx.math.Matrix4): com.badlogic.gdx.math.Matrix4 = {
     return out.set(this.positionTransform)
   }
   @java.lang.Override
-  def setVertexTransform(transform: com.badlogic.gdx.math.Matrix4): scala.Unit = {
+  override def setVertexTransform(transform: com.badlogic.gdx.math.Matrix4): scala.Unit = {
     this.vertexTransformationEnabled = transform != null
     if (this.vertexTransformationEnabled) {
       this.positionTransform.set(transform)
@@ -255,28 +255,28 @@ class MeshBuilder extends com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder {
     }
   }
   @java.lang.Override
-  def isVertexTransformationEnabled(): scala.Boolean = {
+  override def isVertexTransformationEnabled(): scala.Boolean = {
     return this.vertexTransformationEnabled
   }
   @java.lang.Override
-  def setVertexTransformationEnabled(enabled: scala.Boolean): scala.Unit = {
+  override def setVertexTransformationEnabled(enabled: scala.Boolean): scala.Unit = {
     this.vertexTransformationEnabled = enabled
   }
   @java.lang.Override
-  def ensureVertices(numVertices: scala.Int): scala.Unit = {
+  override def ensureVertices(numVertices: scala.Int): scala.Unit = {
     this.vertices.ensureCapacity(this.stride * numVertices)
   }
   @java.lang.Override
-  def ensureIndices(numIndices: scala.Int): scala.Unit = {
+  override def ensureIndices(numIndices: scala.Int): scala.Unit = {
     this.indices.ensureCapacity(numIndices)
   }
   @java.lang.Override
-  def ensureCapacity(numVertices: scala.Int, numIndices: scala.Int): scala.Unit = {
+  override def ensureCapacity(numVertices: scala.Int, numIndices: scala.Int): scala.Unit = {
     this.ensureVertices(numVertices)
     this.ensureIndices(numIndices)
   }
   @java.lang.Override
-  def ensureTriangleIndices(numTriangles: scala.Int): scala.Unit = {
+  override def ensureTriangleIndices(numTriangles: scala.Int): scala.Unit = {
     if (this.primitiveType == com.badlogic.gdx.graphics.GL20.GL_LINES) {
       this.ensureIndices(6 * numTriangles)
     } else {
@@ -298,7 +298,7 @@ class MeshBuilder extends com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder {
     this.ensureTriangleIndices(numTriangles)
   }
   @java.lang.Override
-  def ensureRectangleIndices(numRectangles: scala.Int): scala.Unit = {
+  override def ensureRectangleIndices(numRectangles: scala.Int): scala.Unit = {
     if (this.primitiveType == com.badlogic.gdx.graphics.GL20.GL_POINTS) {
       this.ensureIndices(4 * numRectangles)
     } else {
@@ -320,7 +320,7 @@ class MeshBuilder extends com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder {
     this.ensureRectangleIndices(numRectangles)
   }
   @java.lang.Override
-  def lastIndex(): scala.Int = {
+  override def lastIndex(): scala.Int = {
     return this.lastIndex$field
   }
   private final def addVertex(values: scala.Array[scala.Float], offset: scala.Int): scala.Unit = {
@@ -364,7 +364,7 @@ class MeshBuilder extends com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder {
     } else ()
   }
   @java.lang.Override
-  def vertex(pos: com.badlogic.gdx.math.Vector3, nor$arg: com.badlogic.gdx.math.Vector3, col$arg: com.badlogic.gdx.graphics.Color, uv: com.badlogic.gdx.math.Vector2): scala.Short = {
+  override def vertex(pos: com.badlogic.gdx.math.Vector3, nor$arg: com.badlogic.gdx.math.Vector3, col$arg: com.badlogic.gdx.graphics.Color, uv: com.badlogic.gdx.math.Vector2): scala.Short = {
     var nor: com.badlogic.gdx.math.Vector3 = nor$arg
     var col: com.badlogic.gdx.graphics.Color = col$arg
     if (this.vindex > MeshBuilder.MAX_INDEX) {
@@ -411,7 +411,7 @@ class MeshBuilder extends com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder {
     return this.lastIndex$field.asInstanceOf[scala.Short].asInstanceOf[scala.Short]
   }
   @java.lang.Override
-  def vertex(values: scala.Array[scala.Float]): scala.Short = {
+  override def vertex(values: scala.Array[scala.Float]): scala.Short = {
     val n: scala.Int = values.length - this.stride;
     { var i: scala.Int = 0; while (i <= n) { {
       this.addVertex(values, i)
@@ -419,28 +419,28 @@ class MeshBuilder extends com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder {
     return this.lastIndex$field.asInstanceOf[scala.Short].asInstanceOf[scala.Short]
   }
   @java.lang.Override
-  def vertex(info: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo): scala.Short = {
+  override def vertex(info: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo): scala.Short = {
     return this.vertex(if (info.hasPosition) info.position else null.asInstanceOf[com.badlogic.gdx.math.Vector3], if (info.hasNormal) info.normal else null.asInstanceOf[com.badlogic.gdx.math.Vector3], if (info.hasColor) info.color else null.asInstanceOf[com.badlogic.gdx.graphics.Color], if (info.hasUV) info.uv else null.asInstanceOf[com.badlogic.gdx.math.Vector2])
   }
   @java.lang.Override
-  def index(value: scala.Short): scala.Unit = {
+  override def index(value: scala.Short): scala.Unit = {
     (this.indices.add: (scala.Short) => scala.Unit)(value)
   }
   @java.lang.Override
-  def index(value1: scala.Short, value2: scala.Short): scala.Unit = {
+  override def index(value1: scala.Short, value2: scala.Short): scala.Unit = {
     this.ensureIndices(2)
     (this.indices.add: (scala.Short) => scala.Unit)(value1)
     (this.indices.add: (scala.Short) => scala.Unit)(value2)
   }
   @java.lang.Override
-  def index(value1: scala.Short, value2: scala.Short, value3: scala.Short): scala.Unit = {
+  override def index(value1: scala.Short, value2: scala.Short, value3: scala.Short): scala.Unit = {
     this.ensureIndices(3)
     (this.indices.add: (scala.Short) => scala.Unit)(value1)
     (this.indices.add: (scala.Short) => scala.Unit)(value2)
     (this.indices.add: (scala.Short) => scala.Unit)(value3)
   }
   @java.lang.Override
-  def index(value1: scala.Short, value2: scala.Short, value3: scala.Short, value4: scala.Short): scala.Unit = {
+  override def index(value1: scala.Short, value2: scala.Short, value3: scala.Short, value4: scala.Short): scala.Unit = {
     this.ensureIndices(4)
     (this.indices.add: (scala.Short) => scala.Unit)(value1)
     (this.indices.add: (scala.Short) => scala.Unit)(value2)
@@ -448,7 +448,7 @@ class MeshBuilder extends com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder {
     (this.indices.add: (scala.Short) => scala.Unit)(value4)
   }
   @java.lang.Override
-  def index(value1: scala.Short, value2: scala.Short, value3: scala.Short, value4: scala.Short, value5: scala.Short, value6: scala.Short): scala.Unit = {
+  override def index(value1: scala.Short, value2: scala.Short, value3: scala.Short, value4: scala.Short, value5: scala.Short, value6: scala.Short): scala.Unit = {
     this.ensureIndices(6)
     (this.indices.add: (scala.Short) => scala.Unit)(value1)
     (this.indices.add: (scala.Short) => scala.Unit)(value2)
@@ -458,7 +458,7 @@ class MeshBuilder extends com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder {
     (this.indices.add: (scala.Short) => scala.Unit)(value6)
   }
   @java.lang.Override
-  def index(value1: scala.Short, value2: scala.Short, value3: scala.Short, value4: scala.Short, value5: scala.Short, value6: scala.Short, value7: scala.Short, value8: scala.Short): scala.Unit = {
+  override def index(value1: scala.Short, value2: scala.Short, value3: scala.Short, value4: scala.Short, value5: scala.Short, value6: scala.Short, value7: scala.Short, value8: scala.Short): scala.Unit = {
     this.ensureIndices(8)
     (this.indices.add: (scala.Short) => scala.Unit)(value1)
     (this.indices.add: (scala.Short) => scala.Unit)(value2)
@@ -470,31 +470,31 @@ class MeshBuilder extends com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder {
     (this.indices.add: (scala.Short) => scala.Unit)(value8)
   }
   @java.lang.Override
-  def line(index1: scala.Short, index2: scala.Short): scala.Unit = {
+  override def line(index1: scala.Short, index2: scala.Short): scala.Unit = {
     if (this.primitiveType != com.badlogic.gdx.graphics.GL20.GL_LINES) {
       throw new com.badlogic.gdx.utils.GdxRuntimeException("Incorrect primitive type")
     } else ()
     this.index(index1, index2)
   }
   @java.lang.Override
-  def line(p1: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo, p2: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo): scala.Unit = {
+  override def line(p1: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo, p2: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo): scala.Unit = {
     this.ensureVertices(2)
     this.line(this.vertex(p1), this.vertex(p2))
   }
   @java.lang.Override
-  def line(p1: com.badlogic.gdx.math.Vector3, p2: com.badlogic.gdx.math.Vector3): scala.Unit = {
+  override def line(p1: com.badlogic.gdx.math.Vector3, p2: com.badlogic.gdx.math.Vector3): scala.Unit = {
     this.line(this.vertTmp1.set(p1, null, null, null), this.vertTmp2.set(p2, null, null, null))
   }
   @java.lang.Override
-  def line(x1: scala.Float, y1: scala.Float, z1: scala.Float, x2: scala.Float, y2: scala.Float, z2: scala.Float): scala.Unit = {
+  override def line(x1: scala.Float, y1: scala.Float, z1: scala.Float, x2: scala.Float, y2: scala.Float, z2: scala.Float): scala.Unit = {
     this.line(this.vertTmp1.set(null, null, null, null).setPos(x1, y1, z1), this.vertTmp2.set(null, null, null, null).setPos(x2, y2, z2))
   }
   @java.lang.Override
-  def line(p1: com.badlogic.gdx.math.Vector3, c1: com.badlogic.gdx.graphics.Color, p2: com.badlogic.gdx.math.Vector3, c2: com.badlogic.gdx.graphics.Color): scala.Unit = {
+  override def line(p1: com.badlogic.gdx.math.Vector3, c1: com.badlogic.gdx.graphics.Color, p2: com.badlogic.gdx.math.Vector3, c2: com.badlogic.gdx.graphics.Color): scala.Unit = {
     this.line(this.vertTmp1.set(p1, null, c1, null), this.vertTmp2.set(p2, null, c2, null))
   }
   @java.lang.Override
-  def triangle(index1: scala.Short, index2: scala.Short, index3: scala.Short): scala.Unit = {
+  override def triangle(index1: scala.Short, index2: scala.Short, index3: scala.Short): scala.Unit = {
     if ((this.primitiveType == com.badlogic.gdx.graphics.GL20.GL_TRIANGLES) || (this.primitiveType == com.badlogic.gdx.graphics.GL20.GL_POINTS)) {
       this.index(index1, index2, index3)
     } else {
@@ -506,20 +506,20 @@ class MeshBuilder extends com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder {
     }
   }
   @java.lang.Override
-  def triangle(p1: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo, p2: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo, p3: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo): scala.Unit = {
+  override def triangle(p1: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo, p2: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo, p3: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo): scala.Unit = {
     this.ensureVertices(3)
     this.triangle(this.vertex(p1), this.vertex(p2), this.vertex(p3))
   }
   @java.lang.Override
-  def triangle(p1: com.badlogic.gdx.math.Vector3, p2: com.badlogic.gdx.math.Vector3, p3: com.badlogic.gdx.math.Vector3): scala.Unit = {
+  override def triangle(p1: com.badlogic.gdx.math.Vector3, p2: com.badlogic.gdx.math.Vector3, p3: com.badlogic.gdx.math.Vector3): scala.Unit = {
     this.triangle(this.vertTmp1.set(p1, null, null, null), this.vertTmp2.set(p2, null, null, null), this.vertTmp3.set(p3, null, null, null))
   }
   @java.lang.Override
-  def triangle(p1: com.badlogic.gdx.math.Vector3, c1: com.badlogic.gdx.graphics.Color, p2: com.badlogic.gdx.math.Vector3, c2: com.badlogic.gdx.graphics.Color, p3: com.badlogic.gdx.math.Vector3, c3: com.badlogic.gdx.graphics.Color): scala.Unit = {
+  override def triangle(p1: com.badlogic.gdx.math.Vector3, c1: com.badlogic.gdx.graphics.Color, p2: com.badlogic.gdx.math.Vector3, c2: com.badlogic.gdx.graphics.Color, p3: com.badlogic.gdx.math.Vector3, c3: com.badlogic.gdx.graphics.Color): scala.Unit = {
     this.triangle(this.vertTmp1.set(p1, null, c1, null), this.vertTmp2.set(p2, null, c2, null), this.vertTmp3.set(p3, null, c3, null))
   }
   @java.lang.Override
-  def rect(corner00: scala.Short, corner10: scala.Short, corner11: scala.Short, corner01: scala.Short): scala.Unit = {
+  override def rect(corner00: scala.Short, corner10: scala.Short, corner11: scala.Short, corner01: scala.Short): scala.Unit = {
     if (this.primitiveType == com.badlogic.gdx.graphics.GL20.GL_TRIANGLES) {
       this.index(corner00, corner10, corner11, corner11, corner01, corner00)
     } else {
@@ -535,31 +535,31 @@ class MeshBuilder extends com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder {
     }
   }
   @java.lang.Override
-  def rect(corner00: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo, corner10: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo, corner11: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo, corner01: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo): scala.Unit = {
+  override def rect(corner00: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo, corner10: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo, corner11: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo, corner01: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo): scala.Unit = {
     this.ensureVertices(4)
     this.rect(this.vertex(corner00), this.vertex(corner10), this.vertex(corner11), this.vertex(corner01))
   }
   @java.lang.Override
-  def rect(corner00: com.badlogic.gdx.math.Vector3, corner10: com.badlogic.gdx.math.Vector3, corner11: com.badlogic.gdx.math.Vector3, corner01: com.badlogic.gdx.math.Vector3, normal: com.badlogic.gdx.math.Vector3): scala.Unit = {
+  override def rect(corner00: com.badlogic.gdx.math.Vector3, corner10: com.badlogic.gdx.math.Vector3, corner11: com.badlogic.gdx.math.Vector3, corner01: com.badlogic.gdx.math.Vector3, normal: com.badlogic.gdx.math.Vector3): scala.Unit = {
     this.rect(this.vertTmp1.set(corner00, normal, null, null).setUV(0.0f, 1.0f), this.vertTmp2.set(corner10, normal, null, null).setUV(1.0f, 1.0f), this.vertTmp3.set(corner11, normal, null, null).setUV(1.0f, 0.0f), this.vertTmp4.set(corner01, normal, null, null).setUV(0.0f, 0.0f))
   }
   @java.lang.Override
-  def rect(x00: scala.Float, y00: scala.Float, z00: scala.Float, x10: scala.Float, y10: scala.Float, z10: scala.Float, x11: scala.Float, y11: scala.Float, z11: scala.Float, x01: scala.Float, y01: scala.Float, z01: scala.Float, normalX: scala.Float, normalY: scala.Float, normalZ: scala.Float): scala.Unit = {
+  override def rect(x00: scala.Float, y00: scala.Float, z00: scala.Float, x10: scala.Float, y10: scala.Float, z10: scala.Float, x11: scala.Float, y11: scala.Float, z11: scala.Float, x01: scala.Float, y01: scala.Float, z01: scala.Float, normalX: scala.Float, normalY: scala.Float, normalZ: scala.Float): scala.Unit = {
     this.rect(this.vertTmp1.set(null, null, null, null).setPos(x00, y00, z00).setNor(normalX, normalY, normalZ).setUV(0.0f, 1.0f), this.vertTmp2.set(null, null, null, null).setPos(x10, y10, z10).setNor(normalX, normalY, normalZ).setUV(1.0f, 1.0f), this.vertTmp3.set(null, null, null, null).setPos(x11, y11, z11).setNor(normalX, normalY, normalZ).setUV(1.0f, 0.0f), this.vertTmp4.set(null, null, null, null).setPos(x01, y01, z01).setNor(normalX, normalY, normalZ).setUV(0.0f, 0.0f))
   }
   @java.lang.Override
-  def addMesh(mesh: com.badlogic.gdx.graphics.Mesh): scala.Unit = {
+  override def addMesh(mesh: com.badlogic.gdx.graphics.Mesh): scala.Unit = {
     this.addMesh(mesh, 0, mesh.getNumIndices())
   }
   @java.lang.Override
-  def addMesh(meshpart: com.badlogic.gdx.graphics.g3d.model.MeshPart): scala.Unit = {
+  override def addMesh(meshpart: com.badlogic.gdx.graphics.g3d.model.MeshPart): scala.Unit = {
     if (meshpart.primitiveType != this.primitiveType) {
       throw new com.badlogic.gdx.utils.GdxRuntimeException("Primitive type doesn't match")
     } else ()
     this.addMesh(meshpart.mesh, meshpart.offset, meshpart.size)
   }
   @java.lang.Override
-  def addMesh(mesh: com.badlogic.gdx.graphics.Mesh, indexOffset: scala.Int, numIndices: scala.Int): scala.Unit = {
+  override def addMesh(mesh: com.badlogic.gdx.graphics.Mesh, indexOffset: scala.Int, numIndices: scala.Int): scala.Unit = {
     if (!this.attributes.equals(mesh.getVertexAttributes())) {
       throw new com.badlogic.gdx.utils.GdxRuntimeException("Vertex attributes do not match")
     } else ()
@@ -578,7 +578,7 @@ class MeshBuilder extends com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder {
     this.addMesh(MeshBuilder.tmpVertices.items, MeshBuilder.tmpIndices.items, 0, numIndices)
   }
   @java.lang.Override
-  def addMesh(vertices: scala.Array[scala.Float], indices: scala.Array[scala.Short], indexOffset: scala.Int, numIndices: scala.Int): scala.Unit = {
+  override def addMesh(vertices: scala.Array[scala.Float], indices: scala.Array[scala.Short], indexOffset: scala.Int, numIndices: scala.Int): scala.Unit = {
     if (MeshBuilder.indicesMap == null) {
       MeshBuilder.indicesMap = new com.badlogic.gdx.utils.IntIntMap(numIndices)
     } else {
@@ -602,7 +602,7 @@ class MeshBuilder extends com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder {
     }; i = i + 1 } }
   }
   @java.lang.Override
-  def addMesh(vertices: scala.Array[scala.Float], indices: scala.Array[scala.Short]): scala.Unit = {
+  override def addMesh(vertices: scala.Array[scala.Float], indices: scala.Array[scala.Short]): scala.Unit = {
     val offset: scala.Int = this.lastIndex$field + 1
     val numVertices: scala.Int = vertices.length / this.stride
     this.ensureVertices(numVertices);
@@ -616,197 +616,197 @@ class MeshBuilder extends com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder {
   }
   @java.lang.Override
   @java.lang.Deprecated
-  def patch(corner00: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo, corner10: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo, corner11: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo, corner01: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo, divisionsU: scala.Int, divisionsV: scala.Int): scala.Unit = {
+  override def patch(corner00: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo, corner10: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo, corner11: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo, corner01: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo, divisionsU: scala.Int, divisionsV: scala.Int): scala.Unit = {
     com.badlogic.gdx.graphics.g3d.utils.shapebuilders.PatchShapeBuilder.build(this, corner00, corner10, corner11, corner01, divisionsU, divisionsV)
   }
   @java.lang.Override
   @java.lang.Deprecated
-  def patch(corner00: com.badlogic.gdx.math.Vector3, corner10: com.badlogic.gdx.math.Vector3, corner11: com.badlogic.gdx.math.Vector3, corner01: com.badlogic.gdx.math.Vector3, normal: com.badlogic.gdx.math.Vector3, divisionsU: scala.Int, divisionsV: scala.Int): scala.Unit = {
+  override def patch(corner00: com.badlogic.gdx.math.Vector3, corner10: com.badlogic.gdx.math.Vector3, corner11: com.badlogic.gdx.math.Vector3, corner01: com.badlogic.gdx.math.Vector3, normal: com.badlogic.gdx.math.Vector3, divisionsU: scala.Int, divisionsV: scala.Int): scala.Unit = {
     com.badlogic.gdx.graphics.g3d.utils.shapebuilders.PatchShapeBuilder.build(this, corner00, corner10, corner11, corner01, normal, divisionsU, divisionsV)
   }
   @java.lang.Override
   @java.lang.Deprecated
-  def patch(x00: scala.Float, y00: scala.Float, z00: scala.Float, x10: scala.Float, y10: scala.Float, z10: scala.Float, x11: scala.Float, y11: scala.Float, z11: scala.Float, x01: scala.Float, y01: scala.Float, z01: scala.Float, normalX: scala.Float, normalY: scala.Float, normalZ: scala.Float, divisionsU: scala.Int, divisionsV: scala.Int): scala.Unit = {
+  override def patch(x00: scala.Float, y00: scala.Float, z00: scala.Float, x10: scala.Float, y10: scala.Float, z10: scala.Float, x11: scala.Float, y11: scala.Float, z11: scala.Float, x01: scala.Float, y01: scala.Float, z01: scala.Float, normalX: scala.Float, normalY: scala.Float, normalZ: scala.Float, divisionsU: scala.Int, divisionsV: scala.Int): scala.Unit = {
     com.badlogic.gdx.graphics.g3d.utils.shapebuilders.PatchShapeBuilder.build(this, x00, y00, z00, x10, y10, z10, x11, y11, z11, x01, y01, z01, normalX, normalY, normalZ, divisionsU, divisionsV)
   }
   @java.lang.Override
   @java.lang.Deprecated
-  def box(corner000: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo, corner010: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo, corner100: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo, corner110: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo, corner001: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo, corner011: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo, corner101: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo, corner111: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo): scala.Unit = {
+  override def box(corner000: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo, corner010: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo, corner100: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo, corner110: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo, corner001: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo, corner011: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo, corner101: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo, corner111: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo): scala.Unit = {
     com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BoxShapeBuilder.build(this, corner000, corner010, corner100, corner110, corner001, corner011, corner101, corner111)
   }
   @java.lang.Override
   @java.lang.Deprecated
-  def box(corner000: com.badlogic.gdx.math.Vector3, corner010: com.badlogic.gdx.math.Vector3, corner100: com.badlogic.gdx.math.Vector3, corner110: com.badlogic.gdx.math.Vector3, corner001: com.badlogic.gdx.math.Vector3, corner011: com.badlogic.gdx.math.Vector3, corner101: com.badlogic.gdx.math.Vector3, corner111: com.badlogic.gdx.math.Vector3): scala.Unit = {
+  override def box(corner000: com.badlogic.gdx.math.Vector3, corner010: com.badlogic.gdx.math.Vector3, corner100: com.badlogic.gdx.math.Vector3, corner110: com.badlogic.gdx.math.Vector3, corner001: com.badlogic.gdx.math.Vector3, corner011: com.badlogic.gdx.math.Vector3, corner101: com.badlogic.gdx.math.Vector3, corner111: com.badlogic.gdx.math.Vector3): scala.Unit = {
     com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BoxShapeBuilder.build(this, corner000, corner010, corner100, corner110, corner001, corner011, corner101, corner111)
   }
   @java.lang.Override
   @java.lang.Deprecated
-  def box(transform: com.badlogic.gdx.math.Matrix4): scala.Unit = {
+  override def box(transform: com.badlogic.gdx.math.Matrix4): scala.Unit = {
     com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BoxShapeBuilder.build(this, transform)
   }
   @java.lang.Override
   @java.lang.Deprecated
-  def box(width: scala.Float, height: scala.Float, depth: scala.Float): scala.Unit = {
+  override def box(width: scala.Float, height: scala.Float, depth: scala.Float): scala.Unit = {
     com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BoxShapeBuilder.build(this, width, height, depth)
   }
   @java.lang.Override
   @java.lang.Deprecated
-  def box(x: scala.Float, y: scala.Float, z: scala.Float, width: scala.Float, height: scala.Float, depth: scala.Float): scala.Unit = {
+  override def box(x: scala.Float, y: scala.Float, z: scala.Float, width: scala.Float, height: scala.Float, depth: scala.Float): scala.Unit = {
     com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BoxShapeBuilder.build(this, x, y, z, width, height, depth)
   }
   @java.lang.Override
   @java.lang.Deprecated
-  def circle(radius: scala.Float, divisions: scala.Int, centerX: scala.Float, centerY: scala.Float, centerZ: scala.Float, normalX: scala.Float, normalY: scala.Float, normalZ: scala.Float): scala.Unit = {
+  override def circle(radius: scala.Float, divisions: scala.Int, centerX: scala.Float, centerY: scala.Float, centerZ: scala.Float, normalX: scala.Float, normalY: scala.Float, normalZ: scala.Float): scala.Unit = {
     com.badlogic.gdx.graphics.g3d.utils.shapebuilders.EllipseShapeBuilder.build(this, radius, divisions, centerX, centerY, centerZ, normalX, normalY, normalZ)
   }
   @java.lang.Override
   @java.lang.Deprecated
-  def circle(radius: scala.Float, divisions: scala.Int, center: com.badlogic.gdx.math.Vector3, normal: com.badlogic.gdx.math.Vector3): scala.Unit = {
+  override def circle(radius: scala.Float, divisions: scala.Int, center: com.badlogic.gdx.math.Vector3, normal: com.badlogic.gdx.math.Vector3): scala.Unit = {
     com.badlogic.gdx.graphics.g3d.utils.shapebuilders.EllipseShapeBuilder.build(this, radius, divisions, center, normal)
   }
   @java.lang.Override
   @java.lang.Deprecated
-  def circle(radius: scala.Float, divisions: scala.Int, center: com.badlogic.gdx.math.Vector3, normal: com.badlogic.gdx.math.Vector3, tangent: com.badlogic.gdx.math.Vector3, binormal: com.badlogic.gdx.math.Vector3): scala.Unit = {
+  override def circle(radius: scala.Float, divisions: scala.Int, center: com.badlogic.gdx.math.Vector3, normal: com.badlogic.gdx.math.Vector3, tangent: com.badlogic.gdx.math.Vector3, binormal: com.badlogic.gdx.math.Vector3): scala.Unit = {
     com.badlogic.gdx.graphics.g3d.utils.shapebuilders.EllipseShapeBuilder.build(this, radius, divisions, center, normal, tangent, binormal)
   }
   @java.lang.Override
   @java.lang.Deprecated
-  def circle(radius: scala.Float, divisions: scala.Int, centerX: scala.Float, centerY: scala.Float, centerZ: scala.Float, normalX: scala.Float, normalY: scala.Float, normalZ: scala.Float, tangentX: scala.Float, tangentY: scala.Float, tangentZ: scala.Float, binormalX: scala.Float, binormalY: scala.Float, binormalZ: scala.Float): scala.Unit = {
+  override def circle(radius: scala.Float, divisions: scala.Int, centerX: scala.Float, centerY: scala.Float, centerZ: scala.Float, normalX: scala.Float, normalY: scala.Float, normalZ: scala.Float, tangentX: scala.Float, tangentY: scala.Float, tangentZ: scala.Float, binormalX: scala.Float, binormalY: scala.Float, binormalZ: scala.Float): scala.Unit = {
     com.badlogic.gdx.graphics.g3d.utils.shapebuilders.EllipseShapeBuilder.build(this, radius, divisions, centerX, centerY, centerZ, normalX, normalY, normalZ, tangentX, tangentY, tangentZ, binormalX, binormalY, binormalZ)
   }
   @java.lang.Override
   @java.lang.Deprecated
-  def circle(radius: scala.Float, divisions: scala.Int, centerX: scala.Float, centerY: scala.Float, centerZ: scala.Float, normalX: scala.Float, normalY: scala.Float, normalZ: scala.Float, angleFrom: scala.Float, angleTo: scala.Float): scala.Unit = {
+  override def circle(radius: scala.Float, divisions: scala.Int, centerX: scala.Float, centerY: scala.Float, centerZ: scala.Float, normalX: scala.Float, normalY: scala.Float, normalZ: scala.Float, angleFrom: scala.Float, angleTo: scala.Float): scala.Unit = {
     com.badlogic.gdx.graphics.g3d.utils.shapebuilders.EllipseShapeBuilder.build(this, radius, divisions, centerX, centerY, centerZ, normalX, normalY, normalZ, angleFrom, angleTo)
   }
   @java.lang.Override
   @java.lang.Deprecated
-  def circle(radius: scala.Float, divisions: scala.Int, center: com.badlogic.gdx.math.Vector3, normal: com.badlogic.gdx.math.Vector3, angleFrom: scala.Float, angleTo: scala.Float): scala.Unit = {
+  override def circle(radius: scala.Float, divisions: scala.Int, center: com.badlogic.gdx.math.Vector3, normal: com.badlogic.gdx.math.Vector3, angleFrom: scala.Float, angleTo: scala.Float): scala.Unit = {
     com.badlogic.gdx.graphics.g3d.utils.shapebuilders.EllipseShapeBuilder.build(this, radius, divisions, center, normal, angleFrom, angleTo)
   }
   @java.lang.Override
   @java.lang.Deprecated
-  def circle(radius: scala.Float, divisions: scala.Int, center: com.badlogic.gdx.math.Vector3, normal: com.badlogic.gdx.math.Vector3, tangent: com.badlogic.gdx.math.Vector3, binormal: com.badlogic.gdx.math.Vector3, angleFrom: scala.Float, angleTo: scala.Float): scala.Unit = {
+  override def circle(radius: scala.Float, divisions: scala.Int, center: com.badlogic.gdx.math.Vector3, normal: com.badlogic.gdx.math.Vector3, tangent: com.badlogic.gdx.math.Vector3, binormal: com.badlogic.gdx.math.Vector3, angleFrom: scala.Float, angleTo: scala.Float): scala.Unit = {
     this.circle(radius, divisions, center.x, center.y, center.z, normal.x, normal.y, normal.z, tangent.x, tangent.y, tangent.z, binormal.x, binormal.y, binormal.z, angleFrom, angleTo)
   }
   @java.lang.Override
   @java.lang.Deprecated
-  def circle(radius: scala.Float, divisions: scala.Int, centerX: scala.Float, centerY: scala.Float, centerZ: scala.Float, normalX: scala.Float, normalY: scala.Float, normalZ: scala.Float, tangentX: scala.Float, tangentY: scala.Float, tangentZ: scala.Float, binormalX: scala.Float, binormalY: scala.Float, binormalZ: scala.Float, angleFrom: scala.Float, angleTo: scala.Float): scala.Unit = {
+  override def circle(radius: scala.Float, divisions: scala.Int, centerX: scala.Float, centerY: scala.Float, centerZ: scala.Float, normalX: scala.Float, normalY: scala.Float, normalZ: scala.Float, tangentX: scala.Float, tangentY: scala.Float, tangentZ: scala.Float, binormalX: scala.Float, binormalY: scala.Float, binormalZ: scala.Float, angleFrom: scala.Float, angleTo: scala.Float): scala.Unit = {
     com.badlogic.gdx.graphics.g3d.utils.shapebuilders.EllipseShapeBuilder.build(this, radius, divisions, centerX, centerY, centerZ, normalX, normalY, normalZ, tangentX, tangentY, tangentZ, binormalX, binormalY, binormalZ, angleFrom, angleTo)
   }
   @java.lang.Override
   @java.lang.Deprecated
-  def ellipse(width: scala.Float, height: scala.Float, divisions: scala.Int, centerX: scala.Float, centerY: scala.Float, centerZ: scala.Float, normalX: scala.Float, normalY: scala.Float, normalZ: scala.Float): scala.Unit = {
+  override def ellipse(width: scala.Float, height: scala.Float, divisions: scala.Int, centerX: scala.Float, centerY: scala.Float, centerZ: scala.Float, normalX: scala.Float, normalY: scala.Float, normalZ: scala.Float): scala.Unit = {
     com.badlogic.gdx.graphics.g3d.utils.shapebuilders.EllipseShapeBuilder.build(this, width, height, divisions, centerX, centerY, centerZ, normalX, normalY, normalZ)
   }
   @java.lang.Override
   @java.lang.Deprecated
-  def ellipse(width: scala.Float, height: scala.Float, divisions: scala.Int, center: com.badlogic.gdx.math.Vector3, normal: com.badlogic.gdx.math.Vector3): scala.Unit = {
+  override def ellipse(width: scala.Float, height: scala.Float, divisions: scala.Int, center: com.badlogic.gdx.math.Vector3, normal: com.badlogic.gdx.math.Vector3): scala.Unit = {
     com.badlogic.gdx.graphics.g3d.utils.shapebuilders.EllipseShapeBuilder.build(this, width, height, divisions, center, normal)
   }
   @java.lang.Override
   @java.lang.Deprecated
-  def ellipse(width: scala.Float, height: scala.Float, divisions: scala.Int, center: com.badlogic.gdx.math.Vector3, normal: com.badlogic.gdx.math.Vector3, tangent: com.badlogic.gdx.math.Vector3, binormal: com.badlogic.gdx.math.Vector3): scala.Unit = {
+  override def ellipse(width: scala.Float, height: scala.Float, divisions: scala.Int, center: com.badlogic.gdx.math.Vector3, normal: com.badlogic.gdx.math.Vector3, tangent: com.badlogic.gdx.math.Vector3, binormal: com.badlogic.gdx.math.Vector3): scala.Unit = {
     com.badlogic.gdx.graphics.g3d.utils.shapebuilders.EllipseShapeBuilder.build(this, width, height, divisions, center, normal, tangent, binormal)
   }
   @java.lang.Override
   @java.lang.Deprecated
-  def ellipse(width: scala.Float, height: scala.Float, divisions: scala.Int, centerX: scala.Float, centerY: scala.Float, centerZ: scala.Float, normalX: scala.Float, normalY: scala.Float, normalZ: scala.Float, tangentX: scala.Float, tangentY: scala.Float, tangentZ: scala.Float, binormalX: scala.Float, binormalY: scala.Float, binormalZ: scala.Float): scala.Unit = {
+  override def ellipse(width: scala.Float, height: scala.Float, divisions: scala.Int, centerX: scala.Float, centerY: scala.Float, centerZ: scala.Float, normalX: scala.Float, normalY: scala.Float, normalZ: scala.Float, tangentX: scala.Float, tangentY: scala.Float, tangentZ: scala.Float, binormalX: scala.Float, binormalY: scala.Float, binormalZ: scala.Float): scala.Unit = {
     com.badlogic.gdx.graphics.g3d.utils.shapebuilders.EllipseShapeBuilder.build(this, width, height, divisions, centerX, centerY, centerZ, normalX, normalY, normalZ, tangentX, tangentY, tangentZ, binormalX, binormalY, binormalZ)
   }
   @java.lang.Override
   @java.lang.Deprecated
-  def ellipse(width: scala.Float, height: scala.Float, divisions: scala.Int, centerX: scala.Float, centerY: scala.Float, centerZ: scala.Float, normalX: scala.Float, normalY: scala.Float, normalZ: scala.Float, angleFrom: scala.Float, angleTo: scala.Float): scala.Unit = {
+  override def ellipse(width: scala.Float, height: scala.Float, divisions: scala.Int, centerX: scala.Float, centerY: scala.Float, centerZ: scala.Float, normalX: scala.Float, normalY: scala.Float, normalZ: scala.Float, angleFrom: scala.Float, angleTo: scala.Float): scala.Unit = {
     com.badlogic.gdx.graphics.g3d.utils.shapebuilders.EllipseShapeBuilder.build(this, width, height, divisions, centerX, centerY, centerZ, normalX, normalY, normalZ, angleFrom, angleTo)
   }
   @java.lang.Override
   @java.lang.Deprecated
-  def ellipse(width: scala.Float, height: scala.Float, divisions: scala.Int, center: com.badlogic.gdx.math.Vector3, normal: com.badlogic.gdx.math.Vector3, angleFrom: scala.Float, angleTo: scala.Float): scala.Unit = {
+  override def ellipse(width: scala.Float, height: scala.Float, divisions: scala.Int, center: com.badlogic.gdx.math.Vector3, normal: com.badlogic.gdx.math.Vector3, angleFrom: scala.Float, angleTo: scala.Float): scala.Unit = {
     com.badlogic.gdx.graphics.g3d.utils.shapebuilders.EllipseShapeBuilder.build(this, width, height, divisions, center, normal, angleFrom, angleTo)
   }
   @java.lang.Override
   @java.lang.Deprecated
-  def ellipse(width: scala.Float, height: scala.Float, divisions: scala.Int, center: com.badlogic.gdx.math.Vector3, normal: com.badlogic.gdx.math.Vector3, tangent: com.badlogic.gdx.math.Vector3, binormal: com.badlogic.gdx.math.Vector3, angleFrom: scala.Float, angleTo: scala.Float): scala.Unit = {
+  override def ellipse(width: scala.Float, height: scala.Float, divisions: scala.Int, center: com.badlogic.gdx.math.Vector3, normal: com.badlogic.gdx.math.Vector3, tangent: com.badlogic.gdx.math.Vector3, binormal: com.badlogic.gdx.math.Vector3, angleFrom: scala.Float, angleTo: scala.Float): scala.Unit = {
     com.badlogic.gdx.graphics.g3d.utils.shapebuilders.EllipseShapeBuilder.build(this, width, height, divisions, center, normal, tangent, binormal, angleFrom, angleTo)
   }
   @java.lang.Override
   @java.lang.Deprecated
-  def ellipse(width: scala.Float, height: scala.Float, divisions: scala.Int, centerX: scala.Float, centerY: scala.Float, centerZ: scala.Float, normalX: scala.Float, normalY: scala.Float, normalZ: scala.Float, tangentX: scala.Float, tangentY: scala.Float, tangentZ: scala.Float, binormalX: scala.Float, binormalY: scala.Float, binormalZ: scala.Float, angleFrom: scala.Float, angleTo: scala.Float): scala.Unit = {
+  override def ellipse(width: scala.Float, height: scala.Float, divisions: scala.Int, centerX: scala.Float, centerY: scala.Float, centerZ: scala.Float, normalX: scala.Float, normalY: scala.Float, normalZ: scala.Float, tangentX: scala.Float, tangentY: scala.Float, tangentZ: scala.Float, binormalX: scala.Float, binormalY: scala.Float, binormalZ: scala.Float, angleFrom: scala.Float, angleTo: scala.Float): scala.Unit = {
     com.badlogic.gdx.graphics.g3d.utils.shapebuilders.EllipseShapeBuilder.build(this, width, height, divisions, centerX, centerY, centerZ, normalX, normalY, normalZ, tangentX, tangentY, tangentZ, binormalX, binormalY, binormalZ, angleFrom, angleTo)
   }
   @java.lang.Override
   @java.lang.Deprecated
-  def ellipse(width: scala.Float, height: scala.Float, innerWidth: scala.Float, innerHeight: scala.Float, divisions: scala.Int, center: com.badlogic.gdx.math.Vector3, normal: com.badlogic.gdx.math.Vector3): scala.Unit = {
+  override def ellipse(width: scala.Float, height: scala.Float, innerWidth: scala.Float, innerHeight: scala.Float, divisions: scala.Int, center: com.badlogic.gdx.math.Vector3, normal: com.badlogic.gdx.math.Vector3): scala.Unit = {
     com.badlogic.gdx.graphics.g3d.utils.shapebuilders.EllipseShapeBuilder.build(this, width, height, innerWidth, innerHeight, divisions, center, normal)
   }
   @java.lang.Override
   @java.lang.Deprecated
-  def ellipse(width: scala.Float, height: scala.Float, innerWidth: scala.Float, innerHeight: scala.Float, divisions: scala.Int, centerX: scala.Float, centerY: scala.Float, centerZ: scala.Float, normalX: scala.Float, normalY: scala.Float, normalZ: scala.Float): scala.Unit = {
+  override def ellipse(width: scala.Float, height: scala.Float, innerWidth: scala.Float, innerHeight: scala.Float, divisions: scala.Int, centerX: scala.Float, centerY: scala.Float, centerZ: scala.Float, normalX: scala.Float, normalY: scala.Float, normalZ: scala.Float): scala.Unit = {
     com.badlogic.gdx.graphics.g3d.utils.shapebuilders.EllipseShapeBuilder.build(this, width, height, innerWidth, innerHeight, divisions, centerX, centerY, centerZ, normalX, normalY, normalZ)
   }
   @java.lang.Override
   @java.lang.Deprecated
-  def ellipse(width: scala.Float, height: scala.Float, innerWidth: scala.Float, innerHeight: scala.Float, divisions: scala.Int, centerX: scala.Float, centerY: scala.Float, centerZ: scala.Float, normalX: scala.Float, normalY: scala.Float, normalZ: scala.Float, angleFrom: scala.Float, angleTo: scala.Float): scala.Unit = {
+  override def ellipse(width: scala.Float, height: scala.Float, innerWidth: scala.Float, innerHeight: scala.Float, divisions: scala.Int, centerX: scala.Float, centerY: scala.Float, centerZ: scala.Float, normalX: scala.Float, normalY: scala.Float, normalZ: scala.Float, angleFrom: scala.Float, angleTo: scala.Float): scala.Unit = {
     com.badlogic.gdx.graphics.g3d.utils.shapebuilders.EllipseShapeBuilder.build(this, width, height, innerWidth, innerHeight, divisions, centerX, centerY, centerZ, normalX, normalY, normalZ, angleFrom, angleTo)
   }
   @java.lang.Override
   @java.lang.Deprecated
-  def ellipse(width: scala.Float, height: scala.Float, innerWidth: scala.Float, innerHeight: scala.Float, divisions: scala.Int, centerX: scala.Float, centerY: scala.Float, centerZ: scala.Float, normalX: scala.Float, normalY: scala.Float, normalZ: scala.Float, tangentX: scala.Float, tangentY: scala.Float, tangentZ: scala.Float, binormalX: scala.Float, binormalY: scala.Float, binormalZ: scala.Float, angleFrom: scala.Float, angleTo: scala.Float): scala.Unit = {
+  override def ellipse(width: scala.Float, height: scala.Float, innerWidth: scala.Float, innerHeight: scala.Float, divisions: scala.Int, centerX: scala.Float, centerY: scala.Float, centerZ: scala.Float, normalX: scala.Float, normalY: scala.Float, normalZ: scala.Float, tangentX: scala.Float, tangentY: scala.Float, tangentZ: scala.Float, binormalX: scala.Float, binormalY: scala.Float, binormalZ: scala.Float, angleFrom: scala.Float, angleTo: scala.Float): scala.Unit = {
     com.badlogic.gdx.graphics.g3d.utils.shapebuilders.EllipseShapeBuilder.build(this, width, height, innerWidth, innerHeight, divisions, centerX, centerY, centerZ, normalX, normalY, normalZ, tangentX, tangentY, tangentZ, binormalX, binormalY, binormalZ, angleFrom, angleTo)
   }
   @java.lang.Override
   @java.lang.Deprecated
-  def cylinder(width: scala.Float, height: scala.Float, depth: scala.Float, divisions: scala.Int): scala.Unit = {
+  override def cylinder(width: scala.Float, height: scala.Float, depth: scala.Float, divisions: scala.Int): scala.Unit = {
     com.badlogic.gdx.graphics.g3d.utils.shapebuilders.CylinderShapeBuilder.build(this, width, height, depth, divisions)
   }
   @java.lang.Override
   @java.lang.Deprecated
-  def cylinder(width: scala.Float, height: scala.Float, depth: scala.Float, divisions: scala.Int, angleFrom: scala.Float, angleTo: scala.Float): scala.Unit = {
+  override def cylinder(width: scala.Float, height: scala.Float, depth: scala.Float, divisions: scala.Int, angleFrom: scala.Float, angleTo: scala.Float): scala.Unit = {
     com.badlogic.gdx.graphics.g3d.utils.shapebuilders.CylinderShapeBuilder.build(this, width, height, depth, divisions, angleFrom, angleTo)
   }
   @java.lang.Override
   @java.lang.Deprecated
-  def cylinder(width: scala.Float, height: scala.Float, depth: scala.Float, divisions: scala.Int, angleFrom: scala.Float, angleTo: scala.Float, close: scala.Boolean): scala.Unit = {
+  override def cylinder(width: scala.Float, height: scala.Float, depth: scala.Float, divisions: scala.Int, angleFrom: scala.Float, angleTo: scala.Float, close: scala.Boolean): scala.Unit = {
     com.badlogic.gdx.graphics.g3d.utils.shapebuilders.CylinderShapeBuilder.build(this, width, height, depth, divisions, angleFrom, angleTo, close)
   }
   @java.lang.Override
   @java.lang.Deprecated
-  def cone(width: scala.Float, height: scala.Float, depth: scala.Float, divisions: scala.Int): scala.Unit = {
+  override def cone(width: scala.Float, height: scala.Float, depth: scala.Float, divisions: scala.Int): scala.Unit = {
     this.cone(width, height, depth, divisions, 0, 360)
   }
   @java.lang.Override
   @java.lang.Deprecated
-  def cone(width: scala.Float, height: scala.Float, depth: scala.Float, divisions: scala.Int, angleFrom: scala.Float, angleTo: scala.Float): scala.Unit = {
+  override def cone(width: scala.Float, height: scala.Float, depth: scala.Float, divisions: scala.Int, angleFrom: scala.Float, angleTo: scala.Float): scala.Unit = {
     com.badlogic.gdx.graphics.g3d.utils.shapebuilders.ConeShapeBuilder.build(this, width, height, depth, divisions, angleFrom, angleTo)
   }
   @java.lang.Override
   @java.lang.Deprecated
-  def sphere(width: scala.Float, height: scala.Float, depth: scala.Float, divisionsU: scala.Int, divisionsV: scala.Int): scala.Unit = {
+  override def sphere(width: scala.Float, height: scala.Float, depth: scala.Float, divisionsU: scala.Int, divisionsV: scala.Int): scala.Unit = {
     com.badlogic.gdx.graphics.g3d.utils.shapebuilders.SphereShapeBuilder.build(this, width, height, depth, divisionsU, divisionsV)
   }
   @java.lang.Override
   @java.lang.Deprecated
-  def sphere(transform: com.badlogic.gdx.math.Matrix4, width: scala.Float, height: scala.Float, depth: scala.Float, divisionsU: scala.Int, divisionsV: scala.Int): scala.Unit = {
+  override def sphere(transform: com.badlogic.gdx.math.Matrix4, width: scala.Float, height: scala.Float, depth: scala.Float, divisionsU: scala.Int, divisionsV: scala.Int): scala.Unit = {
     com.badlogic.gdx.graphics.g3d.utils.shapebuilders.SphereShapeBuilder.build(this, transform, width, height, depth, divisionsU, divisionsV)
   }
   @java.lang.Override
   @java.lang.Deprecated
-  def sphere(width: scala.Float, height: scala.Float, depth: scala.Float, divisionsU: scala.Int, divisionsV: scala.Int, angleUFrom: scala.Float, angleUTo: scala.Float, angleVFrom: scala.Float, angleVTo: scala.Float): scala.Unit = {
+  override def sphere(width: scala.Float, height: scala.Float, depth: scala.Float, divisionsU: scala.Int, divisionsV: scala.Int, angleUFrom: scala.Float, angleUTo: scala.Float, angleVFrom: scala.Float, angleVTo: scala.Float): scala.Unit = {
     com.badlogic.gdx.graphics.g3d.utils.shapebuilders.SphereShapeBuilder.build(this, width, height, depth, divisionsU, divisionsV, angleUFrom, angleUTo, angleVFrom, angleVTo)
   }
   @java.lang.Override
   @java.lang.Deprecated
-  def sphere(transform: com.badlogic.gdx.math.Matrix4, width: scala.Float, height: scala.Float, depth: scala.Float, divisionsU: scala.Int, divisionsV: scala.Int, angleUFrom: scala.Float, angleUTo: scala.Float, angleVFrom: scala.Float, angleVTo: scala.Float): scala.Unit = {
+  override def sphere(transform: com.badlogic.gdx.math.Matrix4, width: scala.Float, height: scala.Float, depth: scala.Float, divisionsU: scala.Int, divisionsV: scala.Int, angleUFrom: scala.Float, angleUTo: scala.Float, angleVFrom: scala.Float, angleVTo: scala.Float): scala.Unit = {
     com.badlogic.gdx.graphics.g3d.utils.shapebuilders.SphereShapeBuilder.build(this, transform, width, height, depth, divisionsU, divisionsV, angleUFrom, angleUTo, angleVFrom, angleVTo)
   }
   @java.lang.Override
   @java.lang.Deprecated
-  def capsule(radius: scala.Float, height: scala.Float, divisions: scala.Int): scala.Unit = {
+  override def capsule(radius: scala.Float, height: scala.Float, divisions: scala.Int): scala.Unit = {
     com.badlogic.gdx.graphics.g3d.utils.shapebuilders.CapsuleShapeBuilder.build(this, radius, height, divisions)
   }
   @java.lang.Override
   @java.lang.Deprecated
-  def arrow(x1: scala.Float, y1: scala.Float, z1: scala.Float, x2: scala.Float, y2: scala.Float, z2: scala.Float, capLength: scala.Float, stemThickness: scala.Float, divisions: scala.Int): scala.Unit = {
+  override def arrow(x1: scala.Float, y1: scala.Float, z1: scala.Float, x2: scala.Float, y2: scala.Float, z2: scala.Float, capLength: scala.Float, stemThickness: scala.Float, divisions: scala.Int): scala.Unit = {
     com.badlogic.gdx.graphics.g3d.utils.shapebuilders.ArrowShapeBuilder.build(this, x1, y1, z1, x2, y2, z2, capLength, stemThickness, divisions)
   }
 }

@@ -15,50 +15,50 @@ class GLOnlyTextureData(width$p: scala.Int, height$p: scala.Int, mipMapLevel: sc
   this.format = format$p
   this.`type` = type$p
   @java.lang.Override
-  def getType(): com.badlogic.gdx.graphics.TextureData.TextureDataType = {
+  override def getType(): com.badlogic.gdx.graphics.TextureData.TextureDataType = {
     return com.badlogic.gdx.graphics.TextureData.TextureDataType.Custom
   }
   @java.lang.Override
-  def isPrepared(): scala.Boolean = {
+  override def isPrepared(): scala.Boolean = {
     return this.isPrepared$field
   }
   @java.lang.Override
-  def prepare(): scala.Unit = {
+  override def prepare(): scala.Unit = {
     if (this.isPrepared$field) {
       throw new com.badlogic.gdx.utils.GdxRuntimeException("Already prepared")
     } else ()
     this.isPrepared$field = true
   }
   @java.lang.Override
-  def consumeCustomData(target: scala.Int): scala.Unit = {
+  override def consumeCustomData(target: scala.Int): scala.Unit = {
     com.badlogic.gdx.Gdx.gl.glTexImage2D(target, this.mipLevel, this.internalFormat, this.width, this.height, 0, this.format, this.`type`, null)
   }
   @java.lang.Override
-  def consumePixmap(): com.badlogic.gdx.graphics.Pixmap = {
+  override def consumePixmap(): com.badlogic.gdx.graphics.Pixmap = {
     throw new com.badlogic.gdx.utils.GdxRuntimeException("This TextureData implementation does not return a Pixmap")
   }
   @java.lang.Override
-  def disposePixmap(): scala.Boolean = {
+  override def disposePixmap(): scala.Boolean = {
     throw new com.badlogic.gdx.utils.GdxRuntimeException("This TextureData implementation does not return a Pixmap")
   }
   @java.lang.Override
-  def getWidth(): scala.Int = {
+  override def getWidth(): scala.Int = {
     return this.width
   }
   @java.lang.Override
-  def getHeight(): scala.Int = {
+  override def getHeight(): scala.Int = {
     return this.height
   }
   @java.lang.Override
-  def getFormat(): com.badlogic.gdx.graphics.Pixmap.Format = {
+  override def getFormat(): com.badlogic.gdx.graphics.Pixmap.Format = {
     return com.badlogic.gdx.graphics.Pixmap.Format.RGBA8888
   }
   @java.lang.Override
-  def useMipMaps(): scala.Boolean = {
+  override def useMipMaps(): scala.Boolean = {
     return false
   }
   @java.lang.Override
-  def isManaged(): scala.Boolean = {
+  override def isManaged(): scala.Boolean = {
     return false
   }
 }

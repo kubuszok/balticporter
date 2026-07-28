@@ -443,7 +443,7 @@ class UBJsonWriter(out$arg: java.io.OutputStream) extends java.io.Closeable {
   def flush(): scala.Unit = {
     this.out.flush()
   }
-  def close(): scala.Unit = {
+  override def close(): scala.Unit = {
     while (this.stack.size > 0) {
       this.pop()
     }

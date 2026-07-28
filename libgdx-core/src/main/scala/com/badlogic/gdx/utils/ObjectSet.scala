@@ -195,7 +195,7 @@ class ObjectSet[T <: java.lang.Object] extends balticporter.runtime.JavaIterable
       }; i = i + 1 } }
     } else ()
   }
-  def hashCode(): scala.Int = {
+  override def hashCode(): scala.Int = {
     var h: scala.Int = this.size
     val keyTable: scala.Array[T] = this.keyTable;
     { var i: scala.Int = 0; val n: scala.Int = keyTable.length; while (i < n) { {
@@ -206,7 +206,7 @@ class ObjectSet[T <: java.lang.Object] extends balticporter.runtime.JavaIterable
     }; i = i + 1 } }
     return h
   }
-  def equals(obj: java.lang.Object): scala.Boolean = {
+  override def equals(obj: java.lang.Object): scala.Boolean = {
     if (!obj.isInstanceOf[ObjectSet[T]]) {
       return false
     } else ()
@@ -222,7 +222,7 @@ class ObjectSet[T <: java.lang.Object] extends balticporter.runtime.JavaIterable
     }; i = i + 1 } }
     return true
   }
-  def toString(): java.lang.String = {
+  override def toString(): java.lang.String = {
     return (java.lang.String.valueOf('{') + this.toString(", ")) + '}'
   }
   def toString(separator: java.lang.String): java.lang.String = {
@@ -250,7 +250,7 @@ class ObjectSet[T <: java.lang.Object] extends balticporter.runtime.JavaIterable
     }
     return buffer.toString()
   }
-  def iterator(): com.badlogic.gdx.utils.ObjectSet.ObjectSetIterator[T] = {
+  override def iterator(): com.badlogic.gdx.utils.ObjectSet.ObjectSetIterator[T] = {
     if (com.badlogic.gdx.utils.Collections.allocateIterators) {
       return new com.badlogic.gdx.utils.ObjectSet.ObjectSetIterator(this).asInstanceOf[com.badlogic.gdx.utils.ObjectSet.ObjectSetIterator[T]]
     } else ()
@@ -309,7 +309,7 @@ object ObjectSet {
       };  } }
       this.hasNext$field = false
     }
-    def remove(): scala.Unit = {
+    override def remove(): scala.Unit = {
       var i: scala.Int = this.currentIndex
       if (i < 0) {
         throw new java.lang.IllegalStateException("next must be called before remove.")
@@ -336,13 +336,13 @@ object ObjectSet {
       } else ()
       this.currentIndex = -1
     }
-    def hasNext(): scala.Boolean = {
+    override def hasNext(): scala.Boolean = {
       if (!this.valid) {
         throw new com.badlogic.gdx.utils.GdxRuntimeException("#iterator() cannot be used nested.")
       } else ()
       return this.hasNext$field
     }
-    def next(): K = {
+    override def next(): K = {
       if (!this.hasNext$field) {
         throw new java.util.NoSuchElementException()
       } else ()
@@ -354,7 +354,7 @@ object ObjectSet {
       this.findNextIndex()
       return key
     }
-    def iterator(): com.badlogic.gdx.utils.ObjectSet.ObjectSetIterator[K] = {
+    override def iterator(): com.badlogic.gdx.utils.ObjectSet.ObjectSetIterator[K] = {
       return this
     }
     def toArray(array: com.badlogic.gdx.utils.Array[K]): com.badlogic.gdx.utils.Array[K] = {

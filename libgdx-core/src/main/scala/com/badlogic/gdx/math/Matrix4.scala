@@ -609,7 +609,7 @@ class Matrix4 extends java.io.Serializable {
     this.`val`(Matrix4.M23) = 0
     return this.inv().tra()
   }
-  def toString(): java.lang.String = {
+  override def toString(): java.lang.String = {
     return (((((((((((((((((((((((((((((((((("[" + this.`val`(Matrix4.M00)) + "|") + this.`val`(Matrix4.M01)) + "|") + this.`val`(Matrix4.M02)) + "|") + this.`val`(Matrix4.M03)) + "]\n") + "[") + this.`val`(Matrix4.M10)) + "|") + this.`val`(Matrix4.M11)) + "|") + this.`val`(Matrix4.M12)) + "|") + this.`val`(Matrix4.M13)) + "]\n") + "[") + this.`val`(Matrix4.M20)) + "|") + this.`val`(Matrix4.M21)) + "|") + this.`val`(Matrix4.M22)) + "|") + this.`val`(Matrix4.M23)) + "]\n") + "[") + this.`val`(Matrix4.M30)) + "|") + this.`val`(Matrix4.M31)) + "|") + this.`val`(Matrix4.M32)) + "|") + this.`val`(Matrix4.M33)) + "]\n"
   }
   def translate(translation: com.badlogic.gdx.math.Vector3): Matrix4 = {

@@ -18,7 +18,7 @@ class ClickListener extends com.badlogic.gdx.scenes.scene2d.InputListener {
     this()
     this.button = button
   }
-  def touchDown(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float, pointer: scala.Int, button: scala.Int): scala.Boolean = {
+  override def touchDown(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float, pointer: scala.Int, button: scala.Int): scala.Boolean = {
     if (this.pressed) {
       return false
     } else ()
@@ -33,7 +33,7 @@ class ClickListener extends com.badlogic.gdx.scenes.scene2d.InputListener {
     this.setVisualPressed(true)
     return true
   }
-  def touchDragged(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float, pointer: scala.Int): scala.Unit = {
+  override def touchDragged(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float, pointer: scala.Int): scala.Unit = {
     if ((pointer != this.pressedPointer) || this.cancelled) {
       return
     } else ()
@@ -42,7 +42,7 @@ class ClickListener extends com.badlogic.gdx.scenes.scene2d.InputListener {
       this.invalidateTapSquare()
     } else ()
   }
-  def touchUp(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float, pointer: scala.Int, button: scala.Int): scala.Unit = {
+  override def touchUp(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float, pointer: scala.Int, button: scala.Int): scala.Unit = {
     if (pointer == this.pressedPointer) {
       if (!this.cancelled) {
         var touchUpOver: scala.Boolean = this.isOver(event.getListenerActor(), x, y)
@@ -65,12 +65,12 @@ class ClickListener extends com.badlogic.gdx.scenes.scene2d.InputListener {
       this.cancelled = false
     } else ()
   }
-  def enter(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float, pointer: scala.Int, fromActor: com.badlogic.gdx.scenes.scene2d.Actor): scala.Unit = {
+  override def enter(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float, pointer: scala.Int, fromActor: com.badlogic.gdx.scenes.scene2d.Actor): scala.Unit = {
     if ((pointer == (-1)) && (!this.cancelled)) {
       this.over = true
     } else ()
   }
-  def exit(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float, pointer: scala.Int, toActor: com.badlogic.gdx.scenes.scene2d.Actor): scala.Unit = {
+  override def exit(event: com.badlogic.gdx.scenes.scene2d.InputEvent, x: scala.Float, y: scala.Float, pointer: scala.Int, toActor: com.badlogic.gdx.scenes.scene2d.Actor): scala.Unit = {
     if ((pointer == (-1)) && (!this.cancelled)) {
       this.over = false
     } else ()

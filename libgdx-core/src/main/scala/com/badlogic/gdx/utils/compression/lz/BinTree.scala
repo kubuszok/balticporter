@@ -25,7 +25,7 @@ class BinTree extends com.badlogic.gdx.utils.compression.lz.InWindow {
       this.kFixHashSize = 0
     }
   }
-  def Init(): scala.Unit = {
+  override def Init(): scala.Unit = {
     super.Init();
     { var i: scala.Int = 0; while (i < this._hashSizeSum) { {
       this._hash(i) = BinTree.kEmptyHashValue
@@ -33,7 +33,7 @@ class BinTree extends com.badlogic.gdx.utils.compression.lz.InWindow {
     this._cyclicBufferPos = 0
     this.ReduceOffsets(-1)
   }
-  def MovePos(): scala.Unit = {
+  override def MovePos(): scala.Unit = {
     if ({ this._cyclicBufferPos += 1; this._cyclicBufferPos } >= this._cyclicBufferSize) {
       this._cyclicBufferPos = 0
     } else ()

@@ -27,25 +27,25 @@ class VertexBufferObject extends com.badlogic.gdx.graphics.glutils.VertexData {
     this.setUsage(usage)
   }
   @java.lang.Override
-  def getAttributes(): com.badlogic.gdx.graphics.VertexAttributes = {
+  override def getAttributes(): com.badlogic.gdx.graphics.VertexAttributes = {
     return this.attributes
   }
   @java.lang.Override
-  def getNumVertices(): scala.Int = {
+  override def getNumVertices(): scala.Int = {
     return (this.buffer.limit() * 4) / this.attributes.vertexSize
   }
   @java.lang.Override
-  def getNumMaxVertices(): scala.Int = {
+  override def getNumMaxVertices(): scala.Int = {
     return this.byteBuffer.capacity() / this.attributes.vertexSize
   }
   @java.lang.Override
   @java.lang.Deprecated
-  def getBuffer(): java.nio.FloatBuffer = {
+  override def getBuffer(): java.nio.FloatBuffer = {
     this.isDirty = true
     return this.buffer
   }
   @java.lang.Override
-  def getBuffer(forWriting: scala.Boolean): java.nio.FloatBuffer = {
+  override def getBuffer(forWriting: scala.Boolean): java.nio.FloatBuffer = {
     this.isDirty = this.isDirty | forWriting
     return this.buffer
   }
@@ -76,7 +76,7 @@ class VertexBufferObject extends com.badlogic.gdx.graphics.glutils.VertexData {
     } else ()
   }
   @java.lang.Override
-  def setVertices(vertices: scala.Array[scala.Float], offset: scala.Int, count: scala.Int): scala.Unit = {
+  override def setVertices(vertices: scala.Array[scala.Float], offset: scala.Int, count: scala.Int): scala.Unit = {
     this.isDirty = true
     com.badlogic.gdx.utils.BufferUtils.copy(vertices, this.byteBuffer, count, offset)
     this.buffer.asInstanceOf[java.nio.Buffer].position(0)
@@ -84,7 +84,7 @@ class VertexBufferObject extends com.badlogic.gdx.graphics.glutils.VertexData {
     this.bufferChanged()
   }
   @java.lang.Override
-  def updateVertices(targetOffset: scala.Int, vertices: scala.Array[scala.Float], sourceOffset: scala.Int, count: scala.Int): scala.Unit = {
+  override def updateVertices(targetOffset: scala.Int, vertices: scala.Array[scala.Float], sourceOffset: scala.Int, count: scala.Int): scala.Unit = {
     this.isDirty = true
     val pos: scala.Int = this.byteBuffer.position()
     this.byteBuffer.asInstanceOf[java.nio.Buffer].position(targetOffset * 4)
@@ -103,11 +103,11 @@ class VertexBufferObject extends com.badlogic.gdx.graphics.glutils.VertexData {
     this.usage = value
   }
   @java.lang.Override
-  def bind(shader: com.badlogic.gdx.graphics.glutils.ShaderProgram): scala.Unit = {
+  override def bind(shader: com.badlogic.gdx.graphics.glutils.ShaderProgram): scala.Unit = {
     this.bind(shader, null)
   }
   @java.lang.Override
-  def bind(shader: com.badlogic.gdx.graphics.glutils.ShaderProgram, locations: scala.Array[scala.Int]): scala.Unit = {
+  override def bind(shader: com.badlogic.gdx.graphics.glutils.ShaderProgram, locations: scala.Array[scala.Int]): scala.Unit = {
     val gl: com.badlogic.gdx.graphics.GL20 = com.badlogic.gdx.Gdx.gl20
     gl.glBindBuffer(com.badlogic.gdx.graphics.GL20.GL_ARRAY_BUFFER, this.bufferHandle)
     if (this.isDirty) {
@@ -140,11 +140,11 @@ class VertexBufferObject extends com.badlogic.gdx.graphics.glutils.VertexData {
     this.isBound = true
   }
   @java.lang.Override
-  def unbind(shader: com.badlogic.gdx.graphics.glutils.ShaderProgram): scala.Unit = {
+  override def unbind(shader: com.badlogic.gdx.graphics.glutils.ShaderProgram): scala.Unit = {
     this.unbind(shader, null)
   }
   @java.lang.Override
-  def unbind(shader: com.badlogic.gdx.graphics.glutils.ShaderProgram, locations: scala.Array[scala.Int]): scala.Unit = {
+  override def unbind(shader: com.badlogic.gdx.graphics.glutils.ShaderProgram, locations: scala.Array[scala.Int]): scala.Unit = {
     val gl: com.badlogic.gdx.graphics.GL20 = com.badlogic.gdx.Gdx.gl20
     val numAttributes: scala.Int = this.attributes.size()
     if (locations == null) {
@@ -163,12 +163,12 @@ class VertexBufferObject extends com.badlogic.gdx.graphics.glutils.VertexData {
     this.isBound = false
   }
   @java.lang.Override
-  def invalidate(): scala.Unit = {
+  override def invalidate(): scala.Unit = {
     this.bufferHandle = com.badlogic.gdx.Gdx.gl20.glGenBuffer()
     this.isDirty = true
   }
   @java.lang.Override
-  def dispose(): scala.Unit = {
+  override def dispose(): scala.Unit = {
     val gl: com.badlogic.gdx.graphics.GL20 = com.badlogic.gdx.Gdx.gl20
     gl.glBindBuffer(com.badlogic.gdx.graphics.GL20.GL_ARRAY_BUFFER, 0)
     gl.glDeleteBuffer(this.bufferHandle)

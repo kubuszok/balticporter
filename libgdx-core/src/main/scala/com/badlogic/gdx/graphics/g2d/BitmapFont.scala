@@ -149,7 +149,7 @@ class BitmapFont extends com.badlogic.gdx.utils.Disposable {
   def isFlipped(): scala.Boolean = {
     return this.flipped
   }
-  def dispose(): scala.Unit = {
+  override def dispose(): scala.Unit = {
     if (this.ownsTexture$field) {
       { var i: scala.Int = 0; while (i < this.regions.size) { {
         this.regions.get(i).getTexture().dispose()
@@ -198,7 +198,7 @@ class BitmapFont extends com.badlogic.gdx.utils.Disposable {
   def newFontCache(): com.badlogic.gdx.graphics.g2d.BitmapFontCache = {
     return new com.badlogic.gdx.graphics.g2d.BitmapFontCache(this, this.integer)
   }
-  def toString(): java.lang.String = {
+  override def toString(): java.lang.String = {
     return if (this.data.name != null) this.data.name else super.toString()
   }
 }
@@ -254,7 +254,7 @@ object BitmapFont {
       } else ()
       page(ch & (BitmapFont.PAGE_SIZE - 1)) = value.asInstanceOf[scala.Byte].asInstanceOf[scala.Byte]
     }
-    def toString(): java.lang.String = {
+    override def toString(): java.lang.String = {
       return java.lang.Character.toString(this.id.asInstanceOf[scala.Char].asInstanceOf[scala.Char])
     }
   }
@@ -767,7 +767,7 @@ object BitmapFont {
     def scale(amount: scala.Float): scala.Unit = {
       this.setScale(this.scaleX + amount, this.scaleY + amount)
     }
-    def toString(): java.lang.String = {
+    override def toString(): java.lang.String = {
       return if (this.name != null) this.name else super.toString()
     }
   }

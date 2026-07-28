@@ -248,7 +248,7 @@ class Queue[T <: java.lang.Object](initialSize: scala.Int, arraySupplier: com.ba
     this.tail = 0
     this.size = 0
   }
-  def iterator(): balticporter.runtime.JavaIterator[T] = {
+  override def iterator(): balticporter.runtime.JavaIterator[T] = {
     if (com.badlogic.gdx.utils.Collections.allocateIterators) {
       return new com.badlogic.gdx.utils.Queue.QueueIterator[T](this.asInstanceOf[Queue[T]], true).asInstanceOf[balticporter.runtime.JavaIterator[T]]
     } else ()
@@ -257,7 +257,7 @@ class Queue[T <: java.lang.Object](initialSize: scala.Int, arraySupplier: com.ba
     } else ()
     return this.iterable.iterator().asInstanceOf[balticporter.runtime.JavaIterator[T]]
   }
-  def toString(): java.lang.String = {
+  override def toString(): java.lang.String = {
     if (this.size == 0) {
       return "[]"
     } else ()
@@ -287,7 +287,7 @@ class Queue[T <: java.lang.Object](initialSize: scala.Int, arraySupplier: com.ba
     }; i = (i + 1) % values.length } }
     return sb.toString()
   }
-  def hashCode(): scala.Int = {
+  override def hashCode(): scala.Int = {
     val size: scala.Int = this.size
     val values: scala.Array[T] = this.values
     val backingLength: scala.Int = values.length
@@ -306,7 +306,7 @@ class Queue[T <: java.lang.Object](initialSize: scala.Int, arraySupplier: com.ba
     }; s = s + 1 } }
     return hash
   }
-  def equals(o: java.lang.Object): scala.Boolean = {
+  override def equals(o: java.lang.Object): scala.Boolean = {
     if (this == o) {
       return true
     } else ()
@@ -386,13 +386,13 @@ object Queue {
     }
     this.queue = queue$p
     this.allowRemove = allowRemove$p
-    def hasNext(): scala.Boolean = {
+    override def hasNext(): scala.Boolean = {
       if (!this.valid) {
         throw new com.badlogic.gdx.utils.GdxRuntimeException("#iterator() cannot be used nested.")
       } else ()
       return this.index < this.queue.size
     }
-    def next(): T = {
+    override def next(): T = {
       if (this.index >= this.queue.size) {
         throw new java.util.NoSuchElementException(java.lang.String.valueOf(this.index))
       } else ()
@@ -401,7 +401,7 @@ object Queue {
       } else ()
       return this.queue.get({ this.index += 1; this.index }).asInstanceOf[T]
     }
-    def remove(): scala.Unit = {
+    override def remove(): scala.Unit = {
       if (!this.allowRemove) {
         throw new com.badlogic.gdx.utils.GdxRuntimeException("Remove not allowed.")
       } else ()
@@ -411,7 +411,7 @@ object Queue {
     def reset(): scala.Unit = {
       this.index = 0
     }
-    def iterator(): balticporter.runtime.JavaIterator[T] = {
+    override def iterator(): balticporter.runtime.JavaIterator[T] = {
       return this
     }
   }
@@ -425,7 +425,7 @@ object Queue {
     }
     this.queue = queue$p
     this.allowRemove = allowRemove$p
-    def iterator(): balticporter.runtime.JavaIterator[T] = {
+    override def iterator(): balticporter.runtime.JavaIterator[T] = {
       if (com.badlogic.gdx.utils.Collections.allocateIterators) {
         return new com.badlogic.gdx.utils.Queue.QueueIterator[T](this.queue, this.allowRemove).asInstanceOf[balticporter.runtime.JavaIterator[T]]
       } else ()
