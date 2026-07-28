@@ -42,6 +42,13 @@ object PortabilityCheck:
     Rule("java.util.concurrent.", "the java.util.concurrent runtime is JVM-only (Scala.js is single-threaded)"),
     Rule("java.lang.Thread", "threads do not exist on Scala.js"),
     Rule("java.lang.ProcessBuilder", "process spawning is JVM-only"),
+    // A ported TEST SUITE is the project's only behavioural gate, and a JUnit one runs on the JVM
+    // alone — neither Scala.js nor Native has JUnit. Emitting java's tests as JUnit-in-Scala
+    // therefore produces a gate that cannot execute on the platforms the port EXISTS for, while
+    // looking like full test coverage. Cross-platform Scala wants MUnit (or utest); converting is
+    // structural, not a rename, because a `@Test` method becomes a `test("…") { … }` block.
+    Rule("org.junit.", "JUnit is JVM-only; cross-platform Scala needs MUnit/utest"),
+    Rule("junit.framework.", "JUnit 3 is JVM-only; cross-platform Scala needs MUnit/utest"),
     Rule("java.lang.System#getProperty", "system properties are JVM-only", exactMember = true),
     Rule("java.util.zip.", "java.util.zip is JVM-only"),
     Rule("javax.", "the javax.* stack is JVM-only"),

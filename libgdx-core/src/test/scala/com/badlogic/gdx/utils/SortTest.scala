@@ -182,7 +182,7 @@ class SortTest {
   }
   class NullsFirstComparator extends java.util.Comparator[java.lang.Integer] {
     @java.lang.Override
-    def compare(o1: java.lang.Integer, o2: java.lang.Integer): scala.Int = {
+    override def compare(o1: java.lang.Integer, o2: java.lang.Integer): scala.Int = {
       if ((o1 == null) && (o2 == null)) {
         return 0
       } else {

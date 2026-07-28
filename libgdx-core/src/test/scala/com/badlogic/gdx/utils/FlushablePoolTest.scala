@@ -79,7 +79,7 @@ class FlushablePoolTest {
       this.max = max
     }
     @java.lang.Override
-    def newObject(): java.lang.String = {
+    override def newObject(): java.lang.String = {
       return java.lang.Integer.toString(this.getFree())
     }
   }

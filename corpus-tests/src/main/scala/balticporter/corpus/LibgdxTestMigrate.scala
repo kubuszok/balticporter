@@ -3,7 +3,7 @@ package balticporter.corpus
 import balticporter.core.FrontendConfig
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
-import balticporter.tir.{OmissionCheck, Pipeline, RewriteTrace}
+import balticporter.tir.{OmissionCheck, Pipeline, PortabilityCheck, RewriteTrace}
 import balticporter.transform.{CollectionsTransform, MutableParamsTransform, PanamaFfiTransform}
 
 import java.nio.file.{Files, Path}
@@ -54,6 +54,14 @@ object LibgdxTestMigrate:
     val omissions = OmissionCheck.check(program)
     println(s"[libgdx-test] OMISSIONS (emitted code silently loses these): ${omissions.size}")
     println(OmissionCheck.summary(omissions))
+
+    // The test port was NEVER portability-checked — this call did not exist, and `org.junit` was
+    // not a rule, so the suite emitted as JUnit-in-Scala looked clean twice over. A ported suite is
+    // this project's only behavioural gate, and a JVM-only one cannot run on the targets the port
+    // exists for; that has to be a NUMBER on every run rather than an assumption.
+    val unportable = PortabilityCheck.check(program)
+    println(s"[libgdx-test] PORTABILITY (cannot run on Scala.js / Native): ${unportable.size}")
+    println(PortabilityCheck.summary(unportable))
 
     val outDir = repoRoot.resolve("libgdx-core/src/test/scala")
     if Files.exists(outDir) then Files.walk(outDir).iterator().asScala.toList.reverse.foreach(Files.delete)

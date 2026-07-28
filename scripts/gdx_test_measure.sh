@@ -14,7 +14,7 @@ if ! grep -qE "wrote [0-9]+ Scala test files" <<<"$MIGRATE_OUT"; then
   grep -E "^\[error\].*\.scala:[0-9]+" <<<"$MIGRATE_OUT" | head -20
   exit 1
 fi
-grep -E "wrote|WARNING|OMISSIONS \(|signature" <<<"$MIGRATE_OUT"
+grep -E "wrote|WARNING|OMISSIONS \(|PORTABILITY|signature" <<<"$MIGRATE_OUT"
 
 echo "-- test discovery --"
 JAVA_TESTS=$(grep -rh "@Test" ../sge/original-src/libgdx/gdx/test | wc -l | tr -d ' ')
