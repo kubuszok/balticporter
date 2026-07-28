@@ -12,6 +12,43 @@ it is worth more than any number of additional compile fixes.
 Reproduce the compile numbers below with `bash scripts/gdx_measure.sh` (re-emits, then compiles with
 scala-cli 3.8.4). The migration itself prints four independent checks on every run.
 
+## THE PORTED TESTS ARE JVM-ONLY — the behavioural gate does not run on the real targets
+
+The 221 tests are emitted as **JUnit 4 written in Scala** (`@org.junit.Test`, 872 `org.junit.Assert`
+calls, `@org.junit.Before`, one `@RunWith(Parameterized)`). Neither Scala.js nor Scala Native has
+JUnit, so on sge's actual targets this suite cannot run at all. "Port and run the tests" as a
+behavioural gate is therefore only a JVM claim today.
+
+**Both checks that should have caught this missed it** — the same shape as every other gate defect
+in this document:
+
+- `LibgdxTestMigrate` runs `RewriteTrace` and `OmissionCheck` and **never calls `PortabilityCheck`**.
+  The test emission has never been portability-checked.
+- `PortabilityCheck.jsAndNative` has no `org.junit` rule, so it would have reported clean anyway.
+
+Fix the wiring and the rule first: that turns a silent assumption into a number, which is worth more
+than the conversion itself.
+
+### Converting to MUnit is a STRUCTURAL transform, not an annotation rename
+
+| JUnit | MUnit | count |
+|---|---|---|
+| `@Test def m()` in a plain class | `class X extends munit.FunSuite` + `test("m") { … }` | 221 |
+| `@Test(expected = classOf[E])` | `intercept[E] { … }` | 16 |
+| `Assert.assertEquals(expected, actual)` | `assertEquals(obtained, expected)` — **order reversed** | 558 |
+| `assertArrayEquals` | no equivalent; `assertEquals(a.toSeq, b.toSeq)` | 53 |
+| `assertEquals(d1, d2, delta)` | `assertEqualsDouble` | — |
+| `@Before` | `override def beforeEach(…)` | 4 |
+| `@RunWith(Parameterized)` | no equivalent; generate N tests or loop | 1 |
+
+The reversed argument order does NOT change pass/fail (equality is symmetric) — it flips the
+expected/obtained labels in failure messages. The sharper consequence is that MUnit's `assertEquals`
+is type-constrained (`B <:< A`), so JUnit calls mixing `int`/`long`/`Object` that compile today will
+FAIL TO COMPILE after conversion. Loud, not silent, which is the outcome to want.
+
+Per CLAUDE.md §1 this is **(a) universal** — every java library ported to cross-platform scala needs
+it — so it belongs in the engine with the target framework parameterised, not in libgdx policy.
+
 ## Scope of the goal
 
 `../sge/original-src/libgdx`, 1534 Java files across 18 modules. They are not equally in scope —
