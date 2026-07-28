@@ -2,7 +2,7 @@ package com.badlogic.gdx.graphics.g3d.utils.shapebuilders
 
 class FrustumShapeBuilder extends com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BaseShapeBuilder
 object FrustumShapeBuilder {
-  export com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BaseShapeBuilder.{build => _, middlePoint => _, centerPoint => _, *}
+  export com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BaseShapeBuilder.{build => _, centerPoint => _, middlePoint => _, *}
   def build(builder: com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder, camera: com.badlogic.gdx.graphics.Camera): scala.Unit = {
     FrustumShapeBuilder.build(builder, camera, com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BaseShapeBuilder.tmpColor0.set(1, 0.66f, 0, 1), com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BaseShapeBuilder.tmpColor1.set(1, 0, 0, 1), com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BaseShapeBuilder.tmpColor2.set(0, 0.66f, 1, 1), com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BaseShapeBuilder.tmpColor3.set(1, 1, 1, 1), com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BaseShapeBuilder.tmpColor4.set(0.2f, 0.2f, 0.2f, 1))
   }

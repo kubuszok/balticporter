@@ -85,7 +85,7 @@ abstract class RegionInfluencer extends com.badlogic.gdx.graphics.g3d.particles.
   }
 }
 object RegionInfluencer {
-  export com.badlogic.gdx.graphics.g3d.particles.influencers.Influencer.{ASSET_DATA => _, Single => _, Random => _, Animated => _, AspectTextureRegion => _, *}
+  export com.badlogic.gdx.graphics.g3d.particles.influencers.Influencer.{ASSET_DATA => _, Animated => _, AspectTextureRegion => _, Random => _, Single => _, *}
   private final val ASSET_DATA: java.lang.String = "atlasAssetData"
   class Single extends RegionInfluencer {
     def this(regionInfluencer: com.badlogic.gdx.graphics.g3d.particles.influencers.RegionInfluencer.Single) = {

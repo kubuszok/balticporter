@@ -553,7 +553,7 @@ class Sprite extends com.badlogic.gdx.graphics.g2d.TextureRegion {
   }
 }
 object Sprite {
-  export com.badlogic.gdx.graphics.g2d.TextureRegion.{VERTEX_SIZE => _, SPRITE_SIZE => _, *}
+  export com.badlogic.gdx.graphics.g2d.TextureRegion.{SPRITE_SIZE => _, VERTEX_SIZE => _, *}
   final val VERTEX_SIZE: scala.Int = (2 + 1) + 2
   final val SPRITE_SIZE: scala.Int = 4 * Sprite.VERTEX_SIZE
 }

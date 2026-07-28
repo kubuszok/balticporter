@@ -63,13 +63,13 @@ class ObjectSet[T] extends balticporter.runtime.JavaIterable[T] {
     return true
   }
   def addAll(array: com.badlogic.gdx.utils.Array[? <: T]): scala.Unit = {
-    this.addAll(array.items, 0, array.size)
+    this.addAll(array.items.asInstanceOf[scala.Array[T]], 0, array.size)
   }
   def addAll(array: com.badlogic.gdx.utils.Array[? <: T], offset: scala.Int, length: scala.Int): scala.Unit = {
     if ((offset + length) > array.size) {
       throw new java.lang.IllegalArgumentException((((("offset + length must be <= size: " + offset) + " + ") + length) + " <= ") + array.size)
     } else ()
-    this.addAll(array.items, offset, length)
+    this.addAll(array.items.asInstanceOf[scala.Array[T]], offset, length)
   }
   def addAll(array: scala.Array[T]): scala.Boolean = {
     return this.addAll(array, 0, array.length)

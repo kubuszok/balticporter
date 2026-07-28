@@ -101,7 +101,7 @@ class Texture extends com.badlogic.gdx.graphics.GLTexture(0, 0) {
   }
 }
 object Texture {
-  export com.badlogic.gdx.graphics.GLTexture.{assetManager => _, managedTextures => _, addManagedTexture => _, clearAllTextures => _, invalidateAllTextures => _, setAssetManager => _, getManagedStatus => _, getNumManagedTextures => _, TextureFilter => _, TextureWrap => _, *}
+  export com.badlogic.gdx.graphics.GLTexture.{TextureFilter => _, TextureWrap => _, addManagedTexture => _, assetManager => _, clearAllTextures => _, getManagedStatus => _, getNumManagedTextures => _, invalidateAllTextures => _, managedTextures => _, setAssetManager => _, *}
   private var assetManager: com.badlogic.gdx.assets.AssetManager = null.asInstanceOf[com.badlogic.gdx.assets.AssetManager]
   final val managedTextures: scala.collection.mutable.Map[com.badlogic.gdx.Application, com.badlogic.gdx.utils.Array[Texture]] = new scala.collection.mutable.HashMap[com.badlogic.gdx.Application, com.badlogic.gdx.utils.Array[Texture]]()
   private def addManagedTexture(app: com.badlogic.gdx.Application, texture: Texture): scala.Unit = {

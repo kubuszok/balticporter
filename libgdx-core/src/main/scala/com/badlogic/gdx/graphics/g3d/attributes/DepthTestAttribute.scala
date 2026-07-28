@@ -65,7 +65,7 @@ class DepthTestAttribute(type$p: scala.Long, depthFunc$p: scala.Int, depthRangeN
   }
 }
 object DepthTestAttribute {
-  export com.badlogic.gdx.graphics.g3d.Attribute.{Alias => _, Type => _, Mask => _, is => _, *}
+  export com.badlogic.gdx.graphics.g3d.Attribute.{Alias => _, Mask => _, Type => _, is => _, *}
   final val Alias: java.lang.String = "depthStencil"
   final val Type: scala.Long = com.badlogic.gdx.graphics.g3d.Attribute.register(DepthTestAttribute.Alias)
   var Mask: scala.Long = DepthTestAttribute.Type

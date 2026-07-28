@@ -482,7 +482,7 @@ object TimSort {
       while ((runHi < hi) && (c.asInstanceOf[java.util.Comparator[java.lang.Object]].compare(a(runHi).asInstanceOf[java.lang.Object], a(runHi - 1).asInstanceOf[java.lang.Object]) < 0)) {
         runHi = runHi + 1
       }
-      TimSort.reverseRange(a, lo, runHi)
+      TimSort.reverseRange(a.asInstanceOf[scala.Array[java.lang.Object]], lo, runHi)
     } else {
       while ((runHi < hi) && (c.asInstanceOf[java.util.Comparator[java.lang.Object]].compare(a(runHi).asInstanceOf[java.lang.Object], a(runHi - 1).asInstanceOf[java.lang.Object]) >= 0)) {
         runHi = runHi + 1

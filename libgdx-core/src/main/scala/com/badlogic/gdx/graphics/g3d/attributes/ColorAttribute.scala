@@ -34,7 +34,7 @@ class ColorAttribute(type$p: scala.Long) extends com.badlogic.gdx.graphics.g3d.A
   }
 }
 object ColorAttribute {
-  export com.badlogic.gdx.graphics.g3d.Attribute.{DiffuseAlias => _, Diffuse => _, SpecularAlias => _, Specular => _, AmbientAlias => _, Ambient => _, EmissiveAlias => _, Emissive => _, ReflectionAlias => _, Reflection => _, AmbientLightAlias => _, AmbientLight => _, FogAlias => _, Fog => _, Mask => _, is => _, createAmbient => _, createDiffuse => _, createSpecular => _, createReflection => _, createEmissive => _, createAmbientLight => _, createFog => _, *}
+  export com.badlogic.gdx.graphics.g3d.Attribute.{Ambient => _, AmbientAlias => _, AmbientLight => _, AmbientLightAlias => _, Diffuse => _, DiffuseAlias => _, Emissive => _, EmissiveAlias => _, Fog => _, FogAlias => _, Mask => _, Reflection => _, ReflectionAlias => _, Specular => _, SpecularAlias => _, createAmbient => _, createAmbientLight => _, createDiffuse => _, createEmissive => _, createFog => _, createReflection => _, createSpecular => _, is => _, *}
   final val DiffuseAlias: java.lang.String = "diffuseColor"
   final val Diffuse: scala.Long = com.badlogic.gdx.graphics.g3d.Attribute.register(ColorAttribute.DiffuseAlias)
   final val SpecularAlias: java.lang.String = "specularColor"

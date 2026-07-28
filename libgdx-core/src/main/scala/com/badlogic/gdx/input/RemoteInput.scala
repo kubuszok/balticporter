@@ -449,7 +449,7 @@ class RemoteInput(port$p: scala.Int, listener$p: com.badlogic.gdx.input.RemoteIn
   }
 }
 object RemoteInput {
-  export com.badlogic.gdx.Input.{MAX_TOUCHES => _, DEFAULT_PORT => _, RemoteInputListener => _, *}
+  export com.badlogic.gdx.Input.{DEFAULT_PORT => _, MAX_TOUCHES => _, RemoteInputListener => _, *}
   private final val MAX_TOUCHES: scala.Int = 20
   var DEFAULT_PORT: scala.Int = 8190
   trait RemoteInputListener {

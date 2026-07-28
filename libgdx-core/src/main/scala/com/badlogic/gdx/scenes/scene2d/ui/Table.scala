@@ -1223,7 +1223,7 @@ class Table extends com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup {
   }
 }
 object Table {
-  export com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup.{debugTableColor => _, debugCellColor => _, debugActorColor => _, cellPool => _, columnWeightedWidth => _, rowWeightedHeight => _, backgroundTop => _, backgroundLeft => _, backgroundBottom => _, backgroundRight => _, DebugRect => _, Debug => _, *}
+  export com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup.{Debug => _, DebugRect => _, backgroundBottom => _, backgroundLeft => _, backgroundRight => _, backgroundTop => _, cellPool => _, columnWeightedWidth => _, debugActorColor => _, debugCellColor => _, debugTableColor => _, rowWeightedHeight => _, *}
   var debugTableColor: com.badlogic.gdx.graphics.Color = new com.badlogic.gdx.graphics.Color(0, 0, 1, 1)
   var debugCellColor: com.badlogic.gdx.graphics.Color = new com.badlogic.gdx.graphics.Color(1, 0, 0, 1)
   var debugActorColor: com.badlogic.gdx.graphics.Color = new com.badlogic.gdx.graphics.Color(0, 1, 0, 1)

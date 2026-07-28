@@ -71,7 +71,7 @@ class Cubemap(data$p: com.badlogic.gdx.graphics.CubemapData) extends com.badlogi
   }
 }
 object Cubemap {
-  export com.badlogic.gdx.graphics.GLTexture.{assetManager => _, managedCubemaps => _, addManagedCubemap => _, clearAllCubemaps => _, invalidateAllCubemaps => _, setAssetManager => _, getManagedStatus => _, getNumManagedCubemaps => _, CubemapSide => _, *}
+  export com.badlogic.gdx.graphics.GLTexture.{CubemapSide => _, addManagedCubemap => _, assetManager => _, clearAllCubemaps => _, getManagedStatus => _, getNumManagedCubemaps => _, invalidateAllCubemaps => _, managedCubemaps => _, setAssetManager => _, *}
   private var assetManager: com.badlogic.gdx.assets.AssetManager = null.asInstanceOf[com.badlogic.gdx.assets.AssetManager]
   final val managedCubemaps: scala.collection.mutable.Map[com.badlogic.gdx.Application, com.badlogic.gdx.utils.Array[Cubemap]] = new scala.collection.mutable.HashMap[com.badlogic.gdx.Application, com.badlogic.gdx.utils.Array[Cubemap]]()
   private def addManagedCubemap(app: com.badlogic.gdx.Application, cubemap: Cubemap): scala.Unit = {

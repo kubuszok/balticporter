@@ -422,7 +422,7 @@ class DefaultShader(renderable$p: com.badlogic.gdx.graphics.g3d.Renderable, conf
   }
 }
 object DefaultShader {
-  export com.badlogic.gdx.graphics.g3d.shaders.BaseShader.{defaultVertexShader => _, defaultFragmentShader => _, implementedFlags => _, defaultCullFace => _, defaultDepthFunc => _, optionalAttributes => _, tmpAttributes => _, getDefaultVertexShader => _, getDefaultFragmentShader => _, and => _, or => _, combineAttributes => _, combineAttributeMasks => _, createPrefix => _, Config => _, Inputs => _, Setters => _, *}
+  export com.badlogic.gdx.graphics.g3d.shaders.BaseShader.{Config => _, Inputs => _, Setters => _, and => _, combineAttributeMasks => _, combineAttributes => _, createPrefix => _, defaultCullFace => _, defaultDepthFunc => _, defaultFragmentShader => _, defaultVertexShader => _, getDefaultFragmentShader => _, getDefaultVertexShader => _, implementedFlags => _, optionalAttributes => _, or => _, tmpAttributes => _, *}
   private var defaultVertexShader: java.lang.String = null
   private var defaultFragmentShader: java.lang.String = null
   var implementedFlags: scala.Long = (((com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute.Type | com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute.Diffuse) | com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute.Diffuse) | com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute.Specular) | com.badlogic.gdx.graphics.g3d.attributes.FloatAttribute.Shininess

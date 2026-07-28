@@ -123,7 +123,7 @@ class ParticleShader(renderable$p: com.badlogic.gdx.graphics.g3d.Renderable, con
   }
 }
 object ParticleShader {
-  export com.badlogic.gdx.graphics.g3d.shaders.BaseShader.{defaultVertexShader => _, defaultFragmentShader => _, implementedFlags => _, TMP_VECTOR3 => _, optionalAttributes => _, getDefaultVertexShader => _, getDefaultFragmentShader => _, createPrefix => _, ParticleType => _, AlignMode => _, Config => _, Inputs => _, Setters => _, *}
+  export com.badlogic.gdx.graphics.g3d.shaders.BaseShader.{AlignMode => _, Config => _, Inputs => _, ParticleType => _, Setters => _, TMP_VECTOR3 => _, createPrefix => _, defaultFragmentShader => _, defaultVertexShader => _, getDefaultFragmentShader => _, getDefaultVertexShader => _, implementedFlags => _, optionalAttributes => _, *}
   private var defaultVertexShader: java.lang.String = null
   private var defaultFragmentShader: java.lang.String = null
   var implementedFlags: scala.Long = com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute.Type | com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute.Diffuse

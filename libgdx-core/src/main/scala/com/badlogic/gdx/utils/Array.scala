@@ -73,13 +73,13 @@ class Array[T] extends balticporter.runtime.JavaIterable[T] {
     this.size = this.size + 4
   }
   def addAll(array: Array[? <: T]): scala.Unit = {
-    this.addAll(array.items, 0, array.size)
+    this.addAll(array.items.asInstanceOf[scala.Array[T]], 0, array.size)
   }
   def addAll(array: Array[? <: T], start: scala.Int, count: scala.Int): scala.Unit = {
     if ((start + count) > array.size) {
       throw new java.lang.IllegalArgumentException((((("start + count must be <= size: " + start) + " + ") + count) + " <= ") + array.size)
     } else ()
-    this.addAll(array.items, start, count)
+    this.addAll(array.items.asInstanceOf[scala.Array[T]], start, count)
   }
   def addAll(array: scala.Array[T]): scala.Unit = {
     this.addAll(array, 0, array.length)
@@ -398,7 +398,7 @@ class Array[T] extends balticporter.runtime.JavaIterable[T] {
     return this.items
   }
   def sort(): scala.Unit = {
-    com.badlogic.gdx.utils.Sort.instance().sort(this.items, 0, this.size)
+    com.badlogic.gdx.utils.Sort.instance().sort(this.items.asInstanceOf[scala.Array[java.lang.Object]], 0, this.size)
   }
   def sort(comparator: java.util.Comparator[? >: T]): scala.Unit = {
     com.badlogic.gdx.utils.Sort.instance().sort(this.items, comparator, 0, this.size)

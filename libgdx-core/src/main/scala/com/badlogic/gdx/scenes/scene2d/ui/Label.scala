@@ -318,7 +318,7 @@ class Label(text$p: java.lang.CharSequence, style$p: com.badlogic.gdx.scenes.sce
   }
 }
 object Label {
-  export com.badlogic.gdx.scenes.scene2d.ui.Widget.{tempColor => _, prefSizeLayout => _, LabelStyle => _, *}
+  export com.badlogic.gdx.scenes.scene2d.ui.Widget.{LabelStyle => _, prefSizeLayout => _, tempColor => _, *}
   private final val tempColor: com.badlogic.gdx.graphics.Color = new com.badlogic.gdx.graphics.Color()
   private final val prefSizeLayout: com.badlogic.gdx.graphics.g2d.GlyphLayout = new com.badlogic.gdx.graphics.g2d.GlyphLayout()
   class LabelStyle {

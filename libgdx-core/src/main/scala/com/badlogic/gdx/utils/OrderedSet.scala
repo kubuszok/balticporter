@@ -187,7 +187,7 @@ class OrderedSet[T] extends com.badlogic.gdx.utils.ObjectSet[T] {
   }
 }
 object OrderedSet {
-  export com.badlogic.gdx.utils.ObjectSet.{`with` => _, OrderedSetIterator => _, *}
+  export com.badlogic.gdx.utils.ObjectSet.{OrderedSetIterator => _, `with` => _, *}
   def `with`[T](array: scala.Array[T]): OrderedSet[T] = {
     val set: OrderedSet[T] = new OrderedSet[T]()
     set.addAll(array)

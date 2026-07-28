@@ -851,5 +851,4 @@ class GL20Interceptor(glProfiler$p: com.badlogic.gdx.graphics.profiling.GLProfil
 }
 object GL20Interceptor {
   export com.badlogic.gdx.graphics.profiling.GLInterceptor.*
-  export com.badlogic.gdx.graphics.GL20.*
 }

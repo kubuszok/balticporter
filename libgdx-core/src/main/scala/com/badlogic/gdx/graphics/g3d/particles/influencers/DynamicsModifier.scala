@@ -20,7 +20,7 @@ abstract class DynamicsModifier extends com.badlogic.gdx.graphics.g3d.particles.
   }
 }
 object DynamicsModifier {
-  export com.badlogic.gdx.graphics.g3d.particles.influencers.Influencer.{TMP_V1 => _, TMP_V2 => _, TMP_V3 => _, TMP_Q => _, FaceDirection => _, Strength => _, Angular => _, Rotational2D => _, Rotational3D => _, CentripetalAcceleration => _, PolarAcceleration => _, TangentialAcceleration => _, BrownianAcceleration => _, *}
+  export com.badlogic.gdx.graphics.g3d.particles.influencers.Influencer.{Angular => _, BrownianAcceleration => _, CentripetalAcceleration => _, FaceDirection => _, PolarAcceleration => _, Rotational2D => _, Rotational3D => _, Strength => _, TMP_Q => _, TMP_V1 => _, TMP_V2 => _, TMP_V3 => _, TangentialAcceleration => _, *}
   final val TMP_V1: com.badlogic.gdx.math.Vector3 = new com.badlogic.gdx.math.Vector3()
   final val TMP_V2: com.badlogic.gdx.math.Vector3 = new com.badlogic.gdx.math.Vector3()
   final val TMP_V3: com.badlogic.gdx.math.Vector3 = new com.badlogic.gdx.math.Vector3()

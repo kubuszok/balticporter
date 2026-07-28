@@ -408,6 +408,35 @@ object SpoonTir:
       case AppliedType(tc, as) => hasWildcard(tc) || as.exists(hasWildcard)
       case _                   => false
 
+    /** Is this type-parameter reference THE SAME parameter as the one its simple name resolves to
+      * here? `accessibleTp`/`resolveTypeParam` are name-based, so a callee's `<T>` silently binds to
+      * an unrelated in-scope `T`; comparing against the id its own declaring type minted
+      * (`<owner qualified name>$$T`, see [[mintTypeParams]]) makes the identity exact. Method-level
+      * parameters are never the same parameter — they exist only inside the callee. */
+    private def sameTypeParamHere(tv: CtTypeParameterReference): Boolean =
+      val owner = (try Option(tv.getDeclaration) catch { case _: Throwable => None })
+        .flatMap(d => Option(d.getParent)).collect { case ct: CtType[?] => ct.getQualifiedName }
+      owner.exists(o => accessibleTp(tv.getSimpleName).exists(id =>
+        minter.fullNameOf(id) == o + "$$" + tv.getSimpleName))
+
+    /** Can this DECLARED formal be named verbatim at the current call site? Concrete parts always;
+      * a type variable only when it is literally the same parameter ([[sameTypeParamHere]]). */
+    private def formalNameableHere(tr: CtTypeReference[?]): Boolean = tr match
+      case null                         => false
+      case tv: CtTypeParameterReference => sameTypeParamHere(tv)
+      case arr: CtArrayTypeReference[?] => formalNameableHere(arr.getComponentType)
+      case w: CtWildcardReference       => false
+      case _: CtIntersectionTypeReference[?] => false
+      case r if r.isPrimitive           => true
+      case r =>
+        val as = try r.getActualTypeArguments.asScala.toList catch { case _: Throwable => Nil }
+        if as.nonEmpty then as.forall(formalNameableHere) else formalArity(r) == 0
+
+    /** does this rendered type name `scala.Array`? */
+    private def isScalaArrayType(t: TypeRepr): Boolean = t match
+      case AppliedType(TypeRef(_, s), _ :: Nil) => minter.fullNameOf(s) == "scala.Array"
+      case _                                    => false
+
     /** does this type mention any of `names` as a type variable (directly or in its arguments)? */
     private def mentionsTypeVar(tr: CtTypeReference[?], names: Set[String]): Boolean = tr match
       case tv: CtTypeParameterReference => names(tv.getSimpleName)
@@ -1159,7 +1188,10 @@ object SpoonTir:
             // the callee's scope, where name-directed fill can resolve differently than here, so
             // only a raw ARGUMENT type drives this cast. Skipped when a coercion already fired.
             if o ne base then o
-            else declFormals(i).map(f => uncheckedGeneric(f, e, o, rawTarget = false, ownScope = false)).getOrElse(o)
+            else
+              val a = arrayFormalCast(e, declFormals(i), o)
+              if a ne o then a
+              else declFormals(i).map(f => uncheckedGeneric(f, e, o, rawTarget = false, ownScope = false)).getOrElse(o)
           }
         else argEs.map(expr)
 
@@ -1173,6 +1205,32 @@ object SpoonTir:
           // the same generic class) — otherwise `tpe` yields the `?T` unresolved stub, invalid syntax.
           case Some(tp: CtTypeParameterReference) if isNull && resolveTypeParam(tp.getSimpleName).isDefined =>
             Tree.Typed(t, tt(tpe(tp), e), tpe(tp), originOf(e))
+          case _ => t
+
+      /** An ARRAY argument whose emitted element type is not the declared formal's.
+        *
+        * Java arrays are COVARIANT and erase their generic element type; Scala's are INVARIANT.
+        * Each of these is legal in Java and rejected by Scala, and all three occur in libgdx:
+        *   - a wildcard CAPTURE — `addAll(Array<? extends T> a)` calling `addAll(a.items, 0, a.size)`,
+        *     where `a.items` types as `Array[a.T]`, not `Array[T]`;
+        *   - a `T[]` value in an `Object[]` formal — `Sort.sort(Object[], int, int)` receiving `items`;
+        *   - plain covariance, `Sub[]` into a `Super[]` slot.
+        * The reference is bit-identical on the JVM (Java's own check is the runtime
+        * `ArrayStoreException`, which no Scala rendering reproduces either way), so the faithful
+        * port of the Java conversion is an explicit `asInstanceOf` at the USE — never a widened
+        * DECLARATION, which was measured catastrophic (see [[erasureOfFormal]]).
+        *
+        * Driven by the DECLARATION's formal, never the reference's: under noClasspath a reference
+        * erases `T[]` to `Object[]`, and casting to `Array[Object]` is precisely what breaks our own
+        * `addAll(Array[T], …)` — which is why blanket array covariance stays OFF for source callees
+        * in [[coerceArgsFixed]]. Gated on [[formalNameableHere]] so the cast never names a type
+        * variable that is only the callee's, nor one this scope cannot see. */
+      private def arrayFormalCast(e: CtExpression[?], declFormal: Option[CtTypeReference[?]], t: Term): Term =
+        declFormal match
+          case Some(arr: CtArrayTypeReference[?]) if formalNameableHere(arr) && isScalaArrayType(t.tpe) =>
+            val want = tpe(arr)
+            if want == t.tpe || !isScalaArrayType(want) then t
+            else Tree.Typed(t, tt(want, e), want, originOf(e))
           case _ => t
 
       /** A type-parameter-typed value flowing into a slot whose real formal is concretely

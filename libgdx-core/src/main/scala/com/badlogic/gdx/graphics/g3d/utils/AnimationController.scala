@@ -210,7 +210,7 @@ class AnimationController(target$p: com.badlogic.gdx.graphics.g3d.ModelInstance)
   }
 }
 object AnimationController {
-  export com.badlogic.gdx.graphics.g3d.utils.BaseAnimationController.{AnimationListener => _, AnimationDesc => _, *}
+  export com.badlogic.gdx.graphics.g3d.utils.BaseAnimationController.{AnimationDesc => _, AnimationListener => _, *}
   trait AnimationListener {
     def onEnd(animation: com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationDesc): scala.Unit
     def onLoop(animation: com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationDesc): scala.Unit

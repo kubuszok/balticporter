@@ -70,7 +70,7 @@ class Texture3D(data$p: com.badlogic.gdx.graphics.Texture3DData) extends com.bad
   }
 }
 object Texture3D {
-  export com.badlogic.gdx.graphics.GLTexture.{managedTexture3Ds => _, addManagedTexture => _, clearAllTextureArrays => _, invalidateAllTextureArrays => _, getManagedStatus => _, getNumManagedTextures3D => _, *}
+  export com.badlogic.gdx.graphics.GLTexture.{addManagedTexture => _, clearAllTextureArrays => _, getManagedStatus => _, getNumManagedTextures3D => _, invalidateAllTextureArrays => _, managedTexture3Ds => _, *}
   final val managedTexture3Ds: scala.collection.mutable.Map[com.badlogic.gdx.Application, com.badlogic.gdx.utils.Array[Texture3D]] = new scala.collection.mutable.HashMap[com.badlogic.gdx.Application, com.badlogic.gdx.utils.Array[Texture3D]]()
   private def addManagedTexture(app: com.badlogic.gdx.Application, texture: Texture3D): scala.Unit = {
     var managedTextureArray: com.badlogic.gdx.utils.Array[Texture3D] = Texture3D.managedTexture3Ds.getOrElse(app, null.asInstanceOf[com.badlogic.gdx.utils.Array[Texture3D]])

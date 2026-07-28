@@ -78,6 +78,27 @@ final class TirEmitter(source: Program):
     program.units.foreach(scan)
     acc.toSet
 
+  /** each type → the names of the `static` members it DECLARES itself. */
+  private lazy val ownStaticsBySym: Map[SymId, Set[String]] =
+    val m = collection.mutable.Map[SymId, Set[String]]()
+    def scan(cd: Tree.ClassDef): Unit =
+      m(cd.symbol) = cd.body.collect { case d: Definition if sym(d.symbol).flags.isStatic => esc(sym(d.symbol).name) }.toSet
+      cd.body.foreach { case c: Tree.ClassDef => scan(c); case _ => () }
+    program.units.foreach(scan); m.toMap
+
+  /** every static name a companion re-export of `s` delivers, mapped to the type that DECLARES it —
+    * `s`'s own statics, then its ancestors' (nearest declaration wins, as in Java). The owner is
+    * what makes two exports comparable: the same name from the same declaring type is the same
+    * constant arriving twice (a diamond — `GL30Interceptor extends GLInterceptor with GL30`, where
+    * `GLInterceptor` implements `GL20` and `GL30` extends it), which Scala rejects as a duplicate
+    * definition; the same name from DIFFERENT types is a real redeclaration and must not be merged. */
+  private def staticOwnersOf(s: SymId, seen: Set[SymId] = Set.empty): Map[String, SymId] =
+    if seen(s) then Map.empty
+    else
+      val inherited = parentsBySym.getOrElse(s, Nil)
+        .foldLeft(Map.empty[String, SymId])((acc, p) => staticOwnersOf(p, seen + s) ++ acc)
+      inherited ++ ownStaticsBySym.getOrElse(s, Set.empty).map(_ -> s).toMap
+
   /** each type → its parent symbols (whole program). */
   private lazy val parentsBySym: Map[SymId, List[SymId]] =
     val m = collection.mutable.Map[SymId, List[SymId]]()
@@ -89,6 +110,12 @@ final class TirEmitter(source: Program):
     * them — the export chain must pass THROUGH intermediates that add no statics of their own). */
   private def staticsReachable(s: SymId, seen: Set[SymId] = Set.empty): Boolean =
     !seen(s) && (typesWithStatics(s) || parentsBySym.getOrElse(s, Nil).exists(p => staticsReachable(p, seen + s)))
+
+  /** every strict ancestor of `s`. */
+  private def ancestorsOf(s: SymId, seen: Set[SymId] = Set.empty): Set[SymId] =
+    parentsBySym.getOrElse(s, Nil).filterNot(seen).foldLeft(Set.empty[SymId]) { (acc, p) =>
+      acc + p ++ ancestorsOf(p, seen + s + p)
+    }
 
   // ---- names ----
   private def sym(id: SymId): Symbol = program.symbolOf(id).getOrElse(Symbol(id, "?", "?", Flags(), SymId.None, TypeRepr.NoType))
@@ -247,8 +274,36 @@ final class TirEmitter(source: Program):
     // exclude the class's OWN static names from the re-export (a subtype may redeclare a parent
     // constant — OpenGL's GL31 vs GL30 — which would otherwise be a duplicate/conflicting export).
     val ownStaticNames = statics.collect { case d: Definition => esc(sym(d.symbol).name) }.distinct
-    val exclusions     = if ownStaticNames.isEmpty then "*" else s"{${ownStaticNames.map(_ + " => _").mkString(", ")}, *}"
-    val parentExports  = parentSymsOf(cd).filter(p => staticsReachable(p)).map(p => s"${ind(i + 1)}export ${typeValue(p)}.$exclusions")
+    // Two exports must not both deliver the same name. `GL20Interceptor extends GLInterceptor with
+    // GL20` and `GLInterceptor` itself implements `GL20`, so `GLInterceptor`'s companion ALREADY
+    // re-exports `GL20`'s constants by this rule — a second `export GL20.*` is a duplicate
+    // definition, not extra reach. Drop a parent another exported parent wholly subsumes, and for
+    // the DIAMOND that remains (`GLInterceptor` and `GL30` meeting at `GL20`) exclude, from each
+    // later export, every name an earlier one already delivered FROM THE SAME DECLARING TYPE. The
+    // same-owner test is what keeps this safe: a genuine redeclaration (`GL31` shadowing a `GL30`
+    // constant) has a different owner, so it is never silently merged away.
+    val exported       = parentSymsOf(cd).filter(p => staticsReachable(p))
+    val kept           = exported.filterNot(p => exported.exists(q => q != p && ancestorsOf(q).contains(p)))
+    val delivered      = kept.map(staticOwnersOf(_))
+    val extraExcl      = Array.fill(kept.size)(Set.empty[String])
+    delivered.flatMap(_.keys).distinct.foreach { n =>
+      val at = delivered.indices.filter(j => delivered(j).contains(n)).toList
+      if at.sizeIs > 1 then
+        val owners = at.map(delivered(_)(n)).distinct
+        // Same owner everywhere ⇒ the SAME constant arriving twice; keep the first export and drop
+        // the rest. Different owners ⇒ a real redeclaration, and the one Java resolves to is the
+        // most specific — the owner that descends from all the others. Incomparable owners are
+        // ambiguous in Java too, so keep the first and let the redeclaration be the loser rather
+        // than guess.
+        val winner = at.find(j => owners.forall(o => o == delivered(j)(n) || ancestorsOf(delivered(j)(n)).contains(o)))
+          .getOrElse(at.head)
+        at.filter(_ != winner).foreach(j => extraExcl(j) = extraExcl(j) + n)
+    }
+    val parentExports  = kept.zipWithIndex.map { (p, j) =>
+      val excluded = (ownStaticNames.toSet ++ extraExcl(j)).toList.sorted
+      val sel      = if excluded.isEmpty then "*" else s"{${excluded.map(_ + " => _").mkString(", ")}, *}"
+      s"${ind(i + 1)}export ${typeValue(p)}.$sel"
+    }
     if statics.isEmpty && parentExports.isEmpty then cls
     else
       val sb = (parentExports ++ orderBody(statics).map(stat(_, i + 1)).filter(_.nonEmpty)).mkString("\n")

@@ -7,7 +7,7 @@ class Sort {
     if (this.comparableTimSort == null) {
       this.comparableTimSort = new com.badlogic.gdx.utils.ComparableTimSort()
     } else ()
-    this.comparableTimSort.doSort(a.items, 0, a.size)
+    this.comparableTimSort.doSort(a.items.asInstanceOf[scala.Array[java.lang.Object]], 0, a.size)
   }
   def sort(a: scala.Array[java.lang.Object]): scala.Unit = {
     if (this.comparableTimSort == null) {
