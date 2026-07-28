@@ -17,10 +17,15 @@ fi
 grep -E "wrote|WARNING|OMISSIONS \(|PORTABILITY|signature" <<<"$MIGRATE_OUT"
 
 echo "-- test discovery --"
+# Count what each FRAMEWORK would actually discover. A ported suite is MUnit (`test("name") {…}`)
+# and the residue is still JUnit (`@Test`), so counting only annotations under-reports by every
+# converted suite — the check must sum both or it lies in the safe-looking direction.
 JAVA_TESTS=$(grep -rh "@Test" ../sge/original-src/libgdx/gdx/test | wc -l | tr -d ' ')
-SCALA_TESTS=$(grep -rh "@org.junit.Test\|@Test" libgdx-core/src_managed/test/scala 2>/dev/null | wc -l | tr -d ' ')
-echo "@Test in Java: $JAVA_TESTS   @Test in emitted Scala: $SCALA_TESTS"
-[ "$JAVA_TESTS" != "$SCALA_TESTS" ] && echo "!! ANNOTATIONS LOST — JUnit would discover $SCALA_TESTS tests and report success"
+JUNIT_LEFT=$(grep -rh "@org.junit.Test\|@Test" libgdx-core/src_managed/test/scala 2>/dev/null | wc -l | tr -d ' ')
+MUNIT_TESTS=$(grep -rhoE '(^|[^a-zA-Z0-9_.])test\("' libgdx-core/src_managed/test/scala 2>/dev/null | wc -l | tr -d ' ')
+SCALA_TESTS=$((JUNIT_LEFT + MUNIT_TESTS))
+echo "@Test in Java: $JAVA_TESTS   discoverable in emitted Scala: $SCALA_TESTS (munit $MUNIT_TESTS + junit $JUNIT_LEFT)"
+[ "$JAVA_TESTS" != "$SCALA_TESTS" ] && echo "!! TESTS LOST — $((JAVA_TESTS - SCALA_TESTS)) of $JAVA_TESTS would never run, and the suite would report success"
 
 pkill -9 -f scala-cli 2>/dev/null; sleep 1
 scala-cli compile --scala 3.8.4 --server=false \
