@@ -119,6 +119,21 @@ than it fixes, on THIS corpus. That is worth re-testing on the next library adde
 with less uniform naming would invert the result — and this is exactly the kind of rule §2 expects
 to move from (c) toward (a) as the corpus grows.
 
+### Why the "mentions" guard cannot separate this case
+
+The natural guard is: only take an inherited entry when the type being filled appears in the
+signatures of the ancestor that supplied it. Measured with a VERIFIED-correct transitive scan:
+
+| scope of the mentions set | errors |
+|---|---|
+| ancestor's signatures only | 145 |
+| ancestor's **+ the class's own** signatures | 1 (no change) |
+
+The union is what makes the guard viable — and the union is also what re-admits the failing entry,
+because `AssetLoadingTask`'s OWN field is literally `Array<AssetDescriptor>`. The predicate
+"is this type mentioned here" is true for the bad case for exactly the same reason it is true for
+the good ones. No refinement of THIS predicate can separate them.
+
 So the remaining single error is NOT the tip of a systemic wildcard problem. It is the one site where
 the name-keyed fill's collision (`AsyncTask<Void>`'s `T` reaching `AssetDescriptor<T>`) is not also
 made harmlessly-consistent on both sides of an override.
