@@ -73,13 +73,37 @@ first use, which is the part to check first.
 
 | where | what | standing |
 |---|---|---|
-| `AssetManager:486` | context-dependent raw fill, above | root cause identified |
-| `OrderedMap:285` | context-dependent raw fill, above | root cause identified |
-| `Skin:513` | RAW `new ReadOnlySerializer(){…}`; Scala infers `[Nothing]` where Java erased. A raw generic `new` must not be left to inference — unconstrained inference gives `Nothing`, which is never what Java meant | open |
-| `ParticleEffectLoader:25` | RAW `new AssetDescriptor(…)`: no explicit type args to substitute (the applied form is fixed) | open |
-| `CharArray:718` | a `ForEach` binding typed `T` in an `Object` formal. NOT mis-resolution to a primitive overload — that was tried and is inert | cause unknown |
-| `NetJavaImpl:196` | a `java.util` value crossing from the JDK into retyped code. **DELIBERATE**: needs a conversion at the boundary (`.asScala`), not un-retyping; a CLASS of issue, not one site | by design |
-| `RegionInfluencer:11` | nilary Java constructor vs Scala's implicit primary. **DELIBERATE**: needs a **discriminator-parameter funnel** — primary `(regionsCount: Int = 1, seedDefault: Boolean = false)` with every call site and `extends` clause updated, which `RewriteTrace` exists to verify | by design |
+| `Skin:513` | RAW `new ReadOnlySerializer(){…}`; Scala infers `[Nothing]` where Java erased | open |
+| `ParticleEffectLoader:25` | RAW `new AssetDescriptor(…)`: no explicit type args to substitute | open |
+| `CharArray:718` | a `ForEach` binding typed `T` in an `Object` formal; cause not yet identified | open |
+| `AssetManager:486`, `OrderedMap:285` | context-dependent raw fill (above) | root cause identified |
+| `NetJavaImpl:196` | **needs real work.** A `java.util.Map[String, java.util.List[String]]` returned by the JDK flowing into a declaration retyped to `mutable.Map[String, mutable.Buffer[String]]`. `.asScala` alone does NOT close it — the conversion is DEEP (the value type is a `java.util.List` too), so this needs either a recursive boundary conversion or a rule that a declaration whose value comes from a JDK method is not retyped. A class of issue wherever a JDK collection enters retyped code | scoped |
+| `RegionInfluencer:11` | **needs real work.** Encoding IS known (below) | scoped |
+
+### The `RegionInfluencer` encoding — scoped, not yet built
+
+`CtorFunnel` nominates `RegionInfluencer(int)` as primary; the whole-program fixpoint withholds it
+because three subclasses reach the class with an argument-free `extends`. The nilary Java
+constructor cannot be primary either — it opens with `this(1)`. So Scala's implicit nilary primary
+and the explicit `def this()` collide.
+
+**Defaults resolve it, and no discriminator parameter is needed.** Give the synthesized primary the
+WITHHELD constructor's parameters with default values:
+
+```scala
+abstract class RegionInfluencer(regionsCount: Int = 1) extends Influencer {
+  regions = new Array(false, regionsCount, …)          // the promoted body
+  def this() = { this(1); /* seed the default region */ }   // erases to (), no clash
+}
+```
+
+The primary erases to `(Int)` and the secondary to `()`, so the E120 disappears — the clash exists
+only while the primary is nilary. Each Java constructor keeps its own body and reaches the parent
+correctly. What it needs: `CtorFunnel` must emit a plan that promotes with defaults instead of
+withholding, and the emitter must then write `extends RegionInfluencer()` at every subclass and
+`new RegionInfluencer()` at every call site — Scala requires the argument list once the primary has
+parameters. `RewriteTrace` is the utility that verifies those call sites followed; this is exactly
+the signature-changing rewrite it was built for.
 
 ~~`DepthShader:111`~~ — **FIXED**, and it had been recorded as BLOCKED. Spoon really does not resolve
 that reference to a `CtFieldWrite` under noClasspath — but the TIR already knew the symbol was an
