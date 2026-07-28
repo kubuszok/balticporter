@@ -86,10 +86,10 @@ object Cubemap {
       managedCubemapArray = new com.badlogic.gdx.utils.Array[Cubemap]()
     } else ()
     managedCubemapArray.add(cubemap)
-    Cubemap.managedCubemaps.update(app, managedCubemapArray)
+    Cubemap.managedCubemaps.put(app, managedCubemapArray).getOrElse(null.asInstanceOf[com.badlogic.gdx.utils.Array[Cubemap]])
   }
   def clearAllCubemaps(app: com.badlogic.gdx.Application): scala.Unit = {
-    Cubemap.managedCubemaps -= app
+    Cubemap.managedCubemaps.remove(app).getOrElse(null.asInstanceOf[com.badlogic.gdx.utils.Array[Cubemap]])
   }
   def invalidateAllCubemaps(app: com.badlogic.gdx.Application): scala.Unit = {
     val managedCubemapArray: com.badlogic.gdx.utils.Array[Cubemap] = Cubemap.managedCubemaps.getOrElse(app, null.asInstanceOf[com.badlogic.gdx.utils.Array[Cubemap]])

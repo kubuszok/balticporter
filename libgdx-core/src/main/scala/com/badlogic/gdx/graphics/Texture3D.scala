@@ -83,10 +83,10 @@ object Texture3D {
       managedTextureArray = new com.badlogic.gdx.utils.Array[Texture3D]()
     } else ()
     managedTextureArray.add(texture)
-    Texture3D.managedTexture3Ds.update(app, managedTextureArray)
+    Texture3D.managedTexture3Ds.put(app, managedTextureArray).getOrElse(null.asInstanceOf[com.badlogic.gdx.utils.Array[Texture3D]])
   }
   def clearAllTextureArrays(app: com.badlogic.gdx.Application): scala.Unit = {
-    Texture3D.managedTexture3Ds -= app
+    Texture3D.managedTexture3Ds.remove(app).getOrElse(null.asInstanceOf[com.badlogic.gdx.utils.Array[Texture3D]])
   }
   def invalidateAllTextureArrays(app: com.badlogic.gdx.Application): scala.Unit = {
     val managedTextureArray: com.badlogic.gdx.utils.Array[Texture3D] = Texture3D.managedTexture3Ds.getOrElse(app, null.asInstanceOf[com.badlogic.gdx.utils.Array[Texture3D]])

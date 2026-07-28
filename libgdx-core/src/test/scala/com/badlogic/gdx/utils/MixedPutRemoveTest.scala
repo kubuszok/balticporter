@@ -20,7 +20,7 @@ class MixedPutRemoveTest {
       if (gdxMap.put(item, i.asInstanceOf[java.lang.Integer]) != null) {
         gdxRepeats = gdxRepeats + 1
       } else ()
-      if (jdkMap.update(item.asInstanceOf[java.lang.Long], i.asInstanceOf[java.lang.Integer]) != null) {
+      if (jdkMap.put(item.asInstanceOf[java.lang.Long], i.asInstanceOf[java.lang.Integer]).getOrElse(null.asInstanceOf[java.lang.Integer]) != null) {
         jdkRepeats = jdkRepeats + 1
       } else ()
       org.junit.Assert.assertEquals(gdxMap.size, jdkMap.size)
@@ -48,8 +48,8 @@ class MixedPutRemoveTest {
       } else {
         gdxRemovals = gdxRemovals + 1
       }
-      if ((jdkMap -= item.asInstanceOf[java.lang.Long]) == null) {
-        jdkMap.update(item.asInstanceOf[java.lang.Long], i.asInstanceOf[java.lang.Integer])
+      if (jdkMap.remove(item.asInstanceOf[java.lang.Long]).getOrElse(null.asInstanceOf[java.lang.Integer]) == null) {
+        jdkMap.put(item.asInstanceOf[java.lang.Long], i.asInstanceOf[java.lang.Integer]).getOrElse(null.asInstanceOf[java.lang.Integer])
       } else {
         jdkRemovals = jdkRemovals + 1
       }
@@ -120,7 +120,7 @@ class MixedPutRemoveTest {
       if (gdxMap.put(item, i.asInstanceOf[java.lang.Integer]) != null) {
         gdxRepeats = gdxRepeats + 1
       } else ()
-      if (jdkMap.update(item.asInstanceOf[java.lang.Integer], i.asInstanceOf[java.lang.Integer]) != null) {
+      if (jdkMap.put(item.asInstanceOf[java.lang.Integer], i.asInstanceOf[java.lang.Integer]).getOrElse(null.asInstanceOf[java.lang.Integer]) != null) {
         jdkRepeats = jdkRepeats + 1
       } else ()
       org.junit.Assert.assertEquals(gdxMap.size, jdkMap.size)
@@ -149,8 +149,8 @@ class MixedPutRemoveTest {
       } else {
         gdxRemovals = gdxRemovals + 1
       }
-      if ((jdkMap -= item.asInstanceOf[java.lang.Integer]) == null) {
-        jdkMap.update(item.asInstanceOf[java.lang.Integer], i.asInstanceOf[java.lang.Integer])
+      if (jdkMap.remove(item.asInstanceOf[java.lang.Integer]).getOrElse(null.asInstanceOf[java.lang.Integer]) == null) {
+        jdkMap.put(item.asInstanceOf[java.lang.Integer], i.asInstanceOf[java.lang.Integer]).getOrElse(null.asInstanceOf[java.lang.Integer])
       } else {
         jdkRemovals = jdkRemovals + 1
       }
@@ -222,7 +222,7 @@ class MixedPutRemoveTest {
       if (gdxMap.put(item.asInstanceOf[java.lang.Integer], i.asInstanceOf[java.lang.Integer]) != null) {
         gdxRepeats = gdxRepeats + 1
       } else ()
-      if (jdkMap.update(item.asInstanceOf[java.lang.Integer], i.asInstanceOf[java.lang.Integer]) != null) {
+      if (jdkMap.put(item.asInstanceOf[java.lang.Integer], i.asInstanceOf[java.lang.Integer]).getOrElse(null.asInstanceOf[java.lang.Integer]) != null) {
         jdkRepeats = jdkRepeats + 1
       } else ()
       org.junit.Assert.assertEquals(gdxMap.size, jdkMap.size)
@@ -251,8 +251,8 @@ class MixedPutRemoveTest {
       } else {
         gdxRemovals = gdxRemovals + 1
       }
-      if ((jdkMap -= item.asInstanceOf[java.lang.Integer]) == null) {
-        jdkMap.update(item.asInstanceOf[java.lang.Integer], i.asInstanceOf[java.lang.Integer])
+      if (jdkMap.remove(item.asInstanceOf[java.lang.Integer]).getOrElse(null.asInstanceOf[java.lang.Integer]) == null) {
+        jdkMap.put(item.asInstanceOf[java.lang.Integer], i.asInstanceOf[java.lang.Integer]).getOrElse(null.asInstanceOf[java.lang.Integer])
       } else {
         jdkRemovals = jdkRemovals + 1
       }

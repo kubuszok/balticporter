@@ -720,7 +720,7 @@ object Mesh {
       managedResources = new com.badlogic.gdx.utils.Array[Mesh]()
     } else ()
     managedResources.add(mesh)
-    Mesh.meshes.update(app, managedResources)
+    Mesh.meshes.put(app, managedResources).getOrElse(null.asInstanceOf[com.badlogic.gdx.utils.Array[Mesh]])
   }
   def invalidateAllMeshes(app: com.badlogic.gdx.Application): scala.Unit = {
     val meshesArray: com.badlogic.gdx.utils.Array[Mesh] = Mesh.meshes.getOrElse(app, null.asInstanceOf[com.badlogic.gdx.utils.Array[Mesh]])
@@ -733,7 +733,7 @@ object Mesh {
     }; i = i + 1 } }
   }
   def clearAllMeshes(app: com.badlogic.gdx.Application): scala.Unit = {
-    Mesh.meshes -= app
+    Mesh.meshes.remove(app).getOrElse(null.asInstanceOf[com.badlogic.gdx.utils.Array[Mesh]])
   }
   def getManagedStatus(): java.lang.String = {
     val builder: java.lang.StringBuilder = new java.lang.StringBuilder()

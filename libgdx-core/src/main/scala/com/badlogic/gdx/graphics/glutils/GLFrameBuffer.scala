@@ -366,7 +366,7 @@ object GLFrameBuffer {
       managedResources = new com.badlogic.gdx.utils.Array[GLFrameBuffer[?]]().asInstanceOf[com.badlogic.gdx.utils.Array[GLFrameBuffer[?]]]
     } else ()
     managedResources.add(frameBuffer)
-    GLFrameBuffer.buffers.update(app, managedResources)
+    GLFrameBuffer.buffers.put(app, managedResources).getOrElse(null.asInstanceOf[com.badlogic.gdx.utils.Array[GLFrameBuffer[?]]])
   }
   def invalidateAllFrameBuffers(app: com.badlogic.gdx.Application): scala.Unit = {
     if (com.badlogic.gdx.Gdx.gl20 == null) {
@@ -381,7 +381,7 @@ object GLFrameBuffer {
     }; i = i + 1 } }
   }
   def clearAllFrameBuffers(app: com.badlogic.gdx.Application): scala.Unit = {
-    GLFrameBuffer.buffers -= app
+    GLFrameBuffer.buffers.remove(app).getOrElse(null.asInstanceOf[com.badlogic.gdx.utils.Array[GLFrameBuffer[?]]])
   }
   def getManagedStatus(builder: java.lang.StringBuilder): java.lang.StringBuilder = {
     builder.append("Managed buffers/app: { ")

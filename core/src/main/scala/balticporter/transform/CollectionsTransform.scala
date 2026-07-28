@@ -76,6 +76,9 @@ final class CollectionsTransform extends Phase:
   private var kindOf: Map[SymId, Kind]    = Map.empty // scala collection symbol → kind
   private var opPlusEq, opMinusEq, opPlusPlusEq: SymId = SymId.None
   private var updateSym, insertSym, getOrElseSym, containsSym: SymId = SymId.None
+  /** scala `mutable.Map.put`/`remove` — they RETURN the previous value, which java's do too and
+    * `update`/`-=` silently discard. */
+  private var putSym, removeSym: SymId = SymId.None
   private var key1Sym, value2Sym, roSetSym: SymId = SymId.None
 
   override def run(program: Program): Program =
@@ -106,6 +109,8 @@ final class CollectionsTransform extends Phase:
     key1Sym      = mint("_1", "_1") // Map.Entry#getKey   on a Tuple2
     value2Sym    = mint("_2", "_2") // Map.Entry#getValue on a Tuple2
     roSetSym     = mint("Set", "scala.collection.Set") // see `transformValDef`
+    putSym       = mint("put", "put")     // scala `mutable.Map.put`: returns the PREVIOUS value
+    removeSym    = mint("remove", "remove") // scala `mutable.Map.remove`: returns the REMOVED value
 
     val symbols = SymbolTable(program.symbols.all ++ added)
     given Program = new Program(program.units, symbols, program.xref)
@@ -167,11 +172,19 @@ final class CollectionsTransform extends Phase:
       case ("get", List(key), Kind.Map)         => Some(call(recv, getOrElseSym, List(key, dflt(nullOf(so), recv, so)), t, so))
       case ("getOrDefault", List(key, d), _)    => Some(call(recv, getOrElseSym, List(key, dflt(d, recv, so)), t, so))
       case ("set", List(i, x), Kind.Seq)        => Some(call(recv, updateSym, List(i, x), t, so)) // xs(i) = x
-      case ("put", List(key, v), Kind.Map)      => Some(call(recv, updateSym, List(key, v), t, so))
+      // Java's `Map.put` RETURNS THE PREVIOUS VALUE; scala's `update` returns `Unit`. Mapping to
+      // `update` discarded it at every site — `if (map.put(k, v) != null)` became a comparison
+      // against `Unit`. Scala's own `put` keeps it, as an `Option`, so `getOrElse(null)` restores
+      // java's contract exactly. The default is ascribed to `V`, as `get`'s is.
+      case ("put", List(key, v), Kind.Map)      =>
+        Some(call(call(recv, putSym, List(key, v), t, so), getOrElseSym, List(dflt(nullOf(so), recv, so)), t, so))
+      // likewise `Map.remove`, which returns the value that was there.
+      case ("remove", List(key), Kind.Map)      =>
+        Some(call(call(recv, removeSym, List(key), t, so), getOrElseSym, List(dflt(nullOf(so), recv, so)), t, so))
       case ("add", List(i, x), Kind.Seq)        => Some(call(recv, insertSym, List(i, x), t, so)) // insert at index
       case ("add", List(x), _)                  => Some(infix(recv, opPlusEq, List(x), t, so))    // xs += x
       case ("addAll" | "putAll", List(c), _)    => Some(infix(recv, opPlusPlusEq, List(c), t, so))// xs ++= c
-      case ("remove", List(x), Kind.Set | Kind.Map) => Some(infix(recv, opMinusEq, List(x), t, so)) // xs -= x
+      case ("remove", List(x), Kind.Set)        => Some(infix(recv, opMinusEq, List(x), t, so)) // xs -= x
       case ("containsKey", List(key), Kind.Map) => Some(call(recv, containsSym, List(key), t, so))
       case _                                    => None
 

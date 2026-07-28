@@ -46,7 +46,7 @@ object Net {
       this.url = url
     }
     def setHeader(name: java.lang.String, value: java.lang.String): scala.Unit = {
-      this.headers.update(name, value)
+      this.headers.put(name, value).getOrElse(null.asInstanceOf[java.lang.String])
     }
     def setContent(content: java.lang.String): scala.Unit = {
       this.content = content
