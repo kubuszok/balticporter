@@ -19,7 +19,7 @@ sge targets Scala Native and Scala.js, so the platform backends are largely irre
 
 | module | files | standing |
 |---|---|---|
-| `gdx/src` | 605 | **in progress** — 10 typer errors, this document |
+| `gdx/src` | 605 | **in progress** — 8 typer errors, this document |
 | `gdx/test` | 29 | **the goal's test clause** — 221 `@Test`, ~900 assertions |
 | `backends/gdx-backend-headless` | 15 | plausible next port target — no windowing, pure JVM |
 | `backends/gdx-backend-lwjgl3` | 39 | desktop JVM backend |
@@ -32,7 +32,7 @@ sge targets Scala Native and Scala.js, so the platform backends are largely irre
 
 ### Ordering, and why
 
-1. **Close the last 10 typer errors in `gdx/src`.** Nothing downstream can run until this is 0.
+1. **Close the last 8 typer errors in `gdx/src`.** Nothing downstream can run until this is 0.
 2. **Then RefChecks runs for the first time** (§0.1) and a new error class appears — missing
    `override`, unimplemented members, variance. Expect the count to RISE here; that is the gate
    beginning to tell the truth, not a regression.
@@ -46,35 +46,26 @@ sge targets Scala Native and Scala.js, so the platform backends are largely irre
 
 | metric | value | source |
 |---|---|---|
-| clean-compile errors (TYPER only — see §0.1) | **10** | `scripts/gdx_measure.sh` |
+| clean-compile errors (TYPER only — see §0.1) | **8** | `scripts/gdx_measure.sh` |
 | portability (JVM-only APIs in emitted code) | **0** | `PortabilityCheck` |
 | portability (injected replacements) | **clean** | `PortabilityCheck.inInjectedSource` |
 | silent omissions | **31** (30 `super(args)` + 1; 0 anonymous-class members) | `OmissionCheck` |
 | signature consistency | clean | `RewriteTrace.check` |
 | substitutions verified removed | 10 dropped types | migration CHECK 1 + CHECK 2 |
 
-Error breakdown: E007 5, E134 2, E120 1, E051 1, E049 1. **Every remaining error is a distinct
-one-off** — no two share a cause, which is what a long tail looks like:
+Error breakdown: E007 4, E134 2, E120 1, E049 1. **Every remaining error is a distinct one-off**,
+and three of the eight are deliberate — they stand because the honest fix is bigger than the symptom:
 
-| where | what |
-|---|---|
-| `AssetManager:486` | a block-valued argument (Java assignment-as-expression) misses the wildcard-slot widening |
-| `Sprite:24` | `setRegion(int×4)` vs `(float×4)`: Java picks `int`, Scala finds both applicable via widening |
-| `ParallelArray:176` | `Arrays.copyOf` argument erased to `Array[Object]`, result assigned to `Array[T]` — the cast belongs on the RESULT |
-| `ParticleEffectLoader:25` | RAW `new AssetDescriptor(…)`, so there are no explicit type args to substitute (the applied form is fixed) |
-| `RegionInfluencer:11` | nilary Java constructor vs Scala's implicit primary — needs a discriminator-parameter funnel (see §4) |
-| `DepthShader:111` | inherited instance field vs the companion's re-exported static of the same name |
-| `NetJavaImpl:196` | a `java.util` value crossing from the JDK into retyped code — needs a CONVERSION, not a retype (see below) |
-| `Skin:513` | RAW `new ReadOnlySerializer(){…}`; Scala infers `[Nothing]` where Java erased |
-| `CharArray:718` | a `ForEach` binding typed `T` in an `Object` formal |
-| `OrderedMap:285` | `Array[?]#T` element used where `Object` is required |
-
-**`NetJavaImpl:196` is not type residue — it is a design gap worth naming.** `CollectionsTransform`
-retyped our declaration to `mutable.Map`, but the value comes straight from the JDK
-(`connection.getHeaderFields()` genuinely returns `java.util.Map`). The faithful fix is a conversion
-at the boundary (`.asScala`), not un-retyping — and it is a CLASS of issue wherever a `java.util`
-collection crosses from the JDK into retyped code, not one site. Left standing deliberately;
-patching the symptom would have hidden it.
+| where | what | tractable? |
+|---|---|---|
+| `AssetManager:486` | a block-valued argument (Java assignment-as-expression) misses the wildcard-slot widening | yes |
+| `ParticleEffectLoader:25` | RAW `new AssetDescriptor(…)`: no explicit type args to substitute (the applied form is fixed) | yes |
+| `Skin:513` | RAW `new ReadOnlySerializer(){…}`; Scala infers `[Nothing]` where Java erased. A raw generic `new` should fill from the parameter's BOUND rather than leave Scala to infer — unconstrained inference gives `Nothing`, which is never what Java meant | yes |
+| `CharArray:718` | a `ForEach` binding typed `T` in an `Object` formal. NOT the mis-resolved-primitive theory — that was tried and is inert | yes |
+| `OrderedMap:285` | `Array[?]#T` element where the callee's `K` is constrained `<: Object` | yes |
+| `DepthShader:111` | inherited instance field vs the companion's re-exported static of the same name. **Spoon does not resolve this reference to a `CtFieldWrite` under noClasspath**, so the frontend never reaches the field path — see do-not-retry | blocked |
+| `NetJavaImpl:196` | a `java.util` value crossing from the JDK into retyped code. **DELIBERATE**: needs a conversion at the boundary (`.asScala`), not un-retyping, and it is a CLASS of issue wherever a JDK collection enters retyped code. Patching the symptom would hide it | by design |
+| `RegionInfluencer:11` | nilary Java constructor vs Scala's implicit primary. **DELIBERATE**: `CtorFunnel` nominates the paramful constructor but the whole-program fixpoint withholds it (three subclasses reach the class with an argument-free `extends`), and the nilary one cannot be primary either since it opens with `this(1)`. The encoding that works is a **discriminator-parameter funnel** — primary `(regionsCount: Int = 1, seedDefault: Boolean = false)` with every call site and `extends` clause updated, which `RewriteTrace` exists to verify. Real work, not a patch | by design |
 
 ### Where the engine ends and a library's manifest begins
 
