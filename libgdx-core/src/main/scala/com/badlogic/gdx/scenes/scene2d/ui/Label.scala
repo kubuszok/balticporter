@@ -47,7 +47,7 @@ class Label(text$p: java.lang.CharSequence, style$p: com.badlogic.gdx.scenes.sce
     this.cache = style.font.newFontCache()
     this.invalidateHierarchy()
   }
-  override def getStyle(): com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle = {
+  override def getStyle(): ?T = {
     return this.style
   }
   def setText(value: scala.Int): scala.Boolean = {

@@ -37,7 +37,7 @@ class ImageButton(style$p: com.badlogic.gdx.scenes.scene2d.ui.ImageButton.ImageB
       this.updateImage()
     } else ()
   }
-  override def getStyle(): com.badlogic.gdx.scenes.scene2d.ui.ImageButton.ImageButtonStyle = {
+  override def getStyle(): ?T = {
     return this.style
   }
   @com.badlogic.gdx.utils.Null

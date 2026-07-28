@@ -568,6 +568,15 @@ decision about which mapping gives way.
 
 ## Do NOT retry (measured failures)
 
+- **Rendering an OVERRIDING method's return type from the parent'''s declaration**: 162 -> **438**.
+  The diagnosis is right — 110 x E164 are `Array[AssetDescriptor[?]]` vs `Array[AssetDescriptor[?]]`,
+  two INDEPENDENT captures our raw fill produced by rendering each side separately — but the repair
+  is not. The parent'''s type reference names the PARENT'''s type variables, which do not exist in the
+  subclass'''s scope, so rendering it there is worse than the mismatch it fixes. What is needed is
+  the parent'''s ALREADY-RENDERED result with the parent'''s formals substituted by the subclass'''s
+  actual arguments — i.e. the transitive parent substitution `CtorFunnel.parentTypeSubst` already
+  computes for constructor replays, applied to member signatures.
+
 - **Falling back to ERASED formals in `rawCtorArgs` when nothing names the class's parameters** —
   THREE gates tried, all worse than leaving it alone. SOLVED, but only by inverting the direction:
   see `rawCtorSpecialisation`, which casts the ERASED argument UP to the binding a precise sibling

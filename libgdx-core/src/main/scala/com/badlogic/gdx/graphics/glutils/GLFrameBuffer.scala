@@ -507,7 +507,7 @@ object GLFrameBuffer {
       this.samples = samples
     }
     @java.lang.Override
-    override def build(): com.badlogic.gdx.graphics.glutils.FrameBuffer = {
+    override def build(): ?U = {
       return new com.badlogic.gdx.graphics.glutils.FrameBuffer(this)
     }
   }
@@ -525,7 +525,7 @@ object GLFrameBuffer {
       this.samples = samples
     }
     @java.lang.Override
-    override def build(): com.badlogic.gdx.graphics.glutils.FloatFrameBuffer = {
+    override def build(): ?U = {
       return new com.badlogic.gdx.graphics.glutils.FloatFrameBuffer(this)
     }
   }
@@ -543,7 +543,7 @@ object GLFrameBuffer {
       this.samples = samples
     }
     @java.lang.Override
-    override def build(): com.badlogic.gdx.graphics.glutils.FrameBufferCubemap = {
+    override def build(): ?U = {
       return new com.badlogic.gdx.graphics.glutils.FrameBufferCubemap(this)
     }
   }

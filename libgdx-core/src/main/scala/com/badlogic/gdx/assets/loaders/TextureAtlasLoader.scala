@@ -3,7 +3,7 @@ package com.badlogic.gdx.assets.loaders
 class TextureAtlasLoader(resolver$p: com.badlogic.gdx.assets.loaders.FileHandleResolver) extends com.badlogic.gdx.assets.loaders.SynchronousAssetLoader[com.badlogic.gdx.graphics.g2d.TextureAtlas, com.badlogic.gdx.assets.loaders.TextureAtlasLoader.TextureAtlasParameter](resolver$p) {
   var data: com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData = null.asInstanceOf[com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData]
   @java.lang.Override
-  override def load(assetManager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.assets.loaders.TextureAtlasLoader.TextureAtlasParameter): com.badlogic.gdx.graphics.g2d.TextureAtlas = {
+  override def load(assetManager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.assets.loaders.TextureAtlasLoader.TextureAtlasParameter): ?T = {
     for (page <- this.data.getPages()) {
       var texture: com.badlogic.gdx.graphics.Texture = assetManager.get(page.textureFile.path().replaceAll("\\\\", "/"), classOf[com.badlogic.gdx.graphics.Texture])
       page.texture = texture

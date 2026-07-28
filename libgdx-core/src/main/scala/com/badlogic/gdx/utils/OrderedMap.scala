@@ -110,7 +110,7 @@ class OrderedMap[K <: java.lang.Object, V <: java.lang.Object] extends com.badlo
   def orderedKeys(): com.badlogic.gdx.utils.Array[K] = {
     return this.keys$field
   }
-  override def iterator(): com.badlogic.gdx.utils.ObjectMap.Entries[K, V] = {
+  override def iterator(): balticporter.runtime.JavaIterator[?T] = {
     return this.entries()
   }
   override def entries(): com.badlogic.gdx.utils.ObjectMap.Entries[K, V] = {
@@ -205,7 +205,7 @@ object OrderedMap {
       nextIndex = 0
       hasNext$field = this.map.size > 0
     }
-    override def next(): com.badlogic.gdx.utils.ObjectMap.Entry[K, V] = {
+    override def next(): ?E = {
       if (!hasNext$field) {
         throw new java.util.NoSuchElementException()
       } else ()
@@ -236,7 +236,7 @@ object OrderedMap {
       nextIndex = 0
       hasNext$field = this.map.size > 0
     }
-    override def next(): K = {
+    override def next(): ?E = {
       if (!hasNext$field) {
         throw new java.util.NoSuchElementException()
       } else ()
@@ -275,7 +275,7 @@ object OrderedMap {
       nextIndex = 0
       hasNext$field = this.map.size > 0
     }
-    override def next(): V = {
+    override def next(): ?E = {
       if (!hasNext$field) {
         throw new java.util.NoSuchElementException()
       } else ()

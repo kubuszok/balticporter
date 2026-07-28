@@ -395,7 +395,7 @@ class Tree[N <: com.badlogic.gdx.scenes.scene2d.ui.Tree.Node[N, V, ?], V <: java
     val node: N = this.selection.first()
     return if (node == null) null.asInstanceOf[V] else node.getValue().asInstanceOf[V]
   }
-  override def getStyle(): com.badlogic.gdx.scenes.scene2d.ui.Tree.TreeStyle = {
+  override def getStyle(): ?T = {
     return this.style
   }
   def getRootNodes(): com.badlogic.gdx.utils.Array[N] = {

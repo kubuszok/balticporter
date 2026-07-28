@@ -7,7 +7,7 @@ class PolygonRegionLoader(resolver$p: com.badlogic.gdx.assets.loaders.FileHandle
     this(new com.badlogic.gdx.assets.loaders.resolvers.InternalFileHandleResolver())
   }
   @java.lang.Override
-  override def load(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.graphics.g2d.PolygonRegionLoader.PolygonRegionParameters): com.badlogic.gdx.graphics.g2d.PolygonRegion = {
+  override def load(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.graphics.g2d.PolygonRegionLoader.PolygonRegionParameters): ?T = {
     val texture: com.badlogic.gdx.graphics.Texture = manager.get(manager.getDependencies(fileName).first())
     return this.load(new com.badlogic.gdx.graphics.g2d.TextureRegion(texture), file)
   }

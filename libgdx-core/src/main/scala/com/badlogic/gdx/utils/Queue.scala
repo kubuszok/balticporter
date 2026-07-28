@@ -392,7 +392,7 @@ object Queue {
       } else ()
       return this.index < this.queue.size
     }
-    override def next(): T = {
+    override def next(): ?E = {
       if (this.index >= this.queue.size) {
         throw new java.util.NoSuchElementException(java.lang.String.valueOf(this.index))
       } else ()

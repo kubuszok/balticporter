@@ -8,7 +8,7 @@ class PointLightsAttribute extends com.badlogic.gdx.graphics.g3d.Attribute(Point
   }
   this.lights = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.environment.PointLight](1)
   @java.lang.Override
-  override def copy(): PointLightsAttribute = {
+  override def copy(): com.badlogic.gdx.graphics.g3d.Attribute = {
     return new PointLightsAttribute(this)
   }
   @java.lang.Override

@@ -45,7 +45,7 @@ class TiledDrawable extends com.badlogic.gdx.scenes.scene2d.utils.TextureRegionD
   def setAlign(align: scala.Int): scala.Unit = {
     this.align = align
   }
-  override def tint(tint: com.badlogic.gdx.graphics.Color): TiledDrawable = {
+  override def tint(tint: com.badlogic.gdx.graphics.Color): com.badlogic.gdx.scenes.scene2d.utils.Drawable = {
     val drawable: TiledDrawable = new TiledDrawable(this)
     drawable.color.set(tint)
     drawable.setLeftWidth(this.getLeftWidth())

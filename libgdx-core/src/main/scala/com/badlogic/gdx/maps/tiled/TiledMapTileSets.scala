@@ -34,7 +34,7 @@ class TiledMapTileSets extends balticporter.runtime.JavaIterable[com.badlogic.gd
     return null
   }
   @java.lang.Override
-  override def iterator(): balticporter.runtime.JavaIterator[com.badlogic.gdx.maps.tiled.TiledMapTileSet] = {
+  override def iterator(): balticporter.runtime.JavaIterator[?T] = {
     return this.tilesets.iterator()
   }
 }

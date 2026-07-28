@@ -185,7 +185,7 @@ object DynamicsModifier {
       }; s = s + this.strengthChannel.strideSize; i = i + this.rotationalVelocity2dChannel.strideSize; l = l + this.lifeChannel.strideSize } }
     }
     @java.lang.Override
-    override def copy(): com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.Rotational2D = {
+    override def copy(): com.badlogic.gdx.graphics.g3d.particles.ParticleControllerComponent = {
       return new com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.Rotational2D(this)
     }
   }
@@ -230,7 +230,7 @@ object DynamicsModifier {
       }; s = s + this.strengthChannel.strideSize; i = i + this.rotationalForceChannel.strideSize; a = a + this.angularChannel.strideSize; l = l + this.lifeChannel.strideSize } }
     }
     @java.lang.Override
-    override def copy(): com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.Rotational3D = {
+    override def copy(): com.badlogic.gdx.graphics.g3d.particles.ParticleControllerComponent = {
       return new com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.Rotational3D(this)
     }
   }
@@ -276,7 +276,7 @@ object DynamicsModifier {
       }; i = i + 1; positionOffset = positionOffset + this.positionChannel.strideSize; strengthOffset = strengthOffset + this.strengthChannel.strideSize; forceOffset = forceOffset + this.accelerationChannel.strideSize; lifeOffset = lifeOffset + this.lifeChannel.strideSize } }
     }
     @java.lang.Override
-    override def copy(): com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.CentripetalAcceleration = {
+    override def copy(): com.badlogic.gdx.graphics.g3d.particles.ParticleControllerComponent = {
       return new com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.CentripetalAcceleration(this)
     }
   }
@@ -322,7 +322,7 @@ object DynamicsModifier {
       }; s = s + this.strengthChannel.strideSize; i = i + this.directionalVelocityChannel.strideSize; a = a + this.angularChannel.strideSize; l = l + this.lifeChannel.strideSize } }
     }
     @java.lang.Override
-    override def copy(): com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.PolarAcceleration = {
+    override def copy(): com.badlogic.gdx.graphics.g3d.particles.ParticleControllerComponent = {
       return new com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.PolarAcceleration(this)
     }
   }
@@ -374,7 +374,7 @@ object DynamicsModifier {
       }; s = s + this.strengthChannel.strideSize; i = i + this.directionalVelocityChannel.strideSize; a = a + this.angularChannel.strideSize; l = l + this.lifeChannel.strideSize; positionOffset = positionOffset + this.positionChannel.strideSize } }
     }
     @java.lang.Override
-    override def copy(): com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.TangentialAcceleration = {
+    override def copy(): com.badlogic.gdx.graphics.g3d.particles.ParticleControllerComponent = {
       return new com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.TangentialAcceleration(this)
     }
   }
@@ -408,7 +408,7 @@ object DynamicsModifier {
       }; i = i + 1; strengthOffset = strengthOffset + this.strengthChannel.strideSize; forceOffset = forceOffset + this.accelerationChannel.strideSize; lifeOffset = lifeOffset + this.lifeChannel.strideSize } }
     }
     @java.lang.Override
-    override def copy(): com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.BrownianAcceleration = {
+    override def copy(): com.badlogic.gdx.graphics.g3d.particles.ParticleControllerComponent = {
       return new com.badlogic.gdx.graphics.g3d.particles.influencers.DynamicsModifier.BrownianAcceleration(this)
     }
   }

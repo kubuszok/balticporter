@@ -354,7 +354,7 @@ class BillboardParticleBatch(mode$p: com.badlogic.gdx.graphics.g3d.particles.Par
   }
   class RenderablePool extends com.badlogic.gdx.utils.Pool[com.badlogic.gdx.graphics.g3d.Renderable] {
     @java.lang.Override
-    override def newObject(): com.badlogic.gdx.graphics.g3d.Renderable = {
+    override def newObject(): ?T = {
       return BillboardParticleBatch.this.allocRenderable()
     }
   }

@@ -142,7 +142,7 @@ class DynamicsInfluencer extends com.badlogic.gdx.graphics.g3d.particles.influen
     }
   }
   @java.lang.Override
-  override def copy(): DynamicsInfluencer = {
+  override def copy(): com.badlogic.gdx.graphics.g3d.particles.ParticleControllerComponent = {
     return new DynamicsInfluencer(this)
   }
   @java.lang.Override

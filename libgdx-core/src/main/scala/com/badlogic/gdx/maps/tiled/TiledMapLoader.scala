@@ -95,7 +95,7 @@ class TiledMapLoader(resolver$p: com.badlogic.gdx.assets.loaders.FileHandleResol
     }
   }
   @java.lang.Override
-  override def loadSync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter$arg: com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.Parameters): com.badlogic.gdx.maps.tiled.TiledMap = {
+  override def loadSync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter$arg: com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.Parameters): ?T = {
     var parameter: com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.Parameters = parameter$arg
     var map: com.badlogic.gdx.maps.tiled.TiledMap = null.asInstanceOf[com.badlogic.gdx.maps.tiled.TiledMap]
     if (parameter == null) {

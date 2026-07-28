@@ -49,7 +49,7 @@ class MapLayers extends balticporter.runtime.JavaIterable[com.badlogic.gdx.maps.
     return fill
   }
   @java.lang.Override
-  override def iterator(): balticporter.runtime.JavaIterator[com.badlogic.gdx.maps.MapLayer] = {
+  override def iterator(): balticporter.runtime.JavaIterator[?T] = {
     return this.layers.iterator()
   }
 }

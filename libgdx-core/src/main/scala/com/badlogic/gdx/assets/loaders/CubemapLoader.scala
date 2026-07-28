@@ -25,7 +25,7 @@ class CubemapLoader(resolver$p: com.badlogic.gdx.assets.loaders.FileHandleResolv
     } else ()
   }
   @java.lang.Override
-  override def loadSync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.assets.loaders.CubemapLoader.CubemapParameter): com.badlogic.gdx.graphics.Cubemap = {
+  override def loadSync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.assets.loaders.CubemapLoader.CubemapParameter): ?T = {
     if (this.info == null) {
       return null
     } else ()

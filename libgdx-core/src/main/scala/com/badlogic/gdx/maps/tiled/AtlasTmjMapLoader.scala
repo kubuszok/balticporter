@@ -28,7 +28,7 @@ class AtlasTmjMapLoader extends com.badlogic.gdx.maps.tiled.BaseTmjMapLoader[com
     this.map = this.loadTiledMap(tmjFile, parameter, this.atlasResolver)
   }
   @java.lang.Override
-  override def loadSync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.Parameters): com.badlogic.gdx.maps.tiled.TiledMap = {
+  override def loadSync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.maps.tiled.BaseTiledMapLoader.Parameters): ?T = {
     if (parameter != null) {
       this.setTextureFilters(parameter.textureMinFilter, parameter.textureMagFilter)
     } else ()

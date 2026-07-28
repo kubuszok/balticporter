@@ -157,7 +157,7 @@ class TextField extends com.badlogic.gdx.scenes.scene2d.ui.Widget with com.badlo
     } else ()
     this.invalidateHierarchy()
   }
-  override def getStyle(): com.badlogic.gdx.scenes.scene2d.ui.TextField.TextFieldStyle = {
+  override def getStyle(): ?T = {
     return this.style
   }
   def calculateOffsets(): scala.Unit = {

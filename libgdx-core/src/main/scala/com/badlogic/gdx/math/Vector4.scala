@@ -33,7 +33,7 @@ class Vector4 extends java.io.Serializable with com.badlogic.gdx.math.Vector[Vec
     return this
   }
   @java.lang.Override
-  override def set(vector: Vector4): Vector4 = {
+  override def set(vector: Vector4): ?T = {
     return this.set(vector.x, vector.y, vector.z, vector.w)
   }
   def set(values: scala.Array[scala.Float]): Vector4 = {
@@ -46,7 +46,7 @@ class Vector4 extends java.io.Serializable with com.badlogic.gdx.math.Vector[Vec
     return this.set(vector.x, vector.y, vector.z, w)
   }
   @java.lang.Override
-  override def setToRandomDirection(): Vector4 = {
+  override def setToRandomDirection(): ?T = {
     var v1: scala.Float = 0.0f
     var v2: scala.Float = 0.0f
     var s: scala.Float = 0.0f
@@ -70,11 +70,11 @@ class Vector4 extends java.io.Serializable with com.badlogic.gdx.math.Vector[Vec
     return this.nor()
   }
   @java.lang.Override
-  override def cpy(): Vector4 = {
+  override def cpy(): ?T = {
     return new Vector4(this)
   }
   @java.lang.Override
-  override def add(vector: Vector4): Vector4 = {
+  override def add(vector: Vector4): ?T = {
     return this.add(vector.x, vector.y, vector.z, vector.w)
   }
   def add(x: scala.Float, y: scala.Float, z: scala.Float, w: scala.Float): Vector4 = {
@@ -84,7 +84,7 @@ class Vector4 extends java.io.Serializable with com.badlogic.gdx.math.Vector[Vec
     return this.set(this.x + values, this.y + values, this.z + values, this.w + values)
   }
   @java.lang.Override
-  override def sub(a_vec: Vector4): Vector4 = {
+  override def sub(a_vec: Vector4): ?T = {
     return this.sub(a_vec.x, a_vec.y, a_vec.z, a_vec.w)
   }
   def sub(x: scala.Float, y: scala.Float, z: scala.Float, w: scala.Float): Vector4 = {
@@ -94,18 +94,18 @@ class Vector4 extends java.io.Serializable with com.badlogic.gdx.math.Vector[Vec
     return this.set(this.x - value, this.y - value, this.z - value, this.w - value)
   }
   @java.lang.Override
-  override def scl(scalar: scala.Float): Vector4 = {
+  override def scl(scalar: scala.Float): ?T = {
     return this.set(this.x * scalar, this.y * scalar, this.z * scalar, this.w * scalar)
   }
   @java.lang.Override
-  override def scl(other: Vector4): Vector4 = {
+  override def scl(other: Vector4): ?T = {
     return this.set(this.x * other.x, this.y * other.y, this.z * other.z, this.w * other.w)
   }
   def scl(vx: scala.Float, vy: scala.Float, vz: scala.Float, vw: scala.Float): Vector4 = {
     return this.set(this.x * vx, this.y * vy, this.z * vz, this.w * vw)
   }
   @java.lang.Override
-  override def mulAdd(vec: Vector4, scalar: scala.Float): Vector4 = {
+  override def mulAdd(vec: Vector4, scalar: scala.Float): ?T = {
     this.x = this.x + (vec.x * scalar)
     this.y = this.y + (vec.y * scalar)
     this.z = this.z + (vec.z * scalar)
@@ -113,7 +113,7 @@ class Vector4 extends java.io.Serializable with com.badlogic.gdx.math.Vector[Vec
     return this
   }
   @java.lang.Override
-  override def mulAdd(vec: Vector4, mulVec: Vector4): Vector4 = {
+  override def mulAdd(vec: Vector4, mulVec: Vector4): ?T = {
     this.x = this.x + (vec.x * mulVec.x)
     this.y = this.y + (vec.y * mulVec.y)
     this.z = this.z + (vec.z * mulVec.z)
@@ -162,7 +162,7 @@ class Vector4 extends java.io.Serializable with com.badlogic.gdx.math.Vector[Vec
     return (((a * a) + (b * b)) + (c * c)) + (d * d)
   }
   @java.lang.Override
-  override def nor(): Vector4 = {
+  override def nor(): ?T = {
     val len2: scala.Float = this.len2()
     if ((len2 == 0.0f) || (len2 == 1.0f)) {
       return this
@@ -307,7 +307,7 @@ class Vector4 extends java.io.Serializable with com.badlogic.gdx.math.Vector[Vec
     return this.dot(vector) < 0
   }
   @java.lang.Override
-  override def lerp(target: Vector4, alpha: scala.Float): Vector4 = {
+  override def lerp(target: Vector4, alpha: scala.Float): ?T = {
     this.x = this.x + (alpha * (target.x - this.x))
     this.y = this.y + (alpha * (target.y - this.y))
     this.z = this.z + (alpha * (target.z - this.z))
@@ -315,7 +315,7 @@ class Vector4 extends java.io.Serializable with com.badlogic.gdx.math.Vector[Vec
     return this
   }
   @java.lang.Override
-  override def interpolate(target: Vector4, alpha: scala.Float, interpolator: com.badlogic.gdx.math.Interpolation): Vector4 = {
+  override def interpolate(target: Vector4, alpha: scala.Float, interpolator: com.badlogic.gdx.math.Interpolation): ?T = {
     return this.lerp(target, interpolator.apply(alpha))
   }
   @java.lang.Override
@@ -342,11 +342,11 @@ class Vector4 extends java.io.Serializable with com.badlogic.gdx.math.Vector[Vec
     throw new com.badlogic.gdx.utils.GdxRuntimeException("Malformed Vector4: " + v)
   }
   @java.lang.Override
-  override def limit(limit: scala.Float): Vector4 = {
+  override def limit(limit: scala.Float): ?T = {
     return this.limit2(limit * limit)
   }
   @java.lang.Override
-  override def limit2(limit2: scala.Float): Vector4 = {
+  override def limit2(limit2: scala.Float): ?T = {
     val len2: scala.Float = this.len2()
     if (len2 > limit2) {
       this.scl(java.lang.Math.sqrt(limit2 / len2).asInstanceOf[scala.Float].asInstanceOf[scala.Float])
@@ -354,16 +354,16 @@ class Vector4 extends java.io.Serializable with com.badlogic.gdx.math.Vector[Vec
     return this
   }
   @java.lang.Override
-  override def setLength(len: scala.Float): Vector4 = {
+  override def setLength(len: scala.Float): ?T = {
     return this.setLength2(len * len)
   }
   @java.lang.Override
-  override def setLength2(len2: scala.Float): Vector4 = {
+  override def setLength2(len2: scala.Float): ?T = {
     val oldLen2: scala.Float = this.len2()
     return if ((oldLen2 == 0) || (oldLen2 == len2)) this else this.scl(java.lang.Math.sqrt(len2 / oldLen2).asInstanceOf[scala.Float].asInstanceOf[scala.Float])
   }
   @java.lang.Override
-  override def clamp(min: scala.Float, max: scala.Float): Vector4 = {
+  override def clamp(min: scala.Float, max: scala.Float): ?T = {
     val len2: scala.Float = this.len2()
     if (len2 == 0.0f) {
       return this
@@ -455,7 +455,7 @@ class Vector4 extends java.io.Serializable with com.badlogic.gdx.math.Vector[Vec
     return this.epsilonEquals(x, y, z, w, com.badlogic.gdx.math.MathUtils.FLOAT_ROUNDING_ERROR)
   }
   @java.lang.Override
-  override def setZero(): Vector4 = {
+  override def setZero(): ?T = {
     this.x = 0
     this.y = 0
     this.z = 0

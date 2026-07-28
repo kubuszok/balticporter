@@ -42,7 +42,7 @@ class ProgressBar(min$p: scala.Float, max$p: scala.Float, stepSize$p: scala.Floa
     this.style = style
     this.invalidateHierarchy()
   }
-  override def getStyle(): com.badlogic.gdx.scenes.scene2d.ui.ProgressBar.ProgressBarStyle = {
+  override def getStyle(): ?T = {
     return this.style
   }
   override def act(delta: scala.Float): scala.Unit = {

@@ -33,7 +33,7 @@ class BitmapFontLoader(resolver$p: com.badlogic.gdx.assets.loaders.FileHandleRes
     ()
   }
   @java.lang.Override
-  override def loadSync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.assets.loaders.BitmapFontLoader.BitmapFontParameter): com.badlogic.gdx.graphics.g2d.BitmapFont = {
+  override def loadSync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.assets.loaders.BitmapFontLoader.BitmapFontParameter): ?T = {
     if ((parameter != null) && (parameter.atlasName != null)) {
       val atlas: com.badlogic.gdx.graphics.g2d.TextureAtlas = manager.get(parameter.atlasName, classOf[com.badlogic.gdx.graphics.g2d.TextureAtlas])
       val name: java.lang.String = file.sibling(this.data.imagePaths(0)).nameWithoutExtension().toString()

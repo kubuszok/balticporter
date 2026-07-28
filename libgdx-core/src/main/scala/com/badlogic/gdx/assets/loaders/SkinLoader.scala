@@ -18,7 +18,7 @@ class SkinLoader(resolver$p: com.badlogic.gdx.assets.loaders.FileHandleResolver)
     ()
   }
   @java.lang.Override
-  override def loadSync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.assets.loaders.SkinLoader.SkinParameter): com.badlogic.gdx.scenes.scene2d.ui.Skin = {
+  override def loadSync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.assets.loaders.SkinLoader.SkinParameter): ?T = {
     var textureAtlasPath: java.lang.String = file.pathWithoutExtension() + ".atlas"
     var resources: com.badlogic.gdx.utils.ObjectMap[java.lang.String, java.lang.Object] = null
     if (parameter != null) {

@@ -10,7 +10,7 @@ class MusicLoader(resolver$p: com.badlogic.gdx.assets.loaders.FileHandleResolver
     this.music = com.badlogic.gdx.Gdx.audio.newMusic(file)
   }
   @java.lang.Override
-  override def loadSync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.assets.loaders.MusicLoader.MusicParameter): com.badlogic.gdx.audio.Music = {
+  override def loadSync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.assets.loaders.MusicLoader.MusicParameter): ?T = {
     var music: com.badlogic.gdx.audio.Music = this.music
     this.music = null
     return music

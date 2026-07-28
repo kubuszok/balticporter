@@ -120,7 +120,7 @@ object ParticleControllerInfluencer {
       }; i = i + 1 } }
     }
     @java.lang.Override
-    override def copy(): com.badlogic.gdx.graphics.g3d.particles.influencers.ParticleControllerInfluencer.Single = {
+    override def copy(): com.badlogic.gdx.graphics.g3d.particles.ParticleControllerComponent = {
       return new com.badlogic.gdx.graphics.g3d.particles.influencers.ParticleControllerInfluencer.Single(this)
     }
   }
@@ -170,12 +170,12 @@ object ParticleControllerInfluencer {
       }; i = i + 1 } }
     }
     @java.lang.Override
-    override def copy(): com.badlogic.gdx.graphics.g3d.particles.influencers.ParticleControllerInfluencer.Random = {
+    override def copy(): com.badlogic.gdx.graphics.g3d.particles.ParticleControllerComponent = {
       return new com.badlogic.gdx.graphics.g3d.particles.influencers.ParticleControllerInfluencer.Random(this)
     }
     class ParticleControllerPool extends com.badlogic.gdx.utils.Pool[com.badlogic.gdx.graphics.g3d.particles.ParticleController] {
       @java.lang.Override
-      override def newObject(): com.badlogic.gdx.graphics.g3d.particles.ParticleController = {
+      override def newObject(): ?T = {
         val controller: com.badlogic.gdx.graphics.g3d.particles.ParticleController = templates.random().copy()
         controller.init()
         return controller

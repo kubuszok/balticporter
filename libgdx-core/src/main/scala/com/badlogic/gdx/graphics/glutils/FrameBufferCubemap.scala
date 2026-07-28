@@ -24,7 +24,7 @@ class FrameBufferCubemap extends com.badlogic.gdx.graphics.glutils.GLFrameBuffer
     this(format, width, height, hasDepth, false)
   }
   @java.lang.Override
-  override def createTexture(attachmentSpec: com.badlogic.gdx.graphics.glutils.GLFrameBuffer.FrameBufferTextureAttachmentSpec): com.badlogic.gdx.graphics.Cubemap = {
+  override def createTexture(attachmentSpec: com.badlogic.gdx.graphics.glutils.GLFrameBuffer.FrameBufferTextureAttachmentSpec): ?T = {
     val data: com.badlogic.gdx.graphics.glutils.GLOnlyTextureData = new com.badlogic.gdx.graphics.glutils.GLOnlyTextureData(this.bufferBuilder.width, this.bufferBuilder.height, 0, attachmentSpec.internalFormat, attachmentSpec.format, attachmentSpec.`type`)
     val result: com.badlogic.gdx.graphics.Cubemap = new com.badlogic.gdx.graphics.Cubemap(data, data, data, data, data, data)
     result.setFilter(com.badlogic.gdx.graphics.Texture.TextureFilter.Linear, com.badlogic.gdx.graphics.Texture.TextureFilter.Linear)

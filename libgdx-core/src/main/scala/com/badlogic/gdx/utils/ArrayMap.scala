@@ -465,7 +465,7 @@ class ArrayMap[K <: java.lang.Object, V <: java.lang.Object] extends balticporte
     buffer.append('}')
     return buffer.toString()
   }
-  override def iterator(): balticporter.runtime.JavaIterator[com.badlogic.gdx.utils.ObjectMap.Entry[K, V]] = {
+  override def iterator(): balticporter.runtime.JavaIterator[?T] = {
     return this.entries()
   }
   def entries(): com.badlogic.gdx.utils.ArrayMap.Entries[K, V] = {
@@ -539,10 +539,10 @@ object ArrayMap {
       } else ()
       return this.index < this.map.size
     }
-    override def iterator(): balticporter.runtime.JavaIterator[com.badlogic.gdx.utils.ObjectMap.Entry[K, V]] = {
+    override def iterator(): balticporter.runtime.JavaIterator[?T] = {
       return this
     }
-    override def next(): com.badlogic.gdx.utils.ObjectMap.Entry[K, V] = {
+    override def next(): ?E = {
       if (this.index >= this.map.size) {
         throw new java.util.NoSuchElementException(java.lang.String.valueOf(this.index))
       } else ()
@@ -572,10 +572,10 @@ object ArrayMap {
       } else ()
       return this.index < this.map.size
     }
-    override def iterator(): balticporter.runtime.JavaIterator[V] = {
+    override def iterator(): balticporter.runtime.JavaIterator[?T] = {
       return this
     }
-    override def next(): V = {
+    override def next(): ?E = {
       if (this.index >= this.map.size) {
         throw new java.util.NoSuchElementException(java.lang.String.valueOf(this.index))
       } else ()
@@ -610,10 +610,10 @@ object ArrayMap {
       } else ()
       return this.index < this.map.size
     }
-    override def iterator(): balticporter.runtime.JavaIterator[K] = {
+    override def iterator(): balticporter.runtime.JavaIterator[?T] = {
       return this
     }
-    override def next(): K = {
+    override def next(): ?E = {
       if (this.index >= this.map.size) {
         throw new java.util.NoSuchElementException(java.lang.String.valueOf(this.index))
       } else ()

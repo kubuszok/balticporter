@@ -8,7 +8,7 @@ class DirectionalLightsAttribute extends com.badlogic.gdx.graphics.g3d.Attribute
   }
   this.lights = new com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.environment.DirectionalLight](1)
   @java.lang.Override
-  override def copy(): DirectionalLightsAttribute = {
+  override def copy(): com.badlogic.gdx.graphics.g3d.Attribute = {
     return new DirectionalLightsAttribute(this)
   }
   @java.lang.Override

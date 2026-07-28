@@ -23,7 +23,7 @@ class FrameBuffer extends com.badlogic.gdx.graphics.glutils.GLFrameBuffer[com.ba
     this(format, width, height, hasDepth, false)
   }
   @java.lang.Override
-  override def createTexture(attachmentSpec: com.badlogic.gdx.graphics.glutils.GLFrameBuffer.FrameBufferTextureAttachmentSpec): com.badlogic.gdx.graphics.Texture = {
+  override def createTexture(attachmentSpec: com.badlogic.gdx.graphics.glutils.GLFrameBuffer.FrameBufferTextureAttachmentSpec): ?T = {
     val data: com.badlogic.gdx.graphics.glutils.GLOnlyTextureData = new com.badlogic.gdx.graphics.glutils.GLOnlyTextureData(this.bufferBuilder.width, this.bufferBuilder.height, 0, attachmentSpec.internalFormat, attachmentSpec.format, attachmentSpec.`type`)
     val result: com.badlogic.gdx.graphics.Texture = new com.badlogic.gdx.graphics.Texture(data)
     val webGLDepth: scala.Boolean = attachmentSpec.isDepth && (com.badlogic.gdx.Gdx.app.getType() == com.badlogic.gdx.Application.ApplicationType.WebGL)

@@ -423,7 +423,7 @@ class IntMap[V <: java.lang.Object](initialCapacity: scala.Int, loadFactor$p: sc
     buffer.append(']')
     return buffer.toString()
   }
-  override def iterator(): balticporter.runtime.JavaIterator[com.badlogic.gdx.utils.IntMap.Entry[V]] = {
+  override def iterator(): balticporter.runtime.JavaIterator[?T] = {
     return this.entries()
   }
   def entries(): com.badlogic.gdx.utils.IntMap.Entries[V] = {
@@ -562,7 +562,7 @@ object IntMap {
   }
   class Entries[V <: java.lang.Object](map$p: IntMap[V]) extends com.badlogic.gdx.utils.IntMap.MapIterator[V](map$p) with balticporter.runtime.JavaIterable[com.badlogic.gdx.utils.IntMap.Entry[V]] with balticporter.runtime.JavaIterator[com.badlogic.gdx.utils.IntMap.Entry[V]] {
     private final val entry: com.badlogic.gdx.utils.IntMap.Entry[V] = new com.badlogic.gdx.utils.IntMap.Entry[V]().asInstanceOf[com.badlogic.gdx.utils.IntMap.Entry[V]]
-    override def next(): com.badlogic.gdx.utils.IntMap.Entry[V] = {
+    override def next(): ?E = {
       if (!hasNext$field) {
         throw new java.util.NoSuchElementException()
       } else ()
@@ -587,7 +587,7 @@ object IntMap {
       } else ()
       return hasNext$field
     }
-    override def iterator(): balticporter.runtime.JavaIterator[com.badlogic.gdx.utils.IntMap.Entry[V]] = {
+    override def iterator(): balticporter.runtime.JavaIterator[?T] = {
       return this
     }
   }
@@ -602,7 +602,7 @@ object IntMap {
       return hasNext$field
     }
     @com.badlogic.gdx.utils.Null
-    override def next(): V = {
+    override def next(): ?E = {
       if (!hasNext$field) {
         throw new java.util.NoSuchElementException()
       } else ()
@@ -619,7 +619,7 @@ object IntMap {
       this.findNextIndex()
       return value
     }
-    override def iterator(): balticporter.runtime.JavaIterator[V] = {
+    override def iterator(): balticporter.runtime.JavaIterator[?T] = {
       return this
     }
     def toArray(): com.badlogic.gdx.utils.Array[V] = {

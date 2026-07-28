@@ -116,7 +116,7 @@ class Button extends com.badlogic.gdx.scenes.scene2d.ui.Table with com.badlogic.
     this.style = style
     this.setBackground(this.getBackgroundDrawable())
   }
-  override def getStyle(): com.badlogic.gdx.scenes.scene2d.ui.Button.ButtonStyle = {
+  override def getStyle(): ?T = {
     return this.style
   }
   @com.badlogic.gdx.utils.Null

@@ -369,7 +369,7 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
     }
     return this
   }
-  override def append(value: scala.Char): CharArray = {
+  override def append(value: scala.Char): java.lang.Appendable = {
     this.require(1)
     this.items({ this.size += 1; this.size }) = value
     return this
@@ -429,7 +429,7 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
     }
     return this
   }
-  override def append(seq: java.lang.CharSequence): CharArray = {
+  override def append(seq: java.lang.CharSequence): java.lang.Appendable = {
     if (seq == null) {
       return this.appendNull()
     } else ()
@@ -447,7 +447,7 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
     } else ()
     return this.append(seq.toString())
   }
-  override def append(seq: java.lang.CharSequence, start: scala.Int, `end`: scala.Int): CharArray = {
+  override def append(seq: java.lang.CharSequence, start: scala.Int, `end`: scala.Int): java.lang.Appendable = {
     if (seq == null) {
       return this.appendNull()
     } else ()
@@ -475,42 +475,42 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
       return this
     } else ()
     if (value < 0) {
-      (this.append: (scala.Char) => CharArray)('-')
+      (this.append: (scala.Char) => java.lang.Appendable)('-')
       value = -value
     } else ()
     if (minLength > 1) {
       { var j: scala.Int = minLength - (CharArray.numChars: (scala.Int, scala.Int) => scala.Int)(value, 10); while (j > 0) { {
-        (this.append: (scala.Char) => CharArray)(prefix)
+        (this.append: (scala.Char) => java.lang.Appendable)(prefix)
       }; j = j - 1 } }
     } else ()
     if (value >= 10000) {
       if (value >= 1000000000) {
-        (this.append: (scala.Char) => CharArray)(CharArray.DIGITS(((value.asInstanceOf[scala.Long] % 10000000000L) / 1000000000L).asInstanceOf[scala.Int]))
+        (this.append: (scala.Char) => java.lang.Appendable)(CharArray.DIGITS(((value.asInstanceOf[scala.Long] % 10000000000L) / 1000000000L).asInstanceOf[scala.Int]))
       } else ()
       if (value >= 100000000) {
-        (this.append: (scala.Char) => CharArray)(CharArray.DIGITS((value % 1000000000) / 100000000))
+        (this.append: (scala.Char) => java.lang.Appendable)(CharArray.DIGITS((value % 1000000000) / 100000000))
       } else ()
       if (value >= 10000000) {
-        (this.append: (scala.Char) => CharArray)(CharArray.DIGITS((value % 100000000) / 10000000))
+        (this.append: (scala.Char) => java.lang.Appendable)(CharArray.DIGITS((value % 100000000) / 10000000))
       } else ()
       if (value >= 1000000) {
-        (this.append: (scala.Char) => CharArray)(CharArray.DIGITS((value % 10000000) / 1000000))
+        (this.append: (scala.Char) => java.lang.Appendable)(CharArray.DIGITS((value % 10000000) / 1000000))
       } else ()
       if (value >= 100000) {
-        (this.append: (scala.Char) => CharArray)(CharArray.DIGITS((value % 1000000) / 100000))
+        (this.append: (scala.Char) => java.lang.Appendable)(CharArray.DIGITS((value % 1000000) / 100000))
       } else ()
-      (this.append: (scala.Char) => CharArray)(CharArray.DIGITS((value % 100000) / 10000))
+      (this.append: (scala.Char) => java.lang.Appendable)(CharArray.DIGITS((value % 100000) / 10000))
     } else ()
     if (value >= 1000) {
-      (this.append: (scala.Char) => CharArray)(CharArray.DIGITS((value % 10000) / 1000))
+      (this.append: (scala.Char) => java.lang.Appendable)(CharArray.DIGITS((value % 10000) / 1000))
     } else ()
     if (value >= 100) {
-      (this.append: (scala.Char) => CharArray)(CharArray.DIGITS((value % 1000) / 100))
+      (this.append: (scala.Char) => java.lang.Appendable)(CharArray.DIGITS((value % 1000) / 100))
     } else ()
     if (value >= 10) {
-      (this.append: (scala.Char) => CharArray)(CharArray.DIGITS((value % 100) / 10))
+      (this.append: (scala.Char) => java.lang.Appendable)(CharArray.DIGITS((value % 100) / 10))
     } else ()
-    (this.append: (scala.Char) => CharArray)(CharArray.DIGITS(value % 10))
+    (this.append: (scala.Char) => java.lang.Appendable)(CharArray.DIGITS(value % 10))
     return this
   }
   def append(value: scala.Long): CharArray = {
@@ -526,69 +526,69 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
       return this
     } else ()
     if (value < 0L) {
-      (this.append: (scala.Char) => CharArray)('-')
+      (this.append: (scala.Char) => java.lang.Appendable)('-')
       value = -value
     } else ()
     if (minLength > 1) {
       { var j: scala.Int = minLength - CharArray.numChars(value, 10); while (j > 0) { {
-        (this.append: (scala.Char) => CharArray)(prefix)
+        (this.append: (scala.Char) => java.lang.Appendable)(prefix)
       }; j = j - 1 } }
     } else ()
     if (value >= 10000) {
       if (value >= 1000000000000000000L) {
-        (this.append: (scala.Char) => CharArray)(CharArray.DIGITS(((value % 1.0E19) / 1000000000000000000L).asInstanceOf[scala.Int]))
+        (this.append: (scala.Char) => java.lang.Appendable)(CharArray.DIGITS(((value % 1.0E19) / 1000000000000000000L).asInstanceOf[scala.Int]))
       } else ()
       if (value >= 100000000000000000L) {
-        (this.append: (scala.Char) => CharArray)(CharArray.DIGITS(((value % 1000000000000000000L) / 100000000000000000L).asInstanceOf[scala.Int]))
+        (this.append: (scala.Char) => java.lang.Appendable)(CharArray.DIGITS(((value % 1000000000000000000L) / 100000000000000000L).asInstanceOf[scala.Int]))
       } else ()
       if (value >= 10000000000000000L) {
-        (this.append: (scala.Char) => CharArray)(CharArray.DIGITS(((value % 100000000000000000L) / 10000000000000000L).asInstanceOf[scala.Int]))
+        (this.append: (scala.Char) => java.lang.Appendable)(CharArray.DIGITS(((value % 100000000000000000L) / 10000000000000000L).asInstanceOf[scala.Int]))
       } else ()
       if (value >= 1000000000000000L) {
-        (this.append: (scala.Char) => CharArray)(CharArray.DIGITS(((value % 10000000000000000L) / 1000000000000000L).asInstanceOf[scala.Int]))
+        (this.append: (scala.Char) => java.lang.Appendable)(CharArray.DIGITS(((value % 10000000000000000L) / 1000000000000000L).asInstanceOf[scala.Int]))
       } else ()
       if (value >= 100000000000000L) {
-        (this.append: (scala.Char) => CharArray)(CharArray.DIGITS(((value % 1000000000000000L) / 100000000000000L).asInstanceOf[scala.Int]))
+        (this.append: (scala.Char) => java.lang.Appendable)(CharArray.DIGITS(((value % 1000000000000000L) / 100000000000000L).asInstanceOf[scala.Int]))
       } else ()
       if (value >= 10000000000000L) {
-        (this.append: (scala.Char) => CharArray)(CharArray.DIGITS(((value % 100000000000000L) / 10000000000000L).asInstanceOf[scala.Int]))
+        (this.append: (scala.Char) => java.lang.Appendable)(CharArray.DIGITS(((value % 100000000000000L) / 10000000000000L).asInstanceOf[scala.Int]))
       } else ()
       if (value >= 1000000000000L) {
-        (this.append: (scala.Char) => CharArray)(CharArray.DIGITS(((value % 10000000000000L) / 1000000000000L).asInstanceOf[scala.Int]))
+        (this.append: (scala.Char) => java.lang.Appendable)(CharArray.DIGITS(((value % 10000000000000L) / 1000000000000L).asInstanceOf[scala.Int]))
       } else ()
       if (value >= 100000000000L) {
-        (this.append: (scala.Char) => CharArray)(CharArray.DIGITS(((value % 1000000000000L) / 100000000000L).asInstanceOf[scala.Int]))
+        (this.append: (scala.Char) => java.lang.Appendable)(CharArray.DIGITS(((value % 1000000000000L) / 100000000000L).asInstanceOf[scala.Int]))
       } else ()
       if (value >= 10000000000L) {
-        (this.append: (scala.Char) => CharArray)(CharArray.DIGITS(((value % 100000000000L) / 10000000000L).asInstanceOf[scala.Int]))
+        (this.append: (scala.Char) => java.lang.Appendable)(CharArray.DIGITS(((value % 100000000000L) / 10000000000L).asInstanceOf[scala.Int]))
       } else ()
       if (value >= 1000000000L) {
-        (this.append: (scala.Char) => CharArray)(CharArray.DIGITS(((value % 10000000000L) / 1000000000L).asInstanceOf[scala.Int]))
+        (this.append: (scala.Char) => java.lang.Appendable)(CharArray.DIGITS(((value % 10000000000L) / 1000000000L).asInstanceOf[scala.Int]))
       } else ()
       if (value >= 100000000L) {
-        (this.append: (scala.Char) => CharArray)(CharArray.DIGITS(((value % 1000000000L) / 100000000L).asInstanceOf[scala.Int]))
+        (this.append: (scala.Char) => java.lang.Appendable)(CharArray.DIGITS(((value % 1000000000L) / 100000000L).asInstanceOf[scala.Int]))
       } else ()
       if (value >= 10000000L) {
-        (this.append: (scala.Char) => CharArray)(CharArray.DIGITS(((value % 100000000L) / 10000000L).asInstanceOf[scala.Int]))
+        (this.append: (scala.Char) => java.lang.Appendable)(CharArray.DIGITS(((value % 100000000L) / 10000000L).asInstanceOf[scala.Int]))
       } else ()
       if (value >= 1000000L) {
-        (this.append: (scala.Char) => CharArray)(CharArray.DIGITS(((value % 10000000L) / 1000000L).asInstanceOf[scala.Int]))
+        (this.append: (scala.Char) => java.lang.Appendable)(CharArray.DIGITS(((value % 10000000L) / 1000000L).asInstanceOf[scala.Int]))
       } else ()
       if (value >= 100000L) {
-        (this.append: (scala.Char) => CharArray)(CharArray.DIGITS(((value % 1000000L) / 100000L).asInstanceOf[scala.Int]))
+        (this.append: (scala.Char) => java.lang.Appendable)(CharArray.DIGITS(((value % 1000000L) / 100000L).asInstanceOf[scala.Int]))
       } else ()
-      (this.append: (scala.Char) => CharArray)(CharArray.DIGITS(((value % 100000L) / 10000L).asInstanceOf[scala.Int]))
+      (this.append: (scala.Char) => java.lang.Appendable)(CharArray.DIGITS(((value % 100000L) / 10000L).asInstanceOf[scala.Int]))
     } else ()
     if (value >= 1000L) {
-      (this.append: (scala.Char) => CharArray)(CharArray.DIGITS(((value % 10000L) / 1000L).asInstanceOf[scala.Int]))
+      (this.append: (scala.Char) => java.lang.Appendable)(CharArray.DIGITS(((value % 10000L) / 1000L).asInstanceOf[scala.Int]))
     } else ()
     if (value >= 100L) {
-      (this.append: (scala.Char) => CharArray)(CharArray.DIGITS(((value % 1000L) / 100L).asInstanceOf[scala.Int]))
+      (this.append: (scala.Char) => java.lang.Appendable)(CharArray.DIGITS(((value % 1000L) / 100L).asInstanceOf[scala.Int]))
     } else ()
     if (value >= 10L) {
-      (this.append: (scala.Char) => CharArray)(CharArray.DIGITS(((value % 100L) / 10L).asInstanceOf[scala.Int]))
+      (this.append: (scala.Char) => java.lang.Appendable)(CharArray.DIGITS(((value % 100L) / 10L).asInstanceOf[scala.Int]))
     } else ()
-    (this.append: (scala.Char) => CharArray)(CharArray.DIGITS((value % 10L).asInstanceOf[scala.Int]))
+    (this.append: (scala.Char) => java.lang.Appendable)(CharArray.DIGITS((value % 10L).asInstanceOf[scala.Int]))
     return this
   }
   def append(obj: java.lang.Object): CharArray = {
@@ -774,7 +774,7 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
     return this.append(value).appendLine()
   }
   def appendln(ch: scala.Char): CharArray = {
-    return (this.append: (scala.Char) => CharArray)(ch).appendLine()
+    return (this.append: (scala.Char) => java.lang.Appendable)(ch).appendLine()
   }
   def appendln(ch: scala.Array[scala.Char]): CharArray = {
     return this.append(ch).appendLine()
@@ -799,11 +799,11 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
   }
   def appendln(str: java.lang.String): CharArray = {
     this.append(str)
-    return (this.append: (scala.Char) => CharArray)('\n')
+    return (this.append: (scala.Char) => java.lang.Appendable)('\n')
   }
   def appendLine(str: java.lang.String): CharArray = {
     this.append(str)
-    return (this.append: (scala.Char) => CharArray)('\n')
+    return (this.append: (scala.Char) => java.lang.Appendable)('\n')
   }
   def appendln(str: java.lang.String, start: scala.Int, `end`: scala.Int): CharArray = {
     return this.append(str, start, `end`).appendLine()
@@ -827,10 +827,10 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
     return this.append(str, start, `end`).appendLine()
   }
   def appendln(): CharArray = {
-    return (this.append: (scala.Char) => CharArray)('\n')
+    return (this.append: (scala.Char) => java.lang.Appendable)('\n')
   }
   def appendLine(): CharArray = {
-    return (this.append: (scala.Char) => CharArray)('\n')
+    return (this.append: (scala.Char) => java.lang.Appendable)('\n')
   }
   def appendNull(): CharArray = {
     this.require(4)
@@ -852,21 +852,21 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
   }
   def appendSeparator(separator: scala.Char): CharArray = {
     if (this.notEmpty()) {
-      (this.append: (scala.Char) => CharArray)(separator)
+      (this.append: (scala.Char) => java.lang.Appendable)(separator)
     } else ()
     return this
   }
   def appendSeparator(standard: scala.Char, defaultIfEmpty: scala.Char): CharArray = {
     if (this.isEmpty()) {
-      (this.append: (scala.Char) => CharArray)(defaultIfEmpty)
+      (this.append: (scala.Char) => java.lang.Appendable)(defaultIfEmpty)
     } else {
-      (this.append: (scala.Char) => CharArray)(standard)
+      (this.append: (scala.Char) => java.lang.Appendable)(standard)
     }
     return this
   }
   def appendSeparator(separator: scala.Char, loopIndex: scala.Int): CharArray = {
     if (loopIndex > 0) {
-      (this.append: (scala.Char) => CharArray)(separator)
+      (this.append: (scala.Char) => java.lang.Appendable)(separator)
     } else ()
     return this
   }
@@ -1868,7 +1868,7 @@ class CharArray extends java.lang.CharSequence with java.lang.Appendable {
       CharArray.this.append(cbuf, off, length)
     }
     override def write(c: scala.Int): scala.Unit = {
-      (CharArray.this.append: (scala.Char) => CharArray)(c.asInstanceOf[scala.Char].asInstanceOf[scala.Char])
+      (CharArray.this.append: (scala.Char) => java.lang.Appendable)(c.asInstanceOf[scala.Char].asInstanceOf[scala.Char])
     }
     override def write(str: java.lang.String): scala.Unit = {
       CharArray.this.append(str)

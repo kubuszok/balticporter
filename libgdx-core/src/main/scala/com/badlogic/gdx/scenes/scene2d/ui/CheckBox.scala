@@ -28,7 +28,7 @@ class CheckBox(text: java.lang.String, style$p: com.badlogic.gdx.scenes.scene2d.
     this.style = style.asInstanceOf[com.badlogic.gdx.scenes.scene2d.ui.CheckBox.CheckBoxStyle]
     super.setStyle(style)
   }
-  override def getStyle(): com.badlogic.gdx.scenes.scene2d.ui.CheckBox.CheckBoxStyle = {
+  override def getStyle(): ?T = {
     return this.style
   }
   override def draw(batch: com.badlogic.gdx.graphics.g2d.Batch, parentAlpha: scala.Float): scala.Unit = {

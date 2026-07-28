@@ -86,7 +86,7 @@ class SplitPane(firstWidget$p: com.badlogic.gdx.scenes.scene2d.Actor, secondWidg
     this.style = style
     this.invalidateHierarchy()
   }
-  override def getStyle(): com.badlogic.gdx.scenes.scene2d.ui.SplitPane.SplitPaneStyle = {
+  override def getStyle(): ?T = {
     return this.style
   }
   override def layout(): scala.Unit = {

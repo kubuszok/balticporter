@@ -57,7 +57,7 @@ class ParticleEffectLoader(resolver$p: com.badlogic.gdx.assets.loaders.FileHandl
     }
   }
   @java.lang.Override
-  override def loadSync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.graphics.g3d.particles.ParticleEffectLoader.ParticleEffectLoadParameter): com.badlogic.gdx.graphics.g3d.particles.ParticleEffect = {
+  override def loadSync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.graphics.g3d.particles.ParticleEffectLoader.ParticleEffectLoadParameter): ?T = {
     var effectData: com.badlogic.gdx.graphics.g3d.particles.ResourceData[com.badlogic.gdx.graphics.g3d.particles.ParticleEffect] = null
     this.items.synchronized {
       { var i: scala.Int = 0; while (i < this.items.size) { {

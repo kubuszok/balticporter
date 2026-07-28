@@ -4,7 +4,7 @@ class Octree[T <: java.lang.Object](minimum: com.badlogic.gdx.math.Vector3, maxi
   var maxItemsPerNode: scala.Int = 0
   final val nodePool: com.badlogic.gdx.utils.Pool[OctreeNode] = new com.badlogic.gdx.utils.Pool[OctreeNode]() {
     @java.lang.Override
-    override def newObject(): OctreeNode = {
+    override def newObject(): T = {
       return new OctreeNode()
     }
   }

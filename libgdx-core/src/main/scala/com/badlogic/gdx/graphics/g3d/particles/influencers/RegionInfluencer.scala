@@ -113,7 +113,7 @@ object RegionInfluencer {
       }; i = i + this.regionChannel.strideSize } }
     }
     @java.lang.Override
-    override def copy(): com.badlogic.gdx.graphics.g3d.particles.influencers.RegionInfluencer.Single = {
+    override def copy(): com.badlogic.gdx.graphics.g3d.particles.ParticleControllerComponent = {
       return new com.badlogic.gdx.graphics.g3d.particles.influencers.RegionInfluencer.Single(this)
     }
   }
@@ -143,7 +143,7 @@ object RegionInfluencer {
       }; i = i + this.regionChannel.strideSize } }
     }
     @java.lang.Override
-    override def copy(): com.badlogic.gdx.graphics.g3d.particles.influencers.RegionInfluencer.Random = {
+    override def copy(): com.badlogic.gdx.graphics.g3d.particles.ParticleControllerComponent = {
       return new com.badlogic.gdx.graphics.g3d.particles.influencers.RegionInfluencer.Random(this)
     }
   }
@@ -179,7 +179,7 @@ object RegionInfluencer {
       }; i = i + this.regionChannel.strideSize; l = l + this.lifeChannel.strideSize } }
     }
     @java.lang.Override
-    override def copy(): com.badlogic.gdx.graphics.g3d.particles.influencers.RegionInfluencer.Animated = {
+    override def copy(): com.badlogic.gdx.graphics.g3d.particles.ParticleControllerComponent = {
       return new com.badlogic.gdx.graphics.g3d.particles.influencers.RegionInfluencer.Animated(this)
     }
   }

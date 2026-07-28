@@ -44,7 +44,7 @@ class ImageTextButton(text: java.lang.String, style$p: com.badlogic.gdx.scenes.s
       this.label.setStyle(labelStyle)
     } else ()
   }
-  override def getStyle(): com.badlogic.gdx.scenes.scene2d.ui.ImageTextButton.ImageTextButtonStyle = {
+  override def getStyle(): ?T = {
     return this.style
   }
   @com.badlogic.gdx.utils.Null

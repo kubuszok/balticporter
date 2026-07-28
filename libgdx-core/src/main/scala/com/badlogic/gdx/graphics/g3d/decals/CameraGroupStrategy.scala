@@ -3,7 +3,7 @@ package com.badlogic.gdx.graphics.g3d.decals
 class CameraGroupStrategy extends com.badlogic.gdx.graphics.g3d.decals.GroupStrategy with com.badlogic.gdx.utils.Disposable {
   var arrayPool: com.badlogic.gdx.utils.Pool[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.decals.Decal]] = new com.badlogic.gdx.utils.Pool[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.decals.Decal]](16) {
     @java.lang.Override
-    override def newObject(): com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.decals.Decal] = {
+    override def newObject(): ?T = {
       return new com.badlogic.gdx.utils.Array().asInstanceOf[com.badlogic.gdx.utils.Array[com.badlogic.gdx.graphics.g3d.decals.Decal]]
     }
   }

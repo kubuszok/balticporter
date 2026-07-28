@@ -417,7 +417,7 @@ class Skin extends com.badlogic.gdx.utils.Disposable {
     json.setTypeName(null)
     json.setUsePrototypes(false)
     json.setSerializer(classOf[Skin], new com.badlogic.gdx.utils.Json.ReadOnlySerializer[Skin]() {
-      override def read(json: com.badlogic.gdx.utils.Json, typeToValueMap: com.badlogic.gdx.utils.JsonValue, ignored: java.lang.Class[?]): Skin = {
+      override def read(json: com.badlogic.gdx.utils.Json, typeToValueMap: com.badlogic.gdx.utils.JsonValue, ignored: java.lang.Class[?]): ?T = {
         { var valueMap: com.badlogic.gdx.utils.JsonValue = typeToValueMap.child$field; while (valueMap != null) { {
           try {
             var `type`: java.lang.Class[?] = json.getClass(valueMap.name()).asInstanceOf[java.lang.Class[?]]
@@ -454,7 +454,7 @@ class Skin extends com.badlogic.gdx.utils.Disposable {
       }
     })
     json.setSerializer(classOf[com.badlogic.gdx.graphics.g2d.BitmapFont], new com.badlogic.gdx.utils.Json.ReadOnlySerializer[com.badlogic.gdx.graphics.g2d.BitmapFont]() {
-      override def read(json: com.badlogic.gdx.utils.Json, jsonData: com.badlogic.gdx.utils.JsonValue, `type`: java.lang.Class[?]): com.badlogic.gdx.graphics.g2d.BitmapFont = {
+      override def read(json: com.badlogic.gdx.utils.Json, jsonData: com.badlogic.gdx.utils.JsonValue, `type`: java.lang.Class[?]): ?T = {
         val path: java.lang.String = json.readValue("file", classOf[java.lang.String], jsonData)
         val scaledSize: scala.Float = json.readValue("scaledSize", classOf[scala.Float], (-1.0f).asInstanceOf[java.lang.Float], jsonData)
         val flip: java.lang.Boolean = json.readValue[java.lang.Boolean]("flip", classOf[java.lang.Boolean], false.asInstanceOf[java.lang.Boolean], jsonData)
@@ -500,7 +500,7 @@ class Skin extends com.badlogic.gdx.utils.Disposable {
       }
     })
     json.setSerializer(classOf[com.badlogic.gdx.graphics.Color], new com.badlogic.gdx.utils.Json.ReadOnlySerializer[com.badlogic.gdx.graphics.Color]() {
-      override def read(json: com.badlogic.gdx.utils.Json, jsonData: com.badlogic.gdx.utils.JsonValue, `type`: java.lang.Class[?]): com.badlogic.gdx.graphics.Color = {
+      override def read(json: com.badlogic.gdx.utils.Json, jsonData: com.badlogic.gdx.utils.JsonValue, `type`: java.lang.Class[?]): ?T = {
         if (jsonData.isString()) {
           return Skin.this.get(jsonData.asString(), classOf[com.badlogic.gdx.graphics.Color])
         } else ()
@@ -516,7 +516,7 @@ class Skin extends com.badlogic.gdx.utils.Disposable {
       }
     })
     json.setSerializer(classOf[com.badlogic.gdx.scenes.scene2d.ui.Skin.TintedDrawable], new com.badlogic.gdx.utils.Json.ReadOnlySerializer() {
-      override def read(json: com.badlogic.gdx.utils.Json, jsonData: com.badlogic.gdx.utils.JsonValue, `type`: java.lang.Class[?]): java.lang.Object = {
+      override def read(json: com.badlogic.gdx.utils.Json, jsonData: com.badlogic.gdx.utils.JsonValue, `type`: java.lang.Class[?]): ?T = {
         val name: java.lang.String = json.readValue("name", classOf[java.lang.String], jsonData)
         val color: com.badlogic.gdx.graphics.Color = json.readValue("color", classOf[com.badlogic.gdx.graphics.Color], jsonData)
         if (color == null) {

@@ -48,7 +48,7 @@ abstract class ModelLoader[P <: com.badlogic.gdx.assets.loaders.ModelLoader.Mode
     ()
   }
   @java.lang.Override
-  override def loadSync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameters: P): com.badlogic.gdx.graphics.g3d.Model = {
+  override def loadSync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameters: P): ?T = {
     var data: com.badlogic.gdx.graphics.g3d.model.data.ModelData = null
     this.items.synchronized {
       { var i: scala.Int = 0; while (i < this.items.size) { {

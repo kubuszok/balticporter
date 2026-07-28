@@ -167,11 +167,11 @@ class ModelBatch(context$p: com.badlogic.gdx.graphics.g3d.utils.RenderContext, s
 object ModelBatch {
   class RenderablePool extends com.badlogic.gdx.utils.FlushablePool[com.badlogic.gdx.graphics.g3d.Renderable] {
     @java.lang.Override
-    override def newObject(): com.badlogic.gdx.graphics.g3d.Renderable = {
+    override def newObject(): ?T = {
       return new com.badlogic.gdx.graphics.g3d.Renderable()
     }
     @java.lang.Override
-    override def obtain(): com.badlogic.gdx.graphics.g3d.Renderable = {
+    override def obtain(): ?T = {
       val renderable: com.badlogic.gdx.graphics.g3d.Renderable = super.obtain()
       renderable.environment = null
       renderable.material = null

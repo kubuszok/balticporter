@@ -13,7 +13,7 @@ class Vector2 extends java.io.Serializable with com.badlogic.gdx.math.Vector[Vec
     this.set(v)
   }
   @java.lang.Override
-  override def cpy(): Vector2 = {
+  override def cpy(): ?T = {
     return new Vector2(this)
   }
   @java.lang.Override
@@ -25,7 +25,7 @@ class Vector2 extends java.io.Serializable with com.badlogic.gdx.math.Vector[Vec
     return (this.x * this.x) + (this.y * this.y)
   }
   @java.lang.Override
-  override def set(v: Vector2): Vector2 = {
+  override def set(v: Vector2): ?T = {
     this.x = v.x
     this.y = v.y
     return this
@@ -36,7 +36,7 @@ class Vector2 extends java.io.Serializable with com.badlogic.gdx.math.Vector[Vec
     return this
   }
   @java.lang.Override
-  override def sub(v: Vector2): Vector2 = {
+  override def sub(v: Vector2): ?T = {
     this.x = this.x - v.x
     this.y = this.y - v.y
     return this
@@ -47,7 +47,7 @@ class Vector2 extends java.io.Serializable with com.badlogic.gdx.math.Vector[Vec
     return this
   }
   @java.lang.Override
-  override def nor(): Vector2 = {
+  override def nor(): ?T = {
     val len: scala.Float = this.len()
     if (len != 0) {
       this.x = this.x / len
@@ -56,7 +56,7 @@ class Vector2 extends java.io.Serializable with com.badlogic.gdx.math.Vector[Vec
     return this
   }
   @java.lang.Override
-  override def add(v: Vector2): Vector2 = {
+  override def add(v: Vector2): ?T = {
     this.x = this.x + v.x
     this.y = this.y + v.y
     return this
@@ -74,7 +74,7 @@ class Vector2 extends java.io.Serializable with com.badlogic.gdx.math.Vector[Vec
     return (this.x * ox) + (this.y * oy)
   }
   @java.lang.Override
-  override def scl(scalar: scala.Float): Vector2 = {
+  override def scl(scalar: scala.Float): ?T = {
     this.x = this.x * scalar
     this.y = this.y * scalar
     return this
@@ -85,19 +85,19 @@ class Vector2 extends java.io.Serializable with com.badlogic.gdx.math.Vector[Vec
     return this
   }
   @java.lang.Override
-  override def scl(v: Vector2): Vector2 = {
+  override def scl(v: Vector2): ?T = {
     this.x = this.x * v.x
     this.y = this.y * v.y
     return this
   }
   @java.lang.Override
-  override def mulAdd(vec: Vector2, scalar: scala.Float): Vector2 = {
+  override def mulAdd(vec: Vector2, scalar: scala.Float): ?T = {
     this.x = this.x + (vec.x * scalar)
     this.y = this.y + (vec.y * scalar)
     return this
   }
   @java.lang.Override
-  override def mulAdd(vec: Vector2, mulVec: Vector2): Vector2 = {
+  override def mulAdd(vec: Vector2, mulVec: Vector2): ?T = {
     this.x = this.x + (vec.x * mulVec.x)
     this.y = this.y + (vec.y * mulVec.y)
     return this
@@ -128,11 +128,11 @@ class Vector2 extends java.io.Serializable with com.badlogic.gdx.math.Vector[Vec
     return (x_d * x_d) + (y_d * y_d)
   }
   @java.lang.Override
-  override def limit(limit: scala.Float): Vector2 = {
+  override def limit(limit: scala.Float): ?T = {
     return this.limit2(limit * limit)
   }
   @java.lang.Override
-  override def limit2(limit2: scala.Float): Vector2 = {
+  override def limit2(limit2: scala.Float): ?T = {
     val len2: scala.Float = this.len2()
     if (len2 > limit2) {
       return this.scl(java.lang.Math.sqrt(limit2 / len2).asInstanceOf[scala.Float].asInstanceOf[scala.Float])
@@ -140,7 +140,7 @@ class Vector2 extends java.io.Serializable with com.badlogic.gdx.math.Vector[Vec
     return this
   }
   @java.lang.Override
-  override def clamp(min: scala.Float, max: scala.Float): Vector2 = {
+  override def clamp(min: scala.Float, max: scala.Float): ?T = {
     val len2: scala.Float = this.len2()
     if (len2 == 0.0f) {
       return this
@@ -156,11 +156,11 @@ class Vector2 extends java.io.Serializable with com.badlogic.gdx.math.Vector[Vec
     return this
   }
   @java.lang.Override
-  override def setLength(len: scala.Float): Vector2 = {
+  override def setLength(len: scala.Float): ?T = {
     return this.setLength2(len * len)
   }
   @java.lang.Override
-  override def setLength2(len2: scala.Float): Vector2 = {
+  override def setLength2(len2: scala.Float): ?T = {
     val oldLen2: scala.Float = this.len2()
     return if ((oldLen2 == 0) || (oldLen2 == len2)) this else this.scl(java.lang.Math.sqrt(len2 / oldLen2).asInstanceOf[scala.Float].asInstanceOf[scala.Float])
   }
@@ -278,18 +278,18 @@ class Vector2 extends java.io.Serializable with com.badlogic.gdx.math.Vector[Vec
     return this
   }
   @java.lang.Override
-  override def lerp(target: Vector2, alpha: scala.Float): Vector2 = {
+  override def lerp(target: Vector2, alpha: scala.Float): ?T = {
     val invAlpha: scala.Float = 1.0f - alpha
     this.x = (this.x * invAlpha) + (target.x * alpha)
     this.y = (this.y * invAlpha) + (target.y * alpha)
     return this
   }
   @java.lang.Override
-  override def interpolate(target: Vector2, alpha: scala.Float, interpolation: com.badlogic.gdx.math.Interpolation): Vector2 = {
+  override def interpolate(target: Vector2, alpha: scala.Float, interpolation: com.badlogic.gdx.math.Interpolation): ?T = {
     return this.lerp(target, interpolation.apply(alpha))
   }
   @java.lang.Override
-  override def setToRandomDirection(): Vector2 = {
+  override def setToRandomDirection(): ?T = {
     val theta: scala.Float = com.badlogic.gdx.math.MathUtils.random(0.0f, com.badlogic.gdx.math.MathUtils.PI2)
     return this.set(com.badlogic.gdx.math.MathUtils.cos(theta), com.badlogic.gdx.math.MathUtils.sin(theta))
   }
@@ -406,7 +406,7 @@ class Vector2 extends java.io.Serializable with com.badlogic.gdx.math.Vector[Vec
     return this.dot(vector) < 0
   }
   @java.lang.Override
-  override def setZero(): Vector2 = {
+  override def setZero(): ?T = {
     this.x = 0
     this.y = 0
     return this

@@ -250,7 +250,7 @@ class ObjectSet[T <: java.lang.Object] extends balticporter.runtime.JavaIterable
     }
     return buffer.toString()
   }
-  override def iterator(): com.badlogic.gdx.utils.ObjectSet.ObjectSetIterator[T] = {
+  override def iterator(): balticporter.runtime.JavaIterator[T] = {
     if (com.badlogic.gdx.utils.Collections.allocateIterators) {
       return new com.badlogic.gdx.utils.ObjectSet.ObjectSetIterator(this).asInstanceOf[com.badlogic.gdx.utils.ObjectSet.ObjectSetIterator[T]]
     } else ()
@@ -342,7 +342,7 @@ object ObjectSet {
       } else ()
       return this.hasNext$field
     }
-    override def next(): K = {
+    override def next(): ?E = {
       if (!this.hasNext$field) {
         throw new java.util.NoSuchElementException()
       } else ()
@@ -354,7 +354,7 @@ object ObjectSet {
       this.findNextIndex()
       return key
     }
-    override def iterator(): com.badlogic.gdx.utils.ObjectSet.ObjectSetIterator[K] = {
+    override def iterator(): balticporter.runtime.JavaIterator[T] = {
       return this
     }
     def toArray(array: com.badlogic.gdx.utils.Array[K]): com.badlogic.gdx.utils.Array[K] = {

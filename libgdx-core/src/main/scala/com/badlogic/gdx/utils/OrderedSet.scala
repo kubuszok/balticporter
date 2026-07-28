@@ -148,7 +148,7 @@ class OrderedSet[T <: java.lang.Object] extends com.badlogic.gdx.utils.ObjectSet
     }; i = i + 1 } }
     return true
   }
-  override def iterator(): com.badlogic.gdx.utils.OrderedSet.OrderedSetIterator[T] = {
+  override def iterator(): balticporter.runtime.JavaIterator[T] = {
     if (com.badlogic.gdx.utils.Collections.allocateIterators) {
       return new com.badlogic.gdx.utils.OrderedSet.OrderedSetIterator(this).asInstanceOf[com.badlogic.gdx.utils.OrderedSet.OrderedSetIterator[T]]
     } else ()
@@ -200,7 +200,7 @@ object OrderedSet {
       nextIndex = 0
       hasNext$field = this.set.size > 0
     }
-    override def next(): K = {
+    override def next(): ?E = {
       if (!hasNext$field) {
         throw new java.util.NoSuchElementException()
       } else ()

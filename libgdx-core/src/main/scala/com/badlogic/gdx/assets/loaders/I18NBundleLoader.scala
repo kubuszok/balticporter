@@ -21,7 +21,7 @@ class I18NBundleLoader(resolver$p: com.badlogic.gdx.assets.loaders.FileHandleRes
     }
   }
   @java.lang.Override
-  override def loadSync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.assets.loaders.I18NBundleLoader.I18NBundleParameter): com.badlogic.gdx.utils.I18NBundle = {
+  override def loadSync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.assets.loaders.I18NBundleLoader.I18NBundleParameter): ?T = {
     var bundle: com.badlogic.gdx.utils.I18NBundle = this.bundle
     this.bundle = null
     return bundle

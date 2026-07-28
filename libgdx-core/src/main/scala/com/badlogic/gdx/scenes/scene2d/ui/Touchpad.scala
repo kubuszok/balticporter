@@ -79,7 +79,7 @@ class Touchpad(deadzoneRadius$p: scala.Float, style$p: com.badlogic.gdx.scenes.s
     this.style = style
     this.invalidateHierarchy()
   }
-  override def getStyle(): com.badlogic.gdx.scenes.scene2d.ui.Touchpad.TouchpadStyle = {
+  override def getStyle(): ?T = {
     return this.style
   }
   override def hit(x: scala.Float, y: scala.Float, touchable: scala.Boolean): com.badlogic.gdx.scenes.scene2d.Actor = {

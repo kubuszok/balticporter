@@ -24,7 +24,7 @@ class TextureLoader(resolver$p: com.badlogic.gdx.assets.loaders.FileHandleResolv
     } else ()
   }
   @java.lang.Override
-  override def loadSync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.assets.loaders.TextureLoader.TextureParameter): com.badlogic.gdx.graphics.Texture = {
+  override def loadSync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.assets.loaders.TextureLoader.TextureParameter): ?T = {
     if (this.info == null) {
       return null
     } else ()

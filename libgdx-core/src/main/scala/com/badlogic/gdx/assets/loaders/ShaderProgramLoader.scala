@@ -22,7 +22,7 @@ class ShaderProgramLoader extends com.badlogic.gdx.assets.loaders.AsynchronousAs
     ()
   }
   @java.lang.Override
-  override def loadSync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.assets.loaders.ShaderProgramLoader.ShaderProgramParameter): com.badlogic.gdx.graphics.glutils.ShaderProgram = {
+  override def loadSync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.assets.loaders.ShaderProgramLoader.ShaderProgramParameter): ?T = {
     var vertFileName: java.lang.String = null
     var fragFileName: java.lang.String = null
     if (parameter != null) {

@@ -26,7 +26,7 @@ class TideMapLoader extends com.badlogic.gdx.assets.loaders.SynchronousAssetLoad
     }
   }
   @java.lang.Override
-  override def load(assetManager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, tideFile: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.maps.tiled.TideMapLoader.Parameters): com.badlogic.gdx.maps.tiled.TiledMap = {
+  override def load(assetManager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, tideFile: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.maps.tiled.TideMapLoader.Parameters): ?T = {
     try {
       return this.loadMap(this.root, tideFile, new com.badlogic.gdx.maps.ImageResolver.AssetManagerImageResolver(assetManager))
     } catch {

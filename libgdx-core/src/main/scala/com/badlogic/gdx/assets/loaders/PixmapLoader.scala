@@ -8,7 +8,7 @@ class PixmapLoader(resolver$p: com.badlogic.gdx.assets.loaders.FileHandleResolve
     this.pixmap = new com.badlogic.gdx.graphics.Pixmap(file)
   }
   @java.lang.Override
-  override def loadSync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.assets.loaders.PixmapLoader.PixmapParameter): com.badlogic.gdx.graphics.Pixmap = {
+  override def loadSync(manager: com.badlogic.gdx.assets.AssetManager, fileName: java.lang.String, file: com.badlogic.gdx.files.FileHandle, parameter: com.badlogic.gdx.assets.loaders.PixmapLoader.PixmapParameter): ?T = {
     var pixmap: com.badlogic.gdx.graphics.Pixmap = this.pixmap
     this.pixmap = null
     return pixmap
