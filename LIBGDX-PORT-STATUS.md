@@ -19,7 +19,7 @@ sge targets Scala Native and Scala.js, so the platform backends are largely irre
 
 | module | files | standing |
 |---|---|---|
-| `gdx/src` | 605 | **in progress** — 8 typer errors, this document |
+| `gdx/src` | 605 | **in progress** — 7 typer errors, this document |
 | `gdx/test` | 29 | **the goal's test clause** — 221 `@Test`, ~900 assertions |
 | `backends/gdx-backend-headless` | 15 | plausible next port target — no windowing, pure JVM |
 | `backends/gdx-backend-lwjgl3` | 39 | desktop JVM backend |
@@ -32,7 +32,7 @@ sge targets Scala Native and Scala.js, so the platform backends are largely irre
 
 ### Ordering, and why
 
-1. **Close the last 8 typer errors in `gdx/src`.** Nothing downstream can run until this is 0.
+1. **Close the last 7 typer errors in `gdx/src`.** Nothing downstream can run until this is 0.
 2. **Then RefChecks runs for the first time** (§0.1) and a new error class appears — missing
    `override`, unimplemented members, variance. Expect the count to RISE here; that is the gate
    beginning to tell the truth, not a regression.
@@ -46,26 +46,43 @@ sge targets Scala Native and Scala.js, so the platform backends are largely irre
 
 | metric | value | source |
 |---|---|---|
-| clean-compile errors (TYPER only — see §0.1) | **8** | `scripts/gdx_measure.sh` |
+| clean-compile errors (TYPER only — see §0.1) | **7** | `scripts/gdx_measure.sh` |
 | portability (JVM-only APIs in emitted code) | **0** | `PortabilityCheck` |
 | portability (injected replacements) | **clean** | `PortabilityCheck.inInjectedSource` |
 | silent omissions | **31** (30 `super(args)` + 1; 0 anonymous-class members) | `OmissionCheck` |
 | signature consistency | clean | `RewriteTrace.check` |
 | substitutions verified removed | 10 dropped types | migration CHECK 1 + CHECK 2 |
 
-Error breakdown: E007 4, E134 2, E120 1, E049 1. **Every remaining error is a distinct one-off**,
-and three of the eight are deliberate — they stand because the honest fix is bigger than the symptom:
+Error breakdown: E007 4, E134 2, E120 1. Two of the seven now share a root cause, and it is worth
+naming because it is the deepest remaining one:
 
-| where | what | tractable? |
+**CONTEXT-DEPENDENT RAW FILL (`AssetManager:486`, `OrderedMap:285`).** The same Java type renders
+differently depending on where it is read. `OrderedMap.keys` is declared `Array<K>`; inside the
+STATIC nested `Entries` class `K` is not nameable, so the DECLARATION renders `Array[?]` — while a
+use site re-renders Spoon's `Array<K>` with whatever `K` is in scope there. Two renderings of one
+type, and only the declaration's is what the emitted Scala actually has. Same for
+`AssetManager.loaders`, declared `[?, ?]` and read as `[T, P]` inside `setLoader<T, P>`.
+
+The fix is to make a field READ carry the FIELD's declared rendering rather than re-render Spoon's
+type in the reading scope — the same class of fix as `erasedFieldReceiver` (a node's `tpe` must be
+what the emitted Scala has). It needs the field symbol's `info` to be reliably populated before
+first use, which is the part to check first.
+
+| where | what | standing |
 |---|---|---|
-| `AssetManager:486` | a block-valued argument (Java assignment-as-expression) misses the wildcard-slot widening | yes |
-| `ParticleEffectLoader:25` | RAW `new AssetDescriptor(…)`: no explicit type args to substitute (the applied form is fixed) | yes |
-| `Skin:513` | RAW `new ReadOnlySerializer(){…}`; Scala infers `[Nothing]` where Java erased. A raw generic `new` should fill from the parameter's BOUND rather than leave Scala to infer — unconstrained inference gives `Nothing`, which is never what Java meant | yes |
-| `CharArray:718` | a `ForEach` binding typed `T` in an `Object` formal. NOT the mis-resolved-primitive theory — that was tried and is inert | yes |
-| `OrderedMap:285` | `Array[?]#T` element where the callee's `K` is constrained `<: Object` | yes |
-| `DepthShader:111` | inherited instance field vs the companion's re-exported static of the same name. **Spoon does not resolve this reference to a `CtFieldWrite` under noClasspath**, so the frontend never reaches the field path — see do-not-retry | blocked |
-| `NetJavaImpl:196` | a `java.util` value crossing from the JDK into retyped code. **DELIBERATE**: needs a conversion at the boundary (`.asScala`), not un-retyping, and it is a CLASS of issue wherever a JDK collection enters retyped code. Patching the symptom would hide it | by design |
-| `RegionInfluencer:11` | nilary Java constructor vs Scala's implicit primary. **DELIBERATE**: `CtorFunnel` nominates the paramful constructor but the whole-program fixpoint withholds it (three subclasses reach the class with an argument-free `extends`), and the nilary one cannot be primary either since it opens with `this(1)`. The encoding that works is a **discriminator-parameter funnel** — primary `(regionsCount: Int = 1, seedDefault: Boolean = false)` with every call site and `extends` clause updated, which `RewriteTrace` exists to verify. Real work, not a patch | by design |
+| `AssetManager:486` | context-dependent raw fill, above | root cause identified |
+| `OrderedMap:285` | context-dependent raw fill, above | root cause identified |
+| `Skin:513` | RAW `new ReadOnlySerializer(){…}`; Scala infers `[Nothing]` where Java erased. A raw generic `new` must not be left to inference — unconstrained inference gives `Nothing`, which is never what Java meant | open |
+| `ParticleEffectLoader:25` | RAW `new AssetDescriptor(…)`: no explicit type args to substitute (the applied form is fixed) | open |
+| `CharArray:718` | a `ForEach` binding typed `T` in an `Object` formal. NOT mis-resolution to a primitive overload — that was tried and is inert | cause unknown |
+| `NetJavaImpl:196` | a `java.util` value crossing from the JDK into retyped code. **DELIBERATE**: needs a conversion at the boundary (`.asScala`), not un-retyping; a CLASS of issue, not one site | by design |
+| `RegionInfluencer:11` | nilary Java constructor vs Scala's implicit primary. **DELIBERATE**: needs a **discriminator-parameter funnel** — primary `(regionsCount: Int = 1, seedDefault: Boolean = false)` with every call site and `extends` clause updated, which `RewriteTrace` exists to verify | by design |
+
+~~`DepthShader:111`~~ — **FIXED**, and it had been recorded as BLOCKED. Spoon really does not resolve
+that reference to a `CtFieldWrite` under noClasspath — but the TIR already knew the symbol was an
+instance member of an ancestor, and the emitter already knew which static names each companion
+carries (`staticOwnersOf`, built for the export diamonds). **"The frontend cannot see it" is not
+"we cannot see it."** Check what the TIR and emitter already know before recording a blocker.
 
 ### Where the engine ends and a library's manifest begins
 
@@ -345,6 +362,23 @@ pass a `classOf[X]` literal, so a call-site rewrite to statically-derived codecs
 site (`readValue("resource", null, …)`) is class-tag driven and needs explicit handling.
 
 ## Do NOT retry (measured failures)
+
+- **Broadening `erasedReceiverView` to fire on a RENDERED wildcard, and to consider the callee's
+  RESULT type**: 7 → **41** (21 × E008 `not a member`). Casting a receiver to its erased view LOSES
+  members — `Array[Object]` has no `com.badlogic…` members the code then calls. The erased view is
+  only safe where the capture is genuinely unusable, which Spoon's own actuals are the right signal
+  for. The context-dependent-fill problem it was aimed at needs the FIELD's declared rendering at
+  the read, not a wider receiver cast.
+- **`typeParamToObject` consulting the REFERENCE formal when the declaration is unavailable**:
+  13 → 28. A reference erases a generic `T` to `Object` under noClasspath, so this casts our own
+  `foo(x: T)` arguments to `Object`.
+- **Disabling array covariance for a generic array formal** (`Arrays.copyOf(T[], int)`): 13 → 28,
+  and again 10 → 26 in the "result shares the argument's type variable" form. A JDK shadow reports
+  `T[]` while the real Scala-visible signature is `Object[]`; the erasure cast is right. What was
+  wrong was the RESULT type we recorded — see `erasedResult`.
+- **Casting a type-parameter argument to `Object` when the resolved formal is PRIMITIVE**: inert (no
+  change). The reasoning is sound — a type variable can never denote a primitive, so Spoon
+  mis-resolved the overload — but it fires nowhere, so `CharArray:718` has a different cause.
 
 - **Erasing declarations** (raw → `Object`-parameterised instead of wildcard): **+277 errors**.
   `Array[?]` accepts an `Array[String]`; `Array[Object]` does not. The rule is *erase uses (casts),
