@@ -264,12 +264,12 @@ object OrderedMap {
       return array
     }
     override def toArray(): com.badlogic.gdx.utils.Array[K] = {
-      return this.toArray(new com.badlogic.gdx.utils.Array[?I](true, this.keys.size - nextIndex))
+      return this.toArray(new com.badlogic.gdx.utils.Array(true, this.keys.size - nextIndex))
     }
   }
   class OrderedMapValues[V <: java.lang.Object](map$p: OrderedMap[?, V]) extends com.badlogic.gdx.utils.ObjectMap.Values[V](map$p.asInstanceOf[OrderedMap[java.lang.Object, V]]) {
-    private var keys: com.badlogic.gdx.utils.Array[?I] = null.asInstanceOf[com.badlogic.gdx.utils.Array[?I]]
-    this.keys = map$p.asInstanceOf[OrderedMap[java.lang.Object, java.lang.Object]].keys$field.asInstanceOf[com.badlogic.gdx.utils.Array[?I]]
+    private var keys: com.badlogic.gdx.utils.Array[?] = null.asInstanceOf[com.badlogic.gdx.utils.Array[?]]
+    this.keys = map$p.asInstanceOf[OrderedMap[java.lang.Object, java.lang.Object]].keys$field.asInstanceOf[com.badlogic.gdx.utils.Array[?]]
     override def reset(): scala.Unit = {
       currentIndex = -1
       nextIndex = 0
@@ -309,7 +309,7 @@ object OrderedMap {
       return array
     }
     override def toArray(): com.badlogic.gdx.utils.Array[V] = {
-      return this.toArray(new com.badlogic.gdx.utils.Array[?I](true, this.keys.size - nextIndex))
+      return this.toArray(new com.badlogic.gdx.utils.Array(true, this.keys.size - nextIndex))
     }
   }
 }

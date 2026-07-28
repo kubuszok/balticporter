@@ -220,7 +220,13 @@ object SpoonTir:
             val as = r.getActualTypeArguments.asScala.toList
             if fs.sizeIs == as.size then
               fs.zip(as).foreach { (f, a) =>
-                if !a.isInstanceOf[CtWildcardReference] && !out.contains(f.getSimpleName) then
+                // skip an argument that names a type variable NOT in scope here: `tpe` renders
+                // those as the unresolved stub `?I`, which is not a legal scala type and reached
+                // the output as `new Array[?I](…)`.
+                val nameable = a match
+                  case tv: CtTypeParameterReference => resolveTypeParam(tv.getSimpleName).isDefined
+                  case _                            => true
+                if !a.isInstanceOf[CtWildcardReference] && nameable && !out.contains(f.getSimpleName) then
                   try out(f.getSimpleName) = tpe(a) catch { case _: Throwable => () }
               }
             val ups: List[CtTypeReference[?]] = decl match

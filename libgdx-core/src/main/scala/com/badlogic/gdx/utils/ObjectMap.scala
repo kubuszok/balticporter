@@ -530,7 +530,7 @@ object ObjectMap {
       return this
     }
     def toArray(): com.badlogic.gdx.utils.Array[V] = {
-      return this.toArray(new com.badlogic.gdx.utils.Array[?I](true, this.map.size))
+      return this.toArray(new com.badlogic.gdx.utils.Array(true, this.map.size))
     }
     def toArray(array: com.badlogic.gdx.utils.Array[V]): com.badlogic.gdx.utils.Array[V] = {
       while (hasNext$field) {
