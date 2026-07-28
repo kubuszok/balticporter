@@ -54,11 +54,11 @@ object BezierTest {
   private var epsilon: scala.Float = java.lang.Float.MIN_NORMAL
   private var epsilonApprimations: scala.Float = 1.0E-6f
   @org.junit.runners.Parameterized.Parameters(name = "imported type {0} use setter {1}")
-  def parameters(): scala.collection.mutable.Iterable[scala.Array[java.lang.Object]] = {
-    val parameters: scala.collection.mutable.Iterable[scala.Array[java.lang.Object]] = new scala.collection.mutable.ArrayBuffer[scala.Array[java.lang.Object]]()
+  def parameters(): scala.collection.mutable.Buffer[scala.Array[java.lang.Object]] = {
+    val parameters: scala.collection.mutable.Buffer[scala.Array[java.lang.Object]] = new scala.collection.mutable.ArrayBuffer[scala.Array[java.lang.Object]]()
     for (`type` <- com.badlogic.gdx.math.BezierTest.ImportType.values()) {
-      parameters += scala.Array[java.lang.Object](`type`, true)
-      parameters += scala.Array[java.lang.Object](`type`, false)
+      parameters += scala.Array[java.lang.Object](`type`, true.asInstanceOf[java.lang.Boolean])
+      parameters += scala.Array[java.lang.Object](`type`, false.asInstanceOf[java.lang.Boolean])
     }
     return parameters
   }

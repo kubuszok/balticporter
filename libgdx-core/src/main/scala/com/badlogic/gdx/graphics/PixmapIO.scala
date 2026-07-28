@@ -227,7 +227,7 @@ object PixmapIO {
     }
   }
   object PNG {
-    private final val SIGNATURE: scala.Array[scala.Byte] = scala.Array[scala.Byte](137.asInstanceOf[scala.Byte], 80, 78, 71, 13, 10, 26, 10)
+    private final val SIGNATURE: scala.Array[scala.Byte] = scala.Array[scala.Byte](137.asInstanceOf[scala.Byte].asInstanceOf[scala.Byte], 80.asInstanceOf[scala.Byte], 78.asInstanceOf[scala.Byte], 71.asInstanceOf[scala.Byte], 13.asInstanceOf[scala.Byte], 10.asInstanceOf[scala.Byte], 26.asInstanceOf[scala.Byte], 10.asInstanceOf[scala.Byte])
     private final val IHDR: scala.Int = 1229472850
     private final val IDAT: scala.Int = 1229209940
     private final val IEND: scala.Int = 1229278788

@@ -1522,7 +1522,15 @@ object SpoonTir:
         val inits = na.getElements.asScala.toList
         val dims  = na.getDimensionExpressions.asScala.toList
         val et    = tt(elemT, na)
-        if inits.nonEmpty || dims.isEmpty then Tree.NewArray(et, Nil, Some(inits.map(expr)), ty(na), originOf(na))
+        // An array INITIALISER is a slot like any other: `new Object[]{type, true}` autoboxes in
+        // Java, and Scala will not box into an `Array[Object]` on its own. Coerce each element to
+        // the component type, exactly as a call argument is coerced to its formal.
+        val comp = na.getType match
+          case arr: CtArrayTypeReference[?] => arr.getComponentType
+          case _                            => null
+        def elem(e: CtExpression[?]): Term =
+          if comp == null then expr(e) else coerce(comp, e, expr(e))
+        if inits.nonEmpty || dims.isEmpty then Tree.NewArray(et, Nil, Some(inits.map(elem)), ty(na), originOf(na))
         else Tree.NewArray(et, dims.map(expr), None, ty(na), originOf(na))
 
       private def lambda(l: CtLambda[?]): Term =

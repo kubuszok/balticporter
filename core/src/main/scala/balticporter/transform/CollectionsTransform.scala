@@ -33,7 +33,12 @@ final class CollectionsTransform extends Phase:
     "java.util.Queue"         -> ("scala.collection.mutable.Queue", Kind.Seq),
     "java.util.Deque"         -> ("scala.collection.mutable.ArrayDeque", Kind.Seq),
     "java.util.ArrayDeque"    -> ("scala.collection.mutable.ArrayDeque", Kind.Seq),
-    "java.util.Collection"    -> ("scala.collection.mutable.Iterable", Kind.Seq),
+    // NOT `scala.collection.mutable.Iterable`: java's `Collection` is add/remove/contains/size,
+    // and mutable.Iterable offers none of those — `parameters.add(x)` becomes `parameters += x`,
+    // which does not exist there. `Buffer` is the mutable, addable, iterable target; it adds an
+    // ordering guarantee java's `Collection` does not make, which is a widening of contract and
+    // cannot break a caller.
+    "java.util.Collection"    -> ("scala.collection.mutable.Buffer", Kind.Seq),
     // likewise NOT `scala.collection.Iterable`: java's `Iterable.iterator()` hands back a
     // REMOVAL-CAPABLE iterator, scala's hands back a `scala.collection.Iterator`. Mapping the
     // two independently would leave the pair inconsistent — `for (x <- xs)` would still work,
