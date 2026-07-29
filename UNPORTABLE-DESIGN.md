@@ -449,11 +449,66 @@ first.**
 `gdx_measure.sh`/`gdx_test_measure.sh` (§6.3, initially with an empty marker set — every error lands
 in the "engine gap, auto-located" lane); (c) `PortReport` assembling the four existing checks +
 `SubstitutionCheck` lift (§4.1, §8); (d) baseline/run-latest persistence + classification (§5.3).
+
+> **STATUS 2026-07-29 — (c) partially BUILT, (d) BUILT. (a) and (b) still open.**
+>
+> `core/.../tir/CheckReport.scala` is the assembly and persistence layer. Each of `OmissionCheck`,
+> `PortabilityCheck` (twice — all-references and emitted-only — plus the injected-source scan) and
+> `RewriteTrace` records its COMPLETE result; the caller's `take(20)` truncation now applies only
+> to the terminal render. Output per port under `port-report/<main-class>/`:
+> `run-latest/{findings.tsv,counts.tsv,report.md,diff.txt,subject.txt}` and a promotable
+> `baseline/{findings.tsv,counts.tsv}` (`scripts/port_baseline.sh accept <port>`). `findings.tsv`
+> is sorted, path-relative and clock-free, so the diff is stable; the finding id excludes the line
+> (R7) and gains a `/n` suffix when a member has several findings that differ only by line, which
+> the line-free id would otherwise merge. `subject.txt` is the `before->after` fragment CLAUDE.md
+> §5 asks every commit subject to carry.
+>
+> Not built: the `SubstitutionCheck` LIFT. CHECK 1 and CHECK 2 are still inline filesystem code in
+> `LibgdxCoreMigrate.scala:203/240`, so the substitution result is the one of the four that reaches
+> stdout but not `findings.tsv`. Lifting it needs §1.2's `PortRun`, or at minimum an edit to the
+> migration program.
+>
+> Recording is invoked FROM the checks rather than from an orchestrator, because there is no
+> orchestrator (§1.2) and check invocation is copy-paste per migration program. It is gated off
+> unless the run supplies `balticporter.root` or a report dir, so a check is still a pure function
+> everywhere else. When `PortRun` lands, the `record` calls move into it.
+>
+> **Measured coverage observation, recorded because it is a real limit of the four checks:** with
+> `balticporter.skipPhases=*` (the whole transform pipeline off) on libGDX core, all four check
+> counts are UNCHANGED — 46 / 139 / 67 / 2 / 0. The checks measure frontend and emission facts; no
+> transform in that pipeline moves any of them. So the diff layer cannot, today, detect a
+> transform regression. That is an argument for Stage 1(a)'s member digests, which would.
 Payoff against the 6+4: every remaining error is automatically attributed to (member, Java origin)
 and every engine change's blast radius is visible per member *before* the compile cycle — the
 per-iteration cost of the endgame drops now, and the machinery is in place for the RefChecks wave,
 which is where a step-up in error count is *expected* (STATUS §0.1) and where hand-triage would be
 most expensive.
+
+**Stage 1.5 — diagnosis flags (BUILT 2026-07-29, not previously in this plan).**
+
+LIBRARY-READINESS.md §2.3/§2.5 asked for three ad-hoc techniques to become first-class. Two are
+now flags read by `balticporter.tir.DebugFlags`, and one is a printer:
+
+| flag | answers |
+|---|---|
+| `balticporter.skipPhases=<name>[,…]` or `*` | "is this phase even responsible" — one run, no source edit. An unmatched name is REPORTED with the pipeline's actual phase names, so a typo cannot masquerade as "the phase changed nothing". |
+| `balticporter.dumpTirBefore` / `dumpTirAfter=<phase>|*`, `balticporter.dumpOnly=<fqn>` | "what did the tree look like either side of that phase" |
+| `balticporter.tracePhases=true` | "did it run, and did the program's size move" |
+| `balticporter.traceNode=<Kind>` | construction provenance via `TirTrace.mint`. MECHANISM ONLY — no construction site is wired, because every site of interest is in `SpoonTir`/`TirEmitter`. |
+
+`TirPrinter` is the rendering: total over `Tree`/`TypeRepr` (an unhandled node is an exhaustivity
+warning, not a silently unprinted subtree), symbols by `fullName`, types in surface syntax, and a
+`canonical` style with no `SymId` and no origin that is the input to `TirPrinter.digest` — i.e. the
+substrate Stage 3(a)'s Stage-A diff needs.
+
+**Where a flag is read from, and why it is not an environment variable.** `sbt -client` talks to a
+long-running server, and the migration runs in a JVM FORKED from it whose `-D` options come from
+`build.sbt`. Neither an exported variable nor a `-D` on the operator's command line reaches it. So
+`DebugFlags` resolves, in increasing precedence: `<root>/.balticporter/run.properties` (written by
+a measure script), `<root>/.balticporter/debug.properties` (hand-written, wins), then system
+properties (for a direct `java` run, a test, or a main class that sets one before it builds a
+pipeline — which is how `DebugEmit` forwards `--dump-after`). This is CLAUDE.md §4.6's marker-file
+rule, generalised; §4.6 itself should gain the flag names.
 
 **Stage 2 — the marker.** `Unportable` + `Tree.Approx` + `UnportableTag` + traversal case +
 conservation check + emission gate + fences/banner/sentinel (§1, §2, §6.1), landing *together* as
