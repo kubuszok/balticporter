@@ -5,7 +5,7 @@ import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.sbtgen.SbtGen
 import balticporter.tir.{CheckReport, Correlate, CorrelateRun, DebugFlags, OmissionCheck, Phase, Pipeline, PortabilityCheck, Program, Remediator, RewriteTrace, SrcMap, SymId, Tree}
-import balticporter.transform.PackageRenameTransform
+import balticporter.transform.{MethodBodyTransform, PackageRenameTransform}
 
 import java.nio.file.{Files, Path, StandardCopyOption}
 import scala.jdk.CollectionConverters.*
@@ -317,6 +317,35 @@ final case class PortRun(
       say(s"PORTABILITY of injected replacements: ${injectedViolations.size} finding(s)")
       say(PortReport.Kind.InjectedPortability.classification)
       injectedViolations.foreach(v => println("  " + v.render))
+
+    // ---- the PORT MAP: what this module did to its upstream surface, published for dependents ----
+    // Written AFTER injection, so `Substituted` and `Added` are decided by what actually stands in
+    // the output rather than by what policy intended. Assembly only: every input below is something
+    // the run already holds (see `PortMap`'s scaladoc for the source of each field).
+    //
+    // A module's map is an OUTPUT and never an input to its own run — only DEPENDENTS read it.
+    // Otherwise it becomes a second source of truth able to disagree with the manifest, and a port
+    // stops being reproducible from sources plus policy (CLAUDE.md §5.5).
+    val injectedFqns = ownSubs.inject.filter(Files.exists(_)).flatMap { root =>
+      SubstitutionCheck.scalaSources(root)
+        .map(src => root.relativize(src).toString.stripSuffix(".scala").replace('/', '.').replace('\\', '.'))
+    }.toSet ++ plan.sources.keySet ++ plan.required ++ supportSources.keySet
+    val bodyKeys: Set[String] =
+      effectivePhases.collect { case m: MethodBodyTransform => m.substituted }.flatten.toSet
+    val portMap = PortMap.of(
+      module       = label,
+      engine       = balticporter.core.EngineInfo.fingerprint,
+      emittedTypes = translated.emitOrder.map(u => program.symbolOf(u.symbol).map(_.fullName).getOrElse(""))
+                       .filterNot(f => f.isEmpty || policySubs.dropsType(f)),
+      srcMap       = translated.emitter.srcMap,
+      dropTypes    = policySubs.dropTypes,
+      dropMethods  = policySubs.dropMethods,
+      injectedFqns = injectedFqns,
+      bodyKeys     = bodyKeys,
+      renames      = renames,
+    )
+    val mapPath = PortMap.write(CheckReport.runDir, portMap)
+    say(s"port map: ${portMap.types.size} type(s), ${portMap.members.size} member(s) -> $mapPath")
 
     // CHECK 2 — over the FINAL tree.
     val danglingSubs = record(PortRun.SubstitutionDangling, SubstitutionCheck.dangling(outDir, ownSubs))
