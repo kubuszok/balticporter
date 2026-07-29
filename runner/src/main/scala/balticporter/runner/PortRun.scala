@@ -5,7 +5,7 @@ import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.sbtgen.SbtGen
 import balticporter.tir.{CheckReport, Correlate, CorrelateRun, DebugFlags, OmissionCheck, Phase, Pipeline, PortabilityCheck, Program, Remediator, RewriteTrace, SrcMap, SymId, Tree}
-import balticporter.transform.{MethodBodyTransform, PackageRenameTransform}
+import balticporter.transform.{MethodBodyTransform, PackageRenameTransform, PortMapTransform}
 
 import java.nio.file.{Files, Path, StandardCopyOption}
 import scala.jdk.CollectionConverters.*
@@ -215,16 +215,35 @@ final case class PortRun(
     // ---- cross-port composition: does the shared surface agree with the module that emits it? ----
     // Runs on EVERY port. On a base port `shared` is empty and the check is a no-op by arithmetic
     // rather than by a branch — the same discipline as an empty policy making a phase a no-op.
-    val agreement = ManifestAgreement.check(manifest, sharedSurface(program, translated.foreign), foreignRoots)
+    val basePorts = discoverBasePorts()
+    val agreement = ManifestAgreement.check(manifest, sharedSurface(program, translated.foreign), foreignRoots, basePorts)
     CheckReport.record(PortRun.Manifest, agreement.map { f =>
       CheckReport.Finding(PortRun.Manifest, f.kind.toString, f.subject, "", 0, f.render)
     })
     val bases = manifest.toList.flatMap(_.baseChain).map(_.name)
-    say(s"MANIFEST agreement (${if bases.isEmpty then "no base module declared" else s"base(s): ${bases.mkString(", ")}"}, " +
+    val howBases =
+      if bases.isEmpty then "no base module declared"
+      else s"base(s): ${basePorts.map(p => s"${p.name}=${if p.map.isDefined then s"published map (${p.source})" else "re-derived"}").mkString(", ")}"
+    say(s"MANIFEST agreement ($howBases, " +
       s"${translated.foreign.size} shared type(s)): ${agreement.size} disagreement(s)")
     if agreement.nonEmpty then
       say(PortReport.Kind.Manifest.classification)
       agreement.take(40).foreach(f => println("  " + f.render))
+
+    // ---- what a base's PUBLISHED map says about the references this module is about to emit ----
+    // Recorded on EVERY run, `Nil` included: without a `PortMapTransform` in the pipeline the list
+    // is empty, and `counts.tsv` must be able to tell "found nothing" from "never ran" — which is
+    // exactly what a check that only registers itself when it has something to say destroys.
+    val mapFindings = effectivePhases.collect { case p: PortMapTransform => p.findings }.flatten
+    CheckReport.record(PortRun.PortMapCheck, mapFindings.map(_.report))
+    if effectivePhases.exists(_.isInstanceOf[PortMapTransform]) then
+      say(s"PORT MAP (references the base module does not emit): ${mapFindings.size}")
+      mapFindings.groupBy(_.issue).toList.sortBy(_._1.toString).foreach { (issue, fs) =>
+        say(s"  ${fs.size} × $issue")
+        say("  " + PortMapTransform.classification(issue))
+        fs.take(10).foreach(f => println("    " + f.render))
+        if fs.sizeIs > 10 then println(s"    … ${fs.size - 10} more (see findings.tsv)")
+      }
 
     // Two portability numbers, recorded separately: what the PROGRAM references, and what the
     // SHIPPED code references. A run that reported only one of them could not show a substitution
@@ -343,6 +362,10 @@ final case class PortRun(
       injectedFqns = injectedFqns,
       bodyKeys     = bodyKeys,
       renames      = renames,
+      // The map fingerprints the JAVA it was derived from, so a dependent can tell that the base's
+      // sources moved under it (design risk R1) instead of reading an entry that describes a run
+      // that no longer exists. `SrcMap` records each member's Java path relative to THIS root.
+      sourceRoot   = Some(frontend.sourceRoot),
     )
     val mapPath = PortMap.write(CheckReport.runDir, portMap)
     say(s"port map: ${portMap.types.size} type(s), ${portMap.members.size} member(s) -> $mapPath")
@@ -511,6 +534,44 @@ final case class PortRun(
     val src = PortRun.real(frontend.sourceRoot)
     frontend.resolutionRoots.map(PortRun.real).exists(r => r != src)
 
+  /** Locate each declared base's PUBLISHED port map, and decide whether it may be believed.
+    *
+    * Done HERE rather than in [[ManifestAgreement]] because it is filesystem work, and the check is
+    * worth more as a pure function of three lists than as something that needs a run directory to
+    * be testable — the same division as `record`.
+    *
+    * Two rules that are not negotiable:
+    *
+    *   - '''This module's own map is excluded''' (design risk R2). A module's map is an OUTPUT and
+    *     never an input to its own run; consuming it would make a port's behaviour depend on its
+    *     previous output, and `PortMapSpec` pins that deleting a module's own map and re-running
+    *     gives byte-identical output. Both the manifest name and the run LABEL are excluded, because
+    *     a port is free to let those differ.
+    *   - '''A map proven STALE is refused, not merely annotated''' (design risk R1). It is dropped
+    *     from the `BasePort` so the dynamic layer takes the re-derivation path for that base, and
+    *     the reason travels as a finding. Using a stale entry and mentioning it in passing is the
+    *     failure this mechanism exists to prevent.
+    */
+  private def discoverBasePorts(): List[ManifestAgreement.BasePort] =
+    val chain = manifest.toList.flatMap(_.baseChain)
+    if chain.isEmpty then Nil
+    else
+      val mine  = Set(label) ++ manifest.map(_.name)
+      val found = PortMap.discover(PortMap.reportRoot, exclude = mine).map(p => p.module -> p).toMap
+      val roots = (frontend.resolutionRoots ++ List(frontend.sourceRoot)).map(_.toAbsolutePath.normalize).distinct
+      chain.map { b =>
+        found.get(b.name) match
+          case scala.None => ManifestAgreement.BasePort(b)
+          case Some(pub) =>
+            pub.map match
+              case Left(err) => ManifestAgreement.BasePort(b, scala.None, pub.source, stale = List(err))
+              case Right(m0) =>
+                PortMap.freshness(m0, balticporter.core.EngineInfo.fingerprint, roots) match
+                  case PortMap.Freshness.Fresh          => ManifestAgreement.BasePort(b, Some(m0), pub.source)
+                  case PortMap.Freshness.Stale(r)       => ManifestAgreement.BasePort(b, scala.None, pub.source, stale = List(r))
+                  case PortMap.Freshness.Unverified(r)  => ManifestAgreement.BasePort(b, Some(m0), pub.source, unverified = List(r))
+      }
+
   /** Every type this run RESOLVED AGAINST but did not convert — the shared surface, as this run
     * modelled it.
     *
@@ -646,6 +707,8 @@ object PortRun:
   val SubstitutionDangling = "substitution(dangling)"
   val Policy               = "policy"
   val Manifest             = "manifest"
+  /** references a base module's PUBLISHED port map says are not in its output. */
+  val PortMapCheck         = "port-map"
 
   /** Every check a run MUST have recorded by the time it finishes. Named rather than derived,
     * because the property being asserted is "the orchestrator invoked all of them" — deriving the
@@ -659,7 +722,7 @@ object PortRun:
     * `LibgdxTestMigrate` never called `PortabilityCheck` at all. */
   val RequiredChecks: Set[String] = Set(
     Signature, Omissions, PortabilityAll, PortabilityEmitted, PortabilityInjected, Remediation,
-    SubstitutionEmitted, SubstitutionDangling, Policy, Manifest,
+    SubstitutionEmitted, SubstitutionDangling, Policy, Manifest, PortMapCheck,
   )
 
   /** One translation, plus everything derived from it that must not be recomputed inconsistently.

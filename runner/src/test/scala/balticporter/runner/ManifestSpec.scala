@@ -48,6 +48,17 @@ class ManifestSpec extends munit.FunSuite:
     else Files.walk(out).iterator().asScala.filter(_.toString.endsWith(".scala"))
       .map(p => out.relativize(p).toString.replace('\\', '/')).toList.sorted
 
+  /** the agreement findings that say the two modules DISAGREE, as opposed to the operational notes
+    * about how the check was answered.
+    *
+    * A unit-test JVM has `CheckReport` off, so no `PortRun` here publishes a port map and every
+    * declared base is reported `BaseMapMissing` — correctly: the agreement really was re-derived
+    * from the manifest rather than read off the base's output. Filtering it keeps each assertion
+    * about what it is testing, and the note itself is pinned once, where it is the subject. */
+  private def disagreements(r: PortResult): List[ManifestAgreement.Finding] =
+    r.report.manifest.filterNot(f =>
+      f.kind == Kind.BaseMapMissing || f.kind == Kind.BaseMapStale || f.kind == Kind.BaseMapUnverified)
+
   private def runBase(root: Path, base: Path, m: PortManifest): PortResult =
     PortRun("base", root.resolve("port-base"), SourceSet.Main,
       FrontendConfig(base, List("com/demo/Widget.java", "com/demo/Gadget.java"), Nil), Nil,
@@ -142,7 +153,11 @@ class ManifestSpec extends munit.FunSuite:
 
     val d = runDependent(root, base, dep, core.extendedBy(PortManifest("ext", governs = Set("com.demo2"))))
     assertEquals(emitted(d.outDir), List("com/demo2/Uses.scala"))
-    assertEquals(d.report.manifest, Nil)
+    // The base declares shared-surface policy and — in a unit-test JVM, where `CheckReport` is off —
+    // publishes no port map, so the agreement below is RE-DERIVED and says so. That note is the
+    // whole point of it: the fallback to the weaker check is never silent. Everything else agrees.
+    assertEquals(disagreements(d), Nil)
+    assertEquals(d.report.manifest.map(_.kind), List(ManifestAgreement.Kind.BaseMapMissing))
     // the shared surface really was carried across: the dependent's reference names the base's
     // RENAMED type, which is the whole thing this item exists to keep true
     assert(clue(Files.readString(d.outDir.resolve("com/demo2/Uses.scala"))).contains("org.port.Widget"))
@@ -157,7 +172,7 @@ class ManifestSpec extends munit.FunSuite:
     runBase(root, base, core)
 
     val d = runDependent(root, base, dep, core.extendedBy(PortManifest("ext")))
-    assertEquals(d.report.manifest, Nil)
+    assertEquals(disagreements(d), Nil)
     // nothing injected here, and CHECK 2 does not hold this module to a replacement its base ships
     assertEquals(d.injected, 0)
     assertEquals(d.report.substitution, Nil)

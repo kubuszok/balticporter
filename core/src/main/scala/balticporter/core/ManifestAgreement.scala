@@ -28,24 +28,52 @@ package balticporter.core
   * it tests, so no prefix separates "mine" from "the base's", while the file a unit was parsed from
   * always does.
   *
+  * ==Two SOURCES for the base's half, and why the published one is better==
+  * The dynamic layer needs to know what the base did with each shared type. There are two ways to
+  * learn it, and this check prefers the second whenever it is available:
+  *
+  *  - '''RE-DERIVED''' — read the base's `PortManifest`. Cheap, always available, and an answer
+  *    about INTENT: it says what the base was configured to do, and assumes the base's run agreed.
+  *  - '''PUBLISHED''' — read the base's [[PortMap]], the artifact its run wrote. An answer about
+  *    OUTPUT: the emitted FQN of every type, which types were dropped and which were replaced,
+  *    which members exist and which of their bodies were hand-supplied.
+  *
+  * The published map is preferred because three of the five holes below are holes in
+  * *re-derivation*, not in the check. It closes 1, 3 and 5, and it closes them by not asking the
+  * question re-derivation asks: a phase's configuration cannot be mis-read off a map that records
+  * what the phase PRODUCED, and neither can a nested type nor an emitted name.
+  *
+  * It is only usable while it is TRUE of the base, which is design risk R1. So a map is checked for
+  * freshness ([[PortMap.freshness]]) before it is believed, a map proven stale is REFUSED and
+  * reported ([[Kind.BaseMapStale]]) with the check falling back to re-derivation, and a base with no
+  * map at all is reported too ([[Kind.BaseMapMissing]]) — because silently running the weaker check
+  * is the failure this whole page exists to prevent.
+  *
   * ==What this check CANNOT see==
   * Stated here because a composition check that silently misses a class of drift is worse than no
-  * check at all:
+  * check at all. Each entry says whether a PUBLISHED map closes it:
   *
   *  1. '''A phase's configuration, unless the phase opts in.''' [[PortManifest.fingerprint]]
   *     compares by `Phase.name` plus, for a phase implementing [[SurfacePolicy]], its policy. Two
   *     differently-configured instances of a phase that does not implement it compare EQUAL.
+  *     ''CLOSED by a published map for everything that reaches a NAME'' — a differently-configured
+  *     phase that moved a type produces a different `emitted` column, and the map is compared
+  *     against it directly.
   *  2. '''A phase whose OUTPUT differs for reasons outside its policy''' — a retyping keyed on
-  *     something in the program rather than on a parameter.
+  *     something in the program rather than on a parameter. ''Same as 1.''
   *  3. '''Nested types.''' The dynamic layer walks top-level units, so a drop naming a nested type
-  *     is verified only by the never-fired tally, not by tag parity.
+  *     is verified only by the never-fired tally, not by tag parity. ''NARROWED by a published
+  *     map'': a nested type the base dropped is an entry like any other, so a dependent that models
+  *     it as ordinary is a `TagMissing`. What is still not covered is a nested type neither module
+  *     mentions.
   *  4. '''A base module that is not DECLARED.''' Nothing can be compared against a manifest that
   *     was never named — which is why a run with foreign resolution roots and no declared base is
-  *     itself a finding ([[Kind.NoBaseDeclared]]) rather than a silent pass.
-  *  5. '''Divergence in the base's own emitted output.''' This compares POLICY and the dependent's
-  *     model of the shared surface. It does not read the base's emitted Scala, so a base whose
-  *     output changed for an engine reason — a new phase in the engine, a different engine version —
-  *     is invisible here. That is what `EnginePin` is for.
+  *     itself a finding ([[Kind.NoBaseDeclared]]) rather than a silent pass. ''Not closed'': a map
+  *     is found by the base's NAME, so an undeclared base is still nothing to look up.
+  *  5. '''Divergence in the base's own emitted output.''' ''CLOSED'': the map IS the base's emitted
+  *     output. A type the base neither emitted nor dropped is [[Kind.BaseSurfaceAbsent]], and an
+  *     emitted name that differs from the base's own is a `SurfaceNameDivergence` derived from what
+  *     the base wrote rather than from what its rename map says it would write.
   */
 object ManifestAgreement:
 
@@ -60,6 +88,37 @@ object ManifestAgreement:
       /** did this run tag it [[Substituted]]? */
       substituted: Boolean,
   )
+
+  /** A base module as this run FOUND it: its manifest, and its published map if there is a usable
+    * one. Assembled by the orchestrator, which is the layer that touches the filesystem — keeping
+    * the IO out of here leaves the whole check a pure function a test can drive with three strings
+    * and a hand-built map.
+    *
+    * @param manifest the base's declared policy — always present, since a base is declared before
+    *                 it is looked up.
+    * @param map      its published [[PortMap]], if one was found AND is fresh. A map proven stale
+    *                 is deliberately NOT carried here: the point of detecting staleness is to stop
+    *                 the stale entry being used, so `stale` carries the reason and this stays
+    *                 `scala.None`, which is the same shape as "never published" and takes the same
+    *                 fallback path.
+    * @param source   `run-latest` / `baseline` — which artifact was read.
+    * @param stale    reasons the map was refused. Non-empty ⇒ `map` is `scala.None`.
+    * @param unverified reasons freshness could not be established. The map IS used.
+    */
+  final case class BasePort(
+      manifest: PortManifest,
+      map: Option[PortMap.Map0] = scala.None,
+      source: String = "",
+      stale: List[String] = Nil,
+      unverified: List[String] = Nil,
+  ):
+    def name: String = manifest.name
+    /** does this base declare ANY shared-surface policy? An empty manifest is the documented way to
+      * say "this resolution root is not a ported module" (CLAUDE.md §1.5), and holding one to the
+      * obligation to publish a map would turn that statement into a finding. */
+    def declaresPolicy: Boolean =
+      manifest.dropTypes.nonEmpty || manifest.dropMethods.nonEmpty ||
+        manifest.packageRenames.nonEmpty || manifest.surface.nonEmpty
 
   enum Kind(val fatal: Boolean, val classification: String):
     /** the base does not translate this type; this module does. */
@@ -109,6 +168,33 @@ object ManifestAgreement:
       "§1(b) PER-LIBRARY, in the BASE's manifest: an inherited key matched nothing here. Harmless " +
         "if this module simply does not reach that part of the shared surface; a typo in the base " +
         "otherwise — and then the base is not doing what it says either.")
+    /** a shared type the base's PUBLISHED map neither emitted nor dropped. */
+    case BaseSurfaceAbsent extends Kind(true,
+      "§1(b) PER-LIBRARY: the base module's published port map has no entry for this type — it " +
+        "neither emitted it nor recorded it as dropped — so this module is about to compile " +
+        "against a class nobody writes. Either the base's file list omits it (fix the base's " +
+        "`FrontendConfig.files`), or this run resolves against a source tree the base does not " +
+        "port. Re-derivation cannot see this at all: a manifest is silent about what it did not " +
+        "mention.")
+    /** the base's map was found and is PROVEN out of date. Not fatal: the check falls back to
+      * re-derivation, which is weaker but still valid. Loud, because the fallback is silent. */
+    case BaseMapStale extends Kind(false,
+      "§1(b) PER-LIBRARY, OPERATIONAL: the base's published port map does not describe the base as " +
+        "it is now, so it was REFUSED and this run fell back to re-deriving the base's decisions " +
+        "from its manifest — which cannot see the base's emitted output, its nested-type drops, or " +
+        "the configuration of any phase that does not implement `SurfacePolicy`. Re-run the base " +
+        "port to restore the stronger check.")
+    /** freshness could not be established either way. The map WAS used. */
+    case BaseMapUnverified extends Kind(false,
+      "§1(b) PER-LIBRARY, OPERATIONAL: the base's published map was used but its freshness could " +
+        "not be checked, so it may describe an older run. Not an error — absence of proof is not " +
+        "proof — but the agreement below is only as current as that map.")
+    /** a declared base with shared-surface policy has published no readable map. */
+    case BaseMapMissing extends Kind(false,
+      "§1(b) PER-LIBRARY, OPERATIONAL: this base declares shared-surface policy but has published " +
+        "no readable port map, so the agreement below is RE-DERIVED from its manifest — the weaker " +
+        "of the two checks (see this object's scaladoc for the three holes that leaves). Run the " +
+        "base port once; every run publishes its map.")
     /** foreign resolution roots, and no base manifest to compare against. */
     case NoBaseDeclared extends Kind(true,
       "§1(b) PER-LIBRARY: this run resolves against sources it does not convert — it is a " +
@@ -128,8 +214,17 @@ object ManifestAgreement:
     * @param foreignRoots whether the run resolved against roots outside its own source root — the
     *                   structural signature of a dependent port, and the trigger for
     *                   [[Kind.NoBaseDeclared]].
+    * @param ports      the bases as the orchestrator found them on disk, in `baseChain` order
+    *                   (furthest base first). Empty ⇒ every base is compared by re-derivation, which
+    *                   is exactly the behaviour before published maps existed, so a caller that
+    *                   cannot look one up loses nothing it had.
     */
-  def check(manifest: Option[PortManifest], shared: List[SharedType], foreignRoots: Boolean): List[Finding] =
+  def check(
+      manifest: Option[PortManifest],
+      shared: List[SharedType],
+      foreignRoots: Boolean,
+      ports: List[BasePort] = Nil,
+  ): List[Finding] =
     manifest match
       case None =>
         if foreignRoots then
@@ -142,7 +237,26 @@ object ManifestAgreement:
             List(Finding(Kind.NoBaseDeclared, "-", m.name,
               "resolution roots outside the source root, and the manifest declares no `bases`"))
           else Nil
-        noBase ++ statik(m) ++ dynamic(m, shared)
+        noBase ++ statik(m) ++ mapHealth(ports) ++ dynamic(m, shared, ports)
+
+  // -------------------------------------------------------------------------
+  // the maps themselves — R1, reported before anything is read OFF one
+  // -------------------------------------------------------------------------
+
+  /** Whether each base's map could be believed, said out loud.
+    *
+    * This runs before the dynamic layer and independently of whether the dynamic layer had anything
+    * to compare: a base port that has not been run is worth reporting on a dependent that happens
+    * to share no types with it, because the NEXT change to that base is when it matters. */
+  private def mapHealth(ports: List[BasePort]): List[Finding] =
+    ports.sortBy(_.name).flatMap { p =>
+      p.stale.map(r => Finding(Kind.BaseMapStale, p.name, s"${p.name} port map", r)) ++
+        p.unverified.map(r => Finding(Kind.BaseMapUnverified, p.name, s"${p.name} port map", r)) ++
+        (if p.map.isEmpty && p.stale.isEmpty && p.declaresPolicy then
+           List(Finding(Kind.BaseMapMissing, p.name, s"${p.name} port map",
+             "no port map published by this base; the shared surface below is re-derived from its manifest"))
+         else Nil)
+    }
 
   // -------------------------------------------------------------------------
   // static — declaration against declaration
@@ -207,7 +321,7 @@ object ManifestAgreement:
   // dynamic — the base's policy against what this run modelled of the shared surface
   // -------------------------------------------------------------------------
 
-  private def dynamic(m: PortManifest, shared: List[SharedType]): List[Finding] =
+  private def dynamic(m: PortManifest, shared: List[SharedType], ports: List[BasePort]): List[Finding] =
     if shared.isEmpty then Nil
     else
       // the UNION of the bases: a shared type is the base layer's, whichever module in it declares
@@ -224,33 +338,80 @@ object ManifestAgreement:
           case Some(from) => baseRenames(from) + fqn.substring(from.length)
           case scala.None => fqn
 
+      // ---- the PUBLISHED half ----------------------------------------------------------------
+      // One lookup over every usable base map, nearest base LAST so its entry wins — the same
+      // precedence `PortManifest.effectivePackageRenames` uses, for the same reason.
+      val usable = ports.filter(_.map.isDefined)
+      val emittedByBase: Map[String, (String, PortMap.Entry)] =
+        usable.foldLeft(Map.empty[String, (String, PortMap.Entry)]) { (acc, p) =>
+          acc ++ p.map.get.byUpstream("type").iterator.map((k, e) => k -> (p.name, e))
+        }
+      // A type this run models is only ABSENT from a base's output if some base with a usable map
+      // CLAIMS the namespace. Without a claim there is no module obliged to have emitted it, and
+      // reporting one would fire on every JDK-adjacent or third-party root a port resolves against.
+      def claimedBy(fqn: String): Option[String] =
+        usable.collectFirst { case p if p.manifest.claims(fqn) => p.name }
+
       val sorted = shared.sortBy(_.upstreamFqn)
 
       val tags = sorted.flatMap { t =>
-        val expectedDrop = baseDrops.contains(t.upstreamFqn)
-        if expectedDrop == t.substituted then Nil
-        else if expectedDrop then
-          List(Finding(Kind.TagMissing, baseName, t.upstreamFqn,
-            "the base declares it dropped; this run modelled it as an ordinary type"))
-        else
-          List(Finding(Kind.TagUnexpected, baseName, t.upstreamFqn,
-            "this run tagged it `Substituted`; the base emits it mechanically"))
+        emittedByBase.get(t.upstreamFqn) match
+          // PUBLISHED: what the base actually produced. `Dropped` (nothing stands at the name) and
+          // `Substituted` (injected Scala stands at it) are one answer here — neither is a
+          // mechanical translation, so this run must have tagged the type either way.
+          case Some((who, e)) =>
+            val notTranslated = e.disposition == PortMap.Disposition.Dropped ||
+              e.disposition == PortMap.Disposition.Substituted
+            if notTranslated == t.substituted then Nil
+            else if notTranslated then
+              List(Finding(Kind.TagMissing, who, t.upstreamFqn,
+                s"the base's published map records it as ${e.disposition}; this run modelled it as an ordinary type"))
+            else
+              List(Finding(Kind.TagUnexpected, who, t.upstreamFqn,
+                s"""this run tagged it `Substituted`; the base emitted it as "${e.emitted}""""))
+          case scala.None =>
+            claimedBy(t.upstreamFqn) match
+              case Some(who) =>
+                List(Finding(Kind.BaseSurfaceAbsent, who, t.upstreamFqn,
+                  "inside the base's declared namespace, and its published map has no entry for it — " +
+                    "the base neither emitted it nor recorded it as dropped"))
+              // RE-DERIVED: no usable map claims this type, so fall back to comparing declarations.
+              case scala.None =>
+                val expectedDrop = baseDrops.contains(t.upstreamFqn)
+                if expectedDrop == t.substituted then Nil
+                else if expectedDrop then
+                  List(Finding(Kind.TagMissing, baseName, t.upstreamFqn,
+                    "the base declares it dropped; this run modelled it as an ordinary type"))
+                else
+                  List(Finding(Kind.TagUnexpected, baseName, t.upstreamFqn,
+                    "this run tagged it `Substituted`; the base emits it mechanically"))
       }
+
+      // The name the base ACTUALLY emitted where a map says so, and the name its rename map implies
+      // otherwise. The difference is the whole of hole 5: a base whose rename failed to reach an
+      // owned symbol, or whose output moved for an engine reason, satisfies its own rename map and
+      // not its own output — and only the second is what a dependent compiles against.
+      def expectedName(t: SharedType): Option[String] = emittedByBase.get(t.upstreamFqn) match
+        case Some((_, e)) if e.emitted.nonEmpty => Some(e.emitted)
+        case Some(_)                            => scala.None // dropped: nothing was emitted to disagree with
+        case scala.None                         => Some(asTheBaseNamesIt(t.upstreamFqn))
 
       // A namespace divergence is a property of the PREFIX, not of the types under it: one wrong
       // rename entry would otherwise produce one finding per shared type — 605 of them on libGDX —
       // and bury every other finding in the report. Grouped by the rename rule that explains it.
       val prefixes = baseRenames.keySet ++ m.effectivePackageRenames.keySet
       val names = sorted
-        .filter(t => asTheBaseNamesIt(t.upstreamFqn) != t.emittedFqn)
+        .filter(t => expectedName(t).exists(_ != t.emittedFqn))
         .groupBy(t => PortManifest.longestPrefix(t.upstreamFqn, prefixes)
           .getOrElse(t.upstreamFqn.take(t.upstreamFqn.lastIndexOf('.').max(0))))
         .toList.sortBy(_._1)
         .map { (prefix, ts) =>
-          val e = ts.head
-          Finding(Kind.SurfaceNameDivergence, baseName, prefix,
-            s"""${ts.size} shared type(s): the base names "${e.upstreamFqn}" """ +
-              s""""${asTheBaseNamesIt(e.upstreamFqn)}"; this run emits "${e.emittedFqn}"""")
+          val e   = ts.head
+          val who = emittedByBase.get(e.upstreamFqn).map(_._1).getOrElse(baseName)
+          val src = if emittedByBase.contains(e.upstreamFqn) then "emits" else "would name"
+          Finding(Kind.SurfaceNameDivergence, who, prefix,
+            s"""${ts.size} shared type(s): the base $src "${e.upstreamFqn}" """ +
+              s""""${expectedName(e).getOrElse("")}"; this run emits "${e.emittedFqn}"""")
         }
 
       tags ++ names

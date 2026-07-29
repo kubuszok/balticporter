@@ -999,7 +999,69 @@ tidy.
 
 ---
 
-## 8. Asserted, not measured
+## 8. A DEPENDENT reading its base's published port map
+
+### D1. A TIR symbol's `fullName` is the SAME for every overload — arity is not enough. **263 → 8**
+
+`Symbol.fullName` for a member is `owner#name` with **no parameter list**; every overload is a
+distinct `SymId` carrying the same string. Every map, manifest key and `dropMethods` entry, by
+contrast, is written `owner#name(P1,P2)`. So a phase that looks a call site up in a published map
+has to reconstruct the parameter list, and the obvious discriminator — the call's ARGUMENT COUNT —
+is not one:
+
+- `Array#toArray(ArraySupplier)` is `Ported` and `Array#toArray(Class)` is `Dropped`, at the **same
+  arity**. Every real library has such a pair, because the portable replacement for a reflective
+  overload takes exactly one argument too.
+- Measured on Ashley against libGDX core's published map: arity-only selection produced **263**
+  findings, of which **118 were `Ambiguous`** and *every* `toArray` and `Array#<init>` site was one.
+  The acceptance case itself — `ImmutableArray.toArray(Class)` — came back undecidable.
+
+**What works: the callee symbol's own `info`.** The frontend interns a member symbol with its
+`MethodType` (through `PolyType` for a generic method) even when the member was dropped and has no
+declaration left, so the erased parameter SIMPLE names are available at the call site and give the
+exact manifest-shaped key. `PortMapTransform.preciseKey` does this; arity survives only as the
+fallback for a symbol whose `info` a lenient frontend never resolved.
+
+Two smaller rules from the same measurement:
+
+- **No arity match means NO record, not the nearest one.** The first version fell back to the whole
+  candidate list, which attributed a 1-argument call to the map's 0-argument entry and reported the
+  base's decision about a member nobody had called.
+- **The xref records `a.m(x)` twice** — `Call` on the `Apply`, `TermRef` on the `Select` inside it.
+  Reporting per usage doubles every finding, and the `Select` half has no argument list, so it
+  cannot pick an overload and lands on `Ambiguous` for a call the `Apply` half resolves exactly.
+  Collapse to (file, line, enclosing definition) and keep the `Apply`.
+
+*Fix kind: (a) engine — this is a fact about the TIR, not about any library.*
+
+### D2. A dependent's program CONTAINS its base — filter every per-site report by ownership
+
+`resolutionRoots` means the base's Java is parsed, so a dependent's `Program` holds libGDX's 596
+units and every call libGDX makes into its own dropped members. Of the 263 findings above, **255
+were in libGDX's own files** — sites the dependent's author neither owns nor can fix, and which the
+base's own run already reported.
+
+Decide ownership STRUCTURALLY, as §4.56 does for renames: climb the `owner` chain and ask whether it
+reaches a type the base's map NAMES. Do not filter on the origin path — that is the same lexical
+path comparison §5.4 already documents as broken across a symlinked worktree, and here the phase
+does not even know the source root. A symbol that exhausts the climb counts as the dependent's, so
+an unresolvable case errs toward reporting.
+
+*Fix kind: (a) engine.*
+
+### D3. A `<synthetic>` origin is not a file — exclude it from any source fingerprint
+
+`PortMap`'s staleness check digests the Java files the map attributes members to. libGDX core has
+exactly **one** member whose origin is `<synthetic>`; including it put an unresolvable path in the
+file set, and the first dependent run reported the base's map as `Unverified` — a check whose first
+real firing was a false positive. `SrcMap.relativise` already leaves `<…>` alone for the same
+reason; anything consuming its paths must too.
+
+*Fix kind: (a) engine.*
+
+---
+
+## 9. Asserted, not measured
 
 Clearly separated because nothing below has a number behind it yet.
 
