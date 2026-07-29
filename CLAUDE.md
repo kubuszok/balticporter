@@ -173,6 +173,24 @@ It runs on the **Fable 5** model and is expensive, so it is **not** run on every
 
 ---
 
+## 4.45 The consumer is an AGENT IN ANOTHER REPOSITORY
+
+The engine's users are not this repository. sge and ssg will maintain their ports by pointing a
+published Baltic Porter at their Java sources, with agents doing that work in *their* repos,
+without this session's context. Two standing consequences:
+
+- **A lesson that is an ENGINE limit must live somewhere the engine ships.** CLAUDE.md, a skill, or
+  an agent definition — not only in a per-library status file. §3.6 already says this; the
+  measured dead ends in `LIBGDX-PORT-STATUS.md` are its largest current exception, because
+  "raw-anon refusal", "`given Conversion` never fires" and the rest are engine-scoped but
+  libGDX-filed.
+- **A check must say which of §1's three kinds the fix is.** An error an agent cannot classify as
+  (a) engine bug, (b) configure an existing phase, or (c) write a library-specific rule costs it a
+  full investigation. `PortabilityCheck` and `RewriteTrace` do this well; bare typer errors do not,
+  and they are the bulk of a new library's first wall.
+
+`LIBRARY-READINESS.md` holds the full audit of what is missing before that consumption is possible.
+
 ## 4.5 Never model a Java interface on a Scala COLLECTION trait
 
 When a Java interface needs a Scala counterpart the stdlib does not have, write a standalone trait
