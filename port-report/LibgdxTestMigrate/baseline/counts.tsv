@@ -1,11 +1,12 @@
 #check	count
 gdx-shared-iterator	0
+manifest	0
 omissions	49
 policy	0
 portability(all)	166
-portability(emitted)	166
+portability(emitted)	82
 portability(injected)	0
-remediation	31
+remediation	16
 signature	0
 substitution(dangling)	0
 substitution(emitted)	0
