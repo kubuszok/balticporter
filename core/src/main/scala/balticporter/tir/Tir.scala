@@ -253,7 +253,7 @@ object Tree:
   /** `return e` — imperative early exit (Java bodies). `tpe` is Nothing. */
   final case class Return(expr: Option[Term], tpe: TypeRepr, origin: Origin)            extends Term
   /** `while (cond) body` — imperative loop (Java bodies). `tpe` is Unit. */
-  final case class While(cond: Term, body: Term, tpe: TypeRepr, origin: Origin)         extends Term
+  final case class While(cond: Term, body: Term, tpe: TypeRepr, origin: Origin, label: Option[String] = None) extends Term
   /** `throw e`. `tpe` is Nothing. */
   final case class Throw(expr: Term, tpe: TypeRepr, origin: Origin)                     extends Term
   /** `x instanceof T` — the tested type is a real type usage. */
@@ -265,9 +265,9 @@ object Tree:
   /** `new T[dims]` and/or `new T[]{ init }`; `init` present for a brace initializer. */
   final case class NewArray(elem: TypeTree, dims: List[Term], init: Option[List[Term]], tpe: TypeRepr, origin: Origin) extends Term
   /** `for (binding : iterable) body` (Java enhanced-for). */
-  final case class ForEach(binding: ValDef, iterable: Term, body: Term, tpe: TypeRepr, origin: Origin) extends Term
+  final case class ForEach(binding: ValDef, iterable: Term, body: Term, tpe: TypeRepr, origin: Origin, label: Option[String] = None) extends Term
   /** `for (init; cond; update) body` (Java classic-for). */
-  final case class For(init: List[Statement], cond: Option[Term], update: List[Statement], body: Term, tpe: TypeRepr, origin: Origin) extends Term
+  final case class For(init: List[Statement], cond: Option[Term], update: List[Statement], body: Term, tpe: TypeRepr, origin: Origin, label: Option[String] = None) extends Term
   /** `try (resources) body catch cases finally fin`. `resources` are the try-with-resources
     * bindings (empty for a plain `try`); each is auto-closed — a lowering concern for the
     * backend, kept structural here. */
@@ -289,7 +289,7 @@ object Tree:
   /** `i++` / `++i` / `i--` / `--i` as an expression; `op` is `"+"`/`"-"`, `post` the position. */
   final case class IncDec(target: Term, op: String, post: Boolean, tpe: TypeRepr, origin: Origin) extends Term
   /** `do body while (cond)`. `tpe` is Unit. */
-  final case class DoWhile(body: Term, cond: Term, tpe: TypeRepr, origin: Origin)        extends Term
+  final case class DoWhile(body: Term, cond: Term, tpe: TypeRepr, origin: Origin, label: Option[String] = None) extends Term
   /** `synchronized (lock) body`. `tpe` is Unit. */
   final case class Synchronized(lock: Term, body: Term, tpe: TypeRepr, origin: Origin)   extends Term
   /** an as-yet-unmodeled TERM, kept typed (a full structured `tpe`) so the tree stays

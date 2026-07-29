@@ -98,10 +98,10 @@ final class MutableParamsTransform extends Phase:
     case Tree.If(c, a, b, _, _)         => List(c, a, b)
     case Tree.Apply(fun, args, _, _, _) => fun :: args
     case Tree.Assign(l, r, _, _)        => List(l, r)
-    case Tree.While(c, b, _, _)         => List(c, b)
-    case Tree.DoWhile(b, c, _, _)       => List(b, c)
-    case Tree.For(init, c, u, b, _, _)  => init.collect { case x: Term => x } ++ c.toList ++ u.collect { case x: Term => x } :+ b
-    case Tree.ForEach(_, it, b, _, _)   => List(it, b)
+    case Tree.While(c, b, _, _, _)         => List(c, b)
+    case Tree.DoWhile(b, c, _, _, _)       => List(b, c)
+    case Tree.For(init, c, u, b, _, _, _)  => init.collect { case x: Term => x } ++ c.toList ++ u.collect { case x: Term => x } :+ b
+    case Tree.ForEach(_, it, b, _, _, _)   => List(it, b)
     case Tree.Try(_, b, cs, fin, _, _)  => (b :: cs.map(_.body)) ++ fin.toList
     case Tree.Match(scr, cs, _, _)      => scr :: cs.map(_.body)
     case Tree.Select(q, _, _, _)        => List(q)

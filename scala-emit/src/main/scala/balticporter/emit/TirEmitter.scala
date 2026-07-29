@@ -832,21 +832,54 @@ final class TirEmitter(source: Program, externalConcrete: Map[String, Set[(Strin
     breakTarget = scala.None
     try f finally breakTarget = sb
 
-  /** Render a loop with whatever boundaries its jumps need. */
-  private def loopWithJumps(body: Tree, render: (=> String) => String, bodyStr: => String): String =
-    val hasB = breaksOut(body)
-    val hasC = continuesIn(body)
+  /** java LABEL -> the scala boundary name a `break`/`continue` naming it must target. A labelled
+    * jump can sit at any depth, so unlike the unlabelled ones these are looked up, not scoped. */
+  private val labelBreak = collection.mutable.Map[String, String]()
+  private val labelCont  = collection.mutable.Map[String, String]()
+
+  /** Render a loop with whatever boundaries its jumps need.
+    *
+    * Up to two: one around the LOOP for `break`, one around the BODY for `continue`. A loop needing
+    * both must NAME the outer one — the body boundary is innermost, so an un-annotated `break(())`
+    * inside it would continue instead. A LABELLED loop names whichever of the two its label is
+    * actually jumped to, and registers the name for the duration of the body. */
+  private def loopWithJumps(body: Tree, label: Option[String], render: (=> String) => String,
+                            bodyStr: => String): String =
+    val lblB = label.filter(l => jumpsTo(body, l, brk = true))
+    val lblC = label.filter(l => jumpsTo(body, l, brk = false))
+    val hasB = breaksOut(body) || lblB.isDefined
+    val hasC = continuesIn(body) || lblC.isDefined
     if !hasB && !hasC then render(bodyStr)
     else
       labelSeq += 1
-      val name = if hasB && hasC then s"brk$$$labelSeq" else ""
-      val inner = inLoop(if hasB then Some(name) else scala.None, hasC) {
-        if hasC then s"scala.util.boundary { $bodyStr }" else bodyStr
-      }
+      val seq  = labelSeq
+      // the break boundary must be named when a body boundary sits inside it, or when a labelled
+      // `break` names it from a nested loop
+      val bName = if hasB && (hasC || lblB.isDefined) then s"brk$$$seq" else ""
+      val cName = if hasC && lblC.isDefined then s"cnt$$$seq" else ""
+      lblB.foreach(l => labelBreak(l) = bName)
+      lblC.foreach(l => labelCont(l) = cName)
+      val inner =
+        try inLoop(if hasB then Some(bName) else scala.None, hasC) {
+          if !hasC then bodyStr
+          else if cName.isEmpty then s"scala.util.boundary { $bodyStr }"
+          else s"scala.util.boundary { ($cName: scala.util.boundary.Label[scala.Unit]) ?=> $bodyStr }"
+        }
+        finally { lblB.foreach(labelBreak.remove); lblC.foreach(labelCont.remove) }
       val loop = render(inner)
       if !hasB then loop
-      else if name.isEmpty then s"scala.util.boundary { $loop }"
-      else s"scala.util.boundary { ($name: scala.util.boundary.Label[scala.Unit]) ?=> $loop }"
+      else if bName.isEmpty then s"scala.util.boundary { $loop }"
+      else s"scala.util.boundary { ($bName: scala.util.boundary.Label[scala.Unit]) ?=> $loop }"
+
+  /** a `break L` / `continue L` naming this loop, at ANY depth — a labelled jump crosses nested
+    * loops and switches by definition, which is what it is for. */
+  private def jumpsTo(t: Any, label: String, brk: Boolean): Boolean = t match
+    case Tree.Break(Some(l), _, _) if brk     => l == label
+    case Tree.Continue(Some(l), _, _) if !brk => l == label
+    case xs: Iterable[?]                      => xs.exists(jumpsTo(_, label, brk))
+    case Some(x)                              => jumpsTo(x, label, brk)
+    case p: Product                           => p.productIterator.exists(jumpsTo(_, label, brk))
+    case _                                    => false
 
   /** an unlabelled `continue` belonging to THIS loop. Unlike `breaksOut` it does NOT stop at a
     * `match`: java's `continue` inside a switch continues the enclosing LOOP. */
@@ -878,8 +911,8 @@ final class TirEmitter(source: Program, externalConcrete: Map[String, Set[(Strin
     // …unless it can BREAK out. Before `break` was emitted the loop really was infinite and the
     // unreachable tail was correct; now `boundary { while (true) … }` returns normally, and the
     // synthetic `throw` after it is reached on every exit.
-    case Tree.While(Tree.Literal(Constant.BoolC(true), _, _), b, _, _) => !breaksOut(b)
-    case Tree.For(_, None, b, _, _, _)                                 => !breaksOut(b)
+    case Tree.While(Tree.Literal(Constant.BoolC(true), _, _), b, _, _, _) => !breaksOut(b)
+    case Tree.For(_, None, b, _, _, _, _)                                 => !breaksOut(b)
     case Tree.Block(stats, e, _, _) =>
       endsInInfiniteLoop(e) || (e match {
         case Tree.Literal(Constant.UnitC, _, _) => stats.lastOption.collect { case x: Term => x }.exists(endsInInfiniteLoop)
@@ -1040,8 +1073,8 @@ final class TirEmitter(source: Program, externalConcrete: Map[String, Set[(Strin
     case Tree.Typed(e, tpt, _, _)       => s"${operand(e, i)}.asInstanceOf[${tpe(castTarget(e, tpt.tpe))}]" // Java cast
     case Tree.Repeated(es, _, _)        => es.map(term(_, i)).mkString(", ")
     case Tree.Return(e, _, _)           => "return" + e.map(x => " " + term(x, i)).getOrElse("")
-    case Tree.While(c, b, _, _)         =>
-      loopWithJumps(b, bd => s"while (${term(c, i)}) $bd", term(b, i))
+    case Tree.While(c, b, _, _, lbl)    =>
+      loopWithJumps(b, lbl, bd => s"while (${term(c, i)}) $bd", term(b, i))
     case Tree.Throw(e, _, _)            => s"throw ${term(e, i)}"
     case Tree.InstanceOf(e, tpt, _, _)  => s"${term(e, i)}.isInstanceOf[${tpe(tpt.tpe)}]"
     case Tree.ArrayAccess(a, idx, _, _) => s"${term(a, i)}(${term(idx, i)})"
@@ -1056,15 +1089,15 @@ final class TirEmitter(source: Program, externalConcrete: Map[String, Set[(Strin
         // `new T[a][]`) stays `new Array[elem](a)`.
         case None if dims.sizeIs > 1 => s"scala.Array.ofDim[${tpe(baseElem(el.tpe))}](${dims.map(term(_, i)).mkString(", ")})"
         case None     => s"new scala.Array[${tpe(el.tpe)}](${dims.map(term(_, i)).mkString(", ")})"
-    case Tree.ForEach(b, it, body, _, _) =>
-      loopWithJumps(body, bd => s"for (${esc(sym(b.symbol).name)} <- ${term(it, i)}) $bd", term(body, i))
-    case Tree.For(init, cond, upd, body, _, _) =>
+    case Tree.ForEach(b, it, body, _, _, lbl) =>
+      loopWithJumps(body, lbl, bd => s"for (${esc(sym(b.symbol).name)} <- ${term(it, i)}) $bd", term(body, i))
+    case Tree.For(init, cond, upd, body, _, _, lbl) =>
       // the UPDATE must run on a `continue` too, so it sits OUTSIDE the per-iteration boundary —
       // which is exactly where java's `for` runs it.
       val is = init.map(stat(_, 0)).mkString("; ")
       val c  = cond.map(term(_, i)).getOrElse("true")
       val u  = upd.map(stat(_, 0)).mkString("; ")
-      loopWithJumps(body, bd => s"{ $is; while ($c) { $bd; $u } }", term(body, i))
+      loopWithJumps(body, lbl, bd => s"{ $is; while ($c) { $bd; $u } }", term(body, i))
     case Tree.Try(res, body, catches, fin, _, _) => tryStr(res, body, catches, fin, i)
     case Tree.Match(scr, cases, _, _)   => inSwitch(matchStr(scr, cases, i))
     case Tree.MethodRef(q, s, mrT, _)   =>
@@ -1098,8 +1131,14 @@ final class TirEmitter(source: Program, externalConcrete: Map[String, Set[(Strin
     // a `break` with no boundary around it belongs to a SWITCH, where it means "end this case" —
     // which scala's `match` does anyway. LABELLED jumps are not covered; the emitted-comment
     // counts are the measure of what is left.
+    case Tree.Break(Some(l), _, _) if labelBreak.contains(l) =>
+      val n = labelBreak(l)
+      if n.isEmpty then "scala.util.boundary.break(())" else s"scala.util.boundary.break(())(using $n)"
     case Tree.Break(_, _, _)            => "/* break */ ()"
     case Tree.Continue(scala.None, _, _) if contBoundary => "scala.util.boundary.break(())"
+    case Tree.Continue(Some(l), _, _) if labelCont.contains(l) =>
+      val n = labelCont(l)
+      if n.isEmpty then "scala.util.boundary.break(())" else s"scala.util.boundary.break(())(using $n)"
     case Tree.Continue(_, _, _)         => "/* continue */ ()" // TODO: scala.util.boundary
     case Tree.Assert(c, m, _, _)        => s"assert(${term(c, i)}${m.map(x => ", " + term(x, i)).getOrElse("")})"
     // Java's POST-increment yields the value BEFORE the update; the pre-form yields it after.
@@ -1110,8 +1149,8 @@ final class TirEmitter(source: Program, externalConcrete: Map[String, Set[(Strin
     case Tree.IncDec(tgt, op, post, _, _) =>
       if post then s"{ val ${'$'}prev = ${term(tgt, i)}; ${term(tgt, i)} $op= 1; ${'$'}prev }"
       else s"{ ${term(tgt, i)} $op= 1; ${term(tgt, i)} }"
-    case Tree.DoWhile(b, c, _, _)       => // Scala 3 has no do-while
-      loopWithJumps(b, bd => s"while ({ $bd; ${term(c, i)} }) ()", term(b, i))
+    case Tree.DoWhile(b, c, _, _, lbl)  => // Scala 3 has no do-while
+      loopWithJumps(b, lbl, bd => s"while ({ $bd; ${term(c, i)} }) ()", term(b, i))
     case Tree.Synchronized(l, b, _, _)  => s"${term(l, i)}.synchronized ${term(b, i)}"
     case Tree.Opaque(raw, _, _)         => raw
 

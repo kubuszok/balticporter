@@ -137,7 +137,7 @@ final class IntToOpaqueTransform(
           case _ => ()
         walkTerm(fun, encl); args.foreach(walkTerm(_, encl))
       case Tree.If(c, a, b, _, _) => walkTerm(c, encl); walkTerm(a, encl); walkTerm(b, encl)
-      case Tree.While(c, b, _, _) => walkTerm(c, encl); walkTerm(b, encl)
+      case Tree.While(c, b, _, _, _) => walkTerm(c, encl); walkTerm(b, encl)
       case Tree.Select(q, _, _, _) => walkTerm(q, encl)
       case _ => ()
     def walkStat(s: Statement, encl: SymId): Unit = s match

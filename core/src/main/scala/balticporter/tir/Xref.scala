@@ -133,15 +133,15 @@ object Xref:
       case Tree.If(c, th, el, _, _)         => walkTerm(c); walkTerm(th); walkTerm(el)
       case Tree.Repeated(elems, _, _)       => elems.foreach(walkTerm)
       case Tree.Return(e, _, _)             => e.foreach(walkTerm)
-      case Tree.While(c, b, _, _)           => walkTerm(c); walkTerm(b)
+      case Tree.While(c, b, _, _, _)           => walkTerm(c); walkTerm(b)
       case Tree.Throw(e, _, _)              => walkTerm(e)
       case io @ Tree.InstanceOf(e, tpt, _, _) => walkTerm(e); walkType(tpt.tpe, UsageKind.TypeRefPos, io)
       case Tree.ArrayAccess(a, i, _, _)     => walkTerm(a); walkTerm(i)
       case Tree.ArrayLength(a, _, _)        => walkTerm(a)
       case na @ Tree.NewArray(el, dims, init, _, _) =>
         walkType(el.tpe, UsageKind.Instantiate, na); dims.foreach(walkTerm); init.foreach(_.foreach(walkTerm))
-      case Tree.ForEach(b, it, body, _, _)  => walkValDef(b); walkTerm(it); walkTerm(body)
-      case Tree.For(init, c, upd, body, _, _) =>
+      case Tree.ForEach(b, it, body, _, _, _)  => walkValDef(b); walkTerm(it); walkTerm(body)
+      case Tree.For(init, c, upd, body, _, _, _) =>
         init.foreach(walkStat); c.foreach(walkTerm); upd.foreach(walkStat); walkTerm(body)
       case Tree.Try(res, body, catches, fin, _, _) =>
         res.foreach(walkValDef)
@@ -159,7 +159,7 @@ object Xref:
       case _: Tree.Break | _: Tree.Continue => () // control-flow leaves, no symbol refs
       case Tree.Assert(c, m, _, _)          => walkTerm(c); m.foreach(walkTerm)
       case Tree.IncDec(t, _, _, _, _)       => walkTerm(t)
-      case Tree.DoWhile(b, c, _, _)         => walkTerm(b); walkTerm(c)
+      case Tree.DoWhile(b, c, _, _, _)         => walkTerm(b); walkTerm(c)
       case Tree.Synchronized(l, b, _, _)    => walkTerm(l); walkTerm(b)
       case l @ Tree.Literal(Constant.ClassOfC(tp), _, _) => walkType(tp, UsageKind.TypeArg, l)
       case _: Tree.Literal                  => ()

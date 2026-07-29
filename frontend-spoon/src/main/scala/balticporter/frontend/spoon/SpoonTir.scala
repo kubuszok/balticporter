@@ -1215,6 +1215,11 @@ object SpoonTir:
       private def selfT    = TypeRef(NoPrefix, classId)
       private def ty(e: CtTypedElement[?]): TypeRepr = Option(e.getType).map(tpe).getOrElse(NoType)
       private def thisTerm(el: CtElement): Term  = Tree.This(classId, selfT, originOf(el))
+      /** a java LABEL on a loop (`outer: for (…)`), the target of `break outer` / `continue outer`.
+        * Kept so the emitter can name the corresponding `boundary` and jump to it explicitly. */
+      private def labelOf(s: CtStatement): Option[String] =
+        try Option(s.getLabel).filter(_.nonEmpty) catch { case _: Throwable => scala.None }
+
       private def superTerm(el: CtElement): Term = Tree.Super(classId, selfT, originOf(el))
       /** true when a `this`-access targets THIS class (not an enclosing one) — only then does
         * it need qualifying; an outer `Outer.this.x` resolves bare in Scala. */
@@ -1313,7 +1318,7 @@ object SpoonTir:
           val ret = Option(r.getReturnedExpression).map(e => target.map(tp => coerce(tp, e, expr(e))).getOrElse(expr(e)))
           Tree.Return(ret, nothingT, originOf(r))
         case w: CtWhile =>
-          Tree.While(expr(w.getLoopingExpression), blockTerm(w.getBody), unitT, originOf(w))
+          Tree.While(expr(w.getLoopingExpression), blockTerm(w.getBody), unitT, originOf(w), labelOf(w))
         case t: CtThrow =>
           Tree.Throw(expr(t.getThrownExpression), nothingT, originOf(t))
         case b: CtBlock[?]      => blockTerm(b)
@@ -1323,12 +1328,12 @@ object SpoonTir:
           val v  = f.getVariable
           val vt = tpe(v.getType)
           val id = defineLocal(v, vt)
-          Tree.ForEach(Tree.ValDef(id, tt(vt, v), None, originOf(v)), expr(f.getExpression), blockTerm(f.getBody), unitT, originOf(f))
+          Tree.ForEach(Tree.ValDef(id, tt(vt, v), None, originOf(v)), expr(f.getExpression), blockTerm(f.getBody), unitT, originOf(f), labelOf(f))
         case f: CtFor =>
           val init = f.getForInit.asScala.toList.map(stmt)
           val cond = Option(f.getExpression).map(expr)
           val upd  = f.getForUpdate.asScala.toList.map(stmt)
-          Tree.For(init, cond, upd, blockTerm(f.getBody), unitT, originOf(f))
+          Tree.For(init, cond, upd, blockTerm(f.getBody), unitT, originOf(f), labelOf(f))
         case t: CtTryWithResource =>
           val res = t.getResources.asScala.toList.collect { case lv: CtLocalVariable[?] =>
             val rt = tpe(lv.getType)
@@ -1340,7 +1345,7 @@ object SpoonTir:
         case b: CtBreak           => Tree.Break(Option(b.getTargetLabel), nothingT, originOf(b))
         case c: CtContinue        => Tree.Continue(Option(c.getTargetLabel), nothingT, originOf(c))
         case a: CtAssert[?]       => Tree.Assert(expr(a.getAssertExpression), Option(a.getExpression).map(expr), unitT, originOf(a))
-        case d: CtDo              => Tree.DoWhile(blockTerm(d.getBody), expr(d.getLoopingExpression), unitT, originOf(d))
+        case d: CtDo              => Tree.DoWhile(blockTerm(d.getBody), expr(d.getLoopingExpression), unitT, originOf(d), labelOf(d))
         case y: CtSynchronized    => Tree.Synchronized(expr(y.getExpression), blockTerm(y.getBlock), unitT, originOf(y))
         case u: CtUnaryOperator[?] =>
           import UnaryOperatorKind.*
