@@ -41,37 +41,28 @@ final class CollectionsTransform extends Phase, RequiresRuntime:
     "java.util.Queue"         -> ("scala.collection.mutable.Queue", Kind.Seq),
     "java.util.Deque"         -> ("scala.collection.mutable.ArrayDeque", Kind.Seq),
     "java.util.ArrayDeque"    -> ("scala.collection.mutable.ArrayDeque", Kind.Seq),
-    // NOT `scala.collection.mutable.Iterable`: java's `Collection` is add/remove/contains/size,
-    // and mutable.Iterable offers none of those — `parameters.add(x)` becomes `parameters += x`,
-    // which does not exist there. `Buffer` is the mutable, addable, iterable target; it adds an
-    // ordering guarantee java's `Collection` does not make, which is a widening of contract and
-    // cannot break a caller.
-    // NOT `Buffer`, and the difference only shows for a library that DEFINES a collection rather
-    // than merely using one. simple-graphs has three classes that `extends AbstractCollection<T>`
-    // and declare their own `size()`/`iterator()`/`add`/`remove`; making those a `Buffer` is
-    // CLAUDE.md §4.5 exactly — the scala trait demands members java never had and collides with the
-    // ones it does. Both the interface and its abstract base map to the standalone shim, because
-    // subtyping must hold in BOTH directions (`Collection` is a return type for the library's own
-    // collections and a parameter type for arbitrary ones) and no implicit bridge can supply it:
-    // ENGINE-LIMITS records `given Conversion` inert wherever the call is OVERLOADED, which
+    // The INTERFACE and its ABSTRACT BASE map to the same target, and must: java's
+    // `AbstractCollection implements Collection`, so a port that sent the two to unrelated types
+    // would break the subtype relation the source depends on. It was split once — `Collection` to
+    // `Buffer`, `AbstractCollection` to the shim — and that split is 13 of simple-graphs' 20
+    // errors: every method declared to return a `Collection` while returning the library's own
+    // `Array extends AbstractCollection`, and every `containsAll(Collection<?>)` override.
+    //
+    // The shared target is the SHIM rather than `Buffer` because only one of the two directions has
+    // a repair. A library that merely USES java collections is served by either; one that DEFINES a
+    // collection by extending `AbstractCollection` cannot extend `mutable.Buffer` at all — the
+    // scala trait demands `apply`/`update`/`insert` java never had and collides with the `size()`/
+    // `iterator()` the java class does declare (CLAUDE.md §4.5). Whereas a scala collection meeting
+    // a shim-typed slot IS repairable, by `coerce`, at the slot.
+    //
+    // MEASURED, and the reason `coerce` covers declarations and not only arguments: mapping the
+    // interface here while bridging arguments alone REGRESSED libGDX's test port by 3 — `BezierTest`
+    // declares `Collection<Object[]> parameters = new ArrayList<>()`, a slot no call-site seam sees.
+    //
+    // No implicit bridge is available instead of the seam, and that is measured too: ENGINE-LIMITS
+    // records `given Conversion` inert wherever the call is OVERLOADED, which
     // `addVertices(Collection)` / `addVertices(V...)` is.
-    "java.util.Collection"    -> ("scala.collection.mutable.Buffer", Kind.Seq),
-    // The ABSTRACT base, and only it. A library that merely USES java collections is served by
-    // `Buffer`; one that DEFINES a collection by extending `AbstractCollection` is not — the scala
-    // trait demands `apply`/`update`/`insert` java never had and collides with the `size()`/
-    // `iterator()` the java class does declare (CLAUDE.md §4.5). So the base maps to the standalone
-    // shim while the INTERFACE stays `Buffer`.
-    //
-    // MEASURED: mapping the interface here too was tried and REGRESSED libGDX's test port by 3 —
-    // `BezierTest` declares `Collection<Object[]> parameters = new ArrayList<>()`, so the variable
-    // became a `JavaCollection` while its value stayed an `ArrayBuffer` and `add` had already been
-    // rewritten to `+=`. (The main port was unaffected: its one `java.util.Collection` is inside
-    // the dropped `Json`, which is why checking `gdx/src` alone said the change was free.)
-    //
-    // Closing that needs `JavaCollection.from(...)` inserted where a scala collection meets a
-    // shim-typed slot — the seam `iterableFromSym` already provides for `JavaIterable`. Until then
-    // the split leaves simple-graphs' return-type sites open and every other corpus port green,
-    // which is the honest trade rather than a silent one.
+    "java.util.Collection"         -> (JavaCollectionFqn, Kind.Seq),
     "java.util.AbstractCollection" -> (JavaCollectionFqn, Kind.Seq),
     // likewise NOT `scala.collection.Iterable`: java's `Iterable.iterator()` hands back a
     // REMOVAL-CAPABLE iterator, scala's hands back a `scala.collection.Iterator`. Mapping the
@@ -121,8 +112,10 @@ final class CollectionsTransform extends Phase, RequiresRuntime:
     * makes the failure read like a typo rather than a missing mapping. */
   private var foreachSym: SymId = SymId.None
   private var key1Sym, value2Sym, roSetSym: SymId = SymId.None
-  /** `JavaIterable` + its `from` factory — see `wrapIterableArgs`. */
+  /** `JavaIterable` + its `from` factory — see `coerce`. */
   private var javaIterableSym, iterableFromSym: SymId = SymId.None
+  /** `JavaCollection` + its `from` factory — the same seam, one type up. */
+  private var javaCollectionSym, collectionFromSym: SymId = SymId.None
   /** `JavaIterator.from` — the `iterator` counterpart of `wrapIterableArgs`. */
   private var iteratorFromSym, javaIteratorSym: SymId = SymId.None
 
@@ -156,6 +149,8 @@ final class CollectionsTransform extends Phase, RequiresRuntime:
     roSetSym     = mint("Set", "scala.collection.Set") // see `transformValDef`
     javaIterableSym = byScala.getOrElse(JavaIterableFqn, SymId.None)
     iterableFromSym = mint("from", JavaIterableFqn + ".from")
+    javaCollectionSym = byScala.getOrElse(JavaCollectionFqn, SymId.None)
+    collectionFromSym = mint("from", JavaCollectionFqn + ".from")
     iteratorFromSym = mint("from", JavaIteratorFqn + ".from")
     javaIteratorSym = byScala.getOrElse(JavaIteratorFqn, SymId.None)
     foreachSym          = mint("foreach", "foreach")
@@ -193,7 +188,16 @@ final class CollectionsTransform extends Phase, RequiresRuntime:
     case Some(Tree.Select(recv, sym, _, _))
         if methodName(sym) == "keySet" && kindAt(recv).contains(Kind.Map) && headSym(t.tpt.tpe).exists(kindOf.get(_).contains(Kind.Set)) =>
       t.copy(tpt = TypeTree(withHead(t.tpt.tpe, roSetSym), t.tpt.origin))
+    // a DECLARED slot is an expected type exactly as a formal parameter is — see `coerce`.
+    // `Collection<Object[]> parameters = new ArrayList<>()` is the shape, and it is the one that
+    // regressed libGDX's test port when only arguments were bridged.
+    case Some(rhs) => t.copy(rhs = Some(coerce(t.tpt.tpe, rhs)))
     case _ => t
+
+  /** an assignment's left-hand side declares the expected type just as a `val`'s `tpt` does. */
+  override def transformTerm(t: Term)(using Program): Term = t match
+    case a: Tree.Assign => a.copy(rhs = coerce(a.lhs.tpe, a.rhs))
+    case other          => other
 
   /** replace the head (type-constructor) symbol of a `TypeRef` / `AppliedType`, keeping args. */
   private def withHead(t: TypeRepr, s: SymId): TypeRepr = t match
@@ -220,10 +224,7 @@ final class CollectionsTransform extends Phase, RequiresRuntime:
     * never fires, because scala does not look for one when no OVERLOAD alternative matches; and
     * widening the parameter to `scala.collection.Iterable` breaks the bodies that iterate-and-
     * REMOVE through it. Wrapping the ARGUMENT has neither problem — the type is exact before
-    * overload resolution runs, and the parameter keeps the capability it declares.
-    *
-    * The wrapper's `remove()` inherits [[JavaIterator]]'s `UnsupportedOperationException`, which is
-    * the truth: a scala collection's iterator cannot remove through it. Nothing is lost silently. */
+    * overload resolution runs, and the parameter keeps the capability it declares. */
   private def wrapIterableArgs(t: Tree.Apply)(using p: Program): Tree.Apply =
     if javaIterableSym == SymId.None then t
     else
@@ -233,28 +234,78 @@ final class CollectionsTransform extends Phase, RequiresRuntime:
       }.getOrElse(Nil)
       if formals.sizeIs != t.args.size then t
       else
-        // the symbol table is retyped AFTER the trees (see `run`), so a formal read here is still
-        // the ORIGINAL java symbol — `java.lang.Iterable`, not the shim. Compare through `remap`,
-        // which makes this correct on either side of that pass.
-        def scalaSym(x: SymId): SymId = remap.getOrElse(x, x)
-        val as = t.args.zip(formals).map { (a, f) =>
-          val wants = headSym(f).map(scalaSym).contains(javaIterableSym)
-          val argS  = headSym(a.tpe).map(scalaSym)
-          if wants && argS.exists(kindOf.contains) && !argS.contains(javaIterableSym)
-          then Tree.Apply(Tree.Ident(iterableFromSym, TypeRepr.NoType, a.origin), List(a),
-                          iterableFromSym, f, a.origin)
-          else a
-        }
+        val as = t.args.zip(formals).map((a, f) => coerce(f, a))
         if as == t.args then t else t.copy(args = as)
+
+  /** Bridge a scala collection into a SHIM-TYPED SLOT — an argument, a declared `val`, an
+    * assignment target. Nothing else in the phase decides this; every position routes here.
+    *
+    * The boundary is self-inflicted and unavoidable. `java.util.Collection` and
+    * `java.util.AbstractCollection` must map into the SAME family, because java's abstract base
+    * IMPLEMENTS the interface and a port that broke that subtype relation would leave a library
+    * that defines its own collection unable to return it (`Node.getConnections()` returning the
+    * `Array` that `extends AbstractCollection`) — 13 of simple-graphs' 20 errors, measured. And the
+    * family cannot be scala's, because §4.5: a class extending `mutable.Buffer` must supply
+    * `apply`/`update`/`insert`/`patchInPlace` java never had, and its own `size`/`iterator`/
+    * `remove` collide with the trait's.
+    *
+    * So both map to the shim, and the cost lands on the OTHER side: a scala collection reaching a
+    * shim-typed slot. That is this function, and the reason it is a value-level wrap rather than a
+    * retyping is that only a wrap leaves the declared capability intact.
+    *
+    * Positions matter as much as the rule. Bridging arguments ALONE was tried, and left
+    * `Collection<Object[]> parameters = new ArrayList<>()` (libGDX's `BezierTest`) broken — a
+    * declared slot is an expected type exactly as a formal is, and a seam that knows only about
+    * calls reads as "the mapping is wrong" when it is the seam that is incomplete.
+    *
+    * Conservative by construction: it wraps only when the source is a scala collection the phase
+    * itself introduced (`kindOf`), so a program class that genuinely EXTENDS the shim is left
+    * alone, and an unrecognised type produces an honest compile error rather than a wrong wrap. */
+  private def coerce(expected: TypeRepr, actual: Term): Term =
+    // the symbol table is retyped AFTER the trees (see `run`), so a formal read here is still the
+    // ORIGINAL java symbol — `java.lang.Iterable`, not the shim. Compare through `remap`, which
+    // makes this correct on either side of that pass.
+    def scalaSym(x: SymId): SymId = remap.getOrElse(x, x)
+    val wants = headSym(expected).map(scalaSym)
+    val got   = headSym(actual.tpe).map(scalaSym)
+    // a shim source needs no bridge: `JavaCollection` already IS a `JavaIterable`, and neither can
+    // be rebuilt from the other. `JavaIterator` is Kind.Seq and is NOT a collection — excluded.
+    val fromScala = got.exists(g => kindOf.get(g).contains(Kind.Seq) && !shimSyms.contains(g))
+    val factory =
+      if !fromScala then SymId.None
+      else if wants.contains(javaCollectionSym) then collectionFromSym
+      else if wants.contains(javaIterableSym) then iterableFromSym
+      else SymId.None
+    if factory == SymId.None then actual
+    else Tree.Apply(Tree.Ident(factory, TypeRepr.NoType, actual.origin), List(actual),
+                    factory, expected, actual.origin)
+
+  /** the runtime shims, as scala symbols — a source already typed as one is never re-wrapped. */
+  private def shimSyms: Set[SymId] = Set(javaIterableSym, javaIteratorSym, javaCollectionSym)
 
   /** kind-aware call rewrite; `None` = leave the call as-is (same-named method binds to
     * the scala API against the retyped receiver at compile time). */
   private def rewrite(k: Kind, recv: Term, m: SymId, so: Origin, t: Tree.Apply)(using Program): Option[Term] =
     val name = methodName(m)
     /** is the receiver one of the runtime SHIMS rather than a scala collection? They carry java's
-      * arity and java's `iterator()`, so the scala-shaped rewrites below must leave them alone. */
-    val onShim = headSym(recv.tpe).exists(x => x == javaIterableSym || x == javaIteratorSym)
+      * arity and java's OWN member names, so the scala-shaped rewrites below must leave them alone.
+      *
+      * This is a BLANKET refusal (the `case _ if onShim` arm) and not a guard per rewrite, because
+      * the per-rewrite form has now failed twice. `parenless` and `iterator` were guarded when the
+      * shims were `JavaIterable`/`JavaIterator`; adding `JavaCollection` — which has `add`,
+      * `addAll`, `remove`, `size()` — meant `add` still became `+=` and `addAll` still became `++=`
+      * against a type that has neither. The rule is not "these few rewrites are unsafe on a shim";
+      * it is "every rewrite here reshapes a call for SCALA's collection API, and a shim is
+      * deliberately not one". Exceptions are listed ABOVE the guard, so a new rewrite is safe by
+      * default and an unsafe one cannot be added by omission. */
+    val onShim = headSym(recv.tpe).exists(shimSyms.contains)
     (name, t.args, k) match
+      // The one exception, and the reason it is one: java 8's `forEach(Consumer)` has no
+      // counterpart on the shim itself — `JavaIterable` supplies `foreach` as an EXTENSION, which
+      // is the whole point of the family (§4.5: an extension adds a view and cannot conflict).
+      // Left alone, this is a call to a member that does not exist.
+      case ("forEach", List(f), _) => Some(call(recv, foreachSym, List(f), t, so))
+      case _ if onShim             => None
       // `m.entrySet()` is the VIEW of the map as its (key, value) pairs, and a scala `Map[K, V]`
       // already IS an `Iterable[(K, V)]` — so the view is the map itself. `m.toSet` would be the
       // unfaithful choice: java's `entrySet` is live, and a snapshot silently changes what a
@@ -271,19 +322,19 @@ final class CollectionsTransform extends Phase, RequiresRuntime:
       // removal to offer.
       // Not on the SHIMS themselves — their `iterator` already yields a `JavaIterator`; wrapping it
       // would be a no-op that also loses the parenless form below, emitting `iterable.iterator()`
-      // against a scala-shaped `def iterator` (measured 2 -> 10).
-      case ("iterator", Nil, _) if iteratorFromSym != SymId.None && !onShim =>
+      // against a scala-shaped `def iterator` (measured 2 -> 10). Covered by the blanket guard.
+      case ("iterator", Nil, _) if iteratorFromSym != SymId.None =>
         val sel = Tree.Select(recv, m, t.tpe, t.origin) // parenless, as the generic case below
         Some(Tree.Apply(Tree.Ident(iteratorFromSym, TypeRepr.NoType, so), List(sel), iteratorFromSym, t.tpe, so))
       case ("entrySet", Nil, Kind.Map)          => Some(recv)
       case ("getKey", Nil, Kind.Entry)          => Some(Tree.Select(recv, key1Sym, t.tpe, t.origin))
       case ("getValue", Nil, Kind.Entry)        => Some(Tree.Select(recv, value2Sym, t.tpe, t.origin))
-      // …but never on a SHIM receiver. `parenless` exists because a scala collection's `size`/
-      // `iterator` take no parens; the shims deliberately carry JAVA's arity (`iterator()`,
-      // `hasNext()`, `next()`), because a class that is both java `Iterable` and java `Iterator`
-      // cannot be modelled on scala's collection traits at all. Stripping `()` there emits
-      // `it.hasNext` against `def hasNext()` — 24 measured errors.
-      case (n, Nil, _) if parenless(n) && !onShim     => Some(Tree.Select(recv, m, t.tpe, t.origin)) // drop `()`
+      // …but never on a SHIM receiver (the blanket guard above). `parenless` exists because a scala
+      // collection's `size`/`iterator` take no parens; the shims deliberately carry JAVA's arity
+      // (`iterator()`, `hasNext()`, `next()`), because a class that is both java `Iterable` and java
+      // `Iterator` cannot be modelled on scala's collection traits at all. Stripping `()` there
+      // emits `it.hasNext` against `def hasNext()` — 24 measured errors.
+      case (n, Nil, _) if parenless(n)          => Some(Tree.Select(recv, m, t.tpe, t.origin)) // drop `()`
       case ("get", List(i), Kind.Seq)           => Some(Tree.Apply(recv, List(i), m, t.tpe, t.origin)) // xs(i)
       case ("get", List(key), Kind.Map)         => Some(call(recv, getOrElseSym, List(key, dflt(nullOf(so), recv, so)), t, so))
       case ("getOrDefault", List(key, d), _)    => Some(call(recv, getOrElseSym, List(key, dflt(d, recv, so)), t, so))
@@ -299,9 +350,6 @@ final class CollectionsTransform extends Phase, RequiresRuntime:
         Some(call(call(recv, removeSym, List(key), t, so), getOrElseSym, List(dflt(nullOf(so), recv, so)), t, so))
       case ("add", List(i, x), Kind.Seq)        => Some(call(recv, insertSym, List(i, x), t, so)) // insert at index
       case ("add", List(x), _)                  => Some(infix(recv, opPlusEq, List(x), t, so))    // xs += x
-      // java 8 `forEach(Consumer)` -> scala `foreach`. The names differ ONLY in case, so the error
-      // reads as a typo and the mapping is easy to believe already present.
-      case ("forEach", List(f), _)              => Some(call(recv, foreachSym, List(f), t, so))
       // ---- java Deque, as `LinkedList`/`ArrayDeque` are routinely used ----
       // `addLast`/`offer` append; `addFirst` prepends. Same shape as `add`, different end.
       case ("addLast" | "offer" | "offerLast", List(x), Kind.Seq) => Some(infix(recv, opPlusEq, List(x), t, so))

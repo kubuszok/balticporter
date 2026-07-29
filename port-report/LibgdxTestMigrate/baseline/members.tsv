@@ -26,13 +26,13 @@ sge.math.BSplineTest	sge.math.BSplineTest#<stmt4>	stmt	4c1e770ce0d7f765
 sge.math.BSplineTest	sge.math.BSplineTest#<stmt5>	stmt	ef3f98f5ac875ad6
 sge.math.BSplineTest	sge.math.BSplineTest#<stmt6>	stmt	f09ef20d57768a2d
 sge.math.BSplineTest	sge.math.BSplineTest#<stmt7>	stmt	d1d8734322ec78b2
-sge.math.BezierTest	sge.math.BezierTest	class	af69606059f15bd8
+sge.math.BezierTest	sge.math.BezierTest	class	221fa6320add3252
 sge.math.BezierTest	sge.math.BezierTest#<stmt1>	stmt	2516e73bd636486b
 sge.math.BezierTest	sge.math.BezierTest#bezier	val	ee08ae083220adb0
 sge.math.BezierTest	sge.math.BezierTest#create(Array<Vector2>)	def	ad4129e73b4ad201
 sge.math.BezierTest	sge.math.BezierTest#epsilon	val	be20f39c4a88d2d4
 sge.math.BezierTest	sge.math.BezierTest#epsilonApprimations	val	7d6762ce45d899fd
-sge.math.BezierTest	sge.math.BezierTest#parameters()	def	6cb0a6bffe2d7b11
+sge.math.BezierTest	sge.math.BezierTest#parameters()	def	f125ff2d99a9632b
 sge.math.BezierTest	sge.math.BezierTest#setup()	def	120a62b16fdbd7b3
 sge.math.BezierTest	sge.math.BezierTest#type	val	0770b4995ff111f4
 sge.math.BezierTest	sge.math.BezierTest#useSetter	val	8c113dd012cbff0d
