@@ -1,5 +1,17 @@
 package balticporter.emit
 
+// =============================================================================
+// FROZEN — the BIR emission backend. New work goes on `TirEmitter`, beside this file.
+//
+// This prints `BUnit`s: the untyped Java IR described (and frozen) at the head of
+// `core/Bir.scala`. `TirEmitter` prints the TIR, where every node carries a resolved
+// `TypeRepr` and every reference a `SymId` — which is why it can decide diamonds,
+// constructor funnels and member clashes that this printer can only guess at.
+//
+// Kept because liqp, xwiki/flexmark and jbump still port through it (the corpus
+// programs are listed in `core/Bir.scala`). Fix what they need; add nothing.
+// =============================================================================
+
 import balticporter.core.*
 import balticporter.core.BExpr.*
 
