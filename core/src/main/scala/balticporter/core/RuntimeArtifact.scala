@@ -137,6 +137,9 @@ object RuntimeArtifact:
       ("containsAll", List(1)), ("addAll", List(1)), ("removeAll", List(1)),
       ("retainAll", List(1)), ("removeIf", List(1)), ("toArray", List(0)),
     ),
+    // an `object` of statics — it is never a PARENT, so it contributes no inherited member and
+    // `diamondOverrides` has nothing to see. Empty is the derivation's answer too, not a stub.
+    s"$Package.JavaCollections" -> Set.empty,
   )
 
 /** What a RUN owes the port it produced, derived from the phases that actually ran.

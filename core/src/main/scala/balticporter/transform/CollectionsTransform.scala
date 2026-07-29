@@ -28,7 +28,7 @@ final class CollectionsTransform extends Phase, RequiresRuntime:
     * dependency, its vendored sources and the emitter's external-parent table from it. */
   def runtimeTypes: Set[String] = CollectionsTransform.runtimeTypes
 
-  import CollectionsTransform.{JavaCollectionFqn, JavaIterableFqn, JavaIteratorFqn, Kind}
+  import CollectionsTransform.{JavaCollectionFqn, JavaCollectionsFqn, JavaIterableFqn, JavaIteratorFqn, Kind}
 
   /** java fully-qualified name → (scala fully-qualified name, collection kind). */
   private val typeMap: Map[String, (String, Kind)] = Map(
@@ -38,7 +38,21 @@ final class CollectionsTransform extends Phase, RequiresRuntime:
     // `mutable.Queue` extends `ArrayDeque` extends `Buffer`, so every Seq rewrite above still
     // applies and `removeHeadOption` exists — which `ListBuffer` does not have.
     "java.util.LinkedList"    -> ("scala.collection.mutable.Queue", Kind.Seq),
-    "java.util.Queue"         -> ("scala.collection.mutable.Queue", Kind.Seq),
+    // `java.util.Queue` maps to `ArrayDeque` and NOT to `mutable.Queue`, because the two libraries
+    // order these types OPPOSITELY: java has `ArrayDeque <: Deque <: Queue`, scala has
+    // `Queue <: ArrayDeque`. Sending the interface to `mutable.Queue` and the class to
+    // `mutable.ArrayDeque` therefore INVERTS the relation, and ordinary java — assigning an
+    // `ArrayDeque` to a `Queue`-typed field — stops type-checking. Measured in simple-graphs'
+    // `MinimumWeightSpanningTree`, whose `Queue<Connection<V>>` field is filled from an
+    // `ArrayDeque::new` collector: `Found: ArrayDeque[…] / Required: Queue[…]`.
+    //
+    // This is the third instance of one rule, and the rule is the transferable part: A MAPPING MUST
+    // PRESERVE THE SOURCE LIBRARY'S OWN SUBTYPE RELATIONS. `Collection`/`AbstractCollection` (below)
+    // was the same failure from the other direction. Nothing is lost by mapping to the base:
+    // `mutable.ArrayDeque` has the `removeHeadOption`/`head` this phase's `poll`/`peek` rewrites
+    // need, and `LinkedList -> mutable.Queue` still conforms because scala's `Queue` IS an
+    // `ArrayDeque`.
+    "java.util.Queue"         -> ("scala.collection.mutable.ArrayDeque", Kind.Seq),
     "java.util.Deque"         -> ("scala.collection.mutable.ArrayDeque", Kind.Seq),
     "java.util.ArrayDeque"    -> ("scala.collection.mutable.ArrayDeque", Kind.Seq),
     // The INTERFACE and its ABSTRACT BASE map to the same target, and must: java's
@@ -119,6 +133,10 @@ final class CollectionsTransform extends Phase, RequiresRuntime:
     * `Collections.unmodifiableCollection`. */
   private var javaCollectionSym, collectionFromSym: SymId = SymId.None
   private var unmodifiableFromSym, unmodifiableSym: SymId = SymId.None
+  /** each scala collection symbol → its companion's `from` factory, for `copyConstructor`. */
+  private var fromSyms: Map[SymId, SymId] = Map.empty
+  /** `JavaCollections`' statics, by name — see `sym`. */
+  private var staticSyms: Map[String, SymId] = Map.empty
   /** the `java.util.stream` collapse — see `staticRewrite`. */
   private var asScalaBufferSym, filteredSym: SymId = SymId.None
   /** `mutable.Buffer`, so a collapsed stream can be TYPED as what it now emits. */
@@ -166,6 +184,14 @@ final class CollectionsTransform extends Phase, RequiresRuntime:
     asScalaBufferSym    = mint("asScalaBuffer", JavaCollectionFqn + ".asScalaBuffer")
     filteredSym         = mint("filtered", JavaCollectionFqn + ".filtered")
     bufferSym           = byScala.getOrElse("scala.collection.mutable.Buffer", SymId.None)
+    staticSyms = CollectionsTransform.StaticHelpers
+      .map(n => n -> mint(n, s"$JavaCollectionsFqn.$n")).toMap
+    // one `from` per DISTINCT scala target, so `new ArrayList<>(c)` copies through the companion the
+    // target type actually has. `Tuple2` is excluded: it is a `Kind.Entry`, not a collection, and
+    // `Tuple2.from` does not exist — the `kindOf` gate in `copyConstructor` never offers it one.
+    fromSyms = byScala.collect {
+      case (fqn, id) if fqn.startsWith("scala.collection.") => id -> mint("from", s"$fqn.from")
+    }.toMap
     iteratorFromSym = mint("from", JavaIteratorFqn + ".from")
     javaIteratorSym = byScala.getOrElse(JavaIteratorFqn, SymId.None)
     foreachSym          = mint("foreach", "foreach")
@@ -222,13 +248,41 @@ final class CollectionsTransform extends Phase, RequiresRuntime:
 
   override def transformApply(t: Tree.Apply)(using Program): Term =
     val t2 = wrapIterableArgs(t)
-    staticRewrite(t2).getOrElse {
+    copyConstructor(t2).orElse(staticRewrite(t2)).getOrElse {
       t2.fun match
         case Tree.Select(recv, m, _, so) => kindAt(recv) match
           case Some(k) => rewrite(k, recv, m, so, t2).getOrElse(t2)
           case None    => t2
         case _ => t2
     }
+
+  /** Java's collection COPY CONSTRUCTOR — `new ArrayList<>(c)`, `new HashSet<>(c)`,
+    * `new HashMap<>(m)`, `new ArrayDeque<>(c)`.
+    *
+    * The type mapping alone is not enough and the failure is asymmetric, which is what makes this
+    * worth its own rule. `new ArrayList<>(10)` is a CAPACITY hint and maps correctly by accident —
+    * `new ArrayBuffer(10)` means the same thing. `new ArrayList<>(c)` is a COPY, and
+    * `new ArrayBuffer(c)` is `Required: Int`. Two java constructors, one scala constructor, and only
+    * one of the two lands: measured in simple-graphs' `Graph.sortEdges`, as
+    * `new ArrayBuffer[Tuple2[…]](this.edgeMap)` against `Required: Int`.
+    *
+    * `<Companion>.from(c)` is the scala counterpart, and every `scala.collection.mutable` companion
+    * this phase targets has it. Gated on the ARGUMENT being a collection, so a capacity hint is left
+    * exactly as it is. */
+  private def copyConstructor(t: Tree.Apply)(using Program): Option[Term] = t.fun match
+    case n: Tree.New =>
+      val target = headSym(n.tpe).filter(kindOf.contains)
+      val single = t.args match
+        case List(a) if headSym(a.tpe).exists(kindOf.contains) => Some(a)
+        case _                                                 => scala.None
+      for
+        tgt <- target
+        arg <- single
+        f   <- fromSyms.get(tgt)
+      // the copy is typed as the TARGET, not as the argument: `new HashMap<>(aTreeMap)` is a
+      // `HashMap`, and a node must describe what it emits (see `staticRewrite`).
+      yield Tree.Apply(Tree.Ident(f, TypeRepr.NoType, t.origin), List(arg), f, n.tpe, t.origin)
+    case _ => scala.None
 
   /** `java.util.Collections`' STATIC utilities — a receiver-less call, so `rewrite` (which is keyed
     * on the receiver's collection kind) never sees them and the call is emitted verbatim against
@@ -256,6 +310,17 @@ final class CollectionsTransform extends Phase, RequiresRuntime:
       case (Some("java.util.Collections#unmodifiableCollection"), List(c)) if unmodifiableSym != SymId.None =>
         Some(factory(unmodifiableSym, List(c)))
 
+      // ---- java.util.Collections / Map.Entry statics — see JavaCollections ----
+      case (Some("java.util.Collections#sort"), List(xs, cmp))    => Some(factory(sym("sort"), List(xs, cmp)))
+      case (Some("java.util.Collections#sort"), List(xs))         => Some(factory(sym("sortNatural"), List(xs)))
+      case (Some("java.util.Collections#reverse"), List(xs))      => Some(factory(sym("reverse"), List(xs)))
+      // `Map.Entry` became a `Tuple2`, so `Entry`'s own statics must come along or the call survives
+      // to the compiler naming a type the port no longer produces.
+      case (Some("java.util.Map$Entry#comparingByKey" | "java.util.Map.Entry#comparingByKey"), List(cmp)) =>
+        Some(factory(sym("comparingByKey"), List(cmp)))
+      case (Some("java.util.Map$Entry#comparingByValue" | "java.util.Map.Entry#comparingByValue"), List(cmp)) =>
+        Some(factory(sym("comparingByValue"), List(cmp)))
+
       // ---- java.util.stream: the CHAIN collapses, it does not translate call-for-call ----
       //
       // `xs.stream().filter(p).collect(Collectors.toList())` is three calls in java and one in
@@ -282,6 +347,17 @@ final class CollectionsTransform extends Phase, RequiresRuntime:
       // its `filter` produced `Found: java.util.stream.Stream[String] / Required: Buffer[A]`:
       // measured 0 -> 1 on the test port. A stream chain from a non-collection source is simply not
       // translated, and must fail as such.
+      case (Some("java.util.stream.Stream#sorted"), List(cmp)) if collapsed(recv) =>
+        recv.map(r => Tree.Apply(Tree.Ident(sym("sortedWith"), TypeRepr.NoType, t.origin), List(r, cmp),
+                                 sym("sortedWith"), r.tpe, t.origin))
+      case (Some("java.util.stream.Stream#collect"), List(collector))
+          if collapsed(recv) && qualified(collectorOf(collector)).contains("java.util.stream.Collectors#toCollection") =>
+        // `toCollection(Factory::new)` carries its target INSIDE the collector, as a factory — so the
+        // collapse cannot end at the receiver the way `toList` does. `into` builds the factory's
+        // collection and fills it, which is what java's collector does.
+        val f = collector match { case a: Tree.Apply => a.args; case _ => Nil }
+        if f.sizeIs != 1 then None
+        else recv.map(r => factory(sym("into"), List(r, f.head)))
       case (Some("java.util.stream.Stream#filter"), List(pred)) if filteredSym != SymId.None && collapsed(recv) =>
         recv.map(r => Tree.Apply(Tree.Ident(filteredSym, TypeRepr.NoType, t.origin), List(r, pred),
                                  filteredSym, r.tpe, t.origin))
@@ -292,6 +368,12 @@ final class CollectionsTransform extends Phase, RequiresRuntime:
           if collapsed(recv) && qualified(collectorOf(collector)).contains("java.util.stream.Collectors#toList") =>
         recv
       case _ => None
+
+  /** a `JavaCollections` static by name. Minted EAGERLY in `run` — symbols cannot be added once the
+    * table is built, and the table is built before the traversal that consults these. An unlisted
+    * name yields `SymId.None`, which `staticRewrite` treats as "not available" rather than emitting a
+    * dangling reference. */
+  private def sym(name: String): SymId = staticSyms.getOrElse(name, SymId.None)
 
   /** the method a collector expression calls, so `collect`'s argument can be identified. */
   private def collectorOf(t: Term): SymId = t match
@@ -520,6 +602,15 @@ object CollectionsTransform:
   val JavaIteratorFqn = s"${RuntimeArtifact.Package}.JavaIterator"
   val JavaIterableFqn = s"${RuntimeArtifact.Package}.JavaIterable"
   val JavaCollectionFqn = s"${RuntimeArtifact.Package}.JavaCollection"
+  /** `java.util.Collections`' statics — a receiver-less utility class, which is why they need their
+    * own home rather than a rewrite keyed on a receiver's collection kind. */
+  val JavaCollectionsFqn = s"${RuntimeArtifact.Package}.JavaCollections"
+
+  /** every `JavaCollections` member the transform may emit. One list, so a new JDK utility is one
+    * line here, one arm in `staticRewrite` and one method in the runtime object — and a typo is a
+    * `SymId.None` that declines the rewrite rather than a dangling name in emitted code. */
+  val StaticHelpers: List[String] =
+    List("sort", "sortNatural", "reverse", "comparingByKey", "comparingByValue", "sortedWith", "into")
 
   /** Support types the retyping REQUIRES. They live in the PUBLISHED `balticporter-runtime`
     * module (`runtime/src/main/scala`), not here — see [[RuntimeArtifact]] for why a per-port copy
@@ -546,7 +637,7 @@ object CollectionsTransform:
     * (`Predicate.PredicateIterator`, `CharArray.appendWithSeparators`, `ModelLoader.loadSync`)
     * would stop type-checking. Two types, one decision.
     */
-  val runtimeTypes: Set[String] = Set(JavaIteratorFqn, JavaIterableFqn, JavaCollectionFqn)
+  val runtimeTypes: Set[String] = Set(JavaIteratorFqn, JavaIterableFqn, JavaCollectionFqn, JavaCollectionsFqn)
 
   /** What [[runtimeSources]] BRINGS, for a consumer that must reason about the injected
     * supertypes it cannot parse. `JavaIterator.remove` is concrete (java's own documented default),
