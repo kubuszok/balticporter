@@ -419,6 +419,11 @@ object CtorFunnel:
 
   /** the leading `super(args)` of a constructor, when it passes arguments — exactly what a
     * secondary constructor cannot express. */
+  private def headName(program: Program, t: TypeRepr): Option[String] = t match
+    case TypeRepr.TypeRef(_, s)      => program.symbolOf(s).map(_.fullName)
+    case TypeRepr.AppliedType(tc, _) => headName(program, tc)
+    case _                           => scala.None
+
   def superArgsOf(program: Program, d: Tree.DefDef): List[Term] = stmtsOf(d).headOption match
     case Some(Tree.Apply(Tree.Select(_: Tree.Super, m, _, _), args, _, _, _)) if isInitName(program, m) => args
     case _                                                                                              => Nil
@@ -441,8 +446,42 @@ object CtorFunnel:
       val roots = ctors.filterNot(delegatesToThis(program, _))
       // a Java GENERIC constructor has no Scala primary form either (the class's own type params
       // are the only ones in scope in an `extends` clause) — leave it a secondary.
+      // Several roots, each with its own `super(args)`: nominating the NILARY one makes a nilary
+      // primary available but silently drops every other root's arguments — which is how
+      // `SerializationException(String message) { super(message); }` became
+      // `def this(message: String) = { this() }` and every exception in the port lost its message.
+      //
+      // Nominate the WIDEST super call instead, so `extends Parent(a, b)` carries the arguments,
+      // and let the narrower roots delegate to it ([[superDelegation]] in the emitter). Only when
+      // that root passes its own parameters STRAIGHT THROUGH to super, since the delegation is
+      // built by substituting the other root's super arguments into those parameters. This is the
+      // shape the reference port writes by hand:
+      //   `enum SgeError(message: String, cause: Option[Throwable]) extends Exception(message, cause.orNull)`
+      /** does this class extend a JDK THROWABLE? Its constructor set is fixed and public — `()`,
+        * `(String)`, `(String, Throwable)`, `(Throwable)` — which is what makes null-padding a
+        * shorter super call exact rather than a guess. A java fact, not a library one. */
+      def throwableParent: Boolean =
+        cd.parents.headOption.flatMap {
+          case tt: TypeTree => headName(program, tt.tpe)
+          case t: Term      => headName(program, t.tpe)
+        }.exists(n => n == "java.lang.Throwable" ||
+                      (n.startsWith("java.") && (n.endsWith("Exception") || n.endsWith("Error"))))
+      def passesThrough(c: Tree.DefDef): Boolean =
+        val ps = c.paramss.flatten.map(_.symbol)
+        superArgsOf(program, c).map { case Tree.Ident(x, _, _) => x; case _ => SymId.None } == ps && ps.nonEmpty
       val chosen = roots match
         case one :: Nil if one.tparams.isEmpty => Some(one)
+        case several if throwableParent =>
+          // ONLY for a JDK throwable parent. The delegation pads a shorter super call with `null`,
+          // and that is equivalent to the parent's own narrower overload for exactly one family:
+          // `Throwable(String)` vs `Throwable(String, null)`, which is the JDK's own documented
+          // constructor set. For any other parent — `DistanceFieldFont extends BitmapFont` has
+          // seven roots reaching different overloads — padding is a GUESS, and guessing there
+          // measured 0 -> 55 errors. Those stay counted by `OmissionCheck`.
+          val widest = several.filter(c => c.tparams.isEmpty && passesThrough(c))
+            .sortBy(c => -superArgsOf(program, c).size).headOption
+          widest.filter(w => several.exists(o => (o ne w) && superArgsOf(program, o).nonEmpty))
+            .orElse(several.find(c => c.paramss.flatten.isEmpty && c.tparams.isEmpty))
         case several                           => several.find(c => c.paramss.flatten.isEmpty && c.tparams.isEmpty)
       chosen match
         case None    => Plan.none
