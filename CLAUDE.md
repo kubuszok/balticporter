@@ -252,6 +252,43 @@ And count what the constructor funnel PROMOTES — the chosen constructor's para
 top-level locals. Neither is in the class body, both become members, and a Java constructor local
 becoming a Scala member is exactly what a subclass then collides with.
 
+## 4.56 A rename decides OWNERSHIP structurally, never by name
+
+Any pass that rewrites a name by prefix — package rename above all — must first answer *does this
+program declare this symbol?*, and must answer it from STRUCTURE, not from the string. A prefix
+match alone rewrites the standard library: `Map("java" -> "j")` turns `java.lang.String` into
+`j.lang.String` and every honest map that happens to share a prefix does the same, silently, with a
+green compile.
+
+The TIR answers it: the frontend interns an external symbol lazily with `owner = SymId.None` and no
+`Definition`, while everything the program declares hangs off a top-level unit through the `owner`
+chain. So **a symbol is owned iff climbing its owners reaches a `program.units` symbol** — stronger
+than "has a definition", which anonymous-class symbols do not.
+
+Two corollaries for any prefix rule:
+
+- **Cut only at a separator.** `Symbol.fullName` uses three: `.` between packages and the top-level
+  type, `$` before a nested type, `#` before a member. `com.foo` must not cover `com.foobar`, and
+  everything after the cut is carried across verbatim or nested-type paths break — at EMISSION,
+  not at the rename.
+- **A namespace rename runs LAST.** Every other phase's policy (`ClassTableTransform` redirects,
+  `StaticForwarderTransform` wrappers, `Substitutions` drops, opaque-type hints) is written in the
+  UPSTREAM namespace. Rename first and all of them match nothing — a phase that does nothing, with
+  no error. `runsAfter` cannot say "after everything"; `Pipeline.order` is stable in declaration
+  order, so the porting program places it last and `PackageRenameTransform.check` verifies it.
+
+## 4.57 Every emission backend carries PROVENANCE — it is a licence obligation
+
+Each library in reach of this engine is licensed (Apache-2.0 so far) and every port is a derived
+work, so every generated file ships an attribution header. Nothing in the pipeline reports a
+missing one — the output compiles perfectly without it — so a new backend loses the header silently,
+which is exactly how the TIR path regressed a feature the BIR path had.
+
+Take the source path from the unit's `Origin`, never from its FQN: a renamed or nested type does not
+live where its FQN suggests, and after a package rename the FQN is not the upstream one at all.
+Where the origin cannot be relativised, say so in the header — a wrong-but-plausible path defeats
+the only purpose the line has.
+
 ## 4.6 A kill switch beats another condition
 
 When a synthesized construct is wrong, first establish **which code produces it** — do not add a
