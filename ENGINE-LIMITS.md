@@ -831,14 +831,43 @@ approximation, not an equivalence.
 
 *Fix kind: (a), unbuilt.*
 
-### X5. `@After`, `@Ignore`, Hamcrest and JUnit 5 are NOT handled
+### X5. JUnit lifecycle and enablement — CLOSED, except what has no translation
 
-Confirmed absent. `@After` leaves a `tearDown` as an ordinary never-called method — the **same silent
-shape** as the `@Before` defect, but on the release side: tests pass and leak state. `@Ignore` would
-**enable** a disabled test. `@BeforeClass`/`@AfterClass`/`@Rule`, JUnit 5 and TestNG degrade
-semi-loudly through the `org.junit.` portability rule. See `LIBRARY-READINESS.md` §3.2.
+`@After` used to leave a `tearDown` as an ordinary never-called method — the **same silent shape** as
+the `@Before` defect, but on the release side: tests passed and leaked state. `@Ignore` **enabled** a
+disabled test, turning an upstream "we know this is broken" into a green result that meant nothing.
 
-*Fix kind: (a), unbuilt.*
+Both now translate, and the shape matters more than the mapping:
+
+- **`@After` is `try { … } finally { tearDown() }`, not a trailing call.** JUnit's statement chain is
+  `afters(befores(expectException(invoke)))`, so teardown runs *whether or not the body threw* —
+  which is exactly the case teardown exists for. Appending the call to the end of the body is the
+  form that compiles and is wrong. `@Before` calls go INSIDE the `try`, so a setup that throws still
+  tears down. Deviation kept honest: JUnit runs each `@After` in its own try/catch collecting
+  errors, and orders subclass before superclass; the port runs them in declaration order in one
+  `finally`.
+- **`@Ignore` is `test(munit.TestOptions("n").ignore) { … }`**, on a method or a whole class. Not
+  `"n".ignore` — that needs MUnit's implicit `String` conversion, and this emitter writes
+  fully-qualified names with no imports (§6). The body is kept: it still has to compile.
+- `@BeforeClass` / `@AfterClass` → `beforeAll()` / `afterAll()`.
+
+**What has no translation is now REPORTED, with its §1 class, instead of vanishing:** `@Rule`,
+`@ClassRule`, `@RunWith`, JUnit 5, TestNG, JUnit 3's `TestCase` subclass, and Hamcrest `assertThat`.
+All classify **(a)** — which is itself the finding: none is fixable by configuring a phase or writing
+a library rule.
+
+`@RunWith` is the one worth understanding before you try: a custom runner changes how tests are
+**enumerated**, so a converted suite runs a different *set* of tests from Java's while looking
+complete. Hamcrest is a second assertion vocabulary; inventing a mapping is precisely the silent
+miss this project exists to prevent.
+
+**Two claims here were false and are corrected.** JUnit 5 reaches the `org.junit.` prefix rule only
+through the *term* reference from an assertion call — annotation types are not in the xref at all,
+since `Xref` walks trees and not `Symbol.annotations`, so a JUnit-5 suite whose assertions came from
+elsewhere is invisible. And **TestNG matches no rule whatsoever**; `PortabilityCheck.check` returns
+`Nil` for it. A test now pins that `Nil` so it fails the day a rule is added.
+
+*Fix kind: (a) for the residue, and it is reported rather than silent. Lifecycle: BUILT.*
 
 ---
 
