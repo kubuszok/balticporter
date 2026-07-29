@@ -671,16 +671,26 @@ A base class whose every member is `assertEquals(a, b) => assert(a == b)` or
 `testCase(n, b) => test(n)(b)` contributes nothing over what it wraps. Shipping it means every new
 porting effort copy-pastes shared glue, which is a failure of a re-compiler.
 
+Both offenders are gone: `PortedSuite` (K4) and the `Asserts` assertion façade (X2), the second of
+which looked like the first rule's case — "MUnit's type constraint is a semantic gap" — and was not.
+The test that separates them: could the engine EMIT the difference from what it already knows? A
+removal-capable iterator, no. An argument order and a numeric widening the transform holds both
+types for, yes.
+
 *Fix kind: (a) for what to inject; see `LIBRARY-READINESS.md` §1.3 for the distribution work.*
 
-### K4. The TIR has no node for a CURRIED APPLICATION
+### K4. RETRACTED — the TIR expresses a CURRIED APPLICATION perfectly well
 
-`test(name)(body)` is two argument lists and cannot be emitted; that is the *only* reason an
-un-curried forwarder ever existed. Until `Tree.Apply` takes multiple argument lists (or a
-curried-apply node exists), any target API whose idiom is curried needs a shim you should expect to
-delete later.
+This entry said `test(name)(body)` could not be emitted, and that an un-curried forwarder in an
+injected base class was therefore unavoidable. **It was wrong.** `Tree.Apply.fun` is itself a `Term`,
+so two argument lists are a NESTED `Apply` — exactly how `quotes.reflect` models currying. The
+scaffold was built over a gap that did not exist, and both it and the `Asserts` façade that rode
+along on the same file have been deleted.
 
-*Fix kind: (a), unbuilt.*
+Kept, rather than removed, as the standing warning: before concluding that an IR cannot express a
+target idiom, build the tree and emit it. This one cost a base class shipped into every port.
+
+*Fix kind: (a). No work outstanding.*
 
 ---
 
@@ -742,36 +752,75 @@ failure messages.
 
 *Fix kind: (a), target framework parameterised (b).*
 
-### X2. MUnit's `assertEquals` is TYPE-CONSTRAINED — 1 → 33, and all 33 are the transform's job
+### X2. CLOSED — MUnit's `assertEquals` is TYPE-CONSTRAINED, and all 33 errors were the transform's job
 
-Java's `assertEquals(Object, Object)` compares anything; MUnit's is `B <:< A`. Mapping directly
-measured **1 → 33**. An earlier reading of that number concluded a shipped helper was justified.
-**That was wrong**, and the breakdown says so:
+Java's `assertEquals(Object, Object)` compares anything; MUnit's `assertEquals[A, B]` needs a
+`Compare[A, B]`. Mapping directly measured **1 -> 33**, and an early reading of that number
+concluded a shipped helper was justified. **That was wrong twice over** — first because the errors
+were shape adaptation (K3), and then because closing them measured **33 -> 0**:
 
-| cause | count | shimmable by the transform? |
+| cause | count | closed by |
 |---|---|---|
-| `Can't compare these two types: Long / Int` | 26 | YES — the engine has both static types and can widen the narrower operand |
-| `Not found: assertEquals` / `fail` | 6 | YES — see X3 |
+| `Can't compare these two types: Long / Int` | 26 | re-applying JAVA'S BINARY NUMERIC PROMOTION in the transform — widen the NARROWER operand from the two static types the TIR already carries, and promote a `Char`/`Short` pair to `Int` since neither widens to the other |
+| `Not found: assertEquals` / `fail` | 6 | X3 |
 | unrelated pre-existing error | 1 | — |
 
-Probed directly against MUnit 1.0.2, all of these COMPILE, so nothing else is missing:
-`assertEquals(o, s)`, `assertEquals(s, o)`, `assertEquals(o, null)`, `assertEquals(b, false)`,
-`assertNotEquals(o, null)`, `assertEquals(a.toSeq, b.toSeq)`, `intercept[E]{…}`, and
-`assertEqualsDouble`/`assertEqualsFloat` for the delta forms.
+Measured 2026-07-29: `balticporter.runtime.Asserts` deleted, **0 compile errors, 217/221 tests
+passing** — the same four `Json.fromJson` substitution failures as before. Nothing ships with the
+port. Do not re-derive whether the helper is needed; it is not.
 
-So the whole helper is **shape adaptation**, which K3 forbids. It needs two transform-side,
-TYPE-DIRECTED changes: widen the narrower operand of a mixed-numeric comparison, and X3.
+The whole mapping is argument PERMUTATION, which is what a re-compiler is for. Every shape below was
+probed directly against MUnit 1.0.2 and compiles:
 
-*Fix kind: (a).*
+| junit | MUnit |
+|---|---|
+| `assertEquals(expected, actual)` | `assertEquals(actual, expected)` |
+| `assertEquals(message, expected, actual)` | `assertEquals(actual, expected, message)` — java's LEADING message is MUnit's TRAILING clue |
+| `assertEquals(e, a, delta)` | `assertEqualsFloat` / `assertEqualsDouble`, chosen by the WIDTH of the widest operand |
+| `assertTrue(b)` / `assertFalse(b)` | `assert(b)` / `assertEquals(b, false)` |
+| `assertNull(o)` / `assertNotNull(o)` | `assertEquals(o, null)` / `assertNotEquals(o, null)` |
+| `assertSame` / `assertNotSame` | `assert(a eq e)` / `assert(a ne e)` — **never `assertEquals`**, which is java's `equals` (`CLAUDE.md` §4.4) |
+| `assertArrayEquals(e, a)` | `assertEquals(a.toSeq, e.toSeq)` |
+| `fail()` | `fail("failed")` — MUnit has no no-argument form |
 
-### X3. A Java `static` test helper emits into the COMPANION OBJECT, where instance assertions are invisible
+**One junit assertion has no MUnit counterpart at all**: `assertArrayEquals(e, a, delta)`,
+elementwise-with-tolerance. Emit it as the loop it means — bind BOTH arrays to locals first, since
+the operands are arbitrary expressions and naming each once is the difference between java's one
+evaluation and one per element — and check the lengths before the elements, as junit does. Dropping
+the delta and comparing `.toSeq` is STRICTER than java and fails tests that pass upstream.
 
-~9 errors. If your target framework puts its assertions on an instance base class, anything Java
-made `static` cannot see them. Emitting the framework's own calls directly — no base class of your
-own — does not have this problem at all, because the assertions are **imported rather than
-inherited**. That is a second, independent argument against a scaffold base suite.
+Two traps in the numeric widening, both real:
 
-*Fix kind: (a).*
+- **Read which overload was resolved from the ARGUMENTS' static types, not from the callee's
+  signature.** Both were available (the Spoon frontend encodes the erased signature into an external
+  member's `fullName`), but only the argument types are an IR contract. Java's optional leading
+  `String message` is separable structurally: a leading `String` is the message exactly when the
+  call has more arguments than the member's minimal arity — which distinguishes every junit overload
+  that exists without naming one.
+- **A widening conversion needs its receiver PARENTHESIZED.** `a * b` is a bare `Apply` in the TIR
+  but renders infix, so `.toLong` on it attaches to `b`: `x >> 2.toLong` is not `(x >> 2).toLong`.
+
+*Fix kind: (a). Closed in `TestFrameworkTransform`.*
+
+### X3. CLOSED — a Java `static` test helper emits into the COMPANION OBJECT; use the framework's assertion OBJECT
+
+~6 errors (`Not found: assertEquals` / `fail`). If your target framework puts its assertions on an
+instance base class, anything Java made `static` cannot see them: it lands in the companion object,
+which does not extend the suite.
+
+**The fix is NOT to move the helper onto the suite.** That was the obvious answer and it is the
+worse one — it changes which scope every static member of a test class lives in, and a helper named
+`test` (libGDX has one) then overloads the framework's own registration method. MUnit declares every
+assertion twice, on the `Assertions` TRAIT that `FunSuite` mixes in and on the `munit.Assertions`
+OBJECT, and an object member resolves identically from a suite body, a companion object, a nested
+class and a lambda. Emit every assertion fully qualified through the object and the scope question
+disappears instead of being answered — which also satisfies `CLAUDE.md` §6.
+
+Generalise the shape, not the name: **when a target framework offers its assertions as both
+inherited members and object members, emit the object members.** Inheritance is the only one of the
+two that a translated scope can fail to reach.
+
+*Fix kind: (a). Closed in `TestFrameworkTransform`.*
 
 ### X4. Calling `@Before` at the head of each test does not reproduce JUnit's FRESH INSTANCE
 
