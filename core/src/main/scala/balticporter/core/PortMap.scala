@@ -168,6 +168,43 @@ object PortMap:
       case (from, to) :: rest if !rest.exists(_._2.length == to.length) => from + emitted.substring(to.length)
       case _                                                           => emitted
 
+  /** The upstream FQN a unit came from, taken from its JAVA ORIGIN rather than from its emitted
+    * name.
+    *
+    * `unrename` inverts a package rename, and a rename is not always invertible: Ashley's policy
+    * flattens `com.badlogic.ashley.core` AND `com.badlogic.ashley` onto `sge.ecs`, so `sge.ecs.X`
+    * genuinely could have come from either and no tie-break gets both `sge.ecs.Engine` (from
+    * `…core`) and `sge.ecs.signals.Signal` (from `…ashley`) right. Declining to guess is correct —
+    * and it made every one of Ashley's 21 shared types unfindable to its own test port, because a
+    * dependent looks the base up by upstream name.
+    *
+    * The origin is ground truth and rename-proof: `com/badlogic/ashley/core/Component.java` says
+    * exactly what the java was called. This is the same rule the provenance header already follows
+    * (CLAUDE.md §4.57 — take the path from `Origin`, never reconstruct it from the FQN).
+    *
+    * The trailing `$Inner` / `#member` of the emitted name is carried across, because the file names
+    * only the TOP-LEVEL type. */
+  private def upstreamOf(emitted: String, javaPath: String, renames: scala.collection.Map[String, String]): String =
+    if javaPath.isEmpty || javaPath.startsWith("<") then unrename(emitted, renames)
+    else
+      // The file gives the PACKAGE, never the type name. A java file may declare more than one
+      // top-level type — only the public one has to match the filename — and libGDX has exactly
+      // that: `MtlLoader` lives in `ObjLoader.java`. Taking the FQN from the path renamed it to
+      // `ObjLoader` and left the base's map without an entry a dependent could find.
+      //
+      // A package rename moves the PACKAGE and leaves the simple name alone, so the two halves come
+      // from the two places that actually know them.
+      val dir = javaPath.stripSuffix(".java").replace('\\', '/')
+      val pkg = dir.lastIndexOf('/') match
+        case i if i > 0 => dir.substring(0, i).replace('/', '.')
+        case _          => ""
+      // the emitted name's own top-level simple name, plus whatever follows it (`$Inner`, `#m(…)`).
+      val cut  = emitted.indexWhere(c => c == '$' || c == '#')
+      val head = if cut < 0 then emitted else emitted.substring(0, cut)
+      val tail = if cut < 0 then "" else emitted.substring(cut)
+      val simple = head.substring(head.lastIndexOf('.') + 1)
+      (if pkg.isEmpty then simple else s"$pkg.$simple") + tail
+
   /** Assemble the map. Pure: every argument is something the run already holds.
     *
     * @param emittedTypes  fully-qualified names of the units this run WROTE
@@ -194,8 +231,11 @@ object PortMap:
       renames: scala.collection.Map[String, String],
       sourceRoot: Option[Path] = scala.None,
   ): Map0 =
+    // emitted FQN -> the java file it came from, so `upstreamOf` can use the ORIGIN.
+    val originOf: scala.collection.Map[String, String] =
+      srcMap.entries.iterator.map(e => e.unit -> e.javaPath).toMap
     val typeEntries = emittedTypes.sorted.map { emitted =>
-      val upstream = unrename(emitted, renames)
+      val upstream = upstreamOf(emitted, originOf.getOrElse(emitted, ""), renames)
       Entry("type", upstream, emitted,
         if upstream != emitted then Disposition.Renamed else Disposition.Ported)
     }
@@ -217,7 +257,7 @@ object PortMap:
       .map { e =>
         // `upstream` is the LOOKUP key and therefore the erased, manifest-shaped form; `emitted`
         // keeps the precise signature the emitter produced.
-        val upstream = erase(unrename(e.member, renames))
+        val upstream = erase(upstreamOf(e.member, e.javaPath, renames))
         Entry("member", upstream, e.member,
           if upstream != erase(e.member) then Disposition.Renamed else Disposition.Ported,
           body = bodyKeys(upstream) || bodyKeys(e.member),

@@ -71,8 +71,35 @@ final class PackageRenameTransform(renames: Map[String, String] = Map.empty) ext
     if renames.isEmpty then program
     else
       val owned = PackageRenameTransform.ownedSymbols(program)
+      // Prefixes the port DEMONSTRABLY declares types under — the ones that also cover at least one
+      // OWNED symbol. Only these reach external symbols.
+      //
+      // That is what makes the relaxation safe without naming the JDK. A prefix under which this
+      // program declares nothing is not this port's namespace, whatever the policy says, so
+      // `Map("java" -> "jvm")` still cannot touch `java.lang.String`. A prefix under which it
+      // declares 605 units plainly is, and the types it merely SUBSTITUTES there — parsed by
+      // nobody, interned as external, replacement injected — move with it.
+      val portOwnedPrefixes: Set[String] =
+        val ownedNames = program.symbols.all.iterator.filter(s => owned(s.id)).map(_.fullName).toList
+        renames.keySet.filter(p => ownedNames.exists(n => PackageRenameTransform.longestMatch(n, Set(p)).isDefined))
       val table = program.symbols.all.foldLeft(program.symbols) { (t, s) =>
-        if !owned(s.id) then t
+        // OWNED, or merely UNDER one of the renamed prefixes.
+        //
+        // The second half is not a weakening of the ownership rule, it is the rest of it. A type
+        // this run never parsed can still be the PORT's: a `Substitutions.dropTypes` entry whose
+        // replacement is injected Scala is interned as an external symbol, because nothing
+        // translated it — yet it lives in the library's own namespace and its replacement file
+        // moves with the rename. Renaming only owned symbols left every REFERENCE to such a type
+        // behind: libGDX's `SharedLibraryLoader`, `Os` and the injected `AssetTypeRegistry` kept
+        // `com.badlogic.gdx.*` while the files they name became `sge.*` — 8 errors, and the shape
+        // that produced them is "a port that both substitutes and renames", i.e. every real port.
+        //
+        // It stays safe for the reason ownership was checking in the first place: a prefix here is
+        // a namespace the PORT DECLARED as its own, and no JDK or stdlib type is under it. The
+        // hostile case the ownership rule exists for — `Map("java" -> "jvm")` rewriting
+        // `java.lang.String` — is now a policy that declares it owns `java`, which is a different
+        // and self-inflicted error from a prefix accidentally colliding with one.
+        if !(owned(s.id) || PackageRenameTransform.longestMatch(s.fullName, portOwnedPrefixes).isDefined) then t
         else
           PackageRenameTransform.longestMatch(s.fullName, renames.keySet) match
             case scala.None => t
@@ -105,7 +132,7 @@ object PackageRenameTransform:
 
   /** longest covering prefix — so a map holding both `com.foo` and `com.foo.bar` renames a symbol
     * under `com.foo.bar` by the more specific entry, as a namespace map is read everywhere else. */
-  private def longestMatch(fullName: String, prefixes: Set[String]): Option[String] =
+  private[transform] def longestMatch(fullName: String, prefixes: Set[String]): Option[String] =
     prefixes.filter(covers(fullName, _)).maxByOption(_.length)
 
   /** Symbols the program DECLARES, as opposed to externals the frontend interned on first

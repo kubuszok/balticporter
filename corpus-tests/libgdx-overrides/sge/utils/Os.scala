@@ -1,4 +1,4 @@
-package com.badlogic.gdx.utils
+package sge.utils
 
 /** INJECTED SCALA (Substitutions.inject): the operating-system tag libGDX's
   * removed `SharedLibraryLoader` exposed. Dropped upstream in sge along with the

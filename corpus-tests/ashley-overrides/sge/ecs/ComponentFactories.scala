@@ -1,4 +1,4 @@
-package com.badlogic.ashley.core
+package sge.ecs
 
 /** Component instantiation for a port that has no reflection.
   *

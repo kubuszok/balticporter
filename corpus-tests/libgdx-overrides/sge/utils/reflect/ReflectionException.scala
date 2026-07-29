@@ -1,4 +1,4 @@
-package com.badlogic.gdx.utils.reflect
+package sge.utils.reflect
 
 /** INJECTED SCALA (Substitutions.inject) — see [[ClassReflection]] for why the `reflect` package
   * is substituted rather than ported. */

@@ -101,6 +101,14 @@ object AshleyPolicy:
     LibgdxPolicy.core(repoRoot).extendedBy(PortManifest(
       name    = "ashley",
       governs = Set("com.badlogic.ashley"),
+      // sge puts Ashley at `sge.ecs`, FLATTENING the `core` package away — its tree is
+      // `sge/ecs/Engine.scala` with `signals`, `systems` and `utils` beside it. Two entries express
+      // that under longest-prefix-wins: `…ashley.core` loses a segment, everything else keeps its
+      // own. libGDX's `com.badlogic.gdx -> sge` is INHERITED from the base manifest, not restated.
+      packageRenames = Map(
+        "com.badlogic.ashley.core" -> "sge.ecs",
+        "com.badlogic.ashley"      -> "sge.ecs",
+      ),
       // Ashley's OWN replacements. `inject` is not inherited — exactly one module ships each
       // replacement file, and libGDX core ships the ones for the types IT dropped.
       inject  = List(repoRoot.resolve("corpus-tests/ashley-overrides")),
@@ -120,8 +128,13 @@ object AshleyPolicy:
         // bookkeeping — translates mechanically, so dropping the TYPE to fix one method would fork
         // it from upstream permanently. This replaces the BODY and nothing else; the signature,
         // and therefore every call site, is untouched.
+        // NB the two namespaces. The KEY names the member in the UPSTREAM namespace, because the
+        // phase matches it against the model before the rename runs. The BODY is spliced verbatim
+        // into emitted code and the rename never sees it, so it must already be written in the
+        // port's FINAL namespace. Getting that backwards is one compile error naming `com.badlogic`
+        // in a file that declares `package sge.ecs`.
         "com.badlogic.ashley.core.Engine#createComponent(Class)" ->
-          "com.badlogic.ashley.core.ComponentFactories.create(componentType)",
+          "sge.ecs.ComponentFactories.create(componentType)",
         )),
         // LAST, deliberately. This reads what the BASE actually emitted and reports a reference the
         // base does not ship — so it must run AFTER the seams that re-point those references, or it

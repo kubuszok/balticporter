@@ -95,6 +95,18 @@ object LibgdxPolicy:
       dropMethods = s.dropMethods,
       inject      = s.inject,
       surface     = mainPhases,
+      // The namespace the CONSUMER actually uses. sge is `package sge`, with libGDX's own
+      // subpackages carried straight through — `sge/maps`, `sge/scenes`, `sge/math`, `sge/graphics`
+      // are all there in the hand port — so one prefix pair moves the whole library and
+      // longest-prefix-wins does the rest.
+      //
+      // Emitting the upstream namespace was never a cosmetic mismatch: neither sge nor ssg can
+      // adopt output that declares `com.badlogic.gdx`, because their entire dependent codebase is
+      // written against the renamed one (LIBRARY-READINESS §1.5).
+      //
+      // The keys of every OTHER policy — dropTypes, dropMethods, the forwarder and class-table
+      // maps — stay upstream, because they are consulted at the frontend, before this runs.
+      packageRenames = Map("com.badlogic.gdx" -> "sge"),
     )
 
   /** libGDX's own JUnit suite, as a DEPENDENT of [[core]].

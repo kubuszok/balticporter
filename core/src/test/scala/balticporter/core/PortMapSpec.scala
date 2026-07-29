@@ -46,12 +46,16 @@ class PortMapSpec extends munit.FunSuite:
     assertEquals(m.types.map(e => (e.emitted, e.disposition)), List(("p.Helper", Disposition.Added)))
   }
 
-  test("a package rename is REVERSED, so `upstream` is the name a dependent's Java still uses") {
-    val m = build(
-      emitted = List("port.ui.Widget"),
-      members = List(member("port.ui.Widget", "port.ui.Widget#draw(Batch)")),
-      renames = Map("up.stream.lib" -> "port"),
-    )
+  test("`upstream` comes from the JAVA ORIGIN, so it survives a non-invertible rename") {
+    // The origin is ground truth. Inverting the rename works only while the rename is injective,
+    // and a real one need not be: flattening two upstream packages onto one target makes
+    // `port.ui.X` genuinely ambiguous, and every shared type then becomes unfindable to a
+    // dependent — which looks the base up BY UPSTREAM NAME. Same rule as the provenance header
+    // (CLAUDE.md §4.57): take the path from `Origin`, never reconstruct it from the FQN.
+    val srcEntry = SrcMap.Entry("port.ui.Widget", "port.ui.Widget#draw(Batch)", "def", 1, 2,
+      "up/stream/lib/ui/Widget.java", 10, "d0")
+    val m = PortMap.of("m", "eng", List("port.ui.Widget"), SrcMap.Recording(List(srcEntry)),
+      Set.empty, Set.empty, Set.empty, Set.empty, Map("up.stream.lib" -> "port"))
     val t = m.types.head
     assertEquals(t.upstream, "up.stream.lib.ui.Widget")
     assertEquals(t.emitted, "port.ui.Widget")

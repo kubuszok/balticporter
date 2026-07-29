@@ -1,6 +1,6 @@
-package com.badlogic.gdx.graphics.g3d.particles
+package sge.graphics.g3d.particles
 
-import com.badlogic.gdx.utils.reflect.ReflectionException
+import sge.utils.reflect.ReflectionException
 
 import scala.collection.mutable
 
@@ -41,8 +41,8 @@ object AssetTypeRegistry:
     byName.getOrElse(name, throw new ReflectionException("Asset type not registered: " + name))
 
   register(
-    classOf[com.badlogic.gdx.graphics.Texture],
-    classOf[com.badlogic.gdx.graphics.g2d.TextureAtlas],
-    classOf[com.badlogic.gdx.graphics.g3d.Model],
-    classOf[com.badlogic.gdx.graphics.g3d.particles.ParticleEffect],
+    classOf[sge.graphics.Texture],
+    classOf[sge.graphics.g2d.TextureAtlas],
+    classOf[sge.graphics.g3d.Model],
+    classOf[sge.graphics.g3d.particles.ParticleEffect],
   )

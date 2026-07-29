@@ -1,7 +1,7 @@
-package com.badlogic.gdx.utils
+package sge.utils
 
-import com.badlogic.gdx.files.FileHandle
-import com.badlogic.gdx.utils.JsonWriter.OutputType
+import sge.files.FileHandle
+import sge.utils.JsonWriter.OutputType
 
 import java.io.{InputStream, Reader, StringWriter, Writer}
 

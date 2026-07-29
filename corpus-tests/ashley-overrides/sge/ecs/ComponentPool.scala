@@ -1,4 +1,4 @@
-package com.badlogic.ashley.core
+package sge.ecs
 
 /** A component pool that builds instances from a FACTORY instead of reflectively.
   *
@@ -43,7 +43,7 @@ final class ComponentPool[T](componentType: Class[T], initialSize: Int, maxSize:
   def free(obj: T): Unit =
     if obj != null then
       obj match
-        case p: com.badlogic.gdx.utils.Pool.Poolable => p.reset()
+        case p: sge.utils.Pool.Poolable => p.reset()
         case _                                       => ()
       if free.size < maxSize then free.addLast(obj)
 

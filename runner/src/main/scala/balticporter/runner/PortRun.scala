@@ -287,7 +287,14 @@ final case class PortRun(
       val full = program.symbolOf(u.symbol).map(_.fullName).getOrElse("Unit")
       // Substitutions.dropTypes: PARSED (so every reference to it still resolves) but NOT emitted —
       // the injected replacement supplies this FQN instead.
-      if policySubs.dropsType(full) then dropped += 1
+      //
+      // Decided by the frontend's `Substituted` TAG, not by matching `full` against the drop set.
+      // `full` is the name AFTER the package rename, and every drop key is written in the UPSTREAM
+      // namespace — so a renamed port matched none of them and emitted all 11 dropped types while
+      // reporting `0 dropped`. The tag is applied at parse time and is therefore rename-proof.
+      // (Kept as a fallback for a symbol the frontend never tagged.)
+      val substituted = program.symbolOf(u.symbol).exists(Substituted.tags)
+      if substituted || policySubs.dropsType(full) then dropped += 1
       else
         write(outDir.resolve(full.replace('.', '/') + ".scala"), translated.sourceOf(u))
         written += 1

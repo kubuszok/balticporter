@@ -5,9 +5,9 @@ omissions	46
 policy	1
 port-map	0
 portability(all)	151
-portability(emitted)	67
+portability(emitted)	151
 portability(injected)	2
-remediation	14
+remediation	29
 signature	0
 substitution(dangling)	0
 substitution(emitted)	0

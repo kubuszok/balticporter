@@ -77,6 +77,12 @@ class PortMapAcceptanceSpec extends munit.FunSuite:
     assertEquals(clue(phase.findings).filter(_.issue == PortMapTransform.Issue.Ambiguous), Nil)
 
     // The other thing the map surfaces early on this corpus, kept as a number rather than a list so
-    // it moves when the port does: PooledEngine's references to the dropped `ReflectionPool`.
-    assertEquals(phase.findings.count(_.issue == PortMapTransform.Issue.DroppedType), 7)
+    // it moves when the port does: Ashley's references to types the base drops — `ReflectionPool`
+    // in `PooledEngine`, and `ClassReflection` + `ReflectionException` in `Engine`.
+    //
+    // 7 -> 8 when the map's `upstream` column stopped being derived by INVERTING the package rename
+    // and started coming from the java ORIGIN. The eighth is `Engine`'s `catch (ReflectionException
+    // e)`: a genuine reference to a dropped type that the map could not name while its key was
+    // wrong. A number that rises because the lookup got correct is the check starting to work.
+    assertEquals(phase.findings.count(_.issue == PortMapTransform.Issue.DroppedType), 8)
   }

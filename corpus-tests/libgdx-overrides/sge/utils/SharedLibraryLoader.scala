@@ -1,4 +1,4 @@
-package com.badlogic.gdx.utils
+package sge.utils
 
 import java.nio.file.Files
 
