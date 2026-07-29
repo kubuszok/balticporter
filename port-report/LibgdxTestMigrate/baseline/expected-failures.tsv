@@ -1,0 +1,16 @@
+# Tests this port is EXPECTED to fail, and why. Read by balticporter.tir.Correlate; a test listed
+# here is reported as expected rather than as a regression, and one that starts PASSING is reported
+# too, because a substitution that began working is news.
+#
+# This is per-library POLICY (CLAUDE.md §1c) and therefore DATA: nothing in `core` may name a
+# ported library, so the engine cannot know that `Json.fromJson` is deliberately absent. When
+# LIBRARY-READINESS.md §1.2's `PortRun` lands it should GENERATE this file from the port's own
+# `Substitutions` — a test whose stack reaches a dropped type is expected by construction — and
+# this hand-written form becomes the fallback for failures a manifest cannot predict.
+#
+# `test` may be `*` to declare a whole suite.
+#suite	test	reason
+com.badlogic.gdx.utils.JsonTest	testFromJsonObject	Substitutions.dropTypes com.badlogic.gdx.utils.Json — the injected replacement throws until a codec is bound (sge replaces the reflection-based Json with Kindlings Jsoniter/UBJson)
+com.badlogic.gdx.utils.JsonTest	testFromJsonArray	Substitutions.dropTypes com.badlogic.gdx.utils.Json — as above
+com.badlogic.gdx.utils.JsonTest	testCharFromNumber	Substitutions.dropTypes com.badlogic.gdx.utils.Json — as above
+com.badlogic.gdx.utils.JsonTest	testReuseReader	Substitutions.dropTypes com.badlogic.gdx.utils.Json — as above

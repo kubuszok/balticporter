@@ -52,10 +52,116 @@ final class TirEmitter(
 
   def emitUnit(cd: Tree.ClassDef): String =
     currentDeclared = declaredTypes(cd)
+    slots.clear(); stmtSeq.clear()
     val body = classDef(cd, 0)
     val full = sym(cd.symbol).fullName
     val pkg  = if full.contains('.') then s"package ${full.substring(0, full.lastIndexOf('.'))}\n\n" else ""
-    header(cd) + pkg + body
+    val text = header(cd) + pkg + body
+    if SrcMap.enabled then SrcMap.record(full, srcMapOf(full, cd, text))
+    text
+
+  // ---------------------------------------------------------------------------
+  // SOURCE MAP — member → emitted line range → Java Origin (UNPORTABLE-DESIGN.md §5.2)
+  //
+  // Emitted Scala had provenance only at the FILE level, so a scalac error or a stack frame could
+  // not be attributed to a member, let alone to the Java that produced it. Every TIR node already
+  // carries an `Origin` and the emitter knows the text it is writing; the two just never met.
+  //
+  // Positions are recovered by SEARCH rather than by threading an offset through every rendering
+  // function: each class-body member is remembered as the exact string it rendered to, and
+  // `srcMapOf` locates those strings in the finished unit. That keeps the instrumentation to one
+  // wrapper — `memberStat` — instead of a cursor parameter on ~40 methods, and it cannot change a
+  // byte of output, which is the property that lets the map be added without re-measuring the port.
+  //
+  // The search is sound because slots are reserved PRE-ORDER (a slot is appended before its member
+  // renders, so a nested class precedes its own members) and the cursor only ever moves forward by
+  // one character past a match. A nested member is therefore still findable inside its owner, while
+  // two textually identical siblings resolve to two different positions.
+  // ---------------------------------------------------------------------------
+
+  private final class Slot(val member: String, val kind: String, val origin: Origin):
+    var text: String = ""
+  private val slots   = collection.mutable.ArrayBuffer.empty[Slot]
+  private val stmtSeq = collection.mutable.Map.empty[String, Int]
+
+  /** [[stat]] for a member of a CLASS BODY, remembering what it rendered to. Identical to `stat`
+    * in every observable way, and not even called when the map is off. */
+  private def memberStat(s: Statement, i: Int): String =
+    if !SrcMap.enabled then stat(s, i)
+    else
+      val slot = new Slot(memberKey(s), memberKind(s), s.origin)
+      slots += slot
+      val t = stat(s, i)
+      slot.text = t
+      t
+
+  /** A member's stable identity. `owner#name` for anything that has a symbol — the form the rest
+    * of this engine already uses (`Substitutions.dropMethods`, `RewriteTrace`) — with the
+    * parameter types appended for a `def`, because Java overloading routinely puts eight `encode`s
+    * in one class and a key that merges them cannot say which one changed.
+    *
+    * A class-body statement with NO symbol (a `@Test` body that a phase lowered to
+    * `test("…"){ … }`, an initialiser) gets an ordinal within its owner. Ordinals shift when a
+    * sibling is added, which over-reports change and never under-reports it; the statement's own
+    * `Origin` — recorded beside it — is the part that actually locates the Java. */
+  private def memberKey(s: Statement): String =
+    val owner = classStack.lastOption.map(x => sym(x).fullName).getOrElse("?")
+    s match
+      case d: Tree.DefDef if !isInitBlock(d) =>
+        s"${sym(d.symbol).fullName}(${d.paramss.flatten.map(v => shortTpe(v.tpt.tpe)).mkString(",")})"
+      case d: Definition => sym(d.symbol).fullName
+      case _ =>
+        val n = stmtSeq.getOrElse(owner, 0) + 1
+        stmtSeq(owner) = n
+        s"$owner#<stmt$n>"
+
+  private def memberKind(s: Statement): String = s match
+    case _: Tree.ClassDef => "class"
+    case d: Tree.DefDef   =>
+      if isInitBlock(d) then "init" else if sym(d.symbol).name == "<init>" then "ctor" else "def"
+    case _: Tree.ValDef  => "val"
+    case _: Tree.TypeDef => "type"
+    case _               => "stmt"
+
+  /** simple, structural rendering of a parameter type — enough to tell two overloads apart without
+    * dragging fully-qualified names (and their churn) into a key. */
+  private def shortTpe(t: TypeRepr): String = t match
+    case TypeRepr.AppliedType(tc, as) if as.nonEmpty => shortTpe(tc) + as.map(shortTpe).mkString("<", ",", ">")
+    case _                                           => headSymOf(t).map(x => sym(x).name).getOrElse("?")
+
+  /** Locate every remembered member in the finished unit text. The unit itself is always entry
+    * one, spanning the whole file: a line that falls between members (a brace, a blank line, the
+    * package clause) then still resolves to the right Java FILE instead of to nothing. */
+  private def srcMapOf(unit: String, cd: Tree.ClassDef, text: String): List[SrcMap.Entry] =
+    val root   = SrcMap.sourceRootOf(unit, cd.origin.javaPath)
+    val starts = collection.mutable.ArrayBuffer(0)
+    var k      = text.indexOf('\n')
+    while k >= 0 do { starts += k + 1; k = text.indexOf('\n', k + 1) }
+    val ls = starts.toArray
+    def lineOf(off: Int): Int =
+      var lo = 0; var hi = ls.length - 1
+      while lo < hi do { val mid = (lo + hi + 1) / 2; if ls(mid) <= off then lo = mid else hi = mid - 1 }
+      lo + 1
+    val out = collection.mutable.ListBuffer(
+      SrcMap.Entry(unit, unit, "class", 1, lineOf(math.max(0, text.length - 1)),
+                   SrcMap.relativise(cd.origin.javaPath, root), cd.origin.line,
+                   TirPrinter.sha256(text).take(16)))
+    var cursor = 0
+    slots.foreach { s =>
+      if s.text.nonEmpty then
+        val at = text.indexOf(s.text, cursor)
+        // A member that cannot be found in the finished text is a hole in the map, and a map with
+        // silent holes attributes an error to the wrong member. Counted and printed (SrcMap.write),
+        // never swallowed — CLAUDE.md §3: the check arrives with the translation.
+        if at < 0 then SrcMap.missed(unit, s.member)
+        else
+          cursor = at + 1
+          val st = lineOf(at)
+          out += SrcMap.Entry(unit, s.member, s.kind, st, st + s.text.count(_ == '\n'),
+                              SrcMap.relativise(s.origin.javaPath, root), s.origin.line,
+                              TirPrinter.sha256(s.text).take(16))
+    }
+    out.toList
 
   /** The attribution + do-not-edit banner, in the same shape the BIR printer
     * ([[balticporter.emit.ScalaPrinter.header]]) has always emitted — one header, so a port that
@@ -450,12 +556,12 @@ final class TirEmitter(
     // an object) — otherwise it stays a `class` with its statics in a companion object.
     if kw == "class" && parents.isEmpty && cd.body.nonEmpty && !hasInstanceState && pparams.isEmpty && !extendedTypes(cd.symbol) then
       val members = cd.body.filterNot { case d: Tree.DefDef => sym(d.symbol).name == "<init>"; case _ => false }
-      val ob = orderBody(members, pparams.nonEmpty).map(stat(_, i + 1)).filter(_.nonEmpty).mkString("\n")
+      val ob = orderBody(members, pparams.nonEmpty).map(memberStat(_, i + 1)).filter(_.nonEmpty).mkString("\n")
       return s"${ind(i)}object ${esc(s.name)}$tps {\n$ob\n${ind(i)}}"
     // Java statics have no instance home in Scala — they move to the companion object.
     val (statics, instance) = if s.flags.isModule then (Nil, loweredBody) else loweredBody.partition(isStatic)
     val self    = cd.selfType.map(st => s"${ind(i + 1)}self: ${tpe(st.tpe)} =>\n").getOrElse("")
-    val body0   = joinStats(orderBody(instance, pparams.nonEmpty).map(stat(_, i + 1)).filter(_.nonEmpty))
+    val body0   = joinStats(orderBody(instance, pparams.nonEmpty).map(memberStat(_, i + 1)).filter(_.nonEmpty))
     val diamonds = diamondOverrides(cd, i + 1)
     val body    = if diamonds.isEmpty then body0 else joinStats(List(body0).filter(_.nonEmpty) ++ diamonds)
     val open    = if body.isEmpty && self.isEmpty then "" else s" {\n$self$body\n${ind(i)}}"
@@ -509,7 +615,7 @@ final class TirEmitter(
     }
     if statics.isEmpty && parentExports.isEmpty then cls
     else
-      val sb = (parentExports ++ orderBody(statics).map(stat(_, i + 1)).filter(_.nonEmpty)).mkString("\n")
+      val sb = (parentExports ++ orderBody(statics).map(memberStat(_, i + 1)).filter(_.nonEmpty)).mkString("\n")
       s"$cls\n${ind(i)}object ${esc(s.name)} {\n$sb\n${ind(i)}}"
 
   /** Java enum → `sealed abstract class Name <parents-minus-Enum> { members }` plus a
@@ -535,7 +641,7 @@ final class TirEmitter(
     // constant name), so `name()` returns it. Skip if the enum already declares a `name` member.
     val hasName = instance.exists { case d: Definition => sym(d.symbol).name == "name"; case _ => false }
     val nameM   = if hasName then Nil else List(s"${ind(i + 1)}def name(): java.lang.String = this.toString()")
-    val members = orderBody(instance).map(stat(_, i + 1)).filter(_.nonEmpty) ++ nameM
+    val members = orderBody(instance).map(memberStat(_, i + 1)).filter(_.nonEmpty) ++ nameM
     val cbody   = members.mkString("\n")
     val cls     = s"${ind(i)}sealed abstract class $name$eprimary$ext" + (if cbody.isEmpty then "" else s" {\n$cbody\n${ind(i)}}")
     val cases = cd.enumCases.map { ec =>
@@ -549,7 +655,7 @@ final class TirEmitter(
     // Java's `Enum.valueOf(String)` — resolve a constant by name (throws like the JDK on no match).
     val vArms  = cd.enumCases.map(ec => esc(sym(ec.symbol).name)).map(n => s"""${ind(i + 2)}case "$n" => $n""").mkString("\n")
     val valueOf = s"${ind(i + 1)}def valueOf(name: java.lang.String): $name = name match {\n$vArms\n${ind(i + 2)}case _ => throw new java.lang.IllegalArgumentException(name)\n${ind(i + 1)}}"
-    val objBody = (cases :+ values :+ valueOf) ++ statics.map(stat(_, i + 1)).filter(_.nonEmpty)
+    val objBody = (cases :+ values :+ valueOf) ++ statics.map(memberStat(_, i + 1)).filter(_.nonEmpty)
     s"$cls\n${ind(i)}object $name {\n${objBody.mkString("\n")}\n${ind(i)}}"
 
   // a Java `static` nested class has no instance home in Scala → it moves to the companion

@@ -49,4 +49,12 @@ grep -oE "\[E[0-9]+\][^:]*Error" /tmp/gdxmeasure.txt | sort | uniq -c | sort -rn
 echo "-- bare (uncoded) errors by message --"
 grep -A1 '^-- Error:' /tmp/gdxmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
 
+# A count is not a triage. Join every error back to the member and the JAVA LINE it came from, and
+# split it into "at a region the engine marked approximate" vs "engine gap" (UNPORTABLE-DESIGN.md
+# §6.3). With no markers minted yet everything lands in the second lane — which is the honest
+# answer, and the lane an agent in another repository has to act on.
+echo
+echo "-- correlation: every error located to its member and its Java origin --"
+correlate "$REPORT/run-latest" --scalac /tmp/gdxmeasure.txt --srcmap "$REPORT/run-latest/srcmap.tsv"
+
 headline "$ERRORS" "$REPORT"

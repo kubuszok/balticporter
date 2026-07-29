@@ -42,11 +42,35 @@ case "$CMD" in
     [ -n "$PORT" ] || { echo "usage: $0 accept <port>"; exit 2; }
     [ -f "$DIR/run-latest/findings.tsv" ] || { echo "no run-latest for $PORT — run the migration first"; exit 1; }
     mkdir -p "$DIR/baseline"
-    # only the two DETERMINISTIC files are promoted. report.md carries the absolute source root and
-    # is a human document; diff.txt is derived. Committing either would put churn in the baseline.
-    cp "$DIR/run-latest/findings.tsv" "$DIR/run-latest/counts.tsv" "$DIR/baseline/"
+    # Only DETERMINISTIC, position-free files are promoted:
+    #   findings.tsv / counts.tsv  — the four checks
+    #   members.tsv                — one digest per emitted member; this is what makes "you changed
+    #                                3 members you did not intend to" answerable before a compile,
+    #                                and it is line-free so a member that only MOVED does not churn
+    #   tests.tsv                  — the pass/fail set; the behavioural baseline, and the only one
+    #                                that can catch a CLAUDE.md §4.4 regression
+    # srcmap.tsv is deliberately NOT promoted: it is positional by construction and would rewrite
+    # itself on every emit. report.md carries the absolute source root and diff.txt is derived.
+    for f in findings.tsv counts.tsv members.tsv tests.tsv; do
+      if [ -f "$DIR/run-latest/$f" ]; then cp "$DIR/run-latest/$f" "$DIR/baseline/"; fi
+    done
     echo "baseline accepted for $PORT:"
     cat "$DIR/baseline/counts.tsv"
+    if [ -f "$DIR/baseline/members.tsv" ]; then
+      echo "members: $(grep -vc '^#' "$DIR/baseline/members.tsv" || true)"
+    fi
+    if [ -f "$DIR/baseline/tests.tsv" ]; then
+      echo "tests:   $(grep -c $'\tpass$' "$DIR/baseline/tests.tsv" || true) passing, $(grep -c $'\tfail$' "$DIR/baseline/tests.tsv" || true) failing"
+    fi
+    # A failing test in the baseline is a REGRESSION-FREE state only if someone said why it fails.
+    if [ -f "$DIR/baseline/tests.tsv" ] && [ ! -f "$DIR/baseline/expected-failures.tsv" ] && \
+       grep -q $'\tfail$' "$DIR/baseline/tests.tsv"; then
+      echo
+      echo "NOTE: this baseline contains failing tests and there is no expected-failures.tsv."
+      echo "      Declare each deliberate failure (a substituted type, a dropped method) there —"
+      echo "      '#suite<TAB>test<TAB>reason', '*' for a whole suite — or they read as regressions"
+      echo "      that someone once accepted."
+    fi
     echo
     echo "commit port-report/$PORT/baseline/ with the change that produced it."
     ;;
