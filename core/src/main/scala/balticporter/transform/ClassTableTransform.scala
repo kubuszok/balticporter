@@ -1,6 +1,6 @@
 package balticporter.transform
 
-import balticporter.core.{PolicyFinding, PolicyIssue, PolicyReport, PolicySource}
+import balticporter.core.{PolicyFinding, PolicyIssue, PolicyReport, PolicySource, SurfacePolicy}
 import balticporter.tir.*
 import balticporter.tir.TypeRepr.NoType
 
@@ -33,8 +33,14 @@ import balticporter.tir.TypeRepr.NoType
   * A key naming a member the program does not have is a NO-OP — the lookup stays reflective and
   * the port stays JVM-only, with nothing said. [[policyReport]] is what says it.
   */
-final class ClassTableTransform(redirects: Map[String, String]) extends Phase, PolicySource:
+final class ClassTableTransform(redirects: Map[String, String]) extends Phase, PolicySource, SurfacePolicy:
   def name: String = "class-table"
+
+  /** Two ports that redirect different lookups produce different call sites for the same shared
+    * code, so the redirect table is part of the emitted surface a dependent module has to match.
+    * Sorted — an unsorted rendering would make two agreeing manifests compare unequal on a map's
+    * iteration order. */
+  def surfaceFingerprint: String = redirects.toList.sorted.map((k, v) => s"$k->$v").mkString(",")
 
   /** callee symbol → (table type symbol, table member symbol) */
   private var mapping: Map[SymId, (SymId, SymId)] = Map.empty

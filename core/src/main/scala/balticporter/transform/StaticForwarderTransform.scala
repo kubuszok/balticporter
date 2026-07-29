@@ -1,6 +1,6 @@
 package balticporter.transform
 
-import balticporter.core.{PolicyFinding, PolicyIssue, PolicyReport, PolicySource}
+import balticporter.core.{PolicyFinding, PolicyIssue, PolicyReport, PolicySource, SurfacePolicy}
 import balticporter.tir.*
 import balticporter.tir.TypeRepr.NoType
 
@@ -30,8 +30,16 @@ import balticporter.tir.TypeRepr.NoType
   * matched by NAME where the name is overloaded (receiver-first is an assumption about the
   * wrapper's shape that a name alone cannot carry).
   */
-final class StaticForwarderTransform(forwarders: List[StaticForwarderTransform.Forwarder]) extends Phase, PolicySource:
+final class StaticForwarderTransform(forwarders: List[StaticForwarderTransform.Forwarder]) extends Phase, PolicySource, SurfacePolicy:
   def name: String = "static-forwarder-inline"
+
+  /** Inlining a forwarder REMOVES a dependency from the emitted code, so a dependent module that
+    * inlines a different set of members compiles against a wrapper the base no longer references —
+    * the forwarder list is part of the shared surface. Sorted at every level, or two agreeing
+    * manifests compare unequal on a `Set`'s iteration order. */
+  def surfaceFingerprint: String =
+    forwarders.map(f => s"${f.wrapper}->${f.receiver}${f.members.toList.sorted.mkString("(", ",", ")")}")
+      .sorted.mkString(",")
 
   private var mapping: Map[SymId, SymId] = Map.empty
 

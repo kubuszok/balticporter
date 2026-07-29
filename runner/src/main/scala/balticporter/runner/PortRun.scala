@@ -109,6 +109,14 @@ object Determinism:
   *                   this parameter is the seam for the ones that cannot, not an alternative to it.
   * @param project    emit the sbt skeleton for the port (build.sbt, .gitignore, the engine pin, the
   *                   `src_managed` wiring). `None` for a port whose build is maintained by hand.
+  * @param manifest   this module's policy as a VALUE, and — through `PortManifest.bases` — the
+  *                   modules it is a dependent of. When present it SUPPLIES `phases`, `subs` and
+  *                   `packageRenames` (which must then be left at their defaults) and enables
+  *                   [[balticporter.core.ManifestAgreement]], the check that this module's shared
+  *                   surface agrees with the module that emits it. A run with resolution roots
+  *                   outside its own source root is structurally a DEPENDENT port, and one that
+  *                   declares no base is itself a finding — that is what makes the check
+  *                   unskippable, the same way `RequiredChecks` makes the others unskippable.
   */
 final case class PortRun(
     label: String,
@@ -125,11 +133,36 @@ final case class PortRun(
     determinism: Determinism = Determinism.Emission,
     cache: Option[Path] = scala.None,
     lenient: Boolean = true,
+    manifest: Option[PortManifest] = scala.None,
     /** printed as the last line — what the operator does next. */
     nextStep: String = "",
 ):
 
   private def say(s: String): Unit = println(s"[$label] $s")
+
+  // ---- the policy this run applies: the manifest's when it has one, the raw fields otherwise ----
+  // Both sources produce the SAME values; a manifest additionally records where each came from,
+  // which is what makes the agreement check possible. A run may use one or the other and never
+  // both, so there is never a question of which won.
+
+  /** every drop in the manifest chain, plus THIS module's injections. Stable instance: the
+    * `Substitutions` tally of which keys fired has to be read off the value the frontend was
+    * handed, and `PortManifest.substitutions` is a `lazy val` for exactly that reason. */
+  private def policySubs: Substitutions = manifest.map(_.substitutions).getOrElse(subs)
+
+  /** the drops THIS module DECLARES and the replacements it SHIPS — what CHECK 2 holds it to.
+    *
+    * A dependent module inherits a base's drops (it must model those types as substituted) but not
+    * the base's injections (exactly one module ships each replacement file, or the FQN is defined
+    * twice). So "dropped, unreplaced and still referenced" is a question about the base's own
+    * output, not this one's, and asking it here would report every inherited drop as dangling. */
+  private def ownSubs: Substitutions = manifest match
+    case Some(m)    => m.ownDrops
+    case scala.None => subs
+
+  private def declaredPhases: List[Phase] = manifest.map(_.effectiveSurface).getOrElse(phases)
+
+  private def renames: Map[String, String] = manifest.map(_.effectivePackageRenames).getOrElse(packageRenames)
 
   /** where this source set's emitted Scala goes. From [[SbtGen]], never composed by hand (§5.5). */
   def outDir: Path = SbtGen.managedDir(portRoot, sourceSet.configName)
@@ -139,10 +172,16 @@ final case class PortRun(
     * not just the first one that aborts. */
   def execute(): PortResult =
     require(
-      !phases.exists(_.isInstanceOf[PackageRenameTransform]),
+      !declaredPhases.exists(_.isInstanceOf[PackageRenameTransform]),
       s"[$label] PackageRenameTransform must not be listed in `phases`: it has to run AFTER every " +
         "other phase (CLAUDE.md §4.56), which `runsAfter` cannot express. Pass `packageRenames` " +
         "instead and PortRun places it last.",
+    )
+    require(
+      manifest.isEmpty || (phases.isEmpty && subs == Substitutions.none && packageRenames.isEmpty),
+      s"[$label] a `manifest` SUPPLIES `phases`, `subs` and `packageRenames`; passing either " +
+        "source alongside it would give this run two policies and no way to say which one the " +
+        "dependent modules have to agree with. Move the values into the PortManifest.",
     )
 
     anchorReportPaths()
@@ -171,14 +210,28 @@ final case class PortRun(
     if omissions.nonEmpty then say(PortReport.Kind.Omission.classification)
     println(OmissionCheck.summary(omissions))
 
-    val droppedIds  = program.symbols.all.collect { case s if subs.dropsType(s.fullName) => s.id }.toSet
+    // ---- cross-port composition: does the shared surface agree with the module that emits it? ----
+    // Runs on EVERY port. On a base port `shared` is empty and the check is a no-op by arithmetic
+    // rather than by a branch — the same discipline as an empty policy making a phase a no-op.
+    val agreement = ManifestAgreement.check(manifest, sharedSurface(program, translated.foreign), foreignRoots)
+    CheckReport.record(PortRun.Manifest, agreement.map { f =>
+      CheckReport.Finding(PortRun.Manifest, f.kind.toString, f.subject, "", 0, f.render)
+    })
+    val bases = manifest.toList.flatMap(_.baseChain).map(_.name)
+    say(s"MANIFEST agreement (${if bases.isEmpty then "no base module declared" else s"base(s): ${bases.mkString(", ")}"}, " +
+      s"${translated.foreign.size} shared type(s)): ${agreement.size} disagreement(s)")
+    if agreement.nonEmpty then
+      say(PortReport.Kind.Manifest.classification)
+      agreement.take(40).foreach(f => println("  " + f.render))
+
+    val droppedIds  = program.symbols.all.collect { case s if policySubs.dropsType(s.fullName) => s.id }.toSet
     val portability = PortabilityCheck.inEmittedCode(program, PortabilityCheck.check(program), droppedIds)
     say(s"PORTABILITY (Scala.js/Native): ${portability.size} site(s) on JVM-only APIs in EMITTED code")
     if portability.nonEmpty then say(PortReport.Kind.Portability.classification)
     println(PortabilityCheck.summary(portability))
 
-    val renameReport = PackageRenameTransform.check(program, packageRenames)
-    if packageRenames.nonEmpty then
+    val renameReport = PackageRenameTransform.check(program, renames)
+    if renames.nonEmpty then
       say(s"package rename (verified AFTER the phase — every prefix must now be unmatched):")
       println(renameReport.render)
 
@@ -193,7 +246,7 @@ final case class PortRun(
       val full = program.symbolOf(u.symbol).map(_.fullName).getOrElse("Unit")
       // Substitutions.dropTypes: PARSED (so every reference to it still resolves) but NOT emitted —
       // the injected replacement supplies this FQN instead.
-      if subs.dropsType(full) then dropped += 1
+      if policySubs.dropsType(full) then dropped += 1
       else
         write(outDir.resolve(full.replace('.', '/') + ".scala"), translated.sourceOf(u))
         written += 1
@@ -204,7 +257,7 @@ final case class PortRun(
     supportSources.foreach { (fqn, src) => write(outDir.resolve(fqn.replace('.', '/') + ".scala"), src); written += 1 }
 
     // CHECK 1 — before injection, so a file at a dropped type's path can only be the emitter's.
-    val leaked = record(PortRun.SubstitutionEmitted, SubstitutionCheck.emittedDroppedTypes(outDir, subs))
+    val leaked = record(PortRun.SubstitutionEmitted, SubstitutionCheck.emittedDroppedTypes(outDir, policySubs))
 
     // ---- injection: ready-made Scala copied verbatim (survives the wipe above) ----
     // Register the injected-portability check even with nothing to inject: it is an APPEND-per-file
@@ -212,7 +265,7 @@ final case class PortRun(
     // nothing" from "never ran" — the one distinction the persistence layer exists to keep.
     CheckReport.append("portability(injected)", Nil)
     var injected = 0
-    subs.inject.filter(Files.exists(_)).foreach { root =>
+    ownSubs.inject.filter(Files.exists(_)).foreach { root =>
       Files.walk(root).iterator().asScala
         .filter(p => p.toString.endsWith(".scala"))
         .toList.sorted
@@ -225,7 +278,7 @@ final case class PortRun(
     }
     // injected replacements bypass the TIR — scan their TEXT for the same portability rules, so a
     // hand-written shim cannot quietly reintroduce the API the substitution was meant to remove.
-    val injectedViolations = subs.inject.filter(Files.exists(_)).flatMap { root =>
+    val injectedViolations = ownSubs.inject.filter(Files.exists(_)).flatMap { root =>
       SubstitutionCheck.scalaSources(root).flatMap { src =>
         PortabilityCheck.inInjectedSource(root.relativize(src).toString, Files.readString(src))
       }
@@ -237,12 +290,22 @@ final case class PortRun(
       injectedViolations.foreach(v => println("  " + v))
 
     // CHECK 2 — over the FINAL tree.
-    val danglingSubs = record(PortRun.SubstitutionDangling, SubstitutionCheck.dangling(outDir, subs))
-    if subs.dropTypes.nonEmpty && danglingSubs.isEmpty then
-      say(s"substitutions: ${subs.dropTypes.size} dropped types verified removed from the final code")
+    val danglingSubs = record(PortRun.SubstitutionDangling, SubstitutionCheck.dangling(outDir, ownSubs))
+    if ownSubs.dropTypes.nonEmpty && danglingSubs.isEmpty then
+      say(s"substitutions: ${ownSubs.dropTypes.size} dropped types verified removed from the final code")
 
     // ---- policy: every (b) seam this run holds, read AFTER the frontend has consulted it ----
-    val policy = PolicyReport.from(subs :: effectivePhases.collect { case p: PolicySource => p })
+    // Only the policy THIS module declares — its own drops, and the phases in its own `surface`.
+    //
+    // A §1(b) finding says "fix this key in the library's manifest", and an INHERITED key lives in
+    // the base's manifest: reporting it here tells every dependent module about a mistake none of
+    // them can fix, and one bad key in a library with eighteen modules becomes eighteen findings
+    // that all mean the same thing. The inherited half is not unchecked — it is checked more
+    // precisely by `ManifestAgreement`, which says which base the key came from and whether it
+    // fired HERE (`InheritedKeyNeverFired`).
+    val ownPolicy: PolicySource   = manifest.getOrElse(subs)
+    val ownPhases: List[Phase]    = manifest.map(_.surface).getOrElse(phases)
+    val policy = PolicyReport.from(ownPolicy :: ownPhases.collect { case p: PolicySource => p })
     CheckReport.record(PortRun.Policy, policy.findings.map { f =>
       CheckReport.Finding(PortRun.Policy, f.issue.label, f.phase, f.setting, 0, s"${f.key} — ${f.detail}")
     })
@@ -267,6 +330,7 @@ final case class PortRun(
       substitution = leaked ++ danglingSubs,
       policy = policy,
       rename = renameReport,
+      manifest = agreement,
     )
     // The one place every count appears together WITH the §1 classification of its fix. An agent
     // in another repository reads this and knows, per line, whether the next step is in the engine,
@@ -325,9 +389,50 @@ final case class PortRun(
             "vanish from findings.tsv while stdout still showed them]"
         )
 
-  /** the phases that actually RUN: the caller's, then the namespace rename LAST (§4.56). */
+  /** the phases that actually RUN: the declared surface, then the namespace rename LAST (§4.56). */
   private def effectivePhases: List[Phase] =
-    if packageRenames.isEmpty then phases else phases :+ new PackageRenameTransform(packageRenames)
+    if renames.isEmpty then declaredPhases else declaredPhases :+ new PackageRenameTransform(renames)
+
+  /** does this run resolve against sources OUTSIDE its own tree? That is the structural signature
+    * of a dependent port — a root that is merely the run's own tree (self-resolution, which several
+    * ports do) is not a second module and carries no agreement obligation. */
+  private def foreignRoots: Boolean =
+    val src = PortRun.real(frontend.sourceRoot)
+    frontend.resolutionRoots.map(PortRun.real).exists(r => r != src)
+
+  /** Every type this run RESOLVED AGAINST but did not convert — the shared surface, as this run
+    * modelled it.
+    *
+    * The upstream name is rebuilt from the unit's ORIGIN: the directory under the resolution root
+    * gives the package, and the unit's own simple name gives the rest. Not from the file name,
+    * because a Java file may declare a package-private second top-level type, and not from
+    * `fullName`, because after a package rename `fullName` is not the upstream name at all — which
+    * is precisely the disagreement being checked for. */
+  private def sharedSurface(program: Program, foreign: List[Tree.ClassDef]): List[ManifestAgreement.SharedType] =
+    if foreign.isEmpty then Nil
+    else
+      val roots = frontend.resolutionRoots.map(PortRun.real).sortBy(-_.length)
+      foreign.flatMap { u =>
+        for
+          sym <- program.symbolOf(u.symbol)
+          pkg <- upstreamPackage(u.origin.javaPath, roots)
+        yield ManifestAgreement.SharedType(
+          upstreamFqn = if pkg.isEmpty then sym.name else s"$pkg.${sym.name}",
+          emittedFqn  = sym.fullName,
+          substituted = Substituted.tags(sym),
+        )
+      }
+
+  private def upstreamPackage(javaPath: String, roots: List[String]): Option[String] =
+    if javaPath.isEmpty then scala.None
+    else
+      val real = PortRun.real(Path.of(javaPath))
+      val sep  = java.io.File.separatorChar
+      roots.collectFirst { case r if real.startsWith(r) =>
+        val rel = real.substring(r.length).dropWhile(_ == sep)
+        val cut = rel.lastIndexOf(sep)
+        if cut < 0 then "" else rel.substring(0, cut).replace(sep, '.')
+      }
 
   private def translate(): PortRun.Translated =
     val once = translateOnce()
@@ -364,13 +469,14 @@ final case class PortRun(
 
   private def translateOnce(): PortRun.Translated =
     val types   = SpoonTir.buildModel(frontend, lenient = lenient)
-    val program = Pipeline.run(SpoonTir.fromTypes(types, subs), effectivePhases)
+    val program = Pipeline.run(SpoonTir.fromTypes(types, policySubs), effectivePhases)
     val plan    = RuntimePlan.of(effectivePhases, runtimeMode)
     // `externalConcrete` is DERIVED, never passed in: a caller who has to remember it is a caller
     // who forgets it, and forgetting it silently disables diamond-conflict detection against an
     // injected parent.
     val emitter = new TirEmitter(program, plan.concreteMembers, provenance)
-    PortRun.Translated(program, plan, emitter, converted(program), cache.map(new ActionCache(_, true)))
+    val (mine, theirs) = partitionUnits(program)
+    PortRun.Translated(program, plan, emitter, mine, theirs, cache.map(new ActionCache(_, true)))
 
   /** Units this run CONVERTS, as opposed to units it merely resolved against.
     *
@@ -387,12 +493,12 @@ final case class PortRun(
     * is the normal case in a git worktree, and was the case that made this return every unit in
     * the model on its first run — is lexically unrelated to the path the parser recorded, and a
     * prefix test then matches nothing while looking correct. */
-  private def converted(program: Program): List[Tree.ClassDef] =
-    if frontend.resolutionRoots.isEmpty then program.units
+  private def partitionUnits(program: Program): (List[Tree.ClassDef], List[Tree.ClassDef]) =
+    if frontend.resolutionRoots.isEmpty then (program.units, Nil)
     else
       val src   = PortRun.real(frontend.sourceRoot)
       val other = frontend.resolutionRoots.map(PortRun.real)
-      program.units.filter { u =>
+      program.units.partition { u =>
         val p = u.origin.javaPath
         if p.isEmpty then true
         else
@@ -419,6 +525,7 @@ object PortRun:
   val SubstitutionEmitted  = "substitution(emitted)"
   val SubstitutionDangling = "substitution(dangling)"
   val Policy               = "policy"
+  val Manifest             = "manifest"
 
   /** Every check a run MUST have recorded by the time it finishes. Named rather than derived,
     * because the property being asserted is "the orchestrator invoked all of them" — deriving the
@@ -426,7 +533,7 @@ object PortRun:
     * here, and forgetting to fails the next run rather than shipping a silently narrower report. */
   val RequiredChecks: Set[String] = Set(
     "signature", "omissions", "portability(all)", "portability(emitted)", "portability(injected)",
-    SubstitutionEmitted, SubstitutionDangling, Policy,
+    SubstitutionEmitted, SubstitutionDangling, Policy, Manifest,
   )
 
   /** One translation, plus everything derived from it that must not be recomputed inconsistently.
@@ -440,6 +547,8 @@ object PortRun:
       val plan: RuntimePlan,
       val emitter: TirEmitter,
       val emitOrder: List[Tree.ClassDef],
+      /** units the run RESOLVED against and does not emit — another module's, by construction. */
+      val foreign: List[Tree.ClassDef],
       val cache: Option[ActionCache],
   ):
     private val memo = collection.mutable.Map.empty[SymId, String]
@@ -478,13 +587,15 @@ final case class PortReport(
     substitution: List[SubstitutionCheck.Finding],
     policy: PolicyReport,
     rename: PackageRenameTransform.Report,
+    manifest: List[ManifestAgreement.Finding] = Nil,
 ):
 
   /** Findings that must STOP the run. A leaked dropped type means the emitted tree contains a
     * mechanical translation the manifest said not to produce; a dangling substitution means the
-    * port depends on a type it claims not to have. Neither is a number to watch — both are
-    * incoherent output. Everything else is a measurement. */
-  def fatal: List[String] = substitution.map(_.render)
+    * port depends on a type it claims not to have; a fatal manifest disagreement means this module
+    * and the module it compiles against do not describe the same shared surface. None is a number
+    * to watch — all are incoherent output. Everything else is a measurement. */
+  def fatal: List[String] = substitution.map(_.render) ++ manifest.filter(_.kind.fatal).map(_.render)
 
   def render: String =
     val rows = List(
@@ -494,6 +605,7 @@ final case class PortReport(
       s"injected portability: ${injectedPortability.size}" -> PortReport.Kind.InjectedPortability,
       s"substitution: ${substitution.size}"          -> PortReport.Kind.Substitution,
       s"policy: ${policy.findings.size}"             -> PortReport.Kind.Policy,
+      s"manifest agreement: ${manifest.size}"        -> PortReport.Kind.Manifest,
     )
     rows.map((line, k) => if line.endsWith(": 0") then s"  $line" else s"  $line\n  ${k.classification}").mkString("\n")
 
@@ -522,6 +634,11 @@ object PortReport:
     case Policy extends Kind(
       "  §1(b) PER-LIBRARY: a declared key matched nothing, so the rule silently did not run. Fix " +
         "the key in this library's manifest; the engine needs no change.")
+    case Manifest extends Kind(
+      "  §1(b) PER-LIBRARY: this module's policy for the SHARED surface differs from the module " +
+        "that emits it — the two ports each compile alone and cannot compile together. Configure " +
+        "this port's `PortManifest` to match its base, or inherit it with `base.extendedBy(...)`. " +
+        "Every finding below carries its own, more specific classification.")
 
 /** What a run PRODUCED. Returned rather than printed so a porting program can assert on it — the
   * corpus's own regression tests do exactly that. */

@@ -283,6 +283,80 @@ configuration over the shared surface. Today that agreement is copy-paste and ho
 imports and extends, plus a check that a resolution-root type tagged `Substituted` in port A is
 identically tagged in port B. Without it, sge's 17 modules drift one at a time.
 
+> **STATUS — done.** `core/PortManifest.scala` (the value) and `core/ManifestAgreement.scala` (the
+> check); `PortRun` gains `manifest`, and `manifest` joins `PortRun.RequiredChecks`.
+>
+> **The value.** `PortManifest(name, governs, dropTypes, dropMethods, packageRenames, surface,
+> inject, bases, inherit)`, composed with `base.extendedBy(dependent)` — ordinary Scala the
+> consumer's compiler type-checks, not a DSL. `PortRun` takes it INSTEAD of `phases`/`subs`/
+> `packageRenames` and refuses both at once, so a run never holds two policies.
+>
+> **Where the MUST-agree / MAY-differ line is drawn.** Everything on the manifest changes the SHAPE
+> of the shared surface as a dependent compiles against it; everything a `PortRun` takes that is not
+> on it is a property of this module's build (`sourceSet`, `frontend`, `provenance`, `runtimeMode`,
+> `supportSources`, `project`, `determinism`, `cache`). The one deliberate split is inside
+> `Substitutions`: **`dropTypes`/`dropMethods` are inherited and `inject` is not.** A drop is an
+> observation about the shared API and binds every module that sees the type; an injection is a
+> build artefact, and exactly one module must ship each replacement file — a dependent that copied
+> `inject` would emit a second definition of the same FQN. `SubstitutionCheck`'s CHECK 2 follows the
+> same line: it holds a module to `ownDrops` (its own, minus its bases'), because "dropped,
+> unreplaced, still referenced" is a question about the module that ships the replacement.
+>
+> **The check, in two layers.** STATIC compares declaration against declaration
+> (`MissingDrop`, `ExtraDrop`, `RenameDivergence`, `RenameOverride`, `SurfaceMissing`,
+> `SurfaceDivergence`, `NoBaseDeclared`). DYNAMIC compares the base's policy against what the run
+> actually MODELLED of the shared surface — for every unit resolved against and not converted, is it
+> tagged `Substituted` exactly when the base drops it (`TagMissing`/`TagUnexpected`), and does it
+> carry the name the base gives it (`SurfaceNameDivergence`)? Shared types are identified by unit
+> ORIGIN, not by package prefix, because a library's own test suite declares its suites in the very
+> packages it tests. Every finding ends in its §1 classification; the fatal ones abort the run.
+>
+> **Measured on the real pair.** `LibgdxCoreMigrate` is now a base manifest and `LibgdxTestMigrate`
+> a dependent of it — 605 shared types, 0 disagreements. Every number is unchanged (596/11/6, 605
+> units/52421 symbols, 46 omissions, 67 portability(emitted), 139 portability(all), 2 injected, 0
+> signature, 1 policy; 29 test files, 634 units, 49 omissions, 0 signature, 0 policy; 0 compile
+> errors, 217 passing / 4 failing) with ONE exception, explained below. Perturbing the dependent's
+> manifest three ways, each caught and fatal:
+>
+> | perturbation | findings |
+> |---|---|
+> | dependent renames `com.badlogic.gdx -> sge`, base does not | `RenameOverride` |
+> | dependent omits the base's `dropTypes` entry for `utils.Json` | `MissingDrop` + `InheritedKeyNeverFired` + **`TagMissing`** on the resolution-root type |
+> | dependent omits `CollectionsTransform` from its surface | `SurfaceMissing: java-collections->scala` |
+>
+> **The one number that moved: `libgdx-test` `portability(emitted)` 148 → 76.** Not a regression and
+> not an adjustment. The test port previously declared NO substitutions, so
+> `PortabilityCheck.inEmittedCode`'s dropped-type filter had nothing to filter and the number
+> counted violations inside `Json`, `Pools`, `NetJavaImpl` and the seven `reflect` types — code
+> neither port emits. Inheriting the base's manifest is what made the two runs agree about which
+> types those are. `portability(all)` is unchanged at 148, which is what proves nothing else moved.
+> Both numbers still count violations in resolution-root units the run does not emit; scoping
+> `inEmittedCode` to converted units would shrink it further and is a separate change.
+>
+> **What the check CANNOT see** — stated because a composition check that silently misses a class of
+> drift is worse than none:
+>
+> 1. a parameterised phase's CONFIGURATION unless it implements `SurfacePolicy`. Comparison is by
+>    `Phase.name` plus, for an opted-in phase, its policy digest; `ClassTableTransform` and
+>    `StaticForwarderTransform` opt in, `CollectionsTransform` does not (its `typeMap` is not a
+>    parameter yet — §3.3), so two differently-configured instances of it compare EQUAL. The
+>    alternative is reflection over private fields, which compares things that are not policy.
+> 2. nested-type drops — the dynamic layer walks top-level units, so those are covered only by the
+>    never-fired tally.
+> 3. a phase whose output differs for reasons outside its declared policy.
+> 4. **the base's emitted OUTPUT.** This compares policy and the dependent's model of the shared
+>    surface; it never reads the Scala the base wrote, so a base built by a different engine version
+>    is invisible here. That is `EnginePin`'s job and it is not wired to this.
+> 5. `MissingDrop` and `SurfaceMissing` are unreachable under `extendedBy`, because inheritance
+>    makes that drift unrepresentable — which is the point, but it also means those two branches only
+>    fire for a manifest declared with `mirroring` (policy stated in full, base checked rather than
+>    inherited). `mirroring` exists so the branches are reachable at all; a check that cannot fire is
+>    not a check.
+>
+> **NOT done:** nothing verifies that two ports were built by the same ENGINE (point 4), and no
+> second libGDX MODULE has been ported — the evidence is `gdx/test` as a dependent of `gdx/src`,
+> which is a real two-port pair with a 605-type shared surface but not a real extension library.
+
 ### 3.2 Test-framework coverage is JUnit-4-shaped — becomes blocking at liqp's test port
 
 Handled: `@Test`, `@Test(expected=)`, `@Before`, nine `Assert` members.

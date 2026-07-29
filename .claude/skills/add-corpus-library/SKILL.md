@@ -39,16 +39,27 @@ PortRun(
   portRoot   = repoRoot.resolve("<lib>"),        // src_managed/{main,test}/scala hangs off this
   sourceSet  = SourceSet.Main,                   // Test for the suite; same mechanics either way
   frontend   = FrontendConfig(base, files, Nil), // resolutionRoots = roots resolved but NOT emitted
-  phases     = List(/* universal, then (b) configured, then your (c) rules */),
-  subs       = Substitutions(dropTypes, dropMethods, inject),
+  phases     = Nil,                              // supplied by the manifest; the two are exclusive
+  manifest   = Some(PortManifest(               // this module's SHARED-SURFACE policy, as a value
+    name        = "<lib>",
+    governs     = Set("com.upstream"),           // the namespace this module claims
+    dropTypes   = …, dropMethods = …,            // what is NOT translated mechanically
+    inject      = List(overridesDir),            // the replacements THIS module ships
+    packageRenames = Map("com.upstream" -> "org.you"),  // NOT a phase: PortRun runs it LAST (§4.56)
+    surface     = List(/* universal, then (b) configured, then your (c) rules */),
+  )),
   provenance = Some(Provenance(name, commit, license, prefix, sourceRoot = base.toString)),
-  packageRenames = Map("com.upstream" -> "org.you"),  // NOT a phase: PortRun runs it LAST (§4.56)
   runtimeMode    = RuntimeMode.Dependency,            // Vendored only for a standalone single set
   supportSources = Map.empty,                         // sources a phase needs but cannot declare
   determinism    = Determinism.fromArgs(args.toSeq),
   project        = Some(spec),                        // emit build.sbt + .gitignore + engine pin
 ).execute()
 ```
+
+A single-module port may still pass `phases` / `subs` / `packageRenames` directly instead of a
+manifest, and `PortRun` refuses both at once. Prefer the manifest from the start: the moment a
+SECOND module appears it is the only thing that keeps the two agreeing, and retrofitting it means
+re-deciding every policy question you already answered.
 
 Things that are now errors rather than omissions:
 
@@ -59,9 +70,65 @@ Things that are now errors rather than omissions:
 - a check going unrun — `PortRun.RequiredChecks` is asserted against what actually recorded, so a
   number that reaches stdout and not `findings.tsv` fails the run.
 
-Two source sets of one module share their policy through a plain `object <Lib>Policy` — see
-`LibgdxPolicy`. Do not instantiate the same parameterised phase twice with different arguments;
-that is the drift `CLAUDE.md` §1 warns about.
+### 2.05 A SECOND module — a dependent port
+
+A library is rarely one module, and the second one is where ports drift. An extension (a plugin, an
+add-on, the library's own test suite) references the base module's types, but its frontend can only
+parse **Java**: it resolves against the base's *upstream* sources through
+`FrontendConfig.resolutionRoots`, never against the Scala the base port emitted. Everything the
+base's transforms did to those signatures — collections retyped, members dropped, a namespace moved,
+a type substituted — has to be redone identically here, or the two ports each compile alone and
+cannot compile together.
+
+**Do not restate the base's policy. Import it and extend it.**
+
+```scala
+object <Lib>Policy:
+  def core(repoRoot: Path): PortManifest = PortManifest(name = "<lib>-core", …)
+
+  def extension(repoRoot: Path): PortManifest =
+    core(repoRoot).extendedBy(PortManifest(
+      name    = "<lib>-ext",
+      governs = Set("com.upstream.ext"),          // omit when the packages interleave
+      surface = List(new MyExtensionOnlyPhase),   // added AFTER the base's, which come first
+      inject  = List(extOverridesDir),            // this module's OWN replacements
+    ))
+```
+
+What is INHERITED (must agree) and what is not (may differ):
+
+| inherited — a fact about the SHARED SURFACE | not inherited — a fact about THIS module's build |
+|---|---|
+| `dropTypes`, `dropMethods` | `inject` — exactly one module ships each replacement file |
+| `packageRenames` | `sourceSet`, `frontend`, `portRoot`, `provenance` |
+| `surface` (the signature-affecting phases) | `runtimeMode`, `supportSources`, `project`, `determinism`, `cache` |
+
+The asymmetry in the first row is the one to get right: a **drop** is an observation about the
+shared API and binds every module that sees the type; an **injection** is a build artefact, and a
+dependent that copied it would emit a second definition of the same FQN.
+
+`PortRun` checks the agreement on every run (`ManifestAgreement`, recorded as the `manifest` check,
+fatal on a real disagreement), so writing the dependent's policy out longhand is allowed and
+verified rather than merely trusted — use `PortManifest(...).mirroring(base)` when you want that.
+Things it will refuse:
+
+- **a dependent port that names no base at all.** Resolution roots outside your own source root make
+  this a dependent port; a run that declares no `bases` fails with `NoBaseDeclared`. If the
+  resolution root is *not* a ported module (a vendored third-party tree you resolve against and
+  never emit), say so with an empty `PortManifest(name = "…")` as the base — that is a statement,
+  not a loophole;
+- a drop, a rename, or a signature-affecting phase present in one module and not the other;
+- one phase name appearing twice in the effective pipeline with different policy.
+
+What it cannot see, so that you do not trust it further than it goes: a parameterised phase's
+CONFIGURATION unless that phase implements `SurfacePolicy` (otherwise two differently-configured
+instances compare equal by name); nested-type drops, which are covered only by the never-fired
+tally; and anything about the base's *emitted output*, which is `EnginePin`'s job.
+
+Two source sets of one module are the smallest case of exactly this: `LibgdxTestMigrate` is a
+dependent of `LibgdxCoreMigrate` and inherits `LibgdxPolicy.core`'s manifest. Never instantiate the
+same parameterised phase twice with different arguments; that is the drift `CLAUDE.md` §1 warns
+about, and it is now a fatal finding rather than a convention.
 
 The migration program owns **all** per-library policy and nothing else:
 

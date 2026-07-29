@@ -71,6 +71,38 @@ covariance). They document; they must drive nothing.
 
 ---
 
+## 1.5 A dependent module INHERITS the shared surface; it never restates it
+
+A library is rarely one module, and the second one is where a port drifts. An extension resolves
+against the base module's **Java** (`resolutionRoots`), never against the Scala the base port
+emitted — so everything the base's transforms did to those signatures has to be redone identically,
+or the two ports each compile alone and cannot compile together. Copying the configuration is not a
+mechanism; it is a habit, and it fails one module at a time.
+
+So the shared surface is a VALUE — `PortManifest` — that a dependent imports and extends
+(`base.extendedBy(...)`), never a block of policy it repeats. Ordinary Scala, type-checked by the
+consumer's compiler; a manifest DSL would move the policy out of reach of both.
+
+The line between what must agree and what must not:
+
+| inherited — a fact about the SHARED SURFACE | not inherited — a fact about THIS module's build |
+|---|---|
+| `dropTypes`, `dropMethods`, `packageRenames`, `surface` | `sourceSet`, `frontend`, `provenance`, `runtimeMode`, `supportSources`, `project` |
+| | **`inject`** |
+
+`inject` is the one that looks wrong and is not. A drop and its replacement read as one decision and
+are two: the DROP is an observation about the shared API and binds every module that sees the type;
+the INJECTION is a build artefact, and exactly one module must ship each replacement file — a
+dependent that copied it would emit a second definition of the same FQN. Every check that asks "is
+this replaced?" follows the same line and holds a module to its OWN drops only.
+
+`PortRun` runs `ManifestAgreement` on every port, and a run whose resolution roots lie outside its
+own source root — the structural signature of a dependent — with no base declared is itself a fatal
+finding. If a resolution root is genuinely NOT a ported module, declare an empty manifest for it and
+say so; that is a statement, not a loophole.
+
+---
+
 ## 2. Adding a library to the corpus
 
 Until the framework is published and each library gets its own porter repository, new libraries are

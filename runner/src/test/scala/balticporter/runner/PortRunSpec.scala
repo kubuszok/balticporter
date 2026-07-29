@@ -80,8 +80,12 @@ class PortRunSpec extends munit.FunSuite:
       """package com.demo2;
         |import com.demo.Widget;
         |public class Uses { public Widget w = new Widget(); }""".stripMargin)
+    // resolving against another module's sources makes this a DEPENDENT port, and a dependent port
+    // must name the module it depends on — see ManifestSpec for what that buys and for the run
+    // that refuses when it does not.
     val r = PortRun("demo", root.resolve("port"), SourceSet.Main,
-      FrontendConfig(other, List("com/demo2/Uses.java"), Nil, resolutionRoots = List(src)), Nil).execute()
+      FrontendConfig(other, List("com/demo2/Uses.java"), Nil, resolutionRoots = List(src)), Nil,
+      manifest = Some(PortManifest("base").extendedBy(PortManifest("dependent")))).execute()
     assertEquals(emitted(r.outDir), List("com/demo2/Uses.scala"))
     assert(r.program.units.size > 1, "the model must still SPAN the resolution root")
   }

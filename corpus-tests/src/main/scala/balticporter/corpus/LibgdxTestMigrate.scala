@@ -2,7 +2,6 @@ package balticporter.corpus
 
 import balticporter.core.{FrontendConfig, Provenance, RuntimeMode}
 import balticporter.runner.{Determinism, PortRun, SourceSet}
-import balticporter.transform.{CollectionsTransform, MutableParamsTransform, PanamaFfiTransform, TestFrameworkTransform}
 
 import java.nio.file.{Files, Path}
 import scala.jdk.CollectionConverters.*
@@ -20,9 +19,12 @@ import scala.jdk.CollectionConverters.*
   * `FrontendConfig.resolutionRoots` is for, and deciding which units it makes this run's own is now
   * [[balticporter.runner.PortRun]]'s job rather than a hand-maintained FQN set here.
   *
-  * Same transform pipeline as the main port, minus the two per-library policy phases: test code
-  * touches neither the reflection wrapper nor the class table, and giving them a second, differently
-  * configured instantiation is exactly the drift `CLAUDE.md` §1 warns about.
+  * The transform pipeline is not restated here at all: it arrives from `LibgdxPolicy.core`'s
+  * manifest, which this module extends with `TestFrameworkTransform`. The version of this file that
+  * listed the shared phases again — minus two, with a comment arguing that test code touches
+  * neither the reflection wrapper nor the class table — was right, but nothing checked it and the
+  * next module would have had to make the same argument from scratch. That is the drift
+  * `CLAUDE.md` §1 warns about, and a `PortManifest` is what removes the opportunity for it.
   *
   * This program had never called `PortabilityCheck` — the check existed, the main port ran it, and
   * this one silently did not, because check invocation was copy-paste. It runs every check now
@@ -46,8 +48,12 @@ object LibgdxTestMigrate:
       portRoot  = repoRoot.resolve("libgdx-core"),
       sourceSet = SourceSet.Test,
       frontend  = FrontendConfig(testRoot, files, Nil, resolutionRoots = List(srcRoot)),
-      phases    = List(new CollectionsTransform, new MutableParamsTransform, new PanamaFfiTransform(),
-                       new TestFrameworkTransform(), new GdxSharedIteratorRule),
+      phases    = Nil, // supplied by the manifest — the two sources are mutually exclusive
+      // A DEPENDENT of `LibgdxPolicy.core`: the shared surface arrives as a value, not as a copy.
+      // It adds `TestFrameworkTransform` and inherits everything else, and `ManifestAgreement`
+      // verifies on every run that the 605 types it resolves against but does not convert are
+      // modelled exactly as the module that emits them models them.
+      manifest  = Some(LibgdxPolicy.test(repoRoot)),
       provenance = Some(Provenance(
         upstreamName     = "libGDX",
         upstreamCommit   = "vendored in ../sge/original-src/libgdx",

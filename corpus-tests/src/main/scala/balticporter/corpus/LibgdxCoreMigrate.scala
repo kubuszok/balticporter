@@ -1,8 +1,8 @@
 package balticporter.corpus
 
-import balticporter.core.{FrontendConfig, Provenance, RuntimeMode, Substitutions}
+import balticporter.core.{FrontendConfig, PortManifest, Provenance, RuntimeMode, Substitutions}
 import balticporter.runner.{Determinism, PortRun, SourceSet}
-import balticporter.transform.{ClassTableTransform, CollectionsTransform, MutableParamsTransform, PanamaFfiTransform, StaticForwarderTransform}
+import balticporter.transform.{ClassTableTransform, CollectionsTransform, MutableParamsTransform, PanamaFfiTransform, StaticForwarderTransform, TestFrameworkTransform}
 
 import java.nio.file.{Files, Path}
 import scala.jdk.CollectionConverters.*
@@ -44,8 +44,11 @@ object LibgdxCoreMigrate:
       portRoot  = repoRoot.resolve("libgdx-core"),
       sourceSet = SourceSet.Main,
       frontend  = FrontendConfig(base, files, Nil, Nil),
-      phases    = if raw then Nil else LibgdxPolicy.mainPhases,
-      subs      = LibgdxPolicy.substitutions(repoRoot),
+      phases    = Nil, // supplied by the manifest — the two sources are mutually exclusive
+      // The BASE manifest. `libgdx-test` is a dependent of exactly this value, so the two runs
+      // cannot disagree about the shared surface by construction, and `ManifestAgreement` verifies
+      // it anyway on every run (a consumer is free to write the dependent's policy out longhand).
+      manifest  = Some(if raw then LibgdxPolicy.core(repoRoot).withoutSurface else LibgdxPolicy.core(repoRoot)),
       provenance = Some(Provenance(
         upstreamName     = "libGDX",
         upstreamCommit   = "vendored in ../sge/original-src/libgdx",
@@ -68,6 +71,42 @@ object LibgdxCoreMigrate:
   * table. The engine holds the mechanism for each, parameterised.
   */
 object LibgdxPolicy:
+
+  /** libGDX core's policy AS A VALUE — the thing every dependent module imports and extends.
+    *
+    * Everything in it is shared-surface policy: the types and methods this port does not translate
+    * mechanically, and the phases that reshape the signatures a dependent module compiles against.
+    * What is NOT here is what a dependent may decide for itself — its source set, its provenance,
+    * its `runtimeMode`, and its own injections. See [[balticporter.core.PortManifest]] for where
+    * that line is drawn and why `inject` sits on the must-differ side of it.
+    *
+    * `governs` is the namespace claim. libGDX's own test suite declares its suites INSIDE
+    * `com.badlogic.gdx` (`com.badlogic.gdx.utils.JsonTest` and friends), so a prefix cannot
+    * separate the two modules — which is exactly why the substitution half of the agreement check
+    * works from unit origins instead. The claim is still worth stating: it is what catches a
+    * dependent that renames part of this namespace on its own.
+    */
+  def core(repoRoot: Path): PortManifest =
+    val s = substitutions(repoRoot)
+    PortManifest(
+      name        = "libgdx-core",
+      governs     = Set("com.badlogic.gdx"),
+      dropTypes   = s.dropTypes,
+      dropMethods = s.dropMethods,
+      inject      = s.inject,
+      surface     = mainPhases,
+    )
+
+  /** libGDX's own JUnit suite, as a DEPENDENT of [[core]].
+    *
+    * It adds one phase and inherits everything else. The hand-written pipeline it replaces listed
+    * the shared phases again, minus two, with a comment arguing that the two were unnecessary — a
+    * correct argument that nothing checked and that the next module would have had to make again.
+    */
+  def test(repoRoot: Path): PortManifest = core(repoRoot).extendedBy(PortManifest(
+    name    = "libgdx-test",
+    surface = List(new TestFrameworkTransform()),
+  ))
 
   /** Typed substitution manifest: constructs sge dropped upstream (and their ready-made Scala
     * replacements). `dropTypes`/`dropMethods` are the seams for opting an in-source type or method
