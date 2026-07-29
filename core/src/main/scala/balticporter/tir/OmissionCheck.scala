@@ -22,8 +22,38 @@ object OmissionCheck:
   /** The complete result. A PURE function of the program: persisting it is the orchestrator's job
     * (`PortRun` records `omissions` from this list), so a caller's `take(n)` render can never be
     * the only record of it and the check itself stays testable without an artifact directory. */
-  def check(program: Program): List[Finding] =
-    droppedSuperArgs(program) ++ droppedAnonMembers(program) ++ droppedAnnotations(program)
+  def check(program: Program): List[Finding] = check(program, program.units)
+
+  /** The complete result, restricted to the units the run actually EMITS.
+    *
+    * A DEPENDENT port resolves against another module's Java (`FrontendConfig.resolutionRoots`), so
+    * its `Program` carries units it will never write. Checking those attributes the BASE module's
+    * findings to the dependent, and the misattribution is total rather than marginal: Ashley — 21
+    * files of its own — reported 47 omissions and 67 portability sites, **none of which were
+    * Ashley's**. Every one belonged to the 605 libGDX units it merely resolved against.
+    *
+    * That is worse than a wrong number. A finding an agent cannot act on in its own repository is
+    * CLAUDE.md §4.45's "cannot classify" failure with a plausible owner attached to it, and it
+    * scales with the size of the base: sge's 17 extension modules would each have reported libGDX
+    * core's entire finding set as their own.
+    *
+    * `units` is the run's own set, so a BASE port passes `program.units` and this is the identity —
+    * the no-op is the general path taken to its limit, not a branch around it (CLAUDE.md §1). */
+  def check(program: Program, units: List[Tree.ClassDef]): List[Finding] =
+    droppedSuperArgs(program, units)
+      ++ droppedAnonMembers(program, units)
+      ++ droppedAnnotations(program, ownedBy(program, units))
+
+  /** Every symbol whose top-level owner is one of `units` — the symbol-side counterpart of the unit
+    * filter, for checks that scan the symbol table rather than the trees. Fuel-bounded: a symbol
+    * that cannot be rooted counts as NOT owned, because attributing another module's finding is the
+    * defect this exists to prevent. */
+  private def ownedBy(program: Program, units: List[Tree.ClassDef]): SymId => Boolean =
+    val roots = units.map(_.symbol).toSet
+    def rooted(s: SymId, fuel: Int): Boolean =
+      s != SymId.None && fuel > 0 &&
+        (roots(s) || program.symbolOf(s).exists(sym => rooted(sym.owner, fuel - 1)))
+    id => rooted(id, 64)
 
   /** A Java ANNOTATION the frontend could not carry.
     *
@@ -34,8 +64,10 @@ object OmissionCheck:
     * it. Now that they are translated, this counts whatever still cannot be — an annotation whose
     * arguments would not translate is REPORTED rather than emitted bare, since `@A` where Java
     * wrote `@A(x)` is a different annotation. */
-  def droppedAnnotations(program: Program): List[Finding] =
-    program.symbols.all.toList.filter(_.droppedAnnotations.nonEmpty).sortBy(_.fullName).map { s =>
+  def droppedAnnotations(program: Program): List[Finding] = droppedAnnotations(program, _ => true)
+
+  def droppedAnnotations(program: Program, owned: SymId => Boolean): List[Finding] =
+    program.symbols.all.toList.filter(s => s.droppedAnnotations.nonEmpty && owned(s.id)).sortBy(_.fullName).map { s =>
       Finding("annotation dropped", s.fullName, s.droppedAnnotations.mkString(", "), s.origin)
     }
 
@@ -48,7 +80,9 @@ object OmissionCheck:
     * this is the counterpart check: `AnonClass.dropped` names any member kind the frontend could
     * not carry, so a future gap is a NUMBER on every run rather than another green-and-wrong port.
     */
-  def droppedAnonMembers(program: Program): List[Finding] =
+  def droppedAnonMembers(program: Program): List[Finding] = droppedAnonMembers(program, program.units)
+
+  def droppedAnonMembers(program: Program, units: List[Tree.ClassDef]): List[Finding] =
     val out = collection.mutable.ListBuffer[Finding]()
     // walk with the STANDARD traversal rather than a private one: a term node added to the tree
     // later is then covered here for free, which is exactly the property whose absence let the
@@ -62,7 +96,7 @@ object OmissionCheck:
         }
         t
     given Program = program
-    program.units.foreach(u => StandardTraversal.mapClassDef(collect, u))
+    units.foreach(u => StandardTraversal.mapClassDef(collect, u))
     out.toList
 
   /** A Java secondary constructor whose `super(args)` cannot be expressed in Scala.
@@ -82,12 +116,14 @@ object OmissionCheck:
     * can REPLAY as statements after `this()`. Every other constructor whose `super(...)` carries
     * arguments still loses them, and is reported.
     */
-  def droppedSuperArgs(program: Program): List[Finding] =
+  def droppedSuperArgs(program: Program): List[Finding] = droppedSuperArgs(program, program.units)
+
+  def droppedSuperArgs(program: Program, units: List[Tree.ClassDef]): List[Finding] =
     def classes(cd: Tree.ClassDef): List[Tree.ClassDef] =
       cd :: cd.body.collect { case c: Tree.ClassDef => classes(c) }.flatten
 
     val plans = CtorFunnel.Plans(program)
-    program.units.flatMap(classes).flatMap { cd =>
+    units.flatMap(classes).flatMap { cd =>
       val primary = plans(cd).primary.map(_.symbol)
       CtorFunnel.ctorsOf(program, cd.body).flatMap { d =>
         val args = CtorFunnel.superArgsOf(program, d)

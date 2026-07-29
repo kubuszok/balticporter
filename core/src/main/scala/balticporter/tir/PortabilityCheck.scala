@@ -120,8 +120,21 @@ object PortabilityCheck:
   /** Violations occurring in code that is actually EMITTED. A violation inside a substituted type
     * is not shipped — that type's declaration is dropped — so counting it would overstate the
     * problem; the point of the number is what the FINAL code depends on. */
-  def inEmittedCode(program: Program, violations: List[Violation], isDropped: SymId => Boolean): List[Violation] =
-    violations.filterNot(v => owningType(program, v.enclosing).exists(isDropped))
+  /** @param isExcluded
+    *   a type this run does NOT ship. Two disjoint reasons, and both must be here or the number
+    *   describes something other than the deliverable:
+    *
+    *   - the port DROPPED it (`Substitutions.dropTypes`) — the original reason for this filter;
+    *   - the run merely RESOLVED against it (`FrontendConfig.resolutionRoots`) — another module's
+    *     unit, which that module reports and this one must not.
+    *
+    *   The second was missing and the misattribution was total, not marginal: Ashley, a 21-file
+    *   dependent of libGDX core, reported **67 portability sites of which none were Ashley's**.
+    *   Every one belonged to the 605 units it only resolved against. Scaled across sge's 17
+    *   extension modules, each would have re-reported the base's entire finding set as its own.
+    */
+  def inEmittedCode(program: Program, violations: List[Violation], isExcluded: SymId => Boolean): List[Violation] =
+    violations.filterNot(v => owningType(program, v.enclosing).exists(isExcluded))
 
   /** INJECTED replacements never pass through the TIR — they are copied verbatim — so the symbol
     * table cannot see them. They are still shipped, so scan their text for the same rules. Coarse

@@ -1600,6 +1600,17 @@ object SpoonTir:
             // computing here.
             val elemRef: Option[CtTypeReference[?]] =
               if comp != null && tpConcrete(comp) then Some(comp)
+              // ZERO variadic arguments — `Family.all()` against `all(Class<? extends Component>...)`.
+              // Java materialises an EMPTY array, so there is nothing to infer the element type FROM
+              // and nothing that needs inferring: the declared component type is already exactly what
+              // the parameter renders as. Without this the call emitted no argument at all and the
+              // method looked as though it were missing one, which is how it surfaced.
+              //
+              // Guarded on the component not being a bare type VARIABLE: `static <T> Array<T> with(T...)`
+              // called as `with()` would name a `T` that does not exist at the call site — the same
+              // reason the inference branch below refuses a generic component.
+              else if comp != null && argEs.sizeIs == fixed && !comp.isInstanceOf[CtTypeParameterReference] then
+                Some(comp)
               else
                 val ts = argEs.drop(fixed).map(e => try e.getType catch { case _: Throwable => null })
                 Option.when(ts.nonEmpty && ts.forall(t => t != null && !t.isPrimitive && tpConcrete(t)) &&

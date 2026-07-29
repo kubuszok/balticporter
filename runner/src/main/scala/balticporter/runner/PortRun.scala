@@ -206,7 +206,7 @@ final case class PortRun(
       say(PortReport.Kind.Signature.classification)
       mismatches.take(20).foreach(m => println("  " + m.render))
 
-    val omissions = OmissionCheck.check(program)
+    val omissions = OmissionCheck.check(program, translated.emitOrder)
     CheckReport.record(PortRun.Omissions, omissions.map(_.report))
     say(s"OMISSIONS (emitted code silently loses these): ${omissions.size}")
     if omissions.nonEmpty then say(PortReport.Kind.Omission.classification)
@@ -230,8 +230,13 @@ final case class PortRun(
     // SHIPPED code references. A run that reported only one of them could not show a substitution
     // moving a violation out of the deliverable.
     val droppedIds  = program.symbols.all.collect { case s if policySubs.dropsType(s.fullName) => s.id }.toSet
+    // A type this run does not ship is either DROPPED by policy or FOREIGN — resolved against and
+    // emitted by another module. Both must be excluded from the shipped-code number, or a dependent
+    // port reports its base's findings as its own (see `PortabilityCheck.inEmittedCode`).
+    val foreignIds  = translated.foreign.map(_.symbol).toSet
+    val notShipped  = (id: SymId) => droppedIds(id) || foreignIds(id)
     val allViolations = PortabilityCheck.check(program)
-    val portability   = PortabilityCheck.inEmittedCode(program, allViolations, droppedIds)
+    val portability   = PortabilityCheck.inEmittedCode(program, allViolations, notShipped)
     // the remediations are computed HERE, where the `Program` is in scope, and handed to `summary`
     // as an argument. They used to travel through a `private var` in `PortabilityCheck` keyed to
     // the exact violation list, because `summary` has no `Program` and there was no orchestrator to
