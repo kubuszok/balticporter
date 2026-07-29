@@ -215,6 +215,66 @@ So the remaining single error is NOT the tip of a systemic wildcard problem. It 
 the name-keyed fill's collision (`AsyncTask<Void>`'s `T` reaching `AssetDescriptor<T>`) is not also
 made harmlessly-consistent on both sides of an override.
 
+## `Asserts` IS DELETED — 33 -> 0, and 217/221 still pass
+
+Measured 2026-07-29. `corpus-tests/runMain balticporter.corpus.LibgdxTestMigrate`, then scala-cli
+3.8.4 over `libgdx-core/src_managed/{main,test}/scala` with munit 1.0.2 + junit 4.13.2 +
+junit-jupiter 5.10.2.
+
+| | before | after |
+|---|---|---|
+| files emitted to `src_managed/test` | 30 (29 suites + `Asserts.scala`) | **29 — nothing injected** |
+| suites / tests converted | 29 / 221 | 29 / 221 |
+| untranslated-construct findings | 5 | 5 |
+| discovery (munit + junit) | 221 + 0 | 221 + 0 |
+| compile errors | 0 (with the façade) / 33 (direct, measured earlier) | **0** |
+| tests | 217 pass, 4 fail | **217 pass, 4 fail** — the same four `Json.fromJson` |
+| engine suite (`sbt testOnly *`) | 126, 1 ignored | 137, 1 ignored |
+
+880 `org.junit.Assert` call sites were mapped; the only `org.junit` references left in the emitted
+tests are the `@Rule`/`@RunWith` residues that `TestFrameworkTransform` already reports by name.
+
+**The rule is lifted to `ENGINE-LIMITS.md` X2 (the full junit->MUnit table, the two numeric-widening
+traps and the array-with-delta loop), X3 (use the framework's assertion OBJECT, do not move the
+helper) and K4 (the curried-apply retraction).** The sections below are the record of how the
+conclusion was reached and are superseded by that outcome; they are kept because the sequence —
+"1 -> 33 justifies a helper", then "no it does not", then 33 -> 0 — is itself the lesson.
+
+### The distribution of junit overloads, measured
+
+Read off all 880 call sites in one instrumented run. Kept because it is what a mapping has to cover,
+and because the tail is where an unmapped member would hide:
+
+| overload | sites | | overload | sites |
+|---|---|---|---|---|
+| `assertEquals(long,long)` | 266 | | `assertEquals(String,long,long)` | 6 |
+| `assertEquals(Object,Object)` | 164 | | `assertEquals(String,Object,Object)` | 5 |
+| `assertTrue(boolean)` | 133 | | `assertNotNull(Object)` | 3 |
+| `assertEquals(float,float,float)` | 112 | | `assertEquals(double,double,double)` | 3 |
+| `assertFalse(boolean)` | 48 | | `assertArrayEquals(float[],float[],float)` | 3 |
+| `assertTrue(String,boolean)` | 35 | | `assertArrayEquals(char[],char[])` | 3 |
+| `assertArrayEquals(long[],long[])` | 26 | | `assertEquals(String,float,float,float)` | 2 |
+| `assertArrayEquals(Object[],Object[])` | 19 | | `assertArrayEquals(String,float[],float[],float)` | 2 |
+| `fail()` | 16 | | `assertNotEquals(long,long)` | 1 |
+| `fail(String)` | 13 | | `assertFalse(String,boolean)` | 1 |
+| `assertNull(Object)` | 12 | | | |
+| `assertNotEquals(Object,Object)` | 7 | | | |
+
+24 of the 880 needed a widening conversion (21 `Int` beside `Long`, 3 `Char` beside `Int`) — the
+26 in the original breakdown counted error SITES, not call sites. `assertSame`/`assertNotSame` and
+every `short`/`byte` overload occur ZERO times in libGDX, so they are mapped on the strength of the
+junit API alone and are covered only by `TestFrameworkTransformSpec`, not by the corpus.
+
+### Do NOT retry: static imports resolve differently in a SNIPPET
+
+`SpoonTir.fromSource` builds with `noClasspath`, so a `import static org.junit.Assert.assertEquals`
+in a one-file snippet resolves to `this.assertEquals(...)` — a `CtThisAccess`, not a `CtTypeAccess`
+naming `org.junit.Assert` — and the assertion rewrite does not fire at all. The full corpus model
+resolves it correctly (all 880 sites), so this is a property of the snippet path only. A unit test
+of the assertion mapping must therefore write `Assert.assertEquals(...)` explicitly, or it will
+assert against unrewritten output and pass for the wrong reason — which the pre-existing
+`@Ignore` test had been doing.
+
 ### CORRECTION: `Asserts` is NOT justified either — it must go the way of `PortedSuite`
 
 > Rules lifted to `ENGINE-LIMITS.md` **X2**/**X3** (MUnit's `B <:< A`, 1 -> 33, and the 26/6/1

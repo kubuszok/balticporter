@@ -9,21 +9,35 @@ import balticporter.tir.*
   * JUnit-in-Scala therefore yields a gate that cannot execute on the platforms the port EXISTS for,
   * while looking like full coverage: 221 discovered tests, zero of them runnable on the target.
   *
-  * ==The assertion façade is a SCAFFOLD, not part of the design==
+  * ==The assertion façade is GONE — nothing ships with the port==
   *
-  * `Assert.assertEquals(expected, actual)` is rewritten to a same-shaped member of an injected
-  * `object` ([[TestFrameworkTransform.runtimeSources]]) rather than to MUnit's
-  * `assertEquals(obtained, expected)`, because the direct mapping measured 1 -> 33 errors: MUnit's
-  * `assertEquals` is type-constrained (`B <:< A`) and java's `assertEquals(Object, Object)` is not.
+  * An earlier version rewrote `Assert.assertEquals(expected, actual)` to a same-shaped member of an
+  * injected `balticporter.runtime.Asserts` object, because the direct mapping onto MUnit had
+  * measured 1 -> 33 errors. Re-declaring shapes the engine can emit correctly is exactly what
+  * injected sources are NOT for (they exist for semantics the target LACKS, like
+  * `CollectionsTransform`'s removal-capable iterator), so the façade was deleted and the 33 closed
+  * by two type-directed rules here plus one naming rule. Recorded because each was a guess that had
+  * to be measured:
   *
-  * That is NOT a justification, and the file must not read as though it were. The 33 broke down as
-  * 26 mixed-numeric comparisons the transform can widen from static types it already has, 6 java
-  * `static` helpers wrongly emitted into the companion object where the suite's instance members
-  * are invisible, and 1 unrelated. Every MUnit shape was probed and compiles. So the façade is
-  * SHAPE ADAPTATION, which this project forbids shipping, and deleting it needs exactly two
-  * type-directed changes here: widen the narrower operand of a mixed-numeric comparison, and stop
-  * emitting a test class's java statics into the companion. Nothing then ships with the port.
-  * Nothing below should add members to it.
+  *   - 26 were `Can't compare these two types: Long / Int`. MUnit's `assertEquals[A, B]` infers
+  *     both operands independently, so nothing drives Scala's numeric widening; java had already
+  *     promoted them at the call. [[promote]] re-applies JAVA'S OWN promotion — widen the narrower
+  *     operand to the wider, and `Char`/`Short` (which do not widen to each other) both to `Int`.
+  *   - 6 were `Not found: assertEquals` / `fail` inside a java `static` test helper, which emits
+  *     into the COMPANION object — a scope that does not extend the suite, so members inherited
+  *     from `munit.FunSuite` are invisible there. The fix is NOT to move the helper onto the suite:
+  *     MUnit declares every assertion on the `munit.Assertions` OBJECT as well, and an object
+  *     member resolves identically from a suite body, a companion object, a nested class and a
+  *     lambda. So every assertion is emitted fully qualified (CLAUDE.md §6), and the scope question
+  *     disappears instead of being answered.
+  *   - 1 was unrelated (a pre-existing error in the ported main sources).
+  *
+  * The remaining shapes are argument PERMUTATION, which is what a re-compiler is for: java's
+  * `(expected, actual)` is MUnit's `(obtained, expected)`, java's leading `String message` is
+  * MUnit's trailing `clue`, java's `delta` overloads are `assertEqualsFloat`/`assertEqualsDouble`,
+  * and `assertArrayEquals` is a `.toSeq` comparison. Only ONE junit form has no MUnit counterpart —
+  * `assertArrayEquals(expected, actual, delta)`, elementwise-with-tolerance — and it is emitted as
+  * the loop it means, with both arrays bound to locals first so neither is re-evaluated.
   *
   * ==The honest §1 label: (b) with EXACTLY ONE implemented policy value==
   *
@@ -35,9 +49,11 @@ import balticporter.tir.*
   *   2. the name slot accepts a `munit.TestOptions`, and `.ignore` on one disables the test;
   *   3. `intercept[E] { … }` is inherited from the suite and asserts that the body throws;
   *   4. one-time setup/teardown are `override def beforeAll()` / `afterAll()` on the suite;
-  *   5. `munit.TestOptions` is nameable by FQN with no import (CLAUDE.md §6).
+  *   5. `munit.TestOptions` is nameable by FQN with no import (CLAUDE.md §6);
+  *   6. the assertions exist as members of a stable OBJECT (`munit.Assertions`), with MUnit's own
+  *      argument order, clue position and delta-member split — see [[munitCall]].
   *
-  * 2–5 name MUnit types and members literally, in this file. 1 is a tree SHAPE, not a string — and
+  * 2–6 name MUnit types and members literally, in this file. 1 is a tree SHAPE, not a string — and
   * note what it is NOT: the TIR expresses currying perfectly well as a nested `Apply`, because
   * `Apply.fun` is a `Term`. An earlier version believed otherwise and injected a `PortedSuite` base
   * class with an un-curried `testCase(name, body)` forwarder; that class has been DELETED and the
@@ -64,14 +80,21 @@ final class TestFrameworkTransform(
     testMember: String = "test",
 ) extends Phase:
 
-  import TestFrameworkTransform.{Finding, Fix}
+  import TestFrameworkTransform.{Finding, Fix, MinArity, NumericRank}
 
   def name: String = "junit->portable-suite"
 
   private val AssertClass = "org.junit.Assert"
-  private val AssertsObject = "balticporter.runtime.Asserts"
-  private val AssertMembers = Set("assertEquals", "assertNotEquals", "assertTrue", "assertFalse",
-    "assertNull", "assertNotNull", "assertSame", "assertArrayEquals", "fail")
+  /** MUnit declares every assertion twice — on the `Assertions` TRAIT that `FunSuite` mixes in, and
+    * on the `Assertions` OBJECT. Emitting through the object is what makes a java `static` test
+    * helper translate at all: it lands in the companion object, which does not extend the suite, so
+    * an inherited `assertEquals` is not in scope there. An object member is, from every scope. */
+  private val MunitAssertions = "munit.Assertions"
+  /** MUnit's own members this phase emits. `TestFrameworkTransform.MinArity` is the matching list
+    * of the `org.junit.Assert` members mapped ONTO them; a junit name absent from it (`assertThat`)
+    * is reported, never guessed at. */
+  private val MunitMembers = Set("assertEquals", "assertNotEquals", "assert", "fail",
+    "assertEqualsFloat", "assertEqualsDouble")
   private val TestAnn        = "org.junit.Test"
   private val BeforeAnn      = "org.junit.Before"
   private val AfterAnn       = "org.junit.After"
@@ -96,8 +119,18 @@ final class TestFrameworkTransform(
   private var testOptionsSym: SymId = SymId.None
   private var ignoreSym: SymId = SymId.None
   private var unitSym: SymId   = SymId.None
-  /** `org.junit.Assert.assertX` → the façade's own `assertX`, by simple name. */
-  private var assertSyms: Map[String, SymId] = Map.empty
+  /** MUnit's assertions on the `munit.Assertions` object, by simple name. */
+  private var munitSyms: Map[String, SymId] = Map.empty
+  /** `scala.Int` → the `toInt` member that widens to it; see [[promote]]. */
+  private var widenSyms: Map[String, SymId] = Map.empty
+  /** primitive/`Unit` type references, resolved from the program where it already has them. */
+  private var primTypes: Map[String, TypeRepr] = Map.empty
+  private var toSeqSym: SymId   = SymId.None
+  private var indicesSym: SymId = SymId.None
+  private var eqSym: SymId      = SymId.None
+  private var neSym: SymId      = SymId.None
+  /** distinguishes the locals of one emitted array-with-delta loop from the next. */
+  private var nextTmp: Int = 0
 
   // symbol minting has to continue DURING the walk (each converted suite needs its own
   // `beforeAll`/`afterAll` symbol), so the counter and the buffer are fields, not `run` locals.
@@ -126,14 +159,25 @@ final class TestFrameworkTransform(
     // String conversion, and this phase emits fully-qualified references with no imports (§6).
     testOptionsSym = mint("TestOptions", "munit.TestOptions")
     ignoreSym      = mint("ignore", "ignore")
-    // keyed by the member's SIMPLE name: a static call renders as `<receiver FQN>.<name>`, so the
-    // member symbol itself is not keyed by the owner's FQN and cannot be found that way.
-    // fully-qualified to an OBJECT, not inherited from the base class. A java `static` helper
-    // emits into the COMPANION object, which does not extend the suite, so inherited assertions are
-    // invisible there (`Not found: assertTrue`). An object member resolves the same from both.
-    assertSyms = AssertMembers.map(nm => nm -> mint(nm, AssertsObject + "." + nm)).toMap
-    unitSym = program.symbols.all.find(_.fullName == "scala.Unit").map(_.id)
-      .getOrElse(mint("Unit", "scala.Unit"))
+    // fully qualified to an OBJECT rather than left to inheritance: see [[MunitAssertions]].
+    munitSyms = MunitMembers.map(nm => nm -> mint(nm, MunitAssertions + "." + nm)).toMap
+    // scala's own widening members and array views — a `Select`'s member renders by SIMPLE name, so
+    // these are minted with no qualification at all.
+    widenSyms  = NumericRank.keys.map(t => t -> mint("to" + t.stripPrefix("scala."), "to" + t.stripPrefix("scala."))).toMap
+    toSeqSym   = mint("toSeq", "toSeq")
+    indicesSym = mint("indices", "indices")
+    // reference identity, NOT `==` — CLAUDE.md §4.4. The `scala.<op>#` prefix is the emitter's
+    // marker for an operator, which renders infix instead of `.eq(x)`.
+    eqSym = mint("eq", "scala.<op>#eq")
+    neSym = mint("ne", "scala.<op>#ne")
+    nextTmp = 0
+    val byName = program.symbols.all.groupBy(_.fullName)
+    def prim(fqn: String): TypeRepr =
+      TypeRepr.TypeRef(TypeRepr.NoPrefix,
+        byName.get(fqn).flatMap(_.headOption).map(_.id)
+          .getOrElse(mint(fqn.substring(fqn.lastIndexOf('.') + 1), fqn)))
+    primTypes = (NumericRank.keySet + "scala.Unit" + "scala.Boolean").map(t => t -> prim(t)).toMap
+    unitSym = headSymOf(primTypes("scala.Unit"))
 
     val symbols0 = SymbolTable(program.symbols.all ++ added)
     given Program = new Program(program.units, symbols0, program.xref)
@@ -213,11 +257,11 @@ final class TestFrameworkTransform(
         if isHamcrest || isAssertThat then
           val what = if isAssertThat then "assertThat" else s.fullName
           program.usages(id).foreach(u => found += Finding(what, u.site.origin, Fix.EngineRule,
-            "Hamcrest is a second assertion vocabulary (`assertThat(x, is(equalTo(y)))`); the " +
-            "injected façade declares JUnit's `Assert` members only, and nothing translates a " +
-            "matcher. OUT OF SCOPE by decision, reported so it is not mistaken for coverage: " +
+            "Hamcrest is a second assertion vocabulary (`assertThat(x, is(equalTo(y)))`); this " +
+            "phase maps JUnit's `Assert` members only, and MUnit has no matcher algebra to map a " +
+            "matcher ONTO. OUT OF SCOPE by decision, reported so it is not mistaken for coverage: " +
             "either keep this suite on the JVM/JUnit path with hamcrest on the test classpath, or " +
-            "add `assertThat` plus matcher shims to the façade."))
+            "translate each matcher into the assertion it means."))
       }
     }
 
@@ -243,16 +287,179 @@ final class TestFrameworkTransform(
       "an unrecognised test-framework annotation: it is carried into the output verbatim (which " +
       "needs the framework on the classpath) and whatever it configured does not happen.")
 
-  /** `org.junit.Assert.assertEquals(a, b)` → `assertEquals(a, b)`, resolving to the façade member
-    * inherited from the base suite. The arguments do not move — that is the whole point of
-    * re-declaring java's shapes there rather than rewriting 872 call sites into MUnit's own
-    * `(obtained, expected)` order. Same mechanism as [[StaticForwarderTransform]]: a wrapper's
-    * statics become plain members. */
+  // -------------------------------------------------------------------------
+  // Assertions — org.junit.Assert onto munit.Assertions, by ARGUMENT TYPE
+  // -------------------------------------------------------------------------
+
+  /** `org.junit.Assert.assertX(…)` → the MUnit assertion that means the same thing.
+    *
+    * Java's shape is `(expected, actual)` with an OPTIONAL leading `String message`; MUnit's is
+    * `(obtained, expected)` with an optional TRAILING `clue`. So both ends of the argument list
+    * move, and which junit overload was resolved decides how — a `delta` third argument is a
+    * different assertion in MUnit, not a third argument to the same one.
+    *
+    * The overload is read from the ARGUMENTS' static types, not from the callee's signature: every
+    * TIR term carries a structured `TypeRepr` by construction, whereas a callee's parameter list is
+    * only as good as the frontend's key encoding for an EXTERNAL symbol. Both were available here;
+    * this is the one the IR contract guarantees.
+    *
+    * A member with no mapping (`assertThat`) is LEFT ALONE and reported. Rewriting it to something
+    * plausible is the silent-miss this engine exists to prevent, and leaving it keeps the reference
+    * to `org.junit` that [[PortabilityCheck]] already counts.
+    *
+    * NOTE for anyone unit-testing this against `SpoonTir.fromSource`: that path builds with
+    * `noClasspath`, so a `import static org.junit.Assert.assertEquals` in a one-file snippet
+    * resolves to `this.assertEquals(…)` and this hook never fires. Write `Assert.assertEquals(…)`
+    * explicitly, or the test asserts against unrewritten output and passes for the wrong reason. A
+    * model built over a whole source tree resolves the static import correctly. */
   override def transformApply(t: Tree.Apply)(using p: Program): Term = t.fun match
     case Tree.Select(recv, m, _, o) if recvIs(recv, AssertClass) =>
       val nm = p.symbolOf(m).map(_.name).getOrElse("")
-      assertSyms.get(nm).map(id => t.copy(fun = Tree.Ident(id, TypeRepr.NoType, o), method = id)).getOrElse(t)
+      munitCall(nm, t.args, o).getOrElse {
+        found += Finding(AssertClass + "." + nm, o, Fix.EngineRule,
+          s"no MUnit counterpart is known for this `$nm` overload (${t.args.size} argument(s)), so " +
+          "the call is left on org.junit — which compiles only with JUnit on the classpath and " +
+          "cannot run on Scala.js / Native. Add the mapping to TestFrameworkTransform.munitCall.")
+        t
+      }
     case _ => t
+
+  /** java's `(message?, expected, actual, delta?)` → MUnit's `(obtained, expected, delta?, clue?)`.
+    *
+    * `hasMsg` is decided STRUCTURALLY: a leading `String` is junit's message exactly when the call
+    * carries more arguments than the member's minimal arity. That separates every junit overload
+    * that exists — `assertEquals(String, Object, Object)` from `assertEquals(double, double,
+    * double)`, and `assertEquals(a, b)` on two Strings from either — without naming one. */
+  private def munitCall(nm: String, args: List[Term], o: Origin)(using p: Program): Option[Term] =
+    MinArity.get(nm).flatMap { min =>
+      val hasMsg = args.sizeIs > min && args.headOption.exists(a => nameOf(a.tpe) == "java.lang.String")
+      val clue   = if hasMsg then List(args.head) else Nil
+      val rest   = if hasMsg then args.tail else args
+      (nm, rest) match
+        // junit's `fail()` has no message; MUnit's `fail` requires one.
+        case ("fail", Nil) =>
+          Some(call("fail", List(clue.headOption.getOrElse(constTerm(Constant.StringC("failed"), "java.lang.String", o))), o))
+        case ("assertTrue", List(c))  => Some(call("assert", c :: clue, o))
+        // `assert(!c)` would need an operator node for one gain in readability; comparing against
+        // the literal is the same assertion and reports the same way.
+        case ("assertFalse", List(c)) => Some(call("assertEquals", c :: bool(false, o) :: clue, o))
+        case ("assertNull", List(x))    => Some(call("assertEquals", x :: nul(o) :: clue, o))
+        case ("assertNotNull", List(x)) => Some(call("assertNotEquals", x :: nul(o) :: clue, o))
+        // REFERENCE identity — scala's `==` is java's `equals` (CLAUDE.md §4.4), so `assertEquals`
+        // here would silently weaken every `assertSame` into an `assertEquals`.
+        case ("assertSame", List(e, a))    => Some(call("assert", infix(a, eqSym, e, o) :: clue, o))
+        case ("assertNotSame", List(e, a)) => Some(call("assert", infix(a, neSym, e, o) :: clue, o))
+        case ("assertEquals" | "assertNotEquals", List(e, a)) =>
+          val (a2, e2) = promote(a, e)
+          Some(call(if nm == "assertEquals" then "assertEquals" else "assertNotEquals", a2 :: e2 :: clue, o))
+        case ("assertEquals", List(e, a, delta)) =>
+          Some(call(deltaMember(List(e, a, delta)), a :: e :: delta :: clue, o))
+        case ("assertArrayEquals", List(e, a)) =>
+          // `guarded` for the same reason as in `widen`: an operand that renders infix or as a
+          // control-flow expression would bind `.toSeq` to its last branch.
+          Some(call("assertEquals",
+            select(guarded(a), toSeqSym, o) :: select(guarded(e), toSeqSym, o) :: clue, o))
+        case ("assertArrayEquals", List(e, a, delta)) => arrayWithDelta(e, a, delta, clue, o)
+        case _ => scala.None
+    }
+
+  /** MUnit splits java's one `assertEquals(…, delta)` by WIDTH, and its `delta` parameter is not
+    * generic — so a `Double` operand anywhere forces the double form, exactly as java's own
+    * overload resolution did. */
+  private def deltaMember(operands: List[Term])(using p: Program): String =
+    val floatRank = NumericRank("scala.Float")
+    if operands.forall(x => NumericRank.getOrElse(nameOf(x.tpe), Int.MaxValue) <= floatRank)
+    then "assertEqualsFloat" else "assertEqualsDouble"
+
+  /** JAVA'S BINARY NUMERIC PROMOTION, re-applied.
+    *
+    * `assertEquals(int, long)` is legal java because the call promoted the `int` before comparing.
+    * MUnit's `assertEquals[A, B]` infers each operand independently, so nothing drives scala's
+    * widening and the pair is rejected — 26 of the 33 errors that once justified an injected
+    * façade. Widening the NARROWER operand is the only safe direction; the reverse loses bits.
+    *
+    * `Char` and `Short` share a rank because neither widens to the other, which is why the
+    * equal-rank case promotes both to `Int` rather than picking one. */
+  private def promote(x: Term, y: Term)(using p: Program): (Term, Term) =
+    val (tx, ty) = (nameOf(x.tpe), nameOf(y.tpe))
+    (NumericRank.get(tx), NumericRank.get(ty)) match
+      case (Some(rx), Some(ry)) if tx != ty =>
+        val to = if rx > ry then tx else if ry > rx then ty else "scala.Int"
+        (widen(x, tx, to, p), widen(y, ty, to, p))
+      case _ => (x, y)
+
+  private def widen(t: Term, from: String, to: String, p: Program): Term =
+    if from == to then t else select(guarded(t)(using p), widenSyms(to), t.origin, primTypes(to))
+
+  /** Parenthesize a receiver that would otherwise re-associate. `a * b` is a bare `Apply` in the
+    * TIR but renders INFIX, so `.toLong` on it would attach to `b` — and `x >> 2.toLong` is not
+    * `(x >> 2).toLong`. A `Block` with no statements is the TIR's only way to say "parenthesized". */
+  private def guarded(t: Term)(using p: Program): Term = t match
+    case Tree.Apply(Tree.Select(_, m, _, _), _, _, _, _)
+        if p.symbolOf(m).exists(_.fullName.startsWith("scala.<op>#")) =>
+      Tree.Block(Nil, t, t.tpe, t.origin)
+    case _: Tree.If | _: Tree.Match | _: Tree.Lambda => Tree.Block(Nil, t, t.tpe, t.origin)
+    case _                                           => t
+
+  /** The ONE junit assertion with no MUnit counterpart: elementwise comparison with a tolerance.
+    *
+    * Emitted as the loop it means. Both arrays are bound to locals FIRST — the two operands are
+    * arbitrary expressions (`polygon.getTransformedVertices()`), and naming each once is the
+    * difference between java's one evaluation and one per element. The length check comes first,
+    * as it does in junit, so a size mismatch reports as a size mismatch. */
+  private def arrayWithDelta(e: Term, a: Term, delta: Term, clue: List[Term], o: Origin)
+                            (using p: Program): Option[Term] =
+    if a.tpe == TypeRepr.NoType || e.tpe == TypeRepr.NoType then scala.None
+    else
+      val n    = nextTmp; nextTmp += 1
+      val int  = primTypes("scala.Int")
+      val unit = primTypes("scala.Unit")
+      val oS = mint(s"bpObtained$n", s"bpObtained$n", Flags(), a.tpe)
+      val eS = mint(s"bpExpected$n", s"bpExpected$n", Flags(), e.tpe)
+      val iS = mint(s"bpIndex$n", s"bpIndex$n", Flags(), int)
+      def obtained = Tree.Ident(oS, a.tpe, o)
+      def expected = Tree.Ident(eS, e.tpe, o)
+      def at(arr: Term, t: TypeRepr) = Tree.ArrayAccess(arr, Tree.Ident(iS, int, o), elemOf(t), o)
+      val lengths = call("assertEquals",
+        Tree.ArrayLength(obtained, int, o) :: Tree.ArrayLength(expected, int, o) :: clue, o)
+      val body = call(deltaMember(List(elemProbe(e, o), elemProbe(a, o), delta)),
+        at(obtained, a.tpe) :: at(expected, e.tpe) :: delta :: clue, o)
+      val loop = Tree.ForEach(Tree.ValDef(iS, TypeTree(int, o), None, o),
+                              select(obtained, indicesSym, o), body, unit, o)
+      Some(Tree.Block(
+        List(Tree.ValDef(oS, TypeTree(a.tpe, o), Some(a), o),
+             Tree.ValDef(eS, TypeTree(e.tpe, o), Some(e), o),
+             lengths),
+        loop, unit, o))
+
+  /** a stand-in term carrying the array's ELEMENT type, so [[deltaMember]] picks the member from
+    * the element width rather than from `Array`. */
+  private def elemProbe(arr: Term, o: Origin)(using p: Program): Term =
+    Tree.Literal(Constant.UnitC, elemOf(arr.tpe), o)
+
+  private def elemOf(t: TypeRepr)(using p: Program): TypeRepr = t match
+    case TypeRepr.AppliedType(tc, List(el)) if nameOf(tc) == "scala.Array" => el
+    case _                                                                => TypeRepr.NoType
+
+  private def call(member: String, args: List[Term], o: Origin): Term =
+    val s = munitSyms(member)
+    Tree.Apply(Tree.Ident(s, TypeRepr.NoType, o), args, s, TypeRepr.NoType, o)
+
+  private def select(q: Term, m: SymId, o: Origin, tpe: TypeRepr = TypeRepr.NoType): Term =
+    Tree.Select(q, m, tpe, o)
+
+  /** `a eq b` — an operator application, which the emitter renders infix off the `scala.<op>#` tag. */
+  private def infix(l: Term, op: SymId, r: Term, o: Origin): Term =
+    Tree.Apply(Tree.Select(l, op, TypeRepr.NoType, o), List(r), op, primTypes("scala.Boolean"), o)
+
+  private def constTerm(c: Constant, tpeName: String, o: Origin): Term =
+    Tree.Literal(c, primTypes.getOrElse(tpeName, TypeRepr.NoType), o)
+  private def bool(v: Boolean, o: Origin): Term = constTerm(Constant.BoolC(v), "scala.Boolean", o)
+  private def nul(o: Origin): Term = Tree.Literal(Constant.NullC, TypeRepr.NoType, o)
+
+  private def headSymOf(t: TypeRepr): SymId = t match
+    case TypeRepr.TypeRef(_, s) => s
+    case _                      => SymId.None
 
   private def recvIs(recv: Term, fqn: String)(using p: Program): Boolean = recv match
     case Tree.Ident(s, _, _)     => p.symbolOf(s).exists(_.fullName == fqn)
@@ -430,86 +637,21 @@ object TestFrameworkTransform:
   final case class Finding(construct: String, where: Origin, fix: Fix, advice: String):
     def render: String = s"$construct — (${fix.label}) $advice  (${where.javaPath}:${where.line})"
 
-  /** Only the ASSERTIONS remain injected: java's argument order and loose typing differ from
-    * MUnit's `(obtained, expected)` with `B <:< A`. That is still shape-adaptation the transform
-    * should do itself — see LIBGDX-PORT-STATUS.md — so this too is interim. */
-  val AssertsObjectFqn = "balticporter.runtime.Asserts"
+  /** Widening rank for java's BINARY NUMERIC PROMOTION: a value of rank r converts, without loss,
+    * to any numeric type of higher rank. `Char` and `Short` share a rank because neither widens to
+    * the other — java promotes that pair to `Int`, and so does [[TestFrameworkTransform.promote]].
+    *
+    * Deliberately NOT the emitter's copy of this table: that one exists to disambiguate an OVERLOAD
+    * at emission, this one to rewrite a TREE. Sharing them would couple a transform to a backend. */
+  val NumericRank: Map[String, Int] = Map(
+    "scala.Byte" -> 1, "scala.Short" -> 2, "scala.Char" -> 2, "scala.Int" -> 3,
+    "scala.Long" -> 4, "scala.Float" -> 5, "scala.Double" -> 6)
 
-  /** The façade: JUnit's assertions with JAVA's argument order and loose typing, over MUnit. */
-  val runtimeSources: Map[String, String] = Map(
-    AssertsObjectFqn ->
-      """package balticporter.runtime
-        |
-        |/** JUnit's assertions, in JAVA's argument order and with java's loose typing.
-        |  *
-        |  * An OBJECT, not members of a base class: a java `static` helper emits into the COMPANION
-        |  * object, which does not extend the suite, so inherited assertions are invisible exactly
-        |  * where java put half of them.
-        |  *
-        |  * INTERIM. Re-declaring shapes the engine could emit correctly is not what injected
-        |  * sources are for — they exist for semantics the target language LACKS. MUnit's own
-        |  * `assertEquals(obtained, expected)` differs from java's only by argument order and a
-        |  * `B <:< A` constraint, both of which the transform can resolve because it knows the
-        |  * operand types. See LIBGDX-PORT-STATUS.md.
-        |  */
-        |object Asserts:
-        |  private def check(cond: Boolean, msg: => String): Unit =
-        |    if !cond then throw new AssertionError(msg)
-        |
-        |  def fail(): Nothing                = throw new AssertionError("failed")
-        |  def fail(message: String): Nothing = throw new AssertionError(message)
-        |
-        |  def assertEquals(expected: Any, actual: Any): Unit =
-        |    check(expected == actual, s"expected <$expected> but was <$actual>")
-        |  def assertEquals(message: String, expected: Any, actual: Any): Unit =
-        |    check(expected == actual, message)
-        |  def assertEquals(expected: Long, actual: Long): Unit =
-        |    check(expected == actual, s"expected <$expected> but was <$actual>")
-        |  def assertEquals(expected: Double, actual: Double): Unit =
-        |    check(expected == actual, s"expected <$expected> but was <$actual>")
-        |  def assertEquals(expected: Double, actual: Double, delta: Double): Unit =
-        |    check(math.abs(expected - actual) <= delta, s"expected <$expected> but was <$actual>")
-        |  def assertEquals(message: String, expected: Double, actual: Double, delta: Double): Unit =
-        |    check(math.abs(expected - actual) <= delta, message)
-        |  def assertNotEquals(unexpected: Any, actual: Any): Unit =
-        |    check(unexpected != actual, s"did not expect <$unexpected>")
-        |
-        |  def assertTrue(b: Boolean): Unit                   = check(b, "expected true")
-        |  def assertTrue(message: String, b: Boolean): Unit  = check(b, message)
-        |  def assertFalse(b: Boolean): Unit                  = check(!b, "expected false")
-        |  def assertFalse(message: String, b: Boolean): Unit = check(!b, message)
-        |  def assertNull(o: Any): Unit                       = check(o == null, s"expected null, was <$o>")
-        |  def assertNotNull(o: Any): Unit                    = check(o != null, "expected non-null")
-        |  def assertSame(expected: AnyRef, actual: AnyRef): Unit =
-        |    check(expected eq actual, "expected the same instance")
-        |
-        |  def assertArrayEquals(expected: Array[Byte], actual: Array[Byte]): Unit =
-        |    check(expected.sameElements(actual), "arrays differ")
-        |  def assertArrayEquals(expected: Array[Short], actual: Array[Short]): Unit =
-        |    check(expected.sameElements(actual), "arrays differ")
-        |  def assertArrayEquals(expected: Array[Int], actual: Array[Int]): Unit =
-        |    check(expected.sameElements(actual), "arrays differ")
-        |  def assertArrayEquals(expected: Array[Long], actual: Array[Long]): Unit =
-        |    check(expected.sameElements(actual), "arrays differ")
-        |  def assertArrayEquals(expected: Array[Char], actual: Array[Char]): Unit =
-        |    check(expected.sameElements(actual), "arrays differ")
-        |  def assertArrayEquals(expected: Array[Object], actual: Array[Object]): Unit =
-        |    check(expected.sameElements(actual), "arrays differ")
-        |  def assertArrayEquals(expected: Array[Float], actual: Array[Float], delta: Float): Unit =
-        |    check(expected.length == actual.length &&
-        |            expected.indices.forall(i => math.abs(expected(i) - actual(i)) <= delta),
-        |          "arrays differ")
-        |  def assertArrayEquals(message: String, expected: Array[Float], actual: Array[Float],
-        |                        delta: Float): Unit =
-        |    check(expected.length == actual.length &&
-        |            expected.indices.forall(i => math.abs(expected(i) - actual(i)) <= delta), message)
-        |  def assertArrayEquals(expected: Array[Double], actual: Array[Double], delta: Double): Unit =
-        |    check(expected.length == actual.length &&
-        |            expected.indices.forall(i => math.abs(expected(i) - actual(i)) <= delta),
-        |          "arrays differ")
-        |  def assertArrayEquals(message: String, expected: Array[Double], actual: Array[Double],
-        |                        delta: Double): Unit =
-        |    check(expected.length == actual.length &&
-        |            expected.indices.forall(i => math.abs(expected(i) - actual(i)) <= delta), message)
-        |""".stripMargin,
-  )
+  /** How many arguments each `org.junit.Assert` member takes WITHOUT java's optional leading
+    * `String message`. Everything above this count with a leading `String` is that message — which
+    * is what separates `assertEquals(String, Object, Object)` from `assertEquals(double, double,
+    * double)` without either being named. */
+  val MinArity: Map[String, Int] = Map(
+    "assertEquals" -> 2, "assertNotEquals" -> 2, "assertArrayEquals" -> 2,
+    "assertSame" -> 2, "assertNotSame" -> 2, "assertTrue" -> 1, "assertFalse" -> 1,
+    "assertNull" -> 1, "assertNotNull" -> 1, "fail" -> 0)

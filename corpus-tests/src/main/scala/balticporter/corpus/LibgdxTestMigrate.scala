@@ -82,13 +82,11 @@ object LibgdxTestMigrate:
         Files.writeString(p, emitter.emitUnit(u))
         written += 1
     }
-    // the suite base class the transform retyped onto — the output is compiled standalone.
-    TestFrameworkTransform.runtimeSources.foreach { (fqn, src) =>
-      val p = outDir.resolve(fqn.replace('.', '/') + ".scala")
-      Files.createDirectories(p.getParent)
-      Files.writeString(p, src)
-      written += 1
-    }
+    // NOTHING is injected alongside the converted suites. `TestFrameworkTransform` used to write a
+    // `balticporter.runtime.Asserts` façade here, re-declaring JUnit's assertions in java's argument
+    // order; it was shape adaptation the transform can do itself, and it has been deleted. The only
+    // sources a port may ship are the ones for semantics scala LACKS — `CollectionsTransform`'s
+    // iterator shims, which `LibgdxCoreMigrate` writes into the MAIN output.
     val missing = testFqns -- program.units.flatMap(u => program.symbolOf(u.symbol).map(_.fullName))
     if missing.nonEmpty then
       println(s"[libgdx-test] WARNING: ${missing.size} test file(s) produced no unit: ${missing.toList.sorted.mkString(", ")}")
