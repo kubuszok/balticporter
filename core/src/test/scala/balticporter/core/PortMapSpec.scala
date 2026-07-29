@@ -3,6 +3,8 @@ package balticporter.core
 import balticporter.core.PortMap.Disposition
 import balticporter.tir.SrcMap
 
+import java.nio.file.Files
+
 class PortMapSpec extends munit.FunSuite:
 
   private def member(unit: String, m: String) =
@@ -46,17 +48,17 @@ class PortMapSpec extends munit.FunSuite:
 
   test("a package rename is REVERSED, so `upstream` is the name a dependent's Java still uses") {
     val m = build(
-      emitted = List("sge.ui.Widget"),
-      members = List(member("sge.ui.Widget", "sge.ui.Widget#draw(Batch)")),
-      renames = Map("com.badlogic.gdx" -> "sge"),
+      emitted = List("port.ui.Widget"),
+      members = List(member("port.ui.Widget", "port.ui.Widget#draw(Batch)")),
+      renames = Map("up.stream.lib" -> "port"),
     )
     val t = m.types.head
-    assertEquals(t.upstream, "com.badlogic.gdx.ui.Widget")
-    assertEquals(t.emitted, "sge.ui.Widget")
+    assertEquals(t.upstream, "up.stream.lib.ui.Widget")
+    assertEquals(t.emitted, "port.ui.Widget")
     assertEquals(t.disposition, Disposition.Renamed)
     // the member follows the same reversal — this is what makes the map usable as a lookup from a
     // dependent that has only ever seen the upstream names
-    assertEquals(m.members.head.upstream, "com.badlogic.gdx.ui.Widget#draw(Batch)")
+    assertEquals(m.members.head.upstream, "up.stream.lib.ui.Widget#draw(Batch)")
   }
 
   test("an AMBIGUOUS reversal reports the emitted name rather than guessing") {
@@ -96,4 +98,98 @@ class PortMapSpec extends munit.FunSuite:
     java.nio.file.Files.writeString(bumped, text.replace(s"schema=${PortMap.Schema}", "schema=999"))
     assert(clue(PortMap.read(bumped)).isLeft)
     assert(PortMap.read(tmp.resolve("absent.tsv")).isLeft)
+  }
+
+  // ---------------------------------------------------------------------------
+  // R1 — the map goes stale against the base's emitted output
+  // ---------------------------------------------------------------------------
+
+  /** a base's Java tree: one file, one member attributed to it. */
+  private def basePort(body: String) =
+    val root = Files.createTempDirectory("portmap-base")
+    val java = root.resolve("p/C.java")
+    Files.createDirectories(java.getParent)
+    Files.writeString(java, body)
+    val m = PortMap.of("base", "eng", List("p.C"),
+      SrcMap.Recording(List(member("p.C", "p.C#f()"))),
+      Set.empty, Set.empty, Set.empty, Set.empty, Map.empty, sourceRoot = Some(root))
+    (root, java, m)
+
+  test("R1 FALSIFIER: change one base member's body and the map is reported STALE, not used") {
+    // The design's own falsifying experiment, run: publish a map, change a base member's body,
+    // consult the map from a dependent. It must SAY the map no longer describes the base rather
+    // than reading an entry that describes a run which no longer exists.
+    val (root, java, m) = basePort("package p; class C { int f() { return 1; } }")
+    assert(m.sources.nonEmpty, "a map published with a source root carries a fingerprint")
+    assertEquals(m.files, 1)
+    assertEquals(PortMap.freshness(m, "eng", List(root)), PortMap.Freshness.Fresh)
+
+    Files.writeString(java, "package p; class C { int f() { return 2; } }")
+    PortMap.freshness(m, "eng", List(root)) match
+      case PortMap.Freshness.Stale(r) => assert(clue(r).contains("has changed"))
+      case other                      => fail(s"expected Stale, got $other")
+  }
+
+  test("a map published by a DIFFERENT ENGINE is stale — its entries describe another emitter") {
+    val (root, _, m) = basePort("package p; class C { int f() { return 1; } }")
+    PortMap.freshness(m, "eng-next", List(root)) match
+      case PortMap.Freshness.Stale(r) => assert(clue(r).contains("eng-next"))
+      case other                      => fail(s"expected Stale, got $other")
+  }
+
+  test("sources this run cannot see are UNVERIFIED, never `Stale` — the two are different answers") {
+    // A path that resolves under no root contributes `?` to the digest and would therefore ALWAYS
+    // compare unequal. Reporting that as staleness would cry wolf on every port whose resolution
+    // roots do not cover the whole base; the honest answer is that freshness was not checked.
+    val (_, _, m) = basePort("package p; class C { int f() { return 1; } }")
+    PortMap.freshness(m, "eng", List(Files.createTempDirectory("elsewhere"))) match
+      case PortMap.Freshness.Unverified(r) => assert(clue(r).contains("not under this run's resolution"))
+      case other                           => fail(s"expected Unverified, got $other")
+    // …and a map with no fingerprint at all (an older engine's) is likewise unverified, not stale.
+    val bare = build(emitted = List("p.C"))
+    assert(clue(PortMap.freshness(bare, "eng", Nil)).isInstanceOf[PortMap.Freshness.Unverified])
+  }
+
+  test("a SYNTHETIC origin is not a file and is left out of the fingerprint") {
+    // Measured, not hypothesised: one member of libGDX core has origin `<synthetic>`, it can never
+    // resolve under any root, and including it made the FIRST dependent run report the base's map
+    // as unverifiable. A check whose first real firing is a false positive teaches its reader to
+    // ignore it.
+    val root = Files.createTempDirectory("portmap-synth")
+    Files.createDirectories(root.resolve("p"))
+    Files.writeString(root.resolve("p/C.java"), "package p; class C {}")
+    val m = PortMap.of("base", "eng", List("p.C"),
+      SrcMap.Recording(List(
+        member("p.C", "p.C#f()"),
+        SrcMap.Entry("p.C", "p.C#synth()", "def", 1, 2, "<synthetic>", 0, "d1"))),
+      Set.empty, Set.empty, Set.empty, Set.empty, Map.empty, sourceRoot = Some(root))
+    assertEquals(m.javaPaths, List("p/C.java"))
+    assertEquals(m.files, 1)
+    assertEquals(PortMap.freshness(m, "eng", List(root)), PortMap.Freshness.Fresh)
+  }
+
+  test("discovery keys on the map's OWN module header, prefers run-latest, and excludes the caller") {
+    // R2 lives or dies on the exclusion: a module that read its own map would have its behaviour
+    // depend on its previous output, and a port would stop being reproducible from sources plus
+    // policy. The exclusion is by module NAME because that is what a `PortManifest` declares — a
+    // report directory is named after the migration PROGRAM and the two need not agree.
+    val reports = Files.createTempDirectory("port-report")
+    def put(dir: String, run: String, module: String, marker: String): Unit =
+      val d = reports.resolve(s"$dir/$run")
+      Files.createDirectories(d)
+      Files.writeString(d.resolve("port-map.tsv"),
+        PortMap.render(PortMap.of(module, "eng", List(marker), SrcMap.Recording(Nil),
+          Set.empty, Set.empty, Set.empty, Set.empty, Map.empty)))
+
+    put("BaseMigrate", "baseline", "base", "p.Old")
+    put("BaseMigrate", "run-latest", "base", "p.New")
+    put("SelfMigrate", "baseline", "me", "p.Mine")
+
+    val all = PortMap.discover(reports)
+    assertEquals(all.map(_.module), List("base", "me"))
+    val b = all.find(_.module == "base").get
+    assertEquals(b.source, "run-latest")
+    assertEquals(b.map.toOption.get.types.map(_.emitted), List("p.New"))
+
+    assertEquals(PortMap.discover(reports, exclude = Set("me")).map(_.module), List("base"))
   }

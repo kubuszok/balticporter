@@ -152,12 +152,85 @@ same schema. Doing config first would standardise a shape that the map is about 
 
 ## Suggested order
 
-1. **Emit the map** from `PortRun` — assembly only, no new analysis. Verify: libGDX core's map
-   round-trips its own 596 emitted types and 19 528 members with every number unchanged.
-2. **Consume it in `ManifestAgreement`** — replace the re-derived shared surface with the base's
-   published one where a map is available, and keep re-derivation as the fallback. Verify against
-   Ashley: the 605-type agreement must still report 0, and `toArray(Class)` must be reportable
-   *before* emission.
-3. **`PortMapTransform`** — mechanical call migration for a dependent.
+1. ~~**Emit the map** from `PortRun`~~ — **BUILT.** `PortMap`, `port-map.tsv` per run.
+2. ~~**Consume it in `ManifestAgreement`**~~ — **BUILT.** See below.
+3. ~~**`PortMapTransform`**~~ — **BUILT.** See below.
 4. **`PortManifest.fromJson`** for the declarative half, sharing the map's schema.
 5. Only then consider config as the primary authoring form.
+
+---
+
+## Steps 2 and 3, as built
+
+### Discovery — a dependent is not told where its bases' maps are
+
+`PortMap.discover(reportRoot, exclude)` scans `port-report/*/{run-latest,baseline}/port-map.tsv`
+and keys each map on the `module=` field of its own header, not on the directory name — a report
+directory is named after the migration PROGRAM and a `PortManifest` names the MODULE, and nothing
+enforces that those agree. `run-latest` wins over `baseline`, so a dependent run in the same session
+as its base sees what the base just produced; the committed baseline is the fallback for a fresh
+checkout. `PortRun.discoverBasePorts` passes `exclude = {label, manifest.name}`, which is where R2
+is enforced: a module never reads its own map.
+
+### `ManifestAgreement` — published where possible, re-derived where not
+
+`check` now takes `List[BasePort]`, one per declared base, each carrying its manifest and its map if
+one was found AND is fresh. Per shared type:
+
+- an entry in a base's map decides tag parity from **what the base produced** (`Dropped` and
+  `Substituted` both oblige the dependent to tag) and the expected emitted name from the map's
+  `emitted` column;
+- no entry, but a base with a usable map **claims** the namespace ⇒ `BaseSurfaceAbsent`, a finding
+  re-derivation cannot make at all: a manifest is silent about what it never mentioned;
+- otherwise the old re-derivation path, unchanged.
+
+Three new non-fatal, LOUD kinds exist so the fallback is never silent: `BaseMapStale` (refused, not
+used), `BaseMapUnverified` (used, freshness unprovable), `BaseMapMissing` (base declares policy and
+has published nothing). An **empty** base manifest — the documented way to declare a resolution root
+that is not a ported module — is exempt from `BaseMapMissing` and claims no namespace.
+
+### R1 — staleness, and how it is detected
+
+Schema 2 adds `sources=` and `files=` to the header: a digest over `(path, sha256(file))` for every
+distinct `javaPath` the map attributes a member to. That file list is **derived from the map
+itself**, so a consumer recomputes the same digest with nothing to agree on beyond the map. Three
+answers, and the difference between the last two is the point:
+
+| answer | meaning | what the consumer does |
+|---|---|---|
+| `Fresh` | engine and sources match | uses the map |
+| `Stale` | engine differs, or the base's Java has changed | **refuses** it, reports, re-derives |
+| `Unverified` | no fingerprint, or sources not under this run's resolution roots | uses it, reports |
+
+Falsifier, run as `PortMapSpec` "R1 FALSIFIER": publish a map, change one base member's body,
+consult it — `Stale`, naming the change.
+
+### `PortMapTransform` — a §1(b) phase over a base's published output
+
+`new PortMapTransform(maps)`; `Nil` is a total no-op. Implements `PolicySource` (a map matching
+NOTHING is reported — the wrong module's map, or one published before a namespace moved) and
+`SurfacePolicy` (fingerprinted by module@engine/sources#entries, so two modules handed different
+maps do not compare equal).
+
+- **re-points a renamed type** by the same mechanism as `PackageRenameTransform` — owned symbols,
+  longest prefix, cut at a separator — with the prefixes taken from the base's `Renamed` entries
+  instead of from this module's configuration;
+- **reports a call to a `Dropped` member or type**, naming the module that dropped it and quoting
+  its record;
+- **reports a call into a `body`-flagged member**, which no signature can show.
+
+Overload identity is the hard part and is documented at `select`: a TIR symbol's `fullName` is
+`X#m` for *every* overload, so arity is the whole discriminator. Exact arity wins; **no** arity
+match means no record rather than the nearest one (the first version attributed a 1-argument call to
+the map's 0-argument entry). Its findings are recorded by `PortRun` under the `port-map` check on
+every run, `Nil` included.
+
+### What is NOT closed
+
+- **Member SIGNATURES are not compared.** A map's member `upstream` key is the *emitted* signature
+  with renames reversed, not the Java one, so a base that retyped a parameter publishes the retyped
+  key. Comparing it against a dependent's Java-derived key would need the base's erasure re-derived —
+  the thing a map exists to stop doing. So hole 1 is closed for anything that reaches a NAME and
+  open for a retyping that changes only a parameter's type.
+- **R4 (the diamond) is still untested.** The lookups merge N maps with the nearest base winning,
+  but no corpus library has two bases sharing a third.
