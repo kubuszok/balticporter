@@ -2,9 +2,10 @@
 gdx-shared-iterator	0
 omissions	49
 policy	0
-portability(all)	148
-portability(emitted)	148
+portability(all)	166
+portability(emitted)	166
 portability(injected)	0
+remediation	31
 signature	0
 substitution(dangling)	0
 substitution(emitted)	0
