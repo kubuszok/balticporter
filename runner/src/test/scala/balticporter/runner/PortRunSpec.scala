@@ -224,3 +224,84 @@ class PortRunSpec extends munit.FunSuite:
 
   private def byName(p: Program, keys: Map[SymId, String]): Map[String, String] =
     keys.flatMap((id, k) => p.symbolOf(id).map(_.fullName -> k))
+
+  // =========================================================================================
+  // the artifact layer: PortRun owns it, because a run is what an artifact describes
+  // =========================================================================================
+
+  /** Turn the artifact layer on, into a directory of this test's own. `CheckReport` is gated on
+    * process-global flags, so this is set and restored around one run. */
+  private def withReport[A](dir: Path)(f: => A): A =
+    val keys  = List("balticporter.report" -> "on", "balticporter.reportDir" -> dir.toString)
+    val saved = keys.map((k, _) => k -> Option(System.getProperty(k)))
+    keys.foreach((k, v) => System.setProperty(k, v))
+    try f
+    finally saved.foreach {
+      case (k, Some(v))    => System.setProperty(k, v)
+      case (k, scala.None) => System.clearProperty(k)
+    }
+
+  test("PortRun writes the source map — the emitter no longer records through a global") {
+    val (root, src) = fixture()
+    val rep = root.resolve("report")
+    val r = withReport(rep)(run(root, src)())
+    val map = SrcMap.parseAll(rep.resolve("run-latest/srcmap.tsv"))
+    assertEquals(map.map(_.unit).distinct.sorted, List("com.demo.Gadget", "com.demo.Widget"))
+    assert(Files.isRegularFile(rep.resolve("run-latest/members.tsv")))
+    // the map describes THIS run's units and no others — with a global table, every emission the
+    // JVM had ever performed (this suite's other fixtures included) landed in the same file.
+    assert(map.forall(_.unit.startsWith("com.demo.")), clue(map.map(_.unit).distinct))
+    assert(r.written == 2)
+  }
+
+  test("expected failures are GENERATED from the manifest: dropped-types.tsv, not a hand-written list") {
+    val (root, src) = fixture()
+    val rep = root.resolve("report")
+    val inject = root.resolve("overrides")
+    java(inject, "com/demo/Widget.scala", "package com.demo\nclass Widget { def label(): String = \"w\" }")
+    withReport(rep) {
+      run(root, src)(_.copy(subs = Substitutions(dropTypes = Set("com.demo.Widget"), inject = List(inject))))
+    }
+    assertEquals(Correlate.parseDropped(rep.resolve("run-latest/dropped-types.tsv")), Set("com.demo.Widget"))
+    // …and the correlator classifies a failure reaching that type as expected, with nothing declared
+    val t = Correlate.locateTests(
+      Correlate.parseTests(
+        "com.demo.WidgetTest:\n==> X com.demo.WidgetTest.labels  0.0s boom\n    at com.demo.Widget.label(Widget.scala:3)\n"),
+      SrcMap.Index.of(SrcMap.parseAll(rep.resolve("run-latest/srcmap.tsv"))),
+      Nil, Set.empty, Correlate.parseDropped(rep.resolve("run-latest/dropped-types.tsv")))
+    assertEquals(t.flatMap(_.expected).map(_.source), List("derived"))
+  }
+
+  test("every RequiredCheck reaches findings.tsv — a number on stdout that is not persisted fails the run") {
+    val (root, src) = fixture()
+    val rep = root.resolve("report")
+    withReport(rep) {
+      run(root, src)()
+      // the shutdown hook's path, forced now: `CheckReport.dir` must resolve INSIDE the flag scope
+      CheckReport.write(rep.resolve("run-latest"))
+    }
+    val counts = Files.readAllLines(rep.resolve("run-latest/counts.tsv")).toArray(Array.empty[String]).toList
+      .filterNot(_.startsWith("#")).flatMap(_.split('\t').headOption).toSet
+    assertEquals(PortRun.RequiredChecks -- counts, Set.empty[String])
+    // a check that found NOTHING is still named, or `counts.tsv` cannot tell it from one that
+    // never ran — the distinction the whole persistence layer exists to keep.
+    assert(counts.contains(PortRun.PortabilityInjected), "nothing was injected, and it must still be named")
+  }
+
+  test("correlation runs IN-PROCESS against this run's own report directory") {
+    val (root, src) = fixture()
+    val rep = root.resolve("report")
+    val result = withReport(rep) {
+      run(root, src)()
+      val log = root.resolve("compile.txt")
+      Files.writeString(log,
+        "-- [E007] Type Mismatch Error: /anywhere/com/demo/Widget.scala:5:2 ---\n" +
+        " 5 |  x\n   |  ^\n   |  Found: String\n")
+      PortRun("demo", root.resolve("port"), SourceSet.Main, FrontendConfig(src, Nil, Nil), Nil)
+        .correlate(scalac = Some(log))
+    }
+    // the error is joined back to the MEMBER and the Java line it came from — no second JVM
+    assertEquals(result.errors.size, 1)
+    assertEquals(result.errors.head.entry.map(_.unit), Some("com.demo.Widget"))
+    assert(Files.isRegularFile(rep.resolve("run-latest/errors.tsv")))
+  }

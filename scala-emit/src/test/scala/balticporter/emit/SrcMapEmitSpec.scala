@@ -54,16 +54,61 @@ class SrcMapEmitSpec extends munit.FunSuite:
       case (k, scala.None) => System.clearProperty(k)
     }
 
+  /** the map is read back off the EMITTER, not out of a global table.
+    *
+    * This used to be `SrcMap.snapshot().filter(_.unit == "srcmapdemo.Foo")` followed by
+    * `SrcMap.reset()`, and the filter carried a comment explaining why: the recording table was
+    * process-global, sbt runs every suite in one JVM, and another emitter spec running concurrently
+    * recorded into it too. The filter is gone because the hazard is. */
   private def emitWithMap(): (String, List[SrcMap.Entry]) =
     val tmp = java.nio.file.Files.createTempDirectory("bp-srcmap")
     withProps("balticporter.report" -> "on", "balticporter.reportDir" -> tmp.toString) {
-      val text = new TirEmitter(program).emitUnit(foo)
-      // filter to THIS spec's unit: `SrcMap.recorded` is process-global, sbt runs suites in
-      // one JVM, and another emitter spec running concurrently records into it too.
-      val es   = SrcMap.snapshot().filter(_.unit == "srcmapdemo.Foo")
-      SrcMap.reset()
-      (text, es)
+      val emitter = new TirEmitter(program)
+      val text    = emitter.emitUnit(foo)
+      (text, emitter.srcMap.entries)
     }
+
+  // a SECOND, unrelated program — the other side of the contamination test below.
+  private val BAR  = SymId(11)
+  private val BARM = SymId(12)
+  private val barM = Tree.DefDef(BARM, List(Nil), tt(tInt), body(7), Origin("/a/b/src/srcmapdemo/Bar.java", 7, 1))
+  private val bar  = Tree.ClassDef(BAR, Nil, None, List(barM), Origin("/a/b/src/srcmapdemo/Bar.java", 3, 1))
+  private val barProgram = new Program(List(bar), SymbolTable(List(
+    Symbol(BAR, "Bar", "srcmapdemo.Bar", Flags(), SymId.None, TypeRef(NoPrefix, BAR),
+           origin = Origin("/a/b/src/srcmapdemo/Bar.java", 3, 1)),
+    Symbol(INT, "Int", "scala.Int", Flags(), SymId.None, NoType),
+    Symbol(BARM, "bm", "srcmapdemo.Bar#bm", Flags(), BAR, MethodType(Nil, tInt)),
+  )), Xref.build(List(bar)))
+
+  test("two emitters in one JVM do not contaminate each other's source map") {
+    val tmp = java.nio.file.Files.createTempDirectory("bp-srcmap")
+    withProps("balticporter.report" -> "on", "balticporter.reportDir" -> tmp.toString) {
+      val a = new TirEmitter(program)
+      val b = new TirEmitter(barProgram)
+      // interleaved on purpose: a global table would have both units in both maps whatever the
+      // order, and an order-dependent one would at least show up here.
+      a.emitUnit(foo)
+      b.emitUnit(bar)
+      val aUnits = a.srcMap.entries.map(_.unit).distinct
+      val bUnits = b.srcMap.entries.map(_.unit).distinct
+      assertEquals(aUnits.sorted, List("srcmapdemo.Foo"))
+      assertEquals(bUnits.sorted, List("srcmapdemo.Bar"))
+      // …and an emitter that emitted nothing has an EMPTY map, rather than inheriting whatever the
+      // JVM happened to have recorded before it was constructed.
+      assert(new TirEmitter(program).srcMap.isEmpty)
+    }
+  }
+
+  test("re-emitting a unit REPLACES its entries — a second emission does not double the map") {
+    val tmp = java.nio.file.Files.createTempDirectory("bp-srcmap")
+    withProps("balticporter.report" -> "on", "balticporter.reportDir" -> tmp.toString) {
+      val e = new TirEmitter(program)
+      e.emitUnit(foo)
+      val once = e.srcMap.entries
+      e.emitUnit(foo)
+      assertEquals(e.srcMap.entries.map(_.tsv), once.map(_.tsv))
+    }
+  }
 
   test("turning the source map ON does not move a byte of emitted output") {
     val off = new TirEmitter(program).emitUnit(foo)

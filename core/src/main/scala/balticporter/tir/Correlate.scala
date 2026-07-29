@@ -42,14 +42,26 @@ import java.nio.file.{Files, Path}
   * that newly fails, plus the list of members whose emitted text changed since the baseline, is a
   * far smaller suspect set than "the diff".
   *
-  * ## Expected failures are DATA
+  * ## Expected failures are DERIVED first, DECLARED only as a fallback
   *
-  * A port that deliberately substitutes a type ships tests that must fail. Those are read from
-  * `expected-failures.tsv` in the BASELINE directory (`suite`, `test` — `*` for the whole suite —
-  * and a reason), never from a name in this file: `core` may not know a ported library exists
-  * (CLAUDE.md §1). An expected failure is reported as expected and is not a regression; an
+  * A port that deliberately substitutes a type ships tests that must fail. That is not a list to
+  * maintain — it is a CONSEQUENCE of the manifest: a test whose failure stack reaches a type in
+  * the port's `Substitutions.dropTypes` fails because the port deliberately does not have that
+  * type. `PortRun` writes those FQNs to `dropped-types.tsv` beside the source map on every run,
+  * and [[locateTests]] classifies from them. Nothing in this file names a library — `core` may not
+  * know one exists (CLAUDE.md §1) — and nothing has to be kept in step by hand.
+  *
+  * A hand-maintained list is exactly the thing that rots into "we always ignore those four" and
+  * then hides a fifth, so the DECLARED form (`expected-failures.tsv` in the BASELINE directory:
+  * `suite`, `test` — `*` for the whole suite — and a reason) survives only as the explicit escape
+  * hatch for a failure no drop explains. The two are kept APART rather than merged:
+  * [[Expected.derived]] says which one classified a test, so a declared entry can never be
+  * mistaken for a fact about the manifest, and `#derived` in the artifact is greppable.
+  *
+  * Either way an expected failure is reported as expected and is not a regression; a DECLARED
   * expected failure that PASSES is reported too, because a substitution that started working is
-  * news.
+  * news. (A derived one cannot: a passing test has no failure stack, so it simply stops being
+  * expected — which is the same news, arrived at without a file to edit.)
   */
 object Correlate:
 
@@ -141,14 +153,20 @@ object Correlate:
     out.toList
 
   // ===========================================================================
-  // expected failures — read from the port's data, never from a name in here
+  // expected failures — derived from the port's own drops, never from a name in here
   // ===========================================================================
 
-  final case class Expected(suite: String, test: String, reason: String):
+  /** @param derived true when this was computed from the port's `Substitutions.dropTypes` rather
+    *                than read from the hand-written escape hatch. The distinction is kept because
+    *                a declared entry is a CLAIM and a derived one is a consequence, and a reader
+    *                who cannot tell them apart is back to "we always ignore those four". */
+  final case class Expected(suite: String, test: String, reason: String, derived: Boolean = false):
     def matches(o: Outcome): Boolean = o.suite == suite && (test == "*" || test == o.name)
+    def source: String = if derived then "derived" else "declared"
 
   val ExpectedHeader = "#suite\ttest\treason"
 
+  /** the DECLARED escape hatch. Normally empty: a failure a drop explains needs no entry here. */
   def parseExpected(p: Path): List[Expected] =
     if !Files.isRegularFile(p) then Nil
     else
@@ -158,6 +176,32 @@ object Correlate:
           l.split('\t').toList match
             case s :: t :: rest => Some(Expected(s.trim, t.trim, rest.mkString(" ").trim))
             case _              => scala.None
+      }
+
+  val DroppedHeader = "#fqn"
+
+  /** The FQNs a port declares in `Substitutions.dropTypes`, as `PortRun` wrote them. One per line;
+    * `#` comments and blanks ignored, so the file reads like every other artifact here. */
+  def parseDropped(p: Path): Set[String] =
+    if !Files.isRegularFile(p) then Set.empty
+    else
+      Files.readAllLines(p).toArray(Array.empty[String]).toList
+        .map(_.trim).filterNot(l => l.startsWith("#") || l.isEmpty).toSet
+
+  /** Is this failure explained BY CONSTRUCTION — does its stack reach a type the port deliberately
+    * does not have?
+    *
+    * The whole ported stack is consulted, not only the anchor: a drop shows up wherever the
+    * replacement threw, which is routinely one frame below the member the anchor names. The FIRST
+    * dropped unit encountered (frames are already ordered outermost-throw-first) is the one
+    * reported, so the reason names the type that actually explains the failure. */
+  def derivedExpectation(t: Outcome, ported: List[(Frame, SrcMap.Entry)], dropped: Set[String]): Option[Expected] =
+    if dropped.isEmpty || t.status != "fail" then scala.None
+    else
+      ported.map(_._2.unit).find(dropped).map { fqn =>
+        Expected(t.suite, t.name,
+          s"Substitutions.dropTypes $fqn — the port deliberately does not translate this type, and " +
+            "this failure's stack reaches it", derived = true)
       }
 
   // ===========================================================================
@@ -212,7 +256,7 @@ object Correlate:
       val e = entry
       s"${outcome.suite}\t${outcome.name}\t${outcome.status}\t$anchor\t${e.map(_.unit).getOrElse("")}\t" +
       s"${e.map(_.member).getOrElse("")}\t${e.map(_.javaPath).getOrElse("")}\t${e.map(_.javaLine).getOrElse(0)}\t" +
-      s"${if expected.isDefined then "expected" else "unexpected"}\t${digestChanged}\t$unitChanged\t${outcome.detail}"
+      s"${expected.map(x => s"expected#${x.source}").getOrElse("unexpected")}\t${digestChanged}\t$unitChanged\t${outcome.detail}"
 
   val FailuresHeader =
     "#suite\ttest\tstatus\tanchor\tunit\tmember\tjavaPath\tjavaLine\texpectation\tdigestChanged\tunitChanged\tdetail"
@@ -227,6 +271,7 @@ object Correlate:
       idx: SrcMap.Index,
       expected: List[Expected] = Nil,
       changedMembers: Set[String] = Set.empty,
+      droppedTypes: Set[String] = Set.empty,
   ): List[LocatedTest] =
     val changedPerUnit = changedMembers.groupBy(_.takeWhile(_ != '\t')).view.mapValues(_.size).toMap
     outs.map { o =>
@@ -241,7 +286,10 @@ object Correlate:
               idx.resolveFile(m.group(1), m.group(2).toIntOption.getOrElse(0)).map(x => ("assert-site", Some(x)))))
             .orElse(idx.unitEntry(o.suite).map(x => ("suite", Some(x))))
             .getOrElse(("none", scala.None))
-      LocatedTest(o, anchor, entry, ported, expected.find(_.matches(o)),
+      // DERIVED first: a drop is a fact about the manifest, a declaration is somebody's claim about
+      // it, and preferring the claim would let a stale line outrank the thing it describes.
+      val why = derivedExpectation(o, ported, droppedTypes).orElse(expected.find(_.matches(o)))
+      LocatedTest(o, anchor, entry, ported, why,
                   entry.exists(x => changedMembers(s"${x.unit}\t${x.member}")),
                   entry.flatMap(x => changedPerUnit.get(x.unit)).getOrElse(0))
     }
@@ -339,6 +387,7 @@ object Correlate:
             else if t.unitChanged > 0 then s"  (${t.unitChanged} member(s) of its unit changed since the baseline)"
             else ""
           sb.append(s"        anchor=${t.anchor}$moved\n")
+          t.expected.foreach(e => sb.append(s"        ${e.source}: ${e.reason}\n"))
           sb.append(s"        at ${where(t)}\n")
           if t.outcome.detail.nonEmpty then sb.append(s"        ${t.outcome.detail.take(200)}\n")
           t.portedFrames.take(6).foreach((f, e) =>
@@ -349,9 +398,12 @@ object Correlate:
           "the highest-value signal this engine produces — a DIGEST CHANGED line names the member that moved")
     block("still failing", d.stillFailing)
     block("newly passing", d.newlyPassing)
-    block("failing AS EXPECTED", d.expectedFailing, "declared in baseline/expected-failures.tsv")
+    block("failing AS EXPECTED", d.expectedFailing,
+          s"${d.expectedFailing.count(_.expected.exists(_.derived))} DERIVED from the port's " +
+          s"Substitutions.dropTypes, ${d.expectedFailing.count(_.expected.exists(!_.derived))} declared " +
+          "in baseline/expected-failures.tsv")
     if d.expectedButPassing.nonEmpty then
-      sb.append(s"\n-- expected to fail but PASSED (${d.expectedButPassing.size}) — update expected-failures.tsv\n")
+      sb.append(s"\n-- expected to fail but PASSED (${d.expectedButPassing.size}) — remove from expected-failures.tsv\n")
       d.expectedButPassing.foreach(e => sb.append(s"   ${e.suite}.${e.test}\n"))
     if d.disappeared.nonEmpty then
       sb.append(s"\n-- tests in the baseline that DID NOT RUN (${d.disappeared.size}) — a suite that stopped running is not a suite that passed\n")

@@ -211,11 +211,13 @@ It runs on the **Fable 5** model and is expensive, so it is **not** run on every
 
 ### 5.1 A diagnostic over emitted code is ATTRIBUTABLE — never read it by hand
 
-`TirEmitter` writes `srcmap.tsv` (member → emitted line range → Java `Origin`) and `members.tsv`
-(one digest per emitted member) into the run's report directory on every migration.
-`balticporter.tir.CorrelateMain` joins compiler output and TEST-RUNNER output back through them.
-The measure scripts run it; run it yourself when you run a compiler by hand. Three consequences
-that change what you should do:
+`PortRun` writes `srcmap.tsv` (member → emitted line range → Java `Origin`) and `members.tsv`
+(one digest per emitted member) into the run's report directory on every migration, from the
+emitter's own recording — `TirEmitter.srcMap` is a value one emitter owns, never a process-global
+table. `balticporter.tir.CorrelateRun` joins compiler output and TEST-RUNNER output back through
+them, in-process (`PortRun.correlate`) or as a command (`CorrelateMain`). The measure scripts run
+the command; run it yourself when you run a compiler by hand. Three consequences that change what
+you should do:
 
 - **Never open an emitted file to work out which member an error is in.** `errors.tsv` already
   says, with the Java file and line, and splits errors into "at a region the engine marked
@@ -232,9 +234,15 @@ that change what you should do:
   anchor is (`main-frame` = the library member that threw; `test-frame` = only where the failure
   was observed). A test that stopped running is reported as such, never as a pass.
 
-Deliberate failures (a substituted type) are declared in `port-report/<Port>/baseline/
-expected-failures.tsv` — DATA, because `core` may not name a library (§1). Promote every baseline
-with `bash scripts/port_baseline.sh accept <port>`.
+Deliberate failures are **DERIVED, not listed**. A test whose failure stack reaches a type in the
+port's `Substitutions.dropTypes` fails because the port deliberately does not have that type, so
+`PortRun` writes those FQNs to `run-latest/dropped-types.tsv` on every run and the correlator
+classifies from them — the set follows the manifest with nobody editing anything, and `core` still
+names no library (§1). `port-report/<Port>/baseline/expected-failures.tsv` survives ONLY as the
+explicit escape hatch for a failure no drop explains, and is normally empty; the artifact records
+`expected#derived` against `expected#declared` so the two can never be confused. A hand-maintained
+list of expected failures is exactly the thing that rots into "we always ignore those four" and
+then hides a fifth. Promote every baseline with `bash scripts/port_baseline.sh accept <port>`.
 
 ---
 

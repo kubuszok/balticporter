@@ -38,8 +38,15 @@ show_check_report() {
 # diagnostic over emitted Scala is a file and a line and nothing else, and every triage starts by
 # reverse-engineering the emitter by hand.
 #
-# The source maps are written by TirEmitter on every migration run; passing BOTH ports' maps is
-# what lets a test failure be anchored on the library member that threw rather than on the test.
+# The source maps are written by PortRun on every migration run, beside `dropped-types.tsv` (which
+# is what makes a failure reaching a substituted type EXPECTED without anyone maintaining a list).
+# Passing BOTH ports' maps is what lets a test failure be anchored on the library member that threw
+# rather than on the test — and it is also how the dropped types of the LIBRARY reach the SUITE's
+# correlation, since the two are different ports.
+#
+# A second JVM is right here: the compiler and the test runner have long since exited and the join
+# is over files. `PortRun.correlate` is the same logic in-process, for a program that drives its own
+# compile. Paths are ABSOLUTE, always: sbt's non-forked `run` has the subproject as its cwd.
 correlate() {
   local out="$1"; shift
   # strip EVERY CSI sequence, not just colour: sbt -client also emits erase-display (`ESC[0J`),

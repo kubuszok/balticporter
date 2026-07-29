@@ -62,9 +62,7 @@ object RewriteTrace:
     *     arity check (with nothing to compare against, it has nothing to say).
     */
   def check(program: Program): List[Mismatch] =
-    val out = callArity(program) ++ typeArity(program) ++ orphanedCalls(program)
-    CheckReport.record("signature", out.map(_.report))
-    out
+    callArity(program) ++ typeArity(program) ++ orphanedCalls(program)
 
   private def callArity(program: Program): List[Mismatch] =
     program.referenced.toList.flatMap { s =>

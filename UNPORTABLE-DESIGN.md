@@ -457,6 +457,17 @@ This turns the compile step from a number into a triaged list, and it is the pie
 >   four deliberate `Json.fromJson` failures cannot be known to the engine. An expected failure that
 >   starts PASSING is reported too: a substitution that began working is news.
 >
+>   **AMENDED 2026-07-29 — they are DERIVED, and the file is now the escape hatch.** Reading them
+>   from a hand-written list was right about `core` and wrong about who has to maintain it: the four
+>   `Json.fromJson` failures are expected BY CONSTRUCTION, because their stack reaches a type in the
+>   port's `Substitutions.dropTypes`. `PortRun` — which holds the manifest — writes those FQNs to
+>   `run-latest/dropped-types.tsv` on every run, and `Correlate` classifies from them; `core` still
+>   names no library, and nothing is kept in step by hand. The file survives for a failure NO drop
+>   explains, and `Correlate.Expected.derived` (`expected#derived` vs `expected#declared` in
+>   `test-failures.tsv`) keeps a claim from being read as a fact about the manifest. A
+>   hand-maintained list of expected failures rots into "we always ignore those four" and then hides
+>   a fifth.
+>
 > Demonstrated by breaking a second universal rule — the `inline val` of §4.4's `static final`
 > row — which produces **zero scalac errors** and is invisible to every other gate in this
 > repository. See §9's Stage 1 status block for the numbers.
@@ -522,10 +533,17 @@ in the "engine gap, auto-located" lane); (c) `PortReport` assembling the four ex
 
 > **STATUS 2026-07-29 — (c) partially BUILT, (d) BUILT. (a) and (b) still open.**
 >
-> `core/.../tir/CheckReport.scala` is the assembly and persistence layer. Each of `OmissionCheck`,
-> `PortabilityCheck` (twice — all-references and emitted-only — plus the injected-source scan) and
-> `RewriteTrace` records its COMPLETE result; the caller's `take(20)` truncation now applies only
-> to the terminal render. Output per port under `port-report/<main-class>/`:
+> `core/.../tir/CheckReport.scala` is the assembly and persistence layer. The COMPLETE result of
+> each of `OmissionCheck`, `PortabilityCheck` (twice — all-references and emitted-only — plus the
+> injected-source scan), `RewriteTrace` and `Remediator` is recorded; the caller's `take(20)`
+> truncation now applies only to the terminal render.
+>
+> **AMENDED 2026-07-29 — the ORCHESTRATOR records, not the check.** The checks recorded themselves
+> because check invocation was copy-paste and the only place that saw every invocation was the
+> check itself. `PortRun` cured that, so the checks are pure functions of a `Program` again and
+> `PortRun.RequiredChecks` — compared against `CheckReport.snapshot()` before the run finishes —
+> carries the guarantee instead. That is strictly stronger: a self-recording check could only vouch
+> for itself once called, and `LibgdxTestMigrate` never called `PortabilityCheck` at all. Output per port under `port-report/<main-class>/`:
 > `run-latest/{findings.tsv,counts.tsv,report.md,diff.txt,subject.txt}` and a promotable
 > `baseline/{findings.tsv,counts.tsv}` (`scripts/port_baseline.sh accept <port>`). `findings.tsv`
 > is sorted, path-relative and clock-free, so the diff is stable; the finding id excludes the line

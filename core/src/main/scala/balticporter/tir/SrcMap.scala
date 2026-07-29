@@ -118,55 +118,47 @@ object SrcMap:
         case scala.None => CheckReport.relativise(javaPath)
 
   // ---------------------------------------------------------------------------
-  // recording — the same stopgap shape as CheckReport, for the same reason
+  // recording — a VALUE the emitter accumulates, written by the orchestrator
   // ---------------------------------------------------------------------------
 
   /** Gated on exactly what [[CheckReport]] is gated on, so one switch (`balticporter.report=off`)
     * turns the whole artifact layer off and a unit-test JVM produces nothing. */
   def enabled: Boolean = CheckReport.enabled
 
-  private val recorded = collection.mutable.LinkedHashMap.empty[String, List[Entry]]
-  private var hooked   = false
+  /** One emitter's source map: what it recorded, and what it could not locate.
+    *
+    * This used to be a PROCESS-GLOBAL table populated as a side effect of `TirEmitter.emitUnit`,
+    * with a shutdown hook writing it. That is a hazard, not merely inelegant: sbt runs every suite
+    * in one JVM, so two emitters — an emitter spec and a determinism double-emission alike —
+    * contaminated one shared table, and `SrcMapEmitSpec` had to filter the global by unit name to
+    * survive a full `testOnly *`. The map is a property of ONE emission, so it is a value that one
+    * emitter owns and `PortRun` writes.
+    *
+    * `missed` is a member the emitter rendered but could not locate in the finished unit. It is a
+    * HOLE in the map — a diagnostic landing there is attributed to whatever member happens to
+    * enclose it — so it is counted and printed rather than dropped. Zero on this corpus; if it ever
+    * is not, the cause is a rendering path that post-processes a member's text after `memberStat`
+    * returned it, and the fix is to record it at the site that does. */
+  final case class Recording(entries: List[Entry], missed: List[String] = Nil):
+    def isEmpty: Boolean = entries.isEmpty
+    def units: Int       = entries.map(_.unit).distinct.size
 
-  /** Record one emitted unit's members. Idempotent per unit: a second emission of the same unit
-    * replaces the first, so an emitter that is run twice does not double the map. */
-  def record(unit: String, entries: Seq[Entry]): Unit =
-    if enabled then
-      synchronized {
-        recorded(unit) = entries.toList
-        if !hooked then
-          hooked = true
-          Runtime.getRuntime.addShutdownHook(new Thread(() =>
-            try writeNow()
-            catch case e: Exception => System.err.println(s"[balticporter] srcmap could not be written: $e")))
-      }
+  object Recording:
+    val empty: Recording = Recording(Nil, Nil)
 
-  private val misses = collection.mutable.ListBuffer.empty[String]
-
-  /** A member the emitter rendered but could not locate in the finished unit. It is a HOLE in the
-    * map — a diagnostic landing there is attributed to whatever member happens to enclose it — so
-    * it is counted and printed rather than dropped. Zero on this corpus; if it ever is not, the
-    * cause is a rendering path that post-processes a member's text after `memberStat` returned it,
-    * and the fix is to record it at the site that does. */
-  def missed(unit: String, member: String): Unit = synchronized { misses += s"$unit#$member" }
-
-  def snapshot(): List[Entry] = synchronized(recorded.values.toList.flatten)
-  def reset(): Unit           = synchronized { recorded.clear(); misses.clear() }
-
-  def writeNow(): Unit = if enabled && synchronized(recorded.nonEmpty) then write(CheckReport.runDir)
-
-  def write(out: Path): Unit =
-    val all = synchronized(recorded.values.toList.flatten)
-      .sortBy(e => (e.unit, e.start, e.member))
+  /** Write one emitter's map into a run directory. Called by the orchestrator, which is the layer
+    * that knows a run is happening and which directory is its own. */
+  def write(out: Path, rec: Recording): Unit =
+    val all = rec.entries.sortBy(e => (e.unit, e.start, e.member))
     Files.createDirectories(out)
     Files.writeString(out.resolve("srcmap.tsv"), (Header :: all.map(_.tsv)).mkString("", "\n", "\n"))
     // members.tsv is sorted by NAME, not by position: a member that only moved must not move in
     // the file that is meant to show what CHANGED.
     Files.writeString(out.resolve("members.tsv"),
       (MembersHeader :: all.sortBy(e => (e.unit, e.member, e.kind)).map(_.memberTsv)).mkString("", "\n", "\n"))
-    val lost = synchronized(misses.toList)
     println(s"[balticporter] srcmap: ${all.size} members over ${all.map(_.unit).distinct.size} units -> $out" +
-            (if lost.isEmpty then "" else s"  !! ${lost.size} UNLOCATABLE: ${lost.take(5).mkString(", ")}"))
+            (if rec.missed.isEmpty then ""
+             else s"  !! ${rec.missed.size} UNLOCATABLE: ${rec.missed.take(5).mkString(", ")}"))
 
   // ---------------------------------------------------------------------------
   // lookup

@@ -19,13 +19,11 @@ object OmissionCheck:
     def report: CheckReport.Finding =
       CheckReport.Finding("omissions", what, owner, CheckReport.relativise(origin.javaPath), origin.line, detail)
 
-  /** The complete result — and, when check persistence is on, the complete result is also written
-    * to `findings.tsv` so a caller's `take(n)` render can never be the only record of it
-    * ([[CheckReport]]). */
+  /** The complete result. A PURE function of the program: persisting it is the orchestrator's job
+    * (`PortRun` records `omissions` from this list), so a caller's `take(n)` render can never be
+    * the only record of it and the check itself stays testable without an artifact directory. */
   def check(program: Program): List[Finding] =
-    val out = droppedSuperArgs(program) ++ droppedAnonMembers(program) ++ droppedAnnotations(program)
-    CheckReport.record("omissions", out.map(_.report))
-    out
+    droppedSuperArgs(program) ++ droppedAnonMembers(program) ++ droppedAnnotations(program)
 
   /** A Java ANNOTATION the frontend could not carry.
     *

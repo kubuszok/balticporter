@@ -62,13 +62,18 @@ case "$CMD" in
     if [ -f "$DIR/baseline/tests.tsv" ]; then
       echo "tests:   $(grep -c $'\tpass$' "$DIR/baseline/tests.tsv" || true) passing, $(grep -c $'\tfail$' "$DIR/baseline/tests.tsv" || true) failing"
     fi
-    # A failing test in the baseline is a REGRESSION-FREE state only if someone said why it fails.
-    if [ -f "$DIR/baseline/tests.tsv" ] && [ ! -f "$DIR/baseline/expected-failures.tsv" ] && \
-       grep -q $'\tfail$' "$DIR/baseline/tests.tsv"; then
+    # A failing test in the baseline is a REGRESSION-FREE state only if something says why it fails.
+    # Most of the time nothing has to: a failure whose stack reaches a type in the port's
+    # `Substitutions.dropTypes` is DERIVED as expected from `run-latest/dropped-types.tsv`, which
+    # PortRun regenerates every run. The warning below is for the residue — a failure no drop
+    # explains and that is still a decision.
+    if [ -f "$DIR/run-latest/test-failures.tsv" ] && grep -q $'\tunexpected\t' "$DIR/run-latest/test-failures.tsv"; then
       echo
-      echo "NOTE: this baseline contains failing tests and there is no expected-failures.tsv."
-      echo "      Declare each deliberate failure (a substituted type, a dropped method) there —"
-      echo "      '#suite<TAB>test<TAB>reason', '*' for a whole suite — or they read as regressions"
+      echo "NOTE: this baseline contains failing tests that NO SUBSTITUTION explains:"
+      grep $'\tunexpected\t' "$DIR/run-latest/test-failures.tsv" | cut -f1,2 | sed 's/^/        /'
+      echo "      Either they are regressions, or they are decisions — and a decision belongs in"
+      echo "      baseline/expected-failures.tsv ('#suite<TAB>test<TAB>reason', '*' for a whole"
+      echo "      suite) with a reason someone can defend. Left unstated they read as regressions"
       echo "      that someone once accepted."
     fi
     echo

@@ -16,18 +16,23 @@ import java.nio.file.{Files, Path}
   * diffs it against a committed baseline. Truncation stays where it belongs — the human stdout
   * render — and never reaches the artifact.
   *
-  * ## Why the checks call this, rather than an orchestrator collecting them
+  * ## The ORCHESTRATOR records; a check is a pure function
   *
-  * The right home is the single `PortRun` entry point of LIBRARY-READINESS.md §1.2, which would
-  * invoke every check unconditionally and own the reporting. That does not exist yet, and while
-  * check invocation is copy-paste in each migration program (which is how `LibgdxTestMigrate`
-  * went its whole life without calling `PortabilityCheck`), the only place that sees every
-  * invocation is the check itself. Recording from the check is therefore a STOPGAP with one real
-  * virtue: it cannot be forgotten by a caller. When `PortRun` lands, move the `record` calls into
-  * it and delete them from the checks.
+  * The checks used to call `record` themselves. That was a stopgap with one real virtue — it could
+  * not be forgotten by a caller — taken while check invocation was copy-paste in each migration
+  * program, which is how `LibgdxTestMigrate` went its whole life without calling
+  * `PortabilityCheck`. `balticporter.runner.PortRun` cured the disease it was guarding against: it
+  * invokes every check unconditionally, so the guard is no longer needed and the checks are pure
+  * functions of a `Program` again — testable with no artifact directory in sight.
   *
-  * The recording is a no-op unless [[enabled]], so a check stays a pure function in every context
-  * that has not opted in — including the unit tests.
+  * The virtue is not lost, it MOVED UP: `PortRun.RequiredChecks` names every check a run must have
+  * recorded and is compared against [[snapshot]] before the run finishes, so a number that reaches
+  * stdout and never reaches `findings.tsv` fails the run. That is a stronger guarantee than
+  * recording from inside a check, which could only ever assert something about checks that were
+  * called.
+  *
+  * The recording is a no-op unless [[enabled]], so a run stays artifact-free in every context that
+  * has not opted in — including the unit tests.
   *
   * ## A check that did not RUN is not a check that found NOTHING
   *
@@ -36,6 +41,9 @@ import java.nio.file.{Files, Path}
   * whole check as a WARNING rather than as an improvement of N to zero. That distinction is not
   * hypothetical: a migration program silently missing a check is a defect this repository has
   * actually shipped.
+  *
+  * It survives the move intact, and is exactly why `PortRun` records EVERY check with its complete
+  * result — `Nil` included — rather than skipping the empty ones.
   *
   * ## Format, and why
   *
@@ -175,11 +183,6 @@ object CheckReport:
           Runtime.getRuntime.addShutdownHook(new Thread(() => try writeNow() catch { case e: Exception =>
             System.err.println(s"[balticporter] check report could not be written: $e") }))
       }
-
-  /** Record an INCREMENT for a check whose caller invokes it once per input (a per-file scan).
-    * Registers the check name even when the increment is empty. */
-  def append(check: String, findings: Seq[Finding]): Unit =
-    if enabled then synchronized(record(check, recorded.getOrElse(check, Nil) ++ findings))
 
   /** what has been recorded so far — for a caller that wants the numbers in-process. */
   def snapshot(): Map[String, List[Finding]] = synchronized(recorded.toMap)

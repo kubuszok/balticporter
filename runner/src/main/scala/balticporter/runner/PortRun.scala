@@ -4,7 +4,7 @@ import balticporter.core.*
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.sbtgen.SbtGen
-import balticporter.tir.{CheckReport, DebugFlags, OmissionCheck, Phase, Pipeline, PortabilityCheck, Program, RewriteTrace, SymId, Tree}
+import balticporter.tir.{CheckReport, Correlate, CorrelateRun, DebugFlags, OmissionCheck, Phase, Pipeline, PortabilityCheck, Program, Remediator, RewriteTrace, SrcMap, SymId, Tree}
 import balticporter.transform.PackageRenameTransform
 
 import java.nio.file.{Files, Path, StandardCopyOption}
@@ -199,6 +199,7 @@ final case class PortRun(
       say(s"substitution blast radius:\n${RewriteTrace.impactSummary(program, substituted)}")
 
     val mismatches = RewriteTrace.check(program)
+    CheckReport.record(PortRun.Signature, mismatches.map(_.report))
     if mismatches.isEmpty then say("signature check: all call sites agree with their declarations")
     else
       say(s"signature check: ${mismatches.size} site(s) disagree with their declaration")
@@ -206,6 +207,7 @@ final case class PortRun(
       mismatches.take(20).foreach(m => println("  " + m.render))
 
     val omissions = OmissionCheck.check(program)
+    CheckReport.record(PortRun.Omissions, omissions.map(_.report))
     say(s"OMISSIONS (emitted code silently loses these): ${omissions.size}")
     if omissions.nonEmpty then say(PortReport.Kind.Omission.classification)
     println(OmissionCheck.summary(omissions))
@@ -224,11 +226,26 @@ final case class PortRun(
       say(PortReport.Kind.Manifest.classification)
       agreement.take(40).foreach(f => println("  " + f.render))
 
+    // Two portability numbers, recorded separately: what the PROGRAM references, and what the
+    // SHIPPED code references. A run that reported only one of them could not show a substitution
+    // moving a violation out of the deliverable.
     val droppedIds  = program.symbols.all.collect { case s if policySubs.dropsType(s.fullName) => s.id }.toSet
-    val portability = PortabilityCheck.inEmittedCode(program, PortabilityCheck.check(program), droppedIds)
+    val allViolations = PortabilityCheck.check(program)
+    val portability   = PortabilityCheck.inEmittedCode(program, allViolations, droppedIds)
+    // the remediations are computed HERE, where the `Program` is in scope, and handed to `summary`
+    // as an argument. They used to travel through a `private var` in `PortabilityCheck` keyed to
+    // the exact violation list, because `summary` has no `Program` and there was no orchestrator to
+    // hold the pair (CLAUDE.md §1(a) — a stopgap, documented as one).
+    val fixes = Remediator.suggest(program, portability)
+    locally {
+      given Program = program
+      CheckReport.record(PortRun.PortabilityAll, allViolations.map(_.report(PortRun.PortabilityAll)))
+      CheckReport.record(PortRun.PortabilityEmitted, portability.map(_.report(PortRun.PortabilityEmitted)))
+    }
+    CheckReport.record(PortRun.Remediation, Remediator.reports(fixes))
     say(s"PORTABILITY (Scala.js/Native): ${portability.size} site(s) on JVM-only APIs in EMITTED code")
     if portability.nonEmpty then say(PortReport.Kind.Portability.classification)
-    println(PortabilityCheck.summary(portability))
+    println(PortabilityCheck.summary(portability, fixes))
 
     val renameReport = PackageRenameTransform.check(program, renames)
     if renames.nonEmpty then
@@ -256,14 +273,16 @@ final case class PortRun(
     written += plan.writeSources(outDir)
     supportSources.foreach { (fqn, src) => write(outDir.resolve(fqn.replace('.', '/') + ".scala"), src); written += 1 }
 
+    // The MEMBER-LEVEL source map for what was just emitted — written HERE, from the emitter's own
+    // recording, rather than accumulated in a process-global table and flushed by a shutdown hook.
+    // Two emitters in one JVM (the determinism double-emission is one; sbt running every suite in
+    // one JVM is another) shared that table and contaminated each other's map.
+    writeSrcMap(translated.emitter.srcMap)
+
     // CHECK 1 — before injection, so a file at a dropped type's path can only be the emitter's.
     val leaked = record(PortRun.SubstitutionEmitted, SubstitutionCheck.emittedDroppedTypes(outDir, policySubs))
 
     // ---- injection: ready-made Scala copied verbatim (survives the wipe above) ----
-    // Register the injected-portability check even with nothing to inject: it is an APPEND-per-file
-    // check, so with no files it would never name itself and `counts.tsv` could not tell "found
-    // nothing" from "never ran" — the one distinction the persistence layer exists to keep.
-    CheckReport.append("portability(injected)", Nil)
     var injected = 0
     ownSubs.inject.filter(Files.exists(_)).foreach { root =>
       Files.walk(root).iterator().asScala
@@ -283,11 +302,16 @@ final case class PortRun(
         PortabilityCheck.inInjectedSource(root.relativize(src).toString, Files.readString(src))
       }
     }
+    // Recorded even with nothing to inject: a check that never names itself leaves `counts.tsv`
+    // unable to tell "found nothing" from "never ran" — the one distinction the persistence layer
+    // exists to keep, and the reason this is a `record` of the COMPLETE list rather than a
+    // per-file increment.
+    CheckReport.record(PortRun.PortabilityInjected, injectedViolations.map(_.report))
     if injectedViolations.isEmpty then say("PORTABILITY of injected replacements: clean")
     else
       say(s"PORTABILITY of injected replacements: ${injectedViolations.size} finding(s)")
       say(PortReport.Kind.InjectedPortability.classification)
-      injectedViolations.foreach(v => println("  " + v))
+      injectedViolations.foreach(v => println("  " + v.render))
 
     // CHECK 2 — over the FINAL tree.
     val danglingSubs = record(PortRun.SubstitutionDangling, SubstitutionCheck.dangling(outDir, ownSubs))
@@ -363,6 +387,59 @@ final case class PortRun(
     * port's own answer wins over a script's, deliberately. */
   private def anchorReportPaths(): Unit =
     System.setProperty(DebugFlags.Prefix + "reportPathRoot", frontend.sourceRoot.toAbsolutePath.normalize.toString)
+
+  /** Write this run's source map, and the data the CORRELATOR needs to classify a test failure as
+    * expected BY CONSTRUCTION.
+    *
+    * `dropped-types.tsv` is the second half and the point of it: a test whose failure stack reaches
+    * a type in `Substitutions.dropTypes` fails because the port deliberately does not have that
+    * type. That is a CONSEQUENCE of the manifest, so it is generated from the manifest on every
+    * run — `port-report/<Port>/baseline/expected-failures.tsv` listing the same failures by hand is
+    * exactly the artifact that rots into "we always ignore those four" and then hides a fifth. The
+    * hand-written file survives as the explicit escape hatch for a failure no drop explains, and
+    * `Correlate.Expected.derived` keeps the two from being confused.
+    *
+    * The whole DROP CHAIN is written, not just this module's own: a dependent port's suite fails
+    * inside the BASE's dropped type, and holding a suite to its own module's drops would classify
+    * every one of those as a regression. (Contrast `ownSubs`, which is right for CHECK 2 for the
+    * mirror-image reason.) */
+  private def writeSrcMap(rec: balticporter.tir.SrcMap.Recording): Unit =
+    if CheckReport.enabled then
+      val dir = CheckReport.runDir
+      SrcMap.write(dir, rec)
+      Files.createDirectories(dir)
+      Files.writeString(dir.resolve("dropped-types.tsv"),
+        (Correlate.DroppedHeader :: policySubs.dropTypes.toList.sorted).mkString("", "\n", "\n"))
+
+  /** Correlate a compiler or test-runner log back to the members and Java origins of THIS run,
+    * IN-PROCESS.
+    *
+    * `CorrelateMain` is a second JVM, which is right for a shell script that has just run a
+    * compiler and wrong for a porting program that drives the compile itself and already holds the
+    * run directory. Both work; this is the one that does not fork.
+    *
+    * Every path is made ABSOLUTE by `CorrelateRun.Request.absolute` before use, including the ones
+    * a caller passes. sbt's non-forked `run` has the SUBPROJECT as its working directory, so a
+    * relative path that reads correctly in a shell resolves to nothing here and the correlation
+    * silently reports "0 units" as if the port had no members.
+    *
+    * @param extraSrcMaps other ports' maps, scoped `main`/`test`. A test suite's failure is
+    *                     anchored on the LIBRARY member that threw, which lives in another port —
+    *                     so pass the library's map to get a `main-frame` anchor instead of a
+    *                     `test-frame` one. */
+  def correlate(
+      scalac: Option[Path] = scala.None,
+      tests: Option[Path] = scala.None,
+      extraSrcMaps: List[(String, Path)] = Nil,
+  ): CorrelateRun.Result =
+    val mine = CheckReport.runDir.resolve("srcmap.tsv")
+    CorrelateRun.run(CorrelateRun.Request(
+      srcmaps  = extraSrcMaps :+ (sourceSet.configName -> mine),
+      scalac   = scalac,
+      tests    = tests,
+      out      = CheckReport.runDir,
+      baseline = Some(CheckReport.baselineDir),
+    ))
 
   /** record a [[SubstitutionCheck]] result under `check`, and hand it straight back.
     *
@@ -521,7 +598,16 @@ object PortRun:
     try p.toRealPath().toString
     catch case _: Exception => p.toAbsolutePath.normalize.toString
 
-  /** the two [[SubstitutionCheck]] halves, as they appear in `counts.tsv`. */
+  /** Every check's name as it appears in `counts.tsv`. Named here, in the orchestrator, because the
+    * orchestrator is now the only thing that records: a check is a pure function of a `Program` and
+    * does not know it is being persisted. */
+  val Signature            = "signature"
+  val Omissions            = "omissions"
+  val PortabilityAll       = "portability(all)"
+  val PortabilityEmitted   = "portability(emitted)"
+  val PortabilityInjected  = "portability(injected)"
+  val Remediation          = "remediation"
+  /** the two [[SubstitutionCheck]] halves. */
   val SubstitutionEmitted  = "substitution(emitted)"
   val SubstitutionDangling = "substitution(dangling)"
   val Policy               = "policy"
@@ -530,9 +616,15 @@ object PortRun:
   /** Every check a run MUST have recorded by the time it finishes. Named rather than derived,
     * because the property being asserted is "the orchestrator invoked all of them" — deriving the
     * list from what was invoked would assert nothing. Adding a check to `PortRun` means adding it
-    * here, and forgetting to fails the next run rather than shipping a silently narrower report. */
+    * here, and forgetting to fails the next run rather than shipping a silently narrower report.
+    *
+    * This is the guarantee that made moving `record` out of the checks safe. The checks used to
+    * record themselves so a caller could not forget them; now `PortRun` calls every one of them and
+    * this asserts that every number which reached stdout also reached `findings.tsv`. That is
+    * strictly stronger — a self-recording check could only ever vouch for itself once called, and
+    * `LibgdxTestMigrate` never called `PortabilityCheck` at all. */
   val RequiredChecks: Set[String] = Set(
-    "signature", "omissions", "portability(all)", "portability(emitted)", "portability(injected)",
+    Signature, Omissions, PortabilityAll, PortabilityEmitted, PortabilityInjected, Remediation,
     SubstitutionEmitted, SubstitutionDangling, Policy, Manifest,
   )
 
@@ -583,7 +675,7 @@ final case class PortReport(
     signature: List[RewriteTrace.Mismatch],
     omissions: List[OmissionCheck.Finding],
     portability: List[PortabilityCheck.Violation],
-    injectedPortability: List[String],
+    injectedPortability: List[PortabilityCheck.InjectedViolation],
     substitution: List[SubstitutionCheck.Finding],
     policy: PolicyReport,
     rename: PackageRenameTransform.Report,

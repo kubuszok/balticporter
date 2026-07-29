@@ -159,6 +159,54 @@ class CorrelateSpec extends munit.FunSuite:
     assert(Correlate.renderTests(Nil, d).contains("DID NOT RUN"))
   }
 
+  // =========================================================================================
+  // expected BY CONSTRUCTION — derived from the port's own drops, not from a hand-written list
+  // =========================================================================================
+
+  test("a failure whose stack reaches a DROPPED type is expected by construction, with no list") {
+    val ts = Correlate.locateTests(Correlate.parseTests(testLog), idx, Nil, Set.empty, Set("p.Buf"))
+    val d  = Correlate.diffTests(Map.empty, ts)
+    // `wraps` threw inside p.Buf, which the port drops; `compares` did not reach it.
+    assertEquals(d.expectedFailing.map(_.outcome.name), List("wraps"))
+    assertEquals(d.newlyFailing.map(_.outcome.name), List("compares"))
+    val why = d.expectedFailing.head.expected.get
+    assert(why.derived, "a drop-explained failure must be marked DERIVED, never declared")
+    assertEquals(why.source, "derived")
+    assert(clue(why.reason).contains("p.Buf"))
+  }
+
+  test("no dropped types ⇒ the same failure is a plain regression: the derivation is what classifies it") {
+    val ts = Correlate.locateTests(Correlate.parseTests(testLog), idx, Nil, Set.empty, Set.empty)
+    assertEquals(Correlate.diffTests(Map.empty, ts).expectedFailing, Nil)
+    assertEquals(Correlate.diffTests(Map.empty, ts).newlyFailing.size, 2)
+  }
+
+  test("the DECLARED hatch still classifies a failure no drop explains, and stays distinguishable") {
+    val ts = Correlate.locateTests(Correlate.parseTests(testLog), idx,
+                                   List(Correlate.Expected("p.BufTest", "compares", "upstream asserts a JVM locale")),
+                                   Set.empty, Set("p.Buf"))
+    val d = Correlate.diffTests(Map.empty, ts)
+    assertEquals(d.newlyFailing, Nil)
+    assertEquals(d.expectedFailing.map(t => t.outcome.name -> t.expected.get.source).sorted,
+                 List("compares" -> "declared", "wraps" -> "derived"))
+    // the artifact keeps the two apart, so a declared claim can never be read as a fact about the manifest
+    val tsv = d.expectedFailing.map(_.tsv).mkString("\n")
+    assert(clue(tsv).contains("expected#derived") && tsv.contains("expected#declared"))
+  }
+
+  test("a DERIVED expectation never applies to a passing test — it has no failure stack to reach") {
+    val ts = Correlate.locateTests(Correlate.parseTests(testLog), idx, Nil, Set.empty, Set("p.Buf", "p.BufTest"))
+    assertEquals(ts.filter(_.outcome.status == "pass").flatMap(_.expected), Nil)
+    assertEquals(Correlate.diffTests(Map.empty, ts).expectedButPassing, Nil)
+  }
+
+  test("dropped-types.tsv round-trips, comments and blanks ignored") {
+    val p = java.nio.file.Files.createTempFile("dropped", ".tsv")
+    java.nio.file.Files.writeString(p, s"${Correlate.DroppedHeader}\np.Buf\n\n# a note\np.Other\n")
+    assertEquals(Correlate.parseDropped(p), Set("p.Buf", "p.Other"))
+    assertEquals(Correlate.parseDropped(p.resolveSibling("nope.tsv")), Set.empty[String])
+  }
+
   test("changedMembers is symmetric: added, removed and altered all count") {
     val b = Map("u\tm1" -> "a", "u\tm2" -> "b")
     val l = Map("u\tm1" -> "a", "u\tm2" -> "B", "u\tm3" -> "c")

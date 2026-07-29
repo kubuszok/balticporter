@@ -76,14 +76,12 @@ object PortabilityCheck:
     Rule("java.lang.Class#getMethod", "reflective member access is JVM-only", exactMember = true),
   )
 
+  /** Every violation the PROGRAM references. Recorded by the orchestrator as `portability(all)`,
+    * separately from `inEmittedCode` below: the two numbers answer different questions (what the
+    * program references vs. what the SHIPPED code references) and a run that reports only one of
+    * them cannot show a substitution moving a violation out of the deliverable. */
   def check(program: Program, rules: List[Rule] = jsAndNative): List[Violation] =
-    val out = checkAll(program, rules)
-    given Program = program
-    // recorded separately from `inEmittedCode` below: the two numbers answer different questions
-    // (what the program references vs. what the SHIPPED code references) and a run that reports
-    // only one of them cannot show a substitution moving a violation out of the deliverable.
-    CheckReport.record("portability(all)", out.map(_.report("portability(all)")))
-    out
+    checkAll(program, rules)
 
   private def checkAll(program: Program, rules: List[Rule]): List[Violation] =
     program.referenced.toList.flatMap { id =>
@@ -123,60 +121,51 @@ object PortabilityCheck:
     * is not shipped — that type's declaration is dropped — so counting it would overstate the
     * problem; the point of the number is what the FINAL code depends on. */
   def inEmittedCode(program: Program, violations: List[Violation], isDropped: SymId => Boolean): List[Violation] =
-    val out = violations.filterNot(v => owningType(program, v.enclosing).exists(isDropped))
-    given Program = program
-    CheckReport.record("portability(emitted)", out.map(_.report("portability(emitted)")))
-    val fixes = Remediator.suggest(program, out)
-    Remediator.record(fixes)
-    lastRemediation = (out, fixes)
-    out
-
-  /** The remediations for the last [[inEmittedCode]] result.
-    *
-    * [[summary]] is called as `summary(violations)` — its signature is fixed by every existing
-    * caller, and none of them has a `Program` in scope at that point. So the suggestions are
-    * computed where the program IS available and read back here, keyed to the exact violation
-    * list they were derived from: a `summary` of any other result prints no remediation rather
-    * than a stale one. A migration is a single pipeline on one thread, so there is nothing to
-    * interleave. When a future `PortRun` owns check invocation end-to-end this becomes a
-    * parameter and the field goes away — the same disposition `CheckReport` records for its own
-    * recording stopgap. */
-  private var lastRemediation: (List[Violation], List[Remediator.Suggestion]) = (Nil, Nil)
+    violations.filterNot(v => owningType(program, v.enclosing).exists(isDropped))
 
   /** INJECTED replacements never pass through the TIR — they are copied verbatim — so the symbol
     * table cannot see them. They are still shipped, so scan their text for the same rules. Coarse
     * by nature (no symbols to resolve), but it closes the hole that matters: a hand-written shim
     * that quietly reintroduces the very API the substitution was meant to remove.
     */
-  def inInjectedSource(fileName: String, source: String, rules: List[Rule] = jsAndNative): List[String] =
+  def inInjectedSource(fileName: String, source: String, rules: List[Rule] = jsAndNative): List[InjectedViolation] =
     // comments discuss the very APIs being removed (a swap-point note naming `newInstance` is not
     // a use of it), so scan code lines only — otherwise the count is noise.
     val code = source.linesIterator
       .map(_.trim)
       .filterNot(l => l.startsWith("//") || l.startsWith("*") || l.startsWith("/*"))
       .toList
-    val out = rules.flatMap { r =>
+    rules.flatMap { r =>
       val needle = if r.exactMember then r.api.substring(r.api.indexOf('#') + 1) else r.api
       val n = code.count(_.contains(needle))
-      if n == 0 then Nil else List((needle, n, r.why, s"$fileName: $needle × $n — ${r.why}"))
+      if n == 0 then Nil else List(InjectedViolation(fileName, needle, n, r.why))
     }
-    // called once per injected file, so this ACCUMULATES rather than replaces. The count is
-    // deliberately not part of the finding id: a shim gaining a second use of an API it already
-    // used is the same finding, and should not read as one fixed plus one new.
-    CheckReport.append("portability(injected)",
-      out.map((needle, n, why, _) => CheckReport.Finding("portability(injected)", needle, fileName, fileName, n, why)))
-    out.map(_._4)
 
-  /** grouped one-line summary, most-referenced first, followed by the remediation block when this
-    * is the result [[inEmittedCode]] last produced. A finding an agent can act on beats a finding
-    * it must first investigate (CLAUDE.md §4.45) — [[Remediator]] states the mechanism and, where
-    * the precondition is verifiable, the literal manifest line. */
-  def summary(violations: List[Violation]): String =
+  /** One injected file's use of an API its substitution was meant to remove.
+    *
+    * The COUNT is deliberately carried in the `line` column and left out of the finding id: a shim
+    * gaining a second use of an API it already used is the same finding, and should not read as one
+    * fixed plus one new. */
+  final case class InjectedViolation(file: String, api: String, count: Int, why: String):
+    def render: String = s"$file: $api × $count — $why"
+    def report: CheckReport.Finding =
+      CheckReport.Finding("portability(injected)", api, file, file, count, why)
+
+  /** grouped one-line summary, most-referenced first, followed by the remediation block when the
+    * caller computed one. A finding an agent can act on beats a finding it must first investigate
+    * (CLAUDE.md §4.45) — [[Remediator]] states the mechanism and, where the precondition is
+    * verifiable, the literal manifest line.
+    *
+    * `fixes` is a PARAMETER. It used to be a `private var` written by [[inEmittedCode]] and read
+    * back here, keyed to the exact violation list, because `summary` has no `Program` and there was
+    * no orchestrator to hold the pair. There is one now: `PortRun` computes both and passes them
+    * together, so there is no hidden state to go stale and no ordering requirement between two
+    * calls. */
+  def summary(violations: List[Violation], fixes: List[Remediator.Suggestion] = Nil): String =
     if violations.isEmpty then "  none"
     else
       val head = violations.groupBy(_.api).toList.sortBy(-_._2.size)
         .map((api, vs) => s"  $api: ${vs.size} site(s) — ${vs.head.why}")
         .mkString("\n")
-      val (forViolations, fixes) = lastRemediation
-      if forViolations != violations || fixes.isEmpty then head
+      if fixes.isEmpty then head
       else head + "\n  REMEDIATION — what to paste, and what was only observed:\n" + Remediator.summary(fixes)

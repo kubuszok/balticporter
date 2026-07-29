@@ -57,8 +57,16 @@ final class TirEmitter(
     val full = sym(cd.symbol).fullName
     val pkg  = if full.contains('.') then s"package ${full.substring(0, full.lastIndexOf('.'))}\n\n" else ""
     val text = header(cd) + pkg + body
-    if SrcMap.enabled then SrcMap.record(full, srcMapOf(full, cd, text))
+    if SrcMap.enabled then recordedMap(full) = srcMapOf(full, cd, text)
     text
+
+  /** THIS emitter's source map — never a process-global table. Idempotent per unit: re-emitting a
+    * unit replaces its entries, so an emitter run twice does not double the map. The orchestrator
+    * writes it (`SrcMap.write`); two emitters in one JVM cannot see each other's. */
+  def srcMap: SrcMap.Recording = SrcMap.Recording(recordedMap.values.toList.flatten, recordedMisses.toList)
+
+  private val recordedMap    = collection.mutable.LinkedHashMap.empty[String, List[SrcMap.Entry]]
+  private val recordedMisses = collection.mutable.ListBuffer.empty[String]
 
   // ---------------------------------------------------------------------------
   // SOURCE MAP — member → emitted line range → Java Origin (UNPORTABLE-DESIGN.md §5.2)
@@ -153,7 +161,7 @@ final class TirEmitter(
         // A member that cannot be found in the finished text is a hole in the map, and a map with
         // silent holes attributes an error to the wrong member. Counted and printed (SrcMap.write),
         // never swallowed — CLAUDE.md §3: the check arrives with the translation.
-        if at < 0 then SrcMap.missed(unit, s.member)
+        if at < 0 then recordedMisses += s"$unit#${s.member}"
         else
           cursor = at + 1
           val st = lineOf(at)

@@ -1,16 +1,19 @@
-# Tests this port is EXPECTED to fail, and why. Read by balticporter.tir.Correlate; a test listed
-# here is reported as expected rather than as a regression, and one that starts PASSING is reported
-# too, because a substitution that began working is news.
+# The ESCAPE HATCH, and nothing else. Empty is the normal state.
 #
-# This is per-library POLICY (CLAUDE.md §1c) and therefore DATA: nothing in `core` may name a
-# ported library, so the engine cannot know that `Json.fromJson` is deliberately absent. When
-# LIBRARY-READINESS.md §1.2's `PortRun` lands it should GENERATE this file from the port's own
-# `Substitutions` — a test whose stack reaches a dropped type is expected by construction — and
-# this hand-written form becomes the fallback for failures a manifest cannot predict.
+# Failures explained by a SUBSTITUTION are not listed here and must not be: they are DERIVED. A
+# test whose failure stack reaches a type in this port's `Substitutions.dropTypes` fails because
+# the port deliberately does not have that type, and `PortRun` writes those FQNs to
+# `run-latest/dropped-types.tsv` on every run for `balticporter.tir.Correlate` to read. The four
+# `com.badlogic.gdx.utils.JsonTest` failures this file used to list by hand are classified that
+# way now, and the list follows the manifest without anyone editing it.
+#
+# What belongs here is a failure NO DROP EXPLAINS and that is still a decision rather than a
+# regression — an upstream test asserting a JVM-only behaviour, a test whose fixture the port
+# cannot supply. Each such line is a CLAIM someone has to defend, which is why it is kept apart
+# from the derived set: `test-failures.tsv` records `expected#declared` vs `expected#derived`, and
+# a declared entry whose test starts PASSING is reported so it can be deleted. A hand-maintained
+# list of expected failures is exactly the thing that rots into "we always ignore those four" and
+# then hides a fifth.
 #
 # `test` may be `*` to declare a whole suite.
 #suite	test	reason
-com.badlogic.gdx.utils.JsonTest	testFromJsonObject	Substitutions.dropTypes com.badlogic.gdx.utils.Json — the injected replacement throws until a codec is bound (sge replaces the reflection-based Json with Kindlings Jsoniter/UBJson)
-com.badlogic.gdx.utils.JsonTest	testFromJsonArray	Substitutions.dropTypes com.badlogic.gdx.utils.Json — as above
-com.badlogic.gdx.utils.JsonTest	testCharFromNumber	Substitutions.dropTypes com.badlogic.gdx.utils.Json — as above
-com.badlogic.gdx.utils.JsonTest	testReuseReader	Substitutions.dropTypes com.badlogic.gdx.utils.Json — as above
