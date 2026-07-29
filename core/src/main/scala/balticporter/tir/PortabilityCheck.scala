@@ -27,6 +27,9 @@ object PortabilityCheck:
 
   final case class Violation(api: String, why: String, origin: Origin, kind: UsageKind, enclosing: SymId):
     def render: String = s"$api — $why  (${origin.javaPath}:${origin.line})"
+    def report(check: String)(using program: Program): CheckReport.Finding =
+      CheckReport.Finding(check, api, program.symbolOf(enclosing).map(_.fullName).getOrElse("?"),
+        CheckReport.relativise(origin.javaPath), origin.line, s"$kind — $why")
 
   /** APIs unavailable on Scala.js / Scala Native. */
   val jsAndNative: List[Rule] = List(
@@ -63,6 +66,15 @@ object PortabilityCheck:
   )
 
   def check(program: Program, rules: List[Rule] = jsAndNative): List[Violation] =
+    val out = checkAll(program, rules)
+    given Program = program
+    // recorded separately from `inEmittedCode` below: the two numbers answer different questions
+    // (what the program references vs. what the SHIPPED code references) and a run that reports
+    // only one of them cannot show a substitution moving a violation out of the deliverable.
+    CheckReport.record("portability(all)", out.map(_.report("portability(all)")))
+    out
+
+  private def checkAll(program: Program, rules: List[Rule]): List[Violation] =
     program.referenced.toList.flatMap { id =>
       program.symbolOf(id) match
         case scala.None => Nil
@@ -100,7 +112,10 @@ object PortabilityCheck:
     * is not shipped — that type's declaration is dropped — so counting it would overstate the
     * problem; the point of the number is what the FINAL code depends on. */
   def inEmittedCode(program: Program, violations: List[Violation], isDropped: SymId => Boolean): List[Violation] =
-    violations.filterNot(v => owningType(program, v.enclosing).exists(isDropped))
+    val out = violations.filterNot(v => owningType(program, v.enclosing).exists(isDropped))
+    given Program = program
+    CheckReport.record("portability(emitted)", out.map(_.report("portability(emitted)")))
+    out
 
   /** INJECTED replacements never pass through the TIR — they are copied verbatim — so the symbol
     * table cannot see them. They are still shipped, so scan their text for the same rules. Coarse
@@ -114,11 +129,17 @@ object PortabilityCheck:
       .map(_.trim)
       .filterNot(l => l.startsWith("//") || l.startsWith("*") || l.startsWith("/*"))
       .toList
-    rules.flatMap { r =>
+    val out = rules.flatMap { r =>
       val needle = if r.exactMember then r.api.substring(r.api.indexOf('#') + 1) else r.api
       val n = code.count(_.contains(needle))
-      if n == 0 then Nil else List(s"$fileName: $needle × $n — ${r.why}")
+      if n == 0 then Nil else List((needle, n, r.why, s"$fileName: $needle × $n — ${r.why}"))
     }
+    // called once per injected file, so this ACCUMULATES rather than replaces. The count is
+    // deliberately not part of the finding id: a shim gaining a second use of an API it already
+    // used is the same finding, and should not read as one fixed plus one new.
+    CheckReport.append("portability(injected)",
+      out.map((needle, n, why, _) => CheckReport.Finding("portability(injected)", needle, fileName, fileName, n, why)))
+    out.map(_._4)
 
   /** grouped one-line summary, most-referenced first. */
   def summary(violations: List[Violation]): String =

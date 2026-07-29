@@ -30,6 +30,9 @@ object RewriteTrace:
   /** a use that disagrees with its declaration's current signature. */
   final case class Mismatch(what: String, sym: SymId, name: String, expected: Int, found: Int, origin: Origin):
     def render: String = s"$what: $name expects $expected, found $found  (${origin.javaPath}:${origin.line})"
+    def report: CheckReport.Finding =
+      CheckReport.Finding("signature", what, name, CheckReport.relativise(origin.javaPath), origin.line,
+        s"expects $expected, found $found")
 
   /** BEFORE a rewrite — every site that must be updated when these symbols' signatures change. */
   def impact(program: Program, syms: Set[SymId]): List[Site] =
@@ -59,7 +62,9 @@ object RewriteTrace:
     *     arity check (with nothing to compare against, it has nothing to say).
     */
   def check(program: Program): List[Mismatch] =
-    callArity(program) ++ typeArity(program) ++ orphanedCalls(program)
+    val out = callArity(program) ++ typeArity(program) ++ orphanedCalls(program)
+    CheckReport.record("signature", out.map(_.report))
+    out
 
   private def callArity(program: Program): List[Mismatch] =
     program.referenced.toList.flatMap { s =>

@@ -4,7 +4,18 @@
 # The tests are the port's only BEHAVIOURAL gate; everything gdx_measure.sh reports is "compiles".
 # Note the discovery check below: a JUnit suite with no @Test annotations runs ZERO tests and
 # reports success, which is exactly the silent-omission failure this project keeps finding.
+#
+# As in gdx_measure.sh, the migration's own output is shown WHOLE. Line 17 used to keep four named
+# patterns, which drops every line a future check adds — and this script's migration is the one
+# that historically went its whole life without calling PortabilityCheck at all. The persisted
+# report below names a check that stopped running, which a grep over stdout cannot.
 cd "$(dirname "$0")/.."
+ROOT="$(pwd)"
+. scripts/_report.sh
+
+write_run_props "$ROOT" "balticporter.reportPathRoot=$ROOT/../sge/original-src/libgdx/gdx"
+REPORT="$ROOT/port-report/LibgdxTestMigrate"
+
 # ABORT if the migration did not run — the same stale-output defect fixed in gdx_measure.sh: piping
 # into grep discards the exit status, so an engine that fails to COMPILE measures the PREVIOUS emit
 # and reports it as a result.
@@ -14,8 +25,15 @@ if ! grep -qE "wrote [0-9]+ Scala test files" <<<"$MIGRATE_OUT"; then
   grep -E "^\[error\].*\.scala:[0-9]+" <<<"$MIGRATE_OUT" | head -20
   exit 1
 fi
-grep -E "wrote|WARNING|OMISSIONS \(|PORTABILITY|signature" <<<"$MIGRATE_OUT"
 
+echo "-- migration (every line it printed) --"
+sed -n '/building model over/,/wrote [0-9]* Scala test files/p' <<<"$MIGRATE_OUT"
+
+echo
+echo "-- checks: persisted, untruncated, diffed against the baseline --"
+show_check_report "$REPORT"
+
+echo
 echo "-- test discovery --"
 # Count what each FRAMEWORK would actually discover. A ported suite is MUnit (`test("name") {…}`)
 # and the residue is still JUnit (`@Test`), so counting only annotations under-reports by every
@@ -27,11 +45,16 @@ SCALA_TESTS=$((JUNIT_LEFT + MUNIT_TESTS))
 echo "@Test in Java: $JAVA_TESTS   discoverable in emitted Scala: $SCALA_TESTS (munit $MUNIT_TESTS + junit $JUNIT_LEFT)"
 [ "$JAVA_TESTS" != "$SCALA_TESTS" ] && echo "!! TESTS LOST — $((JAVA_TESTS - SCALA_TESTS)) of $JAVA_TESTS would never run, and the suite would report success"
 
+echo
+echo "-- compile --"
 pkill -9 -f scala-cli 2>/dev/null; sleep 1
 scala-cli compile --scala 3.8.4 --server=false \
   --dependency org.junit.jupiter:junit-jupiter:5.10.2 \
   --dependency junit:junit:4.13.2 \
   --dependency org.scalameta::munit:1.0.2 \
   libgdx-core/src_managed/main/scala libgdx-core/src_managed/test/scala 2>&1 | sed 's/\x1b\[[0-9;]*m//g' > /tmp/gdxtestmeasure.txt
-echo "TOTAL ERRORS: $(grep -cE '^-- (\[E[0-9]+\] )?.*Error' /tmp/gdxtestmeasure.txt)"
+ERRORS=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' /tmp/gdxtestmeasure.txt)
+echo "TOTAL ERRORS: $ERRORS"
 grep -oE "\[E[0-9]+\][^:]*Error" /tmp/gdxtestmeasure.txt | sort | uniq -c | sort -rn | head
+
+headline "$ERRORS" "$REPORT"

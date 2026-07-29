@@ -86,12 +86,59 @@ object Pipeline:
     out.toList.map(byName)
 
   /** Run phases in dependency order, rebuilding the xref from the rewritten tree after
-    * each — so every phase sees an index consistent with the prior phase's rewrites. */
+    * each — so every phase sees an index consistent with the prior phase's rewrites.
+    *
+    * DIAGNOSIS (CLAUDE.md §4.6, "a kill switch beats another condition"). Because the phase list
+    * is NAMED, three questions that used to cost a source edit and a recompile each are answered
+    * by a flag on one run — see [[DebugFlags]] for where a flag is read from and why an
+    * environment variable is not one of those places:
+    *
+    *   - "is this phase even responsible for that construct?" — `balticporter.skipPhases=<name>`
+    *     (or `*` for all of them) drops it from the run. The measurement to make is the DIFF in
+    *     emitted output, not the error count.
+    *   - "what did the tree look like going in / coming out?" — `balticporter.dumpTirBefore` /
+    *     `balticporter.dumpTirAfter`, narrowed to one unit with `balticporter.dumpOnly=<fqn>`.
+    *   - "did the phase run at all, and did it change the program's size?" —
+    *     `balticporter.tracePhases=true`.
+    *
+    * A name in `skipPhases` that matches no phase is REPORTED, not silently ignored: a typo'd
+    * kill switch that quietly does nothing is worse than no kill switch, because the run that
+    * "shows the phase is not responsible" never skipped anything.
+    */
   def run(program: Program, phases: List[Phase]): Program =
-    order(phases).foldLeft(program) { (prog, phase) =>
-      val out = phase.run(prog)
-      new Program(out.units, out.symbols, Xref.build(out.units))
+    val ordered = order(phases)
+    DebugFlags.banner.foreach(b => println(s"$b  (phases: ${ordered.map(_.name).mkString(", ")})"))
+    val unknown = (DebugFlags.skipPhases - "*") -- ordered.map(_.name).toSet
+    if unknown.nonEmpty then
+      println(s"[balticporter] WARNING: skipPhases names no such phase: ${unknown.toList.sorted.mkString(", ")}" +
+        s" — this pipeline has: ${ordered.map(_.name).mkString(", ")}")
+    ordered.foldLeft(program) { (prog, phase) =>
+      dump(DebugFlags.dumpTirBefore, phase.name, "BEFORE", prog)
+      if DebugFlags.skips(phase.name) then
+        println(s"[balticporter] SKIPPED phase '${phase.name}' (balticporter.skipPhases)")
+        prog
+      else
+        val out  = phase.run(prog)
+        val next = new Program(out.units, out.symbols, Xref.build(out.units))
+        if DebugFlags.tracePhases then
+          println(s"[balticporter] phase '${phase.name}': ${next.units.size} units, ${next.symbols.all.size} symbols")
+        dump(DebugFlags.dumpTirAfter, phase.name, "AFTER", next)
+        next
     }
+
+  /** print the TIR at a phase boundary. `balticporter.dumpOnly=<fqn>` narrows it to one unit —
+    * without that a whole-library dump is megabytes and nobody reads it. */
+  private def dump(when: Set[String], phaseName: String, label: String, prog: Program): Unit =
+    if when.contains(phaseName) || when.contains("*") then
+      given Program = prog
+      val body = DebugFlags.dumpOnly match
+        case Some(fqn) =>
+          TirPrinter.unit(fqn, TirPrinter.Style.debug)
+            .getOrElse(s"<no unit named '$fqn' in this program (${prog.units.size} units)>")
+        case scala.None => TirPrinter.program(TirPrinter.Style.debug)
+      println(s"===== TIR $label phase '$phaseName'${DebugFlags.dumpOnly.map(f => s" [$f]").getOrElse("")} =====")
+      println(body)
+      println(s"===== end TIR $label phase '$phaseName' =====")
 
 /** The standard bottom-up traversal that fuses a phase's hooks over a tree. Children
   * are transformed first, then the node's specific hook, then the `transformTerm`

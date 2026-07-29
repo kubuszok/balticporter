@@ -16,9 +16,16 @@ object OmissionCheck:
 
   final case class Finding(what: String, owner: String, detail: String, origin: Origin):
     def render: String = s"$what: $owner — $detail  (${origin.javaPath}:${origin.line})"
+    def report: CheckReport.Finding =
+      CheckReport.Finding("omissions", what, owner, CheckReport.relativise(origin.javaPath), origin.line, detail)
 
+  /** The complete result — and, when check persistence is on, the complete result is also written
+    * to `findings.tsv` so a caller's `take(n)` render can never be the only record of it
+    * ([[CheckReport]]). */
   def check(program: Program): List[Finding] =
-    droppedSuperArgs(program) ++ droppedAnonMembers(program) ++ droppedAnnotations(program)
+    val out = droppedSuperArgs(program) ++ droppedAnonMembers(program) ++ droppedAnnotations(program)
+    CheckReport.record("omissions", out.map(_.report))
+    out
 
   /** A Java ANNOTATION the frontend could not carry.
     *
