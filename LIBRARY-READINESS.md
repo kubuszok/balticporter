@@ -2,7 +2,79 @@
 
 Source: adversarial review by the `porting-auditor` (Fable 5), 2026-07-29, at commit `8fea564`.
 Every claim marked CONFIRMED below was independently re-verified against the working tree after
-the review; the commands are given so they can be re-run. Nothing here has been implemented.
+the review; the commands are given so they can be re-run.
+
+> ## IMPLEMENTED, 2026-07-29 — read this before the body
+>
+> **Every item below has been built.** The body is preserved as the ANALYSIS — it is why each
+> thing was done, and it is still the best statement of the problems. Individual items carry a
+> `STATUS` block where the answer diverged from the design. **Two of them say NOT done for part of
+> their scope; those are the honest residue and are listed here, not buried.**
+>
+> Measured on the merged tree, through `scripts/gdx_measure.sh` and `scripts/gdx_test_measure.sh`:
+>
+> | gate | at review | now |
+> |---|---|---|
+> | emitted files / dropped / injected | 596 / 11 / 6 | 596 / 11 / 6 |
+> | main compile errors | 0 | **0** |
+> | ported tests | 217 of 221 | **217 of 221**, the 4 now classified `expected#derived` |
+> | engine tests | 33 | **267**, 0 failures |
+> | determinism on TIR | did not exist | **605 units emitted twice, byte-identical** |
+> | manifest agreement | did not exist | **605 shared types, 0 disagreements** |
+> | srcmap | did not exist | **19 528 members over 605 units**, 0 unlocatable |
+> | emitted text vs baseline | did not exist | **0 members changed** |
+>
+> ### What is NOT done, stated plainly
+>
+> - **§1.1's "every corpus program uses one pipeline."** Only the two libGDX programs are on TIR.
+>   Ten others — liqp, xwiki, flexmark, jbump, i.e. ssg's actual Java libraries — are still on the
+>   BIR path, which is now **explicitly frozen** (headers on `Bir.scala` / `SpoonFrontend.scala` /
+>   `ScalaPrinter.scala` naming its ten dependents) but not deleted. Moving them means re-porting
+>   three libraries, each with its own measurement. **The framework is one framework by declaration
+>   and two by deployment.**
+> - **§1.2's "adding a library does not mean editing this repository."** What this repository could
+>   close is closed: nothing mechanical remains to copy, and no check can be forgotten. Proving the
+>   rest needs the published artifacts actually consumed *from* sge or ssg, which cannot be
+>   demonstrated from here.
+> - **No end-to-end proof that a generated port resolves the published runtime.** `SbtGen` writes
+>   the right dependency line; nothing has resolved it. That wants an sbt scripted test.
+> - **`ManifestAgreement` cannot see a parameterised phase's CONFIGURATION** unless the phase
+>   declares a fingerprint. `ClassTableTransform` and `StaticForwarderTransform` opt in;
+>   `CollectionsTransform` cannot until its `typeMap` becomes a parameter (§3.3), so a divergent
+>   collection *mapping* — as opposed to a missing phase — is still invisible.
+> - **Nothing verifies two ports were built by the same ENGINE.** `EnginePin` exists and is not
+>   wired into `ManifestAgreement`.
+> - **Stage 2 of `UNPORTABLE-DESIGN.md` is deliberately unbuilt** (§2.4 says to trim it). The
+>   correlation lane already accepts a marker set and an empty one is a tested, legal input; Stage 2
+>   only has to WRITE `markers.tsv`.
+>
+> ### Two things the audit itself got wrong, corrected during implementation
+>
+> - **§1.3 cited the superseded position on `Asserts`** — see the CORRECTION in that item. The
+>   scaffold was deleted rather than published, and 880 assertion sites now map straight onto MUnit.
+> - **§3.2 claimed JUnit 5 and TestNG "degrade semi-loudly."** JUnit 5 does, but only via the *term*
+>   reference from an assertion call — annotation types are not in the xref at all. **TestNG matches
+>   no rule whatsoever.** A test now pins that so it fails the day a rule is added.
+>
+> ### Found while implementing, not in the audit
+>
+> - `PortabilityCheck`'s nine `exactMember` rules **had never fired** — see the section below. Fixed;
+>   `portability(all)` 139→151 (core) and 148→166 (test), every new finding inside an already-dropped
+>   type, zero false positives.
+> - The rule list had the *plural* `getDeclaredFields` but not the singular `getDeclaredField` /
+>   `getMethod` / `getField`. Four sites had produced **no finding at all**.
+> - `MutableParamsTransform`'s hand-rolled recursion missed **seven** ordinary Java forms, not the
+>   three the audit listed — including `int c = p++;`, because `Block.stats` was filtered to
+>   `case x: Term` and a `ValDef` is a `Definition`, so **local initialisers were never scanned**.
+> - The libGDX manifest declares `getName` on `ClassReflection`, which has no such member. A silent
+>   no-op since it was written; `PolicyReport` reports it the first time it was ever called.
+> - `EngineInfo.version` said `0.1.0-M0` while the build published `0.1.0-SNAPSHOT`, and the version
+>   is baked into emitted headers.
+> - An engine test was **passing for the wrong reason**: `SpoonTir.fromSource` builds with
+>   `noClasspath`, so a one-file snippet's `import static` resolved to `this.assertEquals(…)` and the
+>   rewrite never fired — the assertion was checking *unrewritten* output.
+> - Bare `sbt test` maps to `testQuick` in this build and silently reports "No tests to run". **A
+>   green `sbt test` has never been a gate here.** Use `testOnly *`.
 
 **The goal being evaluated.** `../sge` (a hand-written Scala 3 port of libGDX and 17 extensions)
 and `../ssg` (hand-ported Java libraries — liqp, flexmark) stop hand-maintaining their ports and
