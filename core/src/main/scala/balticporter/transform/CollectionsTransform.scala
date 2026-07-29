@@ -114,8 +114,15 @@ final class CollectionsTransform extends Phase, RequiresRuntime:
   private var key1Sym, value2Sym, roSetSym: SymId = SymId.None
   /** `JavaIterable` + its `from` factory — see `coerce`. */
   private var javaIterableSym, iterableFromSym: SymId = SymId.None
-  /** `JavaCollection` + its `from` factory — the same seam, one type up. */
+  /** `JavaCollection` + its `from` factory — the same seam, one type up. `unmodifiableFromSym` is
+    * the read-only sibling (a `Map.values()` view); `unmodifiableSym` is
+    * `Collections.unmodifiableCollection`. */
   private var javaCollectionSym, collectionFromSym: SymId = SymId.None
+  private var unmodifiableFromSym, unmodifiableSym: SymId = SymId.None
+  /** the `java.util.stream` collapse — see `staticRewrite`. */
+  private var asScalaBufferSym, filteredSym: SymId = SymId.None
+  /** `mutable.Buffer`, so a collapsed stream can be TYPED as what it now emits. */
+  private var bufferSym: SymId = SymId.None
   /** `JavaIterator.from` — the `iterator` counterpart of `wrapIterableArgs`. */
   private var iteratorFromSym, javaIteratorSym: SymId = SymId.None
 
@@ -149,8 +156,16 @@ final class CollectionsTransform extends Phase, RequiresRuntime:
     roSetSym     = mint("Set", "scala.collection.Set") // see `transformValDef`
     javaIterableSym = byScala.getOrElse(JavaIterableFqn, SymId.None)
     iterableFromSym = mint("from", JavaIterableFqn + ".from")
-    javaCollectionSym = byScala.getOrElse(JavaCollectionFqn, SymId.None)
-    collectionFromSym = mint("from", JavaCollectionFqn + ".from")
+    javaCollectionSym   = byScala.getOrElse(JavaCollectionFqn, SymId.None)
+    collectionFromSym   = mint("from", JavaCollectionFqn + ".from")
+    unmodifiableFromSym = mint("unmodifiableFrom", JavaCollectionFqn + ".unmodifiableFrom")
+    unmodifiableSym     = mint("unmodifiable", JavaCollectionFqn + ".unmodifiable")
+    // `asScalaBuffer` is an EXTENSION in JavaCollection's companion, which is exactly where scala 3
+    // looks for one on that receiver type — so it needs no import, like every other name the
+    // structural backend emits fully qualified (CLAUDE.md §6).
+    asScalaBufferSym    = mint("asScalaBuffer", JavaCollectionFqn + ".asScalaBuffer")
+    filteredSym         = mint("filtered", JavaCollectionFqn + ".filtered")
+    bufferSym           = byScala.getOrElse("scala.collection.mutable.Buffer", SymId.None)
     iteratorFromSym = mint("from", JavaIteratorFqn + ".from")
     javaIteratorSym = byScala.getOrElse(JavaIteratorFqn, SymId.None)
     foreachSym          = mint("foreach", "foreach")
@@ -207,11 +222,90 @@ final class CollectionsTransform extends Phase, RequiresRuntime:
 
   override def transformApply(t: Tree.Apply)(using Program): Term =
     val t2 = wrapIterableArgs(t)
-    t2.fun match
-      case Tree.Select(recv, m, _, so) => kindAt(recv) match
-        case Some(k) => rewrite(k, recv, m, so, t2).getOrElse(t2)
-        case None    => t2
-      case _ => t2
+    staticRewrite(t2).getOrElse {
+      t2.fun match
+        case Tree.Select(recv, m, _, so) => kindAt(recv) match
+          case Some(k) => rewrite(k, recv, m, so, t2).getOrElse(t2)
+          case None    => t2
+        case _ => t2
+    }
+
+  /** `java.util.Collections`' STATIC utilities — a receiver-less call, so `rewrite` (which is keyed
+    * on the receiver's collection kind) never sees them and the call is emitted verbatim against
+    * the real JDK class. That is how `Collections.unmodifiableCollection(...)` survived to the
+    * compiler with `Required: java.util.Collection[?]` while everything around it had been retyped.
+    *
+    * Keyed on `owner#name` — the same identification `PortabilityCheck.exactMember` uses, and the
+    * only one available for an external symbol (whose own `fullName` is just the member name).
+    *
+    * DELIBERATELY SMALL. What is here is what the corpus calls; the rest of `java.util.Collections`
+    * is not silently mapped to something approximate, because the approximations are exactly where a
+    * §4.4 defect would live — `Collections.unmodifiableList` has no read-only `Buffer` view to map
+    * onto, and mapping it to the identity would drop the immutability with a green compile. An
+    * unmapped static still fails to COMPILE, which is the honest outcome. */
+  private def staticRewrite(t: Tree.Apply)(using p: Program): Option[Term] =
+    def qualified(s: SymId) = for
+      m <- p.symbolOf(s)
+      o <- p.symbolOf(m.owner)
+    yield s"${o.fullName}#${m.name}"
+    val member  = qualified(t.method)
+    val recv    = t.fun match { case Tree.Select(r, _, _, _) => Some(r); case _ => None }
+    def factory(f: SymId, args: List[Term]) =
+      Tree.Apply(Tree.Ident(f, TypeRepr.NoType, t.origin), args, f, t.tpe, t.origin)
+    (member, t.args) match
+      case (Some("java.util.Collections#unmodifiableCollection"), List(c)) if unmodifiableSym != SymId.None =>
+        Some(factory(unmodifiableSym, List(c)))
+
+      // ---- java.util.stream: the CHAIN collapses, it does not translate call-for-call ----
+      //
+      // `xs.stream().filter(p).collect(Collectors.toList())` is three calls in java and one in
+      // scala, because a scala collection carries the operations directly. So `stream()` becomes the
+      // receiver AS a scala collection, `collect(toList())` becomes nothing at all, and only the
+      // middle operation survives. Mapping any one of the three on its own produces something that
+      // does not type-check — which is why ENGINE-LIMITS K6 records the whole family as untranslated
+      // rather than partly done.
+      //
+      // Semantics: `asScalaBuffer` copies, where java's stream is lazy. The chain's TERMINAL
+      // (`collect`) materialises, so the observable result is identical; what changes is that a
+      // side-effecting predicate would see the elements in the same order but with no short-circuit.
+      // No corpus site has one, and a lazy view would not survive `collect` becoming a no-op.
+      // The collapsed node is typed `Buffer[E]`, NOT the `Stream<E>` the java call had. That is not
+      // bookkeeping: `coerce` decides whether to bridge from the node's own type, so a collapse that
+      // kept `Stream` produced `Found: Buffer[V] / Required: JavaCollection[V]` one call further out
+      // — the chain translated and then failed to meet the method it fed. A rewritten node must
+      // describe the expression it now emits, the same invariant `values()` restores above.
+      case (Some("java.util.Collection#stream" | "java.util.List#stream" | "java.util.Set#stream"), Nil) =>
+        recv.map(r => Tree.Select(r, asScalaBufferSym, asBuffer(r.tpe), t.origin))
+      // A stream OPERATION is rewritten only when its receiver is a collection this phase ALREADY
+      // collapsed — never on the method name alone. `"…".lines()` (libGDX's `JsonMatcherTests`) is a
+      // `java.util.stream.Stream` with no collection behind it, so nothing collapsed it and rewriting
+      // its `filter` produced `Found: java.util.stream.Stream[String] / Required: Buffer[A]`:
+      // measured 0 -> 1 on the test port. A stream chain from a non-collection source is simply not
+      // translated, and must fail as such.
+      case (Some("java.util.stream.Stream#filter"), List(pred)) if filteredSym != SymId.None && collapsed(recv) =>
+        recv.map(r => Tree.Apply(Tree.Ident(filteredSym, TypeRepr.NoType, t.origin), List(r, pred),
+                                 filteredSym, r.tpe, t.origin))
+      // the terminal, and only for the collector the receiver ALREADY is. `Collectors.toSet` /
+      // `toCollection(f)` / `toMap` each need a different target type, and guessing one would be a
+      // silent wrong answer; unmapped, they fail to compile, which is the honest outcome.
+      case (Some("java.util.stream.Stream#collect"), List(collector))
+          if collapsed(recv) && qualified(collectorOf(collector)).contains("java.util.stream.Collectors#toList") =>
+        recv
+      case _ => None
+
+  /** the method a collector expression calls, so `collect`'s argument can be identified. */
+  private def collectorOf(t: Term): SymId = t match
+    case a: Tree.Apply => a.method
+    case _             => SymId.None
+
+  /** has this receiver already been collapsed from a `Stream` to a scala sequence? The shims are
+    * excluded: `filtered` takes a `Buffer`, and a shim is what the collapse consumes, not produces. */
+  private def collapsed(recv: Option[Term]): Boolean =
+    recv.flatMap(r => headSym(r.tpe)).exists(s => kindOf.get(s).contains(Kind.Seq) && !shimSyms.contains(s))
+
+  /** the same type with `Buffer` as its head — what `asScalaBuffer` on a `JavaCollection[E]` returns. */
+  private def asBuffer(t: TypeRepr): TypeRepr =
+    if bufferSym == SymId.None then t else withHead(t, bufferSym)
 
   /** Bridge a scala collection into a shim-typed parameter, AT THE CALL SITE.
     *
@@ -326,6 +420,18 @@ final class CollectionsTransform extends Phase, RequiresRuntime:
       case ("iterator", Nil, _) if iteratorFromSym != SymId.None =>
         val sel = Tree.Select(recv, m, t.tpe, t.origin) // parenless, as the generic case below
         Some(Tree.Apply(Tree.Ident(iteratorFromSym, TypeRepr.NoType, so), List(sel), iteratorFromSym, t.tpe, so))
+      // `m.values()` is the same provenance problem as `iterator()` above, and the same fix.
+      // Java's `Map.values()` is declared `Collection<V>`, so every slot the port derived from that
+      // asks for the SHIM — while the emitted `m.values` is a `scala.collection.Iterable`. The TIR
+      // cannot see the disagreement: the node's `tpe` is the retyped `Collection<V>`, so it CLAIMS
+      // to be a shim already and `coerce` correctly declines to wrap it. Wrapping here restores the
+      // invariant that a node's type describes the expression it emits.
+      //
+      // `unmodifiableFrom` and not `from`: java's `values()` is a VIEW that rejects `add`, so
+      // read-only is java's own behaviour rather than a capability lost in translation.
+      case ("values", Nil, Kind.Map) if unmodifiableFromSym != SymId.None =>
+        val sel = Tree.Select(recv, m, t.tpe, t.origin) // parenless, as the generic case below
+        Some(Tree.Apply(Tree.Ident(unmodifiableFromSym, TypeRepr.NoType, so), List(sel), unmodifiableFromSym, t.tpe, so))
       case ("entrySet", Nil, Kind.Map)          => Some(recv)
       case ("getKey", Nil, Kind.Entry)          => Some(Tree.Select(recv, key1Sym, t.tpe, t.origin))
       case ("getValue", Nil, Kind.Entry)        => Some(Tree.Select(recv, value2Sym, t.tpe, t.origin))

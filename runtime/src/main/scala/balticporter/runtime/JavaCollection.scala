@@ -85,11 +85,26 @@ trait JavaCollection[A] extends JavaIterable[A]:
       if !c.contains(it.next()) then { it.remove(); changed = true }
     changed
 
-  def removeIf(filter: A => Boolean): Boolean =
+  /** JAVA's signature, `java.util.function.Predicate` included — not `A => Boolean`.
+    *
+    * This is §4.5's rule ("java's own shape, java's method arity included") applied to a parameter
+    * type, and the reason is the same: a ported class OVERRIDES this. simple-graphs' `Path` declares
+    * `removeIf(Predicate<? super V>)`, and scala requires an override's parameter type to match its
+    * parent's EXACTLY — contravariance does not help. Declared `A => Boolean` here, no rendering of
+    * the java declaration can agree with it: `Function1[? >: V, Boolean]` is a different type, and
+    * `Function1[V, Boolean]` would be a different DECLARATION from the one java wrote.
+    *
+    * The alternative — map `java.util.function.Predicate` to `Function1` and adapt at each call —
+    * also changes the parameter type of every ported override, so it moves the disagreement rather
+    * than removing it. Note that this is the one place a JDK type is deliberately IN a shim
+    * signature; it is admissible because `java.util.function` is a functional interface available on
+    * the JVM, Scala.js and Scala Native alike, whereas `java.util.Collection` (which this file
+    * exists to replace) is not the portability problem — its INHERITANCE shape is. */
+  def removeIf(filter: java.util.function.Predicate[? >: A]): Boolean =
     var changed = false
     val it = iterator()
     while it.hasNext() do
-      if filter(it.next()) then { it.remove(); changed = true }
+      if filter.test(it.next()) then { it.remove(); changed = true }
     changed
 
   def toArray(): scala.Array[Object] =
@@ -119,6 +134,54 @@ object JavaCollection:
       val i = xs.indexWhere(_ == o)
       if i < 0 then false else { xs.remove(i); true }
     def clear(): Unit               = xs.clear()
+
+  /** Adapt a scala collection that the port may NOT mutate through — a DISTINCT NAME rather than an
+    * overload of [[from]], deliberately.
+    *
+    * An overload would resolve on the static type, and `mutable.Set` is a `scala.collection.Iterable`
+    * — so `Collection<X> c = new HashSet<>(); c.add(x)` would silently pick the read-only wrapper and
+    * throw at runtime while compiling perfectly. That is precisely the CLAUDE.md §4.4 defect class:
+    * valid scala meaning something else, invisible to every count. A separate name cannot be reached
+    * by accident, and the emitted call says which one it is.
+    *
+    * Read-only is not a narrowing where it is used. `Map.values()` in java is a VIEW that rejects
+    * `add` with `UnsupportedOperationException`, and `Collections.unmodifiableCollection` rejects
+    * every mutator — so throwing is what java does, not a capability the port lost. */
+  def unmodifiableFrom[A](xs: scala.collection.Iterable[A]): JavaCollection[A] = new JavaCollection[A]:
+    def iterator(): JavaIterator[A] = JavaIterator.from(xs.iterator)
+    def size(): Int                 = xs.size
+    def isEmpty(): Boolean          = xs.isEmpty
+    def contains(o: Any): Boolean   = xs.iterator.contains(o)
+    def add(e: A): Boolean          = throw new UnsupportedOperationException("add on an unmodifiable collection")
+    def remove(o: Any): Boolean     = throw new UnsupportedOperationException("remove on an unmodifiable collection")
+    def clear(): Unit               = throw new UnsupportedOperationException("clear on an unmodifiable collection")
+
+  /** `java.util.Collections.unmodifiableCollection`, with java's own signature.
+    *
+    * The `? <: T` is the whole reason this exists rather than being erased to the identity: java's
+    * `<T> Collection<T> unmodifiableCollection(Collection<? extends T>)` is where a
+    * `Collection<Connection<V>>` becomes the `Collection<Edge<V>>` a method declares it returns, and
+    * [[JavaCollection]] — like java's own `Collection` — is invariant. Drop the call and the widening
+    * goes with it. */
+  def unmodifiable[T](c: JavaCollection[? <: T]): JavaCollection[T] = new JavaCollection[T]:
+    def iterator(): JavaIterator[T] = c.iterator().asInstanceOf[JavaIterator[T]]
+    def size(): Int                 = c.size()
+    def isEmpty(): Boolean          = c.isEmpty()
+    def contains(o: Any): Boolean   = c.contains(o)
+    def add(e: T): Boolean          = throw new UnsupportedOperationException("add on an unmodifiable collection")
+    def remove(o: Any): Boolean     = throw new UnsupportedOperationException("remove on an unmodifiable collection")
+    def clear(): Unit               = throw new UnsupportedOperationException("clear on an unmodifiable collection")
+
+  /** `Stream.filter(Predicate)`, as a function rather than a synthesised lambda.
+    *
+    * A `java.util.stream` chain does not translate call-for-call — scala's collections carry the
+    * operations directly, so `stream()` and `collect(Collectors.toList())` both DISAPPEAR and only
+    * the middle survives. What survives still takes a `java.util.function.Predicate` where scala's
+    * `filter` wants `A => Boolean`, and doing that in the transform would mean minting a lambda with
+    * a fresh parameter symbol. A named function needs neither, and keeps the adaptation in one
+    * readable place. */
+  def filtered[A](xs: scala.collection.mutable.Buffer[A], p: java.util.function.Predicate[? >: A])
+      : scala.collection.mutable.Buffer[A] = xs.filter(p.test(_))
 
   extension [A](self: JavaCollection[A])
     /** a scala view — `map`, `filter`, `foreach` and the rest. Inherited `foreach` from

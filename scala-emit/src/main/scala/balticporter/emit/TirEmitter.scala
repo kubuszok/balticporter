@@ -344,6 +344,13 @@ final class TirEmitter(
   private def sym(id: SymId): Symbol = program.symbolOf(id).getOrElse(Symbol(id, "?", "?", Flags(), SymId.None, TypeRepr.NoType))
   private def local(id: SymId): String = esc(sym(id).name)
 
+  /** a method symbol's declared parameter types, empty when its info is not a method type — used to
+    * give an unbound method reference the arity java gave it. */
+  private def methodParams(id: SymId): List[TypeRepr] = sym(id).info match
+    case TypeRepr.MethodType(ps, _, _)                       => ps.map(_._2)
+    case TypeRepr.PolyType(_, TypeRepr.MethodType(ps, _, _)) => ps.map(_._2)
+    case _                                                   => Nil
+
   private val keywords = Set(
     "type", "object", "val", "var", "def", "class", "trait", "enum", "given", "match", "case",
     "if", "else", "while", "do", "for", "yield", "then", "with", "extends", "new", "this", "super",
@@ -1065,6 +1072,33 @@ final class TirEmitter(
     * both must NAME the outer one — the body boundary is innermost, so an un-annotated `break(())`
     * inside it would continue instead. A LABELLED loop names whichever of the two its label is
     * actually jumped to, and registers the name for the duration of the body. */
+  /** A java enhanced-for BINDING is a declaration with its own type; scala's `for (x <- xs)` binds at
+    * the ITERABLE's element type. They agree in the ordinary case and java lets them differ:
+    *
+    * {{{ for (Object e : collection) if (!contains(e)) …   // Collection<?>, binding widened to Object }}}
+    *
+    * Java resolves every use of `e` in the body against `Object`; scala resolves them against the
+    * element type, which for a wildcard is an unusable capture — so `contains(e)` fails with
+    * `Found: ?1.CAP`. `Array.containsAll` and `NodeCollection.containsAll` in simple-graphs are
+    * exactly this, and no amount of retyping at the collection fixes it: the loss is at the BINDING.
+    *
+    * Returns the declared type to re-bind at, or `None` when scala's own binding is already exact.
+    *
+    * Conservative in ONE direction on purpose. A difference must be PROVABLE — an element type this
+    * function cannot read is treated as agreeing, because inventing an alias on no evidence would
+    * add a cast to every for-each in the corpus to fix the handful that need one. The cast itself is
+    * sound wherever it does fire: java only permits a WIDENING here, so the value already has the
+    * declared type at runtime. */
+  private def widenedBinding(b: Tree.ValDef, it: Term): Option[String] =
+    elementTpe(it.tpe).filter(_ != b.tpt.tpe).map(_ => tpe(b.tpt.tpe))
+
+  /** the element type of something java could put in an enhanced-for: an applied generic's single
+    * argument, or an array's element. `None` = not readable, which callers must treat as no evidence
+    * rather than as a difference. */
+  private def elementTpe(t: TypeRepr): Option[TypeRepr] = t match
+    case TypeRepr.AppliedType(_, List(el)) => Some(el)
+    case _                                 => scala.None
+
   private def loopWithJumps(body: Tree, label: Option[String], render: (=> String) => String,
                             bodyStr: => String): String =
     val lblB = label.filter(l => jumpsTo(body, l, brk = true))
@@ -1418,7 +1452,21 @@ final class TirEmitter(
         case None if dims.sizeIs > 1 => s"scala.Array.ofDim[${tpe(baseElem(el.tpe))}](${dims.map(term(_, i)).mkString(", ")})"
         case None     => s"new scala.Array[${tpe(el.tpe)}](${dims.map(term(_, i)).mkString(", ")})"
     case Tree.ForEach(b, it, body, _, _, lbl) =>
-      loopWithJumps(body, lbl, bd => s"for (${esc(sym(b.symbol).name)} <- ${term(it, i)}) $bd", term(body, i))
+      val raw  = sym(b.symbol).name
+      val name = esc(raw)
+      widenedBinding(b, it) match
+        case None       => loopWithJumps(body, lbl, bd => s"for ($name <- ${term(it, i)}) $bd", term(body, i))
+        case Some(decl) =>
+          // the alias is INSIDE the loop body, so it is re-bound each iteration exactly as java's is,
+          // and outside any `continue` boundary `loopWithJumps` adds — which is where java runs it.
+          // Derive the fresh name from the RAW one and escape THAT: appending to the escaped form
+          // gives `` `object`$e ``, which is not an identifier at all (measured, 0 -> 3 on libGDX,
+          // as an E040 syntax error). A suffixed keyword needs no escape, so `esc` is a no-op here —
+          // but only because it is applied to the whole name.
+          val fresh = esc(s"$raw$$e")
+          loopWithJumps(body, lbl,
+            bd => s"for ($fresh <- ${term(it, i)}) { val $name: $decl = $fresh.asInstanceOf[$decl]; $bd }",
+            term(body, i))
     case Tree.For(init, cond, upd, body, _, _, lbl) =>
       // the UPDATE must run on a `continue` too, so it sits OUTSIDE the per-iteration boundary —
       // which is exactly where java's `for` runs it.
@@ -1444,7 +1492,20 @@ final class TirEmitter(
               case other                  => tpe(other)
             s"((size: scala.Int) => new scala.Array[$elem](size))"
           case _ => samAscribed(s"(() => new ${ctorTpe(tt.tpe)}())", mrT, tt.tpe)
-        case Left(tt)           => s"${tpe(tt.tpe)}.${local(s)}"
+        // `Type::method` is TWO different java forms sharing one syntax, and only one of them is a
+        // qualified name. For a STATIC method it is `Type.method`. For an INSTANCE method it is an
+        // UNBOUND reference — the receiver becomes the function's first parameter, so
+        // `Edge<V>::getWeight` means `(self: Edge[V]) => self.getWeight()`. Emitted as a name it is
+        // `sge.graphs.Edge[V].getWeight`, which is not even a member access: measured as
+        // `value Edge is not a member of sge.graphs` in simple-graphs' MinimumWeightSpanningTree,
+        // where the reference is a `Comparator` key extractor.
+        case Left(tt) if sym(s).flags.isStatic => s"${tpe(tt.tpe)}.${local(s)}"
+        case Left(tt) =>
+          val self  = "self$"
+          val extra = methodParams(s).zipWithIndex.map((pt, k) => s"a$k$$: ${tpe(pt)}")
+          val ps    = (s"$self: ${tpe(tt.tpe)}" :: extra).mkString(", ")
+          val as    = methodParams(s).indices.map(k => s"a$k$$").mkString(", ")
+          samAscribed(s"(($ps) => $self.${local(s)}($as))", mrT, tt.tpe)
         case Right(e)           => s"${term(e, i)}.${local(s)}"
     // Java's `break` leaves the loop; emitted as a no-op it did NOT, and the loop ran on.
     // `CharArray.deleteAll` scanned to the end of the array instead of stopping at the first

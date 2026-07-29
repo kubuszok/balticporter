@@ -1113,17 +1113,78 @@ member of that family, not a mapping onto the stdlib.
 *Fix kind: (a). The types are JDK, the inheritance is ordinary java, and every library that defines
 its own collection type hits it — flexmark and liqp both do.*
 
-### K6. `java.util.stream` and `java.util.function` are not translated at all
+### K6. `java.util.stream` — the CHAIN collapses; and the two rules that make that safe
 
-`Collection.forEach(Consumer)` now maps to `foreach` — the names differ only in case, so its absence
-read as a typo rather than a missing mapping. `stream()`, `Collectors`, and the rest of
-`java.util.stream` do NOT map, and a `stream().collect(Collectors.toList())` chain needs the whole
-chain rewritten rather than one call: scala's collections carry the operations directly, so the
-`stream()` and the `collect(...)` both disappear rather than translating one-for-one.
+**PARTLY CLOSED.** `xs.stream().filter(p).collect(Collectors.toList())` now translates, and the shape
+of the fix is the transferable part: a stream chain is not rewritten call-for-call. Scala's
+collections carry the operations directly, so `stream()` becomes the receiver AS a scala collection,
+`collect(Collectors.toList())` becomes NOTHING, and only the middle operation survives. Map any one
+of the three on its own and the result does not type-check.
 
-3 sites in simple-graphs. `java.util.function` fares better — `Predicate`/`Consumer` arrive as
-lambdas and mostly land — but neither family has ever been exercised by the corpus, and both are
-heavily used by the libraries still to be ported.
+Two rules were each measured the hard way, and a new backend or a new operation will need both:
+
+- **A rewritten node must be TYPED as what it now emits.** The collapse first kept the java
+  `Stream<E>` type, and one call further out `coerce` therefore declined to bridge: `Found:
+  Buffer[V] / Required: JavaCollection[V]` — the chain translated and then failed to meet the method
+  it fed. Same invariant as `Map.values()`, which claims a `Collection` in the TIR while emitting a
+  `scala.collection.Iterable`, and is wrapped for exactly that reason.
+- **A stream OPERATION is rewritten only when its receiver is a collection the phase already
+  collapsed — never on the method name alone.** `"…".lines()` is a `java.util.stream.Stream` with no
+  collection behind it; rewriting its `filter` gave `Found: java.util.stream.Stream[String]`.
+  Measured 0 → 1 on libGDX's test port. A chain from a non-collection source is untranslated and
+  must fail as such.
+
+Still open, and each needs a different target type rather than more of the same: `Collectors.toSet`,
+`Collectors.toMap`, `Collectors.toCollection(f)`, and `Stream.sorted(Comparator)`. Guessing one would
+be a silent wrong answer, so they are deliberately unmapped and fail to compile.
+`java.util.Collections`' statics are the same story — `unmodifiableCollection` is mapped (its
+`Collection<? extends T> -> Collection<T>` widening is load-bearing, not erasable to the identity),
+while `unmodifiableList` has no read-only `Buffer` view to map onto and mapping it to the identity
+would drop the immutability with a green compile.
+
+`java.util.function` is now exercised: `Predicate` reaches the runtime shim's `removeIf`, and the
+shim declares JAVA's signature (`Predicate<? super A>`) rather than `A => Boolean` — because a
+ported class OVERRIDES it and scala requires an override's parameter type to match EXACTLY.
+Mapping `Predicate` to `Function1` and adapting at each call moves that disagreement rather than
+removing it, since it changes the override's parameter type too.
 
 *Fix kind: (b) for the call shapes, on `CollectionsTransform`'s existing rewrite table; the chain
-collapse is (a).*
+collapse and both rules above are (a).*
+
+### K7. A java enhanced-for BINDING may be declared at a supertype, and the port dropped it
+
+`for (Object e : collection)` over a `Collection<?>` is a DECLARATION: java resolves every use of `e`
+in the body against `Object`. Scala's `for (e <- xs)` binds at the ITERABLE's element type, which for
+a wildcard is an unusable capture — so any use fails with `Found: ?1.CAP`. No retyping at the
+collection can fix it; the loss is at the binding.
+
+Faithful translation re-binds: `for (e$e <- xs) { val e: T = e$e.asInstanceOf[T]; … }`. The cast is
+sound wherever it fires, because java permits only a WIDENING here.
+
+Two things measured while doing it:
+
+- **The gate must be a PROVABLE difference.** Treating an unreadable element type as "differs" would
+  put a cast on every for-each in the corpus to fix the handful that need one.
+- **Derive the fresh name from the RAW name and escape THAT.** Appending to the escaped form gives
+  `` `object`$e ``, which is not an identifier: 0 → 3 on libGDX main, as an E040 syntax error in a
+  file that had compiled for weeks. A suffixed keyword needs no escape — but only because `esc` is
+  applied to the whole name.
+
+27 members of libGDX main changed emitted text; 217/221 tests still pass, so the alias is behaviour-
+preserving where it fired.
+
+*Fix kind: (a) — java's for-each, scala's for-comprehension, no library involved.*
+
+### K8. `Type::method` is TWO java forms sharing one syntax
+
+A method reference on a TYPE is a qualified name (`Type.method`) only when the method is STATIC. For
+an INSTANCE method it is an UNBOUND reference and the receiver becomes the function's first
+parameter: `Edge<V>::getWeight` means `(self: Edge[V]) => self.getWeight()`. Emitted as a name it is
+`sge.graphs.Edge[V].getWeight`, which is not even a member access — measured as `value Edge is not a
+member of sge.graphs`, i.e. an error that points at the PACKAGE and says nothing about method
+references.
+
+Distinguish on `Flags.isStatic`, and take the synthesised lambda's arity from the method's own
+`MethodType` so a multi-parameter reference (`String::compareTo` as a `Comparator`) works too.
+
+*Fix kind: (a).*
