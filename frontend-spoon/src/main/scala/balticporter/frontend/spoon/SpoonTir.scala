@@ -1609,7 +1609,19 @@ object SpoonTir:
               // Guarded on the component not being a bare type VARIABLE: `static <T> Array<T> with(T...)`
               // called as `with()` would name a `T` that does not exist at the call site — the same
               // reason the inference branch below refuses a generic component.
-              else if comp != null && argEs.sizeIs == fixed && !comp.isInstanceOf[CtTypeParameterReference] then
+              // The DECLARED component type, whenever it is not a bare type variable.
+              //
+              // Argument inference is the wrong source here and `Family.all(ComponentA.class)` shows
+              // why: Spoon types a class literal as RAW `Class`, so the inferred element renders
+              // `Class[?]` while the parameter it is being passed to declares
+              // `Array[Class[? <: Component]]` — 94 errors in Ashley's suite, all one shape. This is
+              // ENGINE-LIMITS §0 (two renderings of one Java type: a declaration in one scope, a use
+              // re-rendered in another) and the rule that resolves it is G1, erase USES and never
+              // DECLARATIONS: the array being built is the parameter's own declared type.
+              //
+              // A bare type variable is still excluded — `<T> with(T...)` names a `T` that does not
+              // exist at the call site — and that is what the inference branch below remains for.
+              else if comp != null && !comp.isInstanceOf[CtTypeParameterReference] then
                 Some(comp)
               else
                 val ts = argEs.drop(fixed).map(e => try e.getType catch { case _: Throwable => null })

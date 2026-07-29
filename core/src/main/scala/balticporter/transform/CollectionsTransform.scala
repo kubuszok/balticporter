@@ -34,7 +34,10 @@ final class CollectionsTransform extends Phase, RequiresRuntime:
   private val typeMap: Map[String, (String, Kind)] = Map(
     "java.util.List"          -> ("scala.collection.mutable.Buffer", Kind.Seq),
     "java.util.ArrayList"     -> ("scala.collection.mutable.ArrayBuffer", Kind.Seq),
-    "java.util.LinkedList"    -> ("scala.collection.mutable.ListBuffer", Kind.Seq),
+    // a java `LinkedList` is a List AND a Deque, and the corpus uses it as a QUEUE.
+    // `mutable.Queue` extends `ArrayDeque` extends `Buffer`, so every Seq rewrite above still
+    // applies and `removeHeadOption` exists — which `ListBuffer` does not have.
+    "java.util.LinkedList"    -> ("scala.collection.mutable.Queue", Kind.Seq),
     "java.util.Queue"         -> ("scala.collection.mutable.Queue", Kind.Seq),
     "java.util.Deque"         -> ("scala.collection.mutable.ArrayDeque", Kind.Seq),
     "java.util.ArrayDeque"    -> ("scala.collection.mutable.ArrayDeque", Kind.Seq),
@@ -84,6 +87,10 @@ final class CollectionsTransform extends Phase, RequiresRuntime:
   /** scala `mutable.Map.put`/`remove` — they RETURN the previous value, which java's do too and
     * `update`/`-=` silently discard. */
   private var putSym, removeSym: SymId = SymId.None
+  /** java Deque members. `poll`/`peek` return NULL on empty where scala's `head`/`remove(0)`
+    * throw, so both go through an `Option` and `orNull` — the difference is invisible in a
+    * compile and shows up as a MatchError-shaped failure at runtime (CLAUDE.md §4.4). */
+  private var removeHeadOptionSym, headOptionSym, orNullSym, prependSym: SymId = SymId.None
   private var key1Sym, value2Sym, roSetSym: SymId = SymId.None
   /** `JavaIterable` + its `from` factory — see `wrapIterableArgs`. */
   private var javaIterableSym, iterableFromSym: SymId = SymId.None
@@ -122,6 +129,10 @@ final class CollectionsTransform extends Phase, RequiresRuntime:
     iterableFromSym = mint("from", JavaIterableFqn + ".from")
     iteratorFromSym = mint("from", JavaIteratorFqn + ".from")
     javaIteratorSym = byScala.getOrElse(JavaIteratorFqn, SymId.None)
+    removeHeadOptionSym = mint("removeHeadOption", "removeHeadOption")
+    headOptionSym       = mint("headOption", "headOption")
+    orNullSym           = mint("orNull", "orNull")
+    prependSym          = mint("prepend", "prepend")
     putSym       = mint("put", "put")     // scala `mutable.Map.put`: returns the PREVIOUS value
     removeSym    = mint("remove", "remove") // scala `mutable.Map.remove`: returns the REMOVED value
 
@@ -258,6 +269,19 @@ final class CollectionsTransform extends Phase, RequiresRuntime:
         Some(call(call(recv, removeSym, List(key), t, so), getOrElseSym, List(dflt(nullOf(so), recv, so)), t, so))
       case ("add", List(i, x), Kind.Seq)        => Some(call(recv, insertSym, List(i, x), t, so)) // insert at index
       case ("add", List(x), _)                  => Some(infix(recv, opPlusEq, List(x), t, so))    // xs += x
+      // ---- java Deque, as `LinkedList`/`ArrayDeque` are routinely used ----
+      // `addLast`/`offer` append; `addFirst` prepends. Same shape as `add`, different end.
+      case ("addLast" | "offer" | "offerLast", List(x), Kind.Seq) => Some(infix(recv, opPlusEq, List(x), t, so))
+      case ("addFirst" | "offerFirst", List(x), Kind.Seq)         => Some(call(recv, prependSym, List(x), t, so))
+      // `poll`/`peek` return NULL on an empty deque. `remove(0)`/`head` THROW, so a direct mapping
+      // would turn "the queue was empty" into an exception — a behavioural change with no compile
+      // error. `removeHeadOption().orNull` / `headOption.orNull` reproduce java exactly.
+      // `orNull` is PARAMETERLESS and takes an implicit `Null <:< A`; emitting `orNull()` makes
+      // scala look for an explicit argument list and fail. It is a `Select`, not an `Apply`.
+      case ("poll" | "pollFirst", Nil, Kind.Seq) =>
+        Some(Tree.Select(call(recv, removeHeadOptionSym, Nil, t, so), orNullSym, t.tpe, so))
+      case ("peek" | "peekFirst" | "element", Nil, Kind.Seq) =>
+        Some(Tree.Select(Tree.Select(recv, headOptionSym, TypeRepr.NoType, so), orNullSym, t.tpe, so))
       case ("addAll" | "putAll", List(c), _)    => Some(infix(recv, opPlusPlusEq, List(c), t, so))// xs ++= c
       case ("remove", List(x), Kind.Set)        => Some(infix(recv, opMinusEq, List(x), t, so)) // xs -= x
       case ("containsKey", List(key), Kind.Map) => Some(call(recv, containsSym, List(key), t, so))

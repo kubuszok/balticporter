@@ -104,7 +104,16 @@ object AshleyPolicy:
       // Ashley's OWN replacements. `inject` is not inherited — exactly one module ships each
       // replacement file, and libGDX core ships the ones for the types IT dropped.
       inject  = List(repoRoot.resolve("corpus-tests/ashley-overrides")),
-      surface = List(new balticporter.transform.MethodBodyTransform(Map(
+      surface = List(
+        // `PooledEngine.ComponentPools` uses `ReflectionPool` as a TYPE — a field's type, a local's
+        // type, a `new`, and several cast targets — so no body seam can reach it. The base drops
+        // the type outright (every libGDX use went with the drop; Ashley's did not), and a
+        // dependent may not inject at the base's FQN. Re-pointing every reference at Ashley's own
+        // factory-backed pool is the seam that fits.
+        new balticporter.transform.TypeRedirectTransform(Map(
+          "com.badlogic.gdx.utils.ReflectionPool" -> "com.badlogic.ashley.core.ComponentPool",
+        )),
+        new balticporter.transform.MethodBodyTransform(Map(
         // `Engine.createComponent` is the one reflective site in Ashley's 21 files: it calls
         // `ClassReflection.newInstance(componentType)` and catches `ReflectionException`, both
         // types the base drops. Everything else in `Engine` — 200 lines of entity/system/family

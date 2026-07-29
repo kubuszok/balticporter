@@ -242,6 +242,34 @@ final class TirEmitter(
     program.units.foreach(scan)
     acc.toSet
 
+  /** every type symbol the program INSTANTIATES — an all-static class in this set must stay a
+    * `class`, for the same reason as [[extendedTypes]]: you cannot `new` an object.
+    *
+    * The case that needed it is an EMPTY Java class. `private static class Dummy { }` has no
+    * members, so "every member is static" is VACUOUSLY true and the collapse fired; the
+    * `cd.body.nonEmpty` guard did not stop it, because the TIR carries a synthesised default
+    * constructor and the body is therefore not empty. It emitted as `object Dummy`, and every
+    * `new Dummy()` and every `Signal<Dummy>` in Ashley's suite stopped compiling — 26 errors from
+    * one empty class.
+    *
+    * Walks with the STANDARD traversal rather than a private recursion (CLAUDE.md §3): a `new` can
+    * appear anywhere a term can, including inside an anonymous class body, and a hand-rolled walk
+    * here would find the ones its author remembered. */
+  private lazy val instantiatedTypes: Set[SymId] =
+    val acc = collection.mutable.Set[SymId]()
+    def headSym(t: TypeRepr): Option[SymId] = t match
+      case TypeRepr.TypeRef(_, s)      => Some(s)
+      case TypeRepr.AppliedType(tc, _) => headSym(tc)
+      case _                           => None
+    val collect = new Phase:
+      def name: String = "emit/instantiated-types"
+      override def transformNew(t: Tree.New)(using Program): Term =
+        headSym(t.tpt.tpe).foreach(acc += _)
+        t
+    given Program = program
+    program.units.foreach(u => StandardTraversal.mapClassDef(collect, u))
+    acc.toSet
+
   private def declaredTypes(cd: Tree.ClassDef): Set[SymId] =
     val acc = collection.mutable.Set[SymId](cd.symbol)
     cd.body.foreach { case c: Tree.ClassDef => acc ++= declaredTypes(c); case _ => () }
@@ -562,7 +590,8 @@ final class TirEmitter(
     }
     // an all-static class can only collapse to an `object` if nobody EXTENDS it (you can't extend
     // an object) — otherwise it stays a `class` with its statics in a companion object.
-    if kw == "class" && parents.isEmpty && cd.body.nonEmpty && !hasInstanceState && pparams.isEmpty && !extendedTypes(cd.symbol) then
+    if kw == "class" && parents.isEmpty && cd.body.nonEmpty && !hasInstanceState && pparams.isEmpty &&
+       !extendedTypes(cd.symbol) && !instantiatedTypes(cd.symbol) then
       val members = cd.body.filterNot { case d: Tree.DefDef => sym(d.symbol).name == "<init>"; case _ => false }
       val ob = orderBody(members, pparams.nonEmpty).map(memberStat(_, i + 1)).filter(_.nonEmpty).mkString("\n")
       return s"${ind(i)}object ${esc(s.name)}$tps {\n$ob\n${ind(i)}}"
@@ -1442,6 +1471,22 @@ final class TirEmitter(
     val ok = concrete(target) && headOf(target) != headOf(ctor)
     if ok then s"($fn: ${tpe(target)})" else fn
 
+  /** a STATIC member reached through an instance expression rather than through its own type. */
+  private def staticThroughInstance(recv: Term, m: SymId): Boolean =
+    val s = sym(m)
+    s.flags.isStatic && s.owner != SymId.None && program.symbolOf(s.owner).isDefined && (recv match
+      // already qualified by the owning TYPE — `Family.one(…)` — which is what we want to emit.
+      case Tree.Ident(q, _, _)     => q != s.owner
+      case Tree.Select(_, q, _, _) => q != s.owner
+      case _                       => true)
+
+  /** conservatively: can evaluating this term have an effect? Only shapes that provably cannot are
+    * treated as free, because being wrong in the other direction DROPS an effect. */
+  private def effectFree(t: Term): Boolean = t match
+    case _: Tree.Ident | _: Tree.This | _: Tree.Literal => true
+    case Tree.Select(q, _, _, _)                        => effectFree(q)
+    case _                                              => false
+
   private def applyStr(fun: Term, args: List[Term], i: Int): String = fun match
     case Tree.New(tpt, _, _, anon) =>
       s"new ${ctorTpe(tpt.tpe)}(${args.map(term(_, i)).mkString(", ")})${anonBody(anon, i)}"
@@ -1453,6 +1498,20 @@ final class TirEmitter(
     case Tree.Select(recv, m, _, _) if sym(m).name == "<init>" =>
       val kw = recv match { case _: Tree.Super => "super"; case _ => "this" }
       s"$kw(${args.map(term(_, i)).mkString(", ")})"
+    // JAVA PERMITS A STATIC MEMBER TO BE CALLED THROUGH AN INSTANCE — `family.one(…)` where `one`
+    // is `static`. Scala does not: a static emits into the companion, which an instance cannot
+    // reach. Java evaluates the receiver and DISCARDS it, so the faithful rendering keeps the
+    // receiver's effects and calls the static on its owner.
+    //
+    // A receiver that cannot have effects (a name, `this`, a field read) is simply dropped; one
+    // that can (a call, a `new`) is evaluated first in a block, because silently discarding an
+    // effect is precisely the class of defect a green compile hides (CLAUDE.md §4.4).
+    //
+    // Worked example: Ashley's `Family.all(A, B).get().one(C, D)` — `get()` returns a `Family` and
+    // `one` is static on it, which javac accepts with a warning and scalac rejects outright.
+    case Tree.Select(recv, m, _, _) if staticThroughInstance(recv, m) =>
+      val call = s"${typeValue(sym(m).owner)}.${local(m)}(${args.map(term(_, i)).mkString(", ")})"
+      if effectFree(recv) then call else s"{ ${term(recv, i)}; $call }"
     case Tree.Select(_, m, _, _) if numericOverloadAscription(m).isDefined =>
       s"(${term(fun, i)}: ${numericOverloadAscription(m).get})(${args.map(term(_, i)).mkString(", ")})"
     case _ =>
