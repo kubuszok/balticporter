@@ -51,6 +51,7 @@ final class TestFrameworkTransform(
 
   private var suiteSym: SymId  = SymId.None
   private var testSym: SymId   = SymId.None
+  private var interceptSym: SymId = SymId.None
   /** `org.junit.Assert.assertX` → the façade's own `assertX`, by simple name. */
   private var assertSyms: Map[String, SymId] = Map.empty
 
@@ -63,6 +64,7 @@ final class TestFrameworkTransform(
       id
     suiteSym = mint(suite.substring(suite.lastIndexOf('.') + 1), suite)
     testSym  = mint(testMember, testMember)  // MUnit's own `test`, applied CURRIED
+    interceptSym = mint("intercept", "intercept") // MUnit's own, inherited from the suite
     // keyed by the member's SIMPLE name: a static call renders as `<receiver FQN>.<name>`, so the
     // member symbol itself is not keyed by the owner's FQN and cannot be found that way.
     // fully-qualified to an OBJECT, not inherited from the base class. A java `static` helper
@@ -143,10 +145,11 @@ final class TestFrameworkTransform(
     * method is left alone, so such a test stays a compile error rather than a false green. */
   private def testCase(d: Tree.DefDef, setups: List[SymId] = Nil)(using p: Program): Statement =
     val nm = p.symbolOf(d.symbol).map(_.name).getOrElse("test")
-    val expectsThrow = p.symbolOf(d.symbol).exists(_.annotations.exists { a =>
-      nameOf(a.tpe) == TestAnn && a.args.exists(_._1 == "expected")
-    })
-    if expectsThrow || d.rhs.isEmpty then d
+    val expectsThrow: Option[TypeRepr] = p.symbolOf(d.symbol).flatMap(_.annotations
+      .filter(a => nameOf(a.tpe) == TestAnn)
+      .flatMap(_.args.collect { case ("expected", Tree.Literal(Constant.ClassOfC(t), _, _)) => t })
+      .headOption)
+    if d.rhs.isEmpty then d
     else
       // `test("name") { … }` — TWO argument lists, modelled the way `quotes.reflect` does: nested
       // `Apply`, since `Apply.fun` is itself a `Term`. An earlier version routed around this via an
@@ -156,12 +159,21 @@ final class TestFrameworkTransform(
       val lit = Tree.Literal(Constant.StringC(nm), TypeRepr.NoType, d.origin)
       val head = Tree.Apply(Tree.Ident(testSym, TypeRepr.NoType, d.origin), List(lit),
                             testSym, TypeRepr.NoType, d.origin)
+      // `@Test(expected = classOf[E])` asserts that the body THROWS. Run bare it would pass while
+      // checking nothing — the silent-omission shape this engine exists to prevent — so it becomes
+      // MUnit's `intercept[E] { … }`, which asserts exactly what java asserted.
+      val body0 = expectsThrow match
+        case Some(exTpe) =>
+          val fn = Tree.TypeApply(Tree.Ident(interceptSym, TypeRepr.NoType, d.origin),
+                                  List(TypeTree(exTpe, d.origin)), TypeRepr.NoType, d.origin)
+          Tree.Apply(fn, List(d.rhs.get), interceptSym, TypeRepr.NoType, d.origin)
+        case scala.None => d.rhs.get
       val rhs =
-        if setups.isEmpty then d.rhs.get
+        if setups.isEmpty then body0
         else
           val calls = setups.map(s => Tree.Apply(Tree.Ident(s, TypeRepr.NoType, d.origin), Nil,
                                                  s, TypeRepr.NoType, d.origin))
-          Tree.Block(calls, d.rhs.get, d.rhs.get.tpe, d.origin)
+          Tree.Block(calls, body0, body0.tpe, d.origin)
       Tree.Apply(head, List(rhs), testSym, TypeRepr.NoType, d.origin)
 
   /** `@Before` is the framework's per-test setup hook under a fixed name. */
