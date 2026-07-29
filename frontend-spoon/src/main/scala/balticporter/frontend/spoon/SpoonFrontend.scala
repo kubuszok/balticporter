@@ -1,5 +1,16 @@
 package balticporter.frontend.spoon
 
+// =============================================================================
+// FROZEN — the BIR frontend. New work goes on `SpoonTir`, beside this file.
+//
+// This produces `BUnit`s: the untyped Java IR described (and frozen) at the head of
+// `core/Bir.scala`. `SpoonTir` produces a `Program` — symbol table, cross-reference
+// index, phase pipeline — and that is where every rule since has been written.
+//
+// Kept because liqp, xwiki/flexmark and jbump still port through it (the corpus
+// programs are listed in `core/Bir.scala`). Fix what they need; add nothing.
+// =============================================================================
+
 import balticporter.core.*
 import balticporter.core.BExpr.*
 

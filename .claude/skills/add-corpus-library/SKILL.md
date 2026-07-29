@@ -23,21 +23,77 @@ skipping it.
 Find the **tests** early and count `@Test` methods and assertions. That number is the only
 behavioural evidence the port will ever have, and it decides whether the library is worth adding.
 
-## 2. Write the migration program
+## 2. Write the migration program — a `PortRun` CONFIGURATION, never a copied file
 
-One `object <Lib>Migrate` in `corpus-tests/src/main/scala/balticporter/corpus/`, modelled on
-`LibgdxCoreMigrate`. It owns **all** per-library policy:
+One `object <Lib>Migrate` in `corpus-tests/src/main/scala/balticporter/corpus/`. It is a **single
+`PortRun(...)` value plus this library's policy, and nothing else**. Do NOT copy the body of
+another migration program: everything mechanical — emission, the dropped-type skip, the injection
+copy, the support-source write-out, every check, the substitution checks, determinism, provenance,
+the `src_managed` paths, the runtime dependency — is `balticporter.runner.PortRun`'s and cannot be
+opted out of. That is deliberate: check invocation used to be copy-paste, and `LibgdxTestMigrate`
+went its whole life without ever calling `PortabilityCheck` as a result.
+
+```scala
+PortRun(
+  label      = "<lib>",
+  portRoot   = repoRoot.resolve("<lib>"),        // src_managed/{main,test}/scala hangs off this
+  sourceSet  = SourceSet.Main,                   // Test for the suite; same mechanics either way
+  frontend   = FrontendConfig(base, files, Nil), // resolutionRoots = roots resolved but NOT emitted
+  phases     = List(/* universal, then (b) configured, then your (c) rules */),
+  subs       = Substitutions(dropTypes, dropMethods, inject),
+  provenance = Some(Provenance(name, commit, license, prefix, sourceRoot = base.toString)),
+  packageRenames = Map("com.upstream" -> "org.you"),  // NOT a phase: PortRun runs it LAST (§4.56)
+  runtimeMode    = RuntimeMode.Dependency,            // Vendored only for a standalone single set
+  supportSources = Map.empty,                         // sources a phase needs but cannot declare
+  determinism    = Determinism.fromArgs(args.toSeq),
+  project        = Some(spec),                        // emit build.sbt + .gitignore + engine pin
+).execute()
+```
+
+Things that are now errors rather than omissions:
+
+- passing a `PackageRenameTransform` in `phases` — it has an ordering obligation `runsAfter` cannot
+  state, so `PortRun` appends it and verifies it;
+- forgetting `externalConcrete` — it is derived from the phases via `RuntimePlan`, and a caller
+  cannot supply it;
+- a check going unrun — `PortRun.RequiredChecks` is asserted against what actually recorded, so a
+  number that reaches stdout and not `findings.tsv` fails the run.
+
+Two source sets of one module share their policy through a plain `object <Lib>Policy` — see
+`LibgdxPolicy`. Do not instantiate the same parameterised phase twice with different arguments;
+that is the drift `CLAUDE.md` §1 warns about.
+
+The migration program owns **all** per-library policy and nothing else:
 
 - `Substitutions(dropTypes, dropMethods, inject)` — what not to emit and the Scala to inject instead
 - the parameterised transforms, constructed with this library's values
 - the injected replacement sources, under `corpus-tests/<lib>-overrides/`
+- any §1(c) rule this library plugs in
 
 Nothing library-specific goes into `core` / `frontend-spoon` / `scala-emit`. When you need a new
 rule, decide its kind FIRST (`CLAUDE.md` §1):
 
 - universal → engine, unparameterised
 - same mechanics, different values → engine, **constructor parameters**; empty parameter = no-op
-- only ever this library → a separate plugged-in rule in the migration program
+- only ever this library → a separate plugged-in rule **in your own repository**
+
+### 2.1 Writing a §1(c) rule — the worked example
+
+`corpus-tests/.../GdxSharedIteratorRule.scala` is the model, with
+`corpus-tests/src/test/.../GdxSharedIteratorRuleSpec.scala` as the model for testing it. It is
+deliberately *not* in `core`, and it shows the three things the engine's own phases cannot:
+
+1. **Where the file goes** — beside your migration program, in your repository. It names the
+   library freely; the §1 enforcement grep covers only `core`, `frontend-spoon`, `scala-emit` and
+   `runtime`, and a (c) rule being outside them is the point.
+2. **How it enters the pipeline** — as an ordinary element of `PortRun(phases = …)`. Implement
+   `balticporter.tir.Phase`; there is no registry, service loader or plugin descriptor.
+3. **How it is tested** — `balticporter.testkit.PortSuite`, on a Java snippet, in your own test
+   source set. Include a **negative** test: a check that has never reported is not known to work.
+
+Before writing one, satisfy yourself the MECHANISM cannot be shared. Most things that look (c) are
+a (b) with the policy inlined. A rule whose only library-specific part is a list of names is a (b);
+a rule that encodes an invariant of that library's design is a (c).
 
 ## 3. Make it compile
 
