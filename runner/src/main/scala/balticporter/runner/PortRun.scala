@@ -258,8 +258,6 @@ final case class PortRun(
     // ---- the generated build ----
     project.foreach { spec => SbtGen.emitPort(portRoot, spec, effectivePhases, runtimeMode) }
 
-    say(s"wrote $written ${sourceSet.noun} ($dropped dropped, $injected injected) -> $outDir")
-
     val report = PortReport(
       label = label,
       signature = mismatches,
@@ -270,6 +268,13 @@ final case class PortRun(
       policy = policy,
       rename = renameReport,
     )
+    // The one place every count appears together WITH the §1 classification of its fix. An agent
+    // in another repository reads this and knows, per line, whether the next step is in the engine,
+    // in its manifest, or in a rule of its own (CLAUDE.md §4.45).
+    say("report:")
+    println(report.render)
+    say(s"wrote $written ${sourceSet.noun} ($dropped dropped, $injected injected) -> $outDir")
+
     if report.fatal.nonEmpty then
       report.fatal.foreach(f => System.err.println(s"[$label] FATAL — $f"))
       sys.error(s"[$label] ${report.fatal.size} fatal finding(s); see the report above")
