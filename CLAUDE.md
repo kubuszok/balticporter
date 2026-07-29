@@ -310,6 +310,32 @@ cast came from the emitter.
 `sbt -client` talks to a long-running server, so a shell environment variable never reaches the
 forked migration. Gate the switch on a marker FILE.
 
+**The kill switch is now a FLAG — do not edit source to get one.** `Pipeline.run` reads these, so
+the question "is this phase even responsible" costs one run and no diff:
+
+| flag | does |
+|---|---|
+| `balticporter.skipPhases=<name>,<name>` (or `*`) | omit those phases; the answer in one run |
+| `balticporter.dumpTirBefore=<phase>` / `dumpTirAfter=<phase>` | print the TIR around a phase |
+| `balticporter.dumpOnly=<fqn>` | narrow either dump to one type |
+| `balticporter.tracePhases` | announce each phase as it runs |
+| `balticporter.traceNode=<Kind>` | `TirTrace.mint` prints constructing frames for a node kind — no node gains a field |
+
+Resolution order is **system property → `<root>/.balticporter/run.properties` (script-written) →
+`<root>/debug.properties` (hand-written, wins)**. Note the marker file is not merely a convenience:
+a `-D` on the *caller's* command line does not reach the forked migration either, because `sbt`
+forks it with `javaOptions` from `build.sbt`. Only the file crosses that boundary.
+
+`TirPrinter` renders the TIR readably (`canonical` style leaks no `SymId` and no origin, so two
+runs are comparable); `DebugEmit` models once and emits one FQN, optionally around a phase.
+
+**A flag that carries measurement identity must come from the PORT, not the operator.**
+`balticporter.reportPathRoot` anchors the paths a finding's stable id is hashed from. Set only by
+the measure scripts, it silently falls back when the migration is run directly — and every finding
+then diffs as removed-and-re-added against a baseline whose *counts are identical*. A baseline that
+reproduces only through one shell script is not a baseline. Derive such a value from the port's own
+configuration.
+
 ## 5.5 Emitted code is a BUILD PRODUCT — `src_managed/`, never `src/`
 
 Every port writes its generated Scala to `<port>/src_managed/{main,test}/scala`, which is
