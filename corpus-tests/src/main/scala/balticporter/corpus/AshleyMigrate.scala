@@ -122,7 +122,20 @@ object AshleyPolicy:
         // and therefore every call site, is untouched.
         "com.badlogic.ashley.core.Engine#createComponent(Class)" ->
           "com.badlogic.ashley.core.ComponentFactories.create(componentType)",
-      ))),
+        )),
+        // LAST, deliberately. This reads what the BASE actually emitted and reports a reference the
+        // base does not ship — so it must run AFTER the seams that re-point those references, or it
+        // reports the very sites the next phase repairs. It is a RESIDUE check, exactly like
+        // `PortabilityCheck`: what is left once this module's own policy has been applied.
+        //
+        // Run first it reported 7 findings, every one of them a `ReflectionPool` or
+        // `ClassReflection` reference that `TypeRedirectTransform` and `MethodBodyTransform`
+        // immediately fix. Run last it reports what an agent must actually act on.
+        //
+        // An absent or stale base map is a loud finding, never a silent fallback: the run says so
+        // and falls back to re-derivation.
+        balticporter.transform.PortMapTransform.forBases("libgdx-core"),
+      ),
       dropMethods = Set(
         // `ImmutableArray.toArray(Class<V>)` (`ImmutableArray.java:77-79`) is a one-line forwarder
         // to `Array.toArray(Class)`, which the BASE manifest drops: it is the `ArrayReflection`

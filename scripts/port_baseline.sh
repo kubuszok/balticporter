@@ -51,7 +51,7 @@ case "$CMD" in
     #                                that can catch a CLAUDE.md §4.4 regression
     # srcmap.tsv is deliberately NOT promoted: it is positional by construction and would rewrite
     # itself on every emit. report.md carries the absolute source root and diff.txt is derived.
-    for f in findings.tsv counts.tsv members.tsv tests.tsv; do
+    for f in findings.tsv counts.tsv members.tsv tests.tsv port-map.tsv; do
       if [ -f "$DIR/run-latest/$f" ]; then cp "$DIR/run-latest/$f" "$DIR/baseline/"; fi
     done
     echo "baseline accepted for $PORT:"

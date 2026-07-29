@@ -1,0 +1,375 @@
+# balticporter port map	schema=2	module=ashley	engine=balticporter/0.1.0-SNAPSHOT	sources=181dec8c688f5a38	files=20
+#kind	upstream	emitted	disposition	body	javaPath	javaLine	digest
+type	com.badlogic.ashley.core.Component	com.badlogic.ashley.core.Component	Ported	-		0	
+type	com.badlogic.ashley.core.ComponentMapper	com.badlogic.ashley.core.ComponentMapper	Ported	-		0	
+type	com.badlogic.ashley.core.ComponentOperationHandler	com.badlogic.ashley.core.ComponentOperationHandler	Ported	-		0	
+type	com.badlogic.ashley.core.ComponentType	com.badlogic.ashley.core.ComponentType	Ported	-		0	
+type	com.badlogic.ashley.core.Engine	com.badlogic.ashley.core.Engine	Ported	-		0	
+type	com.badlogic.ashley.core.Entity	com.badlogic.ashley.core.Entity	Ported	-		0	
+type	com.badlogic.ashley.core.EntityListener	com.badlogic.ashley.core.EntityListener	Ported	-		0	
+type	com.badlogic.ashley.core.EntityManager	com.badlogic.ashley.core.EntityManager	Ported	-		0	
+type	com.badlogic.ashley.core.EntitySystem	com.badlogic.ashley.core.EntitySystem	Ported	-		0	
+type	com.badlogic.ashley.core.Family	com.badlogic.ashley.core.Family	Ported	-		0	
+type	com.badlogic.ashley.core.FamilyManager	com.badlogic.ashley.core.FamilyManager	Ported	-		0	
+type	com.badlogic.ashley.core.PooledEngine	com.badlogic.ashley.core.PooledEngine	Ported	-		0	
+type	com.badlogic.ashley.core.SystemManager	com.badlogic.ashley.core.SystemManager	Ported	-		0	
+type	com.badlogic.ashley.signals.Listener	com.badlogic.ashley.signals.Listener	Ported	-		0	
+type	com.badlogic.ashley.signals.Signal	com.badlogic.ashley.signals.Signal	Ported	-		0	
+type	com.badlogic.ashley.systems.IntervalIteratingSystem	com.badlogic.ashley.systems.IntervalIteratingSystem	Ported	-		0	
+type	com.badlogic.ashley.systems.IntervalSystem	com.badlogic.ashley.systems.IntervalSystem	Ported	-		0	
+type	com.badlogic.ashley.systems.IteratingSystem	com.badlogic.ashley.systems.IteratingSystem	Ported	-		0	
+type	com.badlogic.ashley.systems.SortedIteratingSystem	com.badlogic.ashley.systems.SortedIteratingSystem	Ported	-		0	
+type	com.badlogic.ashley.utils.Bag	com.badlogic.ashley.utils.Bag	Ported	-		0	
+type	com.badlogic.ashley.utils.ImmutableArray	com.badlogic.ashley.utils.ImmutableArray	Ported	-		0	
+type	com.badlogic.gdx.net.NetJavaImpl		Dropped	-		0	
+type	com.badlogic.gdx.utils.Json		Dropped	-		0	
+type	com.badlogic.gdx.utils.Pools		Dropped	-		0	
+type	com.badlogic.gdx.utils.ReflectionPool		Dropped	-		0	
+type	com.badlogic.gdx.utils.reflect.Annotation		Dropped	-		0	
+type	com.badlogic.gdx.utils.reflect.ArrayReflection		Dropped	-		0	
+type	com.badlogic.gdx.utils.reflect.ClassReflection		Dropped	-		0	
+type	com.badlogic.gdx.utils.reflect.Constructor		Dropped	-		0	
+type	com.badlogic.gdx.utils.reflect.Field		Dropped	-		0	
+type	com.badlogic.gdx.utils.reflect.Method		Dropped	-		0	
+type	com.badlogic.gdx.utils.reflect.ReflectionException		Dropped	-		0	
+type		balticporter.runtime.JavaIterable	Added	-		0	
+type		balticporter.runtime.JavaIterator	Added	-		0	
+type		com.badlogic.ashley.core.ComponentFactories	Added	-		0	
+type		com.badlogic.ashley.core.ComponentPool	Added	-		0	
+member	com.badlogic.ashley.core.ComponentMapper#<stmt1>	com.badlogic.ashley.core.ComponentMapper#<stmt1>	Ported	-	com/badlogic/ashley/core/ComponentMapper.java	46	693ca6903e1a07fe
+member	com.badlogic.ashley.core.ComponentMapper#componentType	com.badlogic.ashley.core.ComponentMapper#componentType	Ported	-	com/badlogic/ashley/core/ComponentMapper.java	25	94594014e930e2a5
+member	com.badlogic.ashley.core.ComponentMapper#get(Entity)	com.badlogic.ashley.core.ComponentMapper#get(Entity)	Ported	-	com/badlogic/ashley/core/ComponentMapper.java	36	16bbd5f4ecaa1fa9
+member	com.badlogic.ashley.core.ComponentMapper#getFor(Class)	com.badlogic.ashley.core.ComponentMapper#getFor(Class<T>)	Ported	-	com/badlogic/ashley/core/ComponentMapper.java	31	b648ba825dfc67d8
+member	com.badlogic.ashley.core.ComponentMapper#has(Entity)	com.badlogic.ashley.core.ComponentMapper#has(Entity)	Ported	-	com/badlogic/ashley/core/ComponentMapper.java	41	6d1fdc669dbc4343
+member	com.badlogic.ashley.core.ComponentOperationHandler#<stmt1>	com.badlogic.ashley.core.ComponentOperationHandler#<stmt1>	Ported	-	com/badlogic/ashley/core/ComponentOperationHandler.java	13	f34390dcec3c2572
+member	com.badlogic.ashley.core.ComponentOperationHandler#add(Entity)	com.badlogic.ashley.core.ComponentOperationHandler#add(Entity)	Ported	-	com/badlogic/ashley/core/ComponentOperationHandler.java	16	9d37adcd41f1991d
+member	com.badlogic.ashley.core.ComponentOperationHandler#delayed	com.badlogic.ashley.core.ComponentOperationHandler#delayed	Ported	-	com/badlogic/ashley/core/ComponentOperationHandler.java	8	c58e7a33b5a3a011
+member	com.badlogic.ashley.core.ComponentOperationHandler#hasOperationsToProcess()	com.badlogic.ashley.core.ComponentOperationHandler#hasOperationsToProcess()	Ported	-	com/badlogic/ashley/core/ComponentOperationHandler.java	38	dbd5e5a3e7af030c
+member	com.badlogic.ashley.core.ComponentOperationHandler#operationPool	com.badlogic.ashley.core.ComponentOperationHandler#operationPool	Ported	-	com/badlogic/ashley/core/ComponentOperationHandler.java	9	7e745428fce6e740
+member	com.badlogic.ashley.core.ComponentOperationHandler#operations	com.badlogic.ashley.core.ComponentOperationHandler#operations	Ported	-	com/badlogic/ashley/core/ComponentOperationHandler.java	10	1a49f33169a1a5eb
+member	com.badlogic.ashley.core.ComponentOperationHandler#processOperations()	com.badlogic.ashley.core.ComponentOperationHandler#processOperations()	Ported	-	com/badlogic/ashley/core/ComponentOperationHandler.java	42	f81ae26d77bc19ef
+member	com.badlogic.ashley.core.ComponentOperationHandler#remove(Entity)	com.badlogic.ashley.core.ComponentOperationHandler#remove(Entity)	Ported	-	com/badlogic/ashley/core/ComponentOperationHandler.java	27	b8d25250d060ebf8
+member	com.badlogic.ashley.core.ComponentOperationHandler$BooleanInformer#value()	com.badlogic.ashley.core.ComponentOperationHandler$BooleanInformer#value()	Ported	-	com/badlogic/ashley/core/ComponentOperationHandler.java	95	1fc566a602720496
+member	com.badlogic.ashley.core.ComponentOperationHandler$ComponentOperation#entity	com.badlogic.ashley.core.ComponentOperationHandler$ComponentOperation#entity	Ported	-	com/badlogic/ashley/core/ComponentOperationHandler.java	69	965a33107969b63f
+member	com.badlogic.ashley.core.ComponentOperationHandler$ComponentOperation#makeAdd(Entity)	com.badlogic.ashley.core.ComponentOperationHandler$ComponentOperation#makeAdd(Entity)	Ported	-	com/badlogic/ashley/core/ComponentOperationHandler.java	71	c2212a23a70dd6ca
+member	com.badlogic.ashley.core.ComponentOperationHandler$ComponentOperation#makeRemove(Entity)	com.badlogic.ashley.core.ComponentOperationHandler$ComponentOperation#makeRemove(Entity)	Ported	-	com/badlogic/ashley/core/ComponentOperationHandler.java	76	d995ee0ae3f1e79d
+member	com.badlogic.ashley.core.ComponentOperationHandler$ComponentOperation#reset()	com.badlogic.ashley.core.ComponentOperationHandler$ComponentOperation#reset()	Ported	-	com/badlogic/ashley/core/ComponentOperationHandler.java	82	7eb064166348919c
+member	com.badlogic.ashley.core.ComponentOperationHandler$ComponentOperation#type	com.badlogic.ashley.core.ComponentOperationHandler$ComponentOperation#type	Ported	-	com/badlogic/ashley/core/ComponentOperationHandler.java	68	0675d5731bcaa94a
+member	com.badlogic.ashley.core.ComponentOperationHandler$ComponentOperationPool#newObject()	com.badlogic.ashley.core.ComponentOperationHandler$ComponentOperationPool#newObject()	Ported	-	com/badlogic/ashley/core/ComponentOperationHandler.java	89	fc590043b30df5aa
+member	com.badlogic.ashley.core.ComponentType#<stmt1>	com.badlogic.ashley.core.ComponentType#<stmt1>	Ported	-	com/badlogic/ashley/core/ComponentType.java	36	ef7992576402f428
+member	com.badlogic.ashley.core.ComponentType#assignedComponentTypes	com.badlogic.ashley.core.ComponentType#assignedComponentTypes	Ported	-	com/badlogic/ashley/core/ComponentType.java	30	c10c2f304b8fee15
+member	com.badlogic.ashley.core.ComponentType#equals(Any)	com.badlogic.ashley.core.ComponentType#equals(Any)	Ported	-	com/badlogic/ashley/core/ComponentType.java	90	098f36fb1cf12c37
+member	com.badlogic.ashley.core.ComponentType#getBitsFor(Array)	com.badlogic.ashley.core.ComponentType#getBitsFor(Array<Class<?>>)	Ported	-	com/badlogic/ashley/core/ComponentType.java	73	bbfcca821b88d828
+member	com.badlogic.ashley.core.ComponentType#getFor(Class)	com.badlogic.ashley.core.ComponentType#getFor(Class<?>)	Ported	-	com/badlogic/ashley/core/ComponentType.java	48	3850227b4a4e338e
+member	com.badlogic.ashley.core.ComponentType#getIndex()	com.badlogic.ashley.core.ComponentType#getIndex()	Ported	-	com/badlogic/ashley/core/ComponentType.java	40	3a9fcdb7bdf3df96
+member	com.badlogic.ashley.core.ComponentType#getIndexFor(Class)	com.badlogic.ashley.core.ComponentType#getIndexFor(Class<?>)	Ported	-	com/badlogic/ashley/core/ComponentType.java	64	1b944444eefad86e
+member	com.badlogic.ashley.core.ComponentType#hashCode()	com.badlogic.ashley.core.ComponentType#hashCode()	Ported	-	com/badlogic/ashley/core/ComponentType.java	85	67e6b5d0b8114119
+member	com.badlogic.ashley.core.ComponentType#index	com.badlogic.ashley.core.ComponentType#index	Ported	-	com/badlogic/ashley/core/ComponentType.java	33	d38ce783056e42b2
+member	com.badlogic.ashley.core.ComponentType#typeIndex	com.badlogic.ashley.core.ComponentType#typeIndex	Ported	-	com/badlogic/ashley/core/ComponentType.java	31	091acd0349b3754b
+member	com.badlogic.ashley.core.Engine#addEntity(Entity)	com.badlogic.ashley.core.Engine#addEntity(Entity)	Ported	-	com/badlogic/ashley/core/Engine.java	80	ee269a6152c2b417
+member	com.badlogic.ashley.core.Engine#addEntityInternal(Entity)	com.badlogic.ashley.core.Engine#addEntityInternal(Entity)	Ported	-	com/badlogic/ashley/core/Engine.java	254	974f6878cec6bd26
+member	com.badlogic.ashley.core.Engine#addEntityListener(EntityListener)	com.badlogic.ashley.core.Engine#addEntityListener(EntityListener)	Ported	-	com/badlogic/ashley/core/Engine.java	186	6e95cac6b8f67213
+member	com.badlogic.ashley.core.Engine#addEntityListener(Family,EntityListener)	com.badlogic.ashley.core.Engine#addEntityListener(Family,EntityListener)	Ported	-	com/badlogic/ashley/core/Engine.java	204	c39da4803d70323d
+member	com.badlogic.ashley.core.Engine#addEntityListener(Family,int,EntityListener)	com.badlogic.ashley.core.Engine#addEntityListener(Family,int,EntityListener)	Ported	-	com/badlogic/ashley/core/Engine.java	213	90457e5b7ac71992
+member	com.badlogic.ashley.core.Engine#addEntityListener(int,EntityListener)	com.badlogic.ashley.core.Engine#addEntityListener(int,EntityListener)	Ported	-	com/badlogic/ashley/core/Engine.java	195	c168e2fc572f984a
+member	com.badlogic.ashley.core.Engine#addSystem(EntitySystem)	com.badlogic.ashley.core.Engine#addSystem(EntitySystem)	Ported	-	com/badlogic/ashley/core/Engine.java	141	0b0978850217e213
+member	com.badlogic.ashley.core.Engine#componentAdded	com.badlogic.ashley.core.Engine#componentAdded	Ported	-	com/badlogic/ashley/core/Engine.java	46	7c6178ede5bd6014
+member	com.badlogic.ashley.core.Engine#componentOperationHandler	com.badlogic.ashley.core.Engine#componentOperationHandler	Ported	-	com/badlogic/ashley/core/Engine.java	51	227633d66e309bac
+member	com.badlogic.ashley.core.Engine#componentRemoved	com.badlogic.ashley.core.Engine#componentRemoved	Ported	-	com/badlogic/ashley/core/Engine.java	47	7fce94378452b0af
+member	com.badlogic.ashley.core.Engine#createComponent(Class)	com.badlogic.ashley.core.Engine#createComponent(Class<T>)	Ported	body	com/badlogic/ashley/core/Engine.java	67	b92bfc43cc4f4113
+member	com.badlogic.ashley.core.Engine#createEntity()	com.badlogic.ashley.core.Engine#createEntity()	Ported	-	com/badlogic/ashley/core/Engine.java	60	6f223dde45c317d1
+member	com.badlogic.ashley.core.Engine#empty	com.badlogic.ashley.core.Engine#empty	Ported	-	com/badlogic/ashley/core/Engine.java	44	dd3a6d91bc29fc59
+member	com.badlogic.ashley.core.Engine#entityManager	com.badlogic.ashley.core.Engine#entityManager	Ported	-	com/badlogic/ashley/core/Engine.java	50	1806535433c91625
+member	com.badlogic.ashley.core.Engine#familyManager	com.badlogic.ashley.core.Engine#familyManager	Ported	-	com/badlogic/ashley/core/Engine.java	52	1f5849ae8d27947c
+member	com.badlogic.ashley.core.Engine#getEntities()	com.badlogic.ashley.core.Engine#getEntities()	Ported	-	com/badlogic/ashley/core/Engine.java	132	7b39dadb137e670c
+member	com.badlogic.ashley.core.Engine#getEntitiesFor(Family)	com.badlogic.ashley.core.Engine#getEntitiesFor(Family)	Ported	-	com/badlogic/ashley/core/Engine.java	177	625fe59aea3b4766
+member	com.badlogic.ashley.core.Engine#getSystem(Class)	com.badlogic.ashley.core.Engine#getSystem(Class<T>)	Ported	-	com/badlogic/ashley/core/Engine.java	163	603e8a5b01b1a83c
+member	com.badlogic.ashley.core.Engine#getSystems()	com.badlogic.ashley.core.Engine#getSystems()	Ported	-	com/badlogic/ashley/core/Engine.java	170	97f10f48ed617c62
+member	com.badlogic.ashley.core.Engine#removeAllEntities()	com.badlogic.ashley.core.Engine#removeAllEntities()	Ported	-	com/badlogic/ashley/core/Engine.java	104	7320ea40b677d955
+member	com.badlogic.ashley.core.Engine#removeAllEntities(Family)	com.badlogic.ashley.core.Engine#removeAllEntities(Family)	Ported	-	com/badlogic/ashley/core/Engine.java	96	817c9703d7b83411
+member	com.badlogic.ashley.core.Engine#removeAllSystems()	com.badlogic.ashley.core.Engine#removeAllSystems()	Ported	-	com/badlogic/ashley/core/Engine.java	155	95b7cedbca7d0ab9
+member	com.badlogic.ashley.core.Engine#removeEntity(Entity)	com.badlogic.ashley.core.Engine#removeEntity(Entity)	Ported	-	com/badlogic/ashley/core/Engine.java	88	937066cca06a80cc
+member	com.badlogic.ashley.core.Engine#removeEntityInternal(Entity)	com.badlogic.ashley.core.Engine#removeEntityInternal(Entity)	Ported	-	com/badlogic/ashley/core/Engine.java	262	736f0c5319fcb519
+member	com.badlogic.ashley.core.Engine#removeEntityListener(EntityListener)	com.badlogic.ashley.core.Engine#removeEntityListener(EntityListener)	Ported	-	com/badlogic/ashley/core/Engine.java	220	38d6a48f2b4c73b5
+member	com.badlogic.ashley.core.Engine#removeSystem(EntitySystem)	com.badlogic.ashley.core.Engine#removeSystem(EntitySystem)	Ported	-	com/badlogic/ashley/core/Engine.java	148	7e283bffee0cfc35
+member	com.badlogic.ashley.core.Engine#systemManager	com.badlogic.ashley.core.Engine#systemManager	Ported	-	com/badlogic/ashley/core/Engine.java	49	dd0301acff2d96a8
+member	com.badlogic.ashley.core.Engine#update(float)	com.badlogic.ashley.core.Engine#update(float)	Ported	-	com/badlogic/ashley/core/Engine.java	228	06d9fbc334cb46aa
+member	com.badlogic.ashley.core.Engine#updating	com.badlogic.ashley.core.Engine#updating	Ported	-	com/badlogic/ashley/core/Engine.java	53	92088fc954c5e57e
+member	com.badlogic.ashley.core.Engine$ComponentListener#receive(Signal,Entity)	com.badlogic.ashley.core.Engine$ComponentListener#receive(Signal<Entity>,Entity)	Ported	-	com/badlogic/ashley/core/Engine.java	272	2637ec13f8c238cf
+member	com.badlogic.ashley.core.Engine$EngineDelayedInformer#value()	com.badlogic.ashley.core.Engine$EngineDelayedInformer#value()	Ported	-	com/badlogic/ashley/core/Engine.java	303	e3615d6aca041704
+member	com.badlogic.ashley.core.Engine$EngineEntityListener#entityAdded(Entity)	com.badlogic.ashley.core.Engine$EngineEntityListener#entityAdded(Entity)	Ported	-	com/badlogic/ashley/core/Engine.java	291	80c8ed6674aae7a1
+member	com.badlogic.ashley.core.Engine$EngineEntityListener#entityRemoved(Entity)	com.badlogic.ashley.core.Engine$EngineEntityListener#entityRemoved(Entity)	Ported	-	com/badlogic/ashley/core/Engine.java	296	4372c073b0c8e0c9
+member	com.badlogic.ashley.core.Engine$EngineSystemListener#systemAdded(EntitySystem)	com.badlogic.ashley.core.Engine$EngineSystemListener#systemAdded(EntitySystem)	Ported	-	com/badlogic/ashley/core/Engine.java	279	d9b86f90cb2d5292
+member	com.badlogic.ashley.core.Engine$EngineSystemListener#systemRemoved(EntitySystem)	com.badlogic.ashley.core.Engine$EngineSystemListener#systemRemoved(EntitySystem)	Ported	-	com/badlogic/ashley/core/Engine.java	284	3cd6db289fc27e27
+member	com.badlogic.ashley.core.Entity#<stmt1>	com.badlogic.ashley.core.Entity#<stmt1>	Ported	-	com/badlogic/ashley/core/Entity.java	49	9ad2778c0f7ff11b
+member	com.badlogic.ashley.core.Entity#<stmt2>	com.badlogic.ashley.core.Entity#<stmt2>	Ported	-	com/badlogic/ashley/core/Entity.java	50	3bff6e7a5fec7fde
+member	com.badlogic.ashley.core.Entity#<stmt3>	com.badlogic.ashley.core.Entity#<stmt3>	Ported	-	com/badlogic/ashley/core/Entity.java	51	022a4a2f816b43a3
+member	com.badlogic.ashley.core.Entity#<stmt4>	com.badlogic.ashley.core.Entity#<stmt4>	Ported	-	com/badlogic/ashley/core/Entity.java	52	710b79d7c04669bb
+member	com.badlogic.ashley.core.Entity#<stmt5>	com.badlogic.ashley.core.Entity#<stmt5>	Ported	-	com/badlogic/ashley/core/Entity.java	53	9023255d795962a3
+member	com.badlogic.ashley.core.Entity#<stmt6>	com.badlogic.ashley.core.Entity#<stmt6>	Ported	-	com/badlogic/ashley/core/Entity.java	54	d2bc3cc8d3a7dd64
+member	com.badlogic.ashley.core.Entity#<stmt7>	com.badlogic.ashley.core.Entity#<stmt7>	Ported	-	com/badlogic/ashley/core/Entity.java	56	13ea480f3b42a7f5
+member	com.badlogic.ashley.core.Entity#<stmt8>	com.badlogic.ashley.core.Entity#<stmt8>	Ported	-	com/badlogic/ashley/core/Entity.java	57	d40e6fcf4d2e534f
+member	com.badlogic.ashley.core.Entity#add(Component)	com.badlogic.ashley.core.Entity#add(Component)	Ported	-	com/badlogic/ashley/core/Entity.java	64	b50c29e8b7d64a50
+member	com.badlogic.ashley.core.Entity#addAndReturn(T)	com.badlogic.ashley.core.Entity#addAndReturn(T)	Ported	-	com/badlogic/ashley/core/Entity.java	81	6bf44b9cfe5f80d8
+member	com.badlogic.ashley.core.Entity#addInternal(Component)	com.badlogic.ashley.core.Entity#addInternal(Component)	Ported	-	com/badlogic/ashley/core/Entity.java	175	f66a677932c3782d
+member	com.badlogic.ashley.core.Entity#componentAdded	com.badlogic.ashley.core.Entity#componentAdded	Ported	-	com/badlogic/ashley/core/Entity.java	33	825e85bdafcc119c
+member	com.badlogic.ashley.core.Entity#componentBits	com.badlogic.ashley.core.Entity#componentBits	Ported	-	com/badlogic/ashley/core/Entity.java	44	98ccf00c3e57dfc4
+member	com.badlogic.ashley.core.Entity#componentOperationHandler	com.badlogic.ashley.core.Entity#componentOperationHandler	Ported	-	com/badlogic/ashley/core/Entity.java	39	4ca37ae9ef031273
+member	com.badlogic.ashley.core.Entity#componentRemoved	com.badlogic.ashley.core.Entity#componentRemoved	Ported	-	com/badlogic/ashley/core/Entity.java	35	75170a24c3f2b317
+member	com.badlogic.ashley.core.Entity#components	com.badlogic.ashley.core.Entity#components	Ported	-	com/badlogic/ashley/core/Entity.java	41	7795770db409c761
+member	com.badlogic.ashley.core.Entity#componentsArray	com.badlogic.ashley.core.Entity#componentsArray	Ported	-	com/badlogic/ashley/core/Entity.java	42	5762032b88739e47
+member	com.badlogic.ashley.core.Entity#familyBits	com.badlogic.ashley.core.Entity#familyBits	Ported	-	com/badlogic/ashley/core/Entity.java	45	4d89517d2b7a1872
+member	com.badlogic.ashley.core.Entity#flags	com.badlogic.ashley.core.Entity#flags	Ported	-	com/badlogic/ashley/core/Entity.java	31	3728cd2684ae978d
+member	com.badlogic.ashley.core.Entity#getComponent(Class)	com.badlogic.ashley.core.Entity#getComponent(Class<T>)	Ported	-	com/badlogic/ashley/core/Entity.java	133	36d4fe3fc1b229c7
+member	com.badlogic.ashley.core.Entity#getComponent(ComponentType)	com.badlogic.ashley.core.Entity#getComponent(ComponentType)	Ported	-	com/badlogic/ashley/core/Entity.java	142	a570841f9b17ef75
+member	com.badlogic.ashley.core.Entity#getComponentBits()	com.badlogic.ashley.core.Entity#getComponentBits()	Ported	-	com/badlogic/ashley/core/Entity.java	162	d368de1cfd78db39
+member	com.badlogic.ashley.core.Entity#getComponents()	com.badlogic.ashley.core.Entity#getComponents()	Ported	-	com/badlogic/ashley/core/Entity.java	121	90b0c44c9119f0c8
+member	com.badlogic.ashley.core.Entity#getFamilyBits()	com.badlogic.ashley.core.Entity#getFamilyBits()	Ported	-	com/badlogic/ashley/core/Entity.java	167	d0052807297c559d
+member	com.badlogic.ashley.core.Entity#hasComponent(ComponentType)	com.badlogic.ashley.core.Entity#hasComponent(ComponentType)	Ported	-	com/badlogic/ashley/core/Entity.java	155	346c725044d659ab
+member	com.badlogic.ashley.core.Entity#immutableComponentsArray	com.badlogic.ashley.core.Entity#immutableComponentsArray	Ported	-	com/badlogic/ashley/core/Entity.java	43	32f2c8a878b2eebc
+member	com.badlogic.ashley.core.Entity#isRemoving()	com.badlogic.ashley.core.Entity#isRemoving()	Ported	-	com/badlogic/ashley/core/Entity.java	229	e37d3771699e7934
+member	com.badlogic.ashley.core.Entity#isScheduledForRemoval()	com.badlogic.ashley.core.Entity#isScheduledForRemoval()	Ported	-	com/badlogic/ashley/core/Entity.java	224	5324c9bb59b402e1
+member	com.badlogic.ashley.core.Entity#notifyComponentAdded()	com.badlogic.ashley.core.Entity#notifyComponentAdded()	Ported	-	com/badlogic/ashley/core/Entity.java	215	daefc53996a670d1
+member	com.badlogic.ashley.core.Entity#notifyComponentRemoved()	com.badlogic.ashley.core.Entity#notifyComponentRemoved()	Ported	-	com/badlogic/ashley/core/Entity.java	219	a6b16b947948873f
+member	com.badlogic.ashley.core.Entity#remove(Class)	com.badlogic.ashley.core.Entity#remove(Class<T>)	Ported	-	com/badlogic/ashley/core/Entity.java	91	00eb08fbe13ce4a7
+member	com.badlogic.ashley.core.Entity#removeAll()	com.badlogic.ashley.core.Entity#removeAll()	Ported	-	com/badlogic/ashley/core/Entity.java	114	1c57285928acc8dc
+member	com.badlogic.ashley.core.Entity#removeInternal(Class)	com.badlogic.ashley.core.Entity#removeInternal(Class<?>)	Ported	-	com/badlogic/ashley/core/Entity.java	199	4e896b089cc80d30
+member	com.badlogic.ashley.core.Entity#removing	com.badlogic.ashley.core.Entity#removing	Ported	-	com/badlogic/ashley/core/Entity.java	38	6fd7210e6e803c4f
+member	com.badlogic.ashley.core.Entity#scheduledForRemoval	com.badlogic.ashley.core.Entity#scheduledForRemoval	Ported	-	com/badlogic/ashley/core/Entity.java	37	7ad23e456bc9ca32
+member	com.badlogic.ashley.core.EntityListener#entityAdded(Entity)	com.badlogic.ashley.core.EntityListener#entityAdded(Entity)	Ported	-	com/badlogic/ashley/core/EntityListener.java	29	80b52069cffac553
+member	com.badlogic.ashley.core.EntityListener#entityRemoved(Entity)	com.badlogic.ashley.core.EntityListener#entityRemoved(Entity)	Ported	-	com/badlogic/ashley/core/EntityListener.java	36	f94d08f7c8963180
+member	com.badlogic.ashley.core.EntityManager#<stmt1>	com.badlogic.ashley.core.EntityManager#<stmt1>	Ported	-	com/badlogic/ashley/core/EntityManager.java	18	802c342302b2cbcb
+member	com.badlogic.ashley.core.EntityManager#addEntity(Entity)	com.badlogic.ashley.core.EntityManager#addEntity(Entity)	Ported	-	com/badlogic/ashley/core/EntityManager.java	21	f3d3ef7caa96914e
+member	com.badlogic.ashley.core.EntityManager#addEntity(Entity,boolean)	com.badlogic.ashley.core.EntityManager#addEntity(Entity,boolean)	Ported	-	com/badlogic/ashley/core/EntityManager.java	25	41b5d706235ba990
+member	com.badlogic.ashley.core.EntityManager#addEntityInternal(Entity)	com.badlogic.ashley.core.EntityManager#addEntityInternal(Entity)	Ported	-	com/badlogic/ashley/core/EntityManager.java	129	e46255bd7a08a951
+member	com.badlogic.ashley.core.EntityManager#entities	com.badlogic.ashley.core.EntityManager#entities	Ported	-	com/badlogic/ashley/core/EntityManager.java	11	930549fcf914eeca
+member	com.badlogic.ashley.core.EntityManager#entityOperationPool	com.badlogic.ashley.core.EntityManager#entityOperationPool	Ported	-	com/badlogic/ashley/core/EntityManager.java	15	72b82232e6c08e03
+member	com.badlogic.ashley.core.EntityManager#entitySet	com.badlogic.ashley.core.EntityManager#entitySet	Ported	-	com/badlogic/ashley/core/EntityManager.java	12	7f19bf1d2e9ab9df
+member	com.badlogic.ashley.core.EntityManager#getEntities()	com.badlogic.ashley.core.EntityManager#getEntities()	Ported	-	com/badlogic/ashley/core/EntityManager.java	87	bc522f322e2e301c
+member	com.badlogic.ashley.core.EntityManager#hasPendingOperations()	com.badlogic.ashley.core.EntityManager#hasPendingOperations()	Ported	-	com/badlogic/ashley/core/EntityManager.java	91	2ce93a70f00d56a7
+member	com.badlogic.ashley.core.EntityManager#immutableEntities	com.badlogic.ashley.core.EntityManager#immutableEntities	Ported	-	com/badlogic/ashley/core/EntityManager.java	13	bdc6ffa78eff80a2
+member	com.badlogic.ashley.core.EntityManager#listener	com.badlogic.ashley.core.EntityManager#listener	Ported	-	com/badlogic/ashley/core/EntityManager.java	10	29a4a913f1f270a5
+member	com.badlogic.ashley.core.EntityManager#pendingOperations	com.badlogic.ashley.core.EntityManager#pendingOperations	Ported	-	com/badlogic/ashley/core/EntityManager.java	14	3b288ea8426f6600
+member	com.badlogic.ashley.core.EntityManager#processPendingOperations()	com.badlogic.ashley.core.EntityManager#processPendingOperations()	Ported	-	com/badlogic/ashley/core/EntityManager.java	95	a1eb1a32f5b8c5dc
+member	com.badlogic.ashley.core.EntityManager#removeAllEntities()	com.badlogic.ashley.core.EntityManager#removeAllEntities()	Ported	-	com/badlogic/ashley/core/EntityManager.java	58	cf4d7be62bcf6a16
+member	com.badlogic.ashley.core.EntityManager#removeAllEntities(ImmutableArray)	com.badlogic.ashley.core.EntityManager#removeAllEntities(ImmutableArray<Entity>)	Ported	-	com/badlogic/ashley/core/EntityManager.java	66	7b84711b60171c46
+member	com.badlogic.ashley.core.EntityManager#removeAllEntities(ImmutableArray,boolean)	com.badlogic.ashley.core.EntityManager#removeAllEntities(ImmutableArray<Entity>,boolean)	Ported	-	com/badlogic/ashley/core/EntityManager.java	70	3898549348a86768
+member	com.badlogic.ashley.core.EntityManager#removeAllEntities(boolean)	com.badlogic.ashley.core.EntityManager#removeAllEntities(boolean)	Ported	-	com/badlogic/ashley/core/EntityManager.java	62	108bb95deefb4c04
+member	com.badlogic.ashley.core.EntityManager#removeEntity(Entity)	com.badlogic.ashley.core.EntityManager#removeEntity(Entity)	Ported	-	com/badlogic/ashley/core/EntityManager.java	38	7b4d92ee5f108f77
+member	com.badlogic.ashley.core.EntityManager#removeEntity(Entity,boolean)	com.badlogic.ashley.core.EntityManager#removeEntity(Entity,boolean)	Ported	-	com/badlogic/ashley/core/EntityManager.java	42	373232c191cbb547
+member	com.badlogic.ashley.core.EntityManager#removeEntityInternal(Entity)	com.badlogic.ashley.core.EntityManager#removeEntityInternal(Entity)	Ported	-	com/badlogic/ashley/core/EntityManager.java	117	97ac5e537218a67d
+member	com.badlogic.ashley.core.EntityManager$EntityOperation#entities	com.badlogic.ashley.core.EntityManager$EntityOperation#entities	Ported	-	com/badlogic/ashley/core/EntityManager.java	149	41a26d26ade9d439
+member	com.badlogic.ashley.core.EntityManager$EntityOperation#entity	com.badlogic.ashley.core.EntityManager$EntityOperation#entity	Ported	-	com/badlogic/ashley/core/EntityManager.java	148	965a33107969b63f
+member	com.badlogic.ashley.core.EntityManager$EntityOperation#reset()	com.badlogic.ashley.core.EntityManager$EntityOperation#reset()	Ported	-	com/badlogic/ashley/core/EntityManager.java	152	7eb064166348919c
+member	com.badlogic.ashley.core.EntityManager$EntityOperation#type	com.badlogic.ashley.core.EntityManager$EntityOperation#type	Ported	-	com/badlogic/ashley/core/EntityManager.java	147	fa39e88af22de6ab
+member	com.badlogic.ashley.core.EntityManager$EntityOperationPool#newObject()	com.badlogic.ashley.core.EntityManager$EntityOperationPool#newObject()	Ported	-	com/badlogic/ashley/core/EntityManager.java	159	13f697628657940f
+member	com.badlogic.ashley.core.EntitySystem#<init>()	com.badlogic.ashley.core.EntitySystem#<init>()	Ported	-	com/badlogic/ashley/core/EntitySystem.java	31	2b7fcf9636e94278
+member	com.badlogic.ashley.core.EntitySystem#<stmt1>	com.badlogic.ashley.core.EntitySystem#<stmt1>	Ported	-	com/badlogic/ashley/core/EntitySystem.java	40	3523c965b02b1007
+member	com.badlogic.ashley.core.EntitySystem#<stmt2>	com.badlogic.ashley.core.EntitySystem#<stmt2>	Ported	-	com/badlogic/ashley/core/EntitySystem.java	41	84e7445495bc3837
+member	com.badlogic.ashley.core.EntitySystem#addedToEngine(Engine)	com.badlogic.ashley.core.EntitySystem#addedToEngine(Engine)	Ported	-	com/badlogic/ashley/core/EntitySystem.java	48	0d3a4a0ab1ac9ac2
+member	com.badlogic.ashley.core.EntitySystem#addedToEngineInternal(Engine)	com.badlogic.ashley.core.EntitySystem#addedToEngineInternal(Engine)	Ported	-	com/badlogic/ashley/core/EntitySystem.java	81	773c4ab3956273af
+member	com.badlogic.ashley.core.EntitySystem#checkProcessing()	com.badlogic.ashley.core.EntitySystem#checkProcessing()	Ported	-	com/badlogic/ashley/core/EntitySystem.java	66	9a23a9a1590d1a86
+member	com.badlogic.ashley.core.EntitySystem#engine	com.badlogic.ashley.core.EntitySystem#engine	Ported	-	com/badlogic/ashley/core/EntitySystem.java	28	84c30a7bc6377cdf
+member	com.badlogic.ashley.core.EntitySystem#getEngine()	com.badlogic.ashley.core.EntitySystem#getEngine()	Ported	-	com/badlogic/ashley/core/EntitySystem.java	77	299cf9720a926e75
+member	com.badlogic.ashley.core.EntitySystem#priority	com.badlogic.ashley.core.EntitySystem#priority	Ported	-	com/badlogic/ashley/core/EntitySystem.java	25	6225bee7277b0d66
+member	com.badlogic.ashley.core.EntitySystem#processing	com.badlogic.ashley.core.EntitySystem#processing	Ported	-	com/badlogic/ashley/core/EntitySystem.java	27	229bf0f0d0f86304
+member	com.badlogic.ashley.core.EntitySystem#removedFromEngine(Engine)	com.badlogic.ashley.core.EntitySystem#removedFromEngine(Engine)	Ported	-	com/badlogic/ashley/core/EntitySystem.java	55	095e4d816ba5dabc
+member	com.badlogic.ashley.core.EntitySystem#removedFromEngineInternal(Engine)	com.badlogic.ashley.core.EntitySystem#removedFromEngineInternal(Engine)	Ported	-	com/badlogic/ashley/core/EntitySystem.java	86	6526e34ccc2e0000
+member	com.badlogic.ashley.core.EntitySystem#setProcessing(boolean)	com.badlogic.ashley.core.EntitySystem#setProcessing(boolean)	Ported	-	com/badlogic/ashley/core/EntitySystem.java	71	1474dfb21a62ac9b
+member	com.badlogic.ashley.core.EntitySystem#update(float)	com.badlogic.ashley.core.EntitySystem#update(float)	Ported	-	com/badlogic/ashley/core/EntitySystem.java	62	8932c25baae9a45b
+member	com.badlogic.ashley.core.Family#<stmt1>	com.badlogic.ashley.core.Family#<stmt1>	Ported	-	com/badlogic/ashley/core/Family.java	42	31fb15f6db6ce2a2
+member	com.badlogic.ashley.core.Family#<stmt2>	com.badlogic.ashley.core.Family#<stmt2>	Ported	-	com/badlogic/ashley/core/Family.java	43	32896b61210ac0b8
+member	com.badlogic.ashley.core.Family#<stmt3>	com.badlogic.ashley.core.Family#<stmt3>	Ported	-	com/badlogic/ashley/core/Family.java	44	3746eb305644cc7c
+member	com.badlogic.ashley.core.Family#<stmt4>	com.badlogic.ashley.core.Family#<stmt4>	Ported	-	com/badlogic/ashley/core/Family.java	45	746c544010a8d712
+member	com.badlogic.ashley.core.Family#all	com.badlogic.ashley.core.Family#all	Ported	-	com/badlogic/ashley/core/Family.java	35	cbb5b64dabbbdae4
+member	com.badlogic.ashley.core.Family#all(Array)	com.badlogic.ashley.core.Family#all(Array<Class<?>>)	Ported	-	com/badlogic/ashley/core/Family.java	77	92c9ca87d8403617
+member	com.badlogic.ashley.core.Family#builder	com.badlogic.ashley.core.Family#builder	Ported	-	com/badlogic/ashley/core/Family.java	32	782086fcedbdabbb
+member	com.badlogic.ashley.core.Family#equals(Any)	com.badlogic.ashley.core.Family#equals(Any)	Ported	-	com/badlogic/ashley/core/Family.java	167	4c77ec6f4b53fb5f
+member	com.badlogic.ashley.core.Family#exclude	com.badlogic.ashley.core.Family#exclude	Ported	-	com/badlogic/ashley/core/Family.java	37	0865f2b4f80e4aa7
+member	com.badlogic.ashley.core.Family#exclude(Array)	com.badlogic.ashley.core.Family#exclude(Array<Class<?>>)	Ported	-	com/badlogic/ashley/core/Family.java	95	e382f47fdbcfe265
+member	com.badlogic.ashley.core.Family#families	com.badlogic.ashley.core.Family#families	Ported	-	com/badlogic/ashley/core/Family.java	30	c061a947b0f6d1ab
+member	com.badlogic.ashley.core.Family#familyIndex	com.badlogic.ashley.core.Family#familyIndex	Ported	-	com/badlogic/ashley/core/Family.java	31	3d5413d5ea95438e
+member	com.badlogic.ashley.core.Family#getBitsString(Bits)	com.badlogic.ashley.core.Family#getBitsString(Bits)	Ported	-	com/badlogic/ashley/core/Family.java	185	a66a2824b5d81bec
+member	com.badlogic.ashley.core.Family#getFamilyHash(Bits,Bits,Bits)	com.badlogic.ashley.core.Family#getFamilyHash(Bits,Bits,Bits)	Ported	-	com/badlogic/ashley/core/Family.java	171	f2420d7bc0111b15
+member	com.badlogic.ashley.core.Family#getIndex()	com.badlogic.ashley.core.Family#getIndex()	Ported	-	com/badlogic/ashley/core/Family.java	49	3a9fcdb7bdf3df96
+member	com.badlogic.ashley.core.Family#hashCode()	com.badlogic.ashley.core.Family#hashCode()	Ported	-	com/badlogic/ashley/core/Family.java	162	67e6b5d0b8114119
+member	com.badlogic.ashley.core.Family#index	com.badlogic.ashley.core.Family#index	Ported	-	com/badlogic/ashley/core/Family.java	38	d38ce783056e42b2
+member	com.badlogic.ashley.core.Family#matches(Entity)	com.badlogic.ashley.core.Family#matches(Entity)	Ported	-	com/badlogic/ashley/core/Family.java	54	3acc1de73370b05d
+member	com.badlogic.ashley.core.Family#one	com.badlogic.ashley.core.Family#one	Ported	-	com/badlogic/ashley/core/Family.java	36	aa326d88650df076
+member	com.badlogic.ashley.core.Family#one(Array)	com.badlogic.ashley.core.Family#one(Array<Class<?>>)	Ported	-	com/badlogic/ashley/core/Family.java	86	2028f91d0fd17d2c
+member	com.badlogic.ashley.core.Family#zeroBits	com.badlogic.ashley.core.Family#zeroBits	Ported	-	com/badlogic/ashley/core/Family.java	33	86192dd5589b0504
+member	com.badlogic.ashley.core.Family$Builder#all	com.badlogic.ashley.core.Family$Builder#all	Ported	-	com/badlogic/ashley/core/Family.java	100	303dc93885b96937
+member	com.badlogic.ashley.core.Family$Builder#all(Array)	com.badlogic.ashley.core.Family$Builder#all(Array<Class<?>>)	Ported	-	com/badlogic/ashley/core/Family.java	124	f4ad73d2c552576c
+member	com.badlogic.ashley.core.Family$Builder#exclude	com.badlogic.ashley.core.Family$Builder#exclude	Ported	-	com/badlogic/ashley/core/Family.java	102	9a41c13a98832cd0
+member	com.badlogic.ashley.core.Family$Builder#exclude(Array)	com.badlogic.ashley.core.Family$Builder#exclude(Array<Class<?>>)	Ported	-	com/badlogic/ashley/core/Family.java	144	9a28f31e6e337bdc
+member	com.badlogic.ashley.core.Family$Builder#get()	com.badlogic.ashley.core.Family$Builder#get()	Ported	-	com/badlogic/ashley/core/Family.java	150	9fe7b8533f25d21c
+member	com.badlogic.ashley.core.Family$Builder#one	com.badlogic.ashley.core.Family$Builder#one	Ported	-	com/badlogic/ashley/core/Family.java	101	a26029003a07e890
+member	com.badlogic.ashley.core.Family$Builder#one(Array)	com.badlogic.ashley.core.Family$Builder#one(Array<Class<?>>)	Ported	-	com/badlogic/ashley/core/Family.java	134	798a38e9fa8c2bb8
+member	com.badlogic.ashley.core.Family$Builder#reset()	com.badlogic.ashley.core.Family$Builder#reset()	Ported	-	com/badlogic/ashley/core/Family.java	112	7095f6d70b57dab0
+member	com.badlogic.ashley.core.FamilyManager#<stmt1>	com.badlogic.ashley.core.FamilyManager#<stmt1>	Ported	-	com/badlogic/ashley/core/FamilyManager.java	20	a6692bd8605f9cd4
+member	com.badlogic.ashley.core.FamilyManager#addEntityListener(Family,int,EntityListener)	com.badlogic.ashley.core.FamilyManager#addEntityListener(Family,int,EntityListener)	Ported	-	com/badlogic/ashley/core/FamilyManager.java	31	c0a6c32929ae73f0
+member	com.badlogic.ashley.core.FamilyManager#bitsPool	com.badlogic.ashley.core.FamilyManager#bitsPool	Ported	-	com/badlogic/ashley/core/FamilyManager.java	16	40aa3e6e04db9157
+member	com.badlogic.ashley.core.FamilyManager#entities	com.badlogic.ashley.core.FamilyManager#entities	Ported	-	com/badlogic/ashley/core/FamilyManager.java	11	95cc9565fe3bd844
+member	com.badlogic.ashley.core.FamilyManager#entityListenerMasks	com.badlogic.ashley.core.FamilyManager#entityListenerMasks	Ported	-	com/badlogic/ashley/core/FamilyManager.java	15	5dc3563915b90b07
+member	com.badlogic.ashley.core.FamilyManager#entityListeners	com.badlogic.ashley.core.FamilyManager#entityListeners	Ported	-	com/badlogic/ashley/core/FamilyManager.java	14	000a955163bf0706
+member	com.badlogic.ashley.core.FamilyManager#families	com.badlogic.ashley.core.FamilyManager#families	Ported	-	com/badlogic/ashley/core/FamilyManager.java	12	a1c33cba09a89571
+member	com.badlogic.ashley.core.FamilyManager#getEntitiesFor(Family)	com.badlogic.ashley.core.FamilyManager#getEntitiesFor(Family)	Ported	-	com/badlogic/ashley/core/FamilyManager.java	23	d973fcce0a676e00
+member	com.badlogic.ashley.core.FamilyManager#immutableFamilies	com.badlogic.ashley.core.FamilyManager#immutableFamilies	Ported	-	com/badlogic/ashley/core/FamilyManager.java	13	452f892b1913b997
+member	com.badlogic.ashley.core.FamilyManager#notifying	com.badlogic.ashley.core.FamilyManager#notifying	Ported	-	com/badlogic/ashley/core/FamilyManager.java	17	48827152a731b9a6
+member	com.badlogic.ashley.core.FamilyManager#notifying()	com.badlogic.ashley.core.FamilyManager#notifying()	Ported	-	com/badlogic/ashley/core/FamilyManager.java	27	4cbbbd1da9876ab8
+member	com.badlogic.ashley.core.FamilyManager#registerFamily(Family)	com.badlogic.ashley.core.FamilyManager#registerFamily(Family)	Ported	-	com/badlogic/ashley/core/FamilyManager.java	134	78f15a18cc019078
+member	com.badlogic.ashley.core.FamilyManager#removeEntityListener(EntityListener)	com.badlogic.ashley.core.FamilyManager#removeEntityListener(EntityListener)	Ported	-	com/badlogic/ashley/core/FamilyManager.java	63	cd5bd6354221d70f
+member	com.badlogic.ashley.core.FamilyManager#updateFamilyMembership(Entity)	com.badlogic.ashley.core.FamilyManager#updateFamilyMembership(Entity)	Ported	-	com/badlogic/ashley/core/FamilyManager.java	83	70dd7a8fc0569e60
+member	com.badlogic.ashley.core.FamilyManager$BitsPool#newObject()	com.badlogic.ashley.core.FamilyManager$BitsPool#newObject()	Ported	-	com/badlogic/ashley/core/FamilyManager.java	159	86cbf723510557c5
+member	com.badlogic.ashley.core.FamilyManager$EntityListenerData#listener	com.badlogic.ashley.core.FamilyManager$EntityListenerData#listener	Ported	-	com/badlogic/ashley/core/FamilyManager.java	153	e6752a8e11f93df4
+member	com.badlogic.ashley.core.FamilyManager$EntityListenerData#priority	com.badlogic.ashley.core.FamilyManager$EntityListenerData#priority	Ported	-	com/badlogic/ashley/core/FamilyManager.java	154	bc5953a688ed8c85
+member	com.badlogic.ashley.core.PooledEngine#<init>()	com.badlogic.ashley.core.PooledEngine#<init>()	Ported	-	com/badlogic/ashley/core/PooledEngine.java	45	25ea7f42da97a12d
+member	com.badlogic.ashley.core.PooledEngine#<stmt1>	com.badlogic.ashley.core.PooledEngine#<stmt1>	Ported	-	com/badlogic/ashley/core/PooledEngine.java	59	0fc41e5acd9ab292
+member	com.badlogic.ashley.core.PooledEngine#<stmt2>	com.badlogic.ashley.core.PooledEngine#<stmt2>	Ported	-	com/badlogic/ashley/core/PooledEngine.java	60	b6490fc05b43367f
+member	com.badlogic.ashley.core.PooledEngine#clearPools()	com.badlogic.ashley.core.PooledEngine#clearPools()	Ported	-	com/badlogic/ashley/core/PooledEngine.java	83	0aeccbce3885c302
+member	com.badlogic.ashley.core.PooledEngine#componentPools	com.badlogic.ashley.core.PooledEngine#componentPools	Ported	-	com/badlogic/ashley/core/PooledEngine.java	39	11487f87650c0780
+member	com.badlogic.ashley.core.PooledEngine#createComponent(Class)	com.badlogic.ashley.core.PooledEngine#createComponent(Class<T>)	Ported	-	com/badlogic/ashley/core/PooledEngine.java	75	aba015d4e7fb3303
+member	com.badlogic.ashley.core.PooledEngine#createEntity()	com.badlogic.ashley.core.PooledEngine#createEntity()	Ported	-	com/badlogic/ashley/core/PooledEngine.java	65	d5b79783b0073427
+member	com.badlogic.ashley.core.PooledEngine#entityPool	com.badlogic.ashley.core.PooledEngine#entityPool	Ported	-	com/badlogic/ashley/core/PooledEngine.java	38	564f38f1552bae90
+member	com.badlogic.ashley.core.PooledEngine#removeEntityInternal(Entity)	com.badlogic.ashley.core.PooledEngine#removeEntityInternal(Entity)	Ported	-	com/badlogic/ashley/core/PooledEngine.java	89	41d5927bd5c80762
+member	com.badlogic.ashley.core.PooledEngine$ComponentPools#<stmt1>	com.badlogic.ashley.core.PooledEngine$ComponentPools#<stmt1>	Ported	-	com/badlogic/ashley/core/PooledEngine.java	146	9e5686f38957fa89
+member	com.badlogic.ashley.core.PooledEngine$ComponentPools#<stmt2>	com.badlogic.ashley.core.PooledEngine$ComponentPools#<stmt2>	Ported	-	com/badlogic/ashley/core/PooledEngine.java	147	3d9447d474ae91fe
+member	com.badlogic.ashley.core.PooledEngine$ComponentPools#<stmt3>	com.badlogic.ashley.core.PooledEngine$ComponentPools#<stmt3>	Ported	-	com/badlogic/ashley/core/PooledEngine.java	148	c54125699dbbdf04
+member	com.badlogic.ashley.core.PooledEngine$ComponentPools#clear()	com.badlogic.ashley.core.PooledEngine$ComponentPools#clear()	Ported	-	com/badlogic/ashley/core/PooledEngine.java	186	c08eff4893325563
+member	com.badlogic.ashley.core.PooledEngine$ComponentPools#free(Object)	com.badlogic.ashley.core.PooledEngine$ComponentPools#free(Object)	Ported	-	com/badlogic/ashley/core/PooledEngine.java	162	6cc889db35376b2c
+member	com.badlogic.ashley.core.PooledEngine$ComponentPools#freeAll(Array)	com.badlogic.ashley.core.PooledEngine$ComponentPools#freeAll(Array<?>)	Ported	-	com/badlogic/ashley/core/PooledEngine.java	176	77bfff65581f04f5
+member	com.badlogic.ashley.core.PooledEngine$ComponentPools#initialSize	com.badlogic.ashley.core.PooledEngine$ComponentPools#initialSize	Ported	-	com/badlogic/ashley/core/PooledEngine.java	142	2a0ec062de61ca08
+member	com.badlogic.ashley.core.PooledEngine$ComponentPools#maxSize	com.badlogic.ashley.core.PooledEngine$ComponentPools#maxSize	Ported	-	com/badlogic/ashley/core/PooledEngine.java	143	da2bc2dee25c1dfd
+member	com.badlogic.ashley.core.PooledEngine$ComponentPools#obtain(Class)	com.badlogic.ashley.core.PooledEngine$ComponentPools#obtain(Class<T>)	Ported	-	com/badlogic/ashley/core/PooledEngine.java	151	e43d6f6e7919b5ad
+member	com.badlogic.ashley.core.PooledEngine$ComponentPools#pools	com.badlogic.ashley.core.PooledEngine$ComponentPools#pools	Ported	-	com/badlogic/ashley/core/PooledEngine.java	141	4927e2f33c37dffa
+member	com.badlogic.ashley.core.PooledEngine$EntityPool#discard(PooledEntity)	com.badlogic.ashley.core.PooledEngine$EntityPool#discard(PooledEntity)	Ported	-	com/badlogic/ashley/core/PooledEngine.java	135	9a33213830824b6c
+member	com.badlogic.ashley.core.PooledEngine$EntityPool#newObject()	com.badlogic.ashley.core.PooledEngine$EntityPool#newObject()	Ported	-	com/badlogic/ashley/core/PooledEngine.java	126	2fcd6018459cd2b2
+member	com.badlogic.ashley.core.PooledEngine$PooledEntity#removeInternal(Class)	com.badlogic.ashley.core.PooledEngine$PooledEntity#removeInternal(Class<?>)	Ported	-	com/badlogic/ashley/core/PooledEngine.java	99	40453208374d4466
+member	com.badlogic.ashley.core.PooledEngine$PooledEntity#reset()	com.badlogic.ashley.core.PooledEngine$PooledEntity#reset()	Ported	-	com/badlogic/ashley/core/PooledEngine.java	109	5217107e78805473
+member	com.badlogic.ashley.core.SystemManager#<stmt1>	com.badlogic.ashley.core.SystemManager#<stmt1>	Ported	-	com/badlogic/ashley/core/SystemManager.java	19	802c342302b2cbcb
+member	com.badlogic.ashley.core.SystemManager#addSystem(EntitySystem)	com.badlogic.ashley.core.SystemManager#addSystem(EntitySystem)	Ported	-	com/badlogic/ashley/core/SystemManager.java	22	ecc3a9e9e1d6c9dd
+member	com.badlogic.ashley.core.SystemManager#getSystem(Class)	com.badlogic.ashley.core.SystemManager#getSystem(Class<T>)	Ported	-	com/badlogic/ashley/core/SystemManager.java	50	738a54b1f6a75482
+member	com.badlogic.ashley.core.SystemManager#getSystems()	com.badlogic.ashley.core.SystemManager#getSystems()	Ported	-	com/badlogic/ashley/core/SystemManager.java	54	0c77686f83c505db
+member	com.badlogic.ashley.core.SystemManager#immutableSystems	com.badlogic.ashley.core.SystemManager#immutableSystems	Ported	-	com/badlogic/ashley/core/SystemManager.java	14	6bb09d4721ea4e3b
+member	com.badlogic.ashley.core.SystemManager#listener	com.badlogic.ashley.core.SystemManager#listener	Ported	-	com/badlogic/ashley/core/SystemManager.java	16	fa0cf7493e2ef6e9
+member	com.badlogic.ashley.core.SystemManager#removeAllSystems()	com.badlogic.ashley.core.SystemManager#removeAllSystems()	Ported	-	com/badlogic/ashley/core/SystemManager.java	43	70f7715e6106f769
+member	com.badlogic.ashley.core.SystemManager#removeSystem(EntitySystem)	com.badlogic.ashley.core.SystemManager#removeSystem(EntitySystem)	Ported	-	com/badlogic/ashley/core/SystemManager.java	36	1134d37c091e1648
+member	com.badlogic.ashley.core.SystemManager#systemComparator	com.badlogic.ashley.core.SystemManager#systemComparator	Ported	-	com/badlogic/ashley/core/SystemManager.java	12	9d8579e659150aa2
+member	com.badlogic.ashley.core.SystemManager#systems	com.badlogic.ashley.core.SystemManager#systems	Ported	-	com/badlogic/ashley/core/SystemManager.java	13	9d283d5202f3ce4e
+member	com.badlogic.ashley.core.SystemManager#systemsByClass	com.badlogic.ashley.core.SystemManager#systemsByClass	Ported	-	com/badlogic/ashley/core/SystemManager.java	15	037b56afd60a267d
+member	com.badlogic.ashley.core.SystemManager$SystemComparator#compare(EntitySystem,EntitySystem)	com.badlogic.ashley.core.SystemManager$SystemComparator#compare(EntitySystem,EntitySystem)	Ported	-	com/badlogic/ashley/core/SystemManager.java	60	d4fbfb4f6fe3ab7d
+member	com.badlogic.ashley.core.SystemManager$SystemListener#systemAdded(EntitySystem)	com.badlogic.ashley.core.SystemManager$SystemListener#systemAdded(EntitySystem)	Ported	-	com/badlogic/ashley/core/SystemManager.java	66	8aa365d429b645a9
+member	com.badlogic.ashley.core.SystemManager$SystemListener#systemRemoved(EntitySystem)	com.badlogic.ashley.core.SystemManager$SystemListener#systemRemoved(EntitySystem)	Ported	-	com/badlogic/ashley/core/SystemManager.java	67	cdb5fb29abe861c3
+member	com.badlogic.ashley.signals.Listener#receive(Signal,T)	com.badlogic.ashley.signals.Listener#receive(Signal<T>,T)	Ported	-	com/badlogic/ashley/signals/Listener.java	28	4692bb1d59985f8a
+member	com.badlogic.ashley.signals.Signal#<stmt1>	com.badlogic.ashley.signals.Signal#<stmt1>	Ported	-	com/badlogic/ashley/signals/Signal.java	30	2fecb3a323261575
+member	com.badlogic.ashley.signals.Signal#add(Listener)	com.badlogic.ashley.signals.Signal#add(Listener<T>)	Ported	-	com/badlogic/ashley/signals/Signal.java	37	59652aa56a10eabb
+member	com.badlogic.ashley.signals.Signal#dispatch(T)	com.badlogic.ashley.signals.Signal#dispatch(T)	Ported	-	com/badlogic/ashley/signals/Signal.java	58	b942aed79c9965d4
+member	com.badlogic.ashley.signals.Signal#listeners	com.badlogic.ashley.signals.Signal#listeners	Ported	-	com/badlogic/ashley/signals/Signal.java	27	db4361881551ffb7
+member	com.badlogic.ashley.signals.Signal#remove(Listener)	com.badlogic.ashley.signals.Signal#remove(Listener<T>)	Ported	-	com/badlogic/ashley/signals/Signal.java	45	489feb33a332ea52
+member	com.badlogic.ashley.signals.Signal#removeAllListeners()	com.badlogic.ashley.signals.Signal#removeAllListeners()	Ported	-	com/badlogic/ashley/signals/Signal.java	50	8526bdbaaa59895d
+member	com.badlogic.ashley.systems.IntervalIteratingSystem#<init>(Family,float)	com.badlogic.ashley.systems.IntervalIteratingSystem#<init>(Family,float)	Ported	-	com/badlogic/ashley/systems/IntervalIteratingSystem.java	38	e3e53038ffadc13d
+member	com.badlogic.ashley.systems.IntervalIteratingSystem#<stmt1>	com.badlogic.ashley.systems.IntervalIteratingSystem#<stmt1>	Ported	-	com/badlogic/ashley/systems/IntervalIteratingSystem.java	49	7012404adc2dbcc5
+member	com.badlogic.ashley.systems.IntervalIteratingSystem#addedToEngine(Engine)	com.badlogic.ashley.systems.IntervalIteratingSystem#addedToEngine(Engine)	Ported	-	com/badlogic/ashley/systems/IntervalIteratingSystem.java	53	781370baf081e9b5
+member	com.badlogic.ashley.systems.IntervalIteratingSystem#endProcessing()	com.badlogic.ashley.systems.IntervalIteratingSystem#endProcessing()	Ported	-	com/badlogic/ashley/systems/IntervalIteratingSystem.java	96	55f5ab896b2a7e95
+member	com.badlogic.ashley.systems.IntervalIteratingSystem#entities	com.badlogic.ashley.systems.IntervalIteratingSystem#entities	Ported	-	com/badlogic/ashley/systems/IntervalIteratingSystem.java	32	181b358a87d484cb
+member	com.badlogic.ashley.systems.IntervalIteratingSystem#family	com.badlogic.ashley.systems.IntervalIteratingSystem#family	Ported	-	com/badlogic/ashley/systems/IntervalIteratingSystem.java	31	fc7536253024461d
+member	com.badlogic.ashley.systems.IntervalIteratingSystem#getEntities()	com.badlogic.ashley.systems.IntervalIteratingSystem#getEntities()	Ported	-	com/badlogic/ashley/systems/IntervalIteratingSystem.java	69	f89855f5edebddd7
+member	com.badlogic.ashley.systems.IntervalIteratingSystem#getFamily()	com.badlogic.ashley.systems.IntervalIteratingSystem#getFamily()	Ported	-	com/badlogic/ashley/systems/IntervalIteratingSystem.java	76	0b57e17c1a5c3043
+member	com.badlogic.ashley.systems.IntervalIteratingSystem#processEntity(Entity)	com.badlogic.ashley.systems.IntervalIteratingSystem#processEntity(Entity)	Ported	-	com/badlogic/ashley/systems/IntervalIteratingSystem.java	84	b92091ca6a4acc4e
+member	com.badlogic.ashley.systems.IntervalIteratingSystem#startProcessing()	com.badlogic.ashley.systems.IntervalIteratingSystem#startProcessing()	Ported	-	com/badlogic/ashley/systems/IntervalIteratingSystem.java	90	03b7e8e8e3676f31
+member	com.badlogic.ashley.systems.IntervalIteratingSystem#updateInterval()	com.badlogic.ashley.systems.IntervalIteratingSystem#updateInterval()	Ported	-	com/badlogic/ashley/systems/IntervalIteratingSystem.java	58	fbce71364328dd88
+member	com.badlogic.ashley.systems.IntervalSystem#<init>(float)	com.badlogic.ashley.systems.IntervalSystem#<init>(float)	Ported	-	com/badlogic/ashley/systems/IntervalSystem.java	33	bc5b979416aa7245
+member	com.badlogic.ashley.systems.IntervalSystem#<stmt1>	com.badlogic.ashley.systems.IntervalSystem#<stmt1>	Ported	-	com/badlogic/ashley/systems/IntervalSystem.java	43	82a7e52ab1e2b52d
+member	com.badlogic.ashley.systems.IntervalSystem#<stmt2>	com.badlogic.ashley.systems.IntervalSystem#<stmt2>	Ported	-	com/badlogic/ashley/systems/IntervalSystem.java	44	efb840fbc448893a
+member	com.badlogic.ashley.systems.IntervalSystem#accumulator	com.badlogic.ashley.systems.IntervalSystem#accumulator	Ported	-	com/badlogic/ashley/systems/IntervalSystem.java	28	337cb42ad32d6bed
+member	com.badlogic.ashley.systems.IntervalSystem#getInterval()	com.badlogic.ashley.systems.IntervalSystem#getInterval()	Ported	-	com/badlogic/ashley/systems/IntervalSystem.java	47	31c2a411d6c90dde
+member	com.badlogic.ashley.systems.IntervalSystem#interval	com.badlogic.ashley.systems.IntervalSystem#interval	Ported	-	com/badlogic/ashley/systems/IntervalSystem.java	27	bc82215c1a6f5367
+member	com.badlogic.ashley.systems.IntervalSystem#update(float)	com.badlogic.ashley.systems.IntervalSystem#update(float)	Ported	-	com/badlogic/ashley/systems/IntervalSystem.java	52	e93ffefba43dafb4
+member	com.badlogic.ashley.systems.IntervalSystem#updateInterval()	com.badlogic.ashley.systems.IntervalSystem#updateInterval()	Ported	-	com/badlogic/ashley/systems/IntervalSystem.java	64	e63c4e905d95deb5
+member	com.badlogic.ashley.systems.IteratingSystem#<init>(Family)	com.badlogic.ashley.systems.IteratingSystem#<init>(Family)	Ported	-	com/badlogic/ashley/systems/IteratingSystem.java	38	6c2776133f54bc29
+member	com.badlogic.ashley.systems.IteratingSystem#<stmt1>	com.badlogic.ashley.systems.IteratingSystem#<stmt1>	Ported	-	com/badlogic/ashley/systems/IteratingSystem.java	50	7012404adc2dbcc5
+member	com.badlogic.ashley.systems.IteratingSystem#addedToEngine(Engine)	com.badlogic.ashley.systems.IteratingSystem#addedToEngine(Engine)	Ported	-	com/badlogic/ashley/systems/IteratingSystem.java	54	781370baf081e9b5
+member	com.badlogic.ashley.systems.IteratingSystem#endProcessing()	com.badlogic.ashley.systems.IteratingSystem#endProcessing()	Ported	-	com/badlogic/ashley/systems/IteratingSystem.java	104	55f5ab896b2a7e95
+member	com.badlogic.ashley.systems.IteratingSystem#entities	com.badlogic.ashley.systems.IteratingSystem#entities	Ported	-	com/badlogic/ashley/systems/IteratingSystem.java	32	181b358a87d484cb
+member	com.badlogic.ashley.systems.IteratingSystem#family	com.badlogic.ashley.systems.IteratingSystem#family	Ported	-	com/badlogic/ashley/systems/IteratingSystem.java	31	fc7536253024461d
+member	com.badlogic.ashley.systems.IteratingSystem#getEntities()	com.badlogic.ashley.systems.IteratingSystem#getEntities()	Ported	-	com/badlogic/ashley/systems/IteratingSystem.java	75	f89855f5edebddd7
+member	com.badlogic.ashley.systems.IteratingSystem#getFamily()	com.badlogic.ashley.systems.IteratingSystem#getFamily()	Ported	-	com/badlogic/ashley/systems/IteratingSystem.java	82	0b57e17c1a5c3043
+member	com.badlogic.ashley.systems.IteratingSystem#processEntity(Entity,float)	com.badlogic.ashley.systems.IteratingSystem#processEntity(Entity,float)	Ported	-	com/badlogic/ashley/systems/IteratingSystem.java	92	48696d6cf073917e
+member	com.badlogic.ashley.systems.IteratingSystem#removedFromEngine(Engine)	com.badlogic.ashley.systems.IteratingSystem#removedFromEngine(Engine)	Ported	-	com/badlogic/ashley/systems/IteratingSystem.java	59	39f149d295925b05
+member	com.badlogic.ashley.systems.IteratingSystem#startProcessing()	com.badlogic.ashley.systems.IteratingSystem#startProcessing()	Ported	-	com/badlogic/ashley/systems/IteratingSystem.java	98	03b7e8e8e3676f31
+member	com.badlogic.ashley.systems.IteratingSystem#update(float)	com.badlogic.ashley.systems.IteratingSystem#update(float)	Ported	-	com/badlogic/ashley/systems/IteratingSystem.java	64	d0339cea2eb95088
+member	com.badlogic.ashley.systems.SortedIteratingSystem#<init>(Family,Comparator)	com.badlogic.ashley.systems.SortedIteratingSystem#<init>(Family,Comparator<Entity>)	Ported	-	com/badlogic/ashley/systems/SortedIteratingSystem.java	47	fdb5630cd15f2a78
+member	com.badlogic.ashley.systems.SortedIteratingSystem#<stmt1>	com.badlogic.ashley.systems.SortedIteratingSystem#<stmt1>	Ported	-	com/badlogic/ashley/systems/SortedIteratingSystem.java	60	7012404adc2dbcc5
+member	com.badlogic.ashley.systems.SortedIteratingSystem#<stmt2>	com.badlogic.ashley.systems.SortedIteratingSystem#<stmt2>	Ported	-	com/badlogic/ashley/systems/SortedIteratingSystem.java	61	b1a8f89000119d33
+member	com.badlogic.ashley.systems.SortedIteratingSystem#<stmt3>	com.badlogic.ashley.systems.SortedIteratingSystem#<stmt3>	Ported	-	com/badlogic/ashley/systems/SortedIteratingSystem.java	62	46d5b18c04ed7ff1
+member	com.badlogic.ashley.systems.SortedIteratingSystem#<stmt4>	com.badlogic.ashley.systems.SortedIteratingSystem#<stmt4>	Ported	-	com/badlogic/ashley/systems/SortedIteratingSystem.java	63	077ab04352e4b0b0
+member	com.badlogic.ashley.systems.SortedIteratingSystem#addedToEngine(Engine)	com.badlogic.ashley.systems.SortedIteratingSystem#addedToEngine(Engine)	Ported	-	com/badlogic/ashley/systems/SortedIteratingSystem.java	81	e79d71d6a1b30917
+member	com.badlogic.ashley.systems.SortedIteratingSystem#comparator	com.badlogic.ashley.systems.SortedIteratingSystem#comparator	Ported	-	com/badlogic/ashley/systems/SortedIteratingSystem.java	40	84542af1fc33393d
+member	com.badlogic.ashley.systems.SortedIteratingSystem#endProcessing()	com.badlogic.ashley.systems.SortedIteratingSystem#endProcessing()	Ported	-	com/badlogic/ashley/systems/SortedIteratingSystem.java	156	55f5ab896b2a7e95
+member	com.badlogic.ashley.systems.SortedIteratingSystem#entities	com.badlogic.ashley.systems.SortedIteratingSystem#entities	Ported	-	com/badlogic/ashley/systems/SortedIteratingSystem.java	38	181b358a87d484cb
+member	com.badlogic.ashley.systems.SortedIteratingSystem#entityAdded(Entity)	com.badlogic.ashley.systems.SortedIteratingSystem#entityAdded(Entity)	Ported	-	com/badlogic/ashley/systems/SortedIteratingSystem.java	102	40ed252be4154d2a
+member	com.badlogic.ashley.systems.SortedIteratingSystem#entityRemoved(Entity)	com.badlogic.ashley.systems.SortedIteratingSystem#entityRemoved(Entity)	Ported	-	com/badlogic/ashley/systems/SortedIteratingSystem.java	108	6fd4fd4bac9e47f5
+member	com.badlogic.ashley.systems.SortedIteratingSystem#family	com.badlogic.ashley.systems.SortedIteratingSystem#family	Ported	-	com/badlogic/ashley/systems/SortedIteratingSystem.java	36	fc7536253024461d
+member	com.badlogic.ashley.systems.SortedIteratingSystem#forceSort()	com.badlogic.ashley.systems.SortedIteratingSystem#forceSort()	Ported	-	com/badlogic/ashley/systems/SortedIteratingSystem.java	69	ae15bfd09fe2c551
+member	com.badlogic.ashley.systems.SortedIteratingSystem#getEntities()	com.badlogic.ashley.systems.SortedIteratingSystem#getEntities()	Ported	-	com/badlogic/ashley/systems/SortedIteratingSystem.java	126	eca15a5ad0b11cf7
+member	com.badlogic.ashley.systems.SortedIteratingSystem#getFamily()	com.badlogic.ashley.systems.SortedIteratingSystem#getFamily()	Ported	-	com/badlogic/ashley/systems/SortedIteratingSystem.java	134	0b57e17c1a5c3043
+member	com.badlogic.ashley.systems.SortedIteratingSystem#processEntity(Entity,float)	com.badlogic.ashley.systems.SortedIteratingSystem#processEntity(Entity,float)	Ported	-	com/badlogic/ashley/systems/SortedIteratingSystem.java	144	48696d6cf073917e
+member	com.badlogic.ashley.systems.SortedIteratingSystem#removedFromEngine(Engine)	com.badlogic.ashley.systems.SortedIteratingSystem#removedFromEngine(Engine)	Ported	-	com/badlogic/ashley/systems/SortedIteratingSystem.java	95	ee49ed7299f3fc69
+member	com.badlogic.ashley.systems.SortedIteratingSystem#shouldSort	com.badlogic.ashley.systems.SortedIteratingSystem#shouldSort	Ported	-	com/badlogic/ashley/systems/SortedIteratingSystem.java	39	41bb8a578e3b04db
+member	com.badlogic.ashley.systems.SortedIteratingSystem#sort()	com.badlogic.ashley.systems.SortedIteratingSystem#sort()	Ported	-	com/badlogic/ashley/systems/SortedIteratingSystem.java	73	8a3cc8a04acc6b0e
+member	com.badlogic.ashley.systems.SortedIteratingSystem#sortedEntities	com.badlogic.ashley.systems.SortedIteratingSystem#sortedEntities	Ported	-	com/badlogic/ashley/systems/SortedIteratingSystem.java	37	14904290da6fbf0c
+member	com.badlogic.ashley.systems.SortedIteratingSystem#startProcessing()	com.badlogic.ashley.systems.SortedIteratingSystem#startProcessing()	Ported	-	com/badlogic/ashley/systems/SortedIteratingSystem.java	150	03b7e8e8e3676f31
+member	com.badlogic.ashley.systems.SortedIteratingSystem#update(float)	com.badlogic.ashley.systems.SortedIteratingSystem#update(float)	Ported	-	com/badlogic/ashley/systems/SortedIteratingSystem.java	114	e929bda0252b83e1
+member	com.badlogic.ashley.utils.Bag#<init>()	com.badlogic.ashley.utils.Bag#<init>()	Ported	-	com/badlogic/ashley/utils/Bag.java	30	ad26a1aba90e0149
+member	com.badlogic.ashley.utils.Bag#<stmt1>	com.badlogic.ashley.utils.Bag#<stmt1>	Ported	-	com/badlogic/ashley/utils/Bag.java	40	2756649d52ee1803
+member	com.badlogic.ashley.utils.Bag#add(E)	com.badlogic.ashley.utils.Bag#add(E)	Ported	-	com/badlogic/ashley/utils/Bag.java	140	868dff429720a611
+member	com.badlogic.ashley.utils.Bag#clear()	com.badlogic.ashley.utils.Bag#clear()	Ported	-	com/badlogic/ashley/utils/Bag.java	163	d534bd919dee57fa
+member	com.badlogic.ashley.utils.Bag#contains(E)	com.badlogic.ashley.utils.Bag#contains(E)	Ported	-	com/badlogic/ashley/utils/Bag.java	92	fa716bac2a8fb4b2
+member	com.badlogic.ashley.utils.Bag#data	com.badlogic.ashley.utils.Bag#data	Ported	-	com/badlogic/ashley/utils/Bag.java	24	6f35f9fb5dd10861
+member	com.badlogic.ashley.utils.Bag#get(int)	com.badlogic.ashley.utils.Bag#get(int)	Ported	-	com/badlogic/ashley/utils/Bag.java	104	c4a90607e222c950
+member	com.badlogic.ashley.utils.Bag#getCapacity()	com.badlogic.ashley.utils.Bag#getCapacity()	Ported	-	com/badlogic/ashley/utils/Bag.java	118	8e54011c1b3a2d01
+member	com.badlogic.ashley.utils.Bag#grow()	com.badlogic.ashley.utils.Bag#grow()	Ported	-	com/badlogic/ashley/utils/Bag.java	172	14c2b56fb3b35030
+member	com.badlogic.ashley.utils.Bag#grow(int)	com.badlogic.ashley.utils.Bag#grow(int)	Ported	-	com/badlogic/ashley/utils/Bag.java	178	b38aa48ea112c9cc
+member	com.badlogic.ashley.utils.Bag#isEmpty()	com.badlogic.ashley.utils.Bag#isEmpty()	Ported	-	com/badlogic/ashley/utils/Bag.java	133	807246b9e46248e0
+member	com.badlogic.ashley.utils.Bag#isIndexWithinBounds(int)	com.badlogic.ashley.utils.Bag#isIndexWithinBounds(int)	Ported	-	com/badlogic/ashley/utils/Bag.java	126	85312fac933fea11
+member	com.badlogic.ashley.utils.Bag#remove(E)	com.badlogic.ashley.utils.Bag#remove(E)	Ported	-	com/badlogic/ashley/utils/Bag.java	75	6072131c4eadb339
+member	com.badlogic.ashley.utils.Bag#remove(int)	com.badlogic.ashley.utils.Bag#remove(int)	Ported	-	com/badlogic/ashley/utils/Bag.java	48	d459957401b3e817
+member	com.badlogic.ashley.utils.Bag#removeLast()	com.badlogic.ashley.utils.Bag#removeLast()	Ported	-	com/badlogic/ashley/utils/Bag.java	59	2fcf60db478483cf
+member	com.badlogic.ashley.utils.Bag#set(int,E)	com.badlogic.ashley.utils.Bag#set(int,E)	Ported	-	com/badlogic/ashley/utils/Bag.java	152	e6991296ad4083ee
+member	com.badlogic.ashley.utils.Bag#size	com.badlogic.ashley.utils.Bag#size	Ported	-	com/badlogic/ashley/utils/Bag.java	25	c50a5c106c4aa8ba
+member	com.badlogic.ashley.utils.Bag#size()	com.badlogic.ashley.utils.Bag#size()	Ported	-	com/badlogic/ashley/utils/Bag.java	111	2512040e1ef84730
+member	com.badlogic.ashley.utils.ImmutableArray#<init>()	com.badlogic.ashley.utils.ImmutableArray#<init>()	Ported	-	com/badlogic/ashley/utils/ImmutableArray.java	33	be4daf893d715d45
+member	com.badlogic.ashley.utils.ImmutableArray#<stmt1>	com.badlogic.ashley.utils.ImmutableArray#<stmt1>	Ported	-	com/badlogic/ashley/utils/ImmutableArray.java	38	7806eb1a90208b07
+member	com.badlogic.ashley.utils.ImmutableArray#array	com.badlogic.ashley.utils.ImmutableArray#array	Ported	-	com/badlogic/ashley/utils/ImmutableArray.java	30	d52568102c0e6ed9
+member	com.badlogic.ashley.utils.ImmutableArray#contains(T,boolean)	com.badlogic.ashley.utils.ImmutableArray#contains(T,boolean)	Ported	-	com/badlogic/ashley/utils/ImmutableArray.java	49	77894e143bf86f4d
+member	com.badlogic.ashley.utils.ImmutableArray#equals(Any)	com.badlogic.ashley.utils.ImmutableArray#equals(Any)	Ported	-	com/badlogic/ashley/utils/ImmutableArray.java	85	70e7104c8ca8312e
+member	com.badlogic.ashley.utils.ImmutableArray#first()	com.badlogic.ashley.utils.ImmutableArray#first()	Ported	-	com/badlogic/ashley/utils/ImmutableArray.java	65	02318c81fab451bf
+member	com.badlogic.ashley.utils.ImmutableArray#get(int)	com.badlogic.ashley.utils.ImmutableArray#get(int)	Ported	-	com/badlogic/ashley/utils/ImmutableArray.java	45	0bc58fea13ec222a
+member	com.badlogic.ashley.utils.ImmutableArray#hashCode()	com.badlogic.ashley.utils.ImmutableArray#hashCode()	Ported	-	com/badlogic/ashley/utils/ImmutableArray.java	81	4435245b4e45d884
+member	com.badlogic.ashley.utils.ImmutableArray#indexOf(T,boolean)	com.badlogic.ashley.utils.ImmutableArray#indexOf(T,boolean)	Ported	-	com/badlogic/ashley/utils/ImmutableArray.java	53	129e66dbc676574e
+member	com.badlogic.ashley.utils.ImmutableArray#iterable	com.badlogic.ashley.utils.ImmutableArray#iterable	Ported	-	com/badlogic/ashley/utils/ImmutableArray.java	31	0f9b1579b7952ed4
+member	com.badlogic.ashley.utils.ImmutableArray#iterator()	com.badlogic.ashley.utils.ImmutableArray#iterator()	Ported	-	com/badlogic/ashley/utils/ImmutableArray.java	98	0abfc549841d3d1f
+member	com.badlogic.ashley.utils.ImmutableArray#lastIndexOf(T,boolean)	com.badlogic.ashley.utils.ImmutableArray#lastIndexOf(T,boolean)	Ported	-	com/badlogic/ashley/utils/ImmutableArray.java	57	75cfdd28f05b78db
+member	com.badlogic.ashley.utils.ImmutableArray#peek()	com.badlogic.ashley.utils.ImmutableArray#peek()	Ported	-	com/badlogic/ashley/utils/ImmutableArray.java	61	3416328d1f942912
+member	com.badlogic.ashley.utils.ImmutableArray#random()	com.badlogic.ashley.utils.ImmutableArray#random()	Ported	-	com/badlogic/ashley/utils/ImmutableArray.java	69	1453e401d692fa20
+member	com.badlogic.ashley.utils.ImmutableArray#size()	com.badlogic.ashley.utils.ImmutableArray#size()	Ported	-	com/badlogic/ashley/utils/ImmutableArray.java	41	6c99587853285d18
+member	com.badlogic.ashley.utils.ImmutableArray#toArray()	com.badlogic.ashley.utils.ImmutableArray#toArray()	Ported	-	com/badlogic/ashley/utils/ImmutableArray.java	73	bbb4892b9d4298c9
+member	com.badlogic.ashley.utils.ImmutableArray#toString()	com.badlogic.ashley.utils.ImmutableArray#toString()	Ported	-	com/badlogic/ashley/utils/ImmutableArray.java	89	3341e42e698729f8
+member	com.badlogic.ashley.utils.ImmutableArray#toString(String)	com.badlogic.ashley.utils.ImmutableArray#toString(String)	Ported	-	com/badlogic/ashley/utils/ImmutableArray.java	93	f8bab83ce5a662d1
+member	com.badlogic.ashley.utils.ImmutableArray#toArray(Class)		Dropped	-		0	
+member	com.badlogic.gdx.graphics.g3d.particles.ParallelArray$ChannelDescriptor#<init>(int,Class,int)		Dropped	-		0	
+member	com.badlogic.gdx.graphics.g3d.particles.batches.BufferedParticleBatch#<init>(Class)		Dropped	-		0	
+member	com.badlogic.gdx.scenes.scene2d.ui.Skin#findMethod		Dropped	-		0	
+member	com.badlogic.gdx.scenes.scene2d.ui.Skin#setEnabledReflection		Dropped	-		0	
+member	com.badlogic.gdx.utils.Array#<init>(Class)		Dropped	-		0	
+member	com.badlogic.gdx.utils.Array#<init>(boolean,int,Class)		Dropped	-		0	
+member	com.badlogic.gdx.utils.Array#of(Class)		Dropped	-		0	
+member	com.badlogic.gdx.utils.Array#of(boolean,int,Class)		Dropped	-		0	
+member	com.badlogic.gdx.utils.Array#toArray(Class)		Dropped	-		0	
+member	com.badlogic.gdx.utils.ArrayMap#<init>(Class,Class)		Dropped	-		0	
+member	com.badlogic.gdx.utils.ArrayMap#<init>(boolean,int,Class,Class)		Dropped	-		0	
+member	com.badlogic.gdx.utils.DelayedRemovalArray#<init>(Class)		Dropped	-		0	
+member	com.badlogic.gdx.utils.DelayedRemovalArray#<init>(boolean,int,Class)		Dropped	-		0	
+member	com.badlogic.gdx.utils.Queue#<init>(int,Class)		Dropped	-		0	
+member	com.badlogic.gdx.utils.SnapshotArray#<init>(Class)		Dropped	-		0	
+member	com.badlogic.gdx.utils.SnapshotArray#<init>(boolean,int,Class)		Dropped	-		0	
