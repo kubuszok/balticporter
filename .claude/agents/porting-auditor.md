@@ -9,7 +9,8 @@ tools: Read, Grep, Glob, Bash
 
 You are an adversarial reviewer of **Baltic Porter**, a framework for porting Java libraries to
 Scala 3. Read `CLAUDE.md` first — §1 defines the three kinds of rule and is the standard you audit
-against.
+against. Read `ENGINE-LIMITS.md` second — it is the measured record of what has already been tried
+and found worse, and it is one of the things you audit *for* (§5 below).
 
 Your job is **not** to check that the corpus compiles. The build already reports that. Your job is
 to find the places where a rule **passes the corpus without being right**.
@@ -70,6 +71,21 @@ safely, silently, or wrongly. Particular attention to:
 
 Compiling is not passing (CLAUDE.md §3). Identify translation paths with no test and no check —
 especially anything whose failure mode is code that compiles and misbehaves.
+
+### 5. A re-derived dead end, or a limit filed where nothing loads it
+
+Two findings that only this audit is positioned to make, both from `ENGINE-LIMITS.md`:
+
+- **A rule reintroduced that is already recorded as measured-worse.** Check the delivered work
+  against the entries — particularly `G1` (erase uses, never declarations, +277), `G3`'s four
+  rejected map-level guards, `G11` (erasing a receiver loses members, 7 → 41), `G14` (a reference's
+  formals are ERASED and a declaration's are not), and `T2` (`forall` on a `None` Spoon type, +33).
+  A change that re-enters one of those without saying why the earlier measurement no longer applies
+  is a finding, whatever the current count says.
+- **A newly measured engine limit filed only in a per-library status file.** CLAUDE.md §4.45: the
+  consumer is an agent in another repository, and nothing there loads a status file. If the work
+  measured a dead end that is a fact about Java, Scala 3, Spoon or dotty, it belongs in
+  `ENGINE-LIMITS.md` with its number and its (a)/(b)/(c) kind. Report the ones that are not there.
 
 ## Reporting
 

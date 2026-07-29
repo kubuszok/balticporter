@@ -12,6 +12,11 @@ it is worth more than any number of additional compile fixes.
 Reproduce the compile numbers below with `bash scripts/gdx_measure.sh` (re-emits, then compiles with
 scala-cli 3.8.4). The migration itself prints four independent checks on every run.
 
+> **The ENGINE-SCOPED rules extracted from this document now live in `ENGINE-LIMITS.md`**, which is
+> the file a port in another repository reads (CLAUDE.md §3.6, §4.45). This file keeps the
+> MEASUREMENTS, the per-site diagnoses and the trajectories; entry ids like `G3`, `K2`, `M1` below
+> point at the lifted rule. Nothing here was deleted.
+
 ## THE PORTED TESTS ARE JVM-ONLY — the behavioural gate does not run on the real targets
 
 The 221 tests are emitted as **JUnit 4 written in Scala** (`@org.junit.Test`, 872 `org.junit.Assert`
@@ -30,6 +35,9 @@ Fix the wiring and the rule first: that turns a silent assumption into a number,
 than the conversion itself.
 
 ### Converting to MUnit is a STRUCTURAL transform, not an annotation rename
+
+> Rules lifted to `ENGINE-LIMITS.md` **X1**–**X5**, and the wiring lesson (a check not called, and a
+> rule that did not exist) to **P2**.
 
 | JUnit | MUnit | count |
 |---|---|---|
@@ -66,6 +74,10 @@ because `munit.Assertions` members would be imported rather than inherited. It i
 independent reason the scaffold should go.
 
 ### The raw-fill design space, MEASURED
+
+> Rule lifted to `ENGINE-LIMITS.md` **G2** (raw generics render `[?]`; `?` round-trips across an
+> override; `Object` is uniformly worse) and **G4** (a name-keyed fill's success is a property of the
+> corpus's naming).
 
 Four combinations of the two knobs — whether the name-keyed inherited fill runs, and what an
 un-nameable raw type argument falls back to:
@@ -205,6 +217,9 @@ made harmlessly-consistent on both sides of an override.
 
 ### CORRECTION: `Asserts` is NOT justified either — it must go the way of `PortedSuite`
 
+> Rules lifted to `ENGINE-LIMITS.md` **X2**/**X3** (MUnit's `B <:< A`, 1 -> 33, and the 26/6/1
+> breakdown) and **K3** (injected sources are for semantics the target lacks, never for shapes).
+
 An earlier version of this section claimed MUnit's type constraint was a genuine semantic gap. That
 was wrong, and the breakdown of the 33 errors the direct mapping produced says so:
 
@@ -329,6 +344,9 @@ lower than 145 and every one of them is now a real, nameable defect.
 
 ### The three remaining clusters
 
+> Rules lifted to `ENGINE-LIMITS.md` **G6** (a de-wildcarded raw parent and its overrides must agree)
+> and **T7** (the concrete-member diamond, and the missing `super[X]` TIR node that blocks it).
+
 **(a) A raw PARENT and its overrides disagree — 8 classes, `needs to be abstract`.**
 `class ParticleController implements ResourceData.Configurable` (raw). The emitter must
 de-wildcard a parent (Scala forbids `extends Configurable[?]`) and picks `Object`; the
@@ -360,6 +378,8 @@ few signature mismatches. Cheapest cluster of the three.
 
 ### Why the iterator shims had to stop being scala collections
 
+> Governing rule: CLAUDE.md §4.5. Counts collected in `ENGINE-LIMITS.md` **K1**.
+
 A Java class may implement BOTH `Iterable<E>` and `Iterator<E>`; **14 classes in gdx core do**.
 Modelled on `scala.collection.{Iterable, Iterator}` that shape is not awkward, it is ILLEGAL —
 `Iterator.iterator` is `final`, and `seq` arrives from both parents. No `override` recovers it,
@@ -379,6 +399,9 @@ Two measured consequences worth keeping:
   shim (24 errors).
 
 ### Diagnosis method that worked, after three failed guesses
+
+> Governing rule: CLAUDE.md §4.6. Evidence, plus two further inert-by-instrumentation results, in
+> `ENGINE-LIMITS.md` **M4**.
 
 The `IntMap`/`LongMap` cast was chased for three edits by widening conditions inside
 `uncheckedGeneric` — all measured 11 -> 11, INERT. What settled it in two runs:
@@ -409,6 +432,9 @@ that CAN pass, passes.
 
 ### What the behavioural gate found, in order
 
+> Governing rule: CLAUDE.md §4.4 (the statement forms) and §3. The trajectory reading — why
+> 115 -> 183 is a step change, not 68 individual fixes — is in `ENGINE-LIMITS.md` **M2**.
+
 Each of these compiled cleanly before AND after. No compile-error count moved for any of them.
 
 | defect | scale | passing |
@@ -436,6 +462,10 @@ through the subclass reached the superclass's draw path), and `Skin.ignoreUnknow
 a method the hand-written `Json` substitute did not declare — it compiled to nothing.
 
 ### Residues, named — none is an engine defect
+
+> The two that ARE general limits are lifted: the `@Before` fresh-instance caveat to
+> `ENGINE-LIMITS.md` **X4**, and "a JVM-only API in the library is not an engine gap" to **P3**. The
+> counts stay here.
 
 - **45 `/* break */ ()` remain, and all 45 are SWITCH-case breaks**, which scala's `match` performs
   anyway. Zero `continue` no-ops, zero labelled ones. The comment count is the measure; keep it.
@@ -533,6 +563,10 @@ two cannot both be right, and the unbounded one is load-bearing:
 So one site wants the bound and sixteen want it absent.
 
 ### Two measured dead ends — do NOT retry as-is
+
+> Rule lifted to `ENGINE-LIMITS.md` **G19** — an override's type-parameter bounds must follow the
+> PARENT, with all four attempts and what each taught. The `Skin`-specific resolution (bound only the
+> overridden overload of the injected substitute) is library policy and stays here.
 
 | attempt | measured |
 |---|---|
@@ -740,6 +774,9 @@ general rule exists, and drive no behaviour. Re-run the sweep with
 
 ## 0. Annotations — FIXED (the fifth silent defect)
 
+> Rules lifted to `ENGINE-LIMITS.md` **T6** — a Java `@interface` is an annotation type (161
+> errors), annotation arguments are real terms, and Java's single-value array shorthand.
+
 **Found and fixed 2026-07-28, by doing exactly what the goal's third clause demanded.** The moment
 `gdx/test` was ported: `@Test in Java: 221   @Test in emitted Scala: 0`. The TIR had **no annotation
 model at all** — not `Symbol`, not `Tree`, nowhere. 597 emitted main files and 29 test files
@@ -778,6 +815,9 @@ translator exists. `scripts/gdx_test_measure.sh` fails loudly on any `@Test` cou
 it in one run.** That is the argument for the goal's third clause, in one line.
 
 ## 0.0 Anonymous class bodies — FIXED
+
+> Rules lifted to `ENGINE-LIMITS.md` **T1** (`CtNewClass` is a subtype of `CtConstructorCall`;
+> `Some(Nil)` is not `None`) and **T2**/**T3** (only a `this` in VALUE position may be rebound).
 
 **Found and fixed 2026-07-28.** `SpoonTir.ctorCall` translated a `CtConstructorCall` and never asked
 whether the node was the `CtNewClass` SUBTYPE, so every Java anonymous class was emitted as a bare
@@ -841,6 +881,8 @@ parent's body was incomplete.
 
 ### 0.1 The error count is a TYPER-ONLY gate — RefChecks has never run
 
+> Governing rule: CLAUDE.md §3. Evidence collected in `ENGINE-LIMITS.md` **M1**.
+
 Measured, not inferred. dotty's `Phase.isRunnable` is `!ctx.reporter.hasErrors`, so **one** typer
 error anywhere in the run skips every later phase for the WHOLE program — including `RefChecks`,
 which is where missing-`override` (E164), unimplemented-member and variance errors are reported.
@@ -891,6 +933,10 @@ than given its own TIR field.
 ## Remaining work, highest value first
 
 ### 1. Constructor funnelling — mostly DONE, 31 left
+
+> Rules lifted to `ENGINE-LIMITS.md` **C1**–**C5**: never promote without a whole-program check
+> (+14), promoted params and locals become members, padding a super call measured 0 -> 55, replay's
+> declared cost, and the several-roots/no-nilary-root clash.
 `tir.CtorFunnel` makes the primary-constructor nomination a whole-program decision that BOTH the
 emitter and `OmissionCheck` derive from, so the check can never drift from what is emitted. Two
 mechanisms, both exact:
@@ -1032,6 +1078,9 @@ Per-library adjustments (sge replaced these rather than porting them). Declared 
 
 ### ENGINE GAP CONCEALED BY THE `NetJavaImpl` DROP — still open
 
+> Rule lifted to `ENGINE-LIMITS.md` **K2** — the JDK/Scala collection boundary, with the second
+> witness (`CharArray.appendAll`) and both measured dead ends.
+
 The drop is justified by portability alone, and must not be read as closing the defect it removed
 from the error count. `NetJavaImpl.getHeaderFields` failed because:
 
@@ -1074,6 +1123,9 @@ This is universal — rule (a) — and is the next piece of work.
 
 ## The LAST core error — `Tree.scala:417`, and four measured dead ends
 
+> Rule lifted to `ENGINE-LIMITS.md` **G8** — a partially-nameable F-bounded class has no consistent
+> fill; a genuine expressiveness limit, and the strongest candidate for the unportable marker.
+
 State: **1 error**. Receiver renders correctly as `Node[N, V, Actor]`; the ARGUMENT cast still reads
 `Tree[Node[?, Object, Actor], Object]` where `Tree[N, V]` is wanted. Cause is exact: `erasedFormal`
 resolves its `subst` only for a BARE type variable, so an APPLIED formal (`addToTree(Tree<N,V>)`)
@@ -1111,6 +1163,9 @@ check clean — so the whole remaining gap is these five, not five plus an unkno
 | `JsonMatcherTests` | 1 | overload with a cast `null` |
 
 ### The `JavaIterable` boundary — and why a CONVERSION cannot fix it
+
+> Rule lifted to `ENGINE-LIMITS.md` **K2** — including the decisive reason (`given Conversion` never
+> fires because the call is OVERLOADED) and the untried call-site wrap.
 
 `CharArray.appendAll(list)` wants `JavaIterable[?]` (from `java.lang.Iterable`) and is handed a
 `mutable.ArrayBuffer` (from `java.util.List`). The engine's own two mappings create two collection
@@ -1172,6 +1227,9 @@ predicts — parser/naming (`illegal combination of modifiers`) -> typer -> Post
 measuring less than it appeared to.
 
 ### The rule that closed 162 -> 7: a class must see its INHERITED INSTANTIATION
+
+> Rule lifted to `ENGINE-LIMITS.md` **G3**, together with the four rejected map-level guards
+> (4 -> 161 / 161 / 142 / 141) and the answer: the fill is an obligation of OVERRIDING MEMBERS.
 
 `AssetLoader<T, P>` declares a RAW `Array<AssetDescriptor> getDependencies(…)`. Inside the parent,
 the name-directed fill matches `AssetDescriptor`'s own `T` to `AssetLoader`'s `T`, so the inherited
@@ -1343,6 +1401,10 @@ argument pins the instantiation; this is the case where a WILDCARD cast leaves n
 
 ## Do NOT retry (measured failures)
 
+> Rule lifted to `ENGINE-LIMITS.md` — every entry in this list that is a fact about Java, Scala 3,
+> Spoon or dotty is restated there with its number, grouped by what an agent is doing when it hits
+> the wall, and classified (a)/(b)/(c). The measurements stay here.
+
 - **Rendering an OVERRIDING method's return type from the parent'''s declaration**: 162 -> **438**.
   The diagnosis is right — 110 x E164 are `Array[AssetDescriptor[?]]` vs `Array[AssetDescriptor[?]]`,
   two INDEPENDENT captures our raw fill produced by rendering each side separately — but the repair
@@ -1457,6 +1519,9 @@ argument pins the instantiation; this is the case where a WILDCARD cast leaves n
   never ran `RefChecks` while any typer error remained.
 
 ## Guarantees that must not be weakened
+
+> Governing rule: CLAUDE.md §3. Collected as `ENGINE-LIMITS.md` **M5** (coverage, `StandardTraversal`,
+> negative-test the check) and **M6** (refuse and count rather than approximate).
 
 Four checks run on every migration. They exist because silent correctness bugs (dropped
 `static { … }` blocks; dropped `super(args)`; dropped anonymous-class bodies, §0) were found only by

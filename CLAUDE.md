@@ -143,12 +143,18 @@ commit that learned it:
 | home | for |
 |---|---|
 | this file | a governing rule or constraint for all porting work |
+| `ENGINE-LIMITS.md` | a MEASURED dead end or engine limit — what not to retry, and what it cost |
 | a skill (`.claude/skills/**`) | a procedure, e.g. adding a library to the corpus |
 | an agent definition (`.claude/agents/**`) | what a reviewer should hunt for |
 
 The per-library status file keeps the MEASUREMENTS and the dead ends with their numbers. The rule
 extracted from them goes above. A rule that names a specific library is per-library policy and
 belongs in that library's manifest instead (§1c).
+
+`ENGINE-LIMITS.md` is the split between the first two rows: this file says what you must do,
+`ENGINE-LIMITS.md` says what has already been tried and measured worse, grouped by what an agent is
+doing when it hits the wall and classified (a)/(b)/(c). Add to it in the same commit that measures
+the failure, and keep the number — a dead end without its number is an opinion.
 
 ## 4. The Auditor
 
@@ -179,15 +185,18 @@ The engine's users are not this repository. sge and ssg will maintain their port
 published Baltic Porter at their Java sources, with agents doing that work in *their* repos,
 without this session's context. Two standing consequences:
 
-- **A lesson that is an ENGINE limit must live somewhere the engine ships.** CLAUDE.md, a skill, or
-  an agent definition — not only in a per-library status file. §3.6 already says this; the
-  measured dead ends in `LIBGDX-PORT-STATUS.md` are its largest current exception, because
-  "raw-anon refusal", "`given Conversion` never fires" and the rest are engine-scoped but
-  libGDX-filed.
+- **A lesson that is an ENGINE limit must live somewhere the engine ships.** CLAUDE.md,
+  `ENGINE-LIMITS.md`, a skill, or an agent definition — not only in a per-library status file. §3.6
+  already says this. The engine-scoped dead ends measured on libGDX — the raw-anon refusal, `given
+  Conversion` never firing, wildcards round-tripping across an override, "erase uses, never
+  declarations" — are now lifted into `ENGINE-LIMITS.md`, with the counts and the per-site diagnosis
+  left in `LIBGDX-PORT-STATUS.md` under a pointer. **When you measure a new one, put the rule there
+  in the same commit.** The remaining exception is per-library POLICY, which is where it belongs.
 - **A check must say which of §1's three kinds the fix is.** An error an agent cannot classify as
   (a) engine bug, (b) configure an existing phase, or (c) write a library-specific rule costs it a
   full investigation. `PortabilityCheck` and `RewriteTrace` do this well; bare typer errors do not,
-  and they are the bulk of a new library's first wall.
+  and they are the bulk of a new library's first wall. Every `ENGINE-LIMITS.md` entry carries this
+  classification for the same reason.
 
 `LIBRARY-READINESS.md` holds the full audit of what is missing before that consumption is possible.
 

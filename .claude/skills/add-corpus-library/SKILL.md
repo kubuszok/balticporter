@@ -45,6 +45,14 @@ Add a measurement script beside `scripts/gdx_measure.sh`: re-emit, then compile 
 `scala-cli compile --scala 3.8.4 --server=false`, and count
 `^-- (\[E[0-9]+\] )?.*Error` — coded AND bare, since the coded-only count silently undercounts.
 
+**The moment the first wall of errors appears, read `ENGINE-LIMITS.md` — before designing any fix.**
+It is the measured record of what has already been tried: raw types and wildcards, constructors,
+`this` and anonymous classes, the JDK/Scala collection boundary, portability, test porting, and the
+ways the measurement itself misleads. Every entry carries its number and its direction (`13 → 28`,
+`+277`, `inert`) and says which of `CLAUDE.md` §1's three kinds a fix would be. Reading it at the end
+is reading it too late — most of these cost a session each to re-derive. Read `CLAUDE.md` §3.5 in the
+same breath and check the reference port for the construct.
+
 Then work the count down. Discipline (`CLAUDE.md` §5): **change one thing, then measure**; record
 regressions and their cause; state `before->after` in the commit subject; read the emitted output to
 confirm a fix rather than trusting the number.
@@ -78,6 +86,13 @@ Create `<LIB>-PORT-STATUS.md` alongside `LIBGDX-PORT-STATUS.md`:
 - **Do NOT retry** — every measured failure, with its cost and cause
 - which specialisations this library needed, classified (a)/(b)/(c), and which engine rules it
   generalised
+
+Then split it: any dead end that is a fact about **Java, Scala 3, Spoon, dotty or the engine** goes
+into `ENGINE-LIMITS.md` — with its number, its worked example and its (a)/(b)/(c) kind — because the
+next library will be ported in a repository that never sees your status file (`CLAUDE.md` §3.6,
+§4.45). Leave a one-line pointer where you lifted it; the measurement stays. If your library
+confirmed, contradicted or generalised an existing entry, **say so in that entry** — a limit that
+survives a second library is stronger evidence than the one that first recorded it.
 
 ## 7. Hand off to the Auditor
 
