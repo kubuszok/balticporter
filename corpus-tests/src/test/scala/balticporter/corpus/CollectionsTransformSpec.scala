@@ -53,13 +53,19 @@ class CollectionsTransformSpec extends munit.FunSuite:
     assert(out.contains("scala.collection.mutable.HashSet["))
     assert(out.contains("this.items += s"))          // List.add     -> +=
     assert(out.contains("this.seen += s"))           // Set.add      -> +=
-    assert(out.contains("this.counts.update(s,"))    // Map.put      -> update
+    // `Map.put` maps to scala's `put`, NOT `update`: java's returns the PREVIOUS value and
+    // `update` returns Unit, so `if (map.put(k, v) != null)` became a comparison against Unit at
+    // every site. This assertion tracked the superseded `update` shape and had been red since that
+    // fix landed — a red engine test is a gate that has stopped reporting.
+    assert(clue(out).contains("this.counts.put(s,"))       // Map.put -> put(_, _).getOrElse(null)
     assert(out.contains("this.items(0)"))            // List.get(i)  -> apply
     assert(out.contains("this.counts.getOrElse(s, null.asInstanceOf["))   // Map.get -> getOrElse(_, null: V)
     assert(out.contains("this.counts.getOrElse(s, 0.asInstanceOf["))      // getOrDefault -> getOrElse(_, d: V)
     assert(out.contains("this.counts.contains(s)"))  // containsKey  -> contains
     assert(out.contains("this.seen -= s"))           // Set.remove   -> -=
-    assert(out.contains("this.counts -= s"))         // Map.remove   -> -=
+    // same reason as `put` above: java's `Map.remove` RETURNS the removed value, which `-=`
+    // discards, so it maps to scala's `remove(_).getOrElse(null)`.
+    assert(clue(out).contains("this.counts.remove(s)"))    // Map.remove -> remove(_).getOrElse(null)
     assert(out.contains("this.items ++= more"))      // addAll       -> ++=
     assert(out.contains("this.items.isEmpty\n") || out.contains("this.items.isEmpty "))  // drop ()
     assert(out.contains("for (s <- this.items)"))    // for-each over retyped collection
