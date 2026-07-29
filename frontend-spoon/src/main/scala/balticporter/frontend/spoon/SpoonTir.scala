@@ -61,7 +61,8 @@ object SpoonTir:
 
   /** Convenience for tests / snippets: parse one in-memory source (no external classpath;
     * JDK types resolve by qualified name) and populate the TIR from its top-level types. */
-  def fromSource(code: String, fileName: String = "Snippet.java"): Program =
+  def fromSource(code: String, fileName: String = "Snippet.java",
+                 subs: Substitutions = Substitutions.none): Program =
     val launcher = new Launcher
     val env      = launcher.getEnvironment
     env.setComplianceLevel(21)
@@ -69,7 +70,7 @@ object SpoonTir:
     launcher.addInputResource(new VirtualFile(code, fileName))
     val model = launcher.buildModel()
     val tops  = model.getAllTypes.asScala.toList.filter(_.getDeclaringType == null)
-    fromTypes(tops)
+    fromTypes(tops, subs)
 
   // -------------------------------------------------------------------------
   /** Interns symbols by a stable string key (qualified names for types, `owner#member`

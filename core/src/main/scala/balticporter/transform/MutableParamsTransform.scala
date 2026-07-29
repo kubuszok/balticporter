@@ -10,6 +10,13 @@ import balticporter.tir.*
   * A structural Java→Scala transform, symbol-driven: the parameter symbol is repurposed as the
   * local `var` (keeping its name and all its references), and a fresh symbol takes the actual
   * parameter slot. No reference rewriting is needed — identity does the work.
+  *
+  * KNOWN LIMIT, out of this transform's shape: a LAMBDA's own parameter. Java lets one be
+  * reassigned (`(x) -> { x = x + 1; return x; }` compiles); Scala's function parameters are `val`,
+  * so the emitted lambda does not. This pass rewrites `DefDef.paramss` and a `Tree.Lambda` has no
+  * `DefDef`, so nothing here reaches it. It degrades loudly — the emitted `x = x + 1` is a compile
+  * error at the port, not a behavioural difference — and fixing it means giving `Tree.Lambda` the
+  * same param-slot rewrite, not widening the scan.
   */
 final class MutableParamsTransform extends Phase:
   def name = "reassigned-params->var"
@@ -26,7 +33,7 @@ final class MutableParamsTransform extends Phase:
       minted += s.copy(id = id, name = s.name + "$arg", fullName = s.fullName + "$arg")
       id
 
-    def scanDef(d: Tree.DefDef): Unit =
+    def scanDef(d: Tree.DefDef)(using Program): Unit =
       val params = d.paramss.flatten.map(_.symbol).toSet
       val written = d.rhs.map(reassignedIn(_, params)).getOrElse(Set.empty)
       written.foreach { p =>
@@ -81,37 +88,35 @@ final class MutableParamsTransform extends Phase:
       case None        => Tree.Block(prelude, Tree.Literal(Constant.UnitC, TypeRepr.NoType, o), TypeRepr.NoType, o)
     d.copy(paramss = paramss2, rhs = Some(body))
 
-  /** parameters (from `params`) that are the target of an assignment anywhere in `t`. */
-  private def reassignedIn(t: Term, params: Set[SymId]): Set[SymId] =
-    val found = collection.mutable.Set[SymId]()
-    def walk(x: Term): Unit =
+  /** Parameters (from `params`) that are the target of an assignment anywhere in `t`.
+    *
+    * Scanned with [[StandardTraversal.scanTerm]] rather than a private recursion. The recursion
+    * this replaced enumerated node kinds by hand and had gone stale in the ways such a list always
+    * does — no `NewArray` case, so `new int[]{ p++ }` and `new int[p++]` were not seen; no
+    * `Repeated`, so a vararg argument `f(p++)` was not seen; and, worst because it is ordinary
+    * Java, `Block.stats` was filtered to `case x: Term`, which DROPS every `ValDef` — so the
+    * initialiser of a local (`int c = s.charAt(i++)`) was not scanned at all.
+    *
+    * All three degrade loudly rather than silently: the parameter stays a `val`, the emitted
+    * reassignment does not compile, and the port's error count says so. That is why this is
+    * hardening and not a bug fix — but "loud" is only true while somebody is reading the count,
+    * and the node list would have gone stale again at the next `Tree` case added. Missing a node
+    * kind is now impossible by construction; the map traversal is total over `Term`.
+    *
+    * Scanning MORE of the tree cannot produce a false positive: `params` holds this method's own
+    * parameter symbols, and a symbol identifies its binder uniquely. The two node kinds the scan
+    * newly descends into — a `Tree.Lambda` body and a `Tree.New`'s anonymous-class body — cannot
+    * assign an ENCLOSING method's parameter in legal Java at all, which is why the old recursion
+    * got away with returning `Nil` for both. javac, on `Runnable lam(int p) { return () -> { p = p
+    * + 1; }; }`, says "local variables referenced from a lambda expression must be final or
+    * effectively final", and the same for an inner class. So those two cases are genuinely
+    * unreachable HERE and no test pins them; what an anonymous method does to its OWN parameters
+    * is reached by the `DefDef` walk in [[run]] instead, and is pinned there.
+    */
+  private def reassignedIn(t: Term, params: Set[SymId])(using Program): Set[SymId] =
+    StandardTraversal.scanTerm(t, Set.empty[SymId]) { (found, x) =>
       x match
-        case Tree.Assign(Tree.Ident(s, _, _), rhs, _, _) => if params(s) then found += s; walk(rhs)
-        case Tree.IncDec(Tree.Ident(s, _, _), _, _, _, _) => if params(s) then found += s // `p++`/`p--`
-        case _ => ()
-      subterms(x).foreach(walk)
-    walk(t)
-    found.toSet
-
-  private def subterms(t: Term): List[Term] = t match
-    case Tree.Block(stats, e, _, _)     => stats.collect { case x: Term => x } :+ e
-    case Tree.If(c, a, b, _, _)         => List(c, a, b)
-    case Tree.Apply(fun, args, _, _, _) => fun :: args
-    case Tree.Assign(l, r, _, _)        => List(l, r)
-    case Tree.While(c, b, _, _, _)         => List(c, b)
-    case Tree.DoWhile(b, c, _, _, _)       => List(b, c)
-    case Tree.For(init, c, u, b, _, _, _)  => init.collect { case x: Term => x } ++ c.toList ++ u.collect { case x: Term => x } :+ b
-    case Tree.ForEach(_, it, b, _, _, _)   => List(it, b)
-    case Tree.Try(_, b, cs, fin, _, _)  => (b :: cs.map(_.body)) ++ fin.toList
-    case Tree.Match(scr, cs, _, _)      => scr :: cs.map(_.body)
-    case Tree.Select(q, _, _, _)        => List(q)
-    case Tree.Return(e, _, _)           => e.toList
-    case Tree.Throw(e, _, _)            => List(e)
-    case Tree.Synchronized(l, b, _, _)  => List(l, b)
-    case Tree.Typed(e, _, _, _)         => List(e)
-    case Tree.ArrayAccess(a, idx, _, _) => List(a, idx)
-    case Tree.ArrayLength(a, _, _)      => List(a)
-    case Tree.IncDec(tgt, _, _, _, _)   => List(tgt)
-    case _: Tree.New                    => Nil
-    case Tree.TypeApply(fun, _, _, _)   => List(fun)
-    case _                              => Nil
+        case Tree.Assign(Tree.Ident(s, _, _), _, _, _) if params(s)   => found + s
+        case Tree.IncDec(Tree.Ident(s, _, _), _, _, _, _) if params(s) => found + s // `p++`/`p--`
+        case _                                                         => found
+    }

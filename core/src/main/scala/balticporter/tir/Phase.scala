@@ -98,6 +98,41 @@ object Pipeline:
   * catch-all. Every type occurrence (in a `TypeTree` or a term/definition `tpe`/`info`)
   * is routed through `transformType`, applied bottom-up over the `TypeRepr`. */
 object StandardTraversal:
+
+  // -- scans (accumulate-only) --
+  //
+  // A pass that only needs to LOOK still has to reach every node, and the map traversal below is
+  // the one walk in the engine that is kept complete as node kinds are added. A hand-rolled
+  // recursion is not: it stops at whatever its author forgot, silently, and two of the four
+  // correctness defects this project has found were exactly that (CLAUDE.md §3). These give an
+  // analysis the same coverage without giving it the power to rewrite — the tree is rebuilt
+  // identically and thrown away, which costs one allocation per node and buys the guarantee.
+  //
+  // `f` sees every TERM, bottom-up, in the same order the map traversal visits them. A scan that
+  // needs DEFINITIONS instead should implement `Phase` directly and override `transformDefDef` /
+  // `transformValDef`, returning its argument (see `MutableParamsTransform.run`).
+
+  /** fold over every term of a whole compilation unit. */
+  def scanClassDef[A](t: Tree.ClassDef, init: A)(f: (A, Term) => A)(using Program): A =
+    val (ph, read) = scanner(init)(f)
+    mapClassDef(ph, t)
+    read()
+
+  /** fold over every term of one expression, `t` itself included. */
+  def scanTerm[A](t: Term, init: A)(f: (A, Term) => A)(using Program): A =
+    val (ph, read) = scanner(init)(f)
+    mapTerm(ph, t)
+    read()
+
+  private def scanner[A](init: A)(f: (A, Term) => A): (Phase, () => A) =
+    var acc = init
+    val ph = new Phase:
+      def name: String = "standard-traversal/scan"
+      // the catch-all runs on EVERY term after its specific hook, so overriding it alone is what
+      // makes this complete; overriding the specific hooks would enumerate node kinds again.
+      override def transformTerm(x: Term)(using Program): Term = { acc = f(acc, x); x }
+    (ph, () => acc)
+
   // -- types --
   def mapType(ph: Phase, t: TypeRepr)(using Program): TypeRepr =
     val mapped: TypeRepr = t match

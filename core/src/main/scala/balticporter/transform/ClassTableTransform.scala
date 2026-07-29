@@ -1,5 +1,6 @@
 package balticporter.transform
 
+import balticporter.core.{PolicyFinding, PolicyIssue, PolicyReport, PolicySource}
 import balticporter.tir.*
 import balticporter.tir.TypeRepr.NoType
 
@@ -28,19 +29,42 @@ import balticporter.tir.TypeRepr.NoType
   *
   * Mints proper symbols for the table and its member, so the xref, [[RewriteTrace]] and
   * [[PortabilityCheck]] all see the call for what it now is rather than for what it was.
+  *
+  * A key naming a member the program does not have is a NO-OP — the lookup stays reflective and
+  * the port stays JVM-only, with nothing said. [[policyReport]] is what says it.
   */
-final class ClassTableTransform(redirects: Map[String, String]) extends Phase:
+final class ClassTableTransform(redirects: Map[String, String]) extends Phase, PolicySource:
   def name: String = "class-table"
 
   /** callee symbol → (table type symbol, table member symbol) */
   private var mapping: Map[SymId, (SymId, SymId)] = Map.empty
 
+  private var report: PolicyReport = PolicyReport.empty
+
+  /** Declared redirects that matched no member of this program, plus any whose VALUE is not the
+    * `owner#member` shape the rewrite needs. Reflects the last [[run]]; empty before the first,
+    * and empty for an empty policy. */
+  def policyReport: PolicyReport = report
+
   override def run(program: Program): Program =
-    val targets = program.symbols.all.toList
-      .flatMap { s =>
-        program.symbolOf(s.owner).map(o => s"${o.fullName}#${s.name}").flatMap(redirects.get).map(s.id -> _)
-      }
-      .sortBy(_._1.raw) // deterministic minting order
+    // keep the KEY alongside the hit: "which declared keys fired" is exactly what an unmatched-key
+    // report is the complement of, and it cannot be recovered from the symbol ids afterwards.
+    val hits = program.symbols.all.toList.flatMap { s =>
+      program.symbolOf(s.owner).map(o => s"${o.fullName}#${s.name}").flatMap(k => redirects.get(k).map(d => (s.id, k, d)))
+    }
+    val (wellFormed, malformed) = hits.partition(_._3.contains('#'))
+    val fired    = hits.map(_._2).toSet
+    val unmatched = (redirects.keySet -- fired).toList.sorted.map { k =>
+      PolicyFinding(name, "ClassTableTransform(redirects) key", k, PolicyIssue.NeverMatched,
+        "no member `owner#name` of that name occurs in this program, so the runtime class lookup " +
+          "was left in place")
+    }
+    report = PolicyReport(unmatched ++ malformed.map { (_, k, d) =>
+      PolicyFinding(name, "ClassTableTransform(redirects) value", k, PolicyIssue.Malformed,
+        s"""the destination "$d" is not `owner#member`, so there is nothing to select — redirect skipped""")
+    }.distinct)
+
+    val targets = wellFormed.map((id, _, d) => id -> d).sortBy(_._1.raw) // deterministic minting order
     if targets.isEmpty then program
     else
       var table = program.symbols
