@@ -49,9 +49,18 @@ final class TirEmitter(
   private var currentDeclared: Set[SymId] = Set.empty
   /** the class whose body is being rendered — a constructor's funnel plan is looked up by it. */
   private var currentClass: Option[Tree.ClassDef] = None
+  /** simple name of the TOP-LEVEL type being rendered — the qualifier a java `private` needs. */
+  private var currentTopLevel: String = ""
+  /** the top-level type's symbol, and the class whose body is being rendered right now. A java
+    * `private` needs a qualifier only when the two DIFFER, i.e. the member lives in a NESTED class. */
+  private var currentTopLevelSym: SymId = SymId.None
+  private var currentOwnerSym: SymId    = SymId.None
 
   def emitUnit(cd: Tree.ClassDef): String =
     currentDeclared = declaredTypes(cd)
+    currentTopLevel = esc(sym(cd.symbol).name)
+    currentTopLevelSym = cd.symbol
+    currentOwnerSym = cd.symbol
     slots.clear(); stmtSeq.clear()
     val body = classDef(cd, 0)
     val full = sym(cd.symbol).fullName
@@ -559,6 +568,11 @@ final class TirEmitter(
 
   private def classDef0(cd: Tree.ClassDef, i: Int): String =
     if sym(cd.symbol).flags.isEnum then return enumDef(cd, i)
+    val savedOwner = currentOwnerSym
+    currentOwnerSym = cd.symbol
+    try classDef1(cd, i) finally currentOwnerSym = savedOwner
+
+  private def classDef1(cd: Tree.ClassDef, i: Int): String =
     val s  = sym(cd.symbol)
     val kw =
       if s.flags.isModule then "object"
@@ -1009,7 +1023,7 @@ final class TirEmitter(
         if needsUnreachable then s" = {\n${ind(i + 1)}${term(r, i + 1)}\n${ind(i + 1)}throw new java.lang.RuntimeException(\"unreachable\")\n${ind(i)}}"
         else s" = ${term(r, i)}").getOrElse("")
     tparamSubst = savedSubst // restore (ctor type-param substitution was local to this def)
-    s"${annots(s, i)}${ind(i)}${mods(s.flags)}def $name$tps$pss$ret$rhs"
+    s"${annots(s, i)}${ind(i)}${mods(s.flags, privateQualifier(s.owner))}def $name$tps$pss$ret$rhs"
 
   /** does this loop body contain an unlabelled `break` that belongs to THIS loop?
     *
@@ -1214,13 +1228,14 @@ final class TirEmitter(
         s"${ind(i)}${mods(s.flags).replace("final ", "")}inline val ${esc(s.name)} = ${constAt(r, v.tpt.tpe)}"
       case Some(r) =>
         val kw = if s.flags.isMutable then "var" else "val"
-        val m  = if kw == "var" then mods(s.flags).replace("final ", "") else mods(s.flags)
+        val q  = privateQualifier(s.owner)
+        val m  = if kw == "var" then mods(s.flags, q).replace("final ", "") else mods(s.flags, q)
         s"${ind(i)}$m$kw ${esc(s.name)}: ${tpe(v.tpt.tpe)} = ${term(r, i)}"
       case None =>
         // an uninitialized Java field: a `var` defaulted so constructors can assign it (a bare
         // `val x: T` is an abstract member and won't compile in a class). `final var` is
         // contradictory in Scala, so `final` is dropped here.
-        s"${ind(i)}${mods(s.flags).replace("final ", "")}var ${esc(s.name)}: ${tpe(v.tpt.tpe)} = ${defaultFor(v.tpt.tpe)}"
+        s"${ind(i)}${mods(s.flags, privateQualifier(s.owner)).replace("final ", "")}var ${esc(s.name)}: ${tpe(v.tpt.tpe)} = ${defaultFor(v.tpt.tpe)}"
 
   /** the literal rendered AT the field's declared type.
     *
@@ -1282,9 +1297,31 @@ final class TirEmitter(
       s"${ind(i)}@${tpe(a.tpe)}$args\n"
     }.mkString
 
-  private def mods(f: Flags): String =
+  /** The top-level type a symbol lives in, when it is NOT that type itself — i.e. the qualifier a
+    * nested class's `private` member needs.
+    *
+    * Java scopes `private` to the enclosing TOP-LEVEL class: a nested class's private field is
+    * readable by the outer class and vice versa, and the outer class's privates are readable from
+    * the nested one. Scala's bare `private` is class-only, so the faithful rendering is
+    * `private[TopLevel]`. Without it, an outer class reading its own nested class's field —
+    * ordinary Java, and what Ashley's `PooledEngineTests` does — does not compile.
+    *
+    * Applied ONLY to a NESTED class's members. Qualifying a top-level class's own `private` was
+    * tried and REGRESSED libGDX by one error: `GL30Interceptor.check` is private, so
+    * `GL31Interceptor.check` overrides nothing — and `private[GL30Interceptor]` changed that, which
+    * scala then demanded an `override` for. Java's `private` on a top-level class's member is
+    * already exactly scala's, so widening it is not a no-op, it is a different program.
+    *
+    * Deriving the qualifier from the symbol's OWNER chain was tried first and returned nothing; the
+    * class currently being rendered is the fact the emitter actually has. */
+  private def privateQualifier(owner: SymId): Option[String] =
+    Option.when(currentTopLevel.nonEmpty && currentOwnerSym != currentTopLevelSym)(currentTopLevel)
+
+  private def mods(f: Flags): String = mods(f, scala.None)
+
+  private def mods(f: Flags, privateIn: Option[String]): String =
     val parts = List(
-      if f.isPrivate then "private " else "",
+      if f.isPrivate then privateIn.fold("private ")(o => s"private[$o] ") else "",
       // Java `protected` (package + any-instance-in-subclass) is MORE permissive than Scala
       // `protected` (this-instance only), so a faithful port emits it as public — loosening
       // visibility can only remove access errors, never introduce them.

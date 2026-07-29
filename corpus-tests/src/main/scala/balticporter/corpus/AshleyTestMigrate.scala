@@ -89,11 +89,16 @@ object AshleyClasspath:
         val pb = new ProcessBuilder("cs", "fetch", "--classpath",
           "junit:junit:4.13.2", "org.mockito:mockito-core:1.10.19").redirectErrorStream(true)
         val proc = pb.start()
-        val out  = new String(proc.getInputStream.readAllBytes()).trim
-        if proc.waitFor() != 0 then
+        // `cs` writes PROGRESS to stderr and the classpath to stdout, and the streams are merged
+        // here so a failure is reportable. The classpath is the last line and the only one holding
+        // a path separator — taking the whole output cached "Downloading https…" as a classpath
+        // entry, and Spoon then refused the run with "Downloading https does not exist".
+        val raw  = new String(proc.getInputStream.readAllBytes()).trim
+        val out  = raw.linesIterator.filter(_.contains(".jar")).toList.lastOption.getOrElse("")
+        if proc.waitFor() != 0 || out.isEmpty then
           // A missing classpath is reported, never silently swallowed: the failure it causes is a
           // WRONG resolution rather than an error, so a quiet fallback would look like a port bug.
-          System.err.println(s"[ashley-test] could not fetch test classpath (is `cs` installed?):\n$out")
+          System.err.println(s"[ashley-test] could not fetch test classpath (is `cs` installed?):\n$raw")
           ""
         else
           Files.createDirectories(cache.getParent)
