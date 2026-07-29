@@ -336,6 +336,29 @@ then diffs as removed-and-re-added against a baseline whose *counts are identica
 reproduces only through one shell script is not a baseline. Derive such a value from the port's own
 configuration.
 
+## 5.4 Compare paths through `toRealPath`, on BOTH sides — always
+
+Two independent parts of the engine have now been bitten by the same thing, which is what makes it
+a rule rather than a note. Every path this project compares has two forms: the one an operator or a
+config *wrote*, and the one the parser *recorded*. They differ whenever a symlink is in play, and a
+symlink is in play in the normal case — **a git worktree reaches its sibling checkouts through
+one**, and `.claude/worktrees/<x>/../sge` is a link to the real `sge`.
+
+A lexical `normalize` keeps the link; `Files.walk` follows it. So `startsWith` between the two
+matches nothing, silently, and the code around it looks correct:
+
+- `PortRun.converted` decides which units a run OWNS by "under `sourceRoot`, not under a
+  `resolutionRoot`". Compared lexically it classified every unit as owned and wrote **635 files
+  instead of 30** — the whole resolution root re-emitted into the test source set.
+- `CheckReport.relativise` hit it as a diff that was deterministic but *different* from the
+  baseline computed in the primary checkout — a stack of `..` segments that depends on where the
+  link lives.
+
+So: realpath both operands before comparing, and fall back to `normalize` only when the path does
+not exist (a synthetic origin, a directory not yet created). Note the failure is invisible to a
+compile and to every count except the one it inflates — the port still compiled, and the tests
+still passed, on 635 files.
+
 ## 5.5 Emitted code is a BUILD PRODUCT — `src_managed/`, never `src/`
 
 Every port writes its generated Scala to `<port>/src_managed/{main,test}/scala`, which is

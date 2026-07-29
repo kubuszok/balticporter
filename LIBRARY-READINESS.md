@@ -42,6 +42,20 @@ and the TIR path never received the BIR path's caching, provenance, determinism 
 wiring, provenance) runs on TIR, BIR is deleted or explicitly frozen, and every corpus program uses
 one pipeline. Until then sge would adopt TIR and ssg BIR, and "the framework" is two frameworks.
 
+> **STATUS — mostly done.** All four moved onto TIR inside `runner/PortRun`: the action cache
+> (`core/Cache.scala`'s `TirCacheKey` — engine fingerprint + the unit's canonical digest + its
+> dependencies' interface hashes, with the same early cutoff BIR had), determinism by
+> double-translation (`Determinism.Emission` on every run, `Full` behind `--determinism=full`;
+> proven on libGDX core at 605 units), `SbtGen.emitPort` wiring, and `Provenance`. BIR is
+> **explicitly frozen**, not deleted: a header on `Bir.scala` / `SpoonFrontend.scala` /
+> `ScalaPrinter.scala` says so, says why, and names the ten corpus programs that still depend on
+> it (liqp, xwiki/flexmark, jbump — ssg's Java libraries).
+>
+> **NOT done: "every corpus program uses one pipeline."** Only the two libGDX programs are on TIR;
+> the other ten are still BIR, and moving them means re-porting three libraries, each with its own
+> measurement. Until that happens ssg's libraries are still on the frozen path — the framework is
+> one framework by declaration, and two by deployment.
+
 ### 1.2 The consumer API is "copy a 253-line file", by explicit instruction
 
 **CONFIRMED** — `.claude/skills/add-corpus-library/SKILL.md` §2 says to write a migration object
@@ -74,6 +88,30 @@ lifting CHECK 1/2 into a core `SubstitutionCheck`.
 
 **Done when:** a migration program is configuration only, no check can be forgotten, and adding a
 library does not mean editing this repository.
+
+> **STATUS — done, and the sketch above was short of six things.** `runner/PortRun.scala`. The real
+> signature adds `label`, `portRoot` + `sourceSet` (the output paths are DERIVED from
+> `SbtGen.managedDir`, never passed — §5.5), `provenance` (§4.57 makes it a licence obligation),
+> `packageRenames` as DATA rather than a phase (§4.56: it must run after every other phase, which
+> `runsAfter` cannot state — so `PortRun` appends it last and *refuses* a `PackageRenameTransform`
+> passed in `phases`), `runtimeMode`, `supportSources`, `determinism` and an optional action-cache
+> directory. `externalConcrete` is gone from the caller's hands entirely: `RuntimePlan.of(phases,
+> mode)` derives it.
+>
+> "No check can be forgotten" is enforced, not asserted: `PortRun.RequiredChecks` is compared
+> against what actually registered with `CheckReport`, so a number that reaches stdout and not
+> `findings.tsv` fails the run. CHECK 1/2 are lifted to `core/SubstitutionCheck.scala` and are
+> recorded like the rest. `PolicyReport.collect` is finally called — on libGDX it immediately
+> reported one real §1(b) finding that had been invisible.
+>
+> `LibgdxCoreMigrate` is 253 → 195 lines of which the run is 20; `LibgdxTestMigrate` is 97 → 72 and
+> now runs every check, including the `PortabilityCheck` it never called. The skill (§2, §2.1) tells
+> a new port to write a `PortRun` configuration and points at `GdxSharedIteratorRule` — a §1(c) rule
+> that lives OUTSIDE the engine — as the model for a library-specific phase.
+>
+> **NOT done: "adding a library does not mean editing this repository."** That needs the published
+> artifacts of §1.3/§1.4 and a consumer repository to try it from. What is closed is the part this
+> repository can close: nothing mechanical remains to copy.
 
 ### 1.3 Injected runtime must be a published artifact — a CORRECTNESS requirement, not hygiene
 
