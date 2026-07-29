@@ -101,6 +101,19 @@ object AshleyPolicy:
     LibgdxPolicy.core(repoRoot).extendedBy(PortManifest(
       name    = "ashley",
       governs = Set("com.badlogic.ashley"),
+      // Ashley's OWN replacements. `inject` is not inherited — exactly one module ships each
+      // replacement file, and libGDX core ships the ones for the types IT dropped.
+      inject  = List(repoRoot.resolve("corpus-tests/ashley-overrides")),
+      surface = List(new balticporter.transform.MethodBodyTransform(Map(
+        // `Engine.createComponent` is the one reflective site in Ashley's 21 files: it calls
+        // `ClassReflection.newInstance(componentType)` and catches `ReflectionException`, both
+        // types the base drops. Everything else in `Engine` — 200 lines of entity/system/family
+        // bookkeeping — translates mechanically, so dropping the TYPE to fix one method would fork
+        // it from upstream permanently. This replaces the BODY and nothing else; the signature,
+        // and therefore every call site, is untouched.
+        "com.badlogic.ashley.core.Engine#createComponent(Class)" ->
+          "com.badlogic.ashley.core.ComponentFactories.create(componentType)",
+      ))),
       dropMethods = Set(
         // `ImmutableArray.toArray(Class<V>)` (`ImmutableArray.java:77-79`) is a one-line forwarder
         // to `Array.toArray(Class)`, which the BASE manifest drops: it is the `ArrayReflection`
