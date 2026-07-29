@@ -325,6 +325,37 @@ records `(unitFqn, memberFullName, startLine, sha256(memberText))` as it joins t
 - `srcmap.tsv` — member → emitted line range → Java `Origin`. This is the piece that makes scalac
   output attributable (§6.3).
 
+> **STATUS 2026-07-29 — BUILT.** `core/.../tir/SrcMap.scala` is the model, the artifacts and the
+> lookup; `TirEmitter.emitUnit` records. Measured on libGDX core: **19 247 members over 594 units,
+> 0 unlocatable**; on the test port, 290 over 29.
+>
+> Four decisions worth keeping:
+>
+> - **Positions are recovered by SEARCH, not by threading an offset.** One wrapper — `memberStat` —
+>   remembers the exact string each class-body member rendered to, and `srcMapOf` locates those
+>   strings in the finished unit. Slots are reserved PRE-ORDER, so a nested class precedes its own
+>   members, and the cursor advances by one character past each match, so a member is still findable
+>   inside its owner while two textually identical siblings resolve to two positions. The
+>   alternative — a cursor parameter on ~40 rendering methods — could not have been added without
+>   re-measuring the port; this one **cannot change a byte of output**, and a test asserts exactly
+>   that (`SrcMapEmitSpec`). A member the emitter renders but cannot find again is COUNTED and
+>   printed, never dropped: a map with silent holes attributes an error to the wrong member.
+> - **The member key carries the parameter types.** `owner#name(T1,T2)`, the form
+>   `Substitutions.dropMethods` already uses. Java overloading puts eight `encode`s in one class and
+>   a key that merges them cannot say which one changed.
+> - **A class-body statement with no symbol gets an ordinal** (`owner#<stmtN>`). This is not an edge
+>   case: `TestFrameworkTransform` lowers every `@Test` method to a bare `test("…"){ … }` statement,
+>   so without it a test file would map only at unit granularity — and the amendment below is
+>   precisely about anchoring test failures. The statement's own `Origin` is what actually locates
+>   the Java; the ordinal only has to be unique.
+> - **The Java path is relativised against a root DERIVED FROM THE PORT**, not against
+>   `balticporter.reportPathRoot`. A unit's origin ends in its own package path, so stripping that
+>   suffix *is* the source root — no flag, no script, same answer from any checkout. This is
+>   CLAUDE.md §4.6's last paragraph applied at the point where it was still open: `CheckReport`
+>   anchors on a flag only the measure scripts set, and `SrcMap` deliberately does not repeat it
+>   (the flag remains the fallback for a unit whose emitted FQN no longer matches its origin — a
+>   package rename).
+
 ### 5.3 Baseline and classification
 
 `port-report/run-latest/` is overwritten every run; `port-report/baseline/` is promoted **only by
@@ -390,6 +421,45 @@ After scala-cli runs over the best-effort tree, a small step joins `/tmp/gdxmeas
 
 This turns the compile step from a number into a triaged list, and it is the piece that pays first
 (§9).
+
+> **STATUS 2026-07-29 — BUILT, and EXTENDED to the behavioural gate.**
+> `core/.../tir/Correlate.scala` is the join; `CorrelateMain` is the command the measure scripts
+> run after the compiler and the test runner. Three lanes, not two: `Approx` (marked), `EngineGap`
+> (located), and **`Unmapped`** — a diagnostic in a file the source map does not cover (injected
+> Scala, a runtime shim, a dependency). Folding `Unmapped` into either of the other two would be a
+> lie in both directions: an injected shim's error is not an engine gap, and it is not a
+> false-positive marker either.
+>
+> Demonstrated by breaking one universal rule on purpose (`override` no longer emitted): **916
+> errors, 916 located to a member and a Java line, 0 unmapped** —
+> `E164 … FileHandle#equals(Any)  [com/badlogic/gdx/files/FileHandle.java:660]`.
+>
+> ### 6.4 The amendment — TEST-failure correlation (LIBRARY-READINESS.md §2.4)
+>
+> §6.3 as written reads the compiler. CLAUDE.md §4.4 lists ten Java forms that translate to *valid*
+> Scala meaning something else, **none of which moves a compile-error count**; every one was found
+> by running the ported tests. So the same join runs over the test runner's output.
+>
+> - MUnit's console form is parsed into per-test outcomes with their stacks.
+> - A failure is anchored on the **first stack frame that lands in ported code**, main-scope
+>   preferred over test-scope, with the quality of the anchor RECORDED rather than assumed:
+>   `main-frame` (threw inside the library — exact, the §4.4 case), `test-frame` (a plain assertion
+>   mismatch: names where the failure was OBSERVED, not where the wrong value was computed),
+>   `assert-site`, `suite`, `none`.
+> - Pass/fail sets are persisted (`tests.tsv`) and diffed the way §5.3 diffs findings:
+>   newly-failing / newly-passing / still-failing, plus **tests in the baseline that did not run at
+>   all** — a suite that stopped running is not a suite that passed.
+> - Each failing test is joined against the member-digest delta, so a **newly-failing test whose
+>   anchored member also changed digest** is called out. That is the highest-value signal the engine
+>   produces, and it is what recovers the half a `test-frame` anchor cannot give.
+> - **Expected failures are DATA**, read from `baseline/expected-failures.tsv` (`suite`, `test` —
+>   `*` for a whole suite — `reason`). `core` may not name a ported library (CLAUDE.md §1), so the
+>   four deliberate `Json.fromJson` failures cannot be known to the engine. An expected failure that
+>   starts PASSING is reported too: a substitution that began working is news.
+>
+> Demonstrated by breaking a second universal rule — the `inline val` of §4.4's `static final`
+> row — which produces **zero scalac errors** and is invisible to every other gate in this
+> repository. See §9's Stage 1 status block for the numbers.
 
 ---
 
@@ -478,6 +548,36 @@ in the "engine gap, auto-located" lane); (c) `PortReport` assembling the four ex
 > counts are UNCHANGED — 46 / 139 / 67 / 2 / 0. The checks measure frontend and emission facts; no
 > transform in that pipeline moves any of them. So the diff layer cannot, today, detect a
 > transform regression. That is an argument for Stage 1(a)'s member digests, which would.
+
+> **STATUS 2026-07-29 (second pass) — (a) BUILT, (b) BUILT, and the LIBRARY-READINESS.md §2.4
+> AMENDMENT BUILT.** Stage 1 is complete apart from the `SubstitutionCheck` lift, which still needs
+> `PortRun`.
+>
+> | piece | where | measured |
+> |---|---|---|
+> | (a) member digests + `srcmap.tsv` | `core/.../tir/SrcMap.scala`, `TirEmitter.emitUnit` (§5.2) | 19 247 members / 594 units (core), 290 / 29 (tests), **0 unlocatable** |
+> | (b) scalac-error correlation | `core/.../tir/Correlate.scala` + `CorrelateMain`, wired into `scripts/gdx_measure.sh` (§6.3) | 916/916 located in the deliberate-breakage run; 0/0 in the clean one |
+> | AMENDMENT: test-failure correlation | same files, wired into `scripts/gdx_test_measure.sh` (§6.4) | 221 outcomes parsed; 4 expected failures classified from data; a deliberate §4.4 regression located to `Matrix4#<stmt1>` [`Matrix4.java:91`] with **zero scalac errors** |
+>
+> **The coverage limit above is now closed, and the way it closed is the thing to remember.** After
+> the second deliberate breakage was reverted, `run-latest/members.tsv` compared **byte-identical**
+> to `baseline/members.tsv` — which is the port proving, without a compile and without a test run,
+> that the emitted output is back where it started. The same file said "1 740 members changed"
+> while the breakage was in, and "17 member(s) of `Matrix4` changed" beside the failing test. No
+> check count moved at any point in that sequence.
+>
+> **What Stage 2 needs from this, and nothing more:**
+>
+> - a `markers.tsv` of `unit<TAB>member` lines. `Correlate.locateErrors` already takes that set and
+>   routes matching errors to the `Approx` lane; `CorrelateMain --markers` already reads it. The
+>   marker side has to WRITE it — from the `Approx`/`UnportableTag` inventory, keyed the way
+>   `SrcMap` keys members (`owner#name(T1,T2)`, ordinal for an unnamed statement).
+> - nothing else. The false-positive lane §6.3 asks for ("marked region with no error") is one
+>   set-difference over the same two inputs and was left unbuilt only because the marker input does
+>   not exist yet.
+>
+> **What is NOT built, deliberately:** no `Unportable`, no `Tree.Approx`, no traversal case, no
+> `MarkState` conservation — LIBRARY-READINESS.md §2.4 defers all of it.
 Payoff against the 6+4: every remaining error is automatically attributed to (member, Java origin)
 and every engine change's blast radius is visible per member *before* the compile cycle — the
 per-iteration cost of the endgame drops now, and the machinery is in place for the RefChecks wave,

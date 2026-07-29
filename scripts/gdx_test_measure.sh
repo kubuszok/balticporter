@@ -57,4 +57,35 @@ ERRORS=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' /tmp/gdxtestmeasure.txt)
 echo "TOTAL ERRORS: $ERRORS"
 grep -oE "\[E[0-9]+\][^:]*Error" /tmp/gdxtestmeasure.txt | sort | uniq -c | sort -rn | head
 
+# ---------------------------------------------------------------------------------------------
+# RUN them. Compiling a test suite measures nothing about behaviour, and CLAUDE.md §4.4 lists ten
+# Java forms that translate to VALID Scala meaning something else — reference `==`, `x++` as a
+# value, `break`/`continue`, `switch` fall-out, a dropped `super(args)`, `@Before`. Not one of them
+# moves the error count above. Running the suite is the only gate that sees them.
+# ---------------------------------------------------------------------------------------------
+if [ "$ERRORS" = "0" ]; then
+  echo
+  echo "-- run --"
+  scala-cli test --scala 3.8.4 --server=false \
+    --dependency org.scalameta::munit:1.0.2 \
+    --dependency junit:junit:4.13.2 \
+    --dependency org.junit.jupiter:junit-jupiter:5.10.2 \
+    -Duser.language=en -Duser.country=US \
+    libgdx-core/src_managed/main/scala libgdx-core/src_managed/test/scala 2>&1 |
+    sed 's/\x1b\[[0-9;]*m//g' > /tmp/gdxtestrun.txt
+  echo "passing: $(grep -cE '^  \+ ' /tmp/gdxtestrun.txt)   failing: $(grep -c '^==> X ' /tmp/gdxtestrun.txt)"
+
+  # Anchor every failure on the first stack frame that lands in PORTED code and resolve it, through
+  # both ports' source maps, to a member and a Java origin — then diff the pass/fail sets against
+  # the baseline. A newly-failing test whose member also changed digest is the highest-value signal
+  # this engine can produce, and it is the only lane that catches a §4.4 regression.
+  echo
+  echo "-- correlation: test failures located to members and Java origins --"
+  correlate "$REPORT/run-latest" --tests /tmp/gdxtestrun.txt \
+    --srcmap "$ROOT/port-report/LibgdxCoreMigrate/run-latest/srcmap.tsv" \
+    --srcmap "test=$REPORT/run-latest/srcmap.tsv"
+else
+  echo "(not running the suite: it does not compile — a test that cannot run is not a test that passed)"
+fi
+
 headline "$ERRORS" "$REPORT"

@@ -32,6 +32,22 @@ show_check_report() {
   echo "  full, untruncated findings: $dir/run-latest/findings.tsv"
 }
 
+# correlate <out-report-dir> [--scalac f] [--tests f] [--srcmap [scope=]f]...
+# Join compiler and test-runner output back to the MEMBER and the JAVA ORIGIN that produced it
+# (UNPORTABLE-DESIGN.md §6.3 and its LIBRARY-READINESS.md §2.4 amendment). Without this, a
+# diagnostic over emitted Scala is a file and a line and nothing else, and every triage starts by
+# reverse-engineering the emitter by hand.
+#
+# The source maps are written by TirEmitter on every migration run; passing BOTH ports' maps is
+# what lets a test failure be anchored on the library member that threw rather than on the test.
+correlate() {
+  local out="$1"; shift
+  # strip EVERY CSI sequence, not just colour: sbt -client also emits erase-display (`ESC[0J`),
+  # which survives an SGR-only filter and lands in the middle of the report.
+  sbt -client "core/runMain balticporter.tir.CorrelateMain --out $out --baseline $(dirname "$out")/baseline $*" \
+    2>&1 | sed $'s/\033\\[[0-9;]*[a-zA-Z]//g' | sed -n '/^units in source map/,$p' | grep -v '^\['
+}
+
 # headline <error-count> <report-dir>
 # One line carrying BOTH gates, so the check numbers never bury the compile-error count and the
 # compile-error count never hides the checks. `subject.txt` is the before->after fragment
@@ -40,8 +56,20 @@ headline() {
   local errors="$1" dir="$2"
   local checks="(no check report)"
   [ -f "$dir/run-latest/subject.txt" ] && checks="$(cat "$dir/run-latest/subject.txt")"
+  local tests=""
+  if [ -f "$dir/run-latest/tests.tsv" ]; then
+    local p f
+    p=$(grep -c $'\tpass$' "$dir/run-latest/tests.tsv" || true)
+    f=$(grep -c $'\tfail$' "$dir/run-latest/tests.tsv" || true)
+    tests=" | tests $p passing, $f failing"
+    # a NEWLY failing test is the one number that must never scroll past: it is the only signal
+    # this project has for the CLAUDE.md §4.4 defect class, which moves no compile-error count.
+    if grep -q "^-- NEWLY FAILING" "$dir/run-latest/tests-diff.txt" 2>/dev/null; then
+      tests="$tests | !! NEWLY FAILING — see $dir/run-latest/tests-diff.txt"
+    fi
+  fi
   echo
   echo "=================================================================="
-  echo "HEADLINE  errors=$errors | $checks"
+  echo "HEADLINE  errors=$errors | $checks$tests"
   echo "=================================================================="
 }

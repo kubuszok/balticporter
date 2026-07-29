@@ -177,6 +177,33 @@ It runs on the **Fable 5** model and is expensive, so it is **not** run on every
   failure is a result; re-deriving it later is waste.
 - State counts as `before->after` in the commit subject.
 
+### 5.1 A diagnostic over emitted code is ATTRIBUTABLE — never read it by hand
+
+`TirEmitter` writes `srcmap.tsv` (member → emitted line range → Java `Origin`) and `members.tsv`
+(one digest per emitted member) into the run's report directory on every migration.
+`balticporter.tir.CorrelateMain` joins compiler output and TEST-RUNNER output back through them.
+The measure scripts run it; run it yourself when you run a compiler by hand. Three consequences
+that change what you should do:
+
+- **Never open an emitted file to work out which member an error is in.** `errors.tsv` already
+  says, with the Java file and line, and splits errors into "at a region the engine marked
+  approximate", "engine gap" and "outside the source map" (an injected shim is none of the other
+  two).
+- **The member-digest baseline is the blast radius, and it is available BEFORE a compile.** After a
+  change, `run-latest/members.tsv` against `baseline/members.tsv` says exactly which members'
+  emitted text moved. Identical files mean the output is byte-for-byte unchanged — which is a
+  stronger revert check than any count, because *no check count moves for most transform
+  regressions* (with the whole pipeline skipped, all four are unchanged).
+- **The test lane is the only one that sees §4.4.** Ten Java forms translate to valid Scala meaning
+  something else and move no error count. `tests.tsv` is the pass/fail baseline and the diff names
+  newly-failing tests, anchors each on the first stack frame in ported code, and says how good that
+  anchor is (`main-frame` = the library member that threw; `test-frame` = only where the failure
+  was observed). A test that stopped running is reported as such, never as a pass.
+
+Deliberate failures (a substituted type) are declared in `port-report/<Port>/baseline/
+expected-failures.tsv` — DATA, because `core` may not name a library (§1). Promote every baseline
+with `bash scripts/port_baseline.sh accept <port>`.
+
 ---
 
 ## 4.45 The consumer is an AGENT IN ANOTHER REPOSITORY
