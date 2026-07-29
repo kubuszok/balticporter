@@ -55,7 +55,9 @@ class RuntimePlanSpec extends munit.FunSuite:
       assert(!Files.exists(dir.resolve("balticporter/runtime/JavaIterator.scala")))
 
       val n = RuntimePlan.of(List(new CollectionsTransform), RuntimeMode.Vendored).writeSources(dir)
-      assertEquals(n, 2)
+      // three since `JavaCollection` joined the family: java's `AbstractCollection` has no scala
+      // counterpart a class can EXTEND (CLAUDE.md §4.5), so it is a shim like the other two.
+      assertEquals(n, 3)
       val written = Files.readString(dir.resolve("balticporter/runtime/JavaIterator.scala"))
       assertEquals(written, RuntimeArtifact.sourceOf(s"${RuntimeArtifact.Package}.JavaIterator"))
     finally

@@ -28,7 +28,7 @@ final class CollectionsTransform extends Phase, RequiresRuntime:
     * dependency, its vendored sources and the emitter's external-parent table from it. */
   def runtimeTypes: Set[String] = CollectionsTransform.runtimeTypes
 
-  import CollectionsTransform.{JavaIterableFqn, JavaIteratorFqn, Kind}
+  import CollectionsTransform.{JavaCollectionFqn, JavaIterableFqn, JavaIteratorFqn, Kind}
 
   /** java fully-qualified name → (scala fully-qualified name, collection kind). */
   private val typeMap: Map[String, (String, Kind)] = Map(
@@ -46,7 +46,33 @@ final class CollectionsTransform extends Phase, RequiresRuntime:
     // which does not exist there. `Buffer` is the mutable, addable, iterable target; it adds an
     // ordering guarantee java's `Collection` does not make, which is a widening of contract and
     // cannot break a caller.
+    // NOT `Buffer`, and the difference only shows for a library that DEFINES a collection rather
+    // than merely using one. simple-graphs has three classes that `extends AbstractCollection<T>`
+    // and declare their own `size()`/`iterator()`/`add`/`remove`; making those a `Buffer` is
+    // CLAUDE.md §4.5 exactly — the scala trait demands members java never had and collides with the
+    // ones it does. Both the interface and its abstract base map to the standalone shim, because
+    // subtyping must hold in BOTH directions (`Collection` is a return type for the library's own
+    // collections and a parameter type for arbitrary ones) and no implicit bridge can supply it:
+    // ENGINE-LIMITS records `given Conversion` inert wherever the call is OVERLOADED, which
+    // `addVertices(Collection)` / `addVertices(V...)` is.
     "java.util.Collection"    -> ("scala.collection.mutable.Buffer", Kind.Seq),
+    // The ABSTRACT base, and only it. A library that merely USES java collections is served by
+    // `Buffer`; one that DEFINES a collection by extending `AbstractCollection` is not — the scala
+    // trait demands `apply`/`update`/`insert` java never had and collides with the `size()`/
+    // `iterator()` the java class does declare (CLAUDE.md §4.5). So the base maps to the standalone
+    // shim while the INTERFACE stays `Buffer`.
+    //
+    // MEASURED: mapping the interface here too was tried and REGRESSED libGDX's test port by 3 —
+    // `BezierTest` declares `Collection<Object[]> parameters = new ArrayList<>()`, so the variable
+    // became a `JavaCollection` while its value stayed an `ArrayBuffer` and `add` had already been
+    // rewritten to `+=`. (The main port was unaffected: its one `java.util.Collection` is inside
+    // the dropped `Json`, which is why checking `gdx/src` alone said the change was free.)
+    //
+    // Closing that needs `JavaCollection.from(...)` inserted where a scala collection meets a
+    // shim-typed slot — the seam `iterableFromSym` already provides for `JavaIterable`. Until then
+    // the split leaves simple-graphs' return-type sites open and every other corpus port green,
+    // which is the honest trade rather than a silent one.
+    "java.util.AbstractCollection" -> (JavaCollectionFqn, Kind.Seq),
     // likewise NOT `scala.collection.Iterable`: java's `Iterable.iterator()` hands back a
     // REMOVAL-CAPABLE iterator, scala's hands back a `scala.collection.Iterator`. Mapping the
     // two independently would leave the pair inconsistent — `for (x <- xs)` would still work,
@@ -339,6 +365,7 @@ object CollectionsTransform:
 
   val JavaIteratorFqn = s"${RuntimeArtifact.Package}.JavaIterator"
   val JavaIterableFqn = s"${RuntimeArtifact.Package}.JavaIterable"
+  val JavaCollectionFqn = s"${RuntimeArtifact.Package}.JavaCollection"
 
   /** Support types the retyping REQUIRES. They live in the PUBLISHED `balticporter-runtime`
     * module (`runtime/src/main/scala`), not here — see [[RuntimeArtifact]] for why a per-port copy
@@ -365,7 +392,7 @@ object CollectionsTransform:
     * (`Predicate.PredicateIterator`, `CharArray.appendWithSeparators`, `ModelLoader.loadSync`)
     * would stop type-checking. Two types, one decision.
     */
-  val runtimeTypes: Set[String] = Set(JavaIteratorFqn, JavaIterableFqn)
+  val runtimeTypes: Set[String] = Set(JavaIteratorFqn, JavaIterableFqn, JavaCollectionFqn)
 
   /** What [[runtimeSources]] BRINGS, for a consumer that must reason about the injected
     * supertypes it cannot parse. `JavaIterator.remove` is concrete (java's own documented default),

@@ -1,0 +1,4 @@
+# balticporter port map	schema=2	module=k	engine=balticporter/0.1.0-SNAPSHOT	sources=e3b0c44298fc1c14	files=0
+#kind	upstream	emitted	disposition	body	javaPath	javaLine	digest
+type	com.demo.Gadget	com.demo.Gadget	Ported	-		0	
+type	com.demo.Widget	com.demo.Widget	Ported	-		0	

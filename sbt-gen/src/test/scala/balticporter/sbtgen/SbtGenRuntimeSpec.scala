@@ -55,7 +55,9 @@ class SbtGenRuntimeSpec extends munit.FunSuite:
       val f = SbtGen.managedMain(root).resolve("balticporter/runtime/JavaIterator.scala")
       assert(Files.exists(f))
       assertEquals(Files.readString(f), RuntimeArtifact.sourceOf(s"${RuntimeArtifact.Package}.JavaIterator"))
-      assertEquals(plan.sources.size, 2)
+      // three since `JavaCollection` joined the family (CLAUDE.md §4.5: java's
+      // `AbstractCollection` has no scala counterpart a ported class can EXTEND).
+      assertEquals(plan.sources.size, 3)
     }
   }
 

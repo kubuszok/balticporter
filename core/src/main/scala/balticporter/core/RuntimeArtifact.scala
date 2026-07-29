@@ -129,6 +129,14 @@ object RuntimeArtifact:
   val concreteMembers: Map[String, Set[(String, List[Int])]] = Map(
     s"$Package.JavaIterator" -> Set(("remove", List(0))),
     s"$Package.JavaIterable" -> Set.empty,
+    // the DERIVED half of `JavaCollection` — what a ported class inherits without writing it, the
+    // same members `java.util.AbstractCollection` supplies. Declaring them is what lets
+    // `TirEmitter.diamondOverrides` see a conflict against this injected supertype; an empty set
+    // here would make every one of them invisible to that check.
+    s"$Package.JavaCollection" -> Set(
+      ("containsAll", List(1)), ("addAll", List(1)), ("removeAll", List(1)),
+      ("retainAll", List(1)), ("removeIf", List(1)), ("toArray", List(0)),
+    ),
   )
 
 /** What a RUN owes the port it produced, derived from the phases that actually ran.
