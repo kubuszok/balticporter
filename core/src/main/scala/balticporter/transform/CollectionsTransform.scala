@@ -91,6 +91,9 @@ final class CollectionsTransform extends Phase, RequiresRuntime:
     * throw, so both go through an `Option` and `orNull` — the difference is invisible in a
     * compile and shows up as a MatchError-shaped failure at runtime (CLAUDE.md §4.4). */
   private var removeHeadOptionSym, headOptionSym, orNullSym, prependSym: SymId = SymId.None
+  /** java 8 `Collection.forEach(Consumer)` — scala's is `foreach`, differing only in case, which
+    * makes the failure read like a typo rather than a missing mapping. */
+  private var foreachSym: SymId = SymId.None
   private var key1Sym, value2Sym, roSetSym: SymId = SymId.None
   /** `JavaIterable` + its `from` factory — see `wrapIterableArgs`. */
   private var javaIterableSym, iterableFromSym: SymId = SymId.None
@@ -129,6 +132,7 @@ final class CollectionsTransform extends Phase, RequiresRuntime:
     iterableFromSym = mint("from", JavaIterableFqn + ".from")
     iteratorFromSym = mint("from", JavaIteratorFqn + ".from")
     javaIteratorSym = byScala.getOrElse(JavaIteratorFqn, SymId.None)
+    foreachSym          = mint("foreach", "foreach")
     removeHeadOptionSym = mint("removeHeadOption", "removeHeadOption")
     headOptionSym       = mint("headOption", "headOption")
     orNullSym           = mint("orNull", "orNull")
@@ -269,6 +273,9 @@ final class CollectionsTransform extends Phase, RequiresRuntime:
         Some(call(call(recv, removeSym, List(key), t, so), getOrElseSym, List(dflt(nullOf(so), recv, so)), t, so))
       case ("add", List(i, x), Kind.Seq)        => Some(call(recv, insertSym, List(i, x), t, so)) // insert at index
       case ("add", List(x), _)                  => Some(infix(recv, opPlusEq, List(x), t, so))    // xs += x
+      // java 8 `forEach(Consumer)` -> scala `foreach`. The names differ ONLY in case, so the error
+      // reads as a typo and the mapping is easy to believe already present.
+      case ("forEach", List(f), _)              => Some(call(recv, foreachSym, List(f), t, so))
       // ---- java Deque, as `LinkedList`/`ArrayDeque` are routinely used ----
       // `addLast`/`offer` append; `addFirst` prepends. Same shape as `add`, different end.
       case ("addLast" | "offer" | "offerLast", List(x), Kind.Seq) => Some(infix(recv, opPlusEq, List(x), t, so))

@@ -1080,3 +1080,50 @@ Clearly separated because nothing below has a number behind it yet.
 - **A typo'd `dropTypes` / `dropMethods` / forwarder / class-table key silently no-ops.** Nothing
   reports a policy key that never matched. Expect to lose time to this on a new library's manifest.
   (`LIBRARY-READINESS.md` §3.3.)
+
+### K5. A java class that EXTENDS a JDK collection is half-translated — 27 of 30, unbuilt
+
+`java.util.Collection`, `List`, `Map`, `Set` and `Iterator` are in `CollectionsTransform.typeMap`, so
+every *use* of them retypes. The ABSTRACT BASES are not — `java.util.AbstractCollection`,
+`AbstractList`, `AbstractMap`, `AbstractSet`. A library that merely *uses* JDK collections is
+therefore fine, and one that **inherits** from them comes out half-translated: the class keeps the
+JDK parent while every use of it is retyped to a Scala collection, and the two no longer meet.
+
+Measured on simple-graphs (29 files), where three classes do this — `Array`, `NodeCollection`,
+`VertexCollection`, all `extends AbstractCollection<T>`. It is **27 of that library's 30 compile
+errors**, in three shapes that all trace to the one cause:
+
+| shape | count | why |
+|---|---|---|
+| `value foreach is not a member of sge.graphs.Array[…]` | 7 | a java enhanced-for over the class emits scala `for (x <- xs)`, which needs `foreach`; the JDK parent supplies `forEach` (capital E) and nothing else |
+| `Required: java.util.Collection[?]` / `Required: Buffer[…]` given the other | ~5 | a parameter typed by the JDK base meeting an argument the transform retyped, or the reverse |
+| `value stream is not a member of Buffer[…]` | 3 | separate cause — see K6 |
+
+**Do NOT reach for the obvious fix.** Mapping `AbstractCollection` onto a Scala collection base
+(`mutable.AbstractBuffer` and friends) is exactly what **§4.5** forbids and for exactly the reasons
+recorded there: the Scala collection traits are large and interlocking, they import hundreds of
+members that clash with the ported class's own `size`, `isEmpty`, `remove`, and a class that
+implements several small Java interfaces cannot satisfy them at once.
+
+The shape that *is* known to work is the one `JavaIterator`/`JavaIterable` already take: a
+**standalone abstract class in `balticporter-runtime` with Java's own member arity**, with Scala
+interop restored by extension methods rather than by inheritance. `AbstractCollection` is the next
+member of that family, not a mapping onto the stdlib.
+
+*Fix kind: (a). The types are JDK, the inheritance is ordinary java, and every library that defines
+its own collection type hits it — flexmark and liqp both do.*
+
+### K6. `java.util.stream` and `java.util.function` are not translated at all
+
+`Collection.forEach(Consumer)` now maps to `foreach` — the names differ only in case, so its absence
+read as a typo rather than a missing mapping. `stream()`, `Collectors`, and the rest of
+`java.util.stream` do NOT map, and a `stream().collect(Collectors.toList())` chain needs the whole
+chain rewritten rather than one call: scala's collections carry the operations directly, so the
+`stream()` and the `collect(...)` both disappear rather than translating one-for-one.
+
+3 sites in simple-graphs. `java.util.function` fares better — `Predicate`/`Consumer` arrive as
+lambdas and mostly land — but neither family has ever been exercised by the corpus, and both are
+heavily used by the libraries still to be ported.
+
+*Fix kind: (b) for the call shapes, on `CollectionsTransform`'s existing rewrite table; the chain
+collapse is (a).*
