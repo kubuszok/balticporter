@@ -54,6 +54,18 @@ safely, silently, or wrongly. Particular attention to:
   apply" and so hides a real failure;
 - Spoon `noClasspath` assumptions: a reference's formals are ERASED, a declaration's are not, and a
   JDK type is a shadow whose declaration may disagree with the real signature.
+- **a lookup key the program can never produce.** For every rule, phase or check that selects by a
+  COMPUTED string — `owner.fullName + "#" + name` is the recurring one — take an input you know
+  should match and follow the string it actually builds. Nine `PortabilityCheck` rules asked for
+  `java.lang.Class#forName` while the frontend gave every external member `owner = SymId.None`, so
+  the key was `None` and the rules had never fired once, for the whole history of the project,
+  behind a number that read as coverage (`ENGINE-LIMITS.md` P4). `ClassTableTransform` and
+  `StaticForwarderTransform` key on the same string and were blind in the same way. A check whose
+  own reason-for-existing has never fired is the single most expensive thing on this list;
+- **a rule LIST that something else reasons FROM.** A gap in a list of APIs is merely incomplete
+  until another component treats "not listed" as "safe" — then it becomes a wrong answer.
+  `PortabilityCheck` had the plural `getDeclaredFields` and not the singular `getDeclaredField`;
+  harmless until `Remediator` read the list to decide which wrapper members could be inlined.
 
 ### 3. Shortcuts — the fix that moved the number rather than fixed the cause
 

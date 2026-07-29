@@ -411,6 +411,25 @@ This is CLAUDE.md §3 verbatim: *"a check reporting zero is only as good as its 
 means giving external member symbols their owner id in the frontend. **Expect the portability count
 to RISE** — that is the gate beginning to tell the truth, not a regression (§3 again).
 
+**RESOLVED (2026-07-29).** `Minter.external` takes the owner for members; core **139 → 147**, test
+port **148 → 156**, and nothing else moved (596 files, 46/49 omissions, 0 signature, 0 compile
+errors, 217 pass / 4 fail). All eight newly-visible findings are inside
+`utils/reflect/ClassReflection.java`, which the libGDX manifest already drops — so
+`portability(emitted)` for the core port is unchanged at 67 and no manifest change was needed. The
+engine-scoped rule is `ENGINE-LIMITS.md` P4, including the two OTHER mechanisms that key on the same
+string and were equally blind.
+
+### `Remediator`-style snippets — item 2 of the three cheapest changes, DONE (2026-07-29)
+
+`core/.../tir/Remediator.scala`, fed by `PortabilityCheck.inEmittedCode`, printed by its `summary`
+and persisted as the `remediation` check. Three templates whose preconditions are verified against
+the program — chokepoint → `Substitutions(dropTypes = …)`, forwarding wrapper →
+`StaticForwarderTransform.Forwarder(…)`, name lookup → `ClassTableTransform(Map(…))` — and an
+observation fallback that measures the distribution and proposes nothing. On libGDX core it emits 8
+paste-ready drop lines and 6 observations, covering every one of the 24 unportable APIs exactly once.
+Two of the three templates were **impossible before the owner fix above**: recognising a forwarder
+requires knowing which external MEMBER a call reaches, not merely which external type.
+
 ---
 
 ## Incidental engine defect found during the review
@@ -485,9 +504,9 @@ From there:
 1. **`UNPORTABLE-DESIGN.md` Stage 1** — `srcmap.tsv` + error correlation splits every scalac error
    into "at a site the engine knew was approximate" versus "engine gap, auto-located to member and
    Java origin". *That is the (a)-vs-(b/c) discriminator, mechanized.*
-2. **`Remediator`-style snippets on the existing checks** — a portability finding whose sites all
-   route through one wrapper should print the ready-made `Forwarder(...)` line. The design's §4.2
-   example is exactly right and is computable from `Xref` today.
+2. ~~**`Remediator`-style snippets on the existing checks**~~ — DONE, see above. It was computable
+   from `Xref`, but only after external members carried their owner: "routes through one wrapper"
+   is a claim about a MEMBER, and the frontend had made every external member anonymous.
 3. **Move engine-limit do-not-retry entries into an engine-owned home** (this file, CLAUDE.md, or
    the skill), so an agent in another repo inherits the measured dead ends instead of re-deriving
    them.

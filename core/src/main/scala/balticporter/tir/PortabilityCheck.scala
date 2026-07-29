@@ -63,6 +63,17 @@ object PortabilityCheck:
     Rule("java.lang.Class#getFields", "reflective member access is JVM-only", exactMember = true),
     Rule("java.lang.Class#getMethods", "reflective member access is JVM-only", exactMember = true),
     Rule("java.lang.Class#getConstructor", "reflective member access is JVM-only", exactMember = true),
+    // The SINGULAR readers, added the moment the rules above started firing at all. They are the
+    // same family as their plural twins — each returns a `java.lang.reflect.*` — and leaving them
+    // out was invisible while no member rule fired. It stopped being invisible immediately:
+    // `Remediator` reads this list to decide which members of a static wrapper may be inlined, and
+    // with no rule for `getDeclaredField` it offered to forward one, which would have moved a
+    // reflective call from the wrapper to every call site while reporting the port improved.
+    // A gap in a rule list is not neutral once something else reasons from it.
+    Rule("java.lang.Class#getDeclaredField", "reflective member access is JVM-only", exactMember = true),
+    Rule("java.lang.Class#getDeclaredMethod", "reflective member access is JVM-only", exactMember = true),
+    Rule("java.lang.Class#getField", "reflective member access is JVM-only", exactMember = true),
+    Rule("java.lang.Class#getMethod", "reflective member access is JVM-only", exactMember = true),
   )
 
   def check(program: Program, rules: List[Rule] = jsAndNative): List[Violation] =
@@ -115,7 +126,22 @@ object PortabilityCheck:
     val out = violations.filterNot(v => owningType(program, v.enclosing).exists(isDropped))
     given Program = program
     CheckReport.record("portability(emitted)", out.map(_.report("portability(emitted)")))
+    val fixes = Remediator.suggest(program, out)
+    Remediator.record(fixes)
+    lastRemediation = (out, fixes)
     out
+
+  /** The remediations for the last [[inEmittedCode]] result.
+    *
+    * [[summary]] is called as `summary(violations)` — its signature is fixed by every existing
+    * caller, and none of them has a `Program` in scope at that point. So the suggestions are
+    * computed where the program IS available and read back here, keyed to the exact violation
+    * list they were derived from: a `summary` of any other result prints no remediation rather
+    * than a stale one. A migration is a single pipeline on one thread, so there is nothing to
+    * interleave. When a future `PortRun` owns check invocation end-to-end this becomes a
+    * parameter and the field goes away — the same disposition `CheckReport` records for its own
+    * recording stopgap. */
+  private var lastRemediation: (List[Violation], List[Remediator.Suggestion]) = (Nil, Nil)
 
   /** INJECTED replacements never pass through the TIR — they are copied verbatim — so the symbol
     * table cannot see them. They are still shipped, so scan their text for the same rules. Coarse
@@ -141,10 +167,16 @@ object PortabilityCheck:
       out.map((needle, n, why, _) => CheckReport.Finding("portability(injected)", needle, fileName, fileName, n, why)))
     out.map(_._4)
 
-  /** grouped one-line summary, most-referenced first. */
+  /** grouped one-line summary, most-referenced first, followed by the remediation block when this
+    * is the result [[inEmittedCode]] last produced. A finding an agent can act on beats a finding
+    * it must first investigate (CLAUDE.md §4.45) — [[Remediator]] states the mechanism and, where
+    * the precondition is verifiable, the literal manifest line. */
   def summary(violations: List[Violation]): String =
     if violations.isEmpty then "  none"
     else
-      violations.groupBy(_.api).toList.sortBy(-_._2.size)
+      val head = violations.groupBy(_.api).toList.sortBy(-_._2.size)
         .map((api, vs) => s"  $api: ${vs.size} site(s) — ${vs.head.why}")
         .mkString("\n")
+      val (forViolations, fixes) = lastRemediation
+      if forViolations != violations || fixes.isEmpty then head
+      else head + "\n  REMEDIATION — what to paste, and what was only observed:\n" + Remediator.summary(fixes)

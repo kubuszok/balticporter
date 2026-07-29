@@ -91,10 +91,21 @@ object SpoonTir:
       id
 
     /** Ensure a minimal stub exists for an external reference (never clobbers a real
-      * definition, so define-after-reference wins). */
-    def external(key: String, name: String): SymId =
+      * definition, so define-after-reference wins).
+      *
+      * `owner` is `SymId.None` for a TYPE — an external type is by definition rooted outside the
+      * program, and every "is this ours?" predicate in the engine decides exactly that by climbing
+      * to `SymId.None` (`PackageRenameTransform.ownedSymbols`, `Cache.topOwner`). An external
+      * MEMBER, however, must carry the id of the external type it hangs off, or it is
+      * indistinguishable from a root: its `fullName` is the INTERNING key (`@8#forName(…)`), so
+      * `owner#name` is the only place its real identity lives. Nine `PortabilityCheck` rules —
+      * `Class#forName`, `Class#newInstance`, `System#getProperty` and the six reflective readers —
+      * asked for exactly that string and got `None` from every external member for the whole
+      * history of the project, so they never fired once. Ownership still terminates at `SymId.None`
+      * one level up, so nothing that climbs the chain changes answer. */
+    def external(key: String, name: String, owner: SymId = SymId.None): SymId =
       val id = resolve(key)
-      if !syms.contains(id) then syms(id) = Symbol(id, name, key, Flags(), SymId.None, NoType)
+      if !syms.contains(id) then syms(id) = Symbol(id, name, key, Flags(), owner, NoType)
       id
 
     def table: SymbolTable        = SymbolTable(syms.values)
@@ -188,6 +199,10 @@ object SpoonTir:
     // ---- keys ----
     private def typeKey(t: CtTypeReference[?]): String = t.getQualifiedName
     private def memberKey(owner: SymId, sig: String): String = minterKeyOf(owner) + "#" + sig
+    /** An external MEMBER always knows its owner — the key is derived from it. Passing it on is
+      * what lets `owner#name` be reconstructed downstream (see `Minter.external`). */
+    private def externalMember(owner: SymId, sig: String, name: String): SymId =
+      minter.external(memberKey(owner, sig), name, owner)
     private def minterKeyOf(id: SymId): String = "@" + id.raw // members hang off their owner's id
     private def erasedSig(m: CtExecutable[?]): String =
       val ps = m.getParameters.asScala.toList
@@ -1535,6 +1550,11 @@ object SpoonTir:
         val primT = TypeRef(NoPrefix, minter.external("scala." + primName(prim), prim))
         valueMethod.get(prim) match
           case Some(vm) =>
+            // owner deliberately left None: the key is already a readable FQN, no portability
+            // rule targets `Number`'s members, and interning `java.lang.Number` HERE moves it
+            // earlier in the id sequence — which re-keys every downstream finding whose owner is
+            // an external member (their `fullName` embeds the raw id). Measured: 2 findings
+            // diffed as removed-and-re-added for no change in what was found.
             val vsym = minter.external("java.lang.Number#" + vm, vm)
             Tree.Apply(Tree.Select(t, vsym, NoType, originOf(e)), Nil, vsym, primT, originOf(e))
           case None => t
@@ -1993,7 +2013,7 @@ object SpoonTir:
         ownerT match
           case Some(t) if t.getQualifiedName != ta.getAccessedType.getQualifiedName =>
             val ownerId = minter.external(t.getQualifiedName, simpleName(t.getQualifiedName))
-            val fid2    = minter.external(memberKey(ownerId, name), name)
+            val fid2    = externalMember(ownerId, name, name)
             Tree.Select(Tree.Ident(ownerId, TypeRef(NoPrefix, ownerId), originOf(at)), fid2, ty(at), originOf(at))
           case _ => Tree.Select(typeTerm(ta, at), fid, ty(at), originOf(at))
 
@@ -2012,7 +2032,7 @@ object SpoonTir:
           .orElse(Option(ref.getDeclaringType).map(_.getQualifiedName))
           .getOrElse("java.lang.Object")
         val ownerId = minter.external(ownerQ, simpleName(ownerQ))
-        minter.external(memberKey(ownerId, ref.getSimpleName), ref.getSimpleName)
+        externalMember(ownerId, ref.getSimpleName, ref.getSimpleName)
 
       /** Java's WILDCARD/RAW-receiver calls. When the receiver's static type leaves its arguments
         * unknown (raw use, or wildcards), Scala gives every member access a fresh CAPTURE — so a
@@ -2607,13 +2627,13 @@ object SpoonTir:
             val (q, s) = declType(decl)
             val ownerId = minter.external(q, s)
             val nm      = if decl.isInstanceOf[CtConstructor[?]] then "<init>" else decl.getSimpleName
-            minter.external(memberKey(ownerId, nm + erasedSig(decl)), nm)
+            externalMember(ownerId, nm + erasedSig(decl), nm)
           case None =>
             val ownerQ  = Option(ex.getDeclaringType).map(_.getQualifiedName).getOrElse("java.lang.Object")
             val ownerId = minter.external(ownerQ, simpleName(ownerQ))
             val nm      = if ex.isConstructor then "<init>" else ex.getSimpleName
             val sig     = ex.getParameters.asScala.toList.map(p => scala.util.Try(p.getQualifiedName).getOrElse("?")).mkString(",")
-            minter.external(memberKey(ownerId, s"$nm($sig)"), nm)
+            externalMember(ownerId, s"$nm($sig)", nm)
 
       private def declType(decl: CtExecutable[?]): (String, String) = decl match
         case tm: CtTypeMember if tm.getDeclaringType != null => (tm.getDeclaringType.getQualifiedName, tm.getDeclaringType.getSimpleName)
@@ -2641,7 +2661,7 @@ object SpoonTir:
       /** `java.lang.String.valueOf(t)` — make a non-String operand a String for concatenation. */
       private def stringify(t: Term, el: CtElement): Term =
         val strSym = minter.external("java.lang.String", "String")
-        val vSym   = minter.external("java.lang.String#valueOf", "valueOf")
+        val vSym   = minter.external("java.lang.String#valueOf", "valueOf", strSym)
         Tree.Apply(Tree.Select(Tree.Ident(strSym, TypeRef(NoPrefix, strSym), originOf(el)), vSym, NoType, originOf(el)),
           List(t), vSym, TypeRef(NoPrefix, strSym), originOf(el))
 

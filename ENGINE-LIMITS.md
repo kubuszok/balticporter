@@ -727,6 +727,43 @@ hand-port does. Do not look for an engine fix.
 
 *Fix kind: (b) `Substitutions`, with (c) injected sources.*
 
+### P4. An EXTERNAL MEMBER is only identifiable through its owner — and it had no owner
+
+**libGDX core 139 → 147, test port 148 → 156.** Nine of `PortabilityCheck`'s rules name a member
+(`java.lang.Class#forName`, `#newInstance`, the six reflective `getDeclared*`/`get*` readers,
+`java.lang.System#getProperty`) — the exact APIs the check names as its reason for existing. **Not
+one of them had ever fired**, in the whole history of the project, while the check reported a number
+that read as coverage.
+
+The cause is structural, and it will be the same in any frontend that interns lazily. An external
+symbol has no declaration to name it, so `Minter.external` set `fullName` to the *interning key*
+(`@8#forName(java.lang.String)`) and `owner = SymId.None`. The check then computed
+`owner.fullName + "#" + name`, got `None` from every external member, and `None.contains(rule)` is
+false forever. The prefix branch could not match either, because the `fullName` is `@8#…`. The
+comment two lines above the bug states the intent; nothing enforced it.
+
+Three things to take from it:
+
+- **An external TYPE is correctly rooted at `SymId.None`** — `PackageRenameTransform.ownedSymbols`,
+  `Cache.topOwner` and `PortabilityCheck.owningType` all decide "is this ours?" by climbing to it.
+  An external **member** must NOT be: its owner is the external type, whose own owner is `None`, so
+  every ownership predicate still terminates one level later and answers identically. Verified
+  against the hostile `Map("java" -> "jvm")` rename spec, which must leave `java.lang.String` alone.
+- **Leave the `fullName` alone.** It is the interning key and the emitter, the nested-path builder
+  and the rename all read it. Only the owner moves. (Rendering it as `owner#name` instead would also
+  make the *prefix* rules match members, double-counting every site that already counts through its
+  receiver type.)
+- **Two other engine mechanisms key on the same string** and were equally blind: `ClassTableTransform`
+  and `StaticForwarderTransform` both select by `owner.fullName#name`. They worked only because
+  every key they were given happened to name an IN-PROGRAM wrapper. A redirect written against a
+  JDK member (`"java.lang.Class#forName" -> …`) silently matched nothing before this and matches now.
+
+Cost: a whole audit pass to notice, twice independently. What made it findable was asking why a
+*known* unportable API was not in the output — the same move that found the missing `org.junit` rule
+(P2). **When a check reports zero, name an API you know is present and confirm the check sees it.**
+
+*Fix kind: (a) engine — one field in the frontend's interning.*
+
 ---
 
 ## 6. Porting a test suite
