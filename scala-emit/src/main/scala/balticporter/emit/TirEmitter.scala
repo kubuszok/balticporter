@@ -803,13 +803,41 @@ final class TirEmitter(source: Program, externalConcrete: Map[String, Set[(Strin
     tparamSubst = savedSubst // restore (ctor type-param substitution was local to this def)
     s"${annots(s, i)}${ind(i)}${mods(s.flags)}def $name$tps$pss$ret$rhs"
 
+  /** does this loop body contain an unlabelled `break` that belongs to THIS loop?
+    *
+    * Stops descending at a nested loop or switch, since java's unlabelled `break` binds to the
+    * innermost enclosing one — a `boundary` placed around the outer loop would otherwise catch a
+    * break the inner construct owns. */
+  /** is a `boundary` from an enclosing LOOP in scope at this point? Cleared inside a `match`,
+    * because java's unlabelled `break` there belongs to the switch, not to the loop outside it. */
+  private var boundaryInScope = false
+  private def inLoop[A](wrapped: Boolean)(f: => A): A =
+    val saved = boundaryInScope
+    boundaryInScope = wrapped
+    try f finally boundaryInScope = saved
+
+  private def breaksOut(t: Any): Boolean = t match
+    case Tree.Break(scala.None, _, _)                     => true
+    case _: Tree.While | _: Tree.DoWhile | _: Tree.Match |
+         _: Tree.For | _: Tree.ForEach                    => false // binds to the inner one
+    case xs: Iterable[?]                                  => xs.exists(breaksOut)
+    case Some(x)                                          => breaksOut(x)
+    // Product reflection rather than a hand-written case per node: a hand-rolled walk that stops
+    // one node short is exactly how two of this project's silent defects survived (CLAUDE.md §3),
+    // and there is no generic child accessor on the TIR to use instead.
+    case p: Product                                       => p.productIterator.exists(breaksOut)
+    case _                                                => false
+
   private def isUnitType(t: TypeRepr): Boolean = t match
     case TypeRepr.TypeRef(_, s) => sym(s).fullName == "scala.Unit"
     case _ => false
   /** the method body is (or ends in) an infinite `while(true)` / `for(;;)`. */
   private def endsInInfiniteLoop(t: Term): Boolean = t match
-    case Tree.While(Tree.Literal(Constant.BoolC(true), _, _), _, _, _) => true
-    case Tree.For(_, None, _, _, _, _)                                 => true
+    // …unless it can BREAK out. Before `break` was emitted the loop really was infinite and the
+    // unreachable tail was correct; now `boundary { while (true) … }` returns normally, and the
+    // synthetic `throw` after it is reached on every exit.
+    case Tree.While(Tree.Literal(Constant.BoolC(true), _, _), b, _, _) => !breaksOut(b)
+    case Tree.For(_, None, b, _, _, _)                                 => !breaksOut(b)
     case Tree.Block(stats, e, _, _) =>
       endsInInfiniteLoop(e) || (e match {
         case Tree.Literal(Constant.UnitC, _, _) => stats.lastOption.collect { case x: Term => x }.exists(endsInInfiniteLoop)
@@ -970,7 +998,10 @@ final class TirEmitter(source: Program, externalConcrete: Map[String, Set[(Strin
     case Tree.Typed(e, tpt, _, _)       => s"${operand(e, i)}.asInstanceOf[${tpe(castTarget(e, tpt.tpe))}]" // Java cast
     case Tree.Repeated(es, _, _)        => es.map(term(_, i)).mkString(", ")
     case Tree.Return(e, _, _)           => "return" + e.map(x => " " + term(x, i)).getOrElse("")
-    case Tree.While(c, b, _, _)         => s"while (${term(c, i)}) ${term(b, i)}"
+    case Tree.While(c, b, _, _)         =>
+      val wrap = breaksOut(b)
+      val loop = s"while (${term(c, i)}) ${inLoop(wrap)(term(b, i))}"
+      if wrap then s"scala.util.boundary { $loop }" else loop
     case Tree.Throw(e, _, _)            => s"throw ${term(e, i)}"
     case Tree.InstanceOf(e, tpt, _, _)  => s"${term(e, i)}.isInstanceOf[${tpe(tpt.tpe)}]"
     case Tree.ArrayAccess(a, idx, _, _) => s"${term(a, i)}(${term(idx, i)})"
@@ -985,14 +1016,19 @@ final class TirEmitter(source: Program, externalConcrete: Map[String, Set[(Strin
         // `new T[a][]`) stays `new Array[elem](a)`.
         case None if dims.sizeIs > 1 => s"scala.Array.ofDim[${tpe(baseElem(el.tpe))}](${dims.map(term(_, i)).mkString(", ")})"
         case None     => s"new scala.Array[${tpe(el.tpe)}](${dims.map(term(_, i)).mkString(", ")})"
-    case Tree.ForEach(b, it, body, _, _) => s"for (${esc(sym(b.symbol).name)} <- ${term(it, i)}) ${term(body, i)}"
+    case Tree.ForEach(b, it, body, _, _) =>
+      val wrap = breaksOut(body)
+      val loop = s"for (${esc(sym(b.symbol).name)} <- ${term(it, i)}) ${inLoop(wrap)(term(body, i))}"
+      if wrap then s"scala.util.boundary { $loop }" else loop
     case Tree.For(init, cond, upd, body, _, _) =>
+      val wrap = breaksOut(body)
       val is = init.map(stat(_, 0)).mkString("; ")
       val c  = cond.map(term(_, i)).getOrElse("true")
-      val bodyWithUpd = s"{ ${term(body, i)}; ${upd.map(stat(_, 0)).mkString("; ")} }"
-      s"{ $is; while ($c) $bodyWithUpd }"
+      val bodyWithUpd = inLoop(wrap)(s"{ ${term(body, i)}; ${upd.map(stat(_, 0)).mkString("; ")} }")
+      val loop = s"{ $is; while ($c) $bodyWithUpd }"
+      if wrap then s"scala.util.boundary { $loop }" else loop
     case Tree.Try(res, body, catches, fin, _, _) => tryStr(res, body, catches, fin, i)
-    case Tree.Match(scr, cases, _, _)   => matchStr(scr, cases, i)
+    case Tree.Match(scr, cases, _, _)   => inLoop(false)(matchStr(scr, cases, i))
     case Tree.MethodRef(q, s, mrT, _)   =>
       val isCtor = sym(s).name == "<init>" // `Type::new` → a factory function `() => new Type()`
       q match
@@ -1011,7 +1047,17 @@ final class TirEmitter(source: Program, externalConcrete: Map[String, Set[(Strin
           case _ => samAscribed(s"(() => new ${ctorTpe(tt.tpe)}())", mrT, tt.tpe)
         case Left(tt)           => s"${tpe(tt.tpe)}.${local(s)}"
         case Right(e)           => s"${term(e, i)}.${local(s)}"
-    case Tree.Break(_, _, _)            => "/* break */ ()"    // TODO: scala.util.boundary
+    // Java's `break` leaves the loop; emitted as a no-op it did NOT, and the loop ran on.
+    // `CharArray.deleteAll` scanned to the end of the array instead of stopping at the first
+    // non-matching char and deleted most of the string. 290 sites, 73 files, all compiling.
+    // Scala 3's `boundary`/`break` is the faithful shape, and is what the reference port uses.
+    // LABELLED breaks are NOT covered — they still emit the no-op, and the count above is the
+    // measure of what is left.
+    case Tree.Break(scala.None, _, _) if boundaryInScope => "scala.util.boundary.break(())"
+    // a `break` with no boundary around it belongs to a SWITCH, where it means "end this case" —
+    // which scala's `match` does anyway. LABELLED breaks are not covered either; both stay no-ops
+    // and the emitted-comment count is the measure of what is left.
+    case Tree.Break(_, _, _)            => "/* break */ ()"
     case Tree.Continue(_, _, _)         => "/* continue */ ()" // TODO: scala.util.boundary
     case Tree.Assert(c, m, _, _)        => s"assert(${term(c, i)}${m.map(x => ", " + term(x, i)).getOrElse("")})"
     // Java's POST-increment yields the value BEFORE the update; the pre-form yields it after.
@@ -1022,7 +1068,10 @@ final class TirEmitter(source: Program, externalConcrete: Map[String, Set[(Strin
     case Tree.IncDec(tgt, op, post, _, _) =>
       if post then s"{ val ${'$'}prev = ${term(tgt, i)}; ${term(tgt, i)} $op= 1; ${'$'}prev }"
       else s"{ ${term(tgt, i)} $op= 1; ${term(tgt, i)} }"
-    case Tree.DoWhile(b, c, _, _)       => s"while ({ ${term(b, i)}; ${term(c, i)} }) ()" // Scala 3 has no do-while
+    case Tree.DoWhile(b, c, _, _)       =>
+      val wrap = breaksOut(b)
+      val loop = s"while ({ ${inLoop(wrap)(term(b, i))}; ${term(c, i)} }) ()" // Scala 3 has no do-while
+      if wrap then s"scala.util.boundary { $loop }" else loop
     case Tree.Synchronized(l, b, _, _)  => s"${term(l, i)}.synchronized ${term(b, i)}"
     case Tree.Opaque(raw, _, _)         => raw
 
