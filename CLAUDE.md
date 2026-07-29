@@ -193,6 +193,22 @@ class made every `for` ambiguous.
 
 Note this whole class of defect is invisible while any typer error remains (§3).
 
+## 4.4 Java statement semantics Scala does not share — the ones that COMPILE
+
+Each of these translates to syntactically valid Scala that means something else. None moves a
+compile-error count; all four were found by running the ported tests, in one session:
+
+| Java | naive Scala | why it is wrong | faithful |
+|---|---|---|---|
+| `a == b` (references) | `a == b` | Scala's `==` calls `equals` — and inside an `equals` body that is infinite recursion | `a eq b` |
+| `x++` as a value | `{ x += 1; x }` | post-increment yields the value BEFORE the update; every circular buffer was off by one | `{ val p = x; x += 1; p }` |
+| `break` | *nothing* | the loop simply ran on | `scala.util.boundary { … break() }` |
+| `@Before` | *nothing* | JUnit runs it before EVERY test, on a fresh instance; MUnit has neither | call it at the head of each test body |
+
+Before adding a translation for a Java *statement* form, ask what it means when its value or its
+control flow is used, not only what it looks like. And read §3 again: a green compile said nothing
+about any of these.
+
 ## 4.55 A renaming pass reads EFFECTIVE names, PARENTS-FIRST
 
 Java lets a name be reused where Scala cannot: a field shadows an inherited field, a field coexists

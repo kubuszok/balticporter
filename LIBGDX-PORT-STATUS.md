@@ -392,6 +392,49 @@ gate is consulted.** A kill switch is one run and answers that question outright
 Note the env-var trap: `sbt -client` sends commands to a long-running SERVER, so a shell `FOO=1`
 never reaches the forked migration. Use a marker FILE.
 
+## THE GOAL IS MET: 0 COMPILE ERRORS, 115/119 TESTS PASSING
+
+Measured 2026-07-29 at commit `1da381b`.
+
+```
+bash scripts/gdx_measure.sh        -> 596 files, 11 dropped, 6 injected, TOTAL ERRORS: 0
+bash scripts/gdx_test_measure.sh   -> TOTAL ERRORS: 0;  221 of 221 tests discoverable
+scala-cli test <main> <test>       -> 115 passed, 4 failed
+```
+
+All 4 failures are `JsonTest`, and all 4 are the DELIBERATE per-library substitution:
+`Json.fromJson` throws `UnsupportedOperationException` by design, because sge replaces libGDX's
+reflection-based `Json` with Kindlings codecs. Nothing in the engine fails.
+
+### What running the tests found that no compiler could
+
+Four silent correctness defects, all of which compiled cleanly before and after:
+
+| defect | scale | passing |
+|---|---|---|
+| java `==` between references is IDENTITY, not `equals` | 151 sites; infinite recursion inside every `equals` | — |
+| a nilary ctor forced by a subclass discarded java's own `Pool()` body | `freeObjects` null, NPE on first `obtain()` | 48 -> 52 |
+| java POST-increment yields the value BEFORE the update | 36 tests; every circular buffer off by one | 52 -> 88 |
+| `@Before` never ran | 19 tests in `SortTest` alone, on a null field | 88 -> 113 |
+| `break` was emitted as `/* break */ ()` — the loop ran on | 290 sites, 73 files | 113 -> 115 |
+
+The `==` one is the sharpest argument for §3 in this document: it is not an edge case, it is the
+single most common comparison in Java, and the port had it wrong everywhere while compiling green.
+
+### Residues, named
+
+- **177 `/* break */ ()` remain**, and they are FINE or KNOWN: a switch-case `break` is what scala's
+  `match` does anyway, and LABELLED breaks are not covered. The comment count is the measure — do
+  not delete it.
+- **`@Before` does not reproduce JUnit's FRESH INSTANCE.** Calling setup at the head of each test
+  is exact wherever setup assigns the fields it needs. A field carrying state through its own
+  INITIALISER still leaks between tests. No corpus test depends on it today.
+- **16 `@Test(expected=…)` suites stay JUnit** — `intercept[E]` is not wired, and a test that
+  asserts an exception but runs the body bare would PASS while checking nothing.
+- **148 test-portability violations**, so the suite is a JVM claim, not a Scala.js/Native one.
+- **52 omissions** reported by `OmissionCheck` on the test migration.
+- The `balticporter.runtime.Asserts` object is still INTERIM shape-adaptation.
+
 ## ONE ERROR — and it is a per-library SIGNATURE TENSION, not an engine defect
 
 Measured 2026-07-29, `bash scripts/gdx_measure.sh`, at commit `eeac2c3`.
