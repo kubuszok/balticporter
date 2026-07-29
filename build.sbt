@@ -206,7 +206,11 @@ lazy val testkit = project
 
 lazy val runner = project
   .in(file("runner"))
-  .dependsOn(core, `frontend-spoon`, `scala-emit`)
+  // `sbt-gen` because `PortRun` owns the port's output layout: `src_managed/{main,test}/scala`
+  // comes from `SbtGen.managedDir` and the generated build from `SbtGen.emitPort`, so that a
+  // porting program can neither hardcode an output path (CLAUDE.md §5.5) nor forget the runtime
+  // dependency the phases it ran made necessary.
+  .dependsOn(core, `frontend-spoon`, `scala-emit`, `sbt-gen`)
   .settings(
     name := "balticporter-runner",
     libraryDependencies += munit,

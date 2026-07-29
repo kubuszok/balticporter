@@ -131,3 +131,97 @@ object InterfaceHash:
       val es = t.enumCases.map(c => s"$here#${c.name}")
       ms ++ fs ++ cs ++ es ++ t.nested.flatMap(sigsOf(_, here))
     Digest.string(unit.types.flatMap(sigsOf(_, unit.pkg)).sorted.mkString("\n"))
+
+// ---------------------------------------------------------------------------
+// The same three-part key, on the TIR.
+// ---------------------------------------------------------------------------
+
+/** Action-cache keys for TIR emission — the TIR counterpart of [[UnitDeps]] + [[InterfaceHash]].
+  *
+  * The BIR path has had incremental keys since M0 and the TIR path has had none, which is half of
+  * why "there are two engines and each has half of what a consumer needs" (LIBRARY-READINESS.md
+  * §1.1). The key has the same three parts, for the same reasons:
+  *
+  *   - the ENGINE fingerprint ([[EngineFingerprint]]) — any rule change invalidates everything;
+  *   - the unit's OWN content — here the canonical TIR render rather than the Java source digest,
+  *     because on this path the tree is what emission consumes, and it has already been through
+  *     the phases. `TirPrinter.Style.canonical` leaks no `SymId` and no `Origin`, so the digest is
+  *     stable across interning order and across checkouts;
+  *   - its dependencies' INTERFACE hashes — mypy's early cutoff. A method BODY changing in `A`
+  *     re-emits `A` alone; a SIGNATURE changing in `A` re-emits `A` and everything that names it.
+  *
+  * ==What this key is NOT sound against==
+  * Emission is not a per-unit function in one respect: [[balticporter.emit.TirEmitter]] computes
+  * member-clash renames, the constructor funnel and diamond overrides over the WHOLE program in
+  * its constructor. Those are whole-program decisions, and a change to a unit `U` that alters them
+  * can alter the emitted text of a unit that does not reference `U` at all. The dependency edge
+  * used here (`U` names a symbol owned by `V`) covers the ordinary cases — a rename propagates
+  * along references — but not the pathological one where two unrelated units collide in a table.
+  * So the cache is ADVISORY, exactly as the BIR one is: `Determinism` re-emits and byte-compares
+  * on every run, and a port that deletes the cache directory must get identical output. Treat a
+  * mismatch between cached and fresh output as an engine defect, not as a cache-tuning problem.
+  */
+object TirCacheKey:
+  import balticporter.tir.*
+
+  /** the top-level unit a symbol belongs to, or `SymId.None` for an external. */
+  def unitOf(program: Program): Map[SymId, SymId] =
+    val units = program.units.map(_.symbol).toSet
+    val memo  = collection.mutable.Map.empty[SymId, SymId]
+    def climb(s: SymId, fuel: Int): SymId =
+      if s == SymId.None || fuel == 0 then SymId.None
+      else if units(s) then s
+      else memo.getOrElseUpdate(s, program.symbolOf(s).map(sym => climb(sym.owner, fuel - 1)).getOrElse(SymId.None))
+    program.symbols.all.map(s => s.id -> climb(s.id, 64)).toMap
+
+  /** Every symbol NAMED anywhere in a unit — terms and types alike.
+    *
+    * Walked with `StandardTraversal`, never a private recursion: a node kind added later is then
+    * covered for free, and two of the four silent correctness defects this project has found were
+    * hand-rolled walks that stopped one node short (CLAUDE.md §3). `transformType` is what reaches
+    * a reference buried in a signature, which `transformTerm` alone never sees. */
+  def referencedIn(program: Program, unit: Tree.ClassDef): Set[SymId] =
+    given Program = program
+    val acc = collection.mutable.Set.empty[SymId]
+    val scan = new Phase:
+      def name: String = "tir-cache-key/scan"
+      override def transformTerm(t: Term)(using Program): Term =
+        program.symbolIn(t).foreach(acc += _); t
+      override def transformType(t: TypeRepr)(using Program): TypeRepr =
+        t match
+          case TypeRepr.TypeRef(_, s) => acc += s
+          case TypeRepr.TermRef(_, s) => acc += s
+          case _                      => ()
+        t
+    StandardTraversal.mapClassDef(scan, unit)
+    acc.toSet
+
+  /** A unit's exported signature surface, digested — the early-cutoff key. Non-private members
+    * only: a private member's type cannot affect how another unit is emitted. */
+  def interfaceHash(program: Program, unit: Tree.ClassDef): String =
+    given Program = program
+    val owner = unitOf(program)
+    val sigs = program.symbols.all.toList
+      .filter(s => owner.getOrElse(s.id, SymId.None) == unit.symbol && !s.flags.isPrivate)
+      .map(s => s"${s.fullName}:${TirPrinter.tpe(s.info, TirPrinter.Style.canonical)}:${s.flags}")
+      .sorted
+    Digest.string(sigs.mkString("\n"))
+
+  /** `unit symbol -> action key`, for every unit given. One pass over the program builds the
+    * owner map and every interface hash; the per-unit key is then a fold over its dependencies. */
+  def forUnits(program: Program, units: List[Tree.ClassDef]): Map[SymId, String] =
+    given Program = program
+    val owner  = unitOf(program)
+    val byId   = program.units.map(u => u.symbol -> u).toMap
+    val ifaces = program.units.map(u => u.symbol -> interfaceHash(program, u)).toMap
+    units.map { u =>
+      val deps = referencedIn(program, u).flatMap(owner.get).filter(d => d != SymId.None && d != u.symbol)
+      val parts =
+        ("engine" -> EngineFingerprint.value) ::
+          ("self" -> TirPrinter.digest(u)) ::
+          deps.toList.flatMap(d => byId.get(d).map(_ => s"dep:${nameOf(program, d)}" -> ifaces.getOrElse(d, ""))).sorted
+      u.symbol -> Digest.combined(parts)
+    }.toMap
+
+  private def nameOf(program: Program, s: SymId): String =
+    program.symbolOf(s).map(_.fullName).getOrElse(s.toString)
