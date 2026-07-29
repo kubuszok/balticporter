@@ -89,18 +89,40 @@ interdependent extensions. Therefore:
 2. Where the JVM tolerates it, cross-module type compatibility holds only because the FQN collides:
    two ports pinned to different engine versions carry silently divergent bodies at one name.
 
-**Design.** Publish `balticporter-runtime` (`JavaIterator`, `JavaIterable`, `Asserts`, and whatever
-suite base `TestFrameworkTransform` retypes onto), version-locked to the engine.
-`SbtGen.ProjectSpec.deps` gains it automatically when a phase that requires it has run. Keep source
-emission only as an explicit `--vendored-runtime` fallback for zero-dependency ports.
+**Design.** Publish `balticporter-runtime` (`JavaIterator`, `JavaIterable`), version-locked to the
+engine. `SbtGen.ProjectSpec.deps` gains it automatically when a phase that requires it has run. Keep
+source emission only as an explicit `--vendored-runtime` fallback for zero-dependency ports.
+
+**CORRECTION (2026-07-29) — `Asserts` and the suite base do NOT belong in this artifact.** An
+earlier version of this section listed them, citing "the helper is justified but must ship as a
+dependency." That sentence is from commit `4e4a42f`, which commit `d52ab11` explicitly corrects, and
+`1a9f517` is about raw-generic rendering, not this. `LIBGDX-PORT-STATUS.md` carries the three
+sections in *reverse* order of authority — the one headed "Superseded: the argument that `Asserts`
+should SHIP as a dependency" is the superseded one — which is how the misattribution happened.
+
+The current verdict stands at the section headed "CORRECTION: `Asserts` is NOT justified either":
+the 33 errors that appeared to justify the helper are 26 mixed-numeric comparisons the engine can
+widen from its own static types, 6 Java `static` helpers wrongly emitted into the companion object
+where MUnit's instance members are invisible, and 1 unrelated. Every shape was probed against MUnit
+1.0.2 and compiles. So `Asserts` is **shape adaptation**, and the criterion is:
+
+- **semantics the target lacks → a runtime the port DEPENDS ON** (`JavaIterator`, `JavaIterable` —
+  a removal-capable iterator is genuinely absent from Scala; this is what the artifact is for);
+- **shapes the engine can emit correctly → the engine emits them, and nothing ships** (`Asserts`,
+  `PortedSuite` — eliminated, not published).
+
+Eliminating `Asserts` needs a curried-application node in the TIR (its absence is the whole reason
+`testCase(name, body)` exists), operand widening in the transform, and static test helpers emitted
+as suite members. That is tracked separately; it does not change this item, which is about the two
+collection shims.
 
 **Corollary.** `TirEmitter`'s `externalConcrete` parameter (`TirEmitter.scala:22`) exists *only*
 because the shims are unparseable text. With a real dependency its data could be derived. Today,
 forgetting to pass it silently disables diamond-conflict detection — a footgun the orchestrator of
 §1.2 should own rather than the caller.
 
-Already concluded in commits `d52ab11` / `1a9f517`: "the helper is justified but must ship as a
-dependency." Recorded, unimplemented.
+The distribution rule itself — semantics the target lacks become a dependency, never copied source —
+was already concluded and recorded; it had simply not been implemented.
 
 ### 1.4 Nothing is publishable, and a port cannot pin a known-good engine
 
@@ -254,6 +276,28 @@ baked into the phase. A utest target would not work by changing the parameter. H
 - **`CollectionsTransform`'s `typeMap`** should become a defaulted (b) parameter. The mappings are
   Java/Scala facts, but "retype to scala collections *at all*" is a per-port decision — liqp's JVM
   gate deliberately keeps `java.util`. Off = omit the phase, which suffices today.
+
+---
+
+## Found while IMPLEMENTING this document (2026-07-29)
+
+### `PortabilityCheck`'s nine `exactMember` rules have never fired — a check reporting zero because it is blind
+
+Confirmed twice, independently. `Minter.external` (`SpoonTir.scala:94`) mints every external symbol
+with `owner = SymId.None` and `fullName` set to the *interning key*, so an external member comes out
+as `fullName=@8#forName(java.lang.String), owner=-1`. `PortabilityCheck.scala:72` then computes
+`memberName = program.symbolOf(sym.owner).map(o => s"${o.fullName}#${sym.name}")`, which is `None`
+for every one of them — and the `exactMember` branch tests `None.contains(r.api)`, always false. The
+prefix branch cannot match either, since the `fullName` is `@8#…`.
+
+So `Class#forName`, `Class#newInstance`, `System#getProperty` and the six reflective
+`getDeclared*`/`get*` rules — the exact APIs the check names as its reason for existing — have never
+been detected. The comment two lines above the bug shows the author intended `owner#name` to carry
+the meaning; it silently never did.
+
+This is CLAUDE.md §3 verbatim: *"a check reporting zero is only as good as its coverage."* Fixing it
+means giving external member symbols their owner id in the frontend. **Expect the portability count
+to RISE** — that is the gate beginning to tell the truth, not a regression (§3 again).
 
 ---
 
