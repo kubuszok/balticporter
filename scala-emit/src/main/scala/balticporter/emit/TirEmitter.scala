@@ -1003,7 +1003,7 @@ final class TirEmitter(source: Program, externalConcrete: Map[String, Set[(Strin
         // creates a `Vector3` that is still half-built, and the JVM throws
         // `ExceptionInInitializerError`. Scala's equivalent of the java rule is `inline val` —
         // note WITHOUT the type ascription, which would defeat the constant type.
-        s"${ind(i)}${mods(s.flags).replace("final ", "")}inline val ${esc(s.name)} = ${term(r, i)}"
+        s"${ind(i)}${mods(s.flags).replace("final ", "")}inline val ${esc(s.name)} = ${constAt(r, v.tpt.tpe)}"
       case Some(r) =>
         val kw = if s.flags.isMutable then "var" else "val"
         val m  = if kw == "var" then mods(s.flags).replace("final ", "") else mods(s.flags)
@@ -1013,6 +1013,29 @@ final class TirEmitter(source: Program, externalConcrete: Map[String, Set[(Strin
         // `val x: T` is an abstract member and won't compile in a class). `final var` is
         // contradictory in Scala, so `final` is dropped here.
         s"${ind(i)}${mods(s.flags).replace("final ", "")}var ${esc(s.name)}: ${tpe(v.tpt.tpe)} = ${defaultFor(v.tpt.tpe)}"
+
+  /** the literal rendered AT the field's declared type.
+    *
+    * `inline val` takes its constant type from the literal, so the type ascription that would
+    * normally carry it is rejected ("inline value must have a literal constant type"). Java's
+    * `static private final float degFull = 360` therefore has to emit `360.0f`, not `360`: as an
+    * `Int` constant it turned `SIN_COUNT / degFull` into INTEGER division and `MathUtils.cosDeg(90)`
+    * returned -0.07 instead of 0. */
+  private def constAt(r: Term, t: TypeRepr): String = (r, t) match
+    case (Tree.Literal(c, _, _), TypeRepr.TypeRef(_, sy)) =>
+      def num: Option[BigDecimal] = c match
+        case Constant.ByteC(v)  => Some(BigDecimal(v.toInt)); case Constant.ShortC(v) => Some(BigDecimal(v.toInt))
+        case Constant.IntC(v)   => Some(BigDecimal(v));       case Constant.LongC(v)  => Some(BigDecimal(v))
+        case Constant.FloatC(v) => Some(BigDecimal(v.toDouble)); case Constant.DoubleC(v) => Some(BigDecimal(v))
+        case Constant.CharC(v)  => Some(BigDecimal(v.toInt)); case _ => scala.None
+      (sym(sy).fullName, num) match
+        case ("scala.Float", Some(n))  => s"${n.toFloat}f"
+        case ("scala.Double", Some(n)) => val d = n.toDouble; if d == d.toLong then s"$d" else d.toString
+        case ("scala.Long", Some(n))   => s"${n.toLong}L"
+        case ("scala.Short", Some(n))  => s"${n.toShort}"
+        case ("scala.Byte", Some(n))   => s"${n.toByte}"
+        case _                          => constant(c)
+    case _ => term(r, 0)
 
   /** a java CONSTANT VARIABLE: `static final`, primitive or `String`, literal initialiser. */
   private def isJavaConstant(v: Tree.ValDef, s: Symbol): Boolean =
