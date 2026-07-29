@@ -994,6 +994,16 @@ final class TirEmitter(source: Program, externalConcrete: Map[String, Set[(Strin
     if s.flags.isGiven then
       return s"${ind(i)}given ${esc(s.name)}: ${tpe(v.tpt.tpe)}${v.rhs.map(r => s" = ${term(r, i)}").getOrElse("")}"
     v.rhs match
+      case Some(r) if isJavaConstant(v, s) =>
+        // Java calls this a CONSTANT VARIABLE (JLS 4.12.4): `static final` of primitive or String
+        // type with a constant initialiser. javac INLINES every use, so reading `Matrix4.M00` does
+        // NOT trigger `Matrix4`'s class initialiser — which is the only reason libgdx's static
+        // initialisers are not a cycle. `Vector3`'s creates a `Matrix4`, whose constructor reads
+        // `Matrix4.M00`; emitted as an ordinary typed `val` that call initialises `Matrix4`, which
+        // creates a `Vector3` that is still half-built, and the JVM throws
+        // `ExceptionInInitializerError`. Scala's equivalent of the java rule is `inline val` —
+        // note WITHOUT the type ascription, which would defeat the constant type.
+        s"${ind(i)}${mods(s.flags).replace("final ", "")}inline val ${esc(s.name)} = ${term(r, i)}"
       case Some(r) =>
         val kw = if s.flags.isMutable then "var" else "val"
         val m  = if kw == "var" then mods(s.flags).replace("final ", "") else mods(s.flags)
@@ -1003,6 +1013,16 @@ final class TirEmitter(source: Program, externalConcrete: Map[String, Set[(Strin
         // `val x: T` is an abstract member and won't compile in a class). `final var` is
         // contradictory in Scala, so `final` is dropped here.
         s"${ind(i)}${mods(s.flags).replace("final ", "")}var ${esc(s.name)}: ${tpe(v.tpt.tpe)} = ${defaultFor(v.tpt.tpe)}"
+
+  /** a java CONSTANT VARIABLE: `static final`, primitive or `String`, literal initialiser. */
+  private def isJavaConstant(v: Tree.ValDef, s: Symbol): Boolean =
+    s.flags.isStatic && s.flags.isFinal && !s.flags.isMutable &&
+      (v.rhs match { case Some(_: Tree.Literal) => true; case _ => false }) &&
+      (v.tpt.tpe match
+        case TypeRepr.TypeRef(_, x) =>
+          val n = sym(x).fullName
+          primitiveNames(n) || n == "java.lang.String"
+        case _ => false)
 
   private def defaultFor(t: TypeRepr): String = t match
     case TypeRepr.TypeRef(_, s) => sym(s).fullName match
