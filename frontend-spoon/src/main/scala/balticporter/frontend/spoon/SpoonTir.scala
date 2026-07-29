@@ -1723,7 +1723,10 @@ object SpoonTir:
         val split = cases.map { c =>
           val raw = stmtsOf(c)
           raw.reverse match
-            case (_: CtBreak) :: rest => (rest.reverse, true)
+            // …an UNLABELLED one. `case '"': break outer;` does not end the case, it leaves the
+            // enclosing LOOP; stripping it as a terminator silently deleted the jump, and the
+            // quoted-string scanner in `JsonSkimmer` ran off the end of every string.
+            case (b: CtBreak) :: rest if b.getTargetLabel == null => (rest.reverse, true)
             case _                    => (raw, raw.lastOption.exists { case _: CtReturn[?] | _: CtThrow => true; case _ => false })
         }
         val closures = new Array[List[CtStatement]](cases.length)
@@ -1741,7 +1744,15 @@ object SpoonTir:
             out += Tree.CaseDef(pending ++ labels, None, Tree.Block(closures(idx).map(stmt), unit(c), unitT, originOf(c)), isDefault)
             pending = Nil
         }
-        Tree.Match(expr(s.getSelector), out.result(), unitT, originOf(s))
+        // Java's switch with no `default` simply FALLS OUT when nothing matches; scala's `match`
+        // throws `MatchError`. `switch (data[p]) { case '\\': …; case '"': … }` scanning an
+        // ordinary character is the normal path, not an error — it threw on the first letter of
+        // every quoted string. Add the fall-out arm java already has.
+        val arms = out.result()
+        val withDefault =
+          if arms.exists(_.isDefault) then arms
+          else arms :+ Tree.CaseDef(Nil, None, unit(s), isDefault = true)
+        Tree.Match(expr(s.getSelector), withDefault, unitT, originOf(s))
 
       // ---- expressions ----
       private def expr(e: CtExpression[?]): Term =
