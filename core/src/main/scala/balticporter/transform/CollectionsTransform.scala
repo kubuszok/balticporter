@@ -1,5 +1,6 @@
 package balticporter.transform
 
+import balticporter.core.{RequiresRuntime, RuntimeArtifact}
 import balticporter.tir.*
 
 /** `java.util` collections → `scala.collection.mutable`. A whole-program [[Phase]] — the
@@ -20,8 +21,12 @@ import balticporter.tir.*
   * from the table) prints `scala.collection.mutable.Buffer[X]`, `xs += x`, `m.update(k, v)`
   * by construction.
   */
-final class CollectionsTransform extends Phase:
+final class CollectionsTransform extends Phase, RequiresRuntime:
   def name = "java-collections->scala"
+
+  /** this phase retypes onto `balticporter.runtime` — declared once, so the run derives the port's
+    * dependency, its vendored sources and the emitter's external-parent table from it. */
+  def runtimeTypes: Set[String] = CollectionsTransform.runtimeTypes
 
   import CollectionsTransform.{JavaIterableFqn, JavaIteratorFqn, Kind}
 
@@ -301,133 +306,53 @@ object CollectionsTransform:
     /** a `java.util.Map.Entry`, mapped to `Tuple2` — `getKey`/`getValue` are `_1`/`_2`. */
     case Entry
 
-  val JavaIteratorFqn = "balticporter.runtime.JavaIterator"
-  val JavaIterableFqn = "balticporter.runtime.JavaIterable"
+  val JavaIteratorFqn = s"${RuntimeArtifact.Package}.JavaIterator"
+  val JavaIterableFqn = s"${RuntimeArtifact.Package}.JavaIterable"
 
-  /** Support types the retyping REQUIRES, as ready Scala. The emitted program is compiled
-    * standalone, so a target type that is not in the scala stdlib has to be shipped WITH it;
-    * a consumer of this phase writes these out next to the emitted units (keyed by FQN).
+  /** Support types the retyping REQUIRES. They live in the PUBLISHED `balticporter-runtime`
+    * module (`runtime/src/main/scala`), not here — see [[RuntimeArtifact]] for why a per-port copy
+    * at a shared FQN is a correctness defect and not a packaging preference.
     *
-    * Only one so far, and it exists because the obvious mapping is wrong: `java.util.Iterator`
-    * declares `hasNext`, `next` AND `remove`, while `scala.collection.Iterator` declares only
-    * the first two. Mapping java's onto scala's therefore DELETES a method — and libGDX calls
-    * it (`ModelLoader`, `ParticleControllerInfluencer`, `ArraySelection`, `Predicate`), always
-    * through the interface, so no amount of call-site type narrowing brings it back. Nor can
-    * the *loop* be rewritten to a scala idiom (`filterInPlace`): the receiver is not a scala
-    * collection at all, it is an arbitrary user `Iterator` implementation, and in `Predicate`
-    * the removal is a straight delegation from one iterator to another with no loop in sight.
+    * Why they exist at all, since the mapping is not obvious: `java.util.Iterator` declares
+    * `hasNext`, `next` AND `remove`, while `scala.collection.Iterator` declares only the first
+    * two. Mapping java's onto scala's therefore DELETES a method — and libGDX calls it
+    * (`ModelLoader`, `ParticleControllerInfluencer`, `ArraySelection`, `Predicate`), always
+    * through the interface, so no amount of call-site type narrowing brings it back. Nor can the
+    * *loop* be rewritten to a scala idiom (`filterInPlace`): the receiver is not a scala collection
+    * at all, it is an arbitrary user `Iterator` implementation, and in `Predicate` the removal is
+    * a straight delegation from one iterator to another with no loop in sight.
     *
     * So the mapping's target is java's interface expressed in scala: scala's `Iterator` plus
     * `remove`, whose default body is java's own documented default for the method. An
-    * implementation that overrides it (every libGDX iterator does) keeps its behaviour; one
-    * that does not gets exactly what java gives it. Nothing is approximated.
+    * implementation that overrides it (every libGDX iterator does) keeps its behaviour; one that
+    * does not gets exactly what java gives it. Nothing is approximated.
     *
-    * `JavaIterable` follows from it and is not optional: java's `Iterable.iterator()` is
-    * DECLARED to return a `java.util.Iterator`, so retyping `Iterator` without retyping
-    * `Iterable` splits the pair — `iterable.iterator` would yield the removal-less scala
-    * iterator, and every place libGDX takes an `Iterable` only to iterate-and-remove through it
+    * `JavaIterable` follows from it and is not optional: java's `Iterable.iterator()` is DECLARED
+    * to return a `java.util.Iterator`, so retyping `Iterator` without retyping `Iterable` splits
+    * the pair — `iterable.iterator` would yield the removal-less scala iterator, and every place
+    * libGDX takes an `Iterable` only to iterate-and-remove through it
     * (`Predicate.PredicateIterator`, `CharArray.appendWithSeparators`, `ModelLoader.loadSync`)
     * would stop type-checking. Two types, one decision.
     */
+  val runtimeTypes: Set[String] = Set(JavaIteratorFqn, JavaIterableFqn)
+
   /** What [[runtimeSources]] BRINGS, for a consumer that must reason about the injected
     * supertypes it cannot parse. `JavaIterator.remove` is concrete (java's own documented default),
     * so a class extending both it and a superclass that also defines `remove` is a scala
-    * linearisation conflict — `TirEmitter` needs to be told, since the shim is shipped as text. */
-  val runtimeConcreteMembers: Map[String, Set[(String, List[Int])]] = Map(
-    JavaIteratorFqn -> Set(("remove", List(0))),
-    JavaIterableFqn -> Set.empty,
-  )
+    * linearisation conflict — `TirEmitter` needs to be told.
+    *
+    * PREFER `RuntimePlan.of(phases).concreteMembers`, which derives this from the phases that ran
+    * instead of asking the caller to remember it. This name is kept because existing migration
+    * programs pass it directly. */
+  lazy val runtimeConcreteMembers: Map[String, Set[(String, List[Int])]] =
+    RuntimeArtifact.concreteMembers.filter((fqn, _) => runtimeTypes.contains(fqn))
 
-  val runtimeSources: Map[String, String] = Map(
-    JavaIterableFqn ->
-      """package balticporter.runtime
-        |
-        |/** `java.lang.Iterable`, as Scala — java's interface, not scala's collection.
-        |  *
-        |  * STANDALONE by necessity, not by preference. Java's `Iterable` and `Iterator` are
-        |  * independent two- and three-method interfaces, and a class may implement BOTH — libGDX's
-        |  * map and array iterators all do (`Entries extends MapIterator implements Iterable<Entry>,
-        |  * Iterator<Entry>`, 14 such classes in gdx core alone). Modelled on
-        |  * `scala.collection.{Iterable, Iterator}` that shape is not merely awkward, it is
-        |  * ILLEGAL: `Iterator.iterator` is `final`, and `seq` arrives from both sides. No amount
-        |  * of `override` recovers it, because the conflict is in the parents.
-        |  *
-        |  * Nor is java's `iterator()` scala's `iterator`: java's is nilary and returns a
-        |  * REMOVAL-CAPABLE iterator, scala's is parameterless and returns one that cannot remove.
-        |  * Declaring the java shape here is what lets a ported `override def iterator()` mean what
-        |  * it meant in Java.
-        |  *
-        |  * Interop is restored by [[JavaIterable.asScala]] rather than by inheritance, which is
-        |  * the direction that cannot conflict: an extension adds a view, a parent adds members.
-        |  */
-        |trait JavaIterable[A]:
-        |  def iterator(): JavaIterator[A]
-        |
-        |object JavaIterable:
-        |  /** Adapt a plain scala collection to the java-shaped one. Inserted by the engine at call
-        |    * sites where a shim-typed parameter meets a collection the port ITSELF mapped to scala
-        |    * (`CharArray.appendAll(list)`). `remove()` stays at [[JavaIterator]]'s default —
-        |    * `UnsupportedOperationException` — because a scala iterator genuinely cannot remove,
-        |    * which is what java reports for a non-removable iterator too. */
-        |  def from[A](xs: scala.collection.Iterable[A]): JavaIterable[A] = new JavaIterable[A]:
-        |    def iterator(): JavaIterator[A] = JavaIterator.from(xs.iterator)
-        |
-        |  extension [A](self: JavaIterable[A])
-        |    /** A scala view of this java iterable — `for`, `map`, `foreach` and the rest. */
-        |    def asScala: scala.collection.Iterable[A] = new scala.collection.Iterable[A]:
-        |      def iterator: scala.collection.Iterator[A] = self.iterator().asScala
-        |    /** so `for (x <- xs)` and `xs.foreach(f)` work directly on the java shape. Written as
-        |      * the loop rather than delegating to the iterator: `JavaIterator` deliberately has no
-        |      * `foreach` extension (see there), so there is nothing to delegate to. */
-        |    def foreach(f: A => Unit): Unit =
-        |      val it = self.iterator()
-        |      while it.hasNext() do f(it.next())
-        |""".stripMargin,
-    JavaIteratorFqn ->
-      """package balticporter.runtime
-        |
-        |/** `java.util.Iterator`, as Scala — java's interface, not scala's.
-        |  *
-        |  * Java's `Iterator` has a third method, `remove()`, which removes from the underlying
-        |  * collection the element last returned by `next()`. `scala.collection.Iterator` has no
-        |  * such operation and no way to express one, so a port that maps java's onto scala's
-        |  * drops the method — quietly, until a call site fails to compile, and dangerously if the
-        |  * call site is instead "fixed" by dropping the removal. libGDX calls it POLYMORPHICALLY,
-        |  * through the interface (`ModelLoader`, `ParticleControllerInfluencer`, `ArraySelection`,
-        |  * `Predicate`), so no call-site narrowing brings it back.
-        |  *
-        |  * Declared standalone rather than as a `scala.collection.Iterator` subtype — see
-        |  * [[JavaIterable]] for why that subtyping is not available at all. The methods carry
-        |  * java's arity (`hasNext()`, `next()`), which is also the arity every ported override
-        |  * was written with.
-        |  *
-        |  * Portable: no JVM-only API, nothing reflective.
-        |  */
-        |trait JavaIterator[A]:
-        |  def hasNext(): Boolean
-        |  def next(): A
-        |  /** `java.util.Iterator.remove` — the JDK's own default implementation. */
-        |  def remove(): Unit = throw new UnsupportedOperationException("remove")
-        |
-        |object JavaIterator:
-        |  /** Adapt a `scala.collection.Iterator` to the java-shaped one. `remove()` keeps the
-        |    * default above, which is the truth: there is nothing to remove through. */
-        |  def from[A](it: scala.collection.Iterator[A]): JavaIterator[A] = it match
-        |    case ji: JavaIterator[A @unchecked] => ji
-        |    case _ => new JavaIterator[A]:
-        |      def hasNext(): Boolean = it.hasNext
-        |      def next(): A = it.next()
-        |
-        |  extension [A](self: JavaIterator[A])
-        |    /** A scala view of this java iterator. `remove()` is not expressible there and is
-        |      * simply not offered — the view is for traversal. */
-        |    def asScala: scala.collection.Iterator[A] = new scala.collection.Iterator[A]:
-        |      def hasNext: Boolean = self.hasNext()
-        |      def next(): A = self.next()
-        |    /** Deliberately NO `foreach` here, though the loop is trivial: a class that is both a
-        |      * java `Iterable` and a java `Iterator` — which is most of libGDX's — would then have
-        |      * two applicable extensions and scala reports the `for` as ambiguous rather than
-        |      * picking one. `foreach` lives on [[JavaIterable]], which is what java's own for-each
-        |      * requires anyway; traverse an iterator with `asScala`. */
-        |""".stripMargin,
-  )
+  /** The support sources, as text, for a port that vendors them instead of depending on the
+    * artifact ([[balticporter.core.RuntimeMode.Vendored]]).
+    *
+    * NOT the source of truth: this is the build-time copy of `runtime/src/main/scala`, read back
+    * off the classpath. PREFER `RuntimePlan.of(phases, mode).writeSources(dir)`, which will not
+    * write them at all when the port depends on the artifact — which is the default and the
+    * correct choice for any port that is one module of several. */
+  lazy val runtimeSources: Map[String, String] =
+    runtimeTypes.map(fqn => fqn -> RuntimeArtifact.sourceOf(fqn)).toMap
