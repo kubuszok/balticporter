@@ -392,7 +392,79 @@ gate is consulted.** A kill switch is one run and answers that question outright
 Note the env-var trap: `sbt -client` sends commands to a long-running SERVER, so a shell `FOO=1`
 never reaches the forked migration. Use a marker FILE.
 
-## THE GOAL IS MET: 0 COMPILE ERRORS, 115/119 TESTS PASSING
+## 217 of 221 TESTS PASS; the 4 that do not are a deliberate substitution
+
+Measured 2026-07-29 at commit `bf607e5`.
+
+```
+bash scripts/gdx_measure.sh       -> 596 files, 11 dropped, 6 injected, TOTAL ERRORS: 0
+bash scripts/gdx_test_measure.sh  -> TOTAL ERRORS: 0;  221 of 221 discoverable (munit 221, junit 0)
+scala-cli test <main> <test>      -> 217 passed, 4 failed
+sbt test                          -> green
+```
+
+The 4 are `JsonTest`, and all 4 call `Json.fromJson`, which throws by design: sge replaces libgdx's
+reflection-based `Json` with Kindlings codecs, and this port carries that substitution. Every test
+that CAN pass, passes.
+
+### What the behavioural gate found, in order
+
+Each of these compiled cleanly before AND after. No compile-error count moved for any of them.
+
+| defect | scale | passing |
+|---|---|---|
+| java `==` between references is IDENTITY | 151 sites; infinite recursion in every `equals` | — |
+| a nilary ctor forced by a subclass discarded java's own body | `Pool.freeObjects` null | 48 -> 52 |
+| POST-increment yielded the value AFTER the update | every circular buffer off by one | 52 -> 88 |
+| `@Before` never ran | 19 tests in `SortTest` alone | 88 -> 113 |
+| `break` was a no-op comment | 290 sites, 73 files | 113 -> 115 |
+| `continue` was a no-op comment | 236 sites | — |
+| LABELLED `break`/`continue` were no-ops | 110 sites | 115 -> 183 |
+| a JDK throwable's `super(args)` was dropped | every exception threw with a NULL message | — |
+| a java CONSTANT VARIABLE is not an inlined constant | static-init CYCLE, `ExceptionInInitializerError` | 183 -> 187 |
+| …and must render at its DECLARED type | `float degFull = 360` as `Int` made a division integral | 187 -> 188 |
+| a case's trailing LABELLED break was stripped as a terminator | quoted-string scanner ran off every string | — |
+| a `switch` with no `default` threw `MatchError` | java falls out; that is the NORMAL path | 188 -> 201 |
+| `@Test(expected=)` left as JUnit | 16 tests | 201 -> 217 |
+
+The 115 -> 183 jump is not 68 tests fixed one at a time: with control flow wrong the suite did not
+get past the `utils` package inside the timeout. Fixing `break`/`continue` let it RUN.
+
+Two of these were also SILENT behavioural changes rather than crashes, and would have shipped:
+`ParticleEmitter.Particle.rotation` shadowing `Sprite.rotation` (emitted as one field, so writes
+through the subclass reached the superclass's draw path), and `Skin.ignoreUnknownField` overriding
+a method the hand-written `Json` substitute did not declare — it compiled to nothing.
+
+### Residues, named — none is an engine defect
+
+- **45 `/* break */ ()` remain, and all 45 are SWITCH-case breaks**, which scala's `match` performs
+  anyway. Zero `continue` no-ops, zero labelled ones. The comment count is the measure; keep it.
+- **`@Before` does not reproduce JUnit's FRESH INSTANCE.** Calling setup at the head of each test is
+  exact wherever setup assigns the fields it needs; a field carrying state through its own
+  INITIALISER would still leak. No corpus test depends on it, and all 217 pass.
+- **49 omissions**, all `super(args)` on a NON-throwable parent — `DistanceFieldFont extends
+  BitmapFont` has seven roots reaching seven different overloads. Padding a shorter super call is
+  exact only for the JDK throwable family, whose constructor set is fixed; elsewhere it is a guess,
+  and guessing measured 0 -> 55 errors. Left counted rather than guessed.
+- **148 test-portability violations** and 67 in core: `java.lang.reflect` (41), `Thread` (13),
+  networking (19), `java.util.zip`, `java.util.concurrent`. These are JVM-only APIs in LIBGDX, not
+  engine gaps — porting them to Scala.js/Native needs per-library substitution, which is exactly
+  what sge did for `Json`.
+- **`balticporter.runtime.Asserts` is still shape-adaptation the transform could do itself.** It
+  works; it is redundancy, not a defect.
+
+### The one remaining ENGINE tension
+
+`Skin`'s anonymous `Json` subclass overrides `readValue`, which the engine renders `[T <: Object]`
+— correct, java's `<T>` MEANS `<T extends Object>`. The hand-written `Json` substitute declares
+`[T]` on the sibling overloads because 16 sites call `readValue("x", int.class, jsonData)` and
+scala's `classOf[Int]` is `Class[Int]`, where `Int` is not `<: Object`. Resolved per-library by
+bounding ONLY the overload that is actually overridden. Four measured refutations of the general
+fix are recorded below; the best remaining option is that an override's type-parameter bounds
+should follow the PARENT, through the channel `TirEmitter(program, externalConcrete)` opened for
+diamond disambiguation.
+
+## SUPERSEDED — 0 COMPILE ERRORS, 115/119 TESTS PASSING
 
 Measured 2026-07-29 at commit `1da381b`.
 
