@@ -324,9 +324,17 @@ immediately at home. The engine does **not** use Quotes directly — its contrac
 outside a macro and its `Symbol` hides internals — it owns a close analogue that exposes everything
 and adds `Origin`, `SymTag`, the whole-program `XrefIndex` and the decision log (§7).
 
-There is **no registry, service loader or plugin descriptor**: a rule is a `balticporter.tir.Phase`
-implementation passed to the run. `corpus/.../libgdx/GdxSharedIteratorRule.scala` is the worked example
-of a §1(c) rule living outside the engine.
+A rule is a `balticporter.tir.Phase` implementation **passed to the run** — that is the whole
+contract, and `corpus/.../libgdx/GdxSharedIteratorRule.scala` is the worked example of a §1(c) rule
+living outside the engine. There is no plugin descriptor and nothing is loaded by class name.
+
+This section used to add "no registry, service loader": that is now half wrong and the correction
+matters. §5.7 adds a `ServiceLoader` **so that a CONFIG FILE can NAME a phase**, and its contract is
+deliberately narrow — a stable string resolving to a class the consumer already compiled and put on
+its own classpath. Nothing is instantiated from a name written in a config file, no phase is
+discovered implicitly (a factory found on the classpath does nothing until a conf's `surface` names
+it), and the Scala path is unchanged: a `PortRun(phases = …)` still takes instances and needs no
+registration at all.
 
 ### 2.5 Emission
 
@@ -826,6 +834,100 @@ that it has no way to learn it; once the base publishes a map, the dependent *re
 renames as data rather than declaring them. Config is then worth having for the **base** module of a
 library and for the parts an agent edits by hand, sharing the map's schema. Build the map first —
 doing config first would standardise a shape the map is about to change.
+
+The map is built (§5.2). §5.7 is what was then built on top of it, and it revises the "cannot be"
+above: the surface half is still CODE, but a phase can be NAMED from config, which is a different
+claim.
+
+### 5.7 The CONFIG front door — a `.conf` plus an SPI, and why it is not a second truth
+
+**What was measured.** Every migration program in `corpus/` turned out to be hard-coded
+configuration plus one `PortRun(...)` call. `SimpleGraphsMigrate` was 90 lines of which the only
+non-declarative statement was a directory walk the engine can do itself. If that is what a port IS,
+then requiring a consumer to write a Scala program, a build that depends on the engine, and a `main`
+before it can port anything is a cost with nothing on the other side of it.
+
+So there are now **three front doors to the same `PortRun`**, and the third one is a file:
+
+| door | for |
+|---|---|
+| a Scala `main` calling `PortRun(...)` | full strength; the recommended door; what a port with §1(c) rules or a non-trivial build uses |
+| an embedder calling `PortConfig.load(...)` | a repository that owns its own entry point but keeps its policy in a file |
+| `PortConfigMain <port.conf>` | a consumer with nothing to write at all |
+
+**The pieces.** `balticporter.tir.TransformFactory` (in `api`) is `name: String` plus
+`fromConfig(ConfigView): Phase`, discovered with `java.util.ServiceLoader`. `balticporter.runner`
+holds the HOCON adapter (`HoconView`), the registry (`TransformRegistry`), the engine's own factory
+registrations (`BuiltinFactories`, one `META-INF/services` line each) and the loader (`PortConfig`).
+The corpus registers `GdxSharedIteratorFactory` beside its rule, which is the worked example of a
+§1(c) rule reaching the config door from the porting repository rather than from the engine.
+
+**The §1.5 tension, resolved.** §1.5 warns that "a manifest DSL would move the policy out of reach
+of the consumer's compiler". The warning is about a SECOND SOURCE OF TRUTH, and it stands. This is
+not one, for three reasons that are the design rather than a defence of it:
+
+  - the conf path **constructs the same values** — `PortManifest`, `FrontendConfig`, `Provenance`,
+    `PortRun` — through the same constructors. There is no parallel model and no second code path
+    inside `PortRun`, so `ManifestAgreement`, `PortManifest.fingerprint` and the resolution-root/base
+    rule cannot tell a conf-built manifest from a hand-built one;
+  - **inheritance is `extendedBy`**, the operator §1.5 names. `base = "main.conf"` reads that file's
+    manifest and extends it. It is deliberately NOT an include: the base's `input`, `output`,
+    `provenance`, `runtimeMode` and `inject` are §1.5's must-DIFFER column and are ignored;
+  - **anything config cannot express arrives as CODE.** No classname-in-a-string, no expression
+    language, no reflective construction of a lambda. A factory NAME resolving through
+    `ServiceLoader` to a class the consumer compiled is the one sanctioned indirection, and it is
+    exactly as typed as the Scala path. `PrimitiveToOpaqueTransform` from config therefore takes
+    `extraHints` (a set of names) and REFUSES `hints` (a predicate), naming the escape hatch in the
+    error: write a factory.
+
+What is genuinely given up is compiler checking of the declarative half — §5.6's own assessment, and
+a `dropTypes` key is a `String` either way. The Scala path answers that with `PolicyReport`; the
+config path answers it with **a refusal on any key nobody read**. HOCON accepts any document it can
+parse, so `dropType` for `dropTypes` is a policy entry that silently does nothing — the §1(b) no-op
+this engine refuses everywhere else. `HoconView` records every accessor call and `PortConfig` fails
+the run on the leftovers, by tree walk rather than by path-string comparison (a key may itself
+contain dots: `packageRenames { "com.foo" = "sge" }`).
+
+**Two things the format forced, both worth knowing before writing a conf.** `include` is a HOCON
+KEYWORD — `include = [...]` is a parse error — so file selection is `includeGlobs`/`excludeGlobs`.
+And a key read only on SOME code paths is reported as junk on the others: reading `determinism` only
+when no CLI flag was passed made `--determinism=full` refuse its own valid configuration, which is
+the unread-key check working exactly as intended, on the loader.
+
+**`package-rename` is refused by name, not merely absent.** It is manifest DATA because it must run
+after every other phase and `runsAfter` cannot say "after everything" (§4.56). A port told "unknown
+transform" would reasonably conclude the feature is missing; it is not missing, it is spelled
+`manifest.packageRenames`, and the error says so.
+
+**Where the confs live, and what is converted.** A port's configuration lives at
+`corpus/ports/<library>/{main,test}.conf`, beside the other port inputs (`corpus/*-overrides/`) and
+not under `src/`. Paths inside a conf resolve against THE CONF FILE, lexically, so a port directory
+is relocatable and needs no system property; `${balticporter.root}` substitution against `-D`
+properties remains for values an operator genuinely supplies.
+
+simple-graphs is converted and is the acceptance proof: `just sg-measure` measures the conf-driven
+port, and the requirement was every check count unchanged with **0 members changed** — met, on both
+source sets.
+
+libGDX and Ashley are deliberately NOT converted, and the reason is measurement rather than
+capability. Every phase either port uses is now nameable from a conf — `collections`,
+`mutable-params`, `panama-ffi`, `static-forwarder`, `class-table`, `type-redirect`, `method-body`,
+`port-map-migration`, `test-framework`, and libGDX's own §1(c) `gdx-shared-iterator` through the
+factory `corpus` ships — so what their conversion still needs is exactly three things, none of them
+mechanism:
+
+  - **libGDX's `--raw` flag.** `LibgdxCoreMigrate` takes an argument that swaps the manifest for
+    `withoutSurface`. A conf has no arguments; the equivalent is the §4.6 flag
+    `balticporter.skipPhases=*`, which is a better tool for the job anyway (it needs no second
+    manifest and it names what it skipped).
+  - **Ashley's `base` pointing at libGDX's conf.** `AshleyPolicy.core` calls
+    `LibgdxPolicy.core(repoRoot).extendedBy(...)`; the conf spelling is `base = "../libgdx/main.conf"`,
+    which is the same `extendedBy` — but it only works once libGDX itself is a conf, so the two
+    convert together or not at all.
+  - **A re-measurement of four lanes.** Each conversion has to land with `gdx-measure`,
+    `gdx-test-measure` and `ashley-measure` showing every count unchanged and 0 members changed, and
+    CLAUDE.md §5 says change one thing then measure. Converting three ports in the commit that built
+    the mechanism would have measured nothing about either.
 
 ---
 

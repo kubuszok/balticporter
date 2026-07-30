@@ -1,0 +1,193 @@
+package balticporter.runner
+
+import balticporter.tir.{ConfigError, ConfigView, OpaqueSpec, Phase, TransformFactory}
+import balticporter.transform.*
+
+/** The engine's own [[TransformFactory]] registrations — one per transform it ships that a config
+  * file can name, and nothing else.
+  *
+  * ==Which transforms are here, and why exactly these==
+  * A phase belongs here iff it is a CLAUDE.md §1(a) or §1(b) transform the engine ships. That is
+  * the whole test, and it is what makes the list closed rather than a matter of taste:
+  *
+  *   - a (b) whose policy is string-shaped is registered — every one of them, so an agent holding a
+  *     `.conf` can reach the engine's whole parameterised surface without dropping to Scala;
+  *   - a (a) with no configuration is registered taking an EMPTY config object, because a config
+  *     file still has to be able to put it in the pipeline (`mutable-params`, `panama-ffi`);
+  *   - a (c) is NOT here and cannot be — it lives in the porting repository, ships its own factory,
+  *     and is discovered on the consumer's classpath (`GdxSharedIteratorRule` is the worked one);
+  *   - `package-rename` is refused by name, see [[TransformRegistry.Reserved]].
+  *
+  * ==Why these are classes and not `object`s==
+  * `java.util.ServiceLoader` instantiates a provider through a public no-argument constructor, and
+  * a Scala `object`'s constructor is private. Registration is therefore a top-level `final class`
+  * per factory, listed in `META-INF/services/balticporter.tir.TransformFactory`. They are stateless,
+  * so nothing depends on there being one instance.
+  *
+  * ==The one thing config cannot express, stated once==
+  * Three of these phases take a `Symbol => Boolean` in Scala: `PrimitiveToOpaqueTransform.hints`,
+  * `GlobalsToImplicitsTransform.isContext`, `PanamaFfiTransform.isNative`. A predicate is CODE, and
+  * a config format that grew a way to write one would have become a scripting language with the
+  * engine as its interpreter. So each is handled the same way:
+  *
+  *   - where the predicate has a universal default that needs no policy, config uses it
+  *     (`isNative` is `_.flags.isNative` — a fact about Java, not about a library);
+  *   - where the port must name things, config names them AS DATA and the factory closes over the
+  *     data (`globals-to-implicits` takes `contextClasses`, a set of FQNs);
+  *   - where the port genuinely needs an arbitrary predicate, config REFUSES and says so, naming
+  *     the escape hatch — a factory of the port's own, in the port's own repository, in Scala
+  *     (`primitive-to-opaque`'s `hints`).
+  *
+  * That third case is the §1.5 line held: the conf path constructs the same values the Scala path
+  * constructs, and anything a value needs that config cannot express arrives as SPI-discovered
+  * code — never as a string that is secretly code.
+  */
+object BuiltinFactories:
+
+  /** every factory this module registers — the same list its service file names. A spec asserts the
+    * two agree, because a factory added here and not there is reachable from a Scala embedder and
+    * invisible to the config front door, which is the harder of the two failures to notice. */
+  def all: List[TransformFactory] = List(
+    new CollectionsFactory, new MutableParamsFactory, new PanamaFfiFactory,
+    new TestFrameworkFactory, new StaticForwarderFactory, new ClassTableFactory,
+    new TypeRedirectFactory, new MethodBodyFactory, new PortMapMigrationFactory,
+    new PrimitiveToOpaqueFactory, new GlobalsToImplicitsFactory,
+  )
+
+// ---------------------------------------------------------------------------------------------
+// (a) — no policy. The config object is empty; any key under it is caught by the loader's
+// unread-key refusal without these classes doing anything.
+// ---------------------------------------------------------------------------------------------
+
+final class MutableParamsFactory extends TransformFactory:
+  def name = "mutable-params"
+  def fromConfig(config: ConfigView): Phase = new MutableParamsTransform
+
+final class PanamaFfiFactory extends TransformFactory:
+  def name = "panama-ffi"
+  def fromConfig(config: ConfigView): Phase = new PanamaFfiTransform()
+
+// ---------------------------------------------------------------------------------------------
+// (b) — policy as data
+// ---------------------------------------------------------------------------------------------
+
+/** `{ transform = "collections", scope { except = ["com.foo.Bridge"] } }` */
+final class CollectionsFactory extends TransformFactory:
+  def name = "collections"
+  def fromConfig(config: ConfigView): Phase =
+    new CollectionsTransform(TransformFactory.scopeOf(config))
+
+/** `{ transform = "test-framework", suite = "munit.FunSuite", testMember = "test" }` */
+final class TestFrameworkFactory extends TransformFactory:
+  def name = "test-framework"
+  def fromConfig(config: ConfigView): Phase =
+    new TestFrameworkTransform(
+      suite      = config.string("suite").getOrElse(TestFrameworkTransform.DefaultSuite),
+      testMember = config.string("testMember").getOrElse("test"),
+    )
+
+/** ```
+  * { transform = "static-forwarder"
+  *   forwarders = [ { wrapper = "…", receiver = "…", members = ["…"] } ] }
+  * ```
+  */
+final class StaticForwarderFactory extends TransformFactory:
+  def name = "static-forwarder"
+  def fromConfig(config: ConfigView): Phase =
+    new StaticForwarderTransform(config.children("forwarders").getOrElse(Nil).map(f =>
+      StaticForwarderTransform.Forwarder(
+        wrapper  = f.requireString("wrapper"),
+        receiver = f.requireString("receiver"),
+        members  = f.strings("members").getOrElse(
+          throw ConfigError(f.at("members"), "required, and absent — a forwarder with no members " +
+            "forwards nothing, which is a policy entry that can only ever be a mistake")).toSet,
+      )))
+
+/** `{ transform = "class-table", redirects { "a.B#forName" = "c.D#classFor" } }` */
+final class ClassTableFactory extends TransformFactory:
+  def name = "class-table"
+  def fromConfig(config: ConfigView): Phase =
+    new ClassTableTransform(config.stringMap("redirects").getOrElse(Map.empty))
+
+/** `{ transform = "type-redirect", redirects { "a.B" = "c.D" } }` */
+final class TypeRedirectFactory extends TransformFactory:
+  def name = "type-redirect"
+  def fromConfig(config: ConfigView): Phase =
+    new TypeRedirectTransform(config.stringMap("redirects").getOrElse(Map.empty))
+
+/** `{ transform = "method-body", bodies { "a.B#m()" = "{ … }" } }` */
+final class MethodBodyFactory extends TransformFactory:
+  def name = "method-body"
+  def fromConfig(config: ConfigView): Phase =
+    new MethodBodyTransform(config.stringMap("bodies").getOrElse(Map.empty))
+
+/** `{ transform = "port-map-migration", bases = ["libgdx-core"] }`
+  *
+  * Named for the phase rather than shortened to `port-map`, which is a CHECK name in every run's
+  * report — two identifiers that differ by nothing an agent can see is how a config key and a
+  * finding get confused for each other.
+  *
+  * The policy is a list of BASE MODULE NAMES; the maps themselves are discovered from the
+  * classpath and the report tree by `PortMap.published`, which is what makes this data rather than
+  * a list of files a conf would have to keep in step with a build.
+  */
+final class PortMapMigrationFactory extends TransformFactory:
+  def name = "port-map-migration"
+  def fromConfig(config: ConfigView): Phase =
+    PortMapTransform.forBases(config.strings("bases").getOrElse(
+      throw ConfigError(config.at("bases"),
+        "required, and absent — with no base module named there is no published map to read, and " +
+          "the phase would report nothing while looking as though it had checked"))*)
+
+/** ```
+  * { transform = "primitive-to-opaque"
+  *   fqn = "sge.gl.GlHandle", underlying = "Int"
+  *   extraHints = ["sge.gl.GL20#glHandle"]
+  *   scope { only = ["sge.gl"] } }
+  * ```
+  *
+  * `hints` — `OpaqueSpec`'s own predicate, §1(c) in its purest form — is REFUSED here rather than
+  * ignored. A port whose seeds cannot be listed by name registers its own factory and constructs
+  * the `OpaqueSpec` with the predicate in Scala; that is one class in the port's repository, and it
+  * is the only sanctioned way for behaviour to enter a run from configuration.
+  *
+  * `extraHints` is the field it fills, spelled exactly as `OpaqueSpec` spells it. A second, friendlier
+  * name for the same set would be two homes for one policy, which is the cost DESIGN.md §5.6 warns
+  * about, paid for nothing.
+  */
+final class PrimitiveToOpaqueFactory extends TransformFactory:
+  def name = "primitive-to-opaque"
+  def fromConfig(config: ConfigView): Phase =
+    if config.keys.contains("hints") then
+      throw ConfigError(config.at("hints"),
+        "`OpaqueSpec.hints` is a `Symbol => Boolean` and a configuration file cannot hold one — a " +
+          "predicate written as a string would be code the engine interprets, which is precisely " +
+          "what this SPI exists to avoid (CLAUDE.md §1.5). List the seeds by fully-qualified name " +
+          "in `extraHints`, or register a `balticporter.tir.TransformFactory` of your own that " +
+          "builds the `OpaqueSpec` with the predicate in Scala.")
+    new PrimitiveToOpaqueTransform(OpaqueSpec(
+      fqn        = config.requireString("fqn"),
+      hints      = _ => false,
+      underlying = config.string("underlying")
+                     .map(OpaqueSpec.Primitive.fromScalaName)
+                     .getOrElse(OpaqueSpec.Primitive.Int),
+      extraHints = config.strings("extraHints").getOrElse(Nil).toSet,
+      scope      = TransformFactory.scopeOf(config),
+    ))
+
+/** `{ transform = "globals-to-implicits", contextClasses = ["com.foo.Config"] }`
+  *
+  * The phase takes `isContext: Symbol => Boolean`; what a port actually has to say is WHICH class is
+  * the ambient context, which is a name. So the data is a set of fully-qualified names and the
+  * factory closes over it — matched EXACTLY, not by prefix, because a context is one class and a
+  * prefix match would also name its package symbol (CLAUDE.md §4.56: a prefix is not a structural
+  * fact about anything).
+  */
+final class GlobalsToImplicitsFactory extends TransformFactory:
+  def name = "globals-to-implicits"
+  def fromConfig(config: ConfigView): Phase =
+    val names = config.strings("contextClasses").getOrElse(
+      throw ConfigError(config.at("contextClasses"),
+        "required, and absent — with no context class named, the phase would find none and do " +
+          "nothing, which is the §1(b) silent no-op this engine refuses")).toSet
+    new GlobalsToImplicitsTransform(s => names.contains(s.fullName))

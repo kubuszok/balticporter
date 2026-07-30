@@ -9,12 +9,18 @@ import balticporter.tir.Phase
   * `governs` and `inject` are string-keyed DATA — no behaviour, nothing a compiler checks that a
   * parser could not. `surface` is a list of PHASES, and a phase is code: a §1(c) rule is a
   * traversal encoding an invariant of one library's design, and no config format expresses it.
-  * Trying would turn the engine into a plugin registry, which `CLAUDE.md` §2.1 explicitly refuses
-  * ("Implement `balticporter.tir.Phase`; there is no registry, service loader or plugin
-  * descriptor").
   *
   * So the declarative half can be data and the surface cannot, and the honest design says so
   * rather than pretending a manifest is uniformly one or the other.
+  *
+  * ==What `PortConfig` adds, and where the line still is==
+  * A phase can now be NAMED from a HOCON file (DESIGN.md §5.7): `balticporter.runner.PortConfig`
+  * reads a whole `PortRun`, surface included, resolving each `transform = "…"` through a
+  * `ServiceLoader`-discovered `balticporter.tir.TransformFactory`. That does not move the line
+  * above — the phase is still code the consumer compiled, and the config file holds a NAME, never
+  * behaviour. What it means for THIS object is only that the two readers have different jobs:
+  * [[fromPortMap]] recovers a dependent's declarative half from what a base PUBLISHED, and
+  * `PortConfig` reads what an author WROTE.
   *
   * ==The schema is the port map's, deliberately==
   * A key means the same thing in both: a type is a fully-qualified name, a member is the ERASED

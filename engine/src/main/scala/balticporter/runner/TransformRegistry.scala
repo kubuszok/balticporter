@@ -1,0 +1,72 @@
+package balticporter.runner
+
+import balticporter.tir.{ConfigError, ConfigView, Phase, TransformFactory}
+
+import java.util.ServiceLoader
+import scala.jdk.CollectionConverters.*
+
+/** The [[TransformFactory]] instances visible on one classpath, and the only place a config file's
+  * `transform = "…"` is turned into a [[Phase]].
+  *
+  * ==One discovery mechanism, not two==
+  * The engine's own parameterisable transforms are registered exactly the way a consumer's rule is
+  * — a `META-INF/services/balticporter.tir.TransformFactory` line in `balticporter-engine`'s own
+  * resources. A built-in table beside the service loader would be a second mechanism that only the
+  * engine could use, and the first thing a consumer would discover is that its own factory behaves
+  * differently from the ones it can read the source of.
+  *
+  * ==Reserved names==
+  * `package-rename` is NOT constructible, and the refusal is specific rather than falling through to
+  * "unknown transform". `PackageRenameTransform` has an ordering obligation `runsAfter` cannot state
+  * — it must run after every other phase, because all of their policy is written in the upstream
+  * namespace (CLAUDE.md §4.56) — so `PortRun` takes it as MANIFEST DATA and appends it last. A port
+  * that listed it as a surface entry would be told "unknown transform" and reasonably conclude the
+  * feature is missing; it is not missing, it is spelled `manifest.packageRenames`.
+  */
+final class TransformRegistry(val factories: List[TransformFactory]):
+
+  private val byName: Map[String, TransformFactory] =
+    factories.groupBy(_.name).map { (n, fs) =>
+      if fs.sizeIs > 1 then
+        throw ConfigError(s"transform '$n'",
+          s"${fs.size} factories claim this name (${fs.map(_.getClass.getName).sorted.mkString(", ")}); " +
+            "a transform name is published API and exactly one class may answer to it")
+      n -> fs.head
+    }
+
+  /** every name a `.conf` may write here, sorted — what an unknown-name error lists. */
+  def names: List[String] = byName.keys.toList.sorted
+
+  def get(name: String): Option[TransformFactory] = byName.get(name)
+
+  /** Build one surface entry. `where` is the config path, for the error. */
+  def phase(name: String, config: ConfigView, where: String): Phase =
+    TransformRegistry.Reserved.get(name) match
+      case Some(why) => throw ConfigError(where, why)
+      case scala.None =>
+        byName.get(name) match
+          case Some(f) => f.fromConfig(config)
+          case scala.None =>
+            throw ConfigError(where,
+              s"unknown transform '$name'; discovered on this classpath: ${names.mkString(", ")}. " +
+                "A transform this engine does not ship is registered by putting the consumer's own " +
+                "`balticporter.tir.TransformFactory` implementation on the classpath with a " +
+                "`META-INF/services/balticporter.tir.TransformFactory` entry (CLAUDE.md §1(c)).")
+
+object TransformRegistry:
+
+  /** names a surface list may never hold, each with the reason and the thing to write instead. */
+  val Reserved: Map[String, String] = Map(
+    "package-rename" ->
+      ("`package-rename` is not a surface transform. It has to run AFTER every other phase — all " +
+        "of their policy is written in the UPSTREAM namespace, and `runsAfter` cannot say \"after " +
+        "everything\" (CLAUDE.md §4.56) — so it is MANIFEST DATA that `PortRun` appends last and " +
+        "verifies. Write `manifest.packageRenames { \"upstream.prefix\" = \"port.prefix\" }` instead.")
+  )
+
+  /** every factory the given classloader can see. */
+  def discover(loader: ClassLoader = getClass.getClassLoader): TransformRegistry =
+    new TransformRegistry(ServiceLoader.load(classOf[TransformFactory], loader).asScala.toList)
+
+  /** an explicit registry, for a spec or for an embedder that does not want classpath discovery. */
+  def of(factories: TransformFactory*): TransformRegistry = new TransformRegistry(factories.toList)

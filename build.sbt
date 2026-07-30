@@ -173,6 +173,12 @@ lazy val engine = project
     name := "balticporter-engine",
     libraryDependencies ++= Seq(
       "org.scalameta" %% "scalameta" % "4.17.2", // `verify` — skeleton diff over emitted Scala
+      // The CONFIG front door (`PortConfig`, `PortConfigMain`). Deliberately here and not in `api`:
+      // the SPI a rule author implements takes `balticporter.tir.ConfigView`, so `api` keeps the
+      // property DESIGN.md §3.2 asks of it — it depends on nothing. No derivation library beside
+      // it: the schema is ~15 keys read by hand, and a derived reader could not produce the
+      // unknown-key refusal that is half the point (HOCON tolerates junk; a port must not).
+      "com.typesafe"   % "config"    % "1.4.5",
       munit,
     ),
     // The engine's coordinates, generated from the build so `EngineInfo.version` cannot drift from

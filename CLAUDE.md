@@ -104,6 +104,11 @@ So the shared surface is a VALUE — `PortManifest` — that a dependent imports
 (`base.extendedBy(...)`), never a block of policy it repeats. Ordinary Scala, type-checked by the
 consumer's compiler; a manifest DSL would move the policy out of reach of both.
 
+A port may also be written as a `.conf` (DESIGN.md §5.7), and that is not a second truth: the config
+path CONSTRUCTS these same values through these same constructors, `base = "…"` IS `extendedBy`, and
+anything config cannot hold — a predicate, a rule — arrives only as `ServiceLoader`-discovered code,
+never as a string that is secretly code.
+
 The line between what must agree and what must not:
 
 | inherited — a fact about the SHARED SURFACE | not inherited — a fact about THIS module's build |

@@ -1,0 +1,13 @@
+# The engine's own §1(a)/§1(b) transforms, as named surface entries for a port `.conf`.
+# `BuiltinFactories.all` must list exactly these classes — `TransformRegistrySpec` asserts it.
+balticporter.runner.CollectionsFactory
+balticporter.runner.MutableParamsFactory
+balticporter.runner.PanamaFfiFactory
+balticporter.runner.TestFrameworkFactory
+balticporter.runner.StaticForwarderFactory
+balticporter.runner.ClassTableFactory
+balticporter.runner.TypeRedirectFactory
+balticporter.runner.MethodBodyFactory
+balticporter.runner.PortMapMigrationFactory
+balticporter.runner.PrimitiveToOpaqueFactory
+balticporter.runner.GlobalsToImplicitsFactory

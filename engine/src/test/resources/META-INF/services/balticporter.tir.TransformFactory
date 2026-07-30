@@ -1,0 +1,4 @@
+# TEST-ONLY registration, standing in for a §1(c) rule shipped by a porting repository. Its whole
+# job is to prove that discovery finds a factory the engine knows nothing about, beside the
+# built-ins — see `PortConfigSpec`.
+balticporter.runner.SpecEchoFactory
