@@ -168,25 +168,51 @@ Reasoning from first principles when a worked answer exists nearby wastes whole 
 
 ## 3.6 Where a discovery goes
 
-A lesson that would change how the NEXT library is ported does not belong only in that port's status
-file — nothing loads it, and it gets re-derived. Put it in whichever of these fits, in the same
-commit that learned it:
+A lesson that would change how the NEXT library is ported does not belong only in that port's
+progress section — nothing loads it, and it gets re-derived. **There is one document per KIND**, and
+a discovery goes into whichever fits, in the same commit that learned it:
 
 | home | for |
 |---|---|
 | this file | a governing rule or constraint for all porting work |
 | `ENGINE-LIMITS.md` | a MEASURED dead end or engine limit — what not to retry, and what it cost |
+| `DESIGN.md` | a DECISION about what the engine is or how it is built |
+| `PROGRESS.md` | the STATE of a port or of publishability — measurements, residues, remaining work |
 | a skill (`.claude/skills/**`) | a procedure, e.g. adding a library to the corpus |
 | an agent definition (`.claude/agents/**`) | what a reviewer should hunt for |
 
-The per-library status file keeps the MEASUREMENTS and the dead ends with their numbers. The rule
-extracted from them goes above. A rule that names a specific library is per-library policy and
+**Do not add a seventh document.** A new file for one investigation is a file nothing loads; see §3.7.
+
+That library's `PROGRESS.md` section keeps the MEASUREMENTS and the dead ends with their numbers. The
+rule extracted from them goes above. A rule that names a specific library is per-library policy and
 belongs in that library's manifest instead (§1c).
 
 `ENGINE-LIMITS.md` is the split between the first two rows: this file says what you must do,
 `ENGINE-LIMITS.md` says what has already been tried and measured worse, grouped by what an agent is
 doing when it hits the wall and classified (a)/(b)/(c). Add to it in the same commit that measures
 the failure, and keep the number — a dead end without its number is an opinion.
+
+## 3.7 A RESEARCH FILE IS NOT A DELIVERABLE
+
+Working through a question often wants a scratch document — a survey, a table of candidate shapes, a
+transcript of what four experiments measured. **Write it. Do not commit it.**
+
+- Scratch and research files live under **`.balticporter/`**, which is gitignored and which the
+  measure scripts already use for their own captures. Nothing else in the repository is a valid home
+  for one.
+- Before the work is called done, what the file FOUND is incorporated: a decision into `DESIGN.md`, a
+  measurement or a residue into `PROGRESS.md`, a measured dead end into `ENGINE-LIMITS.md`, a
+  governing rule here. Then the scratch file is deleted, not committed.
+- A committed research file is worse than no file. It is not in the §3.6 table, so nothing loads it;
+  it accretes a status section, so it starts disagreeing with `PROGRESS.md`; and its conclusions get
+  re-derived anyway because the next agent never opens it. Every document deleted in the
+  consolidation that produced `DESIGN.md` and `PROGRESS.md` began as exactly this.
+
+**A TODO list shrinks by DELETION.** A completed item is REMOVED — never moved to a "done" section,
+never struck through, never annotated `[x]`. A list that only grows stops being a list of what is
+left and becomes a changelog nobody reads, and the remaining work is then invisible inside it. If a
+finished item taught something worth keeping, that lesson goes to one of the §3.6 homes; the list
+entry still goes. Git history is the record of what was done.
 
 ## 4. The Auditor
 
@@ -201,8 +227,36 @@ It runs on the **Fable 5** model and is expensive, so it is **not** run on every
 
 ## 5. Measurement discipline
 
-- Reproduce libGDX numbers with `bash scripts/gdx_measure.sh`; the migration prints four independent
-  checks on every run (signature consistency, omissions, portability, substitutions removed).
+- **Reproduce every number with the measure scripts, serially.** There are four lanes and each
+  re-emits into `src_managed/`, so a dependent lane compiles against what the base lane just wrote:
+
+  | script | lane |
+  |---|---|
+  | `scripts/gdx_measure.sh` | libGDX core — emit, checks, break residue, compile, correlate |
+  | `scripts/gdx_test_measure.sh` | libGDX's own suite — the same, then RUN it |
+  | `scripts/ashley_measure.sh` | Ashley + its suite, compiled WITH libGDX core (a dependent port) |
+  | `scripts/sg_measure.sh` | simple-graphs + its suite |
+  | `scripts/decision_counts.sh` | `decisions.tsv` row counts by kind, every port |
+
+  Each prints, untruncated and diffed against the committed baseline, **fifteen checks** — not four.
+  Twelve are required of every run (`signature`, `omissions`, `portability(all|emitted|injected)`,
+  `substitution(emitted|dangling)`, `remediation`, `policy`, `manifest`, `port-map`, `trivia`) and
+  three record when their phase is present (`porter-notes`, `collection-closure`,
+  `collection-boundary`). `PortRun.RequiredChecks` is asserted against what actually recorded, so a
+  number that reaches stdout and not `findings.tsv` fails the run.
+
+  Four more measurements are NOT check counts and are printed beside them, because each catches a
+  class nothing else can see:
+
+  - **`break_residue`** — untranslated `break`/`continue` jumps left in emitted code. It was quoted
+    in prose as "45, all switch-case" while nothing computed it; the real number was 55 (§4.4).
+  - **the TEST lane** — `reconcile_outcomes` reconciles outcomes against the **emitted** test count,
+    not against a sum of markers, so a test with no recognised line is reported whatever the reason
+    (§5.1). A skipped test is not a passing test.
+  - **`members.tsv`** — which members' emitted text moved, available BEFORE any compile (§5.1).
+  - **`decisions.tsv` + the porter notes** — how many non-mechanical decisions the port made, by
+    kind, and whether every one of them reached the code (§4.575). `porter-notes` is the check;
+    `scripts/decision_counts.sh` is the size, which nothing else prints.
 - **Change one thing, then measure.** Two changes measured together cost a full cycle to untangle
   and tell you nothing about either.
 - **Record what regressed and why**, in that library's `PROGRESS.md` section under "Do NOT retry". A

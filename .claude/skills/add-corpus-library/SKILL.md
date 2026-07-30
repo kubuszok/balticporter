@@ -70,6 +70,21 @@ Things that are now errors rather than omissions:
 - a check going unrun — `PortRun.RequiredChecks` is asserted against what actually recorded, so a
   number that reaches stdout and not `findings.tsv` fails the run.
 
+**What a new port gets for free, and should not rebuild.** Every `PortRun` writes, into
+`port-report/<MainClass>/run-latest/`: `findings.tsv` + `counts.tsv` + `report.md` + `diff.txt`
+(fifteen checks, sorted, path-relative, diffed against a promotable `baseline/`); `srcmap.tsv`
+(member → emitted lines → Java origin) and `members.tsv` (one digest per member — the blast radius,
+available before any compile); `decisions.tsv`, one row per declaration whose emitted form a
+non-mechanical decision changed, each carrying its `CLAUDE.md` §1 classification and, for a
+configured one, the manifest key **verbatim**; `port-map.tsv`, which is what a dependent of this
+module will read; and `dropped-types.tsv`, from which deliberate test failures are DERIVED rather
+than listed. The matching `/* porter: … */` notes are emitted beside the code itself —
+`grep -rn '/\* porter:' src_managed` is the complete inventory of what this port did
+non-mechanically. `subject.txt` is the `before->after` fragment for your commit subject.
+
+None of that needs configuring. If your library's numbers are not appearing, the run did not reach
+the artifact layer — do not add a writer.
+
 ### 2.05 A SECOND module — a dependent port
 
 A library is rarely one module, and the second one is where ports drift. An extension (a plugin, an
@@ -164,9 +179,36 @@ a rule that encodes an invariant of that library's design is a (c).
 
 ## 3. Make it compile
 
-Add a measurement script beside `scripts/gdx_measure.sh`: re-emit, then compile with
-`scala-cli compile --scala 3.8.4 --server=false`, and count
-`^-- (\[E[0-9]+\] )?.*Error` — coded AND bare, since the coded-only count silently undercounts.
+Add a measurement script beside `scripts/gdx_measure.sh` and source `scripts/_report.sh`. The shape,
+in order — every element of it exists because leaving it out hid something:
+
+1. `write_run_props` with `balticporter.reportPathRoot` — a finding's stable id is hashed from paths
+   relative to it, so without it every finding diffs as removed-and-re-added against a baseline whose
+   counts are identical (`CLAUDE.md` §4.6).
+2. run the migration and **abort if it did not run**: `grep -qE "wrote [0-9]+ Scala( test)? files"`.
+   Piping straight into a count discards the exit status, so an engine that failed to compile
+   measures the PREVIOUS emit and reports a stale number as a result.
+3. `show_check_report` for each report directory — the whole block, never a `grep` for named lines,
+   which is exactly how the checks got discarded by the one command everyone runs.
+4. `java_test_count` against the Java suite, compared with what is discoverable in the emitted Scala.
+   A suite with no discoverable tests runs ZERO and reports SUCCESS.
+5. `break_residue <emitted-dir>` — untranslated `break`/`continue` jumps in emitted code.
+6. compile with `scala-cli compile --scala 3.8.4 --server=false`, **strip ANSI** (`sed
+   's/\x1b\[[0-9;]*m//g'` — dropped once, and every line then began with an escape, reporting 0
+   errors for a port that had 20), count `^-- (\[E[0-9]+\] )?.*Error` — coded AND bare, since the
+   coded-only count silently undercounts — and pass both through `compile_guard`, which catches a
+   compiler that died without emitting errors.
+7. if it compiles, `scala-cli test`, then `reconcile_outcomes <run-file> <emitted-count>`: outcomes
+   are reconciled against the EMITTED count, not a sum of markers, so a test with no recognised line
+   is reported whatever the reason. MUnit prints THREE terminal markers and the third — `==> s …
+   skipped` — is what a suite abandoned after a fatal `Error` produces.
+8. `correlate` over the compiler output (or the test output) with every relevant `srcmap.tsv`,
+   including the BASE port's if this is a dependent — a stack that reaches the base is exactly what a
+   dependent's failure looks like.
+9. `headline` last.
+
+A dependent port compiles the base's emitted Scala and its own on ONE `scala-cli` invocation.
+Compiling the dependent alone measures nothing.
 
 **The moment the first wall of errors appears, read `ENGINE-LIMITS.md` — before designing any fix.**
 It is the measured record of what has already been tried: raw types and wildcards, constructors,
@@ -199,6 +241,12 @@ the tree with `StandardTraversal`, never a private recursion. Then **negative-te
 break something deliberately and confirm it reports. A check that has never failed is not known to
 work.
 
+**Run the engine's own suite with `sbt -batch "testOnly *"` — never `sbt test`, never `testFull`.**
+Bare `sbt test` maps to `testQuick` in this build and silently reports "No tests to run", so a green
+`sbt test` has never been a gate here. And `testFull` over an unchanged tree is a cache REPLAY, not a
+run: it keys on BYTECODE, so it proves nothing about flakiness and nothing about your change
+(`ENGINE-LIMITS.md` M5.7).
+
 ## 6. Write it down — in `PROGRESS.md`, as a new section
 
 **Do not create a per-library status file.** Add a section for the library to `PROGRESS.md`, beside
@@ -217,6 +265,11 @@ next library will be ported in a repository that never sees your measurements (`
 §4.45). Leave a one-line pointer where you lifted it; the measurement stays. If your library
 confirmed, contradicted or generalised an existing entry, **say so in that entry** — a limit that
 survives a second library is stronger evidence than the one that first recorded it.
+
+Research and scratch files stay under gitignored `.balticporter/` and are **never committed**
+(`CLAUDE.md` §3.7). Incorporate what they found into `DESIGN.md` (a decision) or `PROGRESS.md`
+(state) before calling the work done, then delete them. And maintain the remaining-work list by
+DELETION — a done item is removed, not moved to a "done" section.
 
 ## 7. Hand off to the Auditor
 
