@@ -11,7 +11,7 @@ class PortManifestConfigSpec extends munit.FunSuite:
   test("a dependent READS the base's drops instead of restating them") {
     // The point of the whole exercise: the reason a dependent restates a base's policy is that it
     // had no way to LEARN it. A published map removes that reason.
-    val base = PortMap.Map0("libgdx-core", "eng", List(
+    val base = PortMap.Map0("base-core", "eng", List(
       entry("type", "p.Json", "", Disposition.Dropped),
       entry("type", "p.Pools", "p.Pools", Disposition.Substituted),
       entry("type", "p.Kept", "p.Kept", Disposition.Ported),
@@ -28,25 +28,25 @@ class PortManifestConfigSpec extends munit.FunSuite:
 
   test("a package rename is RECOVERED from renamed types, cut at a separator") {
     val base = PortMap.Map0("b", "eng", List(
-      entry("type", "com.badlogic.gdx.ui.Widget", "sge.ui.Widget", Disposition.Renamed),
-      entry("type", "com.badlogic.gdx.Batch", "sge.Batch", Disposition.Renamed),
+      entry("type", "com.acme.lib.ui.Widget", "port.ui.Widget", Disposition.Renamed),
+      entry("type", "com.acme.lib.Batch", "port.Batch", Disposition.Renamed),
     ))
     val m = PortManifestConfig.fromPortMap("d", base)
-    // the pair is the PREFIX, never a partial segment: `com.badlogic.gdx -> sge`, not
-    // `com.badlogic.gdx.Ba -> sge.Ba` from the shared `tch`/`tch` suffix of Batch.
-    assertEquals(m.packageRenames, Map("com.badlogic.gdx" -> "sge"))
+    // the pair is the PREFIX, never a partial segment: `com.acme.lib -> port`, not
+    // `com.acme.lib.Ba -> port.Ba` from the shared `tch`/`tch` suffix of Batch.
+    assertEquals(m.packageRenames, Map("com.acme.lib" -> "port"))
   }
 
   test("render/parse round-trips the declarative half") {
     val m = PortManifest(
-      name           = "libgdx-core",
-      governs        = Set("com.badlogic.gdx"),
+      name           = "base-core",
+      governs        = Set("com.acme.lib"),
       dropTypes      = Set("p.Json", "p.Pools"),
       dropMethods    = Set("p.Array#toArray(Class)"),
-      packageRenames = Map("com.badlogic.gdx" -> "sge"),
+      packageRenames = Map("com.acme.lib" -> "port"),
     )
     val back = PortManifestConfig.parse(PortManifestConfig.render(m), surface = Nil)
-    assertEquals(back.map(_.name), Right("libgdx-core"))
+    assertEquals(back.map(_.name), Right("base-core"))
     assertEquals(back.map(_.governs), Right(m.governs))
     assertEquals(back.map(_.dropTypes), Right(m.dropTypes))
     assertEquals(back.map(_.dropMethods), Right(m.dropMethods))
