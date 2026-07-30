@@ -121,7 +121,7 @@ final class MethodBodyFactory extends TransformFactory:
   def fromConfig(config: ConfigView): Phase =
     new MethodBodyTransform(config.stringMap("bodies").getOrElse(Map.empty))
 
-/** `{ transform = "port-map-migration", bases = ["libgdx-core"] }`
+/** `{ transform = "port-map-migration", bases = ["base-core"] }`
   *
   * Named for the phase rather than shortened to `port-map`, which is a CHECK name in every run's
   * report — two identifiers that differ by nothing an agent can see is how a config key and a
