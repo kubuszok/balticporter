@@ -26,22 +26,47 @@ import balticporter.tir.*
   *   are licensed (Apache-2.0 so far), and a derived work ships its notice. A green build cannot
   *   report a missing one, so nothing but passing it makes the output compliant.
   */
+/** @param notes
+  *   the RUN's decision log, read at emission so every decision whose subject this emitter is
+  *   rendering can carry a [[balticporter.tir.PorterNote]] beside the code (CLAUDE.md §4.57's
+  *   neighbourhood: the porter note grammar). READ-ONLY here: the emitter's own decisions are
+  *   exposed as [[ownDecisions]] and recorded by the orchestrator exactly once, so the
+  *   determinism double-emission — a SECOND emitter over the same program, sharing this log —
+  *   renders the same notes without recording a second copy of them.
+  *
+  *   A value the run owns, never a process-global table: two emitters in one JVM contaminated
+  *   the source map's global predecessor and would contaminate this the same way (§5.1).
+  */
 final class TirEmitter(
     source: Program,
     externalConcrete: Map[String, Set[(String, List[Int])]] = Map.empty,
     provenance: Option[Provenance] = scala.None,
+    notes: DecisionLog = new DecisionLog,
 ):
+  /** what the NORMALISATION below decided — a value, handed to the orchestrator rather than
+    * recorded from here, so constructing an emitter has no side effect on the run's log. */
+  private val own = collection.mutable.ListBuffer.empty[Decision]
+
   // normalize away Java member-name clashes (a field `x` alongside a method `x()`) before
   // rendering — Scala forbids them; renaming the field symbol propagates to every reference.
   private val prepared =
-    TirEmitter.funnelParamRenames(TirEmitter.resolveFieldShadowing(TirEmitter.resolveMemberClashes(source)))
+    TirEmitter.funnelParamRenames(
+      TirEmitter.resolveFieldShadowing(TirEmitter.resolveMemberClashes(source, own), own), own)
   /** which Java constructor becomes each class's Scala primary, and which `super(args)` can be
     * replayed as statements — whole-program decisions. */
   private val plans = CtorFunnel.Plans(prepared)
   // a replayed parent constructor's statements execute one level down, so the private members
   // they reach must be visible there. Widening only rewrites symbol FLAGS — the trees `plans`
   // was computed over are untouched, so it still applies.
-  private val program = TirEmitter.widen(prepared, plans.widenedMembers)
+  private val program = TirEmitter.widen(prepared, plans.widenedMembers, own)
+
+  /** The decisions THIS emitter made — the three §4.55 renaming passes and the replay widening.
+    *
+    * A value rather than a recording, for the reason the `notes` parameter gives: the orchestrator
+    * records these once, from the emitter it keeps, and the determinism twin's identical copy is
+    * simply never read. Recording from the constructor would double every row on any run that
+    * builds two emitters — which is every run, since `Determinism.Emission` is the default. */
+  val ownDecisions: List[Decision] = own.toList
 
   def emit: String = program.units.map(emitUnit).mkString("\n\n")
 
@@ -62,15 +87,22 @@ final class TirEmitter(
     currentTopLevelSym = cd.symbol
     currentOwnerSym = cd.symbol
     slots.clear(); stmtSeq.clear()
-    val body = classDef(cd, 0)
     val full = sym(cd.symbol).fullName
+    currentUnitName = full
+    printedNotes.clear()
+    val body = classDef(cd, 0)
     val pkg  = if full.contains('.') then s"package ${full.substring(0, full.lastIndexOf('.'))}\n\n" else ""
     // The generated banner says what the FILE is; the upstream's own header — its licence — follows
     // verbatim, before the `package` clause it sat above in Java. Both, in that order: the banner
     // carries the `Original license:` SPDX line and the upstream commit, which is the machine-
     // readable half, and the notice itself is the half the licence actually obliges us to
     // reproduce. Neither substitutes for the other (CLAUDE.md §4.57).
-    val text = header(cd) + leading(cd.unitLeading, 0) + pkg + body
+    // FILE-LEVEL porter notes sit between the upstream's own header and the `package` clause. Not
+    // above the licence: the banner and the notice are the ORIGINAL's (§4.57/§4.58) and a note
+    // wedged into them reads as part of the attribution. Below them and above `package` is the
+    // first line that is the port speaking for itself — and it is exactly where a reader who has
+    // just noticed the package is not the upstream one is looking.
+    val text = header(cd) + leading(cd.unitLeading, 0) + unitNotes(cd) + pkg + body
     if SrcMap.enabled then recordedMap(full) = srcMapOf(full, cd, text)
     text
 
@@ -81,6 +113,72 @@ final class TirEmitter(
 
   private val recordedMap    = collection.mutable.LinkedHashMap.empty[String, List[SrcMap.Entry]]
   private val recordedMisses = collection.mutable.ListBuffer.empty[String]
+
+  // ---------------------------------------------------------------------------
+  // PORTER NOTES — one `Decision`, rendered beside the code it explains.
+  //
+  // Read-only over the run's log and INDEXED BY `SymId`, never by name: three of this emitter's
+  // own passes rename the symbol before it is rendered, so a name-keyed index would be empty on
+  // exactly the decisions (`style` -> `style$shadow`) the notes exist for. The decision carries
+  // the id, and the id is what survives every rename in this file.
+  //
+  // A note is EMITTED TEXT, so it moves member digests — which is the intended and accepted blast
+  // of adding them, and the reason the emitter records what it printed (`printedNotes`) rather
+  // than letting a coverage check re-derive it from the text.
+  // ---------------------------------------------------------------------------
+
+  private lazy val noteIndex: Map[SymId, List[Decision]] =
+    notes.all.filter(d => PorterNote.Rendered(d.kind) && d.subject != SymId.None)
+      .groupBy(_.subject)
+      // stable within a subject: the artifact sorts, and so must the emitted text, or two runs of
+      // one program disagree byte-for-byte on a member with two decisions.
+      .view.mapValues(_.sortBy(d => (d.kind.toString, d.reason.className, d.reason.detail, d.tsv))).toMap
+
+  /** decisions with NO subject symbol, grouped by the FQN they name — the rows a policy key makes
+    * about a type this run never interned (a drop that matched nothing, an injected file). Keyed by
+    * name because that is all such a row has. */
+  private lazy val noteIndexByFqn: Map[String, List[Decision]] =
+    notes.all.filter(d => PorterNote.Rendered(d.kind) && d.subject == SymId.None)
+      .groupBy(_.subjectFqn).view.mapValues(_.sortBy(_.tsv)).toMap
+
+  // per UNIT, and cleared when that unit is re-emitted — the same idempotence `recordedMap` has,
+  // for the same reason: `Determinism` and the action cache both re-render units, and an
+  // append-only list would report each note twice and make the coverage check's "one note per
+  // decision" arithmetic a function of how many times the emitter was called.
+  private val recordedNotes = collection.mutable.LinkedHashMap.empty[String, collection.mutable.ListBuffer[PorterNote.Printed]]
+  private def printedNotes: collection.mutable.ListBuffer[PorterNote.Printed] =
+    recordedNotes.getOrElseUpdate(currentUnitName, collection.mutable.ListBuffer.empty)
+
+  /** every note THIS emitter printed, in printing order — the input to [[NoteCoverageCheck]]. */
+  def notesPrinted: List[PorterNote.Printed] = recordedNotes.values.toList.flatten
+
+  /** the notes for `s` whose kind is in `kinds`, rendered at indent `i` and recorded as printed.
+    * `""` when there are none, which is the overwhelming majority of members — so this can be
+    * spliced into every definition site unconditionally. */
+  private def noteBlock(s: SymId, i: Int, kinds: Set[Decision.Kind]): String =
+    noteIndex.get(s).map(_.filter(d => kinds(d.kind))) match
+      case Some(ds) if ds.nonEmpty =>
+        val ind0 = ind(i)
+        ds.map { d =>
+          printedNotes += PorterNote.Printed(d.kind, d.subject, d.subjectFqn, currentUnitName)
+          PorterNote.render(d, ind0)
+        }.mkString
+      case _ => ""
+
+  /** notes above a DEFINITION — a `def`, a `val`, a nested `class`. */
+  private def declNotes(s: SymId, i: Int): String = noteBlock(s, i, PorterNote.AtDeclaration)
+
+  /** notes at the HEAD of a type's body: what is NOT in this type and why (a dropped member has no
+    * declaration to sit above). Placed first so a reader scanning for a member it cannot find sees
+    * the answer before the members that are there. */
+  private def bodyNotes(s: SymId, i: Int): String = noteBlock(s, i, PorterNote.InBody).stripSuffix("\n")
+
+  /** the FILE-level notes: everything decided about the TOP-LEVEL unit's own symbol — the namespace
+    * rename above all, which is a fact about the whole file rather than about a declaration in it.
+    * A NESTED type's notes are rendered at its own `class` keyword by [[declNotes]] instead. */
+  private def unitNotes(cd: Tree.ClassDef): String = declNotes(cd.symbol, 0)
+
+  private var currentUnitName: String = ""
 
   // ---------------------------------------------------------------------------
   // SOURCE MAP — member → emitted line range → Java Origin (UNPORTABLE-DESIGN.md §5.2)
@@ -642,6 +740,10 @@ final class TirEmitter(
 
   private def classDef1(cd: Tree.ClassDef, i: Int): String =
     val s  = sym(cd.symbol)
+    // A NESTED type carries its own notes at its `class` keyword; the TOP-LEVEL one's are the
+    // file's (`unitNotes`) and must not be printed twice.
+    val cnote = if cd.symbol == currentTopLevelSym then "" else declNotes(cd.symbol, i)
+    val bnote = bodyNotes(cd.symbol, i + 1)
     val kw =
       if s.flags.isModule then "object"
       else if s.flags.isTrait then "trait"
@@ -689,12 +791,14 @@ final class TirEmitter(
     if kw == "class" && parents.isEmpty && cd.body.nonEmpty && !hasInstanceState && pparams.isEmpty &&
        !extendedTypes(cd.symbol) && !instantiatedTypes(cd.symbol) then
       val members = cd.body.filterNot { case d: Tree.DefDef => sym(d.symbol).name == "<init>"; case _ => false }
-      val ob = orderBody(members, paramfulPrimary).map(memberStat(_, i + 1)).filter(_.nonEmpty).mkString("\n")
-      return s"${leading(cd.leading, i)}${ind(i)}object ${esc(s.name)}$tps {\n$ob\n${ind(i)}}"
+      val ob0 = orderBody(members, paramfulPrimary).map(memberStat(_, i + 1)).filter(_.nonEmpty).mkString("\n")
+      val ob  = if bnote.isEmpty then ob0 else s"$bnote\n$ob0"
+      return s"${leading(cd.leading, i)}$cnote${ind(i)}object ${esc(s.name)}$tps {\n$ob\n${ind(i)}}"
     // Java statics have no instance home in Scala — they move to the companion object.
     val (statics, instance) = if s.flags.isModule then (Nil, loweredBody) else loweredBody.partition(isStatic)
     val self    = cd.selfType.map(st => s"${ind(i + 1)}self: ${tpe(st.tpe)} =>\n").getOrElse("")
-    val body0   = joinStats(orderBody(instance, paramfulPrimary).map(memberStat(_, i + 1)).filter(_.nonEmpty))
+    val body1   = joinStats(orderBody(instance, paramfulPrimary).map(memberStat(_, i + 1)).filter(_.nonEmpty))
+    val body0   = if bnote.isEmpty then body1 else joinStats(bnote :: List(body1).filter(_.nonEmpty))
     val diamonds = diamondOverrides(cd, i + 1)
     val body    = if diamonds.isEmpty then body0 else joinStats(List(body0).filter(_.nonEmpty) ++ diamonds)
     val open    = if body.isEmpty && self.isEmpty then "" else s" {\n$self$body\n${ind(i)}}"
@@ -715,8 +819,8 @@ final class TirEmitter(
     val ctorLead = plan.primary.toList.flatMap(_.leading)
     val cls     =
       if s.flags.isAnnotation then
-        s"${leading(cd.leading, i)}${annots(s, i)}${ind(i)}class ${esc(s.name)}$tps$prim extends scala.annotation.StaticAnnotation"
-      else s"${leading(cd.leading ++ ctorLead, i)}${annots(s, i)}${ind(i)}${mods(s.flags.copy(isPrivate = false))}$abs$kw ${esc(s.name)}$tps$prim$ext$open"
+        s"${leading(cd.leading, i)}$cnote${annots(s, i)}${ind(i)}class ${esc(s.name)}$tps$prim extends scala.annotation.StaticAnnotation"
+      else s"${leading(cd.leading ++ ctorLead, i)}$cnote${annots(s, i)}${ind(i)}${mods(s.flags.copy(isPrivate = false))}$abs$kw ${esc(s.name)}$tps$prim$ext$open"
     // Java interface/parent CONSTANTS are `static`, so they live in the parent's companion object
     // — which Scala does NOT inherit. Re-export each static-bearing parent's companion so an
     // inherited constant accessed via a subclass (`GL30.GL_LUMINANCE`, declared in `GL20`) resolves.
@@ -781,9 +885,11 @@ final class TirEmitter(
     // constant name), so `name()` returns it. Skip if the enum already declares a `name` member.
     val hasName = instance.exists { case d: Definition => sym(d.symbol).name == "name"; case _ => false }
     val nameM   = if hasName then Nil else List(s"${ind(i + 1)}def name(): java.lang.String = this.toString()")
-    val members = orderBody(instance).map(memberStat(_, i + 1)).filter(_.nonEmpty) ++ nameM
+    val cnote   = if cd.symbol == currentTopLevelSym then "" else declNotes(cd.symbol, i)
+    val bnote   = bodyNotes(cd.symbol, i + 1)
+    val members = List(bnote).filter(_.nonEmpty) ++ orderBody(instance).map(memberStat(_, i + 1)).filter(_.nonEmpty) ++ nameM
     val cbody   = members.mkString("\n")
-    val cls     = s"${leading(cd.leading, i)}${ind(i)}sealed abstract class $name$eprimary$ext" + (if cbody.isEmpty then "" else s" {\n$cbody\n${ind(i)}}")
+    val cls     = s"${leading(cd.leading, i)}$cnote${ind(i)}sealed abstract class $name$eprimary$ext" + (if cbody.isEmpty then "" else s" {\n$cbody\n${ind(i)}}")
     val cases = cd.enumCases.map { ec =>
       val cn   = esc(sym(ec.symbol).name)
       val args = if ec.ctorArgs.isEmpty then "" else s"(${ec.ctorArgs.map(term(_, i + 1)).mkString(", ")})"
@@ -1132,7 +1238,11 @@ final class TirEmitter(
         if needsUnreachable then s" = {\n${ind(i + 1)}${term(r, i + 1)}\n${ind(i + 1)}throw new java.lang.RuntimeException(\"unreachable\")\n${ind(i)}}"
         else s" = ${term(r, i)}").getOrElse("")
     tparamSubst = savedSubst // restore (ctor type-param substitution was local to this def)
-    s"${leading(d.leading, i)}${annots(s, i)}${ind(i)}${mods(s.flags, privateQualifier(s.owner))}def $name$tps$pss$ret$rhs"
+    // ORIGINAL TRIVIA FIRST, porter note LAST, member next. The note explains the port's own
+    // decision and the trivia is the upstream's documentation (a licence among them, §4.58) — a
+    // note above the Javadoc reads as part of it and displaces the thing the port is obliged to
+    // reproduce, so the order here is a rule and not a preference.
+    s"${leading(d.leading, i)}${declNotes(d.symbol, i)}${annots(s, i)}${ind(i)}${mods(s.flags, privateQualifier(s.owner))}def $name$tps$pss$ret$rhs"
 
   /** does this loop body contain an unlabelled `break` that belongs to THIS loop?
     *
@@ -1413,7 +1523,10 @@ final class TirEmitter(
     s"${esc(sym(v.symbol).name)}: ${tpe(overrideAlign.getOrElse(v.symbol, v.tpt.tpe))}"
 
   private def valDef(v: Tree.ValDef, i: Int): String =
-    if v.leading.nonEmpty then leading(v.leading, i) + valDef0(v.copy(leading = Nil), i) else valDef0(v, i)
+    // trivia, then the porter note, then the `val` — see `defDef` for why that order is a rule.
+    val note = declNotes(v.symbol, i)
+    if v.leading.nonEmpty then leading(v.leading, i) + note + valDef0(v.copy(leading = Nil), i)
+    else note + valDef0(v, i)
 
   private def valDef0(v: Tree.ValDef, i: Int): String =
     val s = sym(v.symbol)
@@ -2061,16 +2174,57 @@ final class TirEmitter(
     }
 
 object TirEmitter:
+
+  /** RECORD one of this file's decisions.
+    *
+    * Every decider here is [[Reason.Universal]] and every one of them is a §4.55/§4.56 fact about
+    * the two languages: Java lets a name be reused where Scala cannot, and Java lets a constructor
+    * write its own private fields where a replay one level down cannot. None of it is anybody's
+    * policy, which is why none of these takes a parameter and why the rule strings name the
+    * CLAUDE.md section rather than a phase. */
+  private def note(
+      out: collection.mutable.Buffer[Decision],
+      kind: Decision.Kind,
+      p: Program,
+      s: SymId,
+      detail: Map[String, String],
+      rule: String,
+  ): Unit =
+    val fqn = p.symbolOf(s).map(_.fullName).filter(_.nonEmpty).getOrElse("?")
+    out += Decision(kind, s, fqn, detail, Reason.Universal(rule), Decision.originOf(p, s))
+
+  /** the §4.55 rule string every member rename carries. ONE string for all three passes, with the
+    * pass distinguished by `detail("clash")`: an agent's first question is "why is this name not
+    * the Java one", and the answer is one rule with three causes, not three rules. */
+  private val MemberRenameRule = "member-rename(§4.55)"
+
   /** Drop `private` from the given members. Java lets a parent constructor write its own private
     * fields; when those statements are REPLAYED one level down (see `CtorFunnel.replayFor`) they
     * execute in the subclass, where `private` no longer reaches. Widening visibility can only
     * remove access errors, never introduce one, and never changes behaviour. */
-  def widen(p: Program, members: Set[SymId]): Program =
+  def widen(p: Program, members: Set[SymId],
+            out: collection.mutable.Buffer[Decision] = collection.mutable.ListBuffer.empty): Program =
     if members.isEmpty then p
     else
+      val src = p
       val syms = p.symbols.all.map(s =>
         if members(s.id) then s.copy(flags = s.flags.copy(isPrivate = false)) else s
       )
+      // one row per member that ACTUALLY LOST a modifier — a member already public is in
+      // `widenedMembers` because the planner could not know, and a decision about a change that
+      // did not happen is a row an agent has to disprove.
+      p.symbols.all.foreach { s =>
+        if members(s.id) && s.flags.isPrivate then
+          note(out, Decision.Kind.WidenedVisibility, src, s.id,
+            Map(
+              "from" -> "private",
+              "to"   -> "package-visible",
+              "why"  -> ("a parent constructor's statements are REPLAYED in this subclass " +
+                "(CtorFunnel.replayFor), and java let them touch a private member that scala's " +
+                "replay cannot reach one level down; widening can only remove access errors"),
+            ),
+            "ctor-replay-widening")
+      }
       new Program(p.units, SymbolTable(syms), p.xref)
 
   /** Promoting a constructor to Scala's primary widens the SCOPE of everything it declares: its
@@ -2082,7 +2236,7 @@ object TirEmitter:
     * means the field). Suffixing `$p` removes both: parameters are positional and the locals are
     * unreachable from outside, so the rename is invisible everywhere it matters.
     */
-  def funnelParamRenames(p: Program): Program =
+  def funnelParamRenames(p: Program, out: collection.mutable.Buffer[Decision] = collection.mutable.ListBuffer.empty): Program =
     val renames = collection.mutable.Map[SymId, String]()
     val plans = CtorFunnel.Plans(p)
     def nm(id: SymId): String = p.symbolOf(id).map(_.name).getOrElse("")
@@ -2136,6 +2290,17 @@ object TirEmitter:
             while taken(fresh) do fresh += "$"
             taken += fresh
             renames(v.symbol) = fresh
+            note(out, Decision.Kind.RenamedMember, p, v.symbol,
+              Map(
+                "from"  -> n,
+                "to"    -> fresh,
+                "clash" -> "promoted-ctor-scope",
+                "owner" -> p.symbolOf(cd.symbol).map(_.fullName).getOrElse("?"),
+                "why"   -> ("promoting this constructor to scala's PRIMARY widens its parameters " +
+                  "and top-level locals into class members, where this name was already taken by " +
+                  "an own or INHERITED member — java scoped it to the constructor and scala cannot"),
+              ),
+              MemberRenameRule)
         }
       cd.body.foreach { case c: Tree.ClassDef => scan(c); case _ => () }
     p.units.foreach(scan)
@@ -2159,7 +2324,7 @@ object TirEmitter:
     * Fields shadowing an inherited METHOD (`TextField`'s `layout` field under `Widget.layout()`)
     * are the same defect through Java's separate namespaces for the two, and are renamed here too.
     * Statics are exempt: they land in the companion, which inherits nothing. */
-  def resolveFieldShadowing(p: Program): Program =
+  def resolveFieldShadowing(p: Program, out: collection.mutable.Buffer[Decision] = collection.mutable.ListBuffer.empty): Program =
     val renames = collection.mutable.Map[SymId, String]()
     def nm(id: SymId): String = p.symbolOf(id).map(_.name).getOrElse("")
     def headSym(t: TypeRepr): Option[SymId] = t match
@@ -2201,6 +2366,18 @@ object TirEmitter:
           var fresh = nm(v.symbol) + "$shadow"
           while shadowed(fresh) do fresh += "$"
           renames(v.symbol) = fresh
+          note(out, Decision.Kind.RenamedMember, p, v.symbol,
+            Map(
+              "from"  -> nm(v.symbol),
+              "to"    -> fresh,
+              "clash" -> "shadows-inherited",
+              "owner" -> p.symbolOf(cd.symbol).map(_.fullName).getOrElse("?"),
+              "why"   -> ("java fields SHADOW rather than override and are resolved by the static " +
+                "type of the receiver, so both storages exist; scala has no such thing and a var " +
+                "cannot be overridden at all. Every reference already points at the symbol java " +
+                "chose, so renaming the symbol re-points exactly those and no others"),
+            ),
+            MemberRenameRule)
         case c: Tree.ClassDef => scan(c)
         case _                => ()
       }
@@ -2218,7 +2395,7 @@ object TirEmitter:
   /** Rename any field whose simple name collides with a method in the same class (legal in
     * Java, illegal in Scala) by suffixing `$field`. Renaming the symbol propagates to every
     * reference, since the emitter reads names from the symbol table. */
-  def resolveMemberClashes(p: Program): Program =
+  def resolveMemberClashes(p: Program, out: collection.mutable.Buffer[Decision] = collection.mutable.ListBuffer.empty): Program =
     val renames = collection.mutable.Map[SymId, String]()
     def nm(id: SymId): String = p.symbolOf(id).map(_.name).getOrElse("")
     def headSym(t: TypeRepr): Option[SymId] = t match
@@ -2238,7 +2415,19 @@ object TirEmitter:
     def scan(cd: Tree.ClassDef): Unit =
       val clashNames = selfOrDescMethods(cd.symbol)
       cd.body.foreach {
-        case v: Tree.ValDef if clashNames(nm(v.symbol)) => renames(v.symbol) = nm(v.symbol) + "$field"
+        case v: Tree.ValDef if clashNames(nm(v.symbol)) =>
+          renames(v.symbol) = nm(v.symbol) + "$field"
+          note(out, Decision.Kind.RenamedMember, p, v.symbol,
+            Map(
+              "from"  -> nm(v.symbol),
+              "to"    -> renames(v.symbol),
+              "clash" -> "field-vs-method",
+              "owner" -> p.symbolOf(cd.symbol).map(_.fullName).getOrElse("?"),
+              "why"   -> ("java keeps fields and methods in SEPARATE namespaces, so a field may " +
+                "share a name with a method of this class or of a SUBCLASS; scala has one " +
+                "namespace and forbids it"),
+            ),
+            MemberRenameRule)
         case c: Tree.ClassDef                           => scan(c)
         case _                                           => ()
       }

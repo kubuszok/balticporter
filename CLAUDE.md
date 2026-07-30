@@ -435,6 +435,52 @@ live where its FQN suggests, and after a package rename the FQN is not the upstr
 Where the origin cannot be relativised, say so in the header — a wrong-but-plausible path defeats
 the only purpose the line has.
 
+## 4.575 A PORTER NOTE puts the decision where the question is asked
+
+Every non-mechanical thing the port did is recorded in `decisions.tsv` with its §1 classification.
+That artifact answers an agent that holds the run directory. The agent this engine actually has is
+reading ONE emitted file in another repository (§4.45), and its question is asked at a line of
+Scala: *why is this field called `style$shadow`, why is this method simply absent, why does this
+file live in a package the upstream never had.* A record in a sibling TSV cannot be found from
+there.
+
+So the same fact is also emitted BESIDE the code, in one grammar:
+
+```
+/* porter: <kind-slug> k=v … — <free text> */
+/* porter: renamed-member reason=universal rule=member-rename(§4.55) clash=field-vs-method from=align to=align$field */
+```
+
+`<kind-slug>` is `Decision.Kind` in kebab case — the enum, never a string a decider chose. The pairs
+carry the §1 classification first (`reason=universal|configured|library-rule`, then `rule=` or
+`phase=`+`key=`), because which repository the fix lives in is the reader's first question; then the
+decision's own detail, sorted; then `why` as free text after an em dash. A value containing
+whitespace is QUOTED, or the whitespace-separated pair list silently truncates it. `grep -rn '/\*
+porter:' src_managed` is the complete inventory of non-mechanical translation in a port.
+
+Three rules that are not style:
+
+- **Notes are DERIVED, never authored.** `TirEmitter` renders only decisions whose subject it is
+  emitting; nothing constructs a note from a local condition. A note invented at the emitter is
+  policy that reads as authoritative, and `NoteCoverageCheck` fails the run for it — in both
+  directions: a decision about an emitted subject with no note, and a note with no decision behind
+  it. Neither is visible to a compile, to any other count, or to a test.
+- **Original trivia FIRST, note LAST, member next.** The upstream comment is what a licence obliges
+  the port to reproduce (§4.58); a note above it reads as part of it and displaces it.
+- **A note may never open or close a comment.** Scala block comments nest (§4.58), so every
+  rendered value goes through `PorterNote.safe`.
+
+Where a kind's note goes is machinery, not taste: `PorterNote.AtDeclaration` (above the `def`/`val`/
+nested `class`), `PorterNote.InBody` (a dropped member has no declaration to sit above, so its note
+heads the owning type's body), `PorterNote.NotInTree` (a dropped TYPE's note is carried by the
+INJECTED file that supplies its FQN, prepended at copy time). A kind in the wrong set is a note that
+never appears.
+
+Two consequences to keep in mind when adding one: a note is emitted text, so it moves member
+digests (§5.1) — expect the blast and account for it; and a check that searches emitted text for a
+string must strip notes first, because a note names the UPSTREAM FQN on purpose
+(`SubstitutionCheck.dangling` reported 3 phantom dangling drops the first time notes shipped).
+
 ## 4.58 COMMENTS are part of the port — and only a TEXT-to-TEXT check can see them
 
 The upstream licence lives in a comment, and §4.57's generated banner does not replace it: the

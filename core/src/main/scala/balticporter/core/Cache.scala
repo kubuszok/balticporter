@@ -208,16 +208,29 @@ object TirCacheKey:
     Digest.string(sigs.mkString("\n"))
 
   /** `unit symbol -> action key`, for every unit given. One pass over the program builds the
-    * owner map and every interface hash; the per-unit key is then a fold over its dependencies. */
-  def forUnits(program: Program, units: List[Tree.ClassDef]): Map[SymId, String] =
+    * owner map and every interface hash; the per-unit key is then a fold over its dependencies.
+    *
+    * @param decisions the run's decisions, which are NOT in the tree and ARE in the emitted text:
+    *   a porter note is rendered from the decision log, so two runs whose trees are identical and
+    *   whose POLICY differs produce different files. Without this the cache would replay a
+    *   pre-change emission and the notes would silently be the old ones — the same class of defect
+    *   `TirPrinter.digest` records for trivia (`Style.identity`), one layer out. Digested as a
+    *   whole rather than per unit: a decision names its subject by `SymId`, the mapping from
+    *   subject to UNIT is what a rename can move, and over-invalidating an advisory cache costs a
+    *   re-emit while under-invalidating it costs a wrong file.
+    */
+  def forUnits(program: Program, units: List[Tree.ClassDef], decisions: List[Decision] = Nil): Map[SymId, String] =
     given Program = program
     val owner  = unitOf(program)
     val byId   = program.units.map(u => u.symbol -> u).toMap
     val ifaces = program.units.map(u => u.symbol -> interfaceHash(program, u)).toMap
+    val notes  = Digest.string(
+      decisions.filter(d => PorterNote.Rendered(d.kind)).map(_.tsv).sorted.mkString("\n"))
     units.map { u =>
       val deps = referencedIn(program, u).flatMap(owner.get).filter(d => d != SymId.None && d != u.symbol)
       val parts =
         ("engine" -> EngineFingerprint.value) ::
+          ("notes" -> notes) ::
           ("self" -> TirPrinter.digest(u)) ::
           deps.toList.flatMap(d => byId.get(d).map(_ => s"dep:${nameOf(program, d)}" -> ifaces.getOrElse(d, ""))).sorted
       u.symbol -> Digest.combined(parts)

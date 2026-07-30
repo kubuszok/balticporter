@@ -1204,6 +1204,35 @@ call:
 A residue comment count (`/* break */ ()`) is itself a measure — do not delete it to make output
 tidy.
 
+### M7. A check over EMITTED TEXT must join on a RECORDED id, never on the rendering — 594 → 0
+
+`NoteCoverageCheck` asks whether every decision that must carry a porter note (CLAUDE.md §4.575) got
+one. Its first version answered the second direction — "a note with no decision" — by parsing the
+note's own `k=v` pairs back out of the emitted text and matching the value against the decision's
+`detail`. On libGDX core that reported **594 unbacked notes on a corpus where every one of them was
+derived**: the pair list is whitespace-separated, `Reason.Configured("package-rename", "com
+.badlogic.gdx -> sge")` renders `key=com.badlogic.gdx -> sge`, and both sides were reading a value
+truncated at the first space — differently.
+
+Quoting the value fixed the truncation and is now the grammar. The rule the 594 taught is larger and
+is why this is here rather than in a commit message:
+
+- **A rendering is not an identity.** The authoritative record of "which decision produced this
+  note" is the EMITTER's, taken as it printed — `PorterNote.Printed(kind, SymId, unit)`, the same
+  discipline as `SrcMap.Recording`. The check joins on that. It reads only the SLUG out of the text,
+  which is enough to catch the thing the text can uniquely reveal: a note NOTHING recorded printing.
+- **Do not join on a NAME either.** Three of the emitter's own passes rename the symbol before it is
+  rendered (`style` → `style$shadow`), so a name-keyed join is empty on exactly the decisions the
+  check exists for.
+- **A check that greps emitted text for an FQN must strip porter notes first.** A note names the
+  UPSTREAM FQN deliberately; `SubstitutionCheck.dangling`'s substring search then reported
+  `com.badlogic.gdx.utils.Json` as dropped-but-still-referenced from seven `from=…JsonValue`
+  notes — **substitution(dangling) 0 → 3**, on a port whose replacement was on disk.
+  `SubstitutionCheck.withoutPorterNotes` is the fix, and it removes only the port's own commentary:
+  an upstream Javadoc that genuinely discusses the type is text this check has always counted.
+
+*Fix kind: (a).*
+
 ---
 
 ## 8. A DEPENDENT reading its base's published port map

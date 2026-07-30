@@ -71,13 +71,43 @@ object SubstitutionCheck:
   def dangling(outDir: Path, subs: Substitutions): List[Finding] =
     if subs.dropTypes.isEmpty then Nil
     else
-      val sources = scalaSources(outDir).map(Files.readString)
+      val sources = scalaSources(outDir).map(p => withoutPorterNotes(Files.readString(p)))
       subs.dropTypes.toList.sorted.flatMap { fqn =>
         if Files.exists(outDir.resolve(fqn.replace('.', '/') + ".scala")) then None // replaced
         else
           val refs = sources.count(_.contains(fqn))
           if refs == 0 then None else Some(Finding(Kind.Dangling, fqn, refs)) // rewritten away vs. dangling
       }
+
+  /** Strip the port's own PORTER NOTES before asking whether a file REFERENCES a dropped type.
+    *
+    * A note names the upstream FQN on purpose — that is the string an agent has to search for and
+    * the string it must remove from the manifest to change the outcome. It is not a reference to
+    * the type, and a substring search cannot tell the difference: `from=com.badlogic.gdx.utils
+    * .JsonValue` on 7 renamed units reported `com.badlogic.gdx.utils.Json` as dropped-but-still-
+    * referenced, on a port whose replacement was sitting right there. Measured the first time notes
+    * were emitted: substitution(dangling) 0 -> 3, all three of them the port's own commentary.
+    *
+    * Only porter notes are removed, not every comment: a Javadoc that genuinely discusses the
+    * dropped type is upstream text this check has always counted, and changing that is a separate
+    * decision with its own number. */
+  def withoutPorterNotes(text: String): String =
+    val marker = balticporter.tir.PorterNote.Marker
+    if !text.contains(marker) then text
+    else
+      val sb = new java.lang.StringBuilder
+      var i  = 0
+      var go = true
+      while go do
+        val at = text.indexOf(marker, i)
+        if at < 0 then
+          sb.append(text.substring(i))
+          go = false
+        else
+          sb.append(text.substring(i, at))
+          val end = text.indexOf("*/", at)
+          if end < 0 then go = false else i = end + 2
+      sb.toString
 
   /** every `.scala` file under `dir`, or nothing when the directory does not exist. */
   def scalaSources(dir: Path): List[Path] =

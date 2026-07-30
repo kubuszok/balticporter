@@ -4,7 +4,7 @@ import balticporter.core.*
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.sbtgen.SbtGen
-import balticporter.tir.{CheckReport, Correlate, CorrelateRun, CtorFunnel, DebugFlags, Decision, DecisionLog, OmissionCheck, Origin, Phase, Pipeline, PortabilityCheck, Program, Reason, Remediator, RewriteTrace, SrcMap, SymId, Tree, TriviaCheck}
+import balticporter.tir.{CheckReport, Correlate, CorrelateRun, CtorFunnel, DebugFlags, Decision, DecisionLog, Definition, NoteCoverageCheck, OmissionCheck, Origin, Phase, Pipeline, PortabilityCheck, PorterNote, Program, Reason, Remediator, RewriteTrace, SrcMap, SymId, Tree, TriviaCheck}
 import balticporter.transform.{CollectionBoundaryCheck, CollectionClosureCheck, CollectionsTransform, MethodBodyTransform, PackageRenameTransform, PortMapTransform}
 
 import java.nio.file.{Files, Path, StandardCopyOption}
@@ -302,8 +302,36 @@ final case class PortRun(
       say(s"package rename (verified AFTER the phase — every prefix must now be unmatched):")
       println(renameReport.render)
 
-    // ---- emission ----
+    // ---- DECISION PROVENANCE, BEFORE emission ----
+    // The emitter RENDERS these as porter notes beside the code they explain (CLAUDE.md §4.57's
+    // note grammar), so every decision this run makes has to be in the log before a byte is
+    // written. That is the whole reason this block sits above the emission loop rather than after
+    // it, where it used to: a record written afterwards can describe the output and cannot be part
+    // of it.
+    //
+    // The phases recorded theirs while the pipeline ran; the run's own non-phase deciders — the
+    // substitution manifest, the injection copy, the constructor funnel, the emitter's own
+    // renaming passes — record here, into the SAME log, because the question an investigating
+    // agent asks does not care which layer answered it.
     val plan = RuntimePlan.of(effectivePhases, runtimeMode)
+    // What this port SHIPS as ready-made Scala. Computed here rather than beside the copy loop
+    // because the injection decisions are notes on the copied files, and a note cannot be written
+    // after the file it belongs in.
+    val injectedSources: List[(String, String)] = ownSubs.inject.filter(Files.exists(_)).flatMap { root =>
+      SubstitutionCheck.scalaSources(root).map { src =>
+        val rel = root.relativize(src).toString.replace('\\', '/')
+        rel.stripSuffix(".scala").replace('/', '.') -> rel
+      }
+    }
+    val foreignDecisions = recordRunDecisions(translated, injectedSources, plan)
+    translatedDecisions = translated.decisions.all
+
+    // ---- determinism, with the notes in place ----
+    // Run AFTER the decisions, because a note is emitted text: comparing two emissions of which
+    // only one could see the run's decisions would report every noted member as a violation.
+    verifyDeterminism(translated, injectedSources, plan)
+
+    // ---- emission ----
     wipe(outDir)
     Files.createDirectories(outDir)
 
@@ -312,6 +340,12 @@ final case class PortRun(
     // what was actually SHIPPED, paired with the Java it came from — the input to the trivia check
     // below, which compares text against text and so must see exactly the files that were written.
     val shipped = collection.mutable.ListBuffer.empty[TriviaCheck.Unit]
+    // every symbol this run EMITS a declaration for, and the text of every file it writes — the two
+    // inputs `NoteCoverageCheck` joins on. Collected here, at the one place that knows what was
+    // shipped, rather than re-derived from the filesystem afterwards: an injected replacement is
+    // also on disk and is not something the emitter was ever asked to note.
+    val emittedSubjects = collection.mutable.Set.empty[SymId]
+    val writtenTexts    = collection.mutable.ListBuffer.empty[(String, String)]
     translated.emitOrder.foreach { u =>
       val full = program.symbolOf(u.symbol).map(_.fullName).getOrElse("Unit")
       // Substitutions.dropTypes: PARSED (so every reference to it still resolves) but NOT emitted —
@@ -328,6 +362,8 @@ final case class PortRun(
         val text = translated.sourceOf(u)
         write(outDir.resolve(full.replace('.', '/') + ".scala"), text)
         shipped += TriviaCheck.Unit(PortRun.real(Path.of(u.origin.javaPath)), text)
+        writtenTexts += (full -> text)
+        PortRun.declaredSymbols(u, emittedSubjects)
         written += 1
     }
     // Support types a phase RETYPED code onto. Two feeds, one rule: what the phases DECLARE
@@ -359,15 +395,21 @@ final case class PortRun(
     val leaked = record(PortRun.SubstitutionEmitted, SubstitutionCheck.emittedDroppedTypes(outDir, policySubs))
 
     // ---- injection: ready-made Scala copied verbatim (survives the wipe above) ----
+    // Verbatim EXCEPT for the porter notes prepended at copy time: an injected file is the only
+    // place a DROPPED TYPE's decision can be read from, because no emitted unit corresponds to a
+    // type this run refuses to translate. The source file in the port's overrides directory is
+    // hand-written and must stay so — the note belongs to the BUILD PRODUCT (§5.5), which is why
+    // it is added on the way out and never written back.
     var injected = 0
     ownSubs.inject.filter(Files.exists(_)).foreach { root =>
       Files.walk(root).iterator().asScala
         .filter(p => p.toString.endsWith(".scala"))
         .toList.sorted
         .foreach { src =>
+          val rel = root.relativize(src).toString.replace('\\', '/')
           val dst = outDir.resolve(root.relativize(src).toString)
           Files.createDirectories(dst.getParent)
-          Files.copy(src, dst, StandardCopyOption.REPLACE_EXISTING)
+          Files.writeString(dst, injectionNotes(rel) + Files.readString(src))
           injected += 1
         }
     }
@@ -397,12 +439,6 @@ final case class PortRun(
     // A module's map is an OUTPUT and never an input to its own run — only DEPENDENTS read it.
     // Otherwise it becomes a second source of truth able to disagree with the manifest, and a port
     // stops being reproducible from sources plus policy (CLAUDE.md §5.5).
-    val injectedSources: List[(String, String)] = ownSubs.inject.filter(Files.exists(_)).flatMap { root =>
-      SubstitutionCheck.scalaSources(root).map { src =>
-        val rel = root.relativize(src).toString.replace('\\', '/')
-        rel.stripSuffix(".scala").replace('/', '.') -> rel
-      }
-    }
     val injectedFqns = injectedSources.map(_._1).toSet ++ plan.sources.keySet ++ plan.required ++ supportSources.keySet
     val bodyKeys: Set[String] =
       effectivePhases.collect { case m: MethodBodyTransform => m.substituted }.flatten.toSet
@@ -441,16 +477,25 @@ final case class PortRun(
     say(s"port map: ${portMap.types.size} type(s), ${portMap.members.size} member(s)" +
       mapPath.fold(" (not published: the artifact layer is off)")(p => s" -> $p"))
 
-    // ---- DECISION PROVENANCE: how this run arrived at the code it just wrote ----
-    // The phases recorded theirs while the pipeline ran; the run's own non-phase deciders — the
-    // substitution manifest, the injection copy, the constructor funnel — record here, into the
-    // SAME log, because the question an investigating agent asks does not care which layer
-    // answered it. The phase log is scoped to THIS MODULE first (see `retainOwnDecisions`); the
-    // run's own rows are added after, and are about its manifest rather than about a declaration.
-    val foreignDecisions = retainOwnDecisions(program, translated)
-    recordPolicyDecisions(program, translated, injectedSources, plan)
-    recordCtorFunnel(program, translated)
+    // ---- DECISION PROVENANCE: written out (it was RECORDED before emission, above) ----
     writeDecisions(translated.decisions, foreignDecisions)
+
+    // ---- E8: did every decision that must carry a note actually get one? ----
+    // Beside the other checks rather than inside the emitter, for the reason `record` gives: the
+    // orchestrator is the layer that knows a run is happening, and this check needs BOTH the run's
+    // decisions and the text that was written. Deliberately NOT in `RequiredChecks` — it registers
+    // on every run, but so do the collection checks' siblings, and the wiring living here is what
+    // makes it unskippable (see the comment on `RequiredChecks`).
+    val noteFindings = NoteCoverageCheck.check(
+      decisions = translated.decisions.all,
+      printed   = translated.emitter.notesPrinted,
+      emitted   = emittedSubjects.toSet,
+      texts     = writtenTexts.toList,
+    )
+    CheckReport.record(NoteCoverageCheck.Name, noteFindings.map(_.report))
+    say(s"PORTER NOTES (decisions with no note in the code, and notes with no decision): ${noteFindings.size}")
+    if noteFindings.nonEmpty then say(NoteCoverageCheck.Classification)
+    println(NoteCoverageCheck.summary(noteFindings, translated.emitter.notesPrinted.size))
 
     // CHECK 2 — over the FINAL tree.
     val danglingSubs = record(PortRun.SubstitutionDangling, SubstitutionCheck.dangling(outDir, ownSubs))
@@ -573,6 +618,137 @@ final case class PortRun(
       Files.writeString(dir.resolve("dropped-types.tsv"),
         (Correlate.DroppedHeader :: drops).mkString("", "\n", "\n"))
 
+  /** Everything this run decides OUTSIDE the phase pipeline, into the run's own log, in the one
+    * order the artifact and the emitted notes can both be derived from.
+    *
+    * Called once per TRANSLATION rather than once per run, because `Determinism.Full` produces two
+    * of them and the second must render byte-identical notes to be comparable at all — a check
+    * that can only pass because one side had no decisions is not a determinism check.
+    *
+    * The order inside is the only one that works:
+    *   1. the EMITTER's own passes (the three §4.55 renames, the replay widening). They happened
+    *      when the emitter was constructed; they are recorded here, once, from the emitter the run
+    *      keeps — never from the emitter's constructor, or the determinism twin doubles every row.
+    *   2. the OWNERSHIP FILTER, which scopes everything recorded so far — the phases' rows and the
+    *      emitter's — to this module's own declarations.
+    *   3. the CONSTRUCTOR FUNNEL and the SUBSTITUTION MANIFEST, after it.
+    *
+    * Step 3 is deliberately AFTER the filter and not before. A funnel row is already restricted to
+    * the units this run emits, so filtering it would be a no-op; a MANIFEST row is a statement
+    * about a policy KEY this run applied, and a dependent applies its base's drops (§1.5) — the
+    * `own` detail is what says whose manifest holds the key, and withholding the row instead would
+    * leave a port unable to say which types it is compiling WITHOUT. That is the same reason
+    * `dropped-types.tsv` carries the whole drop chain.
+    *
+    * @return how many rows were withheld as another module's
+    */
+  private def recordRunDecisions(
+      t: PortRun.Translated,
+      injectedSources: List[(String, String)],
+      plan: RuntimePlan,
+  ): Int =
+    t.decisions.recordAll(t.emitter.ownDecisions)
+    val withheld = retainOwnDecisions(t.program, t)
+    recordCtorFunnel(t.program, t)
+    recordDroppedSuperArgs(t.program, t)
+    recordPolicyDecisions(t.program, t, injectedSources, plan)
+    withheld
+
+  /** Prove the emitted text is REPRODUCIBLE — after the decisions, because a porter note is
+    * emitted text and an emitter that could not see the run's log renders a different file.
+    *
+    * `Determinism.Emission` builds a second emitter over the same program and hands it the SAME
+    * decision log: it renders the same notes and records none of its own (`ownDecisions` is a value
+    * nobody reads), which is exactly the property that lets one log serve both. */
+  private def verifyDeterminism(once: PortRun.Translated, injectedSources: List[(String, String)], plan: RuntimePlan): Unit =
+    determinism match
+      case Determinism.Off => ()
+      case Determinism.Emission =>
+        // a SECOND emitter over the same program: independent mutable state, independent lazy
+        // tables, same bytes required.
+        val again = new TirEmitter(once.program, once.plan.concreteMembers, provenance, once.decisions)
+        val diffs = once.emitOrder.filter(u => again.emitUnit(u) != once.sourceOf(u))
+        if diffs.nonEmpty then determinismViolation("emission", once, diffs)
+        say(s"determinism: ${once.emitOrder.size} units emitted twice, byte-identical " +
+          s"(${Determinism.FullFlag} also re-parses)")
+      case Determinism.Full =>
+        val twice = translateOnce()
+        recordRunDecisions(twice, injectedSources, plan)
+        if twice.emitOrder.size != once.emitOrder.size then
+          sys.error(s"[$label] determinism violation: ${once.emitOrder.size} units first, ${twice.emitOrder.size} second")
+        val diffs = once.emitOrder.zip(twice.emitOrder).collect {
+          case (a, b) if once.sourceOf(a) != twice.sourceOf(b) => a
+        }
+        if diffs.nonEmpty then determinismViolation("full translation", once, diffs)
+        say(s"determinism: ${once.emitOrder.size} units translated twice from scratch, byte-identical")
+
+  /** The porter notes an INJECTED file carries, prepended when it is copied into `src_managed`.
+    *
+    * An injected replacement is the only place a `DroppedType` decision can be read from: the type
+    * it replaces is deliberately not emitted, so no unit in the tree corresponds to it and there is
+    * no `class` keyword to sit above. Matched by the file's RELATIVE PATH, which is what
+    * `recordPolicyDecisions` records for an injection and the only key the two sides share — an
+    * injected file has no `SymId` and no Java behind it.
+    *
+    * Prepended at COPY time and never written back to the overrides directory: the emitted tree is
+    * a build product (§5.5) and the hand-written source is a decision. Re-copying reads the
+    * pristine source again, so a note can never accumulate. */
+  private def injectionNotes(rel: String): String =
+    val fqn = rel.stripSuffix(".scala").replace('/', '.')
+    val mine = translatedDecisions.filter { d =>
+      (d.kind == Decision.Kind.InjectedMember && d.detail.get("file").contains(rel)) ||
+      (d.kind == Decision.Kind.DroppedType && d.detail.get("emitted").contains(fqn))
+    }.sortBy(_.tsv)
+    mine.map(PorterNote.render(_, "")).mkString
+
+  /** the run's decisions, for the injection copy — set once, before emission. A `var` because the
+    * copy loop runs inside `execute()` and the alternative is threading the log through three
+    * unrelated parameters; scoped to one run by construction, since `PortRun` is a value a program
+    * builds and calls once. */
+  private var translatedDecisions: List[Decision] = Nil
+
+  /** A secondary constructor whose `super(args)` could not be expressed, as a DECISION beside the
+    * omission the same function already counts.
+    *
+    * Derived from `CtorFunnel.Plans.superExpressed` — the same predicate `OmissionCheck
+    * .droppedSuperArgs` reads and the same one the emitter renders its delegation from, asked at
+    * the same granularity (per CONSTRUCTOR). Two derivations of one fact is exactly how a shadow
+    * becomes a claim; this is one function's answer, recorded twice for two audiences.
+    *
+    * A finding says "this many arguments were discarded" and is a number to watch. The DECISION
+    * says which constructor, in the code, so the reader of that `def this` learns that the
+    * arguments java passed to `super` are gone and why (`ENGINE-LIMITS.md` C3: padding is a guess
+    * everywhere but the JDK throwables). */
+  private def recordDroppedSuperArgs(program: Program, translated: PortRun.Translated): Unit =
+    given Program = program
+    val plans = CtorFunnel.Plans(program)
+    def nested(cd: Tree.ClassDef): List[Tree.ClassDef] =
+      cd :: cd.body.collect { case c: Tree.ClassDef => nested(c) }.flatten
+    val mine = translated.emitOrder.filterNot { u =>
+      program.symbolOf(u.symbol).exists(s => Substituted.tags(s) || policySubs.dropsType(s.fullName))
+    }
+    mine.flatMap(nested).foreach { cd =>
+      CtorFunnel.ctorsOf(program, cd.body).foreach { d =>
+        val args = CtorFunnel.superArgsOf(program, d)
+        if args.nonEmpty && !plans.superExpressed(cd, d) then
+          translated.decisions.record(Decision(
+            kind       = Decision.Kind.DroppedSuperCall,
+            subject    = d.symbol,
+            subjectFqn = program.symbolOf(cd.symbol).map(_.fullName).getOrElse("?"),
+            detail = Map(
+              "owner"     -> program.symbolOf(cd.symbol).map(_.fullName).getOrElse("?"),
+              "arguments" -> args.size.toString,
+              "why"       -> ("java lets EVERY constructor pick its own `super(...)`; scala lets " +
+                "only the primary reach super and a secondary must begin with `this(...)`. This " +
+                "root's arguments reach neither the extends clause nor a replay, so they are gone " +
+                "— padding them would be a guess (ENGINE-LIMITS.md C3)"),
+            ),
+            reason = Reason.Universal("ctor-funnel/super-args-dropped(C3)"),
+            origin = d.origin,
+          ))
+      }
+    }
+
   /** The DECISIONS this run made outside any phase — the substitution manifest, the injection copy
     * and the two OTHER ways a definition reaches the output with no Java behind it (the vendored
     * runtime, `supportSources`) — recorded into the run's own log (CLAUDE.md §4.45: make it obvious
@@ -603,21 +779,30 @@ final case class PortRun(
     val log = translated.decisions
     // A dropped type is PARSED, so the run usually still holds its unit — and with it the Java file
     // the decision is about. Keyed by EMITTED name, since that is what `fullName` is by now.
-    val unitsByFqn: Map[String, Tree.ClassDef] =
-      program.units.flatMap(u => program.symbolOf(u.symbol).map(_.fullName -> u)).toMap
+    // EVERY class this run declares, nested ones included — not only the top-level units.
+    //
+    // A nested type used to fall through to "borrow the enclosing file's origin, keep no symbol",
+    // which was right about the id (a wrong one is worse than none) and cost the row its subject.
+    // A nested type HAS a symbol and HAS an origin of its own; the reason it was not found was
+    // that the index only held units. With the id, a `DroppedMember` on
+    // `ParallelArray$ChannelDescriptor` renders its porter note inside that nested class instead of
+    // nowhere — which is the whole point of recording a subject.
+    val typesByFqn: Map[String, Tree.ClassDef] =
+      def all(cd: Tree.ClassDef): List[Tree.ClassDef] =
+        cd :: cd.body.collect { case c: Tree.ClassDef => all(c) }.flatten
+      program.units.flatMap(all).flatMap(u => program.symbolOf(u.symbol).map(_.fullName -> u)).toMap
     val fired = policySubs.matched
     def emitted(fqn: String) = PackageRenameTransform.renamed(fqn, renames)
-    // The unit a policy key is ABOUT, and its Java file. A NESTED type is not a unit and has no
-    // origin of its own, so the enclosing top-level type supplies the FILE —
-    // `ParallelArray$ChannelDescriptor` lives in `ParallelArray.java`, and a row saying
-    // `<synthetic>` would be unnavigable for the sake of a `$`. Its SYMBOL is not borrowed with
-    // it: that id names a different type, and a wrong id is worse than none. Cut at the separator
-    // (§4.56).
+    // The type a policy key is ABOUT, and its Java file. Where even the nested lookup fails (a key
+    // that matched nothing, a type this run does not parse) the enclosing top-level type still
+    // supplies the FILE — `ParallelArray$ChannelDescriptor` lives in `ParallelArray.java`, and a
+    // row saying `<synthetic>` would be unnavigable for the sake of a `$`. Its SYMBOL is not
+    // borrowed with it: that id names a different type. Cut at the separator (§4.56).
     def at(fqn: String): (SymId, Origin) =
       val e = emitted(fqn)
-      unitsByFqn.get(e) match
+      typesByFqn.get(e) match
         case Some(u)    => (u.symbol, u.origin)
-        case scala.None => (SymId.None, unitsByFqn.get(e.takeWhile(_ != '$')).map(_.origin).getOrElse(Origin.synthetic))
+        case scala.None => (SymId.None, typesByFqn.get(e.takeWhile(_ != '$')).map(_.origin).getOrElse(Origin.synthetic))
 
     policySubs.dropTypes.toList.sorted.foreach { key =>
       val (sym, origin) = at(key)
@@ -986,29 +1171,9 @@ final case class PortRun(
         if cut < 0 then "" else rel.substring(0, cut).replace(sep, '.')
       }
 
-  private def translate(): PortRun.Translated =
-    val once = translateOnce()
-    determinism match
-      case Determinism.Off      => once
-      case Determinism.Emission =>
-        // a SECOND emitter over the same program: independent mutable state, independent lazy
-        // tables, same bytes required.
-        val again = new TirEmitter(once.program, once.plan.concreteMembers, provenance)
-        val diffs = once.emitOrder.filter(u => again.emitUnit(u) != once.sourceOf(u))
-        if diffs.nonEmpty then determinismViolation("emission", once, diffs)
-        say(s"determinism: ${once.emitOrder.size} units emitted twice, byte-identical " +
-          s"(${Determinism.FullFlag} also re-parses)")
-        once
-      case Determinism.Full =>
-        val twice = translateOnce()
-        if twice.emitOrder.size != once.emitOrder.size then
-          sys.error(s"[$label] determinism violation: ${once.emitOrder.size} units first, ${twice.emitOrder.size} second")
-        val diffs = once.emitOrder.zip(twice.emitOrder).collect {
-          case (a, b) if once.sourceOf(a) != twice.sourceOf(b) => a
-        }
-        if diffs.nonEmpty then determinismViolation("full translation", once, diffs)
-        say(s"determinism: ${once.emitOrder.size} units translated twice from scratch, byte-identical")
-        once
+  /** ONE translation. The determinism gate is `verifyDeterminism`, run later — see its scaladoc for
+    * why it cannot happen here any more. */
+  private def translate(): PortRun.Translated = translateOnce()
 
   private def determinismViolation(what: String, t: PortRun.Translated, diffs: List[Tree.ClassDef]): Nothing =
     val names = diffs.flatMap(u => t.program.symbolOf(u.symbol).map(_.fullName)).take(10)
@@ -1029,7 +1194,9 @@ final case class PortRun(
     // `externalConcrete` is DERIVED, never passed in: a caller who has to remember it is a caller
     // who forgets it, and forgetting it silently disables diamond-conflict detection against an
     // injected parent.
-    val emitter = new TirEmitter(program, plan.concreteMembers, provenance)
+    // the emitter READS this log to render porter notes and never writes to it — its own decisions
+    // come back as `TirEmitter.ownDecisions` and are recorded once, by `recordRunDecisions`.
+    val emitter = new TirEmitter(program, plan.concreteMembers, provenance, decisions)
     val (mine, theirs) = partitionUnits(program)
     PortRun.Translated(program, plan, emitter, mine, theirs, cache.map(new ActionCache(_, true)), decisions)
 
@@ -1069,6 +1236,25 @@ final case class PortRun(
     Files.writeString(p, text)
 
 object PortRun:
+
+  /** Every symbol a unit DECLARES — the class, its nested classes, and every member of each.
+    *
+    * The subject set `NoteCoverageCheck` joins on, and it must be exactly "what has a declaration
+    * in the file that was written". Not the symbol table filtered by owner: that also holds
+    * parameters, locals and type parameters, none of which the emitter renders a note above, so a
+    * decision about one would report as an uncovered finding forever. Read from the TREE, which is
+    * the thing that was emitted. */
+  def declaredSymbols(cd: Tree.ClassDef, into: collection.mutable.Set[SymId]): Unit =
+    into += cd.symbol
+    cd.body.foreach {
+      case c: Tree.ClassDef => declaredSymbols(c, into)
+      case d: Definition    => into += d.symbol
+      case _                => ()
+    }
+    cd.enumCases.foreach { ec =>
+      into += ec.symbol
+      ec.body.foreach { case c: Tree.ClassDef => declaredSymbols(c, into); case d: Definition => into += d.symbol; case _ => () }
+    }
 
   /** a path with symlinks resolved, falling back to lexical normalisation when it does not exist
     * (a synthetic origin, a root that was never created). */
@@ -1133,7 +1319,9 @@ object PortRun:
       val decisions: DecisionLog = new DecisionLog,
   ):
     private val memo = collection.mutable.Map.empty[SymId, String]
-    private lazy val keys = cache.map(_ => TirCacheKey.forUnits(program, emitOrder))
+    // the DECISIONS are part of the key: they are not in the tree and they are in the emitted text
+    // (porter notes). Read lazily, so the log is complete by the time the first unit is emitted.
+    private lazy val keys = cache.map(_ => TirCacheKey.forUnits(program, emitOrder, decisions.all))
 
     def sourceOf(u: Tree.ClassDef): String =
       memo.getOrElseUpdate(

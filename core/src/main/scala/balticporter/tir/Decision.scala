@@ -81,12 +81,25 @@ object Decision:
     *                            raw-generic erasure).
     *   - [[FunnelledCtor]]    — Java's constructor set was funnelled into one primary plus
     *                            secondaries, promoting parameters and locals to members.
+    *   - [[DroppedSuperCall]] — a secondary constructor's `super(args)` could not be expressed and
+    *                            its arguments are gone (`ENGINE-LIMITS.md` C3). Distinct from
+    *                            [[FunnelledCtor]], which is the nomination itself: one class may
+    *                            funnel successfully and still drop one root's super arguments, and
+    *                            merging them would make "how many paths lost their arguments"
+    *                            unanswerable.
+    *   - [[WidenedVisibility]]— a member lost `private`/`protected` so a REPLAYED parent
+    *                            constructor's statements can still reach it one level down.
+    *   - [[Unrenderable]]     — the engine has no faithful Scala for this construct and said so in
+    *                            the output (preview mode, [[balticporter.tir.Decision]] E9). Under
+    *                            the shipping default the construct is refused and COUNTED instead
+    *                            (`ENGINE-LIMITS.md` M6) and no row of this kind is written.
     */
   enum Kind:
     case RenamedType, RenamedPackage, RenamedMember
     case DroppedType, DroppedMember
     case SubstitutedBody, InjectedMember
     case RedirectedCall, RetypedSignature, FunnelledCtor
+    case DroppedSuperCall, WidenedVisibility, Unrenderable
 
   val Header = "#kind\tsubjectFqn\treasonClass\treasonDetail\torigin\tline\tdetail"
 
