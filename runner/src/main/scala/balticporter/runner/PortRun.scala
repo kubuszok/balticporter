@@ -466,14 +466,28 @@ final case class PortRun(
     * The whole DROP CHAIN is written, not just this module's own: a dependent port's suite fails
     * inside the BASE's dropped type, and holding a suite to its own module's drops would classify
     * every one of those as a regression. (Contrast `ownSubs`, which is right for CHECK 2 for the
-    * mirror-image reason.) */
+    * mirror-image reason.) `policySubs` and `renames` both read through the manifest chain, so a
+    * dependent's file carries the base's drops UNDER THE BASE'S RENAME — which is the case the
+    * correlator actually needs, since the suite is the port whose failures are being classified.
+    *
+    * BOTH NAMESPACES are written, and that is what makes the rule fire at all. Policy is declared
+    * upstream and `PackageRenameTransform` runs LAST (CLAUDE.md §4.56), so this run is the last
+    * place that holds the manifest FQN and the rename map together; a stack frame, by the time the
+    * correlator sees one, only ever says `sge.utils.Json`. Writing the manifest name alone left the
+    * correlator comparing two namespaces, silently — the derived classification had never once
+    * fired on a renaming port, with the four deliberate libGDX failures reported as unexpected
+    * regressions on every run. The rename is applied by the phase's OWN rule
+    * ([[PackageRenameTransform.renamed]]): longest prefix, cut only at a separator, so `com.foo`
+    * can never rewrite `com.foobar`. */
   private def writeSrcMap(rec: balticporter.tir.SrcMap.Recording): Unit =
     if CheckReport.enabled then
       val dir = CheckReport.runDir
       SrcMap.write(dir, rec)
       Files.createDirectories(dir)
+      val drops = policySubs.dropTypes.toList.sorted
+        .map(fqn => Correlate.Dropped(fqn, PackageRenameTransform.renamed(fqn, renames)).tsv)
       Files.writeString(dir.resolve("dropped-types.tsv"),
-        (Correlate.DroppedHeader :: policySubs.dropTypes.toList.sorted).mkString("", "\n", "\n"))
+        (Correlate.DroppedHeader :: drops).mkString("", "\n", "\n"))
 
   /** Correlate a compiler or test-runner log back to the members and Java origins of THIS run,
     * IN-PROCESS.

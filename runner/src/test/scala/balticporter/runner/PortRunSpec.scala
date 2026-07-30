@@ -262,7 +262,8 @@ class PortRunSpec extends munit.FunSuite:
     withReport(rep) {
       run(root, src)(_.copy(subs = Substitutions(dropTypes = Set("com.demo.Widget"), inject = List(inject))))
     }
-    assertEquals(Correlate.parseDropped(rep.resolve("run-latest/dropped-types.tsv")), Set("com.demo.Widget"))
+    assertEquals(Correlate.parseDropped(rep.resolve("run-latest/dropped-types.tsv")),
+                 Set(Correlate.Dropped("com.demo.Widget", "com.demo.Widget")))
     // …and the correlator classifies a failure reaching that type as expected, with nothing declared
     val t = Correlate.locateTests(
       Correlate.parseTests(
@@ -270,6 +271,31 @@ class PortRunSpec extends munit.FunSuite:
       SrcMap.Index.of(SrcMap.parseAll(rep.resolve("run-latest/srcmap.tsv"))),
       Nil, Set.empty, Correlate.parseDropped(rep.resolve("run-latest/dropped-types.tsv")))
     assertEquals(t.flatMap(_.expected).map(_.source), List("derived"))
+  }
+
+  test("a RENAMING port writes both namespaces, so the drop reaches a stack frame that says `sge.`") {
+    // The measurement-integrity defect this closes: policy is written UPSTREAM and the rename runs
+    // LAST (§4.56), so an artifact holding only the manifest FQN was compared against emitted
+    // frames and matched nothing — the derived classifier had never fired on a renaming port.
+    val (root, src) = fixture()
+    val rep = root.resolve("report")
+    val inject = root.resolve("overrides")
+    java(inject, "com/demo/Widget.scala", "package sge\nclass Widget { def label(): String = \"w\" }")
+    withReport(rep) {
+      run(root, src)(_.copy(subs = Substitutions(dropTypes = Set("com.demo.Widget"), inject = List(inject)),
+                            packageRenames = Map("com.demo" -> "sge")))
+    }
+    val dropped = Correlate.parseDropped(rep.resolve("run-latest/dropped-types.tsv"))
+    assertEquals(dropped, Set(Correlate.Dropped("com.demo.Widget", "sge.Widget")))
+    // the frame is in the EMITTED namespace, and a dropped type has no source-map entry to resolve
+    // through — its replacement is injected Scala the emitter never saw.
+    val t = Correlate.locateTests(
+      Correlate.parseTests(
+        "sge.WidgetTest:\n==> X sge.WidgetTest.labels  0.0s boom\n    at sge.Widget.label(Widget.scala:3)\n"),
+      SrcMap.Index.of(SrcMap.parseAll(rep.resolve("run-latest/srcmap.tsv"))),
+      Nil, Set.empty, dropped)
+    assertEquals(t.flatMap(_.expected).map(_.source), List("derived"))
+    assert(clue(t.flatMap(_.expected).head.reason).contains("com.demo.Widget"))
   }
 
   test("every RequiredCheck reaches findings.tsv — a number on stdout that is not persisted fails the run") {

@@ -68,6 +68,24 @@ class CorrelateRunSpec extends munit.FunSuite:
     assertEquals(rel.out, DebugFlags.root.resolve("port-report/X/run-latest").normalize)
   }
 
+  test("a --tests file that does not exist is FATAL — never a green report over a file never opened") {
+    // The defect: a missing input was one line on stderr, which the measure scripts filter out of
+    // the correlate block by design. The run then wrote a header-only tests.tsv and a headline of
+    // "tests 0 passing, 0 failing" — a whole suite reported as green because a path was wrong.
+    val port = fixture()
+    val e = intercept[CorrelateRun.MissingInput] {
+      CorrelateRun.run(CorrelateRun.Request(
+        srcmaps = List("main" -> port.resolve("run-latest/srcmap.tsv")),
+        tests   = Some(port.resolve("nope.txt")),
+        out     = port.resolve("run-latest"),
+      ))
+    }
+    assertEquals(e.paths.map(_.getFileName.toString), List("nope.txt"))
+    assert(clue(e.getMessage).contains("NOT FOUND"))
+    // …and nothing was written: a run that refuses must not leave an artifact claiming otherwise
+    assert(!Files.exists(port.resolve("run-latest/tests.tsv")))
+  }
+
   test("an ABSOLUTE path is left alone, and the default baseline is <out>/../baseline") {
     val port = fixture()
     val req  = CorrelateRun.Request(out = port.resolve("run-latest")).absolute

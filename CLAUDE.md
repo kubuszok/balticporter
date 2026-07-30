@@ -233,12 +233,21 @@ you should do:
   newly-failing tests, anchors each on the first stack frame in ported code, and says how good that
   anchor is (`main-frame` = the library member that threw; `test-frame` = only where the failure
   was observed). A test that stopped running is reported as such, never as a pass.
+- **Parse every TERMINAL MARKER the runner emits, and gate on each.** MUnit prints three — `  + `
+  (pass), `==> X ` (fail) and `==> s <suite>.<name> skipped 0.0s`. The third was dropped by the
+  parser, so a suite abandoned after a fatal error lost its remaining tests from `tests.tsv`
+  entirely and the run reported success (ashley: 112 emitted, 110 recorded). A skip moves no pass
+  count and no fail count, which is exactly why it needs its own gate — `TestDiff.newlySkipped`,
+  and `skipped` is kept apart from `ignored` because an ignored test is a DECISION and a skipped
+  one is PREVENTION. Same rule for a missing INPUT: a `--tests` path that does not exist is fatal,
+  never a header-only artifact and a headline of "0 passing, 0 failing".
 
 Deliberate failures are **DERIVED, not listed**. A test whose failure stack reaches a type in the
 port's `Substitutions.dropTypes` fails because the port deliberately does not have that type, so
-`PortRun` writes those FQNs to `run-latest/dropped-types.tsv` on every run and the correlator
-classifies from them — the set follows the manifest with nobody editing anything, and `core` still
-names no library (§1). `port-report/<Port>/baseline/expected-failures.tsv` survives ONLY as the
+`PortRun` writes those FQNs to `run-latest/dropped-types.tsv` on every run — `upstream` TAB
+`emitted`, both namespaces, because the stack frame it will be matched against is renamed and the
+manifest key is not (§4.56) — and the correlator classifies from them: the set follows the manifest
+with nobody editing anything, and `core` still names no library (§1). `port-report/<Port>/baseline/expected-failures.tsv` survives ONLY as the
 explicit escape hatch for a failure no drop explains, and is normally empty; the artifact records
 `expected#derived` against `expected#declared` so the two can never be confused. A hand-maintained
 list of expected failures is exactly the thing that rots into "we always ignore those four" and
@@ -352,6 +361,23 @@ Two corollaries for any prefix rule:
   UPSTREAM namespace. Rename first and all of them match nothing — a phase that does nothing, with
   no error. `runsAfter` cannot say "after everything"; `Pipeline.order` is stable in declaration
   order, so the porting program places it last and `PackageRenameTransform.check` verifies it.
+
+- **An artifact that joins POLICY to OBSERVED code carries BOTH names.** The corollary of the point
+  above, and it fails silently in the other direction: policy is upstream, but a stack frame, a
+  compiler path and a class name are all EMITTED, so any file joining the two is comparing two
+  namespaces. `dropped-types.tsv` held only the manifest FQN, and the derived expected-failure rule
+  it feeds had therefore **never once fired on a renaming port** — libGDX's four deliberate
+  `JsonTest` failures were reported as unexpected on every run since the rule was written, with the
+  claim that they were classified living only in prose. The run is the last place that holds the
+  manifest name and the rename map together, so the run writes both (`Correlate.Dropped`) and
+  nothing downstream re-derives a namespace it cannot see. Translate with
+  `PackageRenameTransform.renamed` — the phase's own rule — never a hand-written `startsWith`.
+
+- **Match a runtime class name at a SEPARATOR too.** The same cut applies on the reading side: a
+  frame in `p.Json` may arrive as `p.Json`, `p.Json$`, `p.Json$Ref` or `p.Json$$anonfun$3`, and
+  `p.JsonTest` is none of them. And do not match through the source map: a DROPPED type is the one
+  type the port does not emit, so it has no `srcmap` entry at all — its replacement is injected
+  Scala the emitter never saw. The class name in the frame is the only place it appears.
 
 ## 4.57 Every emission backend carries PROVENANCE — it is a licence obligation
 

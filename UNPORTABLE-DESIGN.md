@@ -468,6 +468,16 @@ This turns the compile step from a number into a triaged list, and it is the pie
 >   hand-maintained list of expected failures rots into "we always ignore those four" and then hides
 >   a fifth.
 >
+>   **CORRECTED 2026-07-30 — the derivation had never once fired.** The artifact held the manifest
+>   FQNs (`com.badlogic.gdx.utils.Json`) and every stack frame is in the EMITTED namespace
+>   (`sge.utils.Json`), because policy is written upstream and the package rename runs LAST
+>   (CLAUDE.md §4.56). The comparison matched nothing on any renaming port, so the four `Json`
+>   failures were reported as UNEXPECTED on every run and the claim above lived only in prose.
+>   `dropped-types.tsv` now carries both names per row (`upstream` TAB `emitted`), written by the
+>   run that holds the rename map, and the match is against the failure's RAW frame class names —
+>   a dropped type is the one type the port does not emit, so it has no source-map entry to resolve
+>   through. `expected 0 -> 4, unexpected 4 -> 0`.
+>
 > Demonstrated by breaking a second universal rule — the `inline val` of §4.4's `static final`
 > row — which produces **zero scalac errors** and is invisible to every other gate in this
 > repository. See §9's Stage 1 status block for the numbers.

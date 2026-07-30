@@ -135,6 +135,21 @@ object PackageRenameTransform:
   private[transform] def longestMatch(fullName: String, prefixes: Set[String]): Option[String] =
     prefixes.filter(covers(fullName, _)).maxByOption(_.length)
 
+  /** The name `fqn` ends up with under `renames` — the same longest-prefix, cut-at-a-separator rule
+    * the phase applies to a symbol, exposed for the code that has to say what an UPSTREAM name is
+    * called in the EMITTED namespace without holding a `Program`.
+    *
+    * A run's POLICY is written upstream (§4.56: the rename runs last, so every other phase's keys
+    * are upstream names), while everything observed about the running port — a stack frame, a
+    * compiler path — is emitted. Anything joining the two has to translate one side, and doing it
+    * by hand is where a bare `startsWith` gets written: `dropped-types.tsv` held upstream FQNs and
+    * the correlator compared them against `sge.*` frames, so the derived expected-failure rule had
+    * never once fired on a renaming port. */
+  def renamed(fqn: String, renames: Map[String, String]): String =
+    longestMatch(fqn, renames.keySet) match
+      case Some(from) => renames(from) + fqn.substring(from.length)
+      case scala.None => fqn
+
   /** Symbols the program DECLARES, as opposed to externals the frontend interned on first
     * reference. Climbs the `owner` chain — an owned symbol reaches a top-level unit, an external
     * one is rooted at `SymId.None` without being a unit. Fuel-bounded, so a corrupt owner cycle

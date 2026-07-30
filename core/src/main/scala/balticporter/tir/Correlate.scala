@@ -51,6 +51,11 @@ import java.nio.file.{Files, Path}
   * and [[locateTests]] classifies from them. Nothing in this file names a library — `core` may not
   * know one exists (CLAUDE.md §1) — and nothing has to be kept in step by hand.
   *
+  * The artifact carries BOTH namespaces per drop ([[Dropped]]), and that is the whole of what made
+  * the rule work: policy is written upstream and the package rename runs last (§4.56), so a
+  * one-column file of manifest FQNs was being compared against stack frames in the emitted
+  * namespace and matched nothing, on every renaming port, since the rule was written.
+  *
   * A hand-maintained list is exactly the thing that rots into "we always ignore those four" and
   * then hides a fifth, so the DECLARED form (`expected-failures.tsv` in the BASELINE directory:
   * `suite`, `test` — `*` for the whole suite — and a reason) survives only as the explicit escape
@@ -117,14 +122,33 @@ object Correlate:
     * skipped, the test vanishes from `tests.tsv`, and the diff reports it as "did not run" — loud,
     * but wrong about why. An ignored test is a DECISION; a missing one is a defect. */
   private val MarkLine  = raw"^==> ([XiI]) (\S+)\s*(.*)$$".r
+  /** MUnit's THIRD terminal marker, and the one that was silently dropped: `==> s <suite>.<name>
+    * skipped 0.0s`. A skip is what MUnit prints when a test never ran — a suite abandoned after a
+    * fatal Error takes its remaining tests with it — so the run loses tests AND reports success,
+    * which is the exact silent-omission shape this project keeps finding (CLAUDE.md §3).
+    *
+    * It needs its own pattern rather than widening `FailLine` to `[XiIs]`: the line ends
+    * `… skipped 0.0s`, so that regex's lazy `(.+?)` would swallow the word and record the test
+    * under the name `<name> skipped` — present in the artifact, matching nothing in the baseline,
+    * and reported as one test that vanished plus one that appeared. Matched BEFORE the other two. */
+  private val SkipLine  = raw"^==> s (\S+) skipped\s+[0-9]+(?:\.[0-9]+)?s\s*$$".r
   private val FrameLine = raw"^\s+at ([^(\s]+)\(([^:)]+)(?::(\d+))?\)\s*$$".r
   private val AssertAt  = raw"([^\s:]+\.scala):(\d+)".r
 
+  /** `X` failed, `s` never ran, anything else (`i`/`I`) was ignored on purpose.
+    *
+    * `skipped` is kept apart from `ignored` because they are opposite kinds of fact: an ignored
+    * test is a DECISION somebody wrote down (`@Ignore`), a skipped one is PREVENTION — the runner
+    * wanted to run it and could not. Merging them files the second under the first and buries it. */
   private def marked(suite: String, mark: String, full: String, detail: String): Outcome =
     val name = if suite.nonEmpty && full.startsWith(suite + ".") then full.substring(suite.length + 1)
                else full.reverse.takeWhile(_ != '.').reverse
+    val status = mark match
+      case "X" => "fail"
+      case "s" => "skipped"
+      case _   => "ignored"
     Outcome(if suite.nonEmpty then suite else full.stripSuffix("." + name), name,
-            if mark == "X" then "fail" else "ignored", detail.trim, Nil)
+            status, detail.trim, Nil)
 
   /** Parse an MUnit console log into per-test outcomes. Passes carry no frames; a failure carries
     * every stack frame printed under it, in order, which is what the anchor is chosen from. */
@@ -137,6 +161,7 @@ object Correlate:
       l match
         case SuiteLine(s)             => flush(); suite = s
         case PassLine(n)              => flush(); out += Outcome(suite, n.trim, "pass", "", Nil)
+        case SkipLine(full)           => flush(); out += marked(suite, "s", full, "")
         case FailLine(mark, full, d) => flush(); pending = Some(marked(suite, mark, full, d))
         case MarkLine(mark, full, d) => flush(); pending = Some(marked(suite, mark, full, d))
         case FrameLine(qual, file, ln) =>
@@ -178,31 +203,81 @@ object Correlate:
             case _              => scala.None
       }
 
-  val DroppedHeader = "#fqn"
+  /** One `Substitutions.dropTypes` entry, IN BOTH NAMESPACES.
+    *
+    * A port's policy is written in the UPSTREAM namespace and its package rename runs LAST
+    * (CLAUDE.md §4.56), so `com.badlogic.gdx.utils.Json` is dropped and `sge.utils.Json` is what a
+    * stack frame says. Recording only one of the two is what made this whole rule dead code: the
+    * artifact held upstream FQNs, every frame was emitted, and the classifier had NEVER fired on a
+    * renaming port — the claim "4 deliberate failures" lived in prose only. Both names are written
+    * by the run that knows the map, so nothing downstream has to guess at a rename it cannot see.
+    *
+    * @param upstream the FQN as the manifest declares it — what a reader must go and edit.
+    * @param emitted  the FQN the port emits it under — what a stack frame and a compiler report. */
+  final case class Dropped(upstream: String, emitted: String):
+    def tsv: String = s"$upstream\t$emitted"
+    /** how to name it to a human: the manifest key, plus the emitted name when they differ. */
+    def render: String = if upstream == emitted then upstream else s"$upstream (emitted as $emitted)"
 
-  /** The FQNs a port declares in `Substitutions.dropTypes`, as `PortRun` wrote them. One per line;
-    * `#` comments and blanks ignored, so the file reads like every other artifact here. */
-  def parseDropped(p: Path): Set[String] =
+  object Dropped:
+    /** a port with no package rename: the two namespaces coincide. */
+    def apply(fqn: String): Dropped = Dropped(fqn, fqn)
+
+  val DroppedHeader = "#upstream\temitted"
+
+  /** The FQNs a port declares in `Substitutions.dropTypes`, as `PortRun` wrote them: `upstream`
+    * TAB `emitted`. `#` comments and blanks ignored, so the file reads like every other artifact
+    * here. A single-column line — the form this file had before renames were carried, and the form
+    * a port with no rename could still write — means the two namespaces coincide. */
+  def parseDropped(p: Path): Set[Dropped] =
     if !Files.isRegularFile(p) then Set.empty
     else
       Files.readAllLines(p).toArray(Array.empty[String]).toList
-        .map(_.trim).filterNot(l => l.startsWith("#") || l.isEmpty).toSet
+        .filterNot(l => l.startsWith("#") || l.isBlank)
+        .flatMap { l =>
+          l.split('\t').map(_.trim).filter(_.nonEmpty) match
+            case Array(u)        => Some(Dropped(u, u))
+            case Array(u, e, _*) => Some(Dropped(u, e))
+            case _               => scala.None
+        }.toSet
+
+  /** `.` separates packages and the top-level type, `$` precedes a nested type or a companion, `#`
+    * a member — the three separators `Symbol.fullName` and a JVM class name are cut at. */
+  private def isBoundary(c: Char): Boolean = c == '.' || c == '$' || c == '#'
+
+  /** Does the runtime class `cls` name `fqn` itself, or something NESTED inside it? Cut only at a
+    * separator, never a bare prefix (CLAUDE.md §4.56): `p.Json` covers `p.Json`, `p.Json$`,
+    * `p.Json$Ref` and `p.Json$$anonfun$3`, and must never cover `p.JsonTest`. */
+  private[tir] def covers(fqn: String, cls: String): Boolean =
+    fqn.nonEmpty && cls.startsWith(fqn) &&
+      (cls.length == fqn.length || isBoundary(cls.charAt(fqn.length)))
 
   /** Is this failure explained BY CONSTRUCTION — does its stack reach a type the port deliberately
     * does not have?
     *
-    * The whole ported stack is consulted, not only the anchor: a drop shows up wherever the
-    * replacement threw, which is routinely one frame below the member the anchor names. The FIRST
-    * dropped unit encountered (frames are already ordered outermost-throw-first) is the one
-    * reported, so the reason names the type that actually explains the failure. */
-  def derivedExpectation(t: Outcome, ported: List[(Frame, SrcMap.Entry)], dropped: Set[String]): Option[Expected] =
+    * The whole stack is consulted, not only the anchor: a drop shows up wherever the replacement
+    * threw, which is routinely one frame below the member the anchor names. The FIRST dropped type
+    * encountered (frames are already ordered outermost-throw-first) is the one reported, so the
+    * reason names the type that actually explains the failure.
+    *
+    * ==Why the RAW frames and not the source-mapped ones==
+    *
+    * This used to read `SrcMap.Entry.unit` off the frames that resolved. That cannot work for the
+    * case it exists for: a dropped type is precisely the one type the port does NOT emit, so it has
+    * no honest source-map entry to resolve to — its replacement is INJECTED Scala, which the
+    * emitter never saw. The class name in the frame is the only place the dropped type appears at
+    * all, so that is what is matched, against [[Dropped.emitted]] because a frame is emitted. */
+  def derivedExpectation(t: Outcome, dropped: Set[Dropped]): Option[Expected] =
     if dropped.isEmpty || t.status != "fail" then scala.None
     else
-      ported.map(_._2.unit).find(dropped).map { fqn =>
-        Expected(t.suite, t.name,
-          s"Substitutions.dropTypes $fqn — the port deliberately does not translate this type, and " +
-            "this failure's stack reaches it", derived = true)
-      }
+      t.frames.iterator
+        .flatMap(f => dropped.find(d => covers(d.emitted, f.cls)))
+        .nextOption()
+        .map { d =>
+          Expected(t.suite, t.name,
+            s"Substitutions.dropTypes ${d.render} — the port deliberately does not translate this " +
+              "type, and this failure's stack reaches it", derived = true)
+        }
 
   // ===========================================================================
   // the join
@@ -271,7 +346,7 @@ object Correlate:
       idx: SrcMap.Index,
       expected: List[Expected] = Nil,
       changedMembers: Set[String] = Set.empty,
-      droppedTypes: Set[String] = Set.empty,
+      droppedTypes: Set[Dropped] = Set.empty,
   ): List[LocatedTest] =
     val changedPerUnit = changedMembers.groupBy(_.takeWhile(_ != '\t')).view.mapValues(_.size).toMap
     outs.map { o =>
@@ -288,7 +363,7 @@ object Correlate:
             .getOrElse(("none", scala.None))
       // DERIVED first: a drop is a fact about the manifest, a declaration is somebody's claim about
       // it, and preferring the claim would let a stale line outrank the thing it describes.
-      val why = derivedExpectation(o, ported, droppedTypes).orElse(expected.find(_.matches(o)))
+      val why = derivedExpectation(o, droppedTypes).orElse(expected.find(_.matches(o)))
       LocatedTest(o, anchor, entry, ported, why,
                   entry.exists(x => changedMembers(s"${x.unit}\t${x.member}")),
                   entry.flatMap(x => changedPerUnit.get(x.unit)).getOrElse(0))
@@ -307,10 +382,18 @@ object Correlate:
       expectedButPassing: List[Expected],
       disappeared: List[String],
       added: List[String],
+      /** a test the runner SKIPPED that the baseline does not record as skipped — it did not run,
+        * and no pass/fail count can show that. See [[regressed]]. */
+      newlySkipped: List[LocatedTest] = Nil,
   ):
-    /** the gate: an UNEXPECTED newly-failing test. An expected failure is not a regression, and a
-      * test that vanished is reported but does not fail the gate — deleting a test is a decision. */
-    def regressed: Boolean = newlyFailing.nonEmpty
+    /** the gate: an UNEXPECTED newly-failing test, or a test that stopped RUNNING.
+      *
+      * An expected failure is not a regression, and a test that vanished from the artifact is
+      * reported but does not fail the gate — deleting a test is a decision somebody made. A SKIP
+      * is neither: the test is still there, the runner still counted it, and it produced no
+      * assertion. It moves no pass count and no fail count, so without its own gate a suite
+      * abandoned mid-way reports success — which is the §3 defect shape exactly. */
+    def regressed: Boolean = newlyFailing.nonEmpty || newlySkipped.nonEmpty
 
   def parseTestsTsv(p: Path): Map[String, String] =
     if !Files.isRegularFile(p) then Map.empty
@@ -338,6 +421,12 @@ object Correlate:
       expectedButPassing = latest.filter(t => t.outcome.status == "pass").flatMap(_.expected).distinct.sortBy(e => (e.suite, e.test)),
       disappeared        = baseline.keys.filterNot(byId.contains).toList.sorted,
       added              = byId.keys.filterNot(baseline.contains).toList.sorted,
+      // A test the baseline does not ALREADY record as skipped. Absent from the baseline counts:
+      // that is what a test looks like the first time the parser stops dropping its marker, and a
+      // skip nobody has accepted is exactly the thing that must not pass silently.
+      newlySkipped       = latest.filter(t => t.outcome.status == "skipped" &&
+                                              !baseline.get(t.outcome.id).contains("skipped"))
+                                 .sortBy(_.outcome.id),
     )
 
   // ---------------------------------------------------------------------------
@@ -373,8 +462,13 @@ object Correlate:
     val sb    = new StringBuilder
     val pass  = all.count(_.outcome.status == "pass")
     val fail  = all.count(_.outcome.status == "fail")
+    // NOT folded into either count: a skipped test asserted nothing, so calling it a pass is a lie
+    // and calling it a failure is a different one. It gets its own number, always printed once any
+    // exists, because "108 passing, 2 failing" over 112 tests reads as complete and is not.
+    val skip  = all.count(_.outcome.status == "skipped")
     sb.append(s"tests: ${all.size}  passing=$pass  failing=$fail  " +
-              s"(expected ${d.expectedFailing.size}, unexpected ${fail - d.expectedFailing.size})\n")
+              s"(expected ${d.expectedFailing.size}, unexpected ${fail - d.expectedFailing.size})" +
+              (if skip > 0 then s"  SKIPPED=$skip — these never ran" else "") + "\n")
     if !d.hasBaseline then
       sb.append("NO TEST BASELINE — these are the current results, nothing to compare against.\n")
     def block(title: String, xs: List[LocatedTest], note: String = ""): Unit =
@@ -396,6 +490,9 @@ object Correlate:
         if xs.sizeIs > limit then sb.append(s"   … ${xs.size - limit} more (see test-failures.tsv)\n")
     block("NEWLY FAILING", d.newlyFailing,
           "the highest-value signal this engine produces — a DIGEST CHANGED line names the member that moved")
+    block("NEWLY SKIPPED", d.newlySkipped,
+          "the runner did NOT run these — a skip moves no pass count and no fail count, so it is " +
+          "gated on its own. Usually the tail of a suite abandoned after a fatal error")
     block("still failing", d.stillFailing)
     block("newly passing", d.newlyPassing)
     block("failing AS EXPECTED", d.expectedFailing,

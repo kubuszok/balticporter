@@ -50,6 +50,17 @@ object CorrelateRun:
 
   final case class Result(report: String, regressed: Boolean, errors: List[Correlate.LocatedError], tests: List[Correlate.LocatedTest])
 
+  /** A declared input that is not there. Fatal, and it names both the path and what it was resolved
+    * against, because the overwhelmingly common cause is a RELATIVE path: sbt's non-forked `run`
+    * has the subproject as its working directory, so a path that reads correctly in a shell script
+    * resolves to nothing here. */
+  final class MissingInput(val paths: List[Path])
+      extends RuntimeException(
+        s"[correlate] ${paths.size} declared input(s) NOT FOUND — refusing to report on a file it " +
+          s"never opened:\n" + paths.map(p => s"  $p").mkString("\n") +
+          s"\n  (relative paths resolve against ${DebugFlags.root}; pass absolute ones, or set " +
+          "balticporter.root)")
+
   /** Run the join and write the artifacts. Prints nothing — the caller decides. */
   def run(req0: Request): Result =
     val req    = req0.absolute
@@ -57,10 +68,18 @@ object CorrelateRun:
     val base   = req.baselineDir
     Files.createDirectories(outDir)
 
-    // A missing input file must SAY SO — see the class doc on why a silent one is so expensive.
-    (req.srcmaps.map(_._2) ++ req.scalac ++ req.tests ++ req.markers).filterNot(Files.isRegularFile(_)).foreach { p =>
-      System.err.println(s"[correlate] NOT FOUND: $p   (resolved against ${Path.of("").toAbsolutePath})")
-    }
+    // A missing input file is FATAL — see the class doc on why a silent one is so expensive.
+    //
+    // It used to be a line on stderr, which the measure scripts filter out of the correlate output
+    // by design. The run then produced a header-only `tests.tsv` and a headline of "tests 0
+    // passing, 0 failing" from a test log it had never opened: a WHOLE SUITE reported as green
+    // because a path was wrong. That is worse than any diagnostic this tool can emit, so a
+    // declared input that does not exist stops the run. An input that is genuinely optional is
+    // omitted from the request, not passed as a path that does not resolve.
+    val missing = (req.srcmaps.map(_._2) ++ req.scalac ++ req.tests ++ req.markers)
+      .filterNot(Files.isRegularFile(_))
+    if missing.nonEmpty then
+      throw MissingInput(missing)
 
     val entries = req.srcmaps.flatMap((scope, p) => SrcMap.parseAll(p, scope))
     val idx     = SrcMap.Index.of(entries)
@@ -86,10 +105,12 @@ object CorrelateRun:
     // would decorate every finding with a flag that means nothing. No baseline ⇒ no claim.
     val changed     = if baseMembers.isEmpty then Set.empty[String] else Correlate.changedMembers(baseMembers, nowMembers)
 
-    // The DROPPED TYPES of every port whose map is loaded. `PortRun` writes the file beside the
-    // source map on every run, so the expected-failure set follows the manifest automatically; the
-    // union is right because a test suite's failure lands in the LIBRARY's dropped type, which is a
-    // different port from the suite (exactly the shape the digest union above exists for).
+    // The DROPPED TYPES of every port whose map is loaded, in BOTH namespaces. `PortRun` writes the
+    // file beside the source map on every run, so the expected-failure set follows the manifest
+    // automatically; the union is right because a test suite's failure lands in the LIBRARY's
+    // dropped type, which is a different port from the suite (exactly the shape the digest union
+    // above exists for). Each row carries its own emitted name, so unioning two ports that rename
+    // differently stays correct — nothing here re-derives a namespace it cannot see.
     val dropped = (req.srcmaps.map(_._2.getParent) ++ portDirs.map(_.resolve("run-latest")) :+ outDir)
       .distinct.flatMap(d => Correlate.parseDropped(d.resolve("dropped-types.tsv"))).toSet
 
@@ -190,10 +211,20 @@ object CorrelateMain:
         case other                  => System.err.println(s"unknown option: $other"); usage()
       i += 1
 
-    val result = CorrelateRun.run(CorrelateRun.Request(
-      srcmaps = srcmaps, scalac = scalac, tests = tests,
-      out = out.getOrElse(usage()), baseline = baseline, markers = markers))
+    // A missing input exits NON-ZERO with the paths on stdout as well as stderr: the measure
+    // scripts filter stderr out of the correlate block, and a shell that cannot see why a
+    // correlation produced nothing reports the run as green.
+    val result =
+      try
+        CorrelateRun.run(CorrelateRun.Request(
+          srcmaps = srcmaps, scalac = scalac, tests = tests,
+          out = out.getOrElse(usage()), baseline = baseline, markers = markers))
+      catch
+        case e: CorrelateRun.MissingInput =>
+          println(e.getMessage)
+          System.err.println(e.getMessage)
+          sys.exit(2)
     println(result.report)
     if strict && result.regressed then
-      System.err.println("[correlate] a test newly FAILED — see NEWLY FAILING above")
+      System.err.println("[correlate] a test newly FAILED or was SKIPPED — see the report above")
       sys.exit(1)
