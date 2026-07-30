@@ -126,65 +126,14 @@ final class IntToOpaqueTransform(
     val units = program.units.map(u => StandardTraversal.mapClassDef(this, u)) :+ synthUnit
     new Program(units, symbols, program.xref)
 
-  // -------------------------------------------------------------------------
-  // Seed detection: union-find over Int symbols connected by pure-move flows.
-  // -------------------------------------------------------------------------
+  /** Seed detection — [[FlowPropagation]] over the `int` symbols, with the hints as roots.
+    *
+    * The mechanism is SHARED rather than owned here: "a rewritten declaration carries every
+    * reference and call site with it" is the second half of every retyping rule, not a fact about
+    * opaque types (`CollectionsTransform` grows a `RuleScope.Only` the same way). What stays here
+    * is the eligibility test, which is this phase's own record of what it retypes. */
   private def propagate(p: Program, hints: Set[SymId]): Set[SymId] =
-    val parent = collection.mutable.Map[SymId, SymId]()
-    def find(x: SymId): SymId =
-      var r = x
-      while parent.getOrElse(r, r) != r do r = parent(r)
-      parent(x) = r; r
-    def union(a: SymId, b: SymId): Unit = parent(find(a)) = find(b)
-    def isIntSym(id: SymId): Boolean = p.symbolOf(id).exists(s => taggableInt(s.info))
-
-    val edges = collectFlows(p).filter((a, b) => isIntSym(a) && isIntSym(b))
-    edges.foreach((a, b) => union(a, b))
-    val hintRoots = hints.filter(isIntSym).map(find)
-    val universe  = (edges.flatMap((a, b) => List(a, b)) ++ hints).toSet.filter(isIntSym)
-    universe.filter(s => hintRoots.contains(find(s)))
-
-  /** Pure-move flow edges over the whole program: `(a, b)` means an int value moves between
-    * `a` and `b` without arithmetic, so they must share a type. Read from the Spoon-resolved
-    * TIR (every reference already carries its resolved `SymId`). */
-  private def collectFlows(p: Program): List[(SymId, SymId)] =
-    val edges = collection.mutable.ListBuffer[(SymId, SymId)]()
-    def refSym(t: Term): Option[SymId] = t match
-      case Tree.Ident(s, _, _)          => Some(s)
-      case Tree.Select(_, s, _, _)      => Some(s)
-      case Tree.Apply(_, Nil, m, _, _)  => Some(m) // nullary getter call: `x = obj.get()`
-      case _                            => None
-    def walkTerm(t: Term, encl: SymId): Unit = t match
-      case Tree.Block(stats, e, _, _) => stats.foreach(walkStat(_, encl)); walkTerm(e, encl)
-      case Tree.Assign(l, r, _, _) =>
-        for a <- refSym(l); b <- refSym(r) do edges += ((a, b)); walkTerm(l, encl); walkTerm(r, encl)
-      case Tree.Return(Some(e), _, _) =>
-        if encl != SymId.None then refSym(e).foreach(s => edges += ((encl, s)))
-        walkTerm(e, encl)
-      case Tree.Apply(fun, args, m, _, _) =>
-        p.definitionOf(m) match
-          case Some(d: Tree.DefDef) =>
-            args.zip(d.paramss.flatten).foreach((arg, pd) => refSym(arg).foreach(s => edges += ((s, pd.symbol))))
-          case _ => ()
-        walkTerm(fun, encl); args.foreach(walkTerm(_, encl))
-      case Tree.If(c, a, b, _, _) => walkTerm(c, encl); walkTerm(a, encl); walkTerm(b, encl)
-      case Tree.While(c, b, _, _, _) => walkTerm(c, encl); walkTerm(b, encl)
-      case Tree.Select(q, _, _, _) => walkTerm(q, encl)
-      case _ => ()
-    def walkStat(s: Statement, encl: SymId): Unit = s match
-      case c: Tree.ClassDef => c.body.foreach(walkStat(_, c.symbol))
-      case d: Tree.DefDef   => d.rhs.foreach(r => { tailRefs(r).foreach(s => edges += ((d.symbol, s))); walkTerm(r, d.symbol) })
-      case v: Tree.ValDef   => v.rhs.foreach(r => { refSym(r).foreach(s => edges += ((v.symbol, s))); walkTerm(r, encl) })
-      case t: Term          => walkTerm(t, encl)
-      case _                => ()
-    /** references returnable from a method body's tail (a bare-expression return or the last
-      * expr of a block), which flow to the method's own (return) symbol. */
-    def tailRefs(t: Term): List[SymId] = t match
-      case Tree.Block(_, e, _, _) => tailRefs(e)
-      case Tree.If(_, a, b, _, _) => tailRefs(a) ++ tailRefs(b)
-      case other                  => refSym(other).toList
-    p.units.foreach(walkStat(_, SymId.None))
-    edges.toList
+    FlowPropagation.grow(p, hints, id => p.symbolOf(id).exists(s => taggableInt(s.info)))
 
   // -------------------------------------------------------------------------
   // Retype seed positions in the tree + insert coercions.

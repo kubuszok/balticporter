@@ -97,13 +97,13 @@ class RuleScopeSpec extends munit.FunSuite:
   // symbols — the owner climb
   // -------------------------------------------------------------------------
 
-  /** a three-level table: type `com.foo.Bar`, its method `#m`, and a method-LOCAL whose `fullName`
-    * is a bare simple name — which is how `SpoonTir.defineLocal` names one, and the whole reason
-    * the symbol form of the test exists. */
+  /** a four-level table, with the two names the frontend actually produces for the kinds a name-only
+    * test cannot place (both established by running `FlowPropagationSpec` against `SpoonTir`, not by
+    * reading it): a PARAMETER is `?#p`, and a method-LOCAL is its bare simple name. */
   private def program: Program =
     val cls   = Symbol(SymId(1), "Bar", "com.foo.Bar", Flags(), SymId.None, TypeRepr.NoType)
     val meth  = Symbol(SymId(2), "m", "com.foo.Bar#m", Flags(), cls.id, TypeRepr.MethodType(Nil, TypeRepr.NoType))
-    val param = Symbol(SymId(3), "p", "com.foo.Bar#m#p", Flags(isParam = true), meth.id, TypeRepr.NoType)
+    val param = Symbol(SymId(3), "p", "?#p", Flags(isParam = true), meth.id, TypeRepr.NoType)
     val local = Symbol(SymId(4), "i", "i", Flags(), meth.id, TypeRepr.NoType)
     val other = Symbol(SymId(5), "Baz", "com.other.Baz", Flags(), SymId.None, TypeRepr.NoType)
     new Program(Nil, SymbolTable(List(cls, meth, param, local, other)), Xref.build(Nil))
@@ -120,9 +120,17 @@ class RuleScopeSpec extends munit.FunSuite:
     assert(!RuleScope.Only(Set("com.other")).includes(p, local))
   }
 
-  test("a PARAMETER is in scope with its member, and a member with its type") {
+  test("a PARAMETER is in scope with its member — its own fullName is `?#p` and names nothing") {
+    val p     = program
+    val param = sym(p, "?#p")
+    assert(!RuleScope.Only(Set("com.foo.Bar")).includes(param.fullName)) // the name alone: no
+    assert(RuleScope.Only(Set("com.foo.Bar#m")).includes(p, param))      // through the owner: yes
+    assert(RuleScope.Only(Set("com.foo.Bar")).includes(p, param))
+    assert(!RuleScope.Everywhere(Set("com.foo.Bar#m")).includes(p, param))
+  }
+
+  test("a member is in scope with its type, and a type is NOT in scope with one of its members") {
     val p = program
-    assert(RuleScope.Only(Set("com.foo.Bar#m")).includes(p, sym(p, "com.foo.Bar#m#p")))
     assert(RuleScope.Only(Set("com.foo.Bar")).includes(p, sym(p, "com.foo.Bar#m")))
     assert(!RuleScope.Only(Set("com.foo.Bar#m")).includes(p, sym(p, "com.foo.Bar")))
   }

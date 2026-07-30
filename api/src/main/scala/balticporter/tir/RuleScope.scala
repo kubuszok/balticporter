@@ -44,12 +44,21 @@ package balticporter.tir
   * many.
   *
   * ==And a SYMBOL is matched through its OWNERS, not through its own name alone==
-  * That is not a convenience: the frontend gives a method-LOCAL a `fullName` that is its simple
-  * name (`SpoonTir.defineLocal`), so a local in `com.foo.Bar#m` is called `i` and no name-only test
-  * can place it. [[RuleScope.entryFor(program:balticporter\.tir\.Program,sym:balticporter\.tir\.Symbol)*]]
-  * climbs the owner chain, which also gives the containment the three forms above promise: a
+  * That is not a convenience. Two of the four declaration kinds a retyping rule reaches carry a
+  * `fullName` that no name-only test can place, and both were found by running this against the
+  * frontend rather than by reading it:
+  *
+  *   - a method-LOCAL is named by its SIMPLE NAME (`SpoonTir.defineLocal`), so a local in
+  *     `com.foo.Bar#m` is called `i`;
+  *   - a PARAMETER is named `?#i`. The frontend qualifies it against its method before the method's
+  *     own record is set, so the owner half of the name is the minter's placeholder.
+  *
+  * [[RuleScope.entryFor(program:balticporter\.tir\.Program,sym:balticporter\.tir\.Symbol)*]] climbs
+  * the owner chain instead, which also gives the containment the three forms above promise: a
   * parameter of a scoped member is in scope with it, and a member of a scoped type is in scope with
-  * the type, whatever its own `fullName` happens to be.
+  * the type, whatever its own `fullName` happens to be. A rule that read the name alone would have
+  * scoped every field and method correctly and silently left every parameter and local behind — a
+  * half-retyped signature, which is a compile error one call away and reads as a broken mapping.
   *
   * ==What this deliberately is NOT==
   * It is not a predicate. A `Symbol => Boolean` would be strictly more expressive and could not be
