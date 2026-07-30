@@ -106,6 +106,26 @@ final class CollectionsTransform extends Phase, RequiresRuntime:
     "java.util.TreeSet"       -> ("scala.collection.mutable.TreeSet", Kind.Set),
   )
 
+  /** the java types this phase retypes — its POLICY, read back so a CHECK can ask what the phase
+    * did rather than guessing from a name (CLAUDE.md §4.56). The check below takes it as a
+    * parameter and hold no mapping of its own, which is what keeps the closure property §1(a)
+    * while the mapping stays §1(b). */
+  def mappedTypes: Set[String] = typeMap.keySet
+
+  /** …and what each became, so a finding can say `java.util.List -> mutable.Buffer` instead of
+    * naming only the half a reader already has. `"?"` for a type the phase does not map. */
+  def targetOf(fqn: String): String = typeMap.get(fqn).map(_._1).getOrElse("?")
+
+  /** [[CollectionClosureCheck]] over this phase's own mapping — the phase reports on its policy,
+    * so the check cannot be run against a mapping that is not the one that ran. */
+  def closure(program: Program): List[CollectionClosureCheck.Finding] =
+    closure(program, program.units)
+
+  /** …held to the units the run EMITS. A dependent port's program contains its base's units, and a
+    * finding attributed to one of those belongs to the base (ENGINE-LIMITS D2). */
+  def closure(program: Program, units: List[Tree.ClassDef]): List[CollectionClosureCheck.Finding] =
+    CollectionClosureCheck.check(program, units, mappedTypes, targetOf)
+
   /** scala nullary accessors that take NO parens (`def size: Int`) — a Java `size()`
     * emitted as `size()` would be an illegal application. Strip the `Apply`. */
   private val parenless = Set("size", "isEmpty", "iterator", "keySet", "values", "nonEmpty", "hasNext", "next")
