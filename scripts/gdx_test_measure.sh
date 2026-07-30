@@ -46,6 +46,8 @@ echo "@Test in Java: $JAVA_TESTS   discoverable in emitted Scala: $SCALA_TESTS (
 [ "$JAVA_TESTS" != "$SCALA_TESTS" ] && echo "!! TESTS LOST — $((JAVA_TESTS - SCALA_TESTS)) of $JAVA_TESTS would never run, and the suite would report success"
 
 echo
+break_residue libgdx-core/src_managed/test/scala
+
 echo "-- compile --"
 scala-cli compile --scala 3.8.4 --server=false \
   --dependency org.junit.jupiter:junit-jupiter:5.10.2 \

@@ -49,6 +49,8 @@ echo "@Test in Java: $JAVA_TESTS   discoverable in emitted Scala: $SCALA_TESTS (
 DEPS="--dependency junit:junit:4.13.2 --dependency org.mockito:mockito-all:1.10.19 --dependency org.scalameta::munit:1.0.2"
 
 echo
+break_residue ashley-core/src_managed
+
 echo "-- compile --"
 # NOTE the ANSI strip: without it `grep -cE '^-- .*Error'` matches nothing and reports 0 for a port
 # that does not compile — a false NEGATIVE on the headline number.

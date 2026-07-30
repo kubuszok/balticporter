@@ -38,6 +38,8 @@ echo "-- checks: persisted, untruncated, diffed against the baseline --"
 show_check_report "$REPORT"
 
 echo
+break_residue libgdx-core/src_managed/main/scala
+
 echo "-- compile --"
 scala-cli compile --scala 3.8.4 --server=false libgdx-core/src_managed/main/scala 2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/gdxmeasure.txt
 CLI_STATUS=${PIPESTATUS[0]}

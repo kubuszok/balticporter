@@ -111,6 +111,24 @@ reconcile_outcomes() {
   fi
 }
 
+# break_residue <emitted-scala-dir>...
+# `/* break */ ()` is what the emitter leaves where a java `break` had no translation. The number
+# was QUOTED in a status file as a measure ("45, all switch-case") while nothing computed it — the
+# real count was 55, 34 of them in JsonReader from LABELLED breaks whose loss corrupts its parsing.
+# A quoted number with no computation behind it drifts the moment the next emit changes anything,
+# so the measure scripts print it on every run, with the per-file breakdown that makes a jump
+# attributable. Goes to zero only when the labelled-break translation lands (Tree.Labeled).
+break_residue() {
+  local total
+  total=$(grep -rho '/\* break \*/' "$@" 2>/dev/null | wc -l | tr -d ' ')
+  echo "break residue: $total × '/* break */ ()' in emitted code"
+  if [ "$total" != "0" ]; then
+    grep -rlo '/\* break \*/' "$@" 2>/dev/null | while read -r f; do
+      echo "     $(grep -o '/\* break \*/' "$f" | wc -l | tr -d ' ') $(basename "$f")"
+    done | sort -rn
+  fi
+}
+
 # compile_guard <scala-cli-exit-status> <counted-errors> <capture-file>
 # A compile that never happened must not report 0. `scala-cli` aborting before compilation
 # ("input file not found", a bad flag) exits non-zero and prints a line that matches neither

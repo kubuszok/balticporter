@@ -43,6 +43,8 @@ echo "@Test in Java: $JAVA_TESTS   discoverable in emitted Scala: $SCALA_TESTS (
 [ "$JAVA_TESTS" != "$SCALA_TESTS" ] && echo "!! TESTS LOST — $((JAVA_TESTS - SCALA_TESTS)) of $JAVA_TESTS would never run, and the suite would report success"
 
 echo
+break_residue simplegraphs-core/src_managed
+
 echo "-- compile --"
 # NOTE the ANSI strip. Dropped once, and `grep -cE '^-- .*Error'` then matched nothing because every
 # line begins with a colour escape — reporting 0 errors for a port that had 20. A false NEGATIVE on

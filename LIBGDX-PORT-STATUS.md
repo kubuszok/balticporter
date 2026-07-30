@@ -527,8 +527,10 @@ a method the hand-written `Json` substitute did not declare — it compiled to n
 > `ENGINE-LIMITS.md` **X4**, and "a JVM-only API in the library is not an engine gap" to **P3**. The
 > counts stay here.
 
-- **45 `/* break */ ()` remain, and all 45 are SWITCH-case breaks**, which scala's `match` performs
-  anyway. Zero `continue` no-ops, zero labelled ones. The comment count is the measure; keep it.
+- **Zero `/* break */ ()` in the TEST set** — `scripts/_report.sh break_residue` computes it on
+  every run now. (An earlier revision of this bullet asserted "45, all switch-case, zero labelled"
+  with nothing computing any of those three claims; all three were false — the residue lives in
+  CORE, 55 of it, a third of it labelled. See the core section's bullet.)
 - **`@Before` does not reproduce JUnit's FRESH INSTANCE.** Calling setup at the head of each test is
   exact wherever setup assigns the fields it needs; a field carrying state through its own
   INITIALISER would still leak. No corpus test depends on it, and all 217 pass.
@@ -585,9 +587,14 @@ single most common comparison in Java, and the port had it wrong everywhere whil
 
 ### Residues, named
 
-- **177 `/* break */ ()` remain**, and they are FINE or KNOWN: a switch-case `break` is what scala's
-  `match` does anyway, and LABELLED breaks are not covered. The comment count is the measure — do
-  not delete it.
+- **55 `/* break */ ()` remain, and they are NOT all fine** — computed by
+  `scripts/_report.sh break_residue` on every measure run (an earlier "177, fine or known" here and
+  a later "45, all switch-case" in the test section were both quoted with nothing computing them).
+  Breakdown: JsonReader 34, TextField 11, JsonSkimmer 4, GlyphLayout 4, Table 1, ParticleEmitter 1.
+  The JsonReader 34 are LABELLED breaks on `if` statements (`break outer` × 17 under 5 `outer:`
+  labels, none on a loop) — dropped, so after `bool(name, true)` the code FALLS THROUGH and also
+  emits a string event for every unquoted bool/null/number. That is silent corruption, open as the
+  labelled-break task (needs `Tree.Labeled`); the count going to 0 is its completion criterion.
 - **`@Before` does not reproduce JUnit's FRESH INSTANCE.** Calling setup at the head of each test
   is exact wherever setup assigns the fields it needs. A field carrying state through its own
   INITIALISER still leaks between tests. No corpus test depends on it today.
