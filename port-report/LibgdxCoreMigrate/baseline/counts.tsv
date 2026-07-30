@@ -3,12 +3,13 @@ collection-boundary	0
 collection-closure	2
 gdx-shared-iterator	0
 manifest	0
-omissions	193
+omissions	177
 policy	0
 port-map	0
 portability(all)	151
 portability(emitted)	151
 portability(injected)	2
+porter-notes	0
 remediation	29
 signature	0
 substitution(dangling)	0

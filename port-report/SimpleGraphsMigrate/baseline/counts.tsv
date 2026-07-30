@@ -2,12 +2,13 @@
 collection-boundary	0
 collection-closure	0
 manifest	0
-omissions	6
+omissions	2
 policy	0
 port-map	0
 portability(all)	6
 portability(emitted)	6
 portability(injected)	0
+porter-notes	0
 remediation	1
 signature	0
 substitution(dangling)	0
