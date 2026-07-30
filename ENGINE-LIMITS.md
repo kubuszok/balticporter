@@ -1254,12 +1254,33 @@ path comparison §5.4 already documents as broken across a symlinked worktree, a
 does not even know the source root. A symbol that exhausts the climb counts as the dependent's, so
 an unresolvable case errs toward reporting.
 
-Now the FOURTH measured instance of the same shape: `OmissionCheck` (Ashley reporting libGDX's 47
-omissions), `PortabilityCheck`, the port-map findings above — and the collection closure check,
-which unfiltered reported `AsyncExecutor`'s two findings to four different ports, three of which
-cannot act on them. Every new per-site check starts from the run's OWN units (`checkedUnits` /
-`OmissionCheck.check`'s unit parameter is the pattern); a check that scans `program.units` bare is
-wrong on every dependent port, and the wrongness arrives exactly when the second module does.
+Now the FIFTH measured instance of the same shape: `OmissionCheck` (Ashley reporting libGDX's 47
+omissions), `PortabilityCheck`, the port-map findings above, the collection closure check — which
+unfiltered reported `AsyncExecutor`'s two findings to four different ports, three of which cannot
+act on them — and now `decisions.tsv`. Every new per-site check starts from the run's OWN units
+(`checkedUnits` / `OmissionCheck.check`'s unit parameter is the pattern); a check that scans
+`program.units` bare is wrong on every dependent port, and the wrongness arrives exactly when the
+second module does.
+
+**And it is not only CHECKS.** A provenance artifact is subject to the identical rule, which is how
+the fifth instance was found: every PHASE also runs over the base's units and decides about them
+identically to the base's own run, so `libgdx-test` published **1240 decisions of which 961 were
+libGDX core's** — the same rows, byte for byte, that `libgdx-core`'s own artifact already carries,
+in a file whose reader is looking for the 279 that are the test module's. Ashley: 499 -> 131,
+ashley-test 657 -> 196, simple-graphs-test 93 -> 23.
+
+Two things that decision cost, and both are worth repeating for the next artifact:
+
+- **Withhold, do not section.** A clearly-marked second section in the same file is still read
+  past, still diffed by anything comparing the artifact, and still makes "how many decisions did
+  this port make" a question with two answers. The rows are not lost — the module that OWNS the
+  declaration emits them, and it is the only module that can change one. Print the WITHHELD COUNT
+  on every run instead, so it can never be mistaken for "none were made".
+- **Scope the PHASE log, not the run's own rows.** A drop the dependent INHERITED is anchored on
+  the base's unit and would be filtered out by the same rule — and it is exactly the row that
+  explains why a type the dependent references is absent. `PortRun` filters the drained phase log
+  and records its own policy rows afterwards; `detail("own")` already separates declared-here from
+  inherited.
 
 *Fix kind: (a) engine.*
 

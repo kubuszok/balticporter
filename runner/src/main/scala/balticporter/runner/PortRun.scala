@@ -443,11 +443,14 @@ final case class PortRun(
 
     // ---- DECISION PROVENANCE: how this run arrived at the code it just wrote ----
     // The phases recorded theirs while the pipeline ran; the run's own non-phase deciders — the
-    // substitution manifest and the injection copy — record here, into the SAME log, because the
-    // question an investigating agent asks does not care which layer answered it.
+    // substitution manifest, the injection copy, the constructor funnel — record here, into the
+    // SAME log, because the question an investigating agent asks does not care which layer
+    // answered it. The phase log is scoped to THIS MODULE first (see `retainOwnDecisions`); the
+    // run's own rows are added after, and are about its manifest rather than about a declaration.
+    val foreignDecisions = retainOwnDecisions(program, translated)
     recordPolicyDecisions(program, translated, injectedSources, plan)
     recordCtorFunnel(program, translated)
-    writeDecisions(translated.decisions)
+    writeDecisions(translated.decisions, foreignDecisions)
 
     // CHECK 2 — over the FINAL tree.
     val danglingSubs = record(PortRun.SubstitutionDangling, SubstitutionCheck.dangling(outDir, ownSubs))
@@ -789,6 +792,48 @@ final case class PortRun(
         ))
     }
 
+  /** Reduce the PHASES' decisions to the ones about THIS MODULE, and say how many were withheld.
+    *
+    * A dependent's `Program` CONTAINS its base — `resolutionRoots` parses it, so every phase runs
+    * over the base's units too and decides about them identically to the base's own run. Unfiltered,
+    * `libgdx-test` published 634 `RenamedPackage` rows of which **605 were libGDX core's**: the same
+    * 605 rows, byte for byte, that `libgdx-core`'s own `decisions.tsv` already carries, in a file
+    * whose reader is looking for the 29 that are the test module's. That is `ENGINE-LIMITS.md` D2 —
+    * now its fifth instance, after `OmissionCheck`, `PortabilityCheck`, the port-map findings and
+    * the collection closure check — and its conclusion is not "annotate them": a report a repository
+    * cannot act on is not its report.
+    *
+    * WITHHELD, not sectioned. A second section in the same file would still have to be read past,
+    * would still be diffed by anything comparing the artifact, and would still make "how many
+    * decisions did this port make" a question with two answers. The rows are not lost: the module
+    * that OWNS the declaration emits them, and it is the only module that can change them. The
+    * COUNT is printed on every run, so "withheld" can never be mistaken for "none were made".
+    *
+    * Ownership is decided STRUCTURALLY (§4.56), never from the origin path — that is the lexical
+    * comparison §5.4 documents as broken across a symlinked worktree, and it is the same climb
+    * `PackageRenameTransform.ownedSymbols` and `PortMapTransform.ownedByBase` make. The roots are
+    * `emitOrder` — the units this run CONVERTS — rather than the ones it writes, so a dropped type's
+    * rename row stays beside the `DroppedType` row that explains it.
+    *
+    * A decision with NO subject (`SymId.None`) is kept: it is a statement about a policy KEY, not
+    * about a declaration, and every such row this run makes is its own. A subject whose owner chain
+    * reaches no unit is an EXTERNAL symbol — the frontend's own marker for "this program does not
+    * declare it" — so no line of emitted code corresponds to it and the row is withheld with the
+    * foreign ones.
+    *
+    * @return how many rows were withheld
+    */
+  private def retainOwnDecisions(program: Program, translated: PortRun.Translated): Int =
+    if translated.foreign.isEmpty then 0
+    else
+      val roots = translated.emitOrder.map(_.symbol).toSet
+      def mine(s: SymId, fuel: Int): Boolean =
+        s != SymId.None && fuel > 0 &&
+          (roots(s) || program.symbolOf(s).exists(sym => mine(sym.owner, fuel - 1)))
+      val (kept, withheld) = translated.decisions.drain().partition(d => d.subject == SymId.None || mine(d.subject, 64))
+      translated.decisions.recordAll(kept)
+      withheld.size
+
   /** Write `decisions.tsv` beside the run's other artifacts, on every reporting run.
     *
     * Gated on exactly what the source map is gated on, so one switch turns the artifact layer off
@@ -796,10 +841,12 @@ final case class PortRun(
     * no recorded decisions, and a header-only file says that, where a missing file cannot be told
     * from a run that never got this far — the same distinction `CheckReport` keeps for a check that
     * found nothing. */
-  private def writeDecisions(log: DecisionLog): Unit =
+  private def writeDecisions(log: DecisionLog, withheld: Int): Unit =
     if CheckReport.enabled then
       val p = Decision.write(CheckReport.runDir, log)
-      say(s"decisions: ${log.size} (${log.summary}) -> $p")
+      say(s"decisions: ${log.size} (${log.summary})" +
+        (if withheld == 0 then "" else s"; $withheld withheld — about a module this port only resolves against") +
+        s" -> $p")
 
   /** Correlate a compiler or test-runner log back to the members and Java origins of THIS run,
     * IN-PROCESS.

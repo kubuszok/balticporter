@@ -251,7 +251,13 @@ you should do:
   verbatim, which is the string an agent edits to change the outcome. A phase records with
   `Phase.record`; `Pipeline.runTraced` hands back the log; the run's non-phase deciders record into
   the same one. The log is a value ONE RUN owns and each phase's buffer is drained into it, for the
-  reason stated above for the source map.
+  reason stated above for the source map. Every decider records at the DECLARATION level — one row
+  per declaration whose emitted form the decision changes, never one per expression: a site-level
+  rewrite is already visible in the diff the reader is holding, and what the diff cannot say is
+  which policy entry produced it. And the artifact is scoped to THIS MODULE's declarations, because
+  `ENGINE-LIMITS.md` D2 governs a provenance artifact exactly as it governs a check — a dependent's
+  phases decide about its base's units too, and republishing those puts a module's own rows in a
+  minority in its own file (libgdx-test: 961 of 1240).
 - **An artifact write is GATED ON THE ARTIFACT LAYER, without exception.** One unconditional
   `PortMap.write` was enough for the engine's own forked test suites to publish port maps into the
   checkout (`runner/port-report/…`, and once a COMMITTED `port-report/jar/`), because with reporting

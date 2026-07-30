@@ -478,6 +478,91 @@ class DecisionProvenanceSpec extends munit.FunSuite:
     assertEquals(once(root.resolve("r1")), once(root.resolve("r2")))
   }
 
+  // -------------------------------------------------------------------------
+  // a DEPENDENT publishes its OWN decisions and no others (ENGINE-LIMITS D2)
+  // -------------------------------------------------------------------------
+
+  /** two source trees: `base/` is only RESOLVED against, `dep/` is what the run converts — the
+    * structural shape of every dependent port. */
+  private def dependentFixture(): (Path, Path, Path) =
+    val root = Files.createTempDirectory("decisions-dep")
+    val base = root.resolve("base")
+    val dep  = root.resolve("dep")
+    java(base, "com/base/Holder.java",
+      """package com.base;
+        |import java.util.List;
+        |import java.util.ArrayList;
+        |public class Holder {
+        |  public List<String> items = new ArrayList<String>();
+        |  public List<String> all() { return items; }
+        |}""".stripMargin)
+    java(dep, "com/dep/Uses.java",
+      """package com.dep;
+        |import java.util.List;
+        |public class Uses {
+        |  public List<String> mine = null;
+        |  public List<String> read(com.base.Holder h) { return h.all(); }
+        |}""".stripMargin)
+    (root, base, dep)
+
+  test("a dependent's decisions.tsv holds ITS declarations only — the base's are WITHHELD") {
+    val (root, base, dep) = dependentFixture()
+    val rep = root.resolve("report")
+    withReport(rep) {
+      PortRun(
+        label     = "dep",
+        portRoot  = root.resolve("port"),
+        sourceSet = SourceSet.Main,
+        frontend  = FrontendConfig(dep, List("com/dep/Uses.java"), Nil, resolutionRoots = List(base)),
+        phases    = Nil, // a manifest SUPPLIES the phases; passing both would give the run two policies
+        // resolution roots outside this run's own tree ARE a dependent port, and one that declares
+        // no base is itself a fatal finding (§1.5) — so the shared surface arrives as a value.
+        manifest  = Some(
+          PortManifest(
+            name           = "base",
+            surface        = List(new balticporter.transform.CollectionsTransform),
+            packageRenames = Map("com.base" -> "port.base"),
+          ).extendedBy(PortManifest(
+            name           = "dep",
+            packageRenames = Map("com.dep" -> "port.dep"),
+          ))),
+      ).execute()
+    }
+    val ds = decisions(rep)
+    assert(clue(ds).nonEmpty)
+
+    // The base's `Holder` is in this run's Program — it is parsed, and CollectionsTransform retyped
+    // its `items` field and its `all()` return exactly as the base's own run does. Those rows
+    // belong to the module that EMITS the declaration; publishing them here would put the base's
+    // decisions in a file whose reader is looking for this module's, and this module cannot change
+    // one of them. A report a repository cannot act on is not its report.
+    assert(!ds.exists(_.subjectFqn.contains("Holder")), clue(ds.map(_.render)))
+    assert(!ds.exists(_.subjectFqn.startsWith("com.base")), clue(ds.map(_.subjectFqn)))
+
+    // …and this module's own are all there: the retyped field, the retyped method, the rename.
+    assert(ds.exists(d => d.subjectFqn == "com.dep.Uses#mine" && d.kind == Decision.Kind.RetypedSignature))
+    assert(ds.exists(d => d.subjectFqn == "com.dep.Uses#read" && d.kind == Decision.Kind.RetypedSignature))
+    assertEquals(ds.filter(_.kind == Decision.Kind.RenamedPackage).map(_.subjectFqn), List("com.dep.Uses"))
+  }
+
+  test("a BASE port withholds nothing — the filter is scoped, not a blanket") {
+    // Same phase, same java, no resolution roots: every unit is this run's own, so nothing is
+    // withheld and `Holder`'s rows appear — in the port that emits Holder.
+    val (root, base, _) = dependentFixture()
+    val rep = root.resolve("report")
+    withReport(rep) {
+      PortRun(
+        label     = "base",
+        portRoot  = root.resolve("baseport"),
+        sourceSet = SourceSet.Main,
+        frontend  = FrontendConfig(base, List("com/base/Holder.java"), Nil),
+        phases    = List(new balticporter.transform.CollectionsTransform),
+      ).execute()
+    }
+    val ds = decisions(rep)
+    assert(ds.exists(_.subjectFqn == "com.base.Holder#items"), clue(ds.map(_.subjectFqn)))
+  }
+
   test("two identical runs produce byte-identical decisions.tsv") {
     val (root, src) = fixture()
     val inject = widgetReplacement(root, "com.demo")
