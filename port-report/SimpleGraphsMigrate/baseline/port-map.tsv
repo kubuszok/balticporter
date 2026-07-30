@@ -389,6 +389,7 @@ member	space.earlygrey.simplegraphs.algorithms.Algorithm#finish()	sge.graphs.alg
 member	space.earlygrey.simplegraphs.algorithms.Algorithm#id	sge.graphs.algorithms.Algorithm#id	Renamed	-	space/earlygrey/simplegraphs/algorithms/Algorithm.java	5	d9cdaa4c9242371d
 member	space.earlygrey.simplegraphs.algorithms.Algorithm#isFinished()	sge.graphs.algorithms.Algorithm#isFinished()	Renamed	-	space/earlygrey/simplegraphs/algorithms/Algorithm.java	13	e2b0c76218876708
 member	space.earlygrey.simplegraphs.algorithms.Algorithm#update()	sge.graphs.algorithms.Algorithm#update()	Renamed	-	space/earlygrey/simplegraphs/algorithms/Algorithm.java	11	bc27a66eb5ed18dc
+member	space.earlygrey.simplegraphs.algorithms.AlgorithmPath#<init>()	sge.graphs.algorithms.AlgorithmPath#<init>()	Renamed	-	space/earlygrey/simplegraphs/algorithms/AlgorithmPath.java	8	e161e0a6ecbf08cd
 member	space.earlygrey.simplegraphs.algorithms.AlgorithmPath#<init>(Node)	sge.graphs.algorithms.AlgorithmPath#<init>(Node<V>)	Renamed	-	space/earlygrey/simplegraphs/algorithms/AlgorithmPath.java	12	86c11f43361a1fde
 member	space.earlygrey.simplegraphs.algorithms.AlgorithmPath#setByBacktracking(Node)	sge.graphs.algorithms.AlgorithmPath#setByBacktracking(Node<V>)	Renamed	-	space/earlygrey/simplegraphs/algorithms/AlgorithmPath.java	17	e06f37a7a80de44e
 member	space.earlygrey.simplegraphs.algorithms.Algorithms#<stmt1>	sge.graphs.algorithms.Algorithms#<stmt1>	Renamed	-	space/earlygrey/simplegraphs/algorithms/Algorithms.java	41	75860eedd6637294

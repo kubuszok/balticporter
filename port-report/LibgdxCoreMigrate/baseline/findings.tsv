@@ -27,8 +27,6 @@ b453601695de	omissions	super(args) dropped	sge.graphics.g3d.shaders.DepthShader$
 d787a1a56f78	omissions	super(args) dropped	sge.graphics.glutils.FloatFrameBuffer	com/badlogic/gdx/graphics/glutils/FloatFrameBuffer.java	37	1 argument(s) discarded
 395b54387d5d	omissions	super(args) dropped	sge.scenes.scene2d.ui.Button	com/badlogic/gdx/scenes/scene2d/ui/Button.java	50	1 argument(s) discarded
 395b54387d5d/2	omissions	super(args) dropped	sge.scenes.scene2d.ui.Button	com/badlogic/gdx/scenes/scene2d/ui/Button.java	57	1 argument(s) discarded
-51ad54e1b3fa	omissions	super(args) dropped	sge.utils.GdxRuntimeException	com/badlogic/gdx/utils/GdxRuntimeException.java	25	1 argument(s) discarded
-51ad54e1b3fa/2	omissions	super(args) dropped	sge.utils.GdxRuntimeException	com/badlogic/gdx/utils/GdxRuntimeException.java	29	1 argument(s) discarded
 685d8cb758b1	omissions	super(args) dropped	sge.utils.IdentityMap	com/badlogic/gdx/utils/IdentityMap.java	43	1 argument(s) discarded
 0426f9481f96	omissions	super(args) dropped	sge.utils.IdentityMap	com/badlogic/gdx/utils/IdentityMap.java	50	2 argument(s) discarded
 685d8cb758b1/2	omissions	super(args) dropped	sge.utils.IdentityMap	com/badlogic/gdx/utils/IdentityMap.java	55	1 argument(s) discarded
@@ -38,11 +36,6 @@ c15a833c959a/2	omissions	super(args) dropped	sge.utils.OrderedMap	com/badlogic/g
 a975ce8cb6aa	omissions	super(args) dropped	sge.utils.OrderedSet	com/badlogic/gdx/utils/OrderedSet.java	51	2 argument(s) discarded
 2bb6af29758a	omissions	super(args) dropped	sge.utils.OrderedSet	com/badlogic/gdx/utils/OrderedSet.java	56	1 argument(s) discarded
 2bb6af29758a/2	omissions	super(args) dropped	sge.utils.OrderedSet	com/badlogic/gdx/utils/OrderedSet.java	61	1 argument(s) discarded
-59809bfed613	omissions	super(args) dropped	sge.utils.SerializationException	com/badlogic/gdx/utils/SerializationException.java	32	1 argument(s) discarded
-ad0495d0d113	omissions	super(args) dropped	sge.utils.SerializationException	com/badlogic/gdx/utils/SerializationException.java	36	2 argument(s) discarded
-38cf493b5ae4	omissions	super(args) dropped	sge.utils.reflect.ReflectionException	com/badlogic/gdx/utils/reflect/ReflectionException.java	27	1 argument(s) discarded
-38cf493b5ae4/2	omissions	super(args) dropped	sge.utils.reflect.ReflectionException	com/badlogic/gdx/utils/reflect/ReflectionException.java	31	1 argument(s) discarded
-67d87c964a94	policy	never matched	static-forwarder-inline	Forwarder("com.badlogic.gdx.utils.reflect.ClassReflection").members	0	getName — the wrapper is present but declares no member of that name
 999987c6f50e	portability(all)	java.lang.Class#forName	sge.utils.reflect.ClassReflection#forName	com/badlogic/gdx/utils/reflect/ClassReflection.java	28	Call — runtime class lookup by name is JVM-only
 948a94e6b54b	portability(all)	java.lang.Class#getConstructor	sge.utils.reflect.ClassReflection#getConstructor	com/badlogic/gdx/utils/reflect/ClassReflection.java	122	Call — reflective member access is JVM-only
 78818ca6a883	portability(all)	java.lang.Class#getDeclaredConstructor	sge.utils.reflect.ClassReflection#getDeclaredConstructor	com/badlogic/gdx/utils/reflect/ClassReflection.java	135	Call — reflective member access is JVM-only

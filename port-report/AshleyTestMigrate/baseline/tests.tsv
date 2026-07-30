@@ -37,7 +37,9 @@ sge.ecs.EntityListenerTests	addEntityListenerFamilyAdd	pass
 sge.ecs.EntityListenerTests	addEntityListenerFamilyRemove	pass
 sge.ecs.EntityListenerTests	addEntityListenerNoFamilyAdd	pass
 sge.ecs.EntityListenerTests	addEntityListenerNoFamilyRemove	pass
+sge.ecs.EntityListenerTests	componentHandlingInListeners	skipped
 sge.ecs.EntityListenerTests	entityListenerPriority	fail
+sge.ecs.EntityListenerTests	familyListenerPriority	skipped
 sge.ecs.EntityManagerTests	addAndRemoveEntity	pass
 sge.ecs.EntityManagerTests	addEntityTwice1	pass
 sge.ecs.EntityManagerTests	addEntityTwice2	pass

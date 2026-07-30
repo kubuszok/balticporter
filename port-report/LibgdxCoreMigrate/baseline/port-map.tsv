@@ -3362,6 +3362,7 @@ member	com.badlogic.gdx.graphics.PixmapIO$PNG$ChunkBuffer#<stmt2>	sge.graphics.P
 member	com.badlogic.gdx.graphics.PixmapIO$PNG$ChunkBuffer#buffer	sge.graphics.PixmapIO$PNG$ChunkBuffer#buffer	Renamed	-	com/badlogic/gdx/graphics/PixmapIO.java	326	c8096c5c87119169
 member	com.badlogic.gdx.graphics.PixmapIO$PNG$ChunkBuffer#crc	sge.graphics.PixmapIO$PNG$ChunkBuffer#crc	Renamed	-	com/badlogic/gdx/graphics/PixmapIO.java	327	90c8a6e7da186527
 member	com.badlogic.gdx.graphics.PixmapIO$PNG$ChunkBuffer#endChunk(DataOutputStream)	sge.graphics.PixmapIO$PNG$ChunkBuffer#endChunk(DataOutputStream)	Renamed	-	com/badlogic/gdx/graphics/PixmapIO.java	339	16c59c91ca00edc9
+member	com.badlogic.gdx.graphics.Texture#<init>()	sge.graphics.Texture#<init>()	Renamed	-	com/badlogic/gdx/graphics/Texture.java	109	6242dcd53a94cdf2
 member	com.badlogic.gdx.graphics.Texture#<init>(FileHandle)	sge.graphics.Texture#<init>(FileHandle)	Renamed	-	com/badlogic/gdx/graphics/Texture.java	117	f59ef400c212ddb7
 member	com.badlogic.gdx.graphics.Texture#<init>(FileHandle,Format,boolean)	sge.graphics.Texture#<init>(FileHandle,Format,boolean)	Renamed	-	com/badlogic/gdx/graphics/Texture.java	125	858316eb7c751566
 member	com.badlogic.gdx.graphics.Texture#<init>(FileHandle,boolean)	sge.graphics.Texture#<init>(FileHandle,boolean)	Renamed	-	com/badlogic/gdx/graphics/Texture.java	121	58dc1c761cc3575e
@@ -16335,7 +16336,7 @@ member	com.badlogic.gdx.utils.GdxNativesLoader#disableNativesLoading	sge.utils.G
 member	com.badlogic.gdx.utils.GdxNativesLoader#load()	sge.utils.GdxNativesLoader#load()	Renamed	-	com/badlogic/gdx/utils/GdxNativesLoader.java	25	7cf70a897c8f192b
 member	com.badlogic.gdx.utils.GdxNativesLoader#nativesLoaded	sge.utils.GdxNativesLoader#nativesLoaded	Renamed	-	com/badlogic/gdx/utils/GdxNativesLoader.java	22	f72605381db1ab1b
 member	com.badlogic.gdx.utils.GdxRuntimeException#<init>(String)	sge.utils.GdxRuntimeException#<init>(String)	Renamed	-	com/badlogic/gdx/utils/GdxRuntimeException.java	25	c939427023e6b9e9
-member	com.badlogic.gdx.utils.GdxRuntimeException#<init>(Throwable)	sge.utils.GdxRuntimeException#<init>(Throwable)	Renamed	-	com/badlogic/gdx/utils/GdxRuntimeException.java	29	2f3fe096d8687937
+member	com.badlogic.gdx.utils.GdxRuntimeException#<init>(Throwable)	sge.utils.GdxRuntimeException#<init>(Throwable)	Renamed	-	com/badlogic/gdx/utils/GdxRuntimeException.java	29	76beaed97881dd73
 member	com.badlogic.gdx.utils.GdxRuntimeException#serialVersionUID	sge.utils.GdxRuntimeException#serialVersionUID	Renamed	-	com/badlogic/gdx/utils/GdxRuntimeException.java	23	11336c4bd0906465
 member	com.badlogic.gdx.utils.I18NBundle#DEFAULT_ENCODING	sge.utils.I18NBundle#DEFAULT_ENCODING	Renamed	-	com/badlogic/gdx/utils/I18NBundle.java	68	28e465f3ed8b7e2e
 member	com.badlogic.gdx.utils.I18NBundle#checkFileExistence(FileHandle)	sge.utils.I18NBundle#checkFileExistence(FileHandle)	Renamed	-	com/badlogic/gdx/utils/I18NBundle.java	343	f0792146f7320eb1
@@ -16777,7 +16778,7 @@ member	com.badlogic.gdx.utils.Json#readField(Object,String,JsonValue)	sge.utils.
 member	com.badlogic.gdx.utils.Json#readField(Object,String,String,Class,JsonValue)	sge.utils.Json#readField(Object,String,String,Class<?>,JsonValue)	Renamed	-	com/badlogic/gdx/utils/Json.java	865	019b64e254e3e92f
 member	com.badlogic.gdx.utils.Json#readField(Object,String,String,JsonValue)	sge.utils.Json#readField(Object,String,String,JsonValue)	Renamed	-	com/badlogic/gdx/utils/Json.java	860	40299e8d0100b969
 member	com.badlogic.gdx.utils.Json#readFields(Object,JsonValue)	sge.utils.Json#readFields(Object,JsonValue)	Renamed	-	com/badlogic/gdx/utils/Json.java	895	bc3948aceac102fe
-member	com.badlogic.gdx.utils.Json#readValue(Class,Class,JsonValue)	sge.utils.Json#readValue(Class<T>,Class<?>,JsonValue)	Renamed	-	com/badlogic/gdx/utils/Json.java	987	3a9271905b09c573
+member	com.badlogic.gdx.utils.Json#readValue(Class,Class,JsonValue)	sge.utils.Json#readValue(Class<T>,Class<?>,JsonValue)	Renamed	-	com/badlogic/gdx/utils/Json.java	987	f2eeaf1640aabb3b
 member	com.badlogic.gdx.utils.Json#readValue(Class,Class,T,JsonValue)	sge.utils.Json#readValue(Class<T>,Class<?>,T,JsonValue)	Renamed	-	com/badlogic/gdx/utils/Json.java	973	407852635ac46dbf
 member	com.badlogic.gdx.utils.Json#readValue(Class,JsonValue)	sge.utils.Json#readValue(Class<T>,JsonValue)	Renamed	-	com/badlogic/gdx/utils/Json.java	980	529a7bae4ad07e4b
 member	com.badlogic.gdx.utils.Json#readValue(String,Class,Class,JsonValue)	sge.utils.Json#readValue(String,Class<T>,Class<?>,JsonValue)	Renamed	-	com/badlogic/gdx/utils/Json.java	958	0d16f8aecc40fb46
@@ -16831,7 +16832,7 @@ member	com.badlogic.gdx.utils.Json#writeObjectStart(String,Class,Class)	sge.util
 member	com.badlogic.gdx.utils.Json#writeType(Class)	sge.utils.Json#writeType(Class<?>)	Renamed	-	com/badlogic/gdx/utils/Json.java	768	dd347912d201a4d1
 member	com.badlogic.gdx.utils.Json#writeValue(Object)	sge.utils.Json#writeValue(Object)	Renamed	-	com/badlogic/gdx/utils/Json.java	473	4ba0708b19a25507
 member	com.badlogic.gdx.utils.Json#writeValue(Object,Class)	sge.utils.Json#writeValue(Object,Class<?>)	Renamed	-	com/badlogic/gdx/utils/Json.java	483	a3dd4a9b94ff076e
-member	com.badlogic.gdx.utils.Json#writeValue(Object,Class,Class)	sge.utils.Json#writeValue(Object,Class<?>,Class<?>)	Renamed	-	com/badlogic/gdx/utils/Json.java	492	6a2a3700b8523700
+member	com.badlogic.gdx.utils.Json#writeValue(Object,Class,Class)	sge.utils.Json#writeValue(Object,Class<?>,Class<?>)	Renamed	-	com/badlogic/gdx/utils/Json.java	492	1ce7bb0c03147bdb
 member	com.badlogic.gdx.utils.Json#writeValue(String,Object)	sge.utils.Json#writeValue(String,Object)	Renamed	-	com/badlogic/gdx/utils/Json.java	431	40b82232fe3a4b98
 member	com.badlogic.gdx.utils.Json#writeValue(String,Object,Class)	sge.utils.Json#writeValue(String,Object,Class<?>)	Renamed	-	com/badlogic/gdx/utils/Json.java	448	fa0bf57a70f27e68
 member	com.badlogic.gdx.utils.Json#writeValue(String,Object,Class,Class)	sge.utils.Json#writeValue(String,Object,Class<?>,Class<?>)	Renamed	-	com/badlogic/gdx/utils/Json.java	462	eeb5d1a4335dbbcb
@@ -19113,7 +19114,7 @@ member	com.badlogic.gdx.utils.reflect.Method#method	sge.utils.reflect.Method#met
 member	com.badlogic.gdx.utils.reflect.Method#setAccessible(boolean)	sge.utils.reflect.Method#setAccessible(boolean)	Renamed	-	com/badlogic/gdx/utils/reflect/Method.java	56	433c021cf8f852d6
 member	com.badlogic.gdx.utils.reflect.ReflectionException#<init>()	sge.utils.reflect.ReflectionException#<init>()	Renamed	-	com/badlogic/gdx/utils/reflect/ReflectionException.java	23	3d8d57efbd63d9fb
 member	com.badlogic.gdx.utils.reflect.ReflectionException#<init>(String)	sge.utils.reflect.ReflectionException#<init>(String)	Renamed	-	com/badlogic/gdx/utils/reflect/ReflectionException.java	27	c939427023e6b9e9
-member	com.badlogic.gdx.utils.reflect.ReflectionException#<init>(Throwable)	sge.utils.reflect.ReflectionException#<init>(Throwable)	Renamed	-	com/badlogic/gdx/utils/reflect/ReflectionException.java	31	bd13ff0f4f4dee0d
+member	com.badlogic.gdx.utils.reflect.ReflectionException#<init>(Throwable)	sge.utils.reflect.ReflectionException#<init>(Throwable)	Renamed	-	com/badlogic/gdx/utils/reflect/ReflectionException.java	31	5e00f04cfffeb874
 member	com.badlogic.gdx.utils.viewport.ExtendViewport#<init>(float,float)	sge.utils.viewport.ExtendViewport#<init>(float,float)	Renamed	-	com/badlogic/gdx/utils/viewport/ExtendViewport.java	36	592a5f58ac49de9a
 member	com.badlogic.gdx.utils.viewport.ExtendViewport#<init>(float,float,Camera)	sge.utils.viewport.ExtendViewport#<init>(float,float,Camera)	Renamed	-	com/badlogic/gdx/utils/viewport/ExtendViewport.java	41	5303173dc4e069f9
 member	com.badlogic.gdx.utils.viewport.ExtendViewport#<init>(float,float,float,float)	sge.utils.viewport.ExtendViewport#<init>(float,float,float,float)	Renamed	-	com/badlogic/gdx/utils/viewport/ExtendViewport.java	47	099977eaa29405ba

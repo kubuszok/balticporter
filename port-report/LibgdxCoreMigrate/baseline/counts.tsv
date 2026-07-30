@@ -1,8 +1,8 @@
 #check	count
 gdx-shared-iterator	0
 manifest	0
-omissions	43
-policy	1
+omissions	37
+policy	0
 port-map	0
 portability(all)	151
 portability(emitted)	151
