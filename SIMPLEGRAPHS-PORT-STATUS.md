@@ -107,9 +107,20 @@ compile:
   with every java constructor a secondary that computes its own arguments. It also EXPRESSES three
   super calls libGDX had been dropping (omissions 46 → 43).
 - **An `asInstanceOf` that could never succeed.** `(Collection<V>) anArrayList` is valid java; this
-  engine then retypes `Collection` to the shim and leaves the `ArrayList` alone, so the surviving
-  cast throws `ClassCastException` — compiling perfectly. Now dropped, which turns a runtime failure
-  into a compile error on the same line.
+  engine sends the two sides to unrelated families — `Collection` to the shim, `ArrayList` to
+  `mutable.ArrayBuffer` — so the surviving cast throws `ClassCastException` while compiling
+  perfectly. Now dropped, which turns a runtime failure into a compile error on the same line.
+
+  **CORRECTED, and the correction is the more transferable half.** The first form of the rule asked
+  whether the cast's SOURCE type was named `java.*`, and `java.lang.Object` is. `(Collection<V>) o`
+  where `o` is `Object` is an ordinary DOWNCAST that this phase does not touch on the source side —
+  at run time the value IS a shim, so with its target retyped the cast succeeds — and deleting it
+  turned a CORRECT program into a wrong one, at three sites in libGDX's `Json` (`Json.java:557`,
+  `:563`, `:1121`, all `(Collection) value` guarded by `instanceof Collection`). The test is now
+  structural: drop the cast only when `remap`/`kindOf` say this phase retyped the source OUT of the
+  shim family. Nothing measured it — every check on every port reported the same number, because the
+  three members are inside a type libGDX's manifest drops. The generalised rule is in CLAUDE.md
+  §4.56. Regression cover: `CollectionsTransformSpec`, both directions.
 
 The engine REPORTED the first one: all five dropped `super(args)` were in `findings.tsv`, including
 `AlgorithmPath.java:12`. It survived because nobody opened the report — §5.2 of an earlier draft of

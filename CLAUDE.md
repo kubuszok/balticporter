@@ -379,6 +379,22 @@ Two corollaries for any prefix rule:
   type the port does not emit, so it has no `srcmap` entry at all — its replacement is injected
   Scala the emitter never saw. The class name in the frame is the only place it appears.
 
+**And it is not only renames.** A second phase has now been bitten by the same string test, which is
+what makes this a rule about DECIDING FROM A NAME rather than a rule about renaming.
+`CollectionsTransform` decided "this cast can never succeed" from the cast's SOURCE type having a
+`java.` prefix — and `java.lang.Object` has one. `(Collection<V>) anObject` is an ordinary downcast
+that the phase does not touch on the source side, so at run time the value IS a shim and the cast
+succeeds; deleting it turned a correct program into a wrong one, at three sites in libGDX's `Json`
+alone. A prefix is not a structural fact about anything.
+
+The general form: **a phase may only conclude something about a type from what the PHASE ITSELF did
+to that type.** Every retyping phase already has that record — `CollectionsTransform` has `typeMap`
+and the `remap`/`kindOf` tables built from it — so the question "did I move this type out of the
+family?" is a lookup, and "is this type one of mine?" is a membership test. A type the phase does
+NOT retype is by definition still whatever it was, and the phase has no standing to reason about it.
+Note this failure is invisible to every count: the port still compiled and every check reported the
+same number, because the members it broke were inside a type the library drops.
+
 ## 4.57 Every emission backend carries PROVENANCE — it is a licence obligation
 
 Each library in reach of this engine is licensed (Apache-2.0 so far) and every port is a derived

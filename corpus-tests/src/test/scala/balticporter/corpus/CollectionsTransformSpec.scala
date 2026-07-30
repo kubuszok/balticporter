@@ -2,13 +2,14 @@ package balticporter.corpus
 
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
+import balticporter.testkit.PortSuite
 import balticporter.tir.{Pipeline, UsageKind}
 import balticporter.transform.CollectionsTransform
 
 /** The java→scala collections transform: retypes every collection occurrence and rewrites
   * the common call shapes, whole-program and symbol-driven. Asserts both the xref (the old
   * type is vacated, the new one inherits its positions) and the emitted Scala. */
-class CollectionsTransformSpec extends munit.FunSuite:
+class CollectionsTransformSpec extends PortSuite:
 
   private val src =
     """package demo;
@@ -70,4 +71,47 @@ class CollectionsTransformSpec extends munit.FunSuite:
     assert(out.contains("this.items.isEmpty\n") || out.contains("this.items.isEmpty "))  // drop ()
     assert(out.contains("for (s <- this.items)"))    // for-each over retyped collection
     assert(!out.contains("java.util."))              // nothing left un-migrated
+  }
+
+  // ---------------------------------------------------------------------------------------------
+  // A CAST across the shim boundary. Both halves of one rule, and they must be tested together:
+  // the phase may drop a cast ONLY when it has itself retyped the source out of the shim family.
+  // Deciding that from the source type's NAME (`fullName.startsWith("java.")`) swept up
+  // `java.lang.Object` and deleted a downcast that is correct — CLAUDE.md §4.56, met in a phase
+  // that is not a renamer.
+  // ---------------------------------------------------------------------------------------------
+
+  test("a downcast FROM a type the phase does not retype is KEPT, retargeted at the shim") {
+    // `Object` is not in the phase's type map, so nothing the phase did can stop the value from
+    // being a shim instance at run time. Java's downcast stays a downcast.
+    val p = port(
+      """package demo;
+        |import java.util.Collection;
+        |class Casts<V> {
+        |  Collection<V> narrow(Object o) { return (Collection<V>) o; }
+        |}
+        |""".stripMargin,
+      new CollectionsTransform,
+    )
+    assertEmits(p, "asInstanceOf[balticporter.runtime.JavaCollection[")
+    // and it targets the SHIM, not the java type the port no longer produces.
+    assertNotEmits(p, "asInstanceOf[java.util.Collection")
+  }
+
+  test("a cast the phase itself made unsatisfiable is dropped rather than emitted") {
+    // `ArrayList` maps to `mutable.ArrayBuffer` and `Collection` maps to the shim, so after this
+    // phase the value CANNOT be what the cast asks for. Dropping it turns a guaranteed runtime
+    // `ClassCastException` into a compile error on the same line (ENGINE-LIMITS M6).
+    val p = port(
+      """package demo;
+        |import java.util.ArrayList;
+        |import java.util.Collection;
+        |class Casts {
+        |  Object widen(ArrayList<String> xs) { return (Collection<String>) xs; }
+        |}
+        |""".stripMargin,
+      new CollectionsTransform,
+    )
+    assertNotEmits(p, "asInstanceOf[balticporter.runtime.JavaCollection[")
+    assertNotEmits(p, "asInstanceOf[java.util.Collection")
   }

@@ -245,33 +245,46 @@ final class CollectionsTransform extends Phase, RequiresRuntime:
     * cast this phase has just made IMPOSSIBLE is dropped rather than emitted.
     *
     * The cast is written by the frontend and is valid java — `(Collection<V>) anArrayList`. This
-    * phase then retypes `Collection` to the shim while leaving the `java.util.List` alone (it comes
-    * from an untranslated `IntStream` chain, which K6's second rule correctly declines to collapse),
-    * and the surviving `asInstanceOf[JavaCollection[V]]` on an `ArrayList` cannot ever succeed. It
-    * COMPILES, and throws `ClassCastException` at run time — found by the test suite, invisible to
-    * every count, and squarely CLAUDE.md §4.4's defect class even though no java statement form is
-    * involved.
+    * phase sends the two sides of it to UNRELATED families: `Collection` to the shim, the concrete
+    * `ArrayList`/`List` to a `scala.collection.mutable` type, so the surviving
+    * `asInstanceOf[JavaCollection[V]]` is applied to a value the phase itself guaranteed is a
+    * `Buffer`. It cannot ever succeed. It COMPILES, and throws `ClassCastException` at run time —
+    * found by the test suite, invisible to every count, and squarely CLAUDE.md §4.4's defect class
+    * even though no java statement form is involved.
     *
     * Dropping it turns a runtime failure into a compile error at the same line, which is the
-    * outcome ENGINE-LIMITS M6 asks for: refuse and be counted, never approximate. */
+    * outcome ENGINE-LIMITS M6 asks for: refuse and be counted, never approximate. And it is dropped
+    * ONLY for a source the phase retyped away — see [[impossibleShimCast]] for why the test must be
+    * structural. */
   override def transformTerm(t: Term)(using Program): Term = t match
     case a: Tree.Assign => a.copy(rhs = coerce(a.lhs.tpe, a.rhs))
     case ty: Tree.Typed if impossibleShimCast(ty) => ty.expr
     case other          => other
 
-  /** a cast TO a runtime shim FROM a JDK type this phase did not retype — unsatisfiable by
-    * construction, since no JDK class implements a `balticporter.runtime` trait. */
-  private def impossibleShimCast(t: Tree.Typed)(using p: Program): Boolean =
-    val to   = headSym(t.tpt.tpe).map(s => remap.getOrElse(s, s))
-    val from = headSym(t.expr.tpe).map(s => remap.getOrElse(s, s))
-    // A SCALA collection source counts too, and for the same reason: once the stream chain collapses,
-    // the value really is a `Buffer`, and `asInstanceOf[JavaCollection[…]]` on it throws exactly as
-    // it did on the `ArrayList`. Dropping the cast is also what lets `coerce` see the argument for
-    // what it is and bridge it properly — the cast was standing between the two.
-    to.exists(shimSyms.contains) && from.exists { f =>
-      !shimSyms.contains(f) &&
-        (kindOf.contains(f) || p.symbolOf(f).exists(_.fullName.startsWith("java.")))
-    }
+  /** a cast TO a runtime shim whose SOURCE this phase has retyped OUT of the shim family — a cast
+    * no value can satisfy, because the phase itself guaranteed the runtime value is a scala
+    * collection and a scala collection is not a `balticporter.runtime` trait.
+    *
+    * Decided from `remap`/`kindOf` — the phase's own record of what it retyped — and NEVER from the
+    * source type's NAME. Testing `fullName.startsWith("java.")` was tried and is wrong for the same
+    * reason CLAUDE.md §4.56 gives for package renames: a prefix is not a structural fact. It swept
+    * up `java.lang.Object`, and `(Collection<V>) anObject` is an ordinary DOWNCAST that this phase
+    * does not touch on the source side — at run time the value IS a shim instance, so the cast (with
+    * its target retyped to the shim) succeeds, and deleting it turned a correct program into a wrong
+    * one. Every JDK type the phase leaves alone is in the same position.
+    *
+    * A SCALA collection source counts exactly as a retyped java one does, and for the same reason:
+    * once the stream chain collapses, the value really is a `Buffer`, and
+    * `asInstanceOf[JavaCollection[…]]` on it throws exactly as it did on the `ArrayList`. Both are
+    * `kindOf` — the map is keyed on the phase's own scala targets, which is what makes "the phase
+    * moved this away from the shim family" the one question asked. Dropping the cast is also what
+    * lets `coerce` see the argument for what it is and bridge it properly — the cast was standing
+    * between the two. */
+  private def impossibleShimCast(t: Tree.Typed): Boolean =
+    def scalaSym(s: SymId) = remap.getOrElse(s, s)
+    val to   = headSym(t.tpt.tpe).map(scalaSym)
+    val from = headSym(t.expr.tpe).map(scalaSym)
+    to.exists(shimSyms.contains) && from.exists(f => !shimSyms.contains(f) && kindOf.contains(f))
 
   /** replace the head (type-constructor) symbol of a `TypeRef` / `AppliedType`, keeping args. */
   private def withHead(t: TypeRepr, s: SymId): TypeRepr = t match
