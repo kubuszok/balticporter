@@ -132,6 +132,10 @@ final class CollectionsTransform extends Phase, RequiresRuntime:
     * the read-only sibling (a `Map.values()` view); `unmodifiableSym` is
     * `Collections.unmodifiableCollection`. */
   private var javaCollectionSym, collectionFromSym: SymId = SymId.None
+  /** the `Kind.Set` source's factory into a `JavaCollection` slot — a DISTINCT NAME rather than an
+    * overload of `from`, for the reason `JavaCollection.unmodifiableFrom` gives: an overload
+    * resolves on the static type, and every candidate here is a `scala.collection.Iterable`. */
+  private var collectionFromSetSym: SymId = SymId.None
   private var unmodifiableFromSym, unmodifiableSym: SymId = SymId.None
   /** each scala collection symbol → its companion's `from` factory, for `copyConstructor`. */
   private var fromSyms: Map[SymId, SymId] = Map.empty
@@ -180,6 +184,7 @@ final class CollectionsTransform extends Phase, RequiresRuntime:
     iterableFromSym = mint("from", JavaIterableFqn + ".from")
     javaCollectionSym   = byScala.getOrElse(JavaCollectionFqn, SymId.None)
     collectionFromSym   = mint("from", JavaCollectionFqn + ".from")
+    collectionFromSetSym = mint("fromSet", JavaCollectionFqn + ".fromSet")
     unmodifiableFromSym = mint("unmodifiableFrom", JavaCollectionFqn + ".unmodifiableFrom")
     unmodifiableSym     = mint("unmodifiable", JavaCollectionFqn + ".unmodifiable")
     // `asScalaBuffer` is an EXTENSION in JavaCollection's companion, which is exactly where scala 3
@@ -454,9 +459,12 @@ final class CollectionsTransform extends Phase, RequiresRuntime:
       case (Some("java.util.stream.Stream#filter"), List(pred)) if filteredSym != SymId.None && collapsed(recv) =>
         recv.map(r => Tree.Apply(Tree.Ident(filteredSym, TypeRepr.NoType, t.origin), List(r, pred),
                                  filteredSym, r.tpe, t.origin))
-      // the terminal, and only for the collector the receiver ALREADY is. `Collectors.toSet` /
-      // `toCollection(f)` / `toMap` each need a different target type, and guessing one would be a
-      // silent wrong answer; unmapped, they fail to compile, which is the honest outcome.
+      // the terminal, and only for the collector the receiver ALREADY is. `Collectors.toSet` and
+      // `toMap` each need a different target type, and guessing one would be a silent wrong answer;
+      // unmapped, they fail to compile, which is the honest outcome. `toCollection(f)` was on that
+      // list and no longer is — it is the `into` arm above, which reads the target out of the
+      // collector's own factory instead of guessing it. A comment that still names a case the code
+      // handles is worse than no comment: it is the reason not to look.
       case (Some("java.util.stream.Stream#collect"), List(collector))
           if collapsed(recv) && qualified(collectorOf(collector)).contains("java.util.stream.Collectors#toList") =>
         recv
@@ -560,8 +568,55 @@ final class CollectionsTransform extends Phase, RequiresRuntime:
         val as = t.args.zip(formals).map((a, f) => coerce(f, a))
         if as == t.args then t else t.copy(args = as)
 
+  /** a RETURN is a shim-typed slot exactly as a formal, a `val` and an assignment target are — the
+    * method's declared return type is the expected type of every `return` in its body.
+    *
+    * The walk is DELIBERATELY BOUNDED and that is the whole subtlety: a `return` inside a lambda,
+    * an anonymous class's method or a local class returns from THAT, not from here, so descending
+    * into one would coerce it against the wrong type. Only the node kinds that carry a STATEMENT of
+    * the same method are followed; everything else — including `Lambda`, `New` (whose `anon` body
+    * holds its own methods) and any nested `DefDef`/`ClassDef` — stops.
+    *
+    * CLAUDE.md §3 says to walk with `StandardTraversal` and never a private recursion, and the
+    * reason it says so is that a hand-rolled walk stops at whatever its author forgot. Here
+    * stopping IS the semantics, so the rule is met the other way: the default arm does NOT
+    * descend, which makes an unhandled node kind a MISSED coercion — an uncoerced `return`, i.e. a
+    * compile error at that line — and never a wrong one. The failure direction is loud by
+    * construction. (Java's `return` is a statement, so it cannot occur inside an argument or an
+    * operand; the nine kinds below are the whole statement-carrying vocabulary.)
+    *
+    * A method body's TAIL expression is not a return value in this TIR — every Java method exits
+    * through `Tree.Return`, so `Block.expr` in a ported body is a statement or `()`. It is walked
+    * (a `Return` sitting there is coerced) but never coerced AS a result; a frontend that lowered
+    * the tail to a bare expression would need one more case here. */
+  override def transformDefDef(t: Tree.DefDef)(using Program): Tree.DefDef =
+    t.copy(rhs = t.rhs.map(coerceReturns(t.returnTpt.tpe, _)))
+
+  private def coerceReturns(want: TypeRepr, t: Term)(using Program): Term = t match
+    case x: Tree.Return       => x.copy(expr = x.expr.map(coerce(want, _)))
+    case x: Tree.Block        => x.copy(stats = x.stats.map(coerceReturnsIn(want, _)), expr = coerceReturns(want, x.expr))
+    case x: Tree.If           => x.copy(thenp = coerceReturns(want, x.thenp), elsep = coerceReturns(want, x.elsep))
+    case x: Tree.While        => x.copy(body = coerceReturns(want, x.body))
+    case x: Tree.DoWhile      => x.copy(body = coerceReturns(want, x.body))
+    case x: Tree.For          => x.copy(body = coerceReturns(want, x.body))
+    case x: Tree.ForEach      => x.copy(body = coerceReturns(want, x.body))
+    case x: Tree.Synchronized => x.copy(body = coerceReturns(want, x.body))
+    case x: Tree.Try =>
+      x.copy(body = coerceReturns(want, x.body),
+             catches = x.catches.map(c => c.copy(body = coerceReturns(want, c.body))),
+             finalizer = x.finalizer.map(coerceReturns(want, _)))
+    case x: Tree.Match => x.copy(cases = x.cases.map(c => c.copy(body = coerceReturns(want, c.body))))
+    case other         => other
+
+  /** a `Block` statement that is a TERM continues this method's return scope; a `ValDef` cannot
+    * contain a `return` at all, and a nested `DefDef`/`ClassDef` opens its own. */
+  private def coerceReturnsIn(want: TypeRepr, s: Statement)(using Program): Statement = s match
+    case t: Term => coerceReturns(want, t)
+    case other   => other
+
   /** Bridge a scala collection into a SHIM-TYPED SLOT — an argument, a declared `val`, an
-    * assignment target. Nothing else in the phase decides this; every position routes here.
+    * assignment target, a RETURN. Nothing else in the phase decides this; every position routes
+    * here.
     *
     * The boundary is self-inflicted and unavoidable. `java.util.Collection` and
     * `java.util.AbstractCollection` must map into the SAME family, because java's abstract base
@@ -583,25 +638,66 @@ final class CollectionsTransform extends Phase, RequiresRuntime:
     *
     * Conservative by construction: it wraps only when the source is a scala collection the phase
     * itself introduced (`kindOf`), so a program class that genuinely EXTENDS the shim is left
-    * alone, and an unrecognised type produces an honest compile error rather than a wrong wrap. */
-  private def coerce(expected: TypeRepr, actual: Term): Term =
+    * alone, and an unrecognised type produces an honest compile error rather than a wrong wrap.
+    *
+    * ==COVERAGE — what this seam does and does not close==
+    * Stated exactly, because "one seam covers every slot" is what this doc used to claim and it
+    * was not true of two of the six cells:
+    *
+    * | source \ target | `JavaIterable` | `JavaCollection` |
+    * |---|---|---|
+    * | `Kind.Seq` (`Buffer`, `ArrayBuffer`, `Queue`, `ArrayDeque`) | `JavaIterable.from` | `JavaCollection.from` |
+    * | `Kind.Set` (`mutable.Set` & co) | `JavaIterable.from` | `JavaCollection.fromSet` |
+    * | `Kind.Map` (`mutable.Map` & co) | `JavaIterable.from` | REFUSED — see below |
+    * | `Kind.Entry` (`Tuple2`) | n/a | n/a |
+    *
+    * `JavaIterable.from` takes a `scala.collection.Iterable`, so every kind reaches it with nothing
+    * added — and a scala `Map[K, V]` IS an `Iterable[(K, V)]`, which is exactly what java's
+    * `entrySet()` view is (the `entrySet` rewrite returns the map itself).
+    *
+    * `Kind.Map` into `JavaCollection` is REFUSED, and the refusal is the honest answer rather than
+    * a gap: java's `Map` is neither a `Collection` nor an `Iterable`, so no valid java sends one to
+    * such a slot. The only path is this phase's own `entrySet()` rewrite, and a `Collection` view
+    * of a map's entries would have to reproduce `entrySet().remove(e)` — which removes a mapping
+    * only when the KEY AND THE VALUE both match. Guessing that is precisely the §4.4 mistake; the
+    * unwrapped value fails to COMPILE at the slot, which is what ENGINE-LIMITS M6 asks for.
+    * `Kind.Entry` is a `Tuple2` and not a collection at all, so it never offers a source.
+    *
+    * The SHIMS themselves are excluded on both sides: `JavaCollection` already IS a `JavaIterable`
+    * and neither can be rebuilt from the other. `JavaIterator` is `Kind.Seq` and is NOT a
+    * collection, so it is excluded too — by the same `shimSyms` test.
+    *
+    * One SOURCE is refused whatever the target: `map.keySet()`. Its node claims the retyped
+    * `mutable.Set`, and the scala it emits is `m.keySet`, whose type is `scala.collection.Set` — the
+    * same disagreement `transformValDef` already encodes for a declaration initialised from it, and
+    * ENGINE-LIMITS §0's "the recorded type is not a witness of what the emitter will print". Wrapping
+    * on a type the phase knows the value does not have would emit a call that cannot compile while
+    * NAMING the wrapper instead of the boundary, so the unwrapped value is left to fail at the slot
+    * exactly as it did before this seam existed. `Map.values()` has no such problem: its rewrite
+    * already restores the invariant by wrapping at the call. */
+  private def coerce(expected: TypeRepr, actual: Term)(using Program): Term =
     // the symbol table is retyped AFTER the trees (see `run`), so a formal read here is still the
     // ORIGINAL java symbol — `java.lang.Iterable`, not the shim. Compare through `remap`, which
     // makes this correct on either side of that pass.
     def scalaSym(x: SymId): SymId = remap.getOrElse(x, x)
     val wants = headSym(expected).map(scalaSym)
     val got   = headSym(actual.tpe).map(scalaSym)
-    // a shim source needs no bridge: `JavaCollection` already IS a `JavaIterable`, and neither can
-    // be rebuilt from the other. `JavaIterator` is Kind.Seq and is NOT a collection — excluded.
-    val fromScala = got.exists(g => kindOf.get(g).contains(Kind.Seq) && !shimSyms.contains(g))
-    val factory =
-      if !fromScala then SymId.None
-      else if wants.contains(javaCollectionSym) then collectionFromSym
-      else if wants.contains(javaIterableSym) then iterableFromSym
-      else SymId.None
+    val from  = got.filterNot(shimSyms.contains).flatMap(kindOf.get)
+    val factory = from match
+      case _ if wants.isEmpty || isKeySetView(actual)                                 => SymId.None
+      case Some(Kind.Seq | Kind.Set | Kind.Map) if wants.contains(javaIterableSym)   => iterableFromSym
+      case Some(Kind.Seq)                       if wants.contains(javaCollectionSym) => collectionFromSym
+      case Some(Kind.Set)                       if wants.contains(javaCollectionSym) => collectionFromSetSym
+      case _                                                                          => SymId.None
     if factory == SymId.None then actual
     else Tree.Apply(Tree.Ident(factory, TypeRepr.NoType, actual.origin), List(actual),
                     factory, expected, actual.origin)
+
+  /** `m.keySet()` — see [[coerce]]. The same structural test [[transformValDef]] uses, so the two
+    * places that know this node's `tpe` overstates the emitted scala agree by construction. */
+  private def isKeySetView(t: Term)(using Program): Boolean = t match
+    case Tree.Select(recv, sym, _, _) => methodName(sym) == "keySet" && kindAt(recv).contains(Kind.Map)
+    case _                            => false
 
   /** the runtime shims, as scala symbols — a source already typed as one is never re-wrapped. */
   private def shimSyms: Set[SymId] = Set(javaIterableSym, javaIteratorSym, javaCollectionSym)

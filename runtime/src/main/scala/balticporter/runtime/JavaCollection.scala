@@ -198,6 +198,35 @@ object JavaCollection:
       if i < 0 then false else { xs.remove(i); true }
     override def clear(): Unit               = xs.clear()
 
+  /** The same seam for a `Kind.Set` source — `java.util.Set` IS a `java.util.Collection`, so a
+    * ported method taking a `Collection` must still accept the port's `mutable.Set`.
+    *
+    * A DISTINCT NAME and not an overload of [[from]], for the reason spelled out on
+    * [[unmodifiableFrom]] one level down: an overload resolves on the STATIC type, and a `Buffer`
+    * and a `mutable.Set` are both `scala.collection.Iterable` — so a third `Iterable`-shaped
+    * candidate added later would silently start winning calls that used to reach this one. An
+    * emitted call that names the wrapper it wants cannot be re-resolved by accident.
+    *
+    * Live, like [[from]]: `add`/`remove` are visible to whoever else holds the set. Two details are
+    * java's `Set`, not java's `Collection`, and both differ from the buffer version above:
+    *
+    *   - `add` returns whether the set CHANGED — `false` for an element already present, where a
+    *     `List` always returns `true`.
+    *   - `contains`/`remove` test `o.equals(element)`, the PROBE's `equals`, as
+    *     `java.util.AbstractCollection` does. */
+  def fromSet[A](xs: scala.collection.mutable.Set[A]): JavaCollection[A] = new JavaCollection[A]:
+    def iterator(): JavaIterator[A] = JavaIterator.from(xs.iterator)
+    def size(): Int                 = xs.size
+    override def isEmpty(): Boolean = xs.isEmpty
+    override def contains(o: java.lang.Object): Boolean =
+      xs.exists(e => if o == null then e == null else o.equals(e))
+    override def add(e: A): Boolean = if xs.contains(e) then false else { xs += e; true }
+    override def remove(o: java.lang.Object): Boolean =
+      xs.find(e => if o == null then e == null else o.equals(e)) match
+        case Some(e) => xs -= e; true
+        case scala.None => false
+    override def clear(): Unit = xs.clear()
+
   /** Adapt a scala collection that the port may NOT mutate through — a DISTINCT NAME rather than an
     * overload of [[from]], deliberately.
     *

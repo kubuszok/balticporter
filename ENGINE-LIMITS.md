@@ -694,9 +694,40 @@ shim-typed expectation, it inserts the explicit wrap *before* overload resolutio
 argument's type is already exactly the formal — nothing has to be inferred — and the parameter
 keeps the shim, so iterate-and-remove bodies are untouched. Measured: it is one of the seams that
 took simple-graphs to 0 and un-broke the libGDX test port after the argument-only version failed
-(`0 → 3` on declared slots; see the port status files for the per-step numbers). Coverage as of
-this writing is the shim-typed ARGUMENT, DECLARATION and ASSIGNMENT slots — return position and
-non-Seq sources are known-open, so do not read "the boundary is closed" out of this entry.
+(`0 → 3` on declared slots; see the port status files for the per-step numbers).
+
+**Coverage, stated as a table because a prose claim of totality was wrong twice.** Four slot kinds —
+shim-typed ARGUMENT, DECLARATION, ASSIGNMENT and RETURN — crossed with the source kinds:
+
+| source \ target | `JavaIterable` | `JavaCollection` |
+|---|---|---|
+| `Kind.Seq` (`Buffer`, `ArrayBuffer`, `Queue`, `ArrayDeque`) | `JavaIterable.from` | `JavaCollection.from` |
+| `Kind.Set` (`mutable.Set` & co) | `JavaIterable.from` | `JavaCollection.fromSet` |
+| `Kind.Map` (`mutable.Map` & co) | `JavaIterable.from` | **REFUSED** |
+| `Kind.Entry` (`Tuple2`) | n/a — not a collection | n/a |
+
+`JavaIterable.from` takes a `scala.collection.Iterable`, so every kind reaches it with nothing
+added, and a scala `Map[K, V]` IS an `Iterable[(K, V)]` — precisely java's `entrySet()` view.
+
+Three cells are REFUSALS rather than gaps, and each refusal is a compile error at the slot (M6):
+
+- **`Kind.Map` into `JavaCollection`.** Java's `Map` is neither a `Collection` nor an `Iterable`, so
+  no valid java sends one to such a slot; the only path is the phase's own `entrySet()` rewrite. A
+  `Collection` view of a map's entries would have to reproduce `entrySet().remove(e)` removing a
+  mapping only when the KEY AND THE VALUE both match — guessing that is §4.4 exactly.
+- **A `map.keySet()` SOURCE, whatever the target.** Its node claims the retyped `mutable.Set` while
+  the scala it emits is `m.keySet`, a `scala.collection.Set` — §0's root cause met in a new place,
+  and the same disagreement `transformValDef`'s keySet arm already encodes for a declaration.
+  Wrapping on a type the phase knows the value does not have emits a call that names the WRAPPER;
+  refusing leaves the error naming the BOUNDARY (`Found: scala.collection.Set[String] / Required:
+  JavaCollection[String]`), which is the one a reader can act on. `Map.values()` has no such
+  problem — its rewrite already wraps at the call and restores the invariant.
+- **The RETURN walk is deliberately BOUNDED.** A `return` inside a lambda, an anonymous class's
+  method or a local class returns from THAT, so the walk follows only the nine statement-carrying
+  node kinds and its default arm does not descend. Under-reach is a missed coercion — a compile
+  error. Over-reach would be a wrong wrap that can type-check. The rule generalises: **when a walk
+  must be scope-bounded rather than complete, make the DEFAULT stop**, so a node kind added later
+  fails loudly instead of silently reaching into a scope it does not own.
 
 *Fix kind: (a). Whether to retype collections **at all** is (b) — a JVM-only port may keep
 `java.util` and skip the phase entirely, which makes this boundary vanish.*

@@ -223,6 +223,115 @@ class CollectionsTransformSpec extends PortSuite:
     assertNotEmits(p, "JavaCollection.filtered(")
   }
 
+  // ---------------------------------------------------------------------------------------------
+  // `coerce` — the scala-collection-into-a-shim-slot seam. Its COVERAGE is what these pin: the
+  // four slot kinds (argument, declaration, assignment, RETURN) crossed with the source kinds
+  // (Seq, Set, Map), plus the two cells that are deliberately REFUSED. The doc on `coerce` used to
+  // claim one seam covered every slot and two of the six cells were open.
+  // ---------------------------------------------------------------------------------------------
+
+  private val slots =
+    """package demo;
+      |import java.util.*;
+      |class C {
+      |  Collection<String> fld;
+      |  void take(Collection<String> c) {}
+      |  void takeIt(Iterable<String> i) {}
+      |  Collection<String> retNew()                          { return new ArrayList<String>(); }
+      |  Collection<String> retVar(List<String> xs)           { return xs; }
+      |  Iterable<String> retIterable(List<String> xs)        { return xs; }
+      |  Collection<String> retIf(List<String> xs, boolean b) { if (b) return xs; return null; }
+      |  Collection<String> retSet(Set<String> s)             { return s; }
+      |  Iterable<String> retSetIterable(Set<String> s)       { return s; }
+      |  void argSet(Set<String> s)    { take(s); }
+      |  void argSetIt(Set<String> s)  { takeIt(s); }
+      |  void declSet(Set<String> s)   { Collection<String> c = s; }
+      |  void assignSet(Set<String> s) { fld = s; }
+      |  Collection<String> lambdaInside(List<String> xs) {
+      |    Runnable r = () -> { List<String> inner = xs; return; };
+      |    return xs;
+      |  }
+      |}
+      |""".stripMargin
+
+  test("RETURN is a shim-typed slot exactly as a formal is — including inside an `if`") {
+    val p = port(slots, new CollectionsTransform)
+    assertEmits(p, "return balticporter.runtime.JavaCollection.from(new scala.collection.mutable.ArrayBuffer")
+    assertEmits(p, "return balticporter.runtime.JavaCollection.from(xs)")
+    assertEmits(p, "return balticporter.runtime.JavaIterable.from(xs)")
+    // the walk follows a statement-carrying node …
+    assertEmits(p, "      return balticporter.runtime.JavaCollection.from(xs)")
+    // … and `return null` is left alone: `coerce` fires only on a source the phase itself retyped.
+    assertEmits(p, "return null")
+  }
+
+  test("a return inside a LAMBDA is NOT coerced against the enclosing method's type") {
+    // The walk stops at every node that opens its own return scope. Descending would coerce an
+    // inner `return` against a type it has nothing to do with — the one way this walk could be
+    // wrong SILENTLY, as against merely missing a coercion (which is a compile error).
+    val p = port(slots, new CollectionsTransform)
+    assertEmits(p, "val inner: scala.collection.mutable.Buffer[java.lang.String] = xs")
+    assertNotEmits(p, "val inner: balticporter.runtime.JavaCollection")
+  }
+
+  test("a Kind.Set source reaches BOTH shims, in all four slots") {
+    val p = port(slots, new CollectionsTransform)
+    // `java.util.Set` IS a `java.util.Collection`, so a `mutable.Set` must reach a Collection slot.
+    // A DISTINCT NAME, never an overload of `from`: every candidate is a `scala.collection.Iterable`.
+    assertEmits(p, "return balticporter.runtime.JavaCollection.fromSet(s)")   // return
+    assertEmits(p, "this.take(balticporter.runtime.JavaCollection.fromSet(s))") // argument
+    assertEmits(p, "val c: balticporter.runtime.JavaCollection[java.lang.String] = balticporter.runtime.JavaCollection.fromSet(s)") // declaration
+    assertEmits(p, "this.fld = balticporter.runtime.JavaCollection.fromSet(s)") // assignment
+    // …and `JavaIterable.from` already takes a `scala.collection.Iterable`, so the iterable target
+    // needs nothing added for a set.
+    assertEmits(p, "this.takeIt(balticporter.runtime.JavaIterable.from(s))")
+    assertEmits(p, "return balticporter.runtime.JavaIterable.from(s)")
+  }
+
+  test("a Kind.Map source bridges to JavaIterable and is REFUSED at JavaCollection") {
+    val p = port(
+      """package demo;
+        |import java.util.*;
+        |class M {
+        |  void takeIt(Iterable<Map.Entry<String,String>> it) {}
+        |  void takeColl(Collection<Map.Entry<String,String>> c) {}
+        |  void argIt(Map<String,String> m)   { takeIt(m.entrySet()); }
+        |  void argColl(Map<String,String> m) { takeColl(m.entrySet()); }
+        |}
+        |""".stripMargin,
+      new CollectionsTransform,
+    )
+    // a scala `Map[K, V]` IS an `Iterable[(K, V)]` — which is exactly what java's `entrySet()` view
+    // is, and the `entrySet` rewrite hands back the map itself.
+    assertEmits(p, "this.takeIt(balticporter.runtime.JavaIterable.from(m))")
+    // …but there is no `Collection` view of a map, and inventing one would have to reproduce
+    // `entrySet().remove(e)` removing a mapping only when KEY AND VALUE both match. Refused, so it
+    // fails to compile at the slot (ENGINE-LIMITS M6) rather than being guessed.
+    assertEmits(p, "this.takeColl(m)")
+    assertNotEmits(p, "JavaCollection.from(m)")
+    assertNotEmits(p, "JavaCollection.fromSet(m)")
+  }
+
+  test("a `keySet()` source is REFUSED — its node type overstates the scala the emitter prints") {
+    // `m.keySet` is a `scala.collection.Set`, not the retyped `mutable.Set` the node claims — the
+    // same disagreement `transformValDef`'s keySet arm already encodes. Wrapping on a type the
+    // phase knows the value does not have would emit a call naming the WRAPPER instead of the
+    // boundary; measured, the unwrapped form says `Found: scala.collection.Set[String] / Required:
+    // JavaCollection[String]`, which is the error a reader needs.
+    val p = port(
+      """package demo;
+        |import java.util.*;
+        |class K {
+        |  void take(Collection<String> c) {}
+        |  void argMapKeys(Map<String,String> m) { take(m.keySet()); }
+        |}
+        |""".stripMargin,
+      new CollectionsTransform,
+    )
+    assertEmits(p, "this.take(m.keySet)")
+    assertNotEmits(p, "fromSet(m.keySet)")
+  }
+
   test("a downcast FROM a type the phase does not retype is KEPT, retargeted at the shim") {
     // `Object` is not in the phase's type map, so nothing the phase did can stop the value from
     // being a shim instance at run time. Java's downcast stays a downcast.
