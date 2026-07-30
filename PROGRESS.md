@@ -24,6 +24,12 @@ just measure-all          # the four above, serially, stopping at the first fail
 just decision-counts      # decisions.tsv row counts by kind, every port
 just members-unchanged    # members.tsv against its baseline — the blast radius, before a compile
 just baseline-accept <port>   # promote a baseline (also: baseline-list / -show / -diff)
+
+just debug-flags [<port>] # which layer defines each §4.6 flag, and what a run recorded
+just debug-set / -clear   # the hand-written flag layer, .balticporter/debug.properties
+just debug-emit <root> <fqn> [<phases>]   # one type as TIR + Scala, around a phase boundary
+just correlate <out> …    # CorrelateMain on a log you produced by hand (§5.1)
+just debug-selfcheck      # proves the four above — no sbt, no ports, seconds
 ```
 
 Run them **serially** — `measure-all` does: each re-emits into `src_managed/` and the dependent lanes
@@ -548,7 +554,7 @@ with each item's state re-verified against the working tree.
 | 1.6 | `TirEmitter` lost provenance headers — a licence problem | **shipped** — `CLAUDE.md` §4.57 is the rule; every backend carries it |
 | 2.1 | the canonical measure script threw the four checks away | **shipped** — every lane prints the full check report, diffed against the baseline |
 | 2.2 | check results were stdout-only, truncated, never persisted, never diffed | **shipped** — `findings.tsv` / `counts.tsv` / `report.md` / `diff.txt` / `subject.txt` per run, with a promotable baseline |
-| 2.3 | no TIR pretty-printer, no way to run/skip/dump a phase | **shipped** — `TirPrinter` (+ a `canonical` style and `digest`), `DebugEmit`, and the five debug flags of `CLAUDE.md` §4.6 |
+| 2.3 | no TIR pretty-printer, no way to run/skip/dump a phase | **shipped** — `TirPrinter` (+ a `canonical` style and `digest`), `DebugEmit` (in `engine`, so it ships), and the five debug flags of `CLAUDE.md` §4.6, each reachable as a `just` recipe and each proven by a spec or by `just debug-selfcheck` |
 | 2.4 | the unportable-marker design's Stage 1, plus a forced test-correlation amendment | **shipped** — source map, member digests, scalac correlation and the **test-failure** correlation lane. Stage 2 (the marker itself) deliberately unbuilt; see `DESIGN.md` §6.5 |
 | 2.5 | three ad-hoc debugging techniques should become first-class | **shipped** — all three are flags or a printer |
 | 3.1 | cross-port composition — blocking at sge's second module | **shipped** — `PortManifest` + `ManifestAgreement` (static and dynamic layers), and beyond the original design, the **port map** (`DESIGN.md` §5): a dependent now reads what its base *emitted*, not only what it *declared* |

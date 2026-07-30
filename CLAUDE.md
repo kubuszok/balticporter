@@ -653,8 +653,30 @@ Resolution order is **system property → `<root>/.balticporter/run.properties` 
 a `-D` on the *caller's* command line does not reach the forked migration either, because `sbt`
 forks it with `javaOptions` from `build.sbt`. Only the file crosses that boundary.
 
+**Reach all of it through `just`, not through a main class or a hand-written file.** Every recipe
+below is proven by a spec or by `just debug-selfcheck`; the mains behind them are an implementation
+detail, and an agent that has to know which one exists is an agent that re-invents the tool:
+
+| recipe | |
+|---|---|
+| `just debug-flags [PORT]` | WHICH layer defines each flag right now, what it shadowed, what a run RECORDED (`report.md`), and which entries no accessor will ever read |
+| `just debug-set KEY VALUE` / `just debug-clear [KEY]` | edit `debug.properties`, the winning layer — idempotent, and `debug-clear` with no key removes the file |
+| `just debug-emit ROOT FQN [PHASES] [FLAGS…]` | model a Java tree once and print ONE type as TIR and as Scala, bracketing each named phase |
+| `just correlate OUT …` | `CorrelateMain` on a compiler or test log you produced by hand (§5.1) |
+| `just members-unchanged [PORT]` | the blast radius, before any compile — and FATAL on an input it cannot compare |
+
+Two facts the resolution surface exists to make visible, because nothing else can: a key without the
+`balticporter.` prefix is read by no accessor, and a misspelt one (`skipPhase`) is a flag that does
+nothing — the run it was written for looks entirely normal. `just debug-flags` marks both.
+**Clear a flag when you are done with it** (`just debug-clear`): a leftover one moves no count, fails
+no check, and quietly changes what every later run in that checkout emits.
+
 `TirPrinter` renders the TIR readably (`canonical` style leaks no `SymId` and no origin, so two
-runs are comparable); `DebugEmit` models once and emits one FQN, optionally around a phase.
+runs are comparable); `DebugEmit` (`balticporter.runner`, in the ENGINE so a consumer's agent has it
+too) models once and emits one FQN, optionally around a phase. What it prints is the pipeline's view
+of one type, never a reproduction of a port's emitted file — there is no substitution, injection,
+package rename or provenance header in it; that is `PortRun`'s job, and giving this tool a port
+`.conf` would make it a second assembly path free to drift from the first.
 
 **A flag that carries measurement identity must come from the PORT, not the operator.**
 `balticporter.reportPathRoot` anchors the paths a finding's stable id is hashed from. Set only by
