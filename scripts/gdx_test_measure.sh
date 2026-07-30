@@ -47,15 +47,14 @@ echo "@Test in Java: $JAVA_TESTS   discoverable in emitted Scala: $SCALA_TESTS (
 
 echo
 echo "-- compile --"
-pkill -9 -f scala-cli 2>/dev/null; sleep 1
 scala-cli compile --scala 3.8.4 --server=false \
   --dependency org.junit.jupiter:junit-jupiter:5.10.2 \
   --dependency junit:junit:4.13.2 \
   --dependency org.scalameta::munit:1.0.2 \
-  libgdx-core/src_managed/main/scala libgdx-core/src_managed/test/scala 2>&1 | sed 's/\x1b\[[0-9;]*m//g' > /tmp/gdxtestmeasure.txt
-ERRORS=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' /tmp/gdxtestmeasure.txt)
+  libgdx-core/src_managed/main/scala libgdx-core/src_managed/test/scala 2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/gdxtestmeasure.txt
+ERRORS=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/gdxtestmeasure.txt)
 echo "TOTAL ERRORS: $ERRORS"
-grep -oE "\[E[0-9]+\][^:]*Error" /tmp/gdxtestmeasure.txt | sort | uniq -c | sort -rn | head
+grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/gdxtestmeasure.txt | sort | uniq -c | sort -rn | head
 
 # ---------------------------------------------------------------------------------------------
 # RUN them. Compiling a test suite measures nothing about behaviour, and CLAUDE.md §4.4 lists ten
@@ -72,8 +71,8 @@ if [ "$ERRORS" = "0" ]; then
     --dependency org.junit.jupiter:junit-jupiter:5.10.2 \
     -Duser.language=en -Duser.country=US \
     libgdx-core/src_managed/main/scala libgdx-core/src_managed/test/scala 2>&1 |
-    sed 's/\x1b\[[0-9;]*m//g' > /tmp/gdxtestrun.txt
-  echo "passing: $(grep -cE '^  \+ ' /tmp/gdxtestrun.txt)   failing: $(grep -c '^==> X ' /tmp/gdxtestrun.txt)"
+    sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/gdxtestrun.txt
+  echo "passing: $(grep -cE '^  \+ ' "$MEASURE_TMP"/gdxtestrun.txt)   failing: $(grep -c '^==> X ' "$MEASURE_TMP"/gdxtestrun.txt)"
 
   # Anchor every failure on the first stack frame that lands in PORTED code and resolve it, through
   # both ports' source maps, to a member and a Java origin — then diff the pass/fail sets against
@@ -81,7 +80,7 @@ if [ "$ERRORS" = "0" ]; then
   # this engine can produce, and it is the only lane that catches a §4.4 regression.
   echo
   echo "-- correlation: test failures located to members and Java origins --"
-  correlate "$REPORT/run-latest" --tests /tmp/gdxtestrun.txt \
+  correlate "$REPORT/run-latest" --tests "$MEASURE_TMP"/gdxtestrun.txt \
     --srcmap "$ROOT/port-report/LibgdxCoreMigrate/run-latest/srcmap.tsv" \
     --srcmap "test=$REPORT/run-latest/srcmap.tsv"
 else

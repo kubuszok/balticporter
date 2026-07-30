@@ -8,6 +8,16 @@
 # the migration. A properties file under the repo root does, because the migration reads it itself
 # (`balticporter.tir.DebugFlags`). `.balticporter/` is gitignored.
 
+# Scratch outputs (compiler and test-runner captures) go under the CHECKOUT, never /tmp: the
+# fixed /tmp names collided the moment two checkouts (a main tree and a worktree, or two agents'
+# worktrees) measured concurrently — one checkout's compile output silently counted, and then
+# CORRELATED, as the other's. `.balticporter/` is gitignored, so this also survives nothing.
+# The same rule removed `pkill -9 -f scala-cli` from every measure script: with `--server=false`
+# each compile is self-contained, so the pkill's only effect on a correct run was to kill a
+# CONCURRENT checkout's compile mid-write — whose truncated output then greps as fewer errors.
+MEASURE_TMP="$(pwd)/.balticporter/tmp"
+mkdir -p "$MEASURE_TMP"
+
 # write_run_props <repo-root> <key=value>...
 # Replaces .balticporter/run.properties wholesale. A hand-written .balticporter/debug.properties is
 # read AFTER it and wins, so an operator's own flags survive a measure run.

@@ -44,7 +44,6 @@ echo "@Test in Java: $JAVA_TESTS   discoverable in emitted Scala: $SCALA_TESTS (
 
 echo
 echo "-- compile --"
-pkill -9 -f scala-cli 2>/dev/null; sleep 1
 # NOTE the ANSI strip. Dropped once, and `grep -cE '^-- .*Error'` then matched nothing because every
 # line begins with a colour escape — reporting 0 errors for a port that had 20. A false NEGATIVE on
 # the project's headline number is the worst failure a measure script can have.
@@ -53,12 +52,12 @@ pkill -9 -f scala-cli 2>/dev/null; sleep 1
 DEPS="--dependency junit:junit:4.12 --dependency org.scalameta::munit:1.0.2"
 scala-cli compile --scala 3.8.4 --server=false $DEPS \
   simplegraphs-core/src_managed/main/scala simplegraphs-core/src_managed/test/scala \
-  2>&1 | sed 's/\x1b\[[0-9;]*m//g' > /tmp/sgmeasure.txt
-ERRORS=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' /tmp/sgmeasure.txt)
-echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' /tmp/sgmeasure.txt) + bare $(grep -cE '^-- Error:' /tmp/sgmeasure.txt))"
-grep -oE "\[E[0-9]+\][^:]*Error" /tmp/sgmeasure.txt | sort | uniq -c | sort -rn | head
+  2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/sgmeasure.txt
+ERRORS=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/sgmeasure.txt)
+echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/sgmeasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/sgmeasure.txt))"
+grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/sgmeasure.txt | sort | uniq -c | sort -rn | head
 echo "-- bare (uncoded) errors by message --"
-grep -A1 '^-- Error:' /tmp/sgmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
+grep -A1 '^-- Error:' "$MEASURE_TMP"/sgmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
 
 # ---------------------------------------------------------------------------------------------
 # RUN them. Compiling a suite measures nothing about behaviour: CLAUDE.md §4.4 lists ten java forms
@@ -71,17 +70,17 @@ if [ "$ERRORS" = "0" ]; then
   echo "-- run --"
   scala-cli test --scala 3.8.4 --server=false $DEPS -Duser.language=en -Duser.country=US \
     simplegraphs-core/src_managed/main/scala simplegraphs-core/src_managed/test/scala \
-    2>&1 | sed 's/\x1b\[[0-9;]*m//g' > /tmp/sgrun.txt
-  echo "passing: $(grep -cE '^  \+ ' /tmp/sgrun.txt)   failing: $(grep -c '^==> X ' /tmp/sgrun.txt)"
+    2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/sgrun.txt
+  echo "passing: $(grep -cE '^  \+ ' "$MEASURE_TMP"/sgrun.txt)   failing: $(grep -c '^==> X ' "$MEASURE_TMP"/sgrun.txt)"
   echo
   echo "-- correlation: test failures located to members and Java origins --"
-  correlate "$TREPORT/run-latest" --tests /tmp/sgrun.txt \
+  correlate "$TREPORT/run-latest" --tests "$MEASURE_TMP"/sgrun.txt \
     --srcmap "$REPORT/run-latest/srcmap.tsv" \
     --srcmap "test=$TREPORT/run-latest/srcmap.tsv"
 else
   echo
   echo "-- correlation: every error located to its member and its Java origin --"
-  correlate "$REPORT/run-latest" --scalac /tmp/sgmeasure.txt \
+  correlate "$REPORT/run-latest" --scalac "$MEASURE_TMP"/sgmeasure.txt \
     --srcmap "$REPORT/run-latest/srcmap.tsv" \
     --srcmap "test=$TREPORT/run-latest/srcmap.tsv"
   echo "(not running the suite: it does not compile — a test that cannot run is not a test that passed)"

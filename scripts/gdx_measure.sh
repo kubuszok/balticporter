@@ -39,15 +39,14 @@ show_check_report "$REPORT"
 
 echo
 echo "-- compile --"
-pkill -9 -f scala-cli 2>/dev/null; sleep 1
-scala-cli compile --scala 3.8.4 --server=false libgdx-core/src_managed/main/scala 2>&1 | sed 's/\x1b\[[0-9;]*m//g' > /tmp/gdxmeasure.txt
+scala-cli compile --scala 3.8.4 --server=false libgdx-core/src_managed/main/scala 2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/gdxmeasure.txt
 # count ALL errors: coded `-- [Exxx] ... Error` AND bare `-- Error:` (e.g. "secondary constructor
 # must call a preceding constructor" carries no code). The coded-only count silently undercounts.
-ERRORS=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' /tmp/gdxmeasure.txt)
-echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' /tmp/gdxmeasure.txt) + bare $(grep -cE '^-- Error:' /tmp/gdxmeasure.txt))"
-grep -oE "\[E[0-9]+\][^:]*Error" /tmp/gdxmeasure.txt | sort | uniq -c | sort -rn | head
+ERRORS=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/gdxmeasure.txt)
+echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/gdxmeasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/gdxmeasure.txt))"
+grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/gdxmeasure.txt | sort | uniq -c | sort -rn | head
 echo "-- bare (uncoded) errors by message --"
-grep -A1 '^-- Error:' /tmp/gdxmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
+grep -A1 '^-- Error:' "$MEASURE_TMP"/gdxmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
 
 # A count is not a triage. Join every error back to the member and the JAVA LINE it came from, and
 # split it into "at a region the engine marked approximate" vs "engine gap" (UNPORTABLE-DESIGN.md
@@ -55,6 +54,6 @@ grep -A1 '^-- Error:' /tmp/gdxmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 
 # answer, and the lane an agent in another repository has to act on.
 echo
 echo "-- correlation: every error located to its member and its Java origin --"
-correlate "$REPORT/run-latest" --scalac /tmp/gdxmeasure.txt --srcmap "$REPORT/run-latest/srcmap.tsv"
+correlate "$REPORT/run-latest" --scalac "$MEASURE_TMP"/gdxmeasure.txt --srcmap "$REPORT/run-latest/srcmap.tsv"
 
 headline "$ERRORS" "$REPORT"

@@ -50,29 +50,28 @@ DEPS="--dependency junit:junit:4.13.2 --dependency org.mockito:mockito-all:1.10.
 
 echo
 echo "-- compile --"
-pkill -9 -f scala-cli 2>/dev/null; sleep 1
 # NOTE the ANSI strip: without it `grep -cE '^-- .*Error'` matches nothing and reports 0 for a port
 # that does not compile — a false NEGATIVE on the headline number.
 scala-cli compile --scala 3.8.4 --server=false $DEPS \
   libgdx-core/src_managed/main/scala ashley-core/src_managed/main/scala ashley-core/src_managed/test/scala \
-  2>&1 | sed 's/\x1b\[[0-9;]*m//g' > /tmp/ashleymeasure.txt
-ERRORS=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' /tmp/ashleymeasure.txt)
-echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' /tmp/ashleymeasure.txt) + bare $(grep -cE '^-- Error:' /tmp/ashleymeasure.txt))"
-grep -oE "\[E[0-9]+\][^:]*Error" /tmp/ashleymeasure.txt | sort | uniq -c | sort -rn | head
+  2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/ashleymeasure.txt
+ERRORS=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/ashleymeasure.txt)
+echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/ashleymeasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/ashleymeasure.txt))"
+grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/ashleymeasure.txt | sort | uniq -c | sort -rn | head
 
 if [ "$ERRORS" = "0" ]; then
   echo
   echo "-- run --"
   scala-cli test --scala 3.8.4 --server=false $DEPS -Duser.language=en -Duser.country=US \
     libgdx-core/src_managed/main/scala ashley-core/src_managed/main/scala ashley-core/src_managed/test/scala \
-    2>&1 | sed 's/\x1b\[[0-9;]*m//g' > /tmp/ashleyrun.txt
-  echo "passing: $(grep -cE '^  \+ ' /tmp/ashleyrun.txt)   failing: $(grep -c '^==> X ' /tmp/ashleyrun.txt)"
+    2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/ashleyrun.txt
+  echo "passing: $(grep -cE '^  \+ ' "$MEASURE_TMP"/ashleyrun.txt)   failing: $(grep -c '^==> X ' "$MEASURE_TMP"/ashleyrun.txt)"
   echo
   echo "-- correlation: test failures located to members and Java origins --"
   # BOTH ports' maps: only the library's own map can anchor a failure on the member that threw,
   # and only the suite's can name the test. libGDX's is passed too — a stack that reaches the base
   # is exactly what a dependent's failure looks like.
-  correlate "$TREPORT/run-latest" --tests /tmp/ashleyrun.txt \
+  correlate "$TREPORT/run-latest" --tests "$MEASURE_TMP"/ashleyrun.txt \
     --srcmap "$ROOT/port-report/LibgdxCoreMigrate/run-latest/srcmap.tsv" \
     --srcmap "$REPORT/run-latest/srcmap.tsv" \
     --srcmap "test=$TREPORT/run-latest/srcmap.tsv"
