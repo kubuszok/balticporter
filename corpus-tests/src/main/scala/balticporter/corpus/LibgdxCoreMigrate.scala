@@ -1,7 +1,7 @@
 package balticporter.corpus
 
 import balticporter.core.{FrontendConfig, PortManifest, Provenance, RuntimeMode, Substitutions}
-import balticporter.runner.{Determinism, PortRun, SourceSet}
+import balticporter.runner.{Determinism, PortRun, SourceSet, VendoredCommit}
 import balticporter.transform.{ClassTableTransform, CollectionsTransform, MutableParamsTransform, PanamaFfiTransform, StaticForwarderTransform, TestFrameworkTransform}
 
 import java.nio.file.{Files, Path}
@@ -51,7 +51,7 @@ object LibgdxCoreMigrate:
       manifest  = Some(if raw then LibgdxPolicy.core(repoRoot).withoutSurface else LibgdxPolicy.core(repoRoot)),
       provenance = Some(Provenance(
         upstreamName     = "libGDX",
-        upstreamCommit   = "vendored in ../sge/original-src/libgdx",
+        upstreamCommit   = VendoredCommit.of(base),
         originalLicense  = "Apache-2.0",
         sourcePathPrefix = "gdx/src",
         sourceRoot       = base.toString,

@@ -1,7 +1,7 @@
 package balticporter.corpus
 
 import balticporter.core.{FrontendConfig, Provenance, RuntimeMode}
-import balticporter.runner.{Determinism, PortRun, SourceSet}
+import balticporter.runner.{Determinism, PortRun, SourceSet, VendoredCommit}
 
 import java.nio.file.{Files, Path}
 import scala.jdk.CollectionConverters.*
@@ -60,7 +60,7 @@ object SimpleGraphsTestMigrate:
       manifest  = Some(SimpleGraphsPolicy.test),
       provenance = Some(Provenance(
         upstreamName     = "simple-graphs",
-        upstreamCommit   = "vendored in ../sge/original-src/simple-graphs",
+        upstreamCommit   = VendoredCommit.of(testRoot),
         originalLicense  = "MIT",
         sourcePathPrefix = "src/test/java",
         sourceRoot       = testRoot.toString,

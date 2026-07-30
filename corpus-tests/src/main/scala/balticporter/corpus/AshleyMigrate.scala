@@ -1,7 +1,7 @@
 package balticporter.corpus
 
 import balticporter.core.{FrontendConfig, PortManifest, Provenance, RuntimeMode}
-import balticporter.runner.{Determinism, PortRun, SourceSet}
+import balticporter.runner.{Determinism, PortRun, SourceSet, VendoredCommit}
 
 import java.nio.file.{Files, Path}
 import scala.jdk.CollectionConverters.*
@@ -71,7 +71,7 @@ object AshleyMigrate:
       manifest  = Some(AshleyPolicy.core(repoRoot)),
       provenance = Some(Provenance(
         upstreamName     = "Ashley",
-        upstreamCommit   = "vendored in ../sge/original-src/ashley",
+        upstreamCommit   = VendoredCommit.of(base),
         originalLicense  = "Apache-2.0",
         sourcePathPrefix = "ashley/src",
         sourceRoot       = base.toString,
