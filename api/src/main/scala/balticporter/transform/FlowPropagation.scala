@@ -47,6 +47,14 @@ import balticporter.tir.*
   * Known and unclosed, for the same reason: bodies reached only through a `Lambda`, an anonymous
   * class (`Tree.New.anon`), a `Try`, a `Match`, a `for`/`foreach` or a `Tree.Commented` wrapper
   * contribute no edges. Each is a missed edge, never a wrong one.
+  *
+  * ==Why this is in `api` and not in `engine`==
+  * DESIGN.md §3.2's criterion is operational: *a §1(c) rule and its spec must compile against `api`
+  * alone*. CLAUDE.md §1 says every rule that RETYPES declarations takes a
+  * [[balticporter.tir.RuleScope]] and carries its call sites with it — so a consumer's own retyping
+  * rule needs exactly this, and needing it from `engine` would drag in the emitter, `PortRun` and
+  * Spoon to grow a seed set. It imports `balticporter.tir` and nothing else, which is the same test
+  * `Pipeline` passes.
   */
 object FlowPropagation:
 

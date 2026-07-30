@@ -443,7 +443,7 @@ final class CollectionsTransform(val scope: RuleScope = RuleScope.Everywhere())
   private def restoreExcluded(orig: Tree.ClassDef, mapped: Tree.ClassDef): Tree.ClassDef =
     if excluded.isEmpty then mapped
     else
-      val body = orig.body.zip(mapped.body).map {
+      val body = CollectionsTransform.spine(orig.body, mapped.body, orig.symbol).map {
         case (o: Tree.ClassDef, m: Tree.ClassDef) => restoreExcluded(o, m)
         case (o: Tree.DefDef, m: Tree.DefDef)     => if excluded(o.symbol) then o else m
         case (o: Tree.ValDef, m: Tree.ValDef)     => if excluded(o.symbol) then o else m
@@ -1291,6 +1291,27 @@ final class CollectionsTransform(val scope: RuleScope = RuleScope.Everywhere())
     case _                           => None
 
 object CollectionsTransform:
+
+  /** Pair a class body with its mapped form, POSITION BY POSITION — and refuse loudly if the two
+    * lengths differ.
+    *
+    * `restoreExcluded` splices held-back members back by position, and its whole argument is that
+    * `StandardTraversal.mapClassDef` returns the same kinds in the same order, so the two zip
+    * exactly. `zip` TRUNCATES when they do not: a phase that one day inserts or drops a body member
+    * would silently lose the tail of the restore — every member after the difference keeping its
+    * MAPPED form whatever the scope said — with no exception, no count moving, and a port that
+    * compiles. That is the same class of defect as every other silent truncation in this engine, so
+    * the assumption is asserted where it is made rather than left in a doc comment. */
+  private[transform] def spine(orig: List[Statement], mapped: List[Statement], of: SymId)
+      : List[(Statement, Statement)] =
+    if orig.sizeIs != mapped.size then
+      throw IllegalStateException(
+        s"CollectionsTransform.restoreExcluded: the declaration spine of ${of.raw} changed length " +
+          s"under the traversal (${orig.size} member(s) before, ${mapped.size} after). Held-back " +
+          "members are spliced back BY POSITION, which is only sound while the mapped body is the " +
+          "same kinds in the same order; zipping two different lengths would silently drop the tail " +
+          "of the restore and emit the mapped form for members the scope excluded.")
+    orig.zip(mapped)
 
   /** The type a term REALLY has when it names a declaration a [[balticporter.tir.RuleScope]] held
     * back — `None` when it names no such declaration, in which case the node's own `tpe` is the

@@ -431,11 +431,13 @@ What that admits is the TIR (`Tree`, `Symbol`, `SymId`, `TypeRepr`, `Origin`, `T
 `Pipeline`, the decision model (`Decision`, `Reason`, `DecisionLog`), the recording surface
 (`CheckReport`, `PolicyReport`), the §4.6 debug surface (`DebugFlags`, `TirTrace`, `TirPrinter` —
 whose `sha256` is what a finding's stable id is hashed from), the frontend contract (`Frontend`,
-`FrontendConfig`, `Unsupported`, `CommentScanner`) and `PortManifest`/`Substitutions`. Everything
-else — every transform, every check IMPLEMENTATION, the emitter, `PortMap`, `Cache`, `PortRun` — is
-machinery and is in `engine`.
+`FrontendConfig`, `Unsupported`, `CommentScanner`), `PortManifest`/`Substitutions`, and the two
+values a SCOPED retyping rule cannot be written without — `RuleScope` and `FlowPropagation`
+(`balticporter.transform`, the one package `api` shares with `engine`). Everything else — every
+transform, every check IMPLEMENTATION, the emitter, `PortMap`, `Cache`, `PortRun` — is machinery and
+is in `engine`.
 
-Four judgement calls in that cut, recorded because each looks wrong until the reason is stated:
+Five judgement calls in that cut, recorded because each looks wrong until the reason is stated:
 
   - **`Pipeline` is in `api`, not `engine`.** It reads as the runner and is not: running a phase
     list over a `Program` is exactly what a rule's SPEC does, and `frontend-spoon`'s own
@@ -451,6 +453,13 @@ Four judgement calls in that cut, recorded because each looks wrong until the re
   - **`engine` depends on `frontend-spoon`**, because `PortRun` models a source set with
     `SpoonTir`. That is the direction the insulation rule wants; a second frontend is added beside
     Spoon and `engine` gains a dependency, never the reverse.
+  - **`FlowPropagation` is in `api`, in package `balticporter.transform`.** It reads as a transform
+    helper and is not a transform: CLAUDE.md §1 requires every retyping rule to take a `RuleScope`
+    and carry its call sites with it, so a §1(c) rule in a consumer's repository needs exactly this
+    to grow its seeds — and the criterion above then decides it, since needing it from `engine`
+    would drag in the emitter, `PortRun` and Spoon. It imports `balticporter.tir` alone. The package
+    is deliberately unchanged: it names what the value is FOR, and a rename would break every
+    consumer's import to say nothing new.
 
 ### 3.3 The port as a VALUE — `PortManifest` and `PortRun`
 

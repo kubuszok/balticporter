@@ -264,6 +264,14 @@ the split it draws, which matters when you are hunting a rule that did not fire 
 a bad **key** is caught here, at load; a bad **value** — a `dropTypes` entry naming a type that does
 not exist — reaches the run and is caught by the `policy` check.
 
+**One hole to know about, because it is invisible from the dependent's side.** When a conf is loaded
+as somebody's `base = "…"`, §1.5 says the dependent inherits the shared SURFACE and nothing else —
+so the base file's own top-level keys (`input`, `output`, `provenance`, `runtimeMode`) are MARKED
+READ without being read, and a typo among them is therefore not caught by that run. It is caught by
+the run that loads the same file as its OWN configuration, which is the run it belongs to. So a
+module that only ever runs its dependent's lane never checks its base conf's top level: **load every
+conf as a port at least once** (§9), including one you wrote only to be extended.
+
 ## 8. What a conf deliberately cannot hold
 
 No classname-in-a-string, no expression language, no reflective construction of a lambda. Three
