@@ -1527,6 +1527,37 @@ object SpoonTir:
         val ct = if boxing then boxedPrimitive(et.getSimpleName) else tpe(target)
         if cast then Tree.Typed(t, tt(ct, e), ct, originOf(e))
         else if unchecked then
+          // A CONDITIONAL's unchecked conversion belongs to its BRANCHES, not to the whole
+          // expression. Java's rules for a reference conditional in an assignment context assign
+          // each operand to the target type separately, which is exactly why `uncheckedGeneric`
+          // refuses the conditional itself: casting a poly expression destroys the inference it
+          // feeds. Refusing without descending simply loses the conversion — measured in
+          // simple-graphs' `AStarSearch.getPath`, `path = end != null ? new AlgorithmPath<>(end) :
+          // Path.EMPTY_PATH`, where the RAW static `EMPTY_PATH` renders `Path[?]` against a `Path[V]`
+          // field and Java's unchecked conversion had nowhere to land.
+          //
+          // Recursing through `coerce` and not `uncheckedGeneric` directly, so a branch gets whatever
+          // conversion IT needs; a nested conditional resolves the same way, one level down.
+          conditionalBranches(e, t) match
+            case Some((c, i)) =>
+              val th = coerce(target, c.getThenExpression, i.thenp, arrayCov, tpToObject, unchecked)
+              val el = coerce(target, c.getElseExpression, i.elsep, arrayCov, tpToObject, unchecked)
+              if (th ne i.thenp) || (el ne i.elsep) then i.copy(thenp = th, elsep = el) else t
+            case None => uncheckedOf(target, e, t, ct)
+
+        else t
+
+      /** the conditional and the `If` it produced, when `t` really is that conditional's translation.
+        * Both halves are checked: `expr` may have wrapped or replaced it, and rebuilding something
+        * that is no longer an `If` would silently drop a branch. */
+      private def conditionalBranches(e: CtExpression[?], t: Term): Option[(CtConditional[?], Tree.If)] =
+        (e, t) match
+          case (c: CtConditional[?], i: Tree.If) => Some((c, i))
+          case _                                 => None
+
+      /** the unchecked-conversion decision for a NON-conditional expression — extracted only so the
+        * branch recursion above reads as one case beside it. */
+      private def uncheckedOf(target: CtTypeReference[?], e: CtExpression[?], t: Term, ct: TypeRepr): Term =
           val u = uncheckedGeneric(target, e, t)
           // Java's unchecked conversion, decided on the RENDERED types rather than Spoon's. A value
           // read through an ERASED receiver (`map.keys$field` off an `OrderedMap[Object, Object]`)
@@ -1536,7 +1567,6 @@ object SpoonTir:
           // this decidable here at all.
           if (u ne t) || !tpAccessibleHere(target) || !uncheckedFrom(t.tpe, ct) then u
           else Tree.Typed(t, tt(ct, e), ct, originOf(e))
-        else t
 
       private val wrapperOf = Map(
         "byte" -> "java.lang.Byte", "short" -> "java.lang.Short", "char" -> "java.lang.Character",

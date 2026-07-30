@@ -30,6 +30,7 @@ type	space.earlygrey.simplegraphs.utils.Heuristic	sge.graphs.utils.Heuristic	Ren
 type	space.earlygrey.simplegraphs.utils.SearchProcessor	sge.graphs.utils.SearchProcessor	Renamed	-		0	
 type	space.earlygrey.simplegraphs.utils.WeightFunction	sge.graphs.utils.WeightFunction	Renamed	-		0	
 type		balticporter.runtime.JavaCollection	Added	-		0	
+type		balticporter.runtime.JavaCollections	Added	-		0	
 type		balticporter.runtime.JavaIterable	Added	-		0	
 type		balticporter.runtime.JavaIterator	Added	-		0	
 member	space.earlygrey.simplegraphs.Array#<init>(int)	sge.graphs.Array#<init>(int)	Renamed	-	space/earlygrey/simplegraphs/Array.java	41	e5be362f9598894d
@@ -40,7 +41,7 @@ member	space.earlygrey.simplegraphs.Array#add(T)	sge.graphs.Array#add(T)	Renamed
 member	space.earlygrey.simplegraphs.Array#addAll(JavaCollection)	sge.graphs.Array#addAll(JavaCollection<?>)	Renamed	-	space/earlygrey/simplegraphs/Array.java	77	854f36fdb5031c8b
 member	space.earlygrey.simplegraphs.Array#clear()	sge.graphs.Array#clear()	Renamed	-	space/earlygrey/simplegraphs/Array.java	135	9d10f872df98cb0f
 member	space.earlygrey.simplegraphs.Array#contains(Object)	sge.graphs.Array#contains(Object)	Renamed	-	space/earlygrey/simplegraphs/Array.java	156	5a3dd79816618bd2
-member	space.earlygrey.simplegraphs.Array#containsAll(JavaCollection)	sge.graphs.Array#containsAll(JavaCollection<?>)	Renamed	-	space/earlygrey/simplegraphs/Array.java	71	8f0a83240b41c962
+member	space.earlygrey.simplegraphs.Array#containsAll(JavaCollection)	sge.graphs.Array#containsAll(JavaCollection<?>)	Renamed	-	space/earlygrey/simplegraphs/Array.java	71	4ef99d6eb2f2f731
 member	space.earlygrey.simplegraphs.Array#get(int)	sge.graphs.Array#get(int)	Renamed	-	space/earlygrey/simplegraphs/Array.java	141	021605d8c71ce242
 member	space.earlygrey.simplegraphs.Array#indexOf(Object)	sge.graphs.Array#indexOf(Object)	Renamed	-	space/earlygrey/simplegraphs/Array.java	97	23f5c8d3f40fadaa
 member	space.earlygrey.simplegraphs.Array#isEmpty()	sge.graphs.Array#isEmpty()	Renamed	-	space/earlygrey/simplegraphs/Array.java	151	818effe647923e42
@@ -109,7 +110,7 @@ member	space.earlygrey.simplegraphs.DirectedGraph#algorithms	sge.graphs.Directed
 member	space.earlygrey.simplegraphs.DirectedGraph#algorithms()	sge.graphs.DirectedGraph#algorithms()	Renamed	-	space/earlygrey/simplegraphs/DirectedGraph.java	70	d3ee5807616d844b
 member	space.earlygrey.simplegraphs.DirectedGraph#createNew()	sge.graphs.DirectedGraph#createNew()	Renamed	-	space/earlygrey/simplegraphs/DirectedGraph.java	65	fceeb763ea8a45a4
 member	space.earlygrey.simplegraphs.DirectedGraph#getInDegree(V)	sge.graphs.DirectedGraph#getInDegree(V)	Renamed	-	space/earlygrey/simplegraphs/DirectedGraph.java	90	d097e5630cb5e7c8
-member	space.earlygrey.simplegraphs.DirectedGraph#getInEdges(V)	sge.graphs.DirectedGraph#getInEdges(V)	Renamed	-	space/earlygrey/simplegraphs/DirectedGraph.java	101	1648a6843b32f5c2
+member	space.earlygrey.simplegraphs.DirectedGraph#getInEdges(V)	sge.graphs.DirectedGraph#getInEdges(V)	Renamed	-	space/earlygrey/simplegraphs/DirectedGraph.java	101	f106bc88f446a63a
 member	space.earlygrey.simplegraphs.DirectedGraph#getOutDegree(V)	sge.graphs.DirectedGraph#getOutDegree(V)	Renamed	-	space/earlygrey/simplegraphs/DirectedGraph.java	82	0093895022c55ce6
 member	space.earlygrey.simplegraphs.DirectedGraph#obtainEdge()	sge.graphs.DirectedGraph#obtainEdge()	Renamed	-	space/earlygrey/simplegraphs/DirectedGraph.java	60	64f86a6834a998f2
 member	space.earlygrey.simplegraphs.DirectedGraph#topologicalSort()	sge.graphs.DirectedGraph#topologicalSort()	Renamed	-	space/earlygrey/simplegraphs/DirectedGraph.java	113	d19f3b437c3b5256
@@ -155,8 +156,8 @@ member	space.earlygrey.simplegraphs.Graph#getDefaultEdgeWeightFunction()	sge.gra
 member	space.earlygrey.simplegraphs.Graph#getEdge(Node,Node)	sge.graphs.Graph#getEdge(Node<V>,Node<V>)	Renamed	-	space/earlygrey/simplegraphs/Graph.java	507	ae1d80996a05f32a
 member	space.earlygrey.simplegraphs.Graph#getEdge(V,V)	sge.graphs.Graph#getEdge(V,V)	Renamed	-	space/earlygrey/simplegraphs/Graph.java	356	94293a9fbc872a82
 member	space.earlygrey.simplegraphs.Graph#getEdgeCount()	sge.graphs.Graph#getEdgeCount()	Renamed	-	space/earlygrey/simplegraphs/Graph.java	437	650aad134fbc0502
-member	space.earlygrey.simplegraphs.Graph#getEdges()	sge.graphs.Graph#getEdges()	Renamed	-	space/earlygrey/simplegraphs/Graph.java	400	031a988ad05aa060
-member	space.earlygrey.simplegraphs.Graph#getEdges(V)	sge.graphs.Graph#getEdges(V)	Renamed	-	space/earlygrey/simplegraphs/Graph.java	384	408a89ea100f7a53
+member	space.earlygrey.simplegraphs.Graph#getEdges()	sge.graphs.Graph#getEdges()	Renamed	-	space/earlygrey/simplegraphs/Graph.java	400	1ada8179bea1e8c4
+member	space.earlygrey.simplegraphs.Graph#getEdges(V)	sge.graphs.Graph#getEdges(V)	Renamed	-	space/earlygrey/simplegraphs/Graph.java	384	7b2fe8e479537a3c
 member	space.earlygrey.simplegraphs.Graph#getNode(V)	sge.graphs.Graph#getNode(V)	Renamed	-	space/earlygrey/simplegraphs/Graph.java	495	feb715275c20cdb8
 member	space.earlygrey.simplegraphs.Graph#getNodes()	sge.graphs.Graph#getNodes()	Renamed	-	space/earlygrey/simplegraphs/Graph.java	499	84090637c7a276f9
 member	space.earlygrey.simplegraphs.Graph#getVertices()	sge.graphs.Graph#getVertices()	Renamed	-	space/earlygrey/simplegraphs/Graph.java	409	a3c0ff03ca4552f0
@@ -173,21 +174,21 @@ member	space.earlygrey.simplegraphs.Graph#removeConnection(Node,Node)	sge.graphs
 member	space.earlygrey.simplegraphs.Graph#removeConnection(Node,Node,boolean)	sge.graphs.Graph#removeConnection(Node<V>,Node<V>,boolean)	Renamed	-	space/earlygrey/simplegraphs/Graph.java	324	e20d74cc1717ffe5
 member	space.earlygrey.simplegraphs.Graph#removeEdge(Edge)	sge.graphs.Graph#removeEdge(Edge<V>)	Renamed	-	space/earlygrey/simplegraphs/Graph.java	243	5135ccfcdef521de
 member	space.earlygrey.simplegraphs.Graph#removeEdge(V,V)	sge.graphs.Graph#removeEdge(V,V)	Renamed	-	space/earlygrey/simplegraphs/Graph.java	237	3d8c829690b3f4cb
-member	space.earlygrey.simplegraphs.Graph#removeEdgeIf(Predicate)	sge.graphs.Graph#removeEdgeIf(Predicate<Edge<V>>)	Renamed	-	space/earlygrey/simplegraphs/Graph.java	251	f36344787efa5370
+member	space.earlygrey.simplegraphs.Graph#removeEdgeIf(Predicate)	sge.graphs.Graph#removeEdgeIf(Predicate<Edge<V>>)	Renamed	-	space/earlygrey/simplegraphs/Graph.java	251	d0061dbd9b193081
 member	space.earlygrey.simplegraphs.Graph#removeEdges(JavaCollection)	sge.graphs.Graph#removeEdges(JavaCollection<Edge<V>>)	Renamed	-	space/earlygrey/simplegraphs/Graph.java	247	88335c6ca081d50f
 member	space.earlygrey.simplegraphs.Graph#removeVertex(V)	sge.graphs.Graph#removeVertex(V)	Renamed	-	space/earlygrey/simplegraphs/Graph.java	133	97a5732786032e86
-member	space.earlygrey.simplegraphs.Graph#removeVertexIf(Predicate)	sge.graphs.Graph#removeVertexIf(Predicate<V>)	Renamed	-	space/earlygrey/simplegraphs/Graph.java	169	567488a4b60edae9
+member	space.earlygrey.simplegraphs.Graph#removeVertexIf(Predicate)	sge.graphs.Graph#removeVertexIf(Predicate<V>)	Renamed	-	space/earlygrey/simplegraphs/Graph.java	169	9e6eb5df6becf5da
 member	space.earlygrey.simplegraphs.Graph#removeVertices(JavaCollection)	sge.graphs.Graph#removeVertices(JavaCollection<V>)	Renamed	-	space/earlygrey/simplegraphs/Graph.java	163	94cd03213c6cc74c
 member	space.earlygrey.simplegraphs.Graph#setDefaultEdgeWeight(WeightFunction)	sge.graphs.Graph#setDefaultEdgeWeight(WeightFunction<V>)	Renamed	-	space/earlygrey/simplegraphs/Graph.java	461	516dfeabb4a03992
 member	space.earlygrey.simplegraphs.Graph#setDefaultEdgeWeight(float)	sge.graphs.Graph#setDefaultEdgeWeight(float)	Renamed	-	space/earlygrey/simplegraphs/Graph.java	471	6827c5abbfd74be8
 member	space.earlygrey.simplegraphs.Graph#size()	sge.graphs.Graph#size()	Renamed	-	space/earlygrey/simplegraphs/Graph.java	428	825b3908027a54f0
-member	space.earlygrey.simplegraphs.Graph#sortEdges(Comparator)	sge.graphs.Graph#sortEdges(Comparator<Connection<V>>)	Renamed	-	space/earlygrey/simplegraphs/Graph.java	289	9085a17995b2d9aa
+member	space.earlygrey.simplegraphs.Graph#sortEdges(Comparator)	sge.graphs.Graph#sortEdges(Comparator<Connection<V>>)	Renamed	-	space/earlygrey/simplegraphs/Graph.java	289	62784d1d15810dc9
 member	space.earlygrey.simplegraphs.Graph#sortVertices(Comparator)	sge.graphs.Graph#sortVertices(Comparator<V>)	Renamed	-	space/earlygrey/simplegraphs/Graph.java	279	797a3d95a50e2595
 member	space.earlygrey.simplegraphs.Graph#toString()	sge.graphs.Graph#toString()	Renamed	-	space/earlygrey/simplegraphs/Graph.java	513	c9a17c3056160114
-member	space.earlygrey.simplegraphs.GraphBuilder#buildCompleteGraph(G)	sge.graphs.GraphBuilder#buildCompleteGraph(G)	Renamed	-	space/earlygrey/simplegraphs/GraphBuilder.java	32	006c89cb4c200f4d
+member	space.earlygrey.simplegraphs.GraphBuilder#buildCompleteGraph(G)	sge.graphs.GraphBuilder#buildCompleteGraph(G)	Renamed	-	space/earlygrey/simplegraphs/GraphBuilder.java	32	0c36e754dc13ef67
 member	space.earlygrey.simplegraphs.Internals#<stmt1>	sge.graphs.Internals#<stmt1>	Renamed	-	space/earlygrey/simplegraphs/Internals.java	36	75860eedd6637294
 member	space.earlygrey.simplegraphs.Internals#addConnection(Node,Node,WeightFunction)	sge.graphs.Internals#addConnection(Node<V>,Node<V>,WeightFunction<V>)	Renamed	-	space/earlygrey/simplegraphs/Internals.java	51	b3017ae41b7edb49
-member	space.earlygrey.simplegraphs.Internals#getConnections()	sge.graphs.Internals#getConnections()	Renamed	-	space/earlygrey/simplegraphs/Internals.java	47	6848ffc6e4104ecc
+member	space.earlygrey.simplegraphs.Internals#getConnections()	sge.graphs.Internals#getConnections()	Renamed	-	space/earlygrey/simplegraphs/Internals.java	47	c302e8e0171f9285
 member	space.earlygrey.simplegraphs.Internals#getNode(V)	sge.graphs.Internals#getNode(V)	Renamed	-	space/earlygrey/simplegraphs/Internals.java	39	55eb1477a4219b5a
 member	space.earlygrey.simplegraphs.Internals#getNodes()	sge.graphs.Internals#getNodes()	Renamed	-	space/earlygrey/simplegraphs/Internals.java	43	b51df8df9ca63cf1
 member	space.earlygrey.simplegraphs.Internals#graph	sge.graphs.Internals#graph	Renamed	-	space/earlygrey/simplegraphs/Internals.java	33	6cf4a9117190cd1b
@@ -252,7 +253,7 @@ member	space.earlygrey.simplegraphs.NodeCollection#add(Node)	sge.graphs.NodeColl
 member	space.earlygrey.simplegraphs.NodeCollection#addAll(JavaCollection)	sge.graphs.NodeCollection#addAll(JavaCollection<?>)	Renamed	-	space/earlygrey/simplegraphs/NodeCollection.java	112	1357536d4fc63a10
 member	space.earlygrey.simplegraphs.NodeCollection#clear()	sge.graphs.NodeCollection#clear()	Renamed	-	space/earlygrey/simplegraphs/NodeCollection.java	130	b7f33019981e017e
 member	space.earlygrey.simplegraphs.NodeCollection#contains(Object)	sge.graphs.NodeCollection#contains(Object)	Renamed	-	space/earlygrey/simplegraphs/NodeCollection.java	49	b38aa8e201cae9c6
-member	space.earlygrey.simplegraphs.NodeCollection#containsAll(JavaCollection)	sge.graphs.NodeCollection#containsAll(JavaCollection<?>)	Renamed	-	space/earlygrey/simplegraphs/NodeCollection.java	104	8f0a83240b41c962
+member	space.earlygrey.simplegraphs.NodeCollection#containsAll(JavaCollection)	sge.graphs.NodeCollection#containsAll(JavaCollection<?>)	Renamed	-	space/earlygrey/simplegraphs/NodeCollection.java	104	4ef99d6eb2f2f731
 member	space.earlygrey.simplegraphs.NodeCollection#equals(Any)	sge.graphs.NodeCollection#equals(Any)	Renamed	-	space/earlygrey/simplegraphs/NodeCollection.java	135	6a5ef040c7ec0c1f
 member	space.earlygrey.simplegraphs.NodeCollection#hashCode()	sge.graphs.NodeCollection#hashCode()	Renamed	-	space/earlygrey/simplegraphs/NodeCollection.java	143	1dcd0a6a4629f3f9
 member	space.earlygrey.simplegraphs.NodeCollection#iterator()	sge.graphs.NodeCollection#iterator()	Renamed	-	space/earlygrey/simplegraphs/NodeCollection.java	54	0be77a6e2b597f26
@@ -373,7 +374,7 @@ member	space.earlygrey.simplegraphs.algorithms.AStarSearch#<stmt8>	sge.graphs.al
 member	space.earlygrey.simplegraphs.algorithms.AStarSearch#aStarSearch(Node,Node,Heuristic,SearchProcessor)	sge.graphs.algorithms.AStarSearch#aStarSearch(Node<V>,Node<V>,Heuristic<V>,SearchProcessor<V>)	Renamed	-	space/earlygrey/simplegraphs/algorithms/AStarSearch.java	109	9f39175fdaf4d40a
 member	space.earlygrey.simplegraphs.algorithms.AStarSearch#end	sge.graphs.algorithms.AStarSearch#end	Renamed	-	space/earlygrey/simplegraphs/algorithms/AStarSearch.java	17	b9519f840a18f57b
 member	space.earlygrey.simplegraphs.algorithms.AStarSearch#getEnd()	sge.graphs.algorithms.AStarSearch#getEnd()	Renamed	-	space/earlygrey/simplegraphs/algorithms/AStarSearch.java	98	cd778b4bb9499237
-member	space.earlygrey.simplegraphs.algorithms.AStarSearch#getPath()	sge.graphs.algorithms.AStarSearch#getPath()	Renamed	-	space/earlygrey/simplegraphs/algorithms/AStarSearch.java	90	6ef60e9651651960
+member	space.earlygrey.simplegraphs.algorithms.AStarSearch#getPath()	sge.graphs.algorithms.AStarSearch#getPath()	Renamed	-	space/earlygrey/simplegraphs/algorithms/AStarSearch.java	90	3c1b4cbdae605fad
 member	space.earlygrey.simplegraphs.algorithms.AStarSearch#heap	sge.graphs.algorithms.AStarSearch#heap	Renamed	-	space/earlygrey/simplegraphs/algorithms/AStarSearch.java	16	f56d361668fb9286
 member	space.earlygrey.simplegraphs.algorithms.AStarSearch#heuristic	sge.graphs.algorithms.AStarSearch#heuristic	Renamed	-	space/earlygrey/simplegraphs/algorithms/AStarSearch.java	13	b07b2cd9f91364e4
 member	space.earlygrey.simplegraphs.algorithms.AStarSearch#isFinished()	sge.graphs.algorithms.AStarSearch#isFinished()	Renamed	-	space/earlygrey/simplegraphs/algorithms/AStarSearch.java	86	edf796077446b4c8
@@ -436,10 +437,10 @@ member	space.earlygrey.simplegraphs.algorithms.DepthFirstSearch#step	sge.graphs.
 member	space.earlygrey.simplegraphs.algorithms.DepthFirstSearch#update()	sge.graphs.algorithms.DepthFirstSearch#update()	Renamed	-	space/earlygrey/simplegraphs/algorithms/DepthFirstSearch.java	27	a12ac36f0332b4c3
 member	space.earlygrey.simplegraphs.algorithms.MinimumWeightSpanningTree#<stmt1>	sge.graphs.algorithms.MinimumWeightSpanningTree#<stmt1>	Renamed	-	space/earlygrey/simplegraphs/algorithms/MinimumWeightSpanningTree.java	24	ed3edb3930ffca3c
 member	space.earlygrey.simplegraphs.algorithms.MinimumWeightSpanningTree#<stmt2>	sge.graphs.algorithms.MinimumWeightSpanningTree#<stmt2>	Renamed	-	space/earlygrey/simplegraphs/algorithms/MinimumWeightSpanningTree.java	26	cb43e69db57b20d8
-member	space.earlygrey.simplegraphs.algorithms.MinimumWeightSpanningTree#<stmt3>	sge.graphs.algorithms.MinimumWeightSpanningTree#<stmt3>	Renamed	-	space/earlygrey/simplegraphs/algorithms/MinimumWeightSpanningTree.java	28	c18123534f058542
+member	space.earlygrey.simplegraphs.algorithms.MinimumWeightSpanningTree#<stmt3>	sge.graphs.algorithms.MinimumWeightSpanningTree#<stmt3>	Renamed	-	space/earlygrey/simplegraphs/algorithms/MinimumWeightSpanningTree.java	28	426792b3db296fb3
 member	space.earlygrey.simplegraphs.algorithms.MinimumWeightSpanningTree#<stmt4>	sge.graphs.algorithms.MinimumWeightSpanningTree#<stmt4>	Renamed	-	space/earlygrey/simplegraphs/algorithms/MinimumWeightSpanningTree.java	32	02cd4beb0aa1ac14
 member	space.earlygrey.simplegraphs.algorithms.MinimumWeightSpanningTree#doesEdgeCreateCycle(Node,Node,int)	sge.graphs.algorithms.MinimumWeightSpanningTree#doesEdgeCreateCycle(Node<V>,Node<V>,int)	Renamed	-	space/earlygrey/simplegraphs/algorithms/MinimumWeightSpanningTree.java	75	e17ec953c02d5d25
-member	space.earlygrey.simplegraphs.algorithms.MinimumWeightSpanningTree#edgeQueue	sge.graphs.algorithms.MinimumWeightSpanningTree#edgeQueue	Renamed	-	space/earlygrey/simplegraphs/algorithms/MinimumWeightSpanningTree.java	16	d2ab2056abaa6e9d
+member	space.earlygrey.simplegraphs.algorithms.MinimumWeightSpanningTree#edgeQueue	sge.graphs.algorithms.MinimumWeightSpanningTree#edgeQueue	Renamed	-	space/earlygrey/simplegraphs/algorithms/MinimumWeightSpanningTree.java	16	7fe27d04c13476f4
 member	space.earlygrey.simplegraphs.algorithms.MinimumWeightSpanningTree#find(Node)	sge.graphs.algorithms.MinimumWeightSpanningTree#find(Node<V>)	Renamed	-	space/earlygrey/simplegraphs/algorithms/MinimumWeightSpanningTree.java	58	4a8f2db636dc267a
 member	space.earlygrey.simplegraphs.algorithms.MinimumWeightSpanningTree#finishAt	sge.graphs.algorithms.MinimumWeightSpanningTree#finishAt	Renamed	-	space/earlygrey/simplegraphs/algorithms/MinimumWeightSpanningTree.java	17	b7d1c7ff077aa788
 member	space.earlygrey.simplegraphs.algorithms.MinimumWeightSpanningTree#getSpanningTree()	sge.graphs.algorithms.MinimumWeightSpanningTree#getSpanningTree()	Renamed	-	space/earlygrey/simplegraphs/algorithms/MinimumWeightSpanningTree.java	92	40c1c0cc0c7d5439

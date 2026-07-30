@@ -41,6 +41,7 @@ type	com.badlogic.gdx.utils.reflect.Field		Dropped	-		0
 type	com.badlogic.gdx.utils.reflect.Method		Dropped	-		0	
 type	com.badlogic.gdx.utils.reflect.ReflectionException		Dropped	-		0	
 type		balticporter.runtime.JavaCollection	Added	-		0	
+type		balticporter.runtime.JavaCollections	Added	-		0	
 type		balticporter.runtime.JavaIterable	Added	-		0	
 type		balticporter.runtime.JavaIterator	Added	-		0	
 member	com.badlogic.gdx.graphics.g3d.utils.AnimationControllerTest#<stmt1>	sge.graphics.g3d.utils.AnimationControllerTest#<stmt1>	Renamed	-	com/badlogic/gdx/graphics/g3d/utils/AnimationControllerTest.java	17	398a3e9a5967b18c
@@ -249,10 +250,10 @@ member	com.badlogic.gdx.utils.LongQueueTest#assertEqualsAndHash(LongQueue,LongQu
 member	com.badlogic.gdx.utils.LongQueueTest#assertValues(LongQueue,Array)	sge.utils.LongQueueTest#assertValues(LongQueue,Array<long>)	Renamed	-	com/badlogic/gdx/utils/LongQueueTest.java	303	ed0dc27539a18fe6
 member	com.badlogic.gdx.utils.MixedPutRemoveTest#<stmt1>	sge.utils.MixedPutRemoveTest#<stmt1>	Renamed	-	com/badlogic/gdx/utils/MixedPutRemoveTest.java	12	689e08e127cd6eb0
 member	com.badlogic.gdx.utils.MixedPutRemoveTest#<stmt2>	sge.utils.MixedPutRemoveTest#<stmt2>	Renamed	-	com/badlogic/gdx/utils/MixedPutRemoveTest.java	31	fe00bb86a2df335f
-member	com.badlogic.gdx.utils.MixedPutRemoveTest#<stmt3>	sge.utils.MixedPutRemoveTest#<stmt3>	Renamed	-	com/badlogic/gdx/utils/MixedPutRemoveTest.java	56	45cd104199f859ab
+member	com.badlogic.gdx.utils.MixedPutRemoveTest#<stmt3>	sge.utils.MixedPutRemoveTest#<stmt3>	Renamed	-	com/badlogic/gdx/utils/MixedPutRemoveTest.java	56	1e24e62c8297e2ed
 member	com.badlogic.gdx.utils.MixedPutRemoveTest#<stmt4>	sge.utils.MixedPutRemoveTest#<stmt4>	Renamed	-	com/badlogic/gdx/utils/MixedPutRemoveTest.java	90	372aa246b2284dba
 member	com.badlogic.gdx.utils.MixedPutRemoveTest#<stmt5>	sge.utils.MixedPutRemoveTest#<stmt5>	Renamed	-	com/badlogic/gdx/utils/MixedPutRemoveTest.java	110	0ad02756ef2f318d
-member	com.badlogic.gdx.utils.MixedPutRemoveTest#<stmt6>	sge.utils.MixedPutRemoveTest#<stmt6>	Renamed	-	com/badlogic/gdx/utils/MixedPutRemoveTest.java	136	bc0096a9eac17055
+member	com.badlogic.gdx.utils.MixedPutRemoveTest#<stmt6>	sge.utils.MixedPutRemoveTest#<stmt6>	Renamed	-	com/badlogic/gdx/utils/MixedPutRemoveTest.java	136	259a96be928fb2e3
 member	com.badlogic.gdx.utils.MixedPutRemoveTest#<stmt7>	sge.utils.MixedPutRemoveTest#<stmt7>	Renamed	-	com/badlogic/gdx/utils/MixedPutRemoveTest.java	171	f6608becaadb598a
 member	com.badlogic.gdx.utils.MixedPutRemoveTest#<stmt8>	sge.utils.MixedPutRemoveTest#<stmt8>	Renamed	-	com/badlogic/gdx/utils/MixedPutRemoveTest.java	191	852b28a58f00743b
 member	com.badlogic.gdx.utils.PooledLinkedListTest#<stmt1>	sge.utils.PooledLinkedListTest#<stmt1>	Renamed	-	com/badlogic/gdx/utils/PooledLinkedListTest.java	22	34eb3c8dbf7f265c

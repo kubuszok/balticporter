@@ -33,6 +33,7 @@ type	com.badlogic.gdx.utils.reflect.Field		Dropped	-		0
 type	com.badlogic.gdx.utils.reflect.Method		Dropped	-		0	
 type	com.badlogic.gdx.utils.reflect.ReflectionException		Dropped	-		0	
 type		balticporter.runtime.JavaCollection	Added	-		0	
+type		balticporter.runtime.JavaCollections	Added	-		0	
 type		balticporter.runtime.JavaIterable	Added	-		0	
 type		balticporter.runtime.JavaIterator	Added	-		0	
 type		sge.ecs.ComponentFactories	Added	-		0	
@@ -236,7 +237,7 @@ member	com.badlogic.ashley.core.PooledEngine#removeEntityInternal(Entity)	sge.ec
 member	com.badlogic.ashley.core.PooledEngine$ComponentPools#<stmt1>	sge.ecs.PooledEngine$ComponentPools#<stmt1>	Renamed	-	com/badlogic/ashley/core/PooledEngine.java	146	16b4bc6c03c16349
 member	com.badlogic.ashley.core.PooledEngine$ComponentPools#<stmt2>	sge.ecs.PooledEngine$ComponentPools#<stmt2>	Renamed	-	com/badlogic/ashley/core/PooledEngine.java	147	3d9447d474ae91fe
 member	com.badlogic.ashley.core.PooledEngine$ComponentPools#<stmt3>	sge.ecs.PooledEngine$ComponentPools#<stmt3>	Renamed	-	com/badlogic/ashley/core/PooledEngine.java	148	c54125699dbbdf04
-member	com.badlogic.ashley.core.PooledEngine$ComponentPools#clear()	sge.ecs.PooledEngine$ComponentPools#clear()	Renamed	-	com/badlogic/ashley/core/PooledEngine.java	186	c08eff4893325563
+member	com.badlogic.ashley.core.PooledEngine$ComponentPools#clear()	sge.ecs.PooledEngine$ComponentPools#clear()	Renamed	-	com/badlogic/ashley/core/PooledEngine.java	186	f11e0889fcd07eca
 member	com.badlogic.ashley.core.PooledEngine$ComponentPools#free(Object)	sge.ecs.PooledEngine$ComponentPools#free(Object)	Renamed	-	com/badlogic/ashley/core/PooledEngine.java	162	d5e333b0480cf300
 member	com.badlogic.ashley.core.PooledEngine$ComponentPools#freeAll(Array)	sge.ecs.PooledEngine$ComponentPools#freeAll(Array<?>)	Renamed	-	com/badlogic/ashley/core/PooledEngine.java	176	e6ba35d76cc2b3ac
 member	com.badlogic.ashley.core.PooledEngine$ComponentPools#initialSize	sge.ecs.PooledEngine$ComponentPools#initialSize	Renamed	-	com/badlogic/ashley/core/PooledEngine.java	142	83559131224c978c

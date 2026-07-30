@@ -133,13 +133,19 @@ object RuntimeArtifact:
     // same members `java.util.AbstractCollection` supplies. Declaring them is what lets
     // `TirEmitter.diamondOverrides` see a conflict against this injected supertype; an empty set
     // here would make every one of them invisible to that check.
+    // Every CONCRETE member of `JavaCollection` — which is every member `java.util.AbstractCollection`
+    // implements, i.e. all of them but `iterator()` and `size()`. Under-listing here is invisible
+    // twice over: `diamondOverrides` stops seeing the conflict, and the members' own absence from the
+    // shim only surfaces when the last typer error is gone and RefChecks finally runs (§3).
     s"$Package.JavaCollection" -> Set(
-      ("containsAll", List(1)), ("addAll", List(1)), ("removeAll", List(1)),
-      ("retainAll", List(1)), ("removeIf", List(1)), ("toArray", List(0)),
+      ("isEmpty", List(0)), ("contains", List(1)), ("add", List(1)), ("remove", List(1)),
+      ("clear", List(0)), ("containsAll", List(1)), ("addAll", List(1)), ("removeAll", List(1)),
+      ("retainAll", List(1)), ("removeIf", List(1)), ("toArray", List(0)), ("toArray", List(1)),
     ),
-    // an `object` of statics — it is never a PARENT, so it contributes no inherited member and
-    // `diamondOverrides` has nothing to see. Empty is the derivation's answer too, not a stub.
-    s"$Package.JavaCollections" -> Set.empty,
+    // NB `JavaCollections` has no entry, and must not: it is an `object` of statics, never a PARENT,
+    // so it contributes no inherited member. `RuntimeMembersDerivationSpec` derives this table from
+    // the published sources and collects TRAITS only — an `-> Set.empty` here is a key the derivation
+    // cannot produce, and it failed the spec rather than being harmlessly redundant.
   )
 
 /** What a RUN owes the port it produced, derived from the phases that actually ran.

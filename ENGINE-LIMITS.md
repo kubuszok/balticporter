@@ -984,6 +984,26 @@ and so never saw a method of an anonymous class. When anonymous bodies started b
 **A check reporting zero is only as good as its coverage.** Add the check in the same commit as the
 translation path, and negative-test it — a check that has never failed is not known to work.
 
+### M5.5 After editing `runtime/`, RESTART the sbt server before believing a vendoring spec
+
+`RuntimeArtifact` reads the runtime sources from a resource that `core`'s build copies out of the
+`runtime` module. Two layers can serve a stale copy, and only one of them matters:
+
+- `classes/` lags `resource_managed/` until `copyResources` runs, which plain `compile` does not
+  trigger. Harmless in practice — every migration runs FORKED (`corpus-tests` sets
+  `Compile / run / fork := true`) and reads the current file from disk, which is why all four ports
+  measured correctly throughout.
+- `sbt -client`'s CLASSLOADER LAYER caches the resource for the life of the server, so a NON-forked
+  test keeps seeing the previous text. `RuntimeArtifactSpec` ("the vendored text is byte-identical to
+  the published source") and `RuntimeMembersDerivationSpec` both failed on a runtime edit that was
+  correct, and both passed unchanged after `pkill -9 -f sbt-launch`.
+
+Cost of not knowing this: a plausible-looking build change (`IO.copyFile` → `IO.write`, to stop the
+copy inheriting the source's mtime) attributed to the wrong layer entirely. It was reverted, because a
+change that cannot be shown to fix the thing it claims to fix is a comment that will mislead the next
+reader. Same family as the `-D`-does-not-reach-the-forked-migration trap in §4.6 — the state that
+lies is between the edit and the process that reads it.
+
 ### M6. Refuse and COUNT rather than approximate
 
 Three places where the port deliberately carries a number instead of a guess, and each is the right
@@ -1081,7 +1101,7 @@ Clearly separated because nothing below has a number behind it yet.
   reports a policy key that never matched. Expect to lose time to this on a new library's manifest.
   (`LIBRARY-READINESS.md` §3.3.)
 
-### K5. A java class that EXTENDS a JDK collection is half-translated — 27 of 30, unbuilt
+### K5. A java class that EXTENDS a JDK collection — CLOSED, and what the shim must get exactly right
 
 `java.util.Collection`, `List`, `Map`, `Set` and `Iterator` are in `CollectionsTransform.typeMap`, so
 every *use* of them retypes. The ABSTRACT BASES are not — `java.util.AbstractCollection`,
@@ -1109,6 +1129,37 @@ The shape that *is* known to work is the one `JavaIterator`/`JavaIterable` alrea
 **standalone abstract class in `balticporter-runtime` with Java's own member arity**, with Scala
 interop restored by extension methods rather than by inheritance. `AbstractCollection` is the next
 member of that family, not a mapping onto the stdlib.
+
+*Fix kind: (a). The types are JDK, the inheritance is ordinary java, and every library that defines
+its own collection type hits it — flexmark and liqp both do.*
+
+**CLOSED.** simple-graphs compiles at 0 and its three `extends AbstractCollection<T>` classes
+translate. `java.util.Collection` and `java.util.AbstractCollection` both map to the
+`balticporter.runtime.JavaCollection` shim — they MUST map to the same family, since java's abstract
+base implements the interface — and a scala collection reaching a shim-typed slot is bridged at the
+slot by `CollectionsTransform.coerce` (arguments, declarations and assignments alike; arguments alone
+left libGDX's `Collection<Object[]> parameters = new ArrayList<>()` broken).
+
+Four things the shim had to get EXACTLY right, every one of them invisible until the last typer error
+was gone and `RefChecks` finally ran (§3 — the count rose 1 → 8 at that moment, which is the gate
+starting to tell the truth):
+
+| got wrong | what RefChecks said | the rule |
+|---|---|---|
+| `contains`/`isEmpty`/`remove`/`clear` declared ABSTRACT | `class Array needs to be abstract, since: it has 2 unimplemented members` × 4 classes | mirror `AbstractCollection`'s OWN split: only `iterator()` and `size()` are abstract there |
+| `contains(o: Any)`, `remove(o: Any)` | same, for a class that DOES declare `contains(Object)` | scala's `Any` is not java's `Object`; take java's parameter type |
+| no `toArray(T[])` at all | `method toArray overrides nothing` × 3 | carry every member java's base has, not the ones that look needed |
+| `toArray[T]` (bound `Any`) | `method toArray has a different signature than the overridden declaration` × 3 | java's IMPLICIT type-parameter bound is `Object`; render it |
+
+`add` is CONCRETE and throws `UnsupportedOperationException`, because that is what
+`AbstractCollection.add` does — a subclass that does not override it really does reject `add`, and
+making it abstract would demand code the source never contained.
+
+The general lesson, and the one that transfers to `AbstractMap`/`AbstractList`/`AbstractSet`: a shim
+standing in for a JDK abstract base is not a list of the members the corpus happens to call. It is
+that base's OWN abstract/concrete split, member for member, with java's parameter types and java's
+type-parameter bounds — and no compile error names any of the four mistakes above until every other
+error is gone.
 
 *Fix kind: (a). The types are JDK, the inheritance is ordinary java, and every library that defines
 its own collection type hits it — flexmark and liqp both do.*

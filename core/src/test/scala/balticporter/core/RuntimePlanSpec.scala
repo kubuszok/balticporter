@@ -55,9 +55,10 @@ class RuntimePlanSpec extends munit.FunSuite:
       assert(!Files.exists(dir.resolve("balticporter/runtime/JavaIterator.scala")))
 
       val n = RuntimePlan.of(List(new CollectionsTransform), RuntimeMode.Vendored).writeSources(dir)
-      // three since `JavaCollection` joined the family: java's `AbstractCollection` has no scala
-      // counterpart a class can EXTEND (CLAUDE.md §4.5), so it is a shim like the other two.
-      assertEquals(n, 3)
+      // four: the three shims (java's `AbstractCollection` has no scala counterpart a class can
+      // EXTEND — CLAUDE.md §4.5) plus `JavaCollections`, which is not a shim at all but a mirror of
+      // `java.util.Collections`' STATICS — a receiver-less utility no receiver-keyed rewrite can see.
+      assertEquals(n, 4)
       val written = Files.readString(dir.resolve("balticporter/runtime/JavaIterator.scala"))
       assertEquals(written, RuntimeArtifact.sourceOf(s"${RuntimeArtifact.Package}.JavaIterator"))
     finally
@@ -71,5 +72,10 @@ class RuntimePlanSpec extends munit.FunSuite:
       CollectionsTransform.runtimeSources(CollectionsTransform.JavaIteratorFqn),
       RuntimeArtifact.sourceOf(CollectionsTransform.JavaIteratorFqn),
     )
-    assertEquals(CollectionsTransform.runtimeConcreteMembers.keySet, CollectionsTransform.runtimeTypes)
+    // a SUBSET, not an equality. `externalConcrete` needs an entry only for a type that can be a
+    // PARENT, and `JavaCollections` is an `object` of statics that never is — so it correctly has no
+    // entry, and demanding one made this assertion encode "every runtime type is a trait", which
+    // stopped being true the moment a utility mirror joined the module. The stronger statement lives
+    // in `RuntimeMembersDerivationSpec`: the table EQUALS what the published traits declare.
+    assert(clue(CollectionsTransform.runtimeConcreteMembers.keySet).subsetOf(CollectionsTransform.runtimeTypes))
   }

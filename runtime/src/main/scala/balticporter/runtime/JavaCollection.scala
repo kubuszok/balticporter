@@ -38,30 +38,71 @@ package balticporter.runtime
   * already unbuildable for an unrelated reason (`ENGINE-LIMITS` K6). Where it does bite, the fix is
   * [[JavaCollection.from]] at the call site, the same seam `JavaIterable.from` already provides.
   */
-/** The ABSTRACT half is what a java class must supply; everything below it is DERIVED, exactly as
-  * `java.util.AbstractCollection` derives it — over `iterator()` and `remove`, nothing else.
+/** The ABSTRACT/CONCRETE split is `java.util.AbstractCollection`'s OWN, member for member: only
+  * `iterator()` and `size()` are abstract there, and everything else has a default written over
+  * those two.
   *
-  * Carrying the derived half matters as much as the abstract half. A java class that extends
-  * `AbstractCollection` inherits `addAll`/`removeAll`/`retainAll`/`containsAll`/`toArray` without
-  * writing them, and `Collection`'s java-8 `removeIf` likewise; a shim with only the abstract
-  * members leaves every one of those calls unresolved at a site the java author never had to think
-  * about. That was 6 of simple-graphs' remaining errors.
+  * ==Why that split, exactly, and not a plausible one==
+  * Both halves matter, and getting either wrong is invisible until the very last typer error is
+  * gone. `contains`, `isEmpty`, `remove` and `clear` were abstract here for one session, and
+  * `RefChecks` — which dotty skips entirely while any typer error remains (CLAUDE.md §3) — then
+  * reported `class Array needs to be abstract, since: it has 2 unimplemented members` for four of
+  * simple-graphs' classes at once. Java's authors never implemented those members because
+  * `AbstractCollection` already had; a shim that demands them is asking for code the source does not
+  * contain.
   *
-  * A class that overrides one simply overrides it, which is what java does too. */
+  * The other half of the same rule: a java class extending `AbstractCollection` inherits
+  * `addAll`/`removeAll`/`retainAll`/`containsAll`/`toArray` without writing them, and `Collection`'s
+  * java-8 `removeIf` likewise, so a shim missing THOSE leaves every such call unresolved. That was 6
+  * errors, found the same way.
+  *
+  * ==`java.lang.Object`, never `Any`==
+  * `contains(Object)` and `remove(Object)` take `java.lang.Object` because java does, and because
+  * scala keeps the two distinct: a ported `override def contains(item: java.lang.Object)` implements
+  * nothing at all against a `contains(o: Any)`, and says so only once RefChecks runs.
+  *
+  * A class that overrides any of these simply overrides it, which is what java does too. */
 trait JavaCollection[A] extends JavaIterable[A]:
-  def size(): Int
-  def isEmpty(): Boolean
-  def contains(o: Any): Boolean
-  def add(e: A): Boolean
-  def remove(o: Any): Boolean
-  def clear(): Unit
 
-  // ---- derived, per java.util.AbstractCollection ----
+  // ---- the only two java leaves abstract ----
+  def size(): Int
+
+  // ---- derived, per java.util.AbstractCollection, over `iterator()` and `size()` ----
+
+  def isEmpty(): Boolean = size() == 0
+
+  /** java's own null-tolerant comparison: a `null` probe matches a `null` element. */
+  def contains(o: java.lang.Object): Boolean =
+    val it = iterator()
+    var found = false
+    while !found && it.hasNext() do
+      val e = it.next().asInstanceOf[java.lang.Object]
+      found = if o == null then e == null else o.equals(e)
+    found
+
+  /** `AbstractCollection.add` THROWS — it is not a no-op and not abstract. A java subclass that
+    * does not override it really does reject `add`, so reproducing that is faithful; making it
+    * abstract instead would demand an implementation java never required. */
+  def add(e: A): Boolean = throw new UnsupportedOperationException("add")
+
+  /** removes THROUGH the iterator, as java does, so the first matching element goes and the rest of
+    * the collection is untouched. */
+  def remove(o: java.lang.Object): Boolean =
+    val it = iterator()
+    var removed = false
+    while !removed && it.hasNext() do
+      val e = it.next().asInstanceOf[java.lang.Object]
+      if (if o == null then e == null else o.equals(e)) then { it.remove(); removed = true }
+    removed
+
+  def clear(): Unit =
+    val it = iterator()
+    while it.hasNext() do { it.next(); it.remove() }
 
   def containsAll(c: JavaCollection[?]): Boolean =
     val it = c.iterator()
     var ok = true
-    while ok && it.hasNext() do ok = contains(it.next())
+    while ok && it.hasNext() do ok = contains(it.next().asInstanceOf[java.lang.Object])
     ok
 
   def addAll(c: JavaCollection[? <: A]): Boolean =
@@ -73,7 +114,7 @@ trait JavaCollection[A] extends JavaIterable[A]:
   def removeAll(c: JavaCollection[?]): Boolean =
     var changed = false
     val it = c.iterator()
-    while it.hasNext() do if remove(it.next()) then changed = true
+    while it.hasNext() do if remove(it.next().asInstanceOf[java.lang.Object]) then changed = true
     changed
 
   /** java removes THROUGH the iterator here, so the receiver is modified in place and the
@@ -82,7 +123,7 @@ trait JavaCollection[A] extends JavaIterable[A]:
     var changed = false
     val it = iterator()
     while it.hasNext() do
-      if !c.contains(it.next()) then { it.remove(); changed = true }
+      if !c.contains(it.next().asInstanceOf[java.lang.Object]) then { it.remove(); changed = true }
     changed
 
   /** JAVA's signature, `java.util.function.Predicate` included — not `A => Boolean`.
@@ -114,6 +155,28 @@ trait JavaCollection[A] extends JavaIterable[A]:
     while it.hasNext() && i < out.length do { out(i) = it.next().asInstanceOf[Object]; i += 1 }
     out
 
+  /** `Collection.toArray(T[])` — the ARRAY-TAKING twin, which four of simple-graphs' classes override
+    * and which was simply absent: `method toArray overrides nothing`, reported only once RefChecks
+    * ran.
+    *
+    * Java's contract to the letter: fill the caller's array when it is long enough (and null the
+    * element just past the last, which is how a caller distinguishes the used prefix), otherwise
+    * return a NEW array of the same component type. `scala.Array.copyOf` is what supplies the second
+    * case without a `ClassTag` — the component type comes from the argument, as java's reflective
+    * allocation does. */
+  /** `T <: java.lang.Object`, not a bare `T`. Java's implicit type-parameter bound IS `Object`, and
+    * the port renders it — `toArray[U <: java.lang.Object]` — so a shim declaring `[T]` (bound `Any`)
+    * has a DIFFERENT signature and overrides nothing. Same rule as `contains(Object)` above, one
+    * level in: scala's `Any` is not java's `Object`, and RefChecks is the only thing that says so. */
+  def toArray[T <: java.lang.Object](a: scala.Array[T]): scala.Array[T] =
+    val n   = size()
+    val out = if a.length >= n then a else scala.Array.copyOf(a, n)
+    val it  = iterator()
+    var i   = 0
+    while it.hasNext() && i < out.length do { out(i) = it.next().asInstanceOf[T]; i += 1 }
+    if out.length > n then out(n) = null.asInstanceOf[T]
+    out
+
 object JavaCollection:
 
   /** Adapt a scala collection to the java-shaped one — the counterpart of
@@ -127,13 +190,13 @@ object JavaCollection:
   def from[A](xs: scala.collection.mutable.Buffer[A]): JavaCollection[A] = new JavaCollection[A]:
     def iterator(): JavaIterator[A] = JavaIterator.from(xs.iterator)
     def size(): Int                 = xs.size
-    def isEmpty(): Boolean          = xs.isEmpty
-    def contains(o: Any): Boolean   = xs.contains(o)
-    def add(e: A): Boolean          = { xs += e; true }
-    def remove(o: Any): Boolean     =
+    override def isEmpty(): Boolean          = xs.isEmpty
+    override def contains(o: java.lang.Object): Boolean = xs.contains(o)
+    override def add(e: A): Boolean          = { xs += e; true }
+    override def remove(o: java.lang.Object): Boolean =
       val i = xs.indexWhere(_ == o)
       if i < 0 then false else { xs.remove(i); true }
-    def clear(): Unit               = xs.clear()
+    override def clear(): Unit               = xs.clear()
 
   /** Adapt a scala collection that the port may NOT mutate through — a DISTINCT NAME rather than an
     * overload of [[from]], deliberately.
@@ -150,11 +213,11 @@ object JavaCollection:
   def unmodifiableFrom[A](xs: scala.collection.Iterable[A]): JavaCollection[A] = new JavaCollection[A]:
     def iterator(): JavaIterator[A] = JavaIterator.from(xs.iterator)
     def size(): Int                 = xs.size
-    def isEmpty(): Boolean          = xs.isEmpty
-    def contains(o: Any): Boolean   = xs.iterator.contains(o)
-    def add(e: A): Boolean          = throw new UnsupportedOperationException("add on an unmodifiable collection")
-    def remove(o: Any): Boolean     = throw new UnsupportedOperationException("remove on an unmodifiable collection")
-    def clear(): Unit               = throw new UnsupportedOperationException("clear on an unmodifiable collection")
+    override def isEmpty(): Boolean          = xs.isEmpty
+    override def contains(o: java.lang.Object): Boolean = xs.iterator.contains(o)
+    override def add(e: A): Boolean          = throw new UnsupportedOperationException("add on an unmodifiable collection")
+    override def remove(o: java.lang.Object): Boolean = throw new UnsupportedOperationException("remove on an unmodifiable collection")
+    override def clear(): Unit               = throw new UnsupportedOperationException("clear on an unmodifiable collection")
 
   /** `java.util.Collections.unmodifiableCollection`, with java's own signature.
     *
@@ -166,11 +229,11 @@ object JavaCollection:
   def unmodifiable[T](c: JavaCollection[? <: T]): JavaCollection[T] = new JavaCollection[T]:
     def iterator(): JavaIterator[T] = c.iterator().asInstanceOf[JavaIterator[T]]
     def size(): Int                 = c.size()
-    def isEmpty(): Boolean          = c.isEmpty()
-    def contains(o: Any): Boolean   = c.contains(o)
-    def add(e: T): Boolean          = throw new UnsupportedOperationException("add on an unmodifiable collection")
-    def remove(o: Any): Boolean     = throw new UnsupportedOperationException("remove on an unmodifiable collection")
-    def clear(): Unit               = throw new UnsupportedOperationException("clear on an unmodifiable collection")
+    override def isEmpty(): Boolean          = c.isEmpty()
+    override def contains(o: java.lang.Object): Boolean = c.contains(o)
+    override def add(e: T): Boolean          = throw new UnsupportedOperationException("add on an unmodifiable collection")
+    override def remove(o: java.lang.Object): Boolean = throw new UnsupportedOperationException("remove on an unmodifiable collection")
+    override def clear(): Unit               = throw new UnsupportedOperationException("clear on an unmodifiable collection")
 
   /** `Stream.filter(Predicate)`, as a function rather than a synthesised lambda.
     *

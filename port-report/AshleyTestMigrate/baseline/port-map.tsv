@@ -30,6 +30,7 @@ type	com.badlogic.gdx.utils.reflect.Field		Dropped	-		0
 type	com.badlogic.gdx.utils.reflect.Method		Dropped	-		0	
 type	com.badlogic.gdx.utils.reflect.ReflectionException		Dropped	-		0	
 type		balticporter.runtime.JavaCollection	Added	-		0	
+type		balticporter.runtime.JavaCollections	Added	-		0	
 type		balticporter.runtime.JavaIterable	Added	-		0	
 type		balticporter.runtime.JavaIterator	Added	-		0	
 member	com.badlogic.ashley.core.ComponentClassFactory#createComponentType(String)	sge.ecs.ComponentClassFactory#createComponentType(String)	Renamed	-	com/badlogic/ashley/core/ComponentClassFactory.java	25	386886a733efdef0
