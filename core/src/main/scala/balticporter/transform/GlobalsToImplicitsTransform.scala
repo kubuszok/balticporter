@@ -61,6 +61,52 @@ final class GlobalsToImplicitsTransform(isContext: Symbol => Boolean) extends Ph
       threaded.iterator.map(m => m -> mint("ctx", Flags(isParam = true, isGiven = true), m, ctxRef)).toMap
     val givenSym = mint(s"${ctxName}Ctx", Flags(isStatic = true, isGiven = true), cls, ctxRef)
 
+    // DECISION PROVENANCE: one row per DECLARATION whose emitted signature moved — the threaded
+    // methods, which gain a `(using ctx: C)` clause, and C's own statics, which stop being statics.
+    // Both are declaration-level already. Nothing is recorded for a CALL into a threaded method:
+    // its argument is supplied by the `using` in scope, so no call site changed at all — which is
+    // the whole reason `using` was chosen over an explicit parameter.
+    //
+    // `Reason.Configured`, keyed by the context class. The mechanism is general and WHICH class is
+    // an ambient context (rather than a bag of unrelated statics) is a fact about one library,
+    // supplied as the `isContext` predicate — so the key an agent acts on is the class it selected.
+    val ctxFqn = program.symbolOf(cls).map(_.fullName).getOrElse(ctxName)
+    threaded.foreach { m =>
+      program.symbolOf(m).foreach { s =>
+        record(Decision(
+          kind       = Decision.Kind.RetypedSignature,
+          subject    = m,
+          subjectFqn = s.fullName,
+          detail = Map(
+            "from" -> "reaches C's static state directly",
+            "to"   -> s"takes `(using ctx: $ctxName)`",
+            "key"  -> ctxFqn,
+            "why"  -> ("this method transitively reaches a static member of the context class, so " +
+              "the ambient state it read is threaded to it explicitly"),
+          ),
+          reason = Reason.Configured(name, ctxFqn),
+          origin = Decision.originOf(program, s.id),
+        ))
+      }
+    }
+    staticMembers.foreach { m =>
+      program.symbolOf(m).foreach { s =>
+        record(Decision(
+          kind       = Decision.Kind.RetypedSignature,
+          subject    = m,
+          subjectFqn = s.fullName,
+          detail = Map(
+            "from" -> "java `static` member of the context class",
+            "to"   -> "an instance member, reached through the threaded context",
+            "key"  -> ctxFqn,
+            "why"  -> "the class's static state IS the context, so it becomes that context's state",
+          ),
+          reason = Reason.Configured(name, ctxFqn),
+          origin = Decision.originOf(program, s.id),
+        ))
+      }
+    }
+
     // de-static C's members (they become instance state/methods); keep everything else.
     val symbols0 = program.symbols.all.map(s =>
       if staticMembers(s.id) then s.copy(flags = s.flags.copy(isStatic = false)) else s)

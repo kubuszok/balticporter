@@ -45,6 +45,30 @@ final class PanamaFfiTransform(isNative: Symbol => Boolean = _.flags.isNative) e
       m -> mint(handleName(program, m), handleName(program, m), Flags(isStatic = true, isPrivate = true), owner, mhRef)
     }.toMap
 
+    // DECISION PROVENANCE: one row per NATIVE method, which is already declaration-level — the
+    // unit of work here IS a method. What moves in the emitted file is the DECLARATION: a bodyless
+    // `native` method becomes an ordinary one with a body, beside a private `MethodHandle` field
+    // that has no java behind it at all. Universal: `native` is a java modifier and the JNI glue it
+    // names exists on no backend this engine targets, so detection is `isNative` and no policy
+    // decides which methods are involved.
+    natives.foreach { m =>
+      program.symbolOf(m).foreach { s =>
+        record(Decision(
+          kind       = Decision.Kind.RetypedSignature,
+          subject    = m,
+          subjectFqn = s.fullName,
+          detail = Map(
+            "from" -> "java `native` (JNI), declared without a body",
+            "to"   -> s"a Panama downcall through the generated `${handleName(program, m)}` handle",
+            "why"  -> ("JNI glue is hand-written C on the JVM and absent from every other backend; " +
+              "a `java.lang.foreign` downcall is derivable from the signature alone"),
+          ),
+          reason = Reason.Universal("jni-to-panama"),
+          origin = Decision.originOf(program, s.id),
+        ))
+      }
+    }
+
     // drop the `native` modifier from the rewritten methods (they now have a body).
     val symbols0 = program.symbols.all.map(s =>
       if natives(s.id) then s.copy(flags = s.flags.copy(isNative = false)) else s)

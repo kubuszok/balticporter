@@ -43,6 +43,32 @@ class GlobalsToImplicitsTransformSpec extends munit.FunSuite:
     assert(out.contains("if (ctx.enabled())")) // Config.enabled() -> ctx.enabled()
   }
 
+  test("the threaded methods and the de-statified members each leave a §1(b) row") {
+    // `Pipeline.runTraced`, not `run`: the latter drains each phase's buffer into a log it discards.
+    val log = Pipeline.runTraced(SpoonTir.fromSource(src),
+      List(new GlobalsToImplicitsTransform(_.name == "Config")))._2
+    val ds = log.of(balticporter.tir.Decision.Kind.RetypedSignature)
+
+    // keyed by the CONTEXT CLASS — the mechanism is general and which class is an ambient context
+    // is the one thing the porting program decides, through `isContext`
+    assert(clue(ds).nonEmpty)
+    assert(ds.forall(_.reason == balticporter.tir.Reason.Configured("globals->implicits", "demo.Config")))
+
+    val fqns = ds.map(_.subjectFqn).toSet
+    assert(clue(fqns).contains("demo.Logger#log"))  // direct reference
+    assert(fqns.contains("demo.App#run"))           // caller of it — the closure
+    assert(fqns.contains("demo.Config#verbosity"))  // the static that became instance state
+    // a CALL into a threaded method is not a row: its argument comes from the `using` in scope, so
+    // the call site did not change at all — which is why `using` was chosen over a parameter.
+    assert(ds.forall(_.detail.contains("key")))
+  }
+
+  test("no context class, no decisions") {
+    val log = Pipeline.runTraced(SpoonTir.fromSource(src),
+      List(new GlobalsToImplicitsTransform(_.name == "NoSuchClass")))._2
+    assertEquals(log.all, Nil)
+  }
+
   test("synthesizes a boundary given in the companion") {
     assert(out.contains("object Config"))
     assert(out.contains("given ConfigCtx: Config = new Config"))

@@ -56,6 +56,30 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
     assert(boom.indexOf("intercept[") < boom.indexOf("finally tearDown()"))
   }
 
+  test("every converted test leaves a §1(a) row NAMING THE INLINED LIFECYCLE — the invisible half") {
+    // `Pipeline.runTraced`, not `run`: the latter drains each phase's buffer into a log it discards.
+    val log = Pipeline.runTraced(SpoonTir.fromSource(lifecycleSrc), List(new TestFrameworkTransform))._2
+    val ds  = log.of(balticporter.tir.Decision.Kind.RetypedSignature).sortBy(_.subjectFqn)
+    assertEquals(ds.map(_.subjectFqn), List("demo.LifecycleTest#boom", "demo.LifecycleTest#one"))
+    assert(ds.forall(_.reason == balticporter.tir.Reason.Universal("test-framework")))
+
+    // `test("one") { … }` obviously came from a `@Test`. That setUp and tearDown were INLINED into
+    // its body is exactly what the emitted file cannot tell you was a DECISION — and it is where
+    // both of §4.4's lifecycle defects lived.
+    assert(ds.forall(_.detail("inlined") == "setUp, tearDown"), clue(ds.map(_.detail("inlined"))))
+    // and `@Test(expected = …)` is recorded as the intercept it became, not lost in the body
+    assertEquals(ds.head.detail("intercept"), "java.lang.IllegalStateException")
+    assertEquals(ds.last.detail("intercept"), "")
+    assert(ds.forall(_.detail("ignored") == "no"))
+  }
+
+  test("a class with no @Test records nothing — the phase converts nothing and says nothing") {
+    val log = Pipeline.runTraced(
+      SpoonTir.fromSource("package demo;\nclass Plain { public void one() {} }\n"),
+      List(new TestFrameworkTransform))._2
+    assertEquals(log.all, Nil)
+  }
+
   test("the consumed @Before/@After annotations do not survive into the emitted suite") {
     val (out, _) = emit(lifecycleSrc)
     // leaving them would re-import a JVM-only library into the very suite this phase exists to

@@ -127,6 +127,27 @@ object Decision:
   def fqnOf(program: Program, s: SymId, fallback: String): String =
     program.symbolOf(s).map(_.fullName).filter(_.nonEmpty).getOrElse(fallback)
 
+  /** WHERE a declaration lives — read from the TREE, never from the symbol.
+    *
+    * `Symbol.origin` exists but the frontend does not populate it: positions live on the tree
+    * nodes, and every `Symbol` a run holds carries `Origin.synthetic`. A decision anchored on it
+    * therefore writes `<synthetic>` in the one column that makes the row navigable — the same
+    * unnavigable shape `PortRun`'s nested-drop rule already exists to prevent, arriving from the
+    * other side. (Caught by a spec, not by a compile: the field is there and the type checks.)
+    *
+    * A symbol with no definition of its own borrows its OWNER's, which is right for the only thing
+    * that matters here — the enclosing type is in the SAME FILE by construction, so the row stays
+    * navigable and the line is the nearest one the run can honestly point at. Fuel-bounded, so a
+    * corrupt owner chain cannot hang a recording pass.
+    */
+  def originOf(program: Program, s: SymId, fuel: Int = 16): Origin =
+    program.definitionOf(s).map(_.origin).filter(o => o.javaPath.nonEmpty && o != Origin.synthetic) match
+      case Some(o) => o
+      case _ if fuel <= 0 => Origin.synthetic
+      case _ =>
+        program.symbolOf(s).map(_.owner).filter(_ != SymId.None)
+          .map(originOf(program, _, fuel - 1)).getOrElse(Origin.synthetic)
+
   /** Is `s` a DECLARATION in the sense this channel records — a class, a field or a method — as
     * opposed to a parameter, a type parameter or a method-local?
     *

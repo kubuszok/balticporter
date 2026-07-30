@@ -251,7 +251,46 @@ final class CollectionsTransform extends Phase, RequiresRuntime:
     given Program = new Program(program.units, symbols, program.xref)
     val units    = program.units.map(u => StandardTraversal.mapClassDef(this, u))
     val symbols2 = StandardTraversal.mapSymbols(this, symbols) // retype signatures too
+    recordRetypings(symbols, symbols2)
     new Program(units, symbols2, program.xref)
+
+  /** DECISION PROVENANCE: one row per DECLARATION whose emitted SIGNATURE moved.
+    *
+    * Read from the phase's own before/after symbol tables rather than from `typeMap` — the same
+    * discipline CLAUDE.md §4.56 states for the other direction ("a phase may only conclude
+    * something about a type from what the PHASE ITSELF did to it"). An `info` that differs is the
+    * definition of "this declaration's emitted signature moved", and it needs no second rule to
+    * stay in step with the retyping as the map grows.
+    *
+    * `Decision.isDeclaration` drops parameters and method-locals: a method's `info` is a
+    * `MethodType` carrying its parameter types, so a retyped parameter already moved the method's
+    * row and a second row would restate it several thousand times on a library of this size.
+    *
+    * `Reason.Universal`, and that is a claim worth stating: which java type becomes which scala one
+    * is fixed in this file, not taken as a constructor parameter, because it is a fact about the
+    * two standard libraries — `java.util.List` is `mutable.Buffer` in every port there will ever
+    * be. Should a library ever need its own mapping, the map becomes a parameter and this becomes
+    * `Configured`; nothing else here changes.
+    */
+  private def recordRetypings(before: SymbolTable, after: SymbolTable)(using p: Program): Unit =
+    before.all.foreach { s =>
+      after.get(s.id).foreach { now =>
+        if now.info != s.info && Decision.isDeclaration(p, s) then
+          record(Decision(
+            kind       = Decision.Kind.RetypedSignature,
+            subject    = s.id,
+            subjectFqn = s.fullName,
+            detail = Map(
+              "from" -> TirPrinter.tpe(s.info, TirPrinter.Style.canonical),
+              "to"   -> TirPrinter.tpe(now.info, TirPrinter.Style.canonical),
+              "why"  -> ("a JDK collection type has a scala counterpart on every backend, and the " +
+                "JDK's own is on none of them"),
+            ),
+            reason = Reason.Universal("collections-retype"),
+            origin = Decision.originOf(p, s.id),
+          ))
+      }
+    }
 
   override def transformType(t: TypeRepr)(using Program): TypeRepr = t match
     case TypeRepr.TypeRef(prefix, s) if remap.contains(s) => TypeRepr.TypeRef(prefix, remap(s))

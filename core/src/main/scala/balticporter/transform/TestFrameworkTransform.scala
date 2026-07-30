@@ -616,6 +616,36 @@ final class TestFrameworkTransform(
         else Tree.Try(Nil, setUp, Nil,
                       Some(seq(teardowns.map(call(_, d.origin)), TypeRepr.NoType, d.origin)),
                       setUp.tpe, d.origin)
+      // DECISION PROVENANCE, one row per TEST MEMBER — already declaration-level: a `@Test` method
+      // is the unit this phase reshapes, and it stops being a method at all.
+      //
+      // What the row carries is the part an agent CANNOT read off the emitted file. `test("m") { … }`
+      // plainly came from a `@Test`; that setup and teardown were INLINED into its body is exactly
+      // what is invisible, and it is where §4.4's two silent defects lived — JUnit runs `@Before`
+      // before every test on a fresh instance and `@After` whether or not the test threw, and MUnit
+      // has neither. `detail` names them.
+      //
+      // Universal: JUnit's semantics against MUnit's are a fact about the two frameworks, identical
+      // for every library. `suite`/`testMember` are constructor parameters and deliberately do NOT
+      // make this `Configured` — the class doc records that they name the two least interesting
+      // parts of a contract only MUnit satisfies, and a reason must say where the fix LIVES.
+      record(Decision(
+        kind       = Decision.Kind.RetypedSignature,
+        subject    = d.symbol,
+        subjectFqn = p.symbolOf(d.symbol).map(_.fullName).getOrElse(nm),
+        detail = Map(
+          "from"      -> "@org.junit.Test def",
+          "to"        -> s"""$testMember("$nm") { … } registered on $suite""",
+          "ignored"   -> (if ignored then "yes" else "no"),
+          "intercept" -> expectsThrow.map(nameOf).getOrElse(""),
+          "inlined"   -> (setups ++ teardowns).flatMap(s => p.symbolOf(s).map(_.name)).mkString(", "),
+          "why"       -> ("a JUnit suite runs on the JVM alone; and MUnit has neither @Before " +
+            "(which JUnit runs before EVERY test, on a fresh instance) nor @After (which it runs " +
+            "whether or not the test threw), so both are inlined here and nothing else says so"),
+        ),
+        reason = Reason.Universal("test-framework"),
+        origin = d.origin,
+      ))
       Tree.Apply(head, List(rhs), testSym, TypeRepr.NoType, d.origin)
 
 object TestFrameworkTransform:

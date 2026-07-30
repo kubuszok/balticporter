@@ -32,6 +32,24 @@ class PanamaFfiTransformSpec extends munit.FunSuite:
     assert(out.contains("FunctionDescriptor.of(java.lang.foreign.ValueLayout.JAVA_DOUBLE, java.lang.foreign.ValueLayout.JAVA_DOUBLE, java.lang.foreign.ValueLayout.JAVA_LONG)"))
   }
 
+  test("every native method leaves a §1(a) row naming the handle that replaced it") {
+    // `Pipeline.runTraced`, not `run`: the latter drains each phase's buffer into a log it discards.
+    val log = Pipeline.runTraced(SpoonTir.fromSource(src), List(new PanamaFfiTransform()))._2
+    val ds  = log.of(balticporter.tir.Decision.Kind.RetypedSignature)
+    assertEquals(clue(ds).size, 3) // one per native, and nothing else in the file
+    assert(ds.forall(_.reason == balticporter.tir.Reason.Universal("jni-to-panama")))
+    assert(ds.exists(_.subjectFqn.endsWith("#add")))
+    assert(ds.forall(_.detail("from").contains("native")))
+    assert(ds.forall(_.detail("to").contains("handle")), clue(ds.map(_.detail("to"))))
+  }
+
+  test("a program with no native method records nothing") {
+    val log = Pipeline.runTraced(
+      SpoonTir.fromSource("package demo;\nclass Plain { int f() { return 1; } }\n"),
+      List(new PanamaFfiTransform()))._2
+    assertEquals(log.all, Nil)
+  }
+
   test("replaces the native body with a handle invocation") {
     assert(out.matches("(?s).*def add\\(a: scala.Int, b: scala.Int\\): scala.Int = add\\$\\d+\\$handle.invokeExact\\(a, b\\).asInstanceOf\\[scala.Int\\].*"))
   }

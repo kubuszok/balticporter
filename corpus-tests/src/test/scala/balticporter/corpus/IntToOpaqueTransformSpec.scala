@@ -43,6 +43,41 @@ class IntToOpaqueTransformSpec extends munit.FunSuite:
     assert(out.contains("val l: Layer.T = this.layer")) // discovered: local `int l = layer`
   }
 
+  // -------------------------------------------------------------------------
+  // decision provenance
+  // -------------------------------------------------------------------------
+
+  test("every retyped DECLARATION leaves a §1(c) row — nothing else says which int was tagged") {
+    // `Pipeline.run` drains each phase's buffer into a log it discards, so the trace variant is
+    // the one a spec can read (a phase instance reused across two translations must not report the
+    // first run's decisions as the second's).
+    val ph  = new IntToOpaqueTransform("Layer", s => s.name == "layer" && !s.flags.isParam)
+    val log = Pipeline.runTraced(SpoonTir.fromSource(src), List(ph))._2
+    val ds  = log.of(balticporter.tir.Decision.Kind.RetypedSignature)
+
+    // (c) — CLAUDE.md §1's canonical library rule. WHICH `int`s are really a domain value is
+    // knowledge about one library, so the row must send its reader to that library's own rule and
+    // not to a manifest key or to the engine.
+    assert(clue(ds).nonEmpty)
+    assert(ds.forall(_.reason == balticporter.tir.Reason.LibraryRule("int->opaque:Layer")))
+    assertEquals(ds.head.reason.section, "§1(c) LIBRARY RULE")
+
+    val by = ds.map(d => d.subjectFqn.substring(d.subjectFqn.lastIndexOf('#') + 1)).toSet
+    // the HINT and a member propagation discovered from it
+    assert(clue(by).contains("layer"))
+    assert(by.contains("getLayer"))
+    // …and NOT the local `l` or the `setLayer` parameter: both are seeds, and both live inside a
+    // method whose own row already carries the move (`Decision.isDeclaration`).
+    assert(ds.forall(!_.subjectFqn.endsWith("#l")), clue(ds.map(_.subjectFqn)))
+    assert(ds.map(_.detail("to")).forall(_.contains("Layer")), clue(ds.map(_.detail("to"))))
+  }
+
+  test("a program with no tagged int records nothing — an unmatched hint is silent as well as inert") {
+    val ph  = new IntToOpaqueTransform("Layer", _.name == "noSuchField")
+    val log = Pipeline.runTraced(SpoonTir.fromSource(src), List(ph))._2
+    assertEquals(log.all, Nil)
+  }
+
   test("wraps construction, unwraps consumption") {
     assert(out.contains("var layer: Layer.T = Layer(0)"))                 // literal wrapped
     assert(out.contains("this.layer = Layer(Layer.unwrap(this.layer) + 1)")) // arith unwrap + assign wrap

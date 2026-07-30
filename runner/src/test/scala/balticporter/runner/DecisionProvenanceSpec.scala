@@ -343,6 +343,84 @@ class DecisionProvenanceSpec extends munit.FunSuite:
     assertEquals(once(root.resolve("r1")), once(root.resolve("r2")))
   }
 
+  // -------------------------------------------------------------------------
+  // the RETYPE family — a declaration whose emitted SIGNATURE moved
+  // -------------------------------------------------------------------------
+
+  /** A class whose members carry a JDK collection in every position a retyping reaches, plus one
+    * reassigned parameter — so "one row per declaration, not per parameter" is a claim the fixture
+    * can distinguish. */
+  private def retypeFixture(): (Path, Path, List[String]) =
+    val (root, src) = fixture()
+    java(src, "com/demo/Bag.java",
+      """package com.demo;
+        |import java.util.List;
+        |import java.util.ArrayList;
+        |public class Bag {
+        |  public List<String> items = new ArrayList<String>();
+        |  public List<String> pick(List<String> from, int n) { n = n + 1; return from; }
+        |  public int plain(int k) { return k; }
+        |}""".stripMargin)
+    (root, src, List("com/demo/Widget.java", "com/demo/Gadget.java", "com/demo/Bag.java"))
+
+  test("a retyped DECLARATION records once, with both types — and a PARAMETER does not add a row") {
+    val (root, src, files) = retypeFixture()
+    val rep = root.resolve("report")
+    withReport(rep) {
+      run(root, src, files)(_.copy(phases = List(new balticporter.transform.CollectionsTransform)))
+    }
+    val rs = decisions(rep).filter(_.reason == Reason.Universal("collections-retype"))
+    assert(clue(rs).forall(_.kind == Decision.Kind.RetypedSignature))
+
+    val field = rs.filter(_.subjectFqn == "com.demo.Bag#items")
+    assertEquals(clue(field).size, 1)
+    assert(clue(field.head.detail("from")).contains("java.util.List"))
+    assert(clue(field.head.detail("to")).contains("scala.collection.mutable.Buffer"))
+
+    // `pick` takes a `List` AND returns one, and it is ONE row: a method's `info` is a MethodType
+    // carrying its parameter types, so the parameter's own retyping already moved this signature.
+    assertEquals(clue(rs.filter(_.subjectFqn == "com.demo.Bag#pick")).size, 1)
+    assert(rs.forall(!_.subjectFqn.endsWith("#from")), clue(rs.map(_.subjectFqn)))
+    // a member the phase did not touch is not a row
+    assert(!rs.exists(_.subjectFqn == "com.demo.Bag#plain"), clue(rs.map(_.subjectFqn)))
+  }
+
+  test("a reassigned parameter records once per METHOD, naming the parameters that moved") {
+    val (root, src, files) = retypeFixture()
+    val rep = root.resolve("report")
+    withReport(rep) {
+      run(root, src, files)(_.copy(phases = List(new balticporter.transform.MutableParamsTransform)))
+    }
+    val rs = decisions(rep).filter(_.reason == Reason.Universal("reassigned-param-to-var"))
+    assertEquals(rs.map(_.subjectFqn), List("com.demo.Bag#pick"))
+    assertEquals(rs.head.kind, Decision.Kind.RetypedSignature)
+    assertEquals(rs.head.detail("params"), "n")
+    assert(clue(rs.head.origin.javaPath).endsWith("com/demo/Bag.java"))
+  }
+
+  test("a program with no JDK collection and no reassigned parameter records nothing") {
+    val (root, src) = fixture()
+    val rep = root.resolve("report")
+    withReport(rep) {
+      run(root, src)(_.copy(phases = List(
+        new balticporter.transform.CollectionsTransform,
+        new balticporter.transform.MutableParamsTransform)))
+    }
+    assertEquals(decisions(rep), Nil)
+  }
+
+  test("two identical runs of the RETYPE family produce byte-identical decisions.tsv") {
+    val (root, src, files) = retypeFixture()
+    def once(rep: Path): String =
+      withReport(rep) {
+        run(root, src, files)(_.copy(phases = List(
+          new balticporter.transform.CollectionsTransform,
+          new balticporter.transform.MutableParamsTransform)))
+      }
+      Files.readString(rep.resolve("run-latest/decisions.tsv"))
+    assertEquals(once(root.resolve("r1")), once(root.resolve("r2")))
+  }
+
   test("two identical runs produce byte-identical decisions.tsv") {
     val (root, src) = fixture()
     val inject = widgetReplacement(root, "com.demo")

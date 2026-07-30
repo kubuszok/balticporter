@@ -57,6 +57,34 @@ final class MutableParamsTransform extends Phase:
     val symbols0 = program.symbols.all.map { s =>
       if nowVar(s.id) then s.copy(flags = s.flags.copy(isParam = false, isMutable = true)) else s
     }
+    // DECISION PROVENANCE: one row per METHOD whose parameter SLOTS moved — never one per
+    // parameter, since a method has ONE emitted signature and that is what an agent is reading.
+    // The parameter symbol keeps its name and becomes the `var`; a fresh `name$arg` takes the
+    // slot, so the emitted signature really does differ from java's and nothing else in the port
+    // says why. Universal: java lets a method reassign its parameters and scala's are `val`, which
+    // is true of every codebase and takes no policy.
+    argOf.keys.toList
+      .flatMap(p => program.symbolOf(p).map(s => s.owner -> s.name))
+      .groupBy(_._1)
+      .foreach { (owner, ps) =>
+        program.symbolOf(owner).foreach { m =>
+          record(Decision(
+            kind       = Decision.Kind.RetypedSignature,
+            subject    = owner,
+            subjectFqn = m.fullName,
+            detail = Map(
+              "params" -> ps.map(_._2).distinct.sorted.mkString(", "),
+              "from"   -> "java parameters, reassigned in the body",
+              "to"     -> "`<name>$arg` parameter slots, with a leading `var <name> = <name>$arg`",
+              "why"    -> ("java lets a method reassign its parameters; scala's are `val`, so the " +
+                "reassignment would not compile and every body reference has to bind to the var"),
+            ),
+            reason = Reason.Universal("reassigned-param-to-var"),
+            origin = Decision.originOf(program, owner),
+          ))
+        }
+      }
+
     val symbols = SymbolTable(symbols0 ++ minted)
     given Program = new Program(program.units, symbols, program.xref)
     val rewrite = new Phase:

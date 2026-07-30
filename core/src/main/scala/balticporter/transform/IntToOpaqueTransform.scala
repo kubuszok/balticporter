@@ -92,6 +92,37 @@ final class IntToOpaqueTransform(
     }
     val symbols = SymbolTable(retyped ++ minted)
     given Program = new Program(program.units, symbols, program.xref)
+
+    // DECISION PROVENANCE: one row per DECLARATION whose signature became the opaque type.
+    //
+    // `Reason.LibraryRule` — CLAUDE.md §1's canonical (c). The MECHANISM is shared (seed, propagate
+    // along pure-move flows, retype, coerce at the boundary) but WHICH `Int`s are really a domain
+    // value is knowledge about one library and nothing else, so an agent reading this row has to
+    // look in that library's own rule, not in a manifest key and not in the engine. Parameters and
+    // method-locals are seeds too and are deliberately not rows: their method's signature already
+    // moved with them (`Decision.isDeclaration`), and the coercions inserted at every boundary are
+    // site-level and visible in the emitted diff.
+    program.symbols.all.foreach { s =>
+      if seeds(s.id) && Decision.isDeclaration(summon[Program], s) then
+        summon[Program].symbolOf(s.id).foreach { now =>
+          if now.info != s.info then
+            record(Decision(
+              kind       = Decision.Kind.RetypedSignature,
+              subject    = s.id,
+              subjectFqn = s.fullName,
+              detail = Map(
+                "from" -> TirPrinter.tpe(s.info, TirPrinter.Style.canonical),
+                "to"   -> TirPrinter.tpe(now.info, TirPrinter.Style.canonical),
+                "key"  -> typeName,
+                "why"  -> ("this `int` reaches a tagged seed by a pure-move flow, so it carries the " +
+                  "same domain value and gets the same opaque type"),
+              ),
+              reason = Reason.LibraryRule(name),
+              origin = Decision.originOf(program, s.id),
+            ))
+        }
+    }
+
     val units = program.units.map(u => StandardTraversal.mapClassDef(this, u)) :+ synthUnit
     new Program(units, symbols, program.xref)
 
