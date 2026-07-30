@@ -363,3 +363,20 @@ class PortRunSpec extends munit.FunSuite:
     val supers = r.report.omissions.filter(_.what == "super(args) dropped")
     assertEquals(supers.map(_.owner), List("com.demo.Kept"))
   }
+
+  test("the source map describes what is ON DISK — a dropped unit leaves no phantom entries") {
+    // The emitter records every unit it renders, including the ones the run then refuses to
+    // write; left in the map, a stack frame inside the INJECTED replacement resolved to a
+    // fabricated member of the never-written unit, with a Java origin to match. Filtered at the
+    // write, keyed by EMITTED name (the drop is declared upstream, the map is post-rename).
+    val (root, src) = fixture()
+    val rep = root.resolve("report")
+    val inject = root.resolve("overrides")
+    java(inject, "com/demo/Widget.scala", "package sge\nclass Widget { def label(): String = \"w\" }")
+    withReport(rep) {
+      run(root, src)(_.copy(subs = Substitutions(dropTypes = Set("com.demo.Widget"), inject = List(inject)),
+                            packageRenames = Map("com.demo" -> "sge")))
+    }
+    val units = SrcMap.parseAll(rep.resolve("run-latest/srcmap.tsv")).map(_.unit).distinct
+    assertEquals(units, List("sge.Gadget"))
+  }

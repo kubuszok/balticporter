@@ -489,7 +489,16 @@ final case class PortRun(
   private def writeSrcMap(rec: balticporter.tir.SrcMap.Recording): Unit =
     if CheckReport.enabled then
       val dir = CheckReport.runDir
-      SrcMap.write(dir, rec)
+      // minus the DROPPED units. The emitter faithfully records every unit it renders — including
+      // the ones this run then refuses to WRITE — so the map carried phantom members for types the
+      // classpath holds an injected replacement of, and a frame inside that replacement resolved
+      // to a fabricated member and Java origin (`sge.utils.Json` line 57 landing on
+      // `Json#addClassTag [Json.java:118]`). The map must describe what is ON DISK; a frame in
+      // injected code then resolves to nothing, which the correlator already classifies honestly
+      // as "outside the source map" (§5.1). Entries are keyed by EMITTED unit name, so the drop
+      // set is translated the same way `dropped-types.tsv`'s second column is.
+      val droppedEmitted = policySubs.dropTypes.map(fqn => PackageRenameTransform.renamed(fqn, renames))
+      SrcMap.write(dir, rec.copy(entries = rec.entries.filterNot(e => droppedEmitted(e.unit))))
       Files.createDirectories(dir)
       val drops = policySubs.dropTypes.toList.sorted
         .map(fqn => Correlate.Dropped(fqn, PackageRenameTransform.renamed(fqn, renames)).tsv)
