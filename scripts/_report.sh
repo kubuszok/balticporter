@@ -111,6 +111,23 @@ reconcile_outcomes() {
   fi
 }
 
+# compile_guard <scala-cli-exit-status> <counted-errors> <capture-file>
+# A compile that never happened must not report 0. `scala-cli` aborting before compilation
+# ("input file not found", a bad flag) exits non-zero and prints a line that matches neither
+# `^-- [Exxx] ... Error` nor `^-- Error:` — so the grep count is 0 and the script printed
+# `TOTAL ERRORS: 0` for a compile that never ran. Same failure class as the migration abort
+# guard above the sbt call, one stage later. Exit status comes from `${PIPESTATUS[0]}`, captured
+# by the caller immediately after the pipeline (the pipeline's own status is sed's).
+# Non-zero WITH counted errors is the ordinary failing compile and stays silent.
+compile_guard() {
+  local st="$1" errors="$2" file="$3"
+  if [ "$st" != "0" ] && [ "$errors" = "0" ]; then
+    echo "!! COMPILE DID NOT RUN — scala-cli exited $st with no countable error; refusing to report 0"
+    tail -5 "$file" | sed 's/^/     /'
+    exit 1
+  fi
+}
+
 # show_check_report <report-dir>
 # The persisted, UNTRUNCATED check results and their diff against the committed baseline.
 show_check_report() {

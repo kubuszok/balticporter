@@ -52,7 +52,9 @@ scala-cli compile --scala 3.8.4 --server=false \
   --dependency junit:junit:4.13.2 \
   --dependency org.scalameta::munit:1.0.2 \
   libgdx-core/src_managed/main/scala libgdx-core/src_managed/test/scala 2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/gdxtestmeasure.txt
+CLI_STATUS=${PIPESTATUS[0]}
 ERRORS=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/gdxtestmeasure.txt)
+compile_guard "$CLI_STATUS" "$ERRORS" "$MEASURE_TMP"/gdxtestmeasure.txt
 echo "TOTAL ERRORS: $ERRORS"
 grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/gdxtestmeasure.txt | sort | uniq -c | sort -rn | head
 

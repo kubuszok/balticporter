@@ -53,7 +53,9 @@ DEPS="--dependency junit:junit:4.12 --dependency org.scalameta::munit:1.0.2"
 scala-cli compile --scala 3.8.4 --server=false $DEPS \
   simplegraphs-core/src_managed/main/scala simplegraphs-core/src_managed/test/scala \
   2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/sgmeasure.txt
+CLI_STATUS=${PIPESTATUS[0]}
 ERRORS=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/sgmeasure.txt)
+compile_guard "$CLI_STATUS" "$ERRORS" "$MEASURE_TMP"/sgmeasure.txt
 echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/sgmeasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/sgmeasure.txt))"
 grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/sgmeasure.txt | sort | uniq -c | sort -rn | head
 echo "-- bare (uncoded) errors by message --"
