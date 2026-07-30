@@ -135,6 +135,24 @@ class RuleScopeSpec extends munit.FunSuite:
     assert(!RuleScope.Only(Set("com.foo.Bar#m")).includes(p, sym(p, "com.foo.Bar")))
   }
 
+  test("a local's BARE NAME places nothing — an entry that is a simple name must match no local anywhere") {
+    // The trap this closes: a method-local's `fullName` IS its simple name, so `Only(Set("i"))` —
+    // a policy line copied without its type, or a typo for `com.foo.Bar#i` — matched EVERY local
+    // called `i`, in every class, and reported itself as having fired.
+    val p = program
+    assertEquals(sym(p, "i").fullName, "i")
+    assert(!RuleScope.Only(Set("i")).includes(p, sym(p, "i")))
+    assert(RuleScope.Everywhere(Set("i")).includes(p, sym(p, "i")))
+    assertEquals(RuleScope.Only(Set("i")).entryFor(p, sym(p, "i")), scala.None)
+    // …and the same for a parameter's `?#p`, which a bare `?` covers at a separator.
+    assertEquals(RuleScope.Only(Set("?")).entryFor(p, sym(p, "?#p")), scala.None)
+    // The name test is not consulted for those two ONLY. A top-level type in the DEFAULT package
+    // has no separator in its name either, and it is still placed by it — the test is structural.
+    val dflt = Symbol(SymId(6), "Loose", "Loose", Flags(), SymId.None, TypeRepr.NoType)
+    val q    = new Program(Nil, SymbolTable(p.symbols.all.toList :+ dflt), Xref.build(Nil))
+    assertEquals(RuleScope.Only(Set("Loose")).entryFor(q, dflt), Some("Loose"))
+  }
+
   test("an empty scope short-circuits the owner climb and includes/excludes by direction") {
     val p = program
     assert(RuleScope.Everywhere().includes(p, sym(p, "i")))

@@ -53,12 +53,30 @@ package balticporter.tir
   *   - a PARAMETER is named `?#i`. The frontend qualifies it against its method before the method's
   *     own record is set, so the owner half of the name is the minter's placeholder.
   *
+  * For those two the name is not merely insufficient, it is ACTIVELY WRONG and must not be
+  * consulted: a bare `items` entry matched every local called `items` in the whole program, and `?`
+  * would cover every parameter. [[RuleScope.placedByOwnName]] is the structural test — a symbol
+  * whose owner is a METHOD is placed by its method, never by its own name — and it is deliberately
+  * not a shape test on the string, which would have unplaced a top-level type in the default
+  * package and still let `?#i` through.
+  *
   * [[RuleScope.entryFor(program:balticporter\.tir\.Program,sym:balticporter\.tir\.Symbol)*]] climbs
   * the owner chain instead, which also gives the containment the three forms above promise: a
   * parameter of a scoped member is in scope with it, and a member of a scoped type is in scope with
   * the type, whatever its own `fullName` happens to be. A rule that read the name alone would have
   * scoped every field and method correctly and silently left every parameter and local behind — a
   * half-retyped signature, which is a compile error one call away and reads as a broken mapping.
+  *
+  * ==A scope selects DECLARATIONS — ask it only about symbols the program OWNS==
+  * The symbol table also holds every EXTERNAL the frontend interned on first reference, and those
+  * have fully-qualified names that a policy entry can match perfectly: `Everywhere(Set("java.util.
+  * List"))` names the interned `java.util.List` and nothing else. There is no declaration there to
+  * hold back and no body to leave alone, so the phase does exactly nothing — while the entry counts
+  * as having FIRED and [[neverFired]] therefore reports nothing. A silent no-op that looks like a
+  * working knob is the §1(b) failure this type exists to prevent, so a phase filters its candidates
+  * through `Program.owned` (structural, §4.56) before asking, and reports an entry whose only
+  * matches were external as [[neverFired]] with WHY — for a mapping phase, the JDK side is the
+  * MAPPING, not the scope.
   *
   * ==What this deliberately is NOT==
   * It is not a predicate. A `Symbol => Boolean` would be strictly more expressive and could not be
@@ -98,7 +116,8 @@ enum RuleScope:
   def entryFor(fullName: String): Option[String] = RuleScope.longestPrefix(fullName, entries)
 
   /** …for a SYMBOL, deciding from the owner chain when the symbol's own name does not — see the
-    * class doc for why a name-only test cannot place a method-local.
+    * class doc for why a name-only test cannot place a method-local, and why for those two kinds it
+    * must not be CONSULTED at all.
     *
     * Fuel-bounded: a corrupt owner chain must not hang a scope decision, and the failure direction
     * is "no entry names it", which for [[Everywhere]] means IN scope (the pre-scope behaviour) and
@@ -107,7 +126,8 @@ enum RuleScope:
   def entryFor(program: Program, sym: Symbol, fuel: Int = 64): Option[String] =
     if entries.isEmpty then scala.None
     else
-      entryFor(sym.fullName).orElse {
+      val byName = if RuleScope.placedByOwnName(program, sym) then entryFor(sym.fullName) else scala.None
+      byName.orElse {
         if fuel <= 0 then scala.None
         else program.symbolOf(sym.owner).flatMap(o => entryFor(program, o, fuel - 1))
       }
@@ -147,6 +167,27 @@ object RuleScope:
   /** the three separators `Symbol.fullName` uses: `.` between packages and the top-level type, `$`
     * before a nested type, `#` before a member (CLAUDE.md §4.56). */
   def isBoundary(c: Char): Boolean = c == '.' || c == '$' || c == '#'
+
+  /** Does this symbol's OWN `fullName` place it, or is the owner chain the only evidence there is?
+    *
+    * The test is STRUCTURAL — the symbol's owner is a method — and not a shape test on the string,
+    * for the reason §4.56 gives about every string test: a name is not a fact about anything. A
+    * "does it contain a separator" test would also have declared a top-level type in the DEFAULT
+    * package unplaceable, and would still have let `?#p` through.
+    *
+    * What it prevents is a real match, not a hypothetical one: a method-LOCAL is named by its
+    * SIMPLE NAME (`SpoonTir.defineLocal`), so an entry reading `items` — a plausible typo for
+    * `com.foo.Model#items`, and the exact shape of a policy line copied without its type — matched
+    * EVERY local called `items` in the program, in every class, silently. A PARAMETER is `?#p`, which
+    * a `?` entry covers at a separator by the same accident. Neither name identifies anything, so
+    * neither is consulted; both symbols are still placed, by their method, which is the containment
+    * the class doc promises.
+    *
+    * Fuel is not needed here: this looks one level up, and the caller is already bounded. */
+  def placedByOwnName(program: Program, sym: Symbol): Boolean =
+    !program.symbolOf(sym.owner).exists(_.info match
+      case _: TypeRepr.MethodType | _: TypeRepr.PolyType => true
+      case _                                             => false)
 
   /** does `prefix` — a package, a type or a member FQN — NAME `fullName`?
     *

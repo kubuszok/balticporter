@@ -218,6 +218,28 @@ class CollectionsScopeSpec extends PortSuite:
   // policy report and decision provenance
   // -------------------------------------------------------------------------
 
+  test("an entry naming a JDK TYPE fires on the interned EXTERNAL, does nothing, and must be REPORTED") {
+    // `java.util.List` is in the symbol table — the frontend interned it on first reference — so the
+    // entry matched, was counted as fired, and produced output byte-identical to the unscoped port.
+    // A knob that reads as configured and does nothing is the §1(b) silent no-op exactly; ownership
+    // is structural (`Program.owned`), and the report says which knob the author actually wants.
+    val (ph, _, out) = ported(RuleScope.Everywhere(Set("java.util.List")))
+    val bare = new TirEmitter(Pipeline.run(SpoonTir.fromSource(src), List(new CollectionsTransform))).emit
+    assertEquals(out, bare, "an entry that names no DECLARATION cannot change the emitted port")
+    assertEquals(ph.scopedOut, Set.empty)
+    val fs = ph.policyReport.of(PolicyIssue.NeverMatched)
+    assertEquals(fs.map(_.key), List("java.util.List"))
+    assert(clue(fs.head.render).contains("THIS PROGRAM DOES NOT DECLARE"))
+    assert(fs.head.render.contains("MAPPING, not the scope"), "…and which knob to reach for instead")
+  }
+
+  test("the same holds for Only — a JDK entry admits nothing, and says so") {
+    val (ph, _, out) = ported(RuleScope.Only(Set("java.util.List")))
+    val nothing = new TirEmitter(Pipeline.run(SpoonTir.fromSource(src), List(new CollectionsTransform(RuleScope.Only(Set.empty))))).emit
+    assertEquals(out, nothing, "nothing was admitted, so this is `Only(Set.empty)`")
+    assertEquals(ph.policyReport.of(PolicyIssue.NeverMatched).map(_.key), List("java.util.List"))
+  }
+
   test("an entry that named nothing is a §1(b) NeverMatched finding — a silent no-op policy is the failure") {
     val (ph, _, _) = ported(RuleScope.Everywhere(Set("demo.Bridge", "demo.Typo")))
     val fs = ph.policyReport.of(PolicyIssue.NeverMatched)

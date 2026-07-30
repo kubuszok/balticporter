@@ -343,8 +343,24 @@ final class CollectionsTransform(val scope: RuleScope = RuleScope.Everywhere())
     excluded = Set.empty; admittedBy = Map.empty; report = PolicyReport.empty
     if scope.isUnrestricted then return
 
-    val named: List[(Symbol, String)] = p.symbols.all.toList.flatMap(s => scope.entryFor(p, s).map(s -> _))
+    // OWNED symbols only, and the reason is CLAUDE.md §4.56 applied to a scope: the symbol table
+    // holds every EXTERNAL the frontend interned on first reference, `java.util.List` among them,
+    // so an entry naming a JDK type matches — the external symbol, which has no declaration to hold
+    // back and no body to leave alone. The phase then does exactly nothing while the entry counts as
+    // FIRED, which is the §1(b) silent no-op this whole channel exists to catch, wearing the
+    // disguise of a policy that works. Ownership is structural (`Program.owned`), never a name test.
+    val owned = p.owned
+    val named: List[(Symbol, String)] =
+      p.symbols.all.toList.flatMap(s => if owned(s.id) then scope.entryFor(p, s).map(s -> _) else scala.None)
     val fired = named.map(_._2).toSet
+    // …and an entry whose ONLY matches were external is reported with WHY, because "no such name in
+    // this program" would be a lie an agent would spend a session disproving: the name is right, the
+    // knob is wrong. A plain name test is exactly right here — the question is not what this symbol
+    // is, it is what the AUTHOR of the entry was pointing at.
+    val externalOnly = p.symbols.all.iterator
+      .filterNot(s => owned(s.id))
+      .flatMap(s => RuleScope.longestPrefix(s.fullName, scope.entries))
+      .toSet -- fired
 
     scope match
       case RuleScope.Everywhere(_) =>
@@ -364,9 +380,17 @@ final class CollectionsTransform(val scope: RuleScope = RuleScope.Everywhere())
 
     report = PolicyReport(scope.neverFired(fired).toList.sorted.map { k =>
       PolicyFinding(name, s"CollectionsTransform(scope) ${scope.productPrefix} entry", k, PolicyIssue.NeverMatched,
-        "no package, type or member with this fully-qualified name occurs in this program, so the " +
-          "scope neither held anything back nor admitted anything — the phase ran as if the entry " +
-          "were absent")
+        if externalOnly(k) then
+          "this names a type THIS PROGRAM DOES NOT DECLARE — an external the frontend interned on " +
+            "first reference, a JDK type most likely. A scope selects DECLARATIONS the port emits, " +
+            "and there is no such declaration to hold back or admit, so the phase ran as if the " +
+            "entry were absent. The JDK side of this phase is the MAPPING, not the scope: to stop " +
+            "`java.util.List` becoming a scala collection everywhere, that is a `typeMap` question; " +
+            "to keep it in ONE of your own classes, name that class."
+        else
+          "no package, type or member with this fully-qualified name occurs in this program, so the " +
+            "scope neither held anything back nor admitted anything — the phase ran as if the entry " +
+            "were absent")
     })
 
   /** could this phase retype what this symbol DECLARES? A value's own type, or a method's RESULT —

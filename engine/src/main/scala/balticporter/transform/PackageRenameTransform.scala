@@ -171,16 +171,13 @@ object PackageRenameTransform:
       case scala.None => fqn
 
   /** Symbols the program DECLARES, as opposed to externals the frontend interned on first
-    * reference. Climbs the `owner` chain — an owned symbol reaches a top-level unit, an external
-    * one is rooted at `SymId.None` without being a unit. Fuel-bounded, so a corrupt owner cycle
-    * cannot hang the phase; a symbol that exhausts it counts as NOT owned (renaming on a guess is
-    * the failure mode this whole predicate exists to prevent). */
-  def ownedSymbols(program: Program): Set[SymId] =
-    val roots = program.units.map(_.symbol).toSet
-    def rooted(s: SymId, fuel: Int): Boolean =
-      s != SymId.None && fuel > 0 &&
-        (roots(s) || program.symbolOf(s).exists(sym => rooted(sym.owner, fuel - 1)))
-    program.symbols.all.collect { case s if rooted(s.id, 64) => s.id }.toSet
+    * reference — `Program.owned`, which is where the one implementation now lives.
+    *
+    * It moved to the substrate when a SECOND kind of rule needed it: every phase that takes a
+    * `RuleScope` must ask the same question before deciding a policy entry fired, and a §1(c) rule
+    * in a consumer's repository compiles against `balticporter-api` alone. This name is kept because
+    * it is what the phase's own doc and specs say. */
+  def ownedSymbols(program: Program): Set[SymId] = program.owned
 
   /** What a rename map does to a program. Per CLAUDE.md §4.45 the answer names which of §1's three
     * kinds a discrepancy is: an unmatched prefix is always (b) — the phase is configured with a

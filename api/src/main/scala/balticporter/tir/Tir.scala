@@ -470,6 +470,32 @@ final class Program(val units: List[Tree.ClassDef], val symbols: SymbolTable, va
 
   def symbolOf(id: SymId): Option[Symbol] = symbols.get(id)
 
+  /** Symbols this program DECLARES, as opposed to externals the frontend interned on first
+    * reference — CLAUDE.md §4.56's "decide ownership STRUCTURALLY, never by name", as a value.
+    *
+    * The frontend interns an external symbol lazily with `owner = SymId.None` and no `Definition`,
+    * while everything the program declares hangs off a top-level unit through the `owner` chain. So
+    * a symbol is owned iff climbing its owners reaches a [[units]] symbol — stronger than "has a
+    * definition", which anonymous-class symbols do not.
+    *
+    * It lives here, on the substrate, because it is not one phase's business: a rename asks it
+    * before rewriting a prefix, and any rule that takes a [[RuleScope]] must ask it before deciding
+    * that a policy entry FIRED — an entry naming a JDK type otherwise matches the interned external,
+    * does nothing at all, and is reported as having matched (the §1(b) silent no-op). A §1(c) rule
+    * compiles against `balticporter-api` alone (DESIGN.md §3.2), so the predicate has to be reachable
+    * from here or it will be written a third time.
+    *
+    * Fuel-bounded: a corrupt owner cycle must not hang a phase, and a symbol that exhausts the fuel
+    * counts as NOT owned — deciding on a guess is the failure this predicate exists to prevent. */
+  lazy val owned: Set[SymId] =
+    val roots = units.map(_.symbol).toSet
+    def rooted(s: SymId, fuel: Int): Boolean =
+      s != SymId.None && fuel > 0 && (roots(s) || symbols.get(s).exists(sym => rooted(sym.owner, fuel - 1)))
+    symbols.all.collect { case s if rooted(s.id, 64) => s.id }.toSet
+
+  /** does THIS program declare `id`? See [[owned]]. */
+  def owns(id: SymId): Boolean = owned(id)
+
   /** the symbol a tree defines or references, if any (`reflect`-style `.symbol`). */
   def symbolIn(t: Tree): Option[SymId] = t match
     case d: Definition                   => Some(d.symbol)
