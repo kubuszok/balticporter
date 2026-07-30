@@ -681,6 +681,9 @@ final class CollectionsTransform extends Phase, RequiresRuntime:
     case x: Tree.ForEach      => x.copy(body = coerceReturns(want, x.body))
     case x: Tree.Synchronized => x.copy(body = coerceReturns(want, x.body))
     case x: Tree.Labeled      => x.copy(stmt = coerceReturns(want, x.stmt))
+    // §4.58: a statement-shape walk must read THROUGH the comment wrapper — a `return` under a
+    // java comment is still a return, and with the trivia harvest live that is the common case.
+    case x: Tree.Commented    => x.copy(stmt = coerceReturns(want, x.stmt))
     case x: Tree.Try =>
       x.copy(body = coerceReturns(want, x.body),
              catches = x.catches.map(c => c.copy(body = coerceReturns(want, c.body))),

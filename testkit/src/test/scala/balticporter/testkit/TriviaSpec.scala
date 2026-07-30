@@ -220,18 +220,21 @@ class TriviaSpec extends munit.FunSuite:
 
   // ---- the no-comment case is byte-identical to the pre-trivia world ----
 
-  /** The emitted probe, written out so an operator can put a real compiler over it
-    * (`sbt -Dbalticporter.dumpProbe=<dir> testkit/testOnly *TriviaSpec` then
-    * `scala-cli compile --server=false <dir>`). Comments cannot break syntax is a claim about a
-    * PARSER, and the specs above are string assertions; this is how the claim gets checked by the
-    * only authority on it. Off by default — a spec must not write outside its own target tree. */
-  test("emitted probe is available for a real compiler when asked for") {
-    sys.props.get("balticporter.dumpProbe").foreach { dir =>
-      val p = _root_.java.nio.file.Path.of(dir, "Probe.scala")
-      _root_.java.nio.file.Files.createDirectories(p.getParent)
-      _root_.java.nio.file.Files.writeString(p, out)
-      println(s"[trivia-probe] wrote $p")
-    }
+  /** The emitted probe, written to this module's own `target/trivia-probe/` on every run, so an
+    * operator can put a real compiler over it (`scala-cli compile --server=false
+    * testkit/target/trivia-probe`). "Comments cannot break syntax" is a claim about a PARSER, and
+    * the specs above are string assertions; this is how the claim gets checked by the only
+    * authority on it.
+    *
+    * Unconditional, not property-gated: tests run FORKED (`ThisBuild / Test / fork := true`), and
+    * neither a `-D` on the sbt command line nor an environment variable reaches a forked test JVM
+    * launched through the sbt server — measured three ways during the labelled-jump work. The
+    * write stays inside this module's own target tree, which `clean` removes. */
+  test("emitted probe is written for a real compiler") {
+    val p = _root_.java.nio.file.Path.of("target", "trivia-probe", "Probe.scala")
+    _root_.java.nio.file.Files.createDirectories(p.getParent)
+    _root_.java.nio.file.Files.writeString(p, out)
+    assert(_root_.java.nio.file.Files.size(p) > 0)
   }
 
   test("a source with no comments mints no Commented node and no leading trivia") {
