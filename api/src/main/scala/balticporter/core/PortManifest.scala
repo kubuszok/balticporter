@@ -1,6 +1,6 @@
 package balticporter.core
 
-import balticporter.tir.Phase
+import balticporter.tir.{Phase, RuleScope}
 
 import java.nio.file.Path
 
@@ -199,15 +199,20 @@ final case class PortManifest(
 object PortManifest:
 
   /** `.` separates packages and the top-level type, `$` precedes a nested type, `#` a member — the
-    * same three boundaries `PackageRenameTransform` cuts at, and for the same reason. */
-  def isBoundary(c: Char): Boolean = c == '.' || c == '$' || c == '#'
+    * same three boundaries `PackageRenameTransform` cuts at, and for the same reason.
+    *
+    * These three FORWARD to [[balticporter.tir.RuleScope]], which is the one implementation of
+    * CLAUDE.md §4.56's separator cut: the rule is about `Symbol.fullName`, and a manifest key and a
+    * rule scope ask the identical question of it. They are kept as names here because every caller
+    * in the engine reaches them through the manifest, and because a rule this easy to get wrong
+    * must have exactly one body — a second copy is a second thing to fix when the trap is sprung
+    * again. */
+  def isBoundary(c: Char): Boolean = RuleScope.isBoundary(c)
 
-  def covers(fullName: String, prefix: String): Boolean =
-    prefix.nonEmpty && fullName.startsWith(prefix) &&
-      (fullName.length == prefix.length || isBoundary(fullName.charAt(prefix.length)))
+  def covers(fullName: String, prefix: String): Boolean = RuleScope.covers(fullName, prefix)
 
   def longestPrefix(fullName: String, prefixes: Set[String]): Option[String] =
-    prefixes.filter(covers(fullName, _)).maxByOption(_.length)
+    RuleScope.longestPrefix(fullName, prefixes)
 
   /** A phase's SIGNATURE-AFFECTING identity, for comparing two modules' pipelines.
     *
