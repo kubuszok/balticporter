@@ -125,6 +125,104 @@ class CollectionsTransformSpec extends PortSuite:
     assertNotEmits(p, "removeValue(ss, 0)")
   }
 
+  // ---------------------------------------------------------------------------------------------
+  // The `java.util.stream` COLLAPSE, and what it is keyed on. Audited as "keys on the receiver's
+  // WRITTEN type rather than its retyped kind" and DISPROVED — see `CollectionsTransform.collapsed`
+  // for the argument. These pin the two halves of it so a change in the frontend's member
+  // resolution reports here instead of the chain silently ceasing to translate.
+  // ---------------------------------------------------------------------------------------------
+
+  /** every spelling a `stream()` receiver can have, including a program class of its own. */
+  private val streamReceivers =
+    """package demo;
+      |import java.util.*;
+      |import java.util.stream.*;
+      |import java.util.function.Predicate;
+      |class Own extends AbstractCollection<String> {
+      |  public Iterator<String> iterator() { return null; }
+      |  public int size() { return 0; }
+      |}
+      |class S {
+      |  List<String> f;
+      |  List<String> get() { return f; }
+      |  List<String> r01(List<String> c, Predicate<String> p)             { return c.stream().filter(p).collect(Collectors.toList()); }
+      |  List<String> r02(ArrayList<String> c, Predicate<String> p)        { return c.stream().filter(p).collect(Collectors.toList()); }
+      |  List<String> r03(Set<String> c, Predicate<String> p)              { return c.stream().filter(p).collect(Collectors.toList()); }
+      |  List<String> r04(HashSet<String> c, Predicate<String> p)          { return c.stream().filter(p).collect(Collectors.toList()); }
+      |  List<String> r05(LinkedList<String> c, Predicate<String> p)       { return c.stream().filter(p).collect(Collectors.toList()); }
+      |  List<String> r06(ArrayDeque<String> c, Predicate<String> p)       { return c.stream().filter(p).collect(Collectors.toList()); }
+      |  List<String> r07(Deque<String> c, Predicate<String> p)            { return c.stream().filter(p).collect(Collectors.toList()); }
+      |  List<String> r08(Queue<String> c, Predicate<String> p)            { return c.stream().filter(p).collect(Collectors.toList()); }
+      |  List<String> r09(Collection<String> c, Predicate<String> p)       { return c.stream().filter(p).collect(Collectors.toList()); }
+      |  List<String> r10(TreeSet<String> c, Predicate<String> p)          { return c.stream().filter(p).collect(Collectors.toList()); }
+      |  List<String> r11(LinkedHashSet<String> c, Predicate<String> p)    { return c.stream().filter(p).collect(Collectors.toList()); }
+      |  List<String> r12(Own c, Predicate<String> p)                      { return c.stream().filter(p).collect(Collectors.toList()); }
+      |  List<String> r13(AbstractCollection<String> c, Predicate<String> p){ return c.stream().filter(p).collect(Collectors.toList()); }
+      |  List<String> chained(Predicate<String> p)                         { return get().stream().filter(p).collect(Collectors.toList()); }
+      |  List<String> cast(Object o, Predicate<String> p)                  { return ((List<String>) o).stream().filter(p).collect(Collectors.toList()); }
+      |  List<String> mapValues(Map<String,String> m, Predicate<String> p) { return m.values().stream().filter(p).collect(Collectors.toList()); }
+      |}
+      |""".stripMargin
+
+  test("the collapse reaches EVERY receiver spelling — 13 declared types, a chained call and a cast") {
+    val p = port(streamReceivers, new CollectionsTransform)
+    // One arm keyed on `java.util.Collection#stream` serves all of them because that is the
+    // DECLARING type of the method, which is what the frontend resolves — not the receiver's
+    // written type. Every one becomes the collapsed `filtered(…asScalaBuffer, …)`.
+    assertEquals(clue(p.out).sliding("JavaCollection.filtered(".length)
+                   .count(_ == "JavaCollection.filtered("), 16)
+    // and nothing survives as a java stream call.
+    assertNotEmits(p, "java.util.stream.Collectors.toList()")
+    assertNotEmits(p, ".stream()")
+  }
+
+  test("a chain whose receiver the phase did NOT retype is left alone — and must be") {
+    // `"…".lines()` is a `java.util.stream.Stream` with no collection behind it; rewriting its
+    // `filter` on the method name alone measured 0 -> 1 on libGDX's test port (ENGINE-LIMITS K6).
+    val p = port(
+      """package demo;
+        |import java.util.*;
+        |import java.util.stream.*;
+        |import java.util.function.Predicate;
+        |class S {
+        |  List<String> lines(String s, Predicate<String> p) {
+        |    return s.lines().filter(p).collect(Collectors.toList());
+        |  }
+        |}
+        |""".stripMargin,
+      new CollectionsTransform,
+    )
+    assertNotEmits(p, "JavaCollection.filtered(")
+    assertEmits(p, "s.lines().filter(")
+  }
+
+  test("a Stream-typed SLOT is the one shape the collapse cannot reach — and it fails LOUDLY") {
+    // The value really is a `Buffer` and the declaration really says `Stream`, because the stream
+    // family is deliberately not retyped (K6). `collapsed` answering `false` here is correct: the
+    // DECLARATION is what has no translation, and making the guard say `true` would rewrite the
+    // operation while leaving the slot in place — moving the error, not closing it. Measured: the
+    // emission below is 2 compile errors, so the refusal is loud (ENGINE-LIMITS M6).
+    val p = port(
+      """package demo;
+        |import java.util.*;
+        |import java.util.stream.*;
+        |import java.util.function.Predicate;
+        |class S {
+        |  List<String> f;
+        |  List<String> viaLocal(Predicate<String> p) {
+        |    Stream<String> st = f.stream();
+        |    return st.filter(p).collect(Collectors.toList());
+        |  }
+        |}
+        |""".stripMargin,
+      new CollectionsTransform,
+    )
+    // the SOURCE still collapses — it is the slot that does not follow …
+    assertEmits(p, "val st: java.util.stream.Stream[java.lang.String] = this.f.asScalaBuffer")
+    // … and the operation is therefore NOT rewritten, which is what makes the mismatch visible.
+    assertNotEmits(p, "JavaCollection.filtered(")
+  }
+
   test("a downcast FROM a type the phase does not retype is KEPT, retargeted at the shim") {
     // `Object` is not in the phase's type map, so nothing the phase did can stop the value from
     // being a shim instance at run time. Java's downcast stays a downcast.

@@ -397,6 +397,15 @@ final class CollectionsTransform extends Phase, RequiresRuntime:
       // kept `Stream` produced `Found: Buffer[V] / Required: JavaCollection[V]` one call further out
       // — the chain translated and then failed to meet the method it fed. A rewritten node must
       // describe the expression it now emits, the same invariant `values()` restores above.
+      //
+      // The key is the DECLARING type of the resolved method, not the receiver's written type, and
+      // that distinction is the whole reason one arm serves every collection: only `Collection`
+      // declares `stream()`, so the frontend resolves all thirteen receiver spellings in
+      // `CollectionsTransformSpec` — `ArrayDeque`, `TreeSet`, a program class extending
+      // `AbstractCollection` — to `java.util.Collection#stream`. `List`/`Set` are kept as
+      // defensive alternatives for a frontend that reports the receiver's type instead; neither
+      // interface declares the method, so on this frontend they never fire. See `collapsed` for
+      // the audit that established this and for the one shape where the collapse does not reach.
       case (Some("java.util.Collection#stream" | "java.util.List#stream" | "java.util.Set#stream"), Nil) =>
         recv.map(r => Tree.Select(r, asScalaBufferSym, asBuffer(r.tpe), t.origin))
       // `IntStream.range(a, b)` is a stream SOURCE with no collection behind it — the one shape the
@@ -477,7 +486,40 @@ final class CollectionsTransform extends Phase, RequiresRuntime:
     else t
 
   /** has this receiver already been collapsed from a `Stream` to a scala sequence? The shims are
-    * excluded: `filtered` takes a `Buffer`, and a shim is what the collapse consumes, not produces. */
+    * excluded: `filtered` takes a `Buffer`, and a shim is what the collapse consumes, not produces.
+    *
+    * ==This is the RETYPED KIND, not the written type — audited, probed and DISPROVED as a defect==
+    * The question CLAUDE.md §4.56 demands ("what did the PHASE do to this type?") is exactly what
+    * `kindOf` answers: the map is keyed on symbols this phase MINTED in `run`, so a hit means the
+    * phase itself put that scala collection there. Three things would have to be true for the
+    * answer to diverge from what the phase did, and each was checked rather than argued:
+    *
+    *  1. `recv.tpe` still naming a JAVA collection symbol here. It cannot:
+    *     `StandardTraversal.mapTerm` routes a node's `tpe` AND its children through `transformType`
+    *     — hence through `remap` — BEFORE calling `transformApply`, and every node this phase
+    *     mints carries a type computed from an already-mapped one (`asBuffer`, `r.tpe`, `t.tpe`).
+    *     So the `remap.getOrElse` normalisation `coerce` and `impossibleShimCast` need (they read
+    *     `Symbol.info`, which is retyped AFTER the trees) would be a no-op here.
+    *  2. `recv.tpe` naming a scala collection the phase did NOT introduce. `kindOf` has no key for
+    *     one, by construction.
+    *  3. the receiver really being a collapsed buffer while its recorded type says otherwise. This
+    *     one IS reachable — through a `java.util.stream.Stream`-typed SLOT, since the stream family
+    *     is deliberately not retyped (ENGINE-LIMITS K6):
+    *
+    *         Stream<String> st = f.stream();   //  st : Stream, value : Buffer
+    *         st.filter(p).collect(toList());   //  not collapsed
+    *
+    *     and there `false` is the RIGHT answer. The declaration is what has no translation; making
+    *     this guard say `true` would rewrite the operation and leave the `Stream`-typed slot in
+    *     place, moving the error rather than closing it. Measured: that emission is 2 compile
+    *     errors, so the refusal is loud (ENGINE-LIMITS M6), never silent.
+    *
+    * The collapse SOURCE arm is keyed the same way and not on the receiver's written type either:
+    * it matches `owner#name` for the RESOLVED method, and the frontend resolves `stream()` to its
+    * DECLARING interface — measured `java.util.Collection#stream` for 13 of 13 receiver spellings,
+    * a program class extending `AbstractCollection` included. `CollectionsTransformSpec` pins all
+    * thirteen, so the day that resolution changes a test says so instead of the chain silently
+    * ceasing to translate. */
   private def collapsed(recv: Option[Term]): Boolean =
     recv.flatMap(r => headSym(r.tpe)).exists(s => kindOf.get(s).contains(Kind.Seq) && !shimSyms.contains(s))
 

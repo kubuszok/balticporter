@@ -1340,8 +1340,31 @@ ported class OVERRIDES it and scala requires an override's parameter type to mat
 Mapping `Predicate` to `Function1` and adapting at each call moves that disagreement rather than
 removing it, since it changes the override's parameter type too.
 
+**A `java.util.stream.Stream`-typed SLOT is the one shape the collapse cannot reach, and the refusal
+is correct.** Audited as "the collapse keys on the receiver's WRITTEN type rather than its retyped
+kind" and **DISPROVED** — recorded because the disproof is what stops it being re-opened:
+
+| what would have to be true for the guard to diverge | measured |
+|---|---|
+| `recv.tpe` still naming a JAVA collection at the guard | impossible — `StandardTraversal.mapTerm` routes a node's `tpe` and its children through `transformType` BEFORE `transformApply`, and every node the phase mints is typed from an already-mapped one |
+| `recv.tpe` naming a scala collection the phase did not introduce | impossible — `kindOf` is keyed only on symbols the phase minted |
+| the SOURCE arm keying on the receiver's declared type | it keys on the RESOLVED method's DECLARING type: **13 of 13** receiver spellings (`ArrayDeque`, `TreeSet`, `Queue`, a program class extending `AbstractCollection`, …) resolve to `java.util.Collection#stream` |
+| the receiver being a collapsed buffer whose recorded type says otherwise | REACHABLE, through a `Stream`-typed slot — and there `false` is right |
+
+```java
+Stream<String> st = f.stream();    // st : Stream, value : Buffer
+st.filter(p).collect(toList());    // not collapsed
+```
+
+The DECLARATION is what has no translation, not the operation. Making the guard answer `true` here
+would rewrite `filter` and leave the `Stream`-typed slot in place — moving the error rather than
+closing it. Measured: that emission is **2 compile errors**, so the refusal is loud (M6), never
+silent. The general rule is `CLAUDE.md` §4.56's: a phase may only conclude something about a type
+from what it did to that type, and this phase did nothing to `java.util.stream.Stream`.
+
 *Fix kind: (b) for the call shapes, on `CollectionsTransform`'s existing rewrite table; the chain
-collapse and both rules above are (a).*
+collapse and both rules above are (a). The `Stream`-typed slot is (a) and unbuilt — it needs the
+stream family retyped, not a wider guard.*
 
 ### K7. A java enhanced-for BINDING may be declared at a supertype, and the port dropped it
 
