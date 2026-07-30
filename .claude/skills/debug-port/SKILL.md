@@ -116,14 +116,20 @@ seconds instead of minutes on a large library, at the cost of resolution fidelit
 <substr>` (narrow what is CONVERTED), `--canonical` (no symbol ids, no origins — the digest input, so
 two runs are comparable), `--classpath`, `--lenient`.
 
-Two honest limits, both by design:
+**`--phases` names a phase exactly as a port `.conf` names it** — `collections`, `mutable-params`,
+`panama-ffi`, … — because it resolves through the same `TransformFactory` SPI the conf's front door
+uses (`TransformRegistry.discover()`), not a list of its own. Whatever is on the classpath is
+available, a consumer's §1(c) rule included; run with a name that does not exist to have the list
+printed. There is no second spelling to learn, which there was: the private registry this replaced
+said `panama` while every `.conf` says `panama-ffi`.
 
-- **`--phases` accepts only the universal transforms under short names** — `collections`,
-  `mutable-params`, `panama` (`DebugEmit.Phases.registry`). It is not the conf's factory registry.
-  Giving this tool a port `.conf` would make it a second assembly path free to drift from the first.
+A phase that takes POLICY is refused here, with its own factory's message and a pointer to `PortRun`.
+That is the one honest limit and it is by design:
+
 - **What it prints is the pipeline's view of one type, never a reproduction of a port's emitted
   file.** No substitution, no injection, no package rename, no provenance header — that is
-  `PortRun`'s job. Do not diff its output against `src_managed`.
+  `PortRun`'s job. Do not diff its output against `src_managed`. Giving this tool a port `.conf`
+  would make it a second assembly path, free to drift from the one that emits your port.
 
 ## 4. A compile or a test run you did by hand
 

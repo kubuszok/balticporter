@@ -3,8 +3,8 @@ package balticporter.runner
 import balticporter.core.FrontendConfig
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
-import balticporter.tir.{DebugFlags, Phase, Pipeline, Program, TirPrinter}
-import balticporter.transform.{CollectionsTransform, MutableParamsTransform, PanamaFfiTransform}
+import balticporter.tir.{ConfigError, DebugFlags, Phase, Pipeline, Program, TirPrinter}
+import balticporter.transform.CollectionsTransform
 
 import java.nio.file.{Files, Path}
 import scala.jdk.CollectionConverters.*
@@ -56,7 +56,7 @@ import scala.jdk.CollectionConverters.*
   * | `--include <substr>` | only CONVERT files whose path under the root contains this. Repeatable. |
   * | `--fast` | do not add the root as a resolution root — parse only the included files. Seconds instead of minutes on a large library, at the cost of resolution fidelity. |
   * | `--fqn <FullName>` | the one type to print. Omit to list what the model contains. |
-  * | `--phases a,b` | run these transforms first — `${Phases.available}` |
+  * | `--phases a,b` | run these transforms first, named EXACTLY as a port `.conf` names them (`collections`, `mutable-params`, `panama-ffi`, …). Resolved through the same `TransformFactory` SPI, so the list is whatever is on the classpath — run with an unknown name to have it printed. A phase that needs policy is refused here and belongs to `PortRun`. |
   * | `--dump-before <phase>` / `--dump-after <phase>` | print the TIR at that boundary (`*` = every phase). Narrowed to `--fqn` automatically. |
   * | `--scala` | also print the emitted Scala for `--fqn` |
   * | `--canonical` | print the canonical form (no symbol ids, no origins) — the digest input |
@@ -65,15 +65,40 @@ import scala.jdk.CollectionConverters.*
   */
 object DebugEmit:
 
-  /** the universal transforms, under short names a shell will not mangle. A phase's own name
-    * contains `->`, which is a redirection operator unquoted. */
-  object Phases:
-    val registry: Map[String, () => Phase] = Map(
-      "collections"    -> (() => new CollectionsTransform),
-      "mutable-params" -> (() => new MutableParamsTransform),
-      "panama"         -> (() => new PanamaFfiTransform()),
-    )
-    def available: String = registry.keys.toList.sorted.mkString(", ")
+  /** Resolve `--phases` through the SPI — the SAME name → phase resolution a port `.conf` uses,
+    * and the reason this class no longer has a registry of its own.
+    *
+    * It had one: three entries, and it had already DIVERGED — it called the FFI phase `panama`
+    * while the config front door calls it `panama-ffi`, so the two doors disagreed about the name
+    * of a phase and neither was wrong on its own terms. That is the standing cost of a second truth
+    * (DESIGN.md §5.7), paid here by an agent who reads one name in a `.conf` and types it into a
+    * diagnostic that answers "unknown phase". Resolving through [[TransformRegistry]] also widens
+    * this from three phases to every default-constructible one, with nothing to maintain.
+    *
+    * It is name resolution, NOT pipeline assembly, and the distinction is what keeps this class
+    * from becoming a second way to build a port: no `.conf` is read, so no policy can enter here.
+    * A factory that REQUIRES policy therefore throws its own [[balticporter.tir.ConfigError]]
+    * against the empty config, and that refusal is passed through with the one thing the operator
+    * needs to hear — a phase configured by a port is driven by the port, through `PortRun`.
+    *
+    * Returns `Left(message)` rather than exiting, so a spec can assert what the operator is told
+    * without taking the JVM down with it. */
+  def phasesFor(names: List[String],
+                registry: TransformRegistry = TransformRegistry.discover()): Either[String, List[Phase]] =
+    val empty = HoconView.root(com.typesafe.config.ConfigFactory.empty)
+    names.foldLeft[Either[String, List[Phase]]](Right(Nil)) { (acc, n) =>
+      acc.flatMap { done =>
+        try Right(done :+ registry.phase(n, empty, s"--phases $n"))
+        catch
+          case e: ConfigError if registry.get(n).isDefined =>
+            // the factory's own error, VERBATIM and with the key it names — a message rewritten
+            // here would be a second statement of a contract only the factory holds.
+            Left(s"[debug-emit] '$n' takes POLICY and this tool reads no port configuration — " +
+              s"drive it through `PortRun` with the port's `.conf`. The factory said: ${e.where}: ${e.why}")
+          case e: ConfigError =>
+            Left(s"[debug-emit] ${e.why}\n  available: ${registry.names.mkString(", ")}")
+      }
+    }
 
   private def opts(args: List[String]): Map[String, List[String]] =
     args.foldLeft((Map.empty[String, List[String]], Option.empty[String])) {
@@ -90,9 +115,10 @@ object DebugEmit:
     def one(k: String): Option[String] = o.get(k).flatMap(_.headOption)
     def flag(k: String): Boolean       = o.contains(k)
 
+    val registry = TransformRegistry.discover()
     val rootArg = one("root").getOrElse {
       System.err.println("DebugEmit: --root <java-source-root> is required (there is deliberately no default).")
-      System.err.println(s"  phases available to --phases: ${Phases.available}")
+      System.err.println(s"  phases available to --phases: ${registry.names.mkString(", ")}")
       sys.exit(2)
     }
     val root = { val p = Path.of(rootArg); (if p.isAbsolute then p else repoRoot.resolve(p)).normalize }
@@ -111,12 +137,10 @@ object DebugEmit:
       System.err.println(s"DebugEmit: no .java under $root matching ${includes.mkString(", ")}")
       sys.exit(2)
 
-    val names   = one("phases").toList.flatMap(_.split(',').map(_.trim)).filter(_.nonEmpty)
-    val unknown = names.filterNot(Phases.registry.contains)
-    if unknown.nonEmpty then
-      System.err.println(s"[debug-emit] unknown phase(s): ${unknown.mkString(", ")} — available: ${Phases.available}")
-      sys.exit(2)
-    val phases  = names.map(Phases.registry(_)())
+    val names  = one("phases").toList.flatMap(_.split(',').map(_.trim)).filter(_.nonEmpty)
+    val phases = phasesFor(names, registry) match
+      case Right(ps)  => ps
+      case Left(why)  => System.err.println(why); sys.exit(2)
 
     // The dump flags are read by `Pipeline.run` from system properties, so setting them HERE is
     // enough — same JVM, no marker file, no rebuild. (`DebugFlags` reads them as `def`s precisely
@@ -127,11 +151,13 @@ object DebugEmit:
     // then a debug flag nobody can see poisoning a later invocation — exactly the failure
     // `just debug-clear` exists for, one layer up.
     //
-    // `--dump-after` is given as a CLI ALIAS; the pipeline matches on the phase's OWN name. A
-    // silently untranslated alias would print nothing and read as "the phase changed nothing" —
-    // the exact failure mode a kill switch exists to avoid — so translate, and pass anything
-    // unrecognised (`*`, a real phase name) through unchanged.
-    val alias: Map[String, String] = Phases.registry.map((k, mk) => k -> mk().name)
+    // `--dump-after` is given as a CONFIG NAME (`collections`); the pipeline matches on the phase's
+    // OWN name (`java-collections->scala`). A silently untranslated alias would print nothing and
+    // read as "the phase changed nothing" — the exact failure mode a kill switch exists to avoid —
+    // so translate, and pass anything unrecognised (`*`, a real phase name) through unchanged.
+    // Built from the phases actually CONSTRUCTED, so a name is never translated by instantiating a
+    // factory that would have refused the empty config.
+    val alias: Map[String, String] = names.zip(phases.map(_.name)).toMap
     def phaseNames(v: String): String = v.split(',').map(_.trim).map(n => alias.getOrElse(n, n)).mkString(",")
     val touched = List(
       one("dump-before").map(v => "dumpTirBefore" -> phaseNames(v)),

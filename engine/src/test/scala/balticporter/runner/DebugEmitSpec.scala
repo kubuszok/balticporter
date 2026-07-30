@@ -74,6 +74,42 @@ class DebugEmitSpec extends munit.FunSuite:
     assert(!after.contains("java.util.List"), after)
   }
 
+  // -------------------------------------------------------------------------
+  // --phases resolves through the SPI — ONE name→phase truth with a port's .conf
+  // -------------------------------------------------------------------------
+
+  test("a phase is named EXACTLY as a `.conf` names it — the private registry had already diverged") {
+    // It said `panama`; the config front door says `panama-ffi`. Two doors, two names for one
+    // phase, and an agent that reads a `.conf` and types the name into the diagnostic is told
+    // "unknown phase". The registry is gone, so the two cannot disagree again.
+    assertEquals(DebugEmit.phasesFor(List("panama-ffi")).map(_.map(_.name)), Right(List("jni->panama")))
+    assert(DebugEmit.phasesFor(List("panama")).isLeft, "the OLD spelling is not a phase name anywhere")
+    DebugEmit.phasesFor(List("panama")).left.foreach { why =>
+      assert(clue(why).contains("panama-ffi"), "…and the refusal LISTS what is available")
+    }
+  }
+
+  test("resolution widened to every default-constructible phase, in the order given") {
+    assertEquals(
+      DebugEmit.phasesFor(List("mutable-params", "collections")).map(_.map(_.name)),
+      Right(List("reassigned-params->var", "java-collections->scala")))
+  }
+
+  test("a phase that takes POLICY is refused, and told where policy lives") {
+    // `primitive-to-opaque` cannot be built from nothing — this tool reads no port `.conf` on
+    // purpose (a second assembly path would be free to drift from `PortRun`'s). The refusal is the
+    // factory's OWN error, so a new required key needs nothing here.
+    val why = DebugEmit.phasesFor(List("primitive-to-opaque")).swap.getOrElse("")
+    assert(clue(why).contains("takes POLICY"))
+    assert(why.contains("PortRun"))
+    assert(why.contains("fqn"), "the factory's own message says WHICH key it wanted")
+  }
+
+  test("a RESERVED name keeps its specific refusal rather than becoming 'unknown phase'") {
+    val why = DebugEmit.phasesFor(List("package-rename")).swap.getOrElse("")
+    assert(clue(why).contains("packageRenames"), "the thing to write instead")
+  }
+
   test("the dump flags it sets are RESTORED — an unforked run must not leave one behind") {
     val keys = List("balticporter.dumpTirBefore", "balticporter.dumpTirAfter", "balticporter.dumpOnly")
     val before = keys.map(k => k -> Option(System.getProperty(k)))
