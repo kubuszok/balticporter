@@ -37,7 +37,7 @@ echo "-- test discovery --"
 # The same both-frameworks sum gdx_test_measure.sh uses: a ported suite is MUnit and any residue is
 # still JUnit, so counting only one under-reports by every converted suite — in the safe-looking
 # direction, which is the dangerous one.
-JAVA_TESTS=$(grep -rh "@Test" ../sge/original-src/ashley/ashley/tests | wc -l | tr -d ' ')
+JAVA_TESTS=$(java_test_count ../sge/original-src/ashley/ashley/tests)
 JUNIT_LEFT=$(grep -rh "@org.junit.Test\|@Test" ashley-core/src_managed/test/scala 2>/dev/null | wc -l | tr -d ' ')
 MUNIT_TESTS=$(grep -rhoE '(^|[^a-zA-Z0-9_.])test\("' ashley-core/src_managed/test/scala 2>/dev/null | wc -l | tr -d ' ')
 SCALA_TESTS=$((JUNIT_LEFT + MUNIT_TESTS))

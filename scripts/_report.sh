@@ -20,6 +20,52 @@ write_run_props() {
   } > "$root/.balticporter/run.properties"
 }
 
+# java_test_count <java-test-dir>...
+# How many `@Test` methods the java suite ACTUALLY declares — comments stripped first.
+#
+# `grep -c "@Test"` counts annotations inside commented-out code, and simple-graphs has one: an entire
+# `GridPoint` class and its `testExample` sit inside a `/* … */` block. The discovery check therefore
+# reported "TESTS LOST — 1 of 17 would never run, and the suite would report success" on a port that
+# had lost nothing. That is the worst possible failure for this particular check: it is the one guard
+# against a suite that runs ZERO tests and reports success, and a check whose first firing is a false
+# positive teaches its reader to ignore it (ENGINE-LIMITS M5).
+#
+# PER FILE and LINE-ORIENTED, tracking block-comment state — not a slurp-and-regex.
+#
+# The obvious version (`perl -0777 -pe 's{/\*.*?\*/}{}gs'` over the concatenated files) was written
+# first and is wrong in the more dangerous direction: it removed 40 of libGDX's 221 LIVE `@Test`
+# annotations. Concatenating the tree makes one unbalanced `/*` — inside a string literal, inside a
+# javadoc example — swallow everything up to the next real `*/`, across file boundaries. So the fix
+# for a check that cried wolf about 1 test produced a check that hid 40.
+#
+# What is relied on here, and it is the whole reason this is tractable: a real annotation is the first
+# token on its line. That makes `^\s*@Test\b` outside a block comment sufficient, and makes every
+# remaining imprecision (a `//` inside a string, an unbalanced marker) confined to one file and unable
+# to affect the line the count actually looks at.
+java_test_count() {
+  find "$@" -name '*.java' -print0 2>/dev/null | xargs -0 perl -e '
+    my $n = 0;
+    for my $f (@ARGV) {
+      open(my $h, "<", $f) or next;
+      my $in = 0;                       # inside a /* … */ block, reset per FILE
+      while (my $l = <$h>) {
+        if ($in) { if ($l =~ s{^.*?\*/}{}) { $in = 0 } else { next } }
+        # STRING LITERALS FIRST, and not optional: the libGDX suite holds path globs such as
+        # "root/(a)/*", and treating that /* as a comment opener swallowed the rest of the file —
+        # 22 live @Test annotations, silently, the direction that HIDES a lost test. Blanking
+        # literals cannot affect the count, because an annotation is never inside one.
+        # (NB no apostrophes in this program: it is single-quoted in the shell.)
+        $l =~ s{"(?:\\.|[^"\\])*"}{""}g;
+        $l =~ s{/\*.*?\*/}{}g;          # whole blocks opened and closed on this line
+        if ($l =~ s{/\*.*$}{}) { $in = 1 }
+        $n++ if $l =~ /^\s*\@Test\b/;   # an annotation is the first token on its line
+      }
+      close($h);
+    }
+    print $n;
+  '
+}
+
 # show_check_report <report-dir>
 # The persisted, UNTRUNCATED check results and their diff against the committed baseline.
 show_check_report() {

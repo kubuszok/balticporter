@@ -38,7 +38,7 @@ echo "-- test discovery --"
 # Count what each FRAMEWORK would actually discover. A ported suite is MUnit (`test("name") {…}`)
 # and the residue is still JUnit (`@Test`), so counting only annotations under-reports by every
 # converted suite — the check must sum both or it lies in the safe-looking direction.
-JAVA_TESTS=$(grep -rh "@Test" ../sge/original-src/libgdx/gdx/test | wc -l | tr -d ' ')
+JAVA_TESTS=$(java_test_count ../sge/original-src/libgdx/gdx/test)
 JUNIT_LEFT=$(grep -rh "@org.junit.Test\|@Test" libgdx-core/src_managed/test/scala 2>/dev/null | wc -l | tr -d ' ')
 MUNIT_TESTS=$(grep -rhoE '(^|[^a-zA-Z0-9_.])test\("' libgdx-core/src_managed/test/scala 2>/dev/null | wc -l | tr -d ' ')
 SCALA_TESTS=$((JUNIT_LEFT + MUNIT_TESTS))
