@@ -1479,6 +1479,24 @@ Distinguish on `Flags.isStatic`, and take the synthesised lambda's arity from th
 The governing rule is `CLAUDE.md` §4.58. This section is only the residue: what is measured to be
 lost after the TIR path carries comments, so nobody re-derives it.
 
+**What carrying them costs, measured by re-emitting every port with the harvest off** (a one-line
+kill switch, `CLAUDE.md` §4.6) — emitted bytes before → after:
+
+| port | before | after | delta |
+|---|---|---|---|
+| libGDX core (604 files) | 5 301 863 | 7 095 303 | **+33.8 %** |
+| libGDX tests (29) | 237 786 | 262 896 | +10.6 % |
+| Ashley core (23) | 69 345 | 104 755 | **+51.1 %** |
+| Ashley tests (18) | 154 867 | 164 307 | +6.1 % |
+| simple-graphs core (33) | 125 579 | 174 383 | **+38.9 %** |
+| simple-graphs tests (7) | 35 348 | 39 889 | +12.8 % |
+
+A THIRD of the emitted text of a well-documented library is its documentation, and a test suite's
+share is a fraction of that. Nothing else moved: compile errors 0 on all four lanes, every other
+check count unchanged, determinism green, `srcmap` unit and member COUNTS identical (594 / 19 257 on
+libGDX) — only 7 159 of those 19 257 member digests, which is exactly the members that gained a
+comment.
+
 ### C1. A comment on a construct the EMISSION consumes has nowhere to go. **222 → 100** on libGDX core
 
 `TriviaCheck` compares the Java text to the emitted text on every run. On libGDX core it first
