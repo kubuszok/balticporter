@@ -4,7 +4,7 @@ import balticporter.core.*
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.sbtgen.SbtGen
-import balticporter.tir.{CheckReport, Correlate, CorrelateRun, DebugFlags, OmissionCheck, Phase, Pipeline, PortabilityCheck, Program, Remediator, RewriteTrace, SrcMap, SymId, Tree}
+import balticporter.tir.{CheckReport, Correlate, CorrelateRun, DebugFlags, Decision, DecisionLog, OmissionCheck, Origin, Phase, Pipeline, PortabilityCheck, Program, Reason, Remediator, RewriteTrace, SrcMap, SymId, Tree}
 import balticporter.transform.{MethodBodyTransform, PackageRenameTransform, PortMapTransform}
 
 import java.nio.file.{Files, Path, StandardCopyOption}
@@ -359,10 +359,13 @@ final case class PortRun(
     // A module's map is an OUTPUT and never an input to its own run — only DEPENDENTS read it.
     // Otherwise it becomes a second source of truth able to disagree with the manifest, and a port
     // stops being reproducible from sources plus policy (CLAUDE.md §5.5).
-    val injectedFqns = ownSubs.inject.filter(Files.exists(_)).flatMap { root =>
-      SubstitutionCheck.scalaSources(root)
-        .map(src => root.relativize(src).toString.stripSuffix(".scala").replace('/', '.').replace('\\', '.'))
-    }.toSet ++ plan.sources.keySet ++ plan.required ++ supportSources.keySet
+    val injectedSources: List[(String, String)] = ownSubs.inject.filter(Files.exists(_)).flatMap { root =>
+      SubstitutionCheck.scalaSources(root).map { src =>
+        val rel = root.relativize(src).toString.replace('\\', '/')
+        rel.stripSuffix(".scala").replace('/', '.') -> rel
+      }
+    }
+    val injectedFqns = injectedSources.map(_._1).toSet ++ plan.sources.keySet ++ plan.required ++ supportSources.keySet
     val bodyKeys: Set[String] =
       effectivePhases.collect { case m: MethodBodyTransform => m.substituted }.flatten.toSet
     val portMap = PortMap.of(
@@ -383,6 +386,13 @@ final case class PortRun(
     )
     val mapPath = PortMap.write(CheckReport.runDir, portMap)
     say(s"port map: ${portMap.types.size} type(s), ${portMap.members.size} member(s) -> $mapPath")
+
+    // ---- DECISION PROVENANCE: how this run arrived at the code it just wrote ----
+    // The phases recorded theirs while the pipeline ran; the run's own non-phase deciders — the
+    // substitution manifest and the injection copy — record here, into the SAME log, because the
+    // question an investigating agent asks does not care which layer answered it.
+    recordPolicyDecisions(program, translated, injectedSources)
+    writeDecisions(translated.decisions)
 
     // CHECK 2 — over the FINAL tree.
     val danglingSubs = record(PortRun.SubstitutionDangling, SubstitutionCheck.dangling(outDir, ownSubs))
@@ -504,6 +514,106 @@ final case class PortRun(
         .map(fqn => Correlate.Dropped(fqn, PackageRenameTransform.renamed(fqn, renames)).tsv)
       Files.writeString(dir.resolve("dropped-types.tsv"),
         (Correlate.DroppedHeader :: drops).mkString("", "\n", "\n"))
+
+  /** The DECISIONS this run made outside any phase — the substitution manifest and the injection
+    * copy — recorded into the run's own log (CLAUDE.md §4.45: make it obvious to an investigating
+    * agent HOW the porter arrived at the code, and in which of §1's three repositories the fix
+    * lives).
+    *
+    * Both are `Reason.Configured`, and the KEY is the manifest entry verbatim. That is the whole
+    * value of the record: an agent holding `sge.utils.Json` learns not merely that the type is
+    * substituted but that `Substitutions.dropTypes` contains `com.badlogic.gdx.utils.Json`, which
+    * is the exact string it must remove to change the outcome.
+    *
+    * One row per DECLARED key, not per key that fired. A key that matched nothing is a decision the
+    * run made and failed to carry out, and `detail("fired")` says so — the same defect `PolicyReport`
+    * reports as a finding, visible here in the provenance an agent reads for a different reason.
+    *
+    * `detail("own")` separates a drop THIS module declares from one it inherited (§1.5), because
+    * they live in different manifests and only one of them is this module's to edit. `detail`
+    * carries the EMITTED name too: policy is upstream and the rename runs last (§4.56), so a
+    * record that named only one of the two would be unjoinable with anything observed about the
+    * running port — the mistake `dropped-types.tsv` shipped with.
+    */
+  private def recordPolicyDecisions(
+      program: Program,
+      translated: PortRun.Translated,
+      injectedSources: List[(String, String)],
+  ): Unit =
+    val log = translated.decisions
+    // A dropped type is PARSED, so the run usually still holds its unit — and with it the Java file
+    // the decision is about. Keyed by EMITTED name, since that is what `fullName` is by now.
+    val unitsByFqn: Map[String, Tree.ClassDef] =
+      program.units.flatMap(u => program.symbolOf(u.symbol).map(_.fullName -> u)).toMap
+    val fired = policySubs.matched
+    def emitted(fqn: String) = PackageRenameTransform.renamed(fqn, renames)
+    def at(fqn: String): (SymId, Origin) =
+      unitsByFqn.get(emitted(fqn)) match
+        case Some(u)    => (u.symbol, u.origin)
+        case scala.None => (SymId.None, Origin.synthetic)
+
+    policySubs.dropTypes.toList.sorted.foreach { key =>
+      val (sym, origin) = at(key)
+      log.record(Decision(
+        kind       = Decision.Kind.DroppedType,
+        subject    = sym,
+        subjectFqn = key,
+        detail = Map(
+          "key"     -> key,
+          "emitted" -> emitted(key),
+          "fired"   -> (if fired(key) then "yes" else "no"),
+          "own"     -> (if ownSubs.dropTypes(key) then "yes" else "no"),
+          "why"     -> "declared in Substitutions.dropTypes: parsed so references still resolve, never emitted",
+        ),
+        reason = Reason.Configured("substitutions", key),
+        origin = origin,
+      ))
+    }
+
+    policySubs.dropMethods.toList.sorted.foreach { key =>
+      val owner         = key.takeWhile(_ != '#')
+      val (sym, origin) = at(owner)
+      log.record(Decision(
+        kind       = Decision.Kind.DroppedMember,
+        subject    = sym,
+        subjectFqn = key,
+        detail = Map(
+          "key"   -> key,
+          "owner" -> emitted(owner),
+          "fired" -> (if fired(key) then "yes" else "no"),
+          "own"   -> (if ownSubs.dropMethods(key) then "yes" else "no"),
+          "why"   -> "declared in Substitutions.dropMethods: the rest of the owning type is ported mechanically",
+        ),
+        reason = Reason.Configured("substitutions", key),
+        origin = origin,
+      ))
+    }
+
+    // The injections THIS module ships (`ownSubs`) — a dependent must not restate its base's, or
+    // the same FQN is defined twice (§1.5). The origin is the file inside the injection root: an
+    // injected definition has no Java at all, and saying so is the point.
+    injectedSources.foreach { (fqn, rel) =>
+      log.record(Decision(
+        kind       = Decision.Kind.InjectedMember,
+        subject    = SymId.None,
+        subjectFqn = fqn,
+        detail     = Map("file" -> rel, "why" -> "hand-written Scala copied verbatim; it never passed through the TIR"),
+        reason     = Reason.Configured("substitutions", "inject"),
+        origin     = Origin(rel, 0, 0),
+      ))
+    }
+
+  /** Write `decisions.tsv` beside the run's other artifacts, on every reporting run.
+    *
+    * Gated on exactly what the source map is gated on, so one switch turns the artifact layer off
+    * and a unit-test JVM leaves nothing behind. Written even when EMPTY: a port with no policy made
+    * no recorded decisions, and a header-only file says that, where a missing file cannot be told
+    * from a run that never got this far — the same distinction `CheckReport` keeps for a check that
+    * found nothing. */
+  private def writeDecisions(log: DecisionLog): Unit =
+    if CheckReport.enabled then
+      val p = Decision.write(CheckReport.runDir, log)
+      say(s"decisions: ${log.size} (${log.summary}) -> $p")
 
   /** Correlate a compiler or test-runner log back to the members and Java origins of THIS run,
     * IN-PROCESS.
@@ -678,14 +788,17 @@ final case class PortRun(
 
   private def translateOnce(): PortRun.Translated =
     val types   = SpoonTir.buildModel(frontend, lenient = lenient)
-    val program = Pipeline.run(SpoonTir.fromTypes(types, policySubs), effectivePhases)
+    // `runTraced`, so the phases' DECISIONS travel with the program they produced. The log belongs
+    // to THIS translation: `Determinism.Full` translates twice and the run keeps the first, which
+    // is only coherent because neither log is shared (CLAUDE.md §5.1).
+    val (program, decisions) = Pipeline.runTraced(SpoonTir.fromTypes(types, policySubs), effectivePhases)
     val plan    = RuntimePlan.of(effectivePhases, runtimeMode)
     // `externalConcrete` is DERIVED, never passed in: a caller who has to remember it is a caller
     // who forgets it, and forgetting it silently disables diamond-conflict detection against an
     // injected parent.
     val emitter = new TirEmitter(program, plan.concreteMembers, provenance)
     val (mine, theirs) = partitionUnits(program)
-    PortRun.Translated(program, plan, emitter, mine, theirs, cache.map(new ActionCache(_, true)))
+    PortRun.Translated(program, plan, emitter, mine, theirs, cache.map(new ActionCache(_, true)), decisions)
 
   /** Units this run CONVERTS, as opposed to units it merely resolved against.
     *
@@ -776,6 +889,9 @@ object PortRun:
       /** units the run RESOLVED against and does not emit — another module's, by construction. */
       val foreign: List[Tree.ClassDef],
       val cache: Option[ActionCache],
+      /** what the PHASES decided while producing `program`. The run's non-phase deciders record
+        * into the same log before it is written (`decisions.tsv`). */
+      val decisions: DecisionLog = new DecisionLog,
   ):
     private val memo = collection.mutable.Map.empty[SymId, String]
     private lazy val keys = cache.map(_ => TirCacheKey.forUnits(program, emitOrder))

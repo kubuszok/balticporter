@@ -109,6 +109,26 @@ final class PackageRenameTransform(renames: Map[String, String] = Map.empty) ext
               val newName = if s.fullName == from then PackageRenameTransform.simpleNameOf(to) else s.name
               t.updated(s.copy(name = newName, fullName = newFull))
       }
+      // DECISION PROVENANCE, one row per UNIT that moved — not per symbol. A member's namespace
+      // moved because its top-level type's did, so a per-symbol log would restate one decision
+      // thousands of times and bury the ones that are not renames. The origin is the unit's Java
+      // file, which is what an agent holding an emitted FQN needs in order to find the upstream
+      // type at all: after this phase the FQN no longer says where the file is (§4.57).
+      program.units.foreach { u =>
+        for
+          was <- program.symbolOf(u.symbol)
+          now <- table.get(u.symbol) if now.fullName != was.fullName
+          from <- PackageRenameTransform.longestMatch(was.fullName, renames.keySet)
+        do
+          record(Decision(
+            kind       = Decision.Kind.RenamedPackage,
+            subject    = u.symbol,
+            subjectFqn = was.fullName, // the UPSTREAM name: the one every policy key is written in
+            detail     = Map("from" -> was.fullName, "to" -> now.fullName),
+            reason     = Reason.Configured(name, s"$from -> ${renames(from)}"),
+            origin     = u.origin,
+          ))
+      }
       // Trees and the xref are keyed by `SymId` and stay valid verbatim — that is the whole point
       // of renaming the symbol rather than the text. (The Pipeline rebuilds the xref anyway.)
       new Program(program.units, table, program.xref)

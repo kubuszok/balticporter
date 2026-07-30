@@ -24,6 +24,28 @@ trait Phase:
   def runsAfter: Set[String]  = Set.empty
   def runsBefore: Set[String] = Set.empty
 
+  // ---- decision provenance (CLAUDE.md §4.45: make it obvious HOW the porter got here) ----
+
+  /** What this phase DECIDED, for the run currently in progress.
+    *
+    * Owned by the phase for the duration of one `run` and DRAINED by [[Pipeline.runTraced]] into
+    * the run's log the moment the phase returns — so a phase instance reused across two
+    * translations (which `Determinism.Full` does, and a porting program that ports two source sets
+    * with one phase list does) never reports the first run's decisions as the second's. It is a
+    * value the phase owns, never a process-global table (§5.1).
+    */
+  final val decisions: DecisionLog = new DecisionLog
+
+  /** Record why this phase changed something. Every note carries its §1 classification because the
+    * reader's first question is which repository the fix lives in ([[Reason]]):
+    * {{{
+    * record(Decision(Decision.Kind.RetypedSignature, sym.id, sym.fullName,
+    *                 Map("from" -> was, "to" -> now), Reason.Configured(name, key), origin))
+    * }}}
+    * Recording is CHEAP and unconditional — a decision is not gated on an artifact directory, so a
+    * phase can be tested on its decisions with no filesystem in sight. */
+  final def record(d: Decision): Unit = decisions.record(d)
+
   /** Full-control entry point. Default applies the hooks below via the standard
     * bottom-up traversal (MiniPhase-style), then rewrites symbol infos with
     * `transformType` so signatures stay consistent with the rewritten trees. Override
@@ -105,26 +127,44 @@ object Pipeline:
     * kill switch that quietly does nothing is worse than no kill switch, because the run that
     * "shows the phase is not responsible" never skipped anything.
     */
-  def run(program: Program, phases: List[Phase]): Program =
+  def run(program: Program, phases: List[Phase]): Program = runTraced(program, phases)._1
+
+  /** [[run]], plus the DECISION LOG the phases filled while it ran.
+    *
+    * A separate entry point rather than a changed signature: every caller that only wants the
+    * rewritten program keeps compiling, and a caller that wants provenance asks for it. The log is
+    * a value THIS CALL owns — each phase's own buffer is cleared before it runs and drained after,
+    * so nothing survives into the next translation and two runs in one JVM cannot contaminate each
+    * other (the failure §5.1 records for the source map's process-global predecessor).
+    *
+    * A SKIPPED phase (`balticporter.skipPhases`) records nothing, which is the honest answer: the
+    * decisions it would have made were not made.
+    */
+  def runTraced(program: Program, phases: List[Phase]): (Program, DecisionLog) =
+    val log     = new DecisionLog
     val ordered = order(phases)
     DebugFlags.banner.foreach(b => println(s"$b  (phases: ${ordered.map(_.name).mkString(", ")})"))
     val unknown = (DebugFlags.skipPhases - "*") -- ordered.map(_.name).toSet
     if unknown.nonEmpty then
       println(s"[balticporter] WARNING: skipPhases names no such phase: ${unknown.toList.sorted.mkString(", ")}" +
         s" — this pipeline has: ${ordered.map(_.name).mkString(", ")}")
-    ordered.foldLeft(program) { (prog, phase) =>
+    val out = ordered.foldLeft(program) { (prog, phase) =>
       dump(DebugFlags.dumpTirBefore, phase.name, "BEFORE", prog)
       if DebugFlags.skips(phase.name) then
         println(s"[balticporter] SKIPPED phase '${phase.name}' (balticporter.skipPhases)")
         prog
       else
+        phase.decisions.clear() // this run's decisions only — see `runTraced`
         val out  = phase.run(prog)
         val next = new Program(out.units, out.symbols, Xref.build(out.units))
+        log.recordAll(phase.decisions.drain())
         if DebugFlags.tracePhases then
-          println(s"[balticporter] phase '${phase.name}': ${next.units.size} units, ${next.symbols.all.size} symbols")
+          println(s"[balticporter] phase '${phase.name}': ${next.units.size} units, ${next.symbols.all.size} symbols" +
+            (if log.isEmpty then "" else s", decisions so far: ${log.size}"))
         dump(DebugFlags.dumpTirAfter, phase.name, "AFTER", next)
         next
     }
+    (out, log)
 
   /** print the TIR at a phase boundary. `balticporter.dumpOnly=<fqn>` narrows it to one unit —
     * without that a whole-library dump is megabytes and nobody reads it. */
