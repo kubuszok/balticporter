@@ -177,8 +177,22 @@ correlate() {
   local out="$1"; shift
   # strip EVERY CSI sequence, not just colour: sbt -client also emits erase-display (`ESC[0J`),
   # which survives an SGR-only filter and lands in the middle of the report.
+  # The display filter starts at the first report line — which means it EATS anything the
+  # correlator says while dying before one is printed. CorrelateMain's missing-input abort is
+  # exactly that shape (fatal, exit 2, message before the report begins), so the raw capture is
+  # kept and shown whenever the exit status is non-zero: a correlation that did not happen must
+  # not render as an empty-but-tidy block (the §3 false green, one artifact later).
+  local cap="$MEASURE_TMP/correlate-$$.txt"
   sbt -client "core/runMain balticporter.tir.CorrelateMain --out $out --baseline $(dirname "$out")/baseline $*" \
-    2>&1 | sed $'s/\033\\[[0-9;]*[a-zA-Z]//g' | sed -n '/^units in source map/,$p' | grep -v '^\['
+    2>&1 | sed $'s/\033\\[[0-9;]*[a-zA-Z]//g' > "$cap"
+  local st=${PIPESTATUS[0]}
+  sed -n '/^units in source map/,$p' "$cap" | grep -v '^\['
+  if [ "$st" != "0" ]; then
+    echo "!! CORRELATION DID NOT RUN — CorrelateMain exited $st; its output:"
+    grep -vE '^\[' "$cap" | tail -10 | sed 's/^/     /'
+    rm -f "$cap"; exit 1
+  fi
+  rm -f "$cap"
 }
 
 # headline <error-count> <report-dir>
@@ -202,8 +216,13 @@ headline() {
     [ "$s" != "0" ] && tests="$tests, !! $s DID NOT RUN"
     # a NEWLY failing test is the one number that must never scroll past: it is the only signal
     # this project has for the CLAUDE.md §4.4 defect class, which moves no compile-error count.
+    # NEWLY SKIPPED is its sibling and gates the same way — a skip moves no pass and no fail
+    # count, which is exactly how ashley lost two tests from every artifact.
     if grep -q "^-- NEWLY FAILING" "$dir/run-latest/tests-diff.txt" 2>/dev/null; then
       tests="$tests | !! NEWLY FAILING — see $dir/run-latest/tests-diff.txt"
+    fi
+    if grep -q "^-- NEWLY SKIPPED" "$dir/run-latest/tests-diff.txt" 2>/dev/null; then
+      tests="$tests | !! NEWLY SKIPPED — see $dir/run-latest/tests-diff.txt"
     fi
   fi
   echo
