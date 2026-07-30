@@ -85,6 +85,20 @@ ThisBuild / Test / publishArtifact := false
 // emitter owns, never a process-global table"), one level up. Until that lands, serial is the honest
 // holding position rather than a retry or a tolerance.
 ThisBuild / Test / parallelExecution := false
+// …and that setting alone is NOT enough, measured: it serialises test CLASSES within one project,
+// while sbt still runs different projects' test TASKS concurrently in the same unforked JVM. Four
+// projects' suites (CheckReportSpec, PipelineDebugSpec, PortRunSpec, SrcMapEmitSpec) open
+// set-and-restore windows on the same `balticporter.report*` system properties — the §4.6 flag
+// channel, which is process-global BY DESIGN because production is one migration per JVM — and an
+// overlap flips CheckReport on under another suite's run. Measured: ManifestSpec 1-in-5 under
+// `testFull`; on another run CheckReportSpec and SrcMapEmitSpec — the two contamination detectors,
+// in two projects — failed in the same instant. `Global / concurrentRestrictions += Tags.limit(
+// Tags.Test, 1)` was tried first and measured NOT to prevent the overlap (1 contaminated run in 6
+// with the line in place), so the fix is the one that cannot miss: a JVM per project's test task.
+// Properties cannot cross processes, and "one migration per JVM" becomes true of tests too.
+// Side effect, welcome: a forked test JVM is fresh, so the M5.5 classloader-layer staleness cannot
+// bite a test run.
+ThisBuild / Test / fork := true
 
 val munit = "org.scalameta" %% "munit" % "1.2.0" % Test
 
