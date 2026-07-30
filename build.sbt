@@ -32,7 +32,7 @@ ThisBuild / scalacOptions ++= Seq(
 // PUBLISHING (Maven-Central-shaped)
 //
 // Applied at `ThisBuild`, so every module inherits it; the modules that must NOT ship say
-// `publish / skip := true` individually (`corpus-tests`, `libgdx-core`, `root`).
+// `publish / skip := true` individually (`corpus`, `libgdx-core`, `root`).
 //
 // NOT set up here, deliberately: CI credentials and the Sonatype Central portal bundle upload.
 // `publishTo` below is the classic OSSRH staging/snapshot shape, which is what `publishSigned` and
@@ -70,15 +70,15 @@ ThisBuild / Test / publishArtifact := false
 // SERIAL TESTS, ACROSS THE WHOLE BUILD, and not as tidiness: `CheckReport` is gated on process-global
 // system properties (`balticporter.report`, `balticporter.reportDir`), which `PortRunSpec.withReport`
 // sets and restores around one run. sbt runs suites in parallel BOTH within a module and across
-// modules, and `ManifestSpec`, `PortRunSpec` and `corpus-tests` all execute `PortRun` — so any two of
+// modules, and `ManifestSpec`, `PortRunSpec` and `corpus` all execute `PortRun` — so any two of
 // them race on `reportDir`, one run's report lands in another's directory, and whichever test then
 // reads `run-latest/*.tsv` fails.
 //
-// Measured: 39 tests in `runner` alone, a DIFFERENT one failing about one run in three, each passing
-// in isolation. Present at f1df4b6 and before, which is why it read as noise rather than as the
-// measurement gate this project's discipline (CLAUDE.md §5) rests on being unreliable. Scoping the
-// setting to `runner` fixed the module and NOT the build: `ManifestSpec` failed again as soon as a
-// whole-build `testFull` ran it beside `corpus-tests`.
+// Measured: 39 tests in the former `runner` module alone, a DIFFERENT one failing about one run in
+// three, each passing in isolation. Present at f1df4b6 and before, which is why it read as noise
+// rather than as the measurement gate this project's discipline (CLAUDE.md §5) rests on being
+// unreliable. Scoping the setting to that module fixed the module and NOT the build: `ManifestSpec`
+// failed again as soon as a whole-build `testFull` ran it beside `corpus`.
 //
 // The DESIGN fix is to make the report directory a value the run owns rather than a process-global
 // flag — the same rule §5.1 already states for the source map ("`TirEmitter.srcMap` is a value one
@@ -87,7 +87,8 @@ ThisBuild / Test / publishArtifact := false
 ThisBuild / Test / parallelExecution := false
 // …and that setting alone is NOT enough, measured: it serialises test CLASSES within one project,
 // while sbt still runs different projects' test TASKS concurrently in the same unforked JVM. Four
-// projects' suites (CheckReportSpec, PipelineDebugSpec, PortRunSpec, SrcMapEmitSpec) open
+// suites (CheckReportSpec, PipelineDebugSpec, PortRunSpec, SrcMapEmitSpec — four separate projects
+// before the module graph was consolidated, all in `engine` now, with `corpus` still beside it) open
 // set-and-restore windows on the same `balticporter.report*` system properties — the §4.6 flag
 // channel, which is process-global BY DESIGN because production is one migration per JVM — and an
 // overlap flips CheckReport on under another suite's run. Measured: ManifestSpec 1-in-5 under
@@ -129,11 +130,51 @@ lazy val runtime = project
     libraryDependencies += munit,
   )
 
-lazy val core = project
-  .in(file("core"))
+// ---------------------------------------------------------------------------------------------
+// `balticporter-api` — what a TRANSFORM OR CHECK AUTHOR compiles against, and nothing more.
+//
+// The consumer of this framework is an agent in ANOTHER repository (CLAUDE.md §4.45) writing a
+// §1(c) rule for its own library. What that costs it must be one dependency, and that dependency
+// must not drag the emitter, the orchestrator or Spoon in behind it. So this module is the MODEL
+// and the CONTRACTS: the TIR (`Tree`, `Symbol`, `SymId`, `TypeRepr`, `Origin`, `Trivia`,
+// `Program`, `Xref`), `Phase`/`Plugin`/`StandardTraversal`/`Pipeline`, the decision model
+// (`Decision`, `Reason`, `DecisionLog`), the recording surface a check reports through
+// (`CheckReport`, `PolicyReport`), the debug-flag surface (`DebugFlags`, `TirTrace`,
+// `TirPrinter`), the frontend contract (`Frontend`, `FrontendConfig`, `Unsupported`, and the
+// frozen BIR a frontend still populates) and `PortManifest`/`Substitutions` — the port's policy
+// as a value.
+//
+// It depends on NOTHING. That is the property worth keeping: the day it needs the emitter or the
+// runner to compile, it has stopped being the surface a rule author codes against. See DESIGN.md
+// §3.2 for the cut and the two judgement calls in it.
+// ---------------------------------------------------------------------------------------------
+lazy val api = project
+  .in(file("api"))
   .settings(
-    name := "balticporter-core",
+    name := "balticporter-api",
+    description := "The Baltic Porter model and contracts a transform, check or frontend is written against.",
     libraryDependencies += munit,
+  )
+
+// ---------------------------------------------------------------------------------------------
+// `balticporter-engine` — the machinery. Everything that is not the surface above: the universal
+// and parameterised transforms, every check implementation, the phase pipeline's callers, the
+// TIR→Scala emitter, the vocabulary tables, the sbt project generator, the verification passes,
+// the BIR passes and printer, and `PortRun` — the one entry point.
+//
+// It depends on `frontend-spoon` because `PortRun` models a source set with `SpoonTir`; the
+// direction is engine → frontend, never the reverse, which is what keeps the insulation rule
+// (DESIGN.md §3.2) true: no Spoon type is visible here.
+// ---------------------------------------------------------------------------------------------
+lazy val engine = project
+  .in(file("engine"))
+  .dependsOn(api, `frontend-spoon`)
+  .settings(
+    name := "balticporter-engine",
+    libraryDependencies ++= Seq(
+      "org.scalameta" %% "scalameta" % "4.17.2", // `verify` — skeleton diff over emitted Scala
+      munit,
+    ),
     // The engine's coordinates, generated from the build so `EngineInfo.version` cannot drift from
     // the artifact version a port resolves. This is what makes `RuntimeArtifact.version` a lock.
     Compile / sourceGenerators += Def.task {
@@ -154,7 +195,7 @@ lazy val core = project
       )
       Seq(f)
     }.taskValue,
-    // VENDORING: the runtime module's real sources, copied verbatim into core's resources so
+    // VENDORING: the runtime module's real sources, copied verbatim into the engine's resources so
     // `RuntimeArtifact.sourceOf` can write them next to a zero-dependency port. A COPY, never a
     // second text — a divergence between the published trait and the vendored string is exactly
     // the bug the published artifact exists to prevent, one level down.
@@ -179,9 +220,11 @@ lazy val core = project
     }.taskValue,
   )
 
+// The ONLY module that sees Spoon types. It depends on `api` alone for the TIR path; the BIR path
+// (`SpoonFrontend`) is served by the frozen BIR model, which is why that model lives in `api` too.
 lazy val `frontend-spoon` = project
   .in(file("frontend-spoon"))
-  .dependsOn(core)
+  .dependsOn(api)
   .settings(
     name := "balticporter-frontend-spoon",
     libraryDependencies ++= Seq(
@@ -190,70 +233,23 @@ lazy val `frontend-spoon` = project
     ),
   )
 
-lazy val `scala-emit` = project
-  .in(file("scala-emit"))
-  .dependsOn(core)
-  .settings(
-    name := "balticporter-scala-emit",
-    libraryDependencies += munit,
-  )
-
-lazy val vocab = project
-  .in(file("vocab"))
-  .dependsOn(core)
-  .settings(
-    name := "balticporter-vocab",
-    libraryDependencies += munit,
-  )
-
-lazy val `sbt-gen` = project
-  .in(file("sbt-gen"))
-  .dependsOn(core)
-  .settings(
-    name := "balticporter-sbt-gen",
-    libraryDependencies += munit,
-  )
-
-lazy val verify = project
-  .in(file("verify"))
-  .dependsOn(core)
-  .settings(
-    name := "balticporter-verify",
-    libraryDependencies ++= Seq(
-      "org.scalameta" %% "scalameta" % "4.17.2",
-      munit,
-    ),
-  )
-
 // Helpers a CONSUMER writing tests against the engine needs: run Java source through phases and
-// assert on the emitted Scala. Filled from what `corpus-tests/src/test` repeats verbatim in every
+// assert on the emitted Scala. Filled from what `corpus/src/test` repeats verbatim in every
 // spec (see `PortFixture`). `munit` is a COMPILE dependency here — a testkit whose users write
 // MUnit suites has to hand them the framework.
 lazy val testkit = project
   .in(file("testkit"))
-  .dependsOn(core, `frontend-spoon`, `scala-emit`)
+  .dependsOn(api, engine, `frontend-spoon`)
   .settings(
     name := "balticporter-testkit",
     libraryDependencies += "org.scalameta" %% "munit" % "1.2.0",
   )
 
-lazy val runner = project
-  .in(file("runner"))
-  // `sbt-gen` because `PortRun` owns the port's output layout: `src_managed/{main,test}/scala`
-  // comes from `SbtGen.managedDir` and the generated build from `SbtGen.emitPort`, so that a
-  // porting program can neither hardcode an output path (CLAUDE.md §5.5) nor forget the runtime
-  // dependency the phases it ran made necessary.
-  .dependsOn(core, `frontend-spoon`, `scala-emit`, `sbt-gen`)
+lazy val corpus = project
+  .in(file("corpus"))
+  .dependsOn(api, engine, testkit, `frontend-spoon`)
   .settings(
-    name := "balticporter-runner",
-    libraryDependencies += munit,
-  )
-
-lazy val `corpus-tests` = project
-  .in(file("corpus-tests"))
-  .dependsOn(runner, testkit, verify, `sbt-gen`, vocab)
-  .settings(
-    name := "balticporter-corpus-tests",
+    name := "balticporter-corpus",
     libraryDependencies += munit,
     publish / skip := true,
     Compile / run / fork := true,
@@ -261,7 +257,7 @@ lazy val `corpus-tests` = project
   )
 
 // A migration TARGET, not part of the tool: the TIR-emitted Scala of libGDX's core module
-// (`gdx/src`, 605 types), produced by `corpus-tests/runMain …LibgdxCoreMigrate`. Standalone
+// (`gdx/src`, 605 types), produced by `corpus/runMain …LibgdxCoreMigrate`. Standalone
 // (JDK-only, like libGDX core itself) and NOT aggregated by root, so a work-in-progress port
 // can't break the main build. Lenient scalacOptions: this is generated code under burn-down.
 //
@@ -286,7 +282,7 @@ lazy val `libgdx-core` = project
 
 lazy val root = project
   .in(file("."))
-  .aggregate(runtime, core, `frontend-spoon`, `scala-emit`, vocab, `sbt-gen`, verify, testkit, runner, `corpus-tests`)
+  .aggregate(runtime, api, `frontend-spoon`, engine, testkit, corpus)
   .settings(
     name := "balticporter",
     publish / skip := true,
