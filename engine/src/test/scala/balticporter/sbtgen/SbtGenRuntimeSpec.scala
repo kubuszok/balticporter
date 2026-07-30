@@ -47,18 +47,23 @@ class SbtGenRuntimeSpec extends munit.FunSuite:
     }
   }
 
-  test("--vendored-runtime writes the sources into src_managed and adds no dependency") {
+  test("--vendored-runtime adds no dependency and carries the sources in the PLAN, unwritten") {
     withRoot { root =>
       val plan = SbtGen.emitPort(root, spec, List(new CollectionsTransform), RuntimeMode.Vendored)
       val build = Files.readString(root.resolve("build.sbt"))
       assert(!build.contains(RuntimeArtifact.artifact), clue(build))
-      val f = SbtGen.managedMain(root).resolve("balticporter/runtime/JavaIterator.scala")
-      assert(Files.exists(f))
-      assertEquals(Files.readString(f), RuntimeArtifact.sourceOf(s"${RuntimeArtifact.Package}.JavaIterator"))
       // four: three shims (CLAUDE.md §4.5: java's `AbstractCollection` has no scala counterpart a
       // ported class can EXTEND) plus `JavaCollections`, the mirror of `java.util.Collections`'
       // statics.
       assertEquals(plan.sources.size, 4)
+      assertEquals(plan.sources.get(s"${RuntimeArtifact.Package}.JavaIterator"),
+                   Some(RuntimeArtifact.sourceOf(s"${RuntimeArtifact.Package}.JavaIterator")))
+      // …and this did NOT write them. The build generator cannot know which source set the run is
+      // producing, and it guessed `main`: a `sourceSet = Test` port with a generated project
+      // vendored the whole runtime into BOTH trees, defining every support type twice. The run
+      // writes them into its own `outDir` (`PortRunProjectSpec`), which is the one place that knows.
+      assertEquals(Files.exists(SbtGen.managedMain(root).resolve("balticporter")), false)
+      assertEquals(Files.exists(SbtGen.managedTest(root).resolve("balticporter")), false)
     }
   }
 

@@ -177,8 +177,12 @@ final case class RuntimePlan(required: Set[String], mode: RuntimeMode):
   def concreteMembers: Map[String, Set[(String, List[Int])]] =
     RuntimeArtifact.concreteMembers.filter((fqn, _) => RuntimeArtifact.closure(required).contains(fqn))
 
-  /** Write the vendored sources under `dir` (a port's `src_managed/main/scala`), one file per FQN.
-    * Returns how many were written — 0 under [[RuntimeMode.Dependency]], by design. */
+  /** Write the vendored sources under `dir` — the RUN's own `src_managed/<set>/scala`, one file per
+    * FQN. Returns how many were written — 0 under [[RuntimeMode.Dependency]], by design.
+    *
+    * Called by `balticporter.runner.PortRun` and by nothing else in the engine: the source set is
+    * the run's, and `SbtGen.emitPort` calling this too wrote a `sourceSet = Test` port's runtime
+    * into `main` as well, defining every support type twice. */
   def writeSources(dir: Path): Int =
     sources.foreach { (fqn, src) =>
       val p = dir.resolve(fqn.replace('.', '/') + ".scala")

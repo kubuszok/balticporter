@@ -560,6 +560,12 @@ final case class PortRun(
     // a consumer whose build already exists and whose `build.sbt` and `.gitignore` are its own
     // decisions. One gate, at the one call, for the reason §5.1 gives about artifact writes: a
     // wrapper every caller must remember is a wrapper one caller will not.
+    //
+    // It emits the BUILD and no sources. The vendored runtime was written above, into `outDir`,
+    // which is the only place that knows this run's `sourceSet`; `emitPort` used to write it too,
+    // into `managedMain` unconditionally, so a `sourceSet = Test` port with a generated project
+    // defined every support type twice — and did so only when `project` was `Some`, which made the
+    // emitted file set depend on whether a build was also generated.
     project.foreach { spec => SbtGen.emitPort(portRoot, spec, effectivePhases, runtimeMode) }
 
     val report = PortReport(

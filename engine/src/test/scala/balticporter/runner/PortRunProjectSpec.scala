@@ -135,3 +135,31 @@ class PortRunProjectSpec extends munit.FunSuite:
                  CollectionsTransform.runtimeTypes.size)                                    // vendored
     assertEquals(r.injected, 1)
   }
+
+  test("a TEST source set with a generated project vendors the runtime ONCE, into the test tree") {
+    // The two-writer defect. `PortRun` writes the vendored runtime into `outDir` — which respects
+    // `sourceSet` — and `SbtGen.emitPort` wrote it AGAIN into `managedMain(root)`, which cannot
+    // respect anything because a build generator does not know which set the run is producing. So
+    // this exact combination — Test + `project = Some` + `Vendored` — defined every support type
+    // twice, in two trees compiled together, which is the failure `PortRun.runtimeMode`'s scaladoc
+    // names ("a port that vendors into both `main` and `test`").
+    //
+    // Asserted as a COUNT over the whole port, not as "the main copy is absent": the question is
+    // how many definitions of each FQN this port ships, and only one of the two writers may answer.
+    val (root, src) = fixture()
+    val port = root.resolve("port")
+    val spec = SbtGen.ProjectSpec("demo", "org.demo", "3.8.4", "2.0.0-M4", Nil, engineFingerprint = "test")
+    run(port, src, SourceSet.Test)(_.copy(
+      project     = Some(spec),
+      phases      = List(new CollectionsTransform),
+      runtimeMode = RuntimeMode.Vendored,
+    ))
+    val runtime = files(port).filter(_.contains("/balticporter/runtime/"))
+    assertEquals(runtime.size, CollectionsTransform.runtimeTypes.size, clue(runtime))
+    assert(runtime.forall(_.startsWith("src_managed/test/scala/")), clue(runtime))
+    // stated the other way too, because a count that happens to match is not a location
+    assert(!Files.exists(port.resolve("src_managed/main/scala/balticporter")),
+           "the build generator must not guess a source set the run already knows")
+    // the gate is OPEN in the same run: the skeleton IS emitted, so this is not passing by absence
+    assert(Files.exists(port.resolve("build.sbt")))
+  }

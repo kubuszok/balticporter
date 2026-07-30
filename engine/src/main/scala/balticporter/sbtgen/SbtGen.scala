@@ -57,8 +57,8 @@ object SbtGen:
   def managedMain(root: Path): Path = managedDir(root, "main")
   def managedTest(root: Path): Path = managedDir(root, "test")
 
-  /** THE entry point for a port: emit the skeleton with runtime delivery DERIVED from the phases
-    * that were run, and write out the vendored sources when that is the mode.
+  /** THE entry point for a port's BUILD: emit the skeleton with runtime delivery DERIVED from the
+    * phases that were run.
     *
     * `emit(root, spec)` still exists for callers that run no TIR phases at all, but everything on
     * the phase pipeline should come through here. The reason is in CLAUDE.md §1(b): "which support
@@ -67,10 +67,27 @@ object SbtGen:
     * [[RuntimePlan]] also carries `concreteMembers` for `TirEmitter`'s `externalConcrete`, so the
     * build file and the emitter cannot disagree about what was injected.
     *
+    * ==What this does NOT do: write the vendored sources==
+    *
+    * It used to, into `managedMain(root)`, which is right exactly when the port has one source set
+    * and that set is `main`. `balticporter.runner.PortRun` writes them into ITS OWN `outDir` — the
+    * only place that knows which [[balticporter.runner.SourceSet]] the run is producing — so a run
+    * with `sourceSet = Test` and a generated project wrote the whole vendored runtime TWICE, once
+    * into `src_managed/test` and once into `src_managed/main`, which is the "defines every support
+    * type twice" failure `PortRun.runtimeMode`'s own scaladoc warns about. Worse, the second copy
+    * appeared only when `project` was `Some`, so the same port emitted a different file set
+    * depending on whether it also generated a build.
+    *
+    * The run owns the SOURCES and this owns the BUILD: writing them here can only ever guess the
+    * source set, and a guess that is usually right is the shape of defect this split removes. A
+    * caller with no `PortRun` behind it writes them itself from the returned plan —
+    * `plan.writeSources(dir)` — naming the directory it means.
+    *
     * @param phases the phases that RAN (order irrelevant; only `RequiresRuntime` is read)
     * @param mode   [[RuntimeMode.Dependency]] by default; `Vendored` is the zero-dependency escape
     *               hatch, correct only for a single-module port
-    * @return the plan, so the caller can pass `plan.concreteMembers` to the emitter
+    * @return the plan, so the caller can pass `plan.concreteMembers` to the emitter and, if it has
+    *         no run behind it, write `plan.sources` where it wants them
     */
   def emitPort(
       root: Path,
@@ -80,7 +97,6 @@ object SbtGen:
   ): RuntimePlan =
     val plan = RuntimePlan.of(phases, mode)
     emit(root, spec.copy(runtime = plan))
-    plan.writeSources(managedMain(root))
     plan
 
   def emit(root: Path, spec: ProjectSpec): Unit =
