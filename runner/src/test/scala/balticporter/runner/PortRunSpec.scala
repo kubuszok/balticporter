@@ -241,6 +241,21 @@ class PortRunSpec extends munit.FunSuite:
       case (k, scala.None) => System.clearProperty(k)
     }
 
+  test("with the artifact layer OFF a run writes NOTHING outside its output directory") {
+    // The port map was written unconditionally, into `<cwd>/port-report/<main class>/run-latest`.
+    // Under a forked test JVM the working directory is the SUBPROJECT's, so this suite published
+    // maps into the repository — `runner/port-report/`, and once a committed `port-report/jar/`
+    // holding this file's own `PortRun("k", …)` fixture. A `git status` that cannot tell a decision
+    // from an artefact is precisely what §5.5's discipline rests on.
+    val here   = DebugFlags.root.resolve("port-report")
+    def listed = if !Files.exists(here) then Set.empty[String]
+                 else Files.walk(here).iterator().asScala.map(_.toString).toSet
+    val before = listed
+    val (root, src) = fixture()
+    run(root, src)()
+    assertEquals(listed, before, "a run that was not asked for artifacts must not leave any")
+  }
+
   test("PortRun writes the source map — the emitter no longer records through a global") {
     val (root, src) = fixture()
     val rep = root.resolve("report")

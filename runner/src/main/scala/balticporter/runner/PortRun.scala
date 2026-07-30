@@ -384,8 +384,24 @@ final case class PortRun(
       // that no longer exists. `SrcMap` records each member's Java path relative to THIS root.
       sourceRoot   = Some(frontend.sourceRoot),
     )
-    val mapPath = PortMap.write(CheckReport.runDir, portMap)
-    say(s"port map: ${portMap.types.size} type(s), ${portMap.members.size} member(s) -> $mapPath")
+    // …and written only when the ARTIFACT LAYER IS ON, like every other file this run produces.
+    //
+    // Unconditional, this wrote `<cwd>/port-report/<sun.java.command>/run-latest/port-map.tsv` for
+    // any run that had not opted in — and under a forked test JVM the working directory is the
+    // SUBPROJECT's, so the engine's own suites published maps INTO THE REPOSITORY
+    // (`runner/port-report/…`, and once a committed `port-report/jar/` holding `PortRunSpec`'s
+    // fixture). A `git status` that cannot distinguish a decision from an artefact is the one thing
+    // §5.5 says the measurement discipline depends on.
+    //
+    // Gating it here rather than fixing the callers is not convenience: a map nobody can DISCOVER
+    // is useless, and `PortMap.discover` reads `CheckReport.dir`'s parent — so a run with no report
+    // directory has nowhere to publish TO, and every spec that ever calls `execute()` would
+    // otherwise have to remember the same wrapper. `ManifestSpec` already documents this as the
+    // expected behaviour ("a unit-test JVM has CheckReport off, so no PortRun here publishes a port
+    // map"); it is now true rather than nearly true.
+    val mapPath = Option.when(CheckReport.enabled)(PortMap.write(CheckReport.runDir, portMap))
+    say(s"port map: ${portMap.types.size} type(s), ${portMap.members.size} member(s)" +
+      mapPath.fold(" (not published: the artifact layer is off)")(p => s" -> $p"))
 
     // ---- DECISION PROVENANCE: how this run arrived at the code it just wrote ----
     // The phases recorded theirs while the pipeline ran; the run's own non-phase deciders — the
