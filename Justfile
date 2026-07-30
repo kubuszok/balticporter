@@ -62,6 +62,13 @@ scala_version := "3.8.4"
 
 # per-lane compile/test dependencies, verbatim scala-cli flags (word-split on purpose)
 gdx_deps      := "--dependency org.junit.jupiter:junit-jupiter:5.10.2 --dependency junit:junit:4.13.2 --dependency org.scalameta::munit:1.0.2"
+# The libGDX suite's RUN carries the same three coordinates in a DIFFERENT order, and it is kept
+# that way on purpose: this is the order the run that produced the committed `tests.tsv` used, and
+# the order of `--dependency` flags is an input to scala-cli's classpath — with junit4, jupiter and
+# munit all present, which runner claims a suite is decided by scanning it. Reordering may well be
+# harmless; it is not something this file is entitled to change silently, and the lane that would
+# discover it costs 221 tests to run.
+gdx_run_deps  := "--dependency org.scalameta::munit:1.0.2 --dependency junit:junit:4.13.2 --dependency org.junit.jupiter:junit-jupiter:5.10.2"
 # Mockito 1.10.19, NOT a 2.x/5.x: Ashley's `ComponentClassFactory` uses `org.mockito.asm`, removed
 # in 2.0. Read from Ashley's own build.gradle rather than guessed — guessing it cost a full cycle.
 ashley_deps   := "--dependency junit:junit:4.13.2 --dependency org.mockito:mockito-all:1.10.19 --dependency org.scalameta::munit:1.0.2"
@@ -208,7 +215,7 @@ gdx-test-measure:
     if [ "$ERRORS" = "0" ]; then
       echo
       echo "-- run --"
-      scala-cli test --scala {{scala_version}} --server=false {{gdx_deps}} \
+      scala-cli test --scala {{scala_version}} --server=false {{gdx_run_deps}} \
         -Duser.language=en -Duser.country=US \
         {{gdx_module}}/src_managed/main/scala {{gdx_module}}/src_managed/test/scala 2>&1 |
         sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/gdxtestrun.txt
