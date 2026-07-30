@@ -33,7 +33,7 @@ type		balticporter.runtime.JavaCollection	Added	-		0
 type		balticporter.runtime.JavaCollections	Added	-		0	
 type		balticporter.runtime.JavaIterable	Added	-		0	
 type		balticporter.runtime.JavaIterator	Added	-		0	
-member	com.badlogic.ashley.core.ComponentClassFactory#createComponentType(String)	sge.ecs.ComponentClassFactory#createComponentType(String)	Renamed	-	com/badlogic/ashley/core/ComponentClassFactory.java	25	386886a733efdef0
+member	com.badlogic.ashley.core.ComponentClassFactory#createComponentType(String)	sge.ecs.ComponentClassFactory#createComponentType(String)	Renamed	-	com/badlogic/ashley/core/ComponentClassFactory.java	25	86513dad698c1047
 member	com.badlogic.ashley.core.ComponentOperationHandlerTests#<stmt1>	sge.ecs.ComponentOperationHandlerTests#<stmt1>	Renamed	-	com/badlogic/ashley/core/ComponentOperationHandlerTests.java	32	e9d3463819de4d1c
 member	com.badlogic.ashley.core.ComponentOperationHandlerTests#<stmt2>	sge.ecs.ComponentOperationHandlerTests#<stmt2>	Renamed	-	com/badlogic/ashley/core/ComponentOperationHandlerTests.java	47	ac521cb518264fb3
 member	com.badlogic.ashley.core.ComponentOperationHandlerTests#<stmt3>	sge.ecs.ComponentOperationHandlerTests#<stmt3>	Renamed	-	com/badlogic/ashley/core/ComponentOperationHandlerTests.java	66	457c1ed5cda5b703
@@ -46,13 +46,13 @@ member	com.badlogic.ashley.core.ComponentTypeTests#<stmt1>	sge.ecs.ComponentType
 member	com.badlogic.ashley.core.ComponentTypeTests#<stmt2>	sge.ecs.ComponentTypeTests#<stmt2>	Renamed	-	com/badlogic/ashley/core/ComponentTypeTests.java	43	5ec7948e0e0c07bb
 member	com.badlogic.ashley.core.ComponentTypeTests#<stmt3>	sge.ecs.ComponentTypeTests#<stmt3>	Renamed	-	com/badlogic/ashley/core/ComponentTypeTests.java	55	ec5b695333a74927
 member	com.badlogic.ashley.core.EngineTests#<stmt10>	sge.ecs.EngineTests#<stmt10>	Renamed	-	com/badlogic/ashley/core/EngineTests.java	367	b4625c8b3221237c
-member	com.badlogic.ashley.core.EngineTests#<stmt11>	sge.ecs.EngineTests#<stmt11>	Renamed	-	com/badlogic/ashley/core/EngineTests.java	407	3702d79a4d016b18
+member	com.badlogic.ashley.core.EngineTests#<stmt11>	sge.ecs.EngineTests#<stmt11>	Renamed	-	com/badlogic/ashley/core/EngineTests.java	407	deb20618f398f1db
 member	com.badlogic.ashley.core.EngineTests#<stmt12>	sge.ecs.EngineTests#<stmt12>	Renamed	-	com/badlogic/ashley/core/EngineTests.java	428	884da1c0a4532a59
 member	com.badlogic.ashley.core.EngineTests#<stmt13>	sge.ecs.EngineTests#<stmt13>	Renamed	-	com/badlogic/ashley/core/EngineTests.java	468	2d37a77e9da93cbc
 member	com.badlogic.ashley.core.EngineTests#<stmt14>	sge.ecs.EngineTests#<stmt14>	Renamed	-	com/badlogic/ashley/core/EngineTests.java	515	93ddc36998cf1b52
 member	com.badlogic.ashley.core.EngineTests#<stmt15>	sge.ecs.EngineTests#<stmt15>	Renamed	-	com/badlogic/ashley/core/EngineTests.java	544	e5d3ce9182c1f4aa
 member	com.badlogic.ashley.core.EngineTests#<stmt16>	sge.ecs.EngineTests#<stmt16>	Renamed	-	com/badlogic/ashley/core/EngineTests.java	659	ada9ed9202302470
-member	com.badlogic.ashley.core.EngineTests#<stmt17>	sge.ecs.EngineTests#<stmt17>	Renamed	-	com/badlogic/ashley/core/EngineTests.java	688	b657b9850bb09293
+member	com.badlogic.ashley.core.EngineTests#<stmt17>	sge.ecs.EngineTests#<stmt17>	Renamed	-	com/badlogic/ashley/core/EngineTests.java	688	5ab05d62e45b8d9e
 member	com.badlogic.ashley.core.EngineTests#<stmt18>	sge.ecs.EngineTests#<stmt18>	Renamed	-	com/badlogic/ashley/core/EngineTests.java	774	d3d25343b7a81866
 member	com.badlogic.ashley.core.EngineTests#<stmt19>	sge.ecs.EngineTests#<stmt19>	Renamed	-	com/badlogic/ashley/core/EngineTests.java	856	28029392104e911c
 member	com.badlogic.ashley.core.EngineTests#<stmt1>	sge.ecs.EngineTests#<stmt1>	Renamed	-	com/badlogic/ashley/core/EngineTests.java	162	cd8b491e3bb2072b
@@ -63,7 +63,7 @@ member	com.badlogic.ashley.core.EngineTests#<stmt23>	sge.ecs.EngineTests#<stmt23
 member	com.badlogic.ashley.core.EngineTests#<stmt24>	sge.ecs.EngineTests#<stmt24>	Renamed	-	com/badlogic/ashley/core/EngineTests.java	954	8f367efe581a513e
 member	com.badlogic.ashley.core.EngineTests#<stmt25>	sge.ecs.EngineTests#<stmt25>	Renamed	-	com/badlogic/ashley/core/EngineTests.java	962	133056d98b019168
 member	com.badlogic.ashley.core.EngineTests#<stmt26>	sge.ecs.EngineTests#<stmt26>	Renamed	-	com/badlogic/ashley/core/EngineTests.java	970	33c88662a7f6e113
-member	com.badlogic.ashley.core.EngineTests#<stmt27>	sge.ecs.EngineTests#<stmt27>	Renamed	-	com/badlogic/ashley/core/EngineTests.java	988	bc659bbb1ca96e31
+member	com.badlogic.ashley.core.EngineTests#<stmt27>	sge.ecs.EngineTests#<stmt27>	Renamed	-	com/badlogic/ashley/core/EngineTests.java	988	b048c2311aea852b
 member	com.badlogic.ashley.core.EngineTests#<stmt2>	sge.ecs.EngineTests#<stmt2>	Renamed	-	com/badlogic/ashley/core/EngineTests.java	194	fa1a8a8f9db28940
 member	com.badlogic.ashley.core.EngineTests#<stmt3>	sge.ecs.EngineTests#<stmt3>	Renamed	-	com/badlogic/ashley/core/EngineTests.java	213	a8617e57de28ad60
 member	com.badlogic.ashley.core.EngineTests#<stmt4>	sge.ecs.EngineTests#<stmt4>	Renamed	-	com/badlogic/ashley/core/EngineTests.java	248	6f4d71aa50341d68
@@ -130,8 +130,8 @@ member	com.badlogic.ashley.core.EntityManagerTests#<stmt3>	sge.ecs.EntityManager
 member	com.badlogic.ashley.core.EntityManagerTests#<stmt4>	sge.ecs.EntityManagerTests#<stmt4>	Renamed	-	com/badlogic/ashley/core/EntityManagerTests.java	87	5b48b7a66a73794e
 member	com.badlogic.ashley.core.EntityManagerTests#<stmt5>	sge.ecs.EntityManagerTests#<stmt5>	Renamed	-	com/badlogic/ashley/core/EntityManagerTests.java	96	8879b3dcb3c00f61
 member	com.badlogic.ashley.core.EntityManagerTests#<stmt6>	sge.ecs.EntityManagerTests#<stmt6>	Renamed	-	com/badlogic/ashley/core/EntityManagerTests.java	107	ae223ba2293269b6
-member	com.badlogic.ashley.core.EntityManagerTests#<stmt7>	sge.ecs.EntityManagerTests#<stmt7>	Renamed	-	com/badlogic/ashley/core/EntityManagerTests.java	133	03ceca81f1ef88c6
-member	com.badlogic.ashley.core.EntityManagerTests#<stmt8>	sge.ecs.EntityManagerTests#<stmt8>	Renamed	-	com/badlogic/ashley/core/EntityManagerTests.java	152	20ce27d46977f1a9
+member	com.badlogic.ashley.core.EntityManagerTests#<stmt7>	sge.ecs.EntityManagerTests#<stmt7>	Renamed	-	com/badlogic/ashley/core/EntityManagerTests.java	133	fbbddacbc179e5c4
+member	com.badlogic.ashley.core.EntityManagerTests#<stmt8>	sge.ecs.EntityManagerTests#<stmt8>	Renamed	-	com/badlogic/ashley/core/EntityManagerTests.java	152	e7bd5da55149637c
 member	com.badlogic.ashley.core.EntityManagerTests$EntityListenerMock#addedCount	sge.ecs.EntityManagerTests$EntityListenerMock#addedCount	Renamed	-	com/badlogic/ashley/core/EntityManagerTests.java	14	ee5884aa03b7c9ac
 member	com.badlogic.ashley.core.EntityManagerTests$EntityListenerMock#entityAdded(Entity)	sge.ecs.EntityManagerTests$EntityListenerMock#entityAdded(Entity)	Renamed	-	com/badlogic/ashley/core/EntityManagerTests.java	18	13081dfe40a8e00b
 member	com.badlogic.ashley.core.EntityManagerTests$EntityListenerMock#entityRemoved(Entity)	sge.ecs.EntityManagerTests$EntityListenerMock#entityRemoved(Entity)	Renamed	-	com/badlogic/ashley/core/EntityManagerTests.java	24	1a299647fc4a6254
@@ -140,7 +140,7 @@ member	com.badlogic.ashley.core.EntityTests#<stmt1>	sge.ecs.EntityTests#<stmt1>	
 member	com.badlogic.ashley.core.EntityTests#<stmt2>	sge.ecs.EntityTests#<stmt2>	Renamed	-	com/badlogic/ashley/core/EntityTests.java	68	f8560c4a6eac71cd
 member	com.badlogic.ashley.core.EntityTests#<stmt3>	sge.ecs.EntityTests#<stmt3>	Renamed	-	com/badlogic/ashley/core/EntityTests.java	74	210c256d2f12dea2
 member	com.badlogic.ashley.core.EntityTests#<stmt4>	sge.ecs.EntityTests#<stmt4>	Renamed	-	com/badlogic/ashley/core/EntityTests.java	86	c8ad9dbe815dfa68
-member	com.badlogic.ashley.core.EntityTests#<stmt5>	sge.ecs.EntityTests#<stmt5>	Renamed	-	com/badlogic/ashley/core/EntityTests.java	120	95a747c666b46f45
+member	com.badlogic.ashley.core.EntityTests#<stmt5>	sge.ecs.EntityTests#<stmt5>	Renamed	-	com/badlogic/ashley/core/EntityTests.java	120	ec99d3bdaa868a5b
 member	com.badlogic.ashley.core.EntityTests#<stmt6>	sge.ecs.EntityTests#<stmt6>	Renamed	-	com/badlogic/ashley/core/EntityTests.java	135	11d5136e324df2e0
 member	com.badlogic.ashley.core.EntityTests#<stmt7>	sge.ecs.EntityTests#<stmt7>	Renamed	-	com/badlogic/ashley/core/EntityTests.java	171	96fc3a6df666df3c
 member	com.badlogic.ashley.core.EntityTests#<stmt8>	sge.ecs.EntityTests#<stmt8>	Renamed	-	com/badlogic/ashley/core/EntityTests.java	187	c3678446cf544467
@@ -172,7 +172,7 @@ member	com.badlogic.ashley.core.FamilyTests#<stmt9>	sge.ecs.FamilyTests#<stmt9>	
 member	com.badlogic.ashley.core.FamilyTests$TestSystemA#processEntity(Entity,float)	sge.ecs.FamilyTests$TestSystemA#processEntity(Entity,float)	Renamed	-	com/badlogic/ashley/core/FamilyTests.java	54	aa0f86d41d594183
 member	com.badlogic.ashley.core.FamilyTests$TestSystemB#processEntity(Entity,float)	sge.ecs.FamilyTests$TestSystemB#processEntity(Entity,float)	Renamed	-	com/badlogic/ashley/core/FamilyTests.java	65	aa0f86d41d594183
 member	com.badlogic.ashley.core.PooledEngineTests#<stmt1>	sge.ecs.PooledEngineTests#<stmt1>	Renamed	-	com/badlogic/ashley/core/PooledEngineTests.java	91	309193c2e92ec299
-member	com.badlogic.ashley.core.PooledEngineTests#<stmt2>	sge.ecs.PooledEngineTests#<stmt2>	Renamed	-	com/badlogic/ashley/core/PooledEngineTests.java	115	35dbbad89d023b04
+member	com.badlogic.ashley.core.PooledEngineTests#<stmt2>	sge.ecs.PooledEngineTests#<stmt2>	Renamed	-	com/badlogic/ashley/core/PooledEngineTests.java	115	4d61122966ea0042
 member	com.badlogic.ashley.core.PooledEngineTests#<stmt3>	sge.ecs.PooledEngineTests#<stmt3>	Renamed	-	com/badlogic/ashley/core/PooledEngineTests.java	169	eab86488d5a7fcf2
 member	com.badlogic.ashley.core.PooledEngineTests#<stmt4>	sge.ecs.PooledEngineTests#<stmt4>	Renamed	-	com/badlogic/ashley/core/PooledEngineTests.java	198	d56af83a9e893065
 member	com.badlogic.ashley.core.PooledEngineTests#<stmt5>	sge.ecs.PooledEngineTests#<stmt5>	Renamed	-	com/badlogic/ashley/core/PooledEngineTests.java	220	2ffcfa15efef8d46
@@ -239,7 +239,7 @@ member	com.badlogic.ashley.systems.IntervalSystemTest#<stmt2>	sge.ecs.systems.In
 member	com.badlogic.ashley.systems.IntervalSystemTest#deltaTime	sge.ecs.systems.IntervalSystemTest#deltaTime	Renamed	-	com/badlogic/ashley/systems/IntervalSystemTest.java	26	f627fe12841e174a
 member	com.badlogic.ashley.systems.IntervalSystemTest$IntervalSystemSpy#numUpdates	sge.ecs.systems.IntervalSystemTest$IntervalSystemSpy#numUpdates	Renamed	-	com/badlogic/ashley/systems/IntervalSystemTest.java	29	14088a878263841e
 member	com.badlogic.ashley.systems.IntervalSystemTest$IntervalSystemSpy#updateInterval()	sge.ecs.systems.IntervalSystemTest$IntervalSystemSpy#updateInterval()	Renamed	-	com/badlogic/ashley/systems/IntervalSystemTest.java	36	5fd2bd213852bf75
-member	com.badlogic.ashley.systems.IteratingSystemTest#<stmt1>	sge.ecs.systems.IteratingSystemTest#<stmt1>	Renamed	-	com/badlogic/ashley/systems/IteratingSystemTest.java	131	56be2ccfc990b800
+member	com.badlogic.ashley.systems.IteratingSystemTest#<stmt1>	sge.ecs.systems.IteratingSystemTest#<stmt1>	Renamed	-	com/badlogic/ashley/systems/IteratingSystemTest.java	131	4d9190f754ea4285
 member	com.badlogic.ashley.systems.IteratingSystemTest#<stmt2>	sge.ecs.systems.IteratingSystemTest#<stmt2>	Renamed	-	com/badlogic/ashley/systems/IteratingSystemTest.java	171	dc9077e2f63b2d04
 member	com.badlogic.ashley.systems.IteratingSystemTest#<stmt3>	sge.ecs.systems.IteratingSystemTest#<stmt3>	Renamed	-	com/badlogic/ashley/systems/IteratingSystemTest.java	204	6050414045113e4b
 member	com.badlogic.ashley.systems.IteratingSystemTest#<stmt4>	sge.ecs.systems.IteratingSystemTest#<stmt4>	Renamed	-	com/badlogic/ashley/systems/IteratingSystemTest.java	237	865a36693369344e
@@ -263,7 +263,7 @@ member	com.badlogic.ashley.systems.IteratingSystemTest$IteratingSystemMock#numUp
 member	com.badlogic.ashley.systems.IteratingSystemTest$IteratingSystemMock#processEntity(Entity,float)	sge.ecs.systems.IteratingSystemTest$IteratingSystemMock#processEntity(Entity,float)	Renamed	-	com/badlogic/ashley/systems/IteratingSystemTest.java	58	93128fa00652c723
 member	com.badlogic.ashley.systems.IteratingSystemTest$IteratingSystemMock#startProcessing()	sge.ecs.systems.IteratingSystemTest$IteratingSystemMock#startProcessing()	Renamed	-	com/badlogic/ashley/systems/IteratingSystemTest.java	53	0dd75fd483a3f1bd
 member	com.badlogic.ashley.systems.IteratingSystemTest$SpyComponent#updates	sge.ecs.systems.IteratingSystemTest$SpyComponent#updates	Renamed	-	com/badlogic/ashley/systems/IteratingSystemTest.java	69	0809796dfe4faaaf
-member	com.badlogic.ashley.systems.SortedIteratingSystemTest#<stmt1>	sge.ecs.systems.SortedIteratingSystemTest#<stmt1>	Renamed	-	com/badlogic/ashley/systems/SortedIteratingSystemTest.java	153	12a4740d734c1560
+member	com.badlogic.ashley.systems.SortedIteratingSystemTest#<stmt1>	sge.ecs.systems.SortedIteratingSystemTest#<stmt1>	Renamed	-	com/badlogic/ashley/systems/SortedIteratingSystemTest.java	153	fdfb966fdc031270
 member	com.badlogic.ashley.systems.SortedIteratingSystemTest#<stmt2>	sge.ecs.systems.SortedIteratingSystemTest#<stmt2>	Renamed	-	com/badlogic/ashley/systems/SortedIteratingSystemTest.java	184	5e3d958edc68afee
 member	com.badlogic.ashley.systems.SortedIteratingSystemTest#<stmt3>	sge.ecs.systems.SortedIteratingSystemTest#<stmt3>	Renamed	-	com/badlogic/ashley/systems/SortedIteratingSystemTest.java	218	16e4e658db085d14
 member	com.badlogic.ashley.systems.SortedIteratingSystemTest#<stmt4>	sge.ecs.systems.SortedIteratingSystemTest#<stmt4>	Renamed	-	com/badlogic/ashley/systems/SortedIteratingSystemTest.java	258	a3433b8ceb76888d

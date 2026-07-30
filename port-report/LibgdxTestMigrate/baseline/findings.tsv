@@ -185,3 +185,72 @@ d2fd6cfc998b	portability(emitted)	org.junit.rules.TestWatcher	sge.utils.JsonMatc
 2c2e139d39b3	portability(emitted)	org.junit.runner.Description	?#desc	com/badlogic/gdx/utils/JsonMatcherTests.java	1571	MemberType — JUnit is JVM-only; cross-platform Scala needs MUnit/utest
 615fd6f48c13	remediation	substitutions-drop	sge.utils.JsonMatcherTests	-	0	Substitutions(dropTypes = Set("sge.utils.JsonMatcherTests"))  ·  high — all 3 site(s) of 2 JVM-only API(s) are inside this one declared type (org.junit.rules.TestWatcher, org.junit.runner.Description), and no other unit in this port references it — it can be dropped outright ! verify the drop with SubstitutionCheck: a reference left behind is a dangling type, not a smaller number
 28e07c94a63d	remediation	substitutions-drop	sge.utils.SortTest	-	0	Substitutions(dropTypes = Set("sge.utils.SortTest"))  ·  high — all 12 site(s) of 2 JVM-only API(s) are inside this one declared type (java.lang.Class#getDeclaredField, java.lang.reflect.Field), and no other unit in this port references it — it can be dropped outright ! verify the drop with SubstitutionCheck: a reference left behind is a dangling type, not a smaller number
+c577d34c112f	trivia	javadoc dropped	com/badlogic/gdx/math/BSplineTest.java	com/badlogic/gdx/math/BSplineTest.java	101	/** Test to validate calculation with edge cases (t = 0 and t = 1). */
+671541340833	trivia	javadoc dropped	com/badlogic/gdx/utils/CharArrayTest.java	com/badlogic/gdx/utils/CharArrayTest.java	14	/** Test constructors */
+acbf28b6f3dc	trivia	javadoc dropped	com/badlogic/gdx/utils/CharArrayTest.java	com/badlogic/gdx/utils/CharArrayTest.java	68	/** Test add methods */
+6fbf7dacabac	trivia	javadoc dropped	com/badlogic/gdx/utils/CharArrayTest.java	com/badlogic/gdx/utils/CharArrayTest.java	115	/** Test get and set methods */
+486451403762	trivia	javadoc dropped	com/badlogic/gdx/utils/CharArrayTest.java	com/badlogic/gdx/utils/CharArrayTest.java	156	/** Test remove methods */
+661648f0e549	trivia	javadoc dropped	com/badlogic/gdx/utils/CharArrayTest.java	com/badlogic/gdx/utils/CharArrayTest.java	209	/** Test search methods */
+eebd2164580c	trivia	javadoc dropped	com/badlogic/gdx/utils/CharArrayTest.java	com/badlogic/gdx/utils/CharArrayTest.java	244	/** Test stack operations */
+331f1bf4c0f5	trivia	javadoc dropped	com/badlogic/gdx/utils/CharArrayTest.java	com/badlogic/gdx/utils/CharArrayTest.java	274	/** Test array operations */
+0a9d4c61a2b2	trivia	javadoc dropped	com/badlogic/gdx/utils/CharArrayTest.java	com/badlogic/gdx/utils/CharArrayTest.java	315	/** Test append methods */
+af522e94f8e2	trivia	javadoc dropped	com/badlogic/gdx/utils/CharArrayTest.java	com/badlogic/gdx/utils/CharArrayTest.java	398	/** Test appendln methods */
+d3d09806da86	trivia	javadoc dropped	com/badlogic/gdx/utils/CharArrayTest.java	com/badlogic/gdx/utils/CharArrayTest.java	415	/** Test padding and fixed width methods */
+0f1832e36c79	trivia	javadoc dropped	com/badlogic/gdx/utils/CharArrayTest.java	com/badlogic/gdx/utils/CharArrayTest.java	441	/** Test delete methods */
+e1c0ba5d1d10	trivia	javadoc dropped	com/badlogic/gdx/utils/CharArrayTest.java	com/badlogic/gdx/utils/CharArrayTest.java	475	/** Test replace methods */
+7b6407790ebb	trivia	javadoc dropped	com/badlogic/gdx/utils/CharArrayTest.java	com/badlogic/gdx/utils/CharArrayTest.java	512	/** Test insert methods */
+0dbc1c6cb635	trivia	javadoc dropped	com/badlogic/gdx/utils/CharArrayTest.java	com/badlogic/gdx/utils/CharArrayTest.java	553	/** Test substring methods */
+10a03cbe3735	trivia	javadoc dropped	com/badlogic/gdx/utils/CharArrayTest.java	com/badlogic/gdx/utils/CharArrayTest.java	579	/** Test string comparison methods */
+983ff5fd472a	trivia	javadoc dropped	com/badlogic/gdx/utils/CharArrayTest.java	com/badlogic/gdx/utils/CharArrayTest.java	619	/** Test CharSequence methods */
+c557da9a8b0d	trivia	javadoc dropped	com/badlogic/gdx/utils/CharArrayTest.java	com/badlogic/gdx/utils/CharArrayTest.java	636	/** Test trim and capacity methods */
+8b6e35714ddc	trivia	javadoc dropped	com/badlogic/gdx/utils/CharArrayTest.java	com/badlogic/gdx/utils/CharArrayTest.java	666	/** Test hashCode and equals */
+2bfbb9a9c496	trivia	javadoc dropped	com/badlogic/gdx/utils/CharArrayTest.java	com/badlogic/gdx/utils/CharArrayTest.java	684	/** Test Reader and Writer */
+84217bf663cc	trivia	javadoc dropped	com/badlogic/gdx/utils/CharArrayTest.java	com/badlogic/gdx/utils/CharArrayTest.java	715	/** Test Unicode/code point methods */
+718c81971070	trivia	javadoc dropped	com/badlogic/gdx/utils/CharArrayTest.java	com/badlogic/gdx/utils/CharArrayTest.java	742	/** Test iterator methods */
+797429665bbb	trivia	javadoc dropped	com/badlogic/gdx/utils/CharArrayTest.java	com/badlogic/gdx/utils/CharArrayTest.java	773	/** Test edge cases and error conditions */
+7f92f4e3a2e7	trivia	javadoc dropped	com/badlogic/gdx/utils/CharArrayTest.java	com/badlogic/gdx/utils/CharArrayTest.java	814	/** Test toArray conversions */
+74b7b2ca42e0	trivia	javadoc dropped	com/badlogic/gdx/utils/CharArrayTest.java	com/badlogic/gdx/utils/CharArrayTest.java	832	/** Test drain methods */
+48ba79db9d54	trivia	javadoc dropped	com/badlogic/gdx/utils/CharArrayTest.java	com/badlogic/gdx/utils/CharArrayTest.java	850	/** Test appendSeparator variations */
+bfdb213f3f8c	trivia	javadoc dropped	com/badlogic/gdx/utils/CharArrayTest.java	com/badlogic/gdx/utils/CharArrayTest.java	888	/** Test random access */
+181ceb2f0d53	trivia	javadoc dropped	com/badlogic/gdx/utils/CharArrayTest.java	com/badlogic/gdx/utils/CharArrayTest.java	909	/** Test appendTo method */
+19846dc21c1c	trivia	javadoc dropped	com/badlogic/gdx/utils/CharArrayTest.java	com/badlogic/gdx/utils/CharArrayTest.java	925	/** Test setCharAt */
+287051dbc0bc	trivia	javadoc dropped	com/badlogic/gdx/utils/CharArrayTest.java	com/badlogic/gdx/utils/CharArrayTest.java	937	/** Test toStringAndClear */
+09c4b02a3e62	trivia	javadoc dropped	com/badlogic/gdx/utils/CharArrayTest.java	com/badlogic/gdx/utils/CharArrayTest.java	947	/** Test toString with separator */
+7d0ea1dde617	trivia	javadoc dropped	com/badlogic/gdx/utils/LongArrayTest.java	com/badlogic/gdx/utils/LongArrayTest.java	23	/** Test of the different adding methods */
+69e1f28968c6	trivia	javadoc dropped	com/badlogic/gdx/utils/LongArrayTest.java	com/badlogic/gdx/utils/LongArrayTest.java	62	/** Test of the get() method */
+93e493574848	trivia	javadoc dropped	com/badlogic/gdx/utils/LongArrayTest.java	com/badlogic/gdx/utils/LongArrayTest.java	76	/** Test of the set() method */
+6131eeba211f	trivia	javadoc dropped	com/badlogic/gdx/utils/LongArrayTest.java	com/badlogic/gdx/utils/LongArrayTest.java	90	/** Test of the incr() method */
+1d3e5b59738b	trivia	javadoc dropped	com/badlogic/gdx/utils/LongArrayTest.java	com/badlogic/gdx/utils/LongArrayTest.java	106	/** Test of the mul() method */
+48f90c4614a0	trivia	javadoc dropped	com/badlogic/gdx/utils/LongArrayTest.java	com/badlogic/gdx/utils/LongArrayTest.java	122	/** Test of the insert() method */
+b102d1cbce98	trivia	javadoc dropped	com/badlogic/gdx/utils/LongArrayTest.java	com/badlogic/gdx/utils/LongArrayTest.java	152	/** Test of the swap() method */
+06df372ce7b6	trivia	javadoc dropped	com/badlogic/gdx/utils/LongArrayTest.java	com/badlogic/gdx/utils/LongArrayTest.java	179	/** Test of the indexOf() method */
+184d66f3be9e	trivia	javadoc dropped	com/badlogic/gdx/utils/LongArrayTest.java	com/badlogic/gdx/utils/LongArrayTest.java	189	/** Test of all remove methods (removeValue, removeIndex, removeRange, removeAll) */
+e346e1ae7791	trivia	javadoc dropped	com/badlogic/gdx/utils/LongArrayTest.java	com/badlogic/gdx/utils/LongArrayTest.java	239	/** Test of the pop(), peek() and first() methods */
+0bf42809875c	trivia	javadoc dropped	com/badlogic/gdx/utils/LongArrayTest.java	com/badlogic/gdx/utils/LongArrayTest.java	268	/** test of the isEmpty() and notEmpty() methods */
+232a60efd180	trivia	javadoc dropped	com/badlogic/gdx/utils/LongArrayTest.java	com/badlogic/gdx/utils/LongArrayTest.java	277	/** Test of the clear() method */
+9048b1d85822	trivia	javadoc dropped	com/badlogic/gdx/utils/LongArrayTest.java	com/badlogic/gdx/utils/LongArrayTest.java	285	/** Test of the shrink() method */
+9834f97fd84c	trivia	javadoc dropped	com/badlogic/gdx/utils/LongArrayTest.java	com/badlogic/gdx/utils/LongArrayTest.java	294	/** Test of the ensureCapacity method */
+9405cad977f7	trivia	javadoc dropped	com/badlogic/gdx/utils/LongArrayTest.java	com/badlogic/gdx/utils/LongArrayTest.java	311	/** Test of the setSize() method */
+5263556b6d26	trivia	javadoc dropped	com/badlogic/gdx/utils/LongArrayTest.java	com/badlogic/gdx/utils/LongArrayTest.java	330	/** Test of resize() method */
+32167eb25cbe	trivia	javadoc dropped	com/badlogic/gdx/utils/LongArrayTest.java	com/badlogic/gdx/utils/LongArrayTest.java	340	/** Test of sort() and reverse() methods */
+bbb700072696	trivia	javadoc dropped	com/badlogic/gdx/utils/LongArrayTest.java	com/badlogic/gdx/utils/LongArrayTest.java	352	/** Test of equals() method */
+85d70347d16a	trivia	javadoc dropped	com/badlogic/gdx/utils/LongQueueTest.java	com/badlogic/gdx/utils/LongQueueTest.java	121	/** Same as resizableQueueTest, but in reverse */
+705f52e9b553	trivia	javadoc dropped	com/badlogic/gdx/utils/QueueTest.java	com/badlogic/gdx/utils/QueueTest.java	123	/** Same as resizableQueueTest, but in reverse */
+59e5cfaef343	trivia	line dropped	com/badlogic/gdx/math/collision/CollisionTest.java	com/badlogic/gdx/math/collision/CollisionTest.java	21	// Note, in stage the bottom and left sides are inclusive while the right and top sides are exclusive.
+b17f57a5dcb5	trivia	line dropped	com/badlogic/gdx/utils/CharArrayTest.java	com/badlogic/gdx/utils/CharArrayTest.java	663	// Extended with null chars
+efa67151131f	trivia	line dropped	com/badlogic/gdx/utils/CharArrayTest.java	com/badlogic/gdx/utils/CharArrayTest.java	803	// Expected
+0d8c77e11739	trivia	line dropped	com/badlogic/gdx/utils/LongArrayTest.java	com/badlogic/gdx/utils/LongArrayTest.java	72	// We should get here as we want to get an index that's out of bounds.
+d2d8bee2719e	trivia	line dropped	com/badlogic/gdx/utils/LongArrayTest.java	com/badlogic/gdx/utils/LongArrayTest.java	86	// We should get here as we are trying to set the value of an index that's out of bounds.
+711f528f7109	trivia	line dropped	com/badlogic/gdx/utils/LongArrayTest.java	com/badlogic/gdx/utils/LongArrayTest.java	102	// This should throw an exception as we are trying to increase at an index out of bounds
+3a60580dfe8e	trivia	line dropped	com/badlogic/gdx/utils/LongArrayTest.java	com/badlogic/gdx/utils/LongArrayTest.java	118	// This should throw an exception as we are trying to multiply at an index out of bounds
+6dd76fdc5b24	trivia	line dropped	com/badlogic/gdx/utils/LongArrayTest.java	com/badlogic/gdx/utils/LongArrayTest.java	136	// This should throw an exception as we are trying to insert at an index out of bounds
+767cdc9d5421	trivia	line dropped	com/badlogic/gdx/utils/LongArrayTest.java	com/badlogic/gdx/utils/LongArrayTest.java	162	// This should throw an exception as we are trying to swap at an index out of bounds
+2b9f5f4a48bd	trivia	line dropped	com/badlogic/gdx/utils/LongArrayTest.java	com/badlogic/gdx/utils/LongArrayTest.java	206	// This should throw an exception as we are trying to remove at an index that is out of bounds
+ac25cb9d94fe	trivia	line dropped	com/badlogic/gdx/utils/LongArrayTest.java	com/badlogic/gdx/utils/LongArrayTest.java	218	// This should throw an exception as we are trying to remove at a range that is out of bounds
+8db07938d8ce	trivia	line dropped	com/badlogic/gdx/utils/LongArrayTest.java	com/badlogic/gdx/utils/LongArrayTest.java	224	// This should throw an exception as the starting index is > than ending index
+981516586b74	trivia	line dropped	com/badlogic/gdx/utils/LongArrayTest.java	com/badlogic/gdx/utils/LongArrayTest.java	252	// This should throw an exception as we can't take the first item of an empty array
+ed8d1ed08f4a	trivia	line dropped	com/badlogic/gdx/utils/LongArrayTest.java	com/badlogic/gdx/utils/LongArrayTest.java	258	// This should throw an exception as we can't take the last item of an empty array
+ddd92cf66813	trivia	line dropped	com/badlogic/gdx/utils/LongArrayTest.java	com/badlogic/gdx/utils/LongArrayTest.java	307	// This should throw an exception as it is not allowed to have a negative integer as ensureCapacity argument
+82cf1bea543e	trivia	line dropped	com/badlogic/gdx/utils/LongArrayTest.java	com/badlogic/gdx/utils/LongArrayTest.java	326	// This should throw an exception as it is not allowed to have a negative integer as setSize argument
+ce1e83a63dd2	trivia	line dropped	com/badlogic/gdx/utils/LongQueueTest.java	com/badlogic/gdx/utils/LongQueueTest.java	187	// Expected
+b5a786402d03	trivia	line dropped	com/badlogic/gdx/utils/QueueTest.java	com/badlogic/gdx/utils/QueueTest.java	189	// Expected
