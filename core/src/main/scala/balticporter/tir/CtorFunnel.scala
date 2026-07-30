@@ -56,16 +56,37 @@ object CtorFunnel:
         * Admissible only when every root reaches the SAME parent constructor: differing overloads
         * would need the null-padding that measured 0 -> 55 outside the JDK-throwable family. */
       synthetic: List[(String, TypeRepr)] = Nil,
-      /** every root's `super(args)` IS expressed — as the primary's own, or through a `this(...)`
-        * delegation that carries them. [[OmissionCheck]] must not count those: it shadows this
-        * decision, and a decision it does not know about shows up as the number moving in the wrong
-        * direction while the emitted code becomes MORE faithful. Measured twice, +4 then +2. */
-      superExpressed: Boolean = false,
   ):
     def primaryParams: List[Tree.ValDef] = primary.map(_.paramss.flatten).getOrElse(Nil)
 
   object Plan:
     val none: Plan = Plan(scala.None, Nil, Nil)
+
+  /** How ONE secondary constructor's `super(args)` reaches the parent — the single decision the
+    * emitter RENDERS and [[OmissionCheck]] COUNTS.
+    *
+    * It is per-ROOT and not per-class, and that distinction is the whole reason this type exists.
+    * A class-wide "every root's super call survives" flag asserted by the planner is a PROMISE; the
+    * emitter's delegation is a computation that can decline (an argument that finds no parameter of
+    * its own type, an arity the primary cannot take). While the flag existed, a class the planner
+    * marked expressed reported ZERO dropped super arguments even for the roots the emitter had just
+    * lowered to a bare `this()` — the check hiding exactly the drop class it exists to count. One
+    * function answers it now, so the two cannot disagree by construction. */
+  enum SuperCall:
+    /** `this(args)` — positional against a SYNTHESISED primary whose parameters ARE the parent
+      * constructor's, in its order. No matching of any kind is needed or wanted here. */
+    case Positional(args: List[Term])
+    /** `this(...)` against a PROMOTED root: each of the primary's parameters takes an argument of
+      * its own type (`Right`), or the `null` at that type (`Left`) the parent's own narrower
+      * overload would have left there. */
+    case Matched(slots: List[Either[TypeRepr, Term]])
+    /** `this()` — the arguments are LOST, and [[OmissionCheck]] reports them. */
+    case Dropped
+
+  /** a padded slot needs a value that `null` can inhabit; a primitive has none. */
+  val primitiveTypeNames: Set[String] =
+    Set("scala.Int", "scala.Long", "scala.Float", "scala.Double",
+        "scala.Short", "scala.Byte", "scala.Char", "scala.Boolean", "scala.Unit")
 
   /** Whole-program funnel decisions. Built once per `Program` because promoting a PARAMFUL
     * constructor to a class's primary is not a local choice: it removes that class's nilary
@@ -152,6 +173,54 @@ object CtorFunnel:
       * constructor stays counted by [[OmissionCheck]]. */
     def replayFor(cd: Tree.ClassDef, d: Tree.DefDef): Option[List[Statement]] =
       replays.get((cd.symbol, d.symbol))
+
+    // ---- the delegation itself: the ONE answer the emitter renders and the check counts ----
+
+    /** What a secondary constructor's `super(args)` becomes. Per-ROOT: two constructors of the same
+      * class get different answers, which is precisely what a class-wide flag could not say.
+      *
+      * The rules are the emitter's, moved here so there is one copy. A SYNTHESISED primary takes
+      * the parent constructor's parameters in order, so the delegation is positional and exact. A
+      * PROMOTED root's parameters are matched by TYPE, not position — `GdxRuntimeException(Throwable
+      * t) { super(t); }` reaches the parent's `(Throwable)` overload, so `t` belongs in the CAUSE
+      * slot, and positionally it landed in the message slot and did not even type-check. Every
+      * argument must find a home and every unfilled slot must admit `null`, or the call built is not
+      * the one Java made and the honest answer is [[SuperCall.Dropped]]. */
+    def superCall(cd: Tree.ClassDef, args: List[Term]): SuperCall =
+      val plan = apply(cd)
+      // NOTE an EMPTY argument list is not a short circuit. An explicit `super()` against a PROMOTED
+      // paramful primary still has to reach it — `this()` does not exist there, and returning
+      // `Dropped` for it cost one compile error on libGDX. It falls through to the matcher below and
+      // becomes the all-`null` call the parent's nilary overload left, exactly as before.
+      if plan.synthetic.nonEmpty then
+        if args.sizeIs == plan.synthetic.size then SuperCall.Positional(args) else SuperCall.Dropped
+      else
+        val ps = plan.primaryParams
+        if ps.isEmpty || plan.superArgs.size != ps.size || args.sizeIs > ps.size then SuperCall.Dropped
+        else
+          val used  = collection.mutable.Set[Int]()
+          val slots = ps.map { v =>
+            val want = headName(program, v.tpt.tpe)
+            args.zipWithIndex.find((a, k) => !used(k) && headName(program, a.tpe) == want) match
+              case Some((a, k)) => used += k; Some(Right(a): Either[TypeRepr, Term])
+              case scala.None   =>
+                if want.exists(primitiveTypeNames) then scala.None else Some(Left(v.tpt.tpe))
+          }
+          if slots.exists(_.isEmpty) || used.size != args.size then SuperCall.Dropped
+          else SuperCall.Matched(slots.flatten)
+
+    /** Does THIS constructor's `super(args)` survive into the emitted code? The whole of what
+      * [[OmissionCheck.droppedSuperArgs]] asks, and every disjunct is a fact about this one
+      * constructor: it carries no arguments to lose, it IS the primary (its arguments go into the
+      * `extends` clause), its parent constructor is REPLAYED as statements after `this()`, or the
+      * delegation above expresses it. */
+    def superExpressed(cd: Tree.ClassDef, d: Tree.DefDef): Boolean =
+      val args = superArgsOf(program, d)
+      // `.map(_.symbol).contains` — NOT `primary.contains(d.symbol)`, which compiles (both widen to
+      // `Any`) and is always FALSE. It reported the promoted primary of 24 libGDX classes as having
+      // lost the arguments that were sitting in their `extends` clause.
+      args.isEmpty || apply(cd).primary.map(_.symbol).contains(d.symbol) || replayFor(cd, d).isDefined ||
+        superCall(cd, args) != SuperCall.Dropped
 
     /** members a replay reaches that are `private` where they are declared. The replay executes
       * one level down, in the subclass, so they must be widened — which is compile-safe and
@@ -570,8 +639,7 @@ object CtorFunnel:
         else
           val o  = cd.origin
           val ps = formals.zipWithIndex.map((ft, k) => (s"sup$$$k", ft))
-          Some(Plan(scala.None, ps.map((n, ft) => Tree.Opaque(n, ft, o)), Nil,
-                    synthetic = ps, superExpressed = true))
+          Some(Plan(scala.None, ps.map((n, ft) => Tree.Opaque(n, ft, o)), Nil, synthetic = ps))
       // SHAPE 2 — every root is paramful, and one of them already IS the synthetic primary (its own
       // parameters are the parent's, passed straight through). Synthesising beside it would emit a
       // duplicate signature, so that root is promoted and the others delegate.
@@ -580,8 +648,9 @@ object CtorFunnel:
       else if collides then
         roots.filter(passesThrough).sortBy(c => -c.paramss.flatten.size).headOption
           // the promoted root's parameters ARE the parent's, so every other root's `super(args)`
-          // reaches it verbatim through `this(...)` — nothing is dropped.
-          .map { c => val (sa, rest) = split(program, c); Plan(Some(c), sa, rest, superExpressed = true) }
+          // reaches it through `this(...)`. Whether each one ACTUALLY does is not asserted here —
+          // it is [[Plans.superCall]]'s answer, per root, and the one the emitter renders.
+          .map { c => val (sa, rest) = split(program, c); Plan(Some(c), sa, rest) }
       else scala.None
 
   private def superTarget(program: Program, d: Tree.DefDef): SymId = stmtsOf(d).headOption match

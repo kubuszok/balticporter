@@ -113,8 +113,12 @@ object OmissionCheck:
     * nomination, and this check is derived from ITS decision, so the two can never disagree: the
     * constructor `CtorFunnel` promotes to primary has its super arguments EMITTED (into the
     * `extends` clause) and is not reported; nor is one whose parent constructor `CtorFunnel`
-    * can REPLAY as statements after `this()`. Every other constructor whose `super(...)` carries
-    * arguments still loses them, and is reported.
+    * can REPLAY as statements after `this()`, nor one whose arguments the funnel's delegation
+    * ([[CtorFunnel.Plans.superCall]]) actually carries. Every other constructor whose `super(...)`
+    * carries arguments still loses them, and is reported.
+    *
+    * "Cannot disagree" is a property of the GRANULARITY as much as of the source: the question is
+    * asked per CONSTRUCTOR, because that is where the emitter answers it.
     */
   def droppedSuperArgs(program: Program): List[Finding] = droppedSuperArgs(program, program.units)
 
@@ -124,19 +128,15 @@ object OmissionCheck:
 
     val plans = CtorFunnel.Plans(program)
     units.flatMap(classes).flatMap { cd =>
-      val plan    = plans(cd)
-      val primary = plan.primary.map(_.symbol)
-      // `superExpressed` marks a plan under which EVERY root's super call survives — a synthesised
-      // primary (each root a secondary delegating its own arguments), or a promoted pass-through
-      // root (whose parameters ARE the parent's, so `this(...)` carries them verbatim). Counting
-      // those anyway — they are all non-primary, which is the test below — reported first 4 then 2
-      // extra omissions on libGDX for code that had just become MORE faithful. This check exists to
-      // shadow the funnel decision exactly; a decision it does not know about is a drift, and the
-      // number moving the wrong way is what a drift looks like.
-      val synthesised = plan.superExpressed
+      // Per CONSTRUCTOR, from `CtorFunnel.Plans.superExpressed` — the same function the emitter
+      // renders its delegation from. It was briefly a class-wide flag the planner asserted
+      // (`Plan.superExpressed`), and that is the shape this check must never have: the emitter
+      // decides per root and can decline one while expressing another, so a class-wide promise
+      // silenced the report for the declined root. A check that shadows a decision has to shadow
+      // it at the decision's own granularity, or it stops being a shadow and becomes a claim.
       CtorFunnel.ctorsOf(program, cd.body).flatMap { d =>
         val args = CtorFunnel.superArgsOf(program, d)
-        if args.isEmpty || synthesised || primary.contains(d.symbol) || plans.replayFor(cd, d).isDefined then Nil
+        if args.isEmpty || plans.superExpressed(cd, d) then Nil
         else
           val owner = program.symbolOf(cd.symbol).map(_.fullName).getOrElse("?")
           List(Finding("super(args) dropped", owner, s"${args.size} argument(s) discarded", d.origin))

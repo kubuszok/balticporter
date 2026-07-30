@@ -1238,48 +1238,23 @@ final class TirEmitter(
   /** A secondary constructor's `super(args)` — which scala cannot write — expressed as a
     * delegation to the PRIMARY, whose own `extends Parent(…)` makes the call.
     *
-    * Exact when the primary passes its parameters STRAIGHT THROUGH to super (which is what
-    * `CtorFunnel.plan0` requires before nominating it): substituting this constructor's super
-    * ARGUMENTS for those parameters reproduces the same parent call. A shorter argument list is
-    * padded with `null`, which is what the parent's own narrower overload would have left there,
-    * and is what the reference port writes by hand (`Exception(message, cause.orNull)`); a padded
-    * PRIMITIVE has no such value, so those decline and stay counted by `OmissionCheck`.
-    *
-    * `this()` otherwise — the arguments really are lost there, and the check still says so. */
+    * The DECISION is `CtorFunnel.Plans.superCall`; this only renders it. That split is the point:
+    * `OmissionCheck` counts a `super(args)` as dropped exactly when the same call returns
+    * `Dropped`, so the check cannot report zero for a constructor this method has just lowered to
+    * a bare `this()`. It did, for as long as the planner asserted a class-wide flag instead. */
   private def superDelegation(args: List[Term], i: Int): String =
-    val plan = currentClass.map(plans.apply).getOrElse(CtorFunnel.Plan.none)
-    // A synthesised primary's parameters ARE the parent constructor's, in order, so the delegation
-    // is positional and exact — no type-matching, which exists below only to place a NARROWER
-    // overload's arguments into a wider parameter list.
-    if plan.synthetic.nonEmpty then
-      return if args.sizeIs == plan.synthetic.size then s"this(${args.map(term(_, i)).mkString(", ")})"
-             else "this()"
-    val ps   = plan.primaryParams
-    if ps.isEmpty || plan.superArgs.size != ps.size || args.sizeIs > ps.size then "this()"
-    else
-      // Matched by TYPE, not position: `GdxRuntimeException(Throwable t) { super(t); }` reaches the
-      // parent's `(Throwable)` overload, so `t` belongs in the CAUSE slot — positionally it landed
-      // in the message slot and did not even type-check. Each parameter takes the first unused
-      // argument of its own type, and whatever is left is `null`, which is what the narrower
-      // overload would have left there.
-      def name(t: TypeRepr): String = t match
-        case TypeRepr.TypeRef(_, sy)      => sym(sy).fullName
-        case TypeRepr.AppliedType(tc, _)  => name(tc)
-        case _                            => ""
-      val used = collection.mutable.Set[Int]()
-      val slots = ps.map { v =>
-        val want = name(v.tpt.tpe)
-        args.zipWithIndex.find((a, k) => !used(k) && name(a.tpe) == want) match
-          case Some((a, k)) => used += k; Some(term(a, i))
-          case scala.None   =>
-            if primitiveNames(want) then scala.None else Some(s"null.asInstanceOf[${tpe(v.tpt.tpe)}]")
-      }
-      // every argument must find a home, or the call we build is not the one java made
-      if slots.exists(_.isEmpty) || used.size != args.size then "this()"
-      else s"this(${slots.flatten.mkString(", ")})"
+    currentClass.map(plans.superCall(_, args)).getOrElse(CtorFunnel.SuperCall.Dropped) match
+      case CtorFunnel.SuperCall.Positional(as) => s"this(${as.map(term(_, i)).mkString(", ")})"
+      case CtorFunnel.SuperCall.Matched(slots) =>
+        val rendered = slots.map {
+          case Right(a) => term(a, i)
+          case Left(t)  => s"null.asInstanceOf[${tpe(t)}]"
+        }
+        s"this(${rendered.mkString(", ")})"
+      // the arguments really are lost here, and `OmissionCheck` says so on the same run
+      case CtorFunnel.SuperCall.Dropped        => "this()"
 
-  private val primitiveNames = Set("scala.Int", "scala.Long", "scala.Float", "scala.Double",
-                                   "scala.Short", "scala.Byte", "scala.Char", "scala.Boolean", "scala.Unit")
+  private val primitiveNames = CtorFunnel.primitiveTypeNames
 
   /** a parameter clause; a clause of `given` params renders as a Scala 3 `using` clause. */
   private def paramClause(ps: List[Tree.ValDef]): String =
