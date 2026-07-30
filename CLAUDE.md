@@ -39,6 +39,23 @@ Current examples:
 | `ClassTableTransform(Map)` | re-point a reflective name lookup at an explicit table | which method → which table |
 | `StaticForwarderTransform(List[Forwarder])` | a wrapper's statics are plain members of argument 1 | which wrapper, receiver, members |
 | `Substitutions` | do not emit these types/methods; inject this Scala instead | which ones, and the replacement sources |
+| `CollectionsTransform(RuleScope)` | retype JDK collections and API-map their call sites | WHICH declarations — a bridge class that must keep the JDK shape opts out |
+| `PrimitiveToOpaqueTransform(OpaqueSpec)` | seed, propagate along pure-move flows, retype, coerce at the boundary | which primitive, what the type is called, where it is minted, which declarations seed it, how far propagation may reach |
+
+**Every rule that RETYPES declarations takes a `RuleScope`** (`api`) — `Everywhere(except)` or
+`Only(include)`, matched by FQN and cut only at a `Symbol.fullName` separator (§4.56), with
+`Everywhere(Set.empty)` the default and the pre-scope code path. Two things such a phase then owes,
+neither optional:
+
+- **the scope is a fact about the emitted SURFACE**, so the phase implements `SurfacePolicy` — two
+  modules scoping it differently emit signatures that each compile alone and cannot compile together
+  (§1.5);
+- **every seam the scope creates is COUNTED.** A scope that silently produces an uncompilable or
+  wrongly-typed boundary is worse than no scope. Where a coercion exists, insert it; where none can
+  (a `mutable.Buffer` is not a `java.util.List`), refuse and report with the §1 classification, and
+  read the boundary through the DECLARATION — a position-blind `transformType` has already remapped
+  the reference node's type, so a check reading node types reports ZERO on exactly the seam the
+  scope made.
 
 ### (c) Genuinely library-specific — a SEPARATE, PLUGGED-IN RULE
 
@@ -48,7 +65,9 @@ generality. In future it will be maintained by the repository that manages that 
 effort, not by this repository.
 
 Turning a primitive into an opaque type is the canonical example: *which* `Int`s are really a GL
-handle is knowledge about libGDX and nothing else.
+handle is knowledge about libGDX and nothing else. Note where the line falls, though — the MECHANISM
+(seed, propagate, retype, coerce) is a (b) in the engine and the knowledge is a (c) `OpaqueSpec` the
+port hands it. A (c) is a value or a plugged-in rule; it is almost never a whole mechanism.
 
 ### The balance
 

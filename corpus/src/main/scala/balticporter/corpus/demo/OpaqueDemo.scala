@@ -2,12 +2,13 @@ package balticporter.corpus.demo
 
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
-import balticporter.tir.Pipeline
-import balticporter.transform.IntToOpaqueTransform
+import balticporter.tir.{OpaqueSpec, Pipeline}
+import balticporter.transform.PrimitiveToOpaqueTransform
 
-/** Demonstrates the Int → opaque-type transform end-to-end: a class with a semantically-tagged
-  * `int layer` becomes an `opaque type Layer.T = Int` with a synthesized companion, retyped
-  * everywhere it flows, wrapped at construction and unwrapped where consumed as a plain int.
+/** Demonstrates the primitive → opaque-type transform end-to-end: a class with a
+  * semantically-tagged `int layer` becomes an `opaque type Layer.T = Int` with a synthesized
+  * companion, retyped everywhere it flows, wrapped at construction and unwrapped where consumed as
+  * a plain int.
   *
   *   corpus/runMain balticporter.corpus.demo.OpaqueDemo
   */
@@ -27,8 +28,10 @@ object OpaqueDemo:
       |""".stripMargin
 
   /** the ONLY hint is the field `layer`. Everything else — `getLayer`'s return, `setLayer`'s
-    * param, and the local `l` in `slot` — is DISCOVERED by flow propagation. */
-  private val transform = new IntToOpaqueTransform("Layer", s => s.name == "layer" && !s.flags.isParam)
+    * param, and the local `l` in `slot` — is DISCOVERED by flow propagation. `underlying` and
+    * `scope` are left at their defaults: `scala.Int`, and a fence that fences nothing. */
+  private val transform = new PrimitiveToOpaqueTransform(
+    OpaqueSpec(fqn = "Layer", hints = s => s.name == "layer" && !s.flags.isParam))
 
   def main(args: Array[String]): Unit =
     val before = SpoonTir.fromSource(src)

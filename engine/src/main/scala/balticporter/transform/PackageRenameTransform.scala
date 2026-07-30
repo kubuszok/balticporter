@@ -49,7 +49,7 @@ import balticporter.tir.*
   * ==Ordering: this phase runs LAST==
   * Every other phase's policy is written in the UPSTREAM namespace — `ClassTableTransform`'s
   * redirects, `StaticForwarderTransform`'s wrappers, `Substitutions`' dropped types, an
-  * `IntToOpaque` hint list are all FQNs from the library as it ships. Renaming first invalidates
+  * `PrimitiveToOpaque` hint list are all FQNs from the library as it ships. Renaming first invalidates
   * all of them at once, silently, because a policy that matches nothing is a phase that does
   * nothing. `runsAfter` cannot express "after everything", so the porting program must place this
   * phase last in its list; `Pipeline.order` is stable in declaration order, so that is sufficient.

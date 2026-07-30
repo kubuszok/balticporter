@@ -144,13 +144,109 @@ run **before** emission, because some rewrites are impossible to recover post ho
 | transform | what it does |
 |---|---|
 | `GlobalsToImplicitsTransform` | globals → implicits: thread a `using` parameter through every method that transitively reaches a global. A call-graph rewrite; the `ResearchPlugin` case, since it needs the call graph before rewriting |
-| `IntToOpaqueTransform` | `Int` → opaque type + companion: retype a semantically-tagged value everywhere it flows, wrap its construction sites. Seed detection is flow propagation — a union-find over the whole-program reference graph from a small HINT set |
-| `CollectionsTransform` | Java collections → Scala, leaner where possible: retype + API-map every usage site of a collection symbol |
+| `PrimitiveToOpaqueTransform` | primitive → opaque type + companion: retype a semantically-tagged value everywhere it flows, wrap its construction sites. Seed detection is flow propagation — a union-find over the whole-program reference graph from a small HINT set. Configured entirely by an `OpaqueSpec` (§2.1.1) |
+| `CollectionsTransform` | Java collections → Scala, leaner where possible: retype + API-map every usage site of a collection symbol. Takes a `RuleScope` (§2.1.1) |
 | `PanamaFfiTransform` | Panama FFI generation: `native` methods → `java.lang.foreign` downcall bindings for JVM and Scala Native linkers |
 
 Each is verified emitting scalac-compiling Scala by its own spec. That the tool must **own** this
 layer (rather than delegate to scalafix) and that the tree must carry **more** than a Scala-2.13
 semantic AST does are the two requirements everything below follows from.
+
+### 2.1.1 Every RETYPING rule takes a SCOPE, and a scoped rewrite PROPAGATES
+
+Two of the four transforms above move a set of declarations onto a different type and carry every
+reference with them. That shared shape has two halves, and both are now values rather than
+assumptions.
+
+**`RuleScope` (`api`) — WHERE a rule applies.** `Everywhere(except)` or `Only(include)`, matched by
+fully-qualified name and cut only at a `Symbol.fullName` separator (§4.56 — `com.foo` must not cover
+`com.foobar`); `PortManifest.covers` forwards to it, so the rule this project has been bitten by
+twice has one body. `Everywhere(Set.empty)` is the default and every phase branches on it to take
+its pre-scope code path, which is the strongest available form of §1(b)'s "an empty parameter needs
+no code path" — the measure lanes assert it as **0 members changed** over 600 files.
+
+Three decisions inside it worth stating, because each looks like a detail and is not:
+
+- **A symbol is placed through its OWNER CHAIN, never by its own name alone.** The frontend gives a
+  method-local a `fullName` that is its simple name and a PARAMETER one that is `?#p` (it qualifies
+  the parameter before the method's own record is set). A name-only test would scope every field and
+  method correctly and silently leave every parameter and local behind — half a retyped signature.
+- **The scope is a set of ENTRIES, not a predicate.** A `Symbol => Boolean` would be strictly more
+  expressive and impossible to report on; declared entries are what lets an entry that named nothing
+  become a §1(b) `PolicyFinding` instead of a silent no-op.
+- **A phase that takes one implements `SurfacePolicy`.** Two modules scoping the same phase
+  differently emit signatures that each compile alone and cannot compile together, which is exactly
+  what §1.5's shared-surface comparison exists for. `CollectionsTransform` did not implement it
+  before, because before the scope there was nothing to compare.
+
+**`FlowPropagation` (`engine`) — the second half.** A rewritten declaration carries its call sites,
+by union-find over pure-move flows read off the Spoon-resolved TIR (assignment, `val x = ref`,
+`return ref`, argument-to-parameter). Arithmetic is deliberately not an edge: it breaks the chain,
+which is what makes an opaque type an opaque type and gives the coercion somewhere to go. It was
+`IntToOpaqueTransform`'s private code; `CollectionsTransform` grows a `RuleScope.Only` with the same
+function. Its walk is hand-written and deliberately bounded, and the argument for that is the
+failure direction: an unknown node kind is a MISSED edge — a declaration left out of the rewrite,
+i.e. a compile error or a boundary finding at the site — never a spurious one.
+
+**The seam a scope creates cannot be closed, so it is COUNTED.** There is no wrap from a
+`mutable.Buffer` into a real `java.util.List` slot and there cannot be one; the runtime shims bridge
+the other direction only. So `CollectionBoundaryCheck` gains `Issue.ScopedOut` with the §1(b) fix,
+and — the part that is easy to get wrong — it reads a reference to a scoped-out declaration through
+the DECLARATION rather than through the node. `transformType` is position-blind, so the node's `tpe`
+was remapped anyway, and a check reading it compares `Buffer` against `Buffer` and reports ZERO on
+the one seam a scope is guaranteed to create. `Decision.Kind.ScopedOut` carries the same fact to
+`decisions.tsv` and to a porter note beside the code, because a declaration that KEPT its type shows
+nothing in a diff.
+
+### 2.1.2 `OpaqueSpec` — the opaque-type rule's policy, as one value
+
+`IntToOpaqueTransform(typeName, hint, extraHints)` was `Int`-only, with an implicit definition site
+and no fence. Each of those three was a limit nobody had decided on purpose, so the phase is now
+`PrimitiveToOpaqueTransform(spec: OpaqueSpec)` and the spec (in `api`, because a porting program in
+another repository constructs it) declares all of them:
+
+- **the FQN, which IS the definition site.** The object is `spec.fqn` and the type is `<fqn>.T`; the
+  package comes from the FQN's prefix and the file from the package. A second "where does it live"
+  knob could only ever hold a value that agrees with this one or a value that is wrong — Scala does
+  not let an `object com.foo.X` live in package `c.d` — so there is no second knob. An FQN with no
+  `.` is the default package, which is what the bare `typeName` did.
+- **the underlying primitive**, as a CLOSED enum of the eight Scala value types a Java primitive maps
+  to, so "this primitive cannot work" is unrepresentable rather than a runtime check somebody has to
+  remember. `fromScalaName` is the loud door for a caller holding a string. All eight work: the
+  mechanism is `opaque type T = P` plus `apply`/`unwrap` and is indifferent to `P`.
+- **the seeds** — `hints` (the port's own predicate, §1(c) in its purest form) and `extraHints` (the
+  agent-in-the-loop escape hatch after a failed compile) — **and a `RuleScope` fencing both.** The
+  fence matters because a pure-move chain crosses type boundaries freely: one hint on a field
+  propagates through a call into another class's field, which the spec measures. A fence a named
+  entry could step over is not a fence, so an `extraHints` entry outside the scope does not fire.
+
+**Two instances in one pipeline must compose, and an overlap FAILS THE RUN.** One symbol cannot be
+two opaque types, and the silent failure is order-dependent: whichever instance runs second finds
+those symbols already retyped away from the primitive, declines them as ineligible, and emits a port
+with half a domain type missing — green compile, no count moved, and the only evidence a row that is
+not there. So the propagation is allowed to walk INTO a sibling's opaque type precisely so the
+overlap is visible, and the run throws, naming the symbol and both specs. A throw rather than a
+finding, for the reason `Pipeline.order` throws on a phase cycle: there is no honest program to emit.
+
+### 2.1.3 Java primitives → Scala primitives is (a) UNIVERSAL, with nothing to scope
+
+Investigated when `RuleScope` landed, and recorded here so it is not re-derived.
+
+`int` → `Int` happens in the **frontend** (`SpoonTir.primName`; `ScalaPrinter.primMap` on the frozen
+BIR path), unconditionally, at the point a type reference is interned. It is §1(a) in the strictest
+sense — a Java `int` IS a Scala `Int`, for every library there will ever be — and there is no
+variant of it a port could want. The thing a port might actually want, "this `int` is really a
+domain value", is not a variant of the mapping at all: it is §2.1.2's phase, and that one has a
+scope. Adding a knob here would be a knob nothing needs.
+
+The plausible second candidate — BOXED types, `java.lang.Integer` → `Int` — **is not a rewrite the
+engine performs, and must not become one.** A boxed value is NULLABLE and a Scala value type is not,
+and the port's own translations depend on that: `CollectionsTransform` renders java's `Map.get` as
+`getOrElse(k, null)` with the default ascribed to `V`, which requires `V` to be a reference type.
+48 emitted libGDX files name a boxed type; every one of them is a slot where Java's own autoboxing
+put the wrapper (`SpoonTir.wrapperOf`), and unboxing them wholesale would turn `null` into `0` with a
+green compile — §4.4's defect class exactly. There is therefore no scoped mechanism to wire: there
+is no rewrite.
 
 ### 2.2 Why a string-oriented IR is the wrong substrate
 

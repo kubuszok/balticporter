@@ -6,7 +6,7 @@ import balticporter.tir.*
   *
   * ==Read this first if you are porting a library==
   * Every other phase in this repository lives in `core/transform`, including the one CLAUDE.md
-  * names as the canonical (c) (`IntToOpaqueTransform`). So there was no precedent for the thing a
+  * names as the canonical (c) (`PrimitiveToOpaqueTransform`). So there was no precedent for the thing a
   * consumer actually has to do: write a rule that only their library could ever want, put it in
   * their own repository, and get it into the pipeline. This file is that precedent, and it is
   * deliberately in `corpus` — the stand-in for "the porting program's own repository" — and
