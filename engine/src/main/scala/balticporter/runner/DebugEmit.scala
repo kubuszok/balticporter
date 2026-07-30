@@ -1,19 +1,19 @@
-package balticporter.corpus
+package balticporter.runner
 
 import balticporter.core.FrontendConfig
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
-import balticporter.tir.{Phase, Pipeline, Program, TirPrinter}
+import balticporter.tir.{DebugFlags, Phase, Pipeline, Program, TirPrinter}
 import balticporter.transform.{CollectionsTransform, MutableParamsTransform, PanamaFfiTransform}
 
 import java.nio.file.{Files, Path}
 import scala.jdk.CollectionConverters.*
 
 /** Model a Java source tree ONCE and look at ONE type — as TIR, as emitted Scala, and at any
-  * phase boundary you name.
+  * phase boundary you name. `just debug-emit --root <dir> --fqn <Type>`.
   *
   * ```
-  * corpus/runMain balticporter.corpus.DebugEmit \
+  * engine/runMain balticporter.runner.DebugEmit \
   *   --root ../sge/original-src/libgdx/gdx/src \
   *   --include utils/ \
   *   --fqn com.badlogic.gdx.utils.DelayedRemovalArray \
@@ -26,11 +26,27 @@ import scala.jdk.CollectionConverters.*
   * copying `src_managed`, flipping a local `debug` flag and recompiling; and reading a
   * case-class `toString`. The first costs a full build per question, the second is unreadable.
   *
+  * ## Why it lives in `engine` and not in `corpus`
+  *
+  * It was written in `corpus`, which is `publish / skip := true`. The user of a debugging tool is
+  * an agent in ANOTHER repository (CLAUDE.md §4.45) holding the published engine, and a tool that
+  * ships in no artifact is a tool that agent does not have — the same reason an engine limit may
+  * not live only in a per-library status file. Nothing here was corpus-specific: every path is an
+  * argument and every phase named below is a universal transform, so the move is a package line.
+  *
+  * It deliberately does NOT take a port `.conf`. That would be convenient — the paths and the
+  * phase list are already written down there — and it would make this class a SECOND assembly path
+  * for a port's pipeline, beside `PortRun`'s, free to drift from it (DESIGN.md §5.7's "not a second
+  * truth" is the same argument one level down). What this prints is the pipeline's view of one
+  * type, not a port's emitted file: there is no substitution, no injection, no package rename and
+  * no provenance header here. Reproducing a port's output is `PortRun`'s job, and `just debug-emit`
+  * says so rather than approximating it.
+  *
   * ## What it must not do
   *
-  * The previous version of this file hardcoded ONE library's source root and one frontend. An
-  * engine tool that only works on the library its author had open is not a tool. Every path here
-  * is an argument; `--root` is required and there is no default.
+  * The first version of this file hardcoded ONE library's source root and one frontend. An engine
+  * tool that only works on the library its author had open is not a tool. Every path here is an
+  * argument; `--root` is required and there is no default.
   *
   * ## Flags
   *
@@ -70,7 +86,7 @@ object DebugEmit:
 
   def main(args: Array[String]): Unit =
     val o        = opts(args.toList)
-    val repoRoot = Path.of(sys.props.getOrElse("balticporter.root", ".")).toAbsolutePath.normalize
+    val repoRoot = DebugFlags.root
     def one(k: String): Option[String] = o.get(k).flatMap(_.headOption)
     def flag(k: String): Boolean       = o.contains(k)
 
@@ -106,16 +122,34 @@ object DebugEmit:
     // enough — same JVM, no marker file, no rebuild. (`DebugFlags` reads them as `def`s precisely
     // so a main class can do this.)
     //
+    // …and they are RESTORED afterwards, because this main is the one that may run UNFORKED, inside
+    // the `sbt -client` server: a flag left behind there outlives the command that set it and is
+    // then a debug flag nobody can see poisoning a later invocation — exactly the failure
+    // `just debug-clear` exists for, one layer up.
+    //
     // `--dump-after` is given as a CLI ALIAS; the pipeline matches on the phase's OWN name. A
     // silently untranslated alias would print nothing and read as "the phase changed nothing" —
     // the exact failure mode a kill switch exists to avoid — so translate, and pass anything
     // unrecognised (`*`, a real phase name) through unchanged.
     val alias: Map[String, String] = Phases.registry.map((k, mk) => k -> mk().name)
     def phaseNames(v: String): String = v.split(',').map(_.trim).map(n => alias.getOrElse(n, n)).mkString(",")
-    one("dump-before").foreach(v => System.setProperty("balticporter.dumpTirBefore", phaseNames(v)))
-    one("dump-after").foreach(v => System.setProperty("balticporter.dumpTirAfter", phaseNames(v)))
-    one("fqn").foreach(v => System.setProperty("balticporter.dumpOnly", v))
+    val touched = List(
+      one("dump-before").map(v => "dumpTirBefore" -> phaseNames(v)),
+      one("dump-after").map(v => "dumpTirAfter" -> phaseNames(v)),
+      one("fqn").map(v => "dumpOnly" -> v),
+    ).flatten
+    val saved = touched.map((k, _) => k -> Option(System.getProperty(DebugFlags.Prefix + k)))
+    touched.foreach((k, v) => System.setProperty(DebugFlags.Prefix + k, v))
+    try run(o, root, files, phases, one, flag)
+    finally saved.foreach {
+      case (k, Some(v))    => System.setProperty(DebugFlags.Prefix + k, v)
+      case (k, scala.None) => System.clearProperty(DebugFlags.Prefix + k)
+    }
 
+  private def run(
+      o: Map[String, List[String]], root: Path, files: List[String], phases: List[Phase],
+      one: String => Option[String], flag: String => Boolean,
+  ): Unit =
     val cp = o.getOrElse("classpath", Nil).map(Path.of(_))
     // `--fast` parses ONLY the included files. Without it the whole root participates in
     // resolution (what a real port does), which for a large library is the whole library — the
