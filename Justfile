@@ -586,7 +586,7 @@ debug-flags PORT="":
     fi
     rm -f "$CAP"
 
-[doc("write one flag into .balticporter/debug.properties — the hand-written layer, which WINS")]
+[doc("write one flag into .balticporter/debug.properties — the hand-written layer, which beats run.properties (a -D beats both, but never reaches a forked migration)")]
 debug-set KEY VALUE:
     #!/usr/bin/env bash
     cd "{{root}}"

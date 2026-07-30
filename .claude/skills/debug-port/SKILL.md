@@ -31,9 +31,14 @@ NOTE  a migration runs in a JVM FORKED from the sbt server, so it sees the two F
       line (CLAUDE.md §4.6). The system-property layer above is THIS process's.
 ```
 
-Resolution order, increasing precedence: **system property → `<root>/.balticporter/run.properties`
-(written by the measure lanes) → `<root>/.balticporter/debug.properties` (hand-written, WINS)**.
-`debug-set` edits only the last of those, is idempotent (`java.util.Properties` keeps the LAST
+Resolution order, increasing precedence: **`<root>/.balticporter/run.properties` (written by the
+measure lanes) → `<root>/.balticporter/debug.properties` (hand-written; wins over run.properties) →
+a system property, which WINS OVER BOTH** (`DebugFlags.get` reads `System.getProperty` first, and
+`DebugFlagsMainSpec` pins it). The order matters in exactly one direction that bites: a `-D` set by
+a main class or a test in THIS process overrides the file you just wrote — and it reaches no forked
+migration at all, which is why `debug-set` is the tool for a run.
+
+`debug-set` edits `debug.properties` — the highest layer that crosses the fork — is idempotent (`java.util.Properties` keeps the LAST
 occurrence, so an appended duplicate would make the effective value depend on file order), and adds
 the `balticporter.` prefix if you left it off.
 

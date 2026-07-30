@@ -653,8 +653,10 @@ the question "is this phase even responsible" costs one run and no diff:
 | `balticporter.tracePhases` | announce each phase as it runs |
 | `balticporter.traceNode=<Kind>` | `TirTrace.mint` prints constructing frames for a node kind — no node gains a field |
 
-Resolution order is **system property → `<root>/.balticporter/run.properties` (script-written) →
-`<root>/.balticporter/debug.properties` (hand-written, wins)**. Note the marker file is not merely a convenience:
+Resolution order, in INCREASING precedence, is **`<root>/.balticporter/run.properties`
+(script-written) → `<root>/.balticporter/debug.properties` (hand-written, beats run.properties) → a
+system property, which beats both** — `DebugFlags.get` reads `System.getProperty` first. Note the
+marker file is not merely a convenience:
 a `-D` on the *caller's* command line does not reach the forked migration either, because `sbt`
 forks it with `javaOptions` from `build.sbt`. Only the file crosses that boundary.
 
