@@ -1032,6 +1032,26 @@ and reaping them is the same cross-checkout kill the measure scripts had to have
 Prevention is cheaper than either: never kill a client that is merely slow — `sbt -client` compiling
 a cold worktree takes minutes, and the wedge only exists because a kill looked faster.
 
+### M5.7 An unchanged-tree `testFull` is a cache REPLAY — it proves nothing about flakiness
+
+sbt 2 caches test results, and a replay is a perfect forgery of a run: per-project totals, suite
+stdout, even per-test timings are printed again. Measured: eight consecutive "testFull" invocations
+on an unchanged tree completed in ~8s each and executed NOTHING — established not by reading the
+output (indistinguishable) but by a spec's known file side effect keeping its old mtime through all
+eight. Under forked tests the replay is the norm, because a forked test task is hermetic enough to
+cache.
+
+Two consequences:
+
+- **"N consecutive green runs" of an unchanged tree is ONE run.** Any rerun-stability claim (flake
+  hunting, race validation) must bust the cache between iterations — append a changing comment to a
+  MAIN source that every test classpath depends on, run, repeat, restore. A `touch` does not bust
+  it; the cache is content-addressed.
+- The forgery cuts the other way too: when a test IS flaky, the cached green can mask it until an
+  unrelated edit re-executes the suite — the failure then diffs against the edit that exposed it,
+  not the one that caused it. Read a surprising test failure with this in mind before blaming the
+  commit under test.
+
 ### M6. Refuse and COUNT rather than approximate
 
 Three places where the port deliberately carries a number instead of a guess, and each is the right
