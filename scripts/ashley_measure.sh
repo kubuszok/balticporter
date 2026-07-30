@@ -65,7 +65,7 @@ if [ "$ERRORS" = "0" ]; then
   scala-cli test --scala 3.8.4 --server=false $DEPS -Duser.language=en -Duser.country=US \
     libgdx-core/src_managed/main/scala ashley-core/src_managed/main/scala ashley-core/src_managed/test/scala \
     2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/ashleyrun.txt
-  echo "passing: $(grep -cE '^  \+ ' "$MEASURE_TMP"/ashleyrun.txt)   failing: $(grep -c '^==> X ' "$MEASURE_TMP"/ashleyrun.txt)"
+  reconcile_outcomes "$MEASURE_TMP"/ashleyrun.txt "$MUNIT_TESTS"
   echo
   echo "-- correlation: test failures located to members and Java origins --"
   # BOTH ports' maps: only the library's own map can anchor a failure on the member that threw,

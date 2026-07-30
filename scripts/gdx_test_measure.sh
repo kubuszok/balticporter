@@ -72,7 +72,7 @@ if [ "$ERRORS" = "0" ]; then
     -Duser.language=en -Duser.country=US \
     libgdx-core/src_managed/main/scala libgdx-core/src_managed/test/scala 2>&1 |
     sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/gdxtestrun.txt
-  echo "passing: $(grep -cE '^  \+ ' "$MEASURE_TMP"/gdxtestrun.txt)   failing: $(grep -c '^==> X ' "$MEASURE_TMP"/gdxtestrun.txt)"
+  reconcile_outcomes "$MEASURE_TMP"/gdxtestrun.txt "$MUNIT_TESTS"
 
   # Anchor every failure on the first stack frame that lands in PORTED code and resolve it, through
   # both ports' source maps, to a member and a Java origin — then diff the pass/fail sets against

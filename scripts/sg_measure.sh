@@ -71,7 +71,7 @@ if [ "$ERRORS" = "0" ]; then
   scala-cli test --scala 3.8.4 --server=false $DEPS -Duser.language=en -Duser.country=US \
     simplegraphs-core/src_managed/main/scala simplegraphs-core/src_managed/test/scala \
     2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/sgrun.txt
-  echo "passing: $(grep -cE '^  \+ ' "$MEASURE_TMP"/sgrun.txt)   failing: $(grep -c '^==> X ' "$MEASURE_TMP"/sgrun.txt)"
+  reconcile_outcomes "$MEASURE_TMP"/sgrun.txt "$MUNIT_TESTS"
   echo
   echo "-- correlation: test failures located to members and Java origins --"
   correlate "$TREPORT/run-latest" --tests "$MEASURE_TMP"/sgrun.txt \

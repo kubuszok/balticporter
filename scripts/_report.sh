@@ -76,6 +76,41 @@ java_test_count() {
   '
 }
 
+# reconcile_outcomes <run-output-file> <emitted-test-count>
+# Every emitted test must produce an OUTCOME LINE, and the two markers a measure script naturally
+# reaches for do not cover them all.
+#
+# MUnit prints THREE terminal markers, not two: `  + name 0.0s` (pass), `==> X suite.name …s <detail>`
+# (failure) and `==> s suite.name skipped 0.0s` — the last for a test the runner never reached. That
+# third one is not exotic: a test that throws a FATAL `java.lang.Error` (an `ExceptionInInitializerError`
+# from a mocking library on a modern JDK, say) is not `NonFatal`, MUnit abandons the suite, and EVERY
+# remaining test in it prints as skipped. Ashley's `EntityListenerTests` loses its last two that way.
+#
+# Adding only passes and failures therefore drops those silently — the script prints a smaller total
+# with no complaint at all, which is CLAUDE.md §3's "a test that stopped running is reported as such,
+# never as a pass" failing inside the measurement itself.
+#
+# So the reconciliation is against the EMITTED count, not against a sum of markers: any test with no
+# line this script recognises is reported, whatever the reason. That keeps the check honest about the
+# next marker MUnit adds, which a fixed list of markers would not.
+reconcile_outcomes() {
+  local run="$1" emitted="$2"
+  local pass fail other total
+  pass=$(grep -cE '^  \+ ' "$run")
+  fail=$(grep -c '^==> X ' "$run")
+  other=$(grep -cE '^==> [^X] ' "$run")
+  total=$((pass + fail + other))
+  echo "passing: $pass   failing: $fail   not run (skipped/ignored): $other   [outcomes $total of $emitted emitted]"
+  if [ "$other" != "0" ]; then
+    echo "!! DID NOT RUN — $other emitted test(s) never executed. A skipped test is not a passing test:"
+    grep -E '^==> [^X] ' "$run" | sed 's/^/     /'
+  fi
+  if [ "$total" != "$emitted" ]; then
+    echo "!! OUTCOMES LOST — $((emitted - total)) of $emitted emitted test(s) produced no outcome line;" \
+         "the suite would report success while they vanish (CLAUDE.md §3)"
+  fi
+}
+
 # show_check_report <report-dir>
 # The persisted, UNTRUNCATED check results and their diff against the committed baseline.
 show_check_report() {
@@ -125,6 +160,11 @@ headline() {
     p=$(grep -c $'\tpass$' "$dir/run-latest/tests.tsv" || true)
     f=$(grep -c $'\tfail$' "$dir/run-latest/tests.tsv" || true)
     tests=" | tests $p passing, $f failing"
+    # a test the runner never reached is neither, and must never be summarised as absence. Shown only
+    # when non-zero, so the headline carries no permanent "0 skipped" for a reader to learn to skip.
+    local s
+    s=$(grep -c $'\tskipped$' "$dir/run-latest/tests.tsv" || true)
+    [ "$s" != "0" ] && tests="$tests, !! $s DID NOT RUN"
     # a NEWLY failing test is the one number that must never scroll past: it is the only signal
     # this project has for the CLAUDE.md §4.4 defect class, which moves no compile-error count.
     if grep -q "^-- NEWLY FAILING" "$dir/run-latest/tests-diff.txt" 2>/dev/null; then
