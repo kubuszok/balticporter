@@ -14,6 +14,18 @@
 #   just baseline-diff   PORT                 the run against the committed baseline
 #   just baseline-accept PORT                 promote run-latest to baseline
 #
+# …and the DEBUGGING surface — the CLAUDE.md §4.6 flags and the diagnostics over emitted code.
+# These are the same tools the lanes use, reachable without knowing which main class exists:
+#
+#   just debug-flags [PORT]          WHICH layer defines each balticporter.* flag right now
+#   just debug-set   KEY VALUE       write one flag into .balticporter/debug.properties (wins)
+#   just debug-clear [KEY]           remove one flag, or ALL of them (no key = the file goes)
+#   just debug-emit  ROOT FQN [PHASES] [FLAGS…]   one type's TIR + Scala, around a phase boundary
+#   just correlate   OUT [--scalac f] [--tests f] [--srcmap [scope=]f]…
+#                                    join a compiler / test-runner log you produced BY HAND back
+#                                    to members and Java origins (CLAUDE.md §5.1)
+#   just debug-selfcheck             proves the four above do what they say — no sbt, no ports
+#
 # WHY ONE FILE AND NOT A SCRIPT PER LANE. The four lanes are one measurement over four sets of
 # paths, and as four scripts the differences between them were invisible: each held its own copy of
 # the compile-and-count block, so which lane prints the bare-error breakdown, which one correlates
@@ -75,6 +87,14 @@ ashley_deps   := "--dependency junit:junit:4.13.2 --dependency org.mockito:mocki
 sg_deps       := "--dependency junit:junit:4.12 --dependency org.scalameta::munit:1.0.2"
 
 root          := justfile_directory()
+
+# The checkout whose `.balticporter/` the debug recipes read and write, and the directory the
+# baseline recipes read. Both are this checkout, always, in normal use — they are variables so
+# `just debug-selfcheck` can point them at a throwaway directory and PROVE the recipes rather
+# than describe them. A self-check that has to mutate the real `port-report/` to run is a
+# self-check nobody runs twice.
+bp_root       := env_var_or_default("BP_ROOT", justfile_directory())
+report_root   := env_var_or_default("BP_REPORT", justfile_directory() / "port-report")
 
 _default:
     @{{just_executable()}} --list --unsorted
@@ -469,21 +489,287 @@ decision-counts:
 # identical files mean the emitted text is byte-for-byte unchanged, which is a stronger revert
 # check than any count — no check count moves for most transform regressions. Exits non-zero if
 # anything moved, so it is usable as a gate.
+#
+# A MISSING INPUT IS FATAL, and this is the half that was wrong: both sides were required with
+# `[ -f "$b" ] && [ -f "$r" ] || continue`, so a port named on the command line whose baseline (or
+# whose run) did not exist printed NOTHING and exited 0 — the §5.1 rule ("a `--tests` path that
+# does not exist is fatal, never a headline of 0 passing, 0 failing") failing inside the one gate
+# that is supposed to catch what no count moves. In a fresh checkout `run-latest/` is gitignored,
+# so `just members-unchanged SimpleGraphsMigrate` reported a clean blast radius for a comparison
+# that never happened.
+#
+# The two modes differ deliberately, and only in what "considered" means:
+#
+#   * a port NAMED on the command line is an assertion about that port — every missing side is
+#     fatal, and an unknown name lists the ports there are;
+#   * the SWEEP considers every port directory. One that has run and has no baseline is fatal
+#     wherever it appears (an artifact exists and nothing checks it — the false green). One that
+#     has a baseline and has not run in this checkout is printed as NOT COMPARED, because a lane
+#     nobody has run here is not a regression; the sweep fails only if that describes them ALL,
+#     which is the "printed nothing, exited 0" state this recipe exists to refuse.
 # ---------------------------------------------------------------------------------------------
 [doc("members.tsv against its committed baseline (all ports, or one)")]
 members-unchanged port="":
     #!/usr/bin/env bash
     cd "{{root}}"
-    rc=0
-    for d in port-report/*/; do
-      [ -z "{{port}}" ] || [ "$(basename "$d")" = "{{port}}" ] || continue
+    R="{{report_root}}"
+    if [ ! -d "$R" ]; then
+      echo "!! no report directory at $R — nothing has been measured in this checkout"
+      exit 1
+    fi
+    known=$(ls -1 "$R" 2>/dev/null | tr '\n' ' ')
+    if [ -n "{{port}}" ] && [ ! -d "$R/{{port}}" ]; then
+      echo "!! NO SUCH PORT: {{port}}"
+      echo "   ports with a report directory: $known"
+      exit 1
+    fi
+    rc=0; compared=0
+    for d in "$R"/*/; do
+      p="$(basename "$d")"
+      [ -z "{{port}}" ] || [ "$p" = "{{port}}" ] || continue
       b="$d/baseline/members.tsv"; r="$d/run-latest/members.tsv"
-      [ -f "$b" ] && [ -f "$r" ] || continue
-      n=$(diff "$b" "$r" | grep -c '^[<>]')
-      echo "$(basename "$d"): $n member(s) changed"
-      [ "$n" = "0" ] || rc=1
+      if [ -f "$b" ] && [ -f "$r" ]; then
+        n=$(diff "$b" "$r" | grep -c '^[<>]')
+        echo "$p: $n member(s) changed"
+        compared=$((compared + 1))
+        [ "$n" = "0" ] || rc=1
+      elif [ -f "$r" ]; then
+        echo "!! $p: MEASURED BUT UNBASELINED — run-latest/members.tsv exists, baseline/members.tsv does not."
+        echo "   Nothing is comparing this port's emitted text. Accept one: just baseline-accept $p"
+        rc=1
+      elif [ -f "$b" ]; then
+        echo "   $p: NOT COMPARED — no run-latest/members.tsv (its lane has not run in this checkout)"
+        [ -z "{{port}}" ] || { echo "!! and you asked about $p specifically — run its measure lane first"; rc=1; }
+      else
+        echo "   $p: NOT COMPARED — neither a baseline nor a run"
+        [ -z "{{port}}" ] || { echo "!! and you asked about $p specifically"; rc=1; }
+      fi
     done
+    if [ "$compared" = "0" ] && [ "$rc" = "0" ]; then
+      echo "!! NOTHING WAS COMPARED — a blast radius nobody computed is not a blast radius of zero"
+      rc=1
+    fi
     exit $rc
+
+# ---------------------------------------------------------------------------------------------
+# THE DEBUGGING SURFACE — CLAUDE.md §4.6, reachable.
+#
+# Every tool below already existed; what did not exist was a way to reach it without knowing which
+# main class or which hand-written file to create. That is a real cost and not a convenience: the
+# consumer of this engine is an agent in ANOTHER repository (§4.45) with none of this session's
+# folklore, and a diagnostic it cannot find is a diagnostic it re-invents — by copying
+# `src_managed`, adding a `println` and rebuilding, which is exactly what these replaced.
+#
+# The layering is the §4.6 one and these recipes do not reimplement it: `debug-flags` renders
+# `DebugFlags.resolution`, the same fold `DebugFlags.get` performs, so the explanation and the
+# behaviour cannot drift apart. `debug-set`/`debug-clear` only edit the file the operator owns.
+# ---------------------------------------------------------------------------------------------
+[doc("WHICH layer defines each balticporter.* flag right now (and what PORT's last run saw)")]
+debug-flags PORT="":
+    #!/usr/bin/env bash
+    cd "{{root}}"
+    mkdir -p .balticporter/tmp
+    CAP=".balticporter/tmp/debug-flags-$$.txt"
+    ARGS="--root {{bp_root}}"
+    [ -n "{{PORT}}" ] && ARGS="$ARGS --port {{PORT}}"
+    sbt -client "{{core_project}}/runMain balticporter.tir.DebugFlagsMain $ARGS" 2>&1 |
+      sed $'s/\033\\[[0-9;]*[a-zA-Z]//g' > "$CAP"
+    st=${PIPESTATUS[0]}
+    # from the report's own first line, so sbt's preamble is dropped without dropping the report:
+    # every line of it that matters starts with `[balticporter]` or two spaces, and a blanket
+    # `grep -v '^\['` would eat the headline itself.
+    sed -n '/flag resolution under/,$p' "$CAP" | grep -vE '^\[(info|warn|error|success)\]'
+    if [ "$st" != "0" ]; then
+      echo "!! debug-flags DID NOT RUN — sbt exited $st; its output:"
+      tail -20 "$CAP" | sed 's/^/     /'
+      rm -f "$CAP"; exit 1
+    fi
+    rm -f "$CAP"
+
+[doc("write one flag into .balticporter/debug.properties — the hand-written layer, which WINS")]
+debug-set KEY VALUE:
+    #!/usr/bin/env bash
+    cd "{{root}}"
+    F="{{bp_root}}/.balticporter/debug.properties"
+    mkdir -p "$(dirname "$F")"
+    K="{{KEY}}"
+    case "$K" in balticporter.*) ;; *) K="balticporter.$K" ;; esac
+    [ -f "$F" ] || printf '# hand-written debug flags (CLAUDE.md §4.6) — `just debug-clear` removes them\n' > "$F"
+    # IDEMPOTENT, and that is not tidiness: java.util.Properties keeps the LAST occurrence, so an
+    # appended duplicate makes the effective value depend on the order of a file nobody reads.
+    # Exact-prefix match rather than a regex — a key is full of dots, and `.` matches anything.
+    awk -v k="$K=" 'substr($0, 1, length(k)) != k' "$F" > "$F.tmp" && mv "$F.tmp" "$F"
+    printf '%s=%s\n' "$K" "{{VALUE}}" >> "$F"
+    echo "$F now holds:"
+    grep -v '^#' "$F" | sed 's/^/  /'
+    echo "(confirm what a run will resolve:  just debug-flags)"
+
+[doc("remove one flag from .balticporter/debug.properties, or ALL of them (no KEY)")]
+debug-clear KEY="":
+    #!/usr/bin/env bash
+    cd "{{root}}"
+    F="{{bp_root}}/.balticporter/debug.properties"
+    if [ ! -f "$F" ]; then echo "no debug flags set ($F is absent)"; exit 0; fi
+    if [ -z "{{KEY}}" ]; then
+      # The whole file GOES. A stale debug flag is invisible — it moves no count, fails no check,
+      # and quietly changes what every later run in this checkout emits — so "clear" has to mean
+      # a state an operator can verify at a glance, and absent is that state.
+      echo "removing all hand-written debug flags:"
+      grep -v '^#' "$F" | sed 's/^/  -/'
+      rm -f "$F"
+    else
+      K="{{KEY}}"
+      case "$K" in balticporter.*) ;; *) K="balticporter.$K" ;; esac
+      awk -v k="$K=" 'substr($0, 1, length(k)) != k' "$F" > "$F.tmp" && mv "$F.tmp" "$F"
+      echo "removed $K; $F now holds:"
+      grep -v '^#' "$F" | sed 's/^/  /'
+      # …and an empty file is removed too, so `.balticporter/` never carries a file whose only
+      # content is a header that reads as configuration.
+      if [ -z "$(grep -v '^#' "$F")" ]; then rm -f "$F"; echo "(file removed — nothing left in it)"; fi
+    fi
+
+[doc("one type's TIR + emitted Scala, around a phase boundary (ROOT is a JAVA source root)")]
+debug-emit ROOT FQN PHASES="" *FLAGS:
+    #!/usr/bin/env bash
+    cd "{{root}}"
+    # Absolute, always: the main resolves a relative path against `balticporter.root`, which for an
+    # UNFORKED `engine/runMain` is the sbt server's directory and not this shell's.
+    R="{{ROOT}}"; case "$R" in /*) ;; *) R="$(pwd)/$R" ;; esac
+    ARGS="--root $R --fqn {{FQN}} --scala"
+    # A phase list means "show me this type ACROSS that boundary" — run the phases and bracket each
+    # one. Without it the type is printed as the frontend built it, which is the other question.
+    [ -n "{{PHASES}}" ] && ARGS="$ARGS --phases {{PHASES}} --dump-before {{PHASES}} --dump-after {{PHASES}}"
+    echo "+ {{core_project}}/runMain balticporter.runner.DebugEmit $ARGS {{FLAGS}}"
+    echo "  (add --fast to parse ONLY the included files: seconds instead of minutes on a large"
+    echo "   library, at the cost of resolution fidelity; --include <substr> narrows what is converted)"
+    mkdir -p .balticporter/tmp
+    CAP=".balticporter/tmp/debug-emit-$$.txt"
+    sbt -client "{{core_project}}/runMain balticporter.runner.DebugEmit $ARGS {{FLAGS}}" 2>&1 |
+      sed $'s/\033\\[[0-9;]*[a-zA-Z]//g' > "$CAP"
+    st=${PIPESTATUS[0]}
+    # from the tool's own first line. `index`, not a regex: the marker is `[debug-emit]`, and as a
+    # regex those brackets are a CHARACTER CLASS that matches most of a stack trace.
+    awk 'f || index($0, "[debug-emit]") > 0 { f = 1; print }' "$CAP" | grep -vE '^\[(info|warn|success)\]'
+    if [ "$st" != "0" ]; then
+      echo "!! debug-emit DID NOT RUN — sbt exited $st; its output:"
+      tail -20 "$CAP" | sed 's/^/     /'
+      rm -f "$CAP"; exit 1
+    fi
+    rm -f "$CAP"
+
+[doc("CorrelateMain standalone — a compiler or test log you produced BY HAND, joined to members")]
+correlate OUT *ARGS:
+    #!/usr/bin/env bash
+    cd "{{root}}"
+    ROOT="$(pwd)"
+    export CORE_PROJECT="{{core_project}}"
+    . scripts/_lib.sh
+    if [ -z "{{ARGS}}" ]; then
+      echo "usage: just correlate <out-dir> [--scalac <file>] [--tests <file>] [--srcmap [scope=]<file>]…"
+      echo
+      echo "  CLAUDE.md §5.1: never open an emitted file to work out which member an error is in."
+      echo "  The lanes do this for you; this is the same command for a compile you ran by hand."
+      echo
+      echo "  scala-cli compile --scala 3.8.4 --server=false <port>/src_managed/main/scala > /tmp/c.txt"
+      echo "  just correlate port-report/<Port>/run-latest --scalac /tmp/c.txt \\"
+      echo "       --srcmap port-report/<Port>/run-latest/srcmap.tsv"
+      echo
+      echo "  --baseline defaults to <out>/../baseline, which is where the diffs come from."
+      exit 2
+    fi
+    OUT="{{OUT}}"; case "$OUT" in /*) ;; *) OUT="$ROOT/$OUT" ;; esac
+    # The lanes' own helper, deliberately: one invocation path, one set of guards (a correlation
+    # that did not happen must not render as an empty-but-tidy block).
+    correlate "$OUT" {{ARGS}}
+
+# ---------------------------------------------------------------------------------------------
+# The debug recipes, proving themselves. No sbt, no ports, no network — it runs in seconds, so
+# there is no reason for it to rot.
+#
+# What it covers is the half a Scala spec cannot: the SHELL. `debug-set` appending a duplicate key
+# instead of replacing it, `debug-clear` leaving a header that reads as configuration, and
+# `members-unchanged` exiting 0 on an input that does not exist are all defects in bash, and the
+# last of them shipped. The engine-side halves (the precedence rule, the dump boundaries, the
+# emitted text) are proven by DebugFlagsSpec, DebugFlagsMainSpec, PipelineDebugSpec and
+# DebugEmitSpec — this is not a substitute for those.
+# ---------------------------------------------------------------------------------------------
+[doc("prove the debug recipes do what they say — set/clear/members-unchanged, in a temp root")]
+debug-selfcheck:
+    #!/usr/bin/env bash
+    cd "{{root}}"
+    T="$(mktemp -d)"
+    trap 'rm -rf "$T"' EXIT
+    fail=0
+    ok()   { echo "  ok   $1"; }
+    bad()  { echo "  FAIL $1"; fail=1; }
+    want() { [ "$2" = "$3" ] && ok "$1" || bad "$1 (want [$3], got [$2])"; }
+    J="{{just_executable()}}"
+    F="$T/.balticporter/debug.properties"
+
+    echo "-- debug-set / debug-clear (root=$T) --"
+    BP_ROOT="$T" $J debug-set skipPhases '*' > /dev/null
+    want "debug-set writes the file"            "$(grep -c . "$F" 2>/dev/null)" "2"
+    want "…with the balticporter. prefix added" "$(grep -c '^balticporter.skipPhases=\*$' "$F")" "1"
+
+    BP_ROOT="$T" $J debug-set skipPhases 'collections' > /dev/null
+    want "debug-set is IDEMPOTENT — one entry"  "$(grep -c '^balticporter.skipPhases=' "$F")" "1"
+    want "…and it is the NEW value"             "$(grep -c '^balticporter.skipPhases=collections$' "$F")" "1"
+
+    BP_ROOT="$T" $J debug-set balticporter.tracePhases true > /dev/null
+    want "an already-prefixed key is not double-prefixed" "$(grep -c '^balticporter.tracePhases=true$' "$F")" "1"
+    want "…beside the first, which survives"    "$(grep -vc '^#' "$F")" "2"
+
+    BP_ROOT="$T" $J debug-clear skipPhases > /dev/null
+    want "debug-clear KEY removes one flag"     "$(grep -c '^balticporter.skipPhases=' "$F")" "0"
+    want "…and leaves the other"                "$(grep -c '^balticporter.tracePhases=true$' "$F")" "1"
+
+    BP_ROOT="$T" $J debug-clear tracePhases > /dev/null
+    [ -f "$F" ] && bad "an emptied debug.properties must be REMOVED, not left as a header" \
+                || ok "an emptied debug.properties is removed"
+
+    BP_ROOT="$T" $J debug-set dumpOnly p.Foo > /dev/null
+    BP_ROOT="$T" $J debug-clear > /dev/null
+    [ -f "$F" ] && bad "debug-clear with no KEY must remove the file" || ok "debug-clear with no KEY removes the file"
+    BP_ROOT="$T" $J debug-clear > /dev/null 2>&1
+    want "…and is idempotent on an absent file" "$?" "0"
+
+    echo "-- members-unchanged: a missing input is FATAL, and names the port --"
+    R="$T/port-report"
+    mkdir -p "$R/Both/baseline" "$R/Both/run-latest"
+    printf 'a\tb\n' > "$R/Both/baseline/members.tsv"
+    printf 'a\tb\n' > "$R/Both/run-latest/members.tsv"
+    out=$(BP_REPORT="$R" $J members-unchanged Both); rc=$?
+    want "an identical pair is 0 changed, exit 0" "$rc" "0"
+    case "$out" in *"Both: 0 member(s) changed"*) ok "…and says so" ;; *) bad "…and says so: $out" ;; esac
+
+    printf 'a\tc\n' > "$R/Both/run-latest/members.tsv"
+    BP_REPORT="$R" $J members-unchanged Both > /dev/null 2>&1; rc=$?
+    want "a moved member is exit 1"               "$rc" "1"
+
+    out=$(BP_REPORT="$R" $J members-unchanged NoSuchPort 2>&1); rc=$?
+    want "an unknown port is FATAL"               "$rc" "1"
+    case "$out" in *"NO SUCH PORT: NoSuchPort"*) ok "…and names it" ;; *) bad "…and names it: $out" ;; esac
+
+    mkdir -p "$R/NoBaseline/run-latest"; printf 'a\tb\n' > "$R/NoBaseline/run-latest/members.tsv"
+    out=$(BP_REPORT="$R" $J members-unchanged NoBaseline 2>&1); rc=$?
+    want "a run with NO BASELINE is fatal"        "$rc" "1"
+    case "$out" in *"MEASURED BUT UNBASELINED"*) ok "…and says which state it is in" ;; *) bad "…state: $out" ;; esac
+
+    mkdir -p "$R/NoRun/baseline"; printf 'a\tb\n' > "$R/NoRun/baseline/members.tsv"
+    out=$(BP_REPORT="$R" $J members-unchanged NoRun 2>&1); rc=$?
+    want "a NAMED port with no run is fatal"      "$rc" "1"
+    case "$out" in *"NOT COMPARED"*) ok "…and says the comparison did not happen" ;; *) bad "…state: $out" ;; esac
+
+    out=$(BP_REPORT="$T/nothing-here" $J members-unchanged 2>&1); rc=$?
+    want "an absent report directory is fatal"    "$rc" "1"
+
+    E="$T/empty-report"; mkdir -p "$E"
+    out=$(BP_REPORT="$E" $J members-unchanged 2>&1); rc=$?
+    want "a sweep that compares NOTHING is fatal" "$rc" "1"
+    case "$out" in *"NOTHING WAS COMPARED"*) ok "…and says so" ;; *) bad "…says so: $out" ;; esac
+
+    echo
+    [ "$fail" = "0" ] && echo "debug-selfcheck: PASS" || { echo "debug-selfcheck: FAILED"; exit 1; }
 
 # ---------------------------------------------------------------------------------------------
 # The baseline half of the check report: list, show, diff and ACCEPT.
