@@ -1,10 +1,12 @@
-package balticporter.frontend.spoon
-
-import balticporter.core.{Trivia, TriviaKind}
+package balticporter.core
 
 /** Lexes every comment out of a Java source file (skipping string/char literals).
   * Used for the comment-preservation invariant — independent of Spoon's attachment
   * heuristics, so a comment Spoon fails to attach is still caught if we drop it.
+  *
+  * In `core` rather than beside a frontend because it reads TEXT and knows nothing about any
+  * parser: both the BIR path and the TIR path's `balticporter.tir.TriviaCheck` need the same
+  * answer, and a second copy of a lexer is a second set of edge cases.
   */
 object CommentScanner:
 

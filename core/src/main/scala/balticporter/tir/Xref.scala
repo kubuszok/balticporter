@@ -161,6 +161,8 @@ object Xref:
       case Tree.IncDec(t, _, _, _, _)       => walkTerm(t)
       case Tree.DoWhile(b, c, _, _, _)         => walkTerm(b); walkTerm(c)
       case Tree.Synchronized(l, b, _, _)    => walkTerm(l); walkTerm(b)
+      // a comment carries no references; the statement under it carries all of them
+      case Tree.Commented(_, s)             => walkTerm(s)
       case l @ Tree.Literal(Constant.ClassOfC(tp), _, _) => walkType(tp, UsageKind.TypeArg, l)
       case _: Tree.Literal                  => ()
       case _: Tree.Opaque                   => ()

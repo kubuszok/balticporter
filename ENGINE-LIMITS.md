@@ -1471,3 +1471,57 @@ Distinguish on `Flags.isStatic`, and take the synthesised lambda's arity from th
 `MethodType` so a multi-parameter reference (`String::compareTo` as a `Comparator`) works too.
 
 *Fix kind: (a).*
+
+---
+
+## 10. Comments (trivia) — what still does not survive, with its number
+
+The governing rule is `CLAUDE.md` §4.58. This section is only the residue: what is measured to be
+lost after the TIR path carries comments, so nobody re-derives it.
+
+### C1. A comment on a construct the EMISSION consumes has nowhere to go. **222 → 100** on libGDX core
+
+`TriviaCheck` compares the Java text to the emitted text on every run. On libGDX core it first
+reported **222** dropped comments; recovering the one large, principled category took it to **100**.
+
+The category that was recoverable: the constructor `CtorFunnel` promotes to Scala's PRIMARY loses
+its `def`, so its Javadoc had no node left to sit on. Scala documents a primary constructor on the
+CLASS, so the promoted constructor's `leading` is appended to the class's — **Javadoc losses 138 →
+17**, no other count moved, output still deterministic.
+
+What remains, by kind (libGDX core `100`; libGDX tests `69`; simple-graphs `1`+`1`; Ashley `0`):
+
+- **81 Line** — the overwhelming majority are comments inside a body that the emitter REWRITES
+  rather than renders statement-for-statement: a `switch` arm the lowering merges, a `break`
+  replaced by a `boundary`, a `for` header (comments there are stripped on purpose — the clause is
+  emitted on one line and a `//` would swallow the rest of it).
+- **17 Javadoc** — members the emission consumes for a different reason: a constructor dropped as
+  degenerate, an all-static class collapsed to an `object` (its `<init>` is filtered out), an enum's
+  constructor folded into the sealed class's parameters.
+- **2 Block** — commented-out code inside an expression position, where a comment cannot be rendered
+  safely at all (a `//` would comment out the rest of the term).
+
+Do NOT "fix" this by hoisting everything to the nearest surviving node: a comment that describes a
+statement, printed above a method, is worse than absent, because it now says something false. The
+honest fix per category is a harvest point at the construct that survives, one category at a time,
+measured against this number.
+
+*Fix kind: (a) engine — every one of these is an emission path in `scala-emit`, not a library
+policy.*
+
+### C2. `TirPrinter.canonical` must NOT carry trivia, and `TirPrinter.digest` MUST
+
+Two consumers with opposite requirements, and satisfying one with the other is a silent defect
+either way:
+
+- A phase-boundary dump exists to show what a phase did to the TREE. libGDX's `AssetManager` carries
+  ~400 lines of Javadoc that would bury the nodes a phase actually moved, and no phase reads a
+  comment. So `Style.canonical` elides it — and a `Commented` wrapper prints as its statement alone,
+  so a dump is identical whether the Java had a comment there or not.
+- `TirCacheKey` keys the ACTION CACHE on `TirPrinter.digest`, and the cache stores EMITTED TEXT. A
+  digest over the canonical form would make a source edit that changed only a comment a cache HIT
+  that re-serves the previous file with the previous comment — silent, surviving a `clean`, and
+  moving no count. `digest` therefore renders `Style.identity` (canonical + trivia): everything that
+  reaches the emitted file, and nothing that does not.
+
+*Fix kind: (a) engine.*

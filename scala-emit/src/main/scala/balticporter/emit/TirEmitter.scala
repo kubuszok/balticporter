@@ -65,7 +65,12 @@ final class TirEmitter(
     val body = classDef(cd, 0)
     val full = sym(cd.symbol).fullName
     val pkg  = if full.contains('.') then s"package ${full.substring(0, full.lastIndexOf('.'))}\n\n" else ""
-    val text = header(cd) + pkg + body
+    // The generated banner says what the FILE is; the upstream's own header — its licence — follows
+    // verbatim, before the `package` clause it sat above in Java. Both, in that order: the banner
+    // carries the `Original license:` SPDX line and the upstream commit, which is the machine-
+    // readable half, and the notice itself is the half the licence actually obliges us to
+    // reproduce. Neither substitutes for the other (CLAUDE.md §4.57).
+    val text = header(cd) + leading(cd.unitLeading, 0) + pkg + body
     if SrcMap.enabled then recordedMap(full) = srcMapOf(full, cd, text)
     text
 
@@ -435,6 +440,62 @@ final class TirEmitter(
 
   private def ind(n: Int): String = "  " * n
 
+  // ---------------------------------------------------------------------------
+  // TRIVIA — the original Java comments, re-emitted above the node that carried them.
+  //
+  // Three decisions, all of them made once here so that the output is DETERMINISTIC rather than
+  // whitespace-faithful (a port is regenerated on every engine change; a diff that moves because a
+  // comment re-wrapped is a diff nobody reads):
+  //
+  //   1. RE-INDENTED to the node, not reproduced at the column Java used. A `/** … */` on a nested
+  //      class's method sat at column 4 upstream and lands at whatever depth the emitted class
+  //      nests to; left at its original column it would read as a comment on the enclosing class.
+  //      Relative alignment INSIDE the comment is preserved — the common leading whitespace of the
+  //      continuation lines is the only thing removed — so a commented-out code block keeps its
+  //      shape and a Javadoc keeps its ` * ` gutter.
+  //   2. Exactly ONE newline between the comment and its node, whatever the Java had. Blank lines
+  //      inside a comment survive; blank lines around it do not, because nothing carries them.
+  //   3. VERBATIM otherwise: every non-whitespace character of the original, delimiters included.
+  //
+  // ## Why no escaping is needed, and the one case where it is
+  //
+  // A comment's text is inert to Scala's parser in every way that matters BUT ONE. `*/` inside a
+  // `//` line comment is nothing; a Javadoc full of `@param`, backticks, `$`, unclosed braces or
+  // Scala-significant text is nothing, because none of it is read. Scala's block comments, however,
+  // NEST and Java's do not — so a Java block comment whose body contains `/*` (perfectly legal:
+  // `/* see the /* marker */` ends at the first `*/` in Java) opens a nested comment in Scala that
+  // never closes, and SWALLOWS THE REST OF THE FILE. That is not hypothetical prettiness: it turns
+  // one upstream comment into a file that does not compile, with an error pointing at the end of
+  // the file.
+  //
+  // The guard is the minimal one: such a comment is re-emitted LINE BY LINE as `//` comments, so
+  // every character of the original — its `/*` and `*/` delimiters included — is still in the
+  // output, and nothing in it can open anything.
+  // ---------------------------------------------------------------------------
+
+  /** the block of comment lines that precedes a node, with its trailing newline; `""` for none. */
+  private def leading(ts: List[Trivia], i: Int): String =
+    if ts.isEmpty then "" else ts.map(triviaText(_, i)).mkString("\n") + "\n"
+
+  /** does this block comment contain a delimiter that Scala would read as nesting? */
+  private def nests(t: Trivia): Boolean =
+    val body = t.text.stripPrefix("/**").stripPrefix("/*").stripSuffix("*/")
+    body.contains("/*") || body.contains("*/")
+
+  private def triviaText(t: Trivia, i: Int): String =
+    val lines = t.text.replace("\r\n", "\n").replace("\r", "\n").split("\n", -1).toList
+    t.kind match
+      case TriviaKind.Line                 => ind(i) + lines.head.trim
+      case _ if nests(t)                   => lines.map(l => (ind(i) + "//" + l).stripTrailing()).mkString("\n")
+      case _                               =>
+        val rest   = lines.tail
+        val filled = rest.filter(_.trim.nonEmpty)
+        val cut    = filled.map(_.takeWhile(c => c == ' ' || c == '\t').length).minOption.getOrElse(0)
+        val gutter = filled.nonEmpty && filled.forall(_.trim.startsWith("*"))
+        val pre    = ind(i) + (if gutter then " " else "")
+        ((ind(i) + lines.head.trim) :: rest.map(l => if l.trim.isEmpty then "" else (pre + l.drop(cut)).stripTrailing()))
+          .mkString("\n")
+
   // ---- definitions ----
   /** the classes currently being rendered, outermost first. Lets a `Tree.This` naming an ENCLOSING
     * class render Java's qualified `Outer.this` rather than a bare `this` (which names the inner one). */
@@ -629,7 +690,7 @@ final class TirEmitter(
        !extendedTypes(cd.symbol) && !instantiatedTypes(cd.symbol) then
       val members = cd.body.filterNot { case d: Tree.DefDef => sym(d.symbol).name == "<init>"; case _ => false }
       val ob = orderBody(members, paramfulPrimary).map(memberStat(_, i + 1)).filter(_.nonEmpty).mkString("\n")
-      return s"${ind(i)}object ${esc(s.name)}$tps {\n$ob\n${ind(i)}}"
+      return s"${leading(cd.leading, i)}${ind(i)}object ${esc(s.name)}$tps {\n$ob\n${ind(i)}}"
     // Java statics have no instance home in Scala — they move to the companion object.
     val (statics, instance) = if s.flags.isModule then (Nil, loweredBody) else loweredBody.partition(isStatic)
     val self    = cd.selfType.map(st => s"${ind(i + 1)}self: ${tpe(st.tpe)} =>\n").getOrElse("")
@@ -645,10 +706,17 @@ final class TirEmitter(
     // A Java `@interface` is an ANNOTATION TYPE. Emitted as an ordinary interface it becomes a
     // trait, and then nothing can be annotated with it — 161 errors' worth of `@Null` in this
     // corpus alone. Scala's equivalent is a class extending `StaticAnnotation`.
+    // The PROMOTED constructor's own Javadoc has no `def` left to sit on — `CtorFunnel` turned it
+    // into the class's parameter list — so it joins the class's, which is where Scala documents a
+    // primary constructor anyway. Without this it is simply dropped, and `TriviaCheck` counted it:
+    // 138 Javadoc losses on libGDX core, the largest single category, most of them exactly this.
+    // exactly the constructor `lowerCtors` replaces with its body, so this can never duplicate a
+    // doc that is still attached to a `def this` somewhere in the class.
+    val ctorLead = plan.primary.toList.flatMap(_.leading)
     val cls     =
       if s.flags.isAnnotation then
-        s"${annots(s, i)}${ind(i)}class ${esc(s.name)}$tps$prim extends scala.annotation.StaticAnnotation"
-      else s"${annots(s, i)}${ind(i)}${mods(s.flags.copy(isPrivate = false))}$abs$kw ${esc(s.name)}$tps$prim$ext$open"
+        s"${leading(cd.leading, i)}${annots(s, i)}${ind(i)}class ${esc(s.name)}$tps$prim extends scala.annotation.StaticAnnotation"
+      else s"${leading(cd.leading ++ ctorLead, i)}${annots(s, i)}${ind(i)}${mods(s.flags.copy(isPrivate = false))}$abs$kw ${esc(s.name)}$tps$prim$ext$open"
     // Java interface/parent CONSTANTS are `static`, so they live in the parent's companion object
     // — which Scala does NOT inherit. Re-export each static-bearing parent's companion so an
     // inherited constant accessed via a subclass (`GL30.GL_LUMINANCE`, declared in `GL20`) resolves.
@@ -715,12 +783,12 @@ final class TirEmitter(
     val nameM   = if hasName then Nil else List(s"${ind(i + 1)}def name(): java.lang.String = this.toString()")
     val members = orderBody(instance).map(memberStat(_, i + 1)).filter(_.nonEmpty) ++ nameM
     val cbody   = members.mkString("\n")
-    val cls     = s"${ind(i)}sealed abstract class $name$eprimary$ext" + (if cbody.isEmpty then "" else s" {\n$cbody\n${ind(i)}}")
+    val cls     = s"${leading(cd.leading, i)}${ind(i)}sealed abstract class $name$eprimary$ext" + (if cbody.isEmpty then "" else s" {\n$cbody\n${ind(i)}}")
     val cases = cd.enumCases.map { ec =>
       val cn   = esc(sym(ec.symbol).name)
       val args = if ec.ctorArgs.isEmpty then "" else s"(${ec.ctorArgs.map(term(_, i + 1)).mkString(", ")})"
       val body = if ec.body.isEmpty then "" else s" {\n${ec.body.map(stat(_, i + 2)).mkString("\n")}\n${ind(i + 1)}}"
-      s"${ind(i + 1)}case object $cn extends $name$args$body"
+      s"${leading(ec.leading, i + 1)}${ind(i + 1)}case object $cn extends $name$args$body"
     }
     // `def` (not `val`) so Java's `E.values()` call site type-checks; also a no-paren read works.
     val values = s"${ind(i + 1)}def values(): scala.Array[$name] = scala.Array(${cd.enumCases.map(ec => esc(sym(ec.symbol).name)).mkString(", ")})"
@@ -760,8 +828,10 @@ final class TirEmitter(
     def isCtor(s: Statement) = s match { case d: Tree.DefDef => sym(d.symbol).name == "<init>"; case _ => false }
     // the peer ctor this one delegates to via a leading `this(args)` (NOT super, NOT the no-arg
     // primary) — its symbol identifies the exact target constructor.
-    def delegateTarget(d: Tree.DefDef): Option[SymId] = d.rhs match
-      case Some(Tree.Block((Tree.Apply(Tree.Select(r, m, _, _), args, _, _, _)) :: _, _, _, _))
+    // matched THROUGH a comment wrapper (CtorFunnel.headStmt says why): a `// delegate` above the
+    // `this(args)` must not turn a delegating constructor into a non-delegating one.
+    def delegateTarget(d: Tree.DefDef): Option[SymId] = CtorFunnel.headStmt(d) match
+      case Some(Tree.Apply(Tree.Select(r, m, _, _), args, _, _, _))
           if sym(m).name == "<init>" && args.nonEmpty && !r.isInstanceOf[Tree.Super] => Some(m)
       case _ => None
     // a no-arg constructor whose body is only super/this delegation is degenerate — Scala's
@@ -773,7 +843,12 @@ final class TirEmitter(
     def degenerate(d: Tree.DefDef): Boolean =
       !paramfulPrimary && d.paramss.flatten.isEmpty && (d.rhs match
         case Some(Tree.Block(stats, _, _, _)) =>
-          stats.forall { case Tree.Apply(Tree.Select(_, m, _, _), _, _, _, _) => sym(m).name == "<init>"; case _ => false }
+          stats.forall {
+            case t: Term => Tree.uncomment(t) match
+              case Tree.Apply(Tree.Select(_, m, _, _), _, _, _, _) => sym(m).name == "<init>"
+              case _                                               => false
+            case _ => false
+          }
         case _ => true)
     val ctorList = body.collect { case d: Tree.DefDef if isCtor(d) && !degenerate(d) => d }
     val bySym    = ctorList.map(d => d.symbol -> d).toMap
@@ -954,7 +1029,18 @@ final class TirEmitter(
     case TypeRepr.AppliedType(tc, a) => hasWildcardArg(tc) || a.exists(hasWildcardArg)
     case _                           => false
 
+  /** a statement rendered on ONE LINE, with any comment stripped — for the two positions where a
+    * newline is illegal (a `for` header's init and update clauses). */
+  private def flatStat(s: Statement): String = s match
+    case t: Term        => stat(Tree.uncomment(t), 0)
+    case v: Tree.ValDef => stat(v.copy(leading = Nil), 0)
+    case other          => stat(other, 0)
+
   private def stat(s: Statement, i: Int): String = s match
+    // a commented STATEMENT: its comments at the statement's own indent, then the statement. A
+    // DEFINITION never arrives here wrapped — it carries its own `leading` field — so this is
+    // exactly the block-statement case and nothing else.
+    case c: Tree.Commented => leading(c.leading, i) + stat(c.stmt, i)
     case c: Tree.ClassDef => classDef(c, i)
     // a Java initializer block is carried as a synthetic member; emit its BODY inline rather than
     // a `def`, since a block in a class/object body runs at initialisation — where Java runs it
@@ -1046,7 +1132,7 @@ final class TirEmitter(
         if needsUnreachable then s" = {\n${ind(i + 1)}${term(r, i + 1)}\n${ind(i + 1)}throw new java.lang.RuntimeException(\"unreachable\")\n${ind(i)}}"
         else s" = ${term(r, i)}").getOrElse("")
     tparamSubst = savedSubst // restore (ctor type-param substitution was local to this def)
-    s"${annots(s, i)}${ind(i)}${mods(s.flags, privateQualifier(s.owner))}def $name$tps$pss$ret$rhs"
+    s"${leading(d.leading, i)}${annots(s, i)}${ind(i)}${mods(s.flags, privateQualifier(s.owner))}def $name$tps$pss$ret$rhs"
 
   /** does this loop body contain an unlabelled `break` that belongs to THIS loop?
     *
@@ -1212,7 +1298,7 @@ final class TirEmitter(
     case TypeRepr.TypeRef(_, s) => sym(s).fullName == "scala.Unit"
     case _ => false
   /** the method body is (or ends in) an infinite `while(true)` / `for(;;)`. */
-  private def endsInInfiniteLoop(t: Term): Boolean = t match
+  private def endsInInfiniteLoop(t: Term): Boolean = Tree.uncomment(t) match
     // …unless it can BREAK out. Before `break` was emitted the loop really was infinite and the
     // unreachable tail was correct; now `boundary { while (true) … }` returns normally, and the
     // synthetic `throw` after it is reached on every exit.
@@ -1233,14 +1319,18 @@ final class TirEmitter(
   private def ctorBody(cdef: Tree.DefDef, i: Int): String =
     val stats  = CtorFunnel.stmtsOf(cdef)
     val replay = currentClass.flatMap(plans.replayFor(_, cdef)).getOrElse(Nil)
-    val (deleg, rest) = stats match
-      case (Tree.Apply(Tree.Select(r, m, _, _), args, _, _, _)) :: tl if sym(m).name == "<init>" =>
+    // the head is read THROUGH its comments, and the comments are re-emitted above the delegation
+    // that replaces it — the call itself is consumed, but what somebody wrote about it is not.
+    val headTrivia = stats.headOption.collect { case t: Term => Tree.triviaOn(t) }.getOrElse(Nil)
+    val (deleg, rest) = CtorFunnel.headStmt(cdef) match
+      case Some(Tree.Apply(Tree.Select(r, m, _, _), args, _, _, _)) if sym(m).name == "<init>" =>
         val d = r match
           case _: Tree.Super => superDelegation(args, i + 1)
           case _             => s"this(${args.map(term(_, i + 1)).mkString(", ")})"
-        (d, tl)
-      case all => ("this()", all)
-    val lines = (ind(i + 1) + deleg) :: (replay ++ rest).map(stat(_, i + 1)).filter(_.trim.nonEmpty)
+        (d, stats.tail)
+      case _ => ("this()", stats)
+    val head  = leading(if rest eq stats then Nil else headTrivia, i + 1) + ind(i + 1) + deleg
+    val lines = head :: (replay ++ rest).map(stat(_, i + 1)).filter(_.trim.nonEmpty)
     s"{\n${joinStats(lines)}\n${ind(i)}}"
 
   /** A secondary constructor's `super(args)` — which scala cannot write — expressed as a
@@ -1281,6 +1371,9 @@ final class TirEmitter(
     s"${esc(sym(v.symbol).name)}: ${tpe(overrideAlign.getOrElse(v.symbol, v.tpt.tpe))}"
 
   private def valDef(v: Tree.ValDef, i: Int): String =
+    if v.leading.nonEmpty then leading(v.leading, i) + valDef0(v.copy(leading = Nil), i) else valDef0(v, i)
+
+  private def valDef0(v: Tree.ValDef, i: Int): String =
     val s = sym(v.symbol)
     if s.flags.isGiven then
       return s"${ind(i)}given ${esc(s.name)}: ${tpe(v.tpt.tpe)}${v.rhs.map(r => s" = ${term(r, i)}").getOrElse("")}"
@@ -1528,9 +1621,12 @@ final class TirEmitter(
     case Tree.For(init, cond, upd, body, _, _, lbl) =>
       // the UPDATE must run on a `continue` too, so it sits OUTSIDE the per-iteration boundary —
       // which is exactly where java's `for` runs it.
-      val is = init.map(stat(_, 0)).mkString("; ")
+      // ONE LINE, joined by `;` — so a comment must never reach here: a `//` would swallow the rest
+      // of the loop header. The frontend does not wrap a `for`'s init/update for exactly that
+      // reason; this strips any that a later phase introduced rather than emitting a broken file.
+      val is = init.map(flatStat).mkString("; ")
       val c  = cond.map(term(_, i)).getOrElse("true")
-      val u  = upd.map(stat(_, 0)).mkString("; ")
+      val u  = upd.map(flatStat).mkString("; ")
       loopWithJumps(body, lbl, bd => s"{ $is; while ($c) { $bd; $u } }", term(body, i))
     case Tree.Try(res, body, catches, fin, _, _) => tryStr(res, body, catches, fin, i)
     case Tree.Match(scr, cases, _, _)   => inSwitch(matchStr(scr, cases, i))
@@ -1611,6 +1707,12 @@ final class TirEmitter(
     case Tree.DoWhile(b, c, _, _, lbl)  => // Scala 3 has no do-while
       loopWithJumps(b, lbl, bd => s"while ({ $bd; ${term(c, i)} }) ()", term(b, i))
     case Tree.Synchronized(l, b, _, _)  => s"${term(l, i)}.synchronized ${term(b, i)}"
+    // An EXPRESSION position, where a comment cannot be rendered safely: a `//` would comment out
+    // the rest of the line and a `/* */` would sit in the middle of a term. The frontend only ever
+    // wraps a STATEMENT (`SpoonTir.withTrivia`), and `stat` handles that case above, so this is
+    // reached only if a phase moves a wrapped statement into an operand — the statement is emitted,
+    // the comment is not, and `TriviaCheck` reports the loss rather than the file being broken.
+    case Tree.Commented(_, s)           => term(s, i)
     case Tree.Opaque(raw, _, _)         => raw
 
   /** A Java constructor reference (`Foo::new`) is typed by the TARGET functional interface Java
@@ -1770,8 +1872,32 @@ final class TirEmitter(
     case Nil => ""
     case h :: t =>
       val sb = new StringBuilder(h)
-      t.foreach { l => if l.trim.startsWith("{") then sb.append(";"); sb.append("\n").append(l) }
+      t.foreach { l => if firstCode(l).contains('{') then sb.append(";"); sb.append("\n").append(l) }
       sb.toString
+
+  /** The first character a PARSER would see in `s` — comments skipped, exactly as Scala's scanner
+    * skips them.
+    *
+    * `l.trim.startsWith("{")` was enough while a statement's first line was always code. It is not
+    * once a statement can be preceded by its original comment: `new Array[String](n)` followed by
+    * `// Read each page.` and then `{ … }` still parses as that constructor's anonymous-class body,
+    * because the comment is whitespace — but the string test saw `//` and skipped the separator.
+    * Two errors in libGDX, both reading `anonymous class {...} cannot extend final class Array`. */
+  private def firstCode(s: String): Option[Char] =
+    var i     = 0
+    var depth = 0
+    while i < s.length do
+      if depth > 0 then
+        if s.startsWith("*/", i) then { depth -= 1; i += 2 }
+        else if s.startsWith("/*", i) then { depth += 1; i += 2 }
+        else i += 1
+      else if s.startsWith("//", i) then
+        val nl = s.indexOf('\n', i)
+        i = if nl < 0 then s.length else nl + 1
+      else if s.startsWith("/*", i) then { depth += 1; i += 2 }
+      else if s.charAt(i).isWhitespace then i += 1
+      else return Some(s.charAt(i))
+    scala.None
 
   private def tryStr(res: List[Tree.ValDef], body: Term, catches: List[Tree.CatchCase], fin: Option[Term], i: Int): String =
     val r  = res.map(v => s"${ind(i + 1)}${valDef(v, 0)}\n").mkString

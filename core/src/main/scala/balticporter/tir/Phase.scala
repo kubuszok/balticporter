@@ -346,4 +346,10 @@ object StandardTraversal:
       case x: Tree.Synchronized => x.copy(lock = mapTerm(ph, x.lock), body = mapTerm(ph, x.body), tpe = mapType(ph, x.tpe))
       case x: Tree.Literal  => x.copy(tpe = mapType(ph, x.tpe))
       case x: Tree.Opaque   => x.copy(tpe = mapType(ph, x.tpe))
+      // The comment wrapper is REBUILT, never unwrapped: a phase that overrides no hook has to see
+      // its statement transformed and get the wrapper back, or every comment vanishes at the first
+      // phase that touches the body. Note the inner term goes through the hooks exactly as it would
+      // unwrapped — including `transformTerm`, which is what keeps a scan's coverage complete —
+      // and the wrapper itself is then offered to `transformTerm` too, one node later.
+      case x: Tree.Commented => x.copy(stmt = mapTerm(ph, x.stmt))
     ph.transformTerm(rebuilt)

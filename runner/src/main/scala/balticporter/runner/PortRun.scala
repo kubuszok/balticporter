@@ -4,7 +4,7 @@ import balticporter.core.*
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.sbtgen.SbtGen
-import balticporter.tir.{CheckReport, Correlate, CorrelateRun, DebugFlags, Decision, DecisionLog, OmissionCheck, Origin, Phase, Pipeline, PortabilityCheck, Program, Reason, Remediator, RewriteTrace, SrcMap, SymId, Tree}
+import balticporter.tir.{CheckReport, Correlate, CorrelateRun, DebugFlags, Decision, DecisionLog, OmissionCheck, Origin, Phase, Pipeline, PortabilityCheck, Program, Reason, Remediator, RewriteTrace, SrcMap, SymId, Tree, TriviaCheck}
 import balticporter.transform.{MethodBodyTransform, PackageRenameTransform, PortMapTransform}
 
 import java.nio.file.{Files, Path, StandardCopyOption}
@@ -290,6 +290,9 @@ final case class PortRun(
 
     var written = 0
     var dropped = 0
+    // what was actually SHIPPED, paired with the Java it came from — the input to the trivia check
+    // below, which compares text against text and so must see exactly the files that were written.
+    val shipped = collection.mutable.ListBuffer.empty[TriviaCheck.Unit]
     translated.emitOrder.foreach { u =>
       val full = program.symbolOf(u.symbol).map(_.fullName).getOrElse("Unit")
       // Substitutions.dropTypes: PARSED (so every reference to it still resolves) but NOT emitted —
@@ -303,7 +306,9 @@ final case class PortRun(
       val substituted = program.symbolOf(u.symbol).exists(Substituted.tags)
       if substituted || policySubs.dropsType(full) then dropped += 1
       else
-        write(outDir.resolve(full.replace('.', '/') + ".scala"), translated.sourceOf(u))
+        val text = translated.sourceOf(u)
+        write(outDir.resolve(full.replace('.', '/') + ".scala"), text)
+        shipped += TriviaCheck.Unit(PortRun.real(Path.of(u.origin.javaPath)), text)
         written += 1
     }
     // Support types a phase RETYPED code onto. Two feeds, one rule: what the phases DECLARE
@@ -316,6 +321,20 @@ final case class PortRun(
     // Two emitters in one JVM (the determinism double-emission is one; sbt running every suite in
     // one JVM is another) shared that table and contaminated each other's map.
     writeSrcMap(translated.emitter.srcMap)
+
+    // The COMMENTS that did not survive — including, if it ever regresses, the upstream licence
+    // notice this project is obliged to reproduce (§4.57). Over the SHIPPED text against the
+    // SOURCE text, so it is blind to how the trivia got there and would still fire if the whole
+    // frontend harvest silently returned `Nil` (it did once; see `TriviaCheck`). Injected
+    // replacements are excluded by construction: they are hand-written Scala with no Java behind
+    // them, and this check compares against a Java file or reports nothing.
+    val shippedUnits = shipped.toList
+    val triviaLost   = TriviaCheck.check(shippedUnits)
+    val triviaFiles  = TriviaCheck.comparable(shippedUnits)
+    CheckReport.record(PortRun.TriviaDropped, triviaLost.map(_.report))
+    say(s"TRIVIA (comments in the Java that did not reach the Scala): ${triviaLost.size}")
+    if triviaLost.nonEmpty then say(PortReport.Kind.Trivia.classification)
+    println(TriviaCheck.summary(triviaLost, triviaFiles))
 
     // CHECK 1 — before injection, so a file at a dropped type's path can only be the emitter's.
     val leaked = record(PortRun.SubstitutionEmitted, SubstitutionCheck.emittedDroppedTypes(outDir, policySubs))
@@ -882,6 +901,8 @@ object PortRun:
   val Manifest             = "manifest"
   /** references a base module's PUBLISHED port map says are not in its output. */
   val PortMapCheck         = "port-map"
+  /** comments in the upstream Java that did not reach the emitted Scala (a LICENCE among them). */
+  val TriviaDropped        = "trivia"
 
   /** Every check a run MUST have recorded by the time it finishes. Named rather than derived,
     * because the property being asserted is "the orchestrator invoked all of them" — deriving the
@@ -895,7 +916,7 @@ object PortRun:
     * `LibgdxTestMigrate` never called `PortabilityCheck` at all. */
   val RequiredChecks: Set[String] = Set(
     Signature, Omissions, PortabilityAll, PortabilityEmitted, PortabilityInjected, Remediation,
-    SubstitutionEmitted, SubstitutionDangling, Policy, Manifest, PortMapCheck,
+    SubstitutionEmitted, SubstitutionDangling, Policy, Manifest, PortMapCheck, TriviaDropped,
   )
 
   /** One translation, plus everything derived from it that must not be recomputed inconsistently.
@@ -999,6 +1020,11 @@ object PortReport:
     case Policy extends Kind(
       "  §1(b) PER-LIBRARY: a declared key matched nothing, so the rule silently did not run. Fix " +
         "the key in this library's manifest; the engine needs no change.")
+    case Trivia extends Kind(
+      "  §1(a) ENGINE: a comment in the upstream Java reached no harvest point in the frontend, or " +
+        "an emission path renders its node without the `leading` it carries. Nothing else reports " +
+        "it — the output compiles perfectly with the comment gone, and a LICENCE notice among " +
+        "these is a §4.57 obligation, not a formatting nicety. Fix in frontend-spoon/scala-emit.")
     case Manifest extends Kind(
       "  §1(b) PER-LIBRARY: this module's policy for the SHARED surface differs from the module " +
         "that emits it — the two ports each compile alone and cannot compile together. Configure " +

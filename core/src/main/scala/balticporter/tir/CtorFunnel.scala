@@ -168,7 +168,7 @@ object CtorFunnel:
       else
         for
           nil  <- ctors.find(_.paramss.flatten.isEmpty)
-          head <- stmtsOf(nil).headOption
+          head <- headStmt(nil)
           (m, as) <- head match
             case Tree.Apply(Tree.Select(r, mm, _, _), aas, _, _, _)
                 if isInitName(program, mm) && !r.isInstanceOf[Tree.Super] && aas.nonEmpty => Some((mm, aas))
@@ -358,7 +358,7 @@ object CtorFunnel:
     private def classOfSym(s: SymId): Option[Tree.ClassDef] = program.definitionOf(s).collect { case c: Tree.ClassDef => c }
 
     /** a leading `super(args)` with arguments, as (target constructor, arguments). */
-    private def superApply(d: Tree.DefDef): Option[(SymId, List[Term])] = stmtsOf(d).headOption match
+    private def superApply(d: Tree.DefDef): Option[(SymId, List[Term])] = headStmt(d) match
       case Some(Tree.Apply(Tree.Select(_: Tree.Super, m, _, _), args, _, _, _))
           if args.nonEmpty && isInitName(program, m) => Some((m, args))
       case _ => scala.None
@@ -391,6 +391,7 @@ object CtorFunnel:
 
     /** the field a top-level statement assigns, when it is a plain `this.f = <e>` / `f = <e>`. */
     private def assignedField(st: Statement): Option[SymId] = st match
+      case Tree.Commented(_, s)                                 => assignedField(s)
       case Tree.Assign(Tree.Ident(f, _, _), _, _, _)            => Some(f)
       case Tree.Assign(Tree.Select(_: Tree.This, f, _, _), _, _, _) => Some(f)
       case _                                                    => scala.None
@@ -611,6 +612,20 @@ object CtorFunnel:
     case Some(t)                      => List(t)
     case None                         => Nil
 
+  /** The FIRST statement of a constructor body, seen THROUGH any comment written above it.
+    *
+    * Every question this object asks of a constructor's head — is it a `super(args)`, a `this(…)`
+    * delegation, a nilary call — is asked by matching that statement's SHAPE, and a
+    * [[Tree.Commented]] wrapper defeats a shape match silently. The failure it defeats is the
+    * worst one in the file: an unrecognised `super(args)` is DROPPED (CLAUDE.md §4.4, "every
+    * exception lost its message"), and one `// call the base` above it would have been enough.
+    * The trivia is not lost by looking through it — the wrapper stays on the statement in the
+    * body, and `split` puts it back on the tail it keeps. */
+  def headStmt(d: Tree.DefDef): Option[Statement] = stmtsOf(d).headOption.map {
+    case t: Term => Tree.uncomment(t)
+    case other   => other
+  }
+
   def isCtor(program: Program, d: Tree.DefDef): Boolean =
     program.symbolOf(d.symbol).exists(_.name == "<init>")
 
@@ -619,7 +634,7 @@ object CtorFunnel:
 
   /** a leading `this(args)` delegation to a PEER constructor (never `super`, never nilary —
     * an explicit nilary call is the implicit primary and carries no information). */
-  def delegatesToThis(program: Program, d: Tree.DefDef): Boolean = stmtsOf(d).headOption.exists {
+  def delegatesToThis(program: Program, d: Tree.DefDef): Boolean = headStmt(d).exists {
     case Tree.Apply(Tree.Select(r, m, _, _), args, _, _, _) =>
       isInitName(program, m) && !r.isInstanceOf[Tree.Super] && args.nonEmpty
     case _ => false
@@ -635,17 +650,36 @@ object CtorFunnel:
     case TypeRepr.AppliedType(tc, _) => headName(program, tc)
     case _                           => scala.None
 
-  def superArgsOf(program: Program, d: Tree.DefDef): List[Term] = stmtsOf(d).headOption match
+  def superArgsOf(program: Program, d: Tree.DefDef): List[Term] = headStmt(d) match
     case Some(Tree.Apply(Tree.Select(_: Tree.Super, m, _, _), args, _, _, _)) if isInitName(program, m) => args
     case _                                                                                              => Nil
 
-  /** split a constructor body into (super args to lift, remaining statements). */
+  /** split a constructor body into (super args to lift, remaining statements).
+    *
+    * The head is matched THROUGH its comment wrapper ([[headStmt]]); when it is consumed, whatever
+    * was written above it moves onto the first statement that survives, so a `// set up the base`
+    * ends up above the code that replaced the call rather than deleted with it. */
   private def split(program: Program, d: Tree.DefDef): (List[Term], List[Statement]) =
-    stmtsOf(d) match
-      case Tree.Apply(Tree.Select(_: Tree.Super, m, _, _), args, _, _, _) :: tl if isInitName(program, m) => (args, tl)
+    val all = stmtsOf(d)
+    def consumed(tl: List[Statement]): List[Statement] = all.headOption match
+      case Some(h: Term) => carry(Tree.triviaOn(h), tl)
+      case _             => tl
+    all.headOption.map { case t: Term => Tree.uncomment(t); case other => other } match
+      case Some(Tree.Apply(Tree.Select(_: Tree.Super, m, _, _), args, _, _, _)) if isInitName(program, m) =>
+        (args, consumed(all.tail))
       // an explicit nilary `this()`/`super()` is what the implicit primary already does
-      case Tree.Apply(Tree.Select(_, m, _, _), args, _, _, _) :: tl if isInitName(program, m) && args.isEmpty => (Nil, tl)
-      case all => (Nil, all)
+      case Some(Tree.Apply(Tree.Select(_, m, _, _), args, _, _, _)) if isInitName(program, m) && args.isEmpty =>
+        (Nil, consumed(all.tail))
+      case _ => (Nil, all)
+
+  /** prepend `ts` to whatever the first of `rest` already carries; `Nil` when nothing survives to
+    * carry it (a constructor whose ONLY statement was the lifted `super(args)`). */
+  private def carry(ts: List[Trivia], rest: List[Statement]): List[Statement] =
+    if ts.isEmpty then rest
+    else
+      rest match
+        case (h: Term) :: tl => Tree.Commented(ts ++ Tree.triviaOn(h), Tree.uncomment(h)) :: tl
+        case other           => other
 
   /** Nominate the Java constructor that becomes Scala's primary for this class, ignoring the
     * whole-program constraint that [[Plans]] applies on top. */
@@ -761,7 +795,7 @@ object CtorFunnel:
           .map { c => val (sa, rest) = split(program, c); Plan(Some(c), sa, rest) }
       else scala.None
 
-  private def superTarget(program: Program, d: Tree.DefDef): SymId = stmtsOf(d).headOption match
+  private def superTarget(program: Program, d: Tree.DefDef): SymId = headStmt(d) match
     case Some(Tree.Apply(Tree.Select(_: Tree.Super, m, _, _), args, _, _, _))
         if args.nonEmpty && isInitName(program, m) => m
     case _ => SymId.None

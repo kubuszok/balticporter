@@ -66,6 +66,29 @@ final case class Flags(
 /** Open, extensible domain semantics attached to symbols by transforms. */
 trait SymTag
 
+// ---------------------------------------------------------------------------
+// Trivia — the ORIGINAL COMMENTS, carried through the port.
+// ---------------------------------------------------------------------------
+
+/** Comment kinds preserved from the Java source. */
+enum TriviaKind:
+  case Line, Block, Javadoc
+
+/** One comment, VERBATIM — delimiters included, sliced out of the original source buffer rather
+  * than re-printed from a parsed model.
+  *
+  * Why the text is a raw slice and not a normalised body: a comment is the one artefact of a port
+  * whose whole value is its exact words. Re-printed from `CtComment.toString` a Javadoc loses
+  * `@param` alignment, `<pre>` blocks and — critically — the exact wording of a LICENCE, which is
+  * the one comment a derived work is legally obliged to reproduce (CLAUDE.md §4.57). Slicing keeps
+  * that honest by construction rather than by a rendering rule nobody checks.
+  *
+  * Deliberately NOT shared with `balticporter.core.Trivia` (the BIR path's identical-looking
+  * record): that file is FROZEN and slated for deletion once its ten corpus programs move over,
+  * and a TIR node referring to it would make the TIR undeletable-with-it. Four duplicated lines is
+  * the cheaper of the two costs. */
+final case class Trivia(kind: TriviaKind, text: String)
+
 /** A Java ANNOTATION on a declaration — `@Test`, `@Override`, `@Deprecated`, `@Null`.
   *
   * Carried because dropping annotations is not cosmetic. A JUnit suite whose `@Test` did not
@@ -195,11 +218,29 @@ object Tree:
       origin: Origin,
       tparams: List[TypeDef] = Nil,
       enumCases: List[EnumCase] = Nil,
+      /** the type's OWN comments — its Javadoc and anything else written directly above it. */
+      leading: List[Trivia] = Nil,
+      /** comments that belong to the FILE rather than to this type: everything above the `package`
+        * clause, plus anything hanging off the imports. That is where the Apache/BSD notice lives
+        * in every library in this corpus, and it is why it is a SECOND field instead of being
+        * merged into `leading`.
+        *
+        * The distinction is one the emitter needs and cannot recover: a `package` clause must
+        * precede the class, so a file header merged into `leading` would be emitted BELOW the
+        * `package` line — legal, but no longer the file's header. And a Java file with two
+        * top-level types becomes two Scala files, each of which is a derived work in its own
+        * right; each therefore carries the notice, which is the one place the frontend's
+        * claimed-once rule is deliberately not applied ([[Trivia]], `SpoonTir.fileHeader`).
+        *
+        * Non-empty only on a top-level unit; a nested `ClassDef` has no file of its own. */
+      unitLeading: List[Trivia] = Nil,
   ) extends Definition
 
   /** one Java enum constant — `NAME(ctorArgs) { body }`. Lowered to a Scala `case object`
     * extending the enum's sealed class. `body` carries per-constant method overrides. */
-  final case class EnumCase(symbol: SymId, ctorArgs: List[Term], body: List[Statement], origin: Origin)
+  final case class EnumCase(symbol: SymId, ctorArgs: List[Term], body: List[Statement], origin: Origin,
+                            /** the constant's own comments. */
+                            leading: List[Trivia] = Nil)
 
   /** type alias / abstract type member / type parameter (`type T = …` / `type T <: U`).
     * For a type parameter, `rhs` carries a `TypeBounds`. */
@@ -212,9 +253,13 @@ object Tree:
       rhs: Option[Term],
       origin: Origin,
       tparams: List[TypeDef] = Nil,
+      /** the method's/constructor's own comments — Javadoc above the declaration. */
+      leading: List[Trivia] = Nil,
   ) extends Definition
 
-  final case class ValDef(symbol: SymId, tpt: TypeTree, rhs: Option[Term], origin: Origin) extends Definition
+  final case class ValDef(symbol: SymId, tpt: TypeTree, rhs: Option[Term], origin: Origin,
+                          /** the field's/local's own comments. */
+                          leading: List[Trivia] = Nil) extends Definition
 
   // ---- terms (each reference resolves to a SymId) ----
   final case class Ident(sym: SymId, tpe: TypeRepr, origin: Origin)                     extends Term
@@ -295,6 +340,51 @@ object Tree:
   /** an as-yet-unmodeled TERM, kept typed (a full structured `tpe`) so the tree stays
     * whole while the node set grows. TYPES are never opaque; only unmodeled terms are. */
   final case class Opaque(raw: String, tpe: TypeRepr, origin: Origin)                   extends Term
+
+  /** A statement with the comments written above it. The one node that exists purely to carry
+    * [[Trivia]], and the reason DECLARATIONS do not need one: a field, method or class has a
+    * `leading` field of its own, while a STATEMENT inside a body is an ordinary `Term` with
+    * nowhere to put it and forty case classes that would each need the field.
+    *
+    * It is transparent to everything by design. `tpe` and `origin` delegate, so a `Commented`
+    * types and locates exactly as its statement does; [[StandardTraversal]] recurses into `stmt`
+    * and REBUILDS the wrapper, so a phase that overrides no hook passes it through untouched and
+    * a phase that rewrites the inner term keeps the comment. The frontend only ever wraps a
+    * statement that HAS a comment, so a body with none is byte-for-byte the tree it was before
+    * this node existed.
+    *
+    * What it is NOT transparent to is a pattern match on statement SHAPE — `stmtsOf(ctor).head
+    * match { case Tree.Apply(Tree.Select(…)) => … }` stops matching the moment somebody writes a
+    * comment above a `super(…)` call, and that particular one silently drops the super call
+    * (CLAUDE.md §4.4). Every such site matches through [[Uncommented]] instead; grep for it before
+    * writing a new one. */
+  final case class Commented(leading: List[Trivia], stmt: Term) extends Term:
+    def tpe: TypeRepr  = stmt.tpe
+    def origin: Origin = stmt.origin
+
+  /** See THROUGH any number of [[Commented]] wrappers — the extractor form, for a pattern match on
+    * a statement's shape: `case Tree.Uncommented(Tree.Apply(fun, args, _, _, _)) => …`. Matches
+    * every term, wrapped or not, so it is a drop-in around an existing pattern. */
+  object Uncommented:
+    def unapply(t: Term): Some[Term] = Some(uncomment(t))
+
+  /** the statement itself, with its comment wrappers removed. */
+  @annotation.tailrec
+  def uncomment(t: Term): Term = t match
+    case Commented(_, inner) => uncomment(inner)
+    case other               => other
+
+  /** the trivia on `t`, outermost first — `Nil` for an unwrapped statement. */
+  def triviaOn(t: Term): List[Trivia] = t match
+    case Commented(l, inner) => l ++ triviaOn(inner)
+    case _                   => Nil
+
+  /** put `original`'s comments back on a `rewritten` replacement for it. A rewrite that builds a
+    * fresh statement (rather than `copy`-ing) drops the wrapper, and the comment goes with it. */
+  def recomment(original: Term, rewritten: Term): Term =
+    triviaOn(original) match
+      case Nil => rewritten
+      case ts  => Commented(ts, uncomment(rewritten))
 
 // ---------------------------------------------------------------------------
 // Whole-program index + program — our layer BEYOND Quotes.

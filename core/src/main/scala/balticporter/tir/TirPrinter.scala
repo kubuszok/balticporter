@@ -33,13 +33,25 @@ object TirPrinter:
 
   /** `showIds`: append `#<SymId>` to every symbol. Interning-order dependent — debugging only,
     * never in a persisted artifact. `showOrigins`: append the Java source location; line numbers
-    * move when upstream whitespace does, so this too is off in the canonical form. */
-  final case class Style(showIds: Boolean = true, showOrigins: Boolean = false, showTypes: Boolean = true)
+    * move when upstream whitespace does, so this too is off in the canonical form.
+    * `showTrivia`: render the original Java comments each node carries — see [[Style.canonical]]. */
+  final case class Style(showIds: Boolean = true, showOrigins: Boolean = false, showTypes: Boolean = true,
+                         showTrivia: Boolean = true)
   object Style:
     /** what you read on a terminal while diagnosing one phase. */
     val debug: Style = Style(showIds = true, showOrigins = true)
-    /** what you persist, digest or diff: no ids, no line numbers, no clock. */
-    val canonical: Style = Style(showIds = false, showOrigins = false)
+    /** what you DIFF: no ids, no line numbers, no clock — and no trivia.
+      *
+      * Trivia is elided here for the same reason origins are. A dump exists to answer "what did
+      * this phase do to the tree", and libGDX's `AssetManager` carries 400 lines of Javadoc that
+      * would bury the twelve nodes a phase actually moved. The comments are content, not
+      * structure, and no phase reads them.
+      *
+      * Which is exactly why [[digest]] does NOT use this style — see there. */
+    val canonical: Style = Style(showIds = false, showOrigins = false, showTrivia = false)
+    /** canonical PLUS trivia: everything that reaches the emitted file and nothing that does not.
+      * The identity a content digest must be taken over. */
+    val identity: Style = canonical.copy(showTrivia = true)
 
   // ---------------------------------------------------------------------------
   // entry points
@@ -54,9 +66,16 @@ object TirPrinter:
     * (UNPORTABLE-DESIGN.md §5.1). */
   def canonical(t: Tree)(using Program): String = render(t, Style.canonical)
 
-  /** sha-256 of [[canonical]], hex. Stable across runs of the same input; changes exactly when the
-    * unit's meaning changes. */
-  def digest(t: Tree)(using Program): String = sha256(canonical(t))
+  /** sha-256 of the unit's IDENTITY form, hex. Stable across runs of the same input; changes
+    * exactly when anything that reaches the emitted file changes.
+    *
+    * NOT `sha256(canonical(t))`, which it was until trivia existed. `balticporter.core.TirCacheKey`
+    * keys the action cache on this, and the cache stores EMITTED TEXT — so anything the emitter
+    * writes has to be inside the digest or a source edit that only touched a comment gets a cache
+    * HIT and re-serves the previous file, with the previous comment. That failure is silent, it
+    * survives a `clean`, and no count moves; `Style.identity` closes it by construction rather
+    * than by remembering to add each new field. */
+  def digest(t: Tree)(using Program): String = sha256(render(t, Style.identity))
 
   def sha256(s: String): String =
     java.security.MessageDigest.getInstance("SHA-256")
@@ -171,6 +190,15 @@ object TirPrinter:
     line(sb, indent, label)
     tree(sb, t, indent + 1, style)
 
+  /** a node's carried comments, as one escaped line each — printed only under a style that asks
+    * for them ([[Style.canonical]] does not; [[Style.identity]] does). Escaped rather than
+    * reproduced, because a multi-line Javadoc printed raw would break the indent-per-line format
+    * this whole rendering is diffable BECAUSE of. */
+  private def trivia(sb: StringBuilder, indent: Int, label: String, ts: List[Trivia], style: Style): Unit =
+    if style.showTrivia && ts.nonEmpty then
+      line(sb, indent, label)
+      ts.foreach(t => line(sb, indent + 1, s"${t.kind} \"${escape(t.text)}\""))
+
   def tree(sb: StringBuilder, t: Tree, indent: Int, style: Style)(using p: Program): Unit = t match
     // ---- definitions ----
     case d: Tree.ClassDef =>
@@ -179,6 +207,8 @@ object TirPrinter:
         if f.exists(_.isTrait) then "trait" else if f.exists(_.isModule) then "object"
         else if f.exists(_.isEnum) then "enum" else "class"
       line(sb, indent, s"ClassDef $kind ${sym(d.symbol, style)}${origin(d.origin, style)}")
+      trivia(sb, indent + 1, "unitLeading", d.unitLeading, style)
+      trivia(sb, indent + 1, "leading", d.leading, style)
       group(sb, indent + 1, "tparams", d.tparams, style)
       group(sb, indent + 1, "parents", d.parents.map(x => x: Tree), style)
       d.selfType.foreach(st => sub(sb, indent + 1, "selfType", st, style))
@@ -196,6 +226,7 @@ object TirPrinter:
 
     case d: Tree.DefDef =>
       line(sb, indent, s"DefDef ${sym(d.symbol, style)}: ${tpe(d.returnTpt.tpe, style)}${origin(d.origin, style)}")
+      trivia(sb, indent + 1, "leading", d.leading, style)
       group(sb, indent + 1, "tparams", d.tparams, style)
       d.paramss.zipWithIndex.foreach((ps, i) => group(sb, indent + 1, s"params[$i]", ps.map(x => x: Tree), style))
       d.rhs.foreach(r => sub(sb, indent + 1, "rhs", r, style))
@@ -204,6 +235,7 @@ object TirPrinter:
       val f  = p.symbolOf(d.symbol).map(_.flags)
       val kw = if f.exists(_.isMutable) then "var" else "val"
       line(sb, indent, s"ValDef $kw ${sym(d.symbol, style)}: ${tpe(d.tpt.tpe, style)}${origin(d.origin, style)}")
+      trivia(sb, indent + 1, "leading", d.leading, style)
       d.rhs.foreach(r => sub(sb, indent + 1, "rhs", r, style))
 
     case tt: TypeTree =>
@@ -337,6 +369,15 @@ object TirPrinter:
       line(sb, indent, s"Synchronized${origin(x.origin, style)}")
       sub(sb, indent + 1, "lock", x.lock, style)
       sub(sb, indent + 1, "body", x.body, style)
+    case x: Tree.Commented =>
+      // Under a style that elides trivia this node prints as its statement ALONE, with no wrapper
+      // line: a canonical dump is then identical whether the Java had a comment there or not,
+      // which is the property that makes two phase dumps comparable.
+      if style.showTrivia then
+        line(sb, indent, "Commented")
+        trivia(sb, indent + 1, "leading", x.leading, style)
+        sub(sb, indent + 1, "stmt", x.stmt, style)
+      else tree(sb, x.stmt, indent, style)
     case x: Tree.Opaque =>
       line(sb, indent, s"Opaque ${"\""}${escape(x.raw)}${"\""}${ofType(x.tpe, style)}${origin(x.origin, style)}")
 

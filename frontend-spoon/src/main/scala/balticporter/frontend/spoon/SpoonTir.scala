@@ -38,7 +38,10 @@ object SpoonTir:
     val launcher = new Launcher
     val env      = launcher.getEnvironment
     env.setComplianceLevel(21)
-    env.setCommentEnabled(false)
+    // Comments are PART OF THE PORT (see `Builder.triviaOf`): the licence notice every emitted file
+    // is obliged to reproduce, and the documentation that makes the output readable. With this off
+    // Spoon attaches none of them and the whole harvest below sees an empty model.
+    env.setCommentEnabled(true)
     env.setNoClasspath(lenient)
     env.setSourceClasspath(cfg.classpath.map(_.toString).toArray)
     if cfg.resolutionRoots.nonEmpty then
@@ -66,11 +69,16 @@ object SpoonTir:
     val launcher = new Launcher
     val env      = launcher.getEnvironment
     env.setComplianceLevel(21)
+    env.setCommentEnabled(true)
     env.setNoClasspath(true)
     launcher.addInputResource(new VirtualFile(code, fileName))
     val model = launcher.buildModel()
     val tops  = model.getAllTypes.asScala.toList.filter(_.getDeclaringType == null)
-    fromTypes(tops, subs)
+    // `code` is handed to the builder because a `VirtualFile` has no file behind it and Spoon's
+    // `CtCompilationUnit.getOriginalSourceCode` therefore returns null — comments would fall back
+    // to Spoon's RE-PRINTED form and this convenience API would quietly be the one path that does
+    // not preserve them verbatim. It is the same buffer either way; only its source differs.
+    new Builder(subs, code).build(tops)
 
   // -------------------------------------------------------------------------
   /** Interns symbols by a stable string key (qualified names for types, `owner#member`
@@ -112,7 +120,10 @@ object SpoonTir:
     def idOf(key: String): SymId  = byKey(key)
     def fullNameOf(id: SymId): String = syms.get(id).map(_.fullName).getOrElse("?")
 
-  private final class Builder(subs: Substitutions = Substitutions.none):
+  /** @param inMemorySource
+    *   the compilation unit's text when Spoon has none of its own — see `fromSource`. Empty for a
+    *   model built over real files, where every unit carries its own buffer. */
+  private final class Builder(subs: Substitutions = Substitutions.none, inMemorySource: String = ""):
     private val minter   = new Minter
     private val tpScopes = collection.mutable.ArrayDeque[Map[String, SymId]]()
     private val selfRawStack = collection.mutable.ArrayDeque[(SymId, List[SymId])]()
@@ -184,8 +195,88 @@ object SpoonTir:
       try f finally inStatic = prev
 
     def build(types: List[CtType[?]]): Program =
-      val units = types.map(classDef)
+      // the FILE header goes on every top-level type the file declares, and the type's own
+      // comments come from `classDef` — see `fileHeader` for why the two are separate fields.
+      val units = types.map(t => classDef(t).copy(unitLeading = fileHeader(t)))
       new Program(units, minter.table, Xref.build(units))
+
+    // ---- trivia (the original comments) -------------------------------------
+    //
+    // Ported from the BIR frontend, which got this right and is the only place it existed:
+    // VERBATIM slices out of the source buffer, and a CLAIMED set so a coarse harvest point only
+    // scoops what no closer one took. Both properties are load-bearing; see each below.
+
+    /** Every comment handed out, by IDENTITY. `deepComments` is a net cast over a whole subtree, so
+      * without this a comment inside a nested statement would be emitted twice — once above the
+      * statement it belongs to and once above the statement that contains it. Identity, not
+      * equality: two `// TODO` comments in one method are two comments. */
+    private val claimed: java.util.Set[CtComment] =
+      java.util.Collections.newSetFromMap(new java.util.IdentityHashMap[CtComment, java.lang.Boolean]())
+
+    /** VERBATIM comment text, sliced from the original source (delimiters included).
+      *
+      * Never `CtComment.toString`, which RE-PRINTS from the parsed model: Spoon reflows the body,
+      * normalises the ` * ` gutter and drops the exact indentation of a `<pre>` block or a
+      * commented-out code sample. For a licence notice — the one comment a derived work must
+      * reproduce — "close enough" is not a category that exists (CLAUDE.md §4.57). The re-printed
+      * form is kept only as the fallback for a comment with no usable position, where there is
+      * nothing to slice. */
+    private def triviaOf(c: CtComment): Trivia =
+      val kind = c.getCommentType match
+        case CtComment.CommentType.JAVADOC => TriviaKind.Javadoc
+        case CtComment.CommentType.INLINE  => TriviaKind.Line
+        case _                             => TriviaKind.Block
+      val pos = c.getPosition
+      val src = sourceOf(c)
+      val text =
+        if pos != null && pos.isValidPosition && src.nonEmpty &&
+           pos.getSourceEnd >= pos.getSourceStart && pos.getSourceEnd < src.length
+        then src.substring(pos.getSourceStart, pos.getSourceEnd + 1)
+        else c.toString
+      Trivia(kind, text)
+
+    /** The compilation unit's original text, for slicing. `""` when Spoon has no buffer for it —
+      * which is the NORMAL case for an in-memory `VirtualFile` (`SpoonTir.fromSource`), where
+      * `getOriginalSourceCode` returns null. Note the two `Option`s: `.map` over the unit alone
+      * yields `Some(null)`, and the `null` then reaches `triviaOf` and NPEs — which, swallowed by
+      * a broad `catch` one level up, made the whole harvest silently produce nothing. */
+    private def sourceOf(el: CtElement): String =
+      val pos = el.getPosition
+      if pos == null || !pos.isValidPosition then inMemorySource
+      else Option(pos.getCompilationUnit).flatMap(cu => Option(cu.getOriginalSourceCode)).getOrElse(inMemorySource)
+
+    /** the comments Spoon attached DIRECTLY to `el` — its Javadoc and anything written above it.
+      * Deliberately NOT wrapped in a `catch`: a harvest that throws is a defect to see, and a
+      * blanket catch here is exactly what hid the null above. */
+    private def leadingOf(el: CtElement): List[Trivia] =
+      el.getComments.asScala.toList.map { c => claimed.add(c); triviaOf(c) }
+
+    /** Comments Spoon attached to EXPRESSION-level descendants — an argument, a link in a fluent
+      * chain, an initialiser. The TIR carries trivia on declarations and on statements only, so
+      * these hoist to the nearest enclosing harvest point.
+      *
+      * MUST be called AFTER the element's children have been translated, so that nested statements
+      * have already claimed theirs and this scoops only what nothing closer wanted. Called before,
+      * it swallows the whole subtree's comments and prints them all above the outermost statement. */
+    private def deepComments(el: CtElement): List[Trivia] =
+      el.getElements(new spoon.reflect.visitor.filter.TypeFilter[CtComment](classOf[CtComment]))
+        .asScala.toList.filter(claimed.add).map(triviaOf)
+
+    /** The FILE's own header: everything above the `package` clause, plus anything hanging off the
+      * imports. In every library this engine has seen, that is the licence.
+      *
+      * This is the ONE harvest that does not respect `claimed`. A Java file with two top-level
+      * types becomes two Scala files, and each of them is a derived work that must carry the
+      * notice; claimed-once would give it to the first and leave the second unattributed. The
+      * comments are still ADDED to `claimed`, so nothing else re-emits them somewhere odd. */
+    private def fileHeader(t: CtType[?]): List[Trivia] =
+      val pos = t.getPosition
+      if pos == null || !pos.isValidPosition || pos.getCompilationUnit == null then Nil
+      else
+        val cu   = pos.getCompilationUnit
+        val here = cu.getComments.asScala.toList ++ cu.getImports.asScala.toList.flatMap(_.getComments.asScala)
+        here.foreach(claimed.add)
+        here.map(triviaOf)
 
     // ---- provenance ----
     private def originOf(el: CtElement): Origin =
@@ -793,6 +884,9 @@ object SpoonTir:
     // ---- declarations ----
     private def classDef(t: CtType[?]): Tree.ClassDef =
       val id   = defineType(t)
+      // claimed FIRST, before any member translates: the type's Javadoc is attached to the type
+      // element, and a member's `deepComments` must not be able to reach it.
+      val lead = leadingOf(t)
       val (frame, tpDefs) = mintTypeParams(typeKey(t.getReference), id, t.getFormalCtTypeParameters.asScala.toList)
       tpScopes.prepend(frame); tpIsExec.prepend(false)
       selfRawStack.prepend(id -> t.getFormalCtTypeParameters.asScala.toList.map(tp => frame(tp.getSimpleName)))
@@ -849,12 +943,13 @@ object SpoonTir:
       tpScopes.remove(0); tpIsExec.remove(0); inheritedInst.remove(0); enclosingFqns.remove(0); ancestorFqns.remove(0)
       selfRawStack.remove(0); tpAccessible.remove(0); tpExecNames.remove(0); inStatic = savedStatic
       Tree.ClassDef(id, parents, selfType = None, body = fields ++ ctors ++ methods ++ initBlocks ++ nested,
-        origin = originOf(t), tparams = tpDefs, enumCases = enumCases)
+        origin = originOf(t), tparams = tpDefs, enumCases = enumCases, leading = lead)
 
     /** a Java enum constant → `EnumCase`: its ctor args, and any per-constant method overrides
       * (from its anonymous-class body), each keyed under the CONSTANT so it doesn't collide
       * with the enum's abstract method of the same name. */
     private def enumCase(enumId: SymId, v: CtEnumValue[?]): Tree.EnumCase =
+      val vlead = leadingOf(v)
       val caseId = minter.define(memberKey(enumId, v.getSimpleName))(sid =>
         Symbol(sid, v.getSimpleName, qualified(enumId, v.getSimpleName), Flags(isStatic = true), enumId, TypeRef(NoPrefix, enumId))
       )
@@ -868,7 +963,7 @@ object SpoonTir:
           (a, b)
         case cc: CtConstructorCall[?] => (cc.getArguments.asScala.toList.map(bt.exprOf), Nil)
         case _                        => (Nil, Nil)
-      Tree.EnumCase(caseId, args, body, originOf(v))
+      Tree.EnumCase(caseId, args, body, originOf(v), leading = vlead ++ deepComments(v))
 
     /** distinguishes anonymous classes within one enclosing type; traversal order is deterministic
       * (every member list is `sortBy(posKey)`), so the minted keys are stable across runs. */
@@ -1015,6 +1110,7 @@ object SpoonTir:
     private def fieldDef(owner: SymId, f: CtField[?], selfClass: SymId = SymId.None, outerVars: Map[String, SymId] = Map.empty,
                          anonSelf: SymId = SymId.None, anonQName: String = ""): Tree.ValDef = withStatic(fieldFlags(f).isStatic) {
       val ft = tpe(f.getType)
+      val flead = leadingOf(f)
       val (fanns, fannDropped) = annotationsOf(f, None)
       val id = minter.define(memberKey(owner, f.getSimpleName))(sid =>
         Symbol(sid, f.getSimpleName, qualified(owner, f.getSimpleName), fieldFlags(f), owner, ft,
@@ -1026,7 +1122,9 @@ object SpoonTir:
         val bt = new BodyTranslator(id, selfOf(owner, selfClass), anonSelf, anonQName)
         bt.seedVars(outerVars); bt.coercedExprOf(f.getType, e)
       }
-      Tree.ValDef(id, tt(ft, f), rhs = rhs, origin = originOf(f))
+      // `deepComments` AFTER the initialiser translated: a comment inside `new Foo(/* why */ 3)`
+      // has nowhere of its own in the TIR and hoists to the field.
+      Tree.ValDef(id, tt(ft, f), rhs = rhs, origin = originOf(f), leading = flead ++ deepComments(f))
     }
 
     private def execDef(owner: SymId, m: CtExecutable[?], name: String, selfClass: SymId = SymId.None,
@@ -1034,6 +1132,11 @@ object SpoonTir:
                         anonSelf: SymId = SymId.None, anonQName: String = ""): Tree.DefDef = withStatic(execFlags(m).isStatic) {
       val mkey = memberKey(owner, name + erasedSig(m))
       val id   = minter.resolve(mkey)
+      // claimed before the body translates, so a statement's `deepComments` cannot reach the
+      // method's own Javadoc. No `deepComments` HERE: every statement in the body harvests its
+      // own subtree, which is what puts an expression comment above the statement it was written
+      // in rather than above the whole method.
+      val mlead = leadingOf(m)
       val mtps = m match
         case ftd: CtFormalTypeDeclarer => ftd.getFormalCtTypeParameters.asScala.toList
         case _                         => Nil
@@ -1082,7 +1185,8 @@ object SpoonTir:
       val body = Option(m.getBody).map(b => bt.methodBody(b))
       tpScopes.remove(0); tpIsExec.remove(0); tpAccessible.remove(0); tpExecNames.remove(0)
       inOverridingMember = savedOverriding
-      Tree.DefDef(id, paramss = List(pvs), returnTpt = tt(ret, m), rhs = body, origin = originOf(m), tparams = tpDefs)
+      Tree.DefDef(id, paramss = List(pvs), returnTpt = tt(ret, m), rhs = body, origin = originOf(m),
+                  tparams = tpDefs, leading = mlead)
     }
 
     /** Java annotations on a declaration, plus the names of any this could not carry.
@@ -1286,7 +1390,47 @@ object SpoonTir:
 
       /** entry: a method/ctor block → a TIR `Block` (statements, Unit result). */
       def methodBody(b: CtBlock[?]): Term =
-        Tree.Block(b.getStatements.asScala.toList.map(stmt), unit(b), unitT, originOf(b))
+        Tree.Block(stmts(b.getStatements.asScala.toList), unit(b), unitT, originOf(b))
+
+      // ---- statement trivia ---------------------------------------------------
+      //
+      // Three things happen per statement, and the ORDER is the whole design:
+      //   1. `leadingOf(s)` claims what Spoon attached to the statement itself;
+      //   2. `stmt(s)` translates it — and every nested statement claims its own comments there;
+      //   3. `deepComments(s)` scoops whatever is LEFT in the subtree — expression-level comments
+      //      the TIR has no node for, which therefore hoist to this statement.
+      // Run (3) before (2) and a comment inside an `if`'s then-branch lands above the `if`.
+      //
+      // A comment with nothing after it inside a block (a trailing `// TODO`) is attached by Spoon
+      // as a STATEMENT of its own; it is carried as `pending` onto the next statement, or dropped
+      // when there is none — the TIR has no empty statement and inventing one would emit a
+      // spurious `()`.
+
+      /** translate a statement list, folding comment-statements into the statement that follows. */
+      private def stmts(ss: List[CtStatement]): List[Statement] =
+        val out     = List.newBuilder[Statement]
+        var pending = List.empty[Trivia]
+        ss.foreach {
+          case c: CtComment => claimed.add(c); pending = pending :+ triviaOf(c)
+          case s =>
+            out += withTrivia(pending, s)
+            pending = Nil
+        }
+        out.result()
+
+      /** one statement, with `pending` plus its own plus its subtree's leftovers attached. */
+      private def withTrivia(pending: List[Trivia], s: CtStatement): Statement =
+        val own = leadingOf(s)
+        val k   = stmt(s)
+        val all = pending ++ own ++ deepComments(s)
+        if all.isEmpty then k
+        else
+          k match
+            // a local variable declaration has a `leading` field of its own — no wrapper needed,
+            // and none wanted: `Tree.Commented` is a TERM and a `ValDef` is not.
+            case v: Tree.ValDef => v.copy(leading = all ++ v.leading)
+            case t: Term        => TirTrace.mint(Tree.Commented(all, t))
+            case other          => other
 
       def exprOf(e: CtExpression[?]): Term = expr(e)
       /** translate an initializer, coercing it to `target` (null → type param, narrowing, etc.). */
@@ -1296,8 +1440,8 @@ object SpoonTir:
 
       private def blockTerm(s: CtStatement): Term = s match
         case null          => Tree.Block(Nil, Tree.Literal(Constant.UnitC, unitT, Origin.synthetic), unitT, Origin.synthetic)
-        case b: CtBlock[?] => Tree.Block(b.getStatements.asScala.toList.map(stmt), unit(b), unitT, originOf(b))
-        case single        => Tree.Block(List(stmt(single)), unit(single), unitT, originOf(single))
+        case b: CtBlock[?] => Tree.Block(stmts(b.getStatements.asScala.toList), unit(b), unitT, originOf(b))
+        case single        => Tree.Block(List(withTrivia(Nil, single)), unit(single), unitT, originOf(single))
 
       // ---- statements ----
       private def stmt(s: CtStatement): Statement = s match
@@ -1370,6 +1514,11 @@ object SpoonTir:
             case POSTINC | PREINC => val t = expr(u.getOperand); Tree.Assign(t, incNarrow(u.getOperand, binApply("+", t, one, ty(u))), unitT, originOf(u))
             case POSTDEC | PREDEC => val t = expr(u.getOperand); Tree.Assign(t, incNarrow(u.getOperand, binApply("-", t, one, ty(u))), unitT, originOf(u))
             case _                => expr(u)
+        // A free-floating comment arriving as a STATEMENT. `stmts` folds these into the statement
+        // that follows, so one reaching here is a body that is ONLY a comment (`if (x) /* no-op */;`)
+        // — Java's empty statement. NOT claimed: leaving it unclaimed lets the enclosing
+        // statement's `deepComments` pick the text up, which is the only place left to put it.
+        case c: CtComment => Tree.Literal(Constant.UnitC, unitT, originOf(c))
         case other => unsupported(other, s"statement ${other.getClass.getSimpleName}")
 
       private def defineLocal(v: CtVariable[?], vt: TypeRepr): SymId =
@@ -1830,12 +1979,15 @@ object SpoonTir:
         // per case: (body without a trailing break, terminated?)
         val split = cases.map { c =>
           val raw = stmtsOf(c)
-          raw.reverse match
+          // A trailing COMMENT is not a terminator. With comments enabled Spoon hands back a
+          // free-floating `// …` as a statement of its own, and it can be the last one — reading
+          // `last` literally would then miss the `break` behind it and fall the case through.
+          raw.reverse.dropWhile(_.isInstanceOf[CtComment]) match
             // …an UNLABELLED one. `case '"': break outer;` does not end the case, it leaves the
             // enclosing LOOP; stripping it as a terminator silently deleted the jump, and the
             // quoted-string scanner in `JsonSkimmer` ran off the end of every string.
-            case (b: CtBreak) :: rest if b.getTargetLabel == null => (rest.reverse, true)
-            case _                    => (raw, raw.lastOption.exists { case _: CtReturn[?] | _: CtThrow => true; case _ => false })
+            case (b: CtBreak) :: _ if b.getTargetLabel == null => (raw.filterNot(_ eq b), true)
+            case rest => (raw, rest.headOption.exists { case _: CtReturn[?] | _: CtThrow => true; case _ => false })
         }
         val closures = new Array[List[CtStatement]](cases.length)
         for i <- cases.indices.reverse do
@@ -1849,7 +2001,7 @@ object SpoonTir:
           val isLast    = idx == cases.length - 1
           if split(idx)._1.isEmpty && stmtsOf(c).isEmpty && !isDefault && !isLast then pending = pending ++ labels
           else
-            out += Tree.CaseDef(pending ++ labels, None, Tree.Block(closures(idx).map(stmt), unit(c), unitT, originOf(c)), isDefault)
+            out += Tree.CaseDef(pending ++ labels, None, Tree.Block(stmts(closures(idx)), unit(c), unitT, originOf(c)), isDefault)
             pending = Nil
         }
         // Java's switch with no `default` simply FALLS OUT when nothing matches; scala's `match`

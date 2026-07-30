@@ -426,6 +426,53 @@ live where its FQN suggests, and after a package rename the FQN is not the upstr
 Where the origin cannot be relativised, say so in the header — a wrong-but-plausible path defeats
 the only purpose the line has.
 
+## 4.58 COMMENTS are part of the port — and only a TEXT-to-TEXT check can see them
+
+The upstream licence lives in a comment, and §4.57's generated banner does not replace it: the
+banner says what the file is, the notice is the thing the licence obliges a derived work to
+reproduce. Everything below follows from taking that seriously.
+
+**Slice VERBATIM from the source buffer; never re-print.** A parser's `toString` for a comment
+reflows the body, normalises the ` * ` gutter and loses the alignment of a `<pre>` block — fine for
+prose, not for a legal notice. `SpoonTir.triviaOf` cuts the comment out of the original text by its
+source positions. Note an in-memory compilation unit may have NO buffer (Spoon's
+`getOriginalSourceCode` returns null for a `VirtualFile`), so the convenience parse path has to be
+handed the text it was given, or it is silently the one path that does not preserve anything.
+
+**One comment, one home: keep a CLAIMED identity set.** Harvesting is layered — a declaration takes
+its own, and a statement then scoops whatever expression-level comments its subtree still has (the
+TIR has no node for those). A coarse harvest must therefore run AFTER its children have translated
+and must skip what they took, by IDENTITY, or every nested comment is emitted twice. The one
+deliberate exception is the FILE header: a Java file with two top-level types becomes two Scala
+files and each is a derived work, so each carries the notice.
+
+**Two Java-vs-Scala comment facts, both of which break the emitted file, neither of which any type
+check sees:**
+
+| Java | naive Scala | what happens |
+|---|---|---|
+| `/* see the /* marker */` | same text | Scala block comments NEST; Java's do not. The emitted comment never closes and swallows the rest of the file. Emit such a comment line-by-line as `//` — every character survives and nothing can open. |
+| a statement separator decided by `nextLine.startsWith("{")` | comment first, `{` second | a comment is WHITESPACE to the parser, so `new Array[String](n)` / `// note` / `{ … }` still parses the block as an anonymous-class body. Any such test must skip comments the way a scanner does (`TirEmitter.firstCode`). Measured: 0 → 2 errors on libGDX the first time trivia was emitted. |
+
+**Indent is re-derived; text is not.** A comment is re-indented to the node it belongs to (its
+internal relative alignment preserved) rather than reproduced at the column upstream used — a port
+is regenerated on every engine change and a diff that moves because a comment re-wrapped is a diff
+nobody reads. Emitted at its original column, a nested member's Javadoc reads as a comment on the
+enclosing class.
+
+**The check compares SOURCE TEXT to EMITTED TEXT — never the tree.** This is the part that is easy
+to get wrong and expensive to leave wrong. Counting `Trivia` nodes proves the frontend harvested and
+proves nothing about the emitter; and the frontend's own notion of "every comment" is the parser's
+attachment model, which is exactly what may be incomplete. `TriviaCheck` re-lexes the Java
+independently (`CommentScanner`) and looks for each comment's normalised body in what the run
+actually WROTE, grouped by Java file. Nothing else in the pipeline can fail when this feature
+regresses: the output compiles perfectly with every comment gone, no count moves, and no test
+breaks. It regressed to exactly that during development — one null reaching a broad `catch` turned
+the whole harvest into `Nil` — and the emitted Scala was valid.
+
+**A `catch` around a harvest is how that happens.** Wrap only the lookups where an absent value is
+NORMAL (a missing source buffer); let a harvest that throws be seen.
+
 ## 4.6 A kill switch beats another condition
 
 When a synthesized construct is wrong, first establish **which code produces it** — do not add a
