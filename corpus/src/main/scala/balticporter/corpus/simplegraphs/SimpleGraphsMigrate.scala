@@ -1,15 +1,23 @@
 package balticporter.corpus.simplegraphs
 
-import balticporter.core.{FrontendConfig, PortManifest, Provenance, RuntimeMode}
-import balticporter.runner.{Determinism, PortRun, SourceSet, VendoredCommit}
-import balticporter.transform.{CollectionsTransform, MutableParamsTransform}
+import balticporter.runner.PortConfig
 
-import java.nio.file.{Files, Path}
-import scala.jdk.CollectionConverters.*
+import java.nio.file.Path
 
 /** Migrate **simple-graphs** (`src/main/java`, 29 types — a dependency-free graph library).
   *
   *   corpus/runMain balticporter.corpus.simplegraphs.SimpleGraphsMigrate [--determinism=full]
+  *
+  * ==This program is ONE LINE, and that is the point==
+  * The whole port is `corpus/ports/simplegraphs/main.conf` — read that, not this file. What remains
+  * here is a `main` whose only job is to name the configuration and give the run its report
+  * identity: `CheckReport.dir` is derived from the main class's simple name, so a per-port `main`
+  * is what keeps `port-report/SimpleGraphsMigrate` a stable measurement baseline.
+  * `balticporter.runner.PortConfigMain` runs any conf without one.
+  *
+  * The conversion is the corpus's acceptance proof for the config front door (DESIGN.md §5.7):
+  * `just sg-measure` measures the conf-driven port and requires every check count and every member
+  * digest to be byte-identical to what the hand-written `PortRun(...)` produced.
   *
   * ==Why simple-graphs is the third corpus library==
   * It is small, but it was not chosen for that. It is the first library to exercise four things
@@ -33,67 +41,16 @@ import scala.jdk.CollectionConverters.*
   *      engine should do about it is an open question this library will answer with a number.
   *
   * It also has a real behavioural gate: 7 test files, 17 `@Test`. See [[SimpleGraphsTestMigrate]].
-  *
-  * ==Licence — a discrepancy worth recording==
-  * Upstream ships **MIT** (`LICENSE`: "MIT License, Copyright (c) 2020 earlygrey"). The reference
-  * hand-port's file headers say "Licensed under the ISC License". One of the two is wrong, and
-  * since a port is a derived work the upstream file is the authority — this port states MIT.
   */
 object SimpleGraphsMigrate:
 
   def main(args: Array[String]): Unit =
-    val repoRoot = Path.of(sys.props.getOrElse("balticporter.root", ".")).toAbsolutePath.normalize
-    val base     = repoRoot.resolve("../sge/original-src/simple-graphs/src/main/java").normalize
+    PortConfig.load(SimpleGraphsPort.conf("main.conf"), args.toSeq).execute()
 
-    val files = Files.walk(base).iterator().asScala
-      .filter(p => p.toString.endsWith(".java"))
-      .map(p => base.relativize(p).toString)
-      .filterNot(f => f.endsWith("package-info.java") || f.endsWith("module-info.java"))
-      .toList.sorted
+/** Where this port's two configuration files live, for the two `main`s that name them. */
+object SimpleGraphsPort:
 
-    PortRun(
-      label     = "simple-graphs",
-      portRoot  = repoRoot.resolve("simplegraphs-core"),
-      sourceSet = SourceSet.Main,
-      // A BASE port: nothing is merely resolved against, everything is converted.
-      frontend  = FrontendConfig(base, files, Nil, Nil),
-      phases    = Nil, // supplied by the manifest — the two sources are mutually exclusive
-      manifest  = Some(SimpleGraphsPolicy.core),
-      provenance = Some(Provenance(
-        upstreamName     = "simple-graphs",
-        upstreamCommit   = VendoredCommit.of(base),
-        originalLicense  = "MIT",
-        sourcePathPrefix = "src/main/java",
-        sourceRoot       = base.toString,
-      )),
-      // A single source set compiled standalone by `scala-cli`: the support types the collections
-      // phase retypes onto ship beside the emitted code.
-      runtimeMode = RuntimeMode.Vendored,
-      determinism = Determinism.fromArgs(args.toSeq),
-      nextStep    = "scala-cli compile simplegraphs-core/src_managed/main/scala",
-    ).execute()
+  def repoRoot: Path =
+    Path.of(sys.props.getOrElse("balticporter.root", ".")).toAbsolutePath.normalize
 
-/** simple-graphs' policy. A BASE manifest — it has no bases of its own.
-  *
-  * `packageRenames` is DATA rather than a phase (CLAUDE.md §4.56): the rename must run after every
-  * other phase, because all of their policy is written in the upstream namespace, and `runsAfter`
-  * cannot state "after everything". `PortRun` appends it last and verifies it with
-  * `PackageRenameTransform.check` — run before, it counts what will move; run after with the same
-  * map, every prefix must come back unmatched.
-  */
-object SimpleGraphsPolicy:
-
-  def core: PortManifest = PortManifest(
-    name    = "simple-graphs",
-    governs = Set("space.earlygrey.simplegraphs"),
-    // The reference hand-port's target namespace. This is the first time the engine renames a real
-    // library, so treat a surprise here as information rather than noise.
-    packageRenames = Map("space.earlygrey.simplegraphs" -> "sge.graphs"),
-    surface = List(new CollectionsTransform, new MutableParamsTransform),
-  )
-
-  /** the upstream JUnit suite, as a dependent of [[core]]. */
-  def test: PortManifest = core.extendedBy(PortManifest(
-    name    = "simple-graphs-test",
-    surface = List(new balticporter.transform.TestFrameworkTransform()),
-  ))
+  def conf(name: String): Path = repoRoot.resolve("corpus/ports/simplegraphs").resolve(name)

@@ -433,6 +433,14 @@ libGDX nor a dependent of it** — which is what makes its result meaningful. Re
 **No §1(c) rules.** simple-graphs needed **zero** library-specific rules: its manifest is a namespace
 claim, two universal phases and a package rename. That is the outcome the corpus procedure aims for.
 
+**And therefore the CONFIG front door's acceptance proof.** Because its whole policy is data, this
+port is driven from `corpus/ports/simplegraphs/{main,test}.conf` (DESIGN.md §5.7) rather than from a
+hand-written `PortRun(...)`; `SimpleGraphsMigrate` and `SimpleGraphsTestMigrate` are now a `main`
+each. The lane above IS the equivalence proof — it measures the conf-driven path, and the conversion
+landed with every check count in the table unchanged and **0 members changed on both source sets**.
+libGDX and Ashley stay on the Scala path for now; §5.7 names the three things their conversion still
+needs, none of them mechanism.
+
 ### 4.2 What this library taught the engine
 
 Every item is an engine §1(a) fix, not per-library policy — which is what a third library is for. Each

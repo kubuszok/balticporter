@@ -25,6 +25,49 @@ behavioural evidence the port will ever have, and it decides whether the library
 
 ## 2. Write the migration program — a `PortRun` CONFIGURATION, never a copied file
 
+### 2.0 CONF-FIRST: start here unless the library needs a §1(c) rule on day one
+
+Most of what a migration program contains is declarative, so **write a `.conf` and a three-line
+`main`** and only reach for a hand-written `PortRun(...)` when something genuinely resists it.
+simple-graphs is the worked example — read `corpus/ports/simplegraphs/{main,test}.conf` beside
+`SimpleGraphsMigrate.scala` before writing either.
+
+```
+corpus/ports/<lib>/main.conf     # the port
+corpus/ports/<lib>/test.conf     # its suite: `base = "main.conf"` — that IS `extendedBy` (§1.5)
+corpus/src/main/scala/balticporter/corpus/<lib>/<Lib>Migrate.scala
+```
+
+```scala
+object <Lib>Migrate:
+  def main(args: Array[String]): Unit =
+    PortConfig.load(<Lib>Port.conf("main.conf"), args.toSeq).execute()
+```
+
+The `main` still exists, and not as ceremony: `CheckReport.dir` is derived from the MAIN CLASS's
+simple name, so a per-port `main` is what keeps `port-report/<Lib>Migrate` a stable measurement
+baseline. (`balticporter.runner.PortConfigMain <conf>` runs any conf without one — fine for a
+one-off, wrong for a port you will measure twice.)
+
+The schema is documented in full on `balticporter.runner.PortConfig`; it is `PortRun`'s parameters
+in the same words. Four things that bite:
+
+- **paths resolve against the CONF FILE**, lexically. Not the working directory, not
+  `balticporter.root`.
+- **`include` is a HOCON keyword** — file selection is `includeGlobs` / `excludeGlobs`. The default
+  is every `.java` minus `package-info`/`module-info`, sorted, which is what every hand-written
+  migrator did by hand.
+- **any key nobody reads FAILS the run**, naming its full path. HOCON accepts `dropType` for
+  `dropTypes` silently; this engine does not.
+- **`package-rename` is not a transform.** Write `manifest.packageRenames`; §4.56.
+
+**When to write Scala instead.** A conf holds names and sets; it cannot hold a predicate or a rule.
+If the port needs `OpaqueSpec.hints`, a custom `Symbol => Boolean`, or a §1(c) rule, you have two
+options and both are fine: write the `PortRun(...)` by hand, or ship a `TransformFactory` (§2.1) and
+keep the conf. Do NOT invent a way to say it in strings — see DESIGN.md §5.7.
+
+### 2.01 …or the Scala program, when the port needs one
+
 One `object <Lib>Migrate` in `corpus/src/main/scala/balticporter/corpus/<lib>/`, in package
 `balticporter.corpus.<lib>`. It is a **single
 `PortRun(...)` value plus this library's policy, and nothing else**. Do NOT copy the body of
@@ -178,7 +221,11 @@ phases cannot:
    library freely; the §1 enforcement grep covers only `api`, `engine`, `frontend-spoon` and
    `runtime`, and a (c) rule being outside them is the point.
 2. **How it enters the pipeline** — as an ordinary element of `PortRun(phases = …)`. Implement
-   `balticporter.tir.Phase`; there is no registry, service loader or plugin descriptor.
+   `balticporter.tir.Phase`; nothing has to be registered. If the port is driven from a `.conf`
+   (§2.0) it needs a name instead, and that is one more five-line class beside the rule:
+   `corpus/src/main/scala/balticporter/corpus/libgdx/GdxSharedIteratorFactory.scala` plus a
+   `META-INF/services/balticporter.tir.TransformFactory` line in your own resources. Still your
+   repository, still compiled by your build — the conf holds a NAME, never behaviour.
 3. **How it is tested** — `balticporter.testkit.PortSuite`, on a Java snippet, in your own test
    source set. Include a **negative** test: a check that has never reported is not known to work.
 

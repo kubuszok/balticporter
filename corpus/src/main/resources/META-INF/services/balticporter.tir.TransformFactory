@@ -1,0 +1,3 @@
+# A PORTING REPOSITORY's own §1(c) rule, registered for the config front door. The engine ships no
+# knowledge of this line; it finds the class because the consumer's build put it on the classpath.
+balticporter.corpus.libgdx.GdxSharedIteratorFactory

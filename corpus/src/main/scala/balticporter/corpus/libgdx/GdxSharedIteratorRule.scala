@@ -18,8 +18,12 @@ import balticporter.tir.*
   *     `com.badlogic.gdx` freely; the §1 enforcement grep covers `api`, `engine`,
   *     `frontend-spoon` and `runtime`, and it is precisely the point that a (c) rule is not there.
   *  2. **How it enters the pipeline.** As an ordinary element of `PortRun(phases = …)`. It
-  *     implements `balticporter.tir.Phase` and nothing else; the engine has no registry, no
-  *     service loader and no plugin descriptor to satisfy.
+  *     implements `balticporter.tir.Phase` and nothing else; nothing has to be registered for the
+  *     Scala path to run it. A port driven from a `.conf` instead names it, and THAT costs the
+  *     five-line [[GdxSharedIteratorFactory]] beside this file plus one `META-INF/services` line —
+  *     still in the porting repository, still compiled by the consumer's own build. See
+  *     DESIGN.md §5.7 for why a name resolving through `ServiceLoader` is the only indirection a
+  *     config file is allowed.
   *  3. **How it is tested.** With `balticporter.testkit.PortSuite`, on a Java snippet, in the
   *     porting repository's own test source set. See `GdxSharedIteratorRuleSpec`.
   *
