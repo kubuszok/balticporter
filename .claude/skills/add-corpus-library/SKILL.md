@@ -53,9 +53,16 @@ PortRun(
   runtimeMode    = RuntimeMode.Dependency,            // Vendored only for a standalone single set
   supportSources = Map.empty,                         // sources a phase needs but cannot declare
   determinism    = Determinism.fromArgs(args.toSeq),
-  project        = Some(spec),                        // emit build.sbt + .gitignore + engine pin
+  project        = None,                              // see below — generation is OPT-IN
 ).execute()
 ```
+
+**`project` is OPTIONAL and defaults to `None`, which is what a corpus port uses.** `Some(spec)`
+makes the run generate a whole sbt skeleton for the port — `build.sbt`, `project/build.properties`,
+`.gitignore` and the engine pin — and is right only when the port's build does not exist yet. Every
+port in this repository lives in a module `build.sbt` already declares, and so does the port an
+agent in another repository is adding to its own build (§4.45): pass `None` and the run writes the
+SOURCES and nothing else. `PortRunProjectSpec` asserts the exact file set in both directions.
 
 A single-module port may still pass `phases` / `subs` / `packageRenames` directly instead of a
 manifest, and `PortRun` refuses both at once. Prefer the manifest from the start: the moment a

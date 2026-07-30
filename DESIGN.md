@@ -520,6 +520,25 @@ corpus migrator never hardcodes an output path. The module graph becomes `depend
 Scala dependencies are computed from what the vocabulary actually mapped onto, so there are no unused
 deps. Everything generated carries the do-not-edit provenance header, the build file included.
 
+**Generating that skeleton is OPTIONAL, and off by default.** The consumer this engine actually has
+(§4.45) calls `PortRun` from inside a build it already owns; its `build.sbt`, its `.gitignore` and
+its dependency declarations are decisions that repository has already made, and an engine that
+overwrites any of them is unusable there. So the whole of the list above is gated on ONE seam —
+`PortRun.project: Option[SbtGen.ProjectSpec]`, defaulting to `None`, consumed at the single
+`project.foreach(SbtGen.emitPort(…))` at the end of `execute()`. With it `None` a run writes exactly
+two things: the SOURCES (emitted, injected, `supportSources`, and the vendored runtime when
+`RuntimeMode.Vendored`) under `outDir`, and its report directory when the artifact layer is on
+(CLAUDE.md §5.1). Nothing else touches `portRoot`, and `PortRunProjectSpec` asserts the exact file
+set in both directions — a gate never observed OPEN cannot be told from a feature that was deleted.
+
+What a caller controls without opting in is `portRoot` + `sourceSet`: an arbitrary directory, which
+need not be an sbt project and need not exist, plus the `src_managed/<set>/scala` suffix it opted
+into by naming a `SourceSet`. That suffix is the only layout assumption left, and a `Test` run
+materialises no `main` tree — the engine asserts no build shape on a repository that did not ask for
+one. No separate output-path knob exists, deliberately: a second way to say where the files go is a
+second thing that can disagree with `PortRun.outDir`, which every artifact the run writes is
+relative to.
+
 *Acceptance:* `sbt Test/compile` and `sbt test` succeed on the declared platforms with **zero manual
 edits**.
 

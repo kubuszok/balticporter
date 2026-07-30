@@ -107,8 +107,18 @@ object Determinism:
   *                   FQN → source for support types a phase's output references but does not
   *                   declare through [[RequiresRuntime]]. A phase that CAN declare them should:
   *                   this parameter is the seam for the ones that cannot, not an alternative to it.
-  * @param project    emit the sbt skeleton for the port (build.sbt, .gitignore, the engine pin, the
-  *                   `src_managed` wiring). `None` for a port whose build is maintained by hand.
+  * @param project    OPT-IN build generation, and the ONLY seam that writes anything outside
+  *                   [[outDir]] and the report directory. `Some(spec)` emits the sbt skeleton for
+  *                   the port — `build.sbt`, `project/build.properties`, `.gitignore` and the
+  *                   engine pin — into `portRoot`; `None`, the default, emits none of it.
+  *
+  *                   `None` is the case the engine's real consumer is in (§4.45): a repository
+  *                   calling this from inside a build it already owns, whose build file and ignore
+  *                   rules are DECISIONS it has already made. A run with `project = None` writes
+  *                   exactly the sources — emitted units, injected replacements, `supportSources`,
+  *                   and the vendored runtime under [[RuntimeMode.Vendored]] — all under `outDir`,
+  *                   plus its report directory when the artifact layer is on. `PortRunProjectSpec`
+  *                   asserts that file set exactly, in both directions.
   * @param manifest   this module's policy as a VALUE, and — through `PortManifest.bases` — the
   *                   modules it is a dependent of. When present it SUPPLIES `phases`, `subs` and
   *                   `packageRenames` (which must then be left at their defaults) and enables
@@ -544,7 +554,12 @@ final case class PortRun(
     // this assertion.
     verifyRecorded()
 
-    // ---- the generated build ----
+    // ---- the generated build: OPT-IN, and the only write above that leaves `outDir` ----
+    // Everything before this point lands under `outDir` or, gated on the artifact layer, under the
+    // report directory — so `project = None` (the default) makes this run a pure source emitter, for
+    // a consumer whose build already exists and whose `build.sbt` and `.gitignore` are its own
+    // decisions. One gate, at the one call, for the reason §5.1 gives about artifact writes: a
+    // wrapper every caller must remember is a wrapper one caller will not.
     project.foreach { spec => SbtGen.emitPort(portRoot, spec, effectivePhases, runtimeMode) }
 
     val report = PortReport(

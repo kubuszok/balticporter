@@ -1,0 +1,137 @@
+package balticporter.runner
+
+import balticporter.core.*
+import balticporter.sbtgen.SbtGen
+import balticporter.transform.CollectionsTransform
+
+import java.nio.file.{Files, Path}
+import scala.jdk.CollectionConverters.*
+
+/** BUILD-PROJECT GENERATION IS OPTIONAL — and this is the spec that says so in file names.
+  *
+  * The consumer this engine actually has (CLAUDE.md §4.45) calls `PortRun` from INSIDE a build it
+  * already owns: an existing sbt project, a Maven module, a Bazel target. Its build file, its
+  * `.gitignore` and its dependency declarations are DECISIONS that repository has already made, and
+  * a porting engine that overwrites any of them is not usable there at all. So `project` is an
+  * `Option`, `None` is the default, and with it the run must write the SOURCES and nothing else.
+  *
+  * Asserting the exact FILE SET rather than "build.sbt is absent" is the point. Every artifact this
+  * run could leak is a file somebody has to notice, and the failure mode is always the same shape —
+  * a write that looked incidental beside the one being reviewed (`PortMap.write` published maps into
+  * the checkout for exactly that reason, CLAUDE.md §5.1). A set comparison fails on the NEXT one
+  * too, which a named-file assertion cannot.
+  *
+  * The mirror direction is asserted in the same test rather than trusted: a gate that is never
+  * observed to be OPEN is indistinguishable from a feature that was deleted.
+  */
+class PortRunProjectSpec extends munit.FunSuite:
+
+  private def java(dir: Path, rel: String, src: String): Unit =
+    val p = dir.resolve(rel)
+    Files.createDirectories(p.getParent)
+    Files.writeString(p, src)
+
+  private def fixture(): (Path, Path) =
+    val root = Files.createTempDirectory("portrun-project")
+    val src  = root.resolve("java")
+    java(src, "com/demo/Widget.java",
+      """package com.demo;
+        |public class Widget {
+        |  public int size;
+        |  public String label() { return "w" + size; }
+        |}""".stripMargin)
+    java(src, "com/demo/Gadget.java",
+      """package com.demo;
+        |public class Gadget {
+        |  public Widget w = new Widget();
+        |}""".stripMargin)
+    (root, src)
+
+  /** every regular FILE under `dir`, relative and `/`-separated. Directories are excluded on
+    * purpose: an empty directory is not an artifact a `git status` can see, and asserting on one
+    * would make this spec fail for a reason nobody cares about. */
+  private def files(dir: Path): List[String] =
+    if !Files.exists(dir) then Nil
+    else Files.walk(dir).iterator().asScala.filter(Files.isRegularFile(_))
+      .map(p => dir.relativize(p).toString.replace('\\', '/')).toList.sorted
+
+  private def run(portRoot: Path, src: Path, set: SourceSet = SourceSet.Main)(
+      f: PortRun => PortRun = identity
+  ): PortResult =
+    f(PortRun(
+      label     = "demo",
+      portRoot  = portRoot,
+      sourceSet = set,
+      frontend  = FrontendConfig(src, List("com/demo/Widget.java", "com/demo/Gadget.java"), Nil),
+      phases    = Nil,
+    )).execute()
+
+  test("project = None writes the SOURCES and nothing else — no build.sbt, no .gitignore, no engine pin") {
+    val (root, src) = fixture()
+    val port = root.resolve("port")
+    val r = run(port, src)()
+    assertEquals(files(port), List(
+      "src_managed/main/scala/com/demo/Gadget.scala",
+      "src_managed/main/scala/com/demo/Widget.scala",
+    ))
+    // stated individually too, because these are the four names a reader of this spec is looking for
+    assert(!Files.exists(port.resolve("build.sbt")), "an existing build must not be overwritten")
+    assert(!Files.exists(port.resolve(".gitignore")), "the consumer's ignore rules are its own")
+    assert(!Files.exists(port.resolve(EnginePin.fileName)), "the pin is part of the generated build")
+    assert(!Files.exists(port.resolve("project/build.properties")), "sbt's version is not this run's business")
+    assertEquals(r.outDir, SbtGen.managedMain(port))
+  }
+
+  test("project = Some emits the skeleton — the same run, the gate OPEN") {
+    val (root, src) = fixture()
+    val port = root.resolve("port")
+    val spec = SbtGen.ProjectSpec("demo", "org.demo", "3.8.4", "2.0.0-M4", Nil, engineFingerprint = "test")
+    run(port, src)(_.copy(project = Some(spec)))
+    assertEquals(files(port), List(
+      ".gitignore",
+      EnginePin.fileName,
+      "build.sbt",
+      "project/build.properties",
+      "src_managed/main/scala/com/demo/Gadget.scala",
+      "src_managed/main/scala/com/demo/Widget.scala",
+    ).sorted)
+  }
+
+  test("the output location is the CALLER's: portRoot + sourceSet, and a test set creates no main tree") {
+    // The knob a consumer needs is the one it already has. `portRoot` is an arbitrary directory —
+    // it need not be an sbt project, need not exist, and nothing below it is assumed except the
+    // `src_managed/<set>/scala` convention the caller opted into by naming a `SourceSet`. A test
+    // run must therefore not materialise the MAIN side of that layout: doing so would be the engine
+    // asserting a build shape on a repository that never asked for one.
+    val (root, src) = fixture()
+    val port = root.resolve("anywhere/at/all")
+    val r = run(port, src, SourceSet.Test)()
+    assertEquals(r.outDir, SbtGen.managedTest(port))
+    assertEquals(files(port), List(
+      "src_managed/test/scala/com/demo/Gadget.scala",
+      "src_managed/test/scala/com/demo/Widget.scala",
+    ))
+    assert(!Files.exists(port.resolve("src_managed/main")), "a test source set is not half of a project skeleton")
+  }
+
+  test("everything a port SHIPS still lands under the output directory — injection, support, vendored runtime") {
+    // The three other ways a file reaches the port. Each is a SOURCE, so each is written with
+    // `project = None`; if one of them ever grew a build-shaped side effect this set would say so.
+    val (root, src) = fixture()
+    val port   = root.resolve("port")
+    val inject = root.resolve("overrides")
+    java(inject, "com/demo/Widget.scala", "package com.demo\nclass Widget { def label(): String = \"w\" }")
+    val r = run(port, src)(_.copy(
+      phases         = List(new CollectionsTransform),
+      runtimeMode    = RuntimeMode.Vendored,
+      subs           = Substitutions(dropTypes = Set("com.demo.Widget"), inject = List(inject)),
+      supportSources = Map("com.demo.support.Helper" -> "package com.demo.support\nobject Helper"),
+    ))
+    val out = files(port)
+    assert(out.forall(_.startsWith("src_managed/main/scala/")), clue(out))
+    assert(out.contains("src_managed/main/scala/com/demo/Widget.scala"), clue(out))         // injected
+    assert(out.contains("src_managed/main/scala/com/demo/support/Helper.scala"), clue(out)) // supportSources
+    assertEquals(out.count(_.startsWith("src_managed/main/scala/balticporter/runtime/")),
+                 CollectionsTransform.runtimeTypes.size)                                    // vendored
+    assertEquals(r.injected, 1)
+  }
