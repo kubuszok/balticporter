@@ -45,7 +45,7 @@ object AshleyTestMigrate:
       // UNQUALIFIED call on the suite itself — which then emits as `this.mock(...)` and fails to
       // compile with "value mock is not a member of EntityListenerTests". 12 errors, all one cause,
       // and the same shape as the `import static org.junit.Assert.*` trap recorded in
-      // LIBGDX-PORT-STATUS: an unresolved static import does not fail, it RESOLVES WRONGLY.
+      // ENGINE-LIMITS.md §6: an unresolved static import does not fail, it RESOLVES WRONGLY.
       frontend  = FrontendConfig(testRoot, files, AshleyClasspath.resolve(repoRoot),
                                  resolutionRoots = List(ashleySrc, gdxSrc)),
       phases    = Nil, // supplied by the manifest — the two sources are mutually exclusive

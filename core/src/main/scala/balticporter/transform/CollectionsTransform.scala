@@ -669,7 +669,7 @@ final class CollectionsTransform extends Phase, RequiresRuntime:
     * collections to its own methods — `CharArray.appendAll(list)`, which java accepted because
     * there `List` IS an `Iterable`.
     *
-    * Both obvious repairs are measured dead ends (LIBGDX-PORT-STATUS.md): a `given Conversion`
+    * Both obvious repairs are measured dead ends (ENGINE-LIMITS.md K2): a `given Conversion`
     * never fires, because scala does not look for one when no OVERLOAD alternative matches; and
     * widening the parameter to `scala.collection.Iterable` breaks the bodies that iterate-and-
     * REMOVE through it. Wrapping the ARGUMENT has neither problem — the type is exact before

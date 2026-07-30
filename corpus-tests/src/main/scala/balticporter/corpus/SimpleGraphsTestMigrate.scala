@@ -10,8 +10,9 @@ import scala.jdk.CollectionConverters.*
   *
   *   corpus-tests/runMain balticporter.corpus.SimpleGraphsTestMigrate [--determinism=full]
   *
-  * 7 files, 17 `@Test` — the only behavioural evidence this port can have. `SIMPLEGRAPHS-PORT-STATUS`
-  * §1 says "compiles" until this runs, and CLAUDE.md §3 is explicit about the difference: four silent
+  * 7 files, 17 `@Test` — the only behavioural evidence this port can have. `PROGRESS.md`
+  * §simple-graphs says "compiles" until this runs, and CLAUDE.md §3 is explicit about the difference:
+  * four silent
   * correctness defects in libGDX core all compiled cleanly, and not one of the ten Java forms in §4.4
   * moves a compile-error count.
   *
@@ -19,7 +20,7 @@ import scala.jdk.CollectionConverters.*
   * It exercises precisely the translations this library forced into the engine, from the outside:
   *
   *   - `Collections.sort(list, cmp)` and `Comparator` — is the ORDER the one java produced? A
-  *     comparator whose sense is inverted compiles perfectly (`SIMPLEGRAPHS-PORT-STATUS` §5.3).
+  *     comparator whose sense is inverted compiles perfectly (`PROGRESS.md` §simple-graphs).
   *   - `java.util.stream` (`Collectors`, `IntStream`) in the TEST sources too, so the chain collapse
   *     is checked on code the library's own authors wrote to be read rather than to be ported.
   *   - `BadHashInteger` — a deliberately colliding `hashCode`, which is how `NodeMap`'s open

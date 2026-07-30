@@ -102,7 +102,7 @@ object LibgdxPolicy:
       //
       // Emitting the upstream namespace was never a cosmetic mismatch: neither sge nor ssg can
       // adopt output that declares `com.badlogic.gdx`, because their entire dependent codebase is
-      // written against the renamed one (LIBRARY-READINESS §1.5).
+      // written against the renamed one.
       //
       // The keys of every OTHER policy — dropTypes, dropMethods, the forwarder and class-table
       // maps — stay upstream, because they are consulted at the frontend, before this runs.
@@ -157,7 +157,7 @@ object LibgdxPolicy:
       // with no replacement and CHECK 2 proves the references are gone. The portable `Net`
       // interface, `HttpRequestBuilder`, `HttpStatus` and `HttpParametersUtils` all stay.
       //
-      // NB — dropping it CONCEALS a real engine gap, recorded in LIBGDX-PORT-STATUS.md: the one
+      // NB — dropping it CONCEALS a real engine gap, recorded in ENGINE-LIMITS.md K2: the one
       // compile error it produced was `CollectionsTransform` rewriting OUR signature to
       // `mutable.Map[String, Buffer[String]]` while the body returned an unported JDK method's
       // real `java.util.Map`. That JDK/Scala collection boundary is universal and still open;

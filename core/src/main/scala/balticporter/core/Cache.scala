@@ -139,8 +139,8 @@ object InterfaceHash:
 /** Action-cache keys for TIR emission — the TIR counterpart of [[UnitDeps]] + [[InterfaceHash]].
   *
   * The BIR path has had incremental keys since M0 and the TIR path has had none, which is half of
-  * why "there are two engines and each has half of what a consumer needs" (LIBRARY-READINESS.md
-  * §1.1). The key has the same three parts, for the same reasons:
+  * why "there are two engines and each has half of what a consumer needs" (PROGRESS.md
+  * §Publishability item 1.1). The key has the same three parts, for the same reasons:
   *
   *   - the ENGINE fingerprint ([[EngineFingerprint]]) — any rule change invalidates everything;
   *   - the unit's OWN content — here the canonical TIR render rather than the Java source digest,

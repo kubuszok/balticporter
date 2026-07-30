@@ -4,7 +4,8 @@ import java.nio.file.{Files, Path}
 
 /** Attribute a COMPILER ERROR or a TEST FAILURE over emitted Scala back to the member that
   * produced it and to the Java it came from. UNPORTABLE-DESIGN.md §6.3 (Stage 1(b)) plus the
-  * amendment LIBRARY-READINESS.md §2.4 forces on it.
+  * amendment CLAUDE.md §4.4 forces on it: ten Java forms translate to VALID Scala meaning something
+  * else and move no compile-error count, so the same join has to run over the TEST runner's output.
   *
   * ## The two lanes, and why the second one is the point
   *

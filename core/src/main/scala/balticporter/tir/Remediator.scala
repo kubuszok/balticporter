@@ -89,7 +89,9 @@ object Remediator:
       (chokepoints ++ forwarders ++ classTables).map(_._1) ++ rest
 
   /** the `CheckReport` feed, so the snippets are persisted and diffed rather than scrolling past
-    * in a terminal — the failure LIBRARY-READINESS.md §2.2 names for the checks themselves. The
+    * in a terminal — the same failure the checks themselves had, when their results were stdout-only,
+    * truncated, never persisted and never diffed, so "did my change move omissions from 31 to 33" had
+    * no answer but scrollback archaeology. The
     * findings are RETURNED, not written: `PortRun` records every check, which is what makes
     * `RequiredChecks` able to assert that each one reached `findings.tsv`. */
   def reports(suggestions: List[Suggestion]): List[CheckReport.Finding] = suggestions.map(_.report)

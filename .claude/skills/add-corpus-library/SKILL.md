@@ -199,12 +199,13 @@ the tree with `StandardTraversal`, never a private recursion. Then **negative-te
 break something deliberately and confirm it reports. A check that has never failed is not known to
 work.
 
-## 6. Write it down
+## 6. Write it down — in `PROGRESS.md`, as a new section
 
-Create `<LIB>-PORT-STATUS.md` alongside `LIBGDX-PORT-STATUS.md`:
+**Do not create a per-library status file.** Add a section for the library to `PROGRESS.md`, beside
+the ones already there, and add its row to §Corpus inventory:
 
-- measured state (errors, omissions, portability, signature consistency) with the command to
-  reproduce each
+- measured state (errors, omissions, portability, trivia, break residue, decisions, tests) in the
+  same table shape the other sections use, with the command to reproduce it
 - remaining work, highest value first, each item with the *shape* of its fix
 - **Do NOT retry** — every measured failure, with its cost and cause
 - which specialisations this library needed, classified (a)/(b)/(c), and which engine rules it
@@ -212,7 +213,7 @@ Create `<LIB>-PORT-STATUS.md` alongside `LIBGDX-PORT-STATUS.md`:
 
 Then split it: any dead end that is a fact about **Java, Scala 3, Spoon, dotty or the engine** goes
 into `ENGINE-LIMITS.md` — with its number, its worked example and its (a)/(b)/(c) kind — because the
-next library will be ported in a repository that never sees your status file (`CLAUDE.md` §3.6,
+next library will be ported in a repository that never sees your measurements (`CLAUDE.md` §3.6,
 §4.45). Leave a one-line pointer where you lifted it; the measurement stays. If your library
 confirmed, contradicted or generalised an existing entry, **say so in that entry** — a limit that
 survives a second library is stronger evidence than the one that first recorded it.

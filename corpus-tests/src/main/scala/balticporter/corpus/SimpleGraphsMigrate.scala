@@ -15,8 +15,8 @@ import scala.jdk.CollectionConverters.*
   * It is small, but it was not chosen for that. It is the first library to exercise four things
   * neither libGDX nor Ashley can:
   *
-  *   1. **A package rename on a REAL library.** `PackageRenameTransform` is a Tier-1 item
-  *      (`LIBRARY-READINESS.md` §1.5) — sge is `package sge`, ssg-liquid is `package ssg.liquid`,
+  *   1. **A package rename on a REAL library.** `PackageRenameTransform` is a Tier-1 adoption
+  *      blocker — sge is `package sge`, ssg-liquid is `package ssg.liquid`,
   *      and neither repository can adopt output in the upstream namespace. It has been implemented
   *      and unit-tested since, but has never actually run over a library: libGDX and Ashley both
   *      keep their upstream names. The reference hand-port renames this one to `sge.graphs`, so

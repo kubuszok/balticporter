@@ -27,8 +27,8 @@ true of your library too. Re-deriving one is waste, and the record exists so you
 - **Worked examples name libGDX constructs.** That is deliberate and permitted (`CLAUDE.md` §1): the
   example documents *why* a general rule exists. It drives nothing. Substitute your own library's
   shape freely.
-- **The measurements live in `LIBGDX-PORT-STATUS.md`.** This file holds the rule; that file holds
-  the per-site diagnosis, the trajectory and the counts in context.
+- **The measurements live in `PROGRESS.md`**, in the section for the library that produced them. This
+  file holds the rule; that one holds the per-site diagnosis, the trajectory and the counts in context.
 
 ---
 
@@ -850,7 +850,8 @@ The test that separates them: could the engine EMIT the difference from what it 
 removal-capable iterator, no. An argument order and a numeric widening the transform holds both
 types for, yes.
 
-*Fix kind: (a) for what to inject; see `LIBRARY-READINESS.md` §1.3 for the distribution work.*
+*Fix kind: (a) for what to inject; see `PROGRESS.md` §Publishability item 1.3 for the distribution
+work.*
 
 ### K4. RETRACTED — the TIR expresses a CURRIED APPLICATION perfectly well
 
@@ -887,7 +888,8 @@ Native has JUnit" missed it, in the two independent ways a gate can miss:
 
 Fix the wiring and the rule *before* the translation: that turns a silent assumption into a number,
 which is worth more than the conversion itself. Check invocation being copy-paste rather than
-orchestration is the root cause and is tracked in `LIBRARY-READINESS.md` §1.2.
+orchestration was the root cause; `PortRun.RequiredChecks` closed it, and `PROGRESS.md`
+§Publishability item 1.2 records what that took.
 
 *Fix kind: (a) for the rule and the orchestration; the per-library API list is (b).*
 
@@ -1379,12 +1381,12 @@ Clearly separated because nothing below has a number behind it yet.
 
 - **Duplicate injected-runtime definitions will break the Scala.js and Native linkers** when a second
   module is ported. Confirmed by design reasoning; not observed, because only one module exists so
-  far. (`LIBRARY-READINESS.md` §1.3.)
+  far. (`PROGRESS.md` §Publishability item 1.3.)
 - **An enum constant with a field or initializer block in its class body** would be dropped silently
   (T8). Zero sites in the corpus, so the hole is reasoned, not observed.
 - **A `StaticForwarderTransform` wrapper whose overloads are not all receiver-first** would be
   rewritten wrongly: members are matched by **name only**. Safe under current policy; worth a guard
-  when a second library configures it. (`LIBRARY-READINESS.md`.)
+  when a second library configures it. (`PROGRESS.md` §Publishability.)
 - ~~A typo'd policy key silently no-ops~~ **CLOSED**: `PolicyReport` collects a classified
   `never matched` finding from every parameterised phase, `SubstitutionCheck.dangling` covers the
   drop side, and the migration prints and baselines both. The check has now also FIRED in anger —

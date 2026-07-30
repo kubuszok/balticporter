@@ -21,7 +21,7 @@ package balticporter.core
 // it — LiqpCorpus, LiqpM0, LiqpProject, XwikiProject, XwikiSurvey, FlexmarkCorpus,
 // JbumpCorpus, BumpDemo, VocabDemo, SpoonTirEmitProject — covering liqp,
 // xwiki/flexmark and jbump, which are exactly ssg's Java libraries. Moving them to
-// the TIR is a separate, measured piece of work (LIBRARY-READINESS.md §1.1); until
+// the TIR is a separate, measured piece of work (PROGRESS.md §Publishability 1.1); until
 // it is done, deleting this deletes their ports.
 //
 // So: fix what those callers need, add nothing. A new rule, check or emission

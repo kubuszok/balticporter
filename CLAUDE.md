@@ -205,8 +205,8 @@ It runs on the **Fable 5** model and is expensive, so it is **not** run on every
   checks on every run (signature consistency, omissions, portability, substitutions removed).
 - **Change one thing, then measure.** Two changes measured together cost a full cycle to untangle
   and tell you nothing about either.
-- **Record what regressed and why**, in `LIBGDX-PORT-STATUS.md` under "Do NOT retry". A measured
-  failure is a result; re-deriving it later is waste.
+- **Record what regressed and why**, in that library's `PROGRESS.md` section under "Do NOT retry". A
+  measured failure is a result; re-deriving it later is waste.
 - State counts as `before->after` in the commit subject.
 
 ### 5.1 A diagnostic over emitted code is ATTRIBUTABLE — never read it by hand
@@ -286,19 +286,21 @@ published Baltic Porter at their Java sources, with agents doing that work in *t
 without this session's context. Two standing consequences:
 
 - **A lesson that is an ENGINE limit must live somewhere the engine ships.** CLAUDE.md,
-  `ENGINE-LIMITS.md`, a skill, or an agent definition — not only in a per-library status file. §3.6
+  `ENGINE-LIMITS.md`, a skill, or an agent definition — not only in a per-library status section. §3.6
   already says this. The engine-scoped dead ends measured on libGDX — the raw-anon refusal, `given
   Conversion` never firing, wildcards round-tripping across an override, "erase uses, never
   declarations" — are now lifted into `ENGINE-LIMITS.md`, with the counts and the per-site diagnosis
-  left in `LIBGDX-PORT-STATUS.md` under a pointer. **When you measure a new one, put the rule there
-  in the same commit.** The remaining exception is per-library POLICY, which is where it belongs.
+  left in `PROGRESS.md`'s section for that library, under a pointer. **When you measure a new one, put
+  the rule there in the same commit.** The remaining exception is per-library POLICY, which is where it
+  belongs.
 - **A check must say which of §1's three kinds the fix is.** An error an agent cannot classify as
   (a) engine bug, (b) configure an existing phase, or (c) write a library-specific rule costs it a
   full investigation. `PortabilityCheck` and `RewriteTrace` do this well; bare typer errors do not,
   and they are the bulk of a new library's first wall. Every `ENGINE-LIMITS.md` entry carries this
   classification for the same reason.
 
-`LIBRARY-READINESS.md` holds the full audit of what is missing before that consumption is possible.
+`PROGRESS.md` §Publishability holds the full audit of what is missing before that consumption is
+possible.
 
 ## 4.5 Never model a Java interface on a Scala COLLECTION trait
 
