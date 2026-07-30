@@ -13,6 +13,18 @@ Each library added should move engine rules **from (c) library-specific → (b) 
 universal**. A library that lands with a pile of new (c) rules has been ported but has not improved
 the framework.
 
+**This skill is the corpus-specific spine.** The steps it wraps are each their own skill, written for
+an agent doing the same work in another repository, and they carry the detail this file only points
+at:
+
+| step | skill |
+|---|---|
+| write the `.conf` — inputs, classpath, manifest, `base = …` | **`configure-port`** |
+| run it and read the numbers honestly | **`port-first-attempt`** |
+| read `errors.tsv`, `findings.tsv`, `decisions.tsv`, never-fired policy | **`read-port-issues`** |
+| configure a (b) phase, or write and test a (c) rule | **`customize-port`** |
+| flags, kill switches, `debug-emit`, `correlate`, blast radius | **`debug-port`** |
+
 ## 1. Scope it before porting it
 
 Survey the module tree and write down, per module, the file count and whether it is in scope.
