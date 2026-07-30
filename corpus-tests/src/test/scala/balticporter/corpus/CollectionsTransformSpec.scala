@@ -332,6 +332,59 @@ class CollectionsTransformSpec extends PortSuite:
     assertNotEmits(p, "fromSet(m.keySet)")
   }
 
+  // ---------------------------------------------------------------------------------------------
+  // `Arrays.asList` — the engine's VARARG CONVENTION met by the one rewritten static whose runtime
+  // counterpart is a scala vararg. A java `T...` parameter is emitted as `Array[T]` and the
+  // frontend materialises the pack at the call, which is right for every in-program vararg method
+  // and wrong for `JavaCollections.asList[A](xs: A*)`.
+  // ---------------------------------------------------------------------------------------------
+
+  private val asList =
+    """package demo;
+      |import java.util.*;
+      |class A {
+      |  List<Integer> elems()             { return Arrays.asList(1, 2, 3); }
+      |  List<String> whole(String[] xs)   { return Arrays.asList(xs); }
+      |  List<String[]> two(String[] xs)   { return Arrays.asList(xs, xs); }
+      |  List<String> none()               { return Arrays.asList(); }
+      |  List<String> one(String s)        { return Arrays.asList(s); }
+      |  static <T> T[] pack(T... xs)      { return xs; }
+      |  String[] callPack(String a, String b) { return pack(a, b); }
+      |}
+      |""".stripMargin
+
+  test("an ELEMENT pack is opened back into separate arguments — never passed as one array") {
+    val p = port(asList, new CollectionsTransform)
+    // two ARRAY elements: correct, translatable java that emitted the pack unspread and failed
+    // E007. Behaviour verified by running it — size 2, both elements `eq` to the argument.
+    assertEmits(p, "balticporter.runtime.JavaCollections.asList(xs, xs)")
+    assertNotEmits(p, "asList(scala.Array[scala.Array[")
+    // one element: the frontend packs a single non-primitive argument too.
+    assertEmits(p, "balticporter.runtime.JavaCollections.asList(s)")
+    assertNotEmits(p, "asList(scala.Array[java.lang.String](s))")
+    // the two shapes the frontend already emitted as bare elements are unchanged — it declines to
+    // pack primitives, which is the only reason `asList(1, 2, 3)` was ever right.
+    assertEmits(p, "balticporter.runtime.JavaCollections.asList(1, 2, 3)")
+    assertEmits(p, "balticporter.runtime.JavaCollections.asList()")
+  }
+
+  test("the whole-ARRAY aliasing form is REFUSED, and the refusal keeps the JDK name") {
+    val p = port(asList, new CollectionsTransform)
+    // java returns a LIVE VIEW of the caller's array; spreading it would silently copy what java
+    // aliases (§4.4). The rewrite does not happen at all, so the emitted text says which call was
+    // not translated — measured `Found: java.util.List[Array[Object]] / Required: Buffer[String]`.
+    assertEmits(p, "return java.util.Arrays.asList(xs.asInstanceOf[scala.Array[java.lang.Object]])")
+    assertNotEmits(p, "JavaCollections.asList(xs.asInstanceOf")
+  }
+
+  test("an IN-PROGRAM vararg method still receives the materialised array — the convention holds") {
+    val p = port(asList, new CollectionsTransform)
+    // the pack is only opened for the one helper declared `A*`; a java `T...` parameter is still
+    // emitted as `Array[T]` and still fed the array.
+    assertEmits(p, "def pack[T <: java.lang.Object](xs: scala.Array[T])")
+    assertEmits(p, "A.pack(scala.Array[java.lang.String](a, b))")
+  }
+
   test("a downcast FROM a type the phase does not retype is KEPT, retargeted at the shim") {
     // `Object` is not in the phase's type map, so nothing the phase did can stop the value from
     // being a shim instance at run time. Java's downcast stays a downcast.

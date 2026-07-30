@@ -376,7 +376,11 @@ final class CollectionsTransform extends Phase, RequiresRuntime:
       // `java.util.Arrays.asList` is not on `Collections`, but it is the same KIND of thing — a
       // receiver-less JDK factory whose result type the port has already retyped — so it shares the
       // table and the runtime object rather than earning a mechanism of its own.
-      case (Some("java.util.Arrays#asList"), args)                 => Some(factory(sym("asList"), args))
+      //
+      // …and it is the ONE rewritten static whose runtime counterpart is a SCALA vararg (`A*`),
+      // which is where the engine's own vararg convention has to be undone. See [[asListArgs]].
+      case (Some("java.util.Arrays#asList"), args)                 =>
+        asListArgs(args).map(as => factory(sym("asList"), as))
       // `Map.Entry` became a `Tuple2`, so `Entry`'s own statics must come along or the call survives
       // to the compiler naming a type the port no longer produces.
       case (Some("java.util.Map$Entry#comparingByKey" | "java.util.Map.Entry#comparingByKey"), List(cmp)) =>
@@ -469,6 +473,47 @@ final class CollectionsTransform extends Phase, RequiresRuntime:
           if collapsed(recv) && qualified(collectorOf(collector)).contains("java.util.stream.Collectors#toList") =>
         recv
       case _ => None
+
+  /** the arguments `JavaCollections.asList` should receive — or `None`, which REFUSES the whole
+    * rewrite and leaves the JDK call to fail to compile under its own name.
+    *
+    * Java's `Arrays.asList` has TWO shapes behind one syntax, and only one of them may reach the
+    * runtime helper (its doc states the contract; read it before changing this):
+    *
+    *   - **elements** (`asList(a, b, c)`) — java packs them into a fresh array nobody else can
+    *     reach, so a `Buffer` differs only in being growable, which is permissive;
+    *   - **a caller-held array passed whole** (`asList(arr)`) — java returns a LIVE VIEW, and a
+    *     copy would silently detach every aliased write. CLAUDE.md §4.4 exactly.
+    *
+    * The engine's own vararg convention is what makes these hard to tell apart HERE. A java `T...`
+    * parameter is emitted as `Array[T]`, so the frontend MATERIALISES a call's trailing arguments
+    * into a `Tree.NewArray` — which is right for every in-program vararg method and wrong for this
+    * one helper, whose scala signature is `asList[A](xs: A*)`. Unfixed, `asList(xs, xs)` (two array
+    * ELEMENTS — correct, translatable java) emitted the pack as ONE argument with no spread and
+    * failed E007, while `asList(1, 2, 3)` came out right only by accident: the frontend declines to
+    * pack primitives, so those arrived as bare elements already.
+    *
+    * So the pack is opened back into separate arguments — which is CLAUDE.md §6's spread with no
+    * spread node needed, and makes both frontend outcomes emit the same shape. A LITERAL array in
+    * the slot (`asList(new String[]{a, b})`) opens too, and that is sound rather than sloppy: the
+    * array is freshly allocated at the call, so nobody holds the alias the live view would matter
+    * for.
+    *
+    * A single argument that IS an array is the aliasing form and is REFUSED — the rewrite does not
+    * happen at all, so the emitted text names `java.util.Arrays.asList` and fails to compile there.
+    * That is deliberately louder than the previous behaviour, which emitted
+    * `JavaCollections.asList(xs.asInstanceOf[Array[Object]])` and read as a broken runtime helper
+    * rather than an untranslated call. ENGINE-LIMITS M6: the compiler is the tracker. A faithful
+    * live view is possible in principle — a fixed-size `Buffer` over the array, with `add`/`remove`
+    * throwing as java's does — but not reachable from here: the frontend has already coerced the
+    * argument to the ERASED formal (`Array[Object]`), so the element type needed to type the view
+    * is gone by this point, and recovering it is a frontend change with far wider blast radius. */
+  private def asListArgs(args: List[Term])(using p: Program): Option[List[Term]] =
+    def isArray(t: TypeRepr) = headSym(t).flatMap(p.symbolOf).exists(_.fullName == "scala.Array")
+    args match
+      case init :+ Tree.NewArray(_, Nil, Some(elems), _, _) => Some(init ++ elems)
+      case List(a) if isArray(a.tpe)                        => scala.None
+      case _                                                => Some(args)
 
   /** a `JavaCollections` static by name. Minted EAGERLY in `run` — symbols cannot be added once the
     * table is built, and the table is built before the traversal that consults these. An unlisted

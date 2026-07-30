@@ -1397,6 +1397,43 @@ from what it did to that type, and this phase did nothing to `java.util.stream.S
 collapse and both rules above are (a). The `Stream`-typed slot is (a) and unbuilt — it needs the
 stream family retyped, not a wider guard.*
 
+### K6.5 A java `T...` becomes an `Array[T]`, so a REWRITE onto a scala vararg must undo the pack
+
+The engine renders a java varargs parameter as `Array[T]` and MATERIALISES the pack at the call
+site (`SpoonTir.varargPack` builds a `Tree.NewArray`). That is right for every in-program vararg
+method — the emitted `def pack[T](xs: Array[T])` is fed `pack(Array[String](a, b))` and both halves
+agree. It is wrong for the one place a rewrite retargets a java call at a runtime helper declared
+with a SCALA vararg, `JavaCollections.asList[A](xs: A*)`:
+
+| java | before | after |
+|---|---|---|
+| `Arrays.asList(1, 2, 3)` | `asList(1, 2, 3)` — right BY ACCIDENT | unchanged |
+| `Arrays.asList(s)` | `asList(Array[String](s))` — E007 | `asList(s)` |
+| `Arrays.asList(xs, xs)` | `asList(Array[Array[String]](xs, xs))` — E007 | `asList(xs, xs)` |
+| `Arrays.asList(xs)` | `JavaCollections.asList(xs.asInstanceOf[Array[Object]])` — E007 | `java.util.Arrays.asList(…)` — REFUSED, E007 under the JDK name |
+
+The accident matters more than the failure: the frontend declines to pack PRIMITIVES, so the one
+shape everybody writes arrived as bare elements and the convention clash never showed. **A rewrite
+onto a differently-shaped runtime signature must normalise the pack, not assume either form** — the
+frontend produces both, conditionally.
+
+Two rules the fix rests on:
+
+- **Open the pack into separate arguments**, which is `CLAUDE.md` §6's spread with no spread node
+  needed and makes both frontend outcomes emit one shape. A LITERAL array in the slot
+  (`asList(new String[]{a, b})`) opens too, soundly: the array is allocated at the call, so no
+  caller holds the alias.
+- **A single ARRAY-typed argument is the ALIASING form and is refused.** Java returns a live view of
+  the caller's array; a spread would silently copy what java aliases (§4.4). The rewrite is skipped
+  entirely so the emitted text keeps the JDK name and the error reads as an untranslated call
+  (`Found: java.util.List[Array[Object]] / Required: Buffer[String]`) rather than a broken helper.
+  A faithful live view — a fixed-size `Buffer` over the array with `add`/`remove` throwing — is
+  expressible but not reachable from the rewrite: the frontend has already coerced the argument to
+  the ERASED formal (`Array[Object]`), so the element type the view needs is gone by then.
+  Recovering it is a frontend change with far wider blast radius.
+
+*Fix kind: (a). The residue (the aliasing form) is (a) and unbuilt, and is a refusal by choice.*
+
 ### K7. A java enhanced-for BINDING may be declared at a supertype, and the port dropped it
 
 `for (Object e : collection)` over a `Collection<?>` is a DECLARATION: java resolves every use of `e`

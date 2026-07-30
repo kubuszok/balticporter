@@ -68,10 +68,15 @@ object JavaCollections:
     *   - **A caller-held array passed whole** (`asList(arr)`): java returns a LIVE VIEW — `set`
     *     writes through to `arr`, and writes to `arr` are visible through the list. A copy here
     *     would compile and silently detach every aliased write, which is exactly a §4.4 defect.
-    *     This method MUST NOT receive that form: today the engine emits the packed array unspread,
-    *     so the call fails to compile (verified by pipeline probe — `Buffer[String]` required,
-    *     `asList(xs.asInstanceOf[Array[Object]])` found), and whoever fixes that emission must
-    *     route the aliasing form to a live view or a refusal, never to this copy. */
+    *     This method MUST NOT receive that form, and now cannot: `CollectionsTransform.asListArgs`
+    *     REFUSES the rewrite for a single array-typed argument, so the emitted text keeps the JDK
+    *     name and fails to compile as `Found: java.util.List[Array[Object]] / Required:
+    *     Buffer[String]` — an untranslated call rather than a broken helper.
+    *
+    * Note this is the one rewritten static declared with a SCALA vararg. The engine renders a java
+    * `T...` parameter as `Array[T]` and materialises the pack at the call site, so `asListArgs`
+    * opens that pack back into separate arguments before it reaches here; a change to this
+    * signature has to change that with it. */
   def asList[A](xs: A*): scala.collection.mutable.Buffer[A] =
     scala.collection.mutable.ArrayBuffer.from(xs)
 
