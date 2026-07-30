@@ -43,7 +43,10 @@ class JavaIteratorSpec extends munit.FunSuite:
     assertEquals(JavaIterator.from(Iterator(7)).asScala.toList, List(7))
   }
 
-  test("JavaIterable.iterator() is nilary and yields a removal-capable iterator") {
+  test("JavaIterable.iterator() is nilary and its iterator REFUSES removal — a scala List backs it") {
+    // The name used to claim "removal-capable", the assertion the opposite. This factory wraps an
+    // immutable scala collection, so refusing `remove` is the only honest behaviour — unlike
+    // `JavaCollection.from`, whose iterator really does remove (see JavaCollectionSpec).
     val xs: JavaIterable[Int] = JavaIterable.from(List(1, 2, 3))
     assertEquals(xs.iterator().asScala.toList, List(1, 2, 3))
     intercept[UnsupportedOperationException](xs.iterator().remove())

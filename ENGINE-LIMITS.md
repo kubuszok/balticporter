@@ -1254,6 +1254,13 @@ path comparison §5.4 already documents as broken across a symlinked worktree, a
 does not even know the source root. A symbol that exhausts the climb counts as the dependent's, so
 an unresolvable case errs toward reporting.
 
+Now the FOURTH measured instance of the same shape: `OmissionCheck` (Ashley reporting libGDX's 47
+omissions), `PortabilityCheck`, the port-map findings above — and the collection closure check,
+which unfiltered reported `AsyncExecutor`'s two findings to four different ports, three of which
+cannot act on them. Every new per-site check starts from the run's OWN units (`checkedUnits` /
+`OmissionCheck.check`'s unit parameter is the pattern); a check that scans `program.units` bare is
+wrong on every dependent port, and the wrongness arrives exactly when the second module does.
+
 *Fix kind: (a) engine.*
 
 ### D3. A `<synthetic>` origin is not a file — exclude it from any source fingerprint
