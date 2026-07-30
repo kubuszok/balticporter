@@ -554,7 +554,7 @@ final class CollectionsTransform(val scope: RuleScope = RuleScope.Everywhere())
     // a DECLARED slot is an expected type exactly as a formal parameter is — see `coerce`.
     // `Collection<Object[]> parameters = new ArrayList<>()` is the shape, and it is the one that
     // regressed libGDX's test port when only arguments were bridged.
-    case Some(rhs) => t.copy(rhs = Some(coerce(t.tpt.tpe, rhs)))
+    case Some(rhs) => t.copy(rhs = Some(coerce(t.tpt.tpe, rhs, excluded(t.symbol))))
     case _ => t
 
   /** an assignment's left-hand side declares the expected type just as a `val`'s `tpt` does; and a
@@ -573,7 +573,11 @@ final class CollectionsTransform(val scope: RuleScope = RuleScope.Everywhere())
     * ONLY for a source the phase retyped away — see [[impossibleShimCast]] for why the test must be
     * structural. */
   override def transformTerm(t: Term)(using Program): Term = t match
-    case a: Tree.Assign => a.copy(rhs = coerce(a.lhs.tpe, a.rhs))
+    case a: Tree.Assign =>
+      // the TARGET may itself be a reference to a scoped-out declaration, in which case the slot is
+      // a JDK one however the node reads — the same `actualOf` the argument side takes.
+      val (want, wantScoped) = actualOf(a.lhs)
+      a.copy(rhs = coerce(want, a.rhs, wantScoped))
     case ty: Tree.Typed if impossibleShimCast(ty) => ty.expr
     case other          => other
 
@@ -921,7 +925,9 @@ final class CollectionsTransform(val scope: RuleScope = RuleScope.Everywhere())
       }.getOrElse(Nil)
       if formals.sizeIs != t.args.size then t
       else
-        val as = t.args.zip(formals).map((a, f) => coerce(f, a))
+        // an EXCLUDED method's formals stay exactly as the frontend read them (`mapSignatures`), so
+        // the slot on the other end of this call is a real `java.util.List` — see `coerce`.
+        val as = t.args.zip(formals).map((a, f) => coerce(f, a, excluded(t.method)))
         if as == t.args then t else t.copy(args = as)
 
   /** a RETURN is a shim-typed slot exactly as a formal, a `val` and an assignment target are — the
@@ -1035,13 +1041,21 @@ final class CollectionsTransform(val scope: RuleScope = RuleScope.Everywhere())
     * NAMING the wrapper instead of the boundary, so the unwrapped value is left to fail at the slot
     * exactly as it did before this seam existed. `Map.values()` has no such problem: its rewrite
     * already restores the invariant by wrapping at the call. */
-  private def coerce(expected: TypeRepr, actual: Term)(using Program): Term =
+  private def coerce(expected: TypeRepr, actual: Term, expectedScoped: Boolean = false)(using Program): Term =
     // the symbol table is retyped AFTER the trees (see `run`), so a formal read here is still the
     // ORIGINAL java symbol — `java.lang.Iterable`, not the shim. Compare through `remap`, which
     // makes this correct on either side of that pass.
-    def scalaSym(x: SymId): SymId = remap.getOrElse(x, x)
-    val wants = headSym(expected).map(scalaSym)
-    val got   = headSym(actual.tpe).map(scalaSym)
+    //
+    // …EXCEPT for a declaration this run's scope held back, on either side. That one is not
+    // "written in java's namespace and about to move"; it is staying, so reading it through `remap`
+    // would claim a slot wants a shim it will never have (or that a value is a `Buffer` when the
+    // emitted code says `java.util.List`) and wrap on both counts. A scoped-out side is therefore
+    // taken LITERALLY, no factory matches it, and the seam is left for `CollectionBoundaryCheck`
+    // to count as `Issue.ScopedOut` — which is the honest answer, since no wrap can close it.
+    def scalaSym(x: SymId, scoped: Boolean): SymId = if scoped then x else remap.getOrElse(x, x)
+    val (actualT, actualScoped) = actualOf(actual)
+    val wants = headSym(expected).map(scalaSym(_, expectedScoped))
+    val got   = headSym(actualT).map(scalaSym(_, actualScoped))
     val from  = got.filterNot(shimSyms.contains).flatMap(kindOf.get)
     val factory = from match
       case _ if wants.isEmpty || isKeySetView(actual)                                 => SymId.None
@@ -1237,7 +1251,15 @@ final class CollectionsTransform(val scope: RuleScope = RuleScope.Everywhere())
 
   /** the receiver's (already-retyped, bottom-up) head type, if it is one of our scala
     * collections → its [[Kind]]. */
-  private def kindAt(recv: Term): Option[Kind] = headSym(recv.tpe).flatMap(kindOf.get)
+  private def kindAt(recv: Term)(using Program): Option[Kind] = headSym(actualOf(recv)._1).flatMap(kindOf.get)
+
+  /** the type a term REALLY has — [[CollectionsTransform.scopedType]] against THIS run's
+    * [[excluded]] set, with the flag that says the answer came from a declaration the scope held
+    * back. `excluded.isEmpty` — the default scope, and any scope that matched nothing — always
+    * answers `(t.tpe, false)`, which is the pre-scope code path by arithmetic. */
+  private def actualOf(t: Term)(using Program): (TypeRepr, Boolean) =
+    if excluded.isEmpty then (t.tpe, false)
+    else CollectionsTransform.scopedType(t, excluded).map(_ -> true).getOrElse(t.tpe -> false)
 
   private def headSym(t: TypeRepr): Option[SymId] = t match
     case TypeRepr.TypeRef(_, s)      => Some(s)
@@ -1245,6 +1267,48 @@ final class CollectionsTransform(val scope: RuleScope = RuleScope.Everywhere())
     case _                           => None
 
 object CollectionsTransform:
+
+  /** The type a term REALLY has when it names a declaration a [[balticporter.tir.RuleScope]] held
+    * back — `None` when it names no such declaration, in which case the node's own `tpe` is the
+    * answer.
+    *
+    * ==Why a node's own type cannot be trusted across a scope==
+    * `transformType` is POSITION-BLIND by construction: the traversal routes every type occurrence
+    * through it, so a REFERENCE to an excluded field or method has its node `tpe` remapped to the
+    * scala shape even though the declaration it names kept the JDK type. Every reader that asks
+    * "what is this value" from the node therefore gets the answer for a declaration that did not
+    * move, and the two readers that matter both get it wrong in a way nothing else can see:
+    *
+    *   - the TRANSFORM rewrites the call shape — `b.raw.addAll(mine)` became `b.raw ++= mine`
+    *     against a `java.util.List`, i.e. emitted code that cannot compile, produced BY the scope
+    *     that was supposed to protect that declaration;
+    *   - the CHECK compares `Buffer` against `Buffer` and reports ZERO on exactly the seam the
+    *     scope created — the one slot a scope is guaranteed to open (§1(b): every seam the scope
+    *     creates is COUNTED).
+    *
+    * So both ask the DECLARATION instead, through this one function: two copies of a rule this
+    * subtle is one copy too many, and the check's classification (`Issue.ScopedOut`) is only
+    * honest if the transform drew the line in the same place. Same rule as CLAUDE.md §4.56's
+    * general form — a phase may conclude something about a type only from what the phase itself
+    * did to it, and what it did here is recorded in `scopedOut`.
+    *
+    * Only the HEAD of the result is ever read by either caller, so taking a method's RESULT type
+    * for a call loses nothing an instantiation would have carried. A declaration whose `info` the
+    * frontend could not record (`NoType`) answers `None` — the node is then the only evidence
+    * there is. */
+  def scopedType(t: Term, scopedOut: SymId => Boolean)(using program: Program): Option[TypeRepr] =
+    def declared(s: SymId, isCall: Boolean) =
+      program.symbolOf(s).map(_.info).map {
+        case TypeRepr.MethodType(_, r, _) if isCall                       => r
+        case TypeRepr.PolyType(_, TypeRepr.MethodType(_, r, _)) if isCall => r
+        case other                                                        => other
+      }.filter(_ != TypeRepr.NoType)
+    t match
+      case Tree.Ident(s, _, _) if scopedOut(s)       => declared(s, isCall = false)
+      case Tree.Select(_, s, _, _) if scopedOut(s)   => declared(s, isCall = false)
+      case Tree.Apply(_, _, m, _, _) if scopedOut(m) => declared(m, isCall = true)
+      case _                                         => scala.None
+
   /** the shape of a collection, which decides the call rewrite (a `Seq` `get` is `apply`,
     * a `Map` `get` is `getOrElse`). */
   enum Kind:

@@ -55,7 +55,12 @@ neither optional:
   (a `mutable.Buffer` is not a `java.util.List`), refuse and report with the §1 classification, and
   read the boundary through the DECLARATION — a position-blind `transformType` has already remapped
   the reference node's type, so a check reading node types reports ZERO on exactly the seam the
-  scope made.
+  scope made. **The REWRITE reads it the same way, through the same function.** A call rewrite keyed
+  on the receiver's node type fires against the JDK type the declaration kept — `b.raw ++= mine` on
+  a `java.util.List` — so the scope emits, for the very declarations it was asked to protect, code
+  that cannot compile and that no check counts. And a scope seam is also the one argument slot with
+  NO formal to compare against: the callee is then the JDK's own external symbol, which the frontend
+  interned without a signature, so the four ordinary slot kinds do not see it.
 
 ### (c) Genuinely library-specific — a SEPARATE, PLUGGED-IN RULE
 

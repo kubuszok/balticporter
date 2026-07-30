@@ -47,9 +47,26 @@ class CollectionsScopeSpec extends PortSuite:
       |}
       |""".stripMargin
 
-  private def ported(scope: RuleScope): (CollectionsTransform, Program, String) =
+  /** The other half of a scope, and the one an audit had to execute to find: IN-SCOPE code that
+    * REACHES a scoped-out declaration. `Client` moves; `Bridge`'s two fields do not, and every
+    * mention of them in `Client` is a node whose `tpe` the position-blind `transformType` remapped
+    * anyway. */
+  private val callSrc =
+    """package demo;
+      |import java.util.*;
+      |class Bridge {
+      |  public List<String> raw = new ArrayList<String>();
+      |  public Map<String, String> m = new HashMap<String, String>();
+      |}
+      |class Client {
+      |  void push(Bridge b, List<String> mine) { b.raw.addAll(mine); }
+      |  String read(Bridge b) { return b.m.get("k"); }
+      |}
+      |""".stripMargin
+
+  private def ported(scope: RuleScope, source: String = src): (CollectionsTransform, Program, String) =
     val ph    = new CollectionsTransform(scope)
-    val after = Pipeline.run(SpoonTir.fromSource(src), List(ph))
+    val after = Pipeline.run(SpoonTir.fromSource(source), List(ph))
     (ph, after, new TirEmitter(after).emit)
 
   private val Buffer = "scala.collection.mutable.Buffer[java.lang.String]"
@@ -159,6 +176,37 @@ class CollectionsScopeSpec extends PortSuite:
     val (ph, after, _) = ported(RuleScope.Everywhere(Set("demo.Model#getLegacy")))
     val scoped = ph.boundary(after).filter(_.issue == CollectionBoundaryCheck.Issue.ScopedOut)
     assert(clue(scoped).exists(f => f.actual == "java.util.List" && f.expected.startsWith("scala.collection.")))
+  }
+
+  test("a CALL on a scoped-out receiver keeps java's call shape — the rewrite reads the DECLARATION") {
+    // The seam the node types alone cannot show, in the direction that EMITS BROKEN CODE rather
+    // than merely under-counting: `b.raw`/`b.m` are excluded, so they stay `java.util.List` /
+    // `java.util.Map` — but their reference nodes were remapped by the position-blind
+    // `transformType`, and a rewrite keyed on the node's type therefore fired `++=` and
+    // `getOrElse` against JDK receivers that have neither. Two compile errors produced BY the
+    // scope that exists to protect those declarations.
+    val (_, _, out) = ported(RuleScope.Everywhere(Set("demo.Bridge")), callSrc)
+    assert(clue(out).contains("b.raw.addAll(mine)"), "java's method, against the JDK type it kept")
+    assert(out.contains("""b.m.get("k")"""), "…and java's `Map.get`, not scala's `getOrElse`")
+    assert(!out.contains("++="), "the scala-shaped rewrite must not reach a scoped-out receiver")
+    assert(!out.contains("getOrElse"))
+  }
+
+  test("…and the seam that call leaves is COUNTED — refusing to rewrite is not the same as being safe") {
+    // Refusing the rewrite is only half of §1(b)'s obligation: `Client.push` still hands its own
+    // `Buffer` to a `java.util.List` slot. NOTHING can wrap that, so it must be reported with the
+    // entry to move — a scope whose seams were silent would be worse than no scope.
+    val (ph, after, _) = ported(RuleScope.Everywhere(Set("demo.Bridge")), callSrc)
+    val scoped = ph.boundary(after).filter(_.issue == CollectionBoundaryCheck.Issue.ScopedOut)
+    assert(clue(scoped).nonEmpty, "the scope opened a slot; the check must see it AND blame the scope")
+  }
+
+  test("the same source under the DEFAULT scope is byte-for-byte the unscoped port, and counts zero") {
+    val (ph, after, out) = ported(RuleScope.Everywhere(), callSrc)
+    val bare = new TirEmitter(Pipeline.run(SpoonTir.fromSource(callSrc), List(new CollectionsTransform))).emit
+    assertEquals(out, bare)
+    assert(clue(out).contains("++="), "with nothing excluded the rewrite still fires everywhere")
+    assertEquals(ph.boundary(after).count(_.issue == CollectionBoundaryCheck.Issue.ScopedOut), 0)
   }
 
   test("the DEFAULT scope reports no ScopedOut finding — a check that fires when it should not is worse") {

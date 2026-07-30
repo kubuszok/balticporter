@@ -27,6 +27,11 @@ import balticporter.tir.*
   *   - an ASSIGNMENT target against its right-hand side,
   *   - a `return` against the enclosing method's declared return type.
   *
+  * …plus one the four cannot express, because it has no formal to compare against: an argument to a
+  * call on a SCOPED-OUT receiver, which binds to the JDK's own API (an external symbol carries no
+  * signature). See `onScopedReceiver` — that call is the shape a scope produces most often, and it
+  * was invisible here while the rewrite was producing uncompilable Scala for it.
+  *
   * A slot is STRANDED when the two sides are on opposite sides of one of THREE lines the phase
   * itself drew — the third being the one a port draws itself:
   *
@@ -176,31 +181,11 @@ object CollectionBoundaryCheck:
       else Issue.UnmappedSubtype
 
     /** The type a term REALLY has, which for a reference to a SCOPED-OUT declaration is not the one
-      * the node carries.
-      *
-      * `CollectionsTransform.transformType` is position-blind by construction — the traversal routes
-      * every type occurrence through it — so a reference to an excluded field or method had its node
-      * `tpe` remapped even though the declaration it names did not move. Left at face value, the
-      * one slot a scope is guaranteed to create (in-scope code meeting an excluded declaration) is
-      * the one slot this check cannot see: both sides read `Buffer` and the emitted Scala says
-      * `java.util.List`. So the DECLARATION's own `info` wins, which is the same
-      * "ask what the phase did, not what a node claims" rule the transform follows on the other
-      * side (§4.56, and ENGINE-LIMITS §0's "the recorded type is not a witness of what the emitter
-      * will print"). Only the HEAD is ever read below, so taking a method's result type here loses
-      * nothing an instantiation would have carried. */
+      * the node carries — `CollectionsTransform.scopedType`, which the TRANSFORM reads through the
+      * same function so that what it refuses to rewrite and what this counts are drawn on one line.
+      * Read its doc before trusting a zero here. */
     def actualOf(t: Term): (TypeRepr, Boolean) =
-      def declared(s: SymId, isCall: Boolean) =
-        program.symbolOf(s).map(_.info).map {
-          case TypeRepr.MethodType(_, r, _) if isCall                       => r
-          case TypeRepr.PolyType(_, TypeRepr.MethodType(_, r, _)) if isCall => r
-          case other                                                        => other
-        }.filter(_ != TypeRepr.NoType)
-      val fromDecl = t match
-        case Tree.Ident(s, _, _) if scopedOut(s)         => declared(s, isCall = false)
-        case Tree.Select(_, s, _, _) if scopedOut(s)     => declared(s, isCall = false)
-        case Tree.Apply(_, _, m, _, _) if scopedOut(m)   => declared(m, isCall = true)
-        case _                                           => scala.None
-      fromDecl.map(_ -> true).getOrElse(t.tpe -> false)
+      CollectionsTransform.scopedType(t, scopedOut).map(_ -> true).getOrElse(t.tpe -> false)
 
     def slot(kind: String, expected: TypeRepr, actual: Term, origin: Origin, enclosing: SymId,
              expectedScoped: Boolean): Unit =
@@ -229,7 +214,36 @@ object CollectionBoundaryCheck:
         }.getOrElse(Nil)
         if formals.sizeIs == t.args.size then
           t.args.zip(formals).foreach((a, f) => slot("argument", f, a, a.origin, t.method, scopedOut(t.method)))
+        else onScopedReceiver(t)
         t
+
+      /** The scope seam the four slot kinds CANNOT reach: an argument whose FORMAL is unknown.
+        *
+        * A call on a scoped-out declaration binds to the JDK's own API — `b.raw.addAll(mine)` where
+        * `raw` kept its `java.util.List` — and `java.util.List#addAll` is an EXTERNAL symbol the
+        * frontend interned with no signature, so the arm above has no formal to compare against and
+        * skips the call entirely. Measured: the probe that found this reported ZERO stranded slots
+        * while emitting an in-scope `Buffer` into a `java.util.Collection` parameter.
+        *
+        * So the JDK's own contract stands in for the missing formal, and only where the phase's own
+        * record licenses it: the receiver must resolve THROUGH A SCOPED-OUT DECLARATION (never from
+        * the node's type, which the position-blind retyping already moved) to a type the mapping
+        * covers. A `java.util.List` receiver takes java collections and nothing else, so an argument
+        * on the scala or shim side of the line is stranded whatever the method's arity. Gated on
+        * `scopedOut`, so an empty scope cannot reach this at all. */
+      private def onScopedReceiver(t: Tree.Apply)(using Program): Unit = t.fun match
+        case Tree.Select(recv, _, _, _) =>
+          val (recvT, recvScoped) = actualOf(recv)
+          if recvScoped then
+            fqn(recvT).filter(r => sideOf(r, shims) == Side.Jdk).foreach { r =>
+              t.args.foreach { a =>
+                val (actualT, _) = actualOf(a)
+                fqn(actualT).filter(x => sideOf(x, shims) == Side.Scala || sideOf(x, shims) == Side.Shim)
+                  .foreach(x => out += Finding(issueFor(r, scoped = true), "argument (scoped-out receiver)",
+                                              r, x, a.origin, t.method))
+              }
+            }
+        case _ => ()
 
       override def transformTerm(t: Term)(using Program): Term =
         t match
