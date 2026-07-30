@@ -10,7 +10,7 @@ package balticporter.core
 // phase model, so a rewrite cannot ask "who else uses this" and every rule is a
 // local pattern match.
 //
-// The TIR (`core/tir/Tir.scala`, `frontend-spoon/SpoonTir`, `scala-emit/TirEmitter`)
+// The TIR (`api/.../tir/Tir.scala`, `frontend-spoon/SpoonTir`, `engine/.../TirEmitter`)
 // carries every CLAUDE.md §3/§4.4 lesson, all of the checks, all of the production
 // transforms and the MUnit conversion. Since `runner/PortRun` it also carries the
 // operational machinery this path was the only home for: the action cache

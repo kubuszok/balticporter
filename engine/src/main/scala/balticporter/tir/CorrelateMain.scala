@@ -151,7 +151,7 @@ object CorrelateRun:
   * have produced their output.
   *
   * {{{
-  * core/runMain balticporter.tir.CorrelateMain \
+  * engine/runMain balticporter.tir.CorrelateMain \
   *   --srcmap      port-report/<MainPort>/run-latest/srcmap.tsv \
   *   --srcmap      test=port-report/<TestPort>/run-latest/srcmap.tsv \
   *   --scalac      /tmp/compile.txt \

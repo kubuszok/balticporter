@@ -44,8 +44,8 @@
 # ---------------------------------------------------------------------------------------------
 
 # sbt projects
-corpus        := "corpus-tests"          # holds the migration programs (balticporter.corpus.*)
-core_project  := "core"                  # holds balticporter.tir.CorrelateMain
+corpus        := "corpus"                # holds the migration programs (balticporter.corpus.*)
+core_project  := "engine"                # holds balticporter.tir.CorrelateMain
 
 # ported modules (their emitted Scala lives in <module>/src_managed/{main,test}/scala)
 gdx_module    := "libgdx-core"
@@ -105,7 +105,7 @@ gdx-measure:
     # status, so an engine that failed to COMPILE printed nothing and the lane went on to measure the
     # PREVIOUS emit — reporting a stale number as a result. Two consecutive measurements were read as
     # "no change" when the change had never been built.
-    MIGRATE_OUT=$(sbt -client "{{corpus}}/runMain balticporter.corpus.LibgdxCoreMigrate" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
+    MIGRATE_OUT=$(sbt -client "{{corpus}}/runMain balticporter.corpus.libgdx.LibgdxCoreMigrate" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
     if ! grep -qE "wrote [0-9]+ Scala files" <<<"$MIGRATE_OUT"; then
       echo "!! MIGRATION DID NOT RUN — refusing to measure stale output"
       grep -E "^\[error\].*\.scala:[0-9]+|^\[error\] +\|" <<<"$MIGRATE_OUT" | head -20
@@ -168,7 +168,7 @@ gdx-test-measure:
     # ABORT if the migration did not run — the same stale-output defect fixed in `gdx-measure`: piping
     # into grep discards the exit status, so an engine that fails to COMPILE measures the PREVIOUS emit
     # and reports it as a result.
-    MIGRATE_OUT=$(sbt -client "{{corpus}}/runMain balticporter.corpus.LibgdxTestMigrate" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
+    MIGRATE_OUT=$(sbt -client "{{corpus}}/runMain balticporter.corpus.libgdx.LibgdxTestMigrate" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
     if ! grep -qE "wrote [0-9]+ Scala test files" <<<"$MIGRATE_OUT"; then
       echo "!! TEST MIGRATION DID NOT RUN — refusing to measure stale output"
       grep -E "^\[error\].*\.scala:[0-9]+" <<<"$MIGRATE_OUT" | head -20
@@ -256,7 +256,7 @@ ashley-measure:
     TREPORT="$ROOT/port-report/AshleyTestMigrate"
 
     for M in AshleyMigrate AshleyTestMigrate; do
-      OUT=$(sbt -client "{{corpus}}/runMain balticporter.corpus.$M" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
+      OUT=$(sbt -client "{{corpus}}/runMain balticporter.corpus.ashley.$M" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
       if ! grep -qE "wrote [0-9]+ Scala( test)? files" <<<"$OUT"; then
         echo "!! $M DID NOT RUN — refusing to measure stale output"
         grep -E "^\[error\].*\.scala:[0-9]+|^\[error\] +\|" <<<"$OUT" | head -20
@@ -344,7 +344,7 @@ sg-measure:
     TREPORT="$ROOT/port-report/SimpleGraphsTestMigrate"
 
     for M in SimpleGraphsMigrate SimpleGraphsTestMigrate; do
-      OUT=$(sbt -client "{{corpus}}/runMain balticporter.corpus.$M" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
+      OUT=$(sbt -client "{{corpus}}/runMain balticporter.corpus.simplegraphs.$M" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
       if ! grep -qE "wrote [0-9]+ Scala( test)? files" <<<"$OUT"; then
         echo "!! $M DID NOT RUN — refusing to measure stale output"
         grep -E "^\[error\].*\.scala:[0-9]+|^\[error\] +\|" <<<"$OUT" | head -20

@@ -15,8 +15,8 @@ import balticporter.tir.*
   * Three things it demonstrates, and they are the three a new port needs:
   *
   *  1. **Where the file goes.** Beside the migration program, in the porting repository. It names
-  *     `com.badlogic.gdx` freely; the §1 enforcement grep covers `core`, `frontend-spoon`,
-  *     `scala-emit` and `runtime`, and it is precisely the point that a (c) rule is not there.
+  *     `com.badlogic.gdx` freely; the §1 enforcement grep covers `api`, `engine`,
+  *     `frontend-spoon` and `runtime`, and it is precisely the point that a (c) rule is not there.
   *  2. **How it enters the pipeline.** As an ordinary element of `PortRun(phases = …)`. It
   *     implements `balticporter.tir.Phase` and nothing else; the engine has no registry, no
   *     service loader and no plugin descriptor to satisfy.

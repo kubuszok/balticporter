@@ -1407,7 +1407,7 @@ object PortReport:
         "changed one and not the other. Fix the phase that moved the signature; no manifest change helps.")
     case Omission extends Kind(
       "  §1(a) ENGINE: the TIR carries these constructs and emission loses them. A green compile " +
-        "says nothing about them (CLAUDE.md §3). Fix in core/scala-emit, or record the limit in ENGINE-LIMITS.md.")
+        "says nothing about them (CLAUDE.md §3). Fix in the engine, or record the limit in ENGINE-LIMITS.md.")
     case Portability extends Kind(
       "  §1(b)/(c) PER-LIBRARY: the JDK APIs listed are absent from Scala.js/Native. Either drop " +
         "the type and inject a replacement (`Substitutions`), re-point it (`StaticForwarderTransform`/" +
@@ -1425,7 +1425,7 @@ object PortReport:
       "  §1(a) ENGINE: a comment in the upstream Java reached no harvest point in the frontend, or " +
         "an emission path renders its node without the `leading` it carries. Nothing else reports " +
         "it — the output compiles perfectly with the comment gone, and a LICENCE notice among " +
-        "these is a §4.57 obligation, not a formatting nicety. Fix in frontend-spoon/scala-emit.")
+        "these is a §4.57 obligation, not a formatting nicety. Fix in frontend-spoon or the engine emitter.")
     case Manifest extends Kind(
       "  §1(b) PER-LIBRARY: this module's policy for the SHARED surface differs from the module " +
         "that emits it — the two ports each compile alone and cannot compile together. Configure " +
