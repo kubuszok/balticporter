@@ -1,4 +1,6 @@
 #id	check	kind	owner	path	line	detail
+8388eed7fb31	collection-closure	java.util.concurrent.LinkedBlockingQueue	sge.net.NetJavaImpl#<init>	com/badlogic/gdx/net/NetJavaImpl.java	139	Tycon — unmapped, but java.util.AbstractCollection is mapped to balticporter.runtime.JavaCollection, so the JDK relation java.util.concurrent.LinkedBlockingQueue <: java.util.AbstractCollection is lost
+28e89e0ce693	collection-closure	java.util.concurrent.SynchronousQueue	sge.net.NetJavaImpl#<init>	com/badlogic/gdx/net/NetJavaImpl.java	139	Tycon — unmapped, but java.util.AbstractCollection is mapped to balticporter.runtime.JavaCollection, so the JDK relation java.util.concurrent.SynchronousQueue <: java.util.AbstractCollection is lost
 74abf1ffd83a	omissions	annotation dropped	sge.graphics.g3d.particles.ParallelArray$ObjectChannel	<synthetic>	0	java.lang.SuppressWarnings
 39ea9a5f4ab1	omissions	annotation dropped	sge.graphics.g3d.particles.renderers.ParticleControllerControllerRenderer	<synthetic>	0	java.lang.SuppressWarnings
 81ca2cb726cd	omissions	annotation dropped	sge.utils.NonNull	<synthetic>	0	java.lang.annotation.Target

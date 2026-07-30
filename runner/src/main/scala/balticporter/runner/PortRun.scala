@@ -5,7 +5,7 @@ import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.sbtgen.SbtGen
 import balticporter.tir.{CheckReport, Correlate, CorrelateRun, DebugFlags, Decision, DecisionLog, OmissionCheck, Origin, Phase, Pipeline, PortabilityCheck, Program, Reason, Remediator, RewriteTrace, SrcMap, SymId, Tree, TriviaCheck}
-import balticporter.transform.{MethodBodyTransform, PackageRenameTransform, PortMapTransform}
+import balticporter.transform.{CollectionBoundaryCheck, CollectionClosureCheck, CollectionsTransform, MethodBodyTransform, PackageRenameTransform, PortMapTransform}
 
 import java.nio.file.{Files, Path, StandardCopyOption}
 import scala.jdk.CollectionConverters.*
@@ -218,6 +218,25 @@ final case class PortRun(
     say(s"OMISSIONS (emitted code silently loses these): ${omissions.size}")
     if omissions.nonEmpty then say(PortReport.Kind.Omission.classification)
     println(OmissionCheck.summary(omissions))
+
+    // ---- the collection boundary the phase itself drew: closure and stranding, triaged ----
+    // Only when the phase RAN — the checks read its typeMap-derived tables, and a port that never
+    // retyped a collection has no boundary to police. Over `checkedUnits` for the same reason the
+    // omission check is: a finding about a resolution root belongs to the module that emits it.
+    effectivePhases.collect { case c: CollectionsTransform => c }.foreach { c =>
+      val clo = c.closure(program, checkedUnits)
+      val bnd = c.boundary(program, checkedUnits)
+      locally {
+        given Program = program
+        CheckReport.record(CollectionClosureCheck.Name, clo.map(_.report))
+        CheckReport.record(CollectionBoundaryCheck.Name, bnd.map(_.report))
+      }
+      say(s"COLLECTION CLOSURE (mapped supertype, unmapped subtype): ${clo.size}")
+      if clo.nonEmpty then say(CollectionClosureCheck.Classification)
+      println(CollectionClosureCheck.summary(clo))
+      say(s"COLLECTION BOUNDARY (stranded slots the phase created): ${bnd.size}")
+      println(CollectionBoundaryCheck.summary(bnd))
+    }
 
     // ---- cross-port composition: does the shared surface agree with the module that emits it? ----
     // Runs on EVERY port. On a base port `shared` is empty and the check is a no-op by arithmetic
@@ -917,6 +936,10 @@ object PortRun:
   val RequiredChecks: Set[String] = Set(
     Signature, Omissions, PortabilityAll, PortabilityEmitted, PortabilityInjected, Remediation,
     SubstitutionEmitted, SubstitutionDangling, Policy, Manifest, PortMapCheck, TriviaDropped,
+    // recorded only when CollectionsTransform is in the pipeline; RequiredChecks asserts against
+    // what RECORDED, and a port without the phase records neither, so requiring them here would
+    // fail every phase-less port. They are made unskippable by the wiring living beside the
+    // omission block rather than by this set — see the guard where they are recorded.
   )
 
   /** One translation, plus everything derived from it that must not be recomputed inconsistently.
