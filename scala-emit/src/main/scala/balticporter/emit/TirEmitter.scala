@@ -1255,8 +1255,13 @@ final class TirEmitter(
       case CtorFunnel.SuperCall.Positional(as) => s"this(${as.map(term(_, i)).mkString(", ")})"
       case CtorFunnel.SuperCall.Matched(slots) =>
         val rendered = slots.map {
-          case Right(a) => term(a, i)
-          case Left(t)  => s"null.asInstanceOf[${tpe(t)}]"
+          case CtorFunnel.Slot.Arg(a)    => term(a, i)
+          case CtorFunnel.Slot.NullAt(t) => s"null.asInstanceOf[${tpe(t)}]"
+          // `Throwable(Throwable cause)` sets message = `cause == null ? null : cause.toString()`.
+          // `Objects.toString(o, nullDefault)` IS that expression and evaluates `o` once, so the
+          // argument needs no purity condition — a hand-written `if` would have read it twice.
+          case CtorFunnel.Slot.CauseMessage(c) =>
+            s"java.util.Objects.toString(${term(c, i)}, null)"
         }
         s"this(${rendered.mkString(", ")})"
       // the arguments really are lost here, and `OmissionCheck` says so on the same run

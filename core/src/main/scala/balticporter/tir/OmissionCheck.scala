@@ -41,6 +41,7 @@ object OmissionCheck:
     * the no-op is the general path taken to its limit, not a branch around it (CLAUDE.md §1). */
   def check(program: Program, units: List[Tree.ClassDef]): List[Finding] =
     droppedSuperArgs(program, units)
+      ++ droppedCauseMessages(program, units)
       ++ droppedAnonMembers(program, units)
       ++ droppedAnnotations(program, ownedBy(program, units))
 
@@ -140,6 +141,32 @@ object OmissionCheck:
         else
           val owner = program.symbolOf(cd.symbol).map(_.fullName).getOrElse("?")
           List(Finding("super(args) dropped", owner, s"${args.size} argument(s) discarded", d.origin))
+      }
+    }
+
+  /** A `super(cause)` that reached the JDK's `Throwable(Throwable)` overload and whose MESSAGE that
+    * overload computes for itself could not be rebuilt.
+    *
+    * `Throwable(Throwable cause)` is `this(cause == null ? null : cause.toString(), cause)`, so the
+    * delegation has to name the cause in both slots — and a scala secondary constructor cannot bind
+    * a value before its `this(...)` call, so a cause the port cannot read twice is refused rather
+    * than evaluated twice. The ARGUMENTS are not lost here (the cause reaches its own slot, so
+    * [[droppedSuperArgs]] correctly says nothing); the message is, and that is invisible to a
+    * compile and to every other count — a runtime probe over the emitted `GdxRuntimeException` is
+    * what found it (CLAUDE.md §4.4). Derived from [[CtorFunnel.Plans.causeMessageLost]], the same
+    * function the emitter's refusal comes from, per CONSTRUCTOR. */
+  def droppedCauseMessages(program: Program): List[Finding] =
+    droppedCauseMessages(program, program.units)
+
+  def droppedCauseMessages(program: Program, units: List[Tree.ClassDef]): List[Finding] =
+    def classes(cd: Tree.ClassDef): List[Tree.ClassDef] =
+      cd :: cd.body.collect { case c: Tree.ClassDef => classes(c) }.flatten
+    val plans = CtorFunnel.Plans(program)
+    units.flatMap(classes).flatMap { cd =>
+      CtorFunnel.ctorsOf(program, cd.body).filter(plans.causeMessageLost(cd, _)).map { d =>
+        val owner = program.symbolOf(cd.symbol).map(_.fullName).getOrElse("?")
+        Finding("Throwable(cause) message dropped", owner,
+                "cause expression cannot be re-read, so the JDK's own message is not rebuilt", d.origin)
       }
     }
 

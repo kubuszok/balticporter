@@ -77,11 +77,30 @@ object CtorFunnel:
       * constructor's, in its order. No matching of any kind is needed or wanted here. */
     case Positional(args: List[Term])
     /** `this(...)` against a PROMOTED root: each of the primary's parameters takes an argument of
-      * its own type (`Right`), or the `null` at that type (`Left`) the parent's own narrower
-      * overload would have left there. */
-    case Matched(slots: List[Either[TypeRepr, Term]])
+      * the java call, or the value the parent's own narrower overload would have left there. */
+    case Matched(slots: List[Slot])
     /** `this()` — the arguments are LOST, and [[OmissionCheck]] reports them. */
     case Dropped
+
+  /** one argument position of a [[SuperCall.Matched]] delegation. */
+  enum Slot:
+    /** an argument of the java `super(...)` call, at the parameter whose type it fits. */
+    case Arg(term: Term)
+    /** the `null` at this type that the parent's own NARROWER overload left in this position. */
+    case NullAt(tpe: TypeRepr)
+    /** The MESSAGE the JDK's `Throwable(Throwable)` constructor computes for itself.
+      *
+      * A padded slot is `null` because the narrower overload java actually called left it `null` —
+      * true of every position except this one. `Throwable(Throwable cause)` is documented as
+      * `this(cause == null ? null : cause.toString(), cause)`, so padding the message with `null`
+      * builds a DIFFERENT exception: `new GdxRuntimeException(cause).getMessage` returned `null`
+      * where java's returned `java.lang.IllegalStateException: boom`. It compiles, it moves no
+      * count, and only a runtime probe sees it (CLAUDE.md §4.4).
+      *
+      * Rendered through `java.util.Objects.toString(cause, null)`, which is that expression exactly
+      * and evaluates `cause` ONCE — so no purity condition on the argument is needed, and none is
+      * imposed. */
+    case CauseMessage(cause: Term)
 
   /** a padded slot needs a value that `null` can inhabit; a primitive has none. */
   val primitiveTypeNames: Set[String] =
@@ -202,12 +221,59 @@ object CtorFunnel:
           val slots = ps.map { v =>
             val want = headName(program, v.tpt.tpe)
             args.zipWithIndex.find((a, k) => !used(k) && headName(program, a.tpe) == want) match
-              case Some((a, k)) => used += k; Some(Right(a): Either[TypeRepr, Term])
+              case Some((a, k)) => used += k; Some(Slot.Arg(a): Slot)
               case scala.None   =>
-                if want.exists(primitiveTypeNames) then scala.None else Some(Left(v.tpt.tpe))
+                if want.exists(primitiveTypeNames) then scala.None else Some(Slot.NullAt(v.tpt.tpe))
           }
           if slots.exists(_.isEmpty) || used.size != args.size then SuperCall.Dropped
-          else SuperCall.Matched(slots.flatten)
+          else
+            val ss = slots.flatten
+            // the JDK's `Throwable(Throwable)` message, but only when the cause can be READ TWICE —
+            // the delegation names it in both slots and scala cannot bind a value before `this(...)`
+            if isJdkCauseCall(cd, args, ss) && simple(args.head) then
+              SuperCall.Matched(ss.map { case _: Slot.NullAt => Slot.CauseMessage(args.head); case s => s })
+            else SuperCall.Matched(ss)
+
+    /** Is this delegation the JDK's `Throwable(Throwable cause)` — the one padded slot that is NOT
+      * `null`?
+      *
+      * Padding is exact for a JDK throwable because the JDK's constructor set is `()`, `(String)`,
+      * `(String, Throwable)`, `(Throwable)` and each shorter overload delegates to the widest with
+      * `null` in the positions it does not take — with ONE exception, which is the whole content of
+      * this function: `Throwable(Throwable cause)` is specified as
+      * `this(cause == null ? null : cause.toString(), cause)`, so it FILLS its own message.
+      *
+      * The configuration is determinate, not a guess: a JDK-throwable parent, exactly ONE super
+      * argument, and exactly one padded slot which is the `String`. The only JDK overload that
+      * leaves the message unfilled while taking one argument is `(Throwable)`. (`super("m")` pads
+      * the THROWABLE slot instead and is untouched; `super()` carries no argument and is untouched.)
+      *
+      * `java.lang.reflect.InvocationTargetException` is the one JDK type whose `(Throwable)`
+      * constructor departs from the contract (it leaves the message null and stores `target`).
+      * Nothing can port a subclass of it through this path anyway — `target` is private and no
+      * delegation reaches it — so it is out of reach here rather than mishandled. */
+    private def isJdkCauseCall(cd: Tree.ClassDef, args: List[Term], slots: List[Slot]): Boolean =
+      val padded = slots.collect { case n: Slot.NullAt => n }
+      args.sizeIs == 1 && padded.sizeIs == 1 &&
+        headName(program, padded.head.tpe).contains("java.lang.String") &&
+        jdkThrowableParent(program, cd)
+
+    /** This constructor reached the JDK's `Throwable(Throwable)` overload, and the message that
+      * overload computes for itself is LOST — because the delegation would have to name the cause
+      * in BOTH slots and re-evaluating it is not free.
+      *
+      * There is no third option. A scala secondary constructor's first statement must be the
+      * `this(...)` call, so no `val` can bind the argument ahead of it (measured: `Not found: x`),
+      * and emitting the expression twice would run a side effect java ran once — and could hand the
+      * two slots different objects. Refusing and REPORTING is the honest outcome; the alternative
+      * is a silent behaviour change of exactly the kind this whole rule exists to remove.
+      * [[OmissionCheck.droppedCauseMessages]] counts it. */
+    def causeMessageLost(cd: Tree.ClassDef, d: Tree.DefDef): Boolean =
+      val args = superArgsOf(program, d)
+      args.nonEmpty && !simple(args.head) && !apply(cd).primary.map(_.symbol).contains(d.symbol) &&
+        replayFor(cd, d).isEmpty && (superCall(cd, args) match
+          case SuperCall.Matched(slots) => isJdkCauseCall(cd, args, slots)
+          case _                        => false)
 
     /** Does THIS constructor's `super(args)` survive into the emitted code? The whole of what
       * [[OmissionCheck.droppedSuperArgs]] asks, and every disjunct is a fact about this one
@@ -482,6 +548,16 @@ object CtorFunnel:
             }
           }
 
+  /** does this class extend a JDK THROWABLE? Its constructor set is fixed and public — `()`,
+    * `(String)`, `(String, Throwable)`, `(Throwable)` — which is what makes null-padding a shorter
+    * super call exact rather than a guess. A java fact, not a library one. */
+  private def jdkThrowableParent(program: Program, cd: Tree.ClassDef): Boolean =
+    cd.parents.headOption.flatMap {
+      case tt: TypeTree => headName(program, tt.tpe)
+      case t: Term      => headName(program, t.tpe)
+    }.exists(n => n == "java.lang.Throwable" ||
+                  (n.startsWith("java.") && (n.endsWith("Exception") || n.endsWith("Error"))))
+
   private def parentSyms(cd: Tree.ClassDef): List[SymId] =
     def head(t: TypeRepr): Option[SymId] = t match
       case TypeRepr.TypeRef(_, s)      => Some(s)
@@ -552,15 +628,7 @@ object CtorFunnel:
       // built by substituting the other root's super arguments into those parameters. This is the
       // shape the reference port writes by hand:
       //   `enum SgeError(message: String, cause: Option[Throwable]) extends Exception(message, cause.orNull)`
-      /** does this class extend a JDK THROWABLE? Its constructor set is fixed and public — `()`,
-        * `(String)`, `(String, Throwable)`, `(Throwable)` — which is what makes null-padding a
-        * shorter super call exact rather than a guess. A java fact, not a library one. */
-      def throwableParent: Boolean =
-        cd.parents.headOption.flatMap {
-          case tt: TypeTree => headName(program, tt.tpe)
-          case t: Term      => headName(program, t.tpe)
-        }.exists(n => n == "java.lang.Throwable" ||
-                      (n.startsWith("java.") && (n.endsWith("Exception") || n.endsWith("Error"))))
+      def throwableParent: Boolean = jdkThrowableParent(program, cd)
       def passesThrough(c: Tree.DefDef): Boolean =
         val ps = c.paramss.flatten.map(_.symbol)
         superArgsOf(program, c).map { case Tree.Ident(x, _, _) => x; case _ => SymId.None } == ps && ps.nonEmpty
