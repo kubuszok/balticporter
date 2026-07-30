@@ -241,6 +241,24 @@ you should do:
   and `skipped` is kept apart from `ignored` because an ignored test is a DECISION and a skipped
   one is PREVENTION. Same rule for a missing INPUT: a `--tests` path that does not exist is fatal,
   never a header-only artifact and a headline of "0 passing, 0 failing".
+- **`decisions.tsv` says WHY the emitted code is not a mechanical translation.** The source map
+  answers "which Java produced this line"; it cannot answer "why is this type simply absent, this
+  package not the upstream one, this member from a hand-written file". Each of those is a
+  `balticporter.tir.Decision`, and its `Reason` is a CONSTRUCTOR PARAMETER — `Universal(rule)` /
+  `Configured(phase, key)` / `LibraryRule(rule)` — because §4.45's rule applies to provenance
+  exactly as it does to findings: a note that does not say which of §1's three kinds the fix is
+  costs its reader a full investigation. For a `Configured` one the KEY is the manifest entry
+  verbatim, which is the string an agent edits to change the outcome. A phase records with
+  `Phase.record`; `Pipeline.runTraced` hands back the log; the run's non-phase deciders record into
+  the same one. The log is a value ONE RUN owns and each phase's buffer is drained into it, for the
+  reason stated above for the source map.
+- **An artifact write is GATED ON THE ARTIFACT LAYER, without exception.** One unconditional
+  `PortMap.write` was enough for the engine's own forked test suites to publish port maps into the
+  checkout (`runner/port-report/…`, and once a COMMITTED `port-report/jar/`), because with reporting
+  off the report directory falls back to `<cwd>/port-report/…` and a forked test's cwd is the
+  subproject. A `git status` that cannot distinguish a decision from an artefact defeats §5.5, and
+  the gate belongs at the write, not in each caller — a wrapper every spec must remember is a
+  wrapper one spec will not.
 
 Deliberate failures are **DERIVED, not listed**. A test whose failure stack reaches a type in the
 port's `Substitutions.dropTypes` fails because the port deliberately does not have that type, so
