@@ -272,6 +272,77 @@ class DecisionProvenanceSpec extends munit.FunSuite:
     assertEquals(once(root.resolve("r1")), once(root.resolve("r2")))
   }
 
+  // -------------------------------------------------------------------------
+  // the SUBSTITUTION family — a body replaced, a definition with no Java behind it
+  // -------------------------------------------------------------------------
+
+  test("a replaced BODY records the member and the key — nothing else can say the signature lies") {
+    val (root, src) = fixture()
+    val rep = root.resolve("report")
+    withReport(rep) {
+      run(root, src)(_.copy(phases = List(
+        new balticporter.transform.MethodBodyTransform(Map(
+          "com.demo.Widget#label" -> """"replaced"""",
+          "com.demo.Widget#nope"  -> "()")))))
+    }
+    val bs = decisions(rep).filter(_.kind == Decision.Kind.SubstitutedBody)
+    // one row per member REPLACED — a key that fired nowhere replaced nothing, and `PolicyReport`
+    // is what reports it; this channel records acts, not intentions
+    assertEquals(bs.map(_.subjectFqn), List("com.demo.Widget#label"))
+    assertEquals(bs.head.reason, Reason.Configured("method-body-substitution", "com.demo.Widget#label"))
+    assertEquals(bs.head.detail("key"), "com.demo.Widget#label")
+    assert(clue(bs.head.origin.javaPath).endsWith("com/demo/Widget.java"))
+  }
+
+  test("a VENDORED support type is (a) and a supportSources entry is (b) — the same act, two fixes") {
+    val (root, src) = fixture()
+    val rep = root.resolve("report")
+    withReport(rep) {
+      run(root, src)(_.copy(
+        phases         = List(new balticporter.transform.CollectionsTransform),
+        runtimeMode    = RuntimeMode.Vendored,
+        supportSources = Map("com.demo.Prop" -> "package com.demo\nobject Prop")))
+    }
+    val inj = decisions(rep).filter(_.kind == Decision.Kind.InjectedMember)
+
+    val vendored = inj.filter(_.reason == Reason.Universal("runtime-vendoring"))
+    assert(clue(vendored).nonEmpty)
+    assert(vendored.forall(_.subjectFqn.startsWith("balticporter.runtime.")), clue(vendored.map(_.subjectFqn)))
+    assertEquals(vendored.head.detail("mode"), "Vendored")
+
+    val support = inj.filter(_.reason.className == "configured")
+    assertEquals(support.map(_.subjectFqn), List("com.demo.Prop"))
+    assertEquals(support.head.reason, Reason.Configured("support-sources", "com.demo.Prop"))
+    assertEquals(support.head.detail("file"), "com/demo/Prop.scala")
+  }
+
+  test("under RuntimeMode.Dependency nothing is vendored, so nothing is recorded as injected") {
+    // The honest answer, and the reason this is recorded from what was WRITTEN rather than from
+    // what the plan requires: a support type reached through a build dependency is not a
+    // definition in this port's output at all.
+    val (root, src) = fixture()
+    val rep = root.resolve("report")
+    withReport(rep) {
+      run(root, src)(_.copy(phases = List(new balticporter.transform.CollectionsTransform)))
+    }
+    assertEquals(decisions(rep).count(_.kind == Decision.Kind.InjectedMember), 0)
+  }
+
+  test("two identical runs of the SUBSTITUTION family produce byte-identical decisions.tsv") {
+    val (root, src) = fixture()
+    def once(rep: Path): String =
+      withReport(rep) {
+        run(root, src)(_.copy(
+          phases         = List(
+            new balticporter.transform.CollectionsTransform,
+            new balticporter.transform.MethodBodyTransform(Map("com.demo.Widget#label" -> """"x""""))),
+          runtimeMode    = RuntimeMode.Vendored,
+          supportSources = Map("com.demo.Prop" -> "package com.demo\nobject Prop")))
+      }
+      Files.readString(rep.resolve("run-latest/decisions.tsv"))
+    assertEquals(once(root.resolve("r1")), once(root.resolve("r2")))
+  }
+
   test("two identical runs produce byte-identical decisions.tsv") {
     val (root, src) = fixture()
     val inject = widgetReplacement(root, "com.demo")

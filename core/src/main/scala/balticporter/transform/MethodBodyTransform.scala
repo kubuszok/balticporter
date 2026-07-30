@@ -135,6 +135,25 @@ final class MethodBodyTransform(bodies: Map[String, String] = Map.empty) extends
                 fired += k
                 hitCount(k) += 1
                 done += k
+                // DECISION PROVENANCE, one row per REPLACED MEMBER. Already declaration-level by
+                // construction — this phase's unit of work IS a member — so there is nothing to
+                // group. The signature is deliberately absent from `detail`: it did not move (that
+                // is the phase's contract), and a call site cannot see from it that the behaviour
+                // behind it is not upstream's. This row is the only place that says so.
+                record(Decision(
+                  kind       = Decision.Kind.SubstitutedBody,
+                  subject    = d.symbol,
+                  subjectFqn = s"$owner#$nm",
+                  detail     = Map(
+                    "key"  -> k,
+                    "from" -> "the mechanically translated java body",
+                    "to"   -> "hand-written Scala from MethodBodyTransform(bodies)",
+                    "why"  -> ("the signature is UNCHANGED and every call site still type-checks; " +
+                      "only the behaviour behind it is this port's rather than upstream's"),
+                  ),
+                  reason = Reason.Configured(name, k),
+                  origin = d.origin,
+                ))
                 d.copy(rhs = Some(Tree.Opaque(bodies(k), d.returnTpt.tpe, d.origin)))
         case c: Tree.ClassDef => rewrite(c)
         case other            => other

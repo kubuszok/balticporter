@@ -445,7 +445,7 @@ final case class PortRun(
     // The phases recorded theirs while the pipeline ran; the run's own non-phase deciders — the
     // substitution manifest and the injection copy — record here, into the SAME log, because the
     // question an investigating agent asks does not care which layer answered it.
-    recordPolicyDecisions(program, translated, injectedSources)
+    recordPolicyDecisions(program, translated, injectedSources, plan)
     writeDecisions(translated.decisions)
 
     // CHECK 2 — over the FINAL tree.
@@ -569,12 +569,13 @@ final case class PortRun(
       Files.writeString(dir.resolve("dropped-types.tsv"),
         (Correlate.DroppedHeader :: drops).mkString("", "\n", "\n"))
 
-  /** The DECISIONS this run made outside any phase — the substitution manifest and the injection
-    * copy — recorded into the run's own log (CLAUDE.md §4.45: make it obvious to an investigating
-    * agent HOW the porter arrived at the code, and in which of §1's three repositories the fix
-    * lives).
+  /** The DECISIONS this run made outside any phase — the substitution manifest, the injection copy
+    * and the two OTHER ways a definition reaches the output with no Java behind it (the vendored
+    * runtime, `supportSources`) — recorded into the run's own log (CLAUDE.md §4.45: make it obvious
+    * to an investigating agent HOW the porter arrived at the code, and in which of §1's three
+    * repositories the fix lives).
     *
-    * Both are `Reason.Configured`, and the KEY is the manifest entry verbatim. That is the whole
+    * The drops and the injection copy are `Reason.Configured`, and the KEY is the manifest entry verbatim. That is the whole
     * value of the record: an agent holding `sge.utils.Json` learns not merely that the type is
     * substituted but that `Substitutions.dropTypes` contains `com.badlogic.gdx.utils.Json`, which
     * is the exact string it must remove to change the outcome.
@@ -593,6 +594,7 @@ final case class PortRun(
       program: Program,
       translated: PortRun.Translated,
       injectedSources: List[(String, String)],
+      plan: RuntimePlan,
   ): Unit =
     val log = translated.decisions
     // A dropped type is PARSED, so the run usually still holds its unit — and with it the Java file
@@ -661,6 +663,55 @@ final case class PortRun(
         detail     = Map("file" -> rel, "why" -> "hand-written Scala copied verbatim; it never passed through the TIR"),
         reason     = Reason.Configured("substitutions", "inject"),
         origin     = Origin(rel, 0, 0),
+      ))
+    }
+
+    // ---- the OTHER two ways a definition reaches the output without a Java file behind it ----
+    //
+    // Both are injections in the only sense that matters to a reader of the emitted tree — a type
+    // stands there that no upstream source declares — and they differ in WHICH of §1's three kinds
+    // an agent must act in, which is exactly what `Reason` is for.
+    //
+    // The VENDORED RUNTIME is §1(a). Neither the requirement nor the text is anybody's policy:
+    // `RuntimePlan.of` derives it from the phases that ran (`RequiresRuntime`), and the sources are
+    // a verbatim copy of the published `balticporter-runtime` module. A port cannot choose the
+    // shape of `JavaCollection`; the only per-port choice is `runtimeMode`, and that decides
+    // whether these are FILES or a build dependency — under `Dependency` this loop writes nothing,
+    // so it records nothing, which is the honest answer: no definition was injected.
+    plan.sources.toList.sorted.foreach { (fqn, _) =>
+      log.record(Decision(
+        kind       = Decision.Kind.InjectedMember,
+        subject    = SymId.None,
+        subjectFqn = fqn,
+        detail = Map(
+          "file"    -> (fqn.replace('.', '/') + ".scala"),
+          "mode"    -> runtimeMode.toString,
+          "required"-> (if plan.required(fqn) then "directly" else "closure"),
+          "why"     -> ("a support type a phase retyped this port's code ONTO, vendored into the " +
+            "source set because this port carries no library dependency; the text is a verbatim " +
+            "copy of the published balticporter-runtime module"),
+        ),
+        reason = Reason.Universal("runtime-vendoring"),
+        origin = Origin.synthetic,
+      ))
+    }
+
+    // `supportSources` is §1(b): a MAP THIS PORT WRITES, for a phase that cannot declare its
+    // support types through `RequiresRuntime`. The key is the FQN, verbatim, because that is the
+    // entry an agent removes to stop the file being written.
+    supportSources.toList.sorted.foreach { (fqn, _) =>
+      log.record(Decision(
+        kind       = Decision.Kind.InjectedMember,
+        subject    = SymId.None,
+        subjectFqn = fqn,
+        detail = Map(
+          "file" -> (fqn.replace('.', '/') + ".scala"),
+          "key"  -> fqn,
+          "why"  -> ("supplied by this port's `supportSources`: a phase's output references it and " +
+            "no phase declares it through RequiresRuntime, so the run writes it"),
+        ),
+        reason = Reason.Configured("support-sources", fqn),
+        origin = Origin.synthetic,
       ))
     }
 
