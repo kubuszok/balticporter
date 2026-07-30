@@ -96,6 +96,30 @@ final class ClassTableTransform(redirects: Map[String, String]) extends Phase, P
         callee -> (tableSym, memberSym)
       }.toMap
 
+      // DECISION PROVENANCE, one row per (DECLARATION, redirect entry) — see
+      // `Decision.declarationsUsing` for why this is not one row per call site. Recorded from the
+      // PRE-rewrite program, which is the only one that still names the callee this phase is about
+      // to replace; after the traversal every site names the table member instead.
+      wellFormed.foreach { (callee, key, dest) =>
+        val calleeFqn = program.symbolOf(callee).map(_.fullName).getOrElse(key)
+        Decision.declarationsUsing(program, callee).foreach { (encl, origin) =>
+          record(Decision(
+            kind       = Decision.Kind.RedirectedCall,
+            subject    = encl,
+            subjectFqn = Decision.fqnOf(program, encl, calleeFqn),
+            detail     = Map(
+              "from" -> key,
+              "to"   -> dest,
+              "key"  -> key,
+              "why"  -> ("a runtime class lookup by NAME has no counterpart off the JVM; this port " +
+                "re-points it at an explicit name->class table it supplies itself"),
+            ),
+            reason = Reason.Configured(name, s"$key -> $dest"),
+            origin = origin,
+          ))
+        }
+      }
+
       given Program = program
       val units = program.units.map(u => StandardTraversal.mapClassDef(this, u))
       new Program(units, table, program.xref) // xref rebuilt by the Pipeline

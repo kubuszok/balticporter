@@ -49,6 +49,15 @@ class PortMapTransformSpec extends munit.FunSuite:
     val out   = Pipeline.run(p, List(phase))
     (phase, out)
 
+  /** [[run]], keeping the DECISION LOG. `Pipeline.run` drains each phase's buffer into a log it
+    * then discards, so a spec that read `phase.decisions` afterwards would assert on an empty
+    * one — which is the point of the drain (a phase instance reused across two translations must
+    * not report the first run's decisions as the second's). */
+  private def runTraced(p: Program, maps: List[PortMap.Map0]) =
+    val phase      = new PortMapTransform(maps)
+    val (out, log) = Pipeline.runTraced(p, List(phase))
+    (phase, out, log)
+
   // -------------------------------------------------------------------------
   // the acceptance case
   // -------------------------------------------------------------------------
@@ -154,6 +163,35 @@ class PortMapTransformSpec extends munit.FunSuite:
     // …and the DEPENDENT's own namespace is untouched: a rename is the base's fact about the base.
     assert(clue(names).contains("com.badlogic.ashley.utils.ImmutableArray"))
     assert(phase.renamedSymbols > 0)
+  }
+
+  test("the re-point leaves a DECISION naming the base's map entry — the only statement of it") {
+    val m = PortMap.of("libgdx-core", "eng", List("sge.utils.Array"),
+      balticporter.tir.SrcMap.Recording(Nil), Set.empty, Set.empty, Set.empty, Set.empty,
+      renames = Map("com.badlogic.gdx" -> "sge"))
+    val (_, _, log) = runTraced(model(baseArray, dependent), List(m))
+    val ds = log.of(balticporter.tir.Decision.Kind.RetypedSignature)
+
+    // Every row is the DEPENDENT's own — never the base's. A dependent's `Program` CONTAINS the
+    // base (`resolutionRoots` parses it), so `Array`'s own references to `Array` are in the model
+    // too, and reporting them tells this module's author about a module they do not own
+    // (ENGINE-LIMITS D2). The filter is the phase's own `ownedByBase`, as `scan` already uses.
+    assert(clue(ds).nonEmpty)
+    assert(ds.forall(_.subjectFqn.startsWith("com.badlogic.ashley.")), clue(ds.map(_.render)))
+
+    val d = ds.head
+    // the KEY is the BASE's entry, not this module's manifest: grepping the dependent's policy for
+    // this rename finds nothing, and re-running the base is the only thing that changes it
+    assertEquals(d.reason,
+      balticporter.tir.Reason.Configured("port-map-migration",
+        "com.badlogic.gdx.utils.Array -> sge.utils.Array"))
+    assertEquals(d.detail("base"), "libgdx-core")
+    assertEquals(d.detail("to"), "sge.utils.Array")
+  }
+
+  test("no map, no decisions — the unconfigured phase is silent as well as inert") {
+    val (_, _, log) = runTraced(model(baseArray, dependent), Nil)
+    assertEquals(log.all, Nil)
   }
 
   test("a call into a HAND-SUPPLIED body is reported — the signature cannot show it") {

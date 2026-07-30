@@ -67,6 +67,26 @@ class DecisionProvenanceSpec extends munit.FunSuite:
     java(inject, "com/demo/Widget.scala", s"package $pkg\nclass Widget { def label(): String = \"w\" }")
     inject
 
+  /** A wrapper whose statics are what the redirect phases are configured against, plus one class
+    * that calls each of them from a DIFFERENT method — so "one row per declaration" is a claim the
+    * fixture can actually distinguish from "one row per site". */
+  private def redirectFixture(): (Path, Path, List[String]) =
+    val (root, src) = fixture()
+    java(src, "com/demo/Reflect.java",
+      """package com.demo;
+        |public class Reflect {
+        |  public static Class<?> forName(String n) { return null; }
+        |  public static String nameOf(Class<?> c) { return null; }
+        |}""".stripMargin)
+    java(src, "com/demo/Uses.java",
+      """package com.demo;
+        |public class Uses {
+        |  public Class<?> lookUp(String n) { return Reflect.forName(n); }
+        |  public String describe(Class<?> c) { return Reflect.nameOf(c) + Reflect.nameOf(c); }
+        |}""".stripMargin)
+    (root, src, List("com/demo/Widget.java", "com/demo/Gadget.java",
+                     "com/demo/Reflect.java", "com/demo/Uses.java"))
+
   // -------------------------------------------------------------------------
 
   test("a drop, an injection and a rename each leave a row naming the policy entry that produced it") {
@@ -166,6 +186,90 @@ class DecisionProvenanceSpec extends munit.FunSuite:
     val p = rep.resolve("run-latest/decisions.tsv")
     assert(Files.isRegularFile(p), "a run that decided nothing must still say so")
     assertEquals(Files.readString(p), Decision.Header + "\n")
+  }
+
+  // -------------------------------------------------------------------------
+  // the REDIRECT family — a call or a type re-pointed by a (b) policy entry
+  // -------------------------------------------------------------------------
+
+  test("a re-pointed call records one row per DECLARATION, naming the entry that fired") {
+    val (root, src, files) = redirectFixture()
+    val rep = root.resolve("report")
+    withReport(rep) {
+      run(root, src, files)(_.copy(phases = List(
+        new balticporter.transform.ClassTableTransform(Map(
+          "com.demo.Reflect#forName" -> "com.demo.Table#classFor")),
+        new balticporter.transform.StaticForwarderTransform(List(
+          balticporter.transform.StaticForwarderTransform.Forwarder(
+            wrapper = "com.demo.Reflect", receiver = "java.lang.Class", members = Set("nameOf")))),
+      )))
+    }
+    val rs = decisions(rep).filter(_.kind == Decision.Kind.RedirectedCall)
+
+    val table = rs.filter(_.reason == Reason.Configured("class-table",
+      "com.demo.Reflect#forName -> com.demo.Table#classFor"))
+    assertEquals(clue(table).size, 1)
+    assert(clue(table.head.subjectFqn).startsWith("com.demo.Uses#lookUp"))
+    assertEquals(table.head.detail("key"), "com.demo.Reflect#forName")
+    assertEquals(table.head.detail("to"), "com.demo.Table#classFor")
+    assert(clue(table.head.origin.javaPath).endsWith("com/demo/Uses.java"))
+
+    // TWO calls in ONE method, and therefore ONE row. That is the property the channel is built
+    // on: a site-level rewrite is visible in the emitted diff already, and restating it per
+    // occurrence buries every decision that is not a redirect.
+    val fwd = rs.filter(_.reason.className == "configured").filterNot(table.contains)
+    assertEquals(clue(fwd).size, 1)
+    assertEquals(fwd.head.reason,
+      Reason.Configured("static-forwarder-inline", "com.demo.Reflect#nameOf -> java.lang.Class#nameOf"))
+    assert(clue(fwd.head.subjectFqn).startsWith("com.demo.Uses#describe"))
+    assertEquals(fwd.head.detail("key"), "com.demo.Reflect")
+  }
+
+  test("a program the redirect phases do not touch records nothing — an empty policy is silent") {
+    val (root, src, files) = redirectFixture()
+    val rep = root.resolve("report")
+    withReport(rep) {
+      run(root, src, files)(_.copy(phases = List(
+        // configured against names this program does not have: the mechanism is identical and
+        // nothing fires, so nothing is recorded
+        new balticporter.transform.ClassTableTransform(Map("com.other.X#y" -> "com.other.T#z")),
+        new balticporter.transform.StaticForwarderTransform(Nil),
+        new balticporter.transform.TypeRedirectTransform(Map.empty),
+      )))
+    }
+    assertEquals(decisions(rep), Nil)
+  }
+
+  test("a re-pointed TYPE records a RetypedSignature — nothing was called") {
+    val (root, src, files) = redirectFixture()
+    val rep = root.resolve("report")
+    withReport(rep) {
+      run(root, src, files)(_.copy(phases = List(
+        new balticporter.transform.TypeRedirectTransform(Map("com.demo.Widget" -> "com.demo.Slab")))))
+    }
+    val rs = decisions(rep).filter(_.kind == Decision.Kind.RetypedSignature)
+    // `Gadget.w` is declared `Widget` — a TYPE occurrence, which no body seam could reach
+    assert(clue(rs).exists(_.subjectFqn.startsWith("com.demo.Gadget#w")), clue(rs.map(_.render)))
+    assertEquals(rs.head.reason, Reason.Configured("type-redirect", "com.demo.Widget -> com.demo.Slab"))
+    assertEquals(rs.head.detail("key"), "com.demo.Widget")
+    assert(rs.forall(_.detail("to") == "com.demo.Slab"))
+  }
+
+  test("two identical runs of the REDIRECT family produce byte-identical decisions.tsv") {
+    val (root, src, files) = redirectFixture()
+    def once(rep: Path): String =
+      withReport(rep) {
+        run(root, src, files)(_.copy(phases = List(
+          new balticporter.transform.ClassTableTransform(Map(
+            "com.demo.Reflect#forName" -> "com.demo.Table#classFor")),
+          new balticporter.transform.StaticForwarderTransform(List(
+            balticporter.transform.StaticForwarderTransform.Forwarder(
+              wrapper = "com.demo.Reflect", receiver = "java.lang.Class", members = Set("nameOf")))),
+          new balticporter.transform.TypeRedirectTransform(Map("com.demo.Widget" -> "com.demo.Slab")),
+        )))
+      }
+      Files.readString(rep.resolve("run-latest/decisions.tsv"))
+    assertEquals(once(root.resolve("r1")), once(root.resolve("r2")))
   }
 
   test("two identical runs produce byte-identical decisions.tsv") {

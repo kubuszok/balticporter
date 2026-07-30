@@ -131,8 +131,51 @@ final class PortMapTransform(maps: List[PortMap.Map0] = Nil) extends Phase, Poli
           "published before a namespace move — re-run the base port"))
     })
 
-    found = scan(program)
+    val theirs = PortMapTransform.ownedByBase(program, typeEntries.keySet)
+    found = scan(program, theirs)
+    recordRepoints(program, theirs)
     repoint(program)
+
+  /** DECISION PROVENANCE for the re-pointing below: one row per (DECLARATION OF THIS MODULE,
+    * re-pointed type).
+    *
+    * `RetypedSignature`, because what an agent sees changed is a declaration whose type now names
+    * `sge.utils.Array` where the Java said `com.badlogic.gdx.utils.Array` — no call was
+    * re-targeted. The KEY is the base's own map entry, which is what makes the row actionable: the
+    * name did not come from this module's `packageRenames` at all, so grepping its manifest for it
+    * finds nothing, and re-running the BASE port is the only thing that changes it.
+    *
+    * Filtered by [[PortMapTransform.ownedByBase]], exactly as `scan` filters its findings and for
+    * the same measured reason (`ENGINE-LIMITS.md` D2): a dependent's `Program` CONTAINS the base,
+    * so every one of the base's own references to its own types is in it, and recording those
+    * would bury this module's handful under thousands of rows about a module its author does not
+    * own. Read from the PRE-repoint program — afterwards no symbol carries the upstream name a
+    * base's map entry is keyed by. */
+  private def recordRepoints(program: Program, theirs: Set[SymId]): Unit =
+    if renames.nonEmpty then
+      val byName = program.symbols.all.iterator.map(s => s.fullName -> s).toMap
+      renames.toList.sorted.foreach { (from, to) =>
+        byName.get(from).foreach { sym =>
+          val who = typeEntries.get(from).map(_._1).getOrElse("?")
+          Decision.declarationsUsing(program, sym.id).filterNot((encl, _) => theirs(encl)).foreach { (encl, origin) =>
+            record(Decision(
+              kind       = Decision.Kind.RetypedSignature,
+              subject    = encl,
+              subjectFqn = Decision.fqnOf(program, encl, from),
+              detail     = Map(
+                "from" -> from,
+                "to"   -> to,
+                "key"  -> from,
+                "base" -> who,
+                "why"  -> ("the base module's PUBLISHED port map records this type emitted under " +
+                  "that name; this module never restates the rename and cannot change it here"),
+              ),
+              reason = Reason.Configured(name, s"$from -> $to"),
+              origin = origin,
+            ))
+          }
+        }
+      }
 
   /** Re-point every owned symbol under a name the base MOVED.
     *
@@ -181,9 +224,8 @@ final class PortMapTransform(maps: List[PortMap.Map0] = Nil) extends Phase, Poli
     * Driven by the [[XrefIndex]] the pipeline maintains, not by a private recursion (CLAUDE.md §3):
     * `program.referenced` is every symbol any tree names, in any position, and `program.usages`
     * locates each one. A hand-rolled walk is how two of this project's four silent defects got in. */
-  private def scan(program: Program): List[PortMapTransform.Finding] =
+  private def scan(program: Program, theirs: Set[SymId]): List[PortMapTransform.Finding] =
     val out = collection.mutable.ListBuffer.empty[PortMapTransform.Finding]
-    val theirs = PortMapTransform.ownedByBase(program, typeEntries.keySet)
 
     program.referenced.toList.flatMap(program.symbolOf).sortBy(_.fullName).foreach { sym =>
       val full = sym.fullName

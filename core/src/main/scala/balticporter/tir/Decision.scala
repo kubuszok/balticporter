@@ -90,6 +90,64 @@ object Decision:
 
   val Header = "#kind\tsubjectFqn\treasonClass\treasonDetail\torigin\tline\tdetail"
 
+  /** The DECLARATIONS a per-SITE rewrite reached, each with the earliest origin inside it.
+    *
+    * Every redirect phase rewrites EXPRESSIONS, and every one of them nevertheless records once per
+    * DECLARATION. The reader is an agent diffing an emitted file against its upstream Java, and a
+    * site-level rewrite is already visible in that diff — `ClassReflection.forName(s)` reads as
+    * `AssetTypeRegistry.classFor(s)` right there. What the diff cannot say is WHICH POLICY ENTRY
+    * did it, and that is one fact per (declaration, key), not one per occurrence. Recorded per site
+    * it would be the same sentence 240 times, burying every decision that is not a redirect —
+    * which is the failure `PortMapTransform.callSites` already documents for a per-site FINDING.
+    *
+    * The enclosing declaration is read from the xref, which records it on every usage
+    * ([[Usage.enclosing]]); a phase that tracked "the definition I am currently inside" with its
+    * own walk would be the hand-rolled traversal CLAUDE.md §3 forbids. A usage recorded outside any
+    * definition keeps `SymId.None` and is reported under the callee's own name rather than dropped.
+    *
+    * The origin is the EARLIEST site in the declaration, by (file, line), so two runs of the same
+    * program agree on it whatever order the xref hands the usages back in.
+    */
+  def declarationsUsing(program: Program, sym: SymId): List[(SymId, Origin)] =
+    program
+      .usages(sym)
+      .groupBy(_.enclosing)
+      .toList
+      .flatMap { (encl, us) =>
+        val os = us.map(_.site.origin)
+        os.filter(_.javaPath.nonEmpty).minByOption(o => (o.javaPath, o.line))
+          .orElse(os.headOption)
+          .map(encl -> _)
+      }
+      .sortBy((encl, o) => (o.javaPath, o.line, encl.raw))
+
+  /** the symbol's name, or `fallback` when the run no longer holds it (`SymId.None` for a usage
+    * outside any definition). Never an empty subject: a row whose subject cannot be named is a row
+    * nobody can join. */
+  def fqnOf(program: Program, s: SymId, fallback: String): String =
+    program.symbolOf(s).map(_.fullName).filter(_.nonEmpty).getOrElse(fallback)
+
+  /** Is `s` a DECLARATION in the sense this channel records — a class, a field or a method — as
+    * opposed to a parameter, a type parameter or a method-local?
+    *
+    * A retyping phase rewrites every symbol's `info`, parameters and locals included, and each of
+    * those is ALREADY covered by the declaration that encloses it: a method's `info` is a
+    * `MethodType` carrying its parameter types, so a parameter whose type moved moved the method's
+    * signature and is one decision, not two. Recording both restates one fact per parameter, which
+    * on libGDX is several thousand rows saying what the method's row already said.
+    *
+    * Decided STRUCTURALLY, from the owner chain — a parameter's and a local's owner is the METHOD
+    * (`SpoonTir` interns them that way), a member's owner is a TYPE. Not from the `isParam` flag
+    * alone, which locals do not carry.
+    */
+  def isDeclaration(program: Program, s: Symbol): Boolean =
+    !s.flags.isParam && !program.symbolOf(s.owner).exists(o => isMethodLike(o.info))
+
+  private def isMethodLike(t: TypeRepr): Boolean = t match
+    case _: TypeRepr.MethodType => true
+    case _: TypeRepr.PolyType   => true
+    case _                      => false
+
   private[tir] def clean(s: String): String =
     s.replace('\t', ' ').replace('\n', ' ').replace('\r', ' ').trim
 

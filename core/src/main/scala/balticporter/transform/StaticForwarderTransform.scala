@@ -105,11 +105,12 @@ final class StaticForwarderTransform(forwarders: List[StaticForwarderTransform.F
 
   override def run(program: Program): Program =
     report = audit(program)
-    // (wrapper static symbol, the receiver type it forwards to)
+    // (wrapper static symbol, the forwarder entry that matched it — its `receiver` drives the
+    // rewrite, and the whole entry is what a decision names as the policy key)
     val targets = forwarders.flatMap { f =>
       program.symbols.all.toList.collect {
         case s if f.members(s.name) && program.symbolOf(s.owner).exists(_.fullName == f.wrapper) && !nullary(s) =>
-          s -> f.receiver
+          s -> f
       }
     }
     if targets.isEmpty then program
@@ -126,12 +127,36 @@ final class StaticForwarderTransform(forwarders: List[StaticForwarderTransform.F
           id
         })
 
-      mapping = targets.map { (t, receiver) =>
-        val owner = ownerOf(receiver)
+      mapping = targets.map { (t, f) =>
+        val owner = ownerOf(f.receiver)
         val id    = SymId(next); next += 1
-        table = table.updated(Symbol(id, t.name, s"$receiver#${t.name}", Flags(), owner, NoType))
+        table = table.updated(Symbol(id, t.name, s"${f.receiver}#${t.name}", Flags(), owner, NoType))
         t.id -> id
       }.toMap
+
+      // DECISION PROVENANCE, one row per (DECLARATION, forwarder member) — never one per call
+      // site (`Decision.declarationsUsing`). Read off the PRE-rewrite program: after the traversal
+      // the site names `receiver#member` and the wrapper this decision is about is gone from it.
+      targets.foreach { (t, f) =>
+        val from = s"${f.wrapper}#${t.name}"
+        val to   = s"${f.receiver}#${t.name}"
+        Decision.declarationsUsing(program, t.id).foreach { (encl, origin) =>
+          record(Decision(
+            kind       = Decision.Kind.RedirectedCall,
+            subject    = encl,
+            subjectFqn = Decision.fqnOf(program, encl, from),
+            detail     = Map(
+              "from" -> from,
+              "to"   -> to,
+              "key"  -> f.wrapper,
+              "why"  -> ("the wrapper's statics are plain members of their FIRST argument, so " +
+                "inlining the call removes a dependency the port does not need and cannot have"),
+            ),
+            reason = Reason.Configured(name, s"$from -> $to"),
+            origin = origin,
+          ))
+        }
+      }
 
       given Program = program
       val units = program.units.map(u => StandardTraversal.mapClassDef(this, u))

@@ -85,6 +85,33 @@ final class TypeRedirectTransform(redirects: Map[String, String] = Map.empty) ex
 
     mapping = redirects.collect { case (from, to) if byName.contains(from) => byName(from).id -> targetOf(to) }
 
+    // DECISION PROVENANCE, one row per (DECLARATION, redirect entry). `RetypedSignature` and not
+    // `RedirectedCall`: what moves is a TYPE occurrence — a field's type, a parameter's, a `new`,
+    // a cast target — so the thing an agent sees changed in the emitted file is the declaration's
+    // signature, and no call was re-pointed at all. Read from the PRE-rewrite program, which is
+    // the only one where a usage still names the type this phase is redirecting AWAY from.
+    redirects.toList.sorted.foreach { (from, to) =>
+      byName.get(from).foreach { sym =>
+        Decision.declarationsUsing(program, sym.id).foreach { (encl, origin) =>
+          record(Decision(
+            kind       = Decision.Kind.RetypedSignature,
+            subject    = encl,
+            subjectFqn = Decision.fqnOf(program, encl, from),
+            detail     = Map(
+              "from" -> from,
+              "to"   -> to,
+              "key"  -> from,
+              "why"  -> ("a module this port depends on drops this type outright, and exactly one " +
+                "module may ship a replacement at a given FQN — so every reference is re-pointed " +
+                "at a shape-compatible type this port declares itself"),
+            ),
+            reason = Reason.Configured(name, s"$from -> $to"),
+            origin = origin,
+          ))
+        }
+      }
+    }
+
     if mapping.isEmpty then
       new Program(program.units, table, program.xref)
     else
