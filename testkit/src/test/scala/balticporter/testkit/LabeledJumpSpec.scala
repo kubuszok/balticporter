@@ -1,6 +1,6 @@
 package balticporter.testkit
 
-/** Java's labelled jumps, through the real pipeline.
+/** Java's labelled and mid-case jumps, through the real pipeline.
   *
   * CLAUDE.md §4.4: each of these translates to syntactically valid Scala that means something
   * else, and none of them moves a compile-error count. The assertions below are on EMITTED TEXT
@@ -193,6 +193,56 @@ class LabeledJumpSpec extends PortSuite:
     assert(!out.contains("/* break"), out)
   }
 
+  // ---- an unlabelled break in the MIDDLE of a case ----
+
+  test("a mid-case break stops the case; the duplicated fallthrough tail must not run") {
+    // GlyphLayout's colour-tag arm: `case '[': if (ok) { …; break; } … ` falling through into
+    // `default: continue outer`. Without a boundary the successful arm fell into the `continue`.
+    val out = emit("""
+      package demo;
+      public class L {
+        void f(int n) {
+          outer:
+          while (n > 0) {
+            switch (n) {
+              case 1:
+                if (n > 0) { g(1); break; }
+                g(2);
+              default:
+                continue outer;
+            }
+          }
+        }
+        void g(int n) {}
+      }""")
+    assert(clue(out).contains("scala.util.boundary { (case$"), out)
+    assert(out.contains("scala.util.boundary.break(())(using case$"), out)
+    assert(!out.contains("/* break"), out)
+    // the `continue outer` really was duplicated into the arm — which is what the boundary guards
+    assert(out.contains("using cnt$"), out)
+  }
+
+  test("a mid-case break with no fallthrough tail still bounds only its own arm") {
+    val out = emit("""
+      package demo;
+      public class L {
+        void f(int n) {
+          switch (n) {
+            case 1: if (n > 0) break; g(1); break;
+            default: g(2);
+          }
+          g(3);
+        }
+        void g(int n) {}
+      }""")
+    assert(clue(out).contains("(case$"), out)
+    assert(out.contains("scala.util.boundary.break(())(using case$"), out)
+    assert(!out.contains("/* break"), out)
+    val brk = out.indexOf("using case$")
+    val g3  = out.indexOf("this.g(3)")
+    assert(brk < g3 && g3 > 0, out) // g(3) is after the whole switch, not inside the boundary
+  }
+
   // ---- the probe an operator can compile ----
 
   /** Every shape above in one Scala file, for a real compiler.
@@ -258,6 +308,16 @@ class LabeledJumpSpec extends PortSuite:
         for (int i = 0; i < n; i++) {
           inner: { if (i == 1) break inner; g(i); }
           if (i == 2) break;
+        }
+      }
+
+      void midCase(int n) {
+        outer:
+        while (n > 0) {
+          switch (n) {
+            case 1: if (n > 0) { g(1); break; } g(2);
+            default: continue outer;
+          }
         }
       }
 

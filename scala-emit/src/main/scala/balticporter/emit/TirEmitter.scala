@@ -1243,7 +1243,8 @@ final class TirEmitter(
     *
     * `scala.util.boundary.break(())` with no `using` resolves the innermost given `Label`, so any
     * boundary the emitter interposes between a loop and an un-annotated jump under it silently
-    * retargets that jump. One construct does it: a [[Tree.Labeled]] that is actually broken to.
+    * retargets that jump. Two constructs do it: a [[Tree.Labeled]] that is actually broken to, and
+    * a switch case with a mid-case `break` (see `matchStr`).
     *
     * Deliberately an OVER-approximation — it does not check that an unlabelled jump is really
     * underneath the interposed boundary. Naming a boundary nothing needed costs one identifier;
@@ -1252,6 +1253,8 @@ final class TirEmitter(
     * jump there belongs to that construct, not to this loop. */
   private def interposes(t: Any): Boolean = t match
     case l: Tree.Labeled => labelNeedsBoundary(l) || interposes(l.stmt)
+    case m: Tree.Match   =>
+      interposes(m.scrutinee) || m.cases.exists(c => caseNeedsBoundary(c.body) || interposes(c.body))
     case _: Tree.While | _: Tree.DoWhile | _: Tree.For | _: Tree.ForEach     => false
     case _: Tree.Lambda | _: Tree.DefDef | _: Tree.AnonClass | _: Tree.ClassDef => false
     case xs: Iterable[?] => xs.exists(interposes)
@@ -1263,6 +1266,12 @@ final class TirEmitter(
     * java lets a label sit on a statement nobody jumps to, and an empty boundary would be noise
     * that also has to be shielded against. */
   private def labelNeedsBoundary(l: Tree.Labeled): Boolean = jumpsTo(l.stmt, l.name, brk = true)
+
+  /** an unlabelled `break` in a switch case that is NOT the case terminator. The frontend strips a
+    * trailing unlabelled `break` (it is what ends the case, which scala's `match` does anyway) and
+    * lowers real fallthrough by duplicating the next case's tail — so a `break` still standing in
+    * a case body means "stop HERE and leave the switch", over statements that follow it. */
+  private def caseNeedsBoundary(body: Term): Boolean = breaksOut(body)
 
   /** a `break L` / `continue L` naming this loop, at ANY depth — a labelled jump crosses nested
     * loops and switches by definition, which is what it is for. */
@@ -1960,12 +1969,36 @@ final class TirEmitter(
     val fl = fin.map(f => s" finally ${term(f, i)}").getOrElse("")
     s"try ${term(body, i)}$cl$fl" // resources: r prepended when the backend lowers auto-close
 
+  /** A java `switch`, with a boundary around any case body that still contains an unlabelled
+    * `break`.
+    *
+    * The frontend already deletes the `break` that TERMINATES a case, so one that reaches here is
+    * a break in the MIDDLE of the case — `case '[': … if (length >= 0) { …; break; } …` in
+    * `GlyphLayout`, whose case then falls through into `default: continue outer`. Emitted as a
+    * no-op it did not stop, and the statements after it ran: the colour-tag arm fell into the
+    * `continue` and re-scanned the run. Scala's `match` has no way to leave an arm early, so the
+    * arm gets its own `boundary`.
+    *
+    * Note this is the SAME defect as the dropped `break`, one construct along: the fallthrough
+    * lowering duplicates the next case's tail INTO this arm, so what runs on after the no-op is
+    * code java put in a different case.
+    *
+    * The boundary is ALWAYS named. It is the innermost `Label` only until something inside it (a
+    * labelled statement, a nested switch) opens another, and unlike a loop this node has no cheap
+    * "nothing can nest here" case worth the risk. */
   private def matchStr(scr: Term, cases: List[Tree.CaseDef], i: Int): String =
     val cs = cases.map { c =>
       val pat = if c.isDefault then "_" else c.labels.map(term(_, i)).mkString(" | ")
-      s"${ind(i + 1)}case $pat => ${inSwitch(scala.None)(term(c.body, i + 1))}"
+      if !caseNeedsBoundary(c.body) then s"${ind(i + 1)}case $pat => ${inSwitch(scala.None)(term(c.body, i + 1))}"
+      else
+        labelSeq += 1
+        val n = s"case$$$labelSeq"
+        val b = inSwitch(Some(n))(term(c.body, i + 1))
+        s"${ind(i + 1)}case $pat => scala.util.boundary { ($n: scala.util.boundary.Label[scala.Unit]) ?=> $b }"
     }.mkString("\n")
-    // the SCRUTINEE is outside the switch — a `break` cannot occur in a java expression.
+    // the SCRUTINEE is outside the switch — a `break` cannot occur in a java expression — but it
+    // is rendered AFTER the arms so that the boundary numbering does not move for a switch that
+    // needed no change.
     s"${inSwitch(scala.None)(term(scr, i))} match {\n$cs\n${ind(i)}}"
 
   // ---- types ----
