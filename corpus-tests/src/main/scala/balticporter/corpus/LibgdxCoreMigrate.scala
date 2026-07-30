@@ -222,7 +222,12 @@ object LibgdxPolicy:
     StaticForwarderTransform.Forwarder(
       wrapper  = "com.badlogic.gdx.utils.reflect.ClassReflection",
       receiver = "java.lang.Class",
-      members  = Set("getSimpleName", "getName", "isInstance", "isAssignableFrom", "isArray",
+      // exactly the wrapper's OWN one-arg pass-throughs to `java.lang.Class` that the corpus
+      // reaches. `getName` sat here from the first draft and matched nothing on any run —
+      // `ClassReflection` never declared it — and the `policy / never matched` finding that
+      // reported it is the check this line answers to: a key that matches nothing is either a
+      // typo for a member that needed forwarding, or dead policy. This one was dead.
+      members  = Set("getSimpleName", "isInstance", "isAssignableFrom", "isArray",
                      "isEnum", "isInterface", "isPrimitive", "isAnnotation", "getComponentType"),
     )
   ))
