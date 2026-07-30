@@ -134,6 +134,19 @@ final case class PortRun(
     cache: Option[Path] = scala.None,
     lenient: Boolean = true,
     manifest: Option[PortManifest] = scala.None,
+    /** DIAGNOSTIC mode (E9), orthogonal to [[RuntimeMode]] and OFF by default.
+      *
+      * With it off — the shipping behaviour — a construct the engine cannot render faithfully
+      * leaves the residue comment `ENGINE-LIMITS.md` M6 counts, and the port compiles. With it on,
+      * each such site becomes `scala.compiletime.error("balticporter: <what>: <why>; <what an agent
+      * must do>; origin <javaPath>:<line>")`: the port deliberately does NOT compile, and every
+      * error names the construct, the reason, the action and the upstream line.
+      *
+      * For the first week of a new library, where the operator is an agent in another repository
+      * (§4.45) that has to FIND the residue before it can act on it. Those errors never mix with
+      * real ones — `Correlate.Lane.Declared` classifies them by the message the engine itself
+      * wrote, ahead of the source-map lookup. */
+    preview: Boolean = false,
     /** printed as the last line — what the operator does next. */
     nextStep: String = "",
 ):
@@ -478,6 +491,11 @@ final case class PortRun(
       mapPath.fold(" (not published: the artifact layer is off)")(p => s" -> $p"))
 
     // ---- DECISION PROVENANCE: written out (it was RECORDED before emission, above) ----
+    // …plus the ones the EMITTER could only make while rendering: preview mode's `Unrenderable`
+    // rows. They cannot travel with `ownDecisions`, which is a value fixed at construction, and
+    // they are added here rather than dropped because a refusal the port declared IN THE OUTPUT
+    // must also be in the artifact — the two are read by different people.
+    translated.decisions.recordAll(translated.emitter.emissionDecisions)
     writeDecisions(translated.decisions, foreignDecisions)
 
     // ---- E8: did every decision that must carry a note actually get one? ----
@@ -666,7 +684,7 @@ final case class PortRun(
       case Determinism.Emission =>
         // a SECOND emitter over the same program: independent mutable state, independent lazy
         // tables, same bytes required.
-        val again = new TirEmitter(once.program, once.plan.concreteMembers, provenance, once.decisions)
+        val again = new TirEmitter(once.program, once.plan.concreteMembers, provenance, once.decisions, preview)
         val diffs = once.emitOrder.filter(u => again.emitUnit(u) != once.sourceOf(u))
         if diffs.nonEmpty then determinismViolation("emission", once, diffs)
         say(s"determinism: ${once.emitOrder.size} units emitted twice, byte-identical " +
@@ -1196,7 +1214,7 @@ final case class PortRun(
     // injected parent.
     // the emitter READS this log to render porter notes and never writes to it — its own decisions
     // come back as `TirEmitter.ownDecisions` and are recorded once, by `recordRunDecisions`.
-    val emitter = new TirEmitter(program, plan.concreteMembers, provenance, decisions)
+    val emitter = new TirEmitter(program, plan.concreteMembers, provenance, decisions, preview)
     val (mine, theirs) = partitionUnits(program)
     PortRun.Translated(program, plan, emitter, mine, theirs, cache.map(new ActionCache(_, true)), decisions)
 

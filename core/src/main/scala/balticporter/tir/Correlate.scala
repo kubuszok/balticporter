@@ -294,6 +294,14 @@ object Correlate:
       * an engine gap and not a marked region — reported separately rather than silently counted
       * as either. */
     case Unmapped
+    /** the engine DECLARED this one: a `scala.compiletime.error` the emitter wrote itself under
+      * `PortRun(preview = true)` because it had no faithful Scala for the construct.
+      *
+      * Its own lane, and classified BEFORE the source-map lookup, because it is the opposite of a
+      * finding: the port is saying what it could not do, at the place it could not do it. Counted
+      * with the engine gaps it would drown them — a preview run of a new library is mostly these —
+      * and counted as `Unmapped` it would read as "not our problem", which is exactly wrong. */
+    case Declared
 
   final case class LocatedError(err: ScalacError, entry: Option[SrcMap.Entry], lane: Lane):
     def tsv: String =
@@ -308,11 +316,23 @@ object Correlate:
     * report anything would be useless on the first day of a new library. */
   def locateErrors(errs: List[ScalacError], idx: SrcMap.Index, markers: Set[String] = Set.empty): List[LocatedError] =
     errs.map { e =>
+      // DECLARED first, and by the MESSAGE the engine itself wrote: the location is still wanted
+      // (it is attached below where the map has one), but the lane must not depend on whether the
+      // map happened to cover the file. Nothing but a `compiletime.error` this emitter emitted can
+      // carry the marker, so the test cannot capture a real diagnostic.
+      val declared = e.message.contains(DeclaredMarker)
       idx.resolveFile(e.path, e.line) match
+        case Some(x) if declared                           => LocatedError(e, Some(x), Lane.Declared)
         case Some(x) if markers(s"${x.unit}\t${x.member}") => LocatedError(e, Some(x), Lane.Approx)
         case Some(x)                                       => LocatedError(e, Some(x), Lane.EngineGap)
+        case scala.None if declared                        => LocatedError(e, scala.None, Lane.Declared)
         case scala.None                                    => LocatedError(e, scala.None, Lane.Unmapped)
     }
+
+  /** the prefix `TirEmitter.unrenderable` puts on every `scala.compiletime.error` it writes. One
+    * string, named here rather than spelled twice, because a lane keyed to a message that drifted
+    * would silently empty itself. */
+  val DeclaredMarker = "balticporter: "
 
   final case class LocatedTest(
       outcome: Outcome,
@@ -457,6 +477,9 @@ object Correlate:
     case Lane.Approx    => "at a region the engine marked approximate: expected, remediation attached"
     case Lane.EngineGap => "(a) engine gap — located to the member and the Java it came from"
     case Lane.Unmapped  => "outside the source map (injected Scala, shims, dependencies) — NOT an engine gap"
+    case Lane.Declared  => "DECLARED by the port under `preview = true`: the engine had no faithful " +
+      "Scala here and said so in the output. Each message carries the construct, the reason, the " +
+      "action and the java origin; none of these is a compiler finding about the port"
 
   def renderTests(all: List[LocatedTest], d: TestDiff, limit: Int = 25): String =
     val sb    = new StringBuilder

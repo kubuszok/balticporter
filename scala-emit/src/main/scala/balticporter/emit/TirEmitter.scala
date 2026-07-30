@@ -42,6 +42,10 @@ final class TirEmitter(
     externalConcrete: Map[String, Set[(String, List[Int])]] = Map.empty,
     provenance: Option[Provenance] = scala.None,
     notes: DecisionLog = new DecisionLog,
+    /** DIAGNOSTIC mode (E9): render each counted refusal as `scala.compiletime.error` instead of
+      * the residue comment M6 counts. Orthogonal to `RuntimeMode` and OFF by default — the
+      * shipping emission is byte-identical with it off, which `members.tsv` proves. */
+    preview: Boolean = false,
 ):
   /** what the NORMALISATION below decided — a value, handed to the orchestrator rather than
     * recorded from here, so constructing an emitter has no side effect on the run's log. */
@@ -179,6 +183,56 @@ final class TirEmitter(
   private def unitNotes(cd: Tree.ClassDef): String = declNotes(cd.symbol, 0)
 
   private var currentUnitName: String = ""
+
+  // ---------------------------------------------------------------------------
+  // PREVIEW MODE (E9) — say it in the OUTPUT, or refuse and count.
+  //
+  // `ENGINE-LIMITS.md` M6: where the engine has no faithful Scala it refuses and carries a NUMBER,
+  // and a residue comment count is itself a measure. That is right for a port that ships. It is
+  // wrong for the first week of a NEW library, where the operator is an agent in another repository
+  // that has to find the residue at all, and a comment reading `()` compiles perfectly.
+  //
+  // `preview = true` turns each such site into `scala.compiletime.error("balticporter: …")` — the
+  // port stops compiling, on purpose, and every error says WHAT could not be rendered, WHY, WHAT
+  // the agent must do, and the JAVA ORIGIN. It is a diagnostic mode, not an emission strategy:
+  // `preview = false` is the shipping default and emits the same bytes it always did, which
+  // `members.tsv` proves rather than this comment.
+  //
+  // The decision is recorded per unit and drained by the orchestrator (`emissionDecisions`) — it is
+  // made at EMISSION, so it cannot travel with `ownDecisions`, which is a value fixed at
+  // construction. The porter note is printed beside it so `NoteCoverageCheck` sees the pair.
+  // ---------------------------------------------------------------------------
+
+  private val recordedEmission =
+    collection.mutable.LinkedHashMap.empty[String, collection.mutable.ListBuffer[Decision]]
+
+  /** what the EMITTER decided while rendering, per unit — idempotent, so re-emitting a unit does
+    * not double it. Drained by `PortRun` into the run's log after emission. */
+  def emissionDecisions: List[Decision] = recordedEmission.values.toList.flatten
+
+  /** A construct with NO faithful Scala. Under the shipping default this is `residue` — the
+    * comment M6 counts; under `preview` it is a `scala.compiletime.error` carrying the whole
+    * diagnosis, plus the porter note that makes it derivable.
+    *
+    * `what/why/action/origin`, in that order and all four mandatory: an agent that cannot classify
+    * a diagnostic pays a full investigation for it (§4.45), and "what an agent must do" is the one
+    * an error message almost never carries. */
+  private def unrenderable(what: String, why: String, action: String, o: Origin, residue: String): String =
+    if !preview then residue
+    else
+      val d = Decision(
+        kind       = Decision.Kind.Unrenderable,
+        subject    = currentOwnerSym,
+        subjectFqn = if currentOwnerSym == SymId.None then currentUnitName else sym(currentOwnerSym).fullName,
+        detail     = Map("construct" -> what, "why" -> why, "action" -> action),
+        reason     = Reason.Universal(s"unrenderable/$what"),
+        origin     = o,
+      )
+      recordedEmission.getOrElseUpdate(currentUnitName, collection.mutable.ListBuffer.empty) += d
+      printedNotes += PorterNote.Printed(d.kind, d.subject, d.subjectFqn, currentUnitName)
+      val msg = PorterNote.safe(s"balticporter: $what: $why; $action; origin ${o.javaPath}:${o.line}")
+      PorterNote.render(d, "").stripSuffix("\n") + " " +
+        "scala.compiletime.error(\"" + escape(msg) + "\")"
 
   // ---------------------------------------------------------------------------
   // SOURCE MAP — member → emitted line range → Java Origin (UNPORTABLE-DESIGN.md §5.2)
@@ -1852,8 +1906,14 @@ final class TirEmitter(
     // TERMINATOR, which scala's `match` does anyway — the frontend has already removed those, so
     // one reaching here is a form neither this emitter nor the frontend recognises. Say WHICH, so
     // the residue count is a diagnosis and not a tally (CLAUDE.md §4.45).
-    case Tree.Break(scala.None, _, _)   => "/* break: no enclosing loop or switch */ ()"
-    case Tree.Break(Some(l), _, _)      => s"/* break $l: label not in scope */ ()"
+    case b @ Tree.Break(scala.None, _, _)   =>
+      unrenderable("break", "no enclosing loop or switch, and the frontend did not recognise it as " +
+        "a switch-case terminator", "give the enclosing construct a `boundary`, or teach the " +
+        "frontend this jump's shape", b.origin, "/* break: no enclosing loop or switch */ ()")
+    case b @ Tree.Break(Some(l), _, _)      =>
+      unrenderable("break", s"labelled `break $l` whose label is not in scope at this point",
+        s"the labelled statement `$l` needs a NAMED boundary (§4.4); check `Tree.Labeled` reached it",
+        b.origin, s"/* break $l: label not in scope */ ()")
     case Tree.Continue(scala.None, _, _) if contTarget.isDefined =>
       contTarget.filter(_.nonEmpty) match
         case Some(n) => s"scala.util.boundary.break(())(using $n)"
@@ -1861,8 +1921,14 @@ final class TirEmitter(
     case Tree.Continue(Some(l), _, _) if labelCont.contains(l) =>
       val n = labelCont(l)
       if n.isEmpty then "scala.util.boundary.break(())" else s"scala.util.boundary.break(())(using $n)"
-    case Tree.Continue(scala.None, _, _) => "/* continue: no enclosing loop */ ()"
-    case Tree.Continue(Some(l), _, _)    => s"/* continue $l: label not in scope */ ()"
+    case c @ Tree.Continue(scala.None, _, _) =>
+      unrenderable("continue", "no enclosing loop",
+        "the loop BODY needs a `boundary` (§4.4); check which construct swallowed it",
+        c.origin, "/* continue: no enclosing loop */ ()")
+    case c @ Tree.Continue(Some(l), _, _)    =>
+      unrenderable("continue", s"labelled `continue $l` whose label is not in scope at this point",
+        s"the labelled loop `$l` needs a NAMED boundary around its body (§4.4)",
+        c.origin, s"/* continue $l: label not in scope */ ()")
     // `name: stmt` — java's label on a NON-loop statement. `break name` leaves exactly that
     // statement, so the boundary goes around the STATEMENT (CLAUDE.md §4.4). Always named: a
     // labelled jump crosses nested loops and switches by definition, and anything the statement
