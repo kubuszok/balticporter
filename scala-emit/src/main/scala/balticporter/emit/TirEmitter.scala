@@ -602,6 +602,12 @@ final class TirEmitter(
     val prim    =
       if plan.synthetic.nonEmpty then s"(${plan.synthetic.map((n, t) => s"$n: ${tpe(t)}").mkString(", ")})"
       else if pparams.isEmpty then "" else s"(${pparams.map(param).mkString(", ")})"
+    // Does the emitted class have a PARAMFUL primary? A synthesised primary is one even though no
+    // java constructor backs it, so `plan.primaryParams` is empty for it — reading only that told
+    // `orderBody` the primary was nilary, and it then discarded the class's own no-arg constructor
+    // as degenerate. `AlgorithmPath()` / `Synth()` simply vanished, and `new AlgorithmPath()` was a
+    // compile error at every call site while `Plans.superCall` reported that same root EXPRESSED.
+    val paramfulPrimary = plan.synthetic.nonEmpty || pparams.nonEmpty
     val superTpe = cd.parents.headOption.map { case tt: TypeTree => tt.tpe; case t: Term => t.tpe }
     val parents = cd.parents.map(parent).filter(_.nonEmpty) match
       case Nil                          => Nil
@@ -622,12 +628,12 @@ final class TirEmitter(
     if kw == "class" && parents.isEmpty && cd.body.nonEmpty && !hasInstanceState && pparams.isEmpty &&
        !extendedTypes(cd.symbol) && !instantiatedTypes(cd.symbol) then
       val members = cd.body.filterNot { case d: Tree.DefDef => sym(d.symbol).name == "<init>"; case _ => false }
-      val ob = orderBody(members, pparams.nonEmpty).map(memberStat(_, i + 1)).filter(_.nonEmpty).mkString("\n")
+      val ob = orderBody(members, paramfulPrimary).map(memberStat(_, i + 1)).filter(_.nonEmpty).mkString("\n")
       return s"${ind(i)}object ${esc(s.name)}$tps {\n$ob\n${ind(i)}}"
     // Java statics have no instance home in Scala — they move to the companion object.
     val (statics, instance) = if s.flags.isModule then (Nil, loweredBody) else loweredBody.partition(isStatic)
     val self    = cd.selfType.map(st => s"${ind(i + 1)}self: ${tpe(st.tpe)} =>\n").getOrElse("")
-    val body0   = joinStats(orderBody(instance, pparams.nonEmpty).map(memberStat(_, i + 1)).filter(_.nonEmpty))
+    val body0   = joinStats(orderBody(instance, paramfulPrimary).map(memberStat(_, i + 1)).filter(_.nonEmpty))
     val diamonds = diamondOverrides(cd, i + 1)
     val body    = if diamonds.isEmpty then body0 else joinStats(List(body0).filter(_.nonEmpty) ++ diamonds)
     val open    = if body.isEmpty && self.isEmpty then "" else s" {\n$self$body\n${ind(i)}}"
@@ -760,8 +766,10 @@ final class TirEmitter(
       case _ => None
     // a no-arg constructor whose body is only super/this delegation is degenerate — Scala's
     // implicit primary constructor already is no-arg, and `def this() = this()` self-recurses.
-    // Only when the primary IS no-arg: against a PARAMFUL primary a `C() { this(16); }` is the
-    // only thing that makes `new C()` legal at all, so it must be emitted.
+    // Only when the primary IS no-arg: against a PARAMFUL primary a `C() { this(16); }` — or a
+    // `C() { super(0, false); }` in front of a SYNTHESISED primary — is the only thing that makes
+    // `new C()` legal at all, so it must be emitted. `paramfulPrimary` therefore has to be read off
+    // the emitted class, not off `Plan.primaryParams`, which a synthesised primary leaves empty.
     def degenerate(d: Tree.DefDef): Boolean =
       !paramfulPrimary && d.paramss.flatten.isEmpty && (d.rhs match
         case Some(Tree.Block(stats, _, _, _)) =>

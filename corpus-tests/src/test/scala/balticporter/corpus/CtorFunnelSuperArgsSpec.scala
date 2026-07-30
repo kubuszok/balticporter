@@ -68,6 +68,8 @@ class CtorFunnelSuperArgsSpec extends munit.FunSuite:
   private val promoted =
     raw"""class Mixed\(([\w$$]+): java\.lang\.Object, ([\w$$]+): scala\.Int\) extends demo\.Parent\(\1, \2\)""".r
   private val lost = raw"""def this\(s: java\.lang\.String\) = \{\s*this\(\)\s*\}""".r
+  // `Synth()`'s own `super(0, false)` reaching the SYNTHESISED primary positionally
+  private val nilarySecondary = raw"""def this\(\) = \{\s*this\(0, false\)\s*\}""".r
 
   test("the promoted root's super arguments reach the parent, the other root's are lost") {
     // the pass-through root became the primary: its arguments are in the `extends` clause
@@ -94,4 +96,14 @@ class CtorFunnelSuperArgsSpec extends munit.FunSuite:
     assert(clue(out).contains("sup$0"))
     assert(out.contains("extends demo.Base(sup$0, sup$1)"))
     assertEquals(dropped.filter(_.owner == "demo.Synth"), Nil)
+  }
+
+  test("the NILARY root of a synthesised primary survives as a secondary constructor") {
+    // A synthesised primary IS paramful, but `Plan.primaryParams` is empty for it — no java
+    // constructor backs it. Reading only that, the emitter judged `Synth()` degenerate (Scala's
+    // implicit primary is already no-arg) and dropped it, leaving a class whose ONLY constructors
+    // take arguments: `new Synth()` a compile error at every call site, while `Plans.superCall`
+    // reported that same root Positional — the exact check/emitter disagreement the per-root
+    // `superCall` refactor exists to make impossible.
+    assert(nilarySecondary.findFirstIn(clue(out)).isDefined)
   }
