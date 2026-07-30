@@ -17,6 +17,33 @@ scala-cli 3.8.4). The migration itself prints four independent checks on every r
 > MEASUREMENTS, the per-site diagnoses and the trajectories; entry ids like `G3`, `K2`, `M1` below
 > point at the lifted rule. Nothing here was deleted.
 
+## DECISION PROVENANCE IS NOW IN THE CODE — 2163 decisions, 0 uncovered notes
+
+Every non-mechanical thing this port does is recorded (`decisions.tsv`) AND emitted beside the code
+that resulted, as a porter note (CLAUDE.md §4.575). Measured on libgdx-core:
+
+| | before | after |
+|---|---|---|
+| decisions recorded | 1283 | **2163** |
+| `RenamedMember` (the three §4.55 passes) | 0 | 827 |
+| `DroppedSuperCall` (per root, C3) | 0 | 31 |
+| `WidenedVisibility` (ctor replay) | 0 | 22 |
+| `porter-notes` findings (E8, both directions) | — | **0** |
+| members whose emitted text moved | — | 918 (notes) + 18 (A10) |
+| compile errors | 0 | 0 |
+
+The blast is expected and is the point: a note is emitted text. What must stay 0 is `porter-notes`,
+and it is 0 on all six ports.
+
+## A10: the prefix strip — omissions 193 -> 177
+
+`CtorFunnel.Plans.residualBody` deletes an escaping root's duplicate of the promoted body where its
+own body literally begins with it. 16 construction paths across 10 classes; `Button` is 4 of them
+and `this.initialize()` now appears ONCE in the whole emitted file. simple-graphs: omissions 6 -> 2.
+
+The targeted refusal for the shape-6 remainder (`Material`, `Table`) was measured and refused:
+**0 -> 35 `E120`**, omissions 177 -> 65. See `ENGINE-LIMITS.md` C7 — do not re-derive it.
+
 ## THE PORTED TESTS ARE JVM-ONLY — the behavioural gate does not run on the real targets
 
 The 221 tests are emitted as **JUnit 4 written in Scala** (`@org.junit.Test`, 872 `org.junit.Assert`

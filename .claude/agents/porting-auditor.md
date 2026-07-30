@@ -78,6 +78,17 @@ safely, silently, or wrongly. Particular attention to:
   recently have a corresponding check? A check that reports zero is only as good as its coverage.
 - A declaration widened to make a use type-check. Erase USES, never DECLARATIONS — declaring raw
   fields erased instead of wildcard was measured catastrophic (+277).
+- **A PORTER NOTE the emitter INVENTED rather than derived** (CLAUDE.md §4.575). Every
+  `/* porter: … */` in emitted code must come from a `Decision` in the run's log; a call site that
+  builds one from a local condition is policy at the emitter, reading to an agent as authoritative.
+  `NoteCoverageCheck` catches the shapes it can see — a kind the emitter never recorded printing —
+  and cannot catch a note derived from the WRONG decision, so read the call sites. The mirror
+  finding is a decider that records nothing: a new phase, a new refusal or a new renaming pass that
+  changes emitted code and leaves `decisions.tsv` unmoved is the same defect with the evidence
+  missing instead of fabricated.
+- **A check that greps EMITTED TEXT and does not strip porter notes first.** A note names the
+  upstream FQN deliberately; `SubstitutionCheck.dangling` reported 3 phantom findings before
+  `withoutPorterNotes` (`ENGINE-LIMITS.md` M7). Any new text-searching check has the same hazard.
 
 ### 4. Untested behaviour
 

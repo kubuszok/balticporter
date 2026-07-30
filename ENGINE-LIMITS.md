@@ -573,9 +573,20 @@ duplicate `initialize()` and the second `ClickListener` with it. The other 6 nev
 `initialize()` in java at all, so there is nothing to strip and the divergence there is still
 counted, correctly.
 
-What it does NOT reach is `Material` and `Table`, both shape 6, and both observable (`Material`
-bumps a static id counter, `Table` leaks a pooled `Cell`). For those the honest outcome is still
-M6's: emission unchanged, divergence reported.
+What it does NOT reach is `Material` and `Table`, both shape 6 (`promoted-nilary`), and both
+observable (`Material` bumps a static id counter, `Table` leaks a pooled `Cell`).
+
+**A TARGETED refusal for exactly that shape was measured and is a dead end too: 0 -> 35.** Demoting
+to `Plan.none` only the shape-6 plans whose promoted body is non-empty — not the blanket 41 — costs
+**35 `E120 Conflicting definitions`** on libGDX core and still leaves 65 escaping paths (omissions
+177 -> 65). So the targeted version buys 112 of 177 divergences for 35 compile errors, which is the
+same trade as the blanket one at 85% of the price: shape 6 exists precisely because a class with
+several roots and no `super(args)` needs the nilary promotion to stop `def this()` clashing with
+scala's implicit primary, and refusing it re-creates the clash it was invented to remove. Do not
+re-derive this; the experiment was a `DebugFlags`-gated demotion in `Plans.plans`, one run, and it
+is not in the tree.
+
+For those classes the honest outcome is still M6's: emission unchanged, divergence reported.
 `OmissionCheck.promotedBodyOnEveryPath` derives it from `CtorFunnel.Plans.promotionEscapes`, which
 reads the same `Plan.primaryBody` the emitter inlines — libGDX core omissions **37 -> 193** when the
 check arrived (`members.tsv` byte-identical, 0 members moved), **193 -> 177** when the strip shipped.
@@ -1224,6 +1235,22 @@ call:
 
 A residue comment count (`/* break */ ()`) is itself a measure — do not delete it to make output
 tidy.
+
+**…and `PortRun(preview = true)` is the other half, for a library nobody has ported yet.** Refusing
+and counting is right for a port that ships and wrong for the first week of a NEW one, where the
+operator is an agent in another repository that has to FIND the residue before it can act — and
+`/* break … */ ()` compiles perfectly. Under `preview` each counted refusal becomes
+
+```
+scala.compiletime.error("balticporter: <construct>: <why>; <what an agent must do>; origin <javaPath>:<line>")
+```
+
+so the port deliberately does not compile and every error carries the four things the residue
+comment does not. It is a DIAGNOSTIC mode, orthogonal to `RuntimeMode`, off by default, and the
+shipping emission with it off is byte-identical (proved by `members.tsv`, not asserted). The errors
+have their own lane — `Correlate.Lane.Declared`, classified by the message the engine itself wrote,
+ahead of the source-map lookup — so a preview run's declared refusals can never be read as engine
+gaps, nor as "outside the map, not our problem".
 
 ### M7. A check over EMITTED TEXT must join on a RECORDED id, never on the rendering — 594 → 0
 
