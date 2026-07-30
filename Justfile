@@ -677,10 +677,28 @@ correlate OUT *ARGS:
       echo "  --baseline defaults to <out>/../baseline, which is where the diffs come from."
       exit 2
     fi
-    OUT="{{OUT}}"; case "$OUT" in /*) ;; *) OUT="$ROOT/$OUT" ;; esac
+    abs() { case "$1" in /*) printf '%s' "$1" ;; *) printf '%s' "$ROOT/$1" ;; esac; }
+    OUT="$(abs "{{OUT}}")"
+    # EVERY path argument is absolutised, and this is not politeness. `engine/runMain` is FORKED,
+    # so the correlator's working directory is the SUBPROJECT: a relative `--scalac out.txt` that
+    # reads correctly in this shell resolves to `engine/out.txt` and the run dies naming a file
+    # nobody wrote. The lanes never met it because they compose `$ROOT/…` throughout; a recipe an
+    # operator types by hand meets it immediately (measured, first try).
+    set -- {{ARGS}}
+    A=(); prev=""
+    for a in "$@"; do
+      case "$prev" in
+        --scalac|--tests|--markers|--baseline|--out) a="$(abs "$a")" ;;
+        --srcmap) case "$a" in
+                    main=*|test=*) a="${a%%=*}=$(abs "${a#*=}")" ;;
+                    *)             a="$(abs "$a")" ;;
+                  esac ;;
+      esac
+      A+=("$a"); prev="$a"
+    done
     # The lanes' own helper, deliberately: one invocation path, one set of guards (a correlation
     # that did not happen must not render as an empty-but-tidy block).
-    correlate "$OUT" {{ARGS}}
+    correlate "$OUT" "${A[@]}"
 
 # ---------------------------------------------------------------------------------------------
 # The debug recipes, proving themselves. No sbt, no ports, no network — it runs in seconds, so
@@ -732,6 +750,11 @@ debug-selfcheck:
     [ -f "$F" ] && bad "debug-clear with no KEY must remove the file" || ok "debug-clear with no KEY removes the file"
     BP_ROOT="$T" $J debug-clear > /dev/null 2>&1
     want "…and is idempotent on an absent file" "$?" "0"
+
+    echo "-- correlate: no arguments is a USAGE, not a silent no-op --"
+    out=$($J correlate some/out 2>&1); rc=$?
+    want "correlate with no options exits 2"      "$rc" "2"
+    case "$out" in *"§5.1"*) ok "…and points at the rule it serves" ;; *) bad "…rule: $out" ;; esac
 
     echo "-- members-unchanged: a missing input is FATAL, and names the port --"
     R="$T/port-report"
