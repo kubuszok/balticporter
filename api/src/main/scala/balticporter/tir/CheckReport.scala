@@ -226,6 +226,11 @@ object CheckReport:
     val sb = new StringBuilder
     sb.append("# Port check report\n\n")
     sb.append(s"path root: `${DebugFlags.path("reportPathRoot").getOrElse(DebugFlags.root)}`\n\n")
+    // What the §4.6 flags actually were IN THIS RUN. The flags are resolved in the migration's own
+    // forked JVM from files the operator may since have edited, so "did my flag reach the run" is
+    // not answerable after the fact from anything else — `just debug-flags PORT` reads this line.
+    // Recorded even when empty: "(none)" is the answer to that question as often as a flag is.
+    sb.append(s"debug flags: ${DebugFlags.active match { case Nil => "(none)"; case on => on.mkString(" ") }}\n\n")
     sb.append("| check | findings |\n|---|---|\n")
     findings.map((c, fs) => s"| $c | ${fs.size} |").sorted.foreach(l => sb.append(l).append('\n'))
     findings.sortBy(_._1).foreach { (c, fs) =>

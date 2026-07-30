@@ -43,9 +43,22 @@ import java.nio.file.{Files, Path}
   * | `balticporter.reportPathRoot=<path>`   | source root to make finding paths RELATIVE to |
   *
   * The marker FILES are read once and cached — a flag must not change under a run, or two halves
-  * of one measurement disagree (CLAUDE.md §5). The accessors themselves are `def`s over
-  * `System.getProperty`, which is what lets a main class set a flag for the pipeline it is about
-  * to run, and lets a test exercise one without a fresh JVM.
+  * of one measurement disagree (CLAUDE.md §5). The cache is keyed on [[root]], which is the one
+  * thing that cannot change under a run, so pointing the root at another directory (a test, a
+  * diagnostic asked about another checkout) re-reads rather than answering from another root's
+  * files. The accessors themselves are `def`s over `System.getProperty`, which is what lets a main
+  * class set a flag for the pipeline it is about to run, and lets a test exercise one without a
+  * fresh JVM.
+  *
+  * ## Why the resolution is also a VALUE ([[resolution]])
+  *
+  * "Why did my flag not reach the run" is the question this whole mechanism generates, and it is
+  * unanswerable from the flags themselves: [[get]] returns the winner and says nothing about which
+  * layer supplied it, which layers it shadowed, or which entries no layer will ever supply because
+  * they are missing the `balticporter.` prefix. So the merge is exposed as data — one [[Resolved]]
+  * per key, carrying its source and what it shadowed — and `just debug-flags` prints it. It is the
+  * SAME fold [[get]] uses, deliberately: a diagnostic that recomputes the precedence rule is a
+  * second truth about it, and would eventually disagree with the runs it claims to explain.
   */
 object DebugFlags:
 
@@ -57,19 +70,83 @@ object DebugFlags:
 
   /** the marker files consulted, in increasing precedence. Exposed so a diagnostic can print
     * WHERE a flag came from — an agent in another repository cannot guess. */
-  def markerFiles: List[Path] =
-    List(root.resolve(".balticporter/run.properties"), root.resolve(".balticporter/debug.properties"))
+  def markerFiles: List[Path] = markerFilesIn(root)
 
-  private lazy val fileProps: Map[String, String] =
-    markerFiles.foldLeft(Map.empty[String, String]) { (acc, f) =>
-      if !Files.isRegularFile(f) then acc
-      else
-        val p = new java.util.Properties()
-        val in = Files.newInputStream(f)
-        try p.load(in)
-        finally in.close()
-        acc ++ p.stringPropertyNames().toArray(Array.empty[String]).map(k => k -> p.getProperty(k)).toMap
+  /** …under an explicit root, for a diagnostic asked about a checkout it is not running in. */
+  def markerFilesIn(r: Path): List[Path] =
+    List(r.resolve(".balticporter/run.properties"), r.resolve(".balticporter/debug.properties"))
+
+  /** One source of flags, named. Layers are always listed in INCREASING precedence, so a fold that
+    * keeps the last wins — which is the whole of the resolution rule, in one place.
+    *
+    * `ignored` is the half of the answer nothing else has: a properties file may hold entries
+    * `get` will never look up, because a key without the `balticporter.` prefix cannot be reached
+    * by any accessor. Written by hand — `skipPhases=*` for `balticporter.skipPhases=*` — that is a
+    * flag that silently does nothing, which is the §1(b) no-op this engine refuses everywhere. */
+  final case class Layer(name: String, file: Option[Path], props: Map[String, String], ignored: Map[String, String]):
+    def present: Boolean = file.forall(Files.isRegularFile(_))
+
+  /** one key's resolved value, its source, and every layer it beat. */
+  final case class Resolved(key: String, value: String, source: String, shadowed: List[(String, String)])
+
+  private def readProps(f: Path): Map[String, String] =
+    if !Files.isRegularFile(f) then Map.empty
+    else
+      val p  = new java.util.Properties()
+      val in = Files.newInputStream(f)
+      try p.load(in)
+      finally in.close()
+      p.stringPropertyNames().toArray(Array.empty[String]).map(k => k -> p.getProperty(k)).toMap
+
+  private def split(name: String, file: Option[Path], all: Map[String, String]): Layer =
+    val (mine, theirs) = all.partition(_._1.startsWith(Prefix))
+    Layer(name, file, mine, theirs)
+
+  /** the FILE layers under `r`, freshly read — no cache, because a diagnostic that answers from a
+    * cache filled before the operator edited the file answers the wrong question. */
+  def fileLayers(r: Path): List[Layer] =
+    markerFilesIn(r).map(f => split(f.getFileName.toString, Some(f), readProps(f)))
+
+  /** this JVM's `balticporter.*` system properties. */
+  def sysFlags: Map[String, String] =
+    sys.props.toMap.filter(_._1.startsWith(Prefix))
+
+  /** every layer, in increasing precedence. */
+  def layers(r: Path, sysProps: Map[String, String]): List[Layer] =
+    fileLayers(r) :+ split("system properties", scala.None, sysProps)
+
+  /** The merge, as data: what each key resolves to, where it came from, and what it shadowed.
+    * `just debug-flags` prints this; [[get]] performs the same fold. */
+  def resolution(r: Path = root, sysProps: Map[String, String] = sysFlags): List[Resolved] =
+    val ls = layers(r, sysProps)
+    ls.flatMap(_.props.keys).distinct.sorted.map { k =>
+      val hits = ls.filter(_.props.contains(k)).map(l => l.name -> l.props(k))
+      val (src, v) = hits.last
+      Resolved(k, v, src, hits.init)
     }
+
+  private var cached: Option[(Path, Map[String, String])] = scala.None
+
+  /** the merged file layers, cached per root (see the class comment for why per root). */
+  private def fileProps: Map[String, String] = synchronized {
+    val r = root
+    cached match
+      case Some((cr, m)) if cr == r => m
+      case _ =>
+        val m = fileLayers(r).foldLeft(Map.empty[String, String])((acc, l) => acc ++ l.props)
+        cached = Some(r -> m)
+        m
+  }
+
+  /** Every key an accessor below actually asks for — the table in the class comment, as data.
+    *
+    * A key that is not in this list is a key nothing will ever look up: `skipPhase` for
+    * `skipPhases` sets a flag that does nothing, and the run it was written for then looks
+    * completely normal. Nothing else can see that, so `just debug-flags` marks it. */
+  val known: List[String] = List(
+    "root", "skipPhases", "dumpTirBefore", "dumpTirAfter", "dumpOnly", "tracePhases", "traceNode",
+    "report", "reportDir", "reportPathRoot",
+  ).map(Prefix + _)
 
   /** raw lookup: system property wins, then marker files (debug over run). */
   def get(key: String): Option[String] =
@@ -97,14 +174,19 @@ object DebugFlags:
   /** `*` skips everything — the whole-pipeline kill switch, one run, no source edit. */
   def skips(phaseName: String): Boolean = skipPhases.contains("*") || skipPhases.contains(phaseName)
 
+  /** what is switched on, as pairs. Every DIAGNOSIS flag is listed — a flag missing from here is
+    * one whose effect an operator sees and cannot attribute, which is the same defect as a flag
+    * that is never read. */
+  def active: List[String] = List(
+    Option.when(skipPhases.nonEmpty)(s"skipPhases=${skipPhases.toList.sorted.mkString(",")}"),
+    Option.when(dumpTirBefore.nonEmpty)(s"dumpTirBefore=${dumpTirBefore.toList.sorted.mkString(",")}"),
+    Option.when(dumpTirAfter.nonEmpty)(s"dumpTirAfter=${dumpTirAfter.toList.sorted.mkString(",")}"),
+    dumpOnly.map(f => s"dumpOnly=$f"),
+    Option.when(tracePhases)("tracePhases=true"),
+    Option.when(traceNode.nonEmpty)(s"traceNode=${traceNode.toList.sorted.mkString(",")}"),
+  ).flatten
+
   /** a one-line statement of what is switched on, for the run's own output. Silence when nothing
     * is set; a diagnostic that prints on a clean run trains the operator to ignore it. */
   def banner: Option[String] =
-    val on = List(
-      Option.when(skipPhases.nonEmpty)(s"skipPhases=${skipPhases.toList.sorted.mkString(",")}"),
-      Option.when(dumpTirBefore.nonEmpty)(s"dumpTirBefore=${dumpTirBefore.toList.sorted.mkString(",")}"),
-      Option.when(dumpTirAfter.nonEmpty)(s"dumpTirAfter=${dumpTirAfter.toList.sorted.mkString(",")}"),
-      dumpOnly.map(f => s"dumpOnly=$f"),
-      Option.when(traceNode.nonEmpty)(s"traceNode=${traceNode.toList.sorted.mkString(",")}"),
-    ).flatten
-    Option.when(on.nonEmpty)(s"[balticporter] DEBUG FLAGS: ${on.mkString(" ")}")
+    Option.when(active.nonEmpty)(s"[balticporter] DEBUG FLAGS: ${active.mkString(" ")}")
