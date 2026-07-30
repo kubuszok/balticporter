@@ -13,18 +13,44 @@ package balticporter.tir
   * counts what the emitter must still drop), so the check can never drift from what is actually
   * emitted: improve the funnel here and both move together.
   *
-  * Two shapes are funnelled today:
+  * SIX shapes are funnelled today, each nominated at its own site and documented there. This list
+  * is the map, not the specification — it started as "two shapes" and stayed that way through four
+  * additions, which is exactly how a header stops being readable as evidence:
   *
   *  1. UNIQUE ROOT — exactly one constructor does not delegate `this(args)`. It becomes the
   *     primary whatever its arity; its `super(args)` lands in `extends`, its parameters become
   *     class parameters, its body becomes class-body statements, and every other constructor is
   *     already a `this(...)` delegation, which Scala expresses verbatim. Nothing is lost.
+  *     ([[plan0]])
   *  2. NO-ARG ROOT — several roots, one of them nilary. It becomes the primary (a `def this()`
-  *     would clash with Scala's implicit primary anyway). The other roots' super arguments are
-  *     NOT expressible and stay counted by [[OmissionCheck]].
+  *     would clash with Scala's implicit primary anyway). The other roots' super arguments reach it
+  *     through [[Plans.superCall]] where they can and stay counted by [[OmissionCheck]] where they
+  *     cannot. ([[plan0]])
+  *  3. WIDEST PASS-THROUGH ROOT, JDK THROWABLES ONLY — several roots reaching different overloads
+  *     of a parent whose constructor set is FIXED and public. The widest root that passes its own
+  *     parameters straight through is promoted and the narrower ones pad the slots the JDK's own
+  *     narrower overload would have left. Exact only for that family; guessing elsewhere measured
+  *     0 -> 55 compile errors. ([[plan0]], [[Plans.superCall]])
+  *  4. SYNTHESISED PRIMARY — no java constructor can be the primary, but every root reaches the
+  *     SAME parent constructor. A primary taking the PARENT's parameters is synthesised and every
+  *     java constructor becomes a secondary computing its arguments. ([[syntheticPrimary]],
+  *     [[Plan.synthetic]])
+  *  5. SYNTHETIC-SHAPED ROOT — the same situation where one root ALREADY has the synthesised
+  *     signature, so synthesising beside it would duplicate it. That root is promoted instead.
+  *     ([[syntheticPrimary]])
+  *  6. PROMOTED NILARY CONSTRUCTOR — no constructor carries `super(args)` at all, so the funnel is
+  *     needed only to stop Scala's implicit nilary primary clashing with an emitted `def this()`.
+  *     The nilary constructor is promoted with its `this(args)` delegation inlined.
+  *     ([[Plans.nilaryPlan]])
   *
-  * Anything else (several paramful roots reaching different parent overloads, e.g.
-  * `DelayedRemovalArray`'s ten) has no single-primary encoding and is reported, not approximated.
+  * Two mechanisms sit ON TOP of the nomination rather than beside it: [[Plans]] WITHHOLDS a
+  * paramful promotion wherever a subclass reaches the class with an argument-free `extends`, and
+  * [[Plans.replayFor]] expresses a secondary's `super(args)` as the parent constructor's own
+  * statements replayed after `this()` where that is provably equivalent.
+  *
+  * Anything else (several paramful roots reaching different parent overloads of a parent whose
+  * constructor set the engine does not know, e.g. `DelayedRemovalArray`'s ten) has no
+  * single-primary encoding and is reported, not approximated.
   */
 object CtorFunnel:
 
@@ -369,12 +395,26 @@ object CtorFunnel:
       case Tree.Assign(Tree.Select(_: Tree.This, f, _, _), _, _, _) => Some(f)
       case _                                                    => scala.None
 
-    /** Does replaying `stats` after `prologue` leave the same state Java's `super(args)` left?
+    /** Does replaying `stats` after `prologue` leave the same STATE Java's `super(args)` left?
       *
-      * `prologue` is what the secondary's own `this()` already ran. It is invisible only if it is
-      * pure field assignment (no call whose effect escapes the object, nothing that publishes
-      * `this`) and the replay assigns EVERY field it touched — then each of those fields ends up
-      * holding what Java put there, and the prologue's contribution is dead.
+      * State, and only state. `prologue` is what the secondary's own `this()` already ran, and this
+      * asks whether the replay overwrites every field it assigned — then each of those fields ends
+      * up holding what Java put there, and the prologue's contribution to the OBJECT is dead. A
+      * prologue statement that is not a plain field assignment already fails it, because
+      * [[assignedField]] answers `None` and `None.exists` is false.
+      *
+      * It compares assignment TARGETS and does not look at the right-hand sides. Read as "the
+      * prologue is invisible" that is too strong — an RHS with an escaping effect (`this.n =
+      * Registry.register()`) really did happen. Read as what it is, a state question, it is right,
+      * and TIGHTENING IT IS A MEASURED REGRESSION: the prologue is the emitted class's own
+      * construction path, so `this()` runs it whether this returns true or false. A kill switch
+      * forcing `false` left the escaping call exactly where it was and additionally discarded the
+      * replay — the constructor lost its argument and gained an omission finding, for no effect
+      * removed. `ENGINE-LIMITS.md` C6 has the run.
+      *
+      * The escaping-effect problem is real and lives one level up, in the PROMOTION: making a
+      * nilary constructor's body the class body runs it on every construction path, which Java did
+      * not. Nothing here can undo that.
       *
       * What this does NOT preserve is the work: `new DelayedRemovalArray(1000)` allocates the
       * nilary path's 16-element backing array and then throws it away. That is a cost, not a

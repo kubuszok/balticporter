@@ -466,6 +466,41 @@ parent constructor and the argument is a single element rather than a `Repeated`
 
 *Fix kind: (a).*
 
+### C6. Do NOT tighten `supersedes` to inspect assignment RIGHT-HAND SIDES — it removes no effect and costs the argument
+
+`CtorFunnel.Plans.supersedes` compares only the assignment TARGETS of the prologue and the replay.
+Its docstring used to claim the prologue is "invisible" when it is pure field assignment, and
+nothing in it looks at an RHS — so `this.n = Registry.register()` in a prologue passes, and that
+call really did happen where Java never ran it. Read as written, the contract was overstated, and
+the obvious repair is to require the RHS to be effect-free.
+
+**Do not.** The prologue is the emitted class's OWN construction path — whatever `class C extends P`
+plus the promoted primary's body runs — and a secondary constructor's first statement must be
+`this(...)`, so `this()` executes the prologue *before* `supersedes` is consulted and regardless of
+its answer. Measured with a kill switch forcing `supersedes` to `false` on a probe with an escaping
+prologue RHS:
+
+| | escaping call runs | argument delivered |
+|---|---|---|
+| replay accepted (today) | yes | yes — `this(); this.n = k` |
+| replay refused (tightened) | **still yes** | **no** — `this()`, and an omission finding |
+
+Refusing removes nothing and loses the constructor's argument. Corpus reach of the gap: **330
+accepted replays on libGDX have a non-re-readable prologue RHS**, and every distinct shape there is
+an allocation (`new C(…)`), a pure JDK static (`Long.numberOfTrailingZeros`), or a cast — all
+harmless. Ashley adds exactly one shape that is NOT (`Family.Builder.get()`, which mutates a static
+family cache), and it changes nothing: refusing that replay would still run the `get()`, because it
+is in the prologue, and would additionally drop the family the constructor was passing up. So the
+tightened rule refuses 330+ replays to fix zero defects.
+
+The escaping-effect problem is real and lives one level UP, in the promotion: making a nilary
+constructor's body the class body runs it on every construction path, which Java did not
+(`Base() { this.n = Audit.bump(); }` plus `Base(int)` — `new Base(5)` bumps in the port and does not
+in Java). That is a `plan0` question about which constructor may be promoted, not a `supersedes`
+question, and it is still open.
+
+*Fix kind: (a), at the promotion — NOT at `supersedes`.*
+
 ---
 
 ## 3. `this`, inner classes and anonymous classes
