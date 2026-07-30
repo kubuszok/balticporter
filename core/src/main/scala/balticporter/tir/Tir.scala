@@ -329,6 +329,24 @@ object Tree:
   final case class Break(label: Option[String], tpe: TypeRepr, origin: Origin)          extends Term
   /** `continue` / `continue label`. `tpe` is Nothing. */
   final case class Continue(label: Option[String], tpe: TypeRepr, origin: Origin)        extends Term
+
+  /** `name: stmt` — a java label on a statement that is NOT a loop, the target of `break name`.
+    *
+    * Java's `LabeledStatement` accepts ANY statement, and `break L` leaves exactly that statement
+    * — an `if`, a bare block and a `switch` are all legal targets, and all three occur in the
+    * corpus (`JsonReader`'s `outer:` on an `if`, `TextField`'s `keys:`/`selection:` on blocks,
+    * `GlyphLayout`'s `runEnded:` on a block). Modelled as a WRAPPER rather than as an `Option`
+    * field on every statement node for the obvious reason, and because the boundary the backend
+    * emits really is a construct around the statement.
+    *
+    * LOOPS do NOT use this node: `While`/`For`/`ForEach`/`DoWhile` carry the label in their own
+    * `label` field, because a loop's label is the target of `continue L` as well, and the two
+    * jumps need boundaries in DIFFERENT places (around the loop / around its body). Splitting
+    * them would put that decision in two places; the frontend is the one that chooses, and it
+    * only mints a `Labeled` for a non-loop statement.
+    *
+    * `tpe` is Unit — java's labelled statement is a statement, never a value. */
+  final case class Labeled(name: String, stmt: Term, tpe: TypeRepr, origin: Origin)      extends Term
   /** `assert cond` / `assert cond : msg`. `tpe` is Unit. */
   final case class Assert(cond: Term, msg: Option[Term], tpe: TypeRepr, origin: Origin)  extends Term
   /** `i++` / `++i` / `i--` / `--i` as an expression; `op` is `"+"`/`"-"`, `post` the position. */

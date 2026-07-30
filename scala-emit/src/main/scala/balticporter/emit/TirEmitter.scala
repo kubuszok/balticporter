@@ -1148,21 +1148,27 @@ final class TirEmitter(
     * (`boundary { brk ?=> … break(())(using brk) }`, verified against scalac).
     *
     * `breakTarget`: `None` = no enclosing loop boundary, so a `break` here belongs to a SWITCH;
-    * `Some("")` = an unnamed one is innermost; `Some(name)` = it must be named because a body
-    * boundary sits inside it. Cleared by `match`, since java's `break` there binds to the switch —
-    * but `contBoundary` is NOT, because a `continue` inside a switch still continues the loop. */
+    * `Some("")` = an unnamed one is innermost; `Some(name)` = it must be named because another
+    * boundary sits inside it. Re-pointed by `match` at the CASE's own boundary, since java's
+    * `break` there ends the case — but `contTarget` is NOT, because a `continue` inside a switch
+    * still continues the loop.
+    *
+    * `contTarget` reads the same way for the `continue` boundary. It became a name rather than a
+    * flag when `Tree.Labeled` arrived: a `boundary` the emitter introduces for a LABELLED
+    * statement sits between the loop's boundaries and any un-annotated `break(())` under it, and
+    * `boundary.break` with no `using` binds to the INNERMOST `Label`. */
   private var breakTarget: Option[String] = scala.None
-  private var contBoundary = false
+  private var contTarget: Option[String]  = scala.None
   private var labelSeq = 0
   /** names the `def` that carries a lambda body containing `return` — see the `Tree.Lambda` case. */
   private var lambdaSeq = 0
-  private def inLoop[A](brk: Option[String], cont: Boolean)(f: => A): A =
-    val (sb, sc) = (breakTarget, contBoundary)
-    breakTarget = brk; contBoundary = cont
-    try f finally { breakTarget = sb; contBoundary = sc }
-  private def inSwitch[A](f: => A): A =
+  private def inLoop[A](brk: Option[String], cont: Option[String])(f: => A): A =
+    val (sb, sc) = (breakTarget, contTarget)
+    breakTarget = brk; contTarget = cont
+    try f finally { breakTarget = sb; contTarget = sc }
+  private def inSwitch[A](brk: Option[String])(f: => A): A =
     val sb = breakTarget
-    breakTarget = scala.None
+    breakTarget = brk
     try f finally breakTarget = sb
 
   /** java LABEL -> the scala boundary name a `break`/`continue` naming it must target. A labelled
@@ -1213,14 +1219,16 @@ final class TirEmitter(
     else
       labelSeq += 1
       val seq  = labelSeq
-      // the break boundary must be named when a body boundary sits inside it, or when a labelled
-      // `break` names it from a nested loop
-      val bName = if hasB && (hasC || lblB.isDefined) then s"brk$$$seq" else ""
-      val cName = if hasC && lblC.isDefined then s"cnt$$$seq" else ""
+      // the break boundary must be named when a body boundary sits inside it, when a labelled
+      // `break` names it from a nested loop, or when some construct INSIDE the body renders with a
+      // boundary of its own (`interposes`) — all three put another `Label` nearer than this one.
+      val shielded = interposes(body)
+      val bName = if hasB && (hasC || lblB.isDefined || shielded) then s"brk$$$seq" else ""
+      val cName = if hasC && (lblC.isDefined || shielded) then s"cnt$$$seq" else ""
       lblB.foreach(l => labelBreak(l) = bName)
       lblC.foreach(l => labelCont(l) = cName)
       val inner =
-        try inLoop(if hasB then Some(bName) else scala.None, hasC) {
+        try inLoop(if hasB then Some(bName) else scala.None, if hasC then Some(cName) else scala.None) {
           if !hasC then bodyStr
           else if cName.isEmpty then s"scala.util.boundary { $bodyStr }"
           else s"scala.util.boundary { ($cName: scala.util.boundary.Label[scala.Unit]) ?=> $bodyStr }"
@@ -1230,6 +1238,31 @@ final class TirEmitter(
       if !hasB then loop
       else if bName.isEmpty then s"scala.util.boundary { $loop }"
       else s"scala.util.boundary { ($bName: scala.util.boundary.Label[scala.Unit]) ?=> $loop }"
+
+  /** does this loop body contain a construct the emitter renders with a `boundary` of ITS OWN?
+    *
+    * `scala.util.boundary.break(())` with no `using` resolves the innermost given `Label`, so any
+    * boundary the emitter interposes between a loop and an un-annotated jump under it silently
+    * retargets that jump. One construct does it: a [[Tree.Labeled]] that is actually broken to.
+    *
+    * Deliberately an OVER-approximation — it does not check that an unlabelled jump is really
+    * underneath the interposed boundary. Naming a boundary nothing needed costs one identifier;
+    * missing one is a silent control-flow change, which is the whole defect class of §4.4. Stops
+    * at a nested loop, lambda, `def` or anonymous class for the same reason `breaksOut` does: a
+    * jump there belongs to that construct, not to this loop. */
+  private def interposes(t: Any): Boolean = t match
+    case l: Tree.Labeled => labelNeedsBoundary(l) || interposes(l.stmt)
+    case _: Tree.While | _: Tree.DoWhile | _: Tree.For | _: Tree.ForEach     => false
+    case _: Tree.Lambda | _: Tree.DefDef | _: Tree.AnonClass | _: Tree.ClassDef => false
+    case xs: Iterable[?] => xs.exists(interposes)
+    case Some(x)         => interposes(x)
+    case p: Product      => p.productIterator.exists(interposes)
+    case _               => false
+
+  /** a labelled statement earns a boundary only when something actually breaks to its label —
+    * java lets a label sit on a statement nobody jumps to, and an empty boundary would be noise
+    * that also has to be shielded against. */
+  private def labelNeedsBoundary(l: Tree.Labeled): Boolean = jumpsTo(l.stmt, l.name, brk = true)
 
   /** a `break L` / `continue L` naming this loop, at ANY depth — a labelled jump crosses nested
     * loops and switches by definition, which is what it is for. */
@@ -1629,7 +1662,7 @@ final class TirEmitter(
       val u  = upd.map(flatStat).mkString("; ")
       loopWithJumps(body, lbl, bd => s"{ $is; while ($c) { $bd; $u } }", term(body, i))
     case Tree.Try(res, body, catches, fin, _, _) => tryStr(res, body, catches, fin, i)
-    case Tree.Match(scr, cases, _, _)   => inSwitch(matchStr(scr, cases, i))
+    case Tree.Match(scr, cases, _, _)   => matchStr(scr, cases, i)
     case Tree.MethodRef(q, s, mrT, _)   =>
       val isCtor = sym(s).name == "<init>" // `Type::new` → a factory function `() => new Type()`
       q match
@@ -1677,24 +1710,45 @@ final class TirEmitter(
     // `CharArray.deleteAll` scanned to the end of the array instead of stopping at the first
     // non-matching char and deleted most of the string. 290 sites, 73 files, all compiling.
     // Scala 3's `boundary`/`break` is the faithful shape, and is what the reference port uses.
-    // LABELLED breaks are NOT covered — they still emit the no-op, and the count above is the
-    // measure of what is left.
+    // A LABELLED break reaches the same shape through `Tree.Labeled` (a label on any statement)
+    // or the loop's own `label` field (a label on a loop), and the residue count is what is left.
     case Tree.Break(scala.None, _, _) if breakTarget.isDefined =>
       breakTarget.filter(_.nonEmpty) match
-        case Some(n) => s"scala.util.boundary.break(())(using $n)" // a body boundary sits inside
+        case Some(n) => s"scala.util.boundary.break(())(using $n)" // another boundary sits inside
         case _       => "scala.util.boundary.break(())"
-    // a `break` with no boundary around it belongs to a SWITCH, where it means "end this case" —
-    // which scala's `match` does anyway. LABELLED jumps are not covered; the emitted-comment
-    // counts are the measure of what is left.
     case Tree.Break(Some(l), _, _) if labelBreak.contains(l) =>
       val n = labelBreak(l)
       if n.isEmpty then "scala.util.boundary.break(())" else s"scala.util.boundary.break(())(using $n)"
-    case Tree.Break(_, _, _)            => "/* break */ ()"
-    case Tree.Continue(scala.None, _, _) if contBoundary => "scala.util.boundary.break(())"
+    // an unlabelled `break` with no boundary around it belongs to a SWITCH and is the case's
+    // TERMINATOR, which scala's `match` does anyway — the frontend has already removed those, so
+    // one reaching here is a form neither this emitter nor the frontend recognises. Say WHICH, so
+    // the residue count is a diagnosis and not a tally (CLAUDE.md §4.45).
+    case Tree.Break(scala.None, _, _)   => "/* break: no enclosing loop or switch */ ()"
+    case Tree.Break(Some(l), _, _)      => s"/* break $l: label not in scope */ ()"
+    case Tree.Continue(scala.None, _, _) if contTarget.isDefined =>
+      contTarget.filter(_.nonEmpty) match
+        case Some(n) => s"scala.util.boundary.break(())(using $n)"
+        case _       => "scala.util.boundary.break(())"
     case Tree.Continue(Some(l), _, _) if labelCont.contains(l) =>
       val n = labelCont(l)
       if n.isEmpty then "scala.util.boundary.break(())" else s"scala.util.boundary.break(())(using $n)"
-    case Tree.Continue(_, _, _)         => "/* continue */ ()" // TODO: scala.util.boundary
+    case Tree.Continue(scala.None, _, _) => "/* continue: no enclosing loop */ ()"
+    case Tree.Continue(Some(l), _, _)    => s"/* continue $l: label not in scope */ ()"
+    // `name: stmt` — java's label on a NON-loop statement. `break name` leaves exactly that
+    // statement, so the boundary goes around the STATEMENT (CLAUDE.md §4.4). Always named: a
+    // labelled jump crosses nested loops and switches by definition, and anything the statement
+    // contains may open a nearer `Label`.
+    case Tree.Labeled(name, s, _, _) =>
+      if !jumpsTo(s, name, brk = true) then term(s, i) // a label nobody breaks to is not control flow
+      else
+        labelSeq += 1
+        val n     = s"lbl$$$labelSeq"
+        val saved = labelBreak.get(name)
+        labelBreak(name) = n
+        val inner =
+          try term(s, i)
+          finally saved match { case Some(v) => labelBreak(name) = v; case _ => labelBreak.remove(name) }
+        s"scala.util.boundary { ($n: scala.util.boundary.Label[scala.Unit]) ?=> $inner }"
     case Tree.Assert(c, m, _, _)        => s"assert(${term(c, i)}${m.map(x => ", " + term(x, i)).getOrElse("")})"
     // Java's POST-increment yields the value BEFORE the update; the pre-form yields it after.
     // Rendered identically, `values[tail++] = object` stored at the NEW index — every circular
@@ -1909,9 +1963,10 @@ final class TirEmitter(
   private def matchStr(scr: Term, cases: List[Tree.CaseDef], i: Int): String =
     val cs = cases.map { c =>
       val pat = if c.isDefault then "_" else c.labels.map(term(_, i)).mkString(" | ")
-      s"${ind(i + 1)}case $pat => ${term(c.body, i + 1)}"
+      s"${ind(i + 1)}case $pat => ${inSwitch(scala.None)(term(c.body, i + 1))}"
     }.mkString("\n")
-    s"${term(scr, i)} match {\n$cs\n${ind(i)}}"
+    // the SCRUTINEE is outside the switch — a `break` cannot occur in a java expression.
+    s"${inSwitch(scala.None)(term(scr, i))} match {\n$cs\n${ind(i)}}"
 
   // ---- types ----
   /** a type in `new` position: `new Foo[?]` is illegal (you can't instantiate a wildcard), so

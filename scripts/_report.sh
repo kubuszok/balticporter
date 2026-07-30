@@ -112,19 +112,27 @@ reconcile_outcomes() {
 }
 
 # break_residue <emitted-scala-dir>...
-# `/* break */ ()` is what the emitter leaves where a java `break` had no translation. The number
-# was QUOTED in a status file as a measure ("45, all switch-case") while nothing computed it — the
-# real count was 55, 34 of them in JsonReader from LABELLED breaks whose loss corrupts its parsing.
-# A quoted number with no computation behind it drifts the moment the next emit changes anything,
-# so the measure scripts print it on every run, with the per-file breakdown that makes a jump
-# attributable. Goes to zero only when the labelled-break translation lands (Tree.Labeled).
+# A `/* break … */ ()` / `/* continue … */ ()` comment is what the emitter leaves where a java jump
+# had no translation. The number was QUOTED in a status file as a measure ("45, all switch-case")
+# while nothing computed it — the real count was 55, 45 of them LABELLED breaks (JsonReader 30,
+# TextField 11, GlyphLayout 3, Table 1) whose loss corrupted JsonReader's parsing, and 10 of them
+# unlabelled breaks in the MIDDLE of a switch case. A quoted number with no computation behind it
+# drifts the moment the next emit changes anything, so the measure scripts print it on every run.
+#
+# The comment now carries the DIAGNOSIS, not just the word (CLAUDE.md §4.45: a residue an agent
+# cannot classify costs it a full investigation), so the breakdown is by REASON as well as by file
+# — a jump in one reason is attributable to one gap. The match is deliberately `/* break` and
+# `/* continue` rather than the whole comment: a new reason string must be counted, not missed.
 break_residue() {
   local total
-  total=$(grep -rho '/\* break \*/' "$@" 2>/dev/null | wc -l | tr -d ' ')
-  echo "break residue: $total × '/* break */ ()' in emitted code"
+  total=$(grep -rho '/\* \(break\|continue\)[^*]*\*/' "$@" 2>/dev/null | wc -l | tr -d ' ')
+  echo "break residue: $total × untranslated jump(s) in emitted code"
   if [ "$total" != "0" ]; then
-    grep -rlo '/\* break \*/' "$@" 2>/dev/null | while read -r f; do
-      echo "     $(grep -o '/\* break \*/' "$f" | wc -l | tr -d ' ') $(basename "$f")"
+    echo "   by reason:"
+    grep -rho '/\* \(break\|continue\)[^*]*\*/' "$@" 2>/dev/null | sort | uniq -c | sort -rn | sed 's/^/    /'
+    echo "   by file:"
+    grep -rl '/\* \(break\|continue\)[^*]*\*/' "$@" 2>/dev/null | while read -r f; do
+      echo "     $(grep -o '/\* \(break\|continue\)[^*]*\*/' "$f" | wc -l | tr -d ' ') $(basename "$f")"
     done | sort -rn
   fi
 }

@@ -340,6 +340,7 @@ object StandardTraversal:
       case x: Tree.Super    => x.copy(tpe = mapType(ph, x.tpe))
       case x: Tree.Break    => x.copy(tpe = mapType(ph, x.tpe))
       case x: Tree.Continue => x.copy(tpe = mapType(ph, x.tpe))
+      case x: Tree.Labeled  => x.copy(stmt = mapTerm(ph, x.stmt), tpe = mapType(ph, x.tpe))
       case x: Tree.Assert   => x.copy(cond = mapTerm(ph, x.cond), msg = x.msg.map(mapTerm(ph, _)), tpe = mapType(ph, x.tpe))
       case x: Tree.IncDec   => x.copy(target = mapTerm(ph, x.target), tpe = mapType(ph, x.tpe))
       case x: Tree.DoWhile  => x.copy(body = mapTerm(ph, x.body), cond = mapTerm(ph, x.cond), tpe = mapType(ph, x.tpe))

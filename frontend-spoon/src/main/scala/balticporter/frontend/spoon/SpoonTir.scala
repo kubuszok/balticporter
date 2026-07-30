@@ -1444,7 +1444,35 @@ object SpoonTir:
         case single        => Tree.Block(List(withTrivia(Nil, single)), unit(single), unitT, originOf(single))
 
       // ---- statements ----
-      private def stmt(s: CtStatement): Statement = s match
+
+      /** One statement, with a java LABEL on a non-loop statement turned into [[Tree.Labeled]].
+        *
+        * Java's `LabeledStatement` takes any statement, and `break L` leaves THAT statement — so a
+        * label on an `if`, a bare block or a `switch` is a control-flow construct of its own and
+        * needs a node. A LOOP's label is not wrapped: `While`/`For`/`ForEach`/`DoWhile` read it
+        * with `labelOf` into their own field, because it is also the target of `continue L`, whose
+        * boundary goes around the loop BODY rather than around the loop.
+        *
+        * `Tree.Labeled` therefore appears only where the label has nowhere else to live, and the
+        * two encodings can never both claim one label. */
+      private def stmt(s: CtStatement): Statement =
+        val k = stmtKind(s)
+        labelOf(s) match
+          // a labelled loop already carries its label; a `ValDef` cannot be labelled at all (JLS
+          // 14.7 — a local declaration is a BlockStatement, not a Statement), so anything else
+          // that is a term gets the wrapper and anything that is not is left exactly as it was.
+          case Some(l) if !carriesOwnLabel(k) =>
+            k match
+              case t: Term => TirTrace.mint(Tree.Labeled(l, t, unitT, originOf(s)))
+              case other   => other
+          case _ => k
+
+      /** does this translated statement already hold its java label in a field of its own? */
+      private def carriesOwnLabel(k: Statement): Boolean = k match
+        case _: Tree.While | _: Tree.For | _: Tree.ForEach | _: Tree.DoWhile => true
+        case _                                                               => false
+
+      private def stmtKind(s: CtStatement): Statement = s match
         case v: CtLocalVariable[?] =>
           val vt = tpe(v.getType)
           val id = defineLocal(v, vt) // sets isMutable when the local is reassigned

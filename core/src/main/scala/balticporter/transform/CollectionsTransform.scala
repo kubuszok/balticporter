@@ -680,6 +680,7 @@ final class CollectionsTransform extends Phase, RequiresRuntime:
     case x: Tree.For          => x.copy(body = coerceReturns(want, x.body))
     case x: Tree.ForEach      => x.copy(body = coerceReturns(want, x.body))
     case x: Tree.Synchronized => x.copy(body = coerceReturns(want, x.body))
+    case x: Tree.Labeled      => x.copy(stmt = coerceReturns(want, x.stmt))
     case x: Tree.Try =>
       x.copy(body = coerceReturns(want, x.body),
              catches = x.catches.map(c => c.copy(body = coerceReturns(want, c.body))),
