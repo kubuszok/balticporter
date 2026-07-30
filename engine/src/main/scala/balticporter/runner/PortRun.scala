@@ -1084,23 +1084,43 @@ final case class PortRun(
     * relative path that reads correctly in a shell resolves to nothing here and the correlation
     * silently reports "0 units" as if the port had no members.
     *
+    * ==Gated on the ARTIFACT LAYER, like every other write this run makes==
+    *
+    * `None` when reporting is off, for the reason §5.1 states without exception: this writes
+    * `errors.tsv`, `tests.tsv` and `correlate.txt` into `CheckReport.runDir`, and with the layer
+    * off that path falls back to `<cwd>/port-report/<sun.java.command>/run-latest` — the SUBPROJECT
+    * under a forked test JVM, i.e. the checkout. `CorrelateRun.run` creates it before it has even
+    * validated its inputs, so an unreporting run left an empty artifact directory behind and then
+    * threw `MissingInput` on the source map this run was never asked to write. A `git status` that
+    * cannot tell a decision from an artefact is what §5.5's discipline rests on.
+    *
+    * The gate is here, at the one place that names `CheckReport.runDir`, and not in each caller —
+    * a wrapper every caller must remember is a wrapper one caller will not. It is an `Option` and
+    * not an empty `Result` on purpose: a `Result(regressed = false)` is indistinguishable from a
+    * clean correlation, which is the "whole suite reported green from a log it never opened"
+    * failure `CorrelateRun.MissingInput` exists to make impossible.
+    *
     * @param extraSrcMaps other ports' maps, scoped `main`/`test`. A test suite's failure is
     *                     anchored on the LIBRARY member that threw, which lives in another port —
     *                     so pass the library's map to get a `main-frame` anchor instead of a
-    *                     `test-frame` one. */
+    *                     `test-frame` one.
+    * @return the correlation, or `None` when the artifact layer is off and there is neither a
+    *         source map to join through nor anywhere to publish the answer */
   def correlate(
       scalac: Option[Path] = scala.None,
       tests: Option[Path] = scala.None,
       extraSrcMaps: List[(String, Path)] = Nil,
-  ): CorrelateRun.Result =
-    val mine = CheckReport.runDir.resolve("srcmap.tsv")
-    CorrelateRun.run(CorrelateRun.Request(
-      srcmaps  = extraSrcMaps :+ (sourceSet.configName -> mine),
-      scalac   = scalac,
-      tests    = tests,
-      out      = CheckReport.runDir,
-      baseline = Some(CheckReport.baselineDir),
-    ))
+  ): Option[CorrelateRun.Result] =
+    Option.when(CheckReport.enabled) {
+      val mine = CheckReport.runDir.resolve("srcmap.tsv")
+      CorrelateRun.run(CorrelateRun.Request(
+        srcmaps  = extraSrcMaps :+ (sourceSet.configName -> mine),
+        scalac   = scalac,
+        tests    = tests,
+        out      = CheckReport.runDir,
+        baseline = Some(CheckReport.baselineDir),
+      ))
+    }
 
   /** record a [[SubstitutionCheck]] result under `check`, and hand it straight back.
     *

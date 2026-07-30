@@ -340,11 +340,37 @@ class PortRunSpec extends munit.FunSuite:
         " 5 |  x\n   |  ^\n   |  Found: String\n")
       PortRun("demo", root.resolve("port"), SourceSet.Main, FrontendConfig(src, Nil, Nil), Nil)
         .correlate(scalac = Some(log))
-    }
+    }.getOrElse(fail("the artifact layer was ON — correlation must have run"))
     // the error is joined back to the MEMBER and the Java line it came from — no second JVM
     assertEquals(result.errors.size, 1)
     assertEquals(result.errors.head.entry.map(_.unit), Some("com.demo.Widget"))
     assert(Files.isRegularFile(rep.resolve("run-latest/errors.tsv")))
+  }
+
+  test("with the artifact layer OFF, correlation creates NO directory — it is a write like any other") {
+    // `correlate` passed `out = CheckReport.runDir` unconditionally, and `CorrelateRun.run` creates
+    // that directory before it validates its inputs. With reporting off `runDir` falls back to
+    // `<cwd>/port-report/<sun.java.command>/run-latest`, and a forked test JVM's cwd is the
+    // SUBPROJECT — so an empty artifact directory appeared in the checkout, from a run that had not
+    // opted in and whose source map had (correctly) never been written. Same defect, same shape and
+    // same fix as the unconditional `PortMap.write` above.
+    //
+    // Asserted on the FILESYSTEM, not on the return value: what is being pinned is that nothing was
+    // created, and a `None` proves only that a branch was taken.
+    val here   = DebugFlags.root.resolve("port-report")
+    def listed = if !Files.exists(here) then Set.empty[String]
+                 else Files.walk(here).iterator().asScala.map(_.toString).toSet
+    val before    = listed
+    val runDir    = CheckReport.runDir
+    val runDirWas = Files.exists(runDir)
+    val (root, src) = fixture()
+    val log = root.resolve("compile.txt")
+    Files.writeString(log, "-- [E007] Type Mismatch Error: /anywhere/com/demo/Widget.scala:5:2 ---\n")
+    val out = PortRun("demo", root.resolve("port"), SourceSet.Main, FrontendConfig(src, Nil, Nil), Nil)
+      .correlate(scalac = Some(log))
+    assertEquals(out, scala.None)
+    assertEquals(listed, before, "a correlation nobody asked to publish must not create its own home")
+    assertEquals(Files.exists(runDir), runDirWas, clue(runDir))
   }
 
   test("omissions are checked over EMITTED units only — a dropped type's findings are not this port's") {
