@@ -54,14 +54,24 @@ object JavaCollections:
       val t = xs(i - 1); xs(i - 1) = xs(j); xs(j) = t
       i -= 1
 
-  /** `java.util.Arrays.asList(a, b, c)`.
+  /** `java.util.Arrays.asList(a, b, c)` — the ELEMENT form only. Java's `asList` has two shapes
+    * with different semantics, and only one of them may ever reach this method:
     *
-    * ONE divergence, stated rather than hidden: java returns a FIXED-SIZE list — `set` works, `add`
-    * and `remove` throw — and this returns an ordinary `Buffer`. There is no scala type that is both
-    * a `Buffer` (which is what `java.util.List` maps to, so it is what the declared slot demands) and
-    * fixed-size. The divergence is permissive: code java would have rejected now runs. That direction
-    * cannot turn a correct program into an incorrect one, which is the same trade already recorded
-    * for `Buffer` adding an ordering guarantee `Collection` does not make. */
+    *   - **Elements listed at the call site** (`asList(1, 2, 3)`): java packs them into a fresh
+    *     array nobody else can reach, so the only observable divergence here is that java's list
+    *     is FIXED-SIZE — `set` works, `add`/`remove` throw — and this returns an ordinary
+    *     `Buffer`. There is no scala type that is both a `Buffer` (which is what `java.util.List`
+    *     maps to, so it is what the declared slot demands) and fixed-size. That divergence is
+    *     permissive: code java would have rejected now runs, and that direction cannot turn a
+    *     correct program into an incorrect one — the same trade already recorded for `Buffer`
+    *     adding an ordering guarantee `Collection` does not make.
+    *   - **A caller-held array passed whole** (`asList(arr)`): java returns a LIVE VIEW — `set`
+    *     writes through to `arr`, and writes to `arr` are visible through the list. A copy here
+    *     would compile and silently detach every aliased write, which is exactly a §4.4 defect.
+    *     This method MUST NOT receive that form: today the engine emits the packed array unspread,
+    *     so the call fails to compile (verified by pipeline probe — `Buffer[String]` required,
+    *     `asList(xs.asInstanceOf[Array[Object]])` found), and whoever fixes that emission must
+    *     route the aliasing form to a live view or a refusal, never to this copy. */
   def asList[A](xs: A*): scala.collection.mutable.Buffer[A] =
     scala.collection.mutable.ArrayBuffer.from(xs)
 

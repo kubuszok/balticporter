@@ -122,8 +122,10 @@ made.
    omissions are `DirectedGraph`/`UndirectedGraph`, whose several roots reach different parent
    overloads (the shape `ENGINE-LIMITS` records as having no single-primary encoding). Neither is
    reachable from a passing test.
-2. `Arrays.asList` returns a mutable `Buffer` where java returns a FIXED-SIZE list. Permissive, so it
-   cannot make a correct program incorrect, but it is a divergence and it is written down in
-   `JavaCollections`.
+2. `Arrays.asList` (element form, the only form this suite uses) returns a mutable `Buffer` where
+   java returns a FIXED-SIZE list. Permissive, so it cannot make a correct program incorrect, and
+   written down in `JavaCollections` — which also records the form that is NOT permissive: java's
+   `asList(arr)` over a caller-held array is a live view, a copy would silently detach it, and
+   today that form fails to compile (the pack is emitted unspread) rather than silently copying.
 3. Non-local returns: 14 sites emit `return` inside a `for`, which scala desugars to a closure. They
    still work in 3.8 (verified) but are deprecated — a forward-compatibility item, not a defect.
