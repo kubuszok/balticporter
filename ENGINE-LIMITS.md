@@ -1044,9 +1044,12 @@ cache.
 Two consequences:
 
 - **"N consecutive green runs" of an unchanged tree is ONE run.** Any rerun-stability claim (flake
-  hunting, race validation) must bust the cache between iterations — append a changing comment to a
-  MAIN source that every test classpath depends on, run, repeat, restore. A `touch` does not bust
-  it; the cache is content-addressed.
+  hunting, race validation) must bust the cache between iterations, and the bust must reach the
+  BYTECODE: the cache keys on compiled output, so a comment-only edit recompiles and then replays
+  anyway (measured — four "busted" runs re-executed nothing after run 1; a spec's file side effect
+  moved once). A `touch` is even weaker. What works: change a non-final `val`'s string literal in a
+  MAIN source every test classpath depends on, run, repeat, restore — and verify each iteration by
+  a KNOWN SIDE EFFECT's mtime advancing, never by the output.
 - The forgery cuts the other way too: when a test IS flaky, the cached green can mask it until an
   unrelated edit re-executes the suite — the failure then diffs against the edit that exposed it,
   not the one that caused it. Read a surprising test failure with this in mind before blaming the
