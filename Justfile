@@ -756,6 +756,16 @@ debug-selfcheck:
     want "correlate with no options exits 2"      "$rc" "2"
     case "$out" in *"§5.1"*) ok "…and points at the rule it serves" ;; *) bad "…rule: $out" ;; esac
 
+    echo "-- _lib.sh: an unset CORE_PROJECT is FATAL, never a dead default --"
+    # The lanes all export it; what this pins is the file's behaviour WITHOUT the Justfile, which is
+    # how the old default (`core`) survived the module restructure — it named a project that no
+    # longer existed, and the comment above it claimed the file was correct on its own.
+    out=$( { unset CORE_PROJECT; . scripts/_lib.sh; correlate "$T/out"; } 2>&1 ); rc=$?
+    want "correlate without CORE_PROJECT is fatal"  "$rc" "1"
+    case "$out" in *CORE_PROJECT*Justfile*) ok "…and names the variable and where it is set" ;;
+                   *) bad "…and names the variable and where it is set: $out" ;; esac
+    case "$out" in *runMain*) bad "…it must not reach sbt at all" ;; *) ok "…before sbt is invoked" ;; esac
+
     echo "-- members-unchanged: a missing input is FATAL, and names the port --"
     R="$T/port-report"
     mkdir -p "$R/Both/baseline" "$R/Both/run-latest"

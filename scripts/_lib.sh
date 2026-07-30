@@ -207,9 +207,13 @@ correlate() {
   # not render as an empty-but-tidy block (the §3 false green, one artifact later).
   local cap="$MEASURE_TMP/correlate-$$.txt"
   # The sbt project that holds CorrelateMain is POLICY: the Justfile exports it (`core_project`) so
-  # a module rename is one line there and never a grep through shell. The default keeps this file
-  # correct on its own.
-  sbt -client "${CORE_PROJECT:-core}/runMain balticporter.tir.CorrelateMain --out $out --baseline $(dirname "$out")/baseline $*" \
+  # a module rename is one line there and never a grep through shell. UNSET IS FATAL, and there is
+  # deliberately no default: the one this line used to carry (`core`) named a project the module
+  # restructure had already deleted, so "correct on its own" meant "wrong, silently, until a lane
+  # happened to run". A missing input is fatal and names the file to edit — CLAUDE.md §5.1, the same
+  # rule that makes a non-existent `--tests` path an abort rather than an empty artifact.
+  : "${CORE_PROJECT:?not set — export it from the Justfile (\`core_project\`) before sourcing scripts/_lib.sh}"
+  sbt -client "$CORE_PROJECT/runMain balticporter.tir.CorrelateMain --out $out --baseline $(dirname "$out")/baseline $*" \
     2>&1 | sed $'s/\033\\[[0-9;]*[a-zA-Z]//g' > "$cap"
   local st=${PIPESTATUS[0]}
   sed -n '/^units in source map/,$p' "$cap" | grep -v '^\['
