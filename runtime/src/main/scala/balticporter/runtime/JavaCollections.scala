@@ -91,11 +91,16 @@ object JavaCollections:
     *
     *   - **the RESULT.** Java returns whether anything was removed, and code branches on it
     *     (`if (list.remove(x)) …`). `-=` returns the buffer.
-    *   - **the DIRECTION of the equality.** Java's `ArrayList.remove(Object o)` tests
-    *     `o.equals(element)` — the PROBE's `equals`, not the element's — with an explicit `null`
-    *     arm. `xs.indexOf(o)` tests the element's, which differs for any asymmetric `equals`
-    *     (a subclass that narrows it, `java.sql.Timestamp` against `java.util.Date`). Reproducing
-    *     java's direction costs one lambda and removes a divergence no test would show.
+    *   - **the explicit NULL arm.** Java's `ArrayList.remove(Object o)` has one, and it is what
+    *     makes `remove(null)` remove a null element rather than throw.
+    *
+    * The DIRECTION of the equality is java's too — `o.equals(element)`, the PROBE's `equals`, not
+    * the element's — and it must be preserved, but it is NOT one of the reasons this is a helper.
+    * That was claimed here and is wrong: `SeqOps.indexOf(elem)` is `indexWhere(elem == _)`, so
+    * scala's own `indexOf` (and `-=` through it) already asks the probe. MEASURED in
+    * `JavaCollectionsSpec`, which pins both the direction and that fact — because a hand-written
+    * `indexWhere(_ == o)` WOULD diverge, silently, for any asymmetric `equals` (a subclass that
+    * narrows it, `java.sql.Timestamp` against `java.util.Date`).
     *
     * Only the FIRST match goes, as java's does. */
   def removeValue[A](xs: scala.collection.mutable.Buffer[A], o: scala.Any): Boolean =

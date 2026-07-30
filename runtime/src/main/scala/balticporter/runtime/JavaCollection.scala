@@ -186,9 +186,28 @@ object JavaCollection:
     * Backed by the ORIGINAL buffer rather than a copy, so `add`/`remove` are visible to whoever
     * holds it. `.asScala` on a nested collection COPIES and turns a live view into a detached
     * snapshot — the failure `ENGINE-LIMITS` records — and this is the same hazard from the other
-    * side, so it is deliberately not a copy. */
+    * side, so it is deliberately not a copy.
+    *
+    * Its `iterator()` is REMOVAL-CAPABLE, which is not a nicety: `AbstractCollection`'s
+    * `removeAll`, `retainAll` and `removeIf` are all implemented as iterate-and-remove, and
+    * `JavaIterator.from` hands back the throwing default — so all three threw
+    * `UnsupportedOperationException` on a wrapper documented as live. That COMPILED and no count
+    * moved (CLAUDE.md §4.4); it was found by calling them, in `JavaCollectionSpec`. And it is the
+    * reason `JavaIterator` carries `remove` at all: java's own `ArrayList.iterator()` supports it,
+    * so a shim standing in for one must too. The index bookkeeping below is
+    * `java.util.ArrayList.Itr`'s, including `IllegalStateException` before the first `next()` and
+    * on a second `remove()`. */
   def from[A](xs: scala.collection.mutable.Buffer[A]): JavaCollection[A] = new JavaCollection[A]:
-    def iterator(): JavaIterator[A] = JavaIterator.from(xs.iterator)
+    def iterator(): JavaIterator[A] = new JavaIterator[A]:
+      private var cursor = 0
+      private var last   = -1
+      def hasNext(): Boolean = cursor < xs.size
+      def next(): A          = { last = cursor; cursor += 1; xs(last) }
+      override def remove(): Unit =
+        if last < 0 then throw new IllegalStateException("remove")
+        xs.remove(last)
+        cursor = last
+        last = -1
     def size(): Int                 = xs.size
     override def isEmpty(): Boolean          = xs.isEmpty
     override def contains(o: java.lang.Object): Boolean = xs.contains(o)
@@ -213,9 +232,22 @@ object JavaCollection:
     *   - `add` returns whether the set CHANGED — `false` for an element already present, where a
     *     `List` always returns `true`.
     *   - `contains`/`remove` test `o.equals(element)`, the PROBE's `equals`, as
-    *     `java.util.AbstractCollection` does. */
+    *     `java.util.AbstractCollection` does.
+    *
+    * REMOVAL-CAPABLE for the reason [[from]] gives. Over a SNAPSHOT of the set rather than the
+    * set's own iterator: removing through a live `mutable.Set` iterator is undefined, and java's
+    * own answer to iterating a `HashSet` while mutating it is `ConcurrentModificationException` —
+    * so nothing correct depends on the difference, and the snapshot makes iterate-and-remove work
+    * where the live iterator would corrupt the traversal. */
   def fromSet[A](xs: scala.collection.mutable.Set[A]): JavaCollection[A] = new JavaCollection[A]:
-    def iterator(): JavaIterator[A] = JavaIterator.from(xs.iterator)
+    def iterator(): JavaIterator[A] = new JavaIterator[A]:
+      private val order          = xs.toList.iterator
+      private var last: Option[A] = scala.None
+      def hasNext(): Boolean = order.hasNext
+      def next(): A          = { val e = order.next(); last = Some(e); e }
+      override def remove(): Unit = last match
+        case Some(e)    => xs -= e; last = scala.None
+        case scala.None => throw new IllegalStateException("remove")
     def size(): Int                 = xs.size
     override def isEmpty(): Boolean = xs.isEmpty
     override def contains(o: java.lang.Object): Boolean =
@@ -256,7 +288,15 @@ object JavaCollection:
     * [[JavaCollection]] — like java's own `Collection` — is invariant. Drop the call and the widening
     * goes with it. */
   def unmodifiable[T](c: JavaCollection[? <: T]): JavaCollection[T] = new JavaCollection[T]:
-    def iterator(): JavaIterator[T] = c.iterator().asInstanceOf[JavaIterator[T]]
+    // the WRAPPED collection's iterator may be removal-capable ([[from]] now is), and java's
+    // `unmodifiableCollection` returns one whose `remove()` throws — otherwise a caller removes
+    // through a view that rejects `remove`, which is the read-only guarantee gone with a green
+    // compile. Delegation is not enough here; the removal has to be refused explicitly.
+    def iterator(): JavaIterator[T] = new JavaIterator[T]:
+      private val u          = c.iterator()
+      def hasNext(): Boolean = u.hasNext()
+      def next(): T          = u.next()
+      override def remove(): Unit = throw new UnsupportedOperationException("remove on an unmodifiable collection")
     def size(): Int                 = c.size()
     override def isEmpty(): Boolean          = c.isEmpty()
     override def contains(o: java.lang.Object): Boolean = c.contains(o)
