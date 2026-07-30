@@ -641,6 +641,37 @@ final class CollectionsTransform extends Phase, RequiresRuntime:
       // likewise `Map.remove`, which returns the value that was there.
       case ("remove", List(key), Kind.Map)      =>
         Some(call(call(recv, removeSym, List(key), t, so), getOrElseSym, List(dflt(nullOf(so), recv, so)), t, so))
+      // Java's `List` declares TWO one-argument `remove`s that do OPPOSITE things, and scala's
+      // `Buffer` has only one of them:
+      //
+      //   * `remove(int index)`  — deletes the element AT that index and returns it. Scala's
+      //     `Buffer.remove(Int): A` is exactly this, so it needs no rewrite at all.
+      //   * `remove(Object o)`   — deletes the FIRST element equal to `o` and returns whether it
+      //     did. Scala's `Buffer` has no such method; the nearest thing, `-=`, returns the buffer.
+      //
+      // Emitting `buffer.remove(x)` for the second is CLAUDE.md §4.4 in its purest form: where the
+      // element type is `Integer`, scala's `Integer2int` conversion applies silently and the call
+      // becomes INDEX removal — `[10, 11, 12].remove(Integer.valueOf(1))` removes nothing in java
+      // and removes `11` in the port, with no compile error and no count moved. (Where the element
+      // is anything else the same emission at least fails to compile — `Found: String / Required:
+      // Int` — which is how narrow the visible half of this defect was.)
+      //
+      // WHICH OVERLOAD JAVA RESOLVED is read off the call's RESULT type, and that is total rather
+      // than heuristic: `remove(Object)` returns a PRIMITIVE `boolean`, while `remove(int)` returns
+      // the element type — which can never be primitive, because java generics cannot be
+      // instantiated at one. So `scala.Boolean` identifies the by-value overload uniquely, and it
+      // stays right where reconstructing java's applicability rules from the argument's type would
+      // not: a `List<Boolean>` index removal is `java.lang.Boolean` (boxed, distinct), and an
+      // `ArrayDeque` has no index overload at all, so `deque.remove(5)` — which java boxes and
+      // sends to `remove(Object)` — is classified by value even though its argument is an `int`.
+      // Verified by pipeline probe over all six shapes.
+      //
+      // ALWAYS the faithful form, never the simple one where the result is discarded: this hook
+      // sees an `Apply`, not the statement it sits in, so "the result is unused" is not a fact
+      // available here — and a discarded `Boolean` costs nothing.
+      case ("remove", List(x), Kind.Seq) if removesByValue(t) && sym("removeValue") != SymId.None =>
+        Some(Tree.Apply(Tree.Ident(sym("removeValue"), TypeRepr.NoType, so), List(recv, x),
+                        sym("removeValue"), t.tpe, t.origin))
       case ("add", List(i, x), Kind.Seq)        => Some(call(recv, insertSym, List(i, x), t, so)) // insert at index
       case ("add", List(x), _)                  => Some(infix(recv, opPlusEq, List(x), t, so))    // xs += x
       // ---- java Deque, as `LinkedList`/`ArrayDeque` are routinely used ----
@@ -660,6 +691,14 @@ final class CollectionsTransform extends Phase, RequiresRuntime:
       case ("remove", List(x), Kind.Set)        => Some(infix(recv, opMinusEq, List(x), t, so)) // xs -= x
       case ("containsKey", List(key), Kind.Map) => Some(call(recv, containsSym, List(key), t, so))
       case _                                    => None
+
+  /** did java resolve `Collection.remove(Object)` (by VALUE, returning `boolean`) rather than
+    * `List.remove(int)` (by INDEX, returning the element)? See the `remove` arm in [[rewrite]] for
+    * why the result type answers this exactly. A call whose result type the frontend could not
+    * record answers `false` and is left as scala's index removal — the pre-existing behaviour, and
+    * the one that at least matches java for every receiver that HAS an index overload. */
+  private def removesByValue(t: Tree.Apply)(using p: Program): Boolean =
+    headSym(t.tpe).flatMap(p.symbolOf).exists(_.fullName == "scala.Boolean")
 
   /** `recv.op(args)` where `op` is tagged an operator → emitted infix (`recv op arg`). */
   private def infix(recv: Term, op: SymId, args: List[Term], t: Tree.Apply, so: Origin): Term =
@@ -715,7 +754,7 @@ object CollectionsTransform:
     * line here, one arm in `staticRewrite` and one method in the runtime object — and a typo is a
     * `SymId.None` that declines the rewrite rather than a dangling name in emitted code. */
   val StaticHelpers: List[String] =
-    List("sort", "sortNatural", "reverse", "shuffle", "asList",
+    List("sort", "sortNatural", "reverse", "shuffle", "asList", "removeValue",
          "comparingByKey", "comparingByValue", "sortedWith", "into", "mapToDouble", "intRange")
 
   /** Support types the retyping REQUIRES. They live in the PUBLISHED `balticporter-runtime`

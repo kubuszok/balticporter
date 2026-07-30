@@ -75,6 +75,28 @@ object JavaCollections:
   def asList[A](xs: A*): scala.collection.mutable.Buffer[A] =
     scala.collection.mutable.ArrayBuffer.from(xs)
 
+  /** `java.util.Collection.remove(Object)` — removal BY VALUE, which scala's `Buffer` does not have.
+    *
+    * Not `Collections`', and deliberately here anyway: like every other member of this object it
+    * exists because a java call has no scala counterpart with the same MEANING, and it is a
+    * receiver-first function for the same reason `sort` is — `Buffer` cannot be extended with a
+    * member that would clash with the `remove(Int)` it already declares.
+    *
+    * Two things are java's and not scala's, and both are the reason this is not `xs -= o`:
+    *
+    *   - **the RESULT.** Java returns whether anything was removed, and code branches on it
+    *     (`if (list.remove(x)) …`). `-=` returns the buffer.
+    *   - **the DIRECTION of the equality.** Java's `ArrayList.remove(Object o)` tests
+    *     `o.equals(element)` — the PROBE's `equals`, not the element's — with an explicit `null`
+    *     arm. `xs.indexOf(o)` tests the element's, which differs for any asymmetric `equals`
+    *     (a subclass that narrows it, `java.sql.Timestamp` against `java.util.Date`). Reproducing
+    *     java's direction costs one lambda and removes a divergence no test would show.
+    *
+    * Only the FIRST match goes, as java's does. */
+  def removeValue[A](xs: scala.collection.mutable.Buffer[A], o: scala.Any): Boolean =
+    val i = xs.indexWhere(e => if o == null then e == null else o.equals(e))
+    if i < 0 then false else { xs.remove(i); true }
+
   /** `java.util.Collections.reverse(list)` — in place, as java's is. */
   def reverse[A](xs: scala.collection.mutable.Buffer[A]): Unit = inPlace(xs, xs.toList.reverse)
 

@@ -313,6 +313,7 @@ compile-error count; all four were found by running the ported tests, in one ses
 | `super(args)` in a 2nd ctor | *nothing* | scala secondary constructors cannot call super; every exception lost its message | promote the widest super call to the PRIMARY and delegate (JDK throwables only — elsewhere padding is a guess) |
 | `@Before` | *nothing* | JUnit runs it before EVERY test, on a fresh instance; MUnit has neither | call it at the head of each test body |
 | `@Test(expected = E.class)` | body run bare | it would PASS while checking nothing | `intercept[E] { … }` |
+| `list.remove(anInteger)` | `buffer.remove(x)` | java resolved `remove(Object)` — by VALUE, returning `boolean`; scala's only `Buffer.remove` is BY INDEX, and `Integer2int` applies silently, so `[10,11,12].remove(Integer.valueOf(1))` removes nothing in java and `11` in the port | a by-value helper. Read WHICH overload java resolved off the call's RESULT type: `remove(Object)` returns a primitive `boolean` and `remove(int)` returns the element, which java generics can never make primitive |
 
 Before adding a translation for a Java *statement* form, ask what it means when its value or its
 control flow is used, not only what it looks like. And read §3 again: a green compile said nothing

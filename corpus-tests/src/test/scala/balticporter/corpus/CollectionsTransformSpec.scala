@@ -81,6 +81,50 @@ class CollectionsTransformSpec extends PortSuite:
   // that is not a renamer.
   // ---------------------------------------------------------------------------------------------
 
+  // ---------------------------------------------------------------------------------------------
+  // `List.remove` — java's TWO one-argument overloads, which do opposite things. Scala's `Buffer`
+  // has only the index one, and `Integer2int` makes the by-VALUE call compile as index removal
+  // (CLAUDE.md §4.4: valid scala meaning something else, no count moved). Verified against a real
+  // run: `[10, 11, 12].remove(Integer.valueOf(1))` removes nothing in java and removed `11` here.
+  // ---------------------------------------------------------------------------------------------
+
+  private val removes =
+    """package demo;
+      |import java.util.*;
+      |class R {
+      |  void discard(List<Integer> xs)      { xs.remove(Integer.valueOf(1)); }
+      |  boolean used(List<Integer> xs)      { return xs.remove(Integer.valueOf(1)); }
+      |  void other(List<String> ss, String s) { ss.remove(s); }
+      |  void index(List<String> ss)         { ss.remove(0); }
+      |  String indexUsed(List<String> ss)   { return ss.remove(0); }
+      |  void boolIndex(List<Boolean> bs)    { bs.remove(0); }
+      |  void dequeValue(ArrayDeque<Integer> q) { q.remove(Integer.valueOf(3)); }
+      |}
+      |""".stripMargin
+
+  test("List.remove(Object) is BY VALUE — java's overload, not scala's index removal") {
+    val p = port(removes, new CollectionsTransform)
+    // both positions get the faithful form: `transformApply` sees an `Apply`, not the statement it
+    // sits in, so "the result is discarded" is not a fact available to the rewrite.
+    assertEmits(p, "balticporter.runtime.JavaCollections.removeValue(xs, java.lang.Integer.valueOf(1))")
+    assertEmits(p, "return balticporter.runtime.JavaCollections.removeValue(xs, java.lang.Integer.valueOf(1))")
+    assertEmits(p, "balticporter.runtime.JavaCollections.removeValue(ss, s)")
+    // an `ArrayDeque` has NO index overload, so java boxes and resolves `remove(Object)` — which is
+    // why the discriminator cannot be "the argument is an int".
+    assertEmits(p, "balticporter.runtime.JavaCollections.removeValue(q, java.lang.Integer.valueOf(3))")
+  }
+
+  test("List.remove(int) stays scala's index removal — same meaning, same result") {
+    val p = port(removes, new CollectionsTransform)
+    assertEmits(p, "ss.remove(0)")
+    assertEmits(p, "return ss.remove(0)")
+    // `List<Boolean>` is the shape that would break a result-type test that did not distinguish the
+    // BOXED element from the primitive `boolean` java's `remove(Object)` returns.
+    assertEmits(p, "bs.remove(0)")
+    assertNotEmits(p, "removeValue(bs")
+    assertNotEmits(p, "removeValue(ss, 0)")
+  }
+
   test("a downcast FROM a type the phase does not retype is KEPT, retargeted at the shim") {
     // `Object` is not in the phase's type map, so nothing the phase did can stop the value from
     // being a shim instance at run time. Java's downcast stays a downcast.
