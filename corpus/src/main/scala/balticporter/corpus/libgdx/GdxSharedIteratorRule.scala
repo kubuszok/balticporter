@@ -1,4 +1,4 @@
-package balticporter.corpus
+package balticporter.corpus.libgdx
 
 import balticporter.tir.*
 

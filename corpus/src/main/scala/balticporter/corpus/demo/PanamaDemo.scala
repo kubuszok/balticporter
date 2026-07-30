@@ -1,4 +1,4 @@
-package balticporter.corpus
+package balticporter.corpus.demo
 
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
@@ -8,7 +8,7 @@ import balticporter.transform.PanamaFfiTransform
 /** Demonstrates JNI → Panama: `native` methods become generated `java.lang.foreign` downcall
   * bindings (a MethodHandle over a FunctionDescriptor built from the signature).
   *
-  *   corpus/runMain balticporter.corpus.PanamaDemo
+  *   corpus/runMain balticporter.corpus.demo.PanamaDemo
   */
 object PanamaDemo:
 

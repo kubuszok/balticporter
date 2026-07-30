@@ -1,4 +1,4 @@
-package balticporter.corpus
+package balticporter.corpus.ashley
 
 import balticporter.core.{FrontendConfig, Provenance, RuntimeMode}
 import balticporter.runner.{Determinism, PortRun, SourceSet, VendoredCommit}
@@ -8,7 +8,7 @@ import scala.jdk.CollectionConverters.*
 
 /** Port Ashley's own JUnit suite (`ashley/tests`) through the same pipeline as `ashley/src`.
   *
-  *   corpus/runMain balticporter.corpus.AshleyTestMigrate [--determinism=full]
+  *   corpus/runMain balticporter.corpus.ashley.AshleyTestMigrate [--determinism=full]
   *
   * 18 files, 118 `@Test` methods, 458 assertions — the only behavioural evidence this port can
   * have. CLAUDE.md §3: a green compile says nothing about behaviour, and every silent defect this

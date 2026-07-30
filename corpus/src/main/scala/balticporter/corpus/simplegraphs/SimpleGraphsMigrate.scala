@@ -1,4 +1,4 @@
-package balticporter.corpus
+package balticporter.corpus.simplegraphs
 
 import balticporter.core.{FrontendConfig, PortManifest, Provenance, RuntimeMode}
 import balticporter.runner.{Determinism, PortRun, SourceSet, VendoredCommit}
@@ -9,7 +9,7 @@ import scala.jdk.CollectionConverters.*
 
 /** Migrate **simple-graphs** (`src/main/java`, 29 types — a dependency-free graph library).
   *
-  *   corpus/runMain balticporter.corpus.SimpleGraphsMigrate [--determinism=full]
+  *   corpus/runMain balticporter.corpus.simplegraphs.SimpleGraphsMigrate [--determinism=full]
   *
   * ==Why simple-graphs is the third corpus library==
   * It is small, but it was not chosen for that. It is the first library to exercise four things

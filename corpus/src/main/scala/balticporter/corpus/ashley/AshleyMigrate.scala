@@ -1,6 +1,7 @@
-package balticporter.corpus
+package balticporter.corpus.ashley
 
 import balticporter.core.{FrontendConfig, PortManifest, Provenance, RuntimeMode}
+import balticporter.corpus.libgdx.LibgdxPolicy
 import balticporter.runner.{Determinism, PortRun, SourceSet, VendoredCommit}
 
 import java.nio.file.{Files, Path}
@@ -8,7 +9,7 @@ import scala.jdk.CollectionConverters.*
 
 /** Migrate **Ashley** (`ashley/src`, 21 types — libGDX's entity-component-system) through the TIR.
   *
-  *   corpus/runMain balticporter.corpus.AshleyMigrate [--determinism=full]
+  *   corpus/runMain balticporter.corpus.ashley.AshleyMigrate [--determinism=full]
   *
   * ==Why Ashley is the second corpus library==
   * It is the smallest library that is a genuine DEPENDENT port. Every one of its 21 files resolves

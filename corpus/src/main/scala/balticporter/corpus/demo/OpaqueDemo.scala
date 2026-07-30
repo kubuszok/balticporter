@@ -1,4 +1,4 @@
-package balticporter.corpus
+package balticporter.corpus.demo
 
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
@@ -9,7 +9,7 @@ import balticporter.transform.IntToOpaqueTransform
   * `int layer` becomes an `opaque type Layer.T = Int` with a synthesized companion, retyped
   * everywhere it flows, wrapped at construction and unwrapped where consumed as a plain int.
   *
-  *   corpus/runMain balticporter.corpus.OpaqueDemo
+  *   corpus/runMain balticporter.corpus.demo.OpaqueDemo
   */
 object OpaqueDemo:
 

@@ -1,4 +1,4 @@
-package balticporter.corpus
+package balticporter.corpus.demo
 
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
@@ -9,7 +9,7 @@ import balticporter.transform.GlobalsToImplicitsTransform
   * becomes an instance threaded as a `using Config` through every method that reaches it
   * (found via the call graph), with a boundary `given` synthesized in its companion.
   *
-  *   corpus/runMain balticporter.corpus.GlobalsDemo
+  *   corpus/runMain balticporter.corpus.demo.GlobalsDemo
   */
 object GlobalsDemo:
 

@@ -1,4 +1,4 @@
-package balticporter.corpus
+package balticporter.corpus.demo
 
 import balticporter.emit.CtorOverride
 

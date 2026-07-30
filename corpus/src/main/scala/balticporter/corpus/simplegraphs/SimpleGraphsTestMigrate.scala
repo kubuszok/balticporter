@@ -1,4 +1,4 @@
-package balticporter.corpus
+package balticporter.corpus.simplegraphs
 
 import balticporter.core.{FrontendConfig, Provenance, RuntimeMode}
 import balticporter.runner.{Determinism, PortRun, SourceSet, VendoredCommit}
@@ -8,7 +8,7 @@ import scala.jdk.CollectionConverters.*
 
 /** Port simple-graphs' own JUnit suite (`src/test/java`) through the same pipeline as `src/main/java`.
   *
-  *   corpus/runMain balticporter.corpus.SimpleGraphsTestMigrate [--determinism=full]
+  *   corpus/runMain balticporter.corpus.simplegraphs.SimpleGraphsTestMigrate [--determinism=full]
   *
   * 7 files, 17 `@Test` — the only behavioural evidence this port can have. `PROGRESS.md`
   * §simple-graphs says "compiles" until this runs, and CLAUDE.md §3 is explicit about the difference:

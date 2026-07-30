@@ -1,4 +1,4 @@
-package balticporter.corpus
+package balticporter.corpus.demo
 
 import balticporter.core.FrontendConfig
 import balticporter.emit.TirEmitter
@@ -13,7 +13,7 @@ import scala.jdk.CollectionConverters.*
 /** Step-3 gate: emit a whole (small, dependency-free) library through the TIR to Scala and
   * run scalac over it. Burn-down harness — run, read the errors, fix the emitter, repeat.
   *
-  *   corpus/runMain balticporter.corpus.SpoonTirEmitProject [lib]   (default noise4j)
+  *   corpus/runMain balticporter.corpus.demo.SpoonTirEmitProject [lib]   (default noise4j)
   */
 object SpoonTirEmitProject:
 

@@ -1,4 +1,4 @@
-package balticporter.corpus
+package balticporter.corpus.libgdx
 
 import balticporter.core.{FrontendConfig, PortManifest, Provenance, RuntimeMode, Substitutions}
 import balticporter.runner.{Determinism, PortRun, SourceSet, VendoredCommit}
@@ -11,7 +11,7 @@ import scala.jdk.CollectionConverters.*
   * of libGDX) through the TIR to the `libgdx-core` sbt submodule, then compile it with
   * `sbt libgdx-core/compile`.
   *
-  *   corpus/runMain balticporter.corpus.LibgdxCoreMigrate [--raw] [--determinism=full]
+  *   corpus/runMain balticporter.corpus.libgdx.LibgdxCoreMigrate [--raw] [--determinism=full]
   *
   * `--raw` skips the transform pipeline (libGDX core uses its own collections, so the java
   * collections transform barely applies here; the port is essentially structural).

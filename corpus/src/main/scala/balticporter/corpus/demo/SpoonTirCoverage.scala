@@ -1,4 +1,4 @@
-package balticporter.corpus
+package balticporter.corpus.demo
 
 import balticporter.core.*
 import balticporter.frontend.spoon.SpoonTir
@@ -11,7 +11,7 @@ import scala.jdk.CollectionConverters.*
   * tally which constructs still hit `Unsupported`. Drives full coverage across every Java
   * library that sge and ssg port — run, implement the top failure category, repeat.
   *
-  *   corpus/runMain balticporter.corpus.SpoonTirCoverage [corpus] [N]
+  *   corpus/runMain balticporter.corpus.demo.SpoonTirCoverage [corpus] [N]
   *
   * corpus = liqp | flexmark | sge | all (default liqp) ; N = example failures per category.
   * sge is a lenient multi-library sweep (each libGDX-ecosystem library modeled on its own).

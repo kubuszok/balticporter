@@ -1,4 +1,4 @@
-package balticporter.corpus
+package balticporter.corpus.demo
 
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
@@ -7,7 +7,7 @@ import java.nio.file.{Files, Path}
 
 /** Emit a single Java file through the TIR to Scala source, to eyeball the emission backend.
   *
-  *   corpus/runMain balticporter.corpus.SpoonTirEmit [path/to/File.java]
+  *   corpus/runMain balticporter.corpus.demo.SpoonTirEmit [path/to/File.java]
   *
   * Default: a small liqp filter. Uses noClasspath parsing (structure over full resolution).
   */
