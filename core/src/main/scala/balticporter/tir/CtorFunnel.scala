@@ -35,6 +35,32 @@ object CtorFunnel:
       superArgs: List[Term],
       /** the promoted constructor's body minus its leading super/this delegation. */
       primaryBody: List[Statement],
+      /** A SYNTHESISED primary, taking the PARENT constructor's parameters, when no java
+        * constructor can be the primary but every root reaches the same parent constructor.
+        *
+        * The case this exists for: `AlgorithmPath()` calls `super(0, false)` and
+        * `AlgorithmPath(Node v)` calls `super(v.getIndex() + 1, true)`. Neither can be scala's
+        * primary — whichever is chosen, the other's `super(args)` has nowhere to go, and the
+        * emitted class then constructs its parent with the WRONG arguments while compiling
+        * perfectly. Measured: simple-graphs' shortest-path test returned a path of size 0 instead
+        * of 39, and the only thing that noticed was the test.
+        *
+        * The faithful encoding is the one a scala author would write by hand — a private primary
+        * that takes the super call's own parameters, with every java constructor a secondary that
+        * computes its arguments and delegates:
+        * {{{
+        * class AlgorithmPath[V] private (n: Int, b: Boolean) extends Path[V](n, b):
+        *   def this()          = this(0, false)
+        *   def this(v: Node[V]) = { this(v.getIndex() + 1, true); setByBacktracking(v) }
+        * }}}
+        * Admissible only when every root reaches the SAME parent constructor: differing overloads
+        * would need the null-padding that measured 0 -> 55 outside the JDK-throwable family. */
+      synthetic: List[(String, TypeRepr)] = Nil,
+      /** every root's `super(args)` IS expressed — as the primary's own, or through a `this(...)`
+        * delegation that carries them. [[OmissionCheck]] must not count those: it shadows this
+        * decision, and a decision it does not know about shows up as the number moving in the wrong
+        * direction while the emitted code becomes MORE faithful. Measured twice, +4 then +2. */
+      superExpressed: Boolean = false,
   ):
     def primaryParams: List[Tree.ValDef] = primary.map(_.paramss.flatten).getOrElse(Nil)
 
@@ -484,5 +510,81 @@ object CtorFunnel:
             .orElse(several.find(c => c.paramss.flatten.isEmpty && c.tparams.isEmpty))
         case several                           => several.find(c => c.paramss.flatten.isEmpty && c.tparams.isEmpty)
       chosen match
+        case Some(c) if roots.count(r => superArgsOf(program, r).nonEmpty) <= 1 =>
+          val (sa, rest) = split(program, c); Plan(Some(c), sa, rest)
+        // MORE THAN ONE root carries `super(args)`: whichever is nominated, the others' arguments
+        // are dropped. Try the synthesised primary before falling back to that.
+        // NOT for a throwable parent: that branch already nominates the WIDEST pass-through root and
+        // is measured (0 -> 55 when it guessed). Consulting the synthesis first let it nominate a
+        // NARROWER pass-through root instead — libGDX omissions 46 -> 50, four exception classes
+        // losing an argument each.
+        case other if !throwableParent => syntheticPrimary(program, cd, roots).getOrElse {
+          other match
+            case None    => Plan.none
+            case Some(c) => val (sa, rest) = split(program, c); Plan(Some(c), sa, rest)
+        }
+        // a THROWABLE parent keeps the measured choice above, untouched by the synthesis
         case None    => Plan.none
         case Some(c) => val (sa, rest) = split(program, c); Plan(Some(c), sa, rest)
+
+  /** A primary whose parameters ARE the parent constructor's — see [[Plan.synthetic]].
+    *
+    * Refuses unless every root reaches the same parent constructor with the same arity, and unless
+    * that constructor's parameter types are all readable here. A refusal leaves the previous
+    * behaviour AND the omission finding, which is the honest outcome: `OmissionCheck` reported all
+    * five of simple-graphs' dropped `super(args)` correctly, and the defect survived because nobody
+    * opened the report — not because the report was missing. */
+  private def syntheticPrimary(program: Program, cd: Tree.ClassDef,
+                               roots: List[Tree.DefDef]): Option[Plan] =
+    val calls = roots.map(r => superTarget(program, r) -> superArgsOf(program, r))
+    val targets = calls.map(_._1).distinct
+    val arities = calls.map(_._2.size).distinct
+    if roots.sizeIs < 2 || roots.exists(_.tparams.nonEmpty) then scala.None
+    else if targets.sizeIs != 1 || targets.head == SymId.None then scala.None
+    else if arities.sizeIs != 1 || arities.head == 0 then scala.None
+    else
+      def passesThrough(c: Tree.DefDef): Boolean =
+        val ps = c.paramss.flatten.map(_.symbol)
+        superArgsOf(program, c).map { case Tree.Ident(x, _, _) => x; case _ => SymId.None } == ps && ps.nonEmpty
+      // parameter TYPES from the parent constructor's own signature, never from one call's
+      // arguments: an argument is an expression whose type may be narrower than the formal.
+      val formals = program.symbolOf(targets.head).map(_.info).collect {
+        case TypeRepr.MethodType(ps, _, _)                       => ps.map(_._2)
+        case TypeRepr.PolyType(_, TypeRepr.MethodType(ps, _, _)) => ps.map(_._2)
+      }.getOrElse(Nil)
+      // a java constructor that ALREADY has the synthetic signature would collide with it
+      val collides = roots.exists(_.paramss.flatten.map(_.tpt.tpe) == formals)
+      if formals.sizeIs != arities.head || formals.contains(TypeRepr.NoType) then scala.None
+      // TWO DISJOINT SHAPES, and keeping them disjoint is the whole content of this decision. Three
+      // orderings were measured against libGDX before this one, and every ordering that let either
+      // shape reach the other's classes moved a number: promotion-first cost 4 omissions
+      // (`Texture`, `ShaderProgramLoader`, `FloatAttribute`, `IntAttribute`), synthesis-first cost 2
+      // compile errors and 5 omissions. libGDX is untouched only when each applies where it belongs.
+      //
+      // SHAPE 1 — a NO-ARG root that still carries `super(args)`. Nothing can be promoted: the
+      // no-arg root would give the class a nilary primary and drop every other root's arguments,
+      // and promoting a paramful root leaves the no-arg root with nothing to delegate with.
+      // Synthesis is the only encoding. `AlgorithmPath()` / `AlgorithmPath(Node)` is this shape.
+      else if roots.exists(_.paramss.flatten.isEmpty) then
+        if collides then scala.None
+        else
+          val o  = cd.origin
+          val ps = formals.zipWithIndex.map((ft, k) => (s"sup$$$k", ft))
+          Some(Plan(scala.None, ps.map((n, ft) => Tree.Opaque(n, ft, o)), Nil,
+                    synthetic = ps, superExpressed = true))
+      // SHAPE 2 — every root is paramful, and one of them already IS the synthetic primary (its own
+      // parameters are the parent's, passed straight through). Synthesising beside it would emit a
+      // duplicate signature, so that root is promoted and the others delegate.
+      // `Path(int, boolean)` / `Path(int)` is this shape. Where there is no such collision the old
+      // behaviour stands: the class keeps its omission finding rather than gaining a guess.
+      else if collides then
+        roots.filter(passesThrough).sortBy(c => -c.paramss.flatten.size).headOption
+          // the promoted root's parameters ARE the parent's, so every other root's `super(args)`
+          // reaches it verbatim through `this(...)` — nothing is dropped.
+          .map { c => val (sa, rest) = split(program, c); Plan(Some(c), sa, rest, superExpressed = true) }
+      else scala.None
+
+  private def superTarget(program: Program, d: Tree.DefDef): SymId = stmtsOf(d).headOption match
+    case Some(Tree.Apply(Tree.Select(_: Tree.Super, m, _, _), args, _, _, _))
+        if args.nonEmpty && isInitName(program, m) => m
+    case _ => SymId.None

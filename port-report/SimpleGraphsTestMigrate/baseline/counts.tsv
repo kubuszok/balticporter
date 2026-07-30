@@ -1,12 +1,12 @@
 #check	count
 manifest	0
-omissions	2
+omissions	0
 policy	0
 port-map	0
 portability(all)	6
-portability(emitted)	6
+portability(emitted)	0
 portability(injected)	0
-remediation	1
+remediation	0
 signature	0
 substitution(dangling)	0
 substitution(emitted)	0

@@ -1,0 +1,7 @@
+#id	check	kind	owner	path	line	detail
+8724b17ae5d8	portability(all)	java.util.concurrent.atomic.AtomicInteger	components	../../main/java/space/earlygrey/simplegraphs/Graph.java	483	Instantiate — the java.util.concurrent runtime is JVM-only (Scala.js is single-threaded)
+01ed8952d7b0	portability(all)	java.util.concurrent.atomic.AtomicInteger	components	../../main/java/space/earlygrey/simplegraphs/Graph.java	483	MemberType — the java.util.concurrent runtime is JVM-only (Scala.js is single-threaded)
+122a6f52c7d2	portability(all)	java.util.concurrent.atomic.AtomicInteger	sge.graphs.algorithms.Algorithms#runID	../../main/java/space/earlygrey/simplegraphs/algorithms/Algorithms.java	38	Instantiate — the java.util.concurrent runtime is JVM-only (Scala.js is single-threaded)
+429ba5427709	portability(all)	java.util.concurrent.atomic.AtomicInteger	sge.graphs.algorithms.Algorithms#runID	../../main/java/space/earlygrey/simplegraphs/algorithms/Algorithms.java	38	MemberType — the java.util.concurrent runtime is JVM-only (Scala.js is single-threaded)
+871df5787479	portability(all)	java.util.concurrent.atomic.AtomicInteger	visited	../../main/java/space/earlygrey/simplegraphs/Graph.java	483	Instantiate — the java.util.concurrent runtime is JVM-only (Scala.js is single-threaded)
+c2c9a73b38ff	portability(all)	java.util.concurrent.atomic.AtomicInteger	visited	../../main/java/space/earlygrey/simplegraphs/Graph.java	483	MemberType — the java.util.concurrent runtime is JVM-only (Scala.js is single-threaded)

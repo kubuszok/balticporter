@@ -141,6 +141,10 @@ final class CollectionsTransform extends Phase, RequiresRuntime:
   private var asScalaBufferSym, filteredSym: SymId = SymId.None
   /** `mutable.Buffer`, so a collapsed stream can be TYPED as what it now emits. */
   private var bufferSym: SymId = SymId.None
+  /** scala's own `sum` — a plain MEMBER name on the collapsed buffer, not a `JavaCollections` helper. */
+  private var sumSym: SymId = SymId.None
+  /** scala's own `map` — a plain member on a collapsed buffer, for the stream chain. */
+  private var mapSym: SymId = SymId.None
   /** `JavaIterator.from` — the `iterator` counterpart of `wrapIterableArgs`. */
   private var iteratorFromSym, javaIteratorSym: SymId = SymId.None
 
@@ -184,6 +188,8 @@ final class CollectionsTransform extends Phase, RequiresRuntime:
     asScalaBufferSym    = mint("asScalaBuffer", JavaCollectionFqn + ".asScalaBuffer")
     filteredSym         = mint("filtered", JavaCollectionFqn + ".filtered")
     bufferSym           = byScala.getOrElse("scala.collection.mutable.Buffer", SymId.None)
+    sumSym              = mint("sum", "sum")
+    mapSym              = mint("map", "map")
     staticSyms = CollectionsTransform.StaticHelpers
       .map(n => n -> mint(n, s"$JavaCollectionsFqn.$n")).toMap
     // one `from` per DISTINCT scala target, so `new ArrayList<>(c)` copies through the companion the
@@ -235,10 +241,37 @@ final class CollectionsTransform extends Phase, RequiresRuntime:
     case Some(rhs) => t.copy(rhs = Some(coerce(t.tpt.tpe, rhs)))
     case _ => t
 
-  /** an assignment's left-hand side declares the expected type just as a `val`'s `tpt` does. */
+  /** an assignment's left-hand side declares the expected type just as a `val`'s `tpt` does; and a
+    * cast this phase has just made IMPOSSIBLE is dropped rather than emitted.
+    *
+    * The cast is written by the frontend and is valid java — `(Collection<V>) anArrayList`. This
+    * phase then retypes `Collection` to the shim while leaving the `java.util.List` alone (it comes
+    * from an untranslated `IntStream` chain, which K6's second rule correctly declines to collapse),
+    * and the surviving `asInstanceOf[JavaCollection[V]]` on an `ArrayList` cannot ever succeed. It
+    * COMPILES, and throws `ClassCastException` at run time — found by the test suite, invisible to
+    * every count, and squarely CLAUDE.md §4.4's defect class even though no java statement form is
+    * involved.
+    *
+    * Dropping it turns a runtime failure into a compile error at the same line, which is the
+    * outcome ENGINE-LIMITS M6 asks for: refuse and be counted, never approximate. */
   override def transformTerm(t: Term)(using Program): Term = t match
     case a: Tree.Assign => a.copy(rhs = coerce(a.lhs.tpe, a.rhs))
+    case ty: Tree.Typed if impossibleShimCast(ty) => ty.expr
     case other          => other
+
+  /** a cast TO a runtime shim FROM a JDK type this phase did not retype — unsatisfiable by
+    * construction, since no JDK class implements a `balticporter.runtime` trait. */
+  private def impossibleShimCast(t: Tree.Typed)(using p: Program): Boolean =
+    val to   = headSym(t.tpt.tpe).map(s => remap.getOrElse(s, s))
+    val from = headSym(t.expr.tpe).map(s => remap.getOrElse(s, s))
+    // A SCALA collection source counts too, and for the same reason: once the stream chain collapses,
+    // the value really is a `Buffer`, and `asInstanceOf[JavaCollection[…]]` on it throws exactly as
+    // it did on the `ArrayList`. Dropping the cast is also what lets `coerce` see the argument for
+    // what it is and bridge it properly — the cast was standing between the two.
+    to.exists(shimSyms.contains) && from.exists { f =>
+      !shimSyms.contains(f) &&
+        (kindOf.contains(f) || p.symbolOf(f).exists(_.fullName.startsWith("java.")))
+    }
 
   /** replace the head (type-constructor) symbol of a `TypeRef` / `AppliedType`, keeping args. */
   private def withHead(t: TypeRepr, s: SymId): TypeRepr = t match
@@ -281,7 +314,7 @@ final class CollectionsTransform extends Phase, RequiresRuntime:
         f   <- fromSyms.get(tgt)
       // the copy is typed as the TARGET, not as the argument: `new HashMap<>(aTreeMap)` is a
       // `HashMap`, and a node must describe what it emits (see `staticRewrite`).
-      yield Tree.Apply(Tree.Ident(f, TypeRepr.NoType, t.origin), List(arg), f, n.tpe, t.origin)
+      yield Tree.Apply(Tree.Ident(f, TypeRepr.NoType, t.origin), List(scalaView(arg)), f, n.tpe, t.origin)
     case _ => scala.None
 
   /** `java.util.Collections`' STATIC utilities — a receiver-less call, so `rewrite` (which is keyed
@@ -303,7 +336,14 @@ final class CollectionsTransform extends Phase, RequiresRuntime:
       o <- p.symbolOf(m.owner)
     yield s"${o.fullName}#${m.name}"
     val member  = qualified(t.method)
-    val recv    = t.fun match { case Tree.Select(r, _, _, _) => Some(r); case _ => None }
+    // through a `TypeApply`: `xs.mapToObj[Integer](f)` is `Apply(TypeApply(Select(xs, mapToObj)))`,
+    // and matching only `Select` silently skipped every explicitly-instantiated call — the chain
+    // then collapsed its first link and stopped, leaving `value mapToObj is not a member of
+    // Buffer[Int]`, an error that reads like a missing mapping rather than an unmatched shape.
+    val recv    = t.fun match
+      case Tree.Select(r, _, _, _)                          => Some(r)
+      case Tree.TypeApply(Tree.Select(r, _, _, _), _, _, _)  => Some(r)
+      case _                                                 => None
     def factory(f: SymId, args: List[Term]) =
       Tree.Apply(Tree.Ident(f, TypeRepr.NoType, t.origin), args, f, t.tpe, t.origin)
     (member, t.args) match
@@ -314,6 +354,11 @@ final class CollectionsTransform extends Phase, RequiresRuntime:
       case (Some("java.util.Collections#sort"), List(xs, cmp))    => Some(factory(sym("sort"), List(xs, cmp)))
       case (Some("java.util.Collections#sort"), List(xs))         => Some(factory(sym("sortNatural"), List(xs)))
       case (Some("java.util.Collections#reverse"), List(xs))      => Some(factory(sym("reverse"), List(xs)))
+      case (Some("java.util.Collections#shuffle"), List(xs, rnd))  => Some(factory(sym("shuffle"), List(xs, rnd)))
+      // `java.util.Arrays.asList` is not on `Collections`, but it is the same KIND of thing — a
+      // receiver-less JDK factory whose result type the port has already retyped — so it shares the
+      // table and the runtime object rather than earning a mechanism of its own.
+      case (Some("java.util.Arrays#asList"), args)                 => Some(factory(sym("asList"), args))
       // `Map.Entry` became a `Tuple2`, so `Entry`'s own statics must come along or the call survives
       // to the compiler naming a type the port no longer produces.
       case (Some("java.util.Map$Entry#comparingByKey" | "java.util.Map.Entry#comparingByKey"), List(cmp)) =>
@@ -341,12 +386,38 @@ final class CollectionsTransform extends Phase, RequiresRuntime:
       // describe the expression it now emits, the same invariant `values()` restores above.
       case (Some("java.util.Collection#stream" | "java.util.List#stream" | "java.util.Set#stream"), Nil) =>
         recv.map(r => Tree.Select(r, asScalaBufferSym, asBuffer(r.tpe), t.origin))
+      // `IntStream.range(a, b)` is a stream SOURCE with no collection behind it — the one shape the
+      // "only collapse a collapsed receiver" rule would otherwise leave untranslated forever, since
+      // nothing can ever collapse it. It becomes the range itself, and the chain proceeds normally.
+      case (Some("java.util.stream.IntStream#range"), List(a, b)) =>
+        Some(Tree.Apply(Tree.Ident(sym("intRange"), TypeRepr.NoType, t.origin), List(a, b),
+                        sym("intRange"), asBuffer(t.tpe), t.origin))
+      // The TYPE APPLICATION is carried across, and it is load-bearing: java's
+      // `mapToObj(i -> i)` against `Stream<Integer>` BOXES, and `Buffer[Int].map(i => i)` does not —
+      // it yields `Buffer[Int]`, which then fails to be a `Collection<Integer>` one call further out.
+      // Re-applying the explicit `[Integer]` gives the lambda body the expected type java gave it,
+      // and scala inserts the same boxing.
+      case (Some("java.util.stream.IntStream#mapToObj" | "java.util.stream.Stream#map"), List(f)) if collapsed(recv) =>
+        val targs = t.fun match { case Tree.TypeApply(_, ts, _, _) => ts; case _ => Nil }
+        recv.map { r =>
+          val sel: Term = Tree.Select(r, mapSym, TypeRepr.NoType, t.origin)
+          val fun = if targs.isEmpty then sel else Tree.TypeApply(sel, targs, TypeRepr.NoType, t.origin)
+          Tree.Apply(fun, List(f), mapSym, asBuffer(r.tpe), t.origin)
+        }
       // A stream OPERATION is rewritten only when its receiver is a collection this phase ALREADY
       // collapsed — never on the method name alone. `"…".lines()` (libGDX's `JsonMatcherTests`) is a
       // `java.util.stream.Stream` with no collection behind it, so nothing collapsed it and rewriting
       // its `filter` produced `Found: java.util.stream.Stream[String] / Required: Buffer[A]`:
       // measured 0 -> 1 on the test port. A stream chain from a non-collection source is simply not
       // translated, and must fail as such.
+      // `mapToDouble(f).sum()` is two more links of the same chain. `sum` is scala's own name and
+      // PARENLESS, so it is a `Select`; `mapToDouble` carries java's widening (see the runtime).
+      case (Some("java.util.stream.Stream#mapToDouble"), List(f)) if collapsed(recv) =>
+        recv.map(r => Tree.Apply(Tree.Ident(sym("mapToDouble"), TypeRepr.NoType, t.origin), List(r, f),
+                                 sym("mapToDouble"), asBuffer(r.tpe), t.origin))
+      case (Some("java.util.stream.DoubleStream#sum" | "java.util.stream.IntStream#sum" |
+                 "java.util.stream.LongStream#sum"), Nil) if collapsed(recv) =>
+        recv.map(r => Tree.Select(r, sumSym, t.tpe, t.origin))
       case (Some("java.util.stream.Stream#sorted"), List(cmp)) if collapsed(recv) =>
         recv.map(r => Tree.Apply(Tree.Ident(sym("sortedWith"), TypeRepr.NoType, t.origin), List(r, cmp),
                                  sym("sortedWith"), r.tpe, t.origin))
@@ -380,14 +451,35 @@ final class CollectionsTransform extends Phase, RequiresRuntime:
     case a: Tree.Apply => a.method
     case _             => SymId.None
 
+  /** the OTHER direction from [[coerce]]: a shim reaching a slot that wants a scala collection.
+    *
+    * `coerce` bridges scala → shim, because that is the direction a shim-typed PARAMETER needs. The
+    * reverse appears wherever the port builds a scala collection FROM one — `new ArrayList<>(c)`
+    * where `c` is a `Collection`, which `copyConstructor` routes through `ArrayBuffer.from` and which
+    * therefore needs an `IterableOnce`, not a `JavaCollection`. Both directions exist because the two
+    * families are deliberately unrelated; neither is the "real" one. */
+  private def scalaView(t: Term): Term =
+    if asScalaBufferSym != SymId.None && headSym(t.tpe).exists(shimSyms.contains)
+    then Tree.Select(t, asScalaBufferSym, asBuffer(t.tpe), t.origin)
+    else t
+
   /** has this receiver already been collapsed from a `Stream` to a scala sequence? The shims are
     * excluded: `filtered` takes a `Buffer`, and a shim is what the collapse consumes, not produces. */
   private def collapsed(recv: Option[Term]): Boolean =
     recv.flatMap(r => headSym(r.tpe)).exists(s => kindOf.get(s).contains(Kind.Seq) && !shimSyms.contains(s))
 
-  /** the same type with `Buffer` as its head — what `asScalaBuffer` on a `JavaCollection[E]` returns. */
+  /** the same type with `Buffer` as its head — what `asScalaBuffer` on a `JavaCollection[E]` returns.
+    *
+    * Falls back to a BARE `Buffer` when the input has no head to replace. That is not a corner case:
+    * an external call's node often carries `NoType`, and `withHead` then returns `NoType` unchanged —
+    * so the collapsed node claimed no type at all, `collapsed` said false one link further along the
+    * chain, and `IntStream.range(0, n).mapToObj(...)` stopped translating half way with
+    * `value mapToObj is not a member of Buffer[Int]`. The head is the only part any caller reads. */
   private def asBuffer(t: TypeRepr): TypeRepr =
-    if bufferSym == SymId.None then t else withHead(t, bufferSym)
+    if bufferSym == SymId.None then t
+    else
+      val h = withHead(t, bufferSym)
+      if headSym(h).contains(bufferSym) then h else TypeRepr.TypeRef(TypeRepr.NoPrefix, bufferSym)
 
   /** Bridge a scala collection into a shim-typed parameter, AT THE CALL SITE.
     *
@@ -610,7 +702,8 @@ object CollectionsTransform:
     * line here, one arm in `staticRewrite` and one method in the runtime object — and a typo is a
     * `SymId.None` that declines the rewrite rather than a dangling name in emitted code. */
   val StaticHelpers: List[String] =
-    List("sort", "sortNatural", "reverse", "comparingByKey", "comparingByValue", "sortedWith", "into")
+    List("sort", "sortNatural", "reverse", "shuffle", "asList",
+         "comparingByKey", "comparingByValue", "sortedWith", "into", "mapToDouble", "intRange")
 
   /** Support types the retyping REQUIRES. They live in the PUBLISHED `balticporter-runtime`
     * module (`runtime/src/main/scala`), not here — see [[RuntimeArtifact]] for why a per-port copy

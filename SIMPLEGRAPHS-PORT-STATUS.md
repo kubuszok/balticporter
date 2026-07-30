@@ -18,15 +18,16 @@ bash scripts/sg_measure.sh
 | compile errors (`scala-cli`, Scala 3.8.4) | **0** — and past `RefChecks`, see §2 |
 | files emitted | 32 (29 upstream units; 0 dropped, 0 injected) |
 | signature consistency | 0 |
-| omissions | 5 |
+| omissions | 2 |
 | portability (Scala.js/Native) | 6 sites, all in emitted code |
 | substitutions removed / dangling | 0 / 0 |
 | manifest agreement | 0 |
 | port map | 0 |
-| **tests ported and run** | **NOT DONE** — 7 files, 17 `@Test`. See §5. |
+| **tests ported and run** | **16 of 16 PASSING** (7 files; 16 live `@Test`) |
 
-`0` is a real 0: the count reached 0, `RefChecks` ran, the count **rose to 8**, and those 8 were then
-fixed. Read §2 before treating the first 0 of any port as a finished port.
+`0` is a real 0 twice over: the compile count reached 0, `RefChecks` ran, the count **rose to 8**, and
+those 8 were fixed — and then the SUITE ran and found two more defects that no count had moved. Read
+§2 before treating any port's first 0 as a finished port.
 
 ---
 
@@ -93,15 +94,36 @@ than silently followed, because the reference port is otherwise this project's t
 
 ---
 
-## 5. Remaining work, highest value first
+## 5. What the SUITE found that no count did
 
-1. **Port and RUN the test suite** — 7 files, 17 `@Test`. This is the only behavioural evidence the
-   port can have, and until it exists §1 of this document says "compiles", nothing more. CLAUDE.md §3
-   and §4.4 both apply: ten java forms translate to valid scala meaning something else, and not one
-   of them moves the compile-error count. `SimpleGraphsPolicy.test` is already written.
-   *Shape of the work:* a `SimpleGraphsTestMigrate` beside `AshleyTestMigrate`, and the `-- run --`
-   half of `scripts/sg_measure.sh`, copied from `ashley_measure.sh`.
-2. **5 omissions and 6 portability sites** — unexamined. Both are baselined, so they are stable, but
-   neither has been read.
-3. `MinimumWeightSpanningTree`'s `Comparator.comparing(...).reversed()` chain now compiles; nothing
-   has confirmed it SORTS in the direction java's does. That is item 1's job.
+Two defects, both in code that compiled cleanly, and neither reachable from the library's own
+compile:
+
+- **`AlgorithmPath` constructed its parent with another constructor's arguments.** Java's
+  `AlgorithmPath(Node v) { super(v.getIndex() + 1, true); … }` and its no-arg sibling reach the same
+  parent constructor with DIFFERENT arguments; scala allows only the primary to reach `super`, so the
+  engine nominated one and silently dropped the other's. `findShortestPath` returned a path of size 0
+  instead of 39. Fixed by `CtorFunnel.Plan.synthetic` — a primary whose parameters ARE the parent's,
+  with every java constructor a secondary that computes its own arguments. It also EXPRESSES three
+  super calls libGDX had been dropping (omissions 46 → 43).
+- **An `asInstanceOf` that could never succeed.** `(Collection<V>) anArrayList` is valid java; this
+  engine then retypes `Collection` to the shim and leaves the `ArrayList` alone, so the surviving
+  cast throws `ClassCastException` — compiling perfectly. Now dropped, which turns a runtime failure
+  into a compile error on the same line.
+
+The engine REPORTED the first one: all five dropped `super(args)` were in `findings.tsv`, including
+`AlgorithmPath.java:12`. It survived because nobody opened the report — §5.2 of an earlier draft of
+this very document said the omissions were "unexamined". A finding nobody reads is a finding nobody
+made.
+
+## 6. Remaining work
+
+1. **2 omissions and 6 portability sites** — baselined and stable, and now actually read: the
+   omissions are `DirectedGraph`/`UndirectedGraph`, whose several roots reach different parent
+   overloads (the shape `ENGINE-LIMITS` records as having no single-primary encoding). Neither is
+   reachable from a passing test.
+2. `Arrays.asList` returns a mutable `Buffer` where java returns a FIXED-SIZE list. Permissive, so it
+   cannot make a correct program incorrect, but it is a divergence and it is written down in
+   `JavaCollections`.
+3. Non-local returns: 14 sites emit `return` inside a `for`, which scala desugars to a closure. They
+   still work in 3.8 (verified) but are deprecated — a forward-compatibility item, not a defect.

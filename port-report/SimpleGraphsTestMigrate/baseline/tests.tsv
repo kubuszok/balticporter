@@ -1,0 +1,17 @@
+#suite	test	status
+sge.graphs.AlgorithmsTest	bfsShouldWork	pass
+sge.graphs.AlgorithmsTest	cyclesShouldBeDetected	pass
+sge.graphs.AlgorithmsTest	dfsShouldWork	pass
+sge.graphs.AlgorithmsTest	mwstShouldBeTree	pass
+sge.graphs.AlgorithmsTest	shortestPathShouldBeCorrect	pass
+sge.graphs.AlgorithmsTest	topologicalSortShouldWork	pass
+sge.graphs.ArrayTest	addAllShouldAddAllItemsFromSourceToTargetAndResizeTarget	pass
+sge.graphs.ArrayTest	addAllShouldAddAllItemsFromSourceToTargetAndUpdateTargetSize	pass
+sge.graphs.GraphBuilderTest	completeGraphCanBeBuilt	pass
+sge.graphs.GraphTest	edgesCanBeAddedAndRemoved	pass
+sge.graphs.GraphTest	edgesCanBeSorted	pass
+sge.graphs.GraphTest	vertexCanBeDisconnectedFromDirectedGraph	pass
+sge.graphs.GraphTest	vertexanBeRemovedFromDirectedGraph	pass
+sge.graphs.GraphTest	verticesCanBeAddedAndRemoved	pass
+sge.graphs.GraphTest	verticesCanBeSorted	pass
+sge.graphs.StructuresTest	nodeMapShouldWork	pass

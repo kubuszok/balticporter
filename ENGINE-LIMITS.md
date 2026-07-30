@@ -1164,6 +1164,63 @@ error is gone.
 *Fix kind: (a). The types are JDK, the inheritance is ordinary java, and every library that defines
 its own collection type hits it — flexmark and liqp both do.*
 
+### K5.5 Several constructors reaching the SAME parent constructor — a SYNTHESISED primary
+
+Scala lets only the PRIMARY constructor reach `super`, so a class whose java constructors each call
+`super(...)` with different arguments has no obvious encoding. The engine used to nominate one and
+DROP the others' arguments — counted by `OmissionCheck`, but counted is not fixed:
+
+```java
+AlgorithmPath()          { super(0, false); }
+AlgorithmPath(Node<V> v) { super(v.getIndex() + 1, true); setByBacktracking(v); }
+```
+emitted `extends Path[V](0, false)` for BOTH, and simple-graphs' shortest path came back size 0
+instead of 39. It compiled, and only the test suite noticed.
+
+When every root reaches the SAME parent constructor, the faithful encoding is the one a scala author
+writes by hand — a primary taking the super call's own parameters:
+
+```scala
+class AlgorithmPath[V](sup$0: Int, sup$1: Boolean) extends Path[V](sup$0, sup$1):
+  def this()           = this(0, false)
+  def this(v: Node[V]) = { this(v.getIndex() + 1, true); setByBacktracking(v) }
+```
+
+Four things measured while getting there, each of which moved a libGDX number the wrong way:
+
+| got wrong | measured |
+|---|---|
+| promoting a pass-through root when some root takes NO parameters | libGDX **0 → 5** — the no-arg root has nothing to delegate with and emits `this()` against a primary that no longer accepts it |
+| picking the FIRST pass-through root rather than the widest | omissions **46 → 50** |
+| letting the synthesis run for a JDK-THROWABLE parent | that branch already nominates the widest and is measured (0 → 55 when it guessed) — leave it alone |
+| letting either shape reach the other's classes | every ordering tried moved a number; they are disjoint by construction now — a no-arg root means SYNTHESIS, all-paramful-with-a-collision means PROMOTION, anything else keeps the old behaviour |
+
+And one that moved a number the RIGHT way while looking wrong: `OmissionCheck` counts a dropped
+`super(args)` by "this root is not the primary", which is false under both new shapes — every root's
+call survives. Marking the plan `superExpressed` and skipping those took libGDX from a reported
+46 → 50 to **46 → 43**, i.e. three super calls that had been silently dropped are now emitted. A check
+derived from a decision must be told when the decision changes, or an improvement reads as a
+regression.
+
+*Fix kind: (a). Java's constructor rules against scala's, no library involved.*
+
+### K5.6 A cast that only BECOMES impossible after a retyping
+
+`(Collection<V>) anArrayList` is valid java and the frontend emits it faithfully. `CollectionsTransform`
+then maps `Collection` to the runtime shim while leaving the `java.util.List` alone — it came from an
+`IntStream` chain, which K6's own rule correctly declines to collapse — and the surviving
+`asInstanceOf[JavaCollection[V]]` on an `ArrayList` can never succeed. It COMPILES and throws
+`ClassCastException`.
+
+No count moves: it is not an omission, not a portability site, not a signature mismatch. Only the test
+suite sees it, which makes it CLAUDE.md §4.4's defect class arriving without a java statement form.
+
+**A phase that retypes must ask what it has done to the CASTS around the types it moved.** Dropping
+the cast turns a runtime failure into a compile error on the same line (ENGINE-LIMITS M6), and here it
+also let `coerce` see the argument and bridge it properly — the cast had been standing between them.
+
+*Fix kind: (a).*
+
 ### K6. `java.util.stream` — the CHAIN collapses; and the two rules that make that safe
 
 **PARTLY CLOSED.** `xs.stream().filter(p).collect(Collectors.toList())` now translates, and the shape

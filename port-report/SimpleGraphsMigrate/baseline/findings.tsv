@@ -1,9 +1,6 @@
 #id	check	kind	owner	path	line	detail
 81ad53826753	omissions	super(args) dropped	sge.graphs.DirectedGraph	space/earlygrey/simplegraphs/DirectedGraph.java	50	1 argument(s) discarded
-174006e70e77	omissions	super(args) dropped	sge.graphs.Path	space/earlygrey/simplegraphs/Path.java	37	2 argument(s) discarded
-174006e70e77/2	omissions	super(args) dropped	sge.graphs.Path	space/earlygrey/simplegraphs/Path.java	41	2 argument(s) discarded
 95dea40934a7	omissions	super(args) dropped	sge.graphs.UndirectedGraph	space/earlygrey/simplegraphs/UndirectedGraph.java	50	1 argument(s) discarded
-0bd5b3e6fcfd	omissions	super(args) dropped	sge.graphs.algorithms.AlgorithmPath	space/earlygrey/simplegraphs/algorithms/AlgorithmPath.java	12	2 argument(s) discarded
 e7ee468aff87	portability(all)	java.util.concurrent.atomic.AtomicInteger	components	space/earlygrey/simplegraphs/Graph.java	483	Instantiate — the java.util.concurrent runtime is JVM-only (Scala.js is single-threaded)
 ec094df8b2c5	portability(all)	java.util.concurrent.atomic.AtomicInteger	components	space/earlygrey/simplegraphs/Graph.java	483	MemberType — the java.util.concurrent runtime is JVM-only (Scala.js is single-threaded)
 3996661362e8	portability(all)	java.util.concurrent.atomic.AtomicInteger	sge.graphs.algorithms.Algorithms#runID	space/earlygrey/simplegraphs/algorithms/Algorithms.java	38	Instantiate — the java.util.concurrent runtime is JVM-only (Scala.js is single-threaded)

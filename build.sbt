@@ -67,6 +67,25 @@ ThisBuild / publishTo := Some(
 ThisBuild / pomIncludeRepository   := { _ => false }
 ThisBuild / Test / publishArtifact := false
 
+// SERIAL TESTS, ACROSS THE WHOLE BUILD, and not as tidiness: `CheckReport` is gated on process-global
+// system properties (`balticporter.report`, `balticporter.reportDir`), which `PortRunSpec.withReport`
+// sets and restores around one run. sbt runs suites in parallel BOTH within a module and across
+// modules, and `ManifestSpec`, `PortRunSpec` and `corpus-tests` all execute `PortRun` — so any two of
+// them race on `reportDir`, one run's report lands in another's directory, and whichever test then
+// reads `run-latest/*.tsv` fails.
+//
+// Measured: 39 tests in `runner` alone, a DIFFERENT one failing about one run in three, each passing
+// in isolation. Present at f1df4b6 and before, which is why it read as noise rather than as the
+// measurement gate this project's discipline (CLAUDE.md §5) rests on being unreliable. Scoping the
+// setting to `runner` fixed the module and NOT the build: `ManifestSpec` failed again as soon as a
+// whole-build `testFull` ran it beside `corpus-tests`.
+//
+// The DESIGN fix is to make the report directory a value the run owns rather than a process-global
+// flag — the same rule §5.1 already states for the source map ("`TirEmitter.srcMap` is a value one
+// emitter owns, never a process-global table"), one level up. Until that lands, serial is the honest
+// holding position rather than a retry or a tolerance.
+ThisBuild / Test / parallelExecution := false
+
 val munit = "org.scalameta" %% "munit" % "1.2.0" % Test
 
 // ---------------------------------------------------------------------------------------------
@@ -214,24 +233,6 @@ lazy val runner = project
   .settings(
     name := "balticporter-runner",
     libraryDependencies += munit,
-    // SERIAL, and not as tidiness: `CheckReport` is gated on process-global system properties
-    // (`balticporter.report`, `balticporter.reportDir`), so `PortRunSpec.withReport` sets and
-    // restores them around one run. sbt runs a module's suites in PARALLEL, and `ManifestSpec`
-    // executes `PortRun` too — so the two race on `reportDir`, one suite's run writes its report
-    // into the other's directory, and whichever test then reads `run-latest/*.tsv` fails.
-    //
-    // Measured: 39 tests, a DIFFERENT one failing on roughly one run in three, every one of them a
-    // test that reads a file under its own report dir, and each passing in isolation. Present at
-    // f1df4b6 and before, so it is not any one change's fault — which is exactly why it went
-    // unnoticed: a flake that moves looks like noise. It is not noise; it is the measurement gate
-    // this project's whole discipline (CLAUDE.md §5) rests on being unreliable one run in three.
-    //
-    // This makes the suite deterministic. The DESIGN fix is to make the report directory a value
-    // the run owns rather than a process-global flag — the same rule §5.1 already states for the
-    // source map ("`TirEmitter.srcMap` is a value one emitter owns, never a process-global table"),
-    // one level up. Until that lands, serial execution is the honest holding position rather than a
-    // retry or a tolerance.
-    Test / parallelExecution := false,
   )
 
 lazy val `corpus-tests` = project

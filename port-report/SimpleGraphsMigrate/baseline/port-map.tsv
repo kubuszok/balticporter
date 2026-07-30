@@ -33,10 +33,10 @@ type		balticporter.runtime.JavaCollection	Added	-		0
 type		balticporter.runtime.JavaCollections	Added	-		0	
 type		balticporter.runtime.JavaIterable	Added	-		0	
 type		balticporter.runtime.JavaIterator	Added	-		0	
+member	space.earlygrey.simplegraphs.Array#<init>()	sge.graphs.Array#<init>()	Renamed	-	space/earlygrey/simplegraphs/Array.java	37	6b8c02987a386f8b
 member	space.earlygrey.simplegraphs.Array#<init>(int)	sge.graphs.Array#<init>(int)	Renamed	-	space/earlygrey/simplegraphs/Array.java	41	e5be362f9598894d
-member	space.earlygrey.simplegraphs.Array#<init>(int,boolean)	sge.graphs.Array#<init>(int,boolean)	Renamed	-	space/earlygrey/simplegraphs/Array.java	45	6b45a792524a25ed
-member	space.earlygrey.simplegraphs.Array#<stmt1>	sge.graphs.Array#<stmt1>	Renamed	-	space/earlygrey/simplegraphs/Array.java	46	d2a9a88937e9617c
-member	space.earlygrey.simplegraphs.Array#<stmt2>	sge.graphs.Array#<stmt2>	Renamed	-	space/earlygrey/simplegraphs/Array.java	47	a53553c0dd26cc9e
+member	space.earlygrey.simplegraphs.Array#<stmt1>	sge.graphs.Array#<stmt1>	Renamed	-	space/earlygrey/simplegraphs/Array.java	46	20883c50d3706a84
+member	space.earlygrey.simplegraphs.Array#<stmt2>	sge.graphs.Array#<stmt2>	Renamed	-	space/earlygrey/simplegraphs/Array.java	47	a96e8989808a1508
 member	space.earlygrey.simplegraphs.Array#add(T)	sge.graphs.Array#add(T)	Renamed	-	space/earlygrey/simplegraphs/Array.java	51	5c924e0747349873
 member	space.earlygrey.simplegraphs.Array#addAll(JavaCollection)	sge.graphs.Array#addAll(JavaCollection<?>)	Renamed	-	space/earlygrey/simplegraphs/Array.java	77	854f36fdb5031c8b
 member	space.earlygrey.simplegraphs.Array#clear()	sge.graphs.Array#clear()	Renamed	-	space/earlygrey/simplegraphs/Array.java	135	9d10f872df98cb0f
@@ -308,8 +308,7 @@ member	space.earlygrey.simplegraphs.NodeMap$NodeIterator#hasNext()	sge.graphs.No
 member	space.earlygrey.simplegraphs.NodeMap$NodeIterator#next()	sge.graphs.NodeMap$NodeIterator#next()	Renamed	-	space/earlygrey/simplegraphs/NodeMap.java	313	87337c344c9df0bf
 member	space.earlygrey.simplegraphs.NodeMap$NodeIterator#nodeMap	sge.graphs.NodeMap$NodeIterator#nodeMap	Renamed	-	space/earlygrey/simplegraphs/NodeMap.java	299	29c91469447c67da
 member	space.earlygrey.simplegraphs.NodeMap$NodeIterator#remove()	sge.graphs.NodeMap$NodeIterator#remove()	Renamed	-	space/earlygrey/simplegraphs/NodeMap.java	323	73617fdff90ba8e5
-member	space.earlygrey.simplegraphs.Path#<init>(int)	sge.graphs.Path#<init>(int)	Renamed	-	space/earlygrey/simplegraphs/Path.java	37	4c19a3dac51035e4
-member	space.earlygrey.simplegraphs.Path#<init>(int,boolean)	sge.graphs.Path#<init>(int,boolean)	Renamed	-	space/earlygrey/simplegraphs/Path.java	41	951983327c5d221e
+member	space.earlygrey.simplegraphs.Path#<init>(int)	sge.graphs.Path#<init>(int)	Renamed	-	space/earlygrey/simplegraphs/Path.java	37	7691d5a14eeed68f
 member	space.earlygrey.simplegraphs.Path#EMPTY_PATH	sge.graphs.Path#EMPTY_PATH	Renamed	-	space/earlygrey/simplegraphs/Path.java	32	654b6f8b16c1b28a
 member	space.earlygrey.simplegraphs.Path#add(V)	sge.graphs.Path#add(V)	Renamed	-	space/earlygrey/simplegraphs/Path.java	65	371e5437751a4252
 member	space.earlygrey.simplegraphs.Path#addAll(JavaCollection)	sge.graphs.Path#addAll(JavaCollection<?>)	Renamed	-	space/earlygrey/simplegraphs/Path.java	83	7dcffa2adc529312
@@ -390,7 +389,7 @@ member	space.earlygrey.simplegraphs.algorithms.Algorithm#finish()	sge.graphs.alg
 member	space.earlygrey.simplegraphs.algorithms.Algorithm#id	sge.graphs.algorithms.Algorithm#id	Renamed	-	space/earlygrey/simplegraphs/algorithms/Algorithm.java	5	d9cdaa4c9242371d
 member	space.earlygrey.simplegraphs.algorithms.Algorithm#isFinished()	sge.graphs.algorithms.Algorithm#isFinished()	Renamed	-	space/earlygrey/simplegraphs/algorithms/Algorithm.java	13	e2b0c76218876708
 member	space.earlygrey.simplegraphs.algorithms.Algorithm#update()	sge.graphs.algorithms.Algorithm#update()	Renamed	-	space/earlygrey/simplegraphs/algorithms/Algorithm.java	11	bc27a66eb5ed18dc
-member	space.earlygrey.simplegraphs.algorithms.AlgorithmPath#<init>(Node)	sge.graphs.algorithms.AlgorithmPath#<init>(Node<V>)	Renamed	-	space/earlygrey/simplegraphs/algorithms/AlgorithmPath.java	12	85594c8c61eadce0
+member	space.earlygrey.simplegraphs.algorithms.AlgorithmPath#<init>(Node)	sge.graphs.algorithms.AlgorithmPath#<init>(Node<V>)	Renamed	-	space/earlygrey/simplegraphs/algorithms/AlgorithmPath.java	12	86c11f43361a1fde
 member	space.earlygrey.simplegraphs.algorithms.AlgorithmPath#setByBacktracking(Node)	sge.graphs.algorithms.AlgorithmPath#setByBacktracking(Node<V>)	Renamed	-	space/earlygrey/simplegraphs/algorithms/AlgorithmPath.java	17	e06f37a7a80de44e
 member	space.earlygrey.simplegraphs.algorithms.Algorithms#<stmt1>	sge.graphs.algorithms.Algorithms#<stmt1>	Renamed	-	space/earlygrey/simplegraphs/algorithms/Algorithms.java	41	75860eedd6637294
 member	space.earlygrey.simplegraphs.algorithms.Algorithms#breadthFirstSearch(V,SearchProcessor)	sge.graphs.algorithms.Algorithms#breadthFirstSearch(V,SearchProcessor<V>)	Renamed	-	space/earlygrey/simplegraphs/algorithms/Algorithms.java	169	9776bdc6b55b9e65

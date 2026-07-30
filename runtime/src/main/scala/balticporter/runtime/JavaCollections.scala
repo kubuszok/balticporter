@@ -39,6 +39,32 @@ object JavaCollections:
   def sortNatural[A <: Comparable[A]](xs: scala.collection.mutable.Buffer[A]): Unit =
     inPlace(xs, xs.toList.sortWith((a, b) => a.compareTo(b) < 0))
 
+  /** `java.util.Collections.shuffle(list, rnd)` — JAVA'S ALGORITHM, not an equivalent one.
+    *
+    * The loop below is `Collections.shuffle`'s, verbatim: walk down from the end, swapping each
+    * position with `rnd.nextInt(i)`. Any other correct shuffle consumes the `Random` differently and
+    * therefore produces a DIFFERENT permutation from the same seed — and a seeded shuffle is only
+    * ever written because the caller wants a reproducible one. simple-graphs' `GraphTest` seeds
+    * `new Random(123)` and asserts on what follows; a "correct" shuffle that permutes differently
+    * would turn a deterministic test into a coin flip, with nothing in the compile to show for it. */
+  def shuffle[A](xs: scala.collection.mutable.Buffer[A], rnd: java.util.Random): Unit =
+    var i = xs.size
+    while i > 1 do
+      val j = rnd.nextInt(i)
+      val t = xs(i - 1); xs(i - 1) = xs(j); xs(j) = t
+      i -= 1
+
+  /** `java.util.Arrays.asList(a, b, c)`.
+    *
+    * ONE divergence, stated rather than hidden: java returns a FIXED-SIZE list — `set` works, `add`
+    * and `remove` throw — and this returns an ordinary `Buffer`. There is no scala type that is both
+    * a `Buffer` (which is what `java.util.List` maps to, so it is what the declared slot demands) and
+    * fixed-size. The divergence is permissive: code java would have rejected now runs. That direction
+    * cannot turn a correct program into an incorrect one, which is the same trade already recorded
+    * for `Buffer` adding an ordering guarantee `Collection` does not make. */
+  def asList[A](xs: A*): scala.collection.mutable.Buffer[A] =
+    scala.collection.mutable.ArrayBuffer.from(xs)
+
   /** `java.util.Collections.reverse(list)` — in place, as java's is. */
   def reverse[A](xs: scala.collection.mutable.Buffer[A]): Unit = inPlace(xs, xs.toList.reverse)
 
@@ -77,6 +103,22 @@ object JavaCollections:
   def sortedWith[A](xs: scala.collection.mutable.Buffer[A], cmp: java.util.Comparator[? >: A])
       : scala.collection.mutable.Buffer[A] =
     xs.sortWith((a, b) => cmp.compare(a, b) < 0)
+
+  /** `Stream.mapToDouble(f)` on a chain already collapsed to a `Buffer`.
+    *
+    * The WIDENING is the point, and it is why this is a named function rather than a bare `.map`.
+    * Java's `ToDoubleFunction` widens whatever the lambda returns to `double`; simple-graphs sums
+    * `Edge.getWeight()`, which is a `float`. Left as `.map(f).sum` scala would sum in FLOAT — the
+    * same answer to within a few ulps, which is exactly the kind of difference that passes a
+    * tolerance-based assertion until the collection is large enough and then does not. Declaring the
+    * function `A => Double` makes scala insert the same widening java did, at the same place. */
+  def mapToDouble[A](xs: scala.collection.mutable.Buffer[A], f: A => Double): scala.collection.mutable.Buffer[Double] =
+    xs.map(f)
+
+  /** `IntStream.range(a, b)` — a stream SOURCE that is not a collection, so nothing else in the
+    * chain-collapse can produce it. Half-open, as java's is. */
+  def intRange(startInclusive: Int, endExclusive: Int): scala.collection.mutable.Buffer[Int] =
+    scala.collection.mutable.ArrayBuffer.from(startInclusive until endExclusive)
 
   /** `Collectors.toCollection(Factory::new)` — build the factory's collection and fill it.
     *

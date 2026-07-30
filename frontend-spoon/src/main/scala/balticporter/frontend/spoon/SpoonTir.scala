@@ -1599,7 +1599,8 @@ object SpoonTir:
         * array Java would have built: `new VertexAttributes(scala.Array[VertexAttribute](a, b, c))`.
         * A call that already passes an array (Java permits that too) is left alone; so is a generic
         * `T...` component, whose element type would not render at the call site. */
-      private def varargPack(ex: CtExecutableReference[?], argEs: List[CtExpression[?]]): Option[List[Term]] =
+      private def varargPack(ex: CtExecutableReference[?], argEs: List[CtExpression[?]],
+                             recvSubst: Map[String, CtTypeReference[?]]): Option[List[Term]] =
         val ps = try Option(ex.getExecutableDeclaration).map(_.getParameters.asScala.toList)
                  catch { case _: Throwable => None }
         ps match
@@ -1653,6 +1654,16 @@ object SpoonTir:
               // exist at the call site — and that is what the inference branch below remains for.
               else if comp != null && !comp.isInstanceOf[CtTypeParameterReference] then
                 Some(comp)
+              // A bare `V...` on a KNOWN receiver: `graph.addVertices(0, 1, 2)` where
+              // `graph : DirectedGraph<Integer>`. The element type is not at the call site and is not
+              // inferable from the arguments either — java AUTOBOXES `int` literals into `Integer[]`,
+              // so the argument types (`int`) name the wrong thing and the branch below rejects them
+              // as primitive. It is the RECEIVER that says what `V` is, which is the same rule
+              // `knownReceiverArgs` and `appliedCtorArgs` already apply one level out (ENGINE-LIMITS
+              // G12: a callee's own type variables do not resolve at the call site, but the CLASS's
+              // do, through the receiver's type arguments).
+              else if comp != null && recvSubst.contains(comp.getSimpleName) then
+                Some(recvSubst(comp.getSimpleName))
               else
                 val ts = argEs.drop(fixed).map(e => try e.getType catch { case _: Throwable => null })
                 Option.when(ts.nonEmpty && ts.forall(t => t != null && !t.isPrimitive && tpConcrete(t)) &&
@@ -1670,8 +1681,31 @@ object SpoonTir:
 
       /** coerce each argument to its formal parameter type (Java autoboxing / numeric narrowing
         * that Scala won't do implicitly). Skipped when arities differ (varargs spread etc.). */
-      private def coerceArgs(ex: CtExecutableReference[?], argEs: List[CtExpression[?]]): List[Term] =
-        varargPack(ex, argEs).getOrElse(coerceArgsFixed(ex, argEs))
+      private def coerceArgs(ex: CtExecutableReference[?], argEs: List[CtExpression[?]],
+                             recvSubst: Map[String, CtTypeReference[?]] = Map.empty): List[Term] =
+        varargPack(ex, argEs, recvSubst).getOrElse(coerceArgsFixed(ex, argEs))
+
+      /** the receiver's own type arguments, by the declaring class's parameter NAMES — `Graph<V>`
+        * called on a `DirectedGraph<Integer>` gives `V -> Integer`.
+        *
+        * Only a fully known instantiation: same arity, every argument nameable here, no wildcards. A
+        * wildcard would put a `?` where a real type has to go, which is the `?T` stub this frontend
+        * refuses to emit everywhere else. */
+      private def receiverTypeArgs(inv: CtInvocation[?]): Map[String, CtTypeReference[?]] =
+        val rt = inv.getTarget match
+          case null => null
+          case _: CtSuperAccess[?] | _: CtTypeAccess[?] => null
+          case t    => try t.getTypeCasts.asScala.lastOption.getOrElse(t.getType) catch { case _: Throwable => null }
+        if rt == null || rt.isPrimitive || rt.isInstanceOf[CtArrayTypeReference[?]] ||
+           rt.isInstanceOf[CtTypeParameterReference] || rt.isInstanceOf[CtWildcardReference] then Map.empty
+        else
+          val formals = try Option(rt.getTypeDeclaration).map(_.getFormalCtTypeParameters.asScala.toList).getOrElse(Nil)
+                        catch { case _: Throwable => Nil }
+          val actuals = rt.getActualTypeArguments.asScala.toList
+          if formals.nonEmpty && actuals.sizeIs == formals.size &&
+             actuals.forall(a => !a.isInstanceOf[CtWildcardReference] && tpConcrete(a))
+          then formals.map(_.getSimpleName).zip(actuals).toMap
+          else Map.empty
 
       private def coerceArgsFixed(ex: CtExecutableReference[?], argEs: List[CtExpression[?]]): List[Term] =
         // Array covariance at call args is DISABLED for OUR OWN methods — Spoon erases a generic
@@ -2324,15 +2358,16 @@ object SpoonTir:
         val mid  = methodSym(ex)
         val argEs = inv.getArguments.asScala.toList
         val erasedRecv = erasedReceiverView(inv)
+        val recvSubst  = receiverTypeArgs(inv)
         val args0 = erasedRecv match
           // A NAME-FILLED receiver needs no argument erasure at all. The callee's formals are then
           // expressed in the caller's OWN type variables (`addToTree(Tree<N,V>)` against a receiver
           // read as `Node[N, V, Actor]`), and the values at hand already have those types — `this`
           // IS a `Tree[N, V]`. Erasing them re-introduced the mismatch the name-fill just removed.
           case Some((_, subst, named)) if named.isEmpty =>
-            eraseDependentArgs(ex, argEs, coerceArgs(ex, argEs), subst)
-          case Some((_, _, nm)) => selfTypeArgs(ex, argEs, coerceArgs(ex, argEs), nm)
-          case None             => coerceArgs(ex, argEs)
+            eraseDependentArgs(ex, argEs, coerceArgs(ex, argEs, recvSubst), subst)
+          case Some((_, _, nm)) => selfTypeArgs(ex, argEs, coerceArgs(ex, argEs, recvSubst), nm)
+          case None             => coerceArgs(ex, argEs, recvSubst)
         val args = typeVarReceiverArgs(inv, argEs, knownReceiverArgs(inv, argEs, args0))
         val o    = originOf(inv)
         val fun: Term =

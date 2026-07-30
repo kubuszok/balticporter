@@ -593,7 +593,15 @@ final class TirEmitter(
     val plan    = if s.flags.isModule then CtorFunnel.Plan.none else plans(cd)
     val (loweredBody, superArgs) = (lowerCtors(cd.body, plan), plan.superArgs)
     val pparams = plan.primaryParams
-    val prim    = if pparams.isEmpty then "" else s"(${pparams.map(param).mkString(", ")})"
+    // A SYNTHESISED primary (CtorFunnel.Plan.synthetic) has no java constructor behind it, so its
+    // parameters are rendered from the plan's own (name, type) pairs rather than from symbols. It is
+    // NOT `private`: scala's `extends C(args)` can only ever invoke C's PRIMARY, so hiding it would
+    // make the class unextendable by exactly the subclasses that motivated it. The widening — a
+    // constructor java did not expose — is the price, and it cannot change the behaviour of code the
+    // port translated.
+    val prim    =
+      if plan.synthetic.nonEmpty then s"(${plan.synthetic.map((n, t) => s"$n: ${tpe(t)}").mkString(", ")})"
+      else if pparams.isEmpty then "" else s"(${pparams.map(param).mkString(", ")})"
     val superTpe = cd.parents.headOption.map { case tt: TypeTree => tt.tpe; case t: Term => t.tpe }
     val parents = cd.parents.map(parent).filter(_.nonEmpty) match
       case Nil                          => Nil
@@ -1052,6 +1060,8 @@ final class TirEmitter(
   private var breakTarget: Option[String] = scala.None
   private var contBoundary = false
   private var labelSeq = 0
+  /** names the `def` that carries a lambda body containing `return` — see the `Tree.Lambda` case. */
+  private var lambdaSeq = 0
   private def inLoop[A](brk: Option[String], cont: Boolean)(f: => A): A =
     val (sb, sc) = (breakTarget, contBoundary)
     breakTarget = brk; contBoundary = cont
@@ -1147,6 +1157,37 @@ final class TirEmitter(
     case p: Product                                                       => p.productIterator.exists(continuesIn)
     case _                                                                => false
 
+  /** does this subtree `return` from the construct that OWNS it?
+    *
+    * Stops at a nested `Lambda`, `DefDef` or anonymous-class body for the same reason `breaksOut`
+    * stops at a nested loop: a `return` there belongs to that construct, not to this one. Product
+    * reflection rather than a case per node — a hand-rolled walk that stops one node short is how two
+    * of this project's silent defects survived (CLAUDE.md §3). */
+  private def returnsIn(t: Any): Boolean = t match
+    case _: Tree.Return                                   => true
+    case _: Tree.Lambda | _: Tree.DefDef | _: Tree.AnonClass => false // binds to the inner one
+    case xs: Iterable[?]                                  => xs.exists(returnsIn)
+    case Some(x)                                          => returnsIn(x)
+    case p: Product                                       => p.productIterator.exists(returnsIn)
+    case _                                                => false
+
+  /** the result type to give the `def` that carries a lambda body containing `return`.
+    *
+    * `Unit` exactly when every `return` in the body is VALUELESS — a java `void` lambda, which is
+    * what a functional interface with a `void` SAM produces and the only case this can type without
+    * reading the interface's abstract method. `None` means "do not rewrite", not "use Any". */
+  private def lambdaResultType(body: Tree): Option[String] =
+    val valued = collectReturns(body).exists(_.expr.isDefined)
+    Option.when(!valued)("scala.Unit")
+
+  private def collectReturns(t: Any): List[Tree.Return] = t match
+    case r: Tree.Return                                   => List(r)
+    case _: Tree.Lambda | _: Tree.DefDef | _: Tree.AnonClass => Nil
+    case xs: Iterable[?]                                  => xs.toList.flatMap(collectReturns)
+    case Some(x)                                          => collectReturns(x)
+    case p: Product                                       => p.productIterator.toList.flatMap(collectReturns)
+    case _                                                => Nil
+
   private def breaksOut(t: Any): Boolean = t match
     case Tree.Break(scala.None, _, _)                     => true
     case _: Tree.While | _: Tree.DoWhile | _: Tree.Match |
@@ -1207,6 +1248,12 @@ final class TirEmitter(
     * `this()` otherwise — the arguments really are lost there, and the check still says so. */
   private def superDelegation(args: List[Term], i: Int): String =
     val plan = currentClass.map(plans.apply).getOrElse(CtorFunnel.Plan.none)
+    // A synthesised primary's parameters ARE the parent constructor's, in order, so the delegation
+    // is positional and exact — no type-matching, which exists below only to place a NARROWER
+    // overload's arguments into a wider parameter list.
+    if plan.synthetic.nonEmpty then
+      return if args.sizeIs == plan.synthetic.size then s"this(${args.map(term(_, i)).mkString(", ")})"
+             else "this()"
     val ps   = plan.primaryParams
     if ps.isEmpty || plan.superArgs.size != ps.size || args.sizeIs > ps.size then "this()"
     else
@@ -1430,7 +1477,30 @@ final class TirEmitter(
     case Tree.TypeApply(fun, targs, _, _) => s"${term(fun, i)}[${targs.map(a => tpe(a.tpe)).mkString(", ")}]"
     case Tree.Assign(l, r, _, _)        => s"${term(l, i)} = ${term(r, i)}"
     case Tree.Block(stats, expr, _, _)  => block(stats, expr, i)
-    case Tree.Lambda(ps, body, _, _)    => s"(${ps.map(param).mkString(", ")}) => ${term(body, i)}"
+    case Tree.Lambda(ps, body, _, _)    =>
+      val head = s"(${ps.map(param).mkString(", ")}) => "
+      // A java LAMBDA BODY IS A METHOD BODY, so `return` is legal in it and means "leave the
+      // lambda". Scala's lambda is an expression and rejects `return` outright — `return outside
+      // method definition`. A NESTED `def` restores java's meaning exactly, because a scala `def`
+      // is the one construct a local `return` does belong to; no `boundary` is needed and none is
+      // as faithful, since `boundary`/`break` inside a body that also contains a loop would have to
+      // be named to avoid breaking the LOOP instead (CLAUDE.md §4.4's "name the outer one when
+      // both") and a `def` cannot be captured by the wrong construct at all.
+      //
+      // A new member of the §4.4 family, found the way the other ten were — by porting a test
+      // suite, not by compiling the library (`AlgorithmsTest`, a `SearchProcessor` that returns
+      // early to prune a search).
+      if !returnsIn(body) then head + term(body, i)
+      else lambdaResultType(body) match
+        case Some(rt) =>
+          lambdaSeq += 1
+          val n = s"body$$$lambdaSeq"
+          head + s"{ def $n(): $rt = ${term(body, i)}; $n() }"
+        // REFUSED rather than guessed: a value-returning lambda needs the SAM's result type, which
+        // the TIR carries as the functional interface rather than as the method. Left alone this is
+        // a loud compile error naming the exact line — which is the right outcome per ENGINE-LIMITS
+        // M6, and strictly better than a `def` with a wrong result type that compiles.
+        case None => head + term(body, i)
     case Tree.If(c, th, el, _, _)       => s"if (${term(c, i)}) ${term(th, i)} else ${term(el, i)}"
     case Tree.Typed(e, tpt, _, _)       => s"${operand(e, i)}.asInstanceOf[${tpe(castTarget(e, tpt.tpe))}]" // Java cast
     case Tree.Repeated(es, _, _)        => es.map(term(_, i)).mkString(", ")
@@ -1502,9 +1572,21 @@ final class TirEmitter(
         case Left(tt) if sym(s).flags.isStatic => s"${tpe(tt.tpe)}.${local(s)}"
         case Left(tt) =>
           val self  = "self$"
-          val extra = methodParams(s).zipWithIndex.map((pt, k) => s"a$k$$: ${tpe(pt)}")
-          val ps    = (s"$self: ${tpe(tt.tpe)}" :: extra).mkString(", ")
           val as    = methodParams(s).indices.map(k => s"a$k$$").mkString(", ")
+          // The receiver parameter is ANNOTATED only when the qualifier names a real type. A RAW
+          // qualifier renders `[?]`, and annotating with it is worse than saying nothing: java's
+          // `Comparator.comparing(Edge::getA)` takes its meaning entirely from the TARGET
+          // (`Comparator<Connection<V>>` pins the input, which pins `getA()`'s result to something
+          // `Comparable`), and writing `self$: Edge[?]` instead makes `getA()` return an unusable
+          // capture — `Found: self.V / Required: U where U <: Comparable[? >: U]`.
+          //
+          // That is the poly-expression rule this frontend already follows elsewhere: a method
+          // reference takes its type FROM the target, which is why `uncheckedGeneric` refuses to cast
+          // one. Leaving the parameter un-annotated hands scala the same job javac had.
+          val recvT = if hasWildcardArg(tt.tpe) then "" else s": ${tpe(tt.tpe)}"
+          val extra = methodParams(s).zipWithIndex.map((pt, k) =>
+            if recvT.isEmpty then s"a$k$$" else s"a$k$$: ${tpe(pt)}")
+          val ps    = (s"$self$recvT" :: extra).mkString(", ")
           samAscribed(s"(($ps) => $self.${local(s)}($as))", mrT, tt.tpe)
         case Right(e)           => s"${term(e, i)}.${local(s)}"
     // Java's `break` leaves the loop; emitted as a no-op it did NOT, and the loop ran on.

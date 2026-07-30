@@ -124,10 +124,19 @@ object OmissionCheck:
 
     val plans = CtorFunnel.Plans(program)
     units.flatMap(classes).flatMap { cd =>
-      val primary = plans(cd).primary.map(_.symbol)
+      val plan    = plans(cd)
+      val primary = plan.primary.map(_.symbol)
+      // `superExpressed` marks a plan under which EVERY root's super call survives — a synthesised
+      // primary (each root a secondary delegating its own arguments), or a promoted pass-through
+      // root (whose parameters ARE the parent's, so `this(...)` carries them verbatim). Counting
+      // those anyway — they are all non-primary, which is the test below — reported first 4 then 2
+      // extra omissions on libGDX for code that had just become MORE faithful. This check exists to
+      // shadow the funnel decision exactly; a decision it does not know about is a drift, and the
+      // number moving the wrong way is what a drift looks like.
+      val synthesised = plan.superExpressed
       CtorFunnel.ctorsOf(program, cd.body).flatMap { d =>
         val args = CtorFunnel.superArgsOf(program, d)
-        if args.isEmpty || primary.contains(d.symbol) || plans.replayFor(cd, d).isDefined then Nil
+        if args.isEmpty || synthesised || primary.contains(d.symbol) || plans.replayFor(cd, d).isDefined then Nil
         else
           val owner = program.symbolOf(cd.symbol).map(_.fullName).getOrElse("?")
           List(Finding("super(args) dropped", owner, s"${args.size} argument(s) discarded", d.origin))

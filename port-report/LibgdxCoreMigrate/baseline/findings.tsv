@@ -27,9 +27,6 @@ b453601695de	omissions	super(args) dropped	sge.graphics.g3d.shaders.DepthShader$
 d787a1a56f78	omissions	super(args) dropped	sge.graphics.glutils.FloatFrameBuffer	com/badlogic/gdx/graphics/glutils/FloatFrameBuffer.java	37	1 argument(s) discarded
 395b54387d5d	omissions	super(args) dropped	sge.scenes.scene2d.ui.Button	com/badlogic/gdx/scenes/scene2d/ui/Button.java	50	1 argument(s) discarded
 395b54387d5d/2	omissions	super(args) dropped	sge.scenes.scene2d.ui.Button	com/badlogic/gdx/scenes/scene2d/ui/Button.java	57	1 argument(s) discarded
-4bffd4eb1d28	omissions	super(args) dropped	sge.scenes.scene2d.ui.Dialog	com/badlogic/gdx/scenes/scene2d/ui/Dialog.java	56	2 argument(s) discarded
-4bffd4eb1d28/2	omissions	super(args) dropped	sge.scenes.scene2d.ui.Dialog	com/badlogic/gdx/scenes/scene2d/ui/Dialog.java	63	2 argument(s) discarded
-4bffd4eb1d28/3	omissions	super(args) dropped	sge.scenes.scene2d.ui.Dialog	com/badlogic/gdx/scenes/scene2d/ui/Dialog.java	70	2 argument(s) discarded
 51ad54e1b3fa	omissions	super(args) dropped	sge.utils.GdxRuntimeException	com/badlogic/gdx/utils/GdxRuntimeException.java	25	1 argument(s) discarded
 51ad54e1b3fa/2	omissions	super(args) dropped	sge.utils.GdxRuntimeException	com/badlogic/gdx/utils/GdxRuntimeException.java	29	1 argument(s) discarded
 685d8cb758b1	omissions	super(args) dropped	sge.utils.IdentityMap	com/badlogic/gdx/utils/IdentityMap.java	43	1 argument(s) discarded
