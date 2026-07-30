@@ -569,7 +569,7 @@ came close to it.
 
 *Fix kind: (a).*
 
-### T7. Concrete-member DIAMOND — a universal Java→Scala fact, currently blocked in the TIR
+### T7. Concrete-member DIAMOND — solved at the EMITTER; qualified `super[X]` still has no TIR node
 
 `class Entries extends MapIterator with JavaIterator`: `remove()` is concrete in both. Java has no
 such rule — `MapIterator.remove()` simply implements `Iterator.remove()`. Scala's linearisation
@@ -577,16 +577,22 @@ demands an explicit disambiguation. **Any** Java class inheriting a concrete met
 superclass while implementing an interface that has a default for it produces this. 11 sites in one
 module.
 
-Fix shape: synthesise `override def remove(): Unit = super[MapIterator].remove()`.
+**This SHIPS**: `TirEmitter.diamondOverrides` synthesises
+`override def remove(): Unit = super[MapIterator].remove()` for every member that arrives concrete
+from both the superclass chain and a mixin, choosing the SUPERCLASS — the parent Java would have
+run. It is a rendering repair, not a tree rewrite: no new symbol, no call-site change, the
+qualified-super TEXT emitted directly. Do not re-derive or re-attempt it.
 
-**Blocker:** `Tree.Super(cls, …)` carries the class the `super` belongs to, but the emitter prints a
-bare `super`. **Qualified `super[X]` is not expressible in the TIR today.** Do not attempt the
-transform before that is added.
+**What remains a limit:** `Tree.Super(cls, …)` carries the class but the emitter prints a bare
+`super` — qualified `super[X]` is still not expressible in the TIR, so a TRANSFORM that needs a
+qualified super call in a TREE (anything beyond this fixed forwarder shape) is still blocked on
+adding that node.
 
 Relatedly, `export` diamonds must dedupe by **DECLARING TYPE**, so a diamond drops the duplicate
 while a genuine redeclaration keeps the most specific.
 
-*Fix kind: (a); the TIR node is an (a) prerequisite.*
+*Fix kind: (a) — shipped for the diamond forwarder; the TIR node is an (a) prerequisite for
+anything more.*
 
 ### T8. Enum constants with class bodies — a known thin path
 
@@ -647,11 +653,15 @@ where they differ in a **capability the body may already use**.
 detached snapshot, and under `noClasspath` a JDK shadow may carry no return type at all to convert
 from.
 
-**The one approach NOT yet tried — wrap at the CALL SITE.** Both dead ends attacked the TYPE. If the
-argument is rewritten to an explicit `JavaIterable.from(xs)` *before* overload resolution runs, its
-type is already exactly the formal — nothing has to be inferred — and the parameter keeps the shim,
-so iterate-and-remove bodies are untouched. Unmeasured. It is a real coercion inserted by the engine,
-in the same spirit as the array-covariance and unchecked-conversion casts.
+**The approach that WORKS — wrap at the CALL SITE — is BUILT.** Both dead ends attacked the TYPE;
+`CollectionsTransform.coerce` attacks the SLOT: where an expression of a retyped scala kind meets a
+shim-typed expectation, it inserts the explicit wrap *before* overload resolution runs, so the
+argument's type is already exactly the formal — nothing has to be inferred — and the parameter
+keeps the shim, so iterate-and-remove bodies are untouched. Measured: it is one of the seams that
+took simple-graphs to 0 and un-broke the libGDX test port after the argument-only version failed
+(`0 → 3` on declared slots; see the port status files for the per-step numbers). Coverage as of
+this writing is the shim-typed ARGUMENT, DECLARATION and ASSIGNMENT slots — return position and
+non-Seq sources are known-open, so do not read "the boundary is closed" out of this entry.
 
 *Fix kind: (a). Whether to retype collections **at all** is (b) — a JVM-only port may keep
 `java.util` and skip the phase entirely, which makes this boundary vanish.*
@@ -1088,18 +1098,16 @@ Clearly separated because nothing below has a number behind it yet.
 - **Duplicate injected-runtime definitions will break the Scala.js and Native linkers** when a second
   module is ported. Confirmed by design reasoning; not observed, because only one module exists so
   far. (`LIBRARY-READINESS.md` §1.3.)
-- **A hand-rolled `subterms` recursion in `MutableParamsTransform`** returns `Nil` for `Tree.New` and
-  has no `Lambda`, `NewArray`-init or `Repeated` cases. Java's effectively-final rule shields the
-  lambda case and a miss degrades loudly, so this is **safe-but-fragile rather than wrong**. Convert
-  to `StandardTraversal` when next touched. (`LIBRARY-READINESS.md`, incidental finding.)
 - **An enum constant with a field or initializer block in its class body** would be dropped silently
   (T8). Zero sites in the corpus, so the hole is reasoned, not observed.
 - **A `StaticForwarderTransform` wrapper whose overloads are not all receiver-first** would be
   rewritten wrongly: members are matched by **name only**. Safe under current policy; worth a guard
   when a second library configures it. (`LIBRARY-READINESS.md`.)
-- **A typo'd `dropTypes` / `dropMethods` / forwarder / class-table key silently no-ops.** Nothing
-  reports a policy key that never matched. Expect to lose time to this on a new library's manifest.
-  (`LIBRARY-READINESS.md` §3.3.)
+- ~~A typo'd policy key silently no-ops~~ **CLOSED**: `PolicyReport` collects a classified
+  `never matched` finding from every parameterised phase, `SubstitutionCheck.dangling` covers the
+  drop side, and the migration prints and baselines both. The check has now also FIRED in anger —
+  it caught `getName` in the `ClassReflection` forwarder, a key dead since the first draft
+  (`policy 1->0` when removed).
 
 ### K5. A java class that EXTENDS a JDK collection — CLOSED, and what the shim must get exactly right
 
@@ -1129,9 +1137,6 @@ The shape that *is* known to work is the one `JavaIterator`/`JavaIterable` alrea
 **standalone abstract class in `balticporter-runtime` with Java's own member arity**, with Scala
 interop restored by extension methods rather than by inheritance. `AbstractCollection` is the next
 member of that family, not a mapping onto the stdlib.
-
-*Fix kind: (a). The types are JDK, the inheritance is ordinary java, and every library that defines
-its own collection type hits it — flexmark and liqp both do.*
 
 **CLOSED.** simple-graphs compiles at 0 and its three `extends AbstractCollection<T>` classes
 translate. `java.util.Collection` and `java.util.AbstractCollection` both map to the
@@ -1242,9 +1247,11 @@ Two rules were each measured the hard way, and a new backend or a new operation 
   Measured 0 → 1 on libGDX's test port. A chain from a non-collection source is untranslated and
   must fail as such.
 
-Still open, and each needs a different target type rather than more of the same: `Collectors.toSet`,
-`Collectors.toMap`, `Collectors.toCollection(f)`, and `Stream.sorted(Comparator)`. Guessing one would
-be a silent wrong answer, so they are deliberately unmapped and fail to compile.
+Still open, and each needs a different target type rather than more of the same: `Collectors.toSet`
+and `Collectors.toMap`. Guessing one would be a silent wrong answer, so they are deliberately
+unmapped and fail to compile. Two that WERE on this list now ship in `JavaCollections`:
+`Stream.sorted(Comparator)` as `sortedWith` (a copy, with the doc explaining why the name matters)
+and `Collectors.toCollection(f)` as `into` (bounded by `Growable`).
 `java.util.Collections`' statics are the same story — `unmodifiableCollection` is mapped (its
 `Collection<? extends T> -> Collection<T>` widening is load-bearing, not erasable to the identity),
 while `unmodifiableList` has no read-only `Buffer` view to map onto and mapping it to the identity
