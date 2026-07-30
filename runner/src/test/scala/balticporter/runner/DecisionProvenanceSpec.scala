@@ -49,12 +49,13 @@ class DecisionProvenanceSpec extends munit.FunSuite:
       case (k, scala.None) => System.clearProperty(k)
     }
 
-  private def run(root: Path, src: Path)(f: PortRun => PortRun = identity): PortResult =
+  private def run(root: Path, src: Path, files: List[String] = Nil)(f: PortRun => PortRun = identity): PortResult =
+    val fs = if files.nonEmpty then files else List("com/demo/Widget.java", "com/demo/Gadget.java")
     f(PortRun(
       label     = "demo",
       portRoot  = root.resolve("port"),
       sourceSet = SourceSet.Main,
-      frontend  = FrontendConfig(src, List("com/demo/Widget.java", "com/demo/Gadget.java"), Nil),
+      frontend  = FrontendConfig(src, fs, Nil),
       phases    = Nil,
     )).execute()
 
@@ -119,6 +120,28 @@ class DecisionProvenanceSpec extends munit.FunSuite:
     assertEquals(ms.map(_.detail("fired")), List("yes", "no"))
     // a drop is anchored on its OWNER's Java file, which is what makes it navigable
     assert(ms.forall(_.origin.javaPath.endsWith("com/demo/Widget.java")), clue(ms.map(_.origin.javaPath)))
+  }
+
+  test("a NESTED type's drop is anchored on the file it lives in, not on `<synthetic>`") {
+    // A nested type is not a compilation unit and has no origin of its own. Reported as synthetic,
+    // the row is unnavigable for the sake of a `$` — and libGDX drops constructors on exactly such
+    // types (`ParallelArray$ChannelDescriptor`).
+    val (root, src) = fixture()
+    java(src, "com/demo/Outer.java",
+      """package com.demo;
+        |public class Outer {
+        |  public static class Inner { public int f() { return 1; } }
+        |}""".stripMargin)
+    val rep = root.resolve("report")
+    withReport(rep) {
+      run(root, src, files = List("com/demo/Outer.java")) {
+        _.copy(subs = Substitutions(dropMethods = Set("com.demo.Outer$Inner#f")))
+      }
+    }
+    val m = decisions(rep).filter(_.kind == Decision.Kind.DroppedMember)
+    assertEquals(m.map(_.subjectFqn), List("com.demo.Outer$Inner#f"))
+    assertEquals(m.head.detail("fired"), "yes")
+    assert(clue(m.head.origin.javaPath).endsWith("com/demo/Outer.java"))
   }
 
   test("a type nobody dropped has no row — the log records decisions, not the whole program") {

@@ -563,10 +563,17 @@ final case class PortRun(
       program.units.flatMap(u => program.symbolOf(u.symbol).map(_.fullName -> u)).toMap
     val fired = policySubs.matched
     def emitted(fqn: String) = PackageRenameTransform.renamed(fqn, renames)
+    // The unit a policy key is ABOUT, and its Java file. A NESTED type is not a unit and has no
+    // origin of its own, so the enclosing top-level type supplies the FILE —
+    // `ParallelArray$ChannelDescriptor` lives in `ParallelArray.java`, and a row saying
+    // `<synthetic>` would be unnavigable for the sake of a `$`. Its SYMBOL is not borrowed with
+    // it: that id names a different type, and a wrong id is worse than none. Cut at the separator
+    // (§4.56).
     def at(fqn: String): (SymId, Origin) =
-      unitsByFqn.get(emitted(fqn)) match
+      val e = emitted(fqn)
+      unitsByFqn.get(e) match
         case Some(u)    => (u.symbol, u.origin)
-        case scala.None => (SymId.None, Origin.synthetic)
+        case scala.None => (SymId.None, unitsByFqn.get(e.takeWhile(_ != '$')).map(_.origin).getOrElse(Origin.synthetic))
 
     policySubs.dropTypes.toList.sorted.foreach { key =>
       val (sym, origin) = at(key)
