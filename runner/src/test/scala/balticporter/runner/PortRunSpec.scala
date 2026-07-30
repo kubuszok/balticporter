@@ -331,3 +331,35 @@ class PortRunSpec extends munit.FunSuite:
     assertEquals(result.errors.head.entry.map(_.unit), Some("com.demo.Widget"))
     assert(Files.isRegularFile(rep.resolve("run-latest/errors.tsv")))
   }
+
+  test("omissions are checked over EMITTED units only — a dropped type's findings are not this port's") {
+    // Both classes have the shape that yields a genuine `super(args) dropped` finding: a promoted
+    // (Object, int) primary, and a second root whose String argument fits none of its parameters.
+    // One is emitted and must be reported; one is dropped-and-replaced, so its "omission" describes
+    // code the port never emits — the classpath holds the injected replacement — and reporting it
+    // hands an agent a finding it cannot act on in any file this run wrote.
+    val (root, src) = fixture()
+    val par =
+      """package com.demo;
+        |public class Par {
+        |  public Object a; public int b;
+        |  public Par(Object a, int b) { this.a = a; this.b = b; }
+        |}""".stripMargin
+    def sub(name: String) =
+      s"""package com.demo;
+         |public class $name extends Par {
+         |  public $name(Object a, int b) { super(a, b); }
+         |  public $name(String s)        { super(s, 7); }
+         |}""".stripMargin
+    java(src, "com/demo/Par.java", par)
+    java(src, "com/demo/Kept.java", sub("Kept"))
+    java(src, "com/demo/Gone.java", sub("Gone"))
+    val inject = root.resolve("overrides")
+    java(inject, "com/demo/Gone.scala", "package com.demo\nclass Gone(a: Object, b: Int) extends Par(a, b)")
+    val r = run(root, src,
+      files = List("com/demo/Par.java", "com/demo/Kept.java", "com/demo/Gone.java")) { p =>
+      p.copy(subs = Substitutions(dropTypes = Set("com.demo.Gone"), inject = List(inject)))
+    }
+    val supers = r.report.omissions.filter(_.what == "super(args) dropped")
+    assertEquals(supers.map(_.owner), List("com.demo.Kept"))
+  }

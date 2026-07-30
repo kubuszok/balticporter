@@ -206,7 +206,14 @@ final case class PortRun(
       say(PortReport.Kind.Signature.classification)
       mismatches.take(20).foreach(m => println("  " + m.render))
 
-    val omissions = OmissionCheck.check(program, translated.emitOrder)
+    // minus the DROPPED units: `emitOrder` still carries them (the write loop below skips them at
+    // write time), but a finding about a member of a type the manifest substitutes away describes
+    // code this run never emits — the classpath holds the injected replacement, not the reported
+    // construct. The check's own contract is "the units the run actually EMITS"; hold it to that.
+    // The filter lives HERE because the drop set is policy and the check stays library-blind (§1).
+    val checkedUnits = translated.emitOrder.filterNot(u =>
+      program.symbolOf(u.symbol).map(_.fullName).exists(policySubs.dropsType))
+    val omissions = OmissionCheck.check(program, checkedUnits)
     CheckReport.record(PortRun.Omissions, omissions.map(_.report))
     say(s"OMISSIONS (emitted code silently loses these): ${omissions.size}")
     if omissions.nonEmpty then say(PortReport.Kind.Omission.classification)
