@@ -79,6 +79,14 @@ object Decision:
     *                            forwarder, port map redirect).
     *   - [[RetypedSignature]] — a declaration's type changed (collections shims, opaque types,
     *                            raw-generic erasure).
+    *   - [[ScopedOut]]        — the COMPLEMENT of the above, and it needs a kind of its own for the
+    *                            reason `decisions.tsv` exists at all: a retyping rule's
+    *                            [[RuleScope]] deliberately held this declaration back, so it keeps
+    *                            its upstream type while the code around it moved. The row that
+    *                            would have explained it is the one that is NOT there, and "why is
+    *                            this field a `java.util.List` when every other file says `Buffer`"
+    *                            then has no answer anywhere in the run. Always `Reason.Configured`
+    *                            — an exclusion is a policy entry by construction.
     *   - [[FunnelledCtor]]    — Java's constructor set was funnelled into one primary plus
     *                            secondaries, promoting parameters and locals to members.
     *   - [[DroppedSuperCall]] — a secondary constructor's `super(args)` could not be expressed and
@@ -98,7 +106,7 @@ object Decision:
     case RenamedType, RenamedPackage, RenamedMember
     case DroppedType, DroppedMember
     case SubstitutedBody, InjectedMember
-    case RedirectedCall, RetypedSignature, FunnelledCtor
+    case RedirectedCall, RetypedSignature, ScopedOut, FunnelledCtor
     case DroppedSuperCall, WidenedVisibility, Unrenderable
 
   val Header = "#kind\tsubjectFqn\treasonClass\treasonDetail\torigin\tline\tdetail"

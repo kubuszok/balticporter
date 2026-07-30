@@ -27,8 +27,8 @@ import balticporter.tir.*
   *   - an ASSIGNMENT target against its right-hand side,
   *   - a `return` against the enclosing method's declared return type.
   *
-  * A slot is STRANDED when the two sides are on opposite sides of one of two lines the phase
-  * itself drew:
+  * A slot is STRANDED when the two sides are on opposite sides of one of THREE lines the phase
+  * itself drew — the third being the one a port draws itself:
   *
   *   - **JDK against retyped** — one side is a JDK collection-family type the mapping left alone,
   *     the other is a `scala.collection.*` or `balticporter.runtime` type the mapping produced.
@@ -40,6 +40,15 @@ import balticporter.tir.*
   *     "already ported". `m.keySet()` into a `Collection` slot is the standing example, refused on
   *     purpose (`coerce.isKeySetView`) and therefore still counted here: a deliberate refusal is a
   *     finding, not an absence.
+  *   - **scoped-out against rewritten** — one side is a declaration the port's
+  *     `CollectionsTransform(scope)` deliberately held back, so it kept the JDK type while the code
+  *     meeting it moved. This line is the port's own and is the reason a scope is safe to offer at
+  *     all: NO wrap can close it (a `mutable.Buffer` is not a `java.util.List`, and the runtime
+  *     shims bridge the other direction only), so it is refused, counted, and told which policy
+  *     entry to move. A scope whose seams were silent would be worse than no scope.
+  *
+  *     Note this is the one line whose sites the node types alone CANNOT show — see [[check]]'s
+  *     `actualOf`, and read it before trusting a zero here.
   *
   * A wrap `coerce` DID insert is excluded by construction and needs no special case: the wrap is
   * typed as the EXPECTED type, so the two sides agree and the slot is not a boundary at all. Same
@@ -73,6 +82,9 @@ object CollectionBoundaryCheck:
     case MappedTypeSurvived
     /** both sides are the phase's own output, on opposite sides of the shim/scala split. */
     case ShimBoundary
+    /** one side is a declaration the phase's [[balticporter.tir.RuleScope]] deliberately held back,
+      * so it kept its JDK type while the code meeting it moved. */
+    case ScopedOut
 
   object Issue:
     /** which of §1's three kinds the fix is — the thing a bare typer error cannot say. */
@@ -92,6 +104,13 @@ object CollectionBoundaryCheck:
         "§1(a) engine gap: a scala collection meets a `balticporter.runtime` shim slot (or the " +
           "reverse) with no wrap — extend `CollectionsTransform.coerce` to this slot, or, if the " +
           "cell is a deliberate refusal, it stays counted here (ENGINE-LIMITS K2's coverage table)."
+      case ScopedOut =>
+        "§1(b) PER-LIBRARY: one side of this slot is a declaration this port's " +
+          "`CollectionsTransform(scope)` deliberately held back, so it kept its JDK type while the " +
+          "other side moved. NO WRAP CAN CLOSE IT — a `mutable.Buffer` is not a `java.util.List` " +
+          "and the runtime shims bridge the other direction only — so widen the scope to cover " +
+          "this declaration, or narrow it to exclude the other side of the slot too. The engine " +
+          "needs no change; a scope that produced this seam SILENTLY would be worse than no scope."
 
   /** one stranded slot. */
   final case class Finding(issue: Issue, slot: String, expected: String, actual: String, origin: Origin, enclosing: SymId):
@@ -130,35 +149,68 @@ object CollectionBoundaryCheck:
     * `mapped` is `CollectionsTransform.mappedTypes` and `targets` is `retypedTargets` — the
     * phase's own policy, read back, so the check concludes about a type only from what the phase
     * did to it (CLAUDE.md §4.56). */
-  def check(program: Program, mapped: Set[String], targets: Set[String] = Set.empty): List[Finding] =
-    check(program, program.units, mapped, targets)
+  def check(program: Program, mapped: Set[String], targets: Set[String] = Set.empty,
+            scopedOut: Set[SymId] = Set.empty): List[Finding] =
+    check(program, program.units, mapped, targets, scopedOut)
 
   /** …restricted to the units the run actually EMITS — the same filter `OmissionCheck` and
     * `PortabilityCheck.inEmittedCode` carry, and for the same measured reason: a DEPENDENT port's
     * `Program` holds the base module's units too (`FrontendConfig.resolutionRoots`), and a stranded
     * slot inside one of those is the BASE's finding, reported by a repository that cannot act on it
     * (ENGINE-LIMITS D2). A base port passes `program.units` and this is the identity. */
-  def check(program: Program, units: List[Tree.ClassDef], mapped: Set[String], targets: Set[String]): List[Finding] =
+  def check(program: Program, units: List[Tree.ClassDef], mapped: Set[String], targets: Set[String],
+            scopedOut: Set[SymId]): List[Finding] =
     val out   = collection.mutable.ListBuffer[Finding]()
     val shims = targets.filter(_.startsWith(RuntimeArtifact.Package + "."))
     given Program = program
 
     def fqn(t: TypeRepr): Option[String] = headSym(t).flatMap(program.symbolOf).map(_.fullName)
 
-    def issueFor(jdk: String): Issue =
-      if mapped.contains(jdk) then Issue.MappedTypeSurvived
+    def issueFor(jdk: String, scoped: Boolean): Issue =
+      if scoped && mapped.contains(jdk) then Issue.ScopedOut
+      else if mapped.contains(jdk) then Issue.MappedTypeSurvived
       else if untranslatedFamilies.exists(jdk.startsWith) then Issue.UntranslatedFamily
       else if CollectionClosureCheck.supertypesOf(jdk).exists(mapped.contains) then Issue.UnmappedSubtype
       // a JDK family type with no mapped supertype at all: the mapping never touched anything it
       // relates to, so the slot is a gap in COVERAGE rather than a broken relation.
       else Issue.UnmappedSubtype
 
-    def slot(kind: String, expected: TypeRepr, actual: TypeRepr, origin: Origin, enclosing: SymId): Unit =
-      (fqn(expected), fqn(actual)) match
+    /** The type a term REALLY has, which for a reference to a SCOPED-OUT declaration is not the one
+      * the node carries.
+      *
+      * `CollectionsTransform.transformType` is position-blind by construction — the traversal routes
+      * every type occurrence through it — so a reference to an excluded field or method had its node
+      * `tpe` remapped even though the declaration it names did not move. Left at face value, the
+      * one slot a scope is guaranteed to create (in-scope code meeting an excluded declaration) is
+      * the one slot this check cannot see: both sides read `Buffer` and the emitted Scala says
+      * `java.util.List`. So the DECLARATION's own `info` wins, which is the same
+      * "ask what the phase did, not what a node claims" rule the transform follows on the other
+      * side (§4.56, and ENGINE-LIMITS §0's "the recorded type is not a witness of what the emitter
+      * will print"). Only the HEAD is ever read below, so taking a method's result type here loses
+      * nothing an instantiation would have carried. */
+    def actualOf(t: Term): (TypeRepr, Boolean) =
+      def declared(s: SymId, isCall: Boolean) =
+        program.symbolOf(s).map(_.info).map {
+          case TypeRepr.MethodType(_, r, _) if isCall                       => r
+          case TypeRepr.PolyType(_, TypeRepr.MethodType(_, r, _)) if isCall => r
+          case other                                                        => other
+        }.filter(_ != TypeRepr.NoType)
+      val fromDecl = t match
+        case Tree.Ident(s, _, _) if scopedOut(s)         => declared(s, isCall = false)
+        case Tree.Select(_, s, _, _) if scopedOut(s)     => declared(s, isCall = false)
+        case Tree.Apply(_, _, m, _, _) if scopedOut(m)   => declared(m, isCall = true)
+        case _                                           => scala.None
+      fromDecl.map(_ -> true).getOrElse(t.tpe -> false)
+
+    def slot(kind: String, expected: TypeRepr, actual: Term, origin: Origin, enclosing: SymId,
+             expectedScoped: Boolean): Unit =
+      val (actualT, actualScoped) = actualOf(actual)
+      val scoped = expectedScoped || actualScoped
+      (fqn(expected), fqn(actualT)) match
         case (Some(e), Some(a)) if e != a =>
           (sideOf(e, shims), sideOf(a, shims)) match
-            case (Side.Jdk, Side.Scala | Side.Shim) => out += Finding(issueFor(e), kind, e, a, origin, enclosing)
-            case (Side.Scala | Side.Shim, Side.Jdk) => out += Finding(issueFor(a), kind, e, a, origin, enclosing)
+            case (Side.Jdk, Side.Scala | Side.Shim) => out += Finding(issueFor(e, scoped), kind, e, a, origin, enclosing)
+            case (Side.Scala | Side.Shim, Side.Jdk) => out += Finding(issueFor(a, scoped), kind, e, a, origin, enclosing)
             case (Side.Shim, Side.Scala) | (Side.Scala, Side.Shim) =>
               out += Finding(Issue.ShimBoundary, kind, e, a, origin, enclosing)
             case _ => ()
@@ -176,22 +228,24 @@ object CollectionBoundaryCheck:
           case TypeRepr.PolyType(_, TypeRepr.MethodType(ps, _, _)) => ps.map(_._2)
         }.getOrElse(Nil)
         if formals.sizeIs == t.args.size then
-          t.args.zip(formals).foreach((a, f) => slot("argument", f, a.tpe, a.origin, t.method))
+          t.args.zip(formals).foreach((a, f) => slot("argument", f, a, a.origin, t.method, scopedOut(t.method)))
         t
 
       override def transformTerm(t: Term)(using Program): Term =
         t match
-          case a: Tree.Assign => slot("assignment", a.lhs.tpe, a.rhs.tpe, a.origin, SymId.None)
-          case _              => ()
+          case a: Tree.Assign =>
+            val (lhsT, lhsScoped) = actualOf(a.lhs)
+            slot("assignment", lhsT, a.rhs, a.origin, SymId.None, lhsScoped)
+          case _ => ()
         t
 
       override def transformValDef(t: Tree.ValDef)(using Program): Tree.ValDef =
-        t.rhs.foreach(r => slot("declaration", t.tpt.tpe, r.tpe, t.origin, t.symbol))
+        t.rhs.foreach(r => slot("declaration", t.tpt.tpe, r, t.origin, t.symbol, scopedOut(t.symbol)))
         t
 
       override def transformDefDef(t: Tree.DefDef)(using Program): Tree.DefDef =
         t.rhs.foreach(b => returnsIn(b).foreach { r =>
-          r.expr.foreach(e => slot("return", t.returnTpt.tpe, e.tpe, r.origin, t.symbol))
+          r.expr.foreach(e => slot("return", t.returnTpt.tpe, e, r.origin, t.symbol, scopedOut(t.symbol)))
         })
         t
 

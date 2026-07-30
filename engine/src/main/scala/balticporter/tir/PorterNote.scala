@@ -63,7 +63,11 @@ object PorterNote:
     *   - [[Decision.Kind.RetypedSignature]] — the new type is written in the declaration and the
     *     diff against the Java shows it; a note per retyped member is 335 comments on libGDX core
     *     restating what the signature already says, and the noise would bury the ones that carry
-    *     information nothing else does.
+    *     information nothing else does. Note its COMPLEMENT, [[Decision.Kind.ScopedOut]], IS
+    *     rendered, and the asymmetry is the line above applied rather than broken: a declaration
+    *     that kept its upstream type looks like a translation nobody performed, and the diff shows
+    *     nothing because nothing changed. It is also rare where the other is not — one row per
+    *     declaration a policy entry names, against one per retyped member.
     *   - [[Decision.Kind.RedirectedCall]] — recorded per DECLARATION for the reason
     *     `Decision.declarationsUsing` gives, and the rewritten call is right there in the body.
     *   - [[Decision.Kind.FunnelledCtor]] — the emitted class has one primary and N secondaries,
@@ -75,7 +79,8 @@ object PorterNote:
   val Rendered: Set[Decision.Kind] =
     import Decision.Kind.*
     Set(RenamedType, RenamedPackage, RenamedMember, DroppedType, DroppedMember,
-        SubstitutedBody, InjectedMember, DroppedSuperCall, WidenedVisibility, Unrenderable)
+        SubstitutedBody, InjectedMember, DroppedSuperCall, WidenedVisibility, Unrenderable,
+        ScopedOut)
 
   /** WHERE each rendered kind's note goes, which is not a style question: the three answers are
     * three different pieces of machinery and a kind in the wrong one is a note that never appears.

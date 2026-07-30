@@ -1,6 +1,6 @@
 package balticporter.transform
 
-import balticporter.core.{RequiresRuntime, RuntimeArtifact}
+import balticporter.core.{PolicyFinding, PolicyIssue, PolicyReport, PolicySource, RequiresRuntime, RuntimeArtifact, SurfacePolicy}
 import balticporter.tir.*
 
 /** `java.util` collections → `scala.collection.mutable`. A whole-program [[Phase]] — the
@@ -20,9 +20,47 @@ import balticporter.tir.*
   * New scala symbols are interned into the table in `run`, so the emitter (which reads names
   * from the table) prints `scala.collection.mutable.Buffer[X]`, `xs += x`, `m.update(k, v)`
   * by construction.
+  *
+  * ==WHERE it applies — the [[balticporter.tir.RuleScope]] parameter==
+  * The MAPPING is §1(a) (`java.util.List` is `mutable.Buffer` in every port there will ever be);
+  * WHICH DECLARATIONS it reaches is §1(b), because a library may have a type that must keep the JDK
+  * shape — a hand-written bridge, a class whose whole purpose is to hand a real `java.util.List` to
+  * something outside the port. Before the scope existed, the only way to say so was not to run the
+  * phase at all.
+  *
+  *   - `RuleScope.Everywhere()` — the default, and the pre-scope behaviour BY THE SAME CODE PATH:
+  *     nothing is excluded, so the `excluded` set is empty and every branch below collapses to what
+  *     it did before. §1(b)'s "an empty parameter needs no code path", taken literally.
+  *   - `RuleScope.Everywhere(except)` — retype everything but those declarations.
+  *   - `RuleScope.Only(include)` — retype only those, GROWN by [[FlowPropagation]]: a named field
+  *     carries its getter, its setter's parameter and every local it initialises, because a
+  *     signature that moves without its call sites is a compile error one call away.
+  *
+  * The scope's unit is a MEMBER — a field, a method or a nested type — because that is the unit a
+  * BODY is rewritten in: a method whose parameter becomes a `Buffer` has a body full of scala-shaped
+  * calls, and half a body is not a translation. So a propagated parameter or local pulls its
+  * enclosing member in whole, and a `TypeDef` or a bare statement in a class body follows its class.
+  *
+  * ==The seam a scope creates cannot be closed, and is therefore COUNTED==
+  * `coerce` bridges a scala collection into a `balticporter.runtime` shim slot; there is no such
+  * bridge into a REAL `java.util.List` slot, and there cannot be one — a `mutable.Buffer` is not a
+  * `java.util.List` and the shims deliberately implement neither. So a scope boundary is refused and
+  * reported rather than approximated (ENGINE-LIMITS M6): [[scopedOut]] is handed to
+  * [[CollectionBoundaryCheck]], which reports every such slot as `Issue.ScopedOut` with the §1(b)
+  * fix. A scope that silently produced an uncompilable seam would be worse than no scope, and this
+  * is what makes it not one.
   */
-final class CollectionsTransform extends Phase, RequiresRuntime:
+final class CollectionsTransform(val scope: RuleScope = RuleScope.Everywhere())
+    extends Phase, RequiresRuntime, PolicySource, SurfacePolicy:
   def name = "java-collections->scala"
+
+  /** Two modules that scope this phase differently emit incompatible signatures for the shared
+    * surface — a `java.util.List` parameter in the base against a `Buffer` argument in the
+    * dependent, which each compile alone and cannot compile together. That is exactly what
+    * [[SurfacePolicy]] exists to make comparable (CLAUDE.md §1.5); before the scope there was
+    * nothing to compare, which is why this phase did not implement it. The default scope renders
+    * `""`, so a port that sets no scope has the fingerprint it always effectively had. */
+  def surfaceFingerprint: String = scope.fingerprint
 
   /** this phase retypes onto `balticporter.runtime` — declared once, so the run derives the port's
     * dependency, its vendored sources and the emitter's external-parent table from it. */
@@ -136,9 +174,10 @@ final class CollectionsTransform extends Phase, RequiresRuntime:
   def boundary(program: Program): List[CollectionBoundaryCheck.Finding] =
     boundary(program, program.units)
 
-  /** …held to the units the run EMITS, for the reason [[closure]] gives. */
+  /** …held to the units the run EMITS, for the reason [[closure]] gives. [[scopedOut]] goes with
+    * the mapping, so a seam the SCOPE created is classified as such rather than as an engine bug. */
   def boundary(program: Program, units: List[Tree.ClassDef]): List[CollectionBoundaryCheck.Finding] =
-    CollectionBoundaryCheck.check(program, units, mappedTypes, retypedTargets)
+    CollectionBoundaryCheck.check(program, units, mappedTypes, retypedTargets, scopedOut)
 
   /** scala nullary accessors that take NO parens (`def size: Int`) — a Java `size()`
     * emitted as `size()` would be an illegal application. Strip the `Apply`. */
@@ -185,6 +224,28 @@ final class CollectionsTransform extends Phase, RequiresRuntime:
   private var mapSym: SymId = SymId.None
   /** `JavaIterator.from` — the `iterator` counterpart of `wrapIterableArgs`. */
   private var iteratorFromSym, javaIteratorSym: SymId = SymId.None
+
+  // ---- the RuleScope's own record, for THIS run (see `applyScope`) ----
+
+  /** every symbol this run's [[scope]] held OUT of the rewrite. EMPTY for the default scope — and
+    * for any scope whose entries matched nothing — which is what makes the no-op a no-op. */
+  private var excluded: Set[SymId] = Set.empty
+
+  /** …read back, so [[CollectionBoundaryCheck]] can classify a seam the scope created from the
+    * phase's OWN record of what it held back rather than guessing from a type name (§4.56). */
+  def scopedOut: Set[SymId] = excluded
+
+  /** the declaration → the scope ENTRY that admitted it, for `Reason.Configured`'s key (§4.575:
+    * the key is the manifest entry VERBATIM, because it is the string an agent edits). */
+  private var admittedBy: Map[SymId, String] = Map.empty
+
+  private var report: PolicyReport = PolicyReport.empty
+
+  /** Scope entries that named nothing in this run — a §1(b) silent no-op, which is the failure this
+    * whole channel exists for: a mis-typed exclusion leaves the phase rewriting a type the port
+    * meant to protect, and nothing else in the pipeline can see it. Reflects the last [[run]];
+    * empty before the first, and empty for the default scope. */
+  def policyReport: PolicyReport = report
 
   override def run(program: Program): Program =
     val added = collection.mutable.ListBuffer[Symbol]()
@@ -249,10 +310,171 @@ final class CollectionsTransform extends Phase, RequiresRuntime:
 
     val symbols = SymbolTable(program.symbols.all ++ added)
     given Program = new Program(program.units, symbols, program.xref)
-    val units    = program.units.map(u => StandardTraversal.mapClassDef(this, u))
-    val symbols2 = StandardTraversal.mapSymbols(this, symbols) // retype signatures too
+    applyScope(summon[Program]) // fills `excluded`, `admittedBy` and `report` — a no-op by default
+    val units    = program.units.map(u => restoreExcluded(u, StandardTraversal.mapClassDef(this, u)))
+    val symbols2 = mapSignatures(symbols) // retype signatures too
     recordRetypings(symbols, symbols2)
+    recordScopedOut(symbols)
     new Program(units, symbols2, program.xref)
+
+  // -------------------------------------------------------------------------
+  // RuleScope — WHICH declarations this run rewrites (CLAUDE.md §1(b))
+  // -------------------------------------------------------------------------
+
+  /** Decide the scope for this run: fill [[excluded]], [[admittedBy]] and [[report]].
+    *
+    * An unrestricted scope short-circuits to EMPTY, and so does any scope whose entries match
+    * nothing — which is what makes the parameter's default a no-op by arithmetic rather than by a
+    * branch that has to stay in step (§1(b)).
+    *
+    * The two directions are not symmetric, and neither is an accident:
+    *
+    *   - `Everywhere(except)` — an opt-out is ABSOLUTE. It is a statement about a declaration that
+    *     must keep the JDK shape, so nothing may drag it back in, propagation included.
+    *   - `Only(include)` — an opt-in is a SEED. Retyping a field without its getter is a compile
+    *     error one call away, so the named declarations are grown along pure-move flows
+    *     ([[FlowPropagation]]), once per ENTRY over a shared edge set so that every admitted
+    *     declaration can name the entry that reached it (§4.575).
+    *
+    * Eligibility for the growth is this phase's OWN record — "does `typeMap` cover the head of this
+    * symbol's type" — never a name test, which is CLAUDE.md §4.56's general form.
+    */
+  private def applyScope(p: Program): Unit =
+    excluded = Set.empty; admittedBy = Map.empty; report = PolicyReport.empty
+    if scope.isUnrestricted then return
+
+    val named: List[(Symbol, String)] = p.symbols.all.toList.flatMap(s => scope.entryFor(p, s).map(s -> _))
+    val fired = named.map(_._2).toSet
+
+    scope match
+      case RuleScope.Everywhere(_) =>
+        excluded = named.map(_._1.id).toSet
+      case RuleScope.Only(include) =>
+        val es       = FlowPropagation.edges(p)
+        def eligible(id: SymId): Boolean = p.symbolOf(id).exists(s => collectionValued(p, s.info))
+        // one growth per entry, sorted, so the attribution is deterministic when two entries reach
+        // the same declaration; `admittedBy` keeps the first (i.e. the alphabetically first entry).
+        val byEntry = include.toList.sorted.map { e =>
+          val seeds = named.collect { case (s, `e`) => s.id }.toSet
+          e -> (seeds ++ FlowPropagation.grow(es, seeds, eligible))
+        }
+        val pulled = byEntry.flatMap((_, ids) => ids ++ ids.flatMap(memberOf(p, _))).toSet
+        admittedBy = byEntry.reverse.flatMap((e, ids) => ids.map(_ -> e)).toMap
+        excluded   = p.symbols.all.collect { case s if !ownerChain(p, s.id).exists(pulled) => s.id }.toSet
+
+    report = PolicyReport(scope.neverFired(fired).toList.sorted.map { k =>
+      PolicyFinding(name, s"CollectionsTransform(scope) ${scope.productPrefix} entry", k, PolicyIssue.NeverMatched,
+        "no package, type or member with this fully-qualified name occurs in this program, so the " +
+          "scope neither held anything back nor admitted anything — the phase ran as if the entry " +
+          "were absent")
+    })
+
+  /** could this phase retype what this symbol DECLARES? A value's own type, or a method's RESULT —
+    * the two positions a pure-move flow moves a collection through. */
+  private def collectionValued(p: Program, info: TypeRepr): Boolean = info match
+    case TypeRepr.MethodType(_, r, _)                       => isMapped(p, r)
+    case TypeRepr.PolyType(_, TypeRepr.MethodType(_, r, _)) => isMapped(p, r)
+    case other                                              => isMapped(p, other)
+
+  private def isMapped(p: Program, t: TypeRepr): Boolean =
+    headSym(t).flatMap(p.symbolOf).exists(s => typeMap.contains(s.fullName))
+
+  /** a symbol and every owner above it, fuel-bounded. */
+  private def ownerChain(p: Program, id: SymId, fuel: Int = 64): List[SymId] =
+    if id == SymId.None || fuel <= 0 then Nil
+    else id :: p.symbolOf(id).toList.flatMap(s => ownerChain(p, s.owner, fuel - 1))
+
+  /** the nearest ancestor-or-self that is a MEMBER of a type rather than of a method — the unit a
+    * body is rewritten in. A propagated parameter or local pulls this in with it, because half a
+    * rewritten body is not a translation. */
+  private def memberOf(p: Program, id: SymId): Option[SymId] =
+    ownerChain(p, id).find(x => !p.symbolOf(x).flatMap(s => p.symbolOf(s.owner)).exists(o => isMethodLike(o.info)))
+
+  private def isMethodLike(t: TypeRepr): Boolean = t match
+    case _: TypeRepr.MethodType => true
+    case _: TypeRepr.PolyType   => true
+    case _                      => false
+
+  /** Restore the members this run's scope held back.
+    *
+    * The traversal runs over the WHOLE unit and the excluded members are then spliced back from the
+    * original, rather than the walk being taught to skip them: `StandardTraversal.mapClassDef` is
+    * the one walk in the engine kept complete as node kinds are added (CLAUDE.md §3), and a second
+    * walk that knew how to descend selectively would be exactly the hand-rolled recursion that rule
+    * forbids. What is hand-written here is only the DECLARATION SPINE — a class body is a list of
+    * class/def/val/type/statement, and the mapped list is the same length and the same kinds in the
+    * same order, so the two zip exactly.
+    *
+    * `excluded.isEmpty` — the default, and any scope that matched nothing — returns the mapped unit
+    * untouched, which is byte-for-byte the pre-scope path.
+    *
+    * A `TypeDef` and a bare statement (a `static { }` block) carry no member identity of their own
+    * and follow their enclosing class, as the scope's granularity says they do.
+    *
+    * An excluded CLASS restores only its OWN positions — parents, self type, type parameters, enum
+    * cases — and never short-circuits its body. Returning the whole original class instead was the
+    * first shape of this and it is wrong in exactly the case `RuleScope.Only` is made of: an entry
+    * naming `Model#items` does not name `Model`, so the enclosing class is out of scope while one
+    * of its members is in it, and bailing at the class threw the member's rewrite away. */
+  private def restoreExcluded(orig: Tree.ClassDef, mapped: Tree.ClassDef): Tree.ClassDef =
+    if excluded.isEmpty then mapped
+    else
+      val body = orig.body.zip(mapped.body).map {
+        case (o: Tree.ClassDef, m: Tree.ClassDef) => restoreExcluded(o, m)
+        case (o: Tree.DefDef, m: Tree.DefDef)     => if excluded(o.symbol) then o else m
+        case (o: Tree.ValDef, m: Tree.ValDef)     => if excluded(o.symbol) then o else m
+        case (_, m)                               => m
+      }
+      val own =
+        if !excluded(orig.symbol) then mapped
+        else mapped.copy(parents = orig.parents, selfType = orig.selfType,
+                         tparams = orig.tparams, enumCases = orig.enumCases)
+      own.copy(body = body)
+
+  /** `StandardTraversal.mapSymbols`, minus the symbols the scope held back — so an excluded
+    * declaration's SIGNATURE stays exactly as the frontend read it, which is what the restored tree
+    * above says it is. The two must agree: a tree that says `java.util.List` over a symbol that
+    * says `Buffer` is a lie every later reader believes. */
+  private def mapSignatures(tbl: SymbolTable)(using Program): SymbolTable =
+    if excluded.isEmpty then StandardTraversal.mapSymbols(this, tbl)
+    else tbl.all.foldLeft(tbl) { (t, s) =>
+      if excluded(s.id) then t else t.updated(s.copy(info = StandardTraversal.mapType(this, s.info)))
+    }
+
+  /** DECISION PROVENANCE for the exclusion direction: one row per declaration the scope HELD BACK
+    * and that the mapping would otherwise have moved.
+    *
+    * Without it the `Everywhere(except)` direction is invisible in `decisions.tsv` — the row that
+    * would have been written simply is not there, and "why is this field a `java.util.List` when
+    * every other file says `Buffer`" has no answer anywhere in the run (§5.1). `Reason.Configured`,
+    * with the entry verbatim, because the fix is one line in that library's manifest.
+    *
+    * Only declarations (`Decision.isDeclaration`) and only ones a retyping would actually have
+    * reached: a scope naming a package full of types with no collection in them is a policy the
+    * port may well want and is not a decision about anything. */
+  private def recordScopedOut(before: SymbolTable)(using p: Program): Unit =
+    if excluded.isEmpty then return
+    scope match
+      case RuleScope.Everywhere(_) =>
+        before.all.foreach { s =>
+          if excluded(s.id) && collectionValued(p, s.info) && Decision.isDeclaration(p, s) then
+            scope.entryFor(p, s).foreach { entry =>
+              record(Decision(
+                kind       = Decision.Kind.ScopedOut,
+                subject    = s.id,
+                subjectFqn = s.fullName,
+                detail = Map(
+                  "kept" -> TirPrinter.tpe(s.info, TirPrinter.Style.canonical),
+                  "key"  -> entry,
+                  "why"  -> ("this port's collections scope excludes this declaration, so it keeps " +
+                    "the JDK type while the code around it moved to scala's"),
+                ),
+                reason = Reason.Configured(name, entry),
+                origin = Decision.originOf(p, s.id),
+              ))
+            }
+        }
+      case RuleScope.Only(_) => () // the admitted half is recorded by `recordRetypings`
 
   /** DECISION PROVENANCE: one row per DECLARATION whose emitted SIGNATURE moved.
     *
@@ -271,11 +493,28 @@ final class CollectionsTransform extends Phase, RequiresRuntime:
     * two standard libraries — `java.util.List` is `mutable.Buffer` in every port there will ever
     * be. Should a library ever need its own mapping, the map becomes a parameter and this becomes
     * `Configured`; nothing else here changes.
+    *
+    * …with ONE exception, which is the scope. Under `RuleScope.Only` a declaration was retyped
+    * because the port ASKED for it — directly, or by naming something this one flows from — so the
+    * row's reason is `Configured(phase, entry)` with the entry verbatim (§4.575). Under every other
+    * scope, including the default, retyping is the rule and `Universal` is the honest classification;
+    * the reader's question there is not "who asked for this" but "why does java's collection have no
+    * counterpart", which is the same answer for every port.
     */
   private def recordRetypings(before: SymbolTable, after: SymbolTable)(using p: Program): Unit =
     before.all.foreach { s =>
       after.get(s.id).foreach { now =>
         if now.info != s.info && Decision.isDeclaration(p, s) then
+          val (reason, why) = admittedBy.get(s.id) match
+            case Some(entry) =>
+              (Reason.Configured(name, entry),
+               "this port's collections scope admits this declaration (directly, or through a " +
+                 "pure-move flow from something it names), and a signature that moves without its " +
+                 "call sites is a compile error one call away")
+            case scala.None =>
+              (Reason.Universal("collections-retype"),
+               "a JDK collection type has a scala counterpart on every backend, and the JDK's own " +
+                 "is on none of them")
           record(Decision(
             kind       = Decision.Kind.RetypedSignature,
             subject    = s.id,
@@ -283,10 +522,9 @@ final class CollectionsTransform extends Phase, RequiresRuntime:
             detail = Map(
               "from" -> TirPrinter.tpe(s.info, TirPrinter.Style.canonical),
               "to"   -> TirPrinter.tpe(now.info, TirPrinter.Style.canonical),
-              "why"  -> ("a JDK collection type has a scala counterpart on every backend, and the " +
-                "JDK's own is on none of them"),
-            ),
-            reason = Reason.Universal("collections-retype"),
+              "why"  -> why,
+            ) ++ admittedBy.get(s.id).map("key" -> _),
+            reason = reason,
             origin = Decision.originOf(p, s.id),
           ))
       }

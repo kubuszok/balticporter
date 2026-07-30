@@ -67,6 +67,16 @@ object FlowPropagation:
     *         the honest answer and is what a never-fired policy report exists to say instead.
     */
   def grow(program: Program, seeds: Set[SymId], eligible: SymId => Boolean): Set[SymId] =
+    grow(edges(program), seeds, eligible)
+
+  /** …over an edge set the caller ALREADY has.
+    *
+    * Not an optimisation for its own sake: a scope that must attribute each grown declaration to
+    * the POLICY ENTRY that reached it (CLAUDE.md §4.575 — the key in a `Reason.Configured` is the
+    * manifest entry verbatim) grows once per entry, and re-walking a 600-file program once per
+    * entry to answer the same question is the difference between a knob a port can use and one it
+    * cannot. */
+  def grow(edges: List[(SymId, SymId)], seeds: Set[SymId], eligible: SymId => Boolean): Set[SymId] =
     val parent = collection.mutable.Map[SymId, SymId]()
     def find(x: SymId): SymId =
       var r = x
@@ -74,7 +84,7 @@ object FlowPropagation:
       parent(x) = r; r
     def union(a: SymId, b: SymId): Unit = parent(find(a)) = find(b)
 
-    val es = edges(program).filter((a, b) => eligible(a) && eligible(b))
+    val es = edges.filter((a, b) => eligible(a) && eligible(b))
     es.foreach((a, b) => union(a, b))
     val roots    = seeds.filter(eligible).map(find)
     val universe = (es.flatMap((a, b) => List(a, b)) ++ seeds).toSet.filter(eligible)

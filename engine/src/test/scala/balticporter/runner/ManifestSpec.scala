@@ -2,7 +2,8 @@ package balticporter.runner
 
 import balticporter.core.*
 import balticporter.core.ManifestAgreement.Kind
-import balticporter.transform.{ClassTableTransform, CollectionsTransform, StaticForwarderTransform}
+import balticporter.tir.RuleScope
+import balticporter.transform.{ClassTableTransform, CollectionsTransform, MutableParamsTransform, StaticForwarderTransform}
 
 import java.nio.file.{Files, Path}
 import scala.jdk.CollectionConverters.*
@@ -303,7 +304,16 @@ class ManifestSpec extends munit.FunSuite:
     assertEquals(PortManifest.fingerprint(fwd(Set("a", "b"))), PortManifest.fingerprint(fwd(Set("b", "a"))))
     assertNotEquals(PortManifest.fingerprint(fwd(Set("a"))), PortManifest.fingerprint(fwd(Set("a", "b"))))
     // a phase that does NOT declare its policy is compared by name only — the documented blind spot
-    assertEquals(PortManifest.fingerprint(new CollectionsTransform), "java-collections->scala")
+    assertEquals(PortManifest.fingerprint(new MutableParamsTransform), "reassigned-params->var")
+    // …and one that DOES carries it, even when the policy is the default: the collections phase
+    // takes a `RuleScope`, and two modules scoping it differently emit signatures that each compile
+    // alone and cannot compile together, which is precisely what `SurfacePolicy` is for (§1.5). The
+    // default renders empty, so a port that sets no scope compares as it always did.
+    assertEquals(PortManifest.fingerprint(new CollectionsTransform), "java-collections->scala[]")
+    assertNotEquals(
+      PortManifest.fingerprint(new CollectionsTransform),
+      PortManifest.fingerprint(new CollectionsTransform(RuleScope.Everywhere(Set("com.demo.Bridge")))),
+    )
   }
 
   test("`renamed` cuts only at a separator — com.demo must not cover com.demonstrate") {
