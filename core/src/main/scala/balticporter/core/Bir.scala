@@ -5,7 +5,7 @@ package balticporter.core
 //
 // Two substrates exist. This is the older one: a resolved-but-untyped Java IR
 // (`BUnit`/`BType`/`BExpr`) with its own frontend (`SpoonFrontend`) and its own
-// printer (`ScalaPrinter`), driven by `runner/M0Pipeline`. `RECOMPILER.md` declares
+// printer (`ScalaPrinter`), driven by `runner/M0Pipeline`. `DESIGN.md` §2.2 declares
 // it the wrong substrate: it has no symbol table, no cross-reference index and no
 // phase model, so a rewrite cannot ask "who else uses this" and every rule is a
 // local pattern match.

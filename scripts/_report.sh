@@ -168,7 +168,7 @@ show_check_report() {
 
 # correlate <out-report-dir> [--scalac f] [--tests f] [--srcmap [scope=]f]...
 # Join compiler and test-runner output back to the MEMBER and the JAVA ORIGIN that produced it
-# (UNPORTABLE-DESIGN.md §6.3, and the amendment that extends it to the TEST runner). Without this, a
+# (DESIGN.md §6.3, and the amendment that extends it to the TEST runner). Without this, a
 # diagnostic over emitted Scala is a file and a line and nothing else, and every triage starts by
 # reverse-engineering the emitter by hand.
 #

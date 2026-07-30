@@ -926,7 +926,7 @@ object SpoonTir:
       // dropped on the floor: nothing referenced `CtAnonymousExecutable`, so `MathUtils` never
       // built its sin/cos table, `CRC` never built its table and `Colors` never registered a
       // colour — a port that compiles clean and computes `sin(x) = 0`. Silent omission is exactly
-      // what this engine forbids (PLAN.md §3.3), so they are translated like any other executable
+      // what this engine forbids (DESIGN.md §3.4), so they are translated like any other executable
       // and carried as synthetic members; the emitter inlines their body at the right place (a
       // static block into the companion object, an instance block into the class body), where
       // Scala runs it at initialisation — the same point Java does.

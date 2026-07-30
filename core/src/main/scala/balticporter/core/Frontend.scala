@@ -3,7 +3,7 @@ package balticporter.core
 import java.nio.file.Path
 
 /** A construct the current engine version cannot translate faithfully. Always fatal:
-  * there is no best-effort emission (anti-omission stance, PLAN.md §3.3).
+  * there is no best-effort emission (anti-omission stance, DESIGN.md §3.4).
   */
 final case class Unsupported(sourcePath: String, position: String, what: String)
     extends RuntimeException(s"$sourcePath:$position — unsupported construct: $what")

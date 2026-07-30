@@ -4,7 +4,7 @@ import java.nio.file.{Files, Path}
 
 /** MEMBER-LEVEL PROVENANCE for emitted Scala — the source map that makes a compiler error, or a
   * test failure, attributable to a member and to the Java it came from.
-  * (UNPORTABLE-DESIGN.md §5.2, Stage 1(a).)
+  * (DESIGN.md §6.3.)
   *
   * ## The problem this closes
   *
@@ -24,7 +24,7 @@ import java.nio.file.{Files, Path}
   *   - `members.tsv` — `member → digest of its emitted text`. Line-free by construction, so it
   *     changes exactly when a member's OUTPUT changes. That is the promotable baseline, and the
   *     one that answers "which members did my engine change" — the blast radius, before any
-  *     compile cycle (UNPORTABLE-DESIGN.md §5.3). The measured limit it addresses is recorded in
+  *     compile cycle (DESIGN.md §6.3). The measured limit it addresses is recorded in
   *     the same document: with the whole transform pipeline switched off, all four checks report
   *     IDENTICAL numbers, so the check diff cannot see a transform regression. A member digest can.
   *

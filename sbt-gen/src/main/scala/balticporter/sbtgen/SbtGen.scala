@@ -5,7 +5,7 @@ import java.nio.file.{Files, Path}
 import balticporter.core.{EngineInfo, EnginePin, RuntimeArtifact, RuntimeMode, RuntimePlan}
 import balticporter.tir.Phase
 
-/** Emits the sbt 2.0 project skeleton for a translated module (PLAN.md §10).
+/** Emits the sbt 2.0 project skeleton for a translated module (DESIGN.md §3.10).
   * Byte-deterministic; everything generated carries the do-not-edit header.
   */
 object SbtGen:

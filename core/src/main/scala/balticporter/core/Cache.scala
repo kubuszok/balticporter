@@ -3,7 +3,7 @@ package balticporter.core
 import java.nio.file.{Files, Path, StandardCopyOption}
 import java.security.MessageDigest
 
-/** Content digests + the persistent action cache (PLAN.md §12).
+/** Content digests + the persistent action cache (DESIGN.md §3.12).
   *
   * One file per action key under `<dir>/aa/<key>`; values are the emitted unit
   * sources. Writes are atomic (temp + rename). The cache is advisory: deleting the
@@ -38,7 +38,7 @@ final class ActionCache(dir: Path, enabled: Boolean):
 
 object EngineFingerprint:
   /** Digest of the engine's own compiled classes — any rule change invalidates the
-    * cache (the coarse, sound tier from RESEARCH.md §4.6). Computed once per run.
+    * cache (the coarse, sound tier from DESIGN.md §3.12). Computed once per run.
     */
   lazy val value: String =
     val cl = getClass.getClassLoader

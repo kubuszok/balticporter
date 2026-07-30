@@ -3,7 +3,7 @@ package balticporter.emit
 import balticporter.core.{EngineInfo, Provenance}
 import balticporter.tir.*
 
-/** Emission backend: the TRANSFORMED typed TIR → Scala 3 source (RECOMPILER.md step 3,
+/** Emission backend: the TRANSFORMED typed TIR → Scala 3 source (DESIGN.md §2.5,
   * "source pretty-printing"). Because every node carries its resolved `TypeRepr` and every
   * reference a `SymId`, the emitter inserts the right form by construction — it looks names
   * up in the `Program`'s symbol table rather than re-deriving them, so the inference/diamond
@@ -235,7 +235,7 @@ final class TirEmitter(
         "scala.compiletime.error(\"" + escape(msg) + "\")"
 
   // ---------------------------------------------------------------------------
-  // SOURCE MAP — member → emitted line range → Java Origin (UNPORTABLE-DESIGN.md §5.2)
+  // SOURCE MAP — member → emitted line range → Java Origin (DESIGN.md §6.3)
   //
   // Emitted Scala had provenance only at the FILE level, so a scalac error or a stack frame could
   // not be attributed to a member, let alone to the Java that produced it. Every TIR node already

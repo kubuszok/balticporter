@@ -20,9 +20,9 @@ import balticporter.core.BExpr.*
   *
   * M0 conventions (M1 will refine): fully-qualified type references except
   * java.lang and same-package types; every binary expression parenthesized;
-  * no import synthesis. Constructor translation follows PLAN.md's funnel
-  * strategies; the two-ctor sentinel merge mirrors the idiom used across the
-  * hand-ported corpus (see ssg Filter.scala).
+  * no import synthesis. Constructor translation follows the constructor funnel
+  * strategies (ENGINE-LIMITS.md §2); the two-ctor sentinel merge mirrors the idiom
+  * used across the hand-ported corpus (see ssg Filter.scala).
   */
 object ScalaPrinter:
 
@@ -318,7 +318,7 @@ private final class Printer(
     line("}")
     companion(t)
 
-  /** Java statics + static nested types → companion object (RESEARCH.md §4.2;
+  /** Java statics + static nested types → companion object (DESIGN.md §4;
     * init-order caveats documented there).
     */
   private def companion(t: BTypeDecl): Unit =
@@ -339,7 +339,7 @@ private final class Printer(
       }
       if t.staticInit.nonEmpty then
         // Java `static { ... }` blocks — companion body statements (init-order caveat:
-        // Scala companions initialize lazily on first access, RESEARCH.md §6 trap 1)
+        // Scala companions initialize lazily on first access, DESIGN.md §4 trap 1)
         t.staticInit.foreach(stmt)
         line()
       t.staticMethods.foreach(methodDecl)
@@ -423,7 +423,7 @@ private final class Printer(
     if t.staticInit.nonEmpty then
       // Java <clinit> runs before the first instance; Scala companions are lazy —
       // touch the companion so static{} blocks keep their before-any-instance timing
-      // (RESEARCH.md §6 trap 1, hit live by SPI registries)
+      // (DESIGN.md §4 trap 1, hit live by SPI registries)
       line(s"locally(${id(t.name)})")
       line()
 
@@ -1012,7 +1012,7 @@ private final class Printer(
           s"classOf[${tpe(t)}].asInstanceOf[Class[AnyRef]]"
         case other => s"classOf[${tpe(other)}]"
 
-  /** Call-site adaptation of Java varargs/array boundaries (RESEARCH.md §4.2):
+  /** Call-site adaptation of Java varargs/array boundaries (DESIGN.md §4):
     *   - varargs param forwarded into a varargs slot        → spread `p*`
     *   - varargs param passed where an array is expected    → `p.toArray`
     *     (`.asInstanceOf[Array[AnyRef]]` when the callee is a JDK Object[] slot,

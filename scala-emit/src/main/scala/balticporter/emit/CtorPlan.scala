@@ -12,12 +12,13 @@ enum FieldLine:
   /** generalized sentinel: `val f: T = if (_p != null) <whenSome> else <whenNull>`. */
   case CondInit(f: BField, paramName: String, whenSome: BExpr, whenNull: BExpr)
   /** no initializer usable at the declaration → Java default value, as `var`.
-    * For final fields this is the definite-assignment fallback (RESEARCH.md §4.2:
+    * For final fields this is the definite-assignment fallback (DESIGN.md §4:
     * ctor assigns inside branches/try → lift is impossible mechanically; `var` +
     * in-body assignment preserves behavior at the cost of final-field publication). */
   case DefaultInit(f: BField)
 
-/** The primary/secondary constructor layout for a class (PLAN.md funnel strategies).
+/** The primary/secondary constructor layout for a class — the constructor funnel
+  * strategies (ENGINE-LIMITS.md §2).
   *
   * Java constructor graphs don't map 1:1 onto Scala's primary/auxiliary model
   * (auxiliaries can never call `super`); this module picks one of three shapes:

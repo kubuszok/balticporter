@@ -8,10 +8,11 @@ import java.nio.file.{Files, Path}
 import scala.jdk.CollectionConverters.*
 
 /** M0 gate: 20 hand-picked Liqp files → compiling Scala 3, comments preserved,
-  * byte-identical across runs. See GOAL.md for the set's rationale.
+  * byte-identical across runs (DESIGN.md §3.11). The set is the smallest one that
+  * exercises every M0 translation path while resolving with only two shims.
   *
   * Out-of-set externals (liqp.LValue, liqp.TemplateContext) follow the Shim
-  * disposition (PLAN.md §6): handwritten minimal implementations under
+  * disposition (DESIGN.md §3.7): handwritten minimal implementations under
   * corpus-tests/shims, compiled together with the generated tree.
   */
 object LiqpM0:

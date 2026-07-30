@@ -2,7 +2,7 @@ package balticporter.core
 
 import balticporter.core.BExpr.*
 
-/** Tier-3 rule API (PLAN.md §3.3, cut to the current engine surface): pure
+/** Tier-3 rule API (DESIGN.md §2.4, cut to the current engine surface): pure
   * BUnit → BUnit passes, single-concern, individually versioned. Order is
   * explicit — the port program lists its passes; the framework never reorders.
   * `id@version` of every registered pass joins the action-cache fingerprint so

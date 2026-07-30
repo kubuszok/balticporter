@@ -35,7 +35,7 @@ object LiqpCorpus:
 
     val cfg = FrontendConfig(sourceRoot, files, LiqpClasspath.resolve(repoRoot), resolutionRoots = List(sourceRoot))
     val prov = Provenance("Liqp", LiqpClasspath.upstreamCommit(repoRoot), "MIT", "liqp/src/main/java")
-    // manifest mapping entries beyond the path convention (PLAN.md §3.5): renamed
+    // manifest mapping entries beyond the path convention (DESIGN.md §3.5): renamed
     // counterparts, and files whose hand-port role was substituted by a documented
     // dependency replacement (docs/architecture/liqp-port.md).
     val renamedCounterparts = Map(

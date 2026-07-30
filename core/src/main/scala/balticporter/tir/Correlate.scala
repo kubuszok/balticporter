@@ -3,7 +3,7 @@ package balticporter.tir
 import java.nio.file.{Files, Path}
 
 /** Attribute a COMPILER ERROR or a TEST FAILURE over emitted Scala back to the member that
-  * produced it and to the Java it came from. UNPORTABLE-DESIGN.md §6.3 (Stage 1(b)) plus the
+  * produced it and to the Java it came from. DESIGN.md §6.3 plus the
   * amendment CLAUDE.md §4.4 forces on it: ten Java forms translate to VALID Scala meaning something
   * else and move no compile-error count, so the same join has to run over the TEST runner's output.
   *
@@ -284,7 +284,7 @@ object Correlate:
   // the join
   // ===========================================================================
 
-  /** which of UNPORTABLE-DESIGN.md §6.3's lanes a diagnostic fell into. */
+  /** which of DESIGN.md §6.3's lanes a diagnostic fell into. */
   enum Lane:
     /** at a region the engine marked approximate — expected, carries a remediation. Empty until
       * Stage 2 mints markers; the lane exists so that adding them is a data change. */

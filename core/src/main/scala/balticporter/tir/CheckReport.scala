@@ -59,7 +59,7 @@ import java.nio.file.{Files, Path}
   *
   * `id` is the first 12 hex of sha-256 over `check|kind|owner|path|detail`. The LINE NUMBER is
   * carried but excluded from the id, so an upstream whitespace edit moves a finding without
-  * orphaning its baseline entry (UNPORTABLE-DESIGN.md §4.1, risk R7).
+  * orphaning its baseline entry (DESIGN.md §6.3 and §6.5, risk R7).
   */
 object CheckReport:
 

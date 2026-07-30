@@ -1,5 +1,5 @@
 /*
- * Handwritten shim (Shim disposition, PLAN.md §6) — NOT generated.
+ * Handwritten shim (Shim disposition, DESIGN.md §3.7) — NOT generated.
  * Minimal stand-in for liqp.LValue (out of the M0 20-file set); provides the
  * helper surface the in-set filters call. Replaced by the real translation
  * when LValue enters the ported set (M1).

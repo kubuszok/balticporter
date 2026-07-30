@@ -1,6 +1,6 @@
 package balticporter.tir
 
-/** Typed IR (TIR) — the re-compiler's working representation. See RECOMPILER.md.
+/** Typed IR (TIR) — the re-compiler's working representation. See DESIGN.md §2.
   *
   * SHAPED LIKE `scala.quoted.Quotes#reflect` so that anyone who has written a Scala 3
   * macro finds the transformer API familiar: `TypeRepr`, `Tree`/`Statement`/

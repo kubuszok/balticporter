@@ -2,7 +2,7 @@ package balticporter.tir
 
 /** Constructs the port carries in the TIR but does NOT emit — counted, located, and reported.
   *
-  * The engine's stance is anti-omission (PLAN.md §3.3): a construct it cannot translate faithfully
+  * The engine's stance is anti-omission (DESIGN.md §3.4): a construct it cannot translate faithfully
   * is fatal, never silently best-effort. Where a lowering is genuinely deferred, the deferral must
   * still be VISIBLE, because a silent omission is the worst failure this engine has: the generated
   * code compiles, the gate is green, and the program misbehaves at runtime. Two such omissions were

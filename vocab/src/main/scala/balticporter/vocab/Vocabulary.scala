@@ -6,7 +6,7 @@ import balticporter.core.BExpr.*
 import java.nio.file.{Files, Path}
 import scala.jdk.CollectionConverters.*
 
-/** Tier-2 vocabulary (PLAN.md §6): diffable data tables mapping Java symbols
+/** Tier-2 vocabulary (DESIGN.md §3.7): diffable data tables mapping Java symbols
   * onto Scala counterparts. Two entry kinds for now:
   *
   *   type java.util.ArrayList -> scala.collection.mutable.ArrayBuffer
@@ -18,7 +18,7 @@ import scala.jdk.CollectionConverters.*
   * ORIGINAL owner, so tables read in upstream vocabulary.
   *
   * Tables are pure data; call-shape adaptations tables can't express are
-  * Tier-3 passes (PLAN.md §6c).
+  * Tier-3 passes (DESIGN.md §2.4).
   */
 final case class Vocabulary(
     typeMap: Map[String, String],

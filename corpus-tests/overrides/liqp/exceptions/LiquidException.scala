@@ -1,10 +1,10 @@
 /*
- * HANDWRITTEN OVERRIDE (whole-file, PLAN.md §7) — replaces engine translation of
+ * HANDWRITTEN OVERRIDE (whole-file, DESIGN.md §3.8) — replaces engine translation of
  * liqp/src/main/java/liqp/exceptions/LiquidException.java.
  *
  * Reason: the three Java constructors call three DIFFERENT super constructors
  * (RuntimeException(msg,cause) / (msg) / (msg,cause)) — the shape Scala cannot
- * express with auxiliaries (RESEARCH.md §6 trap 2). Funnel: private-shape primary
+ * express with auxiliaries (DESIGN.md §4 trap 2). Funnel: private-shape primary
  * (message, line, charPositionInLine, cause); the ctx-based ctor passes cause=null.
  * Divergence note: Java's super(message) leaves the cause UNINITIALIZED (initCause
  * callable later); this encoding fixes it to null. No liqp code calls initCause.

@@ -29,7 +29,7 @@ final case class Provenance(
     sourceRoot: String = "",
 )
 
-/** M0 subset of the PortPlan from PLAN.md §3.1: one module, explicit file list. */
+/** M0 subset of a port configuration (DESIGN.md §3.3): one module, explicit file list. */
 final case class UnitPlan(
     sourceRoot: Path,
     files: List[String],

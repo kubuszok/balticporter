@@ -3,7 +3,7 @@ package balticporter.verify
 import balticporter.core.*
 
 /** Structural API-parity: every non-private member of the ORIGINAL Java unit must be
-  * present in the emitted Scala skeleton (the computed covenant — PLAN.md §11 gate 2).
+  * present in the emitted Scala skeleton (the computed covenant — DESIGN.md §3.11 gate 2).
   * Nothing can be omitted silently; constructor shapes are exempt (the funnel legally
   * restructures them), private members are not required.
   */

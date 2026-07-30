@@ -2,9 +2,9 @@ package balticporter.verify
 
 import balticporter.core.*
 
-/** Cross-platform readiness lint (Tier 2 data, RESEARCH.md §4.2): flags usage of
+/** Cross-platform readiness lint (Tier 2 data, DESIGN.md §3.7): flags usage of
   * APIs absent or divergent on Scala.js / Scala Native, producing the
-  * substitution-disposition worklist (PLAN.md §6) for a JS/Native port.
+  * substitution-disposition worklist (DESIGN.md §3.7) for a JS/Native port.
   */
 object PlatformLint:
 

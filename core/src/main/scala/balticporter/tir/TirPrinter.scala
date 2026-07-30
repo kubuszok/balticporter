@@ -63,7 +63,7 @@ object TirPrinter:
     sb.result()
 
   /** the deterministic form: names, no ids, no origins. The unit of a run-over-run semantic diff
-    * (UNPORTABLE-DESIGN.md §5.1). */
+    * (DESIGN.md §2.6). */
   def canonical(t: Tree)(using Program): String = render(t, Style.canonical)
 
   /** sha-256 of the unit's IDENTITY form, hex. Stable across runs of the same input; changes

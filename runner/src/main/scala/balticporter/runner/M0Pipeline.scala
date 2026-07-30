@@ -8,7 +8,7 @@ import scala.jdk.CollectionConverters.*
 
 /** M0 pipeline: translate a fixed file list, enforce the comment invariant,
   * verify determinism by double-translation, write the output tree, and gate
-  * the result through scalac (via scala-cli). PLAN.md §13 M0.
+  * the result through scalac (via scala-cli). The M0 round-trip gate, DESIGN.md §3.11.
   */
 object M0Pipeline:
 

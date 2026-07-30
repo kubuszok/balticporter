@@ -218,7 +218,7 @@ makes `N` fail its own bound. **Either every formal comes from the enclosing sco
 
 This is an expressiveness limit, not a missing case. The honest output is "this construct has no
 Scala image, here is what a hand-porter would write" — the strongest existing candidate for
-`UNPORTABLE-DESIGN.md`'s marker rather than another gate.
+`DESIGN.md` §6's marker rather than another gate.
 
 *Fix kind: (a), and the (a) is "report it as unportable", not "translate it".*
 

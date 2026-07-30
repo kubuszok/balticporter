@@ -7,7 +7,7 @@ import scala.meta.*
   * Compares the member surface (kind + name + arity, nested via owner paths), not
   * types or bodies — Tier 2/3 idiom passes (DataView, Nullable, package renames)
   * change types everywhere, but the *shape* of a faithful port must match modulo a
-  * small set of known idioms. Divergences are classified (M1 gate, PLAN.md §13):
+  * small set of known idioms. Divergences are classified (the corpus-diff gate, DESIGN.md §3.11):
   *
   *   - SKELETON_EQUAL — surfaces identical
   *   - IDIOM          — every difference explained by a known hand-port idiom

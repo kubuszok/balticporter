@@ -8,7 +8,7 @@ import balticporter.transform.PortMapTransform
 import java.nio.file.{Files, Path}
 import scala.jdk.CollectionConverters.*
 
-/** The acceptance case of `PORT-MAP-DESIGN.md` step 2, on the REAL sources and the REAL artifact.
+/** The acceptance case of `DESIGN.md` §5.4, on the REAL sources and the REAL artifact.
   *
   * Ashley's `ImmutableArray.toArray(Class)` forwards to libGDX's `Array.toArray(Class)`, which the
   * base drops. It was found by `RewriteTrace`'s orphaned-call check on Ashley's first run — AFTER

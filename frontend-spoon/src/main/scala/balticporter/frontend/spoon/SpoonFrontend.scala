@@ -23,7 +23,7 @@ import java.nio.file.{Files, Path}
 import scala.jdk.CollectionConverters.*
 
 /** Frontend on Spoon 11.x (ECJ underneath, full-classpath mode, comments enabled).
-  * The only module that sees Spoon types (PLAN.md §2 insulation rule).
+  * The only module that sees Spoon types (DESIGN.md §3.2 insulation rule).
   */
 final class SpoonFrontend extends Frontend:
 

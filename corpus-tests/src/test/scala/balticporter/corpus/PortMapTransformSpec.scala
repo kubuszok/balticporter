@@ -9,7 +9,7 @@ import java.nio.file.{Files, Path}
 
 /** Mechanical call migration for a DEPENDENT, from the base's published map.
   *
-  * The acceptance case is the one `PORT-MAP-DESIGN.md` names: an entity-component library's
+  * The acceptance case is the one `DESIGN.md` §5 names: an entity-component library's
   * `ImmutableArray.toArray(Class)` is a one-line forwarder to the collection library's
   * `Array.toArray(Class)`, which the base drops because it is reflective. Today that surfaces as
   * `RewriteTrace`'s orphaned-call finding AFTER emission, saying only that a member has no
