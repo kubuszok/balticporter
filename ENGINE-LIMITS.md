@@ -497,9 +497,74 @@ The escaping-effect problem is real and lives one level UP, in the promotion: ma
 constructor's body the class body runs it on every construction path, which Java did not
 (`Base() { this.n = Audit.bump(); }` plus `Base(int)` — `new Base(5)` bumps in the port and does not
 in Java). That is a `plan0` question about which constructor may be promoted, not a `supersedes`
-question, and it is still open.
+question. It has since been measured and is **C7**: refusing the promotion costs 0 -> 41 compile
+errors, so the emission stands and the divergence is COUNTED
+(`OmissionCheck.promotedBodyOnEveryPath`). Nothing about it moved `supersedes`.
 
 *Fix kind: (a), at the promotion — NOT at `supersedes`.*
+
+### C7. A PROMOTED constructor's body runs on EVERY construction path — refusing it costs 0 -> 41
+
+`CtorFunnel` nominates one Java constructor as Scala's primary and `TirEmitter.lowerCtors`
+substitutes its body for it in the CLASS BODY. A Scala class body runs on every construction path,
+because every secondary constructor's first statement is a `this(...)` that reaches the primary.
+Java had no such rule: two constructors that do not delegate to each other run disjoint bodies. So
+promoting one of several roots runs its statements where Java ran nothing. C6's probe, run both
+ways:
+
+| | `new Base(5)` | then `new Base()` |
+|---|---|---|
+| javac | `n=5 bumps=0` | `n=-1 bumps=1` |
+| the port | `n=5 bumps=1` | `n=-1 bumps=2` |
+
+**Do not refuse the promotion.** Dropping every escaping plan to `Plan.none` measured **0 -> 41
+compile errors** on libGDX core, every one an `E120 Conflicting definitions`: the refused class
+emits a `def this()` beside Scala's implicit nilary primary, which is the exact clash shapes 2 and 6
+exist to prevent. Promoting a *different* constructor only moves the escape, and a synthesised no-op
+primary cannot help either — a subclass's `extends C` invokes C's PRIMARY, so a body Java ran from
+the implicit `super()` has to be there.
+
+Corpus reach, by the structural test (a constructor escapes iff no chain of leading `this(...)`
+delegations — at any arity — reaches the promoted one): **61 classes, 160 constructor paths** in the
+units the ports EMIT — libGDX core 59/156, simple-graphs 2/4, Ashley 0/0, libGDX's own suite 0/0. Of
+libGDX core's 771 promotions, 323 have a non-empty body and 59 of those escape.
+
+Ashley's zero is worth one line, because it looks like a miss and is not. `EntitySystem` escapes in
+the plan the ASHLEY-TEST run computes — its test subclasses reach it with an argument-free `extends`,
+so the fixpoint withholds the paramful promotion and `nilaryPlan` takes over — and does not in the
+plan the ASHLEY run computes, which is the run that EMITS the class. Two ports legitimately plan the
+same class differently; only the owning one emits, and B7's unit filter is what keeps the finding
+with the code.
+
+Most are cost, not divergence: the promoted body writes fields the other constructor overwrites, or
+allocates a backing array it discards (`Array`, `IntArray`, `ObjectMap` — C5's declared replay cost
+in its promotion form). Three in the corpus are observable, and they are why this is counted rather
+than tolerated:
+
+| class | what runs twice, or where Java ran nothing |
+|---|---|
+| `Material` | `Material()` is `this("mtl" + (++counter))` — the port bumps the STATIC counter on every construction, so every later generated id is wrong |
+| `Button` | `initialize()` runs again on 8 of 10 paths, adding a SECOND `ClickListener`; each click then calls `setChecked` twice and the button never changes state |
+| `Table` | `obtainCell()` takes a `Cell` from the static `cellPool` on every path — one is leaked per construction, and `Button extends Table` |
+
+A "restrict the promotion to empty-ish bodies" rule is the 41 errors. **Prefix-stripping** — where
+an escaping ROOT's own body literally begins with the promoted body (`Button`'s `initialize()`),
+delete the duplicate from the secondary — is faithful but reaches **11 of the 62 classes** (9 in
+libGDX core, 2 in simple-graphs; 16 of 156 libGDX paths) and needs an emitter change in
+`TirEmitter.ctorBody`. It does not reach `Material` or `Table`, both of which are shape 6. Not worth
+an emission change on its own; recorded here so it is not re-derived.
+
+So the honest outcome is M6's: emission unchanged, divergence reported.
+`OmissionCheck.promotedBodyOnEveryPath` derives it from `CtorFunnel.Plans.promotionEscapes`, which
+reads the same `Plan.primaryBody` the emitter inlines — libGDX core omissions **37 -> 193**, with
+`members.tsv` byte-identical (0 members moved).
+
+Note also what this does NOT cover, and is a second question: a SUBCLASS reaching a promoted
+paramful root. `extends C(args)` can only invoke C's primary, so a Java `super(args)` that targeted a
+different root of C constructs the parent through the promoted one. That is C3's padding domain and
+is counted by `droppedSuperArgs` where the delegation declines.
+
+*Fix kind: (a) — and the (a) is "count it", as in C3.*
 
 ---
 
@@ -1128,6 +1193,10 @@ Three places where the port deliberately carries a number instead of a guess, an
 call:
 
 - 49 dropped `super(args)` on non-throwable parents — padding measured **0 → 55** (C3).
+- 156 construction paths that run the PROMOTED constructor's body where Java ran nothing — refusing
+  the promotion measured **0 → 41** (C7). Note this one is an ADDITION rather than a drop, and the
+  count is on the same footing for it: what the port loses is Java's separation of construction
+  paths.
 - A raw anonymous class with a body — refused and reported (G10).
 - A single-primary encoding with no faithful form — **left as a compile error deliberately**,
   because the compiler is a louder tracker than a silent omission.

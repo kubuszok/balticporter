@@ -51,6 +51,12 @@ package balticporter.tir
   * Anything else (several paramful roots reaching different parent overloads of a parent whose
   * constructor set the engine does not know, e.g. `DelayedRemovalArray`'s ten) has no
   * single-primary encoding and is reported, not approximated.
+  *
+  * What every promotion COSTS is reported the same way. A promoted body becomes the class body, and
+  * a scala class body runs on EVERY construction path — which java's did not, wherever another
+  * constructor does not delegate to the promoted one. Refusing the promotion is not available
+  * (measured 0 -> 41 compile errors), so [[Plans.promotionEscapes]] names the paths and
+  * [[OmissionCheck.promotedBodyOnEveryPath]] counts them. `ENGINE-LIMITS.md` C7.
   */
 object CtorFunnel:
 
@@ -205,6 +211,56 @@ object CtorFunnel:
       acc
 
     def apply(cd: Tree.ClassDef): Plan = plans.getOrElse(cd.symbol, Plan.none)
+
+    // ---- what the promotion COSTS: the promoted body on paths java never ran it ----
+
+    /** Did Java ALSO run `target`'s body when `d` was the constructor invoked? True for `target`
+      * itself, and for every constructor whose leading `this(...)` delegation reaches it.
+      *
+      * ANY arity of `this(...)`, including the nilary one: `C(int n) { this(); … }` is a genuine
+      * delegation to `C()` even though [[delegatesToThis]] excludes it (that predicate answers a
+      * different question — whether the constructor is a funnel ROOT). Reading root-ness here
+      * instead would report `C(int)` as a path java did not run `C()` on, when java ran it first.
+      *
+      * An ABSENT delegation is java's implicit `super()`, which reaches no peer of this class, so
+      * "no leading `this(...)`" is a negative answer and not an unknown. */
+    private def reachesCtor(d: Tree.DefDef, target: SymId, depth: Int): Boolean =
+      d.symbol == target || (depth <= 8 && (stmtsOf(d).headOption match
+        case Some(Tree.Apply(Tree.Select(r, m, _, _), _, _, _, _))
+            if !r.isInstanceOf[Tree.Super] && isInitName(program, m) =>
+          defOf(m).exists(reachesCtor(_, target, depth + 1))
+        case _ => false))
+
+    /** The constructors of `cd` on whose path java did NOT run the promoted constructor's body —
+      * and on which the emitted class therefore runs it anyway.
+      *
+      * A promoted constructor's body BECOMES the class body (`TirEmitter.lowerCtors` substitutes
+      * `Plan.primaryBody` for the constructor), and a scala class body runs on EVERY construction
+      * path, because every secondary constructor's first statement is a `this(...)` that reaches
+      * the primary. Java had no such rule: two constructors that do not delegate to each other run
+      * disjoint bodies. So promoting one of several roots runs its statements where java ran
+      * nothing — `Base() { this.n = Audit.bump(); }` beside `Base(int n) { this.n = n; }` bumps on
+      * `new Base(5)` in the port and does not in java.
+      *
+      * This is exactly the escaping-effect problem `ENGINE-LIMITS.md` C6 located here rather than
+      * at [[supersedes]], and there is no third option at the promotion either: REFUSING measured
+      * **0 -> 41 compile errors** on libGDX (every refused class then emits a `def this()` beside
+      * scala's implicit nilary primary — `E120 Conflicting definitions`), so the honest outcome is
+      * the counted one. [[OmissionCheck.promotedBodyOnEveryPath]] reports it, from this function,
+      * so the count and the emission cannot disagree: both are `Plan.primaryBody`.
+      *
+      * Deliberately NOT a purity question about the body. Whether re-running it is observable
+      * depends on what the other constructor overwrites, on what the callee touches, and on the
+      * caller — 59 of libGDX's 771 promotions land here and most only waste an allocation, but
+      * `Material` bumps a static id counter on every construction and `Button` adds a second
+      * `ClickListener` to every button. The structural fact is the same in all of them, and it is
+      * the one that can be computed. */
+    def promotionEscapes(cd: Tree.ClassDef): List[Tree.DefDef] =
+      val p = plans.getOrElse(cd.symbol, Plan.none)
+      p.primary match
+        case Some(c) if p.primaryBody.nonEmpty =>
+          ctorsOf(program, cd.body).filterNot(reachesCtor(_, c.symbol, 0))
+        case _ => Nil
 
     // ---- effect replay: expressing a `super(args)` a secondary constructor cannot make ----
 

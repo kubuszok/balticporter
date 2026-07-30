@@ -42,6 +42,7 @@ object OmissionCheck:
   def check(program: Program, units: List[Tree.ClassDef]): List[Finding] =
     droppedSuperArgs(program, units)
       ++ droppedCauseMessages(program, units)
+      ++ promotedBodyOnEveryPath(program, units)
       ++ droppedAnonMembers(program, units)
       ++ droppedAnnotations(program, ownedBy(program, units))
 
@@ -167,6 +168,46 @@ object OmissionCheck:
         val owner = program.symbolOf(cd.symbol).map(_.fullName).getOrElse("?")
         Finding("Throwable(cause) message dropped", owner,
                 "cause expression cannot be re-read, so the JDK's own message is not rebuilt", d.origin)
+      }
+    }
+
+  /** A construction path on which the port runs the PROMOTED constructor's body and java ran
+    * nothing — the one omission in this file that is an ADDITION.
+    *
+    * What is dropped is java's DISTINCTION BETWEEN CONSTRUCTION PATHS. `CtorFunnel` nominates one
+    * java constructor as scala's primary and its body becomes the class body; a scala class body
+    * runs on every path, because every secondary's first statement is a `this(...)` that reaches
+    * the primary. Two java constructors that do not delegate to each other ran disjoint bodies, and
+    * that separation has no single-primary encoding: `Base() { this.n = Audit.bump(); }` beside
+    * `Base(int n) { this.n = n; }` bumps on `new Base(5)` in the port and does not in java.
+    *
+    * Refusing the promotion is not the fix and was measured: 0 -> 41 compile errors on libGDX,
+    * every one an `E120 Conflicting definitions` where the refused class emits a `def this()`
+    * beside scala's implicit nilary primary. So the emission stands and the divergence is COUNTED
+    * — `ENGINE-LIMITS.md` C6, and CLAUDE.md §4.4's rule that a form which compiles and means
+    * something else is the class of defect that must become a number.
+    *
+    * Per CONSTRUCTOR, and derived from [[CtorFunnel.Plans.promotionEscapes]], which reads the same
+    * `Plan.primaryBody` the emitter inlines (`TirEmitter.lowerCtors`). The check and the emission
+    * are one function's answer, as `droppedSuperArgs` is of `superExpressed`: a class-wide flag or
+    * a second traversal is exactly how a shadow becomes a claim.
+    *
+    * Fix kind (a) at the promotion — NOT at `CtorFunnel.Plans.supersedes`, where tightening removes
+    * no effect and costs the constructor's argument (C6 again). */
+  def promotedBodyOnEveryPath(program: Program): List[Finding] =
+    promotedBodyOnEveryPath(program, program.units)
+
+  def promotedBodyOnEveryPath(program: Program, units: List[Tree.ClassDef]): List[Finding] =
+    def classes(cd: Tree.ClassDef): List[Tree.ClassDef] =
+      cd :: cd.body.collect { case c: Tree.ClassDef => classes(c) }.flatten
+    val plans = CtorFunnel.Plans(program)
+    units.flatMap(classes).flatMap { cd =>
+      val n = plans(cd).primaryBody.size
+      plans.promotionEscapes(cd).map { d =>
+        val owner = program.symbolOf(cd.symbol).map(_.fullName).getOrElse("?")
+        Finding("promoted constructor body runs on every path", owner,
+                s"$n statement(s) of the promoted constructor also run here; java ran them only on its own path",
+                d.origin)
       }
     }
 
