@@ -40,7 +40,7 @@ import java.nio.file.Path
   *      trait; this is Java source that genuinely does inherit from a JDK collection, and what the
   *      engine should do about it is an open question this library will answer with a number.
   *
-  * It also has a real behavioural gate: 7 test files, 17 `@Test`. See [[SimpleGraphsTestMigrate]].
+  * It also has a real behavioural gate: 7 test files, 16 `@Test` (a 17th, `GraphBuilderTest.testExample`, is commented out upstream). See [[SimpleGraphsTestMigrate]].
   */
 object SimpleGraphsMigrate:
 

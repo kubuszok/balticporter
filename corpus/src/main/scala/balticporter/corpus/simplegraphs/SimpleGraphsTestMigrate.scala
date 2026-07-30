@@ -12,7 +12,7 @@ import java.nio.file.{Files, Path}
   * classpath the conf points at exists, and gives the run its report identity. See
   * [[SimpleGraphsMigrate]] for why that is all a migration program is.
   *
-  * 7 files, 17 `@Test` — the only behavioural evidence this port can have. `PROGRESS.md`
+  * 7 files, 16 `@Test` (a 17th, `GraphBuilderTest.testExample`, is commented out upstream) — the only behavioural evidence this port can have. `PROGRESS.md`
   * §simple-graphs says "compiles" until this runs, and CLAUDE.md §3 is explicit about the difference:
   * four silent
   * correctness defects in libGDX core all compiled cleanly, and not one of the ten Java forms in §4.4
