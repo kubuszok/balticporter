@@ -510,6 +510,8 @@ Each of these compiled cleanly before AND after. No compile-error count moved fo
 | a java CONSTANT VARIABLE is not an inlined constant | static-init CYCLE, `ExceptionInInitializerError` | 183 -> 187 |
 | …and must render at its DECLARED type | `float degFull = 360` as `Int` made a division integral | 187 -> 188 |
 | a case's trailing LABELLED break was stripped as a terminator | quoted-string scanner ran off every string | — |
+| a label on a statement that is NOT a loop had no node | 45 sites; JsonReader emitted a SECOND, string event for every unquoted bool/null/number | — |
+| an unlabelled `break` in the MIDDLE of a case was a no-op | 10 sites; GlyphLayout's colour-tag arm fell into the duplicated `continue outer` | — |
 | a `switch` with no `default` threw `MatchError` | java falls out; that is the NORMAL path | 188 -> 201 |
 | `@Test(expected=)` left as JUnit | 16 tests | 201 -> 217 |
 
@@ -587,14 +589,28 @@ single most common comparison in Java, and the port had it wrong everywhere whil
 
 ### Residues, named
 
-- **55 `/* break */ ()` remain, and they are NOT all fine** — computed by
-  `scripts/_report.sh break_residue` on every measure run (an earlier "177, fine or known" here and
-  a later "45, all switch-case" in the test section were both quoted with nothing computing them).
-  Breakdown: JsonReader 34, TextField 11, JsonSkimmer 4, GlyphLayout 4, Table 1, ParticleEmitter 1.
-  The JsonReader 34 are LABELLED breaks on `if` statements (`break outer` × 17 under 5 `outer:`
-  labels, none on a loop) — dropped, so after `bool(name, true)` the code FALLS THROUGH and also
-  emits a string event for every unquoted bool/null/number. That is silent corruption, open as the
-  labelled-break task (needs `Tree.Labeled`); the count going to 0 is its completion criterion.
+- **`/* break */ ()` residue is 0** — computed by `scripts/_report.sh break_residue` on every
+  measure run (an earlier "177, fine or known" here and a later "45, all switch-case" in the test
+  section were both quoted with nothing computing them; the real count was 55). Two translations
+  closed it, measured one at a time:
+
+  | class | sites | files | commit measured |
+  |---|---|---|---|
+  | `break L` to a label on a NON-loop statement (`Tree.Labeled`) | 45 | JsonReader 30, TextField 11, GlyphLayout 3, Table 1 | 55 -> 10 |
+  | an unlabelled `break` in the MIDDLE of a switch case | 10 | JsonSkimmer 4, JsonReader 4, GlyphLayout 1, ParticleEmitter 1 | 10 -> 0 |
+
+  Both were SILENT: 0 compile errors before and after, all 13 checks unchanged, 217/4 tests
+  unchanged. The evidence is a DIFFERENTIAL EVENT PROBE on the real `sge.utils.JsonReader` against
+  javac's own build of the same Java file — before, `{a:true,b:false,c:null,d:1.5,e:12,f:word}`
+  emitted `bool(a,true)` followed by a spurious `string(a,true)`, and likewise for every unquoted
+  false/null/double/long; after, the two event sequences are identical on four inputs. `GlyphLayout`
+  had the second class live: a parsed colour tag fell out of its arm into the duplicated
+  `default: continue outer` tail. The rules are lifted to `ENGINE-LIMITS.md` F1–F3.
+
+  67 member digests moved for the two commits together: the six files whose jumps were translated,
+  plus every unit emitted after `GlyphLayout` that carries a numbered boundary — `TirEmitter.labelSeq`
+  is program-global, so a new `lbl$`/`case$` renumbers `brk$`/`cnt$` downstream. Worth knowing before
+  reading a member-digest diff: a control-flow change is never local under that counter.
 - **`@Before` does not reproduce JUnit's FRESH INSTANCE.** Calling setup at the head of each test
   is exact wherever setup assigns the fields it needs. A field carrying state through its own
   INITIALISER still leaks between tests. No corpus test depends on it today.

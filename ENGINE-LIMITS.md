@@ -1550,6 +1550,70 @@ Distinguish on `Flags.isStatic`, and take the synthesised lambda's arity from th
 
 ---
 
+## 9.5 Control flow — what a `break` really leaves, and the boundary that steals it
+
+### F1. A java LABEL sits on ANY statement, not only a loop. **55 → 10 residues**
+
+`LabeledStatement: Identifier : Statement` (JLS 14.7) — a label goes on an `if`, a bare block or a
+`switch` as readily as on a loop, and `break L` leaves exactly THAT statement. A loop-only encoding
+(a `label` field on the loop nodes) therefore cannot express most of them: on libGDX core, 45 of the
+55 untranslated jumps were labelled breaks to a NON-loop — `JsonReader` `outer:` on an `if` (30
+after the switch fallthrough lowering duplicates the arm six times), `TextField` `keys:`/`selection:`
+on bare blocks (11), `GlyphLayout` `runEnded:` on a block (3), `Table` `outer:` on an `if` (1).
+
+Dropped, they are SILENT: the port compiles, every count holds, and the code simply runs on.
+Measured on the real `JsonReader` with a differential event probe against javac's own build of the
+same file — before the fix, `{a:true,b:null,c:1.5}` produced `bool(a,true)` **and** `string(a,true)`,
+a spurious second event for every unquoted boolean, null and number; after, the event sequences are
+identical.
+
+What shipped: a `Tree.Labeled(name, stmt)` WRAPPER, minted by the frontend for a labelled non-loop
+statement only. A loop keeps the label in its own node, because that same label is `continue L`'s
+target and the two boundaries go in different places (around the loop / around its body); splitting
+that decision across two encodings is how a label ends up claimed twice. Emission is a NAMED
+`scala.util.boundary` around the statement, and none at all when nothing breaks to the label.
+
+*Fix kind: (a). If your library's port shows a residue for a labelled jump, the node is there —
+check the frontend is minting it, not that the label needs a new mechanism.*
+
+### F2. A `boundary` the emitter INTERPOSES steals the enclosing loop's un-annotated jumps
+
+The hazard F1 creates, and it is not visible in any count. `scala.util.boundary.break(())` with no
+`using` resolves the INNERMOST given `Label`, so the moment the emitter puts a new `boundary`
+between a loop and an unlabelled `break`/`continue` under it, that jump silently retargets — it
+leaves the labelled statement instead of the loop, and the loop runs on.
+
+Naming the inner boundary does NOT shield anything: `boundary { (l: Label[Unit]) ?=> … }` makes `l`
+a context-function parameter, which is exactly what "innermost given" means.
+
+So every construct that opens a boundary of its own has to force the ENCLOSING one to be named:
+`TirEmitter.interposes` answers "does anything in this body render with a boundary" and
+`loopWithJumps` names `brk$`/`cnt$` when it does. It is an OVER-approximation on purpose — it does
+not check that an unlabelled jump is really underneath. An unused name costs one identifier; a
+missed one is a control-flow change with a green compile.
+
+*Fix kind: (a). The rule generalises: any lowering that introduces a scoped, implicitly-resolved
+capability must re-examine every use that was resolving to an outer one.*
+
+### F3. An unlabelled `break` in the MIDDLE of a case ends the CASE. **10 → 0 residues**
+
+The remaining 10. The frontend already deletes the break that TERMINATES a case (scala's `match`
+ends the arm anyway) and lowers real fallthrough by TAIL DUPLICATION — the next case's statements
+are copied into this arm. So a `break` still standing in a case body means "stop HERE", and what ran
+on past the dropped one was code java had put in a **different case**.
+
+`GlyphLayout` is the worked example: `case '[': … if (length >= 0) { …; break; } …` falls through
+into `default: continue outer`, so a successfully parsed colour tag fell into the `continue` and
+re-scanned the run. Green compile, no count moved.
+
+Scala's `match` cannot leave an arm early, so the arm gets its own NAMED `boundary` (named for F2's
+reason). Note this is the same defect as the dropped `break`, one construct along — if your library
+has a switch-heavy scanner, this is where it hides.
+
+*Fix kind: (a).*
+
+---
+
 ## 10. Comments (trivia) — what still does not survive, with its number
 
 The governing rule is `CLAUDE.md` §4.58. This section is only the residue: what is measured to be
