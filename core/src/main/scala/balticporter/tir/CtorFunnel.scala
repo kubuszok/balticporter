@@ -291,11 +291,53 @@ object CtorFunnel:
       * `ClickListener` to every button. The structural fact is the same in all of them, and it is
       * the one that can be computed. */
     def promotionEscapes(cd: Tree.ClassDef): List[Tree.DefDef] =
+      escapingRoots(cd).filter(d => residualBody(cd, d).isEmpty)
+
+    /** the constructors on whose path java did not run the promoted body — BEFORE the prefix strip
+      * below has a chance to make the duplication disappear. */
+    private def escapingRoots(cd: Tree.ClassDef): List[Tree.DefDef] =
       val p = plans.getOrElse(cd.symbol, Plan.none)
       p.primary match
         case Some(c) if p.primaryBody.nonEmpty =>
           ctorsOf(program, cd.body).filterNot(reachesCtor(_, c.symbol, 0))
         case _ => Nil
+
+    /** PREFIX STRIP — the statements of an escaping root that the promoted body does not ALREADY
+      * run, when its own body literally begins with the promoted body.
+      *
+      * `Button()` is `{ initialize(); }` and `Button(Skin)` is `{ initialize(); setSkin(skin); }`:
+      * the second does not delegate to the first, so promoting the first runs `initialize()` where
+      * java ran it once — a SECOND `ClickListener` on eight of ten construction paths, and every
+      * click then calling `setChecked` twice (`ENGINE-LIMITS.md` C7). Because the promoted body is
+      * a literal PREFIX of this one, deleting the duplicate from the secondary is not an
+      * approximation: the class body runs the prefix, `this(…)` returns, and the residual runs —
+      * the same statements, in the same order, once each.
+      *
+      * `None` when the constructor does not escape, or when its body does NOT begin with the
+      * promoted body. That is what makes this one function rather than two: [[promotionEscapes]]
+      * subtracts exactly what this returns, so the check and `TirEmitter.ctorBody` cannot disagree
+      * about which paths still duplicate — the failure mode C7 warns about at
+      * `OmissionCheck.droppedSuperArgs`, in its other form.
+      *
+      * Compared through the CANONICAL rendering, never by tree equality: two occurrences of
+      * `initialize()` are two source positions, so `==` on `Statement` is false for every pair this
+      * is meant to find. `TirPrinter.Style.canonical` elides origins, `SymId`s and trivia, which is
+      * exactly "the same statement, written twice".
+      *
+      * The head DELEGATION is excluded from the comparison for the same reason the emitter excludes
+      * it: an escaping root may still begin with `super(args)`, which is lifted or dropped
+      * elsewhere and is not part of the body being duplicated. */
+    def residualBody(cd: Tree.ClassDef, d: Tree.DefDef): Option[List[Statement]] =
+      val p = plans.getOrElse(cd.symbol, Plan.none)
+      if p.primaryBody.isEmpty || !escapingRoots(cd).exists(_.symbol == d.symbol) then scala.None
+      else
+        given Program = program
+        val rest = bodyAfterDelegation(program, d)
+        val pb   = p.primaryBody
+        def canon(s: Statement): String = TirPrinter.render(s, TirPrinter.Style.canonical)
+        if pb.sizeIs <= rest.size && pb.zip(rest).forall((a, b) => canon(a) == canon(b))
+        then Some(rest.drop(pb.size))
+        else scala.None
 
     // ---- effect replay: expressing a `super(args)` a secondary constructor cannot make ----
 
@@ -716,6 +758,15 @@ object CtorFunnel:
     case t: Term => Tree.uncomment(t)
     case other   => other
   }
+
+  /** a constructor's statements MINUS its leading `this(…)` / `super(…)` delegation, which the
+    * emitter consumes into `deleg`. The one split both `TirEmitter.ctorBody` and
+    * `Plans.residualBody` read, so "the body" means the same list on both sides. */
+  def bodyAfterDelegation(program: Program, d: Tree.DefDef): List[Statement] =
+    val all = stmtsOf(d)
+    headStmt(d) match
+      case Some(Tree.Apply(Tree.Select(_, m, _, _), _, _, _, _)) if isInitName(program, m) => all.tail
+      case _                                                                               => all
 
   def isCtor(program: Program, d: Tree.DefDef): Boolean =
     program.symbolOf(d.symbol).exists(_.name == "<init>")

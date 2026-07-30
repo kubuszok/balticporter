@@ -1481,8 +1481,15 @@ final class TirEmitter(
           case _             => s"this(${args.map(term(_, i + 1)).mkString(", ")})"
         (d, stats.tail)
       case _ => ("this()", stats)
+    // A10 / ENGINE-LIMITS C7 — PREFIX STRIP. Where this constructor ESCAPES the promotion (java
+    // never ran the promoted body on its path) and its own body BEGINS with that body, the class
+    // body has already run those statements by the time `this(…)` returns: emitting them again is
+    // the duplication C7 measures, and deleting them is exact rather than approximate. The residual
+    // comes from `Plans.residualBody`, which is the same function `promotionEscapes` subtracts, so
+    // the emitter and the omission count cannot disagree about which paths still duplicate.
+    val body  = currentClass.flatMap(plans.residualBody(_, cdef)).getOrElse(rest)
     val head  = leading(if rest eq stats then Nil else headTrivia, i + 1) + ind(i + 1) + deleg
-    val lines = head :: (replay ++ rest).map(stat(_, i + 1)).filter(_.trim.nonEmpty)
+    val lines = head :: (replay ++ body).map(stat(_, i + 1)).filter(_.trim.nonEmpty)
     s"{\n${joinStats(lines)}\n${ind(i)}}"
 
   /** A secondary constructor's `super(args)` — which scala cannot write — expressed as a

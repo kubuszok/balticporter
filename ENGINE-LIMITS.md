@@ -547,17 +547,38 @@ than tolerated:
 | `Button` | `initialize()` runs again on 8 of 10 paths, adding a SECOND `ClickListener`; each click then calls `setChecked` twice and the button never changes state |
 | `Table` | `obtainCell()` takes a `Cell` from the static `cellPool` on every path — one is leaked per construction, and `Button extends Table` |
 
-A "restrict the promotion to empty-ish bodies" rule is the 41 errors. **Prefix-stripping** — where
-an escaping ROOT's own body literally begins with the promoted body (`Button`'s `initialize()`),
-delete the duplicate from the secondary — is faithful but reaches **11 of the 62 classes** (9 in
-libGDX core, 2 in simple-graphs; 16 of 156 libGDX paths) and needs an emitter change in
-`TirEmitter.ctorBody`. It does not reach `Material` or `Table`, both of which are shape 6. Not worth
-an emission change on its own; recorded here so it is not re-derived.
+A "restrict the promotion to empty-ish bodies" rule is the 41 errors.
 
-So the honest outcome is M6's: emission unchanged, divergence reported.
+**PREFIX-STRIPPING SHIPPED** (was "not worth an emission change"; the reach was re-measured and the
+earlier estimate was one class low). Where an escaping ROOT's own body literally BEGINS with the
+promoted body, the class body runs the prefix, `this(…)` returns, and the residual runs — the same
+statements, in the same order, once each. Nothing is approximated. `CtorFunnel.Plans.residualBody`
+is the one function: `TirEmitter.ctorBody` emits what it returns and `promotionEscapes` SUBTRACTS
+exactly what it returns, so the emission and the count cannot disagree about which paths still
+duplicate. The comparison is over `TirPrinter.Style.canonical`, never tree equality — two
+occurrences of `initialize()` are two source positions and `==` is false for every pair this is
+meant to find.
+
+Measured on libGDX core: **omissions 193 -> 177**, 16 construction paths repaired across 10 classes,
+compile still 0. The classes and their repaired paths:
+
+| class | paths |
+|---|---|
+| `Button` | 4 of 10 — `this.initialize()` now appears ONCE in the file, in the class body |
+| `FloatFrameBuffer`, `ModelInfluencer$Random`, `ParticleControllerInfluencer$Random` | 2 each |
+| `ParticleEmitter`, `ResourceData$SaveData`, `DynamicsModifier$Angular`, `DynamicsModifier$Strength`, `PrimitiveSpawnShapeValue`, `WeightMeshSpawnShapeValue` | 1 each |
+
+`Button` is REACHED, contrary to this entry's earlier reading of it — 4 of its 10 paths lose the
+duplicate `initialize()` and the second `ClickListener` with it. The other 6 never called
+`initialize()` in java at all, so there is nothing to strip and the divergence there is still
+counted, correctly.
+
+What it does NOT reach is `Material` and `Table`, both shape 6, and both observable (`Material`
+bumps a static id counter, `Table` leaks a pooled `Cell`). For those the honest outcome is still
+M6's: emission unchanged, divergence reported.
 `OmissionCheck.promotedBodyOnEveryPath` derives it from `CtorFunnel.Plans.promotionEscapes`, which
-reads the same `Plan.primaryBody` the emitter inlines — libGDX core omissions **37 -> 193**, with
-`members.tsv` byte-identical (0 members moved).
+reads the same `Plan.primaryBody` the emitter inlines — libGDX core omissions **37 -> 193** when the
+check arrived (`members.tsv` byte-identical, 0 members moved), **193 -> 177** when the strip shipped.
 
 Note also what this does NOT cover, and is a second question: a SUBCLASS reaching a promoted
 paramful root. `extends C(args)` can only invoke C's primary, so a Java `super(args)` that targeted a
