@@ -24,10 +24,11 @@ the budget on depth, not breadth-first skimming: read whole phases and their tes
 
 ### 1. Over-specificity — library knowledge in the engine
 
-Nothing under `core/`, `frontend-spoon/`, `scala-emit/` may name a ported library in code:
+Nothing under `api/`, `engine/`, `frontend-spoon/`, `runtime/` may name a ported library in code —
+test sources included:
 
 ```
-grep -rn --include='*.scala' -E "badlogic|libgdx" core frontend-spoon scala-emit | grep -vE ":\s*(\*|//)"
+grep -rn --include='*.scala' -E "badlogic|libgdx" api engine frontend-spoon runtime | grep -vE ":\s*(\*|//)"
 ```
 
 But the grep is the shallow check and it will usually be clean. The real finding is **library

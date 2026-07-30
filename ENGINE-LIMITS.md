@@ -18,7 +18,7 @@ true of your library too. Re-deriving one is waste, and the record exists so you
   different direction, the entry says so and says what has to be answered first.
 - **Every entry names the kind of fix it would need**, per `CLAUDE.md` §1:
   - **(a) engine bug / engine gap** — the engine is wrong or incomplete for every library. Fix it in
-    `core` / `frontend-spoon` / `scala-emit`, unparameterised.
+    `api` / `engine` / `frontend-spoon`, unparameterised.
   - **(b) configure an existing phase** — the mechanism exists; supply your library's values.
   - **(c) write a library-specific rule** — plug a rule into your own migration program. It does not
     go in the engine.
@@ -1418,11 +1418,11 @@ translation path, and negative-test it — a check that has never failed is not 
 
 ### M5.5 After editing `runtime/`, RESTART the sbt server before believing a vendoring spec
 
-`RuntimeArtifact` reads the runtime sources from a resource that `core`'s build copies out of the
+`RuntimeArtifact` reads the runtime sources from a resource that `engine`'s build copies out of the
 `runtime` module. Two layers can serve a stale copy, and only one of them matters:
 
 - `classes/` lags `resource_managed/` until `copyResources` runs, which plain `compile` does not
-  trigger. Harmless in practice — every migration runs FORKED (`corpus-tests` sets
+  trigger. Harmless in practice — every migration runs FORKED (`corpus` sets
   `Compile / run / fork := true`) and reads the current file from disk, which is why all four ports
   measured correctly throughout.
 - `sbt -client`'s CLASSLOADER LAYER caches the resource for the life of the server, so a NON-forked
@@ -1765,7 +1765,7 @@ statement, printed above a method, is worse than absent, because it now says som
 honest fix per category is a harvest point at the construct that survives, one category at a time,
 measured against this number.
 
-*Fix kind: (a) engine — every one of these is an emission path in `scala-emit`, not a library
+*Fix kind: (a) engine — every one of these is an emission path in the emitter, not a library
 policy.*
 
 ### V2. `TirPrinter.canonical` must NOT carry trivia, and `TirPrinter.digest` MUST

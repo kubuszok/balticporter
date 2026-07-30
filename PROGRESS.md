@@ -568,7 +568,7 @@ with each item's state re-verified against the working tree.
 
 `Substitutions`' overload-precise `owner#m(P1,P2)` keys; `ClassTableTransform` and
 `StaticForwarderTransform` as correct (b) mechanisms (searched for smuggled libGDX knowledge, none
-found); `corpus-tests/libgdx-overrides/**` as correct (c) content in the right place — the model for
+found); `corpus/libgdx-overrides/**` as correct (c) content in the right place — the model for
 what a *consumer repo's* `src/` holds; `IntToOpaqueTransform` as the canonical (c) *policy* carried by a
 shareable (b) *mechanism*; `RewriteTrace`'s impact/check pair (blast radius *before* a rewrite — judged
 unique to this codebase); the stale-emit abort in every measure lane; and `Phase` / `Pipeline` /

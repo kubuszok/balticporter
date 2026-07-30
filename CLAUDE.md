@@ -21,7 +21,7 @@ A fact about **Java and Scala**, true of every codebase. Java arrays are covaria
 not. Java interface constants are `static` and inherited; Scala companions do not inherit. Java
 allows unchecked conversion at a raw type; Scala does not.
 
-These live in `core` / `frontend-spoon` / `scala-emit` with no configuration.
+These live in `api` / `engine` / `frontend-spoon` with no configuration.
 
 ### (b) Reusable mechanism, per-library policy — belongs in the engine, PARAMETERISED
 
@@ -55,14 +55,16 @@ handle is knowledge about libGDX and nothing else.
 **Design every rule to be as reusable as possible.** Reach for (c) only after establishing that the
 mechanism genuinely cannot be shared. Most things that look library-specific are a (b) with the
 policy inlined — that is exactly the mistake `ReflectionToPortableTransform` made, hard-coding
-`com.badlogic.gdx.utils.reflect.ClassReflection` and its member list inside `core`.
+`com.badlogic.gdx.utils.reflect.ClassReflection` and its member list inside the engine.
 
 ### Enforcing it
 
-No file under `core/`, `frontend-spoon/` or `scala-emit/` may name a ported library **in code**:
+No file under `api/`, `engine/`, `frontend-spoon/` or `runtime/` may name a ported library **in
+code** — test sources included, because a fixture that hard-codes one library's names is the same
+mistake one layer down:
 
 ```
-grep -rn --include='*.scala' -E "badlogic|libgdx" core frontend-spoon scala-emit | grep -vE ":\s*(\*|//)"
+grep -rn --include='*.scala' -E "badlogic|libgdx" api engine frontend-spoon runtime | grep -vE ":\s*(\*|//)"
 ```
 
 Library names in **doc comments** are fine and wanted — the worked example that justifies a general
@@ -106,7 +108,8 @@ say so; that is a statement, not a loophole.
 ## 2. Adding a library to the corpus
 
 Until the framework is published and each library gets its own porter repository, new libraries are
-added to the **corpus** (`corpus-tests/`). The procedure for each:
+added to the **corpus** (`corpus/`, one package per library: `balticporter.corpus.<lib>`). The
+procedure for each:
 
 1. **Make it compile.** Every effort — this is where the engine's gaps surface.
 2. **Test-compile it**, then port and run its tests. Compiling is not passing; see §3.
@@ -328,7 +331,7 @@ you should do:
   minority in its own file (libgdx-test: 961 of 1240).
 - **An artifact write is GATED ON THE ARTIFACT LAYER, without exception.** One unconditional
   `PortMap.write` was enough for the engine's own forked test suites to publish port maps into the
-  checkout (`runner/port-report/…`, and once a COMMITTED `port-report/jar/`), because with reporting
+  checkout (`<module>/port-report/…`, and once a COMMITTED `port-report/jar/`), because with reporting
   off the report directory falls back to `<cwd>/port-report/…` and a forked test's cwd is the
   subproject. A `git status` that cannot distinguish a decision from an artefact defeats §5.5, and
   the gate belongs at the write, not in each caller — a wrapper every spec must remember is a
@@ -339,7 +342,7 @@ port's `Substitutions.dropTypes` fails because the port deliberately does not ha
 `PortRun` writes those FQNs to `run-latest/dropped-types.tsv` on every run — `upstream` TAB
 `emitted`, both namespaces, because the stack frame it will be matched against is renamed and the
 manifest key is not (§4.56) — and the correlator classifies from them: the set follows the manifest
-with nobody editing anything, and `core` still names no library (§1). `port-report/<Port>/baseline/expected-failures.tsv` survives ONLY as the
+with nobody editing anything, and the engine still names no library (§1). `port-report/<Port>/baseline/expected-failures.tsv` survives ONLY as the
 explicit escape hatch for a failure no drop explains, and is normally empty; the artifact records
 `expected#derived` against `expected#declared` so the two can never be confused. A hand-maintained
 list of expected failures is exactly the thing that rots into "we always ignore those four" and

@@ -91,7 +91,7 @@ transpiler); javac's Tree API (**discards `//` and `/* */` at the lexer**); tree
 types). Eclipse JDT Core remains the drop-in fallback behind the same interface.
 
 **Scala side: emit source text from the typed IR, not Scalameta trees.** The original design routed
-emission through Scalameta + a pinned scalafmt. What shipped is `scala-emit`'s `TirEmitter`, a direct
+emission through Scalameta + a pinned scalafmt. What shipped is `engine`'s `TirEmitter`, a direct
 typed-tree→source backend, for the reason §2 gives: emission is a *backend*, and the tree that
 carries types and symbols inserts the correct form by construction. The Scalameta option remains a
 possible second backend; nothing in the pipeline depends on it.
@@ -229,7 +229,7 @@ outside a macro and its `Symbol` hides internals — it owns a close analogue th
 and adds `Origin`, `SymTag`, the whole-program `XrefIndex` and the decision log (§7).
 
 There is **no registry, service loader or plugin descriptor**: a rule is a `balticporter.tir.Phase`
-implementation passed to the run. `corpus-tests/.../GdxSharedIteratorRule.scala` is the worked example
+implementation passed to the run. `corpus/.../libgdx/GdxSharedIteratorRule.scala` is the worked example
 of a §1(c) rule living outside the engine.
 
 ### 2.5 Emission
@@ -303,23 +303,50 @@ cache only).
 ```
 balticporter/
   runtime/         // balticporter-runtime: the shims a PORT depends on (JavaIterator, …)
-  core/            // TIR, phases, checks, manifest, substitutions, cache, port map
+  api/             // the MODEL and the CONTRACTS a rule author compiles against
   frontend-spoon/  // the ONLY module that sees Spoon types
-  scala-emit/      // TIR → Scala source (TirEmitter); the frozen BIR printer
-  vocab/           // vocabulary model + Java→Scala stdlib tables
-  sbt-gen/         // sbt project layout + build-definition emission
-  verify/          // API parity, corpus diff, platform lint
-  runner/          // PortRun — the one entry point
+  engine/          // the MACHINERY: transforms, checks, emitter, vocab, sbt-gen, verify, PortRun
   testkit/         // golden-test harness for rule authors (used by ports too)
-  corpus-tests/    // the framework's own acceptance ports against ../ssg, ../sge
+  corpus/          // the framework's own acceptance ports against ../ssg, ../sge
 ```
 
-Dependency directions: everything depends on `core`; `runner` depends on all; nothing depends on
-`runner`. **`frontend-spoon` is the only module that sees Spoon types** — the insulation rule that
-let j2objc and j2cl swap frontends whole.
+Dependency directions: `api` depends on nothing; `frontend-spoon` on `api`; `engine` on both;
+`testkit` and `corpus` on `engine`. Nothing depends on `corpus`. **`frontend-spoon` is the only
+module that sees Spoon types** — the insulation rule that let j2objc and j2cl swap frontends whole,
+and it survives `engine → frontend-spoon` because the arrow only ever points that way.
 
-`CLAUDE.md` §1's enforcement grep covers `core`, `frontend-spoon`, `scala-emit` and `runtime`: no file
-in them may name a ported library in code.
+`CLAUDE.md` §1's enforcement grep covers `api`, `engine`, `frontend-spoon` and `runtime`: no file
+in them may name a ported library in code, test sources included.
+
+**Why the line is drawn between `api` and `engine`, and not somewhere else.** The consumer is an
+agent in another repository (§4.45) writing a §1(c) rule for its own library, and the cost of that
+must be ONE dependency that drags in no emitter, no orchestrator and no Spoon. So the criterion is
+operational rather than aesthetic: *a §1(c) rule and its spec must compile against `api` alone*.
+What that admits is the TIR (`Tree`, `Symbol`, `SymId`, `TypeRepr`, `Origin`, `Trivia`, `Program`,
+`Xref` — a `Program` cannot be built without the indexer), `Phase`/`Plugin`/`StandardTraversal`/
+`Pipeline`, the decision model (`Decision`, `Reason`, `DecisionLog`), the recording surface
+(`CheckReport`, `PolicyReport`), the §4.6 debug surface (`DebugFlags`, `TirTrace`, `TirPrinter` —
+whose `sha256` is what a finding's stable id is hashed from), the frontend contract (`Frontend`,
+`FrontendConfig`, `Unsupported`, `CommentScanner`) and `PortManifest`/`Substitutions`. Everything
+else — every transform, every check IMPLEMENTATION, the emitter, `PortMap`, `Cache`, `PortRun` — is
+machinery and is in `engine`.
+
+Four judgement calls in that cut, recorded because each looks wrong until the reason is stated:
+
+  - **`Pipeline` is in `api`, not `engine`.** It reads as the runner and is not: running a phase
+    list over a `Program` is exactly what a rule's SPEC does, and `frontend-spoon`'s own
+    `SpoonTirSpec` already did it. The runner that is not in `api` is `PortRun`.
+  - **The frozen BIR (`Bir.scala`) is in `api`.** `SpoonFrontend` still populates it, and
+    `frontend-spoon` must depend on `api` ALONE — the alternative is `frontend-spoon → engine`
+    beside `engine → frontend-spoon`, which is a cycle. The BIR's PASSES (`Pass`, `Transform`) and
+    its printer stay in `engine`; only the model crosses. When the BIR path is retired, this row
+    goes with it.
+  - **`PortManifestConfig` was split out of `PortManifest.scala` into `engine`.** It reads and
+    writes a `PortMap`, which is an artifact concern; the manifest itself is policy a consumer
+    declares. This is the only file the consolidation split.
+  - **`engine` depends on `frontend-spoon`**, because `PortRun` models a source set with
+    `SpoonTir`. That is the direction the insulation rule wants; a second frontend is added beside
+    Spoon and `engine` gains a dependency, never the reverse.
 
 ### 3.3 The port as a VALUE — `PortManifest` and `PortRun`
 
@@ -437,7 +464,7 @@ library" feature and the anti-omission gate at the same time.
 | `PlatformProvided` | `java.*` covered by the JVM + javalib, checked against JS/Native coverage tables |
 | `Drop` | with the unit exclusions it implies |
 
-`vocab` ships the Java→Scala stdlib tables and the **platform coverage + lint data** (RE2 regex limits
+`balticporter.vocab` ships the Java→Scala stdlib tables and the **platform coverage + lint data** (RE2 regex limits
 on Native, missing `java.text`/`java.time`/`Locale`, no executors on JS, `@safePublish`, string
 identity on JS), each lint keyed to the platforms the module targets.
 

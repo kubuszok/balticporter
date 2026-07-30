@@ -6,7 +6,7 @@ description: Add a new Java library to the Baltic Porter corpus — port it, mak
 # Adding a library to the corpus
 
 Until Baltic Porter is published and each library gets its own porter repository, new libraries are
-added to the **corpus** (`corpus-tests/`). Read `CLAUDE.md` §1 before starting — the classification
+added to the **corpus** (`corpus/`, one package per library). Read `CLAUDE.md` §1 before starting — the classification
 it defines is the point of the exercise, not a formality.
 
 Each library added should move engine rules **from (c) library-specific → (b) parameterised → (a)
@@ -25,7 +25,8 @@ behavioural evidence the port will ever have, and it decides whether the library
 
 ## 2. Write the migration program — a `PortRun` CONFIGURATION, never a copied file
 
-One `object <Lib>Migrate` in `corpus-tests/src/main/scala/balticporter/corpus/`. It is a **single
+One `object <Lib>Migrate` in `corpus/src/main/scala/balticporter/corpus/<lib>/`, in package
+`balticporter.corpus.<lib>`. It is a **single
 `PortRun(...)` value plus this library's policy, and nothing else**. Do NOT copy the body of
 another migration program: everything mechanical — emission, the dropped-type skip, the injection
 copy, the support-source write-out, every check, the substitution checks, determinism, provenance,
@@ -149,10 +150,10 @@ The migration program owns **all** per-library policy and nothing else:
 
 - `Substitutions(dropTypes, dropMethods, inject)` — what not to emit and the Scala to inject instead
 - the parameterised transforms, constructed with this library's values
-- the injected replacement sources, under `corpus-tests/<lib>-overrides/`
+- the injected replacement sources, under `corpus/<lib>-overrides/`
 - any §1(c) rule this library plugs in
 
-Nothing library-specific goes into `core` / `frontend-spoon` / `scala-emit`. When you need a new
+Nothing library-specific goes into `api` / `engine` / `frontend-spoon`. When you need a new
 rule, decide its kind FIRST (`CLAUDE.md` §1):
 
 - universal → engine, unparameterised
@@ -161,12 +162,13 @@ rule, decide its kind FIRST (`CLAUDE.md` §1):
 
 ### 2.1 Writing a §1(c) rule — the worked example
 
-`corpus-tests/.../GdxSharedIteratorRule.scala` is the model, with
-`corpus-tests/src/test/.../GdxSharedIteratorRuleSpec.scala` as the model for testing it. It is
-deliberately *not* in `core`, and it shows the three things the engine's own phases cannot:
+`corpus/src/main/scala/balticporter/corpus/libgdx/GdxSharedIteratorRule.scala` is the model, with
+`corpus/src/test/scala/balticporter/corpus/libgdx/GdxSharedIteratorRuleSpec.scala` as the model for
+testing it. It is deliberately *not* in the engine, and it shows the three things the engine's own
+phases cannot:
 
 1. **Where the file goes** — beside your migration program, in your repository. It names the
-   library freely; the §1 enforcement grep covers only `core`, `frontend-spoon`, `scala-emit` and
+   library freely; the §1 enforcement grep covers only `api`, `engine`, `frontend-spoon` and
    `runtime`, and a (c) rule being outside them is the point.
 2. **How it enters the pipeline** — as an ordinary element of `PortRun(phases = …)`. Implement
    `balticporter.tir.Phase`; there is no registry, service loader or plugin descriptor.
