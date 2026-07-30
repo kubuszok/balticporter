@@ -198,7 +198,7 @@ Working through a question often wants a scratch document — a survey, a table 
 transcript of what four experiments measured. **Write it. Do not commit it.**
 
 - Scratch and research files live under **`.balticporter/`**, which is gitignored and which the
-  measure scripts already use for their own captures. Nothing else in the repository is a valid home
+  measure lanes already use for their own captures. Nothing else in the repository is a valid home
   for one.
 - Before the work is called done, what the file FOUND is incorporated: a decision into `DESIGN.md`, a
   measurement or a residue into `PROGRESS.md`, a measured dead end into `ENGINE-LIMITS.md`, a
@@ -227,16 +227,27 @@ It runs on the **Fable 5** model and is expensive, so it is **not** run on every
 
 ## 5. Measurement discipline
 
-- **Reproduce every number with the measure scripts, serially.** There are four lanes and each
-  re-emits into `src_managed/`, so a dependent lane compiles against what the base lane just wrote:
+- **Reproduce every number with the measure lanes, serially.** They live in the root `Justfile` —
+  one file, so a fix to one lane's guard reaches the others — and each re-emits into `src_managed/`,
+  so a dependent lane compiles against what the base lane just wrote:
 
-  | script | lane |
+  | recipe | lane |
   |---|---|
-  | `scripts/gdx_measure.sh` | libGDX core — emit, checks, break residue, compile, correlate |
-  | `scripts/gdx_test_measure.sh` | libGDX's own suite — the same, then RUN it |
-  | `scripts/ashley_measure.sh` | Ashley + its suite, compiled WITH libGDX core (a dependent port) |
-  | `scripts/sg_measure.sh` | simple-graphs + its suite |
-  | `scripts/decision_counts.sh` | `decisions.tsv` row counts by kind, every port |
+  | `just gdx-measure` | libGDX core — emit, checks, break residue, compile, correlate |
+  | `just gdx-test-measure` | libGDX's own suite — the same, then RUN it |
+  | `just ashley-measure` | Ashley + its suite, compiled WITH libGDX core (a dependent port) |
+  | `just sg-measure` | simple-graphs + its suite |
+  | `just measure-all` | the four above, SERIALLY, stopping at the first failure |
+  | `just decision-counts` | `decisions.tsv` row counts by kind, every port |
+  | `just members-unchanged` | `members.tsv` against its baseline — the blast radius, before a compile |
+  | `just baseline-{list,show,diff,accept}` | the baseline half of the check report |
+
+  `just` with no recipe lists them. The mechanism the lanes share (`java_test_count`,
+  `reconcile_outcomes`, `break_residue`, `compile_guard`, `show_check_report`, `correlate`,
+  `headline`) is `scripts/_lib.sh`, which every lane sources; the POLICY — which sbt project, which
+  upstream tree, which dependencies — is a variable at the top of the `Justfile`. **Never add
+  `set -e` to a lane**: `grep -c` exits 1 when it counts zero, and counting zero errors is the
+  success case, so a lane under `set -e` aborts exactly when the port is green.
 
   Each prints, untruncated and diffed against the committed baseline, **fifteen engine checks —
   not four — plus any check the port's own §1(c) rules register** (libGDX adds
@@ -258,7 +269,7 @@ It runs on the **Fable 5** model and is expensive, so it is **not** run on every
   - **`members.tsv`** — which members' emitted text moved, available BEFORE any compile (§5.1).
   - **`decisions.tsv` + the porter notes** — how many non-mechanical decisions the port made, by
     kind, and whether every one of them reached the code (§4.575). `porter-notes` is the check;
-    `scripts/decision_counts.sh` is the size, which nothing else prints.
+    `just decision-counts` is the size, which nothing else prints.
 - **Change one thing, then measure.** Two changes measured together cost a full cycle to untangle
   and tell you nothing about either.
 - **Record what regressed and why**, in that library's `PROGRESS.md` section under "Do NOT retry". A
@@ -271,7 +282,7 @@ It runs on the **Fable 5** model and is expensive, so it is **not** run on every
 (one digest per emitted member) into the run's report directory on every migration, from the
 emitter's own recording — `TirEmitter.srcMap` is a value one emitter owns, never a process-global
 table. `balticporter.tir.CorrelateRun` joins compiler output and TEST-RUNNER output back through
-them, in-process (`PortRun.correlate`) or as a command (`CorrelateMain`). The measure scripts run
+them, in-process (`PortRun.correlate`) or as a command (`CorrelateMain`). The measure lanes run
 the command; run it yourself when you run a compiler by hand. Three consequences that change what
 you should do:
 
@@ -332,7 +343,7 @@ with nobody editing anything, and `core` still names no library (§1). `port-rep
 explicit escape hatch for a failure no drop explains, and is normally empty; the artifact records
 `expected#derived` against `expected#declared` so the two can never be confused. A hand-maintained
 list of expected failures is exactly the thing that rots into "we always ignore those four" and
-then hides a fifth. Promote every baseline with `bash scripts/port_baseline.sh accept <port>`.
+then hides a fifth. Promote every baseline with `just baseline-accept <port>`.
 
 ---
 
@@ -620,9 +631,9 @@ runs are comparable); `DebugEmit` models once and emits one FQN, optionally arou
 
 **A flag that carries measurement identity must come from the PORT, not the operator.**
 `balticporter.reportPathRoot` anchors the paths a finding's stable id is hashed from. Set only by
-the measure scripts, it silently falls back when the migration is run directly — and every finding
+the measure lanes, it silently falls back when the migration is run directly — and every finding
 then diffs as removed-and-re-added against a baseline whose *counts are identical*. A baseline that
-reproduces only through one shell script is not a baseline. Derive such a value from the port's own
+reproduces only through one `just` recipe is not a baseline. Derive such a value from the port's own
 configuration.
 
 ## 5.4 Compare paths through `toRealPath`, on BOTH sides — always

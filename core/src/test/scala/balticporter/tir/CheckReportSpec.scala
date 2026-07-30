@@ -97,7 +97,7 @@ class CheckReportSpec extends munit.FunSuite:
     val d = CheckReport.diff(Nil, List(f("omissions", "k", "p.A", "p/A.java", 1, "x")), Set.empty, Set("omissions"), hasBaseline = false)
     val r = CheckReport.renderDiff(d)
     assert(r.contains("NO BASELINE"), r)
-    assert(r.contains("port_baseline.sh accept"), r)
+    assert(r.contains("just baseline-accept"), r)
   }
 
   test("the written artifact is byte-identical across two runs of the same input (determinism, R3)") {

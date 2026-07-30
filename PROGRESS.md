@@ -12,19 +12,25 @@ not moved to a "done" section — and a lesson worth keeping is lifted into `DES
 
 ## 0. Reproducing every number here
 
+Every lane is a recipe in the root `Justfile` (`just` with no argument lists them):
+
 ```
-bash scripts/gdx_measure.sh        # libGDX core        (emit → checks → break residue → compile → correlate)
-bash scripts/gdx_test_measure.sh   # libGDX's own suite (… → compile → RUN → correlate)
-bash scripts/ashley_measure.sh     # Ashley + its suite, compiled WITH libGDX core
-bash scripts/sg_measure.sh         # simple-graphs + its suite
-bash scripts/decision_counts.sh    # decisions.tsv row counts by kind, every port
-bash scripts/port_baseline.sh accept <port>   # promote a baseline
+just gdx-measure          # libGDX core        (emit → checks → break residue → compile → correlate)
+just gdx-test-measure     # libGDX's own suite (… → compile → RUN → correlate)
+just ashley-measure       # Ashley + its suite, compiled WITH libGDX core
+just sg-measure           # simple-graphs + its suite
+just measure-all          # the four above, serially, stopping at the first failure
+
+just decision-counts      # decisions.tsv row counts by kind, every port
+just members-unchanged    # members.tsv against its baseline — the blast radius, before a compile
+just baseline-accept <port>   # promote a baseline (also: baseline-list / -show / -diff)
 ```
 
-Run them **serially**: each re-emits into `src_managed/` and the dependent lanes compile against what
-the base lane just wrote. Every script refuses to measure stale output if its migration did not run,
-and every one prints the full check report diffed against the committed baseline, not a filtered
-selection of it.
+Run them **serially** — `measure-all` does: each re-emits into `src_managed/` and the dependent lanes
+compile against what the base lane just wrote. Every lane refuses to measure stale output if its
+migration did not run, and every one prints the full check report diffed against the committed
+baseline, not a filtered selection of it. The mechanism they share is `scripts/_lib.sh`; the policy
+(sbt projects, upstream trees, dependency coordinates) is variables at the top of the `Justfile`.
 
 Measurements below are from one serial run of all five, 2026-07-30.
 
@@ -295,7 +301,7 @@ port**, and the reason it is in the corpus: every one of its 21 files resolves a
 single-module port cannot: agreeing with a base module's emitted surface while parsing only the base's
 *Java*.
 
-Reproduce with `bash scripts/ashley_measure.sh`. It compiles **libGDX core's emitted Scala and both
+Reproduce with `just ashley-measure`. It compiles **libGDX core's emitted Scala and both
 Ashley source sets on one scala-cli invocation** — Ashley is `RuntimeMode.Dependency`, so the
 collection shims are vendored by libGDX core and compiling `ashley-core` alone measures nothing.
 
@@ -379,7 +385,7 @@ every test after it. So two tests — `familyListenerPriority` and `componentHan
 never ran. **The port did not break them.**
 
 What made this worth a session is that they were invisible. MUnit prints **three** terminal markers,
-not two: `  + ` (pass), `==> X ` (fail) and `==> s <suite>.<name> skipped 0.0s`. Every measure script
+not two: `  + ` (pass), `==> X ` (fail) and `==> s <suite>.<name> skipped 0.0s`. Every measure lane
 counted the first two, so 108 + 2 = 110 against 112 emitted, with nothing comparing the two numbers —
 `CLAUDE.md` §3's *"a test that stopped running is reported as such, never as a pass"* failing inside the
 measurement itself. `reconcile_outcomes` now reconciles against the **emitted** count rather than a sum
@@ -404,7 +410,7 @@ each"), because it is a fact about running any ported suite, not about Ashley.
 
 `space.earlygrey.simplegraphs → sge.graphs`. **The third corpus library, and the first that is neither
 libGDX nor a dependent of it** — which is what makes its result meaningful. Reproduce with
-`bash scripts/sg_measure.sh`.
+`just sg-measure`.
 
 ### 4.1 Measured state
 
@@ -532,7 +538,7 @@ with each item's state re-verified against the working tree.
 | 1.4 | nothing is publishable, and a port cannot pin a known-good engine | **shipped** — `publishTo`, `versionScheme := early-semver`, a version from the environment, and `EnginePin` written into the generated build. Still unproven: **no CI publishing, and nothing has ever resolved the published artifact from sge or ssg** |
 | 1.5 | package renaming did not exist on TIR — blocking for BOTH repos | **shipped** — `PackageRenameTransform`, run last and verified (`CLAUDE.md` §4.56) |
 | 1.6 | `TirEmitter` lost provenance headers — a licence problem | **shipped** — `CLAUDE.md` §4.57 is the rule; every backend carries it |
-| 2.1 | the canonical measure script threw the four checks away | **shipped** — every script prints the full check report, diffed against the baseline |
+| 2.1 | the canonical measure script threw the four checks away | **shipped** — every lane prints the full check report, diffed against the baseline |
 | 2.2 | check results were stdout-only, truncated, never persisted, never diffed | **shipped** — `findings.tsv` / `counts.tsv` / `report.md` / `diff.txt` / `subject.txt` per run, with a promotable baseline |
 | 2.3 | no TIR pretty-printer, no way to run/skip/dump a phase | **shipped** — `TirPrinter` (+ a `canonical` style and `digest`), `DebugEmit`, and the five debug flags of `CLAUDE.md` §4.6 |
 | 2.4 | the unportable-marker design's Stage 1, plus a forced test-correlation amendment | **shipped** — source map, member digests, scalac correlation and the **test-failure** correlation lane. Stage 2 (the marker itself) deliberately unbuilt; see `DESIGN.md` §6.5 |
@@ -565,7 +571,7 @@ with each item's state re-verified against the working tree.
 found); `corpus-tests/libgdx-overrides/**` as correct (c) content in the right place — the model for
 what a *consumer repo's* `src/` holds; `IntToOpaqueTransform` as the canonical (c) *policy* carried by a
 shareable (b) *mechanism*; `RewriteTrace`'s impact/check pair (blast radius *before* a rewrite — judged
-unique to this codebase); the stale-emit abort in every measure script; and `Phase` / `Pipeline` /
+unique to this codebase); the stale-emit abort in every measure lane; and `Phase` / `Pipeline` /
 `StandardTraversal` as the best-documented surface in the repository.
 
 One latent edge worth a guard when a second library configures it: `StaticForwarderTransform` matches

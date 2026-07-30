@@ -179,8 +179,13 @@ a rule that encodes an invariant of that library's design is a (c).
 
 ## 3. Make it compile
 
-Add a measurement script beside `scripts/gdx_measure.sh` and source `scripts/_report.sh`. The shape,
-in order — every element of it exists because leaving it out hid something:
+Add a measurement lane to the root `Justfile` — copy the recipe nearest in shape to your library
+(`sg-measure` for a self-contained port, `ashley-measure` for a dependent one), and put its sbt
+project, upstream tree and dependency coordinates in the variable block at the top of the file
+rather than inline. Every lane is a `#!/usr/bin/env bash` recipe that sources `scripts/_lib.sh`,
+which is where the shared mechanism lives; **do not add `set -e`** (`grep -c` exits 1 when it counts
+zero, and zero errors is the success case, so the lane would abort exactly when the port is green).
+The shape, in order — every element of it exists because leaving it out hid something:
 
 1. `write_run_props` with `balticporter.reportPathRoot` — a finding's stable id is hashed from paths
    relative to it, so without it every finding diffs as removed-and-re-added against a baseline whose

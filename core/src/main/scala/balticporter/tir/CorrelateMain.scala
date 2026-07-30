@@ -70,7 +70,7 @@ object CorrelateRun:
 
     // A missing input file is FATAL — see the class doc on why a silent one is so expensive.
     //
-    // It used to be a line on stderr, which the measure scripts filter out of the correlate output
+    // It used to be a line on stderr, which the measure lanes filter out of the correlate output
     // by design. The run then produced a header-only `tests.tsv` and a headline of "tests 0
     // passing, 0 failing" from a test log it had never opened: a WHOLE SUITE reported as green
     // because a path was wrong. That is worse than any diagnostic this tool can emit, so a
@@ -147,7 +147,7 @@ object CorrelateRun:
     Files.writeString(outDir.resolve("correlate.txt"), report)
     Result(report, regressed, located, locatedTst)
 
-/** The correlation step as a COMMAND the measure scripts run AFTER the compiler and the test runner
+/** The correlation step as a COMMAND the measure lanes run AFTER the compiler and the test runner
   * have produced their output.
   *
   * {{{

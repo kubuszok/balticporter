@@ -274,7 +274,7 @@ object CheckReport:
     val sb = new StringBuilder
     if !d.hasBaseline then
       sb.append("NO BASELINE — these are the current numbers, nothing to compare against.\n")
-      sb.append(s"Accept them with:  bash scripts/port_baseline.sh accept ${dir.getFileName}\n\n")
+      sb.append(s"Accept them with:  just baseline-accept ${dir.getFileName}\n\n")
     d.deltas.foreach { x =>
       val arrow =
         if !x.ran then s"${x.before} -> (CHECK DID NOT RUN)"

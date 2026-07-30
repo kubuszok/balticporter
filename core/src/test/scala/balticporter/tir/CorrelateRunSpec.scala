@@ -6,7 +6,7 @@ import java.nio.file.{Files, Path}
   * shell.
   *
   * The correlation used to exist ONLY as a `main`, so the only way to run it was to start a second
-  * JVM. That is right for a measure script (the compiler and the test runner have long since
+  * JVM. That is right for a measure lane (the compiler and the test runner have long since
   * exited) and wrong for a porting program that drives the compile itself, so the request is now a
   * value and `balticporter.runner.PortRun.correlate` calls it directly.
   */
@@ -69,7 +69,7 @@ class CorrelateRunSpec extends munit.FunSuite:
   }
 
   test("a --tests file that does not exist is FATAL — never a green report over a file never opened") {
-    // The defect: a missing input was one line on stderr, which the measure scripts filter out of
+    // The defect: a missing input was one line on stderr, which the measure lanes filter out of
     // the correlate block by design. The run then wrote a header-only tests.tsv and a headline of
     // "tests 0 passing, 0 failing" — a whole suite reported as green because a path was wrong.
     val port = fixture()

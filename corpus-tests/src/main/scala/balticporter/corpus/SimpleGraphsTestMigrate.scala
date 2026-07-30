@@ -71,7 +71,7 @@ object SimpleGraphsTestMigrate:
       // tolerates only while the copies agree, and the Scala.js/Native linkers reject.
       runtimeMode = RuntimeMode.Dependency,
       determinism = Determinism.fromArgs(args.toSeq),
-      nextStep    = "bash scripts/sg_measure.sh",
+      nextStep    = "just sg-measure",
     ).execute()
 
 /** simple-graphs' TEST-scope dependency, for shadow-class resolution only.

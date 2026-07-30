@@ -82,7 +82,7 @@ object Correlate:
 
   /** Parse a dotty/scala-cli compile log. Both the coded (`-- [E006] … Error: f:1:2 ---`) and the
     * bare (`-- Error: f:1:2 ---`) header forms are recognised, because counting only coded errors
-    * silently undercounts — the same trap `scripts/gdx_measure.sh` documents. */
+    * silently undercounts — the same trap the `Justfile`'s `gdx-measure` lane documents. */
   def parseScalac(text: String): List[ScalacError] =
     val lines = text.linesIterator.toArray
     val out   = collection.mutable.ListBuffer.empty[ScalacError]

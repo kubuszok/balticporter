@@ -31,7 +31,7 @@ import java.nio.file.{Files, Path}
   * ## Why the Java path here does NOT come from `balticporter.reportPathRoot`
   *
   * CLAUDE.md §4.6: a value carrying MEASUREMENT IDENTITY must come from the PORT, not the
-  * operator. [[CheckReport.relativise]] anchors on a flag that only the measure scripts set, so a
+  * operator. [[CheckReport.relativise]] anchors on a flag that only the measure lanes set, so a
   * migration run directly produces a baseline that diffs as removed-and-re-added against one
   * produced through the script.
   *

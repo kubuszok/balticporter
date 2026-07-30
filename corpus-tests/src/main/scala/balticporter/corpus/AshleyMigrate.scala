@@ -81,7 +81,7 @@ object AshleyMigrate:
       // which the JVM tolerates only while the copies agree, and the Scala.js/Native linkers reject.
       runtimeMode = RuntimeMode.Dependency,
       determinism = Determinism.fromArgs(args.toSeq),
-      nextStep    = "bash scripts/ashley_measure.sh",
+      nextStep    = "just ashley-measure",
     ).execute()
 
 /** Ashley's per-library policy — a DEPENDENT of libGDX core's.

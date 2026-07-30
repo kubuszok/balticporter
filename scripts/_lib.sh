@@ -1,5 +1,20 @@
 #!/bin/bash
-# Shared helpers for the measure scripts.
+# Shared helpers for the measure lanes. SOURCED BY THE `Justfile` — it is the only entry point;
+# there are no per-lane scripts any more (`just gdx-measure`, `just sg-measure`, …).
+#
+# This file exists because these helpers are used by four lanes and the two of them that carry the
+# most reasoning per line — `java_test_count`'s comment-aware perl and `reconcile_outcomes`' third
+# MUnit marker — are exactly the ones a fourfold copy would let drift apart. Everything that is
+# per-lane POLICY (which project, which upstream, which dependencies) lives in the `Justfile` as a
+# variable; everything here is mechanism, and takes what it needs as an argument or reads a
+# documented environment variable with a working default.
+#
+# NOTE THE ABSENCE OF `set -e`, in here and in every lane recipe, and do not add it. `grep -c`
+# exits 1 when it counts zero, and `ERRORS=$(grep -cE '^-- .*Error' …)` counting zero is the
+# SUCCESS case for every lane; `[ "$a" != "$b" ] && echo …` is the shape of two guards below.
+# Under `set -e` a lane would abort precisely when the port is green. The guards here are explicit
+# (`compile_guard`, the migration abort, the correlate exit status) because each one names what
+# went wrong — which is the thing `set -e` cannot do.
 #
 # Why a marker FILE and not an environment variable (CLAUDE.md §4.6): `sbt -client` talks to a
 # long-running server started with some earlier shell's environment, and the migration then runs in
@@ -25,7 +40,7 @@ write_run_props() {
   local root="$1"; shift
   mkdir -p "$root/.balticporter"
   {
-    echo "# written by scripts/$(basename "${BASH_SOURCE[1]:-measure}") — safe to delete"
+    echo "# written by a measure lane of the Justfile — safe to delete"
     for kv in "$@"; do echo "$kv"; done
   } > "$root/.balticporter/run.properties"
 }
@@ -191,7 +206,10 @@ correlate() {
   # kept and shown whenever the exit status is non-zero: a correlation that did not happen must
   # not render as an empty-but-tidy block (the §3 false green, one artifact later).
   local cap="$MEASURE_TMP/correlate-$$.txt"
-  sbt -client "core/runMain balticporter.tir.CorrelateMain --out $out --baseline $(dirname "$out")/baseline $*" \
+  # The sbt project that holds CorrelateMain is POLICY: the Justfile exports it (`core_project`) so
+  # a module rename is one line there and never a grep through shell. The default keeps this file
+  # correct on its own.
+  sbt -client "${CORE_PROJECT:-core}/runMain balticporter.tir.CorrelateMain --out $out --baseline $(dirname "$out")/baseline $*" \
     2>&1 | sed $'s/\033\\[[0-9;]*[a-zA-Z]//g' > "$cap"
   local st=${PIPESTATUS[0]}
   sed -n '/^units in source map/,$p' "$cap" | grep -v '^\['

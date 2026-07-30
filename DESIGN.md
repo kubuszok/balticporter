@@ -821,7 +821,7 @@ At zero open markers, best-effort output minus fences and banner is byte-identic
 output *by construction* (same emitter, same tree) — and a standing check asserts exactly that, so the
 mode cannot rot into a divergent path.
 
-The measure scripts have been running in unlabelled best-effort mode all along; after this the
+The measure lanes have been running in unlabelled best-effort mode all along; after this the
 "deliverable" claim becomes a *positive statement the gate makes* (zero open markers, every check
 clean) rather than the absence of complaints. That is the mode a new library lives in for weeks.
 

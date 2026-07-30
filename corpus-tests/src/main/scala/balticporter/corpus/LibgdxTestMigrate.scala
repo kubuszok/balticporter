@@ -77,5 +77,5 @@ object LibgdxTestMigrate:
       // removal-capable iterator); shapes the engine can emit correctly are emitted, and nothing
       // ships.
       determinism = Determinism.fromArgs(args.toSeq),
-      nextStep    = "bash scripts/gdx_test_measure.sh",
+      nextStep    = "just gdx-test-measure",
     ).execute()

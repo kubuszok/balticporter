@@ -1448,8 +1448,8 @@ Recovery, in order: find the wedged checkout's OWN server (each checkout has one
 per project directory) with `ps aux | grep "[s]bt-launch"` cross-checked against
 `lsof -U | grep <socket-hash>`, `kill -9` THAT pid, then `rm -f <checkout>/project/target/active.json`.
 Do not `pkill` by name across the machine: sibling checkouts' servers are healthy and mid-measure,
-and reaping them is the same cross-checkout kill the measure scripts had to have removed from them
-(see the `pkill scala-cli` note in `scripts/_report.sh`).
+and reaping them is the same cross-checkout kill the measure lanes had to have removed from them
+(see the `pkill scala-cli` note at the head of `scripts/_lib.sh`, which the `Justfile`'s lanes source).
 
 Prevention is cheaper than either: never kill a client that is merely slow — `sbt -client` compiling
 a cold worktree takes minutes, and the wedge only exists because a kill looked faster.
