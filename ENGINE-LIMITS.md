@@ -1014,6 +1014,24 @@ change that cannot be shown to fix the thing it claims to fix is a comment that 
 reader. Same family as the `-D`-does-not-reach-the-forked-migration trap in §4.6 — the state that
 lies is between the edit and the process that reads it.
 
+### M5.6 Killing a hung `sbt -client` WEDGES the server permanently — kill the SERVER, not the client
+
+sbt 2's network channel dies badly under a client kill: `NetworkChannel.shutdown →
+VirtualTerminal.cancelRequests` blocks forever on a full `ArrayBlockingQueue`, and every later
+command — `sbt -batch` included, it also goes through sbtn — queues behind the corpse. From the
+outside this looks like the machine having a slow day, indefinitely; two concurrent worktrees hit
+it in one afternoon, independently.
+
+Recovery, in order: find the wedged checkout's OWN server (each checkout has one — the socket is
+per project directory) with `ps aux | grep "[s]bt-launch"` cross-checked against
+`lsof -U | grep <socket-hash>`, `kill -9` THAT pid, then `rm -f <checkout>/project/target/active.json`.
+Do not `pkill` by name across the machine: sibling checkouts' servers are healthy and mid-measure,
+and reaping them is the same cross-checkout kill the measure scripts had to have removed from them
+(see the `pkill scala-cli` note in `scripts/_report.sh`).
+
+Prevention is cheaper than either: never kill a client that is merely slow — `sbt -client` compiling
+a cold worktree takes minutes, and the wedge only exists because a kill looked faster.
+
 ### M6. Refuse and COUNT rather than approximate
 
 Three places where the port deliberately carries a number instead of a guess, and each is the right
