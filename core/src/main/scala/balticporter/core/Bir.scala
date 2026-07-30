@@ -17,10 +17,13 @@ package balticporter.core
 // (`TirCacheKey`, in this file's neighbour `Cache.scala`), determinism by
 // double-translation, `SbtGen` wiring and provenance.
 //
-// It is NOT deleted, and must not be. Ten corpus programs still translate through
+// It is NOT deleted, and must not be. NINE corpus programs still translate through
 // it — LiqpCorpus, LiqpM0, LiqpProject, XwikiProject, XwikiSurvey, FlexmarkCorpus,
-// JbumpCorpus, BumpDemo, VocabDemo, SpoonTirEmitProject — covering liqp,
-// xwiki/flexmark and jbump, which are exactly ssg's Java libraries. Moving them to
+// JbumpCorpus, BumpDemo, VocabDemo — covering liqp,
+// xwiki/flexmark and jbump, which are exactly ssg's Java libraries.
+// (SpoonTirEmitProject is NOT a dependent: it translates through the TIR and touches
+// this path only for `M0Pipeline.compileGate` — do not put it on a migration work list.)
+// Moving them to
 // the TIR is a separate, measured piece of work (PROGRESS.md §Publishability 1.1); until
 // it is done, deleting this deletes their ports.
 //

@@ -238,12 +238,14 @@ It runs on the **Fable 5** model and is expensive, so it is **not** run on every
   | `scripts/sg_measure.sh` | simple-graphs + its suite |
   | `scripts/decision_counts.sh` | `decisions.tsv` row counts by kind, every port |
 
-  Each prints, untruncated and diffed against the committed baseline, **fifteen checks** — not four.
-  Twelve are required of every run (`signature`, `omissions`, `portability(all|emitted|injected)`,
-  `substitution(emitted|dangling)`, `remediation`, `policy`, `manifest`, `port-map`, `trivia`) and
-  three record when their phase is present (`porter-notes`, `collection-closure`,
-  `collection-boundary`). `PortRun.RequiredChecks` is asserted against what actually recorded, so a
-  number that reaches stdout and not `findings.tsv` fails the run.
+  Each prints, untruncated and diffed against the committed baseline, **fifteen engine checks —
+  not four — plus any check the port's own §1(c) rules register** (libGDX adds
+  `gdx-shared-iterator`, so its lanes show sixteen). Twelve are required of every run
+  (`signature`, `omissions`, `portability(all|emitted|injected)`,
+  `substitution(emitted|dangling)`, `remediation`, `policy`, `manifest`, `port-map`, `trivia`);
+  `porter-notes` records on every run, and `collection-closure`/`collection-boundary` record when
+  `CollectionsTransform` is in the pipeline. `PortRun.RequiredChecks` is asserted against what
+  actually recorded, so a number that reaches stdout and not `findings.tsv` fails the run.
 
   Four more measurements are NOT check counts and are printed beside them, because each catches a
   class nothing else can see:
@@ -276,13 +278,14 @@ you should do:
 - **Never open an emitted file to work out which member an error is in.** `errors.tsv` already
   says, with the Java file and line, and splits errors into "at a region the engine marked
   approximate", "engine gap" and "outside the source map" (an injected shim is none of the other
-  two).
+  two) — plus, on a `preview = true` run only, "declared unrenderable" (`Correlate.Lane.Declared`),
+  so the engine's own `compiletime.error` markers never inflate the real error count.
 - **The member-digest baseline is the blast radius, and it is available BEFORE a compile.** After a
   change, `run-latest/members.tsv` against `baseline/members.tsv` says exactly which members'
   emitted text moved. Identical files mean the output is byte-for-byte unchanged — which is a
   stronger revert check than any count, because *no check count moves for most transform
-  regressions* (with the whole pipeline skipped, all four are unchanged).
-- **The test lane is the only one that sees §4.4.** Ten Java forms translate to valid Scala meaning
+  regressions* (with the whole pipeline skipped, every check count is unchanged).
+- **The test lane is the only one that sees §4.4.** The §4.4 table's Java forms translate to valid Scala meaning
   something else and move no error count. `tests.tsv` is the pass/fail baseline and the diff names
   newly-failing tests, anchors each on the first stack frame in ported code, and says how good that
   anchor is (`main-frame` = the library member that threw; `test-frame` = only where the failure
@@ -379,7 +382,7 @@ Note this whole class of defect is invisible while any typer error remains (§3)
 ## 4.4 Java statement semantics Scala does not share — the ones that COMPILE
 
 Each of these translates to syntactically valid Scala that means something else. None moves a
-compile-error count; all four were found by running the ported tests, in one session:
+compile-error count; every one was found by RUNNING the ported tests, never by a compile:
 
 | Java | naive Scala | why it is wrong | faithful |
 |---|---|---|---|
@@ -608,7 +611,7 @@ the question "is this phase even responsible" costs one run and no diff:
 | `balticporter.traceNode=<Kind>` | `TirTrace.mint` prints constructing frames for a node kind — no node gains a field |
 
 Resolution order is **system property → `<root>/.balticporter/run.properties` (script-written) →
-`<root>/debug.properties` (hand-written, wins)**. Note the marker file is not merely a convenience:
+`<root>/.balticporter/debug.properties` (hand-written, wins)**. Note the marker file is not merely a convenience:
 a `-D` on the *caller's* command line does not reach the forked migration either, because `sbt`
 forks it with `javaOptions` from `build.sbt`. Only the file crosses that boundary.
 

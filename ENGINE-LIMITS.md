@@ -868,6 +868,263 @@ target idiom, build the tree and emit it. This one cost a base class shipped int
 
 ---
 
+### K5. A java class that EXTENDS a JDK collection — CLOSED, and what the shim must get exactly right
+
+`java.util.Collection`, `List`, `Map`, `Set` and `Iterator` are in `CollectionsTransform.typeMap`, so
+every *use* of them retypes. The ABSTRACT BASES are not — `java.util.AbstractCollection`,
+`AbstractList`, `AbstractMap`, `AbstractSet`. A library that merely *uses* JDK collections is
+therefore fine, and one that **inherits** from them comes out half-translated: the class keeps the
+JDK parent while every use of it is retyped to a Scala collection, and the two no longer meet.
+
+Measured on simple-graphs (29 files), where three classes do this — `Array`, `NodeCollection`,
+`VertexCollection`, all `extends AbstractCollection<T>`. It is **27 of that library's 30 compile
+errors**, in three shapes that all trace to the one cause:
+
+| shape | count | why |
+|---|---|---|
+| `value foreach is not a member of sge.graphs.Array[…]` | 7 | a java enhanced-for over the class emits scala `for (x <- xs)`, which needs `foreach`; the JDK parent supplies `forEach` (capital E) and nothing else |
+| `Required: java.util.Collection[?]` / `Required: Buffer[…]` given the other | ~5 | a parameter typed by the JDK base meeting an argument the transform retyped, or the reverse |
+| `value stream is not a member of Buffer[…]` | 3 | separate cause — see K6 |
+
+**Do NOT reach for the obvious fix.** Mapping `AbstractCollection` onto a Scala collection base
+(`mutable.AbstractBuffer` and friends) is exactly what **§4.5** forbids and for exactly the reasons
+recorded there: the Scala collection traits are large and interlocking, they import hundreds of
+members that clash with the ported class's own `size`, `isEmpty`, `remove`, and a class that
+implements several small Java interfaces cannot satisfy them at once.
+
+The shape that *is* known to work is the one `JavaIterator`/`JavaIterable` already take: a
+**standalone abstract class in `balticporter-runtime` with Java's own member arity**, with Scala
+interop restored by extension methods rather than by inheritance. `AbstractCollection` is the next
+member of that family, not a mapping onto the stdlib.
+
+**CLOSED.** simple-graphs compiles at 0 and its three `extends AbstractCollection<T>` classes
+translate. `java.util.Collection` and `java.util.AbstractCollection` both map to the
+`balticporter.runtime.JavaCollection` shim — they MUST map to the same family, since java's abstract
+base implements the interface — and a scala collection reaching a shim-typed slot is bridged at the
+slot by `CollectionsTransform.coerce` (arguments, declarations and assignments alike; arguments alone
+left libGDX's `Collection<Object[]> parameters = new ArrayList<>()` broken).
+
+Four things the shim had to get EXACTLY right, every one of them invisible until the last typer error
+was gone and `RefChecks` finally ran (§3 — the count rose 1 → 8 at that moment, which is the gate
+starting to tell the truth):
+
+| got wrong | what RefChecks said | the rule |
+|---|---|---|
+| `contains`/`isEmpty`/`remove`/`clear` declared ABSTRACT | `class Array needs to be abstract, since: it has 2 unimplemented members` × 4 classes | mirror `AbstractCollection`'s OWN split: only `iterator()` and `size()` are abstract there |
+| `contains(o: Any)`, `remove(o: Any)` | same, for a class that DOES declare `contains(Object)` | scala's `Any` is not java's `Object`; take java's parameter type |
+| no `toArray(T[])` at all | `method toArray overrides nothing` × 3 | carry every member java's base has, not the ones that look needed |
+| `toArray[T]` (bound `Any`) | `method toArray has a different signature than the overridden declaration` × 3 | java's IMPLICIT type-parameter bound is `Object`; render it |
+
+`add` is CONCRETE and throws `UnsupportedOperationException`, because that is what
+`AbstractCollection.add` does — a subclass that does not override it really does reject `add`, and
+making it abstract would demand code the source never contained.
+
+The general lesson, and the one that transfers to `AbstractMap`/`AbstractList`/`AbstractSet`: a shim
+standing in for a JDK abstract base is not a list of the members the corpus happens to call. It is
+that base's OWN abstract/concrete split, member for member, with java's parameter types and java's
+type-parameter bounds — and no compile error names any of the four mistakes above until every other
+error is gone.
+
+*Fix kind: (a). The types are JDK, the inheritance is ordinary java, and every library that defines
+its own collection type hits it — flexmark and liqp both do.*
+
+### K5.5 Several constructors reaching the SAME parent constructor — a SYNTHESISED primary
+
+Scala lets only the PRIMARY constructor reach `super`, so a class whose java constructors each call
+`super(...)` with different arguments has no obvious encoding. The engine used to nominate one and
+DROP the others' arguments — counted by `OmissionCheck`, but counted is not fixed:
+
+```java
+AlgorithmPath()          { super(0, false); }
+AlgorithmPath(Node<V> v) { super(v.getIndex() + 1, true); setByBacktracking(v); }
+```
+emitted `extends Path[V](0, false)` for BOTH, and simple-graphs' shortest path came back size 0
+instead of 39. It compiled, and only the test suite noticed.
+
+When every root reaches the SAME parent constructor, the faithful encoding is the one a scala author
+writes by hand — a primary taking the super call's own parameters:
+
+```scala
+class AlgorithmPath[V](sup$0: Int, sup$1: Boolean) extends Path[V](sup$0, sup$1):
+  def this()           = this(0, false)
+  def this(v: Node[V]) = { this(v.getIndex() + 1, true); setByBacktracking(v) }
+```
+
+Four things measured while getting there, each of which moved a libGDX number the wrong way:
+
+| got wrong | measured |
+|---|---|
+| promoting a pass-through root when some root takes NO parameters | libGDX **0 → 5** — the no-arg root has nothing to delegate with and emits `this()` against a primary that no longer accepts it |
+| picking the FIRST pass-through root rather than the widest | omissions **46 → 50** |
+| letting the synthesis run for a JDK-THROWABLE parent | that branch already nominates the widest and is measured (0 → 55 when it guessed) — leave it alone |
+| letting either shape reach the other's classes | every ordering tried moved a number; they are disjoint by construction now — a no-arg root means SYNTHESIS, all-paramful-with-a-collision means PROMOTION, anything else keeps the old behaviour |
+
+And one that moved a number the RIGHT way while looking wrong: `OmissionCheck` counts a dropped
+`super(args)` by "this root is not the primary", which is false under both new shapes — every root's
+call survives. Marking the plan `superExpressed` and skipping those took libGDX from a reported
+46 → 50 to **46 → 43**, i.e. three super calls that had been silently dropped are now emitted. A check
+derived from a decision must be told when the decision changes, or an improvement reads as a
+regression.
+
+*Fix kind: (a). Java's constructor rules against scala's, no library involved.*
+
+### K5.6 A cast that only BECOMES impossible after a retyping
+
+`(Collection<V>) anArrayList` is valid java and the frontend emits it faithfully. `CollectionsTransform`
+then maps `Collection` to the runtime shim while leaving the `java.util.List` alone — it came from an
+`IntStream` chain, which K6's own rule correctly declines to collapse — and the surviving
+`asInstanceOf[JavaCollection[V]]` on an `ArrayList` can never succeed. It COMPILES and throws
+`ClassCastException`.
+
+No count moves: it is not an omission, not a portability site, not a signature mismatch. Only the test
+suite sees it, which makes it CLAUDE.md §4.4's defect class arriving without a java statement form.
+
+**A phase that retypes must ask what it has done to the CASTS around the types it moved.** Dropping
+the cast turns a runtime failure into a compile error on the same line (ENGINE-LIMITS M6), and here it
+also let `coerce` see the argument and bridge it properly — the cast had been standing between them.
+
+*Fix kind: (a).*
+
+### K6. `java.util.stream` — the CHAIN collapses; and the two rules that make that safe
+
+**PARTLY CLOSED.** `xs.stream().filter(p).collect(Collectors.toList())` now translates, and the shape
+of the fix is the transferable part: a stream chain is not rewritten call-for-call. Scala's
+collections carry the operations directly, so `stream()` becomes the receiver AS a scala collection,
+`collect(Collectors.toList())` becomes NOTHING, and only the middle operation survives. Map any one
+of the three on its own and the result does not type-check.
+
+Two rules were each measured the hard way, and a new backend or a new operation will need both:
+
+- **A rewritten node must be TYPED as what it now emits.** The collapse first kept the java
+  `Stream<E>` type, and one call further out `coerce` therefore declined to bridge: `Found:
+  Buffer[V] / Required: JavaCollection[V]` — the chain translated and then failed to meet the method
+  it fed. Same invariant as `Map.values()`, which claims a `Collection` in the TIR while emitting a
+  `scala.collection.Iterable`, and is wrapped for exactly that reason.
+- **A stream OPERATION is rewritten only when its receiver is a collection the phase already
+  collapsed — never on the method name alone.** `"…".lines()` is a `java.util.stream.Stream` with no
+  collection behind it; rewriting its `filter` gave `Found: java.util.stream.Stream[String]`.
+  Measured 0 → 1 on libGDX's test port. A chain from a non-collection source is untranslated and
+  must fail as such.
+
+Still open, and each needs a different target type rather than more of the same: `Collectors.toSet`
+and `Collectors.toMap`. Guessing one would be a silent wrong answer, so they are deliberately
+unmapped and fail to compile. Two that WERE on this list now ship in `JavaCollections`:
+`Stream.sorted(Comparator)` as `sortedWith` (a copy, with the doc explaining why the name matters)
+and `Collectors.toCollection(f)` as `into` (bounded by `Growable`).
+`java.util.Collections`' statics are the same story — `unmodifiableCollection` is mapped (its
+`Collection<? extends T> -> Collection<T>` widening is load-bearing, not erasable to the identity),
+while `unmodifiableList` has no read-only `Buffer` view to map onto and mapping it to the identity
+would drop the immutability with a green compile.
+
+`java.util.function` is now exercised: `Predicate` reaches the runtime shim's `removeIf`, and the
+shim declares JAVA's signature (`Predicate<? super A>`) rather than `A => Boolean` — because a
+ported class OVERRIDES it and scala requires an override's parameter type to match EXACTLY.
+Mapping `Predicate` to `Function1` and adapting at each call moves that disagreement rather than
+removing it, since it changes the override's parameter type too.
+
+**A `java.util.stream.Stream`-typed SLOT is the one shape the collapse cannot reach, and the refusal
+is correct.** Audited as "the collapse keys on the receiver's WRITTEN type rather than its retyped
+kind" and **DISPROVED** — recorded because the disproof is what stops it being re-opened:
+
+| what would have to be true for the guard to diverge | measured |
+|---|---|
+| `recv.tpe` still naming a JAVA collection at the guard | impossible — `StandardTraversal.mapTerm` routes a node's `tpe` and its children through `transformType` BEFORE `transformApply`, and every node the phase mints is typed from an already-mapped one |
+| `recv.tpe` naming a scala collection the phase did not introduce | impossible — `kindOf` is keyed only on symbols the phase minted |
+| the SOURCE arm keying on the receiver's declared type | it keys on the RESOLVED method's DECLARING type: **13 of 13** receiver spellings (`ArrayDeque`, `TreeSet`, `Queue`, a program class extending `AbstractCollection`, …) resolve to `java.util.Collection#stream` |
+| the receiver being a collapsed buffer whose recorded type says otherwise | REACHABLE, through a `Stream`-typed slot — and there `false` is right |
+
+```java
+Stream<String> st = f.stream();    // st : Stream, value : Buffer
+st.filter(p).collect(toList());    // not collapsed
+```
+
+The DECLARATION is what has no translation, not the operation. Making the guard answer `true` here
+would rewrite `filter` and leave the `Stream`-typed slot in place — moving the error rather than
+closing it. Measured: that emission is **2 compile errors**, so the refusal is loud (M6), never
+silent. The general rule is `CLAUDE.md` §4.56's: a phase may only conclude something about a type
+from what it did to that type, and this phase did nothing to `java.util.stream.Stream`.
+
+*Fix kind: (b) for the call shapes, on `CollectionsTransform`'s existing rewrite table; the chain
+collapse and both rules above are (a). The `Stream`-typed slot is (a) and unbuilt — it needs the
+stream family retyped, not a wider guard.*
+
+### K6.5 A java `T...` becomes an `Array[T]`, so a REWRITE onto a scala vararg must undo the pack
+
+The engine renders a java varargs parameter as `Array[T]` and MATERIALISES the pack at the call
+site (`SpoonTir.varargPack` builds a `Tree.NewArray`). That is right for every in-program vararg
+method — the emitted `def pack[T](xs: Array[T])` is fed `pack(Array[String](a, b))` and both halves
+agree. It is wrong for the one place a rewrite retargets a java call at a runtime helper declared
+with a SCALA vararg, `JavaCollections.asList[A](xs: A*)`:
+
+| java | before | after |
+|---|---|---|
+| `Arrays.asList(1, 2, 3)` | `asList(1, 2, 3)` — right BY ACCIDENT | unchanged |
+| `Arrays.asList(s)` | `asList(Array[String](s))` — E007 | `asList(s)` |
+| `Arrays.asList(xs, xs)` | `asList(Array[Array[String]](xs, xs))` — E007 | `asList(xs, xs)` |
+| `Arrays.asList(xs)` | `JavaCollections.asList(xs.asInstanceOf[Array[Object]])` — E007 | `java.util.Arrays.asList(…)` — REFUSED, E007 under the JDK name |
+
+The accident matters more than the failure: the frontend declines to pack PRIMITIVES, so the one
+shape everybody writes arrived as bare elements and the convention clash never showed. **A rewrite
+onto a differently-shaped runtime signature must normalise the pack, not assume either form** — the
+frontend produces both, conditionally.
+
+Two rules the fix rests on:
+
+- **Open the pack into separate arguments**, which is `CLAUDE.md` §6's spread with no spread node
+  needed and makes both frontend outcomes emit one shape. A LITERAL array in the slot
+  (`asList(new String[]{a, b})`) opens too, soundly: the array is allocated at the call, so no
+  caller holds the alias.
+- **A single ARRAY-typed argument is the ALIASING form and is refused.** Java returns a live view of
+  the caller's array; a spread would silently copy what java aliases (§4.4). The rewrite is skipped
+  entirely so the emitted text keeps the JDK name and the error reads as an untranslated call
+  (`Found: java.util.List[Array[Object]] / Required: Buffer[String]`) rather than a broken helper.
+  A faithful live view — a fixed-size `Buffer` over the array with `add`/`remove` throwing — is
+  expressible but not reachable from the rewrite: the frontend has already coerced the argument to
+  the ERASED formal (`Array[Object]`), so the element type the view needs is gone by then.
+  Recovering it is a frontend change with far wider blast radius.
+
+*Fix kind: (a). The residue (the aliasing form) is (a) and unbuilt, and is a refusal by choice.*
+
+### K7. A java enhanced-for BINDING may be declared at a supertype, and the port dropped it
+
+`for (Object e : collection)` over a `Collection<?>` is a DECLARATION: java resolves every use of `e`
+in the body against `Object`. Scala's `for (e <- xs)` binds at the ITERABLE's element type, which for
+a wildcard is an unusable capture — so any use fails with `Found: ?1.CAP`. No retyping at the
+collection can fix it; the loss is at the binding.
+
+Faithful translation re-binds: `for (e$e <- xs) { val e: T = e$e.asInstanceOf[T]; … }`. The cast is
+sound wherever it fires, because java permits only a WIDENING here.
+
+Two things measured while doing it:
+
+- **The gate must be a PROVABLE difference.** Treating an unreadable element type as "differs" would
+  put a cast on every for-each in the corpus to fix the handful that need one.
+- **Derive the fresh name from the RAW name and escape THAT.** Appending to the escaped form gives
+  `` `object`$e ``, which is not an identifier: 0 → 3 on libGDX main, as an E040 syntax error in a
+  file that had compiled for weeks. A suffixed keyword needs no escape — but only because `esc` is
+  applied to the whole name.
+
+27 members of libGDX main changed emitted text; 217/221 tests still pass, so the alias is behaviour-
+preserving where it fired.
+
+*Fix kind: (a) — java's for-each, scala's for-comprehension, no library involved.*
+
+### K8. `Type::method` is TWO java forms sharing one syntax
+
+A method reference on a TYPE is a qualified name (`Type.method`) only when the method is STATIC. For
+an INSTANCE method it is an UNBOUND reference and the receiver becomes the function's first
+parameter: `Edge<V>::getWeight` means `(self: Edge[V]) => self.getWeight()`. Emitted as a name it is
+`sge.graphs.Edge[V].getWeight`, which is not even a member access — measured as `value Edge is not a
+member of sge.graphs`, i.e. an error that points at the PACKAGE and says nothing about method
+references.
+
+Distinguish on `Flags.isStatic`, and take the synthesised lambda's arity from the method's own
+`MethodType` so a multi-parameter reference (`String::compareTo` as a `Comparator`) works too.
+
+*Fix kind: (a).*
+
+---
+
 ## 5. Portability and platform
 
 ### P1. A `--js` compile proves NOTHING as a portability gate
@@ -1105,7 +1362,7 @@ The evidence, kept here because the size of the effect is the point:
 
 ### M2. A green compile says nothing about behaviour — the governing rule is `CLAUDE.md` §4.4
 
-Thirteen defects were found by running ported tests, **none of which moved any compile-error count**.
+The CLAUDE.md §4.4 table's defects were found by running ported tests, **none of which moved any compile-error count** — count them there, not here; the table has grown every time a suite ran.
 The pass trajectory, which is the argument for running tests over fixing counts:
 **48 → 52 → 88 → 113 → 115 → 183 → 187 → 188 → 201 → 217**.
 
@@ -1377,7 +1634,8 @@ reason; anything consuming its paths must too.
 
 ## 9. Asserted, not measured
 
-Clearly separated because nothing below has a number behind it yet.
+Clearly separated because these are reasoned, not observed — no corpus number stands behind an
+OPEN entry here (a bullet marked CLOSED graduated by acquiring one).
 
 - **Duplicate injected-runtime definitions will break the Scala.js and Native linkers** when a second
   module is ported. Confirmed by design reasoning; not observed, because only one module exists so
@@ -1392,263 +1650,6 @@ Clearly separated because nothing below has a number behind it yet.
   drop side, and the migration prints and baselines both. The check has now also FIRED in anger —
   it caught `getName` in the `ClassReflection` forwarder, a key dead since the first draft
   (`policy 1->0` when removed).
-
-### K5. A java class that EXTENDS a JDK collection — CLOSED, and what the shim must get exactly right
-
-`java.util.Collection`, `List`, `Map`, `Set` and `Iterator` are in `CollectionsTransform.typeMap`, so
-every *use* of them retypes. The ABSTRACT BASES are not — `java.util.AbstractCollection`,
-`AbstractList`, `AbstractMap`, `AbstractSet`. A library that merely *uses* JDK collections is
-therefore fine, and one that **inherits** from them comes out half-translated: the class keeps the
-JDK parent while every use of it is retyped to a Scala collection, and the two no longer meet.
-
-Measured on simple-graphs (29 files), where three classes do this — `Array`, `NodeCollection`,
-`VertexCollection`, all `extends AbstractCollection<T>`. It is **27 of that library's 30 compile
-errors**, in three shapes that all trace to the one cause:
-
-| shape | count | why |
-|---|---|---|
-| `value foreach is not a member of sge.graphs.Array[…]` | 7 | a java enhanced-for over the class emits scala `for (x <- xs)`, which needs `foreach`; the JDK parent supplies `forEach` (capital E) and nothing else |
-| `Required: java.util.Collection[?]` / `Required: Buffer[…]` given the other | ~5 | a parameter typed by the JDK base meeting an argument the transform retyped, or the reverse |
-| `value stream is not a member of Buffer[…]` | 3 | separate cause — see K6 |
-
-**Do NOT reach for the obvious fix.** Mapping `AbstractCollection` onto a Scala collection base
-(`mutable.AbstractBuffer` and friends) is exactly what **§4.5** forbids and for exactly the reasons
-recorded there: the Scala collection traits are large and interlocking, they import hundreds of
-members that clash with the ported class's own `size`, `isEmpty`, `remove`, and a class that
-implements several small Java interfaces cannot satisfy them at once.
-
-The shape that *is* known to work is the one `JavaIterator`/`JavaIterable` already take: a
-**standalone abstract class in `balticporter-runtime` with Java's own member arity**, with Scala
-interop restored by extension methods rather than by inheritance. `AbstractCollection` is the next
-member of that family, not a mapping onto the stdlib.
-
-**CLOSED.** simple-graphs compiles at 0 and its three `extends AbstractCollection<T>` classes
-translate. `java.util.Collection` and `java.util.AbstractCollection` both map to the
-`balticporter.runtime.JavaCollection` shim — they MUST map to the same family, since java's abstract
-base implements the interface — and a scala collection reaching a shim-typed slot is bridged at the
-slot by `CollectionsTransform.coerce` (arguments, declarations and assignments alike; arguments alone
-left libGDX's `Collection<Object[]> parameters = new ArrayList<>()` broken).
-
-Four things the shim had to get EXACTLY right, every one of them invisible until the last typer error
-was gone and `RefChecks` finally ran (§3 — the count rose 1 → 8 at that moment, which is the gate
-starting to tell the truth):
-
-| got wrong | what RefChecks said | the rule |
-|---|---|---|
-| `contains`/`isEmpty`/`remove`/`clear` declared ABSTRACT | `class Array needs to be abstract, since: it has 2 unimplemented members` × 4 classes | mirror `AbstractCollection`'s OWN split: only `iterator()` and `size()` are abstract there |
-| `contains(o: Any)`, `remove(o: Any)` | same, for a class that DOES declare `contains(Object)` | scala's `Any` is not java's `Object`; take java's parameter type |
-| no `toArray(T[])` at all | `method toArray overrides nothing` × 3 | carry every member java's base has, not the ones that look needed |
-| `toArray[T]` (bound `Any`) | `method toArray has a different signature than the overridden declaration` × 3 | java's IMPLICIT type-parameter bound is `Object`; render it |
-
-`add` is CONCRETE and throws `UnsupportedOperationException`, because that is what
-`AbstractCollection.add` does — a subclass that does not override it really does reject `add`, and
-making it abstract would demand code the source never contained.
-
-The general lesson, and the one that transfers to `AbstractMap`/`AbstractList`/`AbstractSet`: a shim
-standing in for a JDK abstract base is not a list of the members the corpus happens to call. It is
-that base's OWN abstract/concrete split, member for member, with java's parameter types and java's
-type-parameter bounds — and no compile error names any of the four mistakes above until every other
-error is gone.
-
-*Fix kind: (a). The types are JDK, the inheritance is ordinary java, and every library that defines
-its own collection type hits it — flexmark and liqp both do.*
-
-### K5.5 Several constructors reaching the SAME parent constructor — a SYNTHESISED primary
-
-Scala lets only the PRIMARY constructor reach `super`, so a class whose java constructors each call
-`super(...)` with different arguments has no obvious encoding. The engine used to nominate one and
-DROP the others' arguments — counted by `OmissionCheck`, but counted is not fixed:
-
-```java
-AlgorithmPath()          { super(0, false); }
-AlgorithmPath(Node<V> v) { super(v.getIndex() + 1, true); setByBacktracking(v); }
-```
-emitted `extends Path[V](0, false)` for BOTH, and simple-graphs' shortest path came back size 0
-instead of 39. It compiled, and only the test suite noticed.
-
-When every root reaches the SAME parent constructor, the faithful encoding is the one a scala author
-writes by hand — a primary taking the super call's own parameters:
-
-```scala
-class AlgorithmPath[V](sup$0: Int, sup$1: Boolean) extends Path[V](sup$0, sup$1):
-  def this()           = this(0, false)
-  def this(v: Node[V]) = { this(v.getIndex() + 1, true); setByBacktracking(v) }
-```
-
-Four things measured while getting there, each of which moved a libGDX number the wrong way:
-
-| got wrong | measured |
-|---|---|
-| promoting a pass-through root when some root takes NO parameters | libGDX **0 → 5** — the no-arg root has nothing to delegate with and emits `this()` against a primary that no longer accepts it |
-| picking the FIRST pass-through root rather than the widest | omissions **46 → 50** |
-| letting the synthesis run for a JDK-THROWABLE parent | that branch already nominates the widest and is measured (0 → 55 when it guessed) — leave it alone |
-| letting either shape reach the other's classes | every ordering tried moved a number; they are disjoint by construction now — a no-arg root means SYNTHESIS, all-paramful-with-a-collision means PROMOTION, anything else keeps the old behaviour |
-
-And one that moved a number the RIGHT way while looking wrong: `OmissionCheck` counts a dropped
-`super(args)` by "this root is not the primary", which is false under both new shapes — every root's
-call survives. Marking the plan `superExpressed` and skipping those took libGDX from a reported
-46 → 50 to **46 → 43**, i.e. three super calls that had been silently dropped are now emitted. A check
-derived from a decision must be told when the decision changes, or an improvement reads as a
-regression.
-
-*Fix kind: (a). Java's constructor rules against scala's, no library involved.*
-
-### K5.6 A cast that only BECOMES impossible after a retyping
-
-`(Collection<V>) anArrayList` is valid java and the frontend emits it faithfully. `CollectionsTransform`
-then maps `Collection` to the runtime shim while leaving the `java.util.List` alone — it came from an
-`IntStream` chain, which K6's own rule correctly declines to collapse — and the surviving
-`asInstanceOf[JavaCollection[V]]` on an `ArrayList` can never succeed. It COMPILES and throws
-`ClassCastException`.
-
-No count moves: it is not an omission, not a portability site, not a signature mismatch. Only the test
-suite sees it, which makes it CLAUDE.md §4.4's defect class arriving without a java statement form.
-
-**A phase that retypes must ask what it has done to the CASTS around the types it moved.** Dropping
-the cast turns a runtime failure into a compile error on the same line (ENGINE-LIMITS M6), and here it
-also let `coerce` see the argument and bridge it properly — the cast had been standing between them.
-
-*Fix kind: (a).*
-
-### K6. `java.util.stream` — the CHAIN collapses; and the two rules that make that safe
-
-**PARTLY CLOSED.** `xs.stream().filter(p).collect(Collectors.toList())` now translates, and the shape
-of the fix is the transferable part: a stream chain is not rewritten call-for-call. Scala's
-collections carry the operations directly, so `stream()` becomes the receiver AS a scala collection,
-`collect(Collectors.toList())` becomes NOTHING, and only the middle operation survives. Map any one
-of the three on its own and the result does not type-check.
-
-Two rules were each measured the hard way, and a new backend or a new operation will need both:
-
-- **A rewritten node must be TYPED as what it now emits.** The collapse first kept the java
-  `Stream<E>` type, and one call further out `coerce` therefore declined to bridge: `Found:
-  Buffer[V] / Required: JavaCollection[V]` — the chain translated and then failed to meet the method
-  it fed. Same invariant as `Map.values()`, which claims a `Collection` in the TIR while emitting a
-  `scala.collection.Iterable`, and is wrapped for exactly that reason.
-- **A stream OPERATION is rewritten only when its receiver is a collection the phase already
-  collapsed — never on the method name alone.** `"…".lines()` is a `java.util.stream.Stream` with no
-  collection behind it; rewriting its `filter` gave `Found: java.util.stream.Stream[String]`.
-  Measured 0 → 1 on libGDX's test port. A chain from a non-collection source is untranslated and
-  must fail as such.
-
-Still open, and each needs a different target type rather than more of the same: `Collectors.toSet`
-and `Collectors.toMap`. Guessing one would be a silent wrong answer, so they are deliberately
-unmapped and fail to compile. Two that WERE on this list now ship in `JavaCollections`:
-`Stream.sorted(Comparator)` as `sortedWith` (a copy, with the doc explaining why the name matters)
-and `Collectors.toCollection(f)` as `into` (bounded by `Growable`).
-`java.util.Collections`' statics are the same story — `unmodifiableCollection` is mapped (its
-`Collection<? extends T> -> Collection<T>` widening is load-bearing, not erasable to the identity),
-while `unmodifiableList` has no read-only `Buffer` view to map onto and mapping it to the identity
-would drop the immutability with a green compile.
-
-`java.util.function` is now exercised: `Predicate` reaches the runtime shim's `removeIf`, and the
-shim declares JAVA's signature (`Predicate<? super A>`) rather than `A => Boolean` — because a
-ported class OVERRIDES it and scala requires an override's parameter type to match EXACTLY.
-Mapping `Predicate` to `Function1` and adapting at each call moves that disagreement rather than
-removing it, since it changes the override's parameter type too.
-
-**A `java.util.stream.Stream`-typed SLOT is the one shape the collapse cannot reach, and the refusal
-is correct.** Audited as "the collapse keys on the receiver's WRITTEN type rather than its retyped
-kind" and **DISPROVED** — recorded because the disproof is what stops it being re-opened:
-
-| what would have to be true for the guard to diverge | measured |
-|---|---|
-| `recv.tpe` still naming a JAVA collection at the guard | impossible — `StandardTraversal.mapTerm` routes a node's `tpe` and its children through `transformType` BEFORE `transformApply`, and every node the phase mints is typed from an already-mapped one |
-| `recv.tpe` naming a scala collection the phase did not introduce | impossible — `kindOf` is keyed only on symbols the phase minted |
-| the SOURCE arm keying on the receiver's declared type | it keys on the RESOLVED method's DECLARING type: **13 of 13** receiver spellings (`ArrayDeque`, `TreeSet`, `Queue`, a program class extending `AbstractCollection`, …) resolve to `java.util.Collection#stream` |
-| the receiver being a collapsed buffer whose recorded type says otherwise | REACHABLE, through a `Stream`-typed slot — and there `false` is right |
-
-```java
-Stream<String> st = f.stream();    // st : Stream, value : Buffer
-st.filter(p).collect(toList());    // not collapsed
-```
-
-The DECLARATION is what has no translation, not the operation. Making the guard answer `true` here
-would rewrite `filter` and leave the `Stream`-typed slot in place — moving the error rather than
-closing it. Measured: that emission is **2 compile errors**, so the refusal is loud (M6), never
-silent. The general rule is `CLAUDE.md` §4.56's: a phase may only conclude something about a type
-from what it did to that type, and this phase did nothing to `java.util.stream.Stream`.
-
-*Fix kind: (b) for the call shapes, on `CollectionsTransform`'s existing rewrite table; the chain
-collapse and both rules above are (a). The `Stream`-typed slot is (a) and unbuilt — it needs the
-stream family retyped, not a wider guard.*
-
-### K6.5 A java `T...` becomes an `Array[T]`, so a REWRITE onto a scala vararg must undo the pack
-
-The engine renders a java varargs parameter as `Array[T]` and MATERIALISES the pack at the call
-site (`SpoonTir.varargPack` builds a `Tree.NewArray`). That is right for every in-program vararg
-method — the emitted `def pack[T](xs: Array[T])` is fed `pack(Array[String](a, b))` and both halves
-agree. It is wrong for the one place a rewrite retargets a java call at a runtime helper declared
-with a SCALA vararg, `JavaCollections.asList[A](xs: A*)`:
-
-| java | before | after |
-|---|---|---|
-| `Arrays.asList(1, 2, 3)` | `asList(1, 2, 3)` — right BY ACCIDENT | unchanged |
-| `Arrays.asList(s)` | `asList(Array[String](s))` — E007 | `asList(s)` |
-| `Arrays.asList(xs, xs)` | `asList(Array[Array[String]](xs, xs))` — E007 | `asList(xs, xs)` |
-| `Arrays.asList(xs)` | `JavaCollections.asList(xs.asInstanceOf[Array[Object]])` — E007 | `java.util.Arrays.asList(…)` — REFUSED, E007 under the JDK name |
-
-The accident matters more than the failure: the frontend declines to pack PRIMITIVES, so the one
-shape everybody writes arrived as bare elements and the convention clash never showed. **A rewrite
-onto a differently-shaped runtime signature must normalise the pack, not assume either form** — the
-frontend produces both, conditionally.
-
-Two rules the fix rests on:
-
-- **Open the pack into separate arguments**, which is `CLAUDE.md` §6's spread with no spread node
-  needed and makes both frontend outcomes emit one shape. A LITERAL array in the slot
-  (`asList(new String[]{a, b})`) opens too, soundly: the array is allocated at the call, so no
-  caller holds the alias.
-- **A single ARRAY-typed argument is the ALIASING form and is refused.** Java returns a live view of
-  the caller's array; a spread would silently copy what java aliases (§4.4). The rewrite is skipped
-  entirely so the emitted text keeps the JDK name and the error reads as an untranslated call
-  (`Found: java.util.List[Array[Object]] / Required: Buffer[String]`) rather than a broken helper.
-  A faithful live view — a fixed-size `Buffer` over the array with `add`/`remove` throwing — is
-  expressible but not reachable from the rewrite: the frontend has already coerced the argument to
-  the ERASED formal (`Array[Object]`), so the element type the view needs is gone by then.
-  Recovering it is a frontend change with far wider blast radius.
-
-*Fix kind: (a). The residue (the aliasing form) is (a) and unbuilt, and is a refusal by choice.*
-
-### K7. A java enhanced-for BINDING may be declared at a supertype, and the port dropped it
-
-`for (Object e : collection)` over a `Collection<?>` is a DECLARATION: java resolves every use of `e`
-in the body against `Object`. Scala's `for (e <- xs)` binds at the ITERABLE's element type, which for
-a wildcard is an unusable capture — so any use fails with `Found: ?1.CAP`. No retyping at the
-collection can fix it; the loss is at the binding.
-
-Faithful translation re-binds: `for (e$e <- xs) { val e: T = e$e.asInstanceOf[T]; … }`. The cast is
-sound wherever it fires, because java permits only a WIDENING here.
-
-Two things measured while doing it:
-
-- **The gate must be a PROVABLE difference.** Treating an unreadable element type as "differs" would
-  put a cast on every for-each in the corpus to fix the handful that need one.
-- **Derive the fresh name from the RAW name and escape THAT.** Appending to the escaped form gives
-  `` `object`$e ``, which is not an identifier: 0 → 3 on libGDX main, as an E040 syntax error in a
-  file that had compiled for weeks. A suffixed keyword needs no escape — but only because `esc` is
-  applied to the whole name.
-
-27 members of libGDX main changed emitted text; 217/221 tests still pass, so the alias is behaviour-
-preserving where it fired.
-
-*Fix kind: (a) — java's for-each, scala's for-comprehension, no library involved.*
-
-### K8. `Type::method` is TWO java forms sharing one syntax
-
-A method reference on a TYPE is a qualified name (`Type.method`) only when the method is STATIC. For
-an INSTANCE method it is an UNBOUND reference and the receiver becomes the function's first
-parameter: `Edge<V>::getWeight` means `(self: Edge[V]) => self.getWeight()`. Emitted as a name it is
-`sge.graphs.Edge[V].getWeight`, which is not even a member access — measured as `value Edge is not a
-member of sge.graphs`, i.e. an error that points at the PACKAGE and says nothing about method
-references.
-
-Distinguish on `Flags.isStatic`, and take the synthesised lambda's arity from the method's own
-`MethodType` so a multi-parameter reference (`String::compareTo` as a `Comparator`) works too.
-
-*Fix kind: (a).*
-
----
 
 ## 9.5 Control flow — what a `break` really leaves, and the boundary that steals it
 
@@ -1737,7 +1738,7 @@ check count unchanged, determinism green, `srcmap` unit and member COUNTS identi
 libGDX) — only 7 159 of those 19 257 member digests, which is exactly the members that gained a
 comment.
 
-### C1. A comment on a construct the EMISSION consumes has nowhere to go. **222 → 100** on libGDX core
+### V1. A comment on a construct the EMISSION consumes has nowhere to go. **222 → 100** on libGDX core
 
 `TriviaCheck` compares the Java text to the emitted text on every run. On libGDX core it first
 reported **222** dropped comments; recovering the one large, principled category took it to **100**.
@@ -1767,7 +1768,7 @@ measured against this number.
 *Fix kind: (a) engine — every one of these is an emission path in `scala-emit`, not a library
 policy.*
 
-### C2. `TirPrinter.canonical` must NOT carry trivia, and `TirPrinter.digest` MUST
+### V2. `TirPrinter.canonical` must NOT carry trivia, and `TirPrinter.digest` MUST
 
 Two consumers with opposite requirements, and satisfying one with the other is a silent defect
 either way:

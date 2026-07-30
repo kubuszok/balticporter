@@ -21,7 +21,7 @@ for M in SimpleGraphsMigrate SimpleGraphsTestMigrate; do
     grep -E "^\[error\].*\.scala:[0-9]+|^\[error\] +\|" <<<"$OUT" | head -20
     exit 1
   fi
-  echo "-- $M (all four checks, as the migration printed them) --"
+  echo "-- $M (ALL checks, untruncated, as the migration printed them) --"
   sed -n '/building model over/,/wrote [0-9]* Scala\( test\)\? files/p' <<<"$OUT"
   echo
 done

@@ -25,7 +25,7 @@ import java.nio.file.{Files, Path}
   *     changes exactly when a member's OUTPUT changes. That is the promotable baseline, and the
   *     one that answers "which members did my engine change" — the blast radius, before any
   *     compile cycle (DESIGN.md §6.3). The measured limit it addresses is recorded in
-  *     the same document: with the whole transform pipeline switched off, all four checks report
+  *     the same document: with the whole transform pipeline switched off, every check reports
   *     IDENTICAL numbers, so the check diff cannot see a transform regression. A member digest can.
   *
   * ## Why the Java path here does NOT come from `balticporter.reportPathRoot`

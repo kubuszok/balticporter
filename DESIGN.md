@@ -62,6 +62,16 @@ commitments here:
 Meta's Kotlinator (40k+ files Java→Kotlin) adds the decomposition this project follows: *pre-normalise
 in the source language, post-normalise in the target language, keep the core deterministic.*
 
+**Sources for the numbers above** (verified 2026-07-17, in the original research pass): the
+Luau→Rust figures are pjankiewicz/luaur (TRANSLATION.md and its blog write-up); Kotlinator is
+engineering.fb.com, 2024-12; the incremental-soundness incident in §3.12 is the rustc
+incremental-compilation guide's own history (rustc 1.52.1 disabling incremental globally);
+prior-art shape from c2rust docs, the j2objc FAQ + jre_emul README, j2cl design docs, IntelliJ
+nj2k sources; the LLM-translation survival data family: AlphaTrans arXiv:2410.24117, Syzygy
+arXiv:2412.14234, VERT arXiv:2404.18852, FLOURINE arXiv:2405.11514, C2SaferRust arXiv:2501.14257.
+Internal: sge `docs/contributing/*.md`, ssg `docs/contributing/conversion-rules-java.md` and
+`docs/plans/remediation-2026-06.md`.
+
 ### 1.3 Where LLMs remain, and where they do not
 
 - **Yes:** writing and extending rules, vocabulary tables and dispositions — validated by the golden
@@ -786,7 +796,7 @@ diagnostic in a file the source map does not cover, such as an injected shim or 
 error** is a false-positive candidate, and an accidentally-compiling wrong approximation is precisely
 the silent-defect class this whole document exists for.
 
-**The test lane is the only one that sees `CLAUDE.md` §4.4.** Ten Java forms translate to valid Scala
+**The test lane is the only one that sees `CLAUDE.md` §4.4.** That table's Java forms translate to valid Scala
 meaning something else and move no error count; every one was found by running the ported tests. So
 the same join runs over the test runner's output, anchoring each failure on the first stack frame in
 ported code and **recording the quality of that anchor** rather than assuming it: `main-frame` (threw
@@ -822,6 +832,17 @@ deliberately **not**: the correlation lane already accepts a marker set and an e
 legal input, so the marker side only has to WRITE a `markers.tsv` of `unit<TAB>member` lines keyed the
 way the source map keys members. The false-positive lane is one set-difference over the same two
 inputs.
+
+When the marker IS built, the adoption order is already decided (from the original design, kept so
+its builder does not re-derive it): the marker, traversal case, conservation check, emission gate
+and fences land **together as one change** (CLAUDE.md §3 — check and translation arrive together);
+then mint sites one at a time, each measured against §6.3's precision check, starting with the
+frontend's refusal points (`SpoonTir.unsupported`), then transform refusal points, then gate-derived
+tags. Two standing constraints: the minting rule wraps the **smallest wrong term**, never a
+`this(...)`/`super(...)` delegation head (shape-matching consumers read constructor prologues); and
+constructor-topology markers stay **derived from `CtorFunnel.Plans`** — never frontend-minted —
+because the plan, the check and the emitter must keep answering from one function (§7's rule,
+already enforced for the funnel's other decisions).
 
 Risks and their cheapest falsifying experiments, kept because they are what the staging is for:
 

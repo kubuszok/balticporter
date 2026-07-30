@@ -212,6 +212,13 @@ reaches `com.badlogic.gdx.utils.Json` (emitted as `sge.utils.Json`), a type the 
 drops in favour of a codec-backed replacement. Nothing is hand-listed — the classification follows the
 manifest (`CLAUDE.md` §5.1).
 
+The path OUT of those 4 is already measured (from the pre-consolidation status file, kept because
+it is the analysis a fix starts from): JSON *decoding* raises `UnsupportedOperationException`
+naming the swap point — chosen over returning null/empty, which would corrupt data silently.
+**49 of 50 decode sites pass a `classOf[X]` literal**, so a call-site rewrite to
+statically-derived codecs is viable; ONE site (`readValue("resource", null, …)`) is class-tag
+driven and needs explicit handling.
+
 `decisions.tsv` by kind, `libgdx-core`: 827 `RenamedMember`, 605 `RenamedPackage`, 335
 `RetypedSignature`, 285 `FunnelledCtor`, 31 `DroppedSuperCall`, 22 `WidenedVisibility`, 21
 `RedirectedCall`, 16 `DroppedMember`, 11 `DroppedType`, 10 `InjectedMember`.

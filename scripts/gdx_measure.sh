@@ -27,7 +27,7 @@ if ! grep -qE "wrote [0-9]+ Scala files" <<<"$MIGRATE_OUT"; then
   exit 1
 fi
 
-echo "-- migration (all four checks, as the migration printed them) --"
+echo "-- migration (ALL checks, untruncated, as the migration printed them) --"
 # The whole block the migration emitted, in order, from its first line to its last. A `grep` for
 # named lines is how the checks got lost in the first place: it silently drops any line a future
 # check adds.

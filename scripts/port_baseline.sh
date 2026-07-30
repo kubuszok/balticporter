@@ -43,7 +43,7 @@ case "$CMD" in
     [ -f "$DIR/run-latest/findings.tsv" ] || { echo "no run-latest for $PORT — run the migration first"; exit 1; }
     mkdir -p "$DIR/baseline"
     # Only DETERMINISTIC, position-free files are promoted:
-    #   findings.tsv / counts.tsv  — the four checks
+    #   findings.tsv / counts.tsv  — every check
     #   members.tsv                — one digest per emitted member; this is what makes "you changed
     #                                3 members you did not intend to" answerable before a compile,
     #                                and it is line-free so a member that only MOVED does not churn

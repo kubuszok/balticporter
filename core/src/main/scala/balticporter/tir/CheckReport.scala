@@ -6,7 +6,7 @@ import java.nio.file.{Files, Path}
   *
   * ## The problem this closes
   *
-  * The four checks are computed on every migration run and then printed, truncated, to stdout.
+  * Every check is computed on every migration run and then printed, truncated, to stdout.
   * There was no way to answer "did my change move omissions from 31 to 33" except scrollback
   * archaeology, which is precisely the question CLAUDE.md §5 requires every commit subject to
   * answer. Truncation makes it worse: a `take(20)` in the caller means the 21st finding has never

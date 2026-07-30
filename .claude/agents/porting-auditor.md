@@ -105,10 +105,11 @@ Two findings that only this audit is positioned to make, both from `ENGINE-LIMIT
   formals are ERASED and a declaration's are not), and `T2` (`forall` on a `None` Spoon type, +33).
   A change that re-enters one of those without saying why the earlier measurement no longer applies
   is a finding, whatever the current count says.
-- **A newly measured engine limit filed only in a per-library status file.** CLAUDE.md §4.45: the
-  consumer is an agent in another repository, and nothing there loads a status file. If the work
-  measured a dead end that is a fact about Java, Scala 3, Spoon or dotty, it belongs in
-  `ENGINE-LIMITS.md` with its number and its (a)/(b)/(c) kind. Report the ones that are not there.
+- **A newly measured engine limit filed only in a library's `PROGRESS.md` section.** CLAUDE.md
+  §4.45: the consumer is an agent in another repository, and nothing there loads this repo's
+  progress doc. If the work measured a dead end that is a fact about Java, Scala 3, Spoon or
+  dotty, it belongs in `ENGINE-LIMITS.md` with its number and its (a)/(b)/(c) kind. Report the
+  ones that are not there.
 
 ## Reporting
 
