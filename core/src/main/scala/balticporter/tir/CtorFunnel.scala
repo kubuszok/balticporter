@@ -212,6 +212,38 @@ object CtorFunnel:
 
     def apply(cd: Tree.ClassDef): Plan = plans.getOrElse(cd.symbol, Plan.none)
 
+    /** WHICH of the shapes in this file's header the plan for `cd` is, by name — a READ-ONLY view,
+      * derived from the plan value and the class's own constructors. Nothing here decides anything.
+      *
+      * It exists for the DECISION channel: `Plan` says WHAT was nominated and an agent diffing the
+      * emitted class against its Java needs to know WHY a constructor became the class's parameter
+      * list, which of six situations that was, and therefore what would change it. The names are
+      * the header's, so the row and the specification read the same.
+      *
+      * Derived rather than recorded at planning time on purpose — recording it would mean a second
+      * value to keep in step with a nomination that has been measured three orderings deep, and
+      * every shape is already distinguishable from the plan plus `ctorsOf`/`superArgsOf`.
+      */
+    def shape(cd: Tree.ClassDef): String =
+      val p     = apply(cd)
+      val ctors = ctorsOf(program, cd.body)
+      val roots = ctors.filterNot(delegatesToThis(program, _))
+      if p.synthetic.nonEmpty then "synthesised-primary"
+      else
+        p.primary match
+          case scala.None            => if ctors.isEmpty then "no-constructor" else "not-funnelled"
+          case Some(_) if roots.sizeIs == 1 => "unique-root"
+          case Some(c) if c.paramss.flatten.isEmpty =>
+            // several roots and a NILARY one chosen. The two shapes differ by whether anything had
+            // a `super(args)` to lose: with none, the funnel was needed only to stop scala's
+            // implicit nilary primary clashing with an emitted `def this()`.
+            if ctors.exists(x => superArgsOf(program, x).nonEmpty) then "no-arg-root" else "promoted-nilary"
+          case Some(_)               => "widest-root"
+
+    /** the class's constructors as the funnel read them — read-only, for a caller that wants to
+      * say how many there were without re-deriving `ctorsOf`'s notion of one. */
+    def constructorsOf(cd: Tree.ClassDef): List[Tree.DefDef] = ctorsOf(program, cd.body)
+
     // ---- what the promotion COSTS: the promoted body on paths java never ran it ----
 
     /** Did Java ALSO run `target`'s body when `d` was the constructor invoked? True for `target`

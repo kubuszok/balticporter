@@ -421,6 +421,63 @@ class DecisionProvenanceSpec extends munit.FunSuite:
     assertEquals(once(root.resolve("r1")), once(root.resolve("r2")))
   }
 
+  // -------------------------------------------------------------------------
+  // the CONSTRUCTOR FUNNEL — not a phase; the run records what emission consulted
+  // -------------------------------------------------------------------------
+
+  private def ctorFixture(): (Path, Path, List[String]) =
+    val (root, src) = fixture()
+    java(src, "com/demo/Base.java",
+      """package com.demo;
+        |public class Base {
+        |  public Base(int n, boolean b) { }
+        |}""".stripMargin)
+    // ONE constructor that becomes the primary: java's own structure, unchanged. No row.
+    java(src, "com/demo/Plain.java",
+      """package com.demo;
+        |public class Plain extends Base {
+        |  public Plain(int n) { super(n, true); }
+        |}""".stripMargin)
+    // SEVERAL roots reaching the SAME parent constructor with different arguments: neither can be
+    // the primary, so a primary taking the PARENT's parameters is synthesised.
+    java(src, "com/demo/Two.java",
+      """package com.demo;
+        |public class Two extends Base {
+        |  public Two() { super(0, false); }
+        |  public Two(int n) { super(n + 1, true); }
+        |}""".stripMargin)
+    (root, src, List("com/demo/Widget.java", "com/demo/Gadget.java",
+                     "com/demo/Base.java", "com/demo/Plain.java", "com/demo/Two.java"))
+
+  test("a funnelled class records its SHAPE and its promoted signature; a trivial one records nothing") {
+    val (root, src, files) = ctorFixture()
+    val rep = root.resolve("report")
+    withReport(rep)(run(root, src, files)())
+    val fs = decisions(rep).filter(_.kind == Decision.Kind.FunnelledCtor)
+
+    // `Plain` has one constructor and it became the primary — java's structure survived, so there
+    // is no decision to report. A row for it would be noise on every class in a library.
+    assert(!fs.exists(_.subjectFqn == "com.demo.Plain"), clue(fs.map(_.render)))
+
+    val two = fs.filter(_.subjectFqn == "com.demo.Two")
+    assertEquals(clue(fs).map(_.subjectFqn), List("com.demo.Two"))
+    assertEquals(two.head.reason, Reason.Universal("ctor-funnel"))
+    assertEquals(two.head.detail("shape"), "synthesised-primary")
+    assertEquals(two.head.detail("constructors"), "2")
+    // the parameters are the PARENT constructor's, in its order — that is what makes both java
+    // constructors expressible as secondaries
+    assertEquals(two.head.detail("primary"), "(sup$0: scala.Int, sup$1: scala.Boolean)")
+    assert(clue(two.head.origin.javaPath).endsWith("com/demo/Two.java"))
+  }
+
+  test("two identical runs record identical funnel rows") {
+    val (root, src, files) = ctorFixture()
+    def once(rep: Path): String =
+      withReport(rep)(run(root, src, files)())
+      Files.readString(rep.resolve("run-latest/decisions.tsv"))
+    assertEquals(once(root.resolve("r1")), once(root.resolve("r2")))
+  }
+
   test("two identical runs produce byte-identical decisions.tsv") {
     val (root, src) = fixture()
     val inject = widgetReplacement(root, "com.demo")

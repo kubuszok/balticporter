@@ -4,7 +4,7 @@ import balticporter.core.*
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.sbtgen.SbtGen
-import balticporter.tir.{CheckReport, Correlate, CorrelateRun, DebugFlags, Decision, DecisionLog, OmissionCheck, Origin, Phase, Pipeline, PortabilityCheck, Program, Reason, Remediator, RewriteTrace, SrcMap, SymId, Tree, TriviaCheck}
+import balticporter.tir.{CheckReport, Correlate, CorrelateRun, CtorFunnel, DebugFlags, Decision, DecisionLog, OmissionCheck, Origin, Phase, Pipeline, PortabilityCheck, Program, Reason, Remediator, RewriteTrace, SrcMap, SymId, Tree, TriviaCheck}
 import balticporter.transform.{CollectionBoundaryCheck, CollectionClosureCheck, CollectionsTransform, MethodBodyTransform, PackageRenameTransform, PortMapTransform}
 
 import java.nio.file.{Files, Path, StandardCopyOption}
@@ -446,6 +446,7 @@ final case class PortRun(
     // substitution manifest and the injection copy — record here, into the SAME log, because the
     // question an investigating agent asks does not care which layer answered it.
     recordPolicyDecisions(program, translated, injectedSources, plan)
+    recordCtorFunnel(program, translated)
     writeDecisions(translated.decisions)
 
     // CHECK 2 — over the FINAL tree.
@@ -713,6 +714,79 @@ final case class PortRun(
         reason = Reason.Configured("support-sources", fqn),
         origin = Origin.synthetic,
       ))
+    }
+
+  /** The CONSTRUCTOR FUNNEL's decisions — recorded by the RUN, because the funnel is not a phase.
+    *
+    * `CtorFunnel.Plans` is consulted at EMISSION (`TirEmitter` holds one), so there is no phase
+    * buffer to drain and no `Phase.record` to call; the run is the only layer that holds both the
+    * translated program and the decision log. Recording it here rather than in the emitter also
+    * keeps the emitter a pure function of a `Program` — the same division `PortRun.record` draws
+    * for the substitution checks.
+    *
+    * WHY IT MATTERS MORE THAN ANY OTHER ROW HERE: this is the one decision that changes what the
+    * emitted class DOES rather than what it is called. A promoted constructor's body becomes the
+    * class body, and a scala class body runs on EVERY construction path where java's did not — 59
+    * of libGDX's 771 promotions, `Material` bumping a static id counter on every construction among
+    * them (`ENGINE-LIMITS.md` C7). `detail("escapes")` carries that count per class; refusing the
+    * promotion is not available (measured 0 -> 41 compile errors), so the honest outcome is the
+    * recorded one.
+    *
+    * ONE ROW PER CLASS, and only where the funnel ACTED — a class the funnel nominated nothing for
+    * made no decision, and a class with a single constructor that became the primary is java's own
+    * structure surviving unchanged, which is the definition of a row nobody needs.
+    *
+    * The plans are rebuilt over THIS run's program rather than read off the emitter's, which holds
+    * its own over a name-normalised copy (`TirEmitter.prepared`). Nomination reads constructor
+    * bodies, parameter lists and parent constructor sets — none of which a rename touches — so the
+    * shapes agree; what can differ is a promoted parameter's NAME, which the emitter may suffix
+    * `$p` to keep it from capturing an inherited member. `detail("primary")` is therefore the
+    * signature as the TIR holds it, which is the form every other row here is written in.
+    */
+  private def recordCtorFunnel(program: Program, translated: PortRun.Translated): Unit =
+    given Program = program
+    val plans = CtorFunnel.Plans(program)
+    def nested(cd: Tree.ClassDef): List[Tree.ClassDef] =
+      cd :: cd.body.collect { case c: Tree.ClassDef => nested(c) }.flatten
+    // this run's OWN units, minus the ones it does not write: a dropped type's constructors are
+    // replaced wholesale by injected Scala, so the funnel's answer about them describes nothing on
+    // disk. (`translated.foreign` is excluded by construction — `emitOrder` is the other half.)
+    val mine = translated.emitOrder.filterNot { u =>
+      program.symbolOf(u.symbol).exists(s => Substituted.tags(s) || policySubs.dropsType(s.fullName))
+    }
+    mine.flatMap(nested).foreach { cd =>
+      val p     = plans(cd)
+      val ctors = plans.constructorsOf(cd)
+      val acted = p.primary.isDefined || p.synthetic.nonEmpty
+      val trivial = p.synthetic.isEmpty && ctors.sizeIs <= 1
+      if acted && !trivial then
+        val primary =
+          if p.synthetic.nonEmpty then
+            p.synthetic.map((n, t) => s"$n: ${balticporter.tir.TirPrinter.tpe(t, balticporter.tir.TirPrinter.Style.canonical)}")
+              .mkString("(", ", ", ")")
+          else
+            p.primaryParams.map { v =>
+              val n = program.symbolOf(v.symbol).map(_.name).getOrElse("_")
+              s"$n: ${balticporter.tir.TirPrinter.tpe(v.tpt.tpe, balticporter.tir.TirPrinter.Style.canonical)}"
+            }.mkString("(", ", ", ")")
+        translated.decisions.record(Decision(
+          kind       = Decision.Kind.FunnelledCtor,
+          subject    = cd.symbol,
+          subjectFqn = program.symbolOf(cd.symbol).map(_.fullName).getOrElse("?"),
+          detail = Map(
+            "shape"        -> plans.shape(cd),
+            "primary"      -> primary,
+            "constructors" -> ctors.size.toString,
+            "superArgs"    -> p.superArgs.size.toString,
+            "escapes"      -> plans.promotionEscapes(cd).size.toString,
+            "why"          -> ("java lets every constructor pick its own `super(...)`; scala lets " +
+              "only the PRIMARY reach super, so one is nominated, its super arguments become the " +
+              "`extends` clause and its body becomes the class body — which runs on every " +
+              "construction path, `escapes` of which java did not run it on"),
+          ),
+          reason = Reason.Universal("ctor-funnel"),
+          origin = cd.origin,
+        ))
     }
 
   /** Write `decisions.tsv` beside the run's other artifacts, on every reporting run.
