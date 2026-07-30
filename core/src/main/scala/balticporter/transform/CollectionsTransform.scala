@@ -107,14 +107,19 @@ final class CollectionsTransform extends Phase, RequiresRuntime:
   )
 
   /** the java types this phase retypes — its POLICY, read back so a CHECK can ask what the phase
-    * did rather than guessing from a name (CLAUDE.md §4.56). The check below takes it as a
-    * parameter and hold no mapping of its own, which is what keeps the closure property §1(a)
+    * did rather than guessing from a name (CLAUDE.md §4.56). Both checks below take it as a
+    * parameter and hold no mapping of their own, which is what keeps the closure property §1(a)
     * while the mapping stays §1(b). */
   def mappedTypes: Set[String] = typeMap.keySet
 
   /** …and what each became, so a finding can say `java.util.List -> mutable.Buffer` instead of
     * naming only the half a reader already has. `"?"` for a type the phase does not map. */
   def targetOf(fqn: String): String = typeMap.get(fqn).map(_._1).getOrElse("?")
+
+  /** every scala/shim type this phase can PUT into a program — the other side of the boundary
+    * [[CollectionBoundaryCheck]] measures. Derived from the same map, so a new mapping widens
+    * both checks with no second list to update. */
+  def retypedTargets: Set[String] = typeMap.values.map(_._1).toSet
 
   /** [[CollectionClosureCheck]] over this phase's own mapping — the phase reports on its policy,
     * so the check cannot be run against a mapping that is not the one that ran. */
@@ -125,6 +130,15 @@ final class CollectionsTransform extends Phase, RequiresRuntime:
     * finding attributed to one of those belongs to the base (ENGINE-LIMITS D2). */
   def closure(program: Program, units: List[Tree.ClassDef]): List[CollectionClosureCheck.Finding] =
     CollectionClosureCheck.check(program, units, mappedTypes, targetOf)
+
+  /** [[CollectionBoundaryCheck]] over this phase's own mapping. Run on the program AFTER the
+    * phase: it counts the residue the retyping CREATED and did not close. */
+  def boundary(program: Program): List[CollectionBoundaryCheck.Finding] =
+    boundary(program, program.units)
+
+  /** …held to the units the run EMITS, for the reason [[closure]] gives. */
+  def boundary(program: Program, units: List[Tree.ClassDef]): List[CollectionBoundaryCheck.Finding] =
+    CollectionBoundaryCheck.check(program, units, mappedTypes, retypedTargets)
 
   /** scala nullary accessors that take NO parens (`def size: Int`) — a Java `size()`
     * emitted as `size()` would be an illegal application. Strip the `Apply`. */
@@ -755,8 +769,19 @@ final class CollectionsTransform extends Phase, RequiresRuntime:
       case Some(Kind.Set)                       if wants.contains(javaCollectionSym) => collectionFromSetSym
       case _                                                                          => SymId.None
     if factory == SymId.None then actual
-    else Tree.Apply(Tree.Ident(factory, TypeRepr.NoType, actual.origin), List(actual),
-                    factory, expected, actual.origin)
+    else
+      // The wrap is TYPED as what it now emits, which is the RETYPED expected type and not the one
+      // read above. `wrapIterableArgs` takes its `expected` from a FORMAL in the symbol table, and
+      // the table is retyped AFTER the trees (see `run`) — so the raw value is still
+      // `java.util.Collection` while the emitted call is a `JavaCollection.from(...)`. Left as it
+      // was, this node claimed a java type the port no longer produces, which is exactly the
+      // invariant the stream collapse had to learn (ENGINE-LIMITS K6's first rule) and which
+      // `CollectionBoundaryCheck` reports as `MappedTypeSurvived` — it found these three sites.
+      // No emitted text moves: nothing prints an `Apply`'s own type. What moves is what a LATER
+      // reader concludes about the value.
+      val tpe = wants.map(withHead(expected, _)).getOrElse(expected)
+      Tree.Apply(Tree.Ident(factory, TypeRepr.NoType, actual.origin), List(actual),
+                 factory, tpe, actual.origin)
 
   /** `m.keySet()` — see [[coerce]]. The same structural test [[transformValDef]] uses, so the two
     * places that know this node's `tpe` overstates the emitted scala agree by construction. */
