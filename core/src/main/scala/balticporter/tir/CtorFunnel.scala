@@ -225,7 +225,10 @@ object CtorFunnel:
       * An ABSENT delegation is java's implicit `super()`, which reaches no peer of this class, so
       * "no leading `this(...)`" is a negative answer and not an unknown. */
     private def reachesCtor(d: Tree.DefDef, target: SymId, depth: Int): Boolean =
-      d.symbol == target || (depth <= 8 && (stmtsOf(d).headOption match
+      // through `headStmt`, never the raw head: a java comment above the `this(...)` wraps it in
+      // `Tree.Commented`, and matching the raw statement counted that constructor as an ESCAPE —
+      // a finding manufactured by a comment (found at the E1 merge, pinned in the spec).
+      d.symbol == target || (depth <= 8 && (headStmt(d) match
         case Some(Tree.Apply(Tree.Select(r, m, _, _), _, _, _, _))
             if !r.isInstanceOf[Tree.Super] && isInitName(program, m) =>
           defOf(m).exists(reachesCtor(_, target, depth + 1))

@@ -98,3 +98,23 @@ class CtorFunnelPromotedBodySpec extends munit.FunSuite:
   test("the whole check carries it, not just the direct call") {
     assert(OmissionCheck.check(program).exists(_.what == "promoted constructor body runs on every path"))
   }
+
+  // A comment above the delegation must not manufacture an escape. `reachesCtor` reads the head
+  // statement THROUGH its `Tree.Commented` wrapper (`headStmt`); matched raw, the wrapped
+  // `this(...)` fell to the default arm and the constructor was reported as running the promoted
+  // body on a path java skipped — a finding created by a comment (found at the trivia merge).
+  test("a COMMENT above the `this()` delegation does not turn it into an escape") {
+    val commented =
+      """package demo2;
+        |class Audited {
+        |  int n;
+        |  Audited() { this.n = -1; }
+        |  Audited(int k) {
+        |    // delegate first, as every sibling does
+        |    this();
+        |  }
+        |}
+        |""".stripMargin
+    val program = Pipeline.run(SpoonTir.fromSource(commented), Nil)
+    assertEquals(OmissionCheck.promotedBodyOnEveryPath(program).map(_.owner), Nil)
+  }
