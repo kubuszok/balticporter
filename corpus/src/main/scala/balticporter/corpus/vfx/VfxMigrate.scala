@@ -128,6 +128,37 @@ object VfxPolicy:
       // restated; longest-prefix-wins keeps the two apart.
       packageRenames = Map("com.crashinvaders.vfx" -> "sge.vfx"),
       surface = List(
+        // `VfxGLUtils`' STATIC INITIALISER is gdx-vfx's one reflective site, and the reflection is
+        // there to reach a class this port does not have:
+        //
+        //   if (Gdx.app.getType() == ApplicationType.WebGL)
+        //     glExtension = (VfxGlExtension) ClassReflection.newInstance(
+        //         ClassReflection.forName("com.crashinvaders.vfx.gwt.GwtVfxGlExtension"));
+        //   else
+        //     glExtension = new DefaultVfxGlExtension();
+        //
+        // `ClassReflection` is a type the BASE drops — reflective instantiation is the one thing
+        // Scala.js and Scala Native cannot do — and `GwtVfxGlExtension` lives in `gdx-vfx/gwt`,
+        // which is out of scope (sge targets Native and JS, not GWT). So the branch is not merely
+        // unported, it is UNREACHABLE: nothing in this port can ever be a WebGL application whose
+        // GL extension is that class. Keeping the reflective call to preserve a branch that cannot
+        // be taken would fail to compile for no behaviour.
+        //
+        // The reference hand port reached the same place: `../sge/sge-extension/vfx/src/main/scala/
+        // sge/vfx/gl/VfxGLUtils.scala` has no WebGL branch at all — `initExtension()` assigns
+        // `DefaultVfxGlExtension()` unconditionally (CLAUDE.md §3.5: it SOLVED this, it did not
+        // skip it). This is the same solution, expressed as policy rather than as a fork: the other
+        // ~100 lines of `VfxGLUtils` — shader compilation, the viewport query, the GL state query —
+        // still translate mechanically and still track upstream.
+        //
+        // NB the KEY is the UPSTREAM namespace (the phase matches the model before the rename runs)
+        // and the BODY is the port's FINAL namespace (it is spliced verbatim and the rename never
+        // sees it). `<clinit>` is what the frontend names a `static { }` block; an instance
+        // initialiser is `<initblock>`.
+        new balticporter.transform.MethodBodyTransform(Map(
+          "com.crashinvaders.vfx.gl.VfxGLUtils#<clinit>" ->
+            "{ sge.vfx.gl.VfxGLUtils.glExtension = new sge.vfx.gl.DefaultVfxGlExtension() }",
+        )),
         // LAST, deliberately, for the reason AshleyPolicy states: this reads what the BASE actually
         // emitted and reports a reference the base does not ship, so it must run after any seam
         // that re-points such a reference, or it reports the very sites the next phase repairs. A
