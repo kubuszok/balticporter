@@ -19,8 +19,9 @@ just gdx-measure          # libGDX core        (emit → checks → break residu
 just gdx-test-measure     # libGDX's own suite (… → compile → RUN → correlate)
 just ashley-measure       # Ashley + its suite, compiled WITH libGDX core
 just anim8-measure        # anim8-gdx, compiled WITH libGDX core (a dependent port; hand-written suite, §7)
-just gltf-measure         # gdx-gltf + both its suites, compiled WITH libGDX core (§7.5)
-just screens-measure      # libgdx-screenmanager, compiled WITH libGDX core (hand-written suite, §8)
+just gltf-measure         # gdx-gltf + both its suites, compiled WITH libGDX core (§8)
+just screens-measure      # libgdx-screenmanager, compiled WITH libGDX core (hand-written suite, §9)
+just vfx-measure          # gdx-vfx, compiled WITH libGDX core (a dependent port; hand-written suite, §10)
 just sg-measure           # simple-graphs + its suite
 just noise4j-measure      # noise4j (no upstream test suite — the lane asserts that, see §5)
 just jbump-measure        # jbump — a library that ships NO suite; the lane re-derives that zero (§6)
@@ -49,7 +50,7 @@ Measurements below are from one serial run of all lanes, 2026-07-31.
 
 ## 1. Corpus inventory
 
-Eight libraries are ported on the current (TIR) pipeline, across twelve runs — a library and its own
+Nine libraries are ported on the current (TIR) pipeline, across thirteen runs — a library and its own
 test suite are two ports, and the suite is a *dependent* of the library:
 
 | port | upstream | files in / out | tests | compile |
@@ -59,9 +60,10 @@ test suite are two ports, and the suite is a *dependent* of the library:
 | `ashley` | Ashley `ashley/src` | 21 → **21** (2 injected) | — | **0** |
 | `ashley-test` | Ashley `ashley/tests` | 18 → **18** | **112**, 108 pass / 2 fail / 2 skipped | **0** |
 | `anim8` | anim8-gdx `src/main/java` | 16 → **16** (0 dropped, 0 injected) | **23** hand-written, all passing — upstream has NO suite (§7.1) | **0** |
-| `gltf` | gdx-gltf `gltf/src` | 135 → **135** (0 dropped, 1 injected) | — | **8** (§7.5.4, all classified) |
-| `gltf-test` | gdx-gltf `gltf/test` | 1 of 7 → **1** (§7.5.1) | **8** ported + **22** hand-written, **none run** — the port does not compile | — |
-| `screens` | libgdx-screenmanager `src/main/java` | 22 → **22** (0 dropped, 0 injected) | **16** hand-written, all passing — upstream's 12 need an unported BACKEND (§8 libgdx-screenmanager) | **0** |
+| `gltf` | gdx-gltf `gltf/src` | 135 → **135** (0 dropped, 1 injected) | — | **8** (§8.4, all classified) |
+| `gltf-test` | gdx-gltf `gltf/test` | 1 of 7 → **1** (§8.1) | **8** ported + **22** hand-written, **none run** — the port does not compile | — |
+| `screens` | libgdx-screenmanager `src/main/java` | 22 → **22** (0 dropped, 0 injected) | **16** hand-written, all passing — upstream's 12 need an unported BACKEND (§9 libgdx-screenmanager) | **0** |
+| `vfx` | gdx-vfx `core/src` + `effects/src` | 44 → **44** (0 dropped, 0 injected) | **64** hand-written, all passing — upstream has NO test SOURCE SET (§10.1) | **0** |
 | `simple-graphs` | simple-graphs `src/main` | 29 → **33** | — | **0** |
 | `simple-graphs-test` | simple-graphs `src/test` | 7 → **7** | **16**, all passing | **0** |
 | `noise4j` | noise4j `src` | 12 → **12** | **none upstream** (§5) | **2** |
@@ -99,7 +101,7 @@ Where a doc disagreed with the tree, the tree won.
 | `sge-ai` | gdx-ai | 167 / 18,086 | 134 / 14,039 | **93 %** | 24 / 196 | Apache-2.0 |
 | `sge-tools` | libGDX `gdx-tools` | 80 / 17,773 (8 ported) | 8 / 3,857 | **10 %** — deliberate | 2 / 10 | Apache-2.0 |
 | `sge-gltf` | gdx-gltf | 135 / 11,307 | 141 / 17,615 | **100 %** | 40 / 150 | Apache-2.0 |
-| `sge-vfx` | gdx-vfx | 45 / 5,732 | 41 / 3,881 | **91 %** | 6 / 29 | Apache-2.0 |
+| `sge-vfx` | gdx-vfx | 45 / 5,732 | 41 / 3,881 | **91 %** — upstream now ported by the engine, §8 | 6 / 29 | Apache-2.0 |
 | `sge-jbump` | jbump | 19 / 4,045 | 14 / 2,054 | **73 %** | 7 / 32 | Apache-2.0 |
 | `sge-graphs` | simple-graphs | 29 / 3,784 | 25 / 2,525 | **82 %** | 8 / 77 | MIT |
 | `sge-controllers` | gdx-controllers | 29 / 2,884 | 18 / 2,141 | **27 %** — deliberate | 6 / 33 | Apache-2.0 |
@@ -241,7 +243,7 @@ over `gdx/test` as a **dependent** of it, inheriting its manifest.
 All 4 failures are `expected#derived`, 0 declared: every one is a `sge.utils.JsonTest` case whose stack
 reaches `com.badlogic.gdx.utils.Json` (emitted as `sge.utils.Json`), a type the manifest deliberately
 drops in favour of a codec-backed replacement. Nothing is hand-listed — the classification follows the
-manifest (`CLAUDE.md` §7.1).
+manifest (`CLAUDE.md` §5.1).
 
 The path OUT of those 4 is already measured (from the pre-consolidation status file, kept because
 it is the analysis a fix starts from): JSON *decoding* raises `UnsupportedOperationException`
@@ -898,7 +900,7 @@ the available-and-unported test suites: 20 FILES, 0 tests.)
 
 That leaves the port with no behavioural gate at all, which `CLAUDE.md` §3 says is not a gate. So
 `anim8-core/src/test/scala` holds **23 hand-written MUnit tests** — the only thing in that module a
-human wrote (`src_managed/` is the build product, §7.5) — adapted from the reference hand port's own
+human wrote (`src_managed/` is the build product, CLAUDE.md §5.5) — adapted from the reference hand port's own
 four suites and extended where a property was checkable. `just anim8-measure`'s discovery block
 prints both numbers and says out loud that the java side is legitimately zero, because `0 == 0`
 reading as agreement is precisely the silent success `java_test_count` exists to prevent.
@@ -1046,7 +1048,7 @@ a port that drops its PNG chunk framer has dropped PNG, and the JVM is a target 
 
 ---
 
-## 7.5 gdx-gltf — the port that measures a DEPENDENT's seams
+## 8. gdx-gltf — the port that measures a DEPENDENT's seams
 
 `net.mgsx.gltf → sge.gltf`, Apache-2.0. **The largest port after libGDX core itself — 135 types /
 11,307 lines — and the corpus's first genuine THIRD-PARTY extension.** Reproduce with
@@ -1064,7 +1066,7 @@ Scala this run never sees — it resolves against libGDX's *Java* (§1.5) — so
 test of whether the base's transforms produce a surface a deep subclass hierarchy can extend. **Six
 of its eight remaining errors are in exactly that seam**, and none of them is visible from the base.
 
-### 7.5.1 Scope, and the test census
+### 8.1 Scope, and the test census
 
 `gltf/src` (135 files) only. Excluded and named rather than silently filtered: `demo/` (35 files, a
 libGDX application with desktop/html/android launchers) and `ibl-composer/` (25, a VisUI authoring
@@ -1090,7 +1092,7 @@ NON-ZERO offset because at zero an ignored offset is indistinguishable from a re
 prints the two numbers SEPARATELY — a ported test and a written one are different evidence — and
 `reconcile_outcomes` gates on the sum.
 
-### 7.5.2 Measured state
+### 8.2 Measured state
 
 | gate | `gltf` | `gltf-test` |
 |---|---|---|
@@ -1106,7 +1108,7 @@ prints the two numbers SEPARATELY — a ported test and a written one are differ
 | porter notes uncovered · break residue | 0 · **0** | 0 · 0 |
 | source map | 135 units / 1,523 members | 1 / 9 |
 | decisions recorded | 1,763 rows, **548** about gdx-gltf's own declarations; 1,215 withheld as the base's (D2) | 44, 2,937 withheld |
-| **tests** | 8 ported + 22 hand-written = **30, NONE RUN** — the port does not compile (§7.5.4) | |
+| **tests** | 8 ported + 22 hand-written = **30, NONE RUN** — the port does not compile (§8.4) | |
 
 **Error trajectory: 19 → 16 → 14 → 9 → 8**, on 135 files at the first attempt. `break residue` is
 **0** and `portability(emitted)` is **0** on a library full of `switch`-driven enum mapping, which is
@@ -1118,7 +1120,7 @@ code they describe is deliberately not in the port, so the comments go with it �
 counting them is the honest behaviour, not a defect. Expect any `MethodBodyTransform` entry to cost
 its body's comments.
 
-### 7.5.3 What this library taught the engine — three (a) fixes and a fourth found by reading
+### 8.3 What this library taught the engine — three (a) fixes and a fourth found by reading
 
 | key | the gap | cost |
 |---|---|---|
@@ -1147,7 +1149,7 @@ REFERENCE an injected replacement (six of its files use libGDX's substituted `Js
 times that the base "emits nothing at that name and nothing replaces it" about a type it compiles
 against. This is `CLAUDE.md` §4.56 at a third artifact.
 
-### 7.5.4 The residue — 8 errors, all classified, and why the tests cannot run
+### 8.4 The residue — 8 errors, all classified, and why the tests cannot run
 
 The port does not compile, so **none of its 30 tests has ever executed.** `CLAUDE.md` §3 is explicit
 that a test which cannot run is not a test that passed, and the lane says so rather than reporting a
@@ -1177,7 +1179,7 @@ Nothing in the dependent's own run disagrees with itself: `ManifestAgreement` re
 funnel plan is not a manifest key, and the port map records `Attribute` as `Ported`, which it is. The
 disagreement exists only when the two modules are compiled together.
 
-### 7.5.5 Do NOT retry
+### 8.5 Do NOT retry
 
 - **Reading `Phase.transformType` bare for "is this named as a type".** 29 of libGDX's 31 constant
   holders de-collapsed, 36 members moved, compile still 0 and no check count moved. See D6.
@@ -1192,7 +1194,7 @@ disagreement exists only when the two modules are compiled together.
   upstream permanently to hide two engine gaps, and `ENGINE-LIMITS.md` K3 is the rule against it:
   injected sources are for SEMANTICS the target lacks, never for adapting SHAPES.
 
-### 7.5.6 Remaining work, highest value first
+### 8.6 Remaining work, highest value first
 
 - **D4 (3 errors).** A class the run does not EMIT must have its funnel plan READ, not recomputed —
   from the base's published port map, which is already the channel for "what did the base actually
@@ -1212,7 +1214,7 @@ disagreement exists only when the two modules are compiled together.
   deliberately drops — the reference hand port replaced it with 2,268 lines of hand-written Jsoniter
   codecs (`GLTFCodecs`, `GLTFExporterJson`), which is a decision this port has not made.
 
-### 7.5.7 What the reference port did — `CLAUDE.md` §3.5
+### 8.7 What the reference port did — `CLAUDE.md` §3.5
 
 `../sge/sge-extension/gltf` is **100 % coverage**, 135 upstream types → 141 Scala files, with six
 files that have no upstream counterpart. Two things it settles and one it does not:
@@ -1235,7 +1237,7 @@ files that have no upstream counterpart. Two things it settles and one it does n
 
 ---
 
-## 8. libgdx-screenmanager — the port with a dependency the corpus does not own
+## 9. libgdx-screenmanager — the port with a dependency the corpus does not own
 
 `de.eskalon.commons.{screen,core,utils} → sge.screen{,.utils}`, Apache-2.0. **A dependent port of
 libGDX core**, in the same shape as Ashley's and anim8's: `just screens-measure` compiles libGDX
@@ -1254,14 +1256,14 @@ corpus library had yet — libGDX core depends on nothing, and Ashley, anim8 and
 depend on a module the corpus DOES port. It is also the first port to ship a non-empty
 `src/main/scala`.
 
-### 8.1 Scope, named rather than silently dropped
+### 9.1 Scope, named rather than silently dropped
 
 `src/main/java`, 22 types (23 files minus `package-info.java`).
 
 `src/example/java` (5 files) is out of scope and named: it is a `gdx-backend-lwjgl3` demo
-application, and no libGDX backend is ported (§1.1's first surprise). `src/test/java` is §8.4.
+application, and no libGDX backend is ported (§1.1's first surprise). `src/test/java` is §9.4.
 
-### 8.2 Measured state
+### 9.2 Measured state
 
 | gate | `screens` |
 |---|---|
@@ -1277,7 +1279,7 @@ application, and no libGDX backend is ported (§1.1's first surprise). `src/test
 | porter notes uncovered · break residue | 0 · **0** |
 | source map | 22 units / 175 members; port map 37 types / 169 members |
 | decisions recorded | 139 rows (`RenamedMember` 45, `RetypedSignature` 34, `RenamedPackage` 22, `DroppedMember` 16, `DroppedType` 11, `FunnelledCtor` 11); 1,810 withheld as the base's (`ENGINE-LIMITS` D2) |
-| **tests** | **16 of 16 PASSING** (hand-written; upstream's 12 are §8.4) |
+| **tests** | **16 of 16 PASSING** (hand-written; upstream's 12 are §9.4) |
 
 **`omissions` and `portability(emitted)` are both 0**, which no other dependent port has managed —
 the 151 portability sites are libGDX core's own, seen through the resolution root, and identical to
@@ -1286,7 +1288,7 @@ what `just gdx-measure` reports.
 **Error trajectory.** Two numbers, because two different things were being counted:
 
 - **guacamole references the emitted Scala could not resolve: 26 → 0**, closed by the engine fix in
-  §8.5. Measured by `grep -o 'de\.damios[A-Za-z0-9_.]*' screens-core/src_managed`, NOT by the
+  §9.5. Measured by `grep -o 'de\.damios[A-Za-z0-9_.]*' screens-core/src_managed`, NOT by the
   compiler, because the compiler never saw them: the fix landed before the first compile. 23 static
   calls and 3 annotations.
 - **compile errors: 5 → 0.** Four `@org.jspecify.annotations.Nullable` (the annotation jar was not
@@ -1294,7 +1296,7 @@ what `just gdx-measure` reports.
   one shim written against a Scala vararg where the engine emits a Java `T...` as `Array[T]`
   (`ENGINE-LIMITS` K6.5, from the other side: the SHIM has to match what the emitter produces).
 
-### 8.3 guacamole — a dependency the corpus resolves and does not port
+### 9.3 guacamole — a dependency the corpus resolves and does not port
 
 Resolution and emission are two problems and only the first was already solved.
 
@@ -1329,7 +1331,7 @@ Two things the shims must get exactly right, both learned from a failure:
   that is what Java resolved. A `Tuple2` has `_1`/`_2` and would compile at the declaration and fail
   at every use.
 
-### 8.4 The upstream suite is NOT migrated — 12 `@Test`, 10 of them structurally out of reach
+### 9.4 The upstream suite is NOT migrated — 12 `@Test`, 10 of them structurally out of reach
 
 Upstream ships 7 test files and 12 `@Test`. There is no `ScreensTestMigrate`, and the reason is not
 effort:
@@ -1363,7 +1365,7 @@ layout and `ScreenManager.render`'s framebuffer round trip all issue a GL call o
 statement. They are covered by compilation only. That is the same limit anim8's suite has and for
 the same reason (§7.8).
 
-### 8.5 What this library taught the engine — two (a) fixes, no (b), no (c)
+### 9.5 What this library taught the engine — two (a) fixes, no (b), no (c)
 
 Both are completeness gaps in machinery that already existed, both are in `ENGINE-LIMITS.md`, both
 are pinned by `TypeRedirectTransformSpec`, and both moved **0 members** on every other port:
@@ -1378,7 +1380,7 @@ OCCURRENCE KIND, with the negative half.** The positive assertion passes on a pa
 promise went untested for as long as it did because the first library to use the phase redirected a
 type with no statics and no annotation use.
 
-### 8.6 Where this port is strictly better than the reference hand port
+### 9.6 Where this port is strictly better than the reference hand port
 
 `sge-extension/screens` is 20 Scala files to these 22 Java ones (§1.1: 86 % coverage). The
 difference is not only arithmetic:
@@ -1392,7 +1394,7 @@ difference is not only arithmetic:
   on guacamole FOR, and this port carries it — **verified present in the emitted
   `ScreenManager.createFrameBuffer()`, whose return type is the redirected
   `sge.screen.guacamole.NestableFrameBuffer`.** (What is NOT verified is its RUNTIME behaviour: see
-  §8.4 — the nesting contract needs a GL context.)
+  §9.4 — the nesting contract needs a GL context.)
 - **`ManagedScreenAdapter`, `BasicInputMultiplexer` and `Supplier` are simply not in sge.** All
   three are ported mechanically here, and the hand-written suite covers all three — including
   upstream's own `BasicInputMultiplexerTest`, which is coverage of a type the reference port does
@@ -1400,10 +1402,10 @@ difference is not only arithmetic:
 
 sge did hand-port guacamole's `QuadMeshGenerator` into `sge.screen.utils`, and it also renamed
 `ScreenTransition.render`'s parameters and moved `ManagedGame` from `core` to `screen`. The package
-flattening is followed (three rename pairs, §8.3); the parameter renaming is not, because it is a
+flattening is followed (three rename pairs, §9.3); the parameter renaming is not, because it is a
 redesign no mechanical rule produces.
 
-### 8.7 Do NOT retry
+### 9.7 Do NOT retry
 
 - **Do not fix a static redirect by remapping the qualifier `Ident` alone.** For a type the frontend
   PARSED, `TirEmitter.staticThroughInstance` re-derives the name from the member's owner and undoes
@@ -1421,16 +1423,16 @@ redesign no mechanical rule produces.
 - **Do not put guacamole on the frontend classpath without excluding libGDX.** guacamole's POM
   pulls `com.badlogicgames.gdx:gdx:1.13.5`, and this port resolves libGDX from SOURCE; two answers
   to every `com.badlogic.gdx.*` name, decided by scan order, is not something to leave to chance.
-- **Do not attempt the upstream suite before a libGDX backend is ported** (§8.4). Ten of the twelve
+- **Do not attempt the upstream suite before a libGDX backend is ported** (§9.4). Ten of the twelve
   tests are a fixture, not a body.
 
-### 8.8 Remaining
+### 9.8 Remaining
 
 - **7 trivia residues**, all `// don't do anything by default` / `// do nothing` / `// not needed`
   line comments inside method bodies the emitter renders as `()`. `ENGINE-LIMITS` V1: a comment on a
   construct the EMISSION consumes has nowhere to go.
 - **Behavioural coverage is 16 tests over 8 of 22 types**, and the GL half of the library is covered
-  by compilation only (§8.4). The eleven concrete transitions all render through a `SpriteBatch` or
+  by compilation only (§9.4). The eleven concrete transitions all render through a `SpriteBatch` or
   a `ShaderProgram`; `ShaderCompatibilityHelper`'s pure string rewrites are asserted, the rest is
   not.
 - **guacamole is not ported.** Ten types are hand-written Scala rather than emitted, which is 458
@@ -1440,7 +1442,207 @@ redesign no mechanical rule produces.
 
 ---
 
-## 8. Publishability — what sge and ssg need before they can depend on this
+## 10. gdx-vfx — the GL-facing port, and the one whose API surface is mostly its BASE's
+
+`com.crashinvaders.vfx → sge.vfx`, Apache-2.0. **The fifth corpus library and the third genuine
+dependent port.** Reproduce with `just vfx-measure`, which compiles libGDX core's emitted Scala,
+gdx-vfx's emitted Scala and gdx-vfx's hand-written suite on **one** `scala-cli` invocation — the
+port is `RuntimeMode.Dependency`, so the collection shims are vendored by libGDX core and compiling
+`vfx-core` alone measures nothing.
+
+**Why it is in the corpus.** Every library before it either used libGDX as a toolbox (Ashley,
+anim8) or did not use it at all. gdx-vfx's whole reason for existing is a resource the JVM does not
+own: every effect is a `ShaderProgram` compiled from a `.vert`/`.frag` asset, driven through
+framebuffer ping-pong. Two consequences no earlier library produced:
+
+- **nearly every emitted signature mentions a type the BASE emitted** — `FrameBuffer`, `Mesh`,
+  `ShaderProgram`, `GL20`, `Texture`, `Pixmap.Format`, `Gdx`, `WidgetGroup`. That makes it the
+  sharpest test of `CLAUDE.md` §1.5 in the corpus: it can only compile if libGDX core's transforms
+  did to those signatures exactly what this run assumes they did, and `ManifestAgreement` reports 0
+  because the policy is `LibgdxPolicy.core` EXTENDED rather than restated.
+- **a reflective branch that exists only for a backend nobody ports** — see §10.3.
+
+### 10.1 Scope, named rather than silently dropped
+
+The two LIBRARY gradle modules, `gdx-vfx/core/src` (23 types) and `gdx-vfx/effects/src` (21),
+emitted into ONE sbt module. That is what the reference hand port does too
+(`../sge/sge-extension/vfx` holds both at `sge.vfx`): they share one package root, effects depends
+on core, and nothing depends on effects alone, so a second port would buy a module boundary the
+consumer does not have.
+
+Excluded, and named:
+
+- **`gdx-vfx/gwt/src`** (1 file, `GwtVfxGlExtension`) — the GWT backend's `VfxGlExtension`. sge
+  targets Scala Native and Scala.js; the reference port does not carry it either. Its absence is
+  what makes §10.3's reflective branch unreachable rather than merely unported.
+- **`demo/`** (74 files) — five launcher modules and an LML/VisUI-driven demo application, needing
+  third-party libraries that are not in the corpus.
+
+**`@Test` over the WHOLE upstream checkout, comments stripped: 0.** gdx-vfx ships no test source set
+at all — not a set of demos misread as one (anim8) and not a runnable sample module (jbump), simply
+nothing. So there is no `VfxTestMigrate`, and the behavioural gate is anim8's precedent: **64
+hand-written MUnit tests** under `vfx-core/src/test/scala` (§10.5). `just vfx-measure` prints the
+upstream zero and the hand-written count side by side, because `0 == 0` reading as agreement is the
+silent success `java_test_count` exists to prevent.
+
+### 10.2 Measured state
+
+| gate | `vfx` |
+|---|---|
+| compile errors (with libGDX core, Scala 3.8.4) | **0** |
+| files emitted | **44** (0 dropped, 0 injected), 4,936 lines from 5,663 java |
+| model | 649 units / 53,996 symbols |
+| signature consistency | 0 |
+| omissions | **2** (§10.6) |
+| portability (all / emitted / injected) | 151 / **0** / 0 |
+| substitutions · manifest · port map · policy | 0 · 0 · 0 · 0 |
+| collection closure · boundary · shared-iterator | 0 · 0 · 0 |
+| trivia | **11** (§10.6) |
+| porter notes uncovered · break residue | 0 · **0** |
+| source map | 44 units / 910 members |
+| decisions recorded | 350 rows about gdx-vfx's own declarations (216 `RetypedSignature`, 46 `RenamedMember`, 44 `RenamedPackage`, 16 `DroppedMember`, 15 `FunnelledCtor`, 11 `DroppedType`, 1 `RedirectedCall`, 1 `SubstitutedBody`); 1,216 withheld as the base's, per `ENGINE-LIMITS.md` D2 |
+| **tests** | **64 of 64 PASSING** (6 files, hand-written) |
+
+**Error trajectory: 11 → 10 → 7 → 6 → 5 → 4 → 1 → 0.** One §1(b) policy step and six §1(a) engine
+fixes, one commit and one measurement each. `portability(emitted)` is **0**: the 151 are every one
+in libGDX's own files, which D2's ownership filter keeps out of this port's emitted column.
+
+### 10.3 The one policy decision — a §1(b) body substitution, and why it is not a fork
+
+`VfxGLUtils`' STATIC INITIALISER is gdx-vfx's only reflective site:
+
+```java
+if (Gdx.app.getType() == ApplicationType.WebGL)
+  glExtension = (VfxGlExtension) ClassReflection.newInstance(
+      ClassReflection.forName("com.crashinvaders.vfx.gwt.GwtVfxGlExtension"));
+else
+  glExtension = new DefaultVfxGlExtension();
+```
+
+Both halves are absent from this port BY DECISION: `ClassReflection` is a type the base drops
+(reflective instantiation is the one thing Scala.js and Native cannot do) and `gdx-vfx/gwt` is out
+of scope. So the branch is not merely unported — it is **unreachable**, and keeping the reflective
+call to preserve a branch that cannot be taken would fail to compile for no behaviour.
+
+`MethodBodyTransform` replaces the block with the else-branch alone, keyed
+`com.crashinvaders.vfx.gl.VfxGLUtils#<clinit>`. The reference hand port reached the same place —
+`../sge/sge-extension/vfx/.../VfxGLUtils.scala` has no WebGL branch at all, `initExtension()`
+assigns `DefaultVfxGlExtension()` unconditionally, so it SOLVED this rather than skipping it
+(`CLAUDE.md` §3.5). Expressing it as policy rather than as a fork keeps the other ~100 lines of that
+class — shader compilation, the viewport query, the GL state query — mechanically translated and
+tracking upstream. `port-map 2 → 0`, and it is the port's one `SubstitutedBody` decision.
+
+**No §1(c) rule, no new phase parameter, no injected source.** The rest of the manifest is a
+namespace claim, one package-rename pair and the base's inherited surface.
+
+### 10.4 What this library taught the engine — six (a) fixes, no (c)
+
+The keys are `ENGINE-LIMITS.md` entry numbers as they stood when this was written; each row names the
+entry's TITLE too, so a renumbering there does not orphan the reference.
+
+| key | entry title | cost |
+|---|---|---|
+| M8 | *A note is emitted only where the emitter ASKS for one — a member on a special path has none* | `porter-notes 1 → 0` |
+| K10 | *A TYPE-VARIABLE map key arrives carrying java's `Object` WIDENING* | 10 → 7 |
+| K11 | *A CAPACITY hint at a HASHED collection has no one-argument scala constructor* | 7 → 6 |
+| T13 | *`Enum.ordinal()` is part of every java enum's SURFACE, mentioned or not* | 6 → 5 |
+| L3 | *A CLASS LITERAL needs a CLASS — an all-static class named by one must not collapse* | 5 → 4 |
+| G20 | *A STATIC member sees NONE of its class's type parameters — carry it in the FRAME, not a flag* | 4 → 1 |
+| G21 | *A RAW result read through an ERASED RECEIVER must be TYPED as what it emits* | 1 → **0** |
+
+Every one is pinned by a spec through the pipeline — `MethodBodyTransformSpec`,
+`CollectionsTransformSpec`, `EnumCtorBodySpec`, `StaticCollapseSpec`, `StaticTypeParamScopeSpec`,
+`ErasedReceiverResultSpec` — and every one but T13 moved **0 members** on the other seven ports.
+
+**T13 is the exception and its blast radius is accounted**: it is emitted text for every ported
+enum. libGDX core 69 members, libGDX test 71, Ashley 75, anim8 71, noise4j 6, simple-graphs 0, jbump
+0 — every changed unit an enum or the type that declares one, verified against the members diff, and
+no error count, check count or test outcome moved anywhere. Baselines promoted in the same commit.
+
+### 10.5 The behavioural gate is HAND-WRITTEN, and it stops at the first GL call
+
+64 tests over six suites, every expectation read off the UPSTREAM JAVA rather than off the emitted
+Scala — a test written from the output can only confirm the output. They target the defects that
+move no count (`CLAUDE.md` §4.4):
+
+| suite | what it pins |
+|---|---|
+| `PrioritizedArraySuite` (15) | the iterator's `index++` USED AS A VALUE; `remove(int)` against `remove(T)` on an `Integer` element type; sort stability; the shared-iterator reset |
+| `ValueArrayMapSuite` (11) | java's null-on-miss against scala's `Option`; `put`/`remove` returning the PREVIOUS value; `findKey`'s reference `==`; the reused scratch key array |
+| `CommonUtilsSuite` (11) | the `switch` whose only exit is a throwing default; the shared `tmpColor` aliasing; `Align`'s `static final` constants; null-safe compare in both directions |
+| `VfxFrameBufferSuite` (14) | the modulo in `changeToNext`; the `continue` that skips an uninitialised FBO; the two `IllegalStateException`s; the static nesting counter |
+| `VfxEnumSuite` (7) | `ordinal()`, `name()`, `valueOf`, and the enum CONSTRUCTOR BODY two levels deep (`BlurType.tap.radius`) — T10's exact shape |
+| `VfxGlViewportSuite` (4) | the self-returning setters `VfxGLUtils.getViewport` relies on |
+
+**Canary-checked rather than assumed**: flipping the `Tap5x5.radius` and post-increment expectations
+turns both suites red and nothing else.
+
+**Where it stops is a fact about the library, not a compromise.** A `VfxFrameBuffer`'s constructor
+only allocates matrices; `initialize(w, h)` is the first line that touches GL. So the rotation
+arithmetic, the guard clauses and the ping-pong swap are reachable and the rendering is not. The
+reference port covers the same ground with a headless GL stub over its own `Sge` context; this port
+emits libGDX's `Gdx` statics instead and has no context to stub, so it stops at the GL line rather
+than building a ~150-method `GL20` no-op.
+
+**Not covered at all**: the 21 effect classes and `VfxManager`/`VfxRenderContext`, whose every
+method is a shader draw. That is 27 of 44 types resting on compilation alone.
+
+### 10.6 Residues, named and classified
+
+- **omissions 2.** `ShaderVfxEffect`: one `@SuppressWarnings` dropped — a source-retention java
+  annotation with no scala meaning, correctly not emitted and correctly counted (T6). And
+  `PrioritizedArray`: one C7 promoted-constructor path — two roots, neither delegating, so the
+  nilary body (`items = new ValueArrayMap<>()`) also runs on the capacity path and is immediately
+  overwritten. Declared COST, not divergence, and `PrioritizedArraySuite`'s capacity test is what
+  says the observable behaviour is identical.
+- **trivia 11.** Nine are `//` comments inside bodies the emitter rewrites — the V1 category, on
+  commented-out code and `// Do nothing.` markers. **Two are file-leading Apache blocks**
+  (`LensFlareEffect`, `LevelsEffect`), and those are a NEW limit: both files open with two
+  consecutive block comments and Spoon's compilation unit reports only the first. The licence text
+  itself survives — it IS the first block, and the second is an anonymous copy of the same notice —
+  so nothing legally material is lost here. `ENGINE-LIMITS.md` V3, open.
+- **`portability(all)` 151, `portability(emitted)` 0.** Every finding is in libGDX's own files, which
+  this port resolves against and does not emit. It is the base's number, reported here because the
+  program contains the base (D2).
+- **`PrioritizedArray` carries the shared-iterator hazard the `gdx-shared-iterator` rule looks for,
+  and the rule does not see it.** `PrioritizedArrayIterable` is a hand-copy of libGDX's own
+  alternating iterator1/iterator2 idiom, in gdx-vfx's namespace — so the §1(c) rule's list of
+  cached-iterator collections, which is a fact about `com.badlogic.gdx.utils`, misses it and reports
+  0. Correctly: the rule is libGDX's, and gdx-vfx re-implementing the idiom is gdx-vfx's own
+  invariant. Nesting an iteration over one `PrioritizedArray` inside another would terminate the
+  outer loop early, silently, exactly as it would in libGDX.
+
+### 10.7 Do NOT retry
+
+- **Extending `knownReceiverArgs`' unchecked-conversion guard ALONE was INERT** (1 → 1). The
+  plausible fix for `Found: Wrapper[Object] / Required: Wrapper[T]` is the guard; the guard was
+  never the problem. The node's recorded type said `Wrapper[T]` while the emitted scala had
+  `Wrapper[Object]`, so the comparison the guard feeds had already answered "these agree". Found by
+  a trace at the argument level after the guard change measured nothing (`CLAUDE.md` §4.6);
+  `ENGINE-LIMITS.md` G21, *A RAW result read through an ERASED RECEIVER must be TYPED as what it
+  emits*.
+- **Gating the static type-parameter scope at `classDef`'s `enclosingAcc` measured 0 change.** The
+  reading was right — an anonymous class in a static initialiser must capture no type parameters —
+  and the site was wrong twice over: `anonClass` does not go through `classDef` at all, and the
+  `inStatic` flag it would have consulted is reset by `execDef` for every instance method of the
+  anonymous body. The scope has to live in the FRAME; `ENGINE-LIMITS.md` G20, *A STATIC member sees
+  NONE of its class's type parameters*.
+
+### 10.8 Remaining
+
+- **27 of 44 types rest on compilation alone** (§10.5). Every effect class needs a GL context; the
+  cheapest real step is a headless `GL20` implementation in `vfx-core/src/test`, which is a large
+  hand-written file rather than a missing test.
+- **The two dropped file-leading licence blocks** (`ENGINE-LIMITS.md` V3, *Spoon attaches only ONE
+  of several consecutive FILE-LEADING comment blocks*) are a frontend harvest away, and the fix is
+  worth taking the next time a library's SECOND block carries different text.
+- **`gdx-vfx/gwt` stays unported** while no GWT/Scala.js backend exists in the corpus. If one ever
+  does, the §10.3 body substitution is the entry that has to be revisited — it is where the branch
+  went.
+
+---
+
+## 11. Publishability — what sge and ssg need before they can depend on this
 
 **The goal being evaluated.** sge and ssg stop hand-maintaining their ports and instead depend on
 Baltic Porter as a published library, feeding it Java sources plus per-library configuration — with
@@ -1509,7 +1711,7 @@ cannot yet say, for an *unmarked* error, is which of the three kinds the fix is.
 
 ---
 
-## 9. Remaining work, across the engine
+## 12. Remaining work, across the engine
 
 Maintained by deletion. Items are ordered by what they block, not by size.
 

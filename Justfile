@@ -1045,7 +1045,7 @@ jbump-measure:
     if [ "$JAVA_TESTS" = "0" ]; then
       echo "   NO SUITE UPSTREAM — nothing for the engine to port, so the behavioural gate for this"
       echo "   port is the DIFFERENTIAL PROBE below, not a ported suite. It is hand-written and must"
-      echo "   never be counted as a ported test (CLAUDE.md §3); PROGRESS.md §5 says what it covers."
+      echo "   never be counted as a ported test (CLAUDE.md §3); PROGRESS.md §jbump says what it covers."
     else
       echo "!! A SUITE HAS APPEARED UPSTREAM — $JAVA_TESTS @Test method(s). This port has no test"
       echo "   source set; add corpus/ports/jbump/test.conf (\`base = \"main.conf\"\`) and a lane stage."

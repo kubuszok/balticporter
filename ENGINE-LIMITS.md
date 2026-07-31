@@ -397,6 +397,79 @@ invent a second one.
 *Fix kind: (a) for the rule. Bounding only the overridden overload of an injected substitute is (b)
 policy in that library's manifest.*
 
+### G20. A STATIC member sees NONE of its class's type parameters — carry it in the FRAME, not a flag
+
+CLOSED. G15's rule ("gate on the BARRIER-AWARE frame, not on name resolution") was right and its
+implementation was one level too shallow: the gate was `inStatic`, a flag set per EXECUTABLE. It is
+reset the moment an anonymous class inside a static initialiser declares an INSTANCE method — which
+is what an anonymous class is made of — so the enclosing class's type parameters became reachable
+again, the raw fill reconstructed them, and the emitter put the whole thing in the COMPANION
+OBJECT, where they are not in scope.
+
+The idiom that finds it is a per-class object pool, and the java is written RAW for exactly the
+reason this rule states:
+
+```java
+private static class Wrapper<T> implements Pool.Poolable {
+  private static final Pool<Wrapper> pool = new Pool<Wrapper>() {
+    protected Wrapper newObject() { return new Wrapper(); }   // raw — `T` is out of scope
+  };
+}
+```
+
+**3 × `Not found: type T`** on gdx-vfx's `PrioritizedArray`, in one field. The scope now lives in the
+type-parameter frame: a static `execDef` starts from an EMPTY accessible map plus its OWN formals (a
+static generic method keeps its `E`), and a static `fieldDef` pushes an empty one around its
+initialiser. Everything lexically inside inherits it with no flag to reset — including the anonymous
+class, whose translation (`anonClass`) never touches the frame at all.
+
+Two things confirmed on the way out, both G2's: `?` round-trips across the override (the emitted
+`override def newObject(): Wrapper[?]` satisfies `Pool[Wrapper[?]]`), and `ctorTpe` already drops a
+wildcard argument list so `new Wrapper()` lets scala infer rather than emitting an illegal
+`new Wrapper[?]()`.
+
+**0 members moved** on libGDX core, libGDX test, Ashley, anim8, simple-graphs, noise4j and jbump —
+no other corpus library writes a generic static in a generic class. Spec:
+`StaticTypeParamScopeSpec`, four directions including "a static METHOD keeps its own parameters".
+
+*Fix kind: (a) engine — frontend. Built.*
+
+### G21. A RAW result read through an ERASED RECEIVER must be TYPED as what it emits
+
+CLOSED, and it is §0's root cause with a name. G11's erased-receiver view is correct and stays: a
+wildcard receiver whose callee depends on its type variables is called through java's own erased
+view. But the CALL's recorded type was still Spoon's, and Spoon reports the raw declared result —
+which the CALLER's name-directed fill then renders in the caller's variables:
+
+| | |
+|---|---|
+| emitted | `pool.obtain().asInstanceOf[W[Object]].init(item)` — a `W[Object]` |
+| node `tpe` | `W[T]` — the raw `W` rendered through the caller's fill |
+
+Nothing about the expression is wrong; the type recorded ON it is. The rule that pays for it is
+`knownReceiverArgs`, which compares the callee's substituted formal with the argument's type to
+decide java's unchecked conversion: it found `W[T]` against `W[T]`, concluded there was nothing to
+convert, and emitted no cast for a conversion java really performed.
+`Found: Wrapper[Object] / Required: Wrapper[T]` — gdx-vfx's last compile error.
+
+Two halves, both narrow, and both needed:
+
+- `erasedRecvResult` RE-TYPES the node (emitting no text) to the erased instantiation when the
+  DECLARED result is a raw generic use and the receiver was erased. This is the case `substFormal`
+  answers `None` for BY DESIGN — a raw use has nothing to substitute — so the existing path fell
+  through to "leave it alone" rather than to "say what it is".
+- `knownReceiverArgs` gains the ERASED direction of `uncheckedFrom`: the argument is an
+  `Object`-parameterised view of exactly the slot's type. `uncheckedFrom` demands the same type
+  CONSTRUCTOR, the same arity and every differing argument to be `Object` or a wildcard, which is
+  the shape of an erased or raw use and of nothing else.
+
+Measured alone, the guard extension was **INERT** — the retype is what makes it reachable, and that
+is the informative half (M4): the plausible fix was the guard, and the guard was not the problem.
+**0 members moved** on every other corpus port. Spec: `ErasedReceiverResultSpec`, negative-tested by
+gating the retype off.
+
+*Fix kind: (a) engine. Built.*
+
 ---
 
 ## 2. Constructors
@@ -863,6 +936,33 @@ then do, so it wants its own measured cycle and its own baseline promotion. Do n
 part of another change.
 
 *Fix kind: (a) engine — OPEN, and priced at 867 declarations of emitted-text movement.*
+### T13. `Enum.ordinal()` is part of every java enum's SURFACE, mentioned or not
+
+CLOSED. The enum lowering synthesised `name()`, `values()` and `valueOf(String)` and not the fourth
+member every java enum has. `java.lang.Enum.ordinal()` is FINAL there, so no enum declares it and no
+enum can opt out of it — which is precisely why a library reaches for it wherever the constants
+stand for consecutive integers somewhere ELSE. gdx-vfx's `CrtEffect` passes `lineStyle.ordinal()`
+straight into a shader `#define`, beside a comment saying the ordinals match the shader's own
+constants: `value ordinal is not a member of …`, and unlike `name()` there is no substitute a reader
+would reach for.
+
+Emitted as an ABSTRACT member on the sealed class with one `override def ordinal(): Int = <index>`
+per constant — java's own O(1) field read. `values().indexOf(this)` would be one line instead of
+n + 1 and would allocate an array on every call, which is the wrong trade for a member a render loop
+calls.
+
+**Suppressed WHOLE — base and constants together — when the enum declares its own `ordinal`**, for
+T11's reason one member along: java's two namespaces let a FIELD or a promoted constructor PARAMETER
+carry the name beside the final method, and scala's one namespace cannot. Half a suppression is
+worse than none — every constant would `override` a member the base no longer declares.
+
+Blast radius, since this is emitted text for every ported enum and therefore the one entry here with
+a real one: **libGDX core 69 members, libGDX test 71, Ashley 75, anim8 71, noise4j 6, simple-graphs
+0, jbump 0** — every changed unit an enum or the type that declares one, verified against the
+members diff. No error count and no check count moved anywhere. Spec: `EnumCtorBodySpec`, with the
+negative.
+
+*Fix kind: (a) engine. Built.*
 
 ---
 
@@ -1288,6 +1388,50 @@ the iterator protocol before emission — because an empty parameter makes it a 
 lane stays byte-identical.
 
 *Fix kind: (a) in effect, best delivered as (b). Unbuilt.*
+
+### K10. A TYPE-VARIABLE map key arrives carrying java's `Object` WIDENING
+
+CLOSED, and it is K5.6's rule met one slot along: *a phase that retypes owns the coercions around
+what it moved.* Java declares `Map.get`, `Map.remove` and `Map.containsKey` over `Object`, so a key
+whose static type is a TYPE VARIABLE reaches `CollectionsTransform` already wrapped —
+`key.asInstanceOf[java.lang.Object]`, which the frontend synthesises off the DECLARED formal (G14)
+and which is right for a call to a java `Map`. Scala's `Map[K, V]` declares the same three over `K`,
+so once the receiver is retyped that widening is the only thing between the argument and the
+parameter: `Found: Object / Required: K`, three times in gdx-vfx's `ValueArrayMap`.
+
+The strip is STRUCTURAL and names no type (`CLAUDE.md` §4.56): the cast goes exactly when what it
+WRAPS already has the type the rewritten member wants. A key that is genuinely some other `Object` —
+java permits any — is left alone, and the boundary then still fails to compile naming both types,
+which is the error a reader can act on (M6).
+
+**0 members moved** on any other corpus port: no library before this one passed a type-variable key
+to a retyped map, which is why the seam went four libraries without being seen. Spec:
+`CollectionsTransformSpec`, both directions.
+
+*Fix kind: (a) engine.*
+
+### K11. A CAPACITY hint at a HASHED collection has no one-argument scala constructor
+
+CLOSED. `copyConstructor`'s own note says a java capacity hint "maps correctly by accident", and for
+the SEQUENCE targets it does — `new ArrayBuffer(10)` means what `new ArrayList<>(10)` means. It is
+false for the HASHED ones and silently so: `scala.collection.mutable.HashMap` declares `()` and
+`(initialCapacity: Int, loadFactor: Double)` and nothing between, so java's one-argument form lands
+on no overload at all (E134, gdx-vfx's `ValueArrayMap`).
+
+Java's own one-argument constructor IS `(initialCapacity, DEFAULT_LOAD_FACTOR)` and scala's
+companion publishes the same 0.75 as `defaultLoadFactor`, so supplying it is java's definition
+rather than a guess — the difference between a translation and an approximation.
+
+The two `new` arms are disjoint by construction: `copyConstructor` takes a single COLLECTION
+argument, `capacityConstructor` a single `scala.Int`, and java's `HashMap`/`HashSet` have no other
+one-argument constructor. The two-argument `(int, float)` form needs nothing — scala widens the
+`Float` to the `Double`.
+
+**0 members moved** elsewhere, and that is arithmetic rather than luck: a one-argument hashed
+constructor was a compile error before this, so no port that compiles could have had one.
+
+*Fix kind: (a) engine; the SET of hashed targets is closed over the phase's own `typeMap`, so it is
+the phase's record and not a name test.*
 
 ---
 
@@ -1730,6 +1874,25 @@ is why this is here rather than in a commit message:
   an upstream Javadoc that genuinely discusses the type is text this check has always counted.
 
 *Fix kind: (a).*
+
+### M8. A note is emitted only where the emitter ASKS for one — a member on a special path has none
+
+CLOSED, and it is M7's family from the other side. `NoteCoverageCheck` runs in both directions, so
+"a decision with no note" is a fatal finding — and it fires the moment a policy decides about a
+member the emitter renders through a path that never calls `declNotes`. A java `static { }` block is
+one: it is carried as a synthetic member and emitted as `locally { … }`, not as a `def`, so
+`MethodBodyTransform` replacing a `<clinit>`'s body recorded its decision and shipped no note beside
+the code.
+
+Worth keeping because of what it is invisible to: the output compiles either way, no other count
+moves, and no test breaks — the same profile as the trivia regression §4.58 describes. The general
+form is *every emission path that renders a DECLARATION owes it its notes*, and the ones to suspect
+are exactly the members with no `def`/`val` keyword of their own.
+
+`porter-notes 1 -> 0` on gdx-vfx; **0 members moved** elsewhere, since no other port decides about a
+`<clinit>`. Spec: `MethodBodyTransformSpec`'s `<clinit>` case asserts the body AND the note.
+
+*Fix kind: (a) engine.*
 
 ---
 
@@ -2243,6 +2406,26 @@ either way:
 
 *Fix kind: (a) engine.*
 
+### V3. Spoon attaches only ONE of several consecutive FILE-LEADING comment blocks — 2 sites
+
+OPEN, and measured rather than reasoned. `SpoonTir.fileHeader` takes every comment the compilation
+unit reports, which is the right shape; the limit is upstream of it. Where a java file opens with
+TWO consecutive block comments before the `package` declaration, Spoon's
+`CtCompilationUnit.getComments` carries the first and the second is attached to nothing this walk
+reaches — so it is dropped, and only `TriviaCheck`'s independent re-lex can see it.
+
+gdx-vfx has exactly 2 such files (`LensFlareEffect`, `LevelsEffect`), both of which open with a
+copyrighted Apache notice followed by an anonymous copy of the same notice. **The licence text
+itself survives** — it is the FIRST block — so nothing legally material is lost here, which is why
+this is recorded and not fixed under time pressure. It would not be true of a file whose second
+block carried a different notice.
+
+Zero sites across the other six corpus libraries. The fix is a source-text harvest between the last
+claimed comment and the `package` keyword rather than another walk over Spoon's attachment model;
+budget it as frontend work, and note that it moves emitted text only for files that have the shape.
+
+*Fix kind: (a) engine — frontend. Unbuilt.*
+
 ---
 
 ## 11. Literals and the emitted file's LEXICAL correctness
@@ -2299,3 +2482,36 @@ emitter gains later is covered without being listed.
 
 *Fix kind: (a) engine. Built; `EmitterLiteralSpec` carries the negative half too — `-y` and `!b` are
 untouched.*
+
+### L3. A CLASS LITERAL needs a CLASS — an all-static class named by one must not collapse
+
+CLOSED. An all-static java utility class emits as a Scala `object`, which is a real improvement: its
+statics and its nested types then live together and see each other by simple name. The collapse
+already withholds for the two constructs an object cannot serve — something EXTENDS it, something
+`new`s it — and `classOf` is the third, because an object's only type is `X.type`.
+
+The idiom that finds it is java's log tag, inside the class it names:
+
+```java
+class VfxGLUtils {
+  private static final String TAG = VfxGLUtils.class.getSimpleName();
+  // …every other member static too, so the collapse fired on the very class the literal names
+}
+```
+
+`Expected a type, but found a term: VfxGLUtils`. **`classOf[VfxGLUtils.type]` is the trap, not the
+answer**: it compiles, and `getSimpleName` on it is `"VfxGLUtils$"` — so the port would carry a
+different string than java, with a green compile and no count moved (`CLAUDE.md` §3). Withholding
+the collapse costs nothing: the statics move to the companion object, which is where the collapse
+put them anyway, so no call site changes.
+
+The general shape, and the reason this is here rather than in a commit message: **the collapse is
+withheld by a SET of symbols the program uses in a way an object cannot serve**, one lazy scan per
+construct, each walked with `StandardTraversal`. A fourth construct is a fourth set, not a fourth
+condition inside the guard.
+
+**0 members moved** on any other corpus port — arithmetic again, since `classOf` on an object is a
+compile error and every other port compiles. Spec: `StaticCollapseSpec`, all three guards plus two
+negatives (the collapse still fires without them; the guard is per-symbol).
+
+*Fix kind: (a) engine.*
