@@ -757,6 +757,26 @@ left.
 
 *Fix kind: (a). Field half BUILT; initializer-block and nested-type halves unbuilt.*
 
+### T9. A method-LOCAL named class is refused by the frontend outright
+
+`class Holder { … }` written as a STATEMENT inside a method body — Java's local class, the named
+sibling of the anonymous class — reaches `SpoonTir.stmtKind` as a `CtClassImpl` and is refused:
+`unsupported construct: statement CtClassImpl`. Not dropped silently; the whole unit fails to
+translate, which is the right direction but is the whole story.
+
+**Zero sites in the corpus**, across libGDX core (604), libGDX test (29), Ashley (39), simple-graphs
+(36) and jbump (19) — which is why it has never cost anything and why it is recorded rather than
+built. It surfaced only when a spec for the captured-local rename (`CLAUDE.md` §4.55's fourth face)
+reached for a local class as the second shape that shadows a capture; the pass itself is indifferent
+between the two, because it reads `Tree.ClassDef` and `Tree.AnonClass` through one traversal, so it
+will cover local classes the day the frontend produces them.
+
+Java code that uses the form at all tends to use it a lot (parser and visitor code especially), so a
+library that hits this hits it as a wall rather than as a residue. Budget it as frontend work, not as
+a translation rule: the TIR already has the node.
+
+*Fix kind: (a), unbuilt — frontend only.*
+
 ---
 
 ## 4. Collections, shims and the JDK boundary

@@ -269,7 +269,8 @@ It runs on the **Fable 5** model and is expensive, so it is **not** run on every
   | `just gdx-test-measure` | libGDX's own suite — the same, then RUN it |
   | `just ashley-measure` | Ashley + its suite, compiled WITH libGDX core (a dependent port) |
   | `just sg-measure` | simple-graphs + its suite |
-  | `just measure-all` | the four above, SERIALLY, stopping at the first failure |
+  | `just jbump-measure` | jbump — a library that ships NO suite, so the lane re-derives that zero |
+  | `just measure-all` | every lane above, SERIALLY, stopping at the first failure |
   | `just decision-counts` | `decisions.tsv` row counts by kind, every port |
   | `just members-unchanged` | `members.tsv` against its baseline — the blast radius, before a compile |
   | `just baseline-{list,show,diff,accept}` | the baseline half of the check report |
@@ -462,6 +463,17 @@ Two things every such pass must do, learned by getting both wrong:
   to the same `style$shadow` and just moves the collision up a level. Then keep appending until the
   name is free.
 - **Scan parents before children**, or the previous point cannot hold.
+- **A CAPTURE can be the thing that has to move.** The three faces above rename a MEMBER; the fourth
+  renames a method's local or parameter, because the shadowing runs the other way. Java's two
+  namespaces let a parameter `filter` and a nested class's `Response filter(a, b)` coexist, and a
+  bare `filter` inside that class is unambiguously the parameter; Scala has one namespace and
+  resolves innermost-first, so the member wins and the capture becomes UNNAMEABLE — Scala can
+  qualify an outer member (`Outer.this.x`) and cannot name a shadowed local at all. Rename the
+  capture, and rename it only where it is really shadowed (referenced inside the nested body AND
+  the body declares or inherits the name): a local rename is invisible, but a PARAMETER rename
+  moves emitted surface, so this is the one member-rename pass that must not over-approximate.
+  Note the nested class is usually ANONYMOUS, so it lives inside a TERM — a walk over class bodies
+  finds none of them (§3).
 
 And count what the constructor funnel PROMOTES — the chosen constructor's parameters *and* its
 top-level locals. Neither is in the class body, both become members, and a Java constructor local

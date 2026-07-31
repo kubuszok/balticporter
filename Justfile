@@ -593,9 +593,9 @@ jbump-measure:
     JAVA_TESTS=$(java_test_count {{jbump_upstream}})
     echo "@Test in the WHOLE jbump upstream checkout: $JAVA_TESTS"
     if [ "$JAVA_TESTS" = "0" ]; then
-      echo "!! NO BEHAVIOURAL GATE — jbump ships no test suite, so nothing here is evidence of"
-      echo "   behaviour (CLAUDE.md §3: a green compile said nothing about any of §4.4's ten forms)."
-      echo "   PROGRESS.md §jbump records what that leaves unmeasured, item by item."
+      echo "   NO SUITE UPSTREAM — nothing for the engine to port, so the behavioural gate for this"
+      echo "   port is the DIFFERENTIAL PROBE below, not a ported suite. It is hand-written and must"
+      echo "   never be counted as a ported test (CLAUDE.md §3); PROGRESS.md §5 says what it covers."
     else
       echo "!! A SUITE HAS APPEARED UPSTREAM — $JAVA_TESTS @Test method(s). This port has no test"
       echo "   source set; add corpus/ports/jbump/test.conf (\`base = \"main.conf\"\`) and a lane stage."
@@ -620,8 +620,66 @@ jbump-measure:
     echo "-- bare (uncoded) errors by message --"
     grep -A1 '^-- Error:' "$MEASURE_TMP"/jbumpmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
 
+    # -------------------------------------------------------------------------------------------
+    # RUN it — differentially, against the upstream Java.
+    #
+    # This is the stage a library with no suite would otherwise not have, and CLAUDE.md §3 says what
+    # skipping it would cost: a green compile is not evidence, and jbump contains six of §4.4's ten
+    # forms (reference `==`, `x++` as a value, `break`/`continue`, a `switch`, a `static {}` block,
+    # a `super`-less secondary-constructor funnel) — none of which moves the count above.
+    #
+    # `corpus/ports/jbump/probe/{ProbeJava.java,Probe.scala}` walk the SAME scenario, one against
+    # `{{jbump_src}}` and one against the emitted port, and the gate is that their transcripts are
+    # IDENTICAL. No expected value is written anywhere, so none can be written down wrong: the
+    # upstream Java is the authority and the diff is the whole assertion.
+    # -------------------------------------------------------------------------------------------
     echo
-    echo "-- correlation: every error located to its member and its Java origin --"
+    if [ "$ERRORS" != "0" ]; then
+      echo "-- correlation: every error located to its member and its Java origin --"
+      correlate "$REPORT/run-latest" --scalac "$MEASURE_TMP"/jbumpmeasure.txt \
+        --srcmap "$REPORT/run-latest/srcmap.tsv"
+      echo "(not running the differential probe: the port does not compile — a probe that cannot run is not a probe that agreed)"
+      headline "$ERRORS" "$REPORT"
+      exit 0
+    fi
+
+    echo "-- differential probe: emitted Scala vs upstream Java, same scenario --"
+    PROBE="$MEASURE_TMP/jbump-probe"
+    rm -rf "$PROBE"; mkdir -p "$PROBE/classes"
+    javac -nowarn -d "$PROBE/classes" -sourcepath {{jbump_src}} corpus/ports/jbump/probe/ProbeJava.java \
+      > "$PROBE/javac.txt" 2>&1
+    if [ "$?" != "0" ]; then
+      echo "!! PROBE DID NOT COMPILE against the upstream Java — the AUTHORITY half is broken, so the"
+      echo "   port half proves nothing. Fix corpus/ports/jbump/probe/ProbeJava.java:"
+      grep -v '^Note:' "$PROBE/javac.txt" | head -20 | sed 's/^/     /'
+      exit 1
+    fi
+    java -cp "$PROBE/classes" ProbeJava > "$PROBE/java.txt" 2>&1
+    JAVA_ST=$?
+    scala-cli run --scala {{scala_version}} --server=false $DEPS \
+      {{jbump_module}}/src_managed/main/scala corpus/ports/jbump/probe/Probe.scala \
+      2>&1 | sed 's/\x1b\[[0-9;]*m//g' \
+      | grep -vE '^Warning: setting |deprecation warning|^[0-9]+ warning' > "$PROBE/scala.txt"
+    SCALA_ST=${PIPESTATUS[0]}
+    # Both halves must have RUN. A crashed probe whose partial output happens to match is the §3
+    # false green one artifact later, so the exit statuses gate before the diff does.
+    if [ "$JAVA_ST" != "0" ] || [ "$SCALA_ST" != "0" ]; then
+      echo "!! PROBE DID NOT RUN (java exit $JAVA_ST, scala exit $SCALA_ST) — refusing to diff partial output"
+      tail -20 "$PROBE/scala.txt" | sed 's/^/     /'
+      exit 1
+    fi
+    LINES=$(grep -c "" "$PROBE/java.txt")
+    if diff -u "$PROBE/java.txt" "$PROBE/scala.txt" > "$PROBE/diff.txt"; then
+      echo "probe: $LINES transcript line(s), emitted Scala IDENTICAL to upstream Java"
+    else
+      echo "!! PROBE DIVERGED — the port behaves differently from the library it was made from."
+      echo "   Left = upstream Java (the authority), right = emitted Scala:"
+      sed 's/^/     /' "$PROBE/diff.txt"
+      exit 1
+    fi
+
+    echo
+    echo "-- correlation: nothing to locate (0 errors); the source map is still published --"
     correlate "$REPORT/run-latest" --scalac "$MEASURE_TMP"/jbumpmeasure.txt \
       --srcmap "$REPORT/run-latest/srcmap.tsv"
 

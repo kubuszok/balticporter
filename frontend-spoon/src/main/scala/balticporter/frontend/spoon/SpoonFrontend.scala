@@ -7,7 +7,7 @@ package balticporter.frontend.spoon
 // `core/Bir.scala`. `SpoonTir` produces a `Program` — symbol table, cross-reference
 // index, phase pipeline — and that is where every rule since has been written.
 //
-// Kept because liqp, xwiki/flexmark and jbump still port through it (the corpus
+// Kept because liqp and xwiki/flexmark still port through it (the corpus
 // programs are listed in `core/Bir.scala`). Fix what they need; add nothing.
 // =============================================================================
 

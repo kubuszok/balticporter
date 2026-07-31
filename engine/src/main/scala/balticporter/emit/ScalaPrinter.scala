@@ -8,7 +8,7 @@ package balticporter.emit
 // `TypeRepr` and every reference a `SymId` — which is why it can decide diamonds,
 // constructor funnels and member clashes that this printer can only guess at.
 //
-// Kept because liqp, xwiki/flexmark and jbump still port through it (the corpus
+// Kept because liqp and xwiki/flexmark still port through it (the corpus
 // programs are listed in `core/Bir.scala`). Fix what they need; add nothing.
 // =============================================================================
 

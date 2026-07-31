@@ -20,7 +20,8 @@ just gdx-test-measure     # libGDX's own suite (… → compile → RUN → corr
 just ashley-measure       # Ashley + its suite, compiled WITH libGDX core
 just sg-measure           # simple-graphs + its suite
 just noise4j-measure      # noise4j (no upstream test suite — the lane asserts that, see §5)
-just measure-all          # the five above, serially, stopping at the first failure
+just jbump-measure        # jbump — a library that ships NO suite; the lane re-derives that zero (§6)
+just measure-all          # every lane above, serially, stopping at the first failure
 
 just decision-counts      # decisions.tsv row counts by kind, every port
 just members-unchanged    # members.tsv against its baseline — the blast radius, before a compile
@@ -39,7 +40,7 @@ migration did not run, and every one prints the full check report diffed against
 baseline, not a filtered selection of it. The mechanism they share is `scripts/_lib.sh`; the policy
 (sbt projects, upstream trees, dependency coordinates) is variables at the top of the `Justfile`.
 
-Measurements below are from one serial run of all six lanes, 2026-07-31.
+Measurements below are from one serial run of all lanes, 2026-07-31.
 
 ---
 
@@ -57,6 +58,7 @@ suite are two ports, and the suite is a *dependent* of the library:
 | `simple-graphs` | simple-graphs `src/main` | 29 → **33** | — | **0** |
 | `simple-graphs-test` | simple-graphs `src/test` | 7 → **7** | **16**, all passing | **0** |
 | `noise4j` | noise4j `src` | 12 → **12** | **none upstream** (§5) | **2** |
+| `jbump` | jbump `jbump/src` | 19 → **23** | **none upstream** — gated by a differential probe instead, §6.2 | **0** |
 
 **A frozen BIR path still exists.** Nine corpus programs — liqp, flexmark, the xwiki-macros cold-port
 closure, jbump and their demos — predate the TIR and run on the string-oriented BIR printer
@@ -159,7 +161,7 @@ or per construct.
 | `sge-tools` | 90 % deliberately dropped (all Swing/AWT editors). Not an incomplete port. |
 | `sge-freetype` | Java layer 100 % ported, but every `native` method now binds a Rust crate. Carries a **deliberate behavioural fix upstream lacks** — do not "correct" it back. |
 | `sge-graphs` | Least idiomatic module: raw `null.asInstanceOf`, anonymous SAM classes, zero `Nullable`, zero renames. Any conformance check will flag it heavily — expected, not a defect. |
-| `sge-jbump` | Lost a **public copy constructor** `Collisions(Collisions)`, pinned by a deliberately-red test. |
+| `sge-jbump` | **Five of nineteen upstream types are absent and one is a name collision, not a port**: `Extra`, `util/{BooleanArray,FloatArray,IntArray,IntIntMap}` are gone, and the hand port's `util/MathUtils` holds `Extra`'s three members — upstream's own 352-line `MathUtils` (sine table, `clamp`, `lerp`, the `random` family) is 0 % ported under a name that suggests otherwise. `Collisions` also drops `Comparator<Integer>`, `compare`, `order` and three of four `keySort` overloads for a `boxed`/`applyPermutation` redesign. (The copy-constructor loss this row used to name has since been fixed by hand in sge — verified 2026-07-31 at `Collisions.scala:51`. Its upstream is now ported by the engine: §6.) |
 | `sge-noise` | The 17 % gap is `Array2D` and `Object2dArray` — the whole `array` package bar `Int2dArray`, absent with no note. And every one of the three **enum constant bodies** was REDESIGNED into a flat `enum` plus a `this match`, which no mechanical rule produces; the engine emits `sealed abstract class` + `case object` instead (§5). |
 | `sge-screens` | `NestableFrameBuffer` missing → screens binding their own FBO rebind incorrectly. |
 | `sge-colorful` | `colorful-pure` (40k LOC) unported with **no recorded rationale anywhere**. Confirm intent before treating it as scope. |
@@ -179,8 +181,8 @@ NOTICE / THIRD-PARTY files are hand-maintained and are not.
 
 ### 1.2 Suggested assignment order
 
-1. **`sge-jbump`** — small, mechanical, exercising the `lowlevel.util.*` split. (`sge-ecs`,
-   `sge-graphs`' and `sge-noise`'s upstreams are done: §3, §4 and §5.)
+1. (Tier 1 is complete: `sge-ecs`, `sge-graphs`, `sge-noise` and `sge-jbump`'s upstreams are
+   all ported by the engine — §3, §4, §5 and §6.)
 2. **`sge-gltf`, `sge-anim8`, `sge-vfx`, `sge-screens`** — mid-size, high coverage, few surprises.
 3. **`ssg-liquid`** — small Java surface, but resolve the ANTLR decision first. Its 105 upstream test
    files are the best available proving ground for test porting after libGDX.
@@ -665,7 +667,175 @@ is reported rather than avoided. Reported, counted, baselined — not silent.
 
 ---
 
-## 6. Publishability — what sge and ssg need before they can depend on this
+## 6. jbump
+
+`com.dongbat.jbump → sge.jbump`. **The fourth corpus library, the second conf-only port, and the
+first library in the corpus that ships NO TEST SUITE.** Reproduce with `just jbump-measure`.
+
+A 19-file, 4,045-line 2D AABB collision library (a Java port of kikito's `bump.lua`), dependency-free,
+Apache-2.0. The whole port is `corpus/ports/jbump/main.conf`; `JbumpMigrate` is a three-line `main`.
+
+### 6.1 Measured state
+
+| gate | `jbump` |
+|---|---|
+| compile errors (scala-cli, Scala 3.8.4) | **0** — and past `RefChecks`; the count did NOT rise at zero |
+| files emitted | **23** (19 upstream units + 4 vendored runtime; 0 dropped, 0 injected) |
+| model | 19 units / 1,872 symbols |
+| signature consistency | 0 |
+| omissions | **15** — all C7 promoted-ctor replay, all in the three primitive arrays; see §6.4 |
+| portability (all / emitted / injected) | 0 / 0 / 0 |
+| substitutions · manifest · port map · policy | 0 · 0 · 0 · 0 |
+| trivia | **0** — every comment in all 19 files reached the emitted Scala |
+| porter notes uncovered · break residue | 0 · **0** |
+| source map | 19 units / 521 members; port map 23 types / 494 members |
+| decisions recorded | **97** (RetypedSignature 48, RenamedPackage 19, RenamedMember 16, FunnelledCtor 10, InjectedMember 4), 23 porter notes |
+| **behaviour** | **44 transcript lines, byte-identical to the upstream Java** — §6.2 |
+
+**No §1(c) rules, and no drops.** jbump's manifest is a namespace claim, two universal phases
+(`collections`, `mutable-params`) and a package rename. Nothing was substituted, nothing was
+injected, and no library-specific rule was written — the second library after simple-graphs to land
+that way, and the first to do it at 100 % type coverage.
+
+### 6.2 There is no suite, so the gate is a DIFFERENTIAL PROBE
+
+**jbump ships zero `@Test` methods.** Its `test` gradle module is a runnable libGDX demo
+(`TestBump extends ApplicationAdapter`, LWJGL3 + shapedrawer, driven by mouse and WASD) whose
+`build.gradle` declares a `mainClassName` and a `run` task. Running it would mean porting libGDX's
+backends and a third-party drawing library to open a window. sge's 32 jbump test cases are no help
+either: they were WRITTEN in Scala against a redesigned API, not translated, so there is nothing for
+this engine to port. The lane re-derives the zero with `java_test_count` over the whole upstream
+checkout on every run rather than taking this paragraph on trust.
+
+CLAUDE.md §3 then leaves the port with no evidence at all, and jbump contains **six of §4.4's ten
+forms** — reference `==` in four `equals` bodies, `x++`/`x--`/`++x` read as a value (19 sites, 9 of them
+`IntIntMap`'s `if (size++ >= threshold) resize(...)`), `break` and `continue`, a
+`switch`, a `static { }` block, and secondary constructors funnelled into a promoted primary. Not one
+of them moves a compile-error count.
+
+So the port's gate is `corpus/ports/jbump/probe/{Probe.scala,ProbeJava.java}`: **the same scenario
+written twice, once against the emitted Scala and once against the upstream Java, with the two
+transcripts diffed line for line.** It is hand-written and is **not a ported test** — it is a
+measurement harness, in `scripts/_lib.sh`'s category, and it exists because a behavioural claim no
+lane reproduces is not a measurement (CLAUDE.md §5). Nothing in it asserts an expected value: the
+Java is the authority, so no expectation can be written down wrong, and widening it costs one
+`println` on each side.
+
+What the 44 lines cover, chosen as the union of §4.4's forms present and the port's own decisions:
+
+| probe section | what would break it |
+|---|---|
+| `BooleanArray` / `IntArray` / `FloatArray` — nilary construction, 40 adds through two grows, `removeIndex`, `swap` | the C7 promoted-constructor replay (§6.4), `items[size++] = value` |
+| `IntIntMap` — 200 puts through repeated resizes, `get`/`remove`/`containsKey`/`containsValue`, a full `Entries` iteration, `toString`, the copy constructor, `equals`/`hashCode` | `size++` as a value, the `break` in `findNextIndex`, the `continue` and the enclosing-boundary-named `break` in `toString`, the `switch` in `push`, and the `Iterable`+`Iterator` shim pair |
+| `MathUtils` — `sin`/`cos` off the lookup table, `nextPowerOfTwo`/`clamp`/`floor`/`ceil`/`round`, a SEEDED `random(10)` twice | the `static { }` block that fills the sine table, and the `random` field/method §4.55 rename |
+| `Point` / `IntPoint` / `Item` — `equals`, `hashCode`, `toString` | reference `==` rendered as `==` instead of `eq` (`Point` is `World`'s `HashMap` KEY, so this decides whether the grid works at all) |
+| `Grid.grid_traverse` through an anonymous `TraverseCallback` | a dropped anonymous-class body (ENGINE-LIMITS T1's 156-site defect) |
+| `Collisions` — the copy constructor and its independence, `sort()`, `compare`, `remove` | `Comparator<Integer>` unboxing, `Collections.swap`, `IntIntMap` iteration, the `size` field/method rename |
+| `World` — `add`/`move`/`update`/`remove`/`reset`, `queryRect`/`queryPoint`/`querySegment`/`querySegmentWithCoords`/`queryRay`, `getCellsTouchedBySegment` | the whole library |
+| all four `Response` constants through a caller-supplied `CollisionFilter` | interface constants that are anonymous classes, and the §4.55 captured-local rename in `World.check` |
+| `Rect` / `RectHelper` statics | float arithmetic and the instance-qualified static call |
+
+The gate is negative-tested: perturbing one `println` by `+ 1` makes the lane print
+`!! PROBE DIVERGED`, name the line, and exit 1.
+
+**What it still does not cover, stated plainly.** Ray queries with a non-axis-aligned direction;
+`tileMode = false`; `Response.bounce` off a corner; `IntIntMap`'s stash path under adversarial keys;
+`World.check` with a filter that returns `null` for some pairs. Each is one more `println` on each
+side when somebody wants it.
+
+### 6.3 What this library taught the engine
+
+Two §1(a) fixes, each in its own commit, each spec-pinned, each measured at 0 members changed across
+all four pre-existing lanes.
+
+| the gap | where | cost when wrong |
+|---|---|---|
+| `java.util.Collections.swap` had no entry in the receiver-less static table, so the call survived verbatim against the JDK class while its argument had been retyped | `CollectionsTransform.staticRewrite` + `JavaCollections.swap` | 1 of 2 errors |
+| a method's LOCAL or PARAMETER that a NESTED class's member shadows is unnameable in Scala — Java's two namespaces let `filter` the parameter and `filter(a, b)` the member coexist, Scala's one namespace gives the member both | `TirEmitter.resolveCapturedLocalClashes`, the fourth §4.55 pass | 1 of 2 errors |
+
+The second is the transferable one, and the rule is lifted to `CLAUDE.md` §4.55: the three existing
+renaming passes move a MEMBER, and this one moves the CAPTURE. It is also the one pass in that family
+that must not over-approximate — a local rename is invisible, but a parameter rename moves emitted
+surface, so it fires only where the capture is really shadowed. The nested class is normally
+ANONYMOUS, i.e. inside a TERM, which is why it walks with `StandardTraversal`: a walk over class
+bodies finds none of them.
+
+**The (c)-vs-(b) data point the corpus wanted.** jbump's `IntIntMap` is *libGDX's own* `IntIntMap`,
+vendored — same file, different repository — so it is the control experiment for two libGDX-shaped
+questions, and both came back the same way:
+
+- **The `Iterable`+`Iterator` double interface needed no rule.** `Entries extends MapIterator with
+  JavaIterable[Entry] with JavaIterator[Entry]` is emitted straight onto the universal runtime shims,
+  and `MapIterator`'s `hasNext` FIELD beside `Entries`' `hasNext()` METHOD is the ordinary §4.55
+  field-vs-method rename. CLAUDE.md §4.5 is doing its job unparameterised.
+- **`GdxSharedIteratorRule` stays a genuine §1(c).** jbump inherited libGDX's cached-iterator design
+  along with the file — `entries()` returns one of two `Entries` instances, reset in place — so the
+  nesting hazard is *present* in jbump. It is never *triggered*: the four `keySort` overloads iterate
+  `swapMap` sequentially and nothing nests. So the rule was not needed here, and the reason is a fact
+  about jbump's call sites rather than about the mechanism. A future consumer that nests iteration
+  over one `IntIntMap` needs that rule, in its own repository.
+
+### 6.4 The 15 omissions are C7 replay COST, not divergence
+
+All 15 are `promoted constructor body runs on every path`, five each in `BooleanArray`, `FloatArray`
+and `IntArray`. Each of those classes has six constructors and the funnel promoted the nilary one,
+whose body is `this(true, 16)` inlined to two statements (`ordered = true; items = new T[16]`). Scala
+runs a class body on every construction path, so `new IntArray(false, 64)` now allocates a 16-element
+array and immediately discards it.
+
+**Every other constructor overwrites both statements**, so the final state is identical on every
+path — this is exactly ENGINE-LIMITS C5's declared replay cost in its promotion form, and the probe
+demonstrates it rather than assuming it: `BooleanArray().items=16`, `FloatArray(false, 3)` grows to
+14 and `IntArray()` to 49, all byte-identical to Java. Baselined, stable, not a defect.
+
+### 6.5 Licence — the discrepancy runs the other way from simple-graphs'
+
+Upstream ships **Apache-2.0**: the repository `LICENSE` is the full 201-line Apache text and every
+one of the 19 files carries "Licensed under the Apache License, Version 2.0". The reference hand port
+in `../sge/sge-extension/jbump` states "Licensed under the MIT License" in every file header. One of
+the two is wrong; a port is a derived work, so the upstream file is the authority and this port states
+**Apache-2.0**. Recorded rather than silently followed, for the same reason §4.5 records
+simple-graphs' — the reference port is otherwise this project's tie-breaker (CLAUDE.md §3.5), and it
+has now been wrong about the licence twice.
+
+### 6.6 Where this port is BETTER than the reference, and where the reference is stale
+
+`sge-jbump` covers 14 of 19 upstream types; this port covers 19 of 19 with nothing dropped and
+nothing injected. What the hand port does not have: `Extra`, `util/IntIntMap`, `util/IntArray`,
+`util/FloatArray`, `util/BooleanArray`, and — the one that reads as present and is not — upstream's
+352-line `util/MathUtils`, whose name the hand port reuses for `Extra`'s three members. Within
+`Collisions` it also drops `Comparator<Integer>`, `compare`, `order` and three of the four `keySort`
+overloads in favour of a `boxed`/`applyPermutation` redesign. All of that ports mechanically here.
+
+`PROGRESS.md` §1.1 used to say the hand port had **lost the copy constructor `Collisions(Collisions)`**,
+pinned by a deliberately-red test. That claim is now **stale**: sge fixed it by hand, and
+`../sge/sge-extension/jbump/src/main/scala/sge/jbump/Collisions.scala:51` has it (verified
+2026-07-31). The engine's port has it too, mechanically, as `def this(other: Collisions)` — and the
+probe pins both halves of the contract the red test specified, that the copy carries all 19 arrays
+plus `size` and that clearing the copy leaves the source untouched. The §1.1 row is corrected rather
+than repeated.
+
+### 6.7 Do NOT retry
+
+| tried | measured | why |
+|---|---|---|
+| reading `class BooleanArray {` and concluding the promoted nilary body was dropped | **wrong** — the body is emitted AFTER the secondary constructors, and `BooleanArray().items` is 16 | A Scala class body is not required to precede the constructors it runs before. Read the whole file, or better, RUN it (§6.2); a diagnostic over emitted code is not something to eyeball (CLAUDE.md §5.1) |
+| a spec for the captured-local rename over a method-LOCAL named class | frontend refuses it: `unsupported construct: statement CtClassImpl` | recorded as ENGINE-LIMITS T9, zero sites in the whole corpus; the pass itself is indifferent between a local and an anonymous class |
+
+### 6.8 Remaining
+
+- **15 omissions**, all C5/C7 replay cost, all demonstrated harmless by the probe. Nothing to do
+  unless the funnel gains a shape-6 answer, which ENGINE-LIMITS C7 measures as 0 → 35 errors.
+- **The probe covers 44 lines and could cover more.** §6.2 names the five gaps. This is the only
+  thing on this list that would find a new defect.
+- **`World`'s raw `Item` parameters** emit as `Item[?]` throughout (ENGINE-LIMITS G2), which is what
+  the reference port does too — but jbump's raw uses are pervasive enough that a consumer holding an
+  `Item[Entity]` will need casts the Java did not. Not a defect, a surface question for whoever
+  adopts this.
+
+---
+
+## 7. Publishability — what sge and ssg need before they can depend on this
 
 **The goal being evaluated.** sge and ssg stop hand-maintaining their ports and instead depend on
 Baltic Porter as a published library, feeding it Java sources plus per-library configuration — with
@@ -734,7 +904,7 @@ cannot yet say, for an *unmarked* error, is which of the three kinds the fix is.
 
 ---
 
-## 7. Remaining work, across the engine
+## 8. Remaining work, across the engine
 
 Maintained by deletion. Items are ordered by what they block, not by size.
 
