@@ -60,6 +60,10 @@ import scala.jdk.CollectionConverters.*
   *   dropTypes      = []
   *   dropMethods    = []
   *   packageRenames { "space.earlygrey.simplegraphs" = "sge.graphs" }
+  *   typeRenames    { "liqp.filters.Map" = "MapFilter" }      # bare name = renamed in place
+  *   subPackages    { "p.Algorithms" = "internal" }           # nested under p.internal, in place
+  *   flattenNestedTypes = ["p.Connection$DirectedConnection"] # promoted to top level
+  *   allowPackageSplit  = []                                  # boundary moves declared deliberate
   *   inject         = ["corpus/overrides"]
   *   surface        = [ { transform = "collections" }, { transform = "mutable-params" } ]
   * }
@@ -235,6 +239,13 @@ object PortConfig:
       dropTypes      = m.strings("dropTypes").getOrElse(Nil).toSet,
       dropMethods    = m.strings("dropMethods").getOrElse(Nil).toSet,
       packageRenames = m.stringMap("packageRenames").getOrElse(Map.empty),
+      // the PER-TYPE half of the same phase (M6). Data like the map above, and refused the same
+      // way if written as a `{ transform = "package-rename" }` surface entry: the rename's position
+      // is an obligation no `runsAfter` can state (§4.56), so `PortRun` places it, once.
+      typeRenames        = m.stringMap("typeRenames").getOrElse(Map.empty),
+      subPackages        = m.stringMap("subPackages").getOrElse(Map.empty),
+      flattenNestedTypes = m.strings("flattenNestedTypes").getOrElse(Nil).toSet,
+      allowPackageSplit  = m.strings("allowPackageSplit").getOrElse(Nil).toSet,
       surface        = m.children("surface").getOrElse(Nil).map(surfaceEntry(registry)),
       inject         = m.strings("inject").getOrElse(Nil).map(resolvePath(dir, _)),
     )

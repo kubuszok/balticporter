@@ -134,6 +134,18 @@ object ManifestAgreement:
     case RenameDivergence extends Kind(true,
       "§1(b) PER-LIBRARY: the shared namespace is renamed differently in the two modules, so this " +
         "module's references name a package the base never emits. Inherit the base's rename map.")
+    /** a TYPE both modules see is moved — renamed, sub-packaged or flattened — differently.
+      *
+      * Separate from [[RenameDivergence]] because the fix is a different key and the failure is a
+      * different shape: a package divergence moves a whole namespace and is visible in every
+      * `import`, while a per-TYPE one moves ONE class and is invisible until the dependent names
+      * it. Both are fatal, and for the same reason — the two ports each compile alone and cannot
+      * compile together. */
+    case TypeRenameDivergence extends Kind(true,
+      "§1(b) PER-LIBRARY: a type of the shared surface is moved differently in the two modules — " +
+        "renamed, sub-packaged or flattened here and not there, or to a different destination — so " +
+        "this module names a class the base never emits. Inherit the base's per-type rename maps " +
+        "with `base.extendedBy(...)` rather than restating them.")
     /** this module moves part of the base's claimed namespace the base leaves in place. */
     case RenameOverride extends Kind(true,
       "§1(b) PER-LIBRARY: this module renames a prefix inside the base's declared namespace that " +
@@ -300,11 +312,40 @@ object ManifestAgreement:
           Finding(Kind.RenameOverride, b.name, from, s"""renamed to "$to" here; the base claims this namespace and leaves it in place""")
       }
 
+      // ---- the PER-TYPE half of the same policy (M6) --------------------------------------
+      // Compared as DECLARATIONS (`typeRenames=X` / `subPackages=Y` / `flattenNestedTypes`) rather
+      // than as resolved destinations, because two manifests have to agree about what they SAY:
+      // a base that sub-packages a type and a dependent that spells the same destination as a
+      // `typeRenames` entry agree today and diverge the moment either package rename changes.
+      val bTypes  = b.perTypeDestinations
+      val myTypes = m.perTypeDestinations
+      val typeDiff = bTypes.toList.sorted.flatMap { (fqn, dest) =>
+        myTypes.get(fqn) match
+          case Some(`dest`) => Nil
+          case Some(other)  => List(Finding(Kind.TypeRenameDivergence, b.name, fqn, s"""base declares `$dest`, this module `$other`"""))
+          case None         => List(Finding(Kind.TypeRenameDivergence, b.name, fqn, s"""base declares `$dest`, this module leaves it in place"""))
+      }
+      val typeExtra = myTypes.toList.sorted.collect {
+        case (fqn, dest) if b.claims(fqn) && !bTypes.contains(fqn) =>
+          Finding(Kind.TypeRenameDivergence, b.name, fqn,
+            s"""declared `$dest` here; the base claims this namespace and leaves the type in place""")
+      }
+      // A DECLARED boundary move is half of the rename: a dependent that inherited the rename and
+      // not the declaration refuses a move its base performed, and then the two modules disagree
+      // about where the type IS. Only reported where the rename itself agrees, or the row above
+      // already says everything.
+      val splitDiff = (b.effectiveAllowPackageSplit -- m.effectiveAllowPackageSplit).toList.sorted
+        .filter(fqn => myTypes.get(fqn).exists(bTypes.get(fqn).contains))
+        .map(fqn => Finding(Kind.TypeRenameDivergence, b.name, fqn,
+          "the base declares this type's move a DELIBERATE boundary split and this module does not, " +
+            "so the same rename is performed there and refused here"))
+
       val surfaceGap = b.effectiveSurface.map(PortManifest.fingerprint).distinct
         .filterNot(mySurface.contains).map(f =>
           Finding(Kind.SurfaceMissing, b.name, f, "signature-affecting phase present in the base's surface, absent from this module's"))
 
-      missingTypes ++ missingMethods ++ extraTypes ++ extraMethods ++ renameDiff ++ renameExtra ++ surfaceGap
+      missingTypes ++ missingMethods ++ extraTypes ++ extraMethods ++ renameDiff ++ renameExtra ++
+        typeDiff ++ typeExtra ++ splitDiff ++ surfaceGap
     }
 
     // one phase NAME carrying two different policies in one pipeline is drift regardless of which
@@ -337,10 +378,17 @@ object ManifestAgreement:
       // the name the BASE gives a shared type — not the name this module's own rename map gives it,
       // which would only ever check the run against itself and always agree.
       val baseRenames = m.baseChain.foldLeft(Map.empty[String, String])((acc, b) => acc ++ b.effectivePackageRenames)
+      // …and the base's PER-TYPE moves, applied first, exactly as the phase composes them: every
+      // target is written upstream and the package renames apply to the result (§4.56). Omitting
+      // this half would report a type the base deliberately moved as a divergence on every run.
+      val baseTypeMoves = m.baseChain.foldLeft(Map.empty[String, String])((acc, b) => acc ++ b.effectiveTypeMoves)
       def asTheBaseNamesIt(fqn: String): String =
-        PortManifest.longestPrefix(fqn, baseRenames.keySet) match
-          case Some(from) => baseRenames(from) + fqn.substring(from.length)
+        val once = PortManifest.longestPrefix(fqn, baseTypeMoves.keySet) match
+          case Some(from) => baseTypeMoves(from) + fqn.substring(from.length)
           case scala.None => fqn
+        PortManifest.longestPrefix(once, baseRenames.keySet) match
+          case Some(from) => baseRenames(from) + once.substring(from.length)
+          case scala.None => once
 
       // ---- the PUBLISHED half ----------------------------------------------------------------
       // One lookup over every usable base map, nearest base LAST so its entry wins — the same
@@ -403,7 +451,8 @@ object ManifestAgreement:
       // A namespace divergence is a property of the PREFIX, not of the types under it: one wrong
       // rename entry would otherwise produce one finding per shared type — 605 of them on libGDX —
       // and bury every other finding in the report. Grouped by the rename rule that explains it.
-      val prefixes = baseRenames.keySet ++ m.effectivePackageRenames.keySet
+      val prefixes = baseRenames.keySet ++ m.effectivePackageRenames.keySet ++
+        baseTypeMoves.keySet ++ m.effectiveTypeMoves.keySet
       val names = sorted
         .filter(t => expectedName(t).exists(_ != t.emittedFqn))
         .groupBy(t => PortManifest.longestPrefix(t.upstreamFqn, prefixes)

@@ -44,6 +44,12 @@ class PortManifestConfigSpec extends munit.FunSuite:
       dropTypes      = Set("p.Json", "p.Pools"),
       dropMethods    = Set("p.Array#toArray(Class)"),
       packageRenames = Map("com.acme.lib" -> "port"),
+      // the PER-TYPE half is shared surface too, so it has to survive the same round trip — a
+      // dependent reading a rendered manifest and losing it would silently disagree about a name.
+      typeRenames        = Map("com.acme.lib.Map" -> "MapFilter"),
+      subPackages        = Map("com.acme.lib.Impl" -> "internal"),
+      flattenNestedTypes = Set("com.acme.lib.Conn$Directed"),
+      allowPackageSplit  = Set("com.acme.lib.Impl"),
     )
     val back = PortManifestConfig.parse(PortManifestConfig.render(m), surface = Nil)
     assertEquals(back.map(_.name), Right("base-core"))
@@ -51,6 +57,10 @@ class PortManifestConfigSpec extends munit.FunSuite:
     assertEquals(back.map(_.dropTypes), Right(m.dropTypes))
     assertEquals(back.map(_.dropMethods), Right(m.dropMethods))
     assertEquals(back.map(_.packageRenames), Right(m.packageRenames))
+    assertEquals(back.map(_.typeRenames), Right(m.typeRenames))
+    assertEquals(back.map(_.subPackages), Right(m.subPackages))
+    assertEquals(back.map(_.flattenNestedTypes), Right(m.flattenNestedTypes))
+    assertEquals(back.map(_.allowPackageSplit), Right(m.allowPackageSplit))
   }
 
   test("the SURFACE is never silently represented as empty") {

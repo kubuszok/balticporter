@@ -127,6 +127,42 @@ class PortRunSpec extends munit.FunSuite:
     assertEquals(r.report.rename.unmatched, List("com.demo"))
   }
 
+  test("a per-TYPE rename moves ONE type, composes with the package rename, and lands in the FILE") {
+    val (root, src) = fixture()
+    val r = run(root, src)(_.copy(packageRenames = Map("com.demo" -> "org.port"),
+                                  typeRenames = Map("com.demo.Widget" -> "Gizmo")))
+    assertEquals(emitted(r.outDir), List("org/port/Gadget.scala", "org/port/Gizmo.scala"))
+    // and the check verifies the per-type key the same way it verifies a prefix: zero residue.
+    assertEquals(r.report.rename.unmatched.sorted, List("com.demo", "com.demo.Widget"))
+    assertEquals(r.report.policy.findings, Nil)
+  }
+
+  test("a REFUSED per-type rename is a §1(b) `policy` finding, and the type does not move") {
+    // The whole point of the seam: a rename that cannot be carried out must not be a silent no-op.
+    val (root, src) = fixture()
+    val r = run(root, src)(_.copy(typeRenames = Map("com.demo.Widget" -> "Gadget")))
+    assertEquals(emitted(r.outDir), List("com/demo/Gadget.scala", "com/demo/Widget.scala"))
+    assertEquals(r.report.policy.findings.map(f => (f.phase, f.key, f.issue)),
+                 List(("package-rename", "com.demo.Widget", PolicyIssue.Malformed)))
+    assert(clue(r.report.policy.render).contains("§1(b)"))
+  }
+
+  test("dropped-types.tsv carries a per-TYPE rename in BOTH namespaces (§4.56)") {
+    // The same two-namespace obligation `packageRenames` has, one level finer: an artifact that
+    // joined the manifest's upstream FQN to an EMITTED stack frame matched nothing, silently.
+    val (root, src) = fixture()
+    val rep    = root.resolve("report")
+    val inject = root.resolve("overrides")
+    java(inject, "com/demo/Widget.scala", "package sge\nclass Gizmo { def label(): String = \"w\" }")
+    withReport(rep) {
+      run(root, src)(_.copy(subs = Substitutions(dropTypes = Set("com.demo.Widget"), inject = List(inject)),
+                            packageRenames = Map("com.demo" -> "sge"),
+                            typeRenames = Map("com.demo.Widget" -> "Gizmo")))
+    }
+    assertEquals(Correlate.parseDropped(rep.resolve("run-latest/dropped-types.tsv")),
+                 Set(Correlate.Dropped("com.demo.Widget", "sge.Gizmo")))
+  }
+
   test("externalConcrete is DERIVED from the phases: RuntimePlan, never a caller argument") {
     val (root, src) = fixture()
     val r = run(root, src)(_.copy(phases = List(new CollectionsTransform)))

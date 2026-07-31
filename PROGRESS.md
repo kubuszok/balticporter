@@ -1802,15 +1802,24 @@ behaviour). gltf is at parity, 135/135 both sides.
 6. **Collection-map extensions** — retarget entries like `gdx Array<Integer>` → `ArrayBuffer[Int]`
    with wrapper unboxing (base-manifest); `java.util.Comparator`→`Ordering` + a
    `Collections.sort`→`sortInPlace` call-site table.
-7. **Rename-map extensions** — per-TYPE renames (`liqp.filters.Map`→`MapFilter`), sub-package
-   restructuring and nested-type flattening knobs (simple-graphs' `internal`,
-   `Connection.DirectedConnection`→top level).
-
 **(c) Library rules, permanent injects, skip-then-patch (correctly not mechanized):**
 - **Opaque types** — ~30 in sge core (GL handles, GL enums, `Pixels`/`Seconds`/unit types), zero
   emitted. The (b) mechanism exists (`PrimitiveToOpaqueTransform`); the knowledge is per-library
   config nobody has written yet. Extensions inherit the base's (§1.5). The ssg ports and the four
   small sge ports have ZERO opaque types — do not invent config there.
+- **Per-TYPE renames, sub-packaging and nested-type flattening** — the same shape one line up. The
+  (b) mechanism is BUILT (`PackageRenameTransform`'s `typeRenames` / `subPackages` /
+  `flattenNestedTypes` / `allowPackageSplit`, `DESIGN.md` §8.7); no port enables any of it, and the
+  knowledge of WHICH type is per-library. What a dry run against the reference hand ports says the
+  policy would be, so it is not re-derived: **simple-graphs** —
+  `flattenNestedTypes = ["…Connection$DirectedConnection", "…Connection$UndirectedConnection"]`
+  (0 findings), `subPackages { BinaryHeap = internal, NodeMap = internal }` (0 findings), and
+  `typeRenames { "…simplegraphs.Array" = "…simplegraphs.internal.InternalArray" }`, which needs
+  `allowPackageSplit` beside it — `Array#strictResize` is `protected` and inherited by
+  `algorithms.AlgorithmPath`, so the move takes the subclass out of the declaring package's subtree
+  and the §8.7 qualifier must widen (1 refusal, or 1 recorded `package-split` widening). **liqp** —
+  `typeRenames { "liqp.filters.Map" = "MapFilter" }` and the same for its `DateParser`; liqp is not
+  in the corpus, so that pair is a candidate and not a measurement.
 - **Permanent injects with no Java source**: gltf's 2,268-line Jsoniter codecs (plus (b)5 to reach
   them); liqp's ANTLR-replacement parser trio (2,166 LOC — the generated Java was never committed,
   so these are injects FOREVER, with one pinned behavioural divergence: parse-time vs render-time

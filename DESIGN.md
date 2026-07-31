@@ -2220,7 +2220,43 @@ or is referenced by package-private/protected members across the old boundary, i
 where the port declares the split deliberately, **recorded as a `package-split` `Configured` widening**,
 exactly parallel to `package-merge` and for the same reason (it varies per port and per rename entry, so
 it is what `Configured` is for). **Which rule wins in the qualifier derivation is stated once: the
-recorded widening does.** The qualifier is derived from the emitter's *current emitted package* and
+recorded widening does.**
+
+**BUILT (M6), and four things the implementation settled that this paragraph could not.** The
+per-type policy is four maps on the one renaming phase — `typeRenames` (a whole upstream FQN, or a
+bare simple name renaming in place), `subPackages`, `flattenNestedTypes` and `allowPackageSplit` —
+all four inherited by dependents (§1.5) and compared by `ManifestAgreement.TypeRenameDivergence`. The
+last three DERIVE into per-type entries of the same longest-prefix table the package renames use, so
+there is one rewrite, one LAST position and one check; every target is written UPSTREAM and the
+package rename is applied to it once. What the code had to decide:
+
+- **A boundary is decided by SCALA's rule, not Java's, and the two differ in exactly one direction.**
+  Java's package boundary is exact; Scala's `private[p]` covers `p` *and its subpackages*, which is
+  what this section already says about subpackage nesting. So nesting a type under `p.internal`
+  keeps everything `p` restricts reachable FROM it and removes only the other half. Compared by
+  string equality the rule refuses every `subPackages` entry for a crossing that does not exist —
+  measured on simple-graphs, where the equality form refused `BinaryHeap` and `NodeMap` and the
+  `reaches` form refuses neither, matching the hand port.
+- **`flattenNestedTypes` gets the SAME rule at the enclosure**, recorded as `enclosure-split`
+  beside `package-split`: Java's `private` reaches throughout the top-level enclosure (the
+  `private[TopLevel]` row above), and a promoted type is no longer inside it. It is a second cause
+  and not a second mechanism.
+- **The rule sees the `protected` half of the package boundary and NOT the default-access half**,
+  because package-private is not represented in the TIR at all (the root cause above). That is the
+  measured limit of M6's refusal, stated where the flag lands: one predicate, one line to widen when
+  this section's `Flags` work makes package-private representable.
+- **Two structural refusals the boundary rule does not cover, both `Malformed`:** a destination that
+  is already some other type's emitted name is a COLLISION rather than a hit (two files silently
+  overwriting each other, and no count moves for it), and a Java INNER class cannot be flattened at
+  all — it carries an implicit reference to its enclosing instance and a top-level type has nowhere
+  to keep it.
+
+Measured on simple-graphs against the hand port it reproduces: `Connection$DirectedConnection` and
+`Connection$UndirectedConnection` flatten with **0** findings, `BinaryHeap` and `NodeMap` sub-package
+with **0**, and `Array -> internal.InternalArray` is refused with **1** — `Array#strictResize` is
+`protected` and inherited by `algorithms.AlgorithmPath`, which the move takes out of the declaring
+package's subtree, so its qualifier must widen to the common ancestor. Declared, that is exactly
+**1** `WidenedVisibility` row with `cause=package-split` for D3 to read. The qualifier is derived from the emitter's *current emitted package* and
 never from an upstream FQN (that is what keeps this out of §4.56's two-namespace join), so a split
 type's qualifier names its NEW package — narrower or wider than Java's, but always the truth about the
 emitted file — and the `package-split` row is the record that the boundary moved. And subpackage nesting only **widens, never blocks**; across ports every dependent's

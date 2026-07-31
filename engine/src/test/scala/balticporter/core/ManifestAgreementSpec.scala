@@ -131,3 +131,70 @@ class ManifestAgreementSpec extends munit.FunSuite:
       List(SharedType("third.party.T", "third.party.T", substituted = false)), true, List(BasePort(vendored)))
     assertEquals(clue(fs).map(_.render), Nil)
   }
+
+  // ---------------------------------------------------------------------------
+  // M6 — the PER-TYPE half of the rename policy is shared surface, and is INHERITED
+  // ---------------------------------------------------------------------------
+
+  private val moving = PortManifest(
+    name               = "base",
+    governs            = Set("up"),
+    typeRenames        = Map("up.Map" -> "MapFilter"),
+    subPackages        = Map("up.Impl" -> "internal"),
+    flattenNestedTypes = Set("up.Conn$Directed"),
+  )
+
+  private def statics(m: PortManifest) =
+    ManifestAgreement.check(Some(m), Nil, foreignRoots = true, Nil)
+      .filterNot(_.kind == Kind.InheritedKeyNeverFired)
+
+  test("a dependent that INHERITS the base's per-type renames agrees, and nothing is reported") {
+    assertEquals(clue(statics(moving.extendedBy(PortManifest(name = "dep")))).map(_.render), Nil)
+  }
+
+  test("a dependent that RESTATES them longhand and gets one wrong is FATAL, per entry") {
+    val dep = PortManifest(
+      name = "dep",
+      // `up.Map` moved to a different destination, `up.Impl` not moved at all, `up.Conn$Directed`
+      // correct — three declarations, two disagreements.
+      typeRenames        = Map("up.Map" -> "GdxMap"),
+      flattenNestedTypes = Set("up.Conn$Directed"),
+    ).mirroring(moving)
+    val fs = statics(dep).filter(_.kind == Kind.TypeRenameDivergence)
+    assertEquals(fs.map(_.subject).sorted, List("up.Impl", "up.Map"))
+    assert(fs.forall(_.kind.fatal), clue = "two ports that name one class two ways cannot compile together")
+    assert(clue(fs.find(_.subject == "up.Map").get.detail).contains("typeRenames=GdxMap"))
+  }
+
+  test("a dependent that moves a type INSIDE the base's namespace the base leaves alone is caught") {
+    val dep = PortManifest(name = "dep", subPackages = Map("up.Extra" -> "internal"))
+      .mirroring(PortManifest(name = "base", governs = Set("up")))
+    val fs = statics(dep).filter(_.kind == Kind.TypeRenameDivergence)
+    assertEquals(fs.map(_.subject), List("up.Extra"))
+    assert(clue(fs.head.detail).contains("claims this namespace"))
+  }
+
+  test("a DECLARED boundary split is half of the rename: inheriting one and not the other is caught") {
+    val split = PortManifest(name = "base", governs = Set("up"),
+                             typeRenames = Map("up.A" -> "other.A"), allowPackageSplit = Set("up.A"))
+    val dep = PortManifest(name = "dep", typeRenames = Map("up.A" -> "other.A")).mirroring(split)
+    val fs  = statics(dep).filter(_.kind == Kind.TypeRenameDivergence)
+    assertEquals(fs.map(_.subject), List("up.A"))
+    assert(clue(fs.head.detail).contains("DELIBERATE"))
+    // …and inheriting BOTH is silent, which is the whole point of `extendedBy`.
+    assertEquals(clue(statics(split.extendedBy(PortManifest(name = "dep2")))).map(_.render), Nil)
+  }
+
+  test("the name a base gives a shared type includes its per-TYPE moves, not only its packages") {
+    val b   = PortManifest(name = "base", governs = Set("up"), packageRenames = Map("up" -> "sge"),
+                           typeRenames = Map("up.Map" -> "MapFilter"))
+    val dep = b.extendedBy(PortManifest(name = "dep"))
+    assertEquals(dep.renamed("up.Map"), "sge.MapFilter")
+    assertEquals(dep.renamed("up.Other"), "sge.Other")
+    // a run that emitted the base's name agrees; one that emitted the merely-package-renamed name
+    // does not, which is the divergence this half exists to see.
+    val ok = ManifestAgreement.check(Some(dep), List(SharedType("up.Map", "sge.MapFilter", false)), true, Nil)
+    assertEquals(ok.filter(_.kind == Kind.SurfaceNameDivergence), Nil)
+    val bad = ManifestAgreement.check(Some(dep), List(SharedType("up.Map", "sge.Map", false)), true, Nil)
+    assertEquals(bad.filter(_.kind == Kind.SurfaceNameDivergence).size, 1)
+  }

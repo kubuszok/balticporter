@@ -1,8 +1,9 @@
 package balticporter.corpus
 
+import balticporter.core.PolicyIssue
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
-import balticporter.tir.{Pipeline, Program}
+import balticporter.tir.{Decision, DecisionLog, Pipeline, Program}
 import balticporter.transform.PackageRenameTransform
 
 /** `PackageRenameTransform` — the §1(b) phase that moves a port out of the upstream namespace.
@@ -152,4 +153,302 @@ class PackageRenameTransformSpec extends munit.FunSuite:
     assert(fq.contains("com.example.demo.Widget$Style"))
     assert(!fq.contains("java.lang.String"))
     assert(!fq.contains("java.util.List"))
+  }
+
+  // ---------------------------------------------------------------------------
+  // M6 — the PER-TYPE maps: `typeRenames`, `subPackages`, `flattenNestedTypes`
+  //
+  // Same phase, same LAST position, same separator cut. What they add over a prefix entry is a
+  // BOUND key (so a JDK type or a typo is refused rather than silently succeeding), a FREE
+  // destination (a bound target FQN is a collision, not a hit), and the boundary rule below.
+  // ---------------------------------------------------------------------------
+
+  private def phase(
+      pkg: Map[String, String] = Map.empty,
+      types: Map[String, String] = Map.empty,
+      subs: Map[String, String] = Map.empty,
+      flat: Set[String] = Set.empty,
+      allow: Set[String] = Set.empty,
+  ) = new PackageRenameTransform(pkg, types, subs, flat, allow)
+
+  /** run ONE instance, and keep it — the refusals and the decisions are read off the same value the
+    * pipeline bound, which is exactly what `PortRun` now does with it. */
+  private def runPhase(p: PackageRenameTransform, on: Program = before): (Program, DecisionLog) =
+    Pipeline.runTraced(on, List(p))
+
+  private def issues(p: PackageRenameTransform): List[(String, PolicyIssue)] =
+    p.policyReport.findings.map(f => f.key -> f.issue).sortBy(_._1)
+
+  test("every per-type map EMPTY is the same no-op the empty prefix map is — byte for byte") {
+    val p            = phase()
+    val (after, log) = runPhase(p)
+    assertEquals(names(after), names(before))
+    assertEquals(emit(after), emit(before))
+    assertEquals(log.all, Nil)
+    assertEquals(p.policyReport.findings, Nil)
+    assertEquals(p.upstreamTable, Map.empty[String, String])
+  }
+
+  test("typeRenames: a BARE simple name renames the type in place; a dotted value is a whole FQN") {
+    val inPlace = phase(types = Map("com.example.demo.Widget" -> "Gadget"))
+    val (a, _)  = runPhase(inPlace)
+    assert(names(a).contains("com.example.demo.Gadget"))
+    assert(names(a).contains("com.example.demo.Gadget$Style"), clue = "a nested type must follow its enclosure")
+    assert(names(a).contains("com.example.demo.Gadget#label"))
+    assert(clue(emit(a)).contains("class Gadget"))
+
+    val moved  = phase(types = Map("com.example.demo.Widget" -> "com.other.Gadget"))
+    val (b, _) = runPhase(moved)
+    assert(names(b).contains("com.other.Gadget"))
+    assert(names(b).contains("com.other.Gadget$Handle"))
+    assert(clue(emit(b)).contains("package com.other"))
+  }
+
+  test("a typeRenames TARGET is written UPSTREAM: the package rename applies to it, once") {
+    val p      = phase(pkg = Map("com.example" -> "sge.ui"), types = Map("com.example.demo.Widget" -> "Gadget"))
+    val (a, _) = runPhase(p)
+    assertEquals(p.emittedName("com.example.demo.Widget"), "sge.ui.demo.Gadget")
+    assertEquals(p.emittedName("com.example.demo.Panel"), "sge.ui.demo.Panel")
+    assert(names(a).contains("sge.ui.demo.Gadget"))
+    assertEquals(names(a).filter(_.startsWith("com.example")), Set.empty[String])
+  }
+
+  test("a per-TYPE key cuts at a SEPARATOR too — `…Widget` does not cover `…Widgetry`") {
+    val src2 = """package com.example.demo;
+                 |public class Widget { public int a; }
+                 |class Widgetry { Widget w = new Widget(); }
+                 |""".stripMargin
+    val prog   = SpoonTir.fromSource(src2)
+    val p      = phase(types = Map("com.example.demo.Widget" -> "Gadget"))
+    val (a, _) = Pipeline.runTraced(prog, List(p))
+    val n      = a.symbols.all.map(_.fullName).toSet
+    assert(n.contains("com.example.demo.Gadget"))
+    assert(clue(n).contains("com.example.demo.Widgetry"), clue = "a prefix that does not cut at a separator moved a sibling")
+    assert(!n.contains("com.example.demo.Gadgetry"))
+  }
+
+  test("a key naming a type this program does not DECLARE is refused, never silently applied") {
+    val jdk    = phase(types = Map("java.util.List" -> "sge.Seq"))
+    val (a, _) = runPhase(jdk)
+    assertEquals(names(a), names(before))
+    assertEquals(issues(jdk), List("java.util.List" -> PolicyIssue.NeverMatched))
+    assert(jdk.policyReport.findings.head.detail.contains("REFERENCES and does not DECLARE"))
+
+    val typo   = phase(types = Map("com.example.demo.Widgt" -> "Gadget"))
+    val (b, _) = runPhase(typo)
+    assertEquals(names(b), names(before))
+    assertEquals(issues(typo), List("com.example.demo.Widgt" -> PolicyIssue.NeverMatched))
+  }
+
+  test("a DESTINATION that is already taken is a COLLISION, refused loudly, and nothing moves") {
+    val p      = phase(types = Map("com.example.demo.Widget" -> "Panel"))
+    val (a, _) = runPhase(p)
+    assertEquals(names(a), names(before), "a refused rename must leave the program alone")
+    assertEquals(issues(p), List("com.example.demo.Widget" -> PolicyIssue.Malformed))
+    assert(clue(p.policyReport.findings.head.detail).contains("com.example.demo.Panel"))
+
+    // …and two entries aimed at ONE destination are the same collision from the other side.
+    val twin   = phase(types = Map("com.example.demo.Widget" -> "Z", "com.example.demo.Panel" -> "Z"))
+    val (b, _) = runPhase(twin)
+    assertEquals(names(b), names(before))
+    assertEquals(issues(twin).map(_._2), List(PolicyIssue.Malformed, PolicyIssue.Malformed))
+  }
+
+  test("one type, ONE destination: a key named by two maps is refused on both") {
+    val p = phase(types = Map("com.example.demo.Widget" -> "Gadget"),
+                  subs = Map("com.example.demo.Widget" -> "internal"))
+    val (a, _) = runPhase(p)
+    assertEquals(names(a), names(before))
+    assertEquals(p.policyReport.findings.size, 2)
+    assert(p.policyReport.findings.forall(_.detail.contains("more than one of")))
+  }
+
+  test("subPackages nests a type in place, and refuses a nested type and a `$` in the value") {
+    val p      = phase(subs = Map("com.example.demo.Widget" -> "internal"))
+    val (a, _) = runPhase(p)
+    assert(names(a).contains("com.example.demo.internal.Widget"))
+    assert(names(a).contains("com.example.demo.internal.Widget$Style"))
+    assert(names(a).contains("com.example.demo.Panel"), clue = "a sibling must not move")
+    assert(clue(emit(a)).contains("package com.example.demo.internal"))
+
+    val nested = phase(subs = Map("com.example.demo.Widget$Style" -> "internal"))
+    runPhase(nested)
+    assertEquals(issues(nested), List("com.example.demo.Widget$Style" -> PolicyIssue.Malformed))
+  }
+
+  test("flattenNestedTypes promotes a STATIC nested type to a unit — its own file and package clause") {
+    val p      = phase(flat = Set("com.example.demo.Widget$Style"))
+    val (a, _) = runPhase(p)
+    assertEquals(p.policyReport.findings, Nil)
+    assert(names(a).contains("com.example.demo.Style"))
+    assert(!names(a).contains("com.example.demo.Widget$Style"))
+    assert(names(a).contains("com.example.demo.Style#pad"))
+    // it is a UNIT now: its own emitted file, with its own package clause.
+    assertEquals(a.units.count(u => a.symbolOf(u.symbol).exists(_.fullName == "com.example.demo.Style")), 1)
+    // …and the enclosing type no longer declares it.
+    val widget = a.units.find(u => a.symbolOf(u.symbol).exists(_.fullName == "com.example.demo.Widget")).get
+    assert(!widget.body.exists {
+      case c: balticporter.tir.Tree.ClassDef => a.symbolOf(c.symbol).exists(_.name == "Style")
+      case _                                 => false
+    })
+    // every reference followed — nothing names the old path.
+    assert(!clue(emit(a)).contains("Widget.Style"))
+  }
+
+  test("a NON-STATIC inner class cannot be flattened: it carries an implicit enclosing instance") {
+    val p      = phase(flat = Set("com.example.demo.Widget$Handle"))
+    val (a, _) = runPhase(p)
+    assertEquals(names(a), names(before))
+    assertEquals(issues(p), List("com.example.demo.Widget$Handle" -> PolicyIssue.Malformed))
+    assert(clue(p.policyReport.findings.head.detail).contains("STATIC"))
+  }
+
+  test("`flattenNestedTypes` naming a type with no `$` is malformed, not a silent no-op") {
+    val p = phase(flat = Set("com.example.demo.Panel"))
+    runPhase(p)
+    assertEquals(issues(p), List("com.example.demo.Panel" -> PolicyIssue.Malformed))
+  }
+
+  // ---------------------------------------------------------------------------
+  // DECISION PROVENANCE — a per-type move is a `RenamedType`, not a `RenamedPackage`
+  // ---------------------------------------------------------------------------
+
+  test("a per-type move records RenamedType; a prefix move records RenamedPackage") {
+    val p        = phase(pkg = Map("com.example" -> "sge.ui"), types = Map("com.example.demo.Widget" -> "Gadget"))
+    val (_, log) = runPhase(p)
+    val byKind   = log.all.groupBy(_.kind).view.mapValues(_.map(_.subjectFqn).sorted).toMap
+    assertEquals(byKind.getOrElse(Decision.Kind.RenamedType, Nil), List("com.example.demo.Widget"))
+    assertEquals(byKind.getOrElse(Decision.Kind.RenamedPackage, Nil), List("com.example.demo.Panel"))
+    val d = log.all.find(_.kind == Decision.Kind.RenamedType).get
+    assertEquals(d.detail("to"), "sge.ui.demo.Gadget")
+    assertEquals(d.reason.detail, "package-rename:com.example.demo.Widget -> sge.ui.demo.Gadget")
+    assert(d.detail.contains("why"))
+  }
+
+  // ---------------------------------------------------------------------------
+  // THE PACKAGE-SPLIT RULE (DESIGN.md §8.7) — M6 falsifies the no-split premise
+  // ---------------------------------------------------------------------------
+
+  private val splitSrc =
+    """package com.example.demo;
+      |public class Alpha {
+      |  protected int shared() { return 1; }
+      |  public int own() { return shared(); }
+      |}
+      |class Beta {
+      |  int use(Alpha a) { return a.shared(); }
+      |}
+      |class Gamma {
+      |  public int plain(Alpha a) { return a.own(); }
+      |}
+      |""".stripMargin
+  private val split = SpoonTir.fromSource(splitSrc)
+
+  test("split REFUSED: a move that puts a `protected` member across a new package boundary") {
+    val p        = phase(types = Map("com.example.demo.Alpha" -> "com.other.Alpha"))
+    val (a, log) = runPhase(p, split)
+    assertEquals(a.symbols.all.map(_.fullName).toSet, split.symbols.all.map(_.fullName).toSet,
+                 "a refused split must leave every name where it was")
+    assertEquals(issues(p), List("com.example.demo.Alpha" -> PolicyIssue.Unverifiable))
+    val why = p.policyReport.findings.head.detail
+    assert(clue(why).contains("package-split"))
+    assert(clue(why).contains("com.example.demo.Alpha#shared"))
+    assert(clue(why).contains("allowPackageSplit"), clue = "a refusal must say how to declare the move")
+    assertEquals(log.all.count(_.kind == Decision.Kind.WidenedVisibility), 0)
+    assertEquals(p.recordedWidenings, Nil)
+  }
+
+  test("split RECORDED: declared deliberate, it happens and each affected declaration gets a row") {
+    val p = phase(types = Map("com.example.demo.Alpha" -> "com.other.Alpha"),
+                  allow = Set("com.example.demo.Alpha"))
+    val (a, log) = runPhase(p, split)
+    assertEquals(issues(p), Nil)
+    assert(a.symbols.all.map(_.fullName).toSet.contains("com.other.Alpha"))
+    val rows = log.all.filter(_.kind == Decision.Kind.WidenedVisibility)
+    assertEquals(rows.map(_.subjectFqn), List("com.example.demo.Alpha#shared"))
+    assertEquals(rows.head.detail("cause"), "package-split")
+    assertEquals(rows.head.detail("type"), "com.example.demo.Alpha")
+    assertEquals(rows.head.detail("reader"), "com.example.demo.Beta#use")
+    // §1's classification is on the row, because which repository the fix lives in is the reader's
+    // first question — and this one is CONFIGURED, exactly as `package-merge` is.
+    assertEquals(rows.head.reason.className, "configured")
+  }
+
+  test("no split: a move with no restricted member across the old boundary is SILENT") {
+    val p        = phase(types = Map("com.example.demo.Gamma" -> "com.other.Gamma"))
+    val (a, log) = runPhase(p, split)
+    assertEquals(issues(p), Nil)
+    assert(a.symbols.all.map(_.fullName).toSet.contains("com.other.Gamma"))
+    assertEquals(log.all.count(_.kind == Decision.Kind.WidenedVisibility), 0)
+    assertEquals(p.recordedWidenings, Nil)
+  }
+
+  test("a SUB-PACKAGE move blocks only the OUTGOING half — subpackage nesting widens, never blocks") {
+    // DESIGN.md §8.7. Scala's `private[p]` covers `p` AND its subpackages, so nesting a type under
+    // `p.internal` keeps everything `p` restricts reachable FROM it. What it does take away is the
+    // other direction, and only that half is a split.
+    val incoming =
+      """package com.example.demo;
+        |public class Host { protected int shared() { return 1; } }
+        |class Moving { int use(Host h) { return h.shared(); } }
+        |""".stripMargin
+    val p = phase(subs = Map("com.example.demo.Moving" -> "internal"))
+    val (a, _) = Pipeline.runTraced(SpoonTir.fromSource(incoming), List(p))
+    assertEquals(issues(p), Nil, clue = "the moved type still reads its old package's `protected`")
+    assert(a.symbols.all.map(_.fullName).toSet.contains("com.example.demo.internal.Moving"))
+
+    // …and the SAME two types with the restricted member on the moving side is a split.
+    val outgoing =
+      """package com.example.demo;
+        |public class Moving { protected int shared() { return 1; } }
+        |class Host { int use(Moving m) { return m.shared(); } }
+        |""".stripMargin
+    val q = phase(subs = Map("com.example.demo.Moving" -> "internal"))
+    Pipeline.runTraced(SpoonTir.fromSource(outgoing), List(q))
+    assertEquals(issues(q), List("com.example.demo.Moving" -> PolicyIssue.Unverifiable))
+  }
+
+  test("an `allowPackageSplit` entry that declares nothing is itself a finding") {
+    val p = phase(types = Map("com.example.demo.Gamma" -> "com.other.Gamma"),
+                  allow = Set("com.example.demo.Gamma"))
+    runPhase(p, split)
+    assertEquals(issues(p), List("com.example.demo.Gamma" -> PolicyIssue.NeverMatched))
+  }
+
+  test("flattening that breaks Java's `private[TopLevel]` boundary is refused as an enclosure split") {
+    val src2 =
+      """package com.example.demo;
+        |public class Host {
+        |  private static int secret = 1;
+        |  public static class Guest { int peek() { return secret; } }
+        |}
+        |""".stripMargin
+    val prog   = SpoonTir.fromSource(src2)
+    val p      = phase(flat = Set("com.example.demo.Host$Guest"))
+    val (a, _) = Pipeline.runTraced(prog, List(p))
+    assertEquals(a.symbols.all.map(_.fullName).toSet, prog.symbols.all.map(_.fullName).toSet)
+    assertEquals(issues(p), List("com.example.demo.Host$Guest" -> PolicyIssue.Unverifiable))
+    assert(clue(p.policyReport.findings.head.detail).contains("enclosure-split"))
+  }
+
+  // ---------------------------------------------------------------------------
+  // the table the RUN reads for BOTH namespaces (§4.56), and the check
+  // ---------------------------------------------------------------------------
+
+  test("the accepted table carries both namespaces, and a REFUSED entry is not in it") {
+    val ok = phase(pkg = Map("com.example" -> "sge.ui"), types = Map("com.example.demo.Widget" -> "Gadget"))
+    runPhase(ok)
+    assertEquals(ok.upstreamTable("com.example.demo.Widget"), "sge.ui.demo.Gadget")
+
+    val no = phase(pkg = Map("com.example" -> "sge.ui"), types = Map("com.example.demo.Widget" -> "Panel"))
+    runPhase(no)
+    assertEquals(no.upstreamTable.get("com.example.demo.Widget"), scala.None)
+    assertEquals(no.emittedName("com.example.demo.Widget"), "sge.ui.demo.Widget")
+  }
+
+  test("check reports zero residue for a per-type entry too, after the phase") {
+    val p      = phase(types = Map("com.example.demo.Widget" -> "Gadget"))
+    val (a, _) = runPhase(p)
+    assert(PackageRenameTransform.check(before, p.upstreamTable).matched("com.example.demo.Widget") > 0)
+    assertEquals(PackageRenameTransform.check(a, p.upstreamTable).matched, Map.empty[String, Int])
   }

@@ -102,6 +102,10 @@ object PortManifestConfig:
     m.dropTypes.toList.sorted.foreach(d => ls += s"dropType\t$d\t")
     m.dropMethods.toList.sorted.foreach(d => ls += s"dropMethod\t$d\t")
     m.packageRenames.toList.sortBy(_._1).foreach((f, t) => ls += s"packageRename\t$f\t$t")
+    m.typeRenames.toList.sortBy(_._1).foreach((f, t) => ls += s"typeRename\t$f\t$t")
+    m.subPackages.toList.sortBy(_._1).foreach((f, t) => ls += s"subPackage\t$f\t$t")
+    m.flattenNestedTypes.toList.sorted.foreach(f => ls += s"flattenNestedType\t$f\t")
+    m.allowPackageSplit.toList.sorted.foreach(f => ls += s"allowPackageSplit\t$f\t")
     ls += s"# surface: ${m.surface.size} phase(s), NOT represented here — a phase is code, not data"
     m.surface.foreach(p => ls += s"# surface\t${PortManifest.fingerprint(p)}\t")
     ls.mkString("", "\n", "\n")
@@ -126,5 +130,9 @@ object PortManifestConfig:
           dropTypes      = all("dropType"),
           dropMethods    = all("dropMethod"),
           packageRenames = rows.collect { case Array("packageRename", f, t, _*) if f.nonEmpty => f -> t }.toMap,
+          typeRenames    = rows.collect { case Array("typeRename", f, t, _*) if f.nonEmpty => f -> t }.toMap,
+          subPackages    = rows.collect { case Array("subPackage", f, t, _*) if f.nonEmpty => f -> t }.toMap,
+          flattenNestedTypes = all("flattenNestedType"),
+          allowPackageSplit  = all("allowPackageSplit"),
           surface        = surface,
         ))

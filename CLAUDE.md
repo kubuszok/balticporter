@@ -119,7 +119,7 @@ The line between what must agree and what must not:
 | inherited — a fact about the SHARED SURFACE | not inherited — a fact about THIS module's build |
 |---|---|
 | `dropTypes`, `dropMethods`, `packageRenames`, `surface` | `sourceSet`, `frontend`, `provenance`, `runtimeMode`, `supportSources`, `project` |
-| | **`inject`** |
+| the PER-TYPE half of the rename policy — `typeRenames`, `subPackages`, `flattenNestedTypes`, and `allowPackageSplit` beside them | **`inject`** |
 
 `inject` is the one that looks wrong and is not. A drop and its replacement read as one decision and
 are two: the DROP is an observation about the shared API and binds every module that sees the type;

@@ -137,6 +137,13 @@ final case class PortRun(
     subs: Substitutions = Substitutions.none,
     provenance: Option[Provenance] = scala.None,
     packageRenames: Map[String, String] = Map.empty,
+    /** the PER-TYPE half of the same phase — see `packageRenames` for why all four arrive as data
+      * rather than as a surface entry, and `PackageRenameTransform` for what each one says. Empty
+      * is a no-op; a `manifest` supplies them and they must then be left at their defaults. */
+    typeRenames: Map[String, String] = Map.empty,
+    subPackages: Map[String, String] = Map.empty,
+    flattenNestedTypes: Set[String] = Set.empty,
+    allowPackageSplit: Set[String] = Set.empty,
     runtimeMode: RuntimeMode = RuntimeMode.Dependency,
     supportSources: Map[String, String] = Map.empty,
     project: Option[SbtGen.ProjectSpec] = scala.None,
@@ -187,6 +194,23 @@ final case class PortRun(
 
   private def renames: Map[String, String] = manifest.map(_.effectivePackageRenames).getOrElse(packageRenames)
 
+  /** THE rename phase this run appends, or none — a `lazy val` and not a `def`, because the phase
+    * now owns two answers the run has to read back off the SAME instance: which per-TYPE entries it
+    * ACCEPTED (a refused one must not reach `dropped-types.tsv` or the source map) and what it
+    * REFUSED (a §1(b) finding for the `policy` check). A fresh instance per call would answer both
+    * questions with silence, and nothing would move a count. */
+  private lazy val renamePhase: Option[PackageRenameTransform] =
+    val types = manifest.map(_.effectiveTypeRenames).getOrElse(typeRenames)
+    val subs2 = manifest.map(_.effectiveSubPackages).getOrElse(subPackages)
+    val flat  = manifest.map(_.effectiveFlattenNestedTypes).getOrElse(flattenNestedTypes)
+    val split = manifest.map(_.effectiveAllowPackageSplit).getOrElse(allowPackageSplit)
+    if renames.isEmpty && types.isEmpty && subs2.isEmpty && flat.isEmpty then scala.None
+    else Some(new PackageRenameTransform(renames, types, subs2, flat, split))
+
+  /** what an UPSTREAM name is emitted as, under the policy this run ACCEPTED (§4.56: any artifact
+    * joining policy to observed code carries both namespaces, and only the run holds both). */
+  private def emittedName(fqn: String): String = renamePhase.fold(fqn)(_.emittedName(fqn))
+
   /** where this source set's emitted Scala goes. From [[SbtGen]], never composed by hand (§5.5). */
   def outDir: Path = SbtGen.managedDir(portRoot, sourceSet.configName)
 
@@ -201,8 +225,9 @@ final case class PortRun(
         "instead and PortRun places it last.",
     )
     require(
-      manifest.isEmpty || (phases.isEmpty && subs == Substitutions.none && packageRenames.isEmpty),
-      s"[$label] a `manifest` SUPPLIES `phases`, `subs` and `packageRenames`; passing either " +
+      manifest.isEmpty || (phases.isEmpty && subs == Substitutions.none && packageRenames.isEmpty &&
+        typeRenames.isEmpty && subPackages.isEmpty && flattenNestedTypes.isEmpty && allowPackageSplit.isEmpty),
+      s"[$label] a `manifest` SUPPLIES `phases`, `subs` and every rename map; passing either " +
         "source alongside it would give this run two policies and no way to say which one the " +
         "dependent modules have to agree with. Move the values into the PortManifest.",
     )
@@ -325,7 +350,7 @@ final case class PortRun(
     if portability.nonEmpty then say(PortReport.Kind.Portability.classification)
     println(PortabilityCheck.summary(portability, fixes))
 
-    val renameReport = PackageRenameTransform.check(program, renames)
+    val renameReport = PackageRenameTransform.check(program, renamePhase.fold(renames)(_.upstreamTable))
     if renames.nonEmpty then
       say(s"package rename (verified AFTER the phase — every prefix must now be unmatched):")
       println(renameReport.render)
@@ -554,7 +579,17 @@ final case class PortRun(
     val ownPhaseNames: Set[String] = ownPhases.map(_.name).toSet
     val dropFindings = PolicyReport(PolicyReport.fromBindings(translated.binder.bindings).findings
       .filter(f => f.phase == "substitutions" && ownKeys(f.key)))
-    val policy = dropFindings ++
+    // The RENAME phase is never in `ownPhases` — the run appends it itself, because its position
+    // is an obligation no `runsAfter` can state (§4.56) — so its per-TYPE keys would otherwise be
+    // the one (b) seam with no policy report at all. Held to THIS module's own keys by the same
+    // rule the drops are: an inherited type rename that matched nothing here is
+    // `ManifestAgreement`'s to report, and it says which base it came from.
+    val ownRenameKeys: Set[String] = manifest match
+      case Some(m)    => m.typeRenames.keySet ++ m.subPackages.keySet ++ m.flattenNestedTypes ++ m.allowPackageSplit
+      case scala.None => typeRenames.keySet ++ subPackages.keySet ++ flattenNestedTypes ++ allowPackageSplit
+    val renameFindings = PolicyReport(
+      renamePhase.toList.flatMap(_.policyReport.findings).filter(f => ownRenameKeys(f.key)))
+    val policy = dropFindings ++ renameFindings ++
       PolicyReport.from(ownPhases.collect { case p: PolicySource if ownPhaseNames(p.name) => p })
     CheckReport.record(PortRun.Policy, policy.findings.map { f =>
       CheckReport.Finding(PortRun.Policy, f.issue.label, f.phase, f.setting, 0, s"${f.key} — ${f.detail}")
@@ -663,11 +698,11 @@ final case class PortRun(
       // injected code then resolves to nothing, which the correlator already classifies honestly
       // as "outside the source map" (§5.1). Entries are keyed by EMITTED unit name, so the drop
       // set is translated the same way `dropped-types.tsv`'s second column is.
-      val droppedEmitted = policySubs.dropTypes.map(fqn => PackageRenameTransform.renamed(fqn, renames))
+      val droppedEmitted = policySubs.dropTypes.map(emittedName)
       SrcMap.write(dir, rec.copy(entries = rec.entries.filterNot(e => droppedEmitted(e.unit))))
       Files.createDirectories(dir)
       val drops = policySubs.dropTypes.toList.sorted
-        .map(fqn => Correlate.Dropped(fqn, PackageRenameTransform.renamed(fqn, renames)).tsv)
+        .map(fqn => Correlate.Dropped(fqn, emittedName(fqn)).tsv)
       Files.writeString(dir.resolve("dropped-types.tsv"),
         (Correlate.DroppedHeader :: drops).mkString("", "\n", "\n"))
 
@@ -847,7 +882,7 @@ final case class PortRun(
     // Which declared keys FIRED, from the run's binder — see `firedKeys` above for why this is no
     // longer a tally accumulated on the policy value itself.
     val fired = translated.binder.bindings.filter(_.binding.isBound).map(_.entry).toSet
-    def emitted(fqn: String) = PackageRenameTransform.renamed(fqn, renames)
+    def emitted(fqn: String) = emittedName(fqn)
     // The type a policy key is ABOUT, and its Java file. Where even the nested lookup fails (a key
     // that matched nothing, a type this run does not parse) the enclosing top-level type still
     // supplies the FILE — `ParallelArray$ChannelDescriptor` lives in `ParallelArray.java`, and a
@@ -1177,8 +1212,7 @@ final case class PortRun(
         )
 
   /** the phases that actually RUN: the declared surface, then the namespace rename LAST (§4.56). */
-  private def effectivePhases: List[Phase] =
-    if renames.isEmpty then declaredPhases else declaredPhases :+ new PackageRenameTransform(renames)
+  private def effectivePhases: List[Phase] = declaredPhases ++ renamePhase
 
   /** does this run resolve against sources OUTSIDE its own tree? That is the structural signature
     * of a dependent port — a root that is merely the run's own tree (self-resolution, which several

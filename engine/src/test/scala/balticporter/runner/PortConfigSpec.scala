@@ -63,6 +63,10 @@ class PortConfigSpec extends munit.FunSuite:
         |  dropTypes   = ["com.demo.Gone"]
         |  dropMethods = ["com.demo.Widget#gone()"]
         |  packageRenames { "com.demo" = "port.demo" }
+        |  typeRenames    { "com.demo.Widget" = "Gizmo" }
+        |  subPackages    { "com.demo.Gadget" = "internal" }
+        |  flattenNestedTypes = ["com.demo.Widget$Inner"]
+        |  allowPackageSplit  = ["com.demo.Gadget"]
         |  surface = [ { transform = "collections" }, { transform = "mutable-params" } ]
         |}
         |provenance {
@@ -91,6 +95,10 @@ class PortConfigSpec extends munit.FunSuite:
         dropTypes      = Set("com.demo.Gone"),
         dropMethods    = Set("com.demo.Widget#gone()"),
         packageRenames = Map("com.demo" -> "port.demo"),
+        typeRenames        = Map("com.demo.Widget" -> "Gizmo"),
+        subPackages        = Map("com.demo.Gadget" -> "internal"),
+        flattenNestedTypes = Set("com.demo.Widget$Inner"),
+        allowPackageSplit  = Set("com.demo.Gadget"),
         surface        = List(new CollectionsTransform, new MutableParamsTransform),
       )),
       provenance = Some(Provenance("demo-lib", "abc123", "MIT", "src/main/java",
@@ -119,6 +127,10 @@ class PortConfigSpec extends munit.FunSuite:
     assertEquals(a.effectiveDropTypes, b.effectiveDropTypes)
     assertEquals(a.effectiveDropMethods, b.effectiveDropMethods)
     assertEquals(a.effectivePackageRenames, b.effectivePackageRenames)
+    // the PER-TYPE half of the same phase: config and hand-written value construct ONE manifest,
+    // so a knob the reader forgets is a silent policy difference between the two front doors.
+    assertEquals(a.perTypeDestinations, b.perTypeDestinations)
+    assertEquals(a.effectiveAllowPackageSplit, b.effectiveAllowPackageSplit)
     assertEquals(fingerprints(a), fingerprints(b))
   }
 

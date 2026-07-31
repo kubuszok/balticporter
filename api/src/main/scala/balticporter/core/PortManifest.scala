@@ -79,6 +79,19 @@ final case class PortManifest(
     dropMethods: Set[String] = Set.empty,
     /** upstream prefix → port prefix. Inherited. */
     packageRenames: Map[String, String] = Map.empty,
+    /** upstream TYPE FQN → its name in the port, as a whole upstream FQN or a bare simple name.
+      * Inherited, for exactly the reason [[packageRenames]] is: a type whose emitted name differs
+      * between two modules gives the dependent references the base never wrote. */
+    typeRenames: Map[String, String] = Map.empty,
+    /** upstream TYPE FQN → a sub-package to nest it under, in place. Inherited. */
+    subPackages: Map[String, String] = Map.empty,
+    /** NESTED type FQNs (`p.Outer$Inner`) promoted to top level. Inherited. */
+    flattenNestedTypes: Set[String] = Set.empty,
+    /** upstream TYPE FQNs whose per-type move crosses an access boundary Java gave them, and which
+      * this port DECLARES deliberate — see `PackageRenameTransform`'s boundary rule. Inherited,
+      * because the boundary it moves is the SHARED one: a dependent that inherited the rename and
+      * not the declaration would refuse a move its base performed. */
+    allowPackageSplit: Set[String] = Set.empty,
     /** the phases that shape EMITTED SIGNATURES. Inherited, and placed before a dependent's own. */
     surface: List[Phase] = Nil,
     /** ready-made Scala this module ships. NOT inherited — see the class doc. */
@@ -136,6 +149,33 @@ final case class PortManifest(
   def effectivePackageRenames: Map[String, String] =
     policyChain.foldLeft(Map.empty[String, String])((acc, m) => acc ++ m.packageRenames)
 
+  /** the per-TYPE half of the rename policy, composed exactly as [[effectivePackageRenames]] is —
+    * bases first, so a dependent's declaration wins and [[ManifestAgreement]] reports the override
+    * rather than the engine hiding it. */
+  def effectiveTypeRenames: Map[String, String] =
+    policyChain.foldLeft(Map.empty[String, String])((acc, m) => acc ++ m.typeRenames)
+
+  def effectiveSubPackages: Map[String, String] =
+    policyChain.foldLeft(Map.empty[String, String])((acc, m) => acc ++ m.subPackages)
+
+  def effectiveFlattenNestedTypes: Set[String] = policyChain.flatMap(_.flattenNestedTypes).toSet
+
+  def effectiveAllowPackageSplit: Set[String] = policyChain.flatMap(_.allowPackageSplit).toSet
+
+  /** every per-TYPE destination this manifest declares, keyed by the type it names — the one view
+    * [[ManifestAgreement]] compares, so that a base saying `subPackages` and a dependent saying the
+    * equivalent `typeRenames` are not reported as agreeing when they are two different keys. It is
+    * NOT the resolved destination (that needs a `Program`, and this value has none): it is the
+    * DECLARATION, which is what two manifests have to agree about. */
+  /** every per-TYPE entry RESOLVED to its upstream-namespace destination — what [[renamed]] applies
+    * before the package renames, and what a check comparing NAMES (rather than declarations) reads. */
+  def effectiveTypeMoves: Map[String, String] = PortManifest.declaredTypeMoves(this)
+
+  def perTypeDestinations: Map[String, String] =
+    effectiveTypeRenames.map((k, v) => k -> s"typeRenames=$v") ++
+      effectiveSubPackages.map((k, v) => k -> s"subPackages=$v") ++
+      effectiveFlattenNestedTypes.map(k => k -> "flattenNestedTypes")
+
   /** base phases first, then this module's own. Deduplicated by IDENTITY, so inheriting one
     * manifest through two paths runs its phases once, while two distinct instances of the same
     * phase class stay distinct — that pair is drift, and [[ManifestAgreement]] names it. */
@@ -172,7 +212,10 @@ final case class PortManifest(
     * manifest unioned their answers, and `copy()` silently emptied it. `PolicyBinder` answers from
     * the program and the frontend's index instead. */
   def inheritedKeysNeverFired(fired: Set[String]): Map[String, Set[String]] =
-    baseChain.map(b => b.name -> ((b.dropTypes ++ b.dropMethods) -- fired)).filter(_._2.nonEmpty).toMap
+    baseChain.map(b =>
+      b.name -> ((b.dropTypes ++ b.dropMethods ++
+        b.typeRenames.keySet ++ b.subPackages.keySet ++ b.flattenNestedTypes) -- fired))
+      .filter(_._2.nonEmpty).toMap
 
   /** the drops THIS module is answerable for — its own, minus anything a base also declares.
     *
@@ -190,11 +233,24 @@ final case class PortManifest(
 
   /** `fqn` after this manifest's effective renames, longest prefix first — the name a dependent
     * module will see the type by. Cut only at a separator, exactly as
-    * `PackageRenameTransform` cuts it, or `com.foo` would cover `com.foobar`. */
+    * `PackageRenameTransform` cuts it, or `com.foo` would cover `com.foobar`.
+    *
+    * PER-TYPE entries are applied first and the package renames to their RESULT, which is the
+    * composition §4.56 asks for: every target is written upstream, so a port can add a package
+    * rename without rewriting a single type entry. What this cannot do — and the phase can — is
+    * REFUSE an entry: refusal is a structural judgement about a `Program` (is the key owned, is the
+    * destination free, does the move split a package), and a manifest holds no program. So this is
+    * what the policy DECLARES; `PackageRenameTransform.emittedName` on the instance a run placed
+    * last is what the run PERFORMED, and the two differ exactly by the refusals, each of which is
+    * a §1(b) finding on that run. */
   def renamed(fqn: String): String =
-    PortManifest.longestPrefix(fqn, effectivePackageRenames.keySet) match
-      case Some(from) => effectivePackageRenames(from) + fqn.substring(from.length)
+    val moves = effectiveTypeMoves
+    val once = PortManifest.longestPrefix(fqn, moves.keySet) match
+      case Some(from) => moves(from) + fqn.substring(from.length)
       case None       => fqn
+    PortManifest.longestPrefix(once, effectivePackageRenames.keySet) match
+      case Some(from) => effectivePackageRenames(from) + once.substring(from.length)
+      case None       => once
 
   /** does this manifest claim `fqn`? False for an empty [[governs]] — no claim, not "everything". */
   def claims(fqn: String): Boolean = governs.exists(PortManifest.covers(fqn, _))
@@ -216,6 +272,61 @@ object PortManifest:
 
   def longestPrefix(fullName: String, prefixes: Set[String]): Option[String] =
     RuleScope.longestPrefix(fullName, prefixes)
+
+  /** THE derivation of a per-TYPE destination, in the UPSTREAM namespace.
+    *
+    * ONE body, and that is the point of it being here rather than in the phase that performs it:
+    * the manifest answers "what name will a dependent module see" and `PackageRenameTransform`
+    * answers "what do I rewrite this symbol to", and two copies of a string rule this easy to get
+    * wrong is one copy too many (the same argument [[covers]] carries about the separator cut).
+    * `Left` is the reason the entry is not one that can be carried out at all — a MALFORMED key or
+    * value, never a structural judgement about a program, which is the phase's alone.
+    */
+  object TypeMove:
+
+    /** everything up to and including the last separator — the enclosure a bare simple name keeps. */
+    def enclosureOf(key: String): String =
+      key.substring(0, (key.lastIndexWhere(isBoundary) + 1).max(0))
+
+    /** the last segment, at any of the three separators. */
+    def simpleNameOf(key: String): String =
+      val i = key.lastIndexWhere(isBoundary)
+      if i < 0 then key else key.substring(i + 1)
+
+    /** a `typeRenames` value: a whole upstream FQN, or a bare SIMPLE NAME renaming it in place. */
+    def renameTo(key: String, value: String): Either[String, String] =
+      if value.isEmpty then Left("an empty target names nothing")
+      else if value.contains('#') then Left("`#` makes this a MEMBER name; a type rename names a TYPE")
+      else if value.exists(isBoundary) then Right(value)
+      else Right(enclosureOf(key) + value)
+
+    /** a `subPackages` value: `.`-separated package segments the type is nested under, in place. */
+    def subPackage(key: String, value: String): Either[String, String] =
+      if value.isEmpty then Left("an empty sub-package names nothing")
+      else if value.exists(c => c == '#' || c == '$') then
+        Left("a sub-package is a package: `.`-separated segments, never `$` or `#`")
+      else if key.contains('$') then
+        Left("a NESTED type has no package of its own — sub-package its enclosing type, or flatten " +
+          "it first with `flattenNestedTypes`")
+      else Right(enclosureOf(key) + value + "." + simpleNameOf(key))
+
+    /** a `flattenNestedTypes` key: the nested type, at its enclosure's PACKAGE. */
+    def flatten(key: String): Either[String, String] =
+      if !key.contains('$') then
+        Left("`flattenNestedTypes` names a NESTED type (`p.Outer$Inner`); this key has no `$`")
+      else
+        val head = key.substring(0, key.indexOf('$'))
+        val i    = head.lastIndexOf('.')
+        Right((if i < 0 then "" else head.substring(0, i + 1)) + simpleNameOf(key))
+
+  /** the per-TYPE destinations a manifest DECLARES, upstream key → upstream target, with anything
+    * malformed left out — a manifest reports nothing, and the phase's binding is where a bad entry
+    * becomes a finding. */
+  private[core] def declaredTypeMoves(m: PortManifest): Map[String, String] =
+    (m.effectiveTypeRenames.toList.map((k, v) => k -> TypeMove.renameTo(k, v)) ++
+      m.effectiveSubPackages.toList.map((k, v) => k -> TypeMove.subPackage(k, v)) ++
+      m.effectiveFlattenNestedTypes.toList.map(k => k -> TypeMove.flatten(k)))
+      .collect { case (k, Right(v)) => k -> v }.toMap
 
   /** A phase's SIGNATURE-AFFECTING identity, for comparing two modules' pipelines.
     *
