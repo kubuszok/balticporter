@@ -5,7 +5,7 @@ import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.sbtgen.SbtGen
 import balticporter.tir.{CheckReport, Correlate, CorrelateRun, CtorFunnel, DebugFlags, Decision, DecisionLog, Definition, MemberIndex, NoteCoverageCheck, OmissionCheck, Origin, Phase, Pipeline, PolicyBinder, PolicyBound, PortabilityCheck, PorterNote, Program, Reason, Remediator, RewriteTrace, SrcMap, SymId, SymbolTable, Tree, TriviaCheck, Xref}
-import balticporter.transform.{CollectionBoundaryCheck, CollectionClosureCheck, CollectionsTransform, MethodBodyTransform, PackageRenameTransform, PortMapTransform}
+import balticporter.transform.{CollectionBoundaryCheck, CollectionClosureCheck, CollectionsTransform, MethodBodyTransform, NullabilityBoundaryCheck, NullabilityTransform, PackageRenameTransform, PortMapTransform}
 
 import java.nio.file.{Files, Path, StandardCopyOption}
 import scala.jdk.CollectionConverters.*
@@ -284,6 +284,17 @@ final case class PortRun(
       println(CollectionClosureCheck.summary(clo))
       say(s"COLLECTION BOUNDARY (stranded slots the phase created): ${bnd.size}")
       println(CollectionBoundaryCheck.summary(bnd))
+    }
+
+    // ---- the nullability boundary: every annotated site the phase refused, and every wrapper
+    // seam it could not close. Recorded only when the phase RAN, for the same reason the two
+    // collection checks are — a port that configures no annotation has no boundary to police — and
+    // over `checkedUnits`, so a dependent does not report its base's refusals (ENGINE-LIMITS D2).
+    effectivePhases.collect { case n: NullabilityTransform => n }.foreach { n =>
+      val bnd = n.boundary(checkedUnits)
+      CheckReport.record(NullabilityBoundaryCheck.Name, bnd.map(_.report))
+      say(s"NULLABILITY BOUNDARY (annotated sites refused, and seams a wrapper did not close): ${bnd.size}")
+      println(NullabilityBoundaryCheck.summary(bnd))
     }
 
     // ---- cross-port composition: does the shared surface agree with the module that emits it? ----

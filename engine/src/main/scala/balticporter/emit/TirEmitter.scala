@@ -1876,6 +1876,10 @@ final class TirEmitter(
         case _ => false)
 
   private def defaultFor(t: TypeRepr): String = t match
+    // A union with `Null` STATES its own default, so the placeholder cast is not merely redundant
+    // here — it is the thing the union was introduced to retire. `null.asInstanceOf[T | Null]`
+    // compiles, and reads as an engine that could not express what the declaration already says.
+    case TypeRepr.OrType(_, TypeRepr.TypeRef(_, s)) if sym(s).fullName == "scala.Null" => "null"
     case TypeRepr.TypeRef(_, s) => sym(s).fullName match
         case "scala.Int" | "scala.Short" | "scala.Byte" => "0"
         case "scala.Long"                               => "0L"

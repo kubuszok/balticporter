@@ -1,0 +1,100 @@
+package balticporter.transform
+
+import balticporter.tir.*
+
+/** The NULLABILITY boundary, counted — every annotated site the phase could not honour, and every
+  * seam a wrapper retype opened and did not close.
+  *
+  * ==Why a refusal has to be a number==
+  * `NullabilityTransform` moves a contract out of an annotation and into the type. Where it cannot
+  * — a vararg parameter has no nullable Scala form, a primitive cannot be null, an annotation
+  * carrying arguments is a different annotation — the declaration is left exactly as the upstream
+  * wrote it. That is the RIGHT outcome and it is indistinguishable, from the emitted file alone,
+  * from the phase never having been configured. A refusal that moved no number would be the §1(b)
+  * silent no-op the whole design exists to avoid, so each one arrives here with an origin and a §1
+  * classification, before any compiler runs.
+  *
+  * ==And a wrapper mode has a residue by construction==
+  * Wrapper mode retypes a declaration to `W[T]` and inserts explicit wrap/unwrap at the four slot
+  * kinds a coercion seam reaches. One slot has NO formal to compare against: a call whose callee is
+  * an external the frontend interned without a signature. Nothing honest can be inserted there, so
+  * the site is counted — the same shape, and the same reasoning, as the collection boundary's
+  * scoped-out receiver.
+  *
+  * ==Universal, parameterised by the policy==
+  * §1(a) in mechanism; it holds no library's names. An empty annotation set produces an empty
+  * findings list by arithmetic rather than by a branch.
+  */
+object NullabilityBoundaryCheck:
+
+  /** the check's name in `findings.tsv`. */
+  val Name = "nullability-boundary"
+
+  /** what kind of boundary this is, which is what decides who fixes it (CLAUDE.md §1). */
+  enum Issue:
+    /** `@Null Object... rest` — a Scala vararg has no nullable form (`T*` cannot be `T* | Null`). */
+    case VarargParameter
+    /** the annotated type is a primitive, which cannot be null at all. */
+    case PrimitiveType
+    /** the annotation carries element values at this site, so consuming it would silently drop
+      * them — and `@A` where the upstream wrote `@A(x)` is a different annotation. */
+    case AnnotationArguments
+    /** the annotation sits where the declaration has no type occurrence to move — a TYPE, or a
+      * method-local, which is not surface at all. */
+    case NotAValuePosition
+    /** WRAPPER mode only: the member is one end of an override pair, and a wrapper retype changes
+      * the signature, so moving one end alone breaks the other. */
+    case OverrideCrossing
+    /** WRAPPER mode only: a wrapped value reached a slot whose formal this program does not have. */
+    case UncoercibleSeam
+
+  object Issue:
+    /** which of §1's three kinds the fix is — the thing a bare typer error cannot say. */
+    def classification(i: Issue): String = i match
+      case VarargParameter =>
+        "§1(a) REFUSED on purpose: a Scala vararg has no nullable form — `T*` cannot be written " +
+          "`T* | Null` and a wrapper around the repeated parameter would change its arity. The " +
+          "upstream annotation is left in place; there is no engine change that makes this " +
+          "expressible, and guessing one would silently change a signature."
+      case PrimitiveType =>
+        "§1(b) the ANNOTATION is wrong, not the port: a primitive cannot be null, so the entry " +
+          "names a site its own library cannot mean. Left untouched; fix it upstream, or narrow " +
+          "the `nullability` scope so this declaration is not considered."
+      case AnnotationArguments =>
+        "§1(a) REFUSED on purpose: this annotation carries element values at this site, and " +
+          "consuming it into the type would drop them — `@A` where the upstream wrote `@A(x)` is a " +
+          "different annotation. A nullability marker normally has none; if this one does, it is " +
+          "not a plain nullability marker and should not be listed in `annotations`."
+      case NotAValuePosition =>
+        "§1(b) the entry names an annotation that also appears on a TYPE or a method LOCAL, " +
+          "neither of which has a signature occurrence to move. Not an error and not retyped — a " +
+          "local's type is an implementation detail no consumer can see."
+      case OverrideCrossing =>
+        "§1(b)/§1(a): WRAPPER mode changes the member's signature, so both ends of an override " +
+          "pair have to move together and this phase can only see one of them today. Use `union` " +
+          "mode (a union return may be narrowed or widened across an override, measured), or " +
+          "scope the wrapper to declarations that do not participate in an override."
+      case UncoercibleSeam =>
+        "§1(a) engine gap: a wrapped value reaches a call whose callee is an EXTERNAL symbol the " +
+          "frontend interned without a signature, so there is no formal to coerce against and " +
+          "nothing honest to insert. Unwrap at the source declaration, or scope the wrapper away " +
+          "from the declarations that feed this call."
+
+  /** one boundary site. `unit` is the top-level symbol it belongs to, which is how a dependent
+    * port holds a finding to the module that EMITS it (`ENGINE-LIMITS.md` D2). */
+  final case class Finding(issue: Issue, subject: String, detail: String, origin: Origin, unit: SymId):
+    def render: String = s"$issue $subject — $detail  (${origin.javaPath}:${origin.line})"
+    def report: CheckReport.Finding =
+      CheckReport.Finding(Name, issue.toString, subject,
+        CheckReport.relativise(origin.javaPath), origin.line, detail)
+
+  /** grouped one-line summary, worst family first, each with its §1 classification — a reader must
+    * not have to work out who fixes it. */
+  def summary(fs: List[Finding]): String =
+    if fs.isEmpty then "  none"
+    else
+      fs.groupBy(_.issue).toList.sortBy((_, v) => -v.size).map { (issue, vs) =>
+        val head  = s"  ${vs.size} × $issue\n  ${Issue.classification(issue)}"
+        val sites = vs.sortBy(f => (f.origin.javaPath, f.origin.line)).take(10).map("    " + _.render)
+        (head :: sites).mkString("\n")
+      }.mkString("\n")
