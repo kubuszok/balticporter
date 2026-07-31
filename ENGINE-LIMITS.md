@@ -1824,6 +1824,23 @@ file looks right, and NOTHING in the dependent's run disagrees with itself. `Man
 reports 0, because a funnel plan is not a manifest key; the port map records `Attribute` as `Ported`,
 which it is. The disagreement is only visible when the two modules are compiled together.
 
+**It is DRIFT, not a plain funnel gap, and a probe settles which.** Put the same shape in a SINGLE
+program — a paramful parent, a subclass with two roots both calling `super(K)`:
+
+```java
+abstract class Parent { public Parent(long type) { this.type = type; this.typeBit = (int) type; } }
+class Heir extends Parent {
+  public static final long Type = 7L;
+  public Heir(String plane)      { super(Type); … }
+  public Heir(int a, float b)    { super(Type); … }
+}
+```
+
+It emits `abstract class Parent { def this(type: Long) = … }` and `class Heir extends Parent` with
+the parent's promotion correctly WITHHELD, and it compiles. Two modules, one program each, two
+different correct answers — which is the definition of the §1.5 drift and not a defect in either
+answer. Do not go looking for a bug in `plan0`.
+
 **Do not "fix" it by refusing the withholding** — that is C1 exactly (+14 on libGDX), and it would
 break the dependent's own subclasses instead.
 
