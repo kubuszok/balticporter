@@ -17,7 +17,8 @@ import balticporter.testkit.PortSuite
   *   - libGDX `Cubemap.CubemapSide` builds `up` and `direction` from six float parameters. All six
   *     sides shipped with `up == null`; `getUp(out)` threw. Nothing in the corpus called it.
   *   - anim8 `Dithered.DitherAlgorithm` assigns `legibleName` from a `String name` parameter, so
-  *     `toString()` returned null for all 22 constants.
+  *     `toString()` returned null for all 22 constants — AND the promoted `var name` collided with
+  *     the synthesised `Enum.name()`, which is the one error that made it visible at all.
   */
 class EnumCtorBodySpec extends PortSuite:
 
@@ -61,6 +62,24 @@ class EnumCtorBodySpec extends PortSuite:
     )
     assertEmits(p, "sealed abstract class Filter(var glEnum: scala.Int)")
     assertNotEmits(p, "this.glEnum = glEnum")
+  }
+
+  test("a constructor parameter named `name` suppresses the synthesised `Enum.name()`") {
+    // Java never has to choose: `Enum.name()` is FINAL there and a parameter is not a member at
+    // all. Scala gets both from the promotion, and E120 "Conflicting definitions" is the result.
+    val p = port(
+      """package p;
+        |enum Algo {
+        |  NONE("None"), WREN("Wren");
+        |  public String legibleName;
+        |  Algo(String name) { this.legibleName = name; }
+        |  public String toString() { return legibleName; }
+        |}
+        |""".stripMargin
+    )
+    assertEmits(p, "sealed abstract class Algo(var name: java.lang.String)")
+    assertNotEmits(p, "def name(): java.lang.String")
+    assertEmits(p, "this.legibleName = name")
   }
 
   test("an enum with NO `name` parameter still gets `Enum.name()` — the guard is not a removal") {

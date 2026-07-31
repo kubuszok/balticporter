@@ -984,7 +984,16 @@ final class TirEmitter(
     val eprimary = if ctorParams.isEmpty then "" else s"(${ctorParams.map(v => s"var ${esc(sym(v.symbol).name)}: ${tpe(v.tpt.tpe)}").mkString(", ")})"
     // Java's final `Enum.name()` — a `case object`'s `toString` IS its declared name (= the Java
     // constant name), so `name()` returns it. Skip if the enum already declares a `name` member.
-    val hasName = instance.exists { case d: Definition => sym(d.symbol).name == "name"; case _ => false }
+    //
+    // A PROMOTED CONSTRUCTOR PARAMETER is one, and reading only the body missed it — CLAUDE.md
+    // §4.55's "count what the constructor funnel PROMOTES: the chosen constructor's parameters".
+    // The promotion above renders every parameter as a `var`, so an enum whose constructor takes a
+    // `String name` (anim8's `Dithered.DitherAlgorithm`, which uses it to set `legibleName`) got
+    // both `var name` and `def name()` and did not compile: E120 "Conflicting definitions", one
+    // error, and the only one this port had left. Java never has to choose, because `Enum.name()`
+    // is FINAL there and a parameter is not a member at all.
+    val hasName = paramNames("name") ||
+      instance.exists { case d: Definition => sym(d.symbol).name == "name"; case _ => false }
     val nameM   = if hasName then Nil else List(s"${ind(i + 1)}def name(): java.lang.String = this.toString()")
     val cnote   = if cd.symbol == currentTopLevelSym then "" else declNotes(cd.symbol, i)
     val bnote   = bodyNotes(cd.symbol, i + 1)
