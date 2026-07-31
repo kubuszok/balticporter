@@ -90,3 +90,52 @@ class EnumCtorBodySpec extends PortSuite:
     )
     assertEmits(p, "def name(): java.lang.String = this.toString()")
   }
+
+  test("`Enum.ordinal()` is the constant's DECLARATION INDEX, one override per constant") {
+    // Part of every java enum's surface whether the enum mentions it or not, and a library reaches
+    // for it wherever the constants stand for consecutive integers somewhere else (gdx-vfx feeds
+    // `lineStyle.ordinal()` into a shader `#define`). Absent, it is `value ordinal is not a member
+    // of …` and there is no substitute a reader would reach for.
+    val p = port(
+      """package p;
+        |enum Plain { A, B, C; }
+        |""".stripMargin
+    )
+    assertEmits(p, "def ordinal(): scala.Int")
+    assertEmits(p, "case object A extends Plain {")
+    assertEmits(p, "override def ordinal(): scala.Int = 0")
+    assertEmits(p, "override def ordinal(): scala.Int = 1")
+    assertEmits(p, "override def ordinal(): scala.Int = 2")
+  }
+
+  test("a constant's own BODY keeps its members, with the ordinal override beside them") {
+    val p = port(
+      """package p;
+        |enum Op {
+        |  ADD { public int apply(int a, int b) { return a + b; } },
+        |  SUB { public int apply(int a, int b) { return a - b; } };
+        |  public abstract int apply(int a, int b);
+        |}
+        |""".stripMargin
+    )
+    assertEmits(p, "def apply(a: scala.Int, b: scala.Int): scala.Int")
+    assertEmits(p, "override def ordinal(): scala.Int = 1")
+  }
+
+  test("an enum that declares its OWN `ordinal` suppresses the synthesis — base AND constants") {
+    // The `name` trap one member along: java's two namespaces let a FIELD carry the name beside the
+    // final method; scala's one namespace cannot, and an abstract `def ordinal()` beside a
+    // `var ordinal` is E120. The suppression must reach the CONSTANTS too, or every one of them
+    // carries an `override` of a member the base no longer declares.
+    val p = port(
+      """package p;
+        |enum Slot {
+        |  HEAD(0), BODY(1);
+        |  public final int ordinal;
+        |  Slot(int ordinal) { this.ordinal = ordinal; }
+        |}
+        |""".stripMargin
+    )
+    assertNotEmits(p, "def ordinal(): scala.Int")
+    assertNotEmits(p, "override def ordinal()")
+  }

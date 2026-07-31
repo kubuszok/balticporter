@@ -127,12 +127,12 @@ sge.anim8.ConstantData	sge.anim8.ConstantData#TRI_BLUE_NOISE_C	val	9d47893f7b564
 sge.anim8.ConstantData	sge.anim8.ConstantData#TRI_BLUE_NOISE_MULTIPLIERS	val	b4a1ac1f3f82179e
 sge.anim8.ConstantData	sge.anim8.ConstantData#TRI_BLUE_NOISE_MULTIPLIERS_B	val	2f75bdb768894fd0
 sge.anim8.ConstantData	sge.anim8.ConstantData#TRI_BLUE_NOISE_MULTIPLIERS_C	val	dee300e066f0216c
-sge.anim8.Dithered	sge.anim8.Dithered	class	d9b7fd842adf60b5
+sge.anim8.Dithered	sge.anim8.Dithered	class	9400bf70ad8aa968
 sge.anim8.Dithered	sge.anim8.Dithered#getDitherAlgorithm()	def	e1e11fdfd61d437a
 sge.anim8.Dithered	sge.anim8.Dithered#getPalette()	def	b384081195ce7e6b
 sge.anim8.Dithered	sge.anim8.Dithered#setDitherAlgorithm(DitherAlgorithm)	def	8ea0b10bd2d7829d
 sge.anim8.Dithered	sge.anim8.Dithered#setPalette(PaletteReducer)	def	e95ef30d782bb95c
-sge.anim8.Dithered	sge.anim8.Dithered$DitherAlgorithm	class	b022d2a8dec7c93a
+sge.anim8.Dithered	sge.anim8.Dithered$DitherAlgorithm	class	8511987bc0a47299
 sge.anim8.Dithered	sge.anim8.Dithered$DitherAlgorithm#<stmt1>	stmt	56568ca4d7221d07
 sge.anim8.Dithered	sge.anim8.Dithered$DitherAlgorithm#ALL	val	f758d2f3b8feea3a
 sge.anim8.Dithered	sge.anim8.Dithered$DitherAlgorithm#legibleName	val	536ba623bd1d0cfb

@@ -1090,6 +1090,22 @@ final class TirEmitter(
     val hasName = paramNames("name") ||
       instance.exists { case d: Definition => sym(d.symbol).name == "name"; case _ => false }
     val nameM   = if hasName then Nil else List(s"${ind(i + 1)}def name(): java.lang.String = this.toString()")
+    // Java's final `Enum.ordinal()` — the constant's DECLARATION INDEX, and part of every java
+    // enum's surface whether the enum mentions it or not. A library reaches for it wherever the
+    // constants stand for consecutive integers somewhere else: gdx-vfx passes
+    // `lineStyle.ordinal()` straight into a shader `#define`, which is what a comment on the enum
+    // says the ordinals are FOR. Absent, that is `value ordinal is not a member of …` — and unlike
+    // `name()` there is no plausible substitute a reader would reach for.
+    //
+    // Emitted as an ABSTRACT member with one override per constant, which is java's own O(1)
+    // field read; deriving it from `values().indexOf(this)` would be one line instead of n+1 and
+    // would allocate an array on every call. Skipped whole — base and constants together — when
+    // the enum declares its own `ordinal`, for the reason `hasName` records: java's two namespaces
+    // let a FIELD or a promoted constructor PARAMETER carry the name beside the final method,
+    // and scala's one namespace cannot (CLAUDE.md §4.55).
+    val hasOrdinal = paramNames("ordinal") ||
+      instance.exists { case d: Definition => sym(d.symbol).name == "ordinal"; case _ => false }
+    val ordinalM = if hasOrdinal then Nil else List(s"${ind(i + 1)}def ordinal(): scala.Int")
     val cnote   = if cd.symbol == currentTopLevelSym then "" else declNotes(cd.symbol, i)
     val bnote   = bodyNotes(cd.symbol, i + 1)
     // The constructor's statements go LAST among the class body's own, after every declaration:
@@ -1097,13 +1113,16 @@ final class TirEmitter(
     // `var` it targets would not compile, and one placed below runs exactly where java ran it.
     val members = List(bnote).filter(_.nonEmpty) ++
       orderBody(instance).map(memberStat(_, i + 1)).filter(_.nonEmpty) ++
-      ctorStats.map(memberStat(_, i + 1)).filter(_.nonEmpty) ++ nameM
+      ctorStats.map(memberStat(_, i + 1)).filter(_.nonEmpty) ++ nameM ++ ordinalM
     val cbody   = members.mkString("\n")
     val cls     = s"${leading(cd.leading, i)}$cnote${ind(i)}sealed abstract class $name$eprimary$ext" + (if cbody.isEmpty then "" else s" {\n$cbody\n${ind(i)}}")
-    val cases = cd.enumCases.map { ec =>
+    val cases = cd.enumCases.zipWithIndex.map { (ec, idx) =>
       val cn   = esc(sym(ec.symbol).name)
       val args = if ec.ctorArgs.isEmpty then "" else s"(${ec.ctorArgs.map(term(_, i + 1)).mkString(", ")})"
-      val body = if ec.body.isEmpty then "" else s" {\n${ec.body.map(stat(_, i + 2)).mkString("\n")}\n${ind(i + 1)}}"
+      // the constant's own members first, then the `ordinal()` this lowering owes the base.
+      val stats = ec.body.map(stat(_, i + 2)) ++
+        (if hasOrdinal then Nil else List(s"${ind(i + 2)}override def ordinal(): scala.Int = $idx"))
+      val body = if stats.isEmpty then "" else s" {\n${stats.mkString("\n")}\n${ind(i + 1)}}"
       s"${leading(ec.leading, i + 1)}${ind(i + 1)}case object $cn extends $name$args$body"
     }
     // `def` (not `val`) so Java's `E.values()` call site type-checks; also a no-paren read works.

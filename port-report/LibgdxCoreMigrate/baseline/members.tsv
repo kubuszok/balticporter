@@ -15,7 +15,7 @@ sge.AbstractInput	sge.AbstractInput#keysToCatch	val	140b245f5f104eec
 sge.AbstractInput	sge.AbstractInput#pressedKeyCount	val	a09c2c021faa3f30
 sge.AbstractInput	sge.AbstractInput#pressedKeys	val	83adf99f9ad1a88e
 sge.AbstractInput	sge.AbstractInput#setCatchKey(int,boolean)	def	2966a737134375d7
-sge.Application	sge.Application	class	eab06be6b097b3be
+sge.Application	sge.Application	class	0d996519a69d81c1
 sge.Application	sge.Application#LOG_DEBUG	val	931dc7e13d4b6fc3
 sge.Application	sge.Application#LOG_ERROR	val	aa79571e9a558277
 sge.Application	sge.Application#LOG_INFO	val	a30501aabfd0d018
@@ -46,7 +46,7 @@ sge.Application	sge.Application#postRunnable(Runnable)	def	86211719296a49be
 sge.Application	sge.Application#removeLifecycleListener(LifecycleListener)	def	74adebe8adb1f642
 sge.Application	sge.Application#setApplicationLogger(ApplicationLogger)	def	7e96fa68e1b9d718
 sge.Application	sge.Application#setLogLevel(int)	def	3d1b40a78d4e7644
-sge.Application	sge.Application$ApplicationType	class	feb5e13e6e509378
+sge.Application	sge.Application$ApplicationType	class	ef77a976532ee3c5
 sge.ApplicationAdapter	sge.ApplicationAdapter	class	9115c3f106424497
 sge.ApplicationAdapter	sge.ApplicationAdapter#create()	def	4cc965ababc54c97
 sge.ApplicationAdapter	sge.ApplicationAdapter#dispose()	def	19b8e5b67dc6f922
@@ -75,7 +75,7 @@ sge.Audio	sge.Audio#newAudioRecorder(int,boolean)	def	2f92f103a3d60c29
 sge.Audio	sge.Audio#newMusic(FileHandle)	def	b46514ab7f773905
 sge.Audio	sge.Audio#newSound(FileHandle)	def	8eb550bc88d54267
 sge.Audio	sge.Audio#switchOutputDevice(String)	def	6b2fc9b73cdf4104
-sge.Files	sge.Files	class	9eb42b8ab41d1706
+sge.Files	sge.Files	class	6059d54dfd7d17a9
 sge.Files	sge.Files#absolute(String)	def	2a0899eff26da6f0
 sge.Files	sge.Files#classpath(String)	def	0821e634aced10fc
 sge.Files	sge.Files#external(String)	def	aa72333703eb66db
@@ -86,7 +86,7 @@ sge.Files	sge.Files#internal(String)	def	31a029b6b17d5ce2
 sge.Files	sge.Files#isExternalStorageAvailable()	def	0903857f4a82ed0d
 sge.Files	sge.Files#isLocalStorageAvailable()	def	96ca63ef4727c106
 sge.Files	sge.Files#local(String)	def	9671b89431b355e9
-sge.Files	sge.Files$FileType	class	2b5b85d8e2d3e5c6
+sge.Files	sge.Files$FileType	class	8ed0735a5bfc9b94
 sge.Game	sge.Game	class	c96e6f0bef01665c
 sge.Game	sge.Game#dispose()	def	ec5562f125ffaf57
 sge.Game	sge.Game#getScreen()	def	d9420a4f05c28910
@@ -108,7 +108,7 @@ sge.Gdx	sge.Gdx#gl32	val	675aa4d0e5824ba6
 sge.Gdx	sge.Gdx#graphics	val	03f98a69dbe51a7e
 sge.Gdx	sge.Gdx#input	val	f985ec389d81589b
 sge.Gdx	sge.Gdx#net	val	d8fa9c572de5d94b
-sge.Graphics	sge.Graphics	class	2d5a658e761ce667
+sge.Graphics	sge.Graphics	class	204b78c7fedcaf7c
 sge.Graphics	sge.Graphics#getBackBufferHeight()	def	7ba61d9c291a7b7f
 sge.Graphics	sge.Graphics#getBackBufferScale()	def	48e6c1cd7c7e8959
 sge.Graphics	sge.Graphics#getBackBufferWidth()	def	b60a47ef5d084d82
@@ -192,7 +192,7 @@ sge.Graphics	sge.Graphics$DisplayMode#height	val	d9c5be3f2c90b6ae
 sge.Graphics	sge.Graphics$DisplayMode#refreshRate	val	2aff43c53ef10467
 sge.Graphics	sge.Graphics$DisplayMode#toString()	def	8a0bf64153d0c1f1
 sge.Graphics	sge.Graphics$DisplayMode#width	val	84810203c2c7abb3
-sge.Graphics	sge.Graphics$GraphicsType	class	50ce9e43eadc4c49
+sge.Graphics	sge.Graphics$GraphicsType	class	1274a55460e9ff04
 sge.Graphics	sge.Graphics$Monitor	class	06be4392ea7fbf89
 sge.Graphics	sge.Graphics$Monitor#<stmt1>	stmt	183cb8cc8da23f8b
 sge.Graphics	sge.Graphics$Monitor#<stmt2>	stmt	8ae3a31d30b15759
@@ -200,7 +200,7 @@ sge.Graphics	sge.Graphics$Monitor#<stmt3>	stmt	58b0d4e82d0403cf
 sge.Graphics	sge.Graphics$Monitor#name	val	a559aa512af4f469
 sge.Graphics	sge.Graphics$Monitor#virtualX	val	6204b13f093ccc33
 sge.Graphics	sge.Graphics$Monitor#virtualY	val	fa39d6d1bb369da0
-sge.Input	sge.Input	class	40fd314260a83789
+sge.Input	sge.Input	class	92d6533f209d994c
 sge.Input	sge.Input#closeTextInputField(boolean)	def	54561d603915483e
 sge.Input	sge.Input#closeTextInputField(boolean,NativeInputCloseCallback)	def	f60aa04671e3c22e
 sge.Input	sge.Input#getAccelerometerX()	def	e06dea1b64550bb6
@@ -455,13 +455,13 @@ sge.Input	sge.Input$Keys#initializeKeyNames()	def	b96d42cba7e76dcc
 sge.Input	sge.Input$Keys#keyNames	val	8a2fc7aacd23bfc7
 sge.Input	sge.Input$Keys#toString(int)	def	16b4ce3314d59398
 sge.Input	sge.Input$Keys#valueOf(String)	def	f9850798faa3b725
-sge.Input	sge.Input$OnscreenKeyboardType	class	9bd43d1442e95b58
-sge.Input	sge.Input$Orientation	class	0b5fddfbe32d1afe
-sge.Input	sge.Input$Peripheral	class	5d8fb5b51d41be71
+sge.Input	sge.Input$OnscreenKeyboardType	class	40a8e37e366d2f34
+sge.Input	sge.Input$Orientation	class	61f0bb6cf5f33220
+sge.Input	sge.Input$Peripheral	class	7cca6820fad432dc
 sge.Input	sge.Input$TextInputListener	class	5cee2f5b3cda7971
 sge.Input	sge.Input$TextInputListener#canceled()	def	30b4e22ad8055f6d
 sge.Input	sge.Input$TextInputListener#input(String)	def	c352cb3d21ed36b7
-sge.Input	sge.Input$VibrationType	class	e15caa77d27c50a9
+sge.Input	sge.Input$VibrationType	class	4e6f14ffd14a2736
 sge.InputAdapter	sge.InputAdapter	class	c27a13ce36d34378
 sge.InputAdapter	sge.InputAdapter#keyDown(int)	def	ab1c6fb320121ebb
 sge.InputAdapter	sge.InputAdapter#keyTyped(char)	def	d00f7b8f36c44c76
@@ -532,7 +532,7 @@ sge.LifecycleListener	sge.LifecycleListener	class	f75e3bf0258a9a1b
 sge.LifecycleListener	sge.LifecycleListener#dispose()	def	0a211088ec5a9aa8
 sge.LifecycleListener	sge.LifecycleListener#pause()	def	88463d0e3cbd3de0
 sge.LifecycleListener	sge.LifecycleListener#resume()	def	ff455fd36b44f7c7
-sge.Net	sge.Net	class	61d7bc536a207488
+sge.Net	sge.Net	class	480bc4e1008acc91
 sge.Net	sge.Net#cancelHttpRequest(HttpRequest)	def	74a9083b9eca7b46
 sge.Net	sge.Net#isHttpRequestPending(HttpRequest)	def	925addfb3c8392c5
 sge.Net	sge.Net#newClientSocket(Protocol,String,int,SocketHints)	def	e20ab46c26d8a47a
@@ -588,7 +588,7 @@ sge.Net	sge.Net$HttpResponseListener	class	0f54340829e0049b
 sge.Net	sge.Net$HttpResponseListener#cancelled()	def	69759d0eb94d2f9e
 sge.Net	sge.Net$HttpResponseListener#failed(Throwable)	def	c6f4bc333563c24c
 sge.Net	sge.Net$HttpResponseListener#handleHttpResponse(HttpResponse)	def	f242c0ce5ca34d77
-sge.Net	sge.Net$Protocol	class	c63b41e110a9c674
+sge.Net	sge.Net$Protocol	class	16dd4e260c54762f
 sge.Preferences	sge.Preferences	class	4ea5840086a36d8f
 sge.Preferences	sge.Preferences#clear()	def	717a0052bf89055f
 sge.Preferences	sge.Preferences#contains(String)	def	0c5aae68441c82e4
@@ -1196,7 +1196,7 @@ sge.graphics.Colors	sge.graphics.Colors#getColors()	def	3d002aa7cea328af
 sge.graphics.Colors	sge.graphics.Colors#map	val	231982a6695acc33
 sge.graphics.Colors	sge.graphics.Colors#put(String,Color)	def	40683fca68777cb4
 sge.graphics.Colors	sge.graphics.Colors#reset()	def	c0415f4a9bcedb24
-sge.graphics.Cubemap	sge.graphics.Cubemap	class	a4d04b7f923cb15e
+sge.graphics.Cubemap	sge.graphics.Cubemap	class	472ca958ae373dba
 sge.graphics.Cubemap	sge.graphics.Cubemap#<init>(FileHandle,FileHandle,FileHandle,FileHandle,FileHandle,FileHandle)	ctor	c52df3f057b56503
 sge.graphics.Cubemap	sge.graphics.Cubemap#<init>(FileHandle,FileHandle,FileHandle,FileHandle,FileHandle,FileHandle,boolean)	ctor	e818e1e5bedfa8c7
 sge.graphics.Cubemap	sge.graphics.Cubemap#<init>(Pixmap,Pixmap,Pixmap,Pixmap,Pixmap,Pixmap)	ctor	39780a7d67d03b3e
@@ -1223,7 +1223,7 @@ sge.graphics.Cubemap	sge.graphics.Cubemap#load(CubemapData)	def	7844651cb642f2ce
 sge.graphics.Cubemap	sge.graphics.Cubemap#managedCubemaps	val	e0859d5b612a927d
 sge.graphics.Cubemap	sge.graphics.Cubemap#reload()	def	4fad493760e4fb00
 sge.graphics.Cubemap	sge.graphics.Cubemap#setAssetManager(AssetManager)	def	bad4bfe28eadae8e
-sge.graphics.Cubemap	sge.graphics.Cubemap$CubemapSide	class	ca7af55f82daf615
+sge.graphics.Cubemap	sge.graphics.Cubemap$CubemapSide	class	657538df50d4ed1a
 sge.graphics.Cubemap	sge.graphics.Cubemap$CubemapSide#<stmt1>	stmt	d714ba66dc3dcbcd
 sge.graphics.Cubemap	sge.graphics.Cubemap$CubemapSide#<stmt2>	stmt	2f413f68d04a6e5d
 sge.graphics.Cubemap	sge.graphics.Cubemap$CubemapSide#direction	val	d335eaffd2768b61
@@ -1238,8 +1238,8 @@ sge.graphics.CubemapData	sge.graphics.CubemapData#getWidth()	def	e5a78fe1be3e4ab
 sge.graphics.CubemapData	sge.graphics.CubemapData#isManaged()	def	cb0ff9dc96329242
 sge.graphics.CubemapData	sge.graphics.CubemapData#isPrepared()	def	9e5c03a43dc33651
 sge.graphics.CubemapData	sge.graphics.CubemapData#prepare()	def	ee8764c8cd20b7b8
-sge.graphics.Cursor	sge.graphics.Cursor	class	da0743ce524a945a
-sge.graphics.Cursor	sge.graphics.Cursor$SystemCursor	class	d1efdfc00922705f
+sge.graphics.Cursor	sge.graphics.Cursor	class	20e5b9324806c30f
+sge.graphics.Cursor	sge.graphics.Cursor$SystemCursor	class	1118b5b35ac56783
 sge.graphics.FPSLogger	sge.graphics.FPSLogger	class	c67e9d002af065e9
 sge.graphics.FPSLogger	sge.graphics.FPSLogger#<init>()	ctor	fead2e67db675e75
 sge.graphics.FPSLogger	sge.graphics.FPSLogger#<stmt1>	stmt	689b973ff0304f41
@@ -2654,7 +2654,7 @@ sge.graphics.GLTexture	sge.graphics.GLTexture#unsafeSetWrap(TextureWrap,TextureW
 sge.graphics.GLTexture	sge.graphics.GLTexture#uploadImageData(int,TextureData)	def	32c364de837756b6
 sge.graphics.GLTexture	sge.graphics.GLTexture#uploadImageData(int,TextureData,int)	def	c508e74cdab6391e
 sge.graphics.GLTexture	sge.graphics.GLTexture#vWrap	val	b8ac908a76b9cc63
-sge.graphics.Mesh	sge.graphics.Mesh	class	75b137e922ef39ef
+sge.graphics.Mesh	sge.graphics.Mesh	class	8ce31c5f7365fcce
 sge.graphics.Mesh	sge.graphics.Mesh#<init>(VertexData,IndexData,boolean)	ctor	d1a15de9bca863b2
 sge.graphics.Mesh	sge.graphics.Mesh#<init>(VertexDataType,boolean,int,int,Array<VertexAttribute>)	ctor	d41e1c26b401109e
 sge.graphics.Mesh	sge.graphics.Mesh#<init>(VertexDataType,boolean,int,int,VertexAttributes)	ctor	52d055276678bc95
@@ -2743,7 +2743,7 @@ sge.graphics.Mesh	sge.graphics.Mesh#updateInstanceData(int,FloatBuffer,int,int)	
 sge.graphics.Mesh	sge.graphics.Mesh#updateVertices(int,Array<float>)	def	56d9c0251377bba6
 sge.graphics.Mesh	sge.graphics.Mesh#updateVertices(int,Array<float>,int,int)	def	75def66d06aeb472
 sge.graphics.Mesh	sge.graphics.Mesh#vertices	val	458203f511c82c60
-sge.graphics.Mesh	sge.graphics.Mesh$VertexDataType	class	d37580035c47bc5b
+sge.graphics.Mesh	sge.graphics.Mesh$VertexDataType	class	297b905df8e07691
 sge.graphics.OrthographicCamera	sge.graphics.OrthographicCamera	class	09c9fc4ac2cb6439
 sge.graphics.OrthographicCamera	sge.graphics.OrthographicCamera#<init>(float,float)	ctor	e362445d67472212
 sge.graphics.OrthographicCamera	sge.graphics.OrthographicCamera#<stmt1>	stmt	6eb786a241d0cd09
@@ -2762,7 +2762,7 @@ sge.graphics.PerspectiveCamera	sge.graphics.PerspectiveCamera#fieldOfView	val	63
 sge.graphics.PerspectiveCamera	sge.graphics.PerspectiveCamera#tmp	val	0a2cb7f357f3e05f
 sge.graphics.PerspectiveCamera	sge.graphics.PerspectiveCamera#update()	def	92d2031063d86ebf
 sge.graphics.PerspectiveCamera	sge.graphics.PerspectiveCamera#update(boolean)	def	a9f61b20d308d4a2
-sge.graphics.Pixmap	sge.graphics.Pixmap	class	00d0daea808a77d1
+sge.graphics.Pixmap	sge.graphics.Pixmap	class	d2959f738d5109d7
 sge.graphics.Pixmap	sge.graphics.Pixmap#<init>(Array<byte>,int,int)	ctor	e165376d91a84ed4
 sge.graphics.Pixmap	sge.graphics.Pixmap#<init>(ByteBuffer)	ctor	9f53bff75a6879bf
 sge.graphics.Pixmap	sge.graphics.Pixmap#<init>(ByteBuffer,int,int)	ctor	bbfd2cd911a89e99
@@ -2806,12 +2806,12 @@ sge.graphics.Pixmap	sge.graphics.Pixmap#setColor(float,float,float,float)	def	26
 sge.graphics.Pixmap	sge.graphics.Pixmap#setColor(int)	def	a976c92ccc4c0515
 sge.graphics.Pixmap	sge.graphics.Pixmap#setFilter(Filter)	def	b4c1c9347852e1d8
 sge.graphics.Pixmap	sge.graphics.Pixmap#setPixels(ByteBuffer)	def	3027ce346d1766c0
-sge.graphics.Pixmap	sge.graphics.Pixmap$Blending	class	37e98b260ffe70a2
+sge.graphics.Pixmap	sge.graphics.Pixmap$Blending	class	32bc08513ac803ce
 sge.graphics.Pixmap	sge.graphics.Pixmap$DownloadPixmapResponseListener	class	175d4165981d6b32
 sge.graphics.Pixmap	sge.graphics.Pixmap$DownloadPixmapResponseListener#downloadComplete(Pixmap)	def	10cf53c7121608e6
 sge.graphics.Pixmap	sge.graphics.Pixmap$DownloadPixmapResponseListener#downloadFailed(Throwable)	def	3645f1a415b8880b
-sge.graphics.Pixmap	sge.graphics.Pixmap$Filter	class	a4a35cfd3bc8fd8f
-sge.graphics.Pixmap	sge.graphics.Pixmap$Format	class	a14ff2f0a7642090
+sge.graphics.Pixmap	sge.graphics.Pixmap$Filter	class	a8686d791e43ec5c
+sge.graphics.Pixmap	sge.graphics.Pixmap$Format	class	6c5f87ae46e96eb7
 sge.graphics.Pixmap	sge.graphics.Pixmap$Format#fromGdx2DPixmapFormat(int)	def	5ec7a44344912a96
 sge.graphics.Pixmap	sge.graphics.Pixmap$Format#toGdx2DPixmapFormat(Format)	def	b2b06662ca66086e
 sge.graphics.Pixmap	sge.graphics.Pixmap$Format#toGlFormat(Format)	def	af7eb5f66e5cec16
@@ -2859,7 +2859,7 @@ sge.graphics.PixmapIO	sge.graphics.PixmapIO$PNG$ChunkBuffer#<stmt2>	stmt	9f7e8e2
 sge.graphics.PixmapIO	sge.graphics.PixmapIO$PNG$ChunkBuffer#buffer	val	c8096c5c87119169
 sge.graphics.PixmapIO	sge.graphics.PixmapIO$PNG$ChunkBuffer#crc	val	90c8a6e7da186527
 sge.graphics.PixmapIO	sge.graphics.PixmapIO$PNG$ChunkBuffer#endChunk(DataOutputStream)	def	16c59c91ca00edc9
-sge.graphics.Texture	sge.graphics.Texture	class	9302f05aefe25f31
+sge.graphics.Texture	sge.graphics.Texture	class	e6277bf1f9083175
 sge.graphics.Texture	sge.graphics.Texture#<init>()	ctor	6242dcd53a94cdf2
 sge.graphics.Texture	sge.graphics.Texture#<init>(FileHandle)	ctor	f59ef400c212ddb7
 sge.graphics.Texture	sge.graphics.Texture#<init>(FileHandle,Format,boolean)	ctor	858316eb7c751566
@@ -2890,10 +2890,10 @@ sge.graphics.Texture	sge.graphics.Texture#managedTextures	val	be890ff0c06cdd4b
 sge.graphics.Texture	sge.graphics.Texture#reload()	def	30e7efa7509a7485
 sge.graphics.Texture	sge.graphics.Texture#setAssetManager(AssetManager)	def	232c1fcb82c5151d
 sge.graphics.Texture	sge.graphics.Texture#toString()	def	5edb5888b2f2bf5c
-sge.graphics.Texture	sge.graphics.Texture$TextureFilter	class	946d83460ba460db
+sge.graphics.Texture	sge.graphics.Texture$TextureFilter	class	16d034c2a143e48b
 sge.graphics.Texture	sge.graphics.Texture$TextureFilter#getGLEnum()	def	b8e97915d186d4dc
 sge.graphics.Texture	sge.graphics.Texture$TextureFilter#isMipMap()	def	917c22ecd2effd07
-sge.graphics.Texture	sge.graphics.Texture$TextureWrap	class	74129248b1f59412
+sge.graphics.Texture	sge.graphics.Texture$TextureWrap	class	943de46d2f67c08b
 sge.graphics.Texture	sge.graphics.Texture$TextureWrap#getGLEnum()	def	b8e97915d186d4dc
 sge.graphics.Texture3D	sge.graphics.Texture3D	class	74774149367d243f
 sge.graphics.Texture3D	sge.graphics.Texture3D#<init>(int,int,int,int,int,int)	ctor	02fe905a8db98033
@@ -2964,7 +2964,7 @@ sge.graphics.TextureArrayData	sge.graphics.TextureArrayData#isPrepared()	def	149
 sge.graphics.TextureArrayData	sge.graphics.TextureArrayData#prepare()	def	9db6522b938c9aa0
 sge.graphics.TextureArrayData	sge.graphics.TextureArrayData$Factory	class	0bdc882217f5fd48
 sge.graphics.TextureArrayData	sge.graphics.TextureArrayData$Factory#loadFromFiles(Format,boolean,Array<FileHandle>)	def	98341866438df482
-sge.graphics.TextureData	sge.graphics.TextureData	class	0fbdeda79488a548
+sge.graphics.TextureData	sge.graphics.TextureData	class	dbb777d0c2c00f52
 sge.graphics.TextureData	sge.graphics.TextureData#consumeCustomData(int)	def	5d7301b0c1567e80
 sge.graphics.TextureData	sge.graphics.TextureData#consumePixmap()	def	2bf416e67b0464ee
 sge.graphics.TextureData	sge.graphics.TextureData#disposePixmap()	def	e42f2411c2ea28c5
@@ -2979,7 +2979,7 @@ sge.graphics.TextureData	sge.graphics.TextureData#useMipMaps()	def	5abd5ca1fb27b
 sge.graphics.TextureData	sge.graphics.TextureData$Factory	class	251786b89b325efe
 sge.graphics.TextureData	sge.graphics.TextureData$Factory#loadFromFile(FileHandle,Format,boolean)	def	7dc5bba9b1aac728
 sge.graphics.TextureData	sge.graphics.TextureData$Factory#loadFromFile(FileHandle,boolean)	def	b58d3e51df5e4d47
-sge.graphics.TextureData	sge.graphics.TextureData$TextureDataType	class	46d142c2e4c2538a
+sge.graphics.TextureData	sge.graphics.TextureData$TextureDataType	class	fa68cf9bfd045476
 sge.graphics.VertexAttribute	sge.graphics.VertexAttribute	class	45d40a03c90b3714
 sge.graphics.VertexAttribute	sge.graphics.VertexAttribute#<init>(int,int,String)	ctor	58b32b2970fd4821
 sge.graphics.VertexAttribute	sge.graphics.VertexAttribute#<init>(int,int,String,int)	ctor	f4ec701ca425d23b
@@ -3066,7 +3066,7 @@ sge.graphics.VertexAttributes	sge.graphics.VertexAttributes$Usage#Normal	val	7e0
 sge.graphics.VertexAttributes	sge.graphics.VertexAttributes$Usage#Position	val	9eac543065fbd014
 sge.graphics.VertexAttributes	sge.graphics.VertexAttributes$Usage#Tangent	val	7288ffadc6a1219d
 sge.graphics.VertexAttributes	sge.graphics.VertexAttributes$Usage#TextureCoordinates	val	3ba38c378190d274
-sge.graphics.g2d.Animation	sge.graphics.g2d.Animation	class	70b0a46216fe54bd
+sge.graphics.g2d.Animation	sge.graphics.g2d.Animation	class	2a07f5a31f42e2d9
 sge.graphics.g2d.Animation	sge.graphics.g2d.Animation#<init>(float,Array<?>)	ctor	50d8a96d2a98d5d6
 sge.graphics.g2d.Animation	sge.graphics.g2d.Animation#<init>(float,Array<?>,PlayMode)	ctor	888b4227ea312c7b
 sge.graphics.g2d.Animation	sge.graphics.g2d.Animation#<init>(float,Array<T>)	ctor	5305fd705a039e4f
@@ -3087,7 +3087,7 @@ sge.graphics.g2d.Animation	sge.graphics.g2d.Animation#playMode	val	a82388cde068b
 sge.graphics.g2d.Animation	sge.graphics.g2d.Animation#setFrameDuration(float)	def	eeb5073923c250af
 sge.graphics.g2d.Animation	sge.graphics.g2d.Animation#setKeyFrames(Array<T>)	def	150f5a48a354b31a
 sge.graphics.g2d.Animation	sge.graphics.g2d.Animation#setPlayMode(PlayMode)	def	be3f916f0ad9b919
-sge.graphics.g2d.Animation	sge.graphics.g2d.Animation$PlayMode	class	42d04a816d23379d
+sge.graphics.g2d.Animation	sge.graphics.g2d.Animation$PlayMode	class	cef5ac69df12f920
 sge.graphics.g2d.Batch	sge.graphics.g2d.Batch	class	82b69ea5d2941c11
 sge.graphics.g2d.Batch	sge.graphics.g2d.Batch#C1	val	a68fa8455ff530f7
 sge.graphics.g2d.Batch	sge.graphics.g2d.Batch#C2	val	f2c0f9a6f3874e3a
@@ -3616,7 +3616,7 @@ sge.graphics.g2d.ParticleEffectPool	sge.graphics.g2d.ParticleEffectPool#free(Poo
 sge.graphics.g2d.ParticleEffectPool	sge.graphics.g2d.ParticleEffectPool#newObject()	def	610ea0eccd0eae57
 sge.graphics.g2d.ParticleEffectPool	sge.graphics.g2d.ParticleEffectPool$PooledEffect	class	cb0fb6c569a75d2f
 sge.graphics.g2d.ParticleEffectPool	sge.graphics.g2d.ParticleEffectPool$PooledEffect#free()	def	f49b9b3297ef4d9e
-sge.graphics.g2d.ParticleEmitter	sge.graphics.g2d.ParticleEmitter	class	3754b86364285eb8
+sge.graphics.g2d.ParticleEmitter	sge.graphics.g2d.ParticleEmitter	class	56decdddf43938c8
 sge.graphics.g2d.ParticleEmitter	sge.graphics.g2d.ParticleEmitter#<init>(BufferedReader)	ctor	624be95c350ec042
 sge.graphics.g2d.ParticleEmitter	sge.graphics.g2d.ParticleEmitter#<init>(ParticleEmitter)	ctor	92c4f3fc9c01ffc0
 sge.graphics.g2d.ParticleEmitter	sge.graphics.g2d.ParticleEmitter#<stmt1>	stmt	32fffd18ae01f8b6
@@ -3885,8 +3885,8 @@ sge.graphics.g2d.ParticleEmitter	sge.graphics.g2d.ParticleEmitter$ScaledNumericV
 sge.graphics.g2d.ParticleEmitter	sge.graphics.g2d.ParticleEmitter$ScaledNumericValue#setScaling(Array<float>)	def	423f188866d4c606
 sge.graphics.g2d.ParticleEmitter	sge.graphics.g2d.ParticleEmitter$ScaledNumericValue#setTimeline(Array<float>)	def	0e7a0aa106137717
 sge.graphics.g2d.ParticleEmitter	sge.graphics.g2d.ParticleEmitter$ScaledNumericValue#timeline	val	528d9fbdffabf00e
-sge.graphics.g2d.ParticleEmitter	sge.graphics.g2d.ParticleEmitter$SpawnEllipseSide	class	2bc0bf2065ec2d22
-sge.graphics.g2d.ParticleEmitter	sge.graphics.g2d.ParticleEmitter$SpawnShape	class	76826e7d199ca339
+sge.graphics.g2d.ParticleEmitter	sge.graphics.g2d.ParticleEmitter$SpawnEllipseSide	class	65364ba1f8a4d141
+sge.graphics.g2d.ParticleEmitter	sge.graphics.g2d.ParticleEmitter$SpawnShape	class	cc40234102eea631
 sge.graphics.g2d.ParticleEmitter	sge.graphics.g2d.ParticleEmitter$SpawnShapeValue	class	3057259ff45fb260
 sge.graphics.g2d.ParticleEmitter	sge.graphics.g2d.ParticleEmitter$SpawnShapeValue#edges	val	25aa7698de0fa844
 sge.graphics.g2d.ParticleEmitter	sge.graphics.g2d.ParticleEmitter$SpawnShapeValue#getShape()	def	9a74cdf8f73637aa
@@ -3900,7 +3900,7 @@ sge.graphics.g2d.ParticleEmitter	sge.graphics.g2d.ParticleEmitter$SpawnShapeValu
 sge.graphics.g2d.ParticleEmitter	sge.graphics.g2d.ParticleEmitter$SpawnShapeValue#setSide(SpawnEllipseSide)	def	e980bbf533ed9f24
 sge.graphics.g2d.ParticleEmitter	sge.graphics.g2d.ParticleEmitter$SpawnShapeValue#shape	val	aa792e56d83350e9
 sge.graphics.g2d.ParticleEmitter	sge.graphics.g2d.ParticleEmitter$SpawnShapeValue#side	val	732a1422c561d91d
-sge.graphics.g2d.ParticleEmitter	sge.graphics.g2d.ParticleEmitter$SpriteMode	class	7712ce20c3a098f6
+sge.graphics.g2d.ParticleEmitter	sge.graphics.g2d.ParticleEmitter$SpriteMode	class	652833fb93f0b7c3
 sge.graphics.g2d.PixmapPacker	sge.graphics.g2d.PixmapPacker	class	dbba21939902214e
 sge.graphics.g2d.PixmapPacker	sge.graphics.g2d.PixmapPacker#<init>(int,int,Format,int,boolean)	ctor	a97c69e89b169d4e
 sge.graphics.g2d.PixmapPacker	sge.graphics.g2d.PixmapPacker#<init>(int,int,Format,int,boolean,PackStrategy)	ctor	36b73c9a00c19d11
@@ -4023,10 +4023,10 @@ sge.graphics.g2d.PixmapPacker	sge.graphics.g2d.PixmapPacker$SkylineStrategy$Skyl
 sge.graphics.g2d.PixmapPacker	sge.graphics.g2d.PixmapPacker$SkylineStrategy$SkylinePage$Row#height	val	0dbc899fea45e951
 sge.graphics.g2d.PixmapPacker	sge.graphics.g2d.PixmapPacker$SkylineStrategy$SkylinePage$Row#x	val	db25923b7218c28a
 sge.graphics.g2d.PixmapPacker	sge.graphics.g2d.PixmapPacker$SkylineStrategy$SkylinePage$Row#y	val	5cbe48818b44e92b
-sge.graphics.g2d.PixmapPackerIO	sge.graphics.g2d.PixmapPackerIO	class	12b5b082e6613caa
+sge.graphics.g2d.PixmapPackerIO	sge.graphics.g2d.PixmapPackerIO	class	38a8000018ba37a6
 sge.graphics.g2d.PixmapPackerIO	sge.graphics.g2d.PixmapPackerIO#save(FileHandle,PixmapPacker)	def	0e05d3be871b3e4c
 sge.graphics.g2d.PixmapPackerIO	sge.graphics.g2d.PixmapPackerIO#save(FileHandle,PixmapPacker,SaveParameters)	def	9894b3d664117c1d
-sge.graphics.g2d.PixmapPackerIO	sge.graphics.g2d.PixmapPackerIO$ImageFormat	class	fe1d1d0e3a067f2d
+sge.graphics.g2d.PixmapPackerIO	sge.graphics.g2d.PixmapPackerIO$ImageFormat	class	428168ec0e6b1284
 sge.graphics.g2d.PixmapPackerIO	sge.graphics.g2d.PixmapPackerIO$ImageFormat#getExtension()	def	9c29108ba3c3c678
 sge.graphics.g2d.PixmapPackerIO	sge.graphics.g2d.PixmapPackerIO$SaveParameters	class	f23d184ad86ea63c
 sge.graphics.g2d.PixmapPackerIO	sge.graphics.g2d.PixmapPackerIO$SaveParameters#format	val	e71c77dfa7ec01af
@@ -5506,7 +5506,7 @@ sge.graphics.g3d.model.data.ModelData	sge.graphics.g3d.model.data.ModelData#mate
 sge.graphics.g3d.model.data.ModelData	sge.graphics.g3d.model.data.ModelData#meshes	val	978e0537d2aca819
 sge.graphics.g3d.model.data.ModelData	sge.graphics.g3d.model.data.ModelData#nodes	val	29b3d1703b882cca
 sge.graphics.g3d.model.data.ModelData	sge.graphics.g3d.model.data.ModelData#version	val	476a8f7672131885
-sge.graphics.g3d.model.data.ModelMaterial	sge.graphics.g3d.model.data.ModelMaterial	class	47e1ab63e4c04250
+sge.graphics.g3d.model.data.ModelMaterial	sge.graphics.g3d.model.data.ModelMaterial	class	0d5c0241017c09ec
 sge.graphics.g3d.model.data.ModelMaterial	sge.graphics.g3d.model.data.ModelMaterial#ambient	val	def087783f23a228
 sge.graphics.g3d.model.data.ModelMaterial	sge.graphics.g3d.model.data.ModelMaterial#diffuse	val	694573be6da9407b
 sge.graphics.g3d.model.data.ModelMaterial	sge.graphics.g3d.model.data.ModelMaterial#emissive	val	e38b365c836faff2
@@ -5517,7 +5517,7 @@ sge.graphics.g3d.model.data.ModelMaterial	sge.graphics.g3d.model.data.ModelMater
 sge.graphics.g3d.model.data.ModelMaterial	sge.graphics.g3d.model.data.ModelMaterial#specular	val	75b973ac406a8256
 sge.graphics.g3d.model.data.ModelMaterial	sge.graphics.g3d.model.data.ModelMaterial#textures	val	c50302ce30f49a49
 sge.graphics.g3d.model.data.ModelMaterial	sge.graphics.g3d.model.data.ModelMaterial#type	val	ea4465314a78020d
-sge.graphics.g3d.model.data.ModelMaterial	sge.graphics.g3d.model.data.ModelMaterial$MaterialType	class	89ac6a8921c032e7
+sge.graphics.g3d.model.data.ModelMaterial	sge.graphics.g3d.model.data.ModelMaterial$MaterialType	class	32bf8d3046bb98d1
 sge.graphics.g3d.model.data.ModelMesh	sge.graphics.g3d.model.data.ModelMesh	class	f1f8ef9dadd2ca13
 sge.graphics.g3d.model.data.ModelMesh	sge.graphics.g3d.model.data.ModelMesh#attributes	val	c1c3523ca38e2cfc
 sge.graphics.g3d.model.data.ModelMesh	sge.graphics.g3d.model.data.ModelMesh#id	val	ce46f16fd0616688
@@ -5820,7 +5820,7 @@ sge.graphics.g3d.particles.ParticleEffectLoader	sge.graphics.g3d.particles.Parti
 sge.graphics.g3d.particles.ParticleEffectLoader	sge.graphics.g3d.particles.ParticleEffectLoader$ParticleEffectSaveParameter#jsonOutputType	val	39e9062e14d33363
 sge.graphics.g3d.particles.ParticleEffectLoader	sge.graphics.g3d.particles.ParticleEffectLoader$ParticleEffectSaveParameter#manager	val	9072124eaaa08301
 sge.graphics.g3d.particles.ParticleEffectLoader	sge.graphics.g3d.particles.ParticleEffectLoader$ParticleEffectSaveParameter#prettyPrint	val	dd487df48b810922
-sge.graphics.g3d.particles.ParticleShader	sge.graphics.g3d.particles.ParticleShader	class	4fa1d52747526c63
+sge.graphics.g3d.particles.ParticleShader	sge.graphics.g3d.particles.ParticleShader	class	62491c1fa4d9117e
 sge.graphics.g3d.particles.ParticleShader	sge.graphics.g3d.particles.ParticleShader#<init>(Renderable)	ctor	98613ff0a168ff39
 sge.graphics.g3d.particles.ParticleShader	sge.graphics.g3d.particles.ParticleShader#<init>(Renderable,Config)	ctor	8e53d69f97888cbb
 sge.graphics.g3d.particles.ParticleShader	sge.graphics.g3d.particles.ParticleShader#<init>(Renderable,Config,String)	ctor	2687d7741f95de95
@@ -5867,7 +5867,7 @@ sge.graphics.g3d.particles.ParticleShader	sge.graphics.g3d.particles.ParticleSha
 sge.graphics.g3d.particles.ParticleShader	sge.graphics.g3d.particles.ParticleShader#setDefaultCullFace(int)	def	0aaa71bae532c6bd
 sge.graphics.g3d.particles.ParticleShader	sge.graphics.g3d.particles.ParticleShader#setDefaultDepthFunc(int)	def	44154f8c31d044e3
 sge.graphics.g3d.particles.ParticleShader	sge.graphics.g3d.particles.ParticleShader#vertexMask	val	8f7bec761358ca49
-sge.graphics.g3d.particles.ParticleShader	sge.graphics.g3d.particles.ParticleShader$AlignMode	class	0c60652d1a3e65a5
+sge.graphics.g3d.particles.ParticleShader	sge.graphics.g3d.particles.ParticleShader$AlignMode	class	c45b2a12cff4f2ea
 sge.graphics.g3d.particles.ParticleShader	sge.graphics.g3d.particles.ParticleShader$Config	class	ab50adb0f0fe3d2f
 sge.graphics.g3d.particles.ParticleShader	sge.graphics.g3d.particles.ParticleShader$Config#<init>(AlignMode)	ctor	873bfef36d0c7b69
 sge.graphics.g3d.particles.ParticleShader	sge.graphics.g3d.particles.ParticleShader$Config#<init>(AlignMode,ParticleType)	ctor	ec1684805d065541
@@ -5885,7 +5885,7 @@ sge.graphics.g3d.particles.ParticleShader	sge.graphics.g3d.particles.ParticleSha
 sge.graphics.g3d.particles.ParticleShader	sge.graphics.g3d.particles.ParticleShader$Inputs#cameraRight	val	6bc83bf008e0e612
 sge.graphics.g3d.particles.ParticleShader	sge.graphics.g3d.particles.ParticleShader$Inputs#regionSize	val	d242d37bf8cb0e19
 sge.graphics.g3d.particles.ParticleShader	sge.graphics.g3d.particles.ParticleShader$Inputs#screenWidth	val	2b483634133c7167
-sge.graphics.g3d.particles.ParticleShader	sge.graphics.g3d.particles.ParticleShader$ParticleType	class	81479ddf825b7284
+sge.graphics.g3d.particles.ParticleShader	sge.graphics.g3d.particles.ParticleShader$ParticleType	class	13aab9d18be05ef6
 sge.graphics.g3d.particles.ParticleShader	sge.graphics.g3d.particles.ParticleShader$Setters	class	ce89da10b1d8a7ca
 sge.graphics.g3d.particles.ParticleShader	sge.graphics.g3d.particles.ParticleShader$Setters#cameraInvDirection	val	c714626c7ae64ff9
 sge.graphics.g3d.particles.ParticleShader	sge.graphics.g3d.particles.ParticleShader$Setters#cameraPosition	val	f15a2a10bdfe5cf7
@@ -6145,7 +6145,7 @@ sge.graphics.g3d.particles.emitters.Emitter	sge.graphics.g3d.particles.emitters.
 sge.graphics.g3d.particles.emitters.Emitter	sge.graphics.g3d.particles.emitters.Emitter#setMinParticleCount(int)	def	8f8004c35d60b0e4
 sge.graphics.g3d.particles.emitters.Emitter	sge.graphics.g3d.particles.emitters.Emitter#setParticleCount(int,int)	def	7f4539fe209eab85
 sge.graphics.g3d.particles.emitters.Emitter	sge.graphics.g3d.particles.emitters.Emitter#write(Json)	def	90b08495a311eb08
-sge.graphics.g3d.particles.emitters.RegularEmitter	sge.graphics.g3d.particles.emitters.RegularEmitter	class	b93c286cb7e29184
+sge.graphics.g3d.particles.emitters.RegularEmitter	sge.graphics.g3d.particles.emitters.RegularEmitter	class	1e4fca0e81bc3b12
 sge.graphics.g3d.particles.emitters.RegularEmitter	sge.graphics.g3d.particles.emitters.RegularEmitter#<init>(RegularEmitter)	ctor	15fdaf056d8b55ff
 sge.graphics.g3d.particles.emitters.RegularEmitter	sge.graphics.g3d.particles.emitters.RegularEmitter#<stmt10>	stmt	c29bb0f5e74e5125
 sge.graphics.g3d.particles.emitters.RegularEmitter	sge.graphics.g3d.particles.emitters.RegularEmitter#<stmt1>	stmt	7d35bcec19e06ca4
@@ -6197,7 +6197,7 @@ sge.graphics.g3d.particles.emitters.RegularEmitter	sge.graphics.g3d.particles.em
 sge.graphics.g3d.particles.emitters.RegularEmitter	sge.graphics.g3d.particles.emitters.RegularEmitter#start()	def	71f6dd34abc54bd0
 sge.graphics.g3d.particles.emitters.RegularEmitter	sge.graphics.g3d.particles.emitters.RegularEmitter#update()	def	760c6c2e8e88b870
 sge.graphics.g3d.particles.emitters.RegularEmitter	sge.graphics.g3d.particles.emitters.RegularEmitter#write(Json)	def	a74581e04f25a1b9
-sge.graphics.g3d.particles.emitters.RegularEmitter	sge.graphics.g3d.particles.emitters.RegularEmitter$EmissionMode	class	c7d517844e353c47
+sge.graphics.g3d.particles.emitters.RegularEmitter	sge.graphics.g3d.particles.emitters.RegularEmitter$EmissionMode	class	c32292c7a88ffa75
 sge.graphics.g3d.particles.influencers.ColorInfluencer	sge.graphics.g3d.particles.influencers.ColorInfluencer	class	79a177576155663a
 sge.graphics.g3d.particles.influencers.ColorInfluencer	sge.graphics.g3d.particles.influencers.ColorInfluencer#allocateChannels()	def	590b5a16f883d895
 sge.graphics.g3d.particles.influencers.ColorInfluencer	sge.graphics.g3d.particles.influencers.ColorInfluencer#colorChannel	val	0e56e0d398ff051e
@@ -6611,7 +6611,7 @@ sge.graphics.g3d.particles.values.PointSpawnShapeValue	sge.graphics.g3d.particle
 sge.graphics.g3d.particles.values.PointSpawnShapeValue	sge.graphics.g3d.particles.values.PointSpawnShapeValue#<init>(PointSpawnShapeValue)	ctor	f94d72a8078927df
 sge.graphics.g3d.particles.values.PointSpawnShapeValue	sge.graphics.g3d.particles.values.PointSpawnShapeValue#copy()	def	e5fe4790716f0db9
 sge.graphics.g3d.particles.values.PointSpawnShapeValue	sge.graphics.g3d.particles.values.PointSpawnShapeValue#spawnAux(Vector3,float)	def	c8372d33480b54d2
-sge.graphics.g3d.particles.values.PrimitiveSpawnShapeValue	sge.graphics.g3d.particles.values.PrimitiveSpawnShapeValue	class	e064a4a60b530cbb
+sge.graphics.g3d.particles.values.PrimitiveSpawnShapeValue	sge.graphics.g3d.particles.values.PrimitiveSpawnShapeValue	class	2f7f5071bf58d10f
 sge.graphics.g3d.particles.values.PrimitiveSpawnShapeValue	sge.graphics.g3d.particles.values.PrimitiveSpawnShapeValue#<init>(PrimitiveSpawnShapeValue)	ctor	c045ec31696602f9
 sge.graphics.g3d.particles.values.PrimitiveSpawnShapeValue	sge.graphics.g3d.particles.values.PrimitiveSpawnShapeValue#<stmt1>	stmt	86d69889fc800612
 sge.graphics.g3d.particles.values.PrimitiveSpawnShapeValue	sge.graphics.g3d.particles.values.PrimitiveSpawnShapeValue#<stmt2>	stmt	c9b0a6263604e891
@@ -6638,7 +6638,7 @@ sge.graphics.g3d.particles.values.PrimitiveSpawnShapeValue	sge.graphics.g3d.part
 sge.graphics.g3d.particles.values.PrimitiveSpawnShapeValue	sge.graphics.g3d.particles.values.PrimitiveSpawnShapeValue#spawnWidthValue	val	c34aa595c7397d8a
 sge.graphics.g3d.particles.values.PrimitiveSpawnShapeValue	sge.graphics.g3d.particles.values.PrimitiveSpawnShapeValue#start()	def	a08a950f56e4e39c
 sge.graphics.g3d.particles.values.PrimitiveSpawnShapeValue	sge.graphics.g3d.particles.values.PrimitiveSpawnShapeValue#write(Json)	def	4507dd16ec4486b4
-sge.graphics.g3d.particles.values.PrimitiveSpawnShapeValue	sge.graphics.g3d.particles.values.PrimitiveSpawnShapeValue$SpawnSide	class	c0a3de5ae96591c2
+sge.graphics.g3d.particles.values.PrimitiveSpawnShapeValue	sge.graphics.g3d.particles.values.PrimitiveSpawnShapeValue$SpawnSide	class	dec9c7f6e9fa3ef0
 sge.graphics.g3d.particles.values.RangedNumericValue	sge.graphics.g3d.particles.values.RangedNumericValue	class	79cf8bd4c8d1e32b
 sge.graphics.g3d.particles.values.RangedNumericValue	sge.graphics.g3d.particles.values.RangedNumericValue#getLowMax()	def	007cb1e0599b87d2
 sge.graphics.g3d.particles.values.RangedNumericValue	sge.graphics.g3d.particles.values.RangedNumericValue#getLowMin()	def	fae9c6830f4127d0
@@ -8126,7 +8126,7 @@ sge.graphics.glutils.GLOnlyTextureData	sge.graphics.glutils.GLOnlyTextureData#us
 sge.graphics.glutils.GLOnlyTextureData	sge.graphics.glutils.GLOnlyTextureData#width	val	f2ea4110d816a20b
 sge.graphics.glutils.GLVersion	?#rendererString	val	975f88bf1627e548
 sge.graphics.glutils.GLVersion	?#vendorString	val	ef75fb8709fb6033
-sge.graphics.glutils.GLVersion	sge.graphics.glutils.GLVersion	class	e90d54fd5d2745b0
+sge.graphics.glutils.GLVersion	sge.graphics.glutils.GLVersion	class	05ef3eaac06824d1
 sge.graphics.glutils.GLVersion	sge.graphics.glutils.GLVersion#<stmt1>	stmt	78b0c947a7a8ab58
 sge.graphics.glutils.GLVersion	sge.graphics.glutils.GLVersion#<stmt2>	stmt	d4989f65cae31784
 sge.graphics.glutils.GLVersion	sge.graphics.glutils.GLVersion#<stmt3>	stmt	9efecaaf30ad756d
@@ -8151,8 +8151,8 @@ sge.graphics.glutils.GLVersion	sge.graphics.glutils.GLVersion#rendererString	val
 sge.graphics.glutils.GLVersion	sge.graphics.glutils.GLVersion#type	val	b1a2f90d7e40e2e0
 sge.graphics.glutils.GLVersion	sge.graphics.glutils.GLVersion#vendorString	val	56044212de748818
 sge.graphics.glutils.GLVersion	sge.graphics.glutils.GLVersion#versionString	val	f37e3bb66d6d2384
-sge.graphics.glutils.GLVersion	sge.graphics.glutils.GLVersion$Type	class	27848a4dee58f2bf
-sge.graphics.glutils.HdpiMode	sge.graphics.glutils.HdpiMode	class	02f66f1354fce574
+sge.graphics.glutils.GLVersion	sge.graphics.glutils.GLVersion$Type	class	10e496dfe8a4b1a5
+sge.graphics.glutils.HdpiMode	sge.graphics.glutils.HdpiMode	class	1faacc172afe3685
 sge.graphics.glutils.HdpiUtils	sge.graphics.glutils.HdpiUtils	class	20a2e382487ded3c
 sge.graphics.glutils.HdpiUtils	sge.graphics.glutils.HdpiUtils#glScissor(int,int,int,int)	def	6a5a272b8d01a9f0
 sge.graphics.glutils.HdpiUtils	sge.graphics.glutils.HdpiUtils#glViewport(int,int,int,int)	def	a31070288903cca7
@@ -8618,7 +8618,7 @@ sge.graphics.glutils.ShaderProgram	sge.graphics.glutils.ShaderProgram#uniformTyp
 sge.graphics.glutils.ShaderProgram	sge.graphics.glutils.ShaderProgram#uniforms	val	64fb605c162640bd
 sge.graphics.glutils.ShaderProgram	sge.graphics.glutils.ShaderProgram#vertexShaderHandle	val	eee59f07663bd1d2
 sge.graphics.glutils.ShaderProgram	sge.graphics.glutils.ShaderProgram#vertexShaderSource	val	edd1a87441d212b5
-sge.graphics.glutils.ShapeRenderer	sge.graphics.glutils.ShapeRenderer	class	569060639dc96f43
+sge.graphics.glutils.ShapeRenderer	sge.graphics.glutils.ShapeRenderer	class	5e5377d4f50a9b83
 sge.graphics.glutils.ShapeRenderer	sge.graphics.glutils.ShapeRenderer#<init>()	ctor	cb325d3ff9063604
 sge.graphics.glutils.ShapeRenderer	sge.graphics.glutils.ShapeRenderer#<init>(int)	ctor	1bdfef44b2a475c7
 sge.graphics.glutils.ShapeRenderer	sge.graphics.glutils.ShapeRenderer#<stmt1>	stmt	7628d60038080b30
@@ -8691,7 +8691,7 @@ sge.graphics.glutils.ShapeRenderer	sge.graphics.glutils.ShapeRenderer#triangle(f
 sge.graphics.glutils.ShapeRenderer	sge.graphics.glutils.ShapeRenderer#updateMatrices()	def	b8be95fccde1998a
 sge.graphics.glutils.ShapeRenderer	sge.graphics.glutils.ShapeRenderer#x(Vector2,float)	def	fc5cd9f53a17495c
 sge.graphics.glutils.ShapeRenderer	sge.graphics.glutils.ShapeRenderer#x(float,float,float)	def	0f6dc95a9689cc3f
-sge.graphics.glutils.ShapeRenderer	sge.graphics.glutils.ShapeRenderer$ShapeType	class	9ce2955903d70c0e
+sge.graphics.glutils.ShapeRenderer	sge.graphics.glutils.ShapeRenderer$ShapeType	class	1b8b95000beebe14
 sge.graphics.glutils.ShapeRenderer	sge.graphics.glutils.ShapeRenderer$ShapeType#getGlType()	def	35814eef89cf0a2f
 sge.graphics.glutils.VertexArray	sge.graphics.glutils.VertexArray	class	6b331c8f6f890f9c
 sge.graphics.glutils.VertexArray	sge.graphics.glutils.VertexArray#<init>(int,Array<VertexAttribute>)	ctor	3c694a146f08c0e5
@@ -10145,7 +10145,7 @@ sge.maps.tiled.TiledMapRenderer	sge.maps.tiled.TiledMapRenderer#renderImageLayer
 sge.maps.tiled.TiledMapRenderer	sge.maps.tiled.TiledMapRenderer#renderObject(MapObject)	def	d20ec5d27260f52b
 sge.maps.tiled.TiledMapRenderer	sge.maps.tiled.TiledMapRenderer#renderObjects(MapLayer)	def	dd2cb5955f68f583
 sge.maps.tiled.TiledMapRenderer	sge.maps.tiled.TiledMapRenderer#renderTileLayer(TiledMapTileLayer)	def	a73447e86dbfdd59
-sge.maps.tiled.TiledMapTile	sge.maps.tiled.TiledMapTile	class	3a34189241be34d7
+sge.maps.tiled.TiledMapTile	sge.maps.tiled.TiledMapTile	class	160ea6c1d44f123f
 sge.maps.tiled.TiledMapTile	sge.maps.tiled.TiledMapTile#getBlendMode()	def	fcac61ad4c42d243
 sge.maps.tiled.TiledMapTile	sge.maps.tiled.TiledMapTile#getId()	def	4b3c859d79e4f8b8
 sge.maps.tiled.TiledMapTile	sge.maps.tiled.TiledMapTile#getObjects()	def	be40a2f13ea64e78
@@ -10158,7 +10158,7 @@ sge.maps.tiled.TiledMapTile	sge.maps.tiled.TiledMapTile#setId(int)	def	b6ae18eab
 sge.maps.tiled.TiledMapTile	sge.maps.tiled.TiledMapTile#setOffsetX(float)	def	a8ddddbbdd043f28
 sge.maps.tiled.TiledMapTile	sge.maps.tiled.TiledMapTile#setOffsetY(float)	def	c4ce3cf5152eecad
 sge.maps.tiled.TiledMapTile	sge.maps.tiled.TiledMapTile#setTextureRegion(TextureRegion)	def	8e69526fa09ce753
-sge.maps.tiled.TiledMapTile	sge.maps.tiled.TiledMapTile$BlendMode	class	c42e1e176af0e0a1
+sge.maps.tiled.TiledMapTile	sge.maps.tiled.TiledMapTile$BlendMode	class	0279808fcab790bd
 sge.maps.tiled.TiledMapTileLayer	sge.maps.tiled.TiledMapTileLayer	class	7e059fa1893397e1
 sge.maps.tiled.TiledMapTileLayer	sge.maps.tiled.TiledMapTileLayer#<stmt1>	stmt	19ab7a3c85329e47
 sge.maps.tiled.TiledMapTileLayer	sge.maps.tiled.TiledMapTileLayer#<stmt2>	stmt	756b3dfe32c62344
@@ -11328,7 +11328,7 @@ sge.math.Path	sge.math.Path#approximate(T)	def	dca97c19f42d9848
 sge.math.Path	sge.math.Path#derivativeAt(T,float)	def	c20ca77bdd90561f
 sge.math.Path	sge.math.Path#locate(T)	def	2665d465e2480d20
 sge.math.Path	sge.math.Path#valueAt(T,float)	def	0111de03b51bd96b
-sge.math.Plane	sge.math.Plane	class	8426e97f3cb4967b
+sge.math.Plane	sge.math.Plane	class	eee567b4f1f196c0
 sge.math.Plane	sge.math.Plane#<init>(Vector3,Vector3)	ctor	ca8f8f4f307b0c8c
 sge.math.Plane	sge.math.Plane#<init>(Vector3,Vector3,Vector3)	ctor	4dd53e78df7d76a1
 sge.math.Plane	sge.math.Plane#<init>(Vector3,float)	ctor	1c3e88a6508da021
@@ -11347,7 +11347,7 @@ sge.math.Plane	sge.math.Plane#set(float,float,float,float,float,float)	def	39c05
 sge.math.Plane	sge.math.Plane#testPoint(Vector3)	def	11815a00ecc2c305
 sge.math.Plane	sge.math.Plane#testPoint(float,float,float)	def	1e987535684d0a4a
 sge.math.Plane	sge.math.Plane#toString()	def	c159dbba5ba184f0
-sge.math.Plane	sge.math.Plane$PlaneSide	class	86a223ef0a54aff4
+sge.math.Plane	sge.math.Plane$PlaneSide	class	4769c18ab0bff869
 sge.math.Polygon	sge.math.Polygon	class	71e8d81556ab407b
 sge.math.Polygon	sge.math.Polygon#<init>(Array<float>)	ctor	42f395948f298cbd
 sge.math.Polygon	sge.math.Polygon#<stmt1>	stmt	71c9fc1a78cc02f8
@@ -12440,7 +12440,7 @@ sge.scenes.scene2d.Group	sge.scenes.scene2d.Group#toString()	def	dd36be98204be96
 sge.scenes.scene2d.Group	sge.scenes.scene2d.Group#toString(StringBuilder,int)	def	d388f063cff184e3
 sge.scenes.scene2d.Group	sge.scenes.scene2d.Group#transform	val	f1db6d962a425f46
 sge.scenes.scene2d.Group	sge.scenes.scene2d.Group#worldTransform	val	bb23ab697df721c2
-sge.scenes.scene2d.InputEvent	sge.scenes.scene2d.InputEvent	class	0accdc3297a21def
+sge.scenes.scene2d.InputEvent	sge.scenes.scene2d.InputEvent	class	b00677ec59d8a002
 sge.scenes.scene2d.InputEvent	sge.scenes.scene2d.InputEvent#button	val	81bb41d01c9a041e
 sge.scenes.scene2d.InputEvent	sge.scenes.scene2d.InputEvent#character	val	9b5fd818723906ef
 sge.scenes.scene2d.InputEvent	sge.scenes.scene2d.InputEvent#getButton()	def	990d35775f483b37
@@ -12478,7 +12478,7 @@ sge.scenes.scene2d.InputEvent	sge.scenes.scene2d.InputEvent#toCoordinates(Actor,
 sge.scenes.scene2d.InputEvent	sge.scenes.scene2d.InputEvent#toString()	def	b4840f5f173d42e3
 sge.scenes.scene2d.InputEvent	sge.scenes.scene2d.InputEvent#touchFocus	val	a2c82c660a406898
 sge.scenes.scene2d.InputEvent	sge.scenes.scene2d.InputEvent#type	val	357312816f8028eb
-sge.scenes.scene2d.InputEvent	sge.scenes.scene2d.InputEvent$Type	class	892b15484c3ef25a
+sge.scenes.scene2d.InputEvent	sge.scenes.scene2d.InputEvent$Type	class	491e3d58a8acff2c
 sge.scenes.scene2d.InputListener	sge.scenes.scene2d.InputListener	class	5a9465024f17e4c9
 sge.scenes.scene2d.InputListener	sge.scenes.scene2d.InputListener#enter(InputEvent,float,float,int,Actor)	def	7f32a389651e369d
 sge.scenes.scene2d.InputListener	sge.scenes.scene2d.InputListener#exit(InputEvent,float,float,int,Actor)	def	d279645d8dadb2a5
@@ -12598,7 +12598,7 @@ sge.scenes.scene2d.Stage	sge.scenes.scene2d.Stage$TouchFocus#listenerActor	val	1
 sge.scenes.scene2d.Stage	sge.scenes.scene2d.Stage$TouchFocus#pointer	val	c9f7702ec67f2977
 sge.scenes.scene2d.Stage	sge.scenes.scene2d.Stage$TouchFocus#reset()	def	8f35e5e95e196481
 sge.scenes.scene2d.Stage	sge.scenes.scene2d.Stage$TouchFocus#target	val	56739c07d7b7732d
-sge.scenes.scene2d.Touchable	sge.scenes.scene2d.Touchable	class	390ea156bf6ed826
+sge.scenes.scene2d.Touchable	sge.scenes.scene2d.Touchable	class	083cd042fad33fc5
 sge.scenes.scene2d.actions.Actions	sge.scenes.scene2d.actions.Actions	class	605965f1ea1734dd
 sge.scenes.scene2d.actions.Actions	sge.scenes.scene2d.actions.Actions#<clinit>	init	e1763c6f14dc1682
 sge.scenes.scene2d.actions.Actions	sge.scenes.scene2d.actions.Actions#ACTION_POOLS	val	51f0910ebffae635
@@ -14301,7 +14301,7 @@ sge.scenes.scene2d.ui.Stack	sge.scenes.scene2d.ui.Stack#sizeInvalid	val	55eb84a4
 sge.scenes.scene2d.ui.Styleable	sge.scenes.scene2d.ui.Styleable	class	e45c59aca3b23036
 sge.scenes.scene2d.ui.Styleable	sge.scenes.scene2d.ui.Styleable#getStyle()	def	f3b8735c164e4e60
 sge.scenes.scene2d.ui.Styleable	sge.scenes.scene2d.ui.Styleable#setStyle(T)	def	10e1ccf8bff76426
-sge.scenes.scene2d.ui.Table	sge.scenes.scene2d.ui.Table	class	535c84a079cdbd77
+sge.scenes.scene2d.ui.Table	sge.scenes.scene2d.ui.Table	class	5174e883c673cede
 sge.scenes.scene2d.ui.Table	sge.scenes.scene2d.ui.Table#<init>(Skin)	ctor	548eda8be884aeb3
 sge.scenes.scene2d.ui.Table	sge.scenes.scene2d.ui.Table#<stmt1>	stmt	343eb7ddce546f10
 sge.scenes.scene2d.ui.Table	sge.scenes.scene2d.ui.Table#<stmt2>	stmt	3dd5781123d7c648
@@ -14443,7 +14443,7 @@ sge.scenes.scene2d.ui.Table	sge.scenes.scene2d.ui.Table#tableMinWidth	val	9c74f4
 sge.scenes.scene2d.ui.Table	sge.scenes.scene2d.ui.Table#tablePrefHeight	val	fb21e180a22a994a
 sge.scenes.scene2d.ui.Table	sge.scenes.scene2d.ui.Table#tablePrefWidth	val	39fe6e64831468cf
 sge.scenes.scene2d.ui.Table	sge.scenes.scene2d.ui.Table#top()	def	d8fc99a6a1d4ceca
-sge.scenes.scene2d.ui.Table	sge.scenes.scene2d.ui.Table$Debug	class	c1c960e840e99626
+sge.scenes.scene2d.ui.Table	sge.scenes.scene2d.ui.Table$Debug	class	53e43d1b48420bb3
 sge.scenes.scene2d.ui.Table	sge.scenes.scene2d.ui.Table$DebugRect	class	b56f3a836af87711
 sge.scenes.scene2d.ui.Table	sge.scenes.scene2d.ui.Table$DebugRect#color	val	6ca3d4a5e2821772
 sge.scenes.scene2d.ui.Table	sge.scenes.scene2d.ui.Table$DebugRect#pool	val	ef74fd9f68557912
@@ -15389,11 +15389,11 @@ sge.scenes.scene2d.utils.Drawable	sge.scenes.scene2d.utils.Drawable#setPadding(f
 sge.scenes.scene2d.utils.Drawable	sge.scenes.scene2d.utils.Drawable#setPadding(float,float,float,float)	def	c986a485e1b43e7f
 sge.scenes.scene2d.utils.Drawable	sge.scenes.scene2d.utils.Drawable#setRightWidth(float)	def	c9f12ad347a676d9
 sge.scenes.scene2d.utils.Drawable	sge.scenes.scene2d.utils.Drawable#setTopHeight(float)	def	d7b600f79dd1db60
-sge.scenes.scene2d.utils.FocusListener	sge.scenes.scene2d.utils.FocusListener	class	757e9309d36619e6
+sge.scenes.scene2d.utils.FocusListener	sge.scenes.scene2d.utils.FocusListener	class	20d3e161469f3b6b
 sge.scenes.scene2d.utils.FocusListener	sge.scenes.scene2d.utils.FocusListener#handle(Event)	def	2eae36fc36ba301d
 sge.scenes.scene2d.utils.FocusListener	sge.scenes.scene2d.utils.FocusListener#keyboardFocusChanged(FocusEvent,Actor,boolean)	def	e7f784764aa6bb23
 sge.scenes.scene2d.utils.FocusListener	sge.scenes.scene2d.utils.FocusListener#scrollFocusChanged(FocusEvent,Actor,boolean)	def	1f2bcba9986a25df
-sge.scenes.scene2d.utils.FocusListener	sge.scenes.scene2d.utils.FocusListener$FocusEvent	class	a9c3ad1e65442390
+sge.scenes.scene2d.utils.FocusListener	sge.scenes.scene2d.utils.FocusListener$FocusEvent	class	9b5c195b92521bed
 sge.scenes.scene2d.utils.FocusListener	sge.scenes.scene2d.utils.FocusListener$FocusEvent#focused	val	40c2b057ad60ae30
 sge.scenes.scene2d.utils.FocusListener	sge.scenes.scene2d.utils.FocusListener$FocusEvent#getRelatedActor()	def	743755aa80c21262
 sge.scenes.scene2d.utils.FocusListener	sge.scenes.scene2d.utils.FocusListener$FocusEvent#getType()	def	939d2bc2868ffaf9
@@ -15404,7 +15404,7 @@ sge.scenes.scene2d.utils.FocusListener	sge.scenes.scene2d.utils.FocusListener$Fo
 sge.scenes.scene2d.utils.FocusListener	sge.scenes.scene2d.utils.FocusListener$FocusEvent#setRelatedActor(Actor)	def	6375fc9a353acbe9
 sge.scenes.scene2d.utils.FocusListener	sge.scenes.scene2d.utils.FocusListener$FocusEvent#setType(Type)	def	30a515d00c595df7
 sge.scenes.scene2d.utils.FocusListener	sge.scenes.scene2d.utils.FocusListener$FocusEvent#type	val	d4edc6959d148381
-sge.scenes.scene2d.utils.FocusListener	sge.scenes.scene2d.utils.FocusListener$FocusEvent$Type	class	47ad7bd3d99949f0
+sge.scenes.scene2d.utils.FocusListener	sge.scenes.scene2d.utils.FocusListener$FocusEvent$Type	class	85890baacc24e01d
 sge.scenes.scene2d.utils.Layout	sge.scenes.scene2d.utils.Layout	class	f6ffa1bf15ca7aa3
 sge.scenes.scene2d.utils.Layout	sge.scenes.scene2d.utils.Layout#getMaxHeight()	def	06c8f5286887b59e
 sge.scenes.scene2d.utils.Layout	sge.scenes.scene2d.utils.Layout#getMaxWidth()	def	569454123b62054f
@@ -17044,7 +17044,7 @@ sge.utils.JsonReader	sge.utils.JsonReader#stop	val	f2e01fd4eb4dff3e
 sge.utils.JsonReader	sge.utils.JsonReader#stop()	def	a63ff5756d2aeea1
 sge.utils.JsonReader	sge.utils.JsonReader#string(String,String)	def	e85ba6a0b526a70c
 sge.utils.JsonReader	sge.utils.JsonReader#unescape(String)	def	0d6a66fa57cc739e
-sge.utils.JsonSkimmer	sge.utils.JsonSkimmer	class	03124e92dfd5e299
+sge.utils.JsonSkimmer	sge.utils.JsonSkimmer	class	d86ca6169d024171
 sge.utils.JsonSkimmer	sge.utils.JsonSkimmer#<stmt1>	stmt	9566cada937f3054
 sge.utils.JsonSkimmer	sge.utils.JsonSkimmer#<stmt2>	stmt	52c0f7037ab49f57
 sge.utils.JsonSkimmer	sge.utils.JsonSkimmer#_json_actions	val	0bd5d4e67e222325
@@ -17088,7 +17088,7 @@ sge.utils.JsonSkimmer	sge.utils.JsonSkimmer#stop	val	1e25f9884f36d48a
 sge.utils.JsonSkimmer	sge.utils.JsonSkimmer#stop()	def	a63ff5756d2aeea1
 sge.utils.JsonSkimmer	sge.utils.JsonSkimmer#value	val	951ddec472b029c7
 sge.utils.JsonSkimmer	sge.utils.JsonSkimmer#value(JsonToken,JsonToken)	def	2661b018f776f3d8
-sge.utils.JsonSkimmer	sge.utils.JsonSkimmer$JsonToken	class	a1b55c005e4b9915
+sge.utils.JsonSkimmer	sge.utils.JsonSkimmer$JsonToken	class	bce0e730f3ab4b59
 sge.utils.JsonSkimmer	sge.utils.JsonSkimmer$JsonToken#<stmt1>	stmt	7e77ff903813ed68
 sge.utils.JsonSkimmer	sge.utils.JsonSkimmer$JsonToken#buffer	val	4fb1c74ef8e7d690
 sge.utils.JsonSkimmer	sge.utils.JsonSkimmer$JsonToken#chars	val	45041c550292f05a
@@ -17101,7 +17101,7 @@ sge.utils.JsonSkimmer	sge.utils.JsonSkimmer$JsonToken#type	val	9e2518a2b9ef82b1
 sge.utils.JsonSkimmer	sge.utils.JsonSkimmer$JsonToken#unescape	val	2cf2bda4d9c77172
 sge.utils.JsonSkimmer	sge.utils.JsonSkimmer$JsonToken#unescape()	def	c1e820eb239f96cb
 sge.utils.JsonSkimmer	sge.utils.JsonSkimmer$JsonToken#value()	def	851a18520709efda
-sge.utils.JsonSkimmer	sge.utils.JsonSkimmer$JsonToken$TokenType	class	560132f4da3d3cb1
+sge.utils.JsonSkimmer	sge.utils.JsonSkimmer$JsonToken$TokenType	class	179fc1f84721dc89
 sge.utils.JsonString	sge.utils.JsonString	class	e9f867f2d0cc1072
 sge.utils.JsonString	sge.utils.JsonString#<init>()	ctor	ad26a1aba90e0149
 sge.utils.JsonString	sge.utils.JsonString#<stmt1>	stmt	3e53d74e9b0ff645
@@ -17146,7 +17146,7 @@ sge.utils.JsonString	sge.utils.JsonString#value(double)	def	d7348d5c2d675108
 sge.utils.JsonString	sge.utils.JsonString#value(float)	def	2e2189aa1970fa4b
 sge.utils.JsonString	sge.utils.JsonString#value(int)	def	73c35e4614314e38
 sge.utils.JsonString	sge.utils.JsonString#value(long)	def	57ab07f95c58881d
-sge.utils.JsonValue	sge.utils.JsonValue	class	48ca7d229e970e97
+sge.utils.JsonValue	sge.utils.JsonValue	class	1e0babfd7716db92
 sge.utils.JsonValue	sge.utils.JsonValue#<init>(JsonValue)	ctor	0f4a89bfdb8319e4
 sge.utils.JsonValue	sge.utils.JsonValue#<init>(JsonValue,JsonValue,JsonValue)	ctor	18649eb888b9965f
 sge.utils.JsonValue	sge.utils.JsonValue#<init>(String)	ctor	8810a81c953f52d4
@@ -17286,8 +17286,8 @@ sge.utils.JsonValue	sge.utils.JsonValue$PrettyPrintSettings	class	49a6f1b834d1ff
 sge.utils.JsonValue	sge.utils.JsonValue$PrettyPrintSettings#outputType	val	db11d1cbeb9fcbbc
 sge.utils.JsonValue	sge.utils.JsonValue$PrettyPrintSettings#singleLineColumns	val	bfcc661579da3043
 sge.utils.JsonValue	sge.utils.JsonValue$PrettyPrintSettings#wrapNumericArrays	val	d42f5db251df61ae
-sge.utils.JsonValue	sge.utils.JsonValue$ValueType	class	4c405ff4a87e3696
-sge.utils.JsonWriter	sge.utils.JsonWriter	class	ccc50939c5203cf3
+sge.utils.JsonValue	sge.utils.JsonValue$ValueType	class	5c701e4df5621a8b
+sge.utils.JsonWriter	sge.utils.JsonWriter	class	b551ce97eeab752c
 sge.utils.JsonWriter	sge.utils.JsonWriter#<init>(Writer)	ctor	2931dfdeb86c6d46
 sge.utils.JsonWriter	sge.utils.JsonWriter#array	val	af1057359aed6eca
 sge.utils.JsonWriter	sge.utils.JsonWriter#array()	def	c5cf6dd316141b3e
@@ -17331,7 +17331,7 @@ sge.utils.JsonWriter	sge.utils.JsonWriter#value(int)	def	a8110eedf06a83a4
 sge.utils.JsonWriter	sge.utils.JsonWriter#value(long)	def	85c5facf6d81d489
 sge.utils.JsonWriter	sge.utils.JsonWriter#write(Array<char>,int,int)	def	bb4236387a200523
 sge.utils.JsonWriter	sge.utils.JsonWriter#writer	val	d49a2eb289218677
-sge.utils.JsonWriter	sge.utils.JsonWriter$OutputType	class	5ce8763574456706
+sge.utils.JsonWriter	sge.utils.JsonWriter$OutputType	class	210491fa15fb5dde
 sge.utils.JsonWriter	sge.utils.JsonWriter$OutputType#escape(String,int)	def	3eb5428f0d2a2964
 sge.utils.JsonWriter	sge.utils.JsonWriter$OutputType#escapeQuote(String)	def	b045c389587614be
 sge.utils.JsonWriter	sge.utils.JsonWriter$OutputType#javascriptPattern	val	65ca56bb6ca40dd8
