@@ -2883,31 +2883,71 @@ object TirEmitter:
     if renames.isEmpty then p
     else p.rebuilt(symbols = SymbolTable(p.symbols.all.map(s => renames.get(s.id).map(n => s.copy(name = n)).getOrElse(s))))
 
-  /** Rename any field whose simple name collides with a method in the same class (legal in
+  /** Rename any field whose simple name collides with a method in the same EMITTED SCOPE (legal in
     * Java, illegal in Scala) by suffixing `$field`. Renaming the symbol propagates to every
-    * reference, since the emitter reads names from the symbol table. */
+    * reference, since the emitter reads names from the symbol table.
+    *
+    * "Same emitted scope" is the whole rule, and it is PLACEMENT, not name. A Java `static` member
+    * leaves the class entirely — [[classDef]] partitions the body and emits the statics into the
+    * companion `object` — so a `static` factory and an instance field of the same name are two
+    * members of two different scopes and cannot collide:
+    *
+    * {{{
+    * private final Bits all;                                    // the class
+    * public static final Builder all (Class<? extends Component>... t) { … }   // the companion
+    * }}}
+    *
+    * which is the shape a private constructor forces on every such library (Ashley's `Family`, three
+    * fields' worth). Renaming there moved public surface for nothing. `resolveFieldShadowing` already
+    * reasons exactly this way — "statics are exempt: they land in the companion, which inherits
+    * nothing" — and this is the same fact read one direction further.
+    *
+    * So the two scopes are read separately, and they are not symmetric:
+    *
+    *   - the INSTANCE scope is inherited, so a field here still clashes with a method declared in any
+    *     DESCENDANT (`hasNext` field + `hasNext()` from `Iterator`);
+    *   - the STATIC scope is not. A companion inherits nothing; [[classDef]] re-exports a parent's
+    *     companion with this type's OWN static names excluded, so a static field can only ever meet a
+    *     static method of the SAME class.
+    *
+    * A `module` symbol has one body rather than a class and a companion, so both its placements land
+    * in the same scope and the partition collapses — stated here rather than assumed, because a
+    * synthesized object is exactly where an assumption about `isStatic` stops holding. */
   def resolveMemberClashes(p: Program, out: collection.mutable.Buffer[Decision] = collection.mutable.ListBuffer.empty): Program =
     val renames = collection.mutable.Map[SymId, String]()
     def nm(id: SymId): String = p.symbolOf(id).map(_.name).getOrElse("")
     def headSym(t: TypeRepr): Option[SymId] = t match
       case TypeRepr.TypeRef(_, s) => Some(s); case TypeRepr.AppliedType(tc, _) => headSym(tc); case _ => None
-    // per-class method names, and the parent edges — a Java field can coexist with a same-named
-    // METHOD in a SUBCLASS (`hasNext` field + `hasNext()` from Iterator), which Scala forbids.
-    val methodsOf = collection.mutable.Map[SymId, Set[String]]()
+    def isModule(c: SymId): Boolean  = p.symbolOf(c).exists(_.flags.isModule)
+    /** where a member of `owner` is EMITTED — the companion, or the class/object body itself. */
+    def inCompanion(m: SymId, owner: SymId): Boolean =
+      p.symbolOf(m).exists(_.flags.isStatic) && !isModule(owner)
+    // per-class method names BY PLACEMENT, and the parent edges the instance scope is inherited along
+    val instMethodsOf = collection.mutable.Map[SymId, Set[String]]()
+    val statMethodsOf = collection.mutable.Map[SymId, Set[String]]()
     val childrenOf = collection.mutable.Map[SymId, List[SymId]]().withDefaultValue(Nil)
     def index(cd: Tree.ClassDef): Unit =
-      methodsOf(cd.symbol) = cd.body.collect { case d: Tree.DefDef => nm(d.symbol) }.toSet
+      val (stat, inst) = cd.body.collect { case d: Tree.DefDef => d }.partition(d => inCompanion(d.symbol, cd.symbol))
+      instMethodsOf(cd.symbol) = inst.map(d => nm(d.symbol)).toSet
+      statMethodsOf(cd.symbol) = stat.map(d => nm(d.symbol)).toSet
       cd.parents.foreach { case tt: TypeTree => headSym(tt.tpe).foreach(pp => childrenOf(pp) = cd.symbol :: childrenOf(pp)); case _ => () }
       cd.body.foreach { case c: Tree.ClassDef => index(c); case _ => () }
     p.units.foreach(index)
     def selfOrDescMethods(c: SymId, seen: Set[SymId] = Set.empty): Set[String] =
       if seen(c) then Set.empty
-      else methodsOf.getOrElse(c, Set.empty) ++ childrenOf(c).flatMap(ch => selfOrDescMethods(ch, seen + c))
+      else instMethodsOf.getOrElse(c, Set.empty) ++ childrenOf(c).flatMap(ch => selfOrDescMethods(ch, seen + c))
     def scan(cd: Tree.ClassDef): Unit =
-      val clashNames = selfOrDescMethods(cd.symbol)
+      val instClashNames = selfOrDescMethods(cd.symbol)
+      val statClashNames = statMethodsOf.getOrElse(cd.symbol, Set.empty)
+      def clashes(v: Tree.ValDef): Boolean =
+        if inCompanion(v.symbol, cd.symbol) then statClashNames(nm(v.symbol)) else instClashNames(nm(v.symbol))
       cd.body.foreach {
-        case v: Tree.ValDef if clashNames(nm(v.symbol)) =>
+        case v: Tree.ValDef if clashes(v) =>
           renames(v.symbol) = nm(v.symbol) + "$field"
+          // the note's own text is unchanged by this refinement, deliberately: it already says
+          // "a method of this class or of a SUBCLASS", which is the INSTANCE scope and now the
+          // only thing the pass claims. A reworded `why` is emitted text (§4.575) and would move
+          // every member carrying this note in every port, hiding the three that really changed.
           note(out, Decision.Kind.RenamedMember, p, v.symbol,
             Map(
               "from"  -> nm(v.symbol),
