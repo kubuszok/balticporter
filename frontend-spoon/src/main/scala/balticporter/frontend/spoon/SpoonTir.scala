@@ -111,9 +111,16 @@ object SpoonTir:
       * asked for exactly that string and got `None` from every external member for the whole
       * history of the project, so they never fired once. Ownership still terminates at `SymId.None`
       * one level up, so nothing that climbs the chain changes answer. */
-    def external(key: String, name: String, owner: SymId = SymId.None): SymId =
+    def external(key: String, name: String, owner: SymId = SymId.None,
+                 descriptor: Option[Descriptor] = None): SymId =
       val id = resolve(key)
-      if !syms.contains(id) then syms(id) = Symbol(id, name, key, Flags(), owner, NoType)
+      if !syms.contains(id) then syms(id) = Symbol(id, name, key, Flags(), owner, NoType, descriptor = descriptor)
+      // `external` NEVER clobbers, so a stub interned by an earlier, UNRESOLVED reference would
+      // otherwise keep its empty descriptor for the whole run while a later, resolved one knew the
+      // answer. The descriptor is the one field where filling a hole is strictly better information:
+      // it is derived from the parser's own declaration and cannot contradict a previous fill.
+      else if descriptor.isDefined && syms(id).descriptor.isEmpty then
+        syms(id) = syms(id).copy(descriptor = descriptor)
       id
 
     def table: SymbolTable        = SymbolTable(syms.values)
@@ -292,14 +299,43 @@ object SpoonTir:
     private def memberKey(owner: SymId, sig: String): String = minterKeyOf(owner) + "#" + sig
     /** An external MEMBER always knows its owner — the key is derived from it. Passing it on is
       * what lets `owner#name` be reconstructed downstream (see `Minter.external`). */
-    private def externalMember(owner: SymId, sig: String, name: String): SymId =
-      minter.external(memberKey(owner, sig), name, owner)
+    private def externalMember(owner: SymId, sig: String, name: String,
+                               descriptor: Option[Descriptor] = None): SymId =
+      minter.external(memberKey(owner, sig), name, owner, descriptor)
     private def minterKeyOf(id: SymId): String = "@" + id.raw // members hang off their owner's id
     private def erasedSig(m: CtExecutable[?]): String =
       val ps = m.getParameters.asScala.toList
         .map(p => scala.util.Try(p.getType.getQualifiedName).getOrElse("?"))
         .mkString(",")
       s"($ps)"
+
+    /** The member's DESCRIPTOR — its source-level parameter spelling, read from the PARSER.
+      *
+      * This is the one place a descriptor is derived for a member the frontend declares, and it is
+      * read HERE, from `CtParameter.getType`, rather than downstream from the `MethodType` this
+      * method is about to build. That ordering is the whole of the `equals` divergence's fix:
+      * `execDef` retypes a 1-argument `equals(Object)`'s parameter to `scala.Any` (Scala's
+      * `Object.equals` takes `Any`), so a descriptor read from `info` says `Any` and every manifest
+      * in existence says `Object`. Read before the retyping there is nothing to reconcile.
+      *
+      * The spelling is `getSimpleName` — grammar-identical to `isDropped`'s, which is what a
+      * `dropMethods` key already matches against, so no existing key changes meaning. An ARRAY is
+      * decomposed STRUCTURALLY rather than taken from `getSimpleName` (which happens to render
+      * `int[]` as well): a Java vararg `T…` is a `CtArrayTypeReference` too, and going through
+      * [[Param.Arr]] makes the two spell identically by construction rather than by coincidence.
+      *
+      * ALL parameters or none ([[Descriptor.total]]): a key with one parameter guessed matches the
+      * wrong overload, which is worse than no key. */
+    private def descriptorOf(m: CtExecutable[?]): Option[Descriptor] =
+      def paramOf(r: CtTypeReference[?]): Param = r match
+        case null                        => Param.Unresolved
+        case a: CtArrayTypeReference[?]  => paramOf(a.getComponentType) match
+          case Param.Unresolved => Param.Unresolved
+          case of               => Param.Arr(of)
+        case other                       =>
+          scala.util.Try(other.getSimpleName).toOption.fold(Param.Unresolved)(Descriptor.paramOf)
+      val ps = scala.util.Try(m.getParameters.asScala.toList).getOrElse(Nil)
+      Descriptor.total(ps.map(p => scala.util.Try(p.getType).toOption.fold(Param.Unresolved)(paramOf)))
 
     // ---- type parameter resolution ----
     /** parallel to `tpScopes`: is this frame an EXECUTABLE's own type parameters? */
@@ -1210,8 +1246,10 @@ object SpoonTir:
         case _                        => unitT
       val sig = MethodType(ps.map(p => p.getSimpleName -> anyForEquals(p)), ret)
       val (anns, annDropped) = annotationsOf(m, Some(bt))
+      // `descriptorOf` reads the PARSER's parameter types, so it is `Object` here and not the `Any`
+      // `sig` above already carries — see its own note.
       minter.set(id, Symbol(id, name, qualified(owner, name), execFlags(m).copy(isOverride = overrides), owner, sig,
-                            annotations = anns, droppedAnnotations = annDropped))
+                            annotations = anns, droppedAnnotations = annDropped, descriptor = descriptorOf(m)))
       // translate the body (with param + type-param scope in place) — this is what makes
       // Call / field-ref usages and `callersOf` real. Abstract/interface methods have none.
       val body = Option(m.getBody).map(b => bt.methodBody(b))
@@ -2959,12 +2997,17 @@ object SpoonTir:
             val (q, s) = declType(decl)
             val ownerId = minter.external(q, s)
             val nm      = if decl.isInstanceOf[CtConstructor[?]] then "<init>" else decl.getSimpleName
-            externalMember(ownerId, nm + erasedSig(decl), nm)
+            externalMember(ownerId, nm + erasedSig(decl), nm, descriptorOf(decl))
           case None =>
             val ownerQ  = Option(ex.getDeclaringType).map(_.getQualifiedName).getOrElse("java.lang.Object")
             val ownerId = minter.external(ownerQ, simpleName(ownerQ))
             val nm      = if ex.isConstructor then "<init>" else ex.getSimpleName
             val sig     = ex.getParameters.asScala.toList.map(p => scala.util.Try(p.getQualifiedName).getOrElse("?")).mkString(",")
+            // NO DESCRIPTOR, deliberately. With no declaration this is the REFERENCE's formals,
+            // which a lenient parse erases systematically (`<T> void m(T)` reads `m(Object)`), so
+            // recording them would manufacture a precise-looking key that names the wrong overload.
+            // This is the design's admitted residue: the failure is LOUD at bind time — an unbound
+            // key naming a real member — instead of a silent degrade to arity at match time.
             externalMember(ownerId, s"$nm($sig)", nm)
 
       private def declType(decl: CtExecutable[?]): (String, String) = decl match

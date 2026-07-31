@@ -124,6 +124,24 @@ final case class Symbol(
     /** annotations the frontend could NOT carry, by name — reported by `OmissionCheck` rather
       * than discarded, so a gap here is a number on every run. */
     droppedAnnotations: List[String] = Nil,
+    /** the member's PARAMETER SPELLING — the half of member identity [[fullName]] does not carry,
+      * and the whole of overload identity. See [[Descriptor]] for the grammar and for the two
+      * cross-grammar divergences it closes.
+      *
+      * Three readings of `None`, and only one of them is a gap:
+      *
+      *  - a FIELD, a TYPE, a parameter, a local — not an executable, so there is nothing to spell.
+      *    `owner#name` is its COMPLETE identity, and a binder that reported this as unresolved would
+      *    produce a finding for every field in the program.
+      *  - an EXTERNAL member whose declaration the frontend could not resolve. That one IS a gap,
+      *    and it is the surviving residue of the arity fallback this field replaces — made LOUD at
+      *    bind time here rather than silently degrading to arity at match time.
+      *  - a member with one unnameable formal: ALL of them or none ([[Descriptor.total]]).
+      *
+      * NEVER folded into [[fullName]] and never printed by `TirPrinter.canonical`: it is a symbol
+      * PROPERTY, not part of the symbol's NAME, and every promoted artifact in every lane is keyed
+      * on the name. See [[MemberKey]] for the whole of that argument. */
+    descriptor: Option[Descriptor] = None,
 )
 
 // ---------------------------------------------------------------------------
