@@ -920,6 +920,20 @@ final class TirEmitter(
       val sb = (parentExports ++ orderBody(statics).map(memberStat(_, i + 1)).filter(_.nonEmpty)).mkString("\n")
       s"$cls\n${ind(i)}object ${esc(s.name)} {\n$sb\n${ind(i)}}"
 
+  /** `this.x = x` — the NAME assigned, when the assignment is a field taking its own same-named
+    * source and nothing else. Both sides must resolve to the same simple name and the right-hand
+    * side must be a bare identifier, so `this.up = new Vector3(upX, …)` and `this.a = b` are not
+    * this shape and are not touched. */
+  private def selfAssignedParam(a: Tree.Assign): Option[String] =
+    val lhs = a.lhs match
+      case Tree.Select(_: Tree.This, m, _, _) => Some(sym(m).name)
+      case Tree.Ident(m, _, _)                => Some(sym(m).name)
+      case _                                  => scala.None
+    val rhs = a.rhs match
+      case Tree.Ident(m, _, _) => Some(sym(m).name)
+      case _                   => scala.None
+    lhs.filter(l => rhs.contains(l))
+
   /** Java enum → `sealed abstract class Name <parents-minus-Enum> { members }` plus a
     * companion `object` holding each constant as a `case object` and a `values` array. */
   private def enumDef(cd: Tree.ClassDef, i: Int): String =
@@ -931,13 +945,42 @@ final class TirEmitter(
     // A Java enum constructor's PARAMS become the sealed class's primary constructor params (as `var`
     // fields), so `case object Nearest extends TextureFilter(GL_NEAREST)` has somewhere to pass its
     // arg. Drop the constructor itself and any field that a param supersedes (same name).
-    val ctorParams = instance0.collectFirst { case d: Tree.DefDef if sym(d.symbol).name == "<init>" => d.paramss.flatten }.getOrElse(Nil)
+    val ctors      = instance0.collect { case d: Tree.DefDef if sym(d.symbol).name == "<init>" => d }
+    val ctorParams = ctors.headOption.map(_.paramss.flatten).getOrElse(Nil)
     val paramNames = ctorParams.map(v => sym(v.symbol).name).toSet
     val instance   = instance0.filterNot {
       case d: Tree.DefDef => sym(d.symbol).name == "<init>"
       case v: Tree.ValDef => paramNames(sym(v.symbol).name)
       case _              => false
     }
+    // …and it also has a BODY, which RUNS. Keeping only the parameters left every field the
+    // constructor assigned at its declared default, silently: libGDX's `Cubemap.CubemapSide` builds
+    // `up` and `direction` from six float parameters, so all six sides shipped with `up == null`
+    // and `getUp(out)` threw — in a port that compiled with zero errors and moved no check count
+    // (CLAUDE.md §3). Found by porting anim8, whose `Dithered.DitherAlgorithm` assigns
+    // `legibleName` the same way, so `toString()` returned null for all 22 constants.
+    //
+    // `CtorFunnel` is deliberately NOT consulted. It plans a class whose constructors it may
+    // promote, delegate or synthesise, and an enum's shape is already fixed: the sealed class's
+    // primary IS the java constructor, because every `case object` passes its arguments to it. (It
+    // also plans nothing here — `Plan.primaryParams` came back empty and the parameter list
+    // vanished, which is how that was measured.) So the lowering is the direct one, and it applies
+    // only to a SINGLE constructor: an OVERLOADED enum constructor cannot be expressed by this
+    // shape at all, since a `case object` can reach only one primary. That is a pre-existing limit
+    // this does not widen, and attributing one overload's body to every constant would be worse
+    // than leaving it out.
+    val ctorStats =
+      if ctors.sizeIs != 1 then Nil
+      else CtorFunnel.stmtsOf(ctors.head).filterNot {
+        // java's implicit `super()`, which reaches `java.lang.Enum` and has no expression here.
+        case Tree.Apply(Tree.Select(_, m, _, _), _, _, _, _) => sym(m).name == "<init>"
+        // `this.glEnum = glEnum` is what most enum constructors ARE, and the promotion above
+        // already performs it — `var glEnum` IS the parameter. Re-emitting it is a self-assignment:
+        // correct, and pure churn in four of libGDX's five enums. Dropped only in that exact shape,
+        // so an assignment that computes anything (`this.up = new Vector3(upX, upY, upZ)`) stays.
+        case a: Tree.Assign                                  => selfAssignedParam(a).exists(paramNames)
+        case _                                               => false
+      }
     val eprimary = if ctorParams.isEmpty then "" else s"(${ctorParams.map(v => s"var ${esc(sym(v.symbol).name)}: ${tpe(v.tpt.tpe)}").mkString(", ")})"
     // Java's final `Enum.name()` — a `case object`'s `toString` IS its declared name (= the Java
     // constant name), so `name()` returns it. Skip if the enum already declares a `name` member.
@@ -945,7 +988,12 @@ final class TirEmitter(
     val nameM   = if hasName then Nil else List(s"${ind(i + 1)}def name(): java.lang.String = this.toString()")
     val cnote   = if cd.symbol == currentTopLevelSym then "" else declNotes(cd.symbol, i)
     val bnote   = bodyNotes(cd.symbol, i + 1)
-    val members = List(bnote).filter(_.nonEmpty) ++ orderBody(instance).map(memberStat(_, i + 1)).filter(_.nonEmpty) ++ nameM
+    // The constructor's statements go LAST among the class body's own, after every declaration:
+    // a Scala class body runs its statements in textual order, so an assignment placed above the
+    // `var` it targets would not compile, and one placed below runs exactly where java ran it.
+    val members = List(bnote).filter(_.nonEmpty) ++
+      orderBody(instance).map(memberStat(_, i + 1)).filter(_.nonEmpty) ++
+      ctorStats.map(memberStat(_, i + 1)).filter(_.nonEmpty) ++ nameM
     val cbody   = members.mkString("\n")
     val cls     = s"${leading(cd.leading, i)}$cnote${ind(i)}sealed abstract class $name$eprimary$ext" + (if cbody.isEmpty then "" else s" {\n$cbody\n${ind(i)}}")
     val cases = cd.enumCases.map { ec =>
