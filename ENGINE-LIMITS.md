@@ -685,6 +685,70 @@ is counted by `droppedSuperArgs` where the delegation declines.
 
 *Fix kind: (a) — and the (a) is "count it", as in C3.*
 
+### C8. A SYNTHESISED primary is SHADOWED by a narrower real constructor — the test is APPLICABILITY, not signature equality — **0 -> 2**
+
+A synthesised primary takes the PARENT constructor's formals; every Java constructor becomes a
+`def this` whose body starts `this(<its own super arguments>)`. The obvious question — "does a real
+constructor already have this signature?" — is the wrong one, and asking only it measured **0 -> 2
+compile errors** on libGDX core the first time the synthesis was widened past a nilary root.
+
+Scalac does not compare the delegation against the primary's signature. It resolves an OVERLOAD:
+every constructor of the class is a candidate, applicability comes first, most-specific decides. So a
+real constructor whose parameters are *narrower* than the parent's formals wins the call even though
+its signature equals nothing:
+
+```scala
+class DistanceFieldFontCache protected (sup$0: BitmapFont, sup$1: Boolean)
+    extends BitmapFontCache(sup$0, sup$1):
+  def this(font: DistanceFieldFont)                   = this(font, font.usesIntegerPositions())
+  def this(font: DistanceFieldFont, integer: Boolean) = this(font, integer)   // ITSELF
+```
+
+`DistanceFieldFont <: BitmapFont`, so the second constructor is applicable to `(font, integer)` and
+strictly more specific than the primary: it delegates to **itself**. The first then resolves to the
+second, which is declared below it — `secondary constructor must call a preceding constructor`.
+Note what each half costs: the second error is a compiler diagnostic, and the first would have been
+an infinite recursion at construction time had the declaration order gone the other way.
+
+**The predicate is therefore per-ROOT and about the ARGUMENTS the emitter will write**, not about
+the slot list: refuse (or disambiguate) when any real constructor of the class is applicable to some
+root's delegation argument list — same arity, and every argument type assignable to the
+corresponding parameter. Signature equality and erasure-equality are both special cases of it. An
+unknown type on either side counts as assignable, because refusing the synthesis is the safe answer
+and pretending to know is not.
+
+Erasure equality is still the right test for the OTHER direction — two DECLARATIONS that cannot
+coexist (`E120 … have the same type after erasure`, and `private` does not separate them) — so a
+widening needs both. `DESIGN.md` §8.2 states the erasure half only; this is the half it is missing.
+
+The clean fix is the marker parameter §8.2 designs for the collision case, because it changes the
+primary's ARITY and so removes it from every delegation's candidate set at once. Until that ships,
+refusing and keeping the counted omission is the honest outcome — measured back to **2 -> 0**, with
+libGDX core byte-for-byte unchanged.
+
+*Fix kind: (a).*
+
+### C9. A companion-`private` marker type CANNOT appear in a `protected` primary's signature
+
+`DESIGN.md` §8.2's disambiguator is "a final parameter of a companion-private marker type", validated
+against a `private` primary. It does not compose with the same section's `protected` primary:
+
+```
+non-private constructor C in class C refers to private class Funnel
+in its type signature (n: Int, ctor: e2.e4.C.Funnel): e2.e4.C
+```
+
+Scala requires every type in a member's signature to be at least as visible as the member. Measured
+against scalac 3.8.4, the marker must be **`protected` in the companion** — which compiles, runs, and
+is reachable from a subclass's `extends` clause **in another package** (`class D extends n1.C(7,
+null)` where `object C { protected final class Funnel }`). A public marker with a private constructor
+also works and is strictly worse: it publishes a name into the API for no reader's benefit.
+
+Recorded because the two halves of §8.2 were validated in separate probes and only their combination
+fails, which is exactly the shape that survives a design review.
+
+*Fix kind: (a).*
+
 ---
 
 ## 3. `this`, inner classes and anonymous classes

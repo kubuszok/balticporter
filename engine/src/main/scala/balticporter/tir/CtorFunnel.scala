@@ -31,10 +31,11 @@ package balticporter.tir
   *     parameters straight through is promoted and the narrower ones pad the slots the JDK's own
   *     narrower overload would have left. Exact only for that family; guessing elsewhere measured
   *     0 -> 55 compile errors. ([[plan0]], [[Plans.superCall]])
-  *  4. SYNTHESISED PRIMARY — no java constructor can be the primary, but every root reaches the
-  *     SAME parent constructor. A primary taking the PARENT's parameters is synthesised and every
-  *     java constructor becomes a secondary computing its arguments. ([[syntheticPrimary]],
-  *     [[Plan.synthetic]])
+  *  4. SYNTHESISED PRIMARY — every root reaches the SAME parent constructor. A `protected` primary
+  *     taking the PARENT constructor's own formals is synthesised and every java constructor becomes
+  *     a secondary computing its arguments. NO java body becomes the class body, so this shape is
+  *     the only one that cannot escape (5) or lose a root's `super(args)` (3).
+  *     ([[syntheticPrimary]], [[Plan.synthetic]])
   *  5. SYNTHETIC-SHAPED ROOT — the same situation where one root ALREADY has the synthesised
   *     signature, so synthesising beside it would duplicate it. That root is promoted instead.
   *     ([[syntheticPrimary]])
@@ -182,6 +183,28 @@ object CtorFunnel:
           eff  <- effects(m, as, 0)
         yield Plan(Some(nil), Nil, eff.stats ++ stmtsOf(nil).tail)
 
+    /** Does the emitted class take constructor arguments it cannot be built without? A SYNTHESISED
+      * primary is paramful even though `primaryParams` is empty — no java constructor backs it, so
+      * its parameters live in `Plan.synthetic`. Reading only `primaryParams` here let the fixpoint's
+      * whole-program guard (`ENGINE-LIMITS.md` C1) miss the synthesis entirely. */
+    private def paramfulPrimary(p: Plan): Boolean = p.primaryParams.nonEmpty || p.synthetic.nonEmpty
+
+    /** Can a subclass still write an ARGUMENT-FREE `extends C` against this paramful primary?
+      *
+      * Yes exactly when some constructor of the class survives as a NILARY secondary — validated
+      * against scalac 3.8.4: `class D extends C` with no parentheses at all resolves to the nilary
+      * `def this()`, not to the primary. That is what makes a SYNTHESISED primary safe where a
+      * PROMOTED one is not: synthesis consumes no java constructor, so a `C()` java declared is
+      * still there to be reached, while a promotion turns the constructor it promotes into the
+      * class's parameter list and removes that path (C1's `FillViewport extends ScalingViewport`).
+      *
+      * Deliberately NOT extended to promoted plans here. A promoted paramful primary that ALSO has
+      * a separate nilary constructor would be safe by the same argument, and widening the guard to
+      * say so is A2 step 4's measurement, not this one's. */
+    private def reachableArgumentFree(s: SymId, p: Plan): Boolean =
+      p.synthetic.nonEmpty &&
+        classes.find(_.symbol == s).exists(cd => ctorsOf(program, cd.body).exists(_.paramss.flatten.isEmpty))
+
     private val plans: Map[SymId, Plan] =
       var acc     = classes.map(cd => cd.symbol -> plan0(program, cd)).toMap
       classes.foreach { cd =>
@@ -195,7 +218,7 @@ object CtorFunnel:
           .flatMap(parentSyms)
           .toSet
         acc.foreach { (s, p) =>
-          if p.primaryParams.nonEmpty && needNilary(s) then
+          if paramfulPrimary(p) && needNilary(s) && !reachableArgumentFree(s, p) then
             // A subclass reaches this class with an argument-free `extends`, so its promoted
             // primary cannot keep parameters. Falling straight to `Plan.none` DISCARDS whatever
             // java's own no-arg constructor did: `Pool()` delegates `this(16, MAX_VALUE)`, which
@@ -460,8 +483,19 @@ object CtorFunnel:
         // `this()` must run nothing beyond the parent's nilary construction: the class's own
         // primary contributes no statements and passes no super arguments of its own.
         val p = plans.getOrElse(cd.symbol, Plan.none)
-        // everything `this()` runs: the class's own promoted primary, and whatever IT reaches
-        val prologue = if p.primaryParams.nonEmpty then scala.None else prologueOf(cd.symbol, 0)
+        // everything `this()` runs: the class's own promoted primary, and whatever IT reaches.
+        //
+        // A SYNTHESISED primary is refused outright, and this is a correctness guard rather than an
+        // optimisation. A replay is emitted AFTER the delegation the emitter renders, and against a
+        // synthesised primary that delegation is `this(<the very arguments of this super call>)` —
+        // which reaches the parent constructor through the `extends` clause. Replaying the same
+        // constructor's statements on top would run the parent's body TWICE, and nothing else in the
+        // pipeline could see it: the class compiles, `superExpressed` is true either way, and only a
+        // running test would notice. Every root of a synthesised class is expressed positionally by
+        // construction (same target, same arity), so the replay has nothing to add in the first
+        // place.
+        val prologue =
+          if paramfulPrimary(p) then scala.None else prologueOf(cd.symbol, 0)
         if prologue.isDefined then
           ctorsOf(program, cd.body).foreach { d =>
             if !p.primary.contains(d.symbol) then
@@ -510,9 +544,12 @@ object CtorFunnel:
           case scala.None => Some(Nil)
           case Some(cd) =>
             val p = plans.getOrElse(cd.symbol, Plan.none)
-            // a paramful primary means `extends P` with no arguments does not compile; `Plans`
-            // withholds such promotions wherever a subclass needs them, so this cannot be reached
-            if p.primaryParams.nonEmpty then scala.None
+            // a paramful primary means `extends P` with no arguments reaches P's nilary SECONDARY
+            // if it has one and does not compile if it does not — either way this is not "P's
+            // promoted primary plus what it reaches", which is the only thing this function can
+            // compute. `paramfulPrimary`, not `primaryParams`: a synthesised primary is paramful
+            // with an empty `primaryParams`.
+            if paramfulPrimary(p) then scala.None
             else
               val up = p.primary.flatMap(superApply) match
                 case Some((m, args)) => effectsOf(m, args, 0)
@@ -907,6 +944,44 @@ object CtorFunnel:
       }.getOrElse(Nil)
       // a java constructor that ALREADY has the synthetic signature would collide with it
       val collides = roots.exists(_.paramss.flatten.map(_.tpt.tpe) == formals)
+      // …but SIGNATURE EQUALITY IS NOT THE QUESTION SCALAC ASKS, and reading it as if it were cost
+      // 2 compile errors the first time the synthesis was widened. What the emitter writes for each
+      // root is `this(<that root's own super arguments>)`, and scalac resolves that by
+      // APPLICABILITY plus most-specific — so a real constructor whose parameters are NARROWER than
+      // the parent's formals wins the call outright:
+      //
+      //   class DistanceFieldFontCache protected (sup$0: BitmapFont, sup$1: Boolean)
+      //     def this(font: DistanceFieldFont)                  = this(font, font.usesIntegerPositions())
+      //     def this(font: DistanceFieldFont, integer: Boolean) = this(font, integer)   // ITSELF
+      //
+      // The second is infinite self-delegation; the first resolves to the second, which is declared
+      // BELOW it ("secondary constructor must call a preceding constructor"). Neither signature
+      // EQUALS the synthetic one, so an equality test sees nothing. The predicate has to be "could
+      // this delegation reach any real constructor of the class", asked per ROOT against the
+      // arguments actually emitted. A2 step 3 answers it with the marker parameter, which changes
+      // the ARITY and so cannot be reached by any of them; until then the honest answer is to
+      // refuse the synthesis and keep the counted omission.
+      val ctors = ctorsOf(program, cd.body)
+      def ancestorOf(anc: SymId, s: SymId, fuel: Int): Boolean =
+        s != SymId.None && fuel > 0 && (anc == s ||
+          program.definitionOf(s).collect { case c: Tree.ClassDef => c }
+            .exists(c => parentSyms(c).exists(ancestorOf(anc, _, fuel - 1))))
+      def assignable(from: TypeRepr, to: TypeRepr): Boolean =
+        val (f, t) = (headName(program, from), headName(program, to))
+        // an UNKNOWN type on either side is assignable, because refusing the synthesis is the safe
+        // answer and pretending to know is the unsafe one
+        f.isEmpty || t.isEmpty || f == t || t.contains("java.lang.Object") ||
+          headSym(from).zip(headSym(to)).exists((fs, ts) => ancestorOf(ts, fs, 16))
+      def headSym(t: TypeRepr): Option[SymId] = t match
+        case TypeRepr.TypeRef(_, s)      => Some(s)
+        case TypeRepr.AppliedType(tc, _) => headSym(tc)
+        case _                           => scala.None
+      val shadowed = calls.exists { (_, args) =>
+        ctors.exists { c =>
+          val ps = c.paramss.flatten
+          ps.sizeIs == args.size && ps.zip(args).forall((p, a) => assignable(a.tpe, p.tpt.tpe))
+        }
+      }
       if formals.sizeIs != arities.head || formals.contains(TypeRepr.NoType) then scala.None
       // TWO DISJOINT SHAPES, and keeping them disjoint is the whole content of this decision. Three
       // orderings were measured against libGDX before this one, and every ordering that let either
@@ -914,28 +989,45 @@ object CtorFunnel:
       // (`Texture`, `ShaderProgramLoader`, `FloatAttribute`, `IntAttribute`), synthesis-first cost 2
       // compile errors and 5 omissions. libGDX is untouched only when each applies where it belongs.
       //
-      // SHAPE 1 — a NO-ARG root that still carries `super(args)`. Nothing can be promoted: the
-      // no-arg root would give the class a nilary primary and drop every other root's arguments,
-      // and promoting a paramful root leaves the no-arg root with nothing to delegate with.
-      // Synthesis is the only encoding. `AlgorithmPath()` / `AlgorithmPath(Node)` is this shape.
-      else if roots.exists(_.paramss.flatten.isEmpty) then
-        if collides then scala.None
-        else
-          val o  = cd.origin
-          val ps = formals.zipWithIndex.map((ft, k) => (s"sup$$$k", ft))
-          Some(Plan(scala.None, ps.map((n, ft) => Tree.Opaque(n, ft, o)), Nil, synthetic = ps))
-      // SHAPE 2 — every root is paramful, and one of them already IS the synthetic primary (its own
-      // parameters are the parent's, passed straight through). Synthesising beside it would emit a
-      // duplicate signature, so that root is promoted and the others delegate.
-      // `Path(int, boolean)` / `Path(int)` is this shape. Where there is no such collision the old
-      // behaviour stands: the class keeps its omission finding rather than gaining a guess.
+      // SHAPE 2 — one root ALREADY has the synthetic signature (its own parameters are the parent's,
+      // passed straight through). Synthesising beside it would emit a duplicate signature — scala
+      // compares constructors AFTER ERASURE and `private` does not separate them (`E120 … have the
+      // same type after erasure`) — so that root is promoted and the others delegate.
+      // `Path(int, boolean)` / `Path(int)` is this shape.
       else if collides then
-        roots.filter(passesThrough).sortBy(c => -c.paramss.flatten.size).headOption
-          // the promoted root's parameters ARE the parent's, so every other root's `super(args)`
-          // reaches it through `this(...)`. Whether each one ACTUALLY does is not asserted here —
-          // it is [[Plans.superCall]]'s answer, per root, and the one the emitter renders.
-          .map { c => val (sa, rest) = split(program, c); Plan(Some(c), sa, rest) }
-      else scala.None
+        // A NILARY root among them is deliberately NOT collapsed. Promoting the pass-through root
+        // leaves the nilary root a `def this()` delegating to it, which is expressible — but the
+        // ordering here has been measured three ways (see above), and widening the collapse is a
+        // separate change from widening the SYNTHESIS. It is A2 step 3's, with the disambiguator
+        // beside it; keeping the two apart is what makes either measurable.
+        if roots.exists(_.paramss.flatten.isEmpty) then scala.None
+        else
+          roots.filter(passesThrough).sortBy(c => -c.paramss.flatten.size).headOption
+            // the promoted root's parameters ARE the parent's, so every other root's `super(args)`
+            // reaches it through `this(...)`. Whether each one ACTUALLY does is not asserted here —
+            // it is [[Plans.superCall]]'s answer, per root, and the one the emitter renders.
+            .map { c => val (sa, rest) = split(program, c); Plan(Some(c), sa, rest) }
+      // SHADOWED WITHOUT AN EQUAL SIGNATURE — no constructor to collapse onto and no way yet to make
+      // the primary unreachable from the delegation. Refused, and the omission stays counted, which
+      // is the honest outcome and exactly what a synthesis that emits a self-recursive `def this`
+      // is not.
+      else if shadowed then scala.None
+      // SHAPE 1 — SYNTHESISE. Every root reaches the SAME parent constructor, so one primary taking
+      // that constructor's own formals expresses all of them, and no java body becomes the class
+      // body.
+      //
+      // This used to demand that one of the roots be NILARY, on the reasoning that a paramful root
+      // could always be promoted instead. It cannot: promoting one paramful root leaves every OTHER
+      // root's `super(args)` to be rebuilt by a type-matched fill that declines whenever an argument
+      // finds no parameter of its own type — and where nothing was nominated at all
+      // (`several.find(nilary)` is `None` when no root is nilary) the class was simply
+      // `not-funnelled`, every root's arguments dropped and counted. The nilary root was never the
+      // reason the encoding works; reaching ONE parent constructor is
+      // (`ENGINE-LIMITS.md` C7, corrected).
+      else
+        val o  = cd.origin
+        val ps = formals.zipWithIndex.map((ft, k) => (s"sup$$$k", ft))
+        Some(Plan(scala.None, ps.map((n, ft) => Tree.Opaque(n, ft, o)), Nil, synthetic = ps))
 
   private def superTarget(program: Program, d: Tree.DefDef): SymId = headStmt(d) match
     case Some(Tree.Apply(Tree.Select(_: Tree.Super, m, _, _), args, _, _, _))

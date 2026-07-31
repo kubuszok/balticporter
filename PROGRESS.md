@@ -283,6 +283,19 @@ omissions 177 → 65, and also refused. The prefix strip that took omissions 193
 construction paths across 10 classes. The rest is `super(args) dropped` (`ENGINE-LIMITS.md` C3) and 6
 dropped annotations.
 
+**The constructor residue is dominated by genuine WALLS, and the raw census over-stated what a wider
+super-slot rule can reach.** `.balticporter/briefs/R1`'s pre-pipeline census put libGDX core at 144
+escapes and 31 dropped `super(args)` with "the largest single reduction" available from generalising
+the synthesised primary from "some root is nilary" to "all roots reach one parent constructor". The
+lane says 140 and 31, and the generalisation moved the lane by **zero**: measured, libGDX core came
+out byte-for-byte unchanged (0 members moved, every check identical). The 31 break down as
+`DistanceFieldFont` 7 (seven roots to seven `BitmapFont` overloads — irreducible), `OrderedSet` /
+`OrderedMap` / `IdentityMap` / three `RegionInfluencer` nests 3 each, `Button` 2, and three singles.
+Every one of them reaches DIFFERENT parent constructors or is shadowed by one of its own; none is a
+class the super-slot rule alone can express. What the same change IS worth is one of gdx-gltf's D4
+errors (§8.4) and, more importantly, the soundness test in `ENGINE-LIMITS.md` C8 — without which the
+widening emitted an infinitely self-delegating constructor.
+
 **Trivia, 100 of 4,565 comments.** Classified in `ENGINE-LIMITS.md` §10: a comment on a construct the
 *emission consumes* has nowhere to go. Carrying comments at all costs +33.8 % emitted bytes on libGDX
 core, measured with the harvest off.
@@ -1157,9 +1170,20 @@ suite of zero.
 
 | errors | site | classification |
 |---|---|---|
-| 3 | `ClippingPlaneAttribute`, `PBRCubemapAttribute`, `PBRTextureAttribute` — `extends Attribute` with no arguments | **D4**, (a) engine |
+| ~~3~~ **2** | ~~`ClippingPlaneAttribute`,~~ `PBRCubemapAttribute`, `PBRTextureAttribute` — `extends CubemapAttribute` / `extends TextureAttribute` with no arguments | **D4**, (a) engine |
 | 4 | `ModelInstanceHack` — `this.copyNodes(…)`, `private` in libGDX's emitted `ModelInstance` | **D5**, (a) engine |
 | 1 | `MeshLoader.java:252` — `vertexAttributes.toArray(VertexAttribute.class)`, a member the base drops | **D7**, (b) a phase that does not exist |
+
+**8 -> 7: one of the D4 trio is fixed, and WHICH one says exactly what is left.**
+`ClippingPlaneAttribute`'s two roots both call `super(Type)` — the SAME parent constructor — so
+widening the synthesised primary from "some root is nilary" to "all roots reach one parent
+constructor" gives it a local `class ClippingPlaneAttribute protected (sup$0: Long) extends
+Attribute(sup$0)`, computed from its own Java with no seed from anywhere, and D4's cause for it is
+gone exactly as `DESIGN.md` §8.2 says it should be. The other two are NOT that shape: their roots
+reach `CubemapAttribute(long, TextureDescriptor)` and `(long, Cubemap)` — two DIFFERENT parent
+constructors, so they are genuine WALL classes and the fixpoint is still their only answer. They need
+§8.2's reduction step (both parent overloads reduce to the emitted primary's single `long` slot) or
+the port-map seed D4 describes; a local derivation cannot reach them.
 
 **D4 is the largest thing a dependent port has surfaced, and it is confirmed rather than inferred.**
 `CtorFunnel.Plans` decides which java constructor becomes the Scala primary at a FIXPOINT over the

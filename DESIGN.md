@@ -1501,20 +1501,37 @@ emitter's delegation-topological ordering, not appended — a secondary placed b
 delegates to is a hard error. Do **not** copy the reference port's habit of recomputing a
 subexpression three times in one delegation: a hand port may accept that, the engine may not.
 
-**Collision disambiguation is by ERASURE, because that is the test scalac applies** — the measured
-error is `E120 … have the same type after erasure`, and `private` does not separate the two
-declarations. So the predicate is erasure-based, never `TypeRepr`-equality-based. Two answers in
-order: **collapse** — if the colliding constructor is a pure pass-through whose parameters *are* the
-slots, promote it and emit no synthetic member at all, which covers most of the 100 measured
-collisions (they are overwhelmingly value classes whose all-fields constructor IS the synthetic
-primary) and leaves output unchanged; otherwise **a final parameter of a companion-private marker
-type**, minted **per disambiguated class** rather than once in `runtime/`: emitted code then carries
-no dependency on the engine's runtime artifact for a purely local encoding, at the price of ~100
-one-line companion members corpus-wide. §8.1 states how it reaches a dependent — the contract row says
-`disambiguator=marker` and never spells the marker as an FQN, because a companion-private type is not
-a name any consumer may resolve. Rejected `(using DummyImplicit)`: the declarations coexist but every call is an ambiguous
-overload unless the `using` clause is passed explicitly, and it puts a second parameter clause on the
-class.
+**Collision disambiguation has TWO predicates, and the design originally stated only one.** The first
+is about DECLARATIONS that cannot coexist and is by **ERASURE**, because that is the test scalac
+applies — the measured error is `E120 … have the same type after erasure`, and `private` does not
+separate the two declarations. The second is about the DELEGATION each secondary writes, and it is
+**overload APPLICABILITY**: scalac resolves `this(<a root's own super arguments>)` against every
+constructor of the class, applicability first and most-specific second, so a real constructor whose
+parameters are *narrower* than the parent's formals wins the call while its signature equals nothing.
+Measured 0 -> 2 on libGDX (`DistanceFieldFontCache`, one of them an infinite self-delegation);
+`ENGINE-LIMITS.md` C8 has the shape. A widening needs both tests, and the applicability one is asked
+per ROOT against the arguments the emitter will actually write.
+
+Two answers in order: **collapse** — if the colliding constructor is a pure pass-through whose
+parameters *are* the slots, promote it and emit no synthetic member at all, which covers most of the
+100 measured collisions (they are overwhelmingly value classes whose all-fields constructor IS the
+synthetic primary) and leaves output unchanged; otherwise **a final parameter of a marker type**,
+minted **per disambiguated class** rather than once in `runtime/`: emitted code then carries no
+dependency on the engine's runtime artifact for a purely local encoding, at the price of ~100
+one-line companion members corpus-wide. The marker also answers the applicability problem outright,
+which is the larger reason to have it: it changes the primary's ARITY, so no delegation can reach a
+real constructor by accident.
+
+**The marker is `protected` in the companion, NOT `private`** — a correction, because the two halves
+of this design were validated in separate probes and only their combination fails. Scala requires
+every type in a member's signature to be at least as visible as the member, so a companion-`private`
+marker in a `protected` primary is `non-private constructor C in class C refers to private class
+Funnel`. `protected` compiles, runs, and is reachable from a subclass's `extends` clause in another
+package, which is exactly the reach the `protected` primary needs (`ENGINE-LIMITS.md` C9). §8.1
+states how it reaches a dependent — the contract row says `disambiguator=marker` and never spells the
+marker as an FQN, because a companion-protected type is not a name any ordinary consumer may resolve.
+Rejected `(using DummyImplicit)`: the declarations coexist but every call is an ambiguous overload
+unless the `using` clause is passed explicitly, and it puts a second parameter clause on the class.
 
 **Initialisation order is reproduced exactly, not approximately.** javac and scalac traces of the same
 program are byte-identical: super arguments evaluate at the delegation site, super runs, instance
@@ -1531,7 +1548,14 @@ excludes them by construction; and empirically, across 1,106 corpus files plus f
 **0 in every port**. Raising that compliance level re-opens this and must fail loudly.
 
 **The measurements that decide the design** (raw, pre-pipeline, over 430 multi-constructor classes in
-eleven corpus source sets):
+eleven corpus source sets). **They are a census, not a lane**, and the difference has since been
+measured rather than assumed: the raw pass sees the Java before any substitution, drop or package
+rename, so its residue counts are an upper bound on what a lane reports. Where a lane number exists,
+it governs — libGDX core's EMITTED omissions are 140 promoted-body escapes and 31 dropped
+`super(args)` against the census's 144 and 31, and the dropped-super residue there is dominated by
+genuine WALL classes (`DistanceFieldFont`'s seven roots to seven overloads alone is 7 of the 31), so
+generalising the super-slot rule alone moves libGDX by **zero**. `PROGRESS.md` §7 carries the
+per-step numbers.
 
 | | |
 |---|---|
@@ -1556,7 +1580,12 @@ primary body, from a parameter — which *is* the condition for emitting it as a
 **The withholding fixpoint is DELETED for the 348.** It exists solely because promoting a paramful
 constructor *removes* a class's nilary construction path; a synthetic primary removes nothing — every
 Java constructor survives as a secondary, `extends Parent()` reaches the nilary one and
-`extends Parent(args)` the paramful one. And the synthetic signature is a **local function of the
+`extends Parent(args)` the paramful one. Measured addition: `class D extends C` with **no parentheses
+at all** — which is what the emitter writes for a subclass whose plan carries no super arguments —
+also resolves to the nilary SECONDARY. That is the exact condition under which a paramful primary is
+safe, so the guard is not "is this class extended" but "does a nilary constructor survive": a
+synthesis satisfies it whenever the Java class declares one, and a promotion never can, because it
+consumes the constructor it promotes. And the synthetic signature is a **local function of the
 Java** — parent formals plus this class's own field declarations, consulting no subclass — so a
 dependent computing it from the same Java gets the same answer the base did: **D4's measured drift has
 no cause left** for a non-wall class. The fixpoint narrows to the 82, where it is still whole-program
