@@ -1290,3 +1290,1026 @@ itself wrote, ahead of the source-map lookup.
 
 Default **off**: it changes the deliverable. `preview = false` emits the same bytes it always did,
 which the member digests prove rather than this document.
+
+---
+
+## 8. Closing the adoption gap — ten designs
+
+`PROGRESS.md` §11.9's three-way audit compared what the engine emits against what the hand ports
+wrote, and the gaps it found were mostly not bugs. They were **design absences**: a family of
+symptoms with one cause, patched one library at a time. Eight research briefs measured each family's
+root cause before anything was implemented; this section is what they decided.
+
+Two properties are shared by all ten and are the bar each was held to. **Fix by design, never by
+accreting conditions** — every one of these families grew by one patch per library, and an entry
+table with six faces of one defect is the evidence that the substrate was wrong rather than that the
+world is complicated. And **a mechanism is (b), the policy is the port's** (§1): every new phase here
+is default-off with an empty parameter meaning no code path, and the gate for landing it is every
+lane reporting *0 members changed*.
+
+The `ENGINE-LIMITS.md` entries each design retires, narrows or keeps are named in its subsection;
+what is BUILT is `PROGRESS.md`'s business, not this document's.
+
+### 8.1 Member identity — `Symbol.descriptor`, and one `PolicyBinder`
+
+**Decision.** `Symbol` gains a `descriptor: Option[Descriptor]` field carrying the member's
+parameter spelling. **`Symbol.fullName` is untouched.** One grammar, rendered and parsed in one
+place, read from the frontend before any retyping. Policy keys are resolved once, by a two-stage
+`PolicyBinder` in `api`, and **phases receive bound `SymId`s, never raw strings**.
+
+**Zero baseline movement is the decisive property, and it is what chooses a field over a name.** The
+obvious alternative — a fourth separator in `fullName`, `com.foo.Bar#baz(int,String)` — moves every
+`findings.tsv` id in nine lanes (an id hashes the owner's `fullName`), every `decisions.tsv` row,
+every `TirPrinter.canonical` dump and therefore every cache key. Worse, a descriptor contains `.`
+and `$`, which gives `PackageRenameTransform.longestMatch` and `RuleScope.covers` a place to cut
+*inside* the parameter list — §4.56's trap re-opened in the one function this project has been bitten
+by twice. P4 already ruled the same way for a different reason: *leave the `fullName` alone*. With a
+separate field, `members.tsv`, `srcmap.tsv`, `findings.tsv`, `decisions.tsv`, the porter notes, the
+port map, the cache key and `Xref` are all unchanged **byte for byte**, and the migration cost is one
+compiler-forced thread-through rather than a re-baseline.
+
+**The descriptor is SOURCE-LEVEL spelling, not a JVM erasure, and that is sound rather than
+convenient.** Java forbids two methods in one class with the same erasure, so source-level parameter
+spelling is **already injective within an overload set**: `void m(T)` beside `void m(String)` is
+legal and the two spell differently, while `<X> void m(X)` beside `void m(Object)` is illegal. The
+descriptor therefore does not need to be truly erased — it needs to be *consistently derived*. That
+is what makes the design cheap: a manifest key stays exactly the string a policy author writes today.
+
+**Five key grammars exist in the engine and two of them disagree.** Both divergences are latent, both
+are invisible to every count, and both become negative specs rather than reconciliation code:
+
+| divergence | frontend/manifest grammar | engine grammar | why |
+|---|---|---|---|
+| an ARRAY parameter | `Owner#copy(int[])` | `Owner#copy(Array)` | Spoon's `getSimpleName` for an array reference is `component + "[]"`; the TIR renders it `AppliedType(Array, [Int])` and the engine key takes the *tycon's* name. A Java `T...` vararg is an array reference too, so every vararg member has the same split |
+| `equals(Object)` | `Object` | `Any` | the frontend deliberately retypes a 1-arg `equals`'s parameter to `scala.Any` before building the `MethodType`; the manifest grammar is read before that, the engine grammar after |
+
+Neither is exercised by the corpus — all 16 member-shaped policy keys in every port take `Class`,
+`int`, `boolean` and `<init>` only — so this is a **trap set for the next library**, and an unmatched
+key reports `NeverMatched`, which reads as a typo. The fix is one negative spec each: the array key
+binds from *both* sides with the exact spelling `int[]` and `Array` does *not* bind; the `equals` key
+binds as `Object`, never `Any`, with the descriptor asserted to be read before the retyping.
+
+**A dropped member is never interned, and that forces the binder to be two-stage.** The frontend
+filters an executable out *before* the method symbol is minted, so a `dropMethods` key names a member
+with no `SymId`, no `Symbol` and no row in the symbol table — it cannot be resolved against a
+`Program` at all. The general rule, worth stating because it also explains why a dropped TYPE has no
+`srcmap` entry (§4.56): **policy that REMOVES something can only be bound where the thing still
+exists, which is the frontend.** So stage 1 is a `MemberIndex` the frontend publishes, carrying every
+executable it saw *including the ones it is about to drop*; stage 2 is `PortRun` binding every key
+once, before the pipeline runs. The index also subsumes `Substitutions`' mutable `matchedKeys` tally,
+whose own scaladoc apologises for being a mutable field on a `case class` that `copy()` empties.
+
+Three boundaries bound the design and are stated so an implementer does not chase them:
+
+- **A FIELD has no descriptor, and that is the complete answer rather than a gap.** A binder that
+  reported it as unresolved would produce a finding for every field in the program.
+- **An external member whose `info` never resolved has none.** That is D1's surviving eight-finding
+  residue and the design cannot remove it. What it can do is make the failure LOUD at bind time
+  instead of silently degrading to arity at match time.
+- **The convenience source-parse path takes the unresolved branch systematically**, where a
+  reference's formals are erased. So a spec pinning descriptor identity must be written against a
+  real source-tree model, or it pins the erased answer and passes for the wrong reason.
+
+**The evidence that this is one design defect and not a collection of local ones**: two independent
+phases have already routed *around* member identity, each with the reason written down.
+`TestFrameworkTransform` refuses to read a callee's parameter list and reads the arguments' static
+types instead, because *"a callee's parameter list is only as good as the frontend's key encoding for
+an EXTERNAL symbol"*; `CollectionsTransform` reads a call's RESULT type to decide which `remove`
+overload Java resolved (§4.4). Two routes around the same wall is the signal.
+
+**`Program.members` is a REQUIRED constructor parameter, not a defaulted field.** There are 28
+`new Program(...)` sites outside tests and the pipeline rebuilds a fresh `Program` after every phase;
+a defaulted field would be silently dropped at 27 of them and at every phase boundary — a regression
+no count could see, which is precisely the class of defect this repository has shipped before. The
+required parameter makes it a mechanical, compiler-forced migration, and `Program.rebuilt` becomes
+*the* way a phase returns a program.
+
+**Never-fired reporting unifies as a side effect.** The binder accumulates every binding with the
+`(phase, setting)` that asked for it and owns the report, so five phases lose their private
+`var report` and hand-written `audit`. The case that pays immediately is `ExternalOnly`: `RuleScope`'s
+own doc already describes it as a live silent no-op — *the entry counts as having FIRED and
+`neverFired` therefore reports nothing* — and in the binder it is one branch.
+
+**One asymmetry decided on purpose rather than inherited.** A BARE `owner#name` key drops every
+overload under `dropMethods` (which is how a reflective family is dropped wholesale) and is reported
+`Unverifiable` by another phase — two seams, one key convention, opposite policies. The decision:
+bare stays legal for `dropMethods`, exactness is required for call-site substitution, and
+`Unverifiable` is the answer everywhere else.
+
+**The honest limit, stated rather than implied.** `Symbol.fullName` is public and `String`-typed, so
+nothing in the type system stops a new phase writing `s.fullName.startsWith("java.")` — the exact
+defect §4.56 records. This is **a convention with a lint, not a type-level guarantee**: a source-level
+check in the engine's own suite forbidding `fullName ==`, `fullName.startsWith` and `+ "#" +` inside
+the transform package with a named allow-list, plus the auditor's hunt line.
+
+**Rejected.** A fourth separator in `fullName` (above). A structured `SymId` — it is an
+`opaque type SymId = Int` whose interning order is relied on for deterministic minting, and
+structuring it would put symbol identity into every `Xref` map key for nothing the field does not
+give. A true JVM erased descriptor — correct and wrong for this engine: no manifest author writes it,
+all 16 existing keys would change, source spelling is already injective, and it cannot be produced
+for a type variable whose bound the frontend could not resolve. Deriving the descriptor at the ENGINE
+from `Symbol.info` alone — it permanently re-creates the `equals` divergence (`info` has already been
+retyped) and cannot answer for a dropped member, which has no `info` because it has no symbol. A
+local arity or arg-shape test per vulnerable site — measured: arity produced **118 `Ambiguous` out of
+263 findings** and the acceptance case itself came back undecidable. A `Symbol => Boolean` policy —
+strictly more expressive and impossible to report on, which `neverFired` is the whole point of.
+
+**Retires and unblocks.** D1's root defect narrows to its external residue; the two divergences become
+recorded limits with negative specs instead of latent traps; `Substitutions.matchedKeys` is deleted.
+It is a hard prerequisite for call-site substitution (a bare `Json#toJson` names three overloads with
+three different arities, and an expression template with positional holes can only be right for one),
+for the comparator call-site table, and for §8.3's member rows — a per-member contract row that is not
+overload-keyed reproduces D1's own 118 ambiguities.
+
+### 8.2 The constructor funnel — a synthetic PROTECTED primary
+
+**Decision.** Every class with two or more constructors gets a **synthetic `protected` primary**
+whose parameters are *(the formals of the single parent constructor its roots reach) ++ (the values
+of the fields its constructors assign, where those values are expressible before construction)*. The
+primary's `extends` clause passes the super slots and its body assigns the field slots; **every Java
+constructor becomes a `def this(...)`** delegating with expressions and running its own remaining
+statements afterwards.
+
+**The fact that changes the design is an emitter comment that is false.** `TirEmitter` asserts that
+*"scala's `extends C(args)` can only ever invoke C's PRIMARY, so hiding it would make the class
+unextendable"*. A probe — a `private` primary, three secondaries, three subclasses **in another
+package** — compiles and runs. That false claim is the only thing keeping today's synthetic primary
+public; correcting it is part of the change.
+
+**`protected`, not `private`, and the reason is not taste.** `private` works for every subclass the
+port itself emits, and the reference ports use it freely — but only on classes nobody extends (zero of
+their 22 private-primary classes is extended anywhere), switching to `protected` the moment one is
+(16 such classes, whose subclasses call the primary from their `extends` clause directly). Deciding
+*"is this class extended?"* is a **whole-program question, and a whole-program question in the plan
+table is exactly what D4 measures as drift**. `protected` needs no such question and cannot be reached
+by ordinary client code. The negative boundary is pinned by a spec because it is what makes the choice
+real: `private` is class-private, not package-private, so even a *same-package* subclass cannot reach
+a private primary's slot.
+
+**Slot derivation.** Super slots come from the parent constructor's own **formals**, never from one
+call's argument types — an argument may be narrower than the formal. Field slots are the **leading
+run** of `this.f = e` assignments in each root, gated on three conditions: every root either assigns
+`f` in its own leading run or does not assign it at all; the value expression does not read `this`
+(Java may there, a Scala delegation argument list may not); and no delegating constructor or method
+assigns it again. A root that does not assign `f` supplies `f`'s own Java initialiser or the Java
+default at that slot. Everything *not* in a root's leading run stays a post-delegation statement of
+that root's secondary, in source order — which is what makes interleaved statements a **degradation
+rather than a wall**.
+
+**This shape is in-repo prior art, not a proposal.** The frozen BIR path's `CtorPlan.maximalPrimaryPlan`
+already mints exactly it — a non-public primary whose parameters are super slots ++ assigned-field
+slots, field assignment in the primary body, each root a secondary delegating with its own super args
+and field values, and an unassigned field filled from its own initialiser or the Java default. It was
+written once for the flexmark/liqp corpus and not carried across to the TIR rewrite.
+
+**The double-evaluation trap, measured.** `this(h(n), h(n) * 2)` evaluates `h` **twice**; the naive
+hoist is not Java's evaluate-once. The encoding is a companion helper returning a **tuple** plus a
+`private def this(p: (A, B))` auxiliary that spreads it. And the auxiliary must be *entered into* the
+emitter's delegation-topological ordering, not appended — a secondary placed before the constructor it
+delegates to is a hard error. Do **not** copy the reference port's habit of recomputing a
+subexpression three times in one delegation: a hand port may accept that, the engine may not.
+
+**Collision disambiguation is by ERASURE, because that is the test scalac applies** — the measured
+error is `E120 … have the same type after erasure`, and `private` does not separate the two
+declarations. So the predicate is erasure-based, never `TypeRepr`-equality-based. Two answers in
+order: **collapse** — if the colliding constructor is a pure pass-through whose parameters *are* the
+slots, promote it and emit no synthetic member at all, which covers most of the 100 measured
+collisions (they are overwhelmingly value classes whose all-fields constructor IS the synthetic
+primary) and leaves output unchanged; otherwise **a final parameter of a companion-private marker
+type**. Rejected `(using DummyImplicit)`: the declarations coexist but every call is an ambiguous
+overload unless the `using` clause is passed explicitly, and it puts a second parameter clause on the
+class.
+
+**Initialisation order is reproduced exactly, not approximately.** javac and scalac traces of the same
+program are byte-identical: super arguments evaluate at the delegation site, super runs, instance
+initialisers and init blocks run in source order, the constructor body runs — and a
+`this(...)`-delegating constructor does **not** re-run the initialisers, on either side. Scala's class
+body occupies precisely the slot Java's instance initialisers occupied, which is why the encoding is
+order-*exact*.
+
+**The one assumption everything rests on**, validated three ways: a Java super-argument is a pure
+expression that cannot read `this`. Every corpus upstream declares Java 1.6–1.8; the frontend pins its
+compliance level below the release that introduced flexible constructors, so the *input language*
+excludes them by construction; and empirically, across 1,106 corpus files plus flexmark separately,
+**1,454 super/this invocations with 0 violations**, with the probe's own `super-arg-reads-this` counter
+**0 in every port**. Raising that compliance level re-opens this and must fail loudly.
+
+**The measurements that decide the design** (raw, pre-pipeline, over 430 multi-constructor classes in
+eleven corpus source sets):
+
+| | |
+|---|---|
+| expressible with **no wall** | **348 of 430 (81 %)** — of which 100 need a disambiguator, priced at one parameter |
+| the **wall** — roots reach DIFFERENT parent constructors | **82 classes**, of which 11 are reducible through a pure `this(...)` chain |
+| of the wall, **already fully expressed today by replay** | **73 of 82** |
+| promoted-body escapes today | **188 → 0** for the 348 |
+| non-hoistable classes (a field stays a `var`) | 129, with the reason recorded per field |
+
+The 73 is the single most important number here: **replay must be KEPT**, or the design trades 33
+dropped `super(args)` for roughly 200. The wall is genuinely irreducible — one `extends` clause, N
+parent constructors — and the attempt order per class is: one parent target → synthesise; reducible
+chain → reduce, then synthesise; a JDK-throwable parent → the measured widest-pass-through with null
+padding, and **synthesis must not be consulted first** (recorded: consulting it first cost 4
+omissions); otherwise promote a nilary root, replay, and count what is still dropped.
+
+**A1 folds in and is not a second pass.** A field that is a SLOT is assigned exactly once, in the
+primary body, from a parameter — which *is* the condition for emitting it as a `val`. Slot-eligibility
+**is** `val`-eligibility: one derivation, one answer, no way for the two to disagree.
+`scala.compiletime.uninitialized` covers the residue.
+
+**The withholding fixpoint is DELETED for the 348.** It exists solely because promoting a paramful
+constructor *removes* a class's nilary construction path; a synthetic primary removes nothing — every
+Java constructor survives as a secondary, `extends Parent()` reaches the nilary one and
+`extends Parent(args)` the paramful one. And the synthetic signature is a **local function of the
+Java** — parent formals plus this class's own field declarations, consulting no subclass — so a
+dependent computing it from the same Java gets the same answer the base did: **D4's measured drift has
+no cause left** for a non-wall class. The fixpoint narrows to the 82, where it is still whole-program
+and still D4-exposed, which is what §8.3's contract row is for.
+
+**Provenance: extend the existing kind, do not add one.** `FunnelledCtor` already records shape,
+primary, constructors, super args and escapes. `shape` gains `synthetic-primary` /
+`synthetic-primary-collapsed` / `wall-replay` / `wall-counted`, derived in the one place shape is
+derived; `slots` names each slot and its origin (`sup$k` = parent formal *k*, `f$<name>` = field) so a
+reader can join the emitted signature back to the Java **without the run directory**;
+`disambiguator=marker|none`; and `notSlot="cache=reads-this"` is the sentence an agent asking *"why is
+this field a `var`"* needs, which A1 has no other channel for.
+
+**Rejected.** *Keep promotion, add a seventh and eighth shape* — the path the file has been on for four
+additions, and weaker for a structural reason: **every shape that promotes a real constructor inherits
+C7 and C1 by construction**, because promotion makes one Java body the class body and removes one
+construction path. Both available escapes were measured (blanket refusal 0→41, targeted 0→35). The
+synthetic primary is the only encoding under which *no* Java body becomes the class body. *Keep the
+primary public* — justified only by the false emitter claim; it widens the API with a constructor Java
+never exposed and makes the signature part of the published surface rather than an implementation
+detail. *A discriminator slot for the wall* — the `extends` clause is evaluated once with one argument
+list, so a discriminator can select different **arguments to the same parent constructor**, never a
+different one; that is the null-padding whose guess measured 0→55 outside the JDK family. *Default
+parameters* — built end to end once and the emitted class came out unchanged, the path never
+consulted; independently, the reference ports prefer overloaded `def this` 14:1 and 46:1 and never put
+a default on a funnel class. *A funnel-only `skipInit` flag* — a human wrote one, and it adds a
+parameter that changes the class's construction API for a reason no Java reader can see, where
+post-delegation statements need no flag. *Computing slot values in the primary body* — the primary body
+runs on every path, so a per-root value cannot live there; it is the promotion problem one level down.
+*Seeding the dependent's plans from the base's map* — not rejected but **superseded** for the 348,
+since a local derivation needs no seed.
+
+**Retires.** C1, C4 and C7 for the 348 (**188 escapes → 0**) and D4 for non-wall classes; C2 narrows
+sharply (engine-named slots cannot collide with an inherited member, and only the collapse case
+promotes real parameters). C3 and D5 narrow to the wall. C5/C6 are unchanged — replay is retained and
+both govern it exactly as written. The three C7 sites that were *observable* are the worked examples:
+a `Material` whose nilary body bumped a static counter on every construction, a `Table` leaking one
+pooled cell per construction, and a `Button` running `initialize()` on 8 of 10 paths. Under the design
+each constructor's statements run on its own path only, and there is nothing to strip.
+
+### 8.3 The published base surface — a `Surface` VIEW, and prevention rather than a check
+
+**Decision**, three parts: the port map goes to **schema 3 with ONE new column, `shape`**, carrying a
+`k=v` payload in the porter-note grammar; phases and the emitter receive a **`Surface` view** instead
+of a bare `Program`, answering `Own` / `Published` / `Unknown`; and **an `Unknown` that shaped emitted
+text fails the run.**
+
+**The family keeps recurring because the substrate is wrong.** `Program.owned` roots its ownership
+climb on `program.units` — *all* of them, the base's included — so it is a **program-vs-JDK filter,
+not a mine-vs-base filter**, and in a dependent it answers `true` for every base symbol. Every
+`RuleScope` rule, the package rename and the port-map repointing ask it. The five real mine-vs-base
+filters are **six independent copies** of the same fuel-bounded climb, all on the reporting side, none
+on the rewriting side, with different failure directions. One ownership predicate is the prerequisite
+for everything else here.
+
+**Inventory: 24 sites where a run answers a whole-program question covering non-owned types; nine have
+drift that MATTERS** — the dependent emits text whose correctness depends on the answer agreeing with
+the base's. Only two of the nine are the already-diagnosed D4/D5. **Three are new and unpatched:**
+
+- **descendant clash renames.** A field is renamed `x → x$field` iff this class *or any descendant*
+  declares a method `x`; a dependent subclass declaring `def x()` therefore renames the **base's** field
+  in the dependent's run, while the base emitted `x`. Zero corpus sites today — and the ownership
+  filter *hides* it: the dependent records the rename decision and then withholds it, so no count
+  moves, no note prints, and only a joint compile fails. That is D4's signature failure mode at a
+  second site.
+- **the `export` exclusion lists.** 311 emitted `export` lines corpus-wide, whose excluded static names
+  are computed from the base's **Java as this run reads it**, not from what the base **emitted** — so a
+  base static that was renamed, dropped or moved is named wrongly, and a base with no companion makes
+  `export X.*` an error outright.
+- **D6's cross-module face.** A base that collapsed an all-static class to a bare `object` (31 of them
+  in one base), named by a dependent in a *type* position. Measured 0 today, which is exactly D6's own
+  observation that the base has 31 and names none of them, *which is why five ports did not see it*.
+
+Four more are **latent behind default-off phases Stage P is scheduled to arm** — the globals→context
+closure, the opaque-type seeds, the collections scope and the flow propagation. That is the ordering
+constraint: **the `Surface` must land before those phases are armed**, because arming them over a
+substrate that cannot tell mine from base is precisely how D4 shipped.
+
+**The port map cannot answer a single one of the nine today**, measured on the committed baseline: one
+base's map has 19,219 rows and carries **no class-vs-object row** (a type that emits as an `object` is
+recorded with kind `class`), **no primary-constructor row** (828 constructor rows, one per *Java*
+constructor, with nothing saying which became the primary), **no visibility**, and **zero of that
+port's 827 member renames** — the renames exist only in `decisions.tsv`, which nothing discovers and
+nothing consumes.
+
+**Extending the map, rather than adding an artifact,** because the map's declared question is *"the
+correspondence between the upstream Java surface and what this port actually emitted"* — and emitted
+form, emitted primary signature and emitted member name are answers to **that** question. A second
+artifact would duplicate discovery keyed on the header's `module=`, freshness over sources digest plus
+engine fingerprint, own-map exclusion, the both-namespaces split and schema-major refusal: five places
+for two files to disagree about one base, which is D6.5's failure shape at a fourth artifact, plus a
+fifth committed baseline per port. Row count is unchanged, the payload is sparse, and a schema-major
+bump makes an old map degrade **per question** rather than wholesale.
+
+**Both namespaces (§4.56), and the split is not symmetric.** The `upstream` column stays the
+manifest-shaped upstream name because it is the join key; **every name inside `shape` is an EMITTED
+name**, because every consumer of it compares against emitted text — a reference, a `super[X]`, an
+`export` selector, a stack frame. `PortMap.of` is the one point where both are in scope, exactly as
+D6.5 requires.
+
+| row | keys |
+|---|---|
+| type | `form` (class/object/trait/annotation/enum-class), `companion`, `statics` (emitted names), `primary`, `primaryKind`, `primaryVis`, `secondaries`, `tparams`, `parents`, `flags`, `vis` |
+| member | `name` (emitted simple name, when it differs), `vis`, `placement` (class vs companion), `promotedParam` |
+
+Deliberately **not** carried: **policy** (drops, renames and scopes reach a dependent through manifest
+inheritance and `ManifestAgreement`; duplicating them here is the second source of truth §5.7
+refuses), **bodies or trees** (a dependent never needs to re-derive the base's implementation, and if
+it thinks it does the honest outcome is M6), and **per-site data** (`srcmap.tsv` stays the one file
+that answers that).
+
+**Enforcement is by PREVENTION, and a drift check is rejected on evidence.** D4's own write-up records
+that **nothing in the dependent's run disagrees with itself** — `ManifestAgreement` reports 0, the port
+map records the type as `Ported`, which it is, and the disagreement is visible only when the two
+modules are compiled together. A check would have to hold both the recomputed answer *and* the
+published one, at which point it is already reading the contract and the only remaining question is
+whether it reads *before* or *after* emitting the wrong text. And detection is per-fact, so it
+**accrues**: D2 → D4 → D5 → D6 → D6.5 → D8 is six patches to six faces of one defect, with the three
+new findings above waiting to become a seventh, eighth and ninth.
+
+`Surface` lives in `api`, because a §1(c) rule must be able to ask it (§3.2's criterion). `owns` is the
+**one** structural climb — owner chain to a program unit *and* membership of the run's own units — and
+its failure direction is **named once and specified**: exhausting the fuel counts as *not owned*, so
+the run asks the contract and gets an honest `Unknown` rather than silently computing. The
+whole-program indexes move behind it: the constructor plan table and the emitter's parent, static,
+extended-type and named-elsewhere indexes are built over `surface.ownedUnits`, and every question about
+a symbol outside them goes through the view. **Honest about the guarantee**: a future phase can still
+write `program.units.foreach` — Scala has no capability type here — but the *answers it would need
+about a base type* are obtainable only from `Surface`, which is the same lever `RuleScope` and
+`FlowPropagation` already use, and as close to structural refusal as the language gives.
+
+**`BaseMapStale` and `BaseMapMissing` become fatal where they shaped emitted text.** Today they are
+loud-but-non-fatal findings that fall back to re-derivation, and falling back is exactly how D4
+produced three errors while every check reported clean. The **empty base manifest stays the escape
+hatch** for a resolution root that is genuinely not a ported module — that is a *statement* a port
+makes, not staleness, and it remains exempt while the run still says so loudly. An `Unknown` no
+emission consumed is a finding; an `Unknown` whose answer shaped emitted text fails the run, naming
+the base module, the type, and which of §1's three kinds the fix is.
+
+**The honest scope statement, stated up front rather than discovered later.** *"A dependent answers
+every non-owned question from the contract"* is **not achievable for all nine**, and the design says so
+rather than pretending. Three of them — a base type collapsed to an `object` and named as a type, a
+base primary a dependent's subclass cannot satisfy, a base `private` member a replay needs — have **no
+local repair**, because the base is already emitted and gone. For those the contract buys
+**attribution and refuse-and-count**: a bare typer error becomes a finding naming the module that must
+change and the §1 kind of the fix. That is a smaller claim than "answer from it", and §4.45 measures a
+check by exactly that difference.
+
+**Rejected.** A new `surface.tsv`; extending `EnginePin` (one line per build asserting engine identity
+— wrong granularity, wrong lifecycle); **parsing the base's emitted Scala** (a second frontend for a
+language the engine only writes, when §1.5's rule is that a dependent resolves against the base's
+*Java* and the map exists precisely so it need not read the output); a drift check; **making the base
+emit defensively** — never collapse, never promote, widen every private — which was measured worse three
+times (refusing the promotion 0→41, the targeted refusal 0→35, the de-collapse moving 36 members
+across 29 of 31 constant holders, the un-withheld promotion +14); passing the base's `Program` to the
+dependent (the base's run is over, and the dependent's phases would re-decide over a program that is
+not the one the base emitted from — the same drift with more machinery); sectioning the contract into
+the dependent's own artifacts (D2's rule: **withhold, do not section** — a clearly-marked second
+section is still read past and still makes "what did this port do" a question with two answers); and a
+`contract = <path>` conf key, which is a second way to name a base that `ManifestAgreement` cannot
+check against the declared base chain.
+
+**One publication gap, named because §4.45's consumer hits it first.** The report root keys on this
+repository's own run tree, and an agent in another repository pointing the published engine at a
+library has no such tree. The addition is an explicit `baseReports` search path; the map-consuming
+phase, which reads maps at **construction** time, must take the same path or two loads of one file
+disagree within a run.
+
+**Replaces and unifies.** D4 and D5 both become lookups (the plan table's fixpoint runs over owned
+units only and seeds every non-owned class from `primary=`; a replay consults `vis` and refuses +
+counts). D2's six ownership climbs collapse to one with a specified failure direction. D6, D6.5, D8 and
+D1 are kept unchanged, with the contract *adding* D6's cross-module face as a finding. §5.5's recorded
+hole — *member signatures are not compared* — closes for everything the `sig` row reaches.
+
+### 8.4 Globals → context — replace the core, keep the shell
+
+**Decision.** The existing globals transform's **closure and boundary handling are replaced**; its
+forwarding insight, provenance shape, factory contract and traversal-based rewrite pattern are kept.
+The policy is a list of **holders**, each with a **path-valued member map** onto an injected or minted
+context type, an attachment mode, a read shape, and per-site boundary policies.
+
+**What survives is worth naming, because it is why the mechanism scales.** A call into a threaded
+method changes **nothing at the call site** — the argument arrives from the `using` in scope. That is
+what makes "no decision row per call site" a derivation rather than a shortcut, across 562 measured
+read sites.
+
+**Two live SILENT mistranslations are the hazard being closed**, and they are the reason this is a
+replacement rather than an extension:
+
+- A `static { }` block is a synthetic class-initialiser `DefDef` with a `MethodType`, so it passes the
+  is-a-method test, **seeds**, and receives a `using` parameter — and the emitter inlines only its
+  *body* into the companion, dropping the parameter and leaving the context identifier unresolved.
+- A **field initializer's** read is enclosed by the *field* symbol, which fails the is-a-method seed
+  test, and the rewrite visits only `DefDef` arms — so the initializer still names a member that is no
+  longer static. **Broken emitted code, zero decisions, zero findings.**
+
+The rest of the disqualifying list is structural: one holder, first match wins; the holder *is* the
+context, so a separate context type with hand-written ergonomics and a member map is inexpressible;
+and the closure is the direct call graph and nothing else, which is unsound in **both directions at
+once** because Java resolved every virtual call to the *declared* member — threading an implementation
+breaks `override` against the unthreaded declaration, and callers through the interface never join the
+closure at all.
+
+**The closure is a directed reachability over five edge kinds, not a call graph.** Seed (a body reads a
+mapped static — read from the phase's **own record** of what it mapped, per §4.56's *a phase may only
+conclude from what it did*); call; **override component, both directions**; instantiate (class
+attachment only); and **capture** — a lambda or anonymous/local class body imposes the need on the
+**enclosing** declaration rather than threading its own signature-frozen method, which is what makes
+external-interface SAMs a non-problem in the common case. Rejected reusing `FlowPropagation`: it is a
+union-find over **symmetric** pure-move edges (*these two must share a type*), and this is **directed
+need** (*this one must be able to supply that one*); bending one into the other either over-unions or
+requires the dedicated walk anyway. What *is* reused is its shape — `edges(program)` exposed separately
+from the growth, so a spec can pin the edge set itself.
+
+**Over-approximation across an override component is benign and priced.** Threading a component member
+that never reads the holder costs one trailing anonymous clause at the declaration, **nothing at call
+sites**, one extra reference argument at run time, and an API-surface cost that the closure itself
+counts. The unsound alternative — thread only the overrides that read — breaks `override` matching:
+100+ compile errors, unattributed. So: over-approximate, note each with `via=override-component`
+naming the member that seeded it, and count the total.
+
+**The read shape is an anonymous `(using T)` plus a summon, and this is forced by measured evidence.**
+The reference port repaired two files *away* from named context parameters, with the reason recorded:
+a parameter named after the renamed root package **shadows** it and breaks every qualified reference in
+scope — and this engine emits **only** fully-qualified names (§2.5), so every reference in scope is
+qualified. Nothing reads the name (`using` resolution and `summon` never do), so anonymity costs
+nothing; **98.2 % of the reference port's 557 context reads** are the inline companion-summon idiom.
+
+**The member map is PATH-valued, not a member rename**, because the reference port's dominant rewrite
+is two-hop: 6 of 11 holder fields became bundle members and the 5 remaining statics were **re-homed
+onto a service**, which is **305 of 557 reads (56 %)**. The same shape answers the write problem: the
+bundle stays an **immutable** case class and the mutability lives on the service, so a global rebinding
+— 10 writes, all in one profiling class, symmetric enable/disable — write-throughs along the mapped
+path when it ends on a `var` or a setter. A path ending on a `val` makes the write site a per-site
+policy decision; **the mechanism never mints mutability the mapped type does not declare.**
+
+**The ambient default `given` is DELETED, and that is the load-bearing reversal.** With
+`given T = new T` in scope, every unthreaded→threaded seam compiles silently and the global is
+reintroduced with extra steps. Without it, an unthreaded owned caller of a threaded callee is
+**impossible by construction** — the closure would have threaded it — except across a refused boundary,
+and those sites are exactly the seams. **`ContextSeamCheck`**, modelled on the collection boundary
+check (a number with an origin and a §1 classification, gated on the artifact layer, filtered to the
+run's own units), counts four seam kinds: `residual-global-read`, `deferred-init`, `captured-context`,
+`frozen-component`. A port that enables the phase **sees its boundary, sized, before any compile.**
+
+**Eager→lazy is a REPORTED semantic change, never a default.** Java runs a class initialiser at first
+active use; a `lazy val` runs at first *read of that field*. Per-site opt-in, decision row, note, seam
+count. The corpus demand is **exactly one true class-initialiser site in nine libraries, and it is in a
+dependent** — which is itself the argument for per-site policy over a mode.
+
+**Attachment has two modes and only one of them has a dependency.** `method` — a trailing anonymous
+clause per threaded method — is correct for statics and for the whole demand when class attachment is
+off. `class` — the clause on the **primary constructor**, so instance methods summon it with no
+signature change and external-anchored overrides become a non-problem — is the reference port's shape:
+**82 % of its 493 attachment sites are constructors, and 49 % are SECONDARY constructors**, so the
+clause must land on every funnelled secondary too. That rides on the constructor plan, which is why
+class mode lands after §8.2 and the enablement is sequenced last.
+
+**Measured facts that bound the risk.** 562 code reads in 97 of 605 base files; **62 of the reference
+port's 159 attachment files carry the clause purely to PROPAGATE**, so expect the closure to touch
+roughly 1.6× the direct-reader file set; **zero** interface-default-method reads anywhere; and **the
+test lane cannot break** — upstream test sources contain zero holder references and the emitted test
+set contains zero, so the behavioural gate survives unless a threaded signature reaches a tested
+member, which `members.tsv` reports **before any compile**. One dependent has zero holder references at
+all and must show **0 members changed**, which is itself a gate that the phase respects D2.
+
+**Rejected.** Extending the existing transform condition by condition — *the core relation it computes
+is the wrong relation*, and every fix would be a patch on a foundation that cannot carry an override or
+a constructor. The ambient given. A named context parameter (measured twice in the reference port). A
+hand-maintained list of threaded methods as config (§5.1's *derived, not listed*). Context function
+types as a general emission shape — no Java analogue and it changes every functional interface's
+emitted shape; it is right at the **consumer's** entry point, which is hand-written bootstrap and not
+emitted code. De-statifying the holder in place as the only mode — subsumed: that is `mint` pointed at
+the holder's own FQN with an identity member map.
+
+### 8.5 `OverrideGraph`, `MemberRenamer`, and the property transform
+
+**Decision.** Two layers, both in `api`. **`OverrideGraph`** answers member-level correspondence across
+a hierarchy — `parentsOf`, `childrenOf`, `overridden`, and `closureOf` returning owned members plus
+`externalAnchors` plus `baseAnchors`. **`MemberRenamer`** expands rename requests through those
+closures, refuses anchored ones, checks the new name against **effective names parents-first**, records
+one decision per renamed declaration and applies **one** symbol-table rewrite. Three consumers: the
+property transform, the type-redirect member renames, and §8.4's using-threading.
+
+**The shared core, named precisely: *the set of declarations that must change together, or none of
+them*, plus anchored refusal with a counted decision.** Renaming half a component is a silent contract
+break; threading half is a broken `override`. §8.4 consumes only the closure/anchor layer and does not
+use the renamer at all — it changes signatures, not names — which is exactly why the two layers are
+separate types rather than one.
+
+**Reference propagation is free, and the reason is §4.55's exactness argument.** A rename is a
+symbol-table rewrite; the emitter renders every reference through the symbol's name, every reference
+node carries its `SymId`, and Java resolved all of this **statically**, so each reference already points
+at the symbol Java chose.
+
+**Why no such graph exists today.** Four whole-program rename passes run in the emitter's constructor
+and each rebuilds its own local structures — parent-edge computation is duplicated at least six times in
+one file, and the emitter's own parent index is private and built *after* those passes ran. Where member
+correspondence across a hierarchy is needed the emitter matches on **name + arity**, which D1 measured
+insufficient (263 findings, 118 ambiguous). So **edges are descriptor-keyed**: D1's erased-descriptor
+rule now, §8.1's identity when it lands, with the fallback's misses **reported, never guessed**.
+
+Five gaps in the existing passes that the utility closes, each of which explains why the feature was
+never needed before: they **never rename a method** (all four rename fields, locals or parameters —
+things that do not override, and the field-vs-method pass renames the *field* precisely to avoid
+touching the method's override obligations); no override edges; no external-anchor refusal (they note
+that members inherited from unparsed types are invisible and accept it); no arity change; and no
+`Reason.Configured` path, because they are Universal by construction and a policy rename is not.
+
+**Anchor policy is deliberately conservative and stated as such**: an unknown external parent with no
+surface data **anchors** — refuse, count. *An over-refusal is a counted skip an agent can see; an
+under-refusal is a silent contract break.* The external surface comes from the channel the emitter
+already threads, not a second one.
+
+**Collision handling delegates rather than re-implements.** The suffix-until-free idiom is §4.55's, and
+the emitter's four passes still run afterwards, so a rename that lands a method on a private field's
+name is resolved by the *field* moving. The utility refuses only when the collision is with something
+those passes will **not** move.
+
+**The property target is `def x` / `def x_=(v: R): Unit` ONLY, bodies kept verbatim.** The `var x`
+collapse — which is what the reference port actually wrote for most harvested pairs, and which deletes
+the `$field` noise — is **deferred behind a measured `$field`-residue count, not rejected**, because it
+carries three silent-correctness obligations: a `var` cannot be overridden (legal only when the closure
+has no members *below* the declaring class, though an interface *above* is fine); deleting the
+accessors requires that every call provably route through the pair; and any direct field access
+elsewhere in the class must be verified equivalent post-collapse. The frozen BIR path's
+`collapsedAccessors` — a trivial-body test plus an override guard — shows the mechanism is real and
+already survived a corpus. §5's *change one thing*: the def-pair blast is measurable alone, and the
+collapse degenerates to the def-pair whenever its guards fail.
+
+**Never invent a member.** An entry naming an accessor that does not exist is a `NeverMatched` finding,
+not a synthesis. The audit found the hand port **authored** getters to complete pairs; that is
+authoring, permanently outside mechanism scope.
+
+Refusals, each counted, each with a spec: an accessor overriding an external member — **the whole pair
+is skipped**, because a renamed getter with an anchored setter is half a property; a **fluent** setter
+returning the declaring type (`o.x = v` is `Unit` and a chain has no assignment rendering); a
+**set-only** entry; a value-position accessor reference (an eta-expanded `x_=` is not the SAM Java
+saw); a static accessor. The setter rewrite has one detail that is not obvious and is also the
+structural reason set-only is refused: the assignment's **left-hand side names the GETTER symbol**, so
+the emitter renders `recv.x = v` and scalac desugars to `x_=` — with no getter there is nothing to put
+on an LHS.
+
+**The policy is an INCLUDE LIST because blanket application is measured wrong.** The upstream emits
+3,234 bean-shaped methods today and the hand port **kept 1,375 of them** (684 distinct names) against
+~223 converted accessors — a **~14 % conversion rate**, concentrated in three package families, with the
+same pair converted differently per type (one type's `opacity` is a computed `def`, another's is a
+`var`). A blanket rule would rewrite ~3,000 members the reference port deliberately left alone. The
+include list harvested from the hand port's own documented rename headers — **145 properties across 38
+upstream types, ~223 accessor methods, every entry a conversion the hand port actually performed** — is
+the enablement's input, not this design's content.
+
+**This phase changes emitted signatures, so it is SHARED SURFACE**: it implements `SurfacePolicy` with a
+sorted fingerprint and its pairs live in the **base** manifest, because dependents resolve against the
+base's Java and must see the same conversion or the two ports cannot compile together (§1.5).
+
+**Rejected.** Blanket bean-pair auto-detection (the negative space above). `var x` as the primary target
+(deferred, above). Renaming the setter into an overload of `x` — loses assignment syntax and collides in
+one namespace. **Emitter-level beautification** — rendering `getX()` calls as `x` without renaming
+symbols desynchronises the surface from the source map, and the emitted *surface* is what an adopter
+consumes. A second scope knob beside the pairs map (two homes for one policy). Per-call-site decisions
+(the diff shows the site; the policy lives at the declaration). Building the graph inside the emitter —
+its copy is post-§4.55, private, unavailable to transforms, and §8.3 wants it too.
+
+### 8.6 Nullability — three stages, union floor first
+
+**Decision.** One phase, §1(b), default-off, with **two configured targets** — `union` (`T | Null`) and
+`wrapper` (a configured FQN satisfying a four-member contract) — and a three-stage design target of
+which only the first is built:
+
+| stage | what | prerequisite |
+|---|---|---|
+| **N1** | annotation-driven `T \| Null` floor, **no compiler flag** | none |
+| **N2** | compile emitted ports with `-Yexplicit-nulls -language:unsafeNulls` | §8.2's `val`/`uninitialized` work removing the placeholder shapes |
+| **N3** | strict mode per port | the out-of-scope null-flow research line |
+
+**N1 costs nothing at use sites, and that is compiled rather than reasoned.** Without the flag
+`Null <: String`, so a union return simplifies at every use, an override may narrow *or* widen, and no
+`.nn` is required anywhere. What it **buys**: the contract moves out of an annotation the Scala
+compiler ignores and **into the type**, visible to every IDE and every downstream compiler; it is
+byte-forward into explicit-nulls with no second migration; and it **deletes the
+`null.asInstanceOf[T]` placeholder at annotated GENERIC returns** — `def m[T <: X](): T = null` is a
+type error even without the flag, because `Null <: T` does not hold at an abstract `T`, which is
+exactly why the emitter resorts to the cast today, while the union form compiles. Its **honest
+limitation**: without the flag it enforces nothing. It is *typed documentation* until N2.
+
+**Two measured facts decide N2's shape.** The placeholder casts are **not** the blocker —
+`null.asInstanceOf[T]` compiles under explicit-nulls (it is an unchecked cast; it lies, but it does not
+error); what breaks is the literal `= null` field initialiser and every body selection on a genuinely
+nullable value. And `scala.language.unsafeNulls`, **as a compiler option**, makes every probe compile —
+widening overrides and literal inits included — while the *signatures* keep their honest `| Null`. As
+an option it needs no per-file import, so it does not violate §6's no-imports rule. Strict mode rejects
+a **widening** override, which is why annotation propagation across the override graph (§8.5's utility)
+is done in N1: it is not needed for compilation now, and doing it late would churn digests twice.
+
+**Wrapper mode attacks the SLOT, not the type** — K2's lesson transferred whole. `given Conversion` is
+a hard constraint, measured never to fire through overloaded calls, and the survey adds the decisive
+footnote: the reference wrapper's own two conversions are **dead in practice** (zero bare-null-into-
+wrapper sites in either hand port, and at overload-heavy surfaces the hand port dodges the wrapper
+entirely). So the phase retypes annotated declarations and inserts **explicit** wrap/unwrap at the same
+four slot kinds the collections coercion uses — argument-vs-formal, declaration-vs-init,
+assignment-vs-RHS, return-vs-result — *before overload resolution ever runs*: the argument's type is
+already exactly the formal, nothing is inferred and no implicit is consulted. One rewrite is not
+optional: **`x == null` on an opaque wrapper is a compile error**, so every Java null-test on a wrapped
+value becomes `.isEmpty`. The contract is exactly four members — `apply` (null-normalising), `empty`,
+extension `get` (unchecked, NPE on empty, which **is** Java's semantics at a dereference), extension
+`isEmpty` — which the published reference wrapper satisfies verbatim today. Nothing in the contract
+touches that wrapper's `orNull`, which is fake-`@deprecated` as a lint tripwire in repositories
+compiling with `-Werror`; generated code must never emit it. Emission is FQN-only and extensions
+resolve from the companion's implicit scope with no import (§2.5).
+
+**The census bounds the work.** **Seven of eleven upstreams have zero nullability annotations**, so the
+empty-config no-op is the *normal* case — §1(b)'s shape exactly. Where annotations exist the grammar is
+declaration-position rather than TYPE_USE, with two edge shapes: an annotated **array** is fine to
+retype, and an annotated **vararg** is a refusal, because a Scala vararg has no nullable form. One
+prerequisite is a small §1(a) frontend gap: parameter annotations are never captured, which the output
+confirms exactly — **389 upstream parameter annotation sites → 0 emitted**. Returns and fields are
+consumable today, and the type model needs no extension because `TypeRepr.OrType` already exists.
+
+**The consumed annotation is STRIPPED**: the type now states the fact, keeping both double-states it and
+re-imposes the annotation-jar dependency on every port. One port's third-party annotation dependency
+becomes a measurable deletion.
+
+**The boundary is written down rather than approximated.** The hand ports cover roughly **2×** the
+annotated set, and two of them hand-marked nullability over upstreams with *zero* annotations: that gap
+is null-flow knowledge, not a missing rule. Of the candidate signals only the annotation is both sound
+and actionable. `return null` in a body is **sound but not actionable as a retype** — it changes surface
+the author did not contract, must propagate through the override graph, and misses every method that is
+nullable *via a callee*; it ships as a **harvest**, a candidate list for human review, which is the same
+hand-off shape §8.5's harvest uses. Javadoc *"may be null"* is a text heuristic that also matches *"must
+not be null"*. "Field with no initialiser" is answered by `compiletime.uninitialized`, not by widening
+the type. **Closing the gap needs interprocedural null-flow analysis over TIR bodies; no phase has flow
+analysis today, and this is named as a research line, not scheduled.**
+
+**Ordering:** after the collections family (their retypes must land first, so `@Null Array<T>` becomes
+`Buffer[T] | Null` and not the reverse) and before the package rename, because the configured
+annotation FQNs are upstream-namespace (§4.56).
+
+**Rejected.** `given Conversion` ergonomics. A **boxing** wrapper — it changes erasure, bringing bridges,
+overload-erasure collisions and an allocation per annotated call, where the opaque-over-union wrapper
+has none of the three (measured). **Blanket `T | Null` on every reference type** — it destroys the
+annotation's information, making the annotated set indistinguishable from the unannotated majority, and
+makes eventual strict mode worthless. Retyping from `return null` sites. Emitting `.nn` at consumption
+sites now — meaningless without the flag, body churn with no buyer.
+
+### 8.7 Visibility — Java's four levels, mapped
+
+**Decision.** The frontend records **JLS-effective** visibility, and the emitter renders all four
+levels:
+
+| Java | Scala | fidelity |
+|---|---|---|
+| `public` | *nothing* | exact |
+| `private` member of a top-level class | `private` | exact — and never qualify this one |
+| `private` member or nested TYPE of a nested class | `private[TopLevel]` | **exact**, not a widening: Java `private` is accessible throughout the top-level enclosure (JLS 6.6.1) |
+| package-private member / ctor / nested type | `private[<emitted pkg tail>]` | near-exact |
+| package-private TOP-LEVEL type | top-level `private` | near-exact — Scala's top-level `private` already means package-plus-subpackages |
+| `protected` member / ctor / nested type | `protected[<emitted pkg tail>]` | near-exact — the package half restored, the subclass half kept |
+| `protected static` | public + **recorded** widening | residual |
+
+**Root cause: `PUBLIC` is never read and package-private is never REPRESENTED.** A Java declaration with
+no modifier produces flags byte-identical to a `public` one, so **the TIR cannot even state that a type
+is package-private** and nothing downstream can render, record or check it. `protected` was dropped
+wholesale during an error burn-down to escape the same-package-caller delta; the overload interaction
+was found later and is the **cost of** that drop, not its cause.
+
+**Feasibility is probe-verified on the two idioms that had to work**: a public member may expose a
+`private[pkg]` type in its signature, and a public class may extend a `private[pkg]` base whose
+inherited members stay callable cross-package. That is what retires the emitter's blanket erasure of
+type-level `private` — only *unqualified* private types are barred from non-private signatures, and
+that remains true and load-bearing for the top-level case. The qualifier is a **simple identifier**
+naming an enclosing scope (no dotted form exists in the language), and it is derived from the emitter's
+**current emitted package** — never from a symbol's upstream FQN. Because the rename runs last
+(§4.56), at emission time the unit's package *is* the emitted one, so **no new two-namespace join is
+created**.
+
+**T12 retires, and not merely by avoiding its error.** With `protected[pkg]` kept, dotty **prunes
+inaccessible alternatives before overload resolution**, reproducing javac's choice exactly — so the
+mapping restores Java's *resolution input*, which is the principled fix the entry asks for. The
+hand-written body substitution that compensated for it is deleted in the same change (its own comment
+states the retirement condition verbatim), and that dependent port loses **−1 error** and one
+`SubstitutedBody` row.
+
+**Cross-package protected overrides are a wall with a door.** A child can keep neither bare `protected`
+nor its own package's qualifier — both are *"has weaker access privileges"* — but it **can** name any
+**enclosing** package, and a qualifier at the nearest **common** enclosing package satisfies the check.
+Under the corpus renames every emitted package nests under one root, so a common ancestor always exists
+and **no protected override needs to widen to public**. The added access is nominal rather than
+behavioural: any same-subtree caller could already reach the member in Java through a parent-typed
+receiver, since dynamic dispatch lands in the child regardless.
+
+**Two structural facts about a qualified boundary after a rename.** An upstream package **cannot split**
+across emitted packages — renames map whole packages, cut at separators — so the only delta is
+**merges**, where three corpus ports fold two upstream packages into one emitted one and former siblings
+gain access Java never granted; that is a consequence of *configured policy*, not of the mapping, and is
+recorded as such. And subpackage nesting only **widens, never blocks**; across ports every dependent's
+`governs` set is disjoint from its base's, so none of their Java ever legally touched a base's
+package-private member — javac would have rejected it. **The one deliberate package-sharer is a
+library's own test suite**, which declares its types inside the library's packages (the standard Java
+same-package test idiom) and routinely reads package-private members — and because the dependent
+**inherits** the base's rename map rather than copying it, both land in the same emitted packages and
+the idiom keeps working. **The mapping preserves it precisely because §1.5's inheritance rule holds**, and
+a dependent that landed in a base's emitted package by *accident* is what a manifest check should flag.
+
+`Symbol.privateWithin` — a stub mirroring `reflect`, populated nowhere and read nowhere — becomes real,
+**as effective visibility on `Flags`, not as a `SymId`**: a `SymId` cannot name a package in this TIR,
+because packages are `fullName` segments and not symbols.
+
+**What records and what does not.** The mapping itself is §1(a) universal and **the diff IS the change**,
+so a faithful rendering records nothing — recording it would be thousands of identical rows burying
+every real decision, which is the altitude rule §4.575 already states. The two systematic
+over-approximations (subpackage nesting, dependent-namespace nesting) are properties of *every* qualified
+boundary rather than of any declaration, and are documented **here, once**. What *does* record is the
+residual widenings, and they **reuse `Decision.Kind.WidenedVisibility` for members AND types** rather
+than minting a type-level kind: the kind is the fact that this declaration ships wider than Java wrote
+it, the subject column already distinguishes a type from a member, and the §4.575 grammar puts the cause
+in the pairs — a new kind would need its own note placement and its own coverage wiring for no
+additional information. The causes: `x-pkg-protected-override`, `protected-static`,
+`qualifier-shadowed` (the guard for an enclosing type named like the package tail, which otherwise binds
+the qualifier to the *class* and silently narrows the boundary), `x-pkg-pkg-private-override` (Java's
+non-override across packages has no Scala form, and adding `override` **changes dispatch** — stated in
+`why`), the retargeted `ctor-replay-widening`, and `package-merge`, which is the one **`Configured`**
+cause because it varies per port and per rename entry.
+
+**Two hazards the mapping itself introduces, with their answers.** A widened member re-enters overload
+resolution for outside callers — the T12 shape, now caused by the port's own widening; the residual set
+is small and every member of it carries a decision and a note, so the failure is at least attributable.
+And **a companion re-export creates a public forwarder for a `private[pkg]` member**, silently undoing
+the mapping for statics; the re-export must filter members that did not render public, which is also the
+*faithful* rendering, since Java's own access to a parent's package-private static is package-scoped.
+
+One rule-scoping correction that is not cosmetic: the emitter drops `override` for a private member.
+That is right for **bare** private and **wrong** once qualified private exists — a `private[pkg]` member
+does override and needs the keyword. The existing negative stays pinned: qualifying a top-level class's
+own bare `private` regressed a port by 1 error, because a member that overrode nothing suddenly did.
+
+**Blast: one designed corpus-wide re-baseline.** The census *is* the predicted movement — for the largest
+port ≈ 867 protected + 1,043 package-private + 36 types + 23 ctors ≈ **1,970 member digests**.
+`members-unchanged` is the wrong gate for this change **by design**; the gate is that error counts do
+not rise unexplained, test outcomes do not move, and every new error maps to a recorded cause or a
+missed guard. Two empirical anchors keep it honest: the exhaustive set of same-package non-subclass
+`protected` callers is **20 sites** — exactly what bare `protected` breaks and `protected[pkg]`
+preserves — and Java's non-override shadow (a package-private method re-declared in a different-package
+subclass) is **0 sites over 9,346 method declarations**, so its guard is cheap insurance rather than a
+live cost.
+
+**Rejected.** Bare `protected` — it denies Java's package half, which is the access-error class that
+caused the original drop. Keeping the drop and recording every one — thousands of rows saying the same
+sentence, and T12's error class stays alive. A new type-level `Decision.Kind`. Dotted qualifiers, which
+do not exist. Populating `privateWithin` as a `SymId`. Deriving the qualifier from the upstream FQN plus
+the rename map — it re-creates the two-namespace join §4.56 exists to kill. A **mixed per-usage
+strategy** (qualify only where a same-package caller exists) — visibility then becomes a function of the
+caller census and is unstable under any upstream edit.
+
+### 8.8 Trivia — a hybrid, and a loss that is not where it was thought to be
+
+**Decision**, three mechanisms, ordered by what each retires:
+
+1. a **`trailing: List[Trivia]` slot on `Tree.Block`**, with the frontend **keeping** instead of
+   dropping the leftover comment-statements;
+2. **position-based file-leading harvest**;
+3. **span-interleave as a completeness BACKSTOP only.**
+
+**The finding that reorders the work: the dominant residue category is not an emitter rewrite at all.**
+The frontend's statement fold accumulates comment-statements into a pending buffer and folds them onto
+the **next** statement — or **discards them when there is none**. Because they were already *claimed*,
+no coarser harvest can ever recover them: **claim-then-drop**, one line. Three traced sites are all the
+same mechanism — a comment that *is* an empty override body; commented-out code as the last line of a
+method; a comment between a `case`'s `return` and `default:`. The contrast is what made the residue look
+arbitrary from outside: a sibling comment one line further up folds onto the following `return` and
+survives. And the case-terminator `break` filter **manufactures** the shape — a comment written above a
+stripped `break` becomes trailing the moment the break is deleted. Fixing it **in the model** gives
+**exact** placement, because end-of-block is precisely where Java had these comments; no fallback
+heuristic, no marker.
+
+**The V3 culprit is Spoon's attachment model, with one unread harvest point as accessory.** The walk
+reads the compilation unit's comments, every element's own, and a filter sweep over every declaration
+subtree; the only attachment site never read is the **package declaration's**. Since a type-attached or
+statement-attached block would have been emitted — misplaced but *present* — the loss is either that
+unread slot or Spoon attaching nowhere, and the recorded measurement is that the unit carries only the
+**first** of consecutive leading blocks. The fix is position-based either way: every scanned comment
+whose end precedes the `package` keyword's offset is file-leading, the Spoon-attached subset claimed by
+identity as today, the **rest** taken from the scanner stream verbatim, in source order. **And V3 is
+undercounted and worse than recorded**: at least seven more files of the same shape sit inside one
+port's existing residue, and in one generated-parser family the **dropped block is the Apache notice
+itself** — so V3's own mitigation, *the licence is the first block so it survives*, does not hold there.
+That makes this a licence obligation (§4.57, §4.58), not a tidiness item.
+
+**Pure interleave is rejected as the primary channel, and the reason is a number.** The source map's
+granularity is the **member**, so a pure interleave can place a comment no finer than *somewhere in this
+member* and every body comment would clump at member boundaries — while the attachment channel is the
+only carrier of statement-level position through rewrites (`Commented` survives the traversal;
+`recomment` restores it) and it currently places the overwhelming majority correctly: **7,159 members
+carry trivia** in one port's emission. **Replacing a channel that is right at fine grain with one that
+is complete at coarse grain optimises the check number at the cost of the thing the check exists to
+protect.**
+
+So the backstop runs **inside the emitter, after body text is built and before the source map is
+computed** — a post-pass over finished text would desync `srcmap.tsv` and `members.tsv`, and M7's rule
+(join on a recorded id, never on the rendering) applies to line ranges too. It reads the emitter's own
+slots, tests presence through the **shared** normalisation function rather than a fork, **strips porter
+notes before searching** (a note names the upstream FQN on purpose and otherwise produces phantom
+matches — §4.575's own recorded trap), anchors on the last member whose origin line precedes the
+comment, and appends **after** that member's rendered text — *between* slots, so no member digest moves
+and only the whole-file digest does. Each recovered comment carries one marker line naming its Java path
+and line: **a comment relocated WITH its source coordinates is a quotation, not a false statement about
+the code below it**, which is V1's own objection to hoisting, answered.
+
+`CommentScanner` gains start offsets. That is an `api` change and it also makes the check's line
+recovery exact for free — today it recovers a line by `indexOf`, which is wrong for duplicated comment
+text.
+
+**`TriviaCheck` grows LANES rather than shrinking scope**: `lost` (the publishable bar, target **0**),
+`recovered` (backstop placements — a counted residue in M6's sense, **not** a success), and
+`deliberate`, **derived** from the run's own drops exactly as the expected-failure ledger is (§3.6). That
+last lane fixes a live miscount: the check's deliberate-drop exemption is **type-level only**, so a
+policy-dropped **member's** Javadoc is currently counted as engine loss, and several such rows sit in the
+baseline today.
+
+**Order:** (2) first, whose blast is only the V3-shaped files; then (1), the largest, where every member
+with a trailing comment changes digest; then (3), which moves whole-file digests only. One mechanism per
+commit with `before->after` trivia counts in the subject.
+
+**Updates the recorded limits**: V1's category table is *wrong about where the loss happens* — the
+dominant category is a frontend claim-then-drop, not an emitter rewrite — and V3's site count rises while
+its licence mitigation is withdrawn. Both in the same commit as the fix.
+
+### 8.9 The JDK surface — derived from the walk that already runs
+
+**Decision.** One new artifact and one new check, **both second consumers of an enumeration the engine
+already computes**.
+
+`PortabilityCheck.checkAll` already walks every referenced external member, resolves its `owner#name`
+(correct only since P4 gave an external member an owner), and holds each one's usage kinds and site
+counts — **and throws all of it away except the hits of its 34 rules**. No artifact of external
+references exists anywhere. So `external-surface.tsv` is **one filter away**: lift the enumeration out of
+the rule filter and write one row per external member this port's **emitted** units reference —
+`owner#name(descriptor)` (arity is not enough, per D1), usage kinds, site count, first origin — with
+**zero new traversal**.
+
+The `jdk-surface` check classifies every call-kind row against three sources, and **anything
+unclassified is a finding**:
+
+| class | source of truth | what it tells the agent |
+|---|---|---|
+| shimmed | the runtime artifact's concrete-member map, already pinned to the published sources by a derivation spec | engine, done |
+| mapped | the transform's **handled set** | configured — enable or extend this phase |
+| refused | a `Refusals` table, each entry carrying `why` **and** its `ENGINE-LIMITS.md` pointer | (a) with a citation, or (c) per manifest |
+| — | | **the port's JDK wall, named** |
+
+The *mapped* row is the one that requires work, and it is work worth doing on its own: the collections
+transform's static and instance tables are **`match` arms, not data**, so adding a mapping is three
+coordinated hand edits and nothing can ask *"what does this phase handle?"*. **Lift the arms into one
+declarative table that the arms AND the check both read**, pinned by a bijection spec in both directions
+— the same discipline the runtime-members spec already applies, and the file's own "one list" comment
+finally made true.
+
+**Refusals are CHECK DATA, not decisions**, and the line is principled: `decisions.tsv` records what
+changed an emitted **declaration** (§5.1's altitude rule), and a kept JDK call changes nothing — it is a
+fact about the *surface*, which is what a check table is for. Today refusals have no home at all: several
+live in doc comments and `case _ => None` arms, no decision kind fits an external member, and a refusal
+surfaces only as a compile error, *after* a compile. **An uncited refusal is itself a finding.**
+
+**K9 becomes a derived demand rather than an open entry.** A row whose type appears as a `ForEach`
+receiver and is neither retyped by a phase — decided from the phase's **own table membership**, per
+§4.56, never from the type's name — nor covered by the shipped iterable shim is a finding of its own
+kind, pointing at the §1(b) phase that entry already specifies.
+
+**The day-one story is the point.** A new library's first `preview` run prints, beside the fifteen
+checks, its entire JDK wall as classified rows — *N* shimmed, *M* mapped-if-you-enable, *K*
+refused-with-reasons, *J* unclassified — and *J* is the work list, each row carrying the §4.45
+classification an agent needs. Two worked cases: a `Collections.swap` demand would have been an
+*unclassified, 1 site* row on that library's **first** run instead of a compile error three lanes later,
+and K9's two errors in another port would have been a named finding **before any compile**.
+
+**Scale**, measured from emitted text (fully qualified by §6, so grep is a near-census): **144 distinct
+`java.*` types and 108 distinct statically-qualified members** across nine ports. The 108 is a **floor** —
+instance calls on kept receivers are invisible to text, while the TIR inventory sees them all, which is
+itself the argument for deriving the artifact from the walk rather than from a grep.
+
+### 8.10 One `RealPath` — and a watch note on class-initialisation timing
+
+**Decision.** One utility, `balticporter.core.RealPath`, replacing the **four divergent private copies**
+of §5.4's helper; the two remaining raw comparisons fixed; enforcement by a grep-spec **plus** an auditor
+hunt line, because the two catch different things.
+
+**The four copies are a bigger liability than either raw site**, because each reimplements the rule
+differently and three of the four have distinct exception policies — one of them a bug:
+
+| copy | policy |
+|---|---|
+| the run's unit partitioner | catches `Exception`, falls back to `toAbsolutePath.normalize` |
+| the check report's relativiser | falls back to **bare** `normalize`, so a relative path stays relative and the subsequent `relativize` can throw — whose outer catch then returns the raw absolute path, the one thing that function's own doc promises never to emit |
+| the emitter's source-path resolver | catches only `IOException`, so a `SecurityException` or `InvalidPathException` escapes and kills emission |
+| the vendored-commit reader | guard-based (`exists` then `toRealPath`) — TOCTOU, and it throws on exists-but-unreadable |
+
+`RealPath.of` is §5.4's rule verbatim — realpath, with `toAbsolutePath.normalize` **only** as the
+not-exists fallback so the fallback can never produce the relative-vs-absolute throw. Beside it go the
+**comparison** forms (`startsWith`, `relativize`, `str`) so a call site states intent rather than
+composing one, and a strict `ofExisting` that throws with a diagnostic, for the frontend sites where an
+absent declared input must be **fatal** rather than silently normalised (§5.1's missing-input rule).
+
+**Two raw sites remain.** The config loader's base-chain **cycle detection** compares `normalize`-only
+paths, and here the §5.4 failure is a **crash rather than a wrong number**: a base cycle spelled through
+a worktree symlink is undetected and becomes a `StackOverflowError` instead of the intended
+configuration error. The loader's own doc argues that lexical resolution *"resolves to the same place
+either way"*, which is right for **resolution** and wrong for **comparison** — so resolution stays
+lexical and the seen-set gets `RealPath.of`, and the distinction is then enforced by *using different
+functions*. The second is a freshness-roots site that spells its roots lexically while three neighbours
+spell the same roots through the realpath helper; it is consumed only by existence probes today, so it is
+safe and would regress silently under any future prefix test. **Two independent briefs flagged it**,
+which is the argument for fixing a spelling inconsistency that is not yet a bug.
+
+**Enforcement needs both halves.** A source-scan spec asserts that `.toRealPath(` appears in production
+code **only inside the utility** — helper duplication is exactly what a grep *can* see, and it is the
+failure that actually happened four times. A grep for raw `startsWith` on paths is deliberately **not**
+built: path-ish receivers are not syntactically distinguishable from FQN prefix tests, and a spec whose
+false positives must be routinely ignored trains people to ignore it. The semantic half is an auditor
+hunt line — *any comparison, prefix test or relativize between a CONFIG-written path and a
+PARSER-recorded path that does not go through `RealPath`; check both operands, a lexical `normalize`
+beside a `startsWith` is the signature, and the worktree is the environment where it fails.*
+
+> **Watch: class-initialisation timing is not preserved, and nothing measures it.** Java runs a class's
+> static initialisers lazily, on first *active use* (JLS 12.4) — and a read of a constant variable
+> (`static final` with a constant initialiser) is not an active use at all, because javac inlines it.
+> Scala companions are also lazy, but at a different granularity: **any** member access initialises the
+> **whole** companion, in declaration order. The port already carries two consequences: constant
+> variables emit as `inline val` (§4.4) precisely so that reading one triggers nothing — the dodge that
+> broke the `Vector3`/`Matrix4` initialisation cycle — and Java `static { }` blocks emit as members that
+> run at companion init rather than at Java's class-init point. What remains **unmeasured**: a
+> non-constant `static final` read still forces its entire companion where Java forced one field's
+> class; cross-companion cycles that Java resolved by partial initialisation (a static read during init
+> observing a default value) may deadlock, NPE, or simply produce different values in Scala; and a
+> side-effecting static initialiser runs at a different moment than upstream. The failure profile is
+> T10's — no compile error, no count moves, only behaviour — so if a port ever exhibits init-order
+> symptoms, **this is the paragraph to reread before instrumenting.** Not a project; a named suspect.
+
+### 8.11 Ordering, and the interactions the briefs left open
+
+Four interactions cross design boundaries and are resolved here rather than in either subsection.
+
+**§8.2's `protected` primary × §8.7's `protected` mapping — they compose, and the composition is what
+makes both safe.** §8.2 chose `protected` over `private` to avoid a whole-program *is this class
+extended?* question; §8.7 renders a Java `protected` declaration as `protected[<emitted pkg tail>]`. The
+synthetic primary is **not a Java declaration**, so §8.7's mapping does not reach it: it is emitted as
+**bare `protected`**, which is the wider form in the subclass direction and the narrower one in the
+package direction — and that is exactly the right pair of answers. Its only legitimate callers are the
+class's own secondaries, which are inside the class, and a subclass's `extends` clause **in any
+package**, which bare `protected` permits and a package qualifier would deny across a dependent
+boundary. A package-qualified synthetic primary would break precisely the cross-module subclassing §8.2
+chose `protected` to protect. §8.7's rendering continues to govern every Java-declared constructor,
+which after §8.2 is every **secondary**: one rule per kind of declaration, no overlap.
+
+**§8.2's D4 dissolution × §8.3's contract scope — the constructor row becomes attribution-only for wall
+classes.** §8.2 removes D4's cause for 348 of 430 classes by making the synthetic signature a *local*
+function of the Java, while §8.3 keeps a `primary=` / `primaryKind=` / `primaryVis=` row for every type.
+Those are not redundant. For a **non-wall** class the row is a **cross-check**: the dependent derives the
+same answer independently and the contract confirms it, so a disagreement is an engine bug rather than
+drift. For the **82 wall classes** the fixpoint survives and is still whole-program, so the row is
+**load-bearing** and the dependent reads it rather than recomputing. §8.3's honest-scope statement then
+applies to the wall row specifically: where the contract says the base emitted a primary a dependent's
+subclass cannot reach, there is no local repair — the outcome is **refuse the replay and count**, never
+demote the base's plan. And §8.3's open question about a `private` synthetic primary is answered by
+§8.2: it is `protected`, and reachable.
+
+**§8.4 and §8.5 share ONE `OverrideGraph` — §8.5 owns it, §8.4 consumes it.** The merged requirements:
+edges keyed by name **and descriptor** (D1's rule now, §8.1's identity when it lands, misses reported and
+never guessed); the walk uses `StandardTraversal` so anonymous-class bodies are nodes (§3);
+`closureOf` returns owned members plus `externalAnchors` plus `baseAnchors`; and the shared invariant is
+that a signature change applies to **all of a component or none of it**. The consumers differ only in
+what they do with a frozen component: §8.5 refuses the rename with a finding, §8.4 falls back per site —
+capture where lexical, residual-global otherwise — and counts a `frozen-component` seam. §8.4 does not
+use `MemberRenamer`, because it changes signatures rather than names; that is why the two layers are
+separate types.
+
+**The two phase-ordering constraints do not conflict.** §8.5's property transform runs **before** every
+retyping phase, so the descriptors it matches are Java's own; §8.6's nullability runs **after** the
+collections family, so it wraps the *result* of their retype. They sit at opposite ends of the surface
+list, and the rule that governs both is §4.56's: every policy key is written in the **upstream**
+namespace, and the package rename runs **last**.
+
+The ordering that follows, with the reason each edge is real rather than scheduling:
+
+| track | order | why |
+|---|---|---|
+| core-model spine | **§8.1 first, alone** | it touches symbol minting, the `Program` constructor and every keyed phase; nothing that reads symbol identity can run beside it |
+| emitter track | **§8.2 → §8.7 → §8.8** | all three rewrite emitter regions (constructor rendering, modifiers, trivia), so serialising avoids three-way merges — and each moves member digests, which must stay separately attributable (§5) |
+| base surface | **§8.3 after §8.2, after §8.1's ownership work** | the contract's constructor rows *are* §8.2's signatures, and `Surface.owns` is the same climb §8.1 touches |
+| the armed phases | **§8.3 before §8.4's and the opaque-type enablements** | four of the nine drift sites are latent behind exactly those phases; arming them first is how the family grows a tenth face |
+| transform track | **§8.4, §8.5, §8.6 in parallel, default-off** | none reads a policy key beyond a type binding; each is its own phase, factory and spec, and the gate is every lane 0 members changed |
+| blocked on §8.1 | call-site substitution, the comparator table, §8.3's member rows | each needs an overload-exact key |
+| checks track | **§8.9, §8.10 any time** | no shared files with the above |
