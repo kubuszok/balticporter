@@ -8,6 +8,7 @@
 #   just anim8-measure               anim8-gdx, compiled WITH libGDX core (a dependent port)
 #   just gltf-measure                gdx-gltf + its suite, compiled WITH libGDX core (a dependent port)
 #   just screens-measure             libgdx-screenmanager, compiled WITH libGDX core (a dependent port)
+#   just vfx-measure                 gdx-vfx, compiled WITH libGDX core (a dependent port)
 #   just sg-measure                  simple-graphs + its suite
 #   just noise4j-measure             noise4j — emit, checks, break residue, compile, correlate
 #   just jbump-measure               jbump (no suite upstream — the lane re-derives the zero)
@@ -77,6 +78,7 @@ n4j_module    := "noise4j-core"
 jbump_module  := "jbump-core"
 gltf_module   := "gltf-core"
 screens_module := "screens-core"
+vfx_module    := "vfx-core"
 
 # upstream Java, relative to the checkout root
 gdx_src       := "../sge/original-src/libgdx/gdx"
@@ -92,6 +94,7 @@ jbump_src     := "../sge/original-src/jbump/jbump/src"
 jbump_upstream := "../sge/original-src/jbump"
 gltf_src      := "../sge/original-src/gdx-gltf/gltf/src"
 screens_src   := "../sge/original-src/libgdx-screenmanager"
+vfx_src       := "../sge/original-src/gdx-vfx"
 # gdx-gltf's WHOLE test tree, not the one file the port migrates: SEVEN java files sit there and
 # only ONE is a suite (`AttributesCompareTest`, 8 `@Test`). The other six are `extends Game` demos
 # with a `main` that opens an lwjgl window. `java_test_count` over the tree is what re-derives the
@@ -140,6 +143,10 @@ gltf_deps     := "--dependency junit:junit:4.12 --dependency org.scalameta::muni
 # real annotations (an annotation IS a declaration's contract, `Annot` in the TIR), so the jar has
 # to be present or four emitted declarations do not resolve. munit is for the hand-written suite.
 screens_deps  := "--dependency org.jspecify:jspecify:0.3.0 --dependency org.scalameta::munit:1.0.2"
+# gdx-vfx's only compile dependency is libGDX itself, which this lane supplies as the SOURCE the
+# base port emitted rather than as a coordinate. So the only coordinate here is the one its
+# HAND-WRITTEN suite is written in — the same shape, and for the same reason, as anim8's.
+vfx_deps      := "--dependency org.scalameta::munit:1.0.2"
 
 root          := justfile_directory()
 
@@ -718,6 +725,99 @@ screens-measure:
     headline "$ERRORS" "$REPORT"
 
 # ---------------------------------------------------------------------------------------------
+# gdx-vfx, compiled TOGETHER with the ported libGDX core.
+#
+# A DEPENDENT port with the same shape as anim8's — every one of its 44 files resolves against
+# libGDX, the collection shims are vendored by libgdx-core, so both source sets must be on the same
+# scala-cli invocation and this lane must run AFTER `gdx-measure` has re-emitted the base.
+#
+# THE TEST STORY, stated rather than assumed: gdx-vfx ships NO test source set. The `@Test` census
+# below runs over the WHOLE upstream checkout (library, gwt backend and the 74-file demo alike) and
+# is expected to be 0 — this is the third corpus library with no upstream suite and the only one
+# where the zero is total rather than "the test directory holds demos". The behavioural gate is
+# therefore the HAND-WRITTEN MUnit suite committed under `vfx-core/src/test/scala` (CLAUDE.md §5.5:
+# `src/` is the hand-written half of a port). Both numbers are printed, because `0 == 0` must not
+# read as agreement — a suite with no discoverable tests runs ZERO and reports SUCCESS, which is
+# the exact failure `java_test_count` exists to catch.
+# ---------------------------------------------------------------------------------------------
+[doc("gdx-vfx, compiled WITH libGDX core (a dependent port)")]
+vfx-measure:
+    #!/usr/bin/env bash
+    cd "{{root}}"
+    ROOT="$(pwd)"
+    export CORE_PROJECT="{{core_project}}"
+    . scripts/_lib.sh
+
+    write_run_props "$ROOT" "balticporter.reportPathRoot=$ROOT/{{vfx_src}}"
+    REPORT="$ROOT/port-report/VfxMigrate"
+
+    OUT=$(sbt -client "{{corpus}}/runMain balticporter.corpus.vfx.VfxMigrate" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
+    if ! grep -qE "wrote [0-9]+ Scala files" <<<"$OUT"; then
+      echo "!! VfxMigrate DID NOT RUN — refusing to measure stale output"
+      grep -E "^\[error\].*\.scala:[0-9]+|^\[error\] +\|" <<<"$OUT" | head -20
+      exit 1
+    fi
+    echo "-- VfxMigrate (every line it printed) --"
+    sed -n '/building model over/,/wrote [0-9]* Scala files/p' <<<"$OUT"
+    echo
+
+    echo "-- checks: persisted, untruncated, diffed against the baseline --"
+    show_check_report "$REPORT"
+
+    echo
+    echo "-- test discovery --"
+    JAVA_TESTS=$(java_test_count {{vfx_src}})
+    HAND_TESTS=$(grep -rhoE '(^|[^a-zA-Z0-9_.])test\("' {{vfx_module}}/src/test/scala 2>/dev/null | wc -l | tr -d ' ')
+    EMITTED_TESTS=$(grep -rhoE '(^|[^a-zA-Z0-9_.])test\("' {{vfx_module}}/src_managed/test/scala 2>/dev/null | wc -l | tr -d ' ')
+    echo "@Test in upstream java (WHOLE checkout): $JAVA_TESTS (gdx-vfx ships no test source set — nothing to port)"
+    echo "hand-written munit in {{vfx_module}}/src/test/scala: $HAND_TESTS   emitted: $EMITTED_TESTS"
+    [ "$JAVA_TESTS" != "0" ] && echo "!! UPSTREAM NOW HAS A SUITE — $JAVA_TESTS @Test method(s) that this port does not migrate; add a VfxTestMigrate"
+    [ "$HAND_TESTS" = "0" ] && echo "!! NO BEHAVIOURAL GATE — this port would compile and prove nothing (CLAUDE.md §3)"
+
+    echo
+    break_residue {{vfx_module}}/src_managed
+
+    echo "-- compile --"
+    DEPS="{{vfx_deps}}"
+    scala-cli compile --scala {{scala_version}} --server=false $DEPS \
+      {{gdx_module}}/src_managed/main/scala {{vfx_module}}/src_managed/main/scala {{vfx_module}}/src/test/scala \
+      2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/vfxmeasure.txt
+    CLI_STATUS=${PIPESTATUS[0]}
+    ERRORS=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/vfxmeasure.txt)
+    compile_guard "$CLI_STATUS" "$ERRORS" "$MEASURE_TMP"/vfxmeasure.txt
+    echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/vfxmeasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/vfxmeasure.txt))"
+    grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/vfxmeasure.txt | sort | uniq -c | sort -rn | head
+    echo "-- bare (uncoded) errors by message --"
+    grep -A1 '^-- Error:' "$MEASURE_TMP"/vfxmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
+
+    if [ "$ERRORS" = "0" ]; then
+      echo
+      echo "-- run --"
+      scala-cli test --scala {{scala_version}} --server=false $DEPS -Duser.language=en -Duser.country=US \
+        {{gdx_module}}/src_managed/main/scala {{vfx_module}}/src_managed/main/scala {{vfx_module}}/src/test/scala \
+        2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/vfxrun.txt
+      reconcile_outcomes "$MEASURE_TMP"/vfxrun.txt "$HAND_TESTS"
+      echo
+      echo "-- correlation: test failures located to members and Java origins --"
+      # BOTH ports' maps. There is no `test=` map: the suite is hand-written, so no srcmap can
+      # anchor a test FRAME on a Java origin — but a failure inside the LIBRARY still resolves
+      # through vfx's own map, and one that reaches the base resolves through libGDX's, which is
+      # exactly what a dependent's failure looks like.
+      correlate "$REPORT/run-latest" --tests "$MEASURE_TMP"/vfxrun.txt \
+        --srcmap "$ROOT/port-report/LibgdxCoreMigrate/run-latest/srcmap.tsv" \
+        --srcmap "$REPORT/run-latest/srcmap.tsv"
+    else
+      echo
+      echo "-- correlation: every error located to its member and its Java origin --"
+      correlate "$REPORT/run-latest" --scalac "$MEASURE_TMP"/vfxmeasure.txt \
+        --srcmap "$ROOT/port-report/LibgdxCoreMigrate/run-latest/srcmap.tsv" \
+        --srcmap "$REPORT/run-latest/srcmap.tsv"
+      echo "(not running the suite: it does not compile — a test that cannot run is not a test that passed)"
+    fi
+
+    headline "$ERRORS" "$REPORT"
+
+# ---------------------------------------------------------------------------------------------
 # simple-graphs + its suite — the same gate as `gdx-measure`.
 #
 # simple-graphs is a VENDORED-runtime port (RuntimeMode.Vendored): the shim family it retypes onto
@@ -1049,7 +1149,7 @@ jbump-measure:
 measure-all:
     #!/usr/bin/env bash
     cd "{{root}}"
-    for lane in gdx-measure gdx-test-measure ashley-measure anim8-measure gltf-measure sg-measure noise4j-measure jbump-measure screens-measure; do
+    for lane in gdx-measure gdx-test-measure ashley-measure anim8-measure gltf-measure vfx-measure sg-measure noise4j-measure jbump-measure screens-measure; do
       echo
       echo "################################################################## just $lane"
       if ! {{just_executable()}} "$lane"; then
