@@ -769,7 +769,7 @@ sge.gltf.scene3d.attributes.PBRHDRColorAttribute	sge.gltf.scene3d.attributes.PBR
 sge.gltf.scene3d.attributes.PBRHDRColorAttribute	sge.gltf.scene3d.attributes.PBRHDRColorAttribute#g	val	e2093d9e4e7e55b4
 sge.gltf.scene3d.attributes.PBRHDRColorAttribute	sge.gltf.scene3d.attributes.PBRHDRColorAttribute#r	val	b702b2f1ddb6f2ac
 sge.gltf.scene3d.attributes.PBRHDRColorAttribute	sge.gltf.scene3d.attributes.PBRHDRColorAttribute#set(float,float,float)	def	e30892966851e27c
-sge.gltf.scene3d.attributes.PBRIridescenceAttribute	sge.gltf.scene3d.attributes.PBRIridescenceAttribute	class	9943d506c17e54fb
+sge.gltf.scene3d.attributes.PBRIridescenceAttribute	sge.gltf.scene3d.attributes.PBRIridescenceAttribute	class	1afb4801a2752b2c
 sge.gltf.scene3d.attributes.PBRIridescenceAttribute	sge.gltf.scene3d.attributes.PBRIridescenceAttribute#<init>()	ctor	f23aa72be26d2a32
 sge.gltf.scene3d.attributes.PBRIridescenceAttribute	sge.gltf.scene3d.attributes.PBRIridescenceAttribute#<init>(float,float,float,float)	ctor	e9f1e6b45ff35991
 sge.gltf.scene3d.attributes.PBRIridescenceAttribute	sge.gltf.scene3d.attributes.PBRIridescenceAttribute#Alias	val	562115f90bf56838
@@ -853,7 +853,7 @@ sge.gltf.scene3d.attributes.PBRVertexAttributes	sge.gltf.scene3d.attributes.PBRV
 sge.gltf.scene3d.attributes.PBRVertexAttributes	sge.gltf.scene3d.attributes.PBRVertexAttributes$Usage#NormalTarget	val	808f0d453637b7f5
 sge.gltf.scene3d.attributes.PBRVertexAttributes	sge.gltf.scene3d.attributes.PBRVertexAttributes$Usage#PositionTarget	val	1b9127422b44b9dd
 sge.gltf.scene3d.attributes.PBRVertexAttributes	sge.gltf.scene3d.attributes.PBRVertexAttributes$Usage#TangentTarget	val	4e421de691098445
-sge.gltf.scene3d.attributes.PBRVolumeAttribute	sge.gltf.scene3d.attributes.PBRVolumeAttribute	class	97d589b55a35dc89
+sge.gltf.scene3d.attributes.PBRVolumeAttribute	sge.gltf.scene3d.attributes.PBRVolumeAttribute	class	7b0f6689b33fa829
 sge.gltf.scene3d.attributes.PBRVolumeAttribute	sge.gltf.scene3d.attributes.PBRVolumeAttribute#<init>()	ctor	68ae07ccfe56614a
 sge.gltf.scene3d.attributes.PBRVolumeAttribute	sge.gltf.scene3d.attributes.PBRVolumeAttribute#<init>(float,float,Color)	ctor	7a35d5a06b47dfd2
 sge.gltf.scene3d.attributes.PBRVolumeAttribute	sge.gltf.scene3d.attributes.PBRVolumeAttribute#Alias	val	dde339f2a448cee4

@@ -1003,10 +1003,23 @@ final case class PortRun(
           detail = Map(
             "shape"        -> plans.shape(cd),
             "primary"      -> primary,
+            // WHOSE constructor the primary is, which is the reader's next question after `primary`
+            // and is only answerable here: a SYNTHESISED primary is a member no java declared, so it
+            // is emitted `protected` — narrow enough that no client can call a constructor java
+            // never exposed, wide enough that a subclass in ANY module still reaches it from its
+            // `extends` clause (`private` is class-private in scala, so even a same-package subclass
+            // could not). A promoted one keeps whatever java gave the constructor it promotes.
+            "primaryVis"   -> (if p.synthetic.nonEmpty then "protected" else "as-declared"),
             "constructors" -> ctors.size.toString,
             "superArgs"    -> p.superArgs.size.toString,
             "escapes"      -> plans.promotionEscapes(cd).size.toString,
-            "why"          -> ("java lets every constructor pick its own `super(...)`; scala lets " +
+            "why"          -> (if p.synthetic.nonEmpty then
+              "java lets every constructor pick its own `super(...)` and scala lets only the " +
+              "PRIMARY reach super; no java constructor here can be that primary, so a protected " +
+              "one taking the PARENT constructor's own parameters is synthesised and every java " +
+              "constructor becomes a `def this` computing its arguments"
+            else
+              "java lets every constructor pick its own `super(...)`; scala lets " +
               "only the PRIMARY reach super, so one is nominated, its super arguments become the " +
               "`extends` clause and its body becomes the class body — which runs on every " +
               "construction path, `escapes` of which java did not run it on"),

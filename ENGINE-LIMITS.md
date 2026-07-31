@@ -593,9 +593,23 @@ ways:
 **Do not refuse the promotion.** Dropping every escaping plan to `Plan.none` measured **0 -> 41
 compile errors** on libGDX core, every one an `E120 Conflicting definitions`: the refused class
 emits a `def this()` beside Scala's implicit nilary primary, which is the exact clash shapes 2 and 6
-exist to prevent. Promoting a *different* constructor only moves the escape, and a synthesised no-op
-primary cannot help either — a subclass's `extends C` invokes C's PRIMARY, so a body Java ran from
-the implicit `super()` has to be there.
+exist to prevent. Promoting a *different* constructor only moves the escape.
+
+**CORRECTED, 2026-07-31.** This entry used to add *"and a synthesised no-op primary cannot help
+either — a subclass's `extends C` invokes C's PRIMARY, so a body Java ran from the implicit
+`super()` has to be there"*. **That sentence is false**, and it was the same false claim
+`TirEmitter` carried beside the synthesis it was keeping public. Compiled and run against scalac
+3.8.4: a `private` primary's SECONDARIES are reachable from an `extends` clause **in another
+package** (`class D extends p.C("hello")`, `class E extends p.C()`), and a `protected` primary is
+reachable **directly** from a subclass's `extends` clause in another package and from an anonymous
+`new G(3, false) {}`. So a class MAY have a non-public primary that no `extends` clause names, with
+every Java constructor surviving as a `def this` the `extends` clauses reach — which is precisely
+the encoding under which no Java body becomes the class body and there is nothing to escape.
+`DESIGN.md` §8.2 is that design. The 0 -> 41 and 0 -> 35 measurements below stand exactly as
+written: both are the cost of refusing a *promotion*, and they say nothing about an encoding that
+promotes nothing. Note the boundary that makes `protected` rather than `private` the answer:
+`private` is CLASS-private in Scala, so even a SAME-package subclass sees only the secondaries
+(`too many arguments for constructor A in class A: (): g.A`).
 
 Corpus reach, by the structural test (a constructor escapes iff no chain of leading `this(...)`
 delegations — at any arity — reaches the promoted one): **61 classes, 160 constructor paths** in the

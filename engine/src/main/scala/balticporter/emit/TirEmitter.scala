@@ -922,13 +922,27 @@ final class TirEmitter(
     val (loweredBody, superArgs) = (lowerCtors(cd.body, plan), plan.superArgs)
     val pparams = plan.primaryParams
     // A SYNTHESISED primary (CtorFunnel.Plan.synthetic) has no java constructor behind it, so its
-    // parameters are rendered from the plan's own (name, type) pairs rather than from symbols. It is
-    // NOT `private`: scala's `extends C(args)` can only ever invoke C's PRIMARY, so hiding it would
-    // make the class unextendable by exactly the subclasses that motivated it. The widening — a
-    // constructor java did not expose — is the price, and it cannot change the behaviour of code the
-    // port translated.
+    // parameters are rendered from the plan's own (name, type) pairs rather than from symbols.
+    //
+    // It is `protected`, and the reason is a corrected fact. This comment used to assert that
+    // "scala's `extends C(args)` can only ever invoke C's PRIMARY, so hiding it would make the class
+    // unextendable" — which is FALSE, and was the only thing keeping a constructor java never
+    // declared in the published API. Compiled and run: a `private` primary with three secondaries is
+    // reached by `class D extends p.C("hello")`, `class E extends p.C()` and `class F(k: Int) extends
+    // p.C(k.toString)` from ANOTHER package; a `protected` primary is reached DIRECTLY by a
+    // subclass's `extends` clause in another package, and by an anonymous `new G(3, false) {}`.
+    //
+    // `protected` rather than `private` because `private` is CLASS-private in scala, not
+    // package-private: a SAME-package subclass sees only the nilary secondary ("too many arguments
+    // for constructor A ... : (): g.A"). Choosing between them per class would mean asking "is this
+    // class extended?", which is the whole-program question `ENGINE-LIMITS.md` D4 measures as drift
+    // — and it is asked at emission, one module at a time, so a dependent would answer it
+    // differently from the base. `protected` needs no such question, cannot be reached by ordinary
+    // client code, and is what the reference ports write on every funnel class that is subclassed.
+    // Bare `protected`, never `protected[pkg]`: a package qualifier would deny exactly the
+    // cross-module subclassing this choice exists to permit (DESIGN.md §8.11).
     val prim    =
-      if plan.synthetic.nonEmpty then s"(${plan.synthetic.map((n, t) => s"$n: ${tpe(t)}").mkString(", ")})"
+      if plan.synthetic.nonEmpty then s" protected (${plan.synthetic.map((n, t) => s"$n: ${tpe(t)}").mkString(", ")})"
       else if pparams.isEmpty then "" else s"(${pparams.map(param).mkString(", ")})"
     // Does the emitted class have a PARAMFUL primary? A synthesised primary is one even though no
     // java constructor backs it, so `plan.primaryParams` is empty for it — reading only that told

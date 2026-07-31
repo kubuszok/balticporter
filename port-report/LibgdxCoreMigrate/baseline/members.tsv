@@ -2859,7 +2859,7 @@ sge.graphics.PixmapIO	sge.graphics.PixmapIO$PNG$ChunkBuffer#<stmt2>	stmt	9f7e8e2
 sge.graphics.PixmapIO	sge.graphics.PixmapIO$PNG$ChunkBuffer#buffer	val	c8096c5c87119169
 sge.graphics.PixmapIO	sge.graphics.PixmapIO$PNG$ChunkBuffer#crc	val	90c8a6e7da186527
 sge.graphics.PixmapIO	sge.graphics.PixmapIO$PNG$ChunkBuffer#endChunk(DataOutputStream)	def	16c59c91ca00edc9
-sge.graphics.Texture	sge.graphics.Texture	class	e6277bf1f9083175
+sge.graphics.Texture	sge.graphics.Texture	class	3e56c5e50cce6c0b
 sge.graphics.Texture	sge.graphics.Texture#<init>()	ctor	6242dcd53a94cdf2
 sge.graphics.Texture	sge.graphics.Texture#<init>(FileHandle)	ctor	f59ef400c212ddb7
 sge.graphics.Texture	sge.graphics.Texture#<init>(FileHandle,Format,boolean)	ctor	858316eb7c751566
