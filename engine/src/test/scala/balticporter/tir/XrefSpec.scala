@@ -71,7 +71,7 @@ class XrefSpec extends munit.FunSuite:
 
   private def program(): Program =
     val units = List(foo)
-    new Program(units, symbols, Xref.build(units))
+    new Program(units, symbols, Xref.build(units), MemberIndex.empty)
 
   private def kinds(p: Program, s: SymId): Set[UsageKind] = p.usages(s).map(_.kind).toSet
 

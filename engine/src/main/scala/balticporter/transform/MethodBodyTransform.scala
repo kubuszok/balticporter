@@ -175,4 +175,4 @@ final class MethodBodyTransform(bodies: Map[String, String] = Map.empty) extends
 
     report  = PolicyReport(findings.toList)
     applied = done.toList
-    new Program(units, program.symbols, program.xref) // xref rebuilt by the Pipeline
+    program.rebuilt(units) // xref rebuilt by the Pipeline

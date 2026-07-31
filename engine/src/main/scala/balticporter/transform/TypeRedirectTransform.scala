@@ -174,16 +174,16 @@ final class TypeRedirectTransform(redirects: Map[String, String] = Map.empty) ex
     }
 
     if mapping.isEmpty then
-      new Program(program.units, table, program.xref)
+      program.rebuilt(symbols = table)
     else
-      given Program = new Program(program.units, table, program.xref)
+      given Program = program.rebuilt(symbols = table)
       // The STANDARD traversal, so every type occurrence the tree has — parents, self-types, tpts,
       // type arguments, `new`, ascriptions — and every symbol `info` is routed through
       // `transformType`. A private walk here would reach the ones it remembered and miss whichever
       // node kind is added next (CLAUDE.md §3).
       val units   = program.units.map(u => StandardTraversal.mapClassDef(this, u))
       val symbols = StandardTraversal.mapSymbols(this, table)
-      new Program(units, symbols, program.xref) // xref rebuilt by the Pipeline
+      program.rebuilt(units, symbols) // xref rebuilt by the Pipeline
 
   override def transformType(t: TypeRepr)(using Program): TypeRepr = t match
     case TypeRepr.TypeRef(p, s) if mapping.contains(s) => TypeRepr.TypeRef(p, mapping(s))

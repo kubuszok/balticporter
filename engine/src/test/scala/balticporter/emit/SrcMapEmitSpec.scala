@@ -43,7 +43,7 @@ class SrcMapEmitSpec extends munit.FunSuite:
     Symbol(IM, "im", "srcmapdemo.Foo$Inner#im", Flags(), INNER, MethodType(Nil, tInt)),
   ))
 
-  private val program = new Program(List(foo), symbols, Xref.build(List(foo)))
+  private val program = new Program(List(foo), symbols, Xref.build(List(foo)), MemberIndex.empty)
 
   private def withProps[A](kv: (String, String)*)(f: => A): A =
     val saved = kv.map((k, _) => k -> Option(System.getProperty(k)))
@@ -78,7 +78,7 @@ class SrcMapEmitSpec extends munit.FunSuite:
            origin = Origin("/a/b/src/srcmapdemo/Bar.java", 3, 1)),
     Symbol(INT, "Int", "scala.Int", Flags(), SymId.None, NoType),
     Symbol(BARM, "bm", "srcmapdemo.Bar#bm", Flags(), BAR, MethodType(Nil, tInt)),
-  )), Xref.build(List(bar)))
+  )), Xref.build(List(bar)), MemberIndex.empty)
 
   test("two emitters in one JVM do not contaminate each other's source map") {
     val tmp = java.nio.file.Files.createTempDirectory("bp-srcmap")

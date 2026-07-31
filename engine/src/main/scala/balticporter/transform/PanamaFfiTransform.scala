@@ -73,10 +73,10 @@ final class PanamaFfiTransform(isNative: Symbol => Boolean = _.flags.isNative) e
     val symbols0 = program.symbols.all.map(s =>
       if natives(s.id) then s.copy(flags = s.flags.copy(isNative = false)) else s)
     val symbols = SymbolTable(symbols0 ++ minted)
-    given Program = new Program(program.units, symbols, program.xref)
+    given Program = program.rebuilt(symbols = symbols)
 
     val units = program.units.map(u => rewriteClass(u, natives, handleSym))
-    new Program(units, symbols, program.xref)
+    program.rebuilt(units, symbols)
 
   private def rewriteClass(cd: Tree.ClassDef, natives: Set[SymId], handleSym: Map[SymId, SymId])(using Program): Tree.ClassDef =
     val o = Origin.synthetic

@@ -2589,7 +2589,7 @@ object TirEmitter:
             ),
             "ctor-replay-widening")
       }
-      new Program(p.units, SymbolTable(syms), p.xref)
+      p.rebuilt(symbols = SymbolTable(syms))
 
   /** Promoting a constructor to Scala's primary widens the SCOPE of everything it declares: its
     * parameters become class parameters and its top-level locals become class members, both
@@ -2669,7 +2669,7 @@ object TirEmitter:
       cd.body.foreach { case c: Tree.ClassDef => scan(c); case _ => () }
     p.units.foreach(scan)
     if renames.isEmpty then p
-    else new Program(p.units, SymbolTable(p.symbols.all.map(s => renames.get(s.id).map(n => s.copy(name = n)).getOrElse(s))), p.xref)
+    else p.rebuilt(symbols = SymbolTable(p.symbols.all.map(s => renames.get(s.id).map(n => s.copy(name = n)).getOrElse(s))))
 
   /** Rename any field that SHADOWS an inherited member.
     *
@@ -2754,7 +2754,7 @@ object TirEmitter:
       val syms = p.symbols.all.map(s =>
         renames.get(s.id).map(n => s.copy(name = n, flags = s.flags.copy(isPrivate = false, isProtected = false))).getOrElse(s)
       )
-      new Program(p.units, SymbolTable(syms), p.xref)
+      p.rebuilt(symbols = SymbolTable(syms))
 
   /** Rename an enclosing method's LOCAL or PARAMETER that a nested class's member shadows.
     *
@@ -2877,7 +2877,7 @@ object TirEmitter:
         }
     }
     if renames.isEmpty then p
-    else new Program(p.units, SymbolTable(p.symbols.all.map(s => renames.get(s.id).map(n => s.copy(name = n)).getOrElse(s))), p.xref)
+    else p.rebuilt(symbols = SymbolTable(p.symbols.all.map(s => renames.get(s.id).map(n => s.copy(name = n)).getOrElse(s))))
 
   /** Rename any field whose simple name collides with a method in the same class (legal in
     * Java, illegal in Scala) by suffixing `$field`. Renaming the symbol propagates to every
@@ -2927,4 +2927,4 @@ object TirEmitter:
       val syms = p.symbols.all.map(s =>
         renames.get(s.id).map(n => s.copy(name = n, flags = s.flags.copy(isPrivate = false, isProtected = false))).getOrElse(s)
       )
-      new Program(p.units, SymbolTable(syms), p.xref)
+      p.rebuilt(symbols = SymbolTable(syms))

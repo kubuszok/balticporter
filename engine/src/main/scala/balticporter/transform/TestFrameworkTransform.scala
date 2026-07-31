@@ -180,7 +180,7 @@ final class TestFrameworkTransform(
     unitSym = headSymOf(primTypes("scala.Unit"))
 
     val symbols0 = SymbolTable(program.symbols.all ++ added)
-    given Program = new Program(program.units, symbols0, program.xref)
+    given Program = program.rebuilt(symbols = symbols0)
     survey(program)
     val units = program.units.map(convert)
     // `convert` mints more (the lifecycle overrides), so the table is rebuilt AFTER the walk.
@@ -195,7 +195,7 @@ final class TestFrameworkTransform(
           droppedAnnotations = s.droppedAnnotations.filterNot(ConsumedAnns)))
     }
     report()
-    new Program(units, symbols, program.xref)
+    program.rebuilt(units, symbols)
 
   private def mint(nm: String, full: String, flags: Flags = Flags(), info: TypeRepr = TypeRepr.NoType): SymId =
     val id = SymId(nextId); nextId += 1

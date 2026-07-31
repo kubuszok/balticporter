@@ -88,7 +88,7 @@ class ProvenanceHeaderSpec extends munit.FunSuite:
     // `Origin.synthetic`. There is no upstream file to attribute, and the header must say that
     // instead of reconstructing `com/example/demo/Widget.java`, which nobody ever read.
     val u    = only(fromFile)
-    val bare = new Program(List(u.copy(origin = Origin.synthetic)), fromFile.symbols, fromFile.xref)
+    val bare = fromFile.rebuilt(units = List(u.copy(origin = Origin.synthetic)))
     val out  = new TirEmitter(bare, provenance = Some(prov)).emitUnit(only(bare))
     assert(clue(out).contains("Ported from: <unknown"))
     assert(!out.contains("Widget.java"))

@@ -35,7 +35,7 @@ class TirEmitterSpec extends munit.FunSuite:
     )
   )
 
-  private val program = new Program(List(foo), symbols, Xref.build(List(foo)))
+  private val program = new Program(List(foo), symbols, Xref.build(List(foo)), MemberIndex.empty)
   private val out     = new TirEmitter(program).emit
 
   test("emits package, class, field and method with a body") {

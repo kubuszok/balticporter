@@ -213,7 +213,7 @@ final class PortMapTransform(maps: List[PortMap.Map0] = Nil) extends Phase, Poli
       repointed = moved
       // Trees and the xref are keyed by `SymId` and stay valid verbatim — renaming the SYMBOL is
       // what makes a rename reach every reference, including ones no textual rewrite could find.
-      new Program(program.units, table, program.xref)
+      program.rebuilt(symbols = table)
 
   // ---------------------------------------------------------------------------
   // reporting — what the dependent references that the base did not emit

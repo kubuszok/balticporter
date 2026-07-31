@@ -97,7 +97,7 @@ class TirPrinterSpec extends munit.FunSuite:
 
   test("program() orders units by full name, not by the frontend's file walk") {
     val bar = TinyProgram.foo.copy(symbol = TinyProgram.BASE, body = Nil, tparams = Nil, parents = Nil)
-    val p1  = new Program(List(TinyProgram.foo, bar), TinyProgram.symbols, Xref.build(List(TinyProgram.foo, bar)))
-    val p2  = new Program(List(bar, TinyProgram.foo), TinyProgram.symbols, Xref.build(List(bar, TinyProgram.foo)))
+    val p1  = new Program(List(TinyProgram.foo, bar), TinyProgram.symbols, Xref.build(List(TinyProgram.foo, bar)), MemberIndex.empty)
+    val p2  = new Program(List(bar, TinyProgram.foo), TinyProgram.symbols, Xref.build(List(bar, TinyProgram.foo)), MemberIndex.empty)
     assertEquals(TirPrinter.program()(using p1), TirPrinter.program()(using p2))
   }

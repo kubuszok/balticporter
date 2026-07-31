@@ -72,4 +72,4 @@ object TinyProgram:
     tparams = List(Tree.TypeDef(T, tt(AnyBounds), O)),
   )
 
-  def program: Program = new Program(List(foo), symbols, Xref.build(List(foo)))
+  def program: Program = new Program(List(foo), symbols, Xref.build(List(foo)), MemberIndex.empty)

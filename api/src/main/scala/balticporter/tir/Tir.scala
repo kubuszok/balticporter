@@ -483,10 +483,36 @@ final class XrefIndex(
 
 /** The transform substrate: all units, the symbol table, the xref index. Project-
   * owned transformers receive this, query it (Quotes-familiar), and rewrite. */
-final class Program(val units: List[Tree.ClassDef], val symbols: SymbolTable, val xref: XrefIndex):
+final class Program(
+    val units: List[Tree.ClassDef],
+    val symbols: SymbolTable,
+    val xref: XrefIndex,
+    /** WHAT THE FRONTEND SAW, dropped members included — see [[MemberIndex]].
+      *
+      * '''A REQUIRED parameter, not a defaulted field, and that is the whole design of this
+      * commit.''' There are 28 `new Program(...)` sites outside tests and `Pipeline.runTraced`
+      * rebuilds a fresh `Program` after EVERY phase; a default would have been silently dropped at
+      * 27 of them and at every phase boundary — a regression no check count could see, which is
+      * precisely the class of defect this repository has shipped before. Required, the migration is
+      * mechanical and the compiler performs it. [[rebuilt]] is then THE way a phase returns a
+      * program, so the next whole-program value costs one line instead of another 28. */
+    val members: MemberIndex,
+):
   export xref.{definitionOf, usagesOf, usages, referenced}
 
   def symbolOf(id: SymId): Option[Symbol] = symbols.get(id)
+
+  /** Rebuild after a rewrite, CARRYING EVERYTHING THE CALLER DID NOT CHANGE.
+    *
+    * `new Program` is for the frontend and the pipeline; a phase uses this. The difference is not
+    * brevity: a phase that constructs a `Program` positionally has to remember every whole-program
+    * value that exists today, and the one it forgets is dropped in silence. */
+  def rebuilt(
+      units: List[Tree.ClassDef] = this.units,
+      symbols: SymbolTable = this.symbols,
+      xref: XrefIndex = this.xref,
+      members: MemberIndex = this.members,
+  ): Program = new Program(units, symbols, xref, members)
 
   /** Symbols this program DECLARES, as opposed to externals the frontend interned on first
     * reference — CLAUDE.md §4.56's "decide ownership STRUCTURALLY, never by name", as a value.

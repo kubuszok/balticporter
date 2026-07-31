@@ -86,12 +86,12 @@ final class MutableParamsTransform extends Phase:
       }
 
     val symbols = SymbolTable(symbols0 ++ minted)
-    given Program = new Program(program.units, symbols, program.xref)
+    given Program = program.rebuilt(symbols = symbols)
     val rewrite = new Phase:
       def name = "reassigned-params->var/rewrite"
       override def transformDefDef(d: Tree.DefDef)(using Program): Tree.DefDef = rewriteDef(d)
     val units = program.units.map(u => StandardTraversal.mapClassDef(rewrite, u))
-    new Program(units, symbols, program.xref)
+    program.rebuilt(units, symbols)
 
   private def rewriteDef(d: Tree.DefDef)(using Program): Tree.DefDef =
     val shadows = d.paramss.flatten.filter(v => argOf.contains(v.symbol))

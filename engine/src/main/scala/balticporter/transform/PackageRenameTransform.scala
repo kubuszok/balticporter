@@ -131,7 +131,7 @@ final class PackageRenameTransform(renames: Map[String, String] = Map.empty) ext
       }
       // Trees and the xref are keyed by `SymId` and stay valid verbatim — that is the whole point
       // of renaming the symbol rather than the text. (The Pipeline rebuilds the xref anyway.)
-      new Program(program.units, table, program.xref)
+      program.rebuilt(symbols = table)
 
 object PackageRenameTransform:
 

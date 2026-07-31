@@ -42,7 +42,7 @@ class PolicySpec extends munit.FunSuite:
     )
   )
 
-  private def program(): Program = new Program(List(caller), symbols, Xref.build(List(caller)))
+  private def program(): Program = new Program(List(caller), symbols, Xref.build(List(caller)), MemberIndex.empty)
 
   private def keys(r: PolicyReport)   = r.findings.map(_.key)
   private def issues(r: PolicyReport) = r.findings.map(_.issue)

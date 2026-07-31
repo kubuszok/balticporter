@@ -54,7 +54,7 @@ trait Phase:
     given Program = program
     val units   = program.units.map(u => StandardTraversal.mapClassDef(this, u))
     val symbols = StandardTraversal.mapSymbols(this, program.symbols)
-    new Program(units, symbols, program.xref) // xref rebuilt by the Pipeline
+    program.rebuilt(units, symbols) // xref rebuilt by the Pipeline
 
   // ---- MiniPhase-style hooks (identity by default) ----
   def transformClassDef(t: Tree.ClassDef)(using Program): Tree.ClassDef = t
@@ -156,7 +156,7 @@ object Pipeline:
       else
         phase.decisions.clear() // this run's decisions only — see `runTraced`
         val out  = phase.run(prog)
-        val next = new Program(out.units, out.symbols, Xref.build(out.units))
+        val next = out.rebuilt(xref = Xref.build(out.units))
         log.recordAll(phase.decisions.drain())
         if DebugFlags.tracePhases then
           println(s"[balticporter] phase '${phase.name}': ${next.units.size} units, ${next.symbols.all.size} symbols" +

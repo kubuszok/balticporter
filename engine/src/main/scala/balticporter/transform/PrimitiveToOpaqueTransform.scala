@@ -118,7 +118,7 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec) extends Phase:
         case _ => s
     }
     val symbols = SymbolTable(retyped ++ minted)
-    given Program = new Program(program.units, symbols, program.xref)
+    given Program = program.rebuilt(symbols = symbols)
 
     // DECISION PROVENANCE: one row per DECLARATION whose signature became the opaque type.
     //
@@ -151,7 +151,7 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec) extends Phase:
     }
 
     val units = program.units.map(u => StandardTraversal.mapClassDef(this, u)) :+ synthUnit
-    new Program(units, symbols, program.xref)
+    program.rebuilt(units, symbols)
 
   /** Seed detection — [[FlowPropagation]] over the symbols of this spec's primitive, with the
     * hints as roots.

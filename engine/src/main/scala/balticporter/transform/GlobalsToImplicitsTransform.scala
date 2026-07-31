@@ -111,7 +111,7 @@ final class GlobalsToImplicitsTransform(isContext: Symbol => Boolean) extends Ph
     val symbols0 = program.symbols.all.map(s =>
       if staticMembers(s.id) then s.copy(flags = s.flags.copy(isStatic = false)) else s)
     val symbols = SymbolTable(symbols0 ++ minted)
-    val prog2   = new Program(program.units, symbols, program.xref) // post-mint, for the rewrite
+    val prog2   = program.rebuilt(symbols = symbols) // post-mint, for the rewrite
 
     // the boundary given lives in C's companion (static member of C → emitter puts it there).
     val o = Origin.synthetic
@@ -119,7 +119,7 @@ final class GlobalsToImplicitsTransform(isContext: Symbol => Boolean) extends Ph
 
     val units = program.units.map(u =>
       rewriteClass(u, cls, staticMembers, threaded, ctxParam, ctxRef, givenVal)(using prog2))
-    new Program(units, symbols, program.xref)
+    program.rebuilt(units, symbols)
 
   private val minted = collection.mutable.ListBuffer[Symbol]()
 

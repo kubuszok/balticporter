@@ -320,13 +320,13 @@ final class CollectionsTransform(val scope: RuleScope = RuleScope.Everywhere())
     removeSym    = mint("remove", "remove") // scala `mutable.Map.remove`: returns the REMOVED value
 
     val symbols = SymbolTable(program.symbols.all ++ added)
-    given Program = new Program(program.units, symbols, program.xref)
+    given Program = program.rebuilt(symbols = symbols)
     applyScope(summon[Program]) // fills `excluded`, `admittedBy` and `report` — a no-op by default
     val units    = program.units.map(u => restoreExcluded(u, StandardTraversal.mapClassDef(this, u)))
     val symbols2 = mapSignatures(symbols) // retype signatures too
     recordRetypings(symbols, symbols2)
     recordScopedOut(symbols)
-    new Program(units, symbols2, program.xref)
+    program.rebuilt(units, symbols2)
 
   // -------------------------------------------------------------------------
   // RuleScope — WHICH declarations this run rewrites (CLAUDE.md §1(b))

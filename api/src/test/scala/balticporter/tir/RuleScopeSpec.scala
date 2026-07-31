@@ -106,7 +106,7 @@ class RuleScopeSpec extends munit.FunSuite:
     val param = Symbol(SymId(3), "p", "?#p", Flags(isParam = true), meth.id, TypeRepr.NoType)
     val local = Symbol(SymId(4), "i", "i", Flags(), meth.id, TypeRepr.NoType)
     val other = Symbol(SymId(5), "Baz", "com.other.Baz", Flags(), SymId.None, TypeRepr.NoType)
-    new Program(Nil, SymbolTable(List(cls, meth, param, local, other)), Xref.build(Nil))
+    new Program(Nil, SymbolTable(List(cls, meth, param, local, other)), Xref.build(Nil), MemberIndex.empty)
 
   private def sym(p: Program, fqn: String): Symbol = p.symbols.all.find(_.fullName == fqn).get
 
@@ -149,7 +149,7 @@ class RuleScopeSpec extends munit.FunSuite:
     // The name test is not consulted for those two ONLY. A top-level type in the DEFAULT package
     // has no separator in its name either, and it is still placed by it — the test is structural.
     val dflt = Symbol(SymId(6), "Loose", "Loose", Flags(), SymId.None, TypeRepr.NoType)
-    val q    = new Program(Nil, SymbolTable(p.symbols.all.toList :+ dflt), Xref.build(Nil))
+    val q    = p.rebuilt(symbols = SymbolTable(p.symbols.all.toList :+ dflt))
     assertEquals(RuleScope.Only(Set("Loose")).entryFor(q, dflt), Some("Loose"))
   }
 

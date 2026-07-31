@@ -160,7 +160,7 @@ final class StaticForwarderTransform(forwarders: List[StaticForwarderTransform.F
 
       given Program = program
       val units = program.units.map(u => StandardTraversal.mapClassDef(this, u))
-      new Program(units, table, program.xref) // xref rebuilt by the Pipeline
+      program.rebuilt(units, table) // xref rebuilt by the Pipeline
 
   /** `Wrapper.m(x, rest…)` → `x.m(rest…)`. */
   override def transformApply(t: Tree.Apply)(using Program): Term =

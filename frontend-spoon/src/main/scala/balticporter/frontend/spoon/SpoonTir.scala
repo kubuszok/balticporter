@@ -201,11 +201,20 @@ object SpoonTir:
       val prev = inStatic; inStatic = s
       try f finally inStatic = prev
 
+    /** WHAT THIS WALK SAW — every executable it was asked to consider, INCLUDING the ones policy
+      * removed. Published on the `Program` as [[MemberIndex]], which explains why the dropped half
+      * cannot be recovered anywhere else: after `classDef` filters an executable out, it has no
+      * symbol, no `DefDef` and no row in the symbol table, so a `dropMethods` key naming it would be
+      * reported as a typo on every run that WORKED. */
+    private val seenMembers = collection.mutable.Map.empty[MemberKey, MemberFacts]
+    private val seenTypes   = collection.mutable.Set.empty[String]
+
     def build(types: List[CtType[?]]): Program =
       // the FILE header goes on every top-level type the file declares, and the type's own
       // comments come from `classDef` — see `fileHeader` for why the two are separate fields.
       val units = types.map(t => classDef(t).copy(unitLeading = fileHeader(t)))
-      new Program(units, minter.table, Xref.build(units))
+      new Program(units, minter.table, Xref.build(units),
+                  MemberIndex(seenMembers.toMap, seenTypes.toSet))
 
     // ---- trivia (the original comments) -------------------------------------
     //
@@ -948,16 +957,35 @@ object SpoonTir:
       def isDropped(e: CtExecutable[?], name: String): Boolean =
         subs.dropsMethod(t.getQualifiedName, name,
           e.getParameters.asScala.toList.map(p => Option(p.getType).map(_.getSimpleName).getOrElse("?")))
+      seenTypes += t.getQualifiedName
+      /** Record what this walk SAW, then translate what survives — the two halves of the same pass,
+        * because this is the last place the dropped half exists at all ([[seenMembers]]).
+        *
+        * The interleave is deliberate and load-bearing: `isDropped` and `descriptorOf` mint nothing,
+        * so the order symbols are MINTED in is exactly what it was before this record existed
+        * (`filterNot` then `map`), and a run's `SymId` assignment — which every deterministic
+        * artifact depends on — cannot move. */
+      def walked[E <: CtExecutable[?]](es: List[E], nameOf: E => String)(mk: E => Tree.DefDef): List[Tree.DefDef] =
+        es.flatMap { e =>
+          val nm  = nameOf(e)
+          val key = MemberKey(t.getQualifiedName, nm, descriptorOf(e))
+          if isDropped(e, nm) then
+            seenMembers(key) = MemberFacts(scala.None, execFlags(e), originOf(e), dropped = true)
+            Nil
+          else
+            val d = mk(e)
+            seenMembers(key) = MemberFacts(Some(d.symbol), execFlags(e), originOf(e), dropped = false)
+            List(d)
+        }
       val ctors = t match
-        case c: CtClass[?] => c.getConstructors.asScala.toList.sortBy(posKey)
-                               .filterNot(isDropped(_, "<init>")).map(execDef(id, _, "<init>"))
+        case c: CtClass[?] => walked(c.getConstructors.asScala.toList.sortBy(posKey), _ => "<init>")(
+                                execDef(id, _, "<init>"))
         case _             => Nil
-      val methods = t.getMethods.asScala.toList.sortBy(posKey)
-        .filterNot(m => isDropped(m, m.getSimpleName))
-        // ordinary methods went through with the DEFAULT `overrides = false`; only anonymous-class
-        // methods ever consulted the hierarchy. Scala requires `override` where java requires
-        // nothing, and RefChecks — the phase that says so — had never run to report it.
-        .map(m => execDef(id, m, m.getSimpleName, overrides = overridesInherited(m)))
+      // ordinary methods went through with the DEFAULT `overrides = false`; only anonymous-class
+      // methods ever consulted the hierarchy. Scala requires `override` where java requires
+      // nothing, and RefChecks — the phase that says so — had never run to report it.
+      val methods = walked(t.getMethods.asScala.toList.sortBy(posKey), _.getSimpleName)(m =>
+        execDef(id, m, m.getSimpleName, overrides = overridesInherited(m)))
       // Java INITIALIZER BLOCKS — `static { … }` and instance `{ … }`. These were previously
       // dropped on the floor: nothing referenced `CtAnonymousExecutable`, so `MathUtils` never
       // built its sin/cos table, `CRC` never built its table and `Colors` never registered a
