@@ -83,23 +83,29 @@ object PortabilityCheck:
   def check(program: Program, rules: List[Rule] = jsAndNative): List[Violation] =
     checkAll(program, rules)
 
+  /** The RULE FILTER, over an enumeration this object no longer owns.
+    *
+    * The walk it used to perform inline — every referenced symbol, its `owner#name` (a MEMBER is
+    * identified that way, since an external member's own `fullName` is an interning key), and every
+    * recorded usage — is [[ExternalUsage.all]], because it answers more questions than these 34
+    * rules ask and throwing it away was the reason no artifact of a port's external dependencies
+    * existed anywhere.
+    *
+    * The lift is order-preserving on purpose: [[ExternalUsage.all]] iterates
+    * `program.referenced.toList` and each symbol's usages in exactly the order this loop did, so
+    * `portability(all)`'s promoted baseline in thirteen lanes is byte-identical rather than
+    * merely equal in count. */
   private def checkAll(program: Program, rules: List[Rule]): List[Violation] =
-    program.referenced.toList.flatMap { id =>
-      program.symbolOf(id) match
+    ExternalUsage.all(program).flatMap { row =>
+      val hit = rules.find { r =>
+        if r.exactMember then row.member.contains(r.api)
+        else row.fullName == r.api || row.fullName.startsWith(r.api)
+      }
+      hit match
         case scala.None => Nil
-        case Some(sym) =>
-          // a MEMBER is identified by `owner#name` (an external member's own fullName is an
-          // internal interning key, so the owner's name is what carries meaning here).
-          val memberName = program.symbolOf(sym.owner).map(o => s"${o.fullName}#${sym.name}")
-          val hit = rules.find { r =>
-            if r.exactMember then memberName.contains(r.api)
-            else sym.fullName == r.api || sym.fullName.startsWith(r.api)
-          }
-          hit match
-            case scala.None    => Nil
-            case Some(r) =>
-              val api = if r.exactMember then memberName.getOrElse(r.api) else sym.fullName
-              program.usages(id).map(u => Violation(api, r.why, u.site.origin, u.kind, u.enclosing))
+        case Some(r) =>
+          val api = if r.exactMember then row.member.getOrElse(r.api) else row.fullName
+          row.usages.map(u => Violation(api, r.why, u.site.origin, u.kind, u.enclosing))
     }
 
   /** the top-level type a definition belongs to — used to attribute a violation to the unit that
