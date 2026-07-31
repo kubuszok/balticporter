@@ -7,6 +7,7 @@
 #   just ashley-measure              Ashley + its suite, compiled WITH libGDX core (a dependent port)
 #   just anim8-measure               anim8-gdx, compiled WITH libGDX core (a dependent port)
 #   just gltf-measure                gdx-gltf + its suite, compiled WITH libGDX core (a dependent port)
+#   just screens-measure             libgdx-screenmanager, compiled WITH libGDX core (a dependent port)
 #   just sg-measure                  simple-graphs + its suite
 #   just noise4j-measure             noise4j — emit, checks, break residue, compile, correlate
 #   just jbump-measure               jbump (no suite upstream — the lane re-derives the zero)
@@ -75,6 +76,7 @@ anim8_module  := "anim8-core"
 n4j_module    := "noise4j-core"
 jbump_module  := "jbump-core"
 gltf_module   := "gltf-core"
+screens_module := "screens-core"
 
 # upstream Java, relative to the checkout root
 gdx_src       := "../sge/original-src/libgdx/gdx"
@@ -89,6 +91,7 @@ jbump_src     := "../sge/original-src/jbump/jbump/src"
 # and the day somebody adds a real suite there this lane is what says so.
 jbump_upstream := "../sge/original-src/jbump"
 gltf_src      := "../sge/original-src/gdx-gltf/gltf/src"
+screens_src   := "../sge/original-src/libgdx-screenmanager"
 # gdx-gltf's WHOLE test tree, not the one file the port migrates: SEVEN java files sit there and
 # only ONE is a suite (`AttributesCompareTest`, 8 `@Test`). The other six are `extends Game` demos
 # with a `main` that opens an lwjgl window. `java_test_count` over the tree is what re-derives the
@@ -130,6 +133,13 @@ jbump_deps    := ""
 # junit coordinate is not what RUNS it; it is here because scala-cli must resolve the same surface
 # the frontend did, and because a port resolves what the library DECLARES (see `ashley_deps`).
 gltf_deps     := "--dependency junit:junit:4.12 --dependency org.scalameta::munit:1.0.2"
+# libgdx-screenmanager's `build.gradle` declares gdx 1.13.5 and `com.github.crykn.guacamole:gdx`.
+# libGDX arrives as EMITTED SCALA on this compile, not as a jar, and guacamole is replaced by the
+# hand-written Scala in `screens-core/src/main/scala` — so the only COMPILE coordinate left is the
+# annotation jar those sources are written against. `@Nullable`/`@NullMarked` survive the port as
+# real annotations (an annotation IS a declaration's contract, `Annot` in the TIR), so the jar has
+# to be present or four emitted declarations do not resolve. munit is for the hand-written suite.
+screens_deps  := "--dependency org.jspecify:jspecify:0.3.0 --dependency org.scalameta::munit:1.0.2"
 
 root          := justfile_directory()
 
@@ -602,6 +612,112 @@ gltf-measure:
     headline "$ERRORS" "$TREPORT"
 
 # ---------------------------------------------------------------------------------------------
+# libgdx-screenmanager, compiled TOGETHER with the ported libGDX core.
+#
+# A DEPENDENT port of the same shape as Ashley's and anim8's — every one of its 22 files resolves
+# against libGDX and the collection shims are vendored by libgdx-core, so both source sets are on
+# one scala-cli invocation and this lane must run AFTER `gdx-measure` has re-emitted the base.
+#
+# TWO THINGS THIS LANE HAS THAT NO OTHER ONE DOES:
+#
+#  - **A HAND-WRITTEN SOURCE SET IN `src/main`.** Every other port's `src/main` is empty. This one
+#    ships Scala for ten guacamole types (`com.github.crykn.guacamole:gdx`, a separate upstream this
+#    corpus resolves against and does not port), which `TypeRedirectTransform` re-points the emitted
+#    references at. They are on the compile because without them the port does not have a
+#    `NestableFrameBuffer` — the type upstream depends on guacamole FOR.
+#  - **A MIGRATED TEST COUNT OF ZERO THAT IS NOT AN OMISSION.** Upstream ships 12 `@Test`, and 10 of
+#    them boot `gdx-backend-headless` or call `Mockito.mockStatic`/`spy` on the type under test. No
+#    libGDX backend is ported and neither is bytecode instrumentation portable, so there is no
+#    `ScreensTestMigrate`. The block below prints upstream, emitted and hand-written side by side
+#    rather than letting `0` read as agreement — the same rule `anim8-measure` follows, and the day
+#    a backend is ported it is this block that says the 12 became reachable.
+# ---------------------------------------------------------------------------------------------
+[doc("libgdx-screenmanager, compiled WITH libGDX core (a dependent port)")]
+screens-measure:
+    #!/usr/bin/env bash
+    cd "{{root}}"
+    ROOT="$(pwd)"
+    export CORE_PROJECT="{{core_project}}"
+    . scripts/_lib.sh
+
+    write_run_props "$ROOT" "balticporter.reportPathRoot=$ROOT/{{screens_src}}"
+    REPORT="$ROOT/port-report/ScreensMigrate"
+
+    OUT=$(sbt -client "{{corpus}}/runMain balticporter.corpus.screens.ScreensMigrate" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
+    if ! grep -qE "wrote [0-9]+ Scala files" <<<"$OUT"; then
+      echo "!! ScreensMigrate DID NOT RUN — refusing to measure stale output"
+      grep -E "^\[error\].*\.scala:[0-9]+|^\[error\] +\|" <<<"$OUT" | head -20
+      exit 1
+    fi
+    echo "-- ScreensMigrate (every line it printed) --"
+    sed -n '/building model over/,/wrote [0-9]* Scala files/p' <<<"$OUT"
+    echo
+
+    echo "-- checks: persisted, untruncated, diffed against the baseline --"
+    show_check_report "$REPORT"
+
+    echo
+    echo "-- test discovery --"
+    JAVA_TESTS=$(java_test_count {{screens_src}}/src/test)
+    HAND_TESTS=$(grep -rhoE '(^|[^a-zA-Z0-9_.])test\("' {{screens_module}}/src/test/scala 2>/dev/null | wc -l | tr -d ' ')
+    EMITTED_TESTS=$(grep -rhoE '(^|[^a-zA-Z0-9_.])test\("' {{screens_module}}/src_managed/test/scala 2>/dev/null | wc -l | tr -d ' ')
+    echo "@Test in upstream java: $JAVA_TESTS   emitted by this port: $EMITTED_TESTS"
+    echo "  (10 of the 12 need gdx-backend-headless — NO libGDX backend is ported — or Mockito"
+    echo "   mockStatic/spy over the type under test, which is JVM bytecode instrumentation and"
+    echo "   not portable to the Scala.js/Native targets this port exists for. See PROGRESS.md.)"
+    echo "hand-written munit in {{screens_module}}/src/test/scala: $HAND_TESTS"
+    [ "$JAVA_TESTS" != "12" ] && echo "!! UPSTREAM'S @Test COUNT MOVED ($JAVA_TESTS, was 12) — re-read whether the suite is now migratable"
+    [ "$HAND_TESTS" = "0" ] && echo "!! NO BEHAVIOURAL GATE — this port would compile and prove nothing (CLAUDE.md §3)"
+
+    echo
+    break_residue {{screens_module}}/src_managed
+    echo "-- hand-written support sources (CLAUDE.md §5.5: src/ is the hand-written half) --"
+    echo "$(find {{screens_module}}/src/main/scala -name '*.scala' | wc -l | tr -d ' ') file(s), $(cat $(find {{screens_module}}/src/main/scala -name '*.scala') | wc -l | tr -d ' ') lines — the guacamole replacements TypeRedirectTransform points at"
+
+    echo "-- compile --"
+    # NOTE the ANSI strip: without it `grep -cE '^-- .*Error'` matches nothing and reports 0 for a
+    # port that does not compile — a false NEGATIVE on the headline number.
+    DEPS="{{screens_deps}}"
+    scala-cli compile --scala {{scala_version}} --server=false $DEPS \
+      {{gdx_module}}/src_managed/main/scala {{screens_module}}/src_managed/main/scala \
+      {{screens_module}}/src/main/scala {{screens_module}}/src/test/scala \
+      2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/screensmeasure.txt
+    CLI_STATUS=${PIPESTATUS[0]}
+    ERRORS=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/screensmeasure.txt)
+    compile_guard "$CLI_STATUS" "$ERRORS" "$MEASURE_TMP"/screensmeasure.txt
+    echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/screensmeasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/screensmeasure.txt))"
+    grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/screensmeasure.txt | sort | uniq -c | sort -rn | head
+    echo "-- bare (uncoded) errors by message --"
+    grep -A1 '^-- Error:' "$MEASURE_TMP"/screensmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
+
+    if [ "$ERRORS" = "0" ]; then
+      echo
+      echo "-- run --"
+      scala-cli test --scala {{scala_version}} --server=false $DEPS -Duser.language=en -Duser.country=US \
+        {{gdx_module}}/src_managed/main/scala {{screens_module}}/src_managed/main/scala \
+        {{screens_module}}/src/main/scala {{screens_module}}/src/test/scala \
+        2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/screensrun.txt
+      reconcile_outcomes "$MEASURE_TMP"/screensrun.txt "$HAND_TESTS"
+      echo
+      echo "-- correlation: test failures located to members and Java origins --"
+      # BOTH ports' maps, and no `test=` map: the suite is hand-written, so no srcmap can anchor a
+      # test FRAME on a Java origin — but a failure inside the LIBRARY still resolves through this
+      # port's map, and one that reaches the base resolves through libGDX's.
+      correlate "$REPORT/run-latest" --tests "$MEASURE_TMP"/screensrun.txt \
+        --srcmap "$ROOT/port-report/LibgdxCoreMigrate/run-latest/srcmap.tsv" \
+        --srcmap "$REPORT/run-latest/srcmap.tsv"
+    else
+      echo
+      echo "-- correlation: every error located to its member and its Java origin --"
+      correlate "$REPORT/run-latest" --scalac "$MEASURE_TMP"/screensmeasure.txt \
+        --srcmap "$ROOT/port-report/LibgdxCoreMigrate/run-latest/srcmap.tsv" \
+        --srcmap "$REPORT/run-latest/srcmap.tsv"
+      echo "(not running the suite: it does not compile — a test that cannot run is not a test that passed)"
+    fi
+
+    headline "$ERRORS" "$REPORT"
+
+# ---------------------------------------------------------------------------------------------
 # simple-graphs + its suite — the same gate as `gdx-measure`.
 #
 # simple-graphs is a VENDORED-runtime port (RuntimeMode.Vendored): the shim family it retypes onto
@@ -933,7 +1049,7 @@ jbump-measure:
 measure-all:
     #!/usr/bin/env bash
     cd "{{root}}"
-    for lane in gdx-measure gdx-test-measure ashley-measure anim8-measure gltf-measure sg-measure noise4j-measure jbump-measure; do
+    for lane in gdx-measure gdx-test-measure ashley-measure anim8-measure gltf-measure sg-measure noise4j-measure jbump-measure screens-measure; do
       echo
       echo "################################################################## just $lane"
       if ! {{just_executable()}} "$lane"; then

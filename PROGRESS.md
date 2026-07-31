@@ -20,6 +20,7 @@ just gdx-test-measure     # libGDX's own suite (… → compile → RUN → corr
 just ashley-measure       # Ashley + its suite, compiled WITH libGDX core
 just anim8-measure        # anim8-gdx, compiled WITH libGDX core (a dependent port; hand-written suite, §7)
 just gltf-measure         # gdx-gltf + both its suites, compiled WITH libGDX core (§7.5)
+just screens-measure      # libgdx-screenmanager, compiled WITH libGDX core (hand-written suite, §8)
 just sg-measure           # simple-graphs + its suite
 just noise4j-measure      # noise4j (no upstream test suite — the lane asserts that, see §5)
 just jbump-measure        # jbump — a library that ships NO suite; the lane re-derives that zero (§6)
@@ -48,7 +49,7 @@ Measurements below are from one serial run of all lanes, 2026-07-31.
 
 ## 1. Corpus inventory
 
-Seven libraries are ported on the current (TIR) pipeline, across eleven runs — a library and its own
+Eight libraries are ported on the current (TIR) pipeline, across twelve runs — a library and its own
 test suite are two ports, and the suite is a *dependent* of the library:
 
 | port | upstream | files in / out | tests | compile |
@@ -60,6 +61,7 @@ test suite are two ports, and the suite is a *dependent* of the library:
 | `anim8` | anim8-gdx `src/main/java` | 16 → **16** (0 dropped, 0 injected) | **23** hand-written, all passing — upstream has NO suite (§7.1) | **0** |
 | `gltf` | gdx-gltf `gltf/src` | 135 → **135** (0 dropped, 1 injected) | — | **8** (§7.5.4, all classified) |
 | `gltf-test` | gdx-gltf `gltf/test` | 1 of 7 → **1** (§7.5.1) | **8** ported + **22** hand-written, **none run** — the port does not compile | — |
+| `screens` | libgdx-screenmanager `src/main/java` | 22 → **22** (0 dropped, 0 injected) | **16** hand-written, all passing — upstream's 12 need an unported BACKEND (§8 libgdx-screenmanager) | **0** |
 | `simple-graphs` | simple-graphs `src/main` | 29 → **33** | — | **0** |
 | `simple-graphs-test` | simple-graphs `src/test` | 7 → **7** | **16**, all passing | **0** |
 | `noise4j` | noise4j `src` | 12 → **12** | **none upstream** (§5) | **2** |
@@ -195,7 +197,7 @@ NOTICE / THIRD-PARTY files are hand-maintained and are not.
 
 1. (Tier 1 is complete: `sge-ecs`, `sge-graphs`, `sge-noise` and `sge-jbump`'s upstreams are
    all ported by the engine — §3, §4, §5 and §6.)
-2. **`sge-gltf`, `sge-anim8`, `sge-vfx`, `sge-screens`** — mid-size, high coverage, few surprises.
+2. **`sge-gltf`, `sge-vfx`** — mid-size, high coverage, few surprises. (`sge-anim8`'s and
 3. **`ssg-liquid`** — small Java surface, but resolve the ANTLR decision first. Its 105 upstream test
    files are the best available proving ground for test porting after libGDX.
 4. **`sge-ai`, `sge-visui`, `sge-textra`, `sge-colorful`** — large, each with a named redesign that must
@@ -1230,6 +1232,205 @@ files that have no upstream counterpart. Two things it settles and one it does n
   `BinaryDataFileResolver.java:97`, and `toJson` at `GLTFExporter.java:238`, are inert at run time.
   That is an inherited decision, not a gdx-gltf one, and it is why loading a real `.gltf` is not
   something this port can be tested for today.
+
+---
+
+## 8. libgdx-screenmanager — the port with a dependency the corpus does not own
+
+`de.eskalon.commons.{screen,core,utils} → sge.screen{,.utils}`, Apache-2.0. **A dependent port of
+libGDX core**, in the same shape as Ashley's and anim8's: `just screens-measure` compiles libGDX
+core's emitted Scala, screenmanager's emitted Scala, screenmanager's HAND-WRITTEN support sources
+and its hand-written suite on **one** `scala-cli` invocation, and must run after `just gdx-measure`.
+
+**Why it is in the corpus.** It is the first library whose upstream depends on ANOTHER library this
+corpus neither vendors nor ports. `build.gradle` declares
+
+```
+api "com.github.crykn.guacamole:gdx:v0.3.6" // is exposed because of NestableFrameBuffer
+```
+
+and ten guacamole types reach into these 22 files. That is a shape every real library has and no
+corpus library had yet — libGDX core depends on nothing, and Ashley, anim8 and the test suites all
+depend on a module the corpus DOES port. It is also the first port to ship a non-empty
+`src/main/scala`.
+
+### 8.1 Scope, named rather than silently dropped
+
+`src/main/java`, 22 types (23 files minus `package-info.java`).
+
+`src/example/java` (5 files) is out of scope and named: it is a `gdx-backend-lwjgl3` demo
+application, and no libGDX backend is ported (§1.1's first surprise). `src/test/java` is §8.4.
+
+### 8.2 Measured state
+
+| gate | `screens` |
+|---|---|
+| compile errors (with libGDX core, Scala 3.8.4) | **0** |
+| files emitted | **22** (0 dropped, 0 injected) |
+| hand-written support sources (`src/main/scala`) | **9 files, 458 lines** — the guacamole replacements |
+| model | 627 units / 52,867 symbols |
+| signature consistency · omissions | 0 · **0** |
+| portability (all / emitted / injected) | 151 / **0** / 0 |
+| substitutions (emitted / dangling) · manifest · port map · policy · remediation | 0 · 0 · 0 · 0 · 0 · 0 |
+| collection closure · boundary · shared-iterator | 0 · 0 · 0 |
+| trivia | **7** |
+| porter notes uncovered · break residue | 0 · **0** |
+| source map | 22 units / 175 members; port map 37 types / 169 members |
+| decisions recorded | 139 rows (`RenamedMember` 45, `RetypedSignature` 34, `RenamedPackage` 22, `DroppedMember` 16, `DroppedType` 11, `FunnelledCtor` 11); 1,810 withheld as the base's (`ENGINE-LIMITS` D2) |
+| **tests** | **16 of 16 PASSING** (hand-written; upstream's 12 are §8.4) |
+
+**`omissions` and `portability(emitted)` are both 0**, which no other dependent port has managed —
+the 151 portability sites are libGDX core's own, seen through the resolution root, and identical to
+what `just gdx-measure` reports.
+
+**Error trajectory.** Two numbers, because two different things were being counted:
+
+- **guacamole references the emitted Scala could not resolve: 26 → 0**, closed by the engine fix in
+  §8.5. Measured by `grep -o 'de\.damios[A-Za-z0-9_.]*' screens-core/src_managed`, NOT by the
+  compiler, because the compiler never saw them: the fix landed before the first compile. 23 static
+  calls and 3 annotations.
+- **compile errors: 5 → 0.** Four `@org.jspecify.annotations.Nullable` (the annotation jar was not
+  on the lane's compile classpath — a real upstream dependency, now a `screens_deps` coordinate) and
+  one shim written against a Scala vararg where the engine emits a Java `T...` as `Array[T]`
+  (`ENGINE-LIMITS` K6.5, from the other side: the SHIM has to match what the emitter produces).
+
+### 8.3 guacamole — a dependency the corpus resolves and does not port
+
+Resolution and emission are two problems and only the first was already solved.
+
+**Resolution** is `ScreensClasspath`, which fetches exactly what `build.gradle` declares
+(`com.github.crykn.guacamole:gdx:v0.3.6` from jitpack, plus `org.jspecify:jspecify`) with `cs fetch
+--classpath` and writes the one joined line `FrontendConfig.classpath` reads — the mechanism
+`SimpleGraphsClasspath` established for JUnit, and for the same reason: an import the frontend
+cannot resolve does not fail, it resolves WRONGLY. libGDX itself is EXCLUDED from that fetch,
+because it arrives as a source resolution root and a second copy from a jar would be a second answer
+to every `com.badlogic.gdx.*` name.
+
+**Emission** is `TypeRedirectTransform` — the engine's existing §1(b) mechanism for a type a module
+must reference and cannot ship — re-pointing all ten at `sge.screen.guacamole.*`, which
+`screens-core/src/main/scala` supplies. That is the whole of this port's library-specific policy:
+**no §1(c) rule, no new phase, no new phase parameter.** The table is nine lines in `ScreensPolicy`.
+
+The replacements are hand-written, which is a statement about SCOPE and not about quality — they are
+the hand-written half of a port (`CLAUDE.md` §5.5), each carrying guacamole's own Apache-2.0
+attribution, and each with a note on what it deliberately does not reproduce (`Preconditions`'
+`checkNotEmpty`, `NestableFrameBuffer`'s builder: a shim member with no caller is untested code that
+reads as verified). **The day guacamole becomes a corpus port of its own, the redirect table and
+this directory are deleted together** and the emitted references follow that port's own rename.
+
+Two things the shims must get exactly right, both learned from a failure:
+
+- **the JDK exception TYPE each precondition raises.** `checkArgument`/`checkState`/`checkNotNull`
+  are `IllegalArgumentException`/`IllegalStateException`/`NullPointerException`. Scala's `require`
+  is the obvious substitute and raises `IllegalArgumentException` for all three, which would turn
+  "used before `initialize()`" from a state error into an argument error — silently, with a green
+  compile. The suite asserts each one.
+- **`Pair`'s field NAMES.** The emitted `ScreenManager` reads `pair.x` / `pair.y` directly, because
+  that is what Java resolved. A `Tuple2` has `_1`/`_2` and would compile at the declaration and fail
+  at every use.
+
+### 8.4 The upstream suite is NOT migrated — 12 `@Test`, 10 of them structurally out of reach
+
+Upstream ships 7 test files and 12 `@Test`. There is no `ScreensTestMigrate`, and the reason is not
+effort:
+
+- **`LibgdxUnitTest`, the base class of six of the seven files, boots
+  `com.badlogic.gdx.backends.headless.HeadlessApplication`.** No libGDX backend is ported, by this
+  engine or by the reference hand port. There is nothing to compile the fixture against.
+- **`ScreenManagerUnitTest` adds `Mockito.mockStatic(ScreenFboUtils.class)` and
+  `Mockito.spy(new ScreenManager())`.** Both instrument JVM bytecode of the type under test at run
+  time — `mockStatic` in particular replaces a static method of the ported library so the tests
+  never touch GL. The port exists for Scala.js and Scala Native, where neither is available.
+
+Only `BasicInputMultiplexerTest` and `TimedScreenTransitionTest` need neither, and both of their
+bodies are reproduced in the hand-written suite, marked `(upstream)`.
+
+So the behavioural gate is **16 hand-written MUnit tests** in `screens-core/src/test/scala`, adapted
+from upstream's two reachable tests and from the reference hand port's six suites. `just
+screens-measure` prints upstream `@Test`, emitted, and hand-written side by side and says which of
+the twelve are unreachable and why — `0` emitted must not read as agreement, and the day a backend
+is ported that block is what says the twelve became reachable.
+
+**What the suite found that no count did.** One assertion was written expecting `pushScreen(screen,
+null)` to queue a NULL transition supplier. Upstream writes `pushScreen(() -> screen, () ->
+transition)` unconditionally, so the supplier is non-null and yields null — the difference between
+`render` NPE-ing and playing no transition. The port was faithful and the test was wrong; nothing
+but running it could have said so.
+
+**What the suite cannot reach, stated rather than implied.** Everything below runs with no GL
+context and no `Gdx.app`. `NestableFrameBuffer`'s nesting contract, `QuadMeshGenerator`'s vertex
+layout and `ScreenManager.render`'s framebuffer round trip all issue a GL call on their first
+statement. They are covered by compilation only. That is the same limit anim8's suite has and for
+the same reason (§7.8).
+
+### 8.5 What this library taught the engine — two (a) fixes, no (b), no (c)
+
+Both are completeness gaps in machinery that already existed, both are in `ENGINE-LIMITS.md`, both
+are pinned by `TypeRedirectTransformSpec`, and both moved **0 members** on every other port:
+
+| key | the gap | measured |
+|---|---|---|
+| `ENGINE-LIMITS` M5.8 | `StandardTraversal.mapSymbols` routed `Symbol.info` and NOT `Symbol.annotations`, so EVERY retyping phase in the engine left an annotation naming the type it had just moved | 3 sites here; 0 members changed on libGDX core, Ashley, anim8, simple-graphs, noise4j, jbump |
+| `ENGINE-LIMITS` D8 | `TypeRedirectTransform` promised "every reference moves together, so a partial redirect is impossible" and rewrote `TypeRepr` only — a static access is rendered from a `Tree.Ident`'s SYMBOL, or from the member's OWNER when the type was parsed | 23 sites here; the parsed half is proven by the spec and by no corpus number |
+
+The second one is the more transferable lesson: **a phase whose doc claims totality owes a spec per
+OCCURRENCE KIND, with the negative half.** The positive assertion passes on a partial redirect. The
+promise went untested for as long as it did because the first library to use the phase redirected a
+type with no statics and no annotation use.
+
+### 8.6 Where this port is strictly better than the reference hand port
+
+`sge-extension/screens` is 20 Scala files to these 22 Java ones (§1.1: 86 % coverage). The
+difference is not only arithmetic:
+
+- **`NestableFrameBuffer` is absent from sge**, which uses a plain `FrameBuffer` for the screen
+  manager's own two buffers. libGDX's `FrameBuffer.end()` calls `GLFrameBuffer.unbind()`, which
+  binds framebuffer **0** — the default — whatever was bound on `begin()`. So a screen or transition
+  that binds an FBO of its own inside a managed render unbinds to the DEFAULT buffer when it
+  finishes, and the manager's buffer is silently lost for the rest of the frame. Nothing about that
+  is a compile error and nothing throws; the frame comes out wrong. It is the type upstream depends
+  on guacamole FOR, and this port carries it — **verified present in the emitted
+  `ScreenManager.createFrameBuffer()`, whose return type is the redirected
+  `sge.screen.guacamole.NestableFrameBuffer`.** (What is NOT verified is its RUNTIME behaviour: see
+  §8.4 — the nesting contract needs a GL context.)
+- **`ManagedScreenAdapter`, `BasicInputMultiplexer` and `Supplier` are simply not in sge.** All
+  three are ported mechanically here, and the hand-written suite covers all three — including
+  upstream's own `BasicInputMultiplexerTest`, which is coverage of a type the reference port does
+  not have at all.
+
+sge did hand-port guacamole's `QuadMeshGenerator` into `sge.screen.utils`, and it also renamed
+`ScreenTransition.render`'s parameters and moved `ManagedGame` from `core` to `screen`. The package
+flattening is followed (three rename pairs, §8.3); the parameter renaming is not, because it is a
+redesign no mechanical rule produces.
+
+### 8.7 Do NOT retry
+
+- **Do not fix a static redirect by remapping the qualifier `Ident` alone.** For a type the frontend
+  PARSED, `TirEmitter.staticThroughInstance` re-derives the name from the member's owner and undoes
+  it one layer later — silently, with no count moving (`ENGINE-LIMITS` D8).
+- **Do not give a minted redirect TARGET a self `TypeRef` as its `info`.** `TirEmitter.isTypeRef`
+  reads exactly `fullName` dotted, `#`-free and `info == NoType` to decide that an external symbol
+  is a TYPE; a self `TypeRef` reads as a term and the static half emits an unqualified identifier —
+  valid Scala naming nothing. Measured and reverted in the same cycle.
+- **Do not put guacamole on the frontend classpath without excluding libGDX.** guacamole's POM
+  pulls `com.badlogicgames.gdx:gdx:1.13.5`, and this port resolves libGDX from SOURCE; two answers
+  to every `com.badlogic.gdx.*` name, decided by scan order, is not something to leave to chance.
+- **Do not attempt the upstream suite before a libGDX backend is ported** (§8.4). Ten of the twelve
+  tests are a fixture, not a body.
+
+### 8.8 Remaining
+
+- **7 trivia residues**, all `// don't do anything by default` / `// do nothing` / `// not needed`
+  line comments inside method bodies the emitter renders as `()`. `ENGINE-LIMITS` V1: a comment on a
+  construct the EMISSION consumes has nowhere to go.
+- **Behavioural coverage is 16 tests over 8 of 22 types**, and the GL half of the library is covered
+  by compilation only (§8.4). The eleven concrete transitions all render through a `SpriteBatch` or
+  a `ShaderProgram`; `ShaderCompatibilityHelper`'s pure string rewrites are asserted, the rest is
+  not.
+- **guacamole is not ported.** Ten types are hand-written Scala rather than emitted, which is 458
+  lines this port cannot regenerate. It is the obvious next library: it is 37 files / 3,544 lines
+  across two Maven modules, Apache-2.0, and porting it would delete `ScreensPolicy.guacamole`
+  outright — the cleanest available demonstration that a redirect is a stopgap and a port is not.
 
 ---
 

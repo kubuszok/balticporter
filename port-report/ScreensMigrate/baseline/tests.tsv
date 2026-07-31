@@ -1,0 +1,17 @@
+#suite	test	status
+sge.screen.ScreenmanagerSuite	BasicInputMultiplexer: batch and single add/remove (upstream)	pass
+sge.screen.ScreenmanagerSuite	ManagedScreen: the clear colour defaults to BLACK and input processors start empty	pass
+sge.screen.ScreenmanagerSuite	ManagedScreenAdapter and BlankScreen: every lifecycle method is a no-op that returns	pass
+sge.screen.ScreenmanagerSuite	Pair: fields, equality, hash and toString match upstream	pass
+sge.screen.ScreenmanagerSuite	Preconditions: each check raises the JDK exception upstream raises	pass
+sge.screen.ScreenmanagerSuite	ScreenManager: a queued push is held as a Pair of suppliers, transition first	pass
+sge.screen.ScreenmanagerSuite	ScreenManager: pushing a null screen is a NullPointerException	pass
+sge.screen.ScreenmanagerSuite	ScreenManager: using it before initialize() is an IllegalStateException, not an argument error	pass
+sge.screen.ScreenmanagerSuite	ScreenTransition: show/hide default to no-ops and the clear colour defaults to BLACK	pass
+sge.screen.ScreenmanagerSuite	ShaderCompatibilityHelper: the 120→150 rewrites, which need no GL context	pass
+sge.screen.ScreenmanagerSuite	SlidingDirection: four directions, with the factors upstream declares	pass
+sge.screen.ScreenmanagerSuite	SlidingDirection: name() and valueOf round-trip, and an unknown name throws	pass
+sge.screen.ScreenmanagerSuite	TimedTransition: a non-positive duration is rejected	pass
+sge.screen.ScreenmanagerSuite	TimedTransition: interpolation is applied to progress, not to delta	pass
+sge.screen.ScreenmanagerSuite	TimedTransition: isDone after the duration elapses, and show() resets it (upstream)	pass
+sge.screen.ScreenmanagerSuite	TimedTransition: progress is timePassed/duration and clamps at 1	pass
