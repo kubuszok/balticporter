@@ -474,10 +474,19 @@ final class TirEmitter(
     * `extends` and `new` are the other two, and they already have [[extendedTypes]] and
     * [[instantiatedTypes]].
     *
-    * The type's OWN declarations do not count: a class names itself in its members' owner types and
-    * in its synthesised constructor, so the owner chain of each symbol is climbed and a candidate it
-    * reaches is skipped. Without that every class would name itself and the collapse would be
-    * disabled outright rather than narrowed. */
+    * The type's OWN declarations do not count — for the DECLARATION arm: a class names itself in
+    * its members' owner types and in its synthesised constructor, so the owner chain of each symbol
+    * is climbed and a candidate it reaches is skipped. Without that every class would name itself
+    * and the collapse would be disabled outright rather than narrowed.
+    *
+    * A CLASS LITERAL in the type's own unit DOES count, deliberately. The java idiom for a log tag
+    * is `private static final String TAG = VfxGLUtils.class.getSimpleName();` inside `VfxGLUtils`
+    * itself; collapsed, `classOf[VfxGLUtils]` names nothing — and `classOf[VfxGLUtils.type]` is NOT
+    * the answer, because `getSimpleName` on it is `"VfxGLUtils$"`, a silently different string than
+    * java's (CLAUDE.md §3). Keeping the class costs nothing: its statics move to the companion,
+    * which is where an `object` put them anyway, so every `X.member` call site is unchanged.
+    * (Measured on gdx-vfx; subtracting the literal's own unit — the first shape of this merge —
+    * fails exactly that case in `StaticCollapseSpec`.) */
   private lazy val typeNamedElsewhere: Set[SymId] =
     given Program = program
     val out = collection.mutable.Set[SymId]()
@@ -505,12 +514,13 @@ final class TirEmitter(
     program.symbols.all.foreach { s => out ++= typesIn(s.info) -- enclosing(s.id) }
 
     // (2) class literals, which declare nothing. Scanned with the standard traversal so a `.class`
-    // inside an anonymous-class body or a lambda is reached like any other term.
+    // inside an anonymous-class body or a lambda is reached like any other term. The literal's OWN
+    // unit is NOT subtracted here — `X.class` inside `X` still needs `classOf[X]` (the log-tag
+    // idiom; see the doc above). Own-unit self-naming is only excluded on the declaration arm.
     program.units.foreach { u =>
-      val here = declaredTypes(u)
       out ++= StandardTraversal.scanClassDef(u, Set.empty[SymId]) { (acc, term) =>
         term match
-          case Tree.Literal(Constant.ClassOfC(t), _, _) => acc ++ (typesIn(t) -- here)
+          case Tree.Literal(Constant.ClassOfC(t), _, _) => acc ++ typesIn(t)
           case _                                        => acc
       }
     }
