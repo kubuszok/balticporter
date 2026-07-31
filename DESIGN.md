@@ -1480,6 +1480,40 @@ default at that slot. Everything *not* in a root's leading run stays a post-dele
 that root's secondary, in source order — which is what makes interleaved statements a **degradation
 rather than a wall**.
 
+**The third condition above is TWO conditions, and conflating them demotes half the corpus.** "No
+delegating constructor or method assigns it again" is the *`val`* condition (A1): it decides whether
+the slot binds as `val f = slot` or `var f = slot` in the primary body, and a field with an ordinary
+setter fails it while remaining a perfectly good SLOT. Slot eligibility is conditions 1–2 plus
+order-safety below; `val`-vs-`var` is decided afterwards, per field, from the whole-program
+assignment count the plan data already carries. Reading the three as one gate would have demoted
+most settered fields to the no-slot path for no semantic reason.
+
+**Order-safety: a slot value evaluates BEFORE super; Java evaluated it AFTER.** Java runs a
+constructor body's field assignments after `super(...)` and after the instance initialisers; a value
+hoisted into the delegation argument list runs before both. Condition 2 (no `this`) already removes
+instance-state reads — Scala enforces it in a delegation argument list — but a static read, a
+companion call or a `new` can still observe the reordering. The rule: a slot value must be
+ORDER-BLIND — composed of the secondary's own parameters, literals, and operator applications on
+those; an expression containing any method call, `new`, array read or static/field read stays a
+post-delegation assignment of its secondary, `reason=order` recorded per field. Step 3 measures the
+survivor count first; a purity allow-list is only worth designing if that number says so. (This is
+§4.4's discipline applied to the funnel's own synthesis: ask what the form means when its evaluation
+ORDER is observed, not only what it looks like.)
+
+**Build order inside step 3: the disambiguator comes FIRST, the slots second.** Field slots make a
+synthetic signature look exactly like a value class's all-fields constructor — which is the moment
+C8's applicability test starts refusing widenings. With the marker (C9) already in place the
+applicability problem cannot arise (the marker changes the primary's arity), so landing marker-then-
+slots turns a correctness cliff into a non-event. The reverse order was the plan's original text and
+is retired.
+
+**Step 4's acceptance, rescoped by measurement.** The original "gltf's D4 trio → 0" double-counted:
+one of the three was the local shape and fell in step 2 (8 → 7); the other two reach TWO DIFFERENT
+parent constructors — genuine walls, out of local derivation's reach by definition, waiting on
+§8.3's seeded row or remaining as recorded walls. The fixpoint deletion for non-wall classes
+therefore expects NO error movement anywhere; its gate is the escapes count and the deleted code,
+not an error delta.
+
 **A consumed assignment's TRIVIA rides the slot** (§4.58 — the comment is the licence-bearing part of
 the port, and nothing else in the pipeline can see it go). A `this.f = e` folded into a slot does not
 disappear from the emitted file: its comment rides the **primary body's** assignment of that field,
