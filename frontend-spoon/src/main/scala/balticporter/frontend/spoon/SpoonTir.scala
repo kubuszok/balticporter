@@ -2530,8 +2530,18 @@ object SpoonTir:
                   // loader's. Both sides are concrete for us, so java's silent conversion must be
                   // written. (The ARGUMENT is not raw here — spoon fills the diamond — so testing
                   // the argument instead is a no-op; measured.)
+                  // …and `uncheckedFrom(t.tpe, ct)`, the ERASED direction: the ARGUMENT is an
+                  // `Object`-parameterised view of exactly the slot's type. That is what a chain
+                  // through an ERASED RECEIVER produces — `pool.obtain().asInstanceOf[Wrapper[
+                  // Object]].initialize(…)` has result type `Wrapper[Object]` where the slot is
+                  // `Wrapper[T]` — and it is java's unchecked conversion just as much as the other
+                  // two: javac stopped checking at the raw `Pool<Wrapper>` the value came from.
+                  // Narrow by construction: `uncheckedFrom` demands the same type CONSTRUCTOR, the
+                  // same arity, and every differing argument to be `Object` or a wildcard, which is
+                  // precisely the shape of an erased or raw use and of nothing else.
                   case Some(ct) if ct != t.tpe && !ct.isInstanceOf[TypeBounds] &&
-                                   (hasWildcard(t.tpe) || uncheckedFrom(ct, t.tpe) || rawElement) =>
+                                   (hasWildcard(t.tpe) || uncheckedFrom(ct, t.tpe) ||
+                                    uncheckedFrom(t.tpe, ct) || rawElement) =>
                     Tree.Typed(t, tt(ct, argEs(i)), ct, t.origin)
                   case _ => t
               }
@@ -2653,13 +2663,35 @@ object SpoonTir:
                 case a                      => a
               }).collect { case (n, a) if a != null && tpResolvable(a) => n -> tpe(a) }.toMap
             catch { case _: Throwable => Map.empty }
+          // A RAW declared result, read through an ERASED receiver, is where the node's type and the
+          // emitted scala part company (ENGINE-LIMITS §0). `Wrapper initialize(T, int)` called on
+          // `pool.obtain().asInstanceOf[Wrapper[Object]]` EMITS a `Wrapper[Object]` — the receiver
+          // cast decided that — while `ty(inv)` renders the raw `Wrapper` through the caller's own
+          // name-directed fill and says `Wrapper[T]`. Nothing is cast here, because nothing is
+          // wrong with the expression; what is wrong is the type recorded ON it, and every later
+          // rule that consults `tpe` then reasons about a type the output does not have. The one
+          // that matters is `knownReceiverArgs`, which found argument and slot equal and emitted no
+          // unchecked conversion for a conversion java really did perform.
+          //
+          // `substFormal` cannot answer this: it returns `None` for a raw use with arity > 0, by
+          // design, because there is nothing to substitute. The erased instantiation is what the
+          // receiver cast already committed to.
+          // re-TYPE the call node, emitting nothing: `Apply` is the only shape this path produces.
+          def retyped(t: Term, want: Option[TypeRepr]): Term = (t, want) match
+            case (a: Tree.Apply, Some(w)) if w != a.tpe => a.copy(tpe = w)
+            case _                                      => t
+          val rawErasedResult = declRet.filter(d => d != null && !d.isPrimitive && isRawGenericUse(d)).flatMap { d =>
+            val arity = try Option(d.getTypeDeclaration).map(_.getFormalCtTypeParameters.size).getOrElse(0)
+                        catch { case _: Throwable => 0 }
+            Option.when(arity > 0)(AppliedType(TypeRef(NoPrefix, typeSym(d)), List.fill(arity)(objectT)))
+          }
           declRet match
             case Some(d) if d != null && !d.isPrimitive && mentionsTypeVarFilled(d, subst.keySet) =>
               substFormal(d, declSubst) match
                 case Some(ct) if ct != app.tpe && ct != NoType && !hasWildcard(ct) =>
                   Tree.Typed(app, tt(ct, inv), ct, originOf(inv))
-                case _ => app
-            case _ => app
+                case _ => retyped(app, rawErasedResult)
+            case _ => retyped(app, rawErasedResult)
 
       /** The result type an ERASED ARGUMENT drags with it.
         *
