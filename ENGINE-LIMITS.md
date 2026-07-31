@@ -1644,6 +1644,31 @@ Two consequences:
   not the one that caused it. Read a surprising test failure with this in mind before blaming the
   commit under test.
 
+### M5.8 A symbol's ANNOTATIONS are types too — and `mapSymbols` was not showing them
+
+`StandardTraversal.mapSymbols` routed each `Symbol.info` through `transformType` and nothing else.
+`Symbol.annotations` is a `List[Annot]`, each with a `tpe`, and the emitter renders `@…` from
+exactly that `tpe` — so **every retyping phase in the engine had the same blind spot**: it moved a
+type in every signature, every `new`, every cast and every type argument, and left the annotation
+naming the type it had just removed.
+
+Measured on a port whose §1(b) type redirect moved a third-party marker annotation: **3 sites**, and
+the only symptom was three `value <pkg> is not a member of` errors in the emitted file. No check
+moved, no test broke, and the phase's own policy report said the entry had fired — because it had,
+everywhere except here.
+
+Two things this generalises to, before the next traversal is narrowed:
+
+- **An annotation is a declaration's CONTRACT** (the `Annot` doc says so at length: a `@Test` that
+  does not survive runs zero tests and reports success). A traversal that treats it as decoration is
+  wrong for the same reason dropping it is.
+- **The annotation's ARGUMENTS are terms**, and terms are reached by the tree walk that visits the
+  declaration, not from the symbol table. `mapSymbols` deliberately does not touch them; a phase
+  that needs to rewrite an annotation argument needs a tree hook, not this one.
+
+*Fix kind: (a) engine — done; pinned by `TypeRedirectTransformSpec`'s annotation case, which is the
+one that fails if the traversal is narrowed again.*
+
 ### M6. Refuse and COUNT rather than approximate
 
 Three places where the port deliberately carries a number instead of a guess, and each is the right
@@ -1990,6 +2015,52 @@ modules rewriting a shared call differently is drift). Until it exists, a depend
 inherited drop from inside a large method has exactly one honest outcome, which is to count it.
 
 *Fix kind: (b) — an engine phase that does not exist yet, not a library rule.*
+### D8. A TYPE REDIRECT that only rewrites `TypeRepr` is a PARTIAL redirect — and its own contract said that was impossible
+
+`TypeRedirectTransform` is the (b) mechanism a dependent uses for a type it cannot ship and cannot
+inject at the other module's FQN. Its doc promised "every reference moves together, so a partial
+redirect is impossible". It rewrote `transformType` and nothing else, and a type occurrence is only
+one of the THREE ways a reference to a type reaches the emitted file:
+
+| the occurrence | where the emitter reads the name from | reached by `transformType`? |
+|---|---|---|
+| a field/parameter/result type, a `new`, a cast, a type argument | the node's `TypeRepr` | yes |
+| a static access `T.m(…)` / `T.F` | `Tree.Ident`'s **SymId**, or — when `T` was PARSED — the member symbol's **OWNER**, via `TirEmitter.staticThroughInstance` | no |
+| `@T` on a declaration | `Symbol.annotations`, see M5.8 | no |
+
+**And the second row has two answers, which is the part that costs a cycle.** A redirected type the
+frontend never parsed (a jar on the frontend classpath) reaches its statics through an explicit
+`Select(Ident(type), member)`, so remapping the `Ident`'s symbol is enough. A redirected type the
+frontend DID parse — a resolution root, which is the ORDINARY case for a dependent — is re-qualified
+by the emitter from the member symbol's owner, which deliberately ignores the qualifier in the tree
+(that behaviour is right: it is what turns Java's legal `instance.staticMethod()` into Scala's
+required `Type.staticMethod()`). Remap the `Ident` alone and the emitter silently undoes it one
+layer later. Both are needed, and the second is a symbol-table edit: re-point the members' `owner`
+and rebuild their `fullName` by replacing the owner's prefix.
+
+Measured on the first library to redirect types WITH a static surface: **26 references** across 10
+redirected types — **23 static calls and 3 annotations** — every one of them naming a package the
+port does not declare, in a port whose every check reported clean and whose emitted files were
+otherwise complete. The first library to use the phase redirected one type with no statics and no
+annotation use, which is why the promise went untested for as long as it did.
+
+Be exact about which half each fix answers, because the corpus only measures one of them. That
+library resolves its redirected types from a JAR, so all 26 sites were the FIRST shape and the
+`Ident` remap alone closed them (`0` members changed when the owner half landed on top). The
+PARSED shape — the ordinary one for a dependent, and the one the emitter re-qualifies — is proven
+by `TypeRedirectTransformSpec`'s static-call case and by no corpus number.
+
+Two rules that fall out:
+
+- **A phase whose doc claims totality owes a spec PER OCCURRENCE KIND**, with the negative half
+  (`assertNotEmits`) — the positive one passes on a partial redirect.
+- **Do not redirect a type the port also EMITS.** Moving the members' owner is exact only because the
+  contract is that this module does not ship the type; a module that shipped it would emit the
+  declaration under one name and every reference under another. Nothing enforces this, and nothing
+  can: it is a coherence property of the configuration.
+
+*Fix kind: (a) engine — the mechanism was incomplete, not the policy. Done; pinned by
+`TypeRedirectTransformSpec`.*
 
 ---
 

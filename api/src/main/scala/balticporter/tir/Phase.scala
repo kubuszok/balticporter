@@ -245,8 +245,27 @@ object StandardTraversal:
 
   private def mapTpt(ph: Phase, tt: TypeTree)(using Program): TypeTree = TypeTree(mapType(ph, tt.tpe), tt.origin)
 
+  /** Route every TYPE a symbol record carries through `ph.transformType` — its `info` AND the type
+    * of each of its annotations.
+    *
+    * The annotations half is not decoration. `Symbol.annotations` is where `@Test`, `@Deprecated`
+    * and every library's own marker live, and the emitter renders each from `Annot.tpe` — so a
+    * retyping phase that is not shown them re-points a type EVERYWHERE ELSE and leaves the
+    * annotation naming the old one. There is no way for the phase to notice: the emitted file is
+    * uncompilable at exactly one line per annotated declaration, no check counts it, and the
+    * phase's own policy report says the entry matched. Measured on a port whose §1(b) type
+    * redirect moved a third-party marker annotation: 3 sites, all of them silent
+    * (`ENGINE-LIMITS.md` M5.8 "A symbol's ANNOTATIONS are types too").
+    *
+    * The annotation's ARGUMENTS are terms, and terms are reached by the tree walk that visits the
+    * declaration — not from here, which sees the symbol table alone. */
   def mapSymbols(ph: Phase, tbl: SymbolTable)(using Program): SymbolTable =
-    tbl.all.foldLeft(tbl)((t, s) => t.updated(s.copy(info = mapType(ph, s.info))))
+    tbl.all.foldLeft(tbl)((t, s) =>
+      t.updated(s.copy(
+        info        = mapType(ph, s.info),
+        annotations = s.annotations.map(a => a.copy(tpe = mapType(ph, a.tpe))),
+      ))
+    )
 
   // -- trees --
   def mapClassDef(ph: Phase, t: Tree.ClassDef)(using Program): Tree.ClassDef =
