@@ -2244,11 +2244,49 @@ final class TirEmitter(
     case Constant.UnitC      => "()"
     case Constant.ClassOfC(t) => s"classOf[${tpe(t)}]"
 
+  /** Render a string or char literal's VALUE as Scala source that denotes the same value.
+    *
+    * A `Constant.StringC` holds the DECODED text, so every character in it has to be put back in a
+    * form Scala's lexer accepts inside `"…"` / `'…'`. The set of characters that need an escape is
+    * a fact about the two lexers and nothing else — CLAUDE.md §1(a) — and getting it short is not a
+    * simplification, it is a file that does not parse:
+    *
+    *   - a raw `\n` ENDS the literal, and everything after it is then read as code;
+    *   - a raw control character (`U+0001`, `\f`, `\b`, DEL) is an "illegal character" outright;
+    *   - a lone SURROGATE cannot be encoded in the UTF-8 the file is written as, so it would be
+    *     replaced on the way out and the value would silently change.
+    *
+    * Everything else — including ordinary non-ASCII text — is emitted verbatim, which is what keeps
+    * a comment-adjacent literal readable and is safe because the emitted file is UTF-8 and Scala
+    * reads it as UTF-8.
+    *
+    * `\uXXXX` is the general escape and it is a SCALA 3 escape SEQUENCE, not the Scala 2 source
+    * pre-processing that was removed: it is expanded inside the literal only, so an emitted `\\u`
+    * (an escaped backslash followed by `u`) is left alone, and there is no way for one to leak.
+    *
+    * Measured on anim8-gdx, whose `ConstantData` holds four ISO-8859-1 string literals of 47,935 /
+    * 6,390 / 6,390 / 6,390 characters (a palette preload and three blue-noise grids, decoded with
+    * `getBytes(ISO_8859_1)`): the five-case version produced **1,334 errors** from that one file —
+    * one unescaped newline ends the literal and every byte after it is parsed as source. No other
+    * corpus library had a literal with a character outside the five, which is exactly why this
+    * survived three ports.
+    */
   private def escape(s: String): String =
-    s.flatMap {
-      case '\\' => "\\\\"; case '"' => "\\\""; case '\n' => "\\n"; case '\r' => "\\r"; case '\t' => "\\t"
-      case c    => c.toString
+    val b = new StringBuilder(s.length)
+    s.foreach { c =>
+      c match
+        case '\\'   => b ++= "\\\\"
+        case '"'    => b ++= "\\\""
+        case '\b'   => b ++= "\\b"
+        case '\t'   => b ++= "\\t"
+        case '\n'   => b ++= "\\n"
+        case '\f'   => b ++= "\\f"
+        case '\r'   => b ++= "\\r"
+        case _ if c < ' ' || c.toInt == 0x7f || Character.isSurrogate(c) =>
+          b ++= "\\u"; b ++= f"${c.toInt}%04x"
+        case _      => b += c
     }
+    b.result()
 
 object TirEmitter:
 
