@@ -175,6 +175,34 @@ class SyntheticPrimarySlotsSpec extends munit.FunSuite:
     assert(fout.contains("var b: scala.Int = this.a * 2"))
   }
 
+  test("A1 counts the EMISSION's own writes too — a REPLAY into a subclass forces `var`") {
+    // A replay lifts a PARENT constructor's statements into a subclass, so a parent field the funnel
+    // hoisted into a slot and saw written exactly once in the java is written again, once per
+    // replaying subclass, in code no source scan can see. Ashley's `EntitySystemMock.updates` is
+    // java-`private` and assigned by one constructor — `val`-eligible by every test over the java —
+    // and its two subclasses replay `super(updates)`. Measured 0 -> 4 `E052 Reassignment to val`
+    // with the decision taken before the replays were known.
+    val replayed =
+      """package repl;
+        |class Mock {
+        |  private java.util.List<String> log;
+        |  Mock() { }
+        |  Mock(java.util.List<String> log) { this.log = log; }
+        |}
+        |/** roots reaching DIFFERENT parent constructors, so this class is a wall and its
+        |  * `super(log)` is expressed by REPLAY — the parent's `this.log = log` lifted in here. */
+        |class MockA extends Mock {
+        |  MockA(java.util.List<String> log) { super(log); }
+        |  MockA(int n)                      { super(); }
+        |}
+        |""".stripMargin
+    val o3 = new TirEmitter(Pipeline.run(SpoonTir.fromSource(replayed), Nil)).emit
+    assert(clue(o3).contains("f$log"))
+    // the slot is real; what it must NOT be is a `val`, because the two replays assign it
+    assert(!o3.contains("val log:"))
+    assert(o3.contains("var log: java.util.List[java.lang.String] = f$log"))
+  }
+
   test("§4.58 — a CONSUMED assignment's comment rides the delegation that replaced it") {
     // Every field slot has N roots contributing by construction, so the comment attaches to THIS
     // secondary's delegation. The funnel is the one place a statement disappears without a diff

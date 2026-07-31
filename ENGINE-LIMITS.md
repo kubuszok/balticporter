@@ -533,6 +533,16 @@ this run holds. Neither can drift. libGDX core: 5 `val` of 53 hoisted slots unde
 against 20 under the wide one, and the 15 difference is exactly the class of field a dependent may
 legitimately assign. Widening it needs §8.3's published base surface, not a better count.
 
+**And the count must include THE EMISSION'S OWN writes, not only java's — 0 -> 4.** A REPLAY
+(`Plans.replayFor`) lifts a parent constructor's statements into a subclass, so a parent field the
+funnel hoisted into a slot and saw written exactly once in the java is written again, once per
+replaying subclass, in code no source scan can see. Ashley's `EntitySystemMock.updates` is
+java-`private` and assigned by one constructor — `val`-eligible by every test over the java — and its
+two mocks replay `super(updates)` as `this.updates = updates`: **`E052 Reassignment to val` × 4**, in
+the TEST source set, on a run whose every check count was unchanged. The `val`/`var` decision
+therefore runs LAST, after `replays` is built, and adds the replayed writes to the program's.
+Pinned by `SyntheticPrimarySlotsSpec`.
+
 *Fix kind: (a).*
 
 ### C2. A promoted constructor's parameters AND top-level locals become MEMBERS

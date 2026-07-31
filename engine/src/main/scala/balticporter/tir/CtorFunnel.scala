@@ -354,15 +354,7 @@ object CtorFunnel:
       // from outside the compilation this run holds, so neither can drift. libGDX core: 20 `val` on
       // the wide rule, 5 on this one; the 15 difference is exactly the class of field a dependent
       // may legitimately assign.
-      val written = writesPerField
-      acc.map { (s, p) =>
-        if p.fieldSlots.isEmpty then s -> p
-        else s -> p.copy(fieldSlots = p.fieldSlots.map { fs =>
-          val fl   = program.symbolOf(fs.field).map(_.flags)
-          val safe = fl.exists(f => f.isFinal || f.isPrivate)
-          fs.copy(mutable = !(safe && written.getOrElse(fs.field, 0) <= fs.writes))
-        })
-      }
+      acc
 
     /** how many times the WHOLE program writes each field. Built once — the question is asked per
       * field slot and the answer is a property of the program, not of the class. */
@@ -384,7 +376,33 @@ object CtorFunnel:
       program.units.foreach(u => StandardTraversal.mapStat(ph, u))
       acc.toMap
 
-    def apply(cd: Tree.ClassDef): Plan = plans.getOrElse(cd.symbol, Plan.none)
+    /** the plans with A1's `val`/`var` decided — LAST, and after [[replays]], which is the whole
+      * reason it is a separate pass.
+      *
+      * A REPLAY writes fields the java program does not: it lifts a parent constructor's statements
+      * into a subclass, so a parent field the funnel hoisted into a slot and saw written exactly
+      * once is written again, once per replaying subclass, in code no source scan can see. Ashley's
+      * `EntitySystemMock.updates` is java-`private` and assigned by one constructor, which is
+      * `val`-eligible by every test over the java — and `EntitySystemMockA`/`B` replay `super(updates)`
+      * as `this.updates = updates`. Measured: **0 -> 4 `E052 Reassignment to val`** with the decision
+      * taken before the replays were known. So the count is java's writes PLUS the emission's own. */
+    private lazy val decided: Map[SymId, Plan] =
+      val written = writesPerField
+      val byReplay = collection.mutable.Map[SymId, Int]().withDefaultValue(0)
+      plans.values.flatMap(_.fieldSlots).map(_.field).toSet.foreach { f =>
+        replays.values.foreach(stats => byReplay(f) += writeCount(program, stats, f))
+      }
+      plans.map { (s, p) =>
+        if p.fieldSlots.isEmpty then s -> p
+        else s -> p.copy(fieldSlots = p.fieldSlots.map { fs =>
+          val fl   = program.symbolOf(fs.field).map(_.flags)
+          val safe = fl.exists(f => f.isFinal || f.isPrivate)
+          val all  = written.getOrElse(fs.field, 0) + byReplay(fs.field)
+          fs.copy(mutable = !(safe && all <= fs.writes))
+        })
+      }
+
+    def apply(cd: Tree.ClassDef): Plan = decided.getOrElse(cd.symbol, Plan.none)
 
     /** WHICH of the shapes in this file's header the plan for `cd` is, by name — a READ-ONLY view,
       * derived from the plan value and the class's own constructors. Nothing here decides anything.

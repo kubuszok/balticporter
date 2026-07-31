@@ -226,7 +226,7 @@ over `gdx/test` as a **dependent** of it, inheriting its manifest.
 | files emitted | **598** (11 dropped, 6 injected) | **29** |
 | model | 605 units / 52,453 symbols | 634 units / 53,612 symbols |
 | signature consistency | 0 | 0 |
-| omissions | **177** | 3 |
+| omissions | **67** | 3 |
 | portability (all / emitted / injected) | 151 / 151 / 2 | 166 / 15 / 0 |
 | remediation suggestions | 29 | 2 |
 | substitutions (emitted / dangling) | 0 / 0 | 0 / 0 |
@@ -235,7 +235,7 @@ over `gdx/test` as a **dependent** of it, inheriting its manifest.
 | trivia (comments lost) | **100** | **69** |
 | porter notes uncovered | **0** | **0** |
 | break residue (untranslated jumps) | **0** | **0** |
-| source map | 594 units / 19,259 members | 623 units / 19,547 members |
+| source map | 594 units / 19,288 members | 623 units / 19,547 members |
 | members changed vs baseline | **0** | **0** — the 28 + 6 that moved when this baseline was promoted are accounted below |
 | decisions recorded | **2,163** | **279** (961 withheld as the base's) |
 | **tests** | — | **221 emitted, 217 passing, 4 failing** |
@@ -252,9 +252,51 @@ naming the swap point — chosen over returning null/empty, which would corrupt 
 statically-derived codecs is viable; ONE site (`readValue("resource", null, …)`) is class-tag
 driven and needs explicit handling.
 
-`decisions.tsv` by kind, `libgdx-core`: 827 `RenamedMember`, 605 `RenamedPackage`, 335
-`RetypedSignature`, 285 `FunnelledCtor`, 31 `DroppedSuperCall`, 22 `WidenedVisibility`, 21
-`RedirectedCall`, 16 `DroppedMember`, 11 `DroppedType`, 10 `InjectedMember`.
+`decisions.tsv` by kind, `libgdx-core`: 826 `RenamedMember`, 605 `RenamedPackage`, 335
+`RetypedSignature`, 292 `FunnelledCtor`, 30 `DroppedSuperCall`, 21 `RedirectedCall`, 16
+`DroppedMember`, 15 `WidenedVisibility`, 11 `DroppedType`, 10 `InjectedMember`.
+
+#### The constructor funnel after A2 — what a SYNTHESISED primary bought, in numbers
+
+The funnel no longer PROMOTES a java constructor wherever every root reaches ONE parent constructor,
+the implicit `super()` included; it synthesises a `protected` primary and every java constructor
+stays a `def this`. Measured on this lane, against the pre-A2 baseline:
+
+| | before | after |
+|---|---|---|
+| omissions | 177 | **67** |
+| — promoted body runs on every path (`ENGINE-LIMITS.md` C7) | 140 | **31** |
+| — `super(args)` dropped (C3) | 30 | **30**, and the set is the baseline's MINUS `DistanceFieldFontCache` (C8's own worked example, repaired by the marker) |
+| — annotation dropped | 6 | 6 |
+| compile errors | 0 | **0** |
+| classes carrying a marker disambiguator | — | **6** |
+| field slots hoisted | — | **53 across 31 classes**, of which **5 bind as `val`** and 48 stay `var` |
+| fields REFUSED a slot, with the reason recorded | — | **166 across 64 classes: 146 `order`, 15 `interleaved`, 5 `no-default`** |
+
+**The order-safety rule is the whole residue.** 146 of 166 refusals are `reason=order` — the value
+was not composed of the constructor's own parameters, literals and operators, so hoisting it into a
+delegation argument list would evaluate it before `super(...)` and before the instance initialisers
+where java evaluated it after both. R1's census predicted 129 non-hoistable CLASSES corpus-wide; on
+libGDX core alone 64 synthesised classes carry at least one refusal, so the order rule grows that set
+substantially rather than marginally. A purity allow-list is the obvious next lever and is not built:
+the number says it would be worth designing, which is exactly what the measurement was for.
+
+**What still escapes, 31 paths.** Wall classes (roots reaching different parent overloads —
+`FloatAction`/`IntAction`, 3 each), JDK-throwable parents, and the UNIQUE-ROOT class whose paramful
+promotion the C1 fixpoint withholds (`ObjectMap`, `ObjectSet`, `OrderedMap`, `OrderedSet`, 3 each —
+one root, so the synthesis's two-root condition excludes it). `Material` — one of C7's three
+observable divergences — is repaired outright; `Button` (5) and `Table` (1) are wall classes and
+remain.
+
+**And the COLLAPSE keeps an escape where the marker would not** — a residue named here because it is
+a decision, not a limit. `DESIGN.md` §8.2 orders collapse before the marker so the ~100 measured
+collisions come out byte-for-byte unchanged; a collapse PROMOTES a real constructor, so its body
+becomes the class body and C7 applies to it again. noise4j's `Object2dArray` is the whole of that
+port's residue: three roots reaching one `Array2D(int,int)`, one of them a pure pass-through whose
+parameters ARE the slots, so it collapses and its `this.array = getArray(width * height)` runs on all
+three paths. Disambiguating it instead would take the escape to 0 at the price of a companion member
+and a changed signature. The refinement that costs neither — collapse only where the promotion has NO
+escaping path — is one predicate (`reachesCtor` over the other roots) and is not built.
 
 #### The 34 members that moved when this baseline was promoted, and the SILENT DEFECT one of them was
 
@@ -275,26 +317,23 @@ which is the whole reason a fourth library is worth adding:
 
 ### 2.2 Residues, named
 
-**Omissions, 177.** The dominant kind is `promoted constructor body runs on every path` — a promoted
-constructor's body executes on construction paths Java would not have run it on. Refusing that shape
-instead of counting it was measured at **0 → 41 errors** and refused (`ENGINE-LIMITS.md` C7); the
-targeted refusal for the shape-6 remainder (`Material`, `Table`) was measured at **0 → 35 `E120`**,
-omissions 177 → 65, and also refused. The prefix strip that took omissions 193 → 177 repaired 16
-construction paths across 10 classes. The rest is `super(args) dropped` (`ENGINE-LIMITS.md` C3) and 6
-dropped annotations.
+**Omissions, 67**, and the composition is the table above. What used to dominate — `promoted
+constructor body runs on every path`, 140 of 177 — is now 31, because the funnel synthesises a
+`protected` primary instead of promoting a java constructor wherever every root reaches one parent
+constructor. Refusing the promotion had been measured twice and refused twice (blanket **0 → 41**,
+targeted **0 → 35 `E120`**); the answer was not to refuse it but to stop needing it. The prefix strip
+that took omissions 193 → 177 still applies, on the wall.
 
-**The constructor residue is dominated by genuine WALLS, and the raw census over-stated what a wider
-super-slot rule can reach.** `.balticporter/briefs/R1`'s pre-pipeline census put libGDX core at 144
-escapes and 31 dropped `super(args)` with "the largest single reduction" available from generalising
-the synthesised primary from "some root is nilary" to "all roots reach one parent constructor". The
-lane says 140 and 31, and the generalisation moved the lane by **zero**: measured, libGDX core came
-out byte-for-byte unchanged (0 members moved, every check identical). The 31 break down as
+**The remaining `super(args) dropped` set is exactly the pre-A2 one minus `DistanceFieldFontCache`.**
+`.balticporter/briefs/R1`'s pre-pipeline census put libGDX core at 144 escapes and 31 dropped
+`super(args)`; the lane said 140 and 31, and generalising the synthesis to "all roots reach one
+parent constructor" moved the DROPPED-SUPER count by zero — those 30 break down as
 `DistanceFieldFont` 7 (seven roots to seven `BitmapFont` overloads — irreducible), `OrderedSet` /
-`OrderedMap` / `IdentityMap` / three `RegionInfluencer` nests 3 each, `Button` 2, and three singles.
-Every one of them reaches DIFFERENT parent constructors or is shadowed by one of its own; none is a
-class the super-slot rule alone can express. What the same change IS worth is one of gdx-gltf's D4
-errors (§8.4) and, more importantly, the soundness test in `ENGINE-LIMITS.md` C8 — without which the
-widening emitted an infinitely self-delegating constructor.
+`OrderedMap` / `IdentityMap` / three `RegionInfluencer` nests 3 each, `Button` 2, and three singles,
+every one reaching DIFFERENT parent constructors. What the widening was worth is elsewhere: the 109
+escaping paths above, and the soundness test in `ENGINE-LIMITS.md` C8 — without which it emitted an
+infinitely self-delegating constructor. The 31st, `DistanceFieldFontCache`, is C8's own worked
+example and the marker disambiguator repaired it.
 
 **Trivia, 100 of 4,565 comments.** Classified in `ENGINE-LIMITS.md` §10: a comment on a construct the
 *emission consumes* has nowhere to go. Carrying comments at all costs +33.8 % emitted bytes on libGDX
