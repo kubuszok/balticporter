@@ -1503,8 +1503,9 @@ silent success `java_test_count` exists to prevent.
 | decisions recorded | 350 rows about gdx-vfx's own declarations (216 `RetypedSignature`, 46 `RenamedMember`, 44 `RenamedPackage`, 16 `DroppedMember`, 15 `FunnelledCtor`, 11 `DroppedType`, 1 `RedirectedCall`, 1 `SubstitutedBody`); 1,216 withheld as the base's, per `ENGINE-LIMITS.md` D2 |
 | **tests** | **64 of 64 PASSING** (6 files, hand-written) |
 
-**Error trajectory: 11 → 10 → 7 → 6 → 5 → 4 → 1 → 0.** One §1(b) policy step and six §1(a) engine
-fixes, one commit and one measurement each. `portability(emitted)` is **0**: the 151 are every one
+**Error trajectory: 11 → 10 → 7 → 6 → 5 → 4 → 1 → 0.** One §1(b) policy step and SEVEN §1(a)
+engine fixes, one commit and one measurement each — six of the seven moved the error count and the
+seventh moved `porter-notes` instead, which is the only gate that could see it. `portability(emitted)` is **0**: the 151 are every one
 in libGDX's own files, which D2's ownership filter keeps out of this port's emitted column.
 
 ### 10.3 The one policy decision — a §1(b) body substitution, and why it is not a fork
@@ -1535,7 +1536,7 @@ tracking upstream. `port-map 2 → 0`, and it is the port's one `SubstitutedBody
 **No §1(c) rule, no new phase parameter, no injected source.** The rest of the manifest is a
 namespace claim, one package-rename pair and the base's inherited surface.
 
-### 10.4 What this library taught the engine — six (a) fixes, no (c)
+### 10.4 What this library taught the engine — seven (a) fixes, one (b), no (c)
 
 The keys are `ENGINE-LIMITS.md` entry numbers as they stood when this was written; each row names the
 entry's TITLE too, so a renumbering there does not orphan the reference.
@@ -1628,7 +1629,36 @@ method is a shader draw. That is 27 of 44 types resting on compilation alone.
   anonymous body. The scope has to live in the FRAME; `ENGINE-LIMITS.md` G20, *A STATIC member sees
   NONE of its class's type parameters*.
 
-### 10.8 Remaining
+### 10.8 One INTEGRATION collision with the gdx-gltf branch, measured
+
+Recorded here because it is the one place a naive merge silently costs gdx-vfx a compile error.
+Both ports independently hit the object-collapse guard and both fixed it; the two fixes are
+COMPLEMENTARY, not duplicates:
+
+| | reads | excludes |
+|---|---|---|
+| gltf's `typeNamedElsewhere` | every `Symbol.info` declaration type **and** every `Constant.ClassOfC` | the candidate's own owner chain (arm 1) and `declaredTypes(u)` (arm 2) |
+| vfx's `classLiteralTypes` | every `Constant.ClassOfC` | nothing |
+
+gltf's is far wider on the declaration half and its arm-2 exclusion is what gdx-vfx falls into:
+`VfxGLUtils.class` appears INSIDE `VfxGLUtils.java`, so `typesIn(t) -- here` is empty and the
+collapse fires again. **Measured, not inferred**: applying that subtraction to this branch's set
+fails exactly one test — `StaticCollapseSpec`'s "…nor when a CLASS LITERAL names it — including
+from inside itself" — and leaves the other four green.
+
+The merge that keeps both: take gltf's `typeNamedElsewhere` and DROP the `-- here` from its
+class-literal arm. Arm 1's owner-chain exclusion is the one that carries the "a class names itself
+constantly" argument; a class LITERAL of your own type is a genuine type use, not that. gltf's own
+"the type's OWN unit does not count" test uses a static ACCESS (`Registry.A`), which arm 1 handles,
+so it stays green.
+
+**Integration outcome**: exactly that merge was applied when this branch was rebased onto master —
+`typeNamedElsewhere` is the one survivor, its class-literal arm no longer subtracts the literal's
+own unit, and both spec families (`AllStaticClassAsTypeSpec`, `StaticCollapseSpec`) pass against
+the merged guard.
+
+### 10.9 Remaining
+
 
 - **27 of 44 types rest on compilation alone** (§10.5). Every effect class needs a GL context; the
   cheapest real step is a headless `GL20` implementation in `vfx-core/src/test`, which is a large
