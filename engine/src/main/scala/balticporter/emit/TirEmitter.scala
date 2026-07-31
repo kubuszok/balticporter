@@ -884,7 +884,24 @@ final class TirEmitter(
     // inherited constant accessed via a subclass (`GL30.GL_LUMINANCE`, declared in `GL20`) resolves.
     // exclude the class's OWN static names from the re-export (a subtype may redeclare a parent
     // constant — OpenGL's GL31 vs GL30 — which would otherwise be a duplicate/conflicting export).
-    val ownStaticNames = statics.collect { case d: Definition => esc(sym(d.symbol).name) }.distinct
+    //
+    // A STATIC INITIALIZER BLOCK is not one of those names. Java calls it `<clinit>` — the JVM's
+    // name for the synthetic method it compiles a `static { … }` block into — and no Scala
+    // identifier can spell it, backticks included: there is no member at that name to hide, so an
+    // exclusion naming it is not merely useless, it is `export P.{<clinit> => _, *}`, which the
+    // parser reads as an XML start tag. The block has no name in the emitted Scala either
+    // ([[isInitBlock]] lowers it into the companion's body), so it can never collide with an
+    // inherited constant and has nothing to exclude.
+    //
+    // Invisible for six ports because it needs BOTH halves at once — a class that inherits statics
+    // from a parent AND declares a `static { }` block of its own. libGDX core has 605 types and not
+    // one of them; gdx-gltf's attribute hierarchy has three (`PBRColorAttribute`,
+    // `PBRCubemapAttribute`, `PBRTextureAttribute`, each `extends` a libGDX `Attribute` subclass
+    // whose constants it re-exports, each registering its own aliases in a `static { }`).
+    val ownStaticNames = statics.collect {
+      case d: Definition if !d.isInstanceOf[Tree.DefDef] || !isInitBlock(d.asInstanceOf[Tree.DefDef]) =>
+        esc(sym(d.symbol).name)
+    }.distinct
     // Two exports must not both deliver the same name. `GL20Interceptor extends GLInterceptor with
     // GL20` and `GLInterceptor` itself implements `GL20`, so `GLInterceptor`'s companion ALREADY
     // re-exports `GL20`'s constants by this rule — a second `export GL20.*` is a duplicate
