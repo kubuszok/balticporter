@@ -19,6 +19,7 @@ just gdx-measure          # libGDX core        (emit → checks → break residu
 just gdx-test-measure     # libGDX's own suite (… → compile → RUN → correlate)
 just ashley-measure       # Ashley + its suite, compiled WITH libGDX core
 just anim8-measure        # anim8-gdx, compiled WITH libGDX core (a dependent port; hand-written suite, §7)
+just gltf-measure         # gdx-gltf + both its suites, compiled WITH libGDX core (§7.5)
 just sg-measure           # simple-graphs + its suite
 just noise4j-measure      # noise4j (no upstream test suite — the lane asserts that, see §5)
 just jbump-measure        # jbump — a library that ships NO suite; the lane re-derives that zero (§6)
@@ -47,7 +48,7 @@ Measurements below are from one serial run of all lanes, 2026-07-31.
 
 ## 1. Corpus inventory
 
-Six libraries are ported on the current (TIR) pipeline, across nine runs — a library and its own
+Seven libraries are ported on the current (TIR) pipeline, across eleven runs — a library and its own
 test suite are two ports, and the suite is a *dependent* of the library:
 
 | port | upstream | files in / out | tests | compile |
@@ -57,6 +58,8 @@ test suite are two ports, and the suite is a *dependent* of the library:
 | `ashley` | Ashley `ashley/src` | 21 → **21** (2 injected) | — | **0** |
 | `ashley-test` | Ashley `ashley/tests` | 18 → **18** | **112**, 108 pass / 2 fail / 2 skipped | **0** |
 | `anim8` | anim8-gdx `src/main/java` | 16 → **16** (0 dropped, 0 injected) | **23** hand-written, all passing — upstream has NO suite (§7.1) | **0** |
+| `gltf` | gdx-gltf `gltf/src` | 135 → **135** (0 dropped, 1 injected) | — | **8** (§7.5.4, all classified) |
+| `gltf-test` | gdx-gltf `gltf/test` | 1 of 7 → **1** (§7.5.1) | **8** ported + **22** hand-written, **none run** — the port does not compile | — |
 | `simple-graphs` | simple-graphs `src/main` | 29 → **33** | — | **0** |
 | `simple-graphs-test` | simple-graphs `src/test` | 7 → **7** | **16**, all passing | **0** |
 | `noise4j` | noise4j `src` | 12 → **12** | **none upstream** (§5) | **2** |
@@ -1038,6 +1041,195 @@ a port that drops its PNG chunk framer has dropped PNG, and the JVM is a target 
   and `LZWEncoder` — 16,700 of the 19,594 lines — are covered only by compilation. Writing an
   end-to-end encode/decode assertion needs a `Pixmap`, and libGDX's `Pixmap` is backed by
   `Gdx2DPixmap` (JNI), so it is a real piece of work rather than a missing test.
+
+---
+
+## 7.5 gdx-gltf — the port that measures a DEPENDENT's seams
+
+`net.mgsx.gltf → sge.gltf`, Apache-2.0. **The largest port after libGDX core itself — 135 types /
+11,307 lines — and the corpus's first genuine THIRD-PARTY extension.** Reproduce with
+`just gltf-measure`, which emits both source sets and compiles libGDX core's Scala, gdx-gltf's
+Scala, gdx-gltf's ported suite and gdx-gltf's hand-written suite on **one** `scala-cli` invocation.
+Run it after a fresh `just gdx-measure`.
+
+**Why it is in the corpus.** Ashley and anim8 are written by libGDX's own community against a small
+part of its API. gdx-gltf is stacked on libGDX's *3D pipeline*, so its difficulty is INHERITANCE
+DEPTH: `PBRShader extends DefaultShader extends BaseShader`, `Scene`/`SceneManager` over
+`ModelInstance`/`RenderableProvider`, sixteen `Attribute` subclasses over `Attribute`'s
+`register`/`compareTo` protocol, and `AnimationControllerHack`/`ModelInstanceHack`, which exist to
+reach into libGDX's protected and private constructor state. Every one of those parents is EMITTED
+Scala this run never sees — it resolves against libGDX's *Java* (§1.5) — so the port is a sustained
+test of whether the base's transforms produce a surface a deep subclass hierarchy can extend. **Six
+of its eight remaining errors are in exactly that seam**, and none of them is visible from the base.
+
+### 7.5.1 Scope, and the test census
+
+`gltf/src` (135 files) only. Excluded and named rather than silently filtered: `demo/` (35 files, a
+libGDX application with desktop/html/android launchers) and `ibl-composer/` (25, a VisUI authoring
+tool).
+
+**`gltf/test` holds SEVEN java files and exactly EIGHT `@Test` methods, all in ONE file.** The other
+six — `Benchmark`, `ExportOBJTest`, `ExportSharedIndexBufferTest`, `ImportGLTFTest`,
+`SharedTextureTest`, `ProceduralExamples` — are `extends Game` / `extends ApplicationAdapter`
+classes with a `main` that opens a window through `com.badlogic.gdx.backends.lwjgl`, which is the
+ONLY import in the whole checkout that `gdx/src` cannot resolve. They are demos with `Test` in the
+name; the jbump/anim8 lesson, a third time. `GltfTestMigrate` therefore NAMES its one input file
+rather than globbing, and the lane's `java_test_count` runs over the WHOLE tree so the 8 is
+re-derived on every run and a second file gaining a real `@Test` is reported.
+
+Eight attribute-comparison tests say nothing about the glTF reader that is most of the library, so
+`gltf-core/src/test/scala` adds **22 hand-written MUnit tests** over `GLTFTypes` — the file where the
+specification's enumerations become libGDX values, 300 lines of pure functions with no GL context,
+no asset and no backend. Every assertion in it is pointed at a `CLAUDE.md` §4.4 hazard rather than at
+coverage: a `switch` with no `default` falling out to a `throw`, an `Integer` scrutinee against `int`
+case labels, a mutated PARAMETER (`map(CubicWeightVector, …)` does `offset += w.count` twice, so the
+three groups must come from three different windows), and every `map(…, fv, offset)` read at a
+NON-ZERO offset because at zero an ignored offset is indistinguishable from a respected one. The lane
+prints the two numbers SEPARATELY — a ported test and a written one are different evidence — and
+`reconcile_outcomes` gates on the sum.
+
+### 7.5.2 Measured state
+
+| gate | `gltf` | `gltf-test` |
+|---|---|---|
+| compile errors (with libGDX core, Scala 3.8.4) | **8** | — (one invocation) |
+| files emitted | **135** (0 dropped, 1 injected) | **1** |
+| model | 740 units / 56,368 symbols | 741 / 56,420 |
+| signature consistency | 1 | 1 (the same site) |
+| omissions | 3 | 0 |
+| portability (all / emitted / injected) | 151 / **0** / **0** | 151 / 0 / 0 |
+| substitutions · manifest · port map · policy | 0 · 0 · **0** · 0 | 0 · 0 · 0 · 0 |
+| collection closure · boundary · shared-iterator | 0 · 0 · 0 | 0 · 0 · 0 |
+| trivia | 10 | 0 |
+| porter notes uncovered · break residue | 0 · **0** | 0 · 0 |
+| source map | 135 units / 1,523 members | 1 / 9 |
+| decisions recorded | 1,763 rows, **548** about gdx-gltf's own declarations; 1,215 withheld as the base's (D2) | 44, 2,937 withheld |
+| **tests** | 8 ported + 22 hand-written = **30, NONE RUN** — the port does not compile (§7.5.4) | |
+
+**Error trajectory: 19 → 16 → 14 → 9 → 8**, on 135 files at the first attempt. `break residue` is
+**0** and `portability(emitted)` is **0** on a library full of `switch`-driven enum mapping, which is
+§9.5's control-flow work and the portability rules paying off on a library they were not built for.
+
+`trivia` moved 6 → 10 and the four are accounted for: they are the comments INSIDE the two bodies
+`MethodBodyTransform` replaces ("call X via reflection to avoid compilation error with GWT"). The
+code they describe is deliberately not in the port, so the comments go with it — and `TriviaCheck`
+counting them is the honest behaviour, not a defect. Expect any `MethodBodyTransform` entry to cost
+its body's comments.
+
+### 7.5.3 What this library taught the engine — three (a) fixes and a fourth found by reading
+
+| key | the gap | cost |
+|---|---|---|
+| — | `<clinit>` reached an `export` selector list; `export P.{<clinit> => _, *}` is an XML start tag to dotty | 3 errors |
+| `ENGINE-LIMITS.md` D6 | an all-static java class is still a TYPE, and the object collapse had no third guard | 5 errors |
+| `ENGINE-LIMITS.md` D6.5 | a DROP and its INJECTION are in different namespaces, so `Substituted` had never been produced by a renaming port | **10 false findings** |
+| `ENGINE-LIMITS.md` T12 | java `protected` is dropped, and accessibility is an input to OVERLOAD RESOLUTION | 1 error |
+
+Each of the first three shipped in its own commit with a spec, and **each moved 0 members on
+libGDX** — the `<clinit>` guard cannot fire on a type with no initializer block, the type-position
+guard is narrowed to declaration types and class literals, and the port-map fix moves an ARTIFACT
+and no emitted text.
+
+**D6's dead end is the part worth carrying.** The obvious implementation — read every type
+occurrence from `Phase.transformType` — was built first and measured: a term's own `tpe` is an
+occurrence, so `Gdx.app` (a static ACCESS, the thing the collapse exists for) reads as a type usage.
+It de-collapsed **29 of libGDX core's 31** constant holders and moved **36 members**, still compiling
+and moving no check count. `AllStaticClassAsTypeSpec` pins the static-access NEGATIVE for that
+reason.
+
+**D6.5 is the one nothing would have found.** `PortMap.of` had distinguished `Dropped` from
+`Substituted` since it was written, deciding by `injectedFqns(fqn)` — a manifest key compared against
+a set of emitted file names. False for every renaming port, so `Substituted` had never once been
+produced by one, and nothing failed until a dependent read the map. gdx-gltf is the first port to
+REFERENCE an injected replacement (six of its files use libGDX's substituted `Json`) and was told ten
+times that the base "emits nothing at that name and nothing replaces it" about a type it compiles
+against. This is `CLAUDE.md` §4.56 at a third artifact.
+
+### 7.5.4 The residue — 8 errors, all classified, and why the tests cannot run
+
+The port does not compile, so **none of its 30 tests has ever executed.** `CLAUDE.md` §3 is explicit
+that a test which cannot run is not a test that passed, and the lane says so rather than reporting a
+suite of zero.
+
+| errors | site | classification |
+|---|---|---|
+| 3 | `ClippingPlaneAttribute`, `PBRCubemapAttribute`, `PBRTextureAttribute` — `extends Attribute` with no arguments | **D4**, (a) engine |
+| 4 | `ModelInstanceHack` — `this.copyNodes(…)`, `private` in libGDX's emitted `ModelInstance` | **D5**, (a) engine |
+| 1 | `MeshLoader.java:252` — `vertexAttributes.toArray(VertexAttribute.class)`, a member the base drops | **D7**, (b) a phase that does not exist |
+
+**D4 is the largest thing a dependent port has surfaced, and it is confirmed rather than inferred.**
+`CtorFunnel.Plans` decides which java constructor becomes the Scala primary at a FIXPOINT over the
+whole program, and that answer is the class's emitted parameter list. A dependent's `Program`
+CONTAINS its base, so the fixpoint sees a different set of classes and can reach a different answer
+for a BASE class than the base's own run did. libGDX emits `abstract class Attribute(type$p: Long)`;
+gdx-gltf adds three subclasses with several roots and no shared parameter list, its fixpoint withheld
+the promotion, `replayFor` accepted a nilary prologue for the parent, and the three classes emitted
+`extends Attribute` with no arguments against a parent that has none.
+
+A minimal probe settles that it is drift and not a plain funnel gap: the same shape in a SINGLE
+program (a paramful parent, a subclass with two roots both calling `super(K)`) emits
+`class Heir extends Parent` with the parent's promotion correctly withheld, and compiles. Two
+modules, one program each, two different correct answers.
+
+Nothing in the dependent's own run disagrees with itself: `ManifestAgreement` reports 0 because a
+funnel plan is not a manifest key, and the port map records `Attribute` as `Ported`, which it is. The
+disagreement exists only when the two modules are compiled together.
+
+### 7.5.5 Do NOT retry
+
+- **Reading `Phase.transformType` bare for "is this named as a type".** 29 of libGDX's 31 constant
+  holders de-collapsed, 36 members moved, compile still 0 and no check count moved. See D6.
+- **Refusing every cross-class private widening in `CtorFunnel`** to fix D5. libGDX core makes **22**
+  `WidenedVisibility` decisions of its own, all of them within one module and all of them sound, so a
+  blanket refusal regresses the base to fix the dependent. The missing input is which classes the run
+  EMITS, which `Plans` does not have — the same input D4 needs.
+- **Refusing the withheld promotion** to fix D4. That is `ENGINE-LIMITS.md` C1 exactly (+14 on
+  libGDX) and it breaks the dependent's own subclasses instead.
+- **`dropTypes` + `inject` for the four affected files** to reach a green compile. That forks
+  `ClippingPlaneAttribute`, `PBRCubemapAttribute`, `PBRTextureAttribute` and `ModelInstanceHack` from
+  upstream permanently to hide two engine gaps, and `ENGINE-LIMITS.md` K3 is the rule against it:
+  injected sources are for SEMANTICS the target lacks, never for adapting SHAPES.
+
+### 7.5.6 Remaining work, highest value first
+
+- **D4 (3 errors).** A class the run does not EMIT must have its funnel plan READ, not recomputed —
+  from the base's published port map, which is already the channel for "what did the base actually
+  do". The map must carry each type's primary parameter list, and `Plans` must seed itself from it
+  for every non-owned class.
+- **D5 (4 errors).** `Plans` needs the same "which classes does this run emit" input, and then M6's
+  answer applies unchanged: refuse the replay whose widening cannot be performed, count the dropped
+  `super(args)` as an omission, and compile.
+- **D7 (1 error).** A CALL-SITE substitution phase — the call-level twin of `MethodBodyTransform`,
+  keyed like `dropMethods`, replacement text naming the receiver and arguments.
+- **T12.** Render java's `protected` as `protected[<package>]`. Priced at 867 declarations of emitted
+  text on libGDX core alone; it wants its own cycle and its own baseline promotion, and until it
+  lands the port carries one `MethodBodyTransform` entry that exists only to restate the overload
+  javac chose.
+- **Behavioural coverage is 30 tests over 5 of 135 types**, and none has run. The exporter and the
+  loaders are covered only by compilation, and their round-trip needs the reflective `Json` the base
+  deliberately drops — the reference hand port replaced it with 2,268 lines of hand-written Jsoniter
+  codecs (`GLTFCodecs`, `GLTFExporterJson`), which is a decision this port has not made.
+
+### 7.5.7 What the reference port did — `CLAUDE.md` §3.5
+
+`../sge/sge-extension/gltf` is **100 % coverage**, 135 upstream types → 141 Scala files, with six
+files that have no upstream counterpart. Two things it settles and one it does not:
+
+- **SOLVED, and this port took the answer**: both `ClassReflection` sites that carry an upstream
+  "…via reflection to avoid compilation error with GWT" comment are a GWT workaround and nothing
+  else. `PixmapBinaryLoaderHack.scala` is `new Pixmap(encodedData, offset, len)` and
+  `GLTFBinaryExporter.savePNG` is `PixmapIO.writePNG(file, pixmap)`, each with the WebGL guard kept.
+- **SOLVED differently, and this port did NOT follow**: `GLTFMaterialExporter.ext` uses
+  `tpe.getDeclaredConstructor().newInstance()` — plain JVM reflection, which does not link on
+  Scala.js or Scala Native. This port uses the factory registry libGDX core's own injected `Pools`
+  and Ashley's `ComponentFactories` already use.
+- **NOT solved, replaced**: the whole reflective `Json` path. sge hand-wrote `GLTFCodecs` (1,378
+  lines) and `GLTFExporterJson` (890) rather than porting it. This port compiles against libGDX's
+  injected `Json` facade, whose reflective paths raise `UnsupportedOperationException` naming the
+  seam — so `fromJson(GLTF.class, …)` at `SeparatedDataFileResolver.java:30` and
+  `BinaryDataFileResolver.java:97`, and `toJson` at `GLTFExporter.java:238`, are inert at run time.
+  That is an inherited decision, not a gdx-gltf one, and it is why loading a real `.gltf` is not
+  something this port can be tested for today.
 
 ---
 

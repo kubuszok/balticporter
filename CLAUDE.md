@@ -268,6 +268,7 @@ It runs on the **Fable 5** model and is expensive, so it is **not** run on every
   | `just gdx-measure` | libGDX core — emit, checks, break residue, compile, correlate |
   | `just gdx-test-measure` | libGDX's own suite — the same, then RUN it |
   | `just ashley-measure` | Ashley + its suite, compiled WITH libGDX core (a dependent port) |
+  | `just gltf-measure` | gdx-gltf + both its suites, compiled WITH libGDX core (a dependent port) |
   | `just sg-measure` | simple-graphs + its suite |
   | `just jbump-measure` | jbump — a library that ships NO suite, so the lane re-derives that zero |
   | `just measure-all` | every lane above, SERIALLY, stopping at the first failure |
