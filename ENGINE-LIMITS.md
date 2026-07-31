@@ -1511,8 +1511,6 @@ constructor was a compile error before this, so no port that compiles could have
 *Fix kind: (a) engine; the SET of hashed targets is closed over the phase's own `typeMap`, so it is
 the phase's record and not a name test.*
 
----
-
 ### K12. The engine has NO JDK MEMBER SURFACE, so a component under an UNPARSED PARENT is frozen — **12 of 144**
 
 `OverrideGraph.closureOf` may only change a member's signature when it can see every declaration of
@@ -1557,6 +1555,44 @@ correct and the cost is the number above.*
 ---
 
 ## 5. Portability and platform
+
+### K13. `T | Null` is NOT transparent at an ABSTRACT type parameter — the union floor is free only at CONCRETE types
+
+`Null` is a subtype of every concrete reference type, so `String | Null` simplifies at every use and
+the annotation-driven union floor (`DESIGN.md` §8.6) costs nothing there. **It is not a subtype of an
+abstract `T <: Object`** — which is not a corner case but the very fact that makes
+`def m[T <: X](): T = null` a type error and forces the frontend's `null.asInstanceOf[T]`. So
+`T | Null` does not conform to `T`, and every USE of an annotated `T`-typed declaration in a plain
+`T` slot fails.
+
+**Measured** by binding libGDX's own `@Null` policy on the reference port, emitting, and compiling —
+**0 → 35 errors**, from **632** retyped declarations:
+
+| shape | n |
+|---|---:|
+| `Found: T \| Null / Required: T` | 34 |
+| a defaulted overload losing its one-argument form (`ObjectMap#get`) | 1 |
+
+Every one is inside a generic type — the containers (`IntMap`, `LongMap`, `ObjectMap`, `OrderedMap`,
+`Array`, `Queue`, `AtomicQueue`) and the generic widgets (`Tree`, `List`, `SelectBox`, `Selection`).
+The second shape matters on its own: §8.6 claimed the floor cannot move overload resolution, and it
+did.
+
+**Do NOT "fix" this by refusing to retype at an abstract type.** The refusal would delete exactly the
+thing the floor buys — the generic RETURN is where the placeholder cast lives — and the declaration
+itself is perfectly well-typed. The cost is entirely at the USES, which is why it is COUNTED
+(`NullabilityBoundaryCheck.Issue.AbstractTypeParameter`: 155 occurrences flagged, a deliberate
+over-approximation of the 35 that fail) and left as a policy decision with three exits: scope the
+generic types out of the phase, accept the errors, or stage to `-Yexplicit-nulls
+-language:unsafeNulls` (§8.6's N2), under which the whole class disappears.
+
+**And do not trust a probe that used `String`.** The claim this corrects was compiled, not reasoned —
+against concrete types only. A probe for a rule about type conformance has to include an abstract
+type or it has not tested the rule.
+
+*Fix kind: (b) per-library policy — the engine's part is the number.*
+
+---
 
 ### P1. A `--js` compile proves NOTHING as a portability gate
 

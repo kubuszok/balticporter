@@ -209,25 +209,45 @@ final class NullabilityTransform(
               else if s.flags.isParam && s.flags.isVararg then refuse(program, s, key, Issue.VarargParameter)
               else if isPrimitive(program, was) then refuse(program, s, key, Issue.PrimitiveType)
               else if wrapperCrossesOverride(program, s) then refuse(program, s, key, Issue.OverrideCrossing)
-              else plan += Planned(s, key, slot, was, hits)
+              else
+                // RETYPED AND COUNTED, which is not a contradiction: the declaration is fine and
+                // every USE of it is not (see `Issue.AbstractTypeParameter`). Recorded before the
+                // plan entry so the order of the two reads as one act.
+                if target == Target.Union && mentionsTypeParam(program, was) then
+                  refuse(program, s, key, Issue.AbstractTypeParameter)
+                plan += Planned(s, key, slot, was, hits)
     }
     if plan.isEmpty then return program
 
     newTypes = plan.iterator.map(p => p.sym.id -> nullable(p.was)).toMap
     if target != Target.Union then wrapped = newTypes
 
-    /** annotated PARAMETERS, by their owning method — a `MethodType`'s parameter list is
-      * `(name, type)` pairs and has to move with the parameter symbol, or the method's signature
-      * and its own parameters disagree and every caller resolves against the older of the two. */
-    val paramsByOwner: Map[SymId, Map[String, TypeRepr]] =
-      plan.iterator.filter(_.slot == Slot.Param).toList
-        .groupBy(_.sym.owner).view.mapValues(ps => ps.map(p => p.sym.name -> newTypes(p.sym.id)).toMap).toMap
+    /** annotated PARAMETERS, by their owning method and BY POSITION — the method's signature has to
+      * move with its parameter symbols, or the two disagree and every caller resolves against the
+      * older of them.
+      *
+      * By POSITION and never by NAME, and that is a measured correction rather than a preference: a
+      * `MethodType`'s parameter list and the `DefDef`'s are parallel by construction, while the
+      * NAMES are not — an earlier phase may rewrite a parameter SLOT without touching the
+      * method's `info`, which is exactly what the reassigned-parameter transform does when it
+      * repurposes a `content` parameter as a local `var` and mints `content$arg` for the slot. Read
+      * by name, the annotated declaration's emitted parameter moved and its signature silently did
+      * not — a disagreement no count can see, found by binding the real corpus policy and reading
+      * the artifact rather than by any spec. Name matching survives only where there is no
+      * declaration to index against, which for an owned method there never is. */
+    val paramsByOwner: Map[SymId, Map[Int, TypeRepr]] =
+      plan.iterator.filter(_.slot == Slot.Param).toList.groupBy(_.sym.owner).flatMap { (owner, ps) =>
+        program.definitionOf(owner).collect { case d: Tree.DefDef =>
+          val at = d.paramss.flatten.map(_.symbol).zipWithIndex.toMap
+          owner -> ps.flatMap(p => at.get(p.sym.id).map(_ -> newTypes(p.sym.id))).toMap
+        }
+      }.toMap
 
     val consumed: Map[SymId, List[Annot]] = plan.iterator.map(p => p.sym.id -> p.hits).toMap
 
     def methodType(id: SymId, mt: TypeRepr.MethodType): TypeRepr.MethodType =
       val ps = paramsByOwner.getOrElse(id, Map.empty)
-      TypeRepr.MethodType(mt.params.map((n, t) => n -> ps.getOrElse(n, t)),
+      TypeRepr.MethodType(mt.params.zipWithIndex.map((nt, i) => nt._1 -> ps.getOrElse(i, nt._2)),
                           newTypes.getOrElse(id, mt.result), mt.isImplicit)
 
     val retyped = table.all.map { s =>
@@ -276,6 +296,21 @@ final class NullabilityTransform(
       // a method LOCAL: not surface, and Java's own `@Target` normally allows it. Recorded rather
       // than retyped — a local's type is an implementation detail no consumer can see.
       case _                                                     => scala.None
+
+  /** does this type mention an ABSTRACT TYPE PARAMETER anywhere?
+    *
+    * Decided STRUCTURALLY — a type parameter's `info` is a `TypeBounds` and nothing else's is —
+    * never from a name, and never from "is it one letter". `Foo[T]` counts as much as bare `T`:
+    * `Foo[T] | Null` is transparent, but a `T` INSIDE it is where `Null` stops being a subtype, and
+    * a port reading this number wants every declaration whose transparency depends on an abstract
+    * type, not only the ones typed by one directly. */
+  private def mentionsTypeParam(p: Program, t: TypeRepr): Boolean = t match
+    case TypeRepr.TypeRef(_, s)       => p.symbolOf(s).exists(_.info.isInstanceOf[TypeRepr.TypeBounds])
+    case TypeRepr.AppliedType(tc, as) => mentionsTypeParam(p, tc) || as.exists(mentionsTypeParam(p, _))
+    case TypeRepr.OrType(l, r)        => mentionsTypeParam(p, l) || mentionsTypeParam(p, r)
+    case TypeRepr.AndType(l, r)       => mentionsTypeParam(p, l) || mentionsTypeParam(p, r)
+    case TypeRepr.TypeBounds(_, _)    => true
+    case _                            => false
 
   /** Scala's own primitives — `scala.Int` and friends, which cannot be null and for which the
     * annotation is a mistake somewhere upstream. ENGINE identity, not per-library policy: these

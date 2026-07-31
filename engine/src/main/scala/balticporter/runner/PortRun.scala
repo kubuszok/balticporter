@@ -293,7 +293,8 @@ final case class PortRun(
     effectivePhases.collect { case n: NullabilityTransform => n }.foreach { n =>
       val bnd = n.boundary(checkedUnits)
       CheckReport.record(NullabilityBoundaryCheck.Name, bnd.map(_.report))
-      say(s"NULLABILITY BOUNDARY (annotated sites refused, and seams a wrapper did not close): ${bnd.size}")
+      say(s"NULLABILITY BOUNDARY (sites refused, wrapper seams left open, retypes the language " +
+        s"does not make transparent): ${bnd.size}")
       println(NullabilityBoundaryCheck.summary(bnd))
     }
 

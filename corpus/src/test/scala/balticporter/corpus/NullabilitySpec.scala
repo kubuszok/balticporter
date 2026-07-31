@@ -3,7 +3,7 @@ package balticporter.corpus
 import balticporter.core.PolicyIssue
 import balticporter.testkit.{PortFixture, PortSuite}
 import balticporter.tir.*
-import balticporter.transform.{NullabilityBoundaryCheck, NullabilityTransform}
+import balticporter.transform.{MutableParamsTransform, NullabilityBoundaryCheck, NullabilityTransform}
 import balticporter.transform.NullabilityBoundaryCheck.Issue
 import balticporter.transform.NullabilityTransform.Target
 
@@ -119,6 +119,18 @@ class NullabilitySpec extends PortSuite:
     assertEmits(port(java, phase()), "def count(): scala.Int")
   }
 
+  test("an annotated ABSTRACT TYPE is retyped AND counted — the one place the floor is not free") {
+    // `Null` is a subtype of every CONCRETE reference type and NOT of an abstract `T`, so
+    // `T | Null` does not conform to `T` and every use of `pick()`'s result in a `T` slot is a
+    // compile error. Nothing at the declaration is wrong — so this is counted, not refused, and
+    // the row is the only warning a port gets before it compiles.
+    val ph = phase()
+    val (after, log) = run(ph)
+    assertEquals(issuesOf(ph, after).get(Issue.AbstractTypeParameter), Some(List("demo.Group#pick")))
+    assert(log.of(Decision.Kind.RetypedSignature).exists(_.subjectFqn == "demo.Group#pick"),
+           "counted is not refused — the declaration still moved")
+  }
+
   test("an annotation carrying ARGUMENTS is refused — `@A(x)` is not `@A`") {
     val ph = phase(annotations = Set("demo.Tag"))
     val (after, _) = run(ph)
@@ -142,6 +154,36 @@ class NullabilitySpec extends PortSuite:
     // retire goes at the declaration as well as at the generic return.
     assertEmits(port(java), "var parent: demo.Actor = null.asInstanceOf[demo.Actor]")
     assertEmits(port(java, phase()), "var parent: demo.Actor | scala.Null = null")
+  }
+
+  // -------------------------------------------------------------------------
+  // the parameter whose SLOT an earlier phase moved
+  // -------------------------------------------------------------------------
+
+  private val reassigning =
+    """package demo;
+      |import java.lang.annotation.*;
+      |@Target({ElementType.METHOD, ElementType.FIELD, ElementType.PARAMETER})
+      |@interface Null {}
+      |class Group {
+      |  void trim(@Null String s) { s = "x"; }
+      |}
+      |""".stripMargin
+
+  test("a parameter the reassigned-param transform DEMOTED still moves its method's SIGNATURE") {
+    // Java lets a method reassign its parameters and Scala does not, so that transform repurposes
+    // the parameter symbol as a local `var` and mints `s$arg` for the slot — WITHOUT touching the
+    // method's `MethodType`, whose parameter is still called `s`. Matched by NAME, the emitted
+    // parameter moved and the signature silently did not: a disagreement no count can see, and
+    // the reason the two lists are joined BY POSITION. Both ends asserted, because asserting the
+    // emitted text alone is exactly what missed it.
+    val p = port(reassigning, new MutableParamsTransform, phase())
+    assertEmits(p, "def trim(s$arg: java.lang.String | scala.Null)")
+    val m = p.after.symbols.all.find(_.fullName == "demo.Group#trim").getOrElse(fail("no `trim`"))
+    val firstParam = m.info match
+      case TypeRepr.MethodType(ps, _, _) => ps.head._2
+      case other                         => fail(s"not a method type: $other")
+    assert(clue(firstParam).isInstanceOf[TypeRepr.OrType], "the SIGNATURE did not move with the slot")
   }
 
   // -------------------------------------------------------------------------

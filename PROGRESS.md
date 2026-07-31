@@ -1936,6 +1936,81 @@ Renaming a getter to `x` lands it on the private field's name, and the emitter's
 large: 102 fields against 127 properties says most of the harvested pairs are not trivial (a
 computed getter or a side-effecting setter keeps its field either way). The collapse is worth doing
 and it is worth doing SECOND, on its own measurement.
+### 11.12 M3 — annotation-driven nullability, as measured
+
+DESIGN.md §8.6, landed default-off as two commits with a thirteen-lane measurement between them.
+
+**The (a) prerequisite, alone.** `SpoonTir.annotationsOf` was never called for a PARAMETER, so a
+library's nullability contract — which it states mostly on parameters — reached **389 upstream sites
+and 0 symbols** on the most-annotated port. The gap was invisible from both ends: nothing renders a
+parameter annotation, so the emitted file is byte-identical with them and without, and no check can
+report a symbol property that is never populated. Measured after the fix:
+
+| | |
+|---|---|
+| emitted text | **0 members changed on twelve ports**; `LibgdxCoreMigrate` shows 4 rows, which are **2 member KEYS re-indexed with byte-identical digests** (`@1352#<init>(String,String)#…` → `@1353#…`) |
+| check counts | identical on every lane. The only finding that diffs anywhere is the same re-index — one `portability(all)` row per lane, same count, same text, new id |
+| tests | unchanged: gdx-test 217/4, ashley 108/2 (+2 pre-existing skips), anim8 23/0, screens 16/0, vfx 64/0, sg 16/0 |
+
+**The re-index is intrinsic, not a defect to design around.** An external ANONYMOUS owner's
+`fullName` embeds its raw `SymId`, and interning one annotation type earlier moves every id after
+it by one. Nothing but a member key embeds an id, and the digest beside it is what says the emitted
+text did not move. Nine baselines promoted; `LibgdxCoreMigrate/baseline/port-map.tsv` additionally
+picked up a PRE-EXISTING staleness this work did not cause (three `Dropped`+`Added` pairs are now the
+single `Substituted` row the current engine writes), which moves no check count.
+
+**The phase, default-off.** `nullability` (§1(b)), both targets built — the union floor and the
+wrapper — plus `nullability-boundary`. Every lane 0 members changed and every check count identical
+with it absent, which is the (b) proof; 24 specs, of which the negatives are the load-bearing half
+(vararg, primitive, argument-carrying annotation, non-value position, override-crossing under the
+wrapper, uncoercible seam, unknown FQN never-fired, empty-config byte-identity).
+
+**P3 dry run — `@Null` → union floor on libGDX core, bound, counted and COMPILED, then reverted.**
+The phase was added to `mainPhases`, the port emitted and compiled, and the tree restored. Measured:
+
+| | |
+|---|---|
+| declarations retyped (`decisions.tsv` rows for `nullability:com.badlogic.gdx.utils.Null`) | **632** |
+| positions moved | **707** — **182** returns, **389** parameters, **136** fields |
+| `nullability-boundary` | **174** — 155 `AbstractTypeParameter`, 17 `NotAValuePosition`, 2 `VarargParameter` |
+| `@sge.utils.Null` in the emitted Scala | **161 → 0**, every rendered marker consumed |
+| `| scala.Null` in the emitted Scala | **0 → 632** |
+| compile errors, libGDX core alone | **0 → 35** |
+
+**389 is the census's parameter count EXACTLY, and it was 377 until the run corrected the engine.**
+A parameter the reassigned-parameter transform demotes keeps its name on the method's `MethodType`
+while its SLOT becomes `<name>$arg`, so matching the two lists by NAME moved the emitted parameter
+and silently left the signature behind. Joined BY POSITION the two agree, and the number then
+matches an independently-measured upstream census to the site. Nothing else in the run could have
+shown it: the emitted text was right, every check was 0, and only the artifact disagreed with the
+census.
+
+**And the run REFUTED §8.6's central claim — see DESIGN.md §8.6, amended.** "N1 costs nothing at use
+sites" is true at a CONCRETE reference type and false at an ABSTRACT one: `Null` is a subtype of
+`String` and not of a `T <: Object`, which is the very reason a `return null` at a `T` return needs
+a cast. **0 → 35 errors**, 34 of them `Found: T | Null / Required: T` and one an arity change at
+`ObjectMap#get`'s defaulted overload — an overload-resolution movement the design said could not
+happen. Every error is inside a generic type (`IntMap`, `LongMap`, `ObjectMap`, `OrderedMap`,
+`Array`, `Queue`, `AtomicQueue`, `Tree`, `List`, `SelectBox`, `Selection`). The probes behind the
+claim used `String`; none used a type parameter.
+
+The engine's answer is to COUNT rather than refuse — the declaration is fine and the cost is
+entirely at the uses — so `Issue.AbstractTypeParameter` flags all **155** annotated occurrences
+whose type mentions an abstract type parameter, a deliberate over-approximation of the 35 that
+actually fail. **P3 is therefore not a free enablement**, and it has three exits, all policy: scope
+libGDX's generic containers out of `nullability`; accept 35 errors; or land N2
+(`-Yexplicit-nulls -language:unsafeNulls`), under which the whole class disappears.
+
+**One further interaction to measure at P3 rather than discover.** `TirEmitter.rawParentAlignment`
+tests `hasWildcardArg`, which does not look inside a union, so an annotated parameter whose type
+carries a wildcard AND overrides a parent method stops being aligned. It produced no error in the
+dry run; it is named because a silent un-alignment is not the kind of thing a count would show.
+
+**A pre-existing defect the lanes surfaced along the way, unrelated to this work.** A `trivia`
+finding whose detail contains a TAB can never match its own baseline: the detail is written with
+tabs normalised to spaces and the id is recomputed from the parsed row on read, so the same finding
+is reported as removed-and-re-added on every run. Three rows in gdx-gltf, counts identical, and
+`just baseline-accept` does not settle it because the next read re-derives the same mismatch.
 
 ## 12. Remaining work, across the engine
 

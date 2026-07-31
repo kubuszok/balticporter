@@ -2088,6 +2088,20 @@ which only the first is built:
 | **N2** | compile emitted ports with `-Yexplicit-nulls -language:unsafeNulls` | §8.2's `val`/`uninitialized` work removing the placeholder shapes |
 | **N3** | strict mode per port | the out-of-scope null-flow research line |
 
+> **AMENDED, and the amendment is the important part. "N1 costs nothing at use sites" is TRUE at a
+> CONCRETE reference type and FALSE at an ABSTRACT one.** `Null` is a subtype of `String`; it is not a
+> subtype of a `T <: Object`, which is the very reason `def m[T <: X](): T = null` needs a cast — so
+> `T | Null` does not conform to `T`, and every use of an annotated `T`-typed declaration in a plain
+> `T` slot is a compile error. Measured by binding the real policy on the reference port and
+> compiling: **0 → 35 errors**, 34 of them `Found: T | Null / Required: T` and one an ARITY change at
+> a defaulted overload — an overload-resolution movement this section said could not happen. Every
+> one is inside a generic container or a generic widget. The probes the claim rests on used `String`;
+> none used a type parameter. The engine COUNTS rather than refuses (the declaration is fine and the
+> cost is entirely at the uses — `NullabilityBoundaryCheck.Issue.AbstractTypeParameter`, 155 sites
+> flagged for the 35 that fail), and enabling the floor on a generic-heavy library is a POLICY
+> decision with three exits: scope the generic types out, accept the errors, or land N2, under which
+> the whole class disappears. Read the rest of this section with that correction applied.
+
 **N1 costs nothing at use sites, and that is compiled rather than reasoned.** Without the flag
 `Null <: String`, so a union return simplifies at every use, an override may narrow *or* widen, and no
 `.nn` is required anywhere. What it **buys**: the contract moves out of an annotation the Scala
@@ -2149,6 +2163,43 @@ analysis today, and this is named as a research line, not scheduled.**
 **Ordering:** after the collections family (their retypes must land first, so `@Null Array<T>` becomes
 `Buffer[T] | Null` and not the reverse) and before the package rename, because the configured
 annotation FQNs are upstream-namespace (§4.56).
+
+**BUILT, and five things the build settled that the design above did not.** N1 shipped as
+`NullabilityTransform` + `NullabilityBoundaryCheck`, default-off, with **wrapper mode built rather
+than deferred** — its seam rules are written down either way, and a written seam nobody exercised is
+a design, not a mechanism.
+
+- **The check counts REFUSALS in BOTH modes, not only the wrapper's seams.** The union floor has
+  refusals of its own — an annotated vararg, an annotated primitive, an annotation carrying
+  arguments, an annotation on a type or a local — and each leaves the declaration byte-identical to
+  the one the phase never saw. A refusal nobody can count is the §1(b) silent no-op the whole design
+  exists to avoid, so `nullability-boundary` records whenever the phase is in the pipeline, exactly
+  as the two collection checks do, and a refused site KEEPS its annotation so the contract stays
+  readable at the line.
+- **A retype gets a DECISION and deliberately no PORTER NOTE.** `Decision.Kind.RetypedSignature` is
+  outside `PorterNote.Rendered` by a standing rule — the new type is written in the declaration and
+  the diff against the Java shows it, and one note per retyped member is several hundred comments
+  restating what the signature says. Nullability is not the exception that overturns it: the type
+  reads `T | Null` and the annotation is gone, which is the whole of what a note would say. Its
+  COMPLEMENT is rendered, and that asymmetry is the same rule rather than a break in it — a
+  `ScopedOut` declaration kept its upstream type, so the diff shows nothing and the reader has no
+  local evidence at all.
+- **`null.asInstanceOf` is retired at TWO shapes, not one.** The generic return was the known one.
+  The other is an uninitialised annotated FIELD: a Java field with no initialiser has no Scala
+  default, so the emitter writes `null.asInstanceOf[T]`, and a union with `Null` states its own —
+  `var parent: Actor | Null = null`. Both placeholders exist for the same reason and both go.
+- **Wrapper mode refuses an override-crossing member, conservatively and COUNTED.** The wrapper
+  changes the signature, so both ends of an override pair must move together; until §8.5's shared
+  override closure exists the test is `isOverride`, plus any owned overriding member matching by
+  name and descriptor so the PARENT end of the same pair is refused too. It over-approximates across
+  unrelated hierarchies, which refuses a safe retype and counts it — never the reverse. Swapping the
+  predicate for the real closure is one line and nothing else. Union mode has no such constraint,
+  measured: a union return may be narrowed OR widened across an override without the flag.
+- **The one interaction P3 must measure before it is believed.** The emitter's raw-parent parameter
+  alignment (`rawParentAlignment`) tests `hasWildcardArg`, which does not look inside a union — so an
+  annotated parameter whose type carries a wildcard AND overrides a parent method silently stops
+  being aligned. Nothing today produces that shape, because the phase is off; it is named here so the
+  P3 enablement measures it rather than discovering it as an unexplained diff.
 
 **Rejected.** `given Conversion` ergonomics. A **boxing** wrapper — it changes erasure, bringing bridges,
 overload-erasure collisions and an allocation per annotated call, where the opaque-over-union wrapper

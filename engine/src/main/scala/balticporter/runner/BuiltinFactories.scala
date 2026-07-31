@@ -52,7 +52,7 @@ object BuiltinFactories:
     new TestFrameworkFactory, new StaticForwarderFactory, new ClassTableFactory,
     new TypeRedirectFactory, new MethodBodyFactory, new PortMapMigrationFactory,
     new PrimitiveToOpaqueFactory, new GlobalsToImplicitsFactory, new BeanPropertyFactory,
-    new PrimitiveToOpaqueFactory, new GlobalsToImplicitsFactory, new NullabilityFactory,
+    new NullabilityFactory,
   )
 
 // ---------------------------------------------------------------------------------------------
