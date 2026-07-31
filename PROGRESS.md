@@ -1722,6 +1722,90 @@ cannot yet say, for an *unmarked* error, is which of the three kinds the fix is.
 
 ---
 
+### 11.9 The adoption-gap catalog — three-way audit, 2026-07-31
+
+A five-agent comparison of UPSTREAM JAVA vs the HAND PORTS (sge/ssg/lls) vs the ENGINE OUTPUT, over
+all nine ported libraries plus the two unported ssg ones. Method: type census through each port's
+`port-map.tsv`, adaptation hunt by exhaustive pair-diffs on the small libraries and stratified
+12-pair samples on libGDX/flexmark. What follows is the ranked inventory of hand-port DECISIONS the
+engine does not reproduce, each with its §1 support path — the work list for closing the gap
+between "mechanically faithful" and "what sge/ssg would actually adopt".
+
+**Validated first: what the engine already does better.** Zero unexplained type-level omissions in
+any port — every absence has a manifest drop, a decisions.tsv row or a porter note. The engine is
+STRICTLY more complete than the hand port in 8 of 9 libraries (libGDX: the ~15-file LZMA stack and
+the 9-file Json tree sge never ported; simple-graphs +4 types; noise4j +2; jbump +5 — and jbump's
+hand `MathUtils.scala` is actually `Extra.java` under a reused name, with the real 352-line
+`MathUtils` unported; anim8 +`FastAPNG`; vfx +4; screens +3 plus the `NestableFrameBuffer`
+behaviour). gltf is at parity, 135/135 both sides.
+
+**(a) Engine-generic fixes, actionable now:**
+1. **Java `final` single-write fields emit as `var` + placeholder, should be `val`** — 9 confirmed
+   in noise4j alone; the ctor-plan already computes the assignment-site data. Companion:
+   `scala.compiletime.uninitialized` over `null.asInstanceOf` placeholders.
+2. **`FunnelledCtor` needs the hand ports' two other shapes** — default-parameter collapse when
+   candidates differ only by defaults; companion `apply` + instance `init*` when a demoted body
+   does real work. Would retire C3 (`DroppedSuperCall`, 2 live sites in simple-graphs) rather than
+   document it.
+3. **§4.55 clash false positive**: a Java `static` factory and an instance field of the same name
+   do not collide in Scala (companion vs class); Ashley's `Family` carries 3 unneeded `$field`
+   renames.
+4. **D4/D5 dependent-funnel drift**: `CtorFunnel.Plans` must read a non-owned base class's primary
+   parameters from the base's published port map — fixes 7 of gltf's 8 residual errors.
+
+**(b) Parameterisable phases to build (mechanism engine-side, policy in the manifest/conf):**
+1. **Static-global elimination** — `Gdx.*` (556 sites / 100 files upstream) → a context case class
+   threaded as `(using Sge)` (611 / 161 in sge). General mechanism (holder FQN + field→service map
+   + constructor threading + `Holder.field`→`summon[T].field` rewrite); the field bundle is
+   library policy. The single largest seam between engine output and sge adoption, and a BASE-port
+   decision every dependent inherits (§1.5) — vfx/screens/gltf cannot fix it locally.
+2. **JavaBean property transform** — 3,234 `get*/set*/is*` methods emitted verbatim on libGDX
+   alone where sge made properties. Mechanism is general (pair detection + §4.55-style rename +
+   call-site rewrite); the hand ports' own conversion rate is ~20% and inconsistent, so it ships
+   scoped by `RuleScope`, never blanket.
+3. **Interface substitution with member rename** — `Disposable`→`AutoCloseable` +
+   `dispose()`→`close()` (31→47 sites): `Substitutions`-shaped drop+inject plus one member-rename
+   key. Base-manifest scope.
+4. **Annotation-driven nullability** — the 578 `@Null`-annotated libGDX sites (and jspecify
+   elsewhere) retyped to a policy-chosen target (`T | Null` or a wrapper). ⚠ NOT the hand ports'
+   `lowlevel.Nullable` `given Conversion` idiom — that is a MEASURED dead end (`given Conversion`
+   never fires through overloaded calls) and flexmark, its heaviest user (1,356 sites), is
+   overload-heavy. Beyond-annotation nullability (sge tracks ~2× the annotated set) needs
+   null-flow analysis no phase has: open research, currently manual.
+5. **D7 call-site substitution** — the call-level twin of `MethodBodyTransform` (key = resolved
+   signature, replacement = expression template). Unlocks gltf's injected Jsoniter codecs (3 dead
+   `Json` call sites) and every future replace-the-callee case.
+6. **Collection-map extensions** — retarget entries like `gdx Array<Integer>` → `ArrayBuffer[Int]`
+   with wrapper unboxing (base-manifest); `java.util.Comparator`→`Ordering` + a
+   `Collections.sort`→`sortInPlace` call-site table.
+7. **Rename-map extensions** — per-TYPE renames (`liqp.filters.Map`→`MapFilter`), sub-package
+   restructuring and nested-type flattening knobs (simple-graphs' `internal`,
+   `Connection.DirectedConnection`→top level).
+
+**(c) Library rules, permanent injects, skip-then-patch (correctly not mechanized):**
+- **Opaque types** — ~30 in sge core (GL handles, GL enums, `Pixels`/`Seconds`/unit types), zero
+  emitted. The (b) mechanism exists (`PrimitiveToOpaqueTransform`); the knowledge is per-library
+  config nobody has written yet. Extensions inherit the base's (§1.5). The ssg ports and the four
+  small sge ports have ZERO opaque types — do not invent config there.
+- **Permanent injects with no Java source**: gltf's 2,268-line Jsoniter codecs (plus (b)5 to reach
+  them); liqp's ANTLR-replacement parser trio (2,166 LOC — the generated Java was never committed,
+  so these are injects FOREVER, with one pinned behavioural divergence: parse-time vs render-time
+  unknown-filter errors, which any engine port must consciously re-decide); ssg's `DataView` and
+  `lls.Nullable` shared infra.
+- **Taxonomy/design redesigns**: `SgeError` sealed-enum error taxonomy, vfx's `PrioritizedArray`
+  de-pooling (one decision that transitively deletes its only two callee types), noise4j's
+  hierarchy flattening, jbump's 4-into-1 `keySort` collapse. No detectable trigger; hand-patch
+  after a mechanical port when wanted.
+
+**Non-gaps, recorded so they are not re-derived**: Scala-3 `enum` syntax (cannot express constant
+bodies the class encoding handles — T8/T10/T11/T13); bean names as cosmetics (CLAUDE.md §6's
+beautification backend); `for`→`while` (hand and engine independently agree); sge's own SAM→function
+collapse is inconsistent with itself and ssg keeps all 183 SAM traits; the typed-GL/`GLEnum` layer
+is hand-authored ecosystem infrastructure with no Java source to transform.
+
+**Bookkeeping from the audit**: anim8's decisions.tsv snapshot in §7 predates T13 (235 vs the
+current 565 `RetypedSignature`) — refresh the prose next time that section is touched.
+
 ## 12. Remaining work, across the engine
 
 Maintained by deletion. Items are ordered by what they block, not by size.
