@@ -726,14 +726,36 @@ while a genuine redeclaration keeps the most specific.
 *Fix kind: (a) — shipped for the diamond forwarder; the TIR node is an (a) prerequisite for
 anything more.*
 
-### T8. Enum constants with class bodies — a known thin path
+### T8. Enum constants with class bodies — FIELDS closed, initializer blocks still open
 
-An enum-constant anonymous body is read for `CtMethod` members only; a field or instance-initializer
-block in a constant body would be dropped **silently, with no omission finding**. Zero sites in
-libGDX core (no enum constant there has a class body at all), which is why it was left. If your
-library uses that Java form, this is a known hole, not a surprise.
+The shape works: a Java enum whose constants carry class bodies emits as a `sealed abstract class`
+plus one `case object` per constant, with the per-constant overrides in the object's body. noise4j
+is the first corpus library to have any (three independent ones — `GenerationMode`,
+`DefaultRoomType`, `Direction`), and confirmed it.
 
-*Fix kind: (a), unbuilt.*
+**The FIELD half was the predicted hole, and it fired.** This entry used to say a field in a constant
+body "would be dropped silently, with no omission finding … zero sites in libGDX core". noise4j has
+two: `DefaultRoomType.CASTLE { public static final int MIN_SIZE = 7, MIN_TOWER = 3; … }` and
+`CROSS { public static final int MIN_SIZE = 3; … }`, read UNQUALIFIED by the same constant's own
+methods. JLS 8.1.3 permits statics in an anonymous class body when they are constant variables, and
+that is exactly the form a library uses to keep a magic number beside the constant that needs it.
+Cost: **4 of the port's 6 errors** — and the prediction about invisibility held, because the
+omissions check counts what the TIR CARRIES and these never reached it.
+
+The fix is a frontend harvest, not an emitter change: a Scala `case object`'s body IS the constant's
+scope, so `SpoonTir.enumCase` now collects `CtField` alongside `CtMethod` and the field emits as an
+ordinary member (`inline val MIN_SIZE = 7`, through the same `static final` constant path as
+anywhere else). **0 members changed** in libGDX, libGDX-test, Ashley, Ashley-test, simple-graphs and
+its suite — a body with no field harvests exactly what it did before. Spec: `EnumConstantBodySpec`
+in `testkit`, two positive and two negative.
+
+**Still open, and still unobserved:** an *instance-initializer block* in a constant body, and a
+*nested type* in one, are both dropped with no finding. Zero sites across four corpus libraries. If
+you hit one, the shape of the fix is the same one line — `enumCase` mirrors `anonClass`, which
+already handles the block case — and `anonClass`'s `dropped` list is the model for reporting what is
+left.
+
+*Fix kind: (a). Field half BUILT; initializer-block and nested-type halves unbuilt.*
 
 ---
 
@@ -1122,6 +1144,43 @@ Distinguish on `Flags.isStatic`, and take the synthesised lambda's arity from th
 `MethodType` so a multi-parameter reference (`String::compareTo` as a `Comparator`) works too.
 
 *Fix kind: (a).*
+
+### K9. A java enhanced-for over a JDK `Iterable` has no `foreach` — 2 errors, and why the obvious fix is worse
+
+`Tree.ForEach` emits `for (x <- xs)`, which needs Scala's `foreach`. That is correct for an ARRAY,
+for anything the port owns that ends up under `balticporter.runtime.JavaIterable` (whose companion
+carries a `foreach` extension, so no import is needed), and for every JDK collection a port retyped
+with `CollectionsTransform`. It is wrong for a JDK collection a port **kept**:
+
+```
+for (currentRoom <- this.rooms)   // rooms: java.util.List[Room]
+    value foreach is not a member of java.util.List[Room] — did you mean rooms.forEach?
+```
+
+Two errors on noise4j, which is the first corpus port to run no `collections` phase — and it runs
+none on purpose, because the JDK forms it uses (`Iterator.remove()`, `List.set` for its RETURN value)
+have no Scala-collection counterpart and retyping turns one of them into a runtime `throw`
+(`PROGRESS.md` §noise4j 5.4). So this is not an artefact of an unusual configuration; it is what
+every port that keeps `java.util` will hit, which is every port whose reference hand-port kept it.
+
+**Do NOT switch the emitter's `ForEach` to the iterator protocol universally.** Not attempted, and
+deliberately: `{ val it = xs.iterator(); while (it.hasNext()) { val x = it.next(); … } }` is the JAVA
+arity. A Scala `Buffer`'s `iterator` is parameterless and its `hasNext` is a parameterless accessor,
+so the same text breaks every port that DOES run `collections` — and it would move the emitted digest
+of every foreach loop in libGDX for a change that helps one port.
+
+**And do not decide it from the type's NAME.** "`java.util.*` gets the iterator protocol" is exactly
+the string test `CLAUDE.md` §4.56 exists to forbid, and it fails in both directions here:
+`balticporter.runtime.JavaIterable` is external and not `scala.*` yet already has `foreach`, while a
+retyped `java.util.List` is `scala.collection.mutable.Buffer` and no longer names `java` at all.
+
+What a real fix has to answer first: **which iterables support Scala's `foreach`, decided from what a
+PHASE did rather than from what a type is called.** The shape that costs no existing port anything is
+a §1(b) phase with an empty default — a set of iterable types the port declares it kept, rewritten to
+the iterator protocol before emission — because an empty parameter makes it a no-op and every current
+lane stays byte-identical.
+
+*Fix kind: (a) in effect, best delivered as (b). Unbuilt.*
 
 ---
 
@@ -1640,8 +1699,20 @@ OPEN entry here (a bullet marked CLOSED graduated by acquiring one).
 - **Duplicate injected-runtime definitions will break the Scala.js and Native linkers** when a second
   module is ported. Confirmed by design reasoning; not observed, because only one module exists so
   far. (`PROGRESS.md` §Publishability item 1.3.)
-- **An enum constant with a field or initializer block in its class body** would be dropped silently
-  (T8). Zero sites in the corpus, so the hole is reasoned, not observed.
+- ~~An enum constant with a FIELD in its class body is dropped silently~~ **CLOSED by observation**:
+  noise4j had two, they cost 4 errors, and `SpoonTir.enumCase` now harvests `CtField` (T8). The
+  INITIALIZER-BLOCK and NESTED-TYPE halves of that entry remain reasoned rather than observed — still
+  zero sites across four libraries.
+- **An assignment used as a VALUE re-evaluates its left-hand side.** `return a[f(x)] = v` lowers to
+  `Tree.Block(List(Assign(lhs, rhs)), lhs)` with the SAME `lhs` tree in both slots, so it emits
+  `{ a(f(x)) = v; a(f(x)) }` — and the compound form `a[f(x)] += v` evaluates `f(x)` three times.
+  Java evaluates the target subexpressions exactly once and yields the assigned value. 7 sites in
+  noise4j's `Grid` (`return grid[toIndex(x,y)] = value` and its five arithmetic siblings), every one
+  with a PURE index, so no port has yet been wrong because of it — which is why this is here and not
+  in a numbered entry. `a[i++] = v` used as a value would double-increment, with a green compile and
+  no count moving. The simple form has an exact fix that is also cheaper (`{ val $v = rhs; lhs = $v;
+  $v }` — Java yields the assigned value, not a re-read); the compound form needs the LHS decomposed
+  into a bound receiver and a bound index, which is the part nobody has built. *(a), unbuilt.*
 - **A `StaticForwarderTransform` wrapper whose overloads are not all receiver-first** would be
   rewritten wrongly: members are matched by **name only**. Safe under current policy; worth a guard
   when a second library configures it. (`PROGRESS.md` §Publishability.)

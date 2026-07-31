@@ -19,7 +19,8 @@ just gdx-measure          # libGDX core        (emit → checks → break residu
 just gdx-test-measure     # libGDX's own suite (… → compile → RUN → correlate)
 just ashley-measure       # Ashley + its suite, compiled WITH libGDX core
 just sg-measure           # simple-graphs + its suite
-just measure-all          # the four above, serially, stopping at the first failure
+just noise4j-measure      # noise4j (no upstream test suite — the lane asserts that, see §5)
+just measure-all          # the five above, serially, stopping at the first failure
 
 just decision-counts      # decisions.tsv row counts by kind, every port
 just members-unchanged    # members.tsv against its baseline — the blast radius, before a compile
@@ -38,13 +39,13 @@ migration did not run, and every one prints the full check report diffed against
 baseline, not a filtered selection of it. The mechanism they share is `scripts/_lib.sh`; the policy
 (sbt projects, upstream trees, dependency coordinates) is variables at the top of the `Justfile`.
 
-Measurements below are from one serial run of all five, 2026-07-30.
+Measurements below are from one serial run of all six lanes, 2026-07-31.
 
 ---
 
 ## 1. Corpus inventory
 
-Three libraries are ported on the current (TIR) pipeline, across six runs — a library and its own test
+Four libraries are ported on the current (TIR) pipeline, across seven runs — a library and its own test
 suite are two ports, and the suite is a *dependent* of the library:
 
 | port | upstream | files in / out | tests | compile |
@@ -55,6 +56,7 @@ suite are two ports, and the suite is a *dependent* of the library:
 | `ashley-test` | Ashley `ashley/tests` | 18 → **18** | **112**, 108 pass / 2 fail / 2 skipped | **0** |
 | `simple-graphs` | simple-graphs `src/main` | 29 → **33** | — | **0** |
 | `simple-graphs-test` | simple-graphs `src/test` | 7 → **7** | **16**, all passing | **0** |
+| `noise4j` | noise4j `src` | 12 → **12** | **none upstream** (§5) | **2** |
 
 **A frozen BIR path still exists.** Nine corpus programs — liqp, flexmark, the xwiki-macros cold-port
 closure, jbump and their demos — predate the TIR and run on the string-oriented BIR printer
@@ -93,7 +95,7 @@ Where a doc disagreed with the tree, the tree won.
 | `sge-graphs` | simple-graphs | 29 / 3,784 | 25 / 2,525 | **82 %** | 8 / 77 | MIT |
 | `sge-controllers` | gdx-controllers | 29 / 2,884 | 18 / 2,141 | **27 %** — deliberate | 6 / 33 | Apache-2.0 |
 | `sge-ecs` | Ashley | 21 / 2,523 | 24 / 2,404 | **100 %** | 18 / 172 | Apache-2.0 |
-| `sge-noise` | noise4j | 12 / 2,491 | 10 / 2,608 | **83 %** | 3 / 13 | Apache-2.0 |
+| `sge-noise` | noise4j | 12 / 2,491 | 10 / 2,608 | **83 %** — upstream now ported by the engine, §5 | 3 / 13 | Apache-2.0 |
 | `sge-screens` | libgdx-screenmanager | 23 / 2,459 | 20 / 1,691 | **86 %** | 6 / 29 | Apache-2.0 |
 | `sge-freetype` | libGDX `gdx-freetype` | 4 / 1,891 | 9 / 2,365 | **100 %** of the Java layer | 9 / 28 | Apache-2.0 |
 
@@ -158,6 +160,7 @@ or per construct.
 | `sge-freetype` | Java layer 100 % ported, but every `native` method now binds a Rust crate. Carries a **deliberate behavioural fix upstream lacks** — do not "correct" it back. |
 | `sge-graphs` | Least idiomatic module: raw `null.asInstanceOf`, anonymous SAM classes, zero `Nullable`, zero renames. Any conformance check will flag it heavily — expected, not a defect. |
 | `sge-jbump` | Lost a **public copy constructor** `Collisions(Collisions)`, pinned by a deliberately-red test. |
+| `sge-noise` | The 17 % gap is `Array2D` and `Object2dArray` — the whole `array` package bar `Int2dArray`, absent with no note. And every one of the three **enum constant bodies** was REDESIGNED into a flat `enum` plus a `this match`, which no mechanical rule produces; the engine emits `sealed abstract class` + `case object` instead (§5). |
 | `sge-screens` | `NestableFrameBuffer` missing → screens binding their own FBO rebind incorrectly. |
 | `sge-colorful` | `colorful-pure` (40k LOC) unported with **no recorded rationale anywhere**. Confirm intent before treating it as scope. |
 | `sge-visui` vs core | VisUI keeps `AsyncTask` as a class while core maps it to `() => Unit`. **Two answers to one construct in one repo** — the manifest must decide which. |
@@ -176,8 +179,8 @@ NOTICE / THIRD-PARTY files are hand-maintained and are not.
 
 ### 1.2 Suggested assignment order
 
-1. **`sge-noise`, `sge-jbump`, `sge-graphs`** — small, mechanical, each exercising the `lowlevel.util.*`
-   split. (`sge-ecs` and `sge-graphs`' upstream are already done: §3 and §4.)
+1. **`sge-jbump`** — small, mechanical, exercising the `lowlevel.util.*` split. (`sge-ecs`,
+   `sge-graphs`' and `sge-noise`'s upstreams are done: §3, §4 and §5.)
 2. **`sge-gltf`, `sge-anim8`, `sge-vfx`, `sge-screens`** — mid-size, high coverage, few surprises.
 3. **`ssg-liquid`** — small Java surface, but resolve the ANTLR decision first. Its 105 upstream test
    files are the best available proving ground for test porting after libGDX.
@@ -534,7 +537,135 @@ followed, because the reference port is otherwise this project's tie-breaker (`C
 
 ---
 
-## 5. Publishability — what sge and ssg need before they can depend on this
+## 5. noise4j
+
+`com.github.czyzby.noise4j.{map,array} → sge.noise`, Apache-2.0. **The fourth corpus library, the
+second standalone base port, and the first with no upstream test suite at all.** Reproduce with
+`just noise4j-measure`.
+
+Why it was worth adding: 2,491 lines that concentrate constructs the first three do not have. Three
+independent **Java enum constant bodies** (`Generator.GenerationMode`, `RoomType.DefaultRoomType`,
+`DungeonGenerator.Direction`) — an abstract enum method overridden per constant, which Scala 3's
+`enum` cannot express at all; an interface CONSTANT read unqualified from an implementor
+(`Grid.CellConsumer.BREAK`/`CONTINUE`, two declarators in one Java field declaration); a `continue`
+inside a doubly-nested `for`; and `java.util` mutation through `Iterator.remove()`.
+
+### 5.1 Measured state
+
+| gate | `noise4j` |
+|---|---|
+| compile errors (scala-cli, Scala 3.8.4) | **2** — both one cause, §5.4 |
+| files emitted | **12** (12 upstream units; 0 dropped, 0 injected) |
+| model | 12 units / 1,032 symbols |
+| signature consistency | 0 |
+| omissions | **3** — all `Object2dArray`, §5.5 |
+| portability (all / emitted / injected) | 0 / 0 / 0 |
+| substitutions · manifest · port map · policy | 0 · 0 · 0 · 0 |
+| remediation suggestions | 0 |
+| trivia (comments lost) | **0** — every comment in all 12 files reached the Scala |
+| porter notes uncovered · break residue | 0 · 0 |
+| source map | 12 units / 311 members |
+| members changed vs baseline | 0 |
+| decisions recorded | **37** (RenamedMember 20, RenamedPackage 12, FunnelledCtor 4, RetypedSignature 1) |
+| **tests** | **NONE EXIST UPSTREAM** — §5.2 |
+
+**No §1(c) rules, and one §1(b) phase.** The manifest is a namespace claim, a two-entry package
+rename and `mutable-params`. Everything else this library needed was §1(a).
+
+### 5.2 There is no behavioural gate, and that is a fact about the library
+
+noise4j ships **no test sources**: `find` over the upstream tree returns `src/` and `examples/`
+(nine PNGs) and nothing else. The 13 MUnit cases in the reference hand port (`../sge/sge-extension/
+noise`, 3 files) are hand-written Scala with no Java counterpart, so there is nothing for this
+pipeline to convert and there is no `test.conf` beside `main.conf`.
+
+State the consequence rather than the absence: **every `CLAUDE.md` §4.4 form is UNMEASURED for this
+port.** The four silent correctness defects found in libGDX core all compiled cleanly, and this port
+has only a compile. `just noise4j-measure` therefore ASSERTS `@Test in Java: 0` instead of omitting
+the discovery block — a lane that silently has no tests is indistinguishable from a lane whose tests
+all vanished, and this one also has to notice the day upstream gains one.
+
+What was read by hand instead, since a count could not be: the emitted form of every §4.4 shape this
+library has. All were **correct** — `x++` as a value (`{ val $prev = index; index += 1; $prev }`),
+pre-decrement as a value, `this == object` inside `equals` (`this eq object.asInstanceOf[AnyRef]`),
+the chained `a = b = -1`, `continue` as a `boundary` around the loop BODY with the update outside it,
+`static final` constants as `inline val`, and the interface constants reached through an `export` of
+`Grid.CellConsumer`. That is reading, not measurement, and it is recorded as such.
+
+### 5.3 What this library taught the engine
+
+| gap | kind | cost when wrong |
+|---|---|---|
+| an enum constant's class body was harvested for METHODS only — its fields were dropped silently | **(a)**, fixed | **4 of 6 errors**; `ENGINE-LIMITS.md` T8 predicted it and this port is the first to hit it |
+| a Java enhanced-for over a JDK `Iterable` emits `for (x <- xs)`, which needs Scala's `foreach` | **(a)**, open | **2 errors**, §5.4 |
+| assignment used as a VALUE re-evaluates its left-hand side | **(a)**, open | 0 errors here — 7 sites, all with a pure index. §5.6 |
+
+The enum fix is `SpoonTir.enumCase`, spec-pinned by `EnumConstantBodySpec` in `testkit` (two positive
+tests, two negative). It moved **0 members** in every other port, so no baseline elsewhere changed.
+
+### 5.4 The 2 errors, and why the port does NOT run `CollectionsTransform`
+
+Both errors are one cause: `for (final Room r : rooms)` over a `java.util.List` and
+`for (final Integer region : regions)` over a `java.util.Set` emit as `for (r <- rooms)`, and a JDK
+collection has no `foreach`. The correlator classifies both as **EngineGap — (a)**; the rule is
+`ENGINE-LIMITS.md` K9.
+
+The port keeps `java.util` deliberately, and the alternative is measured rather than assumed:
+
+| configuration | compile errors | what it costs |
+|---|---|---|
+| **no `collections` phase** (shipped) | **2**, both loud | nothing — `java.util` is what the reference hand port emits |
+| `+ { transform = "collections" }` | 1 | `DungeonGenerator.removeDeadEnds` **throws at run time** |
+
+With `collections` on, `Iterator.remove()` over the `LinkedList` of dead ends becomes
+`balticporter.runtime.JavaIterator.from(deadEnds.iterator).remove()`, whose `remove()` is
+`throw new UnsupportedOperationException` — correctly, because a Scala iterator cannot remove. That
+is the library's headline API (`DungeonGenerator.generate` calls it unconditionally) broken by the
+port's own policy, and with no test suite nothing here would ever catch it. The remaining error is
+its sibling: `Generators.shuffle` uses `List.set` for its RETURN value (the previous element) and
+`Buffer.update` returns `Unit`. Two compile errors that name their line are strictly better than one
+compile error plus a `throw`.
+
+`CLAUDE.md` §3.5 agrees independently: the reference hand port imports
+`java.util.{ArrayList, HashMap, HashSet, LinkedList, Iterator, Set}` and renames only to dodge
+Scala's own `Iterator`/`Set`. Where the reference solved it, that is the answer.
+
+### 5.5 The 3 omissions
+
+All `Object2dArray`, all one shape: the constructor funnel promoted `Object2dArray(int, int)` to the
+primary, so its body — `this.array = getArray(width * height)` — runs on the three paths Java did not
+run it on. Each of those then overwrites `array`, so the observable cost is a wasted allocation plus a
+virtual call to an ABSTRACT method during construction, which Java made on one path only.
+`ENGINE-LIMITS.md` C7 is the entry: refusing the promotion costs `0 -> 41` on libGDX, so the omission
+is reported rather than avoided. Reported, counted, baselined — not silent.
+
+### 5.6 Do NOT retry
+
+| tried | measured | why |
+|---|---|---|
+| `{ transform = "collections" }` in the manifest | 2 → 1 error, and `Iterator.remove()` becomes a `throw` | §5.4 — the JDK forms this library uses (`Iterator.remove`, `List.set` for its return) have no Scala-collection counterpart |
+| switching the emitter's `ForEach` to the iterator protocol universally | not attempted, deliberately | `it.hasNext`/`it.next()` is the JAVA arity; a Scala `Buffer`'s `iterator` is parameterless, so it would break every port that DOES run `collections`, and move every foreach loop's digest in libGDX. `ENGINE-LIMITS.md` K9 says what a real fix has to answer first |
+
+### 5.7 Remaining
+
+- **The 2 `for`-over-JDK-`Iterable` errors** (K9). The fix has to decide, structurally rather than
+  from a type's NAME (`CLAUDE.md` §4.56), which iterables support Scala's `foreach`. A `(b)`
+  parameterised phase with an empty default — so every existing lane is a no-op — is the shape that
+  costs no other port anything; that is the design question, not the lowering.
+- **Assignment-as-value re-evaluates its LHS.** `return grid[toIndex(x,y)] = value` emits
+  `{ grid(toIndex(x,y)) = value; grid(toIndex(x,y)) }`, and the compound form evaluates the index
+  THREE times. 7 sites in `Grid`, every one with a pure index, so this port is unaffected — but
+  `a[i++] = v` used as a value would double-increment, silently, with a green compile. The simple
+  form has an exact fix (`{ val $v = rhs; lhs = $v; $v }`, which is also what Java yields); the
+  compound form needs the LHS decomposed. Recorded in `ENGINE-LIMITS.md` §9.
+- **A Java enum with NO members at all** (`public enum Bare { A, B; }`) crashes the frontend with an
+  NPE in `superTypes` → `originOf` on a position with no source buffer. Found while writing
+  `EnumConstantBodySpec`; one member is enough to avoid it. Not on any port's path, so it is noted
+  here and not fixed.
+
+---
+
+## 6. Publishability — what sge and ssg need before they can depend on this
 
 **The goal being evaluated.** sge and ssg stop hand-maintaining their ports and instead depend on
 Baltic Porter as a published library, feeding it Java sources plus per-library configuration — with
@@ -561,7 +692,7 @@ with each item's state re-verified against the working tree.
 | 3.2 | test-framework coverage was JUnit-4-shaped | **mostly** — `@After`, `@Ignore`, `@BeforeClass`/`@AfterClass` and the assertion set are handled (`ENGINE-LIMITS.md` X5). The target side is honestly **(b) with exactly one implemented policy value**: `intercept` and the curried `test(name){body}` shape are MUnit facts baked into the phase |
 | 3.3 | incremental TIR runs; unmatched-policy-key reporting; `CollectionsTransform.typeMap` as a parameter | **two of three** — the action cache moved to TIR, and `PolicyReport` now reports a key that never fired (it found a real dead entry in libGDX's manifest the first time it was called). `typeMap` is still a private table, not a (b) parameter, so a divergent *mapping* is invisible to `ManifestAgreement` |
 
-### 5.1 What is still NOT done, stated plainly
+### 6.1 What is still NOT done, stated plainly
 
 1. **Nine corpus programs on the frozen BIR path.** Until they move, "the framework" is two frameworks.
 2. **No end-to-end proof that a generated port resolves the published runtime.** `SbtGen` writes the
@@ -578,7 +709,7 @@ with each item's state re-verified against the working tree.
 6. **Nothing verifies two ports were built by the same ENGINE at the manifest level.** `EnginePin` is
    wired into the port map's freshness answer, not into `ManifestAgreement`.
 
-### 5.2 What the audit found SOUND — clean verdicts, not courtesy
+### 6.2 What the audit found SOUND — clean verdicts, not courtesy
 
 `Substitutions`' overload-precise `owner#m(P1,P2)` keys; `ClassTableTransform` and
 `StaticForwarderTransform` as correct (b) mechanisms (searched for smuggled libGDX knowledge, none
@@ -592,7 +723,7 @@ One latent edge worth a guard when a second library configures it: `StaticForwar
 members by **name only**, so a wrapper whose overloads are not all receiver-first would be rewritten
 wrongly. Safe under current policy.
 
-### 5.3 What an agent in another repository would still hit first
+### 6.3 What an agent in another repository would still hit first
 
 Traced as a scenario, and the part that has not changed: **typer errors arrive with no (a)/(b)/(c)
 signal at all**, and they are the bulk of a new library's first wall. The checks classify their own
@@ -603,11 +734,11 @@ cannot yet say, for an *unmarked* error, is which of the three kinds the fix is.
 
 ---
 
-## 6. Remaining work, across the engine
+## 7. Remaining work, across the engine
 
 Maintained by deletion. Items are ordered by what they block, not by size.
 
-### 6.1 Provenance coverage — decisions that are not yet recorded
+### 7.1 Provenance coverage — decisions that are not yet recorded
 
 - **`TestFrameworkTransform`'s synthesised `beforeAll`/`afterAll` record no decision.** They are
   definitions with no Java behind them, which is precisely the case a reader cannot explain from the
@@ -619,13 +750,13 @@ Maintained by deletion. Items are ordered by what they block, not by size.
   each is in `DESIGN.md` §7.2 and stands; it is listed here so that adding one is a decision rather
   than an oversight.
 
-### 6.2 Control flow
+### 7.2 Control flow
 
 - **`labelSeq` is program-global**, so a control-flow diff is never file-local: emitting one new
   boundary shifts every subsequent label name. Nothing is wrong with the output; the *diff* is
   unreadable, which is a measurement cost (`CLAUDE.md` §5).
 
-### 6.3 Counted residues that are not defects
+### 7.3 Counted residues that are not defects
 
 - **Trivia 100 / 69 / 1 / 1** (libGDX core, libGDX tests, simple-graphs main and test; Ashley 0),
   classified in `ENGINE-LIMITS.md` §10 — a comment on a construct the emission consumes has nowhere to
@@ -638,11 +769,11 @@ Maintained by deletion. Items are ordered by what they block, not by size.
 - **`Collectors.toSet` / `toMap` deliberately unmapped** (`ENGINE-LIMITS.md` K6): each needs a different
   target type, and both a copy and the identity compile while being wrong.
 
-### 6.4 Cosmetic
+### 7.4 Cosmetic
 
 - Drop notes print `key=` twice.
 
-### 6.5 Not run
+### 7.5 Not run
 
 - **The Auditor has not run over this delivery.** It is expensive (Fable 5) and the **user** runs it,
   once a whole piece of work is delivered (`CLAUDE.md` §4).
