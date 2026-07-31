@@ -2,17 +2,21 @@ package balticporter.corpus
 
 import balticporter.testkit.PortSuite
 
-/** A LEXICAL seam of the emitter, pinned through the pipeline — a Java snippet in, the emitted
-  * Scala asserted. A CLAUDE.md §1(a) fact about the two languages' lexers, found by porting
-  * anim8-gdx, and invisible to every check: the emitted file simply does not parse, so the whole
-  * failure arrives as a wall of syntax errors attributed to whatever the lexer was reading when it
-  * gave up.
+/** Two LEXICAL seams of the emitter, pinned through the pipeline — a Java snippet in, the emitted
+  * Scala asserted. Both are CLAUDE.md §1(a) facts about the two languages' lexers, both were found
+  * by porting anim8-gdx, and neither is visible to any check: the emitted file simply does not
+  * parse, so the whole failure arrives as a wall of syntax errors attributed to whatever the lexer
+  * was reading when it gave up.
   *
   *   - **a literal's VALUE has to be re-escaped.** `Constant.StringC` holds decoded text, so a
   *     control character, a newline or a lone surrogate has to be put back in a form Scala accepts.
   *     anim8's `ConstantData` holds four ISO-8859-1 literals (47,935 + 3 × 6,390 characters) full of
   *     both: **1,334 errors** from one file, because one unescaped newline ends the literal and
   *     every byte after it is read as source.
+  *   - **a prefix operator and its operand are two tokens.** Scala's lexer takes a maximal run of
+  *     operator characters as one identifier, so `-` against a literal that already renders `-…`
+  *     gives `--`. Java negating a hex literal whose `long` value is negative is routine in
+  *     hash-mixing code (`x * -0xC13FA9A902A6328FL`): **48 errors** in one method.
   *
   * No phase is involved: `port(java)` with no phases is the emitter's own identity fixture.
   */
@@ -55,4 +59,39 @@ class EmitterLiteralSpec extends PortSuite:
     val out  = port(stringy).out
     val bad  = out.filter(c => (c < ' ' || c.toInt == 0x7f) && c != '\n' && c != '\r' && c != '\t')
     assertEquals(bad.map(_.toInt).toList, List.empty[Int], s"raw control characters in:\n$out")
+  }
+
+  // -------------------------------------------------------------------------------------------
+  // prefix operators
+  // -------------------------------------------------------------------------------------------
+
+  test("a prefix `-` on a literal that renders NEGATIVE parenthesises rather than lexing as `--`") {
+    // `0xC13FA9A902A6328FL` has bit 63 set, so its `long` value IS -4521708957497675121; the java
+    // `-` in front of it then renders against a leading `-`.
+    val p = port(
+      """package p;
+        |class Mix {
+        |  long mix(long x) { return x * -0xC13FA9A902A6328FL; }
+        |}
+        |""".stripMargin
+    )
+    assertEmits(p, "-(-4521708957497675121L)")
+    assertNotEmits(p, "--")
+  }
+
+  test("a prefix operator on an ordinary operand is NOT parenthesised — the fix is not a rewrite") {
+    // The negative half: a check that only ever fires is a check that has changed the output for
+    // everything. `-y` and `!b` must be untouched.
+    val p = port(
+      """package p;
+        |class Plain {
+        |  int neg(int y) { return -y; }
+        |  boolean not(boolean b) { return !b; }
+        |}
+        |""".stripMargin
+    )
+    assertEmits(p, "-y")
+    assertNotEmits(p, "-(y)")
+    assertEmits(p, "!b")
+    assertNotEmits(p, "!(b)")
   }

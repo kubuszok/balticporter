@@ -2016,7 +2016,7 @@ final class TirEmitter(
     // operators (populator tags them `scala.<op>#…`) render infix / prefix, not `.op(x)`.
     case Tree.Select(recv, m, _, _) if sym(m).fullName.startsWith("scala.<op>#") =>
       val op = sym(m).name
-      if op.startsWith("unary_") then s"${op.stripPrefix("unary_")}${operand(recv, i)}"
+      if op.startsWith("unary_") then prefixOp(op.stripPrefix("unary_"), operand(recv, i))
       else s"${operand(recv, i)} $op ${args.map(operand(_, i)).mkString(", ")}"
     case Tree.Select(recv, m, _, _) if sym(m).name == "<init>" =>
       val kw = recv match { case _: Tree.Super => "super"; case _ => "this" }
@@ -2243,6 +2243,32 @@ final class TirEmitter(
     case Constant.NullC      => "null"
     case Constant.UnitC      => "()"
     case Constant.ClassOfC(t) => s"classOf[${tpe(t)}]"
+
+  /** A PREFIX operator and its operand, with the two kept as two tokens.
+    *
+    * Scala's lexer takes a maximal run of operator characters as ONE identifier, so a prefix `-`
+    * placed directly against an operand that already renders with a leading `-` produces `--`,
+    * which is a different token and a syntax error — not a double negation. That happens whenever
+    * java negates a literal whose VALUE is negative, which is routine in hash-mixing code: anim8's
+    * `AnimatedGif` writes `x * -0xC13FA9A902A6328FL`, and `0xC13FA9A902A6328FL` is
+    * `-4521708957497675121L` as a `long`, so the operand's rendering starts with the very character
+    * the operator ends with. Measured: **48 errors** in one method (`analyzeOverboard`), all E040
+    * "',' or ')' expected, but long literal found".
+    *
+    * A fact about Scala's lexical syntax, so CLAUDE.md §1(a): parenthesising the operand is the
+    * general answer and it is the only one that cannot mis-lex — a separating SPACE would leave
+    * `- -4L`, which reads as an infix application waiting for a left operand. The test is on the
+    * two characters that would meet, never on the operator's name, so an operator this emitter
+    * gains later is covered without being listed.
+    */
+  private def prefixOp(op: String, rendered: String): String =
+    if op.nonEmpty && rendered.nonEmpty && isOpChar(op.last) && isOpChar(rendered.head)
+    then s"$op($rendered)"
+    else s"$op$rendered"
+
+  /** the ASCII half of Scala's `opchar` (SLS 1.1); the Unicode `Sm`/`So` half cannot begin any
+    * rendering this emitter produces. */
+  private def isOpChar(c: Char): Boolean = "!#%&*+-/:<=>?@\\^|~".indexOf(c.toInt) >= 0
 
   /** Render a string or char literal's VALUE as Scala source that denotes the same value.
     *
