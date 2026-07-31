@@ -164,6 +164,26 @@ object GltfPolicy:
               |  }
               |  e
               |}""".stripMargin,
+          // 4. NOT a reflection site, and the only entry here that repairs an ENGINE gap rather
+          //    than a portability one — `ENGINE-LIMITS.md` T12. libGDX's `AnimationController`
+          //    declares six public `setAnimation(String, …)` and one PROTECTED
+          //    `setAnimation(AnimationDesc)`. Java resolved `setAnimation(null)` here against the
+          //    String overload alone, because the protected twin is not accessible from
+          //    `net.mgsx.gltf.scene3d.animation`; the emitter drops `protected` (867 declarations
+          //    in libGDX core, 3 survive), both overloads become public and arity-1, and dotty
+          //    reports `E051 Ambiguous overload`.
+          //
+          //    The body below is upstream's, verbatim, with the ascription that states the
+          //    overload java chose. It is a five-line method, so this costs no divergence from
+          //    upstream worth the name — and it is removed the day the engine renders java's
+          //    `protected` as `protected[<package>]`, which is priced at those 867 declarations.
+          "net.mgsx.gltf.scene3d.animation.AnimationsPlayer#clearAnimations" ->
+            """{
+              |  this.controllers.clear()
+              |  if (this.scene.animationController != null) {
+              |    this.scene.animationController.setAnimation(null.asInstanceOf[java.lang.String])
+              |  }
+              |}""".stripMargin,
         )),
         // LAST, deliberately, for the reason AshleyPolicy states: this reads what the BASE
         // actually emitted and reports a reference the base does not ship, so it must run after
