@@ -1,0 +1,24 @@
+#suite	test	status
+sge.anim8.ChunkBufferSuite	endChunk RESETS the buffer and the CRC, so the instance is reusable	pass
+sge.anim8.ChunkBufferSuite	endChunk frames length, type, payload and CRC — and the SUPER call reached the CheckedOutputStream	pass
+sge.anim8.ChunkBufferSuite	the CRC is not a constant — a different payload gives a different CRC	pass
+sge.anim8.ConstantDataSuite	ENCODED_SNUGGLY is 32768 bytes — a byte[0x8000] palette mapping — with the upstream bytes	pass
+sge.anim8.ConstantDataSuite	TRI_BLUE_NOISE is a 64x64 grid with the upstream bytes	pass
+sge.anim8.ConstantDataSuite	TRI_BLUE_NOISE_B is a 64x64 grid with the upstream bytes	pass
+sge.anim8.ConstantDataSuite	TRI_BLUE_NOISE_C is a 64x64 grid with the upstream bytes	pass
+sge.anim8.ConstantDataSuite	the derived multiplier tables ran their static block — they are not left at zero	pass
+sge.anim8.ConstantDataSuite	the three noise grids hold the SAME multiset of bytes in a different order	pass
+sge.anim8.DitherAlgorithmSuite	ALL is the cached values() array and holds every constant	pass
+sge.anim8.DitherAlgorithmSuite	all 22 algorithms exist	pass
+sge.anim8.DitherAlgorithmSuite	every constant's legibleName is non-empty — the enum CONSTRUCTOR BODY ran	pass
+sge.anim8.DitherAlgorithmSuite	the legible names are upstream's, in upstream's order	pass
+sge.anim8.DitherAlgorithmSuite	toString returns legibleName, for every constant	pass
+sge.anim8.DitherAlgorithmSuite	valueOf resolves a constant by its JAVA name, which is not its legibleName	pass
+sge.anim8.OtherMathSuite	atan2 approximates Math.atan2 in all four quadrants	pass
+sge.anim8.OtherMathSuite	barronSpline is MONOTONIC across the unit interval	pass
+sge.anim8.OtherMathSuite	barronSpline maps the unit interval onto itself: 0 -> 0, 1 -> 1	pass
+sge.anim8.OtherMathSuite	barronSpline with shape = turning = 0.5 is the identity at the midpoint	pass
+sge.anim8.OtherMathSuite	cbrt approximates the cube root, including for negatives	pass
+sge.anim8.OtherMathSuite	centralize pushes middling bytes toward the centre and leaves the extremes	pass
+sge.anim8.OtherMathSuite	probit: 0.5 maps to ~0, and it is symmetric about 0.5	pass
+sge.anim8.OtherMathSuite	probitF: 0.5 maps to ~0, and it tracks the double version	pass

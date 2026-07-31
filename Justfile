@@ -5,6 +5,7 @@
 #   just gdx-measure                 libGDX core        (emit → checks → break residue → compile → correlate)
 #   just gdx-test-measure            libGDX's own suite (… → compile → RUN → correlate)
 #   just ashley-measure              Ashley + its suite, compiled WITH libGDX core (a dependent port)
+#   just anim8-measure               anim8-gdx, compiled WITH libGDX core (a dependent port)
 #   just sg-measure                  simple-graphs + its suite
 #   just noise4j-measure             noise4j — emit, checks, break residue, compile, correlate
 #   just jbump-measure               jbump (no suite upstream — the lane re-derives the zero)
@@ -69,6 +70,7 @@ core_project  := "engine"                # holds balticporter.tir.CorrelateMain
 gdx_module    := "libgdx-core"
 ashley_module := "ashley-core"
 sg_module     := "simplegraphs-core"
+anim8_module  := "anim8-core"
 n4j_module    := "noise4j-core"
 jbump_module  := "jbump-core"
 
@@ -76,6 +78,7 @@ jbump_module  := "jbump-core"
 gdx_src       := "../sge/original-src/libgdx/gdx"
 ashley_src    := "../sge/original-src/ashley"
 sg_src        := "../sge/original-src/simple-graphs"
+anim8_src     := "../sge/original-src/anim8-gdx"
 n4j_src       := "../sge/original-src/noise4j"
 jbump_src     := "../sge/original-src/jbump/jbump/src"
 # jbump's WHOLE upstream checkout, not just the ported module: the `@Test` census runs over it so
@@ -100,6 +103,10 @@ gdx_run_deps  := "--dependency org.scalameta::munit:1.0.2 --dependency junit:jun
 # in 2.0. Read from Ashley's own build.gradle rather than guessed — guessing it cost a full cycle.
 ashley_deps   := "--dependency junit:junit:4.13.2 --dependency org.mockito:mockito-all:1.10.19 --dependency org.scalameta::munit:1.0.2"
 sg_deps       := "--dependency junit:junit:4.12 --dependency org.scalameta::munit:1.0.2"
+# anim8 upstream declares NO test framework at all (its `src/test/java` is a set of lwjgl3 demo
+# apps, not a suite — see Anim8Migrate's scope note), so the only coordinate this lane needs is the
+# one its HAND-WRITTEN suite is written in.
+anim8_deps    := "--dependency org.scalameta::munit:1.0.2"
 # noise4j declares NO dependencies — its `build.gradle` has an empty `dependencies` block and the
 # 12 sources import nothing outside `java.lang`, `java.math` and `java.util`. Stated as an empty
 # variable rather than omitted from the lane, so the lane reads the same as every other one and the
@@ -366,6 +373,104 @@ ashley-measure:
     fi
 
     headline "$ERRORS" "$TREPORT"
+
+# ---------------------------------------------------------------------------------------------
+# anim8-gdx, compiled TOGETHER with the ported libGDX core.
+#
+# A DEPENDENT port with the same shape as Ashley's — every one of its 16 files resolves against
+# libGDX, the collection shims are vendored by libgdx-core, so both source sets must be on the same
+# scala-cli invocation and this lane must run AFTER `gdx-measure` has re-emitted the base.
+#
+# WHERE THIS LANE DIFFERS FROM EVERY OTHER ONE, and it is not a shortcut: anim8 has NO upstream
+# suite. Its `src/test/java` holds 20 files and ZERO `@Test` annotations — every one is an
+# `ApplicationAdapter` demo or a startup bench driven by `gdx-backend-lwjgl3`, and no backend is
+# ported. So there is no `Anim8TestMigrate` and no emitted test source set; the port's behavioural
+# gate is the HAND-WRITTEN MUnit suite committed under `anim8-core/src/test/scala` (CLAUDE.md §5.5:
+# `src/` is the hand-written half of a port). The discovery block below states both numbers
+# explicitly rather than letting `0 == 0` read as agreement — a suite with no discoverable tests
+# runs ZERO and reports SUCCESS, which is the exact failure `java_test_count` exists to catch, and
+# a lane whose java side is legitimately zero must say so out loud or it teaches its reader nothing.
+# ---------------------------------------------------------------------------------------------
+[doc("anim8-gdx, compiled WITH libGDX core (a dependent port)")]
+anim8-measure:
+    #!/usr/bin/env bash
+    cd "{{root}}"
+    ROOT="$(pwd)"
+    export CORE_PROJECT="{{core_project}}"
+    . scripts/_lib.sh
+
+    write_run_props "$ROOT" "balticporter.reportPathRoot=$ROOT/{{anim8_src}}"
+    REPORT="$ROOT/port-report/Anim8Migrate"
+
+    OUT=$(sbt -client "{{corpus}}/runMain balticporter.corpus.anim8.Anim8Migrate" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
+    if ! grep -qE "wrote [0-9]+ Scala files" <<<"$OUT"; then
+      echo "!! Anim8Migrate DID NOT RUN — refusing to measure stale output"
+      grep -E "^\[error\].*\.scala:[0-9]+|^\[error\] +\|" <<<"$OUT" | head -20
+      exit 1
+    fi
+    echo "-- Anim8Migrate (every line it printed) --"
+    sed -n '/building model over/,/wrote [0-9]* Scala files/p' <<<"$OUT"
+    echo
+
+    echo "-- checks: persisted, untruncated, diffed against the baseline --"
+    show_check_report "$REPORT"
+
+    echo
+    echo "-- test discovery --"
+    # The java count is computed and printed even though it is expected to be 0: an upstream that
+    # gains a suite must show up here rather than being assumed away by a comment.
+    JAVA_TESTS=$(java_test_count {{anim8_src}}/src/test)
+    HAND_TESTS=$(grep -rhoE '(^|[^a-zA-Z0-9_.])test\("' {{anim8_module}}/src/test/scala 2>/dev/null | wc -l | tr -d ' ')
+    EMITTED_TESTS=$(grep -rhoE '(^|[^a-zA-Z0-9_.])test\("' {{anim8_module}}/src_managed/test/scala 2>/dev/null | wc -l | tr -d ' ')
+    echo "@Test in upstream java: $JAVA_TESTS (upstream ships DEMOS, not a suite — nothing to port)"
+    echo "hand-written munit in {{anim8_module}}/src/test/scala: $HAND_TESTS   emitted: $EMITTED_TESTS"
+    [ "$JAVA_TESTS" != "0" ] && echo "!! UPSTREAM NOW HAS A SUITE — $JAVA_TESTS @Test method(s) that this port does not migrate; add an Anim8TestMigrate"
+    [ "$HAND_TESTS" = "0" ] && echo "!! NO BEHAVIOURAL GATE — this port would compile and prove nothing (CLAUDE.md §3)"
+
+    echo
+    break_residue {{anim8_module}}/src_managed
+
+    echo "-- compile --"
+    # NOTE the ANSI strip: without it `grep -cE '^-- .*Error'` matches nothing and reports 0 for a
+    # port that does not compile — a false NEGATIVE on the headline number.
+    DEPS="{{anim8_deps}}"
+    scala-cli compile --scala {{scala_version}} --server=false $DEPS \
+      {{gdx_module}}/src_managed/main/scala {{anim8_module}}/src_managed/main/scala {{anim8_module}}/src/test/scala \
+      2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/anim8measure.txt
+    CLI_STATUS=${PIPESTATUS[0]}
+    ERRORS=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/anim8measure.txt)
+    compile_guard "$CLI_STATUS" "$ERRORS" "$MEASURE_TMP"/anim8measure.txt
+    echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/anim8measure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/anim8measure.txt))"
+    grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/anim8measure.txt | sort | uniq -c | sort -rn | head
+    echo "-- bare (uncoded) errors by message --"
+    grep -A1 '^-- Error:' "$MEASURE_TMP"/anim8measure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
+
+    if [ "$ERRORS" = "0" ]; then
+      echo
+      echo "-- run --"
+      scala-cli test --scala {{scala_version}} --server=false $DEPS -Duser.language=en -Duser.country=US \
+        {{gdx_module}}/src_managed/main/scala {{anim8_module}}/src_managed/main/scala {{anim8_module}}/src/test/scala \
+        2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/anim8run.txt
+      reconcile_outcomes "$MEASURE_TMP"/anim8run.txt "$HAND_TESTS"
+      echo
+      echo "-- correlation: test failures located to members and Java origins --"
+      # BOTH ports' maps. There is no `test=` map: the suite is hand-written, so no srcmap can
+      # anchor a test FRAME on a Java origin — but a failure inside the LIBRARY still resolves
+      # through anim8's own map, and one that reaches the base resolves through libGDX's, which is
+      # exactly what a dependent's failure looks like.
+      correlate "$REPORT/run-latest" --tests "$MEASURE_TMP"/anim8run.txt \
+        --srcmap "$ROOT/port-report/LibgdxCoreMigrate/run-latest/srcmap.tsv" \
+        --srcmap "$REPORT/run-latest/srcmap.tsv"
+    else
+      echo
+      echo "-- correlation: every error located to its member and its Java origin --"
+      correlate "$REPORT/run-latest" --scalac "$MEASURE_TMP"/anim8measure.txt \
+        --srcmap "$ROOT/port-report/LibgdxCoreMigrate/run-latest/srcmap.tsv" \
+        --srcmap "$REPORT/run-latest/srcmap.tsv"
+      echo "(not running the suite: it does not compile — a test that cannot run is not a test that passed)"
+    fi
+
+    headline "$ERRORS" "$REPORT"
 
 # ---------------------------------------------------------------------------------------------
 # simple-graphs + its suite — the same gate as `gdx-measure`.
@@ -699,7 +804,7 @@ jbump-measure:
 measure-all:
     #!/usr/bin/env bash
     cd "{{root}}"
-    for lane in gdx-measure gdx-test-measure ashley-measure sg-measure noise4j-measure jbump-measure; do
+    for lane in gdx-measure gdx-test-measure ashley-measure anim8-measure sg-measure noise4j-measure jbump-measure; do
       echo
       echo "################################################################## just $lane"
       if ! {{just_executable()}} "$lane"; then

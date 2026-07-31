@@ -1,0 +1,17 @@
+#check	count
+collection-boundary	0
+collection-closure	0
+gdx-shared-iterator	0
+manifest	0
+omissions	24
+policy	0
+port-map	0
+portability(all)	263
+portability(emitted)	112
+portability(injected)	0
+porter-notes	0
+remediation	4
+signature	0
+substitution(dangling)	0
+substitution(emitted)	0
+trivia	34
