@@ -160,8 +160,12 @@ object CheckReport:
         // git worktree, a mounted source tree) otherwise relativises to a stack of `..` segments
         // that depends on where the link lives — deterministic, but different from the same
         // baseline computed in the primary checkout, which defeats the point.
-        def real(x: Path) = try x.toRealPath() catch case _: Exception => x.normalize
-        real(root).relativize(real(abs)).toString.replace('\\', '/')
+        //
+        // Through `RealPath` (§5.4's one implementation) rather than a local helper. The local one
+        // fell back to a BARE `normalize`, so a relative root stayed relative, `relativize` threw
+        // "different type of Path", and the outer catch below returned `p` — the raw absolute path
+        // this function's own doc promises never to emit.
+        balticporter.core.RealPath.relativize(root, abs).toString.replace('\\', '/')
     catch case _: Exception => p
 
   // ---------------------------------------------------------------------------

@@ -1,6 +1,6 @@
 package balticporter.runner
 
-import java.nio.file.{Files, Path}
+import java.nio.file.Path
 
 /** The truthful `Provenance.upstreamCommit` for a VENDORED source tree.
   *
@@ -47,8 +47,7 @@ object VendoredCommit:
       s"$repoName@$hash${if dirty then "+dirty" else ""} (last change to $tree$where)"
     ).getOrElse(s"vendored at ${sourceRoot.getFileName}; commit unknown")
 
-  private def realpath(p: Path): Path =
-    if Files.exists(p) then p.toRealPath() else p.normalize()
+  private def realpath(p: Path): Path = balticporter.core.RealPath.of(p)
 
   /** stdout of a git command, trimmed — `None` on non-zero exit or any failure to run. */
   private def git(cwd: Path, args: String*): Option[String] =

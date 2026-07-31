@@ -1,6 +1,6 @@
 package balticporter.frontend.spoon
 
-import balticporter.core.{FrontendConfig, Substituted, Substitutions}
+import balticporter.core.{FrontendConfig, RealPath, Substituted, Substitutions}
 import balticporter.tir.*
 import balticporter.tir.TypeRepr.*
 
@@ -46,9 +46,13 @@ object SpoonTir:
     env.setSourceClasspath(cfg.classpath.map(_.toString).toArray)
     if cfg.resolutionRoots.nonEmpty then
       cfg.resolutionRoots.foreach(r => launcher.addInputResource(r.toString))
-      val covered = cfg.resolutionRoots.map(_.toRealPath())
+      // §5.4 on both operands, and STRICT on both: these are DECLARED inputs, so an absent one is
+      // fatal with a diagnostic naming it (§5.1's missing-input rule) rather than a bare
+      // `NoSuchFileException` from deep inside a `map`. `RealPath.of` would be worse than either —
+      // it would normalise the absent path and hand the resolver a root that is not there.
+      val covered = cfg.resolutionRoots.map(r => RealPath.ofExisting(r, "resolution root"))
       cfg.files
-        .map(f => cfg.sourceRoot.resolve(f).toRealPath())
+        .map(f => RealPath.ofExisting(cfg.sourceRoot.resolve(f), s"declared source file $f"))
         .filterNot(abs => covered.exists(abs.startsWith))
         .foreach(abs => launcher.addInputResource(abs.toString))
     else cfg.files.foreach(f => launcher.addInputResource(cfg.sourceRoot.resolve(f).toString))

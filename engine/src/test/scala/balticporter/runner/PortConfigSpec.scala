@@ -232,6 +232,33 @@ class PortConfigSpec extends munit.FunSuite:
     assert(clue(e.getMessage).contains("base chain"))
   }
 
+  test("…and through a SYMLINK too — §5.4, where the failure is a CRASH and not a wrong number") {
+    // `resolvePath` is lexical BY DESIGN (the class doc: a conf-relative path resolves to the same
+    // place either way), which is right for RESOLUTION and wrong for COMPARISON. Spelled through a
+    // link — a git worktree reaching a sibling checkout is the normal case — the two names of one
+    // file compare unequal at every hop, so the cycle below is never detected and `readManifest`
+    // recurses until the stack goes. A `StackOverflowError` instead of the ConfigError above.
+    val root = Files.createTempDirectory("portconf-link")
+    Files.createDirectories(root.resolve("java/com/demo"))
+    Files.writeString(root.resolve("java/com/demo/Widget.java"), "package com.demo;\npublic class Widget {}\n")
+    // b.conf names ITSELF through a symlinked directory that points back at the conf's own dir
+    try Files.createSymbolicLink(root.resolve("via"), root)
+    catch case _: UnsupportedOperationException => assume(false, "filesystem without symlinks")
+    Files.writeString(root.resolve("b.conf"),
+      """base = "via/b.conf"
+        |manifest { name = "b" }
+        |""".stripMargin)
+    Files.writeString(root.resolve("port.conf"),
+      """label = "a"
+        |base  = "b.conf"
+        |input  { sourceRoot = "java" }
+        |output { portRoot = "out", sourceSet = "main" }
+        |manifest { name = "a" }
+        |""".stripMargin)
+    val e = intercept[ConfigError](PortConfig.load(root.resolve("port.conf")))
+    assert(clue(e.getMessage).contains("base chain"))
+  }
+
   test("a base contributes its MANIFEST and nothing else — its build halves are not junk") {
     // The base conf below carries a full `input`/`output`/`provenance`; none of it is this run's
     // business (§1.5's must-differ column), and reporting it as an unread key would make every

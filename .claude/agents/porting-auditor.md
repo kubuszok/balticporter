@@ -67,6 +67,15 @@ safely, silently, or wrongly. Particular attention to:
   until another component treats "not listed" as "safe" — then it becomes a wrong answer.
   `PortabilityCheck` had the plural `getDeclaredFields` and not the singular `getDeclaredField`;
   harmless until `Remediator` read the list to decide which wrapper members could be inlined.
+- **any comparison, prefix test or relativize between a CONFIG-WRITTEN path and a PARSER-RECORDED
+  path that does not go through `balticporter.core.RealPath`** (CLAUDE.md §5.4). Check BOTH
+  operands — realpathing one side is the bug that reads as the fix — and treat a lexical
+  `normalize` beside a `startsWith` as the signature. The WORKTREE is the environment where it
+  fails, so a spec that passes in the primary checkout proves nothing; three parts of the engine
+  have been bitten (635 files emitted instead of 30, a baseline the primary checkout could not
+  reproduce, a provenance header with a duplicated path segment) and each was invisible to every
+  count. `RealPathSpec` greps for a duplicated `.toRealPath(` helper, which is the half a grep can
+  see; a NEW raw comparison is the half only a reader can.
 
 ### 3. Shortcuts — the fix that moved the number rather than fixed the cause
 

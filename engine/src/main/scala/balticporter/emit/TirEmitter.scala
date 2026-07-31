@@ -392,11 +392,11 @@ final class TirEmitter(
     else
       val root   = p.sourceRoot.stripSuffix("/")
       val marker = p.sourcePathPrefix.stripSuffix("/")
-      // §5.4: realpath where the path exists, normalize where it does not — on BOTH operands.
-      def realOrNormal(s: String): java.nio.file.Path =
-        val path = java.nio.file.Path.of(s)
-        try path.toRealPath()
-        catch case _: java.io.IOException => path.toAbsolutePath.normalize
+      // §5.4: realpath where the path exists, normalize where it does not — on BOTH operands, and
+      // through `RealPath`, the one implementation of that rule. The local helper caught
+      // `IOException` alone, so a `SecurityException` or an `InvalidPathException` escaped and
+      // killed the emission of the whole port.
+      def realOrNormal(s: String): java.nio.file.Path = balticporter.core.RealPath.of(java.nio.file.Path.of(s))
       val rel =
         if root.nonEmpty then
           val rraw  = realOrNormal(raw)

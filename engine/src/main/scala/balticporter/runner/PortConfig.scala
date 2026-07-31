@@ -1,6 +1,6 @@
 package balticporter.runner
 
-import balticporter.core.{FrontendConfig, PortManifest, Provenance, RuntimeMode}
+import balticporter.core.{FrontendConfig, PortManifest, Provenance, RealPath, RuntimeMode}
 import balticporter.sbtgen.SbtGen
 import balticporter.tir.{ConfigError, ConfigView}
 
@@ -253,7 +253,13 @@ object PortConfig:
       case scala.None    => own
       case Some(basePath) =>
         val baseFile = resolvePath(dir, basePath)
-        if seen.contains(baseFile) then
+        // RESOLUTION stays lexical (see `resolvePath` and the class doc); the CYCLE TEST does not,
+        // and using two different functions is what keeps the distinction honest. §5.4's failure
+        // here is a CRASH rather than a wrong number: a base chain spelled through a symlink — a
+        // git worktree reaching a sibling checkout is the normal case — compares unequal at every
+        // hop, so the cycle is never detected and `readManifest` recurses to a `StackOverflowError`
+        // instead of raising the `ConfigError` written just below.
+        if seen.exists(s => RealPath.of(s) == RealPath.of(baseFile)) then
           throw ConfigError(view.at("base"),
             s"$baseFile is already in this base chain (${(seen :+ baseFile).mkString(" -> ")}); " +
               "a manifest cannot be a base of itself")

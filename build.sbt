@@ -231,6 +231,20 @@ lazy val engine = project
       IO.write(f, (Compile / scalaSource).value.getAbsolutePath)
       Seq(f)
     }.taskValue,
+    // …and EVERY production source root, one per line, for `RealPathSpec`'s duplication scan. The
+    // subject there is not one package but the whole shipped engine: §5.4's helper was reimplemented
+    // four times in three modules, which is precisely the failure a single-module scan cannot see.
+    Test / resourceGenerators += Def.task {
+      val f = (Test / resourceManaged).value / "balticporter" / "production-source-dirs.txt"
+      val roots = Seq(
+        (api / Compile / scalaSource).value,
+        (Compile / scalaSource).value,
+        (`frontend-spoon` / Compile / scalaSource).value,
+        (runtime / Compile / scalaSource).value,
+      )
+      IO.write(f, roots.map(_.getAbsolutePath).mkString("", "\n", "\n"))
+      Seq(f)
+    }.taskValue,
   )
 
 // The ONLY module that sees Spoon types. It depends on `api` alone for the TIR path; the BIR path

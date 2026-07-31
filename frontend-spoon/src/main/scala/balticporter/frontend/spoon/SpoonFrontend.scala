@@ -30,7 +30,7 @@ final class SpoonFrontend extends Frontend:
   def parse(cfg: FrontendConfig): List[BUnit] =
     val typesByFile = buildModel(cfg)
     cfg.files.map { rel =>
-      val abs = cfg.sourceRoot.resolve(rel).toRealPath()
+      val abs = RealPath.ofExisting(cfg.sourceRoot.resolve(rel), s"declared source file $rel")
       val types = typesByFile.getOrElse(abs, throw Unsupported(rel, "-", "file produced no types"))
       val src = Files.readString(abs)
       new UnitBuilder(rel, src).build(types)
@@ -43,7 +43,7 @@ final class SpoonFrontend extends Frontend:
     val typesByFile = buildModel(cfg)
     cfg.files.map { rel =>
       rel -> scala.util.Try {
-        val abs = cfg.sourceRoot.resolve(rel).toRealPath()
+        val abs = RealPath.ofExisting(cfg.sourceRoot.resolve(rel), s"declared source file $rel")
         val types = typesByFile.getOrElse(abs, throw Unsupported(rel, "-", "file produced no types"))
         val src = Files.readString(abs)
         new UnitBuilder(rel, src).build(types)
@@ -60,9 +60,10 @@ final class SpoonFrontend extends Frontend:
     if cfg.resolutionRoots.nonEmpty then
       // whole roots participate in resolution; conversion is limited to cfg.files
       cfg.resolutionRoots.foreach(r => launcher.addInputResource(r.toString))
-      val covered = cfg.resolutionRoots.map(_.toRealPath())
+      // §5.4 on both operands, STRICT on both — see the same block in `SpoonTir.buildModel`.
+      val covered = cfg.resolutionRoots.map(r => RealPath.ofExisting(r, "resolution root"))
       cfg.files
-        .map(f => cfg.sourceRoot.resolve(f).toRealPath())
+        .map(f => RealPath.ofExisting(cfg.sourceRoot.resolve(f), s"declared source file $f"))
         .filterNot(abs => covered.exists(abs.startsWith))
         .foreach(abs => launcher.addInputResource(abs.toString))
     else cfg.files.foreach(f => launcher.addInputResource(cfg.sourceRoot.resolve(f).toString))
@@ -70,7 +71,9 @@ final class SpoonFrontend extends Frontend:
 
     model.getAllTypes.asScala.toList
       .filter(t => t.getPosition != null && t.getPosition.isValidPosition)
-      .groupBy(t => t.getPosition.getFile.toPath.toRealPath())
+      // a PARSER-recorded path, not a declared one — `of`, whose fallback exists for exactly this
+      // (a position on a virtual or already-deleted file must not sink the whole model).
+      .groupBy(t => RealPath.of(t.getPosition.getFile.toPath))
       .view
       .mapValues(_.sortBy(t => t.getPosition.getSourceStart))
       .toMap

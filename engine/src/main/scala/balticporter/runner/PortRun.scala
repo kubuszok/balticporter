@@ -1257,7 +1257,12 @@ final case class PortRun(
     else
       val mine  = Set(label) ++ manifest.map(_.name)
       val found = PortMap.discover(PortMap.reportRoot, exclude = mine).map(p => p.module -> p).toMap
-      val roots = (frontend.resolutionRoots ++ List(frontend.sourceRoot)).map(_.toAbsolutePath.normalize).distinct
+      // the same roots `partitionUnits` and `sharedSurface` spell through §5.4's helper, spelled the
+      // same way. These reach `PortMap.freshness`, which only probes them for existence today — so
+      // this is a spelling inconsistency and not yet a bug, and it is fixed for that reason: the
+      // next reader to add a prefix test against these roots would inherit the §5.4 failure
+      // silently, and two independent reviews flagged the divergence before anything else did.
+      val roots = (frontend.resolutionRoots ++ List(frontend.sourceRoot)).map(balticporter.core.RealPath.of).distinct
       chain.map { b =>
         found.get(b.name) match
           case scala.None => ManifestAgreement.BasePort(b)
@@ -1423,10 +1428,10 @@ object PortRun:
     }
 
   /** a path with symlinks resolved, falling back to lexical normalisation when it does not exist
-    * (a synthetic origin, a root that was never created). */
-  def real(p: Path): String =
-    try p.toRealPath().toString
-    catch case _: Exception => p.toAbsolutePath.normalize.toString
+    * (a synthetic origin, a root that was never created) — §5.4's rule, which
+    * [[balticporter.core.RealPath]] is the one implementation of. Kept as a `String`-returning
+    * alias because that is what this file's prefix tests compare. */
+  def real(p: Path): String = balticporter.core.RealPath.str(p)
 
   /** Every check's name as it appears in `counts.tsv`. Named here, in the orchestrator, because the
     * orchestrator is now the only thing that records: a check is a pure function of a `Program` and
