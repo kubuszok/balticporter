@@ -164,7 +164,7 @@ member	com.dongbat.jbump.World#cellMaxY	sge.jbump.World#cellMaxY	Renamed	-	com/d
 member	com.dongbat.jbump.World#cellMinX	sge.jbump.World#cellMinX	Renamed	-	com/dongbat/jbump/World.java	35	d81a788e2c7f50c6
 member	com.dongbat.jbump.World#cellMinY	sge.jbump.World#cellMinY	Renamed	-	com/dongbat/jbump/World.java	35	c4c0433153217171
 member	com.dongbat.jbump.World#cellSize	sge.jbump.World#cellSize	Renamed	-	com/dongbat/jbump/World.java	39	bcf2d7703eba9a3d
-member	com.dongbat.jbump.World#check(Item,float,float,CollisionFilter)	sge.jbump.World#check(Item<?>,float,float,CollisionFilter)	Renamed	-	com/dongbat/jbump/World.java	414	4a91598baaf0edec
+member	com.dongbat.jbump.World#check(Item,float,float,CollisionFilter)	sge.jbump.World#check(Item<?>,float,float,CollisionFilter)	Renamed	-	com/dongbat/jbump/World.java	414	b42b8b0cf01ea06a
 member	com.dongbat.jbump.World#check_cols	sge.jbump.World#check_cols	Renamed	-	com/dongbat/jbump/World.java	410	8ccebfe36f4e5ede
 member	com.dongbat.jbump.World#check_projectedCols	sge.jbump.World#check_projectedCols	Renamed	-	com/dongbat/jbump/World.java	411	78850c82d9a3d842
 member	com.dongbat.jbump.World#check_result	sge.jbump.World#check_result	Renamed	-	com/dongbat/jbump/World.java	412	03297dc90c8a930c

@@ -53,9 +53,13 @@ final class TirEmitter(
 
   // normalize away Java member-name clashes (a field `x` alongside a method `x()`) before
   // rendering — Scala forbids them; renaming the field symbol propagates to every reference.
+  // …and LAST, the one that renames a CAPTURE rather than a member: it reads the names the three
+  // above have already settled, so a member renamed to `hasNext$field` is what a captured local is
+  // then held against (§4.55's "read EFFECTIVE names").
   private val prepared =
-    TirEmitter.funnelParamRenames(
-      TirEmitter.resolveFieldShadowing(TirEmitter.resolveMemberClashes(source, own), own), own)
+    TirEmitter.resolveCapturedLocalClashes(
+      TirEmitter.funnelParamRenames(
+        TirEmitter.resolveFieldShadowing(TirEmitter.resolveMemberClashes(source, own), own), own), own)
   /** which Java constructor becomes each class's Scala primary, and which `super(args)` can be
     * replayed as statements — whole-program decisions. */
   private val plans = CtorFunnel.Plans(prepared)
@@ -2464,6 +2468,129 @@ object TirEmitter:
         renames.get(s.id).map(n => s.copy(name = n, flags = s.flags.copy(isPrivate = false, isProtected = false))).getOrElse(s)
       )
       new Program(p.units, SymbolTable(syms), p.xref)
+
+  /** Rename an enclosing method's LOCAL or PARAMETER that a nested class's member shadows.
+    *
+    * The fourth face of §4.55's "Java lets a name be reused where Scala cannot", and the one that
+    * runs the other way: here the name that must move is not the member but the CAPTURE.
+    *
+    * Java keeps methods and variables in separate namespaces, so inside
+    *
+    * {{{
+    * Result check(Item item, CollisionFilter filter) {          // jbump, World.check
+    *   CollisionFilter visitedFilter = new CollisionFilter() {
+    *     public Response filter(Item a, Item b) {               // a METHOD called filter
+    *       if (filter == null) …                                // …and this is the PARAMETER
+    *       return filter.filter(a, b);
+    *     }
+    *   };
+    * }}}
+    *
+    * `filter` in expression position is unambiguously the captured parameter and `filter(a, b)`
+    * would be the method. Scala has ONE namespace and resolves innermost-first, so the member wins
+    * both: `filter == null` becomes an eta-expansion of the member and `filter.filter(a, b)` is
+    * `value filter is not a member of (Item[?], Item[?]) => Response` — the compiler naming a
+    * function type nobody wrote, which is how this was found.
+    *
+    * There is no rendering that keeps the name. Scala can qualify an outer MEMBER (`Outer.this.x`)
+    * and cannot name a shadowed LOCAL at all, so the capture is renamed. That is exact rather than
+    * approximate for §4.55's reason: Java resolved it statically, so the reference in the TIR
+    * already points at the symbol Java chose, and renaming the symbol re-points exactly those.
+    *
+    * Two things this deliberately does NOT do:
+    *
+    *   - it renames only where the capture is REALLY shadowed — the local must be referenced inside
+    *     the nested body AND the body must declare or inherit its name. A local rename is invisible,
+    *     so over-approximating would be safe; a PARAMETER rename is not quite, because the emitted
+    *     signature's parameter name is part of the surface, so precision is worth the two extra
+    *     sets;
+    *   - it reads `declared` through program-declared parents only. A member inherited from a type
+    *     the frontend never parsed (a JDK supertype) is invisible here, as it is to every other
+    *     pass that walks `declOf`. Nothing in the corpus reaches it, and a case that did would show
+    *     up as exactly the error above rather than as silence.
+    */
+  def resolveCapturedLocalClashes(p: Program, out: collection.mutable.Buffer[Decision] = collection.mutable.ListBuffer.empty): Program =
+    given Program = p
+    def nm(id: SymId): String = p.symbolOf(id).map(_.name).getOrElse("")
+    def headSym(t: TypeRepr): Option[SymId] = t match
+      case TypeRepr.TypeRef(_, s) => Some(s); case TypeRepr.AppliedType(tc, _) => headSym(tc); case _ => None
+
+    /** every nested BODY, its owning type symbol and its parents. An anonymous class's body lives
+      * inside a TERM, which is why this is a `StandardTraversal` and not a walk over `cd.body`:
+      * a hand-rolled recursion over class bodies alone would miss every `new X() { … }`, which is
+      * the only shape this defect has been seen in. */
+    val bodies  = collection.mutable.ListBuffer[(List[Statement], List[SymId])]()
+    val methods = collection.mutable.Set[SymId]()
+    val declOf  = collection.mutable.Map[SymId, Tree.ClassDef]()
+    val collector = new Phase:
+      def name: String = "tir-emitter/captured-local-scan"
+      override def transformClassDef(t: Tree.ClassDef)(using Program): Tree.ClassDef =
+        declOf(t.symbol) = t
+        bodies += ((t.body, t.parents.flatMap { case tt: TypeTree => headSym(tt.tpe); case tm: Term => headSym(tm.tpe) }))
+        t
+      override def transformNew(t: Tree.New)(using Program): Term =
+        t.anon.foreach(a => bodies += ((a.body, headSym(t.tpt.tpe).toList)))
+        t
+      override def transformDefDef(t: Tree.DefDef)(using Program): Tree.DefDef = { methods += t.symbol; t }
+    p.units.foreach(StandardTraversal.mapClassDef(collector, _))
+
+    /** the definitions and the references a body holds, at any depth. Both come from one walk of the
+      * SAME traversal, so "declared inside" and "referenced inside" can never disagree about what
+      * "inside" means. */
+    def survey(stats: List[Statement]): (Set[SymId], Set[SymId]) =
+      val defs = collection.mutable.Set[SymId]()
+      val refs = collection.mutable.Set[SymId]()
+      val ph = new Phase:
+        def name: String = "tir-emitter/captured-local-survey"
+        override def transformValDef(t: Tree.ValDef)(using Program): Tree.ValDef     = { defs += t.symbol; t }
+        override def transformDefDef(t: Tree.DefDef)(using Program): Tree.DefDef     = { defs += t.symbol; t }
+        override def transformClassDef(t: Tree.ClassDef)(using Program): Tree.ClassDef = { defs += t.symbol; t }
+        override def transformIdent(t: Tree.Ident)(using Program): Term              = { refs += t.sym; t }
+        override def transformSelect(t: Tree.Select)(using Program): Term            = { refs += t.sym; t }
+      stats.foreach(StandardTraversal.mapStat(ph, _))
+      (defs.toSet, refs.toSet)
+
+    def memberNames(stats: List[Statement]): Set[String] = stats.collect {
+      case d: Tree.DefDef if nm(d.symbol) != "<init>" => nm(d.symbol)
+      case v: Tree.ValDef                             => nm(v.symbol)
+      case c: Tree.ClassDef                           => nm(c.symbol)
+    }.toSet
+    def visibleNames(parents: List[SymId], seen: Set[SymId]): Set[String] =
+      parents.filterNot(seen).flatMap(declOf.get).flatMap(cd =>
+        memberNames(cd.body) ++ visibleNames(
+          cd.parents.flatMap { case tt: TypeTree => headSym(tt.tpe); case tm: Term => headSym(tm.tpe) },
+          seen + cd.symbol)).toSet
+
+    val renames = collection.mutable.Map[SymId, String]()
+    bodies.foreach { (stats, parents) =>
+      val shadowing = memberNames(stats) ++ visibleNames(parents, Set.empty)
+      if shadowing.nonEmpty then
+        val (defs, refs) = survey(stats)
+        // a capture: referenced here, declared elsewhere, and OWNED BY A METHOD — which is what
+        // makes it a local or a parameter rather than a field. A field of the enclosing class is
+        // not this pass's business: java shadows it the same way scala does.
+        (refs -- defs).toList.sortBy(_.raw).foreach { s =>
+          val n = renames.getOrElse(s, nm(s))
+          if shadowing(n) && p.symbolOf(s).exists(sy => methods(sy.owner)) then
+            var fresh = n + "$local"
+            while shadowing(fresh) do fresh += "$"
+            renames(s) = fresh
+            val owner = p.symbolOf(s).map(_.owner).getOrElse(SymId.None)
+            note(out, Decision.Kind.RenamedMember, p, owner,
+              Map(
+                "from"  -> n,
+                "to"    -> fresh,
+                "clash" -> "captured-local-vs-nested-member",
+                "why"   -> ("java keeps methods and variables in SEPARATE namespaces, so a class " +
+                  "nested in this method may declare a member with the same name as one of its " +
+                  "locals and both stay reachable; scala has one namespace and the member wins, " +
+                  "leaving the capture unnameable"),
+              ),
+              MemberRenameRule)
+        }
+    }
+    if renames.isEmpty then p
+    else new Program(p.units, SymbolTable(p.symbols.all.map(s => renames.get(s.id).map(n => s.copy(name = n)).getOrElse(s))), p.xref)
 
   /** Rename any field whose simple name collides with a method in the same class (legal in
     * Java, illegal in Scala) by suffixing `$field`. Renaming the symbol propagates to every
