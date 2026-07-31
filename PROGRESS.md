@@ -2060,6 +2060,71 @@ tabs normalised to spaces and the id is recomputed from the parsed row on read, 
 is reported as removed-and-re-added on every run. Three rows in gdx-gltf, counts identical, and
 `just baseline-accept` does not settle it because the next read re-derives the same mismatch.
 
+### 11.12 M1 — globals → context, as measured
+
+DESIGN.md §8.4. The mechanism is DEFAULT-OFF: no port declares a holder, so **every one of the ten
+lanes is 0 members changed and all 13 ports' check counts are identical**, and `context-seam` records
+nothing at all — the phase returns its input before building anything, so the check is a no-op by
+arithmetic exactly the way `collection-boundary` is for a port with no collections phase.
+
+**The emitted output COMPILES, which is the only evidence that matters here.** The end-to-end fixture
+— a holder, an interface with three implementors across a subclass chain, a caller through the
+interface, an anonymous `Runnable` body, a field initialiser and a class initialiser — is written one
+file per unit and put through `scala-cli compile --scala 3.8.4`: **0 errors**. That is the M2 lesson
+applied: an anonymous `(using T)` resolving across ten emitted files is a claim about scalac, and a
+string assertion is not evidence for it.
+
+**The DRY RUN — the reference bundle's config bound against libGDX core, nothing enabled.** Holder
+`com.badlogic.gdx.Gdx`, injected `sge.Sge`, the 11-field path map from the hand port (`gl*` routed
+through `graphics`), in a throwaway process. Read the two columns against each other: they are the
+argument for class attachment, in numbers.
+
+| | `attach = method` | `attach = class` |
+|---|---|---|
+| threaded declarations (`RetypedSignature` rows) | **2,497** | **275** |
+| distinct files touched | **324** | **177** |
+| seams, total | **162** | **17** |
+|  — `residual-global-read` | 83 | 4 |
+|  — `captured-context` | 47 | 13 |
+|  — `frozen-component` | **32** | **0** |
+| refused components (§1(b) findings) | 15 | 0 |
+| residual holder: fields dropped of 11 | 8 (`app`/`files`/`graphics` keep a reader) | 9 (`app`/`graphics`) |
+| `DeferredInit` sites | 0 | 0 |
+
+Four things follow, none of them re-derivable from R4's census alone:
+
+- **Class attachment reproduces the reference port's size; method attachment does not.** R4 measured
+  the hand port at **159 attachment files against 97 direct-reader files — 1.6×**. Class mode lands
+  at 177/97 = **1.8×**; method mode at 324/97 = **3.3×**. The over-approximation method mode pays is
+  real and it is roughly double.
+- **`frozen-component` goes to ZERO under class attachment**, which is §8.4's prediction confirmed on
+  real code rather than argued: class mode changes no method signature, so an override component
+  anchored on `java.lang.Runnable`, `Comparable` or an unparsed parent is simply not a problem.
+  Method mode refuses 32 declarations across 15 components — `RemoteInput#run`, `Timer$Task`,
+  `TextField`'s listener bodies — every one of them a `Runnable`-shaped anchor.
+- **`DeferredInit` is 0 in base, in both modes**, matching R4's census exactly: the corpus's one true
+  class-initialiser read is `gdx-vfx`'s `VfxGLUtils`, a DEPENDENT. The eager→lazy machinery ships
+  unexercised by libGDX core on purpose.
+- **The residual holder really does mostly vanish**, derived and not configured: 8 of 11 fields lose
+  their last reader under method attachment, 9 under class. What survives is what a boundary still
+  reads.
+
+*(The dry run runs the globals phase ALONE, so it does not see what the base's other surface phases
+do to the same signatures. P5's numbers will move; the ratio between the two columns is the finding.)*
+
+**`attach = "class"` is REFUSED with a counted finding, and that is the one deliverable that did not
+land.** The TIR edit is complete — the clause lands on every constructor, the closure propagates down
+the hierarchy and across every `new` — and the EMISSION is not: the constructor funnel undoes it
+three ways, measured at **5 scalac errors** on the fixture. A constructor that gained a parameter is
+no longer nilary, so the funnel declines to promote it (`ENGINE-LIMITS.md` C1) and emits a synthetic
+nilary primary beside it, leaving the class body with no given in scope; where it does promote, the
+primary's parameter list is built from the funnel's own plan rather than through `paramClause`, so
+the `given` grouping is dropped and the clause renders `class Scene($p: demo.Ctx)`; and a subclass of
+the first shape sees two applicable constructors and reports an ambiguous overload. All three are in
+`CtorFunnel`/`CtorPlan`/the emitter's constructor region, which DESIGN.md §8.2's work owns — so the
+phase reports rather than emitting code that does not compile, and the refusal is one line to delete
+when the synthetic primary lands.
+
 ## 12. Remaining work, across the engine
 
 Maintained by deletion. Items are ordered by what they block, not by size.

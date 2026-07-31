@@ -228,19 +228,58 @@ final class NullabilityFactory extends TransformFactory:
       scope       = TransformFactory.scopeOf(config),
     )
 
-/** `{ transform = "globals-to-implicits", contextClasses = ["com.foo.Config"] }`
+/** {{{
+  * { transform = "globals-to-implicits"
+  *   holders = [{
+  *     holder  = "com.foo.Gdx"
+  *     context = { inject = "sge.Sge" }                  # or { mint = "com.foo.Sge" }
+  *     members = { app = "application", gl = "graphics.gl20" }
+  *     attach = "method", reader = "summon", boundary = "refuse"
+  *     sites  = { "com.foo.Utils#<clinit>" = "lazy-init" }
+  *     promoteToClass = [ "com.foo.Viewport" ]
+  *     scope { except = [ … ] } }] }
+  * }}}
   *
-  * The phase takes `isContext: Symbol => Boolean`; what a port actually has to say is WHICH class is
-  * the ambient context, which is a name. So the data is a set of fully-qualified names and the
-  * factory closes over it — matched EXACTLY, not by prefix, because a context is one class and a
-  * prefix match would also name its package symbol (CLAUDE.md §4.56: a prefix is not a structural
-  * fact about anything).
+  * The whole policy is DATA, which is why this phase (unlike `primitive-to-opaque`'s seeds) needs no
+  * escape hatch: what a port has to say is which class is the ambient context, what its counterpart
+  * is called and which of its fields map where, and all three are names. An absent `holders` is
+  * REFUSED rather than defaulted — with no holder the phase would thread nothing at all, which is
+  * the §1(b) silent no-op this engine exists to remove.
   */
 final class GlobalsToImplicitsFactory extends TransformFactory:
   def name = "globals-to-implicits"
+
   def fromConfig(config: ConfigView): Phase =
-    val names = config.strings("contextClasses").getOrElse(
-      throw ConfigError(config.at("contextClasses"),
-        "required, and absent — with no context class named, the phase would find none and do " +
-          "nothing, which is the §1(b) silent no-op this engine refuses")).toSet
-    new GlobalsToImplicitsTransform(s => names.contains(s.fullName))
+    val hs = config.children("holders").getOrElse(
+      throw ConfigError(config.at("holders"),
+        "required, and absent — with no holder named, the phase would find none and do nothing, " +
+          "which is the §1(b) silent no-op this engine refuses"))
+    new GlobalsToImplicitsTransform(hs.map(holder))
+
+  private def holder(c: ConfigView): ContextHolder =
+    val ctx = c.requireChild("context")
+    val contextType = (ctx.string("inject"), ctx.string("mint")) match
+      case (Some(f), None) => ContextType.Injected(f)
+      case (None, Some(f)) => ContextType.Minted(f)
+      case (Some(_), Some(_)) => throw ConfigError(ctx.at("inject"),
+        "`inject` and `mint` are the two answers to one question — the port supplies the context " +
+          "type, or the engine synthesises it. Declare exactly one")
+      case (None, None) => throw ConfigError(ctx.path,
+        "declare `inject = \"<fqn>\"` (a context type this port wrote) or `mint = \"<fqn>\"` (one " +
+          "the engine synthesises, with a mutable member per mapped static)")
+    ContextHolder(
+      holder  = c.requireString("holder"),
+      context = contextType,
+      members = c.stringMap("members").getOrElse(Map.empty),
+      attach  = c.enumerated("attach", ContextAttach.values.map(v => v.token -> v).toMap)
+                  .getOrElse(ContextAttach.Method),
+      reader  = c.enumerated("reader", ContextReader.values.map(v => v.token -> v).toMap)
+                  .getOrElse(ContextReader.Summon),
+      boundary = c.enumerated("boundary", ContextBoundary.values.map(v => v.token -> v).toMap)
+                  .getOrElse(ContextBoundary.Refuse),
+      sites = c.stringMap("sites").getOrElse(Map.empty).map((k, v) =>
+        k -> ContextSite.fromToken(v).getOrElse(throw ConfigError(c.at("sites"),
+          s"'$v' is not one of ${ContextSite.values.map(_.token).sorted.mkString(", ")}"))),
+      promoteToClass = c.strings("promoteToClass").getOrElse(Nil).toSet,
+      scope = TransformFactory.scopeOf(c),
+    )

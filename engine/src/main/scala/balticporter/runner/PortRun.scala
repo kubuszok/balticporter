@@ -5,7 +5,7 @@ import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.sbtgen.SbtGen
 import balticporter.tir.{CheckReport, Correlate, CorrelateRun, CtorFunnel, DebugFlags, Decision, DecisionLog, Definition, MemberIndex, NoteCoverageCheck, OmissionCheck, Origin, Phase, Pipeline, PolicyBinder, PolicyBound, PortabilityCheck, PorterNote, Program, Reason, Remediator, RewriteTrace, SrcMap, SymId, SymbolTable, Tree, TriviaCheck, Xref}
-import balticporter.transform.{CollectionBoundaryCheck, CollectionClosureCheck, CollectionsTransform, MethodBodyTransform, NullabilityBoundaryCheck, NullabilityTransform, PackageRenameTransform, PortMapTransform}
+import balticporter.transform.{CollectionBoundaryCheck, CollectionClosureCheck, CollectionsTransform, ContextSeamCheck, GlobalsToImplicitsTransform, MethodBodyTransform, NullabilityBoundaryCheck, NullabilityTransform, PackageRenameTransform, PortMapTransform}
 
 import java.nio.file.{Files, Path, StandardCopyOption}
 import scala.jdk.CollectionConverters.*
@@ -296,6 +296,17 @@ final case class PortRun(
       say(s"NULLABILITY BOUNDARY (sites refused, wrapper seams left open, retypes the language " +
         s"does not make transparent): ${bnd.size}")
       println(NullabilityBoundaryCheck.summary(bnd))
+    }
+
+    // ---- the CONTEXT boundary the globals phase drew: every place the threading stopped ----
+    // Only when the phase RAN, and only over `checkedUnits`, for the two reasons above. A port that
+    // declared no holder records nothing here at all — the phase returns its input before building
+    // anything, so this is a no-op by arithmetic rather than by a branch.
+    effectivePhases.collect { case g: GlobalsToImplicitsTransform => g }.foreach { g =>
+      val ss = g.seams(program, checkedUnits)
+      CheckReport.record(ContextSeamCheck.Name, ss.map(_.report))
+      say(s"CONTEXT SEAMS (where the context threading stopped): ${ss.size}")
+      println(ContextSeamCheck.summary(ss))
     }
 
     // ---- cross-port composition: does the shared surface agree with the module that emits it? ----

@@ -2798,3 +2798,90 @@ compile error and every other port compiles. Spec: `StaticCollapseSpec`, all thr
 negatives (the collapse still fires without them; the guard is per-symbol).
 
 *Fix kind: (a) engine.*
+
+---
+
+## 12. Threading a CONTEXT through a program
+
+Turning a static holder into a `using` parameter is a whole-program reachability, and three of its
+edges are not call-graph facts. What follows is what was measured wrong on the way to getting it
+right (`DESIGN.md` §8.4).
+
+### X1. An anonymous body's LEXICAL HOME is not in the owner chain — the capture lands on the CLASS
+
+CLOSED. The frontend interns an anonymous class with its **enclosing class** as owner, because that
+is where its emitted name comes from (`Outer$1`). A pass that finds "the declaration this body was
+written inside" by climbing `Symbol.owner` therefore reaches the CLASS and loses the method, and
+that is wrong in two directions at once — measured on the mechanism's own fixture:
+
+- the capture landed on `Listeners` rather than on `Listeners#install`, which under `attach =
+  method` is a boundary, so the read stayed a global read and was counted as a seam that did not
+  exist;
+- and the anonymous `Runnable#run` was then offered to the closure as an ordinary method, where its
+  external `java.lang.Runnable` anchor froze it — a `frozen-component` refusal for a body that
+  never needed threading at all.
+
+The xref holds the answer and nothing has to re-walk the tree for it: every `new T(){ … }` is an
+`Instantiate` usage of `T` whose SITE is the `New` node carrying the body and whose `enclosing` is
+the declaration it was written in. Do NOT reach for a private traversal that tracks "where am I" —
+that is the shape `CLAUDE.md` §3 forbids, and the index already answers the question.
+
+Same rule one level down: a MEMBER of such a body is reached from the member, so a climb that only
+tests the symbol it was handed sees an ordinary method. Look UP one level before deciding.
+
+*Fix kind: (a) engine.*
+
+### X2. A `lazy val` cannot receive a context — the deferred static is a CACHE PAIR, not a `lazy val`
+
+ASSERTED, and it is a language fact rather than a measurement. A class initialiser that reads the
+holder cannot be threaded (it has no signature) and cannot be made a `lazy val` either: **a `lazy
+val`'s initialiser has no parameter list**, which is precisely the problem being solved. A
+null-sentinel cache is not the answer either — a primitive-typed static legitimately holds its zero,
+so the sentinel fires forever.
+
+What works: `private var f$set: Boolean` / `private var f$value: T` and a `def f(using T): T` that
+reuses the FIELD'S OWN SYMBOL, so every read in the program keeps naming it and no call site changes.
+It does **not** reproduce the JVM's class-initialisation lock, which is why it is per-site opt-in
+with a `DeferredInit` decision and a porter note that says so.
+
+*Fix kind: (b) configure — `sites { "…#<clinit>" = "lazy-init" }`, per site, never a mode.*
+
+### X3. An anonymous `(using T)` clause is an EMITTER capability, not a phase one
+
+CLOSED. Every parameter the emitter rendered was `name: Type`, so the shape the design specifies —
+`(using T)` with no name — was unemittable and a phase would have had to MINT a name. That is the
+thing the design rejects on measured evidence: a context parameter named after an emitted root
+package shadows it and breaks every fully-qualified reference in scope, and this backend emits
+nothing but fully-qualified references.
+
+A `using` parameter whose symbol has an EMPTY NAME now renders anonymously. An empty name is
+otherwise impossible — the frontend gives every parameter Java's own — so the rule cannot capture a
+real one.
+
+*Fix kind: (a) engine.*
+
+### X4. A CONSTRUCTOR cannot yet carry a `using` clause — the funnel undoes it three ways — **5 errors**
+
+OPEN, and owned by the synthetic-primary work (`DESIGN.md` §8.2). Adding a `(using T)` clause to a
+class's constructors is the reference hand port's shape — **82 % of its 493 attachment sites are
+constructors** — and the TIR edit for it is correct: the clause lands on every `<init>`, the closure
+propagates down the hierarchy and across every `new`. The EMISSION is what fails, measured at 5
+scalac errors on the mechanism's own fixture, three distinct causes:
+
+- a constructor that has GAINED a parameter is no longer nilary, so `CtorFunnel` declines to promote
+  it (C1) and emits a **synthetic nilary primary beside it** — the class body then has no given in
+  scope at all, and every `summon` in it fails;
+- where it DOES promote, the synthetic primary's parameter list is built from the funnel's own plan
+  rather than through the emitter's `paramClause`, so the `given` grouping is **dropped** and the
+  clause renders as an ordinary `class Scene($p: demo.Ctx)`;
+- a subclass of the first shape sees TWO applicable constructors — `()` and `()(using T)` — and
+  reports an **ambiguous overload**.
+
+Do NOT work around this in the threading phase: a clause the funnel will not carry is not a clause,
+and every workaround is a second constructor plan. `attach = "class"` therefore RECORDS a
+`PolicyIssue.Unverifiable` finding naming all three and the phase says so before emitting; `attach =
+"method"` emits and compiles. The dry run over one corpus library sizes what is being deferred:
+**275 threaded declarations in 177 files under class attachment against 2,497 in 324 under method**,
+and `frozen-component` refusals **32 → 0**, because class mode changes no method signature at all.
+
+*Fix kind: (a) engine — the constructor region, not the threading phase.*

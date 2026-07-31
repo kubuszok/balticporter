@@ -143,7 +143,7 @@ run **before** emission, because some rewrites are impossible to recover post ho
 
 | transform | what it does |
 |---|---|
-| `GlobalsToImplicitsTransform` | globals → implicits: thread a `using` parameter through every method that transitively reaches a global. A call-graph rewrite; the `ResearchPlugin` case, since it needs the call graph before rewriting |
+| `GlobalsToImplicitsTransform` | globals → CONTEXT: thread an anonymous `(using T)` through every declaration that reaches a static holder, and rewrite each read to a summon along a mapped PATH. A whole-program rewrite — the `ResearchPlugin` case — over five edge kinds, not a call graph (§8.4) |
 | `PrimitiveToOpaqueTransform` | primitive → opaque type + companion: retype a semantically-tagged value everywhere it flows, wrap its construction sites. Seed detection is flow propagation — a union-find over the whole-program reference graph from a small HINT set. Configured entirely by an `OpaqueSpec` (§2.1.1) |
 | `CollectionsTransform` | Java collections → Scala, leaner where possible: retype + API-map every usage site of a collection symbol. Takes a `RuleScope` (§2.1.1) |
 | `PanamaFfiTransform` | Panama FFI generation: `native` methods → `java.lang.foreign` downcall bindings for JVM and Scala Native linkers |
@@ -1987,6 +1987,61 @@ test lane cannot break** — upstream test sources contain zero holder reference
 set contains zero, so the behavioural gate survives unless a threaded signature reaches a tested
 member, which `members.tsv` reports **before any compile**. One dependent has zero holder references at
 all and must show **0 members changed**, which is itself a gate that the phase respects D2.
+
+**What building it settled.** Seven things the design left open or got slightly wrong, each fixed in
+the mechanism commit rather than left for the enablement:
+
+- **The anonymous clause needed the EMITTER, not the phase.** Every parameter the emitter renders is
+  `name: Type`, so the shape this section specifies — `(using T)` with no name — was unemittable. A
+  `using` parameter whose symbol has an EMPTY NAME now renders anonymously, and an empty name is
+  otherwise impossible (the frontend gives every parameter Java's own), so the rule cannot capture a
+  real one. Without this the phase would have had to mint a name, which is the thing the section
+  rejects.
+- **The CAPTURE edge is not in the owner chain, and reading it from there is wrong in two ways.**
+  The frontend interns an anonymous class with its enclosing **class** as owner — that is where its
+  emitted name comes from (`Outer$1`) — so a climb reaches the class and loses the method. Measured
+  on the fixture: the capture landed on `Listeners`, which under `attach = method` is a boundary, so
+  the read stayed global AND the anonymous method was offered to the closure as an ordinary method
+  (where its external `Runnable` anchor then froze it). The lexical home is in the xref: every
+  `new T(){ … }` is an `Instantiate` usage of `T` whose SITE is the `New` node carrying the body and
+  whose `enclosing` is the declaration it was written in. Read from there; nothing re-walks the tree
+  with its own notion of *where am I* (§3).
+- **A member of an anonymous body is reached from the MEMBER, so the climb looks up one level before
+  it decides.** The same defect from the other side: `isType(s)` is false for the anon's `run`, so a
+  climb that only tests the symbol it was handed treats it as an ordinary method.
+- **`mint` is a bag of mutable `var`s, and a two-hop path with a mint is REFUSED at bind time.** The
+  minted type is the holder's own shape moved onto an instance, so a consumer's bootstrap sets its
+  members where it used to set the statics. It cannot express the reference port's immutable case
+  class with `@implicitNotFound` and accessor sugar, and it does not try: that is what `inject` is
+  for. It also has no intermediate type to hang a second hop off, which makes `gl = "graphics.gl20"`
+  a malformed entry rather than a silent miss.
+- **`lazy-init` is a CACHE PAIR, not a `lazy val`.** A `lazy val` initialiser has no parameter list,
+  which is precisely the problem being solved, and a null-sentinel cache would re-run forever for a
+  primitive-typed static. So: `private var f$set` / `private var f$value` and a `def f(using T)` that
+  reuses the FIELD'S OWN SYMBOL — every read in the program keeps naming it and no call site changes.
+  What it does not reproduce is the JVM's class-initialisation LOCK, and the decision row says so.
+- **A porter note renders the §1 classification's pairs AND the decision's detail**, so a decision
+  that repeats the policy key in its `detail` prints `key=` twice in one comment. Only a kind in
+  `PorterNote.Rendered` can show it, which is why it survived unnoticed in the predecessor.
+- **A `DroppedMember` decision's SUBJECT is the owning TYPE**, not the member: `PorterNote.InBody`
+  puts the note at the head of the type's body, and the emitter looks that up by the type's symbol.
+  A note keyed on the member's own symbol never appears, and `NoteCoverageCheck` cannot see it either
+  (the member is not emitted, so it is out of scope by construction).
+
+**And one deliverable that did NOT land: `attach = "class"` is refused with a counted finding.** The
+TIR edit is complete and the emission is not — the constructor funnel undoes it three ways, measured
+at 5 scalac errors (`ENGINE-LIMITS.md` X4), all three inside the region §8.2 owns. The dry run sizes
+what that defers: over one corpus library, class attachment threads **275 declarations in 177 files**
+against method attachment's **2,497 in 324**, and `frozen-component` refusals go **32 → 0** because
+class mode changes no method signature at all. 177 against 97 direct-reader files is **1.8×**, which
+is the reference hand port's measured 1.6× reproduced; method mode's 3.3× is not. The refusal is one
+line to delete when the synthetic primary lands.
+
+**One deliberate simplification worth stating.** An UNSUPPLIABLE USE — a declaration that cannot take
+a clause calling one that now requires it — is counted as `residual-global-read` rather than as a
+fifth seam kind. It is the same fact from the reader's side (this site still needs the global) and the
+detail names it precisely; a fifth kind would split one count in two without changing what anyone does
+about it.
 
 **Rejected.** Extending the existing transform condition by condition — *the core relation it computes
 is the wrong relation*, and every fix would be a patch on a foundation that cannot carry an override or

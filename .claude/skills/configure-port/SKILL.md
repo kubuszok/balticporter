@@ -279,7 +279,8 @@ engine phases take a `Symbol => Boolean`, and each is handled without inventing 
 
 - a universal default needs no policy (`panama-ffi`'s `isNative`);
 - where the port must name things, config names them AS DATA and the factory closes over it
-  (`globals-to-implicits` takes `contextClasses`);
+  (`globals-to-implicits` takes `holders`, whose whole policy — the holder, the context type, the
+  field→path map, the attachment, the per-site boundaries — is names);
 - where an arbitrary predicate is genuinely needed, config **refuses and names the escape hatch** —
   `primitive-to-opaque`'s `hints`, whose error tells you to list seeds in `extraHints` or to register
   a `TransformFactory` of your own.

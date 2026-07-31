@@ -97,6 +97,17 @@ object Decision:
     *                            unanswerable.
     *   - [[WidenedVisibility]]— a member lost `private`/`protected` so a REPLAYED parent
     *                            constructor's statements can still reach it one level down.
+    *   - [[DeferredInit]]     — a static's initialisation moved out of the class initialiser and
+    *                            onto the first READ of it, because the initialiser needed a context
+    *                            it had no signature to receive (DESIGN.md §8.4). It is the one
+    *                            EAGER→LAZY change the engine makes, it is always asked for per site,
+    *                            and it pays for a kind of its own because no existing one states
+    *                            what changed: the declaration's TYPE is untouched, so
+    *                            [[RetypedSignature]] would be a lie, and its body is not replaced,
+    *                            so [[SubstitutedBody]] would be another. Java runs a class
+    *                            initialiser at first ACTIVE USE of the class and the rewritten form
+    *                            runs at first read of the field; a reader has to be told that, at
+    *                            the declaration, which is why this kind carries a porter note.
     *   - [[Unrenderable]]     — the engine has no faithful Scala for this construct and said so in
     *                            the output (preview mode, [[balticporter.tir.Decision]] E9). Under
     *                            the shipping default the construct is refused and COUNTED instead
@@ -107,7 +118,7 @@ object Decision:
     case DroppedType, DroppedMember
     case SubstitutedBody, InjectedMember
     case RedirectedCall, RetypedSignature, ScopedOut, FunnelledCtor
-    case DroppedSuperCall, WidenedVisibility, Unrenderable
+    case DroppedSuperCall, WidenedVisibility, Unrenderable, DeferredInit
 
   val Header = "#kind\tsubjectFqn\treasonClass\treasonDetail\torigin\tline\tdetail"
 

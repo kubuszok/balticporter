@@ -65,7 +65,7 @@ key not read fails the run.
 | `method-body` | `bodies { "a.B#m()" = "{ … }" }` | keep the signature, replace the body |
 | `port-map-migration` | `bases = […]` **required** | base MODULE NAMES; the maps themselves are discovered from the classpath and the report tree. Named for the phase, not shortened to `port-map`, which is a CHECK name |
 | `primitive-to-opaque` | `fqn` **required**, `underlying` (default `Int`), `extraHints = […]`, `scope`; **`hints` REFUSED** | see below |
-| `globals-to-implicits` | `contextClasses = […]` **required** | matched EXACTLY, not by prefix — a context is one class, and a prefix would also name its package symbol |
+| `globals-to-implicits` | `holders = [ { holder, context { inject \| mint }, members { … }, attach, reader, boundary, sites { … }, promoteToClass = […], scope } ]` **required** | globals → CONTEXT (DESIGN.md §8.4). `members` values are dot-PATHS on the context type, not member names (`gl = "graphics.gl20"`); `attach = "method"` puts a trailing `(using T)` on each threaded method and `"class"` puts it on the class's constructors; `boundary` decides what a site with no signature does; `sites` overrides one of them (`"lazy-init"` is the only EAGER→LAZY change and is never a default). Every seam is counted by `context-seam` |
 
 `package-rename` is **not** in this list and is refused by name: it is manifest DATA
 (`manifest.packageRenames`), because it must run after every other phase. See **`configure-port`** §4.

@@ -1857,8 +1857,20 @@ final class TirEmitter(
 
   /** a parameter clause; a clause of `given` params renders as a Scala 3 `using` clause. */
   private def paramClause(ps: List[Tree.ValDef]): String =
-    if ps.nonEmpty && ps.forall(p => sym(p.symbol).flags.isGiven) then s"(using ${ps.map(param).mkString(", ")})"
+    if ps.nonEmpty && ps.forall(p => sym(p.symbol).flags.isGiven) then s"(using ${ps.map(givenParam).mkString(", ")})"
     else s"(${ps.map(param).mkString(", ")})"
+
+  /** A `using` parameter with NO NAME renders ANONYMOUSLY — `(using T)` — and that is not cosmetic.
+    *
+    * A context parameter named after an emitted root package SHADOWS it and breaks every qualified
+    * reference in its scope, and this backend emits nothing but fully-qualified references (§6). The
+    * reference hand port repaired two files away from named context parameters for exactly that
+    * reason. Nothing reads the name: `using` resolution and `summon` never do.
+    *
+    * An empty name is otherwise impossible — the frontend gives every parameter Java's own name — so
+    * this cannot capture a real one. */
+  private def givenParam(v: Tree.ValDef): String =
+    if sym(v.symbol).name.isEmpty then tpe(overrideAlign.getOrElse(v.symbol, v.tpt.tpe)) else param(v)
 
   // NOTE: Java `T...` → Scala `T*` is deferred — it also needs array-spread (`arr: _*`) at call
   // sites and overload-aware resolution, else `f(array)` calls break. Emitting the param type
