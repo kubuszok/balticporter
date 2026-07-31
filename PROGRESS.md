@@ -18,6 +18,7 @@ Every lane is a recipe in the root `Justfile` (`just` with no argument lists the
 just gdx-measure          # libGDX core        (emit → checks → break residue → compile → correlate)
 just gdx-test-measure     # libGDX's own suite (… → compile → RUN → correlate)
 just ashley-measure       # Ashley + its suite, compiled WITH libGDX core
+just anim8-measure        # anim8-gdx, compiled WITH libGDX core (a dependent port; hand-written suite, §7)
 just sg-measure           # simple-graphs + its suite
 just noise4j-measure      # noise4j (no upstream test suite — the lane asserts that, see §5)
 just jbump-measure        # jbump — a library that ships NO suite; the lane re-derives that zero (§6)
@@ -46,8 +47,8 @@ Measurements below are from one serial run of all lanes, 2026-07-31.
 
 ## 1. Corpus inventory
 
-Four libraries are ported on the current (TIR) pipeline, across seven runs — a library and its own test
-suite are two ports, and the suite is a *dependent* of the library:
+Six libraries are ported on the current (TIR) pipeline, across nine runs — a library and its own
+test suite are two ports, and the suite is a *dependent* of the library:
 
 | port | upstream | files in / out | tests | compile |
 |---|---|---|---|---|
@@ -55,6 +56,7 @@ suite are two ports, and the suite is a *dependent* of the library:
 | `libgdx-test` | libGDX `gdx/test` | 29 → **29** | **221**, 217 pass / 4 expected-fail | **0** |
 | `ashley` | Ashley `ashley/src` | 21 → **21** (2 injected) | — | **0** |
 | `ashley-test` | Ashley `ashley/tests` | 18 → **18** | **112**, 108 pass / 2 fail / 2 skipped | **0** |
+| `anim8` | anim8-gdx `src/main/java` | 16 → **16** (0 dropped, 0 injected) | **23** hand-written, all passing — upstream has NO suite (§7.1) | **0** |
 | `simple-graphs` | simple-graphs `src/main` | 29 → **33** | — | **0** |
 | `simple-graphs-test` | simple-graphs `src/test` | 7 → **7** | **16**, all passing | **0** |
 | `noise4j` | noise4j `src` | 12 → **12** | **none upstream** (§5) | **2** |
@@ -100,6 +102,7 @@ Where a doc disagreed with the tree, the tree won.
 | `sge-noise` | noise4j | 12 / 2,491 | 10 / 2,608 | **83 %** — upstream now ported by the engine, §5 | 3 / 13 | Apache-2.0 |
 | `sge-screens` | libgdx-screenmanager | 23 / 2,459 | 20 / 1,691 | **86 %** | 6 / 29 | Apache-2.0 |
 | `sge-freetype` | libGDX `gdx-freetype` | 4 / 1,891 | 9 / 2,365 | **100 %** of the Java layer | 9 / 28 | Apache-2.0 |
+| `sge-anim8` | Its `ConstantData` blobs are **WRONG** — externalised to `.bin` resources holding the UTF-8 encoding of the characters instead of `getBytes(ISO_8859_1)`, so every array is 1.43× too long and corrupt from its first non-ASCII byte, and its own suite pins the wrong lengths (§7.4). Also skipped `FastAPNG` and hoisted `Dithered.DitherAlgorithm` to a top-level type. |
 
 **Not ports — do not assign these to a porting agent.** `sge-physics` / `sge-physics3d` are original
 Scala over the Rust Rapier crates, deliberately not Box2D-shaped (`gdx-box2d`, 238 Java files, and
@@ -138,10 +141,16 @@ or per construct.
    checked.
 2. **Nobody hand-ported a single upstream test.** sge's ~3,500 test cases are hand-written MUnit; liqp's
    65 suites are rewrites. Available and unported: libGDX 430 Java test files, colorful-gdx 162,
-   textratypist 145, gdx-ai 113, vis-ui 32, ashley 31, anim8-gdx 20, liqp 105. Baltic Porter has now
+   textratypist 145, gdx-ai 113, vis-ui 32, ashley 31, liqp 105. Baltic Porter has now
    ported libGDX's 221 core tests, Ashley's 112 and simple-graphs' 16 end to end, so the capability is
    proven — but per `CLAUDE.md` §3 this remains the largest single gap in the hand-off, and it is
    invisible in every status doc because none of them tracks tests.
+
+   **And "20 test files" is not "20 tests": anim8-gdx's are DEMOS.** This row said `anim8-gdx 20` until
+   that port was attempted; the 20 files hold **zero** `@Test` annotations and every one of them is an
+   `ApplicationAdapter` or a startup bench needing a libGDX backend (§7.1). Counting test FILES
+   over-reports the available suite, and it is the direction that turns "port the tests" into a
+   surprise. Nothing here re-counted the other rows by annotation, so treat them as upper bounds.
 3. **libGDX's `utils` is split across THREE repos.** 14 core types (`ObjectMap`, `ObjectSet`,
    `OrderedMap`, `Sort`, `TimSort`, `MathUtils`, `Select`, `ArrayMap`, `DynamicArray`, …) live in a
    sibling repo `../lls`. Coverage measured against `sge/` alone under-reports, and an engine run that
@@ -219,15 +228,15 @@ over `gdx/test` as a **dependent** of it, inheriting its manifest.
 | trivia (comments lost) | **100** | **69** |
 | porter notes uncovered | **0** | **0** |
 | break residue (untranslated jumps) | **0** | **0** |
-| source map | 594 units / 19,257 members | 623 units / 19,547 members |
-| members changed vs baseline | **0** | **0** |
+| source map | 594 units / 19,259 members | 623 units / 19,547 members |
+| members changed vs baseline | **28**, accounted below | **6**, accounted below |
 | decisions recorded | **2,163** | **279** (961 withheld as the base's) |
 | **tests** | — | **221 emitted, 217 passing, 4 failing** |
 
 All 4 failures are `expected#derived`, 0 declared: every one is a `sge.utils.JsonTest` case whose stack
 reaches `com.badlogic.gdx.utils.Json` (emitted as `sge.utils.Json`), a type the manifest deliberately
 drops in favour of a codec-backed replacement. Nothing is hand-listed — the classification follows the
-manifest (`CLAUDE.md` §5.1).
+manifest (`CLAUDE.md` §7.1).
 
 The path OUT of those 4 is already measured (from the pre-consolidation status file, kept because
 it is the analysis a fix starts from): JSON *decoding* raises `UnsupportedOperationException`
@@ -239,6 +248,21 @@ driven and needs explicit handling.
 `decisions.tsv` by kind, `libgdx-core`: 827 `RenamedMember`, 605 `RenamedPackage`, 335
 `RetypedSignature`, 285 `FunnelledCtor`, 31 `DroppedSuperCall`, 22 `WidenedVisibility`, 21
 `RedirectedCall`, 16 `DroppedMember`, 11 `DroppedType`, 10 `InjectedMember`.
+
+#### The 34 members that moved, and the SILENT DEFECT one of them was
+
+Every check count above is unchanged and both lanes still compile to 0 with 217/4 tests. The emitted
+text moved in five types on `libgdx-core` and one on `libgdx-test`, all from engine fixes measured on
+a DIFFERENT library (anim8-gdx, §7.3) — which is the whole reason a fourth library is worth adding:
+
+- **`Cubemap` + `Cubemap$CubemapSide` — a real correctness fix, not churn** (`ENGINE-LIMITS.md` T10).
+  The enum lowering dropped the CONSTRUCTOR's body, so `CubemapSide`'s
+  `this.up = new Vector3(upX, upY, upZ)` and its `direction` twin never ran: **all six cubemap sides
+  shipped with `up == null` and `getUp(out)` threw**. Zero compile errors, no moved check count, no
+  test covering it, three libraries and every measurement to date gone past it.
+- **`CharArray`, `JsonReader`, `JsonSkimmer`, `PropertiesUtils` and `JsonMatcherTests` — legibility,
+  not behaviour** (`ENGINE-LIMITS.md` L1). Their char literals held raw `\b`, `\f` and NUL, which
+  dotty happens to tolerate; they now render `'\b'`, `'\f'`, ``\u0000``. Same values, same behaviour.
 
 ### 2.2 Residues, named
 
@@ -835,7 +859,183 @@ than repeated.
 
 ---
 
-## 7. Publishability — what sge and ssg need before they can depend on this
+## 7. anim8-gdx — the port whose difficulty is per LINE
+
+`com.github.tommyettinger.anim8 → sge.anim8`, Apache-2.0. **The fourth corpus library and the second
+genuine dependent port.** Reproduce with `just anim8-measure`, which compiles libGDX core's emitted
+Scala, anim8's emitted Scala and anim8's hand-written suite on **one** `scala-cli` invocation —
+anim8 is `RuntimeMode.Dependency`, so the collection shims are vendored by libGDX core and compiling
+`anim8-core` alone measures nothing.
+
+**Why it is in the corpus.** Every library before it was many small files. anim8 is 16 files holding
+19,594 lines — `PNG8` alone is 8,351 and `PaletteReducer` 5,989 — and the two shapes that dominate
+them are found nowhere in libGDX, Ashley or simple-graphs:
+
+- **enormous constant data.** `ConstantData` is 108 lines of Java holding four ISO-8859-1 string
+  literals of 47,935 and three × 6,390 SOURCE characters, full of control characters and high bytes,
+  decoded in a `static { }` block with `getBytes(ISO_8859_1)`.
+- **arithmetic in bulk.** `OtherMath`'s `barronSpline` / `probit` / `cbrt` / `atan2` are bit-pattern
+  approximations over `NumberUtils.floatToIntBits`, hex float literals (`0x1p-8`) and shifts — the
+  `CLAUDE.md` §4.4 defect class, per line, for 371 lines.
+
+### 7.1 Scope, named rather than silently dropped
+
+`src/main/java` (16 files) only.
+
+**`src/test/java` (20 files) is excluded because it contains ZERO `@Test` annotations.** Every file in
+it is an `ApplicationAdapter` demo or a startup bench driven by `gdx-backend-lwjgl3` —
+`StillImageDemo`, `VideoConvertDemo`, `InteractiveReducer`, `ShaderCaptureDemo`, the three
+`bench/*StartupBench` — and no libGDX backend is ported. There is no upstream suite to migrate, so
+there is no `Anim8TestMigrate`. (This corrects §1.1's third fact, which listed "anim8-gdx 20" among
+the available-and-unported test suites: 20 FILES, 0 tests.)
+
+That leaves the port with no behavioural gate at all, which `CLAUDE.md` §3 says is not a gate. So
+`anim8-core/src/test/scala` holds **23 hand-written MUnit tests** — the only thing in that module a
+human wrote (`src_managed/` is the build product, §7.5) — adapted from the reference hand port's own
+four suites and extended where a property was checkable. `just anim8-measure`'s discovery block
+prints both numbers and says out loud that the java side is legitimately zero, because `0 == 0`
+reading as agreement is precisely the silent success `java_test_count` exists to prevent.
+
+### 7.2 Measured state
+
+| gate | `anim8` |
+|---|---|
+| compile errors (with libGDX core, Scala 3.8.4) | **0** |
+| files emitted | **16** (0 dropped, 0 injected) |
+| model | 621 units / 57,201 symbols |
+| signature consistency | 0 |
+| omissions | 24 |
+| portability (all / emitted / injected) | 263 / **112** / 0 |
+| substitutions · manifest · port map · policy | 0 · 0 · 0 · 0 |
+| collection closure · boundary · shared-iterator | 0 · 0 · 0 |
+| trivia | 34 |
+| porter notes uncovered · break residue | 0 · **0** |
+| source map | 16 units / 568 members |
+| decisions recorded | 633 rows, **251** about anim8's own declarations (235 `RetypedSignature`, 16 `RenamedPackage`) |
+| **tests** | **23 of 23 PASSING** (4 files, hand-written) |
+
+**Error trajectory: 1383 → 49 → 1 → 0**, every step an engine §1(a) fix (§7.3). **`break residue` is
+0** on 19,594 lines of switch-heavy image code, which is the §9.5 control-flow work paying off on a
+library it was not built for.
+
+### 7.3 What this library taught the engine — four (a) fixes, no (b), no (c)
+
+anim8 needed **no library-specific rule and no new phase parameter**. Its whole manifest is a
+namespace claim, a package rename and the base's inherited surface. What it did produce is four
+universal engine defects, each in its own commit with its own spec, each recorded in
+`ENGINE-LIMITS.md`:
+
+| key | the gap | cost |
+|---|---|---|
+| L1 | a literal's VALUE was not re-escaped; a raw newline ENDS the literal | **1,334 errors from one file** |
+| L2 | a prefix operator rendered against its operand lexes as one token (`--`) | **48 errors in one method** |
+| T10 | a java enum CONSTRUCTOR's body was dropped; every field it assigned stayed at its default | **0 errors — 6 libGDX cubemap sides silently broken** |
+| T11 | a PROMOTED enum constructor parameter is a member and collided with `Enum.name()` | 1 error |
+
+**T10 is the one that matters.** It is a pre-existing silent correctness defect in **libGDX core**,
+not in anim8: `Cubemap.CubemapSide`'s constructor builds `up` and `direction` from six float
+parameters, so all six sides shipped with `up == null` and `getUp(out)` threw — in a port with zero
+compile errors, no moved check count and no test covering the members. Three libraries had gone past
+it. It was found here only because the *same* constructor shape also trips T11, which is a compile
+error, and because a hand-written test asserts `DitherAlgorithm.WREN.legibleName == "Wren"`.
+
+**L1's lesson generalises past its own fix**: libGDX has four files with a char literal outside the
+five characters the emitter escaped (`\b`, `\f`, NUL in `JsonReader`, `PropertiesUtils`, `CharArray`,
+`JsonSkimmer` — 11 members), and dotty happens to *tolerate* those raw, so the port compiled and
+nobody looked. A corpus that has not met a construct is not evidence that the construct is handled.
+
+### 7.4 The reference port is measurably WRONG here — `CLAUDE.md` §3.5, in the other direction
+
+sge's `sge-anim8` externalised `ConstantData`'s four blobs into `.bin` classpath resources, and its
+own `DataEmbeddingRedSuite` pins `ENCODED_SNUGGLY.length == 47006` and `TRI_BLUE_NOISE.length ==
+6143`. **Those are the UTF-8 encodings of the characters, not the `getBytes(ISO_8859_1)` bytes.**
+
+| blob | upstream (ISO-8859-1) | sge's `.bin` | the same chars as UTF-8 |
+|---|---|---|---|
+| `ENCODED_SNUGGLY` | **32,768** | 47,006 | 47,006 |
+| `TRI_BLUE_NOISE` (and `_B`, `_C`) | **4,096** | 6,143 | 6,143 |
+
+Three independent confirmations that 32,768 / 4,096 are right: decoding the Java literal by Java's
+own escape rules gives them; upstream's javadoc calls `TRI_BLUE_NOISE` "a 4096-element byte array as
+a 64x64 grid" and 64 × 64 = 4096; and `ENCODED_SNUGGLY` is a palette mapping, whose shape everywhere
+else in this library is `byte[0x8000]` = 32768. So the reference port's dither data is wrong from its
+first non-ASCII byte, and the suite that was written to defend it pins the wrong values.
+
+`ConstantDataSuite` therefore pins the numbers from that independent oracle, not from what the port
+emits — pinning what the port emits against what the port emits proves nothing — and the port keeps
+upstream's own in-source embedding, which is also the form that works on Scala.js and Native. **A
+reference port that SOLVED a problem is not automatically a model; check the answer.**
+
+### 7.5 The manifest-inheritance shape
+
+`Anim8Policy.core` is `LibgdxPolicy.core(repoRoot).extendedBy(PortManifest(…))`, three fields long:
+
+```scala
+name           = "anim8",
+governs        = Set("com.github.tommyettinger.anim8"),
+packageRenames = Map("com.github.tommyettinger.anim8" -> "sge.anim8"),
+surface        = List(PortMapTransform.forBases("libgdx-core")),
+```
+
+Everything else — `dropTypes`, `dropMethods`, libGDX's `com.badlogic.gdx -> sge` rename and all six
+surface phases — is INHERITED, and `ManifestAgreement` reports 0 on every run. Two details worth
+keeping:
+
+- **the rename is ADDITIVE, not a restatement.** Longest-prefix-wins keeps `com.badlogic.gdx -> sge`
+  and `com.github.tommyettinger.anim8 -> sge.anim8` apart, so the dependent adds its own namespace
+  without touching the base's.
+- **`PortMapTransform.forBases("libgdx-core")` goes LAST**, for the reason `AshleyPolicy` states: it
+  reads what the base actually EMITTED and reports a reference the base does not ship, so it must run
+  after any seam that re-points such a reference. It reports **0** — anim8 touches none of libGDX's
+  dropped types.
+- **`inject` is empty.** anim8 ships no replacement file: libGDX core ships the replacements for the
+  types *it* dropped, and §1.5's asymmetry means a dependent must not copy them.
+
+**The conf door cannot express this port today.** `base = "…"` in a `.conf` resolves another CONF,
+and there is no `corpus/ports/libgdx/main.conf` — `LibgdxPolicy` is Scala, because `ClassTableTransform`,
+`StaticForwarderTransform` and `GdxSharedIteratorRule` are behaviour rather than data. So anim8 is a
+hand-written `PortRun(...)` like Ashley. Converting it needs exactly one thing and it is not new
+mechanism: libGDX's own conf, with its two configured phases reached through `TransformFactory`
+names as `GdxSharedIteratorFactory` already is. Nothing in anim8's own policy resists config.
+
+### 7.6 Residues, named and classified
+
+| residue | count | kind | why it stays |
+|---|---|---|---|
+| `portability(emitted)` — `java.util.zip` | 112 | **not an engine gap** (`ENGINE-LIMITS` P3) | `DeflaterOutputStream` (100), `Deflater` (6), `CRC32` (5), `CheckedOutputStream` (1). PNG *is* DEFLATE; there is no portable substitute in the library's own terms. The reference port made the same call — its `ChunkBufferSuite` lives in `src/test/scalajvm`. |
+| `portability(all)` − `(emitted)` | 151 | base's, not this module's | libGDX core's own 151, seen through the resolution root. Identical to the number `just gdx-measure` reports. |
+| `omissions` — promoted constructor body on every path | 24 | (a), known | `ENGINE-LIMITS` C7, 8 each in `PaletteReducer`, `QualityPalette`, `FastPalette` — the palette classes have many constructors funnelling to one. |
+| `trivia` — dropped comments | 34 | (a), known | `ENGINE-LIMITS` V1: `PaletteReducer` 17, `AnimatedPNG` 12, `FastPalette` 3, `OtherMath` 1, `FastPNG` 1. All are COMMENTED-OUT CODE inside method bodies, which the TIR has no node for. |
+
+`remediation` reports 4 suggestions, all about the `java.util.zip` residue above; the one that
+"needs a value from you" proposes dropping `ChunkBuffer` and injecting a replacement. **Not taken**:
+a port that drops its PNG chunk framer has dropped PNG, and the JVM is a target this port supports.
+
+### 7.7 Do NOT retry
+
+- **Do not route the enum lowering through `CtorFunnel`.** Measured: it plans nothing for an enum,
+  `Plan.primaryParams` comes back empty, and the whole primary parameter list vanished from every
+  emitted enum (`ENGINE-LIMITS` T10).
+- **Do not fix the `name`/`Enum.name()` collision by renaming the parameter.** It would need a
+  §4.55 pass that can see an EMITTER-synthesised member, which no phase can today; the skip is
+  taken, with its semantic caveat stated in `ENGINE-LIMITS` T11.
+- **Do not trust `sge-anim8`'s `ConstantData` values** (§7.4). They are UTF-8 lengths.
+
+### 7.8 Remaining
+
+- **`ConstantData` is public in the port and package-private in Java.** `class ConstantData` and
+  `class ChunkBuffer` have no modifier upstream; the port emits both as public. Recorded as 2
+  `WidenedVisibility` decisions, harmless here and a general item — see §7.
+- **A second source set for the demos** would need a libGDX backend, which is not ported and is not
+  planned (§1.1's first surprise).
+- **Behavioural coverage is 23 tests over 4 of 16 types.** `PNG8`, `AnimatedGif`, `PaletteReducer`
+  and `LZWEncoder` — 16,700 of the 19,594 lines — are covered only by compilation. Writing an
+  end-to-end encode/decode assertion needs a `Pixmap`, and libGDX's `Pixmap` is backed by
+  `Gdx2DPixmap` (JNI), so it is a real piece of work rather than a missing test.
+
+---
+
+## 8. Publishability — what sge and ssg need before they can depend on this
 
 **The goal being evaluated.** sge and ssg stop hand-maintaining their ports and instead depend on
 Baltic Porter as a published library, feeding it Java sources plus per-library configuration — with
@@ -904,7 +1104,7 @@ cannot yet say, for an *unmarked* error, is which of the three kinds the fix is.
 
 ---
 
-## 8. Remaining work, across the engine
+## 9. Remaining work, across the engine
 
 Maintained by deletion. Items are ordered by what they block, not by size.
 

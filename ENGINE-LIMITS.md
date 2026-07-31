@@ -777,6 +777,60 @@ a translation rule: the TIR already has the node.
 
 *Fix kind: (a), unbuilt — frontend only.*
 
+### T10. A java ENUM CONSTRUCTOR has a BODY, and it runs. **6 libGDX sides silently broken, 0 errors**
+
+CLOSED. Recorded because the shape of the failure is the one this file exists for: it moved **no
+number at all**. The enum lowering kept the constructor's PARAMETERS — a `case object` has to pass
+its arguments somewhere — and dropped the constructor itself, so every field the body assigned
+stayed at its declared default. The port compiled with zero errors, every check count was unchanged,
+and no test covered the members.
+
+libGDX `Cubemap.CubemapSide` is the worked example: its constructor builds `up` and `direction` from
+six float parameters, so all six sides shipped with `up == null` and `getUp(out)` threw. It was found
+by porting anim8-gdx three libraries later, whose `Dithered.DitherAlgorithm` assigns `legibleName`
+the same way — `toString()` returned null for all 22 constants — and only because the SAME
+constructor tripped T11 below, which is a compile error.
+
+Two limits deliberately kept, so nobody re-opens them as bugs:
+
+- a PURE self-assignment (`this.glEnum = glEnum`) is dropped, because the parameter promotion
+  already performs it. That is four of libGDX's five enums, and re-emitting it would be churn; only
+  that exact shape, so anything that computes (`new Vector3(upX, …)`) survives.
+- an OVERLOADED enum constructor is left alone. A `case object` can reach only one primary, so that
+  java shape is inexpressible here whatever is done with the body, and attributing one overload's
+  body to every constant would be worse than leaving it out. **Zero sites across four libraries.**
+
+`CtorFunnel` is deliberately not consulted for an enum, and this is the measured part: it plans
+nothing there, `Plan.primaryParams` comes back EMPTY, and routing the lowering through it deleted
+the whole parameter list.
+
+*Fix kind: (a) engine. Built; `EnumCtorBodySpec`.*
+
+### T11. A PROMOTED enum constructor parameter IS a member — `name` collides with `Enum.name()`
+
+CLOSED. The synthesised `Enum.name()` was already skipped when the enum declared a `name` member,
+and the guard read only the BODY. `CLAUDE.md` §4.55's rule applies here exactly as it does to an
+ordinary class — *count what the constructor funnel PROMOTES* — and the enum lowering renders every
+parameter as a `var`, so a `String name` parameter produced both `var name` and `def name()`:
+
+```
+E120 Conflicting definitions:
+  var name: String in class DitherAlgorithm and
+  def name(): String in class DitherAlgorithm
+```
+
+Java never has to choose: `Enum.name()` is FINAL there, so no enum can declare the method, and a
+constructor parameter is not a member at all. Note the SEMANTIC caveat that comes with the skip and
+was accepted rather than overlooked — the port's `name` is then the constructor argument, where
+java's `Enum.name()` is the constant's identifier. The two differ whenever the argument is a display
+string (anim8: `"Wren"` against `WREN`), and `valueOf` still keys on the identifier. Renaming the
+parameter instead would need a §4.55 pass that can see an EMITTER-synthesised member, which no phase
+can today.
+
+**One error on anim8, the last one that port had.**
+
+*Fix kind: (a) engine. Built; `EnumCtorBodySpec`.*
+
 ---
 
 ## 4. Collections, shims and the JDK boundary
@@ -1875,3 +1929,60 @@ either way:
   reaches the emitted file, and nothing that does not.
 
 *Fix kind: (a) engine.*
+
+---
+
+## 11. Literals and the emitted file's LEXICAL correctness
+
+The emitter's output is TEXT, and two facts about Scala's lexer decide whether that text is a file
+at all. Neither is visible to any check: the run reports its usual numbers and the compiler then
+fails at a position that has nothing to do with the construct that caused it. Both were found by
+porting anim8-gdx, the first corpus library whose difficulty is per-LINE rather than per-file — 16
+files, 19,594 lines, of which `ConstantData` is 108 lines holding four ISO-8859-1 string literals of
+47,935 and three x 6,390 characters.
+
+### L1. A literal's VALUE must be RE-ESCAPED — **1,334 errors from ONE file**
+
+CLOSED. `Constant.StringC` holds DECODED text, so every character has to be put back in a form Scala
+accepts inside `"…"`. The emitter escaped five (backslash, quote, `\n`, `\r`, `\t`) and passed
+everything else through raw. That is a file that does not parse the moment a literal holds anything
+else:
+
+- a raw control character is an "illegal character" outright;
+- a raw NEWLINE **ends the literal**, and every byte after it is read as source — which is where
+  1,334 of anim8's 1,383 first-run errors came from, all attributed to the two lines the lexer
+  happened to be on;
+- a lone SURROGATE cannot be encoded in the UTF-8 the file is written as, so it would be replaced on
+  the way out and the VALUE would silently change — no error at all, the §3 shape.
+
+`\uXXXX` is the general escape and, verified against 3.8.4, it is a Scala 3 escape SEQUENCE inside a
+literal, not the Scala 2 source pre-processing that was removed — so an emitted `\\u` cannot leak.
+Ordinary non-ASCII text is left VERBATIM: the file is UTF-8 and Scala reads it as UTF-8, and
+escaping it would churn every port's diff for characters that already round-trip.
+
+Note what survived three libraries. libGDX has exactly four affected files (`JsonReader`,
+`PropertiesUtils`, `CharArray`, `JsonSkimmer`, 11 members) and they held only `\b`, `\f` and NUL in
+CHAR literals — which dotty happens to tolerate, so the port compiled and nobody looked. **A corpus
+that has not met a construct is not evidence that the construct is handled.**
+
+*Fix kind: (a) engine. Built; `EmitterLiteralSpec`, whose strongest assertion is that NO raw control
+character appears anywhere in the emitted source.*
+
+### L2. A prefix operator and its operand are TWO tokens — **48 errors in one method**
+
+CLOSED. Scala's lexer takes a maximal run of operator characters as ONE identifier, so a prefix `-`
+written directly against an operand that already renders with a leading `-` produces `--`: a
+different token and a syntax error, not a double negation. The emitter rendered operator and operand
+adjacent with no separator.
+
+The java form is routine in hash-mixing code — `x * -0xC13FA9A902A6328FL`, where that hex literal's
+`long` VALUE is `-4521708957497675121`. anim8's `AnimatedGif.analyzeOverboard` does it fourteen
+times and produced 48 E040 "',' or ')' expected, but long literal found".
+
+Parenthesising the OPERAND is the only fix that cannot mis-lex. A separating SPACE was rejected on
+inspection rather than measured: `- -4L` reads as an infix application waiting for a left operand.
+The test is on the two CHARACTERS that would meet, never on the operator's name, so an operator the
+emitter gains later is covered without being listed.
+
+*Fix kind: (a) engine. Built; `EmitterLiteralSpec` carries the negative half too — `-y` and `!b` are
+untouched.*
