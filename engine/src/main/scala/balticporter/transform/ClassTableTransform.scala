@@ -37,14 +37,18 @@ final class ClassTableTransform(redirects: Map[String, String])
     extends Phase, PolicySource, SurfacePolicy, PolicyBound:
   def name: String = "class-table"
 
-  /** What the RUN resolved each declared key to, before the pipeline started (§8.1). Recorded
-    * beside the phase's own name match while both exist; `policy-binding` is the check that
-    * compares them, and it is the evidence that swapping one for the other changes nothing. */
+  /** What the RUN resolved each declared key to, before the pipeline started (§8.1) — and the ONLY
+    * thing this phase is allowed to learn about which members its keys name. It used to reconstruct
+    * `owner#name` from every symbol in the program and look that string up, which is the defect
+    * §4.56 generalises: a name is not a structural fact about anything, and this one could not tell
+    * three overloads of `Class#forName` apart. */
   private var bound: Map[String, Binding[List[PolicyBinder.Hit]]] = Map.empty
+  private var records: List[PolicyBinder.Record] = Nil
 
   def bindPolicy(binder: PolicyBinder): Unit =
     bound = redirects.keys.toList.sorted
       .map(k => k -> binder.bindMembers(name, "ClassTableTransform(redirects) key", k)).toMap
+    records = binder.recordsFor(name)
 
   /** Two ports that redirect different lookups produce different call sites for the same shared
     * code, so the redirect table is part of the emitted surface a dependent module has to match.
@@ -55,30 +59,29 @@ final class ClassTableTransform(redirects: Map[String, String])
   /** callee symbol → (table type symbol, table member symbol) */
   private var mapping: Map[SymId, (SymId, SymId)] = Map.empty
 
-  private var report: PolicyReport = PolicyReport.empty
-
   /** Declared redirects that matched no member of this program, plus any whose VALUE is not the
-    * `owner#member` shape the rewrite needs. Reflects the last [[run]]; empty before the first,
-    * and empty for an empty policy. */
-  def policyReport: PolicyReport = report
+    * `owner#member` shape the rewrite needs.
+    *
+    * A property of the POLICY and the PROGRAM, so it is complete the moment the keys are bound and
+    * does not wait for [[run]] — which is what the private `var report` this replaces could not
+    * say. A phase that never ran now reports the same thing a phase that ran and matched nothing
+    * does, which is the truth in both cases. */
+  def policyReport: PolicyReport =
+    PolicyReport.fromBindings(records) ++ PolicyReport(
+      bound.toList.sortBy(_._1).collect {
+        case (k, b) if b.isBound && !redirects(k).contains('#') =>
+          PolicyFinding(name, "ClassTableTransform(redirects) value", k, PolicyIssue.Malformed,
+            s"""the destination "${redirects(k)}" is not `owner#member`, so there is nothing to """ +
+              "select — redirect skipped")
+      })
 
   override def run(program: Program): Program =
     // keep the KEY alongside the hit: "which declared keys fired" is exactly what an unmatched-key
     // report is the complement of, and it cannot be recovered from the symbol ids afterwards.
-    val hits = program.symbols.all.toList.flatMap { s =>
-      program.symbolOf(s.owner).map(o => s"${o.fullName}#${s.name}").flatMap(k => redirects.get(k).map(d => (s.id, k, d)))
+    val hits = bound.toList.sortBy(_._1).flatMap { (k, b) =>
+      b.toOption.getOrElse(Nil).flatMap(_.sym).map(id => (id, k, redirects(k)))
     }
-    val (wellFormed, malformed) = hits.partition(_._3.contains('#'))
-    val fired    = hits.map(_._2).toSet
-    val unmatched = (redirects.keySet -- fired).toList.sorted.map { k =>
-      PolicyFinding(name, "ClassTableTransform(redirects) key", k, PolicyIssue.NeverMatched,
-        "no member `owner#name` of that name occurs in this program, so the runtime class lookup " +
-          "was left in place")
-    }
-    report = PolicyReport(unmatched ++ malformed.map { (_, k, d) =>
-      PolicyFinding(name, "ClassTableTransform(redirects) value", k, PolicyIssue.Malformed,
-        s"""the destination "$d" is not `owner#member`, so there is nothing to select — redirect skipped""")
-    }.distinct)
+    val wellFormed = hits.filter(_._3.contains('#'))
 
     val targets = wellFormed.map((id, _, d) => id -> d).sortBy(_._1.raw) // deterministic minting order
     if targets.isEmpty then program

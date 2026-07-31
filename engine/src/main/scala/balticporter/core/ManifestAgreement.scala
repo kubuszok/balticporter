@@ -224,6 +224,10 @@ object ManifestAgreement:
       shared: List[SharedType],
       foreignRoots: Boolean,
       ports: List[BasePort] = Nil,
+      /** declared drop keys the run BOUND — supplied by the caller, which is the only layer that
+        * holds both the manifest and the `PolicyBinder`. Was read off a mutable tally on
+        * `Substitutions`; see `PortManifest.inheritedKeysNeverFired`. */
+      fired: Set[String] = Set.empty,
   ): List[Finding] =
     manifest match
       case None =>
@@ -237,7 +241,7 @@ object ManifestAgreement:
             List(Finding(Kind.NoBaseDeclared, "-", m.name,
               "resolution roots outside the source root, and the manifest declares no `bases`"))
           else Nil
-        noBase ++ statik(m) ++ mapHealth(ports) ++ dynamic(m, shared, ports)
+        noBase ++ statik(m, fired) ++ mapHealth(ports) ++ dynamic(m, shared, ports)
 
   // -------------------------------------------------------------------------
   // the maps themselves — R1, reported before anything is read OFF one
@@ -262,7 +266,7 @@ object ManifestAgreement:
   // static — declaration against declaration
   // -------------------------------------------------------------------------
 
-  private def statik(m: PortManifest): List[Finding] =
+  private def statik(m: PortManifest, fired: Set[String]): List[Finding] =
     val mine        = m.effectiveDropTypes
     val myMethods   = m.effectiveDropMethods
     val myRenames   = m.effectivePackageRenames
@@ -311,7 +315,7 @@ object ManifestAgreement:
           ps.map(PortManifest.fingerprint).distinct.sorted.mkString(" vs "))
     }
 
-    val neverFired = m.inheritedKeysNeverFired.toList.sortBy(_._1).flatMap { (base, keys) =>
+    val neverFired = m.inheritedKeysNeverFired(fired).toList.sortBy(_._1).flatMap { (base, keys) =>
       keys.toList.sorted.map(k => Finding(Kind.InheritedKeyNeverFired, base, k, "inherited key matched nothing in this run"))
     }
 

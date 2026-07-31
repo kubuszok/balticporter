@@ -60,11 +60,13 @@ final class TypeRedirectTransform(redirects: Map[String, String] = Map.empty)
     * on the one port that uses it, which the `policy-binding` check measured (`screens`,
     * `policy 0 -> 10`) before anything depended on the answer. */
   private var bound: Map[String, Binding[SymId]] = Map.empty
+  private var records: List[PolicyBinder.Record] = Nil
 
   def bindPolicy(binder: PolicyBinder): Unit =
     bound = redirects.keys.toList.sorted
       .map(k => k -> binder.bindType(name, "TypeRedirectTransform(redirects) source", k, Ownership.Either))
       .toMap
+    records = binder.recordsFor(name)
 
   /** Re-pointing a type CHANGES EMITTED SIGNATURES — a field, a parameter and a return type all
     * move — so it is part of the shared surface and two modules must not disagree about it. */
@@ -72,16 +74,16 @@ final class TypeRedirectTransform(redirects: Map[String, String] = Map.empty)
 
   private var mapping: Map[SymId, SymId]     = Map.empty
   private var memberTwins: Map[SymId, SymId] = Map.empty
-  private var report: PolicyReport       = PolicyReport.empty
 
   /** Declared sources that occur nowhere — the redirect silently did not happen and the dependency
     * the port was configured to remove is still there. The symmetric failure to every other (b)
-    * seam's, and the reason [[PolicyReport]] exists. */
-  def policyReport: PolicyReport = report
+    * seam's, and the reason [[PolicyReport]] exists. Derived from the BINDING, so it is complete
+    * before the pipeline runs and says the same thing whether or not this phase ran. */
+  def policyReport: PolicyReport = PolicyReport.fromBindings(records)
 
   override def run(program: Program): Program =
     if redirects.isEmpty then
-      report = PolicyReport.empty; mapping = Map.empty; memberTwins = Map.empty
+      mapping = Map.empty; memberTwins = Map.empty
       return program
 
     val byName = program.symbols.all.iterator.map(s => s.fullName -> s).toMap
@@ -102,13 +104,11 @@ final class TypeRedirectTransform(redirects: Map[String, String] = Map.empty)
       id
     }
 
-    val missing = redirects.keys.toList.sorted.filterNot(byName.contains)
-    report = PolicyReport(missing.map(from =>
-      PolicyFinding(name, "TypeRedirectTransform", from, PolicyIssue.NeverMatched,
-        s"no type of that name occurs in this program, so nothing was re-pointed at " +
-          s"`${redirects(from)}` and every reference still names the original")))
-
-    mapping = redirects.collect { case (from, to) if byName.contains(from) => byName(from).id -> targetOf(to) }
+    // The SOURCE comes from the binding; only the TARGET is looked up by name, and it has to be —
+    // it is a type this program may not mention at all, which is why `targetOf` mints one.
+    mapping = redirects.toList.sortBy(_._1).flatMap { (from, to) =>
+      bound.get(from).flatMap(_.toOption).map(_ -> targetOf(to))
+    }.toMap
 
     // THE MEMBERS MOVE WITH THE TYPE, and there are TWO ways a member reference is rendered.
     //
@@ -167,8 +167,8 @@ final class TypeRedirectTransform(redirects: Map[String, String] = Map.empty)
     // never the type's own, so the type's usages alone under-report it — the members are folded in
     // here for the same reason they are re-pointed above.
     redirects.toList.sorted.foreach { (from, to) =>
-      byName.get(from).foreach { sym =>
-        val sites = (sym.id :: membersOf.getOrElse(sym.id, Nil)).flatMap(Decision.declarationsUsing(program, _))
+      bound.get(from).flatMap(_.toOption).foreach { fromId =>
+        val sites = (fromId :: membersOf.getOrElse(fromId, Nil)).flatMap(Decision.declarationsUsing(program, _))
           .groupBy(_._1).toList
           .flatMap((encl, os) => os.map(_._2).minByOption(o => (o.javaPath, o.line)).map(encl -> _))
           .sortBy((encl, o) => (o.javaPath, o.line, encl.raw))

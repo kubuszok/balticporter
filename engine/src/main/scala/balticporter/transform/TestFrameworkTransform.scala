@@ -252,7 +252,11 @@ final class TestFrameworkTransform(
     // `org.junit.Assert.assertThat` or through `org.hamcrest.MatcherAssert`.
     program.referenced.foreach { id =>
       program.symbolOf(id).foreach { s =>
-        val isHamcrest = s.fullName.startsWith("org.hamcrest")
+        // `RuleScope.covers`, not `startsWith`: a bare prefix makes `org.hamcrest` cover
+        // `org.hamcrestic`, which is §4.56's trap and the one the lint in this package exists to
+        // stop. No corpus package is named that, and that is exactly why the site was worth fixing
+        // rather than exempting — nothing would ever have reported it.
+        val isHamcrest = RuleScope.covers(s.fullName, "org.hamcrest")
         val isAssertThat = s.name == "assertThat"
         if isHamcrest || isAssertThat then
           val what = if isAssertThat then "assertThat" else s.fullName

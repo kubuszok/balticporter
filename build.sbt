@@ -224,6 +224,13 @@ lazy val engine = project
       IO.write(f, (runtime / Compile / scalaSource).value.getAbsolutePath)
       Seq(f)
     }.taskValue,
+    // …and the engine's own source root, for `PolicyKeyLintSpec` — a check whose subject is the
+    // TEXT of the transform package, so it must find those files wherever the suite is run from.
+    Test / resourceGenerators += Def.task {
+      val f = (Test / resourceManaged).value / "balticporter" / "engine-source-dir.txt"
+      IO.write(f, (Compile / scalaSource).value.getAbsolutePath)
+      Seq(f)
+    }.taskValue,
   )
 
 // The ONLY module that sees Spoon types. It depends on `api` alone for the TIR path; the BIR path

@@ -27,6 +27,10 @@ class PolicySpec extends munit.FunSuite:
   private def m(ps: TypeRepr*) = MethodType(ps.toList.zipWithIndex.map((t, i) => (s"p$i", t)), ref(STRING))
 
   private val caller = Tree.ClassDef(CALLER, parents = Nil, selfType = None, body = Nil, origin = O)
+  // The wrapper is a UNIT this program declares, so its members are OWNED (`Program.owned` climbs
+  // to a `units` symbol, §4.56). Without it every key here would bind `ExternalOnly` — correctly,
+  // since a policy that rewrites declarations has nothing to rewrite in a type it only references.
+  private val wrapper = Tree.ClassDef(WRAPPER, parents = Nil, selfType = None, body = Nil, origin = O)
 
   private val symbols = SymbolTable(
     List(
@@ -42,59 +46,49 @@ class PolicySpec extends munit.FunSuite:
     )
   )
 
-  private def program(): Program = new Program(List(caller), symbols, Xref.build(List(caller)), MemberIndex.empty)
+  private val units = List(caller, wrapper)
+  private def program(): Program = new Program(units, symbols, Xref.build(units), MemberIndex.empty)
+
+  /** BIND, then run — the order a `PortRun` uses, and the order a phase's report now depends on:
+    * the never-fired answer is a property of the policy and the program, so it is complete before
+    * the pipeline starts and says the same thing whether or not the phase ran. */
+  private def bindAndRun[P <: Phase & PolicyBound](ph: P): Program =
+    val p = program()
+    ph.bindPolicy(new PolicyBinder(p, p.members))
+    ph.run(p)
 
   private def keys(r: PolicyReport)   = r.findings.map(_.key)
   private def issues(r: PolicyReport) = r.findings.map(_.issue)
 
   // -------------------------------------------------------------------------
-  // Substitutions — the tally is recorded at the CONSULT points, so it measures what the
-  // frontend actually asked, not what the manifest hoped.
+  // Substitutions — a PURE policy value. Which of its keys FIRED is a question about a RUN, and
+  // `PolicyBinder` answers it from the program plus the frontend's index (where a DROPPED member
+  // still exists); see `PolicyBinderSpec`. What this value used to carry instead was a mutable
+  // tally whose own scaladoc apologised for it: `copy()` emptied it, two source sets translated
+  // through one manifest unioned their answers, and a report read before the frontend ran named
+  // every key. None of those is a thing a value can be asked to get right.
   // -------------------------------------------------------------------------
-  test("a typo'd dropTypes key is reported unmatched; a key that fired is not") {
-    val subs = Substitutions(dropTypes = Set("demo.Real", "demo.Tpyo"))
+  test("dropsType and dropsMethod are PURE — asking twice is asking once, and asking changes nothing") {
+    val subs = Substitutions(dropTypes = Set("demo.Real"), dropMethods = Set("demo.C#m", "demo.C#n(Int)"))
     assert(subs.dropsType("demo.Real"))
+    assert(subs.dropsType("demo.Real")) // …and again: no accumulated state to differ on
     assert(!subs.dropsType("demo.Something"))
-
-    assertEquals(keys(subs.policyReport), List("demo.Tpyo"))
-    assertEquals(issues(subs.policyReport), List(PolicyIssue.NeverMatched))
-    assertEquals(subs.unmatchedTypes, Set("demo.Tpyo"))
-    assertEquals(subs.matched, Set("demo.Real"))
+    assertEquals(subs, Substitutions(subs.dropTypes, subs.dropMethods, subs.inject))
   }
 
-  test("a dropMethods key is credited in whichever form it was declared") {
-    val subs = Substitutions(dropMethods = Set(
-      "demo.C#write",            // bare: every overload
-      "demo.C#<init>(Int)",      // overload-precise
-      "demo.C#raed",             // typo
-      "demo.C#<init>(Long)",     // a constructor overload the type does not have
-    ))
+  test("a BARE key drops every overload; a PRECISE key drops exactly one") {
+    val subs = Substitutions(dropMethods = Set("demo.C#write", "demo.C#<init>(Int)"))
     assert(subs.dropsMethod("demo.C", "write", List("String")))
+    assert(subs.dropsMethod("demo.C", "write", List("Int", "Class"))) // bare: any parameter list
     assert(subs.dropsMethod("demo.C", "<init>", List("Int")))
-    assert(!subs.dropsMethod("demo.C", "read", List()))
-
-    assertEquals(keys(subs.policyReport), List("demo.C#<init>(Long)", "demo.C#raed"))
+    assert(!subs.dropsMethod("demo.C", "<init>", List("Long")))       // precise: that one only
+    assert(!subs.dropsMethod("demo.C", "read", Nil))
   }
 
-  test("both forms of one key are credited when both are declared and both apply") {
-    val subs = Substitutions(dropMethods = Set("demo.C#m", "demo.C#m(Int)"))
-    assert(subs.dropsMethod("demo.C", "m", List("Int")))
-    assert(subs.policyReport.isEmpty)
-  }
-
-  test("an empty policy reports nothing, and a report read before translation names every key") {
-    assert(Substitutions.none.policyReport.isEmpty)
-    // the documented limit: the tally measures CONSULTATION, so it is only meaningful afterwards.
-    val fresh = Substitutions(dropTypes = Set("demo.A"))
-    assertEquals(keys(fresh.policyReport), List("demo.A"))
-    assert(fresh.dropsType("demo.A"))
-    assert(fresh.policyReport.isEmpty)
-    // …and the documented cost of keeping the tally off the case class's identity.
-    val same = Substitutions(dropTypes = Set("demo.A"))
-    assertEquals(same, fresh)                             // equal as POLICY
-    assertEquals(keys(fresh.copy().policyReport), List("demo.A")) // but `copy` starts a fresh tally
-    fresh.resetMatches()
-    assertEquals(keys(fresh.policyReport), List("demo.A"))
+  test("`keys` is every declared key in the one grammar a report quotes them in") {
+    assertEquals(Substitutions(dropTypes = Set("demo.A"), dropMethods = Set("demo.C#m")).keys,
+      Set("demo.A", "demo.C#m"))
+    assertEquals(Substitutions.none.keys, Set.empty[String])
   }
 
   // -------------------------------------------------------------------------
@@ -102,11 +96,11 @@ class PolicySpec extends munit.FunSuite:
   // -------------------------------------------------------------------------
   test("a class-table redirect that matched nothing is reported; one that fired is not") {
     val good = new ClassTableTransform(Map("com.x.Wrapper#forName" -> "com.x.Table#classFor"))
-    good.run(program())
+    bindAndRun(good)
     assert(clue(good.policyReport.render) == "  none")
 
     val typo = new ClassTableTransform(Map("com.x.Wrapper#fromName" -> "com.x.Table#classFor"))
-    val out  = typo.run(program())
+    val out  = bindAndRun(typo)
     assertEquals(keys(typo.policyReport), List("com.x.Wrapper#fromName"))
     assertEquals(issues(typo.policyReport), List(PolicyIssue.NeverMatched))
     assertEquals(out.symbols.all.size, program().symbols.all.size) // and nothing was rewritten
@@ -115,14 +109,14 @@ class PolicySpec extends munit.FunSuite:
   test("a class-table destination that is not `owner#member` is reported, not thrown") {
     // it used to be `dest.substring(dest.lastIndexOf('#'))` on a -1 index.
     val bad = new ClassTableTransform(Map("com.x.Wrapper#forName" -> "com.x.Table"))
-    bad.run(program())
+    bindAndRun(bad)
     assertEquals(issues(bad.policyReport), List(PolicyIssue.Malformed))
     assertEquals(keys(bad.policyReport), List("com.x.Wrapper#forName"))
   }
 
   test("an empty class-table policy is a silent no-op") {
     val off = new ClassTableTransform(Map.empty)
-    off.run(program())
+    bindAndRun(off)
     assert(off.policyReport.isEmpty)
   }
 
@@ -134,7 +128,7 @@ class PolicySpec extends munit.FunSuite:
   test("a forwarder member that matched nothing is reported; one that fired is not") {
     val ph = new StaticForwarderTransform(List(
       Forwarder("com.x.Wrapper", "java.lang.Class", Set("forName", "getNaem"))))
-    ph.run(program())
+    bindAndRun(ph)
     assertEquals(keys(ph.policyReport), List("com.x.Wrapper#getNaem"))
     assertEquals(issues(ph.policyReport), List(PolicyIssue.NeverMatched))
   }
@@ -142,7 +136,7 @@ class PolicySpec extends munit.FunSuite:
   test("a forwarder WRAPPER that matched nothing is reported once, not once per member") {
     val ph = new StaticForwarderTransform(List(
       Forwarder("com.x.Wrpper", "java.lang.Class", Set("forName", "getSimpleName"))))
-    ph.run(program())
+    bindAndRun(ph)
     assertEquals(keys(ph.policyReport), List("com.x.Wrpper"))
     assertEquals(ph.policyReport.findings.map(_.setting), List("Forwarder.wrapper"))
   }
@@ -152,7 +146,7 @@ class PolicySpec extends munit.FunSuite:
     // rather than guessing, because refusing correct rewrites would be the worse failure.
     val ph = new StaticForwarderTransform(List(
       Forwarder("com.x.Wrapper", "java.lang.Class", Set("getSimpleName"))))
-    ph.run(program())
+    bindAndRun(ph)
     assertEquals(issues(ph.policyReport), List(PolicyIssue.Unverifiable))
     assert(clue(ph.policyReport.findings.head.detail).contains("2 overloads"))
     assert(ph.policyReport.findings.head.detail.contains("java.lang.Class"))
@@ -163,26 +157,25 @@ class PolicySpec extends munit.FunSuite:
     // impossible rather than doubtful. Nothing is minted for it.
     val ph  = new StaticForwarderTransform(List(
       Forwarder("com.x.Wrapper", "java.lang.Class", Set("now"))))
-    val out = ph.run(program())
+    val out = bindAndRun(ph)
     assertEquals(issues(ph.policyReport), List(PolicyIssue.Malformed))
     assertEquals(out.symbols.all.size, program().symbols.all.size)
   }
 
   test("an empty forwarder policy is a silent no-op") {
     val off = new StaticForwarderTransform(Nil)
-    off.run(program())
+    bindAndRun(off)
     assert(off.policyReport.isEmpty)
   }
 
   // -------------------------------------------------------------------------
   test("reports are COLLECTED from the seams an orchestrator already holds, and classify the fix") {
-    val subs = Substitutions(dropTypes = Set("demo.Tpyo"))
     val fwd  = new StaticForwarderTransform(List(Forwarder("com.x.Wrapper", "java.lang.Class", Set("getNaem"))))
     val tbl  = new ClassTableTransform(Map("com.x.Wrapper#fromName" -> "com.x.Table#classFor"))
-    fwd.run(program()); tbl.run(program())
+    bindAndRun(fwd); bindAndRun(tbl)
 
-    val all = PolicyReport.collect(subs, fwd, tbl)
-    assertEquals(all.keys, Set("demo.Tpyo", "com.x.Wrapper#getNaem", "com.x.Wrapper#fromName"))
+    val all = PolicyReport.collect(fwd, tbl)
+    assertEquals(all.keys, Set("com.x.Wrapper#getNaem", "com.x.Wrapper#fromName"))
     // every line names the key AND says which of CLAUDE.md §1's three kinds the fix is, so a
     // reader in another repository needs no investigation to act on it.
     all.findings.foreach { f =>

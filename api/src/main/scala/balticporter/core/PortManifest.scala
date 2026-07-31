@@ -101,7 +101,7 @@ final case class PortManifest(
       * `SurfaceMissing` could never fire, and a check that cannot fire is not a check.
       */
     inherit: Boolean = true,
-) extends PolicySource:
+):
 
   /** THE composition operation: `base.extendedBy(dependent)`.
     *
@@ -162,13 +162,16 @@ final case class PortManifest(
     * findings. The inherited half is not unchecked, though — it is checked more precisely, as
     * [[ManifestAgreement.Kind.InheritedKeyNeverFired]], which says which BASE the key came from.
     */
-  def policyReport: PolicyReport =
-    val own = ownDrops.dropTypes ++ ownDrops.dropMethods
-    PolicyReport(substitutions.policyReport.findings.filter(f => own.contains(f.key)))
+  def ownKeys: Set[String] = ownDrops.keys
 
-  /** base drop keys that never fired during this run. */
-  def inheritedKeysNeverFired: Map[String, Set[String]] =
-    val fired = substitutions.matched
+  /** base drop keys that never fired during this run.
+    *
+    * `fired` is supplied by the RUN rather than accumulated on `substitutions`, which used to carry
+    * a mutable tally of the keys it had been asked about. That tally answered "did this key ever
+    * fire on this INSTANCE", which is not the question — two source sets translated through one
+    * manifest unioned their answers, and `copy()` silently emptied it. `PolicyBinder` answers from
+    * the program and the frontend's index instead. */
+  def inheritedKeysNeverFired(fired: Set[String]): Map[String, Set[String]] =
     baseChain.map(b => b.name -> ((b.dropTypes ++ b.dropMethods) -- fired)).filter(_._2.nonEmpty).toMap
 
   /** the drops THIS module is answerable for — its own, minus anything a base also declares.

@@ -1426,6 +1426,20 @@ defect §4.56 records. This is **a convention with a lint, not a type-level guar
 check in the engine's own suite forbidding `fullName ==`, `fullName.startsWith` and `+ "#" +` inside
 the transform package with a named allow-list, plus the auditor's hunt line.
 
+**Two things the design listed that do NOT go, corrected by implementing them.**
+
+- **`PortMapTransform.preciseKey` and `PortMap.erase` stay.** §8.1 listed them beside
+  `MethodBodyTransform.keysOf` as key machinery the binder replaces. They are not: they are the two
+  ends of ONE JOIN in the EMITTED namespace. A base publishes a member's `upstream` column as
+  `erase(TirEmitter.memberKey(…))` — emitted type names, so `Array` for an array and `Any` for
+  `equals` — and a dependent reconstructs the same string from the callee's `info`. Moving the
+  reading end to the descriptor alone makes the join MISS on exactly the members the two grammars
+  spell differently. Moving both ends together re-publishes every `port-map.tsv`, an artifact
+  dependents read, so it is a measured commit of its own and not part of an identity change whose
+  gate is byte-identity elsewhere. D1's arity residue survives, scoped to that join.
+- **Four `policyReport` vars go, not five.** `PortMapTransform`'s report is about a whole MAP naming
+  nothing, which is not a key binding and has no binder answer.
+
 **What the `policy-binding` measurement corrected in this design.** Both were false statements in a
 findings file, neither moved a member digest, and nothing else in the pipeline could have seen
 either — which is the whole argument for taking the measurement while both answers still exist:

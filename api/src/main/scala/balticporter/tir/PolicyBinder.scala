@@ -33,7 +33,7 @@ package balticporter.tir
   * §4.56 defect, twice measured. This is a CONVENTION WITH A LINT (`PolicyKeyLintSpec`), not a
   * type-level guarantee, and saying so plainly is better than implying otherwise.
   */
-final class PolicyBinder(program: Program, index: MemberIndex):
+final class PolicyBinder(val program: Program, index: MemberIndex):
 
   private val log = collection.mutable.ListBuffer.empty[PolicyBinder.Record]
 
@@ -42,6 +42,13 @@ final class PolicyBinder(program: Program, index: MemberIndex):
 
   /** the ones that did not bind. */
   def unbound: List[PolicyBinder.Record] = log.toList.filter(_.binding.isUnbound)
+
+  /** the records ONE phase's binds produced — what its own never-fired report is derived from.
+    *
+    * A phase reads this instead of keeping a private `var report`, and the difference is not
+    * bookkeeping: a report built here is complete the moment the keys are bound, so a phase that
+    * never ran reports the same thing a phase that ran and matched nothing does. Both are true. */
+  def recordsFor(phase: String): List[PolicyBinder.Record] = log.toList.filter(_.phase == phase)
 
   // -------------------------------------------------------------------------
   // types

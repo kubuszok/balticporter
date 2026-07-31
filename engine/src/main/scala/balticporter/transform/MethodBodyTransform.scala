@@ -62,12 +62,24 @@ final class MethodBodyTransform(bodies: Map[String, String] = Map.empty)
     extends Phase, PolicySource, SurfacePolicy, PolicyBound:
   def name: String = "method-body-substitution"
 
-  /** What the RUN resolved each declared key to, before the pipeline started (§8.1). */
+  /** What the RUN resolved each declared key to, before the pipeline started (§8.1) — and the only
+    * thing this phase is allowed to learn about which members its keys name.
+    *
+    * '''`bySym` is where the bare-versus-precise precedence now lives, and it is ORDERED.''' With
+    * both `X#m` and `X#m(int)` declared, the precise key must win at the member both name; built
+    * from an unordered map it would win or lose by hash order, which is the kind of thing that is
+    * right for a year and then is not. Bare first, precise last, both sorted. */
   private var bound: Map[String, Binding[List[PolicyBinder.Hit]]] = Map.empty
+  private var bySym: Map[SymId, String] = Map.empty
+  private var records: List[PolicyBinder.Record] = Nil
 
   def bindPolicy(binder: PolicyBinder): Unit =
     bound = bodies.keys.toList.sorted
       .map(k => k -> binder.bindMembers(name, "MethodBodyTransform", k)).toMap
+    records = binder.recordsFor(name)
+    val (bare, precise) = bound.toList.sortBy(_._1)
+      .partition((k, _) => MemberKey.parse(k).toOption.exists(_.isBare))
+    bySym = (bare ++ precise).flatMap((k, b) => b.toOption.getOrElse(Nil).flatMap(_.sym).map(_ -> k)).toMap
 
   /** Two modules that replace different bodies do not disagree about the shared SURFACE — a body is
     * not a signature, and exactly one module emits each type. The keys are fingerprinted anyway:
@@ -77,12 +89,37 @@ final class MethodBodyTransform(bodies: Map[String, String] = Map.empty)
   def surfaceFingerprint: String =
     bodies.toList.sorted.map((k, v) => s"$k=${v.hashCode.toHexString}").mkString(",")
 
-  private var report: PolicyReport = PolicyReport.empty
   private var applied: List[String] = Nil
 
-  /** Declared keys that matched nothing, plus the two shapes this phase refuses. Reflects the last
-    * [[run]]; empty before the first, and empty for an empty policy. */
-  def policyReport: PolicyReport = report
+  /** Declared keys that matched nothing, plus the two shapes this phase refuses.
+    *
+    * The never-fired half comes from the BINDING and is therefore complete before [[run]]; the two
+    * refusals are facts about what the bound members ARE, which is also knowable without running.
+    * The private `var report` this replaces could only speak after a run, so a phase list that
+    * never reached this phase reported an empty policy — silence that read as "every key fired". */
+  def policyReport: PolicyReport =
+    PolicyReport.fromBindings(records) ++ PolicyReport(
+      bound.toList.sortBy(_._1).flatMap { (k, b) =>
+        b match
+          case Binding.Bound(_, hits, _) =>
+            // A REFUSED key is not an UNMATCHED key. Reported as both, the second reading ("your key
+            // is a typo") contradicts the first ("your key names a constructor") and the reader has
+            // to work out which is true.
+            val ctors = hits.count(_.key.name == "<init>")
+            val refuse = Option.when(ctors > 0)(
+              PolicyFinding(name, "MethodBodyTransform", k, PolicyIssue.Malformed,
+                "a CONSTRUCTOR body cannot be substituted: CtorFunnel derives the class's Scala " +
+                  "primary and its replayable `super(args)` from constructor bodies, and swapping " +
+                  "one underneath that analysis changes it silently — drop the type and inject a " +
+                  "replacement instead"))
+            val many = Option.when(hits.size - ctors > 1)(
+              PolicyFinding(name, "MethodBodyTransform", k, PolicyIssue.Unverifiable,
+                s"matched ${hits.size - ctors} members: the bare `owner#name` form gives EVERY " +
+                  "overload the same body. Use the precise `owner#name(P1,P2)` form unless that is " +
+                  "genuinely intended"))
+            refuse.toList ++ many.toList
+          case _ => Nil
+      })
 
   /** Member keys whose body was actually replaced, in a stable order — so a run can state the
     * number rather than leaving it to be inferred. A replaced body also changes that member's
@@ -90,58 +127,29 @@ final class MethodBodyTransform(bodies: Map[String, String] = Map.empty)
     * even when no count moves (CLAUDE.md §3: the translation and its check arrive together). */
   def substituted: List[String] = applied.sorted
 
-  /** `owner#name` and `owner#name(P1,P2)` for a member — the `Substitutions.dropMethods`
-    * convention, so one library states a member the same way wherever it states it. The parameter
-    * names are the erased type SIMPLE names as the frontend recorded them, primitives included
-    * (`int`, not `Int`), which is what libGDX's own manifest already writes in
-    * `Array#<init>(boolean,int,Class)`. Pinned by `MethodBodyTransformSpec`. */
-  private def keysOf(program: Program, owner: String, d: Tree.DefDef): (String, String) =
-    val ps = d.paramss.headOption.getOrElse(Nil).map { p =>
-      val n = program.symbolOf(p.tpt.tpe match {
-        case TypeRepr.TypeRef(_, s)      => s
-        case TypeRepr.AppliedType(TypeRepr.TypeRef(_, s), _) => s
-        case _                           => SymId.None
-      }).map(_.name).getOrElse("?")
-      n
-    }
-    val nm = program.symbolOf(d.symbol).map(_.name).getOrElse("?")
-    (s"$owner#$nm", s"$owner#$nm(${ps.mkString(",")})")
-
   override def run(program: Program): Program =
     if bodies.isEmpty then
-      report = PolicyReport.empty; applied = Nil
+      applied = Nil
       return program
 
-    val fired    = collection.mutable.Set.empty[String]
-    val findings = collection.mutable.ListBuffer.empty[PolicyFinding]
-    val hitCount = collection.mutable.Map.empty[String, Int].withDefaultValue(0)
-    val done     = collection.mutable.ListBuffer.empty[String]
+    val done = collection.mutable.ListBuffer.empty[String]
 
     def rewrite(cd: Tree.ClassDef): Tree.ClassDef =
       val owner = program.symbolOf(cd.symbol).map(_.fullName).getOrElse("")
       val body = cd.body.map {
         case d: Tree.DefDef =>
-          val (bare, precise) = keysOf(program, owner, d)
-          val key = if bodies.contains(precise) then Some(precise) else Option.when(bodies.contains(bare))(bare)
-          key match
+          // The member is identified by its SYMBOL, bound before the pipeline ran. What this
+          // replaces rebuilt `owner#name(P1,P2)` from the `DefDef`'s own parameter TREES and looked
+          // the string up — a second key grammar, in the emitted namespace, that spelled an array
+          // `Array` where every manifest spells it `int[]`.
+          bySym.get(d.symbol) match
             case None => d
             case Some(k) =>
               val nm = program.symbolOf(d.symbol).map(_.name).getOrElse("")
-              if nm == "<init>" then
-                // A REFUSED key is not an UNMATCHED key. Without this the same key is reported
-                // twice, as Malformed and again as NeverMatched, and the second reading ("your key
-                // is a typo") contradicts the first ("your key names a constructor") — the reader
-                // then has to work out which is true.
-                fired += k
-                findings += PolicyFinding(name, "MethodBodyTransform", k, PolicyIssue.Malformed,
-                  "a CONSTRUCTOR body cannot be substituted: CtorFunnel derives the class's Scala " +
-                    "primary and its replayable `super(args)` from constructor bodies, and swapping " +
-                    "one underneath that analysis changes it silently — drop the type and inject a " +
-                    "replacement instead")
-                d
+              // The refusal is REPORTED by `policyReport`, from the binding; here it only declines
+              // to rewrite.
+              if nm == "<init>" then d
               else
-                fired += k
-                hitCount(k) += 1
                 done += k
                 // DECISION PROVENANCE, one row per REPLACED MEMBER. Already declaration-level by
                 // construction — this phase's unit of work IS a member — so there is nothing to
@@ -169,18 +177,5 @@ final class MethodBodyTransform(bodies: Map[String, String] = Map.empty)
       cd.copy(body = body)
 
     val units = program.units.map(rewrite)
-
-    (bodies.keySet -- fired).toList.sorted.foreach { k =>
-      findings += PolicyFinding(name, "MethodBodyTransform", k, PolicyIssue.NeverMatched,
-        "no member of that name (and parameter list, if given) occurs in this program, so the " +
-          "supplied Scala was never used and the mechanically translated body still stands")
-    }
-    hitCount.toList.filter(_._2 > 1).sortBy(_._1).foreach { (k, n) =>
-      findings += PolicyFinding(name, "MethodBodyTransform", k, PolicyIssue.Unverifiable,
-        s"matched $n members: the bare `owner#name` form gives EVERY overload the same body. " +
-          "Use the precise `owner#name(P1,P2)` form unless that is genuinely intended")
-    }
-
-    report  = PolicyReport(findings.toList)
     applied = done.toList
     program.rebuilt(units) // xref rebuilt by the Pipeline

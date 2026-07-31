@@ -287,7 +287,6 @@ class ManifestSpec extends munit.FunSuite:
 
   test("an inherited key that never fired is reported, and is NOT fatal") {
     val m = core.extendedBy(PortManifest("ext"))
-    m.substitutions.resetMatches() // nothing consulted it: every inherited key is unfired
     val fs = ManifestAgreement.check(Some(m), Nil, foreignRoots = true)
     assertEquals(fs.map(_.kind), List(Kind.InheritedKeyNeverFired))
     assertEquals(fs.map(_.base), List("core"))

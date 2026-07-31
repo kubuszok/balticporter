@@ -265,7 +265,12 @@ final case class PortRun(
     // Runs on EVERY port. On a base port `shared` is empty and the check is a no-op by arithmetic
     // rather than by a branch — the same discipline as an empty policy making a phase a no-op.
     val basePorts = discoverBasePorts()
-    val agreement = ManifestAgreement.check(manifest, sharedSurface(program, translated.foreign), foreignRoots, basePorts)
+    // `fired` comes from the RUN's binder — the drop keys that resolved to something. It used to be
+    // a mutable tally on `Substitutions`, which answered "did this key ever fire on this INSTANCE"
+    // and unioned two source sets translated through one manifest.
+    val firedKeys = translated.binder.bindings.filter(_.binding.isBound).map(_.entry).toSet
+    val agreement = ManifestAgreement.check(manifest, sharedSurface(program, translated.foreign),
+                                            foreignRoots, basePorts, firedKeys)
     CheckReport.record(PortRun.Manifest, agreement.map { f =>
       CheckReport.Finding(PortRun.Manifest, f.kind.toString, f.subject, "", 0, f.render)
     })
@@ -530,7 +535,7 @@ final case class PortRun(
     if ownSubs.dropTypes.nonEmpty && danglingSubs.isEmpty then
       say(s"substitutions: ${ownSubs.dropTypes.size} dropped types verified removed from the final code")
 
-    // ---- policy: every (b) seam this run holds, read AFTER the frontend has consulted it ----
+    // ---- policy: every (b) seam this run holds, ALL OF IT FROM THE BINDING ----
     // Only the policy THIS module declares — its own drops, and the phases in its own `surface`.
     //
     // A §1(b) finding says "fix this key in the library's manifest", and an INHERITED key lives in
@@ -539,47 +544,23 @@ final case class PortRun(
     // that all mean the same thing. The inherited half is not unchecked — it is checked more
     // precisely by `ManifestAgreement`, which says which base the key came from and whether it
     // fired HERE (`InheritedKeyNeverFired`).
-    val ownPolicy: PolicySource   = manifest.getOrElse(subs)
-    val ownPhases: List[Phase]    = manifest.map(_.surface).getOrElse(phases)
-    val fromPhases = PolicyReport.from(ownPolicy :: ownPhases.collect { case p: PolicySource => p })
-
-    // …plus what only the BINDER can say. §8.1's `ExternalOnly` is the case that pays for itself:
-    // `RuleScope`'s own doc describes it as a live silent no-op — the entry matches an interned
-    // external, the phase rewrites nothing, and the entry COUNTS AS HAVING FIRED. A phase's own
-    // matcher has no verdict for that, so this is a genuine RISE and the gate beginning to tell the
-    // truth (§3), not a regression.
     //
-    // Restricted to THIS module's own keys, exactly as `PortManifest.policyReport` is and for its
-    // reason: an inherited key lives in the base's manifest, and reporting it here tells every
-    // dependent about a mistake none of them can fix. De-duplicated against what the phases already
-    // said, so nothing is reported twice while both answers exist.
-    val ownKeys: Set[String] = manifest.map(m => m.ownDrops.dropTypes ++ m.ownDrops.dropMethods)
-      .getOrElse(subs.dropTypes ++ subs.dropMethods)
-    val ownPhaseNames: Set[String] = ownPhases.map(_.name).toSet + "substitutions"
-    val alreadySaid: Set[(String, String, String)] =
-      fromPhases.findings.map(f => (f.phase, f.setting, f.key)).toSet
-    val fromBinder = PolicyReport(PolicyReport.fromBindings(translated.binder.bindings).findings.filter { f =>
-      ownPhaseNames(f.phase) && (f.phase != "substitutions" || ownKeys(f.key)) &&
-        !alreadySaid((f.phase, f.setting, f.key))
-    })
-    val policy = fromPhases ++ fromBinder
+    // The DROPS' half no longer comes from a mutable tally on `Substitutions` accumulated as the
+    // frontend consulted it; it comes from the same binder every phase reads, which also
+    // distinguishes an EXTERNAL-only match from a typo, and says WHY. `policy-binding` measured
+    // the two answers against each other on all thirteen lanes before this replaced that one.
+    val ownPhases: List[Phase] = manifest.map(_.surface).getOrElse(phases)
+    val ownKeys: Set[String]   = manifest.map(_.ownKeys).getOrElse(subs.keys)
+    val ownPhaseNames: Set[String] = ownPhases.map(_.name).toSet
+    val dropFindings = PolicyReport(PolicyReport.fromBindings(translated.binder.bindings).findings
+      .filter(f => f.phase == "substitutions" && ownKeys(f.key)))
+    val policy = dropFindings ++
+      PolicyReport.from(ownPhases.collect { case p: PolicySource if ownPhaseNames(p.name) => p })
     CheckReport.record(PortRun.Policy, policy.findings.map { f =>
       CheckReport.Finding(PortRun.Policy, f.issue.label, f.phase, f.setting, 0, s"${f.key} — ${f.detail}")
     })
     say(s"POLICY (declared keys that never fired): ${policy.findings.size}")
     if policy.nonEmpty then println(policy.render)
-
-    // ---- the BINDER against every phase's OWN matcher, while both still exist ----
-    // Scaffolding, and deliberately so: it is what earns the binder the right to replace eighteen
-    // hand-written key tests, and once the matchers are gone there is no second implementation to
-    // compare against. See `PolicyBindingCheck`.
-    val bindingFindings = PolicyBindingCheck.check(translated.binder.bindings, fromPhases)
-    CheckReport.record(PolicyBindingCheck.Name, bindingFindings.map { f =>
-      CheckReport.Finding(PolicyBindingCheck.Name, f.kind, f.phase, f.setting, 0, s"${f.key} — ${f.detail}")
-    })
-    say(s"POLICY BINDING (binder vs each phase's own key matcher): ${bindingFindings.size}")
-    if bindingFindings.nonEmpty then say(PolicyBindingCheck.Classification)
-    println(PolicyBindingCheck.summary(bindingFindings))
 
     // Every check this run believes it ran must ALSO have registered itself with the persistence
     // layer, or a number reaches the operator's terminal and never reaches `findings.tsv`. That is
@@ -863,7 +844,9 @@ final case class PortRun(
       def all(cd: Tree.ClassDef): List[Tree.ClassDef] =
         cd :: cd.body.collect { case c: Tree.ClassDef => all(c) }.flatten
       program.units.flatMap(all).flatMap(u => program.symbolOf(u.symbol).map(_.fullName -> u)).toMap
-    val fired = policySubs.matched
+    // Which declared keys FIRED, from the run's binder — see `firedKeys` above for why this is no
+    // longer a tally accumulated on the policy value itself.
+    val fired = translated.binder.bindings.filter(_.binding.isBound).map(_.entry).toSet
     def emitted(fqn: String) = PackageRenameTransform.renamed(fqn, renames)
     // The type a policy key is ABOUT, and its Java file. Where even the nested lookup fails (a key
     // that matched nothing, a type this run does not parse) the enclosing top-level type still
@@ -1308,7 +1291,9 @@ final case class PortRun(
     // `runTraced`, so the phases' DECISIONS travel with the program they produced. The log belongs
     // to THIS translation: `Determinism.Full` translates twice and the run keeps the first, which
     // is only coherent because neither log is shared (CLAUDE.md §5.1).
-    val (program, decisions) = Pipeline.runTraced(parsed, effectivePhases)
+    // The binder is handed to the pipeline, which binds every `PolicyBound` phase before the first
+    // one runs — a phase run unbound matches nothing, silently.
+    val (program, decisions) = Pipeline.runTraced(parsed, effectivePhases, binder)
     val plan    = RuntimePlan.of(effectivePhases, runtimeMode)
     // `externalConcrete` is DERIVED, never passed in: a caller who has to remember it is a caller
     // who forgets it, and forgetting it silently disables diamond-conflict detection against an
@@ -1333,7 +1318,7 @@ final case class PortRun(
       binder.bindType("substitutions", "Substitutions.dropTypes", k))
     policySubs.dropMethods.toList.sorted.foreach(k =>
       binder.bindMembers("substitutions", "Substitutions.dropMethods", k))
-    effectivePhases.foreach { case p: PolicyBound => p.bindPolicy(binder); case _ => () }
+    // the PHASES' keys are bound by `Pipeline.runTraced`, so no caller of it can forget.
 
   /** Units this run CONVERTS, as opposed to units it merely resolved against.
     *

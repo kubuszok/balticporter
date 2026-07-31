@@ -155,8 +155,19 @@ object Pipeline:
     * decisions it would have made were not made.
     */
   def runTraced(program: Program, phases: List[Phase]): (Program, DecisionLog) =
+    runTraced(program, phases, new PolicyBinder(program, program.members))
+
+  /** …with a binder the CALLER owns, so it can read the bindings afterwards.
+    *
+    * '''Binding happens here, not in each caller.''' A `PolicyBound` phase that is run without
+    * being bound matches nothing and rewrites nothing — silently, which is the §1(b) failure this
+    * whole seam exists to remove, reintroduced one layer up. A caller that has to remember a step
+    * is a caller that will not, and a §1(c) rule author reaching for `Pipeline.run` has no reason
+    * to know the step exists. */
+  def runTraced(program: Program, phases: List[Phase], binder: PolicyBinder): (Program, DecisionLog) =
     val log     = new DecisionLog
     val ordered = order(phases)
+    ordered.foreach { case p: PolicyBound => p.bindPolicy(binder); case _ => () }
     DebugFlags.banner.foreach(b => println(s"$b  (phases: ${ordered.map(_.name).mkString(", ")})"))
     val unknown = (DebugFlags.skipPhases - "*") -- ordered.map(_.name).toSet
     if unknown.nonEmpty then

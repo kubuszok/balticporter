@@ -36,76 +36,29 @@ final case class Substitutions(
     dropTypes: Set[String] = Set.empty,
     dropMethods: Set[String] = Set.empty,
     inject: List[Path] = Nil,
-) extends PolicySource:
+):
 
-  /** Keys that actually fired, accumulated as the frontend consults this value.
-    *
-    * A deliberate mutable tally on a `case class`, and the reasons, since this is exactly the kind
-    * of thing that bites:
-    *
-    *  - It is NOT a constructor parameter, so it stays out of `equals`/`hashCode`/`toString`/
-    *    `copy`. That is the semantics we want — a `Substitutions` IS its policy, and two equal
-    *    policies must remain equal however each was exercised — but it also means `copy()` hands
-    *    back an EMPTY tally and two structurally equal values can report differently. Read the
-    *    report off the instance the frontend was given.
-    *  - It accumulates for the LIFETIME of the instance. Translating two source sets with one
-    *    value unions their matches, which is right for "did this key ever fire?" and wrong for
-    *    "did it fire for THIS set" — call [[resetMatches]] between runs if the second is meant.
-    *  - `dropsType`/`dropsMethod` therefore look pure and are not. The alternative — threading a
-    *    match log out through `SpoonTir.fromTypes`' return type — changes the frontend's signature
-    *    and every call site to report a configuration mistake; the tally keeps the seam at the one
-    *    place that knows the answer, and the concurrent set keeps it safe if translation is ever
-    *    parallelised.
-    */
-  @transient private val matchedKeys: java.util.Set[String] =
-    java.util.concurrent.ConcurrentHashMap.newKeySet[String]()
-
-  def dropsType(fqcn: String): Boolean =
-    val hit = dropTypes.contains(fqcn)
-    if hit then matchedKeys.add(fqcn)
-    hit
+  /** does policy drop this TYPE? PURE — see [[dropsMethod]]. */
+  def dropsType(fqcn: String): Boolean = dropTypes.contains(fqcn)
 
   /** `owner#name` drops EVERY overload of that name; `owner#name(P1,P2)` — the erased parameter
     * type SIMPLE names — drops exactly one. Overload precision is what makes constructors
     * droppable at all: a type's constructors all share the one name `<init>`, so the bare key
-    * could only ever mean "drop them all". */
-  def dropsMethod(ownerFqcn: String, method: String, paramTypes: List[String] = Nil): Boolean =
-    val bare    = s"$ownerFqcn#$method"
-    val precise = s"$ownerFqcn#$method(${paramTypes.mkString(",")})"
-    // record EVERY declared key this call satisfies: with both forms declared, the bare one drops
-    // this overload too, so it has demonstrably fired and is not a typo.
-    val hitBare    = dropMethods.contains(bare)
-    val hitPrecise = dropMethods.contains(precise)
-    if hitBare then matchedKeys.add(bare)
-    if hitPrecise then matchedKeys.add(precise)
-    hitBare || hitPrecise
-
-  /** declared keys observed to fire so far. */
-  def matched: Set[String] = scala.jdk.CollectionConverters.SetHasAsScala(matchedKeys).asScala.toSet
-
-  def unmatchedTypes: Set[String]   = dropTypes -- matched
-  def unmatchedMethods: Set[String] = dropMethods -- matched
-
-  /** Forget every recorded match — for reusing one value across independent translations. */
-  def resetMatches(): Unit = matchedKeys.clear()
-
-  /** Declared drops that never fired. Sorted so a report is stable run to run.
+    * could only ever mean "drop them all".
     *
-    * Note what this cannot say: it is only as good as the number of times the frontend was asked.
-    * A report read before any translation names EVERY key, which is why the orchestrator reads it
-    * after the frontend has run, not before.
-    */
-  def policyReport: PolicyReport =
-    val seen = matched
-    def find(setting: String, keys: Set[String], detail: String) =
-      (keys -- seen).toList.sorted.map(k => PolicyFinding("substitutions", setting, k, PolicyIssue.NeverMatched, detail))
-    PolicyReport(
-      find("Substitutions.dropTypes", dropTypes,
-        "no type with this fully-qualified name was translated, so nothing was dropped and any " +
-          "injected replacement now shadows nothing") ++
-        find("Substitutions.dropMethods", dropMethods,
-          "no method matched this `owner#name` (or `owner#name(P1,P2)`) key, so nothing was dropped")
-    )
+    * '''PURE, and it did not use to be.''' This value carried a mutable tally of the keys it had
+    * been observed to satisfy, whose own scaladoc apologised for being a mutable field on a `case
+    * class` that `copy()` silently empties, and for reporting "did this key EVER fire" when the
+    * question asked was "did it fire for THIS translation". Which keys fired is now a question
+    * `PolicyBinder` answers from the program and the frontend's `MemberIndex`, where a DROPPED
+    * member still exists — so the answer is a fact about a run rather than a side effect
+    * accumulated on a policy value that two runs might share. */
+  def dropsMethod(ownerFqcn: String, method: String, paramTypes: List[String] = Nil): Boolean =
+    dropMethods.contains(s"$ownerFqcn#$method") ||
+      dropMethods.contains(s"$ownerFqcn#$method(${paramTypes.mkString(",")})")
+
+  /** every declared key, in the one grammar a report quotes them in. */
+  def keys: Set[String] = dropTypes ++ dropMethods
 
 object Substitutions:
   val none: Substitutions = Substitutions()

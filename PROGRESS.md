@@ -1830,6 +1830,49 @@ is hand-authored ecosystem infrastructure with no Java source to transform.
 **Bookkeeping from the audit**: anim8's decisions.tsv snapshot in §7 predates T13 (235 vs the
 current 565 `RetypedSignature`) — refresh the prose next time that section is touched.
 
+### 11.10 D2 — member identity and `PolicyBinder`, as measured
+
+DESIGN.md §8.1, landed as five commits with a full thirteen-lane measurement between each. What the
+numbers said, since none of it is visible in a count afterwards:
+
+| | measured |
+|---|---|
+| D2.1 `Symbol.descriptor` | **0 members changed, `findings.tsv` byte-identical on all 13 ports** — the separate-field decision's whole justification, confirmed rather than argued |
+| D2.2 `MemberIndex` + required `Program.members` | same, on 28 migrated construction sites |
+| D2.3 binder BESIDE every matcher | **`policy-binding` 0 on all 13 lanes, and 0 CONTRADICTIONS anywhere** |
+| D2.4 phases consume bindings | 0 members changed; `policy` findings identical to D2.3 |
+| D2.5 per-port key fixes | **EMPTY** — no corpus key changed meaning |
+
+**§8.1 predicted a `policy` RISE from newly-visible `ExternalOnly` and there was none.** The one
+phase that takes a `RuleScope` already filtered through `Program.owned` and already reported an
+external-only entry with WHY; the binder reproduces its answer rather than adding to it. The rise
+that DID appear was twice, and both times the binder was wrong:
+
+- **gdx-vfx `policy 0 → 1`** — `VfxGLUtils#<clinit>` refused as `SyntheticTarget`. The refusal is
+  structural ("the frontend walked this owner and did not record this executable") and initialiser
+  blocks were not in the `MemberIndex`, so a hand-written Java `static { }` block was reported as
+  engine-created. Fixed by indexing them; the index also holds a LIST per key, since a class with
+  two static blocks has two members at one identity.
+- **libgdx-screenmanager `policy 0 → 10`** — every guacamole redirect refused as `ExternalOnly`.
+  `TypeRedirectTransform` is the one seam whose subject is a type this module does not declare and
+  cannot declare. It binds `Ownership.Either`; every other seam keeps `Owned`.
+
+Both were FALSE STATEMENTS in a findings file, neither moved a member digest, and nothing else in
+the pipeline could have seen either. That is the `policy-binding` check's entire return, and it was
+deleted with the matchers it measured (a check that can only ever report zero is the `ENGINE-LIMITS`
+P2 shape).
+
+**What the source-level lint found on its first run**: six string tests in the transform package
+outside the allow-list, five of them engine-owned identity (`scala.<op>#`, the JUnit vocabulary, an
+`OpaqueSpec`'s primitive underlying) and one a genuine §4.56 shape —
+`fullName.startsWith("org.hamcrest")`, which covers `org.hamcrestic`. Fixed rather than exempted: no
+corpus package is named that, which is exactly why nothing would ever have reported it.
+
+**Still open, and named rather than implied.** `PortMapTransform.preciseKey` and `PortMap.erase` are
+the two ends of one join in the EMITTED namespace and did NOT move (see `ENGINE-LIMITS.md` D1 and
+DESIGN.md §8.1). Moving both together re-publishes every `port-map.tsv` and is its own measured
+commit; until then D1's 8-finding arity residue stands, scoped to that join.
+
 ## 12. Remaining work, across the engine
 
 Maintained by deletion. Items are ordered by what they block, not by size.

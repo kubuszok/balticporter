@@ -39,21 +39,55 @@ final class StaticForwarderTransform(forwarders: List[StaticForwarderTransform.F
     * A member is bound as the FULL key `wrapper#member`, which is also now what a finding about it
     * quotes: a `PolicyFinding`'s key must be the string an agent edits (§4.575), and a bare
     * `getSimpleName` is not editable without first working out which forwarder it belongs to. */
-  private var boundWrappers: Map[String, Binding[SymId]] = Map.empty
   private var boundMembers: Map[String, Binding[List[PolicyBinder.Hit]]] = Map.empty
+  private var records: List[PolicyBinder.Record] = Nil
+  private var shapeFindings: List[PolicyFinding] = Nil
+  /** the members to inline, with the forwarder that named them — bound, and in a DETERMINISTIC
+    * order, because the symbols this phase mints are numbered in it. The scan it replaces read
+    * `program.symbols.all`, whose order is a hash order. */
+  private var boundTargets: List[(Symbol, StaticForwarderTransform.Forwarder)] = Nil
 
   private def memberSetting(f: StaticForwarderTransform.Forwarder): String =
     s"""Forwarder("${f.wrapper}").members"""
 
   def bindPolicy(binder: PolicyBinder): Unit =
-    boundWrappers = forwarders.map(f =>
-      f.wrapper -> binder.bindType(name, "Forwarder.wrapper", f.wrapper)).toMap
+    forwarders.foreach(f => binder.bindType(name, "Forwarder.wrapper", f.wrapper))
     boundMembers = forwarders.flatMap { f =>
       f.members.toList.sorted.map { m =>
         val key = s"${f.wrapper}#$m"
         key -> binder.bindMembers(name, memberSetting(f), key)
       }
     }.toMap
+    records = binder.recordsFor(name)
+
+    // What the BINDER cannot say, because it is a fact about the bound members' SIGNATURES rather
+    // than about the key: a member that provably takes no arguments cannot forward to a
+    // first-argument receiver, and a name that matched several overloads will rewrite all of them.
+    // Both are computed here, from the same program the keys were bound against, so the whole
+    // report is complete before the pipeline runs.
+    val hits: List[(StaticForwarderTransform.Forwarder, String, List[Symbol])] =
+      forwarders.flatMap { f =>
+        f.members.toList.sorted.map { m =>
+          val ss = boundMembers.get(s"${f.wrapper}#$m").toList
+            .flatMap(_.toOption.getOrElse(Nil)).flatMap(_.sym).flatMap(binder.program.symbolOf)
+          (f, m, ss)
+        }
+      }
+    shapeFindings = hits.flatMap { (f, m, ss) =>
+      val key = s"${f.wrapper}#$m"
+      val (none0, usable) = ss.partition(nullary)
+      none0.map(_ =>
+        PolicyFinding(name, memberSetting(f), key, PolicyIssue.Malformed,
+          s"`${f.wrapper}.$m` takes no arguments, so it cannot forward to a first-argument " +
+            s"receiver of type ${f.receiver} — not inlined")) ++
+        (if usable.sizeIs > 1 then
+           List(PolicyFinding(name, memberSetting(f), key, PolicyIssue.Unverifiable,
+             s"matched by NAME ONLY: ${usable.size} overloads of `${f.wrapper}.$m` will ALL be " +
+               s"rewritten to `arg1.$m(rest…)`; check that every one takes ${f.receiver} first, " +
+               "or split the policy so only the receiver-first overloads are listed"))
+         else Nil)
+    }
+    boundTargets = hits.flatMap((f, _, ss) => ss.filterNot(nullary).map(_ -> f)).sortBy(_._1.id.raw)
 
   /** Inlining a forwarder REMOVES a dependency from the emitted code, so a dependent module that
     * inlines a different set of members compiles against a wrapper the base no longer references —
@@ -65,11 +99,10 @@ final class StaticForwarderTransform(forwarders: List[StaticForwarderTransform.F
 
   private var mapping: Map[SymId, SymId] = Map.empty
 
-  private var report: PolicyReport = PolicyReport.empty
-
   /** Declared wrappers/members that matched nothing, plus matched members whose receiver-first
-    * shape the engine could not verify. Reflects the last [[run]]; empty before the first, and
-    * empty for an empty policy.
+    * shape the engine could not verify. A property of the POLICY and the PROGRAM, complete the
+    * moment the keys are bound — the `var` this replaces spoke only after a run, so a pipeline that
+    * never reached this phase reported an empty policy, which reads as "every key fired".
     *
     * On the name-only match this DIAGNOSES rather than guards, deliberately. The only guard worth
     * having would be "the first parameter's type is the receiver", and it cannot be applied
@@ -83,63 +116,33 @@ final class StaticForwarderTransform(forwarders: List[StaticForwarderTransform.F
     * signature takes no parameters can never be receiver-first, so it is excluded from the rewrite
     * set. A member whose `info` is unresolved is left in — an unknown signature is not evidence.
     */
-  def policyReport: PolicyReport = report
+  def policyReport: PolicyReport =
+    // The binder's rows carry both halves of "named nothing" — a wrapper the program does not have
+    // (its own `bindType`) and a member the wrapper does not declare — and it distinguishes an
+    // EXTERNAL-only match from a typo, which the name scan this replaces could not.
+    //
+    // A wrapper that named nothing is reported ONCE, not once per member: the member rows under it
+    // all say the same thing for the same reason, and a forwarder with nine members would turn one
+    // typo into ten findings. Suppressed here rather than never bound, because the BINDING of each
+    // member is still what the phase decides from.
+    val deadWrappers = records.collect {
+      case r if r.setting == "Forwarder.wrapper" && r.binding.isUnbound => r.entry
+    }.toSet
+    PolicyReport.fromBindings(records.filterNot { r =>
+      r.setting != "Forwarder.wrapper" && deadWrappers.exists(w => r.entry.startsWith(w + "#"))
+    }) ++ PolicyReport(shapeFindings)
 
   /** provably not receiver-first: a known signature with no parameters has no first argument. */
   private def nullary(s: Symbol): Boolean = s.info match
     case TypeRepr.MethodType(Nil, _, _) => true
     case _                              => false
 
-  /** Everything the policy DECLARES, checked against what the program actually has. Separate from
-    * target selection below so that selection — and therefore the order symbols are minted in —
-    * stays exactly what it was. */
-  private def audit(program: Program): PolicyReport =
-    val all       = program.symbols.all.toList
-    val membersOf = all.groupBy(s => program.symbolOf(s.owner).map(_.fullName).getOrElse(""))
-    val typeNames = all.iterator.map(_.fullName).toSet
-    PolicyReport(forwarders.flatMap { f =>
-      val declared = membersOf.getOrElse(f.wrapper, Nil)
-      if declared.isEmpty && !typeNames.contains(f.wrapper) then
-        List(PolicyFinding(name, "Forwarder.wrapper", f.wrapper, PolicyIssue.NeverMatched,
-          "no type of that name occurs in this program, so none of its members were inlined and " +
-            "every call still goes through the wrapper"))
-      else
-        val setting = memberSetting(f)
-        f.members.toList.sorted.flatMap { m =>
-          // The key a finding QUOTES is the full `wrapper#member`, not the bare name. §4.575: it
-          // has to be the string an agent edits, and `getSimpleName` alone cannot be found in a
-          // manifest without first working out which forwarder declared it. It is also the string
-          // the binder was asked, which is what makes the two answers comparable at all.
-          val key  = s"${f.wrapper}#$m"
-          val hits = declared.filter(_.name == m)
-          if hits.isEmpty then
-            List(PolicyFinding(name, setting, key, PolicyIssue.NeverMatched,
-              "the wrapper is present but declares no member of that name"))
-          else
-            val (none0, usable) = hits.partition(nullary)
-            none0.map(_ =>
-              PolicyFinding(name, setting, key, PolicyIssue.Malformed,
-                s"`${f.wrapper}.$m` takes no arguments, so it cannot forward to a first-argument " +
-                  s"receiver of type ${f.receiver} — not inlined")) ++
-              (if usable.sizeIs > 1 then
-                 List(PolicyFinding(name, setting, key, PolicyIssue.Unverifiable,
-                   s"matched by NAME ONLY: ${usable.size} overloads of `${f.wrapper}.$m` will ALL be " +
-                     s"rewritten to `arg1.$m(rest…)`; check that every one takes ${f.receiver} first, " +
-                     "or split the policy so only the receiver-first overloads are listed"))
-               else Nil)
-        }
-    })
-
   override def run(program: Program): Program =
-    report = audit(program)
     // (wrapper static symbol, the forwarder entry that matched it — its `receiver` drives the
-    // rewrite, and the whole entry is what a decision names as the policy key)
-    val targets = forwarders.flatMap { f =>
-      program.symbols.all.toList.collect {
-        case s if f.members(s.name) && program.symbolOf(s.owner).exists(_.fullName == f.wrapper) && !nullary(s) =>
-          s -> f
-      }
-    }
+    // rewrite, and the whole entry is what a decision names as the policy key). BOUND, and sorted
+    // by symbol id: the scan this replaces walked `program.symbols.all`, whose iteration order is a
+    // hash order, and this phase MINTS symbols in exactly that order.
+    val targets = boundTargets
     if targets.isEmpty then program
     else
       var table = program.symbols

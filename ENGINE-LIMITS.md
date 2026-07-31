@@ -1997,13 +1997,12 @@ are exactly the members with no `def`/`val` keyword of their own.
 
 ## 8. A DEPENDENT reading its base's published port map
 
-### D1. A TIR symbol's `fullName` is the SAME for every overload — arity is not enough. **263 → 8**
+### D1. A TIR symbol's `fullName` is the SAME for every overload. **263 → 8, then CLOSED for policy**
 
 `Symbol.fullName` for a member is `owner#name` with **no parameter list**; every overload is a
 distinct `SymId` carrying the same string. Every map, manifest key and `dropMethods` entry, by
-contrast, is written `owner#name(P1,P2)`. So a phase that looks a call site up in a published map
-has to reconstruct the parameter list, and the obvious discriminator — the call's ARGUMENT COUNT —
-is not one:
+contrast, is written `owner#name(P1,P2)`. The obvious discriminator — the call's ARGUMENT COUNT — is
+not one:
 
 - `Array#toArray(ArraySupplier)` is `Ported` and `Array#toArray(Class)` is `Dropped`, at the **same
   arity**. Every real library has such a pair, because the portable replacement for a reflective
@@ -2012,13 +2011,25 @@ is not one:
   findings, of which **118 were `Ambiguous`** and *every* `toArray` and `Array#<init>` site was one.
   The acceptance case itself — `ImmutableArray.toArray(Class)` — came back undecidable.
 
-**What works: the callee symbol's own `info`.** The frontend interns a member symbol with its
-`MethodType` (through `PolyType` for a generic method) even when the member was dropped and has no
-declaration left, so the erased parameter SIMPLE names are available at the call site and give the
-exact manifest-shaped key. `PortMapTransform.preciseKey` does this; arity survives only as the
-fallback for a symbol whose `info` a lenient frontend never resolved.
+**The root is CLOSED for POLICY, by `Symbol.descriptor` (DESIGN.md §8.1).** A symbol now carries its
+source-level parameter spelling as a separate FIELD — never a fourth separator in `fullName`, which
+would move every `findings.tsv` id in every lane and hand the package rename a place to cut inside a
+parameter list — and every policy key is resolved once, before the pipeline, by `PolicyBinder`. A
+phase receives bound `SymId`s. Two cross-grammar divergences that were latent and invisible to every
+count went with it: an ARRAY parameter (`int[]` in a manifest, `Array` in the engine's own key) and
+`equals(Object)` (`Object` before the frontend's retype, `Any` after). Both are negative specs now.
 
-Two smaller rules from the same measurement:
+**The arity fallback SURVIVES in exactly one place, and it is not the same question.**
+`PortMapTransform.preciseKey`/`bareKey`/`arityOf`/`select` and `PortMap.erase` are the two ends of
+ONE JOIN in the EMITTED namespace: a base publishes `upstream` as `erase(TirEmitter.memberKey(…))`,
+which is emitted type names (`Array` for an array, `Any` for `equals`, `Int` for `int`), and a
+dependent reconstructs the same string from the callee's `info`. Swapping the reading end to the
+descriptor alone makes the join MISS for exactly the members the descriptor spells differently. Both
+ends can move together, and that is a commit that re-publishes every `port-map.tsv` — an artifact
+dependents read — so it is measured on its own and not folded into the identity work. Until then the
+**8-finding residue stands**: a call whose callee `info` a lenient frontend never resolved.
+
+Two smaller rules from the same measurement, both unchanged:
 
 - **No arity match means NO record, not the nearest one.** The first version fell back to the whole
   candidate list, which attributed a 1-argument call to the map's 0-argument entry and reported the
