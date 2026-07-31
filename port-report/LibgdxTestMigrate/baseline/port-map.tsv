@@ -181,7 +181,7 @@ member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt16>	sge.utils.JsonMatcherTes
 member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt17>	sge.utils.JsonMatcherTests#<stmt17>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1365	2e2cc8ef56bbe5aa
 member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt18>	sge.utils.JsonMatcherTests#<stmt18>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1371	230350f6bce43ba0
 member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt19>	sge.utils.JsonMatcherTests#<stmt19>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1377	6a12878d3b411474
-member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt1>	sge.utils.JsonMatcherTests#<stmt1>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	21	eedde4810a7ac45c
+member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt1>	sge.utils.JsonMatcherTests#<stmt1>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	21	a6f4cb94b4381255
 member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt20>	sge.utils.JsonMatcherTests#<stmt20>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1383	138e7ff985a3c58b
 member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt21>	sge.utils.JsonMatcherTests#<stmt21>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1389	015e96c7b7ea0931
 member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt22>	sge.utils.JsonMatcherTests#<stmt22>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1395	a4a1bcee68932380
@@ -192,7 +192,7 @@ member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt26>	sge.utils.JsonMatcherTes
 member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt27>	sge.utils.JsonMatcherTests#<stmt27>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1425	720390381a9fa029
 member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt28>	sge.utils.JsonMatcherTests#<stmt28>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1431	868958e0b3cc156a
 member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt2>	sge.utils.JsonMatcherTests#<stmt2>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	775	87c6c61c04b12d4e
-member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt3>	sge.utils.JsonMatcherTests#<stmt3>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	818	cc0d16b0fb006f66
+member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt3>	sge.utils.JsonMatcherTests#<stmt3>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	818	bb864ae9e12840ab
 member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt4>	sge.utils.JsonMatcherTests#<stmt4>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	966	a26012d7bfb4f4e6
 member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt5>	sge.utils.JsonMatcherTests#<stmt5>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1000	acd8e6e17db2eca7
 member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt6>	sge.utils.JsonMatcherTests#<stmt6>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1047	df161fb200adb504
