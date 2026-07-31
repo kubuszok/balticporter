@@ -941,8 +941,18 @@ final class TirEmitter(
     // client code, and is what the reference ports write on every funnel class that is subclassed.
     // Bare `protected`, never `protected[pkg]`: a package qualifier would deny exactly the
     // cross-module subclassing this choice exists to permit (DESIGN.md §8.11).
+    //
+    // A DISAMBIGUATED synthesis takes one more parameter, of a marker type minted in this class's
+    // own companion (`CtorFunnel.Plan.marker`). It is there to change the primary's ARITY, which is
+    // what removes it from every `this(<a root's super arguments>)` overload candidate set at once
+    // — `ENGINE-LIMITS.md` C8, where a real constructor narrower than the parent's formals won the
+    // call and delegated to itself. The type is named through the companion's VALUE path, and it is
+    // `protected` there, never `private`: scala requires every type in a member's signature to be
+    // at least as visible as the member (C9).
+    val markerParam = plan.marker.map(n => s"ctor$$: ${typeValue(cd.symbol)}.${esc(n)}").toList
     val prim    =
-      if plan.synthetic.nonEmpty then s" protected (${plan.synthetic.map((n, t) => s"$n: ${tpe(t)}").mkString(", ")})"
+      if plan.synthetic.nonEmpty then
+        s" protected (${(plan.synthetic.map((n, t) => s"$n: ${tpe(t)}") ++ markerParam).mkString(", ")})"
       else if pparams.isEmpty then "" else s"(${pparams.map(param).mkString(", ")})"
     // Does the emitted class have a PARAMFUL primary? A synthesised primary is one even though no
     // java constructor backs it, so `plan.primaryParams` is empty for it — reading only that told
@@ -1055,9 +1065,14 @@ final class TirEmitter(
       val sel      = if excluded.isEmpty then "*" else s"{${excluded.map(_ + " => _").mkString(", ")}, *}"
       s"${ind(i + 1)}export ${typeValue(p)}.$sel"
     }
-    if statics.isEmpty && parentExports.isEmpty then cls
+    // the disambiguator's marker type, minted in THIS class's companion — one line, and the reason
+    // it is here rather than in `runtime/` is that emitted code then carries no dependency on the
+    // engine's runtime artifact for a purely local encoding (`DESIGN.md` §8.2). A class that needs
+    // one may have no companion at all, so the companion is emitted for it.
+    val markerDecl = plan.marker.toList.map(n => s"${ind(i + 1)}protected final class ${esc(n)}")
+    if statics.isEmpty && parentExports.isEmpty && markerDecl.isEmpty then cls
     else
-      val sb = (parentExports ++ orderBody(statics).map(memberStat(_, i + 1)).filter(_.nonEmpty)).mkString("\n")
+      val sb = (parentExports ++ markerDecl ++ orderBody(statics).map(memberStat(_, i + 1)).filter(_.nonEmpty)).mkString("\n")
       s"$cls\n${ind(i)}object ${esc(s.name)} {\n$sb\n${ind(i)}}"
 
   /** `this.x = x` — the NAME assigned, when the assignment is a field taking its own same-named
@@ -1782,7 +1797,13 @@ final class TirEmitter(
     * a bare `this()`. It did, for as long as the planner asserted a class-wide flag instead. */
   private def superDelegation(args: List[Term], i: Int): String =
     currentClass.map(plans.superCall(_, args)).getOrElse(CtorFunnel.SuperCall.Dropped) match
-      case CtorFunnel.SuperCall.Positional(as) => s"this(${as.map(term(_, i)).mkString(", ")})"
+      // a DISAMBIGUATED primary takes one more parameter than the slots, so the delegation writes
+      // one more argument. `null` is the only value of a marker type and it inhabits nothing else,
+      // which is precisely why the extra parameter removes the primary from every other
+      // constructor's candidate set (`ENGINE-LIMITS.md` C8).
+      case CtorFunnel.SuperCall.Positional(as) =>
+        val extra = currentClass.flatMap(plans(_).marker).map(_ => "null").toList
+        s"this(${(as.map(term(_, i)) ++ extra).mkString(", ")})"
       case CtorFunnel.SuperCall.Matched(slots) =>
         val rendered = slots.map {
           case CtorFunnel.Slot.Arg(a)    => term(a, i)

@@ -719,12 +719,19 @@ and pretending to know is not.
 
 Erasure equality is still the right test for the OTHER direction — two DECLARATIONS that cannot
 coexist (`E120 … have the same type after erasure`, and `private` does not separate them) — so a
-widening needs both. `DESIGN.md` §8.2 states the erasure half only; this is the half it is missing.
+widening needs both. `DESIGN.md` §8.2 now states both.
 
-The clean fix is the marker parameter §8.2 designs for the collision case, because it changes the
-primary's ARITY and so removes it from every delegation's candidate set at once. Until that ships,
-refusing and keeping the counted omission is the honest outcome — measured back to **2 -> 0**, with
-libGDX core byte-for-byte unchanged.
+**FIXED — the marker parameter shipped, and this entry is now the reason it exists rather than a
+warning.** A final parameter of a per-class companion-`protected` marker type changes the primary's
+ARITY, which removes it from every delegation's candidate set at once and answers the erasure half
+in the same stroke. Attempt order is COLLAPSE first (a pass-through root whose parameters ARE the
+slots is promoted and nothing is synthesised, so those classes stay byte-for-byte as they were),
+then the marker. Measured on libGDX core: omissions **177 -> 176**, the one removed being
+`DistanceFieldFontCache`'s two discarded arguments — this entry's own worked example — with compile
+still 0 and 6 classes gaining a marker (the five tiled map loaders plus `DistanceFieldFontCache`).
+`CtorFunnel.syntheticPrimary` asks `shadowedAt(1)` after choosing the marker, so a class that some
+real constructor of the DISAMBIGUATED arity would still shadow is refused rather than emitted; that
+refusal is the residue this entry now covers.
 
 *Fix kind: (a).*
 
@@ -746,6 +753,14 @@ also works and is strictly worse: it publishes a name into the API for no reader
 
 Recorded because the two halves of §8.2 were validated in separate probes and only their combination
 fails, which is exactly the shape that survives a design review.
+
+**Re-measured on the engine's OWN emitted text when the marker shipped**, which is the only version
+of this measurement that proves anything about the port: the emitted `class Marked protected (sup$0:
+scala.Int, sup$1: scala.Boolean, ctor$: Marked.Funnel)` compiles, runs, and is reached from another
+package both at the primary (`extends demo.DCache(new demo.DFont, true, null)`) and at a secondary
+(`extends demo.DCache(new demo.DFont)`); the same text with `protected final class Funnel` replaced
+by `private final class Funnel` is **one error per disambiguated class**, verbatim as above.
+`SyntheticPrimaryDisambiguationSpec` pins the emitter's half.
 
 *Fix kind: (a).*
 

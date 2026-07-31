@@ -1073,6 +1073,16 @@ final case class PortRun(
             // `extends` clause (`private` is class-private in scala, so even a same-package subclass
             // could not). A promoted one keeps whatever java gave the constructor it promotes.
             "primaryVis"   -> (if p.synthetic.nonEmpty then "protected" else "as-declared"),
+            // WHICH java thing each slot of a synthesised primary came from, so a reader can join
+            // the emitted signature back to the java WITHOUT the run directory (`DESIGN.md` §8.2):
+            // `sup$k` is the parent constructor's formal k. A promoted primary's parameters are
+            // java's own and need no such key.
+            "slots"        -> (if p.synthetic.isEmpty then "-" else p.synthetic.map(_._1).mkString(",")),
+            // …and whether the primary needed a disambiguator to be DECLARABLE beside, and
+            // REACHABLE past, this class's real constructors (`ENGINE-LIMITS.md` C8/C9). Never the
+            // marker's FQN: a companion-`protected` type is not a name any consumer may resolve, so
+            // the contract row says `marker` and nothing more (§8.1 F4).
+            "disambiguator" -> (if p.marker.isDefined then "marker" else "none"),
             "constructors" -> ctors.size.toString,
             "superArgs"    -> p.superArgs.size.toString,
             "escapes"      -> plans.promotionEscapes(cd).size.toString,

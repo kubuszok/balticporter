@@ -89,6 +89,29 @@ object CtorFunnel:
         * Admissible only when every root reaches the SAME parent constructor: differing overloads
         * would need the null-padding that measured 0 -> 55 outside the JDK-throwable family. */
       synthetic: List[(String, TypeRepr)] = Nil,
+      /** The SIMPLE NAME of a per-class marker type the synthesised primary takes as a final
+        * parameter, when the slot list alone would not be a legal or reachable signature.
+        *
+        * Two different failures need it and neither is visible without it (`ENGINE-LIMITS.md` C8):
+        * a real constructor whose ERASED parameter list equals the slots cannot coexist with the
+        * primary (`E120 … have the same type after erasure`, which `private` does not separate),
+        * and a real constructor whose parameters are NARROWER than the parent's formals WINS the
+        * `this(<a root's own super arguments>)` overload resolution outright — `DistanceFieldFontCache`
+        * delegating to itself. The marker changes the primary's ARITY, which removes it from every
+        * delegation's candidate set at once and makes both questions moot.
+        *
+        * It is minted PER CLASS, in that class's own companion, rather than once in `runtime/`:
+        * emitted code then carries no dependency on the engine's runtime artifact for a purely
+        * local encoding, at the price of one companion member per disambiguated class. And it is
+        * `protected` in the companion, never `private` — scala requires every type in a member's
+        * signature to be at least as visible as the member, so a companion-`private` marker in a
+        * `protected` primary is `non-private constructor C in class C refers to private class
+        * Funnel` (`ENGINE-LIMITS.md` C9, measured against scalac 3.8.4).
+        *
+        * Never spelled as an FQN in the port map or in a contract row (`DESIGN.md` §8.1 F4): a
+        * companion-protected type is not a name any ordinary consumer may resolve, so the row says
+        * `disambiguator=marker` and nothing more. */
+      marker: Option[String] = scala.None,
   ):
     def primaryParams: List[Tree.ValDef] = primary.map(_.paramss.flatten).getOrElse(Nil)
 
@@ -824,6 +847,24 @@ object CtorFunnel:
 
   /** the leading `super(args)` of a constructor, when it passes arguments — exactly what a
     * secondary constructor cannot express. */
+  /** the ERASED head name of a parameter type — what scalac compares when it decides two
+    * constructor DECLARATIONS cannot coexist (`E120 … have the same type after erasure`).
+    *
+    * A CLASS type parameter erases to its bound, which for every java class this engine reads is
+    * `Object` — so `Pool<T>`'s `Pool(T)` and `Pool(Object)` are the same declaration and a
+    * synthesis whose slot is the one cannot be emitted beside the other. Reading the applied type's
+    * head name alone would have called them different and emitted both. */
+  private def erasedName(program: Program, cd: Tree.ClassDef, t: TypeRepr): String =
+    val tparams = cd.tparams.map(_.symbol).toSet
+    def head(x: TypeRepr): Option[SymId] = x match
+      case TypeRepr.TypeRef(_, s)      => Some(s)
+      case TypeRepr.AppliedType(tc, _) => head(tc)
+      case _                           => scala.None
+    head(t) match
+      case Some(s) if tparams(s) => "java.lang.Object"
+      case Some(s)               => program.symbolOf(s).map(_.fullName).getOrElse("?")
+      case scala.None            => "?"
+
   private def headName(program: Program, t: TypeRepr): Option[String] = t match
     case TypeRepr.TypeRef(_, s)      => program.symbolOf(s).map(_.fullName)
     case TypeRepr.AppliedType(tc, _) => headName(program, tc)
@@ -942,7 +983,9 @@ object CtorFunnel:
         case TypeRepr.MethodType(ps, _, _)                       => ps.map(_._2)
         case TypeRepr.PolyType(_, TypeRepr.MethodType(ps, _, _)) => ps.map(_._2)
       }.getOrElse(Nil)
-      // a java constructor that ALREADY has the synthetic signature would collide with it
+      // a java constructor that ALREADY has the synthetic signature would collide with it — the
+      // COLLAPSE test, kept as exact type equality on ROOTS because that is the shape a promotion
+      // can actually take over (its parameters ARE the slots, passed straight through).
       val collides = roots.exists(_.paramss.flatten.map(_.tpt.tpe) == formals)
       // …but SIGNATURE EQUALITY IS NOT THE QUESTION SCALAC ASKS, and reading it as if it were cost
       // 2 compile errors the first time the synthesis was widened. What the emitter writes for each
@@ -976,12 +1019,38 @@ object CtorFunnel:
         case TypeRepr.TypeRef(_, s)      => Some(s)
         case TypeRepr.AppliedType(tc, _) => headSym(tc)
         case _                           => scala.None
-      val shadowed = calls.exists { (_, args) =>
+      /** is some real constructor of arity `extra` more than the slot list applicable to a root's
+        * delegation, `extra` trailing `null`s appended? `extra = 0` is the bare synthesis; `extra
+        * = 1` re-asks the same question of the MARKER-disambiguated signature, whose delegation
+        * writes one more argument. A `null` cannot inhabit a primitive, so a padded slot at one
+        * makes that constructor inapplicable and the delegation safe. */
+      def shadowedAt(extra: Int): Boolean = calls.exists { (_, args) =>
         ctors.exists { c =>
           val ps = c.paramss.flatten
-          ps.sizeIs == args.size && ps.zip(args).forall((p, a) => assignable(a.tpe, p.tpt.tpe))
+          ps.sizeIs == args.size + extra &&
+            ps.take(args.size).zip(args).forall((p, a) => assignable(a.tpe, p.tpt.tpe)) &&
+            ps.drop(args.size).forall(p => !headName(program, p.tpt.tpe).exists(primitiveTypeNames))
         }
       }
+      val shadowed = shadowedAt(0)
+      // The DECLARATION half of the collision question, and it is a DIFFERENT test from the one
+      // above: scalac compares two constructor declarations AFTER ERASURE (`E120 … have the same
+      // type after erasure`, which `private` does not separate), while the delegation question is
+      // overload APPLICABILITY. A widening needs both — `DESIGN.md` §8.2, `ENGINE-LIMITS.md` C8.
+      val erasedSlots = formals.map(erasedName(program, cd, _))
+      val erasureClash = ctors.exists(c => c.paramss.flatten.map(v => erasedName(program, cd, v.tpt.tpe)) == erasedSlots)
+      // MARKER NAME — free of every name the class already declares, since the marker lands in that
+      // class's companion beside its statics and nested types. §4.55's rule, one level down: keep
+      // appending until the name is free rather than assuming the first is.
+      def markerName: String =
+        val taken = cd.body.collect { case d: Definition => program.symbolOf(d.symbol).map(_.name).getOrElse("") }.toSet
+        var n = "Funnel"
+        while taken(n) do n = n + "$"
+        n
+      def synthesise(mark: Option[String]): Option[Plan] =
+        val o  = cd.origin
+        val ps = formals.zipWithIndex.map((ft, k) => (s"sup$$$k", ft))
+        Some(Plan(scala.None, ps.map((n, ft) => Tree.Opaque(n, ft, o)), Nil, synthetic = ps, marker = mark))
       if formals.sizeIs != arities.head || formals.contains(TypeRepr.NoType) then scala.None
       // TWO DISJOINT SHAPES, and keeping them disjoint is the whole content of this decision. Three
       // orderings were measured against libGDX before this one, and every ordering that let either
@@ -994,24 +1063,28 @@ object CtorFunnel:
       // compares constructors AFTER ERASURE and `private` does not separate them (`E120 … have the
       // same type after erasure`) — so that root is promoted and the others delegate.
       // `Path(int, boolean)` / `Path(int)` is this shape.
-      else if collides then
-        // A NILARY root among them is deliberately NOT collapsed. Promoting the pass-through root
-        // leaves the nilary root a `def this()` delegating to it, which is expressible — but the
-        // ordering here has been measured three ways (see above), and widening the collapse is a
-        // separate change from widening the SYNTHESIS. It is A2 step 3's, with the disambiguator
-        // beside it; keeping the two apart is what makes either measurable.
-        if roots.exists(_.paramss.flatten.isEmpty) then scala.None
-        else
-          roots.filter(passesThrough).sortBy(c => -c.paramss.flatten.size).headOption
-            // the promoted root's parameters ARE the parent's, so every other root's `super(args)`
-            // reaches it through `this(...)`. Whether each one ACTUALLY does is not asserted here —
-            // it is [[Plans.superCall]]'s answer, per root, and the one the emitter renders.
-            .map { c => val (sa, rest) = split(program, c); Plan(Some(c), sa, rest) }
-      // SHADOWED WITHOUT AN EQUAL SIGNATURE — no constructor to collapse onto and no way yet to make
-      // the primary unreachable from the delegation. Refused, and the omission stays counted, which
-      // is the honest outcome and exactly what a synthesis that emits a self-recursive `def this`
-      // is not.
-      else if shadowed then scala.None
+      // COLLAPSE FIRST, and that ordering is `DESIGN.md` §8.2's, not a preference: a collapse emits
+      // no synthetic member at all and leaves the class byte-for-byte as it is today, so every class
+      // it reaches is one the marker never has to price. Reached only where a root's parameters ARE
+      // the slots and it passes them straight through — anything else is not a constructor a
+      // promotion can take over.
+      else if collides && !roots.exists(_.paramss.flatten.isEmpty) &&
+              roots.exists(passesThrough) then
+        roots.filter(passesThrough).sortBy(c => -c.paramss.flatten.size).headOption
+          // the promoted root's parameters ARE the parent's, so every other root's `super(args)`
+          // reaches it through `this(...)`. Whether each one ACTUALLY does is not asserted here —
+          // it is [[Plans.superCall]]'s answer, per root, and the one the emitter renders.
+          .map { c => val (sa, rest) = split(program, c); Plan(Some(c), sa, rest) }
+      // DISAMBIGUATE — the primary cannot be DECLARED beside a real constructor (erasure) or cannot
+      // be REACHED past one (applicability), and there is nothing to collapse onto. A final
+      // parameter of a per-class marker type answers both at once by changing the primary's ARITY.
+      //
+      // Where it does NOT: a real constructor of exactly the disambiguated arity that is applicable
+      // to `(<the root's arguments>, null)` shadows the marker signature too. `shadowedAt(1)` asks
+      // that question against the arguments the emitter will actually write, and a class that fails
+      // it is refused — the honest outcome, and the counted omission stays.
+      else if erasureClash || shadowed then
+        if shadowedAt(1) then scala.None else synthesise(Some(markerName))
       // SHAPE 1 — SYNTHESISE. Every root reaches the SAME parent constructor, so one primary taking
       // that constructor's own formals expresses all of them, and no java body becomes the class
       // body.
@@ -1024,10 +1097,7 @@ object CtorFunnel:
       // `not-funnelled`, every root's arguments dropped and counted. The nilary root was never the
       // reason the encoding works; reaching ONE parent constructor is
       // (`ENGINE-LIMITS.md` C7, corrected).
-      else
-        val o  = cd.origin
-        val ps = formals.zipWithIndex.map((ft, k) => (s"sup$$$k", ft))
-        Some(Plan(scala.None, ps.map((n, ft) => Tree.Opaque(n, ft, o)), Nil, synthetic = ps))
+      else synthesise(scala.None)
 
   private def superTarget(program: Program, d: Tree.DefDef): SymId = headStmt(d) match
     case Some(Tree.Apply(Tree.Select(_: Tree.Super, m, _, _), args, _, _, _))
