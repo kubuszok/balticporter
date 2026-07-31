@@ -243,12 +243,33 @@ object PortMap:
     // A dropped type is SUBSTITUTED when something stands at its name and DROPPED when nothing
     // does. The distinction is the whole content of the entry for a dependent: one is "call it, you
     // get a different implementation", the other is "every call must be gone".
+    //
+    // AND THE TWO SIDES ARE IN DIFFERENT NAMESPACES (CLAUDE.md §4.56). `dropTypes` is a manifest
+    // key, so it is UPSTREAM; `injectedFqns` is the set of files the run actually WROTE, so it is
+    // EMITTED. Compared directly, `injectedFqns(fqn)` is false for every renaming port — libGDX
+    // drops `com.badlogic.gdx.utils.Json` and injects `sge.utils.Json`, and the same map came out
+    // carrying `Dropped com.badlogic.gdx.utils.Json` beside `Added sge.utils.Json` with nothing
+    // joining them. `Substituted` had therefore NEVER been produced by a renaming port, and the
+    // first dependent to reference an injected replacement (gdx-gltf, on `Json`) was told by
+    // `PortMapTransform` that the base "emits nothing at that name and nothing replaces it" about
+    // a type the base ships and it compiles against — **10 false findings**.
+    //
+    // Translate with the rename phase's OWN rule rather than a hand-written `startsWith`; §4.56
+    // spells out why (a prefix must cut only at a separator, and everything after it is carried
+    // across verbatim).
+    def emittedAt(fqn: String): String =
+      balticporter.transform.PackageRenameTransform.renamed(fqn, renames.toMap)
     val droppedEntries = dropTypes.toList.sorted.map { fqn =>
-      Entry("type", fqn, if injectedFqns(fqn) then fqn else "",
-        if injectedFqns(fqn) then Disposition.Substituted else Disposition.Dropped)
+      val at = emittedAt(fqn)
+      Entry("type", fqn, if injectedFqns(at) then at else "",
+        if injectedFqns(at) then Disposition.Substituted else Disposition.Dropped)
     }
 
-    val added = (injectedFqns -- dropTypes).toList.sorted.map(fqn =>
+    // What is left is a genuine ADDITION — a file the run wrote that replaces no drop (the runtime
+    // support types, and a port's own new helpers). Subtracted in the EMITTED namespace for the
+    // same reason.
+    val replacements = dropTypes.map(emittedAt)
+    val added = (injectedFqns -- replacements).toList.sorted.map(fqn =>
       Entry("type", "", fqn, Disposition.Added))
 
     val memberEntries = srcMap.entries

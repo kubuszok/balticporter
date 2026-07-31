@@ -1907,6 +1907,41 @@ outright.
 *Fix kind: (a) engine — fixed in `TirEmitter.typeNamedElsewhere`; `AllStaticClassAsTypeSpec` pins
 both directions INCLUDING the static-access negative.*
 
+### D6.5. A drop and its INJECTION are in different namespaces, so nothing paired them — 10 false findings
+
+**Title, for renumbering: "a drop and its injection are in different namespaces, so nothing paired
+them".** CLOSED — fixed; recorded because it is §4.56's rule failing at a THIRD artifact.
+
+`PortMap.of` already distinguished a `Dropped` type (nothing stands at the name; every call must be
+gone) from a `Substituted` one (something stands at it; the call gets a different implementation) —
+"the whole content of the entry for a dependent", as its own comment says. It decided which by
+`injectedFqns(fqn)`.
+
+`dropTypes` is a MANIFEST KEY, so it is upstream. `injectedFqns` is the set of files the run
+actually WROTE, so it is emitted. Compared directly the test is false for every RENAMING port, and
+`Substituted` had therefore never once been produced by one. libGDX's published map carried
+`Dropped com.badlogic.gdx.utils.Json` beside `Added sge.utils.Json`, two rows apart in the same
+file, with nothing joining them.
+
+Nothing failed until a dependent read it. gdx-gltf is the first port in the corpus to REFERENCE an
+injected replacement — its `GLTFExtensions`, `GLTFExtras`, `GLTFMorphTarget`, `GLTFExporter` and
+both data-file resolvers all use `Json` — and `PortMapTransform` told it, ten times, that the base
+"emits nothing at that name and nothing replaces it" about a type the base ships and it compiles
+against. **port-map 10 -> 0**, no emitted text moved anywhere, every other check count identical.
+
+This is the same failure §4.56 records for `dropped-types.tsv`, at a third artifact, and the same
+fix: the run is the last place that holds the manifest name and the rename map together, so it
+writes BOTH, translating with `PackageRenameTransform.renamed` — never a hand-written `startsWith`,
+because a prefix must cut only at a separator (`up.stream` must not cover `up.streaming`, pinned).
+
+The generalisation worth carrying: **wherever a port artifact has a POLICY column and an OBSERVED
+column, check whether some predicate compares one to the other.** Both of the ones found so far
+were silent, produced no finding of their own, and were discovered only when a consumer acted on
+the wrong answer.
+
+*Fix kind: (a) engine — fixed in `PortMap.of`; `PortMapSpec` pins the renaming case and the
+separator rule.*
+
 ### D7. An inherited drop leaves a CALL SITE the engine has no seam for — 1 error
 
 **Title, for renumbering: "an inherited drop leaves a call site the engine has no seam for".**

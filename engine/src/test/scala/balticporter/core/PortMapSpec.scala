@@ -46,6 +46,46 @@ class PortMapSpec extends munit.FunSuite:
     assertEquals(m.types.map(e => (e.emitted, e.disposition)), List(("p.Helper", Disposition.Added)))
   }
 
+  test("a RENAMING port still pairs a drop with its injection — the two are in different namespaces") {
+    // CLAUDE.md §4.56. `dropTypes` is a manifest key, so it is UPSTREAM; `injected` is the set of
+    // files the run WROTE, so it is EMITTED. Compared directly the test is false for every renaming
+    // port, and `Substituted` had therefore never once been produced by one: libGDX drops
+    // `com.badlogic.gdx.utils.Json`, injects `sge.utils.Json`, and its map carried `Dropped` beside
+    // an unrelated-looking `Added` with nothing joining them. The first dependent to reference such
+    // a replacement (gdx-gltf, on `Json`) was told the base "emits nothing at that name and nothing
+    // replaces it" about a type it compiles against — 10 false findings.
+    val m = build(
+      dropTypes = Set("up.stream.Gone", "up.stream.Replaced"),
+      injected  = Set("out.Replaced", "out.Helper"),
+      renames   = Map("up.stream" -> "out"),
+    )
+    val byUpstream = m.types.filter(_.upstream.nonEmpty).map(e => e.upstream -> e).toMap
+
+    assertEquals(byUpstream("up.stream.Replaced").disposition, Disposition.Substituted)
+    assertEquals(byUpstream("up.stream.Replaced").emitted, "out.Replaced",
+      "the emitted half of the row must be the name the injection actually ships under")
+
+    // the drop with NO replacement is unaffected — that is the case the check exists for
+    assertEquals(byUpstream("up.stream.Gone").disposition, Disposition.Dropped)
+    assertEquals(byUpstream("up.stream.Gone").emitted, "")
+
+    // …and the injection that replaces nothing is still an ADDITION, subtracted in the EMITTED
+    // namespace so `out.Replaced` is not double-counted as one.
+    assertEquals(m.types.filter(_.disposition == Disposition.Added).map(_.emitted), List("out.Helper"))
+  }
+
+  test("a rename that does not COVER a dropped name leaves it alone — cut only at a separator") {
+    // The §4.56 prefix rule, at this join: `up.streaming` must not be rewritten by a `up.stream`
+    // entry, or a drop would be paired with an injection that has nothing to do with it.
+    val m = build(
+      dropTypes = Set("up.streaming.Gone"),
+      injected  = Set("out.Gone"),
+      renames   = Map("up.stream" -> "out"),
+    )
+    val e = m.types.find(_.upstream == "up.streaming.Gone").get
+    assertEquals(e.disposition, Disposition.Dropped)
+  }
+
   test("`upstream` comes from the JAVA ORIGIN, so it survives a non-invertible rename") {
     // The origin is ground truth. Inverting the rename works only while the rename is injective,
     // and a real one need not be: flattening two upstream packages onto one target makes
