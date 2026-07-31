@@ -1873,6 +1873,61 @@ the two ends of one join in the EMITTED namespace and did NOT move (see `ENGINE-
 DESIGN.md §8.1). Moving both together re-publishes every `port-map.tsv` and is its own measured
 commit; until then D1's 8-finding arity residue stands, scoped to that join.
 
+### 11.11 M2 — `OverrideGraph`, `MemberRenamer`, `bean-properties`, as measured
+
+DESIGN.md §8.5, landed as three commits. The mechanism is DEFAULT-OFF: no port declares a
+`bean-properties` phase, so **every lane is 0 members changed and all 202 check counts across 13
+ports are identical**. What follows is the DRY RUN — the harvested policy bound against libGDX core
+in a throwaway process, with nothing enabled — because the mechanism's real numbers are otherwise
+invisible until Stage P4 turns it on, and P4 should not be the first time anyone sees them.
+
+**The harvest binds. 144 entries, 0 typos.**
+
+| | |
+|---|---|
+| entries declared (R5 §4's block, de-duplicated) | **144** |
+| accessor keys that did NOT bind (`NeverMatched`/`Malformed`) | **0** |
+| properties APPLIED | **127** |
+| properties REFUSED, each counted with its cause | **17** |
+| declarations moved (`RenamedMember`, `Configured`) | **267** |
+
+267 against 127 properties is the closure doing its job: the average property moves 2.1
+declarations, and `Drawable`-shaped entries move one per implementor plus one per anonymous body.
+This is the first large `Configured` rename population in the project; the previous largest was
+libGDX core's 827 `RenamedMember` rows, all `Universal`.
+
+*(R5's prose says "145 properties"; its own block yields 144 distinct keys. The block is what was
+bound — the discrepancy is in the brief's count, not in the policy.)*
+
+**The 17 refusals, all of them correct, none of them silent.**
+
+| cause | n | what it is |
+|---|---|---|
+| external anchor | 12 | `Selection`/`VertexAttributes`/`TiledMapTileSet`/`OrientedBoundingBox` implement `java.lang.Iterable`, `Comparable` or `Serializable`, which the frontend never parses. Pure over-approximation — see `ENGINE-LIMITS.md` K12, which is where the number and the fix live |
+| no nilary getter | 3 | `VertexAttributes#getOffset(int)`, `Polygon#getVertex(int,Vector2)`, `Polygon#getCentroid(Vector2)`. The harvest names a member that takes arguments; a property has none. **The phase refused rather than inventing a nilary twin**, which is the "NEVER INVENT A MEMBER" rule firing on real policy for the first time |
+| collision the emitter will not move | 2 | `ScrollPane#scrollX`/`scrollY` — the target name is already taken by something the §4.55 passes do not relocate |
+
+The three `no nilary getter` entries are a POLICY defect, not an engine one: whoever owns P4 either
+drops them or names the accessor the hand port actually converted. That is exactly the report the
+`PolicyIssue` channel exists to produce.
+
+**The `$field` residue, which is what gates `TrivialAccessorCollapse`.**
+
+Renaming a getter to `x` lands it on the private field's name, and the emitter's
+`resolveMemberClashes` resolves that by moving the FIELD (the `DeferToEmitter` contract). So the
+`$field` population grows by exactly the trivial pairs a `var` collapse would delete:
+
+| | before | after |
+|---|---|---|
+| emitter field-vs-method renames (one per DECLARATION) | 176 | **278** |
+| `var …$field` lines in emitted text | 197 | **299** |
+| emitted characters | 7,228,838 | 7,346,577 |
+
+**+102 declarations.** That is the number DESIGN.md §8.5 defers the collapse behind, and it is not
+large: 102 fields against 127 properties says most of the harvested pairs are not trivial (a
+computed getter or a side-effecting setter keeps its field either way). The collapse is worth doing
+and it is worth doing SECOND, on its own measurement.
+
 ## 12. Remaining work, across the engine
 
 Maintained by deletion. Items are ordered by what they block, not by size.

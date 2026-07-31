@@ -51,7 +51,7 @@ object BuiltinFactories:
     new CollectionsFactory, new MutableParamsFactory, new PanamaFfiFactory,
     new TestFrameworkFactory, new StaticForwarderFactory, new ClassTableFactory,
     new TypeRedirectFactory, new MethodBodyFactory, new PortMapMigrationFactory,
-    new PrimitiveToOpaqueFactory, new GlobalsToImplicitsFactory,
+    new PrimitiveToOpaqueFactory, new GlobalsToImplicitsFactory, new BeanPropertyFactory,
   )
 
 // ---------------------------------------------------------------------------------------------
@@ -114,6 +114,21 @@ final class TypeRedirectFactory extends TransformFactory:
   def name = "type-redirect"
   def fromConfig(config: ConfigView): Phase =
     new TypeRedirectTransform(config.stringMap("redirects").getOrElse(Map.empty))
+
+/** ```
+  * { transform = "bean-properties"
+  *   pairs { "a.B#opacity" = "getOpacity/setOpacity"
+  *           "a.B#layers"  = "getLayers" } }
+  * ```
+  *
+  * The key is the emitted PROPERTY in the upstream namespace; the value names the accessor(s)
+  * explicitly. An absent `pairs` is an empty map, which makes the phase a structural no-op — the
+  * §1(b) requirement that "turned off" needs no code path.
+  */
+final class BeanPropertyFactory extends TransformFactory:
+  def name = "bean-properties"
+  def fromConfig(config: ConfigView): Phase =
+    new BeanPropertyTransform(config.stringMap("pairs").getOrElse(Map.empty))
 
 /** `{ transform = "method-body", bodies { "a.B#m()" = "{ … }" } }` */
 final class MethodBodyFactory extends TransformFactory:

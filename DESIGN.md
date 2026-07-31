@@ -2034,11 +2034,45 @@ the enablement's input, not this design's content.
 sorted fingerprint and its pairs live in the **base** manifest, because dependents resolve against the
 base's Java and must see the same conversion or the two ports cannot compile together (§1.5).
 
+**What building it settled.** Six things the design left open or got slightly wrong, each fixed in the
+mechanism commit rather than left for the enablement:
+
+- **The SHAPE change ranges over the COMPONENT, not over the accessor the entry named.** The rename
+  already did — that is the whole point of the closure — but the arity edit and the call-site rewrite
+  were written against the named symbol, and a call through an *implementor's* symbol is a different
+  `SymId` from a call through the interface's. Measured on the phase's own end-to-end fixture: the
+  rename reached three declarations and the arity edit reached one, emitting an interface `def x`
+  against an implementor `override def x()`, which do not override each other. The invariant is
+  therefore "all of a component or none of it" for EVERY edit a consumer applies, not only for the name
+  — and a consumer holding a `Closure` should read that as an instruction.
+- **The getter's `info` stays `MethodType(Nil, R)`** (§8.5's open question about a parameterless method
+  type). A Scala parameterless `def` IS a method, its descriptor is still the empty one, and every
+  arity reader in the engine reads `paramss`. Retyping `info` would make `PolicyBinder.isExecutable` and
+  `OverrideGraph.signatureOf` stop recognising the member the phase had just renamed.
+- **The implicit root has to be MODELLED.** `SpoonTir.superTypes` filters `java.lang.Object` out of
+  every parent list on purpose, so a graph reading parents alone reports a rename of `toString`,
+  `equals` or `clone` as unanchored. `ExternalSurface` carries `java.lang.Object`'s member set as
+  §1(a) universal knowledge and every closure consults it whatever the tree shows.
+- **The external surface is a VALUE, and its default is one type.** `ExternalSurface(known)` answers
+  exactly for a type it has, and anything else anchors. Its default knows `java.lang.Object` and
+  nothing else — which is the honest state of the engine, and the seam §8.9's demand-derived JDK
+  surface plugs into with no change to `OverrideGraph`.
+- **A refused pair records `Decision.Kind.ScopedOut` with `detail("refused")`,** not a new enum case.
+  A `ScopedOut` row already means "a policy entry named this declaration and it kept its upstream form
+  while the code around it moved", which is exactly a refusal; the `detail` carries the cause and the
+  `why` names the fix. The enum is closed on purpose and every parallel track reads it.
+- **Requests refuse in GROUPS, one level above the component.** A property is two accessors with two
+  independent closures, so `MemberRenamer.Request.group` (defaulting to the policy key) is what makes
+  "a renamed getter with an anchored setter" unrepresentable rather than merely unlikely.
+
 **Rejected.** Blanket bean-pair auto-detection (the negative space above). `var x` as the primary target
 (deferred, above). Renaming the setter into an overload of `x` — loses assignment syntax and collides in
 one namespace. **Emitter-level beautification** — rendering `getX()` calls as `x` without renaming
 symbols desynchronises the surface from the source map, and the emitted *surface* is what an adopter
-consumes. A second scope knob beside the pairs map (two homes for one policy). Per-call-site decisions
+consumes. A second scope knob beside the pairs map (two homes for one policy) — restated here because
+it keeps being asked for: the pairs map IS the include list, `PolicyBinder` already reports an entry
+that named nothing or named only an external, and a `RuleScope` beside it would give one decision two
+homes and let a pair be listed and then silently scoped out. Per-call-site decisions
 (the diff shows the site; the policy lives at the declaration). Building the graph inside the emitter —
 its copy is post-§4.55, private, unavailable to transforms, and §8.3 wants it too.
 

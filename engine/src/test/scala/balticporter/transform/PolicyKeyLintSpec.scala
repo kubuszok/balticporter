@@ -91,6 +91,12 @@ class PolicyKeyLintSpec extends munit.FunSuite:
       "fullName.startsWith" ->
         ("`scala.<op>#` again — the engine's synthetic operator namespace, not a policy key"),
     ),
+    "BeanPropertyTransform.scala" -> Map(
+      "fullName ==" ->
+        ("`scala.Unit` is the ENGINE's own rendering of java `void` — an external this program never " +
+          "declares and has no symbol to bind, so \"did the frontend write void here\" has no other " +
+          "instrument. The phase's KEYS all go through `PolicyBinder`."),
+    ),
     "ClassTableTransform.scala" -> Map(
       "fullName ==" ->
         ("the redirect DESTINATION is an injected table this program never parses — mint or reuse, " +

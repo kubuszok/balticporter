@@ -1513,6 +1513,49 @@ the phase's record and not a name test.*
 
 ---
 
+### K12. The engine has NO JDK MEMBER SURFACE, so a component under an UNPARSED PARENT is frozen — **12 of 144**
+
+`OverrideGraph.closureOf` may only change a member's signature when it can see every declaration of
+the override component. A parent type the frontend never parsed has no `ClassDef` and therefore no
+members to look at, so the closure is ANCHORED and every consumer refuses, counted. That is
+deliberate and stated in DESIGN.md §8.5 — *an over-refusal is a counted skip an agent can see; an
+under-refusal is a silent contract break* — and this entry is what it COSTS, so nobody has to
+re-derive it.
+
+Measured on libGDX core, binding the 144-entry harvested property policy in a dry run: **127
+applied, 17 refused, and 12 of the 17 are this.** Every one of the twelve comes from a JDK interface
+in an `implements` clause:
+
+| type | unparsed parent | properties lost |
+|---|---|---|
+| `Selection<T>` | `java.lang.Iterable` | 6 |
+| `VertexAttributes` | `java.lang.Iterable`, `java.lang.Comparable` | 2 |
+| `TiledMapTileSet` | `java.lang.Iterable` | 2 |
+| `OrientedBoundingBox` | `java.io.Serializable` | 2 |
+
+None of the four interfaces declares a member remotely like `getToggle` or `getMaskWithSizePacked`.
+The refusals are pure over-approximation, and they are the whole gap: **the engine has no way to ask
+what a JDK type declares.** `RuntimePlan.concreteMembers` is not it — that is the engine's own
+INJECTED shims (three types), threaded for the emitter's diamond check, not the JDK.
+
+**The seam is already there, so do not re-architect for it.** `ExternalSurface(known)` is a
+`Map[FQN, Set[Member]]` a caller supplies; a type PRESENT in it is answered exactly, so an absence
+from its member set is proof and the anchor lifts. A demand-derived JDK surface (DESIGN.md §8.9)
+fills exactly that map, with no change to `OverrideGraph` and no change to any phase. `Selection`'s
+six properties come back the day it lands.
+
+**One entry in the default surface is NOT optional and is easy to lose**: `java.lang.Object`.
+`SpoonTir.superTypes` filters it out of every parent list on purpose, so a graph that reads parents
+alone reports a rename of `toString`, `equals`, `hashCode` or `clone` as UNANCHORED — and renaming
+those breaks every caller in the JVM with a green compile and no count moving. `ExternalSurface`
+carries `Object`'s member set as universal knowledge and every closure consults it whatever the tree
+shows.
+
+*Fix kind: (a) engine — the surface is a value the engine must derive; until it does, the refusal is
+correct and the cost is the number above.*
+
+---
+
 ## 5. Portability and platform
 
 ### P1. A `--js` compile proves NOTHING as a portability gate

@@ -11,3 +11,4 @@ balticporter.runner.MethodBodyFactory
 balticporter.runner.PortMapMigrationFactory
 balticporter.runner.PrimitiveToOpaqueFactory
 balticporter.runner.GlobalsToImplicitsFactory
+balticporter.runner.BeanPropertyFactory
