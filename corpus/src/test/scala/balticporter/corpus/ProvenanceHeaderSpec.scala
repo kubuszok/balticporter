@@ -111,3 +111,32 @@ class ProvenanceHeaderSpec extends munit.FunSuite:
     assert(clue(out).contains(" * Ported from: src/main/java/com/example/demo/Widget.java"))
     assert(out.contains("package sge.ui.demo"))
   }
+
+  test("a SYMLINKED spelling of sourceRoot renders the same header as the real one (CLAUDE.md §5.4)") {
+    // The third part of the engine bitten by the same symlink: a git worktree reaches the sibling
+    // source checkout through `.claude/worktrees/<x>/../sge`, so the CONFIGURED root arrives as a
+    // symlinked spelling while the parser recorded the real path. Compared lexically, the
+    // root-relative case silently failed only in worktrees and the MARKER cut took over — and the
+    // marker cut slices at the FIRST occurrence of the prefix, which for a root shaped
+    // `…/mylib/mylib/` (the upstream-repo-contains-a-module-dir-of-its-own-name layout gdx-vfx
+    // has) sits one directory too early: `mylib/mylib/com/…` in a worktree against `mylib/com/…`
+    // in the primary checkout. Same commit, two spellings; 44 whole-file digests a
+    // worktree-accepted baseline carried and the primary could not reproduce. Realpath both
+    // operands and the two spellings are one root.
+    val tmp  = Files.createTempDirectory("bp-provenance-link").toRealPath()
+    val nest = tmp.resolve("mylib/mylib/com/example/demo")
+    Files.createDirectories(nest)
+    Files.writeString(nest.resolve("Widget.java"), src)
+    val nestedRoot = tmp.resolve("mylib/mylib")
+    val link       = tmp.resolve("via-link")
+    try Files.createSymbolicLink(link, nestedRoot)
+    catch case _: UnsupportedOperationException => assume(false, "filesystem without symlinks")
+    val prog = SpoonTir.fromTypes(
+      SpoonTir.buildModel(FrontendConfig(nestedRoot, List("com/example/demo/Widget.java"), Nil), lenient = true))
+    val real = new TirEmitter(prog, provenance = Some(
+      prov.copy(sourcePathPrefix = "mylib", sourceRoot = nestedRoot.toString))).emitUnit(only(prog))
+    val linked = new TirEmitter(prog, provenance = Some(
+      prov.copy(sourcePathPrefix = "mylib", sourceRoot = link.toString))).emitUnit(only(prog))
+    assert(clue(linked).contains(" * Ported from: mylib/com/example/demo/Widget.java"))
+    assertEquals(linked, real)
+  }

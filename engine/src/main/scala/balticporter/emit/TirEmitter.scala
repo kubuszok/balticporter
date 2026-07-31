@@ -375,7 +375,16 @@ final class TirEmitter(
     *      this is attribution, and the point of the line is that someone can find the original.
     *      Synthetic/unknown origins say so outright rather than naming a file that was never read.
     *
-    * Case 3 is a §1(b) diagnostic — configure `Provenance.sourceRoot` — not an engine defect. */
+    * Case 3 is a §1(b) diagnostic — configure `Provenance.sourceRoot` — not an engine defect.
+    *
+    * Case 1 compares PATHS through `toRealPath`, on both sides (CLAUDE.md §5.4) — the third part of
+    * the engine bitten by the same symlink. A worktree reaches the sibling source checkout through
+    * `.claude/worktrees/<x>/../sge`, so the CONFIGURED root is a symlinked spelling while the
+    * parser RECORDED the real one; compared lexically, case 1 silently failed only in worktrees and
+    * the header fell to the marker cut, which cuts at the FIRST occurrence of the prefix and
+    * rendered `gdx-vfx/gdx-vfx/core/…` there against `gdx-vfx/core/…` in the primary checkout.
+    * Same commit, two spellings — and every whole-file digest a worktree-accepted baseline carried
+    * was one the primary checkout could not reproduce. */
   private def sourcePathOf(o: Origin, p: Provenance): String =
     val raw = o.javaPath
     if raw.isEmpty || raw == "<synthetic>" || raw == "<unknown>" then
@@ -383,12 +392,24 @@ final class TirEmitter(
     else
       val root   = p.sourceRoot.stripSuffix("/")
       val marker = p.sourcePathPrefix.stripSuffix("/")
+      // §5.4: realpath where the path exists, normalize where it does not — on BOTH operands.
+      def realOrNormal(s: String): java.nio.file.Path =
+        val path = java.nio.file.Path.of(s)
+        try path.toRealPath()
+        catch case _: java.io.IOException => path.toAbsolutePath.normalize
       val rel =
-        if root.nonEmpty && raw.startsWith(root) then Some(raw.substring(root.length).stripPrefix("/"))
-        else if marker.nonEmpty && raw.contains(marker + "/") then
+        if root.nonEmpty then
+          val rraw  = realOrNormal(raw)
+          val rroot = realOrNormal(root)
+          if rraw.startsWith(rroot) then Some(rroot.relativize(rraw).toString.replace('\\', '/'))
+          else scala.None
+        else scala.None
+      val rel2 = rel.orElse {
+        if marker.nonEmpty && raw.contains(marker + "/") then
           Some(raw.substring(raw.indexOf(marker + "/") + marker.length + 1))
         else scala.None
-      rel match
+      }
+      rel2 match
         case Some(r) if marker.nonEmpty                       => s"$marker/$r"
         case Some(r)                                          => r
         case scala.None if new java.io.File(raw).isAbsolute() =>

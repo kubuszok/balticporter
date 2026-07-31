@@ -1813,6 +1813,27 @@ Two things this generalises to, before the next traversal is narrowed:
 *Fix kind: (a) engine — done; pinned by `TypeRedirectTransformSpec`'s annotation case, which is the
 one that fails if the traversal is narrowed again.*
 
+
+### M5.9 A baseline ACCEPTED IN A WORKTREE may not reproduce in the primary checkout — realpath the provenance root
+
+**Title, for renumbering: "worktree-accepted baselines and the provenance root symlink".** CLOSED —
+the third CLAUDE.md §5.4 instance, and the first to reach an EMITTED BYTE. (a) universal.
+
+`TirEmitter.sourcePathOf` compared the parser-recorded origin path against `Provenance.sourceRoot`
+with a lexical `startsWith`. A git worktree reaches the sibling source checkout through
+`.claude/worktrees/<x>/../sge` — a symlink — so the configured root and the recorded path spelled
+the same directory two ways, the root-relative case silently failed ONLY in worktrees, and the
+marker cut (first-occurrence, one directory too early for a repo that nests a module dir of its own
+name, as gdx-vfx does) rendered `gdx-vfx/gdx-vfx/core/…` there against `gdx-vfx/core/…` in the
+primary checkout. Same commit, two headers.
+
+Measured: **44 vfx + 6 noise4j whole-file digests** in worktree-accepted baselines that the primary
+checkout could not reproduce — zero member digests moved, zero counts moved, only the class rows
+(whole-file digests) — found the first time `just measure-all` ran in the primary after a wave of
+worktree-side integrations. Fix: realpath both operands, normalize as the not-exists fallback
+(§5.4's rule verbatim); pinned by `ProvenanceHeaderSpec`'s symlink case, which was negative-proofed
+against the lexical code (the naive temp-dir layout does NOT discriminate — the root's own parent
+must contain the marker, `…/mylib/mylib/`).
 ### M6. Refuse and COUNT rather than approximate
 
 Three places where the port deliberately carries a number instead of a guess, and each is the right
