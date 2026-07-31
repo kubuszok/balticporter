@@ -229,7 +229,7 @@ over `gdx/test` as a **dependent** of it, inheriting its manifest.
 | porter notes uncovered | **0** | **0** |
 | break residue (untranslated jumps) | **0** | **0** |
 | source map | 594 units / 19,259 members | 623 units / 19,547 members |
-| members changed vs baseline | **28**, accounted below | **6**, accounted below |
+| members changed vs baseline | **0** | **0** — the 28 + 6 that moved when this baseline was promoted are accounted below |
 | decisions recorded | **2,163** | **279** (961 withheld as the base's) |
 | **tests** | — | **221 emitted, 217 passing, 4 failing** |
 
@@ -249,11 +249,13 @@ driven and needs explicit handling.
 `RetypedSignature`, 285 `FunnelledCtor`, 31 `DroppedSuperCall`, 22 `WidenedVisibility`, 21
 `RedirectedCall`, 16 `DroppedMember`, 11 `DroppedType`, 10 `InjectedMember`.
 
-#### The 34 members that moved, and the SILENT DEFECT one of them was
+#### The 34 members that moved when this baseline was promoted, and the SILENT DEFECT one of them was
 
-Every check count above is unchanged and both lanes still compile to 0 with 217/4 tests. The emitted
-text moved in five types on `libgdx-core` and one on `libgdx-test`, all from engine fixes measured on
-a DIFFERENT library (anim8-gdx, §7.3) — which is the whole reason a fourth library is worth adding:
+`just members-unchanged` reported 28 on `libgdx-core` and 6 on `libgdx-test` for one commit, and
+0 since. Every check count above was unchanged across it, both lanes still compiled to 0, and the
+suite was still 217 passing / 4 expected-fail. The emitted text moved in five types on `libgdx-core`
+and one on `libgdx-test`, all from engine fixes measured on a DIFFERENT library (anim8-gdx, §7.3) —
+which is the whole reason a fourth library is worth adding:
 
 - **`Cubemap` + `Cubemap$CubemapSide` — a real correctness fix, not churn** (`ENGINE-LIMITS.md` T10).
   The enum lowering dropped the CONSTRUCTOR's body, so `CubemapSide`'s
@@ -911,7 +913,7 @@ reading as agreement is precisely the silent success `java_test_count` exists to
 | trivia | 34 |
 | porter notes uncovered · break residue | 0 · **0** |
 | source map | 16 units / 568 members |
-| decisions recorded | 633 rows, **251** about anim8's own declarations (235 `RetypedSignature`, 16 `RenamedPackage`) |
+| decisions recorded | 632 rows, **251** about anim8's own declarations (235 `RetypedSignature`, 16 `RenamedPackage`); the other 381 are the base's, which `ENGINE-LIMITS.md` D2 says should not be republished here |
 | **tests** | **23 of 23 PASSING** (4 files, hand-written) |
 
 **Error trajectory: 1383 → 49 → 1 → 0**, every step an engine §1(a) fix (§7.3). **`break residue` is
@@ -922,8 +924,8 @@ library it was not built for.
 
 anim8 needed **no library-specific rule and no new phase parameter**. Its whole manifest is a
 namespace claim, a package rename and the base's inherited surface. What it did produce is four
-universal engine defects, each in its own commit with its own spec, each recorded in
-`ENGINE-LIMITS.md`:
+universal engine defects, each in its own commit, pinned by a spec through the pipeline
+(`EmitterLiteralSpec`, `EnumCtorBodySpec`) and recorded in `ENGINE-LIMITS.md`:
 
 | key | the gap | cost |
 |---|---|---|
@@ -968,7 +970,7 @@ reference port that SOLVED a problem is not automatically a model; check the ans
 
 ### 7.5 The manifest-inheritance shape
 
-`Anim8Policy.core` is `LibgdxPolicy.core(repoRoot).extendedBy(PortManifest(…))`, three fields long:
+`Anim8Policy.core` is `LibgdxPolicy.core(repoRoot).extendedBy(PortManifest(…))`, four fields long:
 
 ```scala
 name           = "anim8",
@@ -978,7 +980,7 @@ surface        = List(PortMapTransform.forBases("libgdx-core")),
 ```
 
 Everything else — `dropTypes`, `dropMethods`, libGDX's `com.badlogic.gdx -> sge` rename and all six
-surface phases — is INHERITED, and `ManifestAgreement` reports 0 on every run. Two details worth
+surface phases — is INHERITED, and `ManifestAgreement` reports 0 on every run. Three details worth
 keeping:
 
 - **the rename is ADDITIVE, not a restatement.** Longest-prefix-wins keeps `com.badlogic.gdx -> sge`
@@ -1023,9 +1025,13 @@ a port that drops its PNG chunk framer has dropped PNG, and the JVM is a target 
 
 ### 7.8 Remaining
 
-- **`ConstantData` is public in the port and package-private in Java.** `class ConstantData` and
-  `class ChunkBuffer` have no modifier upstream; the port emits both as public. Recorded as 2
-  `WidenedVisibility` decisions, harmless here and a general item — see §7.
+- **`ConstantData` and `ChunkBuffer` are package-private in Java and public in the port.** Both are
+  declared `class X` with no modifier upstream. This is NOT one of the port's two recorded
+  `WidenedVisibility` decisions — those are `AnimatedPNG#buffer` and `#deflater`, widened because a
+  parent constructor's statements are replayed in the subclass. A Java package-private TYPE
+  becoming a public Scala one is not recorded at all, which is the general item: it is a real
+  surface difference that nothing counts. Harmless here (the hand-written suite is in the same
+  package either way) and worth a decision kind — see §9.
 - **A second source set for the demos** would need a libGDX backend, which is not ported and is not
   planned (§1.1's first surprise).
 - **Behavioural coverage is 23 tests over 4 of 16 types.** `PNG8`, `AnimatedGif`, `PaletteReducer`
@@ -1119,6 +1125,10 @@ Maintained by deletion. Items are ordered by what they block, not by size.
 - **`RetypedSignature`, `RedirectedCall` and `FunnelledCtor` carry no porter note.** The argument for
   each is in `DESIGN.md` §7.2 and stands; it is listed here so that adding one is a decision rather
   than an oversight.
+- **A package-private java TYPE emits as a public Scala one, and nothing records it.**
+  `WidenedVisibility` covers members widened by the constructor replay; a `class X` with no modifier
+  becoming `class X` in Scala is a surface difference no decision, note or check sees. anim8 has two
+  (`ConstantData`, `ChunkBuffer`, §7.8) and libGDX will have many more.
 
 ### 7.2 Control flow
 
