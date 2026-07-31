@@ -2035,8 +2035,22 @@ frontend DID parse — a resolution root, which is the ORDINARY case for a depen
 by the emitter from the member symbol's owner, which deliberately ignores the qualifier in the tree
 (that behaviour is right: it is what turns Java's legal `instance.staticMethod()` into Scala's
 required `Type.staticMethod()`). Remap the `Ident` alone and the emitter silently undoes it one
-layer later. Both are needed, and the second is a symbol-table edit: re-point the members' `owner`
-and rebuild their `fullName` by replacing the owner's prefix.
+layer later.
+
+**The second answer is a TWIN, not a re-pointing of the original owner — that was measured worse.**
+Moving the members' `owner` onto the target is the same fix in fewer lines and is what the first
+attempt did. But a redirected type is normally one this module RESOLVES AGAINST, so its members are
+the BASE's declarations, and moving their owner detaches them from the unit they belong to: the
+ownership climb (`CLAUDE.md` §4.56) stops reaching a `program.units` symbol, and every per-site check
+that filters "the base's declarations, not mine" (D2) stops recognising them. Measured on a dependent
+that redirects one parsed type: **`port-map` 0 → 6**, all six inside the redirected type's own Java
+file, in a run whose emitted text was **byte-identical** — no member digest moved, so only the check
+diff said anything at all. Mint a new symbol with the same name and signature owned by the target
+instead, re-point `Ident.sym` / `Select.sym` / `Apply.method` at it, and leave the base's own symbols
+exactly as they were: 6 → 0, 0 members moved.
+
+Twin only the STATIC members. An instance member is reached through a receiver whose TYPE the phase
+has already moved, so it needs nothing, and twinning it is surface with no reference behind it.
 
 Measured on the first library to redirect types WITH a static surface: **26 references** across 10
 redirected types — **23 static calls and 3 annotations** — every one of them naming a package the

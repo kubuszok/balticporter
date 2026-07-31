@@ -51,7 +51,8 @@ final class TypeRedirectTransform(redirects: Map[String, String] = Map.empty) ex
     * move — so it is part of the shared surface and two modules must not disagree about it. */
   def surfaceFingerprint: String = redirects.toList.sorted.map((f, t) => s"$f->$t").mkString(",")
 
-  private var mapping: Map[SymId, SymId] = Map.empty
+  private var mapping: Map[SymId, SymId]     = Map.empty
+  private var memberTwins: Map[SymId, SymId] = Map.empty
   private var report: PolicyReport       = PolicyReport.empty
 
   /** Declared sources that occur nowhere — the redirect silently did not happen and the dependency
@@ -61,7 +62,7 @@ final class TypeRedirectTransform(redirects: Map[String, String] = Map.empty) ex
 
   override def run(program: Program): Program =
     if redirects.isEmpty then
-      report = PolicyReport.empty; mapping = Map.empty
+      report = PolicyReport.empty; mapping = Map.empty; memberTwins = Map.empty
       return program
 
     val byName = program.symbols.all.iterator.map(s => s.fullName -> s).toMap
@@ -99,27 +100,43 @@ final class TypeRedirectTransform(redirects: Map[String, String] = Map.empty) ex
     //     (`TirEmitter.staticThroughInstance`), which deliberately ignores the qualifier in the
     //     tree. Remapping the qualifier alone is therefore undone one layer later, silently.
     //
-    // Re-pointing the member's owner covers the second, and is exact for the same reason the rest
-    // of the phase is: the contract is that the port does NOT ship the redirected type, so the only
-    // references to its members are the ones being redirected. The member keeps its `SymId`, so no
-    // tree node has to move, and its NAME is rebuilt by replacing the owner's prefix — carrying the
-    // `#`/`$` separators across verbatim (CLAUDE.md §4.56) rather than re-deriving them.
-    val membersOf: Map[SymId, List[SymId]] = mapping.map { (fromType, toType) =>
+    // The second is answered by a TWIN: a new symbol with the same name and signature whose OWNER is
+    // the target, with the references re-pointed at it. `staticThroughInstance` then finds the
+    // qualifier and the owner in agreement and leaves the reference alone.
+    //
+    // A twin, and NOT a re-pointing of the original symbol's owner — which is the same fix in one
+    // fewer line and was measured worse. A redirected type is normally one this module RESOLVES
+    // AGAINST, so its members are the base's declarations, and moving their owner detaches them from
+    // the unit they belong to: the ownership climb (CLAUDE.md §4.56) no longer reaches a
+    // `program.units` symbol, and every per-site check that filters "the base's declarations, not
+    // mine" (ENGINE-LIMITS D2) stops recognising them. Measured on a dependent that redirects one
+    // parsed type: `port-map` 0 -> 6, all six inside the redirected type's OWN Java file, in a run
+    // whose emitted text was byte-identical. The originals are left exactly as the base declared
+    // them.
+    memberTwins = mapping.flatMap { (fromType, toType) =>
       // Read BOTH names out of `table`, never out of `program`: a MINTED target is in the former
-      // only, and read from the latter it is the empty string — which silently leaves every member
+      // only, and read from the latter it is the empty string — which silently leaves every twin
       // named after the type the redirect just removed.
       val fromFqn = table.get(fromType).map(_.fullName).getOrElse("")
       val toFqn   = table.get(toType).map(_.fullName).getOrElse("")
-      val moved   = program.symbols.all.filter(_.owner == fromType).toList
-      moved.foreach { m =>
+      // STATIC members only. An instance member is reached through a receiver whose TYPE this phase
+      // has already moved, so it needs nothing; twinning it would be surface with no reference.
+      program.symbols.all.filter(m => m.owner == fromType && m.flags.isStatic).toList.map { m =>
+        val id = SymId(next); next += 1
         table = table.updated(m.copy(
+          id       = id,
           owner    = toType,
+          // the owner's prefix replaced, carrying the `#`/`$` separators across verbatim
+          // (CLAUDE.md §4.56) rather than re-deriving them
           fullName = if m.fullName.startsWith(fromFqn) then toFqn + m.fullName.drop(fromFqn.length)
                      else m.fullName,
         ))
+        m.id -> id
       }
-      fromType -> moved.map(_.id)
     }
+
+    val membersOf: Map[SymId, List[SymId]] =
+      mapping.map((fromType, _) => fromType -> program.symbols.all.filter(_.owner == fromType).map(_.id).toList)
 
     // DECISION PROVENANCE, one row per (DECLARATION, redirect entry). `RetypedSignature` and not
     // `RedirectedCall`: what moves is a TYPE occurrence — a field's type, a parameter's, a `new`,
@@ -185,4 +202,18 @@ final class TypeRedirectTransform(redirects: Map[String, String] = Map.empty) ex
     * The MEMBER symbol keeps its identity — a static of the replacement is reached through the
     * replacement, which is precisely what "shape-compatible" above requires of it. */
   override def transformIdent(t: Tree.Ident)(using Program): Term =
-    if mapping.contains(t.sym) then t.copy(sym = mapping(t.sym)) else t
+    if mapping.contains(t.sym) then t.copy(sym = mapping(t.sym))
+    else if memberTwins.contains(t.sym) then t.copy(sym = memberTwins(t.sym))
+    else t
+
+  /** …and the MEMBER half of it. Re-pointing the qualifier alone is not enough for a redirected type
+    * the frontend PARSED: the emitter re-derives a static access from the member symbol's OWNER
+    * (`TirEmitter.staticThroughInstance`) precisely so that Java's legal `instance.staticMethod()`
+    * emits as Scala's required `Type.staticMethod()`, and that re-derivation undoes the qualifier
+    * rewrite one layer later, silently. Pointing at the twin — same name, same signature, owned by
+    * the target — puts qualifier and owner back in agreement. */
+  override def transformSelect(t: Tree.Select)(using Program): Term =
+    if memberTwins.contains(t.sym) then t.copy(sym = memberTwins(t.sym)) else t
+
+  override def transformApply(t: Tree.Apply)(using Program): Term =
+    if memberTwins.contains(t.method) then t.copy(method = memberTwins(t.method)) else t

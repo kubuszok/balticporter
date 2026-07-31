@@ -1408,6 +1408,12 @@ redesign no mechanical rule produces.
 - **Do not fix a static redirect by remapping the qualifier `Ident` alone.** For a type the frontend
   PARSED, `TirEmitter.staticThroughInstance` re-derives the name from the member's owner and undoes
   it one layer later — silently, with no count moving (`ENGINE-LIMITS` D8).
+- **…and do not fix THAT by re-pointing the original member's `owner`.** Measured: **Ashley's
+  `port-map` 0 → 6**, all six inside `ReflectionPool.java` — the type Ashley redirects — in a run
+  whose emitted text was byte-identical, so `members.tsv` said nothing and only the check diff did.
+  A redirected type's members are the BASE's declarations; moving their owner detaches them from
+  their unit and every ownership-filtered check stops recognising them (`ENGINE-LIMITS` D2, D8).
+  Mint a TWIN owned by the target instead: 6 → 0, 0 members moved.
 - **Do not give a minted redirect TARGET a self `TypeRef` as its `info`.** `TirEmitter.isTypeRef`
   reads exactly `fullName` dotted, `#`-free and `info == NoType` to decide that an external symbol
   is a TYPE; a self `TypeRef` reads as a term and the static half emits an unqualified identifier —
