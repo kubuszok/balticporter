@@ -947,7 +947,22 @@ object SpoonTir:
 
     /** a Java enum constant → `EnumCase`: its ctor args, and any per-constant method overrides
       * (from its anonymous-class body), each keyed under the CONSTANT so it doesn't collide
-      * with the enum's abstract method of the same name. */
+      * with the enum's abstract method of the same name.
+      *
+      * ==FIELDS as well as methods==
+      * A Java enum constant's body is an anonymous class body, so it may declare fields — and
+      * `static final` ones at that, since JLS 8.1.3 permits statics in an anonymous class when they
+      * are constant variables. `DefaultRoomType.CASTLE { public static final int MIN_SIZE = 7,
+      * MIN_TOWER = 3; … }` in noise4j is the shape, read UNQUALIFIED from the constant's own
+      * `carve` and `isValid` bodies two lines below. Harvesting only `CtMethod` dropped both,
+      * silently: the emitted `case object` was structurally correct and referred to two names that
+      * did not exist (4 errors, and no check saw them — the omissions check counts what the TIR
+      * carries, and this never reached the TIR at all).
+      *
+      * They need no home of their own. A Scala `case object`'s body IS the constant's scope, so a
+      * `val` there is exactly the Java static's visibility — which is why this is a frontend
+      * harvest and not an emitter change.
+      */
     private def enumCase(enumId: SymId, v: CtEnumValue[?]): Tree.EnumCase =
       val vlead = leadingOf(v)
       val caseId = minter.define(memberKey(enumId, v.getSimpleName))(sid =>
@@ -958,6 +973,7 @@ object SpoonTir:
         case nc: CtNewClass[?] =>
           val a = nc.getArguments.asScala.toList.map(bt.exprOf)
           val b = Option(nc.getAnonymousClass).toList.flatMap(_.getTypeMembers.asScala.toList).collect {
+            case f: CtField[?]  => fieldDef(caseId, f)
             case m: CtMethod[?] => execDef(caseId, m, m.getSimpleName)
           }
           (a, b)
