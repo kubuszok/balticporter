@@ -7,7 +7,8 @@
 #   just ashley-measure              Ashley + its suite, compiled WITH libGDX core (a dependent port)
 #   just sg-measure                  simple-graphs + its suite
 #   just noise4j-measure             noise4j — emit, checks, break residue, compile, correlate
-#   just measure-all                 the five lanes, SERIALLY, in dependency order
+#   just jbump-measure               jbump (no suite upstream — the lane re-derives the zero)
+#   just measure-all                 every lane, SERIALLY, in dependency order
 #   just decision-counts             decisions.tsv row counts by kind, every port
 #   just members-unchanged [PORT]    members.tsv against its committed baseline — the blast radius
 #   just baseline-list                        every port: baseline size and last run
@@ -69,12 +70,19 @@ gdx_module    := "libgdx-core"
 ashley_module := "ashley-core"
 sg_module     := "simplegraphs-core"
 n4j_module    := "noise4j-core"
+jbump_module  := "jbump-core"
 
 # upstream Java, relative to the checkout root
 gdx_src       := "../sge/original-src/libgdx/gdx"
 ashley_src    := "../sge/original-src/ashley"
 sg_src        := "../sge/original-src/simple-graphs"
 n4j_src       := "../sge/original-src/noise4j"
+jbump_src     := "../sge/original-src/jbump/jbump/src"
+# jbump's WHOLE upstream checkout, not just the ported module: the `@Test` census runs over it so
+# that "jbump ships no test suite" is a number this lane re-derives, never a claim in a document.
+# Upstream's `test` gradle module is a runnable libGDX demo (`TestBump extends ApplicationAdapter`),
+# and the day somebody adds a real suite there this lane is what says so.
+jbump_upstream := "../sge/original-src/jbump"
 
 # the compiler every lane measures with — one version, one server-less invocation per lane
 scala_version := "3.8.4"
@@ -97,6 +105,11 @@ sg_deps       := "--dependency junit:junit:4.12 --dependency org.scalameta::muni
 # variable rather than omitted from the lane, so the lane reads the same as every other one and the
 # claim "this library needs nothing" is written down where it can be contradicted.
 n4j_deps      := ""
+# jbump declares NO dependencies at all (`jbump/build.gradle` is four lines and adds none), and it
+# is a `RuntimeMode.Vendored` port, so the support types ship inside the emitted source set. Empty
+# on purpose, and left as a variable rather than dropped from the lane: the day the port grows a
+# test source set this is the line that gains a coordinate.
+jbump_deps    := ""
 
 root          := justfile_directory()
 
@@ -532,7 +545,91 @@ noise4j-measure:
     headline "$ERRORS" "$REPORT"
 
 # ---------------------------------------------------------------------------------------------
-# All five lanes, SERIALLY, in dependency order — never in parallel.
+# jbump — the same gate as `sg-measure`, minus the one stage jbump cannot have.
+#
+# jbump ships NO TEST SUITE. Its `test` gradle module is a runnable libGDX demo (`TestBump extends
+# ApplicationAdapter`, LWJGL3 + shapedrawer, driven by mouse and WASD) and declares zero `@Test`
+# methods, so there is nothing for this engine to port and this port's evidence stops at the
+# compiler. CLAUDE.md §3 is explicit about what that leaves unmeasured, so the lane does two things
+# rather than quietly omitting the stage:
+#
+#   * it RE-DERIVES the zero on every run, with `java_test_count` over the whole upstream checkout
+#     rather than over the ported module — a claim in a document rots, a number in a lane does not,
+#     and the day upstream adds a suite this is the line that says so;
+#   * it says out loud, in the run, that the behavioural gate is absent. A lane that simply had no
+#     test stage would read as a lane whose tests passed.
+# ---------------------------------------------------------------------------------------------
+[doc("jbump — emit, checks, break residue, compile, correlate (no suite upstream: see the lane)")]
+jbump-measure:
+    #!/usr/bin/env bash
+    cd "{{root}}"
+    ROOT="$(pwd)"
+    export CORE_PROJECT="{{core_project}}"
+    . scripts/_lib.sh
+
+    # The finding ids are hashed from paths relative to this root (CLAUDE.md §4.6): set anywhere else
+    # and every finding diffs as removed-and-re-added against a baseline whose counts are identical.
+    write_run_props "$ROOT" "balticporter.reportPathRoot=$ROOT/{{jbump_src}}"
+    REPORT="$ROOT/port-report/JbumpMigrate"
+
+    # ABORT if the migration itself did not run. Piping straight into `grep wrote` discards the exit
+    # status, so an engine that failed to COMPILE would leave the lane measuring the PREVIOUS emit.
+    MIGRATE_OUT=$(sbt -client "{{corpus}}/runMain balticporter.corpus.jbump.JbumpMigrate" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
+    if ! grep -qE "wrote [0-9]+ Scala files" <<<"$MIGRATE_OUT"; then
+      echo "!! MIGRATION DID NOT RUN — refusing to measure stale output"
+      grep -E "^\[error\].*\.scala:[0-9]+|^\[error\] +\|" <<<"$MIGRATE_OUT" | head -20
+      exit 1
+    fi
+
+    echo "-- migration (ALL checks, untruncated, as the migration printed them) --"
+    sed -n '/building model over/,/wrote [0-9]* Scala files/p' <<<"$MIGRATE_OUT"
+
+    echo
+    echo "-- checks: persisted, untruncated, diffed against the baseline --"
+    show_check_report "$REPORT"
+
+    echo
+    echo "-- test discovery --"
+    JAVA_TESTS=$(java_test_count {{jbump_upstream}})
+    echo "@Test in the WHOLE jbump upstream checkout: $JAVA_TESTS"
+    if [ "$JAVA_TESTS" = "0" ]; then
+      echo "!! NO BEHAVIOURAL GATE — jbump ships no test suite, so nothing here is evidence of"
+      echo "   behaviour (CLAUDE.md §3: a green compile said nothing about any of §4.4's ten forms)."
+      echo "   PROGRESS.md §jbump records what that leaves unmeasured, item by item."
+    else
+      echo "!! A SUITE HAS APPEARED UPSTREAM — $JAVA_TESTS @Test method(s). This port has no test"
+      echo "   source set; add corpus/ports/jbump/test.conf (\`base = \"main.conf\"\`) and a lane stage."
+    fi
+
+    echo
+    break_residue {{jbump_module}}/src_managed
+
+    echo "-- compile --"
+    # NOTE the ANSI strip — dropped once, and every line then began with an escape, reporting 0
+    # errors for a port that had 20. A false NEGATIVE on the headline number is the worst failure a
+    # measure lane can have.
+    DEPS="{{jbump_deps}}"
+    scala-cli compile --scala {{scala_version}} --server=false $DEPS \
+      {{jbump_module}}/src_managed/main/scala \
+      2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/jbumpmeasure.txt
+    CLI_STATUS=${PIPESTATUS[0]}
+    ERRORS=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/jbumpmeasure.txt)
+    compile_guard "$CLI_STATUS" "$ERRORS" "$MEASURE_TMP"/jbumpmeasure.txt
+    echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/jbumpmeasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/jbumpmeasure.txt))"
+    grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/jbumpmeasure.txt | sort | uniq -c | sort -rn | head
+    echo "-- bare (uncoded) errors by message --"
+    grep -A1 '^-- Error:' "$MEASURE_TMP"/jbumpmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
+
+    echo
+    echo "-- correlation: every error located to its member and its Java origin --"
+    correlate "$REPORT/run-latest" --scalac "$MEASURE_TMP"/jbumpmeasure.txt \
+      --srcmap "$REPORT/run-latest/srcmap.tsv"
+
+    headline "$ERRORS" "$REPORT"
+
+
+# ---------------------------------------------------------------------------------------------
+# Every lane, SERIALLY, in dependency order — never in parallel.
 #
 # Each lane re-emits into `src_managed/`, so `gdx-test-measure` and `ashley-measure` compile against
 # what `gdx-measure` just wrote. Run concurrently they would measure each other's half-written
@@ -540,11 +637,11 @@ noise4j-measure:
 # sequence, for the same reason every lane aborts on a migration that did not run: the next number
 # would be stale, and a stale number reads exactly like a result.
 # ---------------------------------------------------------------------------------------------
-[doc("the five lanes, SERIALLY, in dependency order — never in parallel")]
+[doc("every lane, SERIALLY, in dependency order — never in parallel")]
 measure-all:
     #!/usr/bin/env bash
     cd "{{root}}"
-    for lane in gdx-measure gdx-test-measure ashley-measure sg-measure noise4j-measure; do
+    for lane in gdx-measure gdx-test-measure ashley-measure sg-measure noise4j-measure jbump-measure; do
       echo
       echo "################################################################## just $lane"
       if ! {{just_executable()}} "$lane"; then
