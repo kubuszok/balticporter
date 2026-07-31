@@ -6,7 +6,8 @@
 #   just gdx-test-measure            libGDX's own suite (… → compile → RUN → correlate)
 #   just ashley-measure              Ashley + its suite, compiled WITH libGDX core (a dependent port)
 #   just sg-measure                  simple-graphs + its suite
-#   just measure-all                 the four lanes, SERIALLY, in dependency order
+#   just noise4j-measure             noise4j — emit, checks, break residue, compile, correlate
+#   just measure-all                 the five lanes, SERIALLY, in dependency order
 #   just decision-counts             decisions.tsv row counts by kind, every port
 #   just members-unchanged [PORT]    members.tsv against its committed baseline — the blast radius
 #   just baseline-list                        every port: baseline size and last run
@@ -46,6 +47,10 @@
 #  - **Scratch captures go under the CHECKOUT** (`.balticporter/tmp`, `MEASURE_TMP` in the helper),
 #    never /tmp: the fixed /tmp names collided the moment two worktrees measured concurrently and
 #    one checkout's compile output silently counted, and then CORRELATED, as the other's.
+#  - **A lane with NO test set still measures test discovery.** `noise4j-measure` is the first one:
+#    noise4j ships no Java tests at all, so the lane asserts that upstream `@Test` count is ZERO
+#    rather than omitting the block. Omitting it is how a suite that runs no tests reports success
+#    — and here it would also hide the day upstream gains one.
 #  - **The lanes are SERIAL and ordered.** Each re-emits into `src_managed/`, so the dependent lanes
 #    compile against what the base lane just wrote. `measure-all` runs them one at a time and stops
 #    at the first failure rather than measuring a stale emit.
@@ -63,11 +68,13 @@ core_project  := "engine"                # holds balticporter.tir.CorrelateMain
 gdx_module    := "libgdx-core"
 ashley_module := "ashley-core"
 sg_module     := "simplegraphs-core"
+n4j_module    := "noise4j-core"
 
 # upstream Java, relative to the checkout root
 gdx_src       := "../sge/original-src/libgdx/gdx"
 ashley_src    := "../sge/original-src/ashley"
 sg_src        := "../sge/original-src/simple-graphs"
+n4j_src       := "../sge/original-src/noise4j"
 
 # the compiler every lane measures with — one version, one server-less invocation per lane
 scala_version := "3.8.4"
@@ -85,6 +92,11 @@ gdx_run_deps  := "--dependency org.scalameta::munit:1.0.2 --dependency junit:jun
 # in 2.0. Read from Ashley's own build.gradle rather than guessed — guessing it cost a full cycle.
 ashley_deps   := "--dependency junit:junit:4.13.2 --dependency org.mockito:mockito-all:1.10.19 --dependency org.scalameta::munit:1.0.2"
 sg_deps       := "--dependency junit:junit:4.12 --dependency org.scalameta::munit:1.0.2"
+# noise4j declares NO dependencies — its `build.gradle` has an empty `dependencies` block and the
+# 12 sources import nothing outside `java.lang`, `java.math` and `java.util`. Stated as an empty
+# variable rather than omitted from the lane, so the lane reads the same as every other one and the
+# claim "this library needs nothing" is written down where it can be contradicted.
+n4j_deps      := ""
 
 root          := justfile_directory()
 
@@ -442,7 +454,85 @@ sg-measure:
     headline "$ERRORS" "$TREPORT"
 
 # ---------------------------------------------------------------------------------------------
-# All four lanes, SERIALLY, in dependency order — never in parallel.
+# noise4j — the same gate as `sg-measure`, minus the run.
+#
+# noise4j is a VENDORED-runtime port and a STANDALONE base port: one source set, no resolution
+# roots, no dependencies, so the compile is over one directory with no classpath at all.
+#
+# IT HAS NO RUN PHASE, and that is the one thing to read before quoting a number from it. noise4j
+# ships no test sources — `find` over the upstream tree returns `src/` and `examples/` (nine PNGs)
+# and nothing else — so there is no Java suite to put through the pipeline and no `test.conf`. The
+# lane therefore ASSERTS that fact instead of skipping the discovery block: a lane that silently
+# has no tests is indistinguishable from a lane whose tests all vanished, which is the failure
+# `java_test_count` exists to catch. Everything CLAUDE.md §4.4 lists is UNMEASURED for this port;
+# `PROGRESS.md` §noise4j says so in the same words.
+# ---------------------------------------------------------------------------------------------
+[doc("noise4j — emit, checks, break residue, compile, correlate (no test set upstream)")]
+noise4j-measure:
+    #!/usr/bin/env bash
+    cd "{{root}}"
+    ROOT="$(pwd)"
+    export CORE_PROJECT="{{core_project}}"
+    . scripts/_lib.sh
+
+    # The finding ids are hashed from paths relative to this root (CLAUDE.md §4.6): set anywhere else
+    # and every finding diffs as removed-and-re-added against a baseline whose counts are identical.
+    write_run_props "$ROOT" "balticporter.reportPathRoot=$ROOT/{{n4j_src}}"
+    REPORT="$ROOT/port-report/Noise4jMigrate"
+
+    # ABORT if the migration itself did not run, or the lane measures the PREVIOUS emit and reports a
+    # stale number as a result.
+    OUT=$(sbt -client "{{corpus}}/runMain balticporter.corpus.noise4j.Noise4jMigrate" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
+    if ! grep -qE "wrote [0-9]+ Scala files" <<<"$OUT"; then
+      echo "!! Noise4jMigrate DID NOT RUN — refusing to measure stale output"
+      grep -E "^\[error\].*\.scala:[0-9]+|^\[error\] +\|" <<<"$OUT" | head -20
+      exit 1
+    fi
+    echo "-- Noise4jMigrate (ALL checks, untruncated, as the migration printed them) --"
+    sed -n '/building model over/,/wrote [0-9]* Scala files/p' <<<"$OUT"
+    echo
+
+    echo "-- checks: persisted, untruncated, diffed against the baseline --"
+    show_check_report "$REPORT"
+
+    echo
+    echo "-- test discovery --"
+    # ASSERTED, not omitted. noise4j has no test sources; if it ever gains one, this lane says so
+    # loudly rather than continuing to report a port with no behavioural evidence as complete.
+    JAVA_TESTS=$(java_test_count {{n4j_src}}/src {{n4j_src}}/test {{n4j_src}}/tests)
+    echo "@Test in Java: $JAVA_TESTS   emitted test files: 0 (this port has no test source set)"
+    [ "$JAVA_TESTS" != "0" ] && echo "!! UPSTREAM NOW HAS $JAVA_TESTS @Test — this port has no test.conf, so none of them runs; add one (CLAUDE.md §3)"
+    echo "   (no run phase: every CLAUDE.md §4.4 form is UNMEASURED for this port — see PROGRESS.md §noise4j)"
+
+    echo
+    break_residue {{n4j_module}}/src_managed
+
+    echo "-- compile --"
+    # NOTE the ANSI strip: without it `grep -cE '^-- .*Error'` matches nothing and reports 0 for a port
+    # that does not compile — a false NEGATIVE on the headline number.
+    DEPS="{{n4j_deps}}"
+    scala-cli compile --scala {{scala_version}} --server=false $DEPS \
+      {{n4j_module}}/src_managed/main/scala \
+      2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/n4jmeasure.txt
+    CLI_STATUS=${PIPESTATUS[0]}
+    ERRORS=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/n4jmeasure.txt)
+    compile_guard "$CLI_STATUS" "$ERRORS" "$MEASURE_TMP"/n4jmeasure.txt
+    echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/n4jmeasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/n4jmeasure.txt))"
+    grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/n4jmeasure.txt | sort | uniq -c | sort -rn | head
+    echo "-- bare (uncoded) errors by message --"
+    grep -A1 '^-- Error:' "$MEASURE_TMP"/n4jmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
+
+    echo
+    echo "-- correlation: every error located to its member and its Java origin --"
+    # Run WHETHER OR NOT it compiled. With no suite there is no second thing to correlate, so the
+    # compile output is the only diagnostic this port has and it is always worth attributing.
+    correlate "$REPORT/run-latest" --scalac "$MEASURE_TMP"/n4jmeasure.txt \
+      --srcmap "$REPORT/run-latest/srcmap.tsv"
+
+    headline "$ERRORS" "$REPORT"
+
+# ---------------------------------------------------------------------------------------------
+# All five lanes, SERIALLY, in dependency order — never in parallel.
 #
 # Each lane re-emits into `src_managed/`, so `gdx-test-measure` and `ashley-measure` compile against
 # what `gdx-measure` just wrote. Run concurrently they would measure each other's half-written
@@ -450,11 +540,11 @@ sg-measure:
 # sequence, for the same reason every lane aborts on a migration that did not run: the next number
 # would be stale, and a stale number reads exactly like a result.
 # ---------------------------------------------------------------------------------------------
-[doc("the four lanes, SERIALLY, in dependency order — never in parallel")]
+[doc("the five lanes, SERIALLY, in dependency order — never in parallel")]
 measure-all:
     #!/usr/bin/env bash
     cd "{{root}}"
-    for lane in gdx-measure gdx-test-measure ashley-measure sg-measure; do
+    for lane in gdx-measure gdx-test-measure ashley-measure sg-measure noise4j-measure; do
       echo
       echo "################################################################## just $lane"
       if ! {{just_executable()}} "$lane"; then

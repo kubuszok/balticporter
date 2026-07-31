@@ -1,0 +1,4 @@
+#id	check	kind	owner	path	line	detail
+2538483ae45c	omissions	promoted constructor body runs on every path	sge.noise.Object2dArray	com/github/czyzby/noise4j/array/Object2dArray.java	14	1 statement(s) of the promoted constructor also run here; java ran them only on its own path
+2538483ae45c/2	omissions	promoted constructor body runs on every path	sge.noise.Object2dArray	com/github/czyzby/noise4j/array/Object2dArray.java	28	1 statement(s) of the promoted constructor also run here; java ran them only on its own path
+2538483ae45c/3	omissions	promoted constructor body runs on every path	sge.noise.Object2dArray	com/github/czyzby/noise4j/array/Object2dArray.java	35	1 statement(s) of the promoted constructor also run here; java ran them only on its own path
