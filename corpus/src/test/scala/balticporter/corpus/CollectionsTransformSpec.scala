@@ -448,6 +448,32 @@ class CollectionsTransformSpec extends PortSuite:
     assertEmits(p, "this.m.put(key, value)")
   }
 
+  test("a CAPACITY hint at a hashed collection gains java's own default load factor") {
+    // scala's `mutable.HashMap` declares `()` and `(Int, Double)` and nothing in between, so java's
+    // one-argument capacity constructor lands on no overload. Java's own definition of that
+    // constructor is `(initialCapacity, DEFAULT_LOAD_FACTOR)`, and scala's companion publishes the
+    // same 0.75 — so this is a translation, not an approximation.
+    val p = port(
+      """package demo;
+        |import java.util.*;
+        |class Sized {
+        |  Map<String, Integer> m = new HashMap<String, Integer>(64);
+        |  Set<String> s = new HashSet<String>(8);
+        |  List<String> l = new ArrayList<String>(4);
+        |  Map<String, Integer> tuned = new HashMap<String, Integer>(64, 0.9f);
+        |}
+        |""".stripMargin,
+      new CollectionsTransform,
+    )
+    assertEmits(p, "new scala.collection.mutable.HashMap[java.lang.String, java.lang.Integer](64, scala.collection.mutable.HashMap.defaultLoadFactor)")
+    assertEmits(p, "new scala.collection.mutable.HashSet[java.lang.String](8, scala.collection.mutable.HashSet.defaultLoadFactor)")
+    // the SEQUENCE targets are the ones the note in `copyConstructor` is right about: scala's
+    // `ArrayBuffer(Int)` means what java's `ArrayList(int)` means, so nothing is added.
+    assertEmits(p, "new scala.collection.mutable.ArrayBuffer[java.lang.String](4)")
+    // …and java's own two-argument form needs nothing: scala widens the Float to the Double.
+    assertEmits(p, "new scala.collection.mutable.HashMap[java.lang.String, java.lang.Integer](64, 0.9f)")
+  }
+
   test("…but a key that is NOT the map's key type keeps whatever it had — the strip is structural") {
     // Java's `Map.get(Object)` accepts anything, so a port CAN meet a key the scala member cannot
     // take. Stripping unconditionally would emit a call that silently claims a type the value does

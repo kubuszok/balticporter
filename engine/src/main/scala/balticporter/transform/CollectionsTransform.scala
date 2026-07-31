@@ -212,6 +212,9 @@ final class CollectionsTransform(val scope: RuleScope = RuleScope.Everywhere())
   private var unmodifiableFromSym, unmodifiableSym: SymId = SymId.None
   /** each scala collection symbol → its companion's `from` factory, for `copyConstructor`. */
   private var fromSyms: Map[SymId, SymId] = Map.empty
+  /** each HASHED scala collection symbol → its companion's `defaultLoadFactor`, for
+    * [[capacityConstructor]]. Keyed on the phase's OWN targets, exactly as `fromSyms` is. */
+  private var loadFactorSyms: Map[SymId, SymId] = Map.empty
   /** `JavaCollections`' statics, by name — see `sym`. */
   private var staticSyms: Map[String, SymId] = Map.empty
   /** the `java.util.stream` collapse — see `staticRewrite`. */
@@ -298,6 +301,14 @@ final class CollectionsTransform(val scope: RuleScope = RuleScope.Everywhere())
     fromSyms = byScala.collect {
       case (fqn, id) if fqn.startsWith("scala.collection.") => id -> mint("from", s"$fqn.from")
     }.toMap
+    // The scala collections whose only paramful constructor is `(initialCapacity, loadFactor)`.
+    // Listed rather than derived because there is nothing in the TIR to derive it FROM — these are
+    // external types with no declaration the frontend ever saw — but the list is closed over the
+    // phase's own `typeMap` targets, so it is the phase's record and not a name test (§4.56).
+    loadFactorSyms = List(
+      "scala.collection.mutable.HashMap", "scala.collection.mutable.LinkedHashMap",
+      "scala.collection.mutable.HashSet", "scala.collection.mutable.LinkedHashSet",
+    ).flatMap(fqn => byScala.get(fqn).map(_ -> mint("defaultLoadFactor", s"$fqn.defaultLoadFactor"))).toMap
     iteratorFromSym = mint("from", JavaIteratorFqn + ".from")
     javaIteratorSym = byScala.getOrElse(JavaIteratorFqn, SymId.None)
     foreachSym          = mint("foreach", "foreach")
@@ -638,7 +649,7 @@ final class CollectionsTransform(val scope: RuleScope = RuleScope.Everywhere())
 
   override def transformApply(t: Tree.Apply)(using Program): Term =
     val t2 = wrapIterableArgs(t)
-    copyConstructor(t2).orElse(staticRewrite(t2)).getOrElse {
+    copyConstructor(t2).orElse(capacityConstructor(t2)).orElse(staticRewrite(t2)).getOrElse {
       t2.fun match
         case Tree.Select(recv, m, _, so) => kindAt(recv) match
           case Some(k) => rewrite(k, recv, m, so, t2).getOrElse(t2)
@@ -672,6 +683,37 @@ final class CollectionsTransform(val scope: RuleScope = RuleScope.Everywhere())
       // the copy is typed as the TARGET, not as the argument: `new HashMap<>(aTreeMap)` is a
       // `HashMap`, and a node must describe what it emits (see `staticRewrite`).
       yield Tree.Apply(Tree.Ident(f, TypeRepr.NoType, t.origin), List(scalaView(arg)), f, n.tpe, t.origin)
+    case _ => scala.None
+
+  /** Java's CAPACITY-HINT constructor at a HASHED collection — `new HashMap<>(16)`,
+    * `new HashSet<>(n)`.
+    *
+    * [[copyConstructor]]'s note says a capacity hint "maps correctly by accident", and for the
+    * SEQUENCE targets it does: `new ArrayBuffer(10)` means what `new ArrayList<>(10)` means. It is
+    * false for the HASHED ones, and silently so — scala's `mutable.HashMap` declares `()` and
+    * `(initialCapacity: Int, loadFactor: Double)` and nothing in between, so the one-argument java
+    * form lands on no overload at all:
+    *
+    * {{{ None of the overloaded alternatives of constructor HashMap … match arguments ((n : Int)) }}}
+    *
+    * Java's own one-argument constructor is `(initialCapacity, DEFAULT_LOAD_FACTOR)` with
+    * `DEFAULT_LOAD_FACTOR = 0.75f`, and scala's companion publishes exactly that value as
+    * `defaultLoadFactor` — so supplying it is java's own definition rather than a guess, which is
+    * what makes this a translation and not an approximation (M6).
+    *
+    * The two arms are DISJOINT by construction: [[copyConstructor]] takes the single-collection
+    * argument, this one takes a single `scala.Int`, and java's `HashMap`/`HashSet` have no other
+    * one-argument constructor. A two-argument `(int, float)` needs nothing — scala widens the
+    * `Float` to the `Double` the second parameter asks for. */
+  private def capacityConstructor(t: Tree.Apply)(using Program): Option[Term] = t.fun match
+    case n: Tree.New =>
+      val isInt = t.args match
+        case List(a) => headSym(a.tpe).flatMap(summon[Program].symbolOf).exists(_.fullName == "scala.Int")
+        case _       => false
+      for
+        tgt <- headSym(n.tpe)
+        lf  <- loadFactorSyms.get(tgt) if isInt
+      yield Tree.Apply(t.fun, t.args :+ Tree.Ident(lf, TypeRepr.NoType, t.origin), t.method, t.tpe, t.origin)
     case _ => scala.None
 
   /** `java.util.Collections`' STATIC utilities — a receiver-less call, so `rewrite` (which is keyed
