@@ -92,7 +92,10 @@ class SyntheticPrimaryDisambiguationSpec extends munit.FunSuite:
     // to itself, which is an infinite recursion the compiler only caught because the other root
     // then resolved to a constructor declared BELOW it.
     assert(clue(out).contains("def this(f: demo.DFont, b: scala.Boolean) = {"))
-    assert(out.contains("this(f, b, null)"))
+    // ASCRIBED, never a bare `null`: `null` inhabits every reference type, so `this(f, b, null)`
+    // would be applicable to `DCache(DFont, boolean)` as well and scalac would report an ambiguous
+    // overload — the very failure the marker exists to remove.
+    assert(out.contains("this(f, b, (null: DCache.Funnel))"))
     assert(!out.contains("this(f, b)\n"))
   }
 

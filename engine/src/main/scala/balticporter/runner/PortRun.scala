@@ -1047,11 +1047,11 @@ final case class PortRun(
     mine.flatMap(nested).foreach { cd =>
       val p     = plans(cd)
       val ctors = plans.constructorsOf(cd)
-      val acted = p.primary.isDefined || p.synthetic.nonEmpty
-      val trivial = p.synthetic.isEmpty && ctors.sizeIs <= 1
+      val acted = p.primary.isDefined || p.isSynthesised
+      val trivial = !p.isSynthesised && ctors.sizeIs <= 1
       if acted && !trivial then
         val primary =
-          if p.synthetic.nonEmpty then
+          if p.isSynthesised then
             p.synthetic.map((n, t) => s"$n: ${balticporter.tir.TirPrinter.tpe(t, balticporter.tir.TirPrinter.Style.canonical)}")
               .mkString("(", ", ", ")")
           else
@@ -1072,12 +1072,15 @@ final case class PortRun(
             // never exposed, wide enough that a subclass in ANY module still reaches it from its
             // `extends` clause (`private` is class-private in scala, so even a same-package subclass
             // could not). A promoted one keeps whatever java gave the constructor it promotes.
-            "primaryVis"   -> (if p.synthetic.nonEmpty then "protected" else "as-declared"),
+            "primaryVis"   -> (if p.isSynthesised then "protected" else "as-declared"),
             // WHICH java thing each slot of a synthesised primary came from, so a reader can join
             // the emitted signature back to the java WITHOUT the run directory (`DESIGN.md` §8.2):
             // `sup$k` is the parent constructor's formal k. A promoted primary's parameters are
             // java's own and need no such key.
             "slots"        -> (if p.synthetic.isEmpty then "-" else p.synthetic.map(_._1).mkString(",")),
+            // every field that was a candidate slot and was REFUSED, with the reason — the sentence
+            // an agent asking "why is this field a `var`" needs, which A1 has no other channel for.
+            "notSlot"      -> (if p.notSlot.isEmpty then "-" else p.notSlot.map((f, w) => s"$f=$w").mkString(",")),
             // …and whether the primary needed a disambiguator to be DECLARABLE beside, and
             // REACHABLE past, this class's real constructors (`ENGINE-LIMITS.md` C8/C9). Never the
             // marker's FQN: a companion-`protected` type is not a name any consumer may resolve, so
@@ -1086,7 +1089,7 @@ final case class PortRun(
             "constructors" -> ctors.size.toString,
             "superArgs"    -> p.superArgs.size.toString,
             "escapes"      -> plans.promotionEscapes(cd).size.toString,
-            "why"          -> (if p.synthetic.nonEmpty then
+            "why"          -> (if p.isSynthesised then
               "java lets every constructor pick its own `super(...)` and scala lets only the " +
               "PRIMARY reach super; no java constructor here can be that primary, so a protected " +
               "one taking the PARENT constructor's own parameters is synthesised and every java " +

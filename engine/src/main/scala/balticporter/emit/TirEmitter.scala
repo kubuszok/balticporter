@@ -951,7 +951,7 @@ final class TirEmitter(
     // at least as visible as the member (C9).
     val markerParam = plan.marker.map(n => s"ctor$$: ${typeValue(cd.symbol)}.${esc(n)}").toList
     val prim    =
-      if plan.synthetic.nonEmpty then
+      if plan.isSynthesised then
         s" protected (${(plan.synthetic.map((n, t) => s"$n: ${tpe(t)}") ++ markerParam).mkString(", ")})"
       else if pparams.isEmpty then "" else s"(${pparams.map(param).mkString(", ")})"
     // Does the emitted class have a PARAMFUL primary? A synthesised primary is one even though no
@@ -959,7 +959,7 @@ final class TirEmitter(
     // `orderBody` the primary was nilary, and it then discarded the class's own no-arg constructor
     // as degenerate. `AlgorithmPath()` / `Synth()` simply vanished, and `new AlgorithmPath()` was a
     // compile error at every call site while `Plans.superCall` reported that same root EXPRESSED.
-    val paramfulPrimary = plan.synthetic.nonEmpty || pparams.nonEmpty
+    val paramfulPrimary = plan.isSynthesised || pparams.nonEmpty
     val superTpe = cd.parents.headOption.map { case tt: TypeTree => tt.tpe; case t: Term => t.tpe }
     val parents = cd.parents.map(parent).filter(_.nonEmpty) match
       case Nil                          => Nil
@@ -1770,13 +1770,35 @@ final class TirEmitter(
     // the head is read THROUGH its comments, and the comments are re-emitted above the delegation
     // that replaces it — the call itself is consumed, but what somebody wrote about it is not.
     val headTrivia = stats.headOption.collect { case t: Term => Tree.triviaOn(t) }.getOrElse(Nil)
-    val (deleg, rest) = CtorFunnel.headStmt(cdef) match
-      case Some(Tree.Apply(Tree.Select(r, m, _, _), args, _, _, _)) if sym(m).name == "<init>" =>
-        val d = r match
-          case _: Tree.Super => superDelegation(args, i + 1)
-          case _             => s"this(${args.map(term(_, i + 1)).mkString(", ")})"
-        (d, stats.tail)
-      case _ => ("this()", stats)
+    val plan  = currentClass.map(plans(_)).getOrElse(CtorFunnel.Plan.none)
+    // A ROOT of a SYNTHESISED primary delegates with the whole slot list — its own `super(args)`
+    // first, then a value for each hoisted field — and the leading `this.f = e` statements those
+    // field values came from are dropped, because the primary now performs them. `Plan.consumed`
+    // and `Plan.delegations` are ONE derivation in `CtorFunnel`, so the statements the emitter
+    // drops and the arguments it writes cannot disagree about which assignment went where.
+    val headIsDelegation = CtorFunnel.headStmt(cdef) match
+      case Some(Tree.Apply(Tree.Select(_, m, _, _), _, _, _, _)) => sym(m).name == "<init>"
+      case _                                                     => false
+    val after = if headIsDelegation then stats.tail else stats
+    val eaten = plan.delegations.get(cdef.symbol).map(_ => plan.consumed.getOrElse(cdef.symbol, 0)).getOrElse(0)
+    val (deleg, rest) = plan.delegations.get(cdef.symbol) match
+      case Some(args) =>
+        val extra = currentClass.zip(plan.marker).map(markerArg(_, _)).toList
+        (s"this(${(args.map(term(_, i + 1)) ++ extra).mkString(", ")})", after.drop(eaten))
+      case None => CtorFunnel.headStmt(cdef) match
+        case Some(Tree.Apply(Tree.Select(r, m, _, _), args, _, _, _)) if sym(m).name == "<init>" =>
+          val d = r match
+            case _: Tree.Super => superDelegation(args, i + 1)
+            case _             => s"this(${args.map(term(_, i + 1)).mkString(", ")})"
+          (d, stats.tail)
+        case _ => ("this()", stats)
+    // §4.58 — a CONSUMED `this.f = e` does not disappear from the file, and neither does what
+    // somebody wrote about it. Every field slot has N roots contributing to it by construction (a
+    // synthesis needs two), so the comment rides THIS secondary's delegation, which is the one
+    // place a reader looking at this constructor will find it. The funnel is the one place a
+    // statement vanishes without a diff showing where it went, so it is pinned by a spec rather
+    // than left to whichever harvest runs last.
+    val eatenTrivia = after.take(eaten).collect { case t: Term => Tree.triviaOn(t) }.flatten
     // A10 / ENGINE-LIMITS C7 — PREFIX STRIP. Where this constructor ESCAPES the promotion (java
     // never ran the promoted body on its path) and its own body BEGINS with that body, the class
     // body has already run those statements by the time `this(…)` returns: emitting them again is
@@ -1784,7 +1806,8 @@ final class TirEmitter(
     // comes from `Plans.residualBody`, which is the same function `promotionEscapes` subtracts, so
     // the emitter and the omission count cannot disagree about which paths still duplicate.
     val body  = currentClass.flatMap(plans.residualBody(_, cdef)).getOrElse(rest)
-    val head  = leading(if rest eq stats then Nil else headTrivia, i + 1) + ind(i + 1) + deleg
+    val carried = (if rest eq stats then Nil else headTrivia) ++ eatenTrivia
+    val head  = leading(carried, i + 1) + ind(i + 1) + deleg
     val lines = head :: (replay ++ body).map(stat(_, i + 1)).filter(_.trim.nonEmpty)
     s"{\n${joinStats(lines)}\n${ind(i)}}"
 
@@ -1795,6 +1818,18 @@ final class TirEmitter(
     * `OmissionCheck` counts a `super(args)` as dropped exactly when the same call returns
     * `Dropped`, so the check cannot report zero for a constructor this method has just lowered to
     * a bare `this()`. It did, for as long as the planner asserted a class-wide flag instead. */
+  /** the DISAMBIGUATOR's argument, when the class's primary takes one.
+    *
+    * ASCRIBED, never a bare `null`, and that is the difference between a marker that disambiguates
+    * and one that does not. `null` inhabits every reference type, so `this(null)` against a class
+    * that also declares `C(String)` is applicable to BOTH and scalac reports an ambiguous overload
+    * — the very failure the marker exists to remove (`ENGINE-LIMITS.md` C8). `(null: C.Funnel)` has
+    * exactly one applicable candidate, because nothing else declares a parameter of a type the
+    * engine minted for this class alone. A real constructor whose corresponding parameter is
+    * `Object` is applicable too and always LOSES most-specific to the marker's own type. */
+  private def markerArg(cd: Tree.ClassDef, name: String): String =
+    s"(null: ${typeValue(cd.symbol)}.${esc(name)})"
+
   private def superDelegation(args: List[Term], i: Int): String =
     currentClass.map(plans.superCall(_, args)).getOrElse(CtorFunnel.SuperCall.Dropped) match
       // a DISAMBIGUATED primary takes one more parameter than the slots, so the delegation writes
@@ -1802,7 +1837,7 @@ final class TirEmitter(
       // which is precisely why the extra parameter removes the primary from every other
       // constructor's candidate set (`ENGINE-LIMITS.md` C8).
       case CtorFunnel.SuperCall.Positional(as) =>
-        val extra = currentClass.flatMap(plans(_).marker).map(_ => "null").toList
+        val extra = currentClass.flatMap(cc => plans(cc).marker.map(markerArg(cc, _))).toList
         s"this(${(as.map(term(_, i)) ++ extra).mkString(", ")})"
       case CtorFunnel.SuperCall.Matched(slots) =>
         val rendered = slots.map {
@@ -1841,6 +1876,18 @@ final class TirEmitter(
     val s = sym(v.symbol)
     if s.flags.isGiven then
       return s"${ind(i)}given ${esc(s.name)}: ${tpe(v.tpt.tpe)}${v.rhs.map(r => s" = ${term(r, i)}").getOrElse("")}"
+    // A FIELD SLOT — the constructor funnel hoisted this field's value into the synthesised
+    // primary's parameter list, so the field binds that parameter and its java initialiser (which
+    // every constructor overwrote) is gone. `val` where nothing else in the program writes it,
+    // which is A1: slot-eligibility and single-write are two conditions, and `CtorFunnel` decides
+    // the second one whole-program because a setter in another member is not visible from here.
+    currentClass.flatMap(cc => plans(cc).fieldSlots.find(_.field == v.symbol)) match
+      case Some(fs) =>
+        val kw = if fs.mutable then "var" else "val"
+        val q  = privateQualifier(s.owner)
+        val m  = if kw == "var" then mods(s.flags, q).replace("final ", "") else mods(s.flags, q)
+        return s"${ind(i)}$m$kw ${esc(s.name)}: ${tpe(v.tpt.tpe)} = ${fs.name}"
+      case None => ()
     v.rhs match
       case Some(r) if isJavaConstant(v, s) =>
         // Java calls this a CONSTANT VARIABLE (JLS 4.12.4): `static final` of primitive or String

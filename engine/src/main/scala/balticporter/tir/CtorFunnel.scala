@@ -112,11 +112,62 @@ object CtorFunnel:
         * companion-protected type is not a name any ordinary consumer may resolve, so the row says
         * `disambiguator=marker` and nothing more. */
       marker: Option[String] = scala.None,
+      /** How many of [[synthetic]]'s slots are the PARENT constructor's own formals. Everything
+        * after them is a FIELD slot, and the split matters to [[Plans.superCall]], which asks
+        * whether a root's `super(args)` reaches the primary POSITIONALLY — a question about the
+        * super slots alone. Reading `synthetic.size` there counted the field slots too and
+        * reported every expressed root as dropped. */
+      superSlots: Int = 0,
+      /** the fields whose value is hoisted into the primary's parameter list, in slot order. */
+      fieldSlots: List[FieldSlot] = Nil,
+      /** the FULL argument list each ROOT delegates with — super slots then field slots, in slot
+        * order. The marker's `null` is appended by the emitter, which is the one part of the call
+        * that is not a java expression. Keyed by the root's symbol because it is per-ROOT: two
+        * constructors of the same class assign the same field different values, which is the
+        * entire point of hoisting it. */
+      delegations: Map[SymId, List[Term]] = Map.empty,
+      /** how many LEADING statements of each root the funnel consumed into field slots — dropped
+        * from that secondary's body, since the primary now performs them. */
+      consumed: Map[SymId, Int] = Map.empty,
+      /** every field that was a CANDIDATE slot and was refused, with the reason, so an agent asking
+        * "why is this field a `var`" is answered where the question is asked (§4.575). A1 has no
+        * other channel for it. */
+      notSlot: List[(String, String)] = Nil,
   ):
     def primaryParams: List[Tree.ValDef] = primary.map(_.paramss.flatten).getOrElse(Nil)
 
+    /** Is this a SYNTHESISED primary — a constructor no java declared?
+      *
+      * `synthetic.nonEmpty` is not the test, and reading it as one emitted a class whose primary
+      * took the marker parameter and whose parameter LIST was empty: every secondary then wrote
+      * `this(null)` against scala's implicit nilary primary. A class with no super slots and no
+      * hoistable field is disambiguated by the marker ALONE, which is exactly the shape that
+      * replaces a promoted nilary constructor (`ENGINE-LIMITS.md` C7). */
+    def isSynthesised: Boolean = synthetic.nonEmpty || marker.isDefined
+
   object Plan:
     val none: Plan = Plan(scala.None, Nil, Nil)
+
+  /** ONE hoisted field: the primary takes its value as a parameter and the field's own declaration
+    * binds it, so each java constructor's `this.f = e` becomes an argument of that constructor's
+    * delegation instead of a statement it runs afterwards.
+    *
+    * `mutable` is a SEPARATE question from slot-eligibility, and reading the two as one gate is
+    * what `DESIGN.md` §8.2 corrects: a field with an ordinary setter fails the single-write
+    * condition while remaining a perfectly good SLOT. It decides `val f = f$name` against
+    * `var f = f$name` and nothing else. */
+  final case class FieldSlot(
+      field: SymId,
+      /** the primary's parameter name for it — engine-minted, so `ENGINE-LIMITS.md` C2's collision
+        * with an inherited member cannot arise. */
+      name: String,
+      tpe: TypeRepr,
+      mutable: Boolean,
+      /** how many writes of this field the funnel CONSUMED. Compared against the whole program's
+        * write count by [[Plans]], which is where `mutable` is finally decided — a local
+        * derivation cannot see a setter in another member. */
+      writes: Int,
+  )
 
   /** How ONE secondary constructor's `super(args)` reaches the parent — the single decision the
     * emitter RENDERS and [[OmissionCheck]] COUNTS.
@@ -210,7 +261,7 @@ object CtorFunnel:
       * primary is paramful even though `primaryParams` is empty — no java constructor backs it, so
       * its parameters live in `Plan.synthetic`. Reading only `primaryParams` here let the fixpoint's
       * whole-program guard (`ENGINE-LIMITS.md` C1) miss the synthesis entirely. */
-    private def paramfulPrimary(p: Plan): Boolean = p.primaryParams.nonEmpty || p.synthetic.nonEmpty
+    private def paramfulPrimary(p: Plan): Boolean = p.primaryParams.nonEmpty || p.isSynthesised
 
     /** Can a subclass still write an ARGUMENT-FREE `extends C` against this paramful primary?
       *
@@ -221,18 +272,43 @@ object CtorFunnel:
       * still there to be reached, while a promotion turns the constructor it promotes into the
       * class's parameter list and removes that path (C1's `FillViewport extends ScalingViewport`).
       *
-      * Deliberately NOT extended to promoted plans here. A promoted paramful primary that ALSO has
-      * a separate nilary constructor would be safe by the same argument, and widening the guard to
-      * say so is A2 step 4's measurement, not this one's. */
+      * Deliberately NOT extended to promoted plans. A promoted paramful primary that ALSO has a
+      * separate nilary constructor would be safe by the same argument — the promotion CONSUMED
+      * that constructor, so it is not there to be reached. */
     private def reachableArgumentFree(s: SymId, p: Plan): Boolean =
-      p.synthetic.nonEmpty &&
+      p.isSynthesised &&
         classes.find(_.symbol == s).exists(cd => ctorsOf(program, cd.body).exists(_.paramss.flatten.isEmpty))
 
     private val plans: Map[SymId, Plan] =
       var acc     = classes.map(cd => cd.symbol -> plan0(program, cd)).toMap
+      // `primary.isEmpty` is NOT "nothing was nominated": a SYNTHESISED plan has no `primary`
+      // either, because no java constructor backs it. Reading it as one let `nilaryPlan` overwrite
+      // every synthesis in its own domain — a class with no `super(args)` anywhere is exactly what
+      // both of these fire on — and the promotion came back with its escaping body: libGDX core's
+      // `CharArray` alone was 9 escaping paths that the synthesis had already removed.
       classes.foreach { cd =>
-        if acc(cd.symbol).primary.isEmpty then nilaryPlan(cd).foreach(p => acc = acc.updated(cd.symbol, p))
+        val p = acc(cd.symbol)
+        if p.primary.isEmpty && !p.isSynthesised then
+          nilaryPlan(cd).foreach(q => acc = acc.updated(cd.symbol, q))
       }
+      // THE WITHHOLDING FIXPOINT — and its DELETION for synthesised plans was measured and is a
+      // dead end, so the guard stays and only the FALLBACK changed (`ENGINE-LIMITS.md` C1).
+      //
+      // `DESIGN.md` §8.2 argued that a synthesis removes nothing — every java constructor survives
+      // as a `def this`, so `extends C` reaches the nilary one — and therefore needs no withholding.
+      // The premise is true and the conclusion does not follow, because the TRIGGER is not "java
+      // wrote an argument-free `extends`": it is `needNilary`, computed from the SUBCLASS's plan,
+      // and a subclass whose own plan carries no super arguments emits `extends P` BARE even where
+      // java wrote `super(args)`. A synthesised class with no nilary java constructor is then
+      // reached argument-free by a subclass java never reached that way. Measured on libGDX core,
+      // guard removed: **0 -> 4 compile errors** (`E134`, "None of the overloaded alternatives of
+      // constructor BatchTiledMapRenderer") and omissions 180 -> 196.
+      //
+      // What WAS wrong is the fallback. Withholding used to drop straight to `nilaryPlan`, which
+      // for a class the synthesis had claimed threw away the promotion it would otherwise have had
+      // — every root's `super(args)` with it (dropped supers 30 -> 79). A withheld synthesis now
+      // falls back to THE PLAN THIS CLASS WOULD HAVE HAD WITHOUT THE SYNTHESIS, which is exactly
+      // the pre-A2 emission for it, and nothing regresses.
       var changed = true
       while changed do
         changed = false
@@ -242,19 +318,71 @@ object CtorFunnel:
           .toSet
         acc.foreach { (s, p) =>
           if paramfulPrimary(p) && needNilary(s) && !reachableArgumentFree(s, p) then
-            // A subclass reaches this class with an argument-free `extends`, so its promoted
+            // A subclass reaches this class with an argument-free `extends`, so its paramful
             // primary cannot keep parameters. Falling straight to `Plan.none` DISCARDS whatever
             // java's own no-arg constructor did: `Pool()` delegates `this(16, MAX_VALUE)`, which
             // is what allocates `freeObjects`, and every `new NodePool()` then NPE'd on the first
             // `obtain()`. Nothing compiled differently — the migrated suite found it.
             //
-            // `nilaryPlan` already knows how to promote a nilary constructor and inline its
-            // `this(args)` delegation; use it, and keep `Plan.none` only where there is no nilary
-            // constructor to promote (then the class genuinely contributes nothing).
-            acc = acc.updated(s, classes.find(_.symbol == s).flatMap(nilaryPlan).getOrElse(Plan.none))
+            // In order: the plan this class would have had WITHOUT the synthesis (a promotion,
+            // whose `super(args)` still reach the `extends` clause); then `nilaryPlan`, which knows
+            // how to promote a nilary constructor and inline its `this(args)` delegation; then
+            // `Plan.none`, where the class genuinely contributes nothing.
+            val cd0 = classes.find(_.symbol == s)
+            val demoted = cd0.map(plan0(program, _, synthesis = false))
+              .filter(q => q.primary.isDefined && !paramfulPrimary(q))
+              .orElse(cd0.flatMap(nilaryPlan))
+              .getOrElse(Plan.none)
+            acc = acc.updated(s, demoted)
             changed = true
         }
-      acc
+      // A1 — `val` OR `var`, decided LAST because it is the one part of a slot that is not a local
+      // function of the class. A slot is written once per construction path, from a parameter, in
+      // the primary; that is `val`-eligibility exactly when NOTHING ELSE in the program writes the
+      // field. `DESIGN.md` §8.2's correction is what this separation is: slot-eligibility and
+      // `val`-eligibility are two conditions, and reading them as one demoted every settered field
+      // out of the slot set for no semantic reason.
+      //
+      // Narrowed to fields java declared `final` or `private`, and the WIDE version — write count
+      // alone — was built and MEASURED: **gdx-gltf 7 -> 23 compile errors**, every one `E052
+      // Reassignment to val`, on libGDX core fields (`ShaderProgram.vertexShader`,
+      // `PBRFloatAttribute.value`) that gltf writes and libGDX core's own run therefore never saw
+      // written. The write count is over THIS RUN's program; a dependent compiled against the
+      // emitted base is not in it. That is `ENGINE-LIMITS.md` D4's shape exactly, and it is not
+      // fixable by a bigger scan — the base run cannot see a module that does not exist yet.
+      // `final` cannot be written after construction in java at all and `private` cannot be written
+      // from outside the compilation this run holds, so neither can drift. libGDX core: 20 `val` on
+      // the wide rule, 5 on this one; the 15 difference is exactly the class of field a dependent
+      // may legitimately assign.
+      val written = writesPerField
+      acc.map { (s, p) =>
+        if p.fieldSlots.isEmpty then s -> p
+        else s -> p.copy(fieldSlots = p.fieldSlots.map { fs =>
+          val fl   = program.symbolOf(fs.field).map(_.flags)
+          val safe = fl.exists(f => f.isFinal || f.isPrivate)
+          fs.copy(mutable = !(safe && written.getOrElse(fs.field, 0) <= fs.writes))
+        })
+      }
+
+    /** how many times the WHOLE program writes each field. Built once — the question is asked per
+      * field slot and the answer is a property of the program, not of the class. */
+    private lazy val writesPerField: Map[SymId, Int] =
+      given Program = program
+      val acc = collection.mutable.Map[SymId, Int]().withDefaultValue(0)
+      def targeted(t: Term): Option[SymId] = t match
+        case Tree.Ident(s, _, _)     => Some(s)
+        case Tree.Select(_, s, _, _) => Some(s)
+        case _                       => scala.None
+      val ph = new Phase:
+        def name = "ctor-field-writes-program"
+        override def transformTerm(t: Term)(using Program): Term =
+          t match
+            case Tree.Assign(lhs, _, _, _)  => targeted(lhs).foreach(s => acc(s) += 1)
+            case Tree.IncDec(tg, _, _, _, _) => targeted(tg).foreach(s => acc(s) += 1)
+            case _                           => ()
+          t
+      program.units.foreach(u => StandardTraversal.mapStat(ph, u))
+      acc.toMap
 
     def apply(cd: Tree.ClassDef): Plan = plans.getOrElse(cd.symbol, Plan.none)
 
@@ -274,7 +402,7 @@ object CtorFunnel:
       val p     = apply(cd)
       val ctors = ctorsOf(program, cd.body)
       val roots = ctors.filterNot(delegatesToThis(program, _))
-      if p.synthetic.nonEmpty then "synthesised-primary"
+      if p.isSynthesised then "synthesised-primary"
       else
         p.primary match
           case scala.None            => if ctors.isEmpty then "no-constructor" else "not-funnelled"
@@ -416,8 +544,10 @@ object CtorFunnel:
       // paramful primary still has to reach it — `this()` does not exist there, and returning
       // `Dropped` for it cost one compile error on libGDX. It falls through to the matcher below and
       // becomes the all-`null` call the parent's nilary overload left, exactly as before.
-      if plan.synthetic.nonEmpty then
-        if args.sizeIs == plan.synthetic.size then SuperCall.Positional(args) else SuperCall.Dropped
+      // `superSlots`, NOT `synthetic.size`: the question is whether this root's `super(args)` fills
+      // the parent's formals, and the FIELD slots that follow them are not part of it.
+      if plan.isSynthesised then
+        if args.sizeIs == plan.superSlots then SuperCall.Positional(args) else SuperCall.Dropped
       else
         val ps = plan.primaryParams
         if ps.isEmpty || plan.superArgs.size != ps.size || args.sizeIs > ps.size then SuperCall.Dropped
@@ -567,12 +697,23 @@ object CtorFunnel:
           case scala.None => Some(Nil)
           case Some(cd) =>
             val p = plans.getOrElse(cd.symbol, Plan.none)
-            // a paramful primary means `extends P` with no arguments reaches P's nilary SECONDARY
-            // if it has one and does not compile if it does not — either way this is not "P's
-            // promoted primary plus what it reaches", which is the only thing this function can
-            // compute. `paramfulPrimary`, not `primaryParams`: a synthesised primary is paramful
-            // with an empty `primaryParams`.
-            if paramfulPrimary(p) then scala.None
+            // A SYNTHESISED primary is paramful, and `extends P` with no arguments therefore reaches
+            // P's NILARY SECONDARY — which is java's own `P()`, unchanged. So what the emitted
+            // `class C extends P` runs on the way in is exactly what java's `new P()` ran, and
+            // [[effects]] already computes that for any constructor, its `super(...)` chain inlined.
+            //
+            // Getting this wrong is not a missed optimisation. `prologueOf` is what `replayFor`
+            // stands on, replay expresses 73 of the 82 WALL classes, and the widened synthesis makes
+            // far more PARENTS paramful — so answering `None` here for every synthesised parent
+            // traded 45 escaping bodies for 49 dropped `super(args)` on libGDX core, which is the
+            // trade `DESIGN.md` §8.2 names as the one that must not be made.
+            if p.isSynthesised then
+              ctorsOf(program, cd.body).find(_.paramss.flatten.isEmpty)
+                .flatMap(n => effects(n.symbol, Nil, 0)).map(_.stats)
+            // a PROMOTED paramful primary means `extends P` with no arguments reaches a nilary
+            // SECONDARY that the promotion CONSUMED — there is none, and this is not "P's promoted
+            // primary plus what it reaches", which is the only thing the branch below can compute.
+            else if p.primaryParams.nonEmpty then scala.None
             else
               val up = p.primary.flatMap(superApply) match
                 case Some((m, args)) => effectsOf(m, args, 0)
@@ -903,7 +1044,12 @@ object CtorFunnel:
 
   /** Nominate the Java constructor that becomes Scala's primary for this class, ignoring the
     * whole-program constraint that [[Plans]] applies on top. */
-  def plan0(program: Program, cd: Tree.ClassDef): Plan =
+  /** @param synthesis pass `false` to get the plan this class would have had WITHOUT a synthesised
+    *                  primary. [[Plans]] asks for it when the whole-program guard withholds one, so
+    *                  a withheld class falls back to its own promotion — `super(args)` in the
+    *                  `extends` clause and all — instead of to `nilaryPlan`, which discards them.
+    *                  Measured: dropped `super(args)` 79 -> 30 on libGDX core. */
+  def plan0(program: Program, cd: Tree.ClassDef, synthesis: Boolean = true): Plan =
     val s = program.symbolOf(cd.symbol)
     if s.exists(x => x.flags.isModule || x.flags.isTrait || x.flags.isEnum) then Plan.none
     else
@@ -941,15 +1087,20 @@ object CtorFunnel:
             .orElse(several.find(c => c.paramss.flatten.isEmpty && c.tparams.isEmpty))
         case several                           => several.find(c => c.paramss.flatten.isEmpty && c.tparams.isEmpty)
       chosen match
-        case Some(c) if roots.count(r => superArgsOf(program, r).nonEmpty) <= 1 =>
+        // A UNIQUE ROOT is the primary and nothing else is possible or wanted: its parameters are
+        // the class's, its body the class body, and it cannot escape because there is no other root
+        // to run it on. This case used to read `roots.count(superArgs.nonEmpty) <= 1`, which also
+        // swallowed every MULTI-root class carrying no `super(args)` at all — the promotion domain
+        // where C7's escaping bodies live. Those go to the synthesis now, which promotes nothing.
+        case Some(c) if roots.sizeIs == 1 =>
           val (sa, rest) = split(program, c); Plan(Some(c), sa, rest)
-        // MORE THAN ONE root carries `super(args)`: whichever is nominated, the others' arguments
-        // are dropped. Try the synthesised primary before falling back to that.
+        // SEVERAL roots: whichever is nominated, another's arguments or another's body is lost.
+        // Try the synthesised primary before falling back to that.
         // NOT for a throwable parent: that branch already nominates the WIDEST pass-through root and
         // is measured (0 -> 55 when it guessed). Consulting the synthesis first let it nominate a
         // NARROWER pass-through root instead — libGDX omissions 46 -> 50, four exception classes
         // losing an argument each.
-        case other if !throwableParent => syntheticPrimary(program, cd, roots).getOrElse {
+        case other if !throwableParent && synthesis => syntheticPrimary(program, cd, roots).getOrElse {
           other match
             case None    => Plan.none
             case Some(c) => val (sa, rest) = split(program, c); Plan(Some(c), sa, rest)
@@ -970,9 +1121,20 @@ object CtorFunnel:
     val calls = roots.map(r => superTarget(program, r) -> superArgsOf(program, r))
     val targets = calls.map(_._1).distinct
     val arities = calls.map(_._2.size).distinct
+    // ONE parent constructor for every root — the whole admissibility condition. `SymId.None` is a
+    // legitimate target and not an unknown: a root with no explicit `super(...)`, or with an
+    // explicit nilary one, reaches the parent's NILARY constructor, and a class all of whose roots
+    // do that reaches exactly one parent constructor just as much as one where they all write
+    // `super(a, b)`. Refusing it kept the synthesis away from the entire domain where the PROMOTION
+    // escapes live (`ENGINE-LIMITS.md` C7: a promoted body runs on every construction path), which
+    // is where the corpus's 188 escaping paths are.
+    //
+    // MIXED is still the wall, and the mix is exactly what makes it one: a root writing `super(a)`
+    // beside a root that does not reaches TWO different parent constructors, and one `extends`
+    // clause cannot make both calls.
     if roots.sizeIs < 2 || roots.exists(_.tparams.nonEmpty) then scala.None
-    else if targets.sizeIs != 1 || targets.head == SymId.None then scala.None
-    else if arities.sizeIs != 1 || arities.head == 0 then scala.None
+    else if targets.sizeIs != 1 then scala.None
+    else if arities.sizeIs != 1 then scala.None
     else
       def passesThrough(c: Tree.DefDef): Boolean =
         val ps = c.paramss.flatten.map(_.symbol)
@@ -1019,26 +1181,6 @@ object CtorFunnel:
         case TypeRepr.TypeRef(_, s)      => Some(s)
         case TypeRepr.AppliedType(tc, _) => headSym(tc)
         case _                           => scala.None
-      /** is some real constructor of arity `extra` more than the slot list applicable to a root's
-        * delegation, `extra` trailing `null`s appended? `extra = 0` is the bare synthesis; `extra
-        * = 1` re-asks the same question of the MARKER-disambiguated signature, whose delegation
-        * writes one more argument. A `null` cannot inhabit a primitive, so a padded slot at one
-        * makes that constructor inapplicable and the delegation safe. */
-      def shadowedAt(extra: Int): Boolean = calls.exists { (_, args) =>
-        ctors.exists { c =>
-          val ps = c.paramss.flatten
-          ps.sizeIs == args.size + extra &&
-            ps.take(args.size).zip(args).forall((p, a) => assignable(a.tpe, p.tpt.tpe)) &&
-            ps.drop(args.size).forall(p => !headName(program, p.tpt.tpe).exists(primitiveTypeNames))
-        }
-      }
-      val shadowed = shadowedAt(0)
-      // The DECLARATION half of the collision question, and it is a DIFFERENT test from the one
-      // above: scalac compares two constructor declarations AFTER ERASURE (`E120 … have the same
-      // type after erasure`, which `private` does not separate), while the delegation question is
-      // overload APPLICABILITY. A widening needs both — `DESIGN.md` §8.2, `ENGINE-LIMITS.md` C8.
-      val erasedSlots = formals.map(erasedName(program, cd, _))
-      val erasureClash = ctors.exists(c => c.paramss.flatten.map(v => erasedName(program, cd, v.tpt.tpe)) == erasedSlots)
       // MARKER NAME — free of every name the class already declares, since the marker lands in that
       // class's companion beside its statics and nested types. §4.55's rule, one level down: keep
       // appending until the name is free rather than assuming the first is.
@@ -1047,10 +1189,49 @@ object CtorFunnel:
         var n = "Funnel"
         while taken(n) do n = n + "$"
         n
+      // FIELD SLOTS ARE DERIVED BEFORE EITHER PREDICATE IS ASKED, and that is not an ordering
+      // preference. Both questions are about the SIGNATURE the emitter will write and the ARGUMENTS
+      // it will pass, and field slots change both: a class whose real constructor collides with the
+      // parent's formals does NOT collide with `formals ++ fieldTypes`, and a delegation carrying
+      // five arguments cannot reach a two-parameter constructor at all. Asking either against the
+      // super slots alone minted a marker for a class that needed none.
+      val (fs, values, consumedRuns, refusedFields) = fieldSlotsOf(program, cd, roots)
+      val sup = formals.zipWithIndex.map((ft, k) => (s"sup$$$k", ft))
+      // super slots FIRST, then field slots — the `extends` clause reads the first `superSlots`
+      // of them positionally, which is what makes `superCall` a question about that prefix alone.
+      val allSlots    = sup ++ fs.map(s => (s.name, s.tpe))
+      val delegations = roots.map { r =>
+        r.symbol -> (superArgsOf(program, r) ++ values.getOrElse(r.symbol, Nil))
+      }.toMap
       def synthesise(mark: Option[String]): Option[Plan] =
-        val o  = cd.origin
-        val ps = formals.zipWithIndex.map((ft, k) => (s"sup$$$k", ft))
-        Some(Plan(scala.None, ps.map((n, ft) => Tree.Opaque(n, ft, o)), Nil, synthetic = ps, marker = mark))
+        val o = cd.origin
+        Some(Plan(scala.None, sup.map((n, ft) => Tree.Opaque(n, ft, o)), Nil, synthetic = allSlots,
+                  marker = mark, superSlots = sup.size, fieldSlots = fs,
+                  delegations = delegations, consumed = consumedRuns, notSlot = refusedFields))
+      /** is some real constructor of the class applicable to a root's DELEGATION — the arguments
+        * the emitter will actually write, field slot values included, never the super arguments
+        * alone? That is the question scalac answers when it resolves `this(...)`, and it decides
+        * whether the BARE synthesis can be reached at all (`ENGINE-LIMITS.md` C8).
+        *
+        * There is no `shadowedAt(1)` beside it, and that absence is a consequence rather than an
+        * omission: the DISAMBIGUATED delegation writes one more argument, ASCRIBED to a type the
+        * engine minted for this class alone (`(null: C.Funnel)`). No real constructor declares a
+        * parameter of it, and one declaring `Object` there is applicable but strictly LESS specific
+        * than the marker's own type, so it can never win. A bare `null` would have been applicable
+        * to everything — which is how this predicate was first written, and it refused the
+        * synthesis for every class that also declared a one-argument constructor. */
+      val shadowed = delegations.values.exists { args =>
+        ctors.exists { c =>
+          val ps = c.paramss.flatten
+          ps.sizeIs == args.size && ps.zip(args).forall((p, a) => assignable(a.tpe, p.tpt.tpe))
+        }
+      }
+      // The DECLARATION half of the collision question, and it is a DIFFERENT test from the one
+      // above: scalac compares two constructor declarations AFTER ERASURE (`E120 … have the same
+      // type after erasure`, which `private` does not separate), while the delegation question is
+      // overload APPLICABILITY. A widening needs both — `DESIGN.md` §8.2, `ENGINE-LIMITS.md` C8.
+      val erasedSlots  = allSlots.map((_, t) => erasedName(program, cd, t))
+      val erasureClash = ctors.exists(c => c.paramss.flatten.map(v => erasedName(program, cd, v.tpt.tpe)) == erasedSlots)
       if formals.sizeIs != arities.head || formals.contains(TypeRepr.NoType) then scala.None
       // TWO DISJOINT SHAPES, and keeping them disjoint is the whole content of this decision. Three
       // orderings were measured against libGDX before this one, and every ordering that let either
@@ -1068,7 +1249,11 @@ object CtorFunnel:
       // it reaches is one the marker never has to price. Reached only where a root's parameters ARE
       // the slots and it passes them straight through — anything else is not a constructor a
       // promotion can take over.
-      else if collides && !roots.exists(_.paramss.flatten.isEmpty) &&
+      // …and only where there are NO field slots. With them the synthesised signature is strictly
+      // longer than any real constructor's, so nothing collides and nothing shadows: collapsing
+      // there would trade a class's whole `val` binding — every hoisted field — for a problem it
+      // does not have.
+      else if fs.isEmpty && collides && !roots.exists(_.paramss.flatten.isEmpty) &&
               roots.exists(passesThrough) then
         roots.filter(passesThrough).sortBy(c => -c.paramss.flatten.size).headOption
           // the promoted root's parameters ARE the parent's, so every other root's `super(args)`
@@ -1079,12 +1264,7 @@ object CtorFunnel:
       // be REACHED past one (applicability), and there is nothing to collapse onto. A final
       // parameter of a per-class marker type answers both at once by changing the primary's ARITY.
       //
-      // Where it does NOT: a real constructor of exactly the disambiguated arity that is applicable
-      // to `(<the root's arguments>, null)` shadows the marker signature too. `shadowedAt(1)` asks
-      // that question against the arguments the emitter will actually write, and a class that fails
-      // it is refused — the honest outcome, and the counted omission stays.
-      else if erasureClash || shadowed then
-        if shadowedAt(1) then scala.None else synthesise(Some(markerName))
+      else if erasureClash || shadowed then synthesise(Some(markerName))
       // SHAPE 1 — SYNTHESISE. Every root reaches the SAME parent constructor, so one primary taking
       // that constructor's own formals expresses all of them, and no java body becomes the class
       // body.
@@ -1097,7 +1277,213 @@ object CtorFunnel:
       // `not-funnelled`, every root's arguments dropped and counted. The nilary root was never the
       // reason the encoding works; reaching ONE parent constructor is
       // (`ENGINE-LIMITS.md` C7, corrected).
+      //
+      // …unless there is nothing to synthesise. With no super slots, no field slots and no clash to
+      // disambiguate, a "synthesised primary" is scala's own implicit nilary one and the plan is
+      // `Plan.none` — which is what the class already gets, with no promotion and so no escape.
+      // Emitting a distinguishable zero-parameter primary here would buy nothing and cost every
+      // such class a diff.
+      else if allSlots.isEmpty then scala.None
       else synthesise(scala.None)
+
+  // ---- FIELD SLOTS: a `this.f = e` hoisted into the primary's parameter list ----
+
+  /** the field a top-level statement assigns AND the value it assigns, when it is a plain
+    * `this.f = <e>` / `f = <e>` — [[Plans.assignedField]]'s other half, needed here because the
+    * value is what becomes a delegation argument. */
+  private def assignment(st: Statement): Option[(SymId, Term)] = st match
+    case Tree.Commented(_, s)                                          => assignment(s)
+    case Tree.Assign(Tree.Ident(f, _, _), rhs, _, _)                   => Some((f, rhs))
+    case Tree.Assign(Tree.Select(_: Tree.This, f, _, _), rhs, _, _)    => Some((f, rhs))
+    case _                                                             => scala.None
+
+  /** is this the symbol of one of scala's own operators, as the frontend interns them? An operator
+    * application is the ONE call shape that is order-blind, because it computes and cannot observe
+    * anything. */
+  private def isOperator(program: Program, m: SymId): Boolean =
+    program.symbolOf(m).exists(_.fullName.startsWith("scala.<op>#"))
+
+  /** ORDER-BLIND — a value whose result cannot depend on WHEN it is evaluated.
+    *
+    * A slot value is evaluated in the DELEGATION ARGUMENT LIST: before `super(...)`, before the
+    * instance initialisers, before the class body. Java evaluated it after all three. Composed only
+    * of the constructor's own parameters, literals and operator applications on those, that
+    * reordering is unobservable — nothing it reads has been written yet in either order, and it
+    * writes nothing. An expression containing a method call, a `new`, a static or field read or an
+    * array read CAN observe it, so the assignment stays a post-delegation statement of its own
+    * secondary and the field stays a `var`, `reason=order`.
+    *
+    * This is CLAUDE.md §4.4's discipline applied to the funnel's own synthesis: ask what the form
+    * means when its evaluation ORDER is observed, not only what it looks like. Note the condition
+    * subsumes `DESIGN.md` §8.2's separate "does not read `this`" one — a `this` read is neither a
+    * parameter nor a literal — so there is one predicate here rather than two. */
+  private def orderBlind(program: Program, params: Set[SymId], t: Term): Boolean = t match
+    case Tree.Commented(_, s)         => orderBlind(program, params, s)
+    case _: Tree.Literal              => true
+    case Tree.Ident(s, _, _)          => params(s)
+    case Tree.Typed(e, _, _, _)       => orderBlind(program, params, e)
+    case Tree.Apply(Tree.Select(q, m, _, _), as, _, _, _) if isOperator(program, m) =>
+      orderBlind(program, params, q) && as.forall(orderBlind(program, params, _))
+    case _                            => false
+
+  /** the java DEFAULT at a field's declared type, as a term a delegation can pass.
+    *
+    * `None` where the engine cannot name one — a type variable above all, which `null` does not
+    * inhabit in scala. A field the funnel cannot default is simply not a slot, since a root that
+    * does not assign it has nothing to put in its place. */
+  private def javaDefault(program: Program, t: TypeRepr, o: Origin): Option[Term] =
+    def lit(c: Constant) = Some(Tree.Literal(c, t, o): Term)
+    t match
+      case TypeRepr.TypeRef(_, s) =>
+        program.symbolOf(s).map(_.fullName) match
+          case Some("scala.Int")     => lit(Constant.IntC(0))
+          case Some("scala.Short")   => lit(Constant.ShortC(0))
+          case Some("scala.Byte")    => lit(Constant.ByteC(0))
+          case Some("scala.Long")    => lit(Constant.LongC(0L))
+          case Some("scala.Float")   => lit(Constant.FloatC(0f))
+          case Some("scala.Double")  => lit(Constant.DoubleC(0d))
+          case Some("scala.Boolean") => lit(Constant.BoolC(false))
+          case Some("scala.Char")    => lit(Constant.CharC(' '))
+          case Some("scala.Unit")    => scala.None
+          // a class type — `null`, which is what java put there. NOT for a symbol the program
+          // declares as a TYPE PARAMETER: scala's `Null` does not conform to an abstract type.
+          case Some(_) if program.definitionOf(s).exists(_.isInstanceOf[Tree.TypeDef]) => scala.None
+          case Some(_)               => lit(Constant.NullC)
+          case scala.None            => scala.None
+      case _: TypeRepr.AppliedType => lit(Constant.NullC)
+      case _                       => scala.None
+
+  /** how many times these statements WRITE `f` — an assignment or an increment, at any depth. */
+  private def writeCount(program: Program, stats: List[Statement], f: SymId): Int =
+    given Program = program
+    var n = 0
+    def targets(t: Term): Boolean = t match
+      case Tree.Ident(s, _, _)                  => s == f
+      case Tree.Select(_: Tree.This, s, _, _)   => s == f
+      case Tree.Select(_, s, _, _)              => s == f
+      case _                                    => false
+    val ph = new Phase:
+      def name = "ctor-field-writes"
+      override def transformTerm(t: Term)(using Program): Term =
+        t match
+          case Tree.Assign(lhs, _, _, _) if targets(lhs) => n += 1
+          case Tree.IncDec(tg, _, _, _, _) if targets(tg) => n += 1
+          case _                                          => ()
+        t
+    stats.foreach(StandardTraversal.mapStat(ph, _))
+    n
+
+  /** does anything in these statements MENTION `f` at all? */
+  private def mentions(program: Program, stats: List[Statement], f: SymId): Boolean =
+    given Program = program
+    var found = false
+    val ph = new Phase:
+      def name = "ctor-field-mentions"
+      override def transformTerm(t: Term)(using Program): Term =
+        program.symbolIn(t).foreach(s => if s == f then found = true)
+        t
+    stats.foreach(StandardTraversal.mapStat(ph, _))
+    found
+
+  /** The FIELD SLOTS of a synthesised primary, the value each root contributes at each, how many
+    * leading statements that consumed from each root, and — for every candidate refused — WHY.
+    *
+    * The three gates, and each of them was earned:
+    *
+    *  - **one home per field.** Every root either assigns `f` exactly once in its own LEADING RUN
+    *    or does not assign it at all. A root that assigns it later runs a statement the primary has
+    *    already performed, in an order java did not have.
+    *  - **order-safety** ([[orderBlind]]) — the one place this encoding can silently differ from
+    *    java, so it is gated rather than assumed.
+    *  - **the class body must not depend on the field's value.** A slot moves the write from the
+    *    constructor body to the field's own DECLARATION, which is where java ran the field's
+    *    initialiser — so `int a; int b = a * 2;` would read the constructor's `a` where java read
+    *    `0`, and an instance init block assigning `a` would win where java's constructor won. Any
+    *    field a sibling initialiser or an init block mentions is refused, `reason=initialiser`.
+    *
+    * `mutable` is left TRUE here and decided by [[Plans]], which is the only place that can see a
+    * write in another member of the program. */
+  private def fieldSlotsOf(program: Program, cd: Tree.ClassDef, roots: List[Tree.DefDef])
+      : (List[FieldSlot], Map[SymId, List[Term]], Map[SymId, Int], List[(String, String)]) =
+    val fields = cd.body.collect {
+      case v: Tree.ValDef if !program.symbolOf(v.symbol).exists(_.flags.isStatic) => v
+    }
+    val byId = fields.map(v => v.symbol -> v).toMap
+    def nameOf(s: SymId) = program.symbolOf(s).map(_.name).getOrElse("?")
+    // everything that runs OUTSIDE a constructor at construction time: sibling field initialisers
+    // and instance init blocks. A field either of them touches cannot move to its declaration.
+    // Every field's initialiser RHS is here, its own included: `int a = a0;` is fine, `int b = a *
+    // 2;` is what refuses `a`. The LHS is deliberately not — a field's own declaration is the very
+    // place the slot moves the write TO, so counting it as a mention would refuse every initialised
+    // field in the corpus.
+    val initSites: List[Statement] =
+      fields.flatMap(_.rhs) ++ cd.body.collect {
+        case d: Tree.DefDef if program.symbolOf(d.symbol).exists(_.name == "<initblock>") => stmtsOf(d)
+      }.flatten
+    // per root: the LEADING RUN of assignments to this class's own instance fields
+    def leadingRun(d: Tree.DefDef): List[(SymId, Term)] =
+      bodyAfterDelegation(program, d)
+        .map(st => assignment(st).filter((f, _) => byId.contains(f)))
+        .takeWhile(_.isDefined).flatten
+    val runs = roots.map(d => d.symbol -> leadingRun(d)).toMap
+    val bodies = roots.map(d => d.symbol -> bodyAfterDelegation(program, d)).toMap
+    val params = roots.map(d => d.symbol -> d.paramss.flatten.map(_.symbol).toSet).toMap
+    val refused = collection.mutable.LinkedHashMap[SymId, String]()
+    // candidates in DECLARATION order, so the slot list reads like the class does
+    var candidates = fields.map(_.symbol).filter(f => runs.values.exists(_.exists(_._1 == f)))
+    def refuse(f: SymId, why: String): Unit =
+      if !refused.contains(f) then refused(f) = why
+      candidates = candidates.filterNot(_ == f)
+    candidates.toList.foreach { f =>
+      val v = byId(f)
+      // what a root that does NOT assign `f` contributes at its slot: the field's own java
+      // initialiser, or the java default at its type. Either must itself be order-blind, since it
+      // moves into an argument list too — an initialiser that calls something keeps the field out
+      // of the slot set rather than running at a moment java did not.
+      val fill = v.rhs.map(r => Option.when(orderBlind(program, Set.empty, r))(r))
+        .getOrElse(javaDefault(program, v.tpt.tpe, v.origin))
+      if mentions(program, initSites, f) then refuse(f, "initialiser")
+      else if fill.isEmpty && roots.exists(d => !runs(d.symbol).exists(_._1 == f)) then refuse(f, "no-default")
+      else roots.foreach { d =>
+        val inRun  = runs(d.symbol).count(_._1 == f)
+        val inBody = writeCount(program, bodies(d.symbol), f)
+        if inRun > 1 || inBody != inRun then refuse(f, "interleaved")
+        else if inRun == 1 &&
+                !orderBlind(program, params(d.symbol), runs(d.symbol).find(_._1 == f).get._2)
+        then refuse(f, "order")
+      }
+    }
+    // A field may be a slot in one root and sit BEHIND a refused one in another root's leading run.
+    // Only a PREFIX of a run can be consumed — the statements after the refused one still execute
+    // in the secondary — so anything trapped behind it is refused too, and that can cascade.
+    var changed = true
+    while changed do
+      changed = false
+      roots.foreach { d =>
+        val run = runs(d.symbol)
+        val ok  = run.map(_._1).takeWhile(candidates.contains)
+        run.map(_._1).drop(ok.size).distinct.foreach { f =>
+          if candidates.contains(f) then { refuse(f, "interleaved"); changed = true }
+        }
+      }
+    val slots = candidates.map { f =>
+      val v = byId(f)
+      FieldSlot(f, s"f$$${nameOf(f)}", v.tpt.tpe, mutable = true,
+                writes = roots.count(d => runs(d.symbol).exists(_._1 == f)))
+    }
+    val consumed = roots.map { d =>
+      d.symbol -> runs(d.symbol).map(_._1).takeWhile(candidates.contains).size
+    }.toMap
+    val values = roots.map { d =>
+      d.symbol -> slots.map { s =>
+        val v = byId(s.field)
+        runs(d.symbol).find(_._1 == s.field).map(_._2)
+          .orElse(v.rhs.filter(orderBlind(program, Set.empty, _)))
+          .orElse(javaDefault(program, s.tpe, v.origin))
+          .getOrElse(sys.error(s"field slot without a value: ${nameOf(s.field)}"))
+      }
+    }.toMap
+    (slots, values, consumed, refused.toList.map((f, why) => (nameOf(f), why)))
 
   private def superTarget(program: Program, d: Tree.DefDef): SymId = headStmt(d) match
     case Some(Tree.Apply(Tree.Select(_: Tree.Super, m, _, _), args, _, _, _))

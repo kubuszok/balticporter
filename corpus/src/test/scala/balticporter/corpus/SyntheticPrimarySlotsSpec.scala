@@ -90,6 +90,98 @@ class SyntheticPrimarySlotsSpec extends munit.FunSuite:
     assertEquals(dropped.filter(_.owner == "demo.Wall"), Nil)
   }
 
+  // ---- FIELD SLOTS: the leading `this.f = e` run, hoisted into the primary's parameter list ----
+
+  private val fieldSrc =
+    """package fields;
+      |class Widened { Widened(Object a, int b) {} }
+      |/** every gate at once: `n` and `tag` hoist and bind as `val`; `spare` hoists and stays a
+      |  * `var` because a method writes it; the second root supplies the java DEFAULT for `spare`. */
+      |class Clean extends Widened {
+      |  private final int n;
+      |  final String tag;
+      |  int spare;
+      |  Clean(String s, int k) {
+      |    super(s, k);
+      |    // the count is the caller's own
+      |    this.n = k * 2;
+      |    this.tag = s;
+      |    this.spare = 1;
+      |    System.out.println(s);
+      |  }
+      |  Clean(int k) { super(null, k); this.n = k; this.tag = "x"; }
+      |  void bump() { this.spare = 9; }
+      |}
+      |/** ORDER-SAFETY: `hashed`'s value is a METHOD CALL, which a delegation argument list would
+      |  * evaluate before `super(...)` and before the instance initialisers — java evaluated it after
+      |  * both. Not a slot; the assignment stays where java put it. */
+      |class Ordered extends Widened {
+      |  private final int hashed;
+      |  Ordered(String s) { super(s, 1); this.hashed = s.hashCode(); }
+      |  Ordered(Integer i) { super(i, 2); this.hashed = 0; }
+      |}
+      |/** the class body must not DEPEND on a hoisted field: a slot moves the write to the field's
+      |  * own declaration, which is where java ran the field's initialiser, so `b = a * 2` would read
+      |  * the constructor's `a` where java read `0`. */
+      |class Reader extends Widened {
+      |  int a;
+      |  int b = a * 2;
+      |  Reader(int k) { super(null, k); this.a = k; }
+      |  Reader(String s) { super(s, 0); this.a = 1; }
+      |}
+      |""".stripMargin
+
+  private val fields = Pipeline.run(SpoonTir.fromSource(fieldSrc), Nil)
+  private val fout   = new TirEmitter(fields).emit
+
+  test("the leading `this.f = e` run becomes SLOTS, after the super slots and in declaration order") {
+    assert(clue(fout).contains(
+      "class Clean protected (sup$0: java.lang.Object, sup$1: scala.Int, " +
+      "f$n: scala.Int, f$tag: java.lang.String, f$spare: scala.Int) extends fields.Widened(sup$0, sup$1)"))
+    // each root delegates with its own values, and the consumed statements are gone from its body
+    assert(fout.contains("this(s, k, k * 2, s, 1)"))
+    assert(!fout.contains("this.n = k * 2"))
+  }
+
+  test("A1 — a slot binds as `val` exactly when NOTHING ELSE in the program writes the field") {
+    // `n` and `tag`: written once per construction path, from a parameter, in the primary
+    assert(clue(fout).contains("private final val n: scala.Int = f$n"))
+    assert(fout.contains("final val tag: java.lang.String = f$tag"))
+    // `spare`: a perfectly good SLOT whose field a method also writes. Reading slot-eligibility and
+    // `val`-eligibility as ONE gate would have demoted it out of the slot set for no semantic
+    // reason — `DESIGN.md` §8.2's correction, and this is the case that shows the difference.
+    assert(fout.contains("var spare: scala.Int = f$spare"))
+  }
+
+  test("a root that does not assign a slot supplies the java DEFAULT at that slot") {
+    assert(clue(fout).contains("this(null, k, k, \"x\", 0)"))
+  }
+
+  test("ORDER-SAFETY — a value that is not order-blind is NOT a slot, and nothing behind it is") {
+    // `Ordered` hoists nothing: `s.hashCode()` is a method call, so its assignment stays a
+    // post-delegation statement of its own secondary and the field stays a `var`.
+    assert(!clue(fout).contains("f$hashed"))
+    assert(fout.contains("this.hashed = s.hashCode()"))
+    assert(fout.contains("private var hashed: scala.Int = 0"))
+  }
+
+  test("NEGATIVE — a field a SIBLING INITIALISER reads is refused, because the slot moves the write") {
+    // `int b = a * 2;` runs where java ran it — reading `a` BEFORE any constructor wrote it. Hoisting
+    // `a` to its declaration would make `b` read the constructor's value instead, silently, with a
+    // green compile and no count moved.
+    assert(!clue(fout).contains("f$a"))
+    assert(fout.contains("var b: scala.Int = this.a * 2"))
+  }
+
+  test("§4.58 — a CONSUMED assignment's comment rides the delegation that replaced it") {
+    // Every field slot has N roots contributing by construction, so the comment attaches to THIS
+    // secondary's delegation. The funnel is the one place a statement disappears without a diff
+    // showing where it went.
+    val idx = fout.indexOf("// the count is the caller's own")
+    assert(idx > 0, clue(fout))
+    assert(fout.indexOf("this(s, k, k * 2, s, 1)", idx) > idx)
+  }
+
   test("a COMMENT above a consumed `super(args)` rides the delegation that replaces it") {
     // §4.58: the call is consumed into a `this(...)`, and what somebody wrote ABOUT it is not. The
     // funnel is the one place a statement disappears without a diff showing where it went, so the

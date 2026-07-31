@@ -480,6 +480,59 @@ It removes the class's nilary construction path, and every subclass whose `exten
 arguments then fails (`FillViewport extends ScalingViewport`, `FloatAttribute extends Attribute`).
 The promotion must be withheld at a fixpoint (`CtorFunnel.Plans`).
 
+**DELETING the fixpoint for SYNTHESISED plans was measured and is a dead end: 0 -> 4 compile errors,
+omissions 180 -> 196.** `DESIGN.md` §8.2 argued that a synthesis removes nothing — every java
+constructor survives as a `def this`, so `extends C` reaches the nilary one — and therefore needs no
+withholding. The premise is true and the conclusion does not follow. The fixpoint's TRIGGER is not
+"java wrote an argument-free `extends`": it is `needNilary`, computed from the SUBCLASS's plan, and a
+subclass whose own plan carries no super arguments emits `extends P` **bare** even where java wrote
+`super(args)`. A synthesised class with no nilary java constructor is then reached argument-free by
+a subclass java never reached that way — measured as four `E134 None of the overloaded alternatives
+of constructor BatchTiledMapRenderer` on libGDX core. The guard stays, gated on
+`reachableArgumentFree` (does a NILARY SECONDARY survive), which a synthesis satisfies whenever java
+declared one and a promotion never can.
+
+What WAS wrong is the **fallback**. Withholding dropped straight to `nilaryPlan`, which for a class
+the synthesis had claimed threw away the promotion it would otherwise have had, every root's
+`super(args)` with it: dropped supers **30 -> 79**. A withheld synthesis now falls back to
+`plan0(…, synthesis = false)` — the plan this class would have had without the synthesis — and the
+count returns to 30.
+
+*Fix kind: (a).*
+
+### C1.5. `primary.isEmpty` is NOT "nothing was nominated" — 109 escaping paths came back
+
+A SYNTHESISED plan has no `primary` either, because no java constructor backs it. `Plans` ran
+`nilaryPlan` over every class whose plan had an empty `primary`, so it OVERWROTE every synthesis in
+its own domain — a class with no `super(args)` anywhere is exactly what both fire on — and the
+promotion came back with its escaping body. libGDX core: promoted-body escapes **95** with the
+confusion, **31** with `!p.isSynthesised` added to the guard; `CharArray` alone was 9 escaping paths
+that the synthesis had already removed. Nothing else moved and the port compiled at 0 either way.
+
+The general form is `Plan.isSynthesised`, and every predicate that asks "is this a synthesised
+primary" must go through it rather than through `synthetic.nonEmpty`: a class disambiguated by the
+MARKER ALONE has an empty slot list, and reading `synthetic.nonEmpty` there emitted a primary whose
+parameter list was empty while every secondary wrote `this((null: C.Funnel))` against scala's
+implicit nilary primary.
+
+*Fix kind: (a).*
+
+### C1.6. A `val` derived from a WHOLE-PROGRAM write count does not survive a DEPENDENT — 7 -> 23
+
+A1's condition — a field written exactly once, in the primary, from a parameter — is `val`-eligibility,
+and the write count is necessarily over THIS RUN's program. A dependent module compiled against the
+emitted base is not in it. Built and measured: with `val` decided by the write count alone, libGDX
+core emitted 20 `val` field slots at 0 errors and **gdx-gltf went 7 -> 23**, every new error `E052
+Reassignment to val` on a libGDX core field gltf writes (`ShaderProgram.vertexShader`,
+`ShaderProgram.fragmentShader`, `PBRFloatAttribute.value`).
+
+No bigger scan fixes it — the base run cannot see a module that does not exist yet — so the condition
+is narrowed by a JAVA fact instead: a field java declared `final` cannot be written after
+construction at all, and one java declared `private` cannot be written from outside the compilation
+this run holds. Neither can drift. libGDX core: 5 `val` of 53 hoisted slots under the narrow rule
+against 20 under the wide one, and the 15 difference is exactly the class of field a dependent may
+legitimately assign. Widening it needs §8.3's published base surface, not a better count.
+
 *Fix kind: (a).*
 
 ### C2. A promoted constructor's parameters AND top-level locals become MEMBERS
@@ -590,10 +643,22 @@ ways:
 | javac | `n=5 bumps=0` | `n=-1 bumps=1` |
 | the port | `n=5 bumps=1` | `n=-1 bumps=2` |
 
-**Do not refuse the promotion.** Dropping every escaping plan to `Plan.none` measured **0 -> 41
-compile errors** on libGDX core, every one an `E120 Conflicting definitions`: the refused class
-emits a `def this()` beside Scala's implicit nilary primary, which is the exact clash shapes 2 and 6
-exist to prevent. Promoting a *different* constructor only moves the escape.
+**LARGELY RETIRED — the fix was not to refuse the promotion but to stop promoting.** A2's synthesised
+`protected` primary promotes no java constructor at all, so there is no body to escape; the shape now
+fires wherever every root reaches ONE parent constructor, the implicit nilary `super()` included,
+which is the whole domain the escapes lived in. Measured on libGDX core: promoted-body escapes
+**140 -> 31**, dropped `super(args)` unchanged at 30, omissions **177 -> 67**, compile 0 -> 0.
+`Material` — this entry's worked example, whose promoted nilary body bumped a static id counter on
+every construction — is repaired outright, and `CtorFunnelPromotedBodySpec`'s own C6 probe had to be
+given a WALL parent to keep reproducing the divergence at all. What remains is the residue below:
+wall classes, JDK-throwable parents, and the UNIQUE-ROOT class whose promotion the C1 fixpoint
+withholds (`ObjectMap`, 3 paths — one root, so the synthesis's two-root condition excludes it; that
+is the largest single item left).
+
+**Do not refuse the promotion** where one still happens. Dropping every escaping plan to `Plan.none`
+measured **0 -> 41 compile errors** on libGDX core, every one an `E120 Conflicting definitions`: the
+refused class emits a `def this()` beside Scala's implicit nilary primary, which is the exact clash
+shapes 2 and 6 exist to prevent. Promoting a *different* constructor only moves the escape.
 
 **CORRECTED, 2026-07-31.** This entry used to add *"and a synthesised no-op primary cannot help
 either — a subclass's `extends C` invokes C's PRIMARY, so a body Java ran from the implicit

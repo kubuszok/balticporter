@@ -37,11 +37,17 @@ class CtorFunnelPromotedBodySpec extends munit.FunSuite:
       |  static int bumps = 0;
       |  static int bump() { bumps++; return -1; }
       |}
-      |/** C6's probe: two roots, neither delegating to the other. */
-      |class Base {
+      |class Parent { Parent(int a) {} Parent(int a, int b) {} }
+      |/** C6's probe, ON THE WALL — two roots, neither delegating to the other, reaching two
+      |  * DIFFERENT parent constructors. The wall is what keeps a PROMOTION here at all: where every
+      |  * root reaches ONE parent constructor the funnel synthesises a primary instead, promotes
+      |  * nothing, and there is no body to escape. That is the whole of A2, and it is why this
+      |  * fixture had to grow a parent — measured, when it did not have one, as this spec failing
+      |  * because the divergence it asserts had been REPAIRED. */
+      |class Base extends Parent {
       |  int n;
-      |  Base() { this.n = Audit.bump(); }
-      |  Base(int n) { this.n = n; }
+      |  Base() { super(0); this.n = Audit.bump(); }
+      |  Base(int n) { super(n, 1); this.n = n; }
       |}
       |/** the paramful constructor DELEGATES with an explicit `this()`, so java ran the nilary body
       |  * on this path as well: nothing escapes and nothing may be reported. */
@@ -72,7 +78,7 @@ class CtorFunnelPromotedBodySpec extends munit.FunSuite:
   test("the promoted nilary body really is in the class body, where every path runs it") {
     // this is the emission the finding describes; asserting it here is what stops the check from
     // drifting into a claim about code the emitter no longer produces
-    assert(clue(out).contains("class Base {"))
+    assert(clue(out).contains("class Base extends demo.Parent(0) {"))
     assert(out.contains("this.n = demo.Audit.bump()"))
     assert(out.contains("def this(n: scala.Int) = {"))
   }
