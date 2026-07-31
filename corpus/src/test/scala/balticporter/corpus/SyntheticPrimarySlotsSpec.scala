@@ -162,7 +162,9 @@ class SyntheticPrimarySlotsSpec extends munit.FunSuite:
     // post-delegation statement of its own secondary and the field stays a `var`.
     assert(!clue(fout).contains("f$hashed"))
     assert(fout.contains("this.hashed = s.hashCode()"))
-    assert(fout.contains("private var hashed: scala.Int = 0"))
+    // …and the field keeps the placeholder every non-slot field keeps: scala's own word for the JVM
+    // default at this type, which is what java put there (A1's residue).
+    assert(fout.contains("private var hashed: scala.Int = scala.compiletime.uninitialized"))
   }
 
   test("NEGATIVE — a field a SIBLING INITIALISER reads is refused, because the slot moves the write") {

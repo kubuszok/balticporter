@@ -1541,6 +1541,50 @@ applicability problem cannot arise (the marker changes the primary's arity), so 
 slots turns a correctness cliff into a non-event. The reverse order was the plan's original text and
 is retired.
 
+**AS BUILT — five things this section said that the implementation refuted, each with its number.**
+They are here rather than in a footnote because every one of them was measured after the design was
+signed off, and a reader who takes the paragraphs below at face value will re-derive them.
+
+1. **Step 4 — "the withholding fixpoint is DELETED for the 348" is REFUTED. 0 → 4 compile errors,
+   omissions 180 → 196.** The premise (a synthesis removes no construction path) is true; the
+   conclusion does not follow, because the fixpoint's TRIGGER is not "java wrote an argument-free
+   `extends`" — it is `needNilary`, computed from the SUBCLASS's plan, and a subclass whose own plan
+   carries no super arguments emits `extends P` **bare** even where java wrote `super(args)`. The
+   guard stays, gated on "does a NILARY SECONDARY survive". What was actually wrong is the
+   **fallback**: withholding dropped to `nilaryPlan` and threw away the promotion the class would
+   otherwise have had, dropped `super(args)` 30 → 79. It now falls back to
+   `plan0(…, synthesis = false)`, and the count returns to 30. `ENGINE-LIMITS.md` C1.
+2. **"Slot-eligibility IS `val`-eligibility" needs a JAVA fact on top.** The write count is over THIS
+   RUN's program and a dependent module is not in it: decided by the count alone, libGDX core emitted
+   20 `val` slots at 0 errors and **gdx-gltf went 7 → 23**, every one `E052 Reassignment to val`.
+   The condition is `final || private` AND the count. `ENGINE-LIMITS.md` C1.6.
+3. **The marker's argument is ASCRIBED, `(null: C.Funnel)`.** A bare `null` inhabits every reference
+   type, so it is applicable to every one-argument constructor of the class — the ambiguity the
+   marker exists to remove. With the ascription no real constructor can shadow the disambiguated
+   primary at all, so the "refuse where even the marker is shadowed" arm this section asked for has
+   no cases and is not built.
+4. **"MARKER FIRST, THEN field slots" is a LANDING order, not a computation order.** Both predicates
+   ask about the signature the emitter will write and the arguments it will pass, and field slots
+   change both — a class colliding with the parent's formals does not collide with
+   `formals ++ fieldTypes`. Asked against the super slots alone, the erasure and applicability tests
+   minted a marker for classes that needed none. Slots are derived first; the predicates then see the
+   whole list. The collapse is tried only where there are NO field slots, since with them nothing
+   collides and collapsing would trade the class's entire `val` binding for a problem it has not got.
+5. **"escapes 188 → 0 for the 348" is not reached; the measured figure is libGDX core 140 → 31.**
+   The residue is wall classes, JDK-throwable parents, and — the largest single item — the
+   UNIQUE-ROOT class whose promotion the C1 fixpoint withholds (`ObjectMap`, 3 paths): one root, so
+   the synthesis's two-root condition excludes it. Widening the synthesis to a withheld unique root
+   is the next item, and it is not this one.
+
+Two implementation invariants that are not restatements of the above, both of which cost a
+measurement: **the synthesis fires for the IMPLICIT `super()` too** — a root with no explicit super
+call reaches the parent's nilary constructor, so a class all of whose roots do that reaches ONE
+parent constructor, and that is the entire domain the promoted-body escapes lived in; and **"is this
+a synthesised primary" is `Plan.isSynthesised`, never `synthetic.nonEmpty` and never
+`primary.isEmpty`** — the first misses a marker-only synthesis (empty slot list), the second is also
+true of a synthesis and let `nilaryPlan` overwrite every one of them in its own domain, escapes 95
+→ 31. `ENGINE-LIMITS.md` C1.5.
+
 **Step 4's acceptance, rescoped by measurement.** The original "gltf's D4 trio → 0" double-counted:
 one of the three was the local shape and fell in step 2 (8 → 7); the other two reach TWO DIFFERENT
 parent constructors — genuine walls, out of local derivation's reach by definition, waiting on

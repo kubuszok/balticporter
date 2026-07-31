@@ -1905,10 +1905,24 @@ final class TirEmitter(
         val m  = if kw == "var" then mods(s.flags, q).replace("final ", "") else mods(s.flags, q)
         s"${ind(i)}$m$kw ${esc(s.name)}: ${tpe(v.tpt.tpe)} = ${term(r, i)}"
       case None =>
-        // an uninitialized Java field: a `var` defaulted so constructors can assign it (a bare
+        // An uninitialized Java field: a `var` placeholder so constructors can assign it (a bare
         // `val x: T` is an abstract member and won't compile in a class). `final var` is
         // contradictory in Scala, so `final` is dropped here.
-        s"${ind(i)}${mods(s.flags, privateQualifier(s.owner)).replace("final ", "")}var ${esc(s.name)}: ${tpe(v.tpt.tpe)} = ${defaultFor(v.tpt.tpe)}"
+        //
+        // `scala.compiletime.uninitialized` is scala's own word for "the JVM default at this type",
+        // which is exactly what java put there, and it is the residue A1 leaves: every field the
+        // constructor funnel could NOT hoist into a slot keeps this line. The alternative it
+        // replaces was `null.asInstanceOf[T]` for every reference type — a CAST, in a position
+        // where nothing is being cast, on a value that is not of the type it claims.
+        //
+        // ONLY FOR A FIELD, and the gate is not a nicety: scalac's rule is "`uninitialized` can only
+        // be used as the right hand side of a MUTABLE FIELD definition", and this same function
+        // renders a method's LOCAL `var` too. Emitted without the gate it measured **0 -> 380
+        // compile errors** on libGDX core, every one that message. The test is structural — the
+        // symbol's owner is a class rather than a method — never the shape of the type.
+        val fieldOfAClass = program.definitionOf(s.owner).exists(_.isInstanceOf[Tree.ClassDef])
+        val blank = if fieldOfAClass then "scala.compiletime.uninitialized" else defaultFor(v.tpt.tpe)
+        s"${ind(i)}${mods(s.flags, privateQualifier(s.owner)).replace("final ", "")}var ${esc(s.name)}: ${tpe(v.tpt.tpe)} = $blank"
 
   /** the literal rendered AT the field's declared type.
     *
