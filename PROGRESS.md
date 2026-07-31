@@ -1553,12 +1553,15 @@ entry's TITLE too, so a renumbering there does not orphan the reference.
 
 Every one is pinned by a spec through the pipeline — `MethodBodyTransformSpec`,
 `CollectionsTransformSpec`, `EnumCtorBodySpec`, `StaticCollapseSpec`, `StaticTypeParamScopeSpec`,
-`ErasedReceiverResultSpec` — and every one but T13 moved **0 members** on the other seven ports.
+`ErasedReceiverResultSpec` — and every one but T13 moved **0 members** on the other nine ports.
 
 **T13 is the exception and its blast radius is accounted**: it is emitted text for every ported
 enum. libGDX core 69 members, libGDX test 71, Ashley 75, anim8 71, noise4j 6, simple-graphs 0, jbump
-0 — every changed unit an enum or the type that declares one, verified against the members diff, and
-no error count, check count or test outcome moved anywhere. Baselines promoted in the same commit.
+0 — and, measured at integration because both ports landed while this one was in flight, gltf 5 and
+screenmanager 1 (four enum surfaces: `Interpolation`, `SceneRenderableSorter.Hints`,
+`PBRShaderConfig`, `SlidingDirection`). Every changed unit an enum or the type that declares one,
+verified against the members diff, and no error count, check count or test outcome moved anywhere
+(gltf errors 8 → 8). Baselines promoted in the commits that measured them.
 
 ### 10.5 The behavioural gate is HAND-WRITTEN, and it stops at the first GL call
 
@@ -1615,6 +1618,12 @@ method is a shader draw. That is 27 of 44 types resting on compilation alone.
 
 ### 10.7 Do NOT retry
 
+- **Do not subtract the class literal's OWN unit from the collapse guard.** The two branches that
+  independently fixed the object-collapse guard merged into one `typeNamedElsewhere` (the resolution
+  is in its doc comment): the declaration arm excludes self-naming through the owner chain, and the
+  literal arm deliberately does NOT exclude the literal's own unit — `X.class` inside `X` is the
+  log-tag idiom and needs `classOf[X]`. Re-adding the subtraction fails exactly
+  `StaticCollapseSpec`'s "…including from inside itself".
 - **Extending `knownReceiverArgs`' unchecked-conversion guard ALONE was INERT** (1 → 1). The
   plausible fix for `Found: Wrapper[Object] / Required: Wrapper[T]` is the guard; the guard was
   never the problem. The node's recorded type said `Wrapper[T]` while the emitted scala had
@@ -1629,35 +1638,7 @@ method is a shader draw. That is 27 of 44 types resting on compilation alone.
   anonymous body. The scope has to live in the FRAME; `ENGINE-LIMITS.md` G20, *A STATIC member sees
   NONE of its class's type parameters*.
 
-### 10.8 One INTEGRATION collision with the gdx-gltf branch, measured
-
-Recorded here because it is the one place a naive merge silently costs gdx-vfx a compile error.
-Both ports independently hit the object-collapse guard and both fixed it; the two fixes are
-COMPLEMENTARY, not duplicates:
-
-| | reads | excludes |
-|---|---|---|
-| gltf's `typeNamedElsewhere` | every `Symbol.info` declaration type **and** every `Constant.ClassOfC` | the candidate's own owner chain (arm 1) and `declaredTypes(u)` (arm 2) |
-| vfx's `classLiteralTypes` | every `Constant.ClassOfC` | nothing |
-
-gltf's is far wider on the declaration half and its arm-2 exclusion is what gdx-vfx falls into:
-`VfxGLUtils.class` appears INSIDE `VfxGLUtils.java`, so `typesIn(t) -- here` is empty and the
-collapse fires again. **Measured, not inferred**: applying that subtraction to this branch's set
-fails exactly one test — `StaticCollapseSpec`'s "…nor when a CLASS LITERAL names it — including
-from inside itself" — and leaves the other four green.
-
-The merge that keeps both: take gltf's `typeNamedElsewhere` and DROP the `-- here` from its
-class-literal arm. Arm 1's owner-chain exclusion is the one that carries the "a class names itself
-constantly" argument; a class LITERAL of your own type is a genuine type use, not that. gltf's own
-"the type's OWN unit does not count" test uses a static ACCESS (`Registry.A`), which arm 1 handles,
-so it stays green.
-
-**Integration outcome**: exactly that merge was applied when this branch was rebased onto master —
-`typeNamedElsewhere` is the one survivor, its class-literal arm no longer subtracts the literal's
-own unit, and both spec families (`AllStaticClassAsTypeSpec`, `StaticCollapseSpec`) pass against
-the merged guard.
-
-### 10.9 Remaining
+### 10.8 Remaining
 
 
 - **27 of 44 types rest on compilation alone** (§10.5). Every effect class needs a GL context; the

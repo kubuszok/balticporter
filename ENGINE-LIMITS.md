@@ -2077,7 +2077,9 @@ answer is to refuse rather than to shift the decision.
 ### D6. An all-static class collapses to an `object`, and a CONSUMER is the one that names it as a TYPE
 
 **Title, for renumbering: "an all-static class collapses to an object, and a consumer names it as a
-type".** CLOSED — fixed, and recorded because the shape recurs.
+type".** CLOSED — fixed, and recorded because the shape recurs. **L3 is the other half of the same
+guard** — the class-literal face, found independently on gdx-vfx; both are answered by one
+`TirEmitter.typeNamedElsewhere` (its doc records the merge).
 
 A Java class whose every member is `static` still has an implicit public constructor and is still a
 TYPE. The emitter collapses it to a bare `object`, guarded on nobody EXTENDING it and nobody
@@ -2486,7 +2488,9 @@ untouched.*
 ### L3. A CLASS LITERAL needs a CLASS — an all-static class named by one must not collapse
 
 CLOSED. An all-static java utility class emits as a Scala `object`, which is a real improvement: its
-statics and its nested types then live together and see each other by simple name. The collapse
+statics and its nested types then live together and see each other by simple name. **D6 is the other
+half of the same guard** — the consumer-names-it-as-a-type face, found independently on gdx-gltf;
+both are answered by one `TirEmitter.typeNamedElsewhere`. The collapse
 already withholds for the two constructs an object cannot serve — something EXTENDS it, something
 `new`s it — and `classOf` is the third, because an object's only type is `X.type`.
 
