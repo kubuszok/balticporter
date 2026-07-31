@@ -58,6 +58,34 @@ class JavaCollectionsSpec extends munit.FunSuite:
     assertEquals(alias.toList, List(3, 2, 1))
   }
 
+  test("swap exchanges TWO positions and leaves the rest — never a clear-and-refill") {
+    // The buffer is aliased throughout, which is the case jbump's `Collisions.keySort` is in: it
+    // swaps through a `List<?>` the caller still holds. Rebuilding the whole buffer would work and
+    // would make an EMPTY intermediate state observable where java's two `set` calls never do.
+    val xs: Buffer[Int] = ArrayBuffer(10, 11, 12, 13)
+    val alias = xs
+    JavaCollections.swap(xs, 0, 3)
+    assertEquals(alias.toList, List(13, 11, 12, 10))
+    assert(alias eq xs)
+  }
+
+  test("swap of a position with ITSELF is a no-op, as java's is") {
+    val xs: Buffer[Int] = ArrayBuffer(1, 2, 3)
+    JavaCollections.swap(xs, 1, 1)
+    assertEquals(xs.toList, List(1, 2, 3))
+  }
+
+  test("swap out of range throws, as java's does — the bound is not silently widened") {
+    val xs: Buffer[Int] = ArrayBuffer(1, 2, 3)
+    intercept[IndexOutOfBoundsException](JavaCollections.swap(xs, 0, 3))
+  }
+
+  test("swap works on a Buffer that is not an IndexedSeq") {
+    val xs: Buffer[Int] = ListBuffer(1, 2, 3)
+    JavaCollections.swap(xs, 0, 2)
+    assertEquals(xs.toList, List(3, 2, 1))
+  }
+
   // -------------------------------------------------------------------------------------------
   // shuffle — JAVA'S ALGORITHM, which is the whole claim
   // -------------------------------------------------------------------------------------------

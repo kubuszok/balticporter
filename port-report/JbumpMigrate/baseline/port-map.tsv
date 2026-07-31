@@ -52,7 +52,7 @@ member	com.dongbat.jbump.Collisions#h2s	sge.jbump.Collisions#h2s	Renamed	-	com/d
 member	com.dongbat.jbump.Collisions#isEmpty()	sge.jbump.Collisions#isEmpty()	Renamed	-	com/dongbat/jbump/Collisions.java	154	807246b9e46248e0
 member	com.dongbat.jbump.Collisions#items	sge.jbump.Collisions#items	Renamed	-	com/dongbat/jbump/Collisions.java	50	017fde693f63e726
 member	com.dongbat.jbump.Collisions#keySort(Buffer,BooleanArray)	sge.jbump.Collisions#keySort(Buffer<Integer>,BooleanArray)	Renamed	-	com/dongbat/jbump/Collisions.java	235	80cda84a5b182a38
-member	com.dongbat.jbump.Collisions#keySort(Buffer,Buffer)	sge.jbump.Collisions#keySort(Buffer<Integer>,Buffer<?>)	Renamed	-	com/dongbat/jbump/Collisions.java	184	9134d5f98e242c02
+member	com.dongbat.jbump.Collisions#keySort(Buffer,Buffer)	sge.jbump.Collisions#keySort(Buffer<Integer>,Buffer<?>)	Renamed	-	com/dongbat/jbump/Collisions.java	184	9d558edc34b16317
 member	com.dongbat.jbump.Collisions#keySort(Buffer,FloatArray)	sge.jbump.Collisions#keySort(Buffer<Integer>,FloatArray)	Renamed	-	com/dongbat/jbump/Collisions.java	201	3d1d4b0ea1677511
 member	com.dongbat.jbump.Collisions#keySort(Buffer,IntArray)	sge.jbump.Collisions#keySort(Buffer<Integer>,IntArray)	Renamed	-	com/dongbat/jbump/Collisions.java	218	17f2a7bcfda52a5e
 member	com.dongbat.jbump.Collisions#moveXs	sge.jbump.Collisions#moveXs	Renamed	-	com/dongbat/jbump/Collisions.java	36	555686735ea504db

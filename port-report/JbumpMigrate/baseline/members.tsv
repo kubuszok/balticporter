@@ -19,7 +19,7 @@ sge.jbump.Collision	sge.jbump.Collision#type	val	54f869053c2fea96
 sge.jbump.CollisionFilter	sge.jbump.CollisionFilter	class	01e8eec387802e06
 sge.jbump.CollisionFilter	sge.jbump.CollisionFilter#defaultFilter	val	2321979d280d0724
 sge.jbump.CollisionFilter	sge.jbump.CollisionFilter#filter(Item<?>,Item<?>)	def	c6f745cdef554b6c
-sge.jbump.Collisions	sge.jbump.Collisions	class	48d9aea9ceae39ba
+sge.jbump.Collisions	sge.jbump.Collisions	class	03809864e06f2355
 sge.jbump.Collisions	sge.jbump.Collisions#<init>(Collisions)	ctor	810be102630be104
 sge.jbump.Collisions	sge.jbump.Collisions#add(Collision)	def	c5013d2d079d4311
 sge.jbump.Collisions	sge.jbump.Collisions#add(boolean,float,float,float,int,int,float,float,float,float,float,float,float,float,float,float,Item<?>,Item<?>,Response)	def	001d48bdfc7cb35b
@@ -32,7 +32,7 @@ sge.jbump.Collisions	sge.jbump.Collisions#h2s	val	8eb2901f42d6b9d0
 sge.jbump.Collisions	sge.jbump.Collisions#isEmpty()	def	807246b9e46248e0
 sge.jbump.Collisions	sge.jbump.Collisions#items	val	017fde693f63e726
 sge.jbump.Collisions	sge.jbump.Collisions#keySort(Buffer<Integer>,BooleanArray)	def	80cda84a5b182a38
-sge.jbump.Collisions	sge.jbump.Collisions#keySort(Buffer<Integer>,Buffer<?>)	def	9134d5f98e242c02
+sge.jbump.Collisions	sge.jbump.Collisions#keySort(Buffer<Integer>,Buffer<?>)	def	9d558edc34b16317
 sge.jbump.Collisions	sge.jbump.Collisions#keySort(Buffer<Integer>,FloatArray)	def	3d1d4b0ea1677511
 sge.jbump.Collisions	sge.jbump.Collisions#keySort(Buffer<Integer>,IntArray)	def	17f2a7bcfda52a5e
 sge.jbump.Collisions	sge.jbump.Collisions#moveXs	val	555686735ea504db

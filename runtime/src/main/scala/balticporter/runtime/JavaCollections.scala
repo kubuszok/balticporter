@@ -110,6 +110,20 @@ object JavaCollections:
   /** `java.util.Collections.reverse(list)` — in place, as java's is. */
   def reverse[A](xs: scala.collection.mutable.Buffer[A]): Unit = inPlace(xs, xs.toList.reverse)
 
+  /** `java.util.Collections.swap(list, i, j)` — in place, as java's is.
+    *
+    * Not routed through [[inPlace]], and that is the point of writing it out: `swap` touches two
+    * positions, so rebuilding the whole buffer would be a clear-and-refill where java performs two
+    * `set` calls. On a buffer that is also aliased as something else — jbump's `Collisions.keySort`
+    * swaps through a `List<?>` the caller still holds — an empty intermediate state is observable in
+    * a way java's never is.
+    *
+    * Java's own `swap` is silent about equal indices and throws `IndexOutOfBoundsException`
+    * otherwise; both fall out of the two `apply`/`update` calls unchanged, so nothing is
+    * approximated here either. */
+  def swap[A](xs: scala.collection.mutable.Buffer[A], i: scala.Int, j: scala.Int): Unit =
+    val t = xs(i); xs(i) = xs(j); xs(j) = t
+
   /** Replace a buffer's contents, keeping the IDENTITY the caller holds.
     *
     * `sortInPlaceWith` would be the obvious call and is not available: it lives on

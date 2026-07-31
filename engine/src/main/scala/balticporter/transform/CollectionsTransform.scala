@@ -711,6 +711,7 @@ final class CollectionsTransform(val scope: RuleScope = RuleScope.Everywhere())
       case (Some("java.util.Collections#sort"), List(xs, cmp))    => Some(factory(sym("sort"), List(xs, cmp)))
       case (Some("java.util.Collections#sort"), List(xs))         => Some(factory(sym("sortNatural"), List(xs)))
       case (Some("java.util.Collections#reverse"), List(xs))      => Some(factory(sym("reverse"), List(xs)))
+      case (Some("java.util.Collections#swap"), List(xs, i, j))   => Some(factory(sym("swap"), List(xs, i, j)))
       case (Some("java.util.Collections#shuffle"), List(xs, rnd))  => Some(factory(sym("shuffle"), List(xs, rnd)))
       // `java.util.Arrays.asList` is not on `Collections`, but it is the same KIND of thing — a
       // receiver-less JDK factory whose result type the port has already retyped — so it shares the
@@ -1372,7 +1373,7 @@ object CollectionsTransform:
     * line here, one arm in `staticRewrite` and one method in the runtime object — and a typo is a
     * `SymId.None` that declines the rewrite rather than a dangling name in emitted code. */
   val StaticHelpers: List[String] =
-    List("sort", "sortNatural", "reverse", "shuffle", "asList", "removeValue",
+    List("sort", "sortNatural", "reverse", "shuffle", "swap", "asList", "removeValue",
          "comparingByKey", "comparingByValue", "sortedWith", "into", "mapToDouble", "intRange")
 
   /** Support types the retyping REQUIRES. They live in the PUBLISHED `balticporter-runtime`

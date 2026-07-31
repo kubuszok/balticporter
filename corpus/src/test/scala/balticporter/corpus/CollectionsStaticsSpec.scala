@@ -30,6 +30,7 @@ class CollectionsStaticsSpec extends PortSuite:
       |  void sortNat(List<String> xs)                       { Collections.sort(xs); }
       |  void rev(List<String> xs)                           { Collections.reverse(xs); }
       |  void shuf(List<String> xs, Random r)                { Collections.shuffle(xs, r); }
+      |  void sw(List<?> xs, int i, int j)                   { Collections.swap(xs, i, j); }
       |  Collection<String> unmod(Collection<String> c)      { return Collections.unmodifiableCollection(c); }
       |  Comparator<Map.Entry<String,Integer>> byKey(Comparator<String> c)  { return Map.Entry.comparingByKey(c); }
       |  Comparator<Map.Entry<String,Integer>> byVal(Comparator<Integer> c) { return Map.Entry.comparingByValue(c); }
@@ -46,6 +47,9 @@ class CollectionsStaticsSpec extends PortSuite:
     assertEmits(p, "balticporter.runtime.JavaCollections.sortNatural(xs)")
     assertEmits(p, "balticporter.runtime.JavaCollections.reverse(xs)")
     assertEmits(p, "balticporter.runtime.JavaCollections.shuffle(xs, r)")
+    // `swap` through a WILDCARD list, which is the shape it is actually written in: java's own
+    // signature is `swap(List<?>, int, int)` and jbump's `Collisions.keySort` calls it that way.
+    assertEmits(p, "balticporter.runtime.JavaCollections.swap(xs, i, j)")
     // …and nothing survives naming the JDK class, which is how these reached the compiler before
     // the table existed (`Required: java.util.List[T]` against a `Buffer` the port produced).
     assertNotEmits(p, "java.util.Collections.")
