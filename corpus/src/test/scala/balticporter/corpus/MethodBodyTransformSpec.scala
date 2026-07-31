@@ -28,11 +28,30 @@ class MethodBodyTransformSpec extends munit.FunSuite:
       |}
       |""".stripMargin
 
+  /** a class whose only interesting member is a STATIC INITIALISER — the shape a `<clinit>` key
+    * addresses. Kept apart from `src` so the other tests' emitted text does not move. */
+  private val withClinit =
+    """package demo;
+      |class Boot {
+      |  static String mode;
+      |  static { mode = Platform.detect().name(); }
+      |}
+      |""".stripMargin
+
   private def emit(policy: Map[String, String]) =
     val before = SpoonTir.fromSource(src)
     val phase  = new MethodBodyTransform(policy)
     val after  = Pipeline.run(before, List(phase))
     (phase, new TirEmitter(after).emit)
+
+  /** the same, but keeping the DECISION LOG — a substituted body must also carry its porter note
+    * (CLAUDE.md §4.575), and only the traced form can show that. */
+  private def emitTraced(source: String, policy: Map[String, String]) =
+    val before        = SpoonTir.fromSource(source)
+    val phase         = new MethodBodyTransform(policy)
+    val (after, log)  = Pipeline.runTraced(before, List(phase))
+    val emitter       = new TirEmitter(after, notes = log)
+    (phase, emitter.emit, emitter.notesPrinted)
 
   test("replaces the named body and leaves the SIGNATURE untouched") {
     // NB the backticks: the Java parameter is `type`, which is a Scala KEYWORD, so the emitter
@@ -94,6 +113,25 @@ class MethodBodyTransformSpec extends munit.FunSuite:
     val (phase, _) = emit(Map("demo.Box#over" -> "0"))
     assertEquals(phase.substituted, List("demo.Box#over", "demo.Box#over"))
     assertEquals(phase.policyReport.findings.map(_.issue), List(PolicyIssue.Unverifiable))
+  }
+
+  test("a STATIC INITIALISER is addressable as `<clinit>`, and its substitution carries a NOTE") {
+    // A `static { … }` block is where a library puts the one thing it does reflectively, or the one
+    // branch that reaches a backend the port does not have — so it is exactly a body a port needs
+    // to replace, and it is not a `def` in the emitted Scala (it renders as `locally { … }`).
+    //
+    // The second assertion is the one that found a real gap: the emitter's init-block arm rendered
+    // the replaced body with NO `declNotes` call, so the decision shipped with no note beside the
+    // code and `NoteCoverageCheck` failed the run for it. Nothing else can see that — the output
+    // compiles perfectly either way and no other count moves.
+    val (phase, out, printed) =
+      emitTraced(withClinit, Map("demo.Boot#<clinit>" -> """{ demo.Boot.mode = "default" }"""))
+    assertEquals(phase.substituted, List("demo.Boot#<clinit>"))
+    assertEquals(phase.policyReport.findings, Nil)
+    assert(clue(out).contains("""locally { demo.Boot.mode = "default" }"""))
+    assert(!out.contains("Platform.detect"))
+    assert(clue(out).contains("/* porter: substituted-body"))
+    assertEquals(printed.map(_.kind.toString), List("SubstitutedBody"))
   }
 
   test("the PRECISE key selects ONE overload and leaves its twin mechanically translated") {

@@ -1364,7 +1364,14 @@ final class TirEmitter(
     // `locally` is REQUIRED, not decoration: a bare `{ … }` on the line after a field initialised
     // with `new T(…)` is parsed as that constructor's anonymous-class body
     // (`new Array[Float](n) { … }`), which fails as "anonymous class cannot extend final class".
-    case d: Tree.DefDef if isInitBlock(d) => d.rhs.map(r => s"${ind(i)}locally ${term(r, i)}").getOrElse("")
+    // An initialiser block is still a DECLARATION the port can decide about — a policy that
+    // replaces its body (`MethodBodyTransform` on a `<clinit>`) records a decision whose subject is
+    // this synthetic member. Rendering the block without `declNotes` therefore emitted the decision
+    // with no note, which `NoteCoverageCheck` fails the run for (CLAUDE.md §4.575: a note is
+    // DERIVED, and the check runs in both directions). The trivia comes first and the note last,
+    // for the reason `defDef` states.
+    case d: Tree.DefDef if isInitBlock(d) =>
+      d.rhs.map(r => s"${declNotes(d.symbol, i)}${ind(i)}locally ${term(r, i)}").getOrElse("")
     case d: Tree.DefDef   => defDef(d, i)
     case v: Tree.ValDef   => valDef(v, i)
     case t: Tree.TypeDef  => s"${ind(i)}${if sym(t.symbol).flags.isOpaque then "opaque " else ""}type ${esc(sym(t.symbol).name)} = ${tpe(t.rhs.tpe)}"
