@@ -1,6 +1,5 @@
 #id	check	kind	owner	path	line	detail
 766278f8392a	omissions	annotation dropped	sge.vfx.effects.ShaderVfxEffect	<synthetic>	0	java.lang.SuppressWarnings
-43b1fcbeaf16	omissions	promoted constructor body runs on every path	sge.vfx.utils.PrioritizedArray	core/src/com/crashinvaders/vfx/utils/PrioritizedArray.java	37	1 statement(s) of the promoted constructor also run here; java ran them only on its own path
 a8aaf897944b	portability(all)	java.lang.Class#forName	sge.utils.reflect.ClassReflection#forName	../../libgdx/gdx/src/com/badlogic/gdx/utils/reflect/ClassReflection.java	28	Call — runtime class lookup by name is JVM-only
 78a4f03ed6a6	portability(all)	java.lang.Class#getConstructor	sge.utils.reflect.ClassReflection#getConstructor	../../libgdx/gdx/src/com/badlogic/gdx/utils/reflect/ClassReflection.java	122	Call — reflective member access is JVM-only
 29e12a51e844	portability(all)	java.lang.Class#getDeclaredConstructor	sge.utils.reflect.ClassReflection#getDeclaredConstructor	../../libgdx/gdx/src/com/badlogic/gdx/utils/reflect/ClassReflection.java	135	Call — reflective member access is JVM-only
