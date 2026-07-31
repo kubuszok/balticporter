@@ -1134,10 +1134,19 @@ object SpoonTir:
       )
       // a field initializer is a real expression: translate it so its usages are traced,
       // attributed to the field (not a method).
-      val rhs = Option(f.getDefaultExpression).map { e =>
-        val bt = new BodyTranslator(id, selfOf(owner, selfClass), anonSelf, anonQName)
-        bt.seedVars(outerVars); bt.coercedExprOf(f.getType, e)
-      }
+      //
+      // A STATIC field's initialiser sees NONE of the class's type parameters — java's rule, and
+      // scala's too once the field lands in the companion object. Carried in the frame for the
+      // reason `execDef` states: an anonymous class in that initialiser declares INSTANCE methods,
+      // which reset the `inStatic` flag the fill site reads.
+      val staticFrame = fieldFlags(f).isStatic
+      if staticFrame then tpAccessible.prepend(Map.empty)
+      val rhs =
+        try Option(f.getDefaultExpression).map { e =>
+          val bt = new BodyTranslator(id, selfOf(owner, selfClass), anonSelf, anonQName)
+          bt.seedVars(outerVars); bt.coercedExprOf(f.getType, e)
+        }
+        finally if staticFrame then tpAccessible.remove(0)
       // `deepComments` AFTER the initialiser translated: a comment inside `new Foo(/* why */ 3)`
       // has nowhere of its own in the TIR and hoists to the field.
       Tree.ValDef(id, tt(ft, f), rhs = rhs, origin = originOf(f), leading = flead ++ deepComments(f))
@@ -1160,9 +1169,16 @@ object SpoonTir:
       val savedOverriding = inOverridingMember
       inOverridingMember = overrides
       tpScopes.prepend(frame); tpIsExec.prepend(true)
-      // a method sees its class's accessible params (unless static — gated at the fill site) plus
-      // its own; `withStatic` already carries `inStatic` for this exec.
-      tpAccessible.prepend(tpAccessible.headOption.getOrElse(Map.empty) ++ frame)
+      // a method sees its class's accessible params plus its own — and a STATIC one sees ONLY its
+      // own, because java's static context has no access to the class's parameters and scala's
+      // companion object cannot name them either. Carried in the FRAME rather than left to the
+      // `inStatic` flag at the fill site: the flag is per-EXECUTABLE, so it is reset the moment an
+      // anonymous class inside a static initialiser declares an instance method, and the enclosing
+      // class's `T` becomes reachable again. That is `Not found: type T`, three times in gdx-vfx's
+      // `PrioritizedArray` — whose `static final Pool<Wrapper> pool = new Pool<Wrapper>() { … }`
+      // inside `class Wrapper<T>` is written RAW for exactly the reason java gives.
+      tpAccessible.prepend(
+        (if execFlags(m).isStatic then Map.empty else tpAccessible.headOption.getOrElse(Map.empty)) ++ frame)
       tpExecNames.prepend(tpExecNames.headOption.getOrElse(Set.empty) ++ frame.keySet)
       val bt = new BodyTranslator(id, selfOf(owner, selfClass), anonSelf, anonQName)
       bt.seedVars(outerVars) // an anonymous class captures the enclosing method's effectively-final locals
