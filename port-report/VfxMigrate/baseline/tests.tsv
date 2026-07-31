@@ -1,0 +1,65 @@
+#suite	test	status
+sge.vfx.effects.VfxEnumSuite	an enum CONSTRUCTOR's body ran: BlurType carries its Tap, and Tap carries its radius	pass
+sge.vfx.effects.VfxEnumSuite	distinct constants are distinct values, and a constant equals only itself	pass
+sge.vfx.effects.VfxEnumSuite	name() is the java CONSTANT's name, which is what the shader defines are keyed on	pass
+sge.vfx.effects.VfxEnumSuite	ordinal() agrees with the position in values(), for every enum in the library	pass
+sge.vfx.effects.VfxEnumSuite	ordinal() is the DECLARATION INDEX, and CrtEffect's are what its shader is written against	pass
+sge.vfx.effects.VfxEnumSuite	valueOf resolves by name and THROWS on an unknown one, as java's does	pass
+sge.vfx.effects.VfxEnumSuite	values() lists every constant once, in declaration order	pass
+sge.vfx.framebuffer.VfxFrameBufferSuite	`end()` before `begin()` is an IllegalStateException, not a null dereference	pass
+sge.vfx.framebuffer.VfxFrameBufferSuite	a fresh VfxFrameBuffer is neither initialised nor drawing, and keeps its pixel format	pass
+sge.vfx.framebuffer.VfxFrameBufferSuite	a single-buffer queue keeps returning the same buffer	pass
+sge.vfx.framebuffer.VfxFrameBufferSuite	buffer nesting starts at zero and is a STATIC counter shared by every instance	pass
+sge.vfx.framebuffer.VfxFrameBufferSuite	changeToNext WRAPS with a modulo — dropping it is IndexOutOfBounds, not a re-scan	pass
+sge.vfx.framebuffer.VfxFrameBufferSuite	disposing an uninitialised queue is a no-op and empties it	pass
+sge.vfx.framebuffer.VfxFrameBufferSuite	initialize(src, dst) assigns BOTH ends — and the parameter order is src first	pass
+sge.vfx.framebuffer.VfxFrameBufferSuite	re-initialising an INITIALISED wrapper resets it first rather than leaking a buffer	pass
+sge.vfx.framebuffer.VfxFrameBufferSuite	rebind SKIPS uninitialised buffers — the `continue` that has no scala keyword	pass
+sge.vfx.framebuffer.VfxFrameBufferSuite	reset clears both ends and leaves the wrapper reusable	pass
+sge.vfx.framebuffer.VfxFrameBufferSuite	swap exchanges src and dst, and is legal OUTSIDE capturing	pass
+sge.vfx.framebuffer.VfxFrameBufferSuite	the ping-pong wrapper starts uninitialised and not capturing	pass
+sge.vfx.framebuffer.VfxFrameBufferSuite	the queue holds exactly fboAmount buffers and starts at the first	pass
+sge.vfx.framebuffer.VfxFrameBufferSuite	the queue rejects a non-positive buffer count	pass
+sge.vfx.gl.VfxGlViewportSuite	a fresh viewport is all zeroes	pass
+sge.vfx.gl.VfxGlViewportSuite	set(viewport) COPIES the four fields — it does not alias the source	pass
+sge.vfx.gl.VfxGlViewportSuite	set(x, y, w, h) assigns all four and returns THIS instance, not a copy	pass
+sge.vfx.gl.VfxGlViewportSuite	toString is upstream's exact form	pass
+sge.vfx.utils.CommonUtilsSuite	compare(T, T, nullGreater) short-circuits on REFERENCE identity, then orders nulls	pass
+sge.vfx.utils.CommonUtilsSuite	compare(boolean, boolean) treats true as the greater	pass
+sge.vfx.utils.CommonUtilsSuite	compare(float, float) likewise, including across zero	pass
+sge.vfx.utils.CommonUtilsSuite	compare(int, int) is Integer.compare's three-way answer	pass
+sge.vfx.utils.CommonUtilsSuite	each parse hands back the SAME shared scratch colour — upstream's aliasing, kept	pass
+sge.vfx.utils.CommonUtilsSuite	getAlignFactorX reads Align's static constants — left 0, right 1, centre 0.5	pass
+sge.vfx.utils.CommonUtilsSuite	getAlignFactorY — bottom 0, top 1, centre 0.5	pass
+sge.vfx.utils.CommonUtilsSuite	parseHexColor dispatches on LENGTH and each arm decodes its own width	pass
+sge.vfx.utils.CommonUtilsSuite	parseHexColor's DEFAULT arm throws — java falls out of a switch, scala must not MatchError	pass
+sge.vfx.utils.CommonUtilsSuite	random(array) stays inside the array	pass
+sge.vfx.utils.CommonUtilsSuite	stringEquals is null-safe in BOTH directions	pass
+sge.vfx.utils.CommonUtilsSuite	the per-width parsers reject a wrong-length string outright	pass
+sge.vfx.utils.PrioritizedArraySuite	a `for` over it sees the same sequence — the JavaIterable extension, not a second protocol	pass
+sge.vfx.utils.PrioritizedArraySuite	add without a priority uses 0 — the one-argument overload delegates	pass
+sge.vfx.utils.PrioritizedArraySuite	an exhausted iterator throws NoSuchElementException rather than returning null	pass
+sge.vfx.utils.PrioritizedArraySuite	clear empties it and leaves it usable	pass
+sge.vfx.utils.PrioritizedArraySuite	contains follows the backing map — equal keys, not identical ones	pass
+sge.vfx.utils.PrioritizedArraySuite	items are ordered by ASCENDING priority, whatever order they arrive in	pass
+sge.vfx.utils.PrioritizedArraySuite	remove(T) on an absent item is a no-op, not a throw	pass
+sge.vfx.utils.PrioritizedArraySuite	remove(T) on the SAME numeric element type removes by value, not by index	pass
+sge.vfx.utils.PrioritizedArraySuite	remove(T) removes BY VALUE and leaves the rest ordered	pass
+sge.vfx.utils.PrioritizedArraySuite	remove(int) removes BY INDEX — the overload java resolved, on a numeric element type	pass
+sge.vfx.utils.PrioritizedArraySuite	setPriority re-sorts in place	pass
+sge.vfx.utils.PrioritizedArraySuite	the ITERATOR yields every element once, in priority order — `index++` is post-increment	pass
+sge.vfx.utils.PrioritizedArraySuite	the constructor's capacity argument does not change observable behaviour	pass
+sge.vfx.utils.PrioritizedArraySuite	the iterator is REUSED, and a second call resets it to the start	pass
+sge.vfx.utils.PrioritizedArraySuite	the sort is STABLE: equal priorities keep insertion order	pass
+sge.vfx.utils.PrioritizedArraySuite	toString and toString(separator) delegate to the wrapper's `item[priority]` form	pass
+sge.vfx.utils.ValueArrayMapSuite	a capacity-constructed map behaves identically to a default one	pass
+sge.vfx.utils.ValueArrayMapSuite	clear empties both halves	pass
+sge.vfx.utils.ValueArrayMapSuite	contains is the map's `containsKey` — EQUALITY, not identity	pass
+sge.vfx.utils.ValueArrayMapSuite	findKey compares by IDENTITY — java's `entry.getValue() == value`	pass
+sge.vfx.utils.ValueArrayMapSuite	getKeys returns the SHARED scratch array — upstream says so, and callers rely on it	pass
+sge.vfx.utils.ValueArrayMapSuite	put then get round-trips, and a MISS is null — not an empty Option	pass
+sge.vfx.utils.ValueArrayMapSuite	remove RETURNS the value that was there, and drops it from the ordered values too	pass
+sge.vfx.utils.ValueArrayMapSuite	removeByValue goes through findKey, so it too is identity-based	pass
+sge.vfx.utils.ValueArrayMapSuite	removing an ABSENT key returns null and touches nothing	pass
+sge.vfx.utils.ValueArrayMapSuite	sort reorders the VALUES view and leaves lookup intact	pass
+sge.vfx.utils.ValueArrayMapSuite	values keep INSERTION order and are addressable by index	pass
