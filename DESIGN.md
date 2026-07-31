@@ -1370,6 +1370,30 @@ Three boundaries bound the design and are stated so an implementer does not chas
   reference's formals are erased. So a spec pinning descriptor identity must be written against a
   real source-tree model, or it pins the erased answer and passes for the wrong reason.
 
+**A SYNTHETIC member gets an ENGINE-derived descriptor in the same grammar, and is never a
+`MemberIndex` entry.** The engine mints members the frontend never saw — §8.2's synthetic primary and
+its tuple-spreading auxiliary above all — and §8.3's contract publishes the primary's *signature*, so
+those members do need a descriptor. It is derived by the engine, in the **same source-spelling
+grammar** a manifest author writes (`(int,String)`; `int[]` for an array or a vararg, per the two
+negative specs above), so a published contract row and a policy key can never be in two grammars.
+Three consequences, each a spec:
+
+- the contract's `primary=` row carries the primary's slots **in descriptor grammar**, and where the
+  collision disambiguator is §8.2's companion-private marker the row says `disambiguator=marker` —
+  **never an invented FQN for the marker type.** The marker is per-class and companion-private, so an
+  FQN in a published artifact would name something no consumer can resolve and none may depend on;
+  `disambiguator=marker` is the whole fact a dependent needs (there is one extra final parameter it
+  cannot supply and must not try to).
+- a synthetic member is **never** a `MemberIndex` entry. The index's declared question is *what the
+  frontend saw* — that is exactly why it is stage 1, and why policy that REMOVES something can only
+  bind there. A member the engine minted after the frontend ran is in neither of the two places a
+  policy key can legitimately name.
+- therefore `PolicyBinder` refuses a key naming one with a dedicated **`SyntheticTarget`** reason,
+  never `NeverMatched`. The two read identically in a findings file and mean opposite things:
+  `NeverMatched` says *your key is a typo*, `SyntheticTarget` says *your key names a member the engine
+  created and policy has no standing to address* — which is (a) work if it should be addressable at
+  all, and §4.45's rule is that a finding an agent cannot classify costs it a full investigation.
+
 **The evidence that this is one design defect and not a collection of local ones**: two independent
 phases have already routed *around* member identity, each with the reason written down.
 `TestFrameworkTransform` refuses to read a callee's parameter list and reads the arguments' static
@@ -1456,6 +1480,14 @@ default at that slot. Everything *not* in a root's leading run stays a post-dele
 that root's secondary, in source order — which is what makes interleaved statements a **degradation
 rather than a wall**.
 
+**A consumed assignment's TRIVIA rides the slot** (§4.58 — the comment is the licence-bearing part of
+the port, and nothing else in the pipeline can see it go). A `this.f = e` folded into a slot does not
+disappear from the emitted file: its comment rides the **primary body's** assignment of that field,
+and where N roots each contributed the same slot the comment attaches to **each secondary's
+delegation** — the one place the funnel duplicates rather than moves. This is §8.8's claim-then-drop
+shape one level up (the statement is *claimed* by the funnel and then has no statement left to sit
+on), so it is pinned by `SyntheticPrimarySlotsSpec` rather than left to whichever harvest runs last.
+
 **This shape is in-repo prior art, not a proposal.** The frozen BIR path's `CtorPlan.maximalPrimaryPlan`
 already mints exactly it — a non-public primary whose parameters are super slots ++ assigned-field
 slots, field assignment in the primary body, each root a secondary delegating with its own super args
@@ -1476,7 +1508,11 @@ order: **collapse** — if the colliding constructor is a pure pass-through whos
 slots, promote it and emit no synthetic member at all, which covers most of the 100 measured
 collisions (they are overwhelmingly value classes whose all-fields constructor IS the synthetic
 primary) and leaves output unchanged; otherwise **a final parameter of a companion-private marker
-type**. Rejected `(using DummyImplicit)`: the declarations coexist but every call is an ambiguous
+type**, minted **per disambiguated class** rather than once in `runtime/`: emitted code then carries
+no dependency on the engine's runtime artifact for a purely local encoding, at the price of ~100
+one-line companion members corpus-wide. §8.1 states how it reaches a dependent — the contract row says
+`disambiguator=marker` and never spells the marker as an FQN, because a companion-private type is not
+a name any consumer may resolve. Rejected `(using DummyImplicit)`: the declarations coexist but every call is an ambiguous
 overload unless the `using` clause is passed explicitly, and it puts a second parameter clause on the
 class.
 
@@ -1623,14 +1659,37 @@ D6.5 requires.
 
 | row | keys |
 |---|---|
-| type | `form` (class/object/trait/annotation/enum-class), `companion`, `statics` (emitted names), `primary`, `primaryKind`, `primaryVis`, `secondaries`, `tparams`, `parents`, `flags`, `vis` |
+| type | `form` (class/object/trait/annotation/enum-class), `companion`, `statics` (emitted names), `primary`, `primaryKind`, `primaryVis`, `disambiguator`, `secondaries`, `tparams`, `parents`, `flags`, `vis` |
 | member | `name` (emitted simple name, when it differs), `vis`, `placement` (class vs companion), `promotedParam` |
+
+`primary=` carries the primary's slots **in §8.1's descriptor grammar** — the same source-level
+spelling a manifest key uses, so a contract row and a policy key are never in two grammars — and
+`disambiguator=marker|none` says whether §8.2 added a final companion-private marker parameter,
+**without naming the marker type**, which is companion-private and therefore not a name a consumer may
+resolve. A synthetic member is engine-minted and is not a `MemberIndex` entry, which is why §8.1 gives
+its descriptor an engine-side derivation and gives `PolicyBinder` a `SyntheticTarget` refusal.
 
 Deliberately **not** carried: **policy** (drops, renames and scopes reach a dependent through manifest
 inheritance and `ManifestAgreement`; duplicating them here is the second source of truth §5.7
 refuses), **bodies or trees** (a dependent never needs to re-derive the base's implementation, and if
 it thinks it does the honest outcome is M6), and **per-site data** (`srcmap.tsv` stays the one file
 that answers that).
+
+**Freshness must cover POLICY, or the contract is `Fresh` and WRONG.** `PortMap.freshness` (§5.4)
+compares two things — the engine fingerprint and a digest over the base's Java files — and neither of
+them moves when the base's **manifest** changes. Schema 3's `shape` payload is full of policy
+outcomes: an emitted member `name` is §8.5's property pairs read from the base manifest, a `form` is a
+drop or a collapse, a `vis` is one rename entry away from a different qualifier. So editing one entry
+in the base manifest and re-running the dependent alone yields a map whose every source digest still
+matches and whose payload is stale — **D4's signature failure, a run that reports clean while the
+emitted text is wrong, re-entering through the artifact built to prevent it.** The header therefore
+carries a **third** fingerprint, the base's **sorted `SurfacePolicy` fingerprint** — the same value
+`ManifestAgreement` already compares, not a new derivation — and freshness gains a third comparison
+against the fingerprint the dependent computes from its **INHERITED** manifest, which §1.5 guarantees
+it holds as a value without loading the base's build. A mismatch is `BaseMapStale`, and by the rule
+below that is **fatal wherever the stale answer shaped emitted text**. The field lands in the SAME
+schema bump as the `shape` column: a schema that changes twice regenerates every committed baseline
+twice, for one design that was known at the first bump.
 
 **Enforcement is by PREVENTION, and a drift check is rejected on evidence.** D4's own write-up records
 that **nothing in the dependent's run disagrees with itself** — `ManifestAgreement` reports 0, the port
@@ -1690,8 +1749,9 @@ phase, which reads maps at **construction** time, must take the same path or two
 disagree within a run.
 
 **Replaces and unifies.** D4 and D5 both become lookups (the plan table's fixpoint runs over owned
-units only and seeds every non-owned class from `primary=`; a replay consults `vis` and refuses +
-counts). D2's six ownership climbs collapse to one with a specified failure direction. D6, D6.5, D8 and
+units only; a non-owned **wall** class is seeded from `primary=`, while a non-owned **non-wall** class
+is derived locally *and* cross-checked against the row where one exists — §8.11 pins that as one
+implementation, not two; a replay consults `vis` and refuses + counts). D2's six ownership climbs collapse to one with a specified failure direction. D6, D6.5, D8 and
 D1 are kept unchanged, with the contract *adding* D6's cross-module face as a finding. §5.5's recorded
 hole — *member signatures are not compared* — closes for everything the `sig` row reaches.
 
@@ -2013,10 +2073,26 @@ behavioural: any same-subtree caller could already reach the member in Java thro
 receiver, since dynamic dispatch lands in the child regardless.
 
 **Two structural facts about a qualified boundary after a rename.** An upstream package **cannot split**
-across emitted packages — renames map whole packages, cut at separators — so the only delta is
-**merges**, where three corpus ports fold two upstream packages into one emitted one and former siblings
-gain access Java never granted; that is a consequence of *configured policy*, not of the mapping, and is
-recorded as such. And subpackage nesting only **widens, never blocks**; across ports every dependent's
+across emitted packages **under the package-rename map alone** — renames map whole packages, cut at
+separators — so under that map the only delta is **merges**, where three corpus ports fold two upstream
+packages into one emitted one and former siblings gain access Java never granted; that is a consequence
+of *configured policy*, not of the mapping, and is recorded as such.
+
+**A per-TYPE rename falsifies the no-split premise, so the split gets the same treatment as the
+merge.** M6 adds `typeRenames` beside `packageRenames` on the one renaming phase, and a type rename
+moves **one type at a time**: two types that shared an upstream package can land in different emitted
+ones, and a package-private or `protected` member declared by one and read by the other then crosses a
+boundary Java never had — the dependent-safety argument above cannot rest on a premise this port's own
+policy can break. M6's bind-time checks therefore gain a **`package-split`** rule beside its
+target-freedom check: a type rename that changes a type's **emitted package**, where that type declares
+or is referenced by package-private/protected members across the old boundary, is **refused** — or,
+where the port declares the split deliberately, **recorded as a `package-split` `Configured` widening**,
+exactly parallel to `package-merge` and for the same reason (it varies per port and per rename entry, so
+it is what `Configured` is for). **Which rule wins in the qualifier derivation is stated once: the
+recorded widening does.** The qualifier is derived from the emitter's *current emitted package* and
+never from an upstream FQN (that is what keeps this out of §4.56's two-namespace join), so a split
+type's qualifier names its NEW package — narrower or wider than Java's, but always the truth about the
+emitted file — and the `package-split` row is the record that the boundary moved. And subpackage nesting only **widens, never blocks**; across ports every dependent's
 `governs` set is disjoint from its base's, so none of their Java ever legally touched a base's
 package-private member — javac would have rejected it. **The one deliberate package-sharer is a
 library's own test suite**, which declares its types inside the library's packages (the standard Java
@@ -2042,8 +2118,8 @@ additional information. The causes: `x-pkg-protected-override`, `protected-stati
 `qualifier-shadowed` (the guard for an enclosing type named like the package tail, which otherwise binds
 the qualifier to the *class* and silently narrows the boundary), `x-pkg-pkg-private-override` (Java's
 non-override across packages has no Scala form, and adding `override` **changes dispatch** — stated in
-`why`), the retargeted `ctor-replay-widening`, and `package-merge`, which is the one **`Configured`**
-cause because it varies per port and per rename entry.
+`why`), the retargeted `ctor-replay-widening`, and `package-merge` plus `package-split`, which are the
+two **`Configured`** causes because they vary per port and per rename entry.
 
 **Two hazards the mapping itself introduces, with their answers.** A widened member re-enters overload
 resolution for outside callers — the T12 shape, now caused by the port's own widening; the residual set
@@ -2128,6 +2204,22 @@ comment, and appends **after** that member's rendered text — *between* slots, 
 and only the whole-file digest does. Each recovered comment carries one marker line naming its Java path
 and line: **a comment relocated WITH its source coordinates is a quotation, not a false statement about
 the code below it**, which is V1's own objection to hoisting, answered.
+
+**That marker is deliberately NOT porter-note grammar.** A recovered comment records **no `Decision`** —
+a row per comment is finer than §5.1's one-row-per-declaration rule — so a `/* porter: … */` line would
+be a note with no decision behind it, which `NoteCoverageCheck` fails the run for, in that exact
+direction (§4.575). The marker therefore has its own shape,
+
+```
+/* trivia: recovered from <path>:<line> */
+```
+
+with three properties that are specified rather than incidental: it is **inventoried by `TriviaCheck`'s
+`recovered` lane**, which is where the count belongs; it is **exempt from note coverage BY SHAPE**, not
+by an exemption list a future kind can fall off; and every note-stripping-adjacent check **strips it
+exactly as it strips a note**, per M7's precedent — a check that searches emitted text for a string must
+first remove what the engine wrote *about* the code, or it matches the engine's own words (the trap that
+produced three phantom dangling drops the first time notes shipped).
 
 `CommentScanner` gains start offsets. That is an `api` change and it also makes the check's line
 recovery exact for free — today it recovers a line by `indexOf`, which is wrong for duplicated comment
@@ -2277,10 +2369,16 @@ which after §8.2 is every **secondary**: one rule per kind of declaration, no o
 **§8.2's D4 dissolution × §8.3's contract scope — the constructor row becomes attribution-only for wall
 classes.** §8.2 removes D4's cause for 348 of 430 classes by making the synthetic signature a *local*
 function of the Java, while §8.3 keeps a `primary=` / `primaryKind=` / `primaryVis=` row for every type.
-Those are not redundant. For a **non-wall** class the row is a **cross-check**: the dependent derives the
-same answer independently and the contract confirms it, so a disagreement is an engine bug rather than
-drift. For the **82 wall classes** the fixpoint survives and is still whole-program, so the row is
-**load-bearing** and the dependent reads it rather than recomputing. §8.3's honest-scope statement then
+Those are not redundant, and there is **ONE implementation**, pinned here because the two subsections
+read as two: a dependent **derives the synthetic signature locally for every non-wall class AND compares
+it against the `primary=` row wherever a row exists** — never one or the other by circumstance. For a
+non-wall class the row is a **cross-check**, and the cross-check is real and **FATAL**: a disagreement is
+an engine bug, reported as such and failing the run, because the local derivation is only "the same
+answer the base got" while both modules run the *same engine version*, and an engine upgrade between the
+base's run and the dependent's is precisely the drift a purely local derivation cannot see. (The engine
+fingerprint in the map header says the versions differ; only this comparison says whether the difference
+changed a signature.) For the **82 wall classes** the fixpoint survives and is still whole-program, so
+there is nothing to derive: the row is **load-bearing** and the dependent reads it. §8.3's honest-scope statement then
 applies to the wall row specifically: where the contract says the base emitted a primary a dependent's
 subclass cannot reach, there is no local repair — the outcome is **refuse the replay and count**, never
 demote the base's plan. And §8.3's open question about a `private` synthetic primary is answered by
