@@ -606,8 +606,8 @@ type	com.badlogic.gdx.utils.viewport.ScreenViewport	sge.utils.viewport.ScreenVie
 type	com.badlogic.gdx.utils.viewport.StretchViewport	sge.utils.viewport.StretchViewport	Renamed	-		0	
 type	com.badlogic.gdx.utils.viewport.Viewport	sge.utils.viewport.Viewport	Renamed	-		0	
 type	com.badlogic.gdx.net.NetJavaImpl		Dropped	-		0	
-type	com.badlogic.gdx.utils.Json		Dropped	-		0	
-type	com.badlogic.gdx.utils.Pools		Dropped	-		0	
+type	com.badlogic.gdx.utils.Json	sge.utils.Json	Substituted	-		0	
+type	com.badlogic.gdx.utils.Pools	sge.utils.Pools	Substituted	-		0	
 type	com.badlogic.gdx.utils.ReflectionPool		Dropped	-		0	
 type	com.badlogic.gdx.utils.reflect.Annotation		Dropped	-		0	
 type	com.badlogic.gdx.utils.reflect.ArrayReflection		Dropped	-		0	
@@ -615,17 +615,14 @@ type	com.badlogic.gdx.utils.reflect.ClassReflection		Dropped	-		0
 type	com.badlogic.gdx.utils.reflect.Constructor		Dropped	-		0	
 type	com.badlogic.gdx.utils.reflect.Field		Dropped	-		0	
 type	com.badlogic.gdx.utils.reflect.Method		Dropped	-		0	
-type	com.badlogic.gdx.utils.reflect.ReflectionException		Dropped	-		0	
+type	com.badlogic.gdx.utils.reflect.ReflectionException	sge.utils.reflect.ReflectionException	Substituted	-		0	
 type		balticporter.runtime.JavaCollection	Added	-		0	
 type		balticporter.runtime.JavaCollections	Added	-		0	
 type		balticporter.runtime.JavaIterable	Added	-		0	
 type		balticporter.runtime.JavaIterator	Added	-		0	
 type		sge.graphics.g3d.particles.AssetTypeRegistry	Added	-		0	
-type		sge.utils.Json	Added	-		0	
 type		sge.utils.Os	Added	-		0	
-type		sge.utils.Pools	Added	-		0	
 type		sge.utils.SharedLibraryLoader	Added	-		0	
-type		sge.utils.reflect.ReflectionException	Added	-		0	
 member	com.badlogic.gdx.AbstractGraphics#getBackBufferScale()	sge.AbstractGraphics#getBackBufferScale()	Renamed	-	com/badlogic/gdx/AbstractGraphics.java	18	9cabec3d8531a06d
 member	com.badlogic.gdx.AbstractGraphics#getDensity()	sge.AbstractGraphics#getDensity()	Renamed	-	com/badlogic/gdx/AbstractGraphics.java	12	a8ee067450eced17
 member	com.badlogic.gdx.AbstractGraphics#getRawDeltaTime()	sge.AbstractGraphics#getRawDeltaTime()	Renamed	-	com/badlogic/gdx/AbstractGraphics.java	7	e75b7cc8e74700c7
@@ -8650,8 +8647,8 @@ member	com.badlogic.gdx.graphics.glutils.PixmapTextureData#pixmap	sge.graphics.g
 member	com.badlogic.gdx.graphics.glutils.PixmapTextureData#prepare()	sge.graphics.glutils.PixmapTextureData#prepare()	Renamed	-	com/badlogic/gdx/graphics/glutils/PixmapTextureData.java	94	d84aa437798d7b4b
 member	com.badlogic.gdx.graphics.glutils.PixmapTextureData#useMipMaps	sge.graphics.glutils.PixmapTextureData#useMipMaps	Renamed	-	com/badlogic/gdx/graphics/glutils/PixmapTextureData.java	27	2fe1d4f7bb7f42c3
 member	com.badlogic.gdx.graphics.glutils.PixmapTextureData#useMipMaps()	sge.graphics.glutils.PixmapTextureData#useMipMaps()	Renamed	-	com/badlogic/gdx/graphics/glutils/PixmapTextureData.java	69	e6aa0bb5ba27bcad
-member	com.badlogic.gdx.graphics.glutils.@1352#<init>(java.lang.String,java.lang.String)#fragmentShader	@1352#<init>(java.lang.String,java.lang.String)#fragmentShader	Renamed	-	com/badlogic/gdx/graphics/glutils/ShaderProgram.java	156	7bf3b82860f5d471
-member	com.badlogic.gdx.graphics.glutils.@1352#<init>(java.lang.String,java.lang.String)#vertexShader	@1352#<init>(java.lang.String,java.lang.String)#vertexShader	Renamed	-	com/badlogic/gdx/graphics/glutils/ShaderProgram.java	156	563b615751ab51fc
+member	com.badlogic.gdx.graphics.glutils.@1353#<init>(java.lang.String,java.lang.String)#fragmentShader	@1353#<init>(java.lang.String,java.lang.String)#fragmentShader	Renamed	-	com/badlogic/gdx/graphics/glutils/ShaderProgram.java	156	7bf3b82860f5d471
+member	com.badlogic.gdx.graphics.glutils.@1353#<init>(java.lang.String,java.lang.String)#vertexShader	@1353#<init>(java.lang.String,java.lang.String)#vertexShader	Renamed	-	com/badlogic/gdx/graphics/glutils/ShaderProgram.java	156	563b615751ab51fc
 member	com.badlogic.gdx.graphics.glutils.ShaderProgram#<init>(FileHandle,FileHandle)	sge.graphics.glutils.ShaderProgram#<init>(FileHandle,FileHandle)	Renamed	-	com/badlogic/gdx/graphics/glutils/ShaderProgram.java	175	010c8aeae2324c46
 member	com.badlogic.gdx.graphics.glutils.ShaderProgram#<stmt1>	sge.graphics.glutils.ShaderProgram#<stmt1>	Renamed	-	com/badlogic/gdx/graphics/glutils/ShaderProgram.java	157	a6d9db9d3416b665
 member	com.badlogic.gdx.graphics.glutils.ShaderProgram#<stmt2>	sge.graphics.glutils.ShaderProgram#<stmt2>	Renamed	-	com/badlogic/gdx/graphics/glutils/ShaderProgram.java	158	b137f052ad7b5cf5

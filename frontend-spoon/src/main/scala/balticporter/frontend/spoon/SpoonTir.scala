@@ -1274,10 +1274,26 @@ object SpoonTir:
            (try p.getType.getQualifiedName == "java.lang.Object" catch { case _: Throwable => false })
         then TypeRef(NoPrefix, minter.external("scala.Any", "Any"))
         else tpe(p.getType)
+      // A PARAMETER's annotations are harvested like a field's and a method's.
+      //
+      // They were the one declaration kind `annotationsOf` was never called for, and the omission
+      // was invisible from either end: nothing renders a parameter annotation, so the emitted file
+      // is identical with them and without them, and no check could report a symbol property that
+      // was never populated. It is a real gap, not a formatting one — a Java library states most of
+      // its nullability contract ON PARAMETERS (`@Null Actor a`), and a phase that reads
+      // `Symbol.annotations` therefore saw a library's returns and fields and none of its
+      // arguments. Measured on the corpus's most-annotated port: 389 upstream parameter sites
+      // reaching zero symbols.
+      //
+      // With the body translator in scope, exactly as for a METHOD: an annotation carrying
+      // arguments is then carried whole instead of being reported as undroppable, which is the
+      // difference between `@A(x)` and `@A` — a different annotation (see `annotationsOf`).
       val pvs = ps.map { p =>
         val pt  = anyForEquals(p)
+        val (panns, pannDropped) = annotationsOf(p, Some(bt))
         val pid = minter.define(minterKeyOf(id) + "%" + p.getSimpleName)(sid =>
-          Symbol(sid, p.getSimpleName, qualified(id, p.getSimpleName), Flags(isParam = true, isVararg = p.isVarArgs), id, pt)
+          Symbol(sid, p.getSimpleName, qualified(id, p.getSimpleName), Flags(isParam = true, isVararg = p.isVarArgs), id, pt,
+                 annotations = panns, droppedAnnotations = pannDropped)
         )
         bt.registerVar(p, pid)
         Tree.ValDef(pid, tt(pt, p), rhs = None, origin = originOf(p))
