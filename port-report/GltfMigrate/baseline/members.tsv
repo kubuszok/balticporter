@@ -505,7 +505,7 @@ sge.gltf.loaders.shared.animation.AnimationLoader	sge.gltf.loaders.shared.animat
 sge.gltf.loaders.shared.animation.AnimationLoader	sge.gltf.loaders.shared.animation.AnimationLoader#animations	val	2318ec3eff8786cb
 sge.gltf.loaders.shared.animation.AnimationLoader	sge.gltf.loaders.shared.animation.AnimationLoader#load(Array<GLTFAnimation>,NodeResolver,DataResolver)	def	95e4d25effa0b58d
 sge.gltf.loaders.shared.animation.AnimationLoader	sge.gltf.loaders.shared.animation.AnimationLoader#load(GLTFAnimation,NodeResolver,DataResolver)	def	59fd0be617bc4a92
-sge.gltf.loaders.shared.animation.Interpolation	sge.gltf.loaders.shared.animation.Interpolation	class	2701e45fb84834c5
+sge.gltf.loaders.shared.animation.Interpolation	sge.gltf.loaders.shared.animation.Interpolation	class	fabcf0d25d805472
 sge.gltf.loaders.shared.data.AccessorBuffer	sge.gltf.loaders.shared.data.AccessorBuffer	class	42773f8e86434977
 sge.gltf.loaders.shared.data.AccessorBuffer	sge.gltf.loaders.shared.data.AccessorBuffer#<stmt1>	stmt	fef82a22494fedaa
 sge.gltf.loaders.shared.data.AccessorBuffer	sge.gltf.loaders.shared.data.AccessorBuffer#<stmt2>	stmt	6632bb2f1e7f75e5
@@ -1113,7 +1113,7 @@ sge.gltf.scene3d.scene.SceneModel	sge.gltf.scene3d.scene.SceneModel#dispose()	de
 sge.gltf.scene3d.scene.SceneModel	sge.gltf.scene3d.scene.SceneModel#lights	val	d77b1cd7f1525241
 sge.gltf.scene3d.scene.SceneModel	sge.gltf.scene3d.scene.SceneModel#model	val	b2bfe2753562a27a
 sge.gltf.scene3d.scene.SceneModel	sge.gltf.scene3d.scene.SceneModel#name	val	33bbc2deb86bcd9a
-sge.gltf.scene3d.scene.SceneRenderableSorter	sge.gltf.scene3d.scene.SceneRenderableSorter	class	0c1d5c24ecab3fe0
+sge.gltf.scene3d.scene.SceneRenderableSorter	sge.gltf.scene3d.scene.SceneRenderableSorter	class	025cb59e8d3209ff
 sge.gltf.scene3d.scene.SceneRenderableSorter	sge.gltf.scene3d.scene.SceneRenderableSorter#camera	val	efefefd20eeb078a
 sge.gltf.scene3d.scene.SceneRenderableSorter	sge.gltf.scene3d.scene.SceneRenderableSorter#compare(Renderable,Renderable)	def	6a4c01a0fc9ae47c
 sge.gltf.scene3d.scene.SceneRenderableSorter	sge.gltf.scene3d.scene.SceneRenderableSorter#compareIdentity(Object,Object)	def	b28bc45ec72060ad
@@ -1122,7 +1122,7 @@ sge.gltf.scene3d.scene.SceneRenderableSorter	sge.gltf.scene3d.scene.SceneRendera
 sge.gltf.scene3d.scene.SceneRenderableSorter	sge.gltf.scene3d.scene.SceneRenderableSorter#sort(Camera,Array<Renderable>)	def	ba4668fb829475ec
 sge.gltf.scene3d.scene.SceneRenderableSorter	sge.gltf.scene3d.scene.SceneRenderableSorter#tmpV1	val	077b988ff93b63b0
 sge.gltf.scene3d.scene.SceneRenderableSorter	sge.gltf.scene3d.scene.SceneRenderableSorter#tmpV2	val	39d03a21db6847f5
-sge.gltf.scene3d.scene.SceneRenderableSorter	sge.gltf.scene3d.scene.SceneRenderableSorter$Hints	class	66910e3be13b2930
+sge.gltf.scene3d.scene.SceneRenderableSorter	sge.gltf.scene3d.scene.SceneRenderableSorter$Hints	class	b888d55a9219f3d6
 sge.gltf.scene3d.scene.SceneSkybox	sge.gltf.scene3d.scene.SceneSkybox	class	285a091edcc8f510
 sge.gltf.scene3d.scene.SceneSkybox	sge.gltf.scene3d.scene.SceneSkybox#<init>(Cubemap)	ctor	2fde5fc8ac4c4710
 sge.gltf.scene3d.scene.SceneSkybox	sge.gltf.scene3d.scene.SceneSkybox#<init>(Cubemap,SRGB,Float,boolean)	ctor	68095bdbe94d3a72
@@ -1412,7 +1412,7 @@ sge.gltf.scene3d.shaders.PBRShader	sge.gltf.scene3d.shaders.PBRShader#volumeColo
 sge.gltf.scene3d.shaders.PBRShader	sge.gltf.scene3d.shaders.PBRShader#volumeColorUniform	val	4a25e2d6301d449c
 sge.gltf.scene3d.shaders.PBRShader	sge.gltf.scene3d.shaders.PBRShader#volumeDistanceSetter	val	571555c28fb92a4c
 sge.gltf.scene3d.shaders.PBRShader	sge.gltf.scene3d.shaders.PBRShader#volumeDistanceUniform	val	52721c6c1810a5d5
-sge.gltf.scene3d.shaders.PBRShaderConfig	sge.gltf.scene3d.shaders.PBRShaderConfig	class	7faee8588ffc6b49
+sge.gltf.scene3d.shaders.PBRShaderConfig	sge.gltf.scene3d.shaders.PBRShaderConfig	class	20c07fd85c56280a
 sge.gltf.scene3d.shaders.PBRShaderConfig	sge.gltf.scene3d.shaders.PBRShaderConfig#DEFAULT_GAMMA	val	1ad6a4f82ab89af4
 sge.gltf.scene3d.shaders.PBRShaderConfig	sge.gltf.scene3d.shaders.PBRShaderConfig#gamma	val	0a9ebf40caf66587
 sge.gltf.scene3d.shaders.PBRShaderConfig	sge.gltf.scene3d.shaders.PBRShaderConfig#glslVersion	val	f8a9a0703434e266
@@ -1422,7 +1422,7 @@ sge.gltf.scene3d.shaders.PBRShaderConfig	sge.gltf.scene3d.shaders.PBRShaderConfi
 sge.gltf.scene3d.shaders.PBRShaderConfig	sge.gltf.scene3d.shaders.PBRShaderConfig#numVertexColors	val	402e13cfba70c88e
 sge.gltf.scene3d.shaders.PBRShaderConfig	sge.gltf.scene3d.shaders.PBRShaderConfig#prefix	val	3914984d010c4523
 sge.gltf.scene3d.shaders.PBRShaderConfig	sge.gltf.scene3d.shaders.PBRShaderConfig#transmissionSRGB	val	e6cb1146ba5ea038
-sge.gltf.scene3d.shaders.PBRShaderConfig	sge.gltf.scene3d.shaders.PBRShaderConfig$SRGB	class	63b6d29392220d5d
+sge.gltf.scene3d.shaders.PBRShaderConfig	sge.gltf.scene3d.shaders.PBRShaderConfig$SRGB	class	f802b52911200a8b
 sge.gltf.scene3d.shaders.PBRShaderProvider	sge.gltf.scene3d.shaders.PBRShaderProvider	class	87abee47c4be84e6
 sge.gltf.scene3d.shaders.PBRShaderProvider	sge.gltf.scene3d.shaders.PBRShaderProvider#<stmt1>	stmt	7dc65e9018bf0e97
 sge.gltf.scene3d.shaders.PBRShaderProvider	sge.gltf.scene3d.shaders.PBRShaderProvider#<stmt2>	stmt	af5ea2c361213870

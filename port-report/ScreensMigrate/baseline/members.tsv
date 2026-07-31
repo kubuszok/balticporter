@@ -153,7 +153,7 @@ sge.screen.transition.impl.ShaderTransition	sge.screen.transition.impl.ShaderTra
 sge.screen.transition.impl.ShaderTransition	sge.screen.transition.impl.ShaderTransition#resize(int,int)	def	84a5aae819234acd
 sge.screen.transition.impl.ShaderTransition	sge.screen.transition.impl.ShaderTransition#screenQuad	val	3a26a98d261c1094
 sge.screen.transition.impl.ShaderTransition	sge.screen.transition.impl.ShaderTransition#viewport	val	118676e8fc9f344a
-sge.screen.transition.impl.SlidingDirection	sge.screen.transition.impl.SlidingDirection	class	77afac5b9ae8a778
+sge.screen.transition.impl.SlidingDirection	sge.screen.transition.impl.SlidingDirection	class	19e7603d102f5dbc
 sge.screen.transition.impl.SlidingInTransition	sge.screen.transition.impl.SlidingInTransition	class	57eaa0d7beec3e39
 sge.screen.transition.impl.SlidingInTransition	sge.screen.transition.impl.SlidingInTransition#<init>(SpriteBatch,SlidingDirection,float)	ctor	594d66e383bb0553
 sge.screen.transition.impl.SlidingOutTransition	sge.screen.transition.impl.SlidingOutTransition	class	23a1e5abbe1fc5ec
