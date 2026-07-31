@@ -1,0 +1,120 @@
+package balticporter.corpus.gltf
+
+import balticporter.core.{FrontendConfig, PortManifest, Provenance, RuntimeMode}
+import balticporter.corpus.libgdx.LibgdxPolicy
+import balticporter.runner.{Determinism, PortRun, SourceSet, VendoredCommit}
+
+import java.nio.file.{Files, Path}
+import scala.jdk.CollectionConverters.*
+
+/** Migrate **gdx-gltf** (`gltf/src`, 135 types / 11,307 lines — a glTF 2.0 loader, exporter and
+  * PBR rendering pipeline for libGDX) through the TIR.
+  *
+  *   corpus/runMain balticporter.corpus.gltf.GltfMigrate [--determinism=full]
+  *
+  * ==Why gdx-gltf is in the corpus==
+  * It is the largest port after libGDX core itself, and the first one whose difficulty is
+  * INHERITANCE DEPTH rather than file count or line count. Its 135 types are stacked on libGDX's
+  * 3D pipeline: `PBRShader extends DefaultShader extends BaseShader extends BaseShaderProvider`,
+  * `Scene`/`SceneManager` over `ModelInstance`/`RenderableProvider`, sixteen `Attribute`
+  * subclasses over `Attribute`'s `register`/`compareTo` protocol, and `AnimationControllerHack`
+  * which reaches into `AnimationController`'s protected state. Every one of those parents is
+  * EMITTED Scala this run never sees — it resolves against libGDX's Java (CLAUDE.md §1.5) — so
+  * the port is a sustained test of whether the base's transforms produce a surface a deep
+  * subclass hierarchy can actually extend.
+  *
+  * It is also the first library in the corpus that is a genuine THIRD-PARTY extension: unlike
+  * Ashley and anim8 it is not written by libGDX's authors, so its use of the base API is the use
+  * a downstream consumer makes, not the use the base's own tests make.
+  *
+  * ==A DEPENDENT port==
+  * All 118 distinct `com.badlogic.*` imports across the 135 files resolve inside `gdx/src` —
+  * there is no backend or extension reference anywhere in the library — so `gdx/src` is a
+  * RESOLUTION root, parsed so references resolve and never emitted here, and the policy is
+  * [[LibgdxPolicy.core]] extended rather than restated (CLAUDE.md §1.5). `LibgdxCoreMigrate`
+  * emits the base and the two are compiled together by `just gltf-measure`.
+  *
+  * ==Scope==
+  * `gltf/src` only. Deliberately excluded, and named rather than silently dropped:
+  *
+  *   - `demo/` (35 files) — a libGDX application with desktop, html and android launchers.
+  *   - `ibl-composer/` (25 files) — an authoring tool (a VisUI desktop app for baking IBL maps).
+  *   - six of the seven files in `gltf/test` — see [[GltfTestMigrate]], which explains why.
+  *
+  * `gltf/test/net/mgsx/gltf/scene3d/attributes/AttributesCompareTest.java` (8 `@Test` methods) IS
+  * in scope and is ported by [[GltfTestMigrate]] as a dependent of this run.
+  */
+object GltfMigrate:
+
+  def main(args: Array[String]): Unit =
+    val repoRoot = Path.of(sys.props.getOrElse("balticporter.root", ".")).toAbsolutePath.normalize
+    val base     = repoRoot.resolve("../sge/original-src/gdx-gltf/gltf/src").normalize
+    val gdxSrc   = repoRoot.resolve("../sge/original-src/libgdx/gdx/src").normalize
+
+    val files = Files.walk(base).iterator().asScala
+      .filter(p => p.toString.endsWith(".java"))
+      .map(p => base.relativize(p).toString)
+      .filterNot(f => f.endsWith("package-info.java") || f.endsWith("module-info.java"))
+      .toList.sorted
+
+    PortRun(
+      label     = "gltf",
+      portRoot  = repoRoot.resolve("gltf-core"),
+      sourceSet = SourceSet.Main,
+      // libGDX core is a RESOLUTION root: parsed so every reference resolves, never emitted here.
+      // `LibgdxCoreMigrate` emits it, and the two are compiled together.
+      frontend  = FrontendConfig(base, files, Nil, resolutionRoots = List(gdxSrc)),
+      phases    = Nil, // supplied by the manifest — the two sources are mutually exclusive
+      manifest  = Some(GltfPolicy.core(repoRoot)),
+      provenance = Some(Provenance(
+        upstreamName     = "gdx-gltf",
+        upstreamCommit   = VendoredCommit.of(base),
+        originalLicense  = "Apache-2.0",
+        sourcePathPrefix = "gltf/src",
+        sourceRoot       = base.toString,
+      )),
+      // NOT `Vendored`: `LibgdxCoreMigrate` already vendors the collection shims into the module
+      // this output is compiled beside. Vendoring again would define every support type twice —
+      // which the JVM tolerates only while the copies agree, and the Scala.js/Native linkers reject.
+      runtimeMode = RuntimeMode.Dependency,
+      determinism = Determinism.fromArgs(args.toSeq),
+      nextStep    = "just gltf-measure",
+    ).execute()
+
+/** gdx-gltf's per-library policy — a DEPENDENT of libGDX core's.
+  *
+  * The base's `dropTypes`, `dropMethods`, `packageRenames` and signature-affecting phases are
+  * INHERITED, not restated: they are facts about the surface gdx-gltf compiles against, and a
+  * dependent that re-declared them would be free to drift. What gdx-gltf adds is its own namespace
+  * claim, its own rename, and whatever its own 135 files need.
+  *
+  * `inject` is deliberately NOT inherited (see [[balticporter.core.PortManifest]]): a drop is an
+  * observation about the shared API and binds every module that sees it, but exactly one module
+  * ships each replacement file. libGDX core ships the replacements for the types it dropped.
+  */
+object GltfPolicy:
+
+  def core(repoRoot: Path): PortManifest =
+    LibgdxPolicy.core(repoRoot).extendedBy(PortManifest(
+      name    = "gltf",
+      governs = Set("net.mgsx.gltf"),
+      // sge puts gdx-gltf at `sge.gltf` (`../sge/sge-extension/gltf/src/main/scala/sge/gltf`),
+      // package for package: `net/mgsx/gltf/scene3d/shaders` is `sge/gltf/scene3d/shaders`, all 28
+      // subpackages carried straight through. One prefix pair moves the whole library. libGDX's
+      // `com.badlogic.gdx -> sge` is INHERITED from the base manifest, not restated; longest-
+      // prefix-wins keeps the two apart.
+      packageRenames = Map("net.mgsx.gltf" -> "sge.gltf"),
+      surface = List(
+        // LAST, deliberately, for the reason AshleyPolicy states: this reads what the BASE
+        // actually emitted and reports a reference the base does not ship, so it must run after
+        // any seam that re-points such a reference, or it reports the very sites the next phase
+        // repairs. A residue check, exactly like `PortabilityCheck`.
+        balticporter.transform.PortMapTransform.forBases("libgdx-core"),
+      ),
+    ))
+
+  /** gdx-gltf's own JUnit suite, as a dependent of [[core]]. */
+  def test(repoRoot: Path): PortManifest = core(repoRoot).extendedBy(PortManifest(
+    name    = "gltf-test",
+    surface = List(new balticporter.transform.TestFrameworkTransform()),
+  ))

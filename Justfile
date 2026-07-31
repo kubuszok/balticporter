@@ -6,6 +6,7 @@
 #   just gdx-test-measure            libGDX's own suite (… → compile → RUN → correlate)
 #   just ashley-measure              Ashley + its suite, compiled WITH libGDX core (a dependent port)
 #   just anim8-measure               anim8-gdx, compiled WITH libGDX core (a dependent port)
+#   just gltf-measure                gdx-gltf + its suite, compiled WITH libGDX core (a dependent port)
 #   just sg-measure                  simple-graphs + its suite
 #   just noise4j-measure             noise4j — emit, checks, break residue, compile, correlate
 #   just jbump-measure               jbump (no suite upstream — the lane re-derives the zero)
@@ -73,6 +74,7 @@ sg_module     := "simplegraphs-core"
 anim8_module  := "anim8-core"
 n4j_module    := "noise4j-core"
 jbump_module  := "jbump-core"
+gltf_module   := "gltf-core"
 
 # upstream Java, relative to the checkout root
 gdx_src       := "../sge/original-src/libgdx/gdx"
@@ -86,6 +88,12 @@ jbump_src     := "../sge/original-src/jbump/jbump/src"
 # Upstream's `test` gradle module is a runnable libGDX demo (`TestBump extends ApplicationAdapter`),
 # and the day somebody adds a real suite there this lane is what says so.
 jbump_upstream := "../sge/original-src/jbump"
+gltf_src      := "../sge/original-src/gdx-gltf/gltf/src"
+# gdx-gltf's WHOLE test tree, not the one file the port migrates: SEVEN java files sit there and
+# only ONE is a suite (`AttributesCompareTest`, 8 `@Test`). The other six are `extends Game` demos
+# with a `main` that opens an lwjgl window. `java_test_count` over the tree is what re-derives the
+# 8 — and what says so the day a second file gains a real `@Test`.
+gltf_tests    := "../sge/original-src/gdx-gltf/gltf/test"
 
 # the compiler every lane measures with — one version, one server-less invocation per lane
 scala_version := "3.8.4"
@@ -117,6 +125,11 @@ n4j_deps      := ""
 # on purpose, and left as a variable rather than dropped from the lane: the day the port grows a
 # test source set this is the line that gains a coordinate.
 jbump_deps    := ""
+# JUnit 4.12 — gdx-gltf's OWN `junitVersion`, from its root `build.gradle`, not the 4.13.2 the
+# other lanes happen to use. The suite is converted to MUnit by `TestFrameworkTransform`, so the
+# junit coordinate is not what RUNS it; it is here because scala-cli must resolve the same surface
+# the frontend did, and because a port resolves what the library DECLARES (see `ashley_deps`).
+gltf_deps     := "--dependency junit:junit:4.12 --dependency org.scalameta::munit:1.0.2"
 
 root          := justfile_directory()
 
@@ -473,6 +486,108 @@ anim8-measure:
     headline "$ERRORS" "$REPORT"
 
 # ---------------------------------------------------------------------------------------------
+# gdx-gltf (main + its one JUnit suite), compiled TOGETHER with the ported libGDX core.
+#
+# A DEPENDENT port of the same shape as Ashley's and anim8's — all 118 distinct `com.badlogic.*`
+# imports across its 135 files resolve inside `gdx/src`, and the collection shims are vendored by
+# libgdx-core — so both source sets must be on the same scala-cli invocation and this lane must run
+# AFTER `gdx-measure` has re-emitted the base.
+#
+# WHERE THIS LANE'S TEST DISCOVERY EARNS ITS KEEP. Upstream `gltf/test` holds SEVEN files and only
+# ONE of them is a suite; the other six are `extends Game` / `extends ApplicationAdapter` demos with
+# a `main` that opens an lwjgl window, and the ONLY import in the whole checkout that `gdx/src`
+# cannot resolve is theirs (`com.badlogic.gdx.backends.lwjgl`). `GltfTestMigrate` therefore names
+# its one input file rather than globbing, and this block counts `@Test` over the WHOLE tree so the
+# 8 is a number the lane re-derives and not a claim in a comment — and so the day a second file
+# gains a real `@Test`, the equality guard below says so instead of absorbing it.
+# ---------------------------------------------------------------------------------------------
+[doc("gdx-gltf + its suite, compiled WITH libGDX core (a dependent port)")]
+gltf-measure:
+    #!/usr/bin/env bash
+    cd "{{root}}"
+    ROOT="$(pwd)"
+    export CORE_PROJECT="{{core_project}}"
+    . scripts/_lib.sh
+
+    write_run_props "$ROOT" "balticporter.reportPathRoot=$ROOT/{{gltf_src}}"
+    REPORT="$ROOT/port-report/GltfMigrate"
+    TREPORT="$ROOT/port-report/GltfTestMigrate"
+
+    for M in GltfMigrate GltfTestMigrate; do
+      OUT=$(sbt -client "{{corpus}}/runMain balticporter.corpus.gltf.$M" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
+      if ! grep -qE "wrote [0-9]+ Scala( test)? files" <<<"$OUT"; then
+        echo "!! $M DID NOT RUN — refusing to measure stale output"
+        grep -E "^\[error\].*\.scala:[0-9]+|^\[error\] +\|" <<<"$OUT" | head -20
+        exit 1
+      fi
+      echo "-- $M (every line it printed) --"
+      sed -n '/building model over/,/wrote [0-9]* Scala\( test\)\? files/p' <<<"$OUT"
+      echo
+    done
+
+    echo "-- checks: persisted, untruncated, diffed against the baseline --"
+    show_check_report "$REPORT"
+    show_check_report "$TREPORT"
+
+    echo
+    echo "-- test discovery --"
+    # Both frameworks summed, as `gdx-test-measure` and `ashley-measure` do: a ported suite is MUnit
+    # and any residue is still JUnit, so counting one under-reports in the safe-LOOKING direction.
+    JAVA_TESTS=$(java_test_count {{gltf_tests}})
+    JUNIT_LEFT=$(grep -rh "@org.junit.Test\|@Test" {{gltf_module}}/src_managed/test/scala 2>/dev/null | wc -l | tr -d ' ')
+    MUNIT_TESTS=$(grep -rhoE '(^|[^a-zA-Z0-9_.])test\("' {{gltf_module}}/src_managed/test/scala 2>/dev/null | wc -l | tr -d ' ')
+    SCALA_TESTS=$((JUNIT_LEFT + MUNIT_TESTS))
+    echo "@Test in Java (whole {{gltf_tests}} tree): $JAVA_TESTS   discoverable in emitted Scala: $SCALA_TESTS (munit $MUNIT_TESTS + junit $JUNIT_LEFT)"
+    [ "$JAVA_TESTS" != "$SCALA_TESTS" ] && echo "!! TESTS LOST — $((JAVA_TESTS - SCALA_TESTS)) of $JAVA_TESTS would never run, and the suite would report success"
+
+    DEPS="{{gltf_deps}}"
+
+    echo
+    break_residue {{gltf_module}}/src_managed
+
+    echo "-- compile --"
+    # NOTE the ANSI strip: without it `grep -cE '^-- .*Error'` matches nothing and reports 0 for a port
+    # that does not compile — a false NEGATIVE on the headline number.
+    scala-cli compile --scala {{scala_version}} --server=false $DEPS \
+      {{gdx_module}}/src_managed/main/scala {{gltf_module}}/src_managed/main/scala {{gltf_module}}/src_managed/test/scala \
+      2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/gltfmeasure.txt
+    CLI_STATUS=${PIPESTATUS[0]}
+    ERRORS=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/gltfmeasure.txt)
+    compile_guard "$CLI_STATUS" "$ERRORS" "$MEASURE_TMP"/gltfmeasure.txt
+    echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/gltfmeasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/gltfmeasure.txt))"
+    grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/gltfmeasure.txt | sort | uniq -c | sort -rn | head
+    echo "-- bare (uncoded) errors by message --"
+    grep -A1 '^-- Error:' "$MEASURE_TMP"/gltfmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
+
+    if [ "$ERRORS" = "0" ]; then
+      echo
+      echo "-- run --"
+      scala-cli test --scala {{scala_version}} --server=false $DEPS -Duser.language=en -Duser.country=US \
+        {{gdx_module}}/src_managed/main/scala {{gltf_module}}/src_managed/main/scala {{gltf_module}}/src_managed/test/scala \
+        2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/gltfrun.txt
+      reconcile_outcomes "$MEASURE_TMP"/gltfrun.txt "$MUNIT_TESTS"
+      echo
+      echo "-- correlation: test failures located to members and Java origins --"
+      # All three maps: only the library's own can anchor a failure on the member that threw, only
+      # the suite's can name the test, and libGDX's is passed because a stack that reaches the base
+      # is exactly what a dependent's failure looks like.
+      correlate "$TREPORT/run-latest" --tests "$MEASURE_TMP"/gltfrun.txt \
+        --srcmap "$ROOT/port-report/LibgdxCoreMigrate/run-latest/srcmap.tsv" \
+        --srcmap "$REPORT/run-latest/srcmap.tsv" \
+        --srcmap "test=$TREPORT/run-latest/srcmap.tsv"
+    else
+      echo
+      echo "-- correlation: every error located to its member and its Java origin --"
+      correlate "$REPORT/run-latest" --scalac "$MEASURE_TMP"/gltfmeasure.txt \
+        --srcmap "$ROOT/port-report/LibgdxCoreMigrate/run-latest/srcmap.tsv" \
+        --srcmap "$REPORT/run-latest/srcmap.tsv" \
+        --srcmap "test=$TREPORT/run-latest/srcmap.tsv"
+      echo "(not running the suite: it does not compile — a test that cannot run is not a test that passed)"
+    fi
+
+    headline "$ERRORS" "$TREPORT"
+
+# ---------------------------------------------------------------------------------------------
 # simple-graphs + its suite — the same gate as `gdx-measure`.
 #
 # simple-graphs is a VENDORED-runtime port (RuntimeMode.Vendored): the shim family it retypes onto
@@ -804,7 +919,7 @@ jbump-measure:
 measure-all:
     #!/usr/bin/env bash
     cd "{{root}}"
-    for lane in gdx-measure gdx-test-measure ashley-measure anim8-measure sg-measure noise4j-measure jbump-measure; do
+    for lane in gdx-measure gdx-test-measure ashley-measure anim8-measure gltf-measure sg-measure noise4j-measure jbump-measure; do
       echo
       echo "################################################################## just $lane"
       if ! {{just_executable()}} "$lane"; then
