@@ -206,7 +206,7 @@ object SpoonTir:
       * cannot be recovered anywhere else: after `classDef` filters an executable out, it has no
       * symbol, no `DefDef` and no row in the symbol table, so a `dropMethods` key naming it would be
       * reported as a typo on every run that WORKED. */
-    private val seenMembers = collection.mutable.Map.empty[MemberKey, MemberFacts]
+    private val seenMembers = collection.mutable.ListBuffer.empty[(MemberKey, MemberFacts)]
     private val seenTypes   = collection.mutable.Set.empty[String]
 
     def build(types: List[CtType[?]]): Program =
@@ -214,7 +214,7 @@ object SpoonTir:
       // comments come from `classDef` — see `fileHeader` for why the two are separate fields.
       val units = types.map(t => classDef(t).copy(unitLeading = fileHeader(t)))
       new Program(units, minter.table, Xref.build(units),
-                  MemberIndex(seenMembers.toMap, seenTypes.toSet))
+                  MemberIndex(seenMembers.toList, seenTypes.toSet))
 
     // ---- trivia (the original comments) -------------------------------------
     //
@@ -958,6 +958,10 @@ object SpoonTir:
         subs.dropsMethod(t.getQualifiedName, name,
           e.getParameters.asScala.toList.map(p => Option(p.getType).map(_.getSimpleName).getOrElse("?")))
       seenTypes += t.getQualifiedName
+      /** one row of [[seenMembers]] — WHAT THIS WALK SAW at this member's identity. */
+      def note(e: CtExecutable[?], nm: String, sym: Option[SymId], dropped: Boolean): Unit =
+        seenMembers += MemberKey(t.getQualifiedName, nm, descriptorOf(e)) ->
+          MemberFacts(sym, execFlags(e), originOf(e), dropped)
       /** Record what this walk SAW, then translate what survives — the two halves of the same pass,
         * because this is the last place the dropped half exists at all ([[seenMembers]]).
         *
@@ -967,14 +971,11 @@ object SpoonTir:
         * artifact depends on — cannot move. */
       def walked[E <: CtExecutable[?]](es: List[E], nameOf: E => String)(mk: E => Tree.DefDef): List[Tree.DefDef] =
         es.flatMap { e =>
-          val nm  = nameOf(e)
-          val key = MemberKey(t.getQualifiedName, nm, descriptorOf(e))
-          if isDropped(e, nm) then
-            seenMembers(key) = MemberFacts(scala.None, execFlags(e), originOf(e), dropped = true)
-            Nil
+          val nm = nameOf(e)
+          if isDropped(e, nm) then { note(e, nm, scala.None, dropped = true); Nil }
           else
             val d = mk(e)
-            seenMembers(key) = MemberFacts(Some(d.symbol), execFlags(e), originOf(e), dropped = false)
+            note(e, nm, Some(d.symbol), dropped = false)
             List(d)
         }
       val ctors = t match
@@ -997,7 +998,22 @@ object SpoonTir:
       val initBlocks = t match
         case c: CtClass[?] =>
           c.getAnonymousExecutables.asScala.toList.sortBy(posKey).map { ae =>
-            execDef(id, ae, if ae.hasModifier(ModifierKind.STATIC) then "<clinit>" else "<initblock>")
+            val nm = if ae.hasModifier(ModifierKind.STATIC) then "<clinit>" else "<initblock>"
+            val d  = execDef(id, ae, nm)
+            // AN INITIALISER BLOCK IS AN INDEX ENTRY. It is an executable the frontend read out of
+            // Java, and a port really does key policy on one — gdx-vfx replaces the BODY of
+            // `VfxGLUtils#<clinit>`, whose Java branches on a reflective class the base drops.
+            // Left out, the binder found the symbol in the program, found the owner in `seenTypes`,
+            // and concluded from the structure that the ENGINE had minted it: a `SyntheticTarget`
+            // refusal, of a hand-written `static { }` block, which is the opposite of true. The
+            // `policy-binding` check is what caught it (vfx, `policy 0 -> 1`) — the whole reason
+            // that check exists while both answers are still computable.
+            //
+            // NOT routed through `walked`: `dropMethods` is not consulted for an initialiser, and
+            // sending it through the drop test would silently make init blocks droppable — a
+            // widening this commit has no business making.
+            note(ae, nm, Some(d.symbol), dropped = false)
+            d
           }
         case _ => Nil
       val nested  = t.getNestedTypes.asScala.toList.sortBy(posKey).map(classDef)

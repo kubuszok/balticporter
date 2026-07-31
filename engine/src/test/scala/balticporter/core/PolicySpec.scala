@@ -135,7 +135,7 @@ class PolicySpec extends munit.FunSuite:
     val ph = new StaticForwarderTransform(List(
       Forwarder("com.x.Wrapper", "java.lang.Class", Set("forName", "getNaem"))))
     ph.run(program())
-    assertEquals(keys(ph.policyReport), List("getNaem"))
+    assertEquals(keys(ph.policyReport), List("com.x.Wrapper#getNaem"))
     assertEquals(issues(ph.policyReport), List(PolicyIssue.NeverMatched))
   }
 
@@ -182,7 +182,7 @@ class PolicySpec extends munit.FunSuite:
     fwd.run(program()); tbl.run(program())
 
     val all = PolicyReport.collect(subs, fwd, tbl)
-    assertEquals(all.keys, Set("demo.Tpyo", "getNaem", "com.x.Wrapper#fromName"))
+    assertEquals(all.keys, Set("demo.Tpyo", "com.x.Wrapper#getNaem", "com.x.Wrapper#fromName"))
     // every line names the key AND says which of CLAUDE.md §1's three kinds the fix is, so a
     // reader in another repository needs no investigation to act on it.
     all.findings.foreach { f =>

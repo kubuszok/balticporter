@@ -1426,6 +1426,26 @@ defect §4.56 records. This is **a convention with a lint, not a type-level guar
 check in the engine's own suite forbidding `fullName ==`, `fullName.startsWith` and `+ "#" +` inside
 the transform package with a named allow-list, plus the auditor's hunt line.
 
+**What the `policy-binding` measurement corrected in this design.** Both were false statements in a
+findings file, neither moved a member digest, and nothing else in the pipeline could have seen
+either — which is the whole argument for taking the measurement while both answers still exist:
+
+- **The `SyntheticTarget` refusal is STRUCTURAL, so the `MemberIndex` must hold every executable the
+  frontend WALKED — initialiser blocks included.** A `static { }` block is a member a port really
+  does key policy on (gdx-vfx replaces the body of one whose Java branches on a reflective class the
+  base drops). Left out of the index, the binder found its symbol in the program, found its owner
+  among the walked types, and concluded that the ENGINE had minted it: measured, `policy 0 -> 1`,
+  refusing a hand-written Java block as engine-created. The index therefore also holds a LIST per
+  key — a class with two `static { }` blocks has two members at one identity, and a map keyed by it
+  keeps one of them in silence.
+- **`Ownership` is not decoration, and `TypeRedirectTransform` is why it exists.** Every other keyed
+  seam wants `Owned`, because an entry naming a type the program merely REFERENCES is the §1(b)
+  silent no-op. That phase is the exception BY CONSTRUCTION: its subject is a type this module does
+  not declare and cannot declare — the base dropped it, and exactly one module may ship a
+  replacement at a given FQN — and what it rewrites is every REFERENCE to one, not a declaration.
+  Bound as `Owned` it reported ten correct redirects as never-matched: measured on
+  libgdx-screenmanager, `policy 0 -> 10`.
+
 **Rejected.** A fourth separator in `fullName` (above). A structured `SymId` — it is an
 `opaque type SymId = Int` whose interning order is relied on for deterministic minting, and
 structuring it would put symbol identity into every `Xref` map key for nothing the field does not

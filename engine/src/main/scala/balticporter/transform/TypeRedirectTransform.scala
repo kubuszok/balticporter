@@ -44,8 +44,27 @@ import balticporter.tir.*
   * and still resolvable. It is therefore ordering-insensitive, and a phase that runs after it sees
   * the redirected type — which is what a later portability or substitution check needs to see.
   */
-final class TypeRedirectTransform(redirects: Map[String, String] = Map.empty) extends Phase, PolicySource, SurfacePolicy:
+final class TypeRedirectTransform(redirects: Map[String, String] = Map.empty)
+    extends Phase, PolicySource, SurfacePolicy, PolicyBound:
   def name: String = "type-redirect"
+
+  /** What the RUN resolved each declared SOURCE type to, before the pipeline started (§8.1).
+    *
+    * '''`Ownership.Either`, and this is the phase that defines why that parameter exists.''' Every
+    * OTHER keyed seam wants `Owned`: an entry naming a type the program merely REFERENCES matches
+    * the interned external, the phase rewrites no declaration, and the entry counts as having fired
+    * — the §1(b) silent no-op. This phase is the exception BY CONSTRUCTION. Its whole subject is a
+    * type this module does not declare and cannot declare (the base dropped it, and exactly one
+    * module may ship a replacement at a given FQN); what it rewrites is not a declaration but every
+    * REFERENCE to one. Bound as `Owned` it reported ten perfectly good redirects as never-matched
+    * on the one port that uses it, which the `policy-binding` check measured (`screens`,
+    * `policy 0 -> 10`) before anything depended on the answer. */
+  private var bound: Map[String, Binding[SymId]] = Map.empty
+
+  def bindPolicy(binder: PolicyBinder): Unit =
+    bound = redirects.keys.toList.sorted
+      .map(k => k -> binder.bindType(name, "TypeRedirectTransform(redirects) source", k, Ownership.Either))
+      .toMap
 
   /** Re-pointing a type CHANGES EMITTED SIGNATURES — a field, a parameter and a return type all
     * move — so it is part of the shared surface and two modules must not disagree about it. */

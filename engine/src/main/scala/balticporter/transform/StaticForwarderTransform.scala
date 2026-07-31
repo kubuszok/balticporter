@@ -30,8 +30,30 @@ import balticporter.tir.TypeRepr.NoType
   * matched by NAME where the name is overloaded (receiver-first is an assumption about the
   * wrapper's shape that a name alone cannot carry).
   */
-final class StaticForwarderTransform(forwarders: List[StaticForwarderTransform.Forwarder]) extends Phase, PolicySource, SurfacePolicy:
+final class StaticForwarderTransform(forwarders: List[StaticForwarderTransform.Forwarder])
+    extends Phase, PolicySource, SurfacePolicy, PolicyBound:
   def name: String = "static-forwarder-inline"
+
+  /** What the RUN resolved each declared wrapper and member to, before the pipeline started (§8.1).
+    *
+    * A member is bound as the FULL key `wrapper#member`, which is also now what a finding about it
+    * quotes: a `PolicyFinding`'s key must be the string an agent edits (§4.575), and a bare
+    * `getSimpleName` is not editable without first working out which forwarder it belongs to. */
+  private var boundWrappers: Map[String, Binding[SymId]] = Map.empty
+  private var boundMembers: Map[String, Binding[List[PolicyBinder.Hit]]] = Map.empty
+
+  private def memberSetting(f: StaticForwarderTransform.Forwarder): String =
+    s"""Forwarder("${f.wrapper}").members"""
+
+  def bindPolicy(binder: PolicyBinder): Unit =
+    boundWrappers = forwarders.map(f =>
+      f.wrapper -> binder.bindType(name, "Forwarder.wrapper", f.wrapper)).toMap
+    boundMembers = forwarders.flatMap { f =>
+      f.members.toList.sorted.map { m =>
+        val key = s"${f.wrapper}#$m"
+        key -> binder.bindMembers(name, memberSetting(f), key)
+      }
+    }.toMap
 
   /** Inlining a forwarder REMOVES a dependency from the emitted code, so a dependent module that
     * inlines a different set of members compiles against a wrapper the base no longer references —
@@ -82,20 +104,25 @@ final class StaticForwarderTransform(forwarders: List[StaticForwarderTransform.F
           "no type of that name occurs in this program, so none of its members were inlined and " +
             "every call still goes through the wrapper"))
       else
-        val setting = s"""Forwarder("${f.wrapper}").members"""
+        val setting = memberSetting(f)
         f.members.toList.sorted.flatMap { m =>
+          // The key a finding QUOTES is the full `wrapper#member`, not the bare name. §4.575: it
+          // has to be the string an agent edits, and `getSimpleName` alone cannot be found in a
+          // manifest without first working out which forwarder declared it. It is also the string
+          // the binder was asked, which is what makes the two answers comparable at all.
+          val key  = s"${f.wrapper}#$m"
           val hits = declared.filter(_.name == m)
           if hits.isEmpty then
-            List(PolicyFinding(name, setting, m, PolicyIssue.NeverMatched,
+            List(PolicyFinding(name, setting, key, PolicyIssue.NeverMatched,
               "the wrapper is present but declares no member of that name"))
           else
             val (none0, usable) = hits.partition(nullary)
             none0.map(_ =>
-              PolicyFinding(name, setting, m, PolicyIssue.Malformed,
+              PolicyFinding(name, setting, key, PolicyIssue.Malformed,
                 s"`${f.wrapper}.$m` takes no arguments, so it cannot forward to a first-argument " +
                   s"receiver of type ${f.receiver} — not inlined")) ++
               (if usable.sizeIs > 1 then
-                 List(PolicyFinding(name, setting, m, PolicyIssue.Unverifiable,
+                 List(PolicyFinding(name, setting, key, PolicyIssue.Unverifiable,
                    s"matched by NAME ONLY: ${usable.size} overloads of `${f.wrapper}.$m` will ALL be " +
                      s"rewritten to `arg1.$m(rest…)`; check that every one takes ${f.receiver} first, " +
                      "or split the policy so only the receiver-first overloads are listed"))

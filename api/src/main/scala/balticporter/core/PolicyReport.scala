@@ -74,6 +74,42 @@ object PolicyReport:
   def from(sources: Iterable[PolicySource]): PolicyReport =
     PolicyReport(sources.iterator.flatMap(_.policyReport.findings).toList)
 
+  /** The never-fired report, derived from what the RUN BOUND — one row per key that did not.
+    *
+    * `PolicyBinder` lives in `balticporter.tir` and cannot produce a `PolicyReport`, because `core`
+    * depends on `tir` and not the other way round (the same rule `RuleScope.neverFired` follows and
+    * documents). So the binder owns the ANSWERS and this owns their classification, which is the
+    * right split anyway: a binding is a fact, a `PolicyIssue` is a judgement about what its reader
+    * should do. */
+  def fromBindings(records: Iterable[balticporter.tir.PolicyBinder.Record]): PolicyReport =
+    import balticporter.tir.Binding
+    PolicyReport(records.iterator.collect {
+      case r if r.binding.isUnbound =>
+        val why = r.binding.why.get
+        PolicyFinding(r.phase, r.setting, r.entry, issueOf(why), why.detail)
+    }.toList)
+
+  /** [[balticporter.tir.NotBound]] → [[PolicyIssue]]. The issue enum gains NO case, deliberately:
+    * it says what the READER should do, and there are only three answers (it named nothing, it
+    * named more than you can act on, it could never have named anything). The binder's finer
+    * distinctions survive in the DETAIL, which is where they are actionable.
+    *
+    * Two mappings worth stating because they are choices:
+    *   - `ExternalOnly` → `NeverMatched`. From the manifest's point of view the entry did nothing,
+    *     which is exactly what `NeverMatched` means to its reader; the detail says WHY, which is
+    *     what `RuleScope`'s doc has asked for since the scope existed.
+    *   - `SyntheticTarget` → `Malformed`. It could never legitimately have matched, so it belongs
+    *     with the keys that are not keys — and NOT with the typos, which is the confusion the
+    *     binder's own enum exists to prevent. */
+  private def issueOf(why: balticporter.tir.NotBound): PolicyIssue =
+    import balticporter.tir.NotBound
+    why match
+      case NotBound.NeverMatched       => PolicyIssue.NeverMatched
+      case NotBound.ExternalOnly(_)    => PolicyIssue.NeverMatched
+      case NotBound.Ambiguous(_)       => PolicyIssue.Unverifiable
+      case NotBound.Malformed(_)       => PolicyIssue.Malformed
+      case NotBound.SyntheticTarget(_) => PolicyIssue.Malformed
+
 /** Implemented by every §1(b) seam — a phase taking a policy parameter, or a policy VALUE like
   * [[Substitutions]] that is consulted rather than run. Report a no-op policy, never a no-op run.
   *

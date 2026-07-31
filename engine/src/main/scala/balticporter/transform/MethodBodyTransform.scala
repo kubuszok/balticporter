@@ -58,8 +58,16 @@ import balticporter.tir.*
   *   and CLAUDE.md §6 applies to what you write (fully-qualified names, no imports, `args*` for a
   *   vararg spread).
   */
-final class MethodBodyTransform(bodies: Map[String, String] = Map.empty) extends Phase, PolicySource, SurfacePolicy:
+final class MethodBodyTransform(bodies: Map[String, String] = Map.empty)
+    extends Phase, PolicySource, SurfacePolicy, PolicyBound:
   def name: String = "method-body-substitution"
+
+  /** What the RUN resolved each declared key to, before the pipeline started (§8.1). */
+  private var bound: Map[String, Binding[List[PolicyBinder.Hit]]] = Map.empty
+
+  def bindPolicy(binder: PolicyBinder): Unit =
+    bound = bodies.keys.toList.sorted
+      .map(k => k -> binder.bindMembers(name, "MethodBodyTransform", k)).toMap
 
   /** Two modules that replace different bodies do not disagree about the shared SURFACE — a body is
     * not a signature, and exactly one module emits each type. The keys are fingerprinted anyway:

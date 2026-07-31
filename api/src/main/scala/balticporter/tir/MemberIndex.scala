@@ -25,7 +25,10 @@ package balticporter.tir
   * apologised for being a mutable field on a `case class` that `copy()` silently empties.
   */
 final class MemberIndex(
-    private val byKey: Map[MemberKey, MemberFacts],
+    /** a LIST per key, not one entry. Two members can share one identity in this grammar — a class
+      * with two `static { }` blocks has two `<clinit>()`s — and a map would silently keep one of
+      * them, which is the shape of every defect this index exists to prevent. */
+    private val byKey: Map[MemberKey, List[MemberFacts]],
     /** every TYPE the frontend walked, by qualified name.
       *
       * A separate field and not `byKey.map(_.owner)`, because the question it answers is "did the
@@ -36,32 +39,34 @@ final class MemberIndex(
     val types: Set[String],
 ):
 
-  /** exactly this overload. */
-  def exact(k: MemberKey): Option[MemberFacts] = byKey.get(k)
+  /** exactly this identity — normally one member, occasionally more (see [[byKey]]). */
+  def exact(k: MemberKey): List[MemberFacts] = byKey.getOrElse(k, Nil)
 
   /** every overload of `owner#name`, in a stable order — what a BARE key names, and what an
     * ambiguity report has to list. */
   def overloads(owner: String, name: String): List[(MemberKey, MemberFacts)] =
-    byKey.iterator.filter((k, _) => k.owner == owner && k.name == name).toList.sortBy(_._1.render)
+    byKey.iterator.filter((k, _) => k.owner == owner && k.name == name)
+      .flatMap((k, fs) => fs.map(k -> _)).toList.sortBy(_._1.render)
 
-  /** …for a key, precise or bare. A precise key names at most one; a bare key names the set. */
+  /** …for a key, precise or bare. A precise key names one identity; a bare key names the set. */
   def matching(k: MemberKey): List[(MemberKey, MemberFacts)] =
-    if k.isBare then overloads(k.owner, k.name) else exact(k).toList.map(f => k -> f)
+    if k.isBare then overloads(k.owner, k.name) else exact(k).map(f => k -> f)
 
-  def all: List[(MemberKey, MemberFacts)] = byKey.toList.sortBy(_._1.render)
-  def size: Int                           = byKey.size
-  def isEmpty: Boolean                    = byKey.isEmpty
+  def all: List[(MemberKey, MemberFacts)] =
+    byKey.toList.flatMap((k, fs) => fs.map(k -> _)).sortBy(_._1.render)
+  def size: Int        = byKey.valuesIterator.map(_.size).sum
+  def isEmpty: Boolean = byKey.isEmpty
 
-  /** union — for a run that translates two source sets through one index. Later entries win, which
-    * is the same rule the minter's `define` follows. */
-  def ++(that: MemberIndex): MemberIndex = new MemberIndex(byKey ++ that.byKey, types ++ that.types)
+  /** union — for a run that translates two source sets through one index. */
+  def ++(that: MemberIndex): MemberIndex =
+    MemberIndex(all ++ that.all, types ++ that.types)
 
 object MemberIndex:
   /** the index of a program nobody parsed. NOT a default parameter anywhere: see `Program`. */
   val empty: MemberIndex = new MemberIndex(Map.empty, Set.empty)
 
   def apply(entries: Iterable[(MemberKey, MemberFacts)], types: Set[String]): MemberIndex =
-    new MemberIndex(entries.toMap, types)
+    new MemberIndex(entries.groupMap(_._1)(_._2).view.mapValues(_.toList).toMap, types)
 
 /** What the frontend knew about one executable at the moment it walked it.
   *

@@ -75,6 +75,20 @@ trait Phase:
     * traversal at every constituent, bottom-up. */
   def transformType(t: TypeRepr)(using Program): TypeRepr = t
 
+/** A phase whose POLICY is a set of declared KEYS — implemented so the RUN can bind them ONCE,
+  * before the pipeline starts.
+  *
+  * Binding before any phase runs is not a scheduling convenience. Every policy key is written in the
+  * UPSTREAM namespace and the package rename runs LAST (§4.56); binding at the front resolves every
+  * key against the names its author wrote, structurally, so a phase's position in the pipeline stops
+  * being able to change what its keys mean. And "did this key ever fire?" becomes a property of the
+  * policy and the program rather than of the order phases happened to run in — which is what lets
+  * five phases lose their private `var report` and one value own the never-fired answer.
+  */
+trait PolicyBound:
+  /** Bind every key this phase declares. Called exactly once per translation, by the run. */
+  def bindPolicy(binder: PolicyBinder): Unit
+
 /** A named bundle of phases (`dotc.plugins.Plugin`). */
 trait Plugin:
   def name: String

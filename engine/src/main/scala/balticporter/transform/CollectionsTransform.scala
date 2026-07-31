@@ -51,8 +51,18 @@ import balticporter.tir.*
   * is what makes it not one.
   */
 final class CollectionsTransform(val scope: RuleScope = RuleScope.Everywhere())
-    extends Phase, RequiresRuntime, PolicySource, SurfacePolicy:
+    extends Phase, RequiresRuntime, PolicySource, SurfacePolicy, PolicyBound:
   def name = "java-collections->scala"
+
+  /** What the RUN resolved each declared scope entry to, before the pipeline started (§8.1). This
+    * phase is the one whose own matcher already reports [[balticporter.tir.NotBound.ExternalOnly]]
+    * (see `applyScope`), so the `policy-binding` measurement over the corpus is largely a
+    * measurement of whether the binder reproduces the answer this phase worked out by hand. */
+  private var boundScope: Map[String, Binding[Unit]] = Map.empty
+
+  def bindPolicy(binder: PolicyBinder): Unit =
+    val setting = s"CollectionsTransform(scope) ${scope.productPrefix} entry"
+    boundScope = scope.entries.toList.sorted.map(e => e -> binder.bindScope(name, setting, e)).toMap
 
   /** Two modules that scope this phase differently emit incompatible signatures for the shared
     * surface — a `java.util.List` parameter in the base against a `Buffer` argument in the

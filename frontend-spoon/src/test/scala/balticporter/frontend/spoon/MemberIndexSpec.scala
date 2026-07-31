@@ -47,7 +47,7 @@ class MemberIndexSpec extends munit.FunSuite:
     assert(keys.contains("com.demo.Reflect#make(String)"))
     assert(keys.contains("com.demo.Reflect#keep(int)"))
     // …and each one that SURVIVED carries the symbol the program declares for it.
-    val keep = p.members.exact(MemberKey.of("com.demo.Reflect#keep(int)")).get
+    val keep = p.members.exact(MemberKey.of("com.demo.Reflect#keep(int)")).head
     assert(keep.sym.isDefined)
     assertEquals(keep.dropped, false)
     assertEquals(p.symbolOf(keep.sym.get).map(_.name), Some("keep"))
@@ -59,10 +59,10 @@ class MemberIndexSpec extends munit.FunSuite:
       "com.demo.Reflect#<init>(int,Class)",        // a constructor, droppable only precisely
     )))(source)
 
-    val dropped = p.members.exact(MemberKey.of("com.demo.Reflect#make(Class)")).get
+    val dropped = p.members.exact(MemberKey.of("com.demo.Reflect#make(Class)")).head
     assertEquals(dropped.sym, scala.None)   // THE POINT: nothing to resolve against the program
     assertEquals(dropped.dropped, true)
-    val ctor = p.members.exact(MemberKey.of("com.demo.Reflect#<init>(int,Class)")).get
+    val ctor = p.members.exact(MemberKey.of("com.demo.Reflect#<init>(int,Class)")).head
     assertEquals(ctor.dropped, true)
 
     // …and the program really does not have them: the only `make` left is the `String` overload,
@@ -75,7 +75,7 @@ class MemberIndexSpec extends munit.FunSuite:
     val ctors = p.symbols.all.filter(s => s.name == "<init>" && s.owner == owner).flatMap(_.descriptor.map(_.render))
     assertEquals(ctors.toSet, Set(""))
     // the surviving overload is NOT marked dropped — a bare key would have taken both.
-    assertEquals(p.members.exact(MemberKey.of("com.demo.Reflect#make(String)")).map(_.dropped), Some(false))
+    assertEquals(p.members.exact(MemberKey.of("com.demo.Reflect#make(String)")).map(_.dropped), List(false))
   }
 
   test("a BARE key drops every overload, and the index says so for each") {
@@ -84,6 +84,32 @@ class MemberIndexSpec extends munit.FunSuite:
     assertEquals(both.size, 2)
     assert(both.forall(_._2.dropped), clue(both.map(x => x._1.render -> x._2.dropped)))
     assert(both.forall(_._2.sym.isEmpty))
+  }
+
+  test("an INITIALISER BLOCK is an index entry, and two of them are two entries") {
+    // A `static { }` is an executable the frontend read out of Java, and a port really does key
+    // policy on one (a static initialiser whose body the target platform cannot express). Left out
+    // of the index, the binder found the symbol in the program, found the owner among the walked
+    // types, and concluded STRUCTURALLY that the engine had minted it — refusing a hand-written
+    // Java block as `SyntheticTarget`, which is the opposite of true.
+    val p = tree(Substitutions.none)("com/demo/Init.java" ->
+      """package com.demo;
+        |public class Init {
+        |  public static int a;
+        |  public static int b;
+        |  static { a = 1; }
+        |  static { b = 2; }
+        |  { }
+        |}""".stripMargin)
+    val clinits = p.members.exact(MemberKey.of("com.demo.Init#<clinit>()"))
+    // TWO static blocks, TWO entries: they share one identity in this grammar, and a map keyed by
+    // it would have kept one of them without saying so.
+    assertEquals(clue(clinits).size, 2)
+    assert(clinits.forall(_.sym.isDefined))
+    assert(clinits.forall(!_.dropped))
+    assertEquals(p.members.exact(MemberKey.of("com.demo.Init#<initblock>()")).size, 1)
+    // …and the BARE key an author actually writes reaches them.
+    assertEquals(p.members.matching(MemberKey.of("com.demo.Init#<clinit>")).size, 2)
   }
 
   test("the index names the TYPES the frontend walked — the set a member key's owner must be in") {

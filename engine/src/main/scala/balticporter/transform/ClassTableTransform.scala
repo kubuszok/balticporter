@@ -33,8 +33,18 @@ import balticporter.tir.TypeRepr.NoType
   * A key naming a member the program does not have is a NO-OP — the lookup stays reflective and
   * the port stays JVM-only, with nothing said. [[policyReport]] is what says it.
   */
-final class ClassTableTransform(redirects: Map[String, String]) extends Phase, PolicySource, SurfacePolicy:
+final class ClassTableTransform(redirects: Map[String, String])
+    extends Phase, PolicySource, SurfacePolicy, PolicyBound:
   def name: String = "class-table"
+
+  /** What the RUN resolved each declared key to, before the pipeline started (§8.1). Recorded
+    * beside the phase's own name match while both exist; `policy-binding` is the check that
+    * compares them, and it is the evidence that swapping one for the other changes nothing. */
+  private var bound: Map[String, Binding[List[PolicyBinder.Hit]]] = Map.empty
+
+  def bindPolicy(binder: PolicyBinder): Unit =
+    bound = redirects.keys.toList.sorted
+      .map(k => k -> binder.bindMembers(name, "ClassTableTransform(redirects) key", k)).toMap
 
   /** Two ports that redirect different lookups produce different call sites for the same shared
     * code, so the redirect table is part of the emitted surface a dependent module has to match.

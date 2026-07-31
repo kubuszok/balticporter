@@ -4,7 +4,7 @@ import balticporter.core.*
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.sbtgen.SbtGen
-import balticporter.tir.{CheckReport, Correlate, CorrelateRun, CtorFunnel, DebugFlags, Decision, DecisionLog, Definition, NoteCoverageCheck, OmissionCheck, Origin, Phase, Pipeline, PortabilityCheck, PorterNote, Program, Reason, Remediator, RewriteTrace, SrcMap, SymId, Tree, TriviaCheck}
+import balticporter.tir.{CheckReport, Correlate, CorrelateRun, CtorFunnel, DebugFlags, Decision, DecisionLog, Definition, MemberIndex, NoteCoverageCheck, OmissionCheck, Origin, Phase, Pipeline, PolicyBinder, PolicyBound, PortabilityCheck, PorterNote, Program, Reason, Remediator, RewriteTrace, SrcMap, SymId, SymbolTable, Tree, TriviaCheck, Xref}
 import balticporter.transform.{CollectionBoundaryCheck, CollectionClosureCheck, CollectionsTransform, MethodBodyTransform, PackageRenameTransform, PortMapTransform}
 
 import java.nio.file.{Files, Path, StandardCopyOption}
@@ -541,12 +541,45 @@ final case class PortRun(
     // fired HERE (`InheritedKeyNeverFired`).
     val ownPolicy: PolicySource   = manifest.getOrElse(subs)
     val ownPhases: List[Phase]    = manifest.map(_.surface).getOrElse(phases)
-    val policy = PolicyReport.from(ownPolicy :: ownPhases.collect { case p: PolicySource => p })
+    val fromPhases = PolicyReport.from(ownPolicy :: ownPhases.collect { case p: PolicySource => p })
+
+    // …plus what only the BINDER can say. §8.1's `ExternalOnly` is the case that pays for itself:
+    // `RuleScope`'s own doc describes it as a live silent no-op — the entry matches an interned
+    // external, the phase rewrites nothing, and the entry COUNTS AS HAVING FIRED. A phase's own
+    // matcher has no verdict for that, so this is a genuine RISE and the gate beginning to tell the
+    // truth (§3), not a regression.
+    //
+    // Restricted to THIS module's own keys, exactly as `PortManifest.policyReport` is and for its
+    // reason: an inherited key lives in the base's manifest, and reporting it here tells every
+    // dependent about a mistake none of them can fix. De-duplicated against what the phases already
+    // said, so nothing is reported twice while both answers exist.
+    val ownKeys: Set[String] = manifest.map(m => m.ownDrops.dropTypes ++ m.ownDrops.dropMethods)
+      .getOrElse(subs.dropTypes ++ subs.dropMethods)
+    val ownPhaseNames: Set[String] = ownPhases.map(_.name).toSet + "substitutions"
+    val alreadySaid: Set[(String, String, String)] =
+      fromPhases.findings.map(f => (f.phase, f.setting, f.key)).toSet
+    val fromBinder = PolicyReport(PolicyReport.fromBindings(translated.binder.bindings).findings.filter { f =>
+      ownPhaseNames(f.phase) && (f.phase != "substitutions" || ownKeys(f.key)) &&
+        !alreadySaid((f.phase, f.setting, f.key))
+    })
+    val policy = fromPhases ++ fromBinder
     CheckReport.record(PortRun.Policy, policy.findings.map { f =>
       CheckReport.Finding(PortRun.Policy, f.issue.label, f.phase, f.setting, 0, s"${f.key} — ${f.detail}")
     })
     say(s"POLICY (declared keys that never fired): ${policy.findings.size}")
     if policy.nonEmpty then println(policy.render)
+
+    // ---- the BINDER against every phase's OWN matcher, while both still exist ----
+    // Scaffolding, and deliberately so: it is what earns the binder the right to replace eighteen
+    // hand-written key tests, and once the matchers are gone there is no second implementation to
+    // compare against. See `PolicyBindingCheck`.
+    val bindingFindings = PolicyBindingCheck.check(translated.binder.bindings, fromPhases)
+    CheckReport.record(PolicyBindingCheck.Name, bindingFindings.map { f =>
+      CheckReport.Finding(PolicyBindingCheck.Name, f.kind, f.phase, f.setting, 0, s"${f.key} — ${f.detail}")
+    })
+    say(s"POLICY BINDING (binder vs each phase's own key matcher): ${bindingFindings.size}")
+    if bindingFindings.nonEmpty then say(PolicyBindingCheck.Classification)
+    println(PolicyBindingCheck.summary(bindingFindings))
 
     // Every check this run believes it ran must ALSO have registered itself with the persistence
     // layer, or a number reaches the operator's terminal and never reaches `findings.tsv`. That is
@@ -1258,10 +1291,24 @@ final case class PortRun(
 
   private def translateOnce(): PortRun.Translated =
     val types   = SpoonTir.buildModel(frontend, lenient = lenient)
+    val parsed  = SpoonTir.fromTypes(types, policySubs)
+    // ---- POLICY BINDING (§8.1) — every declared key resolved ONCE, before any phase runs ----
+    //
+    // Before the pipeline and not inside it, for two reasons that are not scheduling. Every policy
+    // key is written in the UPSTREAM namespace and the package rename runs LAST (§4.56), so binding
+    // here resolves each key against the names its author wrote and a phase's POSITION can no longer
+    // change what its keys mean. And "did this key fire?" becomes a property of the policy and the
+    // program rather than of the order phases happened to run in — which is what lets one value own
+    // the never-fired answer instead of five private `var report`s.
+    //
+    // The binder is per-TRANSLATION for the reason the decision log is (`Determinism.Full`
+    // translates twice): a value one run owns, never a process-global table (§5.1).
+    val binder = new PolicyBinder(parsed, parsed.members)
+    bindDeclaredPolicy(binder)
     // `runTraced`, so the phases' DECISIONS travel with the program they produced. The log belongs
     // to THIS translation: `Determinism.Full` translates twice and the run keeps the first, which
     // is only coherent because neither log is shared (CLAUDE.md §5.1).
-    val (program, decisions) = Pipeline.runTraced(SpoonTir.fromTypes(types, policySubs), effectivePhases)
+    val (program, decisions) = Pipeline.runTraced(parsed, effectivePhases)
     val plan    = RuntimePlan.of(effectivePhases, runtimeMode)
     // `externalConcrete` is DERIVED, never passed in: a caller who has to remember it is a caller
     // who forgets it, and forgetting it silently disables diamond-conflict detection against an
@@ -1270,7 +1317,23 @@ final case class PortRun(
     // come back as `TirEmitter.ownDecisions` and are recorded once, by `recordRunDecisions`.
     val emitter = new TirEmitter(program, plan.concreteMembers, provenance, decisions, preview)
     val (mine, theirs) = partitionUnits(program)
-    PortRun.Translated(program, plan, emitter, mine, theirs, cache.map(new ActionCache(_, true)), decisions)
+    PortRun.Translated(program, plan, emitter, mine, theirs, cache.map(new ActionCache(_, true)),
+                       decisions, binder)
+
+  /** Ask the binder about every key this run DECLARES — its drops, and every keyed phase's own.
+    *
+    * The drops bound here are the EFFECTIVE ones, inherited keys included, because
+    * `PortManifest.inheritedKeysNeverFired` is a real report about a base's key that did not fire
+    * HERE. Which of them reach the `policy` check is a separate decision, taken where that check is
+    * assembled and taken the same way it always was: a §1(b) finding says "fix this key in the
+    * library's manifest", and an inherited key lives in the base's.
+    */
+  private def bindDeclaredPolicy(binder: PolicyBinder): Unit =
+    policySubs.dropTypes.toList.sorted.foreach(k =>
+      binder.bindType("substitutions", "Substitutions.dropTypes", k))
+    policySubs.dropMethods.toList.sorted.foreach(k =>
+      binder.bindMembers("substitutions", "Substitutions.dropMethods", k))
+    effectivePhases.foreach { case p: PolicyBound => p.bindPolicy(binder); case _ => () }
 
   /** Units this run CONVERTS, as opposed to units it merely resolved against.
     *
@@ -1389,6 +1452,10 @@ object PortRun:
       /** what the PHASES decided while producing `program`. The run's non-phase deciders record
         * into the same log before it is written (`decisions.tsv`). */
       val decisions: DecisionLog = new DecisionLog,
+      /** what every declared POLICY KEY resolved to, taken before the pipeline ran (§8.1). A value
+        * this translation owns, for the same reason `decisions` is. */
+      val binder: PolicyBinder = new PolicyBinder(
+        new Program(Nil, SymbolTable(Nil), Xref.build(Nil), MemberIndex.empty), MemberIndex.empty),
   ):
     private val memo = collection.mutable.Map.empty[SymId, String]
     // the DECISIONS are part of the key: they are not in the tree and they are in the emitted text
