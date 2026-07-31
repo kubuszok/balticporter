@@ -440,6 +440,82 @@ final class TirEmitter(
     program.units.foreach(u => StandardTraversal.mapClassDef(collect, u))
     acc.toSet
 
+  /** every type symbol ANOTHER compilation unit names in a TYPE position — an all-static class in
+    * this set must stay a `class`, for the third face of the same reason as [[extendedTypes]] and
+    * [[instantiatedTypes]]: an `object` supplies a VALUE, and no value is a type.
+    *
+    * A Java class whose every member is `static` is still a TYPE. `class KHRMaterialsUnlit { static
+    * final String EXT = …; }` has an implicit public constructor, so `KHRMaterialsUnlit.class` and
+    * `T get(Class<T>, String)` at `T = KHRMaterialsUnlit` are ordinary Java, and gdx-gltf writes
+    * both. Collapsed to `object`, the emitted Scala loses the name in type position entirely —
+    * "type KHRMaterialsUnlit is not a member of sge.gltf.data.extensions", three errors from one
+    * eight-line file. libGDX core has 31 all-static classes and never names one as a type, which is
+    * why five ports did not see this; a library that CONSUMES another's constant-holders does.
+    *
+    * ==Read from DECLARATION types and class literals — NOT from every type the traversal visits==
+    * `Phase.transformType` sees every type occurrence, which sounds like the safe over-approximation
+    * and is the wrong one. A term's `tpe` is an occurrence too, so `Gdx.app` — an ordinary static
+    * ACCESS, the one thing a collapsed object is perfect for — makes `Gdx` look named-as-a-type.
+    * Measured: reading `transformType` bare de-collapsed **29 of libGDX core's 31** constant
+    * holders (`Align`, `Gdx`, `Base64Coder`, `TimeUtils`, …), 36 members of emitted text, for a
+    * question none of them answers. The port still compiled, which is exactly what makes a bad
+    * approximation here expensive rather than loud.
+    *
+    * Two positions require a TYPE and nothing else does:
+    *
+    *   - a DECLARATION's type — every field, parameter, local, return and type argument of one.
+    *     Read from `Symbol.info` through [[StandardTraversal.mapType]], so it is complete for every
+    *     declaration the program has by construction rather than by an enumeration of node kinds
+    *     ([[instantiatedTypes]] records what a hand-rolled walk costs).
+    *   - a CLASS LITERAL. `Ext.class` needs the name to be a type even where nothing is declared at
+    *     it, and it is the half `Symbol.info` cannot see: `ext(m, KHRMaterialsUnlit.class, EXT)`
+    *     infers `T` and declares nothing.
+    *
+    * `extends` and `new` are the other two, and they already have [[extendedTypes]] and
+    * [[instantiatedTypes]].
+    *
+    * The type's OWN declarations do not count: a class names itself in its members' owner types and
+    * in its synthesised constructor, so the owner chain of each symbol is climbed and a candidate it
+    * reaches is skipped. Without that every class would name itself and the collapse would be
+    * disabled outright rather than narrowed. */
+  private lazy val typeNamedElsewhere: Set[SymId] =
+    given Program = program
+    val out = collection.mutable.Set[SymId]()
+
+    def headSym(t: TypeRepr): Option[SymId] = t match
+      case TypeRepr.TypeRef(_, s)      => Some(s)
+      case TypeRepr.AppliedType(tc, _) => headSym(tc)
+      case _                           => None
+
+    /** every symbol from `s` up through its owners — what "declared inside the candidate" means. */
+    def enclosing(s: SymId): Set[SymId] =
+      Iterator.iterate(Option(s))(_.flatMap(program.symbolOf(_).map(_.owner)))
+        .take(64).takeWhile(o => o.isDefined && o.get != SymId.None).flatten.toSet
+
+    def typesIn(t: TypeRepr): Set[SymId] =
+      val seen = collection.mutable.Set[SymId]()
+      val collect = new Phase:
+        def name: String = "emit/type-named-elsewhere"
+        override def transformType(x: TypeRepr)(using Program): TypeRepr =
+          headSym(x).foreach(seen += _); x
+      StandardTraversal.mapType(collect, t)
+      seen.toSet
+
+    // (1) declaration types, every symbol the program has.
+    program.symbols.all.foreach { s => out ++= typesIn(s.info) -- enclosing(s.id) }
+
+    // (2) class literals, which declare nothing. Scanned with the standard traversal so a `.class`
+    // inside an anonymous-class body or a lambda is reached like any other term.
+    program.units.foreach { u =>
+      val here = declaredTypes(u)
+      out ++= StandardTraversal.scanClassDef(u, Set.empty[SymId]) { (acc, term) =>
+        term match
+          case Tree.Literal(Constant.ClassOfC(t), _, _) => acc ++ (typesIn(t) -- here)
+          case _                                        => acc
+      }
+    }
+    out.toSet
+
   private def declaredTypes(cd: Tree.ClassDef): Set[SymId] =
     val acc = collection.mutable.Set[SymId](cd.symbol)
     cd.body.foreach { case c: Tree.ClassDef => acc ++= declaredTypes(c); case _ => () }
@@ -845,9 +921,11 @@ final class TirEmitter(
       case _              => false
     }
     // an all-static class can only collapse to an `object` if nobody EXTENDS it (you can't extend
-    // an object) — otherwise it stays a `class` with its statics in a companion object.
+    // an object), nobody INSTANTIATES it (you can't `new` one) and nobody NAMES IT AS A TYPE (an
+    // object is a value, and no value is a type) — otherwise it stays a `class` with its statics in
+    // a companion object.
     if kw == "class" && parents.isEmpty && cd.body.nonEmpty && !hasInstanceState && pparams.isEmpty &&
-       !extendedTypes(cd.symbol) && !instantiatedTypes(cd.symbol) then
+       !extendedTypes(cd.symbol) && !instantiatedTypes(cd.symbol) && !typeNamedElsewhere(cd.symbol) then
       val members = cd.body.filterNot { case d: Tree.DefDef => sym(d.symbol).name == "<init>"; case _ => false }
       val ob0 = orderBody(members, paramfulPrimary).map(memberStat(_, i + 1)).filter(_.nonEmpty).mkString("\n")
       val ob  = if bnote.isEmpty then ob0 else s"$bnote\n$ob0"

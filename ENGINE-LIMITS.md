@@ -831,6 +831,39 @@ can today.
 
 *Fix kind: (a) engine. Built; `EnumCtorBodySpec`.*
 
+### T12. Java `protected` is DROPPED, and accessibility is an input to OVERLOAD RESOLUTION — 1 error
+
+**Title, for renumbering: "java protected is dropped, and accessibility is an input to overload
+resolution".** This entry is about MEMBER VISIBILITY, whose only current home is this section.
+
+The emitter renders no visibility modifier for a Java `protected` member: libGDX core's Java has
+**867** `protected` declarations and its emitted Scala has **3**, all of them inside injected or
+commented text. Every one of those members ships PUBLIC.
+
+That is usually invisible — a widened member breaks no compile and no test. It stops being invisible
+where accessibility CHOSE AN OVERLOAD. Java resolves a call against the applicable methods that are
+also ACCESSIBLE from the call site, so a `protected` overload simply is not a candidate for an
+unrelated caller in another package; emitted public, it becomes one, and a call javac resolved
+uniquely becomes ambiguous.
+
+Measured on gdx-gltf: `AnimationController` declares six public `setAnimation(String, …)` overloads
+and one `protected AnimationDesc setAnimation(AnimationDesc)`. `AnimationsPlayer.clearAnimations()`
+writes `scene.animationController.setAnimation(null)`, which javac resolved to `setAnimation(String)`
+because the protected twin is out of reach. Emitted, both are public and arity-1, `null` conforms to
+both, and dotty reports `E051 Ambiguous overload` — 1 error, and the only one of gdx-gltf's residue
+that a reader would blame on the library rather than on the port.
+
+**Why it is not simply "emit `protected`".** Java's `protected` is package-access PLUS subclass
+access; Scala's is subclass access only, and Scala additionally forbids reaching a `protected`
+member through a reference that is not `this`. Emitting Scala's `protected` would turn a widening
+into a set of NEW access errors across every same-package caller the corpus has. The near-exact
+rendering is `protected[<package>]`, which restores package access and lifts the `this` restriction
+— untried, and its blast radius is every one of those 867 declarations plus whatever their callers
+then do, so it wants its own measured cycle and its own baseline promotion. Do not attempt it as
+part of another change.
+
+*Fix kind: (a) engine — OPEN, and priced at 867 declarations of emitted-text movement.*
+
 ---
 
 ## 4. Collections, shims and the JDK boundary
@@ -1762,6 +1795,149 @@ real firing was a false positive. `SrcMap.relativise` already leaves `<…>` alo
 reason; anything consuming its paths must too.
 
 *Fix kind: (a) engine.*
+
+### D4. `CtorFunnel`'s fixpoint is WHOLE-PROGRAM, and a dependent's program is a different one — 3 errors
+
+**Title, for renumbering: "CtorFunnel's fixpoint is whole-program, and a dependent's program is a
+different one".**
+
+`CtorFunnel.Plans` decides which Java constructor becomes each class's Scala primary, and it decides
+it at a FIXPOINT over the whole program (C1: a paramful promotion is withheld wherever a subclass
+needs a nilary `extends`). That answer is part of the emitted SURFACE — it is the class's parameter
+list — and it is computed from a set of classes the run does not choose.
+
+A dependent's `Program` CONTAINS its base (D2), so the fixpoint sees the base's classes plus the
+dependent's, and can therefore reach a DIFFERENT answer for a base class than the base's own run
+did. The base has already emitted; the dependent then emits code shaped to the answer it computed.
+
+Measured on gdx-gltf against libGDX core. libGDX emits `abstract class Attribute(type$p: Long)` —
+paramful, and every one of its own 10+ subclasses passes the argument up. gdx-gltf adds three
+subclasses with several roots and no shared parameter list (`ClippingPlaneAttribute`,
+`PBRCubemapAttribute`, `PBRTextureAttribute`), so ITS fixpoint withheld `Attribute`'s promotion;
+`Plans.prologueOf` then reported a nilary prologue for the parent, `replayFor` accepted, and each of
+the three emitted `class C extends Attribute { def this(…) = { this(); this.type = …; … } }`.
+
+Against libGDX's ACTUAL emitted `Attribute` that is `E171 not enough arguments for constructor
+Attribute` / `E134 None of the overloaded alternatives … match arguments ()` — three errors, one per
+class. Note what makes it expensive to find: the replayed bodies are correct, the dependent's own
+file looks right, and NOTHING in the dependent's run disagrees with itself. `ManifestAgreement`
+reports 0, because a funnel plan is not a manifest key; the port map records `Attribute` as `Ported`,
+which it is. The disagreement is only visible when the two modules are compiled together.
+
+**Do not "fix" it by refusing the withholding** — that is C1 exactly (+14 on libGDX), and it would
+break the dependent's own subclasses instead.
+
+The shape of a real fix: a class the run does not EMIT must have its plan READ, not recomputed —
+from the base's published port map, which is already the channel for "what did the base actually
+do" and already carries per-member records. That requires the map to carry each type's primary
+parameter list, and `Plans` to seed itself from it for every non-owned class. Neither exists.
+`Plans` does not currently know which classes the run owns at all, which is the same missing input
+D5 needs.
+
+*Fix kind: (a) engine — and it is the largest one a dependent port has surfaced.*
+
+### D5. A REPLAY may not widen a `private` member the run does not EMIT — 4 errors
+
+**Title, for renumbering: "A replay may not widen a private member the run does not emit".**
+
+Scala secondary constructors cannot call `super(args)`, so `CtorFunnel.Plans.replayFor` expresses one
+as the parent constructor's own statements replayed after `this()`. Those statements execute one
+level DOWN, in the subclass, where a `private` parent member no longer reaches — so the planner
+collects them in `widenedMembers` and `TirEmitter.widen` drops `private` from each. Within one
+module that is exact and cannot change behaviour.
+
+Across a module boundary it is not a widening at all. `widen` edits the SYMBOL TABLE of the run's own
+`Program`; the DECLARATION lives in the base's emitted file, which this run does not write and which
+still says `private`. The dependent emits a call to it and the compile fails.
+
+Measured on gdx-gltf: `ModelInstanceHack(Model)` / `(Model, String…)` each `super(model, …)`, the
+replay lands `ModelInstance`'s constructor body in the subclass, and that body calls
+`ModelInstance.copyNodes` — `private` in libGDX's Java and `private def copyNodes` in libGDX's
+emitted Scala, because libGDX itself never replays it and so never widened it. **4 errors, all
+`value copyNodes is not a member of …ModelInstanceHack`.**
+
+M6's answer applies unchanged: where the widening cannot be performed, REFUSE the replay and count
+the omission. `super(args)` is then dropped, which `OmissionCheck` already reports (C3), and the
+port compiles with a known, named divergence instead of failing. The missing input is the same one
+D4 needs — `Plans` has no notion of which classes this run EMITS, only of which are in the
+`Program`.
+
+Note the asymmetry that makes this invisible from the base: the base cannot widen speculatively (it
+has no way to know a future dependent will replay), and the dependent cannot widen at all. Only the
+dependent can SEE the problem, and only the base could fix it — which is why the honest engine
+answer is to refuse rather than to shift the decision.
+
+*Fix kind: (a) engine.*
+
+### D6. An all-static class collapses to an `object`, and a CONSUMER is the one that names it as a TYPE
+
+**Title, for renumbering: "an all-static class collapses to an object, and a consumer names it as a
+type".** CLOSED — fixed, and recorded because the shape recurs.
+
+A Java class whose every member is `static` still has an implicit public constructor and is still a
+TYPE. The emitter collapses it to a bare `object`, guarded on nobody EXTENDING it and nobody
+INSTANTIATING it — two guards each added after a library broke on the missing one (the second cost
+Ashley 26 errors from a single empty `private static class Dummy { }`).
+
+The third face is a type POSITION with no `new` and no `extends`: `KHRMaterialsUnlit.class` as a
+`Class<T>` argument, and `T get(Class<T>, String)` returning at `T = KHRMaterialsUnlit`. libGDX core
+has 31 all-static classes and names none of them as a type, which is why five ports did not see it;
+a library that CONSUMES another's constant-holders does, and gdx-gltf cost 3 errors from one
+eight-line file.
+
+The lesson for the next guard of this kind: the question is not "can this be an object" but "does
+anything the program does with this name require a TYPE", and the ways to require one are `extends`,
+`new`, a DECLARATION's type and a CLASS LITERAL — four, not three.
+
+**And the obvious over-approximation is the wrong answer, measured.** `Phase.transformType` sees
+every type occurrence, which sounds like the safe reading and is not: a term's own `tpe` is an
+occurrence, so `Gdx.app` — an ordinary static ACCESS, the one thing a collapsed object is perfect
+for — makes `Gdx` look named-as-a-type. Reading it bare de-collapsed **29 of libGDX core's 31
+constant holders and moved 36 members** (`Align`, `Gdx`, `Base64Coder`, `TimeUtils`, …) for a
+question none of them asks. It still compiled and every check count held, which is what makes a bad
+approximation here expensive rather than loud.
+
+Narrowed to the two positions that genuinely require a type — every `Symbol.info` (complete for
+declarations by construction, walked with `StandardTraversal.mapType`) and every
+`Constant.ClassOfC` (the half `info` cannot see: `ext(X.class, …)` infers the callee's `T` and
+declares nothing) — libGDX core moves **0 members** and gdx-gltf's 5 errors go. Exclude the
+candidate's own owner chain either way, or every class names itself and the collapse is disabled
+outright.
+
+*Fix kind: (a) engine — fixed in `TirEmitter.typeNamedElsewhere`; `AllStaticClassAsTypeSpec` pins
+both directions INCLUDING the static-access negative.*
+
+### D7. An inherited drop leaves a CALL SITE the engine has no seam for — 1 error
+
+**Title, for renumbering: "an inherited drop leaves a call site the engine has no seam for".**
+
+A base drops a member; the dependent still calls it. The engine has two seams for code it must not
+translate mechanically and both are WHOLE-DECLARATION: `Substitutions.dropMethods` removes the
+member, and `MethodBodyTransform` replaces the body of the method that CONTAINS the call. Neither
+can say *keep this method, rewrite this one call in it*.
+
+Ashley met this and got lucky: its offending site was a one-line forwarder
+(`ImmutableArray.toArray(Class)`), so `dropMethods` on the forwarder was both available and right.
+gdx-gltf's is not. libGDX core drops `Array#toArray(Class)` — the `java.lang.reflect.Array` overload
+upstream itself deprecated in favour of a portable `ArraySupplier` twin — and
+`MeshLoader.loadMeshes` calls it once, at line 252 of a 464-line method that is otherwise entirely
+mechanical. `MethodBodyTransform` on that method would fork 200 lines from upstream permanently to
+change one argument; `dropMethods` on it would delete the port's mesh loader. **1 error, and no
+seam.**
+
+Note the finding IS reported, twice and correctly classified — `RewriteTrace`'s signature check
+("a call to a member with no declaration: `@6#toArray(java.lang.Class)`") and the port map's
+`Dropped` record both name it with the Java file and line. What is missing is not the diagnosis, it
+is the repair.
+
+The shape of the missing (b): a CALL-SITE substitution keyed like `dropMethods`
+(`owner#name(P1,P2)`) whose replacement text can name the receiver and the arguments — the
+call-level twin of `MethodBodyTransform`'s declaration-level one, and subject to the same rules
+(spliced verbatim, written in the port's FINAL namespace, `SurfacePolicy`-fingerprinted because two
+modules rewriting a shared call differently is drift). Until it exists, a dependent that calls an
+inherited drop from inside a large method has exactly one honest outcome, which is to count it.
+
+*Fix kind: (b) — an engine phase that does not exist yet, not a library rule.*
 
 ---
 
