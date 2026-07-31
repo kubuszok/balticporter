@@ -1911,9 +1911,16 @@ final class TirEmitter(
         //
         // `scala.compiletime.uninitialized` is scala's own word for "the JVM default at this type",
         // which is exactly what java put there, and it is the residue A1 leaves: every field the
-        // constructor funnel could NOT hoist into a slot keeps this line. The alternative it
-        // replaces was `null.asInstanceOf[T]` for every reference type — a CAST, in a position
-        // where nothing is being cast, on a value that is not of the type it claims.
+        // constructor funnel could NOT hoist into a slot keeps this line.
+        //
+        // IT REPLACES THE CAST AND NOTHING ELSE. `defaultFor` answers honestly for every type that
+        // STATES a default — `0`/`false` for a primitive, and `null` for a `T | scala.Null`, which
+        // is the whole point of the nullability phase's union — and only falls back to
+        // `null.asInstanceOf[T]`, a cast in a position where nothing is being cast, on a value that
+        // is not of the type it claims. So the substitution is keyed on that fallback rather than
+        // applied to every uninitialised field: written unconditionally it silently took the union
+        // default back off `NullabilitySpec`'s `var parent: demo.Actor | scala.Null = null`, which
+        // is a rule this port is supposed to be RETIRING the cast for, not re-imposing it on.
         //
         // ONLY FOR A FIELD, and the gate is not a nicety: scalac's rule is "`uninitialized` can only
         // be used as the right hand side of a MUTABLE FIELD definition", and this same function
@@ -1921,7 +1928,8 @@ final class TirEmitter(
         // compile errors** on libGDX core, every one that message. The test is structural — the
         // symbol's owner is a class rather than a method — never the shape of the type.
         val fieldOfAClass = program.definitionOf(s.owner).exists(_.isInstanceOf[Tree.ClassDef])
-        val blank = if fieldOfAClass then "scala.compiletime.uninitialized" else defaultFor(v.tpt.tpe)
+        val stated = defaultFor(v.tpt.tpe)
+        val blank  = if fieldOfAClass && stated.contains(".asInstanceOf[") then "scala.compiletime.uninitialized" else stated
         s"${ind(i)}${mods(s.flags, privateQualifier(s.owner)).replace("final ", "")}var ${esc(s.name)}: ${tpe(v.tpt.tpe)} = $blank"
 
   /** the literal rendered AT the field's declared type.

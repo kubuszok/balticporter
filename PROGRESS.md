@@ -273,6 +273,15 @@ stays a `def this`. Measured on this lane, against the pre-A2 baseline:
 | field slots hoisted | — | **53 across 31 classes**, of which **5 bind as `val`** and 48 stay `var` |
 | fields REFUSED a slot, with the reason recorded | — | **166 across 64 classes: 146 `order`, 15 `interleaved`, 5 `no-default`** |
 
+**A1's residue is a PLACEHOLDER, and the placeholder replaces the CAST and nothing else.** A field the
+funnel could not hoist keeps a `var … = <blank>`, and `<blank>` is `scala.compiletime.uninitialized`
+exactly where the alternative was `null.asInstanceOf[T]` — a cast in a position where nothing is
+being cast. Every type that STATES a default keeps stating it: `0`/`false` for a primitive, and
+`null` for the nullability phase's `T | scala.Null`, which is the very cast that phase exists to
+retire. Keyed on "field with no initialiser" instead, the substitution silently took that union
+default back off, and only `NullabilitySpec` asserting BOTH halves of its rule caught it. libGDX
+core: 1,184 placeholders, against 2,466 under the unkeyed version.
+
 **The order-safety rule is the whole residue.** 146 of 166 refusals are `reason=order` — the value
 was not composed of the constructor's own parameters, literals and operators, so hoisting it into a
 delegation argument list would evaluate it before `super(...)` and before the instance initialisers

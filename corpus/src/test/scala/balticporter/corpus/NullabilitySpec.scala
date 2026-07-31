@@ -149,10 +149,17 @@ class NullabilitySpec extends PortSuite:
   }
 
   test("an uninitialised annotated field defaults to `null`, not to a cast standing in for one") {
-    // The placeholder `null.asInstanceOf[T]` exists because a Java field with no initialiser has no
-    // Scala default; a union WITH `Null` states its own, so the cast the union was introduced to
-    // retire goes at the declaration as well as at the generic return.
-    assertEmits(port(java), "var parent: demo.Actor = null.asInstanceOf[demo.Actor]")
+    // A Java field with no initialiser has no Scala default, so the declaration needs a PLACEHOLDER;
+    // a union WITH `Null` STATES its own, so the cast the union was introduced to retire goes at the
+    // declaration as well as at the generic return.
+    //
+    // The placeholder off the union path is `scala.compiletime.uninitialized` rather than the
+    // `null.asInstanceOf[T]` this test was written against — A1's residue, scala's own word for the
+    // JVM default. That substitution is keyed on the CAST specifically and not on "field with no
+    // initialiser": applied to every one it took the union default here back off to
+    // `uninitialized`, which is the same cast-shaped answer in a different spelling and defeats the
+    // second assertion below. Both halves are asserted together for exactly that reason.
+    assertEmits(port(java), "var parent: demo.Actor = scala.compiletime.uninitialized")
     assertEmits(port(java, phase()), "var parent: demo.Actor | scala.Null = null")
   }
 
