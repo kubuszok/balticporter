@@ -419,3 +419,51 @@ class CollectionsTransformSpec extends PortSuite:
     assertNotEmits(p, "asInstanceOf[balticporter.runtime.JavaCollection[")
     assertNotEmits(p, "asInstanceOf[java.util.Collection")
   }
+
+  /** the same rule one slot along: a WIDENING the java formal required, which the retyped scala
+    * formal does not accept. Java declares `Map.get`/`remove`/`containsKey` over `Object`, so a
+    * TYPE-VARIABLE key arrives at this phase already wrapped in `asInstanceOf[java.lang.Object]`
+    * — correct for the java call, and `Found: Object / Required: K` once the receiver is a scala
+    * `Map[K, V]`. ENGINE-LIMITS K5.6: a phase that retypes owns the coercions around what it moved. */
+  private val genericMap =
+    """package demo;
+      |import java.util.HashMap;
+      |import java.util.Map;
+      |class Registry<K, V> {
+      |  private final Map<K, V> m = new HashMap<K, V>();
+      |  V get(K key) { return m.get(key); }
+      |  V drop(K key) { return m.remove(key); }
+      |  boolean has(K key) { return m.containsKey(key); }
+      |  void set(K key, V value) { m.put(key, value); }
+      |  V getOr(K key, V d) { return m.getOrDefault(key, d); }
+      |}
+      |""".stripMargin
+
+  test("a TYPE-VARIABLE key loses the java Object widening — the scala member takes K") {
+    val p = port(genericMap, new CollectionsTransform)
+    assertNotEmits(p, "key.asInstanceOf[java.lang.Object]")
+    assertEmits(p, "this.m.getOrElse(key,")
+    assertEmits(p, "this.m.remove(key)")
+    assertEmits(p, "this.m.contains(key)")
+    assertEmits(p, "this.m.put(key, value)")
+  }
+
+  test("…but a key that is NOT the map's key type keeps whatever it had — the strip is structural") {
+    // Java's `Map.get(Object)` accepts anything, so a port CAN meet a key the scala member cannot
+    // take. Stripping unconditionally would emit a call that silently claims a type the value does
+    // not have; the strip is keyed on what lies UNDER the cast already being `K` (CLAUDE.md §4.56 —
+    // structural, naming no type), so an `Object` key is passed through as it arrived and the
+    // boundary stays where a reader can see it.
+    val p = port(
+      """package demo;
+        |import java.util.HashMap;
+        |import java.util.Map;
+        |class Loose {
+        |  private final Map<String, Integer> m = new HashMap<String, Integer>();
+        |  Integer any(Object o) { return m.get(o); }
+        |}
+        |""".stripMargin,
+      new CollectionsTransform,
+    )
+    assertEmits(p, "this.m.getOrElse(o,")
+  }

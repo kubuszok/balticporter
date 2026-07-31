@@ -1177,18 +1177,18 @@ final class CollectionsTransform(val scope: RuleScope = RuleScope.Everywhere())
       // emits `it.hasNext` against `def hasNext()` — 24 measured errors.
       case (n, Nil, _) if parenless(n)          => Some(Tree.Select(recv, m, t.tpe, t.origin)) // drop `()`
       case ("get", List(i), Kind.Seq)           => Some(Tree.Apply(recv, List(i), m, t.tpe, t.origin)) // xs(i)
-      case ("get", List(key), Kind.Map)         => Some(call(recv, getOrElseSym, List(key, dflt(nullOf(so), recv, so)), t, so))
-      case ("getOrDefault", List(key, d), _)    => Some(call(recv, getOrElseSym, List(key, dflt(d, recv, so)), t, so))
+      case ("get", List(key), Kind.Map)         => Some(call(recv, getOrElseSym, List(keyArg(key, recv), dflt(nullOf(so), recv, so)), t, so))
+      case ("getOrDefault", List(key, d), _)    => Some(call(recv, getOrElseSym, List(keyArg(key, recv), dflt(d, recv, so)), t, so))
       case ("set", List(i, x), Kind.Seq)        => Some(call(recv, updateSym, List(i, x), t, so)) // xs(i) = x
       // Java's `Map.put` RETURNS THE PREVIOUS VALUE; scala's `update` returns `Unit`. Mapping to
       // `update` discarded it at every site — `if (map.put(k, v) != null)` became a comparison
       // against `Unit`. Scala's own `put` keeps it, as an `Option`, so `getOrElse(null)` restores
       // java's contract exactly. The default is ascribed to `V`, as `get`'s is.
       case ("put", List(key, v), Kind.Map)      =>
-        Some(call(call(recv, putSym, List(key, v), t, so), getOrElseSym, List(dflt(nullOf(so), recv, so)), t, so))
+        Some(call(call(recv, putSym, List(keyArg(key, recv), v), t, so), getOrElseSym, List(dflt(nullOf(so), recv, so)), t, so))
       // likewise `Map.remove`, which returns the value that was there.
       case ("remove", List(key), Kind.Map)      =>
-        Some(call(call(recv, removeSym, List(key), t, so), getOrElseSym, List(dflt(nullOf(so), recv, so)), t, so))
+        Some(call(call(recv, removeSym, List(keyArg(key, recv)), t, so), getOrElseSym, List(dflt(nullOf(so), recv, so)), t, so))
       // Java's `List` declares TWO one-argument `remove`s that do OPPOSITE things, and scala's
       // `Buffer` has only one of them:
       //
@@ -1237,7 +1237,7 @@ final class CollectionsTransform(val scope: RuleScope = RuleScope.Everywhere())
         Some(Tree.Select(Tree.Select(recv, headOptionSym, TypeRepr.NoType, so), orNullSym, t.tpe, so))
       case ("addAll" | "putAll", List(c), _)    => Some(infix(recv, opPlusPlusEq, List(c), t, so))// xs ++= c
       case ("remove", List(x), Kind.Set)        => Some(infix(recv, opMinusEq, List(x), t, so)) // xs -= x
-      case ("containsKey", List(key), Kind.Map) => Some(call(recv, containsSym, List(key), t, so))
+      case ("containsKey", List(key), Kind.Map) => Some(call(recv, containsSym, List(keyArg(key, recv)), t, so))
       case _                                    => None
 
   /** did java resolve `Collection.remove(Object)` (by VALUE, returning `boolean`) rather than
@@ -1271,6 +1271,35 @@ final class CollectionsTransform(val scope: RuleScope = RuleScope.Everywhere())
   private def valueType(t: TypeRepr): Option[TypeRepr] = t match
     case TypeRepr.AppliedType(_, List(_, v)) => Some(v)
     case _                                   => None
+
+  private def keyType(t: TypeRepr): Option[TypeRepr] = t match
+    case TypeRepr.AppliedType(_, List(k, _)) => Some(k)
+    case _                                   => None
+
+  /** A key argument, with the coercion JAVA's formal required stripped when the SCALA member's
+    * formal is exactly what lies beneath it.
+    *
+    * Java declares `Map.get`, `remove` and `containsKey` over `Object`, so a key whose static type
+    * is a TYPE VARIABLE arrives here already widened — the frontend synthesises
+    * `key.asInstanceOf[java.lang.Object]` off the DECLARED formal, which is right for a call to a
+    * java `Map` (ENGINE-LIMITS G14). Scala's `Map[K, V]` declares the same three over `K`, so once
+    * this phase has retyped the receiver that widening is the one thing standing between the
+    * argument and the parameter:
+    *
+    * {{{ Found: Object / Required: K }}}
+    *
+    * ENGINE-LIMITS K5.6 in a new place — a coercion that only becomes wrong AFTER a retyping — and
+    * the rule it states is why this lives here rather than in the frontend: a phase that retypes
+    * must ask what it has done to the casts around the types it moved. The frontend cannot know;
+    * only the phase that moved the receiver does.
+    *
+    * The test is STRUCTURAL and names no type (CLAUDE.md §4.56): the cast is stripped exactly when
+    * what it wraps ALREADY has the type the rewritten member wants. A key that is genuinely
+    * something else — java permits any `Object` — is left alone, and the boundary then fails to
+    * compile naming the two types, which is the error a reader can act on (ENGINE-LIMITS M6). */
+  private def keyArg(arg: Term, recv: Term): Term = (arg, keyType(recv.tpe)) match
+    case (Tree.Typed(inner, _, _, _), Some(k)) if k != TypeRepr.NoType && inner.tpe == k => inner
+    case _                                                                               => arg
 
   private def methodName(m: SymId)(using p: Program): String = p.symbolOf(m).map(_.name).getOrElse("")
 
