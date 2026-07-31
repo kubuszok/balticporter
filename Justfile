@@ -539,6 +539,15 @@ gltf-measure:
     SCALA_TESTS=$((JUNIT_LEFT + MUNIT_TESTS))
     echo "@Test in Java (whole {{gltf_tests}} tree): $JAVA_TESTS   discoverable in emitted Scala: $SCALA_TESTS (munit $MUNIT_TESTS + junit $JUNIT_LEFT)"
     [ "$JAVA_TESTS" != "$SCALA_TESTS" ] && echo "!! TESTS LOST — $((JAVA_TESTS - SCALA_TESTS)) of $JAVA_TESTS would never run, and the suite would report success"
+    # …and the HAND-WRITTEN half, counted and printed separately rather than summed into the line
+    # above. Upstream's whole suite is 8 attribute-comparison tests, which says nothing about the
+    # glTF reader that is most of the library; `gltf-core/src/test/scala` is what covers the §4.4
+    # hazards in `GLTFTypes` (CLAUDE.md §5.5 — `src/` is the hand-written half of a port). Keeping
+    # the two numbers apart is the point: a ported test and a written one are different evidence.
+    HAND_TESTS=$(grep -rhoE '(^|[^a-zA-Z0-9_.])test\("' {{gltf_module}}/src/test/scala 2>/dev/null | wc -l | tr -d ' ')
+    echo "hand-written munit in {{gltf_module}}/src/test/scala: $HAND_TESTS"
+    [ "$HAND_TESTS" = "0" ] && echo "!! the hand-written suite is GONE — the port's only cover for the loader would be missing"
+    ALL_TESTS=$((MUNIT_TESTS + HAND_TESTS))
 
     DEPS="{{gltf_deps}}"
 
@@ -549,7 +558,8 @@ gltf-measure:
     # NOTE the ANSI strip: without it `grep -cE '^-- .*Error'` matches nothing and reports 0 for a port
     # that does not compile — a false NEGATIVE on the headline number.
     scala-cli compile --scala {{scala_version}} --server=false $DEPS \
-      {{gdx_module}}/src_managed/main/scala {{gltf_module}}/src_managed/main/scala {{gltf_module}}/src_managed/test/scala \
+      {{gdx_module}}/src_managed/main/scala {{gltf_module}}/src_managed/main/scala \
+      {{gltf_module}}/src_managed/test/scala {{gltf_module}}/src/test/scala \
       2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/gltfmeasure.txt
     CLI_STATUS=${PIPESTATUS[0]}
     ERRORS=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/gltfmeasure.txt)
@@ -563,9 +573,13 @@ gltf-measure:
       echo
       echo "-- run --"
       scala-cli test --scala {{scala_version}} --server=false $DEPS -Duser.language=en -Duser.country=US \
-        {{gdx_module}}/src_managed/main/scala {{gltf_module}}/src_managed/main/scala {{gltf_module}}/src_managed/test/scala \
+        {{gdx_module}}/src_managed/main/scala {{gltf_module}}/src_managed/main/scala \
+        {{gltf_module}}/src_managed/test/scala {{gltf_module}}/src/test/scala \
         2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/gltfrun.txt
-      reconcile_outcomes "$MEASURE_TMP"/gltfrun.txt "$MUNIT_TESTS"
+      # Reconciled against the SUM: both source sets are on the one invocation, so an outcome
+      # count that matched only the ported half would report success for a hand-written suite that
+      # never ran (CLAUDE.md §5.1).
+      reconcile_outcomes "$MEASURE_TMP"/gltfrun.txt "$ALL_TESTS"
       echo
       echo "-- correlation: test failures located to members and Java origins --"
       # All three maps: only the library's own can anchor a failure on the member that threw, only

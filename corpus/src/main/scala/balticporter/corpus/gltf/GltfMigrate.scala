@@ -104,7 +104,67 @@ object GltfPolicy:
       // `com.badlogic.gdx -> sge` is INHERITED from the base manifest, not restated; longest-
       // prefix-wins keeps the two apart.
       packageRenames = Map("net.mgsx.gltf" -> "sge.gltf"),
+      // gdx-gltf's OWN replacements. `inject` is not inherited — exactly one module ships each
+      // replacement file, and libGDX core ships the ones for the types IT dropped.
+      inject  = List(repoRoot.resolve("corpus/gltf-overrides")),
       surface = List(
+        // ==THE THREE REFLECTIVE SITES, and why all three are a GWT workaround rather than a need==
+        //
+        // gdx-gltf reaches `com.badlogic.gdx.utils.reflect.ClassReflection` in exactly three
+        // methods, and the base drops that type: reflective instantiation is the one thing Scala.js
+        // and Scala Native cannot do. Two of the three say so themselves, in an upstream comment —
+        // "call X via reflection to avoid compilation error with GWT" — so the reflection is not
+        // what the code MEANS, it is how it dodged a compiler that is not in this port's target
+        // set. CLAUDE.md §3.5: the reference hand port (`../sge/sge-extension/gltf`) SOLVED both
+        // the same way, `PixmapBinaryLoaderHack.scala` and `GLTFBinaryExporter.savePNG` each making
+        // the direct call the facade was emulating, with the WebGL guard kept.
+        //
+        // The bodies are written in the port's FINAL namespace: `MethodBodyTransform` splices them
+        // verbatim and the package rename never sees them, while the KEYS are upstream because the
+        // phase matches them against the model before the rename runs. Getting that backwards is
+        // one compile error naming `net.mgsx` in a file that declares `package sge.gltf`.
+        new balticporter.transform.MethodBodyTransform(Map(
+          // 1. `new Pixmap(bytes, off, len)`, reached through `getConstructor(…).newInstance(…)`.
+          "net.mgsx.gltf.loaders.shared.texture.PixmapBinaryLoaderHack#load" ->
+            """{
+              |  if (sge.Gdx.app.getType() eq sge.Application.ApplicationType.WebGL) {
+              |    throw new sge.gltf.loaders.exceptions.GLTFUnsupportedException(
+              |      "load pixmap from bytes not supported for WebGL")
+              |  } else {
+              |    new sge.graphics.Pixmap(encodedData, offset, len)
+              |  }
+              |}""".stripMargin,
+          // 2. `PixmapIO.writePNG(file, pixmap)`, reached through `forName` + `getMethod` + `invoke`.
+          //    `PixmapIO` is ported and portable, so the facade bought nothing here either.
+          "net.mgsx.gltf.exporters.GLTFBinaryExporter#savePNG" ->
+            """{
+              |  if (sge.Gdx.app.getType() eq sge.Application.ApplicationType.WebGL) {
+              |    throw new sge.gltf.loaders.exceptions.GLTFUnsupportedException(
+              |      "saving pixmap not supported for WebGL")
+              |  } else {
+              |    sge.graphics.PixmapIO.writePNG(file, pixmap)
+              |  }
+              |}""".stripMargin,
+          // 3. The one site where reflection was doing real work: `ext` fabricates a material
+          //    extension object from its `Class`. No direct call replaces that, so it takes the
+          //    factory registry the base's own injected `Pools` and Ashley's `ComponentFactories`
+          //    both take — `GLTFExtensionFactories`, injected by THIS module (see `inject`).
+          //    Everything else in the 335-line exporter translates mechanically, which is exactly
+          //    the case `MethodBodyTransform` exists for.
+          "net.mgsx.gltf.exporters.GLTFMaterialExporter#ext" ->
+            """{
+              |  if (m.extensions == null) {
+              |    m.extensions = new sge.gltf.data.GLTFExtensions()
+              |  }
+              |  var e: T = m.extensions.get(`type`, ext)
+              |  if (e == null) {
+              |    this.base.useExtension(ext, false)
+              |    e = sge.gltf.data.extensions.GLTFExtensionFactories.create(`type`)
+              |    m.extensions.set(ext, e)
+              |  }
+              |  e
+              |}""".stripMargin,
+        )),
         // LAST, deliberately, for the reason AshleyPolicy states: this reads what the BASE
         // actually emitted and reports a reference the base does not ship, so it must run after
         // any seam that re-points such a reference, or it reports the very sites the next phase
