@@ -11,8 +11,8 @@ sge.graphs.AlgorithmsTest	sge.graphs.AlgorithmsTest#pathIsConnected(Path<Vector2
 sge.graphs.ArrayTest	sge.graphs.ArrayTest	class	3057f9249bb9aec8
 sge.graphs.ArrayTest	sge.graphs.ArrayTest#<stmt1>	stmt	1c7ceceae848cc5e
 sge.graphs.ArrayTest	sge.graphs.ArrayTest#<stmt2>	stmt	b449832e370cbc31
-sge.graphs.GraphBuilderTest	sge.graphs.GraphBuilderTest	class	f0374fe9e305a208
-sge.graphs.GraphBuilderTest	sge.graphs.GraphBuilderTest#<stmt1>	stmt	ef9965a55137de43
+sge.graphs.GraphBuilderTest	sge.graphs.GraphBuilderTest	class	b2b3e48813329e9b
+sge.graphs.GraphBuilderTest	sge.graphs.GraphBuilderTest#<stmt1>	stmt	339ee43e2b72ebed
 sge.graphs.GraphTest	sge.graphs.GraphTest	class	702507087d904ee3
 sge.graphs.GraphTest	sge.graphs.GraphTest#<stmt1>	stmt	3f1c2caf57147930
 sge.graphs.GraphTest	sge.graphs.GraphTest#<stmt2>	stmt	1ef5f3db63cec35c

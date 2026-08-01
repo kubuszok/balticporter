@@ -232,9 +232,28 @@ object TirCacheKey:
         ("engine" -> EngineFingerprint.value) ::
           ("notes" -> notes) ::
           ("self" -> TirPrinter.digest(u)) ::
+          // …and the UPSTREAM JAVA, which is in the emitted text and NOT in the tree: the emitter's
+          // recovery backstop reads comments the frontend never harvested, so a source edit that
+          // only moved one of those changes the file while every tree digest stays identical —
+          // a cache HIT that re-serves the previous emission, the same defect `Style.identity`
+          // records for trivia and `notes` for decisions, one channel further out.
+          ("java" -> javaDigest(u.origin.javaPath)) ::
           deps.toList.flatMap(d => byId.get(d).map(_ => s"dep:${nameOf(program, d)}" -> ifaces.getOrElse(d, ""))).sorted
       u.symbol -> Digest.combined(parts)
     }.toMap
+
+  /** the upstream file's own digest, once per path. `""` when there is nothing to read — the
+    * backstop reads nothing then either, so the key is not pretending to cover it. */
+  private val javaDigests = collection.concurrent.TrieMap.empty[String, String]
+
+  private def javaDigest(path: String): String =
+    if path.isEmpty then ""
+    else javaDigests.getOrElseUpdate(path, {
+      val p = java.nio.file.Path.of(path)
+      if java.nio.file.Files.isRegularFile(p) then
+        try Digest.string(java.nio.file.Files.readString(p)) catch case _: Throwable => ""
+      else ""
+    })
 
   private def nameOf(program: Program, s: SymId): String =
     program.symbolOf(s).map(_.fullName).getOrElse(s.toString)

@@ -650,7 +650,14 @@ final class TestFrameworkTransform(
         reason = Reason.Universal("test-framework"),
         origin = d.origin,
       ))
-      Tree.Apply(head, List(rhs), testSym, TypeRepr.NoType, d.origin)
+      // …and the METHOD'S OWN DOCUMENTATION, which stops having a `def` to sit on the moment this
+      // phase runs. A `DefDef` carries `leading`; the statement that replaces it is a TERM, and the
+      // TIR's carrier for a statement's comments is the `Commented` wrapper — so the javadoc lands
+      // directly above `test("m")`, which is exactly where java had it. Without this it is the
+      // largest single category the recovery backstop has to put back (51 comments on one suite),
+      // and a backstop placement is member-granular where this is exact.
+      val call0 = Tree.Apply(head, List(rhs), testSym, TypeRepr.NoType, d.origin)
+      if d.leading.isEmpty then call0 else Tree.Commented(d.leading, call0)
 
 object TestFrameworkTransform:
   val DefaultSuite = "munit.FunSuite"

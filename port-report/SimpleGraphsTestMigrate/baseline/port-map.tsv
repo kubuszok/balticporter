@@ -22,7 +22,7 @@ member	space.earlygrey.simplegraphs.AlgorithmsTest#createDirectedSearchGraph()	s
 member	space.earlygrey.simplegraphs.AlgorithmsTest#pathIsConnected(Path,Graph)	sge.graphs.AlgorithmsTest#pathIsConnected(Path<Vector2>,Graph<Vector2>)	Renamed	-	space/earlygrey/simplegraphs/AlgorithmsTest.java	99	7d93f765dc552eb9	placement=companion vis=private
 member	space.earlygrey.simplegraphs.ArrayTest#<stmt1>	sge.graphs.ArrayTest#<stmt1>	Renamed	-	space/earlygrey/simplegraphs/ArrayTest.java	9	1c7ceceae848cc5e	
 member	space.earlygrey.simplegraphs.ArrayTest#<stmt2>	sge.graphs.ArrayTest#<stmt2>	Renamed	-	space/earlygrey/simplegraphs/ArrayTest.java	22	b449832e370cbc31	
-member	space.earlygrey.simplegraphs.GraphBuilderTest#<stmt1>	sge.graphs.GraphBuilderTest#<stmt1>	Renamed	-	space/earlygrey/simplegraphs/GraphBuilderTest.java	68	ef9965a55137de43	
+member	space.earlygrey.simplegraphs.GraphBuilderTest#<stmt1>	sge.graphs.GraphBuilderTest#<stmt1>	Renamed	-	space/earlygrey/simplegraphs/GraphBuilderTest.java	68	339ee43e2b72ebed	
 member	space.earlygrey.simplegraphs.GraphTest#<stmt1>	sge.graphs.GraphTest#<stmt1>	Renamed	-	space/earlygrey/simplegraphs/GraphTest.java	48	3f1c2caf57147930	
 member	space.earlygrey.simplegraphs.GraphTest#<stmt2>	sge.graphs.GraphTest#<stmt2>	Renamed	-	space/earlygrey/simplegraphs/GraphTest.java	131	1ef5f3db63cec35c	
 member	space.earlygrey.simplegraphs.GraphTest#<stmt3>	sge.graphs.GraphTest#<stmt3>	Renamed	-	space/earlygrey/simplegraphs/GraphTest.java	154	200fd9ce41725f33	

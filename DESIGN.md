@@ -2757,6 +2757,70 @@ commit with `before->after` trivia counts in the subject.
 dominant category is a frontend claim-then-drop, not an emitter rewrite — and V3's site count rises while
 its licence mitigation is withdrawn. Both in the same commit as the fix.
 
+#### 8.8 AS BUILT — the design held; four things it did not say
+
+All three mechanisms landed as specified, in the specified order, and the bar is met: **`lost = 0` on
+every one of the thirteen ports**, from a corpus total of 233. Per port, `lost / recovered /
+deliberate`, with `lost` shown against its committed baseline:
+
+| port | before | after (all three) |
+|---|---|---|
+| libGDX core | 100 | **0** / 4 / 12 |
+| libGDX tests | 69 | **0** / 0 / 0 |
+| anim8 | 34 | **0** / 0 / 0 |
+| gdx-gltf | 10 | **0** / 4 / 0 |
+| gdx-vfx | 11 | **0** / 2 / 0 |
+| screens | 7 | **0** / 1 / 0 |
+| simple-graphs (+ suite) | 1 + 1 | **0** / 0 / 0 each |
+| ashley, ashley-test, gltf-test, jbump, noise4j | 0 | **0** / 0 / 0 |
+
+**`recovered` is small because the lane was READ, not because the backstop is good.** Its first run
+on libGDX's suite was **51**, and all 51 were one category: a `@Test` method's javadoc, lost because
+`TestFrameworkTransform` turns the method into a `test("…") { … }` STATEMENT and the `leading` field
+went with the `def`. That has an exact home — the TIR's carrier for a statement's comments is
+`Tree.Commented` — and taking it dropped the lane to 0. This is the loop the lane exists for: a
+`recovered` count that reads high names a category that still wants a home, and shipping the
+backstop over it would have hidden 51 comments at member granularity behind a green `lost = 0`.
+
+What the design did not anticipate, in the order it was learned:
+
+- **V3's culprit is the PACKAGE DECLARATION, not "nowhere".** The brief's accessory lead was the
+  answer: `CtPackageDeclaration.getComments` carries the second of two leading blocks. It changes
+  nothing about the fix — reading one more of a parser's slots leaves the next shape unhandled, and
+  no set of slots can order two blocks — but the probe is pinned in a spec so a Spoon release that
+  moves it is visible.
+- **The file-leading harvest had to become a CLAIM, and had to run FIRST.** A positional harvest can
+  take a comment the parser also attached to the type, which would emit it twice. So the header owns
+  its SPANS (`headerSpans`), the finer harvests skip them, and the whole thing runs before any type
+  translates — a positional claim binds only the harvests that come after it. The header is cached
+  per compilation unit, which is what keeps "each of a file's top-level types carries the whole
+  notice" a fact of the code rather than of two harvests agreeing.
+- **The recovery backstop made the source-map slots load-bearing for EMITTED TEXT.** They were
+  recorded only when the artifact layer was on. The backstop anchors on them, so a run with
+  reporting off would have emitted a different file from the same program — recording is now
+  unconditional. The same reasoning added the upstream file's digest to `TirCacheKey`: the backstop
+  reads comments the frontend never harvested, so a source edit that moved only one of those changes
+  the file while every tree digest stays identical.
+- **"Between slots, so no member digest moves" is true only while slots do not NEST.** They do: a
+  nested class's recorded text CONTAINS its members', so a comment placed after a nested member
+  falls inside the enclosing class's string and `srcMapOf` — which finds a member by searching for
+  exactly that string — then cannot find it. 2 UNLOCATABLE members on libGDX core the first time
+  this shipped, which is a silent hole in the map that misattributes every later error in those
+  types. The splice therefore applies the insertion to every ENCLOSING slot as well; that member's
+  digest does move, and honestly, because it did gain a line.
+- **Two silent defects the mechanisms exposed rather than caused**, both invisible to every count:
+  `TriviaCheck.normalize` stripped `//` LAST, so a nesting comment rendered as `//` lines (§4.58)
+  normalised differently from its java and was reported lost while sitting in the file; and a
+  finding carries the check name it is filed under, so the `deliberate` lane's rows were filed
+  against `trivia` — `lost` read 12 and `deliberate` 0 on a run whose own stdout said the reverse.
+  Both are pinned by specs.
+
+And one §5.4 repeat, which is why that rule is a rule: `CommentAnchor`'s map is keyed by java path
+and its two consumers hold the path in different spellings — what the parser recorded, and what the
+orchestrator resolved. Compared raw, the check's lookup missed EVERY file in a worktree, and the
+`deliberate` lane read zero on a port with twelve dropped-member javadocs. Both sides go through
+`RealPath` now.
+
 ### 8.9 The JDK surface — derived from the walk that already runs
 
 **Decision.** One new artifact and one new check, **both second consumers of an enumeration the engine

@@ -4,7 +4,7 @@ import balticporter.core.*
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.sbtgen.SbtGen
-import balticporter.tir.{CheckReport, Correlate, CorrelateRun, CtorFunnel, DebugFlags, Decision, DecisionLog, Definition, ExternalUsage, JdkSurfaceCheck, MemberIndex, NoteCoverageCheck, OmissionCheck, Origin, Phase, Pipeline, PolicyBinder, PolicyBound, PortabilityCheck, PorterNote, Program, Reason, Remediator, RewriteTrace, SrcMap, Surface, SymId, SymbolTable, Tree, TrivialSurface, TriviaCheck, Xref}
+import balticporter.tir.{CheckReport, CommentAnchor, Correlate, CorrelateRun, CtorFunnel, DebugFlags, Decision, DecisionLog, Definition, ExternalUsage, JdkSurfaceCheck, MemberIndex, NoteCoverageCheck, OmissionCheck, Origin, Phase, Pipeline, PolicyBinder, PolicyBound, PortabilityCheck, PorterNote, Program, Reason, Remediator, RewriteTrace, SrcMap, Surface, SymId, SymbolTable, Tree, TrivialSurface, TriviaCheck, Xref}
 import balticporter.transform.{CollectionBoundaryCheck, CollectionClosureCheck, CollectionsTransform, ContextSeamCheck, GlobalsToImplicitsTransform, MethodBodyTransform, NullabilityBoundaryCheck, NullabilityTransform, PackageRenameTransform, PortMapTransform}
 
 import java.nio.file.{Files, Path, StandardCopyOption}
@@ -523,13 +523,23 @@ final case class PortRun(
     // frontend harvest silently returned `Nil` (it did once; see `TriviaCheck`). Injected
     // replacements are excluded by construction: they are hand-written Scala with no Java behind
     // them, and this check compares against a Java file or reports nothing.
-    val shippedUnits = shipped.toList
-    val triviaLost   = TriviaCheck.check(shippedUnits)
-    val triviaFiles  = TriviaCheck.comparable(shippedUnits)
-    CheckReport.record(PortRun.TriviaDropped, triviaLost.map(_.report))
-    say(s"TRIVIA (comments in the Java that did not reach the Scala): ${triviaLost.size}")
-    if triviaLost.nonEmpty then say(PortReport.Kind.Trivia.classification)
-    println(TriviaCheck.summary(triviaLost, triviaFiles))
+    //
+    // THREE LANES, and the split is what makes `lost` mean something: `recovered` is what the
+    // emitter's backstop had to put back (a residue), and `deliberate` is a comment documenting a
+    // member this port DROPS — derived from the run's own drops through `CommentAnchor`, exactly
+    // as the expected-failure ledger is derived from `dropped-types.tsv`, so the set follows the
+    // manifest with nobody editing a list.
+    val shippedUnits  = shipped.toList
+    val triviaMembers = CommentAnchor.membersOf(program)
+    val trivia        = TriviaCheck.check(shippedUnits, triviaMembers)
+    val triviaFiles   = TriviaCheck.comparable(shippedUnits)
+    CheckReport.record(PortRun.TriviaDropped, trivia.lost.map(_.report(PortRun.TriviaDropped)))
+    CheckReport.record(PortRun.TriviaRecovered, trivia.recovered.map(_.report))
+    CheckReport.record(PortRun.TriviaDeliberate, trivia.deliberate.map(_.report(PortRun.TriviaDeliberate)))
+    say(s"TRIVIA (comments in the Java that did not reach the Scala): ${trivia.lost.size} lost, " +
+        s"${trivia.recovered.size} recovered, ${trivia.deliberate.size} deliberate")
+    if trivia.lost.nonEmpty then say(PortReport.Kind.Trivia.classification)
+    println(TriviaCheck.summary(trivia, triviaFiles))
 
     // CHECK 1 — before injection, so a file at a dropped type's path can only be the emitter's.
     val leaked = record(PortRun.SubstitutionEmitted, SubstitutionCheck.emittedDroppedTypes(outDir, policySubs))
@@ -1603,6 +1613,10 @@ object PortRun:
   val PortMapCheck         = "port-map"
   /** comments in the upstream Java that did not reach the emitted Scala (a LICENCE among them). */
   val TriviaDropped        = "trivia"
+  /** …the ones the emitter's backstop had to PUT BACK: a counted residue, never a success. */
+  val TriviaRecovered      = "trivia(recovered)"
+  /** …and the ones documenting a member this port DROPS, derived from the run's own drops. */
+  val TriviaDeliberate     = "trivia(deliberate)"
   /** the port's JDK wall — every `java.*` member the emitted code still calls, classified. */
   val JdkSurface           = JdkSurfaceCheck.Name
 
@@ -1618,7 +1632,10 @@ object PortRun:
     * `LibgdxTestMigrate` never called `PortabilityCheck` at all. */
   val RequiredChecks: Set[String] = Set(
     Signature, Omissions, PortabilityAll, PortabilityEmitted, PortabilityInjected, Remediation,
-    SubstitutionEmitted, SubstitutionDangling, Policy, Manifest, PortMapCheck, TriviaDropped,
+    SubstitutionEmitted, SubstitutionDangling, Policy, Manifest, PortMapCheck,
+    // all three trivia lanes: a run that reported `lost` alone could hold the bar at zero by
+    // recovering everything, and nothing would say so.
+    TriviaDropped, TriviaRecovered, TriviaDeliberate,
     // required of EVERY port, including one that runs no retyping phase: with the phase absent the
     // check still reports the port's kept JDK surface and K9's ForEach demand, and a port that
     // reported nothing there would be indistinguishable from one whose check never ran.

@@ -247,7 +247,7 @@ sge.gltf.exporters.GLTFAnimationExporter	sge.gltf.exporters.GLTFAnimationExporte
 sge.gltf.exporters.GLTFAnimationExporter	sge.gltf.exporters.GLTFAnimationExporter$ChannelExporter#numComponents	val	d8dc1d1d014c7512
 sge.gltf.exporters.GLTFAnimationExporter	sge.gltf.exporters.GLTFAnimationExporter$ChannelExporter#numElements	val	f7d6ae5d1553e1c3
 sge.gltf.exporters.GLTFAnimationExporter	sge.gltf.exporters.GLTFAnimationExporter$ChannelExporter#outputType	val	3b0aa123b90bb59a
-sge.gltf.exporters.GLTFBinaryExporter	sge.gltf.exporters.GLTFBinaryExporter	class	b3c6040b47a5e615
+sge.gltf.exporters.GLTFBinaryExporter	sge.gltf.exporters.GLTFBinaryExporter	class	b4eccba283953b25
 sge.gltf.exporters.GLTFBinaryExporter	sge.gltf.exporters.GLTFBinaryExporter#<stmt1>	stmt	b6288eac58df8e3f
 sge.gltf.exporters.GLTFBinaryExporter	sge.gltf.exporters.GLTFBinaryExporter#<stmt2>	stmt	3e6b58797b72a118
 sge.gltf.exporters.GLTFBinaryExporter	sge.gltf.exporters.GLTFBinaryExporter#begin(int)	def	d7aae4df1ad4d32d
@@ -264,10 +264,10 @@ sge.gltf.exporters.GLTFBinaryExporter	sge.gltf.exporters.GLTFBinaryExporter#fold
 sge.gltf.exporters.GLTFBinaryExporter	sge.gltf.exporters.GLTFBinaryExporter#reset()	def	601382b545c63840
 sge.gltf.exporters.GLTFBinaryExporter	sge.gltf.exporters.GLTFBinaryExporter#savePNG(FileHandle,Pixmap)	def	6e83b2ab8a194045
 sge.gltf.exporters.GLTFBinaryExporter	sge.gltf.exporters.GLTFBinaryExporter#views	val	40f3128ee9fc2551
-sge.gltf.exporters.GLTFCameraExporter	sge.gltf.exporters.GLTFCameraExporter	class	c5c094cabf393cae
+sge.gltf.exporters.GLTFCameraExporter	sge.gltf.exporters.GLTFCameraExporter	class	4bb9f8bab72f1ddb
 sge.gltf.exporters.GLTFCameraExporter	sge.gltf.exporters.GLTFCameraExporter#<stmt1>	stmt	23fd91ae01f58830
 sge.gltf.exporters.GLTFCameraExporter	sge.gltf.exporters.GLTFCameraExporter#base	val	5ad42a70bbe4c33c
-sge.gltf.exporters.GLTFCameraExporter	sge.gltf.exporters.GLTFCameraExporter#export(Camera)	def	e08b1c52626f74d1
+sge.gltf.exporters.GLTFCameraExporter	sge.gltf.exporters.GLTFCameraExporter#export(Camera)	def	3475498d3c332ba0
 sge.gltf.exporters.GLTFCameraExporter	sge.gltf.exporters.GLTFCameraExporter#export(ObjectMap<Node,Camera>)	def	3e6c92268769768a
 sge.gltf.exporters.GLTFExportTypes	sge.gltf.exporters.GLTFExportTypes	class	d10b1bf67b2bab3a
 sge.gltf.exporters.GLTFExportTypes	sge.gltf.exporters.GLTFExportTypes#rgb(Color)	def	7f52a3ef17e85630
@@ -412,9 +412,9 @@ sge.gltf.loaders.gltf.GLTFAssetLoader	sge.gltf.loaders.gltf.GLTFAssetLoader$Mana
 sge.gltf.loaders.gltf.GLTFLoader	sge.gltf.loaders.gltf.GLTFLoader	class	284a3ff91d54fff7
 sge.gltf.loaders.gltf.GLTFLoader	sge.gltf.loaders.gltf.GLTFLoader#load(FileHandle)	def	5895e862d6552c19
 sge.gltf.loaders.gltf.GLTFLoader	sge.gltf.loaders.gltf.GLTFLoader#load(FileHandle,boolean)	def	485928aba202d745
-sge.gltf.loaders.gltf.SeparatedDataFileResolver	sge.gltf.loaders.gltf.SeparatedDataFileResolver	class	11f6b7b5b6730678
+sge.gltf.loaders.gltf.SeparatedDataFileResolver	sge.gltf.loaders.gltf.SeparatedDataFileResolver	class	d47e03b34f6cb710
 sge.gltf.loaders.gltf.SeparatedDataFileResolver	sge.gltf.loaders.gltf.SeparatedDataFileResolver#bufferMap	val	406b8c34a5f209d8
-sge.gltf.loaders.gltf.SeparatedDataFileResolver	sge.gltf.loaders.gltf.SeparatedDataFileResolver#decodePath(String)	def	ad7b923c6e30953a
+sge.gltf.loaders.gltf.SeparatedDataFileResolver	sge.gltf.loaders.gltf.SeparatedDataFileResolver#decodePath(String)	def	063b9700c2c53c5c
 sge.gltf.loaders.gltf.SeparatedDataFileResolver	sge.gltf.loaders.gltf.SeparatedDataFileResolver#getBuffer(int)	def	ac0bcbea864d04a1
 sge.gltf.loaders.gltf.SeparatedDataFileResolver	sge.gltf.loaders.gltf.SeparatedDataFileResolver#getImageFile(GLTFImage)	def	1a5b93fba8795c7a
 sge.gltf.loaders.gltf.SeparatedDataFileResolver	sge.gltf.loaders.gltf.SeparatedDataFileResolver#getRoot()	def	290e88a4a2604248
@@ -575,9 +575,9 @@ sge.gltf.loaders.shared.material.MaterialLoaderBase	sge.gltf.loaders.shared.mate
 sge.gltf.loaders.shared.material.MaterialLoaderBase	sge.gltf.loaders.shared.material.MaterialLoaderBase#loadMaterials(Array<GLTFMaterial>)	def	05d3e6c81b699c93
 sge.gltf.loaders.shared.material.MaterialLoaderBase	sge.gltf.loaders.shared.material.MaterialLoaderBase#materials	val	4c5c85d7bbfa1173
 sge.gltf.loaders.shared.material.MaterialLoaderBase	sge.gltf.loaders.shared.material.MaterialLoaderBase#textureResolver	val	58da6a4afea8987f
-sge.gltf.loaders.shared.material.PBRMaterialLoader	sge.gltf.loaders.shared.material.PBRMaterialLoader	class	04fdf585c90efa41
+sge.gltf.loaders.shared.material.PBRMaterialLoader	sge.gltf.loaders.shared.material.PBRMaterialLoader	class	3ce6c63ac8d098bf
 sge.gltf.loaders.shared.material.PBRMaterialLoader	sge.gltf.loaders.shared.material.PBRMaterialLoader#getTexureMap(long,GLTFTextureInfo)	def	80068b9a9687794d
-sge.gltf.loaders.shared.material.PBRMaterialLoader	sge.gltf.loaders.shared.material.PBRMaterialLoader#loadMaterial(GLTFMaterial)	def	53cbd6bea41861dd
+sge.gltf.loaders.shared.material.PBRMaterialLoader	sge.gltf.loaders.shared.material.PBRMaterialLoader#loadMaterial(GLTFMaterial)	def	384dc21ecac53141
 sge.gltf.loaders.shared.scene.NodeResolver	sge.gltf.loaders.shared.scene.NodeResolver	class	4b0ce05d26429780
 sge.gltf.loaders.shared.scene.NodeResolver	sge.gltf.loaders.shared.scene.NodeResolver#get(int)	def	13e95230a3102275
 sge.gltf.loaders.shared.scene.NodeResolver	sge.gltf.loaders.shared.scene.NodeResolver#nodeMap	val	bd259baa71660097
@@ -596,7 +596,7 @@ sge.gltf.loaders.shared.texture.ImageResolver	sge.gltf.loaders.shared.texture.Im
 sge.gltf.loaders.shared.texture.ImageResolver	sge.gltf.loaders.shared.texture.ImageResolver#getPixmaps(Array<Pixmap>)	def	a7898580220404ff
 sge.gltf.loaders.shared.texture.ImageResolver	sge.gltf.loaders.shared.texture.ImageResolver#load(Array<GLTFImage>)	def	a9d579fbfa828232
 sge.gltf.loaders.shared.texture.ImageResolver	sge.gltf.loaders.shared.texture.ImageResolver#pixmaps	val	f7432f7fa7066b6f
-sge.gltf.loaders.shared.texture.PixmapBinaryLoaderHack	sge.gltf.loaders.shared.texture.PixmapBinaryLoaderHack	class	3cfea8fd8966fa8a
+sge.gltf.loaders.shared.texture.PixmapBinaryLoaderHack	sge.gltf.loaders.shared.texture.PixmapBinaryLoaderHack	class	a649702a533d835f
 sge.gltf.loaders.shared.texture.PixmapBinaryLoaderHack	sge.gltf.loaders.shared.texture.PixmapBinaryLoaderHack#load(Array<byte>,int,int)	def	64d4b1bd947cf750
 sge.gltf.loaders.shared.texture.TextureResolver	sge.gltf.loaders.shared.texture.TextureResolver	class	95ed48edb3a66934
 sge.gltf.loaders.shared.texture.TextureResolver	sge.gltf.loaders.shared.texture.TextureResolver#dispose()	def	142b3ffd157076b5

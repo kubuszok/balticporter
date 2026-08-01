@@ -232,7 +232,7 @@ over `gdx/test` as a **dependent** of it, inheriting its manifest.
 | substitutions (emitted / dangling) | 0 / 0 | 0 / 0 |
 | manifest agreement · port map · policy | 0 · 0 · 0 | 0 · 0 · 0 |
 | collection closure / boundary | **2** / 0 | 0 / 0 |
-| trivia (comments lost) | **100** | **69** |
+| trivia lost / recovered / deliberate | **0** / 4 / 12 | **0** / 0 / 0 |
 | porter notes uncovered | **0** | **0** |
 | break residue (untranslated jumps) | **0** | **0** |
 | source map | 594 units / 19,288 members | 623 units / 19,547 members |
@@ -537,7 +537,7 @@ collection shims are vendored by libGDX core and compiling `ashley-core` alone m
 | omissions | 1 | 2 |
 | portability (all / emitted / injected) | 151 / **0** / 4 | 153 / 2 / 0 |
 | substitutions · manifest · port map · policy | 0 · 0 · 0 · 0 | 0 · 0 · 0 · 0 |
-| trivia | **0** | **0** |
+| trivia lost / recovered / deliberate | **0** / 0 / 0 | **0** / 0 / 0 |
 | porter notes uncovered | 0 | 0 |
 | break residue | **0** | **0** |
 | source map | — | 633 units / 19,977 members |
@@ -635,7 +635,7 @@ libGDX nor a dependent of it** — which is what makes its result meaningful. Re
 | omissions | 2 | 0 |
 | portability (all / emitted) | 6 / 6 | 6 / 0 |
 | substitutions · manifest · port map · policy | 0 · 0 · 0 · 0 | 0 · 0 · 0 · 0 |
-| trivia | 1 | 1 |
+| trivia lost / recovered / deliberate | **0** / 0 / 0 | **0** / 0 / 0 |
 | porter notes uncovered · break residue | 0 · 0 | 0 · 0 |
 | source map | — | 36 units / 508 members |
 | members changed vs baseline | 0 | **0** |
@@ -1085,7 +1085,7 @@ reading as agreement is precisely the silent success `java_test_count` exists to
 | portability (all / emitted / injected) | 263 / **112** / 0 |
 | substitutions · manifest · port map · policy | 0 · 0 · 0 · 0 |
 | collection closure · boundary · shared-iterator | 0 · 0 · 0 |
-| trivia | 34 |
+| trivia lost / recovered / deliberate | **0** / 0 / 0 |
 | porter notes uncovered · break residue | 0 · **0** |
 | source map | 16 units / 568 members |
 | decisions recorded | 632 rows, **251** about anim8's own declarations (235 `RetypedSignature`, 16 `RenamedPackage`); the other 381 are the base's, which `ENGINE-LIMITS.md` D2 says should not be republished here |
@@ -1182,7 +1182,7 @@ names as `GdxSharedIteratorFactory` already is. Nothing in anim8's own policy re
 | `portability(emitted)` — `java.util.zip` | 112 | **not an engine gap** (`ENGINE-LIMITS` P3) | `DeflaterOutputStream` (100), `Deflater` (6), `CRC32` (5), `CheckedOutputStream` (1). PNG *is* DEFLATE; there is no portable substitute in the library's own terms. The reference port made the same call — its `ChunkBufferSuite` lives in `src/test/scalajvm`. |
 | `portability(all)` − `(emitted)` | 151 | base's, not this module's | libGDX core's own 151, seen through the resolution root. Identical to the number `just gdx-measure` reports. |
 | `omissions` — promoted constructor body on every path | 24 | (a), known | `ENGINE-LIMITS` C7, 8 each in `PaletteReducer`, `QualityPalette`, `FastPalette` — the palette classes have many constructors funnelling to one. |
-| `trivia` — dropped comments | 34 | (a), known | `ENGINE-LIMITS` V1: `PaletteReducer` 17, `AnimatedPNG` 12, `FastPalette` 3, `OtherMath` 1, `FastPNG` 1. All are COMMENTED-OUT CODE inside method bodies, which the TIR has no node for. |
+| `trivia` — dropped comments | **0** | closed | Was 34 (`PaletteReducer` 17, `AnimatedPNG` 12, `FastPalette` 3, `OtherMath` 1, `FastPNG` 1) — all COMMENTED-OUT CODE at the END of a method body, which is `Tree.Block.trailing`'s category exactly. anim8 is the port where D4t's second mechanism took a residue to zero on its own, with nothing recovered and nothing deliberate. |
 
 `remediation` reports 4 suggestions, all about the `java.util.zip` residue above; the one that
 "needs a value from you" proposes dropping `ChunkBuffer` and injecting a replacement. **Not taken**:
@@ -1265,7 +1265,7 @@ prints the two numbers SEPARATELY — a ported test and a written one are differ
 | portability (all / emitted / injected) | 151 / **0** / **0** | 151 / 0 / 0 |
 | substitutions · manifest · port map · policy | 0 · 0 · **0** · 0 | 0 · 0 · 0 · 0 |
 | collection closure · boundary · shared-iterator | 0 · 0 · 0 | 0 · 0 · 0 |
-| trivia | 10 | 0 |
+| trivia lost / recovered / deliberate | **0** / 4 / 0 | **0** / 0 / 0 |
 | porter notes uncovered · break residue | 0 · **0** | 0 · 0 |
 | source map | 135 units / 1,523 members | 1 / 9 |
 | decisions recorded | 1,763 rows, **548** about gdx-gltf's own declarations; 1,215 withheld as the base's (D2) | 44, 2,937 withheld |
@@ -1275,11 +1275,14 @@ prints the two numbers SEPARATELY — a ported test and a written one are differ
 **0** and `portability(emitted)` is **0** on a library full of `switch`-driven enum mapping, which is
 §9.5's control-flow work and the portability rules paying off on a library they were not built for.
 
-`trivia` moved 6 → 10 and the four are accounted for: they are the comments INSIDE the two bodies
-`MethodBodyTransform` replaces ("call X via reflection to avoid compilation error with GWT"). The
-code they describe is deliberately not in the port, so the comments go with it — and `TriviaCheck`
-counting them is the honest behaviour, not a defect. Expect any `MethodBodyTransform` entry to cost
-its body's comments.
+`trivia` is `0 lost / 4 recovered / 0 deliberate` (was 10 lost). The 4 that the backstop relocates
+are the comments INSIDE the two bodies `MethodBodyTransform` replaces ("call X via reflection to
+avoid compilation error with GWT") plus two of the same shape: the code they describe is
+deliberately not in the port, so they have no statement left to sit above and are put back after
+their member with a `/* trivia: recovered … */` line naming the java they came from. Expect any
+`MethodBodyTransform` entry to move its body's comments into the `recovered` lane — that is the
+honest behaviour rather than a defect, and it is a candidate for an honest home (the substituted
+body could carry them) if the lane ever grows.
 
 ### 8.3 What this library taught the engine — three (a) fixes and a fourth found by reading
 
@@ -1468,7 +1471,7 @@ application, and no libGDX backend is ported (§1.1's first surprise). `src/test
 | portability (all / emitted / injected) | 151 / **0** / 0 |
 | substitutions (emitted / dangling) · manifest · port map · policy · remediation | 0 · 0 · 0 · 0 · 0 · 0 |
 | collection closure · boundary · shared-iterator | 0 · 0 · 0 |
-| trivia | **7** |
+| trivia lost / recovered / deliberate | **0** / 1 / 0 |
 | porter notes uncovered · break residue | 0 · **0** |
 | source map | 22 units / 175 members; port map 37 types / 169 members |
 | decisions recorded | 139 rows (`RenamedMember` 45, `RetypedSignature` 34, `RenamedPackage` 22, `DroppedMember` 16, `DroppedType` 11, `FunnelledCtor` 11); 1,810 withheld as the base's (`ENGINE-LIMITS` D2) |
@@ -1621,9 +1624,10 @@ redesign no mechanical rule produces.
 
 ### 9.8 Remaining
 
-- **7 trivia residues**, all `// don't do anything by default` / `// do nothing` / `// not needed`
-  line comments inside method bodies the emitter renders as `()`. `ENGINE-LIMITS` V1: a comment on a
-  construct the EMISSION consumes has nowhere to go.
+- ~~7 trivia residues~~ **0 lost, 1 recovered.** Six of the seven were `// don't do anything by
+  default` / `// do nothing` line comments that ARE an empty body, which is `Tree.Block.trailing`'s
+  category exactly and is now placed where java wrote it; the seventh is relocated by the backstop
+  with its coordinates (D4t).
 - **Behavioural coverage is 16 tests over 8 of 22 types**, and the GL half of the library is covered
   by compilation only (§9.4). The eleven concrete transitions all render through a `SpriteBatch` or
   a `ShaderProgram`; `ShaderCompatibilityHelper`'s pure string rewrites are asserted, the rest is
@@ -1690,7 +1694,7 @@ silent success `java_test_count` exists to prevent.
 | portability (all / emitted / injected) | 151 / **0** / 0 |
 | substitutions · manifest · port map · policy | 0 · 0 · 0 · 0 |
 | collection closure · boundary · shared-iterator | 0 · 0 · 0 |
-| trivia | **11** (§10.6) |
+| trivia lost / recovered / deliberate | **0** / 2 / 0 |
 | porter notes uncovered · break residue | 0 · **0** |
 | source map | 44 units / 910 members |
 | decisions recorded | 350 rows about gdx-vfx's own declarations (216 `RetypedSignature`, 46 `RenamedMember`, 44 `RenamedPackage`, 16 `DroppedMember`, 15 `FunnelledCtor`, 11 `DroppedType`, 1 `RedirectedCall`, 1 `SubstitutedBody`); 1,216 withheld as the base's, per `ENGINE-LIMITS.md` D2 |
@@ -1792,12 +1796,12 @@ method is a shader draw. That is 27 of 44 types resting on compilation alone.
   nilary body (`items = new ValueArrayMap<>()`) also runs on the capacity path and is immediately
   overwritten. Declared COST, not divergence, and `PrioritizedArraySuite`'s capacity test is what
   says the observable behaviour is identical.
-- **trivia 11.** Nine are `//` comments inside bodies the emitter rewrites — the V1 category, on
-  commented-out code and `// Do nothing.` markers. **Two are file-leading Apache blocks**
-  (`LensFlareEffect`, `LevelsEffect`), and those are a NEW limit: both files open with two
-  consecutive block comments and Spoon's compilation unit reports only the first. The licence text
-  itself survives — it IS the first block, and the second is an anonymous copy of the same notice —
-  so nothing legally material is lost here. `ENGINE-LIMITS.md` V3, open.
+- **trivia 11 → 0 lost, 2 recovered** (D4t). The two file-leading Apache blocks
+  (`LensFlareEffect`, `LevelsEffect`) were `ENGINE-LIMITS.md` V3 and are now emitted, both of them,
+  above the `package` clause: the file header is harvested by POSITION, so which of a file's
+  leading blocks the parser attached where stops mattering. Nine were comments at the end of a body
+  — `Tree.Block.trailing`'s category — and seven of those are now placed exactly; the last two are
+  relocated by the backstop with their java coordinates.
 - **`portability(all)` 151, `portability(emitted)` 0.** Every finding is in libGDX's own files, which
   this port resolves against and does not emit. It is the base's number, reported here because the
   program contains the base (D2).
@@ -2369,6 +2373,77 @@ freed**, with 0 members changed and every check count identical on all 13 ports,
 `bean-properties` is still default-off. `java.util.Comparator` is deliberately NOT in the table and
 still anchors: its default methods grew across releases, and an incomplete entry is worse than none.
 
+### 11.14 D4t — the trivia hybrid, as measured
+
+`DESIGN.md` §8.8 (+ §8.8 AS BUILT). Three mechanisms, one commit each, `lost = 0` on every port.
+
+| port | lost, before | lost | recovered | deliberate |
+|---|---|---|---|---|
+| libGDX core | 100 | **0** | 4 | 12 |
+| libGDX tests | 69 | **0** | 0 | 0 |
+| anim8 | 34 | **0** | 0 | 0 |
+| gdx-vfx | 11 | **0** | 2 | 0 |
+| gdx-gltf | 10 | **0** | 4 | 0 |
+| screens | 7 | **0** | 1 | 0 |
+| simple-graphs / its suite | 1 / 1 | **0** | 0 | 0 |
+| ashley, ashley-test, gltf-test, jbump, noise4j | 0 | **0** | 0 | 0 |
+| **corpus** | **233** | **0** | **11** | **12** |
+
+**Per mechanism, corpus-wide: 233 → 198 → 77 → 0.**
+
+| mechanism | what it retired |
+|---|---|
+| position-based file-leading harvest | 233 → 198. libGDX 100 → 65 (the `JsonReader`/`JsonSkimmer`/`PatternParser`/`XmlReader` APACHE NOTICES, `GL30/31/32`, `Base64Coder`'s multi-licence header), vfx 11 → 9 (V3's two recorded sites) |
+| `Tree.Block.trailing` | 198 → 77. anim8 34 → 0 outright, screens 7 → 1, libGDX 65 → 18, its suite 69 → 51 |
+| the backstop + the `deliberate` lane + the `@Test` javadoc's honest home | 77 → 0 |
+
+**What each residue IS**, because "11 recovered" is only useful if it names a category:
+
+- **libGDX core's 4**: a promoted enum constructor's field javadoc (`Cubemap`), a comment inside a
+  parameter LIST (`GL32`, `// int length,` — a position the TIR has no node for at all), and two
+  comments that are the whole body of a degenerate private constructor the funnel drops
+  (`MipMapGenerator`, `Base64Coder`).
+- **gdx-gltf's 4 and vfx's 2**: bodies `MethodBodyTransform` replaces, plus vfx's two end-of-body
+  comments in constructs the emitter rewrites. A substituted body carrying its upstream comments is
+  the honest home if this lane ever grows.
+- **libGDX core's 12 deliberate**: exactly the rows `ENGINE-LIMITS.md` D1 predicted —
+  `Array#toArray(Class)` and its four deprecated `Class`-taking siblings, `ArrayMap`, `Queue`,
+  and `Skin#setEnabledReflection`'s three body comments. Every one documents a member the manifest
+  DROPS, so its absence is a decision; before this they were counted as engine loss.
+
+**The lane earned its keep on its first run.** `trivia(recovered)` opened at **51** on libGDX's
+suite, all of one category: a `@Test` method's javadoc, lost because `TestFrameworkTransform` turns
+the method into a `test("…") { … }` statement and `leading` went with the `def`. The honest home is
+`Tree.Commented` on that statement; taking it dropped the lane to 0. Shipping the backstop over it
+would have hidden 51 comments at member granularity behind a green `lost = 0`.
+
+**Do NOT retry / three defects that cost a cycle each**, all invisible to every count:
+
+- **`TriviaCheck.normalize` stripped `//` LAST.** A nesting block comment is emitted as `//` lines
+  (§4.58), so its javadoc opener arrived with a `//` in front and the two sides normalised
+  differently — the comment was reported lost while sitting in the file. Whatever the emitter WRAPS
+  the text in comes off first.
+- **A finding carries the check name it is filed under.** Passing the lane name to `record` while
+  leaving `"trivia"` inside the finding filed every deliberate row against `lost`: the run printed
+  `0 lost, 4 recovered, 12 deliberate` and the artifact recorded `trivia 12, trivia(deliberate) 0`.
+- **§5.4, a fourth time.** `CommentAnchor`'s map is keyed by java path and its two consumers hold
+  the path in different spellings — parser-recorded and orchestrator-resolved. Compared raw, the
+  check's lookup missed EVERY file in a worktree and the deliberate lane read zero on a port with
+  twelve of them.
+
+And one the design got wrong rather than the implementation: **"between slots, so no member digest
+moves" holds only while slots do not nest.** A comment placed after a NESTED member falls inside the
+enclosing class's recorded text, and `srcMapOf` — which finds a member by searching for exactly that
+string — then cannot: 2 UNLOCATABLE members on libGDX core. The splice now applies the insertion to
+every enclosing slot, whose digest moves honestly because it did gain a line.
+
+**Cost, accounted**: 75 member digests on libGDX core, 136 on its suite, 88 anim8, 93 screens, 88
+vfx, 83 gltf, 75 ashley, 2 simple-graphs; **0 on jbump and noise4j**, whose emitted text is
+byte-identical (jbump's differential probe is therefore identical too — 44 transcript lines).
+Compile unchanged everywhere (libGDX 0, gltf 7, noise4j 2, the last two pre-existing); every other
+check count identical on all thirteen ports; every suite unchanged (gdx-test 217/4, ashley 108/2
+plus its two pre-existing skips, anim8 23, vfx 64, simple-graphs 16, screens 16).
+
 ## 12. Remaining work, across the engine
 
 Maintained by deletion. Items are ordered by what they block, not by size.
@@ -2396,9 +2471,10 @@ Maintained by deletion. Items are ordered by what they block, not by size.
 
 ### 7.3 Counted residues that are not defects
 
-- **Trivia 100 / 69 / 1 / 1** (libGDX core, libGDX tests, simple-graphs main and test; Ashley 0),
-  classified in `ENGINE-LIMITS.md` §10 — a comment on a construct the emission consumes has nowhere to
-  go.
+- **Trivia `lost` is 0 on every port** (D4t, below). What remains counted is `trivia(recovered)` —
+  comments the attachment channel could not place and the backstop relocated with their java
+  coordinates — and `trivia(deliberate)`, derived from the port's own drops. Neither is a defect;
+  `recovered` is the work list for the categories that still want an honest home.
 - **libGDX omissions 177**, dominated by the promoted-constructor-body shape. The targeted refusal for
   the `Material`/`Table` remainder was measured at **0 → 35 `E120`** and refused (`ENGINE-LIMITS.md` C7)
   — do not re-derive it.

@@ -11,14 +11,21 @@ import balticporter.tir.{Phase, Pipeline, Program, SymId}
   * "the old symbol is vacated, the new one inherited its positions" — and those need the two
   * programs side by side. `out` is the emitted Scala.
   */
-final case class Ported(before: Program, after: Program, phases: List[Phase]):
+/** @param sources the java the fixture parsed, `fileName -> code`. Handed to the emitter as its
+  *   `javaSource`, because an in-memory snippet's `Origin.javaPath` names a file that does not
+  *   exist — without it the comment-recovery backstop is the one behaviour no spec could reach,
+  *   which is exactly the shape a fixture must not have. */
+final case class Ported(before: Program, after: Program, phases: List[Phase],
+                        sources: Map[String, String] = Map.empty):
 
   /** what the phases that ran require of `balticporter-runtime`. Derived, not passed: the fixture
     * is a miniature of the orchestrator, so a test exercises the same derivation a real port does
     * rather than a hand-assembled approximation of it. */
   lazy val plan: RuntimePlan = RuntimePlan.of(phases, RuntimeMode.Dependency)
 
-  lazy val emitter: TirEmitter = new TirEmitter(after, plan.concreteMembers)
+  lazy val emitter: TirEmitter =
+    new TirEmitter(after, plan.concreteMembers,
+                   javaSource = path => sources.collectFirst { case (n, c) if path.endsWith(n) => c })
 
   /** the emitted Scala for the whole program. */
   lazy val out: String = emitter.emit
@@ -42,14 +49,14 @@ object PortFixture:
     * for "did my phase change anything". */
   def port(java: String, phases: Phase*): Ported =
     val before = SpoonTir.fromSource(java)
-    Ported(before, Pipeline.run(before, phases.toList), phases.toList)
+    Ported(before, Pipeline.run(before, phases.toList), phases.toList, Map("Snippet.java" -> java))
 
   /** the same over SEVERAL compilation units, each `fileName -> code`. A Java file declares exactly
     * one package, so every rule about a PACKAGE BOUNDARY — default access, `protected`, an override
     * that crosses one — is untestable from a single snippet. */
   def portAll(sources: List[(String, String)], phases: Phase*): Ported =
     val before = SpoonTir.fromSources(sources)
-    Ported(before, Pipeline.run(before, phases.toList), phases.toList)
+    Ported(before, Pipeline.run(before, phases.toList), phases.toList, sources.toMap)
 
   /** parse only — for tests about the FRONTEND rather than about a phase. */
   def parse(java: String): Program = SpoonTir.fromSource(java)

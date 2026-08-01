@@ -79,35 +79,22 @@ object SubstitutionCheck:
           if refs == 0 then None else Some(Finding(Kind.Dangling, fqn, refs)) // rewritten away vs. dangling
       }
 
-  /** Strip the port's own PORTER NOTES before asking whether a file REFERENCES a dropped type.
+  /** Strip everything the ENGINE wrote ABOUT the code before asking whether a file REFERENCES a
+    * dropped type — the porter notes, and the recovery markers beside a relocated comment.
     *
     * A note names the upstream FQN on purpose — that is the string an agent has to search for and
     * the string it must remove from the manifest to change the outcome. It is not a reference to
     * the type, and a substring search cannot tell the difference: `from=com.badlogic.gdx.utils
     * .JsonValue` on 7 renamed units reported `com.badlogic.gdx.utils.Json` as dropped-but-still-
     * referenced, on a port whose replacement was sitting right there. Measured the first time notes
-    * were emitted: substitution(dangling) 0 -> 3, all three of them the port's own commentary.
+    * were emitted: substitution(dangling) 0 -> 3, all three of them the port's own commentary. A
+    * recovery marker names an upstream PATH for the same reason and is stripped for the same one,
+    * through the same function, so the two grammars cannot drift apart at one check.
     *
-    * Only porter notes are removed, not every comment: a Javadoc that genuinely discusses the
-    * dropped type is upstream text this check has always counted, and changing that is a separate
-    * decision with its own number. */
-  def withoutPorterNotes(text: String): String =
-    val marker = balticporter.tir.PorterNote.Marker
-    if !text.contains(marker) then text
-    else
-      val sb = new java.lang.StringBuilder
-      var i  = 0
-      var go = true
-      while go do
-        val at = text.indexOf(marker, i)
-        if at < 0 then
-          sb.append(text.substring(i))
-          go = false
-        else
-          sb.append(text.substring(i, at))
-          val end = text.indexOf("*/", at)
-          if end < 0 then go = false else i = end + 2
-      sb.toString
+    * Only what the engine wrote is removed, not every comment: a Javadoc that genuinely discusses
+    * the dropped type is upstream text this check has always counted, and changing that is a
+    * separate decision with its own number. */
+  def withoutPorterNotes(text: String): String = balticporter.tir.TriviaMark.stripAll(text)
 
   /** every `.scala` file under `dir`, or nothing when the directory does not exist. */
   def scalaSources(dir: Path): List[Path] =

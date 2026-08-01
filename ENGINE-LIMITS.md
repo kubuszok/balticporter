@@ -2894,35 +2894,42 @@ check count unchanged, determinism green, `srcmap` unit and member COUNTS identi
 libGDX) — only 7 159 of those 19 257 member digests, which is exactly the members that gained a
 comment.
 
-### V1. A comment on a construct the EMISSION consumes has nowhere to go. **222 → 100** on libGDX core
+### V1. A comment the FRONTEND claimed and dropped, and one the EMISSION consumes. **222 → 100 → 0 lost**
+
+CLOSED as a loss; what is left is a COUNTED residue (`trivia(recovered)`), which is a different
+thing and is below.
 
 `TriviaCheck` compares the Java text to the emitted text on every run. On libGDX core it first
-reported **222** dropped comments; recovering the one large, principled category took it to **100**.
+reported **222** dropped comments; recovering the promoted constructor's Javadoc onto the CLASS took
+it to **100**, and this entry then recorded the remaining 100 as three emission-side categories. **That
+framing was wrong about where the loss happened, and the correction is the lesson**: the categories
+named the CONTEXTS (a merged `switch` arm, a lowered `break`) and every traced site died on one line
+of the FRONTEND — the statement fold accumulated comment-statements into a pending buffer, folded
+them onto the NEXT statement, and DISCARDED them when there was none. They had been claimed by then,
+so no coarser harvest could recover them either: **claim-then-drop**. Reading a residue's category
+names as a diagnosis cost this entry two years of being believed.
 
-The category that was recoverable: the constructor `CtorFunnel` promotes to Scala's PRIMARY loses
-its `def`, so its Javadoc had no node left to sit on. Scala documents a primary constructor on the
-CLASS, so the promoted constructor's `leading` is appended to the class's — **Javadoc losses 138 →
-17**, no other count moved, output still deterministic.
+What the three mechanisms of `DESIGN.md` §8.8 did to it, measured over thirteen ports:
 
-What remains, by kind (libGDX core `100`; libGDX tests `69`; simple-graphs `1`+`1`; Ashley `0`):
+| mechanism | libGDX core | corpus total |
+|---|---|---|
+| — | 100 | 233 |
+| position-based file-leading harvest (V3) | 65 | 198 |
+| `Tree.Block.trailing` — the frontend KEEPS the leftover | 18 | 77 |
+| the recovery backstop + the `deliberate` lane | **0 lost** | **0 lost** |
 
-- **81 Line** — the overwhelming majority are comments inside a body that the emitter REWRITES
-  rather than renders statement-for-statement: a `switch` arm the lowering merges, a `break`
-  replaced by a `boundary`, a `for` header (comments there are stripped on purpose — the clause is
-  emitted on one line and a `//` would swallow the rest of it).
-- **17 Javadoc** — members the emission consumes for a different reason: a constructor dropped as
-  degenerate, an all-static class collapsed to an `object` (its `<init>` is filtered out), an enum's
-  constructor folded into the sealed class's parameters.
-- **2 Block** — commented-out code inside an expression position, where a comment cannot be rendered
-  safely at all (a `//` would comment out the rest of the term).
+Two things this entry still says, both unchanged by the fix:
 
-Do NOT "fix" this by hoisting everything to the nearest surviving node: a comment that describes a
-statement, printed above a method, is worse than absent, because it now says something false. The
-honest fix per category is a harvest point at the construct that survives, one category at a time,
-measured against this number.
+- **Do NOT hoist to the nearest surviving node silently.** A comment that describes a statement,
+  printed above a method, is worse than absent, because it now says something false. What makes the
+  backstop admissible is the marker: every relocated comment carries `/* trivia: recovered from
+  <path>:<line> */`, which turns it into a QUOTATION with the coordinates a reader can check.
+- **`recovered` is a residue, not a success.** It counts the comments the attachment channel could
+  not place, at member granularity rather than at the statement they were written on, and its
+  per-file breakdown is the work list for giving each remaining category an honest home.
 
-*Fix kind: (a) engine — every one of these is an emission path in the emitter, not a library
-policy.*
+*Fix kind: (a) engine — the frontend's statement fold, the emitter's block rendering and the
+emitter's backstop. No library policy anywhere in it.*
 
 ### V2. `TirPrinter.canonical` must NOT carry trivia, and `TirPrinter.digest` MUST
 
@@ -2941,25 +2948,37 @@ either way:
 
 *Fix kind: (a) engine.*
 
-### V3. Spoon attaches only ONE of several consecutive FILE-LEADING comment blocks — 2 sites
+### V3. Spoon attaches only ONE of several consecutive FILE-LEADING comment blocks — 9+ sites
 
-OPEN, and measured rather than reasoned. `SpoonTir.fileHeader` takes every comment the compilation
-unit reports, which is the right shape; the limit is upstream of it. Where a java file opens with
-TWO consecutive block comments before the `package` declaration, Spoon's
-`CtCompilationUnit.getComments` carries the first and the second is attached to nothing this walk
-reaches — so it is dropped, and only `TriviaCheck`'s independent re-lex can see it.
+CLOSED by a POSITIONAL harvest. Two corrections to what this entry used to say, and the second one
+is why it should not have been left open:
 
-gdx-vfx has exactly 2 such files (`LensFlareEffect`, `LevelsEffect`), both of which open with a
-copyrighted Apache notice followed by an anonymous copy of the same notice. **The licence text
-itself survives** — it is the FIRST block — so nothing legally material is lost here, which is why
-this is recorded and not fixed under time pressure. It would not be true of a file whose second
-block carried a different notice.
+- **WHERE the second block goes is now known**: the PACKAGE DECLARATION. Where a java file opens
+  with two consecutive block comments, `CtCompilationUnit.getComments` carries the first and
+  `CtPackageDeclaration.getComments` carries the second — the one attachment site `SpoonTir` never
+  read. Probed and pinned in `testkit`'s `FileLeadingTriviaSpec`, so a Spoon release that changes it
+  fails a spec instead of silently making a mechanism redundant.
+- **The mitigation recorded here was FALSE beyond the two files it was measured on.** "The licence
+  text itself survives, because it is the FIRST block" holds for gdx-vfx's `LensFlareEffect` and
+  `LevelsEffect`. It does not hold for libGDX, which had **seven more files of the same shape inside
+  its own residue** — `GL30/31/32`, and the Ragel-generated `JsonReader`, `JsonSkimmer`,
+  `PatternParser`, `XmlReader`, where three `//` generator lines are the first block and **the
+  APACHE NOTICE ITSELF is the one that was dropped**. That makes this a §4.57/§4.58 obligation and
+  not a tidiness item, and it is the reason a mitigation measured on one library must not be written
+  down as a property of the engine.
 
-Zero sites across the other six corpus libraries. The fix is a source-text harvest between the last
-claimed comment and the `package` keyword rather than another walk over Spoon's attachment model;
-budget it as frontend work, and note that it moves emitted text only for files that have the shape.
+Reading one more of the parser's slots is NOT the fix, and that is the whole shape of the lesson: the
+next file lands in a slot nobody enumerated, and no set of slots can say which of two blocks came
+FIRST — the order of a licence and the banner above it is text's answer alone. The harvest is
+therefore positional (`CommentScanner.firstCodeOffset`: a comment is the file's iff no code precedes
+it), the parser-attached comments are merged in by OFFSET so a block both sides see is emitted once,
+and the header CLAIMS its spans so a leading block the parser also attached to the type cannot be
+emitted twice.
 
-*Fix kind: (a) engine — frontend. Unbuilt.*
+Measured: **libGDX core trivia 100 → 65, gdx-vfx 11 → 9**, every other check count identical on all
+thirteen ports, 26 + 4 whole-file digests moved.
+
+*Fix kind: (a) engine — frontend.*
 
 ---
 

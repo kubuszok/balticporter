@@ -138,7 +138,7 @@ member	com.github.tommyettinger.anim8.AnimatedPNG#setCompression(int)	sge.anim8.
 member	com.github.tommyettinger.anim8.AnimatedPNG#setFlipY(boolean)	sge.anim8.AnimatedPNG#setFlipY(boolean)	Renamed	-	com/github/tommyettinger/anim8/AnimatedPNG.java	117	cd42e58a6b7a5a73	
 member	com.github.tommyettinger.anim8.AnimatedPNG#write(FileHandle,Array)	sge.anim8.AnimatedPNG#write(FileHandle,Array<Pixmap>)	Renamed	-	com/github/tommyettinger/anim8/AnimatedPNG.java	137	7a88b1270cef69de	
 member	com.github.tommyettinger.anim8.AnimatedPNG#write(FileHandle,Array,int)	sge.anim8.AnimatedPNG#write(FileHandle,Array<Pixmap>,int)	Renamed	-	com/github/tommyettinger/anim8/AnimatedPNG.java	154	d1f66f549cb0c9bf	
-member	com.github.tommyettinger.anim8.AnimatedPNG#write(OutputStream,Array,int)	sge.anim8.AnimatedPNG#write(OutputStream,Array<Pixmap>,int)	Renamed	-	com/github/tommyettinger/anim8/AnimatedPNG.java	172	7ebb5c6952266ef0	
+member	com.github.tommyettinger.anim8.AnimatedPNG#write(OutputStream,Array,int)	sge.anim8.AnimatedPNG#write(OutputStream,Array<Pixmap>,int)	Renamed	-	com/github/tommyettinger/anim8/AnimatedPNG.java	172	610975d4f3dd3b40	
 member	com.github.tommyettinger.anim8.AnimationWriter#write(FileHandle,Array)	sge.anim8.AnimationWriter#write(FileHandle,Array<Pixmap>)	Renamed	-	com/github/tommyettinger/anim8/AnimationWriter.java	33	54e783c451aacb22	
 member	com.github.tommyettinger.anim8.AnimationWriter#write(FileHandle,Array,int)	sge.anim8.AnimationWriter#write(FileHandle,Array<Pixmap>,int)	Renamed	-	com/github/tommyettinger/anim8/AnimationWriter.java	34	71ec95a8a6f666ab	
 member	com.github.tommyettinger.anim8.AnimationWriter#write(OutputStream,Array,int)	sge.anim8.AnimationWriter#write(OutputStream,Array<Pixmap>,int)	Renamed	-	com/github/tommyettinger/anim8/AnimationWriter.java	35	ac849bb653bc172b	
@@ -187,7 +187,7 @@ member	com.github.tommyettinger.anim8.FastPNG#flipY	sge.anim8.FastPNG#flipY	Rena
 member	com.github.tommyettinger.anim8.FastPNG#setCompression(int)	sge.anim8.FastPNG#setCompression(int)	Renamed	-	com/github/tommyettinger/anim8/FastPNG.java	130	af192376b3ea60ae	
 member	com.github.tommyettinger.anim8.FastPNG#setFlipY(boolean)	sge.anim8.FastPNG#setFlipY(boolean)	Renamed	-	com/github/tommyettinger/anim8/FastPNG.java	120	8f0d564fa8e04b14	
 member	com.github.tommyettinger.anim8.FastPNG#write(FileHandle,Pixmap)	sge.anim8.FastPNG#write(FileHandle,Pixmap)	Renamed	-	com/github/tommyettinger/anim8/FastPNG.java	139	9cd8bd70d6064ca2	
-member	com.github.tommyettinger.anim8.FastPNG#write(OutputStream,Pixmap)	sge.anim8.FastPNG#write(OutputStream,Pixmap)	Renamed	-	com/github/tommyettinger/anim8/FastPNG.java	167	7a101be55797749c	
+member	com.github.tommyettinger.anim8.FastPNG#write(OutputStream,Pixmap)	sge.anim8.FastPNG#write(OutputStream,Pixmap)	Renamed	-	com/github/tommyettinger/anim8/FastPNG.java	167	bb8965102198b2c2	
 member	com.github.tommyettinger.anim8.FastPNG8#<init>()	sge.anim8.FastPNG8#<init>()	Renamed	-	com/github/tommyettinger/anim8/FastPNG8.java	89	aea8e357e1b890cb	
 member	com.github.tommyettinger.anim8.FastPNG8#<stmt1>	sge.anim8.FastPNG8#<stmt1>	Renamed	-	com/github/tommyettinger/anim8/FastPNG8.java	95	6bfbde55f443638b	
 member	com.github.tommyettinger.anim8.FastPNG8#write(OutputStream,Array,int,boolean)	sge.anim8.FastPNG8#write(OutputStream,Array<Pixmap>,int,boolean)	Renamed	-	com/github/tommyettinger/anim8/FastPNG8.java	135	33174be02dc7f86c	
@@ -206,7 +206,7 @@ member	com.github.tommyettinger.anim8.FastPalette#difference(int,int,int,int)	sg
 member	com.github.tommyettinger.anim8.FastPalette#difference(int,int,int,int,int,int)	sge.anim8.FastPalette#difference(int,int,int,int,int,int)	Renamed	-	com/github/tommyettinger/anim8/FastPalette.java	326	e2393cfe41226431	
 member	com.github.tommyettinger.anim8.FastPalette#differenceAnalyzing(int,int)	sge.anim8.FastPalette#differenceAnalyzing(int,int)	Renamed	-	com/github/tommyettinger/anim8/FastPalette.java	177	1586d65fa159f673	
 member	com.github.tommyettinger.anim8.FastPalette#differenceAnalyzing(int,int,int,int)	sge.anim8.FastPalette#differenceAnalyzing(int,int,int,int)	Renamed	-	com/github/tommyettinger/anim8/FastPalette.java	218	62849b3f61c9b51e	
-member	com.github.tommyettinger.anim8.FastPalette#differenceAnalyzing(int,int,int,int,int,int)	sge.anim8.FastPalette#differenceAnalyzing(int,int,int,int,int,int)	Renamed	-	com/github/tommyettinger/anim8/FastPalette.java	284	7ebd08328001b47a	
+member	com.github.tommyettinger.anim8.FastPalette#differenceAnalyzing(int,int,int,int,int,int)	sge.anim8.FastPalette#differenceAnalyzing(int,int,int,int,int,int)	Renamed	-	com/github/tommyettinger/anim8/FastPalette.java	284	8c8cfffdc4c64faf	
 member	com.github.tommyettinger.anim8.FastPalette#differenceHW(int,int)	sge.anim8.FastPalette#differenceHW(int,int)	Renamed	-	com/github/tommyettinger/anim8/FastPalette.java	189	eee1d3bae326d943	
 member	com.github.tommyettinger.anim8.FastPalette#differenceHW(int,int,int,int)	sge.anim8.FastPalette#differenceHW(int,int,int,int)	Renamed	-	com/github/tommyettinger/anim8/FastPalette.java	232	f72e36059a013933	
 member	com.github.tommyettinger.anim8.FastPalette#differenceHW(int,int,int,int,int,int)	sge.anim8.FastPalette#differenceHW(int,int,int,int,int,int)	Renamed	-	com/github/tommyettinger/anim8/FastPalette.java	312	ba3eab4402cb6aa8	
@@ -277,7 +277,7 @@ member	com.github.tommyettinger.anim8.OtherMath#c3f	sge.anim8.OtherMath#c3f	Rena
 member	com.github.tommyettinger.anim8.OtherMath#cbrt(float)	sge.anim8.OtherMath#cbrt(float)	Renamed	-	com/github/tommyettinger/anim8/OtherMath.java	153	97ed4435848e790f	placement=companion
 member	com.github.tommyettinger.anim8.OtherMath#cbrtPositive(float)	sge.anim8.OtherMath#cbrtPositive(float)	Renamed	-	com/github/tommyettinger/anim8/OtherMath.java	185	2a60c9c5d9829969	placement=companion
 member	com.github.tommyettinger.anim8.OtherMath#cbrtShape(float)	sge.anim8.OtherMath#cbrtShape(float)	Renamed	-	com/github/tommyettinger/anim8/OtherMath.java	209	aec15100817c9c08	placement=companion
-member	com.github.tommyettinger.anim8.OtherMath#centralize(byte)	sge.anim8.OtherMath#centralize(byte)	Renamed	-	com/github/tommyettinger/anim8/OtherMath.java	40	b3820ee2d5b8effb	placement=companion
+member	com.github.tommyettinger.anim8.OtherMath#centralize(byte)	sge.anim8.OtherMath#centralize(byte)	Renamed	-	com/github/tommyettinger/anim8/OtherMath.java	40	56a27a707fa137ae	placement=companion
 member	com.github.tommyettinger.anim8.OtherMath#d0	sge.anim8.OtherMath#d0	Renamed	-	com/github/tommyettinger/anim8/OtherMath.java	83	dff7d6bb99bcd4c2	placement=companion vis=private
 member	com.github.tommyettinger.anim8.OtherMath#d0f	sge.anim8.OtherMath#d0f	Renamed	-	com/github/tommyettinger/anim8/OtherMath.java	68	f26c3cfc216af02a	placement=companion vis=private
 member	com.github.tommyettinger.anim8.OtherMath#d1	sge.anim8.OtherMath#d1	Renamed	-	com/github/tommyettinger/anim8/OtherMath.java	84	d313da85353b0ff4	placement=companion vis=private
@@ -405,7 +405,7 @@ member	com.github.tommyettinger.anim8.PNG8#writeWrenDithered(OutputStream,Array,
 member	com.github.tommyettinger.anim8.PNG8#writeWrenDithered(OutputStream,Pixmap)	sge.anim8.PNG8#writeWrenDithered(OutputStream,Pixmap)	Renamed	-	com/github/tommyettinger/anim8/PNG8.java	2910	589351e67a32b4a7	
 member	com.github.tommyettinger.anim8.PNG8#writeWrenOriginalDithered(OutputStream,Array,int)	sge.anim8.PNG8#writeWrenOriginalDithered(OutputStream,Array<Pixmap>,int)	Renamed	-	com/github/tommyettinger/anim8/PNG8.java	6568	bf24ee0df4eb820c	
 member	com.github.tommyettinger.anim8.PNG8#writeWrenOriginalDithered(OutputStream,Pixmap)	sge.anim8.PNG8#writeWrenOriginalDithered(OutputStream,Pixmap)	Renamed	-	com/github/tommyettinger/anim8/PNG8.java	2761	46ffd0487219a029	
-member	com.github.tommyettinger.anim8.PaletteReducer#<clinit>	sge.anim8.PaletteReducer#<clinit>	Renamed	-	com/github/tommyettinger/anim8/PaletteReducer.java	786	4de6b604fb495773	placement=companion
+member	com.github.tommyettinger.anim8.PaletteReducer#<clinit>	sge.anim8.PaletteReducer#<clinit>	Renamed	-	com/github/tommyettinger/anim8/PaletteReducer.java	786	da27f25e725d2439	placement=companion
 member	com.github.tommyettinger.anim8.PaletteReducer#<clinit>	sge.anim8.PaletteReducer#<clinit>	Renamed	-	com/github/tommyettinger/anim8/PaletteReducer.java	3989	99d19fbed16243ab	placement=companion
 member	com.github.tommyettinger.anim8.PaletteReducer#<init>()	sge.anim8.PaletteReducer#<init>()	Renamed	-	com/github/tommyettinger/anim8/PaletteReducer.java	1048	9490c8320f2281a8	
 member	com.github.tommyettinger.anim8.PaletteReducer#<init>(Array)	sge.anim8.PaletteReducer#<init>(Array<Color>)	Renamed	-	com/github/tommyettinger/anim8/PaletteReducer.java	1088	2f03437cf8e07de1	
@@ -472,13 +472,13 @@ member	com.github.tommyettinger.anim8.PaletteReducer#curErrorGreenFloats	sge.ani
 member	com.github.tommyettinger.anim8.PaletteReducer#curErrorRedFloats	sge.anim8.PaletteReducer#curErrorRedFloats	Renamed	-	com/github/tommyettinger/anim8/PaletteReducer.java	932	07a6574332618504	
 member	com.github.tommyettinger.anim8.PaletteReducer#differenceAnalyzing(int,int)	sge.anim8.PaletteReducer#differenceAnalyzing(int,int)	Renamed	-	com/github/tommyettinger/anim8/PaletteReducer.java	1228	b42a2ec63e43d20a	
 member	com.github.tommyettinger.anim8.PaletteReducer#differenceAnalyzing(int,int,int,int)	sge.anim8.PaletteReducer#differenceAnalyzing(int,int,int,int)	Renamed	-	com/github/tommyettinger/anim8/PaletteReducer.java	1269	564bcb254c74f3af	
-member	com.github.tommyettinger.anim8.PaletteReducer#differenceAnalyzing(int,int,int,int,int,int)	sge.anim8.PaletteReducer#differenceAnalyzing(int,int,int,int,int,int)	Renamed	-	com/github/tommyettinger/anim8/PaletteReducer.java	1345	a5fde6a71f480df9	
+member	com.github.tommyettinger.anim8.PaletteReducer#differenceAnalyzing(int,int,int,int,int,int)	sge.anim8.PaletteReducer#differenceAnalyzing(int,int,int,int,int,int)	Renamed	-	com/github/tommyettinger/anim8/PaletteReducer.java	1345	46bc0c0ddbfb8713	
 member	com.github.tommyettinger.anim8.PaletteReducer#differenceHW(int,int)	sge.anim8.PaletteReducer#differenceHW(int,int)	Renamed	-	com/github/tommyettinger/anim8/PaletteReducer.java	1240	628cd7005129deaf	
 member	com.github.tommyettinger.anim8.PaletteReducer#differenceHW(int,int,int,int)	sge.anim8.PaletteReducer#differenceHW(int,int,int,int)	Renamed	-	com/github/tommyettinger/anim8/PaletteReducer.java	1283	77e56e6252891ed9	
-member	com.github.tommyettinger.anim8.PaletteReducer#differenceHW(int,int,int,int,int,int)	sge.anim8.PaletteReducer#differenceHW(int,int,int,int,int,int)	Renamed	-	com/github/tommyettinger/anim8/PaletteReducer.java	1386	a533d2f48d19f715	
+member	com.github.tommyettinger.anim8.PaletteReducer#differenceHW(int,int,int,int,int,int)	sge.anim8.PaletteReducer#differenceHW(int,int,int,int,int,int)	Renamed	-	com/github/tommyettinger/anim8/PaletteReducer.java	1386	73ebc7ad8f74ad84	
 member	com.github.tommyettinger.anim8.PaletteReducer#differenceMatch(int,int)	sge.anim8.PaletteReducer#differenceMatch(int,int)	Renamed	-	com/github/tommyettinger/anim8/PaletteReducer.java	1215	7239ae39d12819df	
 member	com.github.tommyettinger.anim8.PaletteReducer#differenceMatch(int,int,int,int)	sge.anim8.PaletteReducer#differenceMatch(int,int,int,int)	Renamed	-	com/github/tommyettinger/anim8/PaletteReducer.java	1254	d66b0722bd07475b	
-member	com.github.tommyettinger.anim8.PaletteReducer#differenceMatch(int,int,int,int,int,int)	sge.anim8.PaletteReducer#differenceMatch(int,int,int,int,int,int)	Renamed	-	com/github/tommyettinger/anim8/PaletteReducer.java	1309	ca01d014843c72cd	
+member	com.github.tommyettinger.anim8.PaletteReducer#differenceMatch(int,int,int,int,int,int)	sge.anim8.PaletteReducer#differenceMatch(int,int,int,int,int,int)	Renamed	-	com/github/tommyettinger/anim8/PaletteReducer.java	1309	bd3f5fe071f385b7	
 member	com.github.tommyettinger.anim8.PaletteReducer#ditherStrength	sge.anim8.PaletteReducer#ditherStrength	Renamed	-	com/github/tommyettinger/anim8/PaletteReducer.java	971	6343674064273ff1	
 member	com.github.tommyettinger.anim8.PaletteReducer#entryComparator	sge.anim8.PaletteReducer#entryComparator	Renamed	-	com/github/tommyettinger/anim8/PaletteReducer.java	1568	c28cb7a6c5a051fd	placement=companion
 member	com.github.tommyettinger.anim8.PaletteReducer#exact(Array)	sge.anim8.PaletteReducer#exact(Array<Color>)	Renamed	-	com/github/tommyettinger/anim8/PaletteReducer.java	1515	d92f1251f033dd7a	
@@ -519,7 +519,7 @@ member	com.github.tommyettinger.anim8.PaletteReducer#reduceChaoticNoise(Pixmap)	
 member	com.github.tommyettinger.anim8.PaletteReducer#reduceDodgy(Pixmap)	sge.anim8.PaletteReducer#reduceDodgy(Pixmap)	Renamed	-	com/github/tommyettinger/anim8/PaletteReducer.java	4799	7c0df0b02da0aed4	
 member	com.github.tommyettinger.anim8.PaletteReducer#reduceFloat(float)	sge.anim8.PaletteReducer#reduceFloat(float)	Renamed	-	com/github/tommyettinger/anim8/PaletteReducer.java	5825	501f60abb4aec209	
 member	com.github.tommyettinger.anim8.PaletteReducer#reduceFloydSteinberg(Pixmap)	sge.anim8.PaletteReducer#reduceFloydSteinberg(Pixmap)	Renamed	-	com/github/tommyettinger/anim8/PaletteReducer.java	3570	62c41ea3a5c0240b	
-member	com.github.tommyettinger.anim8.PaletteReducer#reduceGourd(Pixmap)	sge.anim8.PaletteReducer#reduceGourd(Pixmap)	Renamed	-	com/github/tommyettinger/anim8/PaletteReducer.java	4012	52c7062c80a04e50	
+member	com.github.tommyettinger.anim8.PaletteReducer#reduceGourd(Pixmap)	sge.anim8.PaletteReducer#reduceGourd(Pixmap)	Renamed	-	com/github/tommyettinger/anim8/PaletteReducer.java	4012	e53a15a99286aa12	
 member	com.github.tommyettinger.anim8.PaletteReducer#reduceIgneous(Pixmap)	sge.anim8.PaletteReducer#reduceIgneous(Pixmap)	Renamed	-	com/github/tommyettinger/anim8/PaletteReducer.java	3772	77368e9dada6f7a6	
 member	com.github.tommyettinger.anim8.PaletteReducer#reduceInPlace(Color)	sge.anim8.PaletteReducer#reduceInPlace(Color)	Renamed	-	com/github/tommyettinger/anim8/PaletteReducer.java	5844	dd5e32a2eb53e924	
 member	com.github.tommyettinger.anim8.PaletteReducer#reduceIndex(int)	sge.anim8.PaletteReducer#reduceIndex(int)	Renamed	-	com/github/tommyettinger/anim8/PaletteReducer.java	5807	b56fc04067fc7145	

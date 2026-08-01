@@ -58,6 +58,15 @@ final class TirEmitter(
       * argument cannot refer to another parameter of the SAME list. `None` reads as what it is —
       * "no view was supplied, so this run is its own surface". */
     surfaceView: Option[Surface] = scala.None,
+    /** The UPSTREAM JAVA of a unit, for the comment-recovery backstop (`DESIGN.md` §8.8) — by
+      * `Origin.javaPath`, `None` when there is nothing to read.
+      *
+      * Injected rather than read inline so an in-memory fixture can supply the text it parsed:
+      * a snippet's `javaPath` names a file that does not exist, and the one path that could not
+      * exercise the recovery would be the one every spec uses. The default reads the file, once
+      * per path — the frontend already read it, and re-reading is what keeps this a pure function
+      * of (program, sources) rather than of an object somebody had to thread through. */
+    javaSource: String => Option[String] = TirEmitter.readJavaSource,
 ):
   private val surface: Surface = surfaceView.getOrElse(TrivialSurface(source))
   /** what the NORMALISATION below decided — a value, handed to the orchestrator rather than
@@ -137,7 +146,12 @@ final class TirEmitter(
     // wedged into them reads as part of the attribution. Below them and above `package` is the
     // first line that is the port speaking for itself — and it is exactly where a reader who has
     // just noticed the package is not the upstream one is looking.
-    val text = header(cd) + leading(cd.unitLeading, 0) + unitNotes(cd) + pkg + body
+    val text0 = header(cd) + leading(cd.unitLeading, 0) + unitNotes(cd) + pkg + body
+    // …and the comments the attachment channel could not place, put back beside the member they
+    // were written in. BEFORE the source map is computed, not after: a post-pass over finished text
+    // would desync `srcmap.tsv` and `members.tsv` from the file, and the rule that a join happens
+    // on a recorded id rather than on a rendering applies to line ranges too.
+    val text = recoverTrivia(cd, text0)
     if SrcMap.enabled then recordedMap(full) = srcMapOf(full, cd, text)
     text
 
@@ -394,22 +408,26 @@ final class TirEmitter(
   // two textually identical siblings resolve to two different positions.
   // ---------------------------------------------------------------------------
 
-  private final class Slot(val member: String, val kind: String, val origin: Origin):
+  private final class Slot(val member: String, val kind: String, val origin: Origin, val indent: Int):
     var text: String = ""
   private val slots   = collection.mutable.ArrayBuffer.empty[Slot]
   private val stmtSeq = collection.mutable.Map.empty[String, Int]
 
   /** [[stat]] for a member of a CLASS BODY, remembering what it rendered to. Identical to `stat`
-    * in every observable way, and not even called when the map is off. */
+    * in every observable way.
+    *
+    * UNCONDITIONAL, where it used to be skipped with the artifact layer off. The slots are no
+    * longer only the source map's input: the recovery backstop anchors on them, so they decide
+    * EMITTED TEXT — and a run with reporting off would otherwise emit a different file from the
+    * same program, which is the one thing `Determinism` and the action cache both assume cannot
+    * happen. */
   private def memberStat(s: Statement, i: Int): String =
-    if !SrcMap.enabled then stat(s, i)
-    else
-      val slot = new Slot(memberKey(s), memberKind(s), s.origin)
-      slots += slot
-      recordMemberShape(slot.member, s)
-      val t = stat(s, i)
-      slot.text = t
-      t
+    val slot = new Slot(memberKey(s), memberKind(s), s.origin, i)
+    slots += slot
+    recordMemberShape(slot.member, s)
+    val t = stat(s, i)
+    slot.text = t
+    t
 
   /** …and the same member's CONTRACT row (`DESIGN.md` §8.3), keyed identically, so the orchestrator
     * attaches it to the port-map row without a second join.
@@ -468,6 +486,121 @@ final class TirEmitter(
   private def shortTpe(t: TypeRepr): String = t match
     case TypeRepr.AppliedType(tc, as) if as.nonEmpty => shortTpe(tc) + as.map(shortTpe).mkString("<", ",", ">")
     case _                                           => headSymOf(t).map(x => sym(x).name).getOrElse("?")
+
+  // ---------------------------------------------------------------------------
+  // THE RECOVERY BACKSTOP (`DESIGN.md` §8.8) — the completeness half of comment preservation.
+  //
+  // The attachment channel is the PRIMARY one and stays so: it is the only carrier of
+  // statement-level position through a rewrite, and it places the overwhelming majority correctly.
+  // What it cannot do is be COMPLETE. A construct the emission consumes takes its comments with it
+  // — a promoted constructor has no braces left for a body comment to sit in, a `for` header
+  // renders on one line, an expression position cannot hold a comment at all — and a comment that
+  // reaches no emitted file is a comment the port lost, licence text included.
+  //
+  // So after the unit's text is built, every comment in this unit's JAVA that is not in it is put
+  // back, after the member whose java span contains it, with the java coordinates on the line
+  // above. That marker is the answer to V1's objection to hoisting: a comment relocated WITH its
+  // source position is a quotation, not a false statement about the code below it.
+  //
+  // Two properties that are load-bearing rather than incidental:
+  //
+  //   - the insertion is BETWEEN slots, so no member's rendered text changes and no member digest
+  //     moves — only the whole-file digest does;
+  //   - a comment whose member the port DROPS is not recovered. Its absence is a decision, and
+  //     `CommentAnchor` is the one place that answers "whose comment is this", so the run cannot
+  //     recover a comment its own report then calls deliberate.
+  // ---------------------------------------------------------------------------
+
+  /** every declaration of every java file this program holds, emitted and dropped — computed once. */
+  private lazy val anchorMembers: Map[String, List[CommentAnchor.Member]] = CommentAnchor.membersOf(program)
+
+  private def recoverTrivia(cd: Tree.ClassDef, text: String): String =
+    val path = cd.origin.javaPath
+    if path.isEmpty || path == "<synthetic>" || path == "<unknown>" then text
+    else javaSource(path) match
+      case scala.None                 => text
+      case Some(java) if java.isEmpty => text
+      case Some(java) =>
+        // WHICH comments are this unit's. A java file may declare several top-level types and
+        // becomes that many scala files; without a window each of them would recover the others'
+        // comments, and the same comment would land in every one.
+        val here    = program.units.filter(_.origin.javaPath == path).sortBy(_.origin.line)
+        val idx     = here.indexWhere(_.symbol == cd.symbol)
+        val from    = if idx <= 0 then 0 else cd.origin.line
+        val until   = if idx >= 0 && idx + 1 < here.size then here(idx + 1).origin.line else Int.MaxValue
+        val members = anchorMembers.getOrElse(CommentAnchor.key(path), Nil)
+        val lines   = java.linesIterator.toArray
+        // PRESENCE is tested through the check's own normalisation — the shared function, never a
+        // fork of it, or the emitter and the check disagree about what "already there" means. And
+        // the engine's own commentary is stripped first: a porter note names an upstream FQN on
+        // purpose, and a marker names an upstream PATH, so either can match a comment that is not
+        // actually in the file.
+        val hay  = TriviaCheck.normalize(TriviaMark.stripAll(text))
+        val seen = collection.mutable.Set.empty[String]
+        val put  = collection.mutable.ListBuffer.empty[(Int, String)]
+        balticporter.core.CommentScanner.scanAt(java).foreach { a =>
+          val line = a.line(java)
+          val body = TriviaCheck.normalize(a.text)
+          if body.nonEmpty && line >= from && line < until && !hay.contains(body) && seen.add(body) then
+            val endLine = line + a.text.count(_ == '\n')
+            val owner   = CommentAnchor.owner(lines, line, endLine, members)
+            // a member the port drops has no declaration for its javadoc to sit above, and putting
+            // it in the file anyway would document a member that is not there.
+            if owner.forall(_.emitted) then
+              val at   = slots.lastIndexWhere(s => s.origin.javaPath == path && s.origin.line <= line)
+              val lvl  = if at >= 0 then slots(at).indent else 0
+              val kind = a.kind match
+                case balticporter.core.TriviaKind.Line    => TriviaKind.Line
+                case balticporter.core.TriviaKind.Block   => TriviaKind.Block
+                case balticporter.core.TriviaKind.Javadoc => TriviaKind.Javadoc
+              val where = provenance.map(p => sourcePathOf(Origin(path, line, 0), p)).getOrElse(path)
+              // …rendered through `triviaText`, so §4.58's rules hold for a recovered comment
+              // exactly as for a placed one: a block comment Scala would NEST on goes out
+              // line-by-line as `//`, and the indent is re-derived rather than reproduced.
+              put += at -> (ind(lvl) + TriviaMark.render(where, line) + "\n" + triviaText(Trivia(kind, a.text), lvl))
+        }
+        if put.isEmpty then text else splice(text, put.toList)
+
+  /** Insert each rendered block after the slot it anchors on (`-1` = after everything the unit
+    * emitted, for a comment that precedes the first member).
+    *
+    * Slot positions come from the SAME forward-cursor search `srcMapOf` uses — one implementation
+    * of "where did this member land", so an anchor and a source-map entry can never disagree.
+    *
+    * '''An ENCLOSING slot gains the insertion too.''' Slots nest: a nested class's own text
+    * contains its members' text, so a comment placed after a nested member falls INSIDE the nested
+    * class's recorded string, and `srcMapOf` — which finds a member by searching for exactly that
+    * string — then cannot find it at all. Measured the first time this shipped: 2 UNLOCATABLE
+    * members on libGDX core, a silent hole in the map that attributes every later error in those
+    * types to the wrong member. The enclosing member's digest DOES move, and that is honest: it
+    * really did gain a line. Only a comment appended AFTER a member (`off == end`, never inside)
+    * leaves every digest alone, which is the ordinary case. */
+  private def splice(text: String, put: List[(Int, String)]): String =
+    val starts = Array.fill(slots.size)(-1)
+    val ends   = Array.fill(slots.size)(-1)
+    var cursor = 0
+    slots.zipWithIndex.foreach { (s, k) =>
+      if s.text.nonEmpty then
+        val at = text.indexOf(s.text, cursor)
+        if at >= 0 then { cursor = at + 1; starts(k) = at; ends(k) = at + s.text.length }
+    }
+    val ins = put.zipWithIndex.map { case ((slot, rendered), n) =>
+      val off = if slot >= 0 && slot < ends.length && ends(slot) >= 0 then ends(slot) else text.length
+      (off, n, "\n" + rendered)
+    // back to front, so an earlier insertion cannot move a later offset — for the unit text and
+    // for each slot's own copy alike. Stable within one offset: several comments anchored on one
+    // member keep their source order.
+    }.sortBy((off, n, _) => (-off, -n))
+    val sb = new java.lang.StringBuilder(text)
+    ins.foreach { (off, _, s) =>
+      sb.insert(off, s)
+      slots.zipWithIndex.foreach { (slot, k) =>
+        if starts(k) >= 0 && off > starts(k) && off < ends(k) then
+          val rel = off - starts(k)
+          slot.text = slot.text.substring(0, rel) + s + slot.text.substring(rel)
+      }
+    }
+    sb.toString
 
   /** Locate every remembered member in the finished unit text. The unit itself is always entry
     * one, spanning the whole file: a line that falls between members (a brace, a blank line, the
@@ -2991,6 +3124,23 @@ final class TirEmitter(
     b.result()
 
 object TirEmitter:
+
+  /** The default `javaSource`: the upstream file, read once per path.
+    *
+    * Memoised per JVM because it is a pure function of the path and a port asks for the same file
+    * once per top-level type it declares. An unreadable path is `None` and not an exception — an
+    * emitter must not fail because a source tree moved after it was parsed; the comment simply
+    * cannot be recovered, and `TriviaCheck` (which reads the same file) reports the same absence
+    * as an uncompared file rather than as a clean one. */
+  private val javaSources = collection.concurrent.TrieMap.empty[String, Option[String]]
+
+  def readJavaSource(path: String): Option[String] =
+    javaSources.getOrElseUpdate(path, {
+      val p = java.nio.file.Path.of(path)
+      if java.nio.file.Files.isRegularFile(p) then
+        try Some(java.nio.file.Files.readString(p)) catch case _: Throwable => scala.None
+      else scala.None
+    })
 
   /** the last segment of a dotted package name — the only form a Scala access qualifier has, since
     * the language has no dotted qualifier at all (`private[a.b]` does not parse). */

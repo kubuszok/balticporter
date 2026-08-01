@@ -81,7 +81,7 @@ sge.anim8.AnimatedGif	sge.anim8.AnimatedGif#writeShort(int)	def	5b82e4b097279141
 sge.anim8.AnimatedGif	sge.anim8.AnimatedGif#writeString(String)	def	28e2826aa16274f6
 sge.anim8.AnimatedGif	sge.anim8.AnimatedGif#x	val	f8caaa91ba85bcf1
 sge.anim8.AnimatedGif	sge.anim8.AnimatedGif#y	val	28e8082d792f06ac
-sge.anim8.AnimatedPNG	sge.anim8.AnimatedPNG	class	66cfbd457ea68616
+sge.anim8.AnimatedPNG	sge.anim8.AnimatedPNG	class	df508c6891ea9b5b
 sge.anim8.AnimatedPNG	sge.anim8.AnimatedPNG#<init>()	ctor	c3430307fd38a207
 sge.anim8.AnimatedPNG	sge.anim8.AnimatedPNG#<stmt1>	stmt	75d72649c1a9f8e4
 sge.anim8.AnimatedPNG	sge.anim8.AnimatedPNG#<stmt2>	stmt	892718451a90edbd
@@ -105,7 +105,7 @@ sge.anim8.AnimatedPNG	sge.anim8.AnimatedPNG#setCompression(int)	def	4878f422da7f
 sge.anim8.AnimatedPNG	sge.anim8.AnimatedPNG#setFlipY(boolean)	def	cd42e58a6b7a5a73
 sge.anim8.AnimatedPNG	sge.anim8.AnimatedPNG#write(FileHandle,Array<Pixmap>)	def	7a88b1270cef69de
 sge.anim8.AnimatedPNG	sge.anim8.AnimatedPNG#write(FileHandle,Array<Pixmap>,int)	def	d1f66f549cb0c9bf
-sge.anim8.AnimatedPNG	sge.anim8.AnimatedPNG#write(OutputStream,Array<Pixmap>,int)	def	7ebb5c6952266ef0
+sge.anim8.AnimatedPNG	sge.anim8.AnimatedPNG#write(OutputStream,Array<Pixmap>,int)	def	610975d4f3dd3b40
 sge.anim8.AnimationWriter	sge.anim8.AnimationWriter	class	cb69372fdb9da2b9
 sge.anim8.AnimationWriter	sge.anim8.AnimationWriter#write(FileHandle,Array<Pixmap>)	def	54e783c451aacb22
 sge.anim8.AnimationWriter	sge.anim8.AnimationWriter#write(FileHandle,Array<Pixmap>,int)	def	71ec95a8a6f666ab
@@ -142,7 +142,7 @@ sge.anim8.FastAPNG	sge.anim8.FastAPNG#<init>()	ctor	db11a0532fb58800
 sge.anim8.FastAPNG	sge.anim8.FastAPNG#<init>(int)	ctor	afd95becfcbdd856
 sge.anim8.FastGif	sge.anim8.FastGif	class	099f2b013eebf1f0
 sge.anim8.FastGif	sge.anim8.FastGif#write(OutputStream,Array<Pixmap>,int)	def	e480eff286d0ab0d
-sge.anim8.FastPNG	sge.anim8.FastPNG	class	8a3b261066d84134
+sge.anim8.FastPNG	sge.anim8.FastPNG	class	26c25509b3fa66f4
 sge.anim8.FastPNG	sge.anim8.FastPNG#<init>()	ctor	f7aa12f8ad324eb7
 sge.anim8.FastPNG	sge.anim8.FastPNG#<stmt1>	stmt	75d72649c1a9f8e4
 sge.anim8.FastPNG	sge.anim8.FastPNG#<stmt2>	stmt	8bf7641d4f4f2250
@@ -162,13 +162,13 @@ sge.anim8.FastPNG	sge.anim8.FastPNG#flipY	val	c35d6d0a77ec23d4
 sge.anim8.FastPNG	sge.anim8.FastPNG#setCompression(int)	def	af192376b3ea60ae
 sge.anim8.FastPNG	sge.anim8.FastPNG#setFlipY(boolean)	def	8f0d564fa8e04b14
 sge.anim8.FastPNG	sge.anim8.FastPNG#write(FileHandle,Pixmap)	def	9cd8bd70d6064ca2
-sge.anim8.FastPNG	sge.anim8.FastPNG#write(OutputStream,Pixmap)	def	7a101be55797749c
+sge.anim8.FastPNG	sge.anim8.FastPNG#write(OutputStream,Pixmap)	def	bb8965102198b2c2
 sge.anim8.FastPNG8	sge.anim8.FastPNG8	class	47e7bad689670ac1
 sge.anim8.FastPNG8	sge.anim8.FastPNG8#<init>()	ctor	aea8e357e1b890cb
 sge.anim8.FastPNG8	sge.anim8.FastPNG8#<stmt1>	stmt	6bfbde55f443638b
 sge.anim8.FastPNG8	sge.anim8.FastPNG8#write(OutputStream,Array<Pixmap>,int,boolean)	def	33174be02dc7f86c
 sge.anim8.FastPNG8	sge.anim8.FastPNG8#write(OutputStream,Pixmap,boolean,boolean,int)	def	f0f865183ed6bcb6
-sge.anim8.FastPalette	sge.anim8.FastPalette	class	77aa86b2d8b69990
+sge.anim8.FastPalette	sge.anim8.FastPalette	class	fd0a3f515cdf2b4b
 sge.anim8.FastPalette	sge.anim8.FastPalette#<init>()	ctor	5884a66b3803ef6a
 sge.anim8.FastPalette	sge.anim8.FastPalette#<init>(Array<Color>)	ctor	bc22e67695cccb02
 sge.anim8.FastPalette	sge.anim8.FastPalette#<init>(Array<Color>,int)	ctor	79fc6556743ad145
@@ -183,7 +183,7 @@ sge.anim8.FastPalette	sge.anim8.FastPalette#difference(int,int,int,int)	def	753a
 sge.anim8.FastPalette	sge.anim8.FastPalette#difference(int,int,int,int,int,int)	def	e2393cfe41226431
 sge.anim8.FastPalette	sge.anim8.FastPalette#differenceAnalyzing(int,int)	def	1586d65fa159f673
 sge.anim8.FastPalette	sge.anim8.FastPalette#differenceAnalyzing(int,int,int,int)	def	62849b3f61c9b51e
-sge.anim8.FastPalette	sge.anim8.FastPalette#differenceAnalyzing(int,int,int,int,int,int)	def	7ebd08328001b47a
+sge.anim8.FastPalette	sge.anim8.FastPalette#differenceAnalyzing(int,int,int,int,int,int)	def	8c8cfffdc4c64faf
 sge.anim8.FastPalette	sge.anim8.FastPalette#differenceHW(int,int)	def	eee1d3bae326d943
 sge.anim8.FastPalette	sge.anim8.FastPalette#differenceHW(int,int,int,int)	def	f72e36059a013933
 sge.anim8.FastPalette	sge.anim8.FastPalette#differenceHW(int,int,int,int,int,int)	def	ba3eab4402cb6aa8
@@ -230,7 +230,7 @@ sge.anim8.LZWEncoder	sge.anim8.LZWEncoder#nextPixel()	def	ffa02f1d45013b5a
 sge.anim8.LZWEncoder	sge.anim8.LZWEncoder#output(int,OutputStream)	def	26daa7854cfe0300
 sge.anim8.LZWEncoder	sge.anim8.LZWEncoder#pixArray	val	2bddc56476c9f6cc
 sge.anim8.LZWEncoder	sge.anim8.LZWEncoder#remaining	val	24792cf10c99dce9
-sge.anim8.OtherMath	sge.anim8.OtherMath	class	aadff0ef25b5810c
+sge.anim8.OtherMath	sge.anim8.OtherMath	class	351108e76a796cc9
 sge.anim8.OtherMath	sge.anim8.OtherMath#a0	val	59f2a2235e39ef4b
 sge.anim8.OtherMath	sge.anim8.OtherMath#a0f	val	1061515a44cfb910
 sge.anim8.OtherMath	sge.anim8.OtherMath#a1	val	1e0ee7d4d001f7f0
@@ -256,7 +256,7 @@ sge.anim8.OtherMath	sge.anim8.OtherMath#c3f	val	95dba860134da7cc
 sge.anim8.OtherMath	sge.anim8.OtherMath#cbrt(float)	def	97ed4435848e790f
 sge.anim8.OtherMath	sge.anim8.OtherMath#cbrtPositive(float)	def	2a60c9c5d9829969
 sge.anim8.OtherMath	sge.anim8.OtherMath#cbrtShape(float)	def	aec15100817c9c08
-sge.anim8.OtherMath	sge.anim8.OtherMath#centralize(byte)	def	b3820ee2d5b8effb
+sge.anim8.OtherMath	sge.anim8.OtherMath#centralize(byte)	def	56a27a707fa137ae
 sge.anim8.OtherMath	sge.anim8.OtherMath#d0	val	dff7d6bb99bcd4c2
 sge.anim8.OtherMath	sge.anim8.OtherMath#d0f	val	f26c3cfc216af02a
 sge.anim8.OtherMath	sge.anim8.OtherMath#d1	val	d313da85353b0ff4
@@ -386,8 +386,8 @@ sge.anim8.PNG8	sge.anim8.PNG8#writeWrenDithered(OutputStream,Array<Pixmap>,int)	
 sge.anim8.PNG8	sge.anim8.PNG8#writeWrenDithered(OutputStream,Pixmap)	def	589351e67a32b4a7
 sge.anim8.PNG8	sge.anim8.PNG8#writeWrenOriginalDithered(OutputStream,Array<Pixmap>,int)	def	bf24ee0df4eb820c
 sge.anim8.PNG8	sge.anim8.PNG8#writeWrenOriginalDithered(OutputStream,Pixmap)	def	46ffd0487219a029
-sge.anim8.PaletteReducer	sge.anim8.PaletteReducer	class	478f032e22b63d95
-sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#<clinit>	init	4de6b604fb495773
+sge.anim8.PaletteReducer	sge.anim8.PaletteReducer	class	d17754edc66efae2
+sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#<clinit>	init	da27f25e725d2439
 sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#<clinit>	init	99d19fbed16243ab
 sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#<init>()	ctor	9490c8320f2281a8
 sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#<init>(Array<Color>)	ctor	2f03437cf8e07de1
@@ -454,13 +454,13 @@ sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#curErrorGreenFloats	val	1d3235
 sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#curErrorRedFloats	val	07a6574332618504
 sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#differenceAnalyzing(int,int)	def	b42a2ec63e43d20a
 sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#differenceAnalyzing(int,int,int,int)	def	564bcb254c74f3af
-sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#differenceAnalyzing(int,int,int,int,int,int)	def	a5fde6a71f480df9
+sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#differenceAnalyzing(int,int,int,int,int,int)	def	46bc0c0ddbfb8713
 sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#differenceHW(int,int)	def	628cd7005129deaf
 sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#differenceHW(int,int,int,int)	def	77e56e6252891ed9
-sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#differenceHW(int,int,int,int,int,int)	def	a533d2f48d19f715
+sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#differenceHW(int,int,int,int,int,int)	def	73ebc7ad8f74ad84
 sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#differenceMatch(int,int)	def	7239ae39d12819df
 sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#differenceMatch(int,int,int,int)	def	d66b0722bd07475b
-sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#differenceMatch(int,int,int,int,int,int)	def	ca01d014843c72cd
+sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#differenceMatch(int,int,int,int,int,int)	def	bd3f5fe071f385b7
 sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#ditherStrength	val	6343674064273ff1
 sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#entryComparator	val	c28cb7a6c5a051fd
 sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#exact(Array<Color>)	def	d92f1251f033dd7a
@@ -501,7 +501,7 @@ sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#reduceChaoticNoise(Pixmap)	def
 sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#reduceDodgy(Pixmap)	def	7c0df0b02da0aed4
 sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#reduceFloat(float)	def	501f60abb4aec209
 sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#reduceFloydSteinberg(Pixmap)	def	62c41ea3a5c0240b
-sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#reduceGourd(Pixmap)	def	52c7062c80a04e50
+sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#reduceGourd(Pixmap)	def	e53a15a99286aa12
 sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#reduceIgneous(Pixmap)	def	77368e9dada6f7a6
 sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#reduceInPlace(Color)	def	dd5e32a2eb53e924
 sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#reduceIndex(int)	def	b56fc04067fc7145

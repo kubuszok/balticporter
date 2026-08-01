@@ -416,7 +416,7 @@ sge.graphs.algorithms.CycleDetector	sge.graphs.algorithms.CycleDetector#detectCy
 sge.graphs.algorithms.CycleDetector	sge.graphs.algorithms.CycleDetector#findCycle(Graph<V>)	def	41513a4cdf808a31
 sge.graphs.algorithms.CycleDetector	sge.graphs.algorithms.CycleDetector#isFinished()	def	7baa43f6589f89ba
 sge.graphs.algorithms.CycleDetector	sge.graphs.algorithms.CycleDetector#update()	def	2760204120a562ce
-sge.graphs.algorithms.DepthFirstSearch	sge.graphs.algorithms.DepthFirstSearch	class	67e821e6ec385717
+sge.graphs.algorithms.DepthFirstSearch	sge.graphs.algorithms.DepthFirstSearch	class	0e14d2d107fa1b0c
 sge.graphs.algorithms.DepthFirstSearch	sge.graphs.algorithms.DepthFirstSearch#<stmt1>	stmt	ecaea45c7d03cde9
 sge.graphs.algorithms.DepthFirstSearch	sge.graphs.algorithms.DepthFirstSearch#<stmt2>	stmt	6abc4bf13ae7394d
 sge.graphs.algorithms.DepthFirstSearch	sge.graphs.algorithms.DepthFirstSearch#<stmt3>	stmt	9767db0337c38551
@@ -426,7 +426,7 @@ sge.graphs.algorithms.DepthFirstSearch	sge.graphs.algorithms.DepthFirstSearch#is
 sge.graphs.algorithms.DepthFirstSearch	sge.graphs.algorithms.DepthFirstSearch#processor	val	f30ede9319e2fc6b
 sge.graphs.algorithms.DepthFirstSearch	sge.graphs.algorithms.DepthFirstSearch#queue	val	4830319e41c4446a
 sge.graphs.algorithms.DepthFirstSearch	sge.graphs.algorithms.DepthFirstSearch#step	val	ee3fb262a444ddcb
-sge.graphs.algorithms.DepthFirstSearch	sge.graphs.algorithms.DepthFirstSearch#update()	def	fd5f02b201530907
+sge.graphs.algorithms.DepthFirstSearch	sge.graphs.algorithms.DepthFirstSearch#update()	def	940f9941ea7b04dd
 sge.graphs.algorithms.DirectedGraphAlgorithms	sge.graphs.algorithms.DirectedGraphAlgorithms	class	db220bff9f4138de
 sge.graphs.algorithms.MinimumWeightSpanningTree	sge.graphs.algorithms.MinimumWeightSpanningTree	class	d5fb49f9f070ea1f
 sge.graphs.algorithms.MinimumWeightSpanningTree	sge.graphs.algorithms.MinimumWeightSpanningTree#<stmt1>	stmt	ed3edb3930ffca3c

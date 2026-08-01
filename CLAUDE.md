@@ -283,12 +283,15 @@ It runs on the **Fable 5** model and is expensive, so it is **not** run on every
   `set -e` to a lane**: `grep -c` exits 1 when it counts zero, and counting zero errors is the
   success case, so a lane under `set -e` aborts exactly when the port is green.
 
-  Each prints, untruncated and diffed against the committed baseline, **sixteen engine checks —
+  Each prints, untruncated and diffed against the committed baseline, **eighteen engine checks —
   not four — plus any check the port's own §1(c) rules register** (libGDX adds
-  `gdx-shared-iterator`, so its lanes show seventeen). Thirteen are required of every run
+  `gdx-shared-iterator`, so its lanes show nineteen). Fifteen are required of every run
   (`signature`, `omissions`, `portability(all|emitted|injected)`,
-  `substitution(emitted|dangling)`, `remediation`, `policy`, `manifest`, `port-map`, `trivia`,
-  `jdk-surface`);
+  `substitution(emitted|dangling)`, `remediation`, `policy`, `manifest`, `port-map`,
+  `trivia(|recovered|deliberate)`, `jdk-surface`). The trivia family is three lanes and all three
+  are required, because `lost = 0` is the bar and a run could hold it by RECOVERING everything —
+  `recovered` is a counted residue and `deliberate` is derived from the port's own drops, so
+  reporting the bar without them says nothing about how it was met;
   `porter-notes` records on every run, and `collection-closure`/`collection-boundary` record when
   `CollectionsTransform` is in the pipeline. `PortRun.RequiredChecks` is asserted against what
   actually recorded, so a number that reaches stdout and not `findings.tsv` fails the run.
@@ -617,6 +620,27 @@ and must skip what they took, by IDENTITY, or every nested comment is emitted tw
 deliberate exception is the FILE header: a Java file with two top-level types becomes two Scala
 files and each is a derived work, so each carries the notice.
 
+**…and a harvest that reads TEXT claims a SPAN, before the ones that read the parser.** The file
+header is decided positionally — a comment is the file's iff no code precedes it — precisely because
+a parser's attachment model is what cannot be trusted there (`ENGINE-LIMITS.md` V3: of two leading
+blocks the unit gets the first and the PACKAGE DECLARATION the second, and in one generated-parser
+family the block that fell down that gap was the Apache notice itself). A positional harvest has no
+parser object to claim, so it claims the OFFSET, and every finer harvest skips what it took — which
+only works if it runs FIRST. Reading one more of the parser's slots is not the fix: the next shape
+lands in a slot nobody enumerated, and no set of slots can say which of two blocks came first.
+
+**A comment the emission CONSUMES needs a home, and the last resort is a QUOTATION.** Where a
+construct disappears — a promoted constructor's braces, a `@Test` method that becomes a
+`test("…"){…}` statement, a `for` header rendered on one line — its comments go with it unless
+something carries them. Give each category its honest home first: the TIR node that survives has a
+`leading` (or, for the end of a body, `Tree.Block.trailing`), and that placement is EXACT. What
+cannot be placed is relocated to the member it was written in with its java coordinates beside it
+(`/* trivia: recovered from <path>:<line> */`), which is what makes the relocation admissible — a
+comment moved WITH its position is a quotation, while the same comment moved silently says something
+false about the code below it. Count those separately from the ones that were placed: a recovery
+lane that reads high is a category that still wants a home, and a `lost` count that hides it is a
+number that stopped meaning anything.
+
 **Two Java-vs-Scala comment facts, both of which break the emitted file, neither of which any type
 check sees:**
 
@@ -643,6 +667,14 @@ the whole harvest into `Nil` — and the emitted Scala was valid.
 
 **A `catch` around a harvest is how that happens.** Wrap only the lookups where an absent value is
 NORMAL (a missing source buffer); let a harvest that throws be seen.
+
+**And the NORMALISATION the check compares through is itself a source of false losses.** It strips
+what the emitter is allowed to change — delimiters, the ` * ` gutter, indentation — and the ORDER it
+strips them in decides whether the two sides meet. A block comment Scala would nest on is emitted as
+`//` lines, so its javadoc opener arrives with a `//` in front of it; with the `//` taken off LAST
+the opener was still there, the two sides normalised differently, and every such comment was
+reported lost while sitting in the emitted file. Whatever the emitter may WRAP the text in comes off
+first.
 
 ## 4.6 A kill switch beats another condition
 

@@ -445,3 +445,20 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
     val (_, ph) = emit(lifecycleSrc)
     assertEquals(ph.findings.map(_.render), Nil)
   }
+
+  test("a @Test method's JAVADOC lands above the `test(...)` that replaces it") {
+    // the method stops being a method, so the `leading` field it carried has no `def` left to sit
+    // on. Rendered nowhere, this is the biggest single category the recovery backstop has to put
+    // back — 51 comments on one of libGDX's suites — and a backstop placement is member-granular
+    // where this one is exact.
+    val (out, _) = emit(
+      """package demo;
+        |import org.junit.Test;
+        |public class DocTest {
+        |  /** Test of the different adding methods */
+        |  @Test public void addTest() { }
+        |}
+        |""".stripMargin)
+    assert(out.contains("Test of the different adding methods"), out)
+    assert(out.indexOf("Test of the different adding methods") < out.indexOf("test(\"addTest\")"), out)
+  }

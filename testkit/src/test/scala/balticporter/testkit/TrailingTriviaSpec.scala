@@ -128,6 +128,14 @@ class TrailingTriviaSpec extends munit.FunSuite:
     val o = out(multiCtor)
     List("defaulted both", "defaulted the height")
       .foreach(c => assertEquals(occurrences(o, c), 1, s"'$c' in:\n$o"))
+    // …and each of them PLACED, not recovered: the backstop is the completeness half and these
+    // three are the attachment channel's, which is what places them where java wrote them.
+    assertEquals(balticporter.tir.TriviaMark.scan(o).count(_.line == 8), 0, o)
+    assertEquals(balticporter.tir.TriviaMark.scan(o).count(_.line == 12), 0, o)
+  }
+
+  test("A2 interaction: the CONSUMED constructor's is recovered — `RecoveredTriviaSpec` for how") {
+    assertEquals(occurrences(out(multiCtor), "both given"), 1, out(multiCtor))
   }
 
 

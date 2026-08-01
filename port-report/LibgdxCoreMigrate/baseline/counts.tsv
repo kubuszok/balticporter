@@ -15,4 +15,6 @@ remediation	29
 signature	0
 substitution(dangling)	0
 substitution(emitted)	0
-trivia	100
+trivia	0
+trivia(deliberate)	12
+trivia(recovered)	4
