@@ -3146,3 +3146,134 @@ it silently, where a fourth field on `Opaque` is compiler-forced at the two posi
 exist. A printable hole delimiter — it needs an escape grammar, which is a second parser over text
 the engine deliberately does not parse. Deciding the overload from the call's argument shape — §8.1
 measured that alternative at 118 `Ambiguous` out of 263.
+
+### 8.13 The merge contract — how a parameterised phase's POLICY composes across manifests — as built
+
+**Decision.** A phase may declare `MergeablePolicy` (`api`, beside `SurfacePolicy`, which it
+refines): one method, `mergedWith(later: Phase): Either[String, Merged]`, answering *how MY table
+composes with a nearer manifest's instance of me*. `PortManifest.surfaceFold` folds the policy chain
+through it — same `Phase.name`, base's pipeline POSITION preserved, the merged instance replacing
+the base's in place. A phase that declares nothing keeps exactly today's behaviour: both instances
+stay in the effective pipeline and `ManifestAgreement` reports the pair as a fatal
+`SurfaceDivergence`. `TypeRedirectTransform` declares its merge in this commit; every other
+parameterised phase keeps the no-merge default, deliberately (below).
+
+**What this closes.** `ENGINE-LIMITS.md` D9: a (b) phase configured in a BASE manifest was one no
+dependent could ever configure, so the libGDX base could not gain its first `TypeRedirectTransform`
+while `ashley` and `screens` each had one (1 fatal `SurfaceDivergence` each), and the escape of
+handing the dependents' entries to the base was closed from the other side by D1's published-map
+contract (`BaseMapStale` → 309 fatal base-surface gaps). Stage P's P1 was blocked on exactly this.
+
+**Every parameterised phase declares its OWN answer, and that is the whole reason this is a
+contract rather than a union.** A `Map` of independent keys unions; an ORDERED list of forwarders
+does not (the order is policy); a first-match table does not (a later entry is shadowed, not added);
+a `RuleScope` is a set that composes one way for `Only` and the opposite way for `Everywhere`. An
+engine-side "merge the maps" would be right for one phase and silently wrong for the next, which is
+CLAUDE.md §1's failure mode with the policy in the engine's hands instead of the library's.
+
+**The merge is REFUSED, never approximated.** `Left(why)` means same key, different value — and the
+refused pair stays in the effective pipeline, so the divergence detection that already exists fires
+on it unchanged, now carrying the phase's own sentence for why. Three obligations fall on an
+implementor, all stated on the trait because none is checkable from outside:
+
+- the result must preserve BOTH inputs' behaviour on their OWN keys, or refuse — `SurfaceMissing`
+  stops firing for the base's absorbed instance on the strength of that promise;
+- the merge must be PURE and DETERMINISTIC — the base's own `effectiveSurface` is folded by the base
+  and re-folded by every dependent, and D1's freshness comparison is between those two computations;
+- `surfaceFingerprint` must move whenever the merged table differs from either input, or a merge that
+  changed the surface publishes a digest saying it did not.
+
+#### The D1 contract: the base is the base AS THE BASE RAN IT
+
+This is the half that had to be got right or refused, and the shape that gets it right is not a
+guard — it is WHERE the fold runs. `surfaceFold` folds `policyChain`, which is *this* manifest's
+chain, so a base manifest `b` folds `b.policyChain` and a dependent folds `[…b, this]`. The
+dependent's added phase is not in `b.policyChain` and therefore cannot reach `b.effectiveSurface`.
+`PortRun.basePolicyFingerprint(b)` — the value `PortMap.freshness` compares the base's published
+`policy=` against — is computed from `b.effectiveSurface` and is byte-identical before and after
+this commit. **Only the dependent's EFFECTIVE pipeline holds the merged phase**, which is exactly
+the sentence D9 said there was no place for.
+
+It composes down a chain for the same reason: for `a → b → c`, `b` publishes `merge(a,b)` and `c`
+folds `merge(merge(a,b),c)`, so the absorbed input at `c`'s last step IS the fingerprint `b`
+published. The fold records every absorbed fingerprint for that reason, and `SurfaceMissing`'s
+"present in the base, absent here" test reads `mySurface ++ absorbed` rather than `mySurface`.
+
+`surfaceFold` is a **`lazy val`**, and that is not an optimisation. A merged phase is a NEW instance
+holding a run's mutable binding state; recomputed per call, the instance the pipeline ran would not
+be the instance whose `policyReport` the run reads — the same failure `PortManifest.substitutions`
+is a `lazy val` to avoid, one layer up.
+
+#### The `governs` intrusion — refused, but the criterion is DROPPED, not PREFIXED
+
+The dangerous shape the merge newly permits is a dependent adding a key that edits the SHARED
+surface: the base emitted a type mechanically, and a dependent quietly re-points every reference to
+it, so the two ports each compile alone and cannot compile together — §1.5's failure with a merge as
+the back door. So the fold screens each subject the later instance ADDS against the bases' `governs`
+claims and refuses with a fatal `SurfaceIntrusion`, counted, naming the base and the subject.
+
+**A bare prefix test is the wrong criterion and would have refused the one port the mechanism
+exists for.** `ashley` redirects `com.badlogic.gdx.utils.ReflectionPool`, which is inside libGDX's
+`governs = com.badlogic.gdx` — and is CORRECT, because the base DROPS that type: nothing stands at
+the name in the base's output, so there is no shared surface at it to edit, and re-pointing
+references at a replacement the dependent ships is precisely what `TypeRedirectTransform` was built
+for. The honest criterion is therefore *inside a base's claimed namespace AND not accounted for by
+that base's own policy* — `dropTypes`, or the base's own instance of the same phase already saying
+the same thing (which contributes no added key at all). §4.56's rule applies to the claim as it
+applies to every prefix: `covers` cuts only at a separator.
+
+A subject is read off a policy key as its leading FQN cut at `#` — the convention `ManifestAgreement`
+already uses for `dropMethods` keys, one body (`MergeablePolicy.subjectOf`), so a phase does not
+answer the question twice.
+
+The screen is scoped to keys the MERGE adds. A dependent's own, unmerged phase touching the base's
+namespace is the pre-existing situation on two ports today and is not this commit's to change; what
+this commit owes is that merging cannot become a way to do silently what was not allowed loudly.
+
+#### The policy report follows the KEYS, not the instance
+
+`PortRun` holds a module to its OWN keys — a §1(b) finding says "fix this key in the library's
+manifest", and an inherited key lives in the base's. For drops and renames that filter is
+key-level; for PHASES it was instance-level, which was a sound proxy only while no instance was
+shared. After a merge the dependent's own declared instance never runs and never binds, so reading
+its `policyReport` reports nothing at all — a typo'd key silently no-oping, which is exactly the
+thing `PolicyReport` was built to close (`ENGINE-LIMITS.md` §9). So `ownPhases` resolves each
+own-declared phase to the effective instance that ABSORBED it, and the merged instance's findings
+are filtered to the subjects the fold recorded this manifest as having contributed. A port with no
+merge resolves every phase to itself and the filter is absent — byte-identical.
+
+#### The `.conf` path composes through the SAME fold
+
+Nothing was added to it, and that is the result rather than an omission: `base = "…"` already ends
+in `base.extendedBy(own)` (`PortConfig.readManifest`), and `extendedBy` builds the chain the fold
+reads. A base conf and a dependent conf that each declare `redirects { }` now merge exactly as two
+Scala manifests do. Had the fold been placed in `PortRun` instead of on the manifest, this would
+have been a second truth on the second path — D9 notes the hole was identical on both, so the fix
+had to be.
+
+#### Which phases declare a merge, and which keep the default
+
+`TypeRedirectTransform` declares one: `redirects` and `memberRenames` are key-independent maps, a
+key present in both sides with the same value is agreement and with a different value is refusal,
+and `ExternalSurface` is unioned because it is ENGINE knowledge about the JDK rather than policy (it
+is not in the fingerprint, and cannot be — two ports that know different amounts about a platform
+type still emit the same signatures).
+
+Every other parameterised phase keeps the no-merge default in this commit, and the reason is uniform:
+none of them has a second consumer yet, and a merge rule written without one is a guess that will be
+discovered wrong by the port that first needs it — the same argument §8.5 makes about `memberRenames`
+having waited for its second consumer. What each will need when that day comes is not the same
+answer, which is the point: `StaticForwarderTransform` holds an ORDERED `List[Forwarder]`;
+`CollectionsTransform` holds a `RuleScope` whose two constructors compose in opposite directions;
+`MethodBodyTransform` and `CallSiteSubstitutionTransform` hold whole replacement bodies, where two
+manifests naming one key is a conflict no union can resolve. Until then, two instances of any of
+them remain the fatal `SurfaceDivergence` they are today, which is the correct answer for a
+composition nobody has designed.
+
+**Rejected.** A union in the engine, keyed on `Map` — right for two of eleven phases and silently
+wrong for the rest (above). A per-instance `Phase.name` so two instances never collide — D9's
+recorded near-miss: it defeats the drift check for REAL drift, which is the only thing the check is
+for. Merging at `PortRun` rather than on the manifest — a second truth on the `.conf` path, and it
+puts the merged pipeline where `ManifestAgreement` (a pure function of manifests) cannot see it.
+Letting the intrusion screen pass and reporting it as advisory — a dependent that edits the shared
+surface produces two ports that cannot compile together, which is the definition of fatal here.
