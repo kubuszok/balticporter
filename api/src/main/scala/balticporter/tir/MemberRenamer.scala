@@ -136,7 +136,6 @@ object MemberRenamer:
     // `CheckBox.style` and `TextButton.style` to the same `style$shadow` and moved the collision up
     // a level. Parents-first ordering is what makes `SuffixUntilFree`'s answer stable.
     val assign = collection.mutable.Map.empty[SymId, String]
-    closures.foreach((r, c) => c.members.foreach(m => assign(m) = r.newName))
     def nameOf(m: SymId): String = p.symbolOf(m).map(_.name).getOrElse("")
     def eff(m: SymId): String    = assign.getOrElse(m, nameOf(m))
 
@@ -152,38 +151,61 @@ object MemberRenamer:
       (owners.map(depthOf(_)).minOption.getOrElse(0), r.key, r.member.raw)
     }
 
-    ordered.foreach { (r, c) =>
-      val owners  = c.members.map(graph.ownerOf).filter(_ != SymId.None).toList.distinct
-      val visible = owners.flatMap(graph.relativesOf).distinct
-      def collidersOf(nm: String): List[SymId] =
-        visible.flatMap(t => graph.membersOf(t)).distinct
-          .filterNot(c.members.contains)
-          .filter(m => eff(m) == nm)
-      onCollision match
-        case OnCollision.SuffixUntilFree =>
-          var fresh = r.newName
-          var fuel  = 64
-          while collidersOf(fresh).nonEmpty && fuel > 0 do { fresh += "$"; fuel -= 1 }
-          if collidersOf(fresh).nonEmpty then
-            refuse(r, s"no free name near `${r.newName}` after 64 suffixes")
-          else c.members.foreach(m => assign(m) = fresh)
-        case mode =>
-          val colliders = collidersOf(r.newName)
-          val movable   = mode == OnCollision.DeferToEmitter && colliders.forall(isMovableField(p, _))
-          if colliders.nonEmpty && !movable then
-            val names = colliders.flatMap(p.symbolOf).map(_.fullName).sorted.distinct
-            refuse(r, s"`${r.newName}` is already taken in the component's classes by " +
-              s"${names.mkString(", ")}" +
-              (if mode == OnCollision.DeferToEmitter then
-                 " — and at least one of them is not a member the emitter's §4.55 passes will move"
-               else ""))
-    }
-    sweepGroups()
+    /** the collision pass over the SURVIVORS, from an empty table.
+      *
+      * Rebuilding rather than patching is the whole point. Two requests may name members of ONE
+      * component — step 3 only refuses them when they ask for DIFFERENT names — and
+      * `SuffixUntilFree` writes its answer per request, so rolling one back has to undo an
+      * assignment the other still needs. Patched (remove the refused request's members, then
+      * backfill anything unassigned with `r.newName`), the survivor's component came out on the
+      * RAW requested name: the suffix search's entire answer discarded, and the component landed on
+      * the very name the search had found taken. Nothing sees that — it compiles as an ordinary
+      * clash somewhere else, or not at all, and no count moves.
+      *
+      * Re-running is also what makes the answer honest: `collidersOf` reads PENDING assignments
+      * through `eff`, so with fewer of them a member may keep its original name and collide
+      * differently. The caller loops until no new refusal appears. */
+    def collisionPass(): Unit =
+      assign.clear()
+      val live = ordered.filterNot((r, _) => refusals.contains(r))
+      // seed with the requested names FIRST, so `eff` holds every survivor's pending name while any
+      // one of them is being tested (§4.55: effective names, parents-first).
+      live.foreach((r, c) => c.members.foreach(m => assign(m) = r.newName))
+      live.foreach { (r, c) =>
+        val owners  = c.members.map(graph.ownerOf).filter(_ != SymId.None).toList.distinct
+        val visible = owners.flatMap(graph.relativesOf).distinct
+        def collidersOf(nm: String): List[SymId] =
+          visible.flatMap(t => graph.membersOf(t)).distinct
+            .filterNot(c.members.contains)
+            .filter(m => eff(m) == nm)
+        onCollision match
+          case OnCollision.SuffixUntilFree =>
+            var fresh = r.newName
+            var fuel  = 64
+            while collidersOf(fresh).nonEmpty && fuel > 0 do { fresh += "$"; fuel -= 1 }
+            if collidersOf(fresh).nonEmpty then
+              refuse(r, s"no free name near `${r.newName}` after 64 suffixes")
+            else c.members.foreach(m => assign(m) = fresh)
+          case mode =>
+            val colliders = collidersOf(r.newName)
+            val movable   = mode == OnCollision.DeferToEmitter && colliders.forall(isMovableField(p, _))
+            if colliders.nonEmpty && !movable then
+              val names = colliders.flatMap(p.symbolOf).map(_.fullName).sorted.distinct
+              refuse(r, s"`${r.newName}` is already taken in the component's classes by " +
+                s"${names.mkString(", ")}" +
+                (if mode == OnCollision.DeferToEmitter then
+                   " — and at least one of them is not a member the emitter's §4.55 passes will move"
+                 else ""))
+      }
 
-    // a refused request's members must not carry its assignment into the rewrite.
-    refusals.keys.foreach(r => graph.closureOf(r.member).members.foreach(assign.remove))
-    closures.foreach((r, c) => if !refusals.contains(r) then c.members.foreach(m =>
-      if !assign.contains(m) then assign(m) = r.newName))
+    // …until it settles. A refusal here (or in the group sweep it triggers) invalidates the
+    // assignments made beside it, and refusals only ever GROW, so this terminates in at most one
+    // round per request.
+    var before = -1
+    while refusals.size != before do
+      before = refusals.size
+      collisionPass()
+      sweepGroups()
 
     // ---- 5. one decision per renamed DECLARATION, then ONE table rewrite ----
     val applied = closures.toList.filterNot((r, _) => refusals.contains(r))

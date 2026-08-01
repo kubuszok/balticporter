@@ -32,6 +32,14 @@ import java.nio.file.{Files, Path}
   * deliberately not asserted here: assigning a name to more kinds than the arm covers can only make
   * the check kinder (a "mapped" row that could have been a finding), never make it miss a hole in a
   * kind that genuinely has none.
+  *
+  * The OTHER direction is not symmetric and is worth naming, because it is the one that costs
+  * something: a name assigned to FEWER kinds than its arm covers makes `jdk-surface` report
+  * `unhandled` for a member the phase demonstrably rewrites — a finding that is simply false. That
+  * is not a kind error, it is a REPORT-CREDIBILITY error (§4.45): the agent it is written for is in
+  * another repository, and it spends a full investigation on a hole that is already filled. One
+  * such row teaches that this check's findings need checking, which is worse than the check not
+  * existing. So when a union is split by hand, err WIDE.
   */
 class CollectionsHandledDerivationSpec extends munit.FunSuite:
 

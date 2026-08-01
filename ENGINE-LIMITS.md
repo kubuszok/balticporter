@@ -898,6 +898,35 @@ by `private final class Funnel` is **one error per disambiguated class**, verbat
 
 *Fix kind: (a).*
 
+### C10. `uninitialized` REPLACES THE CAST and nothing else — keyed on the fallback, 2,466 vs 1,184
+
+**Title, for renumbering: "the field placeholder replaces the cast, not every uninitialised
+field".** CLOSED. (a) engine.
+
+A field the constructor funnel could not hoist into a slot keeps a `var f: T = <blank>`, and
+`scala.compiletime.uninitialized` is scala's own word for the JVM default — exactly what java put
+there, and strictly better than the `null.asInstanceOf[T]` it replaces, which is a CAST in a
+position where nothing is being cast, on a value that is not of the type it claims.
+
+**Applied to every uninitialised field it is WORSE, and the damage is invisible.** `defaultFor`
+answers honestly for every type that STATES a default — `0`/`false` for a primitive, and `null` for
+the nullability phase's `T | scala.Null`, which is the union that phase exists to introduce.
+Written unconditionally, the substitution silently took that default back off
+(`var parent: demo.Actor | scala.Null = null` became `= uninitialized`), re-imposing a placeholder on
+the one shape the port had just retired it from. Nothing reports it: the output compiles, no check
+count moves, and only `NullabilitySpec` asserting BOTH halves of its rule caught it. So the
+substitution is keyed on `defaultFor`'s FALLBACK — the `.asInstanceOf[` rendering — and not on "this
+field has no initialiser". libGDX core: **1,184 placeholders keyed, against 2,466 unkeyed**
+(`a85d8872`).
+
+Two gates ride with it, both measured: it is emitted ONLY for a field of a CLASS, because scalac's
+rule is "`uninitialized` can only be used as the right hand side of a mutable FIELD definition" and
+the same function renders local `var`s — **0 -> 3 compile errors** on libGDX core, every one that
+message — and the test is STRUCTURAL (the symbol's owner is a class, not a method), never the shape
+of the type.
+
+*Fix kind: (a).*
+
 ---
 
 ## 3. `this`, inner classes and anonymous classes

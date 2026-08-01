@@ -200,6 +200,41 @@ class MemberRenamerSpec extends munit.FunSuite:
     assertEquals(out.symbolOf(sym(p, "C#m")).get.name, "go")
   }
 
+  test("a ROLLBACK may not take a SURVIVOR's collision answer with it — the pass is re-run, not patched") {
+    // Two requests on ONE component asking for the SAME name (which step 3 permits — it refuses
+    // only DIFFERENT ones), and the second falls with its group. `SuffixUntilFree` writes its
+    // answer per request, so rolling the second one back has to undo an assignment the first one
+    // still needs.
+    //
+    // Patched — remove the refused request's members from `assign`, then backfill anything
+    // unassigned with the raw `newName` — the survivor's component came out on `go`, which is
+    // exactly the name the suffix search had found TAKEN (`I.go` is right there). The search's
+    // whole answer was discarded by a rollback about a different request, and nothing in the
+    // pipeline can see that: it is a clash somewhere else, or a silently shadowed member, and no
+    // count moves. The pass is therefore RE-RUN over the survivors from an empty table.
+    val (p, out, refusals, _) = run(
+      """
+      import java.util.Comparator;
+      interface I { void m(); void go(); }
+      class C implements I { public void m() {} public void go() {} }
+      class Anchored implements Comparator<String> { public int compare(String a, String b) { return 0; } }
+      """,
+      pr => List(
+        MemberRenamer.Request(sym(pr, "I#m"), "go", cfg("k1"), "k1", "survivor"),
+        MemberRenamer.Request(sym(pr, "C#m"), "go", cfg("k2"), "k2", "doomed"),
+        // …and this is what takes group `doomed` down: an anchored component, refused whole.
+        MemberRenamer.Request(sym(pr, "Anchored#compare"), "cmp", cfg("k3"), "k3", "doomed"),
+      ),
+      MemberRenamer.OnCollision.SuffixUntilFree)
+    assertEquals(refusals.map(_.request.key).toSet, Set("k2", "k3"))
+    // the survivor keeps the answer the suffix search gave it, for EVERY declaration of its
+    // component — one name, or the component is split across two
+    assertEquals(out.symbolOf(sym(p, "I#m")).get.name, "go$")
+    assertEquals(out.symbolOf(sym(p, "C#m")).get.name, "go$")
+    // …and the member it was avoiding is untouched
+    assertEquals(out.symbolOf(sym(p, "I#go")).get.name, "go")
+  }
+
   test("a request naming an EXTERNAL symbol is refused — there is no declaration to rename") {
     val (_, _, refusals, _) = run(
       """class Thing { void go(String s) { s.length(); } }""",
