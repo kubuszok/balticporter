@@ -1833,6 +1833,47 @@ type or it has not tested the rule.
 
 *Fix kind: (b) per-library policy — the engine's part is the number.*
 
+### K14. A RETARGET's subtyping licence is ONE-DIRECTIONAL — the producer side is COUNTED, never coerced
+
+A `CollectionsTransform(retarget)` entry moves a type and bridges nothing, on a precondition the
+policy author owes: *the scala target is usable wherever the java source was*. `java.util.Comparator
+-> scala.math.Ordering` holds it, because `Ordering[T] <: Comparator[T]`.
+
+**That licence covers exactly one direction.** It says a retyped value reaches a slot that still
+declares `Comparator`. It says nothing about a `Comparator` the JDK HANDS BACK —
+`Collections.reverseOrder()`, `TreeMap.comparator()`, `Comparator.comparing(…)`,
+`String.CASE_INSENSITIVE_ORDER` — arriving at a slot the phase retyped. That value is not an
+`Ordering`, and three things conspire to make it silent:
+
+- a retarget contributes to neither `mappedTypes` nor `retypedTargets`, so `CollectionBoundaryCheck`
+  is blind to it BY CONSTRUCTION (the precondition says there is no seam);
+- `transformType` is position-blind, so the producing node's own type moved too — both sides of the
+  slot read `Ordering` and a check comparing node types reports ZERO;
+- the phase has no `transformIdent`, so a STATIC receiver (`Comparator.naturalOrder()`) keeps its
+  java spelling under a moved node type.
+
+Through a rewritten cast the failure is a `ClassCastException` at run time with a green compile,
+which is `CLAUDE.md` §3's whole subject.
+
+**What is BUILT is the counter, not the coercion.** `RetargetBoundaryCheck` (`collection-retarget`)
+reports all three shapes with the §1 classification, recorded whenever the phase is in the pipeline.
+**The corpus measures 0** — every `Comparator` in it is produced by code the port emits, which moves
+with its declaration — so the counter was proven against a SYNTHETIC producer
+(`ComparatorOrderingPortSpec`); a residue nobody can produce on demand is one nobody can prove is
+counted.
+
+**What is NOT built, and its cost.** No wrapper is synthesised. One is expressible in principle for
+this pair (an `Ordering` delegating to a `Comparator`'s `compare`) and it is NOT a general answer:
+a retarget is a §1(b) table whose target may be any type, so a coercion would have to arrive as
+policy beside the entry — a factory FQN the port supplies, exactly as `typeMap` carries one — and
+that is a table shape, not a rule the engine can derive. Until a port has a real producer to measure
+against, the honest position is the counted refusal: **do not add a wrapper on a synthetic case.**
+The alternative already exists and is documented — move the type out of `retarget` into `typeMap`
+with a kind and a factory, where the seam becomes a counted `coerce` boundary (`DESIGN.md` §8.12).
+
+*Fix kind: (a) engine for the counter — DONE; (b) per-library for the choice of table when a real
+producer appears.*
+
 ---
 
 ### P1. A `--js` compile proves NOTHING as a portability gate

@@ -74,8 +74,9 @@ portability(all)  portability(emitted)  portability(injected)  porter-notes
 remediation  signature  substitution(dangling)  substitution(emitted)  trivia
 ```
 
-Twelve are required of every run; `porter-notes` records on every run; `collection-closure` and
-`collection-boundary` record when `CollectionsTransform` is in the pipeline.
+Twelve are required of every run; `porter-notes` records on every run; `collection-closure`,
+`collection-boundary` and `collection-retarget` record when `CollectionsTransform` is in the
+pipeline.
 `PortRun.RequiredChecks` is asserted against what actually RECORDED, so a number that reaches stdout
 and not `findings.tsv` fails the run — that guarantee exists because `LibgdxTestMigrate` once went
 its whole life without calling `PortabilityCheck` at all.
@@ -97,6 +98,7 @@ What each headline number is:
 | `trivia` | comments in the Java that did not reach the Scala — a LICENCE among them. **§1(a) ENGINE** |
 | `collection-closure` | a mapped supertype with an unmapped subtype |
 | `collection-boundary` | stranded slots the collections phase's own scope created |
+| `collection-retarget` | values the JDK PRODUCES at a type the port retargets — the direction a retarget's subtyping precondition does not license (`ENGINE-LIMITS.md` K14) |
 
 Each of those the engine classifies, it classifies IN THE OUTPUT. You do not have to guess:
 

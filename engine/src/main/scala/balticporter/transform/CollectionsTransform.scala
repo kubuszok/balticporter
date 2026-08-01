@@ -160,6 +160,17 @@ final class CollectionsTransform(
   def boundary(program: Program, units: List[Tree.ClassDef]): List[CollectionBoundaryCheck.Finding] =
     CollectionBoundaryCheck.check(program, units, mappedTypes, retypedTargets, scopedOut)
 
+  /** [[RetargetBoundaryCheck]] over this phase's own retarget table — the PRODUCER direction, which
+    * [[boundary]] is blind to by construction (a retarget contributes nothing to `mappedTypes` or
+    * `retypedTargets`, because its precondition says there is no seam). Run on the program AFTER
+    * the phase, for the same reason: it counts what the retyping created. */
+  def retargetBoundary(program: Program): List[RetargetBoundaryCheck.Finding] =
+    retargetBoundary(program, program.units)
+
+  /** …held to the units the run EMITS (`ENGINE-LIMITS.md` D2), exactly as [[boundary]] is. */
+  def retargetBoundary(program: Program, units: List[Tree.ClassDef]): List[RetargetBoundaryCheck.Finding] =
+    RetargetBoundaryCheck.check(program, units, effectiveRetarget)
+
   /** scala nullary accessors that take NO parens (`def size: Int`) — a Java `size()`
     * emitted as `size()` would be an illegal application. Strip the `Apply`. */
   private val parenless = Set("size", "isEmpty", "iterator", "keySet", "values", "nonEmpty", "hasNext", "next")

@@ -485,10 +485,10 @@ report. Twelve are required unconditionally:
 | `substitution(emitted)` | `substitution(dangling)` | `remediation` |
 | `policy` | `manifest` | `port-map` |
 
-Three more record on every run that reaches them but are deliberately outside the set, because the set
+Four more record on every run that reaches them but are deliberately outside the set, because the set
 is asserted against what actually recorded and a port without the relevant phase records nothing:
-`porter-notes` (§7.2), `collection-closure` and `collection-boundary` (recorded only when the
-collections transform is in the pipeline). They are made unskippable by their wiring living in the
+`porter-notes` (§7.2), and `collection-closure`, `collection-boundary`, `collection-retarget`
+(recorded only when the collections transform is in the pipeline). They are made unskippable by their wiring living in the
 orchestrator, not by the set. A port's own §1(c) rule may register a check of its own beside these.
 
 `PortManifest` is the **shared-surface policy as an ordinary Scala value** — `name`, `governs`,

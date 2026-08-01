@@ -120,9 +120,11 @@ Per check, what a non-zero number is telling you:
 - **`trivia`** — a comment in the Java that did not reach the Scala. **§1(a) ENGINE**, and not a
   formatting nicety: a LICENCE notice among these is a §4.57 obligation. Nothing else in the pipeline
   can fail when comment handling regresses — the output compiles perfectly with every comment gone.
-- **`collection-closure` / `collection-boundary`** — a mapped supertype with an unmapped subtype; a
-  stranded slot the collections phase's scope created. Recorded only when that phase is in the
-  pipeline.
+- **`collection-closure` / `collection-boundary` / `collection-retarget`** — a mapped supertype with
+  an unmapped subtype; a stranded slot the collections phase's scope created; a value the JDK
+  PRODUCES at a type the port RETARGETS, which the boundary check cannot see (the retype moved the
+  node type on both sides of that slot — `ENGINE-LIMITS.md` K14). Recorded only when that phase is
+  in the pipeline.
 
 ## 4. Policy that never fired — the silent no-op
 

@@ -4,7 +4,7 @@ import balticporter.core.PolicyIssue
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.{Phase, Pipeline, Program}
-import balticporter.transform.{CallSiteSubstitutionTransform, CollectionsTransform}
+import balticporter.transform.{CallSiteSubstitutionTransform, CollectionsTransform, RetargetBoundaryCheck}
 
 /** `java.util.Comparator` → `scala.math.Ordering`, END TO END — the first RETARGET entry, and the
   * first real input to the call-site seam.
@@ -199,6 +199,66 @@ class ComparatorOrderingPortSpec extends munit.FunSuite:
     val retargeted = emit(List(new CollectionsTransform(retarget = Retarget)), arraySrc)
     assert(clue(plain).contains("xs.asInstanceOf[scala.Array[java.lang.Object]]"))
     assert(clue(retargeted).contains("xs.asInstanceOf[scala.Array[java.lang.Object]]"))
+  }
+
+  // -------------------------------------------------------------------------
+  // the PRODUCER direction — the half the subtyping argument does not license
+  // -------------------------------------------------------------------------
+
+  /** every shape in which the JDK HANDS BACK a `Comparator`. None of these occurs in the corpus,
+    * which is why the counter had to be written against a synthetic one: a residue nobody can
+    * produce on demand is a residue nobody can prove is counted. */
+  private val producerSrc =
+    """package demo;
+      |import java.util.Collections;
+      |import java.util.Comparator;
+      |class Producers {
+      |  Comparator<String> fromJdk = Collections.reverseOrder();
+      |  Comparator<String> natural = Comparator.naturalOrder();
+      |  Comparator<String> insensitive = String.CASE_INSENSITIVE_ORDER;
+      |  Comparator<String> viaCast(Object o) { return (Comparator<String>) o; }
+      |}
+      |""".stripMargin
+
+  test("a JDK-PRODUCED Comparator reaching a retyped slot is COUNTED — every shape") {
+    // The retarget's licence is one-directional: `Ordering[T] <: Comparator[T]` covers a retyped
+    // value flowing INTO a `Comparator` slot, and says nothing about a `Comparator` the JDK returns
+    // flowing into a slot this phase moved. The position-blind `transformType` has already retyped
+    // the node, so BOTH sides of such a slot read `Ordering` and `CollectionBoundaryCheck` — which
+    // compares node types, and which a retarget deliberately contributes nothing to — reports 0.
+    val phase        = new CollectionsTransform(retarget = Retarget)
+    val (after, out) = ported(List(phase), producerSrc)
+    val fs           = phase.retargetBoundary(after)
+    assertEquals(clue(fs).map(_.issue).distinct.sorted(Ordering.by(_.toString)),
+                 List(RetargetBoundaryCheck.Issue.CastToTarget,
+                      RetargetBoundaryCheck.Issue.ExternalProducer,
+                      RetargetBoundaryCheck.Issue.StaticReceiver))
+    // the three producers the JDK owns, plus the cast
+    assertEquals(fs.count(_.issue == RetargetBoundaryCheck.Issue.ExternalProducer), 3)
+    assertEquals(fs.count(_.issue == RetargetBoundaryCheck.Issue.StaticReceiver), 1)
+    assertEquals(fs.count(_.issue == RetargetBoundaryCheck.Issue.CastToTarget), 1)
+    // …and every one of them says which of §1's three kinds the fix is (§4.45)
+    assert(fs.forall(f => RetargetBoundaryCheck.Issue.classification(f.issue).contains("§1")))
+    // the emitted text is the evidence that none of this is a compile error the port would see:
+    // the declaration moved and the producer did not.
+    assert(clue(out).contains("scala.math.Ordering[java.lang.String]"))
+    assert(clue(out).contains("java.util.Collections.reverseOrder"))
+    assert(clue(phase.boundary(after)).isEmpty, "the check that exists reports ZERO on all of it")
+  }
+
+  test("…and it counts NOTHING on a program whose producers are its OWN — the corpus's shape") {
+    // Every `Comparator` in the corpus is produced by code the port emits (a `new`, an owned field,
+    // an owned method), and those move WITH their declarations. A counter that also fired on those
+    // would report the retarget working correctly as a residue.
+    val phase = new CollectionsTransform(retarget = Retarget)
+    val after = Pipeline.run(SpoonTir.fromSource(src), List(phase))
+    assertEquals(phase.retargetBoundary(after), Nil)
+  }
+
+  test("no retarget, no counter — an empty table is a no-op by arithmetic") {
+    val phase = new CollectionsTransform()
+    val after = Pipeline.run(SpoonTir.fromSource(producerSrc), List(phase))
+    assertEquals(phase.retargetBoundary(after), Nil)
   }
 
   test("ORDER MATTERS, and getting it wrong is a FINDING rather than a silence") {

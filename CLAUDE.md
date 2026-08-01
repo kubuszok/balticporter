@@ -325,17 +325,21 @@ It runs on the **Fable 5** model and is expensive, so it is **not** run on every
   `set -e` to a lane**: `grep -c` exits 1 when it counts zero, and counting zero errors is the
   success case, so a lane under `set -e` aborts exactly when the port is green.
 
-  Each prints, untruncated and diffed against the committed baseline, **eighteen engine checks —
+  Each prints, untruncated and diffed against the committed baseline, **nineteen engine checks —
   not four — plus any check the port's own §1(c) rules register** (libGDX adds
-  `gdx-shared-iterator`, so its lanes show nineteen). Fifteen are required of every run
+  `gdx-shared-iterator`, so its lanes show twenty). Fifteen are required of every run
   (`signature`, `omissions`, `portability(all|emitted|injected)`,
   `substitution(emitted|dangling)`, `remediation`, `policy`, `manifest`, `port-map`,
   `trivia(|recovered|deliberate)`, `jdk-surface`). The trivia family is three lanes and all three
   are required, because `lost = 0` is the bar and a run could hold it by RECOVERING everything —
   `recovered` is a counted residue and `deliberate` is derived from the port's own drops, so
   reporting the bar without them says nothing about how it was met;
-  `porter-notes` records on every run, and `collection-closure`/`collection-boundary` record when
-  `CollectionsTransform` is in the pipeline. `PortRun.RequiredChecks` is asserted against what
+  `porter-notes` records on every run, and
+  `collection-closure`/`collection-boundary`/`collection-retarget` record when
+  `CollectionsTransform` is in the pipeline. **A retype has TWO directions and a subtyping argument
+  licenses only one of them**: `collection-retarget` counts the other — every value the JDK
+  PRODUCES at a type the port retargets, which the boundary check cannot see, because the
+  position-blind retyping moved the node type on both sides of that slot. `PortRun.RequiredChecks` is asserted against what
   actually recorded, so a number that reaches stdout and not `findings.tsv` fails the run.
 
   Four more measurements are NOT check counts and are printed beside them, because each catches a

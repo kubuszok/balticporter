@@ -5,7 +5,7 @@ import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.sbtgen.SbtGen
 import balticporter.tir.{CheckReport, CommentAnchor, Correlate, CorrelateRun, CtorFunnel, DebugFlags, Decision, DecisionLog, Definition, ExternalUsage, JdkSurfaceCheck, MemberIndex, NoteCoverageCheck, OmissionCheck, Origin, Phase, Pipeline, PolicyBinder, PolicyBound, PortabilityCheck, PorterNote, Program, Reason, Remediator, RewriteTrace, SrcMap, Surface, SymId, SymbolTable, Tree, TrivialSurface, TriviaCheck, Xref}
-import balticporter.transform.{CollectionBoundaryCheck, CollectionClosureCheck, CollectionsTransform, ContextSeamCheck, GlobalsToImplicitsTransform, MethodBodyTransform, NullabilityBoundaryCheck, NullabilityTransform, PackageRenameTransform, PortMapTransform}
+import balticporter.transform.{CollectionBoundaryCheck, CollectionClosureCheck, CollectionsTransform, ContextSeamCheck, GlobalsToImplicitsTransform, MethodBodyTransform, NullabilityBoundaryCheck, NullabilityTransform, PackageRenameTransform, PortMapTransform, RetargetBoundaryCheck}
 
 import java.nio.file.{Files, Path, StandardCopyOption}
 import scala.jdk.CollectionConverters.*
@@ -274,16 +274,28 @@ final case class PortRun(
     effectivePhases.collect { case c: CollectionsTransform => c }.foreach { c =>
       val clo = c.closure(program, checkedUnits)
       val bnd = c.boundary(program, checkedUnits)
+      // …and the RETARGET's own direction, which neither of the two above can see: they read
+      // `mappedTypes`/`retypedTargets`, and a retarget joins neither (its precondition says its
+      // target is usable wherever its source was). That licence is one-directional — it covers the
+      // retyped value reaching a JDK slot, never a JDK-PRODUCED value reaching a retyped one — and
+      // the position-blind retyping has already moved the node type on both sides of such a slot,
+      // so a check reading node types reports zero on exactly the sites the retarget made.
+      // Recorded even at zero, for the reason the other two are: a number nobody prints is a
+      // sentence living in prose.
+      val ret = c.retargetBoundary(program, checkedUnits)
       locally {
         given Program = program
         CheckReport.record(CollectionClosureCheck.Name, clo.map(_.report))
         CheckReport.record(CollectionBoundaryCheck.Name, bnd.map(_.report))
+        CheckReport.record(RetargetBoundaryCheck.Name, ret.map(_.report))
       }
       say(s"COLLECTION CLOSURE (mapped supertype, unmapped subtype): ${clo.size}")
       if clo.nonEmpty then say(CollectionClosureCheck.Classification)
       println(CollectionClosureCheck.summary(clo))
       say(s"COLLECTION BOUNDARY (stranded slots the phase created): ${bnd.size}")
       println(CollectionBoundaryCheck.summary(bnd))
+      say(s"RETARGET BOUNDARY (values the JDK produces at a retargeted type): ${ret.size}")
+      println(RetargetBoundaryCheck.summary(ret))
     }
 
     // ---- the nullability boundary: every annotated site the phase refused, and every wrapper
