@@ -470,6 +470,51 @@ class DecisionProvenanceSpec extends munit.FunSuite:
     assert(clue(two.head.origin.javaPath).endsWith("com/demo/Two.java"))
   }
 
+  /** The funnel's row is also a PORTER NOTE, and that is a CORRECTION rather than an addition.
+    *
+    * `FunnelledCtor` was excluded from `PorterNote.Rendered` on the recorded argument that "the
+    * emitted class has one primary and N secondaries, which is the funnel, in the code" — true of a
+    * PROMOTION, whose primary is a java constructor spelled as java spelled it. `DESIGN.md` §8.2
+    * then made SYNTHESIS the normal case, and the same sentence became false: what the reader is
+    * looking at is a `protected` constructor NO JAVA DECLARED, with `sup$k` slots and sometimes a
+    * companion `Funnel` parameter that has no runtime purpose at all. It has no upstream line, so
+    * the source map cannot answer it either. An exclusion is an argument about a SHAPE, and nothing
+    * in the pipeline can fail when that argument goes stale — a missing note moves no count. */
+  test("the funnel's decision is emitted BESIDE the synthesised class, which has no java behind it") {
+    val (root, src, files) = ctorFixture()
+    val rep = root.resolve("note-report")
+    val res = withReport(rep)(run(root, src, files)())
+    val text = Files.readString(res.outDir.resolve("com/demo/Two.scala"))
+
+    assert(PorterNote.Rendered(Decision.Kind.FunnelledCtor))
+    assert(PorterNote.AtDeclaration(Decision.Kind.FunnelledCtor))
+    val note = text.linesIterator.find(_.contains("porter: funnelled-ctor")).getOrElse("")
+    assert(clue(note).nonEmpty, text)
+    // the §1 classification first, then the detail a reader cannot get off the emitted line
+    assert(note.contains("reason=universal"), note)
+    assert(note.contains("rule=ctor-funnel"), note)
+    assert(note.contains("shape=synthesised-primary"), note)
+    assert(note.contains("primaryVis=protected"), note)
+    assert(note.contains("slots=sup$0,sup$1"), note)
+    // …ABOVE the declaration it explains, never below it
+    val noteAt  = text.linesIterator.indexWhere(_.contains("porter: funnelled-ctor"))
+    val classAt = text.linesIterator.indexWhere(_.contains("class Two"))
+    assert(clue(noteAt) < clue(classAt), text)
+
+    // `Plain` has ONE constructor, so the funnel decided nothing and says nothing — a note per
+    // class would be one comment on every class in a library.
+    assert(!Files.readString(res.outDir.resolve("com/demo/Plain.scala")).contains("porter: funnelled-ctor"))
+
+    // and it is DERIVED, not authored: the emitted note's slug is a `Decision.Kind` and the run
+    // recorded exactly one decision of that kind for this unit. `NoteCoverageCheck` is what fails a
+    // real run in both directions; this is the same join, on the artifacts this test holds.
+    val found = PorterNote.scan(text).filter(_.kind.contains(Decision.Kind.FunnelledCtor))
+    assertEquals(clue(found).size, 1, text)
+    assertEquals(
+      decisions(rep).count(d => d.kind == Decision.Kind.FunnelledCtor && d.subjectFqn == "com.demo.Two"),
+      1)
+  }
+
   test("two identical runs record identical funnel rows") {
     val (root, src, files) = ctorFixture()
     def once(rep: Path): String =

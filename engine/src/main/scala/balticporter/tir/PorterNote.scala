@@ -58,7 +58,7 @@ object PorterNote:
     * itself". A rename, a drop, a substitution and an injection all leave the emitted code saying
     * something the upstream Java does not, with no local evidence of why.
     *
-    * The three that are NOT here are not oversights:
+    * The two that are NOT here are not oversights:
     *
     *   - [[Decision.Kind.RetypedSignature]] — the new type is written in the declaration and the
     *     diff against the Java shows it; a note per retyped member is 335 comments on libGDX core
@@ -70,9 +70,24 @@ object PorterNote:
     *     declaration a policy entry names, against one per retyped member.
     *   - [[Decision.Kind.RedirectedCall]] — recorded per DECLARATION for the reason
     *     `Decision.declarationsUsing` gives, and the rewritten call is right there in the body.
-    *   - [[Decision.Kind.FunnelledCtor]] — the emitted class has one primary and N secondaries,
-    *     which is the funnel, in the code. (Its ESCAPING paths are a different matter and are
-    *     counted by `OmissionCheck.promotedBodyOnEveryPath`; that is a finding, not a note.)
+    *
+    * [[Decision.Kind.FunnelledCtor]] USED to sit in that list, on the reasoning that "the emitted
+    * class has one primary and N secondaries, which is the funnel, in the code". That reasoning was
+    * written when the funnel could only PROMOTE — and for a promotion it is true: the primary is a
+    * java constructor, spelled as java spelled it, and the reader's diff shows a reordering. It is
+    * false for a SYNTHESIS (`DESIGN.md` §8.2), which is what the funnel now does for most classes
+    * that have more than one constructor: the reader is looking at a `protected` constructor **no
+    * java declared**, whose parameters are named `sup$0` and `f$name`, possibly followed by a
+    * parameter of a companion type called `Funnel` that exists for no runtime purpose at all. There
+    * is no line of upstream java it corresponds to, so the source map cannot answer it either, and
+    * the answer — which slot came from which parent formal, which field was refused a slot and why,
+    * why the arity has one more parameter than the signature needs — is exactly what the decision's
+    * `slots` / `notSlot` / `disambiguator` detail already carries. That is §4.575's case in its
+    * purest form: an invented member is the one member whose explanation cannot be read off the
+    * code.
+    *
+    * (Its ESCAPING paths remain a different matter and are counted by
+    * `OmissionCheck.promotedBodyOnEveryPath`; that is a finding, not a note.)
     *
     * Add a kind here and the check immediately demands it — which is the point.
     */
@@ -80,7 +95,7 @@ object PorterNote:
     import Decision.Kind.*
     Set(RenamedType, RenamedPackage, RenamedMember, DroppedType, DroppedMember,
         SubstitutedBody, InjectedMember, DroppedSuperCall, WidenedVisibility, Unrenderable,
-        ScopedOut, DeferredInit)
+        ScopedOut, DeferredInit, FunnelledCtor)
 
   /** WHERE each rendered kind's note goes, which is not a style question: the three answers are
     * three different pieces of machinery and a kind in the wrong one is a note that never appears.

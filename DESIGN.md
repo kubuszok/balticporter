@@ -1212,16 +1212,28 @@ than rejected — a value that cannot be rendered safely is still information �
 whitespace is **quoted**, because the pair list is whitespace-separated and an unquoted
 `key=com.badlogic.gdx -> sge` is three tokens that every reader silently truncates.
 
-**Ten of the thirteen kinds carry a note.** The line is drawn at *would a reader of this line be unable
-to explain it from the line itself*. A rename, a drop, a substitution and an injection all leave the
-emitted code saying something the upstream Java does not, with no local evidence of why. The three
-excluded are not oversights:
+**Eleven of the thirteen kinds carry a note.** The line is drawn at *would a reader of this line be
+unable to explain it from the line itself*. A rename, a drop, a substitution and an injection all
+leave the emitted code saying something the upstream Java does not, with no local evidence of why.
+The two excluded are not oversights:
 
 | excluded | why |
 |---|---|
 | `RetypedSignature` | the new type is written in the declaration; a note per retyped member is 335 comments on libGDX core restating what the signature already says, and the noise would bury the ones that carry information nothing else does |
 | `RedirectedCall` | recorded per declaration, and the rewritten call is right there in the body |
-| `FunnelledCtor` | the emitted class has one primary and N secondaries — that IS the funnel, in the code. Its *escaping* paths are a different matter and are a finding, not a note |
+
+**`FunnelledCtor` was a third exclusion and is not one, and the correction is a lesson about how such
+an argument dates.** The reason recorded was *"the emitted class has one primary and N secondaries —
+that IS the funnel, in the code"*, which is true of a PROMOTION: the primary is a java constructor,
+spelled as java spelled it, and the reader's diff shows a reordering. §8.2 then made SYNTHESIS the
+normal case for a multi-constructor class, and the same sentence became false — the reader is looking
+at a `protected` constructor **no java declared**, whose parameters are `sup$0` and `f$name`, possibly
+followed by a parameter of a companion type called `Funnel` that has no runtime purpose at all. There
+is no upstream line, so the source map cannot answer it either, while `slots` / `notSlot` /
+`disambiguator` / `shape` — which the decision already carried — answer it exactly. An exclusion is an
+argument about a SHAPE, so it has to be re-read whenever that shape changes; nothing in the pipeline
+can notice that it went stale, because a missing note moves no count. Corpus cost: **380 notes over
+thirteen ports** (libgdx-core 292), one per funnelled class.
 
 Where a kind's note goes is machinery, not taste: **at the declaration** (the subject is emitted);
 **in the owning type's body**, at its head, for a dropped MEMBER (there is no `def` to sit above, so the

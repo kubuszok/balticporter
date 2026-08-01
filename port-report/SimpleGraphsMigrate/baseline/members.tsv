@@ -1,5 +1,5 @@
 #unit	member	kind	digest
-sge.graphs.Array	sge.graphs.Array	class	2af40d655c59b9d8
+sge.graphs.Array	sge.graphs.Array	class	485991827ddcb6ec
 sge.graphs.Array	sge.graphs.Array#<init>()	ctor	6b8c02987a386f8b
 sge.graphs.Array	sge.graphs.Array#<init>(int)	ctor	e5be362f9598894d
 sge.graphs.Array	sge.graphs.Array#<stmt1>	stmt	20883c50d3706a84
@@ -28,7 +28,7 @@ sge.graphs.Array	sge.graphs.Array$ArrayIterator#cursor	val	c5dd2af6eb920bee
 sge.graphs.Array	sge.graphs.Array$ArrayIterator#hasNext()	def	2896011085e34b9f
 sge.graphs.Array	sge.graphs.Array$ArrayIterator#next()	def	c7b878cef701a761
 sge.graphs.Array	sge.graphs.Array$ArrayIterator#remove()	def	a2eb5a00053e2db3
-sge.graphs.BinaryHeap	sge.graphs.BinaryHeap	class	e8428eb0ec6242c9
+sge.graphs.BinaryHeap	sge.graphs.BinaryHeap	class	950c38facc749aa6
 sge.graphs.BinaryHeap	sge.graphs.BinaryHeap#<init>()	ctor	f4d0f4ad605e6b7c
 sge.graphs.BinaryHeap	sge.graphs.BinaryHeap#<stmt1>	stmt	15f0787433412452
 sge.graphs.BinaryHeap	sge.graphs.BinaryHeap#add(Node<?>)	def	3a30d71773d7ef79
@@ -75,7 +75,7 @@ sge.graphs.Connection	sge.graphs.Connection$UndirectedConnection#link(Undirected
 sge.graphs.Connection	sge.graphs.Connection$UndirectedConnection#linked	val	4812355ce96bd3df
 sge.graphs.Connection	sge.graphs.Connection$UndirectedConnection#setWeight(WeightFunction<V>)	def	3ab8a9ab0a59bf82
 sge.graphs.Connection	sge.graphs.Connection$UndirectedConnection#toString()	def	0e9c64e1f2c78947
-sge.graphs.DirectedGraph	sge.graphs.DirectedGraph	class	d95e5ac70edd9a2b
+sge.graphs.DirectedGraph	sge.graphs.DirectedGraph	class	6becadf1a523c7db
 sge.graphs.DirectedGraph	sge.graphs.DirectedGraph#<init>(Graph<V>)	ctor	180c9a8b8e56b26a
 sge.graphs.DirectedGraph	sge.graphs.DirectedGraph#<init>(JavaCollection<V>)	ctor	cf2b5ec8d1b54d9a
 sge.graphs.DirectedGraph	sge.graphs.DirectedGraph#<stmt1>	stmt	8da51da614c18fdb
@@ -105,7 +105,7 @@ sge.graphs.Errors	sge.graphs.Errors#throwNullItemException()	def	78a18a5fbf7bdac
 sge.graphs.Errors	sge.graphs.Errors#throwNullVertexException()	def	ddd8c0cdc8751ff4
 sge.graphs.Errors	sge.graphs.Errors#throwSameVertexException()	def	47065a31ad375fa8
 sge.graphs.Errors	sge.graphs.Errors#throwVertexNotInGraphVertexException(boolean)	def	4aaf3680dd9c0194
-sge.graphs.Graph	sge.graphs.Graph	class	7ba0872132bcfaf8
+sge.graphs.Graph	sge.graphs.Graph	class	e448970d6aebd3eb
 sge.graphs.Graph	sge.graphs.Graph#<init>()	ctor	077c59a5f1ed3057
 sge.graphs.Graph	sge.graphs.Graph#<init>(Graph<V>)	ctor	28fd2046227cc55b
 sge.graphs.Graph	sge.graphs.Graph#<init>(JavaCollection<V>)	ctor	0d9d4d198d28a83c
@@ -289,7 +289,7 @@ sge.graphs.NodeMap	sge.graphs.NodeMap$NodeIterator#hasNext()	def	fb62014a0a132c2
 sge.graphs.NodeMap	sge.graphs.NodeMap$NodeIterator#next()	def	87337c344c9df0bf
 sge.graphs.NodeMap	sge.graphs.NodeMap$NodeIterator#nodeMap	val	e84f3b2fadc6dc3c
 sge.graphs.NodeMap	sge.graphs.NodeMap$NodeIterator#remove()	def	73617fdff90ba8e5
-sge.graphs.Path	sge.graphs.Path	class	6452ed2ddd543985
+sge.graphs.Path	sge.graphs.Path	class	31146ce7720a46f3
 sge.graphs.Path	sge.graphs.Path#<init>(int)	ctor	7691d5a14eeed68f
 sge.graphs.Path	sge.graphs.Path#EMPTY_PATH	val	654b6f8b16c1b28a
 sge.graphs.Path	sge.graphs.Path#add(V)	def	371e5437751a4252
@@ -309,7 +309,7 @@ sge.graphs.Path	sge.graphs.Path#retainAll(JavaCollection<?>)	def	cafe6c2944a49c1
 sge.graphs.Path	sge.graphs.Path#set(int,V)	def	ab8839850a38360e
 sge.graphs.Path	sge.graphs.Path#setFixed(boolean)	def	038d190fed929eac
 sge.graphs.Path	sge.graphs.Path#setLength(float)	def	0e3a2ffef043f1cb
-sge.graphs.UndirectedGraph	sge.graphs.UndirectedGraph	class	7b06b1b2d656f498
+sge.graphs.UndirectedGraph	sge.graphs.UndirectedGraph	class	694a86cb585f18ac
 sge.graphs.UndirectedGraph	sge.graphs.UndirectedGraph#<init>(Graph<V>)	ctor	c7a236d216ee82c1
 sge.graphs.UndirectedGraph	sge.graphs.UndirectedGraph#<init>(JavaCollection<V>)	ctor	cf2b5ec8d1b54d9a
 sge.graphs.UndirectedGraph	sge.graphs.UndirectedGraph#<stmt1>	stmt	fa8b5a9308a3911f
@@ -376,7 +376,7 @@ sge.graphs.algorithms.Algorithm	sge.graphs.algorithms.Algorithm#finish()	def	e11
 sge.graphs.algorithms.Algorithm	sge.graphs.algorithms.Algorithm#id	val	d9cdaa4c9242371d
 sge.graphs.algorithms.Algorithm	sge.graphs.algorithms.Algorithm#isFinished()	def	e2b0c76218876708
 sge.graphs.algorithms.Algorithm	sge.graphs.algorithms.Algorithm#update()	def	bc27a66eb5ed18dc
-sge.graphs.algorithms.AlgorithmPath	sge.graphs.algorithms.AlgorithmPath	class	229dc3dc3387f621
+sge.graphs.algorithms.AlgorithmPath	sge.graphs.algorithms.AlgorithmPath	class	1b0a61aec682ce8e
 sge.graphs.algorithms.AlgorithmPath	sge.graphs.algorithms.AlgorithmPath#<init>()	ctor	e161e0a6ecbf08cd
 sge.graphs.algorithms.AlgorithmPath	sge.graphs.algorithms.AlgorithmPath#<init>(Node<V>)	ctor	86c11f43361a1fde
 sge.graphs.algorithms.AlgorithmPath	sge.graphs.algorithms.AlgorithmPath#setByBacktracking(Node<V>)	def	e06f37a7a80de44e

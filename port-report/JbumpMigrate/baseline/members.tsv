@@ -19,7 +19,7 @@ sge.jbump.Collision	sge.jbump.Collision#type	val	4509e7987974d636
 sge.jbump.CollisionFilter	sge.jbump.CollisionFilter	class	01e8eec387802e06
 sge.jbump.CollisionFilter	sge.jbump.CollisionFilter#defaultFilter	val	2321979d280d0724
 sge.jbump.CollisionFilter	sge.jbump.CollisionFilter#filter(Item<?>,Item<?>)	def	c6f745cdef554b6c
-sge.jbump.Collisions	sge.jbump.Collisions	class	3173294041127241
+sge.jbump.Collisions	sge.jbump.Collisions	class	7bef9a2d53ca5ec7
 sge.jbump.Collisions	sge.jbump.Collisions#<init>()	ctor	191ad5aee912c614
 sge.jbump.Collisions	sge.jbump.Collisions#<init>(Collisions)	ctor	c93438a7afedb257
 sge.jbump.Collisions	sge.jbump.Collisions#add(Collision)	def	c5013d2d079d4311
@@ -76,7 +76,7 @@ sge.jbump.Grid	sge.jbump.Grid#grid_traverse_initStepX	val	9fafedd5fa9a2fa9
 sge.jbump.Grid	sge.jbump.Grid#grid_traverse_initStepY	val	d35b2491f20eb738
 sge.jbump.Grid	sge.jbump.Grid$TraverseCallback	class	dcbffd057d32aea4
 sge.jbump.Grid	sge.jbump.Grid$TraverseCallback#onTraverse(float,float,int,int)	def	4b05bdcdb457cbf8
-sge.jbump.IntPoint	sge.jbump.IntPoint	class	79a4a68b9184afd7
+sge.jbump.IntPoint	sge.jbump.IntPoint	class	f1d14a3ef0610fb2
 sge.jbump.IntPoint	sge.jbump.IntPoint#<init>()	ctor	535b68e7828fc91e
 sge.jbump.IntPoint	sge.jbump.IntPoint#<init>(int,int)	ctor	2c5023200c19a33f
 sge.jbump.IntPoint	sge.jbump.IntPoint#equals(Any)	def	04f69508a6c1b5c4
@@ -85,7 +85,7 @@ sge.jbump.IntPoint	sge.jbump.IntPoint#set(int,int)	def	9803b9bc83773875
 sge.jbump.IntPoint	sge.jbump.IntPoint#toString()	def	bea4b335e6b8ad58
 sge.jbump.IntPoint	sge.jbump.IntPoint#x	val	f79d1d32a8ab7e19
 sge.jbump.IntPoint	sge.jbump.IntPoint#y	val	1ca3460e2784afc0
-sge.jbump.Item	sge.jbump.Item	class	af4731f470948162
+sge.jbump.Item	sge.jbump.Item	class	ba9864ac1ff74bac
 sge.jbump.Item	sge.jbump.Item#<init>()	ctor	3abc8c8392cc1a59
 sge.jbump.Item	sge.jbump.Item#<init>(E)	ctor	f7e8f424cb8550b5
 sge.jbump.Item	sge.jbump.Item#equals(Any)	def	3634010bdfa8a6d2
@@ -106,7 +106,7 @@ sge.jbump.ItemInfo	sge.jbump.ItemInfo#x1	val	7d077c006736cd76
 sge.jbump.ItemInfo	sge.jbump.ItemInfo#x2	val	1d8625919ae704b5
 sge.jbump.ItemInfo	sge.jbump.ItemInfo#y1	val	b1cb93fce207ab87
 sge.jbump.ItemInfo	sge.jbump.ItemInfo#y2	val	a85e5d006c2569e7
-sge.jbump.Point	sge.jbump.Point	class	d688556d642cfbf5
+sge.jbump.Point	sge.jbump.Point	class	c66f3d26bd0f89a7
 sge.jbump.Point	sge.jbump.Point#<init>()	ctor	f90efa454642b11e
 sge.jbump.Point	sge.jbump.Point#<init>(float,float)	ctor	c607e3cb58bd86f3
 sge.jbump.Point	sge.jbump.Point#equals(Any)	def	0c5fdd097a433fb3
@@ -115,7 +115,7 @@ sge.jbump.Point	sge.jbump.Point#set(float,float)	def	562ebec624a8b6aa
 sge.jbump.Point	sge.jbump.Point#toString()	def	bea4b335e6b8ad58
 sge.jbump.Point	sge.jbump.Point#x	val	aea6b25a036f1f7f
 sge.jbump.Point	sge.jbump.Point#y	val	34a1132cdc077b35
-sge.jbump.Rect	sge.jbump.Rect	class	3ea2e44d902dff6c
+sge.jbump.Rect	sge.jbump.Rect	class	4d9d398e35b0881b
 sge.jbump.Rect	sge.jbump.Rect#<init>()	ctor	aba8638d9db87cc0
 sge.jbump.Rect	sge.jbump.Rect#<init>(float,float,float,float)	ctor	7e5fbd4bb160d52f
 sge.jbump.Rect	sge.jbump.Rect#h	val	408b084fb8e2de1f
@@ -148,7 +148,7 @@ sge.jbump.Response	sge.jbump.Response$Result#goalX	val	829206762cc30df8
 sge.jbump.Response	sge.jbump.Response$Result#goalY	val	c0baed8121df15b3
 sge.jbump.Response	sge.jbump.Response$Result#projectedCollisions	val	81668b6114a1d7eb
 sge.jbump.Response	sge.jbump.Response$Result#set(float,float)	def	87bde75fa692e30a
-sge.jbump.World	sge.jbump.World	class	e2c6be082b8330fe
+sge.jbump.World	sge.jbump.World	class	bb3b80e9e4431d71
 sge.jbump.World	sge.jbump.World#<init>()	ctor	4407a8f4d83d2d13
 sge.jbump.World	sge.jbump.World#<stmt1>	stmt	52a1c0f0b75c69f7
 sge.jbump.World	sge.jbump.World#add(Item<E>,float,float,float,float)	def	fc1c7f4f4e9b445d
@@ -217,7 +217,7 @@ sge.jbump.World	sge.jbump.World#update(Item<?>,float,float)	def	9c7c827cca7d3473
 sge.jbump.World	sge.jbump.World#update(Item<?>,float,float,float,float)	def	d6b91a4eade001d9
 sge.jbump.World	sge.jbump.World#update_c1	val	d5d7498db4e5783d
 sge.jbump.World	sge.jbump.World#update_c2	val	4604e828b7f388b6
-sge.jbump.util.BooleanArray	sge.jbump.util.BooleanArray	class	61357b7fbe6c76dc
+sge.jbump.util.BooleanArray	sge.jbump.util.BooleanArray	class	ea1e9a9001f14bd8
 sge.jbump.util.BooleanArray	sge.jbump.util.BooleanArray#<init>()	ctor	bf85050fa1a35e4a
 sge.jbump.util.BooleanArray	sge.jbump.util.BooleanArray#<init>(Array<boolean>)	ctor	0a35a08e60f11aca
 sge.jbump.util.BooleanArray	sge.jbump.util.BooleanArray#<init>(BooleanArray)	ctor	3e21ed832675ad5a
@@ -257,7 +257,7 @@ sge.jbump.util.BooleanArray	sge.jbump.util.BooleanArray#toString()	def	2601ec8ac
 sge.jbump.util.BooleanArray	sge.jbump.util.BooleanArray#toString(String)	def	b42588412677c822
 sge.jbump.util.BooleanArray	sge.jbump.util.BooleanArray#truncate(int)	def	571f533b6451dc08
 sge.jbump.util.BooleanArray	sge.jbump.util.BooleanArray#with(Array<boolean>)	def	20bd5389c334e2e2
-sge.jbump.util.FloatArray	sge.jbump.util.FloatArray	class	b75ca02d6cce1a4c
+sge.jbump.util.FloatArray	sge.jbump.util.FloatArray	class	6394e3f13a278297
 sge.jbump.util.FloatArray	sge.jbump.util.FloatArray#<init>()	ctor	bf85050fa1a35e4a
 sge.jbump.util.FloatArray	sge.jbump.util.FloatArray#<init>(Array<float>)	ctor	22917f3d85164e2a
 sge.jbump.util.FloatArray	sge.jbump.util.FloatArray#<init>(FloatArray)	ctor	6bcca264ad8e6747
@@ -305,7 +305,7 @@ sge.jbump.util.FloatArray	sge.jbump.util.FloatArray#toString()	def	90d0d0d3fc864
 sge.jbump.util.FloatArray	sge.jbump.util.FloatArray#toString(String)	def	8dc7aab8471bddbd
 sge.jbump.util.FloatArray	sge.jbump.util.FloatArray#truncate(int)	def	571f533b6451dc08
 sge.jbump.util.FloatArray	sge.jbump.util.FloatArray#with(Array<float>)	def	45cfe611f28e9867
-sge.jbump.util.IntArray	sge.jbump.util.IntArray	class	04095f2cb36a3309
+sge.jbump.util.IntArray	sge.jbump.util.IntArray	class	a290dd5107b293d1
 sge.jbump.util.IntArray	sge.jbump.util.IntArray#<init>()	ctor	bf85050fa1a35e4a
 sge.jbump.util.IntArray	sge.jbump.util.IntArray#<init>(Array<int>)	ctor	6da49e4208a33ff4
 sge.jbump.util.IntArray	sge.jbump.util.IntArray#<init>(IntArray)	ctor	68ad504173ec0e25
@@ -353,7 +353,7 @@ sge.jbump.util.IntArray	sge.jbump.util.IntArray#toString(String)	def	08a5ecf340e
 sge.jbump.util.IntArray	sge.jbump.util.IntArray#truncate(int)	def	571f533b6451dc08
 sge.jbump.util.IntArray	sge.jbump.util.IntArray#with(Array<int>)	def	d60b599d2cb29535
 sge.jbump.util.IntIntMap	@101#<init>(int,float)#initialCapacity	val	b46a457eb0ff2d75
-sge.jbump.util.IntIntMap	sge.jbump.util.IntIntMap	class	2d6461c7d591ef96
+sge.jbump.util.IntIntMap	sge.jbump.util.IntIntMap	class	378ffe5560723554
 sge.jbump.util.IntIntMap	sge.jbump.util.IntIntMap#<init>()	ctor	a6900d1deddd58e2
 sge.jbump.util.IntIntMap	sge.jbump.util.IntIntMap#<init>(IntIntMap)	ctor	b192919e4945a6d8
 sge.jbump.util.IntIntMap	sge.jbump.util.IntIntMap#<init>(int)	ctor	2e3e37df1a47a1ea

@@ -145,7 +145,7 @@ sge.ecs.EntityManager	sge.ecs.EntityManager$EntityOperation#type	val	9ad23fa3f34
 sge.ecs.EntityManager	sge.ecs.EntityManager$EntityOperation$Type	class	7cd0540311831dc0
 sge.ecs.EntityManager	sge.ecs.EntityManager$EntityOperationPool	class	f43bc1b026a15022
 sge.ecs.EntityManager	sge.ecs.EntityManager$EntityOperationPool#newObject()	def	ddd5c55a1642c64f
-sge.ecs.EntitySystem	sge.ecs.EntitySystem	class	d296862d61295cf2
+sge.ecs.EntitySystem	sge.ecs.EntitySystem	class	54f06e2b37b2a982
 sge.ecs.EntitySystem	sge.ecs.EntitySystem#<init>()	ctor	bc7199df8df04217
 sge.ecs.EntitySystem	sge.ecs.EntitySystem#<stmt1>	stmt	3523c965b02b1007
 sge.ecs.EntitySystem	sge.ecs.EntitySystem#<stmt2>	stmt	84e7445495bc3837
@@ -211,7 +211,7 @@ sge.ecs.FamilyManager	sge.ecs.FamilyManager$BitsPool#newObject()	def	bfa7a2ca9b8
 sge.ecs.FamilyManager	sge.ecs.FamilyManager$EntityListenerData	class	ac5ede0bcdc70c81
 sge.ecs.FamilyManager	sge.ecs.FamilyManager$EntityListenerData#listener	val	bb185b9b86ed7316
 sge.ecs.FamilyManager	sge.ecs.FamilyManager$EntityListenerData#priority	val	bc5953a688ed8c85
-sge.ecs.PooledEngine	sge.ecs.PooledEngine	class	5a590ded4b66509b
+sge.ecs.PooledEngine	sge.ecs.PooledEngine	class	14fc31289c25d4ab
 sge.ecs.PooledEngine	sge.ecs.PooledEngine#<init>()	ctor	70e80739cb62ed09
 sge.ecs.PooledEngine	sge.ecs.PooledEngine#<stmt1>	stmt	0fc41e5acd9ab292
 sge.ecs.PooledEngine	sge.ecs.PooledEngine#<stmt2>	stmt	b6490fc05b43367f
@@ -264,7 +264,7 @@ sge.ecs.signals.Signal	sge.ecs.signals.Signal#dispatch(T)	def	23754774bf02d9d0
 sge.ecs.signals.Signal	sge.ecs.signals.Signal#listeners	val	29196949d6180a5c
 sge.ecs.signals.Signal	sge.ecs.signals.Signal#remove(Listener<T>)	def	f2689657e569af77
 sge.ecs.signals.Signal	sge.ecs.signals.Signal#removeAllListeners()	def	c93cc2c4c4674b32
-sge.ecs.systems.IntervalIteratingSystem	sge.ecs.systems.IntervalIteratingSystem	class	76c8c0ded5fbc99e
+sge.ecs.systems.IntervalIteratingSystem	sge.ecs.systems.IntervalIteratingSystem	class	5ced354fd9cf840b
 sge.ecs.systems.IntervalIteratingSystem	sge.ecs.systems.IntervalIteratingSystem#<init>(Family,float)	ctor	e205a5fb85955bdf
 sge.ecs.systems.IntervalIteratingSystem	sge.ecs.systems.IntervalIteratingSystem#<stmt1>	stmt	7012404adc2dbcc5
 sge.ecs.systems.IntervalIteratingSystem	sge.ecs.systems.IntervalIteratingSystem#addedToEngine(Engine)	def	2983e9638a4ddfbc
@@ -276,7 +276,7 @@ sge.ecs.systems.IntervalIteratingSystem	sge.ecs.systems.IntervalIteratingSystem#
 sge.ecs.systems.IntervalIteratingSystem	sge.ecs.systems.IntervalIteratingSystem#processEntity(Entity)	def	28dc80a20f18b12f
 sge.ecs.systems.IntervalIteratingSystem	sge.ecs.systems.IntervalIteratingSystem#startProcessing()	def	fe1ec348163df205
 sge.ecs.systems.IntervalIteratingSystem	sge.ecs.systems.IntervalIteratingSystem#updateInterval()	def	fbce71364328dd88
-sge.ecs.systems.IntervalSystem	sge.ecs.systems.IntervalSystem	class	734fb5d3c900be8a
+sge.ecs.systems.IntervalSystem	sge.ecs.systems.IntervalSystem	class	b70a54d4ce44f7b8
 sge.ecs.systems.IntervalSystem	sge.ecs.systems.IntervalSystem#<init>(float)	ctor	92267b862c3f5fdc
 sge.ecs.systems.IntervalSystem	sge.ecs.systems.IntervalSystem#<stmt1>	stmt	82a7e52ab1e2b52d
 sge.ecs.systems.IntervalSystem	sge.ecs.systems.IntervalSystem#<stmt2>	stmt	efb840fbc448893a
@@ -285,7 +285,7 @@ sge.ecs.systems.IntervalSystem	sge.ecs.systems.IntervalSystem#getInterval()	def	
 sge.ecs.systems.IntervalSystem	sge.ecs.systems.IntervalSystem#interval	val	bc82215c1a6f5367
 sge.ecs.systems.IntervalSystem	sge.ecs.systems.IntervalSystem#update(float)	def	e93ffefba43dafb4
 sge.ecs.systems.IntervalSystem	sge.ecs.systems.IntervalSystem#updateInterval()	def	9b83463b3ad7dddb
-sge.ecs.systems.IteratingSystem	sge.ecs.systems.IteratingSystem	class	8221d4d60beff634
+sge.ecs.systems.IteratingSystem	sge.ecs.systems.IteratingSystem	class	7d3ed9b10c37872f
 sge.ecs.systems.IteratingSystem	sge.ecs.systems.IteratingSystem#<init>(Family)	ctor	bf85d2388b963637
 sge.ecs.systems.IteratingSystem	sge.ecs.systems.IteratingSystem#<stmt1>	stmt	7012404adc2dbcc5
 sge.ecs.systems.IteratingSystem	sge.ecs.systems.IteratingSystem#addedToEngine(Engine)	def	2983e9638a4ddfbc
@@ -298,7 +298,7 @@ sge.ecs.systems.IteratingSystem	sge.ecs.systems.IteratingSystem#processEntity(En
 sge.ecs.systems.IteratingSystem	sge.ecs.systems.IteratingSystem#removedFromEngine(Engine)	def	aefef9a3ed4e319a
 sge.ecs.systems.IteratingSystem	sge.ecs.systems.IteratingSystem#startProcessing()	def	fe1ec348163df205
 sge.ecs.systems.IteratingSystem	sge.ecs.systems.IteratingSystem#update(float)	def	d0339cea2eb95088
-sge.ecs.systems.SortedIteratingSystem	sge.ecs.systems.SortedIteratingSystem	class	fa1c108643599da0
+sge.ecs.systems.SortedIteratingSystem	sge.ecs.systems.SortedIteratingSystem	class	a4e3be1284319626
 sge.ecs.systems.SortedIteratingSystem	sge.ecs.systems.SortedIteratingSystem#<init>(Family,Comparator<Entity>)	ctor	53a85f7196e0e7c4
 sge.ecs.systems.SortedIteratingSystem	sge.ecs.systems.SortedIteratingSystem#<stmt1>	stmt	7012404adc2dbcc5
 sge.ecs.systems.SortedIteratingSystem	sge.ecs.systems.SortedIteratingSystem#<stmt2>	stmt	f6d15a49022a7412
@@ -321,7 +321,7 @@ sge.ecs.systems.SortedIteratingSystem	sge.ecs.systems.SortedIteratingSystem#sort
 sge.ecs.systems.SortedIteratingSystem	sge.ecs.systems.SortedIteratingSystem#sortedEntities	val	95d254fee834c230
 sge.ecs.systems.SortedIteratingSystem	sge.ecs.systems.SortedIteratingSystem#startProcessing()	def	fe1ec348163df205
 sge.ecs.systems.SortedIteratingSystem	sge.ecs.systems.SortedIteratingSystem#update(float)	def	e929bda0252b83e1
-sge.ecs.utils.Bag	sge.ecs.utils.Bag	class	66a51eabe60e87f9
+sge.ecs.utils.Bag	sge.ecs.utils.Bag	class	cd46b97d7e1842c9
 sge.ecs.utils.Bag	sge.ecs.utils.Bag#<init>()	ctor	47b6bd7ae280bd5b
 sge.ecs.utils.Bag	sge.ecs.utils.Bag#<stmt1>	stmt	2756649d52ee1803
 sge.ecs.utils.Bag	sge.ecs.utils.Bag#add(E)	def	382060dad3b965f3
@@ -340,7 +340,7 @@ sge.ecs.utils.Bag	sge.ecs.utils.Bag#removeLast()	def	5d8b27d1b2ff2d46
 sge.ecs.utils.Bag	sge.ecs.utils.Bag#set(int,E)	def	57c00a074b689c1e
 sge.ecs.utils.Bag	sge.ecs.utils.Bag#size	val	8cc4abc99a2dca30
 sge.ecs.utils.Bag	sge.ecs.utils.Bag#size()	def	e7ea6eefce3d2418
-sge.ecs.utils.ImmutableArray	sge.ecs.utils.ImmutableArray	class	8287b018fb6a0f10
+sge.ecs.utils.ImmutableArray	sge.ecs.utils.ImmutableArray	class	8b456e2795bc6ddc
 sge.ecs.utils.ImmutableArray	sge.ecs.utils.ImmutableArray#<init>()	ctor	6c7075a672b20f85
 sge.ecs.utils.ImmutableArray	sge.ecs.utils.ImmutableArray#<stmt1>	stmt	7806eb1a90208b07
 sge.ecs.utils.ImmutableArray	sge.ecs.utils.ImmutableArray#array	val	678982532a88f8f7

@@ -225,7 +225,7 @@ sge.gltf.data.texture.GLTFTexture	sge.gltf.data.texture.GLTFTexture#source	val	1
 sge.gltf.data.texture.GLTFTextureInfo	sge.gltf.data.texture.GLTFTextureInfo	class	0ae16ed08c688bfe
 sge.gltf.data.texture.GLTFTextureInfo	sge.gltf.data.texture.GLTFTextureInfo#index	val	f771e166de59d91b
 sge.gltf.data.texture.GLTFTextureInfo	sge.gltf.data.texture.GLTFTextureInfo#texCoord	val	246d59478ae572d9
-sge.gltf.exporters.GLTFAnimationExporter	sge.gltf.exporters.GLTFAnimationExporter	class	35120218fbe50363
+sge.gltf.exporters.GLTFAnimationExporter	sge.gltf.exporters.GLTFAnimationExporter	class	9262cde1a23c8b9c
 sge.gltf.exporters.GLTFAnimationExporter	sge.gltf.exporters.GLTFAnimationExporter#<stmt1>	stmt	23fd91ae01f58830
 sge.gltf.exporters.GLTFAnimationExporter	sge.gltf.exporters.GLTFAnimationExporter#base	val	5ad42a70bbe4c33c
 sge.gltf.exporters.GLTFAnimationExporter	sge.gltf.exporters.GLTFAnimationExporter#channelExporterQuaternion	val	c95f3f5827d5f779
@@ -237,7 +237,7 @@ sge.gltf.exporters.GLTFAnimationExporter	sge.gltf.exporters.GLTFAnimationExporte
 sge.gltf.exporters.GLTFAnimationExporter	sge.gltf.exporters.GLTFAnimationExporter#rotationInterpolation(NodeAnimation)	def	05bec2a444fd8ccf
 sge.gltf.exporters.GLTFAnimationExporter	sge.gltf.exporters.GLTFAnimationExporter#scaleInterpolation(NodeAnimation)	def	619a6be1139a2203
 sge.gltf.exporters.GLTFAnimationExporter	sge.gltf.exporters.GLTFAnimationExporter#translationInterpolation(NodeAnimation)	def	07e3b0ccc2cf11cb
-sge.gltf.exporters.GLTFAnimationExporter	sge.gltf.exporters.GLTFAnimationExporter$ChannelExporter	class	63422831d70c58db
+sge.gltf.exporters.GLTFAnimationExporter	sge.gltf.exporters.GLTFAnimationExporter$ChannelExporter	class	c23c41b4f3f084bd
 sge.gltf.exporters.GLTFAnimationExporter	sge.gltf.exporters.GLTFAnimationExporter$ChannelExporter#<init>(int,String)	ctor	15b645dcb42455c4
 sge.gltf.exporters.GLTFAnimationExporter	sge.gltf.exporters.GLTFAnimationExporter$ChannelExporter#<stmt1>	stmt	34c81e1847e90b3d
 sge.gltf.exporters.GLTFAnimationExporter	sge.gltf.exporters.GLTFAnimationExporter$ChannelExporter#<stmt2>	stmt	662ad5287d3592ed
@@ -277,7 +277,7 @@ sge.gltf.exporters.GLTFExportTypes	sge.gltf.exporters.GLTFExportTypes#rgba(Color
 sge.gltf.exporters.GLTFExportTypes	sge.gltf.exporters.GLTFExportTypes#rgba(ColorAttribute)	def	d4e377064b834cdf
 sge.gltf.exporters.GLTFExportTypes	sge.gltf.exporters.GLTFExportTypes#toArray(Quaternion)	def	e52fc14005044654
 sge.gltf.exporters.GLTFExportTypes	sge.gltf.exporters.GLTFExportTypes#toArray(Vector3)	def	af8c3afbb51a3204
-sge.gltf.exporters.GLTFExporter	sge.gltf.exporters.GLTFExporter	class	5fb23b5e0763b8a6
+sge.gltf.exporters.GLTFExporter	sge.gltf.exporters.GLTFExporter	class	c42c792209b4330b
 sge.gltf.exporters.GLTFExporter	sge.gltf.exporters.GLTFExporter#<init>()	ctor	dafdac06e0ae173d
 sge.gltf.exporters.GLTFExporter	sge.gltf.exporters.GLTFExporter#<stmt1>	stmt	b6288eac58df8e3f
 sge.gltf.exporters.GLTFExporter	sge.gltf.exporters.GLTFExporter#<stmt2>	stmt	d909e0efba73a46f
@@ -363,7 +363,7 @@ sge.gltf.loaders.blender.BlenderShapeKeys	sge.gltf.loaders.blender.BlenderShapeK
 sge.gltf.loaders.blender.BlenderShapeKeys	sge.gltf.loaders.blender.BlenderShapeKeys#parse(GLTFMesh)	def	803e180f6ef8907c
 sge.gltf.loaders.exceptions.GLTFIllegalException	sge.gltf.loaders.exceptions.GLTFIllegalException	class	2f9689461de58996
 sge.gltf.loaders.exceptions.GLTFIllegalException	sge.gltf.loaders.exceptions.GLTFIllegalException#serialVersionUID	val	f07a2102129b07e5
-sge.gltf.loaders.exceptions.GLTFRuntimeException	sge.gltf.loaders.exceptions.GLTFRuntimeException	class	b35d1406ce67c5d9
+sge.gltf.loaders.exceptions.GLTFRuntimeException	sge.gltf.loaders.exceptions.GLTFRuntimeException	class	b807e567dd4c9a3d
 sge.gltf.loaders.exceptions.GLTFRuntimeException	sge.gltf.loaders.exceptions.GLTFRuntimeException#<init>(String)	ctor	c939427023e6b9e9
 sge.gltf.loaders.exceptions.GLTFRuntimeException	sge.gltf.loaders.exceptions.GLTFRuntimeException#<init>(Throwable)	ctor	76beaed97881dd73
 sge.gltf.loaders.exceptions.GLTFRuntimeException	sge.gltf.loaders.exceptions.GLTFRuntimeException#serialVersionUID	val	21031b8236f97416
@@ -381,7 +381,7 @@ sge.gltf.loaders.glb.BinaryDataFileResolver	sge.gltf.loaders.glb.BinaryDataFileR
 sge.gltf.loaders.glb.BinaryDataFileResolver	sge.gltf.loaders.glb.BinaryDataFileResolver#load(LittleEndianInputStream)	def	bd715b84073447ca
 sge.gltf.loaders.glb.BinaryDataFileResolver	sge.gltf.loaders.glb.BinaryDataFileResolver#loadInternal(LittleEndianInputStream)	def	8a0a4ce5c25aa2cb
 sge.gltf.loaders.glb.BinaryDataFileResolver	sge.gltf.loaders.glb.BinaryDataFileResolver#path	val	b06a990a301e98e7
-sge.gltf.loaders.glb.GLBAssetLoader	sge.gltf.loaders.glb.GLBAssetLoader	class	1837782afdfc23b4
+sge.gltf.loaders.glb.GLBAssetLoader	sge.gltf.loaders.glb.GLBAssetLoader	class	2c9fb883d1ab5a6c
 sge.gltf.loaders.glb.GLBAssetLoader	sge.gltf.loaders.glb.GLBAssetLoader#<init>()	ctor	d09fc2e76e0ee3d5
 sge.gltf.loaders.glb.GLBAssetLoader	sge.gltf.loaders.glb.GLBAssetLoader#getDependencies(String,FileHandle,SceneAssetLoaderParameters)	def	a6c38ce4bc738030
 sge.gltf.loaders.glb.GLBAssetLoader	sge.gltf.loaders.glb.GLBAssetLoader#loadAsync(AssetManager,String,FileHandle,SceneAssetLoaderParameters)	def	a967ced2f231cb1c
@@ -391,7 +391,7 @@ sge.gltf.loaders.glb.GLBLoader	sge.gltf.loaders.glb.GLBLoader#load(Array<byte>)	
 sge.gltf.loaders.glb.GLBLoader	sge.gltf.loaders.glb.GLBLoader#load(Array<byte>,boolean)	def	0b1e05fd73e31140
 sge.gltf.loaders.glb.GLBLoader	sge.gltf.loaders.glb.GLBLoader#load(FileHandle)	def	0d56a9936e260cb5
 sge.gltf.loaders.glb.GLBLoader	sge.gltf.loaders.glb.GLBLoader#load(FileHandle,boolean)	def	9322e4e93e50df72
-sge.gltf.loaders.gltf.GLTFAssetLoader	sge.gltf.loaders.gltf.GLTFAssetLoader	class	06b1e6e596983cf9
+sge.gltf.loaders.gltf.GLTFAssetLoader	sge.gltf.loaders.gltf.GLTFAssetLoader	class	fd10a1bff48ed7db
 sge.gltf.loaders.gltf.GLTFAssetLoader	sge.gltf.loaders.gltf.GLTFAssetLoader#<init>()	ctor	d09fc2e76e0ee3d5
 sge.gltf.loaders.gltf.GLTFAssetLoader	sge.gltf.loaders.gltf.GLTFAssetLoader#dataFileResolver	val	4ae5a9a97310fcde
 sge.gltf.loaders.gltf.GLTFAssetLoader	sge.gltf.loaders.gltf.GLTFAssetLoader#getDependencies(String,FileHandle,SceneAssetLoaderParameters)	def	fb00b1b051b9df46
@@ -423,7 +423,7 @@ sge.gltf.loaders.gltf.SeparatedDataFileResolver	sge.gltf.loaders.gltf.SeparatedD
 sge.gltf.loaders.gltf.SeparatedDataFileResolver	sge.gltf.loaders.gltf.SeparatedDataFileResolver#load(GLTFImage)	def	16a2c6c211cf6cc6
 sge.gltf.loaders.gltf.SeparatedDataFileResolver	sge.gltf.loaders.gltf.SeparatedDataFileResolver#loadBuffers(FileHandle)	def	9e3cb890c25c6333
 sge.gltf.loaders.gltf.SeparatedDataFileResolver	sge.gltf.loaders.gltf.SeparatedDataFileResolver#path	val	b06a990a301e98e7
-sge.gltf.loaders.shared.GLTFLoaderBase	sge.gltf.loaders.shared.GLTFLoaderBase	class	db6af7eae1971d47
+sge.gltf.loaders.shared.GLTFLoaderBase	sge.gltf.loaders.shared.GLTFLoaderBase	class	010a42f6157849f4
 sge.gltf.loaders.shared.GLTFLoaderBase	sge.gltf.loaders.shared.GLTFLoaderBase#<clinit>	init	e65c5d88612fb8cb
 sge.gltf.loaders.shared.GLTFLoaderBase	sge.gltf.loaders.shared.GLTFLoaderBase#<init>(TextureResolver)	ctor	5f420fb0930d7b78
 sge.gltf.loaders.shared.GLTFLoaderBase	sge.gltf.loaders.shared.GLTFLoaderBase#<stmt1>	stmt	40a160e5684e8c6c
@@ -676,7 +676,7 @@ sge.gltf.scene3d.attributes.CascadeShadowMapAttribute	sge.gltf.scene3d.attribute
 sge.gltf.scene3d.attributes.CascadeShadowMapAttribute	sge.gltf.scene3d.attributes.CascadeShadowMapAttribute#cascadeShadowMap	val	ff54926d6437501e
 sge.gltf.scene3d.attributes.CascadeShadowMapAttribute	sge.gltf.scene3d.attributes.CascadeShadowMapAttribute#compareTo(Attribute)	def	cf7a368a13660fa1
 sge.gltf.scene3d.attributes.CascadeShadowMapAttribute	sge.gltf.scene3d.attributes.CascadeShadowMapAttribute#copy()	def	d8310c24948ca3b2
-sge.gltf.scene3d.attributes.ClippingPlaneAttribute	sge.gltf.scene3d.attributes.ClippingPlaneAttribute	class	616dbc844c8b454c
+sge.gltf.scene3d.attributes.ClippingPlaneAttribute	sge.gltf.scene3d.attributes.ClippingPlaneAttribute	class	c552fa2087198611
 sge.gltf.scene3d.attributes.ClippingPlaneAttribute	sge.gltf.scene3d.attributes.ClippingPlaneAttribute#<init>(Plane)	ctor	a9e46e998494bf92
 sge.gltf.scene3d.attributes.ClippingPlaneAttribute	sge.gltf.scene3d.attributes.ClippingPlaneAttribute#<init>(Vector3,float)	ctor	411a40ed94df5481
 sge.gltf.scene3d.attributes.ClippingPlaneAttribute	sge.gltf.scene3d.attributes.ClippingPlaneAttribute#Type	val	b21981929e121c57
@@ -769,7 +769,7 @@ sge.gltf.scene3d.attributes.PBRHDRColorAttribute	sge.gltf.scene3d.attributes.PBR
 sge.gltf.scene3d.attributes.PBRHDRColorAttribute	sge.gltf.scene3d.attributes.PBRHDRColorAttribute#g	val	e2093d9e4e7e55b4
 sge.gltf.scene3d.attributes.PBRHDRColorAttribute	sge.gltf.scene3d.attributes.PBRHDRColorAttribute#r	val	b702b2f1ddb6f2ac
 sge.gltf.scene3d.attributes.PBRHDRColorAttribute	sge.gltf.scene3d.attributes.PBRHDRColorAttribute#set(float,float,float)	def	e30892966851e27c
-sge.gltf.scene3d.attributes.PBRIridescenceAttribute	sge.gltf.scene3d.attributes.PBRIridescenceAttribute	class	61bdb76c061fb432
+sge.gltf.scene3d.attributes.PBRIridescenceAttribute	sge.gltf.scene3d.attributes.PBRIridescenceAttribute	class	0f4cdf39e1c7062e
 sge.gltf.scene3d.attributes.PBRIridescenceAttribute	sge.gltf.scene3d.attributes.PBRIridescenceAttribute#<init>()	ctor	4190558eb8263664
 sge.gltf.scene3d.attributes.PBRIridescenceAttribute	sge.gltf.scene3d.attributes.PBRIridescenceAttribute#<init>(float,float,float,float)	ctor	9409eb5239ee7355
 sge.gltf.scene3d.attributes.PBRIridescenceAttribute	sge.gltf.scene3d.attributes.PBRIridescenceAttribute#Alias	val	562115f90bf56838
@@ -853,7 +853,7 @@ sge.gltf.scene3d.attributes.PBRVertexAttributes	sge.gltf.scene3d.attributes.PBRV
 sge.gltf.scene3d.attributes.PBRVertexAttributes	sge.gltf.scene3d.attributes.PBRVertexAttributes$Usage#NormalTarget	val	808f0d453637b7f5
 sge.gltf.scene3d.attributes.PBRVertexAttributes	sge.gltf.scene3d.attributes.PBRVertexAttributes$Usage#PositionTarget	val	1b9127422b44b9dd
 sge.gltf.scene3d.attributes.PBRVertexAttributes	sge.gltf.scene3d.attributes.PBRVertexAttributes$Usage#TangentTarget	val	4e421de691098445
-sge.gltf.scene3d.attributes.PBRVolumeAttribute	sge.gltf.scene3d.attributes.PBRVolumeAttribute	class	f6474fe8b6799769
+sge.gltf.scene3d.attributes.PBRVolumeAttribute	sge.gltf.scene3d.attributes.PBRVolumeAttribute	class	eccb8826aa6d6ae0
 sge.gltf.scene3d.attributes.PBRVolumeAttribute	sge.gltf.scene3d.attributes.PBRVolumeAttribute#<init>()	ctor	e6d1ea6f4fc29022
 sge.gltf.scene3d.attributes.PBRVolumeAttribute	sge.gltf.scene3d.attributes.PBRVolumeAttribute#<init>(float,float,Color)	ctor	eec8a38c0bdf1402
 sge.gltf.scene3d.attributes.PBRVolumeAttribute	sge.gltf.scene3d.attributes.PBRVolumeAttribute#Alias	val	dde339f2a448cee4
@@ -875,7 +875,7 @@ sge.gltf.scene3d.lights.DirectionalLightEx	sge.gltf.scene3d.lights.DirectionalLi
 sge.gltf.scene3d.lights.DirectionalLightEx	sge.gltf.scene3d.lights.DirectionalLightEx#set(float,float,float,Vector3)	def	e5af1c3d6c971e95
 sge.gltf.scene3d.lights.DirectionalLightEx	sge.gltf.scene3d.lights.DirectionalLightEx#set(float,float,float,float,float,float)	def	bc3bd23ad63a7cc7
 sge.gltf.scene3d.lights.DirectionalLightEx	sge.gltf.scene3d.lights.DirectionalLightEx#updateColor()	def	59f3372b49e7f512
-sge.gltf.scene3d.lights.DirectionalShadowLight	sge.gltf.scene3d.lights.DirectionalShadowLight	class	82739d5476fdc3b5
+sge.gltf.scene3d.lights.DirectionalShadowLight	sge.gltf.scene3d.lights.DirectionalShadowLight	class	9c191a643143c4b1
 sge.gltf.scene3d.lights.DirectionalShadowLight	sge.gltf.scene3d.lights.DirectionalShadowLight#<init>()	ctor	832d73ba70b8feee
 sge.gltf.scene3d.lights.DirectionalShadowLight	sge.gltf.scene3d.lights.DirectionalShadowLight#<init>(int,int)	ctor	91589a7d1cdecf0e
 sge.gltf.scene3d.lights.DirectionalShadowLight	sge.gltf.scene3d.lights.DirectionalShadowLight#<stmt1>	stmt	1dbedbce79cb23f0
@@ -946,7 +946,7 @@ sge.gltf.scene3d.model.NodePlus	sge.gltf.scene3d.model.NodePlus#copy()	def	0ac78
 sge.gltf.scene3d.model.NodePlus	sge.gltf.scene3d.model.NodePlus#morphTargetNames	val	fdfbbdaea163c755
 sge.gltf.scene3d.model.NodePlus	sge.gltf.scene3d.model.NodePlus#set(Node)	def	e61ce27e66b18ff5
 sge.gltf.scene3d.model.NodePlus	sge.gltf.scene3d.model.NodePlus#weights	val	dd682e7394bda82b
-sge.gltf.scene3d.model.WeightVector	sge.gltf.scene3d.model.WeightVector	class	87fa2b68056253ba
+sge.gltf.scene3d.model.WeightVector	sge.gltf.scene3d.model.WeightVector	class	eed3b90598cf1d02
 sge.gltf.scene3d.model.WeightVector	sge.gltf.scene3d.model.WeightVector#<init>()	ctor	808972f5a83c358c
 sge.gltf.scene3d.model.WeightVector	sge.gltf.scene3d.model.WeightVector#<init>(int)	ctor	825383e858086844
 sge.gltf.scene3d.model.WeightVector	sge.gltf.scene3d.model.WeightVector#<stmt1>	stmt	5f8e9e25ae89741c
@@ -1014,7 +1014,7 @@ sge.gltf.scene3d.scene.MirrorSource	sge.gltf.scene3d.scene.MirrorSource#setSize(
 sge.gltf.scene3d.scene.MirrorSource	sge.gltf.scene3d.scene.MirrorSource#setupCamera(Camera,Plane)	def	ef76da34ad801915
 sge.gltf.scene3d.scene.MirrorSource	sge.gltf.scene3d.scene.MirrorSource#skyBox	val	d57917060f6ad86a
 sge.gltf.scene3d.scene.MirrorSource	sge.gltf.scene3d.scene.MirrorSource#width	val	1c8d1b100e2d8990
-sge.gltf.scene3d.scene.Scene	sge.gltf.scene3d.scene.Scene	class	1cb6ce311598deff
+sge.gltf.scene3d.scene.Scene	sge.gltf.scene3d.scene.Scene	class	4a473ad4aac2dd92
 sge.gltf.scene3d.scene.Scene	sge.gltf.scene3d.scene.Scene#<init>(Model)	ctor	deb40d86cbd98c75
 sge.gltf.scene3d.scene.Scene	sge.gltf.scene3d.scene.Scene#<init>(Model,boolean)	ctor	50d64f3f2164096d
 sge.gltf.scene3d.scene.Scene	sge.gltf.scene3d.scene.Scene#<init>(ModelInstance)	ctor	64f2e55202ec81d2
@@ -1050,7 +1050,7 @@ sge.gltf.scene3d.scene.SceneAsset	sge.gltf.scene3d.scene.SceneAsset#scene	val	bb
 sge.gltf.scene3d.scene.SceneAsset	sge.gltf.scene3d.scene.SceneAsset#scenes	val	fee2d2f41b6bdd6c
 sge.gltf.scene3d.scene.SceneAsset	sge.gltf.scene3d.scene.SceneAsset#textures	val	4be2df59424645a4
 sge.gltf.scene3d.scene.SceneManager	lum	val	5574aa99defcd399
-sge.gltf.scene3d.scene.SceneManager	sge.gltf.scene3d.scene.SceneManager	class	aaca095e3bf158c6
+sge.gltf.scene3d.scene.SceneManager	sge.gltf.scene3d.scene.SceneManager	class	dcf2a63d314dfce9
 sge.gltf.scene3d.scene.SceneManager	sge.gltf.scene3d.scene.SceneManager#<init>()	ctor	f11243b9ff742335
 sge.gltf.scene3d.scene.SceneManager	sge.gltf.scene3d.scene.SceneManager#<init>(ShaderProvider,DepthShaderProvider)	ctor	3323854fb10b9d57
 sge.gltf.scene3d.scene.SceneManager	sge.gltf.scene3d.scene.SceneManager#<init>(int)	ctor	c6fa0df4c7bcbb0c
@@ -1123,7 +1123,7 @@ sge.gltf.scene3d.scene.SceneRenderableSorter	sge.gltf.scene3d.scene.SceneRendera
 sge.gltf.scene3d.scene.SceneRenderableSorter	sge.gltf.scene3d.scene.SceneRenderableSorter#tmpV1	val	077b988ff93b63b0
 sge.gltf.scene3d.scene.SceneRenderableSorter	sge.gltf.scene3d.scene.SceneRenderableSorter#tmpV2	val	39d03a21db6847f5
 sge.gltf.scene3d.scene.SceneRenderableSorter	sge.gltf.scene3d.scene.SceneRenderableSorter$Hints	class	b888d55a9219f3d6
-sge.gltf.scene3d.scene.SceneSkybox	sge.gltf.scene3d.scene.SceneSkybox	class	849ebec86aada789
+sge.gltf.scene3d.scene.SceneSkybox	sge.gltf.scene3d.scene.SceneSkybox	class	db3dae1faf9f71db
 sge.gltf.scene3d.scene.SceneSkybox	sge.gltf.scene3d.scene.SceneSkybox#<init>(Cubemap)	ctor	2fde5fc8ac4c4710
 sge.gltf.scene3d.scene.SceneSkybox	sge.gltf.scene3d.scene.SceneSkybox#<init>(Cubemap,SRGB,Float,boolean)	ctor	080ae80be3a3b18e
 sge.gltf.scene3d.scene.SceneSkybox	sge.gltf.scene3d.scene.SceneSkybox#<init>(Cubemap,SRGB,boolean,boolean)	ctor	b8fa2b8aa67cb834
@@ -1155,7 +1155,7 @@ sge.gltf.scene3d.scene.SceneSkybox	sge.gltf.scene3d.scene.SceneSkybox$SkyboxShad
 sge.gltf.scene3d.scene.SceneSkybox	sge.gltf.scene3d.scene.SceneSkybox$SkyboxShaderProvider#<stmt1>	stmt	1fded0127f8b3c3a
 sge.gltf.scene3d.scene.SceneSkybox	sge.gltf.scene3d.scene.SceneSkybox$SkyboxShaderProvider#createShader(Renderable)	def	ffffa035f81eef93
 sge.gltf.scene3d.scene.SceneSkybox	sge.gltf.scene3d.scene.SceneSkybox$SkyboxShaderProvider#fsPrefix	val	290a96ace7da7d8c
-sge.gltf.scene3d.scene.TransmissionSource	sge.gltf.scene3d.scene.TransmissionSource	class	3d35cb48760ebad8
+sge.gltf.scene3d.scene.TransmissionSource	sge.gltf.scene3d.scene.TransmissionSource	class	34b590c92b0e2d0b
 sge.gltf.scene3d.scene.TransmissionSource	sge.gltf.scene3d.scene.TransmissionSource#<init>(ShaderProvider)	ctor	a3109ffbe799e881
 sge.gltf.scene3d.scene.TransmissionSource	sge.gltf.scene3d.scene.TransmissionSource#<stmt1>	stmt	675a4fac01990af7
 sge.gltf.scene3d.scene.TransmissionSource	sge.gltf.scene3d.scene.TransmissionSource#<stmt2>	stmt	536d50282a6492cf
@@ -1456,7 +1456,7 @@ sge.gltf.scene3d.utils.EnvironmentUtil	sge.gltf.scene3d.utils.EnvironmentUtil#FA
 sge.gltf.scene3d.utils.EnvironmentUtil	sge.gltf.scene3d.utils.EnvironmentUtil#createCubemap(FileHandleResolver,String,String,Array<String>)	def	5509f6da00bdffb3
 sge.gltf.scene3d.utils.EnvironmentUtil	sge.gltf.scene3d.utils.EnvironmentUtil#createCubemap(FileHandleResolver,String,String,String,int,Array<String>)	def	5d725c8bccd17f9f
 sge.gltf.scene3d.utils.EnvironmentUtil	sge.gltf.scene3d.utils.EnvironmentUtil#getLightCount(Environment)	def	b2888c2dbc06a078
-sge.gltf.scene3d.utils.FacedMultiCubemapData	sge.gltf.scene3d.utils.FacedMultiCubemapData	class	fa144d625466b95f
+sge.gltf.scene3d.utils.FacedMultiCubemapData	sge.gltf.scene3d.utils.FacedMultiCubemapData	class	c643d3b1b6d443ee
 sge.gltf.scene3d.utils.FacedMultiCubemapData	sge.gltf.scene3d.utils.FacedMultiCubemapData#<init>(Array<FileHandle>,int)	ctor	5466ba375bfe4607
 sge.gltf.scene3d.utils.FacedMultiCubemapData	sge.gltf.scene3d.utils.FacedMultiCubemapData#<init>(Array<Pixmap>,int)	ctor	42414af1cb777304
 sge.gltf.scene3d.utils.FacedMultiCubemapData	sge.gltf.scene3d.utils.FacedMultiCubemapData#consumeCubemapData()	def	325d99180293adc1

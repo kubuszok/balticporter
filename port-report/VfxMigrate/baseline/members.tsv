@@ -1,5 +1,5 @@
 #unit	member	kind	digest
-sge.vfx.VfxManager	sge.vfx.VfxManager	class	2f8f3bfa0b5c7d45
+sge.vfx.VfxManager	sge.vfx.VfxManager	class	e6294f80d8ce1f10
 sge.vfx.VfxManager	sge.vfx.VfxManager#<init>(Format)	ctor	cdff726579d6abe3
 sge.vfx.VfxManager	sge.vfx.VfxManager#<stmt1>	stmt	bc7eab8e0abb0a05
 sge.vfx.VfxManager	sge.vfx.VfxManager#<stmt2>	stmt	68cf25b6767b63d6
@@ -76,7 +76,7 @@ sge.vfx.effects.AbstractVfxEffect	sge.vfx.effects.AbstractVfxEffect	class	1325ba
 sge.vfx.effects.AbstractVfxEffect	sge.vfx.effects.AbstractVfxEffect#disabled	val	313c619a7edb785a
 sge.vfx.effects.AbstractVfxEffect	sge.vfx.effects.AbstractVfxEffect#isDisabled()	def	f4a4e7c5e42f857d
 sge.vfx.effects.AbstractVfxEffect	sge.vfx.effects.AbstractVfxEffect#setDisabled(boolean)	def	44417992945195b3
-sge.vfx.effects.BloomEffect	sge.vfx.effects.BloomEffect	class	f63a721cd9fdfd54
+sge.vfx.effects.BloomEffect	sge.vfx.effects.BloomEffect	class	b1a196e3d339350b
 sge.vfx.effects.BloomEffect	sge.vfx.effects.BloomEffect#<init>()	ctor	1334c1a65f3c302a
 sge.vfx.effects.BloomEffect	sge.vfx.effects.BloomEffect#<stmt1>	stmt	e7c44752ae78e8b0
 sge.vfx.effects.BloomEffect	sge.vfx.effects.BloomEffect#<stmt2>	stmt	6ff1f1a972eb0d25
@@ -145,7 +145,7 @@ sge.vfx.effects.CompositeVfxEffect	sge.vfx.effects.CompositeVfxEffect#register(T
 sge.vfx.effects.CompositeVfxEffect	sge.vfx.effects.CompositeVfxEffect#resize(int,int)	def	38aea77ea2535500
 sge.vfx.effects.CompositeVfxEffect	sge.vfx.effects.CompositeVfxEffect#unregister(T)	def	1044437cddf147b1
 sge.vfx.effects.CompositeVfxEffect	sge.vfx.effects.CompositeVfxEffect#update(float)	def	45b3cfb12733a027
-sge.vfx.effects.CrtEffect	sge.vfx.effects.CrtEffect	class	df4a855ed0c7e5fd
+sge.vfx.effects.CrtEffect	sge.vfx.effects.CrtEffect	class	6364d8daebdf40e9
 sge.vfx.effects.CrtEffect	sge.vfx.effects.CrtEffect#<init>()	ctor	4a8d68f862495871
 sge.vfx.effects.CrtEffect	sge.vfx.effects.CrtEffect#<stmt1>	stmt	5e3db9e8fb1acb4f
 sge.vfx.effects.CrtEffect	sge.vfx.effects.CrtEffect#U_RESOLUTION	val	eb3ba9546b3ccb97
@@ -182,7 +182,7 @@ sge.vfx.effects.FisheyeEffect	sge.vfx.effects.FisheyeEffect#U_TEXTURE0	val	84c2b
 sge.vfx.effects.FisheyeEffect	sge.vfx.effects.FisheyeEffect#rebind()	def	df1c568e43839c54
 sge.vfx.effects.FisheyeEffect	sge.vfx.effects.FisheyeEffect#render(VfxRenderContext,VfxFrameBuffer,VfxFrameBuffer)	def	8f0ecb54af55f12f
 sge.vfx.effects.FisheyeEffect	sge.vfx.effects.FisheyeEffect#render(VfxRenderContext,VfxPingPongWrapper)	def	34eb468b9ae4f864
-sge.vfx.effects.FxaaEffect	sge.vfx.effects.FxaaEffect	class	0ea4182a38dbc7ec
+sge.vfx.effects.FxaaEffect	sge.vfx.effects.FxaaEffect	class	c2df7e32d9425005
 sge.vfx.effects.FxaaEffect	sge.vfx.effects.FxaaEffect#<init>()	ctor	bce11d7b1c0df168
 sge.vfx.effects.FxaaEffect	sge.vfx.effects.FxaaEffect#<stmt1>	stmt	c321040717373843
 sge.vfx.effects.FxaaEffect	sge.vfx.effects.FxaaEffect#<stmt2>	stmt	837034611f6d20f2
@@ -204,7 +204,7 @@ sge.vfx.effects.FxaaEffect	sge.vfx.effects.FxaaEffect#setReduceMin(float)	def	57
 sge.vfx.effects.FxaaEffect	sge.vfx.effects.FxaaEffect#setReduceMul(float)	def	87ab2b6c74971db3
 sge.vfx.effects.FxaaEffect	sge.vfx.effects.FxaaEffect#setSpanMax(float)	def	7693f9afa365f44b
 sge.vfx.effects.FxaaEffect	sge.vfx.effects.FxaaEffect#viewportInverse	val	958d4eb8e6fd9e69
-sge.vfx.effects.GaussianBlurEffect	sge.vfx.effects.GaussianBlurEffect	class	6b8a3ae418bb78da
+sge.vfx.effects.GaussianBlurEffect	sge.vfx.effects.GaussianBlurEffect	class	f786d1a5aa6127bc
 sge.vfx.effects.GaussianBlurEffect	sge.vfx.effects.GaussianBlurEffect#<init>()	ctor	38ce2884bb523c31
 sge.vfx.effects.GaussianBlurEffect	sge.vfx.effects.GaussianBlurEffect#<stmt1>	stmt	c0fb3c209a67c1d5
 sge.vfx.effects.GaussianBlurEffect	sge.vfx.effects.GaussianBlurEffect#amount	val	15684f28a4986c61
@@ -228,7 +228,7 @@ sge.vfx.effects.GaussianBlurEffect	sge.vfx.effects.GaussianBlurEffect#setType(Bl
 sge.vfx.effects.GaussianBlurEffect	sge.vfx.effects.GaussianBlurEffect#type	val	86ec3590e1aabae4
 sge.vfx.effects.GaussianBlurEffect	sge.vfx.effects.GaussianBlurEffect#update(float)	def	f2599ceb11187f46
 sge.vfx.effects.GaussianBlurEffect	sge.vfx.effects.GaussianBlurEffect$BlurType	class	3ba8edf402ecbe0c
-sge.vfx.effects.GaussianBlurEffect	sge.vfx.effects.GaussianBlurEffect$Convolve1DEffect	class	2ddf1dd249938ac8
+sge.vfx.effects.GaussianBlurEffect	sge.vfx.effects.GaussianBlurEffect$Convolve1DEffect	class	bea33343322d81a3
 sge.vfx.effects.GaussianBlurEffect	sge.vfx.effects.GaussianBlurEffect$Convolve1DEffect#<init>(int)	ctor	bb7e7d5b17e22e7a
 sge.vfx.effects.GaussianBlurEffect	sge.vfx.effects.GaussianBlurEffect$Convolve1DEffect#<init>(int,Array<float>)	ctor	672206c6c2282407
 sge.vfx.effects.GaussianBlurEffect	sge.vfx.effects.GaussianBlurEffect$Convolve1DEffect#<stmt1>	stmt	54ee90dc7ea8a9c2
@@ -561,7 +561,7 @@ sge.vfx.effects.util.MixEffect	sge.vfx.effects.util.MixEffect#rebind()	def	04d7b
 sge.vfx.effects.util.MixEffect	sge.vfx.effects.util.MixEffect#render(VfxRenderContext,VfxFrameBuffer,VfxFrameBuffer,VfxFrameBuffer)	def	aae2f9012744e203
 sge.vfx.effects.util.MixEffect	sge.vfx.effects.util.MixEffect#setMixFactor(float)	def	e7b31528762dc8cb
 sge.vfx.effects.util.MixEffect	sge.vfx.effects.util.MixEffect$Method	class	c516653e0a65a193
-sge.vfx.framebuffer.VfxFrameBuffer	sge.vfx.framebuffer.VfxFrameBuffer	class	83d140bc17d92149
+sge.vfx.framebuffer.VfxFrameBuffer	sge.vfx.framebuffer.VfxFrameBuffer	class	4e3ae3cf0cece56b
 sge.vfx.framebuffer.VfxFrameBuffer	sge.vfx.framebuffer.VfxFrameBuffer#<stmt1>	stmt	c8179272566866ba
 sge.vfx.framebuffer.VfxFrameBuffer	sge.vfx.framebuffer.VfxFrameBuffer#addRenderer(Renderer)	def	faa257b76c679812
 sge.vfx.framebuffer.VfxFrameBuffer	sge.vfx.framebuffer.VfxFrameBuffer#begin()	def	2b811f27486dc05e
@@ -595,7 +595,7 @@ sge.vfx.framebuffer.VfxFrameBuffer	sge.vfx.framebuffer.VfxFrameBuffer#setProject
 sge.vfx.framebuffer.VfxFrameBuffer	sge.vfx.framebuffer.VfxFrameBuffer#setTransformMatrix(Matrix4)	def	45309f85856e801f
 sge.vfx.framebuffer.VfxFrameBuffer	sge.vfx.framebuffer.VfxFrameBuffer#tmpCam	val	4642c38a13f19b05
 sge.vfx.framebuffer.VfxFrameBuffer	sge.vfx.framebuffer.VfxFrameBuffer#zeroTransform	val	3179f58b8fa5d566
-sge.vfx.framebuffer.VfxFrameBuffer	sge.vfx.framebuffer.VfxFrameBuffer$BatchRendererAdapter	class	dfdce6c81ad0e2ed
+sge.vfx.framebuffer.VfxFrameBuffer	sge.vfx.framebuffer.VfxFrameBuffer$BatchRendererAdapter	class	fc7da0999ae5dc25
 sge.vfx.framebuffer.VfxFrameBuffer	sge.vfx.framebuffer.VfxFrameBuffer$BatchRendererAdapter#<init>()	ctor	506caf88bc592012
 sge.vfx.framebuffer.VfxFrameBuffer	sge.vfx.framebuffer.VfxFrameBuffer$BatchRendererAdapter#<init>(Batch)	ctor	9b942085a688bb8d
 sge.vfx.framebuffer.VfxFrameBuffer	sge.vfx.framebuffer.VfxFrameBuffer$BatchRendererAdapter#batch	val	9c217440f437f4c6
@@ -628,7 +628,7 @@ sge.vfx.framebuffer.VfxFrameBuffer	sge.vfx.framebuffer.VfxFrameBuffer$RendererMa
 sge.vfx.framebuffer.VfxFrameBuffer	sge.vfx.framebuffer.VfxFrameBuffer$RendererManager#removeRenderer(Renderer)	def	2fd0ce8ff93aad25
 sge.vfx.framebuffer.VfxFrameBuffer	sge.vfx.framebuffer.VfxFrameBuffer$RendererManager#renderers	val	204fd094ce9b52af
 sge.vfx.framebuffer.VfxFrameBuffer	sge.vfx.framebuffer.VfxFrameBuffer$RendererManager#restoreOwnMatrices()	def	c6b3cd50a9c21507
-sge.vfx.framebuffer.VfxFrameBuffer	sge.vfx.framebuffer.VfxFrameBuffer$ShapeRendererAdapter	class	f1c202186934a21b
+sge.vfx.framebuffer.VfxFrameBuffer	sge.vfx.framebuffer.VfxFrameBuffer$ShapeRendererAdapter	class	23401f32d1de2c9b
 sge.vfx.framebuffer.VfxFrameBuffer	sge.vfx.framebuffer.VfxFrameBuffer$ShapeRendererAdapter#<init>()	ctor	b3b8ebaedc83c917
 sge.vfx.framebuffer.VfxFrameBuffer	sge.vfx.framebuffer.VfxFrameBuffer$ShapeRendererAdapter#<init>(ShapeRenderer)	ctor	2d685102db0f26a4
 sge.vfx.framebuffer.VfxFrameBuffer	sge.vfx.framebuffer.VfxFrameBuffer$ShapeRendererAdapter#flush()	def	d4cde1a9e40a9e00
@@ -640,7 +640,7 @@ sge.vfx.framebuffer.VfxFrameBuffer	sge.vfx.framebuffer.VfxFrameBuffer$ShapeRende
 sge.vfx.framebuffer.VfxFrameBuffer	sge.vfx.framebuffer.VfxFrameBuffer$ShapeRendererAdapter#setProjection(Matrix4)	def	80d5856e8f474907
 sge.vfx.framebuffer.VfxFrameBuffer	sge.vfx.framebuffer.VfxFrameBuffer$ShapeRendererAdapter#setTransform(Matrix4)	def	4b474e71750037b8
 sge.vfx.framebuffer.VfxFrameBuffer	sge.vfx.framebuffer.VfxFrameBuffer$ShapeRendererAdapter#shapeRenderer	val	193739f1e1dd4357
-sge.vfx.framebuffer.VfxFrameBufferPool	sge.vfx.framebuffer.VfxFrameBufferPool	class	82fcc8272f610432
+sge.vfx.framebuffer.VfxFrameBufferPool	sge.vfx.framebuffer.VfxFrameBufferPool	class	99ab6298ea551517
 sge.vfx.framebuffer.VfxFrameBufferPool	sge.vfx.framebuffer.VfxFrameBufferPool#<init>()	ctor	e3ef7d70b413127c
 sge.vfx.framebuffer.VfxFrameBufferPool	sge.vfx.framebuffer.VfxFrameBufferPool#<stmt1>	stmt	19ab7a3c85329e47
 sge.vfx.framebuffer.VfxFrameBufferPool	sge.vfx.framebuffer.VfxFrameBufferPool#<stmt2>	stmt	756b3dfe32c62344
@@ -701,7 +701,7 @@ sge.vfx.framebuffer.VfxFrameBufferRenderer	sge.vfx.framebuffer.VfxFrameBufferRen
 sge.vfx.framebuffer.VfxFrameBufferRenderer	sge.vfx.framebuffer.VfxFrameBufferRenderer#renderToScreen(VfxFrameBuffer)	def	849beee637a966e9
 sge.vfx.framebuffer.VfxFrameBufferRenderer	sge.vfx.framebuffer.VfxFrameBufferRenderer#renderToScreen(VfxFrameBuffer,int,int,int,int)	def	531fcfce967dae2e
 sge.vfx.framebuffer.VfxFrameBufferRenderer	sge.vfx.framebuffer.VfxFrameBufferRenderer#shader	val	a3c2c48230f9e7a8
-sge.vfx.framebuffer.VfxPingPongWrapper	sge.vfx.framebuffer.VfxPingPongWrapper	class	97589ccbf8a6aed4
+sge.vfx.framebuffer.VfxPingPongWrapper	sge.vfx.framebuffer.VfxPingPongWrapper	class	84303caf3beba010
 sge.vfx.framebuffer.VfxPingPongWrapper	sge.vfx.framebuffer.VfxPingPongWrapper#<init>()	ctor	592a22b5af3a433e
 sge.vfx.framebuffer.VfxPingPongWrapper	sge.vfx.framebuffer.VfxPingPongWrapper#<init>(VfxFrameBuffer,VfxFrameBuffer)	ctor	000b7f3918dc533e
 sge.vfx.framebuffer.VfxPingPongWrapper	sge.vfx.framebuffer.VfxPingPongWrapper#<init>(VfxFrameBufferPool)	ctor	1092f887f75a9b34
@@ -801,7 +801,7 @@ sge.vfx.utils.CommonUtils	sge.vfx.utils.CommonUtils#parseHexColor8(String)	def	e
 sge.vfx.utils.CommonUtils	sge.vfx.utils.CommonUtils#random(Array<T>)	def	a1fba9269a20dc0d
 sge.vfx.utils.CommonUtils	sge.vfx.utils.CommonUtils#stringEquals(String,String)	def	80f2d649f9e5484a
 sge.vfx.utils.CommonUtils	sge.vfx.utils.CommonUtils#tmpColor	val	8ff10d58c2a011d4
-sge.vfx.utils.PrioritizedArray	sge.vfx.utils.PrioritizedArray	class	94b7adaff298d597
+sge.vfx.utils.PrioritizedArray	sge.vfx.utils.PrioritizedArray	class	b2cb7ca9d7173556
 sge.vfx.utils.PrioritizedArray	sge.vfx.utils.PrioritizedArray#<init>()	ctor	16a678a3baf4fc78
 sge.vfx.utils.PrioritizedArray	sge.vfx.utils.PrioritizedArray#<init>(int)	ctor	c138775132a4cbf4
 sge.vfx.utils.PrioritizedArray	sge.vfx.utils.PrioritizedArray#add(T)	def	998b109688803da8
@@ -819,7 +819,7 @@ sge.vfx.utils.PrioritizedArray	sge.vfx.utils.PrioritizedArray#setPriority(T,int)
 sge.vfx.utils.PrioritizedArray	sge.vfx.utils.PrioritizedArray#size()	def	46d0ce59ea5b415b
 sge.vfx.utils.PrioritizedArray	sge.vfx.utils.PrioritizedArray#toString()	def	126ce960feda93a4
 sge.vfx.utils.PrioritizedArray	sge.vfx.utils.PrioritizedArray#toString(String)	def	6d91e1001b1dee6a
-sge.vfx.utils.PrioritizedArray	sge.vfx.utils.PrioritizedArray$PrioritizedArrayIterable	class	e92a0b51dcaafe6e
+sge.vfx.utils.PrioritizedArray	sge.vfx.utils.PrioritizedArray$PrioritizedArrayIterable	class	123e57ebd261bc17
 sge.vfx.utils.PrioritizedArray	sge.vfx.utils.PrioritizedArray$PrioritizedArrayIterable#<init>(PrioritizedArray<T>)	ctor	05ca54c14f57bf28
 sge.vfx.utils.PrioritizedArray	sge.vfx.utils.PrioritizedArray$PrioritizedArrayIterable#<stmt1>	stmt	233a0320da18bb7a
 sge.vfx.utils.PrioritizedArray	sge.vfx.utils.PrioritizedArray$PrioritizedArrayIterable#<stmt2>	stmt	9389f94150478502
@@ -828,7 +828,7 @@ sge.vfx.utils.PrioritizedArray	sge.vfx.utils.PrioritizedArray$PrioritizedArrayIt
 sge.vfx.utils.PrioritizedArray	sge.vfx.utils.PrioritizedArray$PrioritizedArrayIterable#iterator()	def	cf3f58ed2be84ff6
 sge.vfx.utils.PrioritizedArray	sge.vfx.utils.PrioritizedArray$PrioritizedArrayIterable#iterator1	val	5dcacf7d7672582f
 sge.vfx.utils.PrioritizedArray	sge.vfx.utils.PrioritizedArray$PrioritizedArrayIterable#iterator2	val	f0801e0262f126df
-sge.vfx.utils.PrioritizedArray	sge.vfx.utils.PrioritizedArray$PrioritizedArrayIterator	class	3ef6e5f4bbf18a4f
+sge.vfx.utils.PrioritizedArray	sge.vfx.utils.PrioritizedArray$PrioritizedArrayIterator	class	d5e22b25490d1b3a
 sge.vfx.utils.PrioritizedArray	sge.vfx.utils.PrioritizedArray$PrioritizedArrayIterator#<init>(PrioritizedArray<T>)	ctor	05ca54c14f57bf28
 sge.vfx.utils.PrioritizedArray	sge.vfx.utils.PrioritizedArray$PrioritizedArrayIterator#<stmt1>	stmt	233a0320da18bb7a
 sge.vfx.utils.PrioritizedArray	sge.vfx.utils.PrioritizedArray$PrioritizedArrayIterator#<stmt2>	stmt	9389f94150478502
@@ -863,7 +863,7 @@ sge.vfx.utils.UniformBatcher	sge.vfx.utils.UniformBatcher#set(String,Vector3)	de
 sge.vfx.utils.UniformBatcher	sge.vfx.utils.UniformBatcher#set(String,float)	def	6ebf8e1d2cdb46b0
 sge.vfx.utils.UniformBatcher	sge.vfx.utils.UniformBatcher#set(String,int)	def	d73c03fe86fa7af7
 sge.vfx.utils.UniformBatcher	sge.vfx.utils.UniformBatcher#set(String,int,Array<float>,int,int)	def	f64f6b7450d8fe6a
-sge.vfx.utils.ValueArrayMap	sge.vfx.utils.ValueArrayMap	class	9ef5012730502b6b
+sge.vfx.utils.ValueArrayMap	sge.vfx.utils.ValueArrayMap	class	8a4c024eda59ed55
 sge.vfx.utils.ValueArrayMap	sge.vfx.utils.ValueArrayMap#<init>()	ctor	f4d0f4ad605e6b7c
 sge.vfx.utils.ValueArrayMap	sge.vfx.utils.ValueArrayMap#<stmt1>	stmt	03eeecf0fa6920ac
 sge.vfx.utils.ValueArrayMap	sge.vfx.utils.ValueArrayMap#<stmt2>	stmt	e780464180b6e3cf
@@ -885,7 +885,7 @@ sge.vfx.utils.ValueArrayMap	sge.vfx.utils.ValueArrayMap#tmpKeyArray	val	6aa5cb49
 sge.vfx.utils.ValueArrayMap	sge.vfx.utils.ValueArrayMap#toString()	def	ec5d9c14593c4aba
 sge.vfx.utils.ValueArrayMap	sge.vfx.utils.ValueArrayMap#toString(String)	def	c709ad88bfa2fe21
 sge.vfx.utils.ValueArrayMap	sge.vfx.utils.ValueArrayMap#values	val	709b06eb75dc09b1
-sge.vfx.utils.ViewportQuadMesh	sge.vfx.utils.ViewportQuadMesh	class	257f4b54bfae3fea
+sge.vfx.utils.ViewportQuadMesh	sge.vfx.utils.ViewportQuadMesh	class	c6d3f81e176ece16
 sge.vfx.utils.ViewportQuadMesh	sge.vfx.utils.ViewportQuadMesh#<clinit>	init	56eb77b7a494a77c
 sge.vfx.utils.ViewportQuadMesh	sge.vfx.utils.ViewportQuadMesh#<init>()	ctor	9b5a19e174ffa8d7
 sge.vfx.utils.ViewportQuadMesh	sge.vfx.utils.ViewportQuadMesh#<stmt1>	stmt	319f610c2df2017b

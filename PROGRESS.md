@@ -290,6 +290,22 @@ libGDX core alone 64 synthesised classes carry at least one refusal, so the orde
 substantially rather than marginally. A purity allow-list is the obvious next lever and is not built:
 the number says it would be worth designing, which is exactly what the measurement was for.
 
+**And the funnel now says all of that BESIDE THE CODE.** `FunnelledCtor` was excluded from
+`PorterNote.Rendered` on the argument that "one primary and N secondaries IS the funnel, in the
+code" — true of a PROMOTION, false of a SYNTHESIS, which is what the table above made the normal
+case: a reader in another repository (§4.45) is looking at a `protected` constructor no java
+declared, with `sup$k`/`f$name` slots and possibly a `Funnel` marker parameter, and there is no
+upstream line for the source map to point at. The note is `AtDeclaration` on the class and carries
+the `shape`/`slots`/`notSlot`/`disambiguator`/`escapes` detail the decision already had. Per port
+(= `FunnelledCtor` rows, one note each): **libgdx-core 292, gltf 16, vfx 15, anim8 10, jbump 10,
+screens 11, ashley 8, simple-graphs 7, ashley-test 6, noise4j 4, libgdx-test 1, gltf-test 0,
+simple-graphs-test 0 — 380 corpus-wide.** libGDX core's emitted notes go 906 → 1,198. Blast radius,
+accounted in full: **610 member digests on libgdx-core = 2 × (292 decided classes + 13 ENCLOSING
+units of a decided nested type)**, and every other port is exactly 2 × its own row count in the same
+way. `porter-notes` stays 0 both ways on all thirteen ports, `substitution(dangling)` stays 0
+(the note names the UPSTREAM FQN on purpose and `SubstitutionCheck.withoutPorterNotes` strips it),
+every check count is unchanged and every lane still compiles and runs as it did.
+
 **What still escapes, 31 paths.** Wall classes (roots reaching different parent overloads —
 `FloatAction`/`IntAction`, 3 each), JDK-throwable parents, and the UNIQUE-ROOT class whose paramful
 promotion the C1 fixpoint withholds (`ObjectMap`, `ObjectSet`, `OrderedMap`, `OrderedSet`, 3 each —
@@ -2137,9 +2153,12 @@ Maintained by deletion. Items are ordered by what they block, not by size.
 - **Raw-generic `[?]` rendering and `uncheckedGeneric` retyping are unrecorded.** Both change a
   signature for a reason no reader can recover; recording them needs the decision log threaded through
   the frontend, which today records only from phases and the run.
-- **`RetypedSignature`, `RedirectedCall` and `FunnelledCtor` carry no porter note.** The argument for
-  each is in `DESIGN.md` §7.2 and stands; it is listed here so that adding one is a decision rather
-  than an oversight.
+- **`RetypedSignature` and `RedirectedCall` carry no porter note.** The argument for each is in
+  `DESIGN.md` §7.2 and stands — the retyped signature IS the declaration and the redirected call IS
+  the body — so it is listed here so that adding one is a decision rather than an oversight.
+  (`FunnelledCtor` was on this list and is now rendered: its argument was written for a PROMOTION
+  and is false for a SYNTHESIS, which is what the funnel now does for most multi-constructor
+  classes. See §7's A2 section.)
 - **A package-private java TYPE emits as a public Scala one, and nothing records it.**
   `WidenedVisibility` covers members widened by the constructor replay; a `class X` with no modifier
   becoming `class X` in Scala is a surface difference no decision, note or check sees. anim8 has two
