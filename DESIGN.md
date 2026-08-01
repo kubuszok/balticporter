@@ -3313,12 +3313,41 @@ and `ExternalSurface` is unioned because it is ENGINE knowledge about the JDK ra
 is not in the fingerprint, and cannot be — two ports that know different amounts about a platform
 type still emit the same signatures).
 
-Every other parameterised phase keeps the no-merge default in this commit, and the reason is uniform:
+**`NullabilityTransform` declares the second one, and it is the first policy that is not a MAP** —
+which is what turns "the phase answers, not the engine" from an argument into a measurement. Its
+three tables compose three different ways *inside one phase*:
+
+| table | composes | why |
+|---|---|---|
+| `annotations` | UNION | each FQN independently selects the declarations it marks; nothing about one entry changes what another does, so both inputs keep their behaviour on their own keys by arithmetic |
+| `target` | must AGREE, else REFUSE | it is not a key set, it is the SHAPE every retyped declaration takes. `T \| Null` and `Nullable[T]` are two emitted signatures for one member, so a "merge" of them is a choice |
+| `scope` | UNION of ENTRIES, in BOTH directions — REFUSE across directions | below |
+
+**The scope is the part worth writing down.** An entry means *hold this back* under
+`Everywhere(except)` and *move this* under `Only(include)`, so honouring every entry either module
+wrote is the union of the sets **either way** — and the effect on the covered REGION therefore runs
+in opposite directions: `Everywhere` shrinks as excepts accumulate, `Only` grows. A merge rule
+phrased as "compose the region" would have had to pick one of those and would have been silently
+wrong for the other; phrased as "honour every entry" it is right for both, and it is exactly
+`SurfaceFold`'s first obligation ("preserve both inputs' behaviour on their OWN keys") read
+literally. A base `Everywhere` and a dependent `Only` **refuse**: `Only` says as much by what it
+OMITS as by what it lists, so no entry set preserves both — and that includes the DEFAULT
+`Everywhere(Set.empty)`, because "the whole program" is a direction and not the absence of one.
+
+**Its `subjects` are the annotation FQNs AND the scope entries**, on the trait's own instruction to
+over-approximate. The scope half is the one that carries the failure: a dependent that scopes out a
+type its BASE emits leaves its own overrides of that type's annotated members holding the upstream
+type beside a parent the base emitted as `T | Null` — half an override pair, which is the shape
+§11.17 measured when a scoped-out parent sat beside a retyped child, and precisely the "two modules
+that each compile alone and cannot compile together" the intrusion screen exists for.
+
+Every other parameterised phase keeps the no-merge default, and the reason is uniform:
 none of them has a second consumer yet, and a merge rule written without one is a guess that will be
 discovered wrong by the port that first needs it — the same argument §8.5 makes about `memberRenames`
 having waited for its second consumer. What each will need when that day comes is not the same
 answer, which is the point: `StaticForwarderTransform` holds an ORDERED `List[Forwarder]`;
-`CollectionsTransform` holds a `RuleScope` whose two constructors compose in opposite directions;
+`CollectionsTransform` holds a `RuleScope` too, and would want the rule above — but it has no second
+consumer, and a rule copied ahead of one is the guess this paragraph is about;
 `MethodBodyTransform` and `CallSiteSubstitutionTransform` hold whole replacement bodies, where two
 manifests naming one key is a conflict no union can resolve. Until then, two instances of any of
 them remain the fatal `SurfaceDivergence` they are today, which is the correct answer for a

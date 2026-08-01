@@ -1,6 +1,6 @@
 package balticporter.transform
 
-import balticporter.core.{PolicyReport, PolicySource, SurfacePolicy}
+import balticporter.core.{MergeablePolicy, PolicyReport, PolicySource}
 import balticporter.tir.*
 
 /** Move a library's NULLABILITY ANNOTATIONS out of an annotation the Scala compiler ignores and
@@ -68,7 +68,7 @@ final class NullabilityTransform(
     val annotations: Set[String] = Set.empty,
     val target: NullabilityTransform.Target = NullabilityTransform.Target.Union,
     val scope: RuleScope = RuleScope.Everywhere(),
-) extends Phase, PolicySource, SurfacePolicy, PolicyBound:
+) extends Phase, PolicySource, MergeablePolicy, PolicyBound:
 
   import NullabilityTransform.*
   import NullabilityBoundaryCheck.{Finding, Issue}
@@ -109,6 +109,78 @@ final class NullabilityTransform(
     * together (§1.5). The target shape and the scope are part of it for the same reason. */
   def surfaceFingerprint: String =
     s"${annotations.toList.sorted.mkString(",")}|${target.tag}|${scope.fingerprint}"
+
+  /** every shared-surface SUBJECT this instance's policy is keyed on — the annotation FQNs and the
+    * scope's declared entries, each through [[MergeablePolicy.subjectOf]].
+    *
+    * '''Both halves, and the scope half is the one that matters.''' A scope entry names a TYPE whose
+    * annotated declarations are deliberately held back, and a dependent that adds one for a type its
+    * BASE emits re-scopes a surface it does not own: the base emitted `Actor#getStage(): Stage |
+    * Null` and the dependent's override of it would keep the upstream type, which is half an
+    * override pair — exactly the shape §11.17 measured when a scoped-out parent sat beside a retyped
+    * child. The annotation half is included on the trait's own instruction to over-approximate: an
+    * annotation FQN inside a base's namespace that the base did not itself consume is a claim about
+    * how the base's own marker is read, and a port that means it can say so by naming the base's
+    * drop.
+    */
+  def subjects: Set[String] = (annotations ++ scope.entries).map(MergeablePolicy.subjectOf)
+
+  /** THE MERGE CONTRACT (DESIGN.md §8.13). Three tables, and each composes differently — which is
+    * the whole reason `MergeablePolicy` is a contract the PHASE answers rather than a union the
+    * engine performs.
+    *
+    *   - '''`annotations` UNION.''' Each FQN independently selects the declarations it marks, and
+    *     nothing about one entry changes what another does. Both inputs keep their behaviour on
+    *     their own keys, which is `SurfaceFold`'s first obligation, satisfied by arithmetic.
+    *   - '''`target` must AGREE, or the merge refuses.''' It is not a key set; it is the SHAPE every
+    *     retyped declaration takes. `T | Null` and `Nullable[T]` are two different emitted
+    *     signatures for one member, so a "merge" of them is a choice, and a choice is the thing a
+    *     refusal exists to prevent.
+    *   - '''`scope` unions its ENTRIES — in BOTH directions, and that is not the same as unioning
+    *     the region.''' An entry means "hold this back" under [[RuleScope.Everywhere]] and "move
+    *     this" under [[RuleScope.Only]], so honouring both inputs' entries is the union of the sets
+    *     either way — and the effect on the covered region therefore runs in OPPOSITE directions:
+    *     `Everywhere(except)` gets SMALLER as excepts accumulate, `Only(include)` gets BIGGER. A
+    *     merge rule written as "compose the region" would have had to pick one of those and would
+    *     have been silently wrong for the other; a merge rule written as "honour every entry" is
+    *     right for both, which is why this is the form.
+    *
+    * '''A base `Everywhere` and a dependent `Only` REFUSE, and the refusal is not squeamishness.'''
+    * There is no entry set that preserves both: `Only` says as much by what it OMITS as by what it
+    * lists — everything unnamed is deliberately held back — so a merged `Everywhere` would move
+    * every declaration the `Only` side excluded, while a merged `Only` would hold back everything
+    * the `Everywhere` side covers. That includes the DEFAULT `Everywhere(Set.empty)`: "the whole
+    * program" is a direction, not an absence of one, and a port that wants the other direction
+    * spells the base's scope the same way the base does.
+    *
+    * `added` is the SUBJECT side of what the later instance contributes — the annotation FQNs and
+    * the scope entries this instance did not already hold. Those are the names a dependent could use
+    * to re-scope a base's emitted surface, which is what `SurfaceFold` screens against `governs`,
+    * and they are the keys the run holds this module's own policy findings to.
+    */
+  def mergedWith(later: Phase): Either[String, MergeablePolicy.Merged] = later match
+    case o: NullabilityTransform =>
+      val targetClash = Option.when(target != o.target)(
+        s"""both modules state a nullability TARGET, "${target.tag}" and "${o.target.tag}" — the """ +
+          "shape every retyped declaration takes is one emitted signature per member, so two " +
+          "answers is a choice and not a composition")
+      val scopeMerged: Either[String, RuleScope] = (scope, o.scope) match
+        case (RuleScope.Everywhere(a), RuleScope.Everywhere(b)) => Right(RuleScope.Everywhere(a ++ b))
+        case (RuleScope.Only(a), RuleScope.Only(b))             => Right(RuleScope.Only(a ++ b))
+        case (mine, theirs)                                     => Left(
+          s"""both modules scope `$name`, one `${mine.productPrefix}` and one """ +
+            s"""`${theirs.productPrefix}` — the two point in OPPOSITE directions (an entry EXCLUDES """ +
+            "under one and INCLUDES under the other, and `Only` states as much by omission as by " +
+            "listing), so no entry set preserves both")
+      (targetClash.toList ++ scopeMerged.left.toOption.toList) match
+        case Nil => scopeMerged.map { s =>
+          MergeablePolicy.Merged(
+            new NullabilityTransform(annotations ++ o.annotations, target, s),
+            o.subjects -- subjects)
+        }
+        case whys => Left(whys.mkString("; "))
+    case other =>
+      Left(s"`${other.name}` is not a `NullabilityTransform`, so there is no policy to compose")
 
   // -------------------------------------------------------------------------
   // per-run state

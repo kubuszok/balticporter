@@ -2815,6 +2815,13 @@ policy entry on every libGDX lane forever. **Do NOT retry either shape.** The or
 `NullabilityTransform` a `MergeablePolicy` (union the annotation sets, compose the `RuleScope` per
 its direction, refuse on a conflicting `target`), measure that alone, then land screens' entry.
 
+**The first step of that order is now done** (`DESIGN.md` §8.13): the phase declares its merge —
+annotations union, `target` must agree, the scope unions its ENTRIES in both directions and refuses
+across them — and `subjects` covers both the annotation FQNs and the scope entries, so the intrusion
+screen sees the whole policy. Measured alone: **0 members changed and every check count identical on
+all thirteen ports**, which is what a contract nobody has instantiated yet must measure. Screens'
+entry is the second step.
+
 **One residue this commit does NOT fix, found by reading the emitted output.** Every `ScopedOut`
 note renders its key TWICE — `/* porter: scoped-out reason=configured phase=nullability
 key=com.…ObjectMap key=com.…ObjectMap */`. `PorterNote.pairs` emits the `Reason.Configured` key and
@@ -2887,10 +2894,7 @@ Maintained by deletion. Items are ordered by what they block, not by size.
 
 - **The Auditor has not run over this delivery.** It is expensive (Fable 5) and the **user** runs it,
   once a whole piece of work is delivered (`CLAUDE.md` §4).
-- **`NullabilityTransform` has no `MergeablePolicy`, and that blocks the SECOND port that wants
-  it.** With the phase now in the libGDX BASE manifest, any dependent declaring its own instance is
-  a fatal `SurfaceDivergence` — which is exactly what stops screens from stating its
-  `org.jspecify.annotations.Nullable` policy and retiring the jspecify jar from its lane (§11.17).
-  The merge is well-defined: union the annotation sets, compose the `RuleScope` per its direction
-  (`Only` intersects what a nearer manifest adds, `Everywhere(except)` unions the exclusions),
-  refuse on a conflicting `target`. §1(a), measured alone, before the screens entry.
+- **Screens has not yet stated its `org.jspecify.annotations.Nullable` policy.** The engine half is
+  done — `NullabilityTransform` declares a `MergeablePolicy` (`DESIGN.md` §8.13) — so the entry is
+  now a manifest line plus the retirement of `--dependency org.jspecify:jspecify:0.3.0` from
+  `screens_deps`, and the jar going is what proves the annotation is really gone (§11.17).

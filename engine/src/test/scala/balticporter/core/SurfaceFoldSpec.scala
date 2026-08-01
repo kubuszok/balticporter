@@ -1,8 +1,8 @@
 package balticporter.core
 
 import balticporter.core.ManifestAgreement.Kind
-import balticporter.tir.Phase
-import balticporter.transform.{ClassTableTransform, TypeRedirectTransform}
+import balticporter.tir.{Phase, RuleScope}
+import balticporter.transform.{ClassTableTransform, NullabilityTransform, TypeRedirectTransform}
 
 /** The merge contract — DESIGN.md §8.13, closing `ENGINE-LIMITS.md` D9.
   *
@@ -377,4 +377,159 @@ class SurfaceFoldSpec extends munit.FunSuite:
     assert(!(dep.effectiveSurface.head eq mine))
     assertEquals(mine.redirects, Map("com.other.A" -> "com.dep.A"))
     assertEquals(yours.redirects, Map("com.other.B" -> "com.dep.B"))
+  }
+
+  // -------------------------------------------------------------------------------------------
+  // NULLABILITY — the second phase to declare a merge, and the first whose policy is not a MAP
+  //
+  // Its three tables compose three different ways, which is the concrete case for `MergeablePolicy`
+  // being a contract rather than an engine-side union: the annotation set unions, the target must
+  // AGREE, and the scope unions its ENTRIES while its REGION moves in opposite directions for the
+  // two constructors.
+  // -------------------------------------------------------------------------------------------
+
+  private def nullability(annotations: Set[String],
+                          target: NullabilityTransform.Target = NullabilityTransform.Target.Union,
+                          scope: RuleScope = RuleScope.Everywhere()): NullabilityTransform =
+    new NullabilityTransform(annotations, target, scope)
+
+  private def nulls(m: PortManifest): NullabilityTransform =
+    m.effectiveSurface.collectFirst { case n: NullabilityTransform => n }.get
+
+  test("the DEPENDENT-ADDS-AN-ANNOTATION shape: one instance, both annotation sets, base's position") {
+    // the shape a second module actually needs — the base consumes its own marker, the dependent's
+    // own sources are marked with a third party's, and neither belongs in the other's manifest
+    val b = base(List(redirect("com.other.A" -> "com.dep.A"),
+                      nullability(Set("com.demo.Null"))))
+    val dep = b.extendedBy(PortManifest("dep",
+      surface = List(nullability(Set("org.third.Nullable")))))
+    assertEquals(dep.effectiveSurface.map(_.name), List("type-redirect", "nullability"))
+    assertEquals(nulls(dep).annotations, Set("com.demo.Null", "org.third.Nullable"))
+    assertEquals(dep.surfaceFold.refusals, Nil)
+    assertEquals(ManifestAgreement.check(Some(dep), Nil, foreignRoots = true).map(_.kind), Nil)
+    // …and the merged table PUBLISHES as different, which is `SurfaceFold`'s third obligation
+    assertNotEquals(PortManifest.fingerprint(nulls(dep)), PortManifest.fingerprint(nulls(b)))
+  }
+
+  test("D1 holds for nullability too: the base's own effective surface never sees the merge") {
+    val b      = base(List(nullability(Set("com.demo.Null"))))
+    val before = fps(b)
+    val dep    = b.extendedBy(PortManifest("dep", surface = List(nullability(Set("org.third.Nullable")))))
+    assertEquals(fps(b), before)
+    assertEquals(nulls(b).annotations, Set("com.demo.Null"))
+    assert(clue(dep.surfaceFold.absorbed).contains(before.head))
+  }
+
+  test("`Everywhere` unions its EXCEPTS — every entry either module wrote is honoured") {
+    val b = base(List(nullability(Set("com.demo.Null"), scope = RuleScope.Everywhere(Set("com.demo.Box")))))
+    val dep = b.extendedBy(PortManifest("dep", surface = List(
+      nullability(Set("org.third.Nullable"), scope = RuleScope.Everywhere(Set("org.third.Bag"))))))
+    assertEquals(nulls(dep).scope, RuleScope.Everywhere(Set("com.demo.Box", "org.third.Bag")))
+    assertEquals(dep.surfaceFold.refusals, Nil)
+  }
+
+  test("…and `Only` unions its INCLUDES — the same set operation, the OPPOSITE region") {
+    // the point of the contract: an entry EXCLUDES under one constructor and INCLUDES under the
+    // other, so honouring both inputs' entries makes the covered region shrink in the first case
+    // and grow in the second. A merge written as "compose the region" is right for one and silently
+    // wrong for the other.
+    val b = base(List(nullability(Set("com.demo.Null"), scope = RuleScope.Only(Set("com.demo.Box")))))
+    val dep = b.extendedBy(PortManifest("dep", surface = List(
+      nullability(Set("com.demo.Null"), scope = RuleScope.Only(Set("org.third.Bag"))))))
+    assertEquals(nulls(dep).scope, RuleScope.Only(Set("com.demo.Box", "org.third.Bag")))
+    assert(!nulls(dep).scope.includes("com.other.Untouched"), "`Only` still names what it names")
+    assertEquals(dep.surfaceFold.refusals, Nil)
+  }
+
+  test("REFUSED: two TARGETS is a choice of emitted shape, not a composition") {
+    val b = base(List(nullability(Set("com.demo.Null"))))
+    val dep = b.extendedBy(PortManifest("dep", surface = List(
+      nullability(Set("com.demo.Null"), target = NullabilityTransform.Target.Wrapper("com.dep.Opt")))))
+    assertEquals(dep.effectiveSurface.size, 2, "a refused pair stays in the pipeline")
+    assertEquals(dep.surfaceFold.refusals.map(_.cause), List(SurfaceFold.Cause.Conflict))
+    val f = ManifestAgreement.check(Some(dep), Nil, foreignRoots = true)
+    assertEquals(f.map(_.kind), List(Kind.SurfaceDivergence))
+    assert(Kind.SurfaceDivergence.fatal)
+    assert(clue(f.head.detail).contains("union"))
+    assert(clue(f.head.detail).contains("wrapper:com.dep.Opt"))
+  }
+
+  test("REFUSED: an `Everywhere` base and an `Only` dependent point in OPPOSITE directions") {
+    val b = base(List(nullability(Set("com.demo.Null"), scope = RuleScope.Everywhere(Set("com.demo.Box")))))
+    val dep = b.extendedBy(PortManifest("dep", surface = List(
+      nullability(Set("com.demo.Null"), scope = RuleScope.Only(Set("org.third.Bag"))))))
+    assertEquals(dep.surfaceFold.refusals.map(_.cause), List(SurfaceFold.Cause.Conflict))
+    val f = ManifestAgreement.check(Some(dep), Nil, foreignRoots = true)
+    assertEquals(f.map(_.kind), List(Kind.SurfaceDivergence))
+    assert(clue(f.head.detail).contains("OPPOSITE"))
+  }
+
+  test("…and the DEFAULT `Everywhere(Set.empty)` is a DIRECTION, not the absence of one") {
+    // "the whole program" is what an unscoped instance says, and an `Only` merged into it would
+    // silently move every declaration the `Only` side deliberately left out.
+    val b   = base(List(nullability(Set("com.demo.Null"))))
+    val dep = b.extendedBy(PortManifest("dep", surface = List(
+      nullability(Set("com.demo.Null"), scope = RuleScope.Only(Set("org.third.Bag"))))))
+    assertEquals(dep.surfaceFold.refusals.map(_.cause), List(SurfaceFold.Cause.Conflict))
+  }
+
+  test("REFUSED: a target clash AND a scope clash are reported TOGETHER, not one at a time") {
+    val b = base(List(nullability(Set("com.demo.Null"), scope = RuleScope.Everywhere(Set("com.demo.Box")))))
+    val dep = b.extendedBy(PortManifest("dep", surface = List(nullability(
+      Set("com.demo.Null"), target = NullabilityTransform.Target.Wrapper("com.dep.Opt"),
+      scope = RuleScope.Only(Set("org.third.Bag"))))))
+    val f = ManifestAgreement.check(Some(dep), Nil, foreignRoots = true)
+    assertEquals(f.map(_.kind), List(Kind.SurfaceDivergence))
+    assert(clue(f.head.detail).contains("TARGET"))
+    assert(clue(f.head.detail).contains("OPPOSITE"))
+  }
+
+  test("REFUSED: another phase's instance is not a policy this one can compose") {
+    // unreachable through the fold, which pairs by NAME — asserted directly so the arm is not the
+    // one branch nothing ever evaluates
+    assert(nullability(Set("com.demo.Null")).mergedWith(redirect("com.other.A" -> "com.dep.A")).isLeft)
+  }
+
+  test("`subjects` is the annotation FQNs AND the scope entries — the scope is what re-shapes a surface") {
+    val p = nullability(Set("com.demo.Null"), scope = RuleScope.Everywhere(Set("com.demo.Box", "com.demo.Bag#at")))
+    assertEquals(p.subjects, Set("com.demo.Null", "com.demo.Box", "com.demo.Bag"))
+  }
+
+  test("INTRUSION: a dependent that scopes out a type its BASE emits is fatal") {
+    // the failure this screen exists for, in nullability's own terms: the base emitted the type's
+    // annotated members as `T | Null` and the dependent would hold its own overrides of them back —
+    // half an override pair, two modules that each compile alone and cannot compile together.
+    val b = base(List(nullability(Set("com.demo.Null"))))
+    val dep = b.extendedBy(PortManifest("dep", surface = List(
+      nullability(Set("com.demo.Null"), scope = RuleScope.Everywhere(Set("com.demo.Widget"))))))
+    assertEquals(dep.surfaceFold.refusals.map(_.cause), List(SurfaceFold.Cause.Intrusion))
+    val f = ManifestAgreement.check(Some(dep), Nil, foreignRoots = true)
+    assertEquals(f.map(_.kind), List(Kind.SurfaceIntrusion))
+    assert(Kind.SurfaceIntrusion.fatal)
+    assert(clue(f.head.detail).contains("com.demo.Widget"))
+  }
+
+  test("…and an annotation FQN inside a base's claim is screened by the same rule") {
+    val b   = base(List(nullability(Set("com.demo.Null"))))
+    val dep = b.extendedBy(PortManifest("dep",
+      surface = List(nullability(Set("com.demo.Null", "com.demo.MaybeNull")))))
+    assertEquals(dep.surfaceFold.refusals.map(_.cause), List(SurfaceFold.Cause.Intrusion))
+    assert(clue(ManifestAgreement.check(Some(dep), Nil, foreignRoots = true).head.detail)
+      .contains("com.demo.MaybeNull"))
+  }
+
+  test("`ownKeys` carries the dependent's own annotation, so a typo in it is reported HERE") {
+    // after a merge the module's own declared instance never runs, so the run resolves it to the
+    // instance that absorbed it and filters that instance's findings to what THIS manifest added.
+    val b   = base(List(nullability(Set("com.demo.Null"))))
+    val dep = b.extendedBy(PortManifest("dep", surface = List(nullability(Set("org.third.Nullable")))))
+    assertEquals(dep.surfaceFold.ownKeys, Map("nullability" -> Set("org.third.Nullable")))
+  }
+
+  test("restating the base's annotation adds NOTHING — agreement is not a contribution") {
+    val b   = base(List(nullability(Set("com.demo.Null"))))
+    val dep = b.extendedBy(PortManifest("dep", surface = List(nullability(Set("com.demo.Null")))))
+    assertEquals(dep.surfaceFold.refusals, Nil)
+    assertEquals(dep.surfaceFold.ownKeys, Map("nullability" -> Set.empty[String]))
+    assertEquals(nulls(dep).annotations, Set("com.demo.Null"))
   }
