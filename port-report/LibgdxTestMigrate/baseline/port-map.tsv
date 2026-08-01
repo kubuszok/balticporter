@@ -1,4 +1,4 @@
-# balticporter port map	schema=3	module=libgdx-test	engine=balticporter/0.1.0-SNAPSHOT	sources=a7e5379c527be82c	files=29	policy=ecba72770d4012c5
+# balticporter port map	schema=3	module=libgdx-test	engine=balticporter/0.1.0-SNAPSHOT	sources=a7e5379c527be82c	files=29	policy=abd605153d56303d
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.badlogic.gdx.graphics.g3d.utils.AnimationControllerTest	sge.graphics.g3d.utils.AnimationControllerTest	Renamed	-		0		companion=yes form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public statics=assertSameAnimation
 type	com.badlogic.gdx.graphics.g3d.utils.AnimationDescTest	sge.graphics.g3d.utils.AnimationDescTest	Renamed	-		0		companion=yes form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public statics=epsilon
@@ -30,7 +30,7 @@ type	com.badlogic.gdx.utils.MixedPutRemoveTest	sge.utils.MixedPutRemoveTest	Rena
 type	com.badlogic.gdx.utils.PooledLinkedListTest	sge.utils.PooledLinkedListTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.utils.QueueTest	sge.utils.QueueTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.utils.SortTest	sge.utils.SortTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
-type	com.badlogic.gdx.utils.SortTest$NullsFirstComparator	sge.utils.SortTest$NullsFirstComparator	Renamed	-		0		form=class parents=java.util.Comparator primary=() primaryKind=unique-root primaryVis=public
+type	com.badlogic.gdx.utils.SortTest$NullsFirstComparator	sge.utils.SortTest$NullsFirstComparator	Renamed	-		0		form=class parents=scala.math.Ordering primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.utils.SortedIntListTest	sge.utils.SortedIntListTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.net.NetJavaImpl		Dropped	-		0		
 type	com.badlogic.gdx.utils.Json		Dropped	-		0		
@@ -281,26 +281,26 @@ member	com.badlogic.gdx.utils.QueueTest#<stmt8>	sge.utils.QueueTest#<stmt8>	Rena
 member	com.badlogic.gdx.utils.QueueTest#<stmt9>	sge.utils.QueueTest#<stmt9>	Renamed	-	com/badlogic/gdx/utils/QueueTest.java	257	8c23a35fa0f95332	
 member	com.badlogic.gdx.utils.QueueTest#assertEqualsAndHash(Queue,Queue)	sge.utils.QueueTest#assertEqualsAndHash(Queue<?>,Queue<?>)	Renamed	-	com/badlogic/gdx/utils/QueueTest.java	376	bbc51a605ccf502b	vis=private
 member	com.badlogic.gdx.utils.QueueTest#assertValues(Queue,Array)	sge.utils.QueueTest#assertValues(Queue<Integer>,Array<Integer>)	Renamed	-	com/badlogic/gdx/utils/QueueTest.java	381	df103f27899ef836	vis=private
-member	com.badlogic.gdx.utils.SortTest#<stmt10>	sge.utils.SortTest#<stmt10>	Renamed	-	com/badlogic/gdx/utils/SortTest.java	153	e221c2a196456463	
-member	com.badlogic.gdx.utils.SortTest#<stmt11>	sge.utils.SortTest#<stmt11>	Renamed	-	com/badlogic/gdx/utils/SortTest.java	169	13f2e983bfd2aa33	
-member	com.badlogic.gdx.utils.SortTest#<stmt12>	sge.utils.SortTest#<stmt12>	Renamed	-	com/badlogic/gdx/utils/SortTest.java	185	f0bef068caf193bf	
+member	com.badlogic.gdx.utils.SortTest#<stmt10>	sge.utils.SortTest#<stmt10>	Renamed	-	com/badlogic/gdx/utils/SortTest.java	153	9519dc0d6bceac91	
+member	com.badlogic.gdx.utils.SortTest#<stmt11>	sge.utils.SortTest#<stmt11>	Renamed	-	com/badlogic/gdx/utils/SortTest.java	169	7278b9d713e3a7c1	
+member	com.badlogic.gdx.utils.SortTest#<stmt12>	sge.utils.SortTest#<stmt12>	Renamed	-	com/badlogic/gdx/utils/SortTest.java	185	5d85dd260b59f7d1	
 member	com.badlogic.gdx.utils.SortTest#<stmt13>	sge.utils.SortTest#<stmt13>	Renamed	-	com/badlogic/gdx/utils/SortTest.java	198	19fd5d097cbb25d1	
 member	com.badlogic.gdx.utils.SortTest#<stmt14>	sge.utils.SortTest#<stmt14>	Renamed	-	com/badlogic/gdx/utils/SortTest.java	205	79c1d57bd635f390	
-member	com.badlogic.gdx.utils.SortTest#<stmt15>	sge.utils.SortTest#<stmt15>	Renamed	-	com/badlogic/gdx/utils/SortTest.java	212	1cee83b1d931bd32	
+member	com.badlogic.gdx.utils.SortTest#<stmt15>	sge.utils.SortTest#<stmt15>	Renamed	-	com/badlogic/gdx/utils/SortTest.java	212	ee62b6a6cfa09c68	
 member	com.badlogic.gdx.utils.SortTest#<stmt16>	sge.utils.SortTest#<stmt16>	Renamed	-	com/badlogic/gdx/utils/SortTest.java	220	aa9ddee645fc0b79	
 member	com.badlogic.gdx.utils.SortTest#<stmt17>	sge.utils.SortTest#<stmt17>	Renamed	-	com/badlogic/gdx/utils/SortTest.java	226	daff3a3975dca099	
 member	com.badlogic.gdx.utils.SortTest#<stmt18>	sge.utils.SortTest#<stmt18>	Renamed	-	com/badlogic/gdx/utils/SortTest.java	233	6131bd0267ac580c	
 member	com.badlogic.gdx.utils.SortTest#<stmt19>	sge.utils.SortTest#<stmt19>	Renamed	-	com/badlogic/gdx/utils/SortTest.java	240	0fc03e0de13674a0	
 member	com.badlogic.gdx.utils.SortTest#<stmt1>	sge.utils.SortTest#<stmt1>	Renamed	-	com/badlogic/gdx/utils/SortTest.java	59	9873a0de04fe2822	
 member	com.badlogic.gdx.utils.SortTest#<stmt20>	sge.utils.SortTest#<stmt20>	Renamed	-	com/badlogic/gdx/utils/SortTest.java	247	5969aca2b5849d86	
-member	com.badlogic.gdx.utils.SortTest#<stmt2>	sge.utils.SortTest#<stmt2>	Renamed	-	com/badlogic/gdx/utils/SortTest.java	66	a9831a80d35f627d	
-member	com.badlogic.gdx.utils.SortTest#<stmt3>	sge.utils.SortTest#<stmt3>	Renamed	-	com/badlogic/gdx/utils/SortTest.java	79	d2b19ec7f8313d17	
+member	com.badlogic.gdx.utils.SortTest#<stmt2>	sge.utils.SortTest#<stmt2>	Renamed	-	com/badlogic/gdx/utils/SortTest.java	66	9a29274900685886	
+member	com.badlogic.gdx.utils.SortTest#<stmt3>	sge.utils.SortTest#<stmt3>	Renamed	-	com/badlogic/gdx/utils/SortTest.java	79	84d94eba74619d91	
 member	com.badlogic.gdx.utils.SortTest#<stmt4>	sge.utils.SortTest#<stmt4>	Renamed	-	com/badlogic/gdx/utils/SortTest.java	92	8a51c7289627073c	
 member	com.badlogic.gdx.utils.SortTest#<stmt5>	sge.utils.SortTest#<stmt5>	Renamed	-	com/badlogic/gdx/utils/SortTest.java	99	8be453236a25d3c4	
 member	com.badlogic.gdx.utils.SortTest#<stmt6>	sge.utils.SortTest#<stmt6>	Renamed	-	com/badlogic/gdx/utils/SortTest.java	106	7f2eb04e7eda4c35	
 member	com.badlogic.gdx.utils.SortTest#<stmt7>	sge.utils.SortTest#<stmt7>	Renamed	-	com/badlogic/gdx/utils/SortTest.java	117	e74dc3783f55085c	
 member	com.badlogic.gdx.utils.SortTest#<stmt8>	sge.utils.SortTest#<stmt8>	Renamed	-	com/badlogic/gdx/utils/SortTest.java	127	dbf1e5b26a9cc2d3	
-member	com.badlogic.gdx.utils.SortTest#<stmt9>	sge.utils.SortTest#<stmt9>	Renamed	-	com/badlogic/gdx/utils/SortTest.java	137	8e60f56831a8fcb9	
+member	com.badlogic.gdx.utils.SortTest#<stmt9>	sge.utils.SortTest#<stmt9>	Renamed	-	com/badlogic/gdx/utils/SortTest.java	137	20886bc2f06abd34	
 member	com.badlogic.gdx.utils.SortTest#setUp()	sge.utils.SortTest#setUp()	Renamed	-	com/badlogic/gdx/utils/SortTest.java	39	9734a5af068960db	
 member	com.badlogic.gdx.utils.SortTest#sortInstance	sge.utils.SortTest#sortInstance	Renamed	-	com/badlogic/gdx/utils/SortTest.java	36	9155b1f3f6e33571	vis=private
 member	com.badlogic.gdx.utils.SortTest$NullsFirstComparator#compare(Integer,Integer)	sge.utils.SortTest$NullsFirstComparator#compare(Integer,Integer)	Renamed	-	com/badlogic/gdx/utils/SortTest.java	45	e48107ddfc834ce4	

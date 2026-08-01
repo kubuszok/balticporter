@@ -1,4 +1,4 @@
-# balticporter port map	schema=3	module=gltf	engine=balticporter/0.1.0-SNAPSHOT	sources=005dfe42009b3a9c	files=134	policy=3b477c5033a13bf9
+# balticporter port map	schema=3	module=gltf	engine=balticporter/0.1.0-SNAPSHOT	sources=005dfe42009b3a9c	files=134	policy=b9030a41ce143b75
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	net.mgsx.gltf.data.GLTF	sge.gltf.data.GLTF	Renamed	-		0		form=class parents=sge.gltf.data.GLTFObject primary=() primaryKind=unique-root primaryVis=public
 type	net.mgsx.gltf.data.GLTFAsset	sge.gltf.data.GLTFAsset	Renamed	-		0		form=class parents=sge.gltf.data.GLTFObject primary=() primaryKind=unique-root primaryVis=public
@@ -125,7 +125,7 @@ type	net.mgsx.gltf.scene3d.scene.Scene	sge.gltf.scene3d.scene.Scene	Renamed	-		0
 type	net.mgsx.gltf.scene3d.scene.SceneAsset	sge.gltf.scene3d.scene.SceneAsset	Renamed	-		0		form=class parents=sge.utils.Disposable primary=() primaryKind=unique-root primaryVis=public
 type	net.mgsx.gltf.scene3d.scene.SceneManager	sge.gltf.scene3d.scene.SceneManager	Renamed	-		0		form=class parents=sge.utils.Disposable primary=(ShaderProvider,DepthShaderProvider,RenderableSorter) primaryKind=unique-root primaryVis=public secondaries=();(int);(ShaderProvider,DepthShaderProvider)
 type	net.mgsx.gltf.scene3d.scene.SceneModel	sge.gltf.scene3d.scene.SceneModel	Renamed	-		0		form=class parents=sge.utils.Disposable primary=() primaryKind=unique-root primaryVis=public
-type	net.mgsx.gltf.scene3d.scene.SceneRenderableSorter	sge.gltf.scene3d.scene.SceneRenderableSorter	Renamed	-		0		companion=yes form=class parents=sge.graphics.g3d.utils.RenderableSorter,java.util.Comparator primary=() primaryKind=unique-root primaryVis=public statics=Hints
+type	net.mgsx.gltf.scene3d.scene.SceneRenderableSorter	sge.gltf.scene3d.scene.SceneRenderableSorter	Renamed	-		0		companion=yes form=class parents=sge.graphics.g3d.utils.RenderableSorter,scala.math.Ordering primary=() primaryKind=unique-root primaryVis=public statics=Hints
 type	net.mgsx.gltf.scene3d.scene.SceneRenderableSorter$Hints	sge.gltf.scene3d.scene.SceneRenderableSorter$Hints	Renamed	-		0		companion=yes flags=abstract,sealed form=enum-class parents=java.lang.Enum primary=() primaryKind=not-funnelled primaryVis=public
 type	net.mgsx.gltf.scene3d.scene.SceneSkybox	sge.gltf.scene3d.scene.SceneSkybox	Renamed	-		0		companion=yes form=class parents=sge.graphics.g3d.RenderableProvider,sge.gltf.scene3d.scene.Updatable,sge.utils.Disposable primary=(boolean) primaryKind=synthesised-primary primaryVis=protected secondaries=(Cubemap);(Cubemap,SRGB,Float,boolean);(Cubemap,SRGB,boolean,boolean);(Cubemap,ShaderProvider) statics=enableMipmaps
 type	net.mgsx.gltf.scene3d.scene.SceneSkybox$SkyboxShader	sge.gltf.scene3d.scene.SceneSkybox$SkyboxShader	Renamed	-		0		companion=yes form=class parents=sge.graphics.g3d.shaders.DefaultShader primary=(Renderable,Config) primaryKind=unique-root primaryVis=public

@@ -310,7 +310,7 @@ sge.ecs.systems.IteratingSystemTest	sge.ecs.systems.IteratingSystemTest$Iteratin
 sge.ecs.systems.IteratingSystemTest	sge.ecs.systems.IteratingSystemTest$IteratingSystemMock#startProcessing()	def	0dd75fd483a3f1bd
 sge.ecs.systems.IteratingSystemTest	sge.ecs.systems.IteratingSystemTest$SpyComponent	class	f061388eefd40ccd
 sge.ecs.systems.IteratingSystemTest	sge.ecs.systems.IteratingSystemTest$SpyComponent#updates	val	0809796dfe4faaaf
-sge.ecs.systems.SortedIteratingSystemTest	sge.ecs.systems.SortedIteratingSystemTest	class	0a40a761d6614a38
+sge.ecs.systems.SortedIteratingSystemTest	sge.ecs.systems.SortedIteratingSystemTest	class	6ea8b5cfe36ad066
 sge.ecs.systems.SortedIteratingSystemTest	sge.ecs.systems.SortedIteratingSystemTest#<stmt1>	stmt	fdfb966fdc031270
 sge.ecs.systems.SortedIteratingSystemTest	sge.ecs.systems.SortedIteratingSystemTest#<stmt2>	stmt	5e3d958edc68afee
 sge.ecs.systems.SortedIteratingSystemTest	sge.ecs.systems.SortedIteratingSystemTest#<stmt3>	stmt	16e4e658db085d14
@@ -338,7 +338,7 @@ sge.ecs.systems.SortedIteratingSystemTest	sge.ecs.systems.SortedIteratingSystemT
 sge.ecs.systems.SortedIteratingSystemTest	sge.ecs.systems.SortedIteratingSystemTest$IteratingRemovalSystem#im	val	c3594e5a65f5db5e
 sge.ecs.systems.SortedIteratingSystemTest	sge.ecs.systems.SortedIteratingSystemTest$IteratingRemovalSystem#processEntity(Entity,float)	def	be0c23f3c250d217
 sge.ecs.systems.SortedIteratingSystemTest	sge.ecs.systems.SortedIteratingSystemTest$IteratingRemovalSystem#sm	val	813789bcaa6a2fb9
-sge.ecs.systems.SortedIteratingSystemTest	sge.ecs.systems.SortedIteratingSystemTest$OrderComparator	class	c35068279a2e47e3
+sge.ecs.systems.SortedIteratingSystemTest	sge.ecs.systems.SortedIteratingSystemTest$OrderComparator	class	ae01f2a6343d9bd6
 sge.ecs.systems.SortedIteratingSystemTest	sge.ecs.systems.SortedIteratingSystemTest$OrderComparator#compare(Entity,Entity)	def	11efd494be47fd15
 sge.ecs.systems.SortedIteratingSystemTest	sge.ecs.systems.SortedIteratingSystemTest$OrderComponent	class	8b722726db19a556
 sge.ecs.systems.SortedIteratingSystemTest	sge.ecs.systems.SortedIteratingSystemTest$OrderComponent#<stmt1>	stmt	58b0d4e82d0403cf

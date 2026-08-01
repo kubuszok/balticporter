@@ -232,9 +232,42 @@ object LibgdxPolicy:
     )
   ))
 
+  /** `java.util.Comparator` → `scala.math.Ordering`, the port's one RETARGET entry.
+    *
+    * A retarget moves a type at every occurrence and API-maps it NOWHERE — no kind, no factory, no
+    * `coerce` boundary. What licenses that here is a single fact about the two standard libraries:
+    * Scala declares `trait Ordering[T] extends java.util.Comparator[T]`, so the scala target is
+    * usable everywhere the java source was. Three consequences, and they are the whole of what this
+    * entry costs:
+    *
+    *   - a declaration moves BARE. An `Ordering[T]` reaching a slot that still says `Comparator` —
+    *     the JDK's own `Arrays.sort`, the engine's `JavaCollections.sort` — already IS one, so
+    *     nothing is bridged and `CollectionBoundaryCheck` has nothing to count;
+    *   - `implements Comparator<T>` becomes `extends Ordering[T]` with the `compare(a, b)` under it
+    *     structurally unchanged, because `compare` is `Ordering`'s ONE abstract member. That is also
+    *     what keeps an anonymous `new Comparator<Pixmap>(){…}` — libGDX has four — a valid
+    *     `new Ordering[Pixmap]{…}`, and a java lambda SAM-convertible;
+    *   - no call site is rewritten at all. `cmp.compare(a, b)` binds to `Ordering.compare`.
+    *
+    * ==Why there is no companion call-site table==
+    * `Collections.sort(xs, c)` → `xs.sortInPlace()(using c)` is expressible in the M4 template
+    * language and is REFUTED by the compiler: `sortInPlace` is a `mutable.IndexedSeqOps` member and
+    * `java.util.List` maps to `mutable.Buffer`, which is not one. After the retarget the existing
+    * `JavaCollections.sort` arm is already correct, and `Arrays.sort`'s idiomatic counterpart trades
+    * java's documented stability guarantee for legibility, which is not a trade a seam may make
+    * silently. Measured — `DESIGN.md` §8.12 and `ComparatorOrderingPortSpec`.
+    *
+    * This is SHARED SURFACE and therefore lives in [[core]] alone (§1.5): a base whose `Comparator`s
+    * became `Ordering`s and a dependent whose did not emit signatures that cannot meet. It joins the
+    * phase's `surfaceFingerprint` for exactly that reason. And it is a parameter of the
+    * `CollectionsTransform` this manifest ALREADY carries — not a second instance of it, which is
+    * what `ENGINE-LIMITS.md` D9 closes for a base with dependents. */
+  def comparatorRetarget: Map[String, String] =
+    Map("java.util.Comparator" -> "scala.math.Ordering")
+
   /** the `gdx/src` pipeline. Universal phases first, then the two §1(b) phases configured above,
     * then the one §1(c) rule libGDX plugs in from OUTSIDE the engine
     * ([[GdxSharedIteratorRule]]). */
   def mainPhases: List[balticporter.tir.Phase] =
-    List(new CollectionsTransform, new MutableParamsTransform, new PanamaFfiTransform(),
-         unwrapReflection, classTable, new GdxSharedIteratorRule)
+    List(new CollectionsTransform(retarget = comparatorRetarget), new MutableParamsTransform,
+         new PanamaFfiTransform(), unwrapReflection, classTable, new GdxSharedIteratorRule)

@@ -1971,7 +1971,9 @@ behaviour). gltf is at parity, 135/135 both sides.
    null-flow analysis no phase has: open research, currently manual.
 5. **Collection-map extensions** — retarget entries like `gdx Array<Integer>` → `ArrayBuffer[Int]`
    with wrapper unboxing (base-manifest). The `java.util.Comparator`→`Ordering` half is BUILT as
-   `CollectionsTransform(retarget = …)` and is default-off pending P2; what it measured is that the
+   `CollectionsTransform(retarget = …)` and is **ENABLED in the libGDX base manifest** since P2
+   (§11.16 — 32 `Configured` rows, 110 members, zero refusals, every check and every suite
+   unchanged); what it measured is that the
    `Collections.sort`→`sortInPlace` call-site table it was supposed to need does not exist —
    `sortInPlace` is not a `mutable.Buffer` member, and after the retarget the existing
    `JavaCollections.sort` arm is already correct (DESIGN.md §8.12).
@@ -2504,6 +2506,82 @@ The 6 hand-written suite sites the enablement must fix are `ScreenmanagerSuite` 
 `extends Disposable` — and two calls) and `VfxFrameBufferSuite`'s one call on
 `VfxFrameBufferQueue implements Disposable`.
 
+### 11.16 P2 — `Comparator → Ordering`: DELIVERED, and what a retarget costs
+
+The libGDX base manifest's one `retarget` entry —
+`CollectionsTransform(retarget = "java.util.Comparator" -> "scala.math.Ordering")`, in
+`LibgdxPolicy.core` and inherited by all five dependents (§1.5). **Every lane green, every check
+count identical on all thirteen ports, every suite unchanged.**
+
+**Why this one is NOT D9.** The base already carries a `CollectionsTransform`; P2 sets a
+CONSTRUCTOR PARAMETER on the instance the dependents already inherit. No dependent constructs a
+`CollectionsTransform` of its own — the corpus grep is the whole proof — so there is no second
+instance for `extendedBy` to fail to merge. D9 closes a base manifest to a NEW (b) PHASE, not to new
+policy on a phase it already has, and P2 is the measurement that says so.
+
+| gate | before | with P2 |
+|---|---|---|
+| compile errors | libGDX 0, gltf 7, noise4j 2 | **identical** — gltf's 7 are the same pre-existing `MeshLoader` / `PBRCubemapAttribute` / `PBRTextureAttribute` / `ModelInstanceHack`×4 |
+| all check counts, 13 ports | — | **identical, finding for finding.** `findings.tsv` and `counts.tsv` are byte-unchanged on every port; only `members.tsv` and `port-map.tsv` moved |
+| tests | gdx-test 217/4, ashley 108/2 (+2 pre-existing skips), anim8 23, vfx 64, sg 16, screens 16 | **identical**; jbump's differential probe still 44 lines, IDENTICAL |
+| `collection-boundary` | 0 | **0** — the refusal composition is EMPTY, which is the retarget's defining property, not luck (below) |
+| `decisions.tsv`, corpus-wide | — | **+32**, every one `RetypedSignature` / `Reason.Configured` with the key verbatim: `java-collections->scala:java.util.Comparator -> scala.math.Ordering` |
+| `porter-notes` | 0/0 | **0/0** |
+
+**The promotion, by port and by category** (own members; the lane's own figure adds the base's 75
+through the shared srcmap, so `gdx-test` 84 = 75 + 9, `ashley` 85 = 75 + 8 + 2, `anim8` 85 = 75 + 10,
+`gltf` 76 = 75 + 1, `vfx` 80 = 75 + 5):
+
+| port | re-keyed (decl-retype) | changed in place | own total | `Configured` rows |
+|---|---:|---:|---:|---:|
+| libgdx-core | 21 + 21 | 33 | **75** | 27 |
+| libgdx-test | 0 | 9 | 9 | 0 |
+| ashley | 1 + 1 | 6 | 8 | 3 |
+| ashley-test | 0 | 2 | 2 | 0 |
+| anim8 | 0 | 10 | 10 | 1 |
+| gdx-gltf | 0 | 1 | 1 | 0 |
+| gdx-vfx | 1 + 1 | 3 | 5 | 1 |
+| gltf-test, screens, sg, sg-test, noise4j, jbump | 0 | 0 | **0** | 0 |
+
+**`port-map.tsv` moved on NINE ports and `members.tsv` on seven, and the two extra are the point.**
+`screens` and `gltf-test` emit not one changed character and their published maps still differ by
+one line: `policy=` in the header, because the retarget joins
+`CollectionsTransform.surfaceFingerprint`.
+That is §1.5 working in the direction nobody watches — a dependent that had NOT inherited the entry
+would now be a `SurfaceDivergence`, and the fingerprint is what makes that impossible to miss.
+
+**The refusal composition is empty, and that is a property rather than an outcome.** `Ordering[T]
+<: Comparator[T]`, so a retyped value reaches every slot that still says `Comparator` bare — the
+JDK's own `Arrays.sort`, the engine's `JavaCollections.sort`, and every dependent call site.
+`collection-boundary` stayed 0 on all thirteen ports and `coerce` inserted nothing. Where that
+subtyping does not hold, the type belongs in `typeMap` with a kind and a factory, and the seam is
+then a counted `coerce` boundary — the two are not alternatives (`DESIGN.md` §8.12).
+
+**Zero call sites were rewritten, and no call-site table shipped.** `cmp.compare(a, b)` binds to
+`Ordering.compare` unchanged; `implements Comparator<T>` became `extends Ordering[T]` with the
+`compare` under it structurally identical (four anonymous `new Comparator<X>(){…}` in libGDX core
+became `new Ordering[X]{…}` with no other edit). The `Collections.sort` → `sortInPlace` shape was
+already refuted by the compiler and `Arrays.sort` trades a stability guarantee, both measured under
+M5c.
+
+**One engine gap this measured, invisible to every count.** A class whose PARENT is retargeted
+records no decision: `recordRetypings` compares `Symbol.info`, and a parent list is not in it. Six
+classes changed their emitted declaration line with nothing in `decisions.tsv` —
+`Attributes`, `ModelCache$Sorter`, `SimpleOrthoGroupStrategy$Comparator`,
+`DefaultRenderableSorter` (libgdx-core), `SortTest$NullsFirstComparator` (its suite),
+`SystemManager$SystemComparator` and `SortedIteratingSystemTest$OrderComparator` (ashley),
+`SceneRenderableSorter` (gltf), `PrioritizedArray$WrapperComparator` (vfx). It is why `gltf`,
+`gltf-test`, `libgdx-test` and `ashley-test` each moved members with **zero** `Configured` rows.
+The emitted code is correct; the PROVENANCE is incomplete, and it is the same class of hole as the
+two already listed in §7.1, where it now sits.
+
+**Not a note, by design.** `RetypedSignature` is deliberately absent from `PorterNote.Rendered`
+(the new type is written in the declaration and the diff shows it; 362 notes on libGDX core
+restating signatures would bury the ones that carry information). So P2 emits **no new porter
+note** — the only note text that moved is `funnelled-ctor`'s `primary=` on `TimSort` and
+`SortedIteratingSystem`, which now spells `scala.math.Ordering`. `NoteCoverageCheck` 0/0 on every
+port throughout.
+
 ## 12. Remaining work, across the engine
 
 Maintained by deletion. Items are ordered by what they block, not by size.
@@ -2516,6 +2594,14 @@ Maintained by deletion. Items are ordered by what they block, not by size.
 - **Raw-generic `[?]` rendering and `uncheckedGeneric` retyping are unrecorded.** Both change a
   signature for a reason no reader can recover; recording them needs the decision log threaded through
   the frontend, which today records only from phases and the run.
+- **A retyped PARENT records nothing.** `CollectionsTransform.recordRetypings` walks the symbol
+  table and fires on `Symbol.info`; a class's parent list is in its `Definition`, not its `info`, so
+  a `class X implements Comparator<T>` that becomes `class X extends Ordering[T]` moves its emitted
+  declaration line with no `decisions.tsv` row behind it. **Measured by P2 (§11.16): nine classes
+  across five ports, and it is why four of those ports show changed members against zero
+  `Configured` rows.** The same hole covers any phase that retypes a parent — the retarget is
+  simply the first policy that does. The fix is one more pass over `Definition.parents` in the same
+  `before`/`after` comparison, at the DECLARATION level the channel already uses.
 - **`RetypedSignature` and `RedirectedCall` carry no porter note.** The argument for each is in
   `DESIGN.md` §7.2 and stands — the retyped signature IS the declaration and the redirected call IS
   the body — so it is listed here so that adding one is a decision rather than an oversight.

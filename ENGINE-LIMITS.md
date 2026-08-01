@@ -2820,6 +2820,15 @@ inverted, and the keys would never fire on the base's own run); `PortManifestCon
 mirroring (a manifest with no `bases` is itself a fatal finding for a run with foreign resolution
 roots).
 
+**What this does NOT block, measured by Stage P's P2.** The limit is a phase INSTANCE count, not a
+policy count. A base that already carries a (b) phase may gain any amount of new policy ON THAT
+INSTANCE, because `extendedBy` never has two of it to merge — the dependents inherit the one value
+and their effective surface is identical by construction. libGDX's base `CollectionsTransform` gained
+a `retarget` table this way with **`manifest` 0 on all thirteen ports**, and the fingerprint change
+propagated to nine published port maps with nothing else moving. The question to ask before writing
+a base policy is therefore not "is this a (b) phase?" but *does any dependent CONSTRUCT this phase?*
+— one grep over the ports, and if the answer is no, D9 has nothing to say.
+
 *Fix kind: (a) engine, and it is a CONTRACT change rather than a condition: `Phase` needs a way to
 say "my policy is a table, merge it with the base's", `PortManifest.effectiveSurface` needs to fold
 same-name phases through it, and `SurfaceDivergence` then fires only where a merge is refused — same

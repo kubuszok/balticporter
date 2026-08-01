@@ -127,8 +127,8 @@ the INJECTION is a build artefact, and exactly one module must ship each replace
 dependent that copied it would emit a second definition of the same FQN. Every check that asks "is
 this replaced?" follows the same line and holds a module to its OWN drops only.
 
-**`surface` is the one inherited row that does NOT compose — and that closes a base manifest to new
-(b) policy once a dependent has any.** `extendedBy` unions the drops and the renames key by key; it
+**`surface` is the one inherited row that does NOT compose — and that closes a base manifest to a new
+(b) PHASE once a dependent constructs the same one.** `extendedBy` unions the drops and the renames key by key; it
 CONCATENATES the phases and deduplicates them by IDENTITY, and a phase's policy is a constructor
 argument, so two instances holding two halves of one table never merge. One phase NAME carrying two
 configurations in one effective pipeline is a fatal `SurfaceDivergence` whether the two tables
@@ -139,6 +139,14 @@ turns fatal. **So a (b) phase configured in a base manifest is a phase no depend
 configure**, and adding one to a base that already has dependents using it is a change that cannot
 land. Measured, both halves, on the libGDX base's first `TypeRedirectTransform`
 (`ENGINE-LIMITS.md` D9).
+
+**It is an INSTANCE count, not a policy count** — the distinction that decides whether a base policy
+can land at all. New policy on a phase the base ALREADY carries composes fine: there is only ever
+one instance, the dependents inherit that one value, and their effective surfaces agree by
+construction. So the question before writing a base policy is not "is this a (b) phase?" but *does
+any dependent CONSTRUCT this phase?* — one grep over the ports. Measured the other way round on
+libGDX's base `CollectionsTransform` gaining a `retarget` table: `manifest` 0 on all thirteen ports,
+with the fingerprint change reaching nine published port maps and nothing else moving.
 
 `PortRun` runs `ManifestAgreement` on every port, and a run whose resolution roots lie outside its
 own source root — the structural signature of a dependent — with no base declared is itself a fatal

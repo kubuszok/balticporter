@@ -1113,7 +1113,7 @@ sge.gltf.scene3d.scene.SceneModel	sge.gltf.scene3d.scene.SceneModel#dispose()	de
 sge.gltf.scene3d.scene.SceneModel	sge.gltf.scene3d.scene.SceneModel#lights	val	d77b1cd7f1525241
 sge.gltf.scene3d.scene.SceneModel	sge.gltf.scene3d.scene.SceneModel#model	val	be267f5ccf71f7a1
 sge.gltf.scene3d.scene.SceneModel	sge.gltf.scene3d.scene.SceneModel#name	val	998d02440c0ede9f
-sge.gltf.scene3d.scene.SceneRenderableSorter	sge.gltf.scene3d.scene.SceneRenderableSorter	class	683357ddeaf5099d
+sge.gltf.scene3d.scene.SceneRenderableSorter	sge.gltf.scene3d.scene.SceneRenderableSorter	class	3f003d20eed581a2
 sge.gltf.scene3d.scene.SceneRenderableSorter	sge.gltf.scene3d.scene.SceneRenderableSorter#camera	val	0128e71759ea58b7
 sge.gltf.scene3d.scene.SceneRenderableSorter	sge.gltf.scene3d.scene.SceneRenderableSorter#compare(Renderable,Renderable)	def	6a4c01a0fc9ae47c
 sge.gltf.scene3d.scene.SceneRenderableSorter	sge.gltf.scene3d.scene.SceneRenderableSorter#compareIdentity(Object,Object)	def	b28bc45ec72060ad

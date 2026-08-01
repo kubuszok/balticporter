@@ -1,4 +1,4 @@
-# balticporter port map	schema=3	module=ashley-test	engine=balticporter/0.1.0-SNAPSHOT	sources=4763fb93c6d8686a	files=18	policy=1983de129020083d
+# balticporter port map	schema=3	module=ashley-test	engine=balticporter/0.1.0-SNAPSHOT	sources=4763fb93c6d8686a	files=18	policy=fe41cbfd44c74a87
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.badlogic.ashley.core.ComponentClassFactory	sge.ecs.ComponentClassFactory	Renamed	-		0		form=class parents=java.lang.ClassLoader primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.ashley.core.ComponentOperationHandlerTests	sge.ecs.ComponentOperationHandlerTests	Renamed	-		0		companion=yes form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public statics=BooleanInformerMock,ComponentSpy
@@ -85,7 +85,7 @@ type	sge.ecs.systems.SortedIteratingSystemTest$ComponentC	sge.ecs.systems.Sorted
 type	sge.ecs.systems.SortedIteratingSystemTest$IndexComponent	sge.ecs.systems.SortedIteratingSystemTest$IndexComponent	Ported	-		0		form=class parents=sge.ecs.Component primary=() primaryKind=unique-root primaryVis=private[SortedIteratingSystemTest]
 type	sge.ecs.systems.SortedIteratingSystemTest$IteratingComponentRemovalSystem	sge.ecs.systems.SortedIteratingSystemTest$IteratingComponentRemovalSystem	Ported	-		0		form=class parents=sge.ecs.systems.SortedIteratingSystem primary=() primaryKind=unique-root primaryVis=public
 type	sge.ecs.systems.SortedIteratingSystemTest$IteratingRemovalSystem	sge.ecs.systems.SortedIteratingSystemTest$IteratingRemovalSystem	Ported	-		0		form=class parents=sge.ecs.systems.SortedIteratingSystem primary=() primaryKind=unique-root primaryVis=public
-type	sge.ecs.systems.SortedIteratingSystemTest$OrderComparator	sge.ecs.systems.SortedIteratingSystemTest$OrderComparator	Ported	-		0		form=class parents=java.util.Comparator primary=() primaryKind=unique-root primaryVis=private[SortedIteratingSystemTest]
+type	sge.ecs.systems.SortedIteratingSystemTest$OrderComparator	sge.ecs.systems.SortedIteratingSystemTest$OrderComparator	Ported	-		0		form=class parents=scala.math.Ordering primary=() primaryKind=unique-root primaryVis=private[SortedIteratingSystemTest]
 type	sge.ecs.systems.SortedIteratingSystemTest$OrderComponent	sge.ecs.systems.SortedIteratingSystemTest$OrderComponent	Ported	-		0		form=class parents=sge.ecs.Component primary=(String,int) primaryKind=unique-root primaryVis=public
 type	sge.ecs.systems.SortedIteratingSystemTest$SortedIteratingSystemMock	sge.ecs.systems.SortedIteratingSystemTest$SortedIteratingSystemMock	Ported	-		0		form=class parents=sge.ecs.systems.SortedIteratingSystem primary=(Family) primaryKind=unique-root primaryVis=public
 type	sge.ecs.systems.SortedIteratingSystemTest$SpyComponent	sge.ecs.systems.SortedIteratingSystemTest$SpyComponent	Ported	-		0		form=class parents=sge.ecs.Component primary=() primaryKind=unique-root primaryVis=private[SortedIteratingSystemTest]
