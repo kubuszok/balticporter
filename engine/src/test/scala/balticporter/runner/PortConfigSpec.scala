@@ -1,6 +1,6 @@
 package balticporter.runner
 
-import balticporter.core.{FrontendConfig, PortManifest, Provenance, RuntimeMode}
+import balticporter.core.{FrontendConfig, ManifestAgreement, PortManifest, Provenance, RuntimeMode}
 import balticporter.tir.{ConfigError, RuleScope}
 import balticporter.transform.{CollectionsTransform, MutableParamsTransform, TestFrameworkTransform,
   TypeRedirectTransform}
@@ -302,6 +302,63 @@ class PortConfigSpec extends munit.FunSuite:
            |  "a.Disposable" = { to = "java.lang.AutoCloseable"
            |                     memberRenames { dispose = "close" } }  """.stripMargin),
       "a.B->c.D,a.Disposable->java.lang.AutoCloseable[dispose=close]")
+  }
+
+  test("`base` composes a phase's POLICY through the SAME fold — no second truth on the conf path") {
+    // D9 noted the hole was identical on both paths, so the fix has to be: `base = "…"` IS
+    // `extendedBy`, and the merge lives on the manifest rather than in the run (DESIGN.md §8.13).
+    // Nothing was added to `PortConfig` for this test to pass, which is the point of it.
+    val base =
+      """label = "base"
+        |input  { sourceRoot = "java" }
+        |output { portRoot = "out", sourceSet = "main" }
+        |manifest {
+        |  name = "base"
+        |  governs = ["com.demo"]
+        |  dropTypes = ["com.demo.Gone"]
+        |  surface = [ { transform = "type-redirect", redirects { "com.demo.Gone" = "port.Kept" } } ]
+        |}
+        |""".stripMargin
+    val f = fixture(
+      """label = "dependent"
+        |base  = "base.conf"
+        |input  { sourceRoot = "java" }
+        |output { portRoot = "out", sourceSet = "test" }
+        |manifest { name = "dep"
+        |  surface = [ { transform = "type-redirect", redirects { "other.Legacy" = "dep.Own" } } ] }
+        |""".stripMargin, Map("base.conf" -> base))
+
+    val m = PortConfig.load(f).manifest.get
+    assertEquals(m.effectiveSurface.map(_.name), List("type-redirect"))
+    assertEquals(
+      m.effectiveSurface.collectFirst { case t: TypeRedirectTransform => t.surfaceFingerprint }.get,
+      "com.demo.Gone->port.Kept,other.Legacy->dep.Own")
+    assertEquals(m.surfaceFold.refusals, Nil)
+    assertEquals(m.surfaceFold.ownKeys, Map("type-redirect" -> Set("other.Legacy")))
+  }
+
+  test("…and two confs that DISAGREE about one key are refused there too") {
+    val base =
+      """label = "base"
+        |input  { sourceRoot = "java" }
+        |output { portRoot = "out", sourceSet = "main" }
+        |manifest { name = "base"
+        |  surface = [ { transform = "type-redirect", redirects { "a.B" = "c.D" } } ] }
+        |""".stripMargin
+    val f = fixture(
+      """label = "dependent"
+        |base  = "base.conf"
+        |input  { sourceRoot = "java" }
+        |output { portRoot = "out", sourceSet = "test" }
+        |manifest { name = "dep"
+        |  surface = [ { transform = "type-redirect", redirects { "a.B" = "c.OTHER" } } ] }
+        |""".stripMargin, Map("base.conf" -> base))
+
+    val m = PortConfig.load(f).manifest.get
+    assertEquals(m.effectiveSurface.size, 2, "a refused merge leaves the pre-merge pipeline")
+    val fs = ManifestAgreement.check(Some(m), Nil, foreignRoots = true)
+    assertEquals(fs.map(_.kind), List(ManifestAgreement.Kind.SurfaceDivergence))
+    assert(clue(fs.head.detail).contains("c.OTHER"))
   }
 
   test("a misspelt key INSIDE a redirect entry fails the run — the shape probe is not a read") {

@@ -127,24 +127,39 @@ the INJECTION is a build artefact, and exactly one module must ship each replace
 dependent that copied it would emit a second definition of the same FQN. Every check that asks "is
 this replaced?" follows the same line and holds a module to its OWN drops only.
 
-**`surface` is the one inherited row that does NOT compose — and that closes a base manifest to a new
-(b) PHASE once a dependent constructs the same one.** `extendedBy` unions the drops and the renames key by key; it
-CONCATENATES the phases and deduplicates them by IDENTITY, and a phase's policy is a constructor
-argument, so two instances holding two halves of one table never merge. One phase NAME carrying two
-configurations in one effective pipeline is a fatal `SurfaceDivergence` whether the two tables
-overlap or not. And the obvious escape — hand the dependent's entries to the base so there is one
-instance — is closed from the other side: the base manifest a dependent declares must be the base
-*as the base ran it*, or its published port map is `BaseMapStale` and every base-surface question
-turns fatal. **So a (b) phase configured in a base manifest is a phase no dependent may ever
-configure**, and adding one to a base that already has dependents using it is a change that cannot
-land. Measured, both halves, on the libGDX base's first `TypeRedirectTransform`
-(`ENGINE-LIMITS.md` D9).
+**`surface` composes only where the PHASE says how.** `extendedBy` unions the drops and the renames
+key by key; it cannot do that to a `surface`, because a phase's policy is a constructor argument and
+two instances holding two halves of one table are not a map. So a parameterised phase declares
+`MergeablePolicy` — *how MY table composes with a nearer manifest's instance of me* — and
+`PortManifest.surfaceFold` folds same-name phases through it, at the base's pipeline position
+(`DESIGN.md` §8.13). Four things that follow, none of them optional:
 
-**It is an INSTANCE count, not a policy count** — the distinction that decides whether a base policy
-can land at all. New policy on a phase the base ALREADY carries composes fine: there is only ever
-one instance, the dependents inherit that one value, and their effective surfaces agree by
-construction. So the question before writing a base policy is not "is this a (b) phase?" but *does
-any dependent CONSTRUCT this phase?* — one grep over the ports. Measured the other way round on
+- **the merge is the PHASE's answer, never the engine's.** A `Map` of independent keys unions; an
+  ordered list does not; a first-match table does not; a `RuleScope` composes one way for `Only` and
+  the opposite way for `Everywhere`. A phase that declares nothing keeps the pre-merge behaviour —
+  two instances stay in the pipeline and the pair is a fatal `SurfaceDivergence`, which is the right
+  answer for a composition nobody has designed;
+- **a refusal is a finding, never an approximation.** Same key, different value stays two instances
+  and is reported with the phase's own sentence for why;
+- **the merge lives in the DEPENDENT's pipeline only.** The base manifest a dependent declares must
+  stay the base *as the base ran it* or its published map is `BaseMapStale` and every base-surface
+  question turns fatal — which is why the fold runs on `policyChain` (a dependent's chain contains
+  its base; a base's does not contain its dependent) and not in the run;
+- **a merged-in key may not edit what a base EMITS.** A subject inside a base's `governs` claim that
+  the base neither drops nor already declares is a fatal `SurfaceIntrusion`: a dependent re-shaping
+  the shared surface produces two ports that each compile alone and cannot compile together. A
+  subject the base DROPS is the allowed and ordinary case — nothing stands at that name in the
+  base's output.
+
+Measured on the libGDX base's first `TypeRedirectTransform`, which is what closed `ENGINE-LIMITS.md`
+D9.
+
+**And what a merge is even needed FOR is an INSTANCE count, not a policy count** — the distinction
+that decides how a base policy lands. New policy on a phase the base ALREADY carries reaches no fold
+at all: there is only ever one instance, the dependents inherit that one value, and their effective
+surfaces agree by construction. So the first question before writing a base policy is still not "is
+this a (b) phase?" but *does any dependent CONSTRUCT this phase?* — one grep over the ports; the
+merge contract above is what answers the second case, and only that one. Measured the other way round on
 libGDX's base `CollectionsTransform` gaining a `retarget` table: `manifest` 0 on all thirteen ports,
 with the fingerprint change reaching nine published port maps and nothing else moving.
 

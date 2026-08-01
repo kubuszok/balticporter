@@ -3199,6 +3199,15 @@ folds `merge(merge(a,b),c)`, so the absorbed input at `c`'s last step IS the fin
 published. The fold records every absorbed fingerprint for that reason, and `SurfaceMissing`'s
 "present in the base, absent here" test reads `mySurface ++ absorbed` rather than `mySurface`.
 
+**A module that inherits NOTHING has no fold to read, so the same question is asked of the phase.**
+`mirroring` states the shared policy in full and is checked against the base rather than inheriting
+it (`PortManifest.inherit`), so a mirroring module that writes ONE instance holding both tables has
+no `absorbed` entry and would be `SurfaceMissing` for a phase it demonstrably runs. The containment
+test is `bases.mergedWith(mine)` leaving `mine`'s fingerprint unchanged — mine already holds
+everything the base's does — asked through the phase's own `mergedWith` precisely so there is no
+second notion of containment to keep in step with the first. A module that restates the base's table
+WRONGLY still fails, on the key it got wrong, because the merged fingerprint then differs.
+
 `surfaceFold` is a **`lazy val`**, and that is not an optimisation. A merged phase is a NEW instance
 holding a run's mutable binding state; recomputed per call, the instance the pipeline ran would not
 be the instance whose `policyReport` the run reads — the same failure `PortManifest.substitutions`

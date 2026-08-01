@@ -176,13 +176,18 @@ final case class PortManifest(
       effectiveSubPackages.map((k, v) => k -> s"subPackages=$v") ++
       effectiveFlattenNestedTypes.map(k => k -> "flattenNestedTypes")
 
-  /** base phases first, then this module's own. Deduplicated by IDENTITY, so inheriting one
-    * manifest through two paths runs its phases once, while two distinct instances of the same
-    * phase class stay distinct — that pair is drift, and [[ManifestAgreement]] names it. */
-  def effectiveSurface: List[Phase] =
-    policyChain.flatMap(_.surface).foldLeft(List.empty[Phase]) { (acc, p) =>
-      if acc.exists(_ eq p) then acc else acc :+ p
-    }
+  /** base phases first, then this module's own — with same-name phases folded through their
+    * declared [[MergeablePolicy]] where they declare one. See [[surfaceFold]] for everything the
+    * fold decides; this is its `phases`, which is what a run's pipeline is built from. */
+  def effectiveSurface: List[Phase] = surfaceFold.phases
+
+  /** THE fold: this manifest's effective pipeline, and everything deciding it produced.
+    *
+    * A `lazy val`, and for [[substitutions]]' reason rather than for speed: a MERGED phase is a new
+    * instance holding a run's mutable binding state, so recomputing the fold would leave the run
+    * reading the `policyReport` of an instance the pipeline never ran (DESIGN.md §8.13).
+    */
+  lazy val surfaceFold: SurfaceFold = SurfaceFold.of(policyChain, this)
 
   /** The [[Substitutions]] value this run hands the frontend: every drop in the chain, and only
     * THIS module's injections.

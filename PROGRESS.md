@@ -2446,14 +2446,21 @@ Compile unchanged everywhere (libGDX 0, gltf 7, noise4j 2, the last two pre-exis
 check count identical on all thirteen ports; every suite unchanged (gdx-test 217/4, ashley 108/2
 plus its two pre-existing skips, anim8 23, vfx 64, simple-graphs 16, screens 16).
 
-### 11.15 P1 — `Disposable → AutoCloseable`: BLOCKED on `ENGINE-LIMITS.md` D9, with the blast measured
+### 11.15 P1 — `Disposable → AutoCloseable`: UNBLOCKED by M5m, with the blast already measured
 
 The policy is three lines and it is CORRECT — measured end to end on libGDX core and its suite
-before the block was found, and reverted, not baselined. **What stops it is not the policy: it is
-that the libGDX base manifest cannot gain ANY new (b) phase while two dependents configure the same
-one** (D9). `ashley` and `screens` each report `1 fatal SurfaceDivergence`; the escape route through
-the base manifest is closed by D1's published-map contract, measured as `BaseMapStale` → 309 fatal
-base-surface gaps. Both numbers, and why there is no third place to put the entry, are in D9.
+before the block was found, and reverted, not baselined. **What stopped it was not the policy: it
+was that the libGDX base manifest could not gain ANY new (b) phase while two dependents configured
+the same one** (D9). `ashley` and `screens` each reported `1 fatal SurfaceDivergence`; the escape
+route through the base manifest was closed by D1's published-map contract, measured as
+`BaseMapStale` → 309 fatal base-surface gaps. Both numbers, and why there was no third place to put
+the entry, are in D9.
+
+**D9 is now CLOSED by the M5m merge contract** (`DESIGN.md` §8.13): the base's and each dependent's
+`TypeRedirectTransform` fold into one instance holding both tables, at the base's pipeline position,
+with the base's own published `policy=` digest unchanged. Both dependents' added subjects are types
+the base DROPS, which is what the `governs` screen requires. **P1 re-issues unchanged**, and the
+numbers below are the replay — do not re-derive them.
 
 The numbers below are kept so the re-issue does not re-derive them. They are what the run produced
 with the three pieces in place — `TypeRedirectTransform("com.badlogic.gdx.utils.Disposable" ->

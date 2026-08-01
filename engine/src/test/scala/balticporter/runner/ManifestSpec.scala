@@ -3,7 +3,7 @@ package balticporter.runner
 import balticporter.core.*
 import balticporter.core.ManifestAgreement.Kind
 import balticporter.tir.RuleScope
-import balticporter.transform.{ClassTableTransform, CollectionsTransform, MutableParamsTransform, StaticForwarderTransform}
+import balticporter.transform.{ClassTableTransform, CollectionsTransform, MutableParamsTransform, StaticForwarderTransform, TypeRedirectTransform}
 
 import java.nio.file.{Files, Path}
 import scala.jdk.CollectionConverters.*
@@ -234,6 +234,31 @@ class ManifestSpec extends munit.FunSuite:
     val msg = caught(runDependent(root, base, dep, drift))
     assert(clue(msg).contains("SurfaceMissing"))
     assert(clue(msg).contains("java-collections->scala"))
+  }
+
+  test("MERGE: a base and a dependent that each configure a `type-redirect` now COMPOSE, and run") {
+    // `ENGINE-LIMITS.md` D9's first row, from the other side: before the merge contract this pair
+    // was 1 fatal `SurfaceDivergence` and the base could not gain the phase at all. Both keys name
+    // types the base DROPS, which is what the `governs` screen requires of an added subject
+    // (DESIGN.md §8.13).
+    val (root, base, dep) = twoModules()
+    val core = PortManifest("core", governs = Set("com.demo"),
+      dropTypes = Set("com.demo.Widget", "com.demo.Gadget"),
+      surface   = List(new TypeRedirectTransform(Map("com.demo.Widget" -> "com.demo2.MyWidget"))))
+    val ext = core.extendedBy(PortManifest("ext",
+      surface = List(new TypeRedirectTransform(Map("com.demo.Gadget" -> "com.demo2.MyGadget")))))
+
+    // ONE phase in the effective pipeline, holding BOTH tables
+    assertEquals(ext.effectiveSurface.map(_.name), List("type-redirect"))
+    assertEquals(
+      ext.effectiveSurface.collectFirst { case t: TypeRedirectTransform => t.redirects }.get,
+      Map("com.demo.Widget" -> "com.demo2.MyWidget", "com.demo.Gadget" -> "com.demo2.MyGadget"))
+
+    val d = runDependent(root, base, dep, ext)
+    assert(clue(disagreements(d)).forall(!_.kind.fatal))
+    // …and the merged table is the one that RAN: this module's reference to the base's dropped type
+    // is re-pointed, from an entry the BASE declared
+    assert(clue(Files.readString(d.outDir.resolve("com/demo2/Uses.scala"))).contains("com.demo2.MyWidget"))
   }
 
   test("MISMATCH: one phase, twice, configured differently") {

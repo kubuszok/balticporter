@@ -2779,7 +2779,7 @@ Two rules that fall out:
 *Fix kind: (a) engine — the mechanism was incomplete, not the policy. Done; pinned by
 `TypeRedirectTransformSpec`.*
 
-### D9. A (b) phase configured in a BASE manifest is one no DEPENDENT may ever configure — and adding one to a base that has dependents cannot land. **P1 blocked, 2 ports fatal**
+### D9. A (b) phase configured in a BASE manifest is one no DEPENDENT may ever configure — and adding one to a base that has dependents cannot land. **P1 blocked, 2 ports fatal** — **CLOSED by M5m**
 
 `PortManifest.extendedBy` composes every row §1.5 calls shared, and it composes them two different
 ways. `dropTypes`, `dropMethods` and the rename maps are unioned KEY BY KEY. `surface` is a
@@ -2806,7 +2806,9 @@ The second row is not a detail of that attempt, it is a PROOF: D1's contract is 
 manifest a dependent declares is the base *as the base ran it*, and the base runs ONCE and publishes
 ONE map. N dependents each wanting their own entry cannot all agree with one map. So the base
 manifest is structurally not a home for a dependent's policy, and the dependent's own surface is
-closed by `SurfaceDivergence`. There is no third place.
+closed by `SurfaceDivergence`. There was no third place — until M5m made the two instances ONE,
+which is the closure at the end of this entry; both statements above still hold of the manifests, and
+what changed is that the pipeline no longer has two of the phase to disagree about.
 
 Note the `.conf` path has the identical hole — `base = "…"` is `base.extendedBy(own)`, and a base
 conf and a dependent conf that both declare `redirects { }` build two instances exactly as the
@@ -2835,6 +2837,24 @@ same-name phases through it, and `SurfaceDivergence` then fires only where a mer
 key, different value. Every parameterised phase has to declare its own answer, because the merge is
 not always a union (an ordered list, a first-match table and a set compose differently). That is a
 mechanism commit with its own default-off gate, and it BLOCKS Stage P's P1 until it lands.*
+
+**CLOSED by M5m** — `MergeablePolicy` (`api`), `PortManifest.surfaceFold`, and
+`TypeRedirectTransform`'s own merge declaration; `DESIGN.md` §8.13 is the as-built. The two rows
+above are what the mechanism had to satisfy and both do: the FIRST now composes into ONE phase
+holding both tables (`ManifestSpec`'s two-module fixture runs it end to end), and the SECOND is
+preserved by WHERE the fold runs — `surfaceFold` folds `policyChain`, so a base's own
+`effectiveSurface`, and therefore the `policy=` digest its map publishes, is byte-identical before
+and after. Only the dependent's EFFECTIVE pipeline holds the merged phase.
+
+Two things this did NOT relax, both negative-tested (`SurfaceFoldSpec`): a phase that declares no
+merge is the same fatal `SurfaceDivergence` it always was — the engine does not guess how an ordered
+list or a first-match table composes — and a merged-in key naming a subject inside a base's
+`governs` that the base EMITS is a new fatal `SurfaceIntrusion`, because a dependent re-shaping the
+shared surface is the drift this whole page exists to stop. A subject the base DROPS is allowed and
+is the ordinary case; that is the criterion, not the prefix, and a bare prefix test would have
+refused `ashley`'s `ReflectionPool` redirect, which is the one port the mechanism exists for.
+
+Stage P's P1 is unblocked and re-issues unchanged; `PROGRESS.md` §11.15 keeps its numbers.
 
 ---
 

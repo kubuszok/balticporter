@@ -1,6 +1,6 @@
 package balticporter.transform
 
-import balticporter.core.{PolicyFinding, PolicyIssue, PolicyReport, PolicySource, SurfacePolicy}
+import balticporter.core.{MergeablePolicy, PolicyFinding, PolicyIssue, PolicyReport, PolicySource}
 import balticporter.tir.*
 
 
@@ -73,10 +73,10 @@ import balticporter.tir.*
   * run and the target compiler stays the gate, exactly as it is for the redirect's shape.
   */
 final class TypeRedirectTransform(
-    redirects: Map[String, String] = Map.empty,
-    memberRenames: Map[String, Map[String, String]] = Map.empty,
-    external: ExternalSurface = ExternalSurface.default,
-) extends Phase, PolicySource, SurfacePolicy, PolicyBound:
+    val redirects: Map[String, String] = Map.empty,
+    val memberRenames: Map[String, Map[String, String]] = Map.empty,
+    val external: ExternalSurface = ExternalSurface.default,
+) extends Phase, PolicySource, MergeablePolicy, PolicyBound:
   def name: String = "type-redirect"
 
   /** What the RUN resolved each declared SOURCE type to, before the pipeline started (§8.1).
@@ -154,6 +154,54 @@ final class TypeRedirectTransform(
       case Nil => s"$f->$t"
       case rs  => s"$f->$t[" + rs.map((m, n) => s"$m=$n").mkString(",") + "]"
   }.mkString(",")
+
+  /** THE MERGE CONTRACT (DESIGN.md §8.13). Both tables are keyed by INDEPENDENT upstream FQNs, so a
+    * key only one side holds is an addition, a key both hold with the same value is agreement, and a
+    * key both hold with DIFFERENT values is the refusal — two answers for one type is a rewrite
+    * whose outcome depends on which manifest was read.
+    *
+    * `external` is UNIONED and is not part of the refusal, because it is not policy: it is what this
+    * engine happens to know about a platform type's members, and two ports that know different
+    * amounts about `java.lang.AutoCloseable` still emit the same signatures. It is not in
+    * [[surfaceFingerprint]] for the same reason.
+    *
+    * `added` is the SUBJECT side of what the later instance contributes — redirect sources it adds,
+    * plus the owner of any member rename it adds. Those are the names a dependent could use to
+    * re-shape a base's emitted surface, which is what `SurfaceFold` screens against `governs`.
+    */
+  def mergedWith(later: Phase): Either[String, MergeablePolicy.Merged] = later match
+    case o: TypeRedirectTransform =>
+      val typeClash = (redirects.keySet & o.redirects.keySet).filter(k => redirects(k) != o.redirects(k))
+      // reported as OWNER and SEGMENT rather than as a rebuilt `owner#member` string: the member-key
+      // grammar has exactly one renderer (§8.1) and a refusal message is no reason for a second.
+      val memberClash = for
+        (t, rs)   <- o.memberRenames.toList
+        (mem, to) <- rs
+        if memberRenames.getOrElse(t, Map.empty).get(mem).exists(_ != to)
+      yield (t, mem)
+      if typeClash.nonEmpty || memberClash.nonEmpty then
+        Left(
+          (typeClash.toList.sorted.map(k =>
+             s"""both modules redirect "$k", to "${redirects(k)}" and "${o.redirects(k)}"""") ++
+            memberClash.sorted.map((t, mem) =>
+              s"""both modules rename the member `$mem` of "$t", to two different names"""))
+            .mkString("; ") +
+            " — two answers for one key is a rewrite whose outcome depends on which manifest was read")
+      else
+        val renames = o.memberRenames.foldLeft(memberRenames) { (acc, e) =>
+          acc.updated(e._1, acc.getOrElse(e._1, Map.empty) ++ e._2)
+        }
+        val addedRenameOwners = o.memberRenames.collect {
+          case (t, rs) if rs.exists((m, n) => !memberRenames.getOrElse(t, Map.empty).get(m).contains(n)) => t
+        }.toSet
+        Right(MergeablePolicy.Merged(
+          new TypeRedirectTransform(
+            redirects     = redirects ++ o.redirects,
+            memberRenames = renames,
+            external      = ExternalSurface(external.known ++ o.external.known)),
+          (o.redirects.keySet -- redirects.keySet) ++ addedRenameOwners))
+    case other =>
+      Left(s"`${other.name}` is not a `TypeRedirectTransform`, so there is no table to compose")
 
   private var mapping: Map[SymId, SymId]     = Map.empty
   private var memberTwins: Map[SymId, SymId] = Map.empty

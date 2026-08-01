@@ -156,11 +156,20 @@ object ManifestAgreement:
       "§1(b) PER-LIBRARY: a phase that shapes emitted signatures ran in the base module and not " +
         "here, so this module re-derives the shared surface's signatures differently from the " +
         "module it compiles against. Add the phase to this manifest's `surface`, or inherit it.")
-    /** two instances of one phase, configured differently, in one effective pipeline. */
+    /** two instances of one phase, configured differently, in one effective pipeline — and the
+      * merge that would have composed them was declined or refused. */
     case SurfaceDivergence extends Kind(true,
       "§1(b) PER-LIBRARY: one phase appears twice in the effective pipeline with different " +
-        "policy — a second, differently-configured instantiation, which is exactly the drift " +
-        "CLAUDE.md §1 warns about. Share the base's instance instead of building a new one.")
+        "policy and the two could not be MERGED — either the phase declares no `MergeablePolicy` " +
+        "(that is §1(a), engine: give it one) or its own merge refused the pair, which is the " +
+        "drift CLAUDE.md §1 warns about (§1(b): reconcile the two values, or share one instance).")
+    /** a dependent's merged-in key edits a namespace a base emits. */
+    case SurfaceIntrusion extends Kind(true,
+      "§1(b) PER-LIBRARY: this module adds policy for a type INSIDE a base's declared namespace " +
+        "that the base emits mechanically, so the merged pipeline would re-shape the SHARED " +
+        "surface from the dependent's side and the two ports could not compile together. Move the " +
+        "entry to the base's manifest, or (if the type is genuinely not part of the shared " +
+        "surface) drop it there.")
     /** a resolution-root type the base drops that this run did not tag. */
     case TagMissing extends Kind(true,
       "§1(b) PER-LIBRARY: the base module substitutes this type, and this run translated it as an " +
@@ -340,20 +349,48 @@ object ManifestAgreement:
           "the base declares this type's move a DELIBERATE boundary split and this module does not, " +
             "so the same rename is performed there and refused here"))
 
-      val surfaceGap = b.effectiveSurface.map(PortManifest.fingerprint).distinct
-        .filterNot(mySurface.contains).map(f =>
+      // …or ABSORBED by a merge, or SUBSUMED by one of this module's own instances. A base phase
+      // this module's fold composed with its own is present in the pipeline — inside the merged
+      // phase — and reading `mySurface` alone would report the very composition the merge contract
+      // exists to allow (DESIGN.md §8.13). The promise that makes this sound is the implementor's:
+      // a merge preserves both inputs' behaviour on their own keys, or refuses.
+      //
+      // `subsumes` is the same question asked of a module that INHERITS NOTHING (`mirroring`) and
+      // therefore has no fold to read: does merging the base's instance into mine change mine? If
+      // not, mine already holds everything the base's does. Asked through the phase's own
+      // `mergedWith`, so there is no second notion of containment to keep in step with the first.
+      def subsumes(bp: balticporter.tir.Phase): Boolean = bp match
+        case mergeable: MergeablePolicy =>
+          m.effectiveSurface.filter(_.name == bp.name).exists(mine =>
+            mergeable.mergedWith(mine).exists(r =>
+              PortManifest.fingerprint(r.phase) == PortManifest.fingerprint(mine)))
+        case _ => false
+      val surfaceGap = b.effectiveSurface.distinct
+        .filterNot(p => mySurface.contains(PortManifest.fingerprint(p)) ||
+          m.surfaceFold.absorbed.contains(PortManifest.fingerprint(p)) || subsumes(p))
+        .map(PortManifest.fingerprint).distinct.map(f =>
           Finding(Kind.SurfaceMissing, b.name, f, "signature-affecting phase present in the base's surface, absent from this module's"))
 
       missingTypes ++ missingMethods ++ extraTypes ++ extraMethods ++ renameDiff ++ renameExtra ++
         typeDiff ++ typeExtra ++ splitDiff ++ surfaceGap
     }
 
-    // one phase NAME carrying two different policies in one pipeline is drift regardless of which
-    // manifest each came from, so it is checked once over the effective surface.
+    // One phase NAME carrying two different policies in one pipeline is drift regardless of which
+    // manifest each came from, so it is checked once over the effective surface. Two instances
+    // survive the fold only where the merge was DECLINED or REFUSED, so the fold's own sentence for
+    // why is attached — and an INTRUSION is reported as itself, because the reader's next action is
+    // a different one (DESIGN.md §8.13). Read off the pipeline and not off the refusal list, so a
+    // phase that never declared a merge is detected exactly as it was before merging existed.
+    val whyRefused = m.surfaceFold.refusals.groupBy(_.phase)
     val divergent = m.effectiveSurface.groupBy(_.name).toList.sortBy(_._1).collect {
       case (n, ps) if ps.map(PortManifest.fingerprint).distinct.size > 1 =>
-        Finding(Kind.SurfaceDivergence, m.name, n,
-          ps.map(PortManifest.fingerprint).distinct.sorted.mkString(" vs "))
+        val fps  = ps.map(PortManifest.fingerprint).distinct.sorted.mkString(" vs ")
+        val here = whyRefused.getOrElse(n, Nil)
+        here.find(_.cause == SurfaceFold.Cause.Intrusion) match
+          case Some(r) => Finding(Kind.SurfaceIntrusion, m.name, n, s"$fps — ${r.why}")
+          case scala.None =>
+            Finding(Kind.SurfaceDivergence, m.name, n,
+              here.headOption.map(r => s"$fps — ${r.why}").getOrElse(fps))
     }
 
     val neverFired = m.inheritedKeysNeverFired(fired).toList.sortBy(_._1).flatMap { (base, keys) =>

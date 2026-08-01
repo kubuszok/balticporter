@@ -693,7 +693,22 @@ final case class PortRun(
     // frontend consulted it; it comes from the same binder every phase reads, which also
     // distinguishes an EXTERNAL-only match from a typo, and says WHY. `policy-binding` measured
     // the two answers against each other on all thirteen lanes before this replaced that one.
-    val ownPhases: List[Phase] = manifest.map(_.surface).getOrElse(phases)
+    // …and a MERGED phase is read through the instance that actually RAN. A phase whose policy the
+    // fold composed with a base's (DESIGN.md §8.13) leaves this module's own declared instance
+    // bound to nothing at all, so reading that one reports NOTHING — a typo'd key silently
+    // no-oping, which is the one thing `PolicyReport` exists to close. Resolve each own-declared
+    // phase to the effective instance that absorbed it; with no merge every phase resolves to
+    // itself and this is the identity.
+    val ownPhases: List[Phase] = manifest match
+      case Some(m) =>
+        val effective = m.effectiveSurface
+        m.surface.map(p =>
+          if effective.exists(_ eq p) then p else effective.find(_.name == p.name).getOrElse(p))
+      case scala.None => phases
+    // The merged instance holds the BASE's keys too, and a §1(b) finding must name a key this
+    // module can fix — the same rule the drops below follow. Scoped by the SUBJECT the fold
+    // recorded this manifest as contributing; absent for an unmerged phase, which means no filter.
+    val ownSurfaceKeys: Map[String, Set[String]] = manifest.map(_.surfaceFold.ownKeys).getOrElse(Map.empty)
     val ownKeys: Set[String]   = manifest.map(_.ownKeys).getOrElse(subs.keys)
     val ownPhaseNames: Set[String] = ownPhases.map(_.name).toSet
     val dropFindings = PolicyReport(PolicyReport.fromBindings(translated.binder.bindings).findings
@@ -708,8 +723,10 @@ final case class PortRun(
       case scala.None => typeRenames.keySet ++ subPackages.keySet ++ flattenNestedTypes ++ allowPackageSplit
     val renameFindings = PolicyReport(
       renamePhase.toList.flatMap(_.policyReport.findings).filter(f => ownRenameKeys(f.key)))
-    val policy = dropFindings ++ renameFindings ++
+    val policy = dropFindings ++ renameFindings ++ PolicyReport(
       PolicyReport.from(ownPhases.collect { case p: PolicySource if ownPhaseNames(p.name) => p })
+        .findings.filter(f =>
+          ownSurfaceKeys.get(f.phase).forall(_.contains(balticporter.core.MergeablePolicy.subjectOf(f.key)))))
     CheckReport.record(PortRun.Policy, policy.findings.map { f =>
       CheckReport.Finding(PortRun.Policy, f.issue.label, f.phase, f.setting, 0, s"${f.key} — ${f.detail}")
     })
