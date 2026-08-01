@@ -2563,6 +2563,30 @@ The 6 hand-written suite sites the enablement must fix are `ScreenmanagerSuite` 
 `extends Disposable` — and two calls) and `VfxFrameBufferSuite`'s one call on
 `VfxFrameBufferQueue implements Disposable`.
 
+#### The checkpoint-4 audit of the fold — three holes, all of them silent, all closed
+
+Found by adversarial review of the delivered mechanism, and every one of them is a screen or a
+filter that could not fire rather than one that fired wrongly — which is why no count in the tables
+above had moved for any of them. **All thirteen ports re-measured after the three: every check count
+identical, 0 members changed on every port, every suite unchanged.** They are recorded here because
+the numbers say something the fix messages cannot — a corpus that cannot exercise a screen is not
+evidence that the screen works.
+
+| what could not fire | how the corpus hid it | closed by |
+|---|---|---|
+| `SurfaceIntrusion` ran only inside the merge arm, so a dependent declaring a phase NO base has was appended unscreened — one instance, so no divergence; no merge, so no `added` | both consumers of `TypeRedirectTransform` merge with the base's instance, and the one whose subject is inside `com.badlogic.gdx` (ashley) is admitted by the drop | `MergeablePolicy.subjects`, screened on the no-counterpart arm; `ManifestAgreement.statik` derives the finding from any refusal the divergence arm did not report |
+| a member-rename clash compared MAP KEYS, so `dispose -> close` merged cleanly with `dispose() -> shutdown` and the drift landed as `MemberRenamer`'s NON-FATAL two-claimants refusal | no port spells one member two ways | both sides through `MemberKey.parseIn`, refusal keyed on the parsed NAME |
+| the run's own-keys filter reads a finding's subject off its KEY, and member-level `Malformed` findings were keyed by the bare SEGMENT — so a DEPENDENT's typo'd `memberRenames` entry was dropped from its own report | every corpus key is well-formed, so the filter never had one to drop | keyed `owner#member` (`MemberKey.spell`), plus two run-level specs over a real merged pipeline |
+
+And a fourth, in the criterion rather than the reach: **the intrusion screen admitted every DROPPED
+subject, where the honest test is "nothing stands at that name"**. A drop WITH an injection ships a
+file at that FQN and that shim is shared surface; a dependent re-pointing away from it produces two
+ports that cannot compile together. `PortManifest.shipsInjectionAt` answers it through `renamed`,
+because the drop key is upstream and the shim's FQN is emitted. **Measured before assuming**:
+libGDX's overrides hold `Json`, `Os`, `Pools`, `SharedLibraryLoader`, `ReflectionException` and
+`AssetTypeRegistry` and **no `ReflectionPool`**, so ashley — the one production case — is admitted
+for the honest reason rather than by the approximation, and `manifest` stays 0 on every port.
+
 ### 11.16 P2 — `Comparator → Ordering`: DELIVERED, and what a retarget costs
 
 The libGDX base manifest's one `retarget` entry —
@@ -2631,6 +2655,29 @@ classes changed their emitted declaration line with nothing in `decisions.tsv` �
 `gltf-test`, `libgdx-test` and `ashley-test` each moved members with **zero** `Configured` rows.
 The emitted code is correct; the PROVENANCE is incomplete, and it is the same class of hole as the
 two already listed in §7.1, where it now sits.
+
+**The PRODUCER direction was uncounted, and is now a check that reads 0** (checkpoint-4 audit;
+`ENGINE-LIMITS.md` K14). The `collection-boundary 0` in the table above is honest and it is also
+narrower than it looks: `Ordering[T] <: Comparator[T]` licenses a retyped value flowing INTO a
+`Comparator` slot and says nothing about a `Comparator` the JDK HANDS BACK reaching a slot the phase
+moved — and nothing could see that direction, because a retarget joins neither `mappedTypes` nor
+`retypedTargets` and the position-blind `transformType` had already moved the producing node's own
+type, so both sides of such a slot read `Ordering`. `RetargetBoundaryCheck` (`collection-retarget`)
+counts three shapes — an external producer, a static receiver left naming the java type, and a cast
+to the target — with the §1 classification.
+
+| | |
+|---|---|
+| corpus, all thirteen ports | **0**, and the check now says so in `counts.tsv` (one new baseline row on the 12 ports that run the phase; noise4j runs none and gains none). Nothing else in any baseline moved: **0 members changed on every port**, findings/tests/port-map untouched |
+| first corpus run, before the constructor exclusion | **11 findings, every one a `new Comparator<T>(){…}`** — 4 libGDX core, 6 its suite, 1 anim8 — all of them CORRECT code. An anonymous class's `<init>` does not climb to a unit symbol, so `Program.owns` reads it as external. Constructors are excluded structurally; the shape is pinned in `ComparatorOrderingPortSpec` |
+| the counter's own proof | a SYNTHETIC producer (`Collections.reverseOrder()`, `Comparator.naturalOrder()`, `String.CASE_INSENSITIVE_ORDER`, a cast): 3 + 1 + 1 findings, with `CollectionBoundaryCheck` reporting **0** on the identical program |
+
+**No coercion is synthesised, and K14 says why**: a wrapper is expressible for THIS pair and is not a
+general answer — a retarget's target may be any type, so a coercion has to arrive as policy beside
+the entry, which is a table shape and not a rule the engine can derive. Building one against a
+synthetic case is exactly the guess CLAUDE.md §1 warns about. The alternative already exists: move
+the type into `typeMap` with a kind and a factory, where the seam becomes a counted `coerce`
+boundary.
 
 **Not a note, by design.** `RetypedSignature` is deliberately absent from `PorterNote.Rendered`
 (the new type is written in the declaration and the diff shows it; 362 notes on libGDX core

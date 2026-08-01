@@ -246,6 +246,28 @@ class ComparatorOrderingPortSpec extends munit.FunSuite:
     assert(clue(phase.boundary(after)).isEmpty, "the check that exists reports ZERO on all of it")
   }
 
+  test("an ANONYMOUS `new Comparator<T>(){…}` is NOT a producer — measured on the corpus, 11 times") {
+    // The check's first corpus run reported ELEVEN findings, every one of them this shape: 4 in
+    // libGDX core, 6 in its suite, 1 in anim8. All eleven are correct code — the phase retyped the
+    // instantiated type and the body under it together, so `new Ordering[T]{…}` really IS an
+    // `Ordering`. They reached the counter because an ANONYMOUS class's `<init>` does not climb to
+    // a unit symbol, so `Program.owns` reads it as external; a constructor is therefore excluded
+    // STRUCTURALLY. A counter that reports a working retarget as a residue is worse than none.
+    val anonSrc =
+      """package demo;
+        |import java.util.Comparator;
+        |class Anon {
+        |  Comparator<String> byLen = new Comparator<String>() {
+        |    public int compare(String a, String b) { return a.length() - b.length(); }
+        |  };
+        |}
+        |""".stripMargin
+    val phase        = new CollectionsTransform(retarget = Retarget)
+    val (after, out) = ported(List(phase), anonSrc)
+    assert(clue(out).contains("new scala.math.Ordering[java.lang.String]"))
+    assertEquals(phase.retargetBoundary(after), Nil)
+  }
+
   test("…and it counts NOTHING on a program whose producers are its OWN — the corpus's shape") {
     // Every `Comparator` in the corpus is produced by code the port emits (a `new`, an owned field,
     // an owned method), and those move WITH their declarations. A counter that also fired on those

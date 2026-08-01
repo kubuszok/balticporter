@@ -1,6 +1,7 @@
 #check	count
 collection-boundary	0
 collection-closure	0
+collection-retarget	0
 jdk-surface	6
 manifest	0
 omissions	2

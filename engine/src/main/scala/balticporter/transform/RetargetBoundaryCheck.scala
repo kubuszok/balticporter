@@ -119,11 +119,24 @@ object RetargetBoundaryCheck:
         * signatures. What does not is a symbol the frontend interned with no declaration at all. */
       def external(s: SymId): Boolean = s != SymId.None && !program.owns(s)
 
+      /** A CONSTRUCTOR application is never a producer, whatever `owns` says about its symbol.
+        *
+        * `new Comparator<T>(){…}` constructs its value AT THE TYPE THE SOURCE NAMES, and the phase
+        * retyped that occurrence and the body under it in the same tree — the emitted
+        * `new Ordering[T]{…}` really is an `Ordering`. It has to be excluded structurally rather
+        * than by `owns`, because an ANONYMOUS class's `<init>` does not climb to a unit symbol and
+        * so reads as external. Measured, and this is the only reason the exclusion exists: the
+        * check's first corpus run reported **11 findings, every one of them this shape** — 4 in
+        * libGDX core, 6 in its suite, 1 in anim8 — on code that is correct. A counter that reports
+        * a working retarget as a residue is worse than no counter (CLAUDE.md §3). */
+      def constructs(t: Tree.Apply): Boolean =
+        t.fun.isInstanceOf[Tree.New] || program.symbolOf(t.method).exists(_.name == "<init>")
+
       val scan = new Phase:
         def name: String = "collection-retarget-check"
 
         override def transformApply(t: Tree.Apply)(using Program): Term =
-          if external(t.method) then
+          if external(t.method) && !constructs(t) then
             targeted(t.tpe).foreach(tt => out += Finding(Issue.ExternalProducer, "call",
               sourceOf(tt), tt, t.origin, t.method))
           // …and the RECEIVER half: a static access is an `Ident` of the TYPE's own symbol, which

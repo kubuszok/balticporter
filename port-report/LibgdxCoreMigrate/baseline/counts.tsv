@@ -1,6 +1,7 @@
 #check	count
 collection-boundary	0
 collection-closure	2
+collection-retarget	0
 gdx-shared-iterator	0
 jdk-surface	24
 manifest	0
