@@ -2384,17 +2384,62 @@ The three that remain are one category and a half, both the PORT's:
 
 - **two STATIC field initialisers that construct a now-threaded type** — `TextField#DEFAULT_ONSCREEN_KEYBOARD`
   (`new DefaultOnscreenKeyboard()`) and `Table#cellPool` (`new Pool<Cell>(){ … new Cell() … }`). A
-  static has no constructor clause in scope, which is the boundary the phase already counts; the exit
-  is a `sites` entry (`lazy-init`) or moving the initialiser behind a method the closure can reach.
+  static has no constructor clause in scope, which is the boundary the phase already counts.
   **Only the first was named when P5 was measured — the second was inside `Table`, one of the 22
-  classes whose 55 errors CT5 was producing, so it could not be seen until they cleared.** The
-  category is unchanged and so is its fix; the count of it is 2, not 1.
+  classes whose 55 errors CT5 was producing, so it could not be seen until they cleared.**
 - **one INJECTED shim**, `sge/utils/Pools.scala`, registering factories for constructors that now
   take a context. It is hand-written Scala this port owns, outside the source map by construction,
   and the correlator says so (`Unmapped`, not an engine gap).
 
-So the replay is a POLICY exercise now, not an engine one. Re-run it unchanged when the port decides
-to take the two `sites` entries and edit its own shim.
+**THE REPLAY WAS THEN RUN AS A DELIVERY, and it is STILL BLOCKED — on `ENGINE-LIMITS.md` CT6, which
+is what measuring the exit rather than quoting it found.** Everything the plan priced reproduced,
+to the row:
+
+| | §11.12, blocked on CT5 | the delivery replay |
+|---|---:|---:|
+| threaded declarations | 275 (188 classes + 87 methods) | **275** — 188 + 87 |
+| distinct java files threaded | 177 | **177** — 1.77× the 100 files that name `Gdx.` upstream |
+| `context-seam` | 17 | **17** — 13 captured, 4 residual-global, 0 frozen, 0 `lost-clause` |
+| refusals (`policy`) | 0 above the 2-row floor | **0** |
+| holder fields dropped of 11 | 9 (`app`/`graphics` keep a reader) | **9**, the same two |
+| `DeferredInit` | 0 | **0** |
+| `omissions` | 65 | **65** |
+| every other check | baseline | **identical** |
+| libgdx-core blast | ~1,800 members | **1,799** |
+| libgdx-test | 0 upstream `Gdx.` refs | **0** upstream, **0** emitted holder refs, `context-seam` **0**, 2 members |
+| ashley — the D2 gate | 0 members, 0 seams | **0 members on BOTH source sets, 0 seams on both** |
+| emitted `(using sge.Sge)` clauses | 575 in 176 files | **598 in 177 files** |
+| scalac errors | 3 | **3** |
+
+Two of those moved and both are explained. The clause count is **+23 in one more file** because that
+is precisely CT5's fix arriving: the 19 top-level plus ≥3 nested `Plan.none` classes that used to
+LOSE the clause now carry it. And the blast is 1,799 against the correlator's own 1,316, which count
+different things — `just members-unchanged` is the digest baseline (the number to quote), the
+correlator's is its own join.
+
+**What blocks it is CT6, and it is two faces of one thing: the ESCAPE HATCH the engine names does not
+exist.** Both were measured, not reasoned:
+
+- **`Table#cellPool` is an error with NO seam.** `new Cell()` at a GENERIC class records a `Tycon`
+  usage rather than an `Instantiate` one (`Xref.walkType`'s `AppliedType` arm re-labels the kind), so
+  §8.4's instantiate edge is absent for every generic class — no threading, no `impose`, and
+  therefore no `residual-global-read` row. 1 error, 0 seams, against the non-generic
+  `TextField#DEFAULT_ONSCREEN_KEYBOARD` beside it at 1 error and 1 counted seam.
+- **The `sites` `lazy-init` entry the seam's own diagnostic names does nothing.** Both keys were
+  added and measured: emitted output **byte-identical** (1,799 members changed either way, 17 seams,
+  `deferred-init` 0, 3 errors), and `policy` stayed at 2 — the keys BIND, so the never-fired
+  machinery cannot see that they are dead. `ContextNeed.deferrals` is keyed on reads of a mapped
+  static and `planDeferral` filters on `readsHolder(rhs)`; an initialiser that CONSTRUCTS a threaded
+  type reads no holder and is in neither set.
+
+**So the enablement is REVERTED again, byte-for-byte** — `just measure-all` exit 0, all 13 ports 0
+members changed, every check count identical, `context-seam` gone, every suite outcome unchanged.
+**Do NOT retry it as a policy exercise**: the two exits that look available are still the two §11.12
+rejected (a hand-maintained scope list, `attach = "method"`), and the third that was believed to
+exist — a `sites` entry — has now been measured not to. P5 replays unchanged the day CT6's two-line
+widening lands in `ContextNeed`, and the only work left beside it is this port's own `Pools.scala`,
+whose eager registration block constructs types that now take a context and therefore belongs behind
+a `def registerDefaults()(using sge.Sge)` the bootstrap calls.
 
 ### 11.13 D5j — the demand-derived JDK surface, as measured
 

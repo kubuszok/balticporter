@@ -3434,7 +3434,7 @@ class mode changes no method signature at all.
 
 *Fix kind: (a) engine — the constructor region, not the threading phase.*
 
-### CT5. A class the funnel neither PROMOTES nor SYNTHESISES has nowhere to put the context clause — **CLOSED; 57 errors → 2, and the primary hosts the clause and nothing else**
+### CT5. A class the funnel neither PROMOTES nor SYNTHESISES has nowhere to put the context clause — **CLOSED; 57 errors → 3, and the primary hosts the clause and nothing else**
 
 **Title, for renumbering: "an implicit nilary primary carries no using clause".** CLOSED. (a) engine.
 
@@ -3524,9 +3524,88 @@ Three things measured while closing it, none of which a compile-error count woul
   emitter.
 
 **What it unblocked.** The globals→context enablement, replayed with the P5 policy in a worktree:
-**57 → 2 errors**, and the 2 are the port's own boundary exactly as `PROGRESS.md` §11.12 said they
-were (a static field initialiser that constructs a now-threaded type, and a hand-written injected
+**57 → 3 errors**, and the 3 are the port's own boundary exactly as `PROGRESS.md` §11.12 said they
+were (two static field initialisers that construct a now-threaded type, and a hand-written injected
 shim registering factories for constructors that now take a context). Everything else in that run
 reproduced: 275 threaded declarations, 177 files, 17 seams, 0 refusals, 0 `frozen-component`.
 
 *Fix kind: (a) engine — `CtorFunnel`, the `Plan.none` outcome. Not reachable from any manifest key.*
+
+### CT6. The INSTANTIATE edge does not exist for a GENERIC class, and the `sites` exit the seam NAMES does not exist either — **OPEN; P5's last 2 errors, and one of them is UNCOUNTED**
+
+**Title, for renumbering: "a generic `new` is not an instantiate, and `sites` cannot reach an
+unsuppliable use".** OPEN. (a) engine, both faces. Measured on the P5 replay after CT5 closed: the
+enablement lands at **3 scalac errors**, and neither of the two that are the port's own boundary has
+the policy exit the engine's own diagnostic tells its reader to use.
+
+Read this beside CT5. CT5 was the emitter losing a clause the phase attached; these two are the
+CLOSURE not seeing an edge, and the ESCAPE HATCH not reaching the site it is named for. Both are
+invisible to every count in the run — which is the part that makes them worth an entry rather than a
+line in a status file.
+
+#### Face A — `new G<…>()` records a `Tycon` usage, not an `Instantiate` one
+
+`Xref.walkType`'s `AppliedType` arm re-labels the kind it was called with:
+
+```scala
+case TypeRepr.AppliedType(tycon, args) =>
+  walkType(tycon, UsageKind.Tycon, site); args.foreach(walkType(_, UsageKind.TypeArg, site))
+```
+
+so `walkType(tpt.tpe, UsageKind.Instantiate, n)` at a `Tree.New` reaches the constructed class as
+`Tycon` whenever that class takes type parameters — for a parameterised `new Cell<String>()` and for
+a RAW `new Cell()` alike, because the frontend applies the raw type too. Dumped from the index on a
+five-class fixture, which is where the two lines that settle it are:
+
+```
+demo.Svc:  Instantiate site=New enc=demo.Named#S        <- non-generic: the edge exists
+demo.Cell: Tycon       site=New enc=demo.Tbl#cellPool   <- generic: the same `new`, relabelled
+```
+
+Three consequences, in increasing order of how badly they hide:
+
+- **`ContextNeed.expandClass` matches `case Usage(UsageKind.Instantiate, …)`, so the INSTANTIATE
+  edge of `DESIGN.md` §8.4's five-edge closure is simply absent for every generic class.** A
+  declaration that constructs a threaded generic is not threaded by that construction. Under
+  `attach = "class"` it is usually threaded anyway — the class-level over-approximation covers it —
+  which is exactly why one library surfaced ONE site.
+- **`ContextNeed.anonHome` is built from `Instantiate` usages carrying an anon body, so an anonymous
+  subclass of a GENERIC parent has no lexical home** and a capture inside it climbs to the enclosing
+  CLASS instead. That is CT1 reappearing, for generics only, from the other side of the same table.
+- **And the seam is not counted at all.** The `impose` boundary arm is what records
+  `residual-global-read`, and it is never reached, so the site produces a scalac error that no
+  number in the run predicts. Measured on libGDX: `Table#cellPool`
+  (`static final Pool<Cell> cellPool = new Pool<Cell>(){ … new Cell() … }`) is **1 error and 0
+  seams**, while the non-generic `TextField#DEFAULT_ONSCREEN_KEYBOARD` beside it is 1 error and 1
+  counted seam. A boundary the engine cannot see is worse than one it refuses (CLAUDE.md §1).
+
+**Where the fix goes, and where it must NOT.** Not in `Xref`: `UsageKind` is a shared index read by
+the portability check, the rewrite trace and the external-surface walk, and re-labelling one arm is
+its own change with its own measure cycle across thirteen ports. In the PHASE: a usage whose SITE is
+a `Tree.New` **is** an instantiation whatever the walk labelled it, which is a structural fact about
+the node the phase is holding rather than a conclusion from a name (§4.56). Both readers —
+`expandClass`'s usage match and `anonHome`'s — take the same two-line widening.
+
+#### Face B — a `sites` `lazy-init` entry cannot reach an UNSUPPLIABLE USE
+
+The seam's own §1 classification and its per-site detail both say the same thing:
+
+> give the site a `sites` policy, or move the use into a declaration the closure can reach
+
+There is no such policy. `ContextNeed.deferrals` is derived from `reads` — reads of a MAPPED STATIC
+— and `planDeferral` then filters each candidate assignment on `readsHolder(rhs)`. A static field
+initialiser that CONSTRUCTS a now-threaded type reads no holder at all, so it is in neither set and
+no `sites` key can name it. The exit exists for exactly the shape that does not need naming.
+
+**Measured, and the measurement is the point**: both keys added to the libGDX holder
+(`TextField#DEFAULT_ONSCREEN_KEYBOARD`, `Table#cellPool` → `ContextSite.LazyInit`), and the emitted
+output is **byte-identical** — 1,799 members changed with the entries and without them, `context-seam`
+17 both times with `deferred-init` 0, 3 scalac errors both times. **And `policy` stayed at its 2-row
+floor**, because the keys BIND: they name real members, `PolicyBinder.bindMembers` resolves them, and
+the never-fired machinery has nothing to report. This is a policy entry that is accepted, does
+nothing, and is invisible to every check in the run — the third face of "never fired" and the one
+nothing currently counts.
+
+*Fix kind: (a) engine, both faces — `ContextNeed` (the usage match, `anonHome`, and the deferral's
+trigger). Neither is reachable from any manifest key, and P5 stays blocked on them: the enablement
+is otherwise complete and reproduces every number `PROGRESS.md` §11.12 records.*
