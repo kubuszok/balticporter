@@ -2401,7 +2401,9 @@ final class TirEmitter(
     // reached only if a phase moves a wrapped statement into an operand — the statement is emitted,
     // the comment is not, and `TriviaCheck` reports the loss rather than the file being broken.
     case Tree.Commented(_, s)           => term(s, i)
-    case Tree.Opaque(raw, _, _)         => raw
+    // Ready-made Scala, with any HOLES rendered as terms. The closed form (`holes = Nil`) is
+    // `raw` verbatim and no scan runs over it — see `Tree.Opaque`.
+    case o: Tree.Opaque                 => o.spliced(h => spliceOperand(h, i))
 
   /** A Java constructor reference (`Foo::new`) is typed by the TARGET functional interface Java
     * resolved, not by `Foo`. Emitted bare, `() => new Foo()` is a `Function0`, which Scala
@@ -2545,6 +2547,20 @@ final class TirEmitter(
       s"(${term(t, i)})"
     case _: Tree.If | _: Tree.Match | _: Tree.Lambda => s"(${term(t, i)})"
     case _ => term(t, i)
+
+  /** …and the same question for a term spliced into a [[Tree.Opaque]] HOLE, which is strictly
+    * harder: an operand's neighbours are the emitter's own output and a hole's neighbours are
+    * whatever a policy entry wrote around `{recv}`. `{recv}.close()` after an ascription is
+    * `x: T.close()`, which parses and means something else; `{arg0} + 1` after an assignment does
+    * not parse at all. So this over-approximates by three more node kinds than [[operand]] — a
+    * redundant pair of parentheses costs two characters and cannot change a meaning.
+    *
+    * Deliberately NOT folded into `operand`: that one is on the path of every emitted expression
+    * in every port, and widening it would move member digests everywhere for a case that only
+    * arises in ready-made text. */
+  private def spliceOperand(t: Term, i: Int): String = Tree.uncomment(t) match
+    case _: Tree.Typed | _: Tree.Assign | _: Tree.InstanceOf => s"(${term(t, i)})"
+    case _                                                   => operand(t, i)
 
   private def block(stats: List[Statement], expr: Term, i: Int): String =
     // drop a redundant trailing `()` when the block already has statements (Java void bodies).

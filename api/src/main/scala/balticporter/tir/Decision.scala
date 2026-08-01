@@ -73,6 +73,16 @@ object Decision:
     *   - [[DroppedType]]      — a type is deliberately NOT emitted; something else supplies its FQN.
     *   - [[DroppedMember]]    — one member is deliberately not emitted, the rest of its type is.
     *   - [[SubstitutedBody]]  — a method KEPT its signature and had its body replaced.
+    *   - [[SubstitutedCall]]  — a CALL was replaced by a ready-made expression naming its receiver
+    *                            and arguments. Distinct from [[RedirectedCall]], and the two are
+    *                            not a candidate for merging: a redirect swaps the CALLEE and leaves
+    *                            the call's shape alone, so the emitted line still reads as the
+    *                            Java's call with a different name on it; a substitution replaces
+    *                            the whole expression, and the result may be a field read, a `using`
+    *                            application or nothing that looks like a call at all. Merged, "how
+    *                            many call sites still resemble their Java" stops being answerable —
+    *                            and it is the question that says whether a port's bodies can still
+    *                            be diffed against upstream.
     *   - [[InjectedMember]]   — a definition in the output came from a hand-written file, not from
     *                            the frontend.
     *   - [[RedirectedCall]]   — a call site now names a different target (class table, static
@@ -116,7 +126,7 @@ object Decision:
   enum Kind:
     case RenamedType, RenamedPackage, RenamedMember
     case DroppedType, DroppedMember
-    case SubstitutedBody, InjectedMember
+    case SubstitutedBody, SubstitutedCall, InjectedMember
     case RedirectedCall, RetypedSignature, ScopedOut, FunnelledCtor
     case DroppedSuperCall, WidenedVisibility, Unrenderable, DeferredInit
 

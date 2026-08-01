@@ -50,7 +50,8 @@ object BuiltinFactories:
   def all: List[TransformFactory] = List(
     new CollectionsFactory, new MutableParamsFactory, new PanamaFfiFactory,
     new TestFrameworkFactory, new StaticForwarderFactory, new ClassTableFactory,
-    new TypeRedirectFactory, new MethodBodyFactory, new PortMapMigrationFactory,
+    new TypeRedirectFactory, new MethodBodyFactory, new CallSiteSubstitutionFactory,
+    new PortMapMigrationFactory,
     new PrimitiveToOpaqueFactory, new GlobalsToImplicitsFactory, new BeanPropertyFactory,
     new NullabilityFactory,
   )
@@ -163,6 +164,20 @@ final class MethodBodyFactory extends TransformFactory:
   def name = "method-body"
   def fromConfig(config: ConfigView): Phase =
     new MethodBodyTransform(config.stringMap("bodies").getOrElse(Map.empty))
+
+/** ```
+  * { transform = "call-site-substitution"
+  *   calls { "a.B#m(int,String)" = "c.D.n({recv}, {arg0})" } }
+  * ```
+  *
+  * The key is the RESOLVED CALLEE and the value an expression template; `{recv}` and
+  * `{arg0}`…`{argN}` are the call's own receiver and arguments. Named for the phase rather than
+  * shortened to `call-site`, so the conf entry reads as what it does to the reader of a diff.
+  */
+final class CallSiteSubstitutionFactory extends TransformFactory:
+  def name = "call-site-substitution"
+  def fromConfig(config: ConfigView): Phase =
+    new CallSiteSubstitutionTransform(config.stringMap("calls").getOrElse(Map.empty))
 
 /** `{ transform = "port-map-migration", bases = ["base-core"] }`
   *

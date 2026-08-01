@@ -389,8 +389,71 @@ object Tree:
   /** `synchronized (lock) body`. `tpe` is Unit. */
   final case class Synchronized(lock: Term, body: Term, tpe: TypeRepr, origin: Origin)   extends Term
   /** an as-yet-unmodeled TERM, kept typed (a full structured `tpe`) so the tree stays
-    * whole while the node set grows. TYPES are never opaque; only unmodeled terms are. */
-  final case class Opaque(raw: String, tpe: TypeRepr, origin: Origin)                   extends Term
+    * whole while the node set grows. TYPES are never opaque; only unmodeled terms are.
+    *
+    * ==`holes` — ready-made Scala with TREES spliced into it==
+    * The plain form is closed text: a hand-written method body, a generated FFI downcall. A
+    * CALL-SITE substitution cannot be, because its replacement has to name the receiver and the
+    * arguments of the call it replaces, and those are TERMS the phase is holding — a `Buffer` the
+    * collections phase has already retyped, an argument that is itself a call. So `raw` may carry
+    * NUMBERED HOLES ([[Opaque.hole]]) and `holes` supplies one term per index; the emitter renders
+    * each hole with its own term rendering and splices the result ([[spliced]]).
+    *
+    * Three properties follow from the holes being trees rather than text, and each of them is the
+    * reason it is done this way:
+    *
+    *   - '''a later phase still sees them.''' `StandardTraversal` maps into `holes`, so the package
+    *     rename, the collections retyping and every check reach a spliced argument exactly as they
+    *     reach any other term. Text would be invisible to all of them — the failure §4.56 describes
+    *     for policy written in the wrong namespace, one layer down.
+    *   - '''the xref still records them.''' A symbol used only inside a hole is a real usage; read
+    *     as text it would look dead.
+    *   - '''nothing has to render Scala outside the emitter.''' A phase cannot print a term (the
+    *     emitter is the only thing that can), which is precisely why the substitution cannot be
+    *     performed as a string at the phase.
+    *
+    * `holes = Nil` — the default, and every existing construction site — is the closed form, and
+    * [[spliced]] then returns `raw` untouched: no marker scan runs, so text that happens to contain
+    * one cannot be misread. */
+  final case class Opaque(raw: String, tpe: TypeRepr, origin: Origin, holes: List[Term] = Nil)
+      extends Term:
+
+    /** `raw` with each hole replaced by `render` of the term it names.
+      *
+      * A hole index with no term is left as the marker rather than dropped or defaulted: it can
+      * only arise from a malformed construction, and a marker that survives into the output is a
+      * compile error naming the file, where a silent drop would be a wrong program that compiles. */
+    def spliced(render: Term => String): String =
+      if holes.isEmpty then raw
+      else
+        val sb = new StringBuilder
+        var i  = 0
+        while i < raw.length do
+          val c = raw.charAt(i)
+          if c != Opaque.Mark then { sb.append(c); i += 1 }
+          else
+            val close = raw.indexOf(Opaque.Mark.toInt, i + 1)
+            val idx   = if close < 0 then scala.None else raw.substring(i + 1, close).toIntOption
+            idx.filter(holes.indices.contains) match
+              case Some(n) => sb.append(render(holes(n))); i = close + 1
+              case scala.None => sb.append(c); i += 1
+        sb.toString
+
+  object Opaque:
+    /** The hole delimiter: NUL, which cannot occur in Scala source and therefore needs no escape
+      * grammar. A printable delimiter would need one, and an escape grammar over ready-made Scala
+      * is a second parser for text the engine deliberately does not parse. */
+    val Mark: Char = 0.toChar
+
+    /** the marker for hole `i`, as it appears inside [[Opaque.raw]]. */
+    def hole(i: Int): String = s"$Mark$i$Mark"
+
+    /** `parts` interleaved with holes `0 … parts.size - 2`. `parts` always has one more element
+      * than `holes`; a mismatch is a construction bug and is refused here rather than emitted. */
+    def spliced(parts: List[String], holes: List[Term], tpe: TypeRepr, origin: Origin): Opaque =
+      require(parts.size == holes.size + 1,
+        s"Opaque.spliced: ${parts.size} literal parts for ${holes.size} holes — expected ${holes.size + 1}")
+      Opaque(parts.head + parts.tail.zipWithIndex.map((p, i) => hole(i) + p).mkString, tpe, origin, holes)
 
   /** A statement with the comments written above it. The one node that exists purely to carry
     * [[Trivia]], and the reason DECLARATIONS do not need one: a field, method or class has a

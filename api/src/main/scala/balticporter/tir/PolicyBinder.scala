@@ -96,6 +96,42 @@ final class PolicyBinder(val program: Program, index: MemberIndex):
         case many      => Binding.Unbound(entry, NotBound.Ambiguous(many.map(_.key.render).sorted))
     })
 
+  /** bind a key to the symbol a CALL SITE names — exactly one overload, like [[bindMember]], and
+    * differing from it in one documented place.
+    *
+    * ==Why a call site is not the same question as a declaration==
+    * The two stages exist because a DROPPED member has no symbol: the frontend filters the
+    * executable out before minting one, so only the index can answer for it. That is the whole
+    * truth for a declaration — there is nothing left to rewrite. It is NOT the truth for a call:
+    * `SpoonTir.methodSym` interns the callee from the REFERENCE, with the declaration's own
+    * descriptor, so every caller of a dropped member still names a real `SymId` that this program
+    * holds. Bound through [[bindMember]] the key returns `Bound` with an empty symbol list, and a
+    * phase that rewrites calls concludes there is nothing to do — for the one case
+    * `ENGINE-LIMITS.md` D7 is about (a base drops a member, a dependent still calls it), which is
+    * precisely the case a call-site rewrite exists to repair.
+    *
+    * So when the index answers with DROPPED members only, this falls through to the symbol table
+    * and takes the reference-side symbol. Two consequences, both deliberate:
+    *
+    *   - the `SyntheticTarget` refusal is SUPPRESSED on that path, and only on it. Its structural
+    *     test is "the frontend walked this owner and did not record this executable, so the ENGINE
+    *     minted it" — true of an engine-minted member, and equally true of a member the frontend
+    *     recorded as DROPPED and then interned again from a call site. Left in place it reports the
+    *     port's own `dropMethods` entry as an engine artefact.
+    *   - the drop itself is still visible: the returned [[PolicyBinder.Hit]] carries `dropped =
+    *     true`, so a phase can say "this callee has no declaration to return to" without asking
+    *     the index a second question.
+    *
+    * Everything else — the grammar, the exactness requirement, the `Ambiguous` report — is
+    * [[bindMember]]'s, by calling the same resolution. */
+  def bindCallee(phase: String, setting: String, entry: String,
+                 need: Ownership = Ownership.Either): Binding[PolicyBinder.Hit] =
+    record(phase, setting, entry, resolve(entry, need, callSite = true).flatMap { (_, hits) =>
+      hits match
+        case List(one) => Binding.Bound(entry, one, 1)
+        case many      => Binding.Unbound(entry, NotBound.Ambiguous(many.map(_.key.render).sorted))
+    })
+
   /** bind a SCOPE entry — a package, a type or a member prefix. It names a REGION, so the answer is
     * only "did anything in this program fall inside it", and the failure that matters is
     * [[NotBound.ExternalOnly]]: an entry naming a JDK type matches the interned external perfectly,
@@ -116,14 +152,22 @@ final class PolicyBinder(val program: Program, index: MemberIndex):
   // internals
   // -------------------------------------------------------------------------
 
-  /** the shared two-stage lookup: parse, ask the INDEX, then ask the PROGRAM. */
-  private def resolve(entry: String, need: Ownership): Binding[(MemberKey, List[PolicyBinder.Hit])] =
+  /** the shared two-stage lookup: parse, ask the INDEX, then ask the PROGRAM.
+    *
+    * `callSite` is [[bindCallee]]'s one difference and is documented there: it asks for the symbol
+    * a REFERENCE names, which exists for a dropped member where the declaration's does not. */
+  private def resolve(entry: String, need: Ownership,
+                      callSite: Boolean = false): Binding[(MemberKey, List[PolicyBinder.Hit])] =
     MemberKey.parse(entry) match
       case Left(m) => Binding.Unbound(entry, NotBound.Malformed(m.what))
       case Right(key) =>
         // STAGE 1 — what the frontend saw, dropped members included.
         val seen = index.matching(key).map((k, f) => PolicyBinder.Hit(k, f.sym, f.dropped))
-        if seen.nonEmpty then Binding.Bound(entry, (key, seen), seen.size)
+        // …the index SAW this member and every match was dropped, so it has no symbol to hand back.
+        // For a declaration that is the complete answer; for a CALL SITE it is the case that most
+        // needs one.
+        val droppedOnly = seen.nonEmpty && seen.forall(_.sym.isEmpty)
+        if seen.nonEmpty && !(callSite && droppedOnly) then Binding.Bound(entry, (key, seen), seen.size)
         else
           // STAGE 2 — what the program HAS. Externals live only here, and so does anything the
           // ENGINE minted after the frontend ran.
@@ -132,7 +176,10 @@ final class PolicyBinder(val program: Program, index: MemberIndex):
               key.descriptor.forall(d => s.descriptor.contains(d))
           }.toList
           val (owned, external) = syms.partition(s => program.owns(s.id))
-          def hits(ss: List[Symbol]) = ss.map(s => PolicyBinder.Hit(key, Some(s.id), dropped = false))
+          // `dropped` is carried from STAGE 1's answer: on the call-site fall-through the index
+          // already said this member was removed, and losing that here would make a caller of a
+          // dropped member indistinguishable from a caller of a live one.
+          def hits(ss: List[Symbol]) = ss.map(s => PolicyBinder.Hit(key, Some(s.id), dropped = droppedOnly))
           // The engine-minted test is STRUCTURAL and it is about EXECUTABLES only. The index holds
           // what the frontend walked in a type BODY; a FIELD was never a candidate for it, so
           // "walked the owner, did not record the member" says nothing about one — and read without
@@ -141,6 +188,11 @@ final class PolicyBinder(val program: Program, index: MemberIndex):
           if syms.isEmpty then Binding.Unbound(entry, NotBound.NeverMatched)
           else if ownedOther.nonEmpty || (owned.nonEmpty && !index.types.contains(key.owner)) then
             Binding.Bound(entry, (key, hits(owned)), owned.size)
+          // …unless STAGE 1 already recorded this very member as DROPPED, in which case the
+          // structural test is answering about the frontend's own reference-side interning rather
+          // than about anything the engine minted. See [[bindCallee]].
+          else if ownedExecs.nonEmpty && droppedOnly then
+            Binding.Bound(entry, (key, hits(ownedExecs)), ownedExecs.size)
           else if ownedExecs.nonEmpty then
             // The frontend WALKED this owner and did not record this executable, yet the program has
             // it and owns it: the ENGINE minted it. A key naming one is not a typo and must not read

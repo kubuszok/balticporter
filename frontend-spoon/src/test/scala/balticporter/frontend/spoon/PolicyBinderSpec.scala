@@ -126,6 +126,49 @@ class PolicyBinderSpec extends munit.FunSuite:
       .flatMap(_.descriptor.map(_.render)).toSet, Set("String"))
   }
 
+  /** a second unit that CALLS the member the test above drops — the reference side, which is where
+    * a dropped member still has a symbol. */
+  private val caller = "com/demo/Till.java" ->
+    """package com.demo;
+      |public class Till {
+      |  public Object buy(Shop s) { return s.make(Object.class); }
+      |}""".stripMargin
+
+  test("bindCallee reaches a DROPPED member's CALL SITES, which is the one thing bindMembers cannot") {
+    // `ENGINE-LIMITS.md` D7 in one assertion. The DECLARATION is gone and the key still fired, so
+    // the declaration-side answer is "bound, nothing to point at" — correct, and useless to a phase
+    // that rewrites CALLS, which is exactly the phase a dropped-and-still-called member needs.
+    val p = tree(Substitutions(dropMethods = Set("com.demo.Shop#make(Class)")))(source, caller)
+    assertEquals(bindAll(p, "com.demo.Shop#make(Class)").toOption.map(_.flatMap(_.sym)), Some(Nil))
+
+    val b   = binderOf(p)
+    val hit = b.bindCallee("spec", "setting", "com.demo.Shop#make(Class)")
+    assert(clue(hit).isBound)
+    assert(hit.toOption.flatMap(_.sym).isDefined)
+    // …and the DROP is still visible, so a phase can say "this callee has no declaration to return
+    // to" without asking the index a second question.
+    assertEquals(hit.toOption.map(_.dropped), Some(true))
+    // the refusal this path has to suppress, and the reason it needs its own entry point: the
+    // structural engine-minted test cannot tell a reference-side interning from a synthetic member.
+    assertEquals(b.unbound, Nil)
+  }
+
+  test("bindCallee does NOT change the ordinary path — a LIVE member still binds through the index") {
+    val p = tree(Substitutions.none)(source, caller)
+    val b = binderOf(p)
+    val viaCallee = b.bindCallee("spec", "setting", "com.demo.Shop#make(Class)")
+    val viaMember = bind(p, "com.demo.Shop#make(Class)")
+    assertEquals(viaCallee.toOption.flatMap(_.sym), viaMember.toOption.flatMap(_.sym))
+    assertEquals(viaCallee.toOption.map(_.dropped), Some(false))
+    assertEquals(b.unbound, Nil)
+  }
+
+  test("bindCallee requires EXACTNESS: a bare key naming two overloads is Ambiguous, never one") {
+    val p = tree(Substitutions.none)(source, caller)
+    val b = binderOf(p).bindCallee("spec", "setting", "com.demo.Shop#make")
+    assertEquals(b.why, Some(NotBound.Ambiguous(List("com.demo.Shop#make(Class)", "com.demo.Shop#make(String)"))))
+  }
+
   test("an EXTERNAL-only entry reports ExternalOnly WITH WHY — never Bound, and never a typo") {
     val p = tree(Substitutions.none)(source)
     val b = binderOf(p)

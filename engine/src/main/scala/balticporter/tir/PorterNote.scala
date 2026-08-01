@@ -70,6 +70,12 @@ object PorterNote:
     *     declaration a policy entry names, against one per retyped member.
     *   - [[Decision.Kind.RedirectedCall]] — recorded per DECLARATION for the reason
     *     `Decision.declarationsUsing` gives, and the rewritten call is right there in the body.
+    *     Note its sibling [[Decision.Kind.SubstitutedCall]] IS rendered, and the asymmetry is the
+    *     line above applied rather than broken: a redirect leaves the call's SHAPE intact, so a
+    *     reader diffing against the Java sees one name change and can act on it; a substitution
+    *     replaces the whole expression with text the port wrote, so the emitted line may have no
+    *     counterpart in the Java at all — and the source map points at a line that says something
+    *     else. That is the same reason `SubstitutedBody` is rendered one level up.
     *
     * [[Decision.Kind.FunnelledCtor]] USED to sit in that list, on the reasoning that "the emitted
     * class has one primary and N secondaries, which is the funnel, in the code". That reasoning was
@@ -94,8 +100,8 @@ object PorterNote:
   val Rendered: Set[Decision.Kind] =
     import Decision.Kind.*
     Set(RenamedType, RenamedPackage, RenamedMember, DroppedType, DroppedMember,
-        SubstitutedBody, InjectedMember, DroppedSuperCall, WidenedVisibility, Unrenderable,
-        ScopedOut, DeferredInit, FunnelledCtor)
+        SubstitutedBody, SubstitutedCall, InjectedMember, DroppedSuperCall, WidenedVisibility,
+        Unrenderable, ScopedOut, DeferredInit, FunnelledCtor)
 
   /** WHERE each rendered kind's note goes, which is not a style question: the three answers are
     * three different pieces of machinery and a kind in the wrong one is a note that never appears.

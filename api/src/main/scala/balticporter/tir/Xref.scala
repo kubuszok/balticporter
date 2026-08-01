@@ -167,7 +167,10 @@ object Xref:
       case Tree.Commented(_, s)             => walkTerm(s)
       case l @ Tree.Literal(Constant.ClassOfC(tp), _, _) => walkType(tp, UsageKind.TypeArg, l)
       case _: Tree.Literal                  => ()
-      case _: Tree.Opaque                   => ()
+      // the ready-made text names nothing the xref can see; its HOLES are ordinary terms and name
+      // everything they always did. A usage that occurs only inside a hole would read as dead code
+      // to every consumer of this index if the walk stopped at the node.
+      case o: Tree.Opaque                   => o.holes.foreach(walkTerm)
 
     units.foreach(walkClassDef)
     new XrefIndex(defs.toMap, usages.view.mapValues(_.toList).toMap)

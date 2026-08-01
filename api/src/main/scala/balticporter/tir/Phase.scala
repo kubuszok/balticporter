@@ -390,7 +390,11 @@ object StandardTraversal:
       case x: Tree.DoWhile  => x.copy(body = mapTerm(ph, x.body), cond = mapTerm(ph, x.cond), tpe = mapType(ph, x.tpe))
       case x: Tree.Synchronized => x.copy(lock = mapTerm(ph, x.lock), body = mapTerm(ph, x.body), tpe = mapType(ph, x.tpe))
       case x: Tree.Literal  => x.copy(tpe = mapType(ph, x.tpe))
-      case x: Tree.Opaque   => x.copy(tpe = mapType(ph, x.tpe))
+      // …and INTO its holes. A hole is an ordinary term spliced into ready-made Scala, so every
+      // later phase — the package rename above all, which runs last (§4.56) — must reach it exactly
+      // as it reaches any other operand. Skipped here it would be the one term in the program no
+      // phase can see, with a green compile and a wrong namespace.
+      case x: Tree.Opaque   => x.copy(tpe = mapType(ph, x.tpe), holes = x.holes.map(mapTerm(ph, _)))
       // The comment wrapper is REBUILT, never unwrapped: a phase that overrides no hook has to see
       // its statement transformed and get the wrapper back, or every comment vanishes at the first
       // phase that touches the body. Note the inner term goes through the hooks exactly as it would

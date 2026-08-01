@@ -382,5 +382,9 @@ object TirPrinter:
         sub(sb, indent + 1, "stmt", x.stmt, style)
       else tree(sb, x.stmt, indent, style)
     case x: Tree.Opaque =>
-      line(sb, indent, s"Opaque ${"\""}${escape(x.raw)}${"\""}${ofType(x.tpe, style)}${origin(x.origin, style)}")
+      // the hole markers are NUL, which no dump should carry: rendered `{0}` `{1}` … so the text
+      // reads the way the policy entry that produced it was written, with the terms below it.
+      val shown = x.holes.indices.foldLeft(x.raw)((s, i) => s.replace(Tree.Opaque.hole(i), s"{$i}"))
+      line(sb, indent, s"Opaque ${"\""}${escape(shown)}${"\""}${ofType(x.tpe, style)}${origin(x.origin, style)}")
+      group(sb, indent + 1, "holes", x.holes, style)
 
