@@ -159,7 +159,7 @@ final class MethodBodyTransform(bodies: Map[String, String] = Map.empty)
                 record(Decision(
                   kind       = Decision.Kind.SubstitutedBody,
                   subject    = d.symbol,
-                  subjectFqn = s"$owner#$nm",
+                  subjectFqn = MemberKey(owner, nm).render,
                   detail     = Map(
                     "key"  -> k,
                     "from" -> "the mechanically translated java body",

@@ -121,7 +121,7 @@ final class GlobalsToImplicitsTransform(val holders: List[ContextHolder] = Nil)
       h.context match
         case ContextType.Minted(fqn) =>
           h.members.filter((_, p) => p.contains('.')).toList.sorted.foreach((f, p) =>
-            malformedEntry(h, "members", s"${h.holder}#$f", s"`$p` is a two-hop PATH and the context " +
+            malformedEntry(h, "members", MemberKey(h.holder, f).render, s"`$p` is a two-hop PATH and the context " +
               s"type is MINTED — the engine synthesises `$fqn`'s own members and has no intermediate " +
               "type to hang a second hop off. Map this field onto a single member, or `inject` a " +
               "context type you wrote, which is where a service path belongs"))
@@ -209,12 +209,12 @@ final class GlobalsToImplicitsTransform(val holders: List[ContextHolder] = Nil)
 
     val predefSym = mint.tpe("Predef", "scala.Predef")
     val summonSym = mint.member("summon", "scala.Predef#summon", predefSym, ctxRef, Flags(isStatic = true))
-    val applySym  = mint.member("apply", s"$ctxFqn#apply", ctxSym, ctxRef, Flags(isStatic = true))
-    val globalSym = mint.member("global", s"$ctxFqn#global", ctxSym, ctxRef,
+    val applySym  = mint.member("apply", MemberKey(ctxFqn, "apply").render, ctxSym, ctxRef, Flags(isStatic = true))
+    val globalSym = mint.member("global", MemberKey(ctxFqn, "global").render, ctxSym, ctxRef,
                                 Flags(isStatic = true, isMutable = true))
     val segCache  = collection.mutable.Map.empty[String, SymId]
     def segSym(seg: String): SymId =
-      segCache.getOrElseUpdate(seg, mint.member(seg, s"$ctxFqn#$seg", ctxSym, TypeRepr.NoType, Flags()))
+      segCache.getOrElseUpdate(seg, mint.member(seg, MemberKey(ctxFqn, seg).render, ctxSym, TypeRepr.NoType, Flags()))
 
     /** `scala.Predef.summon[T]`, or `T.apply()`. Built STRUCTURALLY and not as text: a minted
       * context's FQN is in the upstream namespace and the package rename runs last, so a name
@@ -286,7 +286,8 @@ final class GlobalsToImplicitsTransform(val holders: List[ContextHolder] = Nil)
             // done otherwise, which is the shape of defect a refusal is supposed to prevent.
             val at   = t.origin
             val ctor = mint.member(ContextNeed.CtorName,
-              s"${summon[Program].symbolOf(t.symbol).map(_.fullName).getOrElse("?")}#<init>",
+              MemberKey(summon[Program].symbolOf(t.symbol).map(_.fullName).getOrElse("?"),
+                        ContextNeed.CtorName).render,
               t.symbol, TypeRepr.MethodType(Nil, TypeRepr.NoType), Flags())
             t.copy(body = Tree.DefDef(ctor, List(List(mint.usingParam(ctor, ctxFqn, ctxRef, at))),
               TypeTree(TypeRepr.NoType, at), Some(Tree.Block(Nil, Tree.Literal(Constant.UnitC, TypeRepr.NoType, at),
@@ -338,7 +339,7 @@ final class GlobalsToImplicitsTransform(val holders: List[ContextHolder] = Nil)
       .flatMap((s, path) => p.symbolOf(s).map(sym => path -> sym.info))
       .filterNot((path, _) => path.contains('.'))
       .distinctBy(_._1).sortBy(_._1)
-      .map((path, info) => mint.member(path, s"$fqn#$path", ctxSym, info, Flags(isMutable = true)) -> info)
+      .map((path, info) => mint.member(path, MemberKey(fqn, path).render, ctxSym, info, Flags(isMutable = true)) -> info)
     val hasGlobal = seamLog.exists(f => f.kind == ContextSeamCheck.Kind.ResidualGlobalRead)
     val body: List[Statement] =
       fields.map((id, info) => Tree.ValDef(id, TypeTree(info, o), scala.None, o)) ++
@@ -477,5 +478,5 @@ object GlobalsToImplicitsTransform:
       * not grow two clauses. */
     def usingParam(owner: SymId, ctxFqn: String, ctxRef: TypeRepr, at: Origin): Tree.ValDef =
       val id = usings.getOrElseUpdate(owner,
-        member("", s"$ctxFqn#<using>", owner, ctxRef, Flags(isParam = true, isGiven = true)))
+        member("", MemberKey(ctxFqn, "<using>").render, owner, ctxRef, Flags(isParam = true, isGiven = true)))
       Tree.ValDef(id, TypeTree(ctxRef, at), scala.None, at)

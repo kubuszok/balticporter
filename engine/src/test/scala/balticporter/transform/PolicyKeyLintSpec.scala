@@ -34,17 +34,41 @@ class PolicyKeyLintSpec extends munit.FunSuite:
     val s = try new String(is.readAllBytes(), "UTF-8").trim finally is.close()
     Path.of(s).resolve("balticporter/transform")
 
+  /** ONE forbidden shape: the NAME an allow-list entry cites, the test, and what to reach for.
+    *
+    * The test is a predicate rather than a substring because the first three shapes are literals
+    * and the fourth cannot be: `s"$owner#$name"` builds the same key as `owner + "#" + name` and
+    * shares no text with it. A lint that only knows the spelling it was written against passes
+    * vacuously the moment somebody writes the other one — which is exactly what happened
+    * (`StaticForwarderTransform` rebuilt three keys by interpolation, unlisted and unreported). */
+  private final case class Shape(name: String, hits: String => Boolean, instead: String)
+
+  /** a `$`-interpolation IMMEDIATELY BESIDE a `#` — `s"${owner}#$name"`, `s"$owner#$name"`,
+    * `s"$owner#${name}"`. Adjacency is the whole test: prose that merely mentions `owner#member`
+    * beside an interpolated value is not building a key, and a `#` used as some other separator
+    * (`PortMapTransform`'s fingerprint) is allow-listed by name rather than by weakening this.
+    *
+    * The LINE must also open an interpolated string, or `"java.util.Map$Entry#comparingByKey"` —
+    * a plain literal whose `$` is java's NESTED-TYPE separator — reads as an interpolation and the
+    * lint reports four of `CollectionsTransform`'s own table entries. */
+  private val Interpolator = raw"""(^|[^A-Za-z0-9_])(s|f|raw)\"""".r
+  private val HashAdjacent = raw"""(#\s*\$$)|(\}#)|(\$$[A-Za-z_][A-Za-z0-9_]*#)""".r
+
   /** the forbidden shapes, each with what a phase should reach for instead. */
-  private val Forbidden: List[(String, String)] = List(
-    "fullName ==" ->
-      ("compare SYMBOLS (`SymId`), or bind the name through `PolicyBinder` — a name is not a " +
+  private val Forbidden: List[Shape] = List(
+    Shape("fullName ==", _.contains("fullName =="),
+      "compare SYMBOLS (`SymId`), or bind the name through `PolicyBinder` — a name is not a " +
         "structural fact about anything (§4.56)"),
-    "fullName.startsWith" ->
-      ("a prefix that does not cut at a separator matches `com.foobar` from `com.foo`; use " +
+    Shape("fullName.startsWith", _.contains("fullName.startsWith"),
+      "a prefix that does not cut at a separator matches `com.foobar` from `com.foo`; use " +
         "`RuleScope.covers`, which is the one implementation of that rule"),
-    """+ "#" +""" ->
-      ("a member key rebuilt from `owner` and `name` carries no parameter list, so it is the same " +
+    Shape("""+ "#" +""", _.contains("""+ "#" +"""),
+      "a member key rebuilt from `owner` and `name` carries no parameter list, so it is the same " +
         "string for every overload; ask `PolicyBinder`, or render a `MemberKey`"),
+    Shape("interpolated #",
+      s => Interpolator.findFirstIn(s).isDefined && HashAdjacent.findFirstIn(s).isDefined,
+      "the same rebuilt key one spelling along — `s\"$owner#$name\"` is `owner + \"#\" + name`. " +
+        "Render a `MemberKey`, which is the one place that grammar is written"),
   )
 
   /** file → the shapes it is allowed to use, and WHY. One line each, or it is a site to fix. */
@@ -71,6 +95,10 @@ class PolicyKeyLintSpec extends munit.FunSuite:
           "so this is the same mint-or-reuse question `TypeRedirectTransform` asks about its target"),
     ),
     "PortMapTransform.scala" -> Map(
+      "interpolated #" ->
+        ("the `#` in `surfaceFingerprint` separates a map's SOURCE FINGERPRINT from its entry " +
+          "count — it names no member, and rendering a `MemberKey` there would be a lie about " +
+          "what the string is"),
       "fullName ==" ->
         ("a published port map's `upstream` column is a string in the EMITTED namespace, joined " +
           "against a key rebuilt the same way (ENGINE-LIMITS D1); both ends of that join move " +
@@ -125,12 +153,12 @@ class PolicyKeyLintSpec extends munit.FunSuite:
   test("no phase reconstructs member identity from a STRING — the §8.1 convention, enforced") {
     assert(sources.nonEmpty, "the transform package has no sources — this lint proves nothing")
     val violations = for
-      (file, src)      <- sources
-      (shape, instead) <- Forbidden
-      if !AllowList.get(file).exists(_.contains(shape))
-      (line, text)     <- codeLines(src)
-      if text.contains(shape)
-    yield s"$file:$line  `$shape`  — $instead\n    $text.trim"
+      (file, src)  <- sources
+      shape        <- Forbidden
+      if !AllowList.get(file).exists(_.contains(shape.name))
+      (line, text) <- codeLines(src)
+      if shape.hits(text)
+    yield s"$file:$line  `${shape.name}`  — ${shape.instead}\n    ${text.trim}"
     assertEquals(violations, Nil,
       s"\n${violations.size} forbidden string test(s) in the transform package:\n" +
         violations.mkString("\n") +
@@ -142,11 +170,13 @@ class PolicyKeyLintSpec extends munit.FunSuite:
     // The half that rots. An allow-list entry whose site was fixed or deleted goes on permitting
     // something nobody does, and the next real violation lands under it in silence.
     val bySource = sources.toMap
+    val byName   = Forbidden.map(s => s.name -> s).toMap
     val stale = for
       (file, shapes) <- AllowList.toList.sortBy(_._1)
       (shape, _)     <- shapes.toList.sortBy(_._1)
       src = bySource.getOrElse(file, fail(s"allow-list names $file, which the transform package does not have"))
-      if !codeLines(src).exists((_, t) => t.contains(shape))
+      test = byName.getOrElse(shape, fail(s"$file allows `$shape`, which is not a forbidden shape")).hits
+      if !codeLines(src).exists((_, t) => test(t))
     yield s"$file allows `$shape` and no longer uses it"
     assertEquals(stale, Nil, s"\nstale allow-list entries:\n${stale.mkString("\n")}")
   }

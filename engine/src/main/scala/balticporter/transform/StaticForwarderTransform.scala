@@ -54,7 +54,7 @@ final class StaticForwarderTransform(forwarders: List[StaticForwarderTransform.F
     forwarders.foreach(f => binder.bindType(name, "Forwarder.wrapper", f.wrapper))
     boundMembers = forwarders.flatMap { f =>
       f.members.toList.sorted.map { m =>
-        val key = s"${f.wrapper}#$m"
+        val key = MemberKey(f.wrapper, m).render
         key -> binder.bindMembers(name, memberSetting(f), key)
       }
     }.toMap
@@ -68,13 +68,13 @@ final class StaticForwarderTransform(forwarders: List[StaticForwarderTransform.F
     val hits: List[(StaticForwarderTransform.Forwarder, String, List[Symbol])] =
       forwarders.flatMap { f =>
         f.members.toList.sorted.map { m =>
-          val ss = boundMembers.get(s"${f.wrapper}#$m").toList
+          val ss = boundMembers.get(MemberKey(f.wrapper, m).render).toList
             .flatMap(_.toOption.getOrElse(Nil)).flatMap(_.sym).flatMap(binder.program.symbolOf)
           (f, m, ss)
         }
       }
     shapeFindings = hits.flatMap { (f, m, ss) =>
-      val key = s"${f.wrapper}#$m"
+      val key = MemberKey(f.wrapper, m).render
       val (none0, usable) = ss.partition(nullary)
       none0.map(_ =>
         PolicyFinding(name, memberSetting(f), key, PolicyIssue.Malformed,
@@ -160,7 +160,7 @@ final class StaticForwarderTransform(forwarders: List[StaticForwarderTransform.F
       mapping = targets.map { (t, f) =>
         val owner = ownerOf(f.receiver)
         val id    = SymId(next); next += 1
-        table = table.updated(Symbol(id, t.name, s"${f.receiver}#${t.name}", Flags(), owner, NoType))
+        table = table.updated(Symbol(id, t.name, MemberKey(f.receiver, t.name).render, Flags(), owner, NoType))
         t.id -> id
       }.toMap
 
@@ -168,8 +168,8 @@ final class StaticForwarderTransform(forwarders: List[StaticForwarderTransform.F
       // site (`Decision.declarationsUsing`). Read off the PRE-rewrite program: after the traversal
       // the site names `receiver#member` and the wrapper this decision is about is gone from it.
       targets.foreach { (t, f) =>
-        val from = s"${f.wrapper}#${t.name}"
-        val to   = s"${f.receiver}#${t.name}"
+        val from = MemberKey(f.wrapper, t.name).render
+        val to   = MemberKey(f.receiver, t.name).render
         Decision.declarationsUsing(program, t.id).foreach { (encl, origin) =>
           record(Decision(
             kind       = Decision.Kind.RedirectedCall,

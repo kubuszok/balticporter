@@ -675,7 +675,7 @@ final class CollectionsTransform(val scope: RuleScope = RuleScope.Everywhere())
     def qualified(s: SymId) = for
       m <- p.symbolOf(s)
       o <- p.symbolOf(m.owner)
-    yield s"${o.fullName}#${m.name}"
+    yield MemberKey(o.fullName, m.name).render
     val member  = qualified(t.method)
     // through a `TypeApply`: `xs.mapToObj[Integer](f)` is `Apply(TypeApply(Select(xs, mapToObj)))`,
     // and matching only `Select` silently skipped every explicitly-instantiated call — the chain
