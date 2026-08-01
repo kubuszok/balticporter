@@ -2922,9 +2922,13 @@ AND a `ScopedOut` decision, each:
 | collision the emitter will not move | 2 | `ScrollPane#scrollX`/`scrollY` — the target name is taken by a member the §4.55 passes do not relocate |
 
 All five are POLICY defects this manifest owns, not engine ones (CHUNK3 Q30): drop them, or name the
-accessor sge actually converted. They are left in DELIBERATELY — a refusal that is counted,
-explained and reproducible is the report the `PolicyIssue` channel exists to produce, and deleting
-the entries would delete the evidence that it works.
+accessor sge actually converted. **THE "LEAVE THEM IN DELIBERATELY" ARGUMENT WAS WRONG FOR THE FIRST
+THREE AND §11.24 REVERSES IT.** "A refusal that is counted, explained and reproducible is the report
+the channel exists to produce" is true of a refusal a port can ACT on; the three no-nilary-getter
+entries name accessors that take arguments, so the phase will refuse them on every run for as long
+as the upstream stands, and a finding that can never be cleared is a noise floor that teaches its
+reader to skim the number. They are deleted; the two `ScrollPane` collisions stay, because those ARE
+pending work and the count is the thing that keeps them visible.
 
 **Every applied property landed on its EXACT requested name: zero suffixed rename targets.** The
 collisions that would have needed one were absorbed by the emitter moving the FIELD
@@ -3019,11 +3023,11 @@ port throughout.
   and it recorded nothing at all — so the seven are not rows one decider lost, they are seven of ~280
   rows a second decider never had. Filed against the wrong decider, the item asks for a fix that
   would have re-recorded seven and left the other ~273 exactly as invisible.
-- **A base's refusals are republished in every dependent's `decisions.tsv`** — 5 rows each in anim8,
-  ashley, ashley-test, gltf, gltf-test, screens, vfx. `ENGINE-LIMITS.md` D2's module scope filters by
-  DECLARATION and a refusal has none, so the one decision kind that cannot be scoped is the one that
-  leaks. The `policy` findings ARE correctly scoped (0 on every dependent); only the provenance
-  artifact is not.
+- **A base's refusals are republished in every dependent's `decisions.tsv`** — 2 rows each in anim8,
+  ashley, ashley-test, gltf, gltf-test, screens, vfx (5 until §11.24 deleted the three permanently
+  refused entries). `ENGINE-LIMITS.md` D2's module scope filters by DECLARATION and a refusal has
+  none, so the one decision kind that cannot be scoped is the one that leaks. The `policy` findings
+  ARE correctly scoped (0 on every dependent); only the provenance artifact is not.
 
 ### 11.19 Checkpoint-4 audit remediation — F1: a dependent's ANNOTATION may not retype its BASE
 
@@ -3211,6 +3215,47 @@ a constant and state the MECHANISM — the fifteen `PortRun.RequiredChecks` rows
 run's own pipeline registers (`porter-notes` always, the three `collection-*` with
 `CollectionsTransform`, `nullability-boundary` with `NullabilityTransform`) — because a number in
 prose is what went stale, twice.
+
+### 11.24 Checkpoint-4 audit remediation — F6: the `policy` noise floor, and a duplicate the corpus was emitting
+
+`LibgdxPolicy`'s bean-property harvest, 144 entries -> **133**. **`policy` 5 -> 2 on libgdx-core, and
+that is the ONLY check that moves anywhere.** Every other count identical on all thirteen ports, 0
+compile errors, every suite unchanged, twelve ports 0 members changed.
+
+**Three entries were PERMANENTLY refused, and a finding that can never be cleared is a noise floor.**
+`VertexAttributes#getOffset(int)`, `Polygon#getVertex(int,Vector2)` and `Polygon#getCentroid(Vector2)`
+all take ARGUMENTS, so there is no nilary getter to convert and the phase refuses them on every run
+for as long as the upstream stands. Deleted. The **two survivors are real pending work** and stay
+counted: `ScrollPane#scrollX`/`scrollY` hit a name the emitter's §4.55 passes will not relocate, and
+completing those get-only entries against an upstream that has setters is a manifest edit nobody has
+made. `policy > 0` on this port now means something again.
+
+**And nine per-implementor entries were DUPLICATES the corpus was emitting twice.** The phase renames
+the whole override COMPONENT, so an entry on the type that DECLARES a member already reaches every
+implementor; the `Drawable` family was collapsed to its interface when the harvest was written and
+two more families were owed the same treatment. `isManaged` is declared abstract on `GLTexture` (one
+entry replaces three) and `TiledMapTile` declares all seven of its properties (seven entries replace
+thirteen).
+
+**THE AUDIT PREDICTED ZERO MEMBER MOVEMENT AND THAT WAS WRONG — 49 members moved, and the reason is
+the point.** A duplicate entry is not inert: `MemberRenamer` records one `RenamedMember` decision per
+member of the component PER REQUEST, and the emitter renders every decision about a subject it is
+emitting — so `StaticTiledMapTile.scala` carried TWO notes on `def id`, in two different `key=`s,
+telling its reader the same thing twice. Removing the duplicates removes the second note.
+
+| | |
+|---|---:|
+| `policy`, libgdx-core | 5 -> **2** |
+| `RenamedMember` decisions | 1290 -> **1250** (-40, exactly the duplicates) |
+| `ScopedOut` decisions | 56 -> **53** (-3, the deleted refusals; they leaked into all seven dependents' artifacts too, §12.1's last row, now 2 each) |
+| members changed, libgdx-core | **49** = 41 members + 8 enclosing types |
+| …the 41 | 5 `managed` (`GLTexture` + `Cubemap` + `Texture` + `Texture3D` + `TextureArray`) and 36 tile accessors (12 each across `TiledMapTile`, `AnimatedTiledMapTile`, `StaticTiledMapTile`) |
+| members changed, every other port | **0** |
+
+**Nothing SEMANTIC moved and the artifact proves it**: the same 41 members are renamed to the same
+names by the same components — `def id`, `def id_=` are emitted exactly as before — and what changed
+is one note and its `key=`. The three deleted refusals moved no member at all, which is what "inert
+on the code" means and what the audit's prediction was right about.
 
 ## 12. Remaining work, across the engine
 

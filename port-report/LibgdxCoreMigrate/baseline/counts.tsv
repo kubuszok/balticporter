@@ -7,7 +7,7 @@ jdk-surface	24
 manifest	0
 nullability-boundary	160
 omissions	65
-policy	5
+policy	2
 port-map	0
 portability(all)	151
 portability(emitted)	151

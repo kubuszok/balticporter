@@ -1,4 +1,4 @@
-# balticporter port map	schema=3	module=libgdx-core	engine=balticporter/0.1.0-SNAPSHOT	sources=d4e1a1128812d482	files=597	policy=afc6011800b3009e
+# balticporter port map	schema=3	module=libgdx-core	engine=balticporter/0.1.0-SNAPSHOT	sources=d4e1a1128812d482	files=597	policy=e5f57ea40350d953
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.badlogic.gdx.AbstractGraphics	sge.AbstractGraphics	Renamed	-		0		companion=yes flags=abstract form=class parents=sge.Graphics primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.AbstractInput	sge.AbstractInput	Renamed	-		0		companion=yes flags=abstract form=class parents=sge.Input primary=() primaryKind=unique-root primaryVis=public
@@ -2111,7 +2111,7 @@ member	com.badlogic.gdx.graphics.Cubemap#getNumManagedCubemaps()	sge.graphics.Cu
 member	com.badlogic.gdx.graphics.Cubemap#getWidth()	sge.graphics.Cubemap#getWidth()	Renamed	-	com/badlogic/gdx/graphics/Cubemap.java	173	3fdd41063f92a54d	
 member	com.badlogic.gdx.graphics.Cubemap#invalidateAllCubemaps(Application)	sge.graphics.Cubemap#invalidateAllCubemaps(Application)	Renamed	-	com/badlogic/gdx/graphics/Cubemap.java	212	0ab19507d0c10bfb	placement=companion
 member	com.badlogic.gdx.graphics.Cubemap#load(CubemapData)	sge.graphics.Cubemap#load(CubemapData)	Renamed	-	com/badlogic/gdx/graphics/Cubemap.java	146	7844651cb642f2ce	
-member	com.badlogic.gdx.graphics.Cubemap#managed()	sge.graphics.Cubemap#managed()	Renamed	-	com/badlogic/gdx/graphics/Cubemap.java	161	329242c7c3d53f31	
+member	com.badlogic.gdx.graphics.Cubemap#managed()	sge.graphics.Cubemap#managed()	Renamed	-	com/badlogic/gdx/graphics/Cubemap.java	161	e5d2dba75d918912	
 member	com.badlogic.gdx.graphics.Cubemap#managedCubemaps	sge.graphics.Cubemap#managedCubemaps	Renamed	-	com/badlogic/gdx/graphics/Cubemap.java	40	bd57ec042283971e	placement=companion
 member	com.badlogic.gdx.graphics.Cubemap#reload()	sge.graphics.Cubemap#reload()	Renamed	-	com/badlogic/gdx/graphics/Cubemap.java	166	cbdbeb37b17a4e2f	
 member	com.badlogic.gdx.graphics.Cubemap#setAssetManager(AssetManager)	sge.graphics.Cubemap#setAssetManager(AssetManager)	Renamed	-	com/badlogic/gdx/graphics/Cubemap.java	274	bad4bfe28eadae8e	placement=companion
@@ -3518,7 +3518,7 @@ member	com.badlogic.gdx.graphics.GLTexture#getWidth()	sge.graphics.GLTexture#get
 member	com.badlogic.gdx.graphics.GLTexture#glHandle	sge.graphics.GLTexture#glHandle	Renamed	-	com/badlogic/gdx/graphics/GLTexture.java	38	05d3ca5f5487bd1b	
 member	com.badlogic.gdx.graphics.GLTexture#glTarget	sge.graphics.GLTexture#glTarget	Renamed	-	com/badlogic/gdx/graphics/GLTexture.java	37	1de5862b25088fea	
 member	com.badlogic.gdx.graphics.GLTexture#magFilter	sge.graphics.GLTexture#magFilter	Renamed	-	com/badlogic/gdx/graphics/GLTexture.java	40	b0ae365a67860f59	
-member	com.badlogic.gdx.graphics.GLTexture#managed()	sge.graphics.GLTexture#managed()	Renamed	-	com/badlogic/gdx/graphics/GLTexture.java	66	165040dcfc929d14	
+member	com.badlogic.gdx.graphics.GLTexture#managed()	sge.graphics.GLTexture#managed()	Renamed	-	com/badlogic/gdx/graphics/GLTexture.java	66	6060d19f04a09a1a	
 member	com.badlogic.gdx.graphics.GLTexture#maxAnisotropicFilterLevel	sge.graphics.GLTexture#maxAnisotropicFilterLevel	Renamed	-	com/badlogic/gdx/graphics/GLTexture.java	44	51d753165413454d	placement=companion vis=private
 member	com.badlogic.gdx.graphics.GLTexture#minFilter	sge.graphics.GLTexture#minFilter	Renamed	-	com/badlogic/gdx/graphics/GLTexture.java	39	0dd373add17bb5d4	
 member	com.badlogic.gdx.graphics.GLTexture#reload()	sge.graphics.GLTexture#reload()	Renamed	-	com/badlogic/gdx/graphics/GLTexture.java	68	333e9664cd398ba5	
@@ -3752,7 +3752,7 @@ member	com.badlogic.gdx.graphics.Texture#getNumManagedTextures()	sge.graphics.Te
 member	com.badlogic.gdx.graphics.Texture#getWidth()	sge.graphics.Texture#getWidth()	Renamed	-	com/badlogic/gdx/graphics/Texture.java	195	3fdd41063f92a54d	
 member	com.badlogic.gdx.graphics.Texture#invalidateAllTextures(Application)	sge.graphics.Texture#invalidateAllTextures(Application)	Renamed	-	com/badlogic/gdx/graphics/Texture.java	247	470b8e5127efa380	placement=companion
 member	com.badlogic.gdx.graphics.Texture#load(TextureData)	sge.graphics.Texture#load(TextureData)	Renamed	-	com/badlogic/gdx/graphics/Texture.java	155	76a87df8a8a3a215	
-member	com.badlogic.gdx.graphics.Texture#managed()	sge.graphics.Texture#managed()	Renamed	-	com/badlogic/gdx/graphics/Texture.java	214	109f5f447c465521	
+member	com.badlogic.gdx.graphics.Texture#managed()	sge.graphics.Texture#managed()	Renamed	-	com/badlogic/gdx/graphics/Texture.java	214	b7b65b98336429b1	
 member	com.badlogic.gdx.graphics.Texture#managedTextures	sge.graphics.Texture#managedTextures	Renamed	-	com/badlogic/gdx/graphics/Texture.java	50	304fb834f894749e	placement=companion
 member	com.badlogic.gdx.graphics.Texture#reload()	sge.graphics.Texture#reload()	Renamed	-	com/badlogic/gdx/graphics/Texture.java	174	d6a6aae81485b1c3	
 member	com.badlogic.gdx.graphics.Texture#setAssetManager(AssetManager)	sge.graphics.Texture#setAssetManager(AssetManager)	Renamed	-	com/badlogic/gdx/graphics/Texture.java	310	232c1fcb82c5151d	placement=companion
@@ -3776,7 +3776,7 @@ member	com.badlogic.gdx.graphics.Texture3D#getNumManagedTextures3D()	sge.graphic
 member	com.badlogic.gdx.graphics.Texture3D#getWidth()	sge.graphics.Texture3D#getWidth()	Renamed	-	com/badlogic/gdx/graphics/Texture3D.java	82	3fdd41063f92a54d	
 member	com.badlogic.gdx.graphics.Texture3D#invalidateAllTextureArrays(Application)	sge.graphics.Texture3D#invalidateAllTextureArrays(Application)	Renamed	-	com/badlogic/gdx/graphics/Texture3D.java	121	a4ca5c5c0116b713	placement=companion
 member	com.badlogic.gdx.graphics.Texture3D#load(Texture3DData)	sge.graphics.Texture3D#load(Texture3DData)	Renamed	-	com/badlogic/gdx/graphics/Texture3D.java	55	389516f7bc66d12f	vis=private
-member	com.badlogic.gdx.graphics.Texture3D#managed()	sge.graphics.Texture3D#managed()	Renamed	-	com/badlogic/gdx/graphics/Texture3D.java	97	79613164ec761d12	
+member	com.badlogic.gdx.graphics.Texture3D#managed()	sge.graphics.Texture3D#managed()	Renamed	-	com/badlogic/gdx/graphics/Texture3D.java	97	2351547a1897dc55	
 member	com.badlogic.gdx.graphics.Texture3D#managedTexture3Ds	sge.graphics.Texture3D#managedTexture3Ds	Renamed	-	com/badlogic/gdx/graphics/Texture3D.java	33	c1b3f55bdd2d7ddd	placement=companion
 member	com.badlogic.gdx.graphics.Texture3D#rWrap	sge.graphics.Texture3D#rWrap	Renamed	-	com/badlogic/gdx/graphics/Texture3D.java	37	ad35479b056e2536	
 member	com.badlogic.gdx.graphics.Texture3D#reload()	sge.graphics.Texture3D#reload()	Renamed	-	com/badlogic/gdx/graphics/Texture3D.java	102	bfe399a7c751cc54	
@@ -3812,7 +3812,7 @@ member	com.badlogic.gdx.graphics.TextureArray#getNumManagedTextureArrays()	sge.g
 member	com.badlogic.gdx.graphics.TextureArray#getWidth()	sge.graphics.TextureArray#getWidth()	Renamed	-	com/badlogic/gdx/graphics/TextureArray.java	91	3fdd41063f92a54d	
 member	com.badlogic.gdx.graphics.TextureArray#invalidateAllTextureArrays(Application)	sge.graphics.TextureArray#invalidateAllTextureArrays(Application)	Renamed	-	com/badlogic/gdx/graphics/TextureArray.java	130	9ce7e8159991d8f5	placement=companion
 member	com.badlogic.gdx.graphics.TextureArray#load(TextureArrayData)	sge.graphics.TextureArray#load(TextureArrayData)	Renamed	-	com/badlogic/gdx/graphics/TextureArray.java	72	6fe59c27e33f75d6	vis=private
-member	com.badlogic.gdx.graphics.TextureArray#managed()	sge.graphics.TextureArray#managed()	Renamed	-	com/badlogic/gdx/graphics/TextureArray.java	106	5cf2733144f5ba72	
+member	com.badlogic.gdx.graphics.TextureArray#managed()	sge.graphics.TextureArray#managed()	Renamed	-	com/badlogic/gdx/graphics/TextureArray.java	106	2421fef3efd4e837	
 member	com.badlogic.gdx.graphics.TextureArray#managedTextureArrays	sge.graphics.TextureArray#managedTextureArrays	Renamed	-	com/badlogic/gdx/graphics/TextureArray.java	32	dfb2c47f116c26e3	placement=companion
 member	com.badlogic.gdx.graphics.TextureArray#reload()	sge.graphics.TextureArray#reload()	Renamed	-	com/badlogic/gdx/graphics/TextureArray.java	111	bfe399a7c751cc54	
 member	com.badlogic.gdx.graphics.TextureArrayData#consumeTextureArrayData()	sge.graphics.TextureArrayData#consumeTextureArrayData()	Renamed	-	com/badlogic/gdx/graphics/TextureArrayData.java	45	98e733e316367071	
@@ -10618,18 +10618,18 @@ member	com.badlogic.gdx.maps.tiled.TiledMapRenderer#renderImageLayer(TiledMapIma
 member	com.badlogic.gdx.maps.tiled.TiledMapRenderer#renderObject(MapObject)	sge.maps.tiled.TiledMapRenderer#renderObject(MapObject)	Renamed	-	com/badlogic/gdx/maps/tiled/TiledMapRenderer.java	26	d20ec5d27260f52b	
 member	com.badlogic.gdx.maps.tiled.TiledMapRenderer#renderObjects(MapLayer)	sge.maps.tiled.TiledMapRenderer#renderObjects(MapLayer)	Renamed	-	com/badlogic/gdx/maps/tiled/TiledMapRenderer.java	24	dd2cb5955f68f583	
 member	com.badlogic.gdx.maps.tiled.TiledMapRenderer#renderTileLayer(TiledMapTileLayer)	sge.maps.tiled.TiledMapRenderer#renderTileLayer(TiledMapTileLayer)	Renamed	-	com/badlogic/gdx/maps/tiled/TiledMapRenderer.java	28	a73447e86dbfdd59	
-member	com.badlogic.gdx.maps.tiled.TiledMapTile#blendMode()	sge.maps.tiled.TiledMapTile#blendMode()	Renamed	-	com/badlogic/gdx/maps/tiled/TiledMapTile.java	35	991389fcc3664db2	
-member	com.badlogic.gdx.maps.tiled.TiledMapTile#blendMode_=(BlendMode)	sge.maps.tiled.TiledMapTile#blendMode_=(BlendMode)	Renamed	-	com/badlogic/gdx/maps/tiled/TiledMapTile.java	40	4a94de0a1d9304d2	
-member	com.badlogic.gdx.maps.tiled.TiledMapTile#id()	sge.maps.tiled.TiledMapTile#id()	Renamed	-	com/badlogic/gdx/maps/tiled/TiledMapTile.java	30	9599c5fc16833a6e	
-member	com.badlogic.gdx.maps.tiled.TiledMapTile#id_=(int)	sge.maps.tiled.TiledMapTile#id_=(int)	Renamed	-	com/badlogic/gdx/maps/tiled/TiledMapTile.java	32	63df26a9fe02f942	
-member	com.badlogic.gdx.maps.tiled.TiledMapTile#objects()	sge.maps.tiled.TiledMapTile#objects()	Renamed	-	com/badlogic/gdx/maps/tiled/TiledMapTile.java	64	3b85076a09582aeb	
-member	com.badlogic.gdx.maps.tiled.TiledMapTile#offsetX()	sge.maps.tiled.TiledMapTile#offsetX()	Renamed	-	com/badlogic/gdx/maps/tiled/TiledMapTile.java	49	89b43bbba1a60047	
-member	com.badlogic.gdx.maps.tiled.TiledMapTile#offsetX_=(float)	sge.maps.tiled.TiledMapTile#offsetX_=(float)	Renamed	-	com/badlogic/gdx/maps/tiled/TiledMapTile.java	52	2b01ac437fbc8c29	
-member	com.badlogic.gdx.maps.tiled.TiledMapTile#offsetY()	sge.maps.tiled.TiledMapTile#offsetY()	Renamed	-	com/badlogic/gdx/maps/tiled/TiledMapTile.java	55	a25c82123d6b337e	
-member	com.badlogic.gdx.maps.tiled.TiledMapTile#offsetY_=(float)	sge.maps.tiled.TiledMapTile#offsetY_=(float)	Renamed	-	com/badlogic/gdx/maps/tiled/TiledMapTile.java	58	48ce4f9af7d28a9c	
-member	com.badlogic.gdx.maps.tiled.TiledMapTile#properties()	sge.maps.tiled.TiledMapTile#properties()	Renamed	-	com/badlogic/gdx/maps/tiled/TiledMapTile.java	61	b4c9f6c375b04711	
-member	com.badlogic.gdx.maps.tiled.TiledMapTile#textureRegion()	sge.maps.tiled.TiledMapTile#textureRegion()	Renamed	-	com/badlogic/gdx/maps/tiled/TiledMapTile.java	43	79765ed671e6fca4	
-member	com.badlogic.gdx.maps.tiled.TiledMapTile#textureRegion_=(TextureRegion)	sge.maps.tiled.TiledMapTile#textureRegion_=(TextureRegion)	Renamed	-	com/badlogic/gdx/maps/tiled/TiledMapTile.java	46	8d50e9ddb651966b	
+member	com.badlogic.gdx.maps.tiled.TiledMapTile#blendMode()	sge.maps.tiled.TiledMapTile#blendMode()	Renamed	-	com/badlogic/gdx/maps/tiled/TiledMapTile.java	35	95874071713c0355	
+member	com.badlogic.gdx.maps.tiled.TiledMapTile#blendMode_=(BlendMode)	sge.maps.tiled.TiledMapTile#blendMode_=(BlendMode)	Renamed	-	com/badlogic/gdx/maps/tiled/TiledMapTile.java	40	0b3806aba32274f4	
+member	com.badlogic.gdx.maps.tiled.TiledMapTile#id()	sge.maps.tiled.TiledMapTile#id()	Renamed	-	com/badlogic/gdx/maps/tiled/TiledMapTile.java	30	8e82ee92cee3cfc6	
+member	com.badlogic.gdx.maps.tiled.TiledMapTile#id_=(int)	sge.maps.tiled.TiledMapTile#id_=(int)	Renamed	-	com/badlogic/gdx/maps/tiled/TiledMapTile.java	32	c67a9a9f1f4441cc	
+member	com.badlogic.gdx.maps.tiled.TiledMapTile#objects()	sge.maps.tiled.TiledMapTile#objects()	Renamed	-	com/badlogic/gdx/maps/tiled/TiledMapTile.java	64	8b2de211dc0e6383	
+member	com.badlogic.gdx.maps.tiled.TiledMapTile#offsetX()	sge.maps.tiled.TiledMapTile#offsetX()	Renamed	-	com/badlogic/gdx/maps/tiled/TiledMapTile.java	49	4a6e2ce336a801cd	
+member	com.badlogic.gdx.maps.tiled.TiledMapTile#offsetX_=(float)	sge.maps.tiled.TiledMapTile#offsetX_=(float)	Renamed	-	com/badlogic/gdx/maps/tiled/TiledMapTile.java	52	04b3e785c83a6f84	
+member	com.badlogic.gdx.maps.tiled.TiledMapTile#offsetY()	sge.maps.tiled.TiledMapTile#offsetY()	Renamed	-	com/badlogic/gdx/maps/tiled/TiledMapTile.java	55	11299902cd1af491	
+member	com.badlogic.gdx.maps.tiled.TiledMapTile#offsetY_=(float)	sge.maps.tiled.TiledMapTile#offsetY_=(float)	Renamed	-	com/badlogic/gdx/maps/tiled/TiledMapTile.java	58	b6abdde825a582df	
+member	com.badlogic.gdx.maps.tiled.TiledMapTile#properties()	sge.maps.tiled.TiledMapTile#properties()	Renamed	-	com/badlogic/gdx/maps/tiled/TiledMapTile.java	61	086a1f5e9e6150b5	
+member	com.badlogic.gdx.maps.tiled.TiledMapTile#textureRegion()	sge.maps.tiled.TiledMapTile#textureRegion()	Renamed	-	com/badlogic/gdx/maps/tiled/TiledMapTile.java	43	4ac839a8821c2bc6	
+member	com.badlogic.gdx.maps.tiled.TiledMapTile#textureRegion_=(TextureRegion)	sge.maps.tiled.TiledMapTile#textureRegion_=(TextureRegion)	Renamed	-	com/badlogic/gdx/maps/tiled/TiledMapTile.java	46	23eaa2f7f8178c90	
 member	com.badlogic.gdx.maps.tiled.TiledMapTileLayer#<stmt1>	sge.maps.tiled.TiledMapTileLayer#<stmt1>	Renamed	-	com/badlogic/gdx/maps/tiled/TiledMapTileLayer.java	60	19ab7a3c85329e47	
 member	com.badlogic.gdx.maps.tiled.TiledMapTileLayer#<stmt2>	sge.maps.tiled.TiledMapTileLayer#<stmt2>	Renamed	-	com/badlogic/gdx/maps/tiled/TiledMapTileLayer.java	61	756b3dfe32c62344	
 member	com.badlogic.gdx.maps.tiled.TiledMapTileLayer#<stmt3>	sge.maps.tiled.TiledMapTileLayer#<stmt3>	Renamed	-	com/badlogic/gdx/maps/tiled/TiledMapTileLayer.java	62	ce52d6130b027d2f	
@@ -10841,50 +10841,50 @@ member	com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile#animationIntervals
 member	com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile#animationIntervals()	sge.maps.tiled.tiles.AnimatedTiledMapTile#animationIntervals()	Renamed	-	com/badlogic/gdx/maps/tiled/tiles/AnimatedTiledMapTile.java	114	8fe0cf7318900ff0	
 member	com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile#animationIntervals_=(Array)	sge.maps.tiled.tiles.AnimatedTiledMapTile#animationIntervals_=(Array<int>)	Renamed	-	com/badlogic/gdx/maps/tiled/tiles/AnimatedTiledMapTile.java	118	cf20ea126d9dd995	
 member	com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile#blendMode	sge.maps.tiled.tiles.AnimatedTiledMapTile#blendMode	Renamed	-	com/badlogic/gdx/maps/tiled/tiles/AnimatedTiledMapTile.java	35	8d124d89f4283d8b	name=blendMode$field
-member	com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile#blendMode()	sge.maps.tiled.tiles.AnimatedTiledMapTile#blendMode()	Renamed	-	com/badlogic/gdx/maps/tiled/tiles/AnimatedTiledMapTile.java	58	748320e4e29d75d3	
-member	com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile#blendMode_=(BlendMode)	sge.maps.tiled.tiles.AnimatedTiledMapTile#blendMode_=(BlendMode)	Renamed	-	com/badlogic/gdx/maps/tiled/tiles/AnimatedTiledMapTile.java	63	43affaf05c285563	
+member	com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile#blendMode()	sge.maps.tiled.tiles.AnimatedTiledMapTile#blendMode()	Renamed	-	com/badlogic/gdx/maps/tiled/tiles/AnimatedTiledMapTile.java	58	1e64ad0c8b48df5b	
+member	com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile#blendMode_=(BlendMode)	sge.maps.tiled.tiles.AnimatedTiledMapTile#blendMode_=(BlendMode)	Renamed	-	com/badlogic/gdx/maps/tiled/tiles/AnimatedTiledMapTile.java	63	6296f294f17dab49	
 member	com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile#currentFrame()	sge.maps.tiled.tiles.AnimatedTiledMapTile#currentFrame()	Renamed	-	com/badlogic/gdx/maps/tiled/tiles/AnimatedTiledMapTile.java	80	d39f7e14dee58445	
 member	com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile#currentFrameIndex()	sge.maps.tiled.tiles.AnimatedTiledMapTile#currentFrameIndex()	Renamed	-	com/badlogic/gdx/maps/tiled/tiles/AnimatedTiledMapTile.java	67	6312492dcda6e131	
 member	com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile#frameTiles	sge.maps.tiled.tiles.AnimatedTiledMapTile#frameTiles	Renamed	-	com/badlogic/gdx/maps/tiled/tiles/AnimatedTiledMapTile.java	41	00ebeebba60ceb88	name=frameTiles$field
 member	com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile#frameTiles()	sge.maps.tiled.tiles.AnimatedTiledMapTile#frameTiles()	Renamed	-	com/badlogic/gdx/maps/tiled/tiles/AnimatedTiledMapTile.java	186	a081b085023dae41	
 member	com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile#id	sge.maps.tiled.tiles.AnimatedTiledMapTile#id	Renamed	-	com/badlogic/gdx/maps/tiled/tiles/AnimatedTiledMapTile.java	33	0ede12ef2fcc4880	name=id$field
-member	com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile#id()	sge.maps.tiled.tiles.AnimatedTiledMapTile#id()	Renamed	-	com/badlogic/gdx/maps/tiled/tiles/AnimatedTiledMapTile.java	48	06bbaabde1b80528	
-member	com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile#id_=(int)	sge.maps.tiled.tiles.AnimatedTiledMapTile#id_=(int)	Renamed	-	com/badlogic/gdx/maps/tiled/tiles/AnimatedTiledMapTile.java	53	024b10da9067534a	
+member	com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile#id()	sge.maps.tiled.tiles.AnimatedTiledMapTile#id()	Renamed	-	com/badlogic/gdx/maps/tiled/tiles/AnimatedTiledMapTile.java	48	f86e8079fd8ac7e1	
+member	com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile#id_=(int)	sge.maps.tiled.tiles.AnimatedTiledMapTile#id_=(int)	Renamed	-	com/badlogic/gdx/maps/tiled/tiles/AnimatedTiledMapTile.java	53	183e7c1e8dfd1591	
 member	com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile#initialTimeOffset	sge.maps.tiled.tiles.AnimatedTiledMapTile#initialTimeOffset	Renamed	-	com/badlogic/gdx/maps/tiled/tiles/AnimatedTiledMapTile.java	45	eb7886bfabc585f0	placement=companion vis=private
 member	com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile#lastTiledMapRenderTime	sge.maps.tiled.tiles.AnimatedTiledMapTile#lastTiledMapRenderTime	Renamed	-	com/badlogic/gdx/maps/tiled/tiles/AnimatedTiledMapTile.java	31	0b64df6347e8b44c	placement=companion vis=private
 member	com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile#loopDuration	sge.maps.tiled.tiles.AnimatedTiledMapTile#loopDuration	Renamed	-	com/badlogic/gdx/maps/tiled/tiles/AnimatedTiledMapTile.java	44	a876535e7ac29ec8	vis=private
 member	com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile#objects	sge.maps.tiled.tiles.AnimatedTiledMapTile#objects	Renamed	-	com/badlogic/gdx/maps/tiled/tiles/AnimatedTiledMapTile.java	39	3ce2da1878a08261	name=objects$field
-member	com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile#objects()	sge.maps.tiled.tiles.AnimatedTiledMapTile#objects()	Renamed	-	com/badlogic/gdx/maps/tiled/tiles/AnimatedTiledMapTile.java	142	d0000f19dd63c78e	
-member	com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile#offsetX()	sge.maps.tiled.tiles.AnimatedTiledMapTile#offsetX()	Renamed	-	com/badlogic/gdx/maps/tiled/tiles/AnimatedTiledMapTile.java	95	30122e491efecd9c	
-member	com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile#offsetX_=(float)	sge.maps.tiled.tiles.AnimatedTiledMapTile#offsetX_=(float)	Renamed	-	com/badlogic/gdx/maps/tiled/tiles/AnimatedTiledMapTile.java	100	d69ac8e573edc176	
-member	com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile#offsetY()	sge.maps.tiled.tiles.AnimatedTiledMapTile#offsetY()	Renamed	-	com/badlogic/gdx/maps/tiled/tiles/AnimatedTiledMapTile.java	105	ea217d3c397cb303	
-member	com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile#offsetY_=(float)	sge.maps.tiled.tiles.AnimatedTiledMapTile#offsetY_=(float)	Renamed	-	com/badlogic/gdx/maps/tiled/tiles/AnimatedTiledMapTile.java	110	a626a70b126a1866	
+member	com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile#objects()	sge.maps.tiled.tiles.AnimatedTiledMapTile#objects()	Renamed	-	com/badlogic/gdx/maps/tiled/tiles/AnimatedTiledMapTile.java	142	25a8a78638185ee2	
+member	com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile#offsetX()	sge.maps.tiled.tiles.AnimatedTiledMapTile#offsetX()	Renamed	-	com/badlogic/gdx/maps/tiled/tiles/AnimatedTiledMapTile.java	95	8e06177fa2a4482b	
+member	com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile#offsetX_=(float)	sge.maps.tiled.tiles.AnimatedTiledMapTile#offsetX_=(float)	Renamed	-	com/badlogic/gdx/maps/tiled/tiles/AnimatedTiledMapTile.java	100	09501edb72c37597	
+member	com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile#offsetY()	sge.maps.tiled.tiles.AnimatedTiledMapTile#offsetY()	Renamed	-	com/badlogic/gdx/maps/tiled/tiles/AnimatedTiledMapTile.java	105	38028150a7356e4d	
+member	com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile#offsetY_=(float)	sge.maps.tiled.tiles.AnimatedTiledMapTile#offsetY_=(float)	Renamed	-	com/badlogic/gdx/maps/tiled/tiles/AnimatedTiledMapTile.java	110	c5f23858a6956598	
 member	com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile#properties	sge.maps.tiled.tiles.AnimatedTiledMapTile#properties	Renamed	-	com/badlogic/gdx/maps/tiled/tiles/AnimatedTiledMapTile.java	37	93e203bafd8fb235	name=properties$field
-member	com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile#properties()	sge.maps.tiled.tiles.AnimatedTiledMapTile#properties()	Renamed	-	com/badlogic/gdx/maps/tiled/tiles/AnimatedTiledMapTile.java	134	0c81a56746e183db	
-member	com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile#textureRegion()	sge.maps.tiled.tiles.AnimatedTiledMapTile#textureRegion()	Renamed	-	com/badlogic/gdx/maps/tiled/tiles/AnimatedTiledMapTile.java	85	393cf0c18f10fe0a	
-member	com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile#textureRegion_=(TextureRegion)	sge.maps.tiled.tiles.AnimatedTiledMapTile#textureRegion_=(TextureRegion)	Renamed	-	com/badlogic/gdx/maps/tiled/tiles/AnimatedTiledMapTile.java	90	f26b21129ed7a993	
+member	com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile#properties()	sge.maps.tiled.tiles.AnimatedTiledMapTile#properties()	Renamed	-	com/badlogic/gdx/maps/tiled/tiles/AnimatedTiledMapTile.java	134	ed57dd7347516112	
+member	com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile#textureRegion()	sge.maps.tiled.tiles.AnimatedTiledMapTile#textureRegion()	Renamed	-	com/badlogic/gdx/maps/tiled/tiles/AnimatedTiledMapTile.java	85	82ebf69436db32b4	
+member	com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile#textureRegion_=(TextureRegion)	sge.maps.tiled.tiles.AnimatedTiledMapTile#textureRegion_=(TextureRegion)	Renamed	-	com/badlogic/gdx/maps/tiled/tiles/AnimatedTiledMapTile.java	90	a9be9325c5da2386	
 member	com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile#updateAnimationBaseTime()	sge.maps.tiled.tiles.AnimatedTiledMapTile#updateAnimationBaseTime()	Renamed	-	com/badlogic/gdx/maps/tiled/tiles/AnimatedTiledMapTile.java	151	6f5973ddf9f58ad2	placement=companion
 member	com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile#<init>(StaticTiledMapTile)	sge.maps.tiled.tiles.StaticTiledMapTile#<init>(StaticTiledMapTile)	Renamed	-	com/badlogic/gdx/maps/tiled/tiles/StaticTiledMapTile.java	117	f17d6e138adea595	
 member	com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile#<init>(TextureRegion)	sge.maps.tiled.tiles.StaticTiledMapTile#<init>(TextureRegion)	Renamed	-	com/badlogic/gdx/maps/tiled/tiles/StaticTiledMapTile.java	110	2cdf2c3e36a21aad	
 member	com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile#blendMode	sge.maps.tiled.tiles.StaticTiledMapTile#blendMode	Renamed	-	com/badlogic/gdx/maps/tiled/tiles/StaticTiledMapTile.java	29	dbae044255d8e5cd	name=blendMode$field
-member	com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile#blendMode()	sge.maps.tiled.tiles.StaticTiledMapTile#blendMode()	Renamed	-	com/badlogic/gdx/maps/tiled/tiles/StaticTiledMapTile.java	52	f52e9343246f6f74	
-member	com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile#blendMode_=(BlendMode)	sge.maps.tiled.tiles.StaticTiledMapTile#blendMode_=(BlendMode)	Renamed	-	com/badlogic/gdx/maps/tiled/tiles/StaticTiledMapTile.java	57	3df8ab3adc4a46e5	
+member	com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile#blendMode()	sge.maps.tiled.tiles.StaticTiledMapTile#blendMode()	Renamed	-	com/badlogic/gdx/maps/tiled/tiles/StaticTiledMapTile.java	52	146994c5578d13a3	
+member	com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile#blendMode_=(BlendMode)	sge.maps.tiled.tiles.StaticTiledMapTile#blendMode_=(BlendMode)	Renamed	-	com/badlogic/gdx/maps/tiled/tiles/StaticTiledMapTile.java	57	fe14e003e39d22e5	
 member	com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile#id	sge.maps.tiled.tiles.StaticTiledMapTile#id	Renamed	-	com/badlogic/gdx/maps/tiled/tiles/StaticTiledMapTile.java	27	a424f4b78c762e3a	name=id$field
-member	com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile#id()	sge.maps.tiled.tiles.StaticTiledMapTile#id()	Renamed	-	com/badlogic/gdx/maps/tiled/tiles/StaticTiledMapTile.java	42	6af95d6451e64db9	
-member	com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile#id_=(int)	sge.maps.tiled.tiles.StaticTiledMapTile#id_=(int)	Renamed	-	com/badlogic/gdx/maps/tiled/tiles/StaticTiledMapTile.java	47	517288c00e1b5243	
+member	com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile#id()	sge.maps.tiled.tiles.StaticTiledMapTile#id()	Renamed	-	com/badlogic/gdx/maps/tiled/tiles/StaticTiledMapTile.java	42	fcb83ee38b75f4ad	
+member	com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile#id_=(int)	sge.maps.tiled.tiles.StaticTiledMapTile#id_=(int)	Renamed	-	com/badlogic/gdx/maps/tiled/tiles/StaticTiledMapTile.java	47	c7c2d8422de325a0	
 member	com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile#objects	sge.maps.tiled.tiles.StaticTiledMapTile#objects	Renamed	-	com/badlogic/gdx/maps/tiled/tiles/StaticTiledMapTile.java	33	fc1a3a28224d105e	name=objects$field
-member	com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile#objects()	sge.maps.tiled.tiles.StaticTiledMapTile#objects()	Renamed	-	com/badlogic/gdx/maps/tiled/tiles/StaticTiledMapTile.java	70	4ef6788b17043d14	
+member	com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile#objects()	sge.maps.tiled.tiles.StaticTiledMapTile#objects()	Renamed	-	com/badlogic/gdx/maps/tiled/tiles/StaticTiledMapTile.java	70	933d3ce2716f381e	
 member	com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile#offsetX	sge.maps.tiled.tiles.StaticTiledMapTile#offsetX	Renamed	-	com/badlogic/gdx/maps/tiled/tiles/StaticTiledMapTile.java	37	cf15979c18fc3ad6	name=offsetX$field
-member	com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile#offsetX()	sge.maps.tiled.tiles.StaticTiledMapTile#offsetX()	Renamed	-	com/badlogic/gdx/maps/tiled/tiles/StaticTiledMapTile.java	88	6c631f03167e73c3	
-member	com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile#offsetX_=(float)	sge.maps.tiled.tiles.StaticTiledMapTile#offsetX_=(float)	Renamed	-	com/badlogic/gdx/maps/tiled/tiles/StaticTiledMapTile.java	93	e5af13f5004ebf47	
+member	com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile#offsetX()	sge.maps.tiled.tiles.StaticTiledMapTile#offsetX()	Renamed	-	com/badlogic/gdx/maps/tiled/tiles/StaticTiledMapTile.java	88	4525d91783c931a1	
+member	com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile#offsetX_=(float)	sge.maps.tiled.tiles.StaticTiledMapTile#offsetX_=(float)	Renamed	-	com/badlogic/gdx/maps/tiled/tiles/StaticTiledMapTile.java	93	aaa1993917787027	
 member	com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile#offsetY	sge.maps.tiled.tiles.StaticTiledMapTile#offsetY	Renamed	-	com/badlogic/gdx/maps/tiled/tiles/StaticTiledMapTile.java	39	9792f764630858cf	name=offsetY$field
-member	com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile#offsetY()	sge.maps.tiled.tiles.StaticTiledMapTile#offsetY()	Renamed	-	com/badlogic/gdx/maps/tiled/tiles/StaticTiledMapTile.java	98	e909457b6e641688	
-member	com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile#offsetY_=(float)	sge.maps.tiled.tiles.StaticTiledMapTile#offsetY_=(float)	Renamed	-	com/badlogic/gdx/maps/tiled/tiles/StaticTiledMapTile.java	103	aa3a9b0cb1054af1	
+member	com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile#offsetY()	sge.maps.tiled.tiles.StaticTiledMapTile#offsetY()	Renamed	-	com/badlogic/gdx/maps/tiled/tiles/StaticTiledMapTile.java	98	e87fac6c35a5561c	
+member	com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile#offsetY_=(float)	sge.maps.tiled.tiles.StaticTiledMapTile#offsetY_=(float)	Renamed	-	com/badlogic/gdx/maps/tiled/tiles/StaticTiledMapTile.java	103	78b2c772adfedbf3	
 member	com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile#properties	sge.maps.tiled.tiles.StaticTiledMapTile#properties	Renamed	-	com/badlogic/gdx/maps/tiled/tiles/StaticTiledMapTile.java	31	4fa277885c198d1c	name=properties$field
-member	com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile#properties()	sge.maps.tiled.tiles.StaticTiledMapTile#properties()	Renamed	-	com/badlogic/gdx/maps/tiled/tiles/StaticTiledMapTile.java	62	23aed49953a7ef31	
+member	com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile#properties()	sge.maps.tiled.tiles.StaticTiledMapTile#properties()	Renamed	-	com/badlogic/gdx/maps/tiled/tiles/StaticTiledMapTile.java	62	27b184a89847d52c	
 member	com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile#textureRegion	sge.maps.tiled.tiles.StaticTiledMapTile#textureRegion	Renamed	-	com/badlogic/gdx/maps/tiled/tiles/StaticTiledMapTile.java	35	f33447375b87377c	name=textureRegion$field
-member	com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile#textureRegion()	sge.maps.tiled.tiles.StaticTiledMapTile#textureRegion()	Renamed	-	com/badlogic/gdx/maps/tiled/tiles/StaticTiledMapTile.java	78	83114536ebedb942	
-member	com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile#textureRegion_=(TextureRegion)	sge.maps.tiled.tiles.StaticTiledMapTile#textureRegion_=(TextureRegion)	Renamed	-	com/badlogic/gdx/maps/tiled/tiles/StaticTiledMapTile.java	83	e3bf2bfc891999d9	
+member	com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile#textureRegion()	sge.maps.tiled.tiles.StaticTiledMapTile#textureRegion()	Renamed	-	com/badlogic/gdx/maps/tiled/tiles/StaticTiledMapTile.java	78	9b5d714ec43e5102	
+member	com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile#textureRegion_=(TextureRegion)	sge.maps.tiled.tiles.StaticTiledMapTile#textureRegion_=(TextureRegion)	Renamed	-	com/badlogic/gdx/maps/tiled/tiles/StaticTiledMapTile.java	83	011b116fe84b1d7b	
 member	com.badlogic.gdx.math.Affine2#<init>()	sge.math.Affine2#<init>()	Renamed	-	com/badlogic/gdx/math/Affine2.java	38	fd76350324955190	
 member	com.badlogic.gdx.math.Affine2#<init>(Affine2)	sge.math.Affine2#<init>(Affine2)	Renamed	-	com/badlogic/gdx/math/Affine2.java	44	2b75cb6d87894492	
 member	com.badlogic.gdx.math.Affine2#applyTo(Vector2)	sge.math.Affine2#applyTo(Vector2)	Renamed	-	com/badlogic/gdx/math/Affine2.java	658	e9244cdc6f0cb78a	

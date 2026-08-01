@@ -324,19 +324,33 @@ object LibgdxPolicy:
     * ==Where it comes from==
     * Every entry is a conversion sge DOCUMENTED in a `Renames:` header — 132 of its 549 files carry
     * one — joined to the upstream FQN through each header's `Original source:` line. Nothing here is
-    * derived or extrapolated: 144 properties over 38 upstream types, ~223 accessor methods. The
-    * per-implementor `getLeftWidth` rows of the `Drawable` family are collapsed into the one INTERFACE
-    * entry, because the phase renames the whole override COMPONENT and that is the design's point.
+    * derived or extrapolated. The harvest was 144 rows over 38 upstream types; **133 remain, and the
+    * eleven that went were noise rather than policy** (below).
+    *
+    * ==AN ENTRY NAMES A COMPONENT, so a per-IMPLEMENTOR entry is a duplicate==
+    * The phase renames the whole override COMPONENT — that is the design's point — so an entry on the
+    * type that DECLARES a member already reaches every implementor of it, and a second entry naming
+    * an implementor renames exactly the same set again. The `Drawable` family's `getLeftWidth` rows
+    * were collapsed to the one INTERFACE entry when the harvest was written; the same collapse was
+    * owed to two more families and is now taken: `isManaged` is declared abstract on `GLTexture`
+    * (three per-implementor rows for `Cubemap`, `Texture` and `TextureArray` said it three times) and
+    * `TiledMapTile` declares all seven of its properties (thirteen rows across
+    * `AnimatedTiledMapTile` and `StaticTiledMapTile` said six of them twice). **The duplicates were
+    * never inert**: each recorded its own `RenamedMember` decision per member of the component and
+    * rendered its own porter note beside the code, so a reader of `StaticTiledMapTile.scala` was
+    * being told twice, in two different `key=`s, why one method is called `id`.
     *
     * ==Refusals are the expected outcome for some of it, and they are COUNTED==
-    * A pair is applied whole or not at all. Five entries refuse on this library and each is a
-    * `PolicyIssue.Unverifiable` finding with its cause, a `ScopedOut` decision and a porter note:
-    * three name an accessor that TAKES ARGUMENTS (`VertexAttributes#getOffset(int)`,
-    * `Polygon#getVertex(int,Vector2)`, `Polygon#getCentroid(Vector2)`), where the phase refuses rather
-    * than inventing a nilary twin, and two (`ScrollPane#scrollX`/`scrollY`) hit a name the emitter's
-    * §4.55 passes will not relocate. The first three are a POLICY defect this manifest owns — drop them
-    * or name the accessor sge actually converted — and completing the get-only `ScrollPane` entries
-    * whose upstream has setters is the same kind of edit. Neither is something the harvest may decide.
+    * A pair is applied whole or not at all, and each refusal is a `PolicyIssue.Unverifiable` finding
+    * with its cause plus a `ScopedOut` decision. **Two remain, and both are real pending work**:
+    * `ScrollPane#scrollX` and `#scrollY` hit a name the emitter's §4.55 passes will not relocate, and
+    * completing those get-only entries against an upstream that has setters is a manifest edit
+    * nobody has made. **Three others were PERMANENTLY refused and are deleted** —
+    * `VertexAttributes#getOffset(int)`, `Polygon#getVertex(int,Vector2)`,
+    * `Polygon#getCentroid(Vector2)` all take ARGUMENTS, so there is no nilary getter to convert and
+    * the phase will refuse them on every run for as long as the upstream stands. A finding that can
+    * never be cleared is a noise floor: it makes `policy > 0` the normal state of this port and
+    * teaches its next reader to skim the number that the two survivors need them to read.
     *
     * A twelve-refusal sixth cause is GONE and worth naming so nobody re-adds a workaround for it:
     * `Selection`/`VertexAttributes`/`TiledMapTileSet`/`OrientedBoundingBox` implement `java.lang.Iterable`,
@@ -368,12 +382,12 @@ object LibgdxPolicy:
     "com.badlogic.gdx.audio.Music#position" -> "getPosition/setPosition",
     // -- com.badlogic.gdx.graphics --
     "com.badlogic.gdx.graphics.Cubemap#cubemapData" -> "getCubemapData",
-    "com.badlogic.gdx.graphics.Cubemap#managed" -> "isManaged",
+    // `isManaged` is declared ABSTRACT on `GLTexture` and the phase renames the whole override
+    // COMPONENT, so the interface entry covers `Cubemap`, `Texture` and `TextureArray` — three
+    // per-implementor entries said the same thing three times.
+    "com.badlogic.gdx.graphics.GLTexture#managed" -> "isManaged",
     "com.badlogic.gdx.graphics.Texture#textureData" -> "getTextureData",
-    "com.badlogic.gdx.graphics.Texture#managed" -> "isManaged",
-    "com.badlogic.gdx.graphics.TextureArray#managed" -> "isManaged",
     "com.badlogic.gdx.graphics.VertexAttribute#key" -> "getKey",
-    "com.badlogic.gdx.graphics.VertexAttributes#offset" -> "getOffset",
     "com.badlogic.gdx.graphics.VertexAttributes#mask" -> "getMask",
     "com.badlogic.gdx.graphics.VertexAttributes#maskWithSizePacked" -> "getMaskWithSizePacked",
     // -- com.badlogic.gdx.graphics.g2d --
@@ -439,6 +453,16 @@ object LibgdxPolicy:
     "com.badlogic.gdx.maps.tiled.TiledMapImageLayer#repeatY" -> "isRepeatY/setRepeatY",
     "com.badlogic.gdx.maps.tiled.TiledMapTileSet#name" -> "getName/setName",
     "com.badlogic.gdx.maps.tiled.TiledMapTileSet#properties" -> "getProperties",
+    // `TiledMapTile` DECLARES all seven, and the phase renames the whole override component, so
+    // one entry each covers `AnimatedTiledMapTile` and `StaticTiledMapTile` — thirteen
+    // per-implementor entries said the same thing twice over.
+    "com.badlogic.gdx.maps.tiled.TiledMapTile#id" -> "getId/setId",
+    "com.badlogic.gdx.maps.tiled.TiledMapTile#blendMode" -> "getBlendMode/setBlendMode",
+    "com.badlogic.gdx.maps.tiled.TiledMapTile#textureRegion" -> "getTextureRegion/setTextureRegion",
+    "com.badlogic.gdx.maps.tiled.TiledMapTile#offsetX" -> "getOffsetX/setOffsetX",
+    "com.badlogic.gdx.maps.tiled.TiledMapTile#offsetY" -> "getOffsetY/setOffsetY",
+    "com.badlogic.gdx.maps.tiled.TiledMapTile#properties" -> "getProperties",
+    "com.badlogic.gdx.maps.tiled.TiledMapTile#objects" -> "getObjects",
     // -- com.badlogic.gdx.maps.tiled.objects --
     "com.badlogic.gdx.maps.tiled.objects.TiledMapTileMapObject#flipHorizontally" -> "isFlipHorizontally/setFlipHorizontally",
     "com.badlogic.gdx.maps.tiled.objects.TiledMapTileMapObject#flipVertically" -> "isFlipVertically/setFlipVertically",
@@ -448,29 +472,14 @@ object LibgdxPolicy:
     "com.badlogic.gdx.maps.tiled.renderers.HexagonalTiledMapRenderer#staggerIndexEven" -> "isStaggerIndexEven/setStaggerIndexEven",
     "com.badlogic.gdx.maps.tiled.renderers.HexagonalTiledMapRenderer#hexSideLength" -> "getHexSideLength/setHexSideLength",
     // -- com.badlogic.gdx.maps.tiled.tiles --
-    "com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile#id" -> "getId/setId",
-    "com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile#blendMode" -> "getBlendMode/setBlendMode",
-    "com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile#textureRegion" -> "getTextureRegion/setTextureRegion",
-    "com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile#offsetX" -> "getOffsetX/setOffsetX",
-    "com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile#properties" -> "getProperties",
-    "com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile#objects" -> "getObjects",
     "com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile#currentFrameIndex" -> "getCurrentFrameIndex",
     "com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile#currentFrame" -> "getCurrentFrame",
     "com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile#animationIntervals" -> "getAnimationIntervals/setAnimationIntervals",
     "com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile#frameTiles" -> "getFrameTiles",
-    "com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile#id" -> "getId/setId",
-    "com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile#blendMode" -> "getBlendMode/setBlendMode",
-    "com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile#textureRegion" -> "getTextureRegion/setTextureRegion",
-    "com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile#offsetX" -> "getOffsetX/setOffsetX",
-    "com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile#offsetY" -> "getOffsetY/setOffsetY",
-    "com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile#properties" -> "getProperties",
-    "com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile#objects" -> "getObjects",
     // -- com.badlogic.gdx.math --
     "com.badlogic.gdx.math.Polygon#vertices" -> "getVertices",
     "com.badlogic.gdx.math.Polygon#transformedVertices" -> "getTransformedVertices",
     "com.badlogic.gdx.math.Polygon#vertexCount" -> "getVertexCount",
-    "com.badlogic.gdx.math.Polygon#vertex" -> "getVertex",
-    "com.badlogic.gdx.math.Polygon#centroid" -> "getCentroid",
     "com.badlogic.gdx.math.Polygon#boundingRectangle" -> "getBoundingRectangle",
     "com.badlogic.gdx.math.Polygon#rotation" -> "getRotation",
     // -- com.badlogic.gdx.math.collision --
