@@ -1782,6 +1782,79 @@ a `Material` whose nilary body bumped a static counter on every construction, a 
 pooled cell per construction, and a `Button` running `initialize()` on 8 of 10 paths. Under the design
 each constructor's statements run on its own path only, and there is nothing to strip.
 
+**AS BUILT, SEVENTH — THE CLAUSE-BEARING EMPTY PRIMARY: what a `Plan.none` class does with a context
+clause (`ENGINE-LIMITS.md` CT5).** The funnel has THREE outcomes and this section had only ever
+specified two of them. A class is PROMOTED (a java constructor becomes the primary), SYNTHESISED (the
+funnel builds one), or neither — `Plan.none`, where the emitted class relies on Scala's own implicit
+nilary primary and every java constructor becomes a `def this`. That third outcome is the most common
+one in real code, and it is the one with no parameter list for a phase's `(using T)` group to land
+on: the clause reaches every secondary and the class body has no given in scope. Measured on one
+corpus library at `attach = "class"`: **57 scalac errors, 55 of them this**, over 19 top-level plus
+at least 3 nested classes of 188 threaded.
+
+**The decision is CLAUSE-CONDITIONAL, and that is a statement about the emitted text rather than a
+convenience.** `Plan.none` gains exactly one thing — the context clause its OWN constructors already
+carry (`CtorFunnel.classGivens`, applied once as a post-pass over the decided plans so every road to
+"no primary" is covered: the nomination's four `Plan.none` returns, the withholding fixpoint's
+fallback, and the module/trait/enum guard). With no clause anywhere the post-pass computes `Nil`, the
+plan is `Plan.none` unchanged, and the emitted text is byte-identical — **13 ports, 0 members
+changed**, which is the only acceptable price for a shape change with every phase default-off.
+
+**What the clause-bearing primary DOES about `super` is NOTHING, and that is the whole of why it is
+sound.** It hosts the clause and delegates nothing: `superArgs` stays empty, so the `extends` clause
+is the bare parent it was (java's implicit `super()`, which Scala's `extends P` already runs); every
+secondary still writes the delegation it wrote before, and a `super(args)` the funnel could not
+express is still `SuperCall.Dropped`, still rendered `this()`, still counted by `OmissionCheck`. The
+synthesis's parent-agreement preconditions (`targets.sizeIs == 1`, `arities.sizeIs == 1`,
+`formals.sizeIs == arities.head`) are not consulted because nothing is being lifted into an `extends`
+clause — there are no slots. So CT5's caution — *a `Plan.none` class's roots are exactly the ones
+whose `super(args)` is already a counted omission, so making the primary real for this shape IS the
+synthesis widened past its preconditions* — is answered by not touching them at all: this is not the
+synthesis widened, it is the implicit primary made SPELLABLE. The omission census is arithmetically
+unchanged (libGDX core 65 before and after), which is the check that says so.
+
+**The shape is `(using T)` and never `()(using T)`, and `this()` reaches it — validated by running,
+not asserted.** scalac 3.8.4: with `class X(using Ctx)`, a secondary `def this(k: Int)(using Ctx) = {
+this(); … }` compiles and RUNS (the compiler supplies the primary's argument from the secondary's own
+anonymous clause), as do `new X()`, `new X(3)`, a body `summon`, a field initialiser that summons,
+and `class Sub(using Ctx) extends X` with no parentheses. An empty value group in front would be a
+different signature at every call site, which is the reason the emitter's promoted-nilary branch
+already refuses to add one. Note what this makes the emitter's job: `prim` for a plan with no primary
+and no synthesis is ALREADY `givenClause` (the branch CT4 landed for a promoted nilary constructor),
+so the emission needs no new branch — the funnel had simply never given that plan a clause to render.
+
+**E051 is the same `paramss.flatten` mistake CT4 closed, one level down, and the answer is NOT to
+promote.** A java NILARY constructor that delegates (`BitmapFont()` calling `this(…)`) is DEGENERATE
+against a nilary primary — Scala's implicit one already is no-arg — and `TirEmitter.orderBody` has
+dropped it since before any of this. It asked `d.paramss.flatten.isEmpty`, which is *what does this
+constructor take* where the question is *what did JAVA declare*: with the clause the constructor
+stopped being degenerate and was emitted as `def this()(using T)` beside a primary of the same erased
+signature. Measured on the probe: `E120` at the declaration plus one `E051` at every argument-free
+`extends` and every `new C()` — which is exactly the pair the census reported for
+`BitmapFont`/`DistanceFieldFont`. Reading `CtorFunnel.valueParams` restores today's answer for the
+same class with no clause. Promoting the java nilary constructor instead was weighed and rejected:
+`nilaryPlan` refuses any class where a constructor carries `super(args)` — BitmapFont's do — so
+promoting here means widening a promotion past its own preconditions to remove a clash the existing
+rule already removes, with a bigger blast radius for identical emitted text.
+
+**The SILENT half needs a check, because none of the above is what a green compile measures.** A
+threaded class with no body `summon` and no threaded construction in its initialisers loses its
+clause and COMPILES, while its decision row and its porter note both claim it. So the emitter records,
+per type it renders, whether the class's constructors carried a context clause and whether the
+rendered header carries one, and the run reports each disagreement as `context-seam`'s fifth kind,
+`lost-clause` (§1(a), fatal to nobody but counted like every other seam). It is recorded from the
+RENDERED header text at the one place that writes it, and after emission, because a check that reads
+the plan would have passed on the day CT4 flattened the clause into a value parameter. Three shapes it
+covers by construction and no other check can see: a class the funnel gives no clause, a `trait` that
+Scala's trait parameters are not the answer for (the port's `promoteToClass` is), and a java ENUM,
+whose primary IS its java constructor and whose `case object`s would each have to pass an argument —
+its clause is dropped from the parameter list rather than emitted as `var : T`, and counted here.
+
+**Not changed, deliberately: the CONTRACT row.** `Descriptor` records the primary's VALUE slots, and a
+context clause is not one — two modules that disagree about the clause are caught by the phase's
+`surfaceFingerprint` through `ManifestAgreement` (§1.5), which is where a disagreement about POLICY
+belongs. Putting it in the descriptor would make the same fact fatal in two places with two spellings.
+
 ### 8.3 The published base surface — a `Surface` VIEW, and prevention rather than a check
 
 **Decision**, three parts: the port map goes to **schema 3 with ONE new column, `shape`**, carrying a

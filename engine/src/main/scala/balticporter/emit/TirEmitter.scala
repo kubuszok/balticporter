@@ -311,6 +311,36 @@ final class TirEmitter(
   /** every note THIS emitter printed, in printing order — the input to [[NoteCoverageCheck]]. */
   def notesPrinted: List[PorterNote.Printed] = recordedNotes.values.toList.flatten
 
+  // ---- THE CONTEXT CLAUSE, checked against what was actually written -------------------------
+  //
+  // A phase may put a `(using T)` clause on a class's constructors (`DESIGN.md` §8.4), and three
+  // shapes of class have nowhere to put it: one whose primary is scala's own implicit nilary
+  // constructor and whose plan carries no clause, a trait, and a java enum. The emitted file
+  // COMPILES with the clause gone wherever the class's own body happens not to summon anything —
+  // and the run's decision row and porter note both claim a clause that is not there. Nothing else
+  // in the pipeline can see it (CLAUDE.md §3), so the emitter records the disagreement between what
+  // the constructors CARRIED and what the header it just wrote RENDERS, and the run reports each as
+  // a `lost-clause` seam (`ENGINE-LIMITS.md` CT5).
+  //
+  // Read off the RENDERED text, not off the plan: the plan is exactly what may have dropped the
+  // clause, and a check reading it would have passed on the day CT4 flattened one into a value
+  // parameter. Keyed by symbol so re-emission (the determinism twin, the action cache) overwrites
+  // rather than duplicates, the same idempotence `recordedNotes` has.
+  private val clauseLost = collection.mutable.LinkedHashMap.empty[SymId, TirEmitter.ClauseLoss]
+
+  /** every type this emitter rendered whose constructors carry a context clause its emitted header
+    * does not — the input to `context-seam`'s `lost-clause` lane. Empty for every port that threads
+    * nothing, since nothing then puts a clause on a constructor. */
+  def contextClauseLosses: List[TirEmitter.ClauseLoss] = clauseLost.values.toList
+
+  /** record what the header just written did with the class's context clause. `form` is what was
+    * emitted, because the reader's next question is which of the three shapes this is. */
+  private def checkClause(cd: Tree.ClassDef, rendered: Boolean, form: String): Unit =
+    if !rendered && CtorFunnel.ctorsCarryGivens(program, cd) then
+      clauseLost(cd.symbol) = TirEmitter.ClauseLoss(
+        cd.symbol, sym(cd.symbol).fullName, form, cd.origin)
+    else clauseLost.remove(cd.symbol)
+
   /** the notes for `s` whose kind is in `kinds`, rendered at indent `i` and recorded as printed.
     * `""` when there are none, which is the overwhelming majority of members — so this can be
     * spliced into every definition site unconditionally. */
@@ -1363,6 +1393,12 @@ final class TirEmitter(
     // as degenerate. `AlgorithmPath()` / `Synth()` simply vanished, and `new AlgorithmPath()` was a
     // compile error at every call site while `Plans.superCall` reported that same root EXPRESSED.
     val paramfulPrimary = plan.isSynthesised || pparams.nonEmpty
+    // …and did the header just built KEEP the class's context clause? Asked of the rendered text
+    // and not of `plan.givens`, because a clause the plan holds and the rendering flattens into a
+    // value parameter is exactly the shape CT4 measured. A `trait` reaches this with no clause on
+    // purpose — `CtorFunnel.classGivens` refuses one, since scala's trait parameters are a
+    // different feature and the port's `promoteToClass` is the answer — and is counted here.
+    checkClause(cd, rendered = prim.contains("(using "), form = kw)
     val superTpe = cd.parents.headOption.map { case tt: TypeTree => tt.tpe; case t: Term => t.tpe }
     val parents = cd.parents.map(parent).filter(_.nonEmpty) match
       case Nil                          => Nil
@@ -1393,6 +1429,9 @@ final class TirEmitter(
       // its kind as `class` (`ENGINE-LIMITS.md` D6's cross-module face). Recorded here rather than
       // re-derived because the four whole-program reads above exist only in this branch.
       recordTypeShape(cd, "object", plan, companion = false, statics = Nil)
+      // an `object` has no constructor at all, so a context clause on this class's constructors has
+      // nowhere to go here — counted rather than silently dropped (CT5).
+      checkClause(cd, rendered = false, form = "object")
       return s"${leading(cd.leading, i)}$cnote${ind(i)}${vis(s, privateQualifier(s.owner))}object ${esc(s.name)}$tps {\n$ob\n${ind(i)}}"
     // Java statics have no instance home in Scala — they move to the companion object.
     val (statics, instance) = if s.flags.isModule then (Nil, loweredBody) else loweredBody.partition(isStatic)
@@ -1526,7 +1565,15 @@ final class TirEmitter(
     // fields), so `case object Nearest extends TextureFilter(GL_NEAREST)` has somewhere to pass its
     // arg. Drop the constructor itself and any field that a param supersedes (same name).
     val ctors      = instance0.collect { case d: Tree.DefDef if sym(d.symbol).name == "<init>" => d }
-    val ctorParams = ctors.headOption.map(_.paramss.flatten).getOrElse(Nil)
+    // JAVA's parameters, never `paramss.flatten` (`CtorFunnel.valueParams`, and the same rule the
+    // funnel applies one level up). A context clause a phase put on this constructor is not a java
+    // parameter and cannot become a `var` field: the parameter is ANONYMOUS, so it would render as
+    // `var : sge.Sge`, and an enum's primary is reached by every `case object` — each of which
+    // would have to pass an argument for a clause the emitter has no way to supply. So it is
+    // dropped from the parameter list and COUNTED as a lost clause instead (`ENGINE-LIMITS.md`
+    // CT5); an enum whose body needs an ambient context is a port-level decision, not a rendering.
+    val ctorParams = ctors.headOption.map(CtorFunnel.valueParams(program, _)).getOrElse(Nil)
+    checkClause(cd, rendered = false, form = "enum")
     val paramNames = ctorParams.map(v => sym(v.symbol).name).toSet
     val instance   = instance0.filterNot {
       case d: Tree.DefDef => sym(d.symbol).name == "<init>"
@@ -1680,8 +1727,16 @@ final class TirEmitter(
     // `C() { super(0, false); }` in front of a SYNTHESISED primary — is the only thing that makes
     // `new C()` legal at all, so it must be emitted. `paramfulPrimary` therefore has to be read off
     // the emitted class, not off `Plan.primaryParams`, which a synthesised primary leaves empty.
+    // …and NILARY is a question about what JAVA declared, never `paramss.flatten` — the same
+    // distinction `CtorFunnel.valueParams` exists for one level up. A `C()` that gained a `(using
+    // T)` clause (`DESIGN.md` §8.4) stopped being degenerate here and was emitted as
+    // `def this()(using T)` beside a primary carrying the same clause: `E120` at the declaration
+    // ("the same type after erasure"), and an `E051` ambiguous overload at every argument-free
+    // `extends` and every `new C()`. That is CT4's third cause reappearing on the `Plan.none` side,
+    // and reading value parameters restores exactly the answer this class gets with no clause at
+    // all — the degenerate secondary dropped (`ENGINE-LIMITS.md` CT5).
     def degenerate(d: Tree.DefDef): Boolean =
-      !paramfulPrimary && d.paramss.flatten.isEmpty && (d.rhs match
+      !paramfulPrimary && CtorFunnel.valueParams(program, d).isEmpty && (d.rhs match
         case Some(Tree.Block(stats, _, _, _, _)) =>
           stats.forall {
             case t: Term => Tree.uncomment(t) match
@@ -3124,6 +3179,19 @@ final class TirEmitter(
     b.result()
 
 object TirEmitter:
+
+  /** A class whose constructors carry a CONTEXT CLAUSE the emitted header does not
+    * (`ENGINE-LIMITS.md` CT5).
+    *
+    * A value the emitter records and the run reports; the emitter names no check and no phase,
+    * because the fact is about EMISSION — a `using` group the tree holds and the text does not —
+    * and the phase that put the clause there is the run's to name.
+    *
+    * @param form what WAS emitted for this type: `class`, `trait`, `object`, `enum`. The reader's
+    *             next question after "which type", and the three that are not `class` each say why
+    *             the clause had nowhere to go.
+    */
+  final case class ClauseLoss(subject: SymId, fqn: String, form: String, origin: Origin)
 
   /** The default `javaSource`: the upstream file, read once per path.
     *

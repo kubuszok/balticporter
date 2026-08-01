@@ -2334,7 +2334,9 @@ Four things it settles, none of which the dry run could:
   reached the dependent's artifacts.
 - **The test lane's first zero is confirmed**: `gdx/test` contains 0 `Gdx.*` references upstream.
 
-**What blocked it: 57 scalac errors, ONE cause, and it is an engine gap no manifest key reaches.**
+**What blocked it AT THE TIME: 57 scalac errors, ONE cause, and an engine gap no manifest key
+reaches.** (Closed since — see the replay below; the census is kept because it is what the fix was
+measured against.)
 `ENGINE-LIMITS.md` **CT5** — a class the funnel neither promotes nor synthesises keeps Scala's
 implicit nilary primary, which carries no `using` clause, so the clause reaches only the `def this`
 secondaries and the class body has no given in scope. 19 top-level classes plus at least 3 nested
@@ -2349,12 +2351,50 @@ now-threaded type — its exit is a `sites` entry), and the injected `sge/utils/
 factories for types whose constructors now take a context, which is a hand-written shim this port
 owns.
 
-**Do NOT retry the enablement before CT5 is closed**, and do not try to buy it with policy. The two
-exits that look available are both wrong: scoping the 22 classes out is a hand-maintained list
-derived from an emitter internal (it rots the first time upstream adds a constructor) and it leaves
-the globals in exactly the heaviest `Gdx.gl20` readers; `attach = "method"` is the mode §11.12
-measured at 3.3× with 32 frozen components. The revert is byte-for-byte — libgdx-core back to 0
-errors and **0 members changed**, every check count identical, `context-seam` gone.
+**Do not try to buy the enablement with policy.** The two exits that look available are both wrong:
+scoping the 22 classes out is a hand-maintained list derived from an emitter internal (it rots the
+first time upstream adds a constructor) and it leaves the globals in exactly the heaviest `Gdx.gl20`
+readers; `attach = "method"` is the mode §11.12 measured at 3.3× with 32 frozen components. The
+revert is byte-for-byte — libgdx-core back to 0 errors and **0 members changed**, every check count
+identical, `context-seam` gone.
+
+**CT5 IS NOW CLOSED, and P5 replays unchanged: 57 → 3, with none of the 3 the engine's.** The
+mechanism shipped default-off (`ENGINE-LIMITS.md` CT5, `DESIGN.md` §8.2's seventh as-built): a plan
+with no primary of its own carries the context clause its own constructors carry, so a `Plan.none`
+class emits `class X(using sge.Sge)` — hosting the clause, lifting no super argument, leaving every
+secondary's delegation and every counted omission exactly where they were (`omissions` 65 → 65 in
+the enablement run itself). It is CLAUSE-CONDITIONAL, so the mechanism commit is **0 members changed
+on all 13 ports with every check count identical** and no baseline moved — the re-baseline CHUNK3
+expected did not materialise, because nothing about the emitted text changes until a port declares a
+holder.
+
+**The enablement, replayed in a worktree with the policy applied and then reverted** (the P5 config
+above, verbatim, plus the injected `sge.Sge` and the four `Graphics#gl2x` bean pairs):
+
+| | P5, blocked | replayed after CT5 |
+|---|---:|---:|
+| scalac errors | **57** | **3** |
+| — the missing clause on `Plan.none` classes | 55 | **0** |
+| — the port's own boundary | 2 | **3** |
+| `context-seam` | 17 | **17** (13 captured, 4 residual-global, 0 frozen, **0 `lost-clause`**) |
+| `omissions` | 65 | **65** |
+| every other check | baseline | **identical** |
+
+The three that remain are one category and a half, both the PORT's:
+
+- **two STATIC field initialisers that construct a now-threaded type** — `TextField#DEFAULT_ONSCREEN_KEYBOARD`
+  (`new DefaultOnscreenKeyboard()`) and `Table#cellPool` (`new Pool<Cell>(){ … new Cell() … }`). A
+  static has no constructor clause in scope, which is the boundary the phase already counts; the exit
+  is a `sites` entry (`lazy-init`) or moving the initialiser behind a method the closure can reach.
+  **Only the first was named when P5 was measured — the second was inside `Table`, one of the 22
+  classes whose 55 errors CT5 was producing, so it could not be seen until they cleared.** The
+  category is unchanged and so is its fix; the count of it is 2, not 1.
+- **one INJECTED shim**, `sge/utils/Pools.scala`, registering factories for constructors that now
+  take a context. It is hand-written Scala this port owns, outside the source map by construction,
+  and the correlator says so (`Unmapped`, not an engine gap).
+
+So the replay is a POLICY exercise now, not an engine one. Re-run it unchanged when the port decides
+to take the two `sites` entries and edit its own shim.
 
 ### 11.13 D5j — the demand-derived JDK surface, as measured
 

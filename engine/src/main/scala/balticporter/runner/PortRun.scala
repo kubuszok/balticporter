@@ -314,12 +314,14 @@ final case class PortRun(
     // Only when the phase RAN, and only over `checkedUnits`, for the two reasons above. A port that
     // declared no holder records nothing here at all — the phase returns its input before building
     // anything, so this is a no-op by arithmetic rather than by a branch.
-    effectivePhases.collect { case g: GlobalsToImplicitsTransform => g }.foreach { g =>
-      val ss = g.seams(program, checkedUnits)
-      CheckReport.record(ContextSeamCheck.Name, ss.map(_.report))
-      say(s"CONTEXT SEAMS (where the context threading stopped): ${ss.size}")
-      println(ContextSeamCheck.summary(ss))
-    }
+    //
+    // COLLECTED here and RECORDED after emission, which is a departure from every other check in
+    // this block and is forced by the fifth kind: a clause the phase attached and the emitter did
+    // not write is not visible in the tree these four are read from (`ENGINE-LIMITS.md` CT5). One
+    // `CheckReport.record` per check name is the contract — a second call REPLACES the first — so
+    // the two halves cannot be recorded where each is computed.
+    val contextPhases = effectivePhases.collect { case g: GlobalsToImplicitsTransform => g }
+    val contextSeams  = contextPhases.flatMap(_.seams(program, checkedUnits))
 
     // ---- cross-port composition: does the shared surface agree with the module that emits it? ----
     // Runs on EVERY port. On a base port `shared` is empty and the check is a no-op by arithmetic
@@ -680,6 +682,39 @@ final case class PortRun(
     say(s"PORTER NOTES (decisions with no note in the code, and notes with no decision): ${noteFindings.size}")
     if noteFindings.nonEmpty then say(NoteCoverageCheck.Classification)
     println(NoteCoverageCheck.summary(noteFindings, translated.emitter.notesPrinted.size))
+
+    // ---- the CONTEXT boundary, RECORDED: the four the phase drew (collected above) plus the one
+    // only the emitted text can show — a `using` clause the threading attached to a class's
+    // constructors that the emitted type does not carry (`ENGINE-LIMITS.md` CT5).
+    //
+    // The loss list is the EMITTER's own recording of the header it wrote, for the reason
+    // `NoteCoverageCheck` joins on `notesPrinted` rather than re-reading the files: the question is
+    // what the emitter DID, and re-deriving it from the plan would have passed on the day CT4
+    // flattened a clause into a value parameter. Reported even when no globals phase is in the
+    // pipeline, because a loss list that is non-empty is by definition a clause somebody attached —
+    // and a check that could only fire when the usual phase ran would be silent for the next one.
+    //
+    // …held to what this run actually WROTE, which is not the same as what the emitter RENDERED:
+    // the determinism twin re-renders every unit in `emitOrder`, dropped types included, and a
+    // finding about a type whose replacement is injected Scala describes nothing on disk. The same
+    // filter `checkedUnits` applies to the other four, expressed through the set the write loop
+    // built (`ENGINE-LIMITS.md` D2 for the dependent half: a base's unit is not in it).
+    val clauseLosses = translated.emitter.contextClauseLosses.filter(l => emittedSubjects(l.subject))
+    // the key a reader edits: the holder whose threading this is. Absent (`-`) when no phase in
+    // this pipeline declares one, which is the shape a future clause-attaching phase would have.
+    val holderKey = contextPhases.flatMap(_.holders).map(_.holder).distinct.sorted match
+      case Nil => "-"
+      case hs  => hs.mkString(",")
+    val lostClauses = clauseLosses.map { l =>
+      ContextSeamCheck.Finding(ContextSeamCheck.Kind.LostClause, l.fqn, holderKey,
+        s"its constructors take a context clause and the emitted `${l.form}` does not carry one, " +
+          "so nothing in its body can summon it", l.origin, l.subject)
+    }
+    if contextPhases.nonEmpty || lostClauses.nonEmpty then
+      val ss = contextSeams ++ lostClauses
+      CheckReport.record(ContextSeamCheck.Name, ss.map(_.report))
+      say(s"CONTEXT SEAMS (where the context threading stopped): ${ss.size}")
+      println(ContextSeamCheck.summary(ss))
 
     // CHECK 2 — over the FINAL tree.
     val danglingSubs = record(PortRun.SubstitutionDangling, SubstitutionCheck.dangling(outDir, ownSubs))

@@ -181,6 +181,16 @@ object CtorFunnel:
     def isSynthesised: Boolean = synthetic.nonEmpty || marker.isDefined
 
   object Plan:
+    /** No primary of this funnel's making — the emitted class keeps scala's own implicit nilary one
+      * and every java constructor is a `def this`.
+      *
+      * It is the THIRD outcome and the most common one in real code, which is why [[Plan.givens]]
+      * can be non-empty for a plan that is otherwise this: an implicit primary cannot carry a
+      * context clause, so a class whose constructors have one gets [[Plan.givens]] here and the
+      * emitter spells the primary `class X(using T)`. Nothing else about the plan changes — no
+      * super argument is lifted, no java body becomes the class body, every secondary delegates
+      * exactly as it did, and a `super(args)` that was a counted omission still is
+      * (`DESIGN.md` §8.2, `ENGINE-LIMITS.md` CT5). */
     val none: Plan = Plan(scala.None, Nil, Nil)
 
   /** ONE hoisted field: the primary takes its value as a parameter and the field's own declaration
@@ -436,7 +446,32 @@ object CtorFunnel:
       //
       // …and LAST, the contract. Every class the fixpoint above just declined to touch is one this
       // run does not emit, and the module that DOES emit it published what it emitted.
-      reconciled(acc)
+      hosting(reconciled(acc))
+
+    /** Give every plan with NO PRIMARY OF ITS OWN the context clause its class's constructors carry
+      * (`ENGINE-LIMITS.md` CT5). A promoted plan already has one (from the constructor it promotes)
+      * and a synthesised one already has one (from its roots); this is the third outcome, where
+      * scala's implicit nilary primary would carry none and the class body would have no given in
+      * scope.
+      *
+      * ONE POST-PASS RATHER THAN A BRANCH AT EACH NOMINATION, because "no primary" is reached five
+      * ways — `plan0`'s trait/module/enum guard, its two `case None` arms, `syntheticPrimary`'s
+      * "nothing to synthesise" refusal, and the withholding fixpoint's `Plan.none` fallback — and a
+      * clause missing from any one of them is a class that compiles with its threading silently
+      * gone. It runs over EVERY class, owned or not, for the same reason the nomination does: a
+      * dependent must derive for a base class exactly what the base emitted.
+      *
+      * A no-op by arithmetic for every port that threads nothing: [[classGivens]] is `Nil`, the map
+      * is returned untouched, and no emitted byte moves. */
+    private def hosting(acc: Map[SymId, Plan]): Map[SymId, Plan] =
+      classes.foldLeft(acc) { (m, cd) =>
+        val p = m.getOrElse(cd.symbol, Plan.none)
+        if p.primary.isDefined || p.isSynthesised || p.givens.nonEmpty then m
+        else
+          classGivens(program, cd) match
+            case Nil => m
+            case gs  => m.updated(cd.symbol, p.copy(givens = gs))
+      }
 
     /** Reconcile every NON-OWNED class's locally-derived plan against the base's published row.
       *
@@ -1218,6 +1253,47 @@ object CtorFunnel:
   def valueParams(program: Program, d: Tree.DefDef): List[Tree.ValDef] =
     d.paramss.dropRight(givenClauses(program, d).size).flatten
 
+  /** THE CLASS'S OWN CONTEXT CLAUSE — what a plan with no primary of its own must still put on the
+    * emitted class (`ENGINE-LIMITS.md` CT5, `DESIGN.md` §8.2).
+    *
+    * A promoted primary reads its clause off the constructor it promotes and a synthesised one off
+    * its roots; a `Plan.none` class has neither, and scala's implicit nilary primary carries no
+    * clause at all — so the `using` reaches only the `def this` secondaries and the class body has
+    * no given in scope. The clause is the same on every constructor by construction (a phase that
+    * threads a class puts it on all of them, `DESIGN.md` §8.4), so this reads it back off them.
+    *
+    * `Nil` — the pre-clause code path, and every port that threads nothing — for four cases, each
+    * of which is a REFUSAL rather than an oversight:
+    *
+    *   - no constructor carries one, which is every unedited program;
+    *   - the clauses DISAGREE, so no single primary could carry one every secondary's `this(...)`
+    *     resolves against;
+    *   - the class declares no constructor at all, so nothing was threaded through it;
+    *   - it is a TRAIT, a MODULE or an ENUM. Scala's trait parameters are a different feature with
+    *     their own restrictions (a subtrait may not pass arguments), an object has no constructor
+    *     to speak of, and an enum's primary IS its java constructor — every `case object` would
+    *     have to pass an argument. The port's own `promoteToClass` is the answer for the trait.
+    *
+    * Every one of those refusals is COUNTED where it can be seen: the emitter records what it
+    * rendered against what the constructors carried, and the run reports the difference as a
+    * `lost-clause` seam. A clause that silently does not reach the emitted class compiles perfectly
+    * and moves no other number (CLAUDE.md §3). */
+  def classGivens(program: Program, cd: Tree.ClassDef): List[List[Tree.ValDef]] =
+    if program.symbolOf(cd.symbol).exists(x => x.flags.isModule || x.flags.isTrait || x.flags.isEnum)
+    then Nil
+    else
+      val ctors = ctorsOf(program, cd.body)
+      val cs    = ctors.map(givenClauses(program, _))
+      if ctors.isEmpty || cs.exists(_.isEmpty) then Nil
+      else if cs.map(_.map(_.map(_.tpt.tpe))).distinct.sizeIs != 1 then Nil
+      else cs.head
+
+  /** does this class's own constructors carry a context clause? The question the EMITTER asks to
+    * decide whether the header it just wrote lost one — asked of the class, never of the plan,
+    * because the plan is exactly what may have dropped it. */
+  def ctorsCarryGivens(program: Program, cd: Tree.ClassDef): Boolean =
+    ctorsOf(program, cd.body).exists(givenClauses(program, _).nonEmpty)
+
   /** a promoted plan, with the constructor's own context clause carried onto the primary. */
   private def promoted(program: Program, c: Tree.DefDef, sa: List[Term], rest: List[Statement]): Plan =
     Plan(Some(c), sa, rest, givens = givenClauses(program, c))
@@ -1601,6 +1677,11 @@ object CtorFunnel:
       // `Plan.none` — which is what the class already gets, with no promotion and so no escape.
       // Emitting a distinguishable zero-parameter primary here would buy nothing and cost every
       // such class a diff.
+      //
+      // …with ONE exception, and it is not taken here: scala's implicit primary carries no CONTEXT
+      // CLAUSE, so for a class whose constructors have one the two are not the same primary after
+      // all. That is `Plan.givens` on the `Plan.none` outcome, applied by [[Plans.hosting]] over
+      // every road to it rather than by a second branch here (`ENGINE-LIMITS.md` CT5).
       else if allSlots.isEmpty then scala.None
       else synthesise(scala.None)
 

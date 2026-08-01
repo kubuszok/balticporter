@@ -21,7 +21,7 @@ import balticporter.tir.*
   * So: a number with an origin and a CLAUDE.md §1 classification, available before any compiler
   * runs. A port that enables the phase sees the size of its boundary immediately.
   *
-  * ==The four kinds, and why they are four==
+  * ==The five kinds, and why they are five==
   * Each one is a different instruction to its reader, which is the same argument
   * [[balticporter.tir.NotBound]] makes for refusing to collapse its cases:
   *
@@ -42,6 +42,13 @@ import balticporter.tir.*
   *     ([[balticporter.tir.OverrideGraph.Closure.isAnchored]]), or a trait whose own body needs the
   *     context and has no `promoteToClass` entry. Threading half a component is a broken `override`,
   *     so the whole of it is refused; each refusal names the member and what froze it.
+  *   - [[Kind.LostClause]] — a clause the phase DID attach that the emitted type does not carry.
+  *     The other four are refusals the phase records as it makes them; this one is a disagreement
+  *     between the tree and the emitted text, and it is the only kind that is invisible to every
+  *     other number in the run — the file compiles, and the run's own decision row and porter note
+  *     claim the clause. Recorded from the emitter's reading of the header it wrote
+  *     (`ENGINE-LIMITS.md` CT5), which is why this one arrives after emission rather than with the
+  *     other four.
   *
   * ==Its gate is the BASELINE, not a constant==
   * Deliberately no hard-coded fatality on any kind. The count is a finding and the committed
@@ -67,6 +74,18 @@ object ContextSeamCheck:
     case DeferredInit       extends Kind("deferred-init")
     case CapturedContext    extends Kind("captured-context")
     case FrozenComponent    extends Kind("frozen-component")
+    /** …and the fifth, which is the only one the PHASE cannot see: a clause it put on a class's
+      * constructors that the emitted header does not carry (`ENGINE-LIMITS.md` CT5).
+      *
+      * It is a seam by the same definition as the other four — a place the threading stopped — and
+      * it is here rather than in a check of its own because a reader asking "how much of this
+      * library is still global" must see all five in one number. What makes it different is WHERE it
+      * is observed: the four above are refusals the phase RECORDS as it makes them, and this one is
+      * a disagreement between the tree and the text, so it comes from the emitter's own recording of
+      * the header it wrote, after emission. A lost clause compiles perfectly wherever the class's
+      * body happens not to summon anything, moves no other count, and leaves the decision row and
+      * the porter note claiming a clause the file does not have. */
+    case LostClause         extends Kind("lost-clause")
 
   object Kind:
     /** which of §1's three kinds the fix is — the thing a bare typer error cannot say. */
@@ -88,6 +107,17 @@ object ContextSeamCheck:
           "not change, so it captures the context from the enclosing declaration's clause. Nothing " +
           "to fix; the count exists so a port can size how much of its context outlives the call " +
           "that supplied it."
+      case LostClause =>
+        "§1(a) ENGINE, and SILENT until this line: the threading put a `using` clause on this " +
+          "class's constructors and the emitted type does not carry one, so its body has no given " +
+          "in scope — while its decision row and its porter note both say it does. A `class` here " +
+          "is an engine bug in the constructor region (`DESIGN.md` §8.2), reachable from no " +
+          "manifest key. The other three forms are the engine refusing rather than guessing, and " +
+          "each has a port-level answer: an `object` is an all-static class with no constructor to " +
+          "carry anything, a `trait` needs a `promoteToClass` entry (scala's trait parameters are " +
+          "a different feature, and a subtrait may not pass arguments), and an `enum`'s primary IS " +
+          "its java constructor, which every case object reaches with its own argument list — move " +
+          "what needs the context off the enum, or scope the enum out."
       case FrozenComponent =>
         "§1(b)/§1(a): this override component reaches a declaration this program does not own — an " +
           "unparsed parent, or a resolution root's — so its signature is not this module's to " +

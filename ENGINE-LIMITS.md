@@ -3417,6 +3417,13 @@ reached by two secondaries and by a subclass's argument-free `extends` — compi
 corpus library (605 types) class attachment emits **578 `(using T)` clauses, 0 of them flattened
 into a value parameter and 0 synthesised empty primaries**.
 
+**SCOPE, corrected by CT5: "0 synthesised empty primaries" covers only the primaries the funnel
+BUILDS.** Both figures above are read off classes the funnel PROMOTED or SYNTHESISED, which is where
+this entry's three causes lived — and they say nothing at all about the third outcome, `Plan.none`,
+where there is no primary to count a clause on. 22 of that same run's classes were in it and every
+one of them emitted a class with no clause at all, which is CT5 beside this entry. Read the two
+numbers as "of the primaries this entry is about", never as "of the port".
+
 Two things NOT to re-derive. **Do not work around this in the threading phase**: a clause the funnel
 will not carry is not a clause, and every workaround is a second constructor plan — which is why the
 knob RECORDED a `PolicyIssue.Unverifiable` finding for as long as it could not emit, rather than
@@ -3427,9 +3434,9 @@ class mode changes no method signature at all.
 
 *Fix kind: (a) engine — the constructor region, not the threading phase.*
 
-### CT5. A class the funnel neither PROMOTES nor SYNTHESISES has nowhere to put the context clause — **OPEN; 57 errors, and it is CT4's fourth cause**
+### CT5. A class the funnel neither PROMOTES nor SYNTHESISES has nowhere to put the context clause — **CLOSED; 57 errors → 2, and the primary hosts the clause and nothing else**
 
-**Title, for renumbering: "an implicit nilary primary carries no using clause".** OPEN. (a) engine.
+**Title, for renumbering: "an implicit nilary primary carries no using clause".** CLOSED. (a) engine.
 
 CT4 closed the clause for the two primaries the funnel BUILDS — a promoted java constructor
 (`plan0` reads `givenClauses` off it) and a synthesised one (`rootGivens.head`). It says nothing
@@ -3467,19 +3474,59 @@ lost the clause. Three shapes, one cause:
   and the porter note both claim a clause the emitted file does not carry.
 
 **Do not work around it in the threading phase** — CT4's standing rule, and this is the same
-module. And do not reach for the obvious one-line emitter fix either: giving such a class
-`class X(using T)` also requires each secondary to delegate `this()` FIRST, and the roots of a
-`Plan.none` class are exactly the constructors whose `super(args)` is already a counted
-`OmissionCheck` finding because Scala has nowhere to put it. Making the primary real for this shape
-IS the synthesis, widened to classes where the parent-constructor agreement the synthesis requires
-(`targets.sizeIs == 1`, `arities.sizeIs == 1`, `formals.sizeIs == arities.head`) does not hold — a
-`DESIGN.md` §8.2 change with its own measurement and its own re-baseline of every port, since a new
-primary shape moves emitted text with no phase enabled at all.
+module. **The caution that was written here when it was open is the part worth keeping**, because
+answering it is what makes the fix small: giving such a class `class X(using T)` looks like it needs
+each secondary to delegate `this()` first, and the roots of a `Plan.none` class are exactly the
+constructors whose `super(args)` is already a counted `OmissionCheck` finding — so making the primary
+REAL for this shape would be the synthesis widened to classes where its parent-constructor agreement
+(`targets.sizeIs == 1`, `arities.sizeIs == 1`, `formals.sizeIs == arities.head`) does not hold.
 
-**What this blocks, and what it does not.** It is the ONLY thing standing between the corpus and the
-globals→context enablement: everything else in that run reproduced its dry run exactly (275 threaded
-declarations, 177 files, 17 seams, 0 refusals, 0 `frozen-component`), the write story landed
-(`GLProfiler`'s ten global rebindings compile through the mapped service path), and the dependent
-that reads no holder moved 0 members. See `PROGRESS.md` §11.12.
+**CLOSED, and not that way. The primary HOSTS the clause and delegates nothing.** `Plan.none` gains
+exactly one thing — `Plan.givens`, read back off the class's own constructors
+(`CtorFunnel.classGivens`, applied by `Plans.hosting` as a post-pass over the decided plans, so all
+five roads to "no primary" are covered: the nomination's trait/module/enum guard, its two `case None`
+arms, `syntheticPrimary`'s nothing-to-synthesise refusal and the withholding fixpoint's fallback).
+`superArgs` stays empty, so the `extends` clause is the bare parent it already was; every secondary
+writes the delegation it already wrote; every `super(args)` that was `SuperCall.Dropped` still is and
+`OmissionCheck` still counts it. Nothing is lifted into an `extends` clause, so the synthesis's
+preconditions are not consulted — this is not the synthesis widened, it is the implicit primary made
+SPELLABLE. Measured: the omission census is identical with the clause and without it, on both
+fixtures and on the port.
+
+**And it is CLAUSE-CONDITIONAL, which is what pays for it.** With no clause anywhere `classGivens`
+is `Nil`, the plan is `Plan.none` unchanged, and the emitted text is byte-identical: **all 13 ports,
+0 members changed, every check count identical.** No re-baseline was needed and none was taken.
+
+Three things measured while closing it, none of which a compile-error count would have shown:
+
+- **`this()` reaches a `(using T)`-only primary**, and the shape must NOT gain an empty value group.
+  scalac 3.8.4, compiled and RUN: `class X(using Ctx)` with `def this(k: Int)(using Ctx) = { this();
+  … }`, `new X()`, `new X(3)`, `class Sub(using Ctx) extends X`, a body `summon` and a field
+  initialiser that summons. `()(using T)` is a different signature and would move every call site.
+- **The `E051` half is `paramss.flatten` again, one level down in the EMITTER.**
+  `TirEmitter.orderBody.degenerate` asked "does this constructor take nothing" of `paramss.flatten`,
+  so a nilary java constructor that had gained the clause stopped being degenerate and was emitted
+  as `def this()(using T)` beside a primary of the same erased signature — reproduced on a probe as
+  `E120` at the declaration plus one `E051` at every argument-free `extends` and every `new C()`,
+  which is exactly the `BitmapFont`/`DistanceFieldFont` pair. It reads `CtorFunnel.valueParams` now,
+  which restores the answer that class gets with no clause: the degenerate secondary dropped.
+  **Promoting the java nilary constructor instead was rejected** — `nilaryPlan` refuses any class
+  where a constructor carries `super(args)`, so it would mean widening a promotion past its own
+  preconditions to remove a clash the existing rule already removes, for identical emitted text.
+- **The silent variant is now COUNTED**, and it had to be, because it is the one shape a green
+  compile ratifies: `context-seam`'s fifth kind, `lost-clause`, recorded from the EMITTER's reading
+  of the header it wrote (never from the plan — a check reading the plan would have passed on the day
+  CT4 flattened a clause into a value parameter). It fires for a `class` that lost one, and for the
+  three forms that cannot hold one at all: an all-static class collapsed to an `object`, a `trait`
+  (scala's trait parameters are a different feature; the port's `promoteToClass` is the answer), and
+  an `enum`, whose primary IS its java constructor — its clause is dropped from the parameter list
+  rather than emitted as the unparseable `var : T`. Negative-tested on all four through the real
+  emitter.
+
+**What it unblocked.** The globals→context enablement, replayed with the P5 policy in a worktree:
+**57 → 2 errors**, and the 2 are the port's own boundary exactly as `PROGRESS.md` §11.12 said they
+were (a static field initialiser that constructs a now-threaded type, and a hand-written injected
+shim registering factories for constructors that now take a context). Everything else in that run
+reproduced: 275 threaded declarations, 177 files, 17 seams, 0 refusals, 0 `frozen-component`.
 
 *Fix kind: (a) engine — `CtorFunnel`, the `Plan.none` outcome. Not reachable from any manifest key.*
