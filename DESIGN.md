@@ -2227,6 +2227,43 @@ mechanism commit rather than left for the enablement:
   independent closures, so `MemberRenamer.Request.group` (defaulting to the policy key) is what makes
   "a renamed getter with an anchored setter" unrepresentable rather than merely unlikely.
 
+**What the SECOND consumer settled — `TypeRedirectTransform.memberRenames`, as built.** The type
+redirect's own member renames (`Disposable → AutoCloseable`, `dispose → close`) are the renamer's
+first METHOD-rename consumer, and building them fixed four things this section had left open:
+
+- **The rename is part of the REDIRECT PHASE, not a phase beside it.** Post-redirect every
+  implementor's parent edge points at the external target, so `OverrideGraph` has no owned ancestor
+  joining them and the N-declaration component splits into singletons — measured on the mechanism's
+  own fixture, a 4-declaration component becomes `{Buffer, Sub}` plus two singletons. Whole-or-none
+  then guarantees nothing: with one implementor anchored by an unparsed parent, the PRE-redirect
+  order refuses all four and the POST-redirect order renames three and reports success. How that
+  half program fails is not the engine's to choose — for `AutoCloseable` it is two scalac errors
+  (the member is abstract); where the target's member is concrete, or the split leaves an interface
+  nothing implements, it compiles and no count moves. So the ordering is a CORRECTNESS constraint,
+  not scheduling, and `runsAfter`/`runsBefore` cannot express it: only one phase that builds the
+  graph, renames, and then redirects can.
+- **The new name must exist on the TARGET, where the target is known at all.** A rename is
+  checked against `ExternalSurface` — `jdkPlatform` already closes `java.lang.AutoCloseable#close`
+  — and refused with what the target DOES declare. An UNKNOWN target (the ordinary case: a
+  shape-compatible type the port ships itself) cannot refuse anything, and must not: the target
+  compiler is the gate there, exactly as it already is for the redirect's shape. This is the one
+  place the mechanism's conservative direction inverts, and it inverts because refusing an unknown
+  target would make the feature unusable for every redirect that is not to a JDK platform type.
+- **`OnCollision.Refuse`, never `DeferToEmitter`.** The requested name is the TARGET's name for the
+  member, so a name that lands one `$` along is not a name the target declares — which is the whole
+  thing the surface check exists to prevent.
+- **The redirect may name a type this module DECLARES AND PARSED**, which no port had exercised.
+  The twin machinery covers it as documented, and one thing follows that an enablement must not be
+  surprised by: a redirect re-points REFERENCES and never deletes a declaration, so the upstream
+  type is still emitted and the port must `dropTypes` it separately. Pinned by
+  `TypeRedirectMemberRenameSpec`'s owned-and-parsed case.
+
+The config shape extends compatibly rather than replacing: `redirects { "a.B" = "c.D" }` and
+`"a.B" = { to = "c.D", memberRenames { … } }` live in one map, read apart by `ConfigView.isObject`
+— a PROBE that does not count as a read, so the unread-key refusal still catches a misspelling
+inside an entry. Deciding the shape by CATCHING the error the other reader throws would have turned
+a genuine shape mistake into a silent fallback.
+
 **Rejected.** Blanket bean-pair auto-detection (the negative space above). `var x` as the primary target
 (deferred, above). Renaming the setter into an overload of `x` — loses assignment syntax and collides in
 one namespace. **Emitter-level beautification** — rendering `getX()` calls as `x` without renaming

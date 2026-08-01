@@ -61,7 +61,7 @@ key not read fails the run.
 | `test-framework` | `suite` (default `TestFrameworkTransform.DefaultSuite`), `testMember` (default `"test"`) | JUnit → MUnit is a STRUCTURAL transform, not an annotation rename |
 | `static-forwarder` | `forwarders = [ { wrapper, receiver, members = […] } ]` | all three required per entry; a forwarder with no `members` is refused — it can only ever be a mistake |
 | `class-table` | `redirects { "a.B#forName" = "c.D#classFor" }` | re-point a reflective name lookup at an explicit table |
-| `type-redirect` | `redirects { "a.B" = "c.D" }` | |
+| `type-redirect` | `redirects { "a.B" = "c.D" }`, or the same entry as an object: `"a.B" = { to = "c.D", memberRenames { m = "n" } }` | re-point every reference to one type at another. A `memberRenames` key is a member SEGMENT under its owner — `dispose`, or `dispose()` for one overload — and renames every declaration of that member's override COMPONENT before the redirect, so a target that spells the member differently (`Disposable#dispose` → `AutoCloseable#close`) is expressible. Both entry shapes live in one map; the flat one is not legacy. A rename to a name a KNOWN target does not declare, or one whose component reaches a declaration this program cannot move, is REFUSED and counted — never half-applied |
 | `method-body` | `bodies { "a.B#m()" = "{ … }" }` | keep the signature, replace the body |
 | `port-map-migration` | `bases = […]` **required** | base MODULE NAMES; the maps themselves are discovered from the classpath and the report tree. Named for the phase, not shortened to `port-map`, which is a CHECK name |
 | `primitive-to-opaque` | `fqn` **required**, `underlying` (default `Int`), `extraHints = […]`, `scope`; **`hints` REFUSED** | see below |

@@ -114,6 +114,20 @@ trait ConfigView:
   /** a nested object. */
   def child(key: String): Option[ConfigView]
 
+  /** is the value at `key` an OBJECT? — the one shape question a reader may ask before reading.
+    *
+    * It exists for the COMPATIBLE EXTENSION of a settled key. `redirects { "a.B" = "c.D" }` is a
+    * published shape and every port that writes it must keep working, so the entry that grew a
+    * second field spells it `"a.B" = { to = "c.D", … }` and the two forms live in one map. Deciding
+    * between them by CATCHING the [[ConfigError]] that `string` or `child` throws would turn a
+    * genuine shape error (a list, a number) into a silent fallback, which is the §1(b) no-op this
+    * whole front door refuses.
+    *
+    * It is a PROBE and not a read: asking does not mark the key read, because a factory that probes
+    * and then honours nothing must still be caught by the unread-key refusal. An absent key is
+    * `false` — there is no value there to be an object. */
+  def isObject(key: String): Boolean
+
   /** a list of nested objects. */
   def children(key: String): Option[List[ConfigView]]
 

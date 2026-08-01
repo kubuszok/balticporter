@@ -43,9 +43,40 @@ import balticporter.tir.*
   * re-points references at a type the program does NOT own, leaving the original symbol untouched
   * and still resolvable. It is therefore ordering-insensitive, and a phase that runs after it sees
   * the redirected type — which is what a later portability or substitution check needs to see.
+  *
+  * ==`memberRenames` — when the target calls the member something else==
+  * A shape-compatible target is not always a NAME-compatible one: `Disposable#dispose()` and
+  * `java.lang.AutoCloseable#close()` are the same member under two names, and a redirect alone
+  * emits a class that claims to be an `AutoCloseable` and does not implement it. So an entry may
+  * carry `memberRenames`, member simple name → the target's name for it, and the phase renames
+  * every declaration of that member's override component before re-pointing anything.
+  *
+  * '''The rename runs against the PRE-REDIRECT override graph, INSIDE this one phase, and that is
+  * not a scheduling convenience.''' Post-redirect every implementor's parent edge points at the
+  * external target, so [[OverrideGraph]] has no owned ancestor joining them and the N-declaration
+  * component splits into singletons: [[MemberRenamer]]'s whole-or-none guarantee then guarantees
+  * nothing, and a single anchored declaration no longer refuses the rest — half a hierarchy is
+  * renamed, and the refusal that should have stopped all of it reports success. How that half
+  * program then fails is not something the engine gets to choose: measured on this phase's own
+  * fixture it is two scalac errors, because `AutoCloseable#close` is abstract; where the target's
+  * member is concrete, or where the split leaves an interface nothing implements, the same
+  * half-rename compiles and no count moves for it. Two phases in series cannot express any of this;
+  * one phase that builds the graph, renames, and only then redirects can.
+  * (`TypeRedirectMemberRenameSpec` constructs the wrong order and measures the split.)
+  *
+  * '''And the new name must exist on the TARGET.''' Renaming `dispose` to something
+  * `java.lang.AutoCloseable` does not declare emits a program that calls a method the target does
+  * not have — a compile error three lanes downstream, in the consumer's repository. Where the
+  * target's surface is KNOWN ([[ExternalSurface]] — the JDK platform types whose member sets the
+  * JDK itself closes) the rename is checked against it and refused, counted, with why. Where it is
+  * not known — the ordinary case, a shape-compatible type the port ships itself — the check cannot
+  * run and the target compiler stays the gate, exactly as it is for the redirect's shape.
   */
-final class TypeRedirectTransform(redirects: Map[String, String] = Map.empty)
-    extends Phase, PolicySource, SurfacePolicy, PolicyBound:
+final class TypeRedirectTransform(
+    redirects: Map[String, String] = Map.empty,
+    memberRenames: Map[String, Map[String, String]] = Map.empty,
+    external: ExternalSurface = ExternalSurface.default,
+) extends Phase, PolicySource, SurfacePolicy, PolicyBound:
   def name: String = "type-redirect"
 
   /** What the RUN resolved each declared SOURCE type to, before the pipeline started (§8.1).
@@ -62,29 +93,93 @@ final class TypeRedirectTransform(redirects: Map[String, String] = Map.empty)
   private var bound: Map[String, Binding[SymId]] = Map.empty
   private var records: List[PolicyBinder.Record] = Nil
 
+  /** the member renames, PARSED and BOUND — one row per declaration a rename entry named. Bound
+    * `Owned`, unlike the type above: a rename rewrites a DECLARATION, and a key naming only an
+    * interned external has nothing to rewrite (`ExternalOnly` says exactly that). */
+  private var boundRenames: List[TypeRedirectTransform.Rename] = Nil
+
+  /** this phase's OWN findings — a malformed member segment, a `memberRenames` block for a type
+    * that is not redirected, and every counted refusal the run makes. */
+  private var ownFindings: List[PolicyFinding] = Nil
+
   def bindPolicy(binder: PolicyBinder): Unit =
     bound = redirects.keys.toList.sorted
       .map(k => k -> binder.bindType(name, "TypeRedirectTransform(redirects) source", k, Ownership.Either))
       .toMap
+    val bad = collection.mutable.ListBuffer.empty[PolicyFinding]
+    boundRenames = memberRenames.toList.sortBy(_._1).flatMap { (from, renames) =>
+      redirects.get(from) match
+        // A `memberRenames` block for a type nothing redirects is not a rename this phase could
+        // ever perform: the whole point of the rename is that the TARGET spells the member
+        // differently, and with no target there is no other spelling. Config cannot express it
+        // (the block is nested inside its entry); a Scala embedder can, and it must not read as a
+        // rename that silently did nothing.
+        case scala.None =>
+          bad += PolicyFinding(name, "TypeRedirectTransform(memberRenames)", from, PolicyIssue.Malformed,
+            "`memberRenames` names a type this phase does not redirect — a member rename exists " +
+              "because the REDIRECT TARGET spells the member differently, so with no `redirects` " +
+              "entry for this type there is nothing it could be renamed towards")
+          Nil
+        case Some(to) => renames.toList.sortBy(_._1).flatMap { (member, newName) =>
+          MemberKey.parseIn(from, member) match
+            case Left(m) =>
+              bad += PolicyFinding(name, s"TypeRedirectTransform(memberRenames) of `$from`", member,
+                PolicyIssue.Malformed, m.what)
+              Nil
+            case Right(_) if newName.isEmpty =>
+              bad += PolicyFinding(name, s"TypeRedirectTransform(memberRenames) of `$from`", member,
+                PolicyIssue.Malformed, "the new name is empty, which names nothing")
+              Nil
+            case Right(mk) =>
+              val entry = mk.render
+              // `flatMap(_.sym)` and not `map`: a hit with no symbol is a member the port DROPPED,
+              // which the binder counts as having fired and which there is nothing left to rename.
+              // That is the honest answer — a drop is a decision the port already made about this
+              // member — and it is why an empty `hits` below is a no-op rather than a finding.
+              val hits  = binder.bindMembers(name, s"TypeRedirectTransform(memberRenames) of `$from`", entry)
+                .toOption.getOrElse(Nil).flatMap(_.sym)
+              List(TypeRedirectTransform.Rename(from, to, entry, newName, hits))
+        }
+    }
+    ownFindings = bad.toList
     records = binder.recordsFor(name)
 
   /** Re-pointing a type CHANGES EMITTED SIGNATURES — a field, a parameter and a return type all
-    * move — so it is part of the shared surface and two modules must not disagree about it. */
-  def surfaceFingerprint: String = redirects.toList.sorted.map((f, t) => s"$f->$t").mkString(",")
+    * move — so it is part of the shared surface and two modules must not disagree about it. A
+    * member rename moves the signature twice over, so it is rendered here too; an entry with no
+    * renames spells exactly what it always did, so two modules that predate this feature still
+    * compare equal. */
+  def surfaceFingerprint: String = redirects.toList.sorted.map { (f, t) =>
+    memberRenames.getOrElse(f, Map.empty).toList.sorted match
+      case Nil => s"$f->$t"
+      case rs  => s"$f->$t[" + rs.map((m, n) => s"$m=$n").mkString(",") + "]"
+  }.mkString(",")
 
   private var mapping: Map[SymId, SymId]     = Map.empty
   private var memberTwins: Map[SymId, SymId] = Map.empty
 
+  /** refusals this RUN made — reset at the head of every run, because a phase instance is reused
+    * across two translations (`Determinism.Full`) and the first run's refusals are not the
+    * second's. */
+  private var runFindings: List[PolicyFinding] = Nil
+
   /** Declared sources that occur nowhere — the redirect silently did not happen and the dependency
     * the port was configured to remove is still there. The symmetric failure to every other (b)
     * seam's, and the reason [[PolicyReport]] exists. Derived from the BINDING, so it is complete
-    * before the pipeline runs and says the same thing whether or not this phase ran. */
-  def policyReport: PolicyReport = PolicyReport.fromBindings(records)
+    * before the pipeline runs and says the same thing whether or not this phase ran — plus this
+    * phase's own malformed entries and counted rename refusals, which the binding cannot see. */
+  def policyReport: PolicyReport =
+    PolicyReport.fromBindings(records) ++ PolicyReport(ownFindings ++ runFindings)
 
-  override def run(program: Program): Program =
+  override def run(program0: Program): Program =
+    runFindings = Nil
     if redirects.isEmpty then
       mapping = Map.empty; memberTwins = Map.empty
-      return program
+      return program0
+
+    // THE RENAME FIRST, against the graph of the program as JAVA declared it — see this class's
+    // note on why the two cannot be two phases.
+    val program = renameMembers(program0)
 
     val byName = program.symbols.all.iterator.map(s => s.fullName -> s).toMap
     var table  = program.symbols
@@ -204,6 +299,96 @@ final class TypeRedirectTransform(redirects: Map[String, String] = Map.empty)
       val symbols = StandardTraversal.mapSymbols(this, table)
       program.rebuilt(units, symbols) // xref rebuilt by the Pipeline
 
+  // -------------------------------------------------------------------------------------------
+  // the member renames — everything below runs BEFORE a single reference has moved
+  // -------------------------------------------------------------------------------------------
+
+  /** Rename every declaration of each named member's override COMPONENT to what the target calls
+    * it, then hand the rewritten program on to the redirect.
+    *
+    * Three screens, in this order, and each one is a counted refusal rather than a silent skip:
+    *
+    *   1. the TARGET must declare the new name, where its surface is known at all;
+    *   2. the component must be one this program may move — [[OverrideGraph.Closure]]'s anchors,
+    *      which is [[MemberRenamer]]'s own screen and not repeated here;
+    *   3. the new name must be free in the component's classes. [[MemberRenamer.OnCollision.Refuse]]
+    *      and not `DeferToEmitter`: the requested name is the TARGET's name for the member, so a
+    *      name landing one `$` along is not a name the target declares, which is the whole thing
+    *      screen 1 exists to prevent. A class that implements the redirected type AND already has a
+    *      method of the target's name is a genuine conflict for the port to resolve.
+    */
+  private def renameMembers(program: Program): Program =
+    if boundRenames.isEmpty then program
+    else
+      // NO `baseUnits`, and that is the dependent case working rather than an omission. A dependent
+      // module's `Program` contains its base (`ENGINE-LIMITS.md` D2) and does not EMIT it, so
+      // renaming the base's declaration in this run's symbol table defines nothing twice — and it
+      // is exactly what makes the dependent's own overrides come out under the name the base
+      // already emitted. Base-anchoring here would refuse every dependent and emit an `override`
+      // of a member that no longer exists. What keeps the two modules honest is `SurfacePolicy`:
+      // the rename is part of the fingerprint, so a base and a dependent that disagree are a §1.5
+      // finding before either compiles.
+      val graph = OverrideGraph.build(program, external)
+      val screened        = boundRenames.map(r => r -> targetRefusal(graph, r))
+      val (refused, live) = (screened.collect { case (r, Some(why)) => (r, why) },
+                             screened.collect { case (r, scala.None) => r })
+      refused.foreach((r, why) => refuseRename(r, why))
+      val requests = live.flatMap(r => r.hits.map(h =>
+        MemberRenamer.Request(h, r.newName, Reason.Configured(name, r.key), r.key, r.key)))
+      if requests.isEmpty then program
+      else
+        val (out, refusals) = MemberRenamer.rename(
+          program, graph, requests, MemberRenamer.OnCollision.Refuse, decisions)
+        refusals.map(_.request.key).distinct.foreach { k =>
+          val why = refusals.find(_.request.key == k).map(_.why).getOrElse("refused")
+          live.find(_.key == k).foreach(r => refuseRename(r, why))
+        }
+        out
+
+  /** Does the redirect TARGET declare the name this entry asks for? `None` when it does, or when
+    * nothing is known about the target — an unknown surface cannot refuse anything, and the
+    * direction of THAT error is the one the phase already lives with for shape (the target compiler
+    * is the gate). The signature is the member's own, with the new name substituted, so an arity
+    * mismatch is caught too where the surface carries one. */
+  private def targetRefusal(graph: OverrideGraph, r: TypeRedirectTransform.Rename): Option[String] =
+    if r.hits.isEmpty || !external.isKnown(r.target) then scala.None
+    else
+      val declared = external.known.getOrElse(r.target, Set.empty)
+      val ok = r.hits.forall { h =>
+        graph.signatureOf(h) match
+          case Some(sig) => declared.exists(_.matches(sig.copy(name = r.newName)))
+          case scala.None => declared.exists(_.name == r.newName)
+      }
+      val has = declared.toList.map(_.name).distinct.sorted match
+        case Nil => "declares nothing at all"
+        case ns  => s"declares ${ns.mkString(", ")}"
+      Option.when(!ok)(
+        s"`${r.target}` does not declare `${r.newName}` with this member's shape — its surface is " +
+          s"known to this engine and it $has. A rename to a name the target does not have emits " +
+          "code that calls a method which does not exist, which is a compile error in the " +
+          "consumer's repository and not here")
+
+  /** one counted refusal: a `PolicyReport` row for the never-fired half, and a `ScopedOut` decision
+    * for the provenance half. `ScopedOut` and not a new enum case, for DESIGN.md §8.5's reason — a
+    * declaration that kept its upstream form while the code around it moved IS a scope-out, and the
+    * enum is closed on purpose. */
+  private def refuseRename(r: TypeRedirectTransform.Rename, why: String): Unit =
+    runFindings = runFindings :+ PolicyFinding(
+      name, s"TypeRedirectTransform(memberRenames) of `${r.source}`", r.key, PolicyIssue.Unverifiable, why)
+    record(Decision(
+      kind       = Decision.Kind.ScopedOut,
+      subject    = SymId.None,
+      subjectFqn = r.entry,
+      detail     = Map(
+        "refused" -> "member-rename",
+        "to"      -> r.newName,
+        "target"  -> r.target,
+        "why"     -> why,
+      ),
+      reason = Reason.Configured(name, r.key),
+      origin = Origin.synthetic,
+    ))
+
   override def transformType(t: TypeRepr)(using Program): TypeRepr = t match
     case TypeRepr.TypeRef(p, s) if mapping.contains(s) => TypeRepr.TypeRef(p, mapping(s))
     case other                                         => other
@@ -236,3 +421,20 @@ final class TypeRedirectTransform(redirects: Map[String, String] = Map.empty)
 
   override def transformApply(t: Tree.Apply)(using Program): Term =
     if memberTwins.contains(t.method) then t.copy(method = memberTwins(t.method)) else t
+
+object TypeRedirectTransform:
+
+  /** One declared member rename, parsed and bound.
+    *
+    * @param source the redirected type, as the policy spells it
+    * @param target what it is redirected TO — the type whose name for the member is being adopted
+    * @param entry  the bound member key (`owner#name`, or one overload), rendered from a `MemberKey`
+    * @param newName the target's name for it
+    * @param hits   every declaration the key named. The override CLOSURE of each is what actually
+    *               moves; this is only what the key itself pointed at.
+    */
+  final case class Rename(source: String, target: String, entry: String, newName: String,
+                          hits: List[SymId]):
+    /** the string an agent edits, in one piece — the `Reason.Configured` key and the id a refusal
+      * is reported under (§4.575). */
+    def key: String = s"$entry -> $newName"

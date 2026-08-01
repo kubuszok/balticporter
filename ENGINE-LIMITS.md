@@ -2149,6 +2149,23 @@ and reaping them is the same cross-checkout kill the measure lanes had to have r
 Prevention is cheaper than either: never kill a client that is merely slow — `sbt -client` compiling
 a cold worktree takes minutes, and the wedge only exists because a kill looked faster.
 
+**Which is which takes two commands and no guessing**, and the rule above is unusable without them —
+"minutes" and "for ever" look identical from the outside, especially with three sibling worktrees
+measuring at once and everything slow. A wedged server is IDLE, and idleness is observable:
+
+```
+find . -newermt "-3 minutes" -type f -not -path "./.git/*"   # a build that is working WRITES
+ps -o time= -p <server-pid>                                  # …twice: a working server BURNS CPU
+```
+
+Both static — no file touched in three minutes and CPU unmoved between two samples — is the wedge;
+either one moving is a slow compile, and killing it is the mistake this entry is about. Then find
+the server for THIS checkout through its own `project/target/active.json` socket
+(`lsof -U | grep <hash>`), never off `ps` alone: measured during M5r, `ps aux | grep sbt-launch`
+listed ten servers of which exactly one was this worktree's — the other nine were sibling
+checkouts', mid-measure, and three of them had started during this lane's own run, which is
+precisely the coincidence that makes a name-based kill look justified.
+
 ### M5.7 An unchanged-tree `testFull` is a cache REPLAY — it proves nothing about flakiness
 
 sbt 2 caches test results, and a replay is a perfect forgery of a run: per-project totals, suite
@@ -2650,10 +2667,16 @@ Two rules that fall out:
 
 - **A phase whose doc claims totality owes a spec PER OCCURRENCE KIND**, with the negative half
   (`assertNotEmits`) — the positive one passes on a partial redirect.
-- **Do not redirect a type the port also EMITS.** Moving the members' owner is exact only because the
-  contract is that this module does not ship the type; a module that shipped it would emit the
-  declaration under one name and every reference under another. Nothing enforces this, and nothing
-  can: it is a coherence property of the configuration.
+- **A port that redirects a type it OWNS must also DROP it.** Moving the members' owner is exact only
+  because the contract is that this module does not ship the type. A module that ships it emits the
+  declaration under one name and every reference under another — a `trait Disposable` nothing
+  refers to, beside classes that all extend the target. The redirect re-points REFERENCES and never
+  deletes a declaration, which is not an oversight (deleting is `Substitutions.dropTypes`, and the
+  two are separate decisions for §1.5's reason: the DROP binds every module that sees the type).
+  Nothing enforces the pairing and nothing can: it is a coherence property of the configuration.
+  Measured, not assumed — `TypeRedirectMemberRenameSpec`'s owned-and-parsed case runs a redirect of
+  a type the fixture declares and asserts exactly this shape, statics twinned and members renamed,
+  with the orphan declaration still there.
 
 *Fix kind: (a) engine — the mechanism was incomplete, not the policy. Done; pinned by
 `TypeRedirectTransformSpec`.*

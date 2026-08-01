@@ -81,6 +81,11 @@ final class HoconView private (val path: String, obj: ConfigObject) extends Conf
     case v => wrongType(key, "an object of string values", v)
   }
 
+  /** the shape PROBE — deliberately NOT through `raw`, which records the read. See
+    * [[ConfigView.isObject]] for why a probe that counted as a read would defeat [[unread]]. */
+  def isObject(key: String): Boolean =
+    Option(obj.get(key)).exists(_.valueType == ConfigValueType.OBJECT)
+
   def child(key: String): Option[ConfigView] = raw(key).map {
     case o: ConfigObject => hand(at(key), o)
     case v               => wrongType(key, "an object", v)

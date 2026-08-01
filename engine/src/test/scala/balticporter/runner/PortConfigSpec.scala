@@ -2,7 +2,8 @@ package balticporter.runner
 
 import balticporter.core.{FrontendConfig, PortManifest, Provenance, RuntimeMode}
 import balticporter.tir.{ConfigError, RuleScope}
-import balticporter.transform.{CollectionsTransform, MutableParamsTransform, TestFrameworkTransform}
+import balticporter.transform.{CollectionsTransform, MutableParamsTransform, TestFrameworkTransform,
+  TypeRedirectTransform}
 
 import java.nio.file.{Files, Path}
 
@@ -280,6 +281,35 @@ class PortConfigSpec extends munit.FunSuite:
         |manifest { name = "dep" }
         |""".stripMargin, Map("base.conf" -> base))
     assertEquals(PortConfig.load(f).manifest.get.baseChain.map(_.name), List("base"))
+  }
+
+  // -------------------------------------------------------------------------------------------
+  test("`type-redirect` reads BOTH entry shapes out of one map, and the flat one is unchanged") {
+    // The flat form is published — every port that writes it must keep working — so the entry that
+    // grew `memberRenames` spells itself as an object BESIDE it, in the same map. The identity
+    // compared is `surfaceFingerprint`, because that is what decides whether two modules agree
+    // about the emitted surface (§1.5), and because an entry with no renames must still render
+    // exactly what it always did or every base/dependent pair predating this feature disagrees.
+    def fp(entries: String) = PortConfig.load(fixture(Minimal.replace(
+      """manifest { name = "demo" }""",
+      s"""manifest { name = "demo", surface = [ { transform = "type-redirect", redirects { $entries } } ] }"""
+    ))).manifest.get.effectiveSurface.collectFirst { case t: TypeRedirectTransform => t.surfaceFingerprint }.get
+
+    assertEquals(fp(""""a.B" = "c.D""""), "a.B->c.D")
+    assertEquals(fp("""  "a.B" = { to = "c.D" }  """), "a.B->c.D")
+    assertEquals(
+      fp("""  "a.B" = "c.D"
+           |  "a.Disposable" = { to = "java.lang.AutoCloseable"
+           |                     memberRenames { dispose = "close" } }  """.stripMargin),
+      "a.B->c.D,a.Disposable->java.lang.AutoCloseable[dispose=close]")
+  }
+
+  test("a misspelt key INSIDE a redirect entry fails the run — the shape probe is not a read") {
+    val f = fixture(Minimal.replace("""manifest { name = "demo" }""",
+      """manifest { name = "demo", surface = [ { transform = "type-redirect",
+        |  redirects { "a.B" = { to = "c.D", memberRename { x = "y" } } } } ] }""".stripMargin))
+    val e = intercept[ConfigError](PortConfig.load(f))
+    assert(clue(e.getMessage).contains("memberRename"))
   }
 
   // -------------------------------------------------------------------------------------------

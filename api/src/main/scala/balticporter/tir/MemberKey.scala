@@ -117,6 +117,22 @@ object MemberKey:
           }
       }
 
+  /** Parse a MEMBER SEGMENT against an owner named separately — `dispose`, or `dispose()` for the
+    * nilary overload alone.
+    *
+    * A policy whose keys are nested UNDER their owner (`"a.B" { dispose = "close" }`) has the two
+    * halves already apart, and splicing them back together at the reader is how a phase ends up
+    * building member identity from a string — the exact shape `PolicyKeyLintSpec` forbids. The
+    * splice belongs in the one file that owns this grammar, so it lives here and the reader gets a
+    * parsed [[MemberKey]] or a [[Malformed]] with the same message any other key would produce.
+    */
+  def parseIn(owner: String, member: String): Either[Malformed, MemberKey] =
+    if owner.isEmpty then Left(Malformed(member, "the owner is empty: a member key names its declaring type in full"))
+    else if member.contains('#') then
+      Left(Malformed(member, "a `#` in a member segment whose owner is already named — write the " +
+        "member alone (`dispose`), or one overload of it (`dispose()`)"))
+    else parse(owner + "#" + member).left.map(m => m.copy(key = member))
+
   /** parse, or throw — for a literal written in engine code or a spec, never for policy. */
   def of(key: String): MemberKey =
     parse(key).fold(m => throw new IllegalArgumentException(s"""malformed member key "${m.key}": ${m.what}"""), identity)

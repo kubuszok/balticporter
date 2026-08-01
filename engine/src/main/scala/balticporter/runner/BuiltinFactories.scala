@@ -110,11 +110,38 @@ final class ClassTableFactory extends TransformFactory:
   def fromConfig(config: ConfigView): Phase =
     new ClassTableTransform(config.stringMap("redirects").getOrElse(Map.empty))
 
-/** `{ transform = "type-redirect", redirects { "a.B" = "c.D" } }` */
+/** ```
+  * { transform = "type-redirect"
+  *   redirects {
+  *     "a.B" = "c.D"                                                  # the flat form
+  *     "a.Disposable" = { to = "java.lang.AutoCloseable"               # …and the same entry with
+  *                        memberRenames { dispose = "close" } }        #    the target's names
+  *   } }
+  * ```
+  *
+  * TWO SHAPES IN ONE MAP, and the flat one is not a legacy spelling: an entry whose target spells
+  * every member the same way has nothing to say beyond `to`, and making it say
+  * `{ to = "c.D" }` would rewrite every port that already writes the published form for no
+  * information. The value is read as an object only when it IS one ([[ConfigView.isObject]]) — never
+  * by catching the error the other reader would throw, which would turn a genuine shape mistake (a
+  * list, a number) into a silent fallback.
+  *
+  * A `memberRenames` key is a member SEGMENT under its owner — `dispose`, or `dispose()` for the
+  * nilary overload alone. The owner is the entry it is nested in, which is what makes a rename for
+  * a type nothing redirects unwritable rather than merely reported.
+  */
 final class TypeRedirectFactory extends TransformFactory:
   def name = "type-redirect"
   def fromConfig(config: ConfigView): Phase =
-    new TypeRedirectTransform(config.stringMap("redirects").getOrElse(Map.empty))
+    val entries = config.child("redirects").toList.flatMap(rs => rs.keys.map { k =>
+      if !rs.isObject(k) then (k, rs.requireString(k), Map.empty[String, String])
+      else
+        val e = rs.requireChild(k)
+        (k, e.requireString("to"), e.stringMap("memberRenames").getOrElse(Map.empty))
+    })
+    new TypeRedirectTransform(
+      redirects     = entries.map((k, to, _) => k -> to).toMap,
+      memberRenames = entries.collect { case (k, _, rn) if rn.nonEmpty => k -> rn }.toMap)
 
 /** ```
   * { transform = "bean-properties"
