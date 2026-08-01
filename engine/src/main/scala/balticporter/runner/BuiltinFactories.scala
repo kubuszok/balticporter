@@ -73,11 +73,22 @@ final class PanamaFfiFactory extends TransformFactory:
 // (b) — policy as data
 // ---------------------------------------------------------------------------------------------
 
-/** `{ transform = "collections", scope { except = ["com.foo.Bridge"] } }` */
+/** ```
+  * { transform = "collections"
+  *   scope { except = ["com.foo.Bridge"] }
+  *   retarget { "java.util.Comparator" = "scala.math.Ordering" } }
+  * ```
+  *
+  * `retarget` is the type-only half: java FQN → scala FQN, retyped everywhere and API-mapped
+  * nowhere. Legal exactly where the scala target is usable wherever the java source was — see the
+  * constructor parameter for the precondition and why the engine cannot check it.
+  */
 final class CollectionsFactory extends TransformFactory:
   def name = "collections"
   def fromConfig(config: ConfigView): Phase =
-    new CollectionsTransform(TransformFactory.scopeOf(config))
+    new CollectionsTransform(
+      TransformFactory.scopeOf(config),
+      config.stringMap("retarget").getOrElse(Map.empty))
 
 /** `{ transform = "test-framework", suite = "munit.FunSuite", testMember = "test" }` */
 final class TestFrameworkFactory extends TransformFactory:

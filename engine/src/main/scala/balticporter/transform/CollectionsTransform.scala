@@ -50,8 +50,33 @@ import balticporter.tir.*
   * fix. A scope that silently produced an uncompilable seam would be worse than no scope, and this
   * is what makes it not one.
   */
-final class CollectionsTransform(val scope: RuleScope = RuleScope.Everywhere())
-    extends Phase, RequiresRuntime, PolicySource, SurfacePolicy, PolicyBound:
+final class CollectionsTransform(
+    val scope: RuleScope = RuleScope.Everywhere(),
+    /** RETARGET ENTRIES — java FQN → scala FQN, retyped at every occurrence and API-mapped NOWHERE.
+      *
+      * ==Why this is a second table and not four more rows in [[CollectionsTransform.typeMap]]==
+      * `typeMap` says two things at once: *this type becomes that one*, and *its calls are rewritten
+      * kind-aware and its slots bridged by `coerce`*. That second half is what a collection needs
+      * (`list.get(0)` is `xs(0)`; a `Buffer` reaching a `java.util.Iterable` slot needs a shim) and
+      * it is exactly what a retarget must NOT get. So a retarget entry joins `remap` — the type
+      * rewrite — and joins neither `kindOf` nor any factory, which makes every kind-driven arm a
+      * no-op on it by arithmetic rather than by a new guard in each one.
+      *
+      * ==The precondition, which the engine cannot check and the policy author owes==
+      * '''The scala target must be usable wherever the java source was.''' The worked example is
+      * `java.util.Comparator` → `scala.math.Ordering`: Scala declares
+      * `trait Ordering[T] extends Comparator[T]`, so every occurrence moves with no coercion
+      * anywhere, an anonymous `new Comparator<T>(){ int compare(a,b) }` becomes a structurally
+      * identical `new Ordering[T]`, a java lambda stays SAM-convertible (`compare` is `Ordering`'s
+      * one abstract member), and a JDK method still declaring `Comparator` accepts the retyped
+      * value unchanged. Where that relation does not hold, the seam is a `coerce` boundary and the
+      * type belongs in `typeMap` with a kind and a factory — not here.
+      *
+      * A key that also appears in `typeMap` is REFUSED rather than merged: two answers for one type
+      * is a rewrite whose outcome depends on which table was read, which is not a thing a policy
+      * author can reason about. Empty is the default and makes this a no-op with no code path. */
+    val retarget: Map[String, String] = Map.empty,
+) extends Phase, RequiresRuntime, PolicySource, SurfacePolicy, PolicyBound:
   def name = "java-collections->scala"
 
   /** What the RUN resolved each declared scope entry to, before the pipeline started (§8.1). This
@@ -60,17 +85,31 @@ final class CollectionsTransform(val scope: RuleScope = RuleScope.Everywhere())
     * measurement of whether the binder reproduces the answer this phase worked out by hand. */
   private var boundScope: Map[String, Binding[Unit]] = Map.empty
 
+  /** …and each retarget SOURCE. Bound as [[Ownership.Either]] on purpose: a retarget's subject is a
+    * type this program REFERENCES and never declares — a JDK interface — which is the one shape
+    * `Owned` would report as never-matched while the rewrite worked. */
+  private var boundRetarget: Map[String, Binding[SymId]] = Map.empty
+
   def bindPolicy(binder: PolicyBinder): Unit =
     val setting = s"CollectionsTransform(scope) ${scope.productPrefix} entry"
     boundScope = scope.entries.toList.sorted.map(e => e -> binder.bindScope(name, setting, e)).toMap
+    boundRetarget = retarget.keys.toList.sorted
+      .map(k => k -> binder.bindType(name, RetargetSetting, k, Ownership.Either)).toMap
 
   /** Two modules that scope this phase differently emit incompatible signatures for the shared
     * surface — a `java.util.List` parameter in the base against a `Buffer` argument in the
     * dependent, which each compile alone and cannot compile together. That is exactly what
     * [[SurfacePolicy]] exists to make comparable (CLAUDE.md §1.5); before the scope there was
     * nothing to compare, which is why this phase did not implement it. The default scope renders
-    * `""`, so a port that sets no scope has the fingerprint it always effectively had. */
-  def surfaceFingerprint: String = scope.fingerprint
+    * `""`, so a port that sets no scope has the fingerprint it always effectively had.
+    *
+    * A RETARGET is the same fact one type further out — a base whose `Comparator`s became
+    * `Ordering`s and a dependent whose did not emit signatures that cannot meet — so it joins the
+    * fingerprint. Sorted, and only rendered when non-empty, so a port that declares none has the
+    * string it always had and no baseline moves. */
+  def surfaceFingerprint: String =
+    if retarget.isEmpty then scope.fingerprint
+    else s"${scope.fingerprint};retarget=${retarget.toList.sorted.map((k, v) => s"$k->$v").mkString(",")}"
 
   /** this phase retypes onto `balticporter.runtime` — declared once, so the run derives the port's
     * dependency, its vendored sources and the emitter's external-parent table from it. */
@@ -186,11 +225,40 @@ final class CollectionsTransform(val scope: RuleScope = RuleScope.Everywhere())
 
   private var report: PolicyReport = PolicyReport.empty
 
+  /** the setting every retarget finding is filed under — the string an agent greps for (§4.575). */
+  private val RetargetSetting = "CollectionsTransform(retarget) entry"
+
+  /** the retarget entries that actually RUN: everything the port declared, minus any key
+    * [[CollectionsTransform.typeMap]] already answers for (reported as `Malformed` instead — see
+    * the constructor parameter). A `val`, so the two readers below and `run` cannot disagree. */
+  private val effectiveRetarget: Map[String, String] =
+    retarget.filterNot((k, _) => typeMap.contains(k))
+
+  /** what a RETARGET entry moved, read back so a reader of a finding or a decision has both halves.
+    * Deliberately NOT folded into [[mappedTypes]] / [[retypedTargets]]: those two feed
+    * [[CollectionClosureCheck]] and [[CollectionBoundaryCheck]], which are about the shim BOUNDARY,
+    * and a retarget has none by construction (its target is usable wherever its source was — the
+    * precondition stated on the constructor parameter). */
+  def retargetedTypes: Map[String, String] = effectiveRetarget
+
   /** Scope entries that named nothing in this run — a §1(b) silent no-op, which is the failure this
     * whole channel exists for: a mis-typed exclusion leaves the phase rewriting a type the port
     * meant to protect, and nothing else in the pipeline can see it. Reflects the last [[run]];
-    * empty before the first, and empty for the default scope. */
-  def policyReport: PolicyReport = report
+    * empty before the first, and empty for the default scope.
+    *
+    * The RETARGET half is a property of the policy and the program alone, so it is complete the
+    * moment the keys are bound and does not wait for a run. */
+  def policyReport: PolicyReport =
+    report ++ PolicyReport.fromBindings(boundRetarget.toList.sortBy(_._1).map { (k, b) =>
+      PolicyBinder.Record(name, RetargetSetting, k, b.forget)
+    }) ++ PolicyReport(
+      retarget.keys.toList.sorted.filter(typeMap.contains).map { k =>
+        PolicyFinding(name, RetargetSetting, k, PolicyIssue.Malformed,
+          s"`$k` already has a COLLECTION mapping (-> ${targetOf(k)}), which retypes its call " +
+            "shapes and bridges its slots as well as moving the type. A retarget entry does only " +
+            "the last of those, so the two answers are not refinements of one another — the entry " +
+            "is ignored and the collection mapping stands")
+      })
 
   override def run(program: Program): Program =
     val added = collection.mutable.ListBuffer[Symbol]()
@@ -203,7 +271,9 @@ final class CollectionsTransform(val scope: RuleScope = RuleScope.Everywhere())
     // scala type — e.g. Deque & ArrayDeque → ArrayDeque — share it and its kind).
     val byScala = collection.mutable.Map[String, SymId]()
     remap = program.symbols.all.flatMap { s =>
-      typeMap.get(s.fullName).map { case (sc, _) =>
+      // …RETARGET first, so a key the port also finds in `typeMap` cannot silently take the
+      // collection answer: `effectiveRetarget` has already removed any such key and reported it.
+      effectiveRetarget.get(s.fullName).orElse(typeMap.get(s.fullName).map(_._1)).map { sc =>
         s.id -> byScala.getOrElseUpdate(sc, mint(sc.substring(sc.lastIndexOf('.') + 1), sc))
       }
     }.toMap
@@ -354,7 +424,8 @@ final class CollectionsTransform(val scope: RuleScope = RuleScope.Everywhere())
     case other                                              => isMapped(p, other)
 
   private def isMapped(p: Program, t: TypeRepr): Boolean =
-    headSym(t).flatMap(p.symbolOf).exists(s => typeMap.contains(s.fullName))
+    headSym(t).flatMap(p.symbolOf)
+      .exists(s => typeMap.contains(s.fullName) || effectiveRetarget.contains(s.fullName))
 
   /** a symbol and every owner above it, fuel-bounded. */
   private def ownerChain(p: Program, id: SymId, fuel: Int = 64): List[SymId] =
@@ -488,6 +559,15 @@ final class CollectionsTransform(val scope: RuleScope = RuleScope.Everywhere())
                "this port's collections scope admits this declaration (directly, or through a " +
                  "pure-move flow from something it names), and a signature that moves without its " +
                  "call sites is a compile error one call away")
+            // …a RETARGET entry is a policy decision, so it may not read as the engine's own doing:
+            // §4.45's rule is that a reader must be able to tell which repository the fix lives in,
+            // and `Universal` here would send them to this file for a line in their manifest.
+            case scala.None if retargetKeysIn(s.info).nonEmpty =>
+              val ks = retargetKeysIn(s.info).toList.sorted
+              (Reason.Configured(name, ks.map(k => s"$k -> ${effectiveRetarget(k)}").mkString(", ")),
+               "this port RETARGETS the type at every occurrence: the scala counterpart is usable " +
+                 "wherever the java one was, so the declaration moves with no bridge and no " +
+                 "call-shape change")
             case scala.None =>
               (Reason.Universal("collections-retype"),
                "a JDK collection type has a scala counterpart on every backend, and the JDK's own " +
@@ -506,6 +586,29 @@ final class CollectionsTransform(val scope: RuleScope = RuleScope.Everywhere())
           ))
       }
     }
+
+  /** which RETARGET entries this signature mentions, anywhere inside it — `Set.empty` when none,
+    * which is every signature in a port that declares no retarget.
+    *
+    * Walked with [[StandardTraversal.mapType]] rather than a private recursion over `TypeRepr`'s
+    * fourteen cases: CLAUDE.md §3's rule, and the reason for it is the same here as on trees — a
+    * hand-rolled walk that stopped at `MethodType`'s parameters would answer "no retarget" for
+    * every method in the program, silently, and every one of them would then be attributed to the
+    * engine instead of to the manifest entry that caused it. */
+  private def retargetKeysIn(t: TypeRepr)(using Program): Set[String] =
+    if effectiveRetarget.isEmpty then Set.empty
+    else
+      val seen = collection.mutable.Set.empty[String]
+      val scan = new Phase:
+        def name = "retarget-scan"
+        override def transformType(x: TypeRepr)(using p: Program): TypeRepr =
+          x match
+            case TypeRepr.TypeRef(_, s) =>
+              p.symbolOf(s).map(_.fullName).filter(effectiveRetarget.contains).foreach(seen += _)
+            case _ => ()
+          x
+      StandardTraversal.mapType(scan, t)
+      seen.toSet
 
   override def transformType(t: TypeRepr)(using Program): TypeRepr = t match
     case TypeRepr.TypeRef(prefix, s) if remap.contains(s) => TypeRepr.TypeRef(prefix, remap(s))

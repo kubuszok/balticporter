@@ -208,7 +208,21 @@ final class CallSiteSubstitutionTransform(calls: Map[String, String] = Map.empty
       } ++
       faults.toList.sortBy(_._1).map((k, f) => finding(k, f._1, f._2)) ++
       refusals.map((k, why, o) => finding(k, PolicyIssue.Unverifiable,
-        s"$why — at ${o.javaPath}:${o.line}, the call is left as upstream wrote it")))
+        s"$why — at ${o.javaPath}:${o.line}, the call is left as upstream wrote it")) ++
+      // A key that BOUND and rewrote NOTHING. Not the same as an unbound key, and it has its own
+      // instruction: the callee is real, so the fault is either that nothing calls it or — the
+      // case that costs a session — that an EARLIER phase already re-pointed those calls, at which
+      // point this phase's callee symbol occurs nowhere and it matches nothing in silence. Ordering
+      // is the port's to fix and nothing else in the pipeline can see it: every count is unchanged
+      // and the emitted code is what the port asked to change.
+      bySym.values.map(_.key).toList.distinct.sorted
+        .filterNot(k => done.contains(k) || refused.exists(_._1 == k))
+        .map(k => finding(k, PolicyIssue.NeverMatched,
+          "the key bound to a real callee and NO call site named it when this phase ran. Either " +
+            "nothing in this program calls that member, or a phase that ran EARLIER re-pointed " +
+            "those calls at something else — a call-site substitution must be placed before any " +
+            "phase that rewrites the same callee, and `Pipeline.order` is stable in the order the " +
+            "port declares its surface")))
 
   // -------------------------------------------------------------------------
   // the rewrite
