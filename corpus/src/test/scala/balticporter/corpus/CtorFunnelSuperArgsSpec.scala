@@ -12,6 +12,11 @@ import balticporter.tir.{OmissionCheck, Pipeline}
   * parameter of the promoted primary has nowhere to go, and the emitter falls back to a bare
   * `this()`, losing it.
   *
+  * WHERE IT MAY NOT DECLINE is the other half, and this spec pinned the wrong answer for it. Under
+  * THE COLLAPSE the primary's parameters are the parent constructor's own formals, so every root's
+  * `super(args)` reaches them positionally and the type-matched fill has no standing to refuse.
+  * `Mixed` is that shape; `Holder` is a genuine loss, kept so both directions still have a fixture.
+  *
   * The regression this pins: the funnel briefly asserted a CLASS-WIDE `Plan.superExpressed` flag,
   * and the check skipped every constructor of a class carrying it. A class whose promotion expressed
   * one root and dropped another therefore reported ZERO dropped super arguments — the check hiding
@@ -30,10 +35,27 @@ class CtorFunnelSuperArgsSpec extends munit.FunSuite:
       |  Object a; int b;
       |  Parent(Object a, int b) { this.a = a; this.b = b; }
       |}
-      |/** one root's parameters ARE the parent's (promoted); the other's arguments fit no slot. */
+      |/** THE COLLAPSE: one root's parameters ARE the parent's, so it is promoted and nothing is
+      |  * synthesised. The other root's arguments fit no slot BY TYPE (`String` is not `Object`),
+      |  * and are delegated POSITIONALLY instead — which is what java wrote. */
       |class Mixed extends Parent {
       |  Mixed(Object a, int b) { super(a, b); }
       |  Mixed(String s)        { super(s, 7); }
+      |}
+      |class Anchor {
+      |  int cap; String tag;
+      |  Anchor()        { this.tag = "t"; }
+      |  Anchor(int cap) { this.cap = cap; }
+      |}
+      |/** A WALL, and the one the REPLAY cannot express either: the two roots reach two DIFFERENT
+      |  * parent constructors, so nothing is synthesised and the nilary root is promoted; and
+      |  * `Anchor()` assigns a field `Anchor(int)` does not, so replaying `Anchor(int)`'s statements
+      |  * after `this()` would NOT leave the state java left. Both refusals are correct, and the
+      |  * surviving `super(cap)` really is lost — which is what the check must say, for THAT root
+      |  * and not for the class. */
+      |class Holder extends Anchor {
+      |  Holder()         { }
+      |  Holder(int cap)  { super(cap); }
       |}
       |class Base {
       |  int n; boolean flag;
@@ -67,21 +89,32 @@ class CtorFunnelSuperArgsSpec extends munit.FunSuite:
   // members), so match the SHAPE — both parameters passed straight through — not the mangled names.
   private val promoted =
     raw"""class Mixed\(([\w$$]+): java\.lang\.Object, ([\w$$]+): scala\.Int\) extends demo\.Parent\(\1, \2\)""".r
-  private val lost = raw"""def this\(s: java\.lang\.String\) = \{\s*this\(\)\s*\}""".r
+  private val delegated = raw"""def this\(s: java\.lang\.String\) = \{\s*this\(s, 7\)\s*\}""".r
+  private val lost      = raw"""def this\(cap: scala\.Int\) = \{\s*this\(\)\s*\}""".r
   // `Synth()`'s own `super(0, false)` reaching the SYNTHESISED primary positionally
   private val nilarySecondary = raw"""def this\(\) = \{\s*this\(0, false\)\s*\}""".r
 
-  test("the promoted root's super arguments reach the parent, the other root's are lost") {
+  test("a COLLAPSED primary is delegated to POSITIONALLY — the sibling's arguments are not lost") {
     // the pass-through root became the primary: its arguments are in the `extends` clause
     assert(promoted.findFirstIn(clue(out)).isDefined)
-    // and the root whose arguments fit no parameter of it is emitted as a bare `this()` — the
-    // emitter's own decision, which is what the next test requires the check to have counted
-    assert(lost.findFirstIn(out).isDefined)
+    // …and the sibling reaches it with its own arguments, in the parent constructor's order.
+    //
+    // This is the shape the synthesis was built to express, and the collapse used to drop it. The
+    // type-matched fill is the right question for a promotion that passes only SOME of its
+    // parameters up (`Sized` below); for a COLLAPSE the primary's parameters ARE the parent's
+    // formals, and `String` failing to be `Object` by head name says nothing about whether
+    // `super(s, 7)` reaches them — java made that exact call. Both arguments were discarded here,
+    // silently, with a green compile, and this spec pinned that as correct.
+    assert(delegated.findFirstIn(clue(out)).isDefined)
+    assertEquals(dropped.filter(_.owner == "demo.Mixed"), Nil)
   }
 
   test("exactly the dropped root is reported — not the whole class, not none of it") {
+    // `Holder` is the case where the loss is REAL: a wall the replay cannot express either. Its
+    // nilary root carries nothing to lose and must NOT be reported; its `super(cap)` must be.
+    assert(lost.findFirstIn(clue(out)).isDefined)
     assertEquals(dropped.map(f => (f.owner, f.detail)),
-                 List(("demo.Mixed", "2 argument(s) discarded")))
+                 List(("demo.Holder", "1 argument(s) discarded")))
   }
 
   test("the PROMOTED primary is never reported — its arguments are in the `extends` clause") {

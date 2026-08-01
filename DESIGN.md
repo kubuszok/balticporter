@@ -1553,7 +1553,7 @@ applicability problem cannot arise (the marker changes the primary's arity), so 
 slots turns a correctness cliff into a non-event. The reverse order was the plan's original text and
 is retired.
 
-**AS BUILT — five things this section said that the implementation refuted, each with its number.**
+**AS BUILT — six things this section said that the implementation refuted, each with its number.**
 They are here rather than in a footnote because every one of them was measured after the design was
 signed off, and a reader who takes the paragraphs below at face value will re-derive them.
 
@@ -1582,7 +1582,23 @@ signed off, and a reader who takes the paragraphs below at face value will re-de
    minted a marker for classes that needed none. Slots are derived first; the predicates then see the
    whole list. The collapse is tried only where there are NO field slots, since with them nothing
    collides and collapsing would trade the class's entire `val` binding for a problem it has not got.
-5. **"escapes 188 → 0 for the 348" is not reached; the measured figure is libGDX core 140 → 31.**
+5. **THE COLLAPSE IS DELEGATED TO POSITIONALLY, and the type-matched fill was dropping exactly what
+   this section exists to express.** A collapse promotes a root whose parameters ARE the parent
+   constructor's formals, and the class was a candidate only because EVERY root reaches that one
+   parent constructor — so every sibling's `super(args)` fills the same formals in the same order.
+   Sent through the fill instead, `Mixed(String s) { super(s, 7); }` beside a promoted
+   `Mixed(Object a, int b)` found no `Object`-typed argument, declined, and lost BOTH arguments to a
+   bare `this()`; it compiled, and `CtorFunnelSuperArgsSpec` pinned it as correct. The alternative —
+   DECLINE the collapse whenever a root's delegation would be `Dropped`, in the same attempt-order
+   style as the escapes decline — was weighed and rejected twice over: it prices a class that has a
+   perfectly good promoted primary into the marker path (a synthetic signature and a companion
+   member, and a moved diff for every such class), and the question it would have to ask is the
+   delegation's, which is `Plans.superCall`'s and reads the DECIDED plan — asking it again at the
+   nomination is the second locally-written copy of one rule that `ENGINE-LIMITS.md` C7 records as
+   the way the count and the emission came to disagree. The fill stays FIRST, because it is what
+   supplies a JDK throwable's padded slot; positional is the fallback, keyed on `Plan.collapse`,
+   which the collapse itself records (§4.56: a phase concludes only from what the phase did).
+6. **"escapes 188 → 0 for the 348" is not reached; the measured figure is libGDX core 140 → 31.**
    The residue is wall classes, JDK-throwable parents, and — the largest single item — the
    UNIQUE-ROOT class whose promotion the C1 fixpoint withholds (`ObjectMap`, 3 paths): one root, so
    the synthesis's two-root condition excludes it. Widening the synthesis to a withheld unique root

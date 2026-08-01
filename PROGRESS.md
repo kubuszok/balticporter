@@ -282,6 +282,19 @@ retire. Keyed on "field with no initialiser" instead, the substitution silently 
 default back off, and only `NullabilitySpec` asserting BOTH halves of its rule caught it. libGDX
 core: 1,184 placeholders, against 2,466 under the unkeyed version.
 
+**The 30 dropped `super(args)` are all WALLS — the COLLAPSE contributes none of them, and that is a
+measurement, not an assumption.** A collapse promotes a root whose parameters ARE the parent's
+formals, and its siblings' `super(args)` used to go through the type-matched fill, which declines on
+a type mismatch that means nothing there (`super(s, 7)` against a promoted `(Object, int)`): both
+arguments discarded, compiling. The delegation is positional for a collapse now (`Plan.collapse`,
+`DESIGN.md` §8.2 as-built 5), and the corpus delta is **0 on every one of the 13 lanes — 0 members
+changed, 0 counts moved**. The residue is unaffected because every one of the 30 is a class whose
+roots reach DIFFERENT parent constructors (`DistanceFieldFont` 7, `OrderedSet`/`OrderedMap`/
+`IdentityMap` 3 each, the three `RegionInfluencer` bodies 3 each, `Button` 2, four singles), which
+is the wall the synthesis refuses by design and no delegation can express. The defect was real and
+the corpus does not exercise it: it was found by reading the spec that pinned it as correct, which
+is the only instrument that could have.
+
 **The order-safety rule is the whole residue.** 146 of 166 refusals are `reason=order` — the value
 was not composed of the constructor's own parameters, literals and operators, so hoisting it into a
 delegation argument list would evaluate it before `super(...)` and before the instance initialisers

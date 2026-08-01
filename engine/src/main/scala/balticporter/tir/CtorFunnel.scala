@@ -151,6 +151,21 @@ object CtorFunnel:
         * where `Phase.transformDefDef` appends one and where Scala requires a `using` clause to be
         * for the call sites to stay unchanged. */
       givens: List[List[Tree.ValDef]] = Nil,
+      /** This promotion is THE COLLAPSE: the promoted root's own parameters ARE the parent
+        * constructor's formals, passed straight through, in order ([[collapseTo]]).
+        *
+        * Recorded because it is the one promotion whose primary can be delegated to POSITIONALLY.
+        * A promoted root generally passes only SOME of its parameters up (`Sized(String, int, int)`
+        * calling `super(cap, max)`), so another root's `super(args)` has to be matched into the
+        * primary's parameters BY TYPE — and that fill declines whenever an argument finds no
+        * parameter of its own type. Under a collapse the fill is not the right question at all:
+        * every root of the class reaches the SAME parent constructor, so every root's arguments
+        * fill the SAME formals in the SAME order, and those formals are exactly the primary's
+        * parameters. `this(args)` is then type-correct for every sibling by construction.
+        *
+        * `false` for every other plan, including a synthesis — which is positional for its own
+        * reason (`superSlots`) and asks this nothing. */
+      collapse: Boolean = false,
   ):
     /** the primary's VALUE parameters — java's own, never the context clause [[givens]] holds. */
     def primaryParams: List[Tree.ValDef] =
@@ -200,8 +215,12 @@ object CtorFunnel:
     * lowered to a bare `this()` — the check hiding exactly the drop class it exists to count. One
     * function answers it now, so the two cannot disagree by construction. */
   enum SuperCall:
-    /** `this(args)` — positional against a SYNTHESISED primary whose parameters ARE the parent
-      * constructor's, in its order. No matching of any kind is needed or wanted here. */
+    /** `this(args)` — positional against a primary whose parameters ARE the parent constructor's,
+      * in its order. No matching of any kind is needed or wanted here.
+      *
+      * TWO plans have that property and both use this: a SYNTHESISED primary (its slots are the
+      * formals, `Plan.superSlots` of them) and THE COLLAPSE (a promoted root that passes its own
+      * parameters straight through, `Plan.collapse`). */
     case Positional(args: List[Term])
     /** `this(...)` against a PROMOTED root: each of the primary's parameters takes an argument of
       * the java call, or the value the parent's own narrower overload would have left there. */
@@ -558,7 +577,22 @@ object CtorFunnel:
         if args.sizeIs == plan.superSlots then SuperCall.Positional(args) else SuperCall.Dropped
       else
         val ps = plan.primaryParams
-        if ps.isEmpty || plan.superArgs.size != ps.size || args.sizeIs > ps.size then SuperCall.Dropped
+        // THE COLLAPSE IS POSITIONAL, and the type-matched fill is simply the wrong question for it.
+        // A collapse promotes a root whose own parameters ARE the parent constructor's formals,
+        // passed straight through in order, and the class was only a collapse candidate because
+        // EVERY root reaches that one parent constructor — so every sibling's `super(args)` fills
+        // those same formals in that same order, and `this(args)` is type-correct by construction.
+        //
+        // Left to the fill, `Mixed(String s) { super(s, 7); }` beside a promoted
+        // `Mixed(Object a, int b)` lost BOTH arguments: `String` is not `Object` by head name, so
+        // the first slot found no home, and the parent was constructed with neither. It compiled,
+        // and a spec pinned it as correct. Attempt order is FILL then this, not the other way
+        // round: for a JDK throwable the fill is what supplies the padded slot the narrower
+        // overload would have left (`Slot.NullAt`, `Slot.CauseMessage`), and no throwable-parent
+        // class is a collapse anyway — `plan0` never consults the synthesis for one.
+        def positional: SuperCall =
+          if plan.collapse && args.sizeIs == ps.size then SuperCall.Positional(args) else SuperCall.Dropped
+        if ps.isEmpty || plan.superArgs.size != ps.size || args.sizeIs > ps.size then positional
         else
           val used  = collection.mutable.Set[Int]()
           val slots = ps.map { v =>
@@ -568,7 +602,7 @@ object CtorFunnel:
               case scala.None   =>
                 if want.exists(primitiveTypeNames) then scala.None else Some(Slot.NullAt(v.tpt.tpe))
           }
-          if slots.exists(_.isEmpty) || used.size != args.size then SuperCall.Dropped
+          if slots.exists(_.isEmpty) || used.size != args.size then positional
           else
             val ss = slots.flatten
             // the JDK's `Throwable(Throwable)` message, but only when the cause can be READ TWICE —
@@ -1409,10 +1443,15 @@ object CtorFunnel:
     * [[Plans.superCall]]'s answer, per root, and the one the emitter renders. What IS asserted is
     * the thing `syntheticPrimary` cannot ask any other way: does java run this body on every path
     * that will now run it? Where it does not, the caller falls through to the marker, which
-    * synthesises and promotes nothing. */
+    * synthesises and promotes nothing.
+    *
+    * The plan is MARKED (`Plan.collapse`), which is what lets [[Plans.superCall]] delegate to it
+    * positionally where the type-matched fill declines — see that field. Marking it here rather
+    * than re-deriving "is this promotion a pass-through of the parent's formals" at the delegation
+    * is CLAUDE.md §4.56's rule about a phase concluding only from what the phase itself did. */
   private def collapseTo(program: Program, cd: Tree.ClassDef, candidates: List[Tree.DefDef]): Option[Plan] =
     candidates.sortBy(c => -valueParams(program, c).size).headOption
-      .map { c => val (sa, rest) = split(program, c); promoted(program, c, sa, rest) }
+      .map { c => val (sa, rest) = split(program, c); promoted(program, c, sa, rest).copy(collapse = true) }
       .filter(p => escapesOf(program, cd, p.primary, p.primaryBody).isEmpty)
 
   // ---- FIELD SLOTS: a `this.f = e` hoisted into the primary's parameter list ----
