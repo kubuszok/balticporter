@@ -76,7 +76,8 @@ object TriviaCheck:
           case Some(java) =>
             val out  = normalize(units.map(_.scala).mkString("\n"))
             val seen = collection.mutable.Set.empty[String]
-            CommentScanner.scan(java).zipWithIndex.flatMap { (t, _) =>
+            CommentScanner.scanAt(java).flatMap { a =>
+              val t    = a.trivia
               val body = normalize(t.text)
               // an EMPTY normalisation is a comment with no words in it (`//`, `/****/`); there is
               // nothing to find and nothing lost.
@@ -88,7 +89,7 @@ object TriviaCheck:
                 case balticporter.core.TriviaKind.Line    => TriviaKind.Line
                 case balticporter.core.TriviaKind.Block   => TriviaKind.Block
                 case balticporter.core.TriviaKind.Javadoc => TriviaKind.Javadoc
-              , t.text, lineOf(java, t.text)))
+              , t.text, a.line(java)))
             }
       }
 
@@ -113,10 +114,6 @@ object TriviaCheck:
       .filter(_.nonEmpty)
       .mkString(" ")
       .replaceAll("\\s+", " ")
-
-  private def lineOf(source: String, text: String): Int =
-    val at = source.indexOf(text)
-    if at < 0 then 0 else source.substring(0, at).count(_ == '\n') + 1
 
   private def readFile(path: String): Option[String] =
     val p = java.nio.file.Path.of(path)

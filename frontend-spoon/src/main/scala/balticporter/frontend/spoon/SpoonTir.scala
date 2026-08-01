@@ -232,7 +232,12 @@ object SpoonTir:
     def build(types: List[CtType[?]]): Program =
       // the FILE header goes on every top-level type the file declares, and the type's own
       // comments come from `classDef` — see `fileHeader` for why the two are separate fields.
-      val units = types.map(t => classDef(t).copy(unitLeading = fileHeader(t)))
+      //
+      // Harvested BEFORE any type translates, which is not an ordering detail: the header is
+      // decided by POSITION now (everything above the first line of code), and a positional claim
+      // can only keep a finer harvest off a comment if it is made before that harvest runs.
+      val headers = types.map(fileHeader)
+      val units   = types.zip(headers).map((t, h) => classDef(t).copy(unitLeading = h))
       new Program(units, minter.table, Xref.build(units),
                   MemberIndex(seenMembers.toList, seenTypes.toSet))
 
@@ -296,7 +301,31 @@ object SpoonTir:
       * Deliberately NOT wrapped in a `catch`: a harvest that throws is a defect to see, and a
       * blanket catch here is exactly what hid the null above. */
     private def leadingOf(el: CtElement): List[Trivia] =
-      el.getComments.asScala.toList.map { c => claimed.add(c); triviaOf(c) }
+      el.getComments.asScala.toList.filter(unheaded).map { c => claimed.add(c); triviaOf(c) }
+
+    /** WHERE a comment is, as a pair a set can hold: the file it is in and the offset it starts
+      * at. The identity `claimed` uses is the parser's OBJECT, which is exactly what the file
+      * header can no longer rely on — a comment the parser attached nowhere has no object to
+      * claim, so the header claims a SPAN and every finer harvest is held off by span too. */
+    private def spanOf(c: CtComment): Option[(String, Int)] =
+      val p = c.getPosition
+      if p == null || !p.isValidPosition then scala.None
+      else Some(unitKeyOf(p) -> p.getSourceStart)
+
+    private def unitKeyOf(p: spoon.reflect.cu.SourcePosition): String =
+      Option(p.getFile).map(_.getPath)
+        .orElse(Option(p.getCompilationUnit).flatMap(cu => Option(cu.getFile)).map(_.getPath))
+        // an in-memory `VirtualFile` may report no file at all, and "<unknown>" for every unit
+        // would make two snippets share one header. The unit OBJECT is the identity then.
+        .orElse(Option(p.getCompilationUnit).map(cu => "cu@" + System.identityHashCode(cu)))
+        .getOrElse("<unknown>")
+
+    /** spans the FILE HEADER has taken. Not `claimed`: see [[spanOf]]. */
+    private val headerSpans = collection.mutable.Set.empty[(String, Int)]
+
+    /** a comment the file header did NOT take — the filter every finer harvest applies, so a
+      * leading block that Spoon ALSO attached to the type is not emitted twice. */
+    private def unheaded(c: CtComment): Boolean = spanOf(c).forall(!headerSpans.contains(_))
 
     /** Comments Spoon attached to EXPRESSION-level descendants — an argument, a link in a fluent
       * chain, an initialiser. The TIR carries trivia on declarations and on statements only, so
@@ -307,23 +336,71 @@ object SpoonTir:
       * it swallows the whole subtree's comments and prints them all above the outermost statement. */
     private def deepComments(el: CtElement): List[Trivia] =
       el.getElements(new spoon.reflect.visitor.filter.TypeFilter[CtComment](classOf[CtComment]))
-        .asScala.toList.filter(claimed.add).map(triviaOf)
+        .asScala.toList.filter(unheaded).filter(claimed.add).map(triviaOf)
 
-    /** The FILE's own header: everything above the `package` clause, plus anything hanging off the
-      * imports. In every library this engine has seen, that is the licence.
+    /** The FILE's own header: everything above the first line of CODE, plus anything hanging off
+      * the imports. In every library this engine has seen, that is the licence.
       *
-      * This is the ONE harvest that does not respect `claimed`. A Java file with two top-level
+      * ## Why this one harvest reads TEXT and not the parser
+      *
+      * A parser's attachment model is precisely the thing that cannot be trusted here, and it was
+      * measured (`ENGINE-LIMITS.md` V3): where a file opens with TWO consecutive block comments,
+      * `CtCompilationUnit.getComments` carries the FIRST and the second goes to the PACKAGE
+      * DECLARATION — the one attachment site this walk never read (probed and pinned in the
+      * testkit). In one generated-parser family the block that fell down that gap is the APACHE
+      * NOTICE itself, behind three `//` generator lines the parser attached first, which makes
+      * this a §4.57/§4.58 obligation rather than a tidiness item.
+      *
+      * Reading one more of the parser's slots is NOT the fix, and that is the point of doing it
+      * positionally: the next shape lands in a slot nobody enumerated, and no set of slots can say
+      * which of two blocks came FIRST — the order of a licence and the banner above it is text's
+      * answer alone. So the rule needs no parser at all: a comment is the FILE's iff no code
+      * precedes it (`CommentScanner.firstCodeOffset`). The parser-attached ones are still read —
+      * they are how a comment with no usable position, and anything hanging off an import, still
+      * arrives — and merged by offset, so a block both sides see is emitted once.
+      *
+      * This is also the ONE harvest that does not respect `claimed`. A Java file with two top-level
       * types becomes two Scala files, and each of them is a derived work that must carry the
       * notice; claimed-once would give it to the first and leave the second unattributed. The
-      * comments are still ADDED to `claimed`, so nothing else re-emits them somewhere odd. */
+      * answer is therefore CACHED per compilation unit rather than recomputed — recomputing would
+      * be correct too, but the cache is what makes "each type gets the same header" a fact of the
+      * code instead of a property of two harvests agreeing. */
+    private val fileHeaders = collection.mutable.Map.empty[String, List[Trivia]]
+
     private def fileHeader(t: CtType[?]): List[Trivia] =
       val pos = t.getPosition
       if pos == null || !pos.isValidPosition || pos.getCompilationUnit == null then Nil
-      else
-        val cu   = pos.getCompilationUnit
-        val here = cu.getComments.asScala.toList ++ cu.getImports.asScala.toList.flatMap(_.getComments.asScala)
-        here.foreach(claimed.add)
-        here.map(triviaOf)
+      else fileHeaders.getOrElseUpdate(unitKeyOf(pos), harvestHeader(t, pos))
+
+    private def harvestHeader(t: CtType[?], pos: spoon.reflect.cu.SourcePosition): List[Trivia] =
+      val cu   = pos.getCompilationUnit
+      val key  = unitKeyOf(pos)
+      val src  = sourceOf(t)
+      // TEXT first: every comment above the first character a compiler would read.
+      val positional =
+        if src.isEmpty then Nil
+        else
+          val cut = balticporter.core.CommentScanner.firstCodeOffset(src)
+          balticporter.core.CommentScanner.scanAt(src).filter(_.start < cut)
+      val fromText = positional.map(a => a.start -> Trivia(kindOf(a.kind), a.text))
+      // …then the parser's own, which still contribute: an import's comments sit BELOW the cut,
+      // and a comment with no usable position has no offset to be found by.
+      val attached = cu.getComments.asScala.toList ++ cu.getImports.asScala.toList.flatMap(_.getComments.asScala)
+      attached.foreach(claimed.add)
+      val taken    = fromText.map(_._1).toSet
+      val fromTree = attached.flatMap { c =>
+        val at = spanOf(c).map(_._2)
+        if at.exists(taken.contains) then Nil else List(at.getOrElse(Int.MaxValue) -> triviaOf(c))
+      }
+      // the header OWNS these spans: `leadingOf` and `deepComments` skip them from here on, so a
+      // leading block the parser also attached to the type cannot be emitted a second time.
+      fromText.foreach((at, _) => headerSpans += (key -> at))
+      (fromText ++ fromTree).sortBy(_._1).map(_._2)
+
+    private def kindOf(k: balticporter.core.TriviaKind): TriviaKind = k match
+      case balticporter.core.TriviaKind.Line    => TriviaKind.Line
+      case balticporter.core.TriviaKind.Block   => TriviaKind.Block
+      case balticporter.core.TriviaKind.Javadoc => TriviaKind.Javadoc
 
     // ---- provenance ----
     private def originOf(el: CtElement): Origin =
